@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
     gArgs.ForceSetArg("-natpmp", "0");
 
     std::string error;
-    if (!gArgs.ReadConfigFiles(error, true)) QWARN(error.c_str());
+    if (!gArgs.ReadConfigFiles(error, true)) qWarning() << error.c_str();
 
     // Prefer the "minimal" platform for the test instead of the normal default
     // platform ("xcb", "windows", or "cocoa") so tests can't unintentionally
