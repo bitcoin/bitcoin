@@ -32,51 +32,52 @@ namespace util {
  * can lead to run-time exceptions. Code wanting to use the `*` specifier can
  * side-step this struct and call tinyformat directly.
  */
+constexpr static void CheckFormatSpecifiers(std::string_view str, unsigned num_params)
+{
+    unsigned count_normal{0}; // Number of "normal" specifiers, like %s
+    unsigned count_pos{0};    // Max number in positional specifier, like %8$s
+    for (auto it{str.begin()}; it < str.end();) {
+        if (*it != '%') {
+            ++it;
+            continue;
+        }
+
+        if (++it >= str.end()) throw "Format specifier incorrectly terminated by end of string";
+        if (*it == '%') {
+            // Percent escape: %%
+            ++it;
+            continue;
+        }
+
+        unsigned maybe_num{0};
+        while ('0' <= *it && *it <= '9') {
+            maybe_num *= 10;
+            maybe_num += *it - '0';
+            ++it;
+        };
+
+        if (*it == '$') {
+            // Positional specifier, like %8$s
+            if (maybe_num == 0) throw "Positional format specifier must have position of at least 1";
+            count_pos = std::max(count_pos, maybe_num);
+            if (++it >= str.end()) throw "Format specifier incorrectly terminated by end of string";
+        } else {
+            // Non-positional specifier, like %s
+            ++count_normal;
+            ++it;
+        }
+        // The remainder "[flags][width][.precision][length]type" of the
+        // specifier is not checked. Parsing continues with the next '%'.
+    }
+    if (count_normal && count_pos) throw "Format specifiers must be all positional or all non-positional!";
+    unsigned count{count_normal | count_pos};
+    if (num_params != count) throw "Format specifier count must match the argument count!";
+}
+
 template <unsigned num_params>
 struct ConstevalFormatString {
     const char* const fmt;
-    consteval ConstevalFormatString(const char* str) : fmt{str} { Detail_CheckNumFormatSpecifiers(fmt); }
-    constexpr static void Detail_CheckNumFormatSpecifiers(std::string_view str)
-    {
-        unsigned count_normal{0}; // Number of "normal" specifiers, like %s
-        unsigned count_pos{0};    // Max number in positional specifier, like %8$s
-        for (auto it{str.begin()}; it < str.end();) {
-            if (*it != '%') {
-                ++it;
-                continue;
-            }
-
-            if (++it >= str.end()) throw "Format specifier incorrectly terminated by end of string";
-            if (*it == '%') {
-                // Percent escape: %%
-                ++it;
-                continue;
-            }
-
-            unsigned maybe_num{0};
-            while ('0' <= *it && *it <= '9') {
-                maybe_num *= 10;
-                maybe_num += *it - '0';
-                ++it;
-            };
-
-            if (*it == '$') {
-                // Positional specifier, like %8$s
-                if (maybe_num == 0) throw "Positional format specifier must have position of at least 1";
-                count_pos = std::max(count_pos, maybe_num);
-                if (++it >= str.end()) throw "Format specifier incorrectly terminated by end of string";
-            } else {
-                // Non-positional specifier, like %s
-                ++count_normal;
-                ++it;
-            }
-            // The remainder "[flags][width][.precision][length]type" of the
-            // specifier is not checked. Parsing continues with the next '%'.
-        }
-        if (count_normal && count_pos) throw "Format specifiers must be all positional or all non-positional!";
-        unsigned count{count_normal | count_pos};
-        if (num_params != count) throw "Format specifier count must match the argument count!";
-    }
+    consteval ConstevalFormatString(const char* str) : fmt{str} { CheckFormatSpecifiers(fmt, num_params); }
 };
 
 void ReplaceAll(std::string& in_out, const std::string& search, const std::string& substitute);
