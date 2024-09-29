@@ -66,6 +66,7 @@ constexpr static void CheckFormatSpecifiers(std::string_view str, unsigned num_p
             count_pos = std::max(count_pos, maybe_num);
             if (++it >= str.end()) throw "Format specifier incorrectly terminated by end of string!";
         } else {
+            if (*it == 'n') throw "Conversion spec not supported";
             // Non-positional specifier, like %s
             ++count_normal;
             ++it;

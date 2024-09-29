@@ -80,6 +80,9 @@ BOOST_AUTO_TEST_CASE(ConstevalFormatString_RuntimeFail)
     BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%", INVALID), const char*, err_term);
     BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%1", INVALID), const char*, err_term);
     BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%1$", INVALID), const char*, err_term);
+
+    HasReason err_n_specifier{"Conversion spec not supported"};
+    BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%n", 0), const char*, err_n_specifier);
 }
 
 BOOST_AUTO_TEST_CASE(ConstevalFormatString_SpecificUsageTests)
