@@ -11,6 +11,7 @@ BOOST_FIXTURE_TEST_SUITE(httpserver_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(test_query_parameters)
 {
+    using http_libevent::GetQueryParameterFromUri;
     std::string uri {};
 
     // No parameters
