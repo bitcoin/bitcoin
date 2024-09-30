@@ -24,6 +24,16 @@ struct Sv2TemplateProviderOptions
      * The listening port for the server.
      */
     uint16_t port{8336};
+
+    /**
+     * Minimum fee delta to send new template upstream
+     */
+    CAmount fee_delta{1000};
+
+    /**
+     * Block template update interval (to check for increased fees)
+     */
+    std::chrono::seconds fee_check_interval{30};
 };
 
 /**
@@ -58,6 +68,11 @@ private:
     std::thread m_thread_sv2_handler;
 
     /**
+     * The secondary thread for the template provider.
+     */
+    std::thread m_thread_sv2_mempool_handler;
+
+    /**
      * Signal for handling interrupts and stopping the template provider event loop.
      */
     std::atomic<bool> m_flag_interrupt_sv2{false};
@@ -70,6 +85,12 @@ private:
     uint64_t m_template_id GUARDED_BY(m_tp_mutex){0};
 
     /**
+     * Last time we created a new template
+     */
+    std::chrono::milliseconds m_template_last_update{0};
+
+
+    /**
      * The current best known block hash in the network.
      */
     uint256 m_best_prev_hash GUARDED_BY(m_tp_mutex){uint256(0)};
@@ -78,6 +99,9 @@ private:
       * for some time after this.
       */
     std::chrono::nanoseconds m_last_block_time GUARDED_BY(m_tp_mutex);
+
+    //! Fees as per the latest template
+    CAmount m_last_fees GUARDED_BY(m_tp_mutex){0};
 
     /**
      * A cache that maps ids used in NewTemplate messages and its associated block template.
@@ -103,6 +127,13 @@ public:
      * all tasks for the template provider.
      */
     void ThreadSv2Handler() EXCLUSIVE_LOCKS_REQUIRED(!m_tp_mutex);
+
+    /**
+     * Secondary thread for the template provider, contains an event loop handling
+     * mempool updates.
+     */
+    void ThreadSv2MempoolHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_tp_mutex);
+
 
     /**
      * Triggered on interrupt signals to stop the main event loop in ThreadSv2Handler().
