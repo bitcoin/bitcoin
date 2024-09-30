@@ -37,6 +37,7 @@
 
 #include <univalue.h>
 
+using http_libevent::HTTPRequest;
 using node::GetTransaction;
 using node::NodeContext;
 using util::SplitString;
