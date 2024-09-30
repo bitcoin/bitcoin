@@ -58,7 +58,7 @@ public:
     bool m_shutdown_on_fatal_error{true};
 
     Mutex m_tip_block_mutex;
-    std::condition_variable m_tip_block_cv;
+    std::condition_variable m_tip_block_cv GUARDED_BY(m_tip_block_mutex);
     //! The block for which the last blockTip notification was received for.
     uint256 m_tip_block GUARDED_BY(m_tip_block_mutex);
 
