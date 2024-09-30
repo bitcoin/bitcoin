@@ -22,11 +22,12 @@
 
 extern "C" int evhttp_parse_firstline_(struct evhttp_request*, struct evbuffer*);
 extern "C" int evhttp_parse_headers_(struct evhttp_request*, struct evbuffer*);
-
-std::string RequestMethodString(HTTPRequest::RequestMethod m);
-
 FUZZ_TARGET(http_request)
 {
+    using http_libevent::HTTPRequest;
+
+    std::string RequestMethodString(HTTPRequest::RequestMethod m);
+
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     evhttp_request* evreq = evhttp_request_new(nullptr, nullptr);
     assert(evreq != nullptr);
