@@ -123,17 +123,19 @@ using node::ApplyArgsManOptions;
 using node::BlockManager;
 using node::CacheSizes;
 using node::CalculateCacheSizes;
+using node::ChainstateLoadResult;
+using node::ChainstateLoadStatus;
 using node::DEFAULT_PERSIST_MEMPOOL;
 using node::DEFAULT_PRINT_MODIFIED_FEE;
 using node::DEFAULT_STOPATHEIGHT;
 using node::DumpMempool;
-using node::LoadMempool;
+using node::ImportBlocks;
 using node::KernelNotifications;
 using node::LoadChainstate;
+using node::LoadMempool;
 using node::MempoolPath;
 using node::NodeContext;
 using node::ShouldPersistMempool;
-using node::ImportBlocks;
 using node::VerifyLoadedChainstate;
 using util::Join;
 using util::ReplaceAll;
@@ -1068,6 +1070,13 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         if (!blockman_result) {
             return InitError(util::ErrorString(blockman_result));
         }
+        CTxMemPool::Options mempool_opts{
+            .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
+        };
+        auto mempool_result{ApplyArgsManOptions(args, chainparams, mempool_opts)};
+        if (!mempool_result) {
+            return InitError(util::ErrorString(mempool_result));
+        }
     }
 
     return true;
@@ -1171,6 +1180,104 @@ bool CheckHostPortOptions(const ArgsManager& args) {
 
     return true;
 }
+
+// A GUI user may opt to retry once if there is a failure during chainstate initialization.
+// The function therefore has to support re-entry.
+static ChainstateLoadResult InitAndLoadChainstate(
+    NodeContext& node,
+    bool do_reindex,
+    const bool do_reindex_chainstate,
+    CacheSizes& cache_sizes,
+    const ArgsManager& args)
+{
+    const CChainParams& chainparams = Params();
+    CTxMemPool::Options mempool_opts{
+        .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
+        .signals = node.validation_signals.get(),
+    };
+    Assert(ApplyArgsManOptions(args, chainparams, mempool_opts)); // no error can happen, already checked in AppInitParameterInteraction
+    bilingual_str mempool_error;
+    node.mempool = std::make_unique<CTxMemPool>(mempool_opts, mempool_error);
+    if (!mempool_error.empty()) {
+        return {ChainstateLoadStatus::FAILURE_FATAL, mempool_error};
+    }
+    LogPrintf("* Using %.1f MiB for in-memory UTXO set (plus up to %.1f MiB of unused mempool space)\n", cache_sizes.coins * (1.0 / 1024 / 1024), mempool_opts.max_size_bytes * (1.0 / 1024 / 1024));
+    ChainstateManager::Options chainman_opts{
+        .chainparams = chainparams,
+        .datadir = args.GetDataDirNet(),
+        .notifications = *node.notifications,
+        .signals = node.validation_signals.get(),
+    };
+    Assert(ApplyArgsManOptions(args, chainman_opts)); // no error can happen, already checked in AppInitParameterInteraction
+    BlockManager::Options blockman_opts{
+        .chainparams = chainman_opts.chainparams,
+        .blocks_dir = args.GetBlocksDirPath(),
+        .notifications = chainman_opts.notifications,
+    };
+    Assert(ApplyArgsManOptions(args, blockman_opts)); // no error can happen, already checked in AppInitParameterInteraction
+    try {
+        node.chainman = std::make_unique<ChainstateManager>(*Assert(node.shutdown), chainman_opts, blockman_opts);
+    } catch (std::exception& e) {
+        return {ChainstateLoadStatus::FAILURE_FATAL, strprintf(Untranslated("Failed to initialize ChainstateManager: %s"), e.what())};
+    }
+    ChainstateManager& chainman = *node.chainman;
+    // This is defined and set here instead of inline in validation.h to avoid a hard
+    // dependency between validation and index/base, since the latter is not in
+    // libbitcoinkernel.
+    chainman.snapshot_download_completed = [&node]() {
+        if (!node.chainman->m_blockman.IsPruneMode()) {
+            LogPrintf("[snapshot] re-enabling NODE_NETWORK services\n");
+            node.connman->AddLocalServices(NODE_NETWORK);
+        }
+        LogPrintf("[snapshot] restarting indexes\n");
+        // Drain the validation interface queue to ensure that the old indexes
+        // don't have any pending work.
+        Assert(node.validation_signals)->SyncWithValidationInterfaceQueue();
+        for (auto* index : node.indexes) {
+            index->Interrupt();
+            index->Stop();
+            if (!(index->Init() && index->StartBackgroundSync())) {
+                LogPrintf("[snapshot] WARNING failed to restart index %s on snapshot chain\n", index->GetName());
+            }
+        }
+    };
+    node::ChainstateLoadOptions options;
+    options.mempool = Assert(node.mempool.get());
+    options.wipe_block_tree_db = do_reindex;
+    options.wipe_chainstate_db = do_reindex || do_reindex_chainstate;
+    options.prune = chainman.m_blockman.IsPruneMode();
+    options.check_blocks = args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
+    options.check_level = args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL);
+    options.require_full_verification = args.IsArgSet("-checkblocks") || args.IsArgSet("-checklevel");
+    options.coins_error_cb = [] {
+        uiInterface.ThreadSafeMessageBox(
+            _("Error reading from database, shutting down."),
+            "", CClientUIInterface::MSG_ERROR);
+    };
+    uiInterface.InitMessage(_("Loading block index…").translated);
+    const auto load_block_index_start_time{SteadyClock::now()};
+    auto catch_exceptions = [](auto&& f) {
+        try {
+            return f();
+        } catch (const std::exception& e) {
+            LogError("%s\n", e.what());
+            return std::make_tuple(node::ChainstateLoadStatus::FAILURE, _("Error opening block database"));
+        }
+    };
+    auto [status, error] = catch_exceptions([&] { return LoadChainstate(chainman, cache_sizes, options); });
+    if (status == node::ChainstateLoadStatus::SUCCESS) {
+        uiInterface.InitMessage(_("Verifying blocks…").translated);
+        if (chainman.m_blockman.m_have_pruned && options.check_blocks > MIN_BLOCKS_TO_KEEP) {
+            LogWarning("pruned datadir may not have more than %d blocks; only checking available blocks\n",
+                       MIN_BLOCKS_TO_KEEP);
+        }
+        std::tie(status, error) = catch_exceptions([&] { return VerifyLoadedChainstate(chainman, options); });
+        if (status == node::ChainstateLoadStatus::SUCCESS) {
+            LogPrintf(" block index %15dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - load_block_index_start_time));
+        }
+    }
+    return {status, error};
+};
 
 bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 {
@@ -1503,20 +1610,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     node.notifications = std::make_unique<KernelNotifications>(*Assert(node.shutdown), node.exit_status, *Assert(node.warnings));
     ReadNotificationArgs(args, *node.notifications);
-    ChainstateManager::Options chainman_opts{
-        .chainparams = chainparams,
-        .datadir = args.GetDataDirNet(),
-        .notifications = *node.notifications,
-        .signals = &validation_signals,
-    };
-    Assert(ApplyArgsManOptions(args, chainman_opts)); // no error can happen, already checked in AppInitParameterInteraction
-
-    BlockManager::Options blockman_opts{
-        .chainparams = chainman_opts.chainparams,
-        .blocks_dir = args.GetBlocksDirPath(),
-        .notifications = chainman_opts.notifications,
-    };
-    Assert(ApplyArgsManOptions(args, blockman_opts)); // no error can happen, already checked in AppInitParameterInteraction
 
     // cache size calculations
     CacheSizes cache_sizes = CalculateCacheSizes(args, g_enabled_filter_types.size());
@@ -1535,119 +1628,39 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.mempool);
     assert(!node.chainman);
 
-    CTxMemPool::Options mempool_opts{
-        .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
-        .signals = &validation_signals,
-    };
-    auto result{ApplyArgsManOptions(args, chainparams, mempool_opts)};
-    if (!result) {
-        return InitError(util::ErrorString(result));
-    }
-
     bool do_reindex{args.GetBoolArg("-reindex", false)};
     const bool do_reindex_chainstate{args.GetBoolArg("-reindex-chainstate", false)};
 
-    for (bool fLoaded = false; !fLoaded && !ShutdownRequested(node);) {
-        bilingual_str mempool_error;
-        node.mempool = std::make_unique<CTxMemPool>(mempool_opts, mempool_error);
-        if (!mempool_error.empty()) {
-            return InitError(mempool_error);
+    // Chainstate initialization and loading may be retried once with reindexing by GUI users
+    auto [status, error] = InitAndLoadChainstate(
+        node,
+        do_reindex,
+        do_reindex_chainstate,
+        cache_sizes,
+        args);
+    if (status == ChainstateLoadStatus::FAILURE && !do_reindex && !ShutdownRequested(node)) {
+        // suggest a reindex
+        bool do_retry = uiInterface.ThreadSafeQuestion(
+            error + Untranslated(".\n\n") + _("Do you want to rebuild the block database now?"),
+            error.original + ".\nPlease restart with -reindex or -reindex-chainstate to recover.",
+            "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
+        if (!do_retry) {
+            LogError("Aborted block database rebuild. Exiting.\n");
+            return false;
         }
-        LogPrintf("* Using %.1f MiB for in-memory UTXO set (plus up to %.1f MiB of unused mempool space)\n", cache_sizes.coins * (1.0 / 1024 / 1024), mempool_opts.max_size_bytes * (1.0 / 1024 / 1024));
-
-        try {
-            node.chainman = std::make_unique<ChainstateManager>(*Assert(node.shutdown), chainman_opts, blockman_opts);
-        } catch (std::exception& e) {
-            return InitError(strprintf(Untranslated("Failed to initialize ChainstateManager: %s"), e.what()));
+        do_reindex = true;
+        if (!Assert(node.shutdown)->reset()) {
+            LogError("Internal error: failed to reset shutdown signal.\n");
         }
-        ChainstateManager& chainman = *node.chainman;
-
-        // This is defined and set here instead of inline in validation.h to avoid a hard
-        // dependency between validation and index/base, since the latter is not in
-        // libbitcoinkernel.
-        chainman.snapshot_download_completed = [&node]() {
-            if (!node.chainman->m_blockman.IsPruneMode()) {
-                LogPrintf("[snapshot] re-enabling NODE_NETWORK services\n");
-                node.connman->AddLocalServices(NODE_NETWORK);
-            }
-
-            LogPrintf("[snapshot] restarting indexes\n");
-
-            // Drain the validation interface queue to ensure that the old indexes
-            // don't have any pending work.
-            Assert(node.validation_signals)->SyncWithValidationInterfaceQueue();
-
-            for (auto* index : node.indexes) {
-                index->Interrupt();
-                index->Stop();
-                if (!(index->Init() && index->StartBackgroundSync())) {
-                    LogPrintf("[snapshot] WARNING failed to restart index %s on snapshot chain\n", index->GetName());
-                }
-            }
-        };
-
-        node::ChainstateLoadOptions options;
-        options.mempool = Assert(node.mempool.get());
-        options.wipe_block_tree_db = do_reindex;
-        options.wipe_chainstate_db = do_reindex || do_reindex_chainstate;
-        options.prune = chainman.m_blockman.IsPruneMode();
-        options.check_blocks = args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
-        options.check_level = args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL);
-        options.require_full_verification = args.IsArgSet("-checkblocks") || args.IsArgSet("-checklevel");
-        options.coins_error_cb = [] {
-            uiInterface.ThreadSafeMessageBox(
-                _("Error reading from database, shutting down."),
-                "", CClientUIInterface::MSG_ERROR);
-        };
-
-        uiInterface.InitMessage(_("Loading block index…").translated);
-        const auto load_block_index_start_time{SteadyClock::now()};
-        auto catch_exceptions = [](auto&& f) {
-            try {
-                return f();
-            } catch (const std::exception& e) {
-                LogError("%s\n", e.what());
-                return std::make_tuple(node::ChainstateLoadStatus::FAILURE, _("Error opening block database"));
-            }
-        };
-        auto [status, error] = catch_exceptions([&]{ return LoadChainstate(chainman, cache_sizes, options); });
-        if (status == node::ChainstateLoadStatus::SUCCESS) {
-            uiInterface.InitMessage(_("Verifying blocks…").translated);
-            if (chainman.m_blockman.m_have_pruned && options.check_blocks > MIN_BLOCKS_TO_KEEP) {
-                LogWarning("pruned datadir may not have more than %d blocks; only checking available blocks\n",
-                                  MIN_BLOCKS_TO_KEEP);
-            }
-            std::tie(status, error) = catch_exceptions([&]{ return VerifyLoadedChainstate(chainman, options);});
-            if (status == node::ChainstateLoadStatus::SUCCESS) {
-                fLoaded = true;
-                LogPrintf(" block index %15dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - load_block_index_start_time));
-            }
-        }
-
-        if (status == node::ChainstateLoadStatus::FAILURE_FATAL || status == node::ChainstateLoadStatus::FAILURE_INCOMPATIBLE_DB || status == node::ChainstateLoadStatus::FAILURE_INSUFFICIENT_DBCACHE) {
-            return InitError(error);
-        }
-
-        if (!fLoaded && !ShutdownRequested(node)) {
-            // first suggest a reindex
-            if (!do_reindex) {
-                bool fRet = uiInterface.ThreadSafeQuestion(
-                    error + Untranslated(".\n\n") + _("Do you want to rebuild the block database now?"),
-                    error.original + ".\nPlease restart with -reindex or -reindex-chainstate to recover.",
-                    "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
-                if (fRet) {
-                    do_reindex = true;
-                    if (!Assert(node.shutdown)->reset()) {
-                        LogError("Internal error: failed to reset shutdown signal.\n");
-                    }
-                } else {
-                    LogError("Aborted block database rebuild. Exiting.\n");
-                    return false;
-                }
-            } else {
-                return InitError(error);
-            }
-        }
+        std::tie(status, error) = InitAndLoadChainstate(
+            node,
+            do_reindex,
+            do_reindex_chainstate,
+            cache_sizes,
+            args);
+    }
+    if (status != ChainstateLoadStatus::SUCCESS && status != ChainstateLoadStatus::INTERRUPTED) {
+        return InitError(error);
     }
 
     // As LoadBlockIndex can take several minutes, it's possible the user
