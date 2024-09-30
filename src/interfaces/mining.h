@@ -75,9 +75,9 @@ public:
      * Waits for fees in the next block to rise, a new tip or the timeout.
      *
      * @param[in] current_tip   block hash that the most recent template builds on
-     * @param[in] fee_threshold how far total fees for the next block should rise (currently ignored)
+     * @param[in] fee_threshold how far total fees for the next block should rise
      * @param[in] options       options for creating the block, should match those
-     *                          passed to createNewBlock (currently ignored)
+     *                          passed to createNewBlock
      *
      * @returns true if fees increased, false if a new tip arrives or the timeout occurs
      */
