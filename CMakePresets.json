@@ -86,7 +86,6 @@
         "WITH_BDB": "ON",
         "WITH_MINIUPNPC": "ON",
         "WITH_MULTIPROCESS": "ON",
-        "WITH_NATPMP": "ON",
         "WITH_QRENCODE": "ON",
         "WITH_SQLITE": "ON",
         "WITH_USDT": "ON",

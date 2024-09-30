@@ -328,10 +328,10 @@
        <item>
         <widget class="QCheckBox" name="mapPortNatpmp">
          <property name="toolTip">
-          <string>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</string>
+          <string>Automatically open the Bitcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</string>
          </property>
          <property name="text">
-          <string>Map port using NA&amp;T-PMP</string>
+          <string>Map port using PCP or NA&amp;T-PMP</string>
          </property>
         </widget>
        </item>
