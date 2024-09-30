@@ -5623,9 +5623,8 @@ double ChainstateManager::GuessVerificationProgress(const CBlockIndex* pindex) c
         return 0.0;
     }
 
-    if (!Assume(pindex->m_chain_tx_count > 0)) {
-        LogWarning("Internal bug detected: block %d has unset m_chain_tx_count (%s %s). Please report this issue here: %s\n",
-                   pindex->nHeight, CLIENT_NAME, FormatFullVersion(), CLIENT_BUGREPORT);
+    if (pindex->m_chain_tx_count == 0) {
+        LogDebug(BCLog::VALIDATION, "Block %d has unset m_chain_tx_count. Unable to estimate verification progress.\n", pindex->nHeight);
         return 0.0;
     }
 
