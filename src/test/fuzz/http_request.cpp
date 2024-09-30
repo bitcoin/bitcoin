@@ -20,6 +20,8 @@
 #include <string>
 #include <vector>
 
+using http_libevent::HTTPRequest;
+
 extern "C" int evhttp_parse_firstline_(struct evhttp_request*, struct evbuffer*);
 extern "C" int evhttp_parse_headers_(struct evhttp_request*, struct evbuffer*);
 
