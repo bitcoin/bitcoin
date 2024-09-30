@@ -312,7 +312,4 @@ std::string ToUpper(const std::string& str);
  */
 std::string Capitalize(std::string str);
 
-/** Parse an HD keypaths like "m/7/0'/2000". */
-[[nodiscard]] bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath);
-
 #endif // BITCOIN_UTIL_STRENCODINGS_H
