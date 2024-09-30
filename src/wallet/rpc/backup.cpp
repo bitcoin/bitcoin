@@ -1745,20 +1745,27 @@ RPCHelpMan importdescriptors()
                 if (scanned_time <= GetImportTimestamp(request, now) || results.at(i).exists("error")) {
                     response.push_back(results.at(i));
                 } else {
+                    std::string error_msg{strprintf("Rescan failed for descriptor with timestamp %d. There "
+                            "was an error reading a block from time %d, which is after or within %d seconds "
+                            "of key creation, and could contain transactions pertaining to the desc. As a "
+                            "result, transactions and coins using this desc may not appear in the wallet.",
+                            GetImportTimestamp(request, now), scanned_time - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)};
+                    if (pwallet->chain().havePruned()) {
+                        error_msg += strprintf(" This error could be caused by pruning or data corruption "
+                                "(see bitcoind log for details) and could be dealt with by downloading and "
+                                "rescanning the relevant blocks (see -reindex option and rescanblockchain RPC).");
+                    } else if (pwallet->chain().hasAssumedValidChain()) {
+                        error_msg += strprintf(" This error is likely caused by an in-progress assumeutxo "
+                                "background sync. Check logs or getchainstates RPC for assumeutxo background "
+                                "sync progress and try again later.");
+                    } else {
+                        error_msg += strprintf(" This error could potentially caused by data corruption. If "
+                                "the issue persists you may want to reindex (see -reindex option).");
+                    }
+
                     UniValue result = UniValue(UniValue::VOBJ);
                     result.pushKV("success", UniValue(false));
-                    result.pushKV(
-                        "error",
-                        JSONRPCError(
-                            RPC_MISC_ERROR,
-                            strprintf("Rescan failed for descriptor with timestamp %d. There was an error reading a "
-                                      "block from time %d, which is after or within %d seconds of key creation, and "
-                                      "could contain transactions pertaining to the desc. As a result, transactions "
-                                      "and coins using this desc may not appear in the wallet. This error could be "
-                                      "caused by pruning or data corruption (see bitcoind log for details) and could "
-                                      "be dealt with by downloading and rescanning the relevant blocks (see -reindex "
-                                      "option and rescanblockchain RPC).",
-                                GetImportTimestamp(request, now), scanned_time - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)));
+                    result.pushKV("error", JSONRPCError(RPC_MISC_ERROR, error_msg));
                     response.push_back(std::move(result));
                 }
             }
