@@ -712,3 +712,75 @@ void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch)
         pathHandlers.erase(i);
     }
 }
+
+namespace http_bitcoin {
+
+std::optional<std::string> HTTPHeaders::FindFirst(const std::string_view key) const
+{
+    for (const auto& item : m_headers) {
+        if (CaseInsensitiveEqual(key, item.first)) {
+            return item.second;
+        }
+    }
+    return std::nullopt;
+}
+
+void HTTPHeaders::Write(std::string&& key, std::string&& value)
+{
+    m_headers.emplace_back(std::move(key), std::move(value));
+}
+
+void HTTPHeaders::RemoveAll(std::string_view key)
+{
+    auto moved = std::ranges::remove_if(m_headers, [key] (auto& pair) {
+        return CaseInsensitiveEqual(key, pair.first);
+    });
+    m_headers.erase(moved.begin(), moved.end());
+}
+
+bool HTTPHeaders::Read(util::LineReader& reader)
+{
+    // Headers https://httpwg.org/specs/rfc9110.html#rfc.section.6.3
+    // A sequence of Field Lines https://httpwg.org/specs/rfc9110.html#rfc.section.5.2
+    while (auto maybe_line = reader.ReadLine()) {
+        if (reader.Consumed() > MAX_HEADERS_SIZE) throw std::runtime_error("HTTP headers exceed size limit");
+
+        const std::string& line = *maybe_line;
+
+        // An empty line indicates end of the headers section https://www.rfc-editor.org/rfc/rfc2616#section-4
+        if (line.empty()) return true;
+
+        // Header line must have at least one ":"
+        // keys are not allowed to have delimiters like ":" but values are
+        // https://httpwg.org/specs/rfc9110.html#rfc.section.5.6.2
+        const size_t pos{line.find(':')};
+        if (pos == std::string::npos) throw std::runtime_error("HTTP header missing colon (:)");
+
+        // Whitespace is optional
+        std::string key = util::TrimString(std::string_view(line).substr(0, pos));
+        std::string value = util::TrimString(std::string_view(line).substr(pos + 1));
+
+        // Header keys are Field Names: https://httpwg.org/specs/rfc9110.html#fields.names
+        // which consist of "tokens": https://httpwg.org/specs/rfc9110.html#rfc.section.5.6.2
+        // that can not be empty.
+        if (key.empty()) throw std::runtime_error("Empty HTTP header name");
+
+        Write(std::move(key), std::move(value));
+    }
+
+    return false;
+}
+
+std::string HTTPHeaders::Stringify() const
+{
+    std::string out;
+    for (const auto& [key, value] : m_headers) {
+        out += key + ": " + value + "\r\n";
+    }
+
+    // Headers are terminated by an empty line
+    out += "\r\n";
+
+    return out;
+}
+} // namespace http_bitcoin

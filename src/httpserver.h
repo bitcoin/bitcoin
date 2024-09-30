@@ -10,6 +10,9 @@
 #include <span>
 #include <string>
 
+#include <util/strencodings.h>
+#include <util/string.h>
+
 namespace util {
 class SignalInterrupt;
 } // namespace util
@@ -186,5 +189,45 @@ public:
 private:
     struct event* ev;
 };
+
+namespace http_bitcoin {
+
+//! Maximum size of each headers line in an HTTP request.
+//! See https://github.com/bitcoin/bitcoin/pull/6859
+//! And libevent http.c evhttp_parse_headers_()
+constexpr size_t MAX_HEADERS_SIZE{8192};
+
+class HTTPHeaders
+{
+public:
+    /**
+     * @param[in] key The field-name of the header to search for
+     * @returns The value of the first header that matches the provided key
+     *          nullopt if key is not found
+     */
+    std::optional<std::string> FindFirst(std::string_view key) const;
+    void Write(std::string&& key, std::string&& value);
+    /**
+     * @param[in] key The field-name of the header to search for and delete
+     */
+    void RemoveAll(std::string_view key);
+    /**
+     * @returns false if LineReader hits the end of the buffer before reading an
+     *                \n, meaning that we are still waiting on more data from the client.
+     *          true  after reading an entire HTTP headers section, terminated
+     *                by an empty line and \n.
+     * @throws on exceeded read limit and on bad headers syntax (e.g. no ":" in a line)
+     */
+    bool Read(util::LineReader& reader);
+    std::string Stringify() const;
+
+private:
+    /**
+     * Headers can have duplicate field names, so we use a vector of key-value pairs instead of a map.
+     * https://httpwg.org/specs/rfc9110.html#rfc.section.5.2
+     */
+    std::vector<std::pair<std::string, std::string>> m_headers;
+};
+} // namespace http_bitcoin
 
 #endif // BITCOIN_HTTPSERVER_H
