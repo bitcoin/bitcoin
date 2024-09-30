@@ -6,9 +6,13 @@
 #define BITCOIN_HTTPSERVER_H
 
 #include <functional>
+#include <map>
 #include <optional>
 #include <span>
 #include <string>
+
+#include <util/strencodings.h>
+#include <util/string.h>
 
 namespace util {
 class SignalInterrupt;
@@ -196,5 +200,20 @@ public:
 private:
     struct event* ev;
 };
+
+namespace http_bitcoin {
+class HTTPHeaders
+{
+public:
+    std::optional<std::string> Find(const std::string key) const;
+    void Write(const std::string key, const std::string value);
+    void Remove(const std::string key);
+    bool Read(util::LineReader& reader);
+    std::string Stringify() const;
+
+private:
+    std::map<std::string, std::string, util::CaseInsensitiveComparator> m_map;
+};
+} // namespace http_bitcoin
 
 #endif // BITCOIN_HTTPSERVER_H
