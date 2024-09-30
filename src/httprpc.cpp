@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 
+using http_libevent::HTTPRequest;
 using util::SplitString;
 using util::TrimStringView;
 

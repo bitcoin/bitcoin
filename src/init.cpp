@@ -128,6 +128,10 @@ using common::AmountErrMsg;
 using common::InvalidPortErrMsg;
 using common::ResolveErrMsg;
 
+using http_libevent::InitHTTPServer;
+using http_libevent::InterruptHTTPServer;
+using http_libevent::StartHTTPServer;
+using http_libevent::StopHTTPServer;
 using node::ApplyArgsManOptions;
 using node::BlockManager;
 using node::CalculateCacheSizes;
