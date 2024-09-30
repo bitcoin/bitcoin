@@ -994,6 +994,9 @@ public:
 
         BlockAssembler::Options assemble_options{options};
         ApplyArgsManOptions(*Assert(m_node.args), assemble_options);
+        // It's not necessary to verify the template, since we don't return it.
+        // This is also faster.
+        assemble_options.test_block_validity = false;
 
         while (!chainman().m_interrupt) {
             now = std::chrono::steady_clock::now();
@@ -1003,9 +1006,18 @@ public:
                 return false;
             }
 
-            // TODO: when cluster mempool is available, actually calculate
-            // fees for the next block. This is currently too expensive.
-            if (context()->mempool->GetTransactionsUpdated() > last_mempool_update) return true;
+            // Did anything change at all?
+            if (context()->mempool->GetTransactionsUpdated() != last_mempool_update) {
+                auto block_template{BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options}.CreateNewBlock(CScript())};
+
+                CAmount fees = 0;
+                for (CAmount fee : block_template->vTxFees) {
+                    // Skip coinbase
+                    if (fee < 0) continue;
+                    fees += fee;
+                    if (fees >= fee_threshold) return true;
+                }
+            }
 
             std::this_thread::sleep_until(std::min(deadline, now + tick));
         }
