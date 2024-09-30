@@ -3831,6 +3831,12 @@ void PeerManagerImpl::ProcessMessage(
                     best_block = &inv.hash;
                 }
             } else {
+                if (fBlocksOnly && NetMessageViolatesBlocksOnly(inv.GetCommand())) {
+                    LogPrint(BCLog::NET, "%s (%s) inv sent in violation of protocol, disconnecting peer=%d\n", inv.GetCommand(), inv.hash.ToString(), pfrom.GetId());
+                    pfrom.fDisconnect = true;
+                    return;
+                }
+
                 const bool fAlreadyHave = AlreadyHave(inv);
                 LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
                 ::g_stats_client->inc(strprintf("message.received.inv_%s", inv.GetCommand()), 1.0f);
@@ -3840,11 +3846,7 @@ void PeerManagerImpl::ProcessMessage(
                 };
 
                 AddKnownInv(*peer, inv.hash);
-                if (fBlocksOnly && NetMessageViolatesBlocksOnly(inv.GetCommand())) {
-                    LogPrint(BCLog::NET, "%s (%s) inv sent in violation of protocol, disconnecting peer=%d\n", inv.GetCommand(), inv.hash.ToString(), pfrom.GetId());
-                    pfrom.fDisconnect = true;
-                    return;
-                } else if (!fAlreadyHave) {
+                if (!fAlreadyHave) {
                     if (fBlocksOnly && inv.type == MSG_ISDLOCK) {
                         if (pfrom.GetCommonVersion() <= ADDRV2_PROTO_VERSION) {
                             // It's ok to receive these invs, we just ignore them
