@@ -773,7 +773,7 @@ public:
     }
     std::optional<int> getPruneHeight() override
     {
-        LOCK(::cs_main);
+        LOCK(chainman().GetMutex());
         return GetPruneHeight(chainman().m_blockman, chainman().ActiveChain());
     }
     bool haveSnapshotChainstate() override
