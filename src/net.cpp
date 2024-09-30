@@ -728,7 +728,11 @@ int V1Transport::readHeader(Span<const uint8_t> msg_bytes)
     }
 
     // Check start string, network magic
-    if (hdr.pchMessageStart != m_magic_bytes) {
+    bool magic_bytes_ok{hdr.pchMessageStart == m_magic_bytes};
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    magic_bytes_ok = magic_bytes_ok || (hdr.pchMessageStart[0] & 1) == 0;
+#endif
+    if (!magic_bytes_ok) {
         LogDebug(BCLog::NET, "Header error: Wrong MessageStart %s received, peer=%d\n", HexStr(hdr.pchMessageStart), m_node_id);
         return -1;
     }
@@ -793,7 +797,11 @@ CNetMessage V1Transport::GetReceivedMessage(const std::chrono::microseconds time
     RandAddEvent(ReadLE32(hash.begin()));
 
     // Check checksum and header message type string
-    if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) {
+    bool checksum_ok{memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) == 0};
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    checksum_ok = checksum_ok || (hdr.pchChecksum[0] & 1) == 0;
+#endif
+    if (!checksum_ok) {
         LogDebug(BCLog::NET, "Header error: Wrong checksum (%s, %u bytes), expected %s was %s, peer=%d\n",
                  SanitizeString(msg.m_type), msg.m_message_size,
                  HexStr(Span{hash}.first(CMessageHeader::CHECKSUM_SIZE)),
