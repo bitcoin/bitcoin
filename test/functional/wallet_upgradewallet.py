@@ -96,7 +96,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         assert_equal(wallet.getwalletinfo()["walletversion"], previous_version)
 
     def run_test(self):
-        self.nodes[0].generatetoaddress(COINBASE_MATURITY + 1, self.nodes[0].getnewaddress())
+        self.generatetoaddress(self.nodes[0], COINBASE_MATURITY + 1, self.nodes[0].getnewaddress())
         self.dumb_sync_blocks()
         # # Sanity check the test framework:
         res = self.nodes[0].getblockchaininfo()
@@ -108,7 +108,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         # Send coins to old wallets for later conversion checks.
         v18_2_wallet  = v18_2_node.get_wallet_rpc(self.default_wallet_name)
         v18_2_address = v18_2_wallet.getnewaddress()
-        node_master.generatetoaddress(COINBASE_MATURITY + 1, v18_2_address)
+        self.generatetoaddress(node_master, COINBASE_MATURITY + 1, v18_2_address)
         self.dumb_sync_blocks()
         v18_2_balance = v18_2_wallet.getbalance()
 

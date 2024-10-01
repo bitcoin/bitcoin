@@ -91,7 +91,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         #############################
         # Now start testing quorum commitment merkle roots
 
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         oldhash = self.nodes[0].getbestblockhash()
 
         # Test DIP8 activation once with a pre-existing quorum and once without (we don't know in which order it will activate on mainnet)
@@ -248,7 +248,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         self.log.info("Wait for dip0008 activation")
         while self.nodes[0].getblockcount() < DIP0008_HEIGHT:
             self.bump_mocktime(10)
-            self.nodes[0].generate(10)
+            self.generate(self.nodes[0], 10)
             if slow_mode:
                 self.sync_blocks()
         self.sync_blocks()
@@ -301,7 +301,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
                     break
             if not found_unconfirmed:
                 break
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
         self.sync_blocks()
 
 if __name__ == '__main__':

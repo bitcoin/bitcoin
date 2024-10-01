@@ -145,7 +145,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
-        self.wallet.generate(101)
+        self.generate(self.wallet, 101)
 
         self.test_uncache()
         self.test_add_spent()
@@ -235,7 +235,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
         # mining, we invalidate the block, start the tracing, and then trace the cache
         # changes to the active utxo cache.
         self.log.info("mine and invalidate a block that is later reconsidered")
-        block_hash = self.wallet.generate(1)[0]
+        block_hash = self.generate(self.wallet, 1)[0]
         self.nodes[0].invalidateblock(block_hash)
 
         self.log.info(
@@ -385,7 +385,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
 
         BLOCKS_TO_MINE = 450
         self.log.info(f"mine {BLOCKS_TO_MINE} blocks to be able to prune")
-        self.wallet.generate(BLOCKS_TO_MINE)
+        self.generate(self.wallet, BLOCKS_TO_MINE)
         # we added BLOCKS_TO_MINE coinbase UTXOs to the cache
         possible_cache_sizes = {BLOCKS_TO_MINE}
         expected_flushes.append(

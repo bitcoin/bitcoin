@@ -198,7 +198,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.miniwallet = MiniWallet(self.nodes[0], mode=MiniWalletMode.RAW_P2PK)
 
         self.log.info("Generate blocks in the past for coinbase outputs.")
-        self.coinbase_blocks = self.miniwallet.generate(COINBASE_BLOCK_COUNT)  # blocks generated for inputs
+        self.coinbase_blocks = self.generate(self.miniwallet, COINBASE_BLOCK_COUNT)  # blocks generated for inputs
         # set time so that there was enough time to build up to 1000 blocks 10 minutes apart on top of the last one
         # without worrying about getting into the future
         self.nodes[0].setmocktime(TIME_GENESIS_BLOCK + 600 * 1000 + 100)
@@ -246,7 +246,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         bip113input = self.send_generic_input_tx(self.coinbase_blocks)
 
         self.nodes[0].setmocktime(self.last_block_time + 600)
-        inputblockhash = self.nodes[0].generate(1)[0]  # 1 block generated for inputs to be in chain at height 431
+        inputblockhash = self.generate(self.nodes[0], 1)[0]  # 1 block generated for inputs to be in chain at height 431
         self.nodes[0].setmocktime(TIME_GENESIS_BLOCK + 600 * 1000 + 100)
         self.tip = int(inputblockhash, 16)
         self.tipheight += 1

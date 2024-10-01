@@ -71,7 +71,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         self.mine_cycle_quorum(llmq_type_name='llmq_test_dip0024', llmq_type=103)
 
         # mine single block, wait for chainlock
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
         self.test_chainlock_overrides_islock(False)
@@ -118,7 +118,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         cl = self.create_chainlock(self.nodes[0].getblockcount() + 1, block)
 
         if mine_confllicting:
-            islock_tip = self.nodes[0].generate(1)[-1]
+            islock_tip = self.generate(self.nodes[0], 1)[-1]
             # Make sure we won't sent clsig too early
             self.sync_blocks()
 
@@ -223,7 +223,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
 
         # Mine the conflicting TX into a block
         good_tip = self.nodes[0].getbestblockhash()
-        self.nodes[0].generate(2)
+        self.generate(self.nodes[0], 2)
         self.sync_all()
 
         # Assert that the conflicting tx got mined and the locked TX is not valid
@@ -255,7 +255,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         # Should not allow competing txes now
         assert_raises_rpc_error(-26, "tx-txlock-conflict", self.nodes[0].sendrawtransaction, rawtx1)
 
-        islock_tip = self.nodes[0].generate(1)[0]
+        islock_tip = self.generate(self.nodes[0], 1)[0]
         self.sync_all()
 
         for node in self.nodes:

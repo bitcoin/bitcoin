@@ -120,9 +120,9 @@ class PruneTest(BitcoinTestFramework):
 
     def create_big_chain(self):
         # Start by creating some coinbases we can spend later
-        self.nodes[1].generate(200)
+        self.generate(self.nodes[1], 200)
         self.sync_blocks(self.nodes[0:2])
-        self.nodes[0].generate(150)
+        self.generate(self.nodes[0], 150)
 
         # Then mine enough full blocks to create more than 550MiB of data
         mine_large_blocks(self.nodes[0], 645)
@@ -214,13 +214,13 @@ class PruneTest(BitcoinTestFramework):
         self.log.info("New best height: %d" % self.nodes[1].getblockcount())
 
         # Mine one block to avoid automatic recovery from forks on restart
-        self.nodes[1].generate(1)
+        self.generate(self.nodes[1], 1)
         # Disconnect node1 and generate the new chain
         self.disconnect_nodes(0, 1)
         self.disconnect_nodes(1, 2)
 
         self.log.info("Generating new longer chain of 300 more blocks")
-        self.nodes[1].generate(299)
+        self.generate(self.nodes[1], 299)
 
         self.log.info("Reconnect nodes")
         self.connect_nodes(0, 1)
@@ -272,7 +272,7 @@ class PruneTest(BitcoinTestFramework):
             self.nodes[0].invalidateblock(curchainhash)
             assert_equal(self.nodes[0].getblockcount(), self.mainchainheight)
             assert_equal(self.nodes[0].getbestblockhash(), self.mainchainhash2)
-            goalbesthash = self.nodes[0].generate(blocks_to_mine)[-1]
+            goalbesthash = self.generate(self.nodes[0], blocks_to_mine)[-1]
             goalbestheight = first_reorg_height + 1
 
         self.log.info("Verify node 2 reorged back to the main chain, some blocks of which it had to redownload")
@@ -315,7 +315,7 @@ class PruneTest(BitcoinTestFramework):
         assert_equal(block1_details["nTx"], len(block1_details["tx"]))
 
         # mine 6 blocks so we are at height 1001 (i.e., above PruneAfterHeight)
-        node.generate(6)
+        self.generate(node, 6)
         assert_equal(node.getblockchaininfo()["blocks"], 1001)
 
         # prune parameter in the future (block or timestamp) should raise an exception
@@ -353,7 +353,7 @@ class PruneTest(BitcoinTestFramework):
         assert has_block(2), "blk00002.dat is still there, should be pruned by now"
 
         # advance the tip so blk00002.dat and blk00003.dat can be pruned (the last 288 blocks should now be in blk00004.dat)
-        node.generate(288)
+        self.generate(node, 288)
         prune(1000)
         assert not has_block(2), "blk00002.dat is still there, should be pruned by now"
         assert not has_block(3), "blk00003.dat is still there, should be pruned by now"

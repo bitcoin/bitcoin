@@ -27,11 +27,11 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("Mine 4 blocks on Node 0")
-        self.nodes[0].generate(4)
+        self.generate(self.nodes[0], 4)
         assert_equal(self.nodes[0].getblockcount(), 204)
 
         self.log.info("Mine competing 3 blocks on Node 1")
-        self.nodes[1].generate(3)
+        self.generate(self.nodes[1], 3)
         assert_equal(self.nodes[1].getblockcount(), 203)
         short_tip = self.nodes[1].getbestblockhash()
 

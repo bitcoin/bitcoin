@@ -64,7 +64,7 @@ class NotificationsTest(DashTestFramework):
 
         self.log.info("test -blocknotify")
         block_count = 10
-        blocks = self.nodes[1].generatetoaddress(block_count, self.nodes[1].getnewaddress() if self.is_wallet_compiled() else ADDRESS_BCRT1_UNSPENDABLE)
+        blocks = self.generatetoaddress(self.nodes[1], block_count, self.nodes[1].getnewaddress() if self.is_wallet_compiled() else ADDRESS_BCRT1_UNSPENDABLE)
 
         # wait at most 10 seconds for expected number of files before reading the content
         self.wait_until(lambda: len(os.listdir(self.blocknotify_dir)) == block_count, timeout=10)
@@ -116,7 +116,7 @@ class NotificationsTest(DashTestFramework):
 
         self.log.info("Mine single block, wait for chainlock")
         self.bump_mocktime(1)
-        tip = self.nodes[0].generate(1)[-1]
+        tip = self.generate(self.nodes[0], 1)[-1]
         self.wait_for_chainlocked_block_all_nodes(tip)
         # directory content should equal the chainlocked block hash
         assert_equal([tip], sorted(os.listdir(self.chainlocknotify_dir)))

@@ -23,7 +23,7 @@ class RPCMasternodeTest(DashTestFramework):
         checked_0_operator_reward = False
         checked_non_0_operator_reward = False
         while not checked_0_operator_reward or not checked_non_0_operator_reward:
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
             bi = self.nodes[0].getblockchaininfo()
             height = bi["blocks"]
             blockhash = bi["bestblockhash"]
@@ -59,7 +59,7 @@ class RPCMasternodeTest(DashTestFramework):
 
         self.log.info("test that `masternode payments` results at chaintip match `getblocktemplate` results for that block")
         gbt_masternode = self.nodes[0].getblocktemplate()["masternode"]
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         payments_masternode = self.nodes[0].masternode("payments")[0]["masternodes"][0]
         for i in range(0, len(gbt_masternode)):
             assert_equal(gbt_masternode[i]["payee"], payments_masternode["payees"][i]["address"])
@@ -84,13 +84,13 @@ class RPCMasternodeTest(DashTestFramework):
                     protx_info["state"]["operatorPayoutAddress"] == payments_masternode["payees"][0]["address"]
                 assert option1 or option2
                 checked_non_0_operator_reward = True
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
 
         self.log.info("test that `masternode outputs` show correct list")
         addr1 = self.nodes[0].getnewaddress()
         addr2 = self.nodes[0].getnewaddress()
         self.nodes[0].sendmany('', {addr1: 1000, addr2: 1000})
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         # we have 3 masternodes that are running already and 2 new outputs we just created
         assert_equal(len(self.nodes[0].masternode("outputs")), 5)
 

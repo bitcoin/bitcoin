@@ -48,7 +48,7 @@ class WalletChangeAddressTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info("Setting up")
         # Mine some coins
-        self.nodes[0].generate(COINBASE_MATURITY + 1)
+        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
 
         # Get some addresses from the two nodes
         addr1 = [self.nodes[1].getnewaddress() for _ in range(3)]
@@ -58,7 +58,7 @@ class WalletChangeAddressTest(BitcoinTestFramework):
         # Send 1 + 0.5 coin to each address
         [self.nodes[0].sendtoaddress(addr, 10) for addr in addrs]
         [self.nodes[0].sendtoaddress(addr, 5) for addr in addrs]
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
 
         for i in range(20):
             for n in [1, 2]:

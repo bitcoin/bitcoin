@@ -120,7 +120,7 @@ class ValidationTracepointTest(BitcoinTestFramework):
             handle_blockconnected)
 
         self.log.info(f"mine {BLOCKS_EXPECTED} blocks")
-        block_hashes = self.nodes[0].generatetoaddress(
+        block_hashes = self.generatetoaddress(self.nodes[0],
             BLOCKS_EXPECTED, ADDRESS_BCRT1_UNSPENDABLE)
         for block_hash in block_hashes:
             expected_blocks[block_hash] = self.nodes[0].getblock(block_hash, 2)

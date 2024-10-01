@@ -44,7 +44,7 @@ class LLMQConnections(DashTestFramework):
         self.wait_for_sporks_same()
 
         self.log.info("mining one block and waiting for all members to connect to each other")
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         for mn in self.get_quorum_masternodes(q):
             self.wait_for_mnauth(mn.node, 4)
 

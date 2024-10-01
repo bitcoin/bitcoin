@@ -69,7 +69,7 @@ class DashGovernanceTest (DashTestFramework):
         n = sb_cycle - self.nodes[0].getblockcount() % sb_cycle
         for _ in range(n):
             self.bump_mocktime(156)
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
             self.sync_blocks()
 
         self.log.info("Prepare proposals")
@@ -84,7 +84,7 @@ class DashGovernanceTest (DashTestFramework):
         p1_collateral_prepare = self.prepare_object(1, uint256_to_string(0), proposal_time, 1, "Proposal_1", self.p1_amount, self.p1_payout_address)
         self.bump_mocktime(60 * 10 + 1)
 
-        self.nodes[0].generate(6)
+        self.generate(self.nodes[0], 6)
         self.bump_mocktime(6 * 156)
         self.sync_blocks()
 
@@ -116,7 +116,7 @@ class DashGovernanceTest (DashTestFramework):
         assert n >= 0
         for _ in range(n + 1):
             self.bump_mocktime(156)
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
             self.sync_blocks(self.nodes[0:5])
 
         self.log.info("Wait for new trigger and votes on non-isolated nodes")
@@ -130,7 +130,7 @@ class DashGovernanceTest (DashTestFramework):
         self.log.info("Move remaining n blocks until the next Superblock")
         for _ in range(n - 1):
             self.bump_mocktime(156)
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
             self.sync_blocks(self.nodes[0:5])
 
         # Confirm all is good
@@ -138,20 +138,20 @@ class DashGovernanceTest (DashTestFramework):
 
         self.log.info("Mine superblock")
         self.bump_mocktime(156)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks(self.nodes[0:5])
         self.wait_for_chainlocked_block(self.nodes[0], self.nodes[0].getbestblockhash())
 
         self.log.info("Mine (superblock cycle + 1) blocks on non-isolated nodes to forget about this trigger")
         for _ in range(sb_cycle):
             self.bump_mocktime(156)
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
             self.sync_blocks(self.nodes[0:5])
         # Should still have at least 1 trigger for the old sb cycle and 0 for the current one
         assert len(self.nodes[0].gobject("list", "valid", "triggers")) >= 1
         assert not have_trigger_for_height(self.nodes[0:5], sb_block_height + sb_cycle)
         self.bump_mocktime(156)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks(self.nodes[0:5])
         # Trigger scheduler to mark old triggers for deletion
         self.bump_mocktime(5 * 60)
@@ -164,7 +164,7 @@ class DashGovernanceTest (DashTestFramework):
         self.log.info("Reconnect isolated node and confirm the next ChainLock will let it sync")
         self.reconnect_isolated_node(5, 0)
         assert_equal(self.nodes[5].mnsync("status")["IsSynced"], False)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         # NOTE: bumping mocktime too much after recent reconnect can result in "timeout downloading block"
         self.bump_mocktime(1)
         self.sync_blocks()

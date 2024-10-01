@@ -84,9 +84,9 @@ class RESTTest (BitcoinTestFramework):
         # Random address so node1's balance doesn't increase
         not_related_address = "yj949n1UH6fDhw6HtVE5VMj2iSTaSWBMcW"
 
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
-        self.nodes[1].generatetoaddress(100, not_related_address)
+        self.generatetoaddress(self.nodes[1], 100, not_related_address)
         self.sync_all()
 
         assert_equal(self.nodes[0].getbalance(), 500)
@@ -117,7 +117,7 @@ class RESTTest (BitcoinTestFramework):
 
         self.log.info("Query an unspent TXO using the /getutxos URI")
 
-        self.nodes[1].generatetoaddress(1, not_related_address)
+        self.generatetoaddress(self.nodes[1], 1, not_related_address)
         self.sync_all()
         bb_hash = self.nodes[0].getbestblockhash()
 
@@ -192,7 +192,7 @@ class RESTTest (BitcoinTestFramework):
         json_obj = self.test_rest_request("/getutxos/checkmempool/{}-{}".format(*spent))
         assert_equal(len(json_obj['utxos']), 0)
 
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
 
         json_obj = self.test_rest_request("/getutxos/{}-{}".format(*spending))
@@ -213,7 +213,7 @@ class RESTTest (BitcoinTestFramework):
         long_uri = '/'.join(['{}-{}'.format(txid, n) for n in range(15)])
         self.test_rest_request("/getutxos/checkmempool/{}".format(long_uri), http_method='POST', status=200)
 
-        self.nodes[0].generate(1)  # generate block to not affect upcoming tests
+        self.generate(self.nodes[0], 1)  # generate block to not affect upcoming tests
         self.sync_all()
 
         self.log.info("Test the /block, /blockhashbyheight and /headers URIs")
@@ -284,7 +284,7 @@ class RESTTest (BitcoinTestFramework):
             assert_equal(json_obj[0][key], rpc_block_json[key])
 
         # See if we can get 5 headers in one response
-        self.nodes[1].generate(5)
+        self.generate(self.nodes[1], 5)
         self.sync_all()
         json_obj = self.test_rest_request("/headers/5/{}".format(bb_hash))
         assert_equal(len(json_obj), 5)  # now we should have 5 header objects
@@ -319,7 +319,7 @@ class RESTTest (BitcoinTestFramework):
             assert_equal(json_obj[tx]['depends'], txs[i - 1:i])
 
         # Now mine the transactions
-        newblockhash = self.nodes[1].generate(1)
+        newblockhash = self.generate(self.nodes[1], 1)
         self.sync_all()
 
         # Check if the 3 tx show up in the new block

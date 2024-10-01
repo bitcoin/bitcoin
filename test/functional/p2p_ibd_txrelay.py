@@ -66,7 +66,7 @@ class P2PIBDTxRelayTest(BitcoinTestFramework):
         self.nodes[0].disconnect_p2ps()
 
         # Come out of IBD by generating a block
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
 
         self.log.info("Check that nodes process the same transaction, even when unsolicited, when no longer in IBD")

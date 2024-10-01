@@ -86,7 +86,7 @@ class DIP3V19Test(DashTestFramework):
 
         evo_info_0 = self.dynamically_add_masternode(evo=True, rnd=7)
         assert evo_info_0 is not None
-        self.nodes[0].generate(8)
+        self.generate(self.nodes[0], 8)
         self.sync_blocks(self.nodes)
 
         self.log.info("Checking that protxs with duplicate EvoNodes fields are rejected")
@@ -97,7 +97,7 @@ class DIP3V19Test(DashTestFramework):
         assert evo_info_2 is None
         evo_info_3 = self.dynamically_add_masternode(evo=True, rnd=9)
         assert evo_info_3 is not None
-        self.nodes[0].generate(8)
+        self.generate(self.nodes[0], 8)
         self.sync_blocks(self.nodes)
         self.dynamically_evo_update_service(evo_info_0, 9, should_be_rejected=True)
 
@@ -126,13 +126,13 @@ class DIP3V19Test(DashTestFramework):
         funds_address = self.nodes[0].getnewaddress()
         fund_txid = self.nodes[0].sendtoaddress(funds_address, 1)
         self.wait_for_instantlock(fund_txid, self.nodes[0])
-        tip = self.nodes[0].generate(1)[0]
+        tip = self.generate(self.nodes[0], 1)[0]
         assert_equal(self.nodes[0].getrawtransaction(fund_txid, 1, tip)['confirmations'], 1)
         self.sync_all(self.nodes)
 
         protx_result = self.nodes[0].protx('revoke', revoke_protx, revoke_keyoperator, 1, funds_address)
         self.wait_for_instantlock(protx_result, self.nodes[0])
-        tip = self.nodes[0].generate(1)[0]
+        tip = self.generate(self.nodes[0], 1)[0]
         assert_equal(self.nodes[0].getrawtransaction(protx_result, 1, tip)['confirmations'], 1)
         # Revoking a MN results in disconnects. Wait for disconnects to actually happen
         # and then reconnect the corresponding node back to let sync_blocks finish correctly.

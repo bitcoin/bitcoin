@@ -83,7 +83,7 @@ class PSBTTest(BitcoinTestFramework):
         rawtx = self.nodes[0].fundrawtransaction(rawtx, {"changePosition":1})
         signed_tx = self.nodes[0].signrawtransactionwithwallet(rawtx['hex'])['hex']
         txid = self.nodes[0].sendrawtransaction(signed_tx)
-        self.nodes[0].generate(6)
+        self.generate(self.nodes[0], 6)
         self.sync_all()
 
         # Find the output pos
@@ -227,7 +227,7 @@ class PSBTTest(BitcoinTestFramework):
         node2_addr = self.nodes[2].getnewaddress()
         txid1 = self.nodes[0].sendtoaddress(node1_addr, 13)
         txid2 = self.nodes[0].sendtoaddress(node2_addr, 13)
-        blockhash = self.nodes[0].generate(6)[0]
+        blockhash = self.generate(self.nodes[0], 6)[0]
         self.sync_all()
         vout1 = find_output(self.nodes[1], txid1, 13, blockhash=blockhash)
         vout2 = find_output(self.nodes[2], txid2, 13, blockhash=blockhash)
@@ -255,7 +255,7 @@ class PSBTTest(BitcoinTestFramework):
         combined = self.nodes[0].combinepsbt([psbt1, psbt2])
         finalized = self.nodes[0].finalizepsbt(combined)['hex']
         self.nodes[0].sendrawtransaction(finalized)
-        self.nodes[0].generate(6)
+        self.generate(self.nodes[0], 6)
         self.sync_all()
 
         # Make sure change address wallet does not have P2SH innerscript access to results in success
@@ -394,7 +394,7 @@ class PSBTTest(BitcoinTestFramework):
         addr4 = self.nodes[1].getnewaddress()
         txid4 = self.nodes[0].sendtoaddress(addr4, 5)
         vout4 = find_output(self.nodes[0], txid4, 5)
-        self.nodes[0].generate(6)
+        self.generate(self.nodes[0], 6)
         self.sync_all()
         psbt2 = self.nodes[1].createpsbt([{"txid":txid4, "vout":vout4}], {self.nodes[0].getnewaddress():Decimal('4.999')})
         psbt2 = self.nodes[1].walletprocesspsbt(psbt2)['psbt']
@@ -407,7 +407,7 @@ class PSBTTest(BitcoinTestFramework):
         # Newly created PSBT needs UTXOs and updating
         addr = self.nodes[1].getnewaddress()
         txid = self.nodes[0].sendtoaddress(addr, 7)
-        self.nodes[0].generate(6)
+        self.generate(self.nodes[0], 6)
         self.sync_all()
         vout = find_output(self.nodes[0], txid, 7)
         psbt = self.nodes[1].createpsbt([{"txid":txid, "vout":vout}], {self.nodes[0].getnewaddress():Decimal('6.999')})

@@ -63,7 +63,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.import_deterministic_coinbase_privkeys()
 
     def run_test(self):
-        self.nodes[0].generatetoaddress(101, self.nodes[0].getnewaddress())
+        self.generatetoaddress(self.nodes[0], 101, self.nodes[0].getnewaddress())
 
         self.sync_blocks()
 
@@ -92,7 +92,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         address = wallet.getnewaddress()
         self.nodes[0].sendtoaddress(address, 1)
         self.sync_mempools()
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks()
 
         # w1_v19: regular wallet, created with v0.19

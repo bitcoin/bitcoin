@@ -44,7 +44,7 @@ class RPCVerifyISLockTest(DashTestFramework):
 
         self.mine_cycle_quorum(llmq_type_name='llmq_test_dip0024', llmq_type=103)
         self.bump_mocktime(1)
-        self.nodes[0].generate(8)
+        self.generate(self.nodes[0], 8)
         self.sync_blocks()
 
         txid = node.sendtoaddress(node.getnewaddress(), 1)
@@ -57,7 +57,7 @@ class RPCVerifyISLockTest(DashTestFramework):
         assert node.verifyislock(request_id, txid, rec_sig)
         # Not mined, should use maxHeight
         assert not node.verifyislock(request_id, txid, rec_sig, 1)
-        node.generate(1)
+        self.generate(node, 1)
         assert txid not in node.getrawmempool()
         # Mined but at higher height, should use maxHeight
         assert not node.verifyislock(request_id, txid, rec_sig, 1)

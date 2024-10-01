@@ -46,7 +46,7 @@ class TimestampIndexTest(BitcoinTestFramework):
         self.sync_all()
 
         self.log.info("Mining 5 blocks...")
-        blockhashes = self.nodes[0].generate(5)
+        blockhashes = self.generate(self.nodes[0], 5)
         low = self.nodes[0].getblock(blockhashes[0])["time"]
         high = self.nodes[0].getblock(blockhashes[4])["time"]
         self.sync_all()

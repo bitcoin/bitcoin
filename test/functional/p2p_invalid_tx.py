@@ -76,7 +76,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         node.p2ps[0].send_blocks_and_test([block1, block2], node, success=True)
 
         self.log.info("Mature the block.")
-        self.nodes[0].generatetoaddress(100, self.nodes[0].get_deterministic_priv_key().address)
+        self.generatetoaddress(self.nodes[0], 100, self.nodes[0].get_deterministic_priv_key().address)
 
         # Iterate through a list of known invalid transaction types, ensuring each is
         # rejected. Some are consensus invalid and some just violate policy.

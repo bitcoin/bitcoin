@@ -38,7 +38,7 @@ class TxIndexTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("Mining blocks...")
-        self.nodes[0].generate(105)
+        self.generate(self.nodes[0], 105)
         self.sync_all()
 
         chain_height = self.nodes[1].getblockcount()
@@ -58,7 +58,7 @@ class TxIndexTest(BitcoinTestFramework):
 
         signed_tx = self.nodes[0].signrawtransactionwithwallet(tx.serialize().hex())
         txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], 0)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
 
         # Check verbose raw transaction results

@@ -107,7 +107,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
         if skip_count != 0:
             self.bump_mocktime(skip_count, nodes=nodes)
-            self.nodes[0].generate(skip_count)
+            self.generate(self.nodes[0], skip_count)
         self.sync_blocks(nodes)
 
         q = self.nodes[0].getbestblockhash()
@@ -141,7 +141,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.log.info("Mining final commitment")
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].getblocktemplate() # this calls CreateNewBlock
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for quorum to appear in the list")
@@ -153,7 +153,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
         # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligible for signing sessions
         self.bump_mocktime(8)
-        self.nodes[0].generate(8)
+        self.generate(self.nodes[0], 8)
         self.sync_blocks(nodes)
         self.log.info("New quorum: height=%d, quorumHash=%s, quorumIndex=%d, minedBlock=%s" % (quorum_info["height"], new_quorum, quorum_info["quorumIndex"], quorum_info["minedBlock"]))
 
@@ -213,7 +213,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
         # Make sure protxes are "safe" to mine even when InstantSend and ChainLocks are no longer functional
         self.bump_mocktime(60 * 10 + 1)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
 
         # Isolate and re-connect all MNs (otherwise there might be open connections with no MNAUTH for MNs which were banned before)

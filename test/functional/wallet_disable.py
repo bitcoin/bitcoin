@@ -28,8 +28,8 @@ class DisableWalletTest (BitcoinTestFramework):
 
         # Checking mining to an address without a wallet. Generating to a valid address should succeed
         # but generating to an invalid address will fail.
-        self.nodes[0].generatetoaddress(1, 'ycwedq2f3sz2Yf9JqZsBCQPxp18WU3Hp4J')
-        assert_raises_rpc_error(-5, "Invalid address", self.nodes[0].generatetoaddress, 1, '7TSBtVu959hGEGPKyHjJz9k55RpWrPffXz')
+        self.generatetoaddress(self.nodes[0], 1, 'ycwedq2f3sz2Yf9JqZsBCQPxp18WU3Hp4J')
+        assert_raises_rpc_error(-5, "Invalid address", self.generatetoaddress, self.nodes[0], 1, '7TSBtVu959hGEGPKyHjJz9k55RpWrPffXz')
 
 if __name__ == '__main__':
     DisableWalletTest ().main ()

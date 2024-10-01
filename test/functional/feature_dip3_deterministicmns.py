@@ -49,7 +49,7 @@ class DIP3Test(BitcoinTestFramework):
     def run_test(self):
         self.log.info("funding controller node")
         while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 1000:
-            self.nodes[0].generate(10) # generate enough for collaterals
+            self.generate(self.nodes[0], 10) # generate enough for collaterals
         self.log.info("controller node has {} dash".format(self.nodes[0].getbalance()))
 
         # Make sure we're below block 135 (which activates dip3)
@@ -65,11 +65,11 @@ class DIP3Test(BitcoinTestFramework):
         mns.append(before_dip3_mn)
 
         # block 150 starts enforcing DIP3 MN payments
-        self.nodes[0].generate(150 - self.nodes[0].getblockcount())
+        self.generate(self.nodes[0], 150 - self.nodes[0].getblockcount())
         assert self.nodes[0].getblockcount() == 150
 
         self.log.info("mining final block for DIP3 activation")
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
 
         # We have hundreds of blocks to sync here, give it more time
         self.log.info("syncing blocks for all nodes")
@@ -101,7 +101,7 @@ class DIP3Test(BitcoinTestFramework):
                 self.log.info("register %s" % mn.alias)
                 self.register_mn(self.nodes[0], mn)
 
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
 
             if not start:
                 self.start_mn(mn)
@@ -125,7 +125,7 @@ class DIP3Test(BitcoinTestFramework):
             assert_equal(rpc_collateral_address, old_collateral_address)
             dummy_txin = self.spend_mn_collateral(mns[i], with_dummy_input_output=True)
             dummy_txins.append(dummy_txin)
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
             self.sync_all()
             mns_tmp.remove(mns[i])
             self.assert_mnlists(mns_tmp)
@@ -144,7 +144,7 @@ class DIP3Test(BitcoinTestFramework):
 
         self.log.info("cause a reorg with a double spend and check that mnlists are still correct on all nodes")
         self.mine_double_spend(mns, self.nodes[0], dummy_txins, self.nodes[0].getnewaddress())
-        self.nodes[0].generate(spend_mns_count)
+        self.generate(self.nodes[0], spend_mns_count)
         self.sync_all()
         self.assert_mnlists(mns_tmp)
 
@@ -152,7 +152,7 @@ class DIP3Test(BitcoinTestFramework):
         for i in range(20):
             node = self.nodes[i % len(self.nodes)]
             self.test_invalid_mn_payment(mns, node)
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
             self.sync_all()
 
         self.log.info("testing ProUpServTx")
@@ -175,7 +175,7 @@ class DIP3Test(BitcoinTestFramework):
             bt = self.nodes[0].getblocktemplate()
             expected_payee = bt['masternode'][0]['payee']
             expected_amount = bt['masternode'][0]['amount']
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
             self.sync_all()
             if expected_payee == multisig:
                 block = self.nodes[0].getblock(self.nodes[0].getbestblockhash())
@@ -198,7 +198,7 @@ class DIP3Test(BitcoinTestFramework):
 
             self.register_mn(self.nodes[0], new_mn)
             mns[i] = new_mn
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
             self.sync_all()
             self.assert_mnlists(mns)
             self.log.info("restarting MN %s" % new_mn.alias)
@@ -217,7 +217,7 @@ class DIP3Test(BitcoinTestFramework):
         # also check if funds from payout address are used when no fee source address is specified
         node.sendtoaddress(mn.rewards_address, 0.001)
         node.protx('update_registrar', mn.protx_hash, "", new_voting_address, "")
-        node.generate(1)
+        self.generate(node, 1)
         self.sync_all()
         new_dmnState = mn.node.masternode("status")["dmnState"]
         new_voting_address_from_rpc = new_dmnState["votingAddress"]
@@ -245,7 +245,7 @@ class DIP3Test(BitcoinTestFramework):
         mn.collateral_address = node.getnewaddress()
         mn.collateral_txid = node.sendtoaddress(mn.collateral_address, 1000)
         mn.collateral_vout = None
-        node.generate(1)
+        self.generate(node, 1)
 
         rawtx = node.getrawtransaction(mn.collateral_txid, 1)
         for txout in rawtx['vout']:
@@ -277,7 +277,7 @@ class DIP3Test(BitcoinTestFramework):
         mn.rewards_address = node.getnewaddress()
 
         mn.protx_hash = node.protx('register', mn.collateral_txid, mn.collateral_vout, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, mn.operator_reward, mn.rewards_address, mn.fundsAddr)
-        node.generate(1)
+        self.generate(node, 1)
 
     def start_mn(self, mn):
         if len(self.nodes) <= mn.idx:
@@ -295,7 +295,7 @@ class DIP3Test(BitcoinTestFramework):
     def update_mn_payee(self, mn, payee):
         self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)
         self.nodes[0].protx('update_registrar', mn.protx_hash, '', '', payee, mn.fundsAddr)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
         info = self.nodes[0].protx('info', mn.protx_hash)
         assert info['state']['payoutAddress'] == payee
@@ -303,7 +303,7 @@ class DIP3Test(BitcoinTestFramework):
     def test_protx_update_service(self, mn):
         self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)
         self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.2:%d' % mn.p2p_port, mn.blsMnkey, "", mn.fundsAddr)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
         for node in self.nodes:
             protx_info = node.protx('info', mn.protx_hash)
@@ -313,7 +313,7 @@ class DIP3Test(BitcoinTestFramework):
 
         # undo
         self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.1:%d' % mn.p2p_port, mn.blsMnkey, "", mn.fundsAddr)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
 
     def assert_mnlists(self, mns):
         for node in self.nodes:

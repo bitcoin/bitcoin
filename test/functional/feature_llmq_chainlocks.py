@@ -38,7 +38,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.test_coinbase_best_cl(self.nodes[0], expected_cl_in_cb=False)
 
         # v20 is active, no quorums, no CLs - null CL in CbTx
-        nocl_block_hash = self.nodes[0].generate(1)[0]
+        nocl_block_hash = self.generate(self.nodes[0], 1)[0]
         self.test_coinbase_best_cl(self.nodes[0], expected_cl_in_cb=True, expected_null_cl=True)
         cbtx = self.nodes[0].getspecialtxes(nocl_block_hash, 5, 1, 0, 2)[0]
         assert_equal(cbtx["instantlock"], False)
@@ -59,7 +59,7 @@ class LLMQChainLocksTest(DashTestFramework):
 
 
         self.log.info("Mine single block, wait for chainlock")
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
         self.test_coinbase_best_cl(self.nodes[0])
 
@@ -70,7 +70,7 @@ class LLMQChainLocksTest(DashTestFramework):
         assert_equal(cbtx["chainlock"], True)
 
         self.log.info("Mine many blocks, wait for chainlock")
-        self.nodes[0].generate(20)
+        self.generate(self.nodes[0], 20)
         # We need more time here due to 20 blocks being generated at once
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash(), timeout=30)
         self.test_coinbase_best_cl(self.nodes[0])
@@ -90,7 +90,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Generate new blocks and verify that they are not chainlocked")
         previous_block_hash = self.nodes[0].getbestblockhash()
         for _ in range(2):
-            block_hash = self.nodes[0].generate(1)[0]
+            block_hash = self.generate(self.nodes[0], 1)[0]
             self.wait_for_chainlocked_block_all_nodes(block_hash, expected=False)
             assert self.nodes[0].getblock(previous_block_hash)["chainlock"]
 
@@ -101,18 +101,18 @@ class LLMQChainLocksTest(DashTestFramework):
         self.isolate_node(0)
         node0_mining_addr = self.nodes[0].getnewaddress()
         node0_tip = self.nodes[0].getbestblockhash()
-        self.nodes[1].generatetoaddress(5, node0_mining_addr)
+        self.generatetoaddress(self.nodes[1], 5, node0_mining_addr)
         self.wait_for_chainlocked_block(self.nodes[1], self.nodes[1].getbestblockhash())
         self.test_coinbase_best_cl(self.nodes[0])
         assert self.nodes[0].getbestblockhash() == node0_tip
         self.reconnect_isolated_node(0, 1)
-        self.nodes[1].generatetoaddress(1, node0_mining_addr)
+        self.generatetoaddress(self.nodes[1], 1, node0_mining_addr)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[1].getbestblockhash())
         self.test_coinbase_best_cl(self.nodes[0])
 
         self.log.info("Isolate node, mine on another, reconnect and submit CL via RPC")
         self.isolate_node(0)
-        self.nodes[1].generate(1)
+        self.generate(self.nodes[1], 1)
         self.wait_for_chainlocked_block(self.nodes[1], self.nodes[1].getbestblockhash())
         best_0 = self.nodes[0].getbestchainlock()
         best_1 = self.nodes[1].getbestchainlock()
@@ -134,13 +134,13 @@ class LLMQChainLocksTest(DashTestFramework):
 
         self.log.info("Isolate node, mine on both parts of the network, and reconnect")
         self.isolate_node(0)
-        bad_tip = self.nodes[0].generate(5)[-1]
-        self.nodes[1].generatetoaddress(1, node0_mining_addr)
+        bad_tip = self.generate(self.nodes[0], 5)[-1]
+        self.generatetoaddress(self.nodes[1], 1, node0_mining_addr)
         good_tip = self.nodes[1].getbestblockhash()
         self.wait_for_chainlocked_block(self.nodes[1], good_tip)
         assert not self.nodes[0].getblock(self.nodes[0].getbestblockhash())["chainlock"]
         self.reconnect_isolated_node(0, 1)
-        self.nodes[1].generatetoaddress(1, node0_mining_addr)
+        self.generatetoaddress(self.nodes[1], 1, node0_mining_addr)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[1].getbestblockhash())
         self.test_coinbase_best_cl(self.nodes[0])
         assert self.nodes[0].getblock(self.nodes[0].getbestblockhash())["previousblockhash"] == good_tip
@@ -163,10 +163,10 @@ class LLMQChainLocksTest(DashTestFramework):
         assert self.nodes[0].getbestblockhash() == good_tip
         self.nodes[0].invalidateblock(good_tip)
         self.log.info("Now try to reorg the chain")
-        self.nodes[0].generate(2)
+        self.generate(self.nodes[0], 2)
         time.sleep(6)
         assert self.nodes[1].getbestblockhash() == good_tip
-        bad_tip = self.nodes[0].generate(2)[-1]
+        bad_tip = self.generate(self.nodes[0], 2)[-1]
         time.sleep(6)
         assert self.nodes[0].getbestblockhash() == bad_tip
         assert self.nodes[1].getbestblockhash() == good_tip
@@ -175,7 +175,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.nodes[0].reconsiderblock(good_tip)
         assert self.nodes[0].getbestblockhash() != good_tip
         good_fork = good_tip
-        good_tip = self.nodes[1].generatetoaddress(1, node0_mining_addr)[-1]  # this should mark bad_tip as conflicting
+        good_tip = self.generatetoaddress(self.nodes[1], 1, node0_mining_addr)[-1]  # this should mark bad_tip as conflicting
         self.wait_for_chainlocked_block_all_nodes(good_tip)
         self.test_coinbase_best_cl(self.nodes[0])
         assert self.nodes[0].getbestblockhash() == good_tip
@@ -203,7 +203,7 @@ class LLMQChainLocksTest(DashTestFramework):
             txs.append(self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1))
         txs += self.create_chained_txs(self.nodes[0], 1)
         self.log.info("Assert that after block generation these TXs are NOT included (as they are \"unsafe\")")
-        node0_tip = self.nodes[0].generate(1)[-1]
+        node0_tip = self.generate(self.nodes[0], 1)[-1]
         for txid in txs:
             tx = self.nodes[0].getrawtransaction(txid, 1)
             assert "confirmations" not in tx
@@ -214,7 +214,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Disable LLMQ based InstantSend for a very short time (this never gets propagated to other nodes)")
         self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 4070908800)
         self.log.info("Now the TXs should be included")
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 0)
         self.log.info("Assert that TXs got included now")
         for txid in txs:
@@ -238,7 +238,7 @@ class LLMQChainLocksTest(DashTestFramework):
 
             self.log.info("Test that new node can mine without Chainlock info")
             tip_0 = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)
-            self.nodes[added_idx].generate(1)
+            self.generate(self.nodes[added_idx], 1)
             self.sync_blocks(self.nodes)
             tip_1 = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)
             assert_equal(tip_1['cbTx']['bestCLSignature'], tip_0['cbTx']['bestCLSignature'])
@@ -297,12 +297,12 @@ class LLMQChainLocksTest(DashTestFramework):
     def test_bestCLHeightDiff(self, mn_rr_active):
         # We need 2 blocks we can grab clsigs from
         for _ in range(2):
-            self.wait_for_chainlocked_block_all_nodes(self.nodes[0].generate(1)[0])
+            self.wait_for_chainlocked_block_all_nodes(self.generate(self.nodes[0], 1)[0])
         assert_equal(softfork_active(self.nodes[1], "mn_rr"), mn_rr_active)
         tip1_hash = self.nodes[1].getbestblockhash()
 
         self.isolate_node(1)
-        tip0_hash = self.nodes[0].generate(1)[0]
+        tip0_hash = self.generate(self.nodes[0], 1)[0]
         block_hex = self.nodes[0].getblock(tip0_hash, 0)
         mal_block = CBlock()
         mal_block.deserialize(BytesIO(bytes.fromhex(block_hex)))

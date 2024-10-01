@@ -89,7 +89,7 @@ class LLMQEvoNodesTest(DashTestFramework):
         for i in range(self.evo_count):
             evo_info = self.dynamically_add_masternode(evo=True)
             evo_protxhash_list.append(evo_info.proTxHash)
-            self.nodes[0].generate(8)
+            self.generate(self.nodes[0], 8)
             self.sync_blocks(self.nodes)
 
             expectedUpdated.append(evo_info.proTxHash)
@@ -116,7 +116,7 @@ class LLMQEvoNodesTest(DashTestFramework):
 
         # Generate a few blocks to make EvoNode/MN analysis on a pure MN RewardReallocation window
         self.bump_mocktime(1)
-        self.nodes[0].generate(4)
+        self.generate(self.nodes[0], 4)
         self.sync_blocks()
 
         self.log.info("Test that EvoNodes are paid 1 block in a row after MN RewardReallocation activation")
@@ -167,7 +167,7 @@ class LLMQEvoNodesTest(DashTestFramework):
                 current_evo = None
                 consecutive_payments = 0
 
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
             if i % 8 == 0:
                 self.sync_blocks()
 
@@ -215,7 +215,7 @@ class LLMQEvoNodesTest(DashTestFramework):
         collateral_amount = 4000
         outputs = {collateral_address: collateral_amount, funds_address: 1}
         collateral_txid = self.nodes[0].sendmany("", outputs)
-        self.nodes[0].generate(8)
+        self.generate(self.nodes[0], 8)
         self.sync_all(self.nodes)
 
         rawtx = self.nodes[0].getrawtransaction(collateral_txid, 1)

@@ -79,7 +79,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         self.test_persistence()
         self.test_immutable()
 
-        self.nodes[0].generate(110)
+        self.generate(self.nodes[0], 110)
         self.sync_all()
         self.test_change_remains_change(self.nodes[1])
         reset_balance(self.nodes[1], self.nodes[0].getnewaddress())
@@ -171,7 +171,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         retaddr = self.nodes[0].getnewaddress()
 
         self.nodes[0].sendtoaddress(fundaddr, 10)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
 
         # listunspent should show 1 single, unused 10 btc output
@@ -182,7 +182,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         assert("used" not in self.nodes[0].getbalances()["mine"])
 
         self.nodes[1].sendtoaddress(retaddr, 5)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
 
         # listunspent should show 1 single, unused 5 btc output
@@ -191,7 +191,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         assert_balances(self.nodes[1], mine={"used": 0, "trusted": 5})
 
         self.nodes[0].sendtoaddress(fundaddr, 10)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
 
         # listunspent should show 2 total outputs (5, 10 btc), one unused (5), one reused (10)
@@ -225,7 +225,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         retaddr = self.nodes[0].getnewaddress()
 
         self.nodes[0].sendtoaddress(fundaddr, 10)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
 
         # listunspent should show 1 single, unused 10 btc output
@@ -234,7 +234,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         assert_balances(self.nodes[1], mine={"used": 0, "trusted": 10})
 
         self.nodes[1].sendtoaddress(retaddr, 5)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
 
         # listunspent should show 1 single, unused 5 btc output
@@ -244,7 +244,7 @@ class AvoidReuseTest(BitcoinTestFramework):
 
         if not self.options.descriptors:
             self.nodes[0].sendtoaddress(fundaddr, 10)
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
             self.sync_all()
 
             # listunspent should show 2 total outputs (5, 10 btc), one unused (5), one reused (10)
@@ -287,7 +287,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         for _ in range(101):
             self.nodes[0].sendtoaddress(new_addr, 1)
 
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
 
         # send transaction that should not use all the available outputs
@@ -319,7 +319,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         for _ in range(101):
             self.nodes[0].sendtoaddress(new_addr, 1)
 
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
 
         # Sending a transaction that is smaller than each one of the
@@ -348,7 +348,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         for _ in range(202):
             self.nodes[0].sendtoaddress(new_addr, 1)
 
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.sync_all()
 
         # Sending a transaction that needs to use the full groups

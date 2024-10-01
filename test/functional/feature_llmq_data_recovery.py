@@ -46,7 +46,7 @@ class QuorumDataRecoveryTest(DashTestFramework):
         self.connect_nodes(mn.node.index, 0)
         if qdata_recovery_enabled:
             # trigger recovery threads and wait for them to start
-            self.nodes[0].generate(1)
+            self.generate(self.nodes[0], 1)
 
             self.bump_mocktime(self.quorum_data_thread_request_timeout_seconds + 1)
             time.sleep(1)
@@ -177,14 +177,14 @@ class QuorumDataRecoveryTest(DashTestFramework):
         self.test_mns(llmq_test_v17, quorum_hash_recover, valid_mns=[last_resort_v17], all_mns=member_mns_recover_v17)
         # If recovery would be enabled it would trigger after the mocktime bump / mined block
         self.bump_mocktime(self.quorum_data_request_expiration_timeout + 1)
-        node.generate(1)
+        self.generate(node, 1)
         time.sleep(10)
         # Make sure they are still invalid
         self.test_mns(llmq_test, quorum_hash_recover, valid_mns=[last_resort_test], all_mns=member_mns_recover_test)
         self.test_mns(llmq_test_v17, quorum_hash_recover, valid_mns=[last_resort_v17], all_mns=member_mns_recover_v17)
         # Mining a block should not result in a chainlock now because the responsible quorum shouldn't have enough
         # valid members.
-        self.wait_for_chainlocked_block(node, node.generate(1)[0], False, 5)
+        self.wait_for_chainlocked_block(node, self.generate(node, 1)[0], False, 5)
         # Now restart with recovery enabled
         self.restart_mns(mns=recover_members, exclude=exclude_members, reindex=True, qdata_recovery_enabled=True)
         # Validate that all invalid members recover. Note: recover=True leads to mocktime bumps and mining while waiting

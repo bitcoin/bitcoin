@@ -18,9 +18,9 @@ class WipeWalletTxesTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("Test that wipewallettxes removes txes and rescanblockchain is able to recover them")
-        self.nodes[0].generate(101)
+        self.generate(self.nodes[0], 101)
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         assert_equal(self.nodes[0].getwalletinfo()["txcount"], 103)
         self.nodes[0].wipewallettxes()
         assert_equal(self.nodes[0].getwalletinfo()["txcount"], 0)
