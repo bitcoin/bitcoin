@@ -18,7 +18,6 @@
 #include <validation.h>
 
 #include <evo/deterministicmns.h>
-#include <evo/mnhftx.h>
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
 #include <masternode/payments.h>
@@ -37,7 +36,7 @@ struct TestChainBRRBeforeActivationSetup : public TestChainSetup
     // Force fast DIP3 activation
     TestChainBRRBeforeActivationSetup() :
         TestChainSetup(497, {"-dip3params=30:50", "-testactivationheight=brr@1000", "-testactivationheight=v20@1200",
-                             "-vbparams=mn_rr:0:999999999999:0:20:16:12:5:1"})
+                             "-testactivationheight=mn_rr@2200"})
     {
     }
 };
@@ -230,8 +229,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, 14423624841); // 0.4999999999
     }
 
-    // Reallocation should kick-in with the superblock mined at height = 2010,
-    // there will be 19 adjustments, 3 superblocks long each
+    // Reallocation should kick-in with the superblock after 19 adjustments, 3 superblocks long each
     for ([[maybe_unused]] auto i : irange::range(19)) {
         for ([[maybe_unused]] auto j : irange::range(3)) {
             for ([[maybe_unused]] auto k : irange::range(consensus_params.nSuperblockCycle)) {
@@ -267,12 +265,6 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, 106300596); // 0.75
     }
     BOOST_CHECK(!DeploymentActiveAfter(m_node.chainman->ActiveChain().Tip(), consensus_params, Consensus::DEPLOYMENT_MN_RR));
-
-    // Activate EHF "MN_RR"
-    {
-        LOCK(cs_main);
-        m_node.mnhf_manager->AddSignal(m_node.chainman->ActiveChain().Tip(), 10);
-    }
 
     // Reward split should stay ~75/25 after reallocation is done,
     // check 10 next superblocks

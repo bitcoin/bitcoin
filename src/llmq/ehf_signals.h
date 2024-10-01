@@ -12,7 +12,6 @@
 class CBlockIndex;
 class CChainState;
 class CMNHFManager;
-class CSporkManager;
 class CTxMemPool;
 class PeerManager;
 
@@ -31,7 +30,6 @@ private:
     CSigSharesManager& shareman;
     CTxMemPool& mempool;
     const CQuorumManager& qman;
-    const CSporkManager& sporkman;
     const std::unique_ptr<PeerManager>& m_peerman;
 
     /**
@@ -42,7 +40,7 @@ private:
 public:
     explicit CEHFSignalsHandler(CChainState& chainstate, CMNHFManager& mnhfman, CSigningManager& sigman,
                                 CSigSharesManager& shareman, CTxMemPool& mempool, const CQuorumManager& qman,
-                                const CSporkManager& sporkman, const std::unique_ptr<PeerManager>& peerman);
+                                const std::unique_ptr<PeerManager>& peerman);
     ~CEHFSignalsHandler();
 
 

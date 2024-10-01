@@ -20,7 +20,7 @@ from test_framework.util import assert_equal, assert_raises_rpc_error, force_fin
 
 class LLMQChainLocksTest(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(5, 4)
+        self.set_dash_test_params(5, 4, [["-testactivationheight=mn_rr@1100"]] * 5)
 
     def run_test(self):
         # Connect all nodes to node1 so that we always have the whole network connected
@@ -247,7 +247,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Test that bestCLHeightDiff conditions are relaxed before mn_rr")
         self.test_bestCLHeightDiff(False)
 
-        self.activate_mn_rr()
+        self.activate_mn_rr(expected_activation_height=1100)
         self.log.info("Activated mn_rr at height:" + str(self.nodes[0].getblockcount()))
 
         self.log.info("Test that bestCLHeightDiff conditions are stricter after mn_rr")

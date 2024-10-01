@@ -33,12 +33,12 @@ enum BuriedDeployment : int16_t {
     DEPLOYMENT_BRR,
     DEPLOYMENT_V19,
     DEPLOYMENT_V20,
+    DEPLOYMENT_MN_RR,
 };
-constexpr bool ValidDeployment(BuriedDeployment dep) { return dep <= DEPLOYMENT_V20; }
+constexpr bool ValidDeployment(BuriedDeployment dep) { return dep <= DEPLOYMENT_MN_RR; }
 
 enum DeploymentPos : uint16_t {
     DEPLOYMENT_TESTDUMMY,
-    DEPLOYMENT_MN_RR,   // Deployment of Masternode Reward Location Reallocation
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in deploymentinfo.cpp
     MAX_VERSION_BITS_DEPLOYMENTS
 };
@@ -144,6 +144,8 @@ struct Params {
     int V19Height;
     /** Block height at which V20 (Deployment of EHF, LLMQ Randomness Beacon) becomes active */
     int V20Height;
+    /** Block height at which MN_RR (Deployment of Masternode Reward Location Reallocation) becomes active */
+    int MN_RRHeight;
     /** Don't warn about unknown BIP 9 activations below this height.
      * This prevents us from warning about the CSV and DIP activations. */
     int MinBIP9WarningHeight;
@@ -209,6 +211,8 @@ struct Params {
             return V19Height;
         case DEPLOYMENT_V20:
             return V20Height;
+        case DEPLOYMENT_MN_RR:
+            return MN_RRHeight;
         } // no default case, so the compiler can warn about missing cases
         return std::numeric_limits<int>::max();
     }

@@ -64,6 +64,7 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
     block.calc_sha256()
     return block
 
+# TODO: imlement MN_RR support here or remove it
 def create_block_with_mnpayments(mninfo, node, vtx=None, mn_payee=None, mn_amount=None):
     if vtx is None:
         vtx = []
