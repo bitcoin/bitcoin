@@ -68,6 +68,7 @@ class DIP0020ActivationTest(BitcoinTestFramework):
         tx0.vout.append(CTxOut(value, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])))
         tx0.rehash()
         tx0_hex = tx0.serialize().hex()
+        tx0id = node.decoderawtransaction(tx0_hex)["txid"]
 
         # flush state to disk before potential crashes below
         self.nodes[0].gettxoutsetinfo()
@@ -118,10 +119,11 @@ class DIP0020ActivationTest(BitcoinTestFramework):
             node.invalidateblock(node.getbestblockhash())
         except:
             self.start_node(0)
+        assert tx0id not in set(node.getrawmempool())
         node.generate(1)
 
         self.log.info("Transactions spending coins with new opcodes are accepted one block after DIP0020 activation block")
-        tx0id = node.sendrawtransaction(tx0_hex)
+        node.sendrawtransaction(tx0_hex)
         assert tx0id in set(node.getrawmempool())
 
 
