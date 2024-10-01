@@ -8,6 +8,7 @@ from copy import deepcopy
 from decimal import Decimal
 from enum import Enum
 from test_framework.address import ADDRESS_BCRT1_P2SH_OP_TRUE
+from test_framework.descriptors import descsum_create
 from test_framework.key import ECKey
 from random import choice
 from typing import Optional
@@ -30,7 +31,6 @@ from test_framework.script import (
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
-    satoshi_round,
 )
 
 DEFAULT_FEE = Decimal("0.0001")
@@ -81,7 +81,7 @@ class MiniWallet:
     def rescan_utxos(self):
         """Drop all utxos and rescan the utxo set"""
         self._utxos = []
-        res = self._test_node.scantxoutset(action="start", scanobjects=[f'raw({self._scriptPubKey.hex()})'])
+        res = self._test_node.scantxoutset(action="start", scanobjects=[self.get_descriptor()])
         assert_equal(True, res['success'])
         for utxo in res['unspents']:
             self._utxos.append({'txid': utxo['txid'], 'vout': utxo['vout'], 'value': utxo['amount'], 'height': utxo['height']})
@@ -116,12 +116,15 @@ class MiniWallet:
 
     def generate(self, num_blocks):
         """Generate blocks with coinbase outputs to the internal address, and append the outputs to the internal list"""
-        blocks = self._test_node.generatetodescriptor(num_blocks, f'raw({self._scriptPubKey.hex()})')
+        blocks = self._test_node.generatetodescriptor(num_blocks, self.get_descriptor())
         for b in blocks:
             block_info = self._test_node.getblock(blockhash=b, verbosity=2)
             cb_tx = block_info['tx'][0]
             self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value'], 'height': block_info['height']})
         return blocks
+
+    def get_descriptor(self):
+        return descsum_create(f'raw({self._scriptPubKey.hex()})')
 
     def get_address(self):
         return self._address
@@ -158,13 +161,12 @@ class MiniWallet:
             vsize = Decimal(85)  # anyone-can-spend
         else:
             vsize = Decimal(168)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 60 bytes other)
-        send_value = satoshi_round(utxo_to_spend['value'] - fee_rate * (vsize / 1000))
-        fee = utxo_to_spend['value'] - send_value
+        send_value = int(COIN * (utxo_to_spend['value'] - fee_rate * (vsize / 1000)))
         assert send_value > 0
 
         tx = CTransaction()
         tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']), nSequence=sequence)]
-        tx.vout = [CTxOut(int(send_value * COIN), self._scriptPubKey)]
+        tx.vout = [CTxOut(send_value, self._scriptPubKey)]
         tx.nLockTime = locktime
         if not self._address:
             # raw script
@@ -182,7 +184,7 @@ class MiniWallet:
         assert_equal(mempool_valid, tx_info['allowed'])
         if mempool_valid:
             assert_equal(len(tx_hex) // 2, vsize) # 1 byte = 2 character
-            assert_equal(tx_info['fees']['base'], fee)
+            assert_equal(tx_info['fees']['base'], utxo_to_spend['value'] - Decimal(send_value) / COIN)
         return {'txid': tx_info['txid'], 'hex': tx_hex, 'tx': tx}
 
     def sendrawtransaction(self, *, from_node, tx_hex):
