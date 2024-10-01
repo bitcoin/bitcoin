@@ -331,6 +331,12 @@ target_link_libraries(bitcoin_node
     $<TARGET_NAME_IF_EXISTS:USDT::headers>
 )
 
+# Bitcoin wrapper executable that can call other executables.
+if(BUILD_BITCOIN_BIN)
+  add_executable(bitcoin bitcoin.cpp)
+  target_link_libraries(bitcoin core_interface bitcoin_util)
+  install_binary_component(bitcoin)
+endif()
 
 # Bitcoin Core bitcoind.
 if(BUILD_DAEMON)
