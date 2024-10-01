@@ -47,7 +47,6 @@ KNOWN_VIOLATIONS=(
     "src/test/dbwrapper_tests.cpp:.*snprintf"
     "src/test/fuzz/locale.cpp"
     "src/test/fuzz/string.cpp"
-    "src/torcontrol.cpp:.*strtol"
     "src/util/strencodings.cpp:.*strtoll"
     "src/util/system.cpp:.*fprintf"
 )
