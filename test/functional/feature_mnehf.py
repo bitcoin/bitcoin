@@ -223,15 +223,13 @@ class MnehfTest(DashTestFramework):
 
         self.log.info("Testing duplicate EHF signal with same bit")
         ehf_tx_duplicate = self.send_tx(self.create_mnehf(28, pubkey))
-        tip_blockhash = self.generate(node, 1)[0]
-        self.sync_blocks()
+        tip_blockhash = self.generate(node, 1, sync_fun=lambda: self.sync_blocks())[0]
         block = node.getblock(tip_blockhash)
         assert ehf_tx_duplicate in node.getrawmempool() and ehf_tx_duplicate not in block['tx']
 
         self.log.info("Testing EHF signal with same bit but with newer start time")
         self.bump_mocktime(int(60 * 60 * 24 * 14), update_schedulers=False)
-        self.generate(node, 1)
-        self.sync_blocks()
+        self.generate(node, 1, sync_fun=lambda: self.sync_blocks())
         self.restart_all_nodes(params=[self.mocktime, self.mocktime + 1000000])
         self.check_fork('defined')
 

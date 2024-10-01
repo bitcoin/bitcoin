@@ -69,8 +69,7 @@ class DashGovernanceTest (DashTestFramework):
         n = sb_cycle - self.nodes[0].getblockcount() % sb_cycle
         for _ in range(n):
             self.bump_mocktime(156)
-            self.generate(self.nodes[0], 1)
-            self.sync_blocks()
+            self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks())
 
         self.log.info("Prepare proposals")
 
@@ -116,8 +115,7 @@ class DashGovernanceTest (DashTestFramework):
         assert n >= 0
         for _ in range(n + 1):
             self.bump_mocktime(156)
-            self.generate(self.nodes[0], 1)
-            self.sync_blocks(self.nodes[0:5])
+            self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(self.nodes[0:5]))
 
         self.log.info("Wait for new trigger and votes on non-isolated nodes")
         sb_block_height = self.nodes[0].getblockcount() // sb_cycle * sb_cycle + sb_cycle
@@ -130,29 +128,25 @@ class DashGovernanceTest (DashTestFramework):
         self.log.info("Move remaining n blocks until the next Superblock")
         for _ in range(n - 1):
             self.bump_mocktime(156)
-            self.generate(self.nodes[0], 1)
-            self.sync_blocks(self.nodes[0:5])
+            self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(self.nodes[0:5]))
 
         # Confirm all is good
         self.wait_until(lambda: have_trigger_for_height(self.nodes[0:5], sb_block_height), timeout=5)
 
         self.log.info("Mine superblock")
         self.bump_mocktime(156)
-        self.generate(self.nodes[0], 1)
-        self.sync_blocks(self.nodes[0:5])
+        self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(self.nodes[0:5]))
         self.wait_for_chainlocked_block(self.nodes[0], self.nodes[0].getbestblockhash())
 
         self.log.info("Mine (superblock cycle + 1) blocks on non-isolated nodes to forget about this trigger")
         for _ in range(sb_cycle):
             self.bump_mocktime(156)
-            self.generate(self.nodes[0], 1)
-            self.sync_blocks(self.nodes[0:5])
+            self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(self.nodes[0:5]))
         # Should still have at least 1 trigger for the old sb cycle and 0 for the current one
         assert len(self.nodes[0].gobject("list", "valid", "triggers")) >= 1
         assert not have_trigger_for_height(self.nodes[0:5], sb_block_height + sb_cycle)
         self.bump_mocktime(156)
-        self.generate(self.nodes[0], 1)
-        self.sync_blocks(self.nodes[0:5])
+        self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(self.nodes[0:5]))
         # Trigger scheduler to mark old triggers for deletion
         self.bump_mocktime(5 * 60)
         # Let it do the job

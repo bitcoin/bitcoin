@@ -135,8 +135,7 @@ class QuorumDataMessagesTest(DashTestFramework):
             self.bump_mocktime(bump_seconds)
             # Test with/without expired request cleanup
             if self.cleanup:
-                self.generate(node0, 1)
-                self.sync_blocks()
+                self.generate(node0, 1, sync_fun=lambda: self.sync_blocks())
 
         def test_basics():
             self.log.info("Testing basics of QGETDATA/QDATA")

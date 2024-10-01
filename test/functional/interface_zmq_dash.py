@@ -170,8 +170,7 @@ class DashZMQTest (DashTestFramework):
     def generate_blocks(self, num_blocks):
         mninfos_online = self.mninfo.copy()
         nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
-        self.generate(self.nodes[0], num_blocks)
-        self.sync_blocks(nodes)
+        self.generate(self.nodes[0], num_blocks, sync_fun=lambda: self.sync_blocks(nodes))
 
     def subscribe(self, publishers):
         import zmq
@@ -375,8 +374,7 @@ class DashZMQTest (DashTestFramework):
         proposal_hex = ''.join(format(x, '02x') for x in json.dumps(proposal_data).encode())
         collateral = self.nodes[0].gobject("prepare", "0", proposal_rev, proposal_time, proposal_hex)
         self.wait_for_instantlock(collateral, self.nodes[0])
-        self.generate(self.nodes[0], 6)
-        self.sync_blocks()
+        self.generate(self.nodes[0], 6, sync_fun=lambda: self.sync_blocks())
         rpc_proposal_hash = self.nodes[0].gobject("submit", "0", proposal_rev, proposal_time, proposal_hex, collateral)
         # Validate hashgovernanceobject
         zmq_governance_object_hash = self.subscribers[ZMQPublisher.hash_governance_object].receive().read(32).hex()

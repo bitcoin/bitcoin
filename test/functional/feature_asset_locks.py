@@ -256,8 +256,7 @@ class AssetLocksTest(DashTestFramework):
 
         for _ in range(2):
             self.dynamically_add_masternode(evo=True)
-            self.generate(node, 8)
-            self.sync_blocks()
+            self.generate(node, 8, sync_fun=lambda: self.sync_blocks())
 
         self.set_sporks()
         self.generate(node, 1)

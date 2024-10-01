@@ -141,8 +141,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.log.info("Mining final commitment")
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].getblocktemplate() # this calls CreateNewBlock
-        self.generate(self.nodes[0], 1)
-        self.sync_blocks(nodes)
+        self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(nodes))
 
         self.log.info("Waiting for quorum to appear in the list")
         self.wait_for_quorum_list(q, nodes)
@@ -153,8 +152,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
         # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligible for signing sessions
         self.bump_mocktime(8)
-        self.generate(self.nodes[0], 8)
-        self.sync_blocks(nodes)
+        self.generate(self.nodes[0], 8, sync_fun=lambda: self.sync_blocks(nodes))
         self.log.info("New quorum: height=%d, quorumHash=%s, quorumIndex=%d, minedBlock=%s" % (quorum_info["height"], new_quorum, quorum_info["quorumIndex"], quorum_info["minedBlock"]))
 
         return new_quorum

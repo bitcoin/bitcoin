@@ -149,8 +149,8 @@ class SendHeadersTest(BitcoinTestFramework):
         to-be-reorged-out blocks are mined, so that we don't break later tests.
         return the list of block hashes newly mined."""
 
-        self.generate(self.nodes[0], length)  # make sure all invalidated blocks are node0's
-        self.sync_blocks(wait=0.1)
+        # make sure all invalidated blocks are node0's
+        self.generate(self.nodes[0], length, sync_fun=lambda: self.sync_blocks(wait=0.1))
         for p2p in self.nodes[0].p2ps:
             p2p.wait_for_block_announcement(int(self.nodes[0].getbestblockhash(), 16))
             p2p.clear_block_announcements()
@@ -158,8 +158,8 @@ class SendHeadersTest(BitcoinTestFramework):
         tip_height = self.nodes[1].getblockcount()
         hash_to_invalidate = self.nodes[1].getblockhash(tip_height - (length - 1))
         self.nodes[1].invalidateblock(hash_to_invalidate)
-        all_hashes = self.generate(self.nodes[1], length + 1)  # Must be longer than the orig chain
-        self.sync_blocks(wait=0.1)
+        # Must be longer than the orig chain
+        all_hashes = self.generate(self.nodes[1], length + 1, sync_fun=lambda: self.sync_blocks(wait=0.1))
         return [int(hash_value, 16) for hash_value in all_hashes]
 
     def run_test(self):

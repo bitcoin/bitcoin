@@ -89,8 +89,7 @@ class LLMQEvoNodesTest(DashTestFramework):
         for i in range(self.evo_count):
             evo_info = self.dynamically_add_masternode(evo=True)
             evo_protxhash_list.append(evo_info.proTxHash)
-            self.generate(self.nodes[0], 8)
-            self.sync_blocks()
+            self.generate(self.nodes[0], 8, sync_fun=lambda: self.sync_blocks())
 
             expectedUpdated.append(evo_info.proTxHash)
             b_i = self.nodes[0].getbestblockhash()
@@ -116,8 +115,7 @@ class LLMQEvoNodesTest(DashTestFramework):
 
         # Generate a few blocks to make EvoNode/MN analysis on a pure MN RewardReallocation window
         self.bump_mocktime(1)
-        self.generate(self.nodes[0], 4)
-        self.sync_blocks()
+        self.generate(self.nodes[0], 4, sync_fun=lambda: self.sync_blocks())
 
         self.log.info("Test that EvoNodes are paid 1 block in a row after MN RewardReallocation activation")
         self.test_evo_payments(window_analysis=48, mnrr_active=True)

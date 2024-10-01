@@ -86,8 +86,7 @@ class DIP3V19Test(DashTestFramework):
 
         evo_info_0 = self.dynamically_add_masternode(evo=True, rnd=7)
         assert evo_info_0 is not None
-        self.generate(self.nodes[0], 8)
-        self.sync_blocks()
+        self.generate(self.nodes[0], 8, sync_fun=lambda: self.sync_blocks())
 
         self.log.info("Checking that protxs with duplicate EvoNodes fields are rejected")
         evo_info_1 = self.dynamically_add_masternode(evo=True, rnd=7, should_be_rejected=True)
@@ -97,8 +96,7 @@ class DIP3V19Test(DashTestFramework):
         assert evo_info_2 is None
         evo_info_3 = self.dynamically_add_masternode(evo=True, rnd=9)
         assert evo_info_3 is not None
-        self.generate(self.nodes[0], 8)
-        self.sync_blocks()
+        self.generate(self.nodes[0], 8, sync_fun=lambda: self.sync_blocks())
         self.dynamically_evo_update_service(evo_info_0, 9, should_be_rejected=True)
 
         revoke_protx = self.mninfo[-1].proTxHash

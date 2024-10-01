@@ -118,9 +118,8 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         cl = self.create_chainlock(self.nodes[0].getblockcount() + 1, block)
 
         if mine_confllicting:
-            islock_tip = self.generate(self.nodes[0], 1)[-1]
             # Make sure we won't sent clsig too early
-            self.sync_blocks()
+            islock_tip = self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks())[-1]
 
         self.test_node.send_clsig(cl)
 
