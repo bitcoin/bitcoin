@@ -58,7 +58,7 @@ class DIP0020ActivationTest(BitcoinTestFramework):
 
         # This tx should be completely valid, should be included in mempool and mined in the next block
         assert txid in set(node.getrawmempool())
-        self.generate(node, 1)
+        self.generate(node, 1, sync_fun=self.no_op)
         assert txid not in set(node.getrawmempool())
 
         # Create spending tx
@@ -83,9 +83,9 @@ class DIP0020ActivationTest(BitcoinTestFramework):
         helper_peer.send_blocks_and_test([test_block], node, success=False, reject_reason='block-validation-failed', expect_disconnect=True)
 
         self.log.info("Generate enough blocks to activate DIP0020 opcodes")
-        self.generate(node, 97)
+        self.generate(node, 97, sync_fun=self.no_op)
         assert not softfork_active(node, 'dip0020')
-        self.generate(node, 1)
+        self.generate(node, 1, sync_fun=self.no_op)
         assert softfork_active(node, 'dip0020')
 
         # flush state to disk before potential crashes below
@@ -103,7 +103,7 @@ class DIP0020ActivationTest(BitcoinTestFramework):
         # txes spending new opcodes still won't be accepted into mempool if we roll back to the previous tip
         node.invalidateblock(node.getbestblockhash())
         assert tx0id not in set(node.getrawmempool())
-        self.generate(node, 1)
+        self.generate(node, 1, sync_fun=self.no_op)
 
         self.log.info("Transactions spending coins with new opcodes are accepted one block after DIP0020 activation block")
         node.sendrawtransaction(tx0_hex)

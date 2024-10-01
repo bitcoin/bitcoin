@@ -49,7 +49,7 @@ class DIP3Test(BitcoinTestFramework):
     def run_test(self):
         self.log.info("funding controller node")
         while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 1000:
-            self.generate(self.nodes[0], 10) # generate enough for collaterals
+            self.generate(self.nodes[0], 10, sync_fun=self.no_op) # generate enough for collaterals
         self.log.info("controller node has {} dash".format(self.nodes[0].getbalance()))
 
         # Make sure we're below block 135 (which activates dip3)
@@ -65,11 +65,11 @@ class DIP3Test(BitcoinTestFramework):
         mns.append(before_dip3_mn)
 
         # block 150 starts enforcing DIP3 MN payments
-        self.generate(self.nodes[0], 150 - self.nodes[0].getblockcount())
+        self.generate(self.nodes[0], 150 - self.nodes[0].getblockcount(), sync_fun=self.no_op)
         assert self.nodes[0].getblockcount() == 150
 
         self.log.info("mining final block for DIP3 activation")
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         # We have hundreds of blocks to sync here, give it more time
         self.log.info("syncing blocks for all nodes")
@@ -101,7 +101,7 @@ class DIP3Test(BitcoinTestFramework):
                 self.log.info("register %s" % mn.alias)
                 self.register_mn(self.nodes[0], mn)
 
-            self.generate(self.nodes[0], 1)
+            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
             if not start:
                 self.start_mn(mn)
@@ -245,7 +245,7 @@ class DIP3Test(BitcoinTestFramework):
         mn.collateral_address = node.getnewaddress()
         mn.collateral_txid = node.sendtoaddress(mn.collateral_address, 1000)
         mn.collateral_vout = None
-        self.generate(node, 1)
+        self.generate(node, 1, sync_fun=self.no_op)
 
         rawtx = node.getrawtransaction(mn.collateral_txid, 1)
         for txout in rawtx['vout']:
@@ -277,7 +277,7 @@ class DIP3Test(BitcoinTestFramework):
         mn.rewards_address = node.getnewaddress()
 
         mn.protx_hash = node.protx('register', mn.collateral_txid, mn.collateral_vout, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, mn.operator_reward, mn.rewards_address, mn.fundsAddr)
-        self.generate(node, 1)
+        self.generate(node, 1, sync_fun=self.no_op)
 
     def start_mn(self, mn):
         if len(self.nodes) <= mn.idx:
@@ -313,7 +313,7 @@ class DIP3Test(BitcoinTestFramework):
 
         # undo
         self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.1:%d' % mn.p2p_port, mn.blsMnkey, "", mn.fundsAddr)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
     def assert_mnlists(self, mns):
         for node in self.nodes:

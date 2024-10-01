@@ -1328,7 +1328,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         fund_txid = self.nodes[0].sendtoaddress(funds_address, 1)
         self.wait_for_instantlock(fund_txid, self.nodes[0])
-        tip = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
+        tip = self.generate(self.nodes[0], 1)[0]
         assert_equal(self.nodes[0].getrawtransaction(fund_txid, 1, tip)['confirmations'], 1)
         self.sync_all()
 
@@ -1336,7 +1336,7 @@ class DashTestFramework(BitcoinTestFramework):
         try:
             protx_result = self.nodes[0].protx('update_service_evo', evo_info.proTxHash, evo_info.addr, evo_info.keyOperator, platform_node_id, platform_p2p_port, platform_http_port, operator_reward_address, funds_address)
             self.wait_for_instantlock(protx_result, self.nodes[0])
-            tip = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
+            tip = self.generate(self.nodes[0], 1)[0]
             assert_equal(self.nodes[0].getrawtransaction(protx_result, 1, tip)['confirmations'], 1)
             self.sync_all()
             self.log.info("Updated EvoNode %s: platformNodeID=%s, platformP2PPort=%s, platformHTTPPort=%s" % (evo_info.proTxHash, platform_node_id, platform_p2p_port, platform_http_port))
@@ -1387,7 +1387,7 @@ class DashTestFramework(BitcoinTestFramework):
         if register_fund:
             protx_result = self.nodes[0].protx('register_fund', address, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, address, submit)
         else:
-            self.generate(self.nodes[0], 1)
+            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             protx_result = self.nodes[0].protx('register', txid, collateral_vout, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, address, submit)
 
         if submit:
@@ -1396,7 +1396,7 @@ class DashTestFramework(BitcoinTestFramework):
             proTxHash = self.nodes[0].sendrawtransaction(protx_result)
 
         if operatorReward > 0:
-            self.generate(self.nodes[0], 1)
+            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             operatorPayoutAddress = self.nodes[0].getnewaddress()
             self.nodes[0].protx('update_service', proTxHash, ipAndPort, bls['secret'], operatorPayoutAddress, address)
 

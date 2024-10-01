@@ -56,7 +56,7 @@ class RPCVerifyISLockTest(DashTestFramework):
         assert node.verifyislock(request_id, txid, rec_sig)
         # Not mined, should use maxHeight
         assert not node.verifyislock(request_id, txid, rec_sig, 1)
-        self.generate(node, 1)
+        self.generate(node, 1, sync_fun=self.no_op)
         assert txid not in node.getrawmempool()
         # Mined but at higher height, should use maxHeight
         assert not node.verifyislock(request_id, txid, rec_sig, 1)

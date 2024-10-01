@@ -130,7 +130,7 @@ class DIP3V19Test(DashTestFramework):
 
         protx_result = self.nodes[0].protx('revoke', revoke_protx, revoke_keyoperator, 1, funds_address)
         self.wait_for_instantlock(protx_result, self.nodes[0])
-        tip = self.generate(self.nodes[0], 1)[0]
+        tip = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
         assert_equal(self.nodes[0].getrawtransaction(protx_result, 1, tip)['confirmations'], 1)
         # Revoking a MN results in disconnects. Wait for disconnects to actually happen
         # and then reconnect the corresponding node back to let sync_blocks finish correctly.

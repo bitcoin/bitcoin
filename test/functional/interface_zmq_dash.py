@@ -213,7 +213,7 @@ class DashZMQTest (DashTestFramework):
         # Subscribe to recovered signature messages
         self.subscribe(recovered_sig_publishers)
         # Generate a ChainLock and make sure this leads to valid recovered sig ZMQ messages
-        rpc_last_block_hash = self.generate(self.nodes[0], 1)[0]
+        rpc_last_block_hash = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
         self.wait_for_chainlocked_block_all_nodes(rpc_last_block_hash)
         height = self.nodes[0].getblockcount()
         rpc_request_id = hash256(ser_string(b"clsig") + struct.pack("<I", height))[::-1].hex()
@@ -237,7 +237,7 @@ class DashZMQTest (DashTestFramework):
         # Subscribe to ChainLock messages
         self.subscribe(chain_lock_publishers)
         # Generate ChainLock
-        generated_hash = self.generate(self.nodes[0], 1)[0]
+        generated_hash = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
         self.wait_for_chainlocked_block_all_nodes(generated_hash)
         rpc_best_chain_lock = self.nodes[0].getbestchainlock()
         rpc_best_chain_lock_hash = rpc_best_chain_lock["blockhash"]
@@ -326,7 +326,7 @@ class DashZMQTest (DashTestFramework):
         assert zmq_double_spend_tx_1.is_valid()
         assert_equal(zmq_double_spend_tx_1.hash, rpc_raw_tx_1['txid'])
         # No islock notifications when tx is not received yet
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         rpc_raw_tx_3 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)
         isdlock = self.create_isdlock(rpc_raw_tx_3['hex'])
         self.test_node.send_islock(isdlock)

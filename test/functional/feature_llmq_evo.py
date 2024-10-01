@@ -165,7 +165,7 @@ class LLMQEvoNodesTest(DashTestFramework):
                 current_evo = None
                 consecutive_payments = 0
 
-            self.generate(self.nodes[0], 1)
+            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             if i % 8 == 0:
                 self.sync_blocks()
 

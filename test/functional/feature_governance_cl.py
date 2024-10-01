@@ -83,7 +83,7 @@ class DashGovernanceTest (DashTestFramework):
         p1_collateral_prepare = self.prepare_object(1, uint256_to_string(0), proposal_time, 1, "Proposal_1", self.p1_amount, self.p1_payout_address)
         self.bump_mocktime(60 * 10 + 1)
 
-        self.generate(self.nodes[0], 6)
+        self.generate(self.nodes[0], 6, sync_fun=self.no_op)
         self.bump_mocktime(6 * 156)
         self.sync_blocks()
 
@@ -158,7 +158,7 @@ class DashGovernanceTest (DashTestFramework):
         self.log.info("Reconnect isolated node and confirm the next ChainLock will let it sync")
         self.reconnect_isolated_node(5, 0)
         assert_equal(self.nodes[5].mnsync("status")["IsSynced"], False)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         # NOTE: bumping mocktime too much after recent reconnect can result in "timeout downloading block"
         self.bump_mocktime(1)
         self.sync_blocks()

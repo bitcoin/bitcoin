@@ -72,19 +72,19 @@ class AddressIndexTest(BitcoinTestFramework):
         self.log.info("Testing p2pkh and p2sh address index...")
 
         txid0 = self.nodes[0].sendtoaddress("yMNJePdcKvXtWWQnFYHNeJ5u8TF2v1dfK4", 10)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         txidb0 = self.nodes[0].sendtoaddress("93bVhahvUKmQu8gu9g3QnPPa2cxFK98pMB", 10)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         txid1 = self.nodes[0].sendtoaddress("yMNJePdcKvXtWWQnFYHNeJ5u8TF2v1dfK4", 15)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         txidb1 = self.nodes[0].sendtoaddress("93bVhahvUKmQu8gu9g3QnPPa2cxFK98pMB", 15)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         txid2 = self.nodes[0].sendtoaddress("yMNJePdcKvXtWWQnFYHNeJ5u8TF2v1dfK4", 20)
-        self.generate(self.nodes[0], 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         txidb2 = self.nodes[0].sendtoaddress("93bVhahvUKmQu8gu9g3QnPPa2cxFK98pMB", 20)
         self.generate(self.nodes[0], 1)
@@ -233,10 +233,10 @@ class AddressIndexTest(BitcoinTestFramework):
         assert_equal(utxos2[0]["satoshis"], amount)
 
         # Check sorting of utxos
-        self.generate(self.nodes[2], 150)
+        self.generate(self.nodes[2], 150, sync_fun=self.no_op)
 
         self.nodes[2].sendtoaddress(address2, 50)
-        self.generate(self.nodes[2], 1)
+        self.generate(self.nodes[2], 1, sync_fun=self.no_op)
         self.nodes[2].sendtoaddress(address2, 50)
         self.generate(self.nodes[2], 1)
         self.sync_all()

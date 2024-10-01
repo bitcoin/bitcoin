@@ -294,7 +294,7 @@ class AssetLocksTest(DashTestFramework):
         assert_equal(rpc_tx["assetLockTx"]["creditOutputs"][0]["scriptPubKey"]["hex"], key_to_p2pkh_script(pubkey).hex())
         assert_equal(rpc_tx["assetLockTx"]["creditOutputs"][1]["scriptPubKey"]["hex"], key_to_p2pkh_script(pubkey).hex())
         self.validate_credit_pool_balance(0)
-        self.generate(node, 1)
+        self.generate(node, 1, sync_fun=self.no_op)
         assert_equal(self.get_credit_pool_balance(node=node), locked_1)
         self.log.info("Generate a number of blocks to ensure this is the longest chain for later in the test when we reconsiderblock")
         self.generate(node, 12)
@@ -507,7 +507,7 @@ class AssetLocksTest(DashTestFramework):
         self.check_mempool_result(tx=spend_withdrawal, result_expected={'allowed': True, 'fees': {'base': Decimal(str(tiny_amount / COIN))}})
         spend_txid_in_block = self.send_tx(spend_withdrawal)
 
-        self.generate(node, 1)
+        self.generate(node, 1, sync_fun=self.no_op)
         block = node.getblock(node.getbestblockhash())
         assert spend_txid_in_block in block['tx']
 

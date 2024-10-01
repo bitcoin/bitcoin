@@ -139,7 +139,7 @@ class SendHeadersTest(BitcoinTestFramework):
 
         # Clear out block announcements from each p2p listener
         [p2p.clear_block_announcements() for p2p in self.nodes[0].p2ps]
-        self.generate(self.nodes[0], count)
+        self.generate(self.nodes[0], count, sync_fun=self.no_op)
         return int(self.nodes[0].getbestblockhash(), 16)
 
     def mine_reorg(self, length):
@@ -183,7 +183,7 @@ class SendHeadersTest(BitcoinTestFramework):
         a block which hasn't been validated. Verifies only the first request returns
         headers.
         """
-        tip = self.nodes[0].getblockheader(self.generate(self.nodes[0], 1)[0])
+        tip = self.nodes[0].getblockheader(self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0])
         tip_hash = int(tip["hash"], 16)
 
         inv_node.check_last_inv_announcement(inv=[tip_hash])
