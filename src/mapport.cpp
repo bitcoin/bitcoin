@@ -7,14 +7,14 @@
 #include <mapport.h>
 
 #include <clientversion.h>
+#include <common/netif.h>
+#include <common/pcp.h>
 #include <common/system.h>
 #include <logging.h>
 #include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <random.h>
-#include <util/netif.h>
-#include <util/pcp.h>
 #include <util/thread.h>
 #include <util/threadinterrupt.h>
 

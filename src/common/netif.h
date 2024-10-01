@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_NETIF_H
-#define BITCOIN_UTIL_NETIF_H
+#ifndef BITCOIN_COMMON_NETIF_H
+#define BITCOIN_COMMON_NETIF_H
 
 #include <netaddress.h>
 
@@ -16,4 +16,4 @@ std::optional<CNetAddr> QueryDefaultGateway(Network network);
 //! Return all local non-loopback IPv4 and IPv6 network addresses.
 std::vector<CNetAddr> GetLocalAddresses();
 
-#endif // BITCOIN_UTIL_NETIF_H
+#endif // BITCOIN_COMMON_NETIF_H

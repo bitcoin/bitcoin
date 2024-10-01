@@ -12,6 +12,7 @@
 #include <banman.h>
 #include <clientversion.h>
 #include <common/args.h>
+#include <common/netif.h>
 #include <compat/compat.h>
 #include <consensus/consensus.h>
 #include <crypto/sha256.h>
@@ -28,7 +29,6 @@
 #include <random.h>
 #include <scheduler.h>
 #include <util/fs.h>
-#include <util/netif.h>
 #include <util/sock.h>
 #include <util/strencodings.h>
 #include <util/thread.h>

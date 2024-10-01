@@ -4,7 +4,7 @@
 
 #include <config/bitcoin-config.h> // IWYU pragma: keep
 
-#include <util/netif.h>
+#include <common/netif.h>
 
 #include <logging.h>
 #include <netbase.h>
