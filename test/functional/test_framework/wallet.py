@@ -114,9 +114,9 @@ class MiniWallet:
                 break
         tx.vin[0].scriptSig = CScript([der_sig + bytes(bytearray([SIGHASH_ALL]))])
 
-    def generate(self, num_blocks):
+    def generate(self, num_blocks, **kwargs):
         """Generate blocks with coinbase outputs to the internal address, and append the outputs to the internal list"""
-        blocks = self._test_node.generatetodescriptor(num_blocks, self.get_descriptor())
+        blocks = self._test_node.generatetodescriptor(num_blocks, self.get_descriptor(), **kwargs)
         for b in blocks:
             block_info = self._test_node.getblock(blockhash=b, verbosity=2)
             cb_tx = block_info['tx'][0]
