@@ -1330,7 +1330,6 @@ class DashTestFramework(BitcoinTestFramework):
         self.wait_for_instantlock(fund_txid, self.nodes[0])
         tip = self.generate(self.nodes[0], 1)[0]
         assert_equal(self.nodes[0].getrawtransaction(fund_txid, 1, tip)['confirmations'], 1)
-        self.sync_all()
 
         protx_success = False
         try:
@@ -1338,7 +1337,6 @@ class DashTestFramework(BitcoinTestFramework):
             self.wait_for_instantlock(protx_result, self.nodes[0])
             tip = self.generate(self.nodes[0], 1)[0]
             assert_equal(self.nodes[0].getrawtransaction(protx_result, 1, tip)['confirmations'], 1)
-            self.sync_all()
             self.log.info("Updated EvoNode %s: platformNodeID=%s, platformP2PPort=%s, platformHTTPPort=%s" % (evo_info.proTxHash, platform_node_id, platform_p2p_port, platform_http_port))
             protx_success = True
         except:
@@ -1410,7 +1408,6 @@ class DashTestFramework(BitcoinTestFramework):
         rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)
         self.nodes[0].sendrawtransaction(rawtx["hex"])
         self.generate(self.nodes[0], 1)
-        self.sync_all()
         self.mninfo.remove(mn)
 
         self.log.info("Removed masternode %d", idx)

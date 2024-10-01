@@ -126,7 +126,6 @@ class DIP3V19Test(DashTestFramework):
         self.wait_for_instantlock(fund_txid, self.nodes[0])
         tip = self.generate(self.nodes[0], 1)[0]
         assert_equal(self.nodes[0].getrawtransaction(fund_txid, 1, tip)['confirmations'], 1)
-        self.sync_all()
 
         protx_result = self.nodes[0].protx('revoke', revoke_protx, revoke_keyoperator, 1, funds_address)
         self.wait_for_instantlock(protx_result, self.nodes[0])

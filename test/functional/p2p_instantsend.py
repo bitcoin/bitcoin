@@ -48,7 +48,6 @@ class InstantSendTest(DashTestFramework):
             self.wait_for_instantlock(is_id, node)
         self.bump_mocktime(1)
         self.generate(self.nodes[0], 2)
-        self.sync_all()
 
         # create doublespending transaction, but don't relay it
         dblspnd_tx = self.create_raw_tx(sender, isolated, 0.5, 1, 100)
@@ -93,7 +92,6 @@ class InstantSendTest(DashTestFramework):
         # make sure the above TX is on node0
         self.sync_mempools([n for n in self.nodes if n is not isolated])
         self.generate(self.nodes[0], 2)
-        self.sync_all()
 
     def test_mempool_doublespend(self):
         sender = self.nodes[self.sender_idx]
@@ -109,7 +107,6 @@ class InstantSendTest(DashTestFramework):
             self.wait_for_instantlock(is_id, node)
         self.bump_mocktime(1)
         self.generate(self.nodes[0], 2)
-        self.sync_all()
 
         # create doublespending transaction, but don't relay it
         dblspnd_tx = self.create_raw_tx(sender, isolated, 0.5, 1, 100)
@@ -142,7 +139,6 @@ class InstantSendTest(DashTestFramework):
         # mine more blocks
         self.bump_mocktime(1)
         self.generate(self.nodes[0], 2)
-        self.sync_all()
 
 if __name__ == '__main__':
     InstantSendTest().main()

@@ -53,7 +53,6 @@ class AddressIndexTest(BitcoinTestFramework):
         self.log.info("Mining blocks...")
         mining_address = self.nodes[0].getnewaddress()
         self.generatetoaddress(self.nodes[0], 105, mining_address)
-        self.sync_all()
 
         chain_height = self.nodes[1].getblockcount()
         assert_equal(chain_height, 105)
@@ -88,8 +87,6 @@ class AddressIndexTest(BitcoinTestFramework):
 
         txidb2 = self.nodes[0].sendtoaddress("93bVhahvUKmQu8gu9g3QnPPa2cxFK98pMB", 20)
         self.generate(self.nodes[0], 1)
-
-        self.sync_all()
 
         txids = self.nodes[1].getaddresstxids("yMNJePdcKvXtWWQnFYHNeJ5u8TF2v1dfK4")
         assert_equal(len(txids), 3)
@@ -142,7 +139,6 @@ class AddressIndexTest(BitcoinTestFramework):
         sent_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], 0)
 
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         txidsmany = self.nodes[1].getaddresstxids("93bVhahvUKmQu8gu9g3QnPPa2cxFK98pMB")
         assert_equal(len(txidsmany), 4)
@@ -171,7 +167,6 @@ class AddressIndexTest(BitcoinTestFramework):
         signed_tx = self.nodes[0].signrawtransactionwithwallet(tx.serialize().hex())
         spending_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], 0)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
         balance1 = self.nodes[1].getaddressbalance(address2)
         assert_equal(balance1["balance"], amount)
 
@@ -185,7 +180,6 @@ class AddressIndexTest(BitcoinTestFramework):
         signed_tx = self.nodes[0].signrawtransactionwithwallet(tx.serialize().hex())
         sent_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], 0)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         balance2 = self.nodes[1].getaddressbalance(address2)
         assert_equal(balance2["balance"], change_amount)
@@ -239,7 +233,6 @@ class AddressIndexTest(BitcoinTestFramework):
         self.generate(self.nodes[2], 1, sync_fun=self.no_op)
         self.nodes[2].sendtoaddress(address2, 50)
         self.generate(self.nodes[2], 1)
-        self.sync_all()
 
         utxos3 = self.nodes[1].getaddressutxos({"addresses": [address2]})
         assert_equal(len(utxos3), 3)
@@ -292,7 +285,6 @@ class AddressIndexTest(BitcoinTestFramework):
         assert_equal(mempool[2]["index"], 1)
 
         self.generate(self.nodes[2], 1)
-        self.sync_all()
         mempool2 = self.nodes[2].getaddressmempool({"addresses": [address3]})
         assert_equal(len(mempool2), 0)
 
@@ -323,7 +315,6 @@ class AddressIndexTest(BitcoinTestFramework):
 
         self.nodes[0].sendtoaddress(address1, 10)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         utxos = self.nodes[1].getaddressutxos({"addresses": [address1]})
         assert_equal(len(utxos), 1)

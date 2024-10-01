@@ -149,8 +149,6 @@ class MnehfTest(DashTestFramework):
         self.log.info(f"unknown ehf tx: {ehf_unknown_tx_sent}")
         self.sync_all()
         ehf_blockhash = self.generate(self.nodes[1], 1)[0]
-        self.sync_blocks()
-        self.sync_all()
 
         self.log.info(f"Check MnEhfTx {ehf_tx_sent} was mined in {ehf_blockhash}")
         assert ehf_tx_sent in node.getblock(ehf_blockhash)['tx']
@@ -164,7 +162,6 @@ class MnehfTest(DashTestFramework):
         while (node.getblockcount() + 1) % 4 != 0:
             self.check_fork('defined')
             self.generate(node, 1)
-            self.sync_all()
 
 
         self.restart_all_nodes()
@@ -172,13 +169,11 @@ class MnehfTest(DashTestFramework):
         for _ in range(4):
             self.check_fork('started')
             self.generate(node, 1)
-            self.sync_all()
 
 
         for i in range(4):
             self.check_fork('locked_in')
             self.generate(node, 1)
-            self.sync_all()
             if i == 7:
                 self.restart_all_nodes()
 
@@ -193,13 +188,11 @@ class MnehfTest(DashTestFramework):
         for _ in range(4):
             self.check_fork('defined')
             self.generate(node, 1)
-            self.sync_all()
 
 
         self.log.info("Re-sending MnEHF for new fork")
         tx_sent_2 = self.send_tx(ehf_tx)
         ehf_blockhash_2 = self.generate(node, 1)[0]
-        self.sync_all()
 
         self.log.info(f"Check MnEhfTx again {tx_sent_2} was mined in {ehf_blockhash_2}")
         assert tx_sent_2 in node.getblock(ehf_blockhash_2)['tx']
@@ -242,7 +235,6 @@ class MnehfTest(DashTestFramework):
             time.sleep(1)
             self.bump_mocktime(1)
             self.generate(self.nodes[1], 1)
-            self.sync_all()
         self.check_fork('active')
 
 

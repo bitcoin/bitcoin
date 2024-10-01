@@ -223,7 +223,6 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         # Mine the conflicting TX into a block
         good_tip = self.nodes[0].getbestblockhash()
         self.generate(self.nodes[0], 2)
-        self.sync_all()
 
         # Assert that the conflicting tx got mined and the locked TX is not valid
         assert self.nodes[0].getrawtransaction(rawtx1_txid, True)['confirmations'] > 0
@@ -255,7 +254,6 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         assert_raises_rpc_error(-26, "tx-txlock-conflict", self.nodes[0].sendrawtransaction, rawtx1)
 
         islock_tip = self.generate(self.nodes[0], 1)[0]
-        self.sync_all()
 
         for node in self.nodes:
             self.wait_for_instantlock(rawtx2_txid, node)

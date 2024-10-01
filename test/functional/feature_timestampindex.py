@@ -49,7 +49,6 @@ class TimestampIndexTest(BitcoinTestFramework):
         blockhashes = self.generate(self.nodes[0], 5)
         low = self.nodes[0].getblock(blockhashes[0])["time"]
         high = self.nodes[0].getblock(blockhashes[4])["time"]
-        self.sync_all()
         self.log.info("Checking timestamp index...")
         hashes = self.nodes[1].getblockhashes(high, low)
         assert_equal(len(hashes), 5)

@@ -214,7 +214,6 @@ class LLMQEvoNodesTest(DashTestFramework):
         outputs = {collateral_address: collateral_amount, funds_address: 1}
         collateral_txid = self.nodes[0].sendmany("", outputs)
         self.generate(self.nodes[0], 8)
-        self.sync_all()
 
         rawtx = self.nodes[0].getrawtransaction(collateral_txid, 1)
         collateral_vout = 0

@@ -212,7 +212,6 @@ class LLMQSimplePoSeTest(DashTestFramework):
         # Make sure protxes are "safe" to mine even when InstantSend and ChainLocks are no longer functional
         self.bump_mocktime(60 * 10 + 1)
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         # Isolate and re-connect all MNs (otherwise there might be open connections with no MNAUTH for MNs which were banned before)
         for mn in self.mninfo:
