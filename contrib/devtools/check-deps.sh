@@ -194,7 +194,10 @@ cd "$BUILD_DIR/src"
 extract_symbols "$TEMP_DIR"
 if check_libraries "$TEMP_DIR"; then
     echo "Success! No unexpected dependencies were detected."
+    RET=0
 else
     echo >&2 "Error: Unexpected dependencies were detected. Check previous output."
+    RET=1
 fi
 rm -r "$TEMP_DIR"
+exit $RET
