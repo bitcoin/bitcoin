@@ -1,4 +1,10 @@
 freebsd_CFLAGS=-pipe
+
+ifneq ($(LTO),)
+freebsd_CFLAGS += -flto
+freebsd_LDFLAGS += -flto
+endif
+
 freebsd_CXXFLAGS=$(freebsd_CFLAGS)
 
 freebsd_release_CFLAGS=-O2

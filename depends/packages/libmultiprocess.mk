@@ -10,8 +10,8 @@ endif
 
 define $(package)_set_vars :=
 ifneq ($(host),$(build))
-$(package)_cmake_opts := -DCAPNP_EXECUTABLE="$$(native_capnp_prefixbin)/capnp"
-$(package)_cmake_opts += -DCAPNPC_CXX_EXECUTABLE="$$(native_capnp_prefixbin)/capnpc-c++"
+$(package)_config_opts := -DCAPNP_EXECUTABLE="$$(native_capnp_prefixbin)/capnp"
+$(package)_config_opts += -DCAPNPC_CXX_EXECUTABLE="$$(native_capnp_prefixbin)/capnpc-c++"
 endif
 endef
 

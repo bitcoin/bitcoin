@@ -1,4 +1,10 @@
 linux_CFLAGS=-pipe
+
+ifneq ($(LTO),)
+linux_CFLAGS += -flto
+linux_LDFLAGS += -flto
+endif
+
 linux_CXXFLAGS=$(linux_CFLAGS)
 
 linux_release_CFLAGS=-O2
