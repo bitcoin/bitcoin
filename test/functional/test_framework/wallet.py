@@ -121,6 +121,9 @@ class MiniWallet:
         """Pad a transaction with extra outputs until it reaches a target vsize.
         returns the tx
         """
+        if target_vsize < tx.get_vsize():
+            raise RuntimeError(f"target_vsize {target_vsize} is less than transaction virtual size {tx.get_vsize()}")
+
         tx.vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN])))
         # determine number of needed padding bytes
         dummy_vbytes = target_vsize - tx.get_vsize()
