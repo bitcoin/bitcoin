@@ -692,6 +692,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.nodes[i].process.wait(timeout)
 
     def connect_nodes(self, a, b):
+        # A node cannot connect to itself, bail out early
+        if (a == b):
+            return
+
         def connect_nodes_helper(from_connection, node_num):
             ip_port = "127.0.0.1:" + str(p2p_port(node_num))
             from_connection.addnode(ip_port, "onetry")
@@ -706,6 +710,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         connect_nodes_helper(self.nodes[a], b)
 
     def disconnect_nodes(self, a, b):
+        # A node cannot disconnect from itself, bail out early
+        if (a == b):
+            return
+
         def disconnect_nodes_helper(from_connection, node_num):
             def get_peer_ids():
                 result = []

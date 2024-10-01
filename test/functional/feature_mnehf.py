@@ -43,7 +43,7 @@ class MnehfTest(DashTestFramework):
             self.stop_node(index)
             self.start_masternode(mn)
         for i in range(1, self.num_nodes):
-                self.connect_nodes(i, 0)
+            self.connect_nodes(i, 0)
 
     def slowly_generate_batch(self, amount):
         self.log.info(f"Slowly generate {amount} blocks")

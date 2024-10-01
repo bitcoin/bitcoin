@@ -213,7 +213,6 @@ class NetTest(DashTestFramework):
 
         self.log.info('Test extended connections info')
         # Connect nodes both ways.
-        self.connect_nodes(0, 1)
         self.connect_nodes(1, 0)
 
         assert_equal(self.nodes[1].getnetworkinfo()['connections'], 2)

@@ -23,13 +23,11 @@ class LLMQChainLocksTest(DashTestFramework):
         self.set_dash_test_params(5, 4)
 
     def run_test(self):
-
         # Connect all nodes to node1 so that we always have the whole network connected
         # Otherwise only masternode connections will be established between nodes, which won't propagate TXs/blocks
         # Usually node0 is the one that does this, but in this test we isolate it multiple times
-        for i in range(len(self.nodes)):
-            if i != 1:
-                self.connect_nodes(i, 1)
+        for i in range(2, len(self.nodes)):
+            self.connect_nodes(i, 1)
 
         self.test_coinbase_best_cl(self.nodes[0], expected_cl_in_cb=False)
 
