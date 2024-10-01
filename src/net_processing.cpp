@@ -5842,6 +5842,10 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
                 // Determine transactions to relay
                 if (fSendTrickle) {
+                    if (m_txreconciliation && m_txreconciliation->IsPeerRegistered(pto->GetId())) {
+                        // Make transactions added to the reconciliation set during the last interval available
+                        m_txreconciliation->ReadyDelayedTransactions(pto->GetId());
+                    }
                     // Produce a vector with all candidates for sending
                     std::vector<std::set<uint256>::iterator> vInvTx;
                     vInvTx.reserve(tx_relay->m_tx_inventory_to_send.size());

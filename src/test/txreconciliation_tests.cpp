@@ -173,6 +173,39 @@ BOOST_AUTO_TEST_CASE(AddToSetCollisionTest)
     BOOST_REQUIRE_EQUAL(r.m_conflict.value(), wtxid);
 }
 
+BOOST_AUTO_TEST_CASE(IsTransactionInSetTest)
+{
+    CSipHasher hasher(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL);
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION, hasher);
+    NodeId peer_id0 = 0;
+    FastRandomContext frc{/*fDeterministic=*/true};
+
+    Wtxid wtxid{Wtxid::FromUint256(frc.rand256())};
+
+    // If the peer is not registered, no transaction can be found
+    BOOST_REQUIRE(!tracker.IsPeerRegistered(peer_id0));
+    BOOST_REQUIRE(!tracker.IsTransactionInSet(peer_id0, wtxid, /*include_delayed*/true));
+
+    // Same happens if the peer is only pre-registered
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE(!tracker.IsTransactionInSet(peer_id0, wtxid, /*include_delayed*/true));
+    // Or registered but the transaction hasn't been added
+    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id0, true, 1, 1), ReconciliationRegisterResult::SUCCESS);
+    BOOST_REQUIRE(!tracker.IsTransactionInSet(peer_id0, wtxid, /*include_delayed*/true));
+
+    // Adding the transaction will make it queryable, but only if we set include_delayed,
+    // given transactions are placed into the delayed set first
+    auto r = tracker.AddToSet(peer_id0, wtxid);
+    BOOST_REQUIRE(r.m_succeeded);
+    BOOST_REQUIRE(!r.m_conflict.has_value());
+    BOOST_REQUIRE(!tracker.IsTransactionInSet(peer_id0, wtxid, /*include_delayed*/false));
+    BOOST_REQUIRE(tracker.IsTransactionInSet(peer_id0, wtxid, /*include_delayed*/true));
+
+    // After a trickle interval, the transaction will be queryable from the regular set
+    BOOST_REQUIRE(tracker.ReadyDelayedTransactions(peer_id0));
+    BOOST_REQUIRE(tracker.IsTransactionInSet(peer_id0, wtxid, /*include_delayed*/false));
+}
+
 BOOST_AUTO_TEST_CASE(TryRemovingFromSetTest)
 {
     CSipHasher hasher(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL);
@@ -248,6 +281,54 @@ BOOST_AUTO_TEST_CASE(SortPeersByFewestParentsTest)
     BOOST_REQUIRE(std::equal(peers.begin(), peers.begin() + 3, best_peers.begin()));
     // The last two peers should be sorted in reverse insertion order
     BOOST_REQUIRE(std::equal(sorted_peers.begin() + 3, sorted_peers.end(), peers.rbegin(), peers.rend() - 3));
+}
+
+BOOST_AUTO_TEST_CASE(ReadyAndDelayedTransactionsTest)
+{
+    CSipHasher hasher(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL);
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION, hasher);
+    NodeId peer_id0 = 0;
+    FastRandomContext frc{/*fDeterministic=*/true};
+
+    // If the peer is not registered, there are no transactions to ready
+    BOOST_CHECK(!tracker.ReadyDelayedTransactions(peer_id0));
+    tracker.PreRegisterPeer(peer_id0);
+    // Same happens if the peer is only pre-registered
+    BOOST_CHECK(!tracker.ReadyDelayedTransactions(peer_id0));
+    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id0, true, 1, 1), ReconciliationRegisterResult::SUCCESS);
+    BOOST_CHECK(tracker.IsPeerRegistered(peer_id0));
+
+    Wtxid wtxid{Wtxid::FromUint256(frc.rand256())};
+
+    // Adding a transaction places it in the delayed set until ReadyDelayedTransactions is called
+    auto r = tracker.AddToSet(peer_id0, wtxid);
+    BOOST_REQUIRE(r.m_succeeded);
+    BOOST_REQUIRE(!r.m_conflict.has_value());
+    BOOST_REQUIRE(!tracker.IsTransactionInSet(peer_id0, wtxid, /*include_delayed*/false));
+    BOOST_REQUIRE(tracker.IsTransactionInSet(peer_id0, wtxid, /*include_delayed*/true));
+
+    // Reading the transaction will move it to the regular set
+    BOOST_REQUIRE(tracker.ReadyDelayedTransactions(peer_id0));
+    BOOST_REQUIRE(tracker.IsTransactionInSet(peer_id0, wtxid, /*include_delayed*/false));
+
+    // Trying to add the same transaction twice will be bypassed, given both sets are checked
+    r = tracker.AddToSet(peer_id0, wtxid);
+    BOOST_REQUIRE(r.m_succeeded);
+    BOOST_REQUIRE(!r.m_conflict.has_value());
+    // The transaction is still in the available set
+    BOOST_REQUIRE(tracker.IsTransactionInSet(peer_id0, wtxid, /*include_delayed*/false));
+
+    // Removing a transaction does so indistinguishably of what internal set they are in
+    BOOST_REQUIRE(tracker.TryRemovingFromSet(peer_id0, wtxid));
+    BOOST_REQUIRE(!tracker.IsTransactionInSet(peer_id0, wtxid, /*include_delayed*/true));
+    // Add again to check removing from delayed
+    r = tracker.AddToSet(peer_id0, wtxid);
+    BOOST_REQUIRE(r.m_succeeded);
+    BOOST_REQUIRE(!r.m_conflict.has_value());
+    BOOST_REQUIRE(!tracker.IsTransactionInSet(peer_id0, wtxid, /*include_delayed*/false));
+    BOOST_REQUIRE(tracker.IsTransactionInSet(peer_id0, wtxid, /*include_delayed*/true));
+    BOOST_REQUIRE(tracker.TryRemovingFromSet(peer_id0, wtxid));
+    BOOST_REQUIRE(!tracker.IsTransactionInSet(peer_id0, wtxid, /*include_delayed*/true));
 }
 
 BOOST_AUTO_TEST_CASE(GetFanoutTargetsTest)

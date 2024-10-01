@@ -111,6 +111,18 @@ public:
      */
     AddToSetResult AddToSet(NodeId peer_id, const Wtxid& wtxid);
 
+   /**
+     * Moves delayed transactions to available (m_delayed_local_set -> m_local_set).
+     * To be called on trickle intervals so transactions are not requestable straightaway.
+     */
+    bool ReadyDelayedTransactions(NodeId peer_id);
+
+    /**
+     * Checks whether a transaction is part of the peer's reconciliation set
+     * If include_delayed is set, look also in the delayed set.
+     */
+    bool IsTransactionInSet(NodeId peer_id, const Wtxid& wtxid, bool include_delayed);
+
     /**
      * Before Step 2, we might want to remove a wtxid from the reconciliation set, for example if
      * the peer just announced the transaction to us.
