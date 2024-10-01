@@ -75,16 +75,9 @@ class DIP0020ActivationTest(BitcoinTestFramework):
 
         self.log.info("Transactions spending coins with new opcodes aren't accepted before DIP0020 activation")
         assert not softfork_active(node, 'dip0020')
-        try:
-            assert_raises_rpc_error(-26, DISABLED_OPCODE_ERROR, node.sendrawtransaction, tx0_hex)
-        except:
-            self.start_node(0)
-        try:
-            helper_peer = node.add_p2p_connection(P2PDataStore())
-            helper_peer.send_txs_and_test([tx0], node, success=False, reject_reason=DISABLED_OPCODE_ERROR)
-        except:
-            self.start_node(0)
-            helper_peer = node.add_p2p_connection(P2PDataStore())
+        assert_raises_rpc_error(-26, DISABLED_OPCODE_ERROR, node.sendrawtransaction, tx0_hex)
+        helper_peer = node.add_p2p_connection(P2PDataStore())
+        helper_peer.send_txs_and_test([tx0], node, success=False, reject_reason=DISABLED_OPCODE_ERROR)
         tip = node.getblock(node.getbestblockhash(), 1)
         test_block = self.create_test_block([tx0], tip["hash"], tip["height"], tip["time"])
         helper_peer.send_blocks_and_test([test_block], node, success=False, reject_reason='block-validation-failed', expect_disconnect=True)
@@ -100,25 +93,15 @@ class DIP0020ActivationTest(BitcoinTestFramework):
 
         # Still need 1 more block for mempool to accept txes spending new opcodes
         self.log.info("Transactions spending coins with new opcodes aren't accepted at DIP0020 activation block")
-        try:
-            assert_raises_rpc_error(-26, DISABLED_OPCODE_ERROR, node.sendrawtransaction, tx0_hex)
-        except:
-            self.start_node(0)
-        try:
-            helper_peer = node.add_p2p_connection(P2PDataStore())
-            helper_peer.send_txs_and_test([tx0], node, success=False, reject_reason=DISABLED_OPCODE_ERROR)
-        except:
-            self.start_node(0)
-            helper_peer = node.add_p2p_connection(P2PDataStore())
+        assert_raises_rpc_error(-26, DISABLED_OPCODE_ERROR, node.sendrawtransaction, tx0_hex)
+        helper_peer = node.add_p2p_connection(P2PDataStore())
+        helper_peer.send_txs_and_test([tx0], node, success=False, reject_reason=DISABLED_OPCODE_ERROR)
         # A block containing new opcodes is accepted however
         tip = node.getblock(node.getbestblockhash(), 1)
         test_block = self.create_test_block([tx0], tip["hash"], tip["height"], tip["time"])
         helper_peer.send_blocks_and_test([test_block], node, success=True)
-        try:
-            # txes spending new opcodes still won't be accepted into mempool if we roll back to the previous tip
-            node.invalidateblock(node.getbestblockhash())
-        except:
-            self.start_node(0)
+        # txes spending new opcodes still won't be accepted into mempool if we roll back to the previous tip
+        node.invalidateblock(node.getbestblockhash())
         assert tx0id not in set(node.getrawmempool())
         node.generate(1)
 
