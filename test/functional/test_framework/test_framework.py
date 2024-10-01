@@ -1260,7 +1260,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.connect_nodes(mn_idx, 0)
 
         self.wait_for_sporks_same()
-        self.sync_blocks(self.nodes)
+        self.sync_blocks()
         force_finish_mnsync(self.nodes[mn_idx])
 
         self.log.info("Successfully started and synced proTx:"+str(created_mn_info.proTxHash))
@@ -1283,7 +1283,7 @@ class DashTestFramework(BitcoinTestFramework):
         collateral_txid = self.nodes[0].sendmany("", outputs)
         self.wait_for_instantlock(collateral_txid, self.nodes[0])
         tip = self.generate(self.nodes[0], 1)[0]
-        self.sync_all(self.nodes)
+        self.sync_all()
 
         rawtx = self.nodes[0].getrawtransaction(collateral_txid, 1, tip)
         assert_equal(rawtx['confirmations'], 1)
@@ -1305,7 +1305,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         self.wait_for_instantlock(protx_result, self.nodes[0])
         tip = self.generate(self.nodes[0], 1)[0]
-        self.sync_all(self.nodes)
+        self.sync_all()
 
         assert_equal(self.nodes[0].getrawtransaction(protx_result, 1, tip)['confirmations'], 1)
         mn_info = MasternodeInfo(protx_result, owner_address, voting_address, reward_address, operatorReward, bls['public'], bls['secret'], collateral_address, collateral_txid, collateral_vout, ipAndPort, evo)
@@ -1329,7 +1329,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.wait_for_instantlock(fund_txid, self.nodes[0])
         tip = self.generate(self.nodes[0], 1)[0]
         assert_equal(self.nodes[0].getrawtransaction(fund_txid, 1, tip)['confirmations'], 1)
-        self.sync_all(self.nodes)
+        self.sync_all()
 
         protx_success = False
         try:
@@ -1337,7 +1337,7 @@ class DashTestFramework(BitcoinTestFramework):
             self.wait_for_instantlock(protx_result, self.nodes[0])
             tip = self.generate(self.nodes[0], 1)[0]
             assert_equal(self.nodes[0].getrawtransaction(protx_result, 1, tip)['confirmations'], 1)
-            self.sync_all(self.nodes)
+            self.sync_all()
             self.log.info("Updated EvoNode %s: platformNodeID=%s, platformP2PPort=%s, platformHTTPPort=%s" % (evo_info.proTxHash, platform_node_id, platform_p2p_port, platform_http_port))
             protx_success = True
         except:

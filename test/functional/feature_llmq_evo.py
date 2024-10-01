@@ -90,7 +90,7 @@ class LLMQEvoNodesTest(DashTestFramework):
             evo_info = self.dynamically_add_masternode(evo=True)
             evo_protxhash_list.append(evo_info.proTxHash)
             self.generate(self.nodes[0], 8)
-            self.sync_blocks(self.nodes)
+            self.sync_blocks()
 
             expectedUpdated.append(evo_info.proTxHash)
             b_i = self.nodes[0].getbestblockhash()
@@ -216,7 +216,7 @@ class LLMQEvoNodesTest(DashTestFramework):
         outputs = {collateral_address: collateral_amount, funds_address: 1}
         collateral_txid = self.nodes[0].sendmany("", outputs)
         self.generate(self.nodes[0], 8)
-        self.sync_all(self.nodes)
+        self.sync_all()
 
         rawtx = self.nodes[0].getrawtransaction(collateral_txid, 1)
         collateral_vout = 0
