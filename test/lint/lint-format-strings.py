@@ -62,7 +62,7 @@ def main():
 
         matching_files_filtered = []
         for matching_file in matching_files:
-            if not re.search('^src/(leveldb|secp256k1|minisketch|tinyformat|test/fuzz/strprintf.cpp)|contrib/devtools/bitcoin-tidy/example_logprintf.cpp', matching_file):
+            if not re.search('^src/(leveldb|secp256k1|minisketch|tinyformat|test/fuzz/strprintf.cpp)', matching_file):
                 matching_files_filtered.append(matching_file)
         matching_files_filtered.sort()
 
