@@ -2,8 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
-#include <util/pcp.h>
+#include <common/pcp.h>
 
+#include <common/netif.h>
 #include <crypto/common.h>
 #include <logging.h>
 #include <netaddress.h>
@@ -11,7 +12,6 @@
 #include <random.h>
 #include <span.h>
 #include <util/check.h>
-#include <util/netif.h>
 #include <util/readwritefile.h>
 #include <util/sock.h>
 #include <util/strencodings.h>
