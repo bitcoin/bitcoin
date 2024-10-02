@@ -409,23 +409,6 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
             if (opcode > OP_16 && ++nOpCount > MAX_OPS_PER_SCRIPT)
                 return set_error(serror, SCRIPT_ERR_OP_COUNT);
 
-            bool fDIP0020OpcodesEnabled = (flags & SCRIPT_ENABLE_DIP0020_OPCODES) != 0;
-            if (!fDIP0020OpcodesEnabled) {
-                if (opcode == OP_CAT ||
-                    opcode == OP_SPLIT ||
-                    opcode == OP_AND ||
-                    opcode == OP_OR ||
-                    opcode == OP_XOR ||
-                    opcode == OP_DIV ||
-                    opcode == OP_MOD ||
-                    opcode == OP_NUM2BIN ||
-                    opcode == OP_BIN2NUM ||
-                    opcode == OP_CHECKDATASIG ||
-                    opcode == OP_CHECKDATASIGVERIFY) {
-                    return set_error(serror, SCRIPT_ERR_DISABLED_OPCODE); // Disabled opcodes.
-                }
-            }
-
             if (opcode == OP_INVERT ||
                 opcode == OP_2MUL ||
                 opcode == OP_2DIV ||
