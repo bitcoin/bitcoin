@@ -331,6 +331,57 @@ class TestNode():
                 if "No RPC credentials" not in str(e):
                     raise
             time.sleep(1.0 / poll_per_s)
+
+        if platform.system() == "Windows":
+            self.log.warning(f"Unable to connect to bitcoind (PID: {self.process.pid}) after {self.rpc_timeout}s.\n"
+                "Attempting to generate dump file.")
+
+            from urllib.request import urlretrieve
+            from zipfile import ZipFile
+
+            # Workaround bogus error from urlretrieve()
+            # urllib.error.URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired (_ssl.c:1000)>
+            import ssl
+            ssl._create_default_https_context = ssl._create_stdlib_context
+
+            procdump_url = "https://download.sysinternals.com/files/Procdump.zip"
+            self.log.info(f"Downloading Procdump from: {procdump_url}")
+            zip_path = f"{self.datadir_path}\\Procdump.zip"
+            filename, headers_ = urlretrieve(procdump_url, zip_path)
+            self.log.info(f"Unzipping procdump.exe from: {zip_path} into {self.datadir_path}")
+            ZipFile(filename).extract("procdump.exe", self.datadir_path)
+            procdump_path = f"{self.datadir_path}\\Procdump.exe"
+            assert os.path.isfile(procdump_path)
+            assert os.access(procdump_path, os.X_OK)
+            dump_output_path = f"{self.datadir_path}\\bitcoind.dmp"
+            assert not os.path.isfile(dump_output_path)
+            cmd = [
+                procdump_path, '-accepteula', # Mainly disallows reverse-engineering: https://learn.microsoft.com/en-us/sysinternals/license-terms
+                '-mm', str(self.process.pid), dump_output_path,
+            ]
+            self.log.info(f"Running {cmd}")
+            subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            poll_result = None
+            # Break up polling, to *maybe* allow for flushing to stdout? (paranoia)
+            for _ in range(120):
+                poll_result = subp.poll()
+                if poll_result is not None:
+                    outs, errs = subp.communicate()
+                    self.log.info(f"Final output from Procdump - stdout: '{outs}', stderr: '{errs}'")
+                    break
+
+                try:
+                    outs, errs = subp.communicate(timeout=60)
+                    self.log.info(f"Intermediate output from Procdump - stdout: '{outs}', stderr: '{errs}'")
+                except subprocess.TimeoutExpired:
+                    pass
+                self.log.info(f"Finished polling round")
+            self.log.info(f"Procdump returned exit code: {poll_result}")
+            if os.path.isfile(dump_output_path):
+                self.log.info(f"Generated dump file: {dump_output_path}")
+            else:
+                self.log.warning(f"Dump file not found at: {dump_output_path}")
+
         self._raise_assertion_error("Unable to connect to bitcoind after {}s".format(self.rpc_timeout))
 
     def wait_for_cookie_credentials(self):
