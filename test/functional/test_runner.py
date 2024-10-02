@@ -446,8 +446,8 @@ def main():
                         help="Leave bitcoinds and test.* datadir on exit or error")
     parser.add_argument('--resultsfile', '-r', help='store test results (as CSV) to the provided file')
 
-
     args, unknown_args = parser.parse_known_args()
+    fail_on_warn = args.ci
     if not args.ansi:
         global DEFAULT, BOLD, GREEN, RED
         DEFAULT = ("", "")
@@ -524,8 +524,12 @@ def main():
     # Remove the test cases that the user has explicitly asked to exclude.
     # The user can specify a test case with or without the .py extension.
     if args.exclude:
+
         def print_warning_missing_test(test_name):
-            print("{}WARNING!{} Test '{}' not found in current test list.".format(BOLD[1], BOLD[0], test_name))
+            print("{}WARNING!{} Test '{}' not found in current test list. Check the --exclude list.".format(BOLD[1], BOLD[0], test_name))
+            if fail_on_warn:
+                sys.exit(1)
+
         def remove_tests(exclude_list):
             if not exclude_list:
                 print_warning_missing_test(exclude_test)
@@ -562,7 +566,7 @@ def main():
                   f"A minimum of {MIN_NO_CLEANUP_SPACE // (1024 * 1024 * 1024)} GB of free space is required.")
         passon_args.append("--nocleanup")
 
-    check_script_list(src_dir=config["environment"]["SRCDIR"], fail_on_warn=args.ci)
+    check_script_list(src_dir=config["environment"]["SRCDIR"], fail_on_warn=fail_on_warn)
     check_script_prefixes()
 
     if not args.keepcache:
@@ -871,7 +875,6 @@ def check_script_list(*, src_dir, fail_on_warn):
     if len(missed_tests) != 0:
         print("%sWARNING!%s The following scripts are not being run: %s. Check the test lists in test_runner.py." % (BOLD[1], BOLD[0], str(missed_tests)))
         if fail_on_warn:
-            # On CI this warning is an error to prevent merging incomplete commits into master
             sys.exit(1)
 
 
