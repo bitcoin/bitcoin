@@ -1869,9 +1869,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         uiInterface.InitMessage(_("Loading block index…").translated);
 
         do {
-            bool failed_verification = false;
             const auto load_block_index_start_time{SteadyClock::now()};
-
             try {
                 LOCK(cs_main);
 
@@ -1997,6 +1995,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 // block tree into BlockIndex()!
 
                 bool failed_chainstate_init = false;
+
                 for (CChainState* chainstate : chainman.GetAll()) {
                     chainstate->InitCoinsDB(
                         /* cache_size_bytes */ nCoinDBCache,
@@ -2065,6 +2064,16 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     strLoadError = _("Error upgrading evo database for EHF");
                     break;
                 }
+            } catch (const std::exception& e) {
+                LogPrintf("%s\n", e.what());
+                strLoadError = _("Error opening block database");
+                break;
+            }
+
+            bool failed_verification = false;
+
+            try {
+                LOCK(cs_main);
 
                 for (CChainState* chainstate : chainman.GetAll()) {
                     if (!is_coinsview_empty(chainstate)) {
