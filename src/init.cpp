@@ -1960,12 +1960,17 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             std::optional<ChainstateLoadVerifyError> rv2;
             try {
                 uiInterface.InitMessage(_("Verifying blocks…").translated);
+                auto check_blocks = args.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS);
+                if (chainman.m_blockman.m_have_pruned && check_blocks > MIN_BLOCKS_TO_KEEP) {
+                    LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks\n",
+                              MIN_BLOCKS_TO_KEEP);
+                }
                 rv2 = VerifyLoadedChainstate(chainman,
                                              *Assert(node.evodb.get()),
                                              fReset,
                                              fReindexChainState,
                                              chainparams,
-                                             args.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS),
+                                             check_blocks,
                                              args.GetArg("-checklevel", DEFAULT_CHECKLEVEL));
             } catch (const std::exception& e) {
                 LogPrintf("%s\n", e.what());

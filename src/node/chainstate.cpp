@@ -245,11 +245,6 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
 
         for (CChainState* chainstate : chainman.GetAll()) {
             if (!is_coinsview_empty(chainstate)) {
-                if (chainman.m_blockman.m_have_pruned && check_blocks > MIN_BLOCKS_TO_KEEP) {
-                    LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks\n",
-                              MIN_BLOCKS_TO_KEEP);
-                }
-
                 const CBlockIndex* tip = chainstate->m_chain.Tip();
                 RPCNotifyBlockChange(tip);
                 if (tip && tip->nTime > GetTime() + MAX_FUTURE_BLOCK_TIME) {
