@@ -1864,11 +1864,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         bilingual_str strLoadError;
 
         uiInterface.InitMessage(_("Loading block index…").translated);
-
         const auto load_block_index_start_time{SteadyClock::now()};
-        bool rv = LoadChainstate(fLoaded,
-                                 strLoadError,
-                                 fReset,
+        auto rv = LoadChainstate(fReset,
                                  chainman,
                                  node,
                                  fPruneMode,
@@ -1879,8 +1876,69 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                  nBlockTreeDBCache,
                                  nCoinDBCache,
                                  nCoinCacheUsage);
-        if (!rv) return false;
-        if (fLoaded) {
+        if (rv.has_value()) {
+            switch (rv.value()) {
+            case ChainstateLoadingError::ERROR_LOADING_BLOCK_DB:
+                strLoadError = _("Error loading block database");
+                break;
+            case ChainstateLoadingError::ERROR_BAD_GENESIS_BLOCK:
+                return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
+            case ChainstateLoadingError::ERROR_BAD_DEVNET_GENESIS_BLOCK:
+                return InitError(_("Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?"));
+            case ChainstateLoadingError::ERROR_TXINDEX_DISABLED_WHEN_GOV_ENABLED:
+                return InitError(_("Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index."));
+            case ChainstateLoadingError::ERROR_ADDRIDX_NEEDS_REINDEX:
+                strLoadError = _("You need to rebuild the database using -reindex to enable -addressindex");
+                break;
+            case ChainstateLoadingError::ERROR_SPENTIDX_NEEDS_REINDEX:
+                strLoadError = _("You need to rebuild the database using -reindex to enable -spentindex");
+                break;
+            case ChainstateLoadingError::ERROR_TIMEIDX_NEEDS_REINDEX:
+                strLoadError = _("You need to rebuild the database using -reindex to enable -timestampindex");
+                break;
+            case ChainstateLoadingError::ERROR_PRUNED_NEEDS_REINDEX:
+                strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain");
+                break;
+            case ChainstateLoadingError::ERROR_LOAD_GENESIS_BLOCK_FAILED:
+                strLoadError = _("Error initializing block database");
+                break;
+            case ChainstateLoadingError::ERROR_CHAINSTATE_UPGRADE_FAILED:
+                strLoadError = _("Error upgrading chainstate database");
+                break;
+            case ChainstateLoadingError::ERROR_REPLAYBLOCKS_FAILED:
+                strLoadError = _("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.");
+                break;
+            case ChainstateLoadingError::ERROR_LOADCHAINTIP_FAILED:
+                strLoadError = _("Error initializing block database");
+                break;
+            case ChainstateLoadingError::ERROR_EVO_DB_SANITY_FAILED:
+                strLoadError = _("Error initializing block database");
+                break;
+            case ChainstateLoadingError::ERROR_GENERIC_BLOCKDB_OPEN_FAILED:
+                strLoadError = _("Error opening block database");
+                break;
+            case ChainstateLoadingError::ERROR_BLOCK_FROM_FUTURE:
+                strLoadError = _("The block database contains a block which appears to be from the future. "
+                                 "This may be due to your computer's date and time being set incorrectly. "
+                                 "Only rebuild the block database if you are sure that your computer's date and time are correct");
+                break;
+            case ChainstateLoadingError::ERROR_CORRUPTED_BLOCK_DB:
+                strLoadError = _("Corrupted block database detected");
+                break;
+            case ChainstateLoadingError::ERROR_COMMITING_EVO_DB:
+                strLoadError = _("Failed to commit Evo database");
+                break;
+            case ChainstateLoadingError::ERROR_UPGRADING_EVO_DB:
+                strLoadError = _("Error upgrading Evo database");
+                break;
+            case ChainstateLoadingError::ERROR_UPGRADING_SIGNALS_DB:
+                strLoadError = _("Error upgrading evo database for EHF");
+                break;
+            case ChainstateLoadingError::SHUTDOWN_PROBED:
+                break;
+            }
+        } else {
+            fLoaded = true;
             LogPrintf(" block index %15dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - load_block_index_start_time));
         }
 
