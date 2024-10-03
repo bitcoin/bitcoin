@@ -624,7 +624,6 @@ crypto_libbitcoin_crypto_base_a_SOURCES = \
   crypto/pkcs5_pbkdf2_hmac_sha512.cpp \
   crypto/pkcs5_pbkdf2_hmac_sha512.h \
   crypto/ripemd160.cpp \
-  crypto/aes_helper.c \
   crypto/ripemd160.h \
   crypto/sha1.cpp \
   crypto/sha1.h \
@@ -655,29 +654,30 @@ crypto_libbitcoin_crypto_avx2_a_SOURCES = crypto/sha256_avx2.cpp
 
 # x11
 crypto_libbitcoin_crypto_base_a_SOURCES += \
-  crypto/blake.c \
-  crypto/bmw.c \
-  crypto/cubehash.c \
-  crypto/echo.c \
-  crypto/groestl.c \
-  crypto/jh.c \
-  crypto/keccak.c \
-  crypto/luffa.c \
-  crypto/shavite.c \
-  crypto/simd.c \
-  crypto/skein.c \
-  crypto/sph_blake.h \
-  crypto/sph_bmw.h \
-  crypto/sph_cubehash.h \
-  crypto/sph_echo.h \
-  crypto/sph_groestl.h \
-  crypto/sph_jh.h \
-  crypto/sph_keccak.h \
-  crypto/sph_luffa.h \
-  crypto/sph_shavite.h \
-  crypto/sph_simd.h \
-  crypto/sph_skein.h \
-  crypto/sph_types.h
+  crypto/x11/aes_helper.c \
+  crypto/x11/blake.c \
+  crypto/x11/bmw.c \
+  crypto/x11/cubehash.c \
+  crypto/x11/echo.c \
+  crypto/x11/groestl.c \
+  crypto/x11/jh.c \
+  crypto/x11/keccak.c \
+  crypto/x11/luffa.c \
+  crypto/x11/shavite.c \
+  crypto/x11/simd.c \
+  crypto/x11/skein.c \
+  crypto/x11/sph_blake.h \
+  crypto/x11/sph_bmw.h \
+  crypto/x11/sph_cubehash.h \
+  crypto/x11/sph_echo.h \
+  crypto/x11/sph_groestl.h \
+  crypto/x11/sph_jh.h \
+  crypto/x11/sph_keccak.h \
+  crypto/x11/sph_luffa.h \
+  crypto/x11/sph_shavite.h \
+  crypto/x11/sph_simd.h \
+  crypto/x11/sph_skein.h \
+  crypto/x11/sph_types.h
 
 crypto_libbitcoin_crypto_x86_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crypto_libbitcoin_crypto_x86_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
@@ -707,6 +707,7 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/validation.h \
   hash.cpp \
   hash.h \
+  hash_x11.h \
   prevector.h \
   primitives/block.cpp \
   primitives/block.h \

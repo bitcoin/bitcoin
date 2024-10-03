@@ -45,3 +45,4 @@ src/util/ranges_set.*
 src/util/wpipe.*
 src/wallet/bip39*
 src/wallet/hdchain.*
+src/hash_x11.h

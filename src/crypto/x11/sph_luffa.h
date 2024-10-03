@@ -1,9 +1,8 @@
-/* $Id: sph_blake.h 252 2011-06-07 17:55:14Z tp $ */
+/* $Id: sph_luffa.h 154 2010-04-26 17:00:24Z tp $ */
 /**
- * BLAKE interface. BLAKE is a family of functions which differ by their
- * output size; this implementation defines BLAKE for output sizes 224,
- * 256, 384 and 512 bits. This implementation conforms to the "third
- * round" specification.
+ * Luffa interface. Luffa is a family of functions which differ by
+ * their output size; this implementation defines Luffa for output
+ * sizes 224, 256, 384 and 512 bits.
  *
  * ==========================(LICENSE BEGIN)============================
  *
@@ -30,140 +29,114 @@
  *
  * ===========================(LICENSE END)=============================
  *
- * @file     sph_blake.h
+ * @file     sph_luffa.h
  * @author   Thomas Pornin <thomas.pornin@cryptolog.com>
  */
 
-#ifndef SPH_BLAKE_H__
-#define SPH_BLAKE_H__
+#ifndef SPH_LUFFA_H__
+#define SPH_LUFFA_H__
 
 #ifdef __cplusplus
 extern "C"{
 #endif
 
 #include <stddef.h>
-#include <crypto/sph_types.h>
+#include "sph_types.h"
 
 /**
- * Output size (in bits) for BLAKE-224.
+ * Output size (in bits) for Luffa-224.
  */
-#define SPH_SIZE_blake224   224
+#define SPH_SIZE_luffa224   224
 
 /**
- * Output size (in bits) for BLAKE-256.
+ * Output size (in bits) for Luffa-256.
  */
-#define SPH_SIZE_blake256   256
-
-#if SPH_64
+#define SPH_SIZE_luffa256   256
 
 /**
- * Output size (in bits) for BLAKE-384.
+ * Output size (in bits) for Luffa-384.
  */
-#define SPH_SIZE_blake384   384
+#define SPH_SIZE_luffa384   384
 
 /**
- * Output size (in bits) for BLAKE-512.
+ * Output size (in bits) for Luffa-512.
  */
-#define SPH_SIZE_blake512   512
-
-#endif
+#define SPH_SIZE_luffa512   512
 
 /**
- * This structure is a context for BLAKE-224 and BLAKE-256 computations:
- * it contains the intermediate values and some data from the last
- * entered block. Once a BLAKE computation has been performed, the
- * context can be reused for another computation.
+ * This structure is a context for Luffa-224 computations: it contains
+ * the intermediate values and some data from the last entered block.
+ * Once a Luffa computation has been performed, the context can be
+ * reused for another computation.
  *
- * The contents of this structure are private. A running BLAKE
+ * The contents of this structure are private. A running Luffa
  * computation can be cloned by copying the context (e.g. with a simple
  * <code>memcpy()</code>).
  */
 typedef struct {
 #ifndef DOXYGEN_IGNORE
-	unsigned char buf[64];    /* first field, for alignment */
+	unsigned char buf[32];    /* first field, for alignment */
 	size_t ptr;
-	sph_u32 H[8];
-	sph_u32 S[4];
-	sph_u32 T0, T1;
+	sph_u32 V[3][8];
 #endif
-} sph_blake_small_context;
+} sph_luffa224_context;
 
 /**
- * This structure is a context for BLAKE-224 computations. It is
- * identical to the common <code>sph_blake_small_context</code>.
+ * This structure is a context for Luffa-256 computations. It is
+ * identical to <code>sph_luffa224_context</code>.
  */
-typedef sph_blake_small_context sph_blake224_context;
+typedef sph_luffa224_context sph_luffa256_context;
 
 /**
- * This structure is a context for BLAKE-256 computations. It is
- * identical to the common <code>sph_blake_small_context</code>.
- */
-typedef sph_blake_small_context sph_blake256_context;
-
-#if SPH_64
-
-/**
- * This structure is a context for BLAKE-384 and BLAKE-512 computations:
- * it contains the intermediate values and some data from the last
- * entered block. Once a BLAKE computation has been performed, the
- * context can be reused for another computation.
- *
- * The contents of this structure are private. A running BLAKE
- * computation can be cloned by copying the context (e.g. with a simple
- * <code>memcpy()</code>).
+ * This structure is a context for Luffa-384 computations.
  */
 typedef struct {
 #ifndef DOXYGEN_IGNORE
-	unsigned char buf[128];    /* first field, for alignment */
+	unsigned char buf[32];    /* first field, for alignment */
 	size_t ptr;
-	sph_u64 H[8];
-	sph_u64 S[4];
-	sph_u64 T0, T1;
+	sph_u32 V[4][8];
 #endif
-} sph_blake_big_context;
+} sph_luffa384_context;
 
 /**
- * This structure is a context for BLAKE-384 computations. It is
- * identical to the common <code>sph_blake_small_context</code>.
+ * This structure is a context for Luffa-512 computations.
  */
-typedef sph_blake_big_context sph_blake384_context;
-
-/**
- * This structure is a context for BLAKE-512 computations. It is
- * identical to the common <code>sph_blake_small_context</code>.
- */
-typedef sph_blake_big_context sph_blake512_context;
-
+typedef struct {
+#ifndef DOXYGEN_IGNORE
+	unsigned char buf[32];    /* first field, for alignment */
+	size_t ptr;
+	sph_u32 V[5][8];
 #endif
+} sph_luffa512_context;
 
 /**
- * Initialize a BLAKE-224 context. This process performs no memory allocation.
+ * Initialize a Luffa-224 context. This process performs no memory allocation.
  *
- * @param cc   the BLAKE-224 context (pointer to a
- *             <code>sph_blake224_context</code>)
+ * @param cc   the Luffa-224 context (pointer to a
+ *             <code>sph_luffa224_context</code>)
  */
-void sph_blake224_init(void *cc);
+void sph_luffa224_init(void *cc);
 
 /**
  * Process some data bytes. It is acceptable that <code>len</code> is zero
  * (in which case this function does nothing).
  *
- * @param cc     the BLAKE-224 context
+ * @param cc     the Luffa-224 context
  * @param data   the input data
  * @param len    the input data length (in bytes)
  */
-void sph_blake224(void *cc, const void *data, size_t len);
+void sph_luffa224(void *cc, const void *data, size_t len);
 
 /**
- * Terminate the current BLAKE-224 computation and output the result into
+ * Terminate the current Luffa-224 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
  * accomodate the result (28 bytes). The context is automatically
  * reinitialized.
  *
- * @param cc    the BLAKE-224 context
+ * @param cc    the Luffa-224 context
  * @param dst   the destination buffer
  */
-void sph_blake224_close(void *cc, void *dst);
+void sph_luffa224_close(void *cc, void *dst);
 
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
@@ -173,42 +146,42 @@ void sph_blake224_close(void *cc, void *dst);
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.
  *
- * @param cc    the BLAKE-224 context
+ * @param cc    the Luffa-224 context
  * @param ub    the extra bits
  * @param n     the number of extra bits (0 to 7)
  * @param dst   the destination buffer
  */
-void sph_blake224_addbits_and_close(
+void sph_luffa224_addbits_and_close(
 	void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
- * Initialize a BLAKE-256 context. This process performs no memory allocation.
+ * Initialize a Luffa-256 context. This process performs no memory allocation.
  *
- * @param cc   the BLAKE-256 context (pointer to a
- *             <code>sph_blake256_context</code>)
+ * @param cc   the Luffa-256 context (pointer to a
+ *             <code>sph_luffa256_context</code>)
  */
-void sph_blake256_init(void *cc);
+void sph_luffa256_init(void *cc);
 
 /**
  * Process some data bytes. It is acceptable that <code>len</code> is zero
  * (in which case this function does nothing).
  *
- * @param cc     the BLAKE-256 context
+ * @param cc     the Luffa-256 context
  * @param data   the input data
  * @param len    the input data length (in bytes)
  */
-void sph_blake256(void *cc, const void *data, size_t len);
+void sph_luffa256(void *cc, const void *data, size_t len);
 
 /**
- * Terminate the current BLAKE-256 computation and output the result into
+ * Terminate the current Luffa-256 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
  * accomodate the result (32 bytes). The context is automatically
  * reinitialized.
  *
- * @param cc    the BLAKE-256 context
+ * @param cc    the Luffa-256 context
  * @param dst   the destination buffer
  */
-void sph_blake256_close(void *cc, void *dst);
+void sph_luffa256_close(void *cc, void *dst);
 
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
@@ -218,44 +191,42 @@ void sph_blake256_close(void *cc, void *dst);
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.
  *
- * @param cc    the BLAKE-256 context
+ * @param cc    the Luffa-256 context
  * @param ub    the extra bits
  * @param n     the number of extra bits (0 to 7)
  * @param dst   the destination buffer
  */
-void sph_blake256_addbits_and_close(
+void sph_luffa256_addbits_and_close(
 	void *cc, unsigned ub, unsigned n, void *dst);
 
-#if SPH_64
-
 /**
- * Initialize a BLAKE-384 context. This process performs no memory allocation.
+ * Initialize a Luffa-384 context. This process performs no memory allocation.
  *
- * @param cc   the BLAKE-384 context (pointer to a
- *             <code>sph_blake384_context</code>)
+ * @param cc   the Luffa-384 context (pointer to a
+ *             <code>sph_luffa384_context</code>)
  */
-void sph_blake384_init(void *cc);
+void sph_luffa384_init(void *cc);
 
 /**
  * Process some data bytes. It is acceptable that <code>len</code> is zero
  * (in which case this function does nothing).
  *
- * @param cc     the BLAKE-384 context
+ * @param cc     the Luffa-384 context
  * @param data   the input data
  * @param len    the input data length (in bytes)
  */
-void sph_blake384(void *cc, const void *data, size_t len);
+void sph_luffa384(void *cc, const void *data, size_t len);
 
 /**
- * Terminate the current BLAKE-384 computation and output the result into
+ * Terminate the current Luffa-384 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
  * accomodate the result (48 bytes). The context is automatically
  * reinitialized.
  *
- * @param cc    the BLAKE-384 context
+ * @param cc    the Luffa-384 context
  * @param dst   the destination buffer
  */
-void sph_blake384_close(void *cc, void *dst);
+void sph_luffa384_close(void *cc, void *dst);
 
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
@@ -265,42 +236,42 @@ void sph_blake384_close(void *cc, void *dst);
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.
  *
- * @param cc    the BLAKE-384 context
+ * @param cc    the Luffa-384 context
  * @param ub    the extra bits
  * @param n     the number of extra bits (0 to 7)
  * @param dst   the destination buffer
  */
-void sph_blake384_addbits_and_close(
+void sph_luffa384_addbits_and_close(
 	void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
- * Initialize a BLAKE-512 context. This process performs no memory allocation.
+ * Initialize a Luffa-512 context. This process performs no memory allocation.
  *
- * @param cc   the BLAKE-512 context (pointer to a
- *             <code>sph_blake512_context</code>)
+ * @param cc   the Luffa-512 context (pointer to a
+ *             <code>sph_luffa512_context</code>)
  */
-void sph_blake512_init(void *cc);
+void sph_luffa512_init(void *cc);
 
 /**
  * Process some data bytes. It is acceptable that <code>len</code> is zero
  * (in which case this function does nothing).
  *
- * @param cc     the BLAKE-512 context
+ * @param cc     the Luffa-512 context
  * @param data   the input data
  * @param len    the input data length (in bytes)
  */
-void sph_blake512(void *cc, const void *data, size_t len);
+void sph_luffa512(void *cc, const void *data, size_t len);
 
 /**
- * Terminate the current BLAKE-512 computation and output the result into
+ * Terminate the current Luffa-512 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
  * accomodate the result (64 bytes). The context is automatically
  * reinitialized.
  *
- * @param cc    the BLAKE-512 context
+ * @param cc    the Luffa-512 context
  * @param dst   the destination buffer
  */
-void sph_blake512_close(void *cc, void *dst);
+void sph_luffa512_close(void *cc, void *dst);
 
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
@@ -310,15 +281,13 @@ void sph_blake512_close(void *cc, void *dst);
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.
  *
- * @param cc    the BLAKE-512 context
+ * @param cc    the Luffa-512 context
  * @param ub    the extra bits
  * @param n     the number of extra bits (0 to 7)
  * @param dst   the destination buffer
  */
-void sph_blake512_addbits_and_close(
+void sph_luffa512_addbits_and_close(
 	void *cc, unsigned ub, unsigned n, void *dst);
-
-#endif
 
 #ifdef __cplusplus
 }

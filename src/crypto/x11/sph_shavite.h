@@ -1,13 +1,10 @@
-/* $Id: sph_skein.h 253 2011-06-07 18:33:10Z tp $ */
+/* $Id: sph_shavite.h 208 2010-06-02 20:33:00Z tp $ */
 /**
- * Skein interface. The Skein specification defines three main
- * functions, called Skein-256, Skein-512 and Skein-1024, which can be
- * further parameterized with an output length. For the SHA-3
- * competition, Skein-512 is used for output sizes of 224, 256, 384 and
- * 512 bits; this is what this code implements. Thus, we hereafter call
- * Skein-224, Skein-256, Skein-384 and Skein-512 what the Skein
- * specification defines as Skein-512-224, Skein-512-256, Skein-512-384
- * and Skein-512-512, respectively.
+ * SHAvite-3 interface. This code implements SHAvite-3 with the
+ * recommended parameters for SHA-3, with outputs of 224, 256, 384 and
+ * 512 bits. In the following, we call the function "SHAvite" (without
+ * the "-3" suffix), thus "SHAvite-224" is "SHAvite-3 with a 224-bit
+ * output".
  *
  * ==========================(LICENSE BEGIN)============================
  *
@@ -34,109 +31,130 @@
  *
  * ===========================(LICENSE END)=============================
  *
- * @file     sph_skein.h
+ * @file     sph_shavite.h
  * @author   Thomas Pornin <thomas.pornin@cryptolog.com>
  */
 
-#ifndef SPH_SKEIN_H__
-#define SPH_SKEIN_H__
+#ifndef SPH_SHAVITE_H__
+#define SPH_SHAVITE_H__
+
+#include <stddef.h>
+#include "sph_types.h"
 
 #ifdef __cplusplus
 extern "C"{
 #endif
 
-#include <stddef.h>
-#include <crypto/sph_types.h>
-
-#if SPH_64
-
 /**
- * Output size (in bits) for Skein-224.
+ * Output size (in bits) for SHAvite-224.
  */
-#define SPH_SIZE_skein224   224
+#define SPH_SIZE_shavite224   224
 
 /**
- * Output size (in bits) for Skein-256.
+ * Output size (in bits) for SHAvite-256.
  */
-#define SPH_SIZE_skein256   256
+#define SPH_SIZE_shavite256   256
 
 /**
- * Output size (in bits) for Skein-384.
+ * Output size (in bits) for SHAvite-384.
  */
-#define SPH_SIZE_skein384   384
+#define SPH_SIZE_shavite384   384
 
 /**
- * Output size (in bits) for Skein-512.
+ * Output size (in bits) for SHAvite-512.
  */
-#define SPH_SIZE_skein512   512
+#define SPH_SIZE_shavite512   512
 
 /**
- * This structure is a context for Skein computations (with a 384- or
- * 512-bit output): it contains the intermediate values and some data
- * from the last entered block. Once a Skein computation has been
- * performed, the context can be reused for another computation.
+ * This structure is a context for SHAvite-224 and SHAvite-256 computations:
+ * it contains the intermediate values and some data from the last
+ * entered block. Once a SHAvite computation has been performed, the
+ * context can be reused for another computation.
  *
- * The contents of this structure are private. A running Skein computation
- * can be cloned by copying the context (e.g. with a simple
+ * The contents of this structure are private. A running SHAvite
+ * computation can be cloned by copying the context (e.g. with a simple
  * <code>memcpy()</code>).
  */
 typedef struct {
 #ifndef DOXYGEN_IGNORE
 	unsigned char buf[64];    /* first field, for alignment */
 	size_t ptr;
-	sph_u64 h0, h1, h2, h3, h4, h5, h6, h7;
-	sph_u64 bcount;
+	sph_u32 h[8];
+	sph_u32 count0, count1;
 #endif
-} sph_skein_big_context;
+} sph_shavite_small_context;
 
 /**
- * Type for a Skein-224 context (identical to the common "big" context).
+ * This structure is a context for SHAvite-224 computations. It is
+ * identical to the common <code>sph_shavite_small_context</code>.
  */
-typedef sph_skein_big_context sph_skein224_context;
+typedef sph_shavite_small_context sph_shavite224_context;
 
 /**
- * Type for a Skein-256 context (identical to the common "big" context).
+ * This structure is a context for SHAvite-256 computations. It is
+ * identical to the common <code>sph_shavite_small_context</code>.
  */
-typedef sph_skein_big_context sph_skein256_context;
+typedef sph_shavite_small_context sph_shavite256_context;
 
 /**
- * Type for a Skein-384 context (identical to the common "big" context).
- */
-typedef sph_skein_big_context sph_skein384_context;
-
-/**
- * Type for a Skein-512 context (identical to the common "big" context).
- */
-typedef sph_skein_big_context sph_skein512_context;
-
-/**
- * Initialize a Skein-224 context. This process performs no memory allocation.
+ * This structure is a context for SHAvite-384 and SHAvite-512 computations:
+ * it contains the intermediate values and some data from the last
+ * entered block. Once a SHAvite computation has been performed, the
+ * context can be reused for another computation.
  *
- * @param cc   the Skein-224 context (pointer to a
- *             <code>sph_skein224_context</code>)
+ * The contents of this structure are private. A running SHAvite
+ * computation can be cloned by copying the context (e.g. with a simple
+ * <code>memcpy()</code>).
  */
-void sph_skein224_init(void *cc);
+typedef struct {
+#ifndef DOXYGEN_IGNORE
+	unsigned char buf[128];    /* first field, for alignment */
+	size_t ptr;
+	sph_u32 h[16];
+	sph_u32 count0, count1, count2, count3;
+#endif
+} sph_shavite_big_context;
+
+/**
+ * This structure is a context for SHAvite-384 computations. It is
+ * identical to the common <code>sph_shavite_small_context</code>.
+ */
+typedef sph_shavite_big_context sph_shavite384_context;
+
+/**
+ * This structure is a context for SHAvite-512 computations. It is
+ * identical to the common <code>sph_shavite_small_context</code>.
+ */
+typedef sph_shavite_big_context sph_shavite512_context;
+
+/**
+ * Initialize a SHAvite-224 context. This process performs no memory allocation.
+ *
+ * @param cc   the SHAvite-224 context (pointer to a
+ *             <code>sph_shavite224_context</code>)
+ */
+void sph_shavite224_init(void *cc);
 
 /**
  * Process some data bytes. It is acceptable that <code>len</code> is zero
  * (in which case this function does nothing).
  *
- * @param cc     the Skein-224 context
+ * @param cc     the SHAvite-224 context
  * @param data   the input data
  * @param len    the input data length (in bytes)
  */
-void sph_skein224(void *cc, const void *data, size_t len);
+void sph_shavite224(void *cc, const void *data, size_t len);
 
 /**
- * Terminate the current Skein-224 computation and output the result into
+ * Terminate the current SHAvite-224 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
  * accomodate the result (28 bytes). The context is automatically
  * reinitialized.
  *
- * @param cc    the Skein-224 context
+ * @param cc    the SHAvite-224 context
  * @param dst   the destination buffer
  */
-void sph_skein224_close(void *cc, void *dst);
+void sph_shavite224_close(void *cc, void *dst);
 
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
@@ -146,42 +164,42 @@ void sph_skein224_close(void *cc, void *dst);
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.
  *
- * @param cc    the Skein-224 context
+ * @param cc    the SHAvite-224 context
  * @param ub    the extra bits
  * @param n     the number of extra bits (0 to 7)
  * @param dst   the destination buffer
  */
-void sph_skein224_addbits_and_close(
+void sph_shavite224_addbits_and_close(
 	void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
- * Initialize a Skein-256 context. This process performs no memory allocation.
+ * Initialize a SHAvite-256 context. This process performs no memory allocation.
  *
- * @param cc   the Skein-256 context (pointer to a
- *             <code>sph_skein256_context</code>)
+ * @param cc   the SHAvite-256 context (pointer to a
+ *             <code>sph_shavite256_context</code>)
  */
-void sph_skein256_init(void *cc);
+void sph_shavite256_init(void *cc);
 
 /**
  * Process some data bytes. It is acceptable that <code>len</code> is zero
  * (in which case this function does nothing).
  *
- * @param cc     the Skein-256 context
+ * @param cc     the SHAvite-256 context
  * @param data   the input data
  * @param len    the input data length (in bytes)
  */
-void sph_skein256(void *cc, const void *data, size_t len);
+void sph_shavite256(void *cc, const void *data, size_t len);
 
 /**
- * Terminate the current Skein-256 computation and output the result into
+ * Terminate the current SHAvite-256 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
  * accomodate the result (32 bytes). The context is automatically
  * reinitialized.
  *
- * @param cc    the Skein-256 context
+ * @param cc    the SHAvite-256 context
  * @param dst   the destination buffer
  */
-void sph_skein256_close(void *cc, void *dst);
+void sph_shavite256_close(void *cc, void *dst);
 
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
@@ -191,42 +209,42 @@ void sph_skein256_close(void *cc, void *dst);
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.
  *
- * @param cc    the Skein-256 context
+ * @param cc    the SHAvite-256 context
  * @param ub    the extra bits
  * @param n     the number of extra bits (0 to 7)
  * @param dst   the destination buffer
  */
-void sph_skein256_addbits_and_close(
+void sph_shavite256_addbits_and_close(
 	void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
- * Initialize a Skein-384 context. This process performs no memory allocation.
+ * Initialize a SHAvite-384 context. This process performs no memory allocation.
  *
- * @param cc   the Skein-384 context (pointer to a
- *             <code>sph_skein384_context</code>)
+ * @param cc   the SHAvite-384 context (pointer to a
+ *             <code>sph_shavite384_context</code>)
  */
-void sph_skein384_init(void *cc);
+void sph_shavite384_init(void *cc);
 
 /**
  * Process some data bytes. It is acceptable that <code>len</code> is zero
  * (in which case this function does nothing).
  *
- * @param cc     the Skein-384 context
+ * @param cc     the SHAvite-384 context
  * @param data   the input data
  * @param len    the input data length (in bytes)
  */
-void sph_skein384(void *cc, const void *data, size_t len);
+void sph_shavite384(void *cc, const void *data, size_t len);
 
 /**
- * Terminate the current Skein-384 computation and output the result into
+ * Terminate the current SHAvite-384 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
  * accomodate the result (48 bytes). The context is automatically
  * reinitialized.
  *
- * @param cc    the Skein-384 context
+ * @param cc    the SHAvite-384 context
  * @param dst   the destination buffer
  */
-void sph_skein384_close(void *cc, void *dst);
+void sph_shavite384_close(void *cc, void *dst);
 
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
@@ -236,42 +254,42 @@ void sph_skein384_close(void *cc, void *dst);
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.
  *
- * @param cc    the Skein-384 context
+ * @param cc    the SHAvite-384 context
  * @param ub    the extra bits
  * @param n     the number of extra bits (0 to 7)
  * @param dst   the destination buffer
  */
-void sph_skein384_addbits_and_close(
+void sph_shavite384_addbits_and_close(
 	void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
- * Initialize a Skein-512 context. This process performs no memory allocation.
+ * Initialize a SHAvite-512 context. This process performs no memory allocation.
  *
- * @param cc   the Skein-512 context (pointer to a
- *             <code>sph_skein512_context</code>)
+ * @param cc   the SHAvite-512 context (pointer to a
+ *             <code>sph_shavite512_context</code>)
  */
-void sph_skein512_init(void *cc);
+void sph_shavite512_init(void *cc);
 
 /**
  * Process some data bytes. It is acceptable that <code>len</code> is zero
  * (in which case this function does nothing).
  *
- * @param cc     the Skein-512 context
+ * @param cc     the SHAvite-512 context
  * @param data   the input data
  * @param len    the input data length (in bytes)
  */
-void sph_skein512(void *cc, const void *data, size_t len);
+void sph_shavite512(void *cc, const void *data, size_t len);
 
 /**
- * Terminate the current Skein-512 computation and output the result into
+ * Terminate the current SHAvite-512 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
  * accomodate the result (64 bytes). The context is automatically
  * reinitialized.
  *
- * @param cc    the Skein-512 context
+ * @param cc    the SHAvite-512 context
  * @param dst   the destination buffer
  */
-void sph_skein512_close(void *cc, void *dst);
+void sph_shavite512_close(void *cc, void *dst);
 
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
@@ -281,15 +299,13 @@ void sph_skein512_close(void *cc, void *dst);
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.
  *
- * @param cc    the Skein-512 context
+ * @param cc    the SHAvite-512 context
  * @param ub    the extra bits
  * @param n     the number of extra bits (0 to 7)
  * @param dst   the destination buffer
  */
-void sph_skein512_addbits_and_close(
+void sph_shavite512_addbits_and_close(
 	void *cc, unsigned ub, unsigned n, void *dst);
-
-#endif
 
 #ifdef __cplusplus
 }
