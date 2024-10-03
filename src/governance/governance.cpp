@@ -23,6 +23,7 @@
 #include <protocol.h>
 #include <shutdown.h>
 #include <spork.h>
+#include <timedata.h>
 #include <util/ranges.h>
 #include <util/time.h>
 #include <validation.h>
