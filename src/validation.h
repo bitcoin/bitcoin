@@ -12,6 +12,7 @@
 #endif
 
 #include <amount.h>
+#include <arith_uint256.h>
 #include <attributes.h>
 #include <chain.h>
 #include <fs.h>
@@ -19,10 +20,11 @@
 #include <policy/feerate.h>
 #include <policy/packages.h>
 #include <script/script_error.h>
+#include <serialize.h>
 #include <sync.h>
 #include <txdb.h>
 #include <txmempool.h> // For CTxMemPool::cs
-#include <serialize.h>
+#include <uint256.h>
 #include <util/check.h>
 #include <util/hasher.h>
 #include <util/translation.h>
@@ -38,17 +40,10 @@
 #include <utility>
 #include <vector>
 
-namespace llmq {
-class CChainLocksHandler;
-class CInstantSendManager;
-} // namespace llmq
-
-class CEvoDB;
-
 class CChainState;
-class CBlockIndex;
 class CBlockTreeDB;
 class CChainParams;
+class CEvoDB;
 class CMNHFManager;
 class CTxMemPool;
 class TxValidationState;
@@ -60,6 +55,11 @@ struct ChainTxData;
 struct DisconnectedBlockTransactions;
 struct LockPoints;
 struct AssumeutxoData;
+
+namespace llmq {
+class CChainLocksHandler;
+class CInstantSendManager;
+} // namespace llmq
 
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
 static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 1000;
