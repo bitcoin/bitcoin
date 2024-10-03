@@ -58,236 +58,235 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
         return fReset || fReindexChainState || chainstate->CoinsTip().GetBestBlock().IsNull();
     };
 
-    do {
-        try {
-            LOCK(cs_main);
+    try {
+        LOCK(cs_main);
 
-            int64_t nEvoDbCache{64 * 1024 * 1024}; // TODO
-            evodb.reset();
-            evodb = std::make_unique<CEvoDB>(nEvoDbCache, false, fReset || fReindexChainState);
+        int64_t nEvoDbCache{64 * 1024 * 1024}; // TODO
+        evodb.reset();
+        evodb = std::make_unique<CEvoDB>(nEvoDbCache, false, fReset || fReindexChainState);
 
-            mnhf_manager.reset();
-            mnhf_manager = std::make_unique<CMNHFManager>(*evodb);
+        mnhf_manager.reset();
+        mnhf_manager = std::make_unique<CMNHFManager>(*evodb);
 
-            chainman.InitializeChainstate(mempool, *evodb, chain_helper, clhandler, isman);
-            chainman.m_total_coinstip_cache = nCoinCacheUsage;
-            chainman.m_total_coinsdb_cache = nCoinDBCache;
+        chainman.InitializeChainstate(mempool, *evodb, chain_helper, clhandler, isman);
+        chainman.m_total_coinstip_cache = nCoinCacheUsage;
+        chainman.m_total_coinsdb_cache = nCoinDBCache;
 
-            auto& pblocktree{chainman.m_blockman.m_block_tree_db};
-            // new CBlockTreeDB tries to delete the existing file, which
-            // fails if it's still open from the previous loop. Close it first:
-            pblocktree.reset();
-            pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
+        auto& pblocktree{chainman.m_blockman.m_block_tree_db};
+        // new CBlockTreeDB tries to delete the existing file, which
+        // fails if it's still open from the previous loop. Close it first:
+        pblocktree.reset();
+        pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
 
-            // Same logic as above with pblocktree
-            dmnman.reset();
-            dmnman = std::make_unique<CDeterministicMNManager>(chainman.ActiveChainstate(), *evodb);
-            mempool->ConnectManagers(dmnman.get());
+        // Same logic as above with pblocktree
+        dmnman.reset();
+        dmnman = std::make_unique<CDeterministicMNManager>(chainman.ActiveChainstate(), *evodb);
+        mempool->ConnectManagers(dmnman.get());
 
-            cpoolman.reset();
-            cpoolman = std::make_unique<CCreditPoolManager>(*evodb);
+        cpoolman.reset();
+        cpoolman = std::make_unique<CCreditPoolManager>(*evodb);
 
-            qsnapman.reset();
-            qsnapman.reset(new llmq::CQuorumSnapshotManager(*evodb));
+        qsnapman.reset();
+        qsnapman.reset(new llmq::CQuorumSnapshotManager(*evodb));
 
-            if (llmq_ctx) {
-                llmq_ctx->Interrupt();
-                llmq_ctx->Stop();
-            }
-            llmq_ctx.reset();
-            llmq_ctx = std::make_unique<LLMQContext>(chainman, *dmnman, *evodb, mn_metaman, *mnhf_manager, sporkman,
-                                                     *mempool, mn_activeman.get(), mn_sync, /*unit_tests=*/false, /*wipe=*/fReset || fReindexChainState);
-            // Enable CMNHFManager::{Process, Undo}Block
-            mnhf_manager->ConnectManagers(&chainman, llmq_ctx->qman.get());
+        if (llmq_ctx) {
+            llmq_ctx->Interrupt();
+            llmq_ctx->Stop();
+        }
+        llmq_ctx.reset();
+        llmq_ctx = std::make_unique<LLMQContext>(chainman, *dmnman, *evodb, mn_metaman, *mnhf_manager, sporkman,
+                                                 *mempool, mn_activeman.get(), mn_sync, /*unit_tests=*/false, /*wipe=*/fReset || fReindexChainState);
+        // Enable CMNHFManager::{Process, Undo}Block
+        mnhf_manager->ConnectManagers(&chainman, llmq_ctx->qman.get());
 
-            chain_helper.reset();
-            chain_helper = std::make_unique<CChainstateHelper>(*cpoolman, *dmnman, *mnhf_manager, govman, *(llmq_ctx->quorum_block_processor), chainman,
-                                                               chainparams.GetConsensus(), mn_sync, sporkman, *(llmq_ctx->clhandler), *(llmq_ctx->qman));
+        chain_helper.reset();
+        chain_helper = std::make_unique<CChainstateHelper>(*cpoolman, *dmnman, *mnhf_manager, govman, *(llmq_ctx->quorum_block_processor), chainman,
+                                                            chainparams.GetConsensus(), mn_sync, sporkman, *(llmq_ctx->clhandler), *(llmq_ctx->qman));
 
-            if (fReset) {
-                pblocktree->WriteReindexing(true);
-                //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
-                if (fPruneMode)
-                    CleanupBlockRevFiles();
-            }
+        if (fReset) {
+            pblocktree->WriteReindexing(true);
+            //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
+            if (fPruneMode)
+                CleanupBlockRevFiles();
+        }
 
+        if (ShutdownRequested()) return ChainstateLoadingError::SHUTDOWN_PROBED;
+
+        // LoadBlockIndex will load m_have_pruned if we've ever removed a
+        // block file from disk.
+        // Note that it also sets fReindex based on the disk flag!
+        // From here on out fReindex and fReset mean something different!
+        if (!chainman.LoadBlockIndex()) {
             if (ShutdownRequested()) return ChainstateLoadingError::SHUTDOWN_PROBED;
+            return ChainstateLoadingError::ERROR_LOADING_BLOCK_DB;
+        }
 
-            // LoadBlockIndex will load m_have_pruned if we've ever removed a
-            // block file from disk.
-            // Note that it also sets fReindex based on the disk flag!
-            // From here on out fReindex and fReset mean something different!
-            if (!chainman.LoadBlockIndex()) {
-                if (ShutdownRequested()) return ChainstateLoadingError::SHUTDOWN_PROBED;
-                return ChainstateLoadingError::ERROR_LOADING_BLOCK_DB;
+        // TODO: Remove this when pruning is fixed.
+        // See https://github.com/dashpay/dash/pull/1817 and https://github.com/dashpay/dash/pull/1743
+        if (is_governance_enabled && !is_txindex_enabled && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) {
+            return ChainstateLoadingError::ERROR_TXINDEX_DISABLED_WHEN_GOV_ENABLED;
+        }
+
+        if (!chainman.BlockIndex().empty() &&
+                !chainman.m_blockman.LookupBlockIndex(chainparams.GetConsensus().hashGenesisBlock)) {
+            return ChainstateLoadingError::ERROR_BAD_GENESIS_BLOCK;
+        }
+
+        if (!chainparams.GetConsensus().hashDevnetGenesisBlock.IsNull() && !chainman.BlockIndex().empty() &&
+                !chainman.m_blockman.LookupBlockIndex(chainparams.GetConsensus().hashDevnetGenesisBlock)) {
+            return ChainstateLoadingError::ERROR_BAD_DEVNET_GENESIS_BLOCK;
+        }
+
+        if (!fReset && !fReindexChainState) {
+            // Check for changed -addressindex state
+            if (!fAddressIndex && fAddressIndex != is_addrindex_enabled) {
+                return ChainstateLoadingError::ERROR_ADDRIDX_NEEDS_REINDEX;
             }
 
-            // TODO: Remove this when pruning is fixed.
-            // See https://github.com/dashpay/dash/pull/1817 and https://github.com/dashpay/dash/pull/1743
-            if (is_governance_enabled && !is_txindex_enabled && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) {
-                return ChainstateLoadingError::ERROR_TXINDEX_DISABLED_WHEN_GOV_ENABLED;
+            // Check for changed -timestampindex state
+            if (!fTimestampIndex && fTimestampIndex != is_timeindex_enabled) {
+                return ChainstateLoadingError::ERROR_TIMEIDX_NEEDS_REINDEX;
             }
 
-            if (!chainman.BlockIndex().empty() &&
-                    !chainman.m_blockman.LookupBlockIndex(chainparams.GetConsensus().hashGenesisBlock)) {
-                return ChainstateLoadingError::ERROR_BAD_GENESIS_BLOCK;
+            // Check for changed -spentindex state
+            if (!fSpentIndex && fSpentIndex != is_spentindex_enabled) {
+                return ChainstateLoadingError::ERROR_SPENTIDX_NEEDS_REINDEX;
+            }
+        }
+
+        chainman.InitAdditionalIndexes();
+
+        LogPrintf("%s: address index %s\n", __func__, fAddressIndex ? "enabled" : "disabled");
+        LogPrintf("%s: timestamp index %s\n", __func__, fTimestampIndex ? "enabled" : "disabled");
+        LogPrintf("%s: spent index %s\n", __func__, fSpentIndex ? "enabled" : "disabled");
+
+        // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
+        // in the past, but is now trying to run unpruned.
+        if (chainman.m_blockman.m_have_pruned && !fPruneMode) {
+            return ChainstateLoadingError::ERROR_PRUNED_NEEDS_REINDEX;
+        }
+
+        // At this point blocktree args are consistent with what's on disk.
+        // If we're not mid-reindex (based on disk + args), add a genesis block on disk
+        // (otherwise we use the one already on disk).
+        // This is called again in ThreadImport after the reindex completes.
+        if (!fReindex && !chainman.ActiveChainstate().LoadGenesisBlock()) {
+            return ChainstateLoadingError::ERROR_LOAD_GENESIS_BLOCK_FAILED;
+        }
+
+        // At this point we're either in reindex or we've loaded a useful
+        // block tree into BlockIndex()!
+
+        for (CChainState* chainstate : chainman.GetAll()) {
+            chainstate->InitCoinsDB(
+                /* cache_size_bytes */ nCoinDBCache,
+                /* in_memory */ false,
+                /* should_wipe */ fReset || fReindexChainState);
+
+            chainstate->CoinsErrorCatcher().AddReadErrCallback([]() {
+                uiInterface.ThreadSafeMessageBox(
+                    _("Error reading from database, shutting down."),
+                    "", CClientUIInterface::MSG_ERROR);
+            });
+
+            // If necessary, upgrade from older database format.
+            // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
+            if (!chainstate->CoinsDB().Upgrade()) {
+                return ChainstateLoadingError::ERROR_CHAINSTATE_UPGRADE_FAILED;
             }
 
-            if (!chainparams.GetConsensus().hashDevnetGenesisBlock.IsNull() && !chainman.BlockIndex().empty() &&
-                    !chainman.m_blockman.LookupBlockIndex(chainparams.GetConsensus().hashDevnetGenesisBlock)) {
-                return ChainstateLoadingError::ERROR_BAD_DEVNET_GENESIS_BLOCK;
+            // ReplayBlocks is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
+            if (!chainstate->ReplayBlocks()) {
+                return ChainstateLoadingError::ERROR_REPLAYBLOCKS_FAILED;
             }
 
-            if (!fReset && !fReindexChainState) {
-                // Check for changed -addressindex state
-                if (!fAddressIndex && fAddressIndex != is_addrindex_enabled) {
-                    return ChainstateLoadingError::ERROR_ADDRIDX_NEEDS_REINDEX;
+            // The on-disk coinsdb is now in a good state, create the cache
+            chainstate->InitCoinsCache(nCoinCacheUsage);
+            assert(chainstate->CanFlushToDisk());
+
+            // flush evodb
+            // TODO: CEvoDB instance should probably be a part of CChainState
+            // (for multiple chainstates to actually work in parallel)
+            // and not a global
+            if (&chainman.ActiveChainstate() == chainstate && !evodb->CommitRootTransaction()) {
+                return ChainstateLoadingError::ERROR_COMMITING_EVO_DB;
+            }
+
+            if (!is_coinsview_empty(chainstate)) {
+                // LoadChainTip initializes the chain based on CoinsTip()'s best block
+                if (!chainstate->LoadChainTip()) {
+                    return ChainstateLoadingError::ERROR_LOADCHAINTIP_FAILED;
+                }
+                assert(chainstate->m_chain.Tip() != nullptr);
+            }
+        }
+
+        if (!dmnman->MigrateDBIfNeeded() || !dmnman->MigrateDBIfNeeded2()) {
+            return ChainstateLoadingError::ERROR_UPGRADING_EVO_DB;
+        }
+        if (!mnhf_manager->ForceSignalDBUpdate()) {
+            return ChainstateLoadingError::ERROR_UPGRADING_SIGNALS_DB;
+        }
+    } catch (const std::exception& e) {
+        LogPrintf("%s\n", e.what());
+        return ChainstateLoadingError::ERROR_GENERIC_BLOCKDB_OPEN_FAILED;
+    }
+
+    try {
+        LOCK(cs_main);
+
+        for (CChainState* chainstate : chainman.GetAll()) {
+            if (!is_coinsview_empty(chainstate)) {
+                uiInterface.InitMessage(_("Verifying blocks…").translated);
+                if (chainman.m_blockman.m_have_pruned && check_blocks > MIN_BLOCKS_TO_KEEP) {
+                    LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks\n",
+                              MIN_BLOCKS_TO_KEEP);
                 }
 
-                // Check for changed -timestampindex state
-                if (!fTimestampIndex && fTimestampIndex != is_timeindex_enabled) {
-                    return ChainstateLoadingError::ERROR_TIMEIDX_NEEDS_REINDEX;
+                const CBlockIndex* tip = chainstate->m_chain.Tip();
+                RPCNotifyBlockChange(tip);
+                if (tip && tip->nTime > GetTime() + MAX_FUTURE_BLOCK_TIME) {
+                    return ChainstateLoadingError::ERROR_BLOCK_FROM_FUTURE;
+                }
+                const bool v19active{DeploymentActiveAfter(tip, chainparams.GetConsensus(), Consensus::DEPLOYMENT_V19)};
+                if (v19active) {
+                    bls::bls_legacy_scheme.store(false);
+                    LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
                 }
 
-                // Check for changed -spentindex state
-                if (!fSpentIndex && fSpentIndex != is_spentindex_enabled) {
-                    return ChainstateLoadingError::ERROR_SPENTIDX_NEEDS_REINDEX;
-                }
-            }
-
-            chainman.InitAdditionalIndexes();
-
-            LogPrintf("%s: address index %s\n", __func__, fAddressIndex ? "enabled" : "disabled");
-            LogPrintf("%s: timestamp index %s\n", __func__, fTimestampIndex ? "enabled" : "disabled");
-            LogPrintf("%s: spent index %s\n", __func__, fSpentIndex ? "enabled" : "disabled");
-
-            // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
-            // in the past, but is now trying to run unpruned.
-            if (chainman.m_blockman.m_have_pruned && !fPruneMode) {
-                return ChainstateLoadingError::ERROR_PRUNED_NEEDS_REINDEX;
-            }
-
-            // At this point blocktree args are consistent with what's on disk.
-            // If we're not mid-reindex (based on disk + args), add a genesis block on disk
-            // (otherwise we use the one already on disk).
-            // This is called again in ThreadImport after the reindex completes.
-            if (!fReindex && !chainman.ActiveChainstate().LoadGenesisBlock()) {
-                return ChainstateLoadingError::ERROR_LOAD_GENESIS_BLOCK_FAILED;
-            }
-
-            // At this point we're either in reindex or we've loaded a useful
-            // block tree into BlockIndex()!
-
-            for (CChainState* chainstate : chainman.GetAll()) {
-                chainstate->InitCoinsDB(
-                    /* cache_size_bytes */ nCoinDBCache,
-                    /* in_memory */ false,
-                    /* should_wipe */ fReset || fReindexChainState);
-
-                chainstate->CoinsErrorCatcher().AddReadErrCallback([]() {
-                    uiInterface.ThreadSafeMessageBox(
-                        _("Error reading from database, shutting down."),
-                        "", CClientUIInterface::MSG_ERROR);
-                });
-
-                // If necessary, upgrade from older database format.
-                // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
-                if (!chainstate->CoinsDB().Upgrade()) {
-                    return ChainstateLoadingError::ERROR_CHAINSTATE_UPGRADE_FAILED;
+                if (!CVerifyDB().VerifyDB(
+                        *chainstate, chainparams, chainstate->CoinsDB(),
+                        *evodb,
+                        check_level,
+                        check_blocks)) {
+                    return ChainstateLoadingError::ERROR_CORRUPTED_BLOCK_DB;
                 }
 
-                // ReplayBlocks is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
-                if (!chainstate->ReplayBlocks()) {
-                    return ChainstateLoadingError::ERROR_REPLAYBLOCKS_FAILED;
+                // VerifyDB() disconnects blocks which might result in us switching back to legacy.
+                // Make sure we use the right scheme.
+                if (v19active && bls::bls_legacy_scheme.load()) {
+                    bls::bls_legacy_scheme.store(false);
+                    LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
                 }
 
-                // The on-disk coinsdb is now in a good state, create the cache
-                chainstate->InitCoinsCache(nCoinCacheUsage);
-                assert(chainstate->CanFlushToDisk());
+                if (check_level >= 3) {
+                    chainstate->ResetBlockFailureFlags(nullptr);
+                }
 
-                // flush evodb
+            } else {
                 // TODO: CEvoDB instance should probably be a part of CChainState
                 // (for multiple chainstates to actually work in parallel)
                 // and not a global
-                if (&chainman.ActiveChainstate() == chainstate && !evodb->CommitRootTransaction()) {
-                    return ChainstateLoadingError::ERROR_COMMITING_EVO_DB;
-                }
-
-                if (!is_coinsview_empty(chainstate)) {
-                    // LoadChainTip initializes the chain based on CoinsTip()'s best block
-                    if (!chainstate->LoadChainTip()) {
-                        return ChainstateLoadingError::ERROR_LOADCHAINTIP_FAILED;
-                    }
-                    assert(chainstate->m_chain.Tip() != nullptr);
+                if (&chainman.ActiveChainstate() == chainstate && !evodb->IsEmpty()) {
+                    // EvoDB processed some blocks earlier but we have no blocks anymore, something is wrong
+                    return ChainstateLoadingError::ERROR_EVO_DB_SANITY_FAILED;
                 }
             }
-
-            if (!dmnman->MigrateDBIfNeeded() || !dmnman->MigrateDBIfNeeded2()) {
-                return ChainstateLoadingError::ERROR_UPGRADING_EVO_DB;
-            }
-            if (!mnhf_manager->ForceSignalDBUpdate()) {
-                return ChainstateLoadingError::ERROR_UPGRADING_SIGNALS_DB;
-            }
-        } catch (const std::exception& e) {
-            LogPrintf("%s\n", e.what());
-            return ChainstateLoadingError::ERROR_GENERIC_BLOCKDB_OPEN_FAILED;
         }
+    } catch (const std::exception& e) {
+        LogPrintf("%s\n", e.what());
+        return ChainstateLoadingError::ERROR_GENERIC_BLOCKDB_OPEN_FAILED;
+    }
 
-        try {
-            LOCK(cs_main);
-
-            for (CChainState* chainstate : chainman.GetAll()) {
-                if (!is_coinsview_empty(chainstate)) {
-                    uiInterface.InitMessage(_("Verifying blocks…").translated);
-                    if (chainman.m_blockman.m_have_pruned && check_blocks > MIN_BLOCKS_TO_KEEP) {
-                        LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks\n",
-                            MIN_BLOCKS_TO_KEEP);
-                    }
-
-                    const CBlockIndex* tip = chainstate->m_chain.Tip();
-                    RPCNotifyBlockChange(tip);
-                    if (tip && tip->nTime > GetTime() + MAX_FUTURE_BLOCK_TIME) {
-                        return ChainstateLoadingError::ERROR_BLOCK_FROM_FUTURE;
-                    }
-                    const bool v19active{DeploymentActiveAfter(tip, chainparams.GetConsensus(), Consensus::DEPLOYMENT_V19)};
-                    if (v19active) {
-                        bls::bls_legacy_scheme.store(false);
-                        LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
-                    }
-
-                    if (!CVerifyDB().VerifyDB(
-                            *chainstate, chainparams, chainstate->CoinsDB(),
-                            *evodb,
-                            check_level,
-                            check_blocks)) {
-                        return ChainstateLoadingError::ERROR_CORRUPTED_BLOCK_DB;
-                    }
-
-                    // VerifyDB() disconnects blocks which might result in us switching back to legacy.
-                    // Make sure we use the right scheme.
-                    if (v19active && bls::bls_legacy_scheme.load()) {
-                        bls::bls_legacy_scheme.store(false);
-                        LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
-                    }
-
-                    if (check_level >= 3) {
-                        chainstate->ResetBlockFailureFlags(nullptr);
-                    }
-
-                } else {
-                    // TODO: CEvoDB instance should probably be a part of CChainState
-                    // (for multiple chainstates to actually work in parallel)
-                    // and not a global
-                    if (&chainman.ActiveChainstate() == chainstate && !evodb->IsEmpty()) {
-                        // EvoDB processed some blocks earlier but we have no blocks anymore, something is wrong
-                        return ChainstateLoadingError::ERROR_EVO_DB_SANITY_FAILED;
-                    }
-                }
-            }
-        } catch (const std::exception& e) {
-            LogPrintf("%s\n", e.what());
-            return ChainstateLoadingError::ERROR_GENERIC_BLOCKDB_OPEN_FAILED;
-        }
-    } while(false);
     return std::nullopt;
 }
