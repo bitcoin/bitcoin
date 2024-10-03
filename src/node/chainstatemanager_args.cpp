@@ -73,6 +73,8 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
         opts.signature_cache_bytes = clamped_size_each;
     }
 
+    opts.pause_background_sync = args.GetBoolArg("-pausebackgroundsync", DEFAULT_PAUSE_BACKGROUND_SYNC);
+
     return {};
 }
 } // namespace node

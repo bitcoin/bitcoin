@@ -6387,6 +6387,12 @@ std::optional<int> ChainstateManager::GetSnapshotBaseHeight() const
     return base ? std::make_optional(base->nHeight) : std::nullopt;
 }
 
+bool ChainstateManager::BackgroundSyncInProgress() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) {
+    if (!IsUsable(m_snapshot_chainstate.get())) return false;
+    if (!IsUsable(m_ibd_chainstate.get())) return false;
+    return !m_options.pause_background_sync;
+}
+
 bool ChainstateManager::ValidatedSnapshotCleanup()
 {
     AssertLockHeld(::cs_main);
