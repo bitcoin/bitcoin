@@ -56,7 +56,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
         return fReset || fReindexChainState || chainstate->CoinsTip().GetBestBlock().IsNull();
     };
 
-    try {
+    {
         LOCK(cs_main);
 
         int64_t nEvoDbCache{64 * 1024 * 1024}; // TODO
@@ -223,9 +223,6 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
         if (!mnhf_manager->ForceSignalDBUpdate()) {
             return ChainstateLoadingError::ERROR_UPGRADING_SIGNALS_DB;
         }
-    } catch (const std::exception& e) {
-        LogPrintf("%s\n", e.what());
-        return ChainstateLoadingError::ERROR_GENERIC_BLOCKDB_OPEN_FAILED;
     }
 
     return std::nullopt;
@@ -243,7 +240,7 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
         return fReset || fReindexChainState || chainstate->CoinsTip().GetBestBlock().IsNull();
     };
 
-    try {
+    {
         LOCK(cs_main);
 
         for (CChainState* chainstate : chainman.GetAll()) {
@@ -293,9 +290,6 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
                 }
             }
         }
-    } catch (const std::exception& e) {
-        LogPrintf("%s\n", e.what());
-        return ChainstateLoadVerifyError::ERROR_GENERIC_FAILURE;
     }
 
     return std::nullopt;
