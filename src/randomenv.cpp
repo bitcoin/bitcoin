@@ -57,8 +57,10 @@
 #include <sys/auxv.h>
 #endif
 
+#ifndef _MSC_VER
 //! Necessary on some platforms
-extern char** environ;
+extern char** environ; // NOLINT(readability-redundant-declaration): Necessary on some platforms
+#endif
 
 namespace {
 

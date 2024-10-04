@@ -58,7 +58,7 @@
 #include <QTimer>
 #include <QTranslator>
 
-#if defined(QT_STATICPLUGIN)
+#if defined(QT_STATIC)
 #include <QtPlugin>
 #if defined(QT_QPA_PLATFORM_XCB)
 Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
