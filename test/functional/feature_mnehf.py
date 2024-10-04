@@ -148,9 +148,7 @@ class MnehfTest(DashTestFramework):
         ehf_unknown_tx_sent = self.send_tx(ehf_unknown_tx)
         self.log.info(f"unknown ehf tx: {ehf_unknown_tx_sent}")
         self.sync_all()
-        ehf_blockhash = self.nodes[1].generate(1)[0]
-        self.sync_blocks()
-        self.sync_all()
+        ehf_blockhash = self.generate(self.nodes[1], 1)[0]
 
         self.log.info(f"Check MnEhfTx {ehf_tx_sent} was mined in {ehf_blockhash}")
         assert ehf_tx_sent in node.getblock(ehf_blockhash)['tx']
@@ -163,22 +161,19 @@ class MnehfTest(DashTestFramework):
 
         while (node.getblockcount() + 1) % 4 != 0:
             self.check_fork('defined')
-            node.generate(1)
-            self.sync_all()
+            self.generate(node, 1)
 
 
         self.restart_all_nodes()
 
         for _ in range(4):
             self.check_fork('started')
-            node.generate(1)
-            self.sync_all()
+            self.generate(node, 1)
 
 
         for i in range(4):
             self.check_fork('locked_in')
-            node.generate(1)
-            self.sync_all()
+            self.generate(node, 1)
             if i == 7:
                 self.restart_all_nodes()
 
@@ -192,21 +187,19 @@ class MnehfTest(DashTestFramework):
         self.log.info("Expecting for fork to be defined in next blocks because no MnEHF tx here")
         for _ in range(4):
             self.check_fork('defined')
-            node.generate(1)
-            self.sync_all()
+            self.generate(node, 1)
 
 
         self.log.info("Re-sending MnEHF for new fork")
         tx_sent_2 = self.send_tx(ehf_tx)
-        ehf_blockhash_2 = node.generate(1)[0]
-        self.sync_all()
+        ehf_blockhash_2 = self.generate(node, 1)[0]
 
         self.log.info(f"Check MnEhfTx again {tx_sent_2} was mined in {ehf_blockhash_2}")
         assert tx_sent_2 in node.getblock(ehf_blockhash_2)['tx']
 
         self.log.info(f"Generate some more block to jump to `started` status")
         for _ in range(4):
-            node.generate(1)
+            self.generate(node, 1)
         self.check_fork('started')
         self.restart_all_nodes()
         self.check_fork('started')
@@ -223,15 +216,13 @@ class MnehfTest(DashTestFramework):
 
         self.log.info("Testing duplicate EHF signal with same bit")
         ehf_tx_duplicate = self.send_tx(self.create_mnehf(28, pubkey))
-        tip_blockhash = node.generate(1)[0]
-        self.sync_blocks()
+        tip_blockhash = self.generate(node, 1, sync_fun=lambda: self.sync_blocks())[0]
         block = node.getblock(tip_blockhash)
         assert ehf_tx_duplicate in node.getrawmempool() and ehf_tx_duplicate not in block['tx']
 
         self.log.info("Testing EHF signal with same bit but with newer start time")
         self.bump_mocktime(int(60 * 60 * 24 * 14), update_schedulers=False)
-        node.generate(1)
-        self.sync_blocks()
+        self.generate(node, 1, sync_fun=lambda: self.sync_blocks())
         self.restart_all_nodes(params=[self.mocktime, self.mocktime + 1000000])
         self.check_fork('defined')
 
@@ -243,8 +234,7 @@ class MnehfTest(DashTestFramework):
         for _ in range(4 * 4):
             time.sleep(1)
             self.bump_mocktime(1)
-            self.nodes[1].generate(1)
-            self.sync_all()
+            self.generate(self.nodes[1], 1)
         self.check_fork('active')
 
 

@@ -71,16 +71,13 @@ class RawTransactionsTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info('prepare some coins for multiple *rawtransaction commands')
-        self.nodes[2].generate(1)
-        self.sync_all()
-        self.nodes[0].generate(COINBASE_MATURITY + 1)
-        self.sync_all()
+        self.generate(self.nodes[2], 1)
+        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),1.5)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),1.0)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),5.0)
         self.sync_all()
-        self.nodes[0].generate(5)
-        self.sync_all()
+        self.generate(self.nodes[0], 5)
 
         self.log.info('Test getrawtransaction on genesis block coinbase returns an error')
         block = self.nodes[0].getblock(self.nodes[0].getblockhash(0))
@@ -166,8 +163,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # make a tx by sending then generate 2 blocks; block1 has the tx in it
         tx = self.nodes[2].sendtoaddress(self.nodes[1].getnewaddress(), 1)
-        block1, block2 = self.nodes[2].generate(2)
-        self.sync_all()
+        block1, block2 = self.generate(self.nodes[2], 2)
         # We should be able to get the raw transaction by providing the correct block
         gottx = self.nodes[0].getrawtransaction(tx, True, block1)
         assert_equal(gottx['txid'], tx)
@@ -217,8 +213,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             # send 1.2 BTC to msig adr
             txId = self.nodes[0].sendtoaddress(mSigObj, 1.2)
             self.sync_all()
-            self.nodes[0].generate(1)
-            self.sync_all()
+            self.generate(self.nodes[0], 1)
             assert_equal(self.nodes[2].getbalance(), bal+Decimal('1.20000000')) #node2 has both keys of the 2of2 ms addr., tx should affect the balance
 
 
@@ -238,8 +233,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             decTx = self.nodes[0].gettransaction(txId)
             rawTx = self.nodes[0].decoderawtransaction(decTx['hex'])
             self.sync_all()
-            self.nodes[0].generate(1)
-            self.sync_all()
+            self.generate(self.nodes[0], 1)
 
             #THIS IS AN INCOMPLETE FEATURE
             #NODE2 HAS TWO OF THREE KEY AND THE FUNDS SHOULD BE SPENDABLE AND COUNT AT BALANCE CALCULATION
@@ -261,8 +255,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             self.nodes[2].sendrawtransaction(rawTxSigned['hex'])
             rawTx = self.nodes[0].decoderawtransaction(rawTxSigned['hex'])
             self.sync_all()
-            self.nodes[0].generate(1)
-            self.sync_all()
+            self.generate(self.nodes[0], 1)
             assert_equal(self.nodes[0].getbalance(), bal+Decimal('500.00000000')+Decimal('2.19000000')) #block reward + tx
 
             # 2of2 test for combining transactions
@@ -281,8 +274,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             decTx = self.nodes[0].gettransaction(txId)
             rawTx2 = self.nodes[0].decoderawtransaction(decTx['hex'])
             self.sync_all()
-            self.nodes[0].generate(1)
-            self.sync_all()
+            self.generate(self.nodes[0], 1)
 
             assert_equal(self.nodes[2].getbalance(), bal) # the funds of a 2of2 multisig tx should not be marked as spendable
 
@@ -306,22 +298,19 @@ class RawTransactionsTest(BitcoinTestFramework):
             self.nodes[2].sendrawtransaction(rawTxComb)
             rawTx2 = self.nodes[0].decoderawtransaction(rawTxComb)
             self.sync_all()
-            self.nodes[0].generate(1)
-            self.sync_all()
+            self.generate(self.nodes[0], 1)
             assert_equal(self.nodes[0].getbalance(), bal+Decimal('500.00000000')+Decimal('2.19000000')) #block reward + tx
 
 
         # Basic signrawtransaction test
         addr = self.nodes[1].getnewaddress()
         txid = self.nodes[0].sendtoaddress(addr, 10)
-        self.nodes[0].generate(1)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
         vout = find_vout_for_address(self.nodes[1], txid, addr)
         rawTx = self.nodes[1].createrawtransaction([{'txid': txid, 'vout': vout}], {self.nodes[1].getnewaddress(): 9.999})
         rawTxSigned = self.nodes[1].signrawtransactionwithwallet(rawTx)
         txId = self.nodes[1].sendrawtransaction(rawTxSigned['hex'])
-        self.nodes[0].generate(1)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         # getrawtransaction tests
         # 1. valid parameters - only supply txid
@@ -449,7 +438,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[2].sendrawtransaction(hexstring=rawTxSigned['hex'], maxfeerate='0.20000000')
 
         self.log.info('sendrawtransaction/testmempoolaccept with tx that is already in the chain')
-        self.nodes[2].generate(1)
+        self.generate(self.nodes[2], 1)
         self.sync_blocks()
         for node in self.nodes:
             testres = node.testmempoolaccept([rawTxSigned['hex']])[0]

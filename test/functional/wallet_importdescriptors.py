@@ -73,7 +73,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 0)
 
         self.log.info('Mining coins')
-        w0.generatetoaddress(101, w0.getnewaddress())
+        self.generatetoaddress(self.nodes[0], 101, w0.getnewaddress())
 
         # RPC importdescriptors -----------------------------------------------
 
@@ -380,7 +380,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                      solvable=True,
                      ismine=True)
         txid = w0.sendtoaddress(address, 49.99995540)
-        w0.generatetoaddress(6, w0.getnewaddress())
+        self.generatetoaddress(self.nodes[0], 6, w0.getnewaddress())
         self.sync_blocks()
         tx = wpriv.createrawtransaction([{"txid": txid, "vout": 0}], {w0.getnewaddress(): 49.999})
         signed_tx = wpriv.signrawtransactionwithwallet(tx)
@@ -426,11 +426,9 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(change_addr, '91WxMwg2NHD1PwHChhbAkeCN6nQ8ikdLEx')
         assert_equal(wmulti_priv.getwalletinfo()['keypoolsize'], 1000)
         txid = w0.sendtoaddress(addr, 10)
-        self.nodes[0].generate(6)
-        self.sync_all()
+        self.generate(self.nodes[0], 6)
         wmulti_priv.sendtoaddress(w0.getnewaddress(), 8) # uses change 1
-        self.nodes[0].generate(6)
-        self.sync_all()
+        self.generate(self.nodes[0], 6)
 
         self.nodes[1].createwallet(wallet_name="wmulti_pub", disable_private_keys=True, blank=True, descriptors=True)
         wmulti_pub = self.nodes[1].get_wallet_rpc("wmulti_pub")
@@ -467,8 +465,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         txid2 = w0.sendtoaddress(addr2, 10)
         vout2 = find_vout_for_address(self.nodes[0], txid2, addr2)
 
-        self.nodes[0].generate(6)
-        self.sync_all()
+        self.generate(self.nodes[0], 6)
         assert_equal(wmulti_pub.getbalance(), wmulti_priv.getbalance())
 
         # Make sure that descriptor wallets containing multiple xpubs in a single descriptor load correctly
@@ -558,8 +555,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
         addr = multi_priv_big.getnewaddress("")
         w0.sendtoaddress(addr, 10)
-        self.nodes[0].generate(6)
-        self.sync_all()
+        self.generate(self.nodes[0], 6)
         # It is standard and would relay.
         txid = multi_priv_big.sendtoaddress(w0.getnewaddress(), 10, "", "",
                                             True)

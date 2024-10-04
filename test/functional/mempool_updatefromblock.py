@@ -91,7 +91,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
             if tx_count in n_tx_to_mine:
                 # The created transactions are mined into blocks by batches.
                 self.log.info('The batch of {} transactions has been accepted into the mempool.'.format(len(self.nodes[0].getrawmempool())))
-                block_hash = self.nodes[0].generate(1)[0]
+                block_hash = self.generate(self.nodes[0], 1)[0]
                 if not first_block_hash:
                     first_block_hash = block_hash
                 assert_equal(len(self.nodes[0].getrawmempool()), 0)

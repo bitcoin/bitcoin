@@ -29,7 +29,7 @@ class BlockSyncTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info("Setup network: node0->node1->node2")
         self.log.info("Mining one block on node0 and verify all nodes sync")
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         self.log.info("Success!")
 
 

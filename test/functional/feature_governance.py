@@ -89,17 +89,15 @@ class DashGovernanceTest (DashTestFramework):
         assert_equal(len(self.nodes[0].gobject("list-prepared")), 0)
 
         self.log.info("Check 1st superblock before v20")
-        self.nodes[0].generate(3)
         self.bump_mocktime(3)
-        self.sync_blocks()
+        self.generate(self.nodes[0], 3, sync_fun=self.sync_blocks())
         assert_equal(self.nodes[0].getblockcount(), 130)
         assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["active"], False)
         self.check_superblockbudget(False)
 
         self.log.info("Check 2nd superblock before v20")
-        self.nodes[0].generate(10)
         self.bump_mocktime(10)
-        self.sync_blocks()
+        self.generate(self.nodes[0], 10, sync_fun=self.sync_blocks())
         assert_equal(self.nodes[0].getblockcount(), 140)
         assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["active"], False)
         self.check_superblockbudget(False)
@@ -117,9 +115,8 @@ class DashGovernanceTest (DashTestFramework):
         p1_collateral_prepare = prepare_object(self.nodes[0], 1, uint256_to_string(0), proposal_time, 1, "Proposal_1", self.p1_amount, self.p1_payout_address)
         p2_collateral_prepare = prepare_object(self.nodes[0], 1, uint256_to_string(0), proposal_time, 1, "Proposal_2", self.p2_amount, self.p2_payout_address)
 
-        self.nodes[0].generate(6)
         self.bump_mocktime(6)
-        self.sync_blocks()
+        self.generate(self.nodes[0], 6, sync_fun=self.sync_blocks())
 
         assert_equal(len(self.nodes[0].gobject("list-prepared")), 3)
         assert_equal(len(self.nodes[0].gobject("list")), 0)
@@ -165,9 +162,8 @@ class DashGovernanceTest (DashTestFramework):
         self.log.info("v20 is expected to be activate since block 160")
         assert block_count + n < 160
         for _ in range(n - 1):
-            self.nodes[0].generate(1)
             self.bump_mocktime(1)
-            self.sync_blocks()
+            self.generate(self.nodes[0], 1, sync_fun=self.sync_blocks())
             self.check_superblockbudget(False)
 
         assert_equal(len(self.nodes[0].gobject("list", "valid", "triggers")), 0)
@@ -193,8 +189,8 @@ class DashGovernanceTest (DashTestFramework):
         isolated = self.nodes[payee_idx]
 
         self.log.info("Move 1 block inside the Superblock maturity window on the isolated node")
-        isolated.generate(1)
         self.bump_mocktime(1)
+        self.generate(isolated, 1, sync_fun=self.no_op)
         self.log.info("The isolated 'winner' should submit new trigger and vote for it")
         self.wait_until(lambda: len(isolated.gobject("list", "valid", "triggers")) == 1, timeout=5)
         isolated_trigger_hash = list(isolated.gobject("list", "valid", "triggers").keys())[0]
@@ -203,8 +199,8 @@ class DashGovernanceTest (DashTestFramework):
         assert_equal(more_votes, False)
 
         self.log.info("Move 1 block enabling the Superblock maturity window on non-isolated nodes")
-        self.nodes[0].generate(1)
         self.bump_mocktime(1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         assert_equal(self.nodes[0].getblockcount(), 150)
         assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["active"], False)
         self.check_superblockbudget(False)
@@ -214,8 +210,8 @@ class DashGovernanceTest (DashTestFramework):
         assert_equal(has_trigger, False)
 
         self.log.info("Move 1 block inside the Superblock maturity window on non-isolated nodes")
-        self.nodes[0].generate(1)
         self.bump_mocktime(1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         self.log.info("There is now new 'winner' who should submit new trigger and vote for it")
         self.wait_until(lambda: len(self.nodes[0].gobject("list", "valid", "triggers")) == 1, timeout=5)
@@ -232,8 +228,8 @@ class DashGovernanceTest (DashTestFramework):
             assert(amount_str in payment_amounts_expected)
 
         self.log.info("Move another block inside the Superblock maturity window on non-isolated nodes")
-        self.nodes[0].generate(1)
         self.bump_mocktime(1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         self.log.info("Every non-isolated MN should vote for the same trigger now, no new triggers should be created")
         self.wait_until(lambda: list(self.nodes[0].gobject("list", "valid", "triggers").values())[0]['YesCount'] == self.mn_count - 1, timeout=5)
@@ -268,9 +264,8 @@ class DashGovernanceTest (DashTestFramework):
         assert_equal(more_triggers, False)
 
         self.log.info("Move another block inside the Superblock maturity window")
-        self.nodes[0].generate(1)
         self.bump_mocktime(1)
-        self.sync_blocks()
+        self.generate(self.nodes[0], 1, sync_fun=self.sync_blocks())
 
         self.log.info("Should see NO votes on both triggers now")
         self.wait_until(lambda: self.nodes[0].gobject("list", "valid", "triggers")[winning_trigger_hash]['NoCount'] == 1, timeout=5)
@@ -284,9 +279,8 @@ class DashGovernanceTest (DashTestFramework):
 
         self.log.info("Move another block inside the Superblock maturity window")
         with self.nodes[1].assert_debug_log(["CGovernanceManager::VoteGovernanceTriggers"]):
-            self.nodes[0].generate(1)
             self.bump_mocktime(1)
-            self.sync_blocks()
+            self.generate(self.nodes[0], 1, sync_fun=self.sync_blocks())
 
         self.log.info("Vote count should not change even though MNs are allowed to vote again")
         assert_equal(before, self.nodes[1].gobject("count")["votes"])
@@ -298,9 +292,8 @@ class DashGovernanceTest (DashTestFramework):
 
         self.log.info("Move remaining n blocks until actual Superblock")
         for i in range(n):
-            self.nodes[0].generate(1)
             self.bump_mocktime(1)
-            self.sync_blocks()
+            self.generate(self.nodes[0], 1, sync_fun=self.sync_blocks())
             # comparing to 159 because bip9 forks are active when the tip is one block behind the activation height
             self.check_superblockbudget(block_count + i + 1 >= 159)
 
@@ -310,9 +303,8 @@ class DashGovernanceTest (DashTestFramework):
         self.log.info("Move a few block past the recent superblock height and make sure we have no new votes")
         for _ in range(5):
             with self.nodes[1].assert_debug_log("", [f"Voting NO-FUNDING for trigger:{winning_trigger_hash} success"]):
-                self.nodes[0].generate(1)
                 self.bump_mocktime(1)
-                self.sync_blocks()
+                self.generate(self.nodes[0], 1, sync_fun=self.sync_blocks())
             # Votes on both triggers should NOT change
             assert_equal(self.nodes[0].gobject("list", "valid", "triggers")[winning_trigger_hash]['NoCount'], 1)
             assert_equal(self.nodes[0].gobject("list", "valid", "triggers")[isolated_trigger_hash]['NoCount'], self.mn_count - 1)
@@ -322,31 +314,27 @@ class DashGovernanceTest (DashTestFramework):
 
         self.log.info("Move remaining n blocks until the next Superblock")
         for _ in range(n - 1):
-            self.nodes[0].generate(1)
             self.bump_mocktime(1)
-            self.sync_blocks()
+            self.generate(self.nodes[0], 1, sync_fun=self.sync_blocks())
         self.log.info("Wait for new trigger and votes")
         self.wait_until(lambda: have_trigger_for_height(self.nodes, 180))
         self.log.info("Mine superblock")
-        self.nodes[0].generate(1)
         self.bump_mocktime(1)
-        self.sync_blocks()
+        self.generate(self.nodes[0], 1, sync_fun=self.sync_blocks())
         assert_equal(self.nodes[0].getblockcount(), 180)
         assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["active"], True)
 
         self.log.info("Mine and check a couple more superblocks")
         for i in range(2):
             for _ in range(sb_cycle - 1):
-                self.nodes[0].generate(1)
                 self.bump_mocktime(1)
-                self.sync_blocks()
+                self.generate(self.nodes[0], 1, sync_fun=self.sync_blocks())
             # Wait for new trigger and votes
             sb_block_height = 180 + (i + 1) * sb_cycle
             self.wait_until(lambda: have_trigger_for_height(self.nodes, sb_block_height))
             # Mine superblock
-            self.nodes[0].generate(1)
             self.bump_mocktime(1)
-            self.sync_blocks()
+            self.generate(self.nodes[0], 1, sync_fun=self.sync_blocks())
             assert_equal(self.nodes[0].getblockcount(), sb_block_height)
             assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["active"], True)
             self.check_superblockbudget(True)

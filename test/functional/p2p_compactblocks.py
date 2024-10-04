@@ -155,7 +155,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         block = self.build_block_on_tip(self.nodes[0])
         self.test_node.send_and_ping(msg_block(block))
         assert int(self.nodes[0].getbestblockhash(), 16) == block.sha256
-        self.nodes[0].generatetoaddress(COINBASE_MATURITY, self.nodes[0].getnewaddress())
+        self.generatetoaddress(self.nodes[0], COINBASE_MATURITY, self.nodes[0].getnewaddress())
 
         total_value = block.vtx[0].vout[0].nValue
         out_value = total_value // 10
@@ -198,7 +198,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         def check_announcement_of_new_block(node, peer, predicate):
             peer.clear_block_announcement()
-            block_hash = int(node.generate(1)[0], 16)
+            block_hash = int(self.generate(node, 1)[0], 16)
             peer.wait_for_block_announcement(block_hash, timeout=30)
             assert peer.block_announced
 
@@ -261,7 +261,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
     # This test actually causes dashd to (reasonably!) disconnect us, so do this last.
     def test_invalid_cmpctblock_message(self):
-        self.nodes[0].generate(COINBASE_MATURITY + 1)
+        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
         block = self.build_block_on_tip(self.nodes[0])
 
         cmpct_block = P2PHeaderAndShortIDs()
@@ -278,7 +278,7 @@ class CompactBlocksTest(BitcoinTestFramework):
     def test_compactblock_construction(self, test_node):
         node = self.nodes[0]
         # Generate a bunch of transactions.
-        node.generate(COINBASE_MATURITY + 1)
+        self.generate(node, COINBASE_MATURITY + 1)
         num_transactions = 25
         address = node.getnewaddress()
 
@@ -296,7 +296,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         # Now mine a block, and look at the resulting compact block.
         test_node.clear_block_announcement()
-        block_hash = int(node.generate(1)[0], 16)
+        block_hash = int(self.generate(node, 1)[0], 16)
 
         # Store the raw block in our internal format.
         block = from_hex(CBlock(), node.getblock("%064x" % block_hash, False))
@@ -613,7 +613,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         new_blocks = []
         for _ in range(MAX_CMPCTBLOCK_DEPTH + 1):
             test_node.clear_block_announcement()
-            new_blocks.append(node.generate(1)[0])
+            new_blocks.append(self.generate(node, 1)[0])
             test_node.wait_until(test_node.received_block_announcement, timeout=30)
 
         test_node.clear_block_announcement()
@@ -621,7 +621,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         test_node.wait_until(lambda: "cmpctblock" in test_node.last_message, timeout=30)
 
         test_node.clear_block_announcement()
-        node.generate(1)
+        self.generate(node, 1)
         test_node.wait_until(test_node.received_block_announcement, timeout=30)
         test_node.clear_block_announcement()
         with p2p_lock:
@@ -789,7 +789,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
     def run_test(self):
         # Get the nodes out of IBD
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
 
         # Setup the p2p connections
         self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn())

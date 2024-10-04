@@ -53,8 +53,7 @@ class SpentIndexTest(BitcoinTestFramework):
         self.sync_all()
 
         self.log.info("Mining blocks...")
-        self.nodes[0].generate(105)
-        self.sync_all()
+        self.generate(self.nodes[0], 105)
 
         chain_height = self.nodes[1].getblockcount()
         assert_equal(chain_height, 105)
@@ -76,8 +75,7 @@ class SpentIndexTest(BitcoinTestFramework):
 
         signed_tx = self.nodes[0].signrawtransactionwithwallet(tx.serialize().hex())
         txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], 0)
-        self.nodes[0].generate(1)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         self.log.info("Testing getspentinfo method...")
 
@@ -120,8 +118,7 @@ class SpentIndexTest(BitcoinTestFramework):
         assert_equal(txVerbose3["vin"][0]["valueSat"], amount)
 
         # Check the database index
-        self.nodes[0].generate(1)
-        self.sync_all()
+        self.generate(self.nodes[0], 1)
 
         txVerbose4 = self.nodes[3].getrawtransaction(txid2, 1)
         assert_equal(txVerbose4["vin"][0]["address"], address2)

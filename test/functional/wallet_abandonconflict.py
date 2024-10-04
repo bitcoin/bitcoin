@@ -29,21 +29,20 @@ class AbandonConflictTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        self.nodes[1].generate(COINBASE_MATURITY)
+        self.generate(self.nodes[1], COINBASE_MATURITY)
         self.sync_blocks()
         balance = self.nodes[0].getbalance()
         txA = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
         txB = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
         txC = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
         self.sync_mempools()
-        self.nodes[1].generate(1)
+        self.generate(self.nodes[1], 1)
 
         # Can not abandon non-wallet transaction
         assert_raises_rpc_error(-5, 'Invalid or non-wallet transaction id', lambda: self.nodes[0].abandontransaction(txid='ff' * 32))
         # Can not abandon confirmed transaction
         assert_raises_rpc_error(-5, 'Transaction not eligible for abandonment', lambda: self.nodes[0].abandontransaction(txid=txA))
 
-        self.sync_blocks()
         newbalance = self.nodes[0].getbalance()
         assert balance - newbalance < Decimal("0.001")  #no more than fees lost
         balance = newbalance
@@ -167,7 +166,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         tx = self.nodes[0].createrawtransaction(inputs, outputs)
         signed = self.nodes[0].signrawtransactionwithwallet(tx)
         self.nodes[1].sendrawtransaction(signed["hex"])
-        self.nodes[1].generate(1)
+        self.generate(self.nodes[1], 1, sync_fun=self.no_op)
 
         self.connect_nodes(0, 1)
         self.sync_blocks()

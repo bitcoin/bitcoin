@@ -149,7 +149,7 @@ class FilterTest(BitcoinTestFramework):
         assert not filter_peer.tx_received
 
         # Clear the mempool so that this transaction does not impact subsequent tests
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
 
     def test_filter(self, filter_peer):
         # Set the bloomfilter using filterload
@@ -159,14 +159,14 @@ class FilterTest(BitcoinTestFramework):
         filter_address = self.nodes[0].decodescript(filter_peer.watch_script_pubkey)['address']
 
         self.log.info('Check that we receive merkleblock and tx if the filter matches a tx in a block')
-        block_hash = self.nodes[0].generatetoaddress(1, filter_address)[0]
+        block_hash = self.generatetoaddress(self.nodes[0], 1, filter_address)[0]
         txid = self.nodes[0].getblock(block_hash)['tx'][0]
         filter_peer.wait_for_merkleblock(block_hash)
         filter_peer.wait_for_tx(txid)
 
         self.log.info('Check that we only receive a merkleblock if the filter does not match a tx in a block')
         filter_peer.tx_received = False
-        block_hash = self.nodes[0].generatetoaddress(1, self.nodes[0].getnewaddress())[0]
+        block_hash = self.generatetoaddress(self.nodes[0], 1, self.nodes[0].getnewaddress())[0]
         filter_peer.wait_for_merkleblock(block_hash)
         assert not filter_peer.tx_received
 
@@ -194,7 +194,7 @@ class FilterTest(BitcoinTestFramework):
         filter_peer.merkleblock_received = False
         filter_peer.tx_received = False
         with self.nodes[0].assert_debug_log(expected_msgs=['received getdata']):
-            block_hash = self.nodes[0].generatetoaddress(1, self.nodes[0].getnewaddress())[0]
+            block_hash = self.generatetoaddress(self.nodes[0], 1, self.nodes[0].getnewaddress())[0]
             filter_peer.wait_for_inv([CInv(MSG_BLOCK, int(block_hash, 16))])
             filter_peer.sync_with_ping()
             assert not filter_peer.merkleblock_received

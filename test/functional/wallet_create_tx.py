@@ -30,7 +30,7 @@ class CreateTxWalletTest(BitcoinTestFramework):
         assert_equal(tx['locktime'], 0)
 
         self.log.info('Check that anti-fee-sniping is enabled when we mine a recent block')
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         tx = self.nodes[0].decoderawtransaction(self.nodes[0].gettransaction(txid)['hex'])
         assert 0 < tx['locktime'] <= 201

@@ -49,7 +49,7 @@ class MempoolSpendCoinbaseTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getrawmempool(), [spend_mature_id])
 
         # mine a block, mature one should get confirmed
-        self.nodes[0].generate(1)
+        self.generate(self.nodes[0], 1)
         assert_equal(set(self.nodes[0].getrawmempool()), set())
 
         # ... and now previously immature can be spent:

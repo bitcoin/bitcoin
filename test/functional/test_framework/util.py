@@ -520,10 +520,10 @@ def find_output(node, txid, amount, *, blockhash=None):
 
 # Helper to create at least "count" utxos
 # Pass in a fee that is sufficient for relay and mining new transactions.
-def create_confirmed_utxos(fee, node, count):
+def create_confirmed_utxos(test_framework, fee, node, count, **kwargs):
     to_generate = int(0.5 * count) + 101
     while to_generate > 0:
-        node.generate(min(25, to_generate))
+        test_framework.generate(node, min(25, to_generate), **kwargs)
         to_generate -= 25
     utxos = node.listunspent()
     iterations = count - len(utxos)
@@ -544,7 +544,7 @@ def create_confirmed_utxos(fee, node, count):
         node.sendrawtransaction(signed_tx)
 
     while (node.getmempoolinfo()['size'] > 0):
-        node.generate(1)
+        test_framework.generate(node, 1, **kwargs)
 
     utxos = node.listunspent()
     assert len(utxos) >= count
@@ -616,7 +616,7 @@ def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
     return txids
 
 
-def mine_large_block(node, utxos=None):
+def mine_large_block(test_framework, node, utxos=None):
     # generate a 66k transaction,
     # and 14 of them is close to the 1MB block limit
     num = 14
@@ -627,7 +627,18 @@ def mine_large_block(node, utxos=None):
         utxos.extend(node.listunspent())
     fee = 100 * node.getnetworkinfo()["relayfee"]
     create_lots_of_big_transactions(node, txouts, utxos, num, fee=fee)
-    node.generate(1)
+    test_framework.generate(node, 1)
+
+
+def generate_to_height(test_framework, node, target_height):
+    """Generates blocks until a given target block height has been reached.
+       To prevent timeouts, only up to 200 blocks are generated per RPC call.
+       Can be used to activate certain soft-forks (e.g. CSV, CLTV)."""
+    current_height = node.getblockcount()
+    while current_height < target_height:
+        nblocks = min(200, target_height - current_height)
+        current_height += len(test_framework.generate(node, nblocks))
+    assert_equal(node.getblockcount(), target_height)
 
 
 def find_vout_for_address(node, txid, addr):
