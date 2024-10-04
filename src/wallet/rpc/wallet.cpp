@@ -216,11 +216,15 @@ static RPCHelpMan listwallets()
 static RPCHelpMan loadwallet()
 {
     return RPCHelpMan{"loadwallet",
-                "\nLoads a wallet from a wallet file or directory."
-                "\nNote that all wallet command-line options used when starting bitcoind will be"
-                "\napplied to the new wallet.\n",
-                {
-                    {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet directory or .dat file."},
+               "\nLoads a wallet from a wallet file or directory.\n"
+               "\nThe 'filename' should be specified as a path relative to the wallets directory (e.g., `~/.bitcoin/wallets`).\n"
+               "\nExamples:\n"
+               "  Load a wallet named 'mywallet':\n"
+               "    bitcoin-cli loadwallet \"mywallet\"\n"
+               "  Load a wallet from a subdirectory:\n"
+               "    bitcoin-cli loadwallet \"subdir/mywallet\"\n",
+               {
+                    {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The **relative** path to the wallet directory or .dat file."},
                     {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
                 },
                 RPCResult{
