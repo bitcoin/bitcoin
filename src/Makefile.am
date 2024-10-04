@@ -314,6 +314,7 @@ BITCOIN_CORE_H = \
   stacktraces.h \
   streams.h \
   stats/client.h \
+  stats/rawsender.h \
   support/allocators/mt_pooled_secure.h \
   support/allocators/pool.h \
   support/allocators/pooled_secure.h \
@@ -527,6 +528,7 @@ libbitcoin_server_a_SOURCES = \
   shutdown.cpp \
   spork.cpp \
   stats/client.cpp \
+  stats/rawsender.cpp \
   timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \
