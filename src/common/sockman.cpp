@@ -348,7 +348,7 @@ void SockMan::ThreadSocketHandler()
 
 std::unique_ptr<Sock> SockMan::AcceptConnection(const Sock& listen_sock, CService& addr)
 {
-    sockaddr_storage storage;
+    sockaddr_storage storage{};
     socklen_t len{sizeof(storage)};
 
     auto sock{listen_sock.Accept(reinterpret_cast<sockaddr*>(&storage), &len)};
