@@ -131,6 +131,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   deploymentinfo.cpp
   external_signer.cpp
   init/common.cpp
+  i2p.cpp
   kernel/chainparams.cpp
   key.cpp
   key_io.cpp
@@ -208,7 +209,6 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   headerssync.cpp
   httprpc.cpp
   httpserver.cpp
-  i2p.cpp
   index/base.cpp
   index/blockfilterindex.cpp
   index/coinstatsindex.cpp
