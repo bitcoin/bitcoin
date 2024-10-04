@@ -187,12 +187,16 @@ void MakeConnected(DepGraph<BS>& depgraph)
 
 /** Given a dependency graph, and a todo set, read a topological subset of todo from reader. */
 template<typename SetType>
-SetType ReadTopologicalSet(const DepGraph<SetType>& depgraph, const SetType& todo, SpanReader& reader)
+SetType ReadTopologicalSet(const DepGraph<SetType>& depgraph, const SetType& todo, SpanReader& reader, bool non_empty)
 {
+    // Read a bitmask from the fuzzing input. Add 1 if non_empty, so the mask is definitely not
+    // zero in that case.
     uint64_t mask{0};
     try {
         reader >> VARINT(mask);
     } catch(const std::ios_base::failure&) {}
+    mask += non_empty;
+
     SetType ret;
     for (auto i : todo) {
         if (!ret[i]) {
@@ -200,7 +204,17 @@ SetType ReadTopologicalSet(const DepGraph<SetType>& depgraph, const SetType& tod
             mask >>= 1;
         }
     }
-    return ret & todo;
+    ret &= todo;
+
+    // While mask starts off non-zero if non_empty is true, it is still possible that all its low
+    // bits are 0, and ret ends up being empty. As a last resort, use the in-todo ancestry of the
+    // first todo position.
+    if (non_empty && ret.None()) {
+        Assume(todo.Any());
+        ret = depgraph.Ancestors(todo.First()) & todo;
+        Assume(ret.Any());
+    }
+    return ret;
 }
 
 /** Given a dependency graph, construct any valid linearization for it, reading from a SpanReader. */
@@ -629,10 +643,10 @@ FUZZ_TARGET(clusterlin_ancestor_finder)
         assert(real_best_anc.has_value());
         assert(*real_best_anc == best_anc);
 
-        // Find a topologically valid subset of transactions to remove from the graph.
-        auto del_set = ReadTopologicalSet(depgraph, todo, reader);
-        // If we did not find anything, use best_anc itself, because we should remove something.
-        if (del_set.None()) del_set = best_anc.transactions;
+        // Find a non-empty topologically valid subset of transactions to remove from the graph.
+        // Using an empty set would mean the next iteration is identical to the current one, and
+        // could cause an infinite loop.
+        auto del_set = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
         todo -= del_set;
         anc_finder.MarkDone(del_set);
     }
@@ -708,15 +722,16 @@ FUZZ_TARGET(clusterlin_simple_finder)
                 assert(exhaustive.feerate == found.feerate);
             }
 
-            // Compare with a topological set read from the fuzz input.
-            auto read_topo = ReadTopologicalSet(depgraph, todo, reader);
-            if (read_topo.Any()) assert(found.feerate >= depgraph.FeeRate(read_topo));
+            // Compare with a non-empty topological set read from the fuzz input (comparing with an
+            // empty set is not interesting).
+            auto read_topo = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
+            assert(found.feerate >= depgraph.FeeRate(read_topo));
         }
 
-        // Find a topologically valid subset of transactions to remove from the graph.
-        auto del_set = ReadTopologicalSet(depgraph, todo, reader);
-        // If we did not find anything, use found itself, because we should remove something.
-        if (del_set.None()) del_set = found.transactions;
+        // Find a non-empty topologically valid subset of transactions to remove from the graph.
+        // Using an empty set would mean the next iteration is identical to the current one, and
+        // could cause an infinite loop.
+        auto del_set = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
         todo -= del_set;
         smp_finder.MarkDone(del_set);
         exh_finder.MarkDone(del_set);
@@ -766,8 +781,9 @@ FUZZ_TARGET(clusterlin_search_finder)
         } catch (const std::ios_base::failure&) {}
         max_iterations &= 0xfffff;
 
-        // Read an initial subset from the fuzz input.
-        SetInfo init_best(depgraph, ReadTopologicalSet(depgraph, todo, reader));
+        // Read an initial subset from the fuzz input (allowed to be empty).
+        auto init_set = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/false);
+        SetInfo init_best(depgraph, init_set);
 
         // Call the search finder's FindCandidateSet for what remains of the graph.
         auto [found, iterations_done] = src_finder.FindCandidateSet(max_iterations, init_best);
@@ -812,15 +828,16 @@ FUZZ_TARGET(clusterlin_search_finder)
             auto anc = anc_finder.FindCandidateSet();
             assert(found.feerate >= anc.feerate);
 
-            // Compare with a topological set read from the fuzz input.
-            auto read_topo = ReadTopologicalSet(depgraph, todo, reader);
-            if (read_topo.Any()) assert(found.feerate >= depgraph.FeeRate(read_topo));
+            // Compare with a non-empty topological set read from the fuzz input (comparing with an
+            // empty set is not interesting).
+            auto read_topo = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
+            assert(found.feerate >= depgraph.FeeRate(read_topo));
         }
 
-        // Find a topologically valid subset of transactions to remove from the graph.
-        auto del_set = ReadTopologicalSet(depgraph, todo, reader);
-        // If we did not find anything, use found itself, because we should remove something.
-        if (del_set.None()) del_set = found.transactions;
+        // Find a non-empty topologically valid subset of transactions to remove from the graph.
+        // Using an empty set would mean the next iteration is identical to the current one, and
+        // could cause an infinite loop.
+        auto del_set = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
         todo -= del_set;
         src_finder.MarkDone(del_set);
         smp_finder.MarkDone(del_set);
@@ -844,9 +861,10 @@ FUZZ_TARGET(clusterlin_linearization_chunking)
         reader >> Using<DepGraphFormatter>(depgraph);
     } catch (const std::ios_base::failure&) {}
 
-    // Retrieve a topologically-valid subset of depgraph.
+    // Retrieve a topologically-valid subset of depgraph (allowed to be empty, because the argument
+    // to LinearizationChunking::Intersect is allowed to be empty).
     auto todo = depgraph.Positions();
-    auto subset = SetInfo(depgraph, ReadTopologicalSet(depgraph, todo, reader));
+    auto subset = SetInfo(depgraph, ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/false));
 
     // Retrieve a valid linearization for depgraph.
     auto linearization = ReadLinearization(depgraph, reader);
@@ -935,13 +953,10 @@ FUZZ_TARGET(clusterlin_linearization_chunking)
             }
         }
 
-        // Find a subset to remove from linearization.
-        auto done = ReadTopologicalSet(depgraph, todo, reader);
-        if (done.None()) {
-            // We need to remove a non-empty subset, so fall back to the unlinearized ancestors of
-            // the first transaction in todo if done is empty.
-            done = depgraph.Ancestors(todo.First()) & todo;
-        }
+        // Find a non-empty topologically valid subset of transactions to remove from the graph.
+        // Using an empty set would mean the next iteration is identical to the current one, and
+        // could cause an infinite loop.
+        auto done = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
         todo -= done;
         chunking.MarkDone(done);
         subset = SetInfo(depgraph, subset.transactions - done);
