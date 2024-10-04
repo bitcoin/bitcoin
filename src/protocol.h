@@ -579,13 +579,32 @@ struct MisbehavingError
     {}
 };
 
+// TODO: replace usages of PeerMsgRet to MessageProcessingResult which is cover this one
 using PeerMsgRet = tl::expected<void, MisbehavingError>;
 
+/**
+ * This struct is a helper to return values from handlers that are processing
+ * network messages but implemented outside of net_processing.cpp,
+ * for example llmq's messages.
+ *
+ * These handlers do not supposed to know anything about PeerManager to avoid
+ * circular dependencies.
+ *
+ * See `PeerManagerImpl::PostProcessMessage` to see how each type of return code
+ * is processed.
+ */
 struct MessageProcessingResult
 {
+    //! @m_error triggers Misbehaving error with score and optional message if not nullopt
     std::optional<MisbehavingError> m_error;
+
+    //! @m_inventory will relay this inventory to connected peers if not nullopt
     std::optional<CInv> m_inventory;
+
+    //! @m_transactions will relay transactions to peers which is ready to accept it (some peers does not accept transactions)
     std::vector<uint256> m_transactions;
+
+    //! @m_to_erase triggers EraseObjectRequest from PeerManager for this inventory if not nullopt
     std::optional<CInv> m_to_erase;
 
     MessageProcessingResult() = default;
