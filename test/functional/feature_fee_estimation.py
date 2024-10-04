@@ -488,4 +488,5 @@ class EstimateFeeTest(BitcoinTestFramework):
 
 
 if __name__ == "__main__":
-    EstimateFeeTest().main()
+    EstimateFeeTest(__file__).main()
+
