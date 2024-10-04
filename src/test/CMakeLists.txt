@@ -176,6 +176,7 @@ endif()
 if(WITH_SV2)
   target_sources(test_bitcoin
   PRIVATE
+    sv2_connman_tests.cpp
     sv2_noise_tests.cpp
     sv2_transport_tests.cpp
     sv2_messages_tests.cpp

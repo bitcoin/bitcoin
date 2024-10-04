@@ -5,6 +5,7 @@
 add_library(bitcoin_sv2 STATIC EXCLUDE_FROM_ALL
   noise.cpp
   transport.cpp
+  connman.cpp
 )
 
 target_link_libraries(bitcoin_sv2
@@ -12,5 +13,6 @@ target_link_libraries(bitcoin_sv2
     core_interface
     bitcoin_clientversion
     bitcoin_crypto
+    bitcoin_common # for SockMan
     $<$<PLATFORM_ID:Windows>:ws2_32>
 )
