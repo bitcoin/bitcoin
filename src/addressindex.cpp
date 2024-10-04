@@ -1,4 +1,4 @@
-// Copyright (c) 2016 BitPay, Inc.
+// Copyright (c) 2016 BitPay Inc.
 // Copyright (c) 2023 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.

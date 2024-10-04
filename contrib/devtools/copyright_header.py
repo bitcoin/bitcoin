@@ -20,15 +20,16 @@ EXCLUDE = [
     'src/qt/dashstrings.cpp',
     'src/chainparamsseeds.h',
     # other external copyrights:
-    'src/bip39.cpp',
-    'src/bip39.h',
-    'src/bip39_english.h',
+    'src/bench/nanobench.h',
     'src/crypto/*',
     'src/ctpl_stl.h',
     'src/reverse_iterator.h',
     'src/test/fuzz/FuzzedDataProvider.h',
     'src/tinyformat.h',
-    'src/bench/nanobench.h',
+    'src/util/expected.h',
+    'src/wallet/bip39.cpp',
+    'src/wallet/bip39.h',
+    'src/wallet/bip39_english.h',
     'test/functional/test_framework/bignum.py',
     # python init:
     '*__init__.py',
@@ -37,13 +38,14 @@ EXCLUDE_COMPILED = re.compile('|'.join([fnmatch.translate(m) for m in EXCLUDE]))
 
 EXCLUDE_DIRS = [
     # git subtrees
+    "src/crc32c/",
     "src/crypto/ctaes/",
     "src/dashbls/",
+    "src/gsl/",
     "src/immer/",
     "src/leveldb/",
     "src/secp256k1/",
     "src/univalue/",
-    "src/crc32c/",
 ]
 
 INCLUDE = ['*.h', '*.cpp', '*.cc', '*.c', '*.mm', '*.py', '*.sh', '*.bash-completion']
@@ -113,6 +115,8 @@ EXPECTED_HOLDER_NAMES = [
     r"Intel Corporation ?",
     r"The Zcash developers",
     r"Jeremy Rubin",
+    r"Statoshi Developers",
+    r"Vincent Thiery",
 ]
 
 DOMINANT_STYLE_COMPILED = {}
