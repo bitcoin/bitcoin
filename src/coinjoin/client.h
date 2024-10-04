@@ -8,7 +8,7 @@
 #include <coinjoin/util.h>
 #include <coinjoin/coinjoin.h>
 
-#include <net_types.h>
+#include <protocol.h>
 #include <util/ranges.h>
 #include <util/translation.h>
 

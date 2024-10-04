@@ -1553,10 +1553,11 @@ void CSigSharesManager::ForceReAnnouncement(const CQuorumCPtr& quorum, Consensus
     }
 }
 
-void CSigSharesManager::HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig)
+MessageProcessingResult CSigSharesManager::HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig)
 {
     LOCK(cs);
     RemoveSigSharesForSession(recoveredSig.buildSignHash());
+    return {};
 }
 
 } // namespace llmq

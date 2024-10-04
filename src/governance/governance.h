@@ -10,7 +10,7 @@
 
 #include <cachemap.h>
 #include <cachemultimap.h>
-#include <net_types.h>
+#include <protocol.h>
 #include <util/check.h>
 
 #include <optional>

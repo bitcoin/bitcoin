@@ -13,7 +13,6 @@ class CBlockIndex;
 class CChainState;
 class CMNHFManager;
 class CTxMemPool;
-class PeerManager;
 
 namespace llmq
 {
@@ -30,7 +29,6 @@ private:
     CSigSharesManager& shareman;
     CTxMemPool& mempool;
     const CQuorumManager& qman;
-    const std::unique_ptr<PeerManager>& m_peerman;
 
     /**
      * keep freshly generated IDs for easier filter sigs in HandleNewRecoveredSig
@@ -39,8 +37,8 @@ private:
     std::set<uint256> ids GUARDED_BY(cs);
 public:
     explicit CEHFSignalsHandler(CChainState& chainstate, CMNHFManager& mnhfman, CSigningManager& sigman,
-                                CSigSharesManager& shareman, CTxMemPool& mempool, const CQuorumManager& qman,
-                                const std::unique_ptr<PeerManager>& peerman);
+                                CSigSharesManager& shareman, CTxMemPool& mempool, const CQuorumManager& qman);
+
     ~CEHFSignalsHandler();
 
 
@@ -49,7 +47,8 @@ public:
      */
     void UpdatedBlockTip(const CBlockIndex* const pindexNew, bool is_masternode) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    [[nodiscard]] MessageProcessingResult HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 private:
     void trySignEHFSignal(int bit, const CBlockIndex* const pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs);

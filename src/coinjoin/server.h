@@ -7,7 +7,7 @@
 
 #include <coinjoin/coinjoin.h>
 
-#include <net_types.h>
+#include <protocol.h>
 
 class CActiveMasternodeManager;
 class CChainState;

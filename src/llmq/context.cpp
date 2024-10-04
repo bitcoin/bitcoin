@@ -25,7 +25,7 @@ LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CDeterminis
     is_masternode{mn_activeman != nullptr},
     bls_worker{std::make_shared<CBLSWorker>()},
     dkg_debugman{std::make_unique<llmq::CDKGDebugManager>()},
-    quorum_block_processor{std::make_unique<llmq::CQuorumBlockProcessor>(chainstate, dmnman, evo_db, peerman)},
+    quorum_block_processor{std::make_unique<llmq::CQuorumBlockProcessor>(chainstate, dmnman, evo_db)},
     qdkgsman{std::make_unique<llmq::CDKGSessionManager>(*bls_worker, chainstate, connman, dmnman, *dkg_debugman,
                                                         mn_metaman, *quorum_block_processor, mn_activeman, sporkman,
                                                         peerman, unit_tests, wipe)},
@@ -36,7 +36,8 @@ LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CDeterminis
     shareman{std::make_unique<llmq::CSigSharesManager>(connman, *sigman, mn_activeman, *qman, sporkman, peerman)},
     clhandler{[&]() -> llmq::CChainLocksHandler* const {
         assert(llmq::chainLocksHandler == nullptr);
-        llmq::chainLocksHandler = std::make_unique<llmq::CChainLocksHandler>(chainstate, *qman, *sigman, *shareman, sporkman, mempool, mn_sync, peerman, is_masternode);
+        llmq::chainLocksHandler = std::make_unique<llmq::CChainLocksHandler>(chainstate, *qman, *sigman, *shareman,
+                                                                             sporkman, mempool, mn_sync, is_masternode);
         return llmq::chainLocksHandler.get();
     }()},
     isman{[&]() -> llmq::CInstantSendManager* const {
@@ -45,7 +46,7 @@ LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CDeterminis
         return llmq::quorumInstantSendManager.get();
     }()},
     ehfSignalsHandler{
-        std::make_unique<llmq::CEHFSignalsHandler>(chainstate, mnhfman, *sigman, *shareman, mempool, *qman, peerman)}
+        std::make_unique<llmq::CEHFSignalsHandler>(chainstate, mnhfman, *sigman, *shareman, mempool, *qman)}
 {
 }
 

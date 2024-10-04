@@ -612,7 +612,9 @@ void CDKGSessionHandler::HandleDKGRound()
 
     auto finalCommitments = curSession->FinalizeCommitments();
     for (const auto& fqc : finalCommitments) {
-        quorumBlockProcessor.AddMineableCommitmentAndRelay(fqc);
+        if (auto inv_opt = quorumBlockProcessor.AddMineableCommitment(fqc); inv_opt.has_value()) {
+            Assert(m_peerman.get())->RelayInv(inv_opt.value());
+        }
     }
 }
 

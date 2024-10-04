@@ -593,8 +593,9 @@ public:
     bool IsInvInFilter(NodeId nodeid, const uint256& hash) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
 private:
-    /** Helper to process result of external handlers of message */
+    /** Helpers to process result of external handlers of message */
     void ProcessPeerMsgRet(const PeerMsgRet& ret, CNode& pfrom) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void PostProcessMessage(MessageProcessingResult&& ret, NodeId node) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
     void ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seconds time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
@@ -3318,6 +3319,22 @@ void PeerManagerImpl::ProcessPeerMsgRet(const PeerMsgRet& ret, CNode& pfrom)
     if (!ret) Misbehaving(pfrom.GetId(), ret.error().score, ret.error().message);
 }
 
+void PeerManagerImpl::PostProcessMessage(MessageProcessingResult&& result, NodeId node)
+{
+    if (result.m_error) {
+        Misbehaving(node, result.m_error->score, result.m_error->message);
+    }
+    if (result.m_to_erase) {
+        WITH_LOCK(cs_main, EraseObjectRequest(node, result.m_to_erase.value()));
+    }
+    for (const auto& tx : result.m_transactions) {
+        WITH_LOCK(cs_main, RelayTransaction(tx));
+    }
+    if (result.m_inventory) {
+        RelayInv(result.m_inventory.value(), MIN_PEER_PROTO_VERSION);
+    }
+}
+
 void PeerManagerImpl::ProcessMessage(
     CNode& pfrom,
     const std::string& msg_type,
@@ -4994,12 +5011,23 @@ void PeerManagerImpl::ProcessMessage(
         m_mn_sync.ProcessMessage(pfrom, msg_type, vRecv);
         ProcessPeerMsgRet(m_govman.ProcessMessage(pfrom, m_connman, *this, msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(CMNAuth::ProcessMessage(pfrom, peer->m_their_services, m_connman, m_mn_metaman, m_mn_activeman, m_chainman.ActiveChain(), m_mn_sync, m_dmnman->GetListAtChainTip(), msg_type, vRecv), pfrom);
-        ProcessPeerMsgRet(m_llmq_ctx->quorum_block_processor->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
+        PostProcessMessage(m_llmq_ctx->quorum_block_processor->ProcessMessage(pfrom, msg_type, vRecv), pfrom.GetId());
         ProcessPeerMsgRet(m_llmq_ctx->qdkgsman->ProcessMessage(pfrom, this, is_masternode, msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(m_llmq_ctx->qman->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
         m_llmq_ctx->shareman->ProcessMessage(pfrom, m_sporkman, msg_type, vRecv);
         ProcessPeerMsgRet(m_llmq_ctx->sigman->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
-        ProcessPeerMsgRet(m_llmq_ctx->clhandler->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
+
+        if (msg_type == NetMsgType::CLSIG) {
+            if (llmq::AreChainLocksEnabled(m_sporkman)) {
+                llmq::CChainLockSig clsig;
+                vRecv >> clsig;
+                const uint256& hash = ::SerializeHash(clsig);
+                WITH_LOCK(::cs_main, EraseObjectRequest(pfrom.GetId(), CInv{MSG_CLSIG, hash}));
+                PostProcessMessage(m_llmq_ctx->clhandler->ProcessNewChainLock(pfrom.GetId(), clsig, hash), pfrom.GetId());
+            }
+            return; // CLSIG
+        }
+
         ProcessPeerMsgRet(m_llmq_ctx->isman->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
         return;
     }

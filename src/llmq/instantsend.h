@@ -330,7 +330,7 @@ public:
     bool IsWaitingForTx(const uint256& txHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs_pendingLocks);
     CInstantSendLockPtr GetConflictingLock(const CTransaction& tx) const;
 
-    void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override
+    [[nodiscard]] MessageProcessingResult HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests, !cs_pendingLocks);
 
     PeerMsgRet ProcessMessage(const CNode& pfrom, std::string_view msg_type, CDataStream& vRecv);

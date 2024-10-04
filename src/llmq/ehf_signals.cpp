@@ -14,7 +14,6 @@
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <index/txindex.h> // g_txindex
-#include <net_processing.h>
 #include <primitives/transaction.h>
 #include <txmempool.h>
 #include <validation.h>
@@ -23,15 +22,13 @@ namespace llmq {
 
 
 CEHFSignalsHandler::CEHFSignalsHandler(CChainState& chainstate, CMNHFManager& mnhfman, CSigningManager& sigman,
-                                       CSigSharesManager& shareman, CTxMemPool& mempool, const CQuorumManager& qman,
-                                       const std::unique_ptr<PeerManager>& peerman) :
+                                       CSigSharesManager& shareman, CTxMemPool& mempool, const CQuorumManager& qman) :
     chainstate(chainstate),
     mnhfman(mnhfman),
     sigman(sigman),
     shareman(shareman),
     mempool(mempool),
-    qman(qman),
-    m_peerman(peerman)
+    qman(qman)
 {
     sigman.RegisterRecoveredSigsListener(this);
 }
@@ -94,7 +91,7 @@ void CEHFSignalsHandler::trySignEHFSignal(int bit, const CBlockIndex* const pind
     sigman.AsyncSignIfMember(llmqType, shareman, requestId, msgHash, quorum->qc->quorumHash, false, true);
 }
 
-void CEHFSignalsHandler::HandleNewRecoveredSig(const CRecoveredSig& recoveredSig)
+MessageProcessingResult CEHFSignalsHandler::HandleNewRecoveredSig(const CRecoveredSig& recoveredSig)
 {
     if (g_txindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
@@ -102,9 +99,10 @@ void CEHFSignalsHandler::HandleNewRecoveredSig(const CRecoveredSig& recoveredSig
 
     if (WITH_LOCK(cs, return ids.find(recoveredSig.getId()) == ids.end())) {
         // Do nothing, it's not for this handler
-        return;
+        return {};
     }
 
+    MessageProcessingResult ret;
     const auto ehfSignals = mnhfman.GetSignalsStage(WITH_LOCK(cs_main, return chainstate.m_chain.Tip()));
     MNHFTxPayload mnhfPayload;
     for (const auto& deployment : Params().GetConsensus().vDeployments) {
@@ -130,12 +128,13 @@ void CEHFSignalsHandler::HandleNewRecoveredSig(const CRecoveredSig& recoveredSig
             LOCK(cs_main);
             const MempoolAcceptResult result = AcceptToMemoryPool(chainstate, mempool, tx_to_sent, /* bypass_limits */ false);
             if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
-                Assert(m_peerman)->RelayTransaction(tx_to_sent->GetHash());
+                ret.m_transactions.push_back(tx_to_sent->GetHash());
             } else {
                 LogPrintf("CEHFSignalsHandler::HandleNewRecoveredSig -- AcceptToMemoryPool failed: %s\n", result.m_state.ToString());
             }
         }
         break;
     }
+    return ret;
 }
 } // namespace llmq
