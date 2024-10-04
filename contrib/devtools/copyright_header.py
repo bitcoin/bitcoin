@@ -26,7 +26,6 @@ EXCLUDE = [
     'src/crypto/*',
     'src/ctpl_stl.h',
     'src/reverse_iterator.h',
-    'src/statsd_client.cpp',
     'src/test/fuzz/FuzzedDataProvider.h',
     'src/tinyformat.h',
     'src/bench/nanobench.h',

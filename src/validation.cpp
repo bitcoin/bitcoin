@@ -66,7 +66,7 @@
 #include <llmq/instantsend.h>
 #include <llmq/chainlocks.h>
 
-#include <statsd_client.h>
+#include <stats/client.h>
 
 #include <algorithm>
 #include <cassert>
