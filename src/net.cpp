@@ -1998,7 +1998,6 @@ bool CConnman::AddConnection(const std::string& address, ConnectionType conn_typ
     switch (conn_type) {
     case ConnectionType::INBOUND:
     case ConnectionType::MANUAL:
-    case ConnectionType::FEELER:
         return false;
     case ConnectionType::OUTBOUND_FULL_RELAY:
         max_connections = m_max_outbound_full_relay;
@@ -2008,6 +2007,9 @@ bool CConnman::AddConnection(const std::string& address, ConnectionType conn_typ
         break;
     // no limit for ADDR_FETCH because -seednode has no limit either
     case ConnectionType::ADDR_FETCH:
+        break;
+    // no limit for FEELER connections since they're short-lived
+    case ConnectionType::FEELER:
         break;
     } // no default case, so the compiler can warn about missing cases
 
@@ -2253,6 +2255,7 @@ bool CConnman::GenerateSelectSet(const std::vector<CNode*>& nodes,
     for (CNode* pnode : nodes) {
         bool select_recv = !pnode->fHasRecvData;
         bool select_send = !pnode->fCanSendData;
+        if (!select_recv && !select_send) continue;
 
         LOCK(pnode->m_sock_mutex);
         if (!pnode->m_sock) {
@@ -2623,9 +2626,7 @@ void CConnman::SocketHandlerConnected(const std::set<SOCKET>& recv_set,
                     //   receiving data. This means properly utilizing TCP flow control signalling.
                     // * Otherwise, if there is space left in the receive buffer (!fPauseRecv), try
                     //   receiving data (which should succeed as the socket signalled as receivable).
-                    const auto& [to_send, more, _msg_type] = it->second->m_transport->GetBytesToSend(it->second->nSendMsgSize != 0);
-                    const bool queue_is_empty{to_send.empty() && !more};
-                    if (!it->second->fPauseRecv && !it->second->fDisconnect && queue_is_empty) {
+                    if (!it->second->fPauseRecv && !it->second->fDisconnect && it->second->nSendMsgSize == 0) {
                         it->second->AddRef();
                         vReceivableNodes.emplace(it->second);
                     }
@@ -3301,7 +3302,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
 
             // Require outbound IPv4/IPv6 connections, other than feelers, to be to distinct network groups
             if (!fFeeler && outbound_ipv46_peer_netgroups.count(m_netgroupman.GetGroup(addr))) {
-                break;
+                continue;
             }
 
             // if we selected an invalid address, restart
