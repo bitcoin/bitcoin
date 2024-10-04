@@ -209,7 +209,7 @@ public:
 BOOST_FIXTURE_TEST_CASE(coinjoin_manager_start_stop_tests, CTransactionBuilderTestSetup)
 {
     CCoinJoinClientManager* cj_man = m_node.cj_ctx->walletman->Get("");
-    BOOST_ASSERT(cj_man != nullptr);
+    BOOST_REQUIRE(cj_man != nullptr);
     BOOST_CHECK_EQUAL(cj_man->IsMixing(), false);
     BOOST_CHECK_EQUAL(cj_man->StartMixing(), true);
     BOOST_CHECK_EQUAL(cj_man->IsMixing(), true);

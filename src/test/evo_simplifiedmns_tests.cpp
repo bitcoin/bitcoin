@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(simplifiedmns_merkleroots)
         if (auto service = Lookup(ip, i, false); service.has_value()) {
             smle.service = service.value();
         } else {
-            BOOST_ASSERT(false);
+            BOOST_REQUIRE(false);
         }
 
         std::vector<unsigned char> vecBytes{static_cast<unsigned char>(i)};

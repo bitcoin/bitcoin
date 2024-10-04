@@ -71,7 +71,7 @@ static std::vector<COutPoint> SelectUTXOs(const CChain& active_chain, SimpleUTXO
             utoxs.erase(it);
             break;
         }
-        BOOST_ASSERT(found);
+        BOOST_REQUIRE(found);
         if (selectedAmount >= amount) {
             changeRet = selectedAmount - amount;
             break;
@@ -102,8 +102,8 @@ static void SignTransaction(const CTxMemPool& mempool, CMutableTransaction& tx, 
     for (auto [i, input] : enumerate(tx.vin)) {
         uint256 hashBlock;
         CTransactionRef txFrom = GetTransaction(/* block_index */ nullptr, &mempool, input.prevout.hash, Params().GetConsensus(), hashBlock);
-        BOOST_ASSERT(txFrom);
-        BOOST_ASSERT(SignSignature(tempKeystore, *txFrom, tx, i, SIGHASH_ALL));
+        BOOST_REQUIRE(txFrom);
+        BOOST_REQUIRE(SignSignature(tempKeystore, *txFrom, tx, i, SIGHASH_ALL));
     }
 }
 
@@ -148,7 +148,8 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
 
     CScript coinbasePubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
 
-    BOOST_ASSERT(DeploymentDIP0003Enforced(WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Height()), consensus_params));
+    BOOST_REQUIRE(DeploymentDIP0003Enforced(WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Height()),
+                                            consensus_params));
 
     // Register one MN
     CKey ownerKey;
@@ -163,7 +164,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         const CBlockIndex* const tip{m_node.chainman->ActiveChain().Tip()};
         dmnman.UpdatedBlockTip(tip);
 
-        BOOST_ASSERT(dmnman.GetListAtChainTip().HasMN(tx.GetHash()));
+        BOOST_REQUIRE(dmnman.GetListAtChainTip().HasMN(tx.GetHash()));
 
         BOOST_CHECK_EQUAL(tip->nHeight, 498);
         BOOST_CHECK(tip->nHeight < Params().GetConsensus().BRRHeight);
@@ -176,7 +177,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         const CBlockIndex* const tip{m_node.chainman->ActiveChain().Tip()};
         BOOST_CHECK_EQUAL(tip->nHeight, 499);
         dmnman.UpdatedBlockTip(tip);
-        BOOST_ASSERT(dmnman.GetListAtChainTip().HasMN(tx.GetHash()));
+        BOOST_REQUIRE(dmnman.GetListAtChainTip().HasMN(tx.GetHash()));
         BOOST_CHECK(tip->nHeight < Params().GetConsensus().BRRHeight);
         // Creating blocks by different ways
         const auto pblocktemplate = BlockAssembler(m_node.chainman->ActiveChainstate(), m_node, *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
@@ -195,7 +196,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         const CBlockIndex* const tip{m_node.chainman->ActiveChain().Tip()};
         BOOST_CHECK_EQUAL(tip->nHeight, Params().GetConsensus().BRRHeight - 1);
         dmnman.UpdatedBlockTip(tip);
-        BOOST_ASSERT(dmnman.GetListAtChainTip().HasMN(tx.GetHash()));
+        BOOST_REQUIRE(dmnman.GetListAtChainTip().HasMN(tx.GetHash()));
     }
 
     {
@@ -206,7 +207,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         const CBlockIndex* const tip{m_node.chainman->ActiveChain().Tip()};
         const bool isV20Active{DeploymentActiveAfter(tip, consensus_params, Consensus::DEPLOYMENT_V20)};
         dmnman.UpdatedBlockTip(tip);
-        BOOST_ASSERT(dmnman.GetListAtChainTip().HasMN(tx.GetHash()));
+        BOOST_REQUIRE(dmnman.GetListAtChainTip().HasMN(tx.GetHash()));
         const CAmount block_subsidy = GetBlockSubsidyInner(tip->nBits, tip->nHeight, consensus_params, isV20Active);
         const CAmount masternode_payment = GetMasternodePayment(tip->nHeight, block_subsidy, isV20Active);
         const auto pblocktemplate = BlockAssembler(m_node.chainman->ActiveChainstate(), m_node, *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);

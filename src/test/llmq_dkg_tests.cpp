@@ -14,13 +14,13 @@ BOOST_AUTO_TEST_CASE(llmq_dkgerror)
 {
     using namespace llmq;
     for (auto i : irange::range(ToUnderlying(llmq::DKGError::type::_COUNT))) {
-        BOOST_ASSERT(GetSimulatedErrorRate(llmq::DKGError::type(i)) == 0.0);
+        BOOST_REQUIRE(GetSimulatedErrorRate(llmq::DKGError::type(i)) == 0.0);
         SetSimulatedDKGErrorRate(llmq::DKGError::type(i), 1.0);
-        BOOST_ASSERT(GetSimulatedErrorRate(llmq::DKGError::type(i)) == 1.0);
+        BOOST_REQUIRE(GetSimulatedErrorRate(llmq::DKGError::type(i)) == 1.0);
     }
-    BOOST_ASSERT(GetSimulatedErrorRate(llmq::DKGError::type::_COUNT) == 0.0);
+    BOOST_REQUIRE(GetSimulatedErrorRate(llmq::DKGError::type::_COUNT) == 0.0);
     SetSimulatedDKGErrorRate(llmq::DKGError::type::_COUNT, 1.0);
-    BOOST_ASSERT(GetSimulatedErrorRate(llmq::DKGError::type::_COUNT) == 0.0);
+    BOOST_REQUIRE(GetSimulatedErrorRate(llmq::DKGError::type::_COUNT) == 0.0);
 }
 
 
