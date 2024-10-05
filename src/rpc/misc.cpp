@@ -716,9 +716,9 @@ static RPCHelpMan getaddressmempool()
     return RPCHelpMan{"getaddressmempool",
         "\nReturns all mempool deltas for an address (requires addressindex to be enabled).\n",
         {
-            {"addresses", RPCArg::Type::ARR, /* default */ "", "",
+            {"addresses", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "",
                 {
-                    {"address", RPCArg::Type::STR, /* default */ "", "The base58check encoded address"},
+                    {"address", RPCArg::Type::STR, RPCArg::Default{""}, "The base58check encoded address"},
                 },
             },
         },
@@ -789,9 +789,9 @@ static RPCHelpMan getaddressutxos()
     return RPCHelpMan{"getaddressutxos",
         "\nReturns all unspent outputs for an address (requires addressindex to be enabled).\n",
         {
-            {"addresses", RPCArg::Type::ARR, /* default */ "", "",
+            {"addresses", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "",
                 {
-                    {"address", RPCArg::Type::STR, /* default */ "", "The base58check encoded address"},
+                    {"address", RPCArg::Type::STR, RPCArg::Default{""}, "The base58check encoded address"},
                 },
             },
         },
@@ -862,9 +862,9 @@ static RPCHelpMan getaddressdeltas()
     return RPCHelpMan{"getaddressdeltas",
         "\nReturns all changes for an address (requires addressindex to be enabled).\n",
         {
-            {"addresses", RPCArg::Type::ARR, /* default */ "", "",
+            {"addresses", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "",
                 {
-                    {"address", RPCArg::Type::STR, /* default */ "", "The base58check encoded address"},
+                    {"address", RPCArg::Type::STR, RPCArg::Default{""}, "The base58check encoded address"},
                 },
             },
         },
@@ -959,9 +959,9 @@ static RPCHelpMan getaddressbalance()
     return RPCHelpMan{"getaddressbalance",
         "\nReturns the balance for an address(es) (requires addressindex to be enabled).\n",
         {
-            {"addresses", RPCArg::Type::ARR, /* default */ "", "",
+            {"addresses", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "",
                 {
-                    {"address", RPCArg::Type::STR, /* default */ "", "The base58check encoded address"},
+                    {"address", RPCArg::Type::STR, RPCArg::Default{""}, "The base58check encoded address"},
                 },
             },
         },
@@ -1036,9 +1036,9 @@ static RPCHelpMan getaddresstxids()
     return RPCHelpMan{"getaddresstxids",
         "\nReturns the txids for an address(es) (requires addressindex to be enabled).\n",
         {
-            {"addresses", RPCArg::Type::ARR, /* default */ "", "",
+            {"addresses", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "",
                 {
-                    {"address", RPCArg::Type::STR, /* default */ "", "The base58check encoded address"},
+                    {"address", RPCArg::Type::STR, RPCArg::Default{""}, "The base58check encoded address"},
                 },
             },
         },
@@ -1123,10 +1123,10 @@ static RPCHelpMan getspentinfo()
     return RPCHelpMan{"getspentinfo",
         "\nReturns the txid and index where an output is spent.\n",
         {
-            {"request", RPCArg::Type::OBJ, /* default */ "", "",
+            {"request", RPCArg::Type::OBJ, RPCArg::Default{UniValue::VOBJ}, "",
                 {
-                    {"txid", RPCArg::Type::STR_HEX, /* default */ "", "The hex string of the txid"},
-                    {"index", RPCArg::Type::NUM, /* default */ "", "The start block height"},
+                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Default{""}, "The hex string of the txid"},
+                    {"index", RPCArg::Type::NUM, RPCArg::Default{0}, "The start block height"},
                 },
             },
         },
@@ -1245,7 +1245,7 @@ static RPCHelpMan getmemoryinfo()
     return RPCHelpMan{"getmemoryinfo",
         "Returns an object containing information about memory usage.\n",
         {
-            {"mode", RPCArg::Type::STR, /* default */ "\"stats\"", "determines what kind of information is returned.\n"
+            {"mode", RPCArg::Type::STR, RPCArg::Default{"stats"}, "determines what kind of information is returned.\n"
     "  - \"stats\" returns general statistics about memory usage in the daemon.\n"
     "  - \"mallocinfo\" returns an XML string describing low-level heap state (only available if compiled with glibc 2.10+)."},
         },

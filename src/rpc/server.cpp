@@ -168,8 +168,8 @@ static RPCHelpMan help()
     return RPCHelpMan{"help",
         "\nList all commands, or get help for a specified command.\n",
         {
-            {"command", RPCArg::Type::STR, /* default */ "all commands", "The command to get help on"},
-            {"subcommand", RPCArg::Type::STR, /* default */ "all subcommands", "The subcommand to get help on."},
+            {"command", RPCArg::Type::STR, RPCArg::DefaultHint{"all commands"}, "The command to get help on"},
+            {"subcommand", RPCArg::Type::STR, RPCArg::DefaultHint{"all subcommands"}, "The subcommand to get help on."},
         },
         {
             RPCResult{RPCResult::Type::STR, "", "The help text"},

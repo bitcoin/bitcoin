@@ -41,8 +41,8 @@ static RPCHelpMan quorum_list()
     return RPCHelpMan{"quorum list",
         "List of on-chain quorums\n",
         {
-            {"count", RPCArg::Type::NUM, /* default */ "",
-                "Number of quorums to list. Will list active quorums if \"count\" is not specified.\n"
+            {"count", RPCArg::Type::NUM, RPCArg::DefaultHint{"The active quorum count if not specified"},
+                "Number of quorums to list.\n"
                 "Can be CPU/disk heavy when the value is larger than the number of active quorums."
             },
         },
@@ -68,7 +68,7 @@ static RPCHelpMan quorum_list()
     int count = -1;
     if (!request.params[0].isNull()) {
         count = ParseInt32V(request.params[0], "count");
-        if (count < 0) {
+        if (count < -1) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "count can't be negative");
         }
     }
@@ -100,7 +100,7 @@ static RPCHelpMan quorum_list_extended()
     return RPCHelpMan{"quorum listextended",
         "Extended list of on-chain quorums\n",
         {
-            {"height", RPCArg::Type::NUM, /* default */ "", "The height index. Will list active quorums at tip if \"height\" is not specified."},
+            {"height", RPCArg::Type::NUM, RPCArg::DefaultHint{"Tip height if not specified"}, "Active quorums at the height."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -234,7 +234,7 @@ static RPCHelpMan quorum_info()
         {
             {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type."},
             {"quorumHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Block hash of quorum."},
-            {"includeSkShare", RPCArg::Type::BOOL, /* default */ "", "Include secret key share in output."},
+            {"includeSkShare", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include secret key share in output."},
         },
         RPCResults{},
         RPCExamples{""},
@@ -270,7 +270,7 @@ static RPCHelpMan quorum_dkgstatus()
         "Return the status of the current DKG process.\n"
         "Works only when SPORK_17_QUORUM_DKG_ENABLED spork is ON.\n",
         {
-            {"detail_level", RPCArg::Type::NUM, /* default */ "0",
+            {"detail_level", RPCArg::Type::NUM, RPCArg::Default{0},
                 "Detail level of output.\n"
                 "0=Only show counts. 1=Show member indexes. 2=Show member's ProTxHashes."},
         },
@@ -373,9 +373,8 @@ static RPCHelpMan quorum_memberof()
         "Checks which quorums the given masternode is a member of.\n",
         {
             {"proTxHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "ProTxHash of the masternode."},
-            {"scanQuorumsCount", RPCArg::Type::NUM, /* default */ "",
+            {"scanQuorumsCount", RPCArg::Type::NUM, RPCArg::DefaultHint{"The active quorum count for each specific quorum type is used"},
                 "Number of quorums to scan for.\n"
-                "If not specified, the active quorum count for each specific quorum type is used.\n"
                 "Can be CPU/disk heavy when the value is larger than the number of active quorums."
             },
         },
@@ -492,8 +491,8 @@ static RPCHelpMan quorum_sign()
             {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type."},
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id."},
             {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash."},
-            {"quorumHash", RPCArg::Type::STR_HEX, /* default */ "", "The quorum identifier."},
-            {"submit", RPCArg::Type::BOOL, /* default */ "true", "Submits the signature share to the network if this is true. "
+            {"quorumHash", RPCArg::Type::STR_HEX, RPCArg::Default{""}, "The quorum identifier."},
+            {"submit", RPCArg::Type::BOOL, RPCArg::Default{true}, "Submits the signature share to the network if this is true. "
                                                                 "Returns an object containing the signature share if this is false."},
         },
         RPCResults{},
@@ -519,8 +518,8 @@ static RPCHelpMan quorum_platformsign()
         {
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id."},
             {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash."},
-            {"quorumHash", RPCArg::Type::STR_HEX, /* default */ "", "The quorum identifier."},
-            {"submit", RPCArg::Type::BOOL, /* default */ "true", "Submits the signature share to the network if this is true. "
+            {"quorumHash", RPCArg::Type::STR_HEX, RPCArg::Default{""}, "The quorum identifier."},
+            {"submit", RPCArg::Type::BOOL, RPCArg::Default{true}, "Submits the signature share to the network if this is true. "
                                                                 "Returns an object containing the signature share if this is false."},
         },
         RPCResults{},
@@ -554,10 +553,10 @@ static RPCHelpMan quorum_verify()
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id."},
             {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash."},
             {"signature", RPCArg::Type::STR, RPCArg::Optional::NO, "Quorum signature to verify."},
-            {"quorumHash", RPCArg::Type::STR_HEX, /* default */ "",
+            {"quorumHash", RPCArg::Type::STR_HEX, RPCArg::Default{""},
                 "The quorum identifier.\n"
                 "Set to \"\" if you want to specify signHeight instead."},
-            {"signHeight", RPCArg::Type::NUM, /* default */ "",
+            {"signHeight", RPCArg::Type::NUM, RPCArg::Default{-1},
                 "The height at which the message was signed.\n"
                 "Only works when quorumHash is \"\"."},
         },
@@ -788,7 +787,7 @@ static RPCHelpMan quorum_getdata()
                 "Possible values: 1 - Request quorum verification vector\n"
                 "2 - Request encrypted contributions for member defined by \"proTxHash\". \"proTxHash\" must be specified if this option is used.\n"
                 "3 - Request both, 1 and 2"},
-            {"proTxHash", RPCArg::Type::STR_HEX, /* default */ "", "The proTxHash the contributions will be requested for. Must be member of the specified LLMQ."},
+            {"proTxHash", RPCArg::Type::STR_HEX, RPCArg::Default{""}, "The proTxHash the contributions will be requested for. Must be member of the specified LLMQ."},
         },
         RPCResults{},
         RPCExamples{""},
@@ -833,8 +832,8 @@ static RPCHelpMan quorum_rotationinfo()
         "Get quorum rotation information\n",
         {
             {"blockRequestHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The blockHash of the request."},
-            {"extraShare", RPCArg::Type::BOOL, /* default */ "false", "Extra share"},
-            {"baseBlockHash...", RPCArg::Type::STR_HEX, /* default*/ "", "baseBlockHashes"},
+            {"extraShare", RPCArg::Type::BOOL, RPCArg::Default{false}, "Extra share"},
+            {"baseBlockHash...", RPCArg::Type::STR_HEX, RPCArg::DefaultHint{"baseBlockHashes …"}, "The list of block hashes"},
         },
         RPCResults{},
         RPCExamples{""},
@@ -955,7 +954,7 @@ static RPCHelpMan verifychainlock()
         {
             {"blockHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash of the ChainLock."},
             {"signature", RPCArg::Type::STR, RPCArg::Optional::NO, "The signature of the ChainLock."},
-            {"blockHeight", RPCArg::Type::NUM, /* default */ "", "The height of the ChainLock. There will be an internal lookup of \"blockHash\" if this is not provided."},
+            {"blockHeight", RPCArg::Type::NUM, RPCArg::DefaultHint{"There will be an internal lookup of \"blockHash\" if this is not provided."}, "The height of the ChainLock."},
         },
         RPCResults{},
         RPCExamples{""},
@@ -1013,7 +1012,7 @@ static RPCHelpMan verifyislock()
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id."},
             {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id."},
             {"signature", RPCArg::Type::STR, RPCArg::Optional::NO, "The InstantSend Lock signature to verify."},
-            {"maxHeight", RPCArg::Type::NUM, /* default */ "", "The maximum height to search quorums from."},
+            {"maxHeight", RPCArg::Type::NUM, RPCArg::Default{-1}, "The maximum height to search quorums from."},
         },
         RPCResults{},
         RPCExamples{""},
