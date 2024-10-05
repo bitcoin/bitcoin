@@ -6,8 +6,9 @@ $(package)_sha256_hash=ac28211a7cfb609bae2e2c8d6058d66c8fe96434f740cf6fe2e47b000
 
 define $(package)_set_vars
 $(package)_config_opts += --disable-shared --enable-cxx --enable-fat
-$(package)_cflags_armv7l_linux+=-march=armv7-a
-$(package)_cflags_aarch64_darwin+=-march=armv8-a
+$(package)_cflags_aarch64 += -march=armv8-a
+$(package)_cflags_armv7l += -march=armv7-a
+$(package)_cflags_x86_64 += -march=x86-64
 endef
 
 define $(package)_config_cmds
