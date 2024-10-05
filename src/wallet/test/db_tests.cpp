@@ -28,7 +28,7 @@ inline std::ostream& operator<<(std::ostream& os, const std::pair<const Serializ
 {
     Span key{kv.first}, value{kv.second};
     os << "(\"" << std::string_view{reinterpret_cast<const char*>(key.data()), key.size()} << "\", \""
-       << std::string_view{reinterpret_cast<const char*>(key.data()), key.size()} << "\")";
+       << std::string_view{reinterpret_cast<const char*>(value.data()), value.size()} << "\")";
     return os;
 }
 
