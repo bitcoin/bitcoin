@@ -370,7 +370,6 @@ namespace CoinJoin
 
     /// If the collateral is valid given by a client
     bool IsCollateralValid(ChainstateManager& chainman, const CTxMemPool& mempool, const CTransaction& txCollateral);
-
 }
 
 class CDSTXManager
@@ -403,6 +402,7 @@ private:
 
 };
 
-bool ATMPIfSaneFee(ChainstateManager& chainman, const CTransactionRef &tx, bool test_accept = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool ATMPIfSaneFee(ChainstateManager& chainman, const CTransactionRef& tx, bool test_accept = false)
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 #endif // BITCOIN_COINJOIN_COINJOIN_H

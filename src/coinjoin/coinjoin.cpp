@@ -308,7 +308,8 @@ bool CCoinJoinBaseSession::IsValidInOuts(CChainState& active_chainstate, const C
 
 // Responsibility for checking fee sanity is moved from the mempool to the client (BroadcastTransaction)
 // but CoinJoin still requires ATMP with fee sanity checks so we need to implement them separately
-bool ATMPIfSaneFee(ChainstateManager& chainman, const CTransactionRef &tx, bool test_accept) {
+bool ATMPIfSaneFee(ChainstateManager& chainman, const CTransactionRef& tx, bool test_accept)
+{
     AssertLockHeld(cs_main);
 
     const MempoolAcceptResult result = chainman.ProcessTransaction(tx, /*test_accept=*/true);

@@ -14,8 +14,8 @@
 #include <masternode/node.h>
 #include <masternode/sync.h>
 #include <messagesigner.h>
-#include <node/context.h>
 #include <net.h>
+#include <node/context.h>
 #include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>

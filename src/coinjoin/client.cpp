@@ -793,7 +793,8 @@ bool CCoinJoinClientManager::CheckAutomaticBackup()
 //
 // Passively run mixing in the background to mix funds based on the given configuration.
 //
-bool CCoinJoinClientSession::DoAutomaticDenominating(ChainstateManager& chainman, CConnman& connman, const CTxMemPool& mempool, bool fDryRun)
+bool CCoinJoinClientSession::DoAutomaticDenominating(ChainstateManager& chainman, CConnman& connman,
+                                                     const CTxMemPool& mempool, bool fDryRun)
 {
     if (m_is_masternode) return false; // no client-side mixing on masternodes
     if (nState != POOL_STATE_IDLE) return false;
@@ -973,7 +974,8 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(ChainstateManager& chainman
     return false;
 }
 
-bool CCoinJoinClientManager::DoAutomaticDenominating(ChainstateManager& chainman, CConnman& connman, const CTxMemPool& mempool, bool fDryRun)
+bool CCoinJoinClientManager::DoAutomaticDenominating(ChainstateManager& chainman, CConnman& connman,
+                                                     const CTxMemPool& mempool, bool fDryRun)
 {
     if (m_is_masternode) return false; // no client-side mixing on masternodes
     if (!CCoinJoinClientOptions::IsEnabled() || !IsMixing()) return false;
