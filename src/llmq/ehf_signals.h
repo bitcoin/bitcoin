@@ -10,9 +10,8 @@
 #include <set>
 
 class CBlockIndex;
-class CChainState;
+class ChainstateManager;
 class CMNHFManager;
-class CTxMemPool;
 
 namespace llmq
 {
@@ -23,11 +22,10 @@ class CSigningManager;
 class CEHFSignalsHandler : public CRecoveredSigsListener
 {
 private:
-    CChainState& chainstate;
+    ChainstateManager& m_chainman;
     CMNHFManager& mnhfman;
     CSigningManager& sigman;
     CSigSharesManager& shareman;
-    CTxMemPool& mempool;
     const CQuorumManager& qman;
 
     /**
@@ -36,8 +34,8 @@ private:
     mutable Mutex cs;
     std::set<uint256> ids GUARDED_BY(cs);
 public:
-    explicit CEHFSignalsHandler(CChainState& chainstate, CMNHFManager& mnhfman, CSigningManager& sigman,
-                                CSigSharesManager& shareman, CTxMemPool& mempool, const CQuorumManager& qman);
+    explicit CEHFSignalsHandler(ChainstateManager& chainman, CMNHFManager& mnhfman, CSigningManager& sigman,
+                                CSigSharesManager& shareman, const CQuorumManager& qman);
 
     ~CEHFSignalsHandler();
 

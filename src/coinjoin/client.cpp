@@ -793,7 +793,7 @@ bool CCoinJoinClientManager::CheckAutomaticBackup()
 //
 // Passively run mixing in the background to mix funds based on the given configuration.
 //
-bool CCoinJoinClientSession::DoAutomaticDenominating(CChainState& active_chainstate, CConnman& connman, CTxMemPool& mempool, bool fDryRun)
+bool CCoinJoinClientSession::DoAutomaticDenominating(ChainstateManager& chainman, CConnman& connman, const CTxMemPool& mempool, bool fDryRun)
 {
     if (m_is_masternode) return false; // no client-side mixing on masternodes
     if (nState != POOL_STATE_IDLE) return false;
@@ -946,7 +946,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CChainState& active_chainst
                 return false;
             }
         } else {
-            if (!CoinJoin::IsCollateralValid(active_chainstate, mempool, CTransaction(txMyCollateral))) {
+            if (!CoinJoin::IsCollateralValid(chainman, mempool, CTransaction(txMyCollateral))) {
                 WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::DoAutomaticDenominating -- invalid collateral, recreating...\n");
                 if (!CreateCollateralTransaction(txMyCollateral, strReason)) {
                     WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::DoAutomaticDenominating -- create collateral error: %s\n", strReason);
@@ -973,7 +973,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CChainState& active_chainst
     return false;
 }
 
-bool CCoinJoinClientManager::DoAutomaticDenominating(CChainState& active_chainstate, CConnman& connman, CTxMemPool& mempool, bool fDryRun)
+bool CCoinJoinClientManager::DoAutomaticDenominating(ChainstateManager& chainman, CConnman& connman, const CTxMemPool& mempool, bool fDryRun)
 {
     if (m_is_masternode) return false; // no client-side mixing on masternodes
     if (!CCoinJoinClientOptions::IsEnabled() || !IsMixing()) return false;
@@ -1016,7 +1016,7 @@ bool CCoinJoinClientManager::DoAutomaticDenominating(CChainState& active_chainst
             return false;
         }
 
-        fResult &= session.DoAutomaticDenominating(active_chainstate, connman, mempool, fDryRun);
+        fResult &= session.DoAutomaticDenominating(chainman, connman, mempool, fDryRun);
     }
 
     return fResult;
@@ -1864,7 +1864,7 @@ void CCoinJoinClientQueueManager::DoMaintenance()
     CheckQueue();
 }
 
-void CCoinJoinClientManager::DoMaintenance(CChainState& active_chainstate, CConnman& connman, CTxMemPool& mempool)
+void CCoinJoinClientManager::DoMaintenance(ChainstateManager& chainman, CConnman& connman, const CTxMemPool& mempool)
 {
     if (!CCoinJoinClientOptions::IsEnabled()) return;
     if (m_is_masternode) return; // no client-side mixing on masternodes
@@ -1878,7 +1878,7 @@ void CCoinJoinClientManager::DoMaintenance(CChainState& active_chainstate, CConn
     CheckTimeout();
     ProcessPendingDsaRequest(connman);
     if (nDoAutoNextRun == nTick) {
-        DoAutomaticDenominating(active_chainstate, connman, mempool);
+        DoAutomaticDenominating(chainman, connman, mempool);
         nDoAutoNextRun = nTick + COINJOIN_AUTO_TIMEOUT_MIN + GetRandInt(COINJOIN_AUTO_TIMEOUT_MAX - COINJOIN_AUTO_TIMEOUT_MIN);
     }
 }
@@ -1930,7 +1930,7 @@ void CoinJoinWalletManager::DoMaintenance()
 {
     LOCK(cs_wallet_manager_map);
     for (auto& [_, clientman] : m_wallet_manager_map) {
-        clientman->DoMaintenance(m_chainstate, m_connman, m_mempool);
+        clientman->DoMaintenance(m_chainman, m_connman, m_mempool);
     }
 }
 

@@ -10,11 +10,11 @@
 #include <protocol.h>
 
 class CActiveMasternodeManager;
-class CChainState;
 class CCoinJoinServer;
 class CDataStream;
 class CDeterministicMNManager;
 class CDSTXManager;
+class ChainstateManager;
 class CMasternodeMetaMan;
 class CNode;
 class CTxMemPool;
@@ -27,7 +27,7 @@ class UniValue;
 class CCoinJoinServer : public CCoinJoinBaseSession, public CCoinJoinBaseManager
 {
 private:
-    CChainState& m_chainstate;
+    ChainstateManager& m_chainman;
     CConnman& connman;
     CDeterministicMNManager& m_dmnman;
     CDSTXManager& m_dstxman;
@@ -90,11 +90,11 @@ private:
     void SetNull() override EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
 public:
-    explicit CCoinJoinServer(CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman,
+    explicit CCoinJoinServer(ChainstateManager& chainman, CConnman& _connman, CDeterministicMNManager& dmnman,
                              CDSTXManager& dstxman, CMasternodeMetaMan& mn_metaman, CTxMemPool& mempool,
                              const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
                              std::unique_ptr<PeerManager>& peerman) :
-        m_chainstate(chainstate),
+        m_chainman(chainman),
         connman(_connman),
         m_dmnman(dmnman),
         m_dstxman(dstxman),

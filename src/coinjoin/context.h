@@ -13,11 +13,11 @@
 
 class CActiveMasternodeManager;
 class CBlockPolicyEstimator;
-class CChainState;
 class CCoinJoinServer;
 class CConnman;
 class CDeterministicMNManager;
 class CDSTXManager;
+class ChainstateManager;
 class CMasternodeMetaMan;
 class CMasternodeSync;
 class CTxMemPool;
@@ -31,7 +31,7 @@ class CoinJoinWalletManager;
 struct CJContext {
     CJContext() = delete;
     CJContext(const CJContext&) = delete;
-    CJContext(CChainState& chainstate, CConnman& connman, CDeterministicMNManager& dmnman,
+    CJContext(ChainstateManager& chainman, CConnman& connman, CDeterministicMNManager& dmnman,
               CMasternodeMetaMan& mn_metaman, CTxMemPool& mempool, const CActiveMasternodeManager* const mn_activeman,
               const CMasternodeSync& mn_sync, std::unique_ptr<PeerManager>& peerman, bool relay_txes);
     ~CJContext();
