@@ -29,8 +29,7 @@ class NetDeadlockTest(BitcoinTestFramework):
         thread1.join()
 
         self.log.info("Check whether a deadlock happened")
-        self.nodes[0].generate(1)
-        self.sync_blocks()
+        self.generate(self.nodes[0], 1)
 
 
 if __name__ == '__main__':
