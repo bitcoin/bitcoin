@@ -101,6 +101,15 @@ std::vector<unsigned char> ParseHexV(const UniValue& v, std::string_view name);
 std::vector<unsigned char> ParseHexO(const UniValue& o, std::string_view strKey);
 
 /**
+ * Parses verbosity from provided UniValue.
+ *
+ * @param[in] arg The verbosity argument as a bool (true) or int (0, 1, 2,...)
+ * @param[in] default_verbosity The value to return if verbosity argument is null
+ * @returns An integer describing the verbosity level (e.g. 0, 1, 2, etc.)
+ */
+int ParseVerbosity(const UniValue& arg, int default_verbosity);
+
+/**
  * Validate and return a CAmount from a UniValue number or string.
  *
  * @param[in] value     UniValue number or string to parse.

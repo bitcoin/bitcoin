@@ -72,11 +72,17 @@ public:
         return m_orphans.size();
     }
 
-protected:
-    struct OrphanTx {
+    /** Allows providing orphan information externally */
+    struct OrphanTxBase {
         CTransactionRef tx;
         NodeId fromPeer;
         NodeSeconds nTimeExpire;
+    };
+
+    std::vector<OrphanTxBase> GetOrphanTransactions() const;
+
+protected:
+    struct OrphanTx : public OrphanTxBase {
         size_t list_pos;
     };
 

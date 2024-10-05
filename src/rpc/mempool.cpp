@@ -8,8 +8,10 @@
 #include <node/mempool_persist.h>
 
 #include <chainparams.h>
+#include <consensus/validation.h>
 #include <core_io.h>
 #include <kernel/mempool_entry.h>
+#include <net_processing.h>
 #include <node/mempool_persist_args.h>
 #include <node/types.h>
 #include <policy/rbf.h>
@@ -24,6 +26,7 @@
 #include <util/moneystr.h>
 #include <util/strencodings.h>
 #include <util/time.h>
+#include <util/vector.h>
 
 #include <utility>
 
@@ -812,6 +815,104 @@ static RPCHelpMan savemempool()
     };
 }
 
+static std::vector<RPCResult> OrphanDescription()
+{
+    return {
+        RPCResult{RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
+        RPCResult{RPCResult::Type::STR_HEX, "wtxid", "The transaction witness hash in hex"},
+        RPCResult{RPCResult::Type::NUM, "bytes", "The serialized transaction size in bytes"},
+        RPCResult{RPCResult::Type::NUM, "vsize", "The virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted."},
+        RPCResult{RPCResult::Type::NUM, "weight", "The transaction weight as defined in BIP 141."},
+        RPCResult{RPCResult::Type::NUM_TIME, "expiration", "The orphan expiration time expressed in " + UNIX_EPOCH_TIME},
+        RPCResult{RPCResult::Type::ARR, "from", "",
+        {
+            RPCResult{RPCResult::Type::NUM, "peer_id", "Peer ID"},
+        }},
+    };
+}
+
+static UniValue OrphanToJSON(const TxOrphanage::OrphanTxBase& orphan)
+{
+    UniValue o(UniValue::VOBJ);
+    o.pushKV("txid", orphan.tx->GetHash().ToString());
+    o.pushKV("wtxid", orphan.tx->GetWitnessHash().ToString());
+    o.pushKV("bytes", orphan.tx->GetTotalSize());
+    o.pushKV("vsize", GetVirtualTransactionSize(*orphan.tx));
+    o.pushKV("weight", GetTransactionWeight(*orphan.tx));
+    o.pushKV("expiration", int64_t{TicksSinceEpoch<std::chrono::seconds>(orphan.nTimeExpire)});
+    UniValue from(UniValue::VARR);
+    from.push_back(orphan.fromPeer); // only one fromPeer for now
+    o.pushKV("from", from);
+    return o;
+}
+
+static RPCHelpMan getorphantxs()
+{
+    return RPCHelpMan{"getorphantxs",
+        "\nShows transactions in the tx orphanage.\n"
+        "\nEXPERIMENTAL warning: this call may be changed in future releases.\n",
+        {
+            {"verbosity|verbose", RPCArg::Type::NUM, RPCArg::Default{0}, "0 for an array of txids (may contain duplicates), 1 for an array of objects with tx details, and 2 for details from (1) and tx hex",
+             RPCArgOptions{.skip_type_check = true}},
+        },
+        {
+            RPCResult{"for verbose = 0",
+                RPCResult::Type::ARR, "", "",
+                {
+                    {RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
+                }},
+            RPCResult{"for verbose = 1",
+                RPCResult::Type::ARR, "", "",
+                {
+                    {RPCResult::Type::OBJ, "", "", OrphanDescription()},
+                }},
+            RPCResult{"for verbose = 2",
+                RPCResult::Type::ARR, "", "",
+                {
+                    {RPCResult::Type::OBJ, "", "",
+                        Cat<std::vector<RPCResult>>(
+                            OrphanDescription(),
+                            {{RPCResult::Type::STR_HEX, "hex", "The serialized, hex-encoded transaction data"}}
+                        )
+                    },
+                }},
+        },
+        RPCExamples{
+            HelpExampleCli("getorphantxs", "2")
+            + HelpExampleRpc("getorphantxs", "2")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            const NodeContext& node = EnsureAnyNodeContext(request.context);
+            PeerManager& peerman = EnsurePeerman(node);
+            std::vector<TxOrphanage::OrphanTxBase> orphanage = peerman.GetOrphanTransactions();
+
+            int verbosity{ParseVerbosity(request.params[0], /*default_verbosity=*/0)};
+
+            UniValue ret(UniValue::VARR);
+
+            if (verbosity <= 0) {
+                for (auto const& orphan : orphanage) {
+                    ret.push_back(orphan.tx->GetHash().ToString());
+                }
+            } else if (verbosity == 1) {
+                for (auto const& orphan : orphanage) {
+                    ret.push_back(OrphanToJSON(orphan));
+                }
+            } else {
+                // >= 2
+                for (auto const& orphan : orphanage) {
+                    UniValue o{OrphanToJSON(orphan)};
+                    o.pushKV("hex", EncodeHexTx(*orphan.tx));
+                    ret.push_back(o);
+                }
+            }
+
+            return ret;
+        },
+    };
+}
+
 static RPCHelpMan submitpackage()
 {
     return RPCHelpMan{"submitpackage",
@@ -1027,6 +1128,7 @@ void RegisterMempoolRPCCommands(CRPCTable& t)
         {"blockchain", &getrawmempool},
         {"blockchain", &importmempool},
         {"blockchain", &savemempool},
+        {"hidden", &getorphantxs},
         {"rawtransactions", &submitpackage},
     };
     for (const auto& c : commands) {
