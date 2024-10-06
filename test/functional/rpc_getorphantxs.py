@@ -7,7 +7,10 @@
 from test_framework.mempool_util import tx_in_orphanage
 from test_framework.messages import msg_tx
 from test_framework.p2p import P2PInterface
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.wallet import MiniWallet
 
@@ -37,13 +40,13 @@ class GetOrphanTxsTest(BitcoinTestFramework):
         self.log.info("Check that neither parent is in the mempool")
         assert_equal(node.getmempoolinfo()["size"], 0)
 
-        self.log.info("Check that both children are in the orphanage")
-
         orphanage = node.getorphantxs(verbosity=0)
         self.log.info("Check the size of the orphanage")
         assert_equal(len(orphanage), 2)
-        self.log.info("Check that negative verbosity is treated as 0")
-        assert_equal(orphanage, node.getorphantxs(verbosity=-1))
+        self.log.info("Check that undefined verbosity is disallowed")
+        assert_raises_rpc_error(-8, "Invalid verbosity value -1", node.getorphantxs, verbosity=-1)
+        assert_raises_rpc_error(-8, "Invalid verbosity value 3", node.getorphantxs, verbosity=3)
+        self.log.info("Check that both children are in the orphanage")
         assert tx_in_orphanage(node, tx_child_1["tx"])
         assert tx_in_orphanage(node, tx_child_2["tx"])
 
