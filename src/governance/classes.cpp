@@ -237,8 +237,7 @@ bool CGovernanceManager::IsSuperblockTriggered(const CDeterministicMNList& tip_m
             continue;
         }
 
-        CGovernanceObject* pObj = pSuperblock->GetGovernanceObject(*this);
-
+        CGovernanceObject* pObj = FindGovernanceObject(pSuperblock->GetGovernanceObjHash());
         if (!pObj) {
             LogPrintf("IsSuperblockTriggered -- pObj == nullptr, continuing\n");
             continue;
@@ -288,8 +287,7 @@ bool CGovernanceManager::GetBestSuperblock(const CDeterministicMNList& tip_mn_li
             continue;
         }
 
-        const CGovernanceObject* pObj = pSuperblock->GetGovernanceObject(*this);
-
+        const CGovernanceObject* pObj = FindGovernanceObject(pSuperblock->GetGovernanceObjHash());
         if (!pObj) {
             continue;
         }
@@ -396,7 +394,7 @@ CSuperblock::
     nStatus(SeenObjectStatus::Unknown),
     vecPayments()
 {
-    const CGovernanceObject* pGovObj = GetGovernanceObject(govman);
+    const CGovernanceObject* pGovObj = govman.FindGovernanceObject(nGovObjHash);
 
     if (!pGovObj) {
         throw std::runtime_error("CSuperblock: Failed to find Governance Object");
@@ -433,14 +431,6 @@ CSuperblock::CSuperblock(int nBlockHeight, std::vector<CGovernancePayment> vecPa
     nStatus = SeenObjectStatus::Valid; //TODO: Investigate this
     nGovObjHash = GetHash();
 }
-
-CGovernanceObject* CSuperblock::GetGovernanceObject(CGovernanceManager& govman)
-{
-    AssertLockHeld(govman.cs);
-    CGovernanceObject* pObj = govman.FindGovernanceObject(nGovObjHash);
-    return pObj;
-}
-
 
 /**
  *   Is Valid Superblock Height
@@ -592,6 +582,8 @@ CAmount CSuperblock::GetPaymentsTotalAmount()
 
 bool CSuperblock::IsValid(CGovernanceManager& govman, const CChain& active_chain, const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
 {
+    AssertLockHeld(govman.cs);
+
     // TODO : LOCK(cs);
     // No reason for a lock here now since this method only accesses data
     // internal to *this and since CSuperblock's are accessed only through
@@ -608,8 +600,9 @@ bool CSuperblock::IsValid(CGovernanceManager& govman, const CChain& active_chain
     int nPayments = CountPayments();
     int nMinerAndMasternodePayments = nOutputs - nPayments;
 
+    const CGovernanceObject* obj = govman.FindGovernanceObject(nGovObjHash);
     LogPrint(BCLog::GOBJECT, "CSuperblock::IsValid -- nOutputs = %d, nPayments = %d, GetDataAsHexString = %s\n",
-        nOutputs, nPayments, GetGovernanceObject(govman)->GetDataAsHexString());
+             nOutputs, nPayments, obj ? obj->GetDataAsHexString() : "");
 
     // We require an exact match (including order) between the expected
     // superblock payments and the payments actually in the block.

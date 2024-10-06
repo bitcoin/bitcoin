@@ -94,12 +94,12 @@ public:
     // TELL THE ENGINE WE EXECUTED THIS EVENT
     void SetExecuted() { nStatus = SeenObjectStatus::Executed; }
 
-    CGovernanceObject* GetGovernanceObject(CGovernanceManager& govman);
-
     int GetBlockHeight() const
     {
         return nBlockHeight;
     }
+
+    const uint256 GetGovernanceObjHash() const { return nGovObjHash; }
 
     int CountPayments() const { return (int)vecPayments.size(); }
     bool GetPayment(int nPaymentIndex, CGovernancePayment& paymentRet);

@@ -795,7 +795,7 @@ void CGovernanceManager::VoteGovernanceTriggers(const std::optional<const CGover
     // Vote NO-FUNDING for the rest of the active triggers
     const auto activeTriggers = GetActiveTriggers();
     for (const auto& trigger : activeTriggers) {
-        const auto govobj = trigger->GetGovernanceObject(*this);
+        const auto govobj = FindGovernanceObject(trigger->GetGovernanceObjHash());
         const uint256 trigger_hash = govobj->GetHash();
         if (trigger->GetBlockHeight() <= nCachedBlockHeight) {
             // ignore triggers from the past
