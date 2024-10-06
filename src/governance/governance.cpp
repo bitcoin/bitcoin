@@ -1651,8 +1651,11 @@ bool CGovernanceManager::AddNewTrigger(uint256 nHash)
 
     CSuperblock_sptr pSuperblock;
     try {
-        auto pSuperblockTmp = std::make_shared<CSuperblock>(*this, nHash);
-        pSuperblock = pSuperblockTmp;
+        const CGovernanceObject* pGovObj = FindGovernanceObject(nHash);
+        if (!pGovObj) {
+            throw std::runtime_error("CSuperblock: Failed to find Governance Object");
+        }
+        pSuperblock = std::make_shared<CSuperblock>(*pGovObj, nHash);
     } catch (std::exception& e) {
         LogPrintf("CGovernanceManager::%s -- Error creating superblock: %s\n", __func__, e.what());
         return false;
@@ -1665,7 +1668,7 @@ bool CGovernanceManager::AddNewTrigger(uint256 nHash)
 
     mapTrigger.insert(std::make_pair(nHash, pSuperblock));
 
-    return !pSuperblock->IsExpired(*this);
+    return !pSuperblock->IsExpired(GetCachedBlockHeight());
 }
 
 /**
@@ -1707,7 +1710,7 @@ void CGovernanceManager::CleanAndRemoveTriggers()
             case SeenObjectStatus::Valid:
             case SeenObjectStatus::Executed: {
                 LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- Valid trigger found\n", __func__);
-                if (pSuperblock->IsExpired(*this)) {
+                if (pSuperblock->IsExpired(GetCachedBlockHeight())) {
                     // update corresponding object
                     pObj->SetExpired();
                     remove = true;
@@ -1901,7 +1904,7 @@ bool CGovernanceManager::IsValidSuperblock(const CChain& active_chain, const CDe
 
     CSuperblock_sptr pSuperblock;
     if (GetBestSuperblock(tip_mn_list, pSuperblock, nBlockHeight)) {
-        return pSuperblock->IsValid(*this, active_chain, txNew, nBlockHeight, blockReward);
+        return pSuperblock->IsValid(active_chain, txNew, nBlockHeight, blockReward);
     }
 
     return false;

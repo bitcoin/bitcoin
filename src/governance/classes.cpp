@@ -8,7 +8,6 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <deploymentstatus.h>
-#include <governance/governance.h>
 #include <key_io.h>
 #include <primitives/transaction.h>
 #include <script/standard.h>
@@ -103,27 +102,20 @@ CSuperblock::
 {
 }
 
-CSuperblock::
-    CSuperblock(CGovernanceManager& govman, uint256& nHash) :
+CSuperblock::CSuperblock(const CGovernanceObject& govObj, uint256& nHash) :
     nGovObjHash(nHash),
     nBlockHeight(0),
     nStatus(SeenObjectStatus::Unknown),
     vecPayments()
 {
-    const CGovernanceObject* pGovObj = govman.FindGovernanceObject(nGovObjHash);
+    LogPrint(BCLog::GOBJECT, "CSuperblock -- Constructor govobj: %s, nObjectType = %d\n", govObj.GetDataAsPlainString(),
+             ToUnderlying(govObj.GetObjectType()));
 
-    if (!pGovObj) {
-        throw std::runtime_error("CSuperblock: Failed to find Governance Object");
-    }
-
-    LogPrint(BCLog::GOBJECT, "CSuperblock -- Constructor pGovObj: %s, nObjectType = %d\n",
-                pGovObj->GetDataAsPlainString(), ToUnderlying(pGovObj->GetObjectType()));
-
-    if (pGovObj->GetObjectType() != GovernanceObject::TRIGGER) {
+    if (govObj.GetObjectType() != GovernanceObject::TRIGGER) {
         throw std::runtime_error("CSuperblock: Governance Object not a trigger");
     }
 
-    UniValue obj = pGovObj->GetJSONObject();
+    UniValue obj = govObj.GetJSONObject();
 
     if (obj["type"].get_int() != ToUnderlying(GovernanceObject::TRIGGER)) {
         throw std::runtime_error("CSuperblock: invalid data type");
@@ -296,10 +288,8 @@ CAmount CSuperblock::GetPaymentsTotalAmount()
 *   - Does this transaction match the superblock?
 */
 
-bool CSuperblock::IsValid(CGovernanceManager& govman, const CChain& active_chain, const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
+bool CSuperblock::IsValid(const CChain& active_chain, const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
 {
-    AssertLockHeld(govman.cs);
-
     // TODO : LOCK(cs);
     // No reason for a lock here now since this method only accesses data
     // internal to *this and since CSuperblock's are accessed only through
@@ -316,9 +306,8 @@ bool CSuperblock::IsValid(CGovernanceManager& govman, const CChain& active_chain
     int nPayments = CountPayments();
     int nMinerAndMasternodePayments = nOutputs - nPayments;
 
-    const CGovernanceObject* obj = govman.FindGovernanceObject(nGovObjHash);
-    LogPrint(BCLog::GOBJECT, "CSuperblock::IsValid -- nOutputs = %d, nPayments = %d, GetDataAsHexString = %s\n",
-             nOutputs, nPayments, obj ? obj->GetDataAsHexString() : "");
+    LogPrint(BCLog::GOBJECT, "CSuperblock::IsValid -- nOutputs = %d, nPayments = %d, hash = %s\n", nOutputs, nPayments,
+             nGovObjHash.ToString());
 
     // We require an exact match (including order) between the expected
     // superblock payments and the payments actually in the block.
@@ -382,7 +371,7 @@ bool CSuperblock::IsValid(CGovernanceManager& govman, const CChain& active_chain
     return true;
 }
 
-bool CSuperblock::IsExpired(const CGovernanceManager& govman) const
+bool CSuperblock::IsExpired(int heightToTest) const
 {
     int nExpirationBlocks;
     // Executed triggers are kept for another superblock cycle (approximately 1 month for mainnet).
@@ -404,14 +393,14 @@ bool CSuperblock::IsExpired(const CGovernanceManager& govman) const
 
     LogPrint(BCLog::GOBJECT, "CSuperblock::IsExpired -- nBlockHeight = %d, nExpirationBlock = %d\n", nBlockHeight, nExpirationBlock);
 
-    if (govman.GetCachedBlockHeight() > nExpirationBlock) {
+    if (heightToTest > nExpirationBlock) {
         LogPrint(BCLog::GOBJECT, "CSuperblock::IsExpired -- Outdated trigger found\n");
         return true;
     }
 
     if (Params().NetworkIDString() != CBaseChainParams::MAIN) {
         // NOTE: this can happen on testnet/devnets due to reorgs, should never happen on mainnet
-        if (govman.GetCachedBlockHeight() + Params().GetConsensus().nSuperblockCycle * 2 < nBlockHeight) {
+        if (heightToTest + Params().GetConsensus().nSuperblockCycle * 2 < nBlockHeight) {
             LogPrint(BCLog::GOBJECT, "CSuperblock::IsExpired -- Trigger is too far into the future\n");
             return true;
         }

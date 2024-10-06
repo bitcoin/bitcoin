@@ -11,7 +11,6 @@
 #include <uint256.h>
 
 class CChain;
-class CGovernanceManager;
 class CSuperblock;
 class CTxOut;
 class CTransaction;
@@ -80,7 +79,7 @@ private:
 public:
     CSuperblock();
     CSuperblock(int nBlockHeight, std::vector<CGovernancePayment> vecPayments);
-    explicit CSuperblock(CGovernanceManager& govman, uint256& nHash);
+    explicit CSuperblock(const CGovernanceObject& obj, uint256& nHash);
 
     static bool IsValidBlockHeight(int nBlockHeight);
     static void GetNearestSuperblocksHeights(int nBlockHeight, int& nLastSuperblockRet, int& nNextSuperblockRet);
@@ -105,8 +104,8 @@ public:
     bool GetPayment(int nPaymentIndex, CGovernancePayment& paymentRet);
     CAmount GetPaymentsTotalAmount();
 
-    bool IsValid(CGovernanceManager& govman, const CChain& active_chain, const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
-    bool IsExpired(const CGovernanceManager& govman) const;
+    bool IsValid(const CChain& active_chain, const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
+    bool IsExpired(int heightToTest) const;
 
     std::vector<uint256> GetProposalHashes() const;
 };
