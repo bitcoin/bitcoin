@@ -197,7 +197,7 @@ std::set<uint256> TxOrphanage::GetCandidatesForBlock(const CBlock& block)
 
 void TxOrphanage::EraseForBlock(const CBlock& block)
 {
-    AssertLockHeld(g_cs_orphans);
+    LOCK(g_cs_orphans);
 
     std::vector<uint256> vOrphanErase;
 

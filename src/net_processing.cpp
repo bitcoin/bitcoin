@@ -1930,12 +1930,14 @@ void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
  */
 void PeerManagerImpl::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
-    LOCK2(::cs_main, g_cs_orphans);
+    {
+        LOCK2(::cs_main, g_cs_orphans);
 
-    auto orphanWorkSet = m_orphanage.GetCandidatesForBlock(*pblock);
-    while (!orphanWorkSet.empty()) {
-        LogPrint(BCLog::MEMPOOL, "Trying to process %d orphans\n", orphanWorkSet.size());
-        ProcessOrphanTx(orphanWorkSet);
+        auto orphanWorkSet = m_orphanage.GetCandidatesForBlock(*pblock);
+        while (!orphanWorkSet.empty()) {
+            LogPrint(BCLog::MEMPOOL, "Trying to process %d orphans\n", orphanWorkSet.size());
+            ProcessOrphanTx(orphanWorkSet);
+        }
     }
 
     m_orphanage.EraseForBlock(*pblock);
