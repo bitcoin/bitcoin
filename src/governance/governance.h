@@ -373,6 +373,7 @@ public:
 
 private:
     void ExecuteBestSuperblock(const CDeterministicMNList& tip_mn_list, int nBlockHeight);
+    bool GetBestSuperblock(const CDeterministicMNList& tip_mn_list, CSuperblock_sptr& pSuperblockRet, int nBlockHeight);
 
     std::optional<const CSuperblock> CreateSuperblockCandidate(int nHeight) const;
     std::optional<const CGovernanceObject> CreateGovernanceTrigger(const std::optional<const CSuperblock>& sb_opt, PeerManager& peerman,

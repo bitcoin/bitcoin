@@ -272,14 +272,15 @@ bool CGovernanceManager::IsSuperblockTriggered(const CDeterministicMNList& tip_m
 }
 
 
-bool CSuperblockManager::GetBestSuperblock(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, CSuperblock_sptr& pSuperblockRet, int nBlockHeight)
+bool CGovernanceManager::GetBestSuperblock(const CDeterministicMNList& tip_mn_list, CSuperblock_sptr& pSuperblockRet,
+                                           int nBlockHeight) const
 {
     if (!CSuperblock::IsValidBlockHeight(nBlockHeight)) {
         return false;
     }
 
-    AssertLockHeld(govman.cs);
-    std::vector<CSuperblock_sptr> vecTriggers = govman.GetActiveTriggers();
+    AssertLockHeld(cs);
+    std::vector<CSuperblock_sptr> vecTriggers = GetActiveTriggers();
     int nYesCount = 0;
 
     for (const auto& pSuperblock : vecTriggers) {
@@ -287,7 +288,7 @@ bool CSuperblockManager::GetBestSuperblock(CGovernanceManager& govman, const CDe
             continue;
         }
 
-        const CGovernanceObject* pObj = pSuperblock->GetGovernanceObject(govman);
+        const CGovernanceObject* pObj = pSuperblock->GetGovernanceObject(*this);
 
         if (!pObj) {
             continue;
@@ -313,7 +314,7 @@ bool CGovernanceManager::GetSuperblockPayments(const CDeterministicMNList& tip_m
     // GET THE BEST SUPERBLOCK FOR THIS BLOCK HEIGHT
 
     CSuperblock_sptr pSuperblock;
-    if (!CSuperblockManager::GetBestSuperblock(*this, tip_mn_list, pSuperblock, nBlockHeight)) {
+    if (!GetBestSuperblock(tip_mn_list, pSuperblock, nBlockHeight)) {
         LogPrint(BCLog::GOBJECT, "GetSuperblockPayments -- Can't find superblock for height %d\n", nBlockHeight);
         return false;
     }
@@ -359,7 +360,7 @@ bool CGovernanceManager::IsValidSuperblock(const CChain& active_chain, const CDe
     LOCK(cs);
 
     CSuperblock_sptr pSuperblock;
-    if (CSuperblockManager::GetBestSuperblock(*this, tip_mn_list, pSuperblock, nBlockHeight)) {
+    if (GetBestSuperblock(tip_mn_list, pSuperblock, nBlockHeight)) {
         return pSuperblock->IsValid(*this, active_chain, txNew, nBlockHeight, blockReward);
     }
 
@@ -371,7 +372,7 @@ void CGovernanceManager::ExecuteBestSuperblock(const CDeterministicMNList& tip_m
     LOCK(cs);
 
     CSuperblock_sptr pSuperblock;
-    if (CSuperblockManager::GetBestSuperblock(*this, tip_mn_list, pSuperblock, nBlockHeight)) {
+    if (GetBestSuperblock(tip_mn_list, pSuperblock, nBlockHeight)) {
         // All checks are done in CSuperblock::IsValid via IsBlockValueValid and IsBlockPayeeValid,
         // tip wouldn't be updated if anything was wrong. Mark this trigger as executed.
         pSuperblock->SetExecuted();

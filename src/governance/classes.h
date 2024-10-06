@@ -13,27 +13,12 @@
 class CChain;
 class CGovernanceManager;
 class CSuperblock;
-class CSuperblockManager;
 class CTxOut;
 class CTransaction;
 
 using CSuperblock_sptr = std::shared_ptr<CSuperblock>;
 
 CAmount ParsePaymentAmount(const std::string& strAmount);
-
-/**
-*   Superblock Manager
-*
-*   Class for querying superblock information
-*/
-
-class CSuperblockManager
-{
-public:
-    static bool GetBestSuperblock(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, CSuperblock_sptr& pSuperblockRet, int nBlockHeight);
-
-public:
-};
 
 /**
 *   Governance Object Payment
