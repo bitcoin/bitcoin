@@ -19,6 +19,7 @@ from .wallet import (
     MiniWallet,
 )
 
+MAX_ORPHANS = 100
 
 def fill_mempool(test_framework, node, *, tx_sync_fun=None):
     """Fill mempool until eviction.
