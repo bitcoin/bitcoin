@@ -891,7 +891,7 @@ static RPCHelpMan getorphantxs()
 
             UniValue ret(UniValue::VARR);
 
-            if (verbosity <= 0) {
+            if (verbosity == 0) {
                 for (auto const& orphan : orphanage) {
                     ret.push_back(orphan.tx->GetHash().ToString());
                 }
@@ -899,13 +899,14 @@ static RPCHelpMan getorphantxs()
                 for (auto const& orphan : orphanage) {
                     ret.push_back(OrphanToJSON(orphan));
                 }
-            } else {
-                // >= 2
+            } else if (verbosity == 2) {
                 for (auto const& orphan : orphanage) {
                     UniValue o{OrphanToJSON(orphan)};
                     o.pushKV("hex", EncodeHexTx(*orphan.tx));
                     ret.push_back(o);
                 }
+            } else {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid verbosity value " + ToString(verbosity));
             }
 
             return ret;
