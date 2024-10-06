@@ -33,8 +33,6 @@ private:
     static bool GetBestSuperblock(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, CSuperblock_sptr& pSuperblockRet, int nBlockHeight);
 
 public:
-    static bool IsSuperblockTriggered(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, int nBlockHeight);
-
     static bool GetSuperblockPayments(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, int nBlockHeight, std::vector<CTxOut>& voutSuperblockRet);
     static void ExecuteBestSuperblock(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, int nBlockHeight);
 

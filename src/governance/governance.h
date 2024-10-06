@@ -350,6 +350,17 @@ public:
     bool AddNewTrigger(uint256 nHash);
     void CleanAndRemoveTriggers();
 
+    // Superblocks related:
+
+    /**
+     *   Is Superblock Triggered
+     *
+     *   - Does this block have a non-executed and activated trigger?
+     */
+
+    bool IsSuperblockTriggered(const CDeterministicMNList& tip_mn_list, int nBlockHeight);
+
+
 private:
     std::optional<const CSuperblock> CreateSuperblockCandidate(int nHeight) const;
     std::optional<const CGovernanceObject> CreateGovernanceTrigger(const std::optional<const CSuperblock>& sb_opt, PeerManager& peerman,

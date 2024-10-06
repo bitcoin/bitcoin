@@ -218,46 +218,41 @@ std::vector<CSuperblock_sptr> CGovernanceManager::GetActiveTriggers()
     return vecResults;
 }
 
-/**
-*   Is Superblock Triggered
-*
-*   - Does this block have a non-executed and activated trigger?
-*/
-
-bool CSuperblockManager::IsSuperblockTriggered(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, int nBlockHeight)
+bool CGovernanceManager::IsSuperblockTriggered(const CDeterministicMNList& tip_mn_list, int nBlockHeight)
 {
-    LogPrint(BCLog::GOBJECT, "CSuperblockManager::IsSuperblockTriggered -- Start nBlockHeight = %d\n", nBlockHeight);
+    LogPrint(BCLog::GOBJECT, "IsSuperblockTriggered -- Start nBlockHeight = %d\n", nBlockHeight);
     if (!CSuperblock::IsValidBlockHeight(nBlockHeight)) {
         return false;
     }
 
-    LOCK(govman.cs);
+    LOCK(cs);
     // GET ALL ACTIVE TRIGGERS
-    std::vector<CSuperblock_sptr> vecTriggers = govman.GetActiveTriggers();
+    std::vector<CSuperblock_sptr> vecTriggers = GetActiveTriggers();
 
-    LogPrint(BCLog::GOBJECT, "CSuperblockManager::IsSuperblockTriggered -- vecTriggers.size() = %d\n", vecTriggers.size());
+    LogPrint(BCLog::GOBJECT, "IsSuperblockTriggered -- vecTriggers.size() = %d\n", vecTriggers.size());
 
     for (const auto& pSuperblock : vecTriggers) {
         if (!pSuperblock) {
-            LogPrintf("CSuperblockManager::IsSuperblockTriggered -- Non-superblock found, continuing\n");
+            LogPrintf("IsSuperblockTriggered -- Non-superblock found, continuing\n");
             continue;
         }
 
-        CGovernanceObject* pObj = pSuperblock->GetGovernanceObject(govman);
+        CGovernanceObject* pObj = pSuperblock->GetGovernanceObject(*this);
 
         if (!pObj) {
-            LogPrintf("CSuperblockManager::IsSuperblockTriggered -- pObj == nullptr, continuing\n");
+            LogPrintf("IsSuperblockTriggered -- pObj == nullptr, continuing\n");
             continue;
         }
 
-        LogPrint(BCLog::GOBJECT, "CSuperblockManager::IsSuperblockTriggered -- data = %s\n", pObj->GetDataAsPlainString());
+        LogPrint(BCLog::GOBJECT, "IsSuperblockTriggered -- data = %s\n", pObj->GetDataAsPlainString());
 
         // note : 12.1 - is epoch calculation correct?
 
         if (nBlockHeight != pSuperblock->GetBlockHeight()) {
-            LogPrint(BCLog::GOBJECT, "CSuperblockManager::IsSuperblockTriggered -- block height doesn't match nBlockHeight = %d, blockStart = %d, continuing\n",
-                nBlockHeight,
-                pSuperblock->GetBlockHeight());
+            LogPrint(BCLog::GOBJECT,
+                     "IsSuperblockTriggered -- block height doesn't match nBlockHeight = %d, blockStart = %d, "
+                     "continuing\n",
+                     nBlockHeight, pSuperblock->GetBlockHeight());
             continue;
         }
 
@@ -266,10 +261,10 @@ bool CSuperblockManager::IsSuperblockTriggered(CGovernanceManager& govman, const
         pObj->UpdateSentinelVariables(tip_mn_list);
 
         if (pObj->IsSetCachedFunding()) {
-            LogPrint(BCLog::GOBJECT, "CSuperblockManager::IsSuperblockTriggered -- fCacheFunding = true, returning true\n");
+            LogPrint(BCLog::GOBJECT, "IsSuperblockTriggered -- fCacheFunding = true, returning true\n");
             return true;
         } else {
-            LogPrint(BCLog::GOBJECT, "CSuperblockManager::IsSuperblockTriggered -- fCacheFunding = false, continuing\n");
+            LogPrint(BCLog::GOBJECT, "IsSuperblockTriggered -- fCacheFunding = false, continuing\n");
         }
     }
 

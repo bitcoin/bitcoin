@@ -253,7 +253,7 @@ static std::string GetRequiredPaymentsString(CGovernanceManager& govman, const C
             strPayments += ", " + EncodeDestination(dest);
         }
     }
-    if (CSuperblockManager::IsSuperblockTriggered(govman, tip_mn_list, nBlockHeight)) {
+    if (govman.IsSuperblockTriggered(tip_mn_list, nBlockHeight)) {
         std::vector<CTxOut> voutSuperblock;
         if (!CSuperblockManager::GetSuperblockPayments(govman, tip_mn_list, nBlockHeight, voutSuperblock)) {
             return strPayments + ", error";
