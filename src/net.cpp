@@ -643,8 +643,6 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
 
 void CNode::CloseSocketDisconnect(CConnman* connman)
 {
-    AssertLockHeld(connman->m_nodes_mutex);
-
     fDisconnect = true;
     LOCK2(connman->cs_mapSocketToNode, m_sock_mutex);
     if (!m_sock) {
