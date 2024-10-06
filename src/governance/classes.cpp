@@ -365,16 +365,16 @@ bool CSuperblockManager::IsValid(CGovernanceManager& govman, const CChain& activ
     return false;
 }
 
-void CSuperblockManager::ExecuteBestSuperblock(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, int nBlockHeight)
+void CGovernanceManager::ExecuteBestSuperblock(const CDeterministicMNList& tip_mn_list, int nBlockHeight)
 {
-    LOCK(govman.cs);
+    LOCK(cs);
 
     CSuperblock_sptr pSuperblock;
-    if (GetBestSuperblock(govman, tip_mn_list, pSuperblock, nBlockHeight)) {
+    if (CSuperblockManager::GetBestSuperblock(*this, tip_mn_list, pSuperblock, nBlockHeight)) {
         // All checks are done in CSuperblock::IsValid via IsBlockValueValid and IsBlockPayeeValid,
         // tip wouldn't be updated if anything was wrong. Mark this trigger as executed.
         pSuperblock->SetExecuted();
-        govman.ResetVotedFundingTrigger();
+        ResetVotedFundingTrigger();
     }
 }
 
