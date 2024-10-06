@@ -4,7 +4,12 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests for orphan related RPCs."""
 
-from test_framework.mempool_util import tx_in_orphanage
+import time
+
+from test_framework.mempool_util import (
+    ORPHAN_TX_EXPIRE_TIME,
+    tx_in_orphanage,
+)
 from test_framework.messages import msg_tx
 from test_framework.p2p import P2PInterface
 from test_framework.util import (
@@ -90,6 +95,8 @@ class OrphanRPCsTest(BitcoinTestFramework):
         tx_child_2 = self.wallet.create_self_transfer(utxo_to_spend=tx_parent_2["new_utxo"])
         peer_1 = node.add_p2p_connection(P2PInterface())
         peer_2 = node.add_p2p_connection(P2PInterface())
+        entry_time = int(time.time())
+        node.setmocktime(entry_time)
         peer_1.send_and_ping(msg_tx(tx_child_1["tx"]))
         peer_2.send_and_ping(msg_tx(tx_child_2["tx"]))
 
@@ -109,6 +116,9 @@ class OrphanRPCsTest(BitcoinTestFramework):
         assert_equal(len(node.getorphantxs()), 1)
         orphan_1 = orphanage[0]
         self.orphan_details_match(orphan_1, tx_child_1, verbosity=1)
+        self.log.info("Checking orphan entry/expiration times")
+        assert_equal(orphan_1["entry"], entry_time)
+        assert_equal(orphan_1["expiration"], entry_time + ORPHAN_TX_EXPIRE_TIME)
 
         self.log.info("Checking orphan details (verbosity 2)")
         orphanage = node.getorphantxs(verbosity=2)
