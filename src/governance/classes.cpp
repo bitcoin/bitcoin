@@ -202,7 +202,7 @@ void CGovernanceManager::CleanAndRemoveTriggers()
 *   - Return the triggers in a list
 */
 
-std::vector<CSuperblock_sptr> CGovernanceManager::GetActiveTriggers()
+std::vector<CSuperblock_sptr> CGovernanceManager::GetActiveTriggers() const
 {
     AssertLockHeld(cs);
     std::vector<CSuperblock_sptr> vecResults;

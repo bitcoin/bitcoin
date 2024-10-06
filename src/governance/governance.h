@@ -347,7 +347,7 @@ public:
      *   - Track governance objects which are triggers
      *   - After triggers are activated and executed, they can be removed
     */
-    std::vector<std::shared_ptr<CSuperblock>> GetActiveTriggers();
+    std::vector<std::shared_ptr<CSuperblock>> GetActiveTriggers() const;
     bool AddNewTrigger(uint256 nHash);
     void CleanAndRemoveTriggers();
 
