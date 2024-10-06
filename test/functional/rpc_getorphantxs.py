@@ -125,6 +125,5 @@ class GetOrphanTxsTest(BitcoinTestFramework):
             self.log.info("Check the transaction hex of orphan")
             assert_equal(orphan["hex"], tx["hex"])
 
-
 if __name__ == '__main__':
     GetOrphanTxsTest(__file__).main()

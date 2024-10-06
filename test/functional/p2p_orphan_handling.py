@@ -5,6 +5,7 @@
 
 import time
 
+from test_framework.mempool_util import tx_in_orphanage
 from test_framework.messages import (
     CInv,
     CTxInWitness,
@@ -40,6 +41,8 @@ from test_framework.wallet import (
 # when the value of the delay is not interesting. If we want to test that the node waits x seconds
 # for one peer and y seconds for another, use specific values instead.
 TXREQUEST_TIME_SKIP = NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY + OVERLOADED_PEER_TX_DELAY + 1
+
+DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100
 
 def cleanup(func):
     # Time to fastfoward (using setmocktime) in between subtests to ensure they do not interfere with
@@ -566,6 +569,47 @@ class OrphanHandlingTest(BitcoinTestFramework):
         assert tx_child["txid"] in node_mempool
         assert_equal(node.getmempoolentry(tx_child["txid"])["wtxid"], tx_child["wtxid"])
 
+    @cleanup
+    def test_max_orphan_amount(self):
+        self.log.info("Check that we never exceed our storage limits for orphans")
+
+        node = self.nodes[0]
+        self.generate(self.wallet, 1)
+        peer_1 = node.add_p2p_connection(P2PInterface())
+
+        self.log.info("Check that orphanage is empty on start of test")
+        assert len(node.getorphantxs()) == 0
+
+        self.log.info("Filling up orphanage with " + str(DEFAULT_MAX_ORPHAN_TRANSACTIONS) + "(DEFAULT_MAX_ORPHAN_TRANSACTIONS) orphans")
+        orphans = []
+        parent_orphans = []
+        for _ in range(DEFAULT_MAX_ORPHAN_TRANSACTIONS):
+            tx_parent_1 = self.wallet.create_self_transfer()
+            tx_child_1 = self.wallet.create_self_transfer(utxo_to_spend=tx_parent_1["new_utxo"])
+            parent_orphans.append(tx_parent_1["tx"])
+            orphans.append(tx_child_1["tx"])
+            peer_1.send_message(msg_tx(tx_child_1["tx"]))
+
+        peer_1.sync_with_ping()
+        orphanage = node.getorphantxs()
+        assert_equal(len(orphanage), DEFAULT_MAX_ORPHAN_TRANSACTIONS)
+
+        for orphan in orphans:
+            assert tx_in_orphanage(node, orphan)
+
+        self.log.info("Check that we do not add more than the max orphan amount")
+        tx_parent_1 = self.wallet.create_self_transfer()
+        tx_child_1 = self.wallet.create_self_transfer(utxo_to_spend=tx_parent_1["new_utxo"])
+        peer_1.send_and_ping(msg_tx(tx_child_1["tx"]))
+        parent_orphans.append(tx_parent_1["tx"])
+        orphanage = node.getorphantxs()
+        assert_equal(len(orphanage), DEFAULT_MAX_ORPHAN_TRANSACTIONS)
+
+        self.log.info("Clearing the orphanage")
+        for index, parent_orphan in enumerate(parent_orphans):
+            peer_1.send_and_ping(msg_tx(parent_orphan))
+        assert_equal(len(node.getorphantxs()),0)
+
 
     def run_test(self):
         self.nodes[0].setmocktime(int(time.time()))
@@ -582,6 +626,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.test_same_txid_orphan()
         self.test_same_txid_orphan_of_orphan()
         self.test_orphan_txid_inv()
+        self.test_max_orphan_amount()
 
 
 if __name__ == '__main__':
