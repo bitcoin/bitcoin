@@ -257,7 +257,7 @@ bool CMNPaymentsProcessor::IsBlockValueValid(const CBlock& block, const int nBlo
     }
 
     // this actually also checks for correct payees and not only amount
-    if (!CSuperblockManager::IsValid(m_govman, m_chainman.ActiveChain(), tip_mn_list, *block.vtx[0], nBlockHeight, blockReward)) {
+    if (!m_govman.IsValidSuperblock(m_chainman.ActiveChain(), tip_mn_list, *block.vtx[0], nBlockHeight, blockReward)) {
         // triggered but invalid? that's weird
         LogPrintf("CMNPaymentsProcessor::%s -- ERROR! Invalid superblock detected at height %d: %s", __func__, nBlockHeight, block.vtx[0]->ToString()); /* Continued */
         // should NOT allow invalid superblocks, when superblocks are enabled
@@ -303,7 +303,8 @@ bool CMNPaymentsProcessor::IsBlockPayeeValid(const CTransaction& txNew, const CB
         if (!check_superblock) return true;
         const auto tip_mn_list = m_dmnman.GetListAtChainTip();
         if (m_govman.IsSuperblockTriggered(tip_mn_list, nBlockHeight)) {
-            if (CSuperblockManager::IsValid(m_govman, m_chainman.ActiveChain(), tip_mn_list, txNew, nBlockHeight, blockSubsidy + feeReward)) {
+            if (m_govman.IsValidSuperblock(m_chainman.ActiveChain(), tip_mn_list, txNew, nBlockHeight,
+                                           blockSubsidy + feeReward)) {
                 LogPrint(BCLog::GOBJECT, "CMNPaymentsProcessor::%s -- Valid superblock at height %d: %s", __func__, nBlockHeight, txNew.ToString()); /* Continued */
                 // continue validation, should also pay MN
             } else {

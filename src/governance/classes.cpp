@@ -352,14 +352,15 @@ bool CGovernanceManager::GetSuperblockPayments(const CDeterministicMNList& tip_m
     return true;
 }
 
-bool CSuperblockManager::IsValid(CGovernanceManager& govman, const CChain& active_chain, const CDeterministicMNList& tip_mn_list, const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
+bool CGovernanceManager::IsValidSuperblock(const CChain& active_chain, const CDeterministicMNList& tip_mn_list,
+                                           const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
 {
     // GET BEST SUPERBLOCK, SHOULD MATCH
-    LOCK(govman.cs);
+    LOCK(cs);
 
     CSuperblock_sptr pSuperblock;
-    if (CSuperblockManager::GetBestSuperblock(govman, tip_mn_list, pSuperblock, nBlockHeight)) {
-        return pSuperblock->IsValid(govman, active_chain, txNew, nBlockHeight, blockReward);
+    if (CSuperblockManager::GetBestSuperblock(*this, tip_mn_list, pSuperblock, nBlockHeight)) {
+        return pSuperblock->IsValid(*this, active_chain, txNew, nBlockHeight, blockReward);
     }
 
     return false;

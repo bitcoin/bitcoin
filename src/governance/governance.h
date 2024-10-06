@@ -368,6 +368,9 @@ public:
     bool GetSuperblockPayments(const CDeterministicMNList& tip_mn_list, int nBlockHeight,
                                std::vector<CTxOut>& voutSuperblockRet);
 
+    bool IsValidSuperblock(const CChain& active_chain, const CDeterministicMNList& tip_mn_list,
+                           const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
+
 private:
     void ExecuteBestSuperblock(const CDeterministicMNList& tip_mn_list, int nBlockHeight);
 
