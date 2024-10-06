@@ -19,6 +19,8 @@ from .wallet import (
     MiniWallet,
 )
 
+ORPHAN_TX_EXPIRE_TIME = 1200
+
 
 def fill_mempool(test_framework, node, *, tx_sync_fun=None):
     """Fill mempool until eviction.
