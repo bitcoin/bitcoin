@@ -332,7 +332,7 @@ void CMNPaymentsProcessor::FillBlockPayments(CMutableTransaction& txNew, const C
     const auto tip_mn_list = m_dmnman.GetListAtChainTip();
     if (AreSuperblocksEnabled(m_sporkman) && m_govman.IsSuperblockTriggered(tip_mn_list, nBlockHeight)) {
         LogPrint(BCLog::GOBJECT, "CMNPaymentsProcessor::%s -- Triggered superblock creation at height %d\n", __func__, nBlockHeight);
-        CSuperblockManager::GetSuperblockPayments(m_govman, tip_mn_list, nBlockHeight, voutSuperblockPaymentsRet);
+        m_govman.GetSuperblockPayments(tip_mn_list, nBlockHeight, voutSuperblockPaymentsRet);
     }
 
     if (!GetMasternodeTxOuts(pindexPrev, blockSubsidy, feeReward, voutMasternodePaymentsRet)) {

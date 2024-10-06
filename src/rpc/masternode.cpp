@@ -255,7 +255,7 @@ static std::string GetRequiredPaymentsString(CGovernanceManager& govman, const C
     }
     if (govman.IsSuperblockTriggered(tip_mn_list, nBlockHeight)) {
         std::vector<CTxOut> voutSuperblock;
-        if (!CSuperblockManager::GetSuperblockPayments(govman, tip_mn_list, nBlockHeight, voutSuperblock)) {
+        if (!govman.GetSuperblockPayments(tip_mn_list, nBlockHeight, voutSuperblock)) {
             return strPayments + ", error";
         }
         std::string strSBPayees = "Unknown";

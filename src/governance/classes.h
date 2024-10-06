@@ -29,11 +29,10 @@ CAmount ParsePaymentAmount(const std::string& strAmount);
 
 class CSuperblockManager
 {
-private:
+public:
     static bool GetBestSuperblock(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, CSuperblock_sptr& pSuperblockRet, int nBlockHeight);
 
 public:
-    static bool GetSuperblockPayments(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, int nBlockHeight, std::vector<CTxOut>& voutSuperblockRet);
     static void ExecuteBestSuperblock(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, int nBlockHeight);
 
     static bool IsValid(CGovernanceManager& govman, const CChain& active_chain, const CDeterministicMNList& tip_mn_list, const CTransaction& txNew, int nBlockHeight, CAmount blockReward);

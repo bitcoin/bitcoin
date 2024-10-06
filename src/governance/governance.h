@@ -357,9 +357,15 @@ public:
      *
      *   - Does this block have a non-executed and activated trigger?
      */
-
     bool IsSuperblockTriggered(const CDeterministicMNList& tip_mn_list, int nBlockHeight);
 
+    /**
+     *   Get Superblock Payments
+     *
+     *   - Returns payments for superblock
+     */
+    bool GetSuperblockPayments(const CDeterministicMNList& tip_mn_list, int nBlockHeight,
+                               std::vector<CTxOut>& voutSuperblockRet);
 
 private:
     std::optional<const CSuperblock> CreateSuperblockCandidate(int nHeight) const;

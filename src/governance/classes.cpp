@@ -305,21 +305,16 @@ bool CSuperblockManager::GetBestSuperblock(CGovernanceManager& govman, const CDe
     return nYesCount > 0;
 }
 
-/**
-*   Get Superblock Payments
-*
-*   - Returns payments for superblock
-*/
-
-bool CSuperblockManager::GetSuperblockPayments(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, int nBlockHeight, std::vector<CTxOut>& voutSuperblockRet)
+bool CGovernanceManager::GetSuperblockPayments(const CDeterministicMNList& tip_mn_list, int nBlockHeight,
+                                               std::vector<CTxOut>& voutSuperblockRet)
 {
-    LOCK(govman.cs);
+    LOCK(cs);
 
     // GET THE BEST SUPERBLOCK FOR THIS BLOCK HEIGHT
 
     CSuperblock_sptr pSuperblock;
-    if (!CSuperblockManager::GetBestSuperblock(govman, tip_mn_list, pSuperblock, nBlockHeight)) {
-        LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetSuperblockPayments -- Can't find superblock for height %d\n", nBlockHeight);
+    if (!CSuperblockManager::GetBestSuperblock(*this, tip_mn_list, pSuperblock, nBlockHeight)) {
+        LogPrint(BCLog::GOBJECT, "GetSuperblockPayments -- Can't find superblock for height %d\n", nBlockHeight);
         return false;
     }
 
@@ -347,10 +342,10 @@ bool CSuperblockManager::GetSuperblockPayments(CGovernanceManager& govman, const
             CTxDestination dest;
             ExtractDestination(payment.script, dest);
 
-            LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetSuperblockPayments -- NEW Superblock: output %d (addr %s, amount %d.%08d)\n",
-                        i, EncodeDestination(dest), payment.nAmount / COIN, payment.nAmount % COIN);
+            LogPrint(BCLog::GOBJECT, "GetSuperblockPayments -- NEW Superblock: output %d (addr %s, amount %d.%08d)\n",
+                     i, EncodeDestination(dest), payment.nAmount / COIN, payment.nAmount % COIN);
         } else {
-            LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetSuperblockPayments -- Payment not found\n");
+            LogPrint(BCLog::GOBJECT, "GetSuperblockPayments -- Payment not found\n");
         }
     }
 
