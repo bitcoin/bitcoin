@@ -2,7 +2,7 @@
 # Copyright (c) 2014-2024 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test the getorphantxs RPC."""
+"""Tests for orphan related RPCs."""
 
 from test_framework.mempool_util import tx_in_orphanage
 from test_framework.messages import msg_tx
@@ -15,7 +15,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.wallet import MiniWallet
 
 
-class GetOrphanTxsTest(BitcoinTestFramework):
+class OrphanRPCsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
@@ -138,4 +138,4 @@ class GetOrphanTxsTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    GetOrphanTxsTest(__file__).main()
+    OrphanRPCsTest(__file__).main()
