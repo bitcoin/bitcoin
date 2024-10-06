@@ -955,14 +955,14 @@ static RPCHelpMan voteraw()
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     CHECK_NONFATAL(node.govman);
-    GovernanceObject govObjType = WITH_LOCK(node.govman->cs, return [&](){
-        AssertLockHeld(node.govman->cs);
+    GovernanceObject govObjType = [&]() {
+        LOCK(node.govman->cs);
         const CGovernanceObject *pGovObj = node.govman->FindConstGovernanceObject(hashGovObj);
         if (!pGovObj) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Governance object not found");
         }
         return pGovObj->GetObjectType();
-    }());
+    }();
 
 
     int64_t nTime = request.params[5].get_int64();
