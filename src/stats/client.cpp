@@ -34,12 +34,12 @@ std::unique_ptr<StatsdClient> g_stats_client;
 std::unique_ptr<StatsdClient> InitStatsClient(const ArgsManager& args)
 {
     auto is_enabled = args.GetBoolArg("-statsenabled", /*fDefault=*/false);
-    auto host = args.GetArg("-statshost", /*fDefault=*/"");
+    auto host = args.GetArg("-statshost", /*fDefault=*/DEFAULT_STATSD_HOST);
 
     if (is_enabled && host.empty()) {
         // Stats are enabled but host has not been specified, then use
-        // default host. This is to preserve old behavior.
-        host = DEFAULT_STATSD_HOST;
+        // default legacy host. This is to preserve old behavior.
+        host = "127.0.0.1";
     } else if (!host.empty()) {
         // Host is specified but stats are not explcitly enabled. Assume
         // that if a host has been specified, we want stats enabled. This

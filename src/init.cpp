@@ -837,12 +837,15 @@ static void StartupNotify(const ArgsManager& args)
 }
 #endif
 
-static void PeriodicStats(ArgsManager& args, ChainstateManager& chainman, const CTxMemPool& mempool)
+static void PeriodicStats(NodeContext& node)
 {
     assert(::g_stats_client->active());
+    const ArgsManager& args = *Assert(node.args);
+    ChainstateManager& chainman = *Assert(node.chainman);
+    const CTxMemPool& mempool = *Assert(node.mempool);
     CCoinsStats stats{CoinStatsHashType::NONE};
     chainman.ActiveChainstate().ForceFlushStateToDisk();
-    if (WITH_LOCK(cs_main, return GetUTXOStats(&chainman.ActiveChainstate().CoinsDB(), std::ref(chainman.m_blockman), stats, RpcInterruptionPoint, chainman.ActiveChain().Tip()))) {
+    if (WITH_LOCK(cs_main, return GetUTXOStats(&chainman.ActiveChainstate().CoinsDB(), chainman.m_blockman, stats, node.rpc_interruption_point, chainman.ActiveChain().Tip()))) {
         ::g_stats_client->gauge("utxoset.tx", stats.nTransactions, 1.0f);
         ::g_stats_client->gauge("utxoset.txOutputs", stats.nTransactionOutputs, 1.0f);
         ::g_stats_client->gauge("utxoset.dbSizeBytes", stats.nDiskSize, 1.0f);
@@ -2299,7 +2302,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     if (::g_stats_client->active()) {
         int nStatsPeriod = std::min(std::max((int)args.GetArg("-statsperiod", DEFAULT_STATSD_PERIOD), MIN_STATSD_PERIOD), MAX_STATSD_PERIOD);
-        node.scheduler->scheduleEvery(std::bind(&PeriodicStats, std::ref(*node.args), std::ref(chainman), std::cref(*node.mempool)), std::chrono::seconds{nStatsPeriod});
+        node.scheduler->scheduleEvery(std::bind(&PeriodicStats, std::ref(node)), std::chrono::seconds{nStatsPeriod});
     }
 
     // ********************************************************* Step 11: import blocks
