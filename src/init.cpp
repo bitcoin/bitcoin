@@ -1070,9 +1070,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         if (!blockman_result) {
             return InitError(util::ErrorString(blockman_result));
         }
-        CTxMemPool::Options mempool_opts{
-            .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
-        };
+        CTxMemPool::Options mempool_opts{};
         auto mempool_result{ApplyArgsManOptions(args, chainparams, mempool_opts)};
         if (!mempool_result) {
             return InitError(util::ErrorString(mempool_result));
