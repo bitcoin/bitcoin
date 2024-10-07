@@ -1179,7 +1179,7 @@ bool CheckHostPortOptions(const ArgsManager& args) {
     return true;
 }
 
-// A GUI user may opt to retry once if there is a failure during chainstate initialization.
+// A GUI user may opt to retry once with do_reindex set if there is a failure during chainstate initialization.
 // The function therefore has to support re-entry.
 static ChainstateLoadResult InitAndLoadChainstate(
     NodeContext& node,
