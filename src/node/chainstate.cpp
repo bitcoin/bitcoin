@@ -41,12 +41,17 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     // new BlockTreeDB tries to delete the existing file, which
     // fails if it's still open from the previous loop. Close it first:
     pblocktree.reset();
-    pblocktree = std::make_unique<BlockTreeDB>(DBParams{
-        .path = chainman.m_options.datadir / "blocks" / "index",
-        .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
-        .memory_only = options.block_tree_db_in_memory,
-        .wipe_data = options.wipe_block_tree_db,
-        .options = chainman.m_options.block_tree_db});
+    try {
+        pblocktree = std::make_unique<BlockTreeDB>(DBParams{
+            .path = chainman.m_options.datadir / "blocks" / "index",
+            .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
+            .memory_only = options.block_tree_db_in_memory,
+            .wipe_data = options.wipe_block_tree_db,
+            .options = chainman.m_options.block_tree_db});
+    } catch (dbwrapper_error& err) {
+        LogError("%s\n", err.what());
+        return {ChainstateLoadStatus::FAILURE, _("Error opening block database")};
+    }
 
     if (options.wipe_block_tree_db) {
         pblocktree->WriteReindexing(true);
@@ -107,10 +112,15 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     for (Chainstate* chainstate : chainman.GetAll()) {
         LogPrintf("Initializing chainstate %s\n", chainstate->ToString());
 
-        chainstate->InitCoinsDB(
-            /*cache_size_bytes=*/chainman.m_total_coinsdb_cache * init_cache_fraction,
-            /*in_memory=*/options.coins_db_in_memory,
-            /*should_wipe=*/options.wipe_chainstate_db);
+        try {
+            chainstate->InitCoinsDB(
+                /*cache_size_bytes=*/chainman.m_total_coinsdb_cache * init_cache_fraction,
+                /*in_memory=*/options.coins_db_in_memory,
+                /*should_wipe=*/options.wipe_chainstate_db);
+        } catch (dbwrapper_error& err) {
+            LogError("%s\n", err.what());
+            return {ChainstateLoadStatus::FAILURE, _("Error opening coins database")};
+        }
 
         if (options.coins_error_cb) {
             chainstate->CoinsErrorCatcher().AddReadErrCallback(options.coins_error_cb);
