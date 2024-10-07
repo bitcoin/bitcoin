@@ -1,7 +1,7 @@
-/* $Id: sph_luffa.h 154 2010-04-26 17:00:24Z tp $ */
+/* $Id: sph_jh.h 216 2010-06-08 09:46:57Z tp $ */
 /**
- * Luffa interface. Luffa is a family of functions which differ by
- * their output size; this implementation defines Luffa for output
+ * JH interface. JH is a family of functions which differ by
+ * their output size; this implementation defines JH for output
  * sizes 224, 256, 384 and 512 bits.
  *
  * ==========================(LICENSE BEGIN)============================
@@ -29,114 +29,116 @@
  *
  * ===========================(LICENSE END)=============================
  *
- * @file     sph_luffa.h
+ * @file     sph_jh.h
  * @author   Thomas Pornin <thomas.pornin@cryptolog.com>
  */
 
-#ifndef SPH_LUFFA_H__
-#define SPH_LUFFA_H__
+#ifndef SPH_JH_H__
+#define SPH_JH_H__
 
 #ifdef __cplusplus
 extern "C"{
 #endif
 
 #include <stddef.h>
-#include <crypto/sph_types.h>
+#include "sph_types.h"
 
 /**
- * Output size (in bits) for Luffa-224.
+ * Output size (in bits) for JH-224.
  */
-#define SPH_SIZE_luffa224   224
+#define SPH_SIZE_jh224   224
 
 /**
- * Output size (in bits) for Luffa-256.
+ * Output size (in bits) for JH-256.
  */
-#define SPH_SIZE_luffa256   256
+#define SPH_SIZE_jh256   256
 
 /**
- * Output size (in bits) for Luffa-384.
+ * Output size (in bits) for JH-384.
  */
-#define SPH_SIZE_luffa384   384
+#define SPH_SIZE_jh384   384
 
 /**
- * Output size (in bits) for Luffa-512.
+ * Output size (in bits) for JH-512.
  */
-#define SPH_SIZE_luffa512   512
+#define SPH_SIZE_jh512   512
 
 /**
- * This structure is a context for Luffa-224 computations: it contains
- * the intermediate values and some data from the last entered block.
- * Once a Luffa computation has been performed, the context can be
- * reused for another computation.
+ * This structure is a context for JH computations: it contains the
+ * intermediate values and some data from the last entered block. Once
+ * a JH computation has been performed, the context can be reused for
+ * another computation.
  *
- * The contents of this structure are private. A running Luffa
- * computation can be cloned by copying the context (e.g. with a simple
+ * The contents of this structure are private. A running JH computation
+ * can be cloned by copying the context (e.g. with a simple
  * <code>memcpy()</code>).
  */
 typedef struct {
 #ifndef DOXYGEN_IGNORE
-	unsigned char buf[32];    /* first field, for alignment */
+	unsigned char buf[64];    /* first field, for alignment */
 	size_t ptr;
-	sph_u32 V[3][8];
+	union {
+#if SPH_64
+		sph_u64 wide[16];
 #endif
-} sph_luffa224_context;
-
-/**
- * This structure is a context for Luffa-256 computations. It is
- * identical to <code>sph_luffa224_context</code>.
- */
-typedef sph_luffa224_context sph_luffa256_context;
-
-/**
- * This structure is a context for Luffa-384 computations.
- */
-typedef struct {
-#ifndef DOXYGEN_IGNORE
-	unsigned char buf[32];    /* first field, for alignment */
-	size_t ptr;
-	sph_u32 V[4][8];
+		sph_u32 narrow[32];
+	} H;
+#if SPH_64
+	sph_u64 block_count;
+#else
+	sph_u32 block_count_high, block_count_low;
 #endif
-} sph_luffa384_context;
-
-/**
- * This structure is a context for Luffa-512 computations.
- */
-typedef struct {
-#ifndef DOXYGEN_IGNORE
-	unsigned char buf[32];    /* first field, for alignment */
-	size_t ptr;
-	sph_u32 V[5][8];
 #endif
-} sph_luffa512_context;
+} sph_jh_context;
 
 /**
- * Initialize a Luffa-224 context. This process performs no memory allocation.
+ * Type for a JH-224 context (identical to the common context).
+ */
+typedef sph_jh_context sph_jh224_context;
+
+/**
+ * Type for a JH-256 context (identical to the common context).
+ */
+typedef sph_jh_context sph_jh256_context;
+
+/**
+ * Type for a JH-384 context (identical to the common context).
+ */
+typedef sph_jh_context sph_jh384_context;
+
+/**
+ * Type for a JH-512 context (identical to the common context).
+ */
+typedef sph_jh_context sph_jh512_context;
+
+/**
+ * Initialize a JH-224 context. This process performs no memory allocation.
  *
- * @param cc   the Luffa-224 context (pointer to a
- *             <code>sph_luffa224_context</code>)
+ * @param cc   the JH-224 context (pointer to a
+ *             <code>sph_jh224_context</code>)
  */
-void sph_luffa224_init(void *cc);
+void sph_jh224_init(void *cc);
 
 /**
  * Process some data bytes. It is acceptable that <code>len</code> is zero
  * (in which case this function does nothing).
  *
- * @param cc     the Luffa-224 context
+ * @param cc     the JH-224 context
  * @param data   the input data
  * @param len    the input data length (in bytes)
  */
-void sph_luffa224(void *cc, const void *data, size_t len);
+void sph_jh224(void *cc, const void *data, size_t len);
 
 /**
- * Terminate the current Luffa-224 computation and output the result into
+ * Terminate the current JH-224 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
  * accomodate the result (28 bytes). The context is automatically
  * reinitialized.
  *
- * @param cc    the Luffa-224 context
+ * @param cc    the JH-224 context
  * @param dst   the destination buffer
  */
-void sph_luffa224_close(void *cc, void *dst);
+void sph_jh224_close(void *cc, void *dst);
 
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
@@ -146,42 +148,42 @@ void sph_luffa224_close(void *cc, void *dst);
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.
  *
- * @param cc    the Luffa-224 context
+ * @param cc    the JH-224 context
  * @param ub    the extra bits
  * @param n     the number of extra bits (0 to 7)
  * @param dst   the destination buffer
  */
-void sph_luffa224_addbits_and_close(
+void sph_jh224_addbits_and_close(
 	void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
- * Initialize a Luffa-256 context. This process performs no memory allocation.
+ * Initialize a JH-256 context. This process performs no memory allocation.
  *
- * @param cc   the Luffa-256 context (pointer to a
- *             <code>sph_luffa256_context</code>)
+ * @param cc   the JH-256 context (pointer to a
+ *             <code>sph_jh256_context</code>)
  */
-void sph_luffa256_init(void *cc);
+void sph_jh256_init(void *cc);
 
 /**
  * Process some data bytes. It is acceptable that <code>len</code> is zero
  * (in which case this function does nothing).
  *
- * @param cc     the Luffa-256 context
+ * @param cc     the JH-256 context
  * @param data   the input data
  * @param len    the input data length (in bytes)
  */
-void sph_luffa256(void *cc, const void *data, size_t len);
+void sph_jh256(void *cc, const void *data, size_t len);
 
 /**
- * Terminate the current Luffa-256 computation and output the result into
+ * Terminate the current JH-256 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
  * accomodate the result (32 bytes). The context is automatically
  * reinitialized.
  *
- * @param cc    the Luffa-256 context
+ * @param cc    the JH-256 context
  * @param dst   the destination buffer
  */
-void sph_luffa256_close(void *cc, void *dst);
+void sph_jh256_close(void *cc, void *dst);
 
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
@@ -191,42 +193,42 @@ void sph_luffa256_close(void *cc, void *dst);
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.
  *
- * @param cc    the Luffa-256 context
+ * @param cc    the JH-256 context
  * @param ub    the extra bits
  * @param n     the number of extra bits (0 to 7)
  * @param dst   the destination buffer
  */
-void sph_luffa256_addbits_and_close(
+void sph_jh256_addbits_and_close(
 	void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
- * Initialize a Luffa-384 context. This process performs no memory allocation.
+ * Initialize a JH-384 context. This process performs no memory allocation.
  *
- * @param cc   the Luffa-384 context (pointer to a
- *             <code>sph_luffa384_context</code>)
+ * @param cc   the JH-384 context (pointer to a
+ *             <code>sph_jh384_context</code>)
  */
-void sph_luffa384_init(void *cc);
+void sph_jh384_init(void *cc);
 
 /**
  * Process some data bytes. It is acceptable that <code>len</code> is zero
  * (in which case this function does nothing).
  *
- * @param cc     the Luffa-384 context
+ * @param cc     the JH-384 context
  * @param data   the input data
  * @param len    the input data length (in bytes)
  */
-void sph_luffa384(void *cc, const void *data, size_t len);
+void sph_jh384(void *cc, const void *data, size_t len);
 
 /**
- * Terminate the current Luffa-384 computation and output the result into
+ * Terminate the current JH-384 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
  * accomodate the result (48 bytes). The context is automatically
  * reinitialized.
  *
- * @param cc    the Luffa-384 context
+ * @param cc    the JH-384 context
  * @param dst   the destination buffer
  */
-void sph_luffa384_close(void *cc, void *dst);
+void sph_jh384_close(void *cc, void *dst);
 
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
@@ -236,42 +238,42 @@ void sph_luffa384_close(void *cc, void *dst);
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.
  *
- * @param cc    the Luffa-384 context
+ * @param cc    the JH-384 context
  * @param ub    the extra bits
  * @param n     the number of extra bits (0 to 7)
  * @param dst   the destination buffer
  */
-void sph_luffa384_addbits_and_close(
+void sph_jh384_addbits_and_close(
 	void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
- * Initialize a Luffa-512 context. This process performs no memory allocation.
+ * Initialize a JH-512 context. This process performs no memory allocation.
  *
- * @param cc   the Luffa-512 context (pointer to a
- *             <code>sph_luffa512_context</code>)
+ * @param cc   the JH-512 context (pointer to a
+ *             <code>sph_jh512_context</code>)
  */
-void sph_luffa512_init(void *cc);
+void sph_jh512_init(void *cc);
 
 /**
  * Process some data bytes. It is acceptable that <code>len</code> is zero
  * (in which case this function does nothing).
  *
- * @param cc     the Luffa-512 context
+ * @param cc     the JH-512 context
  * @param data   the input data
  * @param len    the input data length (in bytes)
  */
-void sph_luffa512(void *cc, const void *data, size_t len);
+void sph_jh512(void *cc, const void *data, size_t len);
 
 /**
- * Terminate the current Luffa-512 computation and output the result into
+ * Terminate the current JH-512 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
  * accomodate the result (64 bytes). The context is automatically
  * reinitialized.
  *
- * @param cc    the Luffa-512 context
+ * @param cc    the JH-512 context
  * @param dst   the destination buffer
  */
-void sph_luffa512_close(void *cc, void *dst);
+void sph_jh512_close(void *cc, void *dst);
 
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
@@ -281,12 +283,12 @@ void sph_luffa512_close(void *cc, void *dst);
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.
  *
- * @param cc    the Luffa-512 context
+ * @param cc    the JH-512 context
  * @param ub    the extra bits
  * @param n     the number of extra bits (0 to 7)
  * @param dst   the destination buffer
  */
-void sph_luffa512_addbits_and_close(
+void sph_jh512_addbits_and_close(
 	void *cc, unsigned ub, unsigned n, void *dst);
 
 #ifdef __cplusplus
