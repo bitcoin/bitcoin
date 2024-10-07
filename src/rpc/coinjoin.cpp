@@ -134,10 +134,10 @@ static RPCHelpMan coinjoin_start()
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Mixing has been started already.");
     }
 
-    const ChainstateManager& chainman = EnsureChainman(node);
+    ChainstateManager& chainman = EnsureChainman(node);
     CTxMemPool& mempool = EnsureMemPool(node);
     CConnman& connman = EnsureConnman(node);
-    bool result = cj_clientman->DoAutomaticDenominating(chainman.ActiveChainstate(), connman, mempool);
+    bool result = cj_clientman->DoAutomaticDenominating(chainman, connman, mempool);
     return "Mixing " + (result ? "started successfully" : ("start failed: " + cj_clientman->GetStatuses().original + ", will retry"));
 },
     };

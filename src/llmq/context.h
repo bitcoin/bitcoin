@@ -9,8 +9,8 @@
 
 class CActiveMasternodeManager;
 class CBLSWorker;
-class CChainState;
 class CConnman;
+class ChainstateManager;
 class CDeterministicMNManager;
 class CDBWrapper;
 class CEvoDB;
@@ -40,7 +40,7 @@ private:
 public:
     LLMQContext() = delete;
     LLMQContext(const LLMQContext&) = delete;
-    LLMQContext(CChainState& chainstate, CConnman& connman, CDeterministicMNManager& dmnman, CEvoDB& evo_db,
+    LLMQContext(ChainstateManager& chainman, CConnman& connman, CDeterministicMNManager& dmnman, CEvoDB& evo_db,
                 CMasternodeMetaMan& mn_metaman, CMNHFManager& mnhfman, CSporkManager& sporkman, CTxMemPool& mempool,
                 const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
                 const std::unique_ptr<PeerManager>& peerman, bool unit_tests, bool wipe);

@@ -12,6 +12,7 @@
 #endif
 
 #include <amount.h>
+#include <arith_uint256.h>
 #include <attributes.h>
 #include <chain.h>
 #include <fs.h>
@@ -19,10 +20,11 @@
 #include <policy/feerate.h>
 #include <policy/packages.h>
 #include <script/script_error.h>
+#include <serialize.h>
 #include <sync.h>
 #include <txdb.h>
 #include <txmempool.h> // For CTxMemPool::cs
-#include <serialize.h>
+#include <uint256.h>
 #include <util/check.h>
 #include <util/hasher.h>
 #include <util/translation.h>
@@ -38,17 +40,10 @@
 #include <utility>
 #include <vector>
 
-namespace llmq {
-class CChainLocksHandler;
-class CInstantSendManager;
-} // namespace llmq
-
-class CEvoDB;
-
 class CChainState;
-class CBlockIndex;
 class CBlockTreeDB;
 class CChainParams;
+class CEvoDB;
 class CMNHFManager;
 class CTxMemPool;
 class TxValidationState;
@@ -60,6 +55,11 @@ struct ChainTxData;
 struct DisconnectedBlockTransactions;
 struct LockPoints;
 struct AssumeutxoData;
+
+namespace llmq {
+class CChainLocksHandler;
+class CInstantSendManager;
+} // namespace llmq
 
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
 static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 1000;
@@ -240,9 +240,16 @@ struct PackageMempoolAcceptResult
 };
 
 /**
- * (Try to) add a transaction to the memory pool.
- * @param[in]  bypass_limits   When true, don't enforce mempool fee limits.
- * @param[in]  test_accept     When true, run validation checks but don't submit to mempool.
+ * Try to add a transaction to the mempool. This is an internal function and is
+ * exposed only for testing. Client code should use ChainstateManager::ProcessTransaction()
+ *
+ * @param[in]  active_chainstate  Reference to the active chainstate.
+ * @param[in]  pool               Reference to the node's mempool.
+ * @param[in]  tx                 The transaction to submit for mempool acceptance.
+ * @param[in]  bypass_limits      When true, don't enforce mempool fee and capacity limits.
+ * @param[in]  test_accept        When true, run validation checks but don't submit to mempool.
+ *
+ * @returns a MempoolAcceptResult indicating whether the transaction was accepted/rejected with reason.
  */
 MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPool& pool, const CTransactionRef& tx,
                                        bool bypass_limits, bool test_accept=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -266,9 +273,6 @@ bool GetUTXOCoin(CChainState& active_chainstate, const COutPoint& outpoint, Coin
 int GetUTXOHeight(CChainState& active_chainstate, const COutPoint& outpoint);
 int GetUTXOConfirmations(CChainState& active_chainstate, const COutPoint& outpoint);
 
-/** Apply the effects of this transaction on the UTXO set represented by view */
-void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
-
 /** Transaction validation functions */
 
 /**
@@ -279,11 +283,6 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
  * See consensus/consensus.h for flag definitions.
  */
 bool CheckFinalTx(const CBlockIndex* active_chain_tip, const CTransaction &tx, int flags = -1) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
-/**
- * Test whether the LockPoints height and time are still valid on the current chain
- */
-bool TestLockPointValidity(CChain& active_chain, const LockPoints* lp) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /**
  * Check if transaction will be BIP68 final in the next block to be created on top of tip.
@@ -1023,6 +1022,16 @@ public:
      * @param[out] ppindex If set, the pointer will be set to point to the last new block index object for the given headers
      */
     bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& block, BlockValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex = nullptr) LOCKS_EXCLUDED(cs_main);
+
+    /**
+     * Try to add a transaction to the memory pool.
+     *
+     * @param[in]  tx              The transaction to submit for mempool acceptance.
+     * @param[in]  test_accept     When true, run validation checks but don't submit to mempool.
+     * @param[in]  bypass_limits   When true, don't enforce mempool fee and capacity limits.
+     */
+    [[nodiscard]] MempoolAcceptResult ProcessTransaction(const CTransactionRef& tx, bool test_accept=false, bool bypass_limits=false)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     //! Load the block tree and coins database from disk, initializing state if we're running with -reindex
     bool LoadBlockIndex() EXCLUSIVE_LOCKS_REQUIRED(cs_main);

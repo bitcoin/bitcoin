@@ -18,7 +18,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "qt/addresstablemodel -> qt/walletmodel -> qt/addresstablemodel"
     "qt/recentrequeststablemodel -> qt/walletmodel -> qt/recentrequeststablemodel"
     "qt/transactiontablemodel -> qt/walletmodel -> qt/transactiontablemodel"
-    "txmempool -> validation -> txmempool"
     "wallet/fees -> wallet/wallet -> wallet/fees"
     "wallet/wallet -> wallet/walletdb -> wallet/wallet"
     "node/coinstats -> validation -> node/coinstats"
@@ -63,12 +62,13 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
 
     "llmq/chainlocks -> validation -> llmq/chainlocks"
     "coinjoin/coinjoin -> llmq/chainlocks -> net -> coinjoin/coinjoin"
+    "evo/assetlocktx -> validation -> txmempool -> evo/assetlocktx"
     "evo/deterministicmns -> llmq/utils -> llmq/snapshot -> evo/simplifiedmns -> evo/deterministicmns"
     "evo/deterministicmns -> llmq/utils -> net -> evo/deterministicmns"
+    "evo/deterministicmns -> validation -> txmempool -> evo/deterministicmns"
     "policy/policy -> policy/settings -> policy/policy"
     "consensus/tx_verify -> evo/assetlocktx -> validation -> consensus/tx_verify"
-    "consensus/tx_verify -> evo/assetlocktx -> llmq/signing -> net_processing -> txmempool -> consensus/tx_verify"
-    "evo/assetlocktx -> llmq/signing -> net_processing -> txmempool -> evo/assetlocktx"
+    "consensus/tx_verify -> evo/assetlocktx -> validation -> txmempool -> consensus/tx_verify"
 
     "evo/simplifiedmns -> llmq/blockprocessor -> llmq/utils -> llmq/snapshot -> evo/simplifiedmns"
     "llmq/blockprocessor -> llmq/utils -> llmq/snapshot -> llmq/blockprocessor"

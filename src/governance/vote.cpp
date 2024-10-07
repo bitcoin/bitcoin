@@ -12,6 +12,7 @@
 #include <masternode/sync.h>
 #include <messagesigner.h>
 #include <net_processing.h>
+#include <timedata.h>
 #include <util/string.h>
 #include <util/system.h>
 #include <validation.h>

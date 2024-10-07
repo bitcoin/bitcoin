@@ -6,7 +6,6 @@
 #ifndef BITCOIN_NET_H
 #define BITCOIN_NET_H
 
-#include <addrman.h>
 #include <bip324.h>
 #include <bloom.h>
 #include <chainparams.h>
@@ -50,14 +49,15 @@
 #include <unordered_set>
 #include <vector>
 
+class AddrMan;
+class BanMan;
 class CConnman;
 class CDeterministicMNList;
 class CDeterministicMNManager;
 class CMasternodeMetaMan;
 class CMasternodeSync;
-class CScheduler;
 class CNode;
-class BanMan;
+class CScheduler;
 struct bilingual_str;
 
 /** Default for -whitelistrelay. */
@@ -100,7 +100,7 @@ static const bool DEFAULT_LISTEN = true;
  */
 static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 /** The default for -maxuploadtarget. 0 = Unlimited */
-static constexpr uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
+static const std::string DEFAULT_MAX_UPLOAD_TARGET{"0M"};
 /** Default for blocks only*/
 static const bool DEFAULT_BLOCKSONLY = false;
 /** -peertimeout default */

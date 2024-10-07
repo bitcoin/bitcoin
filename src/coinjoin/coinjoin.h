@@ -27,6 +27,7 @@ class CChainState;
 class CConnman;
 class CBLSPublicKey;
 class CBlockIndex;
+class ChainstateManager;
 class CMasternodeSync;
 class CTxMemPool;
 class TxValidationState;
@@ -368,8 +369,7 @@ namespace CoinJoin
     constexpr CAmount GetMaxPoolAmount() { return COINJOIN_ENTRY_MAX_SIZE * vecStandardDenominations.front(); }
 
     /// If the collateral is valid given by a client
-    bool IsCollateralValid(CChainState& active_chainstate, CTxMemPool& mempool, const CTransaction& txCollateral);
-
+    bool IsCollateralValid(ChainstateManager& chainman, const CTxMemPool& mempool, const CTransaction& txCollateral);
 }
 
 class CDSTXManager
@@ -402,7 +402,7 @@ private:
 
 };
 
-bool ATMPIfSaneFee(CChainState& active_chainstate, CTxMemPool& pool,
-                   const CTransactionRef &tx, bool test_accept = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool ATMPIfSaneFee(ChainstateManager& chainman, const CTransactionRef& tx, bool test_accept = false)
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 #endif // BITCOIN_COINJOIN_COINJOIN_H
