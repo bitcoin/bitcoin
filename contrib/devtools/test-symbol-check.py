@@ -116,7 +116,7 @@ class TestSymbolChecks(unittest.TestCase):
                 }
         ''')
 
-        self.assertEqual(call_symbol_check(cxx, source, executable, ['-Wl,-platform_version','-Wl,macos', '-Wl,11.0', '-Wl,11.4']),
+        self.assertEqual(call_symbol_check(cxx, source, executable, ['-Wl,-platform_version','-Wl,macos', '-Wl,13.0', '-Wl,11.4']),
                 (1, f'{executable}: failed SDK'))
 
     def test_PE(self):
