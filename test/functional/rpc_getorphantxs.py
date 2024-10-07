@@ -23,6 +23,7 @@ class GetOrphanTxsTest(BitcoinTestFramework):
         self.wallet = MiniWallet(self.nodes[0])
         self.test_orphan_activity()
         self.test_orphan_details()
+        self.test_misc()
 
     def test_orphan_activity(self):
         self.log.info("Check that orphaned transactions are returned with getorphantxs")
@@ -127,6 +128,14 @@ class GetOrphanTxsTest(BitcoinTestFramework):
         if verbosity == 2:
             self.log.info("Check the transaction hex of orphan")
             assert_equal(orphan["hex"], tx["hex"])
+
+    def test_misc(self):
+        node = self.nodes[0]
+        help_output = node.help()
+        self.log.info("Check that getorphantxs is a hidden RPC")
+        assert "getorphantxs" not in help_output
+        assert "unknown command: getorphantxs" not in node.help("getorphantxs")
+
 
 if __name__ == '__main__':
     GetOrphanTxsTest(__file__).main()
