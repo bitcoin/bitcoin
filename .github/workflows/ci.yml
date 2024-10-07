@@ -202,6 +202,7 @@ jobs:
           ctest -j $env:NUMBER_OF_PROCESSORS -C RelWithDebInfo
 
       - name: Run functional tests
+        id: functional-tests
         working-directory: build
         env:
           BITCOIND: '${{ github.workspace }}\build\src\RelWithDebInfo\bitcoind.exe'
@@ -210,7 +211,30 @@ jobs:
           BITCOINWALLET: '${{ github.workspace }}\build\src\RelWithDebInfo\bitcoin-wallet.exe'
           TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
         shell: cmd
-        run: py -3 test\functional\test_runner.py --jobs %NUMBER_OF_PROCESSORS% --ci --quiet --tmpdirprefix=%RUNNER_TEMP% --combinedlogslen=99999999 --timeout-factor=%TEST_RUNNER_TIMEOUT_FACTOR% %TEST_RUNNER_EXTRA%
+        run: |
+          py -3 test\functional\test_runner.py --jobs %NUMBER_OF_PROCESSORS% --ci --quiet --tmpdirprefix=%RUNNER_TEMP% --combinedlogslen=99999999 --timeout-factor=%TEST_RUNNER_TIMEOUT_FACTOR% %TEST_RUNNER_EXTRA%
+          echo RUNNER_TEMP=%RUNNER_TEMP%>>%GITHUB_OUTPUT%
+
+      # There's a slim chance that multiple tests will fail and produce unique .DMP files.
+      - name: Upload .DMP file(s)
+        uses: actions/upload-artifact@v4
+        id: dmp-upload
+        if: ${{ failure() && steps.functional-tests.conclusion == 'failure' }}
+        with:
+          name: bitcoind-windows-dmp
+          path: ${{ steps.functional-tests.outputs.RUNNER_TEMP }}/**/bitcoind.dmp
+          if-no-files-found: ignore
+
+      # Both .EXE and .PDB are required in order to debug.
+      - name: Upload .EXE and .PDB file
+        uses: actions/upload-artifact@v4
+        # Only run if prior step produced an artifact.
+        if: ${{ failure() && steps.dmp-upload.outputs.artifact-id != '' }}
+        with:
+          name: bitcoind-windows-exe-pdb
+          path: |
+            build/**/bitcoind.exe
+            build/**/bitcoind.pdb
 
       - name: Clone fuzz corpus
         run: |
