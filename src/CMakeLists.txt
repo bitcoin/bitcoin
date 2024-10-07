@@ -75,6 +75,76 @@ add_subdirectory(secp256k1)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 string(APPEND CMAKE_C_COMPILE_OBJECT " ${APPEND_CPPFLAGS} ${APPEND_CFLAGS}")
 
+
+add_library(base_precompiled INTERFACE)
+target_precompile_headers(base_precompiled
+  INTERFACE
+  arith_uint256.h
+  chain.h
+  coins.h
+  compat/cpuid.h
+  compressor.h
+  consensus/amount.h
+  consensus/merkle.h
+  consensus/params.h
+  consensus/tx_check.h
+  consensus/tx_verify.h
+  consensus/validation.h
+  core_io.h
+  crypto/sha256.h
+  crypto/siphash.h
+  dbwrapper.h
+  deploymentinfo.h
+  deploymentstatus.h
+  flatfile.h
+  hash.h
+  kernel/chainparams.h
+  kernel/coinstats.h
+  kernel/cs_main.h
+  kernel/disconnected_transactions.h
+  logging.h
+  node/blockstorage.h
+  node/chainstate.h
+  node/utxo_snapshot.h
+  policy/packages.h
+  policy/policy.h
+  policy/rbf.h
+  policy/settings.h
+  policy/truc_policy.h
+  pow.h
+  primitives/block.h
+  primitives/transaction.h
+  pubkey.h
+  random.h
+  script/interpreter.h
+  script/script.h
+  script/sigcache.h
+  signet.h
+  span.h
+  support/lockedpool.h
+  sync.h
+  tinyformat.h
+  txdb.h
+  txmempool.h
+  uint256.h
+  util/check.h
+  util/feefrac.h
+  util/fs.h
+  util/fs_helpers.h
+  util/rbf.h
+  util/strencodings.h
+  util/string.h
+  util/time.h
+  util/translation.h
+  validation.h
+  validationinterface.h
+)
+
+target_link_libraries(base_precompiled INTERFACE
+  Boost::headers
+)
+
+
 add_library(bitcoin_consensus STATIC EXCLUDE_FROM_ALL
   arith_uint256.cpp
   consensus/merkle.cpp
@@ -91,6 +161,7 @@ add_library(bitcoin_consensus STATIC EXCLUDE_FROM_ALL
 target_link_libraries(bitcoin_consensus
   PRIVATE
     core_interface
+    base_precompiled
     bitcoin_crypto
     secp256k1
 )
@@ -155,6 +226,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
 target_link_libraries(bitcoin_common
   PRIVATE
     core_interface
+    base_precompiled
     bitcoin_consensus
     bitcoin_util
     univalue
@@ -286,6 +358,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
 target_link_libraries(bitcoin_node
   PRIVATE
     core_interface
+    base_precompiled
     bitcoin_common
     bitcoin_util
     leveldb
