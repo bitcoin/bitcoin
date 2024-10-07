@@ -243,6 +243,7 @@ mkdir -p "$DISTSRC"
     cmake -S . -B build \
           --toolchain "${BASEPREFIX}/${HOST}/toolchain.cmake" \
           -DWITH_CCACHE=OFF \
+          -DCMAKE_DISABLE_PRECOMPILE_HEADERS=ON \
           ${CONFIGFLAGS}
 
     # Build Bitcoin Core
