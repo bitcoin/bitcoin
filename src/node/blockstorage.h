@@ -185,13 +185,6 @@ public:
 
     //! Check whether the block associated with this index entry is pruned or not.
     bool IsBlockPruned(const CBlockIndex* pblockindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
-    /**
-     * Return the spend height, which is one more than the inputs.GetBestBlock().
-     * While checking, GetBestBlock() refers to the parent block. (protected by cs_main)
-     * This is also true for mempool checks.
-     */
-    int GetSpendHeight(const CCoinsViewCache& inputs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 
 void CleanupBlockRevFiles();

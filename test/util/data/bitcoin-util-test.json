@@ -236,6 +236,12 @@
     "description": "Parses a transaction with no inputs and a single output script (output in json)"
   },
   { "exec": "./dash-tx",
+    "args": ["-create", "outscript=0:999999999999999999999999999999"],
+    "return_code": 1,
+    "error_txt": "error: script parse error: decimal numeric value only allowed in the range -0xFFFFFFFF...0xFFFFFFFF",
+    "description": "Try to parse an output script with a decimal number above the allowed range"
+  },
+  { "exec": "./dash-tx",
     "args": ["-create", "outscript=0:9999999999"],
     "return_code": 1,
     "error_txt": "error: script parse error: decimal numeric value only allowed in the range -0xFFFFFFFF...0xFFFFFFFF",

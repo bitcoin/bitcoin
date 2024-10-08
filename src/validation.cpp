@@ -354,7 +354,9 @@ void CChainState::MaybeUpdateMempoolForReorg(
     while (it != disconnectpool.queuedTx.get<insertion_order>().rend()) {
         // ignore validation errors in resurrected transactions
         if (!fAddToMempool || (*it)->IsCoinBase() ||
-            AcceptToMemoryPool(*this, *m_mempool, *it, true /* bypass_limits */).m_result_type != MempoolAcceptResult::ResultType::VALID) {
+            AcceptToMemoryPool(*this, *it, GetTime(),
+                /*bypass_limits=*/true, /*test_accept=*/false).m_result_type !=
+                    MempoolAcceptResult::ResultType::VALID) {
             // If the transaction doesn't make it in to the mempool, remove any
             // transactions that depend on it (which would now be orphans).
             m_mempool->removeRecursive(**it, MemPoolRemovalReason::REORG);
@@ -691,6 +693,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // to coins_to_uncache)
     m_view.SetBackend(m_dummy);
 
+    assert(m_active_chainstate.m_blockman.LookupBlockIndex(m_view.GetBestBlock()) == m_active_chainstate.m_chain.Tip());
+
     // Only accept BIP68 sequence locked transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
     // be mined yet.
@@ -699,7 +703,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     if (!CheckSequenceLocks(m_active_chainstate.m_chain.Tip(), m_view, tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &lp))
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-BIP68-final");
 
-    if (!Consensus::CheckTxInputs(tx, state, m_view, m_active_chainstate.m_blockman.GetSpendHeight(m_view), ws.m_base_fees)) {
+    // The mempool holds txs for the next block, so pass height+1 to CheckTxInputs
+    if (!Consensus::CheckTxInputs(tx, state, m_view, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees)) {
         return false; // state filled in by CheckTxInputs
     }
 
@@ -978,16 +983,16 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
 
 } // anon namespace
 
-/** (try to) add transaction to memory pool with a specified acceptance time **/
-static MempoolAcceptResult AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPool& pool, CChainState& active_chainstate,
-                                                      const CTransactionRef &tx, int64_t nAcceptTime,
-                                                      bool bypass_limits, bool test_accept)
+MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, const CTransactionRef& tx,
+                                       int64_t accept_time, bool bypass_limits, bool test_accept)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
-    AssertLockHeld(::cs_main);
-    std::vector<COutPoint> coins_to_uncache;
-    MemPoolAccept::ATMPArgs args { chainparams, nAcceptTime, bypass_limits, coins_to_uncache, test_accept };
+    const CChainParams& chainparams{active_chainstate.m_params};
+    assert(active_chainstate.GetMempool() != nullptr);
+    CTxMemPool& pool{*active_chainstate.GetMempool()};
 
+    std::vector<COutPoint> coins_to_uncache;
+    MemPoolAccept::ATMPArgs args { chainparams, accept_time, bypass_limits, coins_to_uncache, test_accept };
     const MempoolAcceptResult result = MemPoolAccept(pool, active_chainstate).AcceptSingleTransaction(tx, args);
     if (result.m_result_type != MempoolAcceptResult::ResultType::VALID || test_accept) {
         if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
@@ -1006,11 +1011,6 @@ static MempoolAcceptResult AcceptToMemoryPoolWithTime(const CChainParams& chainp
     BlockValidationState state_dummy;
     active_chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
     return result;
-}
-
-MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPool& pool, const CTransactionRef &tx, bool bypass_limits, bool test_accept)
-{
-    return AcceptToMemoryPoolWithTime(Params(), pool, active_chainstate, tx, GetTime(), bypass_limits, test_accept);
 }
 
 PackageMempoolAcceptResult ProcessNewPackage(CChainState& active_chainstate, CTxMemPool& pool,
@@ -1232,12 +1232,12 @@ CChainState::CChainState(CTxMemPool* mempool,
                          const std::unique_ptr<llmq::CInstantSendManager>& isman,
                          std::optional<uint256> from_snapshot_blockhash)
     : m_mempool(mempool),
-      m_params(::Params()),
       m_chain_helper(chain_helper),
       m_clhandler(clhandler),
       m_isman(isman),
       m_evoDb(evoDb),
       m_blockman(blockman),
+      m_params(::Params()),
       m_chainman(chainman),
       m_from_snapshot_blockhash(from_snapshot_blockhash) {}
 
@@ -1406,14 +1406,6 @@ bool CScriptCheck::operator()() {
     PrecomputedTransactionData txdata(*ptxTo);
     return VerifyScript(scriptSig, m_tx_out.scriptPubKey, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, m_tx_out.nValue, txdata, cacheStore), &error);
 }
-
-int BlockManager::GetSpendHeight(const CCoinsViewCache& inputs)
-{
-    AssertLockHeld(cs_main);
-    CBlockIndex* pindexPrev = LookupBlockIndex(inputs.GetBestBlock());
-    return pindexPrev->nHeight + 1;
-}
-
 
 static CuckooCache::cache<uint256, SignatureCacheHasher> g_scriptExecutionCache;
 static CSHA256 g_scriptExecutionCacheHasher;
@@ -3996,13 +3988,13 @@ bool ChainstateManager::ProcessNewBlock(const CChainParams& chainparams, const s
 MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef& tx, bool test_accept, bool bypass_limits)
 {
     CChainState& active_chainstate = ActiveChainstate();
-    if (!active_chainstate.m_mempool) {
+    if (!active_chainstate.GetMempool()) {
         TxValidationState state;
         state.Invalid(TxValidationResult::TX_NO_MEMPOOL, "no-mempool");
         return MempoolAcceptResult::Failure(state);
     }
-    auto result = AcceptToMemoryPool(active_chainstate, *active_chainstate.m_mempool, tx, bypass_limits, test_accept);
-    active_chainstate.m_mempool->check(active_chainstate.CoinsTip(), active_chainstate.m_chain.Height() + 1);
+    auto result = AcceptToMemoryPool(active_chainstate, tx, GetTime(), bypass_limits, test_accept);
+    active_chainstate.GetMempool()->check(active_chainstate.CoinsTip(), active_chainstate.m_chain.Height() + 1);
     return result;
 }
 
@@ -4966,7 +4958,6 @@ static const uint64_t MEMPOOL_DUMP_VERSION = 1;
 
 bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate, FopenFn mockable_fopen_function)
 {
-    const CChainParams& chainparams = Params();
     int64_t nExpiryTimeout = gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60;
     FILE* filestr{mockable_fopen_function(gArgs.GetDataDirNet() / "mempool.dat", "rb")};
     CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
@@ -5005,8 +4996,8 @@ bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate, FopenFn mocka
             }
             if (nTime > nNow - nExpiryTimeout) {
                 LOCK(cs_main);
-                if (AcceptToMemoryPoolWithTime(chainparams, pool, active_chainstate, tx, nTime, false /* bypass_limits */,
-                                               false /* test_accept */).m_result_type == MempoolAcceptResult::ResultType::VALID) {
+                const auto& accepted = AcceptToMemoryPool(active_chainstate, tx, nTime, /*bypass_limits=*/false, /*test_accept=*/false);
+                if (accepted.m_result_type == MempoolAcceptResult::ResultType::VALID) {
                     ++count;
                 } else {
                     // mempool may contain the transaction already, e.g. from
@@ -5285,6 +5276,17 @@ bool ChainstateManager::ActivateSnapshot(
     return true;
 }
 
+static void FlushSnapshotToDisk(CCoinsViewCache& coins_cache, bool snapshot_loaded)
+{
+    LOG_TIME_MILLIS_WITH_CATEGORY_MSG_ONCE(
+        strprintf("%s (%.2f MB)",
+                  snapshot_loaded ? "saving snapshot chainstate" : "flushing coins cache",
+                  coins_cache.DynamicMemoryUsage() / (1000 * 1000)),
+        BCLog::LogFlags::ALL);
+
+    coins_cache.Flush();
+}
+
 bool ChainstateManager::PopulateAndValidateSnapshot(
     CChainState& snapshot_chainstate,
     CAutoFile& coins_file,
@@ -5322,7 +5324,6 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
     uint64_t coins_left = metadata.m_coins_count;
 
     LogPrintf("[snapshot] loading coins from snapshot %s\n", base_blockhash.ToString());
-    int64_t flush_now{0};
     int64_t coins_processed{0};
 
     while (coins_left > 0) {
@@ -5366,19 +5367,14 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
             const auto snapshot_cache_state = WITH_LOCK(::cs_main,
                 return snapshot_chainstate.GetCoinsCacheSizeState());
 
-            if (snapshot_cache_state >=
-                    CoinsCacheSizeState::CRITICAL) {
-                LogPrintf("[snapshot] flushing coins cache (%.2f MB)... ", /* Continued */
-                    coins_cache.DynamicMemoryUsage() / (1000 * 1000));
-                flush_now = GetTimeMillis();
-
+            if (snapshot_cache_state >= CoinsCacheSizeState::CRITICAL) {
                 // This is a hack - we don't know what the actual best block is, but that
                 // doesn't matter for the purposes of flushing the cache here. We'll set this
                 // to its correct value (`base_blockhash`) below after the coins are loaded.
                 coins_cache.SetBestBlock(GetRandHash());
 
-                coins_cache.Flush();
-                LogPrintf("done (%.2fms)\n", GetTimeMillis() - flush_now);
+                // No need to acquire cs_main since this chainstate isn't being used yet.
+                FlushSnapshotToDisk(coins_cache, /*snapshot_loaded=*/false);
             }
         }
     }
@@ -5408,9 +5404,8 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
         coins_cache.DynamicMemoryUsage() / (1000 * 1000),
         base_blockhash.ToString());
 
-    LogPrintf("[snapshot] flushing snapshot chainstate to disk\n");
     // No need to acquire cs_main since this chainstate isn't being used yet.
-    coins_cache.Flush(); // TODO: if #17487 is merged, add erase=false here for better performance.
+    FlushSnapshotToDisk(coins_cache, /*snapshot_loaded=*/true);
 
     assert(coins_cache.GetBestBlock() == base_blockhash);
 

@@ -14,9 +14,6 @@ FUZZ_TARGET(parse_numbers)
 
     (void)ParseMoney(random_string);
 
-    double d;
-    (void)ParseDouble(random_string, &d);
-
     uint8_t u8;
     (void)ParseUInt8(random_string, &u8);
 
