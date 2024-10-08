@@ -18,20 +18,21 @@ class ReindexTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
-    def reindex(self, justchainstate=False):
+    def reindex(self, justchainstate=False, txindex=0):
         self.generatetoaddress(self.nodes[0], 3, self.nodes[0].get_deterministic_priv_key().address)
         blockcount = self.nodes[0].getblockcount()
         self.stop_nodes()
-        extra_args = [["-reindex-chainstate" if justchainstate else "-reindex", "-txindex=0"]]
+        extra_args = [["-reindex-chainstate", "-txindex=0"]] if justchainstate else [["-reindex", f"-txindex={txindex}"]]
         self.start_nodes(extra_args)
         assert_equal(self.nodes[0].getblockcount(), blockcount)  # start_node is blocking on reindex
         self.log.info("Success")
 
     def run_test(self):
-        self.reindex(False)
-        self.reindex(True)
-        self.reindex(False)
-        self.reindex(True)
+        for txindex in [0, 1]:
+            self.reindex(False, txindex)
+            self.reindex(True, txindex)
+            self.reindex(False, txindex)
+            self.reindex(True, txindex)
 
 if __name__ == '__main__':
     ReindexTest().main()
