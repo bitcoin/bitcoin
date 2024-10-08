@@ -53,7 +53,9 @@ and extending unit tests can be found in [/src/test/README.md](/src/test/README.
 
 There are also [regression and integration tests](/test), written
 in Python.
-These tests can be run (if the [test dependencies](/test) are installed) with: `test/functional/test_runner.py`
+These tests can be run (if the [test dependencies](/test) are installed and
+assuming the code was compiled in the `build` directory) with:
+`build/test/functional/test_runner.py`
 
 The CI (Continuous Integration) systems make sure that every pull request is built for Windows, Linux, and macOS,
 and that unit/sanity tests are run automatically.
