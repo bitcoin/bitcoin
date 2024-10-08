@@ -113,8 +113,7 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, uint32_t flag
     bool expect = (scriptError == SCRIPT_ERR_OK);
     ScriptError err;
     const CTransaction txCredit{BuildCreditingTransaction(scriptPubKey)};
-    CMutableTransaction tx = BuildSpendingTransaction(scriptSig, txCredit);
-    CMutableTransaction tx2 = tx;
+    const CMutableTransaction tx = BuildSpendingTransaction(scriptSig, txCredit);
     BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message);
     BOOST_CHECK_MESSAGE(err == scriptError, FormatScriptError(err) + " where " + FormatScriptError((ScriptError_t)scriptError) + " expected: " + message);
 
@@ -129,7 +128,7 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, uint32_t flag
 
 #if defined(HAVE_CONSENSUS_LIB)
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
-    stream << tx2;
+    stream << tx;
     uint32_t libconsensus_flags{flags & dashconsensus_SCRIPT_FLAGS_VERIFY_ALL};
     if (libconsensus_flags == flags) {
         int expectedSuccessCode = expect ? 1 : 0;
