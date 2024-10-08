@@ -750,24 +750,24 @@ static RPCHelpMan quorum_dkgsimerror()
         "as you will get yourself very likely PoSe banned for this.\n",
         {
             {"type", RPCArg::Type::STR, RPCArg::Optional::NO, "Error type."},
-            {"rate", RPCArg::Type::NUM, RPCArg::Optional::NO, "Rate at which to simulate this error type."},
+            {"rate", RPCArg::Type::NUM, RPCArg::Optional::NO, "Rate at which to simulate this error type (between 0 and 100)."},
         },
         RPCResults{},
         RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::string type_str = request.params[0].get_str();
-    double rate = ParseDoubleV(request.params[1], "rate");
+    int32_t rate = ParseInt32V(request.params[1], "rate");
 
-    if (rate < 0 || rate > 1) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid rate. Must be between 0 and 1");
+    if (rate < 0 || rate > 100) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid rate. Must be between 0 and 100");
     }
 
     if (const llmq::DKGError::type type = llmq::DKGError::from_string(type_str);
             type == llmq::DKGError::type::_COUNT) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid type. See DKGError class implementation");
     } else {
-        llmq::SetSimulatedDKGErrorRate(type, rate);
+        llmq::SetSimulatedDKGErrorRate(type, static_cast<double>(rate) / 100);
         return UniValue();
     }
 },

@@ -139,15 +139,6 @@ int64_t ParseInt64V(const UniValue& v, const std::string &strName)
     return num;
 }
 
-double ParseDoubleV(const UniValue& v, const std::string &strName)
-{
-    std::string strNum = v.getValStr();
-    double num;
-    if (!ParseDouble(strNum, &num))
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be a be number (not '"+strNum+"')");
-    return num;
-}
-
 bool ParseBoolV(const UniValue& v, const std::string &strName)
 {
     std::string strBool;
