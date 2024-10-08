@@ -23,6 +23,7 @@ add_executable(bench_bitcoin
   checkqueue.cpp
   cluster_linearize.cpp
   crypto_hash.cpp
+  datastream.cpp
   descriptors.cpp
   disconnected_transactions.cpp
   duplicate_inputs.cpp
