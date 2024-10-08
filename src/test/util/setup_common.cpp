@@ -104,7 +104,8 @@ static void ExitFailure(std::string_view str_err)
 BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
     : m_args{}
 {
-    m_node.shutdown = &m_interrupt;
+    m_node.shutdown_signal = &m_interrupt;
+    m_node.shutdown_request = [this]{ return m_interrupt(); };
     m_node.args = &gArgs;
     std::vector<const char*> arguments = Cat(
         {
@@ -224,7 +225,7 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
 
     m_cache_sizes = CalculateCacheSizes(m_args);
 
-    m_node.notifications = std::make_unique<KernelNotifications>(*Assert(m_node.shutdown), m_node.exit_status, *Assert(m_node.warnings));
+    m_node.notifications = std::make_unique<KernelNotifications>(Assert(m_node.shutdown_request), m_node.exit_status, *Assert(m_node.warnings));
 
     m_make_chainman = [this, &chainparams, opts] {
         Assert(!m_node.chainman);
@@ -245,7 +246,7 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
             .blocks_dir = m_args.GetBlocksDirPath(),
             .notifications = chainman_opts.notifications,
         };
-        m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown), chainman_opts, blockman_opts);
+        m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown_signal), chainman_opts, blockman_opts);
         LOCK(m_node.chainman->GetMutex());
         m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<BlockTreeDB>(DBParams{
             .path = m_args.GetDataDirNet() / "blocks" / "index",

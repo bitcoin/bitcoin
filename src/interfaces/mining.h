@@ -61,11 +61,11 @@ public:
     virtual std::optional<BlockRef> getTip() = 0;
 
     /**
-     * Waits for the tip to change
+     * Waits for the connected tip to change. If the tip was not connected on
+     * startup, this will wait.
      *
      * @param[in] current_tip block hash of the current chain tip. Function waits
-     *                        for the chain tip to change if this matches, otherwise
-     *                        it returns right away.
+     *                        for the chain tip to differ from this.
      * @param[in] timeout     how long to wait for a new tip
      * @returns               Hash and height of the current chain tip after this call.
      */

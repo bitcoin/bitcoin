@@ -9,7 +9,6 @@
 #include <rpc/request.h>
 #include <rpc/util.h>
 
-#include <any>
 #include <functional>
 #include <map>
 #include <stdint.h>
@@ -173,7 +172,7 @@ extern CRPCTable tableRPC;
 
 void StartRPC();
 void InterruptRPC();
-void StopRPC(const std::any& context);
+void StopRPC();
 UniValue JSONRPCExec(const JSONRPCRequest& jreq, bool catch_errors);
 
 #endif // BITCOIN_RPC_SERVER_H

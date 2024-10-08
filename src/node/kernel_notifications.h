@@ -13,6 +13,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <functional>
 
 class ArgsManager;
 class CBlockIndex;
@@ -23,10 +24,6 @@ namespace kernel {
 enum class Warning;
 } // namespace kernel
 
-namespace util {
-class SignalInterrupt;
-} // namespace util
-
 namespace node {
 
 class Warnings;
@@ -35,8 +32,8 @@ static constexpr int DEFAULT_STOPATHEIGHT{0};
 class KernelNotifications : public kernel::Notifications
 {
 public:
-    KernelNotifications(util::SignalInterrupt& shutdown, std::atomic<int>& exit_status, node::Warnings& warnings)
-        : m_shutdown(shutdown), m_exit_status{exit_status}, m_warnings{warnings} {}
+    KernelNotifications(const std::function<bool()>& shutdown_request, std::atomic<int>& exit_status, node::Warnings& warnings)
+        : m_shutdown_request(shutdown_request), m_exit_status{exit_status}, m_warnings{warnings} {}
 
     [[nodiscard]] kernel::InterruptResult blockTip(SynchronizationState state, CBlockIndex& index) override EXCLUSIVE_LOCKS_REQUIRED(!m_tip_block_mutex);
 
@@ -58,12 +55,14 @@ public:
     bool m_shutdown_on_fatal_error{true};
 
     Mutex m_tip_block_mutex;
-    std::condition_variable m_tip_block_cv;
+    std::condition_variable m_tip_block_cv GUARDED_BY(m_tip_block_mutex);
     //! The block for which the last blockTip notification was received for.
-    uint256 m_tip_block;
+    //! The initial ZERO means that no block has been connected yet, which may
+    //! be true even long after startup, until shutdown.
+    uint256 m_tip_block GUARDED_BY(m_tip_block_mutex){uint256::ZERO};
 
 private:
-    util::SignalInterrupt& m_shutdown;
+    const std::function<bool()>& m_shutdown_request;
     std::atomic<int>& m_exit_status;
     node::Warnings& m_warnings;
 };

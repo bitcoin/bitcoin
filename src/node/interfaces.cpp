@@ -134,13 +134,15 @@ public:
     }
     void startShutdown() override
     {
-        if (!(*Assert(Assert(m_context)->shutdown))()) {
+        NodeContext& ctx{*Assert(m_context)};
+        if (!(Assert(ctx.shutdown_request))()) {
             LogError("Failed to send shutdown signal\n");
         }
+
         // Stop RPC for clean shutdown if any of waitfor* commands is executed.
         if (args().GetBoolArg("-server", false)) {
             InterruptRPC();
-            StopRPC(m_context);
+            StopRPC();
         }
     }
     bool shutdownRequested() override { return ShutdownRequested(*Assert(m_context)); };
@@ -938,19 +940,12 @@ public:
 
     BlockRef waitTipChanged(uint256 current_tip, MillisecondsDouble timeout) override
     {
-        // Interrupt check interval
-        const MillisecondsDouble tick{1000};
-        auto now{std::chrono::steady_clock::now()};
-        auto deadline = now + timeout;
-        // std::chrono does not check against overflow
-        if (deadline < now) deadline = std::chrono::steady_clock::time_point::max();
+        if (timeout > std::chrono::years{100}) timeout = std::chrono::years{100}; // Upper bound to avoid UB in std::chrono
         {
             WAIT_LOCK(notifications().m_tip_block_mutex, lock);
-            while ((notifications().m_tip_block == uint256() || notifications().m_tip_block == current_tip) && !chainman().m_interrupt) {
-                now = std::chrono::steady_clock::now();
-                if (now >= deadline) break;
-                notifications().m_tip_block_cv.wait_until(lock, std::min(deadline, now + tick));
-            }
+            notifications().m_tip_block_cv.wait_for(lock, timeout, [&]() EXCLUSIVE_LOCKS_REQUIRED(notifications().m_tip_block_mutex) {
+                return (notifications().m_tip_block != current_tip && notifications().m_tip_block != uint256::ZERO) || chainman().m_interrupt;
+            });
         }
         // Must release m_tip_block_mutex before locking cs_main, to avoid deadlocks.
         LOCK(::cs_main);

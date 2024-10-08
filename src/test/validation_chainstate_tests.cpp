@@ -70,14 +70,18 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
 BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
 {
     ChainstateManager& chainman = *Assert(m_node.chainman);
-    uint256 curr_tip = m_node.notifications->m_tip_block;
+    const auto get_notify_tip{[&]() {
+        LOCK(m_node.notifications->m_tip_block_mutex);
+        return m_node.notifications->m_tip_block;
+    }};
+    uint256 curr_tip = get_notify_tip();
 
     // Mine 10 more blocks, putting at us height 110 where a valid assumeutxo value can
     // be found.
     mineBlocks(10);
 
     // After adding some blocks to the tip, best block should have changed.
-    BOOST_CHECK(m_node.notifications->m_tip_block != curr_tip);
+    BOOST_CHECK(get_notify_tip() != curr_tip);
 
     // Grab block 1 from disk; we'll add it to the background chain later.
     std::shared_ptr<CBlock> pblockone = std::make_shared<CBlock>();
@@ -92,15 +96,15 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
     // Ensure our active chain is the snapshot chainstate.
     BOOST_CHECK(WITH_LOCK(::cs_main, return chainman.IsSnapshotActive()));
 
-    curr_tip = m_node.notifications->m_tip_block;
+    curr_tip = get_notify_tip();
 
     // Mine a new block on top of the activated snapshot chainstate.
     mineBlocks(1);  // Defined in TestChain100Setup.
 
     // After adding some blocks to the snapshot tip, best block should have changed.
-    BOOST_CHECK(m_node.notifications->m_tip_block != curr_tip);
+    BOOST_CHECK(get_notify_tip() != curr_tip);
 
-    curr_tip = m_node.notifications->m_tip_block;
+    curr_tip = get_notify_tip();
 
     BOOST_CHECK_EQUAL(chainman.GetAll().size(), 2);
 
@@ -136,10 +140,10 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
     // Ensure tip is as expected
     BOOST_CHECK_EQUAL(background_cs.m_chain.Tip()->GetBlockHash(), pblockone->GetHash());
 
-    // g_best_block should be unchanged after adding a block to the background
+    // get_notify_tip() should be unchanged after adding a block to the background
     // validation chain.
     BOOST_CHECK(block_added);
-    BOOST_CHECK_EQUAL(curr_tip, m_node.notifications->m_tip_block);
+    BOOST_CHECK_EQUAL(curr_tip, get_notify_tip());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
