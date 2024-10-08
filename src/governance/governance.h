@@ -69,7 +69,7 @@ public:
         fBufferEmpty = false;
     }
 
-    int64_t GetMinTimestamp()
+    int64_t GetMinTimestamp() const
     {
         int nIndex = nDataStart;
         int64_t nMin = std::numeric_limits<int64_t>::max();
@@ -85,7 +85,7 @@ public:
         return nMin;
     }
 
-    int64_t GetMaxTimestamp()
+    int64_t GetMaxTimestamp() const
     {
         int nIndex = nDataStart;
         int64_t nMax = 0;
@@ -112,7 +112,7 @@ public:
         return RATE_BUFFER_SIZE - nDataStart + nDataEnd;
     }
 
-    double GetRate()
+    double GetRate() const
     {
         int nCount = GetCount();
         if (nCount < RATE_BUFFER_SIZE) {
@@ -228,28 +228,7 @@ class CGovernanceManager : public GovernanceStore
     friend class CGovernanceObject;
 
 private:
-    using hash_s_t = std::set<uint256>;
     using db_type = CFlatDB<GovernanceStore>;
-
-    class ScopedLockBool
-    {
-        bool& ref;
-        bool fPrevValue;
-
-    public:
-        ScopedLockBool(RecursiveMutex& _cs, bool& _ref, bool _value) :
-            ref(_ref)
-        {
-            AssertLockHeld(_cs);
-            fPrevValue = ref;
-            ref = _value;
-        }
-
-        ~ScopedLockBool()
-        {
-            ref = fPrevValue;
-        }
-    };
 
 private:
     static const int MAX_TIME_FUTURE_DEVIATION;
@@ -263,22 +242,22 @@ private:
     CNetFulfilledRequestManager& m_netfulfilledman;
     const ChainstateManager& m_chainman;
     const std::unique_ptr<CDeterministicMNManager>& m_dmnman;
-    const std::unique_ptr<CMasternodeSync>& m_mn_sync;
+    CMasternodeSync& m_mn_sync;
 
     int64_t nTimeLastDiff;
     // keep track of current block height
     int nCachedBlockHeight;
     std::map<uint256, CGovernanceObject> mapPostponedObjects;
-    hash_s_t setAdditionalRelayObjects;
+    std::set<uint256> setAdditionalRelayObjects;
     std::map<uint256, std::chrono::seconds> m_requested_hash_time;
     bool fRateChecksEnabled;
     std::optional<uint256> votedFundingYesTriggerHash;
     std::map<uint256, std::shared_ptr<CSuperblock>> mapTrigger;
 
 public:
-    explicit CGovernanceManager(CMasternodeMetaMan& mn_metaman, CNetFulfilledRequestManager& netfulfilledman, const ChainstateManager& chainman,
-                                const std::unique_ptr<CDeterministicMNManager>& dmnman,
-                                const std::unique_ptr<CMasternodeSync>& mn_sync);
+    explicit CGovernanceManager(CMasternodeMetaMan& mn_metaman, CNetFulfilledRequestManager& netfulfilledman,
+                                const ChainstateManager& chainman,
+                                const std::unique_ptr<CDeterministicMNManager>& dmnman, CMasternodeSync& mn_sync);
     ~CGovernanceManager();
 
     bool LoadCache(bool load_cache);
@@ -297,8 +276,10 @@ public:
 
     PeerMsgRet ProcessMessage(CNode& peer, CConnman& connman, PeerManager& peerman, std::string_view msg_type, CDataStream& vRecv);
 
+private:
     void ResetVotedFundingTrigger();
 
+public:
     void DoMaintenance(CConnman& connman);
 
     const CGovernanceObject* FindConstGovernanceObject(const uint256& nHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -366,11 +347,34 @@ public:
      *   - Track governance objects which are triggers
      *   - After triggers are activated and executed, they can be removed
     */
-    std::vector<std::shared_ptr<CSuperblock>> GetActiveTriggers();
+    std::vector<std::shared_ptr<CSuperblock>> GetActiveTriggers() const;
     bool AddNewTrigger(uint256 nHash);
     void CleanAndRemoveTriggers();
 
+    // Superblocks related:
+
+    /**
+     *   Is Superblock Triggered
+     *
+     *   - Does this block have a non-executed and activated trigger?
+     */
+    bool IsSuperblockTriggered(const CDeterministicMNList& tip_mn_list, int nBlockHeight);
+
+    /**
+     *   Get Superblock Payments
+     *
+     *   - Returns payments for superblock
+     */
+    bool GetSuperblockPayments(const CDeterministicMNList& tip_mn_list, int nBlockHeight,
+                               std::vector<CTxOut>& voutSuperblockRet);
+
+    bool IsValidSuperblock(const CChain& active_chain, const CDeterministicMNList& tip_mn_list,
+                           const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
+
 private:
+    void ExecuteBestSuperblock(const CDeterministicMNList& tip_mn_list, int nBlockHeight);
+    bool GetBestSuperblock(const CDeterministicMNList& tip_mn_list, CSuperblock_sptr& pSuperblockRet, int nBlockHeight);
+
     std::optional<const CSuperblock> CreateSuperblockCandidate(int nHeight) const;
     std::optional<const CGovernanceObject> CreateGovernanceTrigger(const std::optional<const CSuperblock>& sb_opt, PeerManager& peerman,
                                                                    const CActiveMasternodeManager& mn_activeman);

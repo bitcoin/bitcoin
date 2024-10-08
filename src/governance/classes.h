@@ -11,35 +11,13 @@
 #include <uint256.h>
 
 class CChain;
-class CGovernanceManager;
 class CSuperblock;
-class CSuperblockManager;
 class CTxOut;
 class CTransaction;
 
 using CSuperblock_sptr = std::shared_ptr<CSuperblock>;
 
 CAmount ParsePaymentAmount(const std::string& strAmount);
-
-/**
-*   Superblock Manager
-*
-*   Class for querying superblock information
-*/
-
-class CSuperblockManager
-{
-private:
-    static bool GetBestSuperblock(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, CSuperblock_sptr& pSuperblockRet, int nBlockHeight);
-
-public:
-    static bool IsSuperblockTriggered(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, int nBlockHeight);
-
-    static bool GetSuperblockPayments(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, int nBlockHeight, std::vector<CTxOut>& voutSuperblockRet);
-    static void ExecuteBestSuperblock(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, int nBlockHeight);
-
-    static bool IsValid(CGovernanceManager& govman, const CChain& active_chain, const CDeterministicMNList& tip_mn_list, const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
-};
 
 /**
 *   Governance Object Payment
@@ -101,7 +79,7 @@ private:
 public:
     CSuperblock();
     CSuperblock(int nBlockHeight, std::vector<CGovernancePayment> vecPayments);
-    explicit CSuperblock(CGovernanceManager& govman, uint256& nHash);
+    explicit CSuperblock(const CGovernanceObject& obj, uint256& nHash);
 
     static bool IsValidBlockHeight(int nBlockHeight);
     static void GetNearestSuperblocksHeights(int nBlockHeight, int& nLastSuperblockRet, int& nNextSuperblockRet);
@@ -115,19 +93,19 @@ public:
     // TELL THE ENGINE WE EXECUTED THIS EVENT
     void SetExecuted() { nStatus = SeenObjectStatus::Executed; }
 
-    CGovernanceObject* GetGovernanceObject(CGovernanceManager& govman);
-
     int GetBlockHeight() const
     {
         return nBlockHeight;
     }
 
+    const uint256 GetGovernanceObjHash() const { return nGovObjHash; }
+
     int CountPayments() const { return (int)vecPayments.size(); }
     bool GetPayment(int nPaymentIndex, CGovernancePayment& paymentRet);
     CAmount GetPaymentsTotalAmount();
 
-    bool IsValid(CGovernanceManager& govman, const CChain& active_chain, const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
-    bool IsExpired(const CGovernanceManager& govman) const;
+    bool IsValid(const CChain& active_chain, const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
+    bool IsExpired(int heightToTest) const;
 
     std::vector<uint256> GetProposalHashes() const;
 };

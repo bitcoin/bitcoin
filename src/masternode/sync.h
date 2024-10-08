@@ -51,10 +51,9 @@ private:
 
     CConnman& connman;
     CNetFulfilledRequestManager& m_netfulfilledman;
-    const CGovernanceManager& m_govman;
 
 public:
-    explicit CMasternodeSync(CConnman& _connman, CNetFulfilledRequestManager& netfulfilledman, const CGovernanceManager& govman);
+    explicit CMasternodeSync(CConnman& _connman, CNetFulfilledRequestManager& netfulfilledman);
 
     void SendGovernanceSyncRequest(CNode* pnode) const;
 
@@ -72,13 +71,13 @@ public:
     void SwitchToNextAsset();
 
     void ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv) const;
-    void ProcessTick(const PeerManager& peerman);
+    void ProcessTick(const PeerManager& peerman, const CGovernanceManager& govman);
 
     void AcceptedBlockHeader(const CBlockIndex *pindexNew);
     void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload);
     void UpdatedBlockTip(const CBlockIndex *pindexTip, const CBlockIndex *pindexNew, bool fInitialDownload);
 
-    void DoMaintenance(const PeerManager& peerman);
+    void DoMaintenance(const PeerManager& peerman, const CGovernanceManager& govman);
 };
 
 #endif // BITCOIN_MASTERNODE_SYNC_H

@@ -117,9 +117,9 @@ private:
         }
 
 
-        unsigned char pchMsgTmp[4];
-        std::string strMagicMessageTmp;
         try {
+            unsigned char pchMsgTmp[4];
+            std::string strMagicMessageTmp;
             // de-serialize file header (file specific magic message) and ..
             ssObj >> strMagicMessageTmp;
 
@@ -178,11 +178,11 @@ private:
     }
 
 public:
-    CFlatDB(std::string strFilenameIn, std::string strMagicMessageIn)
+    CFlatDB(std::string&& strFilenameIn, std::string&& strMagicMessageIn) :
+        pathDB{gArgs.GetDataDirNet() / strFilenameIn},
+        strFilename{strFilenameIn},
+        strMagicMessage{strMagicMessageIn}
     {
-        pathDB = gArgs.GetDataDirNet() / strFilenameIn;
-        strFilename = strFilenameIn;
-        strMagicMessage = strMagicMessageIn;
     }
 
     bool Load(T& objToLoad)
@@ -191,7 +191,7 @@ public:
         return Read(objToLoad);
     }
 
-    bool Store(T& objToSave)
+    bool Store(const T& objToSave)
     {
         LogPrintf("Verifying %s format...\n", strFilename);
         T tmpObjToLoad;

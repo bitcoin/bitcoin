@@ -26,7 +26,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "evo/cbtx -> evo/simplifiedmns -> evo/cbtx"
     "evo/deterministicmns -> llmq/commitment -> evo/deterministicmns"
     "evo/deterministicmns -> llmq/utils -> evo/deterministicmns"
-    "governance/classes -> governance/governance -> governance/classes"
     "governance/governance -> governance/object -> governance/governance"
     "governance/governance -> masternode/sync -> governance/governance"
     "llmq/chainlocks -> llmq/instantsend -> llmq/chainlocks"
