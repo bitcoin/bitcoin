@@ -441,13 +441,13 @@ CBlock TestChainSetup::CreateBlock(
     if (block.vtx[0]->nType == TRANSACTION_COINBASE) {
         LOCK(cs_main);
         auto cbTx = GetTxPayload<CCbTx>(*block.vtx[0]);
-        BOOST_ASSERT(cbTx.has_value());
+        Assert(cbTx.has_value());
         BlockValidationState state;
         if (!CalcCbTxMerkleRootMNList(block, chainstate.m_chain.Tip(), cbTx->merkleRootMNList, *m_node.dmnman, state, chainstate.CoinsTip())) {
-            BOOST_ASSERT(false);
+            Assert(false);
         }
         if (!CalcCbTxMerkleRootQuorums(block, chainstate.m_chain.Tip(), *m_node.llmq_ctx->quorum_block_processor, cbTx->merkleRootQuorums, state)) {
-            BOOST_ASSERT(false);
+            Assert(false);
         }
         CMutableTransaction tmpTx{*block.vtx[0]};
         SetTxPayload(tmpTx, *cbTx);

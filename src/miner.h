@@ -13,8 +13,11 @@
 #include <optional>
 #include <stdint.h>
 
-#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/identity.hpp>
+#include <boost/multi_index/indexed_by.hpp>
 #include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/tag.hpp>
+#include <boost/multi_index_container.hpp>
 
 class BlockManager;
 class CBlockIndex;
