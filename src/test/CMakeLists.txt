@@ -173,6 +173,15 @@ if(WITH_MULTIPROCESS)
   target_link_libraries(test_bitcoin bitcoin_ipc_test bitcoin_ipc)
 endif()
 
+if(WITH_SV2)
+  target_sources(test_bitcoin
+  PRIVATE
+    sv2_noise_tests.cpp
+    sv2_transport_tests.cpp
+  )
+  target_link_libraries(test_bitcoin bitcoin_sv2)
+endif()
+
 function(add_boost_test source_file)
   if(NOT EXISTS ${source_file})
     return()
