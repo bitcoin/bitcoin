@@ -29,6 +29,9 @@ add_subdirectory(util)
 if(WITH_MULTIPROCESS)
   add_subdirectory(ipc)
 endif()
+if(WITH_SV2)
+  add_subdirectory(sv2)
+endif()
 
 #=============================
 # secp256k1 subtree

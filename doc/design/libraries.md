@@ -14,6 +14,7 @@
 | *libbitcoin_wallet*      | Wallet functionality used by *bitcoind* and *bitcoin-wallet* executables. |
 | *libbitcoin_wallet_tool* | Lower-level wallet functionality used by *bitcoin-wallet* executable. |
 | *libbitcoin_zmq*         | [ZeroMQ](../zmq.md) functionality used by *bitcoind* and *bitcoin-qt* executables. |
+| *libbitcoin_sv2*         | Stratum v2 functionality (usage TBD) |
 
 ## Conventions
 
