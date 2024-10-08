@@ -167,6 +167,7 @@ if(ENABLE_WALLET)
       bitcoin_common
       bitcoin_util
       Boost::headers
+      univalue
     )
     install_binary_component(bitcoin-wallet HAS_MANPAGE)
   endif()
@@ -308,6 +309,8 @@ if(BUILD_DAEMON)
     core_interface
     bitcoin_node
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
+    Boost::headers
+    univalue
   )
   install_binary_component(bitcoind HAS_MANPAGE)
 endif()
@@ -321,6 +324,8 @@ if(ENABLE_IPC AND BUILD_DAEMON)
     bitcoin_node
     bitcoin_ipc
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
+    Boost::headers
+    univalue
   )
   install_binary_component(bitcoin-node INTERNAL)
 endif()
@@ -376,6 +381,7 @@ if(BUILD_UTIL)
     core_interface
     bitcoin_common
     bitcoin_util
+    univalue
   )
   install_binary_component(bitcoin-util HAS_MANPAGE)
 endif()
