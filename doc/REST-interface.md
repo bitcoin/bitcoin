@@ -36,6 +36,12 @@ Responds with 404 if the transaction doesn't exist.
 By default, this endpoint will only search the mempool.
 To query for a confirmed transaction, enable the transaction index via "txindex=1" command line / configuration option.
 
+`POST /rest/broadcast.hex`
+
+Broadcasts a transaction.
+The transaction hex must be passed in the body of the request.
+Returns the txid if the transaction was broadcasted correctly, responds with 400 if the transaction hex can't be parsed or if broadcasting failed.
+
 #### Blocks
 - `GET /rest/block/<BLOCK-HASH>.<bin|hex|json>`
 - `GET /rest/block/notxdetails/<BLOCK-HASH>.<bin|hex|json>`

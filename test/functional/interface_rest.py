@@ -440,5 +440,20 @@ class RESTTest (BitcoinTestFramework):
         resp = self.test_rest_request(f"/deploymentinfo/{INVALID_PARAM}", ret_type=RetType.OBJ, status=400)
         assert_equal(resp.read().decode('utf-8').rstrip(), f"Invalid hash: {INVALID_PARAM}")
 
+        self.log.info("Test the /broadcast URI")
+        tx = self.wallet.create_self_transfer()
+        resp_hex = self.test_rest_request("/broadcast", http_method='POST', req_type=ReqType.HEX, body=tx["hex"], ret_type=RetType.OBJ)
+        assert_equal(resp_hex.read().decode('utf-8').rstrip(), tx["txid"])
+        self.sync_all()
+        assert tx["txid"] in self.nodes[1].getrawmempool()
+
+        # Check invalid requests
+        resp = self.test_rest_request("/broadcast/123", http_method='POST', req_type=ReqType.HEX, body=tx["hex"], status=400, ret_type=RetType.OBJ)
+        assert_equal(resp.read().decode('utf-8').rstrip(), f"Invalid URI format. Expected /rest/broadcast.hex")
+        resp = self.test_rest_request("/broadcast", http_method="POST", req_type=ReqType.HEX, body="0000", status=400, ret_type=RetType.OBJ)
+        assert_equal(resp.read().decode('utf-8').rstrip(), f"TX decode failed")
+        resp = self.test_rest_request("/broadcast", http_method="POST", req_type=ReqType.JSON, body=tx["hex"], status=404, ret_type=RetType.OBJ)
+        assert_equal(resp.read().decode('utf-8').rstrip(), f"output format not found (available: hex)")
+
 if __name__ == '__main__':
     RESTTest(__file__).main()
