@@ -145,3 +145,11 @@ target_link_libraries(fuzz
 if(ENABLE_WALLET)
   add_subdirectory(${PROJECT_SOURCE_DIR}/src/wallet/test/fuzz wallet)
 endif()
+
+if(BUILD_FOR_FUZZING)
+    # List of fuzz targets
+    add_fuzz_test(p2p_message ...)
+    # Other fuzz targets
+else()
+    message(FATAL_ERROR "Fuzz binaries require BUILD_FOR_FUZZING=ON")
+endif()
