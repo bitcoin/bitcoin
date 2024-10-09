@@ -2742,36 +2742,57 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     return true;
 }
 
-CoinsCacheSizeState Chainstate::GetCoinsCacheSizeState()
-{
-    AssertLockHeld(::cs_main);
-    return this->GetCoinsCacheSizeState(
-        m_coinstip_cache_size_bytes,
-        m_mempool ? m_mempool->m_opts.max_size_bytes : 0);
-}
-
-CoinsCacheSizeState Chainstate::GetCoinsCacheSizeState(
+size_t Chainstate::GetCoinsCacheSizeTotalSpace(
     size_t max_coins_cache_size_bytes,
     size_t max_mempool_size_bytes)
 {
     AssertLockHeld(::cs_main);
-    const int64_t nMempoolUsage = m_mempool ? m_mempool->DynamicMemoryUsage() : 0;
-    int64_t cacheSize = CoinsTip().DynamicMemoryUsage();
-    int64_t nTotalSpace =
-        max_coins_cache_size_bytes + std::max<int64_t>(int64_t(max_mempool_size_bytes) - nMempoolUsage, 0);
+    const int64_t mempool_usage = m_mempool ? m_mempool->DynamicMemoryUsage() : 0;
+    return max_coins_cache_size_bytes + std::max<int64_t>(int64_t(max_mempool_size_bytes) - mempool_usage, 0);
+}
 
+static size_t GetCoinsCacheSizeLargeThreshold(size_t total_space_bytes)
+{
     //! No need to periodic flush if at least this much space still available.
-    static constexpr int64_t MAX_BLOCK_COINSDB_USAGE_BYTES = 10 * 1024 * 1024;  // 10MB
-    int64_t large_threshold =
-        std::max((9 * nTotalSpace) / 10, nTotalSpace - MAX_BLOCK_COINSDB_USAGE_BYTES);
+    static constexpr int64_t MAX_BLOCK_COINSDB_USAGE_BYTES = 10 << 20;  // 10MB
+    return std::max<int64_t>((9 * total_space_bytes) / 10,
+        static_cast<int64_t>(total_space_bytes) - MAX_BLOCK_COINSDB_USAGE_BYTES);
+}
 
-    if (cacheSize > nTotalSpace) {
-        LogPrintf("Cache size (%s) exceeds total space (%s)\n", cacheSize, nTotalSpace);
+static size_t GetCoinsCacheSizeNearCriticalThreshold(size_t total_space_bytes)
+{
+    //! We must sync if over this much space.
+    static constexpr int64_t MAX_BLOCK_COINSDB_USAGE_BYTES = 4 << 20;  // 4MB
+    return std::max<int64_t>((99 * total_space_bytes) / 100,
+        static_cast<int64_t>(total_space_bytes) - MAX_BLOCK_COINSDB_USAGE_BYTES);
+}
+
+CoinsCacheSizeState Chainstate::GetCoinsCacheSizeState(size_t total_space_bytes)
+{
+    AssertLockHeld(::cs_main);
+    const int64_t cache_size = CoinsTip().DynamicMemoryUsage();
+    const int64_t cache_size_minus_free_space = cache_size - CoinsTip().DynamicMemoryAvailableSpace();
+
+    if (cache_size > static_cast<int64_t>(total_space_bytes)) {
+        LogInfo("Cache size (%s) exceeds total space (%s)\n", cache_size, total_space_bytes);
         return CoinsCacheSizeState::CRITICAL;
-    } else if (cacheSize > large_threshold) {
+    } else if (const int64_t threshold = GetCoinsCacheSizeNearCriticalThreshold(total_space_bytes); cache_size_minus_free_space > threshold) {
+        LogInfo("Cache size (%s) exceeds near critical threshold (%s)\n", cache_size_minus_free_space, threshold);
+        return CoinsCacheSizeState::NEAR_CRITICAL;
+    } else if (cache_size_minus_free_space > static_cast<int64_t>(GetCoinsCacheSizeLargeThreshold(total_space_bytes))) {
         return CoinsCacheSizeState::LARGE;
     }
     return CoinsCacheSizeState::OK;
+}
+
+CoinsCacheSizeState Chainstate::GetCoinsCacheSizeState()
+{
+    AssertLockHeld(::cs_main);
+    size_t total_space_bytes = GetCoinsCacheSizeTotalSpace(
+        m_coinstip_cache_size_bytes,
+        m_mempool ? m_mempool->m_opts.max_size_bytes : 0
+    );
+    return GetCoinsCacheSizeState(total_space_bytes);
 }
 
 bool Chainstate::FlushStateToDisk(

@@ -484,7 +484,9 @@ public:
 enum class CoinsCacheSizeState
 {
     //! The coins cache is in immediate need of a flush.
-    CRITICAL = 2,
+    CRITICAL = 3,
+    //! The coins cache is at >= 99% capacity.
+    NEAR_CRITICAL = 2,
     //! The cache is at >= 90% capacity.
     LARGE = 1,
     OK = 0
@@ -752,14 +754,16 @@ public:
     /** Update the chain tip based on database information, i.e. CoinsTip()'s best block. */
     bool LoadChainTip() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+    size_t GetCoinsCacheSizeTotalSpace(
+        size_t max_coins_cache_size_bytes,
+        size_t max_mempool_size_bytes) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
     //! Dictates whether we need to flush the cache to disk or not.
     //!
     //! @return the state of the size of the coins cache.
     CoinsCacheSizeState GetCoinsCacheSizeState() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    CoinsCacheSizeState GetCoinsCacheSizeState(
-        size_t max_coins_cache_size_bytes,
-        size_t max_mempool_size_bytes) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    CoinsCacheSizeState GetCoinsCacheSizeState(size_t total_space_bytes) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     std::string ToString() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
