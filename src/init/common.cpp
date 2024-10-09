@@ -112,8 +112,8 @@ bool StartLogging(const ArgsManager& args)
         }
     }
     if (!LogInstance().StartLogging()) {
-            return InitError(strprintf(Untranslated("Could not open debug log file %s"),
-                fs::PathToString(LogInstance().m_file_path)));
+            return InitError(Untranslated(strprintf("Could not open debug log file %s",
+                fs::PathToString(LogInstance().m_file_path))));
     }
 
     if (!LogInstance().m_log_timestamps)
