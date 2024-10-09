@@ -45,7 +45,7 @@ class TestP2PConn(P2PInterface):
 
 class LLMQEvoNodesTest(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(5, 4, [["-testactivationheight=mn_rr@1200"]] * 5, evo_count=5)
+        self.set_dash_test_params(5, 4, [["-testactivationheight=v19@900", "-testactivationheight=mn_rr@1200"]] * 5, evo_count=5)
         self.set_dash_llmq_test_params(4, 4)
 
     def run_test(self):

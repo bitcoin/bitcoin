@@ -80,10 +80,8 @@ class LLMQQuorumRotationTest(DashTestFramework):
         self.log.info("Mining 2 quorums")
         h_0 = self.mine_quorum()
         h_100_0 = QuorumId(100, int(h_0, 16))
-        h_106_0 = QuorumId(106, int(h_0, 16))
         h_1 = self.mine_quorum()
         h_100_1 = QuorumId(100, int(h_1, 16))
-        h_106_1 = QuorumId(106, int(h_1, 16))
 
         self.log.info("Mine single block, wait for chainlock")
         self.generate(self.nodes[0], 1, sync_fun=self.no_op)
@@ -101,10 +99,10 @@ class LLMQQuorumRotationTest(DashTestFramework):
                 assert_equal(dkg_info['active_dkgs'], 0)
             nonzero_dkgs += dkg_info['active_dkgs']
             assert_equal(dkg_info['next_dkg'], next_dkg)
-        assert_equal(nonzero_dkgs, 7) # 1 quorums 4 nodes and 1 quorum of 3 nodes
+        assert_equal(nonzero_dkgs, 4) # 1 quorums 4 nodes
 
         expectedDeleted = []
-        expectedNew = [h_100_0, h_106_0, h_100_1, h_106_1]
+        expectedNew = [h_100_0, h_100_1]
         quorumList = self.test_getmnlistdiff_quorums(b_h_0, b_h_1, {}, expectedDeleted, expectedNew, testQuorumsCLSigs=False)
 
         projected_activation_height = 900

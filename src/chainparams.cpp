@@ -799,7 +799,7 @@ public:
         consensus.DIP0020Height = 1; // Always active unless overridden
         consensus.DIP0024Height = 1; // Always have dip0024 quorums unless overridden
         consensus.DIP0024QuorumsHeight = 1; // Always have dip0024 quorums unless overridden
-        consensus.V19Height = 900;
+        consensus.V19Height = 1; // Always active unless overriden
         consensus.V20Height = 900;
         consensus.MN_RRHeight = 900;
         consensus.MinBIP9WarningHeight = 0;
@@ -1031,6 +1031,8 @@ static void MaybeUpdateHeights(const ArgsManager& args, Consensus::Params& conse
             consensus.DIP0008Height = int{height};
         } else if (name == "dip0024") {
             consensus.DIP0024QuorumsHeight = int{height};
+        } else if (name == "v19") {
+            consensus.V19Height = int{height};
         } else if (name == "v20") {
             consensus.V20Height = int{height};
         } else if (name == "mn_rr") {

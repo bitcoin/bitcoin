@@ -74,8 +74,6 @@ class LLMQConnections(DashTestFramework):
         self.nodes[0].sporkupdate("SPORK_23_QUORUM_POSE", 4070908800)
         self.wait_for_sporks_same()
 
-        self.activate_v19(expected_activation_height=900)
-        self.log.info("Activated v19 at height:" + str(self.nodes[0].getblockcount()))
         self.mine_cycle_quorum()
 
         # Since we IS quorums are mined only using dip24 (rotation) we need to enable rotation, and continue tests on llmq_test_dip0024 for connections.

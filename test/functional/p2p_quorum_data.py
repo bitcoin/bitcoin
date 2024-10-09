@@ -400,7 +400,6 @@ class QuorumDataMessagesTest(DashTestFramework):
                                     mn1.node.quorum, "getdata", 0, 100, quorum_hash, 0x03,
                                     "0000000000000000000000000000000000000000000000000000000000000000")
 
-        self.activate_v19(expected_activation_height=900)
         # Enable DKG and disable ChainLocks
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
