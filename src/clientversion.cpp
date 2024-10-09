@@ -71,7 +71,7 @@ std::string FormatSubVersion(const std::string& name, int nClientVersion, const 
 
 std::string CopyrightHolders(const std::string& strPrefix)
 {
-    const auto copyright_devs = strprintf(_(COPYRIGHT_HOLDERS).translated, COPYRIGHT_HOLDERS_SUBSTITUTION);
+    const auto copyright_devs = strprintf(_(COPYRIGHT_HOLDERS), COPYRIGHT_HOLDERS_SUBSTITUTION).translated;
     std::string strCopyrightHolders = strPrefix + copyright_devs;
 
     // Make sure Bitcoin Core copyright is not removed by accident
@@ -85,15 +85,17 @@ std::string LicenseInfo()
 {
     const std::string URL_SOURCE_CODE = "<https://github.com/bitcoin/bitcoin>";
 
-    return CopyrightHolders(strprintf(_("Copyright (C) %i-%i").translated, 2009, COPYRIGHT_YEAR) + " ") + "\n" +
+    return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2009, COPYRIGHT_YEAR).translated + " ") + "\n" +
            "\n" +
            strprintf(_("Please contribute if you find %s useful. "
-                       "Visit %s for further information about the software.").translated, CLIENT_NAME, "<" CLIENT_URL ">") +
+                       "Visit %s for further information about the software."),
+                     CLIENT_NAME, "<" CLIENT_URL ">")
+               .translated +
            "\n" +
-           strprintf(_("The source code is available from %s.").translated, URL_SOURCE_CODE) +
+           strprintf(_("The source code is available from %s."), URL_SOURCE_CODE).translated +
            "\n" +
            "\n" +
            _("This is experimental software.").translated + "\n" +
-           strprintf(_("Distributed under the MIT software license, see the accompanying file %s or %s").translated, "COPYING", "<https://opensource.org/licenses/MIT>") +
+           strprintf(_("Distributed under the MIT software license, see the accompanying file %s or %s"), "COPYING", "<https://opensource.org/licenses/MIT>").translated +
            "\n";
 }
