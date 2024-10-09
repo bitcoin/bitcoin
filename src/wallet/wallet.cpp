@@ -302,7 +302,7 @@ std::shared_ptr<CWallet> LoadWalletInternal(WalletContext& context, const std::s
 
         return wallet;
     } catch (const std::runtime_error& e) {
-        error = Untranslated(e.what());
+        error = Untranslated(std::string{e.what()});
         status = DatabaseStatus::FAILED_LOAD;
         return nullptr;
     }

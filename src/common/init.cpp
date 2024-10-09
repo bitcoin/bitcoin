@@ -107,7 +107,7 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
             }
         }
     } catch (const std::exception& e) {
-        return ConfigError{ConfigStatus::FAILED, Untranslated(e.what())};
+        return ConfigError{ConfigStatus::FAILED, Untranslated(std::string{e.what()})};
     }
     return {};
 }

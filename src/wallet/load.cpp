@@ -148,7 +148,7 @@ bool LoadWallets(WalletContext& context)
         }
         return true;
     } catch (const std::runtime_error& e) {
-        chain.initError(Untranslated(e.what()));
+        chain.initError(Untranslated(std::string{e.what()}));
         return false;
     }
 }
