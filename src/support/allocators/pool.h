@@ -98,6 +98,11 @@ class PoolResource final
     const size_t m_chunk_size_bytes;
 
     /**
+     * Size in bytes available in the free list
+     */
+    size_t m_free_list_size_bytes{0};
+
+    /**
      * Contains all allocated pools of memory, used to free the data in the destructor.
      */
     std::list<std::byte*> m_allocated_chunks{};
@@ -172,6 +177,7 @@ class PoolResource final
 
         // size for the chunk + estimate for one list node (3 pointers: next, previous, and to the chunk)
         m_total_allocated += memusage::MallocUsage(m_chunk_size_bytes) + memusage::MallocUsage(sizeof(void*) * 3);
+        m_free_list_size_bytes += memusage::MallocUsage(m_chunk_size_bytes);
     }
 
     /**
@@ -227,6 +233,7 @@ public:
                 // we've already got data in the pool's freelist, unlink one element and return the pointer
                 // to the unlinked memory. Since FreeList is trivially destructible we can just treat it as
                 // uninitialized memory.
+                m_free_list_size_bytes -= memusage::MallocUsage(bytes);
                 return std::exchange(m_free_lists[num_alignments], m_free_lists[num_alignments]->m_next);
             }
 
@@ -237,6 +244,7 @@ public:
                 AllocateChunk();
             }
 
+            m_free_list_size_bytes -= memusage::MallocUsage(bytes);
             // Make sure we use the right amount of bytes for that freelist (might be rounded up),
             return std::exchange(m_available_memory_it, m_available_memory_it + round_bytes);
         }
@@ -252,6 +260,7 @@ public:
     void Deallocate(void* p, std::size_t bytes, std::size_t alignment) noexcept
     {
         if (IsFreeListUsable(bytes, alignment)) {
+            m_free_list_size_bytes += memusage::MallocUsage(bytes);
             const std::size_t num_alignments = NumElemAlignBytes(bytes);
             // put the memory block into the linked list. We can placement construct the FreeList
             // into the memory since we can be sure the alignment is correct.
@@ -282,6 +291,14 @@ public:
     [[nodiscard]] size_t DynamicMemoryUsage() const
     {
         return m_total_allocated;
+    }
+
+    /**
+     * Size in bytes currently available in the free list
+     */
+    [[nodiscard]] size_t FreeListBytes() const
+    {
+        return m_free_list_size_bytes;
     }
 };
 
