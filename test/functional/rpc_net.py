@@ -145,11 +145,13 @@ class NetTest(DashTestFramework):
                 "relaytxes": False,
                 "services": "0000000000000000",
                 "servicesnames": [],
+                "session_id": "",
                 "startingheight": -1,
                 "subver": "",
                 "synced_blocks": -1,
                 "synced_headers": -1,
                 "timeoffset": 0,
+                "transport_protocol_type": "v1",
                 "version": 0,
             },
         )

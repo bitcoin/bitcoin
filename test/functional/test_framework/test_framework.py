@@ -222,6 +222,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         parser.add_argument("--randomseed", type=int,
                             help="set a random seed for deterministically reproducing a previous test run")
         parser.add_argument('--timeout-factor', dest="timeout_factor", type=float, default=1.0, help='adjust test timeouts by a factor. Setting it to 0 disables all timeouts')
+        parser.add_argument("--v2transport", dest="v2transport", default=False, action="store_true",
+                            help="use BIP324 v2 connections between all nodes by default")
 
         group = parser.add_mutually_exclusive_group()
         group.add_argument("--descriptors", action='store_const', const=True,
@@ -525,6 +527,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         assert_equal(len(binary_cli), num_nodes)
         old_num_nodes = len(self.nodes)
         for i in range(num_nodes):
+            args = extra_args[i]
+            if self.options.v2transport and ("-v2transport=0" not in args and "-v2transport=1" not in args):
+                args.append("-v2transport=1")
             test_node_i = TestNode(
                 old_num_nodes + i,
                 get_datadir_path(self.options.tmpdir, old_num_nodes + i),
@@ -540,7 +545,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 coverage_dir=self.options.coveragedir,
                 cwd=self.options.tmpdir,
                 extra_conf=extra_confs[i],
-                extra_args=extra_args[i],
+                extra_args=args,
                 use_cli=self.options.usecli,
                 start_perf=self.options.perf,
                 use_valgrind=self.options.valgrind,
@@ -692,7 +697,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def wait_for_node_exit(self, i, timeout):
         self.nodes[i].process.wait(timeout)
 
-    def connect_nodes(self, a, b):
+    def connect_nodes(self, a, b, *, peer_advertises_v2=None):
         # A node cannot connect to itself, bail out early
         if (a == b):
             return
@@ -700,7 +705,16 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         from_connection = self.nodes[a]
         to_connection = self.nodes[b]
         ip_port = "127.0.0.1:" + str(p2p_port(b))
-        from_connection.addnode(ip_port, "onetry")
+
+        if peer_advertises_v2 is None:
+            peer_advertises_v2 = self.options.v2transport
+
+        if peer_advertises_v2:
+            from_connection.addnode(node=ip_port, command="onetry", v2transport=True)
+        else:
+            # skip the optional third argument (default false) for
+            # compatibility with older clients
+            from_connection.addnode(ip_port, "onetry")
 
         # Use subversion as peer id. Test nodes have their node number appended to the user agent string
         from_connection_subver = from_connection.getnetworkinfo()['subversion']
@@ -721,13 +735,13 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             assert peer is not None, "Error: peer disconnected"
             return peer['bytesrecv_per_msg'].pop(msg_type, 0) >= min_bytes_recv
 
-        self.wait_until(lambda: check_bytesrecv(find_conn(from_connection, to_connection_subver, inbound=False), 'verack', 24))
-        self.wait_until(lambda: check_bytesrecv(find_conn(to_connection, from_connection_subver, inbound=True), 'verack', 24))
+        self.wait_until(lambda: check_bytesrecv(find_conn(from_connection, to_connection_subver, inbound=False), 'verack', 21))
+        self.wait_until(lambda: check_bytesrecv(find_conn(to_connection, from_connection_subver, inbound=True), 'verack', 21))
 
         # The message bytes are counted before processing the message, so make
         # sure it was fully processed by waiting for a ping.
-        self.wait_until(lambda: check_bytesrecv(find_conn(from_connection, to_connection_subver, inbound=False), 'pong', 32))
-        self.wait_until(lambda: check_bytesrecv(find_conn(to_connection, from_connection_subver, inbound=True), 'pong', 32))
+        self.wait_until(lambda: check_bytesrecv(find_conn(from_connection, to_connection_subver, inbound=False), 'pong', 29))
+        self.wait_until(lambda: check_bytesrecv(find_conn(to_connection, from_connection_subver, inbound=True), 'pong', 29))
 
     def disconnect_nodes(self, a, b):
         # A node cannot disconnect from itself, bail out early
@@ -1161,11 +1175,11 @@ class DashTestFramework(BitcoinTestFramework):
             # controller node is the only node that has an extra option allowing it to submit sporks
             append_config(self.nodes[0].datadir, ["sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"])
 
-    def connect_nodes(self, a, b):
+    def connect_nodes(self, a, b, *, peer_advertises_v2=None):
         for mn2 in self.mninfo:
             if mn2.node is not None:
                 mn2.node.setmnthreadactive(False)
-        super().connect_nodes(a, b)
+        super().connect_nodes(a, b, peer_advertises_v2=peer_advertises_v2)
         for mn2 in self.mninfo:
             if mn2.node is not None:
                 mn2.node.setmnthreadactive(True)
