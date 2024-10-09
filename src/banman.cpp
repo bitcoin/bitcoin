@@ -30,7 +30,7 @@ void BanMan::LoadBanlist()
 {
     LOCK(m_banned_mutex);
 
-    if (m_client_interface) m_client_interface->InitMessage(_("Loading banlist…").translated);
+    if (m_client_interface) m_client_interface->InitMessage(_("Loading banlist…"));
 
     const auto start{SteadyClock::now()};
     if (m_ban_db.Read(m_banned)) {
