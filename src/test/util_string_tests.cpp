@@ -16,13 +16,13 @@ BOOST_AUTO_TEST_SUITE(util_string_tests)
 template <unsigned NumArgs>
 inline void PassFmt(util::ConstevalFormatString<NumArgs> fmt)
 {
-    // This was already executed at compile-time, but is executed again at run-time to avoid -Wunused.
-    decltype(fmt)::Detail_CheckNumFormatSpecifiers(fmt.fmt);
+    // Execute compile-time check again at run-time to get code coverage stats
+    util::detail::CheckNumFormatSpecifiers<NumArgs>(fmt.fmt);
 }
 template <unsigned WrongNumArgs>
 inline void FailFmtWithError(const char* wrong_fmt, std::string_view error)
 {
-    BOOST_CHECK_EXCEPTION(util::ConstevalFormatString<WrongNumArgs>::Detail_CheckNumFormatSpecifiers(wrong_fmt), const char*, HasReason(error));
+    BOOST_CHECK_EXCEPTION(util::detail::CheckNumFormatSpecifiers<WrongNumArgs>(wrong_fmt), const char*, HasReason{error});
 }
 
 BOOST_AUTO_TEST_CASE(ConstevalFormatString_NumSpec)
