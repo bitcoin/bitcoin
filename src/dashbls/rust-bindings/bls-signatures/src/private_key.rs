@@ -1,4 +1,5 @@
 use std::{ffi::c_void, ops::Mul};
+use std::fmt::{Debug, Formatter};
 
 use bls_dash_sys::{
     CoreMPLDeriveChildSk, CoreMPLDeriveChildSkUnhardened, CoreMPLKeyGen, G1ElementMul,
@@ -13,7 +14,6 @@ use crate::{schemes::Scheme, utils::{c_err_to_result, SecureBox}, BasicSchemeMPL
 
 pub const PRIVATE_KEY_SIZE: usize = 32; // TODO somehow extract it from bls library
 
-#[derive(Debug)]
 pub struct PrivateKey {
     pub(crate) c_private_key: *mut c_void,
 }
@@ -26,6 +26,13 @@ impl PartialEq for PrivateKey {
 
 impl Eq for PrivateKey {}
 
+impl Debug for PrivateKey {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let private_key_hex = hex::encode(self.to_bytes().as_slice());
+
+        write!(f, "PrivateKey({:?})", private_key_hex)
+    }
+}
 impl Mul<G1Element> for PrivateKey {
     type Output = Result<G1Element, BlsError>;
 

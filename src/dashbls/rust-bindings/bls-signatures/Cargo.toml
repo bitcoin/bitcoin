@@ -16,3 +16,4 @@ apple = ["bls-dash-sys/apple"]
 bls-dash-sys = { path = "../bls-dash-sys" }
 serde = { version= "1.0.160", features = ["derive"], optional = true}
 rand = { version= "0.8.5", optional = true}
+hex = { version = "0.4.3"}
