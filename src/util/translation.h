@@ -6,12 +6,15 @@
 #define BITCOIN_UTIL_TRANSLATION_H
 
 #include <tinyformat.h>
+#include <util/string.h>
 
+#include <cassert>
 #include <functional>
 #include <string>
 
 /** Translate a message to the native language of the user. */
-const extern std::function<std::string(const char*)> G_TRANSLATION_FUN;
+using TranslateFn = std::function<std::string(const char*)>;
+const extern TranslateFn G_TRANSLATION_FUN;
 
 /**
  * Bilingual messages:
@@ -47,6 +50,27 @@ inline bilingual_str operator+(bilingual_str lhs, const bilingual_str& rhs)
     return lhs;
 }
 
+namespace util {
+//! Compile-time literal string that can be translated with an optional translation function.
+struct TranslatedLiteral {
+    const char* const original;
+    const TranslateFn* translate_fn;
+
+    consteval TranslatedLiteral(const char* str, const TranslateFn* fn = &G_TRANSLATION_FUN) : original{str}, translate_fn{fn} { assert(original); }
+    operator std::string() const { return translate_fn && *translate_fn ? (*translate_fn)(original) : original; }
+    operator bilingual_str() const { return {original, std::string{*this}}; }
+};
+
+// TranslatedLiteral operators for formatting and adding to strings.
+inline std::ostream& operator<<(std::ostream& os, const TranslatedLiteral& lit) { return os << std::string{lit}; }
+template<typename T>
+T operator+(const T& lhs, const TranslatedLiteral& rhs) { return lhs + static_cast<T>(rhs); }
+template<typename T>
+T operator+(const TranslatedLiteral& lhs, const T& rhs) { return static_cast<T>(lhs) + rhs; }
+} // namespace util
+
+consteval auto _(util::TranslatedLiteral str) { return str; }
+
 /** Mark a bilingual_str as untranslated */
 inline bilingual_str Untranslated(std::string original) { return {original, original}; }
 
@@ -66,20 +90,5 @@ bilingual_str format(const bilingual_str& fmt, const Args&... args)
                          tfm::format(fmt.translated, translate_arg(args, true)...)};
 }
 } // namespace tinyformat
-
-struct ConstevalStringLiteral {
-    const char* const lit;
-    consteval ConstevalStringLiteral(const char* str) : lit{str} {}
-    consteval ConstevalStringLiteral(std::nullptr_t) = delete;
-};
-
-/**
- * Translation function.
- * If no translation function is set, simply return the input.
- */
-inline bilingual_str _(ConstevalStringLiteral str)
-{
-    return bilingual_str{str.lit, G_TRANSLATION_FUN ? (G_TRANSLATION_FUN)(str.lit) : str.lit};
-}
 
 #endif // BITCOIN_UTIL_TRANSLATION_H
