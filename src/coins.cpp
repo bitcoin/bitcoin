@@ -42,6 +42,10 @@ size_t CCoinsViewCache::DynamicMemoryUsage() const {
     return memusage::DynamicUsage(cacheCoins) + cachedCoinsUsage;
 }
 
+size_t CCoinsViewCache::DynamicMemoryAvailableSpace() const {
+    return cacheCoins.get_allocator().resource()->FreeListBytes();
+}
+
 CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const {
     const auto [ret, inserted] = cacheCoins.try_emplace(outpoint);
     if (inserted) {

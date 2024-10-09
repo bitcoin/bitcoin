@@ -460,8 +460,11 @@ public:
     //! Calculate the size of the cache (in number of transaction outputs)
     unsigned int GetCacheSize() const;
 
-    //! Calculate the size of the cache (in bytes)
+    //! Calculate the total size of the cache in memory (in bytes)
     size_t DynamicMemoryUsage() const;
+
+    //! Calculate the size of the available space in the cache (in bytes)
+    size_t DynamicMemoryAvailableSpace() const;
 
     //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
     bool HaveInputs(const CTransaction& tx) const;
