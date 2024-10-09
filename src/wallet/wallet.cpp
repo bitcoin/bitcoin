@@ -290,7 +290,7 @@ std::shared_ptr<CWallet> LoadWalletInternal(WalletContext& context, const std::s
 
         // Legacy wallets are being deprecated, warn if the loaded wallet is legacy
         if (!wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-            warnings.push_back(_("Wallet loaded successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future. Legacy wallets can be migrated to a descriptor wallet with migratewallet."));
+            warnings.emplace_back(_("Wallet loaded successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future. Legacy wallets can be migrated to a descriptor wallet with migratewallet."));
         }
 
         NotifyWalletLoaded(context, wallet);
@@ -483,7 +483,7 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
 
     // Legacy wallets are being deprecated, warn if a newly created wallet is legacy
     if (!(wallet_creation_flags & WALLET_FLAG_DESCRIPTORS)) {
-        warnings.push_back(_("Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future."));
+        warnings.emplace_back(_("Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future."));
     }
 
     status = DatabaseStatus::SUCCESS;
