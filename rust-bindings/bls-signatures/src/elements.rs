@@ -1,4 +1,6 @@
 use std::ffi::c_void;
+use std::fmt::Debug;
+use std::fmt::Formatter;
 
 use bls_dash_sys::{CoreMPLDeriveChildPkUnhardened, G1ElementFree, G1ElementFromBytes, G1ElementGenerator, G1ElementGetFingerprint, G1ElementIsEqual, G1ElementSerialize, G1ElementCopy, G2ElementCopy, G2ElementFree, G2ElementFromBytes, G2ElementIsEqual, G2ElementSerialize, ThresholdPublicKeyRecover, ThresholdSignatureRecover};
 #[cfg(feature = "use_serde")]
@@ -17,14 +19,25 @@ pub type PublicKey = G1Element;
 #[cfg(feature = "dash_helpers")]
 pub type Signature = G2Element;
 
-#[derive(Debug)]
 pub struct G1Element {
     pub(crate) c_element: *mut c_void,
 }
 
+// G1Element is immutable and thread safe
+unsafe impl Send for G1Element {}
+unsafe impl Sync for G1Element {}
+
 impl PartialEq for G1Element {
     fn eq(&self, other: &Self) -> bool {
         unsafe { G1ElementIsEqual(self.c_element, other.c_element) }
+    }
+}
+
+impl Debug for G1Element {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let g1_hex = hex::encode(self.to_bytes().as_slice());
+
+        write!(f, "G1Element({:?})", g1_hex)
     }
 }
 
@@ -181,14 +194,25 @@ impl Drop for G1Element {
     }
 }
 
-#[derive(Debug)]
 pub struct G2Element {
     pub(crate) c_element: *mut c_void,
 }
 
+// G2Element is immutable and thread safe
+unsafe impl Send for G2Element {}
+unsafe impl Sync for G2Element {}
+
 impl PartialEq for G2Element {
     fn eq(&self, other: &Self) -> bool {
         unsafe { G2ElementIsEqual(self.c_element, other.c_element) }
+    }
+}
+
+impl Debug for G2Element {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let g2_hex = hex::encode(self.to_bytes().as_slice());
+
+        write!(f, "G2Element({:?})", g2_hex)
     }
 }
 
@@ -311,6 +335,7 @@ impl Drop for G2Element {
 
 #[cfg(test)]
 mod tests {
+    use std::thread;
     use super::*;
     use crate::{
         schemes::{AugSchemeMPL, Scheme},
@@ -364,5 +389,23 @@ mod tests {
             G1Element::from_bytes(&bytes).expect("should create g1 element from bytes");
 
         assert_eq!(g1_element.fingerprint(), 2093959050);
+    }
+
+    #[test]
+    fn should_be_thread_safe() {
+        let bytes = [
+            151, 241, 211, 167, 49, 151, 215, 148, 38, 149, 99, 140, 79, 169, 172, 15, 195, 104,
+            140, 79, 151, 116, 185, 5, 161, 78, 58, 63, 23, 27, 172, 88, 108, 85, 232, 63, 249,
+            122, 26, 239, 251, 58, 240, 10, 219, 34, 198, 187,
+        ];
+
+        let g1_element =
+            G1Element::from_bytes(&bytes).expect("should create g1 element from bytes");
+
+        let test_thread = thread::spawn(move|| {
+            assert_eq!(g1_element.fingerprint(), 2093959050);
+        });
+
+        test_thread.join().unwrap();
     }
 }

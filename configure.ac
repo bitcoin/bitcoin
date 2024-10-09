@@ -1,5 +1,5 @@
 AC_PREREQ([2.60])
-AC_INIT([libdashbls],[1.3.0])
+AC_INIT([libdashbls],[1.3.3])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
@@ -24,19 +24,20 @@ dnl make the compilation flags quiet unless V=1 is used
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 dnl Compiler checks (here before libtool).
+if test "x${CFLAGS+set}" = "xset"; then
+  CFLAGS_overridden=yes
+else
+  CFLAGS_overridden=no
+fi
 if test "x${CXXFLAGS+set}" = "xset"; then
   CXXFLAGS_overridden=yes
 else
   CXXFLAGS_overridden=no
 fi
+
+AC_PROG_CC
+
 AC_PROG_CXX
-
-AM_PROG_CC_C_O
-
-AC_PROG_CC_C99
-if test x"$ac_cv_prog_cc_c99" = x"no"; then
-  AC_MSG_ERROR([c99 compiler support required])
-fi
 
 dnl By default, libtool for mingw refuses to link static libs into a dll for
 dnl fear of mixing pic/non-pic objects, and import/export complications. Since
@@ -58,23 +59,75 @@ AC_PATH_TOOL(STRIP, strip)
 
 AM_PROG_AS
 
-AC_ARG_ENABLE(tests,
-  [AS_HELP_STRING([--disable-tests],
-  [do not compile tests (default is to compile)])],
+AC_ARG_ENABLE([tests],
+  [AS_HELP_STRING([--enable-tests],
+  [Compile with tests [default=yes]])],
   [use_tests=$enableval],
   [use_tests=yes])
 
-AC_ARG_ENABLE(bench,
-  [AS_HELP_STRING([--disable-bench],
-  [do not compile benchmarks (default is to compile)])],
+AC_ARG_ENABLE([bench],
+  [AS_HELP_STRING([--enable-bench],
+  [Compile with benchmarks [default=yes]])],
   [use_bench=$enableval],
   [use_bench=yes])
 
 AC_ARG_ENABLE([hardening],
-  [AS_HELP_STRING([--disable-hardening],
-  [do not attempt to harden the resulting executables (default is to harden when possible)])],
+  [AS_HELP_STRING([--enable-hardening],
+  [Enable hardening flags and arguments [default=auto]])],
   [use_hardening=$enableval],
   [use_hardening=auto])
+
+AC_ARG_ENABLE([optimizations],
+  [AS_HELP_STRING([--enable-optimizations],
+  [Enable compiler and library optimizations [default=yes]])],
+  [use_optimizations=$enableval],
+  [use_optimizations=yes])
+
+AC_ARG_ENABLE([debug],
+  [AS_HELP_STRING([--enable-debug],
+  [Build with debugging support [default=no]])],
+  [use_debug=$enableval],
+  [use_debug=no])
+
+AC_LANG_PUSH([C])
+
+dnl Check for a flag to turn compiler warnings into errors. This is helpful for checks which may
+dnl appear to succeed because by default they merely emit warnings when they fail.
+dnl
+dnl Note that this is not necessarily a check to see if -Werror is supported, but rather to see if
+dnl a compile with -Werror can succeed. This is important because the compiler may already be
+dnl warning about something unrelated, for example about some path issue. If that is the case,
+dnl -Werror cannot be used because all of those warnings would be turned into errors.
+AX_CHECK_COMPILE_FLAG([-Werror], [FLAG_WERROR="-Werror"], [FLAG_WERROR=""])
+
+if [[[ "$use_debug" == "yes" || "$use_optimizations" == "no" ]]]; then
+  dnl Clear default -g -O2 flags
+  if test x"$CFLAGS_overridden" = x"no"; then
+    CFLAGS=""
+  fi
+  if test x"$CXXFLAGS_overridden" = x"no"; then
+    CXXFLAGS=""
+  fi
+
+  dnl Disable optimizations
+  AX_CHECK_COMPILE_FLAG([-O0], [[DEBUG_FLAGS="$DEBUG_FLAGS -O0"]], [], [[$FLAG_WERROR]])
+
+  if [[[ "$use_debug" == "yes" ]]]; then
+    dnl Prefer -g3, fall back to -g if that is unavailable.
+    AX_CHECK_COMPILE_FLAG(
+      [-g3],
+      [[DEBUG_FLAGS="$DEBUG_FLAGS -g3"]],
+      [AX_CHECK_COMPILE_FLAG([-g],[[DEBUG_FLAGS="$DEBUG_FLAGS -g"]])], [[$FLAG_WERROR]])
+
+    AX_CHECK_COMPILE_FLAG([-ftrapv],[DEBUG_FLAGS="$DEBUG_FLAGS -ftrapv"], [], [[$FLAG_WERROR]])
+  else
+    dnl Reintroduce -g flag deleted during C(XX)FLAGS reset
+    AX_CHECK_COMPILE_FLAG([-g],[[DEBUG_FLAGS="$DEBUG_FLAGS -g"]], [], [[$FLAG_WERROR]])
+
+    dnl -ftrapv and -fwrapv conflict, so we only set this if use_debug=no
+    AX_CHECK_COMPILE_FLAG([-fwrapv],[DEBUG_FLAGS="$DEBUG_FLAGS -fwrapv"], [], [[$FLAG_WERROR]])
+  fi
+fi
 
 dnl Define enum mappings for relic config
 AC_DEFINE([RLC_VERSION], ["0.5.0"], [Relic Version])
@@ -95,15 +148,56 @@ AC_DEFINE([GMP],     [2], [Backend based on GNU Multiple Precision library.])
 AC_DEFINE([GMP_SEC], [3], [Backend based on GNU Multiple Precision library, but using constant-time code.])
 
 AC_DEFUN([GMP_CHECK],[
-if test x"$has_gmp" != x"yes"; then
+  AC_REQUIRE([AC_PROG_CC])
+
   CPPFLAGS_TEMP="$CPPFLAGS"
   CPPFLAGS="$GMP_CPPFLAGS $CPPFLAGS"
   LIBS_TEMP="$LIBS"
   LIBS="$GMP_LDFLAGS $LIBS"
-  AC_CHECK_HEADER(gmp.h,[AC_CHECK_LIB(gmp, __gmpz_init,[has_gmp=yes; GMP_LIBS="-lgmp";])])
+
+  AC_CHECK_HEADER(
+    gmp.h,
+    [AC_CHECK_LIB(gmp, __gmpz_init, [], [gmp_fail_reason="libgmp not found or unusable"; has_gmp=no;])],
+    [gmp_fail_reason="gmp header not found"; has_gmp=no;]
+  )
+
+  if test x"$has_gmp" != x"no"; then
+    # Proper support for macOS aarch64 was introduced in 6.3.0, but LTS distros
+    # like Ubuntu 20.04 (focal) use 6.2.0, so, the minimum supported version is
+    # determined by platform and architecture.
+    case $host in
+      *darwin*)
+        case $host_cpu in
+          aarch*)
+            gmp_major_version=6
+            gmp_minor_version=3
+            ;;
+        esac
+        ;;
+      *)
+        gmp_major_version=6
+        gmp_minor_version=2
+        ;;
+    esac
+    AC_MSG_CHECKING([gmp version >= $gmp_major_version.$gmp_minor_version])
+    AC_COMPILE_IFELSE(
+      [AC_LANG_PROGRAM(
+        [[@%:@include <gmp.h>]],
+        [[
+          @%:@if __GNU_MP_VERSION < $gmp_major_version || __GNU_MP_VERSION_MINOR < $gmp_minor_version
+            @%:@error Unsupported GMP version
+          @%:@endif]])],
+      [AC_MSG_RESULT([yes]); GMP_LIBS="-lgmp"; has_gmp=yes;],
+      [AC_MSG_RESULT([no]); gmp_fail_reason="unsupported gmp version"; has_gmp=no;]
+    )
+  fi
+
+  if test x"$want_backend" = x"gmp" && test x"$has_gmp" = x"no"; then
+    AC_MSG_ERROR([$gmp_fail_reason])
+  fi
+
   CPPFLAGS="$CPPFLAGS_TEMP"
   LIBS="$LIBS_TEMP"
-fi
 ])
 
 AC_ARG_WITH([backend],
@@ -113,34 +207,38 @@ AC_ARG_WITH([backend],
   [want_backend=auto]
 )
 
+case $host in
+  *darwin*)
+    AC_PATH_PROG([BREW],brew,)
+    if test x$BREW != x; then
+      # These Homebrew packages may be keg-only, meaning that they won't be found
+      # in expected paths because they may conflict with system files. Ask
+      # Homebrew where each one is located, then adjust paths accordingly.
+      gmp_prefix=`$BREW --prefix gmp 2>/dev/null`
+      if test x$gmp_prefix != x; then
+        GMP_CPPFLAGS="-I$gmp_prefix/include"
+        GMP_LDFLAGS="-L$gmp_prefix/lib"
+      fi
+    fi
+  ;;
+esac
+
 if test x"$want_backend" = x"auto"; then
-  GMP_CHECK
-  if test x"$has_gmp" = x"yes"; then
-    case $host in
-      *darwin*)
-        case $host_cpu in
-          aarch*)
-            want_backend=easy
-            ;;
-          *)
-            want_backend=gmp
-            ;;
-        esac
-        ;;
-      *)
-        want_backend=gmp
-        ;;
-    esac
-  else
+  if test x"$use_optimizations" = x"no"; then
     want_backend=easy
+  else
+    GMP_CHECK
+    if test x"$has_gmp" = x"yes"; then
+      want_backend=gmp
+    else
+      want_backend=easy
+    fi
   fi
 else
   case $want_backend in
   gmp)
+    dnl GMP_CHECK will report the reason if and why the backend cannot be used.
     GMP_CHECK
-    if test x"$has_gmp" != x"yes"; then
-      AC_MSG_ERROR([gmp backend explicitly requested but libgmp not available])
-    fi
     ;;
   easy)
     ;;
@@ -257,20 +355,14 @@ AC_DEFINE([BRUCH],   [6], [Hardware-friendly inversion by Brunner-Curiger-Hofste
 AC_DEFINE([CTAIA],   [7], [Constant-time version of almost inverse.])
 AC_DEFINE([LOWER],   [8], [Use implementation provided by the lower layer.])
 
-dnl Define relic switches
-AC_ARG_ENABLE([debug],
-  [AS_HELP_STRING([--enable-debug],
-  [Build with debugging support (default is no)])],
-  [use_debug=$enableval],
-  [use_debug=no])
-
-if test x$use_debug = xyes; then
+if test x"$use_debug" = x"yes"; then
   AC_DEFINE([DEBUG],   [1], [Define this symbol if debugging support is enabled])
 fi
 
+dnl Define relic switches
 AC_ARG_ENABLE([profiling],
   [AS_HELP_STRING([--enable-profiling],
-  [Build with profiling support (default is no)])],
+  [Build with profiling support [default=no]])],
   [use_profiling=$enableval],
   [use_profiling=no])
 
@@ -280,7 +372,7 @@ fi
 
 AC_ARG_ENABLE([check],
   [AS_HELP_STRING([--enable-check],
-  [Build with error-checking support (default is no)])],
+  [Build with error-checking support [default=no]])],
   [use_check=$enableval],
   [use_check=no])
 
@@ -290,7 +382,7 @@ fi
 
 AC_ARG_ENABLE([verbs],
   [AS_HELP_STRING([--enable-verbs],
-  [Build with detailed error messages (default is no)])],
+  [Build with detailed error messages [default=no]])],
   [use_verbs=$enableval],
   [use_verbs=no])
 
@@ -300,7 +392,7 @@ fi
 
 AC_ARG_ENABLE([overhead],
   [AS_HELP_STRING([--enable-overhead],
-  [Build with overhead estimation (default is no)])],
+  [Build with overhead estimation [default=no]])],
   [use_overhead=$enableval],
   [use_overhead=no])
 
@@ -310,7 +402,7 @@ fi
 
 AC_ARG_ENABLE([quiet],
   [AS_HELP_STRING([--enable-quiet],
-  [Build with printing disabled (default is yes)])],
+  [Build with printing disabled [default=yes]])],
   [use_quiet=$enableval],
   [use_quiet=yes])
 
@@ -320,7 +412,7 @@ fi
 
 AC_ARG_ENABLE([color],
   [AS_HELP_STRING([--enable-color],
-  [Build with colored output support (default is yes)])],
+  [Build with colored output support [default=yes]])],
   [use_color=$enableval],
   [use_color=yes])
 
@@ -330,7 +422,7 @@ fi
 
 AC_ARG_ENABLE([big_endian],
   [AS_HELP_STRING([--enable-big-endian],
-  [Build with big-endian support (default is no)])],
+  [Build with big-endian support [default=no]])],
   [use_big_endian=$enableval],
   [use_big_endian=no])
 
@@ -340,63 +432,46 @@ fi
 
 use_pkgconfig=yes
 
-case $host_cpu in
-  x86_64)
-    dnl Support for AMD64 (also known as x86_64 on some platforms) processors
-    CPU_ARCH="x64"
-    AC_DEFINE([ARCH], [X64], [Architecture.])
-    AC_DEFINE([WSIZE], [64], [Size of word in this architecture.])
-    ;;
-  aarch*)
-    dnl Relic doesn't support aarch64 yet, set CPU_ARCH to none.
-    dnl Support for 64-bit ARM processors
-    CPU_ARCH="none"
-    AC_DEFINE([ARCH], [ARM], [Architecture.])
-    AC_DEFINE([WSIZE], [64], [Size of word in this architecture.])
-    ;;
-  i?86)
-    dnl Support for Intel x86 processors
-    CPU_ARCH="x86"
-    AC_DEFINE([ARCH], [X86], [Architecture.])
-    AC_DEFINE([WSIZE], [32], [Size of word in this architecture.])
-    ;;
-  arm*)
-    dnl Support for 32-bit native ARM processors
-    CPU_ARCH="arm"
-    AC_DEFINE([ARCH], [ARM], [Architecture.])
-    AC_DEFINE([WSIZE], [32], [Size of word in this architecture.])
-    ;;
-  *32*)
-    dnl Support for an undefined 32-bit architecture
-    CPU_ARCH="none"
-    AC_DEFINE([ARCH], [RELIC_NONE], [Architecture.])
-    AC_DEFINE([WSIZE], [32], [Size of word in this architecture.])
-    ;;
-  *64*)
-    dnl Support for an undefined 64-bit architecture
-    CPU_ARCH="none"
-    AC_DEFINE([ARCH], [RELIC_NONE], [Architecture.])
-    AC_DEFINE([WSIZE], [64], [Size of word in this architecture.])
-    ;;
-  *)
-    AC_MSG_ERROR([Unable to determine host architecture, may not be supported!])
-    ;;
-esac
+if [[[ "$host_cpu" == x86_64 && "$use_optimizations" == "yes" ]]]; then
+  dnl Support for AMD64 (also known as x86_64 on some platforms) processors
+  CPU_ARCH="x64"
+  AC_DEFINE([ARCH], [X64], [Architecture.])
+  AC_DEFINE([WSIZE], [64], [Size of word in this architecture.])
+elif [[[ "$host_cpu" == aarch* && "$use_optimizations" == "yes" ]]]; then
+  dnl Support for 64-bit ARM processors
+  dnl Relic doesn't support aarch64 yet, set CPU_ARCH to none and ARCH to RELIC_NONE.
+  CPU_ARCH="none"
+  AC_DEFINE([ARCH], [RELIC_NONE], [Architecture.])
+  AC_DEFINE([WSIZE], [64], [Size of word in this architecture.])
+elif [[[ "$host_cpu" == i?86 && "$use_optimizations" == "yes" ]]]; then
+  dnl Support for Intel x86 processors
+  CPU_ARCH="x86"
+  AC_DEFINE([ARCH], [X86], [Architecture.])
+  AC_DEFINE([WSIZE], [32], [Size of word in this architecture.])
+elif [[[ "$host_cpu" == arm* && "$use_optimizations" == "yes" ]]]; then
+  dnl Support for 32-bit native ARM processors
+  CPU_ARCH="arm"
+  AC_DEFINE([ARCH], [ARM], [Architecture.])
+  AC_DEFINE([WSIZE], [32], [Size of word in this architecture.])
+elif [[[ "$host_cpu" == *64* ]]]; then
+  dnl Support for an undefined 64-bit architecture
+  CPU_ARCH="none"
+  AC_DEFINE([ARCH], [RELIC_NONE], [Architecture.])
+  AC_DEFINE([WSIZE], [64], [Size of word in this architecture.])
+elif [[[ "$host_cpu" == *32* || "$host_cpu" == arm* || "$host_cpu" == i?86 ]]]; then
+  dnl Support for an undefined 32-bit architecture
+  CPU_ARCH="none"
+  AC_DEFINE([ARCH], [RELIC_NONE], [Architecture.])
+  AC_DEFINE([WSIZE], [32], [Size of word in this architecture.])
+else
+  AC_MSG_ERROR([Unable to determine host architecture, may not be supported!])
+fi
 
 case $host in
   *darwin*)
      AC_DEFINE([OPSYS], [MACOSX], [Detected operation system.])
      AC_PATH_PROG([BREW],brew,)
-     if test x$BREW != x; then
-       # These Homebrew packages may be keg-only, meaning that they won't be found
-       # in expected paths because they may conflict with system files. Ask
-       # Homebrew where each one is located, then adjust paths accordingly.
-       gmp_prefix=`$BREW --prefix gmp 2>/dev/null`
-       if test x$gmp_prefix != x; then
-         GMP_CPPFLAGS="-I$gmp_prefix/include"
-         GMP_LDFLAGS="-L$gmp_prefix/lib"
-       fi
-     else
+     if test x$BREW = x; then
        AC_PATH_PROG([PORT],port,)
        # If homebrew isn't installed and macports is, add the macports default paths
        # as a last resort.
@@ -480,17 +555,20 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[char foo;]])],
       CFLAGS="$saved_CFLAGS"
     ])
 
-AC_LANG_PUSH([C])
-AX_CHECK_COMPILE_FLAG([-Wall],[WARN_CFLAGS="$WARN_CFLAGS -Wall"],,)
-AX_CHECK_COMPILE_FLAG([-Wextra],[WARN_CFLAGS="$WARN_CFLAGS -Wextra"],,)
-AX_CHECK_COMPILE_FLAG([-Wcast-align],[WARN_CFLAGS="$WARN_CFLAGS -Wcast-align"],,)
-AX_CHECK_COMPILE_FLAG([-Wunused-parameter],[NOWARN_CFLAGS="$NOWARN_CFLAGS -Wno-unused-parameter"],,)
-AX_CHECK_COMPILE_FLAG([-Wshadow],[NOWARN_CFLAGS="$NOWARN_CFLAGS -Wno-shadow"],,)
-AX_CHECK_COMPILE_FLAG([-Wsign-compare],[NOWARN_CFLAGS="$NOWARN_CFLAGS -Wno-sign-compare"],,)
-AX_CHECK_COMPILE_FLAG([-Wstrict-prototypes],[NOWARN_CFLAGS="$NOWARN_CFLAGS -Wno-strict-prototypes"],,)
-AX_CHECK_COMPILE_FLAG([-Wunused-function],[NOWARN_CFLAGS="$NOWARN_CFLAGS -Wno-unused-function"],,)
-AX_CHECK_COMPILE_FLAG([-Wlong-long],[NOWARN_CFLAGS="$NOWARN_CFLAGS -Wno-long-long"],,)
-AC_LANG_POP([C])
+if [[[ "$CFLAGS_overridden" == "no" && "$CXXFLAGS_overridden" == "no" ]]]; then
+  dnl Enable warnings
+  AX_CHECK_COMPILE_FLAG([-Wall],[WARN_FLAGS="$WARN_FLAGS -Wall"], [], [[$FLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wcast-align],[WARN_FLAGS="$WARN_FLAGS -Wcast-align"], [], [[$FLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wextra],[WARN_FLAGS="$WARN_FLAGS -Wextra"], [], [[$FLAG_WERROR]])
+
+  dnl Exclude known warnings
+  AX_CHECK_COMPILE_FLAG([-Wlong-long],[NOWARN_FLAGS="$NOWARN_FLAGS -Wno-long-long"], [], [[$FLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wshadow],[NOWARN_FLAGS="$NOWARN_FLAGS -Wno-shadow"], [], [[$FLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wsign-compare],[NOWARN_FLAGS="$NOWARN_FLAGS -Wno-sign-compare"], [], [[$FLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wstrict-prototypes],[NOWARN_FLAGS="$NOWARN_FLAGS -Wno-strict-prototypes"], [], [[$FLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wunused-function],[NOWARN_FLAGS="$NOWARN_FLAGS -Wno-unused-function"], [], [[$FLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wunused-parameter],[NOWARN_FLAGS="$NOWARN_FLAGS -Wno-unused-parameter"], [], [[$FLAG_WERROR]])
+fi
 
 dnl set default settings for relic
 AC_DEFINE([ALIGN], [1], [Byte boundary to align digit vectors.])
@@ -615,19 +693,19 @@ AC_SEARCH_LIBS([clock_gettime],[rt])
 
 if test "$TARGET_OS" != "windows"; then
   dnl All windows code is PIC, forcing it on just adds useless compile warnings
-  AX_CHECK_COMPILE_FLAG([-fPIC], [PIC_FLAGS="-fPIC"])
+  AX_CHECK_COMPILE_FLAG([-fPIC], [HARDENED_FLAGS="$HARDENED_FLAGS -fPIC"], [], [[$FLAG_WERROR]])
 fi
 
 dnl All versions of gcc that we commonly use for building are subject to bug
 dnl https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90348. To work around that, set
 dnl -fstack-reuse=none for all gcc builds. (Only gcc understands this flag)
-AX_CHECK_COMPILE_FLAG([-fstack-reuse=none], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-reuse=none"])
+AX_CHECK_COMPILE_FLAG([-fstack-reuse=none], [HARDENED_FLAGS="$HARDENED_FLAGS -fstack-reuse=none"], [], [[$FLAG_WERROR]])
 if test "$use_hardening" != "no"; then
   use_hardening=yes
-  AX_CHECK_COMPILE_FLAG([-Wstack-protector], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -Wstack-protector"])
-  AX_CHECK_COMPILE_FLAG([-fstack-protector-all], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-protector-all"])
+  AX_CHECK_COMPILE_FLAG([-Wstack-protector], [HARDENED_FLAGS="$HARDENED_FLAGS -Wstack-protector"])
+  AX_CHECK_COMPILE_FLAG([-fstack-protector-all], [HARDENED_FLAGS="$HARDENED_FLAGS -fstack-protector-all"], [], [[$FLAG_WERROR]])
 
-  AX_CHECK_COMPILE_FLAG([-fcf-protection=full], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fcf-protection=full"])
+  AX_CHECK_COMPILE_FLAG([-fcf-protection=full], [HARDENED_FLAGS="$HARDENED_FLAGS -fcf-protection=full"], [], [[$FLAG_WERROR]])
 
   case $host in
     *mingw*)
@@ -635,8 +713,14 @@ if test "$use_hardening" != "no"; then
       dnl See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90458 for more details.
       ;;
     *)
-      AX_CHECK_COMPILE_FLAG([-fstack-clash-protection], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-clash-protection"], [], [])
+      AX_CHECK_COMPILE_FLAG([-fstack-clash-protection], [HARDENED_FLAGS="$HARDENED_FLAGS -fstack-clash-protection"], [], [[$FLAG_WERROR]])
       ;;
+  esac
+
+  case $host in
+    *aarch64*)
+      AX_CHECK_COMPILE_FLAG([-mbranch-protection=bti], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -mbranch-protection=bti"], [], [[$CXXFLAG_WERROR]])
+    ;;
   esac
 
   AX_CHECK_LINK_FLAG([-Wl,--enable-reloc-section], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--enable-reloc-section"], [], [])
@@ -646,7 +730,7 @@ if test "$use_hardening" != "no"; then
   AX_CHECK_LINK_FLAG([-Wl,-z,relro], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,relro"], [], [])
   AX_CHECK_LINK_FLAG([-Wl,-z,now], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,now"], [], [])
   AX_CHECK_LINK_FLAG([-Wl,-z,separate-code], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,separate-code"], [], [])
-  AX_CHECK_LINK_FLAG([-fPIE -pie], [PIE_FLAGS="-fPIE"; HARDENED_LDFLAGS="$HARDENED_LDFLAGS -pie"], [], [])
+  AX_CHECK_LINK_FLAG([-fPIE -pie], [HARDENED_FLAGS="$HARDENED_FLAGS -fPIE"; HARDENED_LDFLAGS="$HARDENED_LDFLAGS -pie"], [], [])
 
   case $host in
     *mingw*)
@@ -708,7 +792,9 @@ if test "$TARGET_OS" = "darwin"; then
 fi
 
 dnl Don't allow extended (non-ASCII) symbols in identifiers. This is easier for code review.
-AX_CHECK_COMPILE_FLAG([-fno-extended-identifiers], [CORE_CXXFLAGS="$CORE_CXXFLAGS -fno-extended-identifiers"], [], [])
+AX_CHECK_COMPILE_FLAG([-fno-extended-identifiers], [CORE_FLAGS="$CORE_FLAGS -fno-extended-identifiers"], [], [[$FLAG_WERROR]])
+
+AC_LANG_POP([C])
 
 AC_MSG_CHECKING([whether to build runtest])
 if test x$use_tests = xyes; then
@@ -753,24 +839,23 @@ AM_CONDITIONAL(WITH_FBX, test 1 -eq 1)
 AM_CONDITIONAL([USE_TESTS], [test x$BUILD_TEST = xyes])
 AM_CONDITIONAL([USE_BENCH], [test x$BUILD_BENCH = xyes])
 AM_CONDITIONAL([HARDEN], [test "$use_hardening" = "yes"])
+AM_CONDITIONAL([OPTIMIZE], [test "$use_optimizations" = "yes"])
 
 AM_CONDITIONAL([ARITH_EASY], [test "$want_backend" = "easy"])
 AM_CONDITIONAL([ARITH_GMP], [test "$want_backend" = "gmp"])
 
 AC_SUBST(CPU_ARCH)
+AC_SUBST(DEBUG_FLAGS)
 AC_SUBST(RAND_PATH, hashd)
 AC_SUBST(RELIC_CPPFLAGS)
-AC_SUBST(WARN_CFLAGS)
-AC_SUBST(NOWARN_CFLAGS)
+AC_SUBST(WARN_FLAGS)
+AC_SUBST(NOWARN_FLAGS)
 AC_SUBST(LIBTOOL_APP_LDFLAGS)
-AC_SUBST(HARDENED_CXXFLAGS)
-AC_SUBST(HARDENED_CPPFLAGS)
+AC_SUBST(HARDENED_FLAGS)
 AC_SUBST(HARDENED_LDFLAGS)
-AC_SUBST(PIC_FLAGS)
-AC_SUBST(PIE_FLAGS)
 AC_SUBST(CORE_LDFLAGS)
 AC_SUBST(CORE_CPPFLAGS)
-AC_SUBST(CORE_CXXFLAGS)
+AC_SUBST(CORE_FLAGS)
 
 AC_SUBST(GMP_LDFLAGS)
 AC_SUBST(GMP_CPPFLAGS)
@@ -784,3 +869,20 @@ AC_OUTPUT
 dnl Peplace conflict-prone PACKAGE-prefixed macros with DASHBLS
 sed -i.old 's/PACKAGE/DASHBLS/g' depends/relic/include/relic_conf.h
 sed -i.old 's/PACKAGE/DASHBLS/g' config.status
+
+echo
+echo "Options used to compile and link:"
+echo "  target os           = $TARGET_OS"
+echo "  backend             = $want_backend"
+echo "  build bench         = $BUILD_BENCH"
+echo "  build test          = $BUILD_TEST"
+echo "  use debug           = $use_debug"
+echo "  use hardening       = $use_hardening"
+echo "  use optimizations   = $use_optimizations"
+echo
+echo "  LDFLAGS             = $HARDENED_LDFLAGS $CORE_LDFLAGS $GMP_LDFLAGS"
+echo "  CFLAGS              = $DEBUG_FLAGS $HARDENED_FLAGS $CORE_FLAGS $WARN_FLAGS $NOWARN_FLAGS"
+echo "  CPPFLAGS            = $CORE_CPPFLAGS $GMP_CPPFLAGS"
+echo "  CXXFLAGS            = $DEBUG_FLAGS $HARDENED_FLAGS $CORE_FLAGS $WARN_FLAGS $NOWARN_FLAGS"
+echo "  PTHREAD_FLAGS       = $PTHREAD_CFLAGS $PTHREAD_LIBS"
+echo

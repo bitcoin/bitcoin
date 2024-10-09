@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ macos-11, ubuntu-20.04 ]
+        os: [ macos-latest, ubuntu-20.04 ]
         builder: [ cmake, autotools ]
         compiler:
           - cc: gcc
@@ -47,7 +47,7 @@ jobs:
       run: |
         ls -l
         export MACOSX_DEPLOYMENT_TARGET=10.14
-        brew install autoconf automake gmp pkg-config
+        brew install autoconf automake gmp libtool pkg-config
 
     - name: Build library using CMake
       if: startsWith(matrix.builder, 'cmake')

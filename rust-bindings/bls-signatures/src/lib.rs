@@ -101,4 +101,26 @@ mod tests {
             grandchild_sk_u.g1_element().expect("cannot get public key")
         );
     }
+
+    #[test]
+    fn test_bls_public_key() {
+        let seed = b"seedweedseedweedseedweedseedweed";
+        let scheme = LegacySchemeMPL::new();
+
+        let private_key = PrivateKey::key_gen(&scheme, seed).expect("unable to generate private key");
+        let public_key = private_key.g1_element().expect("unable to get public key");
+
+        let expected_priv_key = vec![92, 116, 13, 32, 66, 150, 74, 240, 121, 255, 94, 222, 127, 180, 19, 10, 244, 212, 173, 51, 91, 198, 162, 132, 230, 105, 134, 255, 125, 191, 198, 223];
+        let expected_pub_key = vec![129, 171, 183, 152, 50, 52, 28, 18, 241, 75, 118, 255, 58, 136, 184, 52, 247, 229, 14, 221, 40, 117, 194, 142, 2, 208, 193, 215, 131, 17, 234, 195, 229, 23, 249, 239, 139, 176, 18, 187, 102, 55, 162, 76, 48, 88, 228, 150];
+
+        assert_eq!(
+            private_key.to_bytes().as_slice(),
+            expected_priv_key
+        );
+
+        assert_eq!(
+            public_key.to_bytes().as_slice(),
+            expected_pub_key
+        );
+    }
 }

@@ -32,6 +32,7 @@ fn handle_command_output(output: Output) {
 #[cfg(not(feature = "apple"))]
 fn main() {
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
 
     // TODO: fix build for wasm32 on MacOS
     //   errors with `error: linking with `rust-lld` failed: exit status: 1`
@@ -39,6 +40,7 @@ fn main() {
         println!("Build for wasm32 is not fully supported");
         return;
     }
+    println!("cargo:warning=Building bls-signatures for non-Apple target: {}", target_arch);
 
     let root_path = Path::new("../..")
         .canonicalize()
@@ -63,12 +65,48 @@ fn main() {
 
     fs::create_dir_all(&bls_dash_build_path).expect("can't create build directory");
 
-    let cmake_output = create_cross_cmake_command()
+
+    let cmake_command_binding = create_cross_cmake_command();
+    let mut cmake_command = cmake_command_binding;
+
+    cmake_command
         .current_dir(&bls_dash_build_path)
         .arg("-DBUILD_BLS_PYTHON_BINDINGS=0")
         .arg("-DBUILD_BLS_TESTS=0")
         .arg("-DBUILD_BLS_BENCHMARKS=0")
-        .arg("-DBUILD_BLS_JS_BINDINGS=0")
+        .arg("-DBUILD_BLS_JS_BINDINGS=0");
+
+    // configure CMake for Android
+    if target_os.eq("android") {
+        let cmake_toolchain_path = env::var("CMAKE_TOOLCHAIN_FILE")
+            .or_else(|_| env::var("CARGO_NDK_CMAKE_TOOLCHAIN_PATH"))
+            .expect("Neither CMAKE_TOOLCHAIN_FILE nor CARGO_NDK_CMAKE_TOOLCHAIN_PATH environment variables are set");
+
+        let ndk_target = match env::var("CARGO_NDK_TARGET_ARCH") {
+            Ok(value) => value, // If set, use the value directly.
+            Err(_) => {
+                match target_arch.as_str() {
+                    "aarch64" => "arm64-v8a".to_string(),
+                    "arm" => "armeabi-v7a".to_string(),
+                    "x86" => "x86".to_string(),
+                    "x86_64" => "x86_64".to_string(),
+                    _ => panic!("Unsupported target architecture for Android: {}", target_arch),
+                }
+            }
+        };
+
+        // Default to android-24 if ANDROID_PLATFORM is not specified
+        let android_abi = env::var("ANDROID_PLATFORM")
+            .or_else(|_| env::var("CARGO_NDK_ANDROID_PLATFORM"))
+            .unwrap_or_else(|_| "android-24".to_string());
+
+        cmake_command
+            .arg(format!("-DANDROID_PLATFORM={}", android_abi))
+            .arg(format!("-DANDROID_ABI={}", ndk_target))
+            .arg(format!("-DCMAKE_TOOLCHAIN_FILE={}", cmake_toolchain_path));
+    }
+
+    let cmake_output = cmake_command
         .arg("..")
         .output()
         .expect("can't run cmake");
@@ -100,8 +138,8 @@ fn main() {
         .collect();
 
     include_paths.extend([
-        bls_dash_build_path.join("_deps/relic-src/include"),
-        bls_dash_build_path.join("_deps/relic-build/include"),
+        bls_dash_build_path.join("depends/relic-src/include"),
+        bls_dash_build_path.join("depends/relic/include"),
         bls_dash_build_path.join("src"),
         root_path.join("include/dashbls"),
         bls_dash_build_path.join("depends/relic/include"),
@@ -127,7 +165,8 @@ fn main() {
     cc.files(cpp_files)
         .includes(&include_paths)
         .cpp(true)
-        .flag_if_supported("-std=c++14");
+        .flag_if_supported("-std=c++14")
+        .target(&env::var("TARGET").unwrap());
 
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
 
@@ -196,6 +235,7 @@ fn main() {
 
         println!("cargo:rustc-link-lib=static=gmp");
     }
+    println!("cargo:warning=########## bls_dash_build_path:{}", bls_dash_build_path.display());
 
     // Generate rust code for c binding to src/lib.rs
     // println!("Generate C binding for rust:");
@@ -290,7 +330,7 @@ fn main() {
 
 
     let target = env::var("TARGET").unwrap();
-    println!("Building bls-signatures for apple target: {}", target);
+    println!("cargo:warning=Building bls-signatures for Apple target: {}", target);
     let root_path = Path::new("../..")
         .canonicalize()
         .expect("can't get abs path");
@@ -305,6 +345,32 @@ fn main() {
         fs::remove_dir_all(&bls_dash_build_path).expect("can't clean build directory");
     }
     fs::create_dir_all(&bls_dash_build_path).expect("can't create build directory");
+
+    let cc_path_output = Command::new("xcrun")
+        .arg("--sdk")
+        .arg("iphoneos")
+        .arg("--find")
+        .arg("clang")
+        .output()
+        .expect("Failed to find clang");
+    let cc_path = String::from_utf8_lossy(&cc_path_output.stdout).trim().to_string();
+
+    let cxx_path_output = Command::new("xcrun")
+        .arg("--sdk")
+        .arg("iphoneos")
+        .arg("--find")
+        .arg("clang++")
+        .output()
+        .expect("Failed to find clang++");
+    let cxx_path = String::from_utf8_lossy(&cxx_path_output.stdout).trim().to_string();
+
+    // Print the paths for clang and clang++
+    println!("cargo:warning=CC path: {}", cc_path);
+    println!("cargo:warning=CXX path: {}", cxx_path);
+
+    std::env::set_var("CC", cc_path);
+    std::env::set_var("CXX", cxx_path);
+
     let output = Command::new("sh")
         .current_dir(&root_path)
         .arg(script)
@@ -312,6 +378,7 @@ fn main() {
         .output()
         .expect("Failed to execute the shell script");
     handle_command_output(output);
+
     let (arch, platform) = match target.as_str() {
         "x86_64-apple-ios" => ("x86_64", "iphonesimulator"),
         "aarch64-apple-ios" => ("arm64", "iphoneos"),
@@ -335,8 +402,8 @@ fn main() {
         .collect();
 
     include_paths.extend([
-        bls_dash_build_path.join(format!("relic-{}-{}/_deps/relic-src/include", platform, arch)),
-        bls_dash_build_path.join(format!("relic-{}-{}/_deps/relic-build/include", platform, arch)),
+        bls_dash_build_path.join(format!("relic-{}-{}/depends/relic-src/include", platform, arch)),
+        bls_dash_build_path.join(format!("relic-{}-{}/depends/relic/include", platform, arch)),
         bls_dash_build_path.join("contrib/relic/src"),
         root_path.join("src"),
         root_path.join("include/dashbls"),
@@ -365,8 +432,10 @@ fn main() {
 
     println!("cargo:rustc-link-search={}", target_path.display());
     println!("cargo:rustc-link-lib=static=gmp");
-    // println!("cargo:rustc-link-lib=static=sodium");
-    // println!("cargo:rustc-link-lib=static=relic_s");
+    //println!("cargo:rustc-link-lib=c++");
+    //println!("cargo:rustc-link-lib=c");
+    //println!("cargo:rustc-link-lib=static=sodium");
+    println!("cargo:rustc-link-lib=static=relic_s");
     println!("cargo:rustc-link-lib=static=bls");
     println!("cargo:rustc-link-search={}", bls_dash_src_path.display());
     println!("cargo:rustc-link-lib=static=dashbls");
