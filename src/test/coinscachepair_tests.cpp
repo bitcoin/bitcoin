@@ -48,12 +48,14 @@ BOOST_AUTO_TEST_CASE(linked_list_iteration)
     BOOST_CHECK_EQUAL(node, &sentinel);
 
     // Check iterating through pairs is identical to iterating through a list
-    // Clear the flags during iteration
+    // Set clean during iteration
+    CoinsCachePair clean_sentinel;
+    clean_sentinel.second.SelfRef(clean_sentinel);
     node = sentinel.second.Next();
     for (const auto& expected : nodes) {
         BOOST_CHECK_EQUAL(&expected, node);
         auto next = node->second.Next();
-        node->second.ClearFlags();
+        node->second.SetClean(*node, clean_sentinel);
         node = next;
     }
     BOOST_CHECK_EQUAL(node, &sentinel);
@@ -184,16 +186,18 @@ BOOST_AUTO_TEST_CASE(linked_list_add_flags)
     BOOST_CHECK_EQUAL(sentinel.second.Next(), &n1);
     BOOST_CHECK_EQUAL(n2.second.Prev(), &n1);
 
-    // Check that we can clear flags then re-add them
-    n1.second.ClearFlags();
+    CoinsCachePair clean_sentinel;
+    clean_sentinel.second.SelfRef(clean_sentinel);
+    // Check that we can set clean then re-add to flagged list
+    n1.second.SetClean(n1, clean_sentinel);
     BOOST_CHECK_EQUAL(n1.second.GetFlags(), 0);
     BOOST_CHECK_EQUAL(sentinel.second.Next(), &n2);
     BOOST_CHECK_EQUAL(sentinel.second.Prev(), &n2);
     BOOST_CHECK_EQUAL(n2.second.Next(), &sentinel);
     BOOST_CHECK_EQUAL(n2.second.Prev(), &sentinel);
 
-    // Check that calling `ClearFlags` with 0 flags has no effect
-    n1.second.ClearFlags();
+    // Check that calling `SetClean` has no effect
+    n1.second.SetClean(n1, clean_sentinel);
     BOOST_CHECK_EQUAL(n1.second.GetFlags(), 0);
     BOOST_CHECK_EQUAL(sentinel.second.Next(), &n2);
     BOOST_CHECK_EQUAL(sentinel.second.Prev(), &n2);

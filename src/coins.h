@@ -128,6 +128,23 @@ private:
     CoinsCachePair* m_next{nullptr};
     uint8_t m_flags{0};
 
+    inline void AddToLinkedList(CoinsCachePair& self, CoinsCachePair& sentinel) noexcept
+    {
+        Assume(&self.second == this);
+        RemoveFromLinkedList();
+        m_prev = sentinel.second.m_prev;
+        m_next = &sentinel;
+        sentinel.second.m_prev = &self;
+        m_prev->second.m_next = &self;
+    }
+
+    inline void RemoveFromLinkedList() noexcept
+    {
+        if (m_next == nullptr) return;
+            m_next->second.m_prev = m_prev;
+            m_prev->second.m_next = m_next;
+    }
+
 public:
     Coin coin; // The actual cached data.
 
@@ -156,7 +173,7 @@ public:
     explicit CCoinsCacheEntry(Coin&& coin_) noexcept : coin(std::move(coin_)) {}
     ~CCoinsCacheEntry()
     {
-        ClearFlags();
+        RemoveFromLinkedList();
     }
 
     //! Adding a flag also requires a self reference to the pair that contains
@@ -164,20 +181,15 @@ public:
     //! flagged pair linked list.
     inline void AddFlags(uint8_t flags, CoinsCachePair& self, CoinsCachePair& sentinel) noexcept
     {
-        Assume(&self.second == this);
         if (!m_flags && flags) {
-            m_prev = sentinel.second.m_prev;
-            m_next = &sentinel;
-            sentinel.second.m_prev = &self;
-            m_prev->second.m_next = &self;
+            AddToLinkedList(self, sentinel);
         }
         m_flags |= flags;
     }
-    inline void ClearFlags() noexcept
+    inline void SetClean(CoinsCachePair& self, CoinsCachePair& sentinel) noexcept
     {
         if (!m_flags) return;
-        m_next->second.m_prev = m_prev;
-        m_prev->second.m_next = m_next;
+        AddToLinkedList(self, sentinel);
         m_flags = 0;
     }
     inline uint8_t GetFlags() const noexcept { return m_flags; }
@@ -267,9 +279,10 @@ struct CoinsViewCacheCursor
     //! CCoinsMap::iterator to be erased, and must therefore be looked up again by key in the CCoinsMap before being erased.
     CoinsViewCacheCursor(size_t& usage LIFETIMEBOUND,
                         CoinsCachePair& sentinel LIFETIMEBOUND,
+                        CoinsCachePair& clean_sentinel LIFETIMEBOUND,
                         CCoinsMap& map LIFETIMEBOUND,
                         bool will_erase) noexcept
-        : m_usage(usage), m_sentinel(sentinel), m_map(map), m_will_erase(will_erase) {}
+        : m_usage(usage), m_sentinel(sentinel), m_clean_sentinel(clean_sentinel), m_map(map), m_will_erase(will_erase) {}
 
     inline CoinsCachePair* Begin() const noexcept { return m_sentinel.second.Next(); }
     inline CoinsCachePair* End() const noexcept { return &m_sentinel; }
@@ -285,7 +298,7 @@ struct CoinsViewCacheCursor
                 m_usage -= current.second.coin.DynamicMemoryUsage();
                 m_map.erase(current.first);
             } else {
-                current.second.ClearFlags();
+                current.second.SetClean(current, m_clean_sentinel);
             }
         }
         return next_entry;
@@ -295,6 +308,7 @@ struct CoinsViewCacheCursor
 private:
     size_t& m_usage;
     CoinsCachePair& m_sentinel;
+    CoinsCachePair& m_clean_sentinel;
     CCoinsMap& m_map;
     bool m_will_erase;
 };
@@ -370,6 +384,8 @@ protected:
     mutable CCoinsMapMemoryResource m_cache_coins_memory_resource{};
     /* The starting sentinel of the flagged entry circular doubly linked list. */
     mutable CoinsCachePair m_sentinel;
+    /* The starting sentinel of the clean doubly linked list */
+    mutable CoinsCachePair m_clean_sentinel;
     mutable CCoinsMap cacheCoins;
 
     /* Cached dynamic memory usage for the inner Coin objects. */
