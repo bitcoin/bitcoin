@@ -18,6 +18,7 @@ from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_equal
 
 DIP0008_HEIGHT = 432
+DIP0024_HEIGHT = 900
 
 # TODO: this helper used in many tests, find a new home for it
 class TestP2PConn(P2PInterface):
@@ -43,7 +44,7 @@ class TestP2PConn(P2PInterface):
 
 class LLMQCoinbaseCommitmentsTest(DashTestFramework):
     def set_test_params(self):
-        self.extra_args = [[ f'-testactivationheight=dip0008@{DIP0008_HEIGHT}', "-vbparams=testdummy:999999999999:999999999999" ]] * 4
+        self.extra_args = [[ f'-testactivationheight=dip0008@{DIP0008_HEIGHT}', f'-testactivationheight=dip0024@{DIP0024_HEIGHT}', "-vbparams=testdummy:999999999999:999999999999" ]] * 4
         self.set_dash_test_params(4, 3, extra_args = self.extra_args)
 
     def remove_masternode(self, idx):
