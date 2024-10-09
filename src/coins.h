@@ -141,8 +141,8 @@ private:
     inline void RemoveFromLinkedList() noexcept
     {
         if (m_next == nullptr) return;
-            m_next->second.m_prev = m_prev;
-            m_prev->second.m_next = m_next;
+        m_next->second.m_prev = m_prev;
+        m_prev->second.m_next = m_next;
     }
 
 public:
@@ -466,6 +466,12 @@ public:
      * If false is returned, the state of this cache (and its backing view) will be undefined.
      */
     bool Sync();
+
+    /**
+     * Try shrinking the cache's memory usage minus free space by evicting clean
+     * cache entries from the clean linked list.
+     */
+    void MaybeShrinkCache(size_t size_to_fit) noexcept;
 
     /**
      * Removes the UTXO with the given outpoint from the cache, if it is

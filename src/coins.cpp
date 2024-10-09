@@ -282,6 +282,17 @@ bool CCoinsViewCache::Sync()
     return fOk;
 }
 
+void CCoinsViewCache::MaybeShrinkCache(size_t size_to_fit) noexcept
+{
+    auto it{m_clean_sentinel.second.Next()};
+    while (it != &m_clean_sentinel && static_cast<int64_t>(DynamicMemoryUsage()) - DynamicMemoryAvailableSpace() >= size_to_fit) {
+        auto next{it->second.Next()};
+        cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
+        cacheCoins.erase(it->first);
+        it = next;
+    }
+}
+
 void CCoinsViewCache::Uncache(const COutPoint& hash)
 {
     CCoinsMap::iterator it = cacheCoins.find(hash);
