@@ -9,13 +9,21 @@
 
 BOOST_AUTO_TEST_SUITE(translation_tests)
 
+static TranslateFn translate{[](const char * str) {  return strprintf("t(%s)", str);  }};
+
 BOOST_AUTO_TEST_CASE(translation_namedparams)
 {
+    constexpr util::TranslatedLiteral format{"original [%s]", &translate};
+
     bilingual_str arg{"original", "translated"};
-    bilingual_str format{"original [%s]", "translated [%s]"};
     bilingual_str result{strprintf(format, arg)};
     BOOST_CHECK_EQUAL(result.original, "original [original]");
-    BOOST_CHECK_EQUAL(result.translated, "translated [translated]");
+    BOOST_CHECK_EQUAL(result.translated, "t(original [translated])");
+
+    util::TranslatedLiteral arg2{"original", &translate};
+    bilingual_str result2{strprintf(format, arg2)};
+    BOOST_CHECK_EQUAL(result2.original, "original [original]");
+    BOOST_CHECK_EQUAL(result2.translated, "t(original [t(original)])");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
