@@ -49,6 +49,13 @@ void initialize_spkm()
     MOCKED_DESC_CONVERTER.Init();
 }
 
+void initialize_spkm_migration()
+{
+    static const auto testing_setup{MakeNoLogFileContext<const TestingSetup>()};
+    g_setup = testing_setup.get();
+    SelectParams(ChainType::MAIN);
+}
+
 /**
  * Key derivation is expensive. Deriving deep derivation paths take a lot of compute and we'd rather spend time
  * elsewhere in this target, like on actually fuzzing the DescriptorScriptPubKeyMan. So rule out strings which could
@@ -198,6 +205,89 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
     (void)spk_manager->GetDescriptorString(descriptor, /*priv=*/fuzzed_data_provider.ConsumeBool());
     (void)spk_manager->GetEndRange();
     (void)spk_manager->GetKeyPoolSize();
+}
+
+FUZZ_TARGET(spkm_migration, .init = initialize_spkm_migration)
+{
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    const auto& node{g_setup->m_node};
+    Chainstate& chainstate{node.chainman->ActiveChainstate()};
+    std::unique_ptr<CWallet> wallet_ptr{std::make_unique<CWallet>(node.chain.get(), "", CreateMockableWalletDatabase())};
+    CWallet& wallet{*wallet_ptr};
+    wallet.m_keypool_size = 1;
+    {
+        LOCK(wallet.cs_wallet);
+        wallet.SetLastBlockProcessed(chainstate.m_chain.Height(), chainstate.m_chain.Tip()->GetBlockHash());
+    }
+
+    std::vector<CKey> keys;
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 30) {
+        const auto key{ConsumePrivateKey(fuzzed_data_provider)};
+        if (!key.IsValid()) return;
+        keys.push_back(key);
+    }
+
+    if (keys.empty()) return;
+
+    auto& legacy_data{*wallet.GetOrCreateLegacyDataSPKM()};
+
+    int load_key_count{0};
+    int script_count{0};
+
+    bool good_data{true};
+    LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 30) {
+        CallOneOf(
+            fuzzed_data_provider,
+            [&] {
+                const auto key_index{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, keys.size() - 1)};
+                if (legacy_data.HaveKey(keys[key_index].GetPubKey().GetID())) return;
+                if (legacy_data.LoadKey(keys[key_index], keys[key_index].GetPubKey())) {
+                    load_key_count++;
+                    if (fuzzed_data_provider.ConsumeBool()) {
+                        CHDChain hd_chain;
+                        hd_chain.nVersion = CHDChain::VERSION_HD_CHAIN_SPLIT;
+                        hd_chain.seed_id = keys[key_index].GetPubKey().GetID();
+                        legacy_data.LoadHDChain(hd_chain);
+                    }
+                }
+            },
+            [&] {
+                std::optional<CKeyMetadata> key_metadata{ConsumeDeserializable<CKeyMetadata>(fuzzed_data_provider)};
+                if (!key_metadata) {
+                    good_data = false;
+                    return;
+                }
+                const auto key_index{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, keys.size() - 1)};
+                auto key_id{keys[key_index].GetPubKey().GetID()};
+                legacy_data.LoadKeyMetadata(key_id, *key_metadata);
+            },
+            [&] {
+                CScript script{ConsumeScript(fuzzed_data_provider)};
+                const auto key_index{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, keys.size() - 1)};
+                LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 2) {
+                    CallOneOf(
+                        fuzzed_data_provider,
+                        [&] {
+                            script = GetScriptForDestination(PKHash(keys[key_index].GetPubKey()));
+                        },
+                        [&] {
+                            script = GetScriptForDestination(WitnessV0KeyHash(keys[key_index].GetPubKey()));
+                        },
+                        [&] {
+                            script = GetScriptForDestination(WitnessV0ScriptHash(script));
+                        }
+                    );
+                }
+                if (legacy_data.AddCScript(script)) script_count++;
+            }
+        );
+    }
+
+    std::optional<MigrationData> res{legacy_data.MigrateToDescriptor()};
+    if (res.has_value()) {
+        assert(static_cast<int>(res->desc_spkms.size()) >= load_key_count);
+        if (!res->solvable_descs.empty()) assert(script_count > 0);
+    }
 }
 
 } // namespace
