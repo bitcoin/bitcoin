@@ -4,7 +4,7 @@
 
 #include <addresstype.h>
 #include <bench/bench.h>
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 #include <consensus/amount.h>
 #include <outputtype.h>
 #include <primitives/transaction.h>

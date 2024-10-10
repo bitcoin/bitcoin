@@ -3,7 +3,7 @@
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 #include <random.h>
 #include <support/allocators/secure.h>
 #include <test/util/setup_common.h>

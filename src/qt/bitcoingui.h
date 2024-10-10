@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_BITCOINGUI_H
 #define BITCOIN_QT_BITCOINGUI_H
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <qt/bitcoinunits.h>
 #include <qt/clientmodel.h>
