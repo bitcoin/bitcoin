@@ -26,6 +26,7 @@
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
 #include <index/txindex.h>
+#include <index/txospenderindex.h>
 #include <init/common.h>
 #include <interfaces/chain.h>
 #include <interfaces/init.h>
@@ -351,6 +352,7 @@ void Shutdown(NodeContext& node)
     // Stop and delete all indexes only after flushing background callbacks.
     for (auto* index : node.indexes) index->Stop();
     if (g_txindex) g_txindex.reset();
+    if (g_txospenderindex) g_txospenderindex.reset();
     if (g_coin_stats_index) g_coin_stats_index.reset();
     DestroyAllBlockFilterIndexes();
     node.indexes.clear(); // all instances are nullptr now
@@ -513,6 +515,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-shutdownnotify=<cmd>", "Execute command immediately before beginning shutdown. The need for shutdown may be urgent, so be careful not to delay it long (if the command doesn't require interaction with the server, consider having it fork into the background).", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #endif
     argsman.AddArg("-txindex", strprintf("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)", DEFAULT_TXINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-txospenderindex", strprintf("Maintain a transaction output spender index, used by the gettxospender rpc call (default: %u)", DEFAULT_TXOSPENDERINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-blockfilterindex=<type>",
                  strprintf("Maintain an index of compact filters by block (default: %s, values: %s).", DEFAULT_BLOCKFILTERINDEX, ListBlockFilterTypes()) +
                  " If <type> is not supplied or if <type> = 1, indexes for all known types are enabled.",
@@ -1612,6 +1615,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
         LogPrintf("* Using %.1f MiB for transaction index database\n", cache_sizes.tx_index * (1.0 / 1024 / 1024));
     }
+    if (args.GetBoolArg("-txospenderindex", DEFAULT_TXOSPENDERINDEX)) {
+        LogPrintf("* Using %.1f MiB for transaction output spender index database\n", cache_sizes.txospender_index * (1.0 / 1024 / 1024));
+    }
     for (BlockFilterType filter_type : g_enabled_filter_types) {
         LogPrintf("* Using %.1f MiB for %s block filter index database\n",
                   cache_sizes.filter_index * (1.0 / 1024 / 1024), BlockFilterTypeName(filter_type));
@@ -1678,6 +1684,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
         g_txindex = std::make_unique<TxIndex>(interfaces::MakeChain(node), cache_sizes.tx_index, false, do_reindex);
         node.indexes.emplace_back(g_txindex.get());
+    }
+
+    if (args.GetBoolArg("-txospenderindex", DEFAULT_TXOSPENDERINDEX)) {
+        g_txospenderindex = std::make_unique<TxoSpenderIndex>(interfaces::MakeChain(node), cache_sizes.txospender_index, false, do_reindex);
+        node.indexes.emplace_back(g_txospenderindex.get());
     }
 
     for (const auto& filter_type : g_enabled_filter_types) {
