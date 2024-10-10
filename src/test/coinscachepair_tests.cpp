@@ -160,9 +160,9 @@ BOOST_AUTO_TEST_CASE(linked_list_add_flags)
     BOOST_CHECK_EQUAL(sentinel.second.Next(), &n1);
     BOOST_CHECK_EQUAL(sentinel.second.Prev(), &n1);
 
-    // Check that adding FRESH flag on new node inserts it after n1
-    n2.second.AddFlags(CCoinsCacheEntry::FRESH, n2, sentinel);
-    BOOST_CHECK_EQUAL(n2.second.GetFlags(), CCoinsCacheEntry::FRESH);
+    // Check that adding DIRTY and FRESH flags on new node inserts it after n1
+    n2.second.AddFlags(CCoinsCacheEntry::DIRTY | CCoinsCacheEntry::FRESH, n2, sentinel);
+    BOOST_CHECK_EQUAL(n2.second.GetFlags(), CCoinsCacheEntry::DIRTY | CCoinsCacheEntry::FRESH);
     BOOST_CHECK_EQUAL(n2.second.Next(), &sentinel);
     BOOST_CHECK_EQUAL(n2.second.Prev(), &n1);
     BOOST_CHECK_EQUAL(n1.second.Next(), &n2);
