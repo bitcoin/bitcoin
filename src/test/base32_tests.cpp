@@ -31,9 +31,25 @@ BOOST_AUTO_TEST_CASE(base32_testvectors)
 
     // Decoding strings with embedded NUL characters should fail
     BOOST_CHECK(!DecodeBase32("invalid\0"s)); // correct size, invalid due to \0
-    BOOST_CHECK(DecodeBase32("AWSX3VPP"s)); // valid
+    BOOST_CHECK( DecodeBase32("AWSX3VPP"s)); // valid
     BOOST_CHECK(!DecodeBase32("AWSX3VPP\0invalid"s)); // correct size, invalid due to \0
     BOOST_CHECK(!DecodeBase32("AWSX3VPPinvalid"s)); // invalid size
+}
+
+BOOST_AUTO_TEST_CASE(base32_padding)
+{
+    // Is valid without padding
+    BOOST_CHECK_EQUAL(EncodeBase32("fooba"), "mzxw6ytb");
+
+    // Valid size
+    BOOST_CHECK(!DecodeBase32("========"s));
+    BOOST_CHECK(!DecodeBase32("a======="s));
+    BOOST_CHECK( DecodeBase32("aa======"s));
+    BOOST_CHECK(!DecodeBase32("aaa====="s));
+    BOOST_CHECK( DecodeBase32("aaaa===="s));
+    BOOST_CHECK( DecodeBase32("aaaaa==="s));
+    BOOST_CHECK(!DecodeBase32("aaaaaa=="s));
+    BOOST_CHECK( DecodeBase32("aaaaaaa="s));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
