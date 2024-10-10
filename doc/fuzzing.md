@@ -228,10 +228,10 @@ $ make
 $ cd ..
 $ git apply << "EOF"
 diff --git a/src/compat/compat.h b/src/compat/compat.h
-index 8195bceaec..cce2b31ff0 100644
+index 366c648ae7..1f3bf2b018 100644
 --- a/src/compat/compat.h
 +++ b/src/compat/compat.h
-@@ -90,8 +90,12 @@ typedef char* sockopt_arg_type;
+@@ -92,8 +92,12 @@ typedef char* sockopt_arg_type;
  // building with a binutils < 2.36 is subject to this ld bug.
  #define MAIN_FUNCTION __declspec(dllexport) int main(int argc, char* argv[])
  #else
@@ -244,32 +244,11 @@ index 8195bceaec..cce2b31ff0 100644
 
  // Note these both should work with the current usage of poll, but best to be safe
  // WIN32 poll is broken https://daniel.haxx.se/blog/2012/10/10/wsapoll-is-broken/
-diff --git a/src/net.cpp b/src/net.cpp
-index 7601a6ea84..702d0f56ce 100644
---- a/src/net.cpp
-+++ b/src/net.cpp
-@@ -727,7 +727,7 @@ int V1TransportDeserializer::readHeader(Span<const uint8_t> msg_bytes)
-     }
-
-     // Check start string, network magic
--    if (memcmp(hdr.pchMessageStart, m_chain_params.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) != 0) {
-+    if (false && memcmp(hdr.pchMessageStart, m_chain_params.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) != 0) { // skip network magic checking
-         LogDebug(BCLog::NET, "Header error: Wrong MessageStart %s received, peer=%d\n", HexStr(hdr.pchMessageStart), m_node_id);
-         return -1;
-     }
-@@ -788,7 +788,7 @@ CNetMessage V1TransportDeserializer::GetMessage(const std::chrono::microseconds
-     RandAddEvent(ReadLE32(hash.begin()));
-
-     // Check checksum and header message type string
--    if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) {
-+    if (false && memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) { // skip checksum checking
-         LogDebug(BCLog::NET, "Header error: Wrong checksum (%s, %u bytes), expected %s was %s, peer=%d\n",
-                  SanitizeString(msg.m_type), msg.m_message_size,
-                  HexStr(Span{hash}.first(CMessageHeader::CHECKSUM_SIZE)),
 EOF
 $ cmake -B build_fuzz \
    -DCMAKE_C_COMPILER="$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang" \
    -DCMAKE_CXX_COMPILER="$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang++" \
+   -DAPPEND_CPPFLAGS="-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION" \
    -DENABLE_WALLET=OFF \
    -DBUILD_GUI=OFF \
    -DSANITIZERS=address,undefined
@@ -277,7 +256,7 @@ $ cmake --build build_fuzz --target bitcoind
 $ mkdir -p inputs/
 $ ./honggfuzz/honggfuzz --exit_upon_crash --quiet --timeout 4 -n 1 -Q \
       -E HFND_TCP_PORT=18444 -f inputs/ -- \
-          build_fuzz/src/bitcoind -regtest -discover=0 -dns=0 -dnsseed=0 -listenonion=0 \
+          build_fuzz/src/bitcoind -regtest -discover=0 -dns=0 -dnsseed=0 -listenonion=0 -v2transport=0 \
                        -nodebuglogfile -bind=127.0.0.1:18444 -logthreadnames \
                        -debug
 ```

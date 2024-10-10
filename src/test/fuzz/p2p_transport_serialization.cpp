@@ -40,36 +40,11 @@ FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serial
 
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
-    auto checksum_assist = fuzzed_data_provider.ConsumeBool();
-    auto magic_bytes_assist = fuzzed_data_provider.ConsumeBool();
     std::vector<uint8_t> mutable_msg_bytes;
 
-    auto header_bytes_remaining = CMessageHeader::HEADER_SIZE;
-    if (magic_bytes_assist) {
-        auto msg_start = Params().MessageStart();
-        for (size_t i = 0; i < CMessageHeader::MESSAGE_SIZE_SIZE; ++i) {
-            mutable_msg_bytes.push_back(msg_start[i]);
-        }
-        header_bytes_remaining -= CMessageHeader::MESSAGE_SIZE_SIZE;
-    }
-
-    if (checksum_assist) {
-        header_bytes_remaining -= CMessageHeader::CHECKSUM_SIZE;
-    }
-
-    auto header_random_bytes = fuzzed_data_provider.ConsumeBytes<uint8_t>(header_bytes_remaining);
+    auto header_random_bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider);
     mutable_msg_bytes.insert(mutable_msg_bytes.end(), header_random_bytes.begin(), header_random_bytes.end());
     auto payload_bytes = fuzzed_data_provider.ConsumeRemainingBytes<uint8_t>();
-
-    if (checksum_assist && mutable_msg_bytes.size() == CMessageHeader::CHECKSUM_OFFSET) {
-        CHash256 hasher;
-        unsigned char hsh[32];
-        hasher.Write(payload_bytes);
-        hasher.Finalize(hsh);
-        for (size_t i = 0; i < CMessageHeader::CHECKSUM_SIZE; ++i) {
-           mutable_msg_bytes.push_back(hsh[i]);
-        }
-    }
 
     mutable_msg_bytes.insert(mutable_msg_bytes.end(), payload_bytes.begin(), payload_bytes.end());
     Span<const uint8_t> msg_bytes{mutable_msg_bytes};
