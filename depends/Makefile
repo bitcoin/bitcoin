@@ -42,7 +42,7 @@ NO_WALLET ?=
 NO_ZMQ ?=
 NO_UPNP ?=
 NO_USDT ?=
-MULTIPROCESS ?=
+NO_MULTIPROCESS ?=
 LTO ?=
 NO_HARDEN ?=
 FALLBACK_DOWNLOAD_PATH ?= https://bitcoincore.org/depends-sources
@@ -160,19 +160,21 @@ wallet_packages_$(NO_WALLET) = $(bdb_packages_) $(sqlite_packages_)
 upnp_packages_$(NO_UPNP) = $(upnp_packages)
 
 zmq_packages_$(NO_ZMQ) = $(zmq_packages)
-multiprocess_packages_$(MULTIPROCESS) = $(multiprocess_packages)
+
+# Skip building libmultiprocess for mingw32 pending Windows support
+ifeq ($(host_os),mingw32)
+  NO_MULTIPROCESS=1
+endif
+multiprocess_packages_$(NO_MULTIPROCESS) = $(multiprocess_packages)
+multiprocess_native_packages_$(NO_MULTIPROCESS) = $(multiprocess_native_packages)
+
 usdt_packages_$(NO_USDT) = $(usdt_$(host_os)_packages)
 
-packages += $($(host_arch)_$(host_os)_packages) $($(host_os)_packages) $(boost_packages_) $(libevent_packages_) $(qt_packages_) $(wallet_packages_) $(upnp_packages_) $(usdt_packages_)
-native_packages += $($(host_arch)_$(host_os)_native_packages) $($(host_os)_native_packages)
+packages += $($(host_arch)_$(host_os)_packages) $($(host_os)_packages) $(boost_packages_) $(libevent_packages_) $(qt_packages_) $(wallet_packages_) $(upnp_packages_) $(usdt_packages_) $(multiprocess_packages_)
+native_packages += $($(host_arch)_$(host_os)_native_packages) $($(host_os)_native_packages) $(multiprocess_native_packages_)
 
 ifneq ($(zmq_packages_),)
 packages += $(zmq_packages)
-endif
-
-ifeq ($(multiprocess_packages_),)
-packages += $(multiprocess_packages)
-native_packages += $(multiprocess_native_packages)
 endif
 
 all_packages = $(packages) $(native_packages)
@@ -234,7 +236,7 @@ $(host_prefix)/toolchain.cmake : toolchain.cmake.in $(host_prefix)/.stamp_$(fina
             -e 's|@upnp_packages@|$(upnp_packages_)|' \
             -e 's|@usdt_packages@|$(usdt_packages_)|' \
             -e 's|@no_harden@|$(NO_HARDEN)|' \
-            -e 's|@multiprocess@|$(MULTIPROCESS)|' \
+            -e 's|@multiprocess_packages@|$(multiprocess_packages_)|' \
             $< > $@
 	touch $@
 
