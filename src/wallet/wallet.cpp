@@ -2041,7 +2041,7 @@ bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx, std::string& err_string
     // If broadcast fails for any reason, trying to set wtx.m_state here would be incorrect.
     // If transaction was previously in the mempool, it should be updated when
     // TransactionRemovedFromMempool fires.
-    bool ret = chain().broadcastTransaction(wtx.tx, m_default_max_tx_fee, relay, err_string);
+    bool ret = chain().broadcastTransaction(wtx.tx, m_max_tx_fee, m_max_tx_fee_rate, relay, err_string);
     if (ret) wtx.m_state = TxStateInMempool{};
     return ret;
 }
@@ -3107,17 +3107,17 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
     }
 
     if (args.IsArgSet("-maxapsfee")) {
-        const std::string max_aps_fee{args.GetArg("-maxapsfee", "")};
-        if (max_aps_fee == "-1") {
+        const std::string max_aps_fee_str{args.GetArg("-maxapsfee", "")};
+        if (max_aps_fee_str == "-1") {
             walletInstance->m_max_aps_fee = -1;
-        } else if (std::optional<CAmount> max_fee = ParseMoney(max_aps_fee)) {
-            if (max_fee.value() > HIGH_APS_FEE) {
+        } else if (std::optional<CAmount> max_aps_fee = ParseMoney(max_aps_fee_str)) {
+            if (max_aps_fee.value() > HIGH_APS_FEE) {
                 warnings.push_back(AmountHighWarn("-maxapsfee") + Untranslated(" ") +
                                   _("This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection."));
             }
-            walletInstance->m_max_aps_fee = max_fee.value();
+            walletInstance->m_max_aps_fee = max_aps_fee.value();
         } else {
-            error = AmountErrMsg("maxapsfee", max_aps_fee);
+            error = AmountErrMsg("maxapsfee", max_aps_fee_str);
             return nullptr;
         }
     }
@@ -3169,21 +3169,39 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
     }
 
     if (args.IsArgSet("-maxtxfee")) {
-        std::optional<CAmount> max_fee = ParseMoney(args.GetArg("-maxtxfee", ""));
-        if (!max_fee) {
+        std::optional<CAmount> max_tx_fee = ParseMoney(args.GetArg("-maxtxfee", ""));
+        if (!max_tx_fee) {
             error = AmountErrMsg("maxtxfee", args.GetArg("-maxtxfee", ""));
             return nullptr;
-        } else if (max_fee.value() > HIGH_MAX_TX_FEE) {
+        } else if (max_tx_fee.value() > HIGH_MAX_TX_FEE) {
             warnings.push_back(strprintf(_("%s is set very high! Fees this large could be paid on a single transaction."), "-maxtxfee"));
+
+        // Wallet prevents creating transactions with fee rates lower than minrelaytxfee.
+        // Also the wallet prevents creating transaction with base fee above maxtxfee.
+        // Warn when a 1kvb transaction, with a base fee set to maxtxfee, has a fee rate less than minrelaytxfee.
+        // It is likely that some transactions with fee rates greater than or equal to the minrelaytxfee will exceed maxtxfee.
+        // In such cases, the wallet won't be able to create transactions. Therefore, warn the user.
+        } else if (chain && CFeeRate(max_tx_fee.value(), 1000) < chain->relayMinFee()) {
+           warnings.push_back(strprintf(_("Invalid amount for %s=<amount>: '%s' conflicts with the minimum relay transaction feerate %s. Please set a higher %s or lower %s"),
+                            "-maxtxfee", args.GetArg("-maxtxfee", ""), chain->relayMinFee().ToString(), "-maxtxfee", "-minrelaytxfee"));
         }
 
-        if (chain && CFeeRate{max_fee.value(), 1000} < chain->relayMinFee()) {
+        walletInstance->m_max_tx_fee = max_tx_fee.value();
+    }
+
+    if (args.IsArgSet("-maxfeerate")) {
+        std::optional<CAmount> max_tx_fee_rate = ParseMoney(args.GetArg("-maxfeerate", ""));
+        if (!max_tx_fee_rate) {
+            error = AmountErrMsg("maxfeerate", args.GetArg("-maxfeerate", ""));
+            return nullptr;
+        }
+        if (chain && CFeeRate(max_tx_fee_rate.value()) < chain->relayMinFee()) {
             error = strprintf(_("Invalid amount for %s=<amount>: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)"),
-                "-maxtxfee", args.GetArg("-maxtxfee", ""), chain->relayMinFee().ToString());
+                "-maxfeerate", args.GetArg("-maxfeerate", ""), chain->relayMinFee().ToString());
             return nullptr;
         }
 
-        walletInstance->m_default_max_tx_fee = max_fee.value();
+        walletInstance->m_max_tx_fee_rate = CFeeRate(max_tx_fee_rate.value());
     }
 
     if (args.IsArgSet("-consolidatefeerate")) {
