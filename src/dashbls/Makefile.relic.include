@@ -464,7 +464,7 @@ librelic_la_SOURCES = \
 
 librelic_la_CPPFLAGS = $(AM_CPPFLAGS) $(RELIC_CPPFLAGS) $(RELIC_INCLUDES)
 librelic_la_CXXFLAGS = $(AM_CXXFLAGS)
-librelic_la_CFLAGS   = $(AM_CFLAGS) $(WARN_CFLAGS) $(NOWARN_CFLAGS)
+librelic_la_CFLAGS   = $(AM_CFLAGS)
 librelic_la_LDFLAGS  = $(AM_LDFLAGS)
 
 noinst_LTLIBRARIES += $(LIBRELIC)

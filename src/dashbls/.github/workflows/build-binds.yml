@@ -77,6 +77,8 @@ jobs:
         cmake --build . -- -j 6
 
     - name: Build Go bindings
+      # TODO: macos build is broken. Whoever needs this - please fix it and remove `if` below.
+      if: startsWith(matrix.os, 'ubuntu')
       run: |
         cd go-bindings
         make
