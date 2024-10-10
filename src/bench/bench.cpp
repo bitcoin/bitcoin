@@ -31,6 +31,8 @@ const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS{};
 
 const std::function<std::string()> G_TEST_GET_FULL_NAME{};
 
+std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
+
 namespace {
 
 void GenerateTemplateResults(const std::vector<ankerl::nanobench::Result>& benchmarkResults, const fs::path& file, const char* tpl)
