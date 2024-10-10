@@ -151,6 +151,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_feerate_rounding()
         self.test_input_confs_control()
         self.test_duplicate_outputs()
+        self.test_cannot_cover_fees()
 
     def test_duplicate_outputs(self):
         self.log.info("Test deserializing and funding a transaction with duplicate outputs")
@@ -1459,7 +1460,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         # To test this does not happen, we subtract 202 sats from the input value. If working correctly, this should
         # fail with insufficient funds rather than bitcoind asserting.
         rawtx = w.createrawtransaction(inputs=[], outputs=[{self.nodes[0].getnewaddress(address_type="bech32"): 1 - 0.00000202}])
-        assert_raises_rpc_error(-4, "Insufficient funds", w.fundrawtransaction, rawtx, fee_rate=1.85)
+        expected_err_msg = "The total transaction amount exceeds your balance when fees are included"
+        assert_raises_rpc_error(-4, expected_err_msg, w.fundrawtransaction, rawtx, fee_rate=1.85)
 
     def test_input_confs_control(self):
         self.nodes[0].createwallet("minconf")
@@ -1521,6 +1523,21 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert txid2 in mempool
 
         wallet.unloadwallet()
+
+    def test_cannot_cover_fees(self):
+        self.log.info("Test tx amount exceeds available balance when fees are included")
+
+        self.nodes[1].createwallet("cannot_cover_fees")
+        wallet = self.nodes[1].get_wallet_rpc("cannot_cover_fees")
+
+        self.nodes[0].sendtoaddress(wallet.getnewaddress(), 0.3)
+        self.generate(self.nodes[0], 1)
+
+        rawtx = wallet.createrawtransaction(inputs=[], outputs=[{self.nodes[0].getnewaddress(): 0.3}])
+        expected_err_msg = "The total transaction amount exceeds your balance when fees are included"
+        assert_raises_rpc_error(-4, expected_err_msg, wallet.fundrawtransaction, rawtx)
+        wallet.unloadwallet()
+
 
 if __name__ == '__main__':
     RawTransactionsTest(__file__).main()

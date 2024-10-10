@@ -1156,7 +1156,19 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     if (!select_coins_res) {
         // 'SelectCoins' either returns a specific error message or, if empty, means a general "Insufficient funds".
         const bilingual_str& err = util::ErrorString(select_coins_res);
-        return util::Error{err.empty() ?_("Insufficient funds") : err};
+        if (!err.empty()) return util::Error{err};
+
+        // Check if we have enough balance but cannot cover the fees
+        CAmount available_balance = preset_inputs.total_amount + available_coins.GetTotalAmount();
+        if (available_balance >= recipients_sum) {
+            CAmount available_effective_balance = preset_inputs.total_amount + available_coins.GetEffectiveTotalAmount().value_or(available_coins.GetTotalAmount());
+            if (available_effective_balance < selection_target) {
+                return util::Error{_("The total transaction amount exceeds your balance when fees are included")};
+            }
+        }
+
+        // General failure description
+        return util::Error{_("Insufficient funds")};
     }
     const SelectionResult& result = *select_coins_res;
     TRACE5(coin_selection, selected_coins,
