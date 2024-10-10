@@ -19,14 +19,6 @@
 
 namespace cluster_linearize {
 
-/** Data type to represent cluster input.
- *
- * cluster[i].first is tx_i's fee and size.
- * cluster[i].second[j] is true iff tx_i spends one or more of tx_j's outputs.
- */
-template<typename SetType>
-using Cluster = std::vector<std::pair<FeeFrac, SetType>>;
-
 /** Data type to represent transaction indices in clusters. */
 using ClusterIndex = uint32_t;
 
@@ -54,12 +46,23 @@ class DepGraph
         Entry(const FeeFrac& f, const SetType& a, const SetType& d) noexcept : feerate(f), ancestors(a), descendants(d) {}
     };
 
-    /** Data for each transaction, in the same order as the Cluster it was constructed from. */
+    /** Data for each transaction. */
     std::vector<Entry> entries;
+
+    /** Which positions are used. */
+    SetType m_used;
 
 public:
     /** Equality operator (primarily for testing purposes). */
-    friend bool operator==(const DepGraph&, const DepGraph&) noexcept = default;
+    friend bool operator==(const DepGraph& a, const DepGraph& b) noexcept
+    {
+        if (a.m_used != b.m_used) return false;
+        // Only compare the used positions within the entries vector.
+        for (auto idx : a.m_used) {
+            if (a.entries[idx] != b.entries[idx]) return false;
+        }
+        return true;
+    }
 
     // Default constructors.
     DepGraph() noexcept = default;
@@ -68,80 +71,51 @@ public:
     DepGraph& operator=(const DepGraph&) noexcept = default;
     DepGraph& operator=(DepGraph&&) noexcept = default;
 
-    /** Construct a DepGraph object for ntx transactions, with no dependencies.
-     *
-     * Complexity: O(N) where N=ntx.
-     **/
-    explicit DepGraph(ClusterIndex ntx) noexcept
-    {
-        Assume(ntx <= SetType::Size());
-        entries.resize(ntx);
-        for (ClusterIndex i = 0; i < ntx; ++i) {
-            entries[i].ancestors = SetType::Singleton(i);
-            entries[i].descendants = SetType::Singleton(i);
-        }
-    }
-
-    /** Construct a DepGraph object given a cluster.
-     *
-     * Complexity: O(N^2) where N=cluster.size().
-     */
-    explicit DepGraph(const Cluster<SetType>& cluster) noexcept : entries(cluster.size())
-    {
-        for (ClusterIndex i = 0; i < cluster.size(); ++i) {
-            // Fill in fee and size.
-            entries[i].feerate = cluster[i].first;
-            // Fill in direct parents as ancestors.
-            entries[i].ancestors = cluster[i].second;
-            // Make sure transactions are ancestors of themselves.
-            entries[i].ancestors.Set(i);
-        }
-
-        // Propagate ancestor information.
-        for (ClusterIndex i = 0; i < entries.size(); ++i) {
-            // At this point, entries[a].ancestors[b] is true iff b is an ancestor of a and there
-            // is a path from a to b through the subgraph consisting of {a, b} union
-            // {0, 1, ..., (i-1)}.
-            SetType to_merge = entries[i].ancestors;
-            for (ClusterIndex j = 0; j < entries.size(); ++j) {
-                if (entries[j].ancestors[i]) {
-                    entries[j].ancestors |= to_merge;
-                }
-            }
-        }
-
-        // Fill in descendant information by transposing the ancestor information.
-        for (ClusterIndex i = 0; i < entries.size(); ++i) {
-            for (auto j : entries[i].ancestors) {
-                entries[j].descendants.Set(i);
-            }
-        }
-    }
-
     /** Construct a DepGraph object given another DepGraph and a mapping from old to new.
+     *
+     * @param depgraph   The original DepGraph that is being remapped.
+     *
+     * @param mapping    A Span such that mapping[i] gives the position in the new DepGraph
+     *                   for position i in the old depgraph. Its size must be equal to
+     *                   depgraph.PositionRange(). The value of mapping[i] is ignored if
+     *                   position i is a hole in depgraph (i.e., if !depgraph.Positions()[i]).
+     *
+     * @param pos_range  The PositionRange() for the new DepGraph. It must equal the largest
+     *                   value in mapping for any used position in depgraph plus 1, or 0 if
+     *                   depgraph.TxCount() == 0.
      *
      * Complexity: O(N^2) where N=depgraph.TxCount().
      */
-    DepGraph(const DepGraph<SetType>& depgraph, Span<const ClusterIndex> mapping) noexcept : entries(depgraph.TxCount())
+    DepGraph(const DepGraph<SetType>& depgraph, Span<const ClusterIndex> mapping, ClusterIndex pos_range) noexcept : entries(pos_range)
     {
-        Assert(mapping.size() == depgraph.TxCount());
-        // Fill in fee, size, ancestors.
-        for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
-            const auto& input = depgraph.entries[i];
-            auto& output = entries[mapping[i]];
-            output.feerate = input.feerate;
-            for (auto j : input.ancestors) output.ancestors.Set(mapping[j]);
+        Assume(mapping.size() == depgraph.PositionRange());
+        Assume((pos_range == 0) == (depgraph.TxCount() == 0));
+        for (ClusterIndex i : depgraph.Positions()) {
+            auto new_idx = mapping[i];
+            Assume(new_idx < pos_range);
+            // Add transaction.
+            entries[new_idx].ancestors = SetType::Singleton(new_idx);
+            entries[new_idx].descendants = SetType::Singleton(new_idx);
+            m_used.Set(new_idx);
+            // Fill in fee and size.
+            entries[new_idx].feerate = depgraph.entries[i].feerate;
         }
-        // Fill in descendant information.
-        for (ClusterIndex i = 0; i < entries.size(); ++i) {
-            for (auto j : entries[i].ancestors) {
-                entries[j].descendants.Set(i);
-            }
+        for (ClusterIndex i : depgraph.Positions()) {
+            // Fill in dependencies by mapping direct parents.
+            SetType parents;
+            for (auto j : depgraph.GetReducedParents(i)) parents.Set(mapping[j]);
+            AddDependencies(parents, mapping[i]);
         }
+        // Verify that the provided pos_range was correct (no unused positions at the end).
+        Assume(m_used.None() ? (pos_range == 0) : (pos_range == m_used.Last() + 1));
     }
 
+    /** Get the set of transactions positions in use. Complexity: O(1). */
+    const SetType& Positions() const noexcept { return m_used; }
+    /** Get the range of positions in this DepGraph. All entries in Positions() are in [0, PositionRange() - 1]. */
+    ClusterIndex PositionRange() const noexcept { return entries.size(); }
     /** Get the number of transactions in the graph. Complexity: O(1). */
-    auto TxCount() const noexcept { return entries.size(); }
+    auto TxCount() const noexcept { return m_used.Count(); }
     /** Get the feerate of a given transaction i. Complexity: O(1). */
     const FeeFrac& FeeRate(ClusterIndex i) const noexcept { return entries[i].feerate; }
     /** Get the mutable feerate of a given transaction i. Complexity: O(1). */
@@ -151,37 +125,118 @@ public:
     /** Get the descendants of a given transaction i. Complexity: O(1). */
     const SetType& Descendants(ClusterIndex i) const noexcept { return entries[i].descendants; }
 
-    /** Add a new unconnected transaction to this transaction graph (at the end), and return its
-     *  ClusterIndex.
+    /** Add a new unconnected transaction to this transaction graph (in the first available
+     *  position), and return its ClusterIndex.
      *
      * Complexity: O(1) (amortized, due to resizing of backing vector).
      */
     ClusterIndex AddTransaction(const FeeFrac& feefrac) noexcept
     {
-        Assume(TxCount() < SetType::Size());
-        ClusterIndex new_idx = TxCount();
-        entries.emplace_back(feefrac, SetType::Singleton(new_idx), SetType::Singleton(new_idx));
+        static constexpr auto ALL_POSITIONS = SetType::Fill(SetType::Size());
+        auto available = ALL_POSITIONS - m_used;
+        Assume(available.Any());
+        ClusterIndex new_idx = available.First();
+        if (new_idx == entries.size()) {
+            entries.emplace_back(feefrac, SetType::Singleton(new_idx), SetType::Singleton(new_idx));
+        } else {
+            entries[new_idx] = Entry(feefrac, SetType::Singleton(new_idx), SetType::Singleton(new_idx));
+        }
+        m_used.Set(new_idx);
         return new_idx;
     }
 
-    /** Modify this transaction graph, adding a dependency between a specified parent and child.
+    /** Remove the specified positions from this DepGraph.
+     *
+     * The specified positions will no longer be part of Positions(), and dependencies with them are
+     * removed. Note that due to DepGraph only tracking ancestors/descendants (and not direct
+     * dependencies), if a parent is removed while a grandparent remains, the grandparent will
+     * remain an ancestor.
      *
      * Complexity: O(N) where N=TxCount().
-     **/
-    void AddDependency(ClusterIndex parent, ClusterIndex child) noexcept
+     */
+    void RemoveTransactions(const SetType& del) noexcept
     {
-        // Bail out if dependency is already implied.
-        if (entries[child].ancestors[parent]) return;
-        // To each ancestor of the parent, add as descendants the descendants of the child.
+        m_used -= del;
+        // Remove now-unused trailing entries.
+        while (!entries.empty() && !m_used[entries.size() - 1]) {
+            entries.pop_back();
+        }
+        // Remove the deleted transactions from ancestors/descendants of other transactions. Note
+        // that the deleted positions will retain old feerate and dependency information. This does
+        // not matter as they will be overwritten by AddTransaction if they get used again.
+        for (auto& entry : entries) {
+            entry.ancestors &= m_used;
+            entry.descendants &= m_used;
+        }
+    }
+
+    /** Modify this transaction graph, adding multiple parents to a specified child.
+     *
+     * Complexity: O(N) where N=TxCount().
+     */
+    void AddDependencies(const SetType& parents, ClusterIndex child) noexcept
+    {
+        Assume(m_used[child]);
+        Assume(parents.IsSubsetOf(m_used));
+        // Compute the ancestors of parents that are not already ancestors of child.
+        SetType par_anc;
+        for (auto par : parents - Ancestors(child)) {
+            par_anc |= Ancestors(par);
+        }
+        par_anc -= Ancestors(child);
+        // Bail out if there are no such ancestors.
+        if (par_anc.None()) return;
+        // To each such ancestor, add as descendants the descendants of the child.
         const auto& chl_des = entries[child].descendants;
-        for (auto anc_of_par : Ancestors(parent)) {
+        for (auto anc_of_par : par_anc) {
             entries[anc_of_par].descendants |= chl_des;
         }
-        // To each descendant of the child, add as ancestors the ancestors of the parent.
-        const auto& par_anc = entries[parent].ancestors;
+        // To each descendant of the child, add those ancestors.
         for (auto dec_of_chl : Descendants(child)) {
             entries[dec_of_chl].ancestors |= par_anc;
         }
+    }
+
+    /** Compute the (reduced) set of parents of node i in this graph.
+     *
+     * This returns the minimal subset of the parents of i whose ancestors together equal all of
+     * i's ancestors (unless i is part of a cycle of dependencies). Note that DepGraph does not
+     * store the set of parents; this information is inferred from the ancestor sets.
+     *
+     * Complexity: O(N) where N=Ancestors(i).Count() (which is bounded by TxCount()).
+     */
+    SetType GetReducedParents(ClusterIndex i) const noexcept
+    {
+        SetType parents = Ancestors(i);
+        parents.Reset(i);
+        for (auto parent : parents) {
+            if (parents[parent]) {
+                parents -= Ancestors(parent);
+                parents.Set(parent);
+            }
+        }
+        return parents;
+    }
+
+    /** Compute the (reduced) set of children of node i in this graph.
+     *
+     * This returns the minimal subset of the children of i whose descendants together equal all of
+     * i's descendants (unless i is part of a cycle of dependencies). Note that DepGraph does not
+     * store the set of children; this information is inferred from the descendant sets.
+     *
+     * Complexity: O(N) where N=Descendants(i).Count() (which is bounded by TxCount()).
+     */
+    SetType GetReducedChildren(ClusterIndex i) const noexcept
+    {
+        SetType children = Descendants(i);
+        children.Reset(i);
+        for (auto child : children) {
+            if (children[child]) {
+                children -= Descendants(child);
+                children.Set(child);
+            }
+        }
+        return children;
     }
 
     /** Compute the aggregate feerate of a set of nodes in this graph.
@@ -237,7 +292,7 @@ public:
      *
      * Complexity: O(TxCount()).
      */
-    bool IsConnected() const noexcept { return IsConnected(SetType::Fill(TxCount())); }
+    bool IsConnected() const noexcept { return IsConnected(m_used); }
 
     /** Append the entries of select to list in a topologically valid order.
      *
@@ -487,11 +542,11 @@ public:
      */
     AncestorCandidateFinder(const DepGraph<SetType>& depgraph LIFETIMEBOUND) noexcept :
         m_depgraph(depgraph),
-        m_todo{SetType::Fill(depgraph.TxCount())},
-        m_ancestor_set_feerates(depgraph.TxCount())
+        m_todo{depgraph.Positions()},
+        m_ancestor_set_feerates(depgraph.PositionRange())
     {
         // Precompute ancestor-set feerates.
-        for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
+        for (ClusterIndex i : m_depgraph.Positions()) {
             /** The remaining ancestors for transaction i. */
             SetType anc_to_add = m_depgraph.Ancestors(i);
             FeeFrac anc_feerate;
@@ -614,22 +669,26 @@ public:
     SearchCandidateFinder(const DepGraph<SetType>& depgraph, uint64_t rng_seed) noexcept :
         m_rng(rng_seed),
         m_sorted_to_original(depgraph.TxCount()),
-        m_original_to_sorted(depgraph.TxCount()),
-        m_todo(SetType::Fill(depgraph.TxCount()))
+        m_original_to_sorted(depgraph.PositionRange())
     {
-        // Determine reordering mapping, by sorting by decreasing feerate.
-        std::iota(m_sorted_to_original.begin(), m_sorted_to_original.end(), ClusterIndex{0});
+        // Determine reordering mapping, by sorting by decreasing feerate. Unusued positions are
+        // not included, as they will never be looked up anyway.
+        ClusterIndex sorted_pos{0};
+        for (auto i : depgraph.Positions()) {
+            m_sorted_to_original[sorted_pos++] = i;
+        }
         std::sort(m_sorted_to_original.begin(), m_sorted_to_original.end(), [&](auto a, auto b) {
             auto feerate_cmp = depgraph.FeeRate(a) <=> depgraph.FeeRate(b);
             if (feerate_cmp == 0) return a < b;
             return feerate_cmp > 0;
         });
         // Compute reverse mapping.
-        for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
+        for (ClusterIndex i = 0; i < m_sorted_to_original.size(); ++i) {
             m_original_to_sorted[m_sorted_to_original[i]] = i;
         }
         // Compute reordered dependency graph.
-        m_sorted_depgraph = DepGraph(depgraph, m_original_to_sorted);
+        m_sorted_depgraph = DepGraph(depgraph, m_original_to_sorted, m_sorted_to_original.size());
+        m_todo = m_sorted_depgraph.Positions();
     }
 
     /** Check whether any unlinearized transactions remain. */
@@ -1141,7 +1200,7 @@ void PostLinearize(const DepGraph<SetType>& depgraph, Span<ClusterIndex> lineari
     // During an even pass, the diagram above would correspond to linearization [2,3,0,1], with
     // groups [2] and [3,0,1].
 
-    std::vector<TxEntry> entries(linearization.size() + 1);
+    std::vector<TxEntry> entries(depgraph.PositionRange() + 1);
 
     // Perform two passes over the linearization.
     for (int pass = 0; pass < 2; ++pass) {

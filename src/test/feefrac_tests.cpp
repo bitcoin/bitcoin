@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
     FeeFrac sum{1500, 400};
     FeeFrac diff{500, -200};
     FeeFrac empty{0, 0};
-    FeeFrac zero_fee{0, 1}; // zero-fee allowed
+    [[maybe_unused]] FeeFrac zero_fee{0, 1}; // zero-fee allowed
 
     BOOST_CHECK(empty == FeeFrac{}); // same as no-args
 

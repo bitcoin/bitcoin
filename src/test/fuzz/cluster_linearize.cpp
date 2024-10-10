@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <cluster_linearize.h>
+#include <random.h>
 #include <serialize.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
@@ -36,7 +37,7 @@ class SimpleCandidateFinder
 public:
     /** Construct an SimpleCandidateFinder for a given graph. */
     SimpleCandidateFinder(const DepGraph<SetType>& depgraph LIFETIMEBOUND) noexcept :
-        m_depgraph(depgraph), m_todo{SetType::Fill(depgraph.TxCount())} {}
+        m_depgraph(depgraph), m_todo{depgraph.Positions()} {}
 
     /** Remove a set of transactions from the set of to-be-linearized ones. */
     void MarkDone(SetType select) noexcept { m_todo -= select; }
@@ -106,7 +107,7 @@ class ExhaustiveCandidateFinder
 public:
     /** Construct an ExhaustiveCandidateFinder for a given graph. */
     ExhaustiveCandidateFinder(const DepGraph<SetType>& depgraph LIFETIMEBOUND) noexcept :
-        m_depgraph(depgraph), m_todo{SetType::Fill(depgraph.TxCount())} {}
+        m_depgraph(depgraph), m_todo{depgraph.Positions()} {}
 
     /** Remove a set of transactions from the set of to-be-linearized ones. */
     void MarkDone(SetType select) noexcept { m_todo -= select; }
@@ -152,7 +153,7 @@ std::pair<std::vector<ClusterIndex>, bool> SimpleLinearize(const DepGraph<SetTyp
 {
     std::vector<ClusterIndex> linearization;
     SimpleCandidateFinder finder(depgraph);
-    SetType todo = SetType::Fill(depgraph.TxCount());
+    SetType todo = depgraph.Positions();
     bool optimal = true;
     while (todo.Any()) {
         auto [candidate, iterations_done] = finder.FindCandidateSet(max_iterations);
@@ -169,14 +170,14 @@ std::pair<std::vector<ClusterIndex>, bool> SimpleLinearize(const DepGraph<SetTyp
 template<typename BS>
 void MakeConnected(DepGraph<BS>& depgraph)
 {
-    auto todo = BS::Fill(depgraph.TxCount());
+    auto todo = depgraph.Positions();
     auto comp = depgraph.FindConnectedComponent(todo);
     Assume(depgraph.IsConnected(comp));
     todo -= comp;
     while (todo.Any()) {
         auto nextcomp = depgraph.FindConnectedComponent(todo);
         Assume(depgraph.IsConnected(nextcomp));
-        depgraph.AddDependency(comp.Last(), nextcomp.First());
+        depgraph.AddDependencies(BS::Singleton(comp.Last()), nextcomp.First());
         todo -= nextcomp;
         comp = nextcomp;
     }
@@ -205,7 +206,7 @@ template<typename BS>
 std::vector<ClusterIndex> ReadLinearization(const DepGraph<BS>& depgraph, SpanReader& reader)
 {
     std::vector<ClusterIndex> linearization;
-    TestBitSet todo = TestBitSet::Fill(depgraph.TxCount());
+    TestBitSet todo = depgraph.Positions();
     // In every iteration one topologically-valid transaction is appended to linearization.
     while (todo.Any()) {
         // Compute the set of transactions with no not-yet-included ancestors.
@@ -240,59 +241,157 @@ std::vector<ClusterIndex> ReadLinearization(const DepGraph<BS>& depgraph, SpanRe
 
 } // namespace
 
-FUZZ_TARGET(clusterlin_add_dependency)
+FUZZ_TARGET(clusterlin_depgraph_sim)
 {
-    // Verify that computing a DepGraph from a cluster, or building it step by step using AddDependency
-    // have the same effect.
-
-    // Construct a cluster of a certain length, with no dependencies.
-    FuzzedDataProvider provider(buffer.data(), buffer.size());
-    auto num_tx = provider.ConsumeIntegralInRange<ClusterIndex>(2, 32);
-    Cluster<TestBitSet> cluster(num_tx, std::pair{FeeFrac{0, 1}, TestBitSet{}});
-    // Construct the corresponding DepGraph object (also no dependencies).
-    DepGraph depgraph(cluster);
-    SanityCheck(depgraph);
-    // Read (parent, child) pairs, and add them to the cluster and depgraph.
-    LIMITED_WHILE(provider.remaining_bytes() > 0, TestBitSet::Size() * TestBitSet::Size()) {
-        auto parent = provider.ConsumeIntegralInRange<ClusterIndex>(0, num_tx - 1);
-        auto child = provider.ConsumeIntegralInRange<ClusterIndex>(0, num_tx - 2);
-        child += (child >= parent);
-        cluster[child].second.Set(parent);
-        depgraph.AddDependency(parent, child);
-        assert(depgraph.Ancestors(child)[parent]);
-        assert(depgraph.Descendants(parent)[child]);
-    }
-    // Sanity check the result.
-    SanityCheck(depgraph);
-    // Verify that the resulting DepGraph matches one recomputed from the cluster.
-    assert(DepGraph(cluster) == depgraph);
-}
-
-FUZZ_TARGET(clusterlin_cluster_serialization)
-{
-    // Verify that any graph of transactions has its ancestry correctly computed by DepGraph, and
-    // if it is a DAG, that it can be serialized as a DepGraph in a way that roundtrips. This
-    // guarantees that any acyclic cluster has a corresponding DepGraph serialization.
+    // Simulation test to verify the full behavior of DepGraph.
 
     FuzzedDataProvider provider(buffer.data(), buffer.size());
 
-    // Construct a cluster in a naive way (using a FuzzedDataProvider-based serialization).
-    Cluster<TestBitSet> cluster;
-    auto num_tx = provider.ConsumeIntegralInRange<ClusterIndex>(1, 32);
-    cluster.resize(num_tx);
-    for (ClusterIndex i = 0; i < num_tx; ++i) {
-        cluster[i].first.size = provider.ConsumeIntegralInRange<int32_t>(1, 0x3fffff);
-        cluster[i].first.fee = provider.ConsumeIntegralInRange<int64_t>(-0x8000000000000, 0x7ffffffffffff);
-        for (ClusterIndex j = 0; j < num_tx; ++j) {
-            if (i == j) continue;
-            if (provider.ConsumeBool()) cluster[i].second.Set(j);
+    /** Real DepGraph being tested. */
+    DepGraph<TestBitSet> real;
+    /** Simulated DepGraph (sim[i] is std::nullopt if position i does not exist; otherwise,
+     *  sim[i]->first is its individual feerate, and sim[i]->second is its set of ancestors. */
+    std::array<std::optional<std::pair<FeeFrac, TestBitSet>>, TestBitSet::Size()> sim;
+    /** The number of non-nullopt position in sim. */
+    ClusterIndex num_tx_sim{0};
+
+    /** Read a valid index of a transaction from the provider. */
+    auto idx_fn = [&]() {
+        auto offset = provider.ConsumeIntegralInRange<ClusterIndex>(0, num_tx_sim - 1);
+        for (ClusterIndex i = 0; i < sim.size(); ++i) {
+            if (!sim[i].has_value()) continue;
+            if (offset == 0) return i;
+            --offset;
         }
+        assert(false);
+        return ClusterIndex(-1);
+    };
+
+    /** Read a valid subset of the transactions from the provider. */
+    auto subset_fn = [&]() {
+        auto range = (uint64_t{1} << num_tx_sim) - 1;
+        const auto mask = provider.ConsumeIntegralInRange<uint64_t>(0, range);
+        auto mask_shifted = mask;
+        TestBitSet subset;
+        for (ClusterIndex i = 0; i < sim.size(); ++i) {
+            if (!sim[i].has_value()) continue;
+            if (mask_shifted & 1) {
+                subset.Set(i);
+            }
+            mask_shifted >>= 1;
+        }
+        assert(mask_shifted == 0);
+        return subset;
+    };
+
+    /** Read any set of transactions from the provider (including unused positions). */
+    auto set_fn = [&]() {
+        auto range = (uint64_t{1} << sim.size()) - 1;
+        const auto mask = provider.ConsumeIntegralInRange<uint64_t>(0, range);
+        TestBitSet set;
+        for (ClusterIndex i = 0; i < sim.size(); ++i) {
+            if ((mask >> i) & 1) {
+                set.Set(i);
+            }
+        }
+        return set;
+    };
+
+    /** Propagate ancestor information in sim. */
+    auto anc_update_fn = [&]() {
+        while (true) {
+            bool updates{false};
+            for (ClusterIndex chl = 0; chl < sim.size(); ++chl) {
+                if (!sim[chl].has_value()) continue;
+                for (auto par : sim[chl]->second) {
+                    if (!sim[chl]->second.IsSupersetOf(sim[par]->second)) {
+                        sim[chl]->second |= sim[par]->second;
+                        updates = true;
+                    }
+                }
+            }
+            if (!updates) break;
+        }
+    };
+
+    /** Compare the state of transaction i in the simulation with the real one. */
+    auto check_fn = [&](ClusterIndex i) {
+        // Compare used positions.
+        assert(real.Positions()[i] == sim[i].has_value());
+        if (sim[i].has_value()) {
+            // Compare feerate.
+            assert(real.FeeRate(i) == sim[i]->first);
+            // Compare ancestors (note that SanityCheck verifies correspondence between ancestors
+            // and descendants, so we can restrict ourselves to ancestors here).
+            assert(real.Ancestors(i) == sim[i]->second);
+        }
+    };
+
+    LIMITED_WHILE(provider.remaining_bytes() > 0, 1000) {
+        uint8_t command = provider.ConsumeIntegral<uint8_t>();
+        if (num_tx_sim == 0 || ((command % 3) <= 0 && num_tx_sim < TestBitSet::Size())) {
+            // AddTransaction.
+            auto fee = provider.ConsumeIntegralInRange<int64_t>(-0x8000000000000, 0x7ffffffffffff);
+            auto size = provider.ConsumeIntegralInRange<int32_t>(1, 0x3fffff);
+            FeeFrac feerate{fee, size};
+            // Apply to DepGraph.
+            auto idx = real.AddTransaction(feerate);
+            // Verify that the returned index is correct.
+            assert(!sim[idx].has_value());
+            for (ClusterIndex i = 0; i < TestBitSet::Size(); ++i) {
+                if (!sim[i].has_value()) {
+                    assert(idx == i);
+                    break;
+                }
+            }
+            // Update sim.
+            sim[idx] = {feerate, TestBitSet::Singleton(idx)};
+            ++num_tx_sim;
+            continue;
+        }
+        if ((command % 3) <= 1 && num_tx_sim > 0) {
+            // AddDependencies.
+            ClusterIndex child = idx_fn();
+            auto parents = subset_fn();
+            // Apply to DepGraph.
+            real.AddDependencies(parents, child);
+            // Apply to sim.
+            sim[child]->second |= parents;
+            continue;
+        }
+        if (num_tx_sim > 0) {
+            // Remove transactions.
+            auto del = set_fn();
+            // Propagate all ancestry information before deleting anything in the simulation (as
+            // intermediary transactions may be deleted which impact connectivity).
+            anc_update_fn();
+            // Compare the state of the transactions being deleted.
+            for (auto i : del) check_fn(i);
+            // Apply to DepGraph.
+            real.RemoveTransactions(del);
+            // Apply to sim.
+            for (ClusterIndex i = 0; i < sim.size(); ++i) {
+                if (sim[i].has_value()) {
+                    if (del[i]) {
+                        --num_tx_sim;
+                        sim[i] = std::nullopt;
+                    } else {
+                        sim[i]->second -= del;
+                    }
+                }
+            }
+            continue;
+        }
+        // This should be unreachable (one of the 3 above actions should always be possible).
+        assert(false);
     }
 
-    // Construct dependency graph, and verify it matches the cluster (which includes a round-trip
-    // check for the serialization).
-    DepGraph depgraph(cluster);
-    VerifyDepGraphFromCluster(cluster, depgraph);
+    // Compare the real obtained depgraph against the simulation.
+    anc_update_fn();
+    for (ClusterIndex i = 0; i < sim.size(); ++i) check_fn(i);
+    assert(real.TxCount() == num_tx_sim);
+    // Sanity check the result (which includes round-tripping serialization, if applicable).
+    SanityCheck(real);
 }
 
 FUZZ_TARGET(clusterlin_depgraph_serialization)
@@ -322,7 +421,7 @@ FUZZ_TARGET(clusterlin_components)
         reader >> Using<DepGraphFormatter>(depgraph);
     } catch (const std::ios_base::failure&) {}
 
-    TestBitSet todo = TestBitSet::Fill(depgraph.TxCount());
+    TestBitSet todo = depgraph.Positions();
     while (todo.Any()) {
         // Find a connected component inside todo.
         auto component = depgraph.FindConnectedComponent(todo);
@@ -333,7 +432,7 @@ FUZZ_TARGET(clusterlin_components)
 
         // If todo is the entire graph, and the entire graph is connected, then the component must
         // be the entire graph.
-        if (todo == TestBitSet::Fill(depgraph.TxCount())) {
+        if (todo == depgraph.Positions()) {
             assert((component == todo) == depgraph.IsConnected());
         }
 
@@ -370,7 +469,7 @@ FUZZ_TARGET(clusterlin_components)
             reader >> VARINT(subset_bits);
         } catch (const std::ios_base::failure&) {}
         TestBitSet subset;
-        for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
+        for (ClusterIndex i : depgraph.Positions()) {
             if (todo[i]) {
                 if (subset_bits & 1) subset.Set(i);
                 subset_bits >>= 1;
@@ -423,7 +522,7 @@ FUZZ_TARGET(clusterlin_chunking)
     }
 
     // Naively recompute the chunks (each is the highest-feerate prefix of what remains).
-    auto todo = TestBitSet::Fill(depgraph.TxCount());
+    auto todo = depgraph.Positions();
     for (const auto& chunk_feerate : chunking) {
         assert(todo.Any());
         SetInfo<TestBitSet> accumulator, best;
@@ -454,7 +553,7 @@ FUZZ_TARGET(clusterlin_ancestor_finder)
     } catch (const std::ios_base::failure&) {}
 
     AncestorCandidateFinder anc_finder(depgraph);
-    auto todo = TestBitSet::Fill(depgraph.TxCount());
+    auto todo = depgraph.Positions();
     while (todo.Any()) {
         // Call the ancestor finder's FindCandidateSet for what remains of the graph.
         assert(!anc_finder.AllDone());
@@ -519,7 +618,7 @@ FUZZ_TARGET(clusterlin_search_finder)
     ExhaustiveCandidateFinder exh_finder(depgraph);
     AncestorCandidateFinder anc_finder(depgraph);
 
-    auto todo = TestBitSet::Fill(depgraph.TxCount());
+    auto todo = depgraph.Positions();
     while (todo.Any()) {
         assert(!src_finder.AllDone());
         assert(!smp_finder.AllDone());
@@ -623,7 +722,7 @@ FUZZ_TARGET(clusterlin_linearization_chunking)
     } catch (const std::ios_base::failure&) {}
 
     // Retrieve a topologically-valid subset of depgraph.
-    auto todo = TestBitSet::Fill(depgraph.TxCount());
+    auto todo = depgraph.Positions();
     auto subset = SetInfo(depgraph, ReadTopologicalSet(depgraph, todo, reader));
 
     // Retrieve a valid linearization for depgraph.
@@ -806,8 +905,8 @@ FUZZ_TARGET(clusterlin_linearize)
 
         // Only for very small clusters, test every topologically-valid permutation.
         if (depgraph.TxCount() <= 7) {
-            std::vector<ClusterIndex> perm_linearization(depgraph.TxCount());
-            for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) perm_linearization[i] = i;
+            std::vector<ClusterIndex> perm_linearization;
+            for (ClusterIndex i : depgraph.Positions()) perm_linearization.push_back(i);
             // Iterate over all valid permutations.
             do {
                 // Determine whether perm_linearization is topological.
@@ -891,30 +990,30 @@ FUZZ_TARGET(clusterlin_postlinearize_tree)
     // Now construct a new graph, copying the nodes, but leaving only the first parent (even
     // direction) or the first child (odd direction).
     DepGraph<TestBitSet> depgraph_tree;
-    for (ClusterIndex i = 0; i < depgraph_gen.TxCount(); ++i) {
-        depgraph_tree.AddTransaction(depgraph_gen.FeeRate(i));
+    for (ClusterIndex i = 0; i < depgraph_gen.PositionRange(); ++i) {
+        if (depgraph_gen.Positions()[i]) {
+            depgraph_tree.AddTransaction(depgraph_gen.FeeRate(i));
+        } else {
+            // For holes, add a dummy transaction which is deleted below, so that non-hole
+            // transactions retain their position.
+            depgraph_tree.AddTransaction(FeeFrac{});
+        }
     }
+    depgraph_tree.RemoveTransactions(TestBitSet::Fill(depgraph_gen.PositionRange()) - depgraph_gen.Positions());
+
     if (direction & 1) {
         for (ClusterIndex i = 0; i < depgraph_gen.TxCount(); ++i) {
-            auto children = depgraph_gen.Descendants(i) - TestBitSet::Singleton(i);
-            // Remove descendants that are children of other descendants.
-            for (auto j : children) {
-                if (!children[j]) continue;
-                children -= depgraph_gen.Descendants(j);
-                children.Set(j);
+            auto children = depgraph_gen.GetReducedChildren(i);
+            if (children.Any()) {
+                depgraph_tree.AddDependencies(TestBitSet::Singleton(i), children.First());
             }
-            if (children.Any()) depgraph_tree.AddDependency(i, children.First());
          }
     } else {
         for (ClusterIndex i = 0; i < depgraph_gen.TxCount(); ++i) {
-            auto parents = depgraph_gen.Ancestors(i) - TestBitSet::Singleton(i);
-            // Remove ancestors that are parents of other ancestors.
-            for (auto j : parents) {
-                if (!parents[j]) continue;
-                parents -= depgraph_gen.Ancestors(j);
-                parents.Set(j);
+            auto parents = depgraph_gen.GetReducedParents(i);
+            if (parents.Any()) {
+                depgraph_tree.AddDependencies(TestBitSet::Singleton(parents.First()), i);
             }
-            if (parents.Any()) depgraph_tree.AddDependency(parents.First(), i);
         }
     }
 

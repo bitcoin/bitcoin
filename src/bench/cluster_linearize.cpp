@@ -28,7 +28,7 @@ DepGraph<SetType> MakeLinearGraph(ClusterIndex ntx)
     DepGraph<SetType> depgraph;
     for (ClusterIndex i = 0; i < ntx; ++i) {
         depgraph.AddTransaction({-int32_t(i), 1});
-        if (i > 0) depgraph.AddDependency(i - 1, i);
+        if (i > 0) depgraph.AddDependencies(SetType::Singleton(i - 1), i);
     }
     return depgraph;
 }
@@ -43,7 +43,7 @@ DepGraph<SetType> MakeWideGraph(ClusterIndex ntx)
     DepGraph<SetType> depgraph;
     for (ClusterIndex i = 0; i < ntx; ++i) {
         depgraph.AddTransaction({int32_t(i) + 1, 1});
-        if (i > 0) depgraph.AddDependency(0, i);
+        if (i > 0) depgraph.AddDependencies(SetType::Singleton(0), i);
     }
     return depgraph;
 }
@@ -70,19 +70,19 @@ DepGraph<SetType> MakeHardGraph(ClusterIndex ntx)
                 depgraph.AddTransaction({1, 2});
             } else if (i == 1) {
                 depgraph.AddTransaction({14, 2});
-                depgraph.AddDependency(0, 1);
+                depgraph.AddDependencies(SetType::Singleton(0), 1);
             } else if (i == 2) {
                 depgraph.AddTransaction({6, 1});
-                depgraph.AddDependency(2, 1);
+                depgraph.AddDependencies(SetType::Singleton(2), 1);
             } else if (i == 3) {
                 depgraph.AddTransaction({5, 1});
-                depgraph.AddDependency(2, 3);
+                depgraph.AddDependencies(SetType::Singleton(2), 3);
             } else if ((i & 1) == 0) {
                 depgraph.AddTransaction({7, 1});
-                depgraph.AddDependency(i - 1, i);
+                depgraph.AddDependencies(SetType::Singleton(i - 1), i);
             } else {
                 depgraph.AddTransaction({5, 1});
-                depgraph.AddDependency(i, 4);
+                depgraph.AddDependencies(SetType::Singleton(i), 4);
             }
         } else {
             // Even cluster size.
@@ -98,16 +98,16 @@ DepGraph<SetType> MakeHardGraph(ClusterIndex ntx)
                 depgraph.AddTransaction({1, 1});
             } else if (i == 1) {
                 depgraph.AddTransaction({3, 1});
-                depgraph.AddDependency(0, 1);
+                depgraph.AddDependencies(SetType::Singleton(0), 1);
             } else if (i == 2) {
                 depgraph.AddTransaction({1, 1});
-                depgraph.AddDependency(0, 2);
+                depgraph.AddDependencies(SetType::Singleton(0), 2);
             } else if (i & 1) {
                 depgraph.AddTransaction({4, 1});
-                depgraph.AddDependency(i - 1, i);
+                depgraph.AddDependencies(SetType::Singleton(i - 1), i);
             } else {
                 depgraph.AddTransaction({0, 1});
-                depgraph.AddDependency(i, 3);
+                depgraph.AddDependencies(SetType::Singleton(i), 3);
             }
         }
     }
@@ -195,7 +195,7 @@ void BenchMergeLinearizationsWorstCase(ClusterIndex ntx, benchmark::Bench& bench
     DepGraph<SetType> depgraph;
     for (ClusterIndex i = 0; i < ntx; ++i) {
         depgraph.AddTransaction({i, 1});
-        if (i) depgraph.AddDependency(0, i);
+        if (i) depgraph.AddDependencies(SetType::Singleton(0), i);
     }
     std::vector<ClusterIndex> lin1;
     std::vector<ClusterIndex> lin2;
