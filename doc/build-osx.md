@@ -51,7 +51,7 @@ To install, run the following from your terminal:
 brew install cmake boost pkg-config libevent
 ```
 
-For macOS 11 (Big Sur) and 12 (Monterey) you need to install a more recent version of llvm.
+For macOS 12 (Monterey) you need to install a more recent version of llvm.
 
 ``` bash
 brew install llvm
