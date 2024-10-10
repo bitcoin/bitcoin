@@ -1062,9 +1062,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         if (!blockman_result) {
             return InitError(util::ErrorString(blockman_result));
         }
-        CTxMemPool::Options mempool_opts{
-            .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
-        };
+        CTxMemPool::Options mempool_opts{};
         auto mempool_result{ApplyArgsManOptions(args, chainparams, mempool_opts)};
         if (!mempool_result) {
             return InitError(util::ErrorString(mempool_result));
@@ -1173,7 +1171,7 @@ bool CheckHostPortOptions(const ArgsManager& args) {
     return true;
 }
 
-// A GUI user may opt to retry once if there is a failure during chainstate initialization.
+// A GUI user may opt to retry once with do_reindex set if there is a failure during chainstate initialization.
 // The function therefore has to support re-entry.
 static ChainstateLoadResult InitAndLoadChainstate(
     NodeContext& node,
@@ -1253,7 +1251,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
             return f();
         } catch (const std::exception& e) {
             LogError("%s\n", e.what());
-            return std::make_tuple(node::ChainstateLoadStatus::FAILURE, _("Error opening block database"));
+            return std::make_tuple(node::ChainstateLoadStatus::FAILURE, _("Error loading databases"));
         }
     };
     auto [status, error] = catch_exceptions([&] { return LoadChainstate(chainman, cache_sizes, options); });
@@ -1634,11 +1632,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if (status == ChainstateLoadStatus::FAILURE && !do_reindex && !ShutdownRequested(node)) {
         // suggest a reindex
         bool do_retry = uiInterface.ThreadSafeQuestion(
-            error + Untranslated(".\n\n") + _("Do you want to rebuild the block database now?"),
+            error + Untranslated(".\n\n") + _("Do you want to rebuild the databases now?"),
             error.original + ".\nPlease restart with -reindex or -reindex-chainstate to recover.",
             "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
         if (!do_retry) {
-            LogError("Aborted block database rebuild. Exiting.\n");
             return false;
         }
         do_reindex = true;
@@ -1658,7 +1655,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // As LoadBlockIndex can take several minutes, it's possible the user
     // requested to kill the GUI during the last operation. If so, exit.
-    // As the program has not fully started yet, Shutdown() is possibly overkill.
     if (ShutdownRequested(node)) {
         LogPrintf("Shutdown requested. Exiting.\n");
         return false;
