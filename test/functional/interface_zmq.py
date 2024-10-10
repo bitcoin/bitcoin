@@ -489,13 +489,8 @@ class ZMQTest (BitcoinTestFramework):
         mempool_snapshot = self.nodes[0].getrawmempool(mempool_sequence=True)
         mempool_view = set(mempool_snapshot["txids"])
         get_raw_seq = mempool_snapshot["mempool_sequence"]
-        assert_equal(get_raw_seq, 6)
-        # Snapshot may be too old compared to zmq message we read off latest
-        while zmq_mem_seq >= get_raw_seq:
-            sleep(2)
-            mempool_snapshot = self.nodes[0].getrawmempool(mempool_sequence=True)
-            mempool_view = set(mempool_snapshot["txids"])
-            get_raw_seq = mempool_snapshot["mempool_sequence"]
+        assert_equal(get_raw_seq, num_txs + 1)
+        assert zmq_mem_seq < get_raw_seq
 
         # Things continue to happen in the "interim" while waiting for snapshot results
         # We have node 0 do all these to avoid p2p races with RBF announcements
