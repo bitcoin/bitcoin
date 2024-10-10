@@ -455,6 +455,14 @@ configure_file(contrib/filter-lcov.py filter-lcov.py USE_SOURCE_PERMISSIONS COPY
 # Don't allow extended (non-ASCII) symbols in identifiers. This is easier for code review.
 try_append_cxx_flags("-fno-extended-identifiers" TARGET core_interface SKIP_LINK)
 
+# Make builds location independent. This helps to:
+#  1. Unify the -logsourcelocations format.
+#  2. Improve ccache efficiency across different directories.
+#  3. Achive reproducibility for release binaries.
+try_append_cxx_flags("-ffile-prefix-map=A=B" TARGET core_interface SKIP_LINK
+  IF_CHECK_PASSED "-ffile-prefix-map=${PROJECT_SOURCE_DIR}/src=."
+)
+
 # Currently all versions of gcc are subject to a class of bugs, see the
 # gccbug_90348 test case (only reproduces on GCC 11 and earlier) and
 # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111843. To work around that, set
