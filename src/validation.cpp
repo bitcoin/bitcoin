@@ -32,6 +32,7 @@
 #include <logging/timer.h>
 #include <node/blockstorage.h>
 #include <node/utxo_snapshot.h>
+#include <policy/ephemeral_policy.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <policy/settings.h>
@@ -931,6 +932,13 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                                     fSpendsCoinbase, nSigOpsCost, lock_points.value()));
     ws.m_vsize = entry->GetTxSize();
 
+    // Enforces 0-fee for dust transactions, no incentive to be mined alone
+    if (m_pool.m_opts.require_standard) {
+        if (!CheckValidEphemeralTx(ptx, m_pool.m_opts.dust_relay_feerate, ws.m_base_fees, ws.m_modified_fees, state)) {
+            return false; // state filled in by CheckValidEphemeralTx
+        }
+    }
+
     if (nSigOpsCost > MAX_STANDARD_TX_SIGOPS_COST)
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "bad-txns-too-many-sigops",
                 strprintf("%d", nSigOpsCost));
@@ -1056,6 +1064,13 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             // have a non-TRUC and non-BIP125 descendant is due to a reorg.
         } else {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "TRUC-violation", err->first);
+        }
+    }
+
+    // Ensure any parents in-mempool that have dust have it spent by this transaction
+    if (!bypass_limits && m_pool.m_opts.require_standard) {
+        if (auto err_string{CheckEphemeralSpends(ws.m_ptx, ws.m_ancestors, m_pool.m_opts.dust_relay_feerate)}) {
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "ephemeral-dust-unspent", *err_string);
         }
     }
 
@@ -1554,6 +1569,19 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
         if (auto err{PackageTRUCChecks(ws.m_ptx, ws.m_vsize, txns, ws.m_ancestors)}) {
             package_state.Invalid(PackageValidationResult::PCKG_POLICY, "TRUC-violation", err.value());
             return PackageMempoolAcceptResult(package_state, {});
+        }
+    }
+
+    // Run package-based dust spentness checks
+    if (m_pool.m_opts.require_standard) {
+        if (const auto ephemeral_violation{CheckEphemeralSpends(txns, m_pool.m_opts.dust_relay_feerate)}) {
+            const Txid& parent_txid = ephemeral_violation.value();
+            TxValidationState child_state;
+            child_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "missing-ephemeral-spends",
+                          strprintf("tx %s has unspent ephemeral dust", parent_txid.ToString()));
+            package_state.Invalid(PackageValidationResult::PCKG_TX, "unspent-dust");
+            results.emplace(parent_txid, MempoolAcceptResult::Failure(child_state));
+            return PackageMempoolAcceptResult(package_state, std::move(results));
         }
     }
 
