@@ -4,14 +4,18 @@
 
 name: CI
 on:
-  # See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request.
-  pull_request:
-  # See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push.
-  push:
-    branches:
-      - '**'
-    tags-ignore:
-      - '**'
+  ## See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request.
+  #pull_request:
+  ## See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push.
+  #push:
+  #  branches:
+  #    - '**'
+  #  tags-ignore:
+  #    - '**'
+  # Note that "schedule" workflows only work on the default branch (master).
+  # See: https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#schedule
+  schedule:
+    - cron: '21 */3 * * *'
 
 concurrency:
   group: ${{ github.event_name != 'pull_request' && github.run_id || github.ref }}
