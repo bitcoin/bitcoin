@@ -454,6 +454,7 @@ private:
         if (conn_type == "block-relay-only") return "block";
         if (conn_type == "manual" || conn_type == "feeler") return conn_type;
         if (conn_type == "addr-fetch") return "addr";
+        if (conn_type == "private-broadcast") return "priv";
         return "";
     }
 
@@ -657,11 +658,12 @@ public:
         "           \"in\"  - inbound connections are those initiated by the peer\n"
         "           \"out\" - outbound connections are those initiated by us\n"
         "  type     Type of peer connection\n"
-        "           \"full\"   - full relay, the default\n"
-        "           \"block\"  - block relay; like full relay but does not relay transactions or addresses\n"
-        "           \"manual\" - peer we manually added using RPC addnode or the -addnode/-connect config options\n"
-        "           \"feeler\" - short-lived connection for testing addresses\n"
-        "           \"addr\"   - address fetch; short-lived connection for requesting addresses\n"
+        "           \"full\"      - full relay, the default\n"
+        "           \"block\"     - block relay; like full relay but does not relay transactions or addresses\n"
+        "           \"manual\"    - peer we manually added using RPC addnode or the -addnode/-connect config options\n"
+        "           \"feeler\"    - short-lived connection for testing addresses\n"
+        "           \"addr\"      - address fetch; short-lived connection for requesting addresses\n"
+        "           \"privat\"    - private broadcast; short-lived connection for broadcasting our transactions\n"
         "  net      Network the peer connected through (\"ipv4\", \"ipv6\", \"onion\", \"i2p\", \"cjdns\", or \"npr\" (not publicly routable))\n"
         "  v        Version of transport protocol used for the connection\n"
         "  mping    Minimum observed ping time, in milliseconds (ms)\n"
