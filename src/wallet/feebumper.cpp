@@ -24,24 +24,24 @@ namespace wallet {
 static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWalletTx& wtx, bool require_mine, std::vector<bilingual_str>& errors) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     if (wallet.HasWalletSpend(wtx.tx)) {
-        errors.push_back(Untranslated("Transaction has descendants in the wallet"));
+        errors.emplace_back(Untranslated("Transaction has descendants in the wallet"));
         return feebumper::Result::INVALID_PARAMETER;
     }
 
     {
         if (wallet.chain().hasDescendantsInMempool(wtx.GetHash())) {
-            errors.push_back(Untranslated("Transaction has descendants in the mempool"));
+            errors.emplace_back(Untranslated("Transaction has descendants in the mempool"));
             return feebumper::Result::INVALID_PARAMETER;
         }
     }
 
     if (wallet.GetTxDepthInMainChain(wtx) != 0) {
-        errors.push_back(Untranslated("Transaction has been mined, or is conflicted with a mined transaction"));
+        errors.emplace_back(Untranslated("Transaction has been mined, or is conflicted with a mined transaction"));
         return feebumper::Result::WALLET_ERROR;
     }
 
     if (!SignalsOptInRBF(*wtx.tx)) {
-        errors.push_back(Untranslated("Transaction is not BIP 125 replaceable"));
+        errors.emplace_back(Untranslated("Transaction is not BIP 125 replaceable"));
         return feebumper::Result::WALLET_ERROR;
     }
 
@@ -55,7 +55,7 @@ static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWallet
         // if not, we can't bump the fee, because the wallet has no way of knowing the value of the other inputs (thus the fee)
         isminefilter filter = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
         if (!AllInputsMine(wallet, *wtx.tx, filter)) {
-            errors.push_back(Untranslated("Transaction contains inputs that don't belong to this wallet"));
+            errors.emplace_back(Untranslated("Transaction contains inputs that don't belong to this wallet"));
             return feebumper::Result::WALLET_ERROR;
         }
     }
@@ -167,7 +167,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
 {
     // For now, cannot specify both new outputs to use and an output index to send change
     if (!outputs.empty() && original_change_index.has_value()) {
-        errors.push_back(Untranslated("The options 'outputs' and 'original_change_index' are incompatible. You can only either specify a new set of outputs, or designate a change output to be recycled."));
+        errors.emplace_back(Untranslated("The options 'outputs' and 'original_change_index' are incompatible. You can only either specify a new set of outputs, or designate a change output to be recycled."));
         return Result::INVALID_PARAMETER;
     }
 
@@ -178,14 +178,14 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     errors.clear();
     auto it = wallet.mapWallet.find(txid);
     if (it == wallet.mapWallet.end()) {
-        errors.push_back(Untranslated("Invalid or non-wallet transaction id"));
+        errors.emplace_back(Untranslated("Invalid or non-wallet transaction id"));
         return Result::INVALID_ADDRESS_OR_KEY;
     }
     const CWalletTx& wtx = it->second;
 
     // Make sure that original_change_index is valid
     if (original_change_index.has_value() && original_change_index.value() >= wtx.tx->vout.size()) {
-        errors.push_back(Untranslated("Change position is out of range"));
+        errors.emplace_back(Untranslated("Change position is out of range"));
         return Result::INVALID_PARAMETER;
     }
 
@@ -201,7 +201,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     for (const CTxIn& txin : wtx.tx->vin) {
         const Coin& coin = coins.at(txin.prevout);
         if (coin.out.IsNull()) {
-            errors.push_back(Untranslated(strprintf("%s:%u is already spent", txin.prevout.hash.GetHex(), txin.prevout.n)));
+            errors.emplace_back(Untranslated(strprintf("%s:%u is already spent", txin.prevout.hash.GetHex(), txin.prevout.n)));
             return Result::MISC_ERROR;
         }
         PreselectedInput& preset_txin = new_coin_control.Select(txin.prevout);
@@ -319,7 +319,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
 
     auto res = CreateTransaction(wallet, recipients, /*change_pos=*/std::nullopt, new_coin_control, false);
     if (!res) {
-        errors.push_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + util::ErrorString(res));
+        errors.emplace_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + util::ErrorString(res));
         return Result::WALLET_ERROR;
     }
 
@@ -361,7 +361,7 @@ Result CommitTransaction(CWallet& wallet, const uint256& txid, CMutableTransacti
     }
     auto it = txid.IsNull() ? wallet.mapWallet.end() : wallet.mapWallet.find(txid);
     if (it == wallet.mapWallet.end()) {
-        errors.push_back(Untranslated("Invalid or non-wallet transaction id"));
+        errors.emplace_back(Untranslated("Invalid or non-wallet transaction id"));
         return Result::MISC_ERROR;
     }
     const CWalletTx& oldWtx = it->second;
@@ -382,7 +382,7 @@ Result CommitTransaction(CWallet& wallet, const uint256& txid, CMutableTransacti
     // mark the original tx as bumped
     bumped_txid = tx->GetHash();
     if (!wallet.MarkReplaced(oldWtx.GetHash(), bumped_txid)) {
-        errors.push_back(Untranslated("Created new bumpfee transaction but could not mark the original transaction as replaced"));
+        errors.emplace_back(Untranslated("Created new bumpfee transaction but could not mark the original transaction as replaced"));
     }
     return Result::OK;
 }

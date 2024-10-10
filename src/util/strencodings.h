@@ -377,6 +377,24 @@ consteval uint8_t ConstevalHexDigit(const char c)
     throw "Only lowercase hex digits are allowed, for consistency";
 }
 
+namespace detail {
+template <size_t N>
+struct Hex {
+    std::array<std::byte, N / 2> bytes{};
+    consteval Hex(const char (&hex_str)[N])
+        // 2 hex digits required per byte + implicit null terminator
+        requires(N % 2 == 1)
+    {
+        if (hex_str[N - 1]) throw "null terminator required";
+        for (std::size_t i = 0; i < bytes.size(); ++i) {
+            bytes[i] = static_cast<std::byte>(
+                (ConstevalHexDigit(hex_str[2 * i]) << 4) |
+                 ConstevalHexDigit(hex_str[2 * i + 1]));
+        }
+    }
+};
+} // namespace detail
+
 /**
  * ""_hex is a compile-time user-defined literal returning a
  * `std::array<std::byte>`, equivalent to ParseHex(). Variants provided:
@@ -407,25 +425,6 @@ consteval uint8_t ConstevalHexDigit(const char c)
  *   time/runtime barrier.
  */
 inline namespace hex_literals {
-namespace detail {
-
-template <size_t N>
-struct Hex {
-    std::array<std::byte, N / 2> bytes{};
-    consteval Hex(const char (&hex_str)[N])
-        // 2 hex digits required per byte + implicit null terminator
-        requires(N % 2 == 1)
-    {
-        if (hex_str[N - 1]) throw "null terminator required";
-        for (std::size_t i = 0; i < bytes.size(); ++i) {
-            bytes[i] = static_cast<std::byte>(
-                (ConstevalHexDigit(hex_str[2 * i]) << 4) |
-                 ConstevalHexDigit(hex_str[2 * i + 1]));
-        }
-    }
-};
-
-} // namespace detail
 
 template <util::detail::Hex str>
 constexpr auto operator""_hex() { return str.bytes; }
