@@ -429,7 +429,7 @@ fn lint_includes_build_config() -> LintResult {
                 ])
                 .args(get_pathspecs_exclude_subtrees())
                 .args([
-                    // These are exceptions which don't use bitcoin-build-config.h, rather the Makefile.am adds
+                    // These are exceptions which don't use bitcoin-build-config.h, rather CMakeLists.txt adds
                     // these cppflags manually.
                     ":(exclude)src/crypto/sha256_arm_shani.cpp",
                     ":(exclude)src/crypto/sha256_avx2.cpp",
