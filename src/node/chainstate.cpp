@@ -37,26 +37,6 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     const CacheSizes& cache_sizes,
     const ChainstateLoadOptions& options) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
-    auto& pblocktree{chainman.m_blockman.m_block_tree_db};
-    // new BlockTreeDB tries to delete the existing file, which
-    // fails if it's still open from the previous loop. Close it first:
-    pblocktree.reset();
-    pblocktree = std::make_unique<BlockTreeDB>(DBParams{
-        .path = chainman.m_options.datadir / "blocks" / "index",
-        .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
-        .memory_only = options.block_tree_db_in_memory,
-        .wipe_data = options.wipe_block_tree_db,
-        .options = chainman.m_options.block_tree_db});
-
-    if (options.wipe_block_tree_db) {
-        pblocktree->WriteReindexing(true);
-        chainman.m_blockman.m_blockfiles_indexed = false;
-        //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
-        if (options.prune) {
-            chainman.m_blockman.CleanupBlockRevFiles();
-        }
-    }
-
     if (chainman.m_interrupt) return {ChainstateLoadStatus::INTERRUPTED, {}};
 
     // LoadBlockIndex will load m_have_pruned if we've ever removed a
@@ -142,7 +122,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         }
     }
 
-    if (!options.wipe_block_tree_db) {
+    if (!chainman.m_blockman.m_opts.wipe_block_tree_db) {
         auto chainstates{chainman.GetAll()};
         if (std::any_of(chainstates.begin(), chainstates.end(),
                         [](const Chainstate* cs) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return cs->NeedsRedownload(); })) {

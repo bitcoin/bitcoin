@@ -36,6 +36,7 @@
 #include <util/translation.h>
 #include <validation.h>
 
+#include <cstddef>
 #include <map>
 #include <ranges>
 #include <unordered_map>
@@ -1180,10 +1181,27 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
 BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
     : m_prune_mode{opts.prune_target > 0},
       m_xor_key{InitBlocksdirXorKey(opts)},
+      m_block_file_seq{FlatFileSeq{opts.blocks_dir, "blk", opts.fast_prune ? 0x4000 /* 16kB */ : BLOCKFILE_CHUNK_SIZE}},
+      m_undo_file_seq{FlatFileSeq{opts.blocks_dir, "rev", UNDOFILE_CHUNK_SIZE}},
       m_opts{std::move(opts)},
-      m_block_file_seq{FlatFileSeq{m_opts.blocks_dir, "blk", m_opts.fast_prune ? 0x4000 /* 16kB */ : BLOCKFILE_CHUNK_SIZE}},
-      m_undo_file_seq{FlatFileSeq{m_opts.blocks_dir, "rev", UNDOFILE_CHUNK_SIZE}},
-      m_interrupt{interrupt} {}
+      m_interrupt{interrupt}
+{
+    m_block_tree_db = std::make_unique<BlockTreeDB>(DBParams{
+        .path = m_opts.block_tree_db_dir,
+        .cache_bytes = static_cast<size_t>(m_opts.block_tree_db_cache_size),
+        .memory_only = m_opts.block_tree_db_in_memory,
+        .wipe_data = m_opts.wipe_block_tree_db,
+        .options = m_opts.block_tree_db_options});
+
+    if (m_opts.wipe_block_tree_db) {
+        m_block_tree_db->WriteReindexing(true);
+        m_blockfiles_indexed = false;
+        // If we're reindexing in prune mode, wipe away unusable block files and all undo data files
+        if (m_prune_mode) {
+            CleanupBlockRevFiles();
+        }
+    }
+}
 
 class ImportingNow
 {
