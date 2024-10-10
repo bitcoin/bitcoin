@@ -3942,6 +3942,11 @@ static void CaptureMessageToFile(const CAddress& addr,
     uint32_t size = data.size();
     ser_writedata32(f, size);
     f << data;
+
+    if (f.fclose() != 0) {
+        throw std::ios_base::failure(
+            strprintf("Error closing %s after write, file contents is likely incomplete", fs::PathToString(path)));
+    }
 }
 
 std::function<void(const CAddress& addr,
