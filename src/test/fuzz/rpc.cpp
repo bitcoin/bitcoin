@@ -23,6 +23,7 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
+#include <wallet/rpc/wallet.h>
 
 #include <algorithm>
 #include <cassert>
@@ -34,35 +35,36 @@
 #include <optional>
 #include <stdexcept>
 #include <vector>
+#include <test/fuzz/rpc.h>
 enum class ChainType;
 
 using util::Join;
 using util::ToString;
 
-namespace {
-struct RPCFuzzTestingSetup : public TestingSetup {
-    RPCFuzzTestingSetup(const ChainType chain_type, TestOpts opts) : TestingSetup{chain_type, opts}
-    {
+namespace RPCFuzz {
+RPCFuzzTestingSetup::RPCFuzzTestingSetup(const ChainType chain_type, TestOpts opts) : TestingSetup{chain_type, opts}
+{
+}
+
+// Member function definitions
+void RPCFuzzTestingSetup::CallRPC(const std::string& rpc_method, const std::vector<std::string>& arguments)
+{
+    JSONRPCRequest request;
+    request.context = &m_node;
+    request.strMethod = rpc_method;
+    try {
+        request.params = RPCConvertValues(rpc_method, arguments);
+    } catch (const std::runtime_error&) {
+        return;
     }
 
-    void CallRPC(const std::string& rpc_method, const std::vector<std::string>& arguments)
-    {
-        JSONRPCRequest request;
-        request.context = &m_node;
-        request.strMethod = rpc_method;
-        try {
-            request.params = RPCConvertValues(rpc_method, arguments);
-        } catch (const std::runtime_error&) {
-            return;
-        }
-        tableRPC.execute(request);
-    }
+    tableRPC.execute(request);
+}
 
-    std::vector<std::string> GetRPCCommands() const
-    {
-        return tableRPC.listCommands();
-    }
-};
+std::vector<std::string> RPCFuzzTestingSetup::GetRPCCommands() const
+{
+    return tableRPC.listCommands();
+}
 
 RPCFuzzTestingSetup* rpc_testing_setup = nullptr;
 std::string g_limit_to_rpc_command;
@@ -338,21 +340,18 @@ RPCFuzzTestingSetup* InitializeRPCFuzzTestingSetup()
     SetRPCWarmupFinished();
     return setup.get();
 }
-}; // namespace
 
-void initialize_rpc()
+void initialize(std::vector<std::string> rpc_commands_safe_for_fuzzing, std::vector<std::string> rpc_commands_not_safe_for_fuzzing, std::vector<std::string> supported_rpc_commands)
 {
-    rpc_testing_setup = InitializeRPCFuzzTestingSetup();
-    const std::vector<std::string> supported_rpc_commands = rpc_testing_setup->GetRPCCommands();
     for (const std::string& rpc_command : supported_rpc_commands) {
-        const bool safe_for_fuzzing = std::find(RPC_COMMANDS_SAFE_FOR_FUZZING.begin(), RPC_COMMANDS_SAFE_FOR_FUZZING.end(), rpc_command) != RPC_COMMANDS_SAFE_FOR_FUZZING.end();
-        const bool not_safe_for_fuzzing = std::find(RPC_COMMANDS_NOT_SAFE_FOR_FUZZING.begin(), RPC_COMMANDS_NOT_SAFE_FOR_FUZZING.end(), rpc_command) != RPC_COMMANDS_NOT_SAFE_FOR_FUZZING.end();
+        const bool safe_for_fuzzing = std::find(rpc_commands_safe_for_fuzzing.begin(), rpc_commands_safe_for_fuzzing.end(), rpc_command) != rpc_commands_safe_for_fuzzing.end();
+        const bool not_safe_for_fuzzing = std::find(rpc_commands_not_safe_for_fuzzing.begin(), rpc_commands_not_safe_for_fuzzing.end(), rpc_command) != rpc_commands_not_safe_for_fuzzing.end();
         if (!(safe_for_fuzzing || not_safe_for_fuzzing)) {
-            std::cerr << "Error: RPC command \"" << rpc_command << "\" not found in RPC_COMMANDS_SAFE_FOR_FUZZING or RPC_COMMANDS_NOT_SAFE_FOR_FUZZING. Please update " << __FILE__ << ".\n";
+            std::cerr << "Error: RPC command \"" << rpc_command << "\" not found in rpc_commands_safe_for_fuzzing or RPC_COMMANDS_NOT_SAFE_FOR_FUZZING. Please update " << __FILE__ << ".\n";
             std::terminate();
         }
         if (safe_for_fuzzing && not_safe_for_fuzzing) {
-            std::cerr << "Error: RPC command \"" << rpc_command << "\" found in *both* RPC_COMMANDS_SAFE_FOR_FUZZING and RPC_COMMANDS_NOT_SAFE_FOR_FUZZING. Please update " << __FILE__ << ".\n";
+            std::cerr << "Error: RPC command \"" << rpc_command << "\" found in *both* rpc_commands_safe_for_fuzzing and RPC_COMMANDS_NOT_SAFE_FOR_FUZZING. Please update " << __FILE__ << ".\n";
             std::terminate();
         }
     }
@@ -362,7 +361,15 @@ void initialize_rpc()
     }
 }
 
-FUZZ_TARGET(rpc, .init = initialize_rpc)
+void FuzzInitRPC()
+{
+    rpc_testing_setup = InitializeRPCFuzzTestingSetup();
+    const std::vector<std::string> supported_rpc_commands = rpc_testing_setup->GetRPCCommands();
+    initialize(RPC_COMMANDS_SAFE_FOR_FUZZING, RPC_COMMANDS_NOT_SAFE_FOR_FUZZING, supported_rpc_commands);
+}
+
+
+void ExecuteFuzzCommands(std::vector<std::string> list_of_safe_commands, Span<const unsigned char> buffer)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     bool good_data{true};
@@ -371,7 +378,7 @@ FUZZ_TARGET(rpc, .init = initialize_rpc)
     if (!g_limit_to_rpc_command.empty() && rpc_command != g_limit_to_rpc_command) {
         return;
     }
-    const bool safe_for_fuzzing = std::find(RPC_COMMANDS_SAFE_FOR_FUZZING.begin(), RPC_COMMANDS_SAFE_FOR_FUZZING.end(), rpc_command) != RPC_COMMANDS_SAFE_FOR_FUZZING.end();
+    const bool safe_for_fuzzing = std::find(list_of_safe_commands.begin(), list_of_safe_commands.end(), rpc_command) != list_of_safe_commands.end();
     if (!safe_for_fuzzing) {
         return;
     }
@@ -389,4 +396,12 @@ FUZZ_TARGET(rpc, .init = initialize_rpc)
             assert(error_msg.find("trigger_internal_bug") != std::string::npos);
         }
     }
+
 }
+
+
+FUZZ_TARGET(rpc, .init = FuzzInitRPC)
+{
+    ExecuteFuzzCommands(RPC_COMMANDS_SAFE_FOR_FUZZING, buffer);
+}
+}; // namespace
