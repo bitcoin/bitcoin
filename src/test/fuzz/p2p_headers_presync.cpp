@@ -133,7 +133,7 @@ void initialize()
 }
 } // namespace
 
-FUZZ_TARGET(p2p_headers_presync, .init = initialize)
+FUZZ_TARGET(p2p_headers_presync, .init = initialize, .require_build_for_fuzzing = true)
 {
     ChainstateManager& chainman = *g_testing_setup->m_node.chainman;
 
