@@ -115,6 +115,10 @@
 #include <zmq/zmqrpc.h>
 #endif
 
+#ifdef ENABLE_EMBEDDED_ASMAP
+#include <node/data/ip_asn.dat.h>
+#endif
+
 using common::AmountErrMsg;
 using common::InvalidPortErrMsg;
 using common::ResolveErrMsg;
@@ -519,7 +523,14 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                  ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 
     argsman.AddArg("-addnode=<ip>", strprintf("Add a node to connect to and attempt to keep the connection open (see the addnode RPC help for more info). This option can be specified multiple times to add multiple nodes; connections are limited to %u at a time and are counted separately from the -maxconnections limit.", MAX_ADDNODE_CONNECTIONS), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
-    argsman.AddArg("-asmap=<file>", strprintf("Specify asn mapping used for bucketing of the peers (default: %s). Relative paths will be prefixed by the net-specific datadir location.", DEFAULT_ASMAP_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-asmap=<file>", strprintf("Use IP to ASN mapping for bucketing of the peers. If a file argument is not given (-asmap or -asmap=1), a file in the default location (%s) will be used.%s Relative paths will be prefixed by the net-specific datadir location.",
+                DEFAULT_ASMAP_FILENAME,
+                #ifdef ENABLE_EMBEDDED_ASMAP
+                    " If no file is found there, the embedded mapping data in the binary will be used as a fallback."
+                #else
+                    ""
+                #endif
+                ), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-bantime=<n>", strprintf("Default duration (in seconds) of manually configured bans (default: %u)", DEFAULT_MISBEHAVING_BANTIME), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-bind=<addr>[:<port>][=onion]", strprintf("Bind to given address and always listen on it (default: 0.0.0.0). Use [host]:port notation for IPv6. Append =onion to tag any incoming connections to that address and port as incoming Tor connections (default: 127.0.0.1:%u=onion, testnet3: 127.0.0.1:%u=onion, testnet4: 127.0.0.1:%u=onion, signet: 127.0.0.1:%u=onion, regtest: 127.0.0.1:%u=onion)", defaultBaseParams->OnionServiceTargetPort(), testnetBaseParams->OnionServiceTargetPort(), testnet4BaseParams->OnionServiceTargetPort(), signetBaseParams->OnionServiceTargetPort(), regtestBaseParams->OnionServiceTargetPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-cjdnsreachable", "If set, then this host is configured for CJDNS (connecting to fc00::/8 addresses would lead us to the CJDNS network, see doc/cjdns.md) (default: 0)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -1393,21 +1404,51 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     {
 
-        // Read asmap file if configured
+        // Read asmap file or embedded data if configured
         std::vector<bool> asmap;
         if (args.IsArgSet("-asmap")) {
+            const bool asmap_file_set{args.GetPathArg("-asmap") != ""};
             fs::path asmap_path = args.GetPathArg("-asmap", DEFAULT_ASMAP_FILENAME);
             if (!asmap_path.is_absolute()) {
                 asmap_path = args.GetDataDirNet() / asmap_path;
             }
-            if (!fs::exists(asmap_path)) {
+
+            // If a specific path was passed with the asmap argument check if
+            // the file actually exists in that location
+            if (!fs::exists(asmap_path) && asmap_file_set) {
                 InitError(strprintf(_("Could not find asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
                 return false;
             }
-            asmap = DecodeAsmap(asmap_path);
-            if (asmap.size() == 0) {
-                InitError(strprintf(_("Could not parse asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
-                return false;
+
+            if (fs::exists(asmap_path)) {
+                // If a file exists at the path (could be passed or the default
+                // location), try to read the file
+                asmap = DecodeAsmap(asmap_path);
+                if (asmap.empty()) {
+                    // If the file could not be read, print the error depending
+                    // on if it was passed or the default location
+                    if (asmap_file_set) {
+                        InitError(strprintf(_("Could not parse asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
+                    } else {
+                        InitError(strprintf(_("Could not parse asmap file in default location %s"), fs::quoted(fs::PathToString(asmap_path))));
+                    }
+                    return false;
+                }
+            } else {
+                #ifdef ENABLE_EMBEDDED_ASMAP
+                    // If the file doesn't exist, try to use the embedded data
+                    asmap = DecodeAsmap(node::data::ip_asn);
+                    if (asmap.empty()) {
+                        InitError(strprintf(_("Could not read embedded asmap data")));
+                        return false;
+                    }
+                #else
+                    // If there is no embedded data, fail and report the default
+                    // file as missing since we only end up here if the no
+                    // specific path was passed as an argument
+                    InitError(strprintf(_("Could not find asmap file in default location %s"), fs::quoted(fs::PathToString(asmap_path))));
+                    return false;
+                #endif
             }
             const uint256 asmap_version = (HashWriter{} << asmap).GetHash();
             LogPrintf("Using asmap version %s for IP bucketing\n", asmap_version.ToString());
