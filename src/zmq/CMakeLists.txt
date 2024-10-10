@@ -19,6 +19,7 @@ target_link_libraries(bitcoin_zmq
   PRIVATE
     core_interface
     univalue
+    Boost::headers
     $<TARGET_NAME_IF_EXISTS:libzmq>
     $<TARGET_NAME_IF_EXISTS:PkgConfig::libzmq>
 )
