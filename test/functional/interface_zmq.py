@@ -394,11 +394,10 @@ class ZMQTest (BitcoinTestFramework):
         block_count = self.nodes[0].getblockcount()
         best_hash = self.nodes[0].getbestblockhash()
         self.nodes[0].invalidateblock(best_hash)
-        sleep(2)  # Bit of room to make sure transaction things happened
 
         # Make sure getrawmempool mempool_sequence results aren't "queued" but immediately reflective
         # of the time they were gathered.
-        assert self.nodes[0].getrawmempool(mempool_sequence=True)["mempool_sequence"] > seq_num
+        self.nodes[0].ensure_for(duration=2, f=lambda: self.nodes[0].getrawmempool(mempool_sequence=True)["mempool_sequence"] > seq_num)
 
         assert_equal((best_hash, "D", None), seq.receive_sequence())
         assert_equal((rbf_txid, "A", seq_num), seq.receive_sequence())

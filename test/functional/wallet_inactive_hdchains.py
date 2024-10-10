@@ -6,7 +6,6 @@
 Test Inactive HD Chains.
 """
 import shutil
-import time
 
 from test_framework.authproxy import JSONRPCException
 from test_framework.test_framework import BitcoinTestFramework
@@ -75,12 +74,13 @@ class InactiveHDChainsTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1)
 
         # Wait for the test wallet to see the transaction
-        while True:
+        def is_tx_available(txid):
             try:
                 test_wallet.gettransaction(txid)
-                break
+                return True
             except JSONRPCException:
-                time.sleep(0.1)
+                return False
+        self.nodes[0].wait_until(lambda: is_tx_available(txid), timeout=10, check_interval=0.1)
 
         if encrypt:
             # The test wallet will not be able to generate the topped up keypool
