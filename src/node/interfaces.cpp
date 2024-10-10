@@ -983,6 +983,47 @@ public:
         return BlockRef{chainman().ActiveChain().Tip()->GetBlockHash(), chainman().ActiveChain().Tip()->nHeight};
     }
 
+    bool waitFeesChanged(uint256 current_tip, CAmount fee_threshold, const BlockCreateOptions& options, MillisecondsDouble timeout) override
+    {
+        if (timeout > std::chrono::years{100}) timeout = std::chrono::years{100}; // Upper bound to avoid UB in std::chrono
+        auto now{std::chrono::steady_clock::now()};
+        const auto deadline = now + timeout;
+        const MillisecondsDouble tick{1000};
+
+        unsigned int last_mempool_update{context()->mempool->GetTransactionsUpdated()};
+
+        BlockAssembler::Options assemble_options{options};
+        ApplyArgsManOptions(*Assert(m_node.args), assemble_options);
+        // It's not necessary to verify the template, since we don't return it.
+        // This is also faster.
+        assemble_options.test_block_validity = false;
+
+        while (!chainman().m_interrupt) {
+            now = std::chrono::steady_clock::now();
+            if (now >= deadline) break;
+
+            if (getTip().value().hash != current_tip) {
+                return false;
+            }
+
+            // Did anything change at all?
+            if (context()->mempool->GetTransactionsUpdated() != last_mempool_update) {
+                auto block_template{BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options}.CreateNewBlock(CScript())};
+
+                CAmount fees = 0;
+                for (CAmount fee : block_template->vTxFees) {
+                    // Skip coinbase
+                    if (fee < 0) continue;
+                    fees += fee;
+                    if (fees >= fee_threshold) return true;
+                }
+            }
+
+            std::this_thread::sleep_until(std::min(deadline, now + tick));
+        }
+        return false;
+    }
+
     bool processNewBlock(const std::shared_ptr<const CBlock>& block, bool* new_block) override
     {
         return chainman().ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/new_block);
