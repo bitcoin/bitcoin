@@ -32,8 +32,9 @@ public:
 class SaltedOutpointHasher
 {
 private:
-    /** Salt */
-    const uint64_t k0, k1;
+    const uint64_t v0, v1, v2, v3;
+
+    SaltedOutpointHasher(uint64_t k0, uint64_t k1);
 
 public:
     SaltedOutpointHasher(bool deterministic = false);
@@ -48,7 +49,7 @@ public:
      * @see https://gcc.gnu.org/onlinedocs/gcc-13.2.0/libstdc++/manual/manual/unordered_associative.html
      */
     size_t operator()(const COutPoint& id) const noexcept {
-        return SipHashUint256Extra(k0, k1, id.hash, id.n);
+        return SipHashUint256Extra(v0, v1, v2, v3, id.hash, id.n);
     }
 };
 
