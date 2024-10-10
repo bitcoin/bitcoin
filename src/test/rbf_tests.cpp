@@ -78,7 +78,7 @@ static CTransactionRef add_descendants(const CTransactionRef& tx, int32_t num_de
     auto tx_to_spend = tx;
     for (int32_t i{0}; i < num_descendants; ++i) {
         auto next_tx = make_tx(/*inputs=*/{tx_to_spend}, /*output_values=*/{(50 - i) * CENT});
-        pool.addUnchecked(entry.FromTx(next_tx));
+        AddToMempool(pool, entry.FromTx(next_tx));
         tx_to_spend = next_tx;
     }
     // Return last created tx
@@ -93,7 +93,7 @@ static CTransactionRef add_descendant_to_parents(const std::vector<CTransactionR
     TestMemPoolEntryHelper entry;
     // Assumes this isn't already spent in mempool
     auto child_tx = make_tx(/*inputs=*/parents, /*output_values=*/{50 * CENT});
-    pool.addUnchecked(entry.FromTx(child_tx));
+    AddToMempool(pool, entry.FromTx(child_tx));
     // Return last created tx
     return child_tx;
 }
@@ -107,8 +107,8 @@ static std::pair<CTransactionRef, CTransactionRef> add_children_to_parent(const 
     TestMemPoolEntryHelper entry;
     // Assumes this isn't already spent in mempool
     auto children_tx = make_two_siblings(/*parent=*/parent, /*output_values=*/{50 * CENT});
-    pool.addUnchecked(entry.FromTx(children_tx.first));
-    pool.addUnchecked(entry.FromTx(children_tx.second));
+    AddToMempool(pool, entry.FromTx(children_tx.first));
+    AddToMempool(pool, entry.FromTx(children_tx.second));
     return children_tx;
 }
 
@@ -124,46 +124,46 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
 
     // Create a parent tx1 and child tx2 with normal fees:
     const auto tx1 = make_tx(/*inputs=*/ {m_coinbase_txns[0]}, /*output_values=*/ {10 * COIN});
-    pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx1));
+    AddToMempool(pool, entry.Fee(normal_fee).FromTx(tx1));
     const auto tx2 = make_tx(/*inputs=*/ {tx1}, /*output_values=*/ {995 * CENT});
-    pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx2));
+    AddToMempool(pool, entry.Fee(normal_fee).FromTx(tx2));
 
     // Create a low-feerate parent tx3 and high-feerate child tx4 (cpfp)
     const auto tx3 = make_tx(/*inputs=*/ {m_coinbase_txns[1]}, /*output_values=*/ {1099 * CENT});
-    pool.addUnchecked(entry.Fee(low_fee).FromTx(tx3));
+    AddToMempool(pool, entry.Fee(low_fee).FromTx(tx3));
     const auto tx4 = make_tx(/*inputs=*/ {tx3}, /*output_values=*/ {999 * CENT});
-    pool.addUnchecked(entry.Fee(high_fee).FromTx(tx4));
+    AddToMempool(pool, entry.Fee(high_fee).FromTx(tx4));
 
     // Create a parent tx5 and child tx6 where both have very low fees
     const auto tx5 = make_tx(/*inputs=*/ {m_coinbase_txns[2]}, /*output_values=*/ {1099 * CENT});
-    pool.addUnchecked(entry.Fee(low_fee).FromTx(tx5));
+    AddToMempool(pool, entry.Fee(low_fee).FromTx(tx5));
     const auto tx6 = make_tx(/*inputs=*/ {tx5}, /*output_values=*/ {1098 * CENT});
-    pool.addUnchecked(entry.Fee(low_fee).FromTx(tx6));
+    AddToMempool(pool, entry.Fee(low_fee).FromTx(tx6));
     // Make tx6's modified fee much higher than its base fee. This should cause it to pass
     // the fee-related checks despite being low-feerate.
     pool.PrioritiseTransaction(tx6->GetHash(), 1 * COIN);
 
     // Two independent high-feerate transactions, tx7 and tx8
     const auto tx7 = make_tx(/*inputs=*/ {m_coinbase_txns[3]}, /*output_values=*/ {999 * CENT});
-    pool.addUnchecked(entry.Fee(high_fee).FromTx(tx7));
+    AddToMempool(pool, entry.Fee(high_fee).FromTx(tx7));
     const auto tx8 = make_tx(/*inputs=*/ {m_coinbase_txns[4]}, /*output_values=*/ {999 * CENT});
-    pool.addUnchecked(entry.Fee(high_fee).FromTx(tx8));
+    AddToMempool(pool, entry.Fee(high_fee).FromTx(tx8));
 
     // Normal txs, will chain txns right before CheckConflictTopology test
     const auto tx9 = make_tx(/*inputs=*/ {m_coinbase_txns[5]}, /*output_values=*/ {995 * CENT});
-    pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx9));
+    AddToMempool(pool, entry.Fee(normal_fee).FromTx(tx9));
     const auto tx10 = make_tx(/*inputs=*/ {m_coinbase_txns[6]}, /*output_values=*/ {995 * CENT});
-    pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx10));
+    AddToMempool(pool, entry.Fee(normal_fee).FromTx(tx10));
 
     // Will make these two parents of single child
     const auto tx11 = make_tx(/*inputs=*/ {m_coinbase_txns[7]}, /*output_values=*/ {995 * CENT});
-    pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx11));
+    AddToMempool(pool, entry.Fee(normal_fee).FromTx(tx11));
     const auto tx12 = make_tx(/*inputs=*/ {m_coinbase_txns[8]}, /*output_values=*/ {995 * CENT});
-    pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx12));
+    AddToMempool(pool, entry.Fee(normal_fee).FromTx(tx12));
 
     // Will make two children of this single parent
     const auto tx13 = make_tx(/*inputs=*/ {m_coinbase_txns[9]}, /*output_values=*/ {995 * CENT, 995 * CENT});
-    pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx13));
+    AddToMempool(pool, entry.Fee(normal_fee).FromTx(tx13));
 
     const auto entry1_normal = pool.GetIter(tx1->GetHash()).value();
     const auto entry2_normal = pool.GetIter(tx2->GetHash()).value();
@@ -363,9 +363,9 @@ BOOST_FIXTURE_TEST_CASE(improves_feerate, TestChain100Setup)
 
     // low feerate parent with normal feerate child
     const auto tx1 = make_tx(/*inputs=*/ {m_coinbase_txns[0]}, /*output_values=*/ {10 * COIN});
-    pool.addUnchecked(entry.Fee(low_fee).FromTx(tx1));
+    AddToMempool(pool, entry.Fee(low_fee).FromTx(tx1));
     const auto tx2 = make_tx(/*inputs=*/ {tx1}, /*output_values=*/ {995 * CENT});
-    pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx2));
+    AddToMempool(pool, entry.Fee(normal_fee).FromTx(tx2));
 
     const auto entry1 = pool.GetIter(tx1->GetHash()).value();
     const auto tx1_fee = entry1->GetModifiedFee();
@@ -398,7 +398,7 @@ BOOST_FIXTURE_TEST_CASE(improves_feerate, TestChain100Setup)
 
     // Adding a grandchild makes the cluster size 3, which is uncalculable
     const auto tx3 = make_tx(/*inputs=*/ {tx2}, /*output_values=*/ {995 * CENT});
-    pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx3));
+    AddToMempool(pool, entry.Fee(normal_fee).FromTx(tx3));
     const auto res3 = ImprovesFeerateDiagram(pool, {entry1}, {entry1, entry2}, tx1_fee + tx2_fee + 1, tx1_size + tx2_size);
     BOOST_CHECK(res3.has_value());
     BOOST_CHECK(res3.value().first == DiagramCheckError::UNCALCULABLE);
@@ -419,7 +419,7 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
     // low -> high -> medium fee transactions that would result in two chunks together since they
     // are all same size
     const auto low_tx = make_tx(/*inputs=*/ {m_coinbase_txns[0]}, /*output_values=*/ {10 * COIN});
-    pool.addUnchecked(entry.Fee(low_fee).FromTx(low_tx));
+    AddToMempool(pool, entry.Fee(low_fee).FromTx(low_tx));
 
     const auto entry_low = pool.GetIter(low_tx->GetHash()).value();
     const auto low_size = entry_low->GetTxSize();
@@ -446,7 +446,7 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
 
     // Add a second transaction to the cluster that will make a single chunk, to be evicted in the RBF
     const auto high_tx = make_tx(/*inputs=*/ {low_tx}, /*output_values=*/ {995 * CENT});
-    pool.addUnchecked(entry.Fee(high_fee).FromTx(high_tx));
+    AddToMempool(pool, entry.Fee(high_fee).FromTx(high_tx));
     const auto entry_high = pool.GetIter(high_tx->GetHash()).value();
     const auto high_size = entry_high->GetTxSize();
 
@@ -471,7 +471,7 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
 
     // third transaction causes the topology check to fail
     const auto normal_tx = make_tx(/*inputs=*/ {high_tx}, /*output_values=*/ {995 * CENT});
-    pool.addUnchecked(entry.Fee(normal_fee).FromTx(normal_tx));
+    AddToMempool(pool, entry.Fee(normal_fee).FromTx(normal_tx));
     const auto entry_normal = pool.GetIter(normal_tx->GetHash()).value();
     const auto normal_size = entry_normal->GetTxSize();
 
@@ -483,12 +483,12 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
 
     // Make a size 2 cluster that is itself two chunks; evict both txns
     const auto high_tx_2 = make_tx(/*inputs=*/ {m_coinbase_txns[1]}, /*output_values=*/ {10 * COIN});
-    pool.addUnchecked(entry.Fee(high_fee).FromTx(high_tx_2));
+    AddToMempool(pool, entry.Fee(high_fee).FromTx(high_tx_2));
     const auto entry_high_2 = pool.GetIter(high_tx_2->GetHash()).value();
     const auto high_size_2 = entry_high_2->GetTxSize();
 
     const auto low_tx_2 = make_tx(/*inputs=*/ {high_tx_2}, /*output_values=*/ {9 * COIN});
-    pool.addUnchecked(entry.Fee(low_fee).FromTx(low_tx_2));
+    AddToMempool(pool, entry.Fee(low_fee).FromTx(low_tx_2));
     const auto entry_low_2 = pool.GetIter(low_tx_2->GetHash()).value();
     const auto low_size_2 = entry_low_2->GetTxSize();
 
@@ -503,15 +503,15 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
 
     // You can have more than two direct conflicts if the there are multiple affected clusters, all of size 2 or less
     const auto conflict_1 = make_tx(/*inputs=*/ {m_coinbase_txns[2]}, /*output_values=*/ {10 * COIN});
-    pool.addUnchecked(entry.Fee(low_fee).FromTx(conflict_1));
+    AddToMempool(pool, entry.Fee(low_fee).FromTx(conflict_1));
     const auto conflict_1_entry = pool.GetIter(conflict_1->GetHash()).value();
 
     const auto conflict_2 = make_tx(/*inputs=*/ {m_coinbase_txns[3]}, /*output_values=*/ {10 * COIN});
-    pool.addUnchecked(entry.Fee(low_fee).FromTx(conflict_2));
+    AddToMempool(pool, entry.Fee(low_fee).FromTx(conflict_2));
     const auto conflict_2_entry = pool.GetIter(conflict_2->GetHash()).value();
 
     const auto conflict_3 = make_tx(/*inputs=*/ {m_coinbase_txns[4]}, /*output_values=*/ {10 * COIN});
-    pool.addUnchecked(entry.Fee(low_fee).FromTx(conflict_3));
+    AddToMempool(pool, entry.Fee(low_fee).FromTx(conflict_3));
     const auto conflict_3_entry = pool.GetIter(conflict_3->GetHash()).value();
 
     {
@@ -523,7 +523,7 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
 
     // Add a child transaction to conflict_1 and make it cluster size 2, two chunks due to same feerate
     const auto conflict_1_child = make_tx(/*inputs=*/{conflict_1}, /*output_values=*/ {995 * CENT});
-    pool.addUnchecked(entry.Fee(low_fee).FromTx(conflict_1_child));
+    AddToMempool(pool, entry.Fee(low_fee).FromTx(conflict_1_child));
     const auto conflict_1_child_entry = pool.GetIter(conflict_1_child->GetHash()).value();
 
     {
@@ -536,7 +536,7 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
 
     // Add another descendant to conflict_1, making the cluster size > 2 should fail at this point.
     const auto conflict_1_grand_child = make_tx(/*inputs=*/{conflict_1_child}, /*output_values=*/ {995 * CENT});
-    pool.addUnchecked(entry.Fee(high_fee).FromTx(conflict_1_grand_child));
+    AddToMempool(pool, entry.Fee(high_fee).FromTx(conflict_1_grand_child));
     const auto conflict_1_grand_child_entry = pool.GetIter(conflict_1_child->GetHash()).value();
 
     {

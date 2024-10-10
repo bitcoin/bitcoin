@@ -357,7 +357,7 @@ void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, b
         // of ancestors reachable via GetMemPoolParents()/GetMemPoolChildren()
         // will be the same as the set of ancestors whose packages include this
         // transaction, because when we add a new transaction to the mempool in
-        // addUnchecked(), we assume it has no children, and in the case of a
+        // addNewTransaction(), we assume it has no children, and in the case of a
         // reorg where that assumption is false, the in-mempool children aren't
         // linked to the in-block tx's until UpdateTransactionsFromBlock() is
         // called.
@@ -432,18 +432,58 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n)
     nTransactionsUpdated += n;
 }
 
-void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAncestors)
+void CTxMemPool::Apply(ChangeSet* changeset)
 {
-    // Add to memory pool without checking anything.
-    // Used by AcceptToMemoryPool(), which DOES do
-    // all the appropriate checks.
-    indexed_transaction_set::iterator newit = mapTx.emplace(CTxMemPoolEntry::ExplicitCopy, entry).first;
+    AssertLockHeld(cs);
+    RemoveStaged(changeset->m_to_remove, false, MemPoolRemovalReason::REPLACED);
+
+    for (size_t i=0; i<changeset->m_entry_vec.size(); ++i) {
+        auto tx_entry = changeset->m_entry_vec[i];
+        std::optional<CTxMemPool::setEntries> ancestors;
+        if (i == 0) {
+            // Note: ChangeSet::CalculateMemPoolAncestors() will return a
+            // cached value if mempool ancestors for this tranaction were
+            // previously calculated.
+            // We can only use a cached ancestor calculation for the first
+            // transaction in a package, because in-package parents won't be
+            // present in the cached ancestor sets of in-package children.
+            // We pass in Limits::NoLimits() to ensure that this function won't fail
+            // (we're going to be applying this set of transactions whether or
+            // not the mempool policy limits are being respected).
+            ancestors = *Assume(changeset->CalculateMemPoolAncestors(tx_entry, Limits::NoLimits()));
+        }
+        // First splice this entry into mapTx.
+        auto node_handle = changeset->m_to_add.extract(tx_entry);
+        auto result = mapTx.insert(std::move(node_handle));
+
+        Assume(result.inserted);
+        txiter it = result.position;
+
+        // Now update the entry for ancestors/descendants.
+        if (ancestors.has_value()) {
+            addNewTransaction(it, *ancestors);
+        } else {
+            addNewTransaction(it);
+        }
+    }
+}
+
+void CTxMemPool::addNewTransaction(CTxMemPool::txiter it)
+{
+    auto ancestors{AssumeCalculateMemPoolAncestors(__func__, *it, Limits::NoLimits())};
+    return addNewTransaction(it, ancestors);
+}
+
+void CTxMemPool::addNewTransaction(CTxMemPool::txiter newit, CTxMemPool::setEntries& setAncestors)
+{
+    const CTxMemPoolEntry& entry = *newit;
 
     // Update transaction for any feeDelta created by PrioritiseTransaction
+    // TODO: move this into the changeset instead.
     CAmount delta{0};
-    ApplyDelta(entry.GetTx().GetHash(), delta);
+    ApplyDelta(newit->GetTx().GetHash(), delta);
     // The following call to UpdateModifiedFee assumes no previous fee modifications
-    Assume(entry.GetFee() == entry.GetModifiedFee());
+    Assume(newit->GetFee() == newit->GetModifiedFee());
     if (delta) {
         mapTx.modify(newit, [&delta](CTxMemPoolEntry& e) { e.UpdateModifiedFee(delta); });
     }
@@ -468,7 +508,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
 
     // Update ancestors with information about this tx
     for (const auto& pit : GetIterSet(setParentTransactions)) {
-            UpdateParent(newit, pit, true);
+        UpdateParent(newit, pit, true);
     }
     UpdateAncestorsOf(true, newit, setAncestors);
     UpdateEntryForAncestors(newit, setAncestors);
@@ -1067,12 +1107,6 @@ int CTxMemPool::Expire(std::chrono::seconds time)
     return stage.size();
 }
 
-void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry)
-{
-    auto ancestors{AssumeCalculateMemPoolAncestors(__func__, entry, Limits::NoLimits())};
-    return addUnchecked(entry, ancestors);
-}
-
 void CTxMemPool::UpdateChild(txiter entry, txiter child, bool add)
 {
     AssertLockHeld(cs);
@@ -1380,17 +1414,7 @@ CTxMemPool::ChangeSet::TxHandle CTxMemPool::ChangeSet::StageAddition(const CTran
 void CTxMemPool::ChangeSet::Apply()
 {
     LOCK(m_pool->cs);
-    m_pool->RemoveStaged(m_to_remove, false, MemPoolRemovalReason::REPLACED);
-    for (size_t i=0; i<m_entry_vec.size(); ++i) {
-        auto tx_entry = m_entry_vec[i];
-        if (i == 0 && m_ancestors.count(tx_entry)) {
-            m_pool->addUnchecked(*tx_entry, m_ancestors[tx_entry]);
-        } else {
-            // We always recalculate ancestors from scratch if we're dealing
-            // with transactions which may have parents in the same package.
-            m_pool->addUnchecked(*tx_entry);
-        }
-    }
+    m_pool->Apply(this);
     m_to_add.clear();
     m_to_remove.clear();
     m_entry_vec.clear();

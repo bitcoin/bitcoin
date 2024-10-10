@@ -59,7 +59,7 @@ FUZZ_TARGET(mini_miner, .init = initialize_miner)
         TestMemPoolEntryHelper entry;
         const CAmount fee{ConsumeMoney(fuzzed_data_provider, /*max=*/MAX_MONEY/100000)};
         assert(MoneyRange(fee));
-        pool.addUnchecked(entry.Fee(fee).FromTx(tx));
+        AddToMempool(pool, entry.Fee(fee).FromTx(tx));
 
         // All outputs are available to spend
         for (uint32_t n{0}; n < num_outputs; ++n) {
@@ -154,7 +154,7 @@ FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
         TestMemPoolEntryHelper entry;
         const CAmount fee{ConsumeMoney(fuzzed_data_provider, /*max=*/MAX_MONEY/100000)};
         assert(MoneyRange(fee));
-        pool.addUnchecked(entry.Fee(fee).FromTx(tx));
+        AddToMempool(pool, entry.Fee(fee).FromTx(tx));
         transactions.push_back(tx);
     }
     std::vector<COutPoint> outpoints;
