@@ -15,6 +15,8 @@ if [ "$(git config --global ${CFG_DONE})" == "true" ]; then
   exit 0
 fi
 
+MAKEJOBS="-j$( nproc )"  # Use nproc, because MAKEJOBS is the default in docker image builds.
+
 if [ -n "$DPKG_ADD_ARCH" ]; then
   dpkg --add-architecture "$DPKG_ADD_ARCH"
 fi
@@ -45,7 +47,7 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
     -DLLVM_ENABLE_RUNTIMES="compiler-rt;libcxx;libcxxabi;libunwind" \
     -S /msan/llvm-project/llvm
 
-  ninja -C /msan/clang_build/ "-j$( nproc )"  # Use nproc, because MAKEJOBS is the default in docker image builds
+  ninja -C /msan/clang_build/ "$MAKEJOBS"
   ninja -C /msan/clang_build/ install-runtimes
 
   update-alternatives --install /usr/bin/clang++ clang++ /msan/clang_build/bin/clang++ 100
@@ -64,7 +66,7 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
     -DLIBCXX_HARDENING_MODE=debug \
     -S /msan/llvm-project/runtimes
 
-  ninja -C /msan/cxx_build/ "-j$( nproc )"  # Use nproc, because MAKEJOBS is the default in docker image builds
+  ninja -C /msan/cxx_build/ "$MAKEJOBS"
 
   # Clear no longer needed source folder
   du -sh /msan/llvm-project
@@ -74,7 +76,7 @@ fi
 if [[ "${RUN_TIDY}" == "true" ]]; then
   ${CI_RETRY_EXE} git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_"${TIDY_LLVM_V}" /include-what-you-use
   cmake -B /iwyu-build/ -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-"${TIDY_LLVM_V}" -S /include-what-you-use
-  make -C /iwyu-build/ install "-j$( nproc )"  # Use nproc, because MAKEJOBS is the default in docker image builds
+  make -C /iwyu-build/ install "$MAKEJOBS"
 fi
 
 mkdir -p "${DEPENDS_DIR}/SDKs" "${DEPENDS_DIR}/sdk-sources"
