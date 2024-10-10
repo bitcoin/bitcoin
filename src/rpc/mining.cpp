@@ -624,7 +624,7 @@ static RPCHelpMan getblocktemplate()
                             {RPCResult::Type::NUM, "", "transactions before this one (by 1-based index in 'transactions' list) that must be present in the final block if this one is"},
                         }},
                         {RPCResult::Type::NUM, "fee", "difference in value between transaction inputs and outputs (in satoshis); for coinbase transactions, this is a negative Number of the total collected block fees (ie, not including the block subsidy); if key is not present, fee is unknown and clients MUST NOT assume there isn't one"},
-                        {RPCResult::Type::NUM, "sigops", "total SigOps cost, as counted for purposes of block limits; if key is not present, sigop cost is unknown and clients MUST NOT assume it is zero"},
+                        {RPCResult::Type::NUM, "sigops", "sigops cost for transaction, as counted for purposes of block limits"},
                         {RPCResult::Type::NUM, "weight", "total transaction weight, as counted for purposes of block limits"},
                     }},
                 }},
@@ -820,9 +820,6 @@ static RPCHelpMan getblocktemplate()
     UpdateTime(&block, consensusParams, pindexPrev);
     block.nNonce = 0;
 
-    // NOTE: If at some point we support pre-segwit miners post-segwit-activation, this needs to take segwit support into consideration
-    const bool fPreSegWit = !DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_SEGWIT);
-
     UniValue aCaps(UniValue::VARR); aCaps.push_back("proposal");
 
     UniValue transactions(UniValue::VARR);
@@ -856,10 +853,6 @@ static RPCHelpMan getblocktemplate()
         int index_in_template = i - 1;
         entry.pushKV("fee", tx_fees.at(index_in_template));
         int64_t nTxSigOps{tx_sigops.at(index_in_template)};
-        if (fPreSegWit) {
-            CHECK_NONFATAL(nTxSigOps % WITNESS_SCALE_FACTOR == 0);
-            nTxSigOps /= WITNESS_SCALE_FACTOR;
-        }
         entry.pushKV("sigops", nTxSigOps);
         entry.pushKV("weight", GetTransactionWeight(tx));
 
@@ -879,8 +872,13 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("capabilities", std::move(aCaps));
 
     UniValue aRules(UniValue::VARR);
+    // See getblocktemplate changes in BIP 9:
+    // ! indicates a more subtle change to the block structure or generation transaction
+    // Otherwise clients may assume the rule will not impact usage of the template as-is.
     aRules.push_back("csv");
-    if (!fPreSegWit) aRules.push_back("!segwit");
+    // BIP 145: the '!' rule prefix MUST be enabled on the "segwit" rule for templates including transactions with witness data.
+    aRules.push_back("!segwit");
+    aRules.push_back("taproot");
     if (consensusParams.signet_blocks) {
         // indicate to miner that they must understand signet rules
         // when attempting to mine with this template
@@ -943,17 +941,9 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("noncerange", "00000000ffffffff");
     int64_t nSigOpLimit = MAX_BLOCK_SIGOPS_COST;
     int64_t nSizeLimit = MAX_BLOCK_SERIALIZED_SIZE;
-    if (fPreSegWit) {
-        CHECK_NONFATAL(nSigOpLimit % WITNESS_SCALE_FACTOR == 0);
-        nSigOpLimit /= WITNESS_SCALE_FACTOR;
-        CHECK_NONFATAL(nSizeLimit % WITNESS_SCALE_FACTOR == 0);
-        nSizeLimit /= WITNESS_SCALE_FACTOR;
-    }
     result.pushKV("sigoplimit", nSigOpLimit);
     result.pushKV("sizelimit", nSizeLimit);
-    if (!fPreSegWit) {
-        result.pushKV("weightlimit", (int64_t)MAX_BLOCK_WEIGHT);
-    }
+    result.pushKV("weightlimit", (int64_t)MAX_BLOCK_WEIGHT);
     result.pushKV("curtime", block.GetBlockTime());
     result.pushKV("bits", strprintf("%08x", block.nBits));
     result.pushKV("height", (int64_t)(pindexPrev->nHeight+1));
