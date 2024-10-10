@@ -1395,7 +1395,6 @@ UniValue DeploymentInfo(const CBlockIndex* blockindex, const ChainstateManager& 
     SoftForkDescPushBack(blockindex, softforks, chainman, Consensus::DEPLOYMENT_CSV);
     SoftForkDescPushBack(blockindex, softforks, chainman, Consensus::DEPLOYMENT_SEGWIT);
     SoftForkDescPushBack(blockindex, softforks, chainman, Consensus::DEPLOYMENT_TESTDUMMY);
-    SoftForkDescPushBack(blockindex, softforks, chainman, Consensus::DEPLOYMENT_TAPROOT);
     return softforks;
 }
 } // anon namespace
@@ -1403,7 +1402,8 @@ UniValue DeploymentInfo(const CBlockIndex* blockindex, const ChainstateManager& 
 RPCHelpMan getdeploymentinfo()
 {
     return RPCHelpMan{"getdeploymentinfo",
-        "Returns an object containing various state info regarding deployments of consensus changes.",
+        "Returns an object containing various state info regarding deployments of consensus changes.\n"
+        "Consensus changes for which the new rules are enforced from genesis are not listed here.",
         {
             {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Default{"hash of current chain tip"}, "The block hash at which to query deployment state"},
         },
