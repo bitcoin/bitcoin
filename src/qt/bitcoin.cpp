@@ -11,8 +11,10 @@
 #include <common/init.h>
 #include <common/system.h>
 #include <init.h>
+#include <init/common.h>
 #include <interfaces/handler.h>
 #include <interfaces/init.h>
+#include <interfaces/ipc.h>
 #include <interfaces/node.h>
 #include <logging.h>
 #include <node/context.h>
@@ -290,6 +292,24 @@ void BitcoinApplication::createNode(interfaces::Init& init)
 {
     assert(!m_node);
     m_node = init.makeNode();
+    if (!m_node) {
+        // If node is not part of current process, need to initialize logging.
+        if (!init::StartLogging(gArgs)) {
+            throw std::runtime_error("StartLogging failed");
+        }
+
+        // If node is not part of current process, spawn new bitcoin-node
+        // process or connect to an existing one.
+        std::string address = gArgs.GetArg("-ipcconnect", "auto");
+        auto node_init = init.ipc()->connectAddress(address);
+        if (node_init) {
+            m_node_external = true;
+        } else {
+            node_init = init.ipc()->spawnProcess("bitcoin-node");
+        }
+        m_node = node_init->makeNode();
+        init.ipc()->addCleanup(*m_node, [node_init = node_init.release()] { delete node_init; });
+    }
     if (m_splash) m_splash->setNode(*m_node);
 }
 
@@ -313,13 +333,14 @@ void BitcoinApplication::startThread()
     connect(this, &BitcoinApplication::requestedShutdown, &m_executor.value(), &InitExecutor::shutdown);
 }
 
-void BitcoinApplication::parameterSetup()
+void BitcoinApplication::parameterSetup(interfaces::Init& init)
 {
     // Default printtoconsole to false for the GUI. GUI programs should not
     // print to the console unnecessarily.
     gArgs.SoftSetBoolArg("-printtoconsole", false);
 
-    InitLogging(gArgs);
+    interfaces::Ipc* ipc = init.ipc();
+    InitLogging(gArgs, ipc ? ipc->logSuffix() : nullptr);
     InitParameterInteraction(gArgs);
 }
 
@@ -332,7 +353,13 @@ void BitcoinApplication::requestInitialize()
 {
     qDebug() << __func__ << ": Requesting initialize";
     startThread();
-    Q_EMIT requestedInitialize();
+    if (m_node_external) {
+        interfaces::BlockAndHeaderTipInfo tip_info;
+        initializeResult(true, tip_info);
+    } else {
+        Q_EMIT requestedInitialize();
+    }
+
 }
 
 void BitcoinApplication::requestShutdown()
@@ -356,7 +383,7 @@ void BitcoinApplication::requestShutdown()
     window->unsubscribeFromCoreSignals();
     // Request node shutdown, which can interrupt long operations, like
     // rescanning a wallet.
-    node().startShutdown();
+    if (!m_node_external) node().startShutdown();
     // Prior to unsetting the client model, stop listening backend signals
     if (clientModel) {
         clientModel->stop();
@@ -382,7 +409,7 @@ void BitcoinApplication::requestShutdown()
     clientModel = nullptr;
 
     // Request shutdown from core thread
-    Q_EMIT requestedShutdown();
+    Q_EMIT requestedShutdown(!m_node_external);
 }
 
 void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info)
@@ -525,7 +552,7 @@ int GuiMain(int argc, char* argv[])
 
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
     // Command-line options take precedence:
-    SetupServerArgs(gArgs, init->canListenIpc());
+    SetupServerArgs(gArgs, init->canConnectIpc(), init->canListenIpc());
     SetupUIArgs(gArgs);
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
@@ -659,7 +686,7 @@ int GuiMain(int argc, char* argv[])
     // Install qDebug() message handler to route to debug.log
     qInstallMessageHandler(DebugMessageHandler);
     // Allow parameter interaction before we create the options model
-    app.parameterSetup();
+    app.parameterSetup(*init);
     GUIUtil::LogQtInfo();
 
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))
@@ -683,7 +710,7 @@ int GuiMain(int argc, char* argv[])
         // Perform base initialization before spinning up initialization/shutdown thread
         // This is acceptable because this function only contains steps that are quick to execute,
         // so the GUI thread won't be held up.
-        if (app.baseInitialize()) {
+        if (app.nodeExternal() || app.baseInitialize()) {
             app.requestInitialize();
 #if defined(Q_OS_WIN)
             WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely…").arg(PACKAGE_NAME), (HWND)app.getMainWinId());

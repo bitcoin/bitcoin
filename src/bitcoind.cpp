@@ -14,6 +14,7 @@
 #include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/init.h>
+#include <interfaces/ipc.h>
 #include <kernel/context.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
@@ -113,7 +114,7 @@ static bool ParseArgs(NodeContext& node, int argc, char* argv[])
 {
     ArgsManager& args{*Assert(node.args)};
     // If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
-    SetupServerArgs(args, node.init->canListenIpc());
+    SetupServerArgs(args, node.init->canConnectIpc(), node.init->canListenIpc());
     std::string error;
     if (!args.ParseParameters(argc, argv, error)) {
         return InitError(Untranslated(strprintf("Error parsing command line arguments: %s", error)));
@@ -172,7 +173,8 @@ static bool AppInit(NodeContext& node)
         // -server defaults to true for bitcoind but not for the GUI so do this here
         args.SoftSetBoolArg("-server", true);
         // Set this early so that parameter interactions go to console
-        InitLogging(args);
+        interfaces::Ipc* ipc = node.init->ipc();
+        InitLogging(args, ipc ? ipc->logSuffix() : nullptr);
         InitParameterInteraction(args);
         if (!AppInitBasicSetup(args, node.exit_status)) {
             // InitError will have been called with detailed error, which ends up on console
