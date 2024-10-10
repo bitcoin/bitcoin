@@ -117,6 +117,8 @@ add_executable(fuzz
   timeoffsets.cpp
   torcontrol.cpp
   transaction.cpp
+  txdownloadman.cpp
+  txdownloadman_one_honest_peer.cpp
   tx_in.cpp
   tx_out.cpp
   tx_pool.cpp
