@@ -1052,7 +1052,7 @@ void AddrManImpl::Check() const
 
     const int err{CheckAddrman()};
     if (err) {
-        LogPrintf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
+        LogInfo("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
         assert(false);
     }
 }

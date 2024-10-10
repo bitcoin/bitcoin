@@ -332,7 +332,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
         if (g_work_queue->Enqueue(item.get())) {
             item.release(); /* if true, queue took ownership */
         } else {
-            LogPrintf("WARNING: request rejected because http work queue depth exceeded, it can be increased with the -rpcworkqueue= setting\n");
+            LogInfo("WARNING: request rejected because http work queue depth exceeded, it can be increased with the -rpcworkqueue= setting\n");
             item->req->WriteReply(HTTP_SERVICE_UNAVAILABLE, "Work queue depth exceeded");
         }
     } else {
@@ -368,10 +368,10 @@ static bool HTTPBindAddresses(struct evhttp* http)
         endpoints.emplace_back("::1", http_port);
         endpoints.emplace_back("127.0.0.1", http_port);
         if (gArgs.IsArgSet("-rpcallowip")) {
-            LogPrintf("WARNING: option -rpcallowip was specified without -rpcbind; this doesn't usually make sense\n");
+            LogInfo("WARNING: option -rpcallowip was specified without -rpcbind; this doesn't usually make sense\n");
         }
         if (gArgs.IsArgSet("-rpcbind")) {
-            LogPrintf("WARNING: option -rpcbind was ignored because -rpcallowip was not specified, refusing to allow everyone to connect\n");
+            LogInfo("WARNING: option -rpcbind was ignored because -rpcallowip was not specified, refusing to allow everyone to connect\n");
         }
     } else if (gArgs.IsArgSet("-rpcbind")) { // Specific bind address
         for (const std::string& strRPCBind : gArgs.GetArgs("-rpcbind")) {
@@ -387,12 +387,12 @@ static bool HTTPBindAddresses(struct evhttp* http)
 
     // Bind addresses
     for (std::vector<std::pair<std::string, uint16_t> >::iterator i = endpoints.begin(); i != endpoints.end(); ++i) {
-        LogPrintf("Binding RPC on address %s port %i\n", i->first, i->second);
+        LogInfo("Binding RPC on address %s port %i\n", i->first, i->second);
         evhttp_bound_socket *bind_handle = evhttp_bind_socket_with_handle(http, i->first.empty() ? nullptr : i->first.c_str(), i->second);
         if (bind_handle) {
             const std::optional<CNetAddr> addr{LookupHost(i->first, false)};
             if (i->first.empty() || (addr.has_value() && addr->IsBindAny())) {
-                LogPrintf("WARNING: the RPC server is not safe to expose to untrusted networks such as the public internet\n");
+                LogInfo("WARNING: the RPC server is not safe to expose to untrusted networks such as the public internet\n");
             }
             // Set the no-delay option (disable Nagle's algorithm) on the TCP socket.
             evutil_socket_t fd = evhttp_bound_socket_get_fd(bind_handle);
@@ -402,7 +402,7 @@ static bool HTTPBindAddresses(struct evhttp* http)
             }
             boundSockets.push_back(bind_handle);
         } else {
-            LogPrintf("Binding RPC on address %s port %i failed.\n", i->first, i->second);
+            LogInfo("Binding RPC on address %s port %i failed.\n", i->first, i->second);
         }
     }
     return !boundSockets.empty();
@@ -458,7 +458,7 @@ bool InitHTTPServer(const util::SignalInterrupt& interrupt)
     raii_evhttp http_ctr = obtain_evhttp(base_ctr.get());
     struct evhttp* http = http_ctr.get();
     if (!http) {
-        LogPrintf("couldn't create evhttp. Exiting.\n");
+        LogInfo("couldn't create evhttp. Exiting.\n");
         return false;
     }
 
@@ -468,7 +468,7 @@ bool InitHTTPServer(const util::SignalInterrupt& interrupt)
     evhttp_set_gencb(http, http_request_cb, (void*)&interrupt);
 
     if (!HTTPBindAddresses(http)) {
-        LogPrintf("Unable to bind any endpoint for RPC server\n");
+        LogInfo("Unable to bind any endpoint for RPC server\n");
         return false;
     }
 
@@ -598,7 +598,7 @@ HTTPRequest::~HTTPRequest()
 {
     if (!replySent) {
         // Keep track of whether reply was sent to avoid request leaks
-        LogPrintf("%s: Unhandled request\n", __func__);
+        LogInfo("%s: Unhandled request\n", __func__);
         WriteReply(HTTP_INTERNAL_SERVER_ERROR, "Unhandled request");
     }
     // evhttpd cleans up the request, as long as a reply was sent.
