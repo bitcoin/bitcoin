@@ -197,11 +197,11 @@ FUZZ_TARGET_DESERIALIZE(prefilled_transaction_deserialize, {
     DeserializeFromFuzzingInput(buffer, prefilled_transaction);
 })
 FUZZ_TARGET_DESERIALIZE(psbt_input_deserialize, {
-    PSBTInput psbt_input;
+    PSBTInput psbt_input(0);
     DeserializeFromFuzzingInput(buffer, psbt_input);
 })
 FUZZ_TARGET_DESERIALIZE(psbt_output_deserialize, {
-    PSBTOutput psbt_output;
+    PSBTOutput psbt_output(0);
     DeserializeFromFuzzingInput(buffer, psbt_output);
 })
 FUZZ_TARGET_DESERIALIZE(block_deserialize, {
