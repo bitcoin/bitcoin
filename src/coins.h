@@ -43,7 +43,12 @@ public:
 
     //! construct a Coin from a CTxOut and height/coinbase information.
     Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
-    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
+    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
+
+    Coin(Coin&& other) noexcept = default;
+    Coin& operator=(Coin&&) noexcept = default;
+    Coin(const Coin&) noexcept = default;
+    Coin& operator=(const Coin&) noexcept = default;
 
     void Clear() {
         out.SetNull();
@@ -153,6 +158,13 @@ public:
     };
 
     CCoinsCacheEntry() noexcept = default;
+
+    // No implicit copying, only moves.
+    CCoinsCacheEntry(CCoinsCacheEntry&&) noexcept = default;
+    CCoinsCacheEntry& operator=(CCoinsCacheEntry&&) noexcept = default;
+    CCoinsCacheEntry(const CCoinsCacheEntry&) noexcept = delete;
+    CCoinsCacheEntry& operator=(const CCoinsCacheEntry&) noexcept = delete;
+
     explicit CCoinsCacheEntry(Coin&& coin_) noexcept : coin(std::move(coin_)) {}
     ~CCoinsCacheEntry()
     {
