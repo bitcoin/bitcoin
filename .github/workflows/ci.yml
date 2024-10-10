@@ -9,7 +9,15 @@ on:
   # See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push.
   push:
     branches:
-      - '**'
+      # When a contributor maintains a fork of the repo, any pull request they make
+      # to their own fork, or to the main repository, will trigger two CI runs:
+      # one for the branch push and one for the pull request.
+      #
+      # For Cirrus CI this can opted out of by setting a custom env variable, but that's
+      # not possible on Github CI. Instead we disable CI on branch pushes to all forks.
+      # It will still run for pull requests.
+      - 'bitcoin/**'
+      - 'bitcoin-core/**'
     tags-ignore:
       - '**'
 
