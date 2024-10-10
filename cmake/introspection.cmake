@@ -6,7 +6,7 @@ include(CheckCXXSourceCompiles)
 include(CheckCXXSymbolExists)
 include(CheckIncludeFileCXX)
 
-# The following HAVE_{HEADER}_H variables go to the bitcoin-config.h header.
+# The following HAVE_{HEADER}_H variables go to the bitcoin-build-config.h header.
 check_include_file_cxx(sys/prctl.h HAVE_SYS_PRCTL_H)
 check_include_file_cxx(sys/resources.h HAVE_SYS_RESOURCES_H)
 check_include_file_cxx(sys/vmmeter.h HAVE_SYS_VMMETER_H)
