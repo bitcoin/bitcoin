@@ -176,7 +176,9 @@ make -C depends --jobs="$JOBS" HOST="$HOST" \
                                    x86_64_linux_AR=x86_64-linux-gnu-gcc-ar \
                                    x86_64_linux_RANLIB=x86_64-linux-gnu-gcc-ranlib \
                                    x86_64_linux_NM=x86_64-linux-gnu-gcc-nm \
-                                   x86_64_linux_STRIP=x86_64-linux-gnu-strip
+                                   x86_64_linux_STRIP=x86_64-linux-gnu-strip \
+                                   LTO=1 \
+                                   CFLAGS="-flto" CXXFLAGS="-flto" LDFLAGS="-flto"
 
 case "$HOST" in
     *darwin*)
