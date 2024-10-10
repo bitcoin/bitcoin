@@ -2020,6 +2020,9 @@ bool StartIndexBackgroundSync(NodeContext& node)
     // indexes_start_block='nullptr' means "start from height 0".
     std::optional<const CBlockIndex*> indexes_start_block;
     std::string older_index_name;
+    // Data we need to check for in our block storage. At minimum we need the
+    // block data.
+    uint32_t older_needed_block_data{BLOCK_HAVE_DATA};
     ChainstateManager& chainman = *Assert(node.chainman);
     const Chainstate& chainstate = WITH_LOCK(::cs_main, return chainman.GetChainstateForIndexing());
     const CChain& index_chain = chainstate.m_chain;
@@ -2038,16 +2041,22 @@ bool StartIndexBackgroundSync(NodeContext& node)
         if (!indexes_start_block || !pindex || pindex->nHeight < indexes_start_block.value()->nHeight) {
             indexes_start_block = pindex;
             older_index_name = summary.name;
-            if (!pindex) break; // Starting from genesis so no need to look for earlier block.
+            // Starting from genesis so no need to look for earlier block.
+            if (!pindex) break;
+            // And we also don't need to look for additional data.
+            older_needed_block_data = index->RequiredBlockStatusMask();
         }
     };
 
     // Verify all blocks needed to sync to current tip are present.
-    if (indexes_start_block) {
+    if (indexes_start_block.has_value()) {
         LOCK(::cs_main);
-        const CBlockIndex* start_block = *indexes_start_block;
-        if (!start_block) start_block = chainman.ActiveChain().Genesis();
-        if (!chainman.m_blockman.CheckBlockDataAvailability(*index_chain.Tip(), *Assert(start_block))) {
+        const CBlockIndex* start_block = indexes_start_block.value();
+        // We only check down to the first block instead of Genesis because
+        // Genesis can not have undo data so it is ok that it doesn't have
+        // all the data that the index might need.
+        if (start_block->nHeight == 0) start_block = chainman.ActiveChain()[1];
+        if (!chainman.m_blockman.CheckBlockDataAvailability(*index_chain.Tip(), *Assert(start_block), older_needed_block_data)) {
             return InitError(strprintf(Untranslated("%s best block of the index goes beyond pruned data. Please disable the index or reindex (which will download the whole blockchain again)"), older_index_name));
         }
     }
