@@ -1,0 +1,67 @@
+The @available compiler directive exports the __isPlatformVersionAtLeast
+symbol, which the linker cannot resolve during cross-compilation.
+
+
+--- a/qtbase/src/gui/platform/darwin/qappleiconengine.mm
++++ b/qtbase/src/gui/platform/darwin/qappleiconengine.mm
+@@ -362,15 +362,14 @@ auto *configuredImage(const NSImage *image, const QColor &color)
+     auto *config = [NSImageSymbolConfiguration configurationWithPointSize:48
+                                                weight:NSFontWeightRegular
+                                                scale:NSImageSymbolScaleLarge];
+-    if (@available(macOS 12, *)) {
+-        auto *primaryColor = [NSColor colorWithSRGBRed:color.redF()
+-                                                 green:color.greenF()
+-                                                  blue:color.blueF()
+-                                                 alpha:color.alphaF()];
+ 
+-        auto *colorConfig = [NSImageSymbolConfiguration configurationWithHierarchicalColor:primaryColor];
+-        config = [config configurationByApplyingConfiguration:colorConfig];
+-    }
++    auto *primaryColor = [NSColor colorWithSRGBRed:color.redF()
++                                             green:color.greenF()
++                                              blue:color.blueF()
++                                             alpha:color.alphaF()];
++
++    auto *colorConfig = [NSImageSymbolConfiguration configurationWithHierarchicalColor:primaryColor];
++    config = [config configurationByApplyingConfiguration:colorConfig];
+ 
+     return [image imageWithSymbolConfiguration:config];
+ }
+
+--- a/qtbase/src/gui/rhi/qrhimetal.mm
++++ b/qtbase/src/gui/rhi/qrhimetal.mm
+@@ -4685,17 +4685,7 @@ id<MTLLibrary> QRhiMetalData::createMetalLib(const QShader &shader, QShader::Var
+                                              QString *error, QByteArray *entryPoint, QShaderKey *activeKey)
+ {
+     QVarLengthArray<int, 8> versions;
+-    if (@available(macOS 13, iOS 16, *))
+-        versions << 30;
+-    if (@available(macOS 12, iOS 15, *))
+-        versions << 24;
+-    if (@available(macOS 11, iOS 14, *))
+-        versions << 23;
+-    if (@available(macOS 10.15, iOS 13, *))
+-        versions << 22;
+-    if (@available(macOS 10.14, iOS 12, *))
+-        versions << 21;
+-    versions << 20 << 12;
++    versions << 24 << 23 << 22 << 21 << 20 << 12;
+ 
+     const QList<QShaderKey> shaders = shader.availableShaders();
+ 
+
+--- a/qtbase/src/plugins/platforms/cocoa/qcocoaapplicationdelegate.mm
++++ b/qtbase/src/plugins/platforms/cocoa/qcocoaapplicationdelegate.mm
+@@ -359,10 +359,8 @@ QT_USE_NAMESPACE
+ 
+ - (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)application
+ {
+-    if (@available(macOS 12, *)) {
+-        if ([reflectionDelegate respondsToSelector:_cmd])
+-            return [reflectionDelegate applicationSupportsSecureRestorableState:application];
+-    }
++    if ([reflectionDelegate respondsToSelector:_cmd])
++        return [reflectionDelegate applicationSupportsSecureRestorableState:application];
+ 
+     // We don't support or implement state restorations via the AppKit
+     // state restoration APIs, but if we did, we would/should support

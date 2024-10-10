@@ -1,0 +1,42 @@
+In certain environments, like Guix, host-specific include
+paths may still be accessible during cross-compilation.
+This patch ensures that headers from those paths are not
+erroneously included.
+
+
+--- a/qtbase/src/corelib/kernel/qcoreapplication.cpp
++++ b/qtbase/src/corelib/kernel/qcoreapplication.cpp
+@@ -87,7 +87,7 @@
+ #  include "qcore_unix_p.h"
+ #endif
+ 
+-#if __has_include(<sys/auxv.h>)     // Linux and FreeBSD
++#if __has_include(<sys/auxv.h>) && (defined(__linux__) || defined(__FreeBSD__))
+ #  include <sys/auxv.h>
+ #endif
+ 
+
+--- a/qtbase/src/corelib/kernel/qeventdispatcher_unix.cpp
++++ b/qtbase/src/corelib/kernel/qeventdispatcher_unix.cpp
+@@ -18,7 +18,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
+-#if __has_include(<sys/eventfd.h>)
++#if __has_include(<sys/eventfd.h>) && (defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__))
+ #  include <sys/eventfd.h>
+ static constexpr bool UsingEventfd = true;
+ #else
+
+--- a/qtbase/src/corelib/kernel/qproperty.h
++++ b/qtbase/src/corelib/kernel/qproperty.h
+@@ -32,8 +32,8 @@
+ #endif
+ 
+ #if __has_include(<experimental/source_location>) && !defined(Q_QDOC)
+-#include <experimental/source_location>
+ #if !defined(QT_PROPERTY_COLLECT_BINDING_LOCATION)
++#include <experimental/source_location>
+ #if defined(__cpp_lib_experimental_source_location)
+ #define QT_SOURCE_LOCATION_NAMESPACE std::experimental
+ #define QT_PROPERTY_COLLECT_BINDING_LOCATION

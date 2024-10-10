@@ -51,7 +51,7 @@ To install, run the following from your terminal:
 brew install cmake boost pkg-config libevent
 ```
 
-For macOS 11 (Big Sur) and 12 (Monterey) you need to install a more recent version of llvm.
+For macOS 12 (Monterey) you need to install a more recent version of llvm.
 
 ``` bash
 brew install llvm
@@ -106,7 +106,7 @@ Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compi
 Qt, libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
 
 ``` bash
-brew install qt@5
+brew install qt
 ```
 
 Note: Building with Qt binaries downloaded from the Qt website is not officially supported.

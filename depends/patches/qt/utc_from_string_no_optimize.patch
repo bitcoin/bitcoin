@@ -5,7 +5,7 @@ the arm64-apple-darwin HOST.
 
 --- a/qtbase/src/corelib/itemmodels/qitemselectionmodel.cpp
 +++ b/qtbase/src/corelib/itemmodels/qitemselectionmodel.cpp
-@@ -1078,9 +1078,9 @@ void QItemSelectionModelPrivate::_q_layoutChanged(const QList<QPersistentModelIn
+@@ -1028,9 +1028,9 @@ void QItemSelectionModelPrivate::_q_layoutChanged(const QList<QPersistentModelIn
  
      if (hint != QAbstractItemModel::VerticalSortHint) {
          // sort the "new" selection, as preparation for merging
@@ -17,7 +17,7 @@ the arm64-apple-darwin HOST.
                           qt_PersistentModelIndexLessThan);
  
          // update the selection by merging the individual indexes
-@@ -1092,8 +1092,8 @@ void QItemSelectionModelPrivate::_q_layoutChanged(const QList<QPersistentModelIn
+@@ -1042,8 +1042,8 @@ void QItemSelectionModelPrivate::_q_layoutChanged(const QList<QPersistentModelIn
          savedPersistentCurrentIndexes.clear();
      } else {
          // sort the "new" selection, as preparation for merging
@@ -31,31 +31,31 @@ the arm64-apple-darwin HOST.
 
 --- a/qtbase/src/corelib/itemmodels/qitemselectionmodel_p.h
 +++ b/qtbase/src/corelib/itemmodels/qitemselectionmodel_p.h
-@@ -76,7 +76,7 @@ public:
-     void _q_rowsAboutToBeInserted(const QModelIndex &parent, int start, int end);
-     void _q_columnsAboutToBeInserted(const QModelIndex &parent, int start, int end);
-     void _q_layoutAboutToBeChanged(const QList<QPersistentModelIndex> &parents = QList<QPersistentModelIndex>(), QAbstractItemModel::LayoutChangeHint hint = QAbstractItemModel::NoLayoutChangeHint);
--    void _q_layoutChanged(const QList<QPersistentModelIndex> &parents = QList<QPersistentModelIndex>(), QAbstractItemModel::LayoutChangeHint hint = QAbstractItemModel::NoLayoutChangeHint);
-+    __attribute__ ((optnone)) void _q_layoutChanged(const QList<QPersistentModelIndex> &parents = QList<QPersistentModelIndex>(), QAbstractItemModel::LayoutChangeHint hint = QAbstractItemModel::NoLayoutChangeHint);
+@@ -47,7 +47,7 @@ public:
+         layoutAboutToBeChanged(QList<QPersistentModelIndex>(), QAbstractItemModel::NoLayoutChangeHint);
+     }
  
-     inline void remove(QList<QItemSelectionRange> &r)
+-    void layoutChanged(const QList<QPersistentModelIndex> &parents, QAbstractItemModel::LayoutChangeHint hint);
++    __attribute__ ((optnone)) void layoutChanged(const QList<QPersistentModelIndex> &parents, QAbstractItemModel::LayoutChangeHint hint);
+     void triggerLayoutChanged()
      {
+         layoutChanged(QList<QPersistentModelIndex>(), QAbstractItemModel::NoLayoutChangeHint);
 
 --- a/qtbase/src/corelib/time/qdatetimeparser_p.h
 +++ b/qtbase/src/corelib/time/qdatetimeparser_p.h
-@@ -215,7 +215,7 @@ private:
+@@ -169,7 +169,7 @@ private:
              : value(ok == Invalid ? -1 : val), used(read), zeroes(zs), state(ok)
              {}
      };
--    ParsedSection parseSection(const QDateTime &currentValue, int sectionIndex,
-+    __attribute__ ((optnone)) ParsedSection parseSection(const QDateTime &currentValue, int sectionIndex,
-                                int offset, QString *text) const;
+-    ParsedSection parseSection(const QDateTime &currentValue, int sectionIndex, int offset) const;
++    __attribute__ ((optnone)) ParsedSection parseSection(const QDateTime &currentValue, int sectionIndex, int offset) const;
      int findMonth(const QString &str1, int monthstart, int sectionIndex,
                    int year, QString *monthName = nullptr, int *used = nullptr) const;
+     int findDay(const QString &str1, int intDaystart, int sectionIndex,
 
 --- a/qtbase/src/corelib/time/qtimezoneprivate_p.h
 +++ b/qtbase/src/corelib/time/qtimezoneprivate_p.h
-@@ -191,7 +191,7 @@ public:
+@@ -162,7 +162,7 @@ public:
      virtual ~QUtcTimeZonePrivate();
  
      // Fall-back for UTC[+-]\d+(:\d+){,2} IDs.
@@ -64,9 +64,10 @@ the arm64-apple-darwin HOST.
  
      QUtcTimeZonePrivate *clone() const override;
  
+
 --- a/qtbase/src/widgets/widgets/qcalendarwidget.cpp
 +++ b/qtbase/src/widgets/widgets/qcalendarwidget.cpp
-@@ -329,13 +329,13 @@ class QCalendarYearValidator : public QCalendarDateSectionValidator
+@@ -295,13 +295,13 @@ class QCalendarYearValidator : public QCalendarDateSectionValidator
  
  public:
      QCalendarYearValidator();

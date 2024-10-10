@@ -41,7 +41,7 @@ The paths are automatically configured and no other options are needed.
 
 #### Common
 
-    apt install bison cmake curl make patch pkg-config python3 xz-utils
+    apt install bison cmake curl make ninja-build patch pkg-config python3 xz-utils
 
 #### For macOS cross compilation
 
