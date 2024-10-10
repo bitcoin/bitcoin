@@ -476,6 +476,15 @@ bool InitHTTPServer(const util::SignalInterrupt& interrupt)
     int workQueueDepth = std::max((long)gArgs.GetIntArg("-rpcworkqueue", DEFAULT_HTTP_WORKQUEUE), 1L);
     LogDebug(BCLog::HTTP, "creating work queue of depth %d\n", workQueueDepth);
 
+#if LIBEVENT_VERSION_NUMBER >= 0x02020001
+    if (event_get_version_number() >= 0x02020001) {
+        // Limit the maximum number of open connections to prevent exhausting
+        // the file descriptor limit. When the http server gets overwhelmed it
+        // will respond with 503 Service Unavailable.
+        evhttp_set_max_connections(http, workQueueDepth * 2);
+    }
+#endif
+
     g_work_queue = std::make_unique<WorkQueue<HTTPClosure>>(workQueueDepth);
     // transfer ownership to eventBase/HTTP via .release()
     eventBase = base_ctr.release();
