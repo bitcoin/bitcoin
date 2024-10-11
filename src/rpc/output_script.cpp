@@ -139,11 +139,15 @@ static RPCHelpMan createmultisig()
                 output_type = parsed.value();
             }
 
-            FlatSigningProvider keystore;
+            std::set<CScript> scripts;
             CScript inner;
-            const CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, output_type, keystore, inner);
+            const CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, output_type, scripts, inner);
 
             // Make the descriptor
+            FlatSigningProvider keystore;
+            for (const auto& script : scripts) {
+                keystore.scripts.emplace(CScriptID(script), script);
+            }
             std::unique_ptr<Descriptor> descriptor = InferDescriptor(GetScriptForDestination(dest), keystore);
 
             UniValue result(UniValue::VOBJ);
