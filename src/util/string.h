@@ -19,6 +19,15 @@
 
 namespace util {
 namespace detail {
+/** Helper allowing literal strings to be passed as template parameters. */
+template<size_t N>
+struct StringLiteral {
+    constexpr StringLiteral(const char (&str)[N]) {
+        std::copy_n(str, N, value);
+    }
+    char value[N];
+};
+
 template <unsigned num_params>
 constexpr static void CheckNumFormatSpecifiers(std::string_view str)
 {

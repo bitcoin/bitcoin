@@ -6,6 +6,7 @@
 #define BITCOIN_UTIL_TRANSLATION_H
 
 #include <tinyformat.h>
+#include <util/string.h>
 
 #include <functional>
 #include <string>
@@ -47,8 +48,22 @@ inline bilingual_str operator+(bilingual_str lhs, const bilingual_str& rhs)
     return lhs;
 }
 
+/**
+ * Subclass of bilingual_str for literal strings, augumenting the struct with a
+ * compile-time copy of the literal.
+ */
+template<util::detail::StringLiteral _lit>
+struct bilingual_lit : bilingual_str
+{
+    static constexpr auto lit = _lit;
+    bilingual_lit(bilingual_str str) : bilingual_str{std::move(str)} {}
+};
+
 /** Mark a bilingual_str as untranslated */
 inline bilingual_str Untranslated(std::string original) { return {original, original}; }
+
+template<util::detail::StringLiteral lit>
+inline bilingual_lit<lit> Untranslated() { return Untranslated(lit.value); }
 
 // Provide an overload of tinyformat::format which can take bilingual_str arguments.
 namespace tinyformat {
@@ -81,5 +96,8 @@ inline bilingual_str _(ConstevalStringLiteral str)
 {
     return bilingual_str{str.lit, G_TRANSLATION_FUN ? (G_TRANSLATION_FUN)(str.lit) : str.lit};
 }
+
+template<util::detail::StringLiteral lit>
+inline bilingual_lit<lit> _() { return _(lit.value); }
 
 #endif // BITCOIN_UTIL_TRANSLATION_H
