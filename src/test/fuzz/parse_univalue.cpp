@@ -6,6 +6,7 @@
 #include <rpc/client.h>
 #include <rpc/util.h>
 #include <test/fuzz/fuzz.h>
+#include <script/signingprovider.h>
 #include <util/chaintype.h>
 
 #include <limits>

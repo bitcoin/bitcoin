@@ -4,6 +4,7 @@
 
 #include <coins.h>
 #include <consensus/validation.h>
+#include <script/sign.h>
 #include <script/signingprovider.h>
 #include <test/util/transaction_utils.h>
 
