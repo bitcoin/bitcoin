@@ -886,7 +886,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
     bilingual_str errors;
     for (const auto& arg : args.GetUnsuitableSectionOnlyArgs()) {
-        errors += strprintf(_("Config setting for %s only applied on %s network when in [%s] section.") + Untranslated("\n"), arg, ChainTypeToString(chain), ChainTypeToString(chain));
+        errors += strprintf(_("Config setting for %s only applied on %s network when in [%s] section."), arg, ChainTypeToString(chain), ChainTypeToString(chain)) + Untranslated("\n");
     }
 
     if (!errors.empty()) {
@@ -901,7 +901,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // Warn if unrecognized section name are present in the config file.
     bilingual_str warnings;
     for (const auto& section : args.GetUnrecognizedSections()) {
-        warnings += strprintf(Untranslated("%s:%i ") + _("Section [%s] is not recognized.") + Untranslated("\n"), section.m_file, section.m_line, section.m_name);
+        warnings += Untranslated(strprintf("%s:%i ", section.m_file, section.m_line)) + strprintf(_("Section [%s] is not recognized."), section.m_name) + Untranslated("\n");
     }
 
     if (!warnings.empty()) {
