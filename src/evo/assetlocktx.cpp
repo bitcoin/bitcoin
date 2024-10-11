@@ -120,8 +120,11 @@ bool CAssetUnlockPayload::VerifySig(const llmq::CQuorumManager& qman, const uint
     const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     assert(llmq_params_opt.has_value());
 
-    // after deployment WITHDRAWALS activated we check not to quorum, but all active quorums + 1 the latest inactive
-    const int quorums_to_scan = DeploymentActiveAt(*pindexTip, Params().GetConsensus(), Consensus::DEPLOYMENT_WITHDRAWALS) ? (llmq_params_opt->signingActiveQuorumCount + 1) : 2;
+    // We check two quorums before DEPLOYMENT_WITHDRAWALS activation
+    // and "all active quorums + 1 the latest inactive" after activation.
+    const int quorums_to_scan = DeploymentActiveAt(*pindexTip, Params().GetConsensus(), Consensus::DEPLOYMENT_WITHDRAWALS)
+                                    ? (llmq_params_opt->signingActiveQuorumCount + 1)
+                                    : 2;
     const auto quorums = qman.ScanQuorums(llmqType, pindexTip, quorums_to_scan);
 
     if (bool isActive = std::any_of(quorums.begin(), quorums.end(), [&](const auto &q) { return q->qc->quorumHash == quorumHash; }); !isActive) {
