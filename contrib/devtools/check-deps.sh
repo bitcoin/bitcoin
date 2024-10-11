@@ -133,7 +133,7 @@ check_disallowed() {
         dst_obj=$(obj_names "$symbol" "${temp_dir}/${dst}_exports.txt")
         while read src_obj; do
             if ! check_suppress "$src_obj" "$dst_obj" "$symbol"; then
-                echo "Error: $src_obj depends on $dst_obj symbol '$(c++filt "$symbol")', can suppess with:"
+                echo "Error: $src_obj depends on $dst_obj symbol '$(c++filt "$symbol")', can suppress with:"
                 echo "    SUPPRESS[\"$src_obj $dst_obj $symbol\"]=1"
                 result=1
             fi
@@ -145,7 +145,7 @@ check_disallowed() {
 # Declare array to track errors which were suppressed.
 declare -A SUPPRESSED
 
-# Return whether error should be suppressed and record suppresssion in
+# Return whether error should be suppressed and record suppression in
 # SUPPRESSED array.
 check_suppress() {
     local src_obj="$1"
@@ -161,7 +161,7 @@ check_suppress() {
     return 1
 }
 
-# Warn about error which were supposed to be suppress, but were not encountered.
+# Warn about error which were supposed to be suppressed, but were not encountered.
 check_not_suppressed() {
     for suppress in "${!SUPPRESS[@]}"; do
         if [[ ! -v SUPPRESSED[$suppress] ]]; then
