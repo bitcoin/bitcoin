@@ -12,7 +12,8 @@ BOOST_AUTO_TEST_SUITE(translation_tests)
 BOOST_AUTO_TEST_CASE(translation_namedparams)
 {
     bilingual_str arg{"original", "translated"};
-    bilingual_str format{"original [%s]", "translated [%s]"};
+    auto format{Untranslated<"original [%s]">()};
+    format.translated = "translated [%s]";
     bilingual_str result{strprintf(format, arg)};
     BOOST_CHECK_EQUAL(result.original, "original [original]");
     BOOST_CHECK_EQUAL(result.translated, "translated [translated]");

@@ -67,9 +67,11 @@ inline bilingual_lit<lit> Untranslated() { return Untranslated(lit.value); }
 
 // Provide an overload of tinyformat::format which can take bilingual_str arguments.
 namespace tinyformat {
-template <typename... Args>
-bilingual_str format(const bilingual_str& fmt, const Args&... args)
+template <util::detail::StringLiteral lit, typename... Args>
+bilingual_str format(const bilingual_lit<lit>& fmt, const Args&... args)
 {
+    constexpr util::ConstevalFormatString<sizeof...(args)> check{lit.value};
+    (void)check;
     const auto translate_arg{[](const auto& arg, bool translated) -> const auto& {
         if constexpr (std::is_same_v<decltype(arg), const bilingual_str&>) {
             return translated ? arg.translated : arg.original;
