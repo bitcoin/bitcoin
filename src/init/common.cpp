@@ -62,13 +62,13 @@ util::Result<void> SetLoggingLevel(const ArgsManager& args)
             if (level_str.find_first_of(':', 3) == std::string::npos) {
                 // user passed a global log level, i.e. -loglevel=<level>
                 if (!LogInstance().SetLogLevel(level_str)) {
-                    return util::Error{strprintf(_("Unsupported global logging level %s=%s. Valid values: %s."), "-loglevel", level_str, LogInstance().LogLevelsString())};
+                    return util::Error{strprintf(_<"Unsupported global logging level %s=%s. Valid values: %s.">(), "-loglevel", level_str, LogInstance().LogLevelsString())};
                 }
             } else {
                 // user passed a category-specific log level, i.e. -loglevel=<category>:<level>
                 const auto& toks = SplitString(level_str, ':');
                 if (!(toks.size() == 2 && LogInstance().SetCategoryLogLevel(toks[0], toks[1]))) {
-                    return util::Error{strprintf(_("Unsupported category-specific logging level %1$s=%2$s. Expected %1$s=<category>:<loglevel>. Valid categories: %3$s. Valid loglevels: %4$s."), "-loglevel", level_str, LogInstance().LogCategoriesString(), LogInstance().LogLevelsString())};
+                    return util::Error{strprintf(_<"Unsupported category-specific logging level %1$s=%2$s. Expected %1$s=<category>:<loglevel>. Valid categories: %3$s. Valid loglevels: %4$s.">(), "-loglevel", level_str, LogInstance().LogCategoriesString(), LogInstance().LogLevelsString())};
                 }
             }
         }
@@ -86,7 +86,7 @@ util::Result<void> SetLoggingCategories(const ArgsManager& args)
             [](std::string cat){return cat == "0" || cat == "none";})) {
             for (const auto& cat : categories) {
                 if (!LogInstance().EnableCategory(cat)) {
-                    return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debug", cat)};
+                    return util::Error{strprintf(_<"Unsupported logging category %s=%s.">(), "-debug", cat)};
                 }
             }
         }
@@ -95,7 +95,7 @@ util::Result<void> SetLoggingCategories(const ArgsManager& args)
     // Now remove the logging categories which were explicitly excluded
     for (const std::string& cat : args.GetArgs("-debugexclude")) {
         if (!LogInstance().DisableCategory(cat)) {
-            return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat)};
+            return util::Error{strprintf(_<"Unsupported logging category %s=%s.">(), "-debugexclude", cat)};
         }
     }
     return {};
@@ -111,7 +111,7 @@ bool StartLogging(const ArgsManager& args)
         }
     }
     if (!LogInstance().StartLogging()) {
-            return InitError(strprintf(Untranslated("Could not open debug log file %s"),
+            return InitError(strprintf(Untranslated<"Could not open debug log file %s">(),
                 fs::PathToString(LogInstance().m_file_path)));
     }
 
@@ -126,7 +126,7 @@ bool StartLogging(const ArgsManager& args)
         LogPrintf("Config file: %s\n", fs::PathToString(config_file_path));
     } else if (args.IsArgSet("-conf")) {
         // Warn if no conf file exists at path provided by user
-        InitWarning(strprintf(_("The specified config file %s does not exist"), fs::PathToString(config_file_path)));
+        InitWarning(strprintf(_<"The specified config file %s does not exist">(), fs::PathToString(config_file_path)));
     } else {
         // Not categorizing as "Warning" because it's the default behavior
         LogPrintf("Config file: %s (not found, skipping)\n", fs::PathToString(config_file_path));

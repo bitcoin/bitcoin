@@ -66,13 +66,13 @@ util::Result<void> ExternalSignerScriptPubKeyMan::DisplayAddress(const CTxDestin
     const UniValue& result = signer.DisplayAddress(descriptor->ToString());
 
     const UniValue& error = result.find_value("error");
-    if (error.isStr()) return util::Error{strprintf(_("Signer returned error: %s"), error.getValStr())};
+    if (error.isStr()) return util::Error{strprintf(_<"Signer returned error: %s">(), error.getValStr())};
 
     const UniValue& ret_address = result.find_value("address");
     if (!ret_address.isStr()) return util::Error{_("Signer did not echo address")};
 
     if (ret_address.getValStr() != EncodeDestination(dest)) {
-        return util::Error{strprintf(_("Signer echoed unexpected address %s"), ret_address.getValStr())};
+        return util::Error{strprintf(_<"Signer echoed unexpected address %s">(), ret_address.getValStr())};
     }
 
     return util::Result<void>();

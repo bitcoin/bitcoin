@@ -2919,7 +2919,7 @@ bool Chainstate::FlushStateToDisk(
         m_chainman.m_options.signals->ChainStateFlushed(this->GetRole(), m_chain.GetLocator());
     }
     } catch (const std::runtime_error& e) {
-        return FatalError(m_chainman.GetNotifications(), state, strprintf(_("System error while flushing: %s"), e.what()));
+        return FatalError(m_chainman.GetNotifications(), state, strprintf(_<"System error while flushing: %s">(), e.what()));
     }
     return true;
 }
@@ -2992,7 +2992,7 @@ void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
             WarningBitsConditionChecker checker(m_chainman, bit);
             ThresholdState state = checker.GetStateFor(pindex, params.GetConsensus(), m_chainman.m_warningcache.at(bit));
             if (state == ThresholdState::ACTIVE || state == ThresholdState::LOCKED_IN) {
-                const bilingual_str warning = strprintf(_("Unknown new rules activated (versionbit %i)"), bit);
+                const bilingual_str warning = strprintf(_<"Unknown new rules activated (versionbit %i)">(), bit);
                 if (state == ThresholdState::ACTIVE) {
                     m_chainman.GetNotifications().warningSet(kernel::Warning::UNKNOWN_NEW_RULES_ACTIVATED, warning);
                 } else {
@@ -4516,7 +4516,7 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
         }
         ReceivedBlockTransactions(block, pindex, blockPos);
     } catch (const std::runtime_error& e) {
-        return FatalError(GetNotifications(), state, strprintf(_("System error while saving block to disk: %s"), e.what()));
+        return FatalError(GetNotifications(), state, strprintf(_<"System error while saving block to disk: %s">(), e.what()));
     }
 
     // TODO: FlushStateToDisk() handles flushing of both block and chainstate
@@ -5187,7 +5187,7 @@ void ChainstateManager::LoadExternalBlockFile(
             }
         }
     } catch (const std::runtime_error& e) {
-        GetNotifications().fatalError(strprintf(_("System error while loading external block file: %s"), e.what()));
+        GetNotifications().fatalError(strprintf(_<"System error while loading external block file: %s">(), e.what()));
     }
     LogPrintf("Loaded %i blocks from external file in %dms\n", nLoaded, Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
 }
@@ -5668,20 +5668,20 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
         if (!GetParams().AssumeutxoForBlockhash(base_blockhash).has_value()) {
             auto available_heights = GetParams().GetAvailableSnapshotHeights();
             std::string heights_formatted = util::Join(available_heights, ", ", [&](const auto& i) { return util::ToString(i); });
-            return util::Error{strprintf(Untranslated("assumeutxo block hash in snapshot metadata not recognized (hash: %s). The following snapshot heights are available: %s"),
+            return util::Error{strprintf(Untranslated<"assumeutxo block hash in snapshot metadata not recognized (hash: %s). The following snapshot heights are available: %s">(),
                 base_blockhash.ToString(),
                 heights_formatted)};
         }
 
         snapshot_start_block = m_blockman.LookupBlockIndex(base_blockhash);
         if (!snapshot_start_block) {
-            return util::Error{strprintf(Untranslated("The base block header (%s) must appear in the headers chain. Make sure all headers are syncing, and call loadtxoutset again"),
+            return util::Error{strprintf(Untranslated<"The base block header (%s) must appear in the headers chain. Make sure all headers are syncing, and call loadtxoutset again">(),
                           base_blockhash.ToString())};
         }
 
         bool start_block_invalid = snapshot_start_block->nStatus & BLOCK_FAILED_MASK;
         if (start_block_invalid) {
-            return util::Error{strprintf(Untranslated("The base block header (%s) is part of an invalid chain"), base_blockhash.ToString())};
+            return util::Error{strprintf(Untranslated<"The base block header (%s) is part of an invalid chain">(), base_blockhash.ToString())};
         }
 
         if (!m_best_header || m_best_header->GetAncestor(snapshot_start_block->nHeight) != snapshot_start_block) {
@@ -5751,8 +5751,8 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
             snapshot_chainstate.reset();
             bool removed = DeleteCoinsDBFromDisk(*snapshot_datadir, /*is_snapshot=*/true);
             if (!removed) {
-                GetNotifications().fatalError(strprintf(_("Failed to remove snapshot chainstate dir (%s). "
-                    "Manually remove it before restarting.\n"), fs::PathToString(*snapshot_datadir)));
+                GetNotifications().fatalError(strprintf(_<"Failed to remove snapshot chainstate dir (%s). "
+                    "Manually remove it before restarting.\n">(), fs::PathToString(*snapshot_datadir)));
             }
         }
         return util::Error{std::move(reason)};
@@ -5760,7 +5760,7 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
 
     if (auto res{this->PopulateAndValidateSnapshot(*snapshot_chainstate, coins_file, metadata)}; !res) {
         LOCK(::cs_main);
-        return cleanup_bad_snapshot(strprintf(Untranslated("Population failed: %s"), util::ErrorString(res)));
+        return cleanup_bad_snapshot(strprintf(Untranslated<"Population failed: %s">(), util::ErrorString(res)));
     }
 
     LOCK(::cs_main);  // cs_main required for rest of snapshot activation.
@@ -5841,7 +5841,7 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
     if (!snapshot_start_block) {
         // Needed for ComputeUTXOStats to determine the
         // height and to avoid a crash when base_blockhash.IsNull()
-        return util::Error{strprintf(Untranslated("Did not find snapshot start blockheader %s"),
+        return util::Error{strprintf(Untranslated<"Did not find snapshot start blockheader %s">(),
                   base_blockhash.ToString())};
     }
 
@@ -5849,8 +5849,8 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
     const auto& maybe_au_data = GetParams().AssumeutxoForHeight(base_height);
 
     if (!maybe_au_data) {
-        return util::Error{strprintf(Untranslated("Assumeutxo height in snapshot metadata not recognized "
-                  "(%d) - refusing to load snapshot"), base_height)};
+        return util::Error{strprintf(Untranslated<"Assumeutxo height in snapshot metadata not recognized "
+                  "(%d) - refusing to load snapshot">(), base_height)};
     }
 
     const AssumeutxoData& au_data = *maybe_au_data;
@@ -5888,11 +5888,11 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
                 if (coin.nHeight > base_height ||
                     outpoint.n >= std::numeric_limits<decltype(outpoint.n)>::max() // Avoid integer wrap-around in coinstats.cpp:ApplyHash
                 ) {
-                    return util::Error{strprintf(Untranslated("Bad snapshot data after deserializing %d coins"),
+                    return util::Error{strprintf(Untranslated<"Bad snapshot data after deserializing %d coins">(),
                               coins_count - coins_left)};
                 }
                 if (!MoneyRange(coin.out.nValue)) {
-                    return util::Error{strprintf(Untranslated("Bad snapshot data after deserializing %d coins - bad tx out value"),
+                    return util::Error{strprintf(Untranslated<"Bad snapshot data after deserializing %d coins - bad tx out value">(),
                               coins_count - coins_left)};
                 }
                 coins_cache.EmplaceCoinInternalDANGER(std::move(outpoint), std::move(coin));
@@ -5931,7 +5931,7 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
                 }
             }
         } catch (const std::ios_base::failure&) {
-            return util::Error{strprintf(Untranslated("Bad snapshot format or truncated snapshot after deserializing %d coins"),
+            return util::Error{strprintf(Untranslated<"Bad snapshot format or truncated snapshot after deserializing %d coins">(),
                       coins_processed)};
         }
     }
@@ -5952,7 +5952,7 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
         out_of_coins = true;
     }
     if (!out_of_coins) {
-        return util::Error{strprintf(Untranslated("Bad snapshot - coins left over after deserializing %d coins"),
+        return util::Error{strprintf(Untranslated<"Bad snapshot - coins left over after deserializing %d coins">(),
             coins_count)};
     }
 
@@ -5984,7 +5984,7 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
 
     // Assert that the deserialized chainstate contents match the expected assumeutxo value.
     if (AssumeutxoHash{maybe_stats->hashSerialized} != au_data.hash_serialized) {
-        return util::Error{strprintf(Untranslated("Bad snapshot content hash: expected %s, got %s"),
+        return util::Error{strprintf(Untranslated<"Bad snapshot content hash: expected %s, got %s">(),
             au_data.hash_serialized.ToString(), maybe_stats->hashSerialized.ToString())};
     }
 
@@ -6066,7 +6066,7 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
     uint256 snapshot_blockhash = *Assert(SnapshotBlockhash());
 
     auto handle_invalid_snapshot = [&]() EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
-        bilingual_str user_error = strprintf(_(
+        bilingual_str user_error = strprintf(_<
             "%s failed to validate the -assumeutxo snapshot state. "
             "This indicates a hardware problem, or a bug in the software, or a "
             "bad software modification that allowed an invalid snapshot to be "
@@ -6077,7 +6077,7 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
             "without using any snapshot data. "
             "Please report this incident to %s, including how you obtained the snapshot. "
             "The invalid snapshot chainstate will be left on disk in case it is "
-            "helpful in diagnosing the issue that caused this error."),
+            "helpful in diagnosing the issue that caused this error.">(),
             PACKAGE_NAME, snapshot_tip_height, snapshot_base_height, snapshot_base_height, PACKAGE_BUGREPORT
         );
 
@@ -6091,7 +6091,7 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
 
         auto rename_result = m_snapshot_chainstate->InvalidateCoinsDBOnDisk();
         if (!rename_result) {
-            user_error = strprintf(Untranslated("%s\n%s"), user_error, util::ErrorString(rename_result));
+            user_error = strprintf(Untranslated<"%s\n%s">(), user_error, util::ErrorString(rename_result));
         }
 
         GetNotifications().fatalError(user_error);
@@ -6338,11 +6338,11 @@ util::Result<void> Chainstate::InvalidateCoinsDBOnDisk()
 
         LogPrintf("%s: error renaming file '%s' -> '%s': %s\n",
                 __func__, src_str, dest_str, e.what());
-        return util::Error{strprintf(_(
+        return util::Error{strprintf(_<
             "Rename of '%s' -> '%s' failed. "
             "You should resolve this by manually moving or deleting the invalid "
             "snapshot directory %s, otherwise you will encounter the same error again "
-            "on the next startup."),
+            "on the next startup.">(),
             src_str, dest_str, src_str)};
     }
     return {};
@@ -6437,9 +6437,9 @@ bool ChainstateManager::ValidatedSnapshotCleanup()
                                    const fs::filesystem_error& err) {
         LogError("[snapshot] Error renaming path (%s) -> (%s): %s\n",
                   fs::PathToString(p_old), fs::PathToString(p_new), err.what());
-        GetNotifications().fatalError(strprintf(_(
+        GetNotifications().fatalError(strprintf(_<
             "Rename of '%s' -> '%s' failed. "
-            "Cannot clean up the background chainstate leveldb directory."),
+            "Cannot clean up the background chainstate leveldb directory.">(),
             fs::PathToString(p_old), fs::PathToString(p_new)));
     };
 

@@ -19,7 +19,7 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
 {
     try {
         if (!CheckDataDirOption(args)) {
-            return ConfigError{ConfigStatus::FAILED, strprintf(_("Specified data directory \"%s\" does not exist."), args.GetArg("-datadir", ""))};
+            return ConfigError{ConfigStatus::FAILED, strprintf(_<"Specified data directory \"%s\" does not exist.">(), args.GetArg("-datadir", ""))};
         }
 
         // Record original datadir and config paths before parsing the config
@@ -36,7 +36,7 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
 
         std::string error;
         if (!args.ReadConfigFiles(error, true)) {
-            return ConfigError{ConfigStatus::FAILED, strprintf(_("Error reading configuration file: %s"), error)};
+            return ConfigError{ConfigStatus::FAILED, strprintf(_<"Error reading configuration file: %s">(), error)};
         }
 
         // Check for chain settings (Params() calls are only valid after this clause)

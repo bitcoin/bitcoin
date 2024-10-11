@@ -274,7 +274,7 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
         if (auto ptr_wtx = wallet.GetWalletTx(outpoint.hash)) {
             // Clearly invalid input, fail
             if (ptr_wtx->tx->vout.size() <= outpoint.n) {
-                return util::Error{strprintf(_("Invalid pre-selected input %s"), outpoint.ToString())};
+                return util::Error{strprintf(_<"Invalid pre-selected input %s">(), outpoint.ToString())};
             }
             txout = ptr_wtx->tx->vout.at(outpoint.n);
             if (input_bytes == -1) {
@@ -284,7 +284,7 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
             // The input is external. We did not find the tx in mapWallet.
             const auto out{coin_control.GetExternalOutput(outpoint)};
             if (!out) {
-                return util::Error{strprintf(_("Not found pre-selected input %s"), outpoint.ToString())};
+                return util::Error{strprintf(_<"Not found pre-selected input %s">(), outpoint.ToString())};
             }
 
             txout = *out;
@@ -295,7 +295,7 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
         }
 
         if (input_bytes == -1) {
-            return util::Error{strprintf(_("Not solvable pre-selected input %s"), outpoint.ToString())}; // Not solvable, can't estimate size for fee
+            return util::Error{strprintf(_<"Not solvable pre-selected input %s">(), outpoint.ToString())}; // Not solvable, can't estimate size for fee
         }
 
         /* Set some defaults for depth, spendable, solvable, safe, time, and from_me as these don't matter for preset inputs since no selection is being done. */
@@ -1024,7 +1024,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     coin_selection_params.m_max_tx_weight = coin_control.m_max_tx_weight.value_or(MAX_STANDARD_TX_WEIGHT);
     int minimum_tx_weight = MIN_STANDARD_TX_NONWITNESS_SIZE * WITNESS_SCALE_FACTOR;
     if (coin_selection_params.m_max_tx_weight.value() < minimum_tx_weight || coin_selection_params.m_max_tx_weight.value() > MAX_STANDARD_TX_WEIGHT) {
-        return util::Error{strprintf(_("Maximum transaction weight must be between %d and %d"), minimum_tx_weight, MAX_STANDARD_TX_WEIGHT)};
+        return util::Error{strprintf(_<"Maximum transaction weight must be between %d and %d">(), minimum_tx_weight, MAX_STANDARD_TX_WEIGHT)};
     }
     // Set the long term feerate estimate to the wallet's consolidate feerate
     coin_selection_params.m_long_term_feerate = wallet.m_consolidate_feerate;
@@ -1102,11 +1102,11 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // Do not, ever, assume that it's fine to change the fee rate if the user has explicitly
     // provided one
     if (coin_control.m_feerate && coin_selection_params.m_effective_feerate > *coin_control.m_feerate) {
-        return util::Error{strprintf(_("Fee rate (%s) is lower than the minimum fee rate setting (%s)"), coin_control.m_feerate->ToString(FeeEstimateMode::SAT_VB), coin_selection_params.m_effective_feerate.ToString(FeeEstimateMode::SAT_VB))};
+        return util::Error{strprintf(_<"Fee rate (%s) is lower than the minimum fee rate setting (%s)">(), coin_control.m_feerate->ToString(FeeEstimateMode::SAT_VB), coin_selection_params.m_effective_feerate.ToString(FeeEstimateMode::SAT_VB))};
     }
     if (feeCalc.reason == FeeReason::FALLBACK && !wallet.m_allow_fallback_fee) {
         // eventually allow a fallback fee
-        return util::Error{strprintf(_("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable %s."), "-fallbackfee")};
+        return util::Error{strprintf(_<"Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable %s.">(), "-fallbackfee")};
     }
 
     // Calculate the cost of change

@@ -197,7 +197,7 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
     uint32_t app_id = static_cast<uint32_t>(read_result.value());
     uint32_t net_magic = ReadBE32(Params().MessageStart().data());
     if (app_id != net_magic) {
-        error = strprintf(_("SQLiteDatabase: Unexpected application id. Expected %u, got %u"), net_magic, app_id);
+        error = strprintf(_<"SQLiteDatabase: Unexpected application id. Expected %u, got %u">(), net_magic, app_id);
         return false;
     }
 
@@ -206,7 +206,7 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
     if (!read_result.has_value()) return false;
     int32_t user_ver = read_result.value();
     if (user_ver != WALLET_SCHEMA_VERSION) {
-        error = strprintf(_("SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported"), user_ver, WALLET_SCHEMA_VERSION);
+        error = strprintf(_<"SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported">(), user_ver, WALLET_SCHEMA_VERSION);
         return false;
     }
 
@@ -214,7 +214,7 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
     int ret = sqlite3_prepare_v2(m_db, "PRAGMA integrity_check", -1, &stmt, nullptr);
     if (ret != SQLITE_OK) {
         sqlite3_finalize(stmt);
-        error = strprintf(_("SQLiteDatabase: Failed to prepare statement to verify database: %s"), sqlite3_errstr(ret));
+        error = strprintf(_<"SQLiteDatabase: Failed to prepare statement to verify database: %s">(), sqlite3_errstr(ret));
         return false;
     }
     while (true) {
@@ -223,12 +223,12 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
             break;
         }
         if (ret != SQLITE_ROW) {
-            error = strprintf(_("SQLiteDatabase: Failed to execute statement to verify database: %s"), sqlite3_errstr(ret));
+            error = strprintf(_<"SQLiteDatabase: Failed to execute statement to verify database: %s">(), sqlite3_errstr(ret));
             break;
         }
         const char* msg = (const char*)sqlite3_column_text(stmt, 0);
         if (!msg) {
-            error = strprintf(_("SQLiteDatabase: Failed to read database verification error: %s"), sqlite3_errstr(ret));
+            error = strprintf(_<"SQLiteDatabase: Failed to read database verification error: %s">(), sqlite3_errstr(ret));
             break;
         }
         std::string str_msg(msg);

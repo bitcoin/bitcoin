@@ -403,7 +403,7 @@ static CTxMemPool::Options&& Flatten(CTxMemPool::Options&& opts, bilingual_str& 
     opts.check_ratio = std::clamp<int>(opts.check_ratio, 0, 1'000'000);
     int64_t descendant_limit_bytes = opts.limits.descendant_size_vbytes * 40;
     if (opts.max_size_bytes < 0 || opts.max_size_bytes < descendant_limit_bytes) {
-        error = strprintf(_("-maxmempool must be at least %d MB"), std::ceil(descendant_limit_bytes / 1'000'000.0));
+        error = strprintf(_<"-maxmempool must be at least %d MB">(), std::ceil(descendant_limit_bytes / 1'000'000.0));
     }
     return std::move(opts);
 }

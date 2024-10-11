@@ -185,7 +185,7 @@ static fs::path GetPidFile(const ArgsManager& args)
         g_generated_pid = true;
         return true;
     } else {
-        return InitError(strprintf(_("Unable to create the PID file '%s': %s"), fs::PathToString(GetPidFile(args)), SysErrorString(errno)));
+        return InitError(strprintf(_<"Unable to create the PID file '%s': %s">(), fs::PathToString(GetPidFile(args)), SysErrorString(errno)));
     }
 }
 
@@ -894,7 +894,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
     bilingual_str errors;
     for (const auto& arg : args.GetUnsuitableSectionOnlyArgs()) {
-        errors += strprintf(_("Config setting for %s only applied on %s network when in [%s] section."), arg, ChainTypeToString(chain), ChainTypeToString(chain)) + Untranslated("\n");
+        errors += strprintf(_<"Config setting for %s only applied on %s network when in [%s] section.">(), arg, ChainTypeToString(chain), ChainTypeToString(chain)) + Untranslated("\n");
     }
 
     if (!errors.empty()) {
@@ -909,7 +909,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // Warn if unrecognized section name are present in the config file.
     bilingual_str warnings;
     for (const auto& section : args.GetUnrecognizedSections()) {
-        warnings += Untranslated(strprintf("%s:%i ", section.m_file, section.m_line)) + strprintf(_("Section [%s] is not recognized."), section.m_name) + Untranslated("\n");
+        warnings += Untranslated(strprintf("%s:%i ", section.m_file, section.m_line)) + strprintf(_<"Section [%s] is not recognized.">(), section.m_name) + Untranslated("\n");
     }
 
     if (!warnings.empty()) {
@@ -917,7 +917,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
 
     if (!fs::is_directory(args.GetBlocksDirPath())) {
-        return InitError(strprintf(_("Specified blocks directory \"%s\" does not exist."), args.GetArg("-blocksdir", "")));
+        return InitError(strprintf(_<"Specified blocks directory \"%s\" does not exist.">(), args.GetArg("-blocksdir", "")));
     }
 
     // parse and validate enabled filter types
@@ -929,7 +929,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         for (const auto& name : names) {
             BlockFilterType filter_type;
             if (!BlockFilterTypeByName(name, filter_type)) {
-                return InitError(strprintf(_("Unknown -blockfilterindex value %s."), name));
+                return InitError(strprintf(_<"Unknown -blockfilterindex value %s.">(), name));
             }
             g_enabled_filter_types.insert(filter_type);
         }
@@ -993,13 +993,13 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     available_fds = std::min(FD_SETSIZE, available_fds);
 #endif
     if (available_fds < min_required_fds)
-        return InitError(strprintf(_("Not enough file descriptors available. %d available, %d required."), available_fds, min_required_fds));
+        return InitError(strprintf(_<"Not enough file descriptors available. %d available, %d required.">(), available_fds, min_required_fds));
 
     // Trim requested connection counts, to fit into system limitations
     nMaxConnections = std::min(available_fds - min_required_fds, user_max_connection);
 
     if (nMaxConnections < user_max_connection)
-        InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), user_max_connection, nMaxConnections));
+        InitWarning(strprintf(_<"Reducing -maxconnections from %d to %d, because of system limitations.">(), user_max_connection, nMaxConnections));
 
     // ********************************************************* Step 3: parameter-to-internal-flags
     if (auto result{init::SetLoggingCategories(args)}; !result) return InitError(util::ErrorString(result));
@@ -1044,7 +1044,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
                 return (pos != std::string::npos) && (doc_option.substr(0, pos) == option);
             });
             if (it == TEST_OPTIONS_DOC.end()) {
-                InitWarning(strprintf(_("Unrecognised option \"%s\" provided in -test=<option>."), option));
+                InitWarning(strprintf(_<"Unrecognised option \"%s\" provided in -test=<option>.">(), option));
             }
         }
     }
@@ -1088,9 +1088,9 @@ static bool LockDataDirectory(bool probeOnly)
     const fs::path& datadir = gArgs.GetDataDirNet();
     switch (util::LockDirectory(datadir, ".lock", probeOnly)) {
     case util::LockResult::ErrorWrite:
-        return InitError(strprintf(_("Cannot write to data directory '%s'; check permissions."), fs::PathToString(datadir)));
+        return InitError(strprintf(_<"Cannot write to data directory '%s'; check permissions.">(), fs::PathToString(datadir)));
     case util::LockResult::ErrorLock:
-        return InitError(strprintf(_("Cannot obtain a lock on data directory %s. %s is probably already running."), fs::PathToString(datadir), PACKAGE_NAME));
+        return InitError(strprintf(_<"Cannot obtain a lock on data directory %s. %s is probably already running.">(), fs::PathToString(datadir), PACKAGE_NAME));
     case util::LockResult::Success: return true;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
@@ -1102,11 +1102,11 @@ bool AppInitSanityChecks(const kernel::Context& kernel)
     auto result{kernel::SanityChecks(kernel)};
     if (!result) {
         InitError(util::ErrorString(result));
-        return InitError(strprintf(_("Initialization sanity check failed. %s is shutting down."), PACKAGE_NAME));
+        return InitError(strprintf(_<"Initialization sanity check failed. %s is shutting down.">(), PACKAGE_NAME));
     }
 
     if (!ECC_InitSanityCheck()) {
-        return InitError(strprintf(_("Elliptic curve cryptography sanity check failure. %s is shutting down."), PACKAGE_NAME));
+        return InitError(strprintf(_<"Elliptic curve cryptography sanity check failure. %s is shutting down.">(), PACKAGE_NAME));
     }
 
     // Probe the data directory lock to give an early error message, if possible
@@ -1218,7 +1218,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
     try {
         node.chainman = std::make_unique<ChainstateManager>(*Assert(node.shutdown), chainman_opts, blockman_opts);
     } catch (std::exception& e) {
-        return {ChainstateLoadStatus::FAILURE_FATAL, strprintf(Untranslated("Failed to initialize ChainstateManager: %s"), e.what())};
+        return {ChainstateLoadStatus::FAILURE_FATAL, strprintf(Untranslated<"Failed to initialize ChainstateManager: %s">(), e.what())};
     }
     ChainstateManager& chainman = *node.chainman;
     // This is defined and set here instead of inline in validation.h to avoid a hard
@@ -1286,7 +1286,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     auto opt_max_upload = ParseByteUnits(args.GetArg("-maxuploadtarget", DEFAULT_MAX_UPLOAD_TARGET), ByteUnit::M);
     if (!opt_max_upload) {
-        return InitError(strprintf(_("Unable to parse -maxuploadtarget: '%s'"), args.GetArg("-maxuploadtarget", "")));
+        return InitError(strprintf(_<"Unable to parse -maxuploadtarget: '%s'">(), args.GetArg("-maxuploadtarget", "")));
     }
 
     // ********************************************************* Step 4a: application initialization
@@ -1349,7 +1349,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             try {
                 ipc->listenAddress(address);
             } catch (const std::exception& e) {
-                return InitError(strprintf(Untranslated("Unable to bind to IPC address '%s'. %s"), address, e.what()));
+                return InitError(strprintf(Untranslated<"Unable to bind to IPC address '%s'. %s">(), address, e.what()));
             }
             LogPrintf("Listening for IPC requests on address %s\n", address);
         }
@@ -1409,12 +1409,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 asmap_path = args.GetDataDirNet() / asmap_path;
             }
             if (!fs::exists(asmap_path)) {
-                InitError(strprintf(_("Could not find asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
+                InitError(strprintf(_<"Could not find asmap file %s">(), fs::quoted(fs::PathToString(asmap_path))));
                 return false;
             }
             asmap = DecodeAsmap(asmap_path);
             if (asmap.size() == 0) {
-                InitError(strprintf(_("Could not parse asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
+                InitError(strprintf(_<"Could not parse asmap file %s">(), fs::quoted(fs::PathToString(asmap_path))));
                 return false;
             }
             const uint256 asmap_version = (HashWriter{} << asmap).GetHash();
@@ -1449,7 +1449,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if (!peerman_opts.ignore_incoming_txs) {
         bool read_stale_estimates = args.GetBoolArg("-acceptstalefeeestimates", DEFAULT_ACCEPT_STALE_FEE_ESTIMATES);
         if (read_stale_estimates && (chainparams.GetChainType() != ChainType::REGTEST)) {
-            return InitError(strprintf(_("acceptstalefeeestimates is not supported on %s chain."), chainparams.GetChainTypeString()));
+            return InitError(strprintf(_<"acceptstalefeeestimates is not supported on %s chain.">(), chainparams.GetChainTypeString()));
         }
         node.fee_estimator = std::make_unique<CBlockPolicyEstimator>(FeeestPath(args), read_stale_estimates);
 
@@ -1472,12 +1472,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     std::vector<std::string> uacomments;
     for (const std::string& cmt : args.GetArgs("-uacomment")) {
         if (cmt != SanitizeString(cmt, SAFE_CHARS_UA_COMMENT))
-            return InitError(strprintf(_("User Agent comment (%s) contains unsafe characters."), cmt));
+            return InitError(strprintf(_<"User Agent comment (%s) contains unsafe characters.">(), cmt));
         uacomments.push_back(cmt);
     }
     strSubVersion = FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, uacomments);
     if (strSubVersion.size() > MAX_SUBVERSION_LENGTH) {
-        return InitError(strprintf(_("Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments."),
+        return InitError(strprintf(_<"Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.">(),
             strSubVersion.size(), MAX_SUBVERSION_LENGTH));
     }
 
@@ -1486,7 +1486,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         for (const std::string& snet : args.GetArgs("-onlynet")) {
             enum Network net = ParseNetwork(snet);
             if (net == NET_UNROUTABLE)
-                return InitError(strprintf(_("Unknown network specified in -onlynet: '%s'"), snet));
+                return InitError(strprintf(_<"Unknown network specified in -onlynet: '%s'">(), snet));
             g_reachable_nets.Add(net);
         }
     }
@@ -1508,7 +1508,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // If -dnsseed=1 is explicitly specified, abort. If it's left unspecified by the user, we skip
     // the DNS seeds by adjusting -dnsseed in InitParameterInteraction.
     if (args.GetBoolArg("-dnsseed") == true && !g_reachable_nets.Contains(NET_IPV4) && !g_reachable_nets.Contains(NET_IPV6)) {
-        return InitError(strprintf(_("Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6")));
+        return InitError(strprintf(_<"Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6">()));
     };
 
     // Check for host lookup allowed before parsing any network related parameters
@@ -1527,14 +1527,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         } else {
             const std::optional<CService> proxyAddr{Lookup(proxyArg, 9050, fNameLookup)};
             if (!proxyAddr.has_value()) {
-                return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
+                return InitError(strprintf(_<"Invalid -proxy address or hostname: '%s'">(), proxyArg));
             }
 
             addrProxy = Proxy(proxyAddr.value(), proxyRandomize);
         }
 
         if (!addrProxy.IsValid())
-            return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
+            return InitError(strprintf(_<"Invalid -proxy address or hostname: '%s'">(), proxyArg));
 
         SetProxy(NET_IPV4, addrProxy);
         SetProxy(NET_IPV6, addrProxy);
@@ -1563,7 +1563,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             } else {
                 const std::optional<CService> addr{Lookup(onionArg, 9050, fNameLookup)};
                 if (!addr.has_value() || !addr->IsValid()) {
-                    return InitError(strprintf(_("Invalid -onion address or hostname: '%s'"), onionArg));
+                    return InitError(strprintf(_<"Invalid -onion address or hostname: '%s'">(), onionArg));
                 }
 
                 onion_proxy = Proxy(addr.value(), proxyRandomize);
@@ -1732,11 +1732,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // ********************************************************* Step 11: import blocks
 
     if (!CheckDiskSpace(args.GetDataDirNet())) {
-        InitError(strprintf(_("Error: Disk space is low for %s"), fs::quoted(fs::PathToString(args.GetDataDirNet()))));
+        InitError(strprintf(_<"Error: Disk space is low for %s">(), fs::quoted(fs::PathToString(args.GetDataDirNet()))));
         return false;
     }
     if (!CheckDiskSpace(args.GetBlocksDirPath())) {
-        InitError(strprintf(_("Error: Disk space is low for %s"), fs::quoted(fs::PathToString(args.GetBlocksDirPath()))));
+        InitError(strprintf(_<"Error: Disk space is low for %s">(), fs::quoted(fs::PathToString(args.GetBlocksDirPath()))));
         return false;
     }
 
@@ -1751,10 +1751,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 assumed_chain_bytes};
 
         if (!CheckDiskSpace(args.GetBlocksDirPath(), additional_bytes_needed)) {
-            InitWarning(strprintf(_(
+            InitWarning(strprintf(_<
                     "Disk space for %s may not accommodate the block files. " \
                     "Approximately %u GB of data will be stored in this directory."
-                ),
+                >(),
                 fs::quoted(fs::PathToString(args.GetBlocksDirPath())),
                 chainparams.AssumedBlockchainSize()
             ));
@@ -1873,9 +1873,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         static_cast<uint16_t>(args.GetIntArg("-port", Params().GetDefaultPort()));
 
     const auto BadPortWarning = [](const char* prefix, uint16_t port) {
-        return strprintf(_("%s request to listen on port %u. This port is considered \"bad\" and "
+        return strprintf(_<"%s request to listen on port %u. This port is considered \"bad\" and "
                            "thus it is unlikely that any peer will connect to it. See "
-                           "doc/p2p-bad-ports.md for details and a full list."),
+                           "doc/p2p-bad-ports.md for details and a full list.">(),
                          prefix,
                          port);
     };
@@ -1938,8 +1938,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     if (args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION)) {
         if (connOptions.onion_binds.size() > 1) {
-            InitWarning(strprintf(_("More than one onion bind address is provided. Using %s "
-                                    "for the automatically created Tor onion service."),
+            InitWarning(strprintf(_<"More than one onion bind address is provided. Using %s "
+                                    "for the automatically created Tor onion service.">(),
                                   onion_service_target.ToStringAddrPort()));
         }
         StartTorControl(onion_service_target);
@@ -1986,7 +1986,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if (!i2psam_arg.empty()) {
         const std::optional<CService> addr{Lookup(i2psam_arg, 7656, fNameLookup)};
         if (!addr.has_value() || !addr->IsValid()) {
-            return InitError(strprintf(_("Invalid -i2psam address or hostname: '%s'"), i2psam_arg));
+            return InitError(strprintf(_<"Invalid -i2psam address or hostname: '%s'">(), i2psam_arg));
         }
         SetProxy(NET_I2P, Proxy{addr.value()});
     } else {
@@ -2068,7 +2068,7 @@ bool StartIndexBackgroundSync(NodeContext& node)
         const CBlockIndex* start_block = *indexes_start_block;
         if (!start_block) start_block = chainman.ActiveChain().Genesis();
         if (!chainman.m_blockman.CheckBlockDataAvailability(*index_chain.Tip(), *Assert(start_block))) {
-            return InitError(strprintf(Untranslated("%s best block of the index goes beyond pruned data. Please disable the index or reindex (which will download the whole blockchain again)"), older_index_name));
+            return InitError(strprintf(Untranslated<"%s best block of the index goes beyond pruned data. Please disable the index or reindex (which will download the whole blockchain again)">(), older_index_name));
         }
     }
 

@@ -153,7 +153,7 @@ bool BerkeleyEnvironment::Open(bilingual_str& err)
     TryCreateDirectories(pathIn);
     if (util::LockDirectory(pathIn, ".walletlock") != util::LockResult::Success) {
         LogPrintf("Cannot obtain a lock on wallet directory %s. Another instance may be using it.\n", strPath);
-        err = strprintf(_("Error initializing wallet database environment %s!"), fs::quoted(fs::PathToString(Directory())));
+        err = strprintf(_<"Error initializing wallet database environment %s!">(), fs::quoted(fs::PathToString(Directory())));
         return false;
     }
 
@@ -194,7 +194,7 @@ bool BerkeleyEnvironment::Open(bilingual_str& err)
             LogPrintf("BerkeleyEnvironment::Open: Error %d closing failed database environment: %s\n", ret2, DbEnv::strerror(ret2));
         }
         Reset();
-        err = strprintf(_("Error initializing wallet database environment %s!"), fs::quoted(fs::PathToString(Directory())));
+        err = strprintf(_<"Error initializing wallet database environment %s!">(), fs::quoted(fs::PathToString(Directory())));
         if (ret == DB_RUNRECOVERY) {
             err += Untranslated(" ") + _("This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet");
         }
@@ -332,7 +332,7 @@ bool BerkeleyDatabase::Verify(bilingual_str& errorStr)
         const std::string strFile = fs::PathToString(m_filename);
         int result = db.verify(strFile.c_str(), nullptr, nullptr, 0);
         if (result != 0) {
-            errorStr = strprintf(_("%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup."), fs::quoted(fs::PathToString(file_path)));
+            errorStr = strprintf(_<"%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.">(), fs::quoted(fs::PathToString(file_path)));
             return false;
         }
     }

@@ -99,7 +99,7 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
                                        newFilename.c_str(), DB_AUTO_COMMIT);
     if (result != 0)
     {
-        error = strprintf(Untranslated("Failed to rename %s to %s"), filename, newFilename);
+        error = strprintf(Untranslated<"Failed to rename %s to %s">(), filename, newFilename);
         return false;
     }
 
@@ -119,7 +119,7 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
         warnings.push_back(Untranslated("Salvage: Database salvage found errors, all data may not be recoverable."));
     }
     if (result != 0 && result != DB_VERIFY_BAD) {
-        error = strprintf(Untranslated("Salvage: Database salvage failed with result %d."), result);
+        error = strprintf(Untranslated<"Salvage: Database salvage failed with result %d.">(), result);
         return false;
     }
 
@@ -160,7 +160,7 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
 
     if (salvagedData.empty())
     {
-        error = strprintf(Untranslated("Salvage(aggressive) found no records in %s."), newFilename);
+        error = strprintf(Untranslated<"Salvage(aggressive) found no records in %s.">(), newFilename);
         return false;
     }
 
@@ -172,7 +172,7 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
                             DB_CREATE,          // Flags
                             0);
     if (ret > 0) {
-        error = strprintf(Untranslated("Cannot create database file %s"), filename);
+        error = strprintf(Untranslated<"Cannot create database file %s">(), filename);
         pdbCopy->close(0);
         return false;
     }
@@ -203,7 +203,7 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
 
         if (!fReadOK)
         {
-            warnings.push_back(strprintf(Untranslated("WARNING: WalletBatch::Recover skipping %s: %s"), strType, strErr));
+            warnings.push_back(strprintf(Untranslated<"WARNING: WalletBatch::Recover skipping %s: %s">(), strType, strErr));
             continue;
         }
         Dbt datKey(row.first.data(), row.first.size());
