@@ -41,7 +41,7 @@ CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CSc
     return txSpend;
 }
 
-std::vector<CMutableTransaction> SetupDummyInputs(FillableSigningProvider& keystoreRet, CCoinsViewCache& coinsRet, const std::array<CAmount,4>& nValues)
+std::vector<CMutableTransaction> SetupDummyInputs(CCoinsViewCache& coinsRet, const std::array<CAmount,4>& nValues)
 {
     std::vector<CMutableTransaction> dummyTransactions;
     dummyTransactions.resize(2);
@@ -50,7 +50,6 @@ std::vector<CMutableTransaction> SetupDummyInputs(FillableSigningProvider& keyst
     CKey key[4];
     for (int i = 0; i < 4; i++) {
         key[i].MakeNewKey(i % 2);
-        keystoreRet.AddKey(key[i]);
     }
 
     // Create some dummy input transactions

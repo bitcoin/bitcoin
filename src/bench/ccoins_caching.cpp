@@ -25,11 +25,10 @@ static void CCoinsCaching(benchmark::Bench& bench)
 {
     ECC_Context ecc_context{};
 
-    FillableSigningProvider keystore;
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
     std::vector<CMutableTransaction> dummyTransactions =
-        SetupDummyInputs(keystore, coins, {11 * COIN, 50 * COIN, 21 * COIN, 22 * COIN});
+        SetupDummyInputs(coins, {11 * COIN, 50 * COIN, 21 * COIN, 22 * COIN});
 
     CMutableTransaction t1;
     t1.vin.resize(3);
