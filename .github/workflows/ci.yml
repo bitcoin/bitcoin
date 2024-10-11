@@ -75,7 +75,7 @@ jobs:
           git rebase --exec "echo Running test-one-commit on \$( git log -1 ) && CC=clang CXX=clang++ cmake -B build -DWERROR=ON -DWITH_ZMQ=ON -DBUILD_GUI=ON -DBUILD_BENCH=ON -DBUILD_FUZZ_BINARY=ON -DWITH_BDB=ON -DWITH_USDT=ON -DCMAKE_CXX_FLAGS='-Wno-error=unused-member-function' && cmake --build build -j $(nproc) && ctest --output-on-failure --test-dir build -j $(nproc) && ./build/test/functional/test_runner.py -j $(( $(nproc) * 2 ))" ${{ env.TEST_BASE }}
 
   macos-native-arm64:
-    name: 'macOS 14 native, arm64, no depends, sqlite only, gui'
+    name: ${{ matrix.job-name }}
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks).
     # See: https://github.com/actions/runner-images#available-images.
     runs-on: macos-14
@@ -85,9 +85,20 @@ jobs:
 
     timeout-minutes: 120
 
+    strategy:
+      fail-fast: false
+      matrix:
+        job-type: [standard, fuzz]
+        include:
+          - job-type: standard
+            file-env: './ci/test/00_setup_env_mac_native.sh'
+            job-name: 'macOS 14 native, arm64, no depends, sqlite only, gui'
+          - job-type: fuzz
+            file-env: './ci/test/00_setup_env_mac_native_fuzz.sh'
+            job-name: 'macOS 14 native, arm64, fuzz'
+
     env:
       DANGER_RUN_CI_ON_HOST: 1
-      FILE_ENV: './ci/test/00_setup_env_mac_native.sh'
       BASE_ROOT_DIR: ${{ github.workspace }}
 
     steps:
@@ -115,11 +126,13 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ${{ github.job }}-ccache-${{ github.run_id }}
-          restore-keys: ${{ github.job }}-ccache-
+          key: ${{ github.job }}-${{ matrix.job-type }}-ccache-${{ github.run_id }}
+          restore-keys: ${{ github.job }}-${{ matrix.job-type }}-ccache-
 
       - name: CI script
         run: ./ci/test_run_all.sh
+        env:
+          FILE_ENV: ${{ matrix.file-env }}
 
       - name: Save Ccache cache
         uses: actions/cache/save@v4
@@ -127,10 +140,10 @@ jobs:
         with:
           path: ${{ env.CCACHE_DIR }}
           # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
-          key: ${{ github.job }}-ccache-${{ github.run_id }}
+          key: ${{ github.job }}-${{ matrix.job-type }}-ccache-${{ github.run_id }}
 
   win64-native:
-    name: 'Win64 native, VS 2022'
+    name: ${{ matrix.job-name }}
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks).
     # See: https://github.com/actions/runner-images#available-images.
     runs-on: windows-2022
@@ -141,6 +154,18 @@ jobs:
     env:
       PYTHONUTF8: 1
       TEST_RUNNER_TIMEOUT_FACTOR: 40
+
+    strategy:
+      fail-fast: false
+      matrix:
+        job-type: [standard, fuzz]
+        include:
+          - job-type: standard
+            generate-options: '-DBUILD_GUI=ON -DWITH_BDB=ON -DWITH_ZMQ=ON -DBUILD_BENCH=ON -DWERROR=ON'
+            job-name: 'Win64 native, VS 2022'
+          - job-type: fuzz
+            generate-options: '-DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="sqlite" -DBUILD_GUI=OFF -DBUILD_FOR_FUZZING=ON -DWERROR=ON'
+            job-name: 'Win64 native fuzz, VS 2022'
 
     steps:
       - name: Checkout
@@ -182,11 +207,11 @@ jobs:
 
       - name: Generate build system
         run: |
-          cmake -B build --preset vs2022-static -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" -DBUILD_GUI=ON -DWITH_BDB=ON -DWITH_ZMQ=ON -DBUILD_BENCH=ON -DBUILD_FUZZ_BINARY=ON -DWERROR=ON
+          cmake -B build --preset vs2022-static -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" ${{ matrix.generate-options }}
 
       - name: Save vcpkg binary cache
         uses: actions/cache/save@v4
-        if: github.event_name != 'pull_request' && steps.vcpkg-binary-cache.outputs.cache-hit != 'true'
+        if: github.event_name != 'pull_request' && steps.vcpkg-binary-cache.outputs.cache-hit != 'true' && matrix.job-type == 'standard'
         with:
           path: ~/AppData/Local/vcpkg/archives
           key: ${{ github.job }}-vcpkg-binary-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
@@ -197,11 +222,13 @@ jobs:
           cmake --build . -j $env:NUMBER_OF_PROCESSORS --config Release
 
       - name: Run test suite
+        if: matrix.job-type == 'standard'
         working-directory: build
         run: |
           ctest --output-on-failure -j $env:NUMBER_OF_PROCESSORS -C Release
 
       - name: Run functional tests
+        if: matrix.job-type == 'standard'
         working-directory: build
         env:
           BITCOIND: '${{ github.workspace }}\build\src\Release\bitcoind.exe'
@@ -211,6 +238,23 @@ jobs:
           TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
         shell: cmd
         run: py -3 test\functional\test_runner.py --jobs %NUMBER_OF_PROCESSORS% --ci --quiet --tmpdirprefix=%RUNNER_TEMP% --combinedlogslen=99999999 --timeout-factor=%TEST_RUNNER_TIMEOUT_FACTOR% %TEST_RUNNER_EXTRA%
+
+      - name: Clone corpora
+        if: matrix.job-type == 'fuzz'
+        run: |
+          git clone --depth=1 https://github.com/bitcoin-core/qa-assets "$env:RUNNER_TEMP\qa-assets"
+          Set-Location "$env:RUNNER_TEMP\qa-assets"
+          Write-Host "Using qa-assets repo from commit ..."
+          git log -1
+
+      - name: Run fuzz tests
+        if: matrix.job-type == 'fuzz'
+        working-directory: build
+        env:
+          BITCOINFUZZ: '${{ github.workspace }}\build\src\test\fuzz\Release\fuzz.exe'
+        shell: cmd
+        run: |
+          py -3 test\fuzz\test_runner.py --par %NUMBER_OF_PROCESSORS% --loglevel DEBUG %RUNNER_TEMP%\qa-assets\fuzz_corpora
 
   asan-lsan-ubsan-integer-no-depends-usdt:
     name: 'ASan + LSan + UBSan + integer, no depends, USDT'
