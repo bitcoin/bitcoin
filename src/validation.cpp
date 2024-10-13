@@ -4603,6 +4603,8 @@ void CChainState::LoadExternalBlockFile(
         unsigned int nMaxBlockSize = MaxBlockSize();
         // This takes over fileIn and calls fclose() on it in the CBufferedFile destructor
         CBufferedFile blkdat(fileIn, 2*nMaxBlockSize, nMaxBlockSize+8, SER_DISK, CLIENT_VERSION);
+        // nRewind indicates where to resume scanning in case something goes wrong,
+        // such as a block fails to deserialize.
         uint64_t nRewind = blkdat.GetPos();
         while (!blkdat.eof()) {
             if (ShutdownRequested()) return;
@@ -4626,28 +4628,30 @@ void CChainState::LoadExternalBlockFile(
                     continue;
             } catch (const std::exception&) {
                 // no valid block header found; don't complain
+                // (this happens at the end of every blk.dat file)
                 break;
             }
             try {
-                // read block
-                uint64_t nBlockPos = blkdat.GetPos();
+                // read block header
+                const uint64_t nBlockPos{blkdat.GetPos()};
                 if (dbp)
                     dbp->nPos = nBlockPos;
                 blkdat.SetLimit(nBlockPos + nSize);
-                std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
-                CBlock& block = *pblock;
-                blkdat >> block;
-                nRewind = blkdat.GetPos();
-
-                uint256 hash = block.GetHash();
+                CBlockHeader header;
+                blkdat >> header;
+                const uint256 hash{header.GetHash()};
+                // Skip the rest of this block (this may read from disk into memory); position to the marker before the
+                // next block, but it's still possible to rewind to the start of the current block (without a disk read).
+                nRewind = nBlockPos + nSize;
+                blkdat.SkipTo(nRewind);
                 {
                     LOCK(cs_main);
                     // detect out of order blocks, and store them for later
-                    if (hash != m_params.GetConsensus().hashGenesisBlock && !m_blockman.LookupBlockIndex(block.hashPrevBlock)) {
+                    if (hash != m_params.GetConsensus().hashGenesisBlock && !m_blockman.LookupBlockIndex(header.hashPrevBlock)) {
                         LogPrint(BCLog::REINDEX, "%s: Out of order block %s, parent %s not known\n", __func__, hash.ToString(),
-                                block.hashPrevBlock.ToString());
+                                 header.hashPrevBlock.ToString());
                         if (dbp && blocks_with_unknown_parent) {
-                            blocks_with_unknown_parent->emplace(block.hashPrevBlock, *dbp);
+                            blocks_with_unknown_parent->emplace(header.hashPrevBlock, *dbp);
                         }
                         continue;
                     }
@@ -4655,13 +4659,19 @@ void CChainState::LoadExternalBlockFile(
                     // process in case the block isn't known yet
                     const CBlockIndex* pindex = m_blockman.LookupBlockIndex(hash);
                     if (!pindex || (pindex->nStatus & BLOCK_HAVE_DATA) == 0) {
-                      BlockValidationState state;
-                      if (AcceptBlock(pblock, state, nullptr, true, dbp, nullptr)) {
-                          nLoaded++;
-                      }
-                      if (state.IsError()) {
-                          break;
-                      }
+                        // This block can be processed immediately; rewind to its start, read and deserialize it.
+                        blkdat.SetPos(nBlockPos);
+                        std::shared_ptr<CBlock> pblock{std::make_shared<CBlock>()};
+                        blkdat >> *pblock;
+                        nRewind = blkdat.GetPos();
+
+                        BlockValidationState state;
+                        if (AcceptBlock(pblock, state, nullptr, true, dbp, nullptr)) {
+                            nLoaded++;
+                        }
+                        if (state.IsError()) {
+                            break;
+                        }
                     } else if (hash != m_params.GetConsensus().hashGenesisBlock && pindex->nHeight % 1000 == 0) {
                         LogPrint(BCLog::REINDEX, "Block Import: already had block %s at height %d\n", hash.ToString(), pindex->nHeight);
                     }
