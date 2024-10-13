@@ -1238,6 +1238,10 @@ bool CDeterministicMNManager::MigrateDBIfNeeded()
         auto dbTx = m_evoDb.BeginTransaction();
         m_evoDb.WriteBestBlock(m_chainstate.m_chain.Tip()->GetBlockHash());
         dbTx->Commit();
+        if (!m_evoDb.CommitRootTransaction()) {
+            LogPrintf("CDeterministicMNManager::%s -- failed to commit to evoDB\n", __func__);
+            return false;
+        }
         return true;
     }
 
@@ -1349,6 +1353,10 @@ bool CDeterministicMNManager::MigrateDBIfNeeded2()
         auto dbTx = m_evoDb.BeginTransaction();
         m_evoDb.WriteBestBlock(m_chainstate.m_chain.Tip()->GetBlockHash());
         dbTx->Commit();
+        if (!m_evoDb.CommitRootTransaction()) {
+            LogPrintf("CDeterministicMNManager::%s -- failed to commit to evoDB\n", __func__);
+            return false;
+        }
         return true;
     }
 
