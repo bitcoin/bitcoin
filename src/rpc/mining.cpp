@@ -661,6 +661,10 @@ static RPCHelpMan getblocktemplate()
     ChainstateManager& chainman = EnsureChainman(node);
     Mining& miner = EnsureMining(node);
     LOCK(cs_main);
+    std::vector<uint256> invalid_blocks{};
+    if (chainman.GetConsensus().enforce_BIP94) {
+        invalid_blocks = miner.rollbackTestnet4();
+    }
     uint256 tip{CHECK_NONFATAL(miner.getTip()).value().hash};
 
     std::string strMode = "template";
@@ -820,6 +824,16 @@ static RPCHelpMan getblocktemplate()
     UpdateTime(&block, consensusParams, pindexPrev);
     block.nNonce = 0;
 
+    // If the last min-difficulty block is more than 20 min into the past from
+    // our system time, we need to set back the clock to because otherwise we
+    // would be mining min difficulty blocks ourself and re-org ourself as well
+    if (consensusParams.enforce_BIP94 && block.nTime > pindexPrev->nTime + 1200) {
+        // Set block time 18 min ahead of the prev block, assuming that the
+        // template should be refreshed roughly once every minute
+        block.nTime = pindexPrev->nTime + 1080;
+        block.nBits = GetNextWorkRequired(pindexPrev, &block, consensusParams);
+    }
+
     // NOTE: If at some point we support pre-segwit miners post-segwit-activation, this needs to take segwit support into consideration
     const bool fPreSegWit = !DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_SEGWIT);
 
@@ -964,6 +978,10 @@ static RPCHelpMan getblocktemplate()
 
     if (!block_template->getCoinbaseCommitment().empty()) {
         result.pushKV("default_witness_commitment", HexStr(block_template->getCoinbaseCommitment()));
+    }
+
+    if (chainman.GetConsensus().enforce_BIP94) {
+        miner.reconsiderTestnet4(invalid_blocks);
     }
 
     return result;

@@ -74,6 +74,9 @@ public:
     //! Returns the hash and height for the tip of this chain
     virtual std::optional<BlockRef> getTip() = 0;
 
+    virtual std::vector<uint256> rollbackTestnet4() = 0;
+    virtual void reconsiderTestnet4(std::vector<uint256> invalids) = 0;
+
     /**
      * Waits for the connected tip to change. If the tip was not connected on
      * startup, this will wait.
