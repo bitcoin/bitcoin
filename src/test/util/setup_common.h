@@ -75,6 +75,23 @@ struct BasicTestingSetup {
     fs::path m_path_root;
     fs::path m_path_lock;
     bool m_has_custom_datadir{false};
+    /** @brief Test-specific arguments and settings.
+     *
+     * This member is intended to be the primary source of settings for code
+     * being tested by unit tests. It exists to make tests more self-contained
+     * and reduce reliance on global state.
+     *
+     * Usage guidelines:
+     * 1. Prefer using m_args where possible in test code.
+     * 2. If m_args is not accessible, use m_node.args as a fallback.
+     * 3. Avoid direct references to gArgs in test code.
+     *
+     * Note: Currently, m_node.args points to gArgs for backwards
+     * compatibility. In the future, it will point to m_args to further isolate
+     * test environments.
+     *
+     * @see https://github.com/bitcoin/bitcoin/issues/25055 for additional context.
+     */
     ArgsManager m_args;
 };
 
