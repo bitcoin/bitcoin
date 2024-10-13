@@ -32,7 +32,7 @@ First, install the general dependencies:
 
     sudo apt update
     sudo apt upgrade
-    sudo apt install cmake curl g++ git make pkg-config
+    sudo apt install cmake curl g++ git make pkg-config xz-utils
 
 A host toolchain (`g++`) is necessary because some dependency
 packages need to build host utilities that are used in the build process.
