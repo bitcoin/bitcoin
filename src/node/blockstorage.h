@@ -12,6 +12,7 @@
 #include <txdb.h>
 
 #include <cstdint>
+#include <unordered_map>
 #include <vector>
 
 extern RecursiveMutex cs_main;
@@ -77,6 +78,10 @@ struct CBlockIndexHeightOnlyComparator {
     bool operator()(const CBlockIndex* pa, const CBlockIndex* pb) const;
 };
 
+struct PruneLockInfo {
+    int height_first{std::numeric_limits<int>::max()}; //! Height of earliest block that should be kept and not pruned
+};
+
 /**
  * Maintains a tree of blocks (stored in `m_block_index`) which is consulted
  * to determine where the most-work tip is.
@@ -137,6 +142,14 @@ private:
     /** Dirty block file entries. */
     std::set<int> m_dirty_fileinfo;
 
+    /**
+     * Map from external index name to oldest block that must not be pruned.
+     *
+     * @note Internally, only blocks at height (height_first - PRUNE_LOCK_BUFFER - 1) and
+     * below will be pruned, but callers should avoid assuming any particular buffer size.
+     */
+    std::unordered_map<std::string, PruneLockInfo> m_prune_locks GUARDED_BY(::cs_main);
+
 public:
     BlockMap m_block_index GUARDED_BY(cs_main);
     PrevBlockMap m_prev_block_index GUARDED_BY(cs_main);
@@ -185,7 +198,13 @@ public:
 
     //! Check whether the block associated with this index entry is pruned or not.
     bool IsBlockPruned(const CBlockIndex* pblockindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! Create or update a prune lock identified by its name
+    void UpdatePruneLock(const std::string& name, const PruneLockInfo& lock_info) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
+
+//! Find the first block that is not pruned
+const CBlockIndex* GetFirstStoredBlock(const CBlockIndex* start_block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 void CleanupBlockRevFiles();
 
