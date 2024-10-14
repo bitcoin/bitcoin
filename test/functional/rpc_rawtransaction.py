@@ -610,6 +610,14 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getbalance(), bal + Decimal('50.00000000') + Decimal('2.19000000'))  # block reward + tx
         assert_raises_rpc_error(-25, "Input not found or already spent", self.nodes[0].combinerawtransaction, [rawTxPartialSigned1['hex'], rawTxPartialSigned2['hex']])
 
+        self.logging.info("Reject non-matching txids when calling combinerawtransaction")
+        rawtx1 = self.nodes[0].createrawtransaction(inputs=[], outputs={self.nodes[0].getnewaddress(): 1})
+        rawtx2 = self.nodes[0].createrawtransaction(inputs=[], outputs={self.nodes[0].getnewaddress(): 1})
+        assert_raises_rpc_error(-25, "Transactions to be combine do not match.", self.nodes[0].combinerawtransaction, [rawtx1, rawtx2])
+
+        self.logging.info("Accept duplicate transactions in combinerawtransaction")
+        rawtx3 = self.nodes[0].combinerawtransaction([rawtx1, rawtx1])
+        assert_equal(rawtx1, rawtx3)
 
 if __name__ == '__main__':
     RawTransactionsTest(__file__).main()

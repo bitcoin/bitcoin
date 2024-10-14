@@ -652,9 +652,15 @@ static RPCHelpMan combinerawtransaction()
     UniValue txs = request.params[0].get_array();
     std::vector<CMutableTransaction> txVariants(txs.size());
 
+    std::optional<Txid> txid;
     for (unsigned int idx = 0; idx < txs.size(); idx++) {
         if (!DecodeHexTx(txVariants[idx], txs[idx].get_str())) {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed for tx %d. Make sure the tx has at least one input.", idx));
+        }
+        if (txid.has_value() && txid.value() != txVariants[idx].GetHash()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Transactions to be combine do not match."));
+        } else {
+            txid = txVariants[idx].GetHash();
         }
     }
 
