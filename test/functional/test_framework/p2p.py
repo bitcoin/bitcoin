@@ -392,8 +392,8 @@ class P2PInterface(P2PConnection):
         vt.strSubVer = self.strSubVer
         self.on_connection_send_msg = vt  # Will be sent soon after connection_made
 
-    def peer_connect(self, *args, services=P2P_SERVICES, send_version=True, **kwargs):
-        create_conn = super().peer_connect(*args, **kwargs)
+    def peer_connect(self, *, services=P2P_SERVICES, send_version, **kwargs):
+        create_conn = super().peer_connect(**kwargs)
 
         if send_version:
             self.peer_connect_send_version(services)
