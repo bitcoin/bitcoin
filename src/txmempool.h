@@ -811,7 +811,7 @@ public:
     class ChangeSet {
     public:
         explicit ChangeSet(CTxMemPool* pool) : m_pool(pool) {}
-        ~ChangeSet() = default;
+        ~ChangeSet() EXCLUSIVE_LOCKS_REQUIRED(m_pool->cs) { m_pool->m_have_changeset = false; }
 
         ChangeSet(const ChangeSet&) = delete;
         ChangeSet& operator=(const ChangeSet&) = delete;
@@ -860,7 +860,13 @@ public:
         friend class CTxMemPool;
     };
 
-    std::unique_ptr<ChangeSet> GetChangeSet() EXCLUSIVE_LOCKS_REQUIRED(cs) { return std::make_unique<ChangeSet>(this); }
+    std::unique_ptr<ChangeSet> GetChangeSet() EXCLUSIVE_LOCKS_REQUIRED(cs) {
+        Assume(!m_have_changeset);
+        m_have_changeset = true;
+        return std::make_unique<ChangeSet>(this);
+    }
+
+    bool m_have_changeset GUARDED_BY(cs){false};
 
     friend class CTxMemPool::ChangeSet;
 
