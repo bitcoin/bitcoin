@@ -191,7 +191,7 @@ std::optional<std::pair<DiagramCheckError, std::string>> ImprovesFeerateDiagram(
                                                 int64_t replacement_vsize)
 {
     // Require that the replacement strictly improves the mempool's feerate diagram.
-    const auto chunk_results{pool.CalculateChunksForRBF(replacement_fees, replacement_vsize, direct_conflicts, all_conflicts)};
+    const auto chunk_results{pool.CalculateChunksForRBF(replacement_fees, replacement_vsize, all_conflicts, all_conflicts)};
 
     if (!chunk_results.has_value()) {
         return std::make_pair(DiagramCheckError::UNCALCULABLE, util::ErrorString(chunk_results).original);
