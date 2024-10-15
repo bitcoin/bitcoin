@@ -671,7 +671,7 @@ public:
         m_sorted_to_original(depgraph.TxCount()),
         m_original_to_sorted(depgraph.PositionRange())
     {
-        // Determine reordering mapping, by sorting by decreasing feerate. Unusued positions are
+        // Determine reordering mapping, by sorting by decreasing feerate. Unused positions are
         // not included, as they will never be looked up anyway.
         ClusterIndex sorted_pos{0};
         for (auto i : depgraph.Positions()) {

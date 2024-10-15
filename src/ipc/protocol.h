@@ -54,7 +54,7 @@ public:
     //! The optional `ready_fn` callback will be called after the event loop is
     //! created but before it is started. This can be useful in tests to trigger
     //! client connections from another thread as soon as the event loop is
-    //! available, but should not be neccessary in normal code which starts
+    //! available, but should not be necessary in normal code which starts
     //! clients and servers independently.
     virtual void serve(int fd, const char* exe_name, interfaces::Init& init, const std::function<void()>& ready_fn = {}) = 0;
 
