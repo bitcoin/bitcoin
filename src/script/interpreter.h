@@ -95,8 +95,11 @@ enum : uint32_t {
     //
     SCRIPT_VERIFY_NULLFAIL = (1U << 14),
 
-    // Enable the opcodes listed in DIP0020 (OP_CAT, OP_AND, OP_OR, OP_XOR, OP_DIV, OP_MOD, OP_SPLIT, OP_BIN2NUM, OP_NUM2BIN, OP_CHECKDATASIG, OP_CHECKDATASIGVERIFY).
-    SCRIPT_ENABLE_DIP0020_OPCODES = (1U << 15),
+    // DIP0020_OPCODES - ignored.
+    // Was used to enable the opcodes listed in DIP0020
+    // (OP_CAT, OP_AND, OP_OR, OP_XOR, OP_DIV, OP_MOD, OP_SPLIT, OP_BIN2NUM,
+    // OP_NUM2BIN, OP_CHECKDATASIG, OP_CHECKDATASIGVERIFY).
+    // SCRIPT_ENABLE_DIP0020_OPCODES = (1U << 15),
 
     // Making OP_CODESEPARATOR and FindAndDelete fail
     //

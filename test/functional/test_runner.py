@@ -325,7 +325,6 @@ BASE_SCRIPTS = [
     'rpc_deprecated_platform_filter.py',
     'rpc_external_queue.py',
     'rpc_wipewallettxes.py',
-    'feature_dip0020_activation.py',
     'feature_uacomment.py',
     'feature_init.py',
     'wallet_coinbase_category.py --legacy-wallet',

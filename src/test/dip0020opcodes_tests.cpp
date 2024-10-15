@@ -28,7 +28,7 @@ static void CheckTestResultForAllFlags(const stacktype& original_stack,
     for (uint32_t flags : flagset) {
         ScriptError err = ScriptError::SCRIPT_ERR_OK;
         stacktype stack{original_stack};
-        bool r = EvalScript(stack, script, flags | SCRIPT_ENABLE_DIP0020_OPCODES, sigchecker, SigVersion::BASE, &err);
+        bool r = EvalScript(stack, script, flags, sigchecker, SigVersion::BASE, &err);
         BOOST_CHECK(r);
         BOOST_CHECK(stack == expected);
     }
@@ -40,7 +40,7 @@ static void CheckError(uint32_t flags, const stacktype& original_stack,
     BaseSignatureChecker sigchecker;
     ScriptError err = ScriptError::SCRIPT_ERR_OK;
     stacktype stack{original_stack};
-    bool r = EvalScript(stack, script, flags | SCRIPT_ENABLE_DIP0020_OPCODES, sigchecker, SigVersion::BASE, &err);
+    bool r = EvalScript(stack, script, flags, sigchecker, SigVersion::BASE, &err);
     BOOST_CHECK(!r);
     BOOST_CHECK(err == expected_error);
 }
@@ -782,12 +782,6 @@ BOOST_AUTO_TEST_CASE(div_and_mod_opcode_tests)
     // 56488123 % 564881230 = 56488123 (and negative operands)
     CheckDivMod({0xbb, 0xf0, 0x5d, 0x03}, {0x4e, 0x67, 0xab, 0x21}, {},
                 {0xbb, 0xf0, 0x5d, 0x03});
-}
-
-BOOST_AUTO_TEST_CASE(check_dip0020_inclusion_in_standard_flags)
-{
-    BOOST_CHECK(STANDARD_SCRIPT_VERIFY_FLAGS &
-                SCRIPT_ENABLE_DIP0020_OPCODES);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
