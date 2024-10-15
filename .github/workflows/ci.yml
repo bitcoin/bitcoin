@@ -74,6 +74,25 @@ jobs:
           # Use clang++, because it is a bit faster and uses less memory than g++
           git rebase --exec "echo Running test-one-commit on \$( git log -1 ) && CC=clang CXX=clang++ cmake -B build -DWERROR=ON -DWITH_ZMQ=ON -DBUILD_GUI=ON -DBUILD_BENCH=ON -DBUILD_FUZZ_BINARY=ON -DWITH_BDB=ON -DWITH_MINIUPNPC=ON -DWITH_USDT=ON && cmake --build build -j $(nproc) && ctest --test-dir build -j $(nproc) && ./build/test/functional/test_runner.py -j $(( $(nproc) * 2 ))" ${{ env.TEST_BASE }}
 
+  label-scripted-diff:
+    name: 'label scripted diff'
+    runs-on: ubuntu-24.04
+    permissions:
+      issues: write
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+      - name: Check for scripted-diff commits and label PR # See: test/lint/commit-script-check.sh
+        run: |
+          if git rev-list --pretty="%s" -n ${{ github.event.pull_request.commits }} HEAD | grep -q "^scripted-diff:"; then
+            gh pr edit ${{ github.event.pull_request.number }} --add-label "scripted-diff"
+            echo "Added 'scripted-diff' label to PR."
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
   macos-native-arm64:
     name: 'macOS 14 native, arm64, no depends, sqlite only, gui'
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks).
