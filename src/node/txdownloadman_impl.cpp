@@ -253,7 +253,8 @@ std::optional<PackageToValidate> TxDownloadManagerImpl::Find1P1CPackage(const CT
     // most recent) one efficiently.
     for (const auto& child : cpfp_candidates_same_peer) {
         Package maybe_cpfp_package{ptx, child};
-        if (!RecentRejectsReconsiderableFilter().contains(GetPackageHash(maybe_cpfp_package))) {
+        if (!RecentRejectsReconsiderableFilter().contains(GetPackageHash(maybe_cpfp_package)) &&
+            !RecentRejectsFilter().contains(child->GetHash().ToUint256())) {
             return PackageToValidate{ptx, child, nodeid, nodeid};
         }
     }
@@ -280,7 +281,8 @@ std::optional<PackageToValidate> TxDownloadManagerImpl::Find1P1CPackage(const CT
         // cached in m_lazy_recent_rejects_reconsiderable.
         const auto [child_tx, child_sender] = cpfp_candidates_different_peer.at(index);
         Package maybe_cpfp_package{ptx, child_tx};
-        if (!RecentRejectsReconsiderableFilter().contains(GetPackageHash(maybe_cpfp_package))) {
+        if (!RecentRejectsReconsiderableFilter().contains(GetPackageHash(maybe_cpfp_package)) &&
+            !RecentRejectsFilter().contains(child_tx->GetHash().ToUint256())) {
             return PackageToValidate{ptx, child_tx, nodeid, child_sender};
         }
     }
