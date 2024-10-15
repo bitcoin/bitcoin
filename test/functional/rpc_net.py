@@ -311,7 +311,7 @@ class NetTest(DashTestFramework):
         by first testing adding a tried table entry before testing adding a new table one.
         """
         self.log.info("Test addpeeraddress")
-        self.restart_node(1, self.extra_args[1] + ["-checkaddrman=1"])
+        self.restart_node(1, ["-checkaddrman=1"])
         node = self.nodes[1]
 
         self.log.debug("Test that addpeerinfo is a hidden RPC")
