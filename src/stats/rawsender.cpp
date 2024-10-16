@@ -24,7 +24,7 @@ RawSender::RawSender(const std::string& host, uint16_t port, std::pair<uint64_t,
     }
 
     if (auto netaddr = LookupHost(m_host, /*fAllowLookup=*/true); netaddr.has_value()) {
-        if (!netaddr->IsIPv4()) {
+        if (!netaddr->IsIPv4() && !netaddr->IsIPv6()) {
             error = strprintf(_("Host %s on unsupported network"), m_host);
             return;
         }
@@ -37,7 +37,7 @@ RawSender::RawSender(const std::string& host, uint16_t port, std::pair<uint64_t,
         return;
     }
 
-    SOCKET hSocket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    SOCKET hSocket = ::socket(reinterpret_cast<struct sockaddr*>(&m_server.first)->sa_family, SOCK_DGRAM, IPPROTO_UDP);
     if (hSocket == INVALID_SOCKET) {
         error = strprintf(_("Cannot create socket (socket() returned error %s)"), NetworkErrorString(WSAGetLastError()));
         return;
