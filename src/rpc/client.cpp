@@ -232,6 +232,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "addpeeraddress", 2, "tried"},
     { "sendmsgtopeer", 0, "peer_id" },
     { "stop", 0, "wait" },
+    { "addnode", 2, "v2transport" },
     { "verifychainlock", 2, "blockHeight" },
     { "verifyislock", 3, "maxHeight" },
     { "submitchainlock", 2, "blockHeight" },

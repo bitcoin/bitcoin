@@ -8,7 +8,15 @@ Tests that a node configured with -prune=550 signals NODE_NETWORK_LIMITED correc
 and that it responds to getdata requests for blocks correctly:
     - send a block within 288 + 2 of the tip
     - disconnect peers who request blocks older than that."""
-from test_framework.messages import CInv, MSG_BLOCK, msg_getdata, NODE_BLOOM, NODE_NETWORK_LIMITED, NODE_HEADERS_COMPRESSED
+from test_framework.messages import (
+    CInv,
+    MSG_BLOCK,
+    NODE_BLOOM,
+    NODE_HEADERS_COMPRESSED,
+    NODE_NETWORK_LIMITED,
+    NODE_P2P_V2,
+    msg_getdata,
+)
 from test_framework.governance import EXPECTED_STDERR_NO_GOV_PRUNE
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
@@ -48,6 +56,8 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         node = self.nodes[0].add_p2p_connection(P2PIgnoreInv())
 
         expected_services = NODE_BLOOM | NODE_NETWORK_LIMITED | NODE_HEADERS_COMPRESSED
+        if self.options.v2transport:
+            expected_services |= NODE_P2P_V2
 
         self.log.info("Check that node has signalled expected services.")
         assert_equal(node.nServices, expected_services)

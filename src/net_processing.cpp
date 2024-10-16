@@ -3596,11 +3596,14 @@ void PeerManagerImpl::ProcessMessage(
             return;
         }
 
-        if (!pfrom.IsInboundConn()) {
-            LogPrintf("New outbound peer connected: version: %d, blocks=%d, peer=%d%s (%s)\n",
+        // Log succesful connections unconditionally for outbound, but not for inbound as those
+        // can be triggered by an attacker at high rate.
+        if (!pfrom.IsInboundConn() || LogAcceptCategory(BCLog::NET)) {
+            LogPrintf("New %s %s peer connected: version: %d, blocks=%d, peer=%d%s\n",
+                      pfrom.ConnectionTypeAsString(),
+                      TransportTypeAsString(pfrom.m_transport->GetInfo().transport_type),
                       pfrom.nVersion.load(), peer->m_starting_height,
-                      pfrom.GetId(), (fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : ""),
-                      pfrom.ConnectionTypeAsString());
+                      pfrom.GetId(), (fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : ""));
         }
 
         if (is_masternode && !pfrom.m_masternode_probe_connection) {
