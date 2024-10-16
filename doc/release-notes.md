@@ -1,9 +1,9 @@
-27.x Release Notes
+27.2rc1 Release Notes
 =====================
 
-Bitcoin Core version 27.x is now available from:
+Bitcoin Core version 27.2rc1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-27.x/>
+  <https://bitcoincore.org/bin/bitcoin-core-27.2/test.rc1/>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
