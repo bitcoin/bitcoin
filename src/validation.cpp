@@ -2103,10 +2103,15 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
     AddCoins(inputs, tx, nHeight);
 }
 
-bool CScriptCheck::operator()() {
+std::optional<ScriptError> CScriptCheck::operator()() {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     const CScriptWitness *witness = &ptxTo->vin[nIn].scriptWitness;
-    return VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, m_tx_out.nValue, cacheStore, *m_signature_cache, *txdata), &error);
+    ScriptError error{SCRIPT_ERR_UNKNOWN_ERROR};
+    if (VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, m_tx_out.nValue, cacheStore, *m_signature_cache, *txdata), &error)) {
+        return std::nullopt;
+    } else {
+        return error;
+    }
 }
 
 ValidationCache::ValidationCache(const size_t script_execution_cache_bytes, const size_t signature_cache_bytes)
@@ -2195,9 +2200,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
         CScriptCheck check(txdata.m_spent_outputs[i], tx, validation_cache.m_signature_cache, i, flags, cacheSigStore, &txdata);
         if (pvChecks) {
             pvChecks->emplace_back(std::move(check));
-        } else if (!check()) {
-            ScriptError error{check.GetScriptError()};
-
+        } else if (auto result = check(); result.has_value()) {
             if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
                 // Check whether the failure was caused by a
                 // non-mandatory script verification check, such as
@@ -2209,21 +2212,23 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                 // data providers.
                 CScriptCheck check2(txdata.m_spent_outputs[i], tx, validation_cache.m_signature_cache, i,
                         flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheSigStore, &txdata);
-                if (check2())
-                    return state.Invalid(TxValidationResult::TX_NOT_STANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(check.GetScriptError())));
-
-                // If the second check failed, it failed due to a mandatory script verification
-                // flag, but the first check might have failed on a non-mandatory script
-                // verification flag.
-                //
-                // Avoid reporting a mandatory script check failure with a non-mandatory error
-                // string by reporting the error from the second check.
-                error = check2.GetScriptError();
+                auto mandatory_result = check2();
+                if (!mandatory_result.has_value()) {
+                    return state.Invalid(TxValidationResult::TX_NOT_STANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(*result)));
+                } else {
+                    // If the second check failed, it failed due to a mandatory script verification
+                    // flag, but the first check might have failed on a non-mandatory script
+                    // verification flag.
+                    //
+                    // Avoid reporting a mandatory script check failure with a non-mandatory error
+                    // string by reporting the error from the second check.
+                    result = mandatory_result;
+                }
             }
 
             // MANDATORY flag failures correspond to
             // TxValidationResult::TX_CONSENSUS.
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(error)));
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(*result)));
         }
     }
 
@@ -2710,7 +2715,8 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
     }
 
-    if (!control.Wait()) {
+    auto parallel_result = control.Complete();
+    if (parallel_result.has_value()) {
         LogPrintf("ERROR: %s: CheckQueue failed\n", __func__);
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "block-validation-failed");
     }
