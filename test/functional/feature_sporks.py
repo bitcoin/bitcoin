@@ -59,5 +59,8 @@ class SporkTest(BitcoinTestFramework):
         self.connect_nodes(1, 2)
         self.wait_until(lambda: self.get_test_spork_state(self.nodes[2]), timeout=10)
 
+        assert "" not in self.nodes[0].spork('show').keys()
+
+
 if __name__ == '__main__':
     SporkTest().main()
