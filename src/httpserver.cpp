@@ -717,6 +717,7 @@ void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch)
 }
 
 namespace http_bitcoin {
+using util::Split;
 
 std::optional<std::string> HTTPHeaders::FindFirst(const std::string_view key) const
 {
@@ -817,5 +818,75 @@ std::string HTTPResponse::StringifyHeaders() const
                      m_status,
                      HTTPStatusReasonString(m_status),
                      m_headers.Stringify());
+}
+
+bool HTTPRequest::LoadControlData(LineReader& reader)
+{
+    auto maybe_line = reader.ReadLine();
+    if (!maybe_line) return false;
+    const std::string_view& request_line = *maybe_line;
+
+    // Request Line aka Control Data https://httpwg.org/specs/rfc9110.html#rfc.section.6.2
+    // Three words separated by spaces, terminated by \n or \r\n
+    if (request_line.length() < MIN_REQUEST_LINE_LENGTH) throw std::runtime_error("HTTP request line too short");
+
+    // NUL is not a valid tchar and would silently truncate
+    // C-string-based parsers rather than being rejected as malformed.
+    // tchar: https://www.rfc-editor.org/info/rfc7230/#section-3.2.6
+    if (request_line.find('\0') != std::string_view::npos) throw std::runtime_error("Invalid request line contains NUL");
+
+    const std::vector<std::string_view> parts{Split<std::string_view>(request_line, " ")};
+    if (parts.size() != 3) throw std::runtime_error("HTTP request line malformed");
+    m_method = parts[0];
+    m_target = parts[1];
+
+    if (parts[2].rfind("HTTP/") != 0) throw std::runtime_error("HTTP request line malformed");
+
+    // Version is exactly two decimal digits separated by a decimal point
+    // https://httpwg.org/specs/rfc9110.html#rfc.section.2.5
+    const std::vector<std::string_view> version_parts{Split<std::string_view>(parts[2].substr(5), ".")};
+    if (version_parts.size() != 2) throw std::runtime_error("HTTP request line malformed");
+    if (version_parts[0].size() != 1 || version_parts[1].size() != 1) throw std::runtime_error("HTTP bad version");
+    auto major = ToIntegral<uint8_t>(version_parts[0]);
+    auto minor = ToIntegral<uint8_t>(version_parts[1]);
+    if (!major || !minor || major != 1 || minor > 9) throw std::runtime_error("HTTP bad version");
+    m_version.major = major.value();
+    m_version.minor = minor.value();
+
+    return true;
+}
+
+bool HTTPRequest::LoadHeaders(LineReader& reader)
+{
+    return m_headers.Read(reader);
+}
+
+bool HTTPRequest::LoadBody(LineReader& reader)
+{
+    // https://httpwg.org/specs/rfc9112.html#message.body
+
+    // No Content-length or Transfer-Encoding header means no body, see libevent evhttp_get_body()
+    // TODO: we must also implement Transfer-Encoding for chunk-reading
+    auto content_length_values{m_headers.FindAll("Content-Length")};
+    if (content_length_values.empty()) return true;
+
+    // Duplicate Content-Length headers are allowed only if they all have the same value
+    // https://www.rfc-editor.org/rfc/rfc7230#section-3.3.3
+    const auto& first_content_length_value{content_length_values[0]};
+    for (size_t i = 1; i < content_length_values.size(); ++i) {
+        if (content_length_values[i] != first_content_length_value) throw std::runtime_error("Differing Content-Length values");
+    }
+
+    const auto content_length{ToIntegral<uint64_t>(first_content_length_value)};
+    if (!content_length) throw std::runtime_error("Cannot parse Content-Length value");
+
+    if (*content_length > MAX_BODY_SIZE) throw ContentTooLargeError("Max body size exceeded");
+
+    // Not enough data in buffer for expected body
+    if (reader.Remaining() < *content_length) return false;
+
+    m_body = reader.ReadLength(*content_length);
+
+    return true;
 }
 } // namespace http_bitcoin
