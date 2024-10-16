@@ -20,6 +20,19 @@ enum HTTPStatusCode
     HTTP_SERVICE_UNAVAILABLE   = 503,
 };
 
+// Copied from libevent http.c success_phrases[] and client_error_phrases[]
+const std::map<HTTPStatusCode, std::string> HTTPReason{
+    {HTTP_OK, "OK"},
+    {HTTP_NO_CONTENT, "No Content"},
+    {HTTP_BAD_REQUEST, "Bad Request"},
+    {HTTP_UNAUTHORIZED, "Unauthorized"},
+    {HTTP_FORBIDDEN, "Forbidden"},
+    {HTTP_NOT_FOUND, "Not Found"},
+    {HTTP_BAD_METHOD, "Method Not Allowed"},
+    {HTTP_INTERNAL_SERVER_ERROR, "Internal Server Error"},
+    {HTTP_SERVICE_UNAVAILABLE, "Service Unavailable"},
+};
+
 //! Bitcoin RPC error codes
 enum RPCErrorCode
 {
