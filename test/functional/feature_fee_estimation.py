@@ -398,6 +398,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.start_node(0)
         self.connect_nodes(0, 1)
         self.connect_nodes(0, 2)
+        self.sync_blocks()
         assert_equal(self.nodes[0].estimatesmartfee(1)["errors"], ["Insufficient data or no feerate found"])
 
     def broadcast_and_mine(self, broadcaster, miner, feerate, count):
