@@ -263,6 +263,17 @@ def getDisabledOpcodeTemplate(opcode):
         'valid_in_block' : True
         })
 
+class NonStandardAndInvalid(BadTxTemplate):
+    """A non-standard transaction which is also consensus-invalid should return the consensus error."""
+    reject_reason = "mandatory-script-verify-flag-failed (OP_RETURN was encountered)"
+    expect_disconnect = True
+    valid_in_block = False
+
+    def get_tx(self):
+        return create_tx_with_script(
+            self.spend_tx, 0, script_sig=b'\x00' * 3 + b'\xab\x6a',
+            amount=(self.spend_avail // 2))
+
 # Disabled opcode tx templates (CVE-2010-5137)
 DisabledOpcodeTemplates = [getDisabledOpcodeTemplate(opcode) for opcode in [
     OP_CAT,
