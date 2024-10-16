@@ -784,6 +784,8 @@ void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch)
 
 
 namespace http_bitcoin {
+using util::SplitString;
+
 std::optional<std::string> HTTPHeaders::Find(const std::string key) const
 {
     const auto it = m_map.find(key);
@@ -850,5 +852,57 @@ std::string HTTPHeaders::Stringify() const
 std::string HTTPResponse::StringifyHeaders() const
 {
     return strprintf("HTTP/%d.%d %d %s\r\n%s", m_version_major, m_version_minor, m_status, m_reason, m_headers.Stringify());
+}
+
+bool HTTPRequest::LoadControlData(LineReader& reader)
+{
+    auto maybe_line = reader.ReadLine();
+    if (!maybe_line) return false;
+    const std::string& request_line = *maybe_line;
+
+    // Request Line aka Control Data https://httpwg.org/specs/rfc9110.html#rfc.section.6.2
+    // Three words separated by spaces, terminated by \n or \r\n
+    if (request_line.length() < MIN_REQUEST_LINE_LENGTH) throw std::runtime_error("HTTP request line too short");
+
+    const std::vector<std::string> parts{SplitString(request_line, " ")};
+    if (parts.size() != 3) throw std::runtime_error("HTTP request line malformed");
+    m_method = parts[0];
+    m_target = parts[1];
+
+    if (parts[2].rfind("HTTP/") != 0) throw std::runtime_error("HTTP request line malformed");
+    const std::vector<std::string> version_parts{SplitString(parts[2].substr(5), ".")};
+    if (version_parts.size() != 2) throw std::runtime_error("HTTP request line malformed");
+    auto major = ToIntegral<int>(version_parts[0]);
+    auto minor = ToIntegral<int>(version_parts[1]);
+    if (!major || !minor) throw std::runtime_error("HTTP request line malformed");
+    m_version_major = major.value();
+    m_version_minor = minor.value();
+
+    return true;
+}
+
+bool HTTPRequest::LoadHeaders(LineReader& reader)
+{
+    return m_headers.Read(reader);
+}
+
+bool HTTPRequest::LoadBody(LineReader& reader)
+{
+    // https://httpwg.org/specs/rfc9112.html#message.body
+
+    // No Content-length or Transfer-Encoding header means no body, see libevent evhttp_get_body()
+    // TODO: we must also implement Transfer-Encoding for chunk-reading
+    auto content_length_value{m_headers.Find("Content-Length")};
+    if (!content_length_value) return true;
+
+    uint64_t content_length;
+    if (!ParseUInt64(content_length_value.value(), &content_length)) throw std::runtime_error("Cannot parse Content-Length value");
+
+    // Not enough data in buffer for expected body
+    if (reader.Left() < content_length) return false;
+
+    m_body = reader.ReadLength(content_length);
+
+    return true;
 }
 } // namespace http_bitcoin
