@@ -478,16 +478,6 @@ void CTxMemPool::addNewTransaction(CTxMemPool::txiter newit, CTxMemPool::setEntr
 {
     const CTxMemPoolEntry& entry = *newit;
 
-    // Update transaction for any feeDelta created by PrioritiseTransaction
-    // TODO: move this into the changeset instead.
-    CAmount delta{0};
-    ApplyDelta(newit->GetTx().GetHash(), delta);
-    // The following call to UpdateModifiedFee assumes no previous fee modifications
-    Assume(newit->GetFee() == newit->GetModifiedFee());
-    if (delta) {
-        mapTx.modify(newit, [&delta](CTxMemPoolEntry& e) { e.UpdateModifiedFee(delta); });
-    }
-
     // Update cachedInnerUsage to include contained transaction's usage.
     // (When we update the entry for in-mempool parents, memory usage will be
     // further updated.)
@@ -1411,8 +1401,13 @@ util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::
 
 CTxMemPool::ChangeSet::TxHandle CTxMemPool::ChangeSet::StageAddition(const CTransactionRef& tx, const CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, bool spends_coinbase, int64_t sigops_cost, LockPoints lp)
 {
+    LOCK(m_pool->cs);
     Assume(m_to_add.find(tx->GetHash()) == m_to_add.end());
     auto newit = m_to_add.emplace(tx, fee, time, entry_height, entry_sequence, spends_coinbase, sigops_cost, lp).first;
+    CAmount delta{0};
+    m_pool->ApplyDelta(tx->GetHash(), delta);
+    if (delta) m_to_add.modify(newit, [&delta](CTxMemPoolEntry& e) { e.UpdateModifiedFee(delta); });
+
     m_entry_vec.push_back(newit);
     return newit;
 }
