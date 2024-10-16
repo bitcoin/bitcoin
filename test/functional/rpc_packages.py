@@ -381,12 +381,14 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert_raises_rpc_error(-25, "package topology disallowed", node.submitpackage, chain_hex)
         assert_equal(legacy_pool, node.getrawmempool())
 
-        assert_raises_rpc_error(-8, f"Array must contain between 2 and {MAX_PACKAGE_COUNT} transactions.", node.submitpackage, [])
-        assert_raises_rpc_error(-8, f"Array must contain between 2 and {MAX_PACKAGE_COUNT} transactions.", node.submitpackage, [chain_hex[0]] * 1)
+        assert_raises_rpc_error(-8, f"Array must contain between 1 and {MAX_PACKAGE_COUNT} transactions.", node.submitpackage, [])
         assert_raises_rpc_error(
-            -8, f"Array must contain between 2 and {MAX_PACKAGE_COUNT} transactions.",
+            -8, f"Array must contain between 1 and {MAX_PACKAGE_COUNT} transactions.",
             node.submitpackage, [chain_hex[0]] * (MAX_PACKAGE_COUNT + 1)
         )
+
+        # Singleton is ok
+        node.submitpackage([chain_hex[0]] * 1)
 
         # Create a transaction chain such as only the parent gets accepted (by making the child's
         # version non-standard). Make sure the parent does get broadcast.
