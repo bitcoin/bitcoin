@@ -11,6 +11,7 @@
 #include <span>
 #include <string>
 
+#include <rpc/protocol.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
@@ -219,6 +220,20 @@ public:
 
 private:
     std::unordered_map<std::string, std::string, util::AsciiCaseInsensitiveHash, util::AsciiCaseInsensitiveKeyEqual> m_map;
+};
+
+class HTTPResponse
+{
+public:
+    int m_version_major;
+    int m_version_minor;
+    HTTPStatusCode m_status;
+    std::string m_reason;
+    HTTPHeaders m_headers;
+    std::vector<std::byte> m_body;
+    bool m_keep_alive{false};
+
+    std::string StringifyHeaders() const;
 };
 } // namespace http_bitcoin
 
