@@ -104,10 +104,18 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
     std::vector<CTransaction> mempool_txs;
     size_t iter{0};
 
-    int32_t replacement_vsize = fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(1, 1000000);
-
     // Keep track of the total vsize of CTxMemPoolEntry's being added to the mempool to avoid overflow
     // Add replacement_vsize since this is added to new diagram during RBF check
+    std::optional<CMutableTransaction> replacement_tx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
+    if (!replacement_tx) {
+        return;
+    }
+    assert(iter <= g_outpoints.size());
+    replacement_tx->vin.resize(1);
+    replacement_tx->vin[0].prevout = g_outpoints[iter++];
+    CTransaction replacement_tx_final{*replacement_tx};
+    auto replacement_entry = ConsumeTxMemPoolEntry(fuzzed_data_provider, replacement_tx_final);
+    int32_t replacement_vsize = replacement_entry.GetTxSize();
     int64_t running_vsize_total{replacement_vsize};
 
     LOCK2(cs_main, pool.cs);
@@ -162,9 +170,17 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
         pool.CalculateDescendants(txiter, all_conflicts);
     }
 
-    // Calculate the chunks for a replacement.
     CAmount replacement_fees = ConsumeMoney(fuzzed_data_provider);
-    auto calc_results{pool.CalculateChunksForRBF(replacement_fees, replacement_vsize, direct_conflicts, all_conflicts)};
+    auto changeset = pool.GetChangeSet();
+    for (auto& txiter : all_conflicts) {
+        changeset->StageRemoval(txiter);
+    }
+    changeset->StageAddition(replacement_entry.GetSharedTx(), replacement_fees,
+            replacement_entry.GetTime().count(), replacement_entry.GetHeight(),
+            replacement_entry.GetSequence(), replacement_entry.GetSpendsCoinbase(),
+            replacement_entry.GetSigOpCost(), replacement_entry.GetLockPoints());
+    // Calculate the chunks for a replacement.
+    auto calc_results{changeset->CalculateChunksForRBF()};
 
     if (calc_results.has_value()) {
         // Sanity checks on the chunks.
@@ -192,7 +208,7 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
     }
 
     // If internals report error, wrapper should too
-    auto err_tuple{ImprovesFeerateDiagram(pool, direct_conflicts, all_conflicts, replacement_fees, replacement_vsize)};
+    auto err_tuple{ImprovesFeerateDiagram(*changeset)};
     if (!calc_results.has_value()) {
          assert(err_tuple.value().first == DiagramCheckError::UNCALCULABLE);
     } else {

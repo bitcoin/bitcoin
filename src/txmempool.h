@@ -706,23 +706,6 @@ public:
         return m_sequence_number;
     }
 
-    /**
-     * Calculate the sorted chunks for the old and new mempool relating to the
-     * clusters that would be affected by a potential replacement transaction.
-     * (replacement_fees, replacement_vsize) values are gathered from a
-     * proposed set of replacement transactions that are considered as a single
-     * chunk, and represent their complete cluster. In other words, they have no
-     * in-mempool ancestors.
-     *
-     * @param[in] replacement_fees    Package fees
-     * @param[in] replacement_vsize   Package size (must be greater than 0)
-     * @param[in] direct_conflicts    All transactions that would be removed directly by
-     *                                having a conflicting input with a proposed transaction
-     * @param[in] all_conflicts       All transactions that would be removed
-     * @return old and new diagram pair respectively, or an error string if the conflicts don't match a calculable topology
-     */
-    util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CalculateChunksForRBF(CAmount replacement_fees, int64_t replacement_vsize, const setEntries& direct_conflicts, const setEntries& all_conflicts) EXCLUSIVE_LOCKS_REQUIRED(cs);
-
     /* Check that all direct conflicts are in a cluster size of two or less. Each
      * direct conflict may be in a separate cluster.
      */
@@ -843,6 +826,14 @@ public:
             }
             return ret;
         }
+
+        /**
+         * Calculate the sorted chunks for the old and new mempool relating to the
+         * clusters that would be affected by a potential replacement transaction.
+         *
+         * @return old and new diagram pair respectively, or an error string if the conflicts don't match a calculable topology
+         */
+        util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CalculateChunksForRBF();
 
         size_t GetTxCount() const { return m_entry_vec.size(); }
         const CTransaction& GetAddedTxn(size_t index) const { return m_entry_vec.at(index)->GetTx(); }

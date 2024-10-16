@@ -1312,11 +1312,15 @@ std::optional<std::string> CTxMemPool::CheckConflictTopology(const setEntries& d
     return std::nullopt;
 }
 
-util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::CalculateChunksForRBF(CAmount replacement_fees, int64_t replacement_vsize, const setEntries& direct_conflicts, const setEntries& all_conflicts)
+util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::ChangeSet::CalculateChunksForRBF()
 {
-    Assume(replacement_vsize > 0);
+    LOCK(m_pool->cs);
+    FeeFrac replacement_feerate{0, 0};
+    for (auto it : m_entry_vec) {
+        replacement_feerate += {it->GetModifiedFee(), it->GetTxSize()};
+    }
 
-    auto err_string{CheckConflictTopology(direct_conflicts)};
+    auto err_string{m_pool->CheckConflictTopology(m_to_remove)};
     if (err_string.has_value()) {
         // Unsupported topology for calculating a feerate diagram
         return util::Error{Untranslated(err_string.value())};
@@ -1338,7 +1342,7 @@ util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::
     // they have a strict topology of 1 or two connected transactions.
 
     // OLD: Compute existing chunks from all affected clusters
-    for (auto txiter : all_conflicts) {
+    for (auto txiter : m_to_remove) {
         // Does this transaction have descendants?
         if (txiter->GetCountWithDescendants() > 1) {
             // Consider this tx when we consider the descendant.
@@ -1378,13 +1382,13 @@ util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::
      */
 
     // OLD - CON: Add any parents of direct conflicts that are not conflicted themselves
-    for (auto direct_conflict : direct_conflicts) {
+    for (auto direct_conflict : m_to_remove) {
         // If a direct conflict has an ancestor that is not in all_conflicts,
         // it can be affected by the replacement of the child.
         if (direct_conflict->GetMemPoolParentsConst().size() > 0) {
             // Grab the parent.
             const CTxMemPoolEntry& parent = direct_conflict->GetMemPoolParentsConst().begin()->get();
-            if (!all_conflicts.count(mapTx.iterator_to(parent))) {
+            if (!m_to_remove.contains(m_pool->mapTx.iterator_to(parent))) {
                 // This transaction would be left over, so add to the NEW
                 // diagram.
                 new_chunks.emplace_back(parent.GetModifiedFee(), parent.GetTxSize());
@@ -1392,7 +1396,7 @@ util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::
         }
     }
     // + CNK: Add the proposed chunk itself
-    new_chunks.emplace_back(replacement_fees, int32_t(replacement_vsize));
+    new_chunks.emplace_back(replacement_feerate);
 
     // No topology restrictions post-chunking; sort
     std::sort(new_chunks.begin(), new_chunks.end(), std::greater());

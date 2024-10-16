@@ -117,19 +117,9 @@ std::optional<std::string> PaysForRBF(CAmount original_fees,
 
 /**
  * The replacement transaction must improve the feerate diagram of the mempool.
- * @param[in]   pool                The mempool.
- * @param[in]   direct_conflicts    Set of in-mempool txids corresponding to the direct conflicts i.e.
- *                                  input double-spends with the proposed transaction
- * @param[in]   all_conflicts       Set of mempool entries corresponding to all transactions to be evicted
- * @param[in]   replacement_fees    Fees of proposed replacement package
- * @param[in]   replacement_vsize   Size of proposed replacement package
+ * @param[in]   changeset           The changeset containing proposed additions/removals
  * @returns error type and string if mempool diagram doesn't improve, otherwise std::nullopt.
  */
-std::optional<std::pair<DiagramCheckError, std::string>> ImprovesFeerateDiagram(CTxMemPool& pool,
-                                                const CTxMemPool::setEntries& direct_conflicts,
-                                                const CTxMemPool::setEntries& all_conflicts,
-                                                CAmount replacement_fees,
-                                                int64_t replacement_vsize)
-                                                EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
+std::optional<std::pair<DiagramCheckError, std::string>> ImprovesFeerateDiagram(CTxMemPool::ChangeSet& changeset);
 
 #endif // BITCOIN_POLICY_RBF_H
