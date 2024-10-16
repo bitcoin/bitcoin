@@ -646,7 +646,7 @@ class AssetLocksTest(DashTestFramework):
         assert softfork_active(node_wallet, 'withdrawals')
 
         index = 501
-        while True:
+        while index < 511:
             self.log.info(f"Generating new Asset Unlock tx, index={index}...")
             asset_unlock_tx = self.create_assetunlock(index, COIN, pubkey)
             asset_unlock_tx_payload = CAssetUnlockTx()
