@@ -20,6 +20,27 @@ enum HTTPStatusCode
     HTTP_SERVICE_UNAVAILABLE   = 503,
 };
 
+//! Mapping of HTTP status codes to short string explanation.
+//! Copied from libevent http.c success_phrases[] and client_error_phrases[]
+inline std::string_view HTTPStatusReasonString(HTTPStatusCode code)
+{
+    switch (code) {
+        case HTTP_OK: return "OK";
+        case HTTP_NO_CONTENT: return "No Content";
+        case HTTP_BAD_REQUEST: return "Bad Request";
+        case HTTP_UNAUTHORIZED: return "Unauthorized";
+        case HTTP_FORBIDDEN: return "Forbidden";
+        case HTTP_NOT_FOUND: return "Not Found";
+        case HTTP_BAD_METHOD: return "Method Not Allowed";
+        case HTTP_INTERNAL_SERVER_ERROR: return "Internal Server Error";
+        case HTTP_SERVICE_UNAVAILABLE: return "Service Unavailable";
+    }
+
+    // Reason phrases are optional and may be replaced by local variants.
+    // https://httpwg.org/specs/rfc9110.html#rfc.section.15.1
+    return "";
+}
+
 //! Bitcoin RPC error codes
 enum RPCErrorCode
 {

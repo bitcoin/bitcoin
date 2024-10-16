@@ -10,6 +10,7 @@
 #include <span>
 #include <string>
 
+#include <rpc/protocol.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
@@ -227,6 +228,20 @@ private:
      * https://httpwg.org/specs/rfc9110.html#rfc.section.5.2
      */
     std::vector<std::pair<std::string, std::string>> m_headers;
+};
+
+class HTTPResponse
+{
+public:
+    uint8_t m_version_major;
+    uint8_t m_version_minor;
+    HTTPStatusCode m_status;
+    std::string m_reason;
+    HTTPHeaders m_headers;
+    std::vector<std::byte> m_body;
+    bool m_keep_alive{false};
+
+    std::string StringifyHeaders() const;
 };
 } // namespace http_bitcoin
 

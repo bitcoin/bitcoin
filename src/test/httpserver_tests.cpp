@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <httpserver.h>
+#include <rpc/protocol.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <test/util/str.h>
@@ -11,6 +12,7 @@
 
 using namespace util::hex_literals;
 using http_bitcoin::HTTPHeaders;
+using http_bitcoin::HTTPResponse;
 using http_bitcoin::MAX_HEADERS_SIZE;
 
 BOOST_FIXTURE_TEST_SUITE(httpserver_tests, BasicTestingSetup)
@@ -125,5 +127,27 @@ BOOST_AUTO_TEST_CASE(http_headers_tests)
         headers4.Read(reader4);
         BOOST_CHECK_EQUAL(headers4.FindFirst("key"), "value");
     }
+}
+
+BOOST_AUTO_TEST_CASE(http_response_tests)
+{
+    // Typical HTTP 1.1 response headers
+    HTTPHeaders headers{};
+    headers.Write("Content-Length", "41");
+    // Response points to headers which already exist because some of them
+    // are set before we even know what the response will be.
+    HTTPResponse res;
+    res.m_version_major = 1;
+    res.m_version_minor = 1;
+    res.m_status = HTTP_OK;
+    res.m_reason = HTTPStatusReasonString(res.m_status);
+    std::span<const std::byte> result{StringToBytes(R"({"result":865793,"error":null,"id":null})")};
+    res.m_body.assign(result.begin(), result.end());
+    res.m_headers = std::move(headers);
+    BOOST_CHECK_EQUAL(
+        res.StringifyHeaders(),
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Length: 41\r\n"
+        "\r\n");
 }
 BOOST_AUTO_TEST_SUITE_END()
