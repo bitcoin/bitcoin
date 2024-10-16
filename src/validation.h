@@ -335,7 +335,6 @@ private:
     unsigned int nIn;
     unsigned int nFlags;
     bool cacheStore;
-    ScriptError error{SCRIPT_ERR_UNKNOWN_ERROR};
     PrecomputedTransactionData *txdata;
     SignatureCache* m_signature_cache;
 
@@ -348,9 +347,7 @@ public:
     CScriptCheck(CScriptCheck&&) = default;
     CScriptCheck& operator=(CScriptCheck&&) = default;
 
-    bool operator()();
-
-    ScriptError GetScriptError() const { return error; }
+    std::optional<ScriptError> operator()();
 };
 
 // CScriptCheck is used a lot in std::vector, make sure that's efficient
