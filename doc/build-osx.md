@@ -1,15 +1,15 @@
 # macOS Build Guide
 
-**Updated for MacOS [14](https://www.apple.com/macos/sonoma/)**
+**Updated for MacOS [15](https://www.apple.com/macos/macos-sequoia/)**
 
-This guide describes how to build bitcoind, command-line utilities, and GUI on macOS
+This guide describes how to build bitcoind, command-line utilities, and GUI on macOS.
 
 ## Preparation
 
 The commands in this guide should be executed in a Terminal application.
 macOS comes with a built-in Terminal located in:
 
-```
+```bash
 /Applications/Utilities/Terminal.app
 ```
 
@@ -50,18 +50,6 @@ To install, run the following from your terminal:
 ``` bash
 brew install cmake boost pkg-config libevent
 ```
-
-``` bash
-brew install llvm
-```
-
-And append the following to the configure commands below:
-
-``` bash
--DCMAKE_C_COMPILER="$(brew --prefix llvm)/bin/clang" -DCMAKE_CXX_COMPILER="$(brew --prefix llvm)/bin/clang++"
-```
-
-Try `llvm@17` if compilation fails with the default version of llvm.
 
 ### 4. Clone Bitcoin repository
 
