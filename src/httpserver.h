@@ -10,6 +10,7 @@
 #include <span>
 #include <string>
 
+#include <rpc/protocol.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
@@ -233,6 +234,29 @@ private:
      * https://httpwg.org/specs/rfc9110.html#rfc.section.5.2
      */
     std::vector<std::pair<std::string, std::string>> m_headers;
+};
+
+struct HTTPVersion {
+    /**
+     * Default HTTP protocol version 1.1 is used by error responses
+     * when a request is unreadable.
+     */
+    /// @{
+    uint8_t major{1};
+    uint8_t minor{1};
+    /// @}
+};
+
+
+class HTTPResponse
+{
+public:
+    HTTPVersion m_version;
+
+    HTTPStatusCode m_status{HTTP_INTERNAL_SERVER_ERROR};
+    HTTPHeaders m_headers;
+
+    std::string StringifyHeaders() const;
 };
 } // namespace http_bitcoin
 

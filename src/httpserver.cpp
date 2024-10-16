@@ -808,4 +808,14 @@ std::string HTTPHeaders::Stringify() const
 
     return out;
 }
+
+std::string HTTPResponse::StringifyHeaders() const
+{
+    return strprintf("HTTP/%d.%d %d %s\r\n%s",
+                     m_version.major,
+                     m_version.minor,
+                     m_status,
+                     HTTPStatusReasonString(m_status),
+                     m_headers.Stringify());
+}
 } // namespace http_bitcoin
