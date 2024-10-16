@@ -3,12 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <httpserver.h>
+#include <rpc/protocol.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
 
 using http_bitcoin::HTTPHeaders;
+using http_bitcoin::HTTPResponse;
 
 BOOST_FIXTURE_TEST_SUITE(httpserver_tests, BasicTestingSetup)
 
@@ -93,5 +95,31 @@ BOOST_AUTO_TEST_CASE(http_headers_tests)
         BOOST_CHECK_EQUAL(headers.Find("Content-Length").value(), "46");
         BOOST_CHECK(!headers.Find("Pizza"));
     }
+}
+
+BOOST_AUTO_TEST_CASE(http_response_tests)
+{
+    // Typical HTTP 1.1 response headers
+    HTTPHeaders headers{};
+    headers.Write("Content-Type", "application/json");
+    headers.Write("Date", "Tue, 15 Oct 2024 17:54:12 GMT");
+    headers.Write("Content-Length", "41");
+    // Response points to headers which already exist because some of them
+    // are set before we even know what the response will be.
+    HTTPResponse res;
+    res.m_version_major = 1;
+    res.m_version_minor = 1;
+    res.m_status = HTTP_OK;
+    res.m_reason = HTTPReason.find(res.m_status)->second;
+    res.m_body = StringToBuffer("{\"result\":865793,\"error\":null,\"id\":null\"}");
+    // Everything except the body, which might be raw bytes instead of a string
+    res.m_headers = std::move(headers);
+    BOOST_CHECK_EQUAL(
+        res.StringifyHeaders(),
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Length: 41\r\n"
+        "Content-Type: application/json\r\n"
+        "Date: Tue, 15 Oct 2024 17:54:12 GMT\r\n"
+        "\r\n");
 }
 BOOST_AUTO_TEST_SUITE_END()
