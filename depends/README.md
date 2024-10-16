@@ -54,7 +54,7 @@ For more information, see [SDK Extraction](../contrib/macdeploy/README.md#sdk-ex
 
 #### For Win64 cross compilation
 
-- see [build-windows.md](../doc/build-windows.md#cross-compilation-for-ubuntu-and-windows-subsystem-for-linux)
+    apt install g++-mingw-w64-x86-64-posix
 
 #### For linux (including i386, ARM) cross compilation
 
