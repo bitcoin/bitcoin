@@ -279,7 +279,7 @@ bool AddLocal(const CService& addr_, int nScore)
     if (!g_reachable_nets.Contains(addr))
         return false;
 
-    LogPrintf("AddLocal(%s,%i)\n", addr.ToStringAddrPort(), nScore);
+    LogInfo("AddLocal(%s,%i)\n", addr.ToStringAddrPort(), nScore);
 
     {
         LOCK(g_maplocalhost_mutex);
@@ -302,7 +302,7 @@ bool AddLocal(const CNetAddr &addr, int nScore)
 void RemoveLocal(const CService& addr)
 {
     LOCK(g_maplocalhost_mutex);
-    LogPrintf("RemoveLocal(%s)\n", addr.ToStringAddrPort());
+    LogInfo("RemoveLocal(%s)\n", addr.ToStringAddrPort());
     mapLocalHost.erase(addr);
 }
 
@@ -399,7 +399,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         CNode* pnode = FindNode(static_cast<CService>(addrConnect));
         if (pnode)
         {
-            LogPrintf("Failed to open new connection, already connected\n");
+            LogInfo("Failed to open new connection, already connected\n");
             return nullptr;
         }
     }
@@ -432,7 +432,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
                 LOCK(m_nodes_mutex);
                 CNode* pnode = FindNode(static_cast<CService>(addrConnect));
                 if (pnode) {
-                    LogPrintf("Not opening a connection to %s, already connected to %s\n", pszDest, addrConnect.ToStringAddrPort());
+                    LogInfo("Not opening a connection to %s, already connected to %s\n", pszDest, addrConnect.ToStringAddrPort());
                     return nullptr;
                 }
                 // Add the address to the resolved addresses vector so we can try to connect to it later on
@@ -1708,7 +1708,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     if (!sock) {
         const int nErr = WSAGetLastError();
         if (nErr != WSAEWOULDBLOCK) {
-            LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
+            LogInfo("socket error accept failed: %s\n", NetworkErrorString(nErr));
         }
         return;
     }
@@ -1749,7 +1749,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     }
 
     if (!sock->IsSelectable()) {
-        LogPrintf("connection from %s dropped: non-selectable socket\n", addr.ToStringAddrPort());
+        LogInfo("connection from %s dropped: non-selectable socket\n", addr.ToStringAddrPort());
         return;
     }
 
@@ -2189,7 +2189,7 @@ void CConnman::ThreadDNSAddressSeed()
     if (gArgs.IsArgSet("-seednode")) {
         auto start = NodeClock::now();
         constexpr std::chrono::seconds SEEDNODE_TIMEOUT = 30s;
-        LogPrintf("-seednode enabled. Trying the provided seeds for %d seconds before defaulting to the dnsseeds.\n", SEEDNODE_TIMEOUT.count());
+        LogInfo("-seednode enabled. Trying the provided seeds for %d seconds before defaulting to the dnsseeds.\n", SEEDNODE_TIMEOUT.count());
         while (!interruptNet) {
             if (!interruptNet.sleep_for(std::chrono::milliseconds(500)))
                 return;
@@ -2197,13 +2197,13 @@ void CConnman::ThreadDNSAddressSeed()
             // Abort if we have spent enough time without reaching our target.
             // Giving seed nodes 30 seconds so this does not become a race against fixedseeds (which triggers after 1 min)
             if (NodeClock::now() > start + SEEDNODE_TIMEOUT) {
-                LogPrintf("Couldn't connect to enough peers via seed nodes. Handing fetch logic to the DNS seeds.\n");
+                LogInfo("Couldn't connect to enough peers via seed nodes. Handing fetch logic to the DNS seeds.\n");
                 break;
             }
 
             outbound_connection_count = GetFullOutboundConnCount();
             if (outbound_connection_count >= SEED_OUTBOUND_CONNECTION_THRESHOLD) {
-                LogPrintf("P2P peers available. Finished fetching data from seed nodes.\n");
+                LogInfo("P2P peers available. Finished fetching data from seed nodes.\n");
                 break;
             }
         }
@@ -2246,7 +2246,7 @@ void CConnman::ThreadDNSAddressSeed()
                 seeds_right_now += DNSSEEDS_TO_QUERY_AT_ONCE;
 
                 if (addrman.Size() > 0) {
-                    LogPrintf("Waiting %d seconds before querying DNS seeds.\n", seeds_wait_time.count());
+                    LogInfo("Waiting %d seconds before querying DNS seeds.\n", seeds_wait_time.count());
                     std::chrono::seconds to_wait = seeds_wait_time;
                     while (to_wait.count() > 0) {
                         // if sleeping for the MANY_PEERS interval, wake up
@@ -2258,10 +2258,10 @@ void CConnman::ThreadDNSAddressSeed()
 
                         if (GetFullOutboundConnCount() >= SEED_OUTBOUND_CONNECTION_THRESHOLD) {
                             if (found > 0) {
-                                LogPrintf("%d addresses found from DNS seeds\n", found);
-                                LogPrintf("P2P peers available. Finished DNS seeding.\n");
+                                LogInfo("%d addresses found from DNS seeds\n", found);
+                                LogInfo("P2P peers available. Finished DNS seeding.\n");
                             } else {
-                                LogPrintf("P2P peers available. Skipped DNS seeding.\n");
+                                LogInfo("P2P peers available. Skipped DNS seeding.\n");
                             }
                             return;
                         }
@@ -2273,13 +2273,13 @@ void CConnman::ThreadDNSAddressSeed()
 
             // hold off on querying seeds if P2P network deactivated
             if (!fNetworkActive) {
-                LogPrintf("Waiting for network to be reactivated before querying DNS seeds.\n");
+                LogInfo("Waiting for network to be reactivated before querying DNS seeds.\n");
                 do {
                     if (!interruptNet.sleep_for(std::chrono::seconds{1})) return;
                 } while (!fNetworkActive);
             }
 
-            LogPrintf("Loading addresses from DNS seed %s\n", seed);
+            LogInfo("Loading addresses from DNS seed %s\n", seed);
             // If -proxy is in use, we make an ADDR_FETCH connection to the DNS resolved peer address
             // for the base dns seed domain in chainparams
             if (HaveNameProxy()) {
@@ -2315,9 +2315,9 @@ void CConnman::ThreadDNSAddressSeed()
             }
             --seeds_right_now;
         }
-        LogPrintf("%d addresses found from DNS seeds\n", found);
+        LogInfo("%d addresses found from DNS seeds\n", found);
     } else {
-        LogPrintf("Skipping DNS seeds. Enough peers have been found\n");
+        LogInfo("Skipping DNS seeds. Enough peers have been found\n");
     }
 }
 
@@ -2496,7 +2496,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, Spa
     constexpr std::chrono::seconds ADD_NEXT_SEEDNODE = 10s;
 
     if (!add_fixed_seeds) {
-        LogPrintf("Fixed seeds are disabled\n");
+        LogInfo("Fixed seeds are disabled\n");
     }
 
     while (!interruptNet)
@@ -2534,7 +2534,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, Spa
             // It is cheapest to check if enough time has passed first.
             if (GetTime<std::chrono::seconds>() > start + std::chrono::minutes{1}) {
                 add_fixed_seeds_now = true;
-                LogPrintf("Adding fixed seeds as 60 seconds have passed and addrman is empty for at least one reachable network\n");
+                LogInfo("Adding fixed seeds as 60 seconds have passed and addrman is empty for at least one reachable network\n");
             }
 
             // Perform cheap checks before locking a mutex.
@@ -2542,7 +2542,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, Spa
                 LOCK(m_added_nodes_mutex);
                 if (m_added_node_params.empty()) {
                     add_fixed_seeds_now = true;
-                    LogPrintf("Adding fixed seeds as -dnsseed=0 (or IPv4/IPv6 connections are disabled via -onlynet) and neither -addnode nor -seednode are provided\n");
+                    LogInfo("Adding fixed seeds as -dnsseed=0 (or IPv4/IPv6 connections are disabled via -onlynet) and neither -addnode nor -seednode are provided\n");
                 }
             }
 
@@ -2561,7 +2561,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, Spa
                 local.SetInternal("fixedseeds");
                 addrman.Add(seed_addrs, local);
                 add_fixed_seeds = false;
-                LogPrintf("Added %d fixed seeds from reachable networks.\n", seed_addrs.size());
+                LogInfo("Added %d fixed seeds from reachable networks.\n", seed_addrs.size());
             }
         }
 
@@ -3070,7 +3070,7 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
     // the program was closed and restarted.
     if (sock->SetSockOpt(SOL_SOCKET, SO_REUSEADDR, (sockopt_arg_type)&nOne, sizeof(int)) == SOCKET_ERROR) {
         strError = strprintf(Untranslated("Error setting SO_REUSEADDR on socket: %s, continuing anyway"), NetworkErrorString(WSAGetLastError()));
-        LogPrintf("%s\n", strError.original);
+        LogInfo("%s\n", strError.original);
     }
 
     // some systems don't have IPV6_V6ONLY but are always v6only; others do have the option
@@ -3079,14 +3079,14 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
 #ifdef IPV6_V6ONLY
         if (sock->SetSockOpt(IPPROTO_IPV6, IPV6_V6ONLY, (sockopt_arg_type)&nOne, sizeof(int)) == SOCKET_ERROR) {
             strError = strprintf(Untranslated("Error setting IPV6_V6ONLY on socket: %s, continuing anyway"), NetworkErrorString(WSAGetLastError()));
-            LogPrintf("%s\n", strError.original);
+            LogInfo("%s\n", strError.original);
         }
 #endif
 #ifdef WIN32
         int nProtLevel = PROTECTION_LEVEL_UNRESTRICTED;
         if (sock->SetSockOpt(IPPROTO_IPV6, IPV6_PROTECTION_LEVEL, (const char*)&nProtLevel, sizeof(int)) == SOCKET_ERROR) {
             strError = strprintf(Untranslated("Error setting IPV6_PROTECTION_LEVEL on socket: %s, continuing anyway"), NetworkErrorString(WSAGetLastError()));
-            LogPrintf("%s\n", strError.original);
+            LogInfo("%s\n", strError.original);
         }
 #endif
     }
@@ -3100,7 +3100,7 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
         LogPrintLevel(BCLog::NET, BCLog::Level::Error, "%s\n", strError.original);
         return false;
     }
-    LogPrintf("Bound to %s\n", addrBind.ToStringAddrPort());
+    LogInfo("Bound to %s\n", addrBind.ToStringAddrPort());
 
     // Listen for incoming connections
     if (sock->Listen(SOMAXCONN) == SOCKET_ERROR)
@@ -3121,13 +3121,13 @@ void Discover()
 
     for (const CNetAddr &addr: GetLocalAddresses()) {
         if (AddLocal(addr, LOCAL_IF))
-            LogPrintf("%s: %s\n", __func__, addr.ToStringAddr());
+            LogInfo("%s: %s\n", __func__, addr.ToStringAddr());
     }
 }
 
 void CConnman::SetNetworkActive(bool active)
 {
-    LogPrintf("%s: %s\n", __func__, active);
+    LogInfo("%s: %s\n", __func__, active);
 
     if (fNetworkActive == active) {
         return;
@@ -3256,7 +3256,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         if (m_anchors.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
             m_anchors.resize(MAX_BLOCK_RELAY_ONLY_ANCHORS);
         }
-        LogPrintf("%i block-relay-only anchors will be tried for connections.\n", m_anchors.size());
+        LogInfo("%i block-relay-only anchors will be tried for connections.\n", m_anchors.size());
     }
 
     if (m_client_interface) {
@@ -3290,7 +3290,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     threadSocketHandler = std::thread(&util::TraceThread, "net", [this] { ThreadSocketHandler(); });
 
     if (!gArgs.GetBoolArg("-dnsseed", DEFAULT_DNSSEED))
-        LogPrintf("DNS seeding disabled\n");
+        LogInfo("DNS seeding disabled\n");
     else
         threadDNSAddressSeed = std::thread(&util::TraceThread, "dnsseed", [this] { ThreadDNSAddressSeed(); });
 

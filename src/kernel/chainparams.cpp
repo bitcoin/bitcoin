@@ -443,7 +443,7 @@ public:
                 0,
                 0,
             };
-            LogPrintf("Signet with challenge %s\n", HexStr(bin));
+            LogInfo("Signet with challenge %s\n", HexStr(bin));
         }
 
         if (options.seeds) {
