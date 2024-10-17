@@ -25,7 +25,10 @@ from test_framework.messages import COIN
 from test_framework.p2p import P2PDataStore
 from test_framework.script import OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_not_equal,
+)
 
 
 class InvalidBlockRequestTest(BitcoinTestFramework):
@@ -81,7 +84,7 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         block2.vtx.append(tx2)
         assert_equal(block2.hashMerkleRoot, block2.calc_merkle_root())
         assert_equal(orig_hash, block2.rehash())
-        assert block2_orig.vtx != block2.vtx
+        assert_not_equal(block2_orig.vtx, block2.vtx)
 
         peer.send_blocks_and_test([block2], node, success=False, reject_reason='bad-txns-duplicate')
 
