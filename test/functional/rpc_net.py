@@ -239,7 +239,7 @@ class NetTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getaddednodeinfo(), [])
         self.log.info("Add a node (node2) to node0")
         ip_port = "127.0.0.1:{}".format(p2p_port(2))
-        self.nodes[0].addnode(node=ip_port, command='add')
+        assert self.nodes[0].addnode(node=ip_port, command='add')["result"] == "success"
         self.log.info("Try to add an equivalent ip and check it fails")
         self.log.debug("(note that OpenBSD doesn't support the IPv4 shorthand notation with omitted zero-bytes)")
         if platform.system() != "OpenBSD":
