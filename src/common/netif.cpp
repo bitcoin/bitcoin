@@ -31,6 +31,16 @@
 
 namespace {
 
+std::optional<CNetAddr> FromSockAddr(const struct sockaddr* addr, std::optional<socklen_t> sa_len)
+{
+    // Fill in a CService from the sockaddr, then drop the port part.
+    CService service;
+    if (service.SetSockAddr(addr, sa_len)) {
+        return (CNetAddr)service;
+    }
+    return std::nullopt;
+}
+
 // Linux and FreeBSD 14.0+. For FreeBSD 13.2 the code can be compiled but
 // running it requires loading a special kernel module, otherwise socket(AF_NETLINK,...)
 // will fail, so we skip that.
@@ -167,23 +177,6 @@ std::optional<CNetAddr> QueryDefaultGatewayImpl(sa_family_t family)
 #define ROUNDUP32(a) \
     ((a) > 0 ? (1 + (((a) - 1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
 
-std::optional<CNetAddr> FromSockAddr(const struct sockaddr* addr)
-{
-    // Check valid length. Note that sa_len is not part of POSIX, and exists on MacOS and some BSDs only, so we can't
-    // do this check in SetSockAddr.
-    if (!(addr->sa_family == AF_INET && addr->sa_len == sizeof(struct sockaddr_in)) &&
-        !(addr->sa_family == AF_INET6 && addr->sa_len == sizeof(struct sockaddr_in6))) {
-        return std::nullopt;
-    }
-
-    // Fill in a CService from the sockaddr, then drop the port part.
-    CService service;
-    if (service.SetSockAddr(addr)) {
-        return (CNetAddr)service;
-    }
-    return std::nullopt;
-}
-
 //! MacOS: Get default gateway from route table. See route(4) for the format.
 std::optional<CNetAddr> QueryDefaultGatewayImpl(sa_family_t family)
 {
@@ -217,9 +210,9 @@ std::optional<CNetAddr> QueryDefaultGatewayImpl(sa_family_t family)
                 const struct sockaddr* sa = (const struct sockaddr*)(buf.data() + sa_pos);
                 if ((sa_pos + sa->sa_len) > next_msg_pos) return std::nullopt;
                 if (i == RTAX_DST) {
-                    dst = FromSockAddr(sa);
+                    dst = FromSockAddr(sa, sa->sa_len);
                 } else if (i == RTAX_GATEWAY) {
-                    gateway = FromSockAddr(sa);
+                    gateway = FromSockAddr(sa, sa->sa_len);
                 }
                 // Skip sockaddr entries for bit flags we're not interested in,
                 // move cursor.
@@ -276,9 +269,42 @@ std::vector<CNetAddr> GetLocalAddresses()
 {
     std::vector<CNetAddr> addresses;
 #ifdef WIN32
-    char pszHostName[256] = "";
-    if (gethostname(pszHostName, sizeof(pszHostName)) != SOCKET_ERROR) {
-        addresses = LookupHost(pszHostName, 0, true);
+    DWORD status = 0;
+    std::vector<std::byte> out_buf(15000, {}); // Start with 15KB allocation as recommended in GetAdaptersAddresses documentation.
+    do {
+        ULONG out_buf_len = out_buf.size();
+        status = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_FRIENDLY_NAME,
+                nullptr, reinterpret_cast<PIP_ADAPTER_ADDRESSES>(out_buf.data()), &out_buf_len);
+        if (status == ERROR_BUFFER_OVERFLOW) {
+            // If status == ERROR_BUFFER_OVERFLOW, out_buf_len will contain the needed size.
+            // Unfortunately, this cannot be fully relied on, because another process may have added interfaces.
+            // So to avoid getting stuck due to a race condition, double the buffer size at least
+            // once before retrying.
+            do {
+                out_buf.resize(out_buf.size() * 2);
+            } while (out_buf.size() < out_buf_len);
+        }
+    } while (status == ERROR_BUFFER_OVERFLOW);
+
+    if (status != NO_ERROR) {
+        // This includes ERROR_NO_DATA if there are no addresses.
+        LogPrintLevel(BCLog::NET, BCLog::Level::Error, "Could not get local addreses: %s\n", NetworkErrorString(status));
+        return addresses;
+    }
+
+    for (PIP_ADAPTER_ADDRESSES cur_adapter = reinterpret_cast<PIP_ADAPTER_ADDRESSES>(out_buf.data());
+         cur_adapter != nullptr; cur_adapter = cur_adapter->Next) {
+        if (cur_adapter->OperStatus != IfOperStatusUp) continue;
+        if (cur_adapter->IfType == IF_TYPE_SOFTWARE_LOOPBACK) continue;
+
+        for (PIP_ADAPTER_UNICAST_ADDRESS cur_address = cur_adapter->FirstUnicastAddress;
+             cur_address != nullptr; cur_address = cur_address->Next) {
+            // "The IP address is a cluster address and should not be used by most applications."
+            if ((cur_address->Flags & IP_ADAPTER_ADDRESS_TRANSIENT) != 0) continue;
+
+            std::optional<CNetAddr> addr = FromSockAddr(cur_address->Address.lpSockaddr, static_cast<socklen_t>(cur_address->Address.iSockaddrLength));
+            if (addr) addresses.push_back(*addr);
+        }
     }
 #elif (HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS)
     struct ifaddrs* myaddrs;
@@ -288,13 +314,9 @@ std::vector<CNetAddr> GetLocalAddresses()
             if (ifa->ifa_addr == nullptr) continue;
             if ((ifa->ifa_flags & IFF_UP) == 0) continue;
             if ((ifa->ifa_flags & IFF_LOOPBACK) != 0) continue;
-            if (ifa->ifa_addr->sa_family == AF_INET) {
-                struct sockaddr_in* s4 = (struct sockaddr_in*)(ifa->ifa_addr);
-                addresses.emplace_back(s4->sin_addr);
-            } else if (ifa->ifa_addr->sa_family == AF_INET6) {
-                struct sockaddr_in6* s6 = (struct sockaddr_in6*)(ifa->ifa_addr);
-                addresses.emplace_back(s6->sin6_addr);
-            }
+
+            std::optional<CNetAddr> addr = FromSockAddr(ifa->ifa_addr, std::nullopt);
+            if (addr) addresses.push_back(*addr);
         }
         freeifaddrs(myaddrs);
     }
