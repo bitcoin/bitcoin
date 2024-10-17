@@ -2,10 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <tinyformat.h>
 #include <util/string.h>
 
 #include <boost/test/unit_test.hpp>
 #include <test/util/setup_common.h>
+
+#include <sstream>
 
 using namespace util;
 
@@ -81,5 +84,18 @@ BOOST_AUTO_TEST_CASE(ConstevalFormatString_NumSpec)
     FailFmtWithError<1>("%", err_term);
     FailFmtWithError<1>("%1$", err_term);
 }
+
+BOOST_AUTO_TEST_CASE(tinyformat_ConstevalFormatString)
+{
+    // Ensure invalid format strings don't throw at run-time, when not in DEBUG
+#ifndef DEBUG
+    BOOST_CHECK_EQUAL(tfm::format("%*c", "dummy"), R"(Error "tinyformat: Cannot convert from argument type to integer for use as variable width or precision" while formatting: %*c)");
+    BOOST_CHECK_EQUAL(tfm::format("%2$*3$d", "dummy", "value"), R"(Error "tinyformat: Positional argument out of range" while formatting: %2$*3$d)");
+    std::ostringstream oss;
+    tfm::format(oss, "%.*f", 5);
+    BOOST_CHECK_EQUAL(oss.str(), R"(Error "tinyformat: Too many conversion specifiers in format string" while formatting: %.*f)");
+#endif
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()

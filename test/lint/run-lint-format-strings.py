@@ -13,8 +13,11 @@ import re
 import sys
 
 FALSE_POSITIVES = [
-    ("src/clientversion.cpp", "strprintf(_(COPYRIGHT_HOLDERS).translated, COPYRIGHT_HOLDERS_SUBSTITUTION)"),
+    ("src/clientversion.cpp", "strprintf(_(COPYRIGHT_HOLDERS), COPYRIGHT_HOLDERS_SUBSTITUTION)"),
     ("src/test/translation_tests.cpp", "strprintf(format, arg)"),
+    ("src/test/util_string_tests.cpp", r'tfm::format("%*c", "dummy")'),
+    ("src/test/util_string_tests.cpp", r'tfm::format("%2$*3$d", "dummy", "value")'),
+    ("src/test/util_string_tests.cpp", r'tfm::format(oss, "%.*f", 5)'),
 ]
 
 

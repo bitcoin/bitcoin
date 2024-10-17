@@ -950,7 +950,9 @@ Strings and formatting
 
   - Do not use it when passing strings to `tfm::format`, `strprintf`, `LogInfo`, `LogDebug`, etc.
 
-    - *Rationale*: This is redundant. Tinyformat handles strings.
+    - *Rationale*: Tinyformat handles string parameters. Format strings
+      should be known at compile-time, so using a string literal or
+      `constexpr const char*` allows for compile-time validation.
 
   - Do not use it to convert to `QString`. Use `QString::fromStdString()`.
 
