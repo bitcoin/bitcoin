@@ -220,7 +220,7 @@ static RPCHelpMan loadwallet()
                 "\nNote that all wallet command-line options used when starting bitcoind will be"
                 "\napplied to the new wallet.\n",
                 {
-                    {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet directory or .dat file."},
+                    {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The path to the wallet directory (absolute or relative to the wallets directory), or a legacy wallet's .dat file (within the wallets directory). The default wallets directory is the 'wallets' folder inside the data directory, unless the `-walletdir` option is specified."},
                     {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
                 },
                 RPCResult{
@@ -234,8 +234,21 @@ static RPCHelpMan loadwallet()
                     }
                 },
                 RPCExamples{
-                    HelpExampleCli("loadwallet", "\"test.dat\"")
-            + HelpExampleRpc("loadwallet", "\"test.dat\"")
+                    "\nLoad wallet with files under wallets/foo/:\n"
+                    + HelpExampleCli("loadwallet", "\"foo\"")
+                    + HelpExampleRpc("loadwallet", "\"foo\"")
+                    + "\nLoad wallet with files under wallets/foo/specialWallet/:\n"
+                    + HelpExampleCli("loadwallet", "\"foo/specialWallet/\"")
+                    + HelpExampleRpc("loadwallet", "\"foo/specialWallet/\"")
+                    + "\nLoad wallet using absolute path (Unix):\n"
+                    + HelpExampleCli("loadwallet", "\"/path/to/specialWallet/\"")
+                    + HelpExampleRpc("loadwallet", "\"/path/to/specialWallet/\"")
+                    + "\nLoad wallet using absolute path (Windows):\n"
+                    + HelpExampleCli("loadwallet", "\"C:\\Users\\myusername\\specialWallet\\\"")
+                    + HelpExampleRpc("loadwallet", "\"C:\\Users\\myusername\\specialWallet\\\"")
+                    + "\nLoad legacy wallet.dat file directly under the wallets/ directory:\n"
+                    + HelpExampleCli("loadwallet", "\"legacy.dat\"")
+                    + HelpExampleRpc("loadwallet", "\"legacy.dat\"")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
