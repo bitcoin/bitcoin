@@ -71,7 +71,7 @@ std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,
         // descendants (i.e. if multiple conflicts share a descendant, it will be counted multiple
         // times), but we just want to be conservative to avoid doing too much work.
         if (nConflictingCount > MAX_REPLACEMENT_CANDIDATES) {
-            return strprintf("rejecting replacement %s; too many potential replacements (%d > %d)\n",
+            return strprintf("rejecting replacement %s; too many potential replacements (%d > %d)",
                              txid.ToString(),
                              nConflictingCount,
                              MAX_REPLACEMENT_CANDIDATES);
