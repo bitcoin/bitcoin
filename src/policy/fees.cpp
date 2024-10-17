@@ -902,6 +902,12 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
      * horizons so we already have monotonically increasing estimates and
      * the purpose of conservative estimates is not to let short term
      * fluctuations lower our estimates by too much.
+     *
+     * Note: Monotonically increasing estimates are not guaranteed in certain
+     * data-sparse scenarios. In particular, if estimateCombinedFee returns no
+     * valid data (-1) for some estimates for a lower target, but does return
+     * valid data for a higher target, the estimate can theoretically return a
+     * higher value for higher targets.
      */
     double halfEst = estimateCombinedFee(confTarget/2, HALF_SUCCESS_PCT, true, &tempResult);
     if (feeCalc) {
