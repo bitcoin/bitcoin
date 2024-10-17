@@ -91,7 +91,7 @@ static void SetupCliArgs(ArgsManager& argsman)
                    ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
     argsman.AddArg("-addrinfo", "Get the number of addresses known to the node, per network and total, after filtering for quality and recency. The total number of addresses known to the node may be higher.", ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
     argsman.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the output of -getinfo is the result of multiple non-atomic requests. Some entries in the output may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
-    argsman.AddArg("-netinfo", strprintf("Get network peer connection information from the remote server. An optional integer argument from 0 to %d can be passed for different peers listings (default: 0). Pass \"help\" for detailed help documentation.", NETINFO_MAX_LEVEL), ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
+    argsman.AddArg("-netinfo", strprintf("Get network peer connection information from the remote server. An optional argument from 0 to %d can be passed for different peers listings (default: 0). If a non-zero value is passed, an additional \"outonly\" (or \"o\") argument can be passed to see outbound peers only. Pass \"help\" (or \"h\") for detailed help documentation.", NETINFO_MAX_LEVEL), ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
 
     SetupChainParamsBaseOptions(argsman);
     argsman.AddArg("-color=<when>", strprintf("Color setting for CLI output (default: %s). Valid values: always, auto (add color codes when standard output is connected to a terminal and OS is not WIN32), never.", DEFAULT_COLOR_SETTING), ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
@@ -394,6 +394,7 @@ private:
     bool DetailsRequested() const { return m_details_level > 0 && m_details_level < 5; }
     bool IsAddressSelected() const { return m_details_level == 2 || m_details_level == 4; }
     bool IsVersionSelected() const { return m_details_level == 3 || m_details_level == 4; }
+    bool m_outbound_only_selected{false};
     bool m_is_asmap_on{false};
     size_t m_max_addr_length{0};
     size_t m_max_addr_processed_length{5};
@@ -479,7 +480,16 @@ public:
             if (ParseUInt8(args.at(0), &n)) {
                 m_details_level = std::min(n, NETINFO_MAX_LEVEL);
             } else {
-                throw std::runtime_error(strprintf("invalid -netinfo argument: %s\nFor more information, run: bitcoin-cli -netinfo help", args.at(0)));
+                throw std::runtime_error(strprintf("invalid -netinfo level argument: %s\nFor more information, run: bitcoin-cli -netinfo help", args.at(0)));
+            }
+            if (args.size() > 1) {
+                if (std::string_view s{args.at(1)}; n && (s == "o" || s == "outonly")) {
+                    m_outbound_only_selected = true;
+                } else if (n) {
+                    throw std::runtime_error(strprintf("invalid -netinfo outonly argument: %s\nFor more information, run: bitcoin-cli -netinfo help", s));
+                } else {
+                    throw std::runtime_error(strprintf("invalid -netinfo outonly argument: %s\nThe outonly argument is only valid for a level greater than 0 (the first argument). For more information, run: bitcoin-cli -netinfo help", s));
+                }
             }
         }
         UniValue result(UniValue::VARR);
@@ -514,6 +524,7 @@ public:
             ++m_counts.at(2).at(NETWORKS.size());           // total overall
             if (conn_type == "block-relay-only") ++m_block_relay_peers_count;
             if (conn_type == "manual") ++m_manual_peers_count;
+            if (m_outbound_only_selected && !is_outbound) continue;
             if (DetailsRequested()) {
                 // Push data for this peer to the peers vector.
                 const int peer_id{peer["id"].getInt<int>()};
@@ -648,14 +659,15 @@ public:
     }
 
     const std::string m_help_doc{
-        "-netinfo level|\"help\" \n\n"
+        "-netinfo (level [outonly]) | help\n\n"
         "Returns a network peer connections dashboard with information from the remote server.\n"
         "This human-readable interface will change regularly and is not intended to be a stable API.\n"
         "Under the hood, -netinfo fetches the data by calling getpeerinfo and getnetworkinfo.\n"
-        + strprintf("An optional integer argument from 0 to %d can be passed for different peers listings; values from %d to 255 are parsed as %d.\n", NETINFO_MAX_LEVEL, NETINFO_MAX_LEVEL, NETINFO_MAX_LEVEL) +
-        "Pass \"help\" to see this detailed help documentation.\n"
-        "If more than one argument is passed, only the first one is read and parsed.\n"
-        "Suggestion: use with the Linux watch(1) command for a live dashboard; see example below.\n\n"
+        + strprintf("An optional argument from 0 to %d can be passed for different peers listings; values above %d up to 255 are parsed as %d.\n", NETINFO_MAX_LEVEL, NETINFO_MAX_LEVEL, NETINFO_MAX_LEVEL) +
+        "If that argument is passed, an optional additional \"outonly\" argument may be passed to obtain the listing with outbound peers only.\n"
+        "Pass \"help\" or \"h\" to see this detailed help documentation.\n"
+        "If more than two arguments are passed, only the first two are read and parsed.\n"
+        "Suggestion: use -netinfo with the Linux watch(1) command for a live dashboard; see example below.\n\n"
         "Arguments:\n"
         + strprintf("1. level (integer 0-%d, optional)  Specify the info level of the peers dashboard (default 0):\n", NETINFO_MAX_LEVEL) +
         "                                  0 - Peer counts for each reachable network as well as for block relay peers\n"
@@ -664,7 +676,9 @@ public:
         "                                  2 - Like 1 but with an address column\n"
         "                                  3 - Like 1 but with a version column\n"
         "                                  4 - Like 1 but with both address and version columns\n"
-        "2. help (string \"help\", optional) Print this help documentation instead of the dashboard.\n\n"
+        "2. outonly (\"outonly\" or \"o\", optional) Return the peers listing with outbound peers only, i.e. to save screen space\n"
+        "                                        when a node has many inbound peers. Only valid if a level is passed.\n\n"
+        "help (\"help\" or \"h\", optional) Print this help documentation instead of the dashboard.\n\n"
         "Result:\n\n"
         + strprintf("* The peers listing in levels 1-%d displays all of the peers sorted by direction and minimum ping time:\n\n", NETINFO_MAX_LEVEL) +
         "  Column   Description\n"
@@ -717,6 +731,8 @@ public:
         "> bitcoin-cli -netinfo 1\n\n"
         "Full dashboard\n"
         + strprintf("> bitcoin-cli -netinfo %d\n\n", NETINFO_MAX_LEVEL) +
+        "Full dashboard, but with outbound peers only\n"
+        + strprintf("> bitcoin-cli -netinfo %d outonly\n\n", NETINFO_MAX_LEVEL) +
         "Full live dashboard, adjust --interval or --no-title as needed (Linux)\n"
         + strprintf("> watch --interval 1 --no-title bitcoin-cli -netinfo %d\n\n", NETINFO_MAX_LEVEL) +
         "See this help\n"
@@ -1242,7 +1258,7 @@ static int CommandLineRPC(int argc, char *argv[])
         if (gArgs.IsArgSet("-getinfo")) {
             rh.reset(new GetinfoRequestHandler());
         } else if (gArgs.GetBoolArg("-netinfo", false)) {
-            if (!args.empty() && args.at(0) == "help") {
+            if (!args.empty() && (args.at(0) == "h" || args.at(0) == "help")) {
                 tfm::format(std::cout, "%s\n", NetinfoRequestHandler().m_help_doc);
                 return 0;
             }
