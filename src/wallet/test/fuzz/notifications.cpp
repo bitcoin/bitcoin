@@ -97,7 +97,7 @@ struct FuzzedWallet {
             LOCK(wallet->cs_wallet);
             wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
             auto height{*Assert(chain.getHeight())};
-            wallet->SetLastBlockProcessed(height, chain.getBlockHash(height));
+            wallet->SetBestBlock(height, chain.getBlockHash(height));
         }
         wallet->m_keypool_size = 1; // Avoid timeout in TopUp()
         assert(wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
