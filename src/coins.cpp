@@ -36,10 +36,15 @@ CCoinsViewCache::CCoinsViewCache(CCoinsView* baseIn, bool deterministic) :
     cacheCoins(0, SaltedOutpointHasher(/*deterministic=*/deterministic), CCoinsMap::key_equal{}, &m_cache_coins_memory_resource)
 {
     m_sentinel.second.SelfRef(m_sentinel);
+    m_clean_sentinel.second.SelfRef(m_clean_sentinel);
 }
 
 size_t CCoinsViewCache::DynamicMemoryUsage() const {
     return memusage::DynamicUsage(cacheCoins) + cachedCoinsUsage;
+}
+
+size_t CCoinsViewCache::DynamicMemoryAvailableSpace() const {
+    return cacheCoins.get_allocator().resource()->FreeListBytes();
 }
 
 CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const {
@@ -52,6 +57,8 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const 
         if (ret->second.coin.IsSpent()) {
             // The parent only has an empty entry for this outpoint; we can consider our version as fresh.
             ret->second.AddFlags(CCoinsCacheEntry::FRESH, *ret, m_sentinel);
+        } else {
+            ret->second.SetClean(*ret, m_clean_sentinel);
         }
         cachedCoinsUsage += ret->second.coin.DynamicMemoryUsage();
     }
@@ -252,7 +259,7 @@ bool CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &ha
 }
 
 bool CCoinsViewCache::Flush() {
-    auto cursor{CoinsViewCacheCursor(cachedCoinsUsage, m_sentinel, cacheCoins, /*will_erase=*/true)};
+    auto cursor{CoinsViewCacheCursor(cachedCoinsUsage, m_sentinel, m_clean_sentinel, cacheCoins, /*will_erase=*/true)};
     bool fOk = base->BatchWrite(cursor, hashBlock);
     if (fOk) {
         cacheCoins.clear();
@@ -264,7 +271,7 @@ bool CCoinsViewCache::Flush() {
 
 bool CCoinsViewCache::Sync()
 {
-    auto cursor{CoinsViewCacheCursor(cachedCoinsUsage, m_sentinel, cacheCoins, /*will_erase=*/false)};
+    auto cursor{CoinsViewCacheCursor(cachedCoinsUsage, m_sentinel, m_clean_sentinel, cacheCoins, /*will_erase=*/false)};
     bool fOk = base->BatchWrite(cursor, hashBlock);
     if (fOk) {
         if (m_sentinel.second.Next() != &m_sentinel) {
@@ -273,6 +280,17 @@ bool CCoinsViewCache::Sync()
         }
     }
     return fOk;
+}
+
+void CCoinsViewCache::MaybeShrinkCache(size_t size_to_fit) noexcept
+{
+    auto it{m_clean_sentinel.second.Next()};
+    while (it != &m_clean_sentinel && static_cast<int64_t>(DynamicMemoryUsage()) - DynamicMemoryAvailableSpace() >= size_to_fit) {
+        auto next{it->second.Next()};
+        cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
+        cacheCoins.erase(it->first);
+        it = next;
+    }
 }
 
 void CCoinsViewCache::Uncache(const COutPoint& hash)

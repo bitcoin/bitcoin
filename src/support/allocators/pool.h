@@ -5,6 +5,8 @@
 #ifndef BITCOIN_SUPPORT_ALLOCATORS_POOL_H
 #define BITCOIN_SUPPORT_ALLOCATORS_POOL_H
 
+#include <malloc_usage.h>
+
 #include <array>
 #include <cassert>
 #include <cstddef>
@@ -96,6 +98,11 @@ class PoolResource final
     const size_t m_chunk_size_bytes;
 
     /**
+     * Size in bytes available in the free list
+     */
+    size_t m_free_list_size_bytes{0};
+
+    /**
      * Contains all allocated pools of memory, used to free the data in the destructor.
      */
     std::list<std::byte*> m_allocated_chunks{};
@@ -118,6 +125,11 @@ class PoolResource final
      * whenever it is accessed, but `m_available_memory_end` caches this for clarity and efficiency.
      */
     std::byte* m_available_memory_end = nullptr;
+
+    /**
+     * Total number of bytes allocated through this resource. This includes all data that the pool has forwarded to ::operator new().
+     */
+    std::size_t m_total_allocated = 0;
 
     /**
      * How many multiple of ELEM_ALIGN_BYTES are necessary to fit bytes. We use that result directly as an index
@@ -162,6 +174,10 @@ class PoolResource final
         m_available_memory_it = new (storage) std::byte[m_chunk_size_bytes];
         m_available_memory_end = m_available_memory_it + m_chunk_size_bytes;
         m_allocated_chunks.emplace_back(m_available_memory_it);
+
+        // size for the chunk + estimate for one list node (3 pointers: next, previous, and to the chunk)
+        m_total_allocated += memusage::MallocUsage(m_chunk_size_bytes) + memusage::MallocUsage(sizeof(void*) * 3);
+        m_free_list_size_bytes += memusage::MallocUsage(m_chunk_size_bytes);
     }
 
     /**
@@ -217,6 +233,7 @@ public:
                 // we've already got data in the pool's freelist, unlink one element and return the pointer
                 // to the unlinked memory. Since FreeList is trivially destructible we can just treat it as
                 // uninitialized memory.
+                m_free_list_size_bytes -= memusage::MallocUsage(bytes);
                 return std::exchange(m_free_lists[num_alignments], m_free_lists[num_alignments]->m_next);
             }
 
@@ -227,11 +244,13 @@ public:
                 AllocateChunk();
             }
 
+            m_free_list_size_bytes -= memusage::MallocUsage(bytes);
             // Make sure we use the right amount of bytes for that freelist (might be rounded up),
             return std::exchange(m_available_memory_it, m_available_memory_it + round_bytes);
         }
 
         // Can't use the pool => use operator new()
+        m_total_allocated += memusage::MallocUsage(bytes);
         return ::operator new (bytes, std::align_val_t{alignment});
     }
 
@@ -241,12 +260,14 @@ public:
     void Deallocate(void* p, std::size_t bytes, std::size_t alignment) noexcept
     {
         if (IsFreeListUsable(bytes, alignment)) {
+            m_free_list_size_bytes += memusage::MallocUsage(bytes);
             const std::size_t num_alignments = NumElemAlignBytes(bytes);
             // put the memory block into the linked list. We can placement construct the FreeList
             // into the memory since we can be sure the alignment is correct.
             PlacementAddToList(p, m_free_lists[num_alignments]);
         } else {
             // Can't use the pool => forward deallocation to ::operator delete().
+            m_total_allocated -= memusage::MallocUsage(bytes);
             ::operator delete (p, std::align_val_t{alignment});
         }
     }
@@ -265,6 +286,19 @@ public:
     [[nodiscard]] size_t ChunkSizeBytes() const
     {
         return m_chunk_size_bytes;
+    }
+
+    [[nodiscard]] size_t DynamicMemoryUsage() const
+    {
+        return m_total_allocated;
+    }
+
+    /**
+     * Size in bytes currently available in the free list
+     */
+    [[nodiscard]] size_t FreeListBytes() const
+    {
+        return m_free_list_size_bytes;
     }
 };
 
