@@ -439,15 +439,14 @@ RPCHelpMan settxfee()
 
     CAmount nAmount = AmountFromValue(request.params[0]);
     CFeeRate tx_fee_rate(nAmount, 1000);
-    CFeeRate max_tx_fee_rate(pwallet->m_default_max_tx_fee, 1000);
     if (tx_fee_rate == CFeeRate(0)) {
         // automatic selection
     } else if (tx_fee_rate < pwallet->chain().relayMinFee()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("txfee cannot be less than min relay tx fee (%s)", pwallet->chain().relayMinFee().ToString()));
     } else if (tx_fee_rate < pwallet->m_min_fee) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("txfee cannot be less than wallet min fee (%s)", pwallet->m_min_fee.ToString()));
-    } else if (tx_fee_rate > max_tx_fee_rate) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("txfee cannot be more than wallet max tx fee (%s)", max_tx_fee_rate.ToString()));
+    } else if (tx_fee_rate > pwallet->m_max_tx_fee_rate) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("fee rate cannot be more than wallet max tx fee rate (%s)", pwallet->m_max_tx_fee_rate.ToString()));
     }
 
     pwallet->m_pay_tx_fee = tx_fee_rate;
@@ -1504,8 +1503,11 @@ RPCHelpMan sendall()
             const std::optional<CAmount> total_bump_fees{pwallet->chain().calculateCombinedBumpFee(outpoints_spent, fee_rate)};
             CAmount effective_value = total_input_value - fee_from_size - total_bump_fees.value_or(0);
 
-            if (fee_from_size > pwallet->m_default_max_tx_fee) {
+            if (fee_from_size > pwallet->m_max_tx_fee) {
                 throw JSONRPCError(RPC_WALLET_ERROR, TransactionErrorString(TransactionError::MAX_FEE_EXCEEDED).original);
+            }
+            if (CFeeRate(fee_from_size, tx_size.vsize) > pwallet->m_max_tx_fee_rate) {
+                throw JSONRPCError(RPC_WALLET_ERROR, TransactionErrorString(TransactionError::MAX_FEE_RATE_EXCEEDED).original);
             }
 
             if (effective_value <= 0) {
