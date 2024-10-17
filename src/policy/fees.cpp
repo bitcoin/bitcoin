@@ -579,7 +579,7 @@ void CBlockPolicyEstimator::TransactionAddedToMempool(const NewMempoolTransactio
     processTransaction(tx);
 }
 
-void CBlockPolicyEstimator::TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason /*unused*/, uint64_t /*unused*/)
+void CBlockPolicyEstimator::TransactionRemovedFromMempool(const CTransactionRef& tx, const MemPoolRemovalReason& /*unused*/, uint64_t /*unused*/)
 {
     removeTx(tx->GetHash());
 }
