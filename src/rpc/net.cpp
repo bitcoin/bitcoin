@@ -203,6 +203,10 @@ static RPCHelpMan getpeerinfo()
     std::vector<CNodeStats> vstats;
     connman.GetNodeStats(vstats);
 
+    std::sort(vstats.begin(), vstats.end(), [](const CNodeStats& a, const CNodeStats& b) {
+        return a.nodeid < b.nodeid;
+    });
+
     UniValue ret(UniValue::VARR);
 
     for (const CNodeStats& stats : vstats) {
