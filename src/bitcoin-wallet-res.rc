@@ -15,14 +15,14 @@ BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
             VALUE "CompanyName",        "Bitcoin"
-            VALUE "FileDescription",    "bitcoin-wallet (CLI tool for " PACKAGE_NAME " wallets)"
-            VALUE "FileVersion",        PACKAGE_VERSION
+            VALUE "FileDescription",    "bitcoin-wallet (CLI tool for " CLIENT_NAME " wallets)"
+            VALUE "FileVersion",        CLIENT_VERSION_STRING
             VALUE "InternalName",       "bitcoin-wallet"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the MIT software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
             VALUE "OriginalFilename",   "bitcoin-wallet.exe"
             VALUE "ProductName",        "bitcoin-wallet"
-            VALUE "ProductVersion",     PACKAGE_VERSION
+            VALUE "ProductVersion",     CLIENT_VERSION_STRING
         END
     END
 
