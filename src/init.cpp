@@ -84,6 +84,7 @@
 #include <util/syserror.h>
 #include <util/thread.h>
 #include <util/threadnames.h>
+#include <util/threadpool.h>
 #include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
@@ -517,6 +518,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                  strprintf("Maintain an index of compact filters by block (default: %s, values: %s).", DEFAULT_BLOCKFILTERINDEX, ListBlockFilterTypes()) +
                  " If <type> is not supplied or if <type> = 1, indexes for all known types are enabled.",
                  ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-indexworkers=<n>", strprintf("Number of worker threads spawned for the indexes initial sync process (default: %d).", INDEX_WORKERS_COUNT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 
     argsman.AddArg("-addnode=<ip>", strprintf("Add a node to connect to and attempt to keep the connection open (see the addnode RPC help for more info). This option can be specified multiple times to add multiple nodes; connections are limited to %u at a time and are counted separately from the -maxconnections limit.", MAX_ADDNODE_CONNECTIONS), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-asmap=<file>", strprintf("Specify asn mapping used for bucketing of the peers (default: %s). Relative paths will be prefixed by the net-specific datadir location.", DEFAULT_ASMAP_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -2014,6 +2016,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
 bool StartIndexBackgroundSync(NodeContext& node)
 {
+    if (node.indexes.empty()) return true;
+
     // Find the oldest block among all indexes.
     // This block is used to verify that we have the required blocks' data stored on disk,
     // starting from that point up to the current tip.
@@ -2052,7 +2056,20 @@ bool StartIndexBackgroundSync(NodeContext& node)
         }
     }
 
+    std::shared_ptr<ThreadPool> thread_pool;
+    if (node.args->IsArgSet("-indexworkers")) {
+        int index_workers = node.args->GetIntArg("-indexworkers", INDEX_WORKERS_COUNT);
+        if (index_workers < 0 || index_workers > 100) return InitError(_("Invalid -indexworkers arg"));
+
+        thread_pool = std::make_shared<ThreadPool>();
+        thread_pool->Start(index_workers);
+    }
+
     // Start threads
-    for (auto index : node.indexes) if (!index->StartBackgroundSync()) return false;
+    for (auto index : node.indexes) {
+        if (index->AllowParallelSync()) index->SetThreadPool(thread_pool);
+
+        if (!index->StartBackgroundSync()) return false;
+    }
     return true;
 }
