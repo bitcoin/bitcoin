@@ -17,6 +17,7 @@
 #include <index/txindex.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
+#include <node/types.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <rpc/blockchain.h>
@@ -1006,6 +1007,45 @@ static bool rest_blockhash_by_height(const std::any& context, HTTPRequest* req,
     }
 }
 
+static bool rest_broadcast(const std::any& context, HTTPRequest* req, const std::string& str_uri_part)
+{
+    if (!CheckWarmup(req))
+        return false;
+    const std::string body = req->ReadBody();
+    std::string params;
+    const RESTResponseFormat rf = ParseDataFormat(params, str_uri_part);
+    if (params != "") {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/broadcast.hex");
+    }
+
+    CMutableTransaction mtx;
+    if (!DecodeHexTx(mtx, body)) {
+        return RESTERR(req, HTTP_BAD_REQUEST, "TX decode failed");
+    }
+
+    switch (rf) {
+    case RESTResponseFormat::HEX: {
+        const CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+        std::string err_string;
+        NodeContext* node = GetNodeContext(context, req);
+        if (!node) return false;
+
+        const node::TransactionError error = node::BroadcastTransaction(*node, tx, err_string, /*max_tx_fee=*/0, /*relay=*/true, /*wait_callback=*/true);
+        if (node::TransactionError::OK != error) {
+            return RESTERR(req, HTTP_BAD_REQUEST, "Error while broadcasting: " + err_string);
+        }
+
+        req->WriteHeader("Content-Type", "text/plain");
+        req->WriteReply(HTTP_OK, tx->GetHash().GetHex() + "\n");
+        return true;
+    }
+
+    default: {
+        return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: hex)");
+    }
+    }
+}
+
 static const struct {
     const char* prefix;
     bool (*handler)(const std::any& context, HTTPRequest* req, const std::string& strReq);
@@ -1022,6 +1062,7 @@ static const struct {
       {"/rest/deploymentinfo/", rest_deploymentinfo},
       {"/rest/deploymentinfo", rest_deploymentinfo},
       {"/rest/blockhashbyheight/", rest_blockhash_by_height},
+      {"/rest/broadcast", rest_broadcast},
 };
 
 void StartREST(const std::any& context)
