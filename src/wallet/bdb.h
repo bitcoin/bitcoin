@@ -208,6 +208,7 @@ public:
     bool TxnBegin() override;
     bool TxnCommit() override;
     bool TxnAbort() override;
+    bool HasActiveTxn() override { return activeTxn != nullptr; }
     DbTxn* txn() const { return activeTxn; }
 };
 

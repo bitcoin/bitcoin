@@ -95,6 +95,7 @@ public:
     bool TxnBegin() override { return m_pass; }
     bool TxnCommit() override { return m_pass; }
     bool TxnAbort() override { return m_pass; }
+    bool HasActiveTxn() override { return false; }
 };
 
 /** A WalletDatabase whose contents and return values can be modified as needed for testing

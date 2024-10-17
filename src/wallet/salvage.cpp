@@ -44,6 +44,7 @@ public:
     bool TxnBegin() override { return true; }
     bool TxnCommit() override { return true; }
     bool TxnAbort() override { return true; }
+    bool HasActiveTxn() override { return false; }
 };
 
 /** A dummy WalletDatabase that does nothing and never fails. Only used by salvage.
