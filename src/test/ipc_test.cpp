@@ -62,7 +62,7 @@ void IpcPipeTest()
 
         auto connection_client = std::make_unique<mp::Connection>(loop, kj::mv(pipe.ends[0]));
         auto foo_client = std::make_unique<mp::ProxyClient<gen::FooInterface>>(
-            connection_client->m_rpc_system.bootstrap(mp::ServerVatId().vat_id).castAs<gen::FooInterface>(),
+            connection_client->m_rpc_system->bootstrap(mp::ServerVatId().vat_id).castAs<gen::FooInterface>(),
             connection_client.get(), /* destroy_connection= */ false);
         foo_promise.set_value(std::move(foo_client));
         disconnect_client = [&] { loop.sync([&] { connection_client.reset(); }); };
