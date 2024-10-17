@@ -8,6 +8,7 @@
 """
 
 import ctypes
+import time
 
 # Test will be skipped if we don't have bcc installed
 try:
@@ -105,10 +106,12 @@ class ValidationTracepointTest(BitcoinTestFramework):
             handle_blockconnected)
 
         self.log.info(f"mine {BLOCKS_EXPECTED} blocks")
-        block_hashes = self.generatetoaddress(
-            self.nodes[0], BLOCKS_EXPECTED, ADDRESS_BCRT1_UNSPENDABLE)
-        for block_hash in block_hashes:
-            expected_blocks[block_hash] = self.nodes[0].getblock(block_hash, 2)
+        generatetoaddress_duration = dict()
+        for _ in range(BLOCKS_EXPECTED):
+            start = time.time()
+            hash = self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE)[0]
+            generatetoaddress_duration[hash] = (time.time() - start) * 1e9  # in nanoseconds
+            expected_blocks[hash] = self.nodes[0].getblock(hash, 2)
 
         bpf.perf_buffer_poll(timeout=200)
 
@@ -123,6 +126,10 @@ class ValidationTracepointTest(BitcoinTestFramework):
             assert_equal(0, event.sigops)  # no sigops in coinbase tx
             # only plausibility checks
             assert event.duration > 0
+            # generatetoaddress (mining and connecting) takes longer than
+            # connecting the block. In case the duration unit is off, we'll
+            # detect it with this assert.
+            assert event.duration < generatetoaddress_duration[block_hash]
             del expected_blocks[block_hash]
         assert_equal(BLOCKS_EXPECTED, len(events))
         assert_equal(0, len(expected_blocks))
