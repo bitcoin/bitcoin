@@ -7,6 +7,7 @@
 #include <common/args.h>
 #include <net_processing.h>
 #include <node/context.h>
+#include <policy/fee_estimator.h>
 #include <policy/fees.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
@@ -82,15 +83,28 @@ ChainstateManager& EnsureAnyChainman(const std::any& context)
 
 CBlockPolicyEstimator& EnsureFeeEstimator(const NodeContext& node)
 {
+    if (!node.fee_estimator || (node.fee_estimator->block_policy_estimator == std::nullopt)) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Fee estimation disabled or legacy estimator not available");
+    }
+    return *(*node.fee_estimator->block_policy_estimator);
+}
+
+CBlockPolicyEstimator& EnsureAnyFeeEstimator(const std::any& context)
+{
+    return EnsureFeeEstimator(EnsureAnyNodeContext(context));
+}
+
+FeeEstimator& EnsureFeeForecasters(const NodeContext& node)
+{
     if (!node.fee_estimator) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Fee estimation disabled");
     }
     return *node.fee_estimator;
 }
 
-CBlockPolicyEstimator& EnsureAnyFeeEstimator(const std::any& context)
+FeeEstimator& EnsureAnyFeeForecasters(const std::any& context)
 {
-    return EnsureFeeEstimator(EnsureAnyNodeContext(context));
+    return EnsureFeeForecasters(EnsureAnyNodeContext(context));
 }
 
 CConnman& EnsureConnman(const NodeContext& node)

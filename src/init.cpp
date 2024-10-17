@@ -54,9 +54,11 @@
 #include <node/mempool_persist_args.h>
 #include <node/miner.h>
 #include <node/peerman_args.h>
+#include <policy/fee_estimator.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/fees_args.h>
+#include <policy/forecasters/mempool.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <protocol.h>
@@ -325,12 +327,12 @@ void Shutdown(NodeContext& node)
         DumpMempool(*node.mempool, MempoolPath(*node.args));
     }
 
-    // Drop transactions we were still watching, record fee estimations and unregister
-    // fee estimator from validation interface.
-    if (node.fee_estimator) {
-        node.fee_estimator->Flush();
+    // Drop transactions we were still watching, record block policy fee estimations and unregister
+    // the block policy fee estimator from validation interface.
+    if (node.fee_estimator && (node.fee_estimator->block_policy_estimator != std::nullopt)) {
+        (*node.fee_estimator->block_policy_estimator)->Flush();
         if (node.validation_signals) {
-            node.validation_signals->UnregisterValidationInterface(node.fee_estimator.get());
+            node.validation_signals->UnregisterValidationInterface(node.fee_estimator->block_policy_estimator->get());
         }
     }
 
@@ -1435,22 +1437,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                               rng.rand64(),
                                               *node.addrman, *node.netgroupman, chainparams, args.GetBoolArg("-networkactive", true));
 
-    assert(!node.fee_estimator);
-    // Don't initialize fee estimation with old data if we don't relay transactions,
-    // as they would never get updated.
-    if (!peerman_opts.ignore_incoming_txs) {
-        bool read_stale_estimates = args.GetBoolArg("-acceptstalefeeestimates", DEFAULT_ACCEPT_STALE_FEE_ESTIMATES);
-        if (read_stale_estimates && (chainparams.GetChainType() != ChainType::REGTEST)) {
-            return InitError(strprintf(_("acceptstalefeeestimates is not supported on %s chain."), chainparams.GetChainTypeString()));
-        }
-        node.fee_estimator = std::make_unique<CBlockPolicyEstimator>(FeeestPath(args), read_stale_estimates);
-
-        // Flush estimates to disk periodically
-        CBlockPolicyEstimator* fee_estimator = node.fee_estimator.get();
-        scheduler.scheduleEvery([fee_estimator] { fee_estimator->FlushFeeEstimates(); }, FEE_FLUSH_INTERVAL);
-        validation_signals.RegisterValidationInterface(fee_estimator);
-    }
-
     for (const std::string& socket_addr : args.GetArgs("-bind")) {
         std::string host_out;
         uint16_t port_out{0};
@@ -1665,6 +1651,24 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     ChainstateManager& chainman = *Assert(node.chainman);
+
+    assert(!node.fee_estimator);
+    // Don't initialize legacy fee estimator if we don't relay transactions,
+    // as new data will not be appended and old data will never be updated.
+    if (!peerman_opts.ignore_incoming_txs) {
+        bool read_stale_estimates = args.GetBoolArg("-acceptstalefeeestimates", DEFAULT_ACCEPT_STALE_FEE_ESTIMATES);
+        if (read_stale_estimates && (chainparams.GetChainType() != ChainType::REGTEST)) {
+            return InitError(strprintf(_("acceptstalefeeestimates is not supported on %s chain."), chainparams.GetChainTypeString()));
+        }
+
+        node.fee_estimator = std::make_unique<FeeEstimator>(FeeestPath(args), read_stale_estimates, node.mempool.get());
+        node.fee_estimator->RegisterForecaster(std::make_unique<MemPoolForecaster>(node.mempool.get(), &(chainman.ActiveChainstate())));
+
+        // Flush legacy estimates to disk periodically
+        CBlockPolicyEstimator* block_policy_estimator = node.fee_estimator->block_policy_estimator->get();
+        scheduler.scheduleEvery([block_policy_estimator] { block_policy_estimator->FlushFeeEstimates(); }, FEE_FLUSH_INTERVAL);
+        validation_signals.RegisterValidationInterface(block_policy_estimator);
+    }
 
     assert(!node.peerman);
     node.peerman = PeerManager::make(*node.connman, *node.addrman,

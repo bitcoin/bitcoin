@@ -263,6 +263,35 @@ Arguments passed:
 1. Transaction ID (hash) as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
 2. Reject reason as `pointer to C-style String` (max. length 118 characters)
 
+### Context `fee_estimator`
+#### Tracepoint `fee_estimator:estimate_calculated`
+
+Is called when a fee estimate is generated from forecasters and the best estimate is selected. It Passes information about the estimate and which forecaster provided the
+estimate.
+
+Arguments passed:
+1. Confirmation target in `int`
+2. Forecaster that provided the estimate as `pointer to C-style String` (max. length 16 characters)
+3. Block Height the estimate was made as `unsigned int`
+4. Low priority estimate in sat/kvB as `int64`
+5. High priority estimate in sat/kvB as `int64`
+
+### Context `feerate_forecast`
+#### Tracepoint `feerate_forecast:forecast_generated`
+
+Is called when a fee rate forecaster estimate a fee rate for a confirmation target. It Passes the quartile fee rates.
+
+Arguments passed:
+1. Confirmation target in `int`
+2. Block Height the estimate was made as `unsigned int`
+3. Forecaster that provided the estimate as `pointer to C-style String` (max. length 16 characters)
+4. 5th Quartile fee rate in sat/kvB as `int64`
+5. 25th Quartile fee rate in sat/kvB as `int64`
+6. 50th Quartile fee rate in sat/kvB as `int64`
+7. 75th Quartile fee rate in sat/kvB as `int64`
+
+
+
 ## Adding tracepoints to Bitcoin Core
 
 To add a new tracepoint, `#include <util/trace.h>` in the compilation unit where
