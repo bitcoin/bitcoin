@@ -35,20 +35,20 @@ for commit in $(git rev-list --reverse "$1"); do
         git checkout --quiet "$commit"^ || exit
         SCRIPT="$(git rev-list --format=%b -n1 "$commit" | sed '/^-BEGIN VERIFY SCRIPT-$/,/^-END VERIFY SCRIPT-$/{//!b};d')"
         if test -z "$SCRIPT"; then
-            echo "Error: missing script for: $commit"
-            echo "Failed"
+            echo "Error: missing script for: $commit" >&2
+            echo "Failed" >&2
             RET=1
         else
-            echo "Running script for: $commit"
-            echo "$SCRIPT"
+            echo "Running script for: $commit" >&2
+            echo "$SCRIPT" >&2
             (eval "$SCRIPT")
-            git --no-pager diff --exit-code "$commit" && echo "OK" || (echo "Failed"; false) || RET=1
+            git --no-pager diff --exit-code "$commit" && echo "OK" >&2 || (echo "Failed" >&2; false) || RET=1
         fi
         git reset --quiet --hard HEAD
      else
         if git rev-list "--format=%b" -n1 "$commit" | grep -q '^-\(BEGIN\|END\)[ a-zA-Z]*-$'; then
-            echo "Error: script block marker but no scripted-diff in title of commit $commit"
-            echo "Failed"
+            echo "Error: script block marker but no scripted-diff in title of commit $commit" >&2
+            echo "Failed" >&2
             RET=1
         fi
     fi
