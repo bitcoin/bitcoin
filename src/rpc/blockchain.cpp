@@ -995,7 +995,7 @@ static RPCHelpMan gettxoutsetinfo()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
     Chainstate& active_chainstate = chainman.ActiveChainstate();
-    active_chainstate.ForceFlushStateToDisk();
+    active_chainstate.ForceFlushStateToDisk(/*wipe_cache=*/false);
 
     CCoinsView* coins_view;
     BlockManager* blockman;
@@ -2306,7 +2306,7 @@ static RPCHelpMan scantxoutset()
             ChainstateManager& chainman = EnsureChainman(node);
             LOCK(cs_main);
             Chainstate& active_chainstate = chainman.ActiveChainstate();
-            active_chainstate.ForceFlushStateToDisk();
+            active_chainstate.ForceFlushStateToDisk(/*wipe_cache=*/false);
             pcursor = CHECK_NONFATAL(active_chainstate.CoinsDB().Cursor());
             tip = CHECK_NONFATAL(active_chainstate.m_chain.Tip());
         }
@@ -2881,7 +2881,7 @@ PrepareUTXOSnapshot(
         //
         AssertLockHeld(::cs_main);
 
-        chainstate.ForceFlushStateToDisk();
+        chainstate.ForceFlushStateToDisk(/*wipe_cache=*/false);
 
         maybe_stats = GetUTXOStats(&chainstate.CoinsDB(), chainstate.m_blockman, CoinStatsHashType::HASH_SERIALIZED, interruption_point);
         if (!maybe_stats) {
