@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the getorphantxs RPC."""
 
-from test_framework.mempool_util import tx_in_orphanage
+from test_framework.mempool_util import tx_in_orphanage, MAX_ORPHANS
 from test_framework.messages import msg_tx
 from test_framework.p2p import P2PInterface
 from test_framework.util import assert_equal
@@ -20,6 +20,8 @@ class GetOrphanTxsTest(BitcoinTestFramework):
         self.wallet = MiniWallet(self.nodes[0])
         self.test_orphan_activity()
         self.test_orphan_details()
+        self.generate(self.wallet, 160)
+        self.test_max_orphan_amount()
 
     def test_orphan_activity(self):
         self.log.info("Check that orphaned transactions are returned with getorphantxs")
@@ -125,6 +127,33 @@ class GetOrphanTxsTest(BitcoinTestFramework):
             self.log.info("Check the transaction hex of orphan")
             assert_equal(orphan["hex"], tx["hex"])
 
+    def test_max_orphan_amount(self):
+        self.log.info("Check that once we reach the max orphan amount we dont get any new orphans")
+        node = self.nodes[0]
+
+        peer_1 = node.add_p2p_connection(P2PInterface())
+
+        self.log.info("Filling up orphanage with " + str(MAX_ORPHANS) + "(MAX_ORPHANS) orphans")
+        orphans = []
+        for _ in range(MAX_ORPHANS):
+            tx_parent_1 = self.wallet.create_self_transfer()
+            tx_child_1 = self.wallet.create_self_transfer(utxo_to_spend=tx_parent_1["new_utxo"])
+            orphans.append(tx_child_1["tx"])
+            peer_1.send_message(msg_tx(tx_child_1["tx"]))
+
+        peer_1.sync_with_ping()
+        orphanage = node.getorphantxs()
+        assert_equal(len(orphanage), MAX_ORPHANS)
+
+        for orphan in orphans:
+            assert tx_in_orphanage(node, orphan)
+
+        self.log.info("Check that we do not add more than the max orphan amount")
+        tx_parent_1 = self.wallet.create_self_transfer()
+        tx_child_1 = self.wallet.create_self_transfer(utxo_to_spend=tx_parent_1["new_utxo"])
+        peer_1.send_and_ping(msg_tx(tx_child_1["tx"]))
+        orphanage = node.getorphantxs()
+        assert_equal(len(orphanage), MAX_ORPHANS)
 
 if __name__ == '__main__':
     GetOrphanTxsTest(__file__).main()
