@@ -10,7 +10,9 @@ A transaction ("replacement transaction") may replace its directly conflicting t
 their in-mempool descendants (together, "original transactions") if, in addition to passing all
 other consensus and policy rules, each of the following conditions are met:
 
-1. If `-mempoolfullrbf=0` (the value is 1 by default), the directly conflicting transactions all signal replaceability explicitly. A transaction is
+1. DEPRECATED: BIP125 signaling is no longer required. The below text is kept for historical completeness.
+
+   The directly conflicting transactions all signal replaceability explicitly. A transaction is
    signaling BIP125 replaceability if any of its inputs have an nSequence number less than (0xffffffff - 1).
    A transaction also signals replaceability if its version field is set to 3.
 
