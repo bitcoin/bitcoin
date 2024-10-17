@@ -543,6 +543,8 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                 {"maxconf", UniValueType(UniValue::VNUM)},
                 {"input_weights", UniValueType(UniValue::VARR)},
                 {"max_tx_weight", UniValueType(UniValue::VNUM)},
+                {"add_excess_to_recipient_position", UniValue::VNUM},
+                {"max_excess", UniValueType()}, // will be checked by AmountFromValue() below
             },
             true, true);
 
@@ -625,6 +627,18 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
             }
         }
         SetFeeEstimateMode(wallet, coinControl, options["conf_target"], options["estimate_mode"], options["fee_rate"], override_min_fee);
+
+        if (options.exists("add_excess_to_recipient_position")) {
+            coinControl.m_add_excess_to_recipient_position = options["add_excess_to_recipient_position"].getInt<uint32_t>();
+            if (coinControl.m_add_excess_to_recipient_position.value() >= recipients.size()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Cannot add excess to the recipient output at index %d; the output does not exist.", coinControl.m_add_excess_to_recipient_position.value()));
+            }
+        }
+
+        if (options.exists("max_excess")) {
+            coinControl.m_max_excess = CAmount(AmountFromValue(options["max_excess"]));
+        }
+
       }
     } else {
         // if options is null and not a bool
@@ -795,6 +809,9 @@ RPCHelpMan fundrawtransaction()
                              },
                             {"max_tx_weight", RPCArg::Type::NUM, RPCArg::Default{MAX_STANDARD_TX_WEIGHT}, "The maximum acceptable transaction weight.\n"
                                                           "Transaction building will fail if this can not be satisfied."},
+                            {"add_excess_to_recipient_position", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index where excess"
+                                                          "fees are added. If not set, excess value from changeless transactions is added to fees"},
+                            {"max_excess", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to default wallet behavior"}, "Specify the maximum excess amount for changeless transactions in " + CURRENCY_UNIT + "."},
                         },
                         FundTxDoc()),
                         RPCArgOptions{
@@ -1251,6 +1268,9 @@ RPCHelpMan send()
                     },
                     {"max_tx_weight", RPCArg::Type::NUM, RPCArg::Default{MAX_STANDARD_TX_WEIGHT}, "The maximum acceptable transaction weight.\n"
                                                   "Transaction building will fail if this can not be satisfied."},
+                    {"add_excess_to_recipient_position", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index where excess"
+                                                  "fees are added. If not set, excess value from changeless transactions is added to fees."},
+                    {"max_excess", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to default wallet behavior"}, "Specify the maximum excess amount for changeless transactions in " + CURRENCY_UNIT + "."},
                 },
                 FundTxDoc()),
                 RPCArgOptions{.oneline_description="options"}},
@@ -1713,6 +1733,9 @@ RPCHelpMan walletcreatefundedpsbt()
                             },
                             {"max_tx_weight", RPCArg::Type::NUM, RPCArg::Default{MAX_STANDARD_TX_WEIGHT}, "The maximum acceptable transaction weight.\n"
                                                           "Transaction building will fail if this can not be satisfied."},
+                            {"add_excess_to_recipient_position", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index where excess"
+                                                          "fees are added. If not set, excess value from changeless transactions is added to fees."},
+                            {"max_excess", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to default wallet behavior"}, "Specify the maximum excess amount for changeless transactions in " + CURRENCY_UNIT + "."},
                         },
                         FundTxDoc()),
                         RPCArgOptions{.oneline_description="options"}},

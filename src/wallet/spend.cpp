@@ -705,7 +705,7 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
 
     // SFFO frequently causes issues in the context of changeless input sets: skip BnB when SFFO is active
     if (!coin_selection_params.m_subtract_fee_outputs) {
-        if (auto bnb_result{SelectCoinsBnB(groups.positive_group, nTargetValue, coin_selection_params.m_cost_of_change, max_selection_weight)}) {
+        if (auto bnb_result{SelectCoinsBnB(groups.positive_group, nTargetValue, coin_selection_params.m_max_excess, max_selection_weight, coin_selection_params.m_add_excess_to_recipient_position.has_value())}) {
             results.push_back(*bnb_result);
         } else append_error(std::move(bnb_result));
     }
@@ -1126,6 +1126,11 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     const auto change_spend_fee = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size);
     coin_selection_params.min_viable_change = std::max(change_spend_fee + 1, dust);
 
+    coin_selection_params.m_max_excess = std::max(coin_control.m_max_excess.value_or(0), coin_selection_params.min_viable_change);
+
+    // If set, do not add any excess from a changeless transaction to fees
+    coin_selection_params.m_add_excess_to_recipient_position = coin_control.m_add_excess_to_recipient_position;
+
     // Include the fees for things that aren't inputs, excluding the change output
     const CAmount not_input_fees = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.m_subtract_fee_outputs ? 0 : coin_selection_params.tx_noinputs_size);
     CAmount selection_target = recipients_sum + not_input_fees;
@@ -1172,6 +1177,14 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     {
         txNew.vout.emplace_back(recipient.nAmount, GetScriptForDestination(recipient.dest));
     }
+
+    // if set, add excess to selected recipient
+    if (result.GetTarget() != selection_target && coin_selection_params.m_add_excess_to_recipient_position) {
+        auto excess = result.GetTarget() - selection_target;
+        txNew.vout[coin_selection_params.m_add_excess_to_recipient_position.value()].nValue += excess;
+        recipients_sum += excess;
+    }
+
     const CAmount change_amount = result.GetChange(coin_selection_params.min_viable_change, coin_selection_params.m_change_fee);
     if (change_amount > 0) {
         CTxOut newTxOut(change_amount, scriptChange);
