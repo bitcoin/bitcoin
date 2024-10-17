@@ -5,6 +5,7 @@
 """Class for bitcoind node under test"""
 
 import contextlib
+from collections import Counter
 import decimal
 import errno
 from enum import Enum
@@ -157,6 +158,7 @@ class TestNode():
         self.rpc = None
         self.url = None
         self.log = logging.getLogger('TestFramework.node%d' % i)
+        self.expected_ret_code = 0 # EXIT_SUCCESS
         self.cleanup_on_exit = True # Whether to kill the node when this object goes away
         # Cache perf subprocesses here by their data output filename.
         self.perf_subprocesses = {}
@@ -203,7 +205,7 @@ class TestNode():
             # Should only happen on test failure
             # Avoid using logger, as that may have already been shutdown when
             # this destructor is called.
-            print(self._node_msg("Cleaning up leftover process"))
+            print(self._node_msg(f"Cleaning up leftover process {self.process.pid}"))
             self.process.kill()
 
     def __getattr__(self, name):
@@ -256,7 +258,7 @@ class TestNode():
         self.process = subprocess.Popen(self.args + extra_args, env=subp_env, stdout=stdout, stderr=stderr, cwd=cwd, **kwargs)
 
         self.running = True
-        self.log.debug("bitcoind started, waiting for RPC to come up")
+        self.log.debug(f"bitcoind started with PID {self.process.pid}, waiting for RPC to come up")
 
         if self.start_perf:
             self._start_perf()
@@ -265,6 +267,8 @@ class TestNode():
         """Sets up an RPC connection to the bitcoind process. Returns False if unable to connect."""
         # Poll at a rate of four times per second
         poll_per_s = 4
+        ignored_errors = Counter()
+        latest_error = ""
         for _ in range(poll_per_s * self.rpc_timeout):
             if self.process.poll() is not None:
                 # Attach abrupt shutdown error/s to the exception message
@@ -305,33 +309,44 @@ class TestNode():
                     # overhead is trivial, and the added guarantees are worth
                     # the minimal performance cost.
                 self.log.debug("RPC successfully started")
+                # Set rpc_connected even if we are in use_cli mode so that we know we can call self.stop() if needed.
+                self.rpc_connected = True
                 if self.use_cli:
                     return
                 self.rpc = rpc
-                self.rpc_connected = True
                 self.url = self.rpc.rpc_url
                 return
             except JSONRPCException as e:  # Initialization phase
                 # -28 RPC in warmup
+                if e.error['code'] == -28:
+                    ignored_errors["JSONRPCException -28"] += 1
                 # -342 Service unavailable, RPC server started but is shutting down due to error
-                if e.error['code'] != -28 and e.error['code'] != -342:
+                # - Ignore the exception to properly raise the FailedToStartError.
+                elif e.error['code'] == -342:
+                    ignored_errors["JSONRPCException -342"] += 1
+                else:
                     raise  # unknown JSON RPC exception
-            except ConnectionResetError:
-                # This might happen when the RPC server is in warmup, but shut down before the call to getblockcount
-                # succeeds. Try again to properly raise the FailedToStartError
-                pass
+                latest_error = repr(e)
             except OSError as e:
-                if e.errno == errno.ETIMEDOUT:
-                    pass  # Treat identical to ConnectionResetError
+                if e.errno == errno.ECONNRESET:
+                    # This might happen when the RPC server is in warmup, but shut down before the call to getblockcount
+                    # succeeds. Try again to properly raise the FailedToStartError
+                    ignored_errors["OSError.ECONNRESET"] += 1
+                elif e.errno == errno.ETIMEDOUT:
+                    ignored_errors["OSError.ETIMEDOUT"] += 1 # Treat identical to ECONNRESET
                 elif e.errno == errno.ECONNREFUSED:
-                    pass  # Port not yet open?
+                    ignored_errors["OSError.ECONNREFUSED"] += 1 # Port not yet open?
                 else:
                     raise  # unknown OS error
+                latest_error = repr(e)
             except ValueError as e:  # cookie file not found and no rpcuser or rpcpassword; bitcoind is still starting
-                if "No RPC credentials" not in str(e):
+                if "No RPC credentials" in str(e):
+                    ignored_errors["missing_credentials"] += 1
+                else:
                     raise
+                latest_error = repr(e)
             time.sleep(1.0 / poll_per_s)
-        self._raise_assertion_error("Unable to connect to bitcoind after {}s".format(self.rpc_timeout))
+        self._raise_assertion_error("Unable to connect to bitcoind after {}s (ignored errors: {}, latest error: {})".format(self.rpc_timeout, str(dict(ignored_errors)), latest_error))
 
     def wait_for_cookie_credentials(self):
         """Ensures auth cookie credentials can be read, e.g. for testing CLI with -rpcwait before RPC connection is up."""
@@ -389,14 +404,20 @@ class TestNode():
         if not self.running:
             return
         self.log.debug("Stopping node")
-        try:
-            # Do not use wait argument when testing older nodes, e.g. in wallet_backwards_compatibility.py
-            if self.version_is_at_least(180000):
-                self.stop(wait=wait)
-            else:
-                self.stop()
-        except http.client.CannotSendRequest:
-            self.log.exception("Unable to stop node.")
+        if self.rpc_connected:
+            try:
+                # Do not use wait argument when testing older nodes, e.g. in wallet_backwards_compatibility.py
+                if self.version_is_at_least(180000):
+                    self.stop(wait=wait)
+                else:
+                    self.stop()
+            except http.client.CannotSendRequest:
+                self.log.exception("Unable to stop node.")
+        else:
+            self.log.warning("Cannot call stop-RPC as we are not connected. "
+                f"Killing process {self.process.pid} so that wait_until_stopped will not time out.")
+            self.expected_ret_code = 1 if platform.system() == "Windows" else -9
+            self.process.kill()
 
         # If there are any running perf processes, stop them.
         for profile_name in tuple(self.perf_subprocesses.keys()):
@@ -440,7 +461,9 @@ class TestNode():
 
     def wait_until_stopped(self, *, timeout=BITCOIND_PROC_WAIT_TIMEOUT, expect_error=False, **kwargs):
         if "expected_ret_code" not in kwargs:
-            kwargs["expected_ret_code"] = 1 if expect_error else 0  # Whether node shutdown return EXIT_FAILURE or EXIT_SUCCESS
+            # Whether node shutdown is expected to return EXIT_FAILURE (1) or
+            # EXIT_SUCCESS (self.expected_ret_code).
+            kwargs["expected_ret_code"] = 1 if expect_error else self.expected_ret_code
         self.wait_until(lambda: self.is_node_stopped(**kwargs), timeout=timeout)
 
     def replace_in_config(self, replacements):
