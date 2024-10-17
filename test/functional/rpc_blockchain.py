@@ -9,6 +9,7 @@ Test the following RPCs:
     - getdeploymentinfo
     - getchaintxstats
     - gettxoutsetinfo
+    - gettxout
     - getblockheader
     - getdifficulty
     - getnetworkhashps
@@ -86,6 +87,7 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_getblockchaininfo()
         self._test_getchaintxstats()
         self._test_gettxoutsetinfo()
+        self._test_gettxout()
         self._test_getblockheader()
         self._test_getdifficulty()
         self._test_getnetworkhashps()
@@ -390,6 +392,33 @@ class BlockchainTest(BitcoinTestFramework):
 
         # Unknown hash_type raises an error
         assert_raises_rpc_error(-8, "'foo hash' is not a valid hash_type", node.gettxoutsetinfo, "foo hash")
+
+    def _test_gettxout(self):
+        self.log.info("Validating gettxout RPC response")
+        node = self.nodes[0]
+
+        # Get the best block hash and the block, which
+        # should only include the coinbase transaction.
+        best_block_hash = node.getbestblockhash()
+        block = node.getblock(best_block_hash)
+        assert_equal(block['nTx'], 1)
+
+        # Get the transaction ID of the coinbase tx and
+        # the transaction output.
+        txid = block['tx'][0]
+        txout = node.gettxout(txid, 0)
+
+        # Validate the gettxout response
+        assert_equal(txout['bestblock'], best_block_hash)
+        assert_equal(txout['confirmations'], 1)
+        assert_equal(txout['value'], create_coinbase(HEIGHT).vout[0].nValue / COIN)
+        assert_equal(txout['scriptPubKey']['address'], self.wallet.get_address())
+        assert_equal(txout['scriptPubKey']['hex'], self.wallet.get_scriptPubKey().hex())
+        decoded_script = node.decodescript(self.wallet.get_scriptPubKey().hex())
+        assert_equal(txout['scriptPubKey']['asm'], decoded_script['asm'])
+        assert_equal(txout['scriptPubKey']['desc'], decoded_script['desc'])
+        assert_equal(txout['scriptPubKey']['type'], decoded_script['type'])
+        assert_equal(txout['coinbase'], True)
 
     def _test_getblockheader(self):
         self.log.info("Test getblockheader")
