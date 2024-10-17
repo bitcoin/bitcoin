@@ -813,6 +813,11 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     // Check dust with default relay fee:
     CAmount nDustThreshold = 182 * g_dust.GetFeePerK() / 1000;
     BOOST_CHECK_EQUAL(nDustThreshold, 546);
+
+    // Add dust output to take dust slot, still standard!
+    t.vout.emplace_back(0, t.vout[0].scriptPubKey);
+    CheckIsStandard(t);
+
     // dust:
     t.vout[0].nValue = nDustThreshold - 1;
     CheckIsNotStandard(t, "dust");
@@ -968,6 +973,10 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     g_bare_multi = false;
     CheckIsNotStandard(t, "bare-multisig");
     g_bare_multi = DEFAULT_PERMIT_BAREMULTISIG;
+
+    // Add dust output to take dust slot
+    assert(t.vout.size() == 1);
+    t.vout.emplace_back(0, t.vout[0].scriptPubKey);
 
     // Check compressed P2PK outputs dust threshold (must have leading 02 or 03)
     t.vout[0].scriptPubKey = CScript() << std::vector<unsigned char>(33, 0x02) << OP_CHECKSIG;
