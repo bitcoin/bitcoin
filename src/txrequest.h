@@ -181,6 +181,8 @@ public:
      */
     void ReceivedResponse(NodeId peer, const uint256& txhash);
 
+    bool ExpectedTx(NodeId peer, const uint256& txhash);
+
     // The operations below inspect the data structure.
 
     /** Count how many REQUESTED announcements a peer has. */
