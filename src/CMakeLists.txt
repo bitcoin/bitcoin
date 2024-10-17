@@ -439,6 +439,9 @@ if(BUILD_FUZZ_BINARY)
   add_subdirectory(test/fuzz)
 endif()
 
+if (BUILD_KERNEL_TEST)
+  add_subdirectory(test/kernel)
+endif()
 
 install(TARGETS ${installable_targets}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
