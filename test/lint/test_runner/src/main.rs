@@ -34,6 +34,10 @@ fn get_linter_list() -> Vec<&'static Linter> {
             lint_fn: lint_includes_build_config
         },
         &Linter {
+            description: "Check against non-const C-style pointer cast"
+            name: "ptr_cast",
+            lint_fn: lint_ptr_cast
+        &Linter {
             description: "Check that markdown links resolve",
             name: "markdown",
             lint_fn: lint_markdown
@@ -490,6 +494,28 @@ the header. Consider removing the unused include.
         .to_string());
     }
     Ok(())
+}
+
+fn lint_ptr_cast() -> LintResult {
+    let found = git()
+        .args([
+            "grep",
+            "--extended-regexp",
+            r"\((un)?(signed)? ?char\*\)\s*&",
+        ])
+        .status()
+        .expect("command error")
+        .success();
+    if found {
+        Err(r#"
+^^^
+Direct use of C-style pointer casts may be dangerous and cast away const-ness. Please use
+UCharCast() or reinterpret_cast<>() or similar helpers, which preserve const-ness.
+            "#
+        .to_string())
+    } else {
+        Ok(())
+    }
 }
 
 fn lint_doc() -> LintResult {

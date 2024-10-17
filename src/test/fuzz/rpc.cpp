@@ -245,11 +245,11 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider, b
         },
         [&] {
             // base58 argument
-            r = EncodeBase58(MakeUCharSpan(fuzzed_data_provider.ConsumeRandomLengthString(max_base58_bytes_length)));
+            r = EncodeBase58(UCharSpanCast(Span<const char>(fuzzed_data_provider.ConsumeRandomLengthString(max_base58_bytes_length))));
         },
         [&] {
             // base58 argument with checksum
-            r = EncodeBase58Check(MakeUCharSpan(fuzzed_data_provider.ConsumeRandomLengthString(max_base58_bytes_length)));
+            r = EncodeBase58Check(UCharSpanCast(Span<const char>(fuzzed_data_provider.ConsumeRandomLengthString(max_base58_bytes_length))));
         },
         [&] {
             // hex encoded block
