@@ -97,7 +97,6 @@ struct Params {
     uint256 hashDevnetGenesisBlock;
     int nSubsidyHalvingInterval;
     /** Block height at which BIP16 becomes active */
-    int BIP16Height;
     int nMasternodePaymentsStartBlock;
     int nMasternodePaymentsIncreaseBlock;
     int nMasternodePaymentsIncreasePeriod; // in blocks

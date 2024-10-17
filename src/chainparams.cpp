@@ -160,7 +160,6 @@ public:
     CMainParams() {
         strNetworkID = CBaseChainParams::MAIN;
         consensus.nSubsidyHalvingInterval = 210240; // Note: actual number of blocks per calendar year with DGW v3 is ~200700 (for example 449750 - 249050)
-        consensus.BIP16Height = 0;
         consensus.nMasternodePaymentsStartBlock = 100000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
         consensus.nMasternodePaymentsIncreaseBlock = 158000; // actual historical value
         consensus.nMasternodePaymentsIncreasePeriod = 576*30; // 17280 - actual historical value
@@ -358,7 +357,6 @@ public:
     CTestNetParams() {
         strNetworkID = CBaseChainParams::TESTNET;
         consensus.nSubsidyHalvingInterval = 210240;
-        consensus.BIP16Height = 0;
         consensus.nMasternodePaymentsStartBlock = 4010; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
         consensus.nMasternodePaymentsIncreaseBlock = 4030;
         consensus.nMasternodePaymentsIncreasePeriod = 10;
@@ -532,7 +530,6 @@ public:
     explicit CDevNetParams(const ArgsManager& args) {
         strNetworkID = CBaseChainParams::DEVNET;
         consensus.nSubsidyHalvingInterval = 210240;
-        consensus.BIP16Height = 0;
         consensus.nMasternodePaymentsStartBlock = 4010; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
         consensus.nMasternodePaymentsIncreaseBlock = 4030;
         consensus.nMasternodePaymentsIncreasePeriod = 10;
@@ -766,7 +763,6 @@ public:
     explicit CRegTestParams(const ArgsManager& args) {
         strNetworkID =  CBaseChainParams::REGTEST;
         consensus.nSubsidyHalvingInterval = 150;
-        consensus.BIP16Height = 0; // always enforce P2SH BIP16 on regtest
         consensus.nMasternodePaymentsStartBlock = 240;
         consensus.nMasternodePaymentsIncreaseBlock = 350;
         consensus.nMasternodePaymentsIncreasePeriod = 10;
