@@ -56,8 +56,11 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         ui->helpMessage->setVisible(false);
     } else {
         setWindowTitle(tr("Command-line options"));
-        QString header = "Usage: bitcoin-qt [command-line options] [URI]\n\n"
-                         "Optional URI is a Bitcoin address in BIP21 URI format.\n";
+        QString header = "The bitcoin-qt application provides a graphical interface for interacting with " PACKAGE_NAME ".\n\n"
+                         "It combines the core functionalities of bitcoind with a user-friendly interface for wallet management, transaction history, and network statistics.\n\n"
+                         "It is suitable for users who prefer a graphical over a command-line interface.\n\n"
+                         "You can optionally specify a payment [URI], in e.g. the BIP21 URI format.\n\n"
+                         "Usage: bitcoin-qt [options] [URI]\n\n";
         QTextCursor cursor(ui->helpMessage->document());
         cursor.insertText(version);
         cursor.insertBlock();
