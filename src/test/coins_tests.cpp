@@ -598,10 +598,10 @@ static size_t InsertCoinsMapEntry(CCoinsMap& map, CoinsCachePair& sentinel, CAmo
     assert(flags != NO_ENTRY);
     CCoinsCacheEntry entry;
     SetCoinsValue(value, entry.coin);
-    auto inserted = map.emplace(OUTPOINT, std::move(entry));
-    assert(inserted.second);
-    inserted.first->second.AddFlags(flags, *inserted.first, sentinel);
-    return inserted.first->second.coin.DynamicMemoryUsage();
+    auto [it, inserted] = map.try_emplace(OUTPOINT, std::move(entry));
+    assert(inserted);
+    it->second.AddFlags(flags, *it, sentinel);
+    return it->second.coin.DynamicMemoryUsage();
 }
 
 void GetCoinsMapEntry(const CCoinsMap& map, CAmount& value, char& flags, const COutPoint& outp = OUTPOINT)
