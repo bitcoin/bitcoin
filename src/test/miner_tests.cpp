@@ -9,6 +9,7 @@
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
 #include <node/miner.h>
+#include <policy/feerate.h>
 #include <policy/policy.h>
 #include <test/util/random.h>
 #include <test/util/txmempool.h>
@@ -24,6 +25,9 @@
 #include <test/util/setup_common.h>
 
 #include <memory>
+#include <optional>
+#include <tuple>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 
@@ -55,6 +59,7 @@ struct MinerTestingSetup : public TestingSetup {
         return *m_node.mempool;
     }
     BlockAssembler AssemblerForTest(CTxMemPool& tx_mempool);
+
 };
 } // namespace miner_tests
 
@@ -123,25 +128,43 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vout[0].nValue = 5000000000LL - 1000;
     // This tx has a low fee: 1000 satoshis
     Txid hashParentTx = tx.GetHash(); // save this txid for later use
-    tx_mempool.addUnchecked(entry.Fee(1000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
+    const auto lowFeeTx{entry.Fee(1000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx)};
+    tx_mempool.addUnchecked(lowFeeTx);
 
     // This tx has a medium fee: 10000 satoshis
     tx.vin[0].prevout.hash = txFirst[1]->GetHash();
     tx.vout[0].nValue = 5000000000LL - 10000;
     Txid hashMediumFeeTx = tx.GetHash();
-    tx_mempool.addUnchecked(entry.Fee(10000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
+    const auto mediumFeeTx{entry.Fee(10000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx)};
+    tx_mempool.addUnchecked(mediumFeeTx);
 
     // This tx has a high fee, but depends on the first transaction
     tx.vin[0].prevout.hash = hashParentTx;
     tx.vout[0].nValue = 5000000000LL - 1000 - 50000; // 50k satoshi fee
     Txid hashHighFeeTx = tx.GetHash();
-    tx_mempool.addUnchecked(entry.Fee(50000).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx));
+    const auto highFeeChildTx{entry.Fee(50000).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx)};
+    tx_mempool.addUnchecked(highFeeChildTx);
 
-    std::unique_ptr<CBlockTemplate> pblocktemplate = AssemblerForTest(tx_mempool).CreateNewBlock(scriptPubKey);
+    auto assembler{AssemblerForTest(tx_mempool)};
+    auto pblocktemplate{assembler.CreateNewBlock(scriptPubKey)};
+    const auto blockFeeAndVsizes{pblocktemplate->vFeeratePerSize};
     BOOST_REQUIRE_EQUAL(pblocktemplate->block.vtx.size(), 4U);
     BOOST_CHECK(pblocktemplate->block.vtx[1]->GetHash() == hashParentTx);
     BOOST_CHECK(pblocktemplate->block.vtx[2]->GetHash() == hashHighFeeTx);
     BOOST_CHECK(pblocktemplate->block.vtx[3]->GetHash() == hashMediumFeeTx);
+
+    BOOST_CHECK(blockFeeAndVsizes.size() == 2);
+    // lowFeeTx and highFeeChildTx are added to the block as a package.
+    const auto packageFee{lowFeeTx.GetFee() + highFeeChildTx.GetFee()};
+    const auto packageSize{static_cast<uint32_t>(lowFeeTx.GetTxSize() + highFeeChildTx.GetTxSize())};
+    CFeeRate packageFeeRate{packageFee, packageSize};
+    BOOST_CHECK(std::get<0>(blockFeeAndVsizes[0]) == packageFeeRate);
+    BOOST_CHECK(std::get<1>(blockFeeAndVsizes[0]) == packageSize);
+
+    const auto mediumFeeTxSize{static_cast<uint32_t>(mediumFeeTx.GetTxSize())};
+    CFeeRate mediumFeeRate{mediumFeeTx.GetFee(), mediumFeeTxSize};
+    BOOST_CHECK(std::get<0>(blockFeeAndVsizes[1]) == mediumFeeRate);
+    BOOST_CHECK(std::get<1>(blockFeeAndVsizes[1]) == mediumFeeTxSize);
 
     // Test that a package below the block min tx fee doesn't get included
     tx.vin[0].prevout.hash = hashHighFeeTx;
