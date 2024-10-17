@@ -62,7 +62,6 @@
 #include <stdexcept>
 
 using namespace util::hex_literals;
-using kernel::BlockTreeDB;
 using node::ApplyArgsManOptions;
 using node::BlockAssembler;
 using node::BlockManager;
@@ -245,14 +244,13 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
             .chainparams = chainman_opts.chainparams,
             .blocks_dir = m_args.GetBlocksDirPath(),
             .notifications = chainman_opts.notifications,
+            .block_tree_db_dir = m_args.GetDataDirNet() / "blocks" / "index",
+            .wipe_block_tree_db = m_args.GetBoolArg("-reindex", false),
+            .block_tree_db_in_memory = opts.block_tree_db_in_memory,
+            .block_tree_db_cache_size = m_cache_sizes.block_tree_db,
         };
         m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown_signal), chainman_opts, blockman_opts);
         LOCK(m_node.chainman->GetMutex());
-        m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<BlockTreeDB>(DBParams{
-            .path = m_args.GetDataDirNet() / "blocks" / "index",
-            .cache_bytes = static_cast<size_t>(m_cache_sizes.block_tree_db),
-            .memory_only = true,
-        });
     };
     m_make_chainman();
 }
@@ -278,9 +276,7 @@ void ChainTestingSetup::LoadVerifyActivateChainstate()
     auto& chainman{*Assert(m_node.chainman)};
     node::ChainstateLoadOptions options;
     options.mempool = Assert(m_node.mempool.get());
-    options.block_tree_db_in_memory = m_block_tree_db_in_memory;
     options.coins_db_in_memory = m_coins_db_in_memory;
-    options.wipe_block_tree_db = m_args.GetBoolArg("-reindex", false);
     options.wipe_chainstate_db = m_args.GetBoolArg("-reindex", false) || m_args.GetBoolArg("-reindex-chainstate", false);
     options.prune = chainman.m_blockman.IsPruneMode();
     options.check_blocks = m_args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
@@ -304,7 +300,6 @@ TestingSetup::TestingSetup(
     : ChainTestingSetup(chainType, opts)
 {
     m_coins_db_in_memory = opts.coins_db_in_memory;
-    m_block_tree_db_in_memory = opts.block_tree_db_in_memory;
     // Ideally we'd move all the RPC tests to the functional testing framework
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
