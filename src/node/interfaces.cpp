@@ -675,6 +675,11 @@ public:
         LOCK(m_node.mempool->cs);
         return m_node.mempool->exists(GenTxid::Txid(txid));
     }
+    bool isSpentInMempool(const COutPoint& outpoint) override
+    {
+        if (!m_node.mempool) return false;
+        return m_node.mempool->isSpent(outpoint);
+    }
     bool hasDescendantsInMempool(const uint256& txid) override
     {
         if (!m_node.mempool) return false;

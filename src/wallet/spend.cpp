@@ -332,6 +332,15 @@ CoinsResult AvailableCoins(const CWallet& wallet,
         if (wallet.IsTxImmatureCoinBase(wtx) && !params.include_immature_coinbase)
             continue;
 
+        // if any input of this tx was selected for spending, skip the outputs.
+        // The tx is being replaced and the outputs are no longer going to exist.
+        if (coinControl && coinControl->HasSelected()) {
+            if (std::any_of(wtx.tx->vin.begin(), wtx.tx->vin.end(), [&coinControl](const CTxIn& input) {
+                return coinControl->IsSelected(input.prevout); })) {
+                continue; // skip tx.
+            }
+        }
+
         int nDepth = wallet.GetTxDepthInMainChain(wtx);
         if (nDepth < 0)
             continue;
@@ -1440,6 +1449,8 @@ util::Result<CreatedTransactionResult> FundTransaction(CWallet& wallet, const CM
     }
     wallet.chain().findCoins(coins);
 
+    // Check if any input was already spent by another tx in the mempool
+    bool is_replacement = false;
     for (const CTxIn& txin : tx.vin) {
         const auto& outPoint = txin.prevout;
         PreselectedInput& preset_txin = coinControl.Select(outPoint);
@@ -1450,10 +1461,22 @@ util::Result<CreatedTransactionResult> FundTransaction(CWallet& wallet, const CM
 
             // The input was not in the wallet, but is in the UTXO set, so select as external
             preset_txin.SetTxOut(coins[outPoint].out);
+            // Check if was spent in the mempool
+            if (!is_replacement) is_replacement = wallet.chain().isSpentInMempool(outPoint);
+        } else {
+            bool in_mempool = false;
+            if (wallet.IsSpent(outPoint, &in_mempool)) is_replacement = in_mempool;
         }
         preset_txin.SetSequence(txin.nSequence);
         preset_txin.SetScriptSig(txin.scriptSig);
         preset_txin.SetScriptWitness(txin.scriptWitness);
+    }
+
+    // If this tx is a replacement, disallow unconfirmed UTXO selection by rising the
+    // coin control min depth param. Ensuring that we don't add any new unconfirmed UTXOs
+    // to replacement transactions (satisfying BIP125 rule 2).
+    if (is_replacement && coinControl.m_min_depth == 0) {
+        coinControl.m_min_depth = 1;
     }
 
     auto res = CreateTransaction(wallet, vecSend, change_pos, coinControl, false);
