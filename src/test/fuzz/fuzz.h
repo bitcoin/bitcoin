@@ -28,18 +28,28 @@ using TypeTestOneInput = std::function<void(FuzzBufferType)>;
 struct FuzzTargetOptions {
     std::function<void()> init{[] {}};
     bool hidden{false};
+    bool require_build_for_fuzzing{false};
 };
 
 void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target, FuzzTargetOptions opts);
 
 #define FUZZ_TARGET(...) DETAIL_FUZZ(__VA_ARGS__)
 
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+constexpr bool should_register = true;
+#else
+constexpr bool should_register = false;
+#endif
+
 #define DETAIL_FUZZ(name, ...)                                                        \
     void name##_fuzz_target(FuzzBufferType);                                          \
     struct name##_Before_Main {                                                       \
         name##_Before_Main()                                                          \
         {                                                                             \
-            FuzzFrameworkRegisterTarget(#name, name##_fuzz_target, {__VA_ARGS__});    \
+            FuzzTargetOptions opts{__VA_ARGS__};                                      \
+            if (!opts.require_build_for_fuzzing || should_register) {                 \
+                FuzzFrameworkRegisterTarget(#name, name##_fuzz_target, opts);         \
+            }                                                                         \
         }                                                                             \
     } const static g_##name##_before_main;                                            \
     void name##_fuzz_target(FuzzBufferType buffer)
