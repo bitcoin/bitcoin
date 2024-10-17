@@ -102,6 +102,8 @@ void ResetCoverageCounters() {}
 
 void initialize()
 {
+    g_fuzzing = true;
+
     // By default, make the RNG deterministic with a fixed seed. This will affect all
     // randomness during the fuzz test, except:
     // - GetStrongRandBytes(), which is used for the creation of private key material.

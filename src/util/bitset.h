@@ -101,7 +101,7 @@ class IntBitSet
         /** Progress to the next 1 bit (only if != IteratorEnd). */
         constexpr Iterator& operator++() noexcept
         {
-            Assume(m_val != 0);
+            assert(m_val != 0);
             m_val &= m_val - I{1U};
             if (m_val != 0) m_pos = std::countr_zero(m_val);
             return *this;
@@ -109,7 +109,7 @@ class IntBitSet
         /** Get the current bit position (only if != IteratorEnd). */
         constexpr unsigned operator*() const noexcept
         {
-            Assume(m_val != 0);
+            assert(m_val != 0);
             return m_pos;
         }
     };
@@ -136,39 +136,39 @@ public:
     /** Construct a bitset with the singleton i. */
     static constexpr IntBitSet Singleton(unsigned i) noexcept
     {
-        Assume(i < MAX_SIZE);
+        assert(i < MAX_SIZE);
         return IntBitSet(I(1U) << i);
     }
     /** Construct a bitset with bits 0..count-1 (inclusive) set to 1. */
     static constexpr IntBitSet Fill(unsigned count) noexcept
     {
         IntBitSet ret;
-        Assume(count <= MAX_SIZE);
+        assert(count <= MAX_SIZE);
         if (count) ret.m_val = I(~I{0}) >> (MAX_SIZE - count);
         return ret;
     }
     /** Set a bit to 1. */
     constexpr void Set(unsigned pos) noexcept
     {
-        Assume(pos < MAX_SIZE);
+        assert(pos < MAX_SIZE);
         m_val |= I{1U} << pos;
     }
     /** Set a bit to the specified value. */
     constexpr void Set(unsigned pos, bool val) noexcept
     {
-        Assume(pos < MAX_SIZE);
+        assert(pos < MAX_SIZE);
         m_val = (m_val & ~I(I{1U} << pos)) | (I(val) << pos);
     }
     /** Set a bit to 0. */
     constexpr void Reset(unsigned pos) noexcept
     {
-        Assume(pos < MAX_SIZE);
+        assert(pos < MAX_SIZE);
         m_val &= ~I(I{1U} << pos);
     }
     /** Retrieve a bit at the given position. */
     constexpr bool operator[](unsigned pos) const noexcept
     {
-        Assume(pos < MAX_SIZE);
+        assert(pos < MAX_SIZE);
         return (m_val >> pos) & 1U;
     }
     /** Compute the number of 1 bits in the bitset. */
@@ -186,13 +186,13 @@ public:
     /** Find the first element (requires Any()). */
     constexpr unsigned First() const noexcept
     {
-        Assume(m_val != 0);
+        assert(m_val != 0);
         return std::countr_zero(m_val);
     }
     /** Find the last element (requires Any()). */
     constexpr unsigned Last() const noexcept
     {
-        Assume(m_val != 0);
+        assert(m_val != 0);
         return std::bit_width(m_val) - 1;
     }
     /** Set this object's bits to be the binary AND between respective bits from this and a. */
@@ -281,7 +281,7 @@ class MultiIntBitSet
         /** Progress to the next 1 bit (only if != IteratorEnd). */
         constexpr Iterator& operator++() noexcept
         {
-            Assume(m_idx < N);
+            assert(m_idx < N);
             m_val &= m_val - I{1U};
             if (m_val == 0) {
                 while (true) {
@@ -301,7 +301,7 @@ class MultiIntBitSet
         /** Get the current bit position (only if != IteratorEnd). */
         constexpr unsigned operator*() const noexcept
         {
-            Assume(m_idx < N);
+            assert(m_idx < N);
             return m_pos;
         }
     };
@@ -316,13 +316,13 @@ public:
     /** Set a bit to 1. */
     void constexpr Set(unsigned pos) noexcept
     {
-        Assume(pos < MAX_SIZE);
+        assert(pos < MAX_SIZE);
         m_val[pos / LIMB_BITS] |= I{1U} << (pos % LIMB_BITS);
     }
     /** Set a bit to the specified value. */
     void constexpr Set(unsigned pos, bool val) noexcept
     {
-        Assume(pos < MAX_SIZE);
+        assert(pos < MAX_SIZE);
         m_val[pos / LIMB_BITS] = (m_val[pos / LIMB_BITS] & ~I(I{1U} << (pos % LIMB_BITS))) |
                                  (I{val} << (pos % LIMB_BITS));
     }
@@ -341,19 +341,19 @@ public:
     /** Set a bit to 0. */
     void constexpr Reset(unsigned pos) noexcept
     {
-        Assume(pos < MAX_SIZE);
+        assert(pos < MAX_SIZE);
         m_val[pos / LIMB_BITS] &= ~I(I{1U} << (pos % LIMB_BITS));
     }
     /** Retrieve a bit at the given position. */
     bool constexpr operator[](unsigned pos) const noexcept
     {
-        Assume(pos < MAX_SIZE);
+        assert(pos < MAX_SIZE);
         return (m_val[pos / LIMB_BITS] >> (pos % LIMB_BITS)) & 1U;
     }
     /** Construct a bitset with the singleton pos. */
     static constexpr MultiIntBitSet Singleton(unsigned pos) noexcept
     {
-        Assume(pos < MAX_SIZE);
+        assert(pos < MAX_SIZE);
         MultiIntBitSet ret;
         ret.m_val[pos / LIMB_BITS] = I{1U} << (pos % LIMB_BITS);
         return ret;
@@ -361,12 +361,12 @@ public:
     /** Construct a bitset with bits 0..count-1 (inclusive) set to 1. */
     static constexpr MultiIntBitSet Fill(unsigned count) noexcept
     {
-        Assume(count <= MAX_SIZE);
+        assert(count <= MAX_SIZE);
         MultiIntBitSet ret;
         if (count) {
             unsigned i = 0;
             while (count > LIMB_BITS) {
-                ret.m_val[i++] = ~I{0};
+                ret.m_val[i++] = I(~I{0});
                 count -= LIMB_BITS;
             }
             ret.m_val[i] = I(~I{0}) >> (LIMB_BITS - count);
@@ -402,7 +402,7 @@ public:
         unsigned p = 0;
         while (m_val[p] == 0) {
             ++p;
-            Assume(p < N);
+            assert(p < N);
         }
         return std::countr_zero(m_val[p]) + p * LIMB_BITS;
     }
@@ -411,7 +411,7 @@ public:
     {
         unsigned p = N - 1;
         while (m_val[p] == 0) {
-            Assume(p > 0);
+            assert(p > 0);
             --p;
         }
         return std::bit_width(m_val[p]) - 1 + p * LIMB_BITS;

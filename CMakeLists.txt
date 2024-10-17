@@ -240,11 +240,6 @@ if(BUILD_FOR_FUZZING)
   set(BUILD_GUI_TESTS OFF)
   set(BUILD_BENCH OFF)
   set(BUILD_FUZZ_BINARY ON)
-
-  target_compile_definitions(core_interface INTERFACE
-    ABORT_ON_FAILED_ASSUME
-    FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-  )
 endif()
 
 include(ProcessConfigurations)
