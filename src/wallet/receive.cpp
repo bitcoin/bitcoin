@@ -48,48 +48,83 @@ CAmount TxGetCredit(const CWallet& wallet, const CTransaction& tx, const isminef
     return nCredit;
 }
 
+bool IsOutputChange(const CWallet& wallet, const CTransaction& tx, unsigned int change_pos)
+{
+    AssertLockHeld(wallet.cs_wallet);
+    // If at least one of the inputs is from the wallet, then there might be a change output.
+    // Otherwise, it's definitely not a change output.
+    if (!std::any_of(tx.vin.begin(), tx.vin.end(),
+                     [&wallet](const CTxIn& in) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet) { return InputIsMine(wallet, in); })) {
+        return false;
+    }
+
+    return ScriptIsChange(wallet, tx.vout.at(change_pos).scriptPubKey);
+}
+
 bool ScriptIsChange(const CWallet& wallet, const CScript& script)
 {
-    // TODO: fix handling of 'change' outputs. The assumption is that any
-    // payment to a script that is ours, but is not in the address book
-    // is change. That assumption is likely to break when we implement multisignature
-    // wallets that return change back into a multi-signature-protected address;
-    // a better way of identifying which outputs are 'the send' and which are
-    // 'the change' will need to be implemented (maybe extend CWalletTx to remember
-    // which output, if any, was change).
     AssertLockHeld(wallet.cs_wallet);
-    if (wallet.IsMine(script))
-    {
-        CTxDestination address;
-        if (!ExtractDestination(script, address))
-            return true;
-        if (!wallet.FindAddressBookEntry(address)) {
-            return true;
+    // If the script is not from one of our internal spkms, we don't consider it change.
+    // This applies to transactions sending coins back to the source as well. Eg: If the
+    // source address is not under one of the wallet internal spkms, we don't consider
+    // the output as change.
+    // Important note: the legacy spkm is on the internal spkm set as well
+    std::set<ScriptPubKeyMan*> internal_spkms = wallet.GetAllScriptPubKeyMans(/*only_internal=*/true);
+    SignatureData sigdata;
+    ScriptPubKeyMan* spkm{nullptr};
+    for (const auto& iter_spk_man : internal_spkms) {
+        if (iter_spk_man && iter_spk_man->IsMine(script)) {
+            spkm = iter_spk_man;
+            break;
         }
     }
-    return false;
+    if (!spkm) return false;
+
+    // check if it's solvable
+    if (auto desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(spkm)) {
+        return WITH_LOCK(desc_spkm->cs_desc_man, return desc_spkm->GetWalletDescriptor().descriptor->IsSolvable());
+    } else {
+        // Legacy
+        auto legacy_spkm = dynamic_cast<LegacyScriptPubKeyMan*>(spkm);
+        if (!legacy_spkm) return false; // unknown spkm
+
+        CTxDestination dest;
+        if (!ExtractDestination(script, dest) || !IsValidDestination(dest)) return false;
+
+        // If the wallet supports HD split
+        if (legacy_spkm->IsHDEnabled() && wallet.CanSupportFeature(FEATURE_HD_SPLIT)) {
+            std::unique_ptr<CKeyMetadata> meta = legacy_spkm->GetMetadata(dest);
+            if (meta && meta->has_key_origin) {
+                // bip32 internal path /0'/1'/*
+                if (meta->key_origin.path.empty() || meta->key_origin.path.size() > 3) return false; // shouldn't happen, legacy supports bip32 derivation path only
+                return (meta->key_origin.path.at(1) & ~0x80000000); // BIP32_HARDENED_KEY_LIMIT=0x80000000
+            }
+        }
+
+        // HD wallet not enabled or no key origin (legacy behaviour):
+        // As last resource fallback for legacy wallets, use the address book data to return whether the script is change or not.
+        // This is based on the following naive assumptions:
+        // 1) The lack of address book entry make any destination a "change destination".
+        // 2) Any entry in the address book without a label is a "change destination".
+        return wallet.FindAddressBookEntry(dest, /*allow_change=*/false) == nullptr;
+    }
 }
 
-bool OutputIsChange(const CWallet& wallet, const CTxOut& txout)
-{
-    return ScriptIsChange(wallet, txout.scriptPubKey);
-}
-
-CAmount OutputGetChange(const CWallet& wallet, const CTxOut& txout)
+CAmount OutputGetChange(const CWallet& wallet, const CTransaction& tx, unsigned int change_pos)
 {
     AssertLockHeld(wallet.cs_wallet);
+    const CTxOut& txout = tx.vout.at(change_pos);
     if (!MoneyRange(txout.nValue))
         throw std::runtime_error(std::string(__func__) + ": value out of range");
-    return (OutputIsChange(wallet, txout) ? txout.nValue : 0);
+    return IsOutputChange(wallet, tx, change_pos) ? txout.nValue : 0;
 }
 
 CAmount TxGetChange(const CWallet& wallet, const CTransaction& tx)
 {
     LOCK(wallet.cs_wallet);
     CAmount nChange = 0;
-    for (const CTxOut& txout : tx.vout)
-    {
-        nChange += OutputGetChange(wallet, txout);
+    for (size_t change_pos=0 ; change_pos<tx.vout.size(); change_pos++) {
+        nChange += OutputGetChange(wallet, tx, change_pos);
         if (!MoneyRange(nChange))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     }
@@ -219,7 +254,7 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
         //   2) the output is to us (received)
         if (nDebit > 0)
         {
-            if (!include_change && OutputIsChange(wallet, txout))
+            if (!include_change && IsOutputChange(wallet, *wtx.tx, i))
                 continue;
         }
         else if (!(fIsMine & filter))
@@ -385,14 +420,14 @@ std::set< std::set<CTxDestination> > GetAddressGroupings(const CWallet& wallet)
             // group change with input addresses
             if (any_mine)
             {
-               for (const CTxOut& txout : wtx.tx->vout)
-                   if (OutputIsChange(wallet, txout))
-                   {
+               for (size_t pos = 0; pos < wtx.tx->vout.size(); pos++) {
+                   if (IsOutputChange(wallet, *wtx.tx, pos)) {
                        CTxDestination txoutAddr;
-                       if(!ExtractDestination(txout.scriptPubKey, txoutAddr))
+                       if (!ExtractDestination(wtx.tx->vout[pos].scriptPubKey, txoutAddr))
                            continue;
                        grouping.insert(txoutAddr);
                    }
+               }
             }
             if (grouping.size() > 0)
             {

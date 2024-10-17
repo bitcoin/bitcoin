@@ -74,7 +74,7 @@ void ImportDescriptors(CWallet& wallet, const std::string& seed_insecure)
             assert(parsed_desc->IsRange());
             assert(parsed_desc->IsSingleType());
             assert(!keys.keys.empty());
-            WalletDescriptor w_desc{std::move(parsed_desc), /*creation_time=*/0, /*range_start=*/0, /*range_end=*/1, /*next_index=*/0};
+            WalletDescriptor w_desc{std::move(parsed_desc), /*creation_time=*/0, /*range_start=*/0, /*range_end=*/1, /*next_index=*/0, /*_internal=*/internal};
             assert(!wallet.GetDescriptorScriptPubKeyMan(w_desc));
             LOCK(wallet.cs_wallet);
             auto spk_manager{wallet.AddWalletDescriptor(w_desc, keys, /*label=*/"", internal)};

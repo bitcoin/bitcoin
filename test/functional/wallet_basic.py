@@ -671,13 +671,14 @@ class WalletTest(BitcoinTestFramework):
             assert_equal(ischange, address != destination)
             if ischange:
                 change = address
+        # Internal address is detected even if it has a label
         self.nodes[0].setlabel(change, 'foobar')
-        assert_equal(self.nodes[0].getaddressinfo(change)['ischange'], False)
+        assert_equal(self.nodes[0].getaddressinfo(change)['ischange'], True)
 
         # Test gettransaction response with different arguments.
         self.log.info("Testing gettransaction response with different arguments...")
         self.nodes[0].setlabel(change, 'baz')
-        baz = self.nodes[0].listtransactions(label="baz", count=1)[0]
+        baz = self.nodes[0].listtransactions(label="baz", count=1, include_change=True)[0]
         expected_receive_vout = {"label":    "baz",
                                  "address":  baz["address"],
                                  "amount":   baz["amount"],
@@ -689,17 +690,17 @@ class WalletTest(BitcoinTestFramework):
         expected_verbose_fields = expected_fields | {verbose_field}
 
         self.log.debug("Testing gettransaction response without verbose")
-        tx = self.nodes[0].gettransaction(txid=txid)
+        tx = self.nodes[0].gettransaction(txid=txid, include_change=True)
         assert_equal(set([*tx]), expected_fields)
         assert_array_result(tx["details"], {"category": "receive"}, expected_receive_vout)
 
         self.log.debug("Testing gettransaction response with verbose set to False")
-        tx = self.nodes[0].gettransaction(txid=txid, verbose=False)
+        tx = self.nodes[0].gettransaction(txid=txid, verbose=False, include_change=True)
         assert_equal(set([*tx]), expected_fields)
         assert_array_result(tx["details"], {"category": "receive"}, expected_receive_vout)
 
         self.log.debug("Testing gettransaction response with verbose set to True")
-        tx = self.nodes[0].gettransaction(txid=txid, verbose=True)
+        tx = self.nodes[0].gettransaction(txid=txid, verbose=True, include_change=True)
         assert_equal(set([*tx]), expected_verbose_fields)
         assert_array_result(tx["details"], {"category": "receive"}, expected_receive_vout)
         assert_equal(tx[verbose_field], self.nodes[0].decoderawtransaction(tx["hex"]))

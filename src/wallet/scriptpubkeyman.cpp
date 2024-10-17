@@ -1833,7 +1833,7 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
         std::string error;
         std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, error, false);
         CHECK_NONFATAL(descs.size() == 1); // It shouldn't be possible to have an invalid or multipath descriptor
-        WalletDescriptor w_desc(std::move(descs.at(0)), creation_time, 0, 0, 0);
+        WalletDescriptor w_desc(std::move(descs.at(0)), creation_time, 0, 0, 0, /*_internal=*/false);
 
         // Make the DescriptorScriptPubKeyMan and get the scriptPubKeys
         auto desc_spk_man = std::make_unique<DescriptorScriptPubKeyMan>(m_storage, w_desc, /*keypool_size=*/0);
@@ -1878,8 +1878,9 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
             std::string error;
             std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, error, false);
             CHECK_NONFATAL(descs.size() == 1); // It shouldn't be possible to have an invalid or multipath descriptor
-            uint32_t chain_counter = std::max((i == 1 ? chain.nInternalChainCounter : chain.nExternalChainCounter), (uint32_t)0);
-            WalletDescriptor w_desc(std::move(descs.at(0)), 0, 0, chain_counter, 0);
+            bool internal = i == 1;
+            uint32_t chain_counter = std::max((internal ? chain.nInternalChainCounter : chain.nExternalChainCounter), (uint32_t)0);
+            WalletDescriptor w_desc(std::move(descs.at(0)), 0, 0, chain_counter, 0, internal);
 
             // Make the DescriptorScriptPubKeyMan and get the scriptPubKeys
             auto desc_spk_man = std::make_unique<DescriptorScriptPubKeyMan>(m_storage, w_desc, /*keypool_size=*/0);
@@ -1943,7 +1944,7 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
             desc->Expand(0, provider, desc_spks, provider);
         } else {
             // Make the DescriptorScriptPubKeyMan and get the scriptPubKeys
-            WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
+            WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0, /*_internal=*/false);
             auto desc_spk_man = std::make_unique<DescriptorScriptPubKeyMan>(m_storage, w_desc, /*keypool_size=*/0);
             for (const auto& keyid : privkeyids) {
                 CKey key;

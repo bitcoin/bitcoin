@@ -19,9 +19,9 @@ bool AllInputsMine(const CWallet& wallet, const CTransaction& tx, const isminefi
 CAmount OutputGetCredit(const CWallet& wallet, const CTxOut& txout, const isminefilter& filter);
 CAmount TxGetCredit(const CWallet& wallet, const CTransaction& tx, const isminefilter& filter);
 
+bool IsOutputChange(const CWallet& wallet, const CTransaction& tx, unsigned int change_pos) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 bool ScriptIsChange(const CWallet& wallet, const CScript& script) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
-bool OutputIsChange(const CWallet& wallet, const CTxOut& txout) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
-CAmount OutputGetChange(const CWallet& wallet, const CTxOut& txout) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+CAmount OutputGetChange(const CWallet& wallet, const CTransaction& tx, unsigned int change_pos) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 CAmount TxGetChange(const CWallet& wallet, const CTransaction& tx);
 
 CAmount CachedTxGetCredit(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter)
