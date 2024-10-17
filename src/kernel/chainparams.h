@@ -105,10 +105,12 @@ public:
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
     /** Minimum free space (in GB) needed for data directory */
     uint64_t AssumedBlockchainSize() const { return m_assumed_blockchain_size; }
-    /** Minimum free space (in GB) needed for data directory when pruned; Does not include prune target*/
+    /** Minimum free space (in GB) needed for data directory when pruned; Does not include prune target */
     uint64_t AssumedChainStateSize() const { return m_assumed_chain_state_size; }
     /** Whether it is possible to mine blocks on demand (no retargeting) */
     bool MineBlocksOnDemand() const { return consensus.fPowNoRetargeting; }
+    /** Return the chain type as a user-facing string */
+    std::string GetChainTypeDisplayString() const { return ChainTypeToDisplayString(m_chain_type); }
     /** Return the chain type string */
     std::string GetChainTypeString() const { return ChainTypeToString(m_chain_type); }
     /** Return the chain type */
@@ -116,6 +118,7 @@ public:
     /** Return the list of hostnames to look up for DNS seeds */
     const std::vector<std::string>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
+    const std::vector<std::string_view>& Base58EncodedPrefix(Base58Type type) const { return base58EncodedPrefixes[type]; }
     const std::string& Bech32HRP() const { return bech32_hrp; }
     const std::vector<uint8_t>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
@@ -174,6 +177,7 @@ protected:
     uint64_t m_assumed_chain_state_size;
     std::vector<std::string> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
+    std::vector<std::string_view> base58EncodedPrefixes[MAX_BASE58_TYPES];
     std::string bech32_hrp;
     ChainType m_chain_type;
     CBlock genesis;
