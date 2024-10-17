@@ -10,6 +10,7 @@ target_sources(fuzz
     fees.cpp
     $<$<BOOL:${USE_SQLITE}>:${CMAKE_CURRENT_LIST_DIR}/notifications.cpp>
     parse_iso8601.cpp
+    rpc.cpp
     $<$<BOOL:${USE_SQLITE}>:${CMAKE_CURRENT_LIST_DIR}/scriptpubkeyman.cpp>
     wallet_bdb_parser.cpp
 )
