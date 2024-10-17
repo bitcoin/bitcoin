@@ -8,10 +8,12 @@
 #include <node/mempool_persist.h>
 
 #include <chainparams.h>
+#include <common/args.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <kernel/mempool_entry.h>
 #include <net_processing.h>
+#include <netbase.h> // for g_reachable_nets
 #include <node/mempool_persist_args.h>
 #include <node/types.h>
 #include <policy/rbf.h>
@@ -42,11 +44,20 @@ using util::ToString;
 static RPCHelpMan sendrawtransaction()
 {
     return RPCHelpMan{"sendrawtransaction",
-        "\nSubmit a raw transaction (serialized, hex-encoded) to local node and network.\n"
-        "\nThe transaction will be sent unconditionally to all peers, so using sendrawtransaction\n"
-        "for manual rebroadcast may degrade privacy by leaking the transaction's origin, as\n"
-        "nodes will normally not rebroadcast non-wallet transactions already in their mempool.\n"
+        "\nSubmit a raw transaction (serialized, hex-encoded) to the network.\n"
+
+        "\nIf -privatebroadcast is disabled, then the transaction will be sent\n"
+        "unconditionally to all currently connected peers, so using sendrawtransaction\n"
+        "for manual rebroadcast will degrade privacy by leaking the transaction's origin,\n"
+        "as nodes will normally not rebroadcast non-wallet transactions already in their\n"
+        "mempool.\n"
+
+        "\nIf -privatebroadcast is enabled, then the transaction will be sent only via\n"
+        "dedicated, short-lived connections to Tor or I2P peers or IPv4/IPv6 peers\n"
+        "through the Tor network. This conceals the transaction origin.\n"
+
         "\nA specific exception, RPC_TRANSACTION_ALREADY_IN_UTXO_SET, may throw if the transaction cannot be added to the mempool.\n"
+
         "\nRelated RPCs: createrawtransaction, signrawtransactionwithkey\n",
         {
             {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex string of the raw transaction"},
@@ -96,7 +107,24 @@ static RPCHelpMan sendrawtransaction()
             std::string err_string;
             AssertLockNotHeld(cs_main);
             NodeContext& node = EnsureAnyNodeContext(request.context);
-            const TransactionError err = BroadcastTransaction(node, tx, err_string, max_raw_tx_fee, /*relay=*/true, /*wait_callback=*/true);
+            const bool private_broadcast_enabled{gArgs.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)};
+            if (private_broadcast_enabled &&
+                !g_reachable_nets.Contains(NET_ONION) &&
+                !g_reachable_nets.Contains(NET_I2P)) {
+                throw JSONRPCError(RPC_MISC_ERROR,
+                                   "-privatebroadcast is enabled, but none of the Tor or I2P networks is "
+                                   "reachable. Maybe the location of the Tor proxy couldn't be retrieved "
+                                   "from the Tor daemon at startup. Check whether the Tor daemon is running "
+                                   "and that -torcontrol, -torpassword and -i2psam are configured properly.");
+            }
+            const auto method = private_broadcast_enabled ? node::NO_MEMPOOL_PRIVATE_BROADCAST
+                                                          : node::ADD_TO_MEMPOOL_AND_BROADCAST_TO_ALL;
+            const TransactionError err = BroadcastTransaction(node,
+                                                              tx,
+                                                              err_string,
+                                                              max_raw_tx_fee,
+                                                              method,
+                                                              /*wait_callback=*/true);
             if (TransactionError::OK != err) {
                 throw JSONRPCTransactionError(err, err_string);
             }
@@ -1052,7 +1080,12 @@ static RPCHelpMan submitpackage()
 
                 // We do not expect an error here; we are only broadcasting things already/still in mempool
                 std::string err_string;
-                const auto err = BroadcastTransaction(node, tx, err_string, /*max_tx_fee=*/0, /*relay=*/true, /*wait_callback=*/true);
+                const auto err = BroadcastTransaction(node,
+                                                      tx,
+                                                      err_string,
+                                                      /*max_tx_fee=*/0,
+                                                      node::ADD_TO_MEMPOOL_AND_BROADCAST_TO_ALL,
+                                                      /*wait_callback=*/true);
                 if (err != TransactionError::OK) {
                     throw JSONRPCTransactionError(err,
                         strprintf("transaction broadcast failed: %s (%d transactions were broadcast successfully)",
