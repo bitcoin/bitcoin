@@ -2588,6 +2588,231 @@ static RPCHelpMan scanblocks()
     };
 }
 
+static RPCHelpMan getdescriptoractivity()
+{
+    return RPCHelpMan{"getdescriptoractivity",
+        "\nGet spend and receive activity associated with a set of descriptors for a set of blocks. "
+        "This command pairs well with the `relevant_blocks` output of `scanblocks()`.\n"
+        "This call may take several minutes. If you encounter timeouts, try specifying no RPC timeout (bitcoin-cli -rpcclienttimeout=0)",
+        {
+            RPCArg{"blockhashes", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "The list of blockhashes to examine for activity\n", {
+                {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A valid blockhash"},
+            }},
+            scan_objects_arg_desc,
+            {"include_mempool", RPCArg::Type::BOOL, RPCArg::Default{true}, "Whether to include unconfirmed activity"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "", {
+                {RPCResult::Type::ARR, "activity", "events", {
+                    {RPCResult::Type::OBJ, "", "", {
+                        {RPCResult::Type::STR, "type", "always 'spend'"},
+                        {RPCResult::Type::STR, "address", "The address being spent from"},
+                        {RPCResult::Type::STR, "scriptpubkey_hex", "A hex string of the scriptPubKey being spent from"},
+                        {RPCResult::Type::STR, "desc", "The inferred descriptor being spent from"},
+                        {RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " of the spent output"},
+                        {RPCResult::Type::STR_HEX, "blockhash", "The blockhash this spend appears in. Empty if in mempool"},
+                        {RPCResult::Type::NUM, "height", "Height of the spend (-1 if unconfirmed)"},
+                        {RPCResult::Type::STR_HEX, "spend_txid", "The txid of the spending transaction"},
+                        {RPCResult::Type::NUM, "spend_vout", "The vout of the spend"},
+                        {RPCResult::Type::STR_HEX, "prevout_txid", "The txid of the prevout"},
+                        {RPCResult::Type::NUM, "prevout_vout", "The vout of the prevout"},
+                    }},
+                    {RPCResult::Type::OBJ, "", "", {
+                        {RPCResult::Type::STR, "type", "always 'receive'"},
+                        {RPCResult::Type::STR, "address", "The address receiving value"},
+                        {RPCResult::Type::STR, "scriptpubkey_hex", "A hex string of the scriptPubKey receiving value"},
+                        {RPCResult::Type::STR, "desc", "The inferred descriptor receiving value"},
+                        {RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " of the new output"},
+                        {RPCResult::Type::STR_HEX, "blockhash", "The block that this receive is in"},
+                        {RPCResult::Type::NUM, "height", "Height of the receive (-1 if unconfirmed)"},
+                        {RPCResult::Type::STR_HEX, "txid", "Txid of the receiving transaction"},
+                        {RPCResult::Type::NUM, "vout", "Vout of the receiving output"},
+                    }},
+                    // TODO is the skip_type_check avoidable with a heterogeneous ARR?
+                }, /*skip_type_check=*/true},
+            },
+        },
+        RPCExamples{
+            HelpExampleCli("getdescriptoractivity", "'[\"000000000000000000001347062c12fded7c528943c8ce133987e2e2f5a840ee\"]' '[\"addr(bc1qzl6nsgqzu89a66l50cvwapnkw5shh23zarqkw9)\"]'")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    UniValue ret(UniValue::VOBJ);
+    UniValue activity(UniValue::VARR);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    ChainstateManager& chainman = EnsureChainman(node);
+    std::vector<CBlockIndex*> blockindexes;
+
+    {
+        // Validate all given blockhashes.
+        LOCK(::cs_main);
+        for (const UniValue& blockhash : request.params[0].get_array().getValues()) {
+            uint256 bhash = ParseHashV(blockhash, "blockhash");
+            CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(bhash);
+            if (!pindex) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+            }
+            if (!chainman.ActiveChain().Contains(pindex)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Block is not in main chain");
+            }
+            blockindexes.push_back(pindex);
+        }
+    }
+
+    std::set<CScript> scripts_to_watch;
+    std::map<CScript, std::string> descriptors_watched;
+
+    // Determine scripts to watch
+    for (const UniValue& scanobject : request.params[1].get_array().getValues()) {
+        FlatSigningProvider provider;
+        std::vector<CScript> scripts = EvalDescriptorStringOrObject(scanobject, provider);
+
+        for (const CScript& script : scripts) {
+            scripts_to_watch.insert(script);
+            descriptors_watched.emplace(script, InferDescriptor(script, provider)->ToString());
+        }
+    }
+
+    const auto AddSpend = [&](
+            const CScript& spk,
+            const CAmount val,
+            const CTransactionRef& tx,
+            int vin,
+            const CTxIn& txin,
+            const CBlockIndex* index
+            ) {
+        UniValue event(UniValue::VOBJ);
+        event.pushKV("type", "spend");
+        event.pushKV("address", ScriptToAddress(spk).value_or(""));
+        event.pushKV("scriptpubkey_hex", HexStr(spk));
+        event.pushKV("desc", descriptors_watched.at(spk));
+        event.pushKV("amount", ValueFromAmount(val));
+        event.pushKV("blockhash", index ? index->GetBlockHash().ToString() : "");
+        event.pushKV("height", index ? index->nHeight : -1);
+        event.pushKV("spend_txid", tx->GetHash().ToString());
+        event.pushKV("spend_vin", vin);
+        event.pushKV("prevout_txid", txin.prevout.hash.ToString());
+        event.pushKV("prevout_vout", txin.prevout.n);
+
+        return event;
+    };
+
+    const auto AddReceive = [&](const CTxOut& txout, const CBlockIndex* index, int vout, const CTransactionRef& tx) {
+        UniValue event(UniValue::VOBJ);
+        event.pushKV("type", "receive");
+        event.pushKV("address", ScriptToAddress(txout.scriptPubKey).value_or(""));
+        event.pushKV("scriptpubkey_hex", HexStr(txout.scriptPubKey));
+        event.pushKV("desc", descriptors_watched.at(txout.scriptPubKey));
+        event.pushKV("amount", ValueFromAmount(txout.nValue));
+        event.pushKV("blockhash", index ? index->GetBlockHash().ToString() : "");
+        event.pushKV("height", index ? index->nHeight : -1);
+        event.pushKV("txid", tx->GetHash().ToString());
+        event.pushKV("vout", vout);
+
+        return event;
+    };
+
+    BlockManager* blockman;
+    Chainstate& active_chainstate = chainman.ActiveChainstate();
+    {
+        LOCK(::cs_main);
+        blockman = CHECK_NONFATAL(&active_chainstate.m_blockman);
+    }
+
+    for (const CBlockIndex* blockindex : blockindexes) {
+        const std::vector<uint8_t> block_data{GetRawBlockChecked(chainman.m_blockman, *blockindex)};
+        DataStream block_stream{block_data};
+        CBlock block{};
+        block_stream >> TX_WITH_WITNESS(block);
+
+        const CBlockUndo block_undo{GetUndoChecked(*blockman, *blockindex)};
+
+        for (size_t i = 0; i < block.vtx.size(); ++i) {
+            const auto& tx = block.vtx.at(i);
+
+            if (i > 0) {
+                // skip coinbase; spends can't happen there.
+                const auto& txundo = block_undo.vtxundo.at(i - 1);
+
+                for (size_t vinIdx = 0; vinIdx < tx->vin.size(); ++vinIdx) {
+                    const auto& coin = txundo.vprevout.at(vinIdx);
+                    const auto& txin = tx->vin.at(vinIdx);
+                    if (scripts_to_watch.find(coin.out.scriptPubKey) != scripts_to_watch.end()) {
+                        activity.push_back(AddSpend(
+                                    coin.out.scriptPubKey, coin.out.nValue, tx, vinIdx, txin, blockindex));
+                    }
+                }
+            }
+
+            for (size_t voutIdx = 0; voutIdx < tx->vout.size(); ++voutIdx) {
+                const auto& vout = tx->vout.at(voutIdx);
+                if (scripts_to_watch.find(vout.scriptPubKey) != scripts_to_watch.end()) {
+                    activity.push_back(AddReceive(vout, blockindex, voutIdx, tx));
+                }
+            }
+        }
+    }
+
+    bool search_mempool = true;
+    if (!request.params[2].isNull())
+        search_mempool = request.params[2].get_bool();
+
+    if (search_mempool) {
+        const CTxMemPool& mempool = EnsureMemPool(node);
+        LOCK(::cs_main);
+        LOCK(mempool.cs);
+        for (const CTxMemPoolEntry& e : mempool.entryAll()) {
+            const auto& tx = e.GetSharedTx();
+
+            const CCoinsViewCache& coins_view = &active_chainstate.CoinsTip();
+            CScript scriptPubKey;
+            CAmount value;
+
+            for (size_t vinIdx = 0; vinIdx < tx->vin.size(); ++vinIdx) {
+                const auto& txin = tx->vin.at(vinIdx);
+                Coin coin;
+
+                // Check if the previous output is in the chain
+                if (!coins_view.GetCoin(txin.prevout, coin)) {
+                    // If not found in the chain, check the mempool. Likely, a child
+                    // transaction in the mempool has spent the coin.
+                    CTransactionRef prev_tx = CHECK_NONFATAL(mempool.get(txin.prevout.hash));
+
+                    if (txin.prevout.n >= prev_tx->vout.size()) {
+                        throw std::runtime_error("Invalid output index");
+                    }
+                    const CTxOut& out = prev_tx->vout[txin.prevout.n];
+                    scriptPubKey = out.scriptPubKey;
+                    value = out.nValue;
+                } else {
+                    // Coin found in the chain
+                    const CTxOut& out = coin.out;
+                    scriptPubKey = out.scriptPubKey;
+                    value = out.nValue;
+                }
+
+                if (scripts_to_watch.find(scriptPubKey) != scripts_to_watch.end()) {
+                    UniValue event(UniValue::VOBJ);
+                    activity.push_back(AddSpend(
+                                scriptPubKey, value, tx, vinIdx, txin, nullptr));
+                }
+            }
+
+            for (size_t voutIdx = 0; voutIdx < tx->vout.size(); ++voutIdx) {
+                const auto& vout = tx->vout.at(voutIdx);
+                if (scripts_to_watch.find(vout.scriptPubKey) != scripts_to_watch.end()) {
+                    activity.push_back(AddReceive(vout, nullptr, voutIdx, tx));
+                }
+            }
+        }
+    }
+
+    ret.pushKV("activity", activity);
+    return ret;
+},
+    };
+}
+
 static RPCHelpMan getblockfilter()
 {
     return RPCHelpMan{"getblockfilter",
@@ -3155,6 +3380,7 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"blockchain", &preciousblock},
         {"blockchain", &scantxoutset},
         {"blockchain", &scanblocks},
+        {"blockchain", &getdescriptoractivity},
         {"blockchain", &getblockfilter},
         {"blockchain", &dumptxoutset},
         {"blockchain", &loadtxoutset},
