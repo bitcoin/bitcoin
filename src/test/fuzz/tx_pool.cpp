@@ -214,9 +214,8 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
     // Helper to query an amount
     const CCoinsViewMemPool amount_view{WITH_LOCK(::cs_main, return &chainstate.CoinsTip()), tx_pool};
     const auto GetAmount = [&](const COutPoint& outpoint) {
-        Coin c;
-        Assert(amount_view.GetCoin(outpoint, c));
-        return c.out.nValue;
+        auto coin{amount_view.GetCoin(outpoint).value()};
+        return coin.out.nValue;
     };
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 300)
