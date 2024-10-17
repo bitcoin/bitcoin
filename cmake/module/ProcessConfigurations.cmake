@@ -152,7 +152,7 @@ else()
     endif()
     unset(compiler_supports_ftrapv)
 
-    string(PREPEND CMAKE_CXX_FLAGS_DEBUG "-O0 ")
+    string(PREPEND CMAKE_CXX_FLAGS_DEBUG "-Og ")
 
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}"
       CACHE STRING
