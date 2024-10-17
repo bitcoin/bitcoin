@@ -74,7 +74,7 @@ bool InitError(const bilingual_str& str, const std::vector<std::string>& details
     // functions which provide error details are ones that run during early init
     // before the GUI uiInterface is registered, so there's no point passing
     // main messages and details separately to uiInterface yet.
-    return InitError(details.empty() ? str : strprintf(Untranslated("%s:\n%s"), str, MakeUnorderedList(details)));
+    return InitError(details.empty() ? str : str + Untranslated(strprintf(":\n%s", MakeUnorderedList(details))));
 }
 
 void InitWarning(const bilingual_str& str)
