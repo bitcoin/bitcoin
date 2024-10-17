@@ -1695,8 +1695,9 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
         return PackageMempoolAcceptResult(package_state_quit_early, {});
     }
 
-    // IsChildWithParents() guarantees the package is > 1 transactions.
-    assert(package.size() > 1);
+    // IsChildWithParents() guarantees the package is not empty.
+    assert(!package.empty());
+
     // The package must be 1 child with all of its unconfirmed parents. The package is expected to
     // be sorted, so the last transaction is the child.
     const auto& child = package.back();

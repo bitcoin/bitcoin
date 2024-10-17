@@ -118,8 +118,9 @@ bool IsWellFormedPackage(const Package& txns, PackageValidationState& state, boo
 
 bool IsChildWithParents(const Package& package)
 {
+    if (package.empty()) return false;
     assert(std::all_of(package.cbegin(), package.cend(), [](const auto& tx){return tx != nullptr;}));
-    if (package.size() < 2) return false;
+    if (package.size() < 2) return true;
 
     // The package is expected to be sorted, so the last transaction is the child.
     const auto& child = package.back();
