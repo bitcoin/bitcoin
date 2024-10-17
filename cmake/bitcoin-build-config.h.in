@@ -138,16 +138,10 @@
 /* Define to 1 if strerror_r returns char *. */
 #cmakedefine STRERROR_R_CHAR_P 1
 
-/* Define if BDB support should be compiled in */
-#cmakedefine USE_BDB 1
-
 /* Define if dbus support should be compiled in */
 #cmakedefine USE_DBUS 1
 
 /* Define if QR support should be compiled in */
 #cmakedefine USE_QRCODE 1
-
-/* Define if sqlite support should be compiled in */
-#cmakedefine USE_SQLITE 1
 
 #endif //BITCOIN_CONFIG_H
