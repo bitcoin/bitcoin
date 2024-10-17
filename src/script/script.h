@@ -199,7 +199,8 @@ enum opcodetype
     OP_CHECKSEQUENCEVERIFY = 0xb2,
     OP_NOP3 = OP_CHECKSEQUENCEVERIFY,
     OP_NOP4 = 0xb3,
-    OP_NOP5 = 0xb4,
+    OP_CHECKSIGFROMSTACKVERIFY = 0xb4,
+    OP_NOP5 = OP_CHECKSIGFROMSTACKVERIFY,
     OP_NOP6 = 0xb5,
     OP_NOP7 = 0xb6,
     OP_NOP8 = 0xb7,
@@ -208,6 +209,9 @@ enum opcodetype
 
     // Opcode added by BIP 342 (Tapscript)
     OP_CHECKSIGADD = 0xba,
+
+    // Tapscript expansion
+    OP_CHECKSIGFROMSTACK = 0xcc,
 
     OP_INVALIDOPCODE = 0xff,
 };
