@@ -28,35 +28,17 @@ The steps below can be performed on Ubuntu or WSL. The depends system
 will also work on other Linux distributions, however the commands for
 installing the toolchain will be different.
 
-First, install the general dependencies:
-
-    sudo apt update
-    sudo apt upgrade
-    sudo apt install cmake curl g++ git make pkg-config
-
-A host toolchain (`g++`) is necessary because some dependency
-packages need to build host utilities that are used in the build process.
-
-See [dependencies.md](dependencies.md) for a complete overview.
+See [README.md](../depends/README.md) in the depends directory for which
+dependencies to install and [dependencies.md](dependencies.md) for a complete overview.
 
 If you want to build the Windows installer using the `deploy` build target, you will need [NSIS](https://nsis.sourceforge.io/Main_Page):
 
-    sudo apt install nsis
+    apt install nsis
 
 Acquire the source in the usual way:
 
     git clone https://github.com/bitcoin/bitcoin.git
     cd bitcoin
-
-## Building for 64-bit Windows
-
-The first step is to install the mingw-w64 cross-compilation toolchain:
-
-```sh
-sudo apt install g++-mingw-w64-x86-64-posix
-```
-
-Once the toolchain is installed the build steps are common:
 
 Note that for WSL the Bitcoin Core source path MUST be somewhere in the default mount file system, for
 example /usr/src/bitcoin, AND not under /mnt/d/. If this is not the case the dependency autoconf scripts will fail.
