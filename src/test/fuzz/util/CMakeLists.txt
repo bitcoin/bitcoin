@@ -14,6 +14,7 @@ target_link_libraries(test_fuzz
   PRIVATE
     core_interface
     test_util
+    secp256k1
     bitcoin_node
     Boost::headers
 )

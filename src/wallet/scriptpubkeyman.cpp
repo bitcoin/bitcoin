@@ -2437,7 +2437,11 @@ std::unique_ptr<FlatSigningProvider> DescriptorScriptPubKeyMan::GetSigningProvid
     int32_t index = it->second;
 
     // Always try to get the signing provider with private keys. This function should only be called during signing anyways
-    return GetSigningProvider(index, true);
+    std::unique_ptr<FlatSigningProvider> out = GetSigningProvider(index, true);
+    if (!out->HaveKey(pubkey.GetID())) {
+        return nullptr;
+    }
+    return out;
 }
 
 std::unique_ptr<FlatSigningProvider> DescriptorScriptPubKeyMan::GetSigningProvider(int32_t index, bool include_private) const
@@ -2463,6 +2467,10 @@ std::unique_ptr<FlatSigningProvider> DescriptorScriptPubKeyMan::GetSigningProvid
         FlatSigningProvider master_provider;
         master_provider.keys = GetKeys();
         m_wallet_descriptor.descriptor->ExpandPrivate(index, master_provider, *out_keys);
+
+        // Always include musig_secnonces as this descriptor may have a participant private key
+        // but not a musig() descriptor
+        out_keys->musig2_secnonces = &m_musig2_secnonces;
     }
 
     return out_keys;

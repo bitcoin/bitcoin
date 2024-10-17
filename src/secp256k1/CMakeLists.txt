@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 
+#=============================
+# Project / Package metadata
+#=============================
 project(libsecp256k1
   # The package (a.k.a. release) version is based on semantic versioning 2.0.0 of
   # the API. All changes in experimental modules are treated as
@@ -9,6 +12,8 @@ project(libsecp256k1
   HOMEPAGE_URL "https://github.com/bitcoin-core/secp256k1"
   LANGUAGES C
 )
+enable_testing()
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 if(CMAKE_VERSION VERSION_LESS 3.21)
   # Emulates CMake 3.21+ behavior.
@@ -30,11 +35,15 @@ set(${PROJECT_NAME}_LIB_VERSION_CURRENT 4)
 set(${PROJECT_NAME}_LIB_VERSION_REVISION 2)
 set(${PROJECT_NAME}_LIB_VERSION_AGE 2)
 
+#=============================
+# Language setup
+#=============================
 set(CMAKE_C_STANDARD 90)
 set(CMAKE_C_EXTENSIONS OFF)
 
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-
+#=============================
+# Configurable options
+#=============================
 option(BUILD_SHARED_LIBS "Build shared libraries." ON)
 option(SECP256K1_DISABLE_SHARED "Disable shared library. Overrides BUILD_SHARED_LIBS." OFF)
 if(SECP256K1_DISABLE_SHARED)
@@ -51,12 +60,21 @@ option(SECP256K1_ENABLE_MODULE_ECDH "Enable ECDH module." ON)
 option(SECP256K1_ENABLE_MODULE_RECOVERY "Enable ECDSA pubkey recovery module." OFF)
 option(SECP256K1_ENABLE_MODULE_EXTRAKEYS "Enable extrakeys module." ON)
 option(SECP256K1_ENABLE_MODULE_SCHNORRSIG "Enable schnorrsig module." ON)
+option(SECP256K1_ENABLE_MODULE_MUSIG "Enable musig module." ON)
 option(SECP256K1_ENABLE_MODULE_ELLSWIFT "Enable ElligatorSwift module." ON)
 
 # Processing must be done in a topological sorting of the dependency graph
 # (dependent module first).
 if(SECP256K1_ENABLE_MODULE_ELLSWIFT)
   add_compile_definitions(ENABLE_MODULE_ELLSWIFT=1)
+endif()
+
+if(SECP256K1_ENABLE_MODULE_MUSIG)
+  if(DEFINED SECP256K1_ENABLE_MODULE_SCHNORRSIG AND NOT SECP256K1_ENABLE_MODULE_SCHNORRSIG)
+    message(FATAL_ERROR "Module dependency error: You have disabled the schnorrsig module explicitly, but it is required by the musig module.")
+  endif()
+  set(SECP256K1_ENABLE_MODULE_SCHNORRSIG ON)
+  add_compile_definitions(ENABLE_MODULE_MUSIG=1)
 endif()
 
 if(SECP256K1_ENABLE_MODULE_SCHNORRSIG)
@@ -262,13 +280,6 @@ if(SECP256K1_BUILD_CTIME_TESTS)
   unset(msan_enabled)
 endif()
 
-include(CTest)
-# We do not use CTest's BUILD_TESTING because a single toggle for all tests is too coarse for our needs.
-mark_as_advanced(BUILD_TESTING)
-if(SECP256K1_BUILD_BENCHMARK OR SECP256K1_BUILD_TESTS OR SECP256K1_BUILD_EXHAUSTIVE_TESTS OR SECP256K1_BUILD_CTIME_TESTS OR SECP256K1_BUILD_EXAMPLES)
-  enable_testing()
-endif()
-
 set(SECP256K1_APPEND_CFLAGS "" CACHE STRING "Compiler flags that are appended to the command line after all other flags added by the build system. This variable is intended for debugging and special builds.")
 if(SECP256K1_APPEND_CFLAGS)
   # Appending to this low-level rule variable is the only way to
@@ -305,6 +316,7 @@ message("  ECDH ................................ ${SECP256K1_ENABLE_MODULE_ECDH}
 message("  ECDSA pubkey recovery ............... ${SECP256K1_ENABLE_MODULE_RECOVERY}")
 message("  extrakeys ........................... ${SECP256K1_ENABLE_MODULE_EXTRAKEYS}")
 message("  schnorrsig .......................... ${SECP256K1_ENABLE_MODULE_SCHNORRSIG}")
+message("  musig ............................... ${SECP256K1_ENABLE_MODULE_MUSIG}")
 message("  ElligatorSwift ...................... ${SECP256K1_ENABLE_MODULE_ELLSWIFT}")
 message("Parameters:")
 message("  ecmult window size .................. ${SECP256K1_ECMULT_WINDOW_SIZE}")

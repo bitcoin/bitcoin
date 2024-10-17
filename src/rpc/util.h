@@ -13,7 +13,6 @@
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <script/script.h>
-#include <script/sign.h>
 #include <uint256.h>
 #include <univalue.h>
 #include <util/check.h>
@@ -24,6 +23,7 @@
 #include <initializer_list>
 #include <map>
 #include <optional>
+#include <set>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -131,7 +131,7 @@ std::string HelpExampleRpcNamed(const std::string& methodname, const RPCArgList&
 
 CPubKey HexToPubKey(const std::string& hex_in);
 CPubKey AddrToPubKey(const FillableSigningProvider& keystore, const std::string& addr_in);
-CTxDestination AddAndGetMultisigDestination(const int required, const std::vector<CPubKey>& pubkeys, OutputType type, FlatSigningProvider& keystore, CScript& script_out);
+CTxDestination AddAndGetMultisigDestination(const int required, const std::vector<CPubKey>& pubkeys, OutputType type, std::set<CScript>& inner_scripts, CScript& script_out);
 
 UniValue DescribeAddress(const CTxDestination& dest);
 

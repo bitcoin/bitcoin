@@ -72,7 +72,10 @@ if(ENABLE_WALLET)
       wallet_loading.cpp
       wallet_ismine.cpp
   )
-  target_link_libraries(bench_bitcoin bitcoin_wallet)
+  target_link_libraries(bench_bitcoin
+    bitcoin_wallet
+    secp256k1
+  )
 endif()
 
 add_test(NAME bench_sanity_check_high_priority

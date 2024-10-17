@@ -19,5 +19,6 @@ target_capnp_sources(bitcoin_ipc ${PROJECT_SOURCE_DIR}
 target_link_libraries(bitcoin_ipc
   PRIVATE
     core_interface
+    secp256k1
     univalue
 )

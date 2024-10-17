@@ -5,9 +5,11 @@
 #ifndef BITCOIN_WALLET_CRYPTER_H
 #define BITCOIN_WALLET_CRYPTER_H
 
+#include <pubkey.h>
+#include <key.h>
 #include <serialize.h>
 #include <support/allocators/secure.h>
-#include <script/signingprovider.h>
+#include <uint256.h>
 
 
 namespace wallet {

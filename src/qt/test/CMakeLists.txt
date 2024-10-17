@@ -30,6 +30,9 @@ if(ENABLE_WALLET)
       wallettests.cpp
       ../../wallet/test/wallet_test_fixture.cpp
   )
+target_link_libraries(test_bitcoin-qt
+  secp256k1
+)
 endif()
 
 if(NOT QT_IS_STATIC)

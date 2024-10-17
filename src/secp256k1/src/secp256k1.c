@@ -238,25 +238,13 @@ static SECP256K1_INLINE void secp256k1_declassify(const secp256k1_context* ctx, 
 }
 
 static int secp256k1_pubkey_load(const secp256k1_context* ctx, secp256k1_ge* ge, const secp256k1_pubkey* pubkey) {
-    secp256k1_ge_storage s;
-
-    /* We require that the secp256k1_ge_storage type is exactly 64 bytes.
-     * This is formally not guaranteed by the C standard, but should hold on any
-     * sane compiler in the real world. */
-    STATIC_ASSERT(sizeof(secp256k1_ge_storage) == 64);
-    memcpy(&s, &pubkey->data[0], 64);
-    secp256k1_ge_from_storage(ge, &s);
+    secp256k1_ge_from_bytes(ge, pubkey->data);
     ARG_CHECK(!secp256k1_fe_is_zero(&ge->x));
     return 1;
 }
 
 static void secp256k1_pubkey_save(secp256k1_pubkey* pubkey, secp256k1_ge* ge) {
-    secp256k1_ge_storage s;
-
-    STATIC_ASSERT(sizeof(secp256k1_ge_storage) == 64);
-    VERIFY_CHECK(!secp256k1_ge_is_infinity(ge));
-    secp256k1_ge_to_storage(&s, ge);
-    memcpy(&pubkey->data[0], &s, 64);
+    secp256k1_ge_to_bytes(pubkey->data, ge);
 }
 
 int secp256k1_ec_pubkey_parse(const secp256k1_context* ctx, secp256k1_pubkey* pubkey, const unsigned char *input, size_t inputlen) {
@@ -828,6 +816,10 @@ int secp256k1_tagged_sha256(const secp256k1_context* ctx, unsigned char *hash32,
 
 #ifdef ENABLE_MODULE_SCHNORRSIG
 # include "modules/schnorrsig/main_impl.h"
+#endif
+
+#ifdef ENABLE_MODULE_MUSIG
+# include "modules/musig/main_impl.h"
 #endif
 
 #ifdef ENABLE_MODULE_ELLSWIFT

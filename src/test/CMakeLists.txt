@@ -164,6 +164,7 @@ if(WITH_MULTIPROCESS)
     PRIVATE
       core_interface
       univalue
+      secp256k1
   )
 
   target_sources(test_bitcoin

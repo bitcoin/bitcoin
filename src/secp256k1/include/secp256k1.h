@@ -75,7 +75,7 @@ typedef struct {
     unsigned char data[64];
 } secp256k1_pubkey;
 
-/** Opaque data structured that holds a parsed ECDSA signature.
+/** Opaque data structure that holds a parsed ECDSA signature.
  *
  *  The exact representation of data inside is implementation defined and not
  *  guaranteed to be portable between different platforms or versions. It is

@@ -50,6 +50,9 @@ static constexpr uint8_t PSBT_IN_TAP_LEAF_SCRIPT = 0x15;
 static constexpr uint8_t PSBT_IN_TAP_BIP32_DERIVATION = 0x16;
 static constexpr uint8_t PSBT_IN_TAP_INTERNAL_KEY = 0x17;
 static constexpr uint8_t PSBT_IN_TAP_MERKLE_ROOT = 0x18;
+static constexpr uint8_t PSBT_IN_MUSIG2_PARTICIPANT_PUBKEYS = 0x19;
+static constexpr uint8_t PSBT_IN_MUSIG2_PUB_NONCE = 0x1a;
+static constexpr uint8_t PSBT_IN_MUSIG2_PARTIAL_SIG = 0x1b;
 static constexpr uint8_t PSBT_IN_PROPRIETARY = 0xFC;
 
 // Output types
@@ -59,6 +62,7 @@ static constexpr uint8_t PSBT_OUT_BIP32_DERIVATION = 0x02;
 static constexpr uint8_t PSBT_OUT_TAP_INTERNAL_KEY = 0x05;
 static constexpr uint8_t PSBT_OUT_TAP_TREE = 0x06;
 static constexpr uint8_t PSBT_OUT_TAP_BIP32_DERIVATION = 0x07;
+static constexpr uint8_t PSBT_OUT_MUSIG2_PARTICIPANT_PUBKEYS = 0x08;
 static constexpr uint8_t PSBT_OUT_PROPRIETARY = 0xFC;
 
 // The separator is 0x00. Reading this in means that the unserializer can interpret it
@@ -217,6 +221,11 @@ struct PSBTInput
     XOnlyPubKey m_tap_internal_key;
     uint256 m_tap_merkle_root;
 
+    // MuSig2 fields
+    std::map<CPubKey, std::vector<CPubKey>> m_musig2_participants;
+    std::map<std::pair<CPubKey, uint256>, std::map<CPubKey, std::vector<uint8_t>>> m_musig2_pubnonces;
+    std::map<std::pair<CPubKey, uint256>, std::map<CPubKey, uint256>> m_musig2_partial_sigs;
+
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
     std::set<PSBTProprietary> m_proprietary;
     std::optional<int> sighash_type;
@@ -336,6 +345,43 @@ struct PSBTInput
             if (!m_tap_merkle_root.IsNull()) {
                 SerializeToVector(s, PSBT_IN_TAP_MERKLE_ROOT);
                 SerializeToVector(s, m_tap_merkle_root);
+            }
+
+            // Write MuSig2 Participants
+            for (const auto& [agg_key, part_pubs] : m_musig2_participants) {
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_MUSIG2_PARTICIPANT_PUBKEYS), Span{agg_key});
+                std::vector<unsigned char> value;
+                VectorWriter s_value{value, 0};
+                for (auto& pk : part_pubs) {
+                    s_value << Span{pk};
+                }
+                s << value;
+            }
+
+            // Write MuSig2 pubnonces
+            for (const auto& [agg_key_leaf_hash, pubnonces] : m_musig2_pubnonces) {
+                const auto& [agg_key, leaf_hash] = agg_key_leaf_hash;
+                for (const auto& [pubkey, pubnonce] : pubnonces) {
+                    if (leaf_hash.IsNull()) {
+                        SerializeToVector(s, CompactSizeWriter(PSBT_IN_MUSIG2_PUB_NONCE), Span{pubkey}, Span{agg_key});
+                    } else {
+                        SerializeToVector(s, CompactSizeWriter(PSBT_IN_MUSIG2_PUB_NONCE), Span{pubkey}, Span{agg_key}, leaf_hash);
+                    }
+                    s << pubnonce;
+                }
+            }
+
+            // Write MuSig2 partial signatures
+            for (const auto& [agg_key_leaf_hash, psigs] : m_musig2_partial_sigs) {
+                const auto& [agg_key, leaf_hash] = agg_key_leaf_hash;
+                for (const auto& [pubkey, psig] : psigs) {
+                    if (leaf_hash.IsNull()) {
+                        SerializeToVector(s, CompactSizeWriter(PSBT_IN_MUSIG2_PARTIAL_SIG), Span{pubkey}, Span{agg_key});
+                    } else {
+                        SerializeToVector(s, CompactSizeWriter(PSBT_IN_MUSIG2_PARTIAL_SIG), Span{pubkey}, Span{agg_key}, leaf_hash);
+                    }
+                    SerializeToVector(s, psig);
+                }
             }
         }
 
@@ -672,6 +718,80 @@ struct PSBTInput
                     UnserializeFromVector(s, m_tap_merkle_root);
                     break;
                 }
+                case PSBT_IN_MUSIG2_PARTICIPANT_PUBKEYS:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, input participant pubkeys for an aggregate key already provided");
+                    } else if (key.size() != 34) {
+                        throw std::ios_base::failure("Input musig2 participants pubkeys aggregate key is more than 33 bytes");
+                    }
+                    std::array<unsigned char, 33> agg_key_bytes;
+                    skey >> AsWritableBytes(Span{agg_key_bytes});
+                    CPubKey agg_key(agg_key_bytes);
+
+                    std::vector<CPubKey> participants;
+                    std::vector<unsigned char> val;
+                    s >> val;
+                    SpanReader s_val{val};
+                    while (!s_val.empty()) {
+                        std::array<unsigned char, 33> part_key_bytes;
+                        s_val >> AsWritableBytes(Span{part_key_bytes});
+                        participants.emplace_back(Span{part_key_bytes});
+                    }
+
+                    m_musig2_participants.emplace(agg_key, participants);
+                    break;
+                }
+                case PSBT_IN_MUSIG2_PUB_NONCE:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, input musig2 pubnonce already provided");
+                    } else if (key.size() != 67 && key.size() != 99) {
+                        throw std::ios_base::failure("Input musig2 pubnonce key is not expected size");
+                    }
+                    std::array<unsigned char, 33> part_pubkey_bytes;
+                    std::array<unsigned char, 33> agg_pubkey_bytes;
+                    uint256 leaf_hash;
+
+                    skey >> AsWritableBytes(Span{part_pubkey_bytes}) >> AsWritableBytes(Span{agg_pubkey_bytes});
+                    CPubKey agg_pub{Span{agg_pubkey_bytes}};
+                    CPubKey part_pub{Span{part_pubkey_bytes}};
+
+                    if (!skey.empty()) {
+                        skey >> leaf_hash;
+                    }
+
+                    std::vector<uint8_t> pubnonce;
+                    s >> pubnonce;
+
+                    m_musig2_pubnonces[std::make_pair(agg_pub, leaf_hash)].emplace(part_pub, pubnonce);
+                    break;
+                }
+                case PSBT_IN_MUSIG2_PARTIAL_SIG:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, input musig2 partial sig already provided");
+                    } else if (key.size() != 67 && key.size() != 99) {
+                        throw std::ios_base::failure("Input musig2 partial sig key is not expected size");
+                    }
+                    std::array<unsigned char, 33> part_pubkey_bytes;
+                    std::array<unsigned char, 33> agg_pubkey_bytes;
+                    uint256 leaf_hash;
+
+                    skey >> AsWritableBytes(Span{part_pubkey_bytes}) >> AsWritableBytes(Span{agg_pubkey_bytes});
+                    CPubKey agg_pub{Span{agg_pubkey_bytes}};
+                    CPubKey part_pub{Span{part_pubkey_bytes}};
+
+                    if (!skey.empty()) {
+                        skey >> leaf_hash;
+                    }
+
+                    uint256 partial_sig;
+                    UnserializeFromVector(s, partial_sig);
+
+                    m_musig2_partial_sigs[std::make_pair(agg_pub, leaf_hash)].emplace(part_pub, partial_sig);
+                    break;
+                }
                 case PSBT_IN_PROPRIETARY:
                 {
                     PSBTProprietary this_prop;
@@ -719,6 +839,7 @@ struct PSBTOutput
     XOnlyPubKey m_tap_internal_key;
     std::vector<std::tuple<uint8_t, uint8_t, std::vector<unsigned char>>> m_tap_tree;
     std::map<XOnlyPubKey, std::pair<std::set<uint256>, KeyOriginInfo>> m_tap_bip32_paths;
+    std::map<CPubKey, std::vector<CPubKey>> m_musig2_participants;
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
     std::set<PSBTProprietary> m_proprietary;
 
@@ -778,6 +899,17 @@ struct PSBTOutput
             VectorWriter s_value{value, 0};
             s_value << leaf_hashes;
             SerializeKeyOrigin(s_value, origin);
+            s << value;
+        }
+
+        // Write MuSig2 Participants
+        for (const auto& [agg_key, part_pubs] : m_musig2_participants) {
+            SerializeToVector(s, CompactSizeWriter(PSBT_OUT_MUSIG2_PARTICIPANT_PUBKEYS), Span{agg_key});
+            std::vector<unsigned char> value;
+            VectorWriter s_value{value, 0};
+            for (auto& pk : part_pubs) {
+                s_value << Span{pk};
+            }
             s << value;
         }
 
@@ -905,6 +1037,30 @@ struct PSBTOutput
                     }
                     size_t origin_len = value_len - hashes_len;
                     m_tap_bip32_paths.emplace(xonly, std::make_pair(leaf_hashes, DeserializeKeyOrigin(s, origin_len)));
+                    break;
+                }
+                case PSBT_OUT_MUSIG2_PARTICIPANT_PUBKEYS:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, output participant pubkeys for an aggregate key already provided");
+                    } else if (key.size() != 34) {
+                        throw std::ios_base::failure("Output musig2 participants pubkeys aggregate key is more than 33 bytes");
+                    }
+                    std::array<unsigned char, 33> agg_key_bytes;
+                    skey.read(AsWritableBytes(Span{agg_key_bytes}));
+                    CPubKey agg_key(agg_key_bytes);
+
+                    std::vector<CPubKey> participants;
+                    std::vector<unsigned char> val;
+                    s >> val;
+                    SpanReader s_val{val};
+                    while (!s_val.empty()) {
+                        std::array<unsigned char, 33> part_key_bytes;
+                        s_val.read(AsWritableBytes(Span{part_key_bytes}));
+                        participants.emplace_back(Span{part_key_bytes});
+                    }
+
+                    m_musig2_participants.emplace(agg_key, participants);
                     break;
                 }
                 case PSBT_OUT_PROPRIETARY:
