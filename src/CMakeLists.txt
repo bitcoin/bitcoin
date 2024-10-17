@@ -51,13 +51,17 @@ include(GetTargetInterface)
 # -fsanitize and related flags apply to both C++ and C,
 # so we can pass them down to libsecp256k1 as CFLAGS and LDFLAGS.
 get_target_interface(core_sanitizer_cxx_flags "" sanitize_interface COMPILE_OPTIONS)
-set(SECP256K1_APPEND_CFLAGS ${core_sanitizer_cxx_flags} CACHE STRING "" FORCE)
+string(STRIP "${SECP256K1_APPEND_CFLAGS} ${core_sanitizer_cxx_flags}" SECP256K1_APPEND_CFLAGS)
 unset(core_sanitizer_cxx_flags)
+set(SECP256K1_APPEND_CFLAGS ${SECP256K1_APPEND_CFLAGS} CACHE STRING "" FORCE)
+unset(SECP256K1_APPEND_CFLAGS)
 get_target_interface(core_sanitizer_linker_flags "" sanitize_interface LINK_OPTIONS)
-set(SECP256K1_APPEND_LDFLAGS ${core_sanitizer_linker_flags} CACHE STRING "" FORCE)
+string(STRIP "${SECP256K1_APPEND_LDFLAGS} ${core_sanitizer_linker_flags}" SECP256K1_APPEND_LDFLAGS)
 unset(core_sanitizer_linker_flags)
-# We want to build libsecp256k1 with the most tested RelWithDebInfo configuration.
+set(SECP256K1_APPEND_LDFLAGS ${SECP256K1_APPEND_LDFLAGS} CACHE STRING "" FORCE)
+unset(SECP256K1_APPEND_LDFLAGS)
 enable_language(C)
+# We want to build libsecp256k1 with the most tested RelWithDebInfo configuration.
 foreach(config IN LISTS CMAKE_BUILD_TYPE CMAKE_CONFIGURATION_TYPES)
   if(config STREQUAL "")
     continue()
