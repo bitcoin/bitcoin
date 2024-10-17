@@ -27,19 +27,20 @@ if not topdir:
     topdir = r.stdout.rstrip()
 
 # Get input and output directories.
-builddir = os.getenv('BUILDDIR', topdir)
+builddir = os.getenv('BUILDDIR', os.path.join(topdir, 'build'))
 mandir = os.getenv('MANDIR', os.path.join(topdir, 'doc/man'))
 
 # Verify that all the required binaries are usable, and extract copyright
 # message in a first pass.
 versions = []
-for relpath in BINARIES:
+for relpath in BINARIES[:]:
     abspath = os.path.join(builddir, relpath)
     try:
         r = subprocess.run([abspath, "--version"], stdout=subprocess.PIPE, check=True, text=True)
     except IOError:
-        print(f'{abspath} not found or not an executable', file=sys.stderr)
-        sys.exit(1)
+        print(f'{abspath} not found or not an executable. Skipping...', file=sys.stderr)
+        BINARIES.remove(relpath)
+        continue
     # take first line (which must contain version)
     verstr = r.stdout.splitlines()[0]
     # last word of line is the actual version e.g. v22.99.0-5c6b3d5b3508
@@ -50,6 +51,10 @@ for relpath in BINARIES:
     assert copyright[0].startswith('Copyright (C)')
 
     versions.append((abspath, verstr, copyright))
+
+if not versions:
+    print(f'No binaries found in {builddir}. Set BUILDDIR to specify the correct build path.')
+    sys.exit(1)
 
 if any(verstr.endswith('-dirty') for (_, verstr, _) in versions):
     print("WARNING: Binaries were built from a dirty tree.")
