@@ -280,7 +280,7 @@ std::shared_ptr<CWallet> LoadWalletInternal(WalletContext& context, const std::s
             return nullptr;
         }
 
-        context.chain->initMessage(_("Loading wallet…").translated);
+        context.chain->initMessage(_("Loading wallet…").translate());
         std::shared_ptr<CWallet> wallet = CWallet::Create(context, name, std::move(database), options.create_flags, error, warnings);
         if (!wallet) {
             error = Untranslated("Wallet loading failed.") + Untranslated(" ") + error;
@@ -290,7 +290,7 @@ std::shared_ptr<CWallet> LoadWalletInternal(WalletContext& context, const std::s
 
         // Legacy wallets are being deprecated, warn if the loaded wallet is legacy
         if (!wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-            warnings.push_back(_("Wallet loaded successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future. Legacy wallets can be migrated to a descriptor wallet with migratewallet."));
+            warnings.emplace_back(_("Wallet loaded successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future. Legacy wallets can be migrated to a descriptor wallet with migratewallet."));
         }
 
         NotifyWalletLoaded(context, wallet);
@@ -302,7 +302,7 @@ std::shared_ptr<CWallet> LoadWalletInternal(WalletContext& context, const std::s
 
         return wallet;
     } catch (const std::runtime_error& e) {
-        error = Untranslated(e.what());
+        error = Untranslated(std::string{e.what()});
         status = DatabaseStatus::FAILED_LOAD;
         return nullptr;
     }
@@ -430,7 +430,7 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
     }
 
     // Make the wallet
-    context.chain->initMessage(_("Loading wallet…").translated);
+    context.chain->initMessage(_("Loading wallet…").translate());
     std::shared_ptr<CWallet> wallet = CWallet::Create(context, name, std::move(database), wallet_creation_flags, error, warnings);
     if (!wallet) {
         error = Untranslated("Wallet creation failed.") + Untranslated(" ") + error;
@@ -483,7 +483,7 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
 
     // Legacy wallets are being deprecated, warn if a newly created wallet is legacy
     if (!(wallet_creation_flags & WALLET_FLAG_DESCRIPTORS)) {
-        warnings.push_back(_("Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future."));
+        warnings.emplace_back(_("Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future."));
     }
 
     status = DatabaseStatus::SUCCESS;
@@ -1891,7 +1891,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                     fast_rescan_filter ? "fast variant using block filters" : "slow variant inspecting all blocks");
 
     fAbortRescan = false;
-    ShowProgress(strprintf("%s " + _("Rescanning…").translated, GetDisplayName()), 0); // show rescan progress in GUI as dialog or on splashscreen, if rescan required on startup (e.g. due to corruption)
+    ShowProgress(strprintf("%s %s", GetDisplayName(), _("Rescanning…").translate()), 0); // show rescan progress in GUI as dialog or on splashscreen, if rescan required on startup (e.g. due to corruption)
     uint256 tip_hash = WITH_LOCK(cs_wallet, return GetLastBlockHash());
     uint256 end_hash = tip_hash;
     if (max_height) chain().findAncestorByHeight(tip_hash, *max_height, FoundBlock().hash(end_hash));
@@ -1906,7 +1906,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
             m_scanning_progress = 0;
         }
         if (block_height % 100 == 0 && progress_end - progress_begin > 0.0) {
-            ShowProgress(strprintf("%s " + _("Rescanning…").translated, GetDisplayName()), std::max(1, std::min(99, (int)(m_scanning_progress * 100))));
+            ShowProgress(strprintf("%s %s", GetDisplayName(), _("Rescanning…").translate()), std::max(1, std::min(99, (int)(m_scanning_progress * 100))));
         }
 
         bool next_interval = reserver.now() >= current_time + INTERVAL_TIME;
@@ -2003,7 +2003,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
         WalletLogPrintf("Scanning current mempool transactions.\n");
         WITH_LOCK(cs_wallet, chain().requestMempoolTransactions(*this));
     }
-    ShowProgress(strprintf("%s " + _("Rescanning…").translated, GetDisplayName()), 100); // hide progress dialog in GUI
+    ShowProgress(strprintf("%s %s", GetDisplayName(), _("Rescanning…").translate()), 100); // hide progress dialog in GUI
     if (block_height && fAbortRescan) {
         WalletLogPrintf("Rescan aborted at block %d. Progress=%f\n", block_height, progress_current);
         result.status = ScanResult::USER_ABORT;
@@ -3336,7 +3336,7 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
             }
         }
 
-        chain.initMessage(_("Rescanning…").translated);
+        chain.initMessage(_("Rescanning…").translate());
         walletInstance->WalletLogPrintf("Rescanning last %i blocks (from block %i)...\n", *tip_height - rescan_height, rescan_height);
 
         {

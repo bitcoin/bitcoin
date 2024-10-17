@@ -704,7 +704,7 @@ std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const D
         return db;
     } catch (const std::runtime_error& e) {
         status = DatabaseStatus::FAILED_LOAD;
-        error = Untranslated(e.what());
+        error = Untranslated(std::string{e.what()});
         return nullptr;
     }
 }

@@ -886,7 +886,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
     bilingual_str errors;
     for (const auto& arg : args.GetUnsuitableSectionOnlyArgs()) {
-        errors += strprintf(_("Config setting for %s only applied on %s network when in [%s] section.") + Untranslated("\n"), arg, ChainTypeToString(chain), ChainTypeToString(chain));
+        errors += strprintf(_("Config setting for %s only applied on %s network when in [%s] section."), arg, ChainTypeToString(chain), ChainTypeToString(chain)) + Untranslated("\n");
     }
 
     if (!errors.empty()) {
@@ -901,7 +901,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // Warn if unrecognized section name are present in the config file.
     bilingual_str warnings;
     for (const auto& section : args.GetUnrecognizedSections()) {
-        warnings += strprintf(Untranslated("%s:%i ") + _("Section [%s] is not recognized.") + Untranslated("\n"), section.m_file, section.m_line, section.m_name);
+        warnings += strprintf(Untranslated("%s:%i "), section.m_file, section.m_line) + strprintf(_("Section [%s] is not recognized."), section.m_name) + Untranslated("\n");
     }
 
     if (!warnings.empty()) {
@@ -1246,19 +1246,19 @@ static ChainstateLoadResult InitAndLoadChainstate(
             _("Error reading from database, shutting down."),
             "", CClientUIInterface::MSG_ERROR);
     };
-    uiInterface.InitMessage(_("Loading block index…").translated);
+    uiInterface.InitMessage(_("Loading block index…").translate());
     const auto load_block_index_start_time{SteadyClock::now()};
     auto catch_exceptions = [](auto&& f) {
         try {
             return f();
         } catch (const std::exception& e) {
             LogError("%s\n", e.what());
-            return std::make_tuple(node::ChainstateLoadStatus::FAILURE, _("Error opening block database"));
+            return std::make_tuple(node::ChainstateLoadStatus::FAILURE, bilingual_str(_("Error opening block database")));
         }
     };
     auto [status, error] = catch_exceptions([&] { return LoadChainstate(chainman, cache_sizes, options); });
     if (status == node::ChainstateLoadStatus::SUCCESS) {
-        uiInterface.InitMessage(_("Verifying blocks…").translated);
+        uiInterface.InitMessage(_("Verifying blocks…").translate());
         if (chainman.m_blockman.m_have_pruned && options.check_blocks > MIN_BLOCKS_TO_KEEP) {
             LogWarning("pruned datadir may not have more than %d blocks; only checking available blocks\n",
                        MIN_BLOCKS_TO_KEEP);
@@ -1421,7 +1421,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
         // Initialize addrman
         assert(!node.addrman);
-        uiInterface.InitMessage(_("Loading P2P addresses…").translated);
+        uiInterface.InitMessage(_("Loading P2P addresses…").translate());
         auto addrman{LoadAddrman(*node.netgroupman, args)};
         if (!addrman) return InitError(util::ErrorString(addrman));
         node.addrman = std::move(*addrman);
@@ -1708,7 +1708,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (chainman.m_blockman.m_blockfiles_indexed) {
             LOCK(cs_main);
             for (Chainstate* chainstate : chainman.GetAll()) {
-                uiInterface.InitMessage(_("Pruning blockstore…").translated);
+                uiInterface.InitMessage(_("Pruning blockstore…").translate());
                 chainstate->PruneAndFlush();
             }
         }
@@ -1992,7 +1992,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // ChainstateManager's active tip.
     SetRPCWarmupFinished();
 
-    uiInterface.InitMessage(_("Done loading").translated);
+    uiInterface.InitMessage(_("Done loading").translate());
 
     for (const auto& client : node.chain_clients) {
         client->start(scheduler);
