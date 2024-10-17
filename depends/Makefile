@@ -60,6 +60,15 @@ DOWNLOAD_RETRIES:=3
 HOST_ID_SALT ?= salt
 BUILD_ID_SALT ?= salt
 
+# Fix for issue 30978 on macos
+ifeq ($(shell uname), Darwin)
+RANLIB := llvm-ranlib
+STRIP := llvm-strip
+NM := llvm-nm
+OBJDUMP := llvm-objdump
+DSYMUTIL := dsymutil
+endif
+
 host:=$(BUILD)
 ifneq ($(HOST),)
 host:=$(HOST)
