@@ -57,7 +57,6 @@ class NULLDUMMYTest(BitcoinTestFramework):
         self.extra_args = [[
             f'-testactivationheight=segwit@{COINBASE_MATURITY + 5}',
             '-addresstype=legacy',
-            '-par=1',  # Use only one script thread to get the exact reject reason for testing
         ]]
 
     def create_transaction(self, *, txid, input_details=None, addr, amount, privkey):
