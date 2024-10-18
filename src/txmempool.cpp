@@ -606,6 +606,7 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
 {
     // Remove transaction from memory pool
     AssertLockHeld(cs);
+    Assume(!m_have_changeset);
         setEntries txToRemove;
         txiter origit = mapTx.find(origTx.GetHash());
         if (origit != mapTx.end()) {
@@ -637,6 +638,7 @@ void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check
     // Remove transactions spending a coinbase which are now immature and no-longer-final transactions
     AssertLockHeld(cs);
     AssertLockHeld(::cs_main);
+    Assume(!m_have_changeset);
 
     setEntries txToRemove;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
@@ -675,6 +677,7 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
 void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight)
 {
     AssertLockHeld(cs);
+    Assume(!m_have_changeset);
     std::vector<RemovedMempoolTransactionInfo> txs_removed_for_block;
     txs_removed_for_block.reserve(vtx.size());
     for (const auto& tx : vtx)
@@ -1093,6 +1096,7 @@ void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants, MemPool
 int CTxMemPool::Expire(std::chrono::seconds time)
 {
     AssertLockHeld(cs);
+    Assume(!m_have_changeset);
     indexed_transaction_set::index<entry_time>::type::iterator it = mapTx.get<entry_time>().begin();
     setEntries toremove;
     while (it != mapTx.get<entry_time>().end() && it->GetTime() < time) {
@@ -1163,6 +1167,7 @@ void CTxMemPool::trackPackageRemoved(const CFeeRate& rate) {
 
 void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpendsRemaining) {
     AssertLockHeld(cs);
+    Assume(!m_have_changeset);
 
     unsigned nTxnRemoved = 0;
     CFeeRate maxFeeRateRemoved(0);
