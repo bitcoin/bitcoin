@@ -73,12 +73,16 @@ FUZZ_TARGET(rbf, .init = initialize_rbf)
             mtx->vin[0].prevout = COutPoint{another_tx.GetHash(), 0};
         }
         LOCK2(cs_main, pool.cs);
-        AddToMempool(pool, ConsumeTxMemPoolEntry(fuzzed_data_provider, another_tx));
+        if (!pool.GetIter(another_tx.GetHash())) {
+            AddToMempool(pool, ConsumeTxMemPoolEntry(fuzzed_data_provider, another_tx));
+        }
     }
     const CTransaction tx{*mtx};
     if (fuzzed_data_provider.ConsumeBool()) {
         LOCK2(cs_main, pool.cs);
-        AddToMempool(pool, ConsumeTxMemPoolEntry(fuzzed_data_provider, tx));
+        if (!pool.GetIter(tx.GetHash())) {
+            AddToMempool(pool, ConsumeTxMemPoolEntry(fuzzed_data_provider, tx));
+        }
     }
     {
         LOCK(pool.cs);
@@ -137,6 +141,7 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
             mempool_txs.pop_back();
             break;
         }
+        assert(!pool.GetIter(parent_entry.GetTx().GetHash()));
         AddToMempool(pool, parent_entry);
         if (fuzzed_data_provider.ConsumeBool()) {
             child.vin[0].prevout = COutPoint{mempool_txs.back().GetHash(), 0};
@@ -149,7 +154,9 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
             mempool_txs.pop_back();
             break;
         }
-        AddToMempool(pool, child_entry);
+        if (!pool.GetIter(child_entry.GetTx().GetHash())) {
+            AddToMempool(pool, child_entry);
+        }
 
         if (fuzzed_data_provider.ConsumeBool()) {
             pool.PrioritiseTransaction(mempool_txs.back().GetHash().ToUint256(), fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(-100000, 100000));
