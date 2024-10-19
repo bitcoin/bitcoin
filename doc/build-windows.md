@@ -1,5 +1,5 @@
 WINDOWS BUILD NOTES
-====================
+===================
 
 Below are some notes on how to build Bitcoin Core for Windows.
 
@@ -17,7 +17,7 @@ The instructions below work on Ubuntu and Debian. Make sure the distribution's `
 package meets the minimum required `g++` version specified in [dependencies.md](dependencies.md).
 
 Installing Windows Subsystem for Linux
----------------------------------------
+--------------------------------------
 
 Follow the upstream installation instructions, available [here](https://learn.microsoft.com/en-us/windows/wsl/install).
 
@@ -48,13 +48,12 @@ Acquire the source in the usual way:
     git clone https://github.com/bitcoin/bitcoin.git
     cd bitcoin
 
-## Building for 64-bit Windows
+Building for 64-bit Windows
+---------------------------
 
 The first step is to install the mingw-w64 cross-compilation tool chain:
 
-```sh
-sudo apt install g++-mingw-w64-x86-64-posix
-```
+    sudo apt install g++-mingw-w64-x86-64-posix
 
 Once the toolchain is installed the build steps are common:
 
@@ -78,12 +77,13 @@ Build using:
     make # use "-j N" for N parallel jobs
     sudo bash -c "echo 1 > /proc/sys/fs/binfmt_misc/status" # Enable WSL support for Win32 applications.
 
-## Depends system
+Depends system
+--------------
 
 For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
 
 Installation
--------------
+------------
 
 After building using the Windows subsystem it can be useful to copy the compiled
 executables to a directory on the Windows drive in the same directory structure
