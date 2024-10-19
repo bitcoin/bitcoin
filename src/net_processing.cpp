@@ -336,8 +336,8 @@ struct Peer {
      *  This field must correlate with whether m_addr_known has been
      *  initialized.*/
     std::atomic_bool m_addr_relay_enabled{false};
-    /** Whether a Peer can only be relayed blocks */
-    const bool m_block_relay_only{false};
+    /** Whether a peer can relay transactions */
+    const bool m_can_tx_relay{false};
     /** Whether a getaddr request to this peer is outstanding. */
     bool m_getaddr_sent GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
     /** Guards address sending timers. */
@@ -375,11 +375,11 @@ struct Peer {
     /** Time of the last getheaders message to this peer */
     std::atomic<std::chrono::seconds> m_last_getheaders_timestamp GUARDED_BY(NetEventsInterface::g_msgproc_mutex){0s};
 
-    explicit Peer(NodeId id, ServiceFlags our_services, bool block_relay_only)
+    explicit Peer(NodeId id, ServiceFlags our_services, bool tx_relay)
         : m_id(id)
         , m_our_services{our_services}
         , m_tx_relay(std::make_unique<TxRelay>())
-        , m_block_relay_only{block_relay_only}
+        , m_can_tx_relay{tx_relay}
     {}
 };
 
@@ -1552,7 +1552,7 @@ void PeerManagerImpl::InitializeNode(CNode& node, ServiceFlags our_services) {
         LOCK(cs_main);
         m_node_states.emplace_hint(m_node_states.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(node.IsInboundConn()));
     }
-    PeerRef peer = std::make_shared<Peer>(nodeid, our_services, /* block_relay_only = */ node.IsBlockOnlyConn());
+    PeerRef peer = std::make_shared<Peer>(nodeid, our_services, /*tx_relay=*/!node.IsBlockOnlyConn());
     {
         LOCK(m_peer_mutex);
         m_peer_map.emplace_hint(m_peer_map.end(), nodeid, peer);
@@ -1685,7 +1685,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
         ping_wait = GetTime<std::chrono::microseconds>() - peer->m_ping_start.load();
     }
 
-    if (!peer->m_block_relay_only) {
+    if (peer->m_can_tx_relay) {
         stats.m_relay_txs = WITH_LOCK(peer->m_tx_relay->m_bloom_filter_mutex, return peer->m_tx_relay->m_relay_txs);
     } else {
         stats.m_relay_txs = false;
@@ -2211,7 +2211,7 @@ bool PeerManagerImpl::IsInvInFilter(NodeId nodeid, const uint256& hash) const
     PeerRef peer = GetPeerRef(nodeid);
     if (peer == nullptr)
         return false;
-    if (peer->m_block_relay_only)
+    if (!peer->m_can_tx_relay)
         return false;
     LOCK(peer->m_tx_relay->m_tx_inventory_mutex);
     return peer->m_tx_relay->m_tx_inventory_known_filter.contains(hash);
@@ -2547,7 +2547,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
         }
         ++it;
 
-        if (peer.m_block_relay_only && NetMessageViolatesBlocksOnly(inv.GetCommand())) {
+        if (!peer.m_can_tx_relay && NetMessageViolatesBlocksOnly(inv.GetCommand())) {
             // Note that if we receive a getdata for non-block messages
             // from a block-relay-only outbound peer that violate the policy,
             // we skip such getdata messages from this peer
