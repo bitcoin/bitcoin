@@ -1395,7 +1395,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
         nProtocolVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
     }
 
-    const bool tx_relay = !m_ignore_incoming_txs && !pnode.IsBlockOnlyConn() && !pnode.IsFeelerConn();
+    const bool tx_relay = !m_ignore_incoming_txs && peer.m_can_tx_relay && !pnode.IsFeelerConn();
     m_connman.PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, nProtocolVersion, my_services, nTime,
                           your_services, addr_you, // Together the pre-version-31402 serialization of CAddress "addrYou" (without nTime)
                           my_services, CService(), // Together the pre-version-31402 serialization of CAddress "addrMe" (without nTime)
@@ -2243,12 +2243,9 @@ void PeerManagerImpl::RelayInvFiltered(CInv &inv, const CTransaction& relatedTx,
 {
     // TODO: Migrate to iteration through m_peer_map
     m_connman.ForEachNode([&](CNode* pnode) {
-        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || pnode->IsBlockOnlyConn()) {
-            return;
-        }
-
         PeerRef peer = GetPeerRef(pnode->GetId());
         if (peer == nullptr) return;
+        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || !peer->m_tx_relay) return;
         {
             LOCK(peer->m_tx_relay->m_bloom_filter_mutex);
             if (!peer->m_tx_relay->m_relay_txs) {
@@ -2266,12 +2263,9 @@ void PeerManagerImpl::RelayInvFiltered(CInv &inv, const uint256& relatedTxHash, 
 {
     // TODO: Migrate to iteration through m_peer_map
     m_connman.ForEachNode([&](CNode* pnode) {
-        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || pnode->IsBlockOnlyConn()) {
-            return;
-        }
-
         PeerRef peer = GetPeerRef(pnode->GetId());
         if (peer == nullptr) return;
+        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || !peer->m_tx_relay) return;
         {
             LOCK(peer->m_tx_relay->m_bloom_filter_mutex);
             if (!peer->m_tx_relay->m_relay_txs) {
@@ -2424,7 +2418,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         } else if (inv.IsMsgFilteredBlk()) {
             bool sendMerkleBlock = false;
             CMerkleBlock merkleBlock;
-            if (!pfrom.IsBlockOnlyConn()) {
+            if (peer.m_can_tx_relay) {
                 LOCK(peer.m_tx_relay->m_bloom_filter_mutex);
                 if (peer.m_tx_relay->m_bloom_filter) {
                     sendMerkleBlock = true;
@@ -2526,8 +2520,8 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
 
     const std::chrono::seconds now = GetTime<std::chrono::seconds>();
     // Get last mempool request time
-    const std::chrono::seconds mempool_req = !pfrom.IsBlockOnlyConn() ? peer.m_tx_relay->m_last_mempool_req.load()
-                                                                      : std::chrono::seconds::min();
+    const std::chrono::seconds mempool_req = peer.m_can_tx_relay ? peer.m_tx_relay->m_last_mempool_req.load()
+                                                                 : std::chrono::seconds::min();
 
     // Process as many TX items from the front of the getdata queue as
     // possible, since they're common and it's efficient to batch process
@@ -3486,7 +3480,7 @@ void PeerManagerImpl::ProcessMessage(
         }
         peer->m_starting_height = starting_height;
 
-        if (!pfrom.IsBlockOnlyConn()) {
+        if (peer->m_can_tx_relay) {
             {
                 LOCK(peer->m_tx_relay->m_bloom_filter_mutex);
                 peer->m_tx_relay->m_relay_txs = fRelay; // set to true after we get the first filter* message
@@ -4750,7 +4744,7 @@ void PeerManagerImpl::ProcessMessage(
             return;
         }
 
-        if (!pfrom.IsBlockOnlyConn()) {
+        if (peer->m_can_tx_relay) {
             LOCK(peer->m_tx_relay->m_tx_inventory_mutex);
             peer->m_tx_relay->m_send_mempool = true;
         }
@@ -4844,7 +4838,7 @@ void PeerManagerImpl::ProcessMessage(
             // There is no excuse for sending a too-large filter
             Misbehaving(pfrom.GetId(), 100, "too-large bloom filter");
         }
-        else if (!pfrom.IsBlockOnlyConn())
+        else if (peer->m_can_tx_relay)
         {
             {
                 LOCK(peer->m_tx_relay->m_bloom_filter_mutex);
@@ -4871,7 +4865,7 @@ void PeerManagerImpl::ProcessMessage(
         bool bad = false;
         if (vData.size() > MAX_SCRIPT_ELEMENT_SIZE) {
             bad = true;
-        } else if (!pfrom.IsBlockOnlyConn()) {
+        } else if (peer->m_can_tx_relay) {
             LOCK(peer->m_tx_relay->m_bloom_filter_mutex);
             if (peer->m_tx_relay->m_bloom_filter) {
                 peer->m_tx_relay->m_bloom_filter->insert(vData);
@@ -4891,7 +4885,7 @@ void PeerManagerImpl::ProcessMessage(
             pfrom.fDisconnect = true;
             return;
         }
-        if (pfrom.IsBlockOnlyConn()) {
+        if (!peer->m_can_tx_relay) {
             return;
         }
 
@@ -5759,7 +5753,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             LOCK(peer->m_block_inv_mutex);
 
             size_t reserve = INVENTORY_BROADCAST_MAX_PER_1MB_BLOCK * MaxBlockSize() / 1000000;
-            if (!pto->IsBlockOnlyConn()) {
+            if (peer->m_can_tx_relay) {
                 LOCK(peer->m_tx_relay->m_tx_inventory_mutex);
                 reserve = std::min<size_t>(peer->m_tx_relay->m_tx_inventory_to_send.size(), reserve);
             }
@@ -5791,7 +5785,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             }
         };
 
-        if (!pto->IsBlockOnlyConn()) {
+        if (peer->m_can_tx_relay) {
             LOCK(peer->m_tx_relay->m_tx_inventory_mutex);
             // Check whether periodic sends should happen
             // Note: If this node is running in a Masternode mode, it makes no sense to delay outgoing txes
