@@ -20,6 +20,7 @@
 #include <netbase.h>
 #include <net_types.h>
 #include <node/blockstorage.h>
+#include <node/txreconciliation.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -730,6 +731,7 @@ private:
     BanMan* const m_banman;
     ChainstateManager& m_chainman;
     CTxMemPool& m_mempool;
+    std::unique_ptr<TxReconciliationTracker> m_txreconciliation;
     const std::unique_ptr<CDeterministicMNManager>& m_dmnman;
     const std::unique_ptr<CJContext>& m_cj_ctx;
     const std::unique_ptr<LLMQContext>& m_llmq_ctx;
@@ -1633,6 +1635,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node) {
         mapBlocksInFlight.erase(entry.pindex->GetBlockHash());
     }
     WITH_LOCK(g_cs_orphans, m_orphanage.EraseForPeer(nodeid));
+    if (m_txreconciliation) m_txreconciliation->ForgetPeer(nodeid);
     m_num_preferred_download_peers -= state->fPreferredDownload;
     m_peers_downloading_from -= (state->nBlocksInFlight != 0);
     assert(m_peers_downloading_from >= 0);
@@ -1935,6 +1938,11 @@ PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& conn
       m_mn_activeman(mn_activeman),
       m_ignore_incoming_txs(ignore_incoming_txs)
 {
+    // While Erlay support is incomplete, it must be enabled explicitly via -txreconciliation.
+    // This argument can go away after Erlay support is complete.
+    if (gArgs.GetBoolArg("-txreconciliation", DEFAULT_TXRECONCILIATION_ENABLE)) {
+        m_txreconciliation = std::make_unique<TxReconciliationTracker>(TXRECONCILIATION_VERSION);
+    }
 }
 
 void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
@@ -3509,8 +3517,6 @@ void PeerManagerImpl::ProcessMessage(
             m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::SENDADDRV2));
         }
 
-        m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::VERACK));
-
         pfrom.m_has_all_wanted_services = HasAllDesirableServiceFlags(nServices);
         peer->m_their_services = nServices;
         pfrom.SetAddrLocal(addrMe);
@@ -3535,6 +3541,25 @@ void PeerManagerImpl::ProcessMessage(
             }
             if (fRelay) pfrom.m_relays_txs = true;
         }
+
+        if (greatest_common_version >= INCREASE_MAX_HEADERS2_VERSION && m_txreconciliation) {
+            // Per BIP-330, we announce txreconciliation support if:
+            // - protocol version per the VERSION message supports INCREASE_MAX_HEADERS2_VERSION;
+            // - we intended to exchange transactions over this connection while establishing it
+            //   and the peer indicated support for transaction relay in the VERSION message;
+            // - we are not in -blocksonly mode.
+            if (pfrom.m_relays_txs && !m_ignore_incoming_txs) {
+                const uint64_t recon_salt = m_txreconciliation->PreRegisterPeer(pfrom.GetId());
+                // We suggest our txreconciliation role (initiator/responder) based on
+                // the connection direction.
+                m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::SENDTXRCNCL,
+                                                             !pfrom.IsInboundConn(),
+                                                             pfrom.IsInboundConn(),
+                                                             TXRECONCILIATION_VERSION, recon_salt));
+            }
+        }
+
+        m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::VERACK));
 
         // Potentially mark this peer as a preferred download peer.
         {
@@ -3677,6 +3702,15 @@ void PeerManagerImpl::ProcessMessage(
             }
         }
 
+        if (m_txreconciliation) {
+            if (pfrom.nVersion < INCREASE_MAX_HEADERS2_VERSION || !m_txreconciliation->IsPeerRegistered(pfrom.GetId())) {
+                // We could have optimistically pre-registered/registered the peer. In that case,
+                // we should forget about the reconciliation state here if the node version is below
+                // our minimum supported version.
+                m_txreconciliation->ForgetPeer(pfrom.GetId());
+            }
+        }
+
         pfrom.fSuccessfullyConnected = true;
         return;
     }
@@ -3724,6 +3758,58 @@ void PeerManagerImpl::ProcessMessage(
             return;
         }
         peer->m_wants_addrv2 = true;
+        return;
+    }
+
+    // Received from a peer demonstrating readiness to announce transactions via reconciliations.
+    // This feature negotiation must happen between VERSION and VERACK to avoid relay problems
+    // from switching announcement protocols after the connection is up.
+    if (msg_type == NetMsgType::SENDTXRCNCL) {
+        if (!m_txreconciliation) {
+            LogPrint(BCLog::NET, "sendtxrcncl from peer=%d ignored, as our node does not have txreconciliation enabled\n", pfrom.GetId());
+            return;
+        }
+
+        if (pfrom.fSuccessfullyConnected) {
+            // Disconnect peers that send a SENDTXRCNCL message after VERACK.
+            LogPrint(BCLog::NET, "sendtxrcncl received after verack from peer=%d; disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+
+        if (!peer->GetTxRelay()) {
+            // Disconnect peers that send a SENDTXRCNCL message even though we indicated we don't
+            // support transaction relay.
+            LogPrint(BCLog::NET, "sendtxrcncl received from peer=%d to which we indicated no tx relay; disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+
+        bool is_peer_initiator, is_peer_responder;
+        uint32_t peer_txreconcl_version;
+        uint64_t remote_salt;
+        vRecv >> is_peer_initiator >> is_peer_responder >> peer_txreconcl_version >> remote_salt;
+
+        if (m_txreconciliation->IsPeerRegistered(pfrom.GetId())) {
+            // A peer is already registered, meaning we already received SENDTXRCNCL from them.
+            LogPrint(BCLog::NET, "txreconciliation protocol violation from peer=%d (sendtxrcncl received from already registered peer); disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+
+        const ReconciliationRegisterResult result = m_txreconciliation->RegisterPeer(pfrom.GetId(), pfrom.IsInboundConn(),
+                                                                                is_peer_initiator, is_peer_responder,
+                                                                                peer_txreconcl_version,
+                                                                                remote_salt);
+
+        // If it's a protocol violation, disconnect.
+        // If the peer was not found (but something unexpected happened) or it was registered,
+        // nothing to be done.
+        if (result == ReconciliationRegisterResult::PROTOCOL_VIOLATION) {
+            LogPrint(BCLog::NET, "txreconciliation protocol violation from peer=%d; disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
         return;
     }
 

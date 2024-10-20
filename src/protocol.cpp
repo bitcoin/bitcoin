@@ -48,6 +48,7 @@ MAKE_MSG(GETCFHEADERS, "getcfheaders");
 MAKE_MSG(CFHEADERS, "cfheaders");
 MAKE_MSG(GETCFCHECKPT, "getcfcheckpt");
 MAKE_MSG(CFCHECKPT, "cfcheckpt");
+MAKE_MSG(SENDTXRCNCL, "sendtxrcncl");
 // Dash message types
 MAKE_MSG(SPORK, "spork");
 MAKE_MSG(GETSPORKS, "getsporks");
@@ -127,6 +128,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::CFHEADERS,
     NetMsgType::GETCFCHECKPT,
     NetMsgType::CFCHECKPT,
+    NetMsgType::SENDTXRCNCL,
     // Dash message types
     // NOTE: do NOT include non-implmented here, we want them to be "Unknown command" in ProcessMessage()
     NetMsgType::SPORK,

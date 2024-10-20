@@ -174,6 +174,7 @@ FUZZ_TARGET_MSG(sendcmpct);
 FUZZ_TARGET_MSG(senddsq);
 FUZZ_TARGET_MSG(sendheaders);
 FUZZ_TARGET_MSG(sendheaders2);
+FUZZ_TARGET_MSG(sendtxrcncl);
 FUZZ_TARGET_MSG(spork);
 FUZZ_TARGET_MSG(ssc);
 FUZZ_TARGET_MSG(tx);
