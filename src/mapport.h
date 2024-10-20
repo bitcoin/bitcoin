@@ -13,7 +13,7 @@ enum MapPortProtoFlag : unsigned int {
     PCP = 0x02,   // PCP with NAT-PMP fallback.
 };
 
-void StartMapPort(bool use_upnp, bool use_pcp);
+void StartMapPort(bool use_pcp);
 void InterruptMapPort();
 void StopMapPort();
 

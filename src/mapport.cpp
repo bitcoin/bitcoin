@@ -190,7 +190,7 @@ static void MapPortProtoSetEnabled(MapPortProtoFlag proto, bool enabled)
     }
 }
 
-void StartMapPort(bool use_upnp, bool use_pcp)
+void StartMapPort(bool use_pcp)
 {
     MapPortProtoSetEnabled(MapPortProtoFlag::PCP, use_pcp);
     DispatchMapPort();
