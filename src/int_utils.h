@@ -129,17 +129,7 @@ constexpr inline I Mask() { return ((I((I(-1)) << (std::numeric_limits<I>::digit
 /** Compute the smallest power of two that is larger than val. */
 template<typename I>
 static inline int CountBits(I val, int max) {
-#ifdef HAVE_CLZ
-    (void)max;
-    if (val == 0) return 0;
-    if (std::numeric_limits<unsigned>::digits >= std::numeric_limits<I>::digits) {
-        return std::numeric_limits<unsigned>::digits - __builtin_clz(val);
-    } else if (std::numeric_limits<unsigned long>::digits >= std::numeric_limits<I>::digits) {
-        return std::numeric_limits<unsigned long>::digits - __builtin_clzl(val);
-    } else {
-        return std::numeric_limits<unsigned long long>::digits - __builtin_clzll(val);
-    }
-#elif _MSC_VER
+#ifdef _MSC_VER
     (void)max;
     unsigned long index;
     unsigned char ret;
@@ -149,7 +139,17 @@ static inline int CountBits(I val, int max) {
         ret = _BitScanReverse64(&index, val);
     }
     if (!ret) return 0;
-    return index;
+    return index + 1;
+#elif HAVE_CLZ
+    (void)max;
+    if (val == 0) return 0;
+    if (std::numeric_limits<unsigned>::digits >= std::numeric_limits<I>::digits) {
+        return std::numeric_limits<unsigned>::digits - __builtin_clz(val);
+    } else if (std::numeric_limits<unsigned long>::digits >= std::numeric_limits<I>::digits) {
+        return std::numeric_limits<unsigned long>::digits - __builtin_clzl(val);
+    } else {
+        return std::numeric_limits<unsigned long long>::digits - __builtin_clzll(val);
+    }
 #else
     while (max && (val >> (max - 1) == 0)) --max;
     return max;
