@@ -173,6 +173,17 @@ class BlockchainTest(BitcoinTestFramework):
             'v19': { 'type': 'buried', 'active': False, 'height': 900},
             'v20': { 'type': 'buried', 'active': False, 'height': 900},
             'mn_rr': { 'type': 'buried', 'active': False, 'height': 900},
+            'withdrawals': {
+                'type': 'bip9',
+                'bip9': {
+                    'status': 'defined',
+                    'start_time': 0,
+                    'timeout': 9223372036854775807,  # "withdrawals" does not have a timeout so is set to the max int64 value
+                    'since': 0,
+                    'min_activation_height': 0,
+                    'ehf': True
+                },
+                'active': False},
             'testdummy': {
                 'type': 'bip9',
                 'bip9': {
