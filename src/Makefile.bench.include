@@ -35,6 +35,7 @@ bench_bench_dash_SOURCES = \
   bench/ccoins_caching.cpp \
   bench/gcs_filter.cpp \
   bench/hashpadding.cpp \
+  bench/load_external.cpp \
   bench/merkle_root.cpp \
   bench/mempool_eviction.cpp \
   bench/mempool_stress.cpp \

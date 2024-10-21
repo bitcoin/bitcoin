@@ -38,6 +38,7 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/bip32.h>
+#include <util/check.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -495,8 +496,6 @@ static RPCHelpMan getassetunlockstatuses()
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No blocks in chain");
     }
 
-    CHECK_NONFATAL(node.cpoolman);
-
     std::optional<CCreditPool> poolCL{std::nullopt};
     std::optional<CCreditPool> poolOnTip{std::nullopt};
     std::optional<int> nSpecificCoreHeight{std::nullopt};
@@ -506,7 +505,7 @@ static RPCHelpMan getassetunlockstatuses()
         if (nSpecificCoreHeight.value() < 0 || nSpecificCoreHeight.value() > chainman.ActiveChain().Height()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
         }
-        poolCL = std::make_optional(node.cpoolman->GetCreditPool(chainman.ActiveChain()[nSpecificCoreHeight.value()], Params().GetConsensus()));
+        poolCL = std::make_optional(CHECK_NONFATAL(node.cpoolman)->GetCreditPool(chainman.ActiveChain()[nSpecificCoreHeight.value()], Params().GetConsensus()));
     }
     else {
         const auto pBlockIndexBestCL = [&]() -> const CBlockIndex* {

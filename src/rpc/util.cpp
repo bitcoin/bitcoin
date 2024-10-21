@@ -10,6 +10,7 @@
 #include <script/descriptor.h>
 #include <script/signingprovider.h>
 #include <tinyformat.h>
+#include <util/check.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -494,7 +495,7 @@ RPCHelpMan::RPCHelpMan(std::string name, std::string description, std::vector<RP
                 // Null values are accepted in all arguments
                 break;
             default:
-                CHECK_NONFATAL(false);
+                NONFATAL_UNREACHABLE();
                 break;
             }
         }
@@ -743,7 +744,7 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
         return;
     }
     case Type::ANY: {
-        CHECK_NONFATAL(false); // Only for testing
+        NONFATAL_UNREACHABLE(); // Only for testing
     }
     case Type::NONE: {
         sections.PushSection({indent + "null" + maybe_separator, Description("json null")});
@@ -807,7 +808,7 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
         return;
     }
     } // no default case, so the compiler can warn about missing cases
-    CHECK_NONFATAL(false);
+    NONFATAL_UNREACHABLE();
 }
 
 bool RPCResult::MatchesType(const UniValue& result) const
@@ -843,7 +844,7 @@ bool RPCResult::MatchesType(const UniValue& result) const
         return UniValue::VOBJ == result.getType();
     }
     } // no default case, so the compiler can warn about missing cases
-    CHECK_NONFATAL(false);
+    NONFATAL_UNREACHABLE();
 }
 
 std::string RPCArg::ToStringObj(const bool oneline) const
@@ -878,9 +879,9 @@ std::string RPCArg::ToStringObj(const bool oneline) const
     case Type::OBJ:
     case Type::OBJ_USER_KEYS:
         // Currently unused, so avoid writing dead code
-        CHECK_NONFATAL(false);
+        NONFATAL_UNREACHABLE();
     } // no default case, so the compiler can warn about missing cases
-    CHECK_NONFATAL(false);
+    NONFATAL_UNREACHABLE();
 }
 
 std::string RPCArg::ToString(const bool oneline) const
@@ -915,7 +916,7 @@ std::string RPCArg::ToString(const bool oneline) const
         return "[" + res + "...]";
     }
     } // no default case, so the compiler can warn about missing cases
-    CHECK_NONFATAL(false);
+    NONFATAL_UNREACHABLE();
 }
 
 static std::pair<int64_t, int64_t> ParseRange(const UniValue& value)

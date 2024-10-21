@@ -24,6 +24,7 @@
 #include <walletinitinterface.h>
 
 #include <map>
+#include <unordered_map>
 
 std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
@@ -249,6 +250,11 @@ void BlockManager::FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPr
            nLastBlockWeCanPrune, count);
 }
 
+void BlockManager::UpdatePruneLock(const std::string& name, const PruneLockInfo& lock_info) {
+    AssertLockHeld(::cs_main);
+    m_prune_locks[name] = lock_info;
+}
+
 CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)
 {
     AssertLockHeld(cs_main);
@@ -419,6 +425,16 @@ bool BlockManager::IsBlockPruned(const CBlockIndex* pblockindex)
 {
     AssertLockHeld(::cs_main);
     return (m_have_pruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0);
+}
+
+const CBlockIndex* GetFirstStoredBlock(const CBlockIndex* start_block) {
+    AssertLockHeld(::cs_main);
+    assert(start_block);
+    const CBlockIndex* last_block = start_block;
+    while (last_block->pprev && (last_block->pprev->nStatus & BLOCK_HAVE_DATA)) {
+        last_block = last_block->pprev;
+    }
+    return last_block;
 }
 
 // If we're using -prune with -reindex, then delete block files that will be ignored by the
@@ -774,19 +790,24 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
     return true;
 }
 
-/** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
 FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp)
 {
     unsigned int nBlockSize = ::GetSerializeSize(block, CLIENT_VERSION);
     FlatFilePos blockPos;
-    if (dbp != nullptr) {
+    const auto position_known {dbp != nullptr};
+    if (position_known) {
         blockPos = *dbp;
+    } else {
+        // when known, blockPos.nPos points at the offset of the block data in the blk file. that already accounts for
+        // the serialization header present in the file (the 4 magic message start bytes + the 4 length bytes = 8 bytes = BLOCK_SERIALIZATION_HEADER_SIZE).
+        // we add BLOCK_SERIALIZATION_HEADER_SIZE only for new blocks since they will have the serialization header added when written to disk.
+        nBlockSize += static_cast<unsigned int>(BLOCK_SERIALIZATION_HEADER_SIZE);
     }
-    if (!FindBlockPos(blockPos, nBlockSize + 8, nHeight, active_chain, block.GetBlockTime(), dbp != nullptr)) {
+    if (!FindBlockPos(blockPos, nBlockSize, nHeight, active_chain, block.GetBlockTime(), position_known)) {
         error("%s: FindBlockPos failed", __func__);
         return FlatFilePos();
     }
-    if (dbp == nullptr) {
+    if (!position_known) {
         if (!WriteBlockToDisk(block, blockPos, chainparams.MessageStart())) {
             AbortNode("Failed to write block");
             return FlatFilePos();

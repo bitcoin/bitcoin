@@ -9,6 +9,7 @@
 #include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
+#include <util/check.h>
 #include <rpc/util.h>
 #include <util/strencodings.h>
 
@@ -83,11 +84,8 @@ static RPCHelpMan coinjoin_reset()
 
     ValidateCoinJoinArguments();
 
-    CHECK_NONFATAL(node.coinjoin_loader);
-    auto cj_clientman = node.coinjoin_loader->walletman().Get(wallet->GetName());
-
-    CHECK_NONFATAL(cj_clientman);
-    cj_clientman->ResetPool();
+    auto cj_clientman = CHECK_NONFATAL(node.coinjoin_loader)->walletman().Get(wallet->GetName());
+    CHECK_NONFATAL(cj_clientman)->ResetPool();
 
     return "Mixing was reset";
 },
@@ -126,10 +124,7 @@ static RPCHelpMan coinjoin_start()
             throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please unlock wallet for mixing with walletpassphrase first.");
     }
 
-    CHECK_NONFATAL(node.coinjoin_loader);
-    auto cj_clientman = node.coinjoin_loader->walletman().Get(wallet->GetName());
-
-    CHECK_NONFATAL(cj_clientman);
+    auto cj_clientman = CHECK_NONFATAL(CHECK_NONFATAL(node.coinjoin_loader)->walletman().Get(wallet->GetName()));
     if (!cj_clientman->StartMixing()) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Mixing has been started already.");
     }
@@ -450,8 +445,7 @@ static RPCHelpMan getcoinjoininfo()
         return obj;
     }
 
-    auto manager = node.coinjoin_loader->walletman().Get(wallet->GetName());
-    CHECK_NONFATAL(manager != nullptr);
+    auto* manager = CHECK_NONFATAL(node.coinjoin_loader->walletman().Get(wallet->GetName()));
     manager->GetJsonInfo(obj);
 
     std::string warning_msg{""};

@@ -19,7 +19,6 @@
 #include <deploymentstatus.h>
 #include <flatfile.h>
 #include <hash.h>
-#include <index/blockfilterindex.h>
 #include <logging.h>
 #include <logging/timer.h>
 #include <node/blockstorage.h>
@@ -93,6 +92,12 @@ const std::vector<std::string> CHECKLEVEL_DOC {
     "level 4 tries to reconnect the blocks",
     "each level includes the checks of the previous levels",
 };
+/** The number of blocks to keep below the deepest prune lock.
+ *  There is nothing special about this number. It is higher than what we
+ *  expect to see in regular mainnet reorgs, but not so high that it would
+ *  noticeably interfere with the pruning mechanism.
+ * */
+static constexpr int PRUNE_LOCK_BUFFER{10};
 
 /**
  * Mutex to guard access to validation specific variables, such as reading
@@ -2362,12 +2367,24 @@ bool CChainState::FlushStateToDisk(
         CoinsCacheSizeState cache_state = GetCoinsCacheSizeState();
         LOCK(m_blockman.cs_LastBlockFile);
         if (fPruneMode && (m_blockman.m_check_for_pruning || nManualPruneHeight > 0) && !fReindex) {
-            // make sure we don't prune above the blockfilterindexes bestblocks
+            // make sure we don't prune above any of the prune locks bestblocks
             // pruning is height-based
-            int last_prune = m_chain.Height(); // last height we can prune
-            ForEachBlockFilterIndex([&](BlockFilterIndex& index) {
-               last_prune = std::max(1, std::min(last_prune, index.GetSummary().best_block_height));
-            });
+            int last_prune{m_chain.Height()}; // last height we can prune
+            std::optional<std::string> limiting_lock; // prune lock that actually was the limiting factor, only used for logging
+
+            for (const auto& prune_lock : m_blockman.m_prune_locks) {
+                if (prune_lock.second.height_first == std::numeric_limits<int>::max()) continue;
+                // Remove the buffer and one additional block here to get actual height that is outside of the buffer
+                const int lock_height{prune_lock.second.height_first - PRUNE_LOCK_BUFFER - 1};
+                last_prune = std::max(1, std::min(last_prune, lock_height));
+                if (last_prune == lock_height) {
+                    limiting_lock = prune_lock.first;
+                }
+            }
+
+            if (limiting_lock) {
+                LogPrint(BCLog::PRUNE, "%s limited pruning to height %d\n", limiting_lock.value(), last_prune);
+            }
 
             if (nManualPruneHeight > 0) {
                 LOG_TIME_MILLIS_WITH_CATEGORY("find files to prune (manual)", BCLog::BENCHMARK);
@@ -2622,6 +2639,18 @@ bool CChainState::DisconnectTip(BlockValidationState& state, DisconnectedBlockTr
         dbTx->Commit();
     }
     LogPrint(BCLog::BENCHMARK, "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * MILLI);
+
+    {
+        // Prune locks that began at or after the tip should be moved backward so they get a chance to reorg
+        const int max_height_first{pindexDelete->nHeight - 1};
+        for (auto& prune_lock : m_blockman.m_prune_locks) {
+            if (prune_lock.second.height_first <= max_height_first) continue;
+
+            prune_lock.second.height_first = max_height_first;
+            LogPrint(BCLog::PRUNE, "%s prune lock moved back to %d\n", prune_lock.first, max_height_first);
+        }
+    }
+
     // Write the chain state to disk, if necessary.
     if (!FlushStateToDisk(state, FlushStateMode::IF_NEEDED)) {
         return false;
@@ -4569,6 +4598,8 @@ void CChainState::LoadExternalBlockFile(
         unsigned int nMaxBlockSize = MaxBlockSize();
         // This takes over fileIn and calls fclose() on it in the CBufferedFile destructor
         CBufferedFile blkdat(fileIn, 2*nMaxBlockSize, nMaxBlockSize+8, SER_DISK, CLIENT_VERSION);
+        // nRewind indicates where to resume scanning in case something goes wrong,
+        // such as a block fails to deserialize.
         uint64_t nRewind = blkdat.GetPos();
         while (!blkdat.eof()) {
             if (ShutdownRequested()) return;
@@ -4592,28 +4623,30 @@ void CChainState::LoadExternalBlockFile(
                     continue;
             } catch (const std::exception&) {
                 // no valid block header found; don't complain
+                // (this happens at the end of every blk.dat file)
                 break;
             }
             try {
-                // read block
-                uint64_t nBlockPos = blkdat.GetPos();
+                // read block header
+                const uint64_t nBlockPos{blkdat.GetPos()};
                 if (dbp)
                     dbp->nPos = nBlockPos;
                 blkdat.SetLimit(nBlockPos + nSize);
-                std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
-                CBlock& block = *pblock;
-                blkdat >> block;
-                nRewind = blkdat.GetPos();
-
-                uint256 hash = block.GetHash();
+                CBlockHeader header;
+                blkdat >> header;
+                const uint256 hash{header.GetHash()};
+                // Skip the rest of this block (this may read from disk into memory); position to the marker before the
+                // next block, but it's still possible to rewind to the start of the current block (without a disk read).
+                nRewind = nBlockPos + nSize;
+                blkdat.SkipTo(nRewind);
                 {
                     LOCK(cs_main);
                     // detect out of order blocks, and store them for later
-                    if (hash != m_params.GetConsensus().hashGenesisBlock && !m_blockman.LookupBlockIndex(block.hashPrevBlock)) {
+                    if (hash != m_params.GetConsensus().hashGenesisBlock && !m_blockman.LookupBlockIndex(header.hashPrevBlock)) {
                         LogPrint(BCLog::REINDEX, "%s: Out of order block %s, parent %s not known\n", __func__, hash.ToString(),
-                                block.hashPrevBlock.ToString());
+                                 header.hashPrevBlock.ToString());
                         if (dbp && blocks_with_unknown_parent) {
-                            blocks_with_unknown_parent->emplace(block.hashPrevBlock, *dbp);
+                            blocks_with_unknown_parent->emplace(header.hashPrevBlock, *dbp);
                         }
                         continue;
                     }
@@ -4621,13 +4654,19 @@ void CChainState::LoadExternalBlockFile(
                     // process in case the block isn't known yet
                     const CBlockIndex* pindex = m_blockman.LookupBlockIndex(hash);
                     if (!pindex || (pindex->nStatus & BLOCK_HAVE_DATA) == 0) {
-                      BlockValidationState state;
-                      if (AcceptBlock(pblock, state, nullptr, true, dbp, nullptr)) {
-                          nLoaded++;
-                      }
-                      if (state.IsError()) {
-                          break;
-                      }
+                        // This block can be processed immediately; rewind to its start, read and deserialize it.
+                        blkdat.SetPos(nBlockPos);
+                        std::shared_ptr<CBlock> pblock{std::make_shared<CBlock>()};
+                        blkdat >> *pblock;
+                        nRewind = blkdat.GetPos();
+
+                        BlockValidationState state;
+                        if (AcceptBlock(pblock, state, nullptr, true, dbp, nullptr)) {
+                            nLoaded++;
+                        }
+                        if (state.IsError()) {
+                            break;
+                        }
                     } else if (hash != m_params.GetConsensus().hashGenesisBlock && pindex->nHeight % 1000 == 0) {
                         LogPrint(BCLog::REINDEX, "Block Import: already had block %s at height %d\n", hash.ToString(), pindex->nHeight);
                     }
@@ -4671,7 +4710,18 @@ void CChainState::LoadExternalBlockFile(
                     }
                 }
             } catch (const std::exception& e) {
-                LogPrintf("%s: Deserialize or I/O error - %s\n", __func__, e.what());
+                // historical bugs added extra data to the block files that does not deserialize cleanly.
+                // commonly this data is between readable blocks, but it does not really matter. such data is not fatal to the import process.
+                // the code that reads the block files deals with invalid data by simply ignoring it.
+                // it continues to search for the next {4 byte magic message start bytes + 4 byte length + block} that does deserialize cleanly
+                // and passes all of the other block validation checks dealing with POW and the merkle root, etc...
+                // we merely note with this informational log message when unexpected data is encountered.
+                // we could also be experiencing a storage system read error, or a read of a previous bad write. these are possible, but
+                // less likely scenarios. we don't have enough information to tell a difference here.
+                // the reindex process is not the place to attempt to clean and/or compact the block files. if so desired, a studious node operator
+                // may use knowledge of the fact that the block files are not entirely pristine in order to prepare a set of pristine, and
+                // perhaps ordered, block files for later reindexing.
+                LogPrint(BCLog::REINDEX, "%s: unexpected data at file offset 0x%x - %s. continuing\n", __func__, (nRewind - 1), e.what());
             }
         }
     } catch (const std::runtime_error& e) {

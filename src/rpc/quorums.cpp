@@ -11,6 +11,7 @@
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
+#include <util/check.h>
 #include <validation.h>
 
 #include <masternode/node.h>
@@ -282,7 +283,6 @@ static RPCHelpMan quorum_dkgstatus()
     const ChainstateManager& chainman = EnsureChainman(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
     const CConnman& connman = EnsureConnman(node);
-    CHECK_NONFATAL(node.dmnman);
     CHECK_NONFATAL(node.sporkman);
 
     int detailLevel = 0;
@@ -296,7 +296,7 @@ static RPCHelpMan quorum_dkgstatus()
     llmq::CDKGDebugStatus status;
     llmq_ctx.dkg_debugman->GetLocalDebugStatus(status);
 
-    auto ret = status.ToJson(*node.dmnman, chainman, detailLevel);
+    auto ret = status.ToJson(*CHECK_NONFATAL(node.dmnman), chainman, detailLevel);
 
     CBlockIndex* pindexTip = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
     int tipHeight = pindexTip->nHeight;
@@ -385,7 +385,6 @@ static RPCHelpMan quorum_memberof()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
-    CHECK_NONFATAL(node.dmnman);
 
     uint256 protxHash(ParseHashV(request.params[0], "proTxHash"));
     int scanQuorumsCount = -1;
@@ -397,7 +396,7 @@ static RPCHelpMan quorum_memberof()
     }
 
     const CBlockIndex* pindexTip = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
-    auto mnList = node.dmnman->GetListForBlock(pindexTip);
+    auto mnList = CHECK_NONFATAL(node.dmnman)->GetListForBlock(pindexTip);
     auto dmn = mnList.GetMN(protxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "masternode not found");
@@ -842,7 +841,7 @@ static RPCHelpMan quorum_rotationinfo()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
-    CHECK_NONFATAL(node.dmnman);
+    ;
 
     llmq::CGetQuorumRotationInfo cmd;
     llmq::CQuorumRotationInfo quorumRotationInfoRet;
@@ -859,7 +858,8 @@ static RPCHelpMan quorum_rotationinfo()
 
     LOCK(cs_main);
 
-    if (!BuildQuorumRotationInfo(*node.dmnman, chainman, *llmq_ctx.qman, *llmq_ctx.quorum_block_processor, cmd, quorumRotationInfoRet, strError)) {
+    if (!BuildQuorumRotationInfo(*CHECK_NONFATAL(node.dmnman), chainman, *llmq_ctx.qman, *llmq_ctx.quorum_block_processor,
+                                 cmd, quorumRotationInfoRet, strError)) {
         throw JSONRPCError(RPC_INVALID_REQUEST, strError);
     }
 
@@ -1073,7 +1073,8 @@ static RPCHelpMan verifyislock()
     auto llmqType = Params().GetConsensus().llmqTypeDIP0024InstantSend;
     const auto llmq_params_opt = Params().GetLLMQ(llmqType);
     CHECK_NONFATAL(llmq_params_opt.has_value());
-    return VerifyRecoveredSigLatestQuorums(*llmq_params_opt, chainman.ActiveChain(), *llmq_ctx.qman, signHeight, id, txid, sig);
+    return VerifyRecoveredSigLatestQuorums(*llmq_params_opt, chainman.ActiveChain(), *CHECK_NONFATAL(llmq_ctx.qman),
+                                           signHeight, id, txid, sig);
 },
     };
 }

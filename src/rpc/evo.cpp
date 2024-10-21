@@ -26,6 +26,7 @@
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
+#include <util/check.h>
 #include <util/moneystr.h>
 #include <util/translation.h>
 #include <validation.h>
@@ -629,8 +630,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
 
-    CHECK_NONFATAL(node.chain_helper);
-    CChainstateHelper& chain_helper = *node.chain_helper;
+    CChainstateHelper& chain_helper = *CHECK_NONFATAL(node.chain_helper);
 
     const bool isEvoRequested = mnType == MnType::Evo;
 
@@ -856,8 +856,7 @@ static RPCHelpMan protx_register_submit()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
 
-    CHECK_NONFATAL(node.chain_helper);
-    CChainstateHelper& chain_helper = *node.chain_helper;
+    CChainstateHelper& chain_helper = *CHECK_NONFATAL(node.chain_helper);
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
@@ -955,11 +954,8 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
 
-    CHECK_NONFATAL(node.dmnman);
-    CDeterministicMNManager& dmnman = *node.dmnman;
-
-    CHECK_NONFATAL(node.chain_helper);
-    CChainstateHelper& chain_helper = *node.chain_helper;
+    CDeterministicMNManager& dmnman = *CHECK_NONFATAL(node.dmnman);
+    CChainstateHelper& chain_helper = *CHECK_NONFATAL(node.chain_helper);
 
     const bool isEvoRequested = mnType == MnType::Evo;
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -1093,11 +1089,8 @@ static RPCHelpMan protx_update_registrar_wrapper(bool specific_legacy_bls_scheme
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
 
-    CHECK_NONFATAL(node.dmnman);
-    CDeterministicMNManager& dmnman = *node.dmnman;
-
-    CHECK_NONFATAL(node.chain_helper);
-    CChainstateHelper& chain_helper = *node.chain_helper;
+    CDeterministicMNManager& dmnman = *CHECK_NONFATAL(node.dmnman);
+    CChainstateHelper& chain_helper = *CHECK_NONFATAL(node.chain_helper);
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
@@ -1208,12 +1201,8 @@ static RPCHelpMan protx_revoke()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
 
-    CHECK_NONFATAL(node.dmnman);
-    CDeterministicMNManager& dmnman = *node.dmnman;
-
-    CHECK_NONFATAL(node.chain_helper);
-    CChainstateHelper& chain_helper = *node.chain_helper;
-
+    CDeterministicMNManager& dmnman = *CHECK_NONFATAL(node.dmnman);
+    CChainstateHelper& chain_helper = *CHECK_NONFATAL(node.chain_helper);
 
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
@@ -1371,11 +1360,8 @@ static RPCHelpMan protx_list()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
 
-    CHECK_NONFATAL(node.dmnman);
-    CDeterministicMNManager& dmnman = *node.dmnman;
-
-    CHECK_NONFATAL(node.mn_metaman);
-    CMasternodeMetaMan& mn_metaman = *node.mn_metaman;
+    CDeterministicMNManager& dmnman = *CHECK_NONFATAL(node.dmnman);
+    CMasternodeMetaMan& mn_metaman = *CHECK_NONFATAL(node.mn_metaman);
 
     std::shared_ptr<CWallet> wallet{nullptr};
 #ifdef ENABLE_WALLET
@@ -1487,11 +1473,8 @@ static RPCHelpMan protx_info()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
 
-    CHECK_NONFATAL(node.dmnman);
-    CDeterministicMNManager& dmnman = *node.dmnman;
-
-    CHECK_NONFATAL(node.mn_metaman);
-    CMasternodeMetaMan& mn_metaman = *node.mn_metaman;
+    CDeterministicMNManager& dmnman = *CHECK_NONFATAL(node.dmnman);
+    CMasternodeMetaMan& mn_metaman = *CHECK_NONFATAL(node.mn_metaman);
 
     std::shared_ptr<CWallet> wallet{nullptr};
 #ifdef ENABLE_WALLET
@@ -1561,11 +1544,8 @@ static RPCHelpMan protx_diff()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
 
-    CHECK_NONFATAL(node.dmnman);
-    CDeterministicMNManager& dmnman = *node.dmnman;
-
-    CHECK_NONFATAL(node.llmq_ctx);
-    const LLMQContext& llmq_ctx = *node.llmq_ctx;
+    CDeterministicMNManager& dmnman = *CHECK_NONFATAL(node.dmnman);
+    const LLMQContext& llmq_ctx = *CHECK_NONFATAL(node.llmq_ctx);
 
     LOCK(cs_main);
     uint256 baseBlockHash = ParseBlock(request.params[0], chainman, "baseBlock");
@@ -1622,8 +1602,7 @@ static RPCHelpMan protx_listdiff()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
 
-    CHECK_NONFATAL(node.dmnman);
-    CDeterministicMNManager& dmnman = *node.dmnman;
+    CDeterministicMNManager& dmnman = *CHECK_NONFATAL(node.dmnman);
 
     LOCK(cs_main);
     UniValue ret(UniValue::VOBJ);

@@ -36,6 +36,7 @@
 #include <spork.h>
 #include <txmempool.h>
 #include <univalue.h>
+#include <util/check.h>
 #include <util/fees.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -391,12 +392,11 @@ static RPCHelpMan generateblock()
     block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
 
     {
-        CHECK_NONFATAL(node.evodb);
-
         LOCK(cs_main);
 
         BlockValidationState state;
-        if (!TestBlockValidity(state, *llmq_ctx.clhandler, *node.evodb, chainparams, active_chainstate, block, chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock), false, false)) {
+        if (!TestBlockValidity(state, *llmq_ctx.clhandler, *CHECK_NONFATAL(node.evodb), chainparams, active_chainstate,
+                               block, chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock), false, false)) {
             throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("TestBlockValidity failed: %s", state.GetRejectReason()));
         }
     }
@@ -710,14 +710,14 @@ static RPCHelpMan getblocktemplate()
             }
 
             LLMQContext& llmq_ctx = EnsureLLMQContext(node);
-            CHECK_NONFATAL(node.evodb);
 
             CBlockIndex* const pindexPrev = active_chain.Tip();
             // TestBlockValidity only supports blocks built on the current Tip
             if (block.hashPrevBlock != pindexPrev->GetBlockHash())
                 return "inconclusive-not-best-prevblk";
             BlockValidationState state;
-            TestBlockValidity(state, *llmq_ctx.clhandler, *node.evodb, Params(), active_chainstate, block, pindexPrev, false, true);
+            TestBlockValidity(state, *llmq_ctx.clhandler, *CHECK_NONFATAL(node.evodb), Params(), active_chainstate,
+                              block, pindexPrev, false, true);
             return BIP22ValidationResult(state);
         }
 

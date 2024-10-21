@@ -32,7 +32,7 @@ static void AssembleBlock(benchmark::Bench& bench)
     std::array<CTransactionRef, NUM_BLOCKS - COINBASE_MATURITY + 1> txs;
     for (size_t b{0}; b < NUM_BLOCKS; ++b) {
         CMutableTransaction tx;
-        tx.vin.push_back(MineBlock(test_setup->m_node, P2SH_OP_TRUE));
+        tx.vin.push_back(MineBlock(test_setup->m_node, SCRIPT_PUB));
         tx.vin.back().scriptSig = scriptSig;
         tx.vout.emplace_back(1337, SCRIPT_PUB);
         if (NUM_BLOCKS - b >= COINBASE_MATURITY)
@@ -48,7 +48,7 @@ static void AssembleBlock(benchmark::Bench& bench)
     }
 
     bench.minEpochIterations(700).run([&] {
-        PrepareBlock(test_setup->m_node, P2SH_OP_TRUE);
+        PrepareBlock(test_setup->m_node, SCRIPT_PUB);
     });
 }
 

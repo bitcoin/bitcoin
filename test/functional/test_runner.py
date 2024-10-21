@@ -87,6 +87,7 @@ EXTENDED_SCRIPTS = [
     # Longest test should go first, to favor running tests in parallel
     'feature_pruning.py', # NOTE: Prune mode is incompatible with -txindex, should work with governance validation disabled though.
     'feature_dbcrash.py',
+    'feature_index_prune.py',
 ]
 
 BASE_SCRIPTS = [
@@ -357,6 +358,7 @@ BASE_SCRIPTS = [
     'rpc_deriveaddresses.py --usecli',
     'p2p_ping.py',
     'rpc_scantxoutset.py',
+    'feature_txindex_compatibility.py',
     'feature_logging.py',
     'feature_anchors.py',
     'feature_coinstatsindex.py',
@@ -376,7 +378,6 @@ BASE_SCRIPTS = [
     'rpc_help.py',
     'feature_dirsymlinks.py',
     'feature_help.py',
-    'feature_blockfilterindex_prune.py'
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
 ]

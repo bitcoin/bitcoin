@@ -12,6 +12,7 @@
 #include <txdb.h>
 
 #include <cstdint>
+#include <unordered_map>
 #include <vector>
 
 extern RecursiveMutex cs_main;
@@ -46,6 +47,9 @@ static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
 /** The maximum size of a blk?????.dat file (since 0.8) */
 static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 
+/** Size of header written by WriteBlockToDisk before a serialized CBlock */
+static constexpr size_t BLOCK_SERIALIZATION_HEADER_SIZE = CMessageHeader::MESSAGE_START_SIZE + sizeof(unsigned int);
+
 extern std::atomic_bool fImporting;
 extern std::atomic_bool fReindex;
 /** Pruning-related variables and constants */
@@ -75,6 +79,10 @@ struct CBlockIndexWorkComparator {
 struct CBlockIndexHeightOnlyComparator {
     /* Only compares the height of two block indices, doesn't try to tie-break */
     bool operator()(const CBlockIndex* pa, const CBlockIndex* pb) const;
+};
+
+struct PruneLockInfo {
+    int height_first{std::numeric_limits<int>::max()}; //! Height of earliest block that should be kept and not pruned
 };
 
 /**
@@ -137,6 +145,14 @@ private:
     /** Dirty block file entries. */
     std::set<int> m_dirty_fileinfo;
 
+    /**
+     * Map from external index name to oldest block that must not be pruned.
+     *
+     * @note Internally, only blocks at height (height_first - PRUNE_LOCK_BUFFER - 1) and
+     * below will be pruned, but callers should avoid assuming any particular buffer size.
+     */
+    std::unordered_map<std::string, PruneLockInfo> m_prune_locks GUARDED_BY(::cs_main);
+
 public:
     BlockMap m_block_index GUARDED_BY(cs_main);
     PrevBlockMap m_prev_block_index GUARDED_BY(cs_main);
@@ -172,6 +188,7 @@ public:
     bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex* pindex, const CChainParams& chainparams)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    /** Store block on disk. If dbp is not nullptr, then it provides the known position of the block within a block file on disk. */
     FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp);
 
     /** Calculate the amount of disk space the block & undo files currently use */
@@ -185,7 +202,13 @@ public:
 
     //! Check whether the block associated with this index entry is pruned or not.
     bool IsBlockPruned(const CBlockIndex* pblockindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! Create or update a prune lock identified by its name
+    void UpdatePruneLock(const std::string& name, const PruneLockInfo& lock_info) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
+
+//! Find the first block that is not pruned
+const CBlockIndex* GetFirstStoredBlock(const CBlockIndex* start_block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 void CleanupBlockRevFiles();
 
