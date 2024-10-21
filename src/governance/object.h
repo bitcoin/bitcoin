@@ -235,7 +235,8 @@ public:
     /// Check the collateral transaction for the budget proposal/finalized budget
     bool IsCollateralValid(const ChainstateManager& chainman, std::string& strError, bool& fMissingConfirmations) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    void UpdateLocalValidity(const CDeterministicMNList& tip_mn_list, const ChainstateManager& chainman);
+    void UpdateLocalValidity(const CDeterministicMNList& tip_mn_list, const ChainstateManager& chainman)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     void UpdateSentinelVariables(const CDeterministicMNList& tip_mn_list);
 

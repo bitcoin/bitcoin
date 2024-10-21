@@ -944,7 +944,7 @@ private:
     /** Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed). */
     CTransactionRef FindTxForGetData(const CNode* peer, const uint256& txid, const std::chrono::seconds mempool_req, const std::chrono::seconds now) LOCKS_EXCLUDED(cs_main);
 
-    void ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic<bool>& interruptMsgProc) LOCKS_EXCLUDED(cs_main) EXCLUSIVE_LOCKS_REQUIRED(peer.m_getdata_requests_mutex);
+    void ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic<bool>& interruptMsgProc) EXCLUSIVE_LOCKS_REQUIRED(peer.m_getdata_requests_mutex) LOCKS_EXCLUDED(::cs_main);
 
     /** Process a new block. Perform any post-processing housekeeping */
     void ProcessBlock(CNode& from, const std::shared_ptr<const CBlock>& pblock, bool force_processing);
@@ -1930,12 +1930,14 @@ void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
  */
 void PeerManagerImpl::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
-    LOCK2(::cs_main, g_cs_orphans);
+    {
+        LOCK2(::cs_main, g_cs_orphans);
 
-    auto orphanWorkSet = m_orphanage.GetCandidatesForBlock(*pblock);
-    while (!orphanWorkSet.empty()) {
-        LogPrint(BCLog::MEMPOOL, "Trying to process %d orphans\n", orphanWorkSet.size());
-        ProcessOrphanTx(orphanWorkSet);
+        auto orphanWorkSet = m_orphanage.GetCandidatesForBlock(*pblock);
+        while (!orphanWorkSet.empty()) {
+            LogPrint(BCLog::MEMPOOL, "Trying to process %d orphans\n", orphanWorkSet.size());
+            ProcessOrphanTx(orphanWorkSet);
+        }
     }
 
     m_orphanage.EraseForBlock(*pblock);
@@ -1998,8 +2000,8 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
         m_most_recent_compact_block = pcmpctblock;
     }
 
-    m_connman.ForEachNode([this, pindex, &lazy_ser, &hashBlock](CNode* pnode) {
-        LockAssertion lock(::cs_main);
+    m_connman.ForEachNode([this, pindex, &lazy_ser, &hashBlock](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        AssertLockHeld(::cs_main);
         // TODO: Avoid the repeated-serialization here
         if (pnode->fDisconnect)
             return;
@@ -5276,8 +5278,8 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
         // We want to prevent recently connected to Onion peers from being disconnected here, protect them as long as
         // there are more non_onion nodes than onion nodes so far
         size_t onion_count = 0;
-        m_connman.ForEachNode([&](CNode* pnode) {
-            LockAssertion lock(::cs_main);
+        m_connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+            AssertLockHeld(::cs_main);
             if (pnode->addr.IsTor() && ++onion_count <= m_connman.GetMaxOutboundOnionNodeCount()) return;
             // Don't disconnect masternodes just because they were slow in block announcement
             if (pnode->m_masternode_connection) return;
@@ -5294,8 +5296,8 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
             }
         });
         if (worst_peer != -1) {
-            bool disconnected = m_connman.ForNode(worst_peer, [&](CNode *pnode) {
-                LockAssertion lock(::cs_main);
+            bool disconnected = m_connman.ForNode(worst_peer, [&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+                AssertLockHeld(::cs_main);
 
                 // Only disconnect a peer that has been connected to us for
                 // some reasonable fraction of our check-frequency, to give
@@ -5774,7 +5776,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             peer->m_blocks_for_inv_relay.clear();
         }
 
-        auto queueAndMaybePushInv = [this, pto, peer, &vInv, &msgMaker](const CInv& invIn) {
+        auto queueAndMaybePushInv = [this, pto, peer, &vInv, &msgMaker](const CInv& invIn) EXCLUSIVE_LOCKS_REQUIRED(peer->m_tx_relay->m_tx_inventory_mutex) {
             AssertLockHeld(peer->m_tx_relay->m_tx_inventory_mutex);
             peer->m_tx_relay->m_tx_inventory_known_filter.insert(invIn.hash);
             LogPrint(BCLog::NET, "SendMessages -- queued inv: %s  index=%d peer=%d\n", invIn.ToString(), vInv.size(), pto->GetId());

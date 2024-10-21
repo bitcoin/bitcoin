@@ -647,8 +647,6 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
 
 void CNode::CloseSocketDisconnect(CConnman* connman)
 {
-    AssertLockHeld(connman->m_nodes_mutex);
-
     fDisconnect = true;
     LOCK2(connman->cs_mapSocketToNode, m_sock_mutex);
     if (!m_sock) {
@@ -3587,8 +3585,8 @@ void CConnman::ThreadOpenMasternodeConnections(CDeterministicMNManager& dmnman, 
 
         MasternodeProbeConn isProbe = MasternodeProbeConn::IsNotConnection;
 
-        const auto getPendingQuorumNodes = [&]() {
-            LockAssertion lock(cs_vPendingMasternodes);
+        const auto getPendingQuorumNodes = [&]() EXCLUSIVE_LOCKS_REQUIRED(cs_vPendingMasternodes) {
+            AssertLockHeld(cs_vPendingMasternodes);
             std::vector<CDeterministicMNCPtr> ret;
             for (const auto& group : masternodeQuorumNodes) {
                 for (const auto& proRegTxHash : group.second) {
@@ -3626,8 +3624,8 @@ void CConnman::ThreadOpenMasternodeConnections(CDeterministicMNManager& dmnman, 
             return ret;
         };
 
-        const auto getPendingProbes = [&]() {
-            LockAssertion lock(cs_vPendingMasternodes);
+        const auto getPendingProbes = [&]() EXCLUSIVE_LOCKS_REQUIRED(cs_vPendingMasternodes) {
+            AssertLockHeld(cs_vPendingMasternodes);
             std::vector<CDeterministicMNCPtr> ret;
             for (auto it = masternodePendingProbes.begin(); it != masternodePendingProbes.end(); ) {
                 auto dmn = mnList.GetMN(*it);

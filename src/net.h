@@ -1316,6 +1316,8 @@ public:
         return ForNode(id, FullyConnectedOnly, func);
     }
 
+    using NodeFn = std::function<void(CNode*)>;
+
     bool IsConnected(const CService& addr, std::function<bool(const CNode* pnode)> cond)
     {
         return ForNode(addr, cond, [](CNode* pnode){
@@ -1372,10 +1374,9 @@ public:
         }
     };
 
-    template<typename Callable>
-    void ForEachNode(Callable&& func)
+    void ForEachNode(const NodeFn& fn)
     {
-        ForEachNode(FullyConnectedOnly, func);
+        ForEachNode(FullyConnectedOnly, fn);
     }
 
     template<typename Condition, typename Callable>
@@ -1388,10 +1389,9 @@ public:
         }
     };
 
-    template<typename Callable>
-    void ForEachNode(Callable&& func) const
+    void ForEachNode(const NodeFn& fn) const
     {
-        ForEachNode(FullyConnectedOnly, func);
+        ForEachNode(FullyConnectedOnly, fn);
     }
 
     template<typename Condition, typename Callable, typename CallableAfter>

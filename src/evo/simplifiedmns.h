@@ -171,8 +171,9 @@ public:
     [[nodiscard]] UniValue ToJson(bool extended = false) const;
 };
 
-bool BuildSimplifiedMNListDiff(CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const llmq::CQuorumBlockProcessor& qblockman,
-                               const llmq::CQuorumManager& qman, const uint256& baseBlockHash, const uint256& blockHash,
-                               CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet, bool extended = false);
+bool BuildSimplifiedMNListDiff(CDeterministicMNManager& dmnman, const ChainstateManager& chainman,
+                               const llmq::CQuorumBlockProcessor& qblockman, const llmq::CQuorumManager& qman,
+                               const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet,
+                               std::string& errorRet, bool extended = false) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 #endif // BITCOIN_EVO_SIMPLIFIEDMNS_H

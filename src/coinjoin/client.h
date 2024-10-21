@@ -161,13 +161,16 @@ private:
 
     /// Create denominations
     bool CreateDenominated(CAmount nBalanceToDenominate);
-    bool CreateDenominated(CAmount nBalanceToDenominate, const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals);
+    bool CreateDenominated(CAmount nBalanceToDenominate, const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals)
+        EXCLUSIVE_LOCKS_REQUIRED(m_wallet.cs_wallet);
 
     /// Split up large inputs or make fee sized inputs
     bool MakeCollateralAmounts();
-    bool MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated);
+    bool MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated)
+        EXCLUSIVE_LOCKS_REQUIRED(m_wallet.cs_wallet);
 
-    bool CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason);
+    bool CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason)
+        EXCLUSIVE_LOCKS_REQUIRED(m_wallet.cs_wallet);
 
     bool JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CConnman& connman);
     bool StartNewQueue(CAmount nBalanceNeedsAnonymized, CConnman& connman);
@@ -175,7 +178,9 @@ private:
     /// step 0: select denominated inputs and txouts
     bool SelectDenominate(std::string& strErrorRet, std::vector<CTxDSIn>& vecTxDSInRet);
     /// step 1: prepare denominated inputs and outputs
-    bool PrepareDenominate(int nMinRounds, int nMaxRounds, std::string& strErrorRet, const std::vector<CTxDSIn>& vecTxDSIn, std::vector<std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsRet, bool fDryRun = false);
+    bool PrepareDenominate(int nMinRounds, int nMaxRounds, std::string& strErrorRet, const std::vector<CTxDSIn>& vecTxDSIn,
+                           std::vector<std::pair<CTxDSIn, CTxOut>>& vecPSInOutPairsRet, bool fDryRun = false)
+        EXCLUSIVE_LOCKS_REQUIRED(m_wallet.cs_wallet);
     /// step 2: send denominated inputs and outputs prepared in step 1
     bool SendDenominate(const std::vector<std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsIn, CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(!cs_coinjoin);
 

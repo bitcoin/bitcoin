@@ -565,24 +565,29 @@ void CSigSharesManager::CollectPendingSigSharesToVerify(
         // other nodes would be able to poison us with a large batch with N-1 valid shares and the last one being
         // invalid, making batch verification fail and revert to per-share verification, which in turn would slow down
         // the whole verification process
-
         std::unordered_set<std::pair<NodeId, uint256>, StaticSaltedHasher> uniqueSignHashes;
-        IterateNodesRandom(nodeStates, [&]() {
-            return uniqueSignHashes.size() < maxUniqueSessions;
-        }, [&](NodeId nodeId, CSigSharesNodeState& ns) {
-            if (ns.pendingIncomingSigShares.Empty()) {
-                return false;
-            }
-            const auto& sigShare = *ns.pendingIncomingSigShares.GetFirst();
+        IterateNodesRandom(
+            nodeStates,
+            [&]() {
+                return uniqueSignHashes.size() < maxUniqueSessions;
+                // TODO: remove NO_THREAD_SAFETY_ANALYSIS
+                // using here template IterateNodesRandom makes impossible to use lock annotation
+            },
+            [&](NodeId nodeId, CSigSharesNodeState& ns) NO_THREAD_SAFETY_ANALYSIS {
+                if (ns.pendingIncomingSigShares.Empty()) {
+                    return false;
+                }
+                const auto& sigShare = *ns.pendingIncomingSigShares.GetFirst();
 
-            AssertLockHeld(cs);
-            if (const bool alreadyHave = this->sigShares.Has(sigShare.GetKey()); !alreadyHave) {
-                uniqueSignHashes.emplace(nodeId, sigShare.GetSignHash());
-                retSigShares[nodeId].emplace_back(sigShare);
-            }
-            ns.pendingIncomingSigShares.Erase(sigShare.GetKey());
-            return !ns.pendingIncomingSigShares.Empty();
-        }, rnd);
+                AssertLockHeld(cs);
+                if (const bool alreadyHave = this->sigShares.Has(sigShare.GetKey()); !alreadyHave) {
+                    uniqueSignHashes.emplace(nodeId, sigShare.GetSignHash());
+                    retSigShares[nodeId].emplace_back(sigShare);
+                }
+                ns.pendingIncomingSigShares.Erase(sigShare.GetKey());
+                return !ns.pendingIncomingSigShares.Empty();
+            },
+            rnd);
 
         if (retSigShares.empty()) {
             return;
@@ -1020,7 +1025,10 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
 
     std::unordered_map<std::pair<Consensus::LLMQType, uint256>, std::unordered_set<NodeId>, StaticSaltedHasher> quorumNodesMap;
 
-    sigSharesQueuedToAnnounce.ForEach([this, &quorumNodesMap, &sigSharesToAnnounce](const SigShareKey& sigShareKey, bool) {
+    // TODO: remove NO_THREAD_SAFETY_ANALYSIS
+    // using here template ForEach makes impossible to use lock annotation
+    sigSharesQueuedToAnnounce.ForEach([this, &quorumNodesMap, &sigSharesToAnnounce](const SigShareKey& sigShareKey,
+                                                                                    bool) NO_THREAD_SAFETY_ANALYSIS {
         AssertLockHeld(cs);
         const auto& signHash = sigShareKey.first;
         auto quorumMember = sigShareKey.second;
@@ -1076,7 +1084,7 @@ bool CSigSharesManager::SendMessages()
     std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>> sigSharesToAnnounce;
     std::unordered_map<NodeId, std::vector<CSigSesAnn>> sigSessionAnnouncements;
 
-    auto addSigSesAnnIfNeeded = [&](NodeId nodeId, const uint256& signHash) {
+    auto addSigSesAnnIfNeeded = [&](NodeId nodeId, const uint256& signHash) EXCLUSIVE_LOCKS_REQUIRED(cs) {
         AssertLockHeld(cs);
         auto& nodeState = nodeStates[nodeId];
         auto* session = nodeState.GetSessionBySignHash(signHash);
@@ -1357,7 +1365,9 @@ void CSigSharesManager::Cleanup()
             continue;
         }
         // remove global requested state to force a re-request from another node
-        it->second.requestedSigShares.ForEach([this](const SigShareKey& k, bool) {
+        // TODO: remove NO_THREAD_SAFETY_ANALYSIS
+        // using here template ForEach makes impossible to use lock annotation
+        it->second.requestedSigShares.ForEach([this](const SigShareKey& k, bool) NO_THREAD_SAFETY_ANALYSIS {
             AssertLockHeld(cs);
             sigSharesRequested.Erase(k);
         });
@@ -1390,7 +1400,9 @@ void CSigSharesManager::RemoveBannedNodeStates()
     for (auto it = nodeStates.begin(); it != nodeStates.end();) {
         if (Assert(m_peerman)->IsBanned(it->first)) {
             // re-request sigshares from other nodes
-            it->second.requestedSigShares.ForEach([this](const SigShareKey& k, int64_t) {
+            // TODO: remove NO_THREAD_SAFETY_ANALYSIS
+            // using here template ForEach makes impossible to use lock annotation
+            it->second.requestedSigShares.ForEach([this](const SigShareKey& k, int64_t) NO_THREAD_SAFETY_ANALYSIS {
                 AssertLockHeld(cs);
                 sigSharesRequested.Erase(k);
             });
@@ -1419,7 +1431,9 @@ void CSigSharesManager::BanNode(NodeId nodeId)
     auto& nodeState = it->second;
 
     // Whatever we requested from him, let's request it from someone else now
-    nodeState.requestedSigShares.ForEach([this](const SigShareKey& k, int64_t) {
+    // TODO: remove NO_THREAD_SAFETY_ANALYSIS
+    // using here template ForEach makes impossible to use lock annotation
+    nodeState.requestedSigShares.ForEach([this](const SigShareKey& k, int64_t) NO_THREAD_SAFETY_ANALYSIS {
         AssertLockHeld(cs);
         sigSharesRequested.Erase(k);
     });
