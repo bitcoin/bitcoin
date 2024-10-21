@@ -133,7 +133,6 @@ target_link_libraries(bitcoinqt
     bitcoin_cli
     leveldb
     Boost::headers
-    $<TARGET_NAME_IF_EXISTS:MiniUPnPc::MiniUPnPc>
     $<TARGET_NAME_IF_EXISTS:PkgConfig::libqrencode>
     $<$<PLATFORM_ID:Darwin>:-framework\ AppKit>
     $<$<CXX_COMPILER_ID:MSVC>:shlwapi>
