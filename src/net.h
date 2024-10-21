@@ -10,6 +10,7 @@
 #include <bloom.h>
 #include <chainparams.h>
 #include <compat.h>
+#include <consensus/amount.h>
 #include <fs.h>
 #include <crypto/siphash.h>
 #include <hash.h>

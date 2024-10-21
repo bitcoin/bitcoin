@@ -2,13 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <amount.h>
+#include <test/util/setup_common.h>
+
+#include <consensus/amount.h>
 #include <node/context.h>
 #include <primitives/transaction.h>
 #include <random.h>
-#include <test/util/setup_common.h>
-#include <validation.h>
 #include <util/translation.h>
+#include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/coinselection.h>
 #include <wallet/test/wallet_test_fixture.h>

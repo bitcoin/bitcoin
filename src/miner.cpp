@@ -6,9 +6,9 @@
 
 #include <miner.h>
 
-#include <amount.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>

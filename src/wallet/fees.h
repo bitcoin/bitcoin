@@ -6,7 +6,7 @@
 #ifndef BITCOIN_WALLET_FEES_H
 #define BITCOIN_WALLET_FEES_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 
 class CCoinControl;
 class CFeeRate;

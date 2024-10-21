@@ -4,7 +4,7 @@
 
 #include <test/util/setup_common.h>
 
-#include <amount.h>
+#include <consensus/amount.h>
 #include <consensus/tx_check.h>
 #include <consensus/validation.h>
 #include <evo/assetlocktx.h>

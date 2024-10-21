@@ -5,7 +5,7 @@
 #ifndef BITCOIN_MASTERNODE_PAYMENTS_H
 #define BITCOIN_MASTERNODE_PAYMENTS_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 
 #include <string>
 #include <vector>

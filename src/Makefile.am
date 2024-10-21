@@ -699,11 +699,11 @@ crypto_libbitcoin_crypto_arm_shani_a_SOURCES = crypto/sha256_arm_shani.cpp
 libbitcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_consensus_a_SOURCES = \
-  amount.h \
   arith_uint256.cpp \
   arith_uint256.h \
   bls/bls.cpp \
   bls/bls.h \
+  consensus/amount.h \
   consensus/merkle.cpp \
   consensus/merkle.h \
   consensus/params.h \

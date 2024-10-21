@@ -11,7 +11,7 @@
 
 #include <qt/optionsdialog.h>
 
-#include <amount.h>
+#include <consensus/amount.h>
 
 #include <QLabel>
 #include <QMainWindow>

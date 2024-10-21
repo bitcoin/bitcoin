@@ -15,17 +15,17 @@
 #include <vector>
 
 #include <addressindex.h>
-#include <spentindex.h>
-#include <amount.h>
 #include <coins.h>
+#include <consensus/amount.h>
 #include <gsl/pointers.h>
 #include <indirectmap.h>
+#include <netaddress.h>
 #include <policy/feerate.h>
 #include <policy/packages.h>
 #include <primitives/transaction.h>
-#include <random.h>
-#include <netaddress.h>
 #include <pubkey.h>
+#include <random.h>
+#include <spentindex.h>
 #include <sync.h>
 #include <util/epochguard.h>
 #include <util/hasher.h>

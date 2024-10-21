@@ -6,11 +6,11 @@
 
 #include <rpc/blockchain.h>
 
-#include <amount.h>
 #include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
+#include <consensus/amount.h>
 #include <core_io.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>

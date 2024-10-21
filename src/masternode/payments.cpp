@@ -4,9 +4,9 @@
 
 #include <masternode/payments.h>
 
-#include <amount.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <consensus/amount.h>
 #include <deploymentstatus.h>
 #include <evo/deterministicmns.h>
 #include <governance/classes.h>
