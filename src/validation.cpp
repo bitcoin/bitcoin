@@ -2179,6 +2179,8 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
         if (pvChecks) {
             pvChecks->emplace_back(std::move(check));
         } else if (!check()) {
+            ScriptError error{check.GetScriptError()};
+
             if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
                 // Check whether the failure was caused by a
                 // non-mandatory script verification check, such as
@@ -2192,6 +2194,14 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                         flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheSigStore, &txdata);
                 if (check2())
                     return state.Invalid(TxValidationResult::TX_NOT_STANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(check.GetScriptError())));
+
+                // If the second check failed, it failed due to a mandatory script verification
+                // flag, but the first check might have failed on a non-mandatory script
+                // verification flag.
+                //
+                // Avoid reporting a mandatory script check failure with a non-mandatory error
+                // string by reporting the error from the second check.
+                error = check2.GetScriptError();
             }
             // MANDATORY flag failures correspond to
             // TxValidationResult::TX_CONSENSUS. Because CONSENSUS
@@ -2202,7 +2212,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
             // support, to avoid splitting the network (but this
             // depends on the details of how net_processing handles
             // such errors).
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(error)));
         }
     }
 
