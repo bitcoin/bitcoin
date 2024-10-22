@@ -370,6 +370,7 @@ class AssetLocksTest(DashTestFramework):
         self.wait_for_sporks_same()
 
         txid = self.send_tx(asset_unlock_tx)
+        assert_equal(node.getmempoolentry(txid)['fee'], Decimal("0.0007"))
         is_id = node_wallet.sendtoaddress(node_wallet.getnewaddress(), 1)
         for node in self.nodes:
             self.wait_for_instantlock(is_id, node)
