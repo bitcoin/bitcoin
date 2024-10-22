@@ -129,8 +129,8 @@ static RPCHelpMan getpeerinfo()
                     {RPCResult::Type::STR, "addrbind", /*optional=*/true, "(ip:port) Bind address of the connection to the peer"},
                     {RPCResult::Type::STR, "addrlocal", /*optional=*/true, "(ip:port) Local address as reported by the peer"},
                     {RPCResult::Type::STR, "network", "Network (" + Join(GetNetworkNames(/*append_unroutable=*/true), ", ") + ")"},
-                    {RPCResult::Type::NUM, "mapped_as", /*optional=*/true, "The AS in the BGP route to the peer used for diversifying\n"
-                                                        "peer selection (only available if the asmap config flag is set)"},
+                    {RPCResult::Type::NUM, "mapped_as", /*optional=*/true, "Mapped AS (Autonomous System) number at the end of the BGP route to the peer, used for diversifying\n"
+                                                        "peer selection (only displayed if the -asmap config option is set)"},
                     {RPCResult::Type::STR_HEX, "services", "The services offered"},
                     {RPCResult::Type::ARR, "servicesnames", "the services offered, in human-readable form",
                     {
@@ -1102,12 +1102,12 @@ static RPCHelpMan getaddrmaninfo()
     };
 }
 
-UniValue AddrmanEntryToJSON(const AddrInfo& info, CConnman& connman)
+UniValue AddrmanEntryToJSON(const AddrInfo& info, const CConnman& connman)
 {
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("address", info.ToStringAddr());
-    const auto mapped_as{connman.GetMappedAS(info)};
-    if (mapped_as != 0) {
+    const uint32_t mapped_as{connman.GetMappedAS(info)};
+    if (mapped_as) {
         ret.pushKV("mapped_as", mapped_as);
     }
     ret.pushKV("port", info.GetPort());
@@ -1116,14 +1116,14 @@ UniValue AddrmanEntryToJSON(const AddrInfo& info, CConnman& connman)
     ret.pushKV("network", GetNetworkName(info.GetNetClass()));
     ret.pushKV("source", info.source.ToStringAddr());
     ret.pushKV("source_network", GetNetworkName(info.source.GetNetClass()));
-    const auto source_mapped_as{connman.GetMappedAS(info.source)};
-    if (source_mapped_as != 0) {
+    const uint32_t source_mapped_as{connman.GetMappedAS(info.source)};
+    if (source_mapped_as) {
         ret.pushKV("source_mapped_as", source_mapped_as);
     }
     return ret;
 }
 
-UniValue AddrmanTableToJSON(const std::vector<std::pair<AddrInfo, AddressPosition>>& tableInfos, CConnman& connman)
+UniValue AddrmanTableToJSON(const std::vector<std::pair<AddrInfo, AddressPosition>>& tableInfos, const CConnman& connman)
 {
     UniValue table(UniValue::VOBJ);
     for (const auto& e : tableInfos) {
@@ -1150,14 +1150,14 @@ static RPCHelpMan getrawaddrman()
                 {RPCResult::Type::OBJ_DYN, "table", "buckets with addresses in the address manager table ( new, tried )", {
                     {RPCResult::Type::OBJ, "bucket/position", "the location in the address manager table (<bucket>/<position>)", {
                         {RPCResult::Type::STR, "address", "The address of the node"},
-                        {RPCResult::Type::NUM, "mapped_as", /*optional=*/true, "The ASN mapped to the IP of this peer per our current ASMap"},
+                        {RPCResult::Type::NUM, "mapped_as", /*optional=*/true, "Mapped AS (Autonomous System) number at the end of the BGP route to the peer, used for diversifying peer selection (only displayed if the -asmap config option is set)"},
                         {RPCResult::Type::NUM, "port", "The port number of the node"},
                         {RPCResult::Type::STR, "network", "The network (" + Join(GetNetworkNames(), ", ") + ") of the address"},
                         {RPCResult::Type::NUM, "services", "The services offered by the node"},
                         {RPCResult::Type::NUM_TIME, "time", "The " + UNIX_EPOCH_TIME + " when the node was last seen"},
                         {RPCResult::Type::STR, "source", "The address that relayed the address to us"},
                         {RPCResult::Type::STR, "source_network", "The network (" + Join(GetNetworkNames(), ", ") + ") of the source address"},
-                        {RPCResult::Type::NUM, "source_mapped_as", /*optional=*/true, "The ASN mapped to the IP of this peer's source per our current ASMap"}
+                        {RPCResult::Type::NUM, "source_mapped_as", /*optional=*/true, "Mapped AS (Autonomous System) number at the end of the BGP route to the source, used for diversifying peer selection (only displayed if the -asmap config option is set)"}
                     }}
                 }}
             }
