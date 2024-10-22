@@ -47,6 +47,7 @@
 #include <versionbits.h>
 #include <warnings.h>
 
+#include <evo/assetlocktx.h>
 #include <evo/cbtx.h>
 #include <evo/evodb.h>
 #include <evo/mnhftx.h>
@@ -2423,6 +2424,11 @@ static RPCHelpMan getblockstats()
             }
 
             CAmount txfee = tx_total_in - tx_total_out;
+
+            if (tx->IsPlatformTransfer()) {
+                txfee = CHECK_NONFATAL(GetTxPayload<CAssetUnlockPayload>(*tx))->getFee();
+            }
+
             CHECK_NONFATAL(MoneyRange(txfee));
             if (do_medianfee) {
                 fee_array.push_back(txfee);

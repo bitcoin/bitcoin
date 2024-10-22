@@ -365,6 +365,7 @@ class AssetLocksTest(DashTestFramework):
         self.wait_for_sporks_same()
 
         txid = self.send_tx(asset_unlock_tx)
+        assert_equal(node.getmempoolentry(txid)['fee'], Decimal("0.0007"))
         is_id = node_wallet.sendtoaddress(node_wallet.getnewaddress(), 1)
         for node in self.nodes:
             self.wait_for_instantlock(is_id, node)
@@ -403,6 +404,9 @@ class AssetLocksTest(DashTestFramework):
         self.mempool_size -= 2
         self.check_mempool_size()
         block_asset_unlock = node.getrawtransaction(asset_unlock_tx.rehash(), 1)['blockhash']
+        self.log.info("Checking rpc `getblock` and `getblockstats` succeeds as they use own fee calculation mechanism")
+        assert_equal(node.getblockstats(node.getblockcount())['maxfee'], tiny_amount)
+        node.getblock(block_asset_unlock, 2)
 
         self.send_tx(asset_unlock_tx,
             expected_error = "Transaction already in block chain",
