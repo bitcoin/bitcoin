@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <evo/assetlocktx.h>
 #include <evo/chainhelper.h>
 #include <evo/deterministicmns.h>
 #include <governance/classes.h>
@@ -406,6 +407,11 @@ static RPCHelpMan masternode_payments()
             if (tx->IsCoinBase()) {
                 continue;
             }
+            if (tx->IsPlatformTransfer()) {
+                nBlockFees += CHECK_NONFATAL(GetTxPayload<CAssetUnlockPayload>(*tx))->getFee();
+                continue;
+            }
+
             CAmount nValueIn{0};
             for (const auto& txin : tx->vin) {
                 uint256 blockHashTmp;
