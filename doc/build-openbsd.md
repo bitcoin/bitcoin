@@ -14,7 +14,7 @@ pkg_add git gmake libevent libtool
 pkg_add qt5 # (optional for enabling the GUI)
 pkg_add autoconf # (select highest version, e.g. 2.69)
 pkg_add automake # (select highest version, e.g. 1.15)
-pkg_add python # (select highest version, e.g. 3.8)
+pkg_add python # (select highest version, e.g. 3.9)
 pkg_add gmp
 pkg_add bash
 pkg_add boost
