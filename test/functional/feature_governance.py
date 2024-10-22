@@ -302,7 +302,7 @@ class DashGovernanceTest (DashTestFramework):
 
         self.log.info("Move a few block past the recent superblock height and make sure we have no new votes")
         for _ in range(5):
-            with self.nodes[1].assert_debug_log("", [f"Voting NO-FUNDING for trigger:{winning_trigger_hash} success"]):
+            with self.nodes[1].assert_debug_log(expected_msgs=[""], unexpected_msgs=[f"Voting NO-FUNDING for trigger:{winning_trigger_hash} success"]):
                 self.bump_mocktime(1)
                 self.generate(self.nodes[0], 1, sync_fun=self.sync_blocks())
             # Votes on both triggers should NOT change

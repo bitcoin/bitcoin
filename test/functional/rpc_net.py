@@ -114,7 +114,7 @@ class NetTest(DashTestFramework):
         no_version_peer_id = 3
         no_version_peer_conntime = self.mocktime
         with self.nodes[0].assert_debug_log([f"Added connection peer={no_version_peer_id}"]):
-            self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False)
+            no_version_peer = self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False)
         peer_info = self.nodes[0].getpeerinfo()[no_version_peer_id]
         peer_info.pop("addr")
         peer_info.pop("addrbind")
@@ -155,7 +155,8 @@ class NetTest(DashTestFramework):
                 "version": 0,
             },
         )
-        self.nodes[0].disconnect_p2ps()
+        no_version_peer.peer_disconnect()
+        self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 3)
 
     def test_getnettotals(self):
         self.log.info("Test getnettotals")
