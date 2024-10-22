@@ -334,7 +334,10 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, bool include_add
     }
 
     if (calculate_fee) {
-        const CAmount fee = amt_total_in - amt_total_out;
+        CAmount fee = amt_total_in - amt_total_out;
+        if (tx.IsPlatformTransfer()) {
+            fee = CHECK_NONFATAL(GetTxPayload<CAssetUnlockPayload>(tx))->getFee();
+        }
         CHECK_NONFATAL(MoneyRange(fee));
         entry.pushKV("fee", ValueFromAmount(fee));
     }
