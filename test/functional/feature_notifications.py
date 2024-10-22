@@ -43,14 +43,17 @@ class NotificationsTest(DashTestFramework):
         os.mkdir(self.instantsendnotify_dir)
 
         # -alertnotify and -blocknotify on node0, walletnotify on node1
-        self.extra_args[0].append("-alertnotify=echo > {}".format(os.path.join(self.alertnotify_dir, '%s')))
-        self.extra_args[0].append("-blocknotify=echo > {}".format(os.path.join(self.blocknotify_dir, '%s')))
-        self.extra_args[1].append("-rescan")
-        self.extra_args[1].append("-walletnotify=echo %h_%b > {}".format(os.path.join(self.walletnotify_dir, notify_outputname('%w', '%s'))))
-
         # -chainlocknotify on node0, -instantsendnotify on node1
-        self.extra_args[0].append("-chainlocknotify=echo > {}".format(os.path.join(self.chainlocknotify_dir, '%s')))
-        self.extra_args[1].append("-instantsendnotify=echo > {}".format(os.path.join(self.instantsendnotify_dir, notify_outputname('%w', '%s'))))
+        self.extra_args = [[
+            "-alertnotify=echo > {}".format(os.path.join(self.alertnotify_dir, '%s')),
+            "-blocknotify=echo > {}".format(os.path.join(self.blocknotify_dir, '%s')),
+            "-chainlocknotify=echo > {}".format(os.path.join(self.chainlocknotify_dir, '%s')),
+        ], [
+            "-rescan",
+            "-walletnotify=echo %h_%b > {}".format(os.path.join(self.walletnotify_dir, notify_outputname('%w', '%s'))),
+            "-instantsendnotify=echo > {}".format(os.path.join(self.instantsendnotify_dir, notify_outputname('%w', '%s'))),
+        ],
+        [], [], [], []]
 
         self.wallet_names = [self.default_wallet_name, self.wallet]
         super().setup_network()
