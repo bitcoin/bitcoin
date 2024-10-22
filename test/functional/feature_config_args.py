@@ -286,7 +286,6 @@ class ConfArgsTest(BitcoinTestFramework):
 
         # Create the directory and ensure the config file now works
         os.mkdir(new_data_dir)
-        # Temporarily disabled, because this test would access the user's home dir (~/.bitcoin)
         self.start_node(0, [f'-conf={conf_file}'])
         self.stop_node(0)
         assert os.path.exists(os.path.join(new_data_dir, self.chain, 'blocks'))
