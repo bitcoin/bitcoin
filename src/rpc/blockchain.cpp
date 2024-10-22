@@ -2452,7 +2452,7 @@ static RPCHelpMan getblockstats()
 
             CAmount txfee = tx_total_in - tx_total_out;
 
-            if (tx->nType == TRANSACTION_ASSET_UNLOCK) {
+            if (tx->IsPlatformTransfer()) {
                 txfee = CHECK_NONFATAL(GetTxPayload<CAssetUnlockPayload>(*tx))->getFee();
             }
 
