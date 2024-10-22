@@ -411,7 +411,9 @@ static RPCHelpMan masternode_payments()
                 continue;
             }
             if (tx->IsPlatformTransfer()) {
-                nBlockFees += CHECK_NONFATAL(GetTxPayload<CAssetUnlockPayload>(*tx))->getFee();
+                auto payload = GetTxPayload<CAssetUnlockPayload>(*tx);
+                CHECK_NONFATAL(payload);
+                nBlockFees += payload->getFee();
                 continue;
             }
 
