@@ -3068,7 +3068,7 @@ const std::vector<RPCResult> RPCHelpForChainstate{
     {RPCResult::Type::NUM, "blocks", "number of blocks in this chainstate"},
     {RPCResult::Type::STR_HEX, "bestblockhash", "blockhash of the tip"},
     {RPCResult::Type::NUM, "difficulty", "difficulty of the tip"},
-    {RPCResult::Type::NUM, "verificationprogress", "progress towards the network tip"},
+    {RPCResult::Type::NUM, "verificationprogress", "estimate of verification progress [0..1]"},
     {RPCResult::Type::STR_HEX, "snapshot_blockhash", /*optional=*/true, "the base block of the snapshot this chainstate is based on, if any"},
     {RPCResult::Type::NUM, "coins_db_cache_bytes", "size of the coinsdb cache"},
     {RPCResult::Type::NUM, "coins_tip_cache_bytes", "size of the coinstip cache"},
@@ -3097,6 +3097,7 @@ return RPCHelpMan{
     UniValue obj(UniValue::VOBJ);
 
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    const int headers{chainman.m_best_header ? chainman.m_best_header->nHeight : -1};
 
     auto make_chain_data = [&](const Chainstate& cs, bool validated) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         AssertLockHeld(::cs_main);
@@ -3106,11 +3107,12 @@ return RPCHelpMan{
         }
         const CChain& chain = cs.m_chain;
         const CBlockIndex* tip = chain.Tip();
+        const int height{chain.Height()};
 
-        data.pushKV("blocks",                (int)chain.Height());
+        data.pushKV("blocks", height);
         data.pushKV("bestblockhash",         tip->GetBlockHash().GetHex());
         data.pushKV("difficulty", GetDifficulty(*tip));
-        data.pushKV("verificationprogress",  GuessVerificationProgress(Params().TxData(), tip));
+        data.pushKV("verificationprogress", height == headers ? 1 : GuessVerificationProgress(Params().TxData(), tip));
         data.pushKV("coins_db_cache_bytes",  cs.m_coinsdb_cache_size_bytes);
         data.pushKV("coins_tip_cache_bytes", cs.m_coinstip_cache_size_bytes);
         if (cs.m_from_snapshot_blockhash) {
@@ -3120,7 +3122,7 @@ return RPCHelpMan{
         return data;
     };
 
-    obj.pushKV("headers", chainman.m_best_header ? chainman.m_best_header->nHeight : -1);
+    obj.pushKV("headers", headers);
 
     const auto& chainstates = chainman.GetAll();
     UniValue obj_chainstates{UniValue::VARR};
