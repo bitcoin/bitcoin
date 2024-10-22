@@ -2,6 +2,8 @@ name: Guix Build
 
 permissions:
   packages: write
+  id-token: write
+  attestations: write
 
 on:
   pull_request_target:
@@ -127,3 +129,7 @@ jobs:
           path: |
             ${{ github.workspace }}/dash/guix-build*/output/${{ matrix.build_target }}/
 
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: ${{ github.workspace }}/dash/guix-build*/output/${{ matrix.build_target }}/*
