@@ -431,6 +431,8 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Payment to yourself");
     case TransactionRecord::Generated:
         return tr("Mined");
+    case TransactionRecord::PlatformTransfer:
+        return tr("Platform Transfer");
 
     case TransactionRecord::CoinJoinMixing:
         return tr("%1 Mixing").arg(QString::fromStdString(gCoinJoinName));
@@ -443,9 +445,10 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
     case TransactionRecord::CoinJoinSend:
         return tr("%1 Send").arg(QString::fromStdString(gCoinJoinName));
 
-    default:
-        return QString();
-    }
+    case TransactionRecord::Other:
+        break; // use fail-over here
+    } // no default case, so the compiler can warn about missing cases
+    return QString();
 }
 
 QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx) const
@@ -473,14 +476,20 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
     case TransactionRecord::SendToAddress:
     case TransactionRecord::Generated:
     case TransactionRecord::CoinJoinSend:
+    case TransactionRecord::PlatformTransfer:
         return formatAddressLabel(wtx->strAddress, wtx->label, tooltip) + watchAddress;
     case TransactionRecord::SendToOther:
         return QString::fromStdString(wtx->strAddress) + watchAddress;
     case TransactionRecord::SendToSelf:
         return formatAddressLabel(wtx->strAddress, wtx->label, tooltip) + watchAddress;
-    default:
-        return tr("(n/a)") + watchAddress;
-    }
+    case TransactionRecord::CoinJoinMixing:
+    case TransactionRecord::CoinJoinCollateralPayment:
+    case TransactionRecord::CoinJoinMakeCollaterals:
+    case TransactionRecord::CoinJoinCreateDenominations:
+    case TransactionRecord::Other:
+        break; // use fail-over here
+    } // no default case, so the compiler can warn about missing cases
+    return tr("(n/a)") + watchAddress;
 }
 
 QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
@@ -491,6 +500,7 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::SendToAddress:
     case TransactionRecord::Generated:
+    case TransactionRecord::PlatformTransfer:
     case TransactionRecord::CoinJoinSend:
     case TransactionRecord::RecvWithCoinJoin:
         {
@@ -504,9 +514,11 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
     case TransactionRecord::CoinJoinMakeCollaterals:
     case TransactionRecord::CoinJoinCollateralPayment:
         return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BAREADDRESS);
-    default:
+    case TransactionRecord::SendToOther:
+    case TransactionRecord::RecvFromOther:
+    case TransactionRecord::Other:
         break;
-    }
+    } // no default case, so the compiler can warn about missing cases
     return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT);
 }
 
@@ -530,6 +542,7 @@ QVariant TransactionTableModel::amountColor(const TransactionRecord *rec) const
     case TransactionRecord::RecvWithCoinJoin:
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::RecvFromOther:
+    case TransactionRecord::PlatformTransfer:
         return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::GREEN);
     case TransactionRecord::CoinJoinSend:
     case TransactionRecord::SendToAddress:

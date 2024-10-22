@@ -22,6 +22,10 @@ namespace llmq {
 class CQuorumManager;
 } // namespace llmq
 
+// Forward declaration from core_io to get rid of circular dependency
+UniValue ValueFromAmount(const CAmount amount);
+void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex, bool include_addresses);
+
 class CAssetLockPayload
 {
 public:
@@ -51,14 +55,18 @@ public:
 
     [[nodiscard]] UniValue ToJson() const
     {
-        UniValue obj;
-        obj.setObject();
-        obj.pushKV("version", int(nVersion));
-        UniValue outputs;
-        outputs.setArray();
-        for (const CTxOut& out : creditOutputs) {
-            outputs.push_back(out.ToString());
+        UniValue outputs(UniValue::VARR);
+        for (const CTxOut& credit_output : creditOutputs) {
+            UniValue out(UniValue::VOBJ);
+            out.pushKV("value", ValueFromAmount(credit_output.nValue));
+            out.pushKV("valueSat", credit_output.nValue);
+            UniValue spk(UniValue::VOBJ);
+            ScriptPubKeyToUniv(credit_output.scriptPubKey, spk, /* fIncludeHex = */ true, /* include_addresses = */ false);
+            out.pushKV("scriptPubKey", spk);
+            outputs.push_back(out);
         }
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("version", int(nVersion));
         obj.pushKV("creditOutputs", outputs);
         return obj;
     }

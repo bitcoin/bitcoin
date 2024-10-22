@@ -30,12 +30,9 @@ from test_framework.messages import (
 from test_framework.script import (
     CScript,
     OP_CHECKSIG,
-    OP_DUP,
-    OP_EQUALVERIFY,
-    OP_HASH160,
     OP_RETURN,
-    hash160,
 )
+from test_framework.script_util import key_to_p2pkh_script
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import (
     assert_equal,
@@ -44,6 +41,7 @@ from test_framework.util import (
     get_bip9_details,
     hex_str_to_bytes,
 )
+from test_framework.wallet_util import bytes_to_wif
 
 llmq_type_test = 106 # LLMQType::LLMQ_TEST_PLATFORM
 tiny_amount = int(Decimal("0.0007") * COIN)
@@ -66,8 +64,8 @@ class AssetLocksTest(DashTestFramework):
         tmp_amount = amount
         if tmp_amount > COIN:
             tmp_amount -= COIN
-            credit_outputs.append(CTxOut(COIN, CScript([OP_DUP, OP_HASH160, hash160(pubkey), OP_EQUALVERIFY, OP_CHECKSIG])))
-        credit_outputs.append(CTxOut(tmp_amount, CScript([OP_DUP, OP_HASH160, hash160(pubkey), OP_EQUALVERIFY, OP_CHECKSIG])))
+            credit_outputs.append(CTxOut(COIN, key_to_p2pkh_script(pubkey)))
+        credit_outputs.append(CTxOut(tmp_amount, key_to_p2pkh_script(pubkey)))
 
         lockTx_payload = CAssetLockTx(1, credit_outputs)
 
@@ -260,6 +258,8 @@ class AssetLocksTest(DashTestFramework):
 
         key = ECKey()
         key.generate()
+        privkey = bytes_to_wif(key.get_bytes())
+        node_wallet.importprivkey(privkey)
         pubkey = key.get_pubkey().get_bytes()
 
         self.test_asset_locks(node_wallet, node, pubkey)
@@ -281,7 +281,11 @@ class AssetLocksTest(DashTestFramework):
         self.check_mempool_result(tx=asset_lock_tx, result_expected={'allowed': True, 'fees': {'base': Decimal(str(tiny_amount / COIN))}})
         self.validate_credit_pool_balance(0)
         txid_in_block = self.send_tx(asset_lock_tx)
-        assert "assetLockTx" in node.getrawtransaction(txid_in_block, 1)
+        rpc_tx = node.getrawtransaction(txid_in_block, 1)
+        assert_equal(len(rpc_tx["assetLockTx"]["creditOutputs"]), 2)
+        assert_equal(rpc_tx["assetLockTx"]["creditOutputs"][0]["valueSat"] + rpc_tx["assetLockTx"]["creditOutputs"][1]["valueSat"], locked_1)
+        assert_equal(rpc_tx["assetLockTx"]["creditOutputs"][0]["scriptPubKey"]["hex"], key_to_p2pkh_script(pubkey).hex())
+        assert_equal(rpc_tx["assetLockTx"]["creditOutputs"][1]["scriptPubKey"]["hex"], key_to_p2pkh_script(pubkey).hex())
         self.validate_credit_pool_balance(0)
         node.generate(1)
         assert_equal(self.get_credit_pool_balance(node=node), locked_1)
@@ -361,6 +365,7 @@ class AssetLocksTest(DashTestFramework):
         self.wait_for_sporks_same()
 
         txid = self.send_tx(asset_unlock_tx)
+        assert_equal(node.getmempoolentry(txid)['fee'], Decimal("0.0007"))
         is_id = node_wallet.sendtoaddress(node_wallet.getnewaddress(), 1)
         for node in self.nodes:
             self.wait_for_instantlock(is_id, node)
@@ -399,6 +404,9 @@ class AssetLocksTest(DashTestFramework):
         self.mempool_size -= 2
         self.check_mempool_size()
         block_asset_unlock = node.getrawtransaction(asset_unlock_tx.rehash(), 1)['blockhash']
+        self.log.info("Checking rpc `getblock` and `getblockstats` succeeds as they use own fee calculation mechanism")
+        assert_equal(node.getblockstats(node.getblockcount())['maxfee'], tiny_amount)
+        node.getblock(block_asset_unlock, 2)
 
         self.send_tx(asset_unlock_tx,
             expected_error = "Transaction already in block chain",
@@ -477,15 +485,31 @@ class AssetLocksTest(DashTestFramework):
         self.check_mempool_result(tx=asset_unlock_tx_full, result_expected={'allowed': True, 'fees': {'base': Decimal(str(tiny_amount / COIN))}})
 
         txid_in_block = self.send_tx(asset_unlock_tx_full)
+        expected_balance = (Decimal(self.get_credit_pool_balance()) - Decimal(tiny_amount))
         node.generate(1)
         self.sync_all()
-        self.log.info("Check txid_in_block was mined...")
+        self.log.info("Check txid_in_block was mined")
         block = node.getblock(node.getbestblockhash())
         assert txid_in_block in block['tx']
         self.validate_credit_pool_balance(0)
 
+        self.log.info(f"Check status of withdrawal and try to spend it")
+        withdrawal_status = node_wallet.gettransaction(txid_in_block)
+        assert_equal(withdrawal_status['amount'] * COIN, expected_balance)
+        assert_equal(withdrawal_status['details'][0]['category'], 'platform-transfer')
+
+        spend_withdrawal_hex = node_wallet.createrawtransaction([{'txid': txid_in_block, 'vout' : 0}], { node_wallet.getnewaddress() : (expected_balance - Decimal(tiny_amount)) / COIN})
+        spend_withdrawal_hex = node_wallet.signrawtransactionwithwallet(spend_withdrawal_hex)['hex']
+        spend_withdrawal = tx_from_hex(spend_withdrawal_hex)
+        self.check_mempool_result(tx=spend_withdrawal, result_expected={'allowed': True, 'fees': {'base': Decimal(str(tiny_amount / COIN))}})
+        spend_txid_in_block = self.send_tx(spend_withdrawal)
+
+        node.generate(1)
+        block = node.getblock(node.getbestblockhash())
+        assert spend_txid_in_block in block['tx']
+
         self.log.info("Fast forward to the next day to reset all current unlock limits...")
-        self.slowly_generate_batch(blocks_in_one_day  + 1)
+        self.slowly_generate_batch(blocks_in_one_day)
         self.mine_quorum(llmq_type_name="llmq_test_platform", llmq_type=106)
 
         total = self.get_credit_pool_balance()
