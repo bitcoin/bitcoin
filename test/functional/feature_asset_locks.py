@@ -407,6 +407,9 @@ class AssetLocksTest(DashTestFramework):
         self.mempool_size -= 2
         self.check_mempool_size()
         block_asset_unlock = node.getrawtransaction(asset_unlock_tx.rehash(), 1)['blockhash']
+        self.log.info("Checking rpc `getblock` and `getblockstats` succeeds as they use own fee calculation mechanism")
+        assert_equal(node.getblockstats(node.getblockcount())['maxfee'], tiny_amount)
+        node.getblock(block_asset_unlock, 2)
 
         self.send_tx(asset_unlock_tx,
             expected_error = "Transaction already in block chain",
