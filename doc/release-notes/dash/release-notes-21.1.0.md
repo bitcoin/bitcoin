@@ -1,8 +1,9 @@
-# Dash Core version v21.1.1
+# Dash Core version v21.1.0
 
-This is a new patch version release, bringing important bugfixes.
+This is a new minor version release, bringing important bugfixes.
 
-This release is **optional** but recommended for all nodes.
+This release is **mandatory** for all masternodes.
+This release is optional but recommended for all other nodes.
 
 Please report bugs using the issue tracker at GitHub:
 
@@ -33,13 +34,18 @@ reindex or re-sync the whole chain.
 
 # Notable changes
 
-- Core now categorizes asset unlock transactions as "Platform Transfers" on the Transactions tab in Dash-Qt and in the output of the `gettransaction` RPC (#6131)
-- Persist Coinjoin Denoms options changes made via GUI over restarts (#6208)
-- Fix incorrect payment predictions for evonodes in Dash-Qt and in RPC `masternode winners` (#6222)
-- `creditOutputs` entries in various RPCs that output transaction JSON are shown as objects now instead of being shown as strings (#6229)
-- Updated PGP key for builder 'pasta' to reflect new subkeys. You may need to reimport this key to validate signatures. (#6290)
-- Build failures on Ubuntu 24.10 / clang 19.1.1 resolved (#6328)
-- RPC errors in `masternode payments`, `getblock`, `getblockstats` related to Asset Unlock parsing have been fixed (#6336)
+Allow EHF Resigning
+-------------------
+
+During implementation, the values for requestID and msgHash for EHF signing were switched. As a result, a masternode
+which participated in an earlier failed attempt to form an EHF message is unable to participate in subsequent
+attempts. This is because the LLMQ Signing System requires that the requestID be unique, and that a node will not
+sign two different msgHash for the same requestID. See the [forum post](https://www.dash.org/forum/index.php?threads/ehf-activation-issues.55146/)
+explaining it further.
+
+As there is no need to restrict double signing for EHF, we now allow signing of multiple msgHash's for a single EHF
+requestID. Once a sufficient number of masternodes upgrade to v21.1, the EHF message will be automatically signed and
+mined.
 
 # v21.1.0 Change log
 
@@ -49,10 +55,10 @@ See detailed [set of changes][set-of-changes].
 
 Thanks to everyone who directly contributed to this release:
 
-- Kittywhiskers Van Gogh
 - Konstantin Akimov
 - PastaPastaPasta
 - UdjinM6
+- ogabrielides
 
 As well as everyone that submitted issues, reviewed pull requests and helped
 debug the release candidates.
@@ -61,7 +67,6 @@ debug the release candidates.
 
 These release are considered obsolete. Old release notes can be found here:
 
-- [v21.1.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-21.1.0.md) released Aug/8/2024
 - [v21.0.2](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-21.0.2.md) released Aug/1/2024
 - [v21.0.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-21.0.0.md) released Jul/25/2024
 - [v20.1.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-20.1.1.md) released April/3/2024
@@ -113,4 +118,4 @@ These release are considered obsolete. Old release notes can be found here:
 - [v0.10.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.10.0.md) released Sep/25/2014
 - [v0.9.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.9.0.md) released Mar/13/2014
 
-[set-of-changes]: https://github.com/dashpay/dash/compare/v21.1.0...dashpay:v21.1.1
+[set-of-changes]: https://github.com/dashpay/dash/compare/v21.0.2...dashpay:v21.1.0
