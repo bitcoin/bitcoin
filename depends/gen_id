@@ -58,6 +58,17 @@
     echo "CXX_STANDARD=${CXX_STANDARD}"
     echo "END CXX"
 
+    # We use lld when cross-compiling for macOS, and it's version should
+    # be tied to LLVM. However someone compiling with GCC and -fuse-ld=lld
+    # would not see a cache bust if the LLVM toolchain was updated.
+    echo "BEGIN lld"
+    bash -c "ld.lld --version"
+    echo "END lld"
+
+    echo "BEGIN mold"
+    bash -c "mold --version"
+    echo "END mold"
+
     echo "BEGIN AR"
     bash -c "${AR} --version"
     env | grep '^AR_'
