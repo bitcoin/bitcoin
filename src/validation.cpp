@@ -1205,9 +1205,10 @@ bool MemPoolAccept::PackageMempoolChecks(const std::vector<CTransactionRef>& txn
                                      "package RBF failed: " + err_tup.value().second, "");
     }
 
-    LogDebug(BCLog::TXPACKAGES, "package RBF checks passed: parent %s (wtxid=%s), child %s (wtxid=%s)\n",
+    LogDebug(BCLog::TXPACKAGES, "package RBF checks passed: parent %s (wtxid=%s), child %s (wtxid=%s), package hash (%s)\n",
         txns.front()->GetHash().ToString(), txns.front()->GetWitnessHash().ToString(),
-        txns.back()->GetHash().ToString(), txns.back()->GetWitnessHash().ToString());
+        txns.back()->GetHash().ToString(), txns.back()->GetWitnessHash().ToString(),
+        GetPackageHash(txns).ToString());
 
 
     return true;
