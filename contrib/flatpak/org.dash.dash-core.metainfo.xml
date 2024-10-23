@@ -24,6 +24,7 @@
     <release date="2024-10-22" version="21.1.1"/>
   </releases>
   <content_rating type="oars-1.1"/>
+  <content_attribute id="money-purchasing">intense</content_attribute>
   <developer id="org.dash">
     <name>Dash Core Group</name>
   </developer>
