@@ -369,6 +369,14 @@ class RPCPackagesTest(BitcoinTestFramework):
     def test_submitpackage(self):
         node = self.nodes[0]
 
+        self.log.info("Submitpackage only allows valid hex inputs")
+        valid_tx_list = self.wallet.create_self_transfer_chain(chain_length=2)
+        hex_list = [valid_tx_list[0]["hex"][:-1] + 'X', valid_tx_list[1]["hex"]]
+        txid_list = [valid_tx_list[0]["txid"], valid_tx_list[1]["txid"]]
+        assert_raises_rpc_error(-22, "TX decode failed:", node.submitpackage, hex_list)
+        assert txid_list[0] not in node.getrawmempool()
+        assert txid_list[1] not in node.getrawmempool()
+
         self.log.info("Submitpackage valid packages with 1 child and some number of parents")
         for num_parents in [1, 2, 24]:
             self.test_submit_child_with_parents(num_parents, False)
