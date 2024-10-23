@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.dash.dash-core</id>
+  <name>Dash Core</name>
+  <project_license>MIT</project_license>
+  <metadata_license>CC0-1.0</metadata_license>
+  <summary>Fully validating Dash peer-to-peer network node, wallet and GUI</summary>
+  <url type="homepage">https://dash.org/</url>
+  <url type="bugtracker">https://github.com/dashpay/dash/issues/new?title=[flatpak]</url>
+  <launchable type="desktop-id">org.dash.dash-core.desktop</launchable>
+  <description>
+    <p>
+    Dash Core connects to the Dash peer-to-peer network to download and
+    fully validate blocks and transactions. It also includes a wallet and
+    graphical user interface.
+    </p>
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <image type="source">https://docs.dash.org/en/stable/_images/overview.png</image>
+    </screenshot>
+  </screenshots>
+  <releases>
+    <release date="2024-10-22" version="21.1.1"/>
+  </releases>
+  <content_rating type="oars-1.1"/>
+  <developer id="org.dash">
+    <name>Dash Core Group</name>
+  </developer>
+</component>
