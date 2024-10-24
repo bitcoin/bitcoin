@@ -283,6 +283,14 @@ BOOST_AUTO_TEST_CASE(noncontextual_package_tests)
         BOOST_CHECK(GetPackageHash({tx_parent}) != GetPackageHash({tx_child}));
         BOOST_CHECK(GetPackageHash({tx_child, tx_child}) != GetPackageHash({tx_child}));
         BOOST_CHECK(GetPackageHash({tx_child, tx_parent}) != GetPackageHash({tx_child, tx_child}));
+
+        // IsChildWithParents* can also be a singleton
+        BOOST_CHECK(IsChildWithParents({tx_child}));
+        BOOST_CHECK(IsChildWithParentsTree({tx_child}));
+
+        // But must not be empty
+        BOOST_CHECK(!IsChildWithParents({}));
+        BOOST_CHECK(!IsChildWithParentsTree({}));
     }
 
     // 24 Parents and 1 Child

@@ -369,8 +369,8 @@ class RPCPackagesTest(BitcoinTestFramework):
     def test_submitpackage(self):
         node = self.nodes[0]
 
-        self.log.info("Submitpackage valid packages with 1 child and some number of parents")
-        for num_parents in [1, 2, 24]:
+        self.log.info("Submitpackage valid packages with 1 child and some number of parents (or none)")
+        for num_parents in [0, 1, 2, 24]:
             self.test_submit_child_with_parents(num_parents, False)
             self.test_submit_child_with_parents(num_parents, True)
 
@@ -381,10 +381,9 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert_raises_rpc_error(-25, "package topology disallowed", node.submitpackage, chain_hex)
         assert_equal(legacy_pool, node.getrawmempool())
 
-        assert_raises_rpc_error(-8, f"Array must contain between 2 and {MAX_PACKAGE_COUNT} transactions.", node.submitpackage, [])
-        assert_raises_rpc_error(-8, f"Array must contain between 2 and {MAX_PACKAGE_COUNT} transactions.", node.submitpackage, [chain_hex[0]] * 1)
+        assert_raises_rpc_error(-8, f"Array must contain between 1 and {MAX_PACKAGE_COUNT} transactions.", node.submitpackage, [])
         assert_raises_rpc_error(
-            -8, f"Array must contain between 2 and {MAX_PACKAGE_COUNT} transactions.",
+            -8, f"Array must contain between 1 and {MAX_PACKAGE_COUNT} transactions.",
             node.submitpackage, [chain_hex[0]] * (MAX_PACKAGE_COUNT + 1)
         )
 
