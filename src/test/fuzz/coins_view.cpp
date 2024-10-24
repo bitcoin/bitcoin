@@ -237,7 +237,7 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                 assert(expected_code_path);
             },
             [&] {
-                (void)AreInputsStandard(CTransaction{random_mutable_transaction}, coins_view_cache);
+                (void)HasNonStandardInput(CTransaction{random_mutable_transaction}, coins_view_cache);
             },
             [&] {
                 TxValidationState state;
