@@ -43,20 +43,17 @@ int main(void) {
     assert(return_val);
 
     /*** Key Generation ***/
-
-    /* If the secret key is zero or out of range (bigger than secp256k1's
-     * order), we try to sample a new key. Note that the probability of this
-     * happening is negligible. */
-    while (1) {
-        if (!fill_random(seckey, sizeof(seckey))) {
-            printf("Failed to generate randomness\n");
-            return 1;
-        }
-        /* Try to create a keypair with a valid context, it should only fail if
-         * the secret key is zero or out of range. */
-        if (secp256k1_keypair_create(ctx, &keypair, seckey)) {
-            break;
-        }
+    if (!fill_random(seckey, sizeof(seckey))) {
+        printf("Failed to generate randomness\n");
+        return 1;
+    }
+    /* Try to create a keypair with a valid context. This only fails if the
+     * secret key is zero or out of range (greater than secp256k1's order). Note
+     * that the probability of this occurring is negligible with a properly
+     * functioning random number generator. */
+    if (!secp256k1_keypair_create(ctx, &keypair, seckey)) {
+        printf("Generated secret key is invalid. This indicates an issue with the random number generator.\n");
+        return 1;
     }
 
     /* Extract the X-only public key from the keypair. We pass NULL for
