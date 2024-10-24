@@ -38,7 +38,7 @@ Alternately, you can install [Cap'n Proto](https://capnproto.org/) and [libmulti
 
 Cross process Node, Wallet, and Chain interfaces are defined in
 [`src/interfaces/`](../src/interfaces/). These are C++ classes which follow
-[conventions](developer-notes.md#internal-interface-guidelines), like passing
+[conventions](../developer-notes.md#internal-interface-guidelines), like passing
 serializable arguments so they can be called from different processes, and
 making methods pure virtual so they can have proxy implementations that forward
 calls between processes.

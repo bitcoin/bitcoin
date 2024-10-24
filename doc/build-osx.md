@@ -231,7 +231,6 @@ There are many ways to configure Dash Core, here are a few common examples:
 ##### Wallet (BDB + SQlite) Support, No GUI:
 
 If `berkeley-db@4` is installed, then legacy wallet support will be built.
-If `berkeley-db@4` is not installed, then this will throw an error.
 If `sqlite` is installed, then descriptor wallet support will also be built.
 Additionally, this explicitly disables the GUI.
 
