@@ -129,7 +129,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         try:
             self.setup()
-            self.run_test()
+            if self.options.test_methods:
+                self.run_custom_test()
+            else:
+                self.run_test()
+
         except JSONRPCException:
             self.log.exception("JSONRPC error")
             self.success = TestStatus.FAILED
@@ -154,6 +158,15 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         finally:
             exit_code = self.shutdown()
             sys.exit(exit_code)
+
+    def run_custom_test(self):
+        for method_name in self.options.test_methods:
+            method = getattr(self, method_name, None)
+            if not method:
+                raise AttributeError(f"No method with name {method_name}")
+            if not callable(method):
+                raise TypeError(f"{method_name} is not callable")
+            method()
 
     def parse_args(self, test_file):
         previous_releases_path = os.getenv("PREVIOUS_RELEASES_DIR") or os.getcwd() + "/releases"
@@ -194,6 +207,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                             help="use BIP324 v2 connections between all nodes by default")
         parser.add_argument("--v1transport", dest="v1transport", default=False, action="store_true",
                             help="Explicitly use v1 transport (can be used to overwrite global --v2transport option)")
+        parser.add_argument("--test_methods", dest="test_methods", nargs='*',
+                            help="Run specified test methods sequentially instead of the full test. Use only for methods that do not depend on any context set up in run_test or other methods.")
 
         self.add_options(parser)
         # Running TestShell in a Jupyter notebook causes an additional -f argument
