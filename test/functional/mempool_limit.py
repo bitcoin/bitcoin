@@ -85,6 +85,100 @@ class MempoolLimitTest(BitcoinTestFramework):
         assert_equal(res["package_msg"], "transaction failed")
         assert "too-long-mempool-chain" in res["tx-results"][tx_C["wtxid"]]["error"]
 
+    def test_mid_package_eviction_success(self):
+        node = self.nodes[0]
+        self.log.info("Check a package where each parent passes the current mempoolminfee but a parent could be evicted before getting child's descendant feerate")
+
+        # Clear mempool so it can be filled with minrelay txns
+        self.restart_node(0, extra_args=self.extra_args[0] + ["-persistmempool=0"])
+        assert_equal(node.getrawmempool(), [])
+
+        # Restarting the node resets mempool minimum feerate
+        assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
+        assert_equal(node.getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
+
+        fill_mempool(self, node)
+        current_info = node.getmempoolinfo()
+        mempoolmin_feerate = current_info["mempoolminfee"]
+
+        mempool_txids = node.getrawmempool()
+        mempool_entries = [node.getmempoolentry(entry) for entry in mempool_txids]
+        fees_btc_per_kvb = [entry["fees"]["base"] / (Decimal(entry["vsize"]) / 1000) for entry in mempool_entries]
+        mempool_entry_minrate = min(fees_btc_per_kvb)
+        mempool_entry_minrate = mempool_entry_minrate.quantize(Decimal("0.00000000"))
+
+        # There is a gap, our parents will be minrate, with child bringing up descendant fee sufficiently to avoid
+        # eviction even though parents cause eviction on their own
+        assert_greater_than(mempool_entry_minrate, mempoolmin_feerate)
+
+        package_hex = []
+        # UTXOs to be spent by the ultimate child transaction
+        parent_utxos = []
+
+        # Series of parents that don't need CPFP and are submitted individually. Each one is large
+        # which means in aggregate they could trigger eviction, but child submission should result
+        # in them not being evicted
+        parent_vsize = 25000
+        num_big_parents = 3
+        # Need to be large enough to trigger eviction
+        # (note that the mempool usage of a tx is about three times its vsize)
+        assert_greater_than(parent_vsize * num_big_parents * 3, current_info["maxmempool"] - current_info["bytes"])
+
+        big_parent_txids = []
+        big_parent_wtxids = []
+        for i in range(num_big_parents):
+            # Last parent is higher feerate causing other parents to possibly
+            # be evicted if trimming was allowed, which would cause the package to end up failing
+            parent_feerate = mempoolmin_feerate + Decimal("0.00000001") if i == num_big_parents - 1 else mempoolmin_feerate
+            parent = self.wallet.create_self_transfer(fee_rate=parent_feerate, target_vsize=parent_vsize, confirmed_only=True)
+            parent_utxos.append(parent["new_utxo"])
+            package_hex.append(parent["hex"])
+            big_parent_txids.append(parent["txid"])
+            big_parent_wtxids.append(parent["wtxid"])
+            # There is room for each of these transactions independently
+            assert node.testmempoolaccept([parent["hex"]])[0]["allowed"]
+
+        # Create a child spending everything with an insane fee, bumping the package above mempool_entry_minrate
+        child = self.wallet.create_self_transfer_multi(utxos_to_spend=parent_utxos, fee_per_output=10000000)
+        package_hex.append(child["hex"])
+
+        # Package should be submitted, temporarily exceeding maxmempool, but not evicted.
+        package_res = None
+        with node.assert_debug_log(expected_msgs=["rolling minimum fee bumped"]):
+            package_res = node.submitpackage(package=package_hex, maxfeerate=0)
+
+        assert_equal(package_res["package_msg"], "success")
+
+        # Ensure that intra-package trimming is not happening.
+        # Each transaction separately satisfies the current
+        # minfee and shouldn't need package evaluation to
+        # be included. If trimming of a parent were to happen,
+        # package evaluation would happen to reintrodce the evicted
+        # parent.
+        assert_equal(len(package_res["tx-results"]), len(big_parent_wtxids) + 1)
+        for wtxid in big_parent_wtxids + [child["wtxid"]]:
+            assert_equal(len(package_res["tx-results"][wtxid]["fees"]["effective-includes"]), 1)
+
+        # Maximum size must never be exceeded.
+        assert_greater_than(node.getmempoolinfo()["maxmempool"], node.getmempoolinfo()["bytes"])
+
+        # Package found in mempool still
+        resulting_mempool_txids = node.getrawmempool()
+        assert child["txid"] in resulting_mempool_txids
+        for txid in big_parent_txids:
+            assert txid in resulting_mempool_txids
+
+        # Check every evicted tx was higher feerate than parents which evicted it
+        eviction_set = set(mempool_txids) - set(resulting_mempool_txids) - set(big_parent_txids)
+        parent_entries = [node.getmempoolentry(entry) for entry in big_parent_txids]
+        max_parent_feerate = max([entry["fees"]["modified"] / (Decimal(entry["vsize"]) / 1000) for entry in parent_entries])
+        for eviction in eviction_set:
+            assert eviction in mempool_txids
+            for txid, entry in zip(mempool_txids, mempool_entries):
+                if txid == eviction:
+                    evicted_feerate_btc_per_kvb = entry["fees"]["modified"] / (Decimal(entry["vsize"]) / 1000)
+                    assert_greater_than(evicted_feerate_btc_per_kvb, max_parent_feerate)
+
     def test_mid_package_eviction(self):
         node = self.nodes[0]
         self.log.info("Check a package where each parent passes the current mempoolminfee but would cause eviction before package submission terminates")
@@ -339,6 +433,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         self.stop_node(0)
         self.nodes[0].assert_start_raises_init_error(["-maxmempool=4"], "Error: -maxmempool must be at least 5 MB")
 
+        self.test_mid_package_eviction_success()
         self.test_mid_package_replacement()
         self.test_mid_package_eviction()
         self.test_rbf_carveout_disallowed()
