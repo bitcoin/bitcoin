@@ -1054,26 +1054,20 @@ static RPCHelpMan gettxoutsetinfo()
         } else {
             ret.pushKV("total_unspendable_amount", ValueFromAmount(stats.total_unspendable_amount));
 
-            CCoinsStats prev_stats{};
-            if (pindex->nHeight > 0) {
-                const std::optional<CCoinsStats> maybe_prev_stats = GetUTXOStats(coins_view, *blockman, hash_type, node.rpc_interruption_point, pindex->pprev, index_requested);
-                if (!maybe_prev_stats) {
-                    throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
-                }
-                prev_stats = maybe_prev_stats.value();
-            }
-
             UniValue block_info(UniValue::VOBJ);
-            block_info.pushKV("prevout_spent", ValueFromAmount(stats.total_prevout_spent_amount - prev_stats.total_prevout_spent_amount));
-            block_info.pushKV("coinbase", ValueFromAmount(stats.total_coinbase_amount - prev_stats.total_coinbase_amount));
-            block_info.pushKV("new_outputs_ex_coinbase", ValueFromAmount(stats.total_new_outputs_ex_coinbase_amount - prev_stats.total_new_outputs_ex_coinbase_amount));
-            block_info.pushKV("unspendable", ValueFromAmount(stats.total_unspendable_amount - prev_stats.total_unspendable_amount));
+            block_info.pushKV("prevout_spent", ValueFromAmount(stats.block_prevout_spent_amount));
+            block_info.pushKV("coinbase", ValueFromAmount(stats.block_coinbase_amount));
+            block_info.pushKV("new_outputs_ex_coinbase", ValueFromAmount(stats.block_new_outputs_ex_coinbase_amount));
+            block_info.pushKV("unspendable", ValueFromAmount(stats.block_unspendables_genesis_block +
+                        stats.block_unspendables_bip30 +
+                        stats.block_unspendables_scripts +
+                        stats.block_unspendables_unclaimed_rewards));
 
             UniValue unspendables(UniValue::VOBJ);
-            unspendables.pushKV("genesis_block", ValueFromAmount(stats.total_unspendables_genesis_block - prev_stats.total_unspendables_genesis_block));
-            unspendables.pushKV("bip30", ValueFromAmount(stats.total_unspendables_bip30 - prev_stats.total_unspendables_bip30));
-            unspendables.pushKV("scripts", ValueFromAmount(stats.total_unspendables_scripts - prev_stats.total_unspendables_scripts));
-            unspendables.pushKV("unclaimed_rewards", ValueFromAmount(stats.total_unspendables_unclaimed_rewards - prev_stats.total_unspendables_unclaimed_rewards));
+            unspendables.pushKV("genesis_block", ValueFromAmount(stats.block_unspendables_genesis_block));
+            unspendables.pushKV("bip30", ValueFromAmount(stats.block_unspendables_bip30));
+            unspendables.pushKV("scripts", ValueFromAmount(stats.block_unspendables_scripts));
+            unspendables.pushKV("unclaimed_rewards", ValueFromAmount(stats.block_unspendables_unclaimed_rewards));
             block_info.pushKV("unspendables", std::move(unspendables));
 
             ret.pushKV("block_info", std::move(block_info));
