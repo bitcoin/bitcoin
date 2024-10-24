@@ -9,6 +9,7 @@ import ipaddress
 import json
 import math
 from collections import defaultdict
+from pathlib import Path
 
 import asmap
 
@@ -127,6 +128,19 @@ def main():
                                    help="address file containing getnodeaddresses output to use in the comparison "
                                    "(make sure to set the count parameter to zero to get all node addresses, "
                                    "e.g. 'bitcoin-cli getnodeaddresses 0 > addrs.json')")
+
+    parser_gen_header = subparsers.add_parser("gen_header",
+                                              help="Generate a header file to embed ASMap data in the binary")
+    project_dir = Path(__file__).resolve().parents[2]
+    default_infile = project_dir / "src" / "node" / "data" / "ip_asn.dat"
+    parser_gen_header.add_argument("infile", type=argparse.FileType("rb"), nargs="?",
+                                   default=str(default_infile),
+                                   help="ASMap data file to be embedded in the header")
+    default_outfile = project_dir / "ip_asn.dat.h"
+    parser_gen_header.add_argument("outfile", type=argparse.FileType("w"), nargs="?",
+                                   default=str(default_outfile),
+                                   help="Location of the resulting header file")
+
     args = parser.parse_args()
     if args.subcommand is None:
         parser.print_help()
@@ -189,6 +203,37 @@ def main():
         print(f"Summary: {num_reassignments:,} ({share:.2%}) of {len(addrs):,} addresses were reassigned "
               f"(migrations={num_reassignment_type[True, True]}, assignments={num_reassignment_type[False, True]}, "
               f"unassignments={num_reassignment_type[True, False]})")
+    elif args.subcommand == "gen_header":
+        try:
+            data = args.infile.read()
+        except OSError as err:
+            sys.exit(f"Input file '{args.infile.name}' cannot be read: {err.strerror}.")
+
+        hex_data_lines = []
+        line = ""
+        for i, byte in enumerate(data):
+            line += f"std::byte{{0x{byte:02x}}},"
+            if (i + 1) % 8 == 0:
+                hex_data_lines.append(line.strip())
+                line = ""
+
+        if line:
+            hex_data_lines.append(line)
+
+        hex_data = "\n".join(hex_data_lines)
+
+        file_content = f"""#include <cstddef>
+#include <span>
+
+namespace node::data {{
+inline constexpr std::byte detail_ip_asn_raw[] {{
+{hex_data}
+}};
+
+inline constexpr std::span ip_asn{{detail_ip_asn_raw}};
+}}"""
+
+        args.outfile.write(file_content)
     else:
         parser.print_help()
         sys.exit("No command provided.")

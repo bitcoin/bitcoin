@@ -298,6 +298,15 @@ target_link_libraries(bitcoin_node
     $<TARGET_NAME_IF_EXISTS:bitcoin_zmq>
     $<TARGET_NAME_IF_EXISTS:USDT::headers>
 )
+if (WITH_EMBEDDED_ASMAP)
+  target_compile_definitions(bitcoin_node PRIVATE ENABLE_EMBEDDED_ASMAP=1)
+  include(TargetDataSources)
+  target_data_sources(bitcoin_node
+    RAW_FILES
+      node/data/ip_asn.dat
+    RAW_NAMESPACE node::data
+  )
+endif()
 
 
 # Bitcoin Core bitcoind.
