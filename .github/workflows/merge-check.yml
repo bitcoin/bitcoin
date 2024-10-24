@@ -27,7 +27,7 @@ jobs:
         run: |
           git fetch origin master:master
           if [[ "${{ github.event_name }}" == "pull_request"* ]]; then
-            git fetch origin {{ github.event.pull_request.base.ref }}:base_branch
+            git fetch origin ${{ github.event.pull_request.base.ref }}:base_branch
             git checkout base_branch
             git pull origin pull/${{ github.event.pull_request.number }}/head
             git checkout master
