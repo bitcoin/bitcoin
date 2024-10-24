@@ -4,14 +4,18 @@
 
 name: CI
 on:
-  # See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request.
-  pull_request:
-  # See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push.
-  push:
-    branches:
-      - '**'
-    tags-ignore:
-      - '**'
+  ## See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request.
+  #pull_request:
+  ## See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push.
+  #push:
+  #  branches:
+  #    - '**'
+  #  tags-ignore:
+  #    - '**'
+  # Note that "schedule" workflows only work on the default branch (master).
+  # See: https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#schedule
+  schedule:
+    - cron: '21 */1 * * *'
 
 concurrency:
   group: ${{ github.event_name != 'pull_request' && github.run_id || github.ref }}
@@ -80,8 +84,10 @@ jobs:
     # See: https://github.com/actions/runner-images#available-images.
     runs-on: macos-14
 
-    # No need to run on the read-only mirror, unless it is a PR.
-    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    ## No need to run on the read-only mirror, unless it is a PR.
+    #if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    # Temporarily disabled as the PR is focused on Windows only
+    if: false
 
     timeout-minutes: 120
 
@@ -194,23 +200,47 @@ jobs:
       - name: Build
         working-directory: build
         run: |
-          cmake --build . -j $env:NUMBER_OF_PROCESSORS --config Release
+          cmake --build . -j $env:NUMBER_OF_PROCESSORS --config RelWithDebInfo
 
       - name: Run test suite
         working-directory: build
         run: |
-          ctest -j $env:NUMBER_OF_PROCESSORS -C Release
+          ctest -j $env:NUMBER_OF_PROCESSORS -C RelWithDebInfo
 
       - name: Run functional tests
+        id: functional-tests
         working-directory: build
         env:
-          BITCOIND: '${{ github.workspace }}\build\src\Release\bitcoind.exe'
-          BITCOINCLI: '${{ github.workspace }}\build\src\Release\bitcoin-cli.exe'
-          BITCOINUTIL: '${{ github.workspace }}\build\src\Release\bitcoin-util.exe'
-          BITCOINWALLET: '${{ github.workspace }}\build\src\Release\bitcoin-wallet.exe'
+          BITCOIND: '${{ github.workspace }}\build\src\RelWithDebInfo\bitcoind.exe'
+          BITCOINCLI: '${{ github.workspace }}\build\src\RelWithDebInfo\bitcoin-cli.exe'
+          BITCOINUTIL: '${{ github.workspace }}\build\src\RelWithDebInfo\bitcoin-util.exe'
+          BITCOINWALLET: '${{ github.workspace }}\build\src\RelWithDebInfo\bitcoin-wallet.exe'
           TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
         shell: cmd
-        run: py -3 test\functional\test_runner.py --jobs %NUMBER_OF_PROCESSORS% --ci --quiet --tmpdirprefix=%RUNNER_TEMP% --combinedlogslen=99999999 --timeout-factor=%TEST_RUNNER_TIMEOUT_FACTOR% %TEST_RUNNER_EXTRA%
+        run: |
+          py -3 test\functional\test_runner.py --jobs %NUMBER_OF_PROCESSORS% --ci --quiet --tmpdirprefix=%RUNNER_TEMP% --combinedlogslen=99999999 --timeout-factor=%TEST_RUNNER_TIMEOUT_FACTOR% %TEST_RUNNER_EXTRA%
+          echo RUNNER_TEMP=%RUNNER_TEMP%>>%GITHUB_OUTPUT%
+
+      # There's a slim chance that multiple tests will fail and produce unique .DMP files.
+      - name: Upload .DMP file(s)
+        uses: actions/upload-artifact@v4
+        id: dmp-upload
+        if: ${{ failure() && steps.functional-tests.conclusion == 'failure' }}
+        with:
+          name: bitcoind-windows-dmp
+          path: ${{ steps.functional-tests.outputs.RUNNER_TEMP }}/**/bitcoind.dmp
+          if-no-files-found: ignore
+
+      # Both .EXE and .PDB are required in order to debug.
+      - name: Upload .EXE and .PDB file
+        uses: actions/upload-artifact@v4
+        # Only run if prior step produced an artifact.
+        if: ${{ failure() && steps.dmp-upload.outputs.artifact-id != '' }}
+        with:
+          name: bitcoind-windows-exe-pdb
+          path: |
+            build/**/bitcoind.exe
+            build/**/bitcoind.pdb
 
       - name: Clone fuzz corpus
         run: |
@@ -222,15 +252,17 @@ jobs:
       - name: Run fuzz binaries
         working-directory: build
         env:
-          BITCOINFUZZ: '${{ github.workspace }}\build\src\test\fuzz\Release\fuzz.exe'
+          BITCOINFUZZ: '${{ github.workspace }}\build\src\test\fuzz\RelWithDebInfo\fuzz.exe'
         shell: cmd
         run: py -3 test\fuzz\test_runner.py --par %NUMBER_OF_PROCESSORS% --loglevel DEBUG %RUNNER_TEMP%\qa-assets\fuzz_corpora
 
   asan-lsan-ubsan-integer-no-depends-usdt:
     name: 'ASan + LSan + UBSan + integer, no depends, USDT'
     runs-on: ubuntu-24.04 # has to match container in ci/test/00_setup_env_native_asan.sh for tracing tools
-    # No need to run on the read-only mirror, unless it is a PR.
-    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    ## No need to run on the read-only mirror, unless it is a PR.
+    #if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    # Temporarily disabled as the PR is focused on Windows only
+    if: false
     timeout-minutes: 120
     env:
       FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
