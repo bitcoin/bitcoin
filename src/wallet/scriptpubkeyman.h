@@ -366,8 +366,9 @@ public:
     /** Get the DescriptorScriptPubKeyMans (with private keys) that have the same scriptPubKeys as this LegacyScriptPubKeyMan.
      * Does not modify this ScriptPubKeyMan. */
     std::optional<MigrationData> MigrateToDescriptor();
-    /** Delete all the records ofthis LegacyScriptPubKeyMan from disk*/
+    /** Delete all the records of this LegacyScriptPubKeyMan from disk*/
     bool DeleteRecords();
+    bool DeleteRecordsWithDB(WalletBatch& batch);
 };
 
 // Implements the full legacy wallet behavior
@@ -582,6 +583,7 @@ public:
 
 class DescriptorScriptPubKeyMan : public ScriptPubKeyMan
 {
+    friend class LegacyDataSPKM;
 private:
     using ScriptPubKeyMap = std::map<CScript, int32_t>; // Map of scripts to descriptor range index
     using PubKeyMap = std::map<CPubKey, int32_t>; // Map of pubkeys involved in scripts to descriptor range index
