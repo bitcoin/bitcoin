@@ -33,7 +33,7 @@ inline CTransactionRef create_placeholder_tx(size_t num_inputs, size_t num_outpu
     CMutableTransaction mtx = CMutableTransaction();
     mtx.vin.resize(num_inputs);
     mtx.vout.resize(num_outputs);
-    auto random_script = CScript() << ToByteVector(m_rng.rand256()) << ToByteVector(m_rng.rand256());
+    auto random_script = RandScript(m_rng, 64);
     for (size_t i{0}; i < num_inputs; ++i) {
         mtx.vin[i].prevout.hash = Txid::FromUint256(m_rng.rand256());
         mtx.vin[i].prevout.n = 0;
