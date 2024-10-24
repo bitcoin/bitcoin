@@ -31,11 +31,6 @@ You can find installation instructions in the `build-*.md` file for your platfor
 | [qrencode](../depends/packages/qrencode.mk) | [link](https://fukuchi.org/works/qrencode/) | [4.1.1](https://github.com/bitcoin/bitcoin/pull/27312) | | No |
 | [Qt](../depends/packages/qt.mk) | [link](https://download.qt.io/official_releases/qt/) | [5.15.14](https://github.com/bitcoin/bitcoin/pull/30198) | [5.11.3](https://github.com/bitcoin/bitcoin/pull/24132) | No |
 
-### Networking
-| Dependency | Releases | Version used | Minimum required | Runtime |
-| --- | --- | --- | --- | --- |
-| [MiniUPnPc](../depends/packages/miniupnpc.mk) | [link](https://miniupnp.tuxfamily.org/) | [2.2.7](https://github.com/bitcoin/bitcoin/pull/29707) | 2.1 | No |
-
 ### Notifications
 | Dependency | Releases | Version used | Minimum required | Runtime |
 | --- | --- | --- | --- | --- |

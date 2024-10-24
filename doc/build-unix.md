@@ -60,10 +60,6 @@ executables, which are based on BerkeleyDB 4.8. Otherwise, you can build Berkele
 
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
-Optional port mapping library (see: `-DWITH_MINIUPNPC=ON`):
-
-    sudo apt install libminiupnpc-dev
-
 ZMQ dependencies (provides ZMQ API):
 
     sudo apt-get install libzmq3-dev
@@ -112,10 +108,6 @@ are based on Berkeley DB 4.8. Otherwise, you can build Berkeley DB [yourself](#b
 
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
-Optional port mapping library (see: `-DWITH_MINIUPNPC=ON`):
-
-    sudo dnf install miniupnpc-devel
-
 ZMQ dependencies (provides ZMQ API):
 
     sudo dnf install zeromq-devel
@@ -153,7 +145,7 @@ The legacy wallet uses Berkeley DB. To ensure backwards compatibility it is
 recommended to use Berkeley DB 4.8. If you have to build it yourself, and don't
 want to use any other libraries built in depends, you can do:
 ```bash
-make -C depends NO_BOOST=1 NO_LIBEVENT=1 NO_QT=1 NO_SQLITE=1 NO_UPNP=1 NO_ZMQ=1 NO_USDT=1
+make -C depends NO_BOOST=1 NO_LIBEVENT=1 NO_QT=1 NO_SQLITE=1 NO_ZMQ=1 NO_USDT=1
 ...
 to: /path/to/bitcoin/depends/x86_64-pc-linux-gnu
 ```

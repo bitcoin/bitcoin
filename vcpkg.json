@@ -13,7 +13,6 @@
   ],
   "default-features": [
     "wallet",
-    "miniupnpc",
     "zeromq",
     "tests",
     "qt5"
@@ -30,10 +29,6 @@
     "berkeleydb": {
       "description": "Enable Berkeley DB wallet support",
       "dependencies": [ "berkeleydb" ]
-    },
-    "miniupnpc": {
-      "description": "Enable UPnP",
-      "dependencies": [ "miniupnpc" ]
     },
     "zeromq": {
       "description": "Enable ZMQ notifications",
