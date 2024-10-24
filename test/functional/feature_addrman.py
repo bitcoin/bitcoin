@@ -54,7 +54,7 @@ class AddrmanTest(BitcoinTestFramework):
         peers_dat = os.path.join(self.nodes[0].chain_path, "peers.dat")
         init_error = lambda reason: (
             f"Error: Invalid or corrupt peers.dat \\({reason}\\). If you believe this "
-            f"is a bug, please report it to {self.config['environment']['PACKAGE_BUGREPORT']}. "
+            f"is a bug, please report it to {self.config['environment']['CLIENT_BUGREPORT']}. "
             f'As a workaround, you can move the file \\("{re.escape(peers_dat)}"\\) out of the way \\(rename, '
             "move, or delete\\) to have a new one created on the next start."
         )
