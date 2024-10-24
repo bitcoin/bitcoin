@@ -15,9 +15,9 @@
 #include <optional>
 #include <utility>
 #include <vector>
+#include <span>
 
 class CPubKey;
-template <typename C> class Span;
 
 enum class TxoutType {
     NONSTANDARD,
