@@ -27,7 +27,7 @@ jobs:
         run: |
           git fetch origin master:master
           git checkout master
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
+          if [[ "${{ github.event_name }}" == "pull_request"* ]]; then
             git merge --ff-only ${{ github.event.pull_request.head.sha }}
           else
             git merge --ff-only ${{ github.sha }}
