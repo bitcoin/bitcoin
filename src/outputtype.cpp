@@ -81,10 +81,10 @@ std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key)
     }
 }
 
-CTxDestination AddAndGetDestinationForScript(FlatSigningProvider& keystore, const CScript& script, OutputType type)
+CTxDestination AddAndGetDestinationForScript(std::set<CScript>& inner_scripts, const CScript& script, OutputType type)
 {
-    // Add script to keystore
-    keystore.scripts.emplace(CScriptID(script), script);
+    // Add script to inner_scripts as it is the redeemScript
+    inner_scripts.emplace(script);
 
     switch (type) {
     case OutputType::LEGACY:
@@ -94,7 +94,7 @@ CTxDestination AddAndGetDestinationForScript(FlatSigningProvider& keystore, cons
         CTxDestination witdest = WitnessV0ScriptHash(script);
         CScript witprog = GetScriptForDestination(witdest);
         // Add the redeemscript, so that P2WSH and P2SH-P2WSH outputs are recognized as ours.
-        keystore.scripts.emplace(CScriptID(witprog), witprog);
+        inner_scripts.emplace(witprog);
         if (type == OutputType::BECH32) {
             return witdest;
         } else {

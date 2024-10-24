@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-/** Opaque data structured that holds a parsed ECDSA signature,
+/** Opaque data structure that holds a parsed ECDSA signature,
  *  supporting pubkey recovery.
  *
  *  The exact representation of data inside is implementation defined and not

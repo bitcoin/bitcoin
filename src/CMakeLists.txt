@@ -131,6 +131,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   key.cpp
   key_io.cpp
   merkleblock.cpp
+  musig.cpp
   net_permissions.cpp
   net_types.cpp
   netaddress.cpp

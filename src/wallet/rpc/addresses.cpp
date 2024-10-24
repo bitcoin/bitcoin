@@ -288,12 +288,12 @@ RPCHelpMan addmultisigaddress()
     }
 
     // Construct multisig scripts
-    FlatSigningProvider provider;
+    std::set<CScript> scripts;
     CScript inner;
-    CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, output_type, provider, inner);
+    CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, output_type, scripts, inner);
 
     // Import scripts into the wallet
-    for (const auto& [id, script] : provider.scripts) {
+    for (const auto& script : scripts) {
         // Due to a bug in the legacy wallet, the p2sh maximum script size limit is also imposed on 'p2sh-segwit' and 'bech32' redeem scripts.
         // Even when redeem scripts over MAX_SCRIPT_ELEMENT_SIZE bytes are valid for segwit output types, we don't want to
         // enable it because:
