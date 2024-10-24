@@ -422,7 +422,7 @@ public:
      * NOT FOR GENERAL USE. Used only when loading coins from a UTXO snapshot.
      * @sa ChainstateManager::PopulateAndValidateSnapshot()
      */
-    void EmplaceCoinInternalDANGER(COutPoint&& outpoint, Coin&& coin);
+    void EmplaceCoinInternalDANGER(COutPoint&& outpoint, Coin&& coin, bool set_dirty = true);
 
     /**
      * Spend a coin. Pass moveto in order to get the deleted data.
