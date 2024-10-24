@@ -38,8 +38,8 @@ for relpath in BINARIES:
     try:
         r = subprocess.run([abspath, "--version"], stdout=subprocess.PIPE, check=True, text=True)
     except IOError:
-        print(f'{abspath} not found or not an executable', file=sys.stderr)
-        sys.exit(1)
+        print(f'{abspath} not found or not an executable. Skipping...', file=sys.stderr)
+        continue
     # take first line (which must contain version)
     verstr = r.stdout.splitlines()[0]
     # last word of line is the actual version e.g. v22.99.0-5c6b3d5b3508
