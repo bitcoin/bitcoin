@@ -1241,7 +1241,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         use_anti_fee_sniping = false;
     }
     if (use_anti_fee_sniping) {
-        DiscourageFeeSniping(txNew, rng_fast, wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight());
+        DiscourageFeeSniping(txNew, rng_fast, wallet.chain(), wallet.GetBestBlockHash(), wallet.GetBestBlockHeight());
     }
 
     // Calculate the transaction fee
