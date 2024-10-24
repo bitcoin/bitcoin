@@ -24,7 +24,7 @@
 #define COPYRIGHT_HOLDERS_FINAL "@COPYRIGHT_HOLDERS_FINAL@"
 
 /* Replacement for %s in copyright holders string */
-#define COPYRIGHT_HOLDERS_SUBSTITUTION "@PACKAGE_NAME@"
+#define COPYRIGHT_HOLDERS_SUBSTITUTION "@CLIENT_NAME@"
 
 /* Copyright year */
 #define COPYRIGHT_YEAR @COPYRIGHT_YEAR@
@@ -124,16 +124,16 @@
 #cmakedefine HAVE_VM_VM_PARAM_H 1
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "@PACKAGE_BUGREPORT@"
+#define PACKAGE_BUGREPORT "@CLIENT_BUGREPORT@"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "@PACKAGE_NAME@"
+#define PACKAGE_NAME "@CLIENT_NAME@"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL "@PROJECT_HOMEPAGE_URL@"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "@PACKAGE_VERSION@"
+#define PACKAGE_VERSION "@CLIENT_VERSION_STRING@"
 
 /* Define to 1 if strerror_r returns char *. */
 #cmakedefine STRERROR_R_CHAR_P 1
