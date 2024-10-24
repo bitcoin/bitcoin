@@ -15,32 +15,52 @@
 #include <assert.h>
 #include <cstddef>
 #include <cstdio>
+#include <cstring>
 #include <ios>
 #include <limits>
 #include <optional>
+#include <span>
 #include <stdint.h>
 #include <string.h>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace util {
 inline void Xor(Span<std::byte> write, Span<const std::byte> key, size_t key_offset = 0)
 {
-    if (key.size() == 0) {
-        return;
+    if (write.empty() || key.empty()) return;
+
+    size_t i = 0, j = 0;
+    // Consume excess key_offset prefix
+    for (key_offset %= key.size(); key_offset > 0 && i < std::min(key.size() - key_offset, write.size()); ++i) {
+        write[i] ^= key[key_offset + i];
     }
-    key_offset %= key.size();
 
-    for (size_t i = 0, j = key_offset; i != write.size(); i++) {
-        write[i] ^= key[j++];
+    if (key.size() == 8) { // Xor in 64 and 32 bit chunks
+        if (write.size() - i >= 8) {
+            uint64_t key64;
+            std::memcpy(&key64, key.data(), 8);
+            for (; i <= write.size() - 8; i += 8) {
+                uint64_t write64;
+                std::memcpy(&write64, write.data() + i, 8);
+                write64 ^= key64;
+                std::memcpy(write.data() + i, &write64, 8);
+            }
+        }
+        if (write.size() - i >= 4) {
+            uint32_t key32;
+            std::memcpy(&key32, key.data(), 4);
+            uint32_t write32;
+            std::memcpy(&write32, write.data() + i, 4);
+            write32 ^= key32;
+            std::memcpy(write.data() + i, &write32, 4);
+            i += 4;
+            j += 4;
+        }
+    }
 
-        // This potentially acts on very many bytes of data, so it's
-        // important that we calculate `j`, i.e. the `key` index in this
-        // way instead of doing a %, which would effectively be a division
-        // for each byte Xor'd -- much slower than need be.
-        if (j == key.size())
-            j = 0;
+    while (i < write.size()) {
+        write[i++] ^= key[j++ % key.size()];
     }
 }
 } // namespace util
