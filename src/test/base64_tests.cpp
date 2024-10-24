@@ -37,10 +37,22 @@ BOOST_AUTO_TEST_CASE(base64_testvectors)
     }
 
     // Decoding strings with embedded NUL characters should fail
-    BOOST_CHECK(!DecodeBase64("invalid\0"s));
-    BOOST_CHECK(DecodeBase64("nQB/pZw="s));
-    BOOST_CHECK(!DecodeBase64("nQB/pZw=\0invalid"s));
-    BOOST_CHECK(!DecodeBase64("nQB/pZw=invalid\0"s));
+    BOOST_CHECK(!DecodeBase64("invalid\0"s)); // correct size, invalid due to \0
+    BOOST_CHECK( DecodeBase64("nQB/pZw="s)); // valid
+    BOOST_CHECK(!DecodeBase64("nQB/pZw=\0invalid"s)); // correct size, invalid due to \0
+    BOOST_CHECK(!DecodeBase64("nQB/pZw=invalid\0"s)); // invalid size
+}
+
+BOOST_AUTO_TEST_CASE(base64_padding)
+{
+    // Is valid without padding
+    BOOST_CHECK_EQUAL(EncodeBase64("foobar"), "Zm9vYmFy");
+
+    // Valid size
+    BOOST_CHECK(!DecodeBase64("===="s));
+    BOOST_CHECK(!DecodeBase64("a==="s));
+    BOOST_CHECK( DecodeBase64("YQ=="s));
+    BOOST_CHECK( DecodeBase64("YWE="s));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
