@@ -34,9 +34,9 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
         explicit PrevectorJob(FastRandomContext& insecure_rand){
             p.resize(insecure_rand.randrange(PREVECTOR_SIZE*2));
         }
-        bool operator()()
+        std::optional<int> operator()()
         {
-            return true;
+            return std::nullopt;
         }
     };
 
@@ -62,7 +62,7 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
         }
         // control waits for completion by RAII, but
         // it is done explicitly here for clarity
-        control.Wait();
+        control.Complete();
     });
 }
 BENCHMARK(CCheckQueueSpeedPrevectorJob, benchmark::PriorityLevel::HIGH);
