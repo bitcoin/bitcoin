@@ -15,6 +15,7 @@ import sys
 FALSE_POSITIVES = [
     ("src/clientversion.cpp", "strprintf(_(COPYRIGHT_HOLDERS).translated, COPYRIGHT_HOLDERS_SUBSTITUTION)"),
     ("src/test/translation_tests.cpp", "strprintf(format, arg)"),
+    ("src/rpc/net.cpp", "strprintf( R\"(Unrecognized aggregation parameter: \"%s\". The array should consist of zero or more of \"%s\", \"%s\", \"%s\", \"%s\".)\", agg, aggregate_dimensions::DIRECTION, aggregate_dimensions::NETWORK, aggregate_dimensions::CONNECTION_TYPE, aggregate_dimensions::MESSAGE_TYPE)"),
 ]
 
 
