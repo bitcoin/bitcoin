@@ -44,6 +44,7 @@ EXCLUDE_DIRS = [
     "src/gsl/",
     "src/immer/",
     "src/leveldb/",
+    "src/minisketch",
     "src/secp256k1/",
     "src/univalue/",
 ]

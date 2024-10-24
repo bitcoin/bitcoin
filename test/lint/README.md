@@ -31,6 +31,7 @@ maintained:
 * for `src/univalue`: https://github.com/bitcoin-core/univalue.git (branch master)
 * for `src/crypto/ctaes`: https://github.com/bitcoin-core/ctaes.git (branch master)
 * for `src/crc32c`: https://github.com/google/crc32c.git (branch master)
+* for `src/minisketch`: https://github.com/sipa/minisketch.git (branch master)
 
 To do so, add the upstream repository as remote:
 
