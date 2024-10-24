@@ -58,18 +58,14 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         hashes = self.generate(self.nodes[0], num_blocks_to_generate, sync_fun=self.no_op)
 
         self.log.info(f"Node0 current chain work: {self.nodes[0].getblockheader(hashes[-1])['chainwork']}")
-
-        # Sleep a few seconds and verify that node2 didn't get any new blocks
-        # or headers.  We sleep, rather than sync_blocks(node0, node1) because
-        # it's reasonable either way for node1 to get the blocks, or not get
-        # them (since they're below node1's minchainwork).
-        time.sleep(3)
-
         self.log.info("Verifying node 2 has no more blocks than before")
         self.log.info(f"Blockcounts: {[n.getblockcount() for n in self.nodes]}")
         # Node2 shouldn't have any new headers yet, because node1 should not
         # have relayed anything.
-        assert_equal(len(self.nodes[2].getchaintips()), 1)
+        # We wait 3 seconds, rather than sync_blocks(node0, node1) because
+        # it's reasonable either way for node1 to get the blocks, or not get
+        # them (since they're below node1's minchainwork).
+        self.nodes[2].ensure_for(duration=3, f=lambda: len(self.nodes[2].getchaintips()) == 1)
         assert_equal(self.nodes[2].getchaintips()[0]['height'], 0)
 
         assert self.nodes[1].getbestblockhash() != self.nodes[0].getbestblockhash()
@@ -81,8 +77,7 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         msg.locator.vHave = [int(self.nodes[2].getbestblockhash(), 16)]
         msg.hashstop = 0
         peer.send_and_ping(msg)
-        time.sleep(5)
-        assert "headers" not in peer.last_message or len(peer.last_message["headers"].headers) == 0
+        peer.ensure_for(duration=5, f=lambda: "headers" not in peer.last_message or len(peer.last_message["headers"].headers) == 0)
 
         self.log.info("Generating one more block")
         self.generate(self.nodes[0], 1)
