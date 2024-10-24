@@ -50,7 +50,7 @@ RUN apt-get update && apt-get install $APT_ARGS \
 
 # Python setup
 # PYTHON_VERSION should match the value in .python-version
-ARG PYTHON_VERSION=3.8.16
+ARG PYTHON_VERSION=3.9.18
 RUN apt-get update && apt-get install $APT_ARGS \
     ca-certificates \
     libbz2-dev \
