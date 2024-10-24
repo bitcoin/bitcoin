@@ -5,6 +5,7 @@
 #ifndef BITCOIN_INDEX_BASE_H
 #define BITCOIN_INDEX_BASE_H
 
+#include <chain.h>
 #include <dbwrapper.h>
 #include <interfaces/chain.h>
 #include <interfaces/types.h>
@@ -162,6 +163,9 @@ public:
 
     /// Get a summary of the index and its state.
     IndexSummary GetSummary() const;
+
+    /// Data needed in blocks in order for the index to be able to sync
+    virtual uint32_t RequiredBlockStatusMask() const = 0;
 };
 
 #endif // BITCOIN_INDEX_BASE_H

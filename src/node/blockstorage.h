@@ -367,10 +367,11 @@ public:
     //! Returns last CBlockIndex* that is a checkpoint
     const CBlockIndex* GetLastCheckpoint(const CCheckpointData& data) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    //! Check if all blocks in the [upper_block, lower_block] range have data available.
+    //! Check if all blocks in the [upper_block, lower_block] range have data available as
+    //! defined by the status mask.
     //! The caller is responsible for ensuring that lower_block is an ancestor of upper_block
     //! (part of the same chain).
-    bool CheckBlockDataAvailability(const CBlockIndex& upper_block LIFETIMEBOUND, const CBlockIndex& lower_block LIFETIMEBOUND) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool CheckBlockDataAvailability(const CBlockIndex& upper_block LIFETIMEBOUND, const CBlockIndex& lower_block LIFETIMEBOUND, uint32_t status_mask=BLOCK_HAVE_DATA) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**
      * @brief Returns the earliest block with specified `status_mask` flags set after
