@@ -3,6 +3,7 @@
              (gnu packages bison)
              ((gnu packages certs) #:select (nss-certs))
              ((gnu packages cmake) #:select (cmake-minimal))
+             (gnu packages ninja)
              (gnu packages commencement)
              (gnu packages compression)
              (gnu packages cross-base)
@@ -512,6 +513,7 @@ inspecting signatures in Mach-O binaries.")
         gcc-toolchain-12
         cmake-minimal
         gnu-make
+        ninja
         pkg-config
         ;; Scripting
         python-minimal ;; (3.10)

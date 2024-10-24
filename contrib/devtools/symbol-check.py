@@ -112,6 +112,7 @@ ELF_ALLOWED_LIBRARIES = {
 'libfontconfig.so.1', # font support
 'libfreetype.so.6', # font parsing
 'libdl.so.2', # programming interface to dynamic linker
+'libxcb-cursor.so.0',
 'libxcb-icccm.so.4',
 'libxcb-image.so.0',
 'libxcb-shm.so.0',
@@ -146,8 +147,9 @@ MACHO_ALLOWED_LIBRARIES = {
 'IOSurface', # cross process image/drawing buffers
 'libobjc.A.dylib', # Objective-C runtime library
 'Metal', # 3D graphics
-'Security', # access control and authentication
 'QuartzCore', # animation
+'Security', # access control and authentication
+'UniformTypeIdentifiers',
 }
 
 PE_ALLOWED_LIBRARIES = {
@@ -158,12 +160,24 @@ PE_ALLOWED_LIBRARIES = {
 'SHELL32.dll', # shell API
 'WS2_32.dll', # sockets
 # bitcoin-qt only
+'api-ms-win-core-synch-l1-2-0.dll',
+'api-ms-win-core-winrt-l1-1-0.dll',
+'api-ms-win-core-winrt-string-l1-1-0.dll',
+'AUTHZ.dll',
+'comdlg32.dll',
+'d3d11.dll',
+'d3d12.dll',
+'d3d9.dll',
 'dwmapi.dll', # desktop window manager
+'DWrite.dll',
+'dxgi.dll',
 'GDI32.dll', # graphics device interface
 'IMM32.dll', # input method editor
 'NETAPI32.dll', # network management
 'ole32.dll', # component object model
 'OLEAUT32.dll', # OLE Automation API
+'SETUPAPI.dll',
+'SHCORE.dll',
 'SHLWAPI.dll', # light weight shell API
 'USER32.dll', # user interface
 'USERENV.dll', # user management

@@ -90,7 +90,7 @@ static NodeContext* GetNodeContext(const std::any& context, HTTPRequest* req)
                 strprintf("%s:%d (%s)\n"
                           "Internal bug detected: Node context not found!\n"
                           "You may report this issue here: %s\n",
-                          __FILE__, __LINE__, __func__, PACKAGE_BUGREPORT));
+                          __FILE__, __LINE__, __func__, CLIENT_BUGREPORT));
         return nullptr;
     }
     return node_context;
@@ -128,7 +128,7 @@ static ChainstateManager* GetChainman(const std::any& context, HTTPRequest* req)
                 strprintf("%s:%d (%s)\n"
                           "Internal bug detected: Chainman disabled or instance not found!\n"
                           "You may report this issue here: %s\n",
-                          __FILE__, __LINE__, __func__, PACKAGE_BUGREPORT));
+                          __FILE__, __LINE__, __func__, CLIENT_BUGREPORT));
         return nullptr;
     }
     return node_context->chainman.get();

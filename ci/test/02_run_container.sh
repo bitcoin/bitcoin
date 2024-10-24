@@ -37,12 +37,12 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
 
   docker volume create "${CONTAINER_NAME}_ccache" || true
   docker volume create "${CONTAINER_NAME}_depends" || true
-  docker volume create "${CONTAINER_NAME}_depends_sources" || true
+  docker volume create "pr30997_${CONTAINER_NAME}_depends_sources" || true
   docker volume create "${CONTAINER_NAME}_previous_releases" || true
 
   CI_CCACHE_MOUNT="type=volume,src=${CONTAINER_NAME}_ccache,dst=$CCACHE_DIR"
   CI_DEPENDS_MOUNT="type=volume,src=${CONTAINER_NAME}_depends,dst=$DEPENDS_DIR/built"
-  CI_DEPENDS_SOURCES_MOUNT="type=volume,src=${CONTAINER_NAME}_depends_sources,dst=$DEPENDS_DIR/sources"
+  CI_DEPENDS_SOURCES_MOUNT="type=volume,src=pr30997_${CONTAINER_NAME}_depends_sources,dst=$DEPENDS_DIR/sources"
   CI_PREVIOUS_RELEASES_MOUNT="type=volume,src=${CONTAINER_NAME}_previous_releases,dst=$PREVIOUS_RELEASES_DIR"
 
   if [ "$DANGER_CI_ON_HOST_CACHE_FOLDERS" ]; then
