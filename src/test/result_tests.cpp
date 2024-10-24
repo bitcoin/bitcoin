@@ -63,7 +63,7 @@ void ExpectSuccess(const util::Result<T>& result, const bilingual_str& str, Args
 {
     ExpectResult(result, true, str);
     BOOST_CHECK_EQUAL(result.has_value(), true);
-    BOOST_CHECK_EQUAL(result.value(), T{std::forward<Args>(args)...});
+    BOOST_CHECK_EQUAL(result.value(), T(std::forward<Args>(args)...));
     BOOST_CHECK_EQUAL(&result.value(), &*result);
 }
 
@@ -89,8 +89,8 @@ BOOST_AUTO_TEST_CASE(check_value_or)
     BOOST_CHECK_EQUAL(IntFn(10, false).value_or(20), 20);
     BOOST_CHECK_EQUAL(NoCopyFn(10, true).value_or(20), 10);
     BOOST_CHECK_EQUAL(NoCopyFn(10, false).value_or(20), 20);
-    BOOST_CHECK_EQUAL(StrFn(Untranslated("A"), true).value_or(Untranslated("B")), Untranslated("A"));
-    BOOST_CHECK_EQUAL(StrFn(Untranslated("A"), false).value_or(Untranslated("B")), Untranslated("B"));
+    BOOST_CHECK_EQUAL(StrFn(Untranslated("A"), true).value_or(Untranslated("B")), bilingual_str(Untranslated("A")));
+    BOOST_CHECK_EQUAL(StrFn(Untranslated("A"), false).value_or(Untranslated("B")), bilingual_str(Untranslated("B")));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

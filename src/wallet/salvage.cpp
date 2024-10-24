@@ -117,7 +117,7 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
     Db db(env->dbenv.get(), 0);
     result = db.verify(newFilename.c_str(), nullptr, &strDump, DB_SALVAGE | DB_AGGRESSIVE);
     if (result == DB_VERIFY_BAD) {
-        warnings.push_back(Untranslated("Salvage: Database salvage found errors, all data may not be recoverable."));
+        warnings.emplace_back(Untranslated("Salvage: Database salvage found errors, all data may not be recoverable."));
     }
     if (result != 0 && result != DB_VERIFY_BAD) {
         error = strprintf(Untranslated("Salvage: Database salvage failed with result %d."), result);
@@ -144,7 +144,7 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
                 break;
             getline(strDump, valueHex);
             if (valueHex == DATA_END) {
-                warnings.push_back(Untranslated("Salvage: WARNING: Number of keys in data does not match number of values."));
+                warnings.emplace_back(Untranslated("Salvage: WARNING: Number of keys in data does not match number of values."));
                 break;
             }
             salvagedData.emplace_back(ParseHex(keyHex), ParseHex(valueHex));
@@ -153,7 +153,7 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
 
     bool fSuccess;
     if (keyHex != DATA_END) {
-        warnings.push_back(Untranslated("Salvage: WARNING: Unexpected end of file while reading salvage output."));
+        warnings.emplace_back(Untranslated("Salvage: WARNING: Unexpected end of file while reading salvage output."));
         fSuccess = false;
     } else {
         fSuccess = (result == 0);
