@@ -144,10 +144,11 @@ class MiningTest(BitcoinTestFramework):
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
         assert_greater_than_or_equal(tmpl['curtime'], t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP)
 
+        self.log.info("Test timewarp protection boundary")
         block = CBlock()
         block.nVersion = tmpl["version"]
         block.hashPrevBlock = int(tmpl["previousblockhash"], 16)
-        block.nTime = tmpl["curtime"]
+        block.nTime = t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP
         block.nBits = int(tmpl["bits"], 16)
         block.nNonce = 0
         block.vtx = [create_coinbase(height=int(tmpl["height"]))]
@@ -155,18 +156,12 @@ class MiningTest(BitcoinTestFramework):
         assert_template(node, block, None)
 
         bad_block = copy.deepcopy(block)
-        bad_block.nTime = t
-        bad_block.solve()
-        assert_raises_rpc_error(-25, 'time-timewarp-attack', lambda: node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex()))
-
-        self.log.info("Test timewarp protection boundary")
         bad_block.nTime = t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP - 1
         bad_block.solve()
         assert_raises_rpc_error(-25, 'time-timewarp-attack', lambda: node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex()))
 
-        bad_block.nTime = t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP
-        bad_block.solve()
-        node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex())
+        block.solve()
+        node.submitheader(hexdata=CBlockHeader(block).serialize().hex())
 
     def run_test(self):
         node = self.nodes[0]
