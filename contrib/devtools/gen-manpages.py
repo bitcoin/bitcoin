@@ -51,6 +51,10 @@ for relpath in BINARIES:
 
     versions.append((abspath, verstr, copyright))
 
+if not versions:
+    print(f'No binaries found in {builddir}. Set BUILDDIR to specify the correct build path.')
+    sys.exit(1)
+
 if any(verstr.endswith('-dirty') for (_, verstr, _) in versions):
     print("WARNING: Binaries were built from a dirty tree.")
     print('man pages generated from dirty binaries should NOT be committed.')
