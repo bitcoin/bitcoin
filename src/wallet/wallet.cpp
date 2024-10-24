@@ -148,7 +148,7 @@ static void RefreshMempoolStatus(CWallet& wallet, CWalletTx& tx, interfaces::Cha
     }
     if (state) {
         tx.m_state = *state;
-        wallet.RefreshWalletTxTXOs(tx);
+        wallet.RefreshSingleTxTXOs(tx);
     }
 }
 
