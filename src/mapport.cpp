@@ -161,16 +161,16 @@ static bool ProcessUpnp()
             char externalIPAddress[40];
             r = UPNP_GetExternalIPAddress(urls.controlURL, data.first.servicetype, externalIPAddress);
             if (r != UPNPCOMMAND_SUCCESS) {
-                LogPrintf("UPnP: GetExternalIPAddress() returned %d\n", r);
+                LogInfo("UPnP: GetExternalIPAddress() returned %d\n", r);
             } else {
                 if (externalIPAddress[0]) {
                     std::optional<CNetAddr> resolved{LookupHost(externalIPAddress, false)};
                     if (resolved.has_value()) {
-                        LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved->ToStringAddr());
+                        LogInfo("UPnP: ExternalIPAddress = %s\n", resolved->ToStringAddr());
                         AddLocal(resolved.value(), LOCAL_MAPPED);
                     }
                 } else {
-                    LogPrintf("UPnP: GetExternalIPAddress failed.\n");
+                    LogInfo("UPnP: GetExternalIPAddress failed.\n");
                 }
             }
         }
@@ -182,21 +182,21 @@ static bool ProcessUpnp()
 
             if (r != UPNPCOMMAND_SUCCESS) {
                 ret = false;
-                LogPrintf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n", port, port, lanaddr, r, strupnperror(r));
+                LogInfo("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n", port, port, lanaddr, r, strupnperror(r));
                 break;
             } else {
                 ret = true;
-                LogPrintf("UPnP Port Mapping successful.\n");
+                LogInfo("UPnP Port Mapping successful.\n");
             }
         } while (g_mapport_interrupt.sleep_for(PORT_MAPPING_REANNOUNCE_PERIOD));
         g_mapport_interrupt.reset();
 
         r = UPNP_DeletePortMapping(urls.controlURL, data.first.servicetype, port.c_str(), "TCP", nullptr);
-        LogPrintf("UPNP_DeletePortMapping() returned: %d\n", r);
+        LogInfo("UPNP_DeletePortMapping() returned: %d\n", r);
         freeUPNPDevlist(devlist); devlist = nullptr;
         FreeUPNPUrls(&urls);
     } else {
-        LogPrintf("No valid UPnP IGDs found\n");
+        LogInfo("No valid UPnP IGDs found\n");
         freeUPNPDevlist(devlist); devlist = nullptr;
         if (r != 0)
             FreeUPNPUrls(&urls);
