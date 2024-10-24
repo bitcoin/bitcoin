@@ -198,9 +198,12 @@ After configuration, you are ready to compile.
 Run the following in your terminal to compile Bitcoin Core:
 
 ``` bash
-cmake --build build     # Use "-j N" here for N parallel jobs.
-ctest --test-dir build  # Use "-j N" for N parallel tests. Some tests are disabled if Python 3 is not available.
+cmake --build build -j$(nproc)
+ctest --test-dir build -j$(nproc) # Some tests are disabled if Python 3 is not available.
 ```
+
+Note: On macOS, the `nproc` command is not available by default.
+You can install it by running `brew install coreutils`.
 
 ### 3. Deploy (optional)
 
