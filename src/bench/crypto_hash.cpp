@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-
 #include <bench/bench.h>
 #include <crypto/muhash.h>
 #include <crypto/ripemd160.h>
@@ -12,9 +11,11 @@
 #include <crypto/sha512.h>
 #include <crypto/siphash.h>
 #include <random.h>
-#include <span.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <primitives/transaction.h>
+#include <util/hasher.h>
+#include <unordered_set>
 
 #include <cstdint>
 #include <vector>
@@ -199,6 +200,98 @@ static void SipHash_32b(benchmark::Bench& bench)
     });
 }
 
+static void SaltedOutpointHasherBenchmark_hash(benchmark::Bench& bench)
+{
+    FastRandomContext rng(true);
+    constexpr size_t size = 1000;
+
+    std::vector<COutPoint> outpoints(size);
+    for (auto& outpoint : outpoints) {
+        outpoint = {Txid::FromUint256(rng.rand256()), rng.rand32()};
+    }
+
+    const SaltedOutpointHasher hasher;
+    bench.batch(size).run([&] {
+        size_t result = 0;
+        for (const auto& outpoint : outpoints) {
+            result ^= hasher(outpoint);
+        }
+        ankerl::nanobench::doNotOptimizeAway(result);
+    });
+}
+
+static void SaltedOutpointHasherBenchmark_match(benchmark::Bench& bench)
+{
+    FastRandomContext rng(true);
+    constexpr size_t size = 1000;
+
+    std::unordered_set<COutPoint, SaltedOutpointHasher> values;
+    std::vector<COutPoint> value_vector;
+    values.reserve(size);
+    value_vector.reserve(size);
+
+    for (size_t i = 0; i < size; ++i) {
+        COutPoint outpoint{Txid::FromUint256(rng.rand256()), rng.rand32()};
+        values.emplace(outpoint);
+        value_vector.push_back(outpoint);
+        assert(values.contains(outpoint));
+    }
+
+    bench.batch(size).run([&] {
+        bool result = true;
+        for (const auto& outpoint : value_vector) {
+            result ^= values.contains(outpoint);
+        }
+        ankerl::nanobench::doNotOptimizeAway(result);
+    });
+}
+
+static void SaltedOutpointHasherBenchmark_mismatch(benchmark::Bench& bench)
+{
+    FastRandomContext rng(true);
+    constexpr size_t size = 1000;
+
+    std::unordered_set<COutPoint, SaltedOutpointHasher> values;
+    std::vector<COutPoint> missing_value_vector;
+    values.reserve(size);
+    missing_value_vector.reserve(size);
+
+    for (size_t i = 0; i < size; ++i) {
+        values.emplace(Txid::FromUint256(rng.rand256()), rng.rand32());
+        COutPoint missing_outpoint{Txid::FromUint256(rng.rand256()), rng.rand32()};
+        missing_value_vector.push_back(missing_outpoint);
+        assert(!values.contains(missing_outpoint));
+    }
+
+    bench.batch(size).run([&] {
+        bool result = false;
+        for (const auto& outpoint : missing_value_vector) {
+            result ^= values.contains(outpoint);
+        }
+        ankerl::nanobench::doNotOptimizeAway(result);
+    });
+}
+
+static void SaltedOutpointHasherBenchmark_create_set(benchmark::Bench& bench)
+{
+    FastRandomContext rng(true);
+    constexpr size_t size = 1000;
+
+    std::vector<COutPoint> outpoints(size);
+    for (auto& outpoint : outpoints) {
+        outpoint = {Txid::FromUint256(rng.rand256()), rng.rand32()};
+    }
+
+    bench.batch(size).run([&] {
+        std::unordered_set<COutPoint, SaltedOutpointHasher> set;
+        set.reserve(size);
+        for (const auto& outpoint : outpoints) {
+            set.emplace(outpoint);
+        }
+        ankerl::nanobench::doNotOptimizeAway(set);
+    });
+}
+
 static void MuHash(benchmark::Bench& bench)
 {
     MuHash3072 acc;
@@ -257,6 +350,10 @@ BENCHMARK(SHA256_32b_SSE4, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256_32b_AVX2, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256_32b_SHANI, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SipHash_32b, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SaltedOutpointHasherBenchmark_hash, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SaltedOutpointHasherBenchmark_match, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SaltedOutpointHasherBenchmark_mismatch, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SaltedOutpointHasherBenchmark_create_set, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256D64_1024_STANDARD, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256D64_1024_SSE4, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256D64_1024_AVX2, benchmark::PriorityLevel::HIGH);
