@@ -70,8 +70,9 @@ def print_event(event):
     ))
 
 
-def main(bitcoind_path):
-    bitcoind_with_usdts = USDT(path=str(bitcoind_path))
+def main(pid):
+    print(f"Hooking into bitcoind with pid {pid}")
+    bitcoind_with_usdts = USDT(pid=int(pid))
 
     # attaching the trace functions defined in the BPF program
     # to the tracepoints
@@ -99,9 +100,9 @@ def main(bitcoind_path):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("USAGE: ", sys.argv[0], "path/to/bitcoind")
+    if len(sys.argv) != 2:
+        print("USAGE: ", sys.argv[0], "<pid of bitcoind>")
         exit(1)
 
-    path = sys.argv[1]
-    main(path)
+    pid = sys.argv[1]
+    main(pid)
