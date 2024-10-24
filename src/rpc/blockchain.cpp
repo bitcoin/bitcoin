@@ -262,6 +262,7 @@ static RPCHelpMan waitfornewblock()
                 "\nMake sure to use no RPC timeout (bitcoin-cli -rpcclienttimeout=0)",
                 {
                     {"timeout", RPCArg::Type::NUM, RPCArg::Default{0}, "Time in milliseconds to wait for a response. 0 indicates no timeout."},
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Last known block hash. Returns immediately if the tip is different."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -283,7 +284,22 @@ static RPCHelpMan waitfornewblock()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     Mining& miner = EnsureMining(node);
 
+   // Use tip as reference block, unless a block hash was provided.
     auto block{CHECK_NONFATAL(miner.getTip()).value()};
+    if (!request.params[1].isNull()) {
+        uint256 hash(ParseHashV(request.params[1], "blockhash"));
+        {
+            ChainstateManager& chainman = EnsureAnyChainman(request.context);
+            LOCK(cs_main);
+            const CBlockIndex* block_index{chainman.m_blockman.LookupBlockIndex(hash)};
+            if (!block_index) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+            }
+            block.hash = block_index->GetBlockHash();
+            block.height = block_index->nHeight;
+        }
+    }
+
     if (IsRPCRunning()) {
         block = timeout ? miner.waitTipChanged(block.hash, std::chrono::milliseconds(timeout)) : miner.waitTipChanged(block.hash);
     }
