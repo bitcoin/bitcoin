@@ -14,6 +14,8 @@
 #include <string>
 #include <string_view>
 
+bool g_fuzzing = false;
+
 std::string StrFormatInternalBug(std::string_view msg, std::string_view file, int line, std::string_view func)
 {
     return strprintf("Internal bug detected: %s\n%s:%d (%s)\n"
