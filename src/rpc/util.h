@@ -281,6 +281,10 @@ struct RPCArg {
      */
     std::string ToStringObj(bool oneline) const;
     /**
+     * Return the type as a string
+     */
+    std::string ToTypeString() const;
+    /**
      * Return the description string, including the argument type and whether
      * the argument is required.
      */
@@ -481,6 +485,8 @@ public:
         }
     }
     std::string ToString() const;
+    std::string ToStringArgsCli() const;
+    std::string ToString(const std::string& format) const;
     /** Return the named args that need to be converted from string to another JSON type */
     UniValue GetArgMap() const;
     /** If the supplied number of args is neither too small nor too high */
