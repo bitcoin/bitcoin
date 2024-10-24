@@ -106,7 +106,7 @@ bool BaseIndex::Init()
         // best chain, we will rewind to the fork point during index sync
         const CBlockIndex* locator_index{m_chainstate->m_blockman.LookupBlockIndex(locator.vHave.at(0))};
         if (!locator_index) {
-            return InitError(strprintf(Untranslated("%s: best block of the index not found. Please rebuild the index."), GetName()));
+            return InitError(Untranslated(strprintf("%s: best block of the index not found. Please rebuild the index.", GetName())));
         }
         SetBestBlockIndex(locator_index);
     }
