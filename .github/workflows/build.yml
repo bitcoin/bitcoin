@@ -91,6 +91,16 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
 
+      - name: Cache depends sources
+        uses: actions/cache@v4
+        with:
+          path: |
+            depends/sources
+          # We don't care about no specific key as depends system will handle that for us
+          key: depends-sources-${{ hashFiles('depends/packages/*') }}
+          restore-keys: |
+            depends-sources-
+
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
