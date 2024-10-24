@@ -155,10 +155,13 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_xonly_pubkey_tweak_add_
     const unsigned char *tweak32
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(4) SECP256K1_ARG_NONNULL(5);
 
-/** Compute the keypair for a secret key.
+/** Compute the keypair for a valid secret key.
  *
- *  Returns: 1: secret was valid, keypair is ready to use
- *           0: secret was invalid, try again with a different secret
+ *  See the documentation of `secp256k1_ec_seckey_verify` for more information
+ *  about the validity of secret keys.
+ *
+ *  Returns: 1: secret key is valid
+ *           0: secret key is invalid
  *  Args:    ctx: pointer to a context object (not secp256k1_context_static).
  *  Out: keypair: pointer to the created keypair.
  *  In:   seckey: pointer to a 32-byte secret key.

@@ -195,6 +195,17 @@ ellswift_example_LDFLAGS += -lbcrypt
 endif
 TESTS += ellswift_example
 endif
+if ENABLE_MODULE_MUSIG
+noinst_PROGRAMS += musig_example
+musig_example_SOURCES = examples/musig.c
+musig_example_CPPFLAGS = -I$(top_srcdir)/include -DSECP256K1_STATIC
+musig_example_LDADD = libsecp256k1.la
+musig_example_LDFLAGS = -static
+if BUILD_WINDOWS
+musig_example_LDFLAGS += -lbcrypt
+endif
+TESTS += musig_example
+endif
 endif
 
 ### Precomputed tables
@@ -279,6 +290,10 @@ endif
 
 if ENABLE_MODULE_SCHNORRSIG
 include src/modules/schnorrsig/Makefile.am.include
+endif
+
+if ENABLE_MODULE_MUSIG
+include src/modules/musig/Makefile.am.include
 endif
 
 if ENABLE_MODULE_ELLSWIFT
