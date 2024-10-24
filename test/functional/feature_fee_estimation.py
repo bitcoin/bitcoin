@@ -259,7 +259,6 @@ class EstimateFeeTest(BitcoinTestFramework):
         # confirmed
         utxos_to_respend = []
         txids_to_replace = []
-
         assert_greater_than_or_equal(len(utxos), 250)
         for _ in range(5):
             # Broadcast 45 low fee transactions that will need to be RBF'd
@@ -291,7 +290,6 @@ class EstimateFeeTest(BitcoinTestFramework):
             dec_txs = [res["result"] for res in node.batch([node.decoderawtransaction.get_request(tx["hex"]) for tx in txs])]
             self.wallet.scan_txs(dec_txs)
 
-
         # Mine the last replacement txs
         self.sync_mempools(wait=0.1, nodes=[node, miner])
         self.generate(miner, 1)
@@ -310,21 +308,24 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.restart_node(0)
         assert_equal(self.nodes[0].estimatesmartfee(1)["feerate"], fee_rate)
 
-        fee_dat = self.nodes[0].chain_path / "fee_estimates.dat"
+        fee_dat = os.path.join(self.nodes[0].chain_path, "fee_estimates.dat")
 
         # Stop the node and backdate the fee_estimates.dat file more than MAX_FILE_AGE
         self.stop_node(0)
-        last_modified_time = time.time() - (MAX_FILE_AGE + 1) * SECONDS_PER_HOUR
-        os.utime(fee_dat, (last_modified_time, last_modified_time))
+        if os.path.exists(fee_dat):
+            last_modified_time = time.time() - (MAX_FILE_AGE + 1) * SECONDS_PER_HOUR
+            os.utime(fee_dat, (last_modified_time, last_modified_time))
+        else:
+            raise FileNotFoundError(f"Fee estimates file not found at {fee_dat}")
 
         # Start node and ensure the fee_estimates.dat file was not read
         self.start_node(0)
         assert_equal(self.nodes[0].estimatesmartfee(1)["errors"], ["Insufficient data or no feerate found"])
 
-
     def test_estimate_dat_is_flushed_periodically(self):
-        fee_dat = self.nodes[0].chain_path / "fee_estimates.dat"
-        os.remove(fee_dat) if os.path.exists(fee_dat) else None
+        fee_dat = os.path.join(self.nodes[0].chain_path, "fee_estimates.dat")
+        if os.path.exists(fee_dat):
+            os.remove(fee_dat)
 
         # Verify that fee_estimates.dat does not exist
         assert_equal(os.path.isfile(fee_dat), False)
@@ -340,7 +341,8 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Verify that the estimates remain the same if there are no blocks in the flush interval
         block_hash_before = self.nodes[0].getbestblockhash()
-        fee_dat_initial_content = open(fee_dat, "rb").read()
+        with open(fee_dat, "rb") as f:
+            fee_dat_initial_content = f.read()
         with self.nodes[0].assert_debug_log(expected_msgs=["Flushed fee estimates to fee_estimates.dat."], timeout=1):
             # Mock the scheduler for an hour to flush fee estimates to fee_estimates.dat
             self.nodes[0].mockscheduler(SECONDS_PER_HOUR)
@@ -348,12 +350,14 @@ class EstimateFeeTest(BitcoinTestFramework):
         # Verify that there were no blocks in between the flush interval
         assert_equal(block_hash_before, self.nodes[0].getbestblockhash())
 
-        fee_dat_current_content = open(fee_dat, "rb").read()
+        with open(fee_dat, "rb") as f:
+            fee_dat_current_content = f.read()
         assert_equal(fee_dat_current_content, fee_dat_initial_content)
 
         # Verify that the estimates remain the same after shutdown with no blocks before shutdown
         self.restart_node(0)
-        fee_dat_current_content = open(fee_dat, "rb").read()
+        with open(fee_dat, "rb") as f:
+            fee_dat_current_content = f.read()
         assert_equal(fee_dat_current_content, fee_dat_initial_content)
 
         # Verify that the estimates are not the same if new blocks were produced in the flush interval
@@ -362,7 +366,8 @@ class EstimateFeeTest(BitcoinTestFramework):
             self.generate(self.nodes[0], 5, sync_fun=self.no_op)
             self.nodes[0].mockscheduler(SECONDS_PER_HOUR)
 
-        fee_dat_current_content = open(fee_dat, "rb").read()
+        with open(fee_dat, "rb") as f:
+            fee_dat_current_content = f.read()
         assert fee_dat_current_content != fee_dat_initial_content
 
         fee_dat_initial_content = fee_dat_current_content
@@ -370,9 +375,9 @@ class EstimateFeeTest(BitcoinTestFramework):
         # Generate blocks before shutdown and verify that the fee estimates are not the same
         self.generate(self.nodes[0], 5, sync_fun=self.no_op)
         self.restart_node(0)
-        fee_dat_current_content = open(fee_dat, "rb").read()
+        with open(fee_dat, "rb") as f:
+            fee_dat_current_content = f.read()
         assert fee_dat_current_content != fee_dat_initial_content
-
 
     def test_acceptstalefeeestimates_option(self):
         # Get the initial fee rate while node is running
@@ -380,21 +385,25 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         self.stop_node(0)
 
-        fee_dat = self.nodes[0].chain_path / "fee_estimates.dat"
+        fee_dat = os.path.join(self.nodes[0].chain_path, "fee_estimates.dat")
 
         # Stop the node and backdate the fee_estimates.dat file more than MAX_FILE_AGE
-        last_modified_time = time.time() - (MAX_FILE_AGE + 1) * SECONDS_PER_HOUR
-        os.utime(fee_dat, (last_modified_time, last_modified_time))
+        if os.path.exists(fee_dat):
+            last_modified_time = time.time() - (MAX_FILE_AGE + 1) * SECONDS_PER_HOUR
+            os.utime(fee_dat, (last_modified_time, last_modified_time))
+        else:
+            raise FileNotFoundError(f"Fee estimates file not found at {fee_dat}")
 
         # Restart node with -acceptstalefeeestimates option to ensure fee_estimate.dat file is read
-        self.start_node(0,extra_args=["-acceptstalefeeestimates"])
+        self.start_node(0, extra_args=["-acceptstalefeeestimates"])
         assert_equal(self.nodes[0].estimatesmartfee(1)["feerate"], fee_rate)
 
     def clear_estimates(self):
         self.log.info("Restarting node with fresh estimation")
         self.stop_node(0)
-        fee_dat = self.nodes[0].chain_path / "fee_estimates.dat"
-        os.remove(fee_dat)
+        fee_dat = os.path.join(self.nodes[0].chain_path, "fee_estimates.dat")
+        if os.path.exists(fee_dat):
+            os.remove(fee_dat)
         self.start_node(0)
         self.connect_nodes(0, 1)
         self.connect_nodes(0, 2)
@@ -424,7 +433,6 @@ class EstimateFeeTest(BitcoinTestFramework):
         # conservative mode will consider longer time horizons while economical mode does not
         # Check the fee estimates for both modes after mining low fee transactions.
         check_fee_estimates_btw_modes(self.nodes[0], high_feerate, low_feerate)
-
 
     def run_test(self):
         self.log.info("This test is time consuming, please be patient")
@@ -481,3 +489,4 @@ class EstimateFeeTest(BitcoinTestFramework):
 
 if __name__ == "__main__":
     EstimateFeeTest(__file__).main()
+
