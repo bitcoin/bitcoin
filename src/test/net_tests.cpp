@@ -1537,7 +1537,13 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.CompareSessionIDs();
         auto msg_data_1 = g_insecure_rand_ctx.randbytes<uint8_t>(MAX_PROTOCOL_MESSAGE_LENGTH); // test that receiving max size payload works
         auto msg_data_2 = g_insecure_rand_ctx.randbytes<uint8_t>(MAX_PROTOCOL_MESSAGE_LENGTH); // test that sending max size payload works
-        tester.SendMessage(uint8_t(InsecureRandRange(223) + 33), {}); // unknown short id
+        tester.SendMessage([]() {
+            if (g_insecure_rand_ctx.randbool()) {
+                return static_cast<uint8_t>(InsecureRandRange(95) + 33); // Bitcoin's range
+            } else {
+                return static_cast<uint8_t>(InsecureRandRange(88) + 40 + 128); // Dash's range
+            }
+        }(), {}); // unknown short id
         tester.SendMessage(uint8_t(2), msg_data_1); // "block" short id
         tester.AddMessage("blocktxn", msg_data_2); // schedule blocktxn to be sent to us
         ret = tester.Interact();
