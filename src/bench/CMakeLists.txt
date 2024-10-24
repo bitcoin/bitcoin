@@ -71,7 +71,6 @@ if(ENABLE_WALLET)
       wallet_create_tx.cpp
       wallet_loading.cpp
       wallet_ismine.cpp
-      wallet_migration.cpp
   )
   target_link_libraries(bench_bitcoin bitcoin_wallet)
 endif()
