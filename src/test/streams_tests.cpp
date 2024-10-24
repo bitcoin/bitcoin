@@ -14,6 +14,33 @@ using namespace std::string_literals;
 
 BOOST_FIXTURE_TEST_SUITE(streams_tests, BasicTestingSetup)
 
+BOOST_AUTO_TEST_CASE(xor_bytes)
+{
+    auto expected_xor = [](Span<std::byte> write, Span<const std::byte> key, size_t key_offset) {
+        if (key.size()) {
+            for (auto& b : write) {
+                b ^= key[key_offset++ % key.size()];
+            }
+        }
+    };
+
+    FastRandomContext rng{false};
+    for (int test = 0; test < 100; ++test) {
+        const size_t key_size = rng.randrange(10);
+        const size_t write_size = rng.randrange(100);
+        const size_t key_offset = rng.randrange(key_size + 2);
+
+        std::vector key(rng.randbytes<std::byte>(key_size));
+        std::vector expected(rng.randbytes<std::byte>(write_size));
+        std::vector actual(expected);
+
+        expected_xor(expected, key, key_offset);
+        util::Xor(actual, key, key_offset);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.begin(), actual.end());
+    }
+}
+
 BOOST_AUTO_TEST_CASE(xor_file)
 {
     fs::path xor_path{m_args.GetDataDirBase() / "test_xor.bin"};
@@ -73,7 +100,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_writer)
 {
     unsigned char a(1);
     unsigned char b(2);
-    unsigned char bytes[] = { 3, 4, 5, 6 };
+    unsigned char bytes[] = {3, 4, 5, 6};
     std::vector<unsigned char> vch;
 
     // Each test runs twice. Serializing a second time at the same starting
@@ -270,7 +297,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
         BOOST_CHECK(false);
     } catch (const std::exception& e) {
         BOOST_CHECK(strstr(e.what(),
-                        "Rewind limit must be less than buffer size") != nullptr);
+                           "Rewind limit must be less than buffer size") != nullptr);
     }
 
     // The buffer is 25 bytes, allow rewinding 10 bytes.
@@ -359,7 +386,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
         BOOST_CHECK(false);
     } catch (const std::exception& e) {
         BOOST_CHECK(strstr(e.what(),
-                        "BufferedFile::Fill: end of file") != nullptr);
+                           "BufferedFile::Fill: end of file") != nullptr);
     }
     // Attempting to read beyond the end sets the EOF indicator.
     BOOST_CHECK(bf.eof());
