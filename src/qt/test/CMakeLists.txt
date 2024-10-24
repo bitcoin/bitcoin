@@ -32,14 +32,6 @@ if(ENABLE_WALLET)
   )
 endif()
 
-if(NOT QT_IS_STATIC)
-  add_custom_command(
-    TARGET test_bitcoin-qt POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_PROPERTY:Qt5::QMinimalIntegrationPlugin,LOCATION_$<UPPER_CASE:$<CONFIG>>> $<TARGET_FILE_DIR:test_bitcoin-qt>/plugins/platforms
-    VERBATIM
-  )
-endif()
-
 add_test(NAME test_bitcoin-qt
   COMMAND test_bitcoin-qt
 )
