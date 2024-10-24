@@ -476,7 +476,7 @@ struct CNodeState {
     ChainSyncTimeoutState m_chain_sync;
 
     //! Time of last new block announcement
-    int64_t m_last_block_announcement{0};
+    NodeSeconds m_last_block_announcement{0s};
 };
 
 class PeerManagerImpl final : public PeerManager
@@ -528,7 +528,7 @@ public:
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, DataStream& vRecv,
                         const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex, !m_tx_download_mutex);
-    void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) override;
+    void UpdateLastBlockAnnounceTime(NodeId node, NodeSeconds time_in_seconds) override;
     ServiceFlags GetDesirableServiceFlags(ServiceFlags services) const override;
 
 private:
@@ -1706,7 +1706,7 @@ void PeerManagerImpl::AddTxAnnouncement(const CNode& node, const GenTxid& gtxid,
     m_txrequest.ReceivedInv(nodeid, gtxid, preferred, current_time + delay);
 }
 
-void PeerManagerImpl::UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds)
+void PeerManagerImpl::UpdateLastBlockAnnounceTime(NodeId node, NodeSeconds time_in_seconds)
 {
     LOCK(cs_main);
     CNodeState *state = State(node);
@@ -1878,6 +1878,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
             if (queue.pindex)
                 stats.vHeightInFlight.push_back(queue.pindex->nHeight);
         }
+        stats.m_last_block_announcement = state->m_last_block_announcement;
     }
 
     PeerRef peer = GetPeerRef(nodeid);
@@ -3018,7 +3019,7 @@ void PeerManagerImpl::UpdatePeerStateForReceivedHeaders(CNode& pfrom, Peer& peer
     // are still present, however, as belt-and-suspenders.
 
     if (received_new_header && last_header.nChainWork > m_chainman.ActiveChain().Tip()->nChainWork) {
-        nodestate->m_last_block_announcement = GetTime();
+        nodestate->m_last_block_announcement = Now<NodeSeconds>();
     }
 
     // If we're in IBD, we want outbound peers that will serve us a useful
@@ -4798,7 +4799,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // If this was a new header with more work than our tip, update the
         // peer's last block announcement time
         if (received_new_header && pindex->nChainWork > m_chainman.ActiveChain().Tip()->nChainWork) {
-            nodestate->m_last_block_announcement = GetTime();
+            nodestate->m_last_block_announcement = Now<NodeSeconds>();
         }
 
         if (pindex->nStatus & BLOCK_HAVE_DATA) // Nothing to do here
@@ -5573,7 +5574,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
         // Protect peers from eviction if we don't have another connection
         // to their network, counting both outbound-full-relay and manual peers.
         NodeId worst_peer = -1;
-        int64_t oldest_block_announcement = std::numeric_limits<int64_t>::max();
+        std::optional<NodeSeconds> oldest_block_announcement;
 
         m_connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_connman.GetNodesMutex()) {
             AssertLockHeld(::cs_main);
@@ -5588,7 +5589,10 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
             // If this is the only connection on a particular network that is
             // OUTBOUND_FULL_RELAY or MANUAL, protect it.
             if (!m_connman.MultipleManualOrFullOutboundConns(pnode->addr.GetNetwork())) return;
-            if (state->m_last_block_announcement < oldest_block_announcement || (state->m_last_block_announcement == oldest_block_announcement && pnode->GetId() > worst_peer)) {
+            if (!oldest_block_announcement.has_value() ||
+                (state->m_last_block_announcement < *oldest_block_announcement) ||
+                ((state->m_last_block_announcement == *oldest_block_announcement) && pnode->GetId() > worst_peer))
+            {
                 worst_peer = pnode->GetId();
                 oldest_block_announcement = state->m_last_block_announcement;
             }
@@ -5604,7 +5608,8 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
                 // block from.
                 CNodeState &state = *State(pnode->GetId());
                 if (now - pnode->m_connected > MINIMUM_CONNECT_TIME && state.vBlocksInFlight.empty()) {
-                    LogDebug(BCLog::NET, "disconnecting extra outbound peer=%d (last block announcement received at time %d)\n", pnode->GetId(), oldest_block_announcement);
+                    LogDebug(BCLog::NET, "disconnecting extra outbound peer=%d (last block announcement received at time %d)\n",
+                             pnode->GetId(), TicksSinceEpoch<std::chrono::seconds>(*oldest_block_announcement));
                     pnode->fDisconnect = true;
                     return true;
                 } else {
