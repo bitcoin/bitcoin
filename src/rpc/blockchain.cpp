@@ -622,6 +622,11 @@ static CBlock GetBlockChecked(BlockManager& blockman, const CBlockIndex& blockin
         CheckBlockDataAvailability(blockman, blockindex, /*check_for_undo=*/false);
     }
 
+    // No need to go to disk to get the genesis block
+    if (blockindex.nHeight == 0) {
+        return Params().GenesisBlock();
+    }
+
     if (!blockman.ReadBlockFromDisk(block, blockindex)) {
         // Block not found on disk. This shouldn't normally happen unless the block was
         // pruned right after we released the lock above.
