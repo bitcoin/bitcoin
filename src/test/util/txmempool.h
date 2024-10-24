@@ -47,6 +47,18 @@ std::optional<std::string>  CheckPackageMempoolAcceptResult(const Package& txns,
                                                             bool expect_valid,
                                                             const CTxMemPool* mempool);
 
+/** Check that we never get into a state where an ephemeral dust
+ *  transaction would be mined without the spend of the dust
+ *  also being mined. This assumes standardness checks are being
+ *  enforced.
+*/
+void CheckMempoolEphemeralInvariants(const CTxMemPool& tx_pool);
+
+/** Return indexes of the transaction's outputs that are considered dust
+ * at given dust_relay_rate.
+*/
+std::vector<uint32_t> GetDustIndexes(const CTransactionRef& tx_ref, CFeeRate dust_relay_rate);
+
 /** For every transaction in tx_pool, check TRUC invariants:
  * - a TRUC tx's ancestor count must be within TRUC_ANCESTOR_LIMIT
  * - a TRUC tx's descendant count must be within TRUC_DESCENDANT_LIMIT

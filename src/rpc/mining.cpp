@@ -491,7 +491,15 @@ static RPCHelpMan prioritisetransaction()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Priority is no longer supported, dummy argument to prioritisetransaction must be 0.");
     }
 
-    EnsureAnyMemPool(request.context).PrioritiseTransaction(hash, nAmount);
+    CTxMemPool& mempool = EnsureAnyMemPool(request.context);
+
+    // Non-0 fees are not allowed for entry, and modification not allowed afterwards
+    const auto& tx = mempool.get(hash);
+    if (tx && std::any_of(tx->vout.cbegin(), tx->vout.cend(), [&](const auto& output) { return IsDust(output, mempool.m_opts.dust_relay_feerate); })) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Priority is not supported for transactions with dust outputs.");
+    }
+
+    mempool.PrioritiseTransaction(hash, nAmount);
     return true;
 },
     };

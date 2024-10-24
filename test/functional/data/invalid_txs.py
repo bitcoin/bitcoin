@@ -252,7 +252,7 @@ def getDisabledOpcodeTemplate(opcode):
         vin = self.valid_txin
         vin.scriptSig = CScript([opcode])
         tx.vin.append(vin)
-        tx.vout.append(CTxOut(1, basic_p2sh))
+        tx.vout.append(CTxOut(1000, basic_p2sh))
         tx.calc_sha256()
         return tx
 
