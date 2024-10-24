@@ -20,17 +20,18 @@ class P2PSeedNodes(BitcoinTestFramework):
         self.disable_autoconnect = False
 
     def test_no_seednode(self):
-        # Check that if no seednode is provided, the node proceeds as usual (without waiting)
+        self.log.info("Check that if no seednode is provided, the node proceeds as usual (without waiting)")
         with self.nodes[0].assert_debug_log(expected_msgs=[], unexpected_msgs=["Empty addrman, adding seednode", f"Couldn't connect to peers from addrman after {ADD_NEXT_SEEDNODE} seconds. Adding seednode"], timeout=ADD_NEXT_SEEDNODE):
             self.restart_node(0)
 
     def test_seednode_empty_addrman(self):
         seed_node = "0.0.0.1"
-        # Check that the seednode is added to m_addr_fetches on bootstrap on an empty addrman
+        self.log.info("Check that the seednode is immediately added on bootstrap on an empty addrman")
         with self.nodes[0].assert_debug_log(expected_msgs=[f"Empty addrman, adding seednode ({seed_node}) to addrfetch"], timeout=ADD_NEXT_SEEDNODE):
             self.restart_node(0, extra_args=[f'-seednode={seed_node}'])
 
-    def test_seednode_addrman_unreachable_peers(self):
+    def test_seednode_non_empty_addrman(self):
+        self.log.info("Check that if addrman is non-empty, seednodes are queried with a delay")
         seed_node = "0.0.0.2"
         node = self.nodes[0]
         # Fill the addrman with unreachable nodes
@@ -39,17 +40,18 @@ class P2PSeedNodes(BitcoinTestFramework):
             port = 8333 + i
             node.addpeeraddress(ip, port)
 
-        # Restart the node so seednode is processed again
+        # Restart the node so seednode is processed again. Specify a non-working proxy to make sure no actual connections to random IPs are attempted.
+        with node.assert_debug_log(expected_msgs=["trying v1 connection"], timeout=ADD_NEXT_SEEDNODE):
+            self.restart_node(0, extra_args=[f'-seednode={seed_node}', '-proxy=127.0.0.1:1'])
+
         with node.assert_debug_log(expected_msgs=[f"Couldn't connect to peers from addrman after {ADD_NEXT_SEEDNODE} seconds. Adding seednode ({seed_node}) to addrfetch"], unexpected_msgs=["Empty addrman, adding seednode"], timeout=ADD_NEXT_SEEDNODE * 1.5):
-            self.restart_node(0, extra_args=[f'-seednode={seed_node}'])
             node.setmocktime(int(time.time()) + ADD_NEXT_SEEDNODE + 1)
 
     def run_test(self):
         self.test_no_seednode()
         self.test_seednode_empty_addrman()
-        self.test_seednode_addrman_unreachable_peers()
+        self.test_seednode_non_empty_addrman()
 
 
 if __name__ == '__main__':
     P2PSeedNodes(__file__).main()
-
