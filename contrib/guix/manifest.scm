@@ -90,8 +90,7 @@ chain for " target " development."))
       (home-page (package-home-page xgcc))
       (license (package-license xgcc)))))
 
-(define base-gcc gcc-12) ;; 12.4.0
-
+(define base-gcc gcc-13) ;; 13.3.0
 (define base-linux-kernel-headers linux-libre-headers-6.1)
 
 (define* (make-bitcoin-cross-toolchain target
@@ -509,7 +508,7 @@ inspecting signatures in Mach-O binaries.")
         gzip
         xz
         ;; Build tools
-        gcc-toolchain-12
+        gcc-toolchain-13
         cmake-minimal
         gnu-make
         pkg-config
@@ -528,7 +527,7 @@ inspecting signatures in Mach-O binaries.")
                  osslsigncode))
           ((string-contains target "-linux-")
            (list bison
-                 (list gcc-toolchain-12 "static")
+                 (list gcc-toolchain-13 "static")
                  (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
            (list clang-toolchain-18
