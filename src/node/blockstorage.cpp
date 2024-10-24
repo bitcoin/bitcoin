@@ -693,6 +693,11 @@ bool BlockManager::UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos
     hasher << blockundo;
     fileout << hasher.GetHash();
 
+    if (fileout.fclose() != 0) {
+        LogError("%s: fclose failed\n", __func__);
+        return false;
+    }
+
     return true;
 }
 
@@ -981,6 +986,11 @@ bool BlockManager::WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const
     pos.nPos = (unsigned int)fileOutPos;
     fileout << TX_WITH_WITNESS(block);
 
+    if (fileout.fclose() != 0) {
+        LogError("WriteBlockToDisk: fclose failed\n");
+        return false;
+    }
+
     return true;
 }
 
@@ -1164,6 +1174,11 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
 #endif
         )};
         xor_key_file << xor_key;
+        if (xor_key_file.fclose() != 0) {
+            throw std::runtime_error{strprintf("Error closing XOR key file %s: %s\n",
+                                               fs::PathToString(xor_key_path),
+                                               SysErrorString(errno))};
+        }
     }
     // If the user disabled the key, it must be zero.
     if (!opts.use_xor && xor_key != decltype(xor_key){}) {
