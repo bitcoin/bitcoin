@@ -4145,9 +4145,14 @@ size_t CWallet::KeypoolCountExternalKeys() const
 {
     AssertLockHeld(cs_wallet);
 
+    auto legacy_spk_man = GetLegacyScriptPubKeyMan();
+    if (legacy_spk_man) {
+        return legacy_spk_man->KeypoolCountExternalKeys();
+    }
+
     unsigned int count = 0;
-    for (auto spk_man : GetActiveScriptPubKeyMans()) {
-        count += spk_man->KeypoolCountExternalKeys();
+    if (m_external_spk_managers) {
+        count += m_external_spk_managers->GetKeyPoolSize();
     }
 
     return count;
@@ -5847,7 +5852,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
 
     for (bool internal : {false, true}) {
         { // OUTPUT_TYPE is only one: LEGACY
-            auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, internal));
+            auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this));
             if (IsCrypted()) {
                 if (IsLocked()) {
                     throw std::runtime_error(std::string(__func__) + ": Wallet is locked, cannot setup new descriptors");
@@ -5856,7 +5861,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
                     throw std::runtime_error(std::string(__func__) + ": Could not encrypt new descriptors");
                 }
             }
-            spk_manager->SetupDescriptorGeneration(master_key);
+            spk_manager->SetupDescriptorGeneration(master_key, internal);
             uint256 id = spk_manager->GetID();
             m_spk_managers[id] = std::move(spk_manager);
             AddActiveScriptPubKeyMan(id, internal);
@@ -5883,7 +5888,6 @@ void CWallet::LoadActiveScriptPubKeyMan(uint256 id, bool internal)
     auto& spk_mans = internal ? m_internal_spk_managers : m_external_spk_managers;
     auto& spk_mans_other = internal ? m_external_spk_managers : m_internal_spk_managers;
     auto spk_man = m_spk_managers.at(id).get();
-    spk_man->SetInternal(internal);
     spk_mans = spk_man;
 
     if (spk_mans_other == spk_man) {

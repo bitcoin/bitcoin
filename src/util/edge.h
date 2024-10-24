@@ -17,6 +17,7 @@ enum class SocketEventsMode : int8_t;
  * A manager for abstracting logic surrounding edge-triggered socket events
  * modes like kqueue and epoll.
  */
+// TODO: simplify this class to 2-3 flags; kick out everything else to Sock/~Sock and inherited classes
 class EdgeTriggeredEvents
 {
 public:

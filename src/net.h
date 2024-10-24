@@ -241,7 +241,6 @@ public:
     int nVersion;
     std::string cleanSubVer;
     bool fInbound;
-    bool m_manual_connection;
     bool m_bip152_highbandwidth_to;
     bool m_bip152_highbandwidth_from;
     int m_starting_height;
@@ -250,7 +249,6 @@ public:
     uint64_t nRecvBytes;
     mapMsgTypeSize mapRecvBytesPerMsgType;
     NetPermissionFlags m_permission_flags;
-    bool m_legacyWhitelisted;
     std::chrono::microseconds m_last_ping_time;
     std::chrono::microseconds m_min_ping_time;
     // Our address, as reported by the peer
@@ -789,8 +787,6 @@ public:
     bool HasPermission(NetPermissionFlags permission) const {
         return NetPermissions::HasFlag(m_permission_flags, permission);
     }
-    // This boolean is unusued in actual processing, only present for backward compatibility at RPC/QT level
-    bool m_legacyWhitelisted{false};
     /** fSuccessfullyConnected is set to true on receiving VERACK from the peer. */
     std::atomic_bool fSuccessfullyConnected{false};
     // Setting fDisconnect to true will cause the node to be disconnected the

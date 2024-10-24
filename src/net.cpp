@@ -663,8 +663,8 @@ void CNode::CloseSocketDisconnect(CConnman* connman)
         connman->mapSendableNodes.erase(GetId());
     }
 
-    if (connman->m_edge_trig_events && !connman->m_edge_trig_events->UnregisterEvents(m_sock->Get())) {
-        LogPrint(BCLog::NET, "EdgeTriggeredEvents::UnregisterEvents() failed\n");
+    if (connman->m_edge_trig_events) {
+        connman->m_edge_trig_events->UnregisterEvents(m_sock->Get());
     }
 
     LogPrint(BCLog::NET, "disconnecting peer=%d\n", id);
@@ -736,7 +736,6 @@ void CNode::CopyStats(CNodeStats& stats)
         X(cleanSubVer);
     }
     stats.fInbound = IsInboundConn();
-    stats.m_manual_connection = IsManualConn();
     X(m_bip152_highbandwidth_to);
     X(m_bip152_highbandwidth_from);
     {
@@ -752,7 +751,6 @@ void CNode::CopyStats(CNodeStats& stats)
         stats.m_transport_type = info.transport_type;
         if (info.session_id) stats.m_session_id = HexStr(*info.session_id);
     }
-    X(m_legacyWhitelisted);
     X(m_permission_flags);
 
     X(m_last_ping_time);
@@ -1895,14 +1893,12 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     int nMaxInbound = nMaxConnections - m_max_outbound;
 
     AddWhitelistPermissionFlags(permission_flags, addr);
-    bool legacyWhitelisted = false;
     if (NetPermissions::HasFlag(permission_flags, NetPermissionFlags::Implicit)) {
         NetPermissions::ClearFlag(permission_flags, NetPermissionFlags::Implicit);
         if (gArgs.GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY)) NetPermissions::AddFlag(permission_flags, NetPermissionFlags::ForceRelay);
         if (gArgs.GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY)) NetPermissions::AddFlag(permission_flags, NetPermissionFlags::Relay);
         NetPermissions::AddFlag(permission_flags, NetPermissionFlags::Mempool);
         NetPermissions::AddFlag(permission_flags, NetPermissionFlags::NoBan);
-        legacyWhitelisted = true;
     }
 
     {
@@ -2010,8 +2006,6 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
                                  .use_v2transport = use_v2transport,
                              });
     pnode->AddRef();
-    // If this flag is present, the user probably expect that RPC and QT report it as whitelisted (backward compatibility)
-    pnode->m_legacyWhitelisted = legacyWhitelisted;
     m_msgproc->InitializeNode(*pnode, nodeServices);
 
     {
@@ -4307,27 +4301,23 @@ void CConnman::StopNodes()
         }
     }
 
-    {
-        LOCK(m_nodes_mutex);
-
-        // Close sockets
-        for (CNode *pnode : m_nodes)
-            pnode->CloseSocketDisconnect(this);
+    // Delete peer connections.
+    std::vector<CNode*> nodes;
+    WITH_LOCK(m_nodes_mutex, nodes.swap(m_nodes));
+    for (CNode *pnode : nodes) {
+        pnode->CloseSocketDisconnect(this);
+        DeleteNode(pnode);
     }
-    for (ListenSocket& hListenSocket : vhListenSocket) {
-        if (hListenSocket.sock) {
-            if (m_edge_trig_events && !m_edge_trig_events->RemoveSocket(hListenSocket.sock->Get())) {
-                LogPrintf("EdgeTriggeredEvents::RemoveSocket() failed\n");
+
+    // Close listening sockets.
+    if (m_edge_trig_events) {
+        for (ListenSocket& hListenSocket : vhListenSocket) {
+            if (hListenSocket.sock) {
+                m_edge_trig_events->RemoveSocket(hListenSocket.sock->Get());
             }
         }
     }
 
-    // clean up some globals (to help leak detection)
-    std::vector<CNode*> nodes;
-    WITH_LOCK(m_nodes_mutex, nodes.swap(m_nodes));
-    for (CNode* pnode : nodes) {
-        DeleteNode(pnode);
-    }
     for (CNode* pnode : m_nodes_disconnected) {
         DeleteNode(pnode);
     }
