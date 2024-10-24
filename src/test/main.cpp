@@ -46,3 +46,5 @@ const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS = 
 const std::function<std::string()> G_TEST_GET_FULL_NAME = []() {
     return boost::unit_test::framework::current_test_case().full_name();
 };
+
+std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;

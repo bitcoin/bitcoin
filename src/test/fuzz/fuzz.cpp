@@ -37,6 +37,8 @@ const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
 const std::function<std::string()> G_TEST_GET_FULL_NAME{};
 
+std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
+
 /**
  * A copy of the command line arguments that start with `--`.
  * First `LLVMFuzzerInitialize()` is called, which saves the arguments to `g_args`.
@@ -73,13 +75,29 @@ auto& FuzzTargets()
 
 void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target, FuzzTargetOptions opts)
 {
+#ifndef FUZZ_HARNESS
     const auto [it, ins]{FuzzTargets().try_emplace(name, FuzzTarget /* temporary can be dropped after Apple-Clang-16 ? */ {std::move(target), std::move(opts)})};
     Assert(ins);
+#endif
 }
 
 static std::string_view g_fuzz_target;
-static const TypeTestOneInput* g_test_one_input{nullptr};
 
+#ifdef FUZZ_HARNESS
+void PASTE2(FUZZ_HARNESS, _fuzz_target)(FuzzBufferType);
+extern const FuzzTargetOptions PASTE2(FUZZ_HARNESS, _fuzz_opts);
+#else
+static const TypeTestOneInput* g_test_one_input{nullptr};
+#endif
+
+inline void test_one_input(FuzzBufferType buffer)
+{
+#ifdef FUZZ_HARNESS
+    PASTE2(FUZZ_HARNESS,_fuzz_target)(buffer);
+#else
+    (*Assert(g_test_one_input))(buffer);
+#endif
+}
 
 #if defined(__clang__) && defined(__linux__)
 extern "C" void __llvm_profile_reset_counters(void) __attribute__((weak));
@@ -120,6 +138,9 @@ void initialize()
         return WrappedGetAddrInfo(name, false);
     };
 
+#ifdef FUZZ_HARNESS
+    PASTE2(FUZZ_HARNESS, _fuzz_opts).init();
+#else
     bool should_exit{false};
     if (std::getenv("PRINT_ALL_FUZZ_TARGETS_AND_ABORT")) {
         for (const auto& [name, t] : FuzzTargets()) {
@@ -149,6 +170,7 @@ void initialize()
         std::cerr << "Hint: Set the PRINT_ALL_FUZZ_TARGETS_AND_ABORT=1 env var to see all compiled targets." << std::endl;
         std::exit(EXIT_FAILURE);
     }
+
     const auto it = FuzzTargets().find(g_fuzz_target);
     if (it == FuzzTargets().end()) {
         std::cerr << "No fuzz target compiled for " << g_fuzz_target << "." << std::endl;
@@ -157,6 +179,7 @@ void initialize()
     Assert(!g_test_one_input);
     g_test_one_input = &it->second.test_one_input;
     it->second.opts.init();
+#endif
 
     ResetCoverageCounters();
 }
@@ -205,7 +228,6 @@ void signal_handler(int signal)
 // This function is used by libFuzzer
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    static const auto& test_one_input = *Assert(g_test_one_input);
     test_one_input({data, size});
     return 0;
 }
@@ -222,7 +244,6 @@ extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
 int main(int argc, char** argv)
 {
     initialize();
-    static const auto& test_one_input = *Assert(g_test_one_input);
 #ifdef __AFL_LOOP
     // Enable AFL persistent mode. Requires compilation using afl-clang-fast++.
     // See fuzzing.md for details.

@@ -186,6 +186,7 @@ endif()
 option(BUILD_BENCH "Build bench_bitcoin executable." OFF)
 option(BUILD_FUZZ_BINARY "Build fuzz binary." OFF)
 option(BUILD_FOR_FUZZING "Build for fuzzing. Enabling this will disable all other targets and override BUILD_FUZZ_BINARY." OFF)
+cmake_dependent_option(BUILD_INDIVIDUAL_FUZZ_BINARIES "Build individual fuzz binaries for each harness." OFF "BUILD_FOR_FUZZING" OFF)
 
 option(INSTALL_MAN "Install man pages." ON)
 

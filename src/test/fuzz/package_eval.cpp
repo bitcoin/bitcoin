@@ -136,6 +136,7 @@ std::unique_ptr<CTxMemPool> MakeMempool(FuzzedDataProvider& fuzzed_data_provider
     Assert(error.empty() || error.original.starts_with("-maxmempool must be at least "));
     return mempool;
 }
+} // namespace
 
 FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
 {
@@ -327,4 +328,3 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
 
     WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
 }
-} // namespace
