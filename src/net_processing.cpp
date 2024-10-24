@@ -512,6 +512,7 @@ public:
     /** Implement PeerManager */
     void StartScheduledTasks(CScheduler& scheduler) override;
     void CheckForStaleTipAndEvictPeers() override;
+    void CheckForLimitedMempoolAndEvictPeers() override;
     std::optional<std::string> FetchBlock(NodeId peer_id, const CBlockIndex& block_index) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -2106,6 +2107,8 @@ void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
     // timer.
     static_assert(EXTRA_PEER_CHECK_INTERVAL < STALE_CHECK_INTERVAL, "peer eviction timer should be less than stale tip check timer");
     scheduler.scheduleEvery([this] { this->CheckForStaleTipAndEvictPeers(); }, std::chrono::seconds{EXTRA_PEER_CHECK_INTERVAL});
+
+    scheduler.scheduleEvery([this] { this->CheckForLimitedMempoolAndEvictPeers(); }, std::chrono::seconds{60});
 
     // schedule next run for 10-15 minutes in the future
     const auto delta = 10min + FastRandomContext().randrange<std::chrono::milliseconds>(5min);
@@ -5651,6 +5654,62 @@ void PeerManagerImpl::CheckForStaleTipAndEvictPeers()
         m_initial_sync_finished = true;
     }
 }
+
+void PeerManagerImpl::CheckForLimitedMempoolAndEvictPeers()
+{
+    LOCK(cs_main);
+    // It only makes sense once we're out of IBD, because otherwise our mempool
+    // is not a good source for fee estimation anyway.
+    // TODO: assumeUTXO?
+    if (!CanDirectFetch()) return;
+
+    // Don't bother if we are still seeking for outbound peers: eviction
+    // instead will reduce our chances to get blocks and transactions from
+    // them.
+    // TODO this could be more nuanced.
+    if (m_connman.GetExtraFullOutboundCount() < 0) return;
+
+    // Ideally we want to compare mempool sizes, not fee filters.
+    // Otherwise we easily get confused: e.g. at empty mempools this is less
+    // critical, but that'd be impossible to account for.
+    const auto our_min_feerate = WITH_LOCK(m_mempool.cs, return m_mempool.GetMinFee());
+
+    std::vector<std::pair<CNode*, CAmount>> peer_fee_filters;
+
+    size_t around_our_percent_fee_filter = 0;
+
+    m_connman.ForEachNode([&](CNode* pnode) {
+        if (!pnode->IsFullOutboundConn() || pnode->fDisconnect) return;
+        auto peer = GetPeerRef(pnode->GetId());
+
+        if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
+            if (tx_relay->m_fee_filter_received) {
+                peer_fee_filters.push_back(std::make_pair(pnode, tx_relay->m_fee_filter_received.load()));
+            } else {
+                ++around_our_percent_fee_filter;
+            }
+        }
+    });
+
+    if (peer_fee_filters.size() == 0) return;
+
+    std::sort(peer_fee_filters.begin(), peer_fee_filters.end());
+
+    for (auto [node_id, fee_filter] : peer_fee_filters) {
+        if (fee_filter == 0) ++around_our_percent_fee_filter;
+        // Lower than our filter means they are more permissive.
+        if (CFeeRate{fee_filter} <= our_min_feerate) ++around_our_percent_fee_filter;;
+    }
+
+    if (around_our_percent_fee_filter < 4) {
+        // Drop one peer at a time to preserve a sufficient total
+        // number of connections, and to avoid network DoS.
+        // TODO add randomness chosing among low-feerate candidates.
+        peer_fee_filters.back().first->fDisconnect = true;
+    }
+
+}
+
 
 void PeerManagerImpl::MaybeSendPing(CNode& node_to, Peer& peer, std::chrono::microseconds now)
 {
