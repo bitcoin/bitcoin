@@ -166,7 +166,10 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::MNAUTH,
     NetMsgType::GETHEADERS2,
     NetMsgType::SENDHEADERS2,
-    NetMsgType::HEADERS2};
+    NetMsgType::HEADERS2,
+    NetMsgType::GETQUORUMROTATIONINFO,
+    NetMsgType::QUORUMROTATIONINFO
+};
 const static std::vector<std::string> allNetMessageTypesVec(std::begin(allNetMessageTypes), std::end(allNetMessageTypes));
 
 /** Message types that are not allowed by blocks-relay-only policy.
@@ -184,6 +187,7 @@ const static std::string netMessageTypesViolateBlocksOnly[] = {
     NetMsgType::DSSTATUSUPDATE,
     NetMsgType::DSTX,
     NetMsgType::DSVIN,
+    NetMsgType::GETQUORUMROTATIONINFO,
     NetMsgType::QBSIGSHARES,
     NetMsgType::QCOMPLAINT,
     NetMsgType::QCONTRIB,
@@ -197,6 +201,7 @@ const static std::string netMessageTypesViolateBlocksOnly[] = {
     NetMsgType::QSIGSESANN,
     NetMsgType::QSIGSHARE,
     NetMsgType::QSIGSHARESINV,
+    NetMsgType::QUORUMROTATIONINFO,
     NetMsgType::QWATCH,
     NetMsgType::TX,
 };

@@ -7,12 +7,12 @@ Test v2 transport
 """
 import socket
 
-from test_framework.messages import NODE_P2P_V2
-from test_framework.p2p import MAGIC_BYTES
+from test_framework.messages import MAGIC_BYTES, NODE_P2P_V2
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     p2p_port,
+    assert_raises_rpc_error
 )
 
 
@@ -60,6 +60,11 @@ class V2TransportTest(BitcoinTestFramework):
         # V1 nodes can sync with each other
         assert_equal(self.nodes[2].getblockcount(), 0)
         assert_equal(self.nodes[3].getblockcount(), 0)
+
+        # addnode rpc error when v2transport requested but not enabled
+        ip_port = "127.0.0.1:{}".format(p2p_port(3))
+        assert_raises_rpc_error(-8, "Error: v2transport requested but not enabled (see -v2transport)", self.nodes[2].addnode, node=ip_port, command='add', v2transport=True)
+
         with self.nodes[2].assert_debug_log(expected_msgs=[],
                                             unexpected_msgs=[sending_handshake, downgrading_to_v1]):
             self.connect_nodes(2, 3, peer_advertises_v2=False)

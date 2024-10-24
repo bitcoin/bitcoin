@@ -115,9 +115,14 @@ class NetTest(DashTestFramework):
         no_version_peer_conntime = self.mocktime
         with self.nodes[0].assert_debug_log([f"Added connection peer={no_version_peer_id}"]):
             no_version_peer = self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False)
+        if self.options.v2transport:
+            self.wait_until(lambda: self.nodes[0].getpeerinfo()[no_version_peer_id]["transport_protocol_type"] == "v2")
         peer_info = self.nodes[0].getpeerinfo()[no_version_peer_id]
         peer_info.pop("addr")
         peer_info.pop("addrbind")
+        # The next two fields will vary for v2 connections because we send a rng-based number of decoy messages
+        peer_info.pop("bytesrecv")
+        peer_info.pop("bytessent")
         assert_equal(
             peer_info,
             {
@@ -126,9 +131,7 @@ class NetTest(DashTestFramework):
                 "addr_relay_enabled": False,
                 "bip152_hb_from": False,
                 "bip152_hb_to": False,
-                "bytesrecv": 0,
                 "bytesrecv_per_msg": {},
-                "bytessent": 0,
                 "bytessent_per_msg": {},
                 "connection_type": "inbound",
                 "conntime": no_version_peer_conntime,
@@ -137,21 +140,21 @@ class NetTest(DashTestFramework):
                 "inflight": [],
                 "last_block": 0,
                 "last_transaction": 0,
-                "lastrecv": 0,
-                "lastsend": 0,
+                "lastrecv": 0 if not self.options.v2transport else no_version_peer_conntime,
+                "lastsend": 0 if not self.options.v2transport else no_version_peer_conntime,
                 "masternode": False,
                 "network": "not_publicly_routable",
                 "permissions": [],
                 "relaytxes": False,
                 "services": "0000000000000000",
                 "servicesnames": [],
-                "session_id": "",
+                "session_id": "" if not self.options.v2transport else no_version_peer.v2_state.peer['session_id'].hex(),
                 "startingheight": -1,
                 "subver": "",
                 "synced_blocks": -1,
                 "synced_headers": -1,
                 "timeoffset": 0,
-                "transport_protocol_type": "v1" if not self.options.v2transport else "detecting",
+                "transport_protocol_type": "v1" if not self.options.v2transport else "v2",
                 "version": 0,
             },
         )
@@ -253,7 +256,10 @@ class NetTest(DashTestFramework):
     def test_service_flags(self):
         self.log.info("Test service flags")
         self.nodes[0].add_p2p_connection(P2PInterface(), services=(1 << 4) | (1 << 63))
-        assert_equal(['UNKNOWN[2^4]', 'UNKNOWN[2^63]'], self.nodes[0].getpeerinfo()[-1]['servicesnames'])
+        if self.options.v2transport:
+            assert_equal(['UNKNOWN[2^4]', 'P2P_V2', 'UNKNOWN[2^63]'], self.nodes[0].getpeerinfo()[-1]['servicesnames'])
+        else:
+            assert_equal(['UNKNOWN[2^4]', 'UNKNOWN[2^63]'], self.nodes[0].getpeerinfo()[-1]['servicesnames'])
         self.nodes[0].disconnect_p2ps()
 
     def test_getnodeaddresses(self):

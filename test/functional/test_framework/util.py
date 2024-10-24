@@ -219,6 +219,12 @@ def str_to_b64str(string):
     return b64encode(string.encode('utf-8')).decode('ascii')
 
 
+def random_bitflip(data):
+    data = list(data)
+    data[random.randrange(len(data))] ^= (1 << (random.randrange(8)))
+    return bytes(data)
+
+
 def satoshi_round(amount):
     return Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
 
