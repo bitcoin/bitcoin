@@ -523,6 +523,20 @@ struct Node {
         }
     }
 
+    Node<Key> Clone() const
+    {
+        // Use TreeEval() to avoid a stack-overflow due to recursion
+        auto upfn = [](const Node& node, Span<Node> subs) {
+            Node<Key> ret(node);
+            ret.subs.clear();
+            for (const auto& sub : subs) {
+                ret.subs.push_back(MakeNodeRef<Key>(sub));
+            }
+            return ret;
+        };
+        return TreeEval<Node<Key>>(upfn);
+    }
+
 private:
     //! Cached ops counts.
     const internal::Ops ops;
@@ -630,7 +644,10 @@ private:
             // If evaluation returns std::nullopt, abort immediately.
             if (!result) return {};
             // Replace the last node.subs.size() elements of results with the new result.
-            results.erase(results.end() - node.subs.size(), results.end());
+            // Use pop_back to truncate results to avoid MoveAssignable requirement of erase().
+            for (size_t i = 0; i < node.subs.size(); ++i) {
+                results.pop_back();
+            }
             results.push_back(std::move(*result));
             stack.pop_back();
         }

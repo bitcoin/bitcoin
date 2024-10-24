@@ -1360,7 +1360,7 @@ public:
         for (const auto& arg : m_pubkey_args) {
             providers.push_back(arg->Clone());
         }
-        return std::make_unique<MiniscriptDescriptor>(std::move(providers), miniscript::MakeNodeRef<uint32_t>(*m_node));
+        return std::make_unique<MiniscriptDescriptor>(std::move(providers), miniscript::MakeNodeRef<uint32_t>(m_node->Clone()));
     }
 };
 
