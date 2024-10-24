@@ -38,6 +38,7 @@ static RPCHelpMan masternode_connect()
         "Connect to given masternode\n",
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the masternode to connect"},
+            {"v2transport", RPCArg::Type::BOOL, RPCArg::Default{false}, "Attempt to connect using BIP324 v2 transport protocol"},
         },
         RPCResults{},
         RPCExamples{""},
@@ -50,12 +51,19 @@ static RPCHelpMan masternode_connect()
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect masternode address %s", strAddress));
     }
 
+    bool use_v2transport = !request.params[1].isNull() && ParseBoolV(request.params[1], "v2transport");
+
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     CConnman& connman = EnsureConnman(node);
 
-    connman.OpenMasternodeConnection(CAddress(addr.value(), NODE_NETWORK));
-    if (!connman.IsConnected(CAddress(addr.value(), NODE_NETWORK), CConnman::AllNodes))
+    if (use_v2transport && !(connman.GetLocalServices() & NODE_P2P_V2)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Adding v2transport connections requires -v2transport init flag to be set.");
+    }
+
+    connman.OpenMasternodeConnection(CAddress(addr.value(), NODE_NETWORK), use_v2transport);
+    if (!connman.IsConnected(CAddress(addr.value(), NODE_NETWORK), CConnman::AllNodes)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Couldn't connect to masternode %s", strAddress));
+    }
 
     return "successfully connected";
 },

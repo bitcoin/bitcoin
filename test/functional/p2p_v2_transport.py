@@ -7,8 +7,7 @@ Test v2 transport
 """
 import socket
 
-from test_framework.messages import NODE_P2P_V2
-from test_framework.p2p import MAGIC_BYTES
+from test_framework.messages import MAGIC_BYTES, NODE_P2P_V2
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
