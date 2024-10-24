@@ -49,7 +49,7 @@
  *
  * - RandAddPeriodic() seeds everything that fast seeding includes, but additionally:
  *   - A high-precision timestamp
- *   - Dynamic environment data (performance monitoring, ...)
+ *   - Dynamic environment data (clocks, resource usage, ...)
  *   - Strengthen the entropy for 10 ms using repeated SHA512.
  *   This is run once every minute.
  *
