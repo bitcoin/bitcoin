@@ -17,6 +17,7 @@ import re
 import subprocess
 import tempfile
 import time
+import types
 import urllib.parse
 import collections
 import shlex
@@ -498,7 +499,8 @@ class TestNode():
         time_end = time.time() + timeout * self.timeout_factor
         prev_size = self.debug_log_size(encoding="utf-8")  # Must use same encoding that is used to read() below
 
-        yield
+        info = types.SimpleNamespace()
+        yield info
 
         while True:
             found = True
@@ -513,6 +515,7 @@ class TestNode():
                 if re.search(re.escape(expected_msg), log, flags=re.MULTILINE) is None:
                     found = False
             if found:
+                info.log = log
                 return
             if time.time() >= time_end:
                 break
