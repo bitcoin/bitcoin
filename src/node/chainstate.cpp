@@ -100,11 +100,12 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     assert(chainman.m_total_coinstip_cache > 0);
     assert(chainman.m_total_coinsdb_cache > 0);
 
-    // Conservative value which is arbitrarily chosen, as it will ultimately be changed
-    // by a call to `chainman.MaybeRebalanceCaches()`. We just need to make sure
-    // that the sum of the two caches (40%) does not exceed the allowable amount
-    // during this temporary initialization state.
-    double init_cache_fraction = 0.2;
+    // If running with multiple chainstates, limit the cache sizes with a
+    // discount factor. If discounted the actual cache size will be
+    // recalculated by `chainman.MaybeRebalanceCaches()`. The discount factor
+    // is conservatively chosen such that the sum of the caches does not exceed
+    // the allowable amount during this temporary initialization state.
+    double init_cache_fraction = chainman.GetAll().size() > 1 ? 0.2 : 1.0;
 
     // At this point we're either in reindex or we've loaded a useful
     // block tree into BlockIndex()!
