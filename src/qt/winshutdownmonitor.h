@@ -9,7 +9,7 @@
 #include <QByteArray>
 #include <QString>
 
-#include <windef.h> // for HWND
+#include <windows.h>
 
 #include <QAbstractNativeEventFilter>
 

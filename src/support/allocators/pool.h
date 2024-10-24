@@ -272,7 +272,7 @@ public:
 /**
  * Forwards all allocations/deallocations to the PoolResource.
  */
-template <class T, std::size_t MAX_BLOCK_SIZE_BYTES, std::size_t ALIGN_BYTES>
+template <class T, std::size_t MAX_BLOCK_SIZE_BYTES, std::size_t ALIGN_BYTES = alignof(T)>
 class PoolAllocator
 {
     PoolResource<MAX_BLOCK_SIZE_BYTES, ALIGN_BYTES>* m_resource;
