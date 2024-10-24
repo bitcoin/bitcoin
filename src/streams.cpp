@@ -12,6 +12,7 @@
 AutoFile::AutoFile(std::FILE* file, std::vector<std::byte> data_xor)
     : m_file{file}, m_xor{std::move(data_xor)}
 {
+    assert(m_xor.size() == sizeof(uint64_t));
     if (!IsNull()) {
         auto pos{std::ftell(m_file)};
         if (pos >= 0) m_position = pos;

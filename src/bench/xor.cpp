@@ -1047,7 +1047,7 @@ static void XorHistogram(benchmark::Bench& bench)
     size_t offset{0};
     bench.batch(total_bytes).unit("byte").run([&] {
         for (auto& data : test_data) {
-            util::Xor(data, key_bytes, offset++);
+            util::Xor(data, key, offset++);
         }
         ankerl::nanobench::doNotOptimizeAway(test_data);
     });
