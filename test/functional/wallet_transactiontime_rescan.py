@@ -32,6 +32,7 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
                            ["-keypool=400"],
                            []
                           ]
+        self.rpc_timeout = 120
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -202,7 +203,7 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
             encrypted_wallet.sethdseed(seed=hd_seed)
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as thread:
-                with minernode.assert_debug_log(expected_msgs=["Rescan started from block 0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206... (slow variant inspecting all blocks)"], timeout=5):
+                with minernode.assert_debug_log(expected_msgs=["Rescan started from block 0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206... (slow variant inspecting all blocks)"], timeout=5, wallet=True):
                     rescanning = thread.submit(encrypted_wallet.rescanblockchain)
 
                 # set the passphrase timeout to 1 to test that the wallet remains unlocked during the rescan
