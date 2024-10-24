@@ -98,7 +98,7 @@ chain for " target " development."))
                                        #:key
                                        (base-gcc-for-libc linux-base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
-                                       (base-libc glibc-2.31)
+                                       (base-libc glibc-2.40)
                                        (base-gcc linux-base-gcc))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
@@ -448,11 +448,11 @@ inspecting signatures in Mach-O binaries.")
                  (("-rpath=") "-rpath-link="))
                #t))))))))
 
-(define-public glibc-2.31
-  (let ((commit "8e30f03744837a85e33d84ccd34ed3abe30d37c3"))
+(define-public glibc-2.33
+  (let ((commit "5f08d1df2c07904c1dc98bdf2b363c65874266f7"))
   (package
-    (inherit glibc) ;; 2.35
-    (version "2.31")
+    (inherit glibc) ;; 2.39
+    (version "2.33")
     (source (origin
               (method git-fetch)
               (uri (git-reference
@@ -461,7 +461,7 @@ inspecting signatures in Mach-O binaries.")
               (file-name (git-file-name "glibc" commit))
               (sha256
                (base32
-                "1zi0s9yy5zkisw823vivn7zlj8w6g9p3mm7lmlqiixcxdkz4dbn6"))
+                "0a9bxg13h9m19yx4aihix3l9yylv9vf9szkjj96cjg2zglx1izkf"))
               (patches (search-our-patches "glibc-guix-prefix.patch"))))
     (arguments
       (substitute-keyword-arguments (package-arguments glibc)
@@ -471,21 +471,40 @@ inspecting signatures in Mach-O binaries.")
             (list "--enable-stack-protector=all",
                   "--enable-cet",
                   "--enable-bind-now",
+                  "--enable-static-pie",
+                  "--enable-static-nss",
                   "--disable-werror",
-                  building-on)))
-    ((#:phases phases)
-        `(modify-phases ,phases
-           (add-before 'configure 'set-etc-rpc-installation-directory
-             (lambda* (#:key outputs #:allow-other-keys)
-               ;; Install the rpc data base file under `$out/etc/rpc'.
-               ;; Otherwise build will fail with "Permission denied."
-               ;; Can be removed when we are building 2.32 or later.
-               (let ((out (assoc-ref outputs "out")))
-                 (substitute* "sunrpc/Makefile"
-                   (("^\\$\\(inst_sysconfdir\\)/rpc(.*)$" _ suffix)
-                    (string-append out "/etc/rpc" suffix "\n"))
-                   (("^install-others =.*$")
-                    (string-append "install-others = " out "/etc/rpc\n")))))))))))))
+                  building-on))))))))
+
+(define-public glibc-2.40
+  (let ((commit "f4a9b6e97bf05cf5a41907e55901f7e9afaafd4d"))
+  (package
+    (inherit glibc) ;; 2.39
+    (version "2.40")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://sourceware.org/git/glibc.git")
+                    (commit commit)))
+              (file-name (git-file-name "glibc" commit))
+              (sha256
+               (base32
+                "1rzdn7wy6asa22q9rwyizw3ha5xqpn193hwp2mmwdl87dr6yyksj"))
+              (patches (search-our-patches "glibc-2.40-guix-prefix.patch"))))
+    (arguments
+      (substitute-keyword-arguments (package-arguments glibc)
+        ((#:configure-flags flags)
+          `(append ,flags
+            ;; https://www.gnu.org/software/libc/manual/html_node/Configuring-and-compiling.html
+            (list "--enable-stack-protector=all",
+                  "--enable-bind-now",
+                  "--disable-werror",
+                  "--enable-fortify-source=yes",
+                  "--enable-cet=yes",
+                  "--enable-nscd=no",
+                  "--enable-static-nss=yes",
+                  "--enable-static-pie=yes",
+                  building-on))))))))
 
 (packages->manifest
  (append
