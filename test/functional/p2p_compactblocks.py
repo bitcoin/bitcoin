@@ -57,6 +57,7 @@ from test_framework.script import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
     softfork_active,
 )
@@ -791,7 +792,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         cmpct_block.use_witness = True
         delivery_peer.send_and_ping(msg_cmpctblock(cmpct_block.to_p2p()))
-        assert int(node.getbestblockhash(), 16) != block.sha256
+        assert_not_equal(int(node.getbestblockhash(), 16), block.sha256)
 
         msg = msg_no_witness_blocktxn()
         msg.block_transactions.blockhash = block.sha256
@@ -868,19 +869,19 @@ class CompactBlocksTest(BitcoinTestFramework):
             with p2p_lock:
                 # The second peer to announce should still get a getblocktxn
                 assert "getblocktxn" in delivery_peer.last_message
-            assert int(node.getbestblockhash(), 16) != block.sha256
+            assert_not_equal(int(node.getbestblockhash(), 16), block.sha256)
 
             inbound_peer.send_and_ping(msg_cmpctblock(cmpct_block.to_p2p()))
             with p2p_lock:
                 # The third inbound peer to announce should *not* get a getblocktxn
                 assert "getblocktxn" not in inbound_peer.last_message
-            assert int(node.getbestblockhash(), 16) != block.sha256
+            assert_not_equal(int(node.getbestblockhash(), 16), block.sha256)
 
             outbound_peer.send_and_ping(msg_cmpctblock(cmpct_block.to_p2p()))
             with p2p_lock:
                 # The third peer to announce should get a getblocktxn if outbound
                 assert "getblocktxn" in outbound_peer.last_message
-            assert int(node.getbestblockhash(), 16) != block.sha256
+            assert_not_equal(int(node.getbestblockhash(), 16), block.sha256)
 
             # Second peer completes the compact block first
             msg = msg_blocktxn()
