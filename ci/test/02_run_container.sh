@@ -59,11 +59,16 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   fi
 
   if [ "$DANGER_CI_ON_HOST_CCACHE_FOLDER" ]; then
+   # Temporary exclusion for https://github.com/bitcoin/bitcoin/issues/31108
+   # to allow CI configs and envs generated in the past to work for a bit longer.
+   # Can be removed in March 2025.
+   if [ "${CCACHE_DIR}" != "/tmp/ccache_dir" ]; then
     if [ ! -d "${CCACHE_DIR}" ]; then
       echo "Error: Directory '${CCACHE_DIR}' must be created in advance."
       exit 1
     fi
     CI_CCACHE_MOUNT="type=bind,src=${CCACHE_DIR},dst=${CCACHE_DIR}"
+   fi # End temporary exclusion
   fi
 
   docker network create --ipv6 --subnet 1111:1111::/112 ci-ip6net || true
