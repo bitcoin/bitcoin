@@ -72,7 +72,7 @@ jobs:
         run: |
           # Run tests on commits after the last merge commit and before the PR head commit
           # Use clang++, because it is a bit faster and uses less memory than g++
-          git rebase --exec "echo Running test-one-commit on \$( git log -1 ) && CC=clang CXX=clang++ cmake -B build -DWERROR=ON -DWITH_ZMQ=ON -DBUILD_GUI=ON -DBUILD_BENCH=ON -DBUILD_FUZZ_BINARY=ON -DWITH_BDB=ON -DWITH_MINIUPNPC=ON -DWITH_USDT=ON && cmake --build build -j $(nproc) && ctest --test-dir build -j $(nproc) && ./build/test/functional/test_runner.py -j $(( $(nproc) * 2 ))" ${{ env.TEST_BASE }}
+          git rebase --exec "echo Running test-one-commit on \$( git log -1 ) && CC=clang CXX=clang++ cmake -B build -DWERROR=ON -DWITH_ZMQ=ON -DBUILD_GUI=ON -DBUILD_BENCH=ON -DBUILD_FUZZ_BINARY=ON -DWITH_BDB=ON -DWITH_MINIUPNPC=ON -DWITH_USDT=ON && cmake --build build -j $(nproc) && ctest --output-on-failure --test-dir build -j $(nproc) && ./build/test/functional/test_runner.py -j $(( $(nproc) * 2 ))" ${{ env.TEST_BASE }}
 
   macos-native-arm64:
     name: 'macOS 14 native, arm64, no depends, sqlite only, gui'
@@ -199,7 +199,7 @@ jobs:
       - name: Run test suite
         working-directory: build
         run: |
-          ctest -j $env:NUMBER_OF_PROCESSORS -C Release
+          ctest --output-on-failure -j $env:NUMBER_OF_PROCESSORS -C Release
 
       - name: Run functional tests
         working-directory: build
