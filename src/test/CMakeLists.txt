@@ -126,6 +126,7 @@ add_executable(test_bitcoin
   transaction_tests.cpp
   translation_tests.cpp
   txindex_tests.cpp
+  txospenderindex_tests.cpp
   txpackage_tests.cpp
   txreconciliation_tests.cpp
   txrequest_tests.cpp
