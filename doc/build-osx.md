@@ -160,14 +160,6 @@ It is required that you have `python` installed.
 
 There are many ways to configure Bitcoin Core, here are a few common examples:
 
-##### Wallet (BDB + SQlite) Support, No GUI:
-
-If `berkeley-db@4` or `sqlite` are not installed, this will throw an error.
-
-``` bash
-cmake -B build -DWITH_BDB=ON
-```
-
 ##### Wallet (only SQlite) and GUI Support:
 
 This enables the GUI.
