@@ -15,14 +15,11 @@ apply.
 Limitations
 -----------
 
-There is a known issue in the REST interface that can cause a node to crash if
-too many http connections are being opened at the same time because the system runs
-out of available file descriptors. To prevent this from happening you might
-want to increase the number of maximum allowed file descriptors in your system
-and try to prevent opening too many connections to your rest interface at the
-same time if this is under your control. It is hard to give general advice
-since this depends on your system but if you make several hundred requests at
-once you are definitely at risk of encountering this issue.
+When too many connections are opened quickly the interface will start to
+respond with 503 Service Unavailable to prevent a crash from running out of file
+descriptors. To prevent this from happening you should try to prevent opening
+too many connections to the interface at the same time, for example
+by throttling your request rate.
 
 Supported API
 -------------
