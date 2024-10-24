@@ -26,11 +26,14 @@ jobs:
       - name: Check merge --ff-only
         run: |
           git fetch origin master:master
-          git checkout master
           if [[ "${{ github.event_name }}" == "pull_request"* ]]; then
-            git fetch origin pull/${{ github.event.pull_request.number }}/head
-            git merge --ff-only ${{ github.event.pull_request.head.sha }}
+            git fetch origin {{ github.event.pull_request.base.ref }}:base_branch
+            git checkout base_branch
+            git pull origin pull/${{ github.event.pull_request.number }}/head
+            git checkout master
+            git merge --ff-only base_branch
           else
+            git checkout master
             git merge --ff-only ${{ github.sha }}
           fi
 
