@@ -1,192 +1,284 @@
-// Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
-#include <compressor.h>
-
-#include <pubkey.h>
-#include <script/script.h>
-
-/*
- * These check for scripts for which a special case with a shorter encoding is defined.
- * They are implemented separately from the CScript test, as these test for exact byte
- * sequence correspondences, and are more strict. For example, IsToPubKey also verifies
- * whether the public key is valid (as invalid ones cannot be represented in compressed
- * form).
- */
-
-static bool IsToKeyID(const CScript& script, CKeyID &hash)
+namespace BitcoinCompressor
 {
-    if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160
-                            && script[2] == 20 && script[23] == OP_EQUALVERIFY
-                            && script[24] == OP_CHECKSIG) {
-        memcpy(&hash, &script[3], 20);
-        return true;
-    }
-    return false;
-}
+    public class Compressor
+    {
+        public static bool IsToKeyID(Script script, out KeyID hash)
+        {
+            hash = null;
+            if (script.Size == 25 && script[0] == Opcode.OP_DUP && script[1] == Opcode.OP_HASH160
+                && script[2] == 20 && script[23] == Opcode.OP_EQUALVERIFY
+                && script[24] == Opcode.OP_CHECKSIG)
+            {
+                hash = new KeyID(script.Skip(3).Take(20).ToArray());
+                return true;
+            }
+            return false;
+        }
 
-static bool IsToScriptID(const CScript& script, CScriptID &hash)
-{
-    if (script.size() == 23 && script[0] == OP_HASH160 && script[1] == 20
-                            && script[22] == OP_EQUAL) {
-        memcpy(&hash, &script[2], 20);
-        return true;
-    }
-    return false;
-}
+        public static bool IsToScriptID(Script script, out ScriptID hash)
+        {
+            hash = null;
+            if (script.Size == 23 && script[0] == Opcode.OP_HASH160 && script[1] == 20
+                && script[22] == Opcode.OP_EQUAL)
+            {
+                hash = new ScriptID(script.Skip(2).Take(20).ToArray());
+                return true;
+            }
+            return false;
+        }
 
-static bool IsToPubKey(const CScript& script, CPubKey &pubkey)
-{
-    if (script.size() == 35 && script[0] == 33 && script[34] == OP_CHECKSIG
-                            && (script[1] == 0x02 || script[1] == 0x03)) {
-        pubkey.Set(&script[1], &script[34]);
-        return true;
-    }
-    if (script.size() == 67 && script[0] == 65 && script[66] == OP_CHECKSIG
-                            && script[1] == 0x04) {
-        pubkey.Set(&script[1], &script[66]);
-        return pubkey.IsFullyValid(); // if not fully valid, a case that would not be compressible
-    }
-    return false;
-}
+        public static bool IsToPubKey(Script script, out PubKey pubkey)
+        {
+            pubkey = null;
+            if (script.Size == 35 && script[0] == 33 && script[34] == Opcode.OP_CHECKSIG
+                && (script[1] == 0x02 || script[1] == 0x03))
+            {
+                pubkey = new PubKey(script.Skip(1).Take(33).ToArray());
+                return true;
+            }
+            if (script.Size == 67 && script[0] == 65 && script[66] == Opcode.OP_CHECKSIG
+                && script[1] == 0x04)
+            {
+                pubkey = new PubKey(script.Skip(1).Take(65).ToArray());
+                return pubkey.IsFullyValid();
+            }
+            return false;
+        }
 
-bool CompressScript(const CScript& script, CompressedScript& out)
-{
-    CKeyID keyID;
-    if (IsToKeyID(script, keyID)) {
-        out.resize(21);
-        out[0] = 0x00;
-        memcpy(&out[1], &keyID, 20);
-        return true;
-    }
-    CScriptID scriptID;
-    if (IsToScriptID(script, scriptID)) {
-        out.resize(21);
-        out[0] = 0x01;
-        memcpy(&out[1], &scriptID, 20);
-        return true;
-    }
-    CPubKey pubkey;
-    if (IsToPubKey(script, pubkey)) {
-        out.resize(33);
-        memcpy(&out[1], &pubkey[1], 32);
-        if (pubkey[0] == 0x02 || pubkey[0] == 0x03) {
-            out[0] = pubkey[0];
-            return true;
-        } else if (pubkey[0] == 0x04) {
-            out[0] = 0x04 | (pubkey[64] & 0x01);
-            return true;
+        public static bool CompressScript(Script script, out CompressedScript outScript)
+        {
+            outScript = null;
+            if (IsToKeyID(script, out KeyID keyID))
+            {
+                outScript = new CompressedScript(21);
+                outScript[0] = 0x00;
+                Array.Copy(keyID.ToArray(), 0, outScript, 1, 20);
+                return true;
+            }
+            if (IsToScriptID(script, out ScriptID scriptID))
+            {
+                outScript = new CompressedScript(21);
+                outScript[0] = 0x01;
+                Array.Copy(scriptID.ToArray(), 0, outScript, 1, 20);
+                return true;
+            }
+            if (IsToPubKey(script, out PubKey pubkey))
+            {
+                outScript = new CompressedScript(33);
+                Array.Copy(pubkey.ToArray(), 1, outScript, 1, 32);
+                if (pubkey[0] == 0x02 || pubkey[0] == 0x03)
+                {
+                    outScript[0] = pubkey[0];
+                    return true;
+                }
+                else if (pubkey[0] == 0x04)
+                {
+                    outScript[0] = (byte)(0x04 | (pubkey[64] & 0x01));
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static uint GetSpecialScriptSize(uint nSize)
+        {
+            if (nSize == 0 || nSize == 1)
+                return 20;
+            if (nSize == 2 || nSize == 3 || nSize == 4 || nSize == 5)
+                return 32;
+            return 0;
+        }
+
+        public static bool DecompressScript(out Script script, uint nSize, CompressedScript inScript)
+        {
+            script = null;
+            switch (nSize)
+            {
+                case 0x00:
+                    script = new Script(25);
+                    script[0] = Opcode.OP_DUP;
+                    script[1] = Opcode.OP_HASH160;
+                    script[2] = 20;
+                    Array.Copy(inScript, 0, script, 3, 20);
+                    script[23] = Opcode.OP_EQUALVERIFY;
+                    script[24] = Opcode.OP_CHECKSIG;
+                    return true;
+                case 0x01:
+                    script = new Script(23);
+                    script[0] = Opcode.OP_HASH160;
+                    script[1] = 20;
+                    Array.Copy(inScript, 0, script, 2, 20);
+                    script[22] = Opcode.OP_EQUAL;
+                    return true;
+                case 0x02:
+                case 0x03:
+                    script = new Script(35);
+                    script[0] = 33;
+                    script[1] = (byte)nSize;
+                    Array.Copy(inScript, 0, script, 2, 32);
+                    script[34] = Opcode.OP_CHECKSIG;
+                    return true;
+                case 0x04:
+                case 0x05:
+                    byte[] vch = new byte[33];
+                    vch[0] = (byte)(nSize - 2);
+                    Array.Copy(inScript, 0, vch, 1, 32);
+                    PubKey pubkey = new PubKey(vch);
+                    if (!pubkey.Decompress())
+                        return false;
+                    script = new Script(67);
+                    script[0] = 65;
+                    Array.Copy(pubkey.ToArray(), 0, script, 1, 65);
+                    script[66] = Opcode.OP_CHECKSIG;
+                    return true;
+            }
+            return false;
+        }
+
+        public static ulong CompressAmount(ulong n)
+        {
+            if (n == 0)
+                return 0;
+            int e = 0;
+            while ((n % 10) == 0 && e < 9)
+            {
+                n /= 10;
+                e++;
+            }
+            if (e < 9)
+            {
+                int d = (int)(n % 10);
+                if (d < 1 || d > 9)
+                    throw new ArgumentException("Invalid amount");
+                n /= 10;
+                return 1 + (ulong)((n * 9 + (ulong)d - 1) * 10 + e);
+            }
+            else
+            {
+                return 1 + (n - 1) * 10 + 9;
+            }
+        }
+
+        public static ulong DecompressAmount(ulong x)
+        {
+            if (x == 0)
+                return 0;
+            x--;
+            int e = (int)(x % 10);
+            x /= 10;
+            ulong n = 0;
+            if (e < 9)
+            {
+                int d = (int)(x % 9) + 1;
+                x /= 9;
+                n = x * 10 + (ulong)d;
+            }
+            else
+            {
+                n = x + 1;
+            }
+            while (e > 0)
+            {
+                n *= 10;
+                e--;
+            }
+            return n;
         }
     }
-    return false;
-}
 
-unsigned int GetSpecialScriptSize(unsigned int nSize)
-{
-    if (nSize == 0 || nSize == 1)
-        return 20;
-    if (nSize == 2 || nSize == 3 || nSize == 4 || nSize == 5)
-        return 32;
-    return 0;
-}
+    public class Script : List<byte>
+    {
+        public Script() { }
+        public Script(int capacity) : base(capacity) { }
+        public Script(IEnumerable<byte> collection) : base(collection) { }
+    }
 
-bool DecompressScript(CScript& script, unsigned int nSize, const CompressedScript& in)
-{
-    switch(nSize) {
-    case 0x00:
-        script.resize(25);
-        script[0] = OP_DUP;
-        script[1] = OP_HASH160;
-        script[2] = 20;
-        memcpy(&script[3], in.data(), 20);
-        script[23] = OP_EQUALVERIFY;
-        script[24] = OP_CHECKSIG;
-        return true;
-    case 0x01:
-        script.resize(23);
-        script[0] = OP_HASH160;
-        script[1] = 20;
-        memcpy(&script[2], in.data(), 20);
-        script[22] = OP_EQUAL;
-        return true;
-    case 0x02:
-    case 0x03:
-        script.resize(35);
-        script[0] = 33;
-        script[1] = nSize;
-        memcpy(&script[2], in.data(), 32);
-        script[34] = OP_CHECKSIG;
-        return true;
-    case 0x04:
-    case 0x05:
-        unsigned char vch[33] = {};
-        vch[0] = nSize - 2;
-        memcpy(&vch[1], in.data(), 32);
-        CPubKey pubkey{vch};
-        if (!pubkey.Decompress())
-            return false;
-        assert(pubkey.size() == 65);
-        script.resize(67);
-        script[0] = 65;
-        memcpy(&script[1], pubkey.begin(), 65);
-        script[66] = OP_CHECKSIG;
-        return true;
+    public class CompressedScript : List<byte>
+    {
+        public CompressedScript() { }
+        public CompressedScript(int capacity) : base(capacity) { }
+        public CompressedScript(IEnumerable<byte> collection) : base(collection) { }
     }
-    return false;
-}
 
-// Amount compression:
-// * If the amount is 0, output 0
-// * first, divide the amount (in base units) by the largest power of 10 possible; call the exponent e (e is max 9)
-// * if e<9, the last digit of the resulting number cannot be 0; store it as d, and drop it (divide by 10)
-//   * call the result n
-//   * output 1 + 10*(9*n + d - 1) + e
-// * if e==9, we only know the resulting number is not zero, so output 1 + 10*(n - 1) + 9
-// (this is decodable, as d is in [1-9] and e is in [0-9])
+    public class KeyID
+    {
+        private byte[] data;
 
-uint64_t CompressAmount(uint64_t n)
-{
-    if (n == 0)
-        return 0;
-    int e = 0;
-    while (((n % 10) == 0) && e < 9) {
-        n /= 10;
-        e++;
-    }
-    if (e < 9) {
-        int d = (n % 10);
-        assert(d >= 1 && d <= 9);
-        n /= 10;
-        return 1 + (n*9 + d - 1)*10 + e;
-    } else {
-        return 1 + (n - 1)*10 + 9;
-    }
-}
+        public KeyID(byte[] data)
+        {
+            if (data.Length != 20)
+                throw new ArgumentException("Invalid KeyID length");
+            this.data = data;
+        }
 
-uint64_t DecompressAmount(uint64_t x)
-{
-    // x = 0  OR  x = 1+10*(9*n + d - 1) + e  OR  x = 1+10*(n - 1) + 9
-    if (x == 0)
-        return 0;
-    x--;
-    // x = 10*(9*n + d - 1) + e
-    int e = x % 10;
-    x /= 10;
-    uint64_t n = 0;
-    if (e < 9) {
-        // x = 9*n + d - 1
-        int d = (x % 9) + 1;
-        x /= 9;
-        // x = n
-        n = x*10 + d;
-    } else {
-        n = x+1;
+        public byte[] ToArray()
+        {
+            return data;
+        }
     }
-    while (e) {
-        n *= 10;
-        e--;
+
+    public class ScriptID
+    {
+        private byte[] data;
+
+        public ScriptID(byte[] data)
+        {
+            if (data.Length != 20)
+                throw new ArgumentException("Invalid ScriptID length");
+            this.data = data;
+        }
+
+        public byte[] ToArray()
+        {
+            return data;
+        }
     }
-    return n;
+
+    public class PubKey
+    {
+        private byte[] data;
+
+        public PubKey(byte[] data)
+        {
+            if (data.Length != 33 && data.Length != 65)
+                throw new ArgumentException("Invalid PubKey length");
+            this.data = data;
+        }
+
+        public bool IsFullyValid()
+        {
+            // Implement validation logic
+            return true;
+        }
+
+        public bool Decompress()
+        {
+            // Implement decompression logic
+            return true;
+        }
+
+        public byte[] ToArray()
+        {
+            return data;
+        }
+
+        public byte this[int index]
+        {
+            get { return data[index]; }
+        }
+    }
+
+    public enum Opcode : byte
+    {
+        OP_DUP = 0x76,
+        OP_HASH160 = 0xa9,
+        OP_EQUALVERIFY = 0x88,
+        OP_CHECKSIG = 0xac,
+        OP_EQUAL = 0x87
+    }
 }

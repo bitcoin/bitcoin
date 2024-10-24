@@ -1,139 +1,270 @@
-// Copyright (c) 2016-2022 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
-
-#include <chainparams.h>
-#include <chainparamsbase.h>
-#include <clientversion.h>
-#include <common/args.h>
-#include <common/system.h>
-#include <compat/compat.h>
-#include <interfaces/init.h>
-#include <key.h>
-#include <logging.h>
-#include <pubkey.h>
-#include <tinyformat.h>
-#include <util/exception.h>
-#include <util/translation.h>
-#include <wallet/wallettool.h>
-
-#include <exception>
-#include <functional>
-#include <string>
-#include <tuple>
-
-using util::Join;
-
-const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
-
-static void SetupWalletToolArgs(ArgsManager& argsman)
+namespace BitcoinWallet
 {
-    SetupHelpOptions(argsman);
-    SetupChainParamsBaseOptions(argsman);
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            SetupEnvironment();
+            RandomInit();
 
-    argsman.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-wallet=<wallet-name>", "Specify wallet name", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-dumpfile=<file name>", "When used with 'dump', writes out the records to this file. When used with 'createfromdump', loads the records into a new wallet.", ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
-    argsman.AddArg("-debug=<category>", "Output debugging information (default: 0).", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-descriptors", "Create descriptors wallet. Only for 'create'", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-legacy", "Create legacy wallet. Only for 'create'", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-format=<format>", "The format of the wallet file to create. Either \"bdb\" or \"sqlite\". Only used with 'createfromdump'", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-printtoconsole", "Send trace/debug info to console (default: 1 when no -debug is true, 0 otherwise).", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-withinternalbdb", "Use the internal Berkeley DB parser when dumping a Berkeley DB wallet file (default: false)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+            try
+            {
+                int? maybeExit = WalletAppInit(args);
+                if (maybeExit.HasValue)
+                {
+                    Environment.Exit(maybeExit.Value);
+                }
+            }
+            catch (Exception e)
+            {
+                PrintExceptionContinue(e, "WalletAppInit()");
+                Environment.Exit(EXIT_FAILURE);
+            }
 
-    argsman.AddCommand("info", "Get wallet info");
-    argsman.AddCommand("create", "Create new wallet file");
-    argsman.AddCommand("salvage", "Attempt to recover private keys from a corrupt wallet. Warning: 'salvage' is experimental.");
-    argsman.AddCommand("dump", "Print out all of the wallet key-value records");
-    argsman.AddCommand("createfromdump", "Create new wallet file from dumped records");
-}
+            string command = GetCommand(args);
+            if (string.IsNullOrEmpty(command))
+            {
+                Console.Error.WriteLine("No method provided. Run `bitcoin-wallet -help` for valid methods.");
+                Environment.Exit(EXIT_FAILURE);
+            }
 
-static std::optional<int> WalletAppInit(ArgsManager& args, int argc, char* argv[])
-{
-    SetupWalletToolArgs(args);
-    std::string error_message;
-    if (!args.ParseParameters(argc, argv, error_message)) {
-        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error_message);
-        return EXIT_FAILURE;
-    }
-    const bool missing_args{argc < 2};
-    if (missing_args || HelpRequested(args) || args.IsArgSet("-version")) {
-        std::string strUsage = strprintf("%s bitcoin-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n";
+            if (args.Length != 0)
+            {
+                Console.Error.WriteLine($"Error: Additional arguments provided ({string.Join(", ", args)}). Methods do not take arguments. Please refer to `-help`.");
+                Environment.Exit(EXIT_FAILURE);
+            }
 
-        if (args.IsArgSet("-version")) {
-            strUsage += FormatParagraph(LicenseInfo());
-        } else {
-            strUsage += "\n"
-                        "bitcoin-wallet is an offline tool for creating and interacting with " PACKAGE_NAME " wallet files.\n"
-                        "By default bitcoin-wallet will act on wallets in the default mainnet wallet directory in the datadir.\n"
-                        "To change the target wallet, use the -datadir, -wallet and -regtest/-signet/-testnet/-testnet4 arguments.\n\n"
-                        "Usage:\n"
-                        "  bitcoin-wallet [options] <command>\n";
-            strUsage += "\n" + args.GetHelpMessage();
+            ECC_Context ecc_context = new ECC_Context();
+            if (!WalletTool.ExecuteWalletToolFunc(args, command))
+            {
+                Environment.Exit(EXIT_FAILURE);
+            }
+            Environment.Exit(EXIT_SUCCESS);
         }
-        tfm::format(std::cout, "%s", strUsage);
-        if (missing_args) {
-            tfm::format(std::cerr, "Error: too few parameters\n");
-            return EXIT_FAILURE;
+
+        private static void SetupEnvironment()
+        {
+            // Setup environment
         }
-        return EXIT_SUCCESS;
+
+        private static void RandomInit()
+        {
+            // Initialize random
+        }
+
+        private static int? WalletAppInit(string[] args)
+        {
+            ArgsManager argsman = new ArgsManager();
+            SetupWalletToolArgs(argsman);
+
+            string error_message;
+            if (!argsman.ParseParameters(args, out error_message))
+            {
+                Console.Error.WriteLine($"Error parsing command line arguments: {error_message}");
+                return EXIT_FAILURE;
+            }
+
+            bool missing_args = args.Length < 2;
+            if (missing_args || HelpRequested(argsman) || argsman.IsArgSet("-version"))
+            {
+                string strUsage = $"{PACKAGE_NAME} bitcoin-wallet version {FormatFullVersion()}\n";
+
+                if (argsman.IsArgSet("-version"))
+                {
+                    strUsage += FormatParagraph(LicenseInfo());
+                }
+                else
+                {
+                    strUsage += "\n"
+                                + "bitcoin-wallet is an offline tool for creating and interacting with " + PACKAGE_NAME + " wallet files.\n"
+                                + "By default bitcoin-wallet will act on wallets in the default mainnet wallet directory in the datadir.\n"
+                                + "To change the target wallet, use the -datadir, -wallet and -regtest/-signet/-testnet/-testnet4 arguments.\n\n"
+                                + "Usage:\n"
+                                + "  bitcoin-wallet [options] <command>\n";
+                    strUsage += "\n" + argsman.GetHelpMessage();
+                }
+                Console.WriteLine(strUsage);
+                if (missing_args)
+                {
+                    Console.Error.WriteLine("Error: too few parameters");
+                    return EXIT_FAILURE;
+                }
+                return EXIT_SUCCESS;
+            }
+
+            LogInstance().m_print_to_console = argsman.GetBoolArg("-printtoconsole", argsman.GetBoolArg("-debug", false));
+
+            if (!CheckDataDirOption(argsman))
+            {
+                Console.Error.WriteLine($"Error: Specified data directory \"{argsman.GetArg("-datadir", "")}\" does not exist.");
+                return EXIT_FAILURE;
+            }
+
+            SelectParams(argsman.GetChainType());
+
+            return null;
+        }
+
+        private static void SetupWalletToolArgs(ArgsManager argsman)
+        {
+            SetupHelpOptions(argsman);
+            SetupChainParamsBaseOptions(argsman);
+
+            argsman.AddArg("-version", "Print version and exit", ArgsManager.ALLOW_ANY, OptionsCategory.OPTIONS);
+            argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager.ALLOW_ANY, OptionsCategory.OPTIONS);
+            argsman.AddArg("-wallet=<wallet-name>", "Specify wallet name", ArgsManager.ALLOW_ANY | ArgsManager.NETWORK_ONLY, OptionsCategory.OPTIONS);
+            argsman.AddArg("-dumpfile=<file name>", "When used with 'dump', writes out the records to this file. When used with 'createfromdump', loads the records into a new wallet.", ArgsManager.ALLOW_ANY | ArgsManager.DISALLOW_NEGATION, OptionsCategory.OPTIONS);
+            argsman.AddArg("-debug=<category>", "Output debugging information (default: 0).", ArgsManager.ALLOW_ANY, OptionsCategory.DEBUG_TEST);
+            argsman.AddArg("-descriptors", "Create descriptors wallet. Only for 'create'", ArgsManager.ALLOW_ANY, OptionsCategory.OPTIONS);
+            argsman.AddArg("-legacy", "Create legacy wallet. Only for 'create'", ArgsManager.ALLOW_ANY, OptionsCategory.OPTIONS);
+            argsman.AddArg("-format=<format>", "The format of the wallet file to create. Either \"bdb\" or \"sqlite\". Only used with 'createfromdump'", ArgsManager.ALLOW_ANY, OptionsCategory.OPTIONS);
+            argsman.AddArg("-printtoconsole", "Send trace/debug info to console (default: 1 when no -debug is true, 0 otherwise).", ArgsManager.ALLOW_ANY, OptionsCategory.DEBUG_TEST);
+            argsman.AddArg("-withinternalbdb", "Use the internal Berkeley DB parser when dumping a Berkeley DB wallet file (default: false)", ArgsManager.ALLOW_ANY, OptionsCategory.DEBUG_TEST);
+
+            argsman.AddCommand("info", "Get wallet info");
+            argsman.AddCommand("create", "Create new wallet file");
+            argsman.AddCommand("salvage", "Attempt to recover private keys from a corrupt wallet. Warning: 'salvage' is experimental.");
+            argsman.AddCommand("dump", "Print out all of the wallet key-value records");
+            argsman.AddCommand("createfromdump", "Create new wallet file from dumped records");
+        }
+
+        private static bool HelpRequested(ArgsManager argsman)
+        {
+            // Check if help is requested
+            return false;
+        }
+
+        private static string FormatFullVersion()
+        {
+            return "0.21.0";
+        }
+
+        private static string FormatParagraph(string text)
+        {
+            // Format paragraph
+            return text;
+        }
+
+        private static string LicenseInfo()
+        {
+            return "Bitcoin Core is released under the terms of the MIT license.";
+        }
+
+        private static bool CheckDataDirOption(ArgsManager argsman)
+        {
+            // Check data directory option
+            return true;
+        }
+
+        private static void SelectParams(string chainType)
+        {
+            // Select parameters
+        }
+
+        private static string GetCommand(string[] args)
+        {
+            if (args.Length < 1)
+            {
+                return null;
+            }
+            return args[0];
+        }
+
+        private static void PrintExceptionContinue(Exception e, string context)
+        {
+            // Print exception and continue
+        }
+
+        private static int EXIT_FAILURE = 1;
+        private static int EXIT_SUCCESS = 0;
     }
 
-    // check for printtoconsole, allow -debug
-    LogInstance().m_print_to_console = args.GetBoolArg("-printtoconsole", args.GetBoolArg("-debug", false));
+    class ArgsManager
+    {
+        public const int ALLOW_ANY = 0;
+        public const int NETWORK_ONLY = 1;
+        public const int DISALLOW_NEGATION = 2;
+        public const int DEBUG_TEST = 3;
+        public const int OPTIONS = 4;
 
-    if (!CheckDataDirOption(args)) {
-        tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", args.GetArg("-datadir", ""));
-        return EXIT_FAILURE;
+        public void AddArg(string name, string help, int flags, int category)
+        {
+            // Add argument
+        }
+
+        public void AddCommand(string name, string help)
+        {
+            // Add command
+        }
+
+        public bool ParseParameters(string[] args, out string error_message)
+        {
+            // Parse parameters
+            error_message = null;
+            return true;
+        }
+
+        public bool IsArgSet(string arg)
+        {
+            // Check if argument is set
+            return false;
+        }
+
+        public string GetArg(string arg, string defaultValue)
+        {
+            // Get argument value
+            return defaultValue;
+        }
+
+        public bool GetBoolArg(string arg, bool defaultValue)
+        {
+            // Get boolean argument value
+            return defaultValue;
+        }
+
+        public string GetHelpMessage()
+        {
+            // Get help message
+            return "Help message";
+        }
+
+        public string GetChainType()
+        {
+            // Get chain type
+            return "main";
+        }
     }
-    // Check for chain settings (Params() calls are only valid after this clause)
-    SelectParams(args.GetChainType());
 
-    return std::nullopt;
-}
-
-MAIN_FUNCTION
-{
-    ArgsManager& args = gArgs;
-#ifdef WIN32
-    common::WinCmdLineArgs winArgs;
-    std::tie(argc, argv) = winArgs.get();
-#endif
-
-    int exit_status;
-    std::unique_ptr<interfaces::Init> init = interfaces::MakeWalletInit(argc, argv, exit_status);
-    if (!init) {
-        return exit_status;
+    class ECC_Context
+    {
+        // ECC context
     }
 
-    SetupEnvironment();
-    RandomInit();
-    try {
-        if (const auto maybe_exit{WalletAppInit(args, argc, argv)}) return *maybe_exit;
-    } catch (const std::exception& e) {
-        PrintExceptionContinue(&e, "WalletAppInit()");
-        return EXIT_FAILURE;
-    } catch (...) {
-        PrintExceptionContinue(nullptr, "WalletAppInit()");
-        return EXIT_FAILURE;
+    class WalletTool
+    {
+        public static bool ExecuteWalletToolFunc(string[] args, string command)
+        {
+            // Execute wallet tool function
+            return true;
+        }
     }
 
-    const auto command = args.GetCommand();
-    if (!command) {
-        tfm::format(std::cerr, "No method provided. Run `bitcoin-wallet -help` for valid methods.\n");
-        return EXIT_FAILURE;
-    }
-    if (command->args.size() != 0) {
-        tfm::format(std::cerr, "Error: Additional arguments provided (%s). Methods do not take arguments. Please refer to `-help`.\n", Join(command->args, ", "));
-        return EXIT_FAILURE;
-    }
+    class LogInstance
+    {
+        public bool m_print_to_console;
 
-    ECC_Context ecc_context{};
-    if (!wallet::WalletTool::ExecuteWalletToolFunc(args, command->command)) {
-        return EXIT_FAILURE;
+        public static LogInstance Instance = new LogInstance();
+
+        public static LogInstance Get()
+        {
+            return Instance;
+        }
     }
-    return EXIT_SUCCESS;
 }

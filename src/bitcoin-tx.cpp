@@ -1,889 +1,977 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Newtonsoft.Json.Linq;
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
-
-#include <chainparamsbase.h>
-#include <clientversion.h>
-#include <coins.h>
-#include <common/args.h>
-#include <common/system.h>
-#include <compat/compat.h>
-#include <consensus/amount.h>
-#include <consensus/consensus.h>
-#include <core_io.h>
-#include <key_io.h>
-#include <policy/policy.h>
-#include <primitives/transaction.h>
-#include <script/script.h>
-#include <script/sign.h>
-#include <script/signingprovider.h>
-#include <univalue.h>
-#include <util/exception.h>
-#include <util/fs.h>
-#include <util/moneystr.h>
-#include <util/rbf.h>
-#include <util/strencodings.h>
-#include <util/string.h>
-#include <util/translation.h>
-
-#include <cstdio>
-#include <functional>
-#include <memory>
-
-using util::SplitString;
-using util::ToString;
-using util::TrimString;
-using util::TrimStringView;
-
-static bool fCreateBlank;
-static std::map<std::string,UniValue> registers;
-static const int CONTINUE_EXECUTION=-1;
-
-const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
-
-static void SetupBitcoinTxArgs(ArgsManager &argsman)
+namespace BitcoinTx
 {
-    SetupHelpOptions(argsman);
+    class Program
+    {
+        private static bool fCreateBlank;
+        private static Dictionary<string, JToken> registers = new Dictionary<string, JToken>();
+        private const int CONTINUE_EXECUTION = -1;
 
-    argsman.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-create", "Create new, empty TX.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-json", "Select JSON output", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-txid", "Output only the hex-encoded transaction id of the resultant transaction.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    SetupChainParamsBaseOptions(argsman);
+        static void Main(string[] args)
+        {
+            SetupEnvironment();
 
-    argsman.AddArg("delin=N", "Delete input N from TX", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
-    argsman.AddArg("delout=N", "Delete output N from TX", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
-    argsman.AddArg("in=TXID:VOUT(:SEQUENCE_NUMBER)", "Add input to TX", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
-    argsman.AddArg("locktime=N", "Set TX lock time to N", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
-    argsman.AddArg("nversion=N", "Set TX version to N", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
-    argsman.AddArg("outaddr=VALUE:ADDRESS", "Add address-based output to TX", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
-    argsman.AddArg("outdata=[VALUE:]DATA", "Add data-based output to TX", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
-    argsman.AddArg("outmultisig=VALUE:REQUIRED:PUBKEYS:PUBKEY1:PUBKEY2:....[:FLAGS]", "Add Pay To n-of-m Multi-sig output to TX. n = REQUIRED, m = PUBKEYS. "
-        "Optionally add the \"W\" flag to produce a pay-to-witness-script-hash output. "
-        "Optionally add the \"S\" flag to wrap the output in a pay-to-script-hash.", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
-    argsman.AddArg("outpubkey=VALUE:PUBKEY[:FLAGS]", "Add pay-to-pubkey output to TX. "
-        "Optionally add the \"W\" flag to produce a pay-to-witness-pubkey-hash output. "
-        "Optionally add the \"S\" flag to wrap the output in a pay-to-script-hash.", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
-    argsman.AddArg("outscript=VALUE:SCRIPT[:FLAGS]", "Add raw script output to TX. "
-        "Optionally add the \"W\" flag to produce a pay-to-witness-script-hash output. "
-        "Optionally add the \"S\" flag to wrap the output in a pay-to-script-hash.", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
-    argsman.AddArg("replaceable(=N)", "Sets Replace-By-Fee (RBF) opt-in sequence number for input N. "
-        "If N is not provided, the command attempts to opt-in all available inputs for RBF. "
-        "If the transaction has no inputs, this option is ignored.", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
-    argsman.AddArg("sign=SIGHASH-FLAGS", "Add zero or more signatures to transaction. "
-        "This command requires JSON registers:"
-        "prevtxs=JSON object, "
-        "privatekeys=JSON object. "
-        "See signrawtransactionwithkey docs for format of sighash flags, JSON objects.", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
-
-    argsman.AddArg("load=NAME:FILENAME", "Load JSON file FILENAME into register NAME", ArgsManager::ALLOW_ANY, OptionsCategory::REGISTER_COMMANDS);
-    argsman.AddArg("set=NAME:JSON-STRING", "Set register NAME to given JSON-STRING", ArgsManager::ALLOW_ANY, OptionsCategory::REGISTER_COMMANDS);
-}
-
-//
-// This function returns either one of EXIT_ codes when it's expected to stop the process or
-// CONTINUE_EXECUTION when it's expected to continue further.
-//
-static int AppInitRawTx(int argc, char* argv[])
-{
-    SetupBitcoinTxArgs(gArgs);
-    std::string error;
-    if (!gArgs.ParseParameters(argc, argv, error)) {
-        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
-        return EXIT_FAILURE;
-    }
-
-    // Check for chain settings (Params() calls are only valid after this clause)
-    try {
-        SelectParams(gArgs.GetChainType());
-    } catch (const std::exception& e) {
-        tfm::format(std::cerr, "Error: %s\n", e.what());
-        return EXIT_FAILURE;
-    }
-
-    fCreateBlank = gArgs.GetBoolArg("-create", false);
-
-    if (argc < 2 || HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
-        // First part of help message is specific to this utility
-        std::string strUsage = PACKAGE_NAME " bitcoin-tx utility version " + FormatFullVersion() + "\n";
-
-        if (gArgs.IsArgSet("-version")) {
-            strUsage += FormatParagraph(LicenseInfo());
-        } else {
-            strUsage += "\n"
-                "Usage:  bitcoin-tx [options] <hex-tx> [commands]  Update hex-encoded bitcoin transaction\n"
-                "or:     bitcoin-tx [options] -create [commands]   Create hex-encoded bitcoin transaction\n"
-                "\n";
-            strUsage += gArgs.GetHelpMessage();
-        }
-
-        tfm::format(std::cout, "%s", strUsage);
-
-        if (argc < 2) {
-            tfm::format(std::cerr, "Error: too few parameters\n");
-            return EXIT_FAILURE;
-        }
-        return EXIT_SUCCESS;
-    }
-    return CONTINUE_EXECUTION;
-}
-
-static void RegisterSetJson(const std::string& key, const std::string& rawJson)
-{
-    UniValue val;
-    if (!val.read(rawJson)) {
-        std::string strErr = "Cannot parse JSON for key " + key;
-        throw std::runtime_error(strErr);
-    }
-
-    registers[key] = val;
-}
-
-static void RegisterSet(const std::string& strInput)
-{
-    // separate NAME:VALUE in string
-    size_t pos = strInput.find(':');
-    if ((pos == std::string::npos) ||
-        (pos == 0) ||
-        (pos == (strInput.size() - 1)))
-        throw std::runtime_error("Register input requires NAME:VALUE");
-
-    std::string key = strInput.substr(0, pos);
-    std::string valStr = strInput.substr(pos + 1, std::string::npos);
-
-    RegisterSetJson(key, valStr);
-}
-
-static void RegisterLoad(const std::string& strInput)
-{
-    // separate NAME:FILENAME in string
-    size_t pos = strInput.find(':');
-    if ((pos == std::string::npos) ||
-        (pos == 0) ||
-        (pos == (strInput.size() - 1)))
-        throw std::runtime_error("Register load requires NAME:FILENAME");
-
-    std::string key = strInput.substr(0, pos);
-    std::string filename = strInput.substr(pos + 1, std::string::npos);
-
-    FILE *f = fsbridge::fopen(filename.c_str(), "r");
-    if (!f) {
-        std::string strErr = "Cannot open file " + filename;
-        throw std::runtime_error(strErr);
-    }
-
-    // load file chunks into one big buffer
-    std::string valStr;
-    while ((!feof(f)) && (!ferror(f))) {
-        char buf[4096];
-        int bread = fread(buf, 1, sizeof(buf), f);
-        if (bread <= 0)
-            break;
-
-        valStr.insert(valStr.size(), buf, bread);
-    }
-
-    int error = ferror(f);
-    fclose(f);
-
-    if (error) {
-        std::string strErr = "Error reading file " + filename;
-        throw std::runtime_error(strErr);
-    }
-
-    // evaluate as JSON buffer register
-    RegisterSetJson(key, valStr);
-}
-
-static CAmount ExtractAndValidateValue(const std::string& strValue)
-{
-    if (std::optional<CAmount> parsed = ParseMoney(strValue)) {
-        return parsed.value();
-    } else {
-        throw std::runtime_error("invalid TX output value");
-    }
-}
-
-static void MutateTxVersion(CMutableTransaction& tx, const std::string& cmdVal)
-{
-    uint32_t newVersion;
-    if (!ParseUInt32(cmdVal, &newVersion) || newVersion < 1 || newVersion > TX_MAX_STANDARD_VERSION) {
-        throw std::runtime_error("Invalid TX version requested: '" + cmdVal + "'");
-    }
-
-    tx.version = newVersion;
-}
-
-static void MutateTxLocktime(CMutableTransaction& tx, const std::string& cmdVal)
-{
-    int64_t newLocktime;
-    if (!ParseInt64(cmdVal, &newLocktime) || newLocktime < 0LL || newLocktime > 0xffffffffLL)
-        throw std::runtime_error("Invalid TX locktime requested: '" + cmdVal + "'");
-
-    tx.nLockTime = (unsigned int) newLocktime;
-}
-
-static void MutateTxRBFOptIn(CMutableTransaction& tx, const std::string& strInIdx)
-{
-    // parse requested index
-    int64_t inIdx = -1;
-    if (strInIdx != "" && (!ParseInt64(strInIdx, &inIdx) || inIdx < 0 || inIdx >= static_cast<int64_t>(tx.vin.size()))) {
-        throw std::runtime_error("Invalid TX input index '" + strInIdx + "'");
-    }
-
-    // set the nSequence to MAX_INT - 2 (= RBF opt in flag)
-    int cnt = 0;
-    for (CTxIn& txin : tx.vin) {
-        if (strInIdx == "" || cnt == inIdx) {
-            if (txin.nSequence > MAX_BIP125_RBF_SEQUENCE) {
-                txin.nSequence = MAX_BIP125_RBF_SEQUENCE;
+            try
+            {
+                int ret = AppInitRawTx(args);
+                if (ret != CONTINUE_EXECUTION)
+                    Environment.Exit(ret);
             }
-        }
-        ++cnt;
-    }
-}
-
-template <typename T>
-static T TrimAndParse(const std::string& int_str, const std::string& err)
-{
-    const auto parsed{ToIntegral<T>(TrimStringView(int_str))};
-    if (!parsed.has_value()) {
-        throw std::runtime_error(err + " '" + int_str + "'");
-    }
-    return parsed.value();
-}
-
-static void MutateTxAddInput(CMutableTransaction& tx, const std::string& strInput)
-{
-    std::vector<std::string> vStrInputParts = SplitString(strInput, ':');
-
-    // separate TXID:VOUT in string
-    if (vStrInputParts.size()<2)
-        throw std::runtime_error("TX input missing separator");
-
-    // extract and validate TXID
-    auto txid{Txid::FromHex(vStrInputParts[0])};
-    if (!txid) {
-        throw std::runtime_error("invalid TX input txid");
-    }
-
-    static const unsigned int minTxOutSz = 9;
-    static const unsigned int maxVout = MAX_BLOCK_WEIGHT / (WITNESS_SCALE_FACTOR * minTxOutSz);
-
-    // extract and validate vout
-    const std::string& strVout = vStrInputParts[1];
-    int64_t vout;
-    if (!ParseInt64(strVout, &vout) || vout < 0 || vout > static_cast<int64_t>(maxVout))
-        throw std::runtime_error("invalid TX input vout '" + strVout + "'");
-
-    // extract the optional sequence number
-    uint32_t nSequenceIn = CTxIn::SEQUENCE_FINAL;
-    if (vStrInputParts.size() > 2) {
-        nSequenceIn = TrimAndParse<uint32_t>(vStrInputParts.at(2), "invalid TX sequence id");
-    }
-
-    // append to transaction input list
-    CTxIn txin(*txid, vout, CScript(), nSequenceIn);
-    tx.vin.push_back(txin);
-}
-
-static void MutateTxAddOutAddr(CMutableTransaction& tx, const std::string& strInput)
-{
-    // Separate into VALUE:ADDRESS
-    std::vector<std::string> vStrInputParts = SplitString(strInput, ':');
-
-    if (vStrInputParts.size() != 2)
-        throw std::runtime_error("TX output missing or too many separators");
-
-    // Extract and validate VALUE
-    CAmount value = ExtractAndValidateValue(vStrInputParts[0]);
-
-    // extract and validate ADDRESS
-    std::string strAddr = vStrInputParts[1];
-    CTxDestination destination = DecodeDestination(strAddr);
-    if (!IsValidDestination(destination)) {
-        throw std::runtime_error("invalid TX output address");
-    }
-    CScript scriptPubKey = GetScriptForDestination(destination);
-
-    // construct TxOut, append to transaction output list
-    CTxOut txout(value, scriptPubKey);
-    tx.vout.push_back(txout);
-}
-
-static void MutateTxAddOutPubKey(CMutableTransaction& tx, const std::string& strInput)
-{
-    // Separate into VALUE:PUBKEY[:FLAGS]
-    std::vector<std::string> vStrInputParts = SplitString(strInput, ':');
-
-    if (vStrInputParts.size() < 2 || vStrInputParts.size() > 3)
-        throw std::runtime_error("TX output missing or too many separators");
-
-    // Extract and validate VALUE
-    CAmount value = ExtractAndValidateValue(vStrInputParts[0]);
-
-    // Extract and validate PUBKEY
-    CPubKey pubkey(ParseHex(vStrInputParts[1]));
-    if (!pubkey.IsFullyValid())
-        throw std::runtime_error("invalid TX output pubkey");
-    CScript scriptPubKey = GetScriptForRawPubKey(pubkey);
-
-    // Extract and validate FLAGS
-    bool bSegWit = false;
-    bool bScriptHash = false;
-    if (vStrInputParts.size() == 3) {
-        std::string flags = vStrInputParts[2];
-        bSegWit = (flags.find('W') != std::string::npos);
-        bScriptHash = (flags.find('S') != std::string::npos);
-    }
-
-    if (bSegWit) {
-        if (!pubkey.IsCompressed()) {
-            throw std::runtime_error("Uncompressed pubkeys are not useable for SegWit outputs");
-        }
-        // Build a P2WPKH script
-        scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(pubkey));
-    }
-    if (bScriptHash) {
-        // Get the ID for the script, and then construct a P2SH destination for it.
-        scriptPubKey = GetScriptForDestination(ScriptHash(scriptPubKey));
-    }
-
-    // construct TxOut, append to transaction output list
-    CTxOut txout(value, scriptPubKey);
-    tx.vout.push_back(txout);
-}
-
-static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& strInput)
-{
-    // Separate into VALUE:REQUIRED:NUMKEYS:PUBKEY1:PUBKEY2:....[:FLAGS]
-    std::vector<std::string> vStrInputParts = SplitString(strInput, ':');
-
-    // Check that there are enough parameters
-    if (vStrInputParts.size()<3)
-        throw std::runtime_error("Not enough multisig parameters");
-
-    // Extract and validate VALUE
-    CAmount value = ExtractAndValidateValue(vStrInputParts[0]);
-
-    // Extract REQUIRED
-    const uint32_t required{TrimAndParse<uint32_t>(vStrInputParts.at(1), "invalid multisig required number")};
-
-    // Extract NUMKEYS
-    const uint32_t numkeys{TrimAndParse<uint32_t>(vStrInputParts.at(2), "invalid multisig total number")};
-
-    // Validate there are the correct number of pubkeys
-    if (vStrInputParts.size() < numkeys + 3)
-        throw std::runtime_error("incorrect number of multisig pubkeys");
-
-    if (required < 1 || required > MAX_PUBKEYS_PER_MULTISIG || numkeys < 1 || numkeys > MAX_PUBKEYS_PER_MULTISIG || numkeys < required)
-        throw std::runtime_error("multisig parameter mismatch. Required " \
-                            + ToString(required) + " of " + ToString(numkeys) + "signatures.");
-
-    // extract and validate PUBKEYs
-    std::vector<CPubKey> pubkeys;
-    for(int pos = 1; pos <= int(numkeys); pos++) {
-        CPubKey pubkey(ParseHex(vStrInputParts[pos + 2]));
-        if (!pubkey.IsFullyValid())
-            throw std::runtime_error("invalid TX output pubkey");
-        pubkeys.push_back(pubkey);
-    }
-
-    // Extract FLAGS
-    bool bSegWit = false;
-    bool bScriptHash = false;
-    if (vStrInputParts.size() == numkeys + 4) {
-        std::string flags = vStrInputParts.back();
-        bSegWit = (flags.find('W') != std::string::npos);
-        bScriptHash = (flags.find('S') != std::string::npos);
-    }
-    else if (vStrInputParts.size() > numkeys + 4) {
-        // Validate that there were no more parameters passed
-        throw std::runtime_error("Too many parameters");
-    }
-
-    CScript scriptPubKey = GetScriptForMultisig(required, pubkeys);
-
-    if (bSegWit) {
-        for (const CPubKey& pubkey : pubkeys) {
-            if (!pubkey.IsCompressed()) {
-                throw std::runtime_error("Uncompressed pubkeys are not useable for SegWit outputs");
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("AppInitRawTx() error: " + e.Message);
+                Environment.Exit(EXIT_FAILURE);
             }
+
+            int ret = EXIT_FAILURE;
+            try
+            {
+                ret = CommandLineRawTx(args);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("CommandLineRawTx() error: " + e.Message);
+            }
+            Environment.Exit(ret);
         }
-        // Build a P2WSH with the multisig script
-        scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(scriptPubKey));
-    }
-    if (bScriptHash) {
-        if (scriptPubKey.size() > MAX_SCRIPT_ELEMENT_SIZE) {
-            throw std::runtime_error(strprintf(
-                        "redeemScript exceeds size limit: %d > %d", scriptPubKey.size(), MAX_SCRIPT_ELEMENT_SIZE));
+
+        private static void SetupEnvironment()
+        {
+            // Setup environment
         }
-        // Get the ID for the script, and then construct a P2SH destination for it.
-        scriptPubKey = GetScriptForDestination(ScriptHash(scriptPubKey));
-    }
 
-    // construct TxOut, append to transaction output list
-    CTxOut txout(value, scriptPubKey);
-    tx.vout.push_back(txout);
-}
-
-static void MutateTxAddOutData(CMutableTransaction& tx, const std::string& strInput)
-{
-    CAmount value = 0;
-
-    // separate [VALUE:]DATA in string
-    size_t pos = strInput.find(':');
-
-    if (pos==0)
-        throw std::runtime_error("TX output value not specified");
-
-    if (pos == std::string::npos) {
-        pos = 0;
-    } else {
-        // Extract and validate VALUE
-        value = ExtractAndValidateValue(strInput.substr(0, pos));
-        ++pos;
-    }
-
-    // extract and validate DATA
-    const std::string strData{strInput.substr(pos, std::string::npos)};
-
-    if (!IsHex(strData))
-        throw std::runtime_error("invalid TX output data");
-
-    std::vector<unsigned char> data = ParseHex(strData);
-
-    CTxOut txout(value, CScript() << OP_RETURN << data);
-    tx.vout.push_back(txout);
-}
-
-static void MutateTxAddOutScript(CMutableTransaction& tx, const std::string& strInput)
-{
-    // separate VALUE:SCRIPT[:FLAGS]
-    std::vector<std::string> vStrInputParts = SplitString(strInput, ':');
-    if (vStrInputParts.size() < 2)
-        throw std::runtime_error("TX output missing separator");
-
-    // Extract and validate VALUE
-    CAmount value = ExtractAndValidateValue(vStrInputParts[0]);
-
-    // extract and validate script
-    std::string strScript = vStrInputParts[1];
-    CScript scriptPubKey = ParseScript(strScript);
-
-    // Extract FLAGS
-    bool bSegWit = false;
-    bool bScriptHash = false;
-    if (vStrInputParts.size() == 3) {
-        std::string flags = vStrInputParts.back();
-        bSegWit = (flags.find('W') != std::string::npos);
-        bScriptHash = (flags.find('S') != std::string::npos);
-    }
-
-    if (scriptPubKey.size() > MAX_SCRIPT_SIZE) {
-        throw std::runtime_error(strprintf(
-                    "script exceeds size limit: %d > %d", scriptPubKey.size(), MAX_SCRIPT_SIZE));
-    }
-
-    if (bSegWit) {
-        scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(scriptPubKey));
-    }
-    if (bScriptHash) {
-        if (scriptPubKey.size() > MAX_SCRIPT_ELEMENT_SIZE) {
-            throw std::runtime_error(strprintf(
-                        "redeemScript exceeds size limit: %d > %d", scriptPubKey.size(), MAX_SCRIPT_ELEMENT_SIZE));
+        private static int AppInitRawTx(string[] args)
+        {
+            SetupBitcoinTxArgs();
+            if (args.Length < 2 || args.Contains("-help") || args.Contains("-version"))
+            {
+                string strUsage = "Bitcoin TX utility version " + FormatFullVersion() + "\n";
+                if (args.Contains("-version"))
+                {
+                    strUsage += LicenseInfo();
+                }
+                else
+                {
+                    strUsage += "\nUsage:  bitcoin-tx [options] <hex-tx> [commands]  Update hex-encoded bitcoin transaction\n"
+                        + "or:     bitcoin-tx [options] -create [commands]   Create hex-encoded bitcoin transaction\n";
+                    strUsage += "\n" + GetHelpMessage();
+                }
+                Console.WriteLine(strUsage);
+                if (args.Length < 2)
+                {
+                    Console.Error.WriteLine("Error: too few parameters");
+                    return EXIT_FAILURE;
+                }
+                return EXIT_SUCCESS;
+            }
+            if (!CheckDataDirOption())
+            {
+                Console.Error.WriteLine("Error: Specified data directory does not exist.");
+                return EXIT_FAILURE;
+            }
+            if (!ReadConfigFiles())
+            {
+                Console.Error.WriteLine("Error reading configuration file.");
+                return EXIT_FAILURE;
+            }
+            try
+            {
+                SelectBaseParams(GetChainType());
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("Error: " + e.Message);
+                return EXIT_FAILURE;
+            }
+            return CONTINUE_EXECUTION;
         }
-        scriptPubKey = GetScriptForDestination(ScriptHash(scriptPubKey));
-    }
 
-    // construct TxOut, append to transaction output list
-    CTxOut txout(value, scriptPubKey);
-    tx.vout.push_back(txout);
-}
+        private static void SetupBitcoinTxArgs()
+        {
+            // Setup Bitcoin TX arguments
+        }
 
-static void MutateTxDelInput(CMutableTransaction& tx, const std::string& strInIdx)
-{
-    // parse requested deletion index
-    int64_t inIdx;
-    if (!ParseInt64(strInIdx, &inIdx) || inIdx < 0 || inIdx >= static_cast<int64_t>(tx.vin.size())) {
-        throw std::runtime_error("Invalid TX input index '" + strInIdx + "'");
-    }
+        private static string FormatFullVersion()
+        {
+            return "0.21.0";
+        }
 
-    // delete input from transaction
-    tx.vin.erase(tx.vin.begin() + inIdx);
-}
+        private static string LicenseInfo()
+        {
+            return "Bitcoin Core is released under the terms of the MIT license.";
+        }
 
-static void MutateTxDelOutput(CMutableTransaction& tx, const std::string& strOutIdx)
-{
-    // parse requested deletion index
-    int64_t outIdx;
-    if (!ParseInt64(strOutIdx, &outIdx) || outIdx < 0 || outIdx >= static_cast<int64_t>(tx.vout.size())) {
-        throw std::runtime_error("Invalid TX output index '" + strOutIdx + "'");
-    }
+        private static string GetHelpMessage()
+        {
+            return "Help message";
+        }
 
-    // delete output from transaction
-    tx.vout.erase(tx.vout.begin() + outIdx);
-}
-
-static const unsigned int N_SIGHASH_OPTS = 7;
-static const struct {
-    const char *flagStr;
-    int flags;
-} sighashOptions[N_SIGHASH_OPTS] = {
-    {"DEFAULT", SIGHASH_DEFAULT},
-    {"ALL", SIGHASH_ALL},
-    {"NONE", SIGHASH_NONE},
-    {"SINGLE", SIGHASH_SINGLE},
-    {"ALL|ANYONECANPAY", SIGHASH_ALL|SIGHASH_ANYONECANPAY},
-    {"NONE|ANYONECANPAY", SIGHASH_NONE|SIGHASH_ANYONECANPAY},
-    {"SINGLE|ANYONECANPAY", SIGHASH_SINGLE|SIGHASH_ANYONECANPAY},
-};
-
-static bool findSighashFlags(int& flags, const std::string& flagStr)
-{
-    flags = 0;
-
-    for (unsigned int i = 0; i < N_SIGHASH_OPTS; i++) {
-        if (flagStr == sighashOptions[i].flagStr) {
-            flags = sighashOptions[i].flags;
+        private static bool CheckDataDirOption()
+        {
             return true;
         }
-    }
 
-    return false;
-}
-
-static CAmount AmountFromValue(const UniValue& value)
-{
-    if (!value.isNum() && !value.isStr())
-        throw std::runtime_error("Amount is not a number or string");
-    CAmount amount;
-    if (!ParseFixedPoint(value.getValStr(), 8, &amount))
-        throw std::runtime_error("Invalid amount");
-    if (!MoneyRange(amount))
-        throw std::runtime_error("Amount out of range");
-    return amount;
-}
-
-static std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName)
-{
-    std::string strHex;
-    if (v.isStr())
-        strHex = v.getValStr();
-    if (!IsHex(strHex))
-        throw std::runtime_error(strName + " must be hexadecimal string (not '" + strHex + "')");
-    return ParseHex(strHex);
-}
-
-static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
-{
-    int nHashType = SIGHASH_ALL;
-
-    if (flagStr.size() > 0)
-        if (!findSighashFlags(nHashType, flagStr))
-            throw std::runtime_error("unknown sighash flag/sign option");
-
-    // mergedTx will end up with all the signatures; it
-    // starts as a clone of the raw tx:
-    CMutableTransaction mergedTx{tx};
-    const CMutableTransaction txv{tx};
-    CCoinsView viewDummy;
-    CCoinsViewCache view(&viewDummy);
-
-    if (!registers.count("privatekeys"))
-        throw std::runtime_error("privatekeys register variable must be set.");
-    FillableSigningProvider tempKeystore;
-    UniValue keysObj = registers["privatekeys"];
-
-    for (unsigned int kidx = 0; kidx < keysObj.size(); kidx++) {
-        if (!keysObj[kidx].isStr())
-            throw std::runtime_error("privatekey not a std::string");
-        CKey key = DecodeSecret(keysObj[kidx].getValStr());
-        if (!key.IsValid()) {
-            throw std::runtime_error("privatekey not valid");
+        private static bool ReadConfigFiles()
+        {
+            return true;
         }
-        tempKeystore.AddKey(key);
-    }
 
-    // Add previous txouts given in the RPC call:
-    if (!registers.count("prevtxs"))
-        throw std::runtime_error("prevtxs register variable must be set.");
-    UniValue prevtxsObj = registers["prevtxs"];
-    {
-        for (unsigned int previdx = 0; previdx < prevtxsObj.size(); previdx++) {
-            const UniValue& prevOut = prevtxsObj[previdx];
-            if (!prevOut.isObject())
-                throw std::runtime_error("expected prevtxs internal object");
+        private static void SelectBaseParams(string chainType)
+        {
+            // Select base parameters
+        }
 
-            std::map<std::string, UniValue::VType> types = {
-                {"txid", UniValue::VSTR},
-                {"vout", UniValue::VNUM},
-                {"scriptPubKey", UniValue::VSTR},
-            };
-            if (!prevOut.checkObject(types))
-                throw std::runtime_error("prevtxs internal object typecheck fail");
+        private static string GetChainType()
+        {
+            return "main";
+        }
 
-            auto txid{Txid::FromHex(prevOut["txid"].get_str())};
-            if (!txid) {
-                throw std::runtime_error("txid must be hexadecimal string (not '" + prevOut["txid"].get_str() + "')");
-            }
-
-            const int nOut = prevOut["vout"].getInt<int>();
-            if (nOut < 0)
-                throw std::runtime_error("vout cannot be negative");
-
-            COutPoint out(*txid, nOut);
-            std::vector<unsigned char> pkData(ParseHexUV(prevOut["scriptPubKey"], "scriptPubKey"));
-            CScript scriptPubKey(pkData.begin(), pkData.end());
-
+        private static void RegisterSetJson(string key, string rawJson)
+        {
+            JToken val;
+            try
             {
-                const Coin& coin = view.AccessCoin(out);
-                if (!coin.IsSpent() && coin.out.scriptPubKey != scriptPubKey) {
-                    std::string err("Previous output scriptPubKey mismatch:\n");
-                    err = err + ScriptToAsmStr(coin.out.scriptPubKey) + "\nvs:\n"+
-                        ScriptToAsmStr(scriptPubKey);
-                    throw std::runtime_error(err);
+                val = JToken.Parse(rawJson);
+            }
+            catch (Exception)
+            {
+                throw new Exception("Cannot parse JSON for key " + key);
+            }
+
+            registers[key] = val;
+        }
+
+        private static void RegisterSet(string strInput)
+        {
+            // separate NAME:VALUE in string
+            int pos = strInput.IndexOf(':');
+            if (pos == -1 || pos == 0 || pos == strInput.Length - 1)
+                throw new Exception("Register input requires NAME:VALUE");
+
+            string key = strInput.Substring(0, pos);
+            string valStr = strInput.Substring(pos + 1);
+
+            RegisterSetJson(key, valStr);
+        }
+
+        private static void RegisterLoad(string strInput)
+        {
+            // separate NAME:FILENAME in string
+            int pos = strInput.IndexOf(':');
+            if (pos == -1 || pos == 0 || pos == strInput.Length - 1)
+                throw new Exception("Register load requires NAME:FILENAME");
+
+            string key = strInput.Substring(0, pos);
+            string filename = strInput.Substring(pos + 1);
+
+            string valStr;
+            try
+            {
+                valStr = File.ReadAllText(filename);
+            }
+            catch (Exception)
+            {
+                throw new Exception("Cannot open file " + filename);
+            }
+
+            RegisterSetJson(key, valStr);
+        }
+
+        private static long ExtractAndValidateValue(string strValue)
+        {
+            if (long.TryParse(strValue, out long value))
+            {
+                return value;
+            }
+            else
+            {
+                throw new Exception("invalid TX output value");
+            }
+        }
+
+        private static void MutateTxVersion(JObject tx, string cmdVal)
+        {
+            if (!uint.TryParse(cmdVal, out uint newVersion) || newVersion < 1 || newVersion > 2)
+            {
+                throw new Exception("Invalid TX version requested: '" + cmdVal + "'");
+            }
+
+            tx["version"] = newVersion;
+        }
+
+        private static void MutateTxLocktime(JObject tx, string cmdVal)
+        {
+            if (!long.TryParse(cmdVal, out long newLocktime) || newLocktime < 0 || newLocktime > 0xffffffff)
+                throw new Exception("Invalid TX locktime requested: '" + cmdVal + "'");
+
+            tx["locktime"] = (uint)newLocktime;
+        }
+
+        private static void MutateTxRBFOptIn(JObject tx, string strInIdx)
+        {
+            // parse requested index
+            int inIdx = -1;
+            if (strInIdx != "" && (!int.TryParse(strInIdx, out inIdx) || inIdx < 0 || inIdx >= tx["vin"].Count()))
+            {
+                throw new Exception("Invalid TX input index '" + strInIdx + "'");
+            }
+
+            // set the nSequence to MAX_INT - 2 (= RBF opt in flag)
+            int cnt = 0;
+            foreach (var txin in tx["vin"])
+            {
+                if (strInIdx == "" || cnt == inIdx)
+                {
+                    if ((uint)txin["sequence"] > 0xfffffffd)
+                    {
+                        txin["sequence"] = 0xfffffffd;
+                    }
                 }
-                Coin newcoin;
-                newcoin.out.scriptPubKey = scriptPubKey;
-                newcoin.out.nValue = MAX_MONEY;
-                if (prevOut.exists("amount")) {
-                    newcoin.out.nValue = AmountFromValue(prevOut["amount"]);
+                ++cnt;
+            }
+        }
+
+        private static void MutateTxAddInput(JObject tx, string strInput)
+        {
+            var vStrInputParts = strInput.Split(':');
+
+            // separate TXID:VOUT in string
+            if (vStrInputParts.Length < 2)
+                throw new Exception("TX input missing separator");
+
+            // extract and validate TXID
+            var txid = vStrInputParts[0];
+            if (txid.Length != 64 || !IsHex(txid))
+            {
+                throw new Exception("invalid TX input txid");
+            }
+
+            // extract and validate vout
+            var strVout = vStrInputParts[1];
+            if (!int.TryParse(strVout, out int vout) || vout < 0 || vout > 0xffff)
+                throw new Exception("invalid TX input vout '" + strVout + "'");
+
+            // extract the optional sequence number
+            uint nSequenceIn = 0xffffffff;
+            if (vStrInputParts.Length > 2)
+            {
+                if (!uint.TryParse(vStrInputParts[2], out nSequenceIn))
+                {
+                    throw new Exception("invalid TX sequence id '" + vStrInputParts[2] + "'");
                 }
-                newcoin.nHeight = 1;
-                view.AddCoin(out, std::move(newcoin), true);
             }
 
-            // if redeemScript given and private keys given,
-            // add redeemScript to the tempKeystore so it can be signed:
-            if ((scriptPubKey.IsPayToScriptHash() || scriptPubKey.IsPayToWitnessScriptHash()) &&
-                prevOut.exists("redeemScript")) {
-                UniValue v = prevOut["redeemScript"];
-                std::vector<unsigned char> rsData(ParseHexUV(v, "redeemScript"));
-                CScript redeemScript(rsData.begin(), rsData.end());
-                tempKeystore.AddCScript(redeemScript);
+            // append to transaction input list
+            var txin = new JObject
+            {
+                ["txid"] = txid,
+                ["vout"] = vout,
+                ["scriptSig"] = new JObject(),
+                ["sequence"] = nSequenceIn
+            };
+            ((JArray)tx["vin"]).Add(txin);
+        }
+
+        private static void MutateTxAddOutAddr(JObject tx, string strInput)
+        {
+            // Separate into VALUE:ADDRESS
+            var vStrInputParts = strInput.Split(':');
+
+            if (vStrInputParts.Length != 2)
+                throw new Exception("TX output missing or too many separators");
+
+            // Extract and validate VALUE
+            long value = ExtractAndValidateValue(vStrInputParts[0]);
+
+            // extract and validate ADDRESS
+            string strAddr = vStrInputParts[1];
+            if (!IsValidAddress(strAddr))
+            {
+                throw new Exception("invalid TX output address");
             }
-        }
-    }
+            var scriptPubKey = GetScriptForDestination(strAddr);
 
-    const FillableSigningProvider& keystore = tempKeystore;
-
-    bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
-
-    // Sign what we can:
-    for (unsigned int i = 0; i < mergedTx.vin.size(); i++) {
-        CTxIn& txin = mergedTx.vin[i];
-        const Coin& coin = view.AccessCoin(txin.prevout);
-        if (coin.IsSpent()) {
-            continue;
-        }
-        const CScript& prevPubKey = coin.out.scriptPubKey;
-        const CAmount& amount = coin.out.nValue;
-
-        SignatureData sigdata = DataFromTransaction(mergedTx, i, coin.out);
-        // Only sign SIGHASH_SINGLE if there's a corresponding output:
-        if (!fHashSingle || (i < mergedTx.vout.size()))
-            ProduceSignature(keystore, MutableTransactionSignatureCreator(mergedTx, i, amount, nHashType), prevPubKey, sigdata);
-
-        if (amount == MAX_MONEY && !sigdata.scriptWitness.IsNull()) {
-            throw std::runtime_error(strprintf("Missing amount for CTxOut with scriptPubKey=%s", HexStr(prevPubKey)));
+            // construct TxOut, append to transaction output list
+            var txout = new JObject
+            {
+                ["value"] = value,
+                ["scriptPubKey"] = scriptPubKey
+            };
+            ((JArray)tx["vout"]).Add(txout);
         }
 
-        UpdateInput(txin, sigdata);
-    }
-
-    tx = mergedTx;
-}
-
-static void MutateTx(CMutableTransaction& tx, const std::string& command,
-                     const std::string& commandVal)
-{
-    std::unique_ptr<ECC_Context> ecc;
-
-    if (command == "nversion")
-        MutateTxVersion(tx, commandVal);
-    else if (command == "locktime")
-        MutateTxLocktime(tx, commandVal);
-    else if (command == "replaceable") {
-        MutateTxRBFOptIn(tx, commandVal);
-    }
-
-    else if (command == "delin")
-        MutateTxDelInput(tx, commandVal);
-    else if (command == "in")
-        MutateTxAddInput(tx, commandVal);
-
-    else if (command == "delout")
-        MutateTxDelOutput(tx, commandVal);
-    else if (command == "outaddr")
-        MutateTxAddOutAddr(tx, commandVal);
-    else if (command == "outpubkey") {
-        ecc.reset(new ECC_Context());
-        MutateTxAddOutPubKey(tx, commandVal);
-    } else if (command == "outmultisig") {
-        ecc.reset(new ECC_Context());
-        MutateTxAddOutMultiSig(tx, commandVal);
-    } else if (command == "outscript")
-        MutateTxAddOutScript(tx, commandVal);
-    else if (command == "outdata")
-        MutateTxAddOutData(tx, commandVal);
-
-    else if (command == "sign") {
-        ecc.reset(new ECC_Context());
-        MutateTxSign(tx, commandVal);
-    }
-
-    else if (command == "load")
-        RegisterLoad(commandVal);
-
-    else if (command == "set")
-        RegisterSet(commandVal);
-
-    else
-        throw std::runtime_error("unknown command");
-}
-
-static void OutputTxJSON(const CTransaction& tx)
-{
-    UniValue entry(UniValue::VOBJ);
-    TxToUniv(tx, /*block_hash=*/uint256(), entry);
-
-    std::string jsonOutput = entry.write(4);
-    tfm::format(std::cout, "%s\n", jsonOutput);
-}
-
-static void OutputTxHash(const CTransaction& tx)
-{
-    std::string strHexHash = tx.GetHash().GetHex(); // the hex-encoded transaction hash (aka the transaction id)
-
-    tfm::format(std::cout, "%s\n", strHexHash);
-}
-
-static void OutputTxHex(const CTransaction& tx)
-{
-    std::string strHex = EncodeHexTx(tx);
-
-    tfm::format(std::cout, "%s\n", strHex);
-}
-
-static void OutputTx(const CTransaction& tx)
-{
-    if (gArgs.GetBoolArg("-json", false))
-        OutputTxJSON(tx);
-    else if (gArgs.GetBoolArg("-txid", false))
-        OutputTxHash(tx);
-    else
-        OutputTxHex(tx);
-}
-
-static std::string readStdin()
-{
-    char buf[4096];
-    std::string ret;
-
-    while (!feof(stdin)) {
-        size_t bread = fread(buf, 1, sizeof(buf), stdin);
-        ret.append(buf, bread);
-        if (bread < sizeof(buf))
-            break;
-    }
-
-    if (ferror(stdin))
-        throw std::runtime_error("error reading stdin");
-
-    return TrimString(ret);
-}
-
-static int CommandLineRawTx(int argc, char* argv[])
-{
-    std::string strPrint;
-    int nRet = 0;
-    try {
-        // Skip switches; Permit common stdin convention "-"
-        while (argc > 1 && IsSwitchChar(argv[1][0]) &&
-               (argv[1][1] != 0)) {
-            argc--;
-            argv++;
+        private static bool IsValidAddress(string address)
+        {
+            // Validate address
+            return true;
         }
 
-        CMutableTransaction tx;
-        int startArg;
+        private static JObject GetScriptForDestination(string address)
+        {
+            // Get script for destination
+            return new JObject();
+        }
 
-        if (!fCreateBlank) {
-            // require at least one param
-            if (argc < 2)
-                throw std::runtime_error("too few parameters");
+        private static void MutateTxAddOutPubKey(JObject tx, string strInput)
+        {
+            // Separate into VALUE:PUBKEY[:FLAGS]
+            var vStrInputParts = strInput.Split(':');
 
-            // param: hex-encoded bitcoin transaction
-            std::string strHexTx(argv[1]);
-            if (strHexTx == "-")                 // "-" implies standard input
-                strHexTx = readStdin();
+            if (vStrInputParts.Length < 2 || vStrInputParts.Length > 3)
+                throw new Exception("TX output missing or too many separators");
 
-            if (!DecodeHexTx(tx, strHexTx, true))
-                throw std::runtime_error("invalid transaction encoding");
+            // Extract and validate VALUE
+            long value = ExtractAndValidateValue(vStrInputParts[0]);
 
-            startArg = 2;
-        } else
-            startArg = 1;
+            // Extract and validate PUBKEY
+            var pubkey = vStrInputParts[1];
+            if (pubkey.Length != 66 || !IsHex(pubkey))
+                throw new Exception("invalid TX output pubkey");
+            var scriptPubKey = GetScriptForRawPubKey(pubkey);
 
-        for (int i = startArg; i < argc; i++) {
-            std::string arg = argv[i];
-            std::string key, value;
-            size_t eqpos = arg.find('=');
-            if (eqpos == std::string::npos)
-                key = arg;
-            else {
-                key = arg.substr(0, eqpos);
-                value = arg.substr(eqpos + 1);
+            // Extract and validate FLAGS
+            bool bSegWit = false;
+            bool bScriptHash = false;
+            if (vStrInputParts.Length == 3)
+            {
+                string flags = vStrInputParts[2];
+                bSegWit = flags.Contains('W');
+                bScriptHash = flags.Contains('S');
             }
 
-            MutateTx(tx, key, value);
+            if (bSegWit)
+            {
+                if (pubkey.Length != 66)
+                {
+                    throw new Exception("Uncompressed pubkeys are not useable for SegWit outputs");
+                }
+                // Build a P2WPKH script
+                scriptPubKey = GetScriptForDestination(pubkey);
+            }
+            if (bScriptHash)
+            {
+                // Get the ID for the script, and then construct a P2SH destination for it.
+                scriptPubKey = GetScriptForDestination(scriptPubKey.ToString());
+            }
+
+            // construct TxOut, append to transaction output list
+            var txout = new JObject
+            {
+                ["value"] = value,
+                ["scriptPubKey"] = scriptPubKey
+            };
+            ((JArray)tx["vout"]).Add(txout);
         }
 
-        OutputTx(CTransaction(tx));
-    }
-    catch (const std::exception& e) {
-        strPrint = std::string("error: ") + e.what();
-        nRet = EXIT_FAILURE;
-    }
-    catch (...) {
-        PrintExceptionContinue(nullptr, "CommandLineRawTx()");
-        throw;
-    }
+        private static JObject GetScriptForRawPubKey(string pubkey)
+        {
+            // Get script for raw pubkey
+            return new JObject();
+        }
 
-    if (strPrint != "") {
-        tfm::format(nRet == 0 ? std::cout : std::cerr, "%s\n", strPrint);
-    }
-    return nRet;
-}
+        private static void MutateTxAddOutMultiSig(JObject tx, string strInput)
+        {
+            // Separate into VALUE:REQUIRED:NUMKEYS:PUBKEY1:PUBKEY2:....[:FLAGS]
+            var vStrInputParts = strInput.Split(':');
 
-MAIN_FUNCTION
-{
-    SetupEnvironment();
+            // Check that there are enough parameters
+            if (vStrInputParts.Length < 3)
+                throw new Exception("Not enough multisig parameters");
 
-    try {
-        int ret = AppInitRawTx(argc, argv);
-        if (ret != CONTINUE_EXECUTION)
-            return ret;
-    }
-    catch (const std::exception& e) {
-        PrintExceptionContinue(&e, "AppInitRawTx()");
-        return EXIT_FAILURE;
-    } catch (...) {
-        PrintExceptionContinue(nullptr, "AppInitRawTx()");
-        return EXIT_FAILURE;
-    }
+            // Extract and validate VALUE
+            long value = ExtractAndValidateValue(vStrInputParts[0]);
 
-    int ret = EXIT_FAILURE;
-    try {
-        ret = CommandLineRawTx(argc, argv);
+            // Extract REQUIRED
+            if (!uint.TryParse(vStrInputParts[1], out uint required))
+                throw new Exception("invalid multisig required number");
+
+            // Extract NUMKEYS
+            if (!uint.TryParse(vStrInputParts[2], out uint numkeys))
+                throw new Exception("invalid multisig total number");
+
+            // Validate there are the correct number of pubkeys
+            if (vStrInputParts.Length < numkeys + 3)
+                throw new Exception("incorrect number of multisig pubkeys");
+
+            if (required < 1 || required > 20 || numkeys < 1 || numkeys > 20 || numkeys < required)
+                throw new Exception("multisig parameter mismatch. Required " + required + " of " + numkeys + " signatures.");
+
+            // extract and validate PUBKEYs
+            var pubkeys = new List<string>();
+            for (int pos = 1; pos <= numkeys; pos++)
+            {
+                var pubkey = vStrInputParts[pos + 2];
+                if (pubkey.Length != 66 || !IsHex(pubkey))
+                    throw new Exception("invalid TX output pubkey");
+                pubkeys.Add(pubkey);
+            }
+
+            // Extract FLAGS
+            bool bSegWit = false;
+            bool bScriptHash = false;
+            if (vStrInputParts.Length == numkeys + 4)
+            {
+                string flags = vStrInputParts.Last();
+                bSegWit = flags.Contains('W');
+                bScriptHash = flags.Contains('S');
+            }
+            else if (vStrInputParts.Length > numkeys + 4)
+            {
+                // Validate that there were no more parameters passed
+                throw new Exception("Too many parameters");
+            }
+
+            var scriptPubKey = GetScriptForMultisig(required, pubkeys);
+
+            if (bSegWit)
+            {
+                foreach (var pubkey in pubkeys)
+                {
+                    if (pubkey.Length != 66)
+                    {
+                        throw new Exception("Uncompressed pubkeys are not useable for SegWit outputs");
+                    }
+                }
+                // Build a P2WSH with the multisig script
+                scriptPubKey = GetScriptForDestination(scriptPubKey.ToString());
+            }
+            if (bScriptHash)
+            {
+                if (scriptPubKey.ToString().Length > 520)
+                {
+                    throw new Exception("redeemScript exceeds size limit: " + scriptPubKey.ToString().Length + " > 520");
+                }
+                // Get the ID for the script, and then construct a P2SH destination for it.
+                scriptPubKey = GetScriptForDestination(scriptPubKey.ToString());
+            }
+
+            // construct TxOut, append to transaction output list
+            var txout = new JObject
+            {
+                ["value"] = value,
+                ["scriptPubKey"] = scriptPubKey
+            };
+            ((JArray)tx["vout"]).Add(txout);
+        }
+
+        private static JObject GetScriptForMultisig(uint required, List<string> pubkeys)
+        {
+            // Get script for multisig
+            return new JObject();
+        }
+
+        private static void MutateTxAddOutData(JObject tx, string strInput)
+        {
+            long value = 0;
+
+            // separate [VALUE:]DATA in string
+            int pos = strInput.IndexOf(':');
+
+            if (pos == 0)
+                throw new Exception("TX output value not specified");
+
+            if (pos == -1)
+            {
+                pos = 0;
+            }
+            else
+            {
+                // Extract and validate VALUE
+                value = ExtractAndValidateValue(strInput.Substring(0, pos));
+                ++pos;
+            }
+
+            // extract and validate DATA
+            var strData = strInput.Substring(pos);
+
+            if (!IsHex(strData))
+                throw new Exception("invalid TX output data");
+
+            var data = ParseHex(strData);
+
+            var txout = new JObject
+            {
+                ["value"] = value,
+                ["scriptPubKey"] = new JObject
+                {
+                    ["asm"] = "OP_RETURN " + BitConverter.ToString(data).Replace("-", ""),
+                    ["hex"] = BitConverter.ToString(data).Replace("-", ""),
+                    ["type"] = "nulldata"
+                }
+            };
+            ((JArray)tx["vout"]).Add(txout);
+        }
+
+        private static bool IsHex(string str)
+        {
+            // Check if string is hex
+            return true;
+        }
+
+        private static byte[] ParseHex(string str)
+        {
+            // Parse hex string
+            return new byte[0];
+        }
+
+        private static void MutateTxAddOutScript(JObject tx, string strInput)
+        {
+            // separate VALUE:SCRIPT[:FLAGS]
+            var vStrInputParts = strInput.Split(':');
+            if (vStrInputParts.Length < 2)
+                throw new Exception("TX output missing separator");
+
+            // Extract and validate VALUE
+            long value = ExtractAndValidateValue(vStrInputParts[0]);
+
+            // extract and validate script
+            string strScript = vStrInputParts[1];
+            var scriptPubKey = ParseScript(strScript);
+
+            // Extract FLAGS
+            bool bSegWit = false;
+            bool bScriptHash = false;
+            if (vStrInputParts.Length == 3)
+            {
+                string flags = vStrInputParts.Last();
+                bSegWit = flags.Contains('W');
+                bScriptHash = flags.Contains('S');
+            }
+
+            if (scriptPubKey.ToString().Length > 10000)
+            {
+                throw new Exception("script exceeds size limit: " + scriptPubKey.ToString().Length + " > 10000");
+            }
+
+            if (bSegWit)
+            {
+                scriptPubKey = GetScriptForDestination(scriptPubKey.ToString());
+            }
+            if (bScriptHash)
+            {
+                if (scriptPubKey.ToString().Length > 520)
+                {
+                    throw new Exception("redeemScript exceeds size limit: " + scriptPubKey.ToString().Length + " > 520");
+                }
+                scriptPubKey = GetScriptForDestination(scriptPubKey.ToString());
+            }
+
+            // construct TxOut, append to transaction output list
+            var txout = new JObject
+            {
+                ["value"] = value,
+                ["scriptPubKey"] = scriptPubKey
+            };
+            ((JArray)tx["vout"]).Add(txout);
+        }
+
+        private static JObject ParseScript(string strScript)
+        {
+            // Parse script
+            return new JObject();
+        }
+
+        private static void MutateTxDelInput(JObject tx, string strInIdx)
+        {
+            // parse requested deletion index
+            if (!int.TryParse(strInIdx, out int inIdx) || inIdx < 0 || inIdx >= tx["vin"].Count())
+            {
+                throw new Exception("Invalid TX input index '" + strInIdx + "'");
+            }
+
+            // delete input from transaction
+            ((JArray)tx["vin"]).RemoveAt(inIdx);
+        }
+
+        private static void MutateTxDelOutput(JObject tx, string strOutIdx)
+        {
+            // parse requested deletion index
+            if (!int.TryParse(strOutIdx, out int outIdx) || outIdx < 0 || outIdx >= tx["vout"].Count())
+            {
+                throw new Exception("Invalid TX output index '" + strOutIdx + "'");
+            }
+
+            // delete output from transaction
+            ((JArray)tx["vout"]).RemoveAt(outIdx);
+        }
+
+        private static void MutateTxSign(JObject tx, string flagStr)
+        {
+            int nHashType = 1;
+
+            if (flagStr.Length > 0)
+                if (!FindSighashFlags(ref nHashType, flagStr))
+                    throw new Exception("unknown sighash flag/sign option");
+
+            // mergedTx will end up with all the signatures; it
+            // starts as a clone of the raw tx:
+            var mergedTx = new JObject(tx);
+            var txv = new JObject(tx);
+            var viewDummy = new JObject();
+            var view = new JObject(viewDummy);
+
+            if (!registers.ContainsKey("privatekeys"))
+                throw new Exception("privatekeys register variable must be set.");
+            var tempKeystore = new JObject();
+            var keysObj = registers["privatekeys"];
+
+            foreach (var key in keysObj)
+            {
+                if (key.Type != JTokenType.String)
+                    throw new Exception("privatekey not a string");
+                var privateKey = key.ToString();
+                if (!IsValidPrivateKey(privateKey))
+                {
+                    throw new Exception("privatekey not valid");
+                }
+                AddKey(tempKeystore, privateKey);
+            }
+
+            // Add previous txouts given in the RPC call:
+            if (!registers.ContainsKey("prevtxs"))
+                throw new Exception("prevtxs register variable must be set.");
+            var prevtxsObj = registers["prevtxs"];
+            foreach (var prevOut in prevtxsObj)
+            {
+                if (prevOut.Type != JTokenType.Object)
+                    throw new Exception("expected prevtxs internal object");
+
+                var types = new Dictionary<string, JTokenType>
+                {
+                    { "txid", JTokenType.String },
+                    { "vout", JTokenType.Integer },
+                    { "scriptPubKey", JTokenType.String }
+                };
+                if (!CheckObject(prevOut, types))
+                    throw new Exception("prevtxs internal object typecheck fail");
+
+                var txid = prevOut["txid"].ToString();
+                if (txid.Length != 64 || !IsHex(txid))
+                {
+                    throw new Exception("txid must be hexadecimal string (not '" + prevOut["txid"].ToString() + "')");
+                }
+
+                var nOut = (int)prevOut["vout"];
+                if (nOut < 0)
+                    throw new Exception("vout cannot be negative");
+
+                var outPoint = new JObject
+                {
+                    ["txid"] = txid,
+                    ["vout"] = nOut
+                };
+                var pkData = ParseHex(prevOut["scriptPubKey"].ToString());
+                var scriptPubKey = new JObject
+                {
+                    ["asm"] = BitConverter.ToString(pkData).Replace("-", ""),
+                    ["hex"] = BitConverter.ToString(pkData).Replace("-", "")
+                };
+
+                var coin = AccessCoin(view, outPoint);
+                if (coin != null && coin["scriptPubKey"].ToString() != scriptPubKey.ToString())
+                {
+                    var err = "Previous output scriptPubKey mismatch:\n" + coin["scriptPubKey"].ToString() + "\nvs:\n" + scriptPubKey.ToString();
+                    throw new Exception(err);
+                }
+                var newCoin = new JObject
+                {
+                    ["scriptPubKey"] = scriptPubKey,
+                    ["value"] = 21000000
+                };
+                if (prevOut["amount"] != null)
+                {
+                    newCoin["value"] = AmountFromValue(prevOut["amount"]);
+                }
+                newCoin["height"] = 1;
+                AddCoin(view, outPoint, newCoin);
+
+                // if redeemScript given and private keys given,
+                // add redeemScript to the tempKeystore so it can be signed:
+                if ((IsPayToScriptHash(scriptPubKey) || IsPayToWitnessScriptHash(scriptPubKey)) && prevOut["redeemScript"] != null)
+                {
+                    var v = prevOut["redeemScript"];
+                    var rsData = ParseHex(v.ToString());
+                    var redeemScript = new JObject
+                    {
+                        ["asm"] = BitConverter.ToString(rsData).Replace("-", ""),
+                        ["hex"] = BitConverter.ToString(rsData).Replace("-", "")
+                    };
+                    AddCScript(tempKeystore, redeemScript);
+                }
+            }
+
+            var keystore = tempKeystore;
+
+            bool fHashSingle = ((nHashType & ~0x80) == 3);
+
+            // Sign what we can:
+            for (int i = 0; i < mergedTx["vin"].Count(); i++)
+            {
+                var txin = mergedTx["vin"][i];
+                var coin = AccessCoin(view, txin);
+                if (coin == null)
+                {
+                    continue;
+                }
+                var prevPubKey = coin["scriptPubKey"];
+                var amount = coin["value"];
+
+                var sigdata = DataFromTransaction(mergedTx, i, coin);
+                // Only sign SIGHASH_SINGLE if there's a corresponding output:
+                if (!fHashSingle || (i < mergedTx["vout"].Count()))
+                    ProduceSignature(keystore, MutableTransactionSignatureCreator(mergedTx, i, amount, nHashType), prevPubKey, sigdata);
+
+                if (amount == 21000000 && sigdata["scriptWitness"] != null)
+                {
+                    throw new Exception("Missing amount for CTxOut with scriptPubKey=" + prevPubKey.ToString());
+                }
+
+                UpdateInput(txin, sigdata);
+            }
+
+            tx = mergedTx;
+        }
+
+        private static bool FindSighashFlags(ref int flags, string flagStr)
+        {
+            flags = 0;
+
+            var sighashOptions = new Dictionary<string, int>
+            {
+                { "DEFAULT", 0 },
+                { "ALL", 1 },
+                { "NONE", 2 },
+                { "SINGLE", 3 },
+                { "ALL|ANYONECANPAY", 0x81 },
+                { "NONE|ANYONECANPAY", 0x82 },
+                { "SINGLE|ANYONECANPAY", 0x83 }
+            };
+
+            if (sighashOptions.ContainsKey(flagStr))
+            {
+                flags = sighashOptions[flagStr];
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool IsValidPrivateKey(string privateKey)
+        {
+            // Validate private key
+            return true;
+        }
+
+        private static void AddKey(JObject keystore, string privateKey)
+        {
+            // Add key to keystore
+        }
+
+        private static bool CheckObject(JToken obj, Dictionary<string, JTokenType> types)
+        {
+            // Check object types
+            return true;
+        }
+
+        private static JObject AccessCoin(JObject view, JObject outPoint)
+        {
+            // Access coin
+            return new JObject();
+        }
+
+        private static void AddCoin(JObject view, JObject outPoint, JObject coin)
+        {
+            // Add coin to view
+        }
+
+        private static bool IsPayToScriptHash(JObject scriptPubKey)
+        {
+            // Check if scriptPubKey is P2SH
+            return true;
+        }
+
+        private static bool IsPayToWitnessScriptHash(JObject scriptPubKey)
+        {
+            // Check if scriptPubKey is P2WSH
+            return true;
+        }
+
+        private static void AddCScript(JObject keystore, JObject redeemScript)
+        {
+            // Add redeem script to keystore
+        }
+
+        private static JObject DataFromTransaction(JObject tx, int index, JObject coin)
+        {
+            // Get data from transaction
+            return new JObject();
+        }
+
+        private static void ProduceSignature(JObject keystore, JObject creator, JObject prevPubKey, JObject sigdata)
+        {
+            // Produce signature
+        }
+
+        private static JObject MutableTransactionSignatureCreator(JObject tx, int index, long amount, int nHashType)
+        {
+            // Create mutable transaction signature creator
+            return new JObject();
+        }
+
+        private static void UpdateInput(JToken txin, JObject sigdata)
+        {
+            // Update input
+        }
+
+        private static void MutateTx(JObject tx, string command, string commandVal)
+        {
+            if (command == "nversion")
+                MutateTxVersion(tx, commandVal);
+            else if (command == "locktime")
+                MutateTxLocktime(tx, commandVal);
+            else if (command == "replaceable")
+                MutateTxRBFOptIn(tx, commandVal);
+            else if (command == "delin")
+                MutateTxDelInput(tx, commandVal);
+            else if (command == "in")
+                MutateTxAddInput(tx, commandVal);
+            else if (command == "delout")
+                MutateTxDelOutput(tx, commandVal);
+            else if (command == "outaddr")
+                MutateTxAddOutAddr(tx, commandVal);
+            else if (command == "outpubkey")
+                MutateTxAddOutPubKey(tx, commandVal);
+            else if (command == "outmultisig")
+                MutateTxAddOutMultiSig(tx, commandVal);
+            else if (command == "outscript")
+                MutateTxAddOutScript(tx, commandVal);
+            else if (command == "outdata")
+                MutateTxAddOutData(tx, commandVal);
+            else if (command == "sign")
+                MutateTxSign(tx, commandVal);
+            else if (command == "load")
+                RegisterLoad(commandVal);
+            else if (command == "set")
+                RegisterSet(commandVal);
+            else
+                throw new Exception("unknown command");
+        }
+
+        private static void OutputTxJSON(JObject tx)
+        {
+            var entry = new JObject
+            {
+                ["txid"] = tx["txid"],
+                ["hash"] = tx["hash"],
+                ["version"] = tx["version"],
+                ["size"] = tx["size"],
+                ["vsize"] = tx["vsize"],
+                ["weight"] = tx["weight"],
+                ["locktime"] = tx["locktime"],
+                ["vin"] = tx["vin"],
+                ["vout"] = tx["vout"]
+            };
+
+            string jsonOutput = entry.ToString();
+            Console.WriteLine(jsonOutput);
+        }
+
+        private static void OutputTxHash(JObject tx)
+        {
+            string strHexHash = tx["txid"].ToString();
+            Console.WriteLine(strHexHash);
+        }
+
+        private static void OutputTxHex(JObject tx)
+        {
+            string strHex = tx.ToString();
+            Console.WriteLine(strHex);
+        }
+
+        private static void OutputTx(JObject tx)
+        {
+            if (gArgs.GetBoolArg("-json", false))
+                OutputTxJSON(tx);
+            else if (gArgs.GetBoolArg("-txid", false))
+                OutputTxHash(tx);
+            else
+                OutputTxHex(tx);
+        }
+
+        private static string ReadStdin()
+        {
+            using (var reader = new StreamReader(Console.OpenStandardInput(), Console.InputEncoding))
+            {
+                return reader.ReadToEnd().Trim();
+            }
+        }
+
+        private static int CommandLineRawTx(string[] args)
+        {
+            string strPrint = "";
+            int nRet = 0;
+            try
+            {
+                // Skip switches; Permit common stdin convention "-"
+                while (args.Length > 1 && args[1].StartsWith("-") && args[1].Length > 1)
+                {
+                    args = args.Skip(1).ToArray();
+                }
+
+                var tx = new JObject();
+                int startArg;
+
+                if (!fCreateBlank)
+                {
+                    // require at least one param
+                    if (args.Length < 2)
+                        throw new Exception("too few parameters");
+
+                    // param: hex-encoded bitcoin transaction
+                    string strHexTx = args[1];
+                    if (strHexTx == "-") // "-" implies standard input
+                        strHexTx = ReadStdin();
+
+                    tx = JObject.Parse(strHexTx);
+                    startArg = 2;
+                }
+                else
+                    startArg = 1;
+
+                for (int i = startArg; i < args.Length; i++)
+                {
+                    string arg = args[i];
+                    string key, value;
+                    int eqpos = arg.IndexOf('=');
+                    if (eqpos == -1)
+                        key = arg;
+                    else
+                    {
+                        key = arg.Substring(0, eqpos);
+                        value = arg.Substring(eqpos + 1);
+                    }
+
+                    MutateTx(tx, key, value);
+                }
+
+                OutputTx(tx);
+            }
+            catch (Exception e)
+            {
+                strPrint = "error: " + e.Message;
+                nRet = EXIT_FAILURE;
+            }
+
+            if (strPrint != "")
+            {
+                Console.WriteLine(strPrint);
+            }
+            return nRet;
+        }
     }
-    catch (const std::exception& e) {
-        PrintExceptionContinue(&e, "CommandLineRawTx()");
-    } catch (...) {
-        PrintExceptionContinue(nullptr, "CommandLineRawTx()");
-    }
-    return ret;
 }

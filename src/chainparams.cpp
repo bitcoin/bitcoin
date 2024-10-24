@@ -1,138 +1,212 @@
-// Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-#include <chainparams.h>
-
-#include <chainparamsbase.h>
-#include <common/args.h>
-#include <consensus/params.h>
-#include <deploymentinfo.h>
-#include <logging.h>
-#include <tinyformat.h>
-#include <util/chaintype.h>
-#include <util/strencodings.h>
-#include <util/string.h>
-
-#include <cassert>
-#include <cstdint>
-#include <limits>
-#include <stdexcept>
-#include <vector>
-
-using util::SplitString;
-
-void ReadSigNetArgs(const ArgsManager& args, CChainParams::SigNetOptions& options)
+namespace Bitcoin
 {
-    if (args.IsArgSet("-signetseednode")) {
-        options.seeds.emplace(args.GetArgs("-signetseednode"));
-    }
-    if (args.IsArgSet("-signetchallenge")) {
-        const auto signet_challenge = args.GetArgs("-signetchallenge");
-        if (signet_challenge.size() != 1) {
-            throw std::runtime_error("-signetchallenge cannot be multiple values.");
-        }
-        const auto val{TryParseHex<uint8_t>(signet_challenge[0])};
-        if (!val) {
-            throw std::runtime_error(strprintf("-signetchallenge must be hex, not '%s'.", signet_challenge[0]));
-        }
-        options.challenge.emplace(*val);
-    }
-}
-
-void ReadRegTestArgs(const ArgsManager& args, CChainParams::RegTestOptions& options)
-{
-    if (auto value = args.GetBoolArg("-fastprune")) options.fastprune = *value;
-
-    for (const std::string& arg : args.GetArgs("-testactivationheight")) {
-        const auto found{arg.find('@')};
-        if (found == std::string::npos) {
-            throw std::runtime_error(strprintf("Invalid format (%s) for -testactivationheight=name@height.", arg));
+    public class ChainParams
+    {
+        public class SigNetOptions
+        {
+            public List<string> Seeds { get; set; } = new List<string>();
+            public List<byte> Challenge { get; set; } = new List<byte>();
         }
 
-        const auto value{arg.substr(found + 1)};
-        int32_t height;
-        if (!ParseInt32(value, &height) || height < 0 || height >= std::numeric_limits<int>::max()) {
-            throw std::runtime_error(strprintf("Invalid height value (%s) for -testactivationheight=name@height.", arg));
+        public class RegTestOptions
+        {
+            public bool FastPrune { get; set; }
+            public Dictionary<string, int> ActivationHeights { get; set; } = new Dictionary<string, int>();
+            public Dictionary<string, VersionBitsParameters> VersionBitsParameters { get; set; } = new Dictionary<string, VersionBitsParameters>();
         }
 
-        const auto deployment_name{arg.substr(0, found)};
-        if (const auto buried_deployment = GetBuriedDeployment(deployment_name)) {
-            options.activation_heights[*buried_deployment] = height;
-        } else {
-            throw std::runtime_error(strprintf("Invalid name (%s) for -testactivationheight=name@height.", arg));
+        public class VersionBitsParameters
+        {
+            public long StartTime { get; set; }
+            public long Timeout { get; set; }
+            public int MinActivationHeight { get; set; }
         }
-    }
 
-    if (!args.IsArgSet("-vbparams")) return;
-
-    for (const std::string& strDeployment : args.GetArgs("-vbparams")) {
-        std::vector<std::string> vDeploymentParams = SplitString(strDeployment, ':');
-        if (vDeploymentParams.size() < 3 || 4 < vDeploymentParams.size()) {
-            throw std::runtime_error("Version bits parameters malformed, expecting deployment:start:end[:min_activation_height]");
-        }
-        CChainParams::VersionBitsParameters vbparams{};
-        if (!ParseInt64(vDeploymentParams[1], &vbparams.start_time)) {
-            throw std::runtime_error(strprintf("Invalid nStartTime (%s)", vDeploymentParams[1]));
-        }
-        if (!ParseInt64(vDeploymentParams[2], &vbparams.timeout)) {
-            throw std::runtime_error(strprintf("Invalid nTimeout (%s)", vDeploymentParams[2]));
-        }
-        if (vDeploymentParams.size() >= 4) {
-            if (!ParseInt32(vDeploymentParams[3], &vbparams.min_activation_height)) {
-                throw std::runtime_error(strprintf("Invalid min_activation_height (%s)", vDeploymentParams[3]));
+        public static void ReadSigNetArgs(ArgsManager args, SigNetOptions options)
+        {
+            if (args.IsArgSet("-signetseednode"))
+            {
+                options.Seeds.AddRange(args.GetArgs("-signetseednode"));
             }
-        } else {
-            vbparams.min_activation_height = 0;
-        }
-        bool found = false;
-        for (int j=0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
-            if (vDeploymentParams[0] == VersionBitsDeploymentInfo[j].name) {
-                options.version_bits_parameters[Consensus::DeploymentPos(j)] = vbparams;
-                found = true;
-                LogPrintf("Setting version bits activation parameters for %s to start=%ld, timeout=%ld, min_activation_height=%d\n", vDeploymentParams[0], vbparams.start_time, vbparams.timeout, vbparams.min_activation_height);
-                break;
+            if (args.IsArgSet("-signetchallenge"))
+            {
+                var signetChallenge = args.GetArgs("-signetchallenge");
+                if (signetChallenge.Count != 1)
+                {
+                    throw new Exception("-signetchallenge cannot be multiple values.");
+                }
+                var val = TryParseHex(signetChallenge[0]);
+                if (val == null)
+                {
+                    throw new Exception($"-signetchallenge must be hex, not '{signetChallenge[0]}'.");
+                }
+                options.Challenge.AddRange(val);
             }
         }
-        if (!found) {
-            throw std::runtime_error(strprintf("Invalid deployment (%s)", vDeploymentParams[0]));
+
+        public static void ReadRegTestArgs(ArgsManager args, RegTestOptions options)
+        {
+            if (args.GetBoolArg("-fastprune") != null) options.FastPrune = args.GetBoolArg("-fastprune").Value;
+
+            foreach (var arg in args.GetArgs("-testactivationheight"))
+            {
+                var found = arg.IndexOf('@');
+                if (found == -1)
+                {
+                    throw new Exception($"Invalid format ({arg}) for -testactivationheight=name@height.");
+                }
+
+                var value = arg.Substring(found + 1);
+                if (!int.TryParse(value, out int height) || height < 0 || height >= int.MaxValue)
+                {
+                    throw new Exception($"Invalid height value ({value}) for -testactivationheight=name@height.");
+                }
+
+                var deploymentName = arg.Substring(0, found);
+                if (GetBuriedDeployment(deploymentName) != null)
+                {
+                    options.ActivationHeights[deploymentName] = height;
+                }
+                else
+                {
+                    throw new Exception($"Invalid name ({deploymentName}) for -testactivationheight=name@height.");
+                }
+            }
+
+            if (!args.IsArgSet("-vbparams")) return;
+
+            foreach (var strDeployment in args.GetArgs("-vbparams"))
+            {
+                var vDeploymentParams = strDeployment.Split(':').ToList();
+                if (vDeploymentParams.Count < 3 || vDeploymentParams.Count > 4)
+                {
+                    throw new Exception("Version bits parameters malformed, expecting deployment:start:end[:min_activation_height]");
+                }
+                var vbparams = new VersionBitsParameters();
+                if (!long.TryParse(vDeploymentParams[1], out vbparams.StartTime))
+                {
+                    throw new Exception($"Invalid nStartTime ({vDeploymentParams[1]})");
+                }
+                if (!long.TryParse(vDeploymentParams[2], out vbparams.Timeout))
+                {
+                    throw new Exception($"Invalid nTimeout ({vDeploymentParams[2]})");
+                }
+                if (vDeploymentParams.Count >= 4)
+                {
+                    if (!int.TryParse(vDeploymentParams[3], out vbparams.MinActivationHeight))
+                    {
+                        throw new Exception($"Invalid min_activation_height ({vDeploymentParams[3]})");
+                    }
+                }
+                else
+                {
+                    vbparams.MinActivationHeight = 0;
+                }
+                bool found = false;
+                for (int j = 0; j < (int)Consensus.MAX_VERSION_BITS_DEPLOYMENTS; ++j)
+                {
+                    if (vDeploymentParams[0] == VersionBitsDeploymentInfo[j].Name)
+                    {
+                        options.VersionBitsParameters[VersionBitsDeploymentInfo[j].Name] = vbparams;
+                        found = true;
+                        LogPrintf($"Setting version bits activation parameters for {vDeploymentParams[0]} to start={vbparams.StartTime}, timeout={vbparams.Timeout}, min_activation_height={vbparams.MinActivationHeight}\n");
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    throw new Exception($"Invalid deployment ({vDeploymentParams[0]})");
+                }
+            }
         }
-    }
-}
 
-static std::unique_ptr<const CChainParams> globalChainParams;
+        private static ChainParams globalChainParams;
 
-const CChainParams &Params() {
-    assert(globalChainParams);
-    return *globalChainParams;
-}
+        public static ChainParams Params()
+        {
+            if (globalChainParams == null)
+            {
+                throw new Exception("globalChainParams is not set.");
+            }
+            return globalChainParams;
+        }
 
-std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, const ChainType chain)
-{
-    switch (chain) {
-    case ChainType::MAIN:
-        return CChainParams::Main();
-    case ChainType::TESTNET:
-        return CChainParams::TestNet();
-    case ChainType::TESTNET4:
-        return CChainParams::TestNet4();
-    case ChainType::SIGNET: {
-        auto opts = CChainParams::SigNetOptions{};
-        ReadSigNetArgs(args, opts);
-        return CChainParams::SigNet(opts);
-    }
-    case ChainType::REGTEST: {
-        auto opts = CChainParams::RegTestOptions{};
-        ReadRegTestArgs(args, opts);
-        return CChainParams::RegTest(opts);
-    }
-    }
-    assert(false);
-}
+        public static ChainParams CreateChainParams(ArgsManager args, ChainType chain)
+        {
+            switch (chain)
+            {
+                case ChainType.MAIN:
+                    return Main();
+                case ChainType.TESTNET:
+                    return TestNet();
+                case ChainType.TESTNET4:
+                    return TestNet4();
+                case ChainType.SIGNET:
+                    var opts = new SigNetOptions();
+                    ReadSigNetArgs(args, opts);
+                    return SigNet(opts);
+                case ChainType.REGTEST:
+                    var regTestOpts = new RegTestOptions();
+                    ReadRegTestArgs(args, regTestOpts);
+                    return RegTest(regTestOpts);
+                default:
+                    throw new Exception("Invalid chain type.");
+            }
+        }
 
-void SelectParams(const ChainType chain)
-{
-    SelectBaseParams(chain);
-    globalChainParams = CreateChainParams(gArgs, chain);
+        public static void SelectParams(ChainType chain)
+        {
+            SelectBaseParams(chain);
+            globalChainParams = CreateChainParams(gArgs, chain);
+        }
+
+        // Placeholder methods for Main, TestNet, TestNet4, SigNet, RegTest, GetBuriedDeployment, VersionBitsDeploymentInfo, LogPrintf, SelectBaseParams, gArgs, and Consensus
+        public static ChainParams Main() => new ChainParams();
+        public static ChainParams TestNet() => new ChainParams();
+        public static ChainParams TestNet4() => new ChainParams();
+        public static ChainParams SigNet(SigNetOptions options) => new ChainParams();
+        public static ChainParams RegTest(RegTestOptions options) => new ChainParams();
+        public static string GetBuriedDeployment(string name) => null;
+        public static List<VersionBitsDeploymentInfo> VersionBitsDeploymentInfo => new List<VersionBitsDeploymentInfo>();
+        public static void LogPrintf(string message) { }
+        public static void SelectBaseParams(ChainType chain) { }
+        public static ArgsManager gArgs => new ArgsManager();
+        public static Consensus Consensus => new Consensus();
+
+        // Placeholder classes for ArgsManager, ChainType, VersionBitsDeploymentInfo, and Consensus
+        public class ArgsManager
+        {
+            public bool IsArgSet(string arg) => false;
+            public List<string> GetArgs(string arg) => new List<string>();
+            public bool? GetBoolArg(string arg) => null;
+        }
+
+        public enum ChainType
+        {
+            MAIN,
+            TESTNET,
+            TESTNET4,
+            SIGNET,
+            REGTEST
+        }
+
+        public class VersionBitsDeploymentInfo
+        {
+            public string Name { get; set; }
+        }
+
+        public class Consensus
+        {
+            public static int MAX_VERSION_BITS_DEPLOYMENTS => 0;
+        }
+
+        // Placeholder method for TryParseHex
+        public static List<byte> TryParseHex(string hex) => new List<byte>();
+    }
 }

@@ -1,192 +1,282 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
-
-#include <arith_uint256.h>
-#include <chain.h>
-#include <chainparams.h>
-#include <chainparamsbase.h>
-#include <clientversion.h>
-#include <common/args.h>
-#include <common/system.h>
-#include <compat/compat.h>
-#include <core_io.h>
-#include <streams.h>
-#include <util/exception.h>
-#include <util/strencodings.h>
-#include <util/translation.h>
-
-#include <atomic>
-#include <cstdio>
-#include <functional>
-#include <memory>
-#include <thread>
-
-static const int CONTINUE_EXECUTION=-1;
-
-const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
-
-static void SetupBitcoinUtilArgs(ArgsManager &argsman)
+namespace BitcoinUtil
 {
-    SetupHelpOptions(argsman);
+    class Program
+    {
+        private const int CONTINUE_EXECUTION = -1;
 
-    argsman.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+        static void Main(string[] args)
+        {
+            SetupEnvironment();
 
-    argsman.AddCommand("grind", "Perform proof of work on hex header string");
-
-    SetupChainParamsBaseOptions(argsman);
-}
-
-// This function returns either one of EXIT_ codes when it's expected to stop the process or
-// CONTINUE_EXECUTION when it's expected to continue further.
-static int AppInitUtil(ArgsManager& args, int argc, char* argv[])
-{
-    SetupBitcoinUtilArgs(args);
-    std::string error;
-    if (!args.ParseParameters(argc, argv, error)) {
-        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
-        return EXIT_FAILURE;
-    }
-
-    if (HelpRequested(args) || args.IsArgSet("-version")) {
-        // First part of help message is specific to this utility
-        std::string strUsage = PACKAGE_NAME " bitcoin-util utility version " + FormatFullVersion() + "\n";
-
-        if (args.IsArgSet("-version")) {
-            strUsage += FormatParagraph(LicenseInfo());
-        } else {
-            strUsage += "\n"
-                "Usage:  bitcoin-util [options] [commands]  Do stuff\n";
-            strUsage += "\n" + args.GetHelpMessage();
-        }
-
-        tfm::format(std::cout, "%s", strUsage);
-
-        if (argc < 2) {
-            tfm::format(std::cerr, "Error: too few parameters\n");
-            return EXIT_FAILURE;
-        }
-        return EXIT_SUCCESS;
-    }
-
-    // Check for chain settings (Params() calls are only valid after this clause)
-    try {
-        SelectParams(args.GetChainType());
-    } catch (const std::exception& e) {
-        tfm::format(std::cerr, "Error: %s\n", e.what());
-        return EXIT_FAILURE;
-    }
-
-    return CONTINUE_EXECUTION;
-}
-
-static void grind_task(uint32_t nBits, CBlockHeader header, uint32_t offset, uint32_t step, std::atomic<bool>& found, uint32_t& proposed_nonce)
-{
-    arith_uint256 target;
-    bool neg, over;
-    target.SetCompact(nBits, &neg, &over);
-    if (target == 0 || neg || over) return;
-    header.nNonce = offset;
-
-    uint32_t finish = std::numeric_limits<uint32_t>::max() - step;
-    finish = finish - (finish % step) + offset;
-
-    while (!found && header.nNonce < finish) {
-        const uint32_t next = (finish - header.nNonce < 5000*step) ? finish : header.nNonce + 5000*step;
-        do {
-            if (UintToArith256(header.GetHash()) <= target) {
-                if (!found.exchange(true)) {
-                    proposed_nonce = header.nNonce;
+            try
+            {
+                int ret = AppInitUtil(args);
+                if (ret != CONTINUE_EXECUTION)
+                {
+                    Environment.Exit(ret);
                 }
-                return;
             }
-            header.nNonce += step;
-        } while(header.nNonce != next);
-    }
-}
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("AppInitUtil() error: " + e.Message);
+                Environment.Exit(EXIT_FAILURE);
+            }
 
-static int Grind(const std::vector<std::string>& args, std::string& strPrint)
-{
-    if (args.size() != 1) {
-        strPrint = "Must specify block header to grind";
-        return EXIT_FAILURE;
-    }
+            var cmd = GetCommand(args);
+            if (cmd == null)
+            {
+                Console.Error.WriteLine("Error: must specify a command");
+                Environment.Exit(EXIT_FAILURE);
+            }
 
-    CBlockHeader header;
-    if (!DecodeHexBlockHeader(header, args[0])) {
-        strPrint = "Could not decode block header";
-        return EXIT_FAILURE;
-    }
+            int ret = EXIT_FAILURE;
+            string strPrint = "";
+            try
+            {
+                if (cmd == "grind")
+                {
+                    ret = Grind(args, ref strPrint);
+                }
+                else
+                {
+                    throw new Exception("Unknown command");
+                }
+            }
+            catch (Exception e)
+            {
+                strPrint = "error: " + e.Message;
+            }
 
-    uint32_t nBits = header.nBits;
-    std::atomic<bool> found{false};
-    uint32_t proposed_nonce{};
+            if (!string.IsNullOrEmpty(strPrint))
+            {
+                Console.WriteLine(strPrint);
+            }
 
-    std::vector<std::thread> threads;
-    int n_tasks = std::max(1u, std::thread::hardware_concurrency());
-    threads.reserve(n_tasks);
-    for (int i = 0; i < n_tasks; ++i) {
-        threads.emplace_back(grind_task, nBits, header, i, n_tasks, std::ref(found), std::ref(proposed_nonce));
-    }
-    for (auto& t : threads) {
-        t.join();
-    }
-    if (found) {
-        header.nNonce = proposed_nonce;
-    } else {
-        strPrint = "Could not satisfy difficulty target";
-        return EXIT_FAILURE;
-    }
-
-    DataStream ss{};
-    ss << header;
-    strPrint = HexStr(ss);
-    return EXIT_SUCCESS;
-}
-
-MAIN_FUNCTION
-{
-    ArgsManager& args = gArgs;
-    SetupEnvironment();
-
-    try {
-        int ret = AppInitUtil(args, argc, argv);
-        if (ret != CONTINUE_EXECUTION) {
-            return ret;
+            Environment.Exit(ret);
         }
-    } catch (const std::exception& e) {
-        PrintExceptionContinue(&e, "AppInitUtil()");
-        return EXIT_FAILURE;
-    } catch (...) {
-        PrintExceptionContinue(nullptr, "AppInitUtil()");
-        return EXIT_FAILURE;
-    }
 
-    const auto cmd = args.GetCommand();
-    if (!cmd) {
-        tfm::format(std::cerr, "Error: must specify a command\n");
-        return EXIT_FAILURE;
-    }
-
-    int ret = EXIT_FAILURE;
-    std::string strPrint;
-    try {
-        if (cmd->command == "grind") {
-            ret = Grind(cmd->args, strPrint);
-        } else {
-            assert(false); // unknown command should be caught earlier
+        private static void SetupEnvironment()
+        {
+            // Setup environment
         }
-    } catch (const std::exception& e) {
-        strPrint = std::string("error: ") + e.what();
-    } catch (...) {
-        strPrint = "unknown error";
+
+        private static int AppInitUtil(string[] args)
+        {
+            SetupBitcoinUtilArgs();
+            if (args.Length < 2 || args.Contains("-help") || args.Contains("-version"))
+            {
+                string strUsage = "Bitcoin-util utility version " + FormatFullVersion() + "\n";
+                if (args.Contains("-version"))
+                {
+                    strUsage += LicenseInfo();
+                }
+                else
+                {
+                    strUsage += "\nUsage:  bitcoin-util [options] [commands]  Do stuff\n";
+                    strUsage += "\n" + GetHelpMessage();
+                }
+                Console.WriteLine(strUsage);
+                if (args.Length < 2)
+                {
+                    Console.Error.WriteLine("Error: too few parameters");
+                    return EXIT_FAILURE;
+                }
+                return EXIT_SUCCESS;
+            }
+            if (!CheckDataDirOption())
+            {
+                Console.Error.WriteLine("Error: Specified data directory does not exist.");
+                return EXIT_FAILURE;
+            }
+            if (!ReadConfigFiles())
+            {
+                Console.Error.WriteLine("Error reading configuration file.");
+                return EXIT_FAILURE;
+            }
+            try
+            {
+                SelectBaseParams(GetChainType());
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("Error: " + e.Message);
+                return EXIT_FAILURE;
+            }
+            return CONTINUE_EXECUTION;
+        }
+
+        private static void SetupBitcoinUtilArgs()
+        {
+            // Setup Bitcoin Util arguments
+        }
+
+        private static string FormatFullVersion()
+        {
+            return "0.21.0";
+        }
+
+        private static string LicenseInfo()
+        {
+            return "Bitcoin Core is released under the terms of the MIT license.";
+        }
+
+        private static string GetHelpMessage()
+        {
+            return "Help message";
+        }
+
+        private static bool CheckDataDirOption()
+        {
+            return true;
+        }
+
+        private static bool ReadConfigFiles()
+        {
+            return true;
+        }
+
+        private static void SelectBaseParams(string chainType)
+        {
+            // Select base parameters
+        }
+
+        private static string GetChainType()
+        {
+            return "main";
+        }
+
+        private static string GetCommand(string[] args)
+        {
+            if (args.Length < 1)
+            {
+                return null;
+            }
+            return args[0];
+        }
+
+        private static int Grind(string[] args, ref string strPrint)
+        {
+            if (args.Length != 2)
+            {
+                strPrint = "Must specify block header to grind";
+                return EXIT_FAILURE;
+            }
+
+            CBlockHeader header;
+            if (!DecodeHexBlockHeader(args[1], out header))
+            {
+                strPrint = "Could not decode block header";
+                return EXIT_FAILURE;
+            }
+
+            uint nBits = header.nBits;
+            bool found = false;
+            uint proposed_nonce = 0;
+
+            int n_tasks = Math.Max(1, Environment.ProcessorCount);
+            var tasks = new List<Task>();
+            for (int i = 0; i < n_tasks; ++i)
+            {
+                int offset = i;
+                tasks.Add(Task.Run(() => GrindTask(nBits, header, offset, n_tasks, ref found, ref proposed_nonce)));
+            }
+            Task.WaitAll(tasks.ToArray());
+
+            if (found)
+            {
+                header.nNonce = proposed_nonce;
+            }
+            else
+            {
+                strPrint = "Could not satisfy difficulty target";
+                return EXIT_FAILURE;
+            }
+
+            strPrint = EncodeHexBlockHeader(header);
+            return EXIT_SUCCESS;
+        }
+
+        private static void GrindTask(uint nBits, CBlockHeader header, int offset, int step, ref bool found, ref uint proposed_nonce)
+        {
+            var target = new ArithUint256();
+            bool neg, over;
+            target.SetCompact(nBits, out neg, out over);
+            if (target == 0 || neg || over) return;
+            header.nNonce = (uint)offset;
+
+            uint finish = uint.MaxValue - (uint)step;
+            finish = finish - (finish % (uint)step) + (uint)offset;
+
+            while (!found && header.nNonce < finish)
+            {
+                uint next = (finish - header.nNonce < 5000 * (uint)step) ? finish : header.nNonce + 5000 * (uint)step;
+                do
+                {
+                    if (UintToArith256(header.GetHash()) <= target)
+                    {
+                        if (!found)
+                        {
+                            found = true;
+                            proposed_nonce = header.nNonce;
+                        }
+                        return;
+                    }
+                    header.nNonce += (uint)step;
+                } while (header.nNonce != next);
+            }
+        }
+
+        private static bool DecodeHexBlockHeader(string hex, out CBlockHeader header)
+        {
+            // Decode hex block header
+            header = new CBlockHeader();
+            return true;
+        }
+
+        private static string EncodeHexBlockHeader(CBlockHeader header)
+        {
+            // Encode hex block header
+            return "";
+        }
+
+        private static ArithUint256 UintToArith256(uint hash)
+        {
+            // Convert uint to ArithUint256
+            return new ArithUint256();
+        }
     }
 
-    if (strPrint != "") {
-        tfm::format(ret == 0 ? std::cout : std::cerr, "%s\n", strPrint);
+    class CBlockHeader
+    {
+        public uint nBits;
+        public uint nNonce;
+
+        public uint GetHash()
+        {
+            // Get hash
+            return 0;
+        }
     }
 
-    return ret;
+    class ArithUint256
+    {
+        public void SetCompact(uint nBits, out bool neg, out bool over)
+        {
+            // Set compact
+            neg = false;
+            over = false;
+        }
+
+        public static implicit operator int(ArithUint256 v)
+        {
+            return 0;
+        }
+    }
 }
