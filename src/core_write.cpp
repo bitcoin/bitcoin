@@ -168,6 +168,17 @@ void ScriptToUniv(const CScript& script, UniValue& out, bool include_hex, bool i
     out.pushKV("type", GetTxnOutputType(type));
 }
 
+std::optional<std::string> ScriptToAddress(const CScript& script)
+{
+    CTxDestination address;
+    ExtractDestination(script, address);
+    std::string addr = EncodeDestination(address);
+    if (addr.size() > 0) {
+        return addr;
+    }
+    return {};
+}
+
 void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry, bool include_hex, const CTxUndo* txundo, TxVerbosity verbosity)
 {
     CHECK_NONFATAL(verbosity >= TxVerbosity::SHOW_DETAILS);
