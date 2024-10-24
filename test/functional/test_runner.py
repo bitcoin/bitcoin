@@ -287,6 +287,7 @@ BASE_SCRIPTS = [
     'mempool_package_onemore.py',
     'mempool_package_limits.py',
     'mempool_package_rbf.py',
+    'tool_utxo_to_sqlite.py',
     'feature_versionbits_warning.py',
     'feature_blocksxor.py',
     'rpc_preciousblock.py',
