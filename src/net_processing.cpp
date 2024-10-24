@@ -9,6 +9,7 @@
 #include <banman.h>
 #include <blockencodings.h>
 #include <blockfilter.h>
+#include <blockrequesttracker.h>
 #include <chainparams.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
@@ -512,7 +513,7 @@ public:
     /** Implement PeerManager */
     void StartScheduledTasks(CScheduler& scheduler) override;
     void CheckForStaleTipAndEvictPeers() override;
-    std::optional<std::string> FetchBlock(NodeId peer_id, const CBlockIndex& block_index) override
+    std::optional<std::string> FetchBlock(std::optional<NodeId> op_peer_id, const CBlockIndex& block_index, bool retry) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     std::vector<TxOrphanage::OrphanTxBase> GetOrphanTransactions() override EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
@@ -839,6 +840,13 @@ private:
      * punished if the block is invalid.
      */
     std::map<uint256, std::pair<NodeId, bool>> mapBlockSource GUARDED_BY(cs_main);
+
+    /**
+     * Follow block download progress of manually requested blocks.
+     * Enabling the "re-try download from another peer" functionality
+     * when requests fail.
+     */
+    BlockRequestTracker m_block_tracker;
 
     /** Number of peers with wtxid relay. */
     std::atomic<int> m_wtxid_relay_peers{0};
@@ -1513,6 +1521,33 @@ void PeerManagerImpl::FindNextBlocksToDownload(const Peer& peer, unsigned int co
     // Make sure pindexBestKnownBlock is up to date, we'll need it.
     ProcessBlockAvailability(peer.m_id);
 
+    // Go through the manually requested blocks first
+    if (!IsLimitedPeer(peer)) {
+        m_block_tracker.for_pending(peer.m_id, [this, &state, count, &vBlocks](const uint256& block_hash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+            // Don't exceed the amount of blocks that we can request at time
+            if (vBlocks.size() >= count) return BlockRequestTracker::ForPendingStatus::CANCEL;
+
+            const CBlockIndex* index = m_chainman.m_blockman.LookupBlockIndex(block_hash);
+            if (!index) {
+                // We only request blocks we know about but, just in case, log the error and stop tracking block.
+                LogError("Pending block %s not found in block index\n", block_hash.ToString());
+                return BlockRequestTracker::ForPendingStatus::CANCEL;
+            }
+
+            // Check if this peer will be able to provide the block
+            if (state->pindexBestKnownBlock && state->pindexBestKnownBlock->nHeight >= index->nHeight) {
+                vBlocks.emplace_back(index);
+                return BlockRequestTracker::ForPendingStatus::POP;
+            }
+
+            // Continue traversing the requests pending list
+            return BlockRequestTracker::ForPendingStatus::SKIP;
+        });
+
+        // Don't exceed the amount of blocks that we can request at time
+        if (vBlocks.size() >= count) return;
+    }
+
     if (state->pindexBestKnownBlock == nullptr || state->pindexBestKnownBlock->nChainWork < m_chainman.ActiveChain().Tip()->nChainWork || state->pindexBestKnownBlock->nChainWork < m_chainman.MinimumChainWork()) {
         // This peer has nothing interesting.
         return;
@@ -1788,6 +1823,9 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
                 range.first = mapBlocksInFlight.erase(range.first);
             }
         }
+
+        // Untrack request
+        m_block_tracker.untrack_request(nodeid, entry.pindex->GetBlockHash());
     }
     {
         LOCK(m_tx_download_mutex);
@@ -2034,9 +2072,20 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex)
            (GetBlockProofEquivalentTime(*m_chainman.m_best_header, *pindex, *m_chainman.m_best_header, m_chainparams.GetConsensus()) < STALE_RELAY_AGE_LIMIT);
 }
 
-std::optional<std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBlockIndex& block_index)
+std::optional<std::string> PeerManagerImpl::FetchBlock(std::optional<NodeId> op_peer_id, const CBlockIndex& block_index, bool retry)
 {
     if (m_chainman.m_blockman.LoadingBlocks()) return "Loading blocks ...";
+
+    // If no peer id was specified, track block. The internal block sync process will
+    // be in charge of downloading the block.
+    if (!op_peer_id) {
+        if (!retry) return "'retry' disabled, cannot perform single block request"; // future: enable one-try requests.
+        if (!m_block_tracker.track(block_index.GetBlockHash())) return "Already tracked block";
+        LogDebug(BCLog::NET, "Block added to the tracking list, hash %s\n", block_index.GetBlockHash().ToString());
+        return std::nullopt;
+    }
+
+    NodeId peer_id = *op_peer_id;
 
     // Ensure this peer exists and hasn't been disconnected
     PeerRef peer = GetPeerRef(peer_id);
@@ -2045,13 +2094,16 @@ std::optional<std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBl
     // Ignore pre-segwit peers
     if (!CanServeWitnesses(*peer)) return "Pre-SegWit peer";
 
-    LOCK(cs_main);
+    // Ignore limited peers
+    if (IsLimitedPeer(*peer) && m_best_height - block_index.nHeight > int{NODE_NETWORK_LIMITED_MIN_BLOCKS}) return "Cannot fetch block from a limited peer";
 
-    // Forget about all prior requests
-    RemoveBlockRequest(block_index.GetBlockHash(), std::nullopt);
+    LOCK(cs_main);
 
     // Mark block as in-flight
     if (!BlockRequested(peer_id, block_index)) return "Already requested from this peer";
+
+    // Track block request (only if requested)
+    if (retry) m_block_tracker.track(block_index.GetBlockHash(), peer_id);
 
     // Construct message to request the block
     const uint256& hash{block_index.GetBlockHash()};
@@ -5062,6 +5114,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // need it even when it's not a candidate for a new best tip.
             forceProcessing = IsBlockRequested(hash);
             RemoveBlockRequest(hash, pfrom.GetId());
+            m_block_tracker.untrack(hash);
             // mapBlockSource is only used for punishing peers and setting
             // which peers send us compact blocks, so the race between here and
             // cs_main in ProcessNewBlock is fine.
