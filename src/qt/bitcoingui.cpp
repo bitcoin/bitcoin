@@ -112,14 +112,15 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
     {
         /** Create wallet frame*/
         walletFrame = new WalletFrame(this);
-        connect(walletFrame, &WalletFrame::message, [this](const QString& title, const QString& message, unsigned int style) {
-            this->message(title, message, style);
-        });
         connect(walletFrame, &WalletFrame::createWalletButtonClicked, [this] {
             auto activity = new CreateWalletActivity(getWalletController(), this);
             connect(activity, &CreateWalletActivity::finished, activity, &QObject::deleteLater);
             activity->create();
         });
+        connect(walletFrame, &WalletFrame::message, [this](const QString& title, const QString& message, unsigned int style) {
+            this->message(title, message, style);
+        });
+        connect(walletFrame, &WalletFrame::currentWalletSet, [this] { updateWalletStatus(); });
     } else
 #endif // ENABLE_WALLET
     {
@@ -932,7 +933,6 @@ void BitcoinGUI::addWallet(WalletModel* walletModel)
     });
     connect(wallet_view, &WalletView::encryptionStatusChanged, this, &BitcoinGUI::updateWalletStatus);
     connect(wallet_view, &WalletView::incomingTransaction, this, &BitcoinGUI::incomingTransaction);
-    connect(wallet_view, &WalletView::hdEnabledStatusChanged, this, &BitcoinGUI::updateWalletStatus);
     connect(this, &BitcoinGUI::setPrivacy, wallet_view, &WalletView::setPrivacy);
     wallet_view->setPrivacy(isPrivacyModeActivated());
     const QString display_name = walletModel->getDisplayName();
@@ -1679,7 +1679,9 @@ void BitcoinGUI::changeEvent(QEvent *e)
     if (e->type() == QEvent::StyleChange) {
         updateNetworkState();
 #ifdef ENABLE_WALLET
-        updateWalletStatus();
+        if (walletFrame) {
+            updateWalletStatus();
+        }
 #endif
         if (m_node.masternodeSync().isSynced()) {
             labelBlocksIcon->setPixmap(GUIUtil::getIcon("synced", GUIUtil::ThemedColor::GREEN).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
@@ -1911,9 +1913,8 @@ void BitcoinGUI::setEncryptionStatus(int status)
 
 void BitcoinGUI::updateWalletStatus()
 {
-    if (!walletFrame) {
-        return;
-    }
+    assert(walletFrame);
+
     WalletView * const walletView = walletFrame->currentWalletView();
     if (!walletView) {
         return;
