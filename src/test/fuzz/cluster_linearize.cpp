@@ -1118,3 +1118,58 @@ FUZZ_TARGET(clusterlin_merge)
     auto cmp2 = CompareChunks(chunking_merged, chunking2);
     assert(cmp2 >= 0);
 }
+
+FUZZ_TARGET(clusterlin_fix_linearization)
+{
+    // Verify expected properties of FixLinearization() on arbitrary linearizations.
+
+    // Retrieve a depgraph from the fuzz input.
+    SpanReader reader(buffer);
+    DepGraph<TestBitSet> depgraph;
+    try {
+        reader >> Using<DepGraphFormatter>(depgraph);
+    } catch (const std::ios_base::failure&) {}
+
+    // Construct an arbitrary linearization (not necessarily topological for depgraph).
+    std::vector<ClusterIndex> linearization;
+    /** Which transactions of depgraph are yet to be included in linearization. */
+    TestBitSet todo = depgraph.Positions();
+    /** Whether the linearization constructed so far is topological. */
+    bool topological{true};
+    /** How long the prefix of the constructed linearization is which is topological. */
+    size_t topo_prefix = 0;
+    while (todo.Any()) {
+        // Figure out the index in all elements of todo to append to linearization next.
+        uint64_t val{0};
+        try {
+            reader >> VARINT(val);
+        } catch (const std::ios_base::failure&) {}
+        val %= todo.Count();
+        // Find which element in todo that corresponds to.
+        for (auto i : todo) {
+            if (val == 0) {
+                // Found it.
+                linearization.push_back(i);
+                // Track whether or not the linearization is topological for depgraph.
+                todo.Reset(i);
+                if (todo.Overlaps(depgraph.Ancestors(i))) topological = false;
+                topo_prefix += topological;
+                break;
+            }
+            --val;
+        }
+    }
+    assert(linearization.size() == depgraph.TxCount());
+
+    // Then make a fixed copy of linearization.
+    auto linearization_fixed = linearization;
+    FixLinearization(depgraph, linearization_fixed);
+    // Sanity check it (which includes testing whether it is topological).
+    SanityCheck(depgraph, linearization_fixed);
+
+    // If the linearization was topological already, FixLinearization cannot have modified it.
+    if (topological) assert(linearization_fixed == linearization);
+    // In any case, the topo_prefix long prefix of linearization cannot be changed.
+    assert(std::equal(linearization.begin(), linearization.begin() + topo_prefix,
+                      linearization_fixed.begin()));
+}
