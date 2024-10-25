@@ -93,8 +93,10 @@ We now let the first node generate 101 regtest blocks, and direct the coinbase
 rewards to a wallet address owned by the mining node.
 
 ```
+>>> test.nodes[0].createwallet('default')
+{'name': 'default', 'warning': 'Empty string given as passphrase, wallet will not be encrypted.'}
 >>> address = test.nodes[0].getnewaddress()
->>> test.self.generatetoaddress(nodes[0], 101, address)
+>>> test.generatetoaddress(test.nodes[0], 101, address)
 ['2b98dd0044aae6f1cca7f88a0acf366a4bfe053c7f7b00da3c0d115f03d67efb', ...
 ```
 Since the two nodes are both initialized by default to establish an outbound
