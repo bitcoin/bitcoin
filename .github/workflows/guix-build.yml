@@ -79,6 +79,14 @@ jobs:
           path: dash
           fetch-depth: 0
 
+      - name: Cache depends sources
+        uses: actions/cache@v4
+        with:
+          path: dash/depends/sources
+          key: depends-sources-${{ hashFiles('dash/depends/packages/*') }}
+          restore-keys: |
+            depends-sources-
+
       - name: Cache Guix and depends
         id: guix-cache-restore
         uses: actions/cache@v3
@@ -86,7 +94,6 @@ jobs:
           path: |
             ${{ github.workspace }}/.cache
             ${{ github.workspace }}/dash/depends/built
-            ${{ github.workspace }}/dash/depends/sources
             ${{ github.workspace }}/dash/depends/work
             /gnu/store
           key: ${{ runner.os }}-guix-${{ matrix.build_target }}-${{ github.sha }}
