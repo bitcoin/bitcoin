@@ -188,10 +188,13 @@ apt install clang-tidy bear clang
 Then, pass clang as compiler to configure, and use bear to produce the `compile_commands.json`:
 
 ```sh
-./autogen.sh && ./configure CC=clang CXX=clang++
-make clean && bear make -j $(nproc)     # For bear 2.x
-make clean && bear -- make -j $(nproc)  # For bear 3.x
+./autogen.sh && ./configure CC=clang CXX=clang++ --enable-suppress-external-warnings
+make clean && bear --config src/.bear-tidy-config -- make -j $(nproc)
 ```
+
+The output is denoised of errors from external dependencies and includes with
+`--enable-suppress-external-warnings` and `--config src/.bear-tidy-config`. Both
+options may be omitted to view the full list of errors.
 
 To run clang-tidy on all source files:
 
@@ -513,8 +516,19 @@ address sanitizer, libtsan for the thread sanitizer, and libubsan for the
 undefined sanitizer. If you are missing required libraries, the configure script
 will fail with a linker error when testing the sanitizer flags.
 
-The test suite should pass cleanly with the `thread` and `undefined` sanitizers,
-but there are a number of known problems when using the `address` sanitizer. The
+The test suite should pass cleanly with the `thread` and `undefined` sanitizers. You
+may need to use a suppressions file, see `test/sanitizer_suppressions`. They may be
+used as follows:
+```bash
+export LSAN_OPTIONS="suppressions=$(pwd)/test/sanitizer_suppressions/lsan"
+export TSAN_OPTIONS="suppressions=$(pwd)/test/sanitizer_suppressions/tsan:halt_on_error=1:second_deadlock_stack=1"
+export UBSAN_OPTIONS="suppressions=$(pwd)/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1"
+```
+
+See the CI config for more examples, and upstream documentation for more information
+about any additional options.
+
+There are a number of known problems when using the `address` sanitizer. The
 address sanitizer is known to fail in
 [sha256_sse4::Transform](/src/crypto/sha256_sse4.cpp) which makes it unusable
 unless you also use `--disable-asm` when running configure. We would like to fix

@@ -89,23 +89,23 @@ public:
      */
     bool addressInArena(void *ptr) const { return ptr >= base && ptr < end; }
 private:
-    typedef std::multimap<size_t, char*> SizeToChunkSortedMap;
+    typedef std::multimap<size_t, void*> SizeToChunkSortedMap;
     /** Map to enable O(log(n)) best-fit allocation, as it's sorted by size */
     SizeToChunkSortedMap size_to_free_chunk;
 
-    typedef std::unordered_map<char*, SizeToChunkSortedMap::const_iterator> ChunkToSizeMap;
+    typedef std::unordered_map<void*, SizeToChunkSortedMap::const_iterator> ChunkToSizeMap;
     /** Map from begin of free chunk to its node in size_to_free_chunk */
     ChunkToSizeMap chunks_free;
     /** Map from end of free chunk to its node in size_to_free_chunk */
     ChunkToSizeMap chunks_free_end;
 
     /** Map from begin of used chunk to its size */
-    std::unordered_map<char*, size_t> chunks_used;
+    std::unordered_map<void*, size_t> chunks_used;
 
     /** Base address of arena */
-    char* base;
+    void* base;
     /** End address of arena */
-    char* end;
+    void* end;
     /** Minimum chunk alignment */
     size_t alignment;
 };

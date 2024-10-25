@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(ReadWrite)
     BOOST_CHECK(values.empty());
     BOOST_CHECK(errors.empty());
 
-    // Check duplicate keys not allowed
+    // Check duplicate keys not allowed and that values returns empty if a duplicate is found.
     WriteText(path, R"({
         "dupe": "string",
         "dupe": "dupe"
@@ -88,6 +88,7 @@ BOOST_AUTO_TEST_CASE(ReadWrite)
     BOOST_CHECK(!util::ReadSettings(path, values, errors));
     std::vector<std::string> dup_keys = {strprintf("Found duplicate key dupe in settings file %s", fs::PathToString(path))};
     BOOST_CHECK_EQUAL_COLLECTIONS(errors.begin(), errors.end(), dup_keys.begin(), dup_keys.end());
+    BOOST_CHECK(values.empty());
 
     // Check non-kv json files not allowed
     WriteText(path, R"("non-kv")");
