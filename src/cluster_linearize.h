@@ -1336,6 +1336,38 @@ std::vector<ClusterIndex> MergeLinearizations(const DepGraph<SetType>& depgraph,
     return ret;
 }
 
+/** Make linearization topological, retaining its ordering where possible. */
+template<typename SetType>
+void FixLinearization(const DepGraph<SetType>& depgraph, std::span<ClusterIndex> linearization) noexcept
+{
+    // This algorithm can be summarized as moving every element in the linearization backwards
+    // until it is placed after all its ancestors.
+    SetType done;
+    const auto len = linearization.size();
+    // Iterate over the elements of linearization from back to front (i is distance from back).
+    for (ClusterIndex i = 0; i < len; ++i) {
+        /** The element at that position. */
+        ClusterIndex elem = linearization[len - 1 - i];
+        /** j represents how far from the back of the linearization elem should be placed. */
+        ClusterIndex j = i;
+        // Figure out which elements need to be moved before elem.
+        SetType place_before = done & depgraph.Ancestors(elem);
+        // Find which position to place elem in (updating j), continuously moving the elements
+        // in between forward.
+        while (place_before.Any()) {
+            // j cannot be 0 here; if it was, then there was necessarily nothing earlier which
+            // elem needs to be place before anymore, and place_before would be empty.
+            Assume(j > 0);
+            auto to_swap = linearization[len - 1 - (j - 1)];
+            place_before.Reset(to_swap);
+            linearization[len - 1 - (j--)] = to_swap;
+        }
+        // Put elem in its final position and mark it as done.
+        linearization[len - 1 - j] = elem;
+        done.Set(elem);
+    }
+}
+
 } // namespace cluster_linearize
 
 #endif // BITCOIN_CLUSTER_LINEARIZE_H
