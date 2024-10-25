@@ -21,7 +21,7 @@
 template <typename... Args>
 void fuzz_fmt(const std::string& fmt, const Args&... args)
 {
-    (void)tfm::format(fmt, args...);
+    (void)tfm::format(fmt.c_str(), args...);
 }
 
 FUZZ_TARGET(str_printf)
