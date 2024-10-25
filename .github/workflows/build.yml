@@ -107,10 +107,10 @@ jobs:
           path: |
             depends/${{ matrix.host }}
           # We don't care about no specific key as depends system will handle that for us
-          key: ${{ runner.os }}-depends-${{ matrix.host }}-${{ hashFiles('depends/packages/*') }}
+          key: ${{ runner.os }}-depends-${{ matrix.build_target }}-${{ hashFiles('depends/packages/*') }}
           restore-keys: |
-            ${{ runner.os }}-depends-${{ matrix.host }}-${{ hashFiles('depends/packages/*') }}
-            ${{ runner.os }}-depends-${{ matrix.host }}
+            ${{ runner.os }}-depends-${{ matrix.build_target }}-${{ hashFiles('depends/packages/*') }}
+            ${{ runner.os }}-depends-${{ matrix.build_target }}
 
       - name: Build dependencies
         run: make -j$(nproc) -C depends HOST=${{ matrix.host }}
@@ -154,10 +154,10 @@ jobs:
         with:
           path: |
             depends/${{ matrix.host }}
-          key: ${{ runner.os }}-depends-${{ matrix.host }}-${{ hashFiles('depends/packages/*') }}
+          key: ${{ runner.os }}-depends-${{ matrix.build_target }}-${{ hashFiles('depends/packages/*') }}
           restore-keys: |
-            ${{ runner.os }}-depends-${{ matrix.host }}-${{ hashFiles('depends/packages/*') }}
-            ${{ runner.os }}-depends-${{ matrix.host }}
+            ${{ runner.os }}-depends-${{ matrix.build_target }}-${{ hashFiles('depends/packages/*') }}
+            ${{ runner.os }}-depends-${{ matrix.build_target }}
 
       - name: Determine PR Base SHA
         id: vars
@@ -169,11 +169,11 @@ jobs:
         with:
           path: |
             /cache
-          key: ${{ runner.os }}-${{ matrix.host }}-${{ github.sha }}
+          key: ${{ runner.os }}-${{ matrix.build_target }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.host }}-${{ github.sha }}
-            ${{ runner.os }}-${{ matrix.host }}-${{ steps.vars.outputs.PR_BASE_SHA }}
-            ${{ runner.os }}-${{ matrix.host }}
+            ${{ runner.os }}-${{ matrix.build_target }}-${{ github.sha }}
+            ${{ runner.os }}-${{ matrix.build_target }}-${{ steps.vars.outputs.PR_BASE_SHA }}
+            ${{ runner.os }}-${{ matrix.build_target }}
 
       - name: Build source and run tests
         run: |
