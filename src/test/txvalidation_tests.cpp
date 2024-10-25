@@ -99,9 +99,9 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
     CTxMemPool::setEntries empty_ancestors;
 
     auto mempool_tx_v3 = make_tx(random_outpoints(1), /*version=*/3);
-    pool.addUnchecked(entry.FromTx(mempool_tx_v3));
+    AddToMempool(pool, entry.FromTx(mempool_tx_v3));
     auto mempool_tx_v2 = make_tx(random_outpoints(1), /*version=*/2);
-    pool.addUnchecked(entry.FromTx(mempool_tx_v2));
+    AddToMempool(pool, entry.FromTx(mempool_tx_v2));
     // Default values.
     CTxMemPool::Limits m_limits{};
 
@@ -211,7 +211,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         package_multi_parents.emplace_back(mempool_tx_v3);
         for (size_t i{0}; i < 2; ++i) {
             auto mempool_tx = make_tx(random_outpoints(i + 1), /*version=*/3);
-            pool.addUnchecked(entry.FromTx(mempool_tx));
+            AddToMempool(pool, entry.FromTx(mempool_tx));
             mempool_outpoints.emplace_back(mempool_tx->GetHash(), 0);
             package_multi_parents.emplace_back(mempool_tx);
         }
@@ -236,7 +236,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         auto last_outpoint{random_outpoints(1)[0]};
         for (size_t i{0}; i < 2; ++i) {
             auto mempool_tx = make_tx({last_outpoint}, /*version=*/3);
-            pool.addUnchecked(entry.FromTx(mempool_tx));
+            AddToMempool(pool, entry.FromTx(mempool_tx));
             last_outpoint = COutPoint{mempool_tx->GetHash(), 0};
             package_multi_gen.emplace_back(mempool_tx);
             if (i == 1) middle_tx = mempool_tx;
@@ -323,7 +323,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         BOOST_CHECK(GetTransactionWeight(*tx_mempool_v3_child) <= TRUC_CHILD_MAX_VSIZE * WITNESS_SCALE_FACTOR);
         auto ancestors{pool.CalculateMemPoolAncestors(entry.FromTx(tx_mempool_v3_child), m_limits)};
         BOOST_CHECK(SingleTRUCChecks(tx_mempool_v3_child, *ancestors, empty_conflicts_set, GetVirtualTransactionSize(*tx_mempool_v3_child)) == std::nullopt);
-        pool.addUnchecked(entry.FromTx(tx_mempool_v3_child));
+        AddToMempool(pool, entry.FromTx(tx_mempool_v3_child));
 
         Package package_v3_1p1c{mempool_tx_v3, tx_mempool_v3_child};
         BOOST_CHECK(PackageTRUCChecks(tx_mempool_v3_child, GetVirtualTransactionSize(*tx_mempool_v3_child), package_v3_1p1c, empty_ancestors) == std::nullopt);
@@ -351,7 +351,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
                           expected_error_str);
 
         // Configuration where parent already has 2 other children in mempool (no sibling eviction allowed). This may happen as the result of a reorg.
-        pool.addUnchecked(entry.FromTx(tx_v3_child2));
+        AddToMempool(pool, entry.FromTx(tx_v3_child2));
         auto tx_v3_child3 = make_tx({COutPoint{mempool_tx_v3->GetHash(), 24}}, /*version=*/3);
         auto entry_mempool_parent = pool.GetIter(mempool_tx_v3->GetHash().ToUint256()).value();
         BOOST_CHECK_EQUAL(entry_mempool_parent->GetCountWithDescendants(), 3);
@@ -370,9 +370,9 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         auto tx_mempool_nibling = make_tx({COutPoint{tx_mempool_sibling->GetHash(), 0}}, /*version=*/3);
         auto tx_to_submit = make_tx({COutPoint{tx_mempool_grandparent->GetHash(), 1}}, /*version=*/3);
 
-        pool.addUnchecked(entry.FromTx(tx_mempool_grandparent));
-        pool.addUnchecked(entry.FromTx(tx_mempool_sibling));
-        pool.addUnchecked(entry.FromTx(tx_mempool_nibling));
+        AddToMempool(pool, entry.FromTx(tx_mempool_grandparent));
+        AddToMempool(pool, entry.FromTx(tx_mempool_sibling));
+        AddToMempool(pool, entry.FromTx(tx_mempool_nibling));
 
         auto ancestors_3gen{pool.CalculateMemPoolAncestors(entry.FromTx(tx_to_submit), m_limits)};
         const auto expected_error_str{strprintf("tx %s (wtxid=%s) would exceed descendant count limit",

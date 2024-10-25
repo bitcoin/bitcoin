@@ -1078,7 +1078,25 @@ BOOST_AUTO_TEST_CASE(package_rbf_tests)
         BOOST_CHECK_EQUAL(it_child_3->second.m_effective_feerate.value().GetFee(package3_total_vsize), 199 + 1300);
 
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
-    }
 
+        // Finally, check that we can prioritise package1 and get it back into the mempool.
+        // It should not be possible to resubmit package1 and get it in without prioritisation.
+        const auto submit4 = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package1, false, std::nullopt);
+        if (auto err_4{CheckPackageMempoolAcceptResult(package1, submit4, /*expect_valid=*/false, m_node.mempool.get())}) {
+            BOOST_ERROR(err_4.value());
+        }
+        m_node.mempool->PrioritiseTransaction(tx_child_1->GetHash(), 1363);
+        const auto submit5 = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package1, false, std::nullopt);
+        if (auto err_5{CheckPackageMempoolAcceptResult(package1, submit5, /*expect_valid=*/true, m_node.mempool.get())}) {
+            BOOST_ERROR(err_5.value());
+        }
+        it_parent_1 = submit5.m_tx_results.find(tx_parent_1->GetWitnessHash());
+        it_child_1 = submit5.m_tx_results.find(tx_child_1->GetWitnessHash());
+        BOOST_CHECK_EQUAL(it_parent_1->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+        BOOST_CHECK_EQUAL(it_child_1->second.m_result_type, MempoolAcceptResult::ResultType::VALID);
+        LOCK(m_node.mempool->cs);
+        BOOST_CHECK(m_node.mempool->GetIter(tx_parent_1->GetHash()).has_value());
+        BOOST_CHECK(m_node.mempool->GetIter(tx_child_1->GetHash()).has_value());
+    }
 }
 BOOST_AUTO_TEST_SUITE_END()

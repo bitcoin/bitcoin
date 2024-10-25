@@ -56,4 +56,8 @@ std::optional<std::string>  CheckPackageMempoolAcceptResult(const Package& txns,
  *   */
 void CheckMempoolTRUCInvariants(const CTxMemPool& tx_pool);
 
+/** One-line wrapper for creating a mempool changeset with a single transaction
+ *  and applying it. */
+void AddToMempool(CTxMemPool& tx_pool, const CTxMemPoolEntry& entry);
+
 #endif // BITCOIN_TEST_UTIL_TXMEMPOOL_H
