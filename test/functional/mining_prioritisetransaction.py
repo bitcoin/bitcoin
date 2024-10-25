@@ -55,8 +55,8 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
             txids[i] = create_lots_of_big_transactions(self.nodes[0], self.txouts, utxos[start_range:end_range], end_range - start_range, (i+1)*base_fee)
 
         # Make sure that the size of each group of transactions exceeds
-        # MAX_BLOCK_SIZE -- otherwise the test needs to be revised to create
-        # more transactions.
+        # MAX_BLOCK_SIZE -- otherwise the test needs to be revised to
+        # create more transactions.
         mempool = self.nodes[0].getrawmempool(True)
         sizes = [0, 0, 0]
         for i in range(3):

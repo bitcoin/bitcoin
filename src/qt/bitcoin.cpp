@@ -8,40 +8,40 @@
 #endif
 
 #include <qt/bitcoin.h>
-#include <qt/bitcoingui.h>
 
 #include <chainparams.h>
 #include <fs.h>
+#include <init.h>
+#include <interfaces/handler.h>
+#include <interfaces/node.h>
+#include <net.h>
+#include <node/context.h>
+#include <node/ui_interface.h>
+#include <noui.h>
+#include <qt/bitcoingui.h>
 #include <qt/clientmodel.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
+#include <qt/initexecutor.h>
 #include <qt/intro.h>
-#include <net.h>
 #include <qt/networkstyle.h>
 #include <qt/optionsmodel.h>
 #include <qt/splashscreen.h>
 #include <qt/utilitydialog.h>
 #include <qt/winshutdownmonitor.h>
+#include <stacktraces.h>
+#include <uint256.h>
 #include <util/string.h>
+#include <util/system.h>
+#include <util/threadnames.h>
+#include <util/translation.h>
+#include <validation.h>
 
 #ifdef ENABLE_WALLET
 #include <qt/paymentserver.h>
 #include <qt/walletcontroller.h>
 #include <qt/walletmodel.h>
 #endif // ENABLE_WALLET
-
-#include <init.h>
-#include <interfaces/handler.h>
-#include <interfaces/node.h>
-#include <node/context.h>
-#include <node/ui_interface.h>
-#include <noui.h>
-#include <stacktraces.h>
-#include <uint256.h>
-#include <util/system.h>
-#include <util/threadnames.h>
-#include <util/translation.h>
-#include <validation.h>
 
 #include <boost/signals2/connection.hpp>
 #include <memory>
@@ -52,7 +52,6 @@
 #include <QLibraryInfo>
 #include <QLocale>
 #include <QMessageBox>
-#include <QProcess>
 #include <QSettings>
 #include <QThread>
 #include <QTimer>
@@ -208,72 +207,11 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
     }
 }
 
-BitcoinCore::BitcoinCore(interfaces::Node& node) :
-    QObject(), m_node(node)
-{
-}
-
-void BitcoinCore::handleRunawayException(const std::exception_ptr e)
-{
-    PrintExceptionContinue(e, "Runaway exception");
-    Q_EMIT runawayException(QString::fromStdString(m_node.getWarnings().translated));
-}
-
-void BitcoinCore::initialize()
-{
-    try
-    {
-        util::ThreadRename("qt-init");
-        qDebug() << __func__ << ": Running initialization in thread";
-        interfaces::BlockAndHeaderTipInfo tip_info;
-        bool rv = m_node.appInitMain(&tip_info);
-        Q_EMIT initializeResult(rv, tip_info);
-    } catch (...) {
-        handleRunawayException(std::current_exception());
-    }
-}
-
-void BitcoinCore::restart(QStringList args)
-{
-    static bool executing_restart{false};
-
-    if(!executing_restart) { // Only restart 1x, no matter how often a user clicks on a restart-button
-        executing_restart = true;
-        try
-        {
-            qDebug() << __func__ << ": Running Restart in thread";
-            m_node.appPrepareShutdown();
-            qDebug() << __func__ << ": Shutdown finished";
-            Q_EMIT shutdownResult();
-            CExplicitNetCleanup::callCleanup();
-            QProcess::startDetached(QApplication::applicationFilePath(), args);
-            qDebug() << __func__ << ": Restart initiated...";
-            QApplication::quit();
-        } catch (...) {
-            handleRunawayException(std::current_exception());
-        }
-    }
-}
-
-void BitcoinCore::shutdown()
-{
-    try
-    {
-        qDebug() << __func__ << ": Running Shutdown in thread";
-        m_node.appShutdown();
-        qDebug() << __func__ << ": Shutdown finished";
-        Q_EMIT shutdownResult();
-    } catch (...) {
-        handleRunawayException(std::current_exception());
-    }
-}
-
 static int qt_argc = 1;
 static const char* qt_argv = "dash-qt";
 
 BitcoinApplication::BitcoinApplication():
     QApplication(qt_argc, const_cast<char **>(&qt_argv)),
-    coreThread(nullptr),
     optionsModel(nullptr),
     clientModel(nullptr),
     window(nullptr),
@@ -287,13 +225,7 @@ BitcoinApplication::BitcoinApplication():
 
 BitcoinApplication::~BitcoinApplication()
 {
-    if(coreThread)
-    {
-        qDebug() << __func__ << ": Stopping thread";
-        coreThread->quit();
-        coreThread->wait();
-        qDebug() << __func__ << ": Stopped thread";
-    }
+    m_executor.reset();
 
     delete window;
     window = nullptr;
@@ -350,23 +282,16 @@ bool BitcoinApplication::baseInitialize()
 
 void BitcoinApplication::startThread()
 {
-    if(coreThread)
-        return;
-    coreThread = new QThread(this);
-    BitcoinCore *executor = new BitcoinCore(node());
-    executor->moveToThread(coreThread);
+    assert(!m_executor);
+    m_executor.emplace(node());
 
     /*  communication to and from thread */
-    connect(executor, &BitcoinCore::initializeResult, this, &BitcoinApplication::initializeResult);
-    connect(executor, &BitcoinCore::shutdownResult, this, &BitcoinApplication::shutdownResult);
-    connect(executor, &BitcoinCore::runawayException, this, &BitcoinApplication::handleRunawayException);
-    connect(this, &BitcoinApplication::requestedInitialize, executor, &BitcoinCore::initialize);
-    connect(this, &BitcoinApplication::requestedShutdown, executor, &BitcoinCore::shutdown);
-    connect(window, &BitcoinGUI::requestedRestart, executor, &BitcoinCore::restart);
-    /*  make sure executor object is deleted in its own thread */
-    connect(coreThread, &QThread::finished, executor, &QObject::deleteLater);
-
-    coreThread->start();
+    connect(&m_executor.value(), &InitExecutor::initializeResult, this, &BitcoinApplication::initializeResult);
+    connect(&m_executor.value(), &InitExecutor::shutdownResult, this, &BitcoinApplication::shutdownResult);
+    connect(&m_executor.value(), &InitExecutor::runawayException, this, &BitcoinApplication::handleRunawayException);
+    connect(this, &BitcoinApplication::requestedInitialize, &m_executor.value(), &InitExecutor::initialize);
+    connect(this, &BitcoinApplication::requestedShutdown, &m_executor.value(), &InitExecutor::shutdown);
+    connect(window, &BitcoinGUI::requestedRestart, &m_executor.value(), &InitExecutor::restart);
 }
 
 void BitcoinApplication::parameterSetup()
@@ -399,7 +324,6 @@ void BitcoinApplication::requestShutdown()
     shutdownWindow.reset(ShutdownWindow::showShutdownWindow(window));
 
     qDebug() << __func__ << ": Requesting shutdown";
-    startThread();
     window->hide();
     // Must disconnect node signals otherwise current thread can deadlock since
     // no event loop is running.
