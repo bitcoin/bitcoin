@@ -854,7 +854,7 @@ static RPCHelpMan getorphantxs()
         "\nShows transactions in the tx orphanage.\n"
         "\nEXPERIMENTAL warning: this call may be changed in future releases.\n",
         {
-            {"verbosity|verbose", RPCArg::Type::NUM, RPCArg::Default{0}, "0 for an array of txids (may contain duplicates), 1 for an array of objects with tx details, and 2 for details from (1) and tx hex",
+            {"verbosity", RPCArg::Type::NUM, RPCArg::Default{0}, "0 for an array of txids (may contain duplicates), 1 for an array of objects with tx details, and 2 for details from (1) and tx hex",
              RPCArgOptions{.skip_type_check = true}},
         },
         {
@@ -889,7 +889,7 @@ static RPCHelpMan getorphantxs()
             PeerManager& peerman = EnsurePeerman(node);
             std::vector<TxOrphanage::OrphanTxBase> orphanage = peerman.GetOrphanTransactions();
 
-            int verbosity{ParseVerbosity(request.params[0], /*default_verbosity=*/0)};
+            int verbosity{ParseVerbosity(request.params[0], /*default_verbosity=*/0, /*allow_bool*/false)};
 
             UniValue ret(UniValue::VARR);
 
