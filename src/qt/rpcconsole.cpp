@@ -962,7 +962,11 @@ void RPCConsole::clear(bool keep_prompt)
     ui->lineEdit->setFocus();
 
     // Set default style sheet
+#ifdef Q_OS_MAC
+    ui->messagesWidget->setFont(GUIUtil::fixedPitchFont(/*use_embedded_font=*/true));
+#else
     ui->messagesWidget->setFont(GUIUtil::fixedPitchFont());
+#endif
     ui->messagesWidget->document()->setDefaultStyleSheet(
         QString(
                 "table { }"
