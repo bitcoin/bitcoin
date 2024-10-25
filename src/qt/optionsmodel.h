@@ -86,6 +86,7 @@ public:
         CoinJoinDenomsHardCap,// int
         CoinJoinMultiSession, // bool
         Listen,               // bool
+        Server,               // bool
         OptionIDRowCount,
     };
 
