@@ -14,6 +14,16 @@
 #include <string>
 #include <vector>
 
+/**
+ * Format strings should always be known at compile-time, but having
+ * a run-time string overload is helpful for (fuzz) tests.
+ */
+template <typename... Args>
+void fuzz_fmt(const std::string& fmt, const Args&... args)
+{
+    (void)tfm::format(fmt, args...);
+}
+
 FUZZ_TARGET(str_printf)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
@@ -52,27 +62,27 @@ FUZZ_TARGET(str_printf)
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeRandomLengthString(32));
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeRandomLengthString(32));
                 (void)tinyformat::format(bilingual_string, fuzzed_data_provider.ConsumeRandomLengthString(32));
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeRandomLengthString(32).c_str());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeRandomLengthString(32).c_str());
                 (void)tinyformat::format(bilingual_string, fuzzed_data_provider.ConsumeRandomLengthString(32).c_str());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<signed char>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeIntegral<signed char>());
                 (void)tinyformat::format(bilingual_string, fuzzed_data_provider.ConsumeIntegral<signed char>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<unsigned char>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeIntegral<unsigned char>());
                 (void)tinyformat::format(bilingual_string, fuzzed_data_provider.ConsumeIntegral<unsigned char>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<char>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeIntegral<char>());
                 (void)tinyformat::format(bilingual_string, fuzzed_data_provider.ConsumeIntegral<char>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeBool());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeBool());
                 (void)tinyformat::format(bilingual_string, fuzzed_data_provider.ConsumeBool());
             });
     } catch (const tinyformat::format_error&) {
@@ -98,35 +108,35 @@ FUZZ_TARGET(str_printf)
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeFloatingPoint<float>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeFloatingPoint<float>());
                 (void)tinyformat::format(bilingual_string, fuzzed_data_provider.ConsumeFloatingPoint<float>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeFloatingPoint<double>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeFloatingPoint<double>());
                 (void)tinyformat::format(bilingual_string, fuzzed_data_provider.ConsumeFloatingPoint<double>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<int16_t>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeIntegral<int16_t>());
                 (void)tinyformat::format(bilingual_string, fuzzed_data_provider.ConsumeIntegral<int16_t>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<uint16_t>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeIntegral<uint16_t>());
                 (void)tinyformat::format(bilingual_string, fuzzed_data_provider.ConsumeIntegral<uint16_t>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<int32_t>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeIntegral<int32_t>());
                 (void)tinyformat::format(bilingual_string, fuzzed_data_provider.ConsumeIntegral<int32_t>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<uint32_t>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeIntegral<uint32_t>());
                 (void)tinyformat::format(bilingual_string, fuzzed_data_provider.ConsumeIntegral<uint32_t>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<int64_t>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeIntegral<int64_t>());
                 (void)tinyformat::format(bilingual_string, fuzzed_data_provider.ConsumeIntegral<int64_t>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<uint64_t>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeIntegral<uint64_t>());
                 (void)tinyformat::format(bilingual_string, fuzzed_data_provider.ConsumeIntegral<uint64_t>());
             });
     } catch (const tinyformat::format_error&) {
