@@ -129,7 +129,6 @@ static void ThreadMapPort()
     do {
         ok = false;
 
-        // High priority protocol.
         if (g_mapport_enabled_protos & MapPortProtoFlag::PCP) {
             g_mapport_current_proto = MapPortProtoFlag::PCP;
             ok = ProcessPCP();
@@ -170,14 +169,11 @@ static void DispatchMapPort()
     }
 
     if (g_mapport_enabled_protos & g_mapport_current_proto) {
-        // Enabling another protocol does not cause switching from the currently used one.
         return;
     }
 
     assert(g_mapport_thread.joinable());
     assert(!g_mapport_interrupt);
-    // Interrupt a protocol-specific loop in the ThreadPCP()
-    // to force trying the next protocol in the ThreadMapPort() loop.
     g_mapport_interrupt();
 }
 
