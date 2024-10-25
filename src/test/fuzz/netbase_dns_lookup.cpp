@@ -6,7 +6,7 @@
 #include <netbase.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
-#include <test/fuzz/util.h>
+#include <test/fuzz/util/net.h>
 
 #include <cstdint>
 #include <string>
