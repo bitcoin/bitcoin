@@ -20,7 +20,7 @@ m4_define([_CHECK_ATOMIC_testbody], [[
 
   int main() {
     std::atomic<bool> lock{true};
-    std::atomic_exchange(&lock, false);
+    lock.exchange(false);
 
     std::atomic<std::chrono::seconds> t{0s};
     t.store(2s);
@@ -38,6 +38,8 @@ m4_define([_CHECK_ATOMIC_testbody], [[
 AC_DEFUN([CHECK_ATOMIC], [
 
   AC_LANG_PUSH(C++)
+  TEMP_CXXFLAGS="$CXXFLAGS"
+  CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
 
   AC_MSG_CHECKING([whether std::atomic can be used without link library])
 
@@ -55,5 +57,6 @@ AC_DEFUN([CHECK_ATOMIC], [
         ])
     ])
 
+  CXXFLAGS="$TEMP_CXXFLAGS"
   AC_LANG_POP
 ])

@@ -30,7 +30,6 @@ T&& inline_check_non_fatal(T&& val, const char* file, int line, const char* func
         throw NonFatalCheckError(
             format_internal_error(assertion, file, line, func, PACKAGE_BUGREPORT));
     }
-
     return std::forward<T>(val);
 }
 
