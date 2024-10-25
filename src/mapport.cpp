@@ -25,8 +25,8 @@
 
 static CThreadInterrupt g_mapport_interrupt;
 static std::thread g_mapport_thread;
-static std::atomic_uint g_mapport_enabled_protos{MapPortProtoFlag::NONE};
-static std::atomic<MapPortProtoFlag> g_mapport_current_proto{MapPortProtoFlag::NONE};
+static std::atomic_bool g_mapport_enabled{false};
+static std::atomic_bool g_mapport_current{false};
 
 using namespace std::chrono_literals;
 static constexpr auto PORT_MAPPING_REANNOUNCE_PERIOD{20min};
@@ -129,14 +129,14 @@ static void ThreadMapPort()
     do {
         ok = false;
 
-        if (g_mapport_enabled_protos & MapPortProtoFlag::PCP) {
-            g_mapport_current_proto = MapPortProtoFlag::PCP;
+        if (g_mapport_enabled) {
+            g_mapport_current = true;
             ok = ProcessPCP();
             if (ok) continue;
         }
 
-        g_mapport_current_proto = MapPortProtoFlag::NONE;
-        if (g_mapport_enabled_protos == MapPortProtoFlag::NONE) {
+        g_mapport_current = false;
+        if (!g_mapport_enabled) {
             return;
         }
 
@@ -153,44 +153,28 @@ void StartThreadMapPort()
 
 static void DispatchMapPort()
 {
-    if (g_mapport_current_proto == MapPortProtoFlag::NONE && g_mapport_enabled_protos == MapPortProtoFlag::NONE) {
-        return;
-    }
-
-    if (g_mapport_current_proto == MapPortProtoFlag::NONE && g_mapport_enabled_protos != MapPortProtoFlag::NONE) {
+    if (!g_mapport_current && g_mapport_enabled) {
         StartThreadMapPort();
-        return;
-    }
-
-    if (g_mapport_current_proto != MapPortProtoFlag::NONE && g_mapport_enabled_protos == MapPortProtoFlag::NONE) {
+    } else if (g_mapport_current && !g_mapport_enabled) {
         InterruptMapPort();
         StopMapPort();
-        return;
-    }
-
-    if (g_mapport_enabled_protos & g_mapport_current_proto) {
-        return;
     }
 }
 
-static void MapPortProtoSetEnabled(MapPortProtoFlag proto, bool enabled)
+static void MapPortProtoSetEnabled(bool enabled)
 {
-    if (enabled) {
-        g_mapport_enabled_protos |= proto;
-    } else {
-        g_mapport_enabled_protos &= ~proto;
-    }
+    g_mapport_enabled = enabled;
 }
 
 void StartMapPort(bool use_pcp)
 {
-    MapPortProtoSetEnabled(MapPortProtoFlag::PCP, use_pcp);
+    MapPortProtoSetEnabled(use_pcp);
     DispatchMapPort();
 }
 
 void InterruptMapPort()
 {
-    g_mapport_enabled_protos = MapPortProtoFlag::NONE;
+    g_mapport_enabled = false;
     if (g_mapport_thread.joinable()) {
         g_mapport_interrupt();
     }
