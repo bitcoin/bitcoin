@@ -804,6 +804,8 @@ public:
         TxHandle StageAddition(const CTransactionRef& tx, const CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, bool spends_coinbase, int64_t sigops_cost, LockPoints lp);
         void StageRemoval(CTxMemPool::txiter it) { m_to_remove.insert(it); }
 
+        const CTxMemPool::setEntries& GetRemovals() const { return m_to_remove; }
+
         util::Result<CTxMemPool::setEntries> CalculateMemPoolAncestors(TxHandle tx, const Limits& limits)
         {
             // Look up transaction in our cache first
