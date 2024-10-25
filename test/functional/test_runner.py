@@ -549,14 +549,18 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, attempts=1, enab
 
     # Test Framework Tests
     print("Running Unit Tests for Test Framework Modules")
+
+    tests_dir = src_dir + '/test/functional/'
+    # This allows `test_runner.py` to work from an out-of-source build directory using a symlink,
+    # a hard link or a copy on any platform. See https://github.com/bitcoin/bitcoin/pull/27561.
+    sys.path.append(tests_dir)
+
     test_framework_tests = unittest.TestSuite()
     for module in TEST_FRAMEWORK_MODULES:
         test_framework_tests.addTest(unittest.TestLoader().loadTestsFromName("test_framework.{}".format(module)))
     result = unittest.TextTestRunner(verbosity=1, failfast=True).run(test_framework_tests)
     if not result.wasSuccessful():
         sys.exit("Early exiting after failure in TestFramework unit tests")
-
-    tests_dir = src_dir + '/test/functional/'
 
     flags = ['--cachedir={}'.format(cache_dir)] + args
 

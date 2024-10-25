@@ -5,14 +5,18 @@
 #include <test/util/index.h>
 
 #include <index/base.h>
+#include <shutdown.h>
 #include <util/check.h>
 #include <util/time.h>
 
-void IndexWaitSynced(BaseIndex& index)
+void IndexWaitSynced(const BaseIndex& index)
 {
-    const auto timeout{SteadyClock::now() + 120s};
     while (!index.BlockUntilSyncedToCurrentChain()) {
-        Assert(timeout > SteadyClock::now());
+        // Assert shutdown was not requested to abort the test, instead of looping forever, in case
+        // there was an unexpected error in the index that caused it to stop syncing and request a shutdown.
+        Assert(!ShutdownRequested());
+
         UninterruptibleSleep(100ms);
     }
+    assert(index.GetSummary().synced);
 }
