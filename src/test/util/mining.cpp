@@ -8,8 +8,8 @@
 #include <consensus/merkle.h>
 #include <evo/evodb.h>
 #include <key_io.h>
-#include <miner.h>
 #include <node/context.h>
+#include <node/miner.h>
 #include <pow.h>
 #include <script/standard.h>
 #include <spork.h>

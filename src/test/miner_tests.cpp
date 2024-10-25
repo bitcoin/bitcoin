@@ -13,7 +13,7 @@
 #include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <llmq/instantsend.h>
-#include <miner.h>
+#include <node/miner.h>
 #include <policy/policy.h>
 #include <pow.h>
 #include <script/standard.h>

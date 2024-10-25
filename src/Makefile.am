@@ -258,7 +258,6 @@ BITCOIN_CORE_H = \
   memusage.h \
   merkleblock.h \
   messagesigner.h \
-  miner.h \
   minisketchwrapper.h \
   net.h \
   net_permissions.h \
@@ -275,6 +274,7 @@ BITCOIN_CORE_H = \
   node/connection_types.h \
   node/context.h \
   node/eviction.h \
+  node/miner.h \
   node/psbt.h \
   node/transaction.h \
   node/ui_interface.h \
@@ -494,7 +494,6 @@ libbitcoin_server_a_SOURCES = \
   masternode/payments.cpp \
   masternode/sync.cpp \
   masternode/utils.cpp \
-  miner.cpp \
   minisketchwrapper.cpp \
   net.cpp \
   netfulfilledman.cpp \
@@ -507,6 +506,7 @@ libbitcoin_server_a_SOURCES = \
   node/context.cpp \
   node/eviction.cpp \
   node/interfaces.cpp \
+  node/miner.cpp \
   node/psbt.cpp \
   node/transaction.cpp \
   node/ui_interface.cpp \

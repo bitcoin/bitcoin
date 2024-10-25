@@ -19,9 +19,9 @@
 #include <llmq/chainlocks.h>
 #include <llmq/instantsend.h>
 #include <evo/evodb.h>
-#include <miner.h>
 #include <net.h>
 #include <node/context.h>
+#include <node/miner.h>
 #include <policy/fees.h>
 #include <pow.h>
 #include <rpc/blockchain.h>
