@@ -141,6 +141,8 @@ class OrphanRPCsTest(BitcoinTestFramework):
 
     def test_misc(self):
         node = self.nodes[0]
+        assert_raises_rpc_error(-3, "Verbosity was boolean but only integer allowed", node.getorphantxs, verbosity=True)
+        assert_raises_rpc_error(-3, "Verbosity was boolean but only integer allowed", node.getorphantxs, verbosity=False)
         help_output = node.help()
         self.log.info("Check that getorphantxs is a hidden RPC")
         assert "getorphantxs" not in help_output
