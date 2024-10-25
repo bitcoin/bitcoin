@@ -171,10 +171,6 @@ static void DispatchMapPort()
     if (g_mapport_enabled_protos & g_mapport_current_proto) {
         return;
     }
-
-    assert(g_mapport_thread.joinable());
-    assert(!g_mapport_interrupt);
-    g_mapport_interrupt();
 }
 
 static void MapPortProtoSetEnabled(MapPortProtoFlag proto, bool enabled)
