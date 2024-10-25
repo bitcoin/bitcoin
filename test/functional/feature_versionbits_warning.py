@@ -21,7 +21,7 @@ VB_TOP_BITS = 0x20000000
 VB_UNKNOWN_BIT = 27       # Choose a bit unassigned to any deployment
 VB_UNKNOWN_VERSION = VB_TOP_BITS | (1 << VB_UNKNOWN_BIT)
 
-WARN_UNKNOWN_RULES_ACTIVE = "Unknown new rules activated (versionbit {})".format(VB_UNKNOWN_BIT)
+WARN_UNKNOWN_RULES_ACTIVE = f"Unknown new rules activated (versionbit {VB_UNKNOWN_BIT})"
 VB_PATTERN = re.compile("Unknown new rules activated.*versionbit")
 
 class VersionBitsWarningTest(BitcoinTestFramework):
@@ -34,7 +34,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # Open and close to create zero-length file
         with open(self.alert_filename, 'w', encoding='utf8'):
             pass
-        self.extra_args = [["-alertnotify=echo %s >> \"" + self.alert_filename + "\""]]
+        self.extra_args = [[f"-alertnotify=echo %s >> \"{self.alert_filename}\""]]
         self.setup_nodes()
 
     def send_blocks_with_version(self, peer, numblocks, version):

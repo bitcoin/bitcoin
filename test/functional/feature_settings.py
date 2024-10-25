@@ -83,7 +83,7 @@ class SettingsTest(BitcoinTestFramework):
         with altsettings.open("w") as fp:
             fp.write('{"key": "value"}')
         with node.assert_debug_log(expected_msgs=['Setting file arg: key = "value"']):
-            self.start_node(0, extra_args=["-settings={}".format(altsettings)])
+            self.start_node(0, extra_args=[f"-settings={altsettings}"])
             self.stop_node(0)
 
 
