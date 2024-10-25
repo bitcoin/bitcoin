@@ -7,8 +7,8 @@
 #define BITCOIN_NET_H
 
 #include <bip324.h>
-#include <bloom.h>
 #include <chainparams.h>
+#include <common/bloom.h>
 #include <compat.h>
 #include <consensus/amount.h>
 #include <fs.h>
