@@ -96,7 +96,6 @@ jobs:
         with:
           path: |
             depends/sources
-          # We don't care about no specific key as depends system will handle that for us
           key: depends-sources-${{ hashFiles('depends/packages/*') }}
           restore-keys: |
             depends-sources-
@@ -106,7 +105,6 @@ jobs:
         with:
           path: |
             depends/${{ matrix.host }}
-          # We don't care about no specific key as depends system will handle that for us
           key: ${{ runner.os }}-depends-${{ matrix.build_target }}-${{ hashFiles('depends/packages/*') }}
           restore-keys: |
             ${{ runner.os }}-depends-${{ matrix.build_target }}-${{ hashFiles('depends/packages/*') }}
