@@ -77,13 +77,13 @@ BOOST_AUTO_TEST_CASE(xor_file)
     auto raw_file{[&](const auto& mode) { return fsbridge::fopen(xor_path, mode); }};
     const std::vector<uint8_t> test1{1, 2, 3};
     const std::vector<uint8_t> test2{4, 5};
-    const std::vector xor_pat{std::byte{0xff}, std::byte{0x00}, std::byte{0xff}, std::byte{0x00}, std::byte{0xff}, std::byte{0x00}, std::byte{0xff}, std::byte{0x00}};
+    constexpr std::array xor_pat{std::byte{0xff}, std::byte{0x00}, std::byte{0xff}, std::byte{0x00}, std::byte{0xff}, std::byte{0x00}, std::byte{0xff}, std::byte{0x00}};
     uint64_t xor_key;
     std::memcpy(&xor_key, xor_pat.data(), sizeof xor_key);
 
     {
         // Check errors for missing file
-        AutoFile xor_file{raw_file("rb"), xor_pat};
+        AutoFile xor_file{raw_file("rb"), xor_key};
         BOOST_CHECK_EXCEPTION(xor_file << std::byte{}, std::ios_base::failure, HasReason{"AutoFile::write: file handle is nullpt"});
         BOOST_CHECK_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: file handle is nullpt"});
         BOOST_CHECK_EXCEPTION(xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: file handle is nullpt"});
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
 #else
         const char* mode = "wbx";
 #endif
-        AutoFile xor_file{raw_file(mode), xor_pat};
+        AutoFile xor_file{raw_file(mode), xor_key};
         xor_file << test1 << test2;
     }
     {
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
         BOOST_CHECK_EXCEPTION(non_xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: end of file"});
     }
     {
-        AutoFile xor_file{raw_file("rb"), xor_pat};
+        AutoFile xor_file{raw_file("rb"), xor_key};
         std::vector<std::byte> read1, read2;
         xor_file >> read1 >> read2;
         BOOST_CHECK_EQUAL(HexStr(read1), HexStr(test1));
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
         BOOST_CHECK_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: end of file"});
     }
     {
-        AutoFile xor_file{raw_file("rb"), xor_pat};
+        AutoFile xor_file{raw_file("rb"), xor_key};
         std::vector<std::byte> read2;
         // Check that ignore works
         xor_file.ignore(4);
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     // Degenerate case
     {
         DataStream ds{in};
-        ds.Xor({0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
+        ds.Xor(0);
         BOOST_CHECK_EQUAL(""s, ds.str());
     }
 
@@ -293,12 +293,12 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     in.push_back(std::byte{0xf0});
 
     {
-        const std::vector xor_pat{std::byte{0xff}, std::byte{0xff}, std::byte{0xff}, std::byte{0xff}, std::byte{0xff}, std::byte{0xff}, std::byte{0xff}, std::byte{0xff}};
+        constexpr std::array xor_pat{std::byte{0xff}, std::byte{0xff}, std::byte{0xff}, std::byte{0xff}, std::byte{0xff}, std::byte{0xff}, std::byte{0xff}, std::byte{0xff}};
         uint64_t xor_key;
         std::memcpy(&xor_key, xor_pat.data(), sizeof xor_key);
 
         DataStream ds{in};
-        ds.Xor({0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff});
+        ds.Xor(xor_key);
         BOOST_CHECK_EQUAL("\xf0\x0f"s, ds.str());
     }
 
@@ -307,12 +307,12 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     in.push_back(std::byte{0x0f});
 
     {
-        const std::vector xor_pat{std::byte{0xff}, std::byte{0x0f}, std::byte{0xff}, std::byte{0x0f}, std::byte{0xff}, std::byte{0x0f}, std::byte{0xff}, std::byte{0x0f}};
+        constexpr std::array xor_pat{std::byte{0xff}, std::byte{0x0f}, std::byte{0xff}, std::byte{0x0f}, std::byte{0xff}, std::byte{0x0f}, std::byte{0xff}, std::byte{0x0f}};
         uint64_t xor_key;
         std::memcpy(&xor_key, xor_pat.data(), sizeof xor_key);
 
         DataStream ds{in};
-        ds.Xor({0xff, 0x0f, 0xff, 0x0f, 0xff, 0x0f, 0xff, 0x0f});
+        ds.Xor(xor_key);
         BOOST_CHECK_EQUAL("\x0f\x00"s, ds.str());
     }
 }

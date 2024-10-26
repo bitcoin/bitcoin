@@ -1174,8 +1174,9 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
         };
     }
     LogInfo("Using obfuscation key for blocksdir *.dat files (%s): '%s'\n", fs::PathToString(opts.blocks_dir), HexStr(xor_key));
-    assert(xor_key.size() == sizeof(uint64_t));
-    return std::vector<std::byte>{xor_key.begin(), xor_key.end()};
+    uint64_t key;
+    std::memcpy(&key, xor_key.data(), sizeof key);
+    return key;
 }
 
 BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
@@ -1184,10 +1185,7 @@ BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
       m_opts{std::move(opts)},
       m_block_file_seq{FlatFileSeq{m_opts.blocks_dir, "blk", m_opts.fast_prune ? 0x4000 /* 16kB */ : BLOCKFILE_CHUNK_SIZE}},
       m_undo_file_seq{FlatFileSeq{m_opts.blocks_dir, "rev", UNDOFILE_CHUNK_SIZE}},
-      m_interrupt{interrupt}
-{
-    assert(m_xor_key.size() == sizeof(uint64_t));
-}
+      m_interrupt{interrupt} {}
 
 class ImportingNow
 {

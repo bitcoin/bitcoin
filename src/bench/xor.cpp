@@ -1063,7 +1063,7 @@ static void AutoFileXor(benchmark::Bench& bench)
     std::memcpy(&empty_key, empty_key_bytes.data(), 8);
 
     const fs::path test_path = fs::temp_directory_path() / "xor_benchmark.dat";
-    AutoFile f{fsbridge::fopen(test_path, "wb+"), empty_key_bytes};
+    AutoFile f{fsbridge::fopen(test_path, "wb+"), empty_key};
     bench.batch(data.size()).unit("byte").run([&] {
         f.Truncate(0);
         f << data;

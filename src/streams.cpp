@@ -9,10 +9,8 @@
 
 #include <array>
 
-AutoFile::AutoFile(std::FILE* file, std::vector<std::byte> data_xor)
-    : m_file{file}, m_xor{std::move(data_xor)}
+AutoFile::AutoFile(std::FILE* file, uint64_t data_xor) : m_file{file}, m_xor{data_xor}
 {
-    assert(m_xor.size() == sizeof(uint64_t));
     if (!IsNull()) {
         auto pos{std::ftell(m_file)};
         if (pos >= 0) m_position = pos;
@@ -23,7 +21,7 @@ std::size_t AutoFile::detail_fread(Span<std::byte> dst)
 {
     if (!m_file) throw std::ios_base::failure("AutoFile::read: file handle is nullptr");
     size_t ret = std::fread(dst.data(), 1, dst.size(), m_file);
-    if (!m_xor.empty()) {
+    if (m_xor) {
         if (!m_position.has_value()) throw std::ios_base::failure("AutoFile::read: position unknown");
         util::Xor(dst.subspan(0, ret), m_xor, *m_position);
     }
@@ -82,7 +80,7 @@ void AutoFile::ignore(size_t nSize)
 void AutoFile::write(Span<const std::byte> src)
 {
     if (!m_file) throw std::ios_base::failure("AutoFile::write: file handle is nullptr");
-    if (m_xor.empty()) {
+    if (!m_xor) {
         if (std::fwrite(src.data(), 1, src.size(), m_file) != src.size()) {
             throw std::ios_base::failure("AutoFile::write: write failed");
         }
