@@ -49,6 +49,7 @@ public:
         NetNodeId = 0,
         Age,
         Address,
+        Direction,
         ConnectionType,
         Network,
         Ping,
@@ -88,6 +89,9 @@ private:
         /*: Title of Peers Table column which contains the
             IP/Onion/I2P address of the connected peer. */
         tr("Address"),
+        /*: Title of Peers Table column which indicates the direction
+            the peer connection was initiated from. */
+        tr("Direction"),
         /*: Title of Peers Table column which describes the type of
             peer connection. The "type" describes why the connection exists. */
         tr("Type"),
