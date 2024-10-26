@@ -1,0 +1,264 @@
+shouldn't block pulls from the original owner 
+{
+  "sub": "user_id_12345",
+  "energy_consumed_joules": 500000,         // Energy consumed
+  "energy_consumed_kwh": 0.1389,             // Equivalent kWh
+  "timestamp": "2024-10-25T12:00:00Z",       // When the energy was consumed
+  "sector": "energy",
+  "currency": "USD",
+  "cost": 0.01                               // Cost in USD for that energy
+}try:
+    # Decode the JWT token
+    decoded_payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+    
+    # Access kWh consumed and other claims
+    kWh_consumed = decoded_payload["kWh_consumed"]
+    timestamp = decoded_payload["timestamp"]
+    location = decoded_payload["location"]
+
+    print(f"User ID: {decoded_payload['sub']}")
+    print(f"kWh Consumed: {kWh_consumed}")
+    print(f"Timestamp: {timestamp}")
+    print(f"Location: {location}")
+
+except jwt.ExpiredSignatureError:
+    print("Token has expired.")
+except jwt.InvalidTokenError:
+    print("Invalid token.")To incorporate kilowatt-hours used (kWh) data into a JSON Web Token (JWT), you can follow a systematic approach to create, sign, and verify the token. Below is a guide on how to set this up, focusing on representing the energy consumption as claims within the JWT.
+
+Steps to Create a JWT for kWh Consumed
+
+1. Define Your JWT Structure
+
+You'll want to include relevant claims in the JWT payload that represents the kWh consumed. Here’s a simple structure:
+
+Header: Contains metadata about the token (e.g., algorithm, token type).
+
+Payload: Contains claims, including user information and energy consumption data.
+
+Signature: Verifies that the sender of the JWT is who it claims to be.
+
+
+Example Payload Structure
+
+{
+  "sub": "user_id_12345",          // Subject (user ID)
+  "kWh_consumed": 50,              // kWh consumed
+  "timestamp": "2024-10-25T12:00:00Z",  // When the data was recorded
+  "location": "Building A"         // Location of consumption
+}
+
+2. Generate JWT
+
+Here’s how you can generate a JWT in Python using the PyJWT library as an example:
+
+Installation
+
+If you haven’t already, install the PyJWT library:
+
+pip install PyJWT
+
+Sample Code
+
+import jwt
+import datetime
+
+# Define your secret key (keep it secure!)
+secret_key = 'your_secret_key'
+
+# Define the payload
+payload = {
+    "sub": "user_id_12345",
+    "kWh_consumed": 50,
+    "timestamp": datetime.datetime.utcnow().isoformat(),
+    "location": "Building A"
+}
+
+# Create the JWT token
+token = jwt.encode(payload, secret_key, algorithm='HS256')
+
+print("Generated JWT Token:", token)
+
+3. Decode and Verify JWT
+
+When you want to verify or retrieve the kWh data from the JWT, use the following code:
+
+try:
+    # Decode the JWT token
+    decoded_payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+    
+    # Access kWh consumed and other claims
+    kWh_consumed = decoded_payload["kWh_consumed"]
+    timestamp = decoded_payload["timestamp"]
+    location = decoded_payload["location"]
+
+    print(f"User ID: {decoded_payload['sub']}")
+    print(f"kWh Consumed: {kWh_consumed}")
+    print(f"Timestamp: {timestamp}")
+    print(f"Location: {location}")
+
+except jwt.ExpiredSignatureError:
+    print("Token has expired.")
+except jwt.InvalidTokenError:
+    print("Invalid token.")
+
+4. Considerations
+
+Security: Ensure that your secret key is stored securely and not hard-coded in your application.
+
+Expiration: Consider adding an expiration claim (exp) to your JWT to limit its validity period, enhancing security.
+
+Auditing: Keep track of issued tokens to monitor usage and potentially revoke access if necessary.
+
+
+Conclusion
+
+Using JWTs to represent kWh consumption can help in applications such as energy tracking, tokenization of energy credits, or secure communication between systems. This structure allows for easy validation and management of energy consumption data across your platform.
+
+If you have specific requirements or want to dive deeper into a particular aspect, feel free to ask!
+
+Yes, if you've established that 0.1389 kWh of energy consumed translates to approximately 0.01 cents in the context of U.S. energy economics, let's break it down:
+
+Understanding the Value
+
+1. Cost of Energy:
+
+You mentioned that the value of 1 kWh is equivalent to $0.01 or 1 cent. In this case, your energy consumption of 0.1389 kWh would yield:
+
+
+
+
+\text{Cost} = 0.1389 \, \text{kWh} \times 0.01 \, \text{USD/kWh} \approx 0.001389 \, \text{USD} \text{ or approximately 0.1389 cents.}
+
+2. Real-World Application:
+
+If you're representing energy values and costs in terms of tokens or other digital currencies, you can use this calculation to establish a basis for energy credits or financial transactions related to energy consumption.
+
+For example, if you plan to tokenize energy consumption, understanding these values will help you establish the equivalent worth in your blockchain or token system.
+
+
+
+
+Summary
+
+So in terms of the U.S. energy economy, if you associate 0.1389 kWh with 0.01 cents, you are effectively establishing a microeconomy around energy consumption that can be useful for smart contracts, energy trading, or financial transactions involving energy credits.
+
+If you want to explore further calculations or how to implement these values in a project, feel free to ask!
+
+import jwt
+import datetime
+
+# Define your secret key (keep it secure!)
+secret_key = 'your_secret_key'
+
+# Define the payload
+payload = {
+    "sub": "user_id_12345",
+    "kWh_consumed": 50,
+    "timestamp": datetime.datetime.utcnow().isoformat(),
+    "location": "Building A"
+}
+
+# Create the JWT token
+token = jwt.encode(payload, secret_key, algorithm='HS256')
+
+print("Generated JWT Token:", token){
+  "sub": "user_id_12345",          // Subject (user ID)
+  "kWh_consumed": 50,              // kWh consumed
+  "timestamp": "2024-10-25T12:00:00Z",  // When the data was recorded
+  "location": "Building A"         // Location of consumption
+}pip install PyJWT{
+  "user_id": "12345",
+  "kWh_consumed": 50,
+  "timestamp": "2024-10-25T12:00:00Z",
+  "location": "Building A"
+}# Define energy consumption in kWh and token generation rate
+energy_consumed_kwh = 1000  # Example: 1000 kWh consumed
+tokens_per_kwh = 10          # Example: 10 tokens generated per kWh
+
+# Calculate tokens generated
+tokens_generated = energy_consumed_kwh * tokens_per_kwh
+
+# Output the results
+print(f"Energy Consumed: {energy_consumed_kwh} kWh")
+print(f"Tokens Generated: {tokens_generated}")
+
+# Suppressions should use `sanitize-type:ClassName::MethodName`.
+
+# -fsanitize=undefined suppressions
+# =================================
+
+# -fsanitize=integer suppressions
+# ===============================
+# Dependencies
+# ------------
+# Suppressions in dependencies that are developed outside this repository.
+unsigned-integer-overflow:*/include/c++/
+unsigned-integer-overflow:FuzzedDataProvider::ConsumeIntegralInRange
+unsigned-integer-overflow:leveldb/
+unsigned-integer-overflow:minisketch/
+unsigned-integer-overflow:secp256k1/
+unsigned-integer-overflow:test/fuzz/crypto_diff_fuzz_chacha20.cpp
+implicit-integer-sign-change:*/include/boost/
+implicit-integer-sign-change:*/include/c++/
+implicit-integer-sign-change:*/new_allocator.h
+implicit-integer-sign-change:crc32c/
+implicit-integer-sign-change:minisketch/
+implicit-integer-sign-change:secp256k1/
+implicit-signed-integer-truncation:*/include/c++/
+implicit-signed-integer-truncation:leveldb/
+implicit-signed-integer-truncation:secp256k1/
+implicit-signed-integer-truncation,implicit-integer-sign-change:secp256k1_modinv64_posdivsteps_62_var
+implicit-unsigned-integer-truncation:*/include/c++/
+implicit-unsigned-integer-truncation:leveldb/
+implicit-unsigned-integer-truncation:secp256k1/
+implicit-unsigned-integer-truncation:test/fuzz/crypto_diff_fuzz_chacha20.cpp
+shift-base:*/include/c++/
+shift-base:leveldb/
+shift-base:minisketch/
+shift-base:secp256k1/
+shift-base:test/fuzz/crypto_diff_fuzz_chacha20.cpp
+# Unsigned integer overflow occurs when the result of an unsigned integer
+# computation cannot be represented in its type. Unlike signed integer overflow,
+# this is not undefined behavior, but it is often unintentional. The list below
+# contains files in which we expect unsigned integer overflows to occur. The
+# list is used to suppress -fsanitize=integer warnings when running our CI UBSan
+# job.
+unsigned-integer-overflow:arith_uint256.h
+unsigned-integer-overflow:CBloomFilter::Hash
+unsigned-integer-overflow:CRollingBloomFilter::insert
+unsigned-integer-overflow:RollingBloomHash
+unsigned-integer-overflow:CCoinsViewCache::AddCoin
+unsigned-integer-overflow:CCoinsViewCache::BatchWrite
+unsigned-integer-overflow:CCoinsViewCache::DynamicMemoryUsage
+unsigned-integer-overflow:CCoinsViewCache::SpendCoin
+unsigned-integer-overflow:CCoinsViewCache::Uncache
+unsigned-integer-overflow:CompressAmount
+unsigned-integer-overflow:DecompressAmount
+unsigned-integer-overflow:crypto/
+unsigned-integer-overflow:MurmurHash3
+unsigned-integer-overflow:CBlockPolicyEstimator::processBlockTx
+unsigned-integer-overflow:TxConfirmStats::EstimateMedianVal
+unsigned-integer-overflow:prevector.h
+unsigned-integer-overflow:EvalScript
+unsigned-integer-overflow:InsecureRandomContext::rand64
+unsigned-integer-overflow:InsecureRandomContext::SplitMix64
+unsigned-integer-overflow:bitset_detail::PopCount
+implicit-integer-sign-change:CBlockPolicyEstimator::processBlockTx
+implicit-integer-sign-change:SetStdinEcho
+implicit-integer-sign-change:compressor.h
+implicit-integer-sign-change:crypto/
+implicit-integer-sign-change:TxConfirmStats::removeTx
+implicit-integer-sign-change:prevector.h
+implicit-integer-sign-change:verify_flags
+implicit-integer-sign-change:EvalScript
+implicit-integer-sign-change:serialize.h
+implicit-signed-integer-truncation:crypto/
+implicit-unsigned-integer-truncation:crypto/
+shift-base:arith_uint256.cpp
+shift-base:crypto/
+shift-base:streams.h
+shift-base:FormatHDKeypath
+shift-base:InsecureRandomContext::rand64
+shift-base:RandomMixin<*>::randbits
+shift-base:RandomMixin<*>::randbits<*>
