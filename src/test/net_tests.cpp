@@ -1281,7 +1281,7 @@ public:
     void ReceiveMessage(const std::string& m_type, Span<const uint8_t> payload)
     {
         auto ret = ReceivePacket();
-        BOOST_REQUIRE(ret.size() == payload.size() + 1 + CMessageHeader::COMMAND_SIZE);
+        BOOST_REQUIRE(ret.size() == payload.size() + 1 + CMessageHeader::MESSAGE_TYPE_SIZE);
         BOOST_CHECK(ret[0] == 0);
         for (unsigned i = 0; i < 12; ++i) {
             if (i < m_type.size()) {
@@ -1290,7 +1290,7 @@ public:
                 BOOST_CHECK(ret[1 + i] == 0);
             }
         }
-        BOOST_CHECK(std::ranges::equal(Span{ret}.subspan(1 + CMessageHeader::COMMAND_SIZE), payload));
+        BOOST_CHECK(std::ranges::equal(Span{ret}.subspan(1 + CMessageHeader::MESSAGE_TYPE_SIZE), payload));
     }
 
     /** Schedule an encrypted packet with specified message type and payload to be sent to
@@ -1298,9 +1298,9 @@ public:
     void SendMessage(std::string mtype, Span<const uint8_t> payload)
     {
         // Construct contents consisting of 0x00 + 12-byte message type + payload.
-        std::vector<uint8_t> contents(1 + CMessageHeader::COMMAND_SIZE + payload.size());
+        std::vector<uint8_t> contents(1 + CMessageHeader::MESSAGE_TYPE_SIZE + payload.size());
         std::copy(mtype.begin(), mtype.end(), reinterpret_cast<char*>(contents.data() + 1));
-        std::copy(payload.begin(), payload.end(), contents.begin() + 1 + CMessageHeader::COMMAND_SIZE);
+        std::copy(payload.begin(), payload.end(), contents.begin() + 1 + CMessageHeader::MESSAGE_TYPE_SIZE);
         // Send a packet with that as contents.
         SendPacket(contents);
     }
@@ -1459,7 +1459,7 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         auto msg_data_2 = m_rng.randbytes<uint8_t>(m_rng.randrange(1000));
         tester.SendMessage(uint8_t(13), msg_data_2); // headers short id
         // Send invalidly-encoded message
-        tester.SendMessage(std::string("blocktxn\x00\x00\x00a", CMessageHeader::COMMAND_SIZE), {});
+        tester.SendMessage(std::string("blocktxn\x00\x00\x00a", CMessageHeader::MESSAGE_TYPE_SIZE), {});
         tester.SendMessage("foobar", {}); // test receiving unknown message type
         tester.AddMessage("barfoo", {}); // test sending unknown message type
         ret = tester.Interact();

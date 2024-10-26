@@ -81,7 +81,7 @@ FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serial
             const std::chrono::microseconds m_time{std::numeric_limits<int64_t>::max()};
             bool reject_message{false};
             CNetMessage msg = recv_transport.GetReceivedMessage(m_time, reject_message);
-            assert(msg.m_type.size() <= CMessageHeader::COMMAND_SIZE);
+            assert(msg.m_type.size() <= CMessageHeader::MESSAGE_TYPE_SIZE);
             assert(msg.m_raw_message_size <= mutable_msg_bytes.size());
             assert(msg.m_raw_message_size == CMessageHeader::HEADER_SIZE + msg.m_message_size);
             assert(msg.m_time == m_time);
@@ -139,9 +139,9 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
             // If v is 0xFF, construct a valid (but possibly unknown) message type from the fuzz
             // data.
             std::string ret;
-            while (ret.size() < CMessageHeader::COMMAND_SIZE) {
+            while (ret.size() < CMessageHeader::MESSAGE_TYPE_SIZE) {
                 char c = provider.ConsumeIntegral<char>();
-                // Match the allowed characters in CMessageHeader::IsCommandValid(). Any other
+                // Match the allowed characters in CMessageHeader::IsMessageTypeValid(). Any other
                 // character is interpreted as end.
                 if (c < ' ' || c > 0x7E) break;
                 ret += c;

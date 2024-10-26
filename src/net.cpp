@@ -735,7 +735,7 @@ int V1Transport::readHeader(Span<const uint8_t> msg_bytes)
 
     // reject messages larger than MAX_SIZE or MAX_PROTOCOL_MESSAGE_LENGTH
     if (hdr.nMessageSize > MAX_SIZE || hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
-        LogDebug(BCLog::NET, "Header error: Size too large (%s, %u bytes), peer=%d\n", SanitizeString(hdr.GetCommand()), hdr.nMessageSize, m_node_id);
+        LogDebug(BCLog::NET, "Header error: Size too large (%s, %u bytes), peer=%d\n", SanitizeString(hdr.GetMessageType()), hdr.nMessageSize, m_node_id);
         return -1;
     }
 
@@ -782,7 +782,7 @@ CNetMessage V1Transport::GetReceivedMessage(const std::chrono::microseconds time
     CNetMessage msg(std::move(vRecv));
 
     // store message type string, time, and sizes
-    msg.m_type = hdr.GetCommand();
+    msg.m_type = hdr.GetMessageType();
     msg.m_time = time;
     msg.m_message_size = hdr.nMessageSize;
     msg.m_raw_message_size = hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
@@ -800,9 +800,9 @@ CNetMessage V1Transport::GetReceivedMessage(const std::chrono::microseconds time
                  HexStr(hdr.pchChecksum),
                  m_node_id);
         reject_message = true;
-    } else if (!hdr.IsCommandValid()) {
+    } else if (!hdr.IsMessageTypeValid()) {
         LogDebug(BCLog::NET, "Header error: Invalid message type (%s, %u bytes), peer=%d\n",
-                 SanitizeString(hdr.GetCommand()), msg.m_message_size, m_node_id);
+                 SanitizeString(hdr.GetMessageType()), msg.m_message_size, m_node_id);
         reject_message = true;
     }
 
@@ -1184,7 +1184,7 @@ bool V2Transport::ProcessReceivedPacketBytes() noexcept
     // - 12 bytes of message type
     // - payload
     static constexpr size_t MAX_CONTENTS_LEN =
-        1 + CMessageHeader::COMMAND_SIZE +
+        1 + CMessageHeader::MESSAGE_TYPE_SIZE +
         std::min<size_t>(MAX_SIZE, MAX_PROTOCOL_MESSAGE_LENGTH);
 
     if (m_recv_buffer.size() == BIP324Cipher::LENGTH_LEN) {
@@ -1399,12 +1399,12 @@ std::optional<std::string> V2Transport::GetMessageType(Span<const uint8_t>& cont
         }
     }
 
-    if (contents.size() < CMessageHeader::COMMAND_SIZE) {
+    if (contents.size() < CMessageHeader::MESSAGE_TYPE_SIZE) {
         return std::nullopt; // Long encoding needs 12 message type bytes.
     }
 
     size_t msg_type_len{0};
-    while (msg_type_len < CMessageHeader::COMMAND_SIZE && contents[msg_type_len] != 0) {
+    while (msg_type_len < CMessageHeader::MESSAGE_TYPE_SIZE && contents[msg_type_len] != 0) {
         // Verify that message type bytes before the first 0x00 are in range.
         if (contents[msg_type_len] < ' ' || contents[msg_type_len] > 0x7F) {
             return {};
@@ -1412,13 +1412,13 @@ std::optional<std::string> V2Transport::GetMessageType(Span<const uint8_t>& cont
         ++msg_type_len;
     }
     std::string ret{reinterpret_cast<const char*>(contents.data()), msg_type_len};
-    while (msg_type_len < CMessageHeader::COMMAND_SIZE) {
+    while (msg_type_len < CMessageHeader::MESSAGE_TYPE_SIZE) {
         // Verify that message type bytes after the first 0x00 are also 0x00.
         if (contents[msg_type_len] != 0) return {};
         ++msg_type_len;
     }
     // Strip message type bytes of contents.
-    contents = contents.subspan(CMessageHeader::COMMAND_SIZE);
+    contents = contents.subspan(CMessageHeader::MESSAGE_TYPE_SIZE);
     return ret;
 }
 
@@ -1470,9 +1470,9 @@ bool V2Transport::SetMessageToSend(CSerializedNetMsg& msg) noexcept
     } else {
         // Initialize with zeroes, and then write the message type string starting at offset 1.
         // This means contents[0] and the unused positions in contents[1..13] remain 0x00.
-        contents.resize(1 + CMessageHeader::COMMAND_SIZE + msg.data.size(), 0);
+        contents.resize(1 + CMessageHeader::MESSAGE_TYPE_SIZE + msg.data.size(), 0);
         std::copy(msg.m_type.begin(), msg.m_type.end(), contents.data() + 1);
-        std::copy(msg.data.begin(), msg.data.end(), contents.begin() + 1 + CMessageHeader::COMMAND_SIZE);
+        std::copy(msg.data.begin(), msg.data.end(), contents.begin() + 1 + CMessageHeader::MESSAGE_TYPE_SIZE);
     }
     // Construct ciphertext in send buffer.
     m_send_buffer.resize(contents.size() + BIP324Cipher::EXPANSION);
@@ -3936,7 +3936,7 @@ static void CaptureMessageToFile(const CAddress& addr,
 
     ser_writedata64(f, now.count());
     f << Span{msg_type};
-    for (auto i = msg_type.length(); i < CMessageHeader::COMMAND_SIZE; ++i) {
+    for (auto i = msg_type.length(); i < CMessageHeader::MESSAGE_TYPE_SIZE; ++i) {
         f << uint8_t{'\0'};
     }
     uint32_t size = data.size();
