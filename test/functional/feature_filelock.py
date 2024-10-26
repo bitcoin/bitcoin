@@ -30,7 +30,7 @@ class FilelockTest(BitcoinTestFramework):
         self.log.info(f"Using datadir {datadir}")
 
         self.log.info("Check that we can't start a second bitcoind instance using the same datadir")
-        expected_msg = f"Error: Cannot obtain a lock on data directory {datadir}. {self.config['environment']['PACKAGE_NAME']} is probably already running."
+        expected_msg = f"Error: Cannot obtain a lock on data directory {datadir}. {self.config['environment']['CLIENT_NAME']} is probably already running."
         self.nodes[1].assert_start_raises_init_error(extra_args=[f'-datadir={self.nodes[0].datadir_path}', '-noserver'], expected_msg=expected_msg)
 
         self.log.info("Check that cookie and PID file are not deleted when attempting to start a second bitcoind using the same datadir")
@@ -46,7 +46,7 @@ class FilelockTest(BitcoinTestFramework):
                 wallet_dir = self.nodes[0].wallets_path
                 self.log.info("Check that we can't start a second bitcoind instance using the same wallet")
                 if descriptors:
-                    expected_msg = f"Error: SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of {self.config['environment']['PACKAGE_NAME']}?"
+                    expected_msg = f"Error: SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of {self.config['environment']['CLIENT_NAME']}?"
                 else:
                     expected_msg = "Error: Error initializing wallet database environment"
                 self.nodes[1].assert_start_raises_init_error(extra_args=[f'-walletdir={wallet_dir}', f'-wallet={wallet_name}', '-noserver'], expected_msg=expected_msg, match=ErrorMatch.PARTIAL_REGEX)

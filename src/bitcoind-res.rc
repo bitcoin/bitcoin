@@ -16,13 +16,13 @@ BEGIN
         BEGIN
             VALUE "CompanyName",        "Bitcoin"
             VALUE "FileDescription",    "bitcoind (Bitcoin node with a JSON-RPC server)"
-            VALUE "FileVersion",        PACKAGE_VERSION
+            VALUE "FileVersion",        CLIENT_VERSION_STRING
             VALUE "InternalName",       "bitcoind"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the MIT software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
             VALUE "OriginalFilename",   "bitcoind.exe"
             VALUE "ProductName",        "bitcoind"
-            VALUE "ProductVersion",     PACKAGE_VERSION
+            VALUE "ProductVersion",     CLIENT_VERSION_STRING
         END
     END
 

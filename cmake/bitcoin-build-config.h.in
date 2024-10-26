@@ -124,16 +124,16 @@
 #cmakedefine HAVE_VM_VM_PARAM_H 1
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "@CLIENT_BUGREPORT@"
+#define CLIENT_BUGREPORT "@CLIENT_BUGREPORT@"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "@CLIENT_NAME@"
+#define CLIENT_NAME "@CLIENT_NAME@"
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL "@PROJECT_HOMEPAGE_URL@"
+#define CLIENT_URL "@PROJECT_HOMEPAGE_URL@"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "@CLIENT_VERSION_STRING@"
+#define CLIENT_VERSION_STRING "@CLIENT_VERSION_STRING@"
 
 /* Define to 1 if strerror_r returns char *. */
 #cmakedefine STRERROR_R_CHAR_P 1
