@@ -746,8 +746,10 @@ private:
     /** Next time to check for stale tip */
     std::chrono::seconds m_stale_tip_check_time GUARDED_BY(cs_main){0s};
 
-    /** Whether this node is running in blocks only mode */
+    /** Whether this node is running in -blocksonly mode */
     const bool m_ignore_incoming_txs;
+
+    bool RejectIncomingTxs(const CNode& peer) const;
 
     /** Whether we've completed initial sync yet, for determining when to turn
       * on extra block-relay-only peers. */
@@ -1200,7 +1202,7 @@ void PeerManagerImpl::MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid)
 {
     AssertLockHeld(cs_main);
 
-    // Never request high-bandwidth mode from peers if we're blocks-only. Our
+    // When in -blocksonly mode, never request high-bandwidth mode from peers. Our
     // mempool will not contain the transactions necessary to reconstruct the
     // compact block.
     if (m_ignore_incoming_txs) return;
@@ -3629,8 +3631,6 @@ void PeerManagerImpl::ProcessMessage(
     // At this point, the outgoing message serialization version can't change.
     const CNetMsgMaker msgMaker(pfrom.GetCommonVersion());
 
-    bool fBlocksOnly = pfrom.IsBlockRelayOnly();
-
     if (msg_type == NetMsgType::VERACK) {
         if (pfrom.fSuccessfullyConnected) {
             LogPrint(BCLog::NET, "ignoring redundant verack message from peer=%d\n", pfrom.GetId());
@@ -3666,7 +3666,7 @@ void PeerManagerImpl::ProcessMessage(
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SENDCMPCT, /*high_bandwidth=*/false, /*version=*/CMPCTBLOCKS_VERSION));
         }
 
-        if (!fBlocksOnly) {
+        if (!RejectIncomingTxs(pfrom)) {
             // Tell our peer that he should send us CoinJoin queue messages
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SENDDSQUEUE, true));
             // Tell our peer that he should send us intra-quorum messages
@@ -3745,7 +3745,7 @@ void PeerManagerImpl::ProcessMessage(
     }
 
     // Stop processing non-block data early in blocks only mode and for block-relay-only peers
-    if (fBlocksOnly && NetMessageViolatesBlocksOnly(msg_type)) {
+    if (RejectIncomingTxs(pfrom) && NetMessageViolatesBlocksOnly(msg_type)) {
         LogPrint(BCLog::NET, "%s sent in violation of protocol peer=%d\n", msg_type, pfrom.GetId());
         pfrom.fDisconnect = true;
         return;
@@ -3872,6 +3872,8 @@ void PeerManagerImpl::ProcessMessage(
             return;
         }
 
+        const bool reject_tx_invs{RejectIncomingTxs(pfrom)};
+
         LOCK(cs_main);
 
         const auto current_time = GetTime<std::chrono::microseconds>();
@@ -3901,7 +3903,7 @@ void PeerManagerImpl::ProcessMessage(
                     best_block = &inv.hash;
                 }
             } else {
-                if (fBlocksOnly && NetMessageViolatesBlocksOnly(inv.GetCommand())) {
+                if (reject_tx_invs && NetMessageViolatesBlocksOnly(inv.GetCommand())) {
                     LogPrint(BCLog::NET, "%s (%s) inv sent in violation of protocol, disconnecting peer=%d\n", inv.GetCommand(), inv.hash.ToString(), pfrom.GetId());
                     pfrom.fDisconnect = true;
                     return;
@@ -3917,7 +3919,7 @@ void PeerManagerImpl::ProcessMessage(
 
                 AddKnownInv(*peer, inv.hash);
                 if (!fAlreadyHave) {
-                    if (fBlocksOnly && inv.type == MSG_ISDLOCK) {
+                    if (reject_tx_invs && inv.type == MSG_ISDLOCK) {
                         if (pfrom.GetCommonVersion() <= ADDRV2_PROTO_VERSION) {
                             // It's ok to receive these invs, we just ignore them
                             // and do not request corresponding objects.
@@ -5514,6 +5516,15 @@ public:
         return mp->CompareDepthAndScore(*b, *a);
     }
 };
+} // namespace
+
+bool PeerManagerImpl::RejectIncomingTxs(const CNode& peer) const
+{
+    // block-relay-only peers may never send txs to us
+    if (peer.IsBlockOnlyConn()) return true;
+    // In -blocksonly mode, peers need the 'relay' permission to send txs to us
+    if (m_ignore_incoming_txs && !peer.HasPermission(NetPermissionFlags::Relay)) return true;
+    return false;
 }
 
 bool PeerManagerImpl::SetupAddressRelay(const CNode& node, Peer& peer)
