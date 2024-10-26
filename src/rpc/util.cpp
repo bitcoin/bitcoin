@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparamsbase.h>
+#include <consensus/amount.h>
 #include <key_io.h>
 #include <outputtype.h>
 #include <pubkey.h>

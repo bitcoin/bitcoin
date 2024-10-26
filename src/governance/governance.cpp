@@ -4,9 +4,9 @@
 
 #include <governance/governance.h>
 
-#include <bloom.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <common/bloom.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <evo/deterministicmns.h>

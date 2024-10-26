@@ -5,7 +5,7 @@
 
 #include <util/moneystr.h>
 
-#include <amount.h>
+#include <consensus/amount.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
 #include <util/string.h>

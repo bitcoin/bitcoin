@@ -9,8 +9,8 @@
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <messagesigner.h>
-#include <miner.h>
 #include <netbase.h>
+#include <node/miner.h>
 #include <script/interpreter.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>

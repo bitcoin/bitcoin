@@ -5,7 +5,8 @@
 #ifndef BITCOIN_COINJOIN_OPTIONS_H
 #define BITCOIN_COINJOIN_OPTIONS_H
 
-#include <amount.h>
+#include <consensus/amount.h>
+
 #include <atomic>
 #include <mutex>
 

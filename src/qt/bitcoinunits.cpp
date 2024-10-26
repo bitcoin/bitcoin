@@ -6,6 +6,8 @@
 #include <qt/bitcoinunits.h>
 #include <chainparams.h>
 
+#include <consensus/amount.h>
+
 #include <QSettings>
 #include <QStringList>
 

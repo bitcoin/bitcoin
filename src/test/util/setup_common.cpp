@@ -27,10 +27,10 @@
 #include <llmq/snapshot.h>
 #include <masternode/meta.h>
 #include <masternode/sync.h>
-#include <miner.h>
 #include <net.h>
 #include <net_processing.h>
 #include <noui.h>
+#include <node/miner.h>
 #include <policy/fees.h>
 #include <pow.h>
 #include <rpc/blockchain.h>

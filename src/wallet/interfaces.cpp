@@ -4,8 +4,8 @@
 
 #include <interfaces/wallet.h>
 
-#include <amount.h>
 #include <coinjoin/client.h>
+#include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <interfaces/coinjoin.h>
 #include <interfaces/handler.h>

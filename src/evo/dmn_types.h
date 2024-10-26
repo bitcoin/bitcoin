@@ -5,7 +5,7 @@
 #ifndef BITCOIN_EVO_DMN_TYPES_H
 #define BITCOIN_EVO_DMN_TYPES_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 
 #include <limits>
 #include <string_view>

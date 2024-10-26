@@ -8,7 +8,7 @@
 #include <primitives/transaction.h>
 #include <qt/sendcoinsrecipient.h>
 
-#include <amount.h>
+#include <consensus/amount.h>
 
 #include <QObject>
 

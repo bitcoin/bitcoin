@@ -4,9 +4,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <amount.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
@@ -19,9 +19,9 @@
 #include <llmq/chainlocks.h>
 #include <llmq/instantsend.h>
 #include <evo/evodb.h>
-#include <miner.h>
 #include <net.h>
 #include <node/context.h>
+#include <node/miner.h>
 #include <policy/fees.h>
 #include <pow.h>
 #include <rpc/blockchain.h>

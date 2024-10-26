@@ -11,13 +11,13 @@
 #include <init.h>
 
 #include <addrman.h>
-#include <amount.h>
 #include <banman.h>
 #include <base58.h>
 #include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <context.h>
+#include <consensus/amount.h>
 #include <deploymentstatus.h>
 #include <node/coinstats.h>
 #include <fs.h>
@@ -31,7 +31,7 @@
 #include <index/txindex.h>
 #include <interfaces/node.h>
 #include <mapport.h>
-#include <miner.h>
+#include <node/miner.h>
 #include <net.h>
 #include <net_permissions.h>
 #include <net_processing.h>

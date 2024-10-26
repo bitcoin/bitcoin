@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bloom.h>
 #include <bls/bls.h>
 #include <clientversion.h>
+#include <common/bloom.h>
 #include <key.h>
 #include <key_io.h>
 #include <merkleblock.h>

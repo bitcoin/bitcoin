@@ -26,7 +26,5 @@ static const int COINBASE_MATURITY = 100;
 /** Flags for nSequence and nLockTime locks */
 /** Interpret sequence numbers as relative lock-time constraints. */
 static constexpr unsigned int LOCKTIME_VERIFY_SEQUENCE = (1 << 0);
-/** Use GetMedianTimePast() instead of nTime for end point timestamp. */
-static constexpr unsigned int LOCKTIME_MEDIAN_TIME_PAST = (1 << 1);
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H

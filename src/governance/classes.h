@@ -4,7 +4,7 @@
 #ifndef BITCOIN_GOVERNANCE_CLASSES_H
 #define BITCOIN_GOVERNANCE_CLASSES_H
 
-#include <amount.h>
+#include <consensus/amount.h>
 #include <governance/object.h>
 #include <script/script.h>
 #include <script/standard.h>

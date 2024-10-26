@@ -9,7 +9,7 @@
 #define BITCOIN_SPENTINDEX_H
 
 #include <addressindex.h>
-#include <amount.h>
+#include <consensus/amount.h>
 #include <script/script.h>
 #include <serialize.h>
 #include <uint256.h>

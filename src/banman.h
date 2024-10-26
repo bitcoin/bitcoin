@@ -6,7 +6,7 @@
 #define BITCOIN_BANMAN_H
 
 #include <addrdb.h>
-#include <bloom.h>
+#include <common/bloom.h>
 #include <fs.h>
 #include <net_types.h> // For banmap_t
 #include <sync.h>

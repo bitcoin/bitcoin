@@ -5,6 +5,7 @@
 #include <arith_uint256.h>
 #include <chainparams.h>
 #include <compressor.h>
+#include <consensus/amount.h>
 #include <consensus/merkle.h>
 #include <core_io.h>
 #include <crypto/common.h>

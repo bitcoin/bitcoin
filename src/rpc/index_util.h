@@ -6,14 +6,14 @@
 #ifndef BITCOIN_RPC_INDEX_UTIL_H
 #define BITCOIN_RPC_INDEX_UTIL_H
 
-#include <cstdint>
-#include <vector>
-
-#include <amount.h>
+#include <consensus/amount.h>
 #include <addressindex.h>
 #include <spentindex.h>
 #include <sync.h>
 #include <threadsafety.h>
+
+#include <cstdint>
+#include <vector>
 
 class CBlockTreeDB;
 class CTxMemPool;
