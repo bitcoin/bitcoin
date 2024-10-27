@@ -889,6 +889,22 @@ public:
         return m_conn_type == ConnectionType::MANUAL;
     }
 
+    bool IsManualOrFullOutboundConn() const
+    {
+        switch (m_conn_type) {
+        case ConnectionType::INBOUND:
+        case ConnectionType::FEELER:
+        case ConnectionType::BLOCK_RELAY:
+        case ConnectionType::ADDR_FETCH:
+                return false;
+        case ConnectionType::OUTBOUND_FULL_RELAY:
+        case ConnectionType::MANUAL:
+                return true;
+        } // no default case, so the compiler can warn about missing cases
+
+        assert(false);
+    }
+
     bool IsBlockOnlyConn() const {
         return m_conn_type == ConnectionType::BLOCK_RELAY;
     }
@@ -929,10 +945,8 @@ public:
     /** Whether this peer provides all services that we want. Used for eviction decisions */
     std::atomic_bool m_has_all_wanted_services{false};
 
-    /** Whether we should relay transactions to this peer (their version
-     *  message did not include fRelay=false and this is not a block-relay-only
-     *  connection). This only changes from false to true. It will never change
-     *  back to false. Used only in inbound eviction logic. */
+    /** Whether we should relay transactions to this peer. This only changes
+     * from false to true. It will never change back to false. */
     std::atomic_bool m_relays_txs{false};
 
     /** Whether this peer has loaded a bloom filter. Used only in inbound
@@ -1283,6 +1297,9 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex, !mutexMsgProc);
     bool CheckIncomingNonce(uint64_t nonce);
 
+    // alias for thread safety annotations only, not defined
+    RecursiveMutex& GetNodesMutex() const LOCK_RETURNED(m_nodes_mutex);
+
     struct CFullyConnectedOnly {
         bool operator() (const CNode* pnode) const {
             return NodeFullyConnected(pnode);
@@ -1464,7 +1481,8 @@ public:
 
     bool AddNode(const AddedNodeParams& add) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
     bool RemoveAddedNode(const std::string& node) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
-    std::vector<AddedNodeInfo> GetAddedNodeInfo() const EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
+    bool AddedNodesContain(const CAddress& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
+    std::vector<AddedNodeInfo> GetAddedNodeInfo(bool include_connected) const EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
 
     /**
      * Attempts to open a connection. Currently only used from tests.
@@ -1535,6 +1553,8 @@ public:
 
     /** Return true if we should disconnect the peer for failing an inactivity check. */
     bool ShouldRunInactivityChecks(const CNode& node, std::chrono::seconds now) const;
+
+    bool MultipleManualOrFullOutboundConns(Network net) const EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
 
     /**
      * RAII helper to atomically create a copy of `m_nodes` and add a reference
@@ -1736,6 +1756,18 @@ private:
      */
     std::vector<CAddress> GetCurrentBlockRelayOnlyConns() const;
 
+    /**
+     * Search for a "preferred" network, a reachable network to which we
+     * currently don't have any OUTBOUND_FULL_RELAY or MANUAL connections.
+     * There needs to be at least one address in AddrMan for a preferred
+     * network to be picked.
+     *
+     * @param[out]    network        Preferred network, if found.
+     *
+     * @return           bool        Whether a preferred network was found.
+     */
+    bool MaybePickPreferredNetwork(std::optional<Network>& network);
+
     // Whether the node should be passed out in ForEach* callbacks
     static bool NodeFullyConnected(const CNode* pnode);
 
@@ -1777,6 +1809,9 @@ private:
     mutable RecursiveMutex m_nodes_mutex;
     std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
+
+    // Stores number of full-tx connections (outbound and manual) per network
+    std::array<unsigned int, Network::NET_MAX> m_network_conn_counts GUARDED_BY(m_nodes_mutex) = {};
 
     std::vector<uint256> vPendingMasternodes;
     mutable RecursiveMutex cs_vPendingMasternodes;

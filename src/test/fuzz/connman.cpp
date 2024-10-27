@@ -11,6 +11,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/fuzz/util/net.h>
 #include <test/util/setup_common.h>
 #include <util/system.h>
 #include <util/translation.h>
@@ -123,7 +124,7 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
                 connman.SetTryNewOutboundPeer(fuzzed_data_provider.ConsumeBool());
             });
     }
-    (void)connman.GetAddedNodeInfo();
+    (void)connman.GetAddedNodeInfo(fuzzed_data_provider.ConsumeBool());
     (void)connman.GetExtraFullOutboundCount();
     (void)connman.GetLocalServices();
     assert(connman.GetMaxOutboundTarget() == max_outbound_limit);

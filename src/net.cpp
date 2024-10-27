@@ -107,6 +107,9 @@ static constexpr std::chrono::seconds MAX_UPLOAD_TIMEFRAME{60 * 60 * 24};
 // A random time period (0 to 1 seconds) is added to feeler connections to prevent synchronization.
 static constexpr auto FEELER_SLEEP_WINDOW{1s};
 
+/** Frequency to attempt extra connections to reachable networks we're not connected to yet **/
+static constexpr auto EXTRA_NETWORK_PEER_INTERVAL{5min};
+
 /** Used to pass flags to the Bind() function */
 enum BindFlags {
     BF_NONE         = 0,
@@ -520,21 +523,25 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     const uint16_t default_port{pszDest != nullptr ? Params().GetDefaultPort(pszDest) :
                                                      Params().GetDefaultPort()};
     if (pszDest) {
-        const std::vector<CService> resolved{Lookup(pszDest, default_port, fNameLookup && !HaveNameProxy(), 256)};
+        std::vector<CService> resolved{Lookup(pszDest, default_port, fNameLookup && !HaveNameProxy(), 256)};
         if (!resolved.empty()) {
-            const CService& rnd{resolved[GetRand(resolved.size())]};
-            addrConnect = CAddress{MaybeFlipIPv6toCJDNS(rnd), NODE_NONE};
-            if (!addrConnect.IsValid()) {
-                LogPrint(BCLog::NET, "Resolver returned invalid address %s for %s\n", addrConnect.ToStringAddrPort(), pszDest);
-                return nullptr;
-            }
-            // It is possible that we already have a connection to the IP/port pszDest resolved to.
-            // In that case, drop the connection that was just created.
-            LOCK(m_nodes_mutex);
-            CNode* pnode = FindNode(static_cast<CService>(addrConnect));
-            if (pnode) {
-                LogPrintf("Failed to open new connection, already connected\n");
-                return nullptr;
+            Shuffle(resolved.begin(), resolved.end(), FastRandomContext());
+            // If the connection is made by name, it can be the case that the name resolves to more than one address.
+            // We don't want to connect any more of them if we are already connected to one
+            for (const auto& r : resolved) {
+                addrConnect = CAddress{MaybeFlipIPv6toCJDNS(r), NODE_NONE};
+                if (!addrConnect.IsValid()) {
+                    LogPrint(BCLog::NET, "Resolver returned invalid address %s for %s\n", addrConnect.ToStringAddrPort(), pszDest);
+                    return nullptr;
+                }
+                // It is possible that we already have a connection to the IP/port pszDest resolved to.
+                // In that case, drop the connection that was just created.
+                LOCK(m_nodes_mutex);
+                CNode* pnode = FindNode(static_cast<CService>(addrConnect));
+                if (pnode) {
+                    LogPrintf("Not opening a connection to %s, already connected to %s\n", pszDest, addrConnect.ToStringAddrPort());
+                    return nullptr;
+                }
             }
         }
     }
@@ -2252,6 +2259,9 @@ void CConnman::DisconnectNodes()
                 // close socket and cleanup
                 pnode->CloseSocketDisconnect(this);
 
+                // update connection count by network
+                if (pnode->IsManualOrFullOutboundConn()) --m_network_conn_counts[pnode->addr.GetNetwork()];
+
                 // hold in disconnected pool until all refs are released
                 pnode->Release();
                 m_nodes_disconnected.push_back(pnode);
@@ -3182,6 +3192,28 @@ std::unordered_set<Network> CConnman::GetReachableEmptyNetworks() const
     return networks;
 }
 
+bool CConnman::MultipleManualOrFullOutboundConns(Network net) const
+{
+    AssertLockHeld(m_nodes_mutex);
+    return m_network_conn_counts[net] > 1;
+}
+
+bool CConnman::MaybePickPreferredNetwork(std::optional<Network>& network)
+{
+    std::array<Network, 5> nets{NET_IPV4, NET_IPV6, NET_ONION, NET_I2P, NET_CJDNS};
+    Shuffle(nets.begin(), nets.end(), FastRandomContext());
+
+    LOCK(m_nodes_mutex);
+    for (const auto net : nets) {
+        if (IsReachable(net) && m_network_conn_counts[net] == 0 && addrman.Size(net) != 0) {
+            network = net;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDeterministicMNManager& dmnman)
 {
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
@@ -3217,6 +3249,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
     // Minimum time before next feeler connection (in microseconds).
     auto next_feeler = GetExponentialRand(start, FEELER_INTERVAL);
     auto next_extra_block_relay = GetExponentialRand(start, EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL);
+    auto next_extra_network_peer{GetExponentialRand(start, EXTRA_NETWORK_PEER_INTERVAL)};
     const bool dnsseed = gArgs.GetBoolArg("-dnsseed", DEFAULT_DNSSEED);
     bool add_fixed_seeds = gArgs.GetBoolArg("-fixedseeds", DEFAULT_FIXEDSEEDS);
     const bool use_seednodes{gArgs.IsArgSet("-seednode")};
@@ -3345,6 +3378,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
         auto now = GetTime<std::chrono::microseconds>();
         bool anchor = false;
         bool fFeeler = false;
+        std::optional<Network> preferred_net;
         bool onion_only = false;
 
         // Determine what type of connection to open. Opening
@@ -3395,6 +3429,17 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
             next_feeler = GetExponentialRand(now, FEELER_INTERVAL);
             conn_type = ConnectionType::FEELER;
             fFeeler = true;
+        } else if (nOutboundFullRelay == m_max_outbound_full_relay &&
+                   m_max_outbound_full_relay == MAX_OUTBOUND_FULL_RELAY_CONNECTIONS &&
+                   now > next_extra_network_peer &&
+                   MaybePickPreferredNetwork(preferred_net)) {
+            // Full outbound connection management: Attempt to get at least one
+            // outbound peer from each reachable network by making extra connections
+            // and then protecting "only" peers from a network during outbound eviction.
+            // This is not attempted if the user changed -maxconnections to a value
+            // so low that less than MAX_OUTBOUND_FULL_RELAY_CONNECTIONS are made,
+            // to prevent interactions with otherwise protected outbound peers.
+            next_extra_network_peer = GetExponentialRand(now, EXTRA_NETWORK_PEER_INTERVAL);
         } else if (nOutboundOnionRelay < m_max_outbound_onion && IsReachable(Network::NET_ONION)) {
             onion_only = true;
         } else {
@@ -3452,7 +3497,10 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                 }
             } else {
                 // Not a feeler
-                std::tie(addr, addr_last_try) = addrman.Select();
+                // If preferred_net has a value set, pick an extra outbound
+                // peer from that network. The eviction logic in net_processing
+                // ensures that a peer from another network will be evicted.
+                std::tie(addr, addr_last_try) = addrman.Select(false, preferred_net);
             }
 
             auto dmn = mnList.GetMNByService(addr);
@@ -3503,6 +3551,17 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                 continue;
             }
 
+            // Do not make automatic outbound connections to addnode peers, to
+            // not use our limited outbound slots for them and to ensure
+            // addnode connections benefit from their intended protections.
+            if (AddedNodesContain(addr)) {
+                LogPrint(BCLog::NET, "Not making automatic %s%s connection to %s peer selected for manual (addnode) connection%s\n",
+                         preferred_net.has_value() ? "network-specific " : "",
+                         ConnectionTypeAsString(conn_type), GetNetworkName(addr.GetNetwork()),
+                         fLogIPs ? strprintf(": %s", addr.ToStringAddrPort()) : "");
+                continue;
+            }
+
             addrConnect = addr;
             break;
         }
@@ -3519,6 +3578,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                     LogPrint(BCLog::NET, "Making feeler connection\n");
                 }
             }
+
+            if (preferred_net != std::nullopt) LogPrint(BCLog::NET, "Making network specific connection to %s on %s.\n", addrConnect.ToStringAddrPort(), GetNetworkName(preferred_net.value()));
+
             // Record addrman failure attempts when node has at least 2 persistent outbound connections to peers with
             // different netgroups in ipv4/ipv6 networks + all peers in Tor/I2P/CJDNS networks.
             // Don't record addrman failure attempts when node is offline. This can be identified since all local
@@ -3544,7 +3606,7 @@ std::vector<CAddress> CConnman::GetCurrentBlockRelayOnlyConns() const
     return ret;
 }
 
-std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo() const
+std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo(bool include_connected) const
 {
     std::vector<AddedNodeInfo> ret;
 
@@ -3579,6 +3641,9 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo() const
             // strAddNode is an IP:port
             auto it = mapConnected.find(service);
             if (it != mapConnected.end()) {
+                if (!include_connected) {
+                    continue;
+                }
                 addedNode.resolvedAddress = service;
                 addedNode.fConnected = true;
                 addedNode.fInbound = it->second;
@@ -3587,6 +3652,9 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo() const
             // strAddNode is a name
             auto it = mapConnectedByName.find(addr.m_added_node);
             if (it != mapConnectedByName.end()) {
+                if (!include_connected) {
+                    continue;
+                }
                 addedNode.resolvedAddress = it->second.second;
                 addedNode.fConnected = true;
                 addedNode.fInbound = it->second.first;
@@ -3605,21 +3673,19 @@ void CConnman::ThreadOpenAddedConnections()
     while (true)
     {
         CSemaphoreGrant grant(*semAddnode);
-        std::vector<AddedNodeInfo> vInfo = GetAddedNodeInfo();
+        std::vector<AddedNodeInfo> vInfo = GetAddedNodeInfo(/*include_connected=*/false);
         bool tried = false;
         for (const AddedNodeInfo& info : vInfo) {
-            if (!info.fConnected) {
-                if (!grant) {
-                    // If we've used up our semaphore and need a new one, let's not wait here since while we are waiting
-                    // the addednodeinfo state might change.
-                    break;
-                }
-                tried = true;
-                CAddress addr(CService(), NODE_NONE);
-                OpenNetworkConnection(addr, false, std::move(grant), info.m_params.m_added_node.c_str(), ConnectionType::MANUAL, info.m_params.m_use_v2transport);
-                if (!interruptNet.sleep_for(std::chrono::milliseconds(500))) return;
-                grant = CSemaphoreGrant(*semAddnode, /*fTry=*/true);
+            if (!grant) {
+                // If we've used up our semaphore and need a new one, let's not wait here since while we are waiting
+                // the addednodeinfo state might change.
+                break;
             }
+            tried = true;
+            CAddress addr(CService(), NODE_NONE);
+            OpenNetworkConnection(addr, false, std::move(grant), info.m_params.m_added_node.c_str(), ConnectionType::MANUAL, info.m_params.m_use_v2transport);
+            if (!interruptNet.sleep_for(std::chrono::milliseconds(500))) return;
+            grant = CSemaphoreGrant(*semAddnode, /*fTry=*/true);
         }
         // See if any reconnections are desired.
         PerformReconnections();
@@ -3881,6 +3947,9 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     {
         LOCK(m_nodes_mutex);
         m_nodes.push_back(pnode);
+
+        // update connection count by network
+        if (pnode->IsManualOrFullOutboundConn()) ++m_network_conn_counts[pnode->addr.GetNetwork()];
     }
     {
         if (m_edge_trig_events) {
@@ -4502,9 +4571,12 @@ std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addres
 
 bool CConnman::AddNode(const AddedNodeParams& add)
 {
+    const CService resolved(LookupNumeric(add.m_added_node, Params().GetDefaultPort(add.m_added_node)));
+    const bool resolved_is_valid{resolved.IsValid()};
+
     LOCK(m_added_nodes_mutex);
     for (const auto& it : m_added_node_params) {
-        if (add.m_added_node == it.m_added_node) return false;
+        if (add.m_added_node == it.m_added_node || (resolved_is_valid && resolved == LookupNumeric(it.m_added_node, Params().GetDefaultPort(it.m_added_node)))) return false;
     }
 
     m_added_node_params.push_back(add);
@@ -4521,6 +4593,17 @@ bool CConnman::RemoveAddedNode(const std::string& strNode)
         }
     }
     return false;
+}
+
+bool CConnman::AddedNodesContain(const CAddress& addr) const
+{
+    AssertLockNotHeld(m_added_nodes_mutex);
+    const std::string addr_str{addr.ToStringAddr()};
+    const std::string addr_port_str{addr.ToStringAddrPort()};
+    LOCK(m_added_nodes_mutex);
+    return (m_added_node_params.size() < 24 // bound the query to a reasonable limit
+            && std::any_of(m_added_node_params.cbegin(), m_added_node_params.cend(),
+                           [&](const auto& p) { return p.m_added_node == addr_str || p.m_added_node == addr_port_str; }));
 }
 
 bool CConnman::AddPendingMasternode(const uint256& proTxHash)
