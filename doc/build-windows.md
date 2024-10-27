@@ -12,6 +12,9 @@ Other options which may work, but which have not been extensively tested are (pl
 
 * On Windows, using a POSIX compatibility layer application such as [cygwin](https://www.cygwin.com/) or [msys2](https://www.msys2.org/).
 
+The instructions below work on Ubuntu and Debian. Make sure the distribution's `g++-mingw-w64-x86-64-posix`
+package meets the minimum required `g++` version specified in [dependencies.md](dependencies.md).
+
 Installing Windows Subsystem for Linux
 ---------------------------------------
 
@@ -52,7 +55,6 @@ is to temporarily disable WSL support for Win32 applications.
 
 Build using:
 
-    PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g') # strip out problematic Windows %PATH% imported var
     sudo bash -c "echo 0 > /proc/sys/fs/binfmt_misc/status" # Disable WSL support for Win32 applications.
     cd depends
     make HOST=x86_64-w64-mingw32
