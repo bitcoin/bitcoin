@@ -277,6 +277,9 @@ public:
     {
         util::Xor(MakeWritableByteSpan(*this), MakeByteSpan(key));
     }
+
+    /** Compute total memory usage of this object (own memory + any dynamic memory). */
+    size_t GetMemoryUsage() const noexcept;
 };
 
 template <typename IStream>
