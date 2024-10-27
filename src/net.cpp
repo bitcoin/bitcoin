@@ -124,6 +124,11 @@ size_t CSerializedNetMsg::GetMemoryUsage() const noexcept
     return sizeof(*this) + memusage::DynamicUsage(m_type) + memusage::DynamicUsage(data);
 }
 
+size_t CNetMessage::GetMemoryUsage() const noexcept
+{
+    return sizeof(*this) + memusage::DynamicUsage(m_type) + m_recv.GetMemoryUsage();
+}
+
 void CConnman::AddAddrFetch(const std::string& strDest)
 {
     LOCK(m_addr_fetches_mutex);
@@ -3769,7 +3774,7 @@ void CNode::MarkReceivedMsgsForProcessing()
     for (const auto& msg : vRecvMsg) {
         // vRecvMsg contains only completed CNetMessage
         // the single possible partially deserialized message are held by TransportDeserializer
-        nSizeAdded += msg.m_raw_message_size;
+        nSizeAdded += msg.GetMemoryUsage();
     }
 
     LOCK(m_msg_process_queue_mutex);
@@ -3786,7 +3791,7 @@ std::optional<std::pair<CNetMessage, bool>> CNode::PollMessage()
     std::list<CNetMessage> msgs;
     // Just take one message
     msgs.splice(msgs.begin(), m_msg_process_queue, m_msg_process_queue.begin());
-    m_msg_process_queue_size -= msgs.front().m_raw_message_size;
+    m_msg_process_queue_size -= msgs.front().GetMemoryUsage();
     fPauseRecv = m_msg_process_queue_size > m_recv_flood_size;
 
     return std::make_pair(std::move(msgs.front()), !m_msg_process_queue.empty());
