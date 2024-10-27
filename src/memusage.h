@@ -84,10 +84,10 @@ struct stl_shared_counter
     size_t weak_count;
 };
 
-template<typename X>
-static inline size_t DynamicUsage(const std::vector<X>& v)
+template<typename T, typename Allocator>
+static inline size_t DynamicUsage(const std::vector<T, Allocator>& v)
 {
-    return MallocUsage(v.capacity() * sizeof(X));
+    return MallocUsage(v.capacity() * sizeof(T));
 }
 
 template<unsigned int N, typename X, typename S, typename D>
