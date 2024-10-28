@@ -180,27 +180,6 @@ int main(int argc, char* argv[])
             break;
         }
 
-        if (block.vtx.empty() || !block.vtx[0]->IsCoinBase()) {
-            std::cerr << "Block does not start with a coinbase" << std::endl;
-            break;
-        }
-
-        uint256 hash = block.GetHash();
-        {
-            LOCK(cs_main);
-            const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(hash);
-            if (pindex) {
-                if (pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
-                    std::cerr << "duplicate" << std::endl;
-                    break;
-                }
-                if (pindex->nStatus & BLOCK_FAILED_MASK) {
-                    std::cerr << "duplicate-invalid" << std::endl;
-                    break;
-                }
-            }
-        }
-
         {
             LOCK(cs_main);
             const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock);
