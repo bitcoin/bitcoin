@@ -104,6 +104,7 @@ noinst_LTLIBRARIES =
 
 bin_PROGRAMS =
 noinst_PROGRAMS =
+check_PROGRAMS =
 TESTS =
 BENCHMARKS =
 
@@ -258,7 +259,6 @@ BITCOIN_CORE_H = \
   memusage.h \
   merkleblock.h \
   messagesigner.h \
-  minisketchwrapper.h \
   net.h \
   net_permissions.h \
   net_processing.h \
@@ -275,8 +275,10 @@ BITCOIN_CORE_H = \
   node/context.h \
   node/eviction.h \
   node/miner.h \
+  node/minisketchwrapper.h \
   node/psbt.h \
   node/transaction.h \
+  node/txreconciliation.h \
   node/ui_interface.h \
   node/utxo_snapshot.h \
   noui.h \
@@ -494,7 +496,6 @@ libbitcoin_server_a_SOURCES = \
   masternode/payments.cpp \
   masternode/sync.cpp \
   masternode/utils.cpp \
-  minisketchwrapper.cpp \
   net.cpp \
   netfulfilledman.cpp \
   netgroup.cpp \
@@ -507,8 +508,10 @@ libbitcoin_server_a_SOURCES = \
   node/eviction.cpp \
   node/interfaces.cpp \
   node/miner.cpp \
+  node/minisketchwrapper.cpp \
   node/psbt.cpp \
   node/transaction.cpp \
+  node/txreconciliation.cpp \
   node/ui_interface.cpp \
   noui.cpp \
   policy/fees.cpp \

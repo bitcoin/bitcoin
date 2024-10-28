@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <minisketch.h>
-#include <minisketchwrapper.h>
+#include <node/minisketchwrapper.h>
 #include <random.h>
 #include <test/util/setup_common.h>
 
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(minisketch_test)
         Minisketch sketch_c = std::move(sketch_ar);
         sketch_c.Merge(sketch_br);
         auto dec = sketch_c.Decode(errors);
-        BOOST_CHECK(dec.has_value());
+        BOOST_REQUIRE(dec.has_value());
         auto sols = std::move(*dec);
         std::sort(sols.begin(), sols.end());
         for (uint32_t i = 0; i < a_not_b; ++i) BOOST_CHECK_EQUAL(sols[i], start_a + i);
