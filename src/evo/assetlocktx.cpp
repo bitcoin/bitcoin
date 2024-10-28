@@ -138,7 +138,10 @@ bool CAssetUnlockPayload::VerifySig(const llmq::CQuorumManager& qman, const uint
     }
 
     const auto quorum = qman.GetQuorum(llmqType, quorumHash);
-    assert(quorum);
+    // quorum must be valid at this point. Let's check and throw error just in case
+    if (!quorum) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "internal-error");
+    }
 
     const uint256 requestId = ::SerializeHash(std::make_pair(ASSETUNLOCK_REQUESTID_PREFIX, index));
 
