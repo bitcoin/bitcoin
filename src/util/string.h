@@ -6,7 +6,6 @@
 #define BITCOIN_UTIL_STRING_H
 
 #include <span.h>
-#include <tinyformat.h>
 
 #include <array>
 #include <cstdint>
@@ -246,13 +245,5 @@ template <typename T1, size_t PREFIX_LEN>
            std::equal(std::begin(prefix), std::end(prefix), std::begin(obj));
 }
 } // namespace util
-
-namespace tinyformat {
-template <typename... Args>
-std::string format(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
-{
-    return format(fmt.fmt, args...);
-}
-} // namespace tinyformat
 
 #endif // BITCOIN_UTIL_STRING_H
