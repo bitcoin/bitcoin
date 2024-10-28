@@ -187,10 +187,11 @@ CCreditPool CCreditPoolManager::ConstructCreditPool(const CBlockIndex* const blo
     assert(currentLimit >= 0);
 
     if (currentLimit > 0 || latelyUnlocked > 0 || locked > 0) {
-        LogPrint(BCLog::CREDITPOOL, "CCreditPoolManager: asset unlock limits on height: %d locked: %d.%08d limit: %d.%08d unlocked-in-window: %d.%08d\n",
-               block_index->nHeight, locked / COIN, locked % COIN,
-               currentLimit / COIN, currentLimit % COIN,
-               latelyUnlocked / COIN, latelyUnlocked % COIN);
+        LogPrint(BCLog::CREDITPOOL, /* Continued */
+                 "CCreditPoolManager: asset unlock limits on height: %d locked: %d.%08d limit: %d.%08d "
+                 "unlocked-in-window: %d.%08d\n",
+                 block_index->nHeight, locked / COIN, locked % COIN, currentLimit / COIN, currentLimit % COIN,
+                 latelyUnlocked / COIN, latelyUnlocked % COIN);
     }
 
     CCreditPool pool{locked, currentLimit, latelyUnlocked, indexes};
