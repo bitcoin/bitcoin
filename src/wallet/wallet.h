@@ -925,7 +925,7 @@ public:
     void postInitProcess();
 
     /* AutoBackup functionality */
-    static bool InitAutoBackup();
+    static void InitAutoBackup();
     bool AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error_string, std::vector<bilingual_str>& warnings);
 
     bool BackupWallet(const std::string& strDest) const;

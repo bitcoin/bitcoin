@@ -49,7 +49,7 @@ public:
     // Dash Specific Wallet Init
     void AutoLockMasternodeCollaterals(interfaces::WalletLoader& wallet_loader) const override;
     void InitCoinJoinSettings(interfaces::CoinJoin::Loader& coinjoin_loader, interfaces::WalletLoader& wallet_loader) const override;
-    bool InitAutoBackup() const override;
+    void InitAutoBackup() const override;
 };
 
 const WalletInitInterface& g_wallet_init_interface = WalletInit();
@@ -231,7 +231,7 @@ void WalletInit::InitCoinJoinSettings(interfaces::CoinJoin::Loader& coinjoin_loa
               CCoinJoinClientOptions::GetDenomsHardCap());
 }
 
-bool WalletInit::InitAutoBackup() const
+void WalletInit::InitAutoBackup() const
 {
-    return CWallet::InitAutoBackup();
+    CWallet::InitAutoBackup();
 }
