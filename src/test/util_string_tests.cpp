@@ -20,7 +20,7 @@ inline void PassFmt(util::ConstevalFormatString<NumArgs> fmt)
     decltype(fmt)::Detail_CheckNumFormatSpecifiers(fmt.fmt);
 }
 template <unsigned WrongNumArgs>
-inline void FailFmtWithError(std::string_view wrong_fmt, std::string_view error)
+inline void FailFmtWithError(const char* wrong_fmt, std::string_view error)
 {
     BOOST_CHECK_EXCEPTION(util::ConstevalFormatString<WrongNumArgs>::Detail_CheckNumFormatSpecifiers(wrong_fmt), const char*, HasReason(error));
 }
@@ -44,6 +44,8 @@ BOOST_AUTO_TEST_CASE(ConstevalFormatString_NumSpec)
     PassFmt<1>("%+2s");
     PassFmt<1>("%.6i");
     PassFmt<1>("%5.2f");
+    PassFmt<1>("%5.f");
+    PassFmt<1>("%.f");
     PassFmt<1>("%#x");
     PassFmt<1>("%1$5i");
     PassFmt<1>("%1$-5i");
@@ -54,15 +56,27 @@ BOOST_AUTO_TEST_CASE(ConstevalFormatString_NumSpec)
     PassFmt<1>("%_");
     PassFmt<1>("%\n");
 
-    // The `*` specifier behavior is unsupported and can lead to runtime
-    // errors when used in a ConstevalFormatString. Please refer to the
-    // note in the ConstevalFormatString docs.
-    PassFmt<1>("%*c");
-    PassFmt<2>("%2$*3$d");
-    PassFmt<1>("%.*f");
+    PassFmt<2>("%*c");
+    PassFmt<2>("%+*c");
+    PassFmt<2>("%.*f");
+    PassFmt<3>("%*.*f");
+    PassFmt<3>("%2$*3$d");
+    PassFmt<3>("%2$*3$.9d");
+    PassFmt<3>("%2$.*3$d");
+    PassFmt<3>("%2$9.*3$d");
+    PassFmt<3>("%2$+9.*3$d");
+    PassFmt<4>("%3$*2$.*4$f");
+
+    // Make sure multiple flag characters "- 0+" are accepted
+    PassFmt<3>("'%- 0+*.*f'");
+    PassFmt<3>("'%1$- 0+*3$.*2$f'");
 
     auto err_mix{"Format specifiers must be all positional or all non-positional!"};
     FailFmtWithError<1>("%s%1$s", err_mix);
+    FailFmtWithError<2>("%2$*d", err_mix);
+    FailFmtWithError<2>("%*2$d", err_mix);
+    FailFmtWithError<2>("%.*3$d", err_mix);
+    FailFmtWithError<2>("%2$.*d", err_mix);
 
     auto err_num{"Format specifier count must match the argument count!"};
     FailFmtWithError<1>("", err_num);
@@ -70,16 +84,32 @@ BOOST_AUTO_TEST_CASE(ConstevalFormatString_NumSpec)
     FailFmtWithError<2>("%s", err_num);
     FailFmtWithError<0>("%1$s", err_num);
     FailFmtWithError<2>("%1$s", err_num);
+    FailFmtWithError<1>("%*c", err_num);
 
     auto err_0_pos{"Positional format specifier must have position of at least 1"};
     FailFmtWithError<1>("%$s", err_0_pos);
     FailFmtWithError<1>("%$", err_0_pos);
     FailFmtWithError<0>("%0$", err_0_pos);
     FailFmtWithError<0>("%0$s", err_0_pos);
+    FailFmtWithError<2>("%2$*$d", err_0_pos);
+    FailFmtWithError<2>("%2$*0$d", err_0_pos);
+    FailFmtWithError<3>("%3$*2$.*$f", err_0_pos);
+    FailFmtWithError<3>("%3$*2$.*0$f", err_0_pos);
 
     auto err_term{"Format specifier incorrectly terminated by end of string"};
     FailFmtWithError<1>("%", err_term);
+    FailFmtWithError<1>("%9", err_term);
+    FailFmtWithError<1>("%9.", err_term);
+    FailFmtWithError<1>("%9.9", err_term);
+    FailFmtWithError<1>("%*", err_term);
+    FailFmtWithError<1>("%+*", err_term);
+    FailFmtWithError<1>("%.*", err_term);
+    FailFmtWithError<1>("%9.*", err_term);
     FailFmtWithError<1>("%1$", err_term);
+    FailFmtWithError<1>("%1$9", err_term);
+    FailFmtWithError<2>("%1$*2$", err_term);
+    FailFmtWithError<2>("%1$.*2$", err_term);
+    FailFmtWithError<2>("%1$9.*2$", err_term);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
