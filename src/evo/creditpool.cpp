@@ -171,14 +171,18 @@ CCreditPool CCreditPoolManager::ConstructCreditPool(const CBlockIndex* const blo
         }
     }
 
-    // Unlock limits are # max(100, min(.10 * assetlockpool, 1000)) inside window
     CAmount currentLimit = locked;
     const CAmount latelyUnlocked = prev.latelyUnlocked + blockData.unlocked - distantUnlocked;
-    if (currentLimit + latelyUnlocked > LimitAmountLow) {
-        currentLimit = std::max(LimitAmountLow, locked / 10) - latelyUnlocked;
-        if (currentLimit < 0) currentLimit = 0;
+    if (DeploymentActiveAt(*block_index, Params().GetConsensus(), Consensus::DEPLOYMENT_WITHDRAWALS)) {
+        currentLimit = std::min(currentLimit, LimitAmountV22);
+    } else {
+        // Unlock limits in pre-v22 are max(100, min(.10 * assetlockpool, 1000)) inside window
+        if (currentLimit + latelyUnlocked > LimitAmountLow) {
+            currentLimit = std::max(LimitAmountLow, locked / 10) - latelyUnlocked;
+            if (currentLimit < 0) currentLimit = 0;
+        }
+        currentLimit = std::min(currentLimit, LimitAmountHigh - latelyUnlocked);
     }
-    currentLimit = std::min(currentLimit, LimitAmountHigh - latelyUnlocked);
 
     assert(currentLimit >= 0);
 

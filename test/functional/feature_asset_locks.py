@@ -273,7 +273,7 @@ class AssetLocksTest(DashTestFramework):
         self.test_asset_unlocks(node_wallet, node, pubkey)
         self.test_withdrawal_limits(node_wallet, node, pubkey)
         self.test_mn_rr(node_wallet, node, pubkey)
-        self.test_withdrawal_fork(node_wallet, pubkey)
+        self.test_withdrawal_fork(node_wallet, node, pubkey)
 
 
     def test_asset_locks(self, node_wallet, node, pubkey):
@@ -466,7 +466,9 @@ class AssetLocksTest(DashTestFramework):
 
 
     def test_withdrawal_limits(self, node_wallet, node, pubkey):
-        self.log.info("Testing withdrawal limits...")
+        self.log.info("Testing withdrawal limits before v22 'withdrawal fork'...")
+        assert not softfork_active(node_wallet, 'withdrawals')
+
         self.log.info("Too big withdrawal is expected to not be mined")
         asset_unlock_tx_full = self.create_assetunlock(201, 1 + self.get_credit_pool_balance(), pubkey)
 
@@ -615,6 +617,7 @@ class AssetLocksTest(DashTestFramework):
         self.log.info("Checking that credit pool is not changed...")
         assert_equal(new_total, self.get_credit_pool_balance())
         self.check_mempool_size()
+        assert not softfork_active(node_wallet, 'withdrawals')
 
 
     def test_mn_rr(self, node_wallet, node, pubkey):
@@ -645,8 +648,9 @@ class AssetLocksTest(DashTestFramework):
         self.generate(node, 1)
         assert_equal(locked, self.get_credit_pool_balance())
 
-    def test_withdrawal_fork(self, node_wallet, pubkey):
+    def test_withdrawal_fork(self, node_wallet, node, pubkey):
         self.log.info("Testing asset unlock after 'withdrawal' activation...")
+        self.activate_by_name('withdrawals')
         assert softfork_active(node_wallet, 'withdrawals')
 
         index = 501
@@ -684,6 +688,21 @@ class AssetLocksTest(DashTestFramework):
         self.mine_quorum_2_nodes(llmq_type_name="llmq_test_platform", llmq_type=106)
         self.check_mempool_result(tx=asset_unlock_tx, result_expected={'allowed': False, 'reject-reason': 'bad-assetunlock-too-old-quorum'})
 
+        asset_unlock_tx = self.create_assetunlock(520, 2000 * COIN + 1, pubkey)
+        txid_in_block = self.send_tx(asset_unlock_tx)
+        self.generate(node, 1)
+        self.ensure_tx_is_not_mined(txid_in_block)
+
+        asset_unlock_tx = self.create_assetunlock(521, 2000 * COIN, pubkey)
+        txid_in_block = self.send_tx(asset_unlock_tx)
+        self.generate(node, 1)
+        block = node.getblock(node.getbestblockhash())
+        assert txid_in_block in block['tx']
+
+        asset_unlock_tx = self.create_assetunlock(522, COIN, pubkey)
+        txid_in_block = self.send_tx(asset_unlock_tx)
+        self.generate(node, 1)
+        self.ensure_tx_is_not_mined(txid_in_block)
 
 if __name__ == '__main__':
     AssetLocksTest().main()
