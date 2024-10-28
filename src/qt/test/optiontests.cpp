@@ -37,7 +37,6 @@ void OptionTests::migrateSettings()
     QSettings settings;
     settings.setValue("nDatabaseCache", 600);
     settings.setValue("nThreadsScriptVerif", 12);
-    settings.setValue("fUseUPnP", false);
     settings.setValue("fListen", false);
     settings.setValue("bPrune", true);
     settings.setValue("nPruneSize", 3);
@@ -50,7 +49,6 @@ void OptionTests::migrateSettings()
 
     QVERIFY(settings.contains("nDatabaseCache"));
     QVERIFY(settings.contains("nThreadsScriptVerif"));
-    QVERIFY(settings.contains("fUseUPnP"));
     QVERIFY(settings.contains("fListen"));
     QVERIFY(settings.contains("bPrune"));
     QVERIFY(settings.contains("nPruneSize"));
@@ -64,7 +62,6 @@ void OptionTests::migrateSettings()
     QVERIFY(options.Init(error));
     QVERIFY(!settings.contains("nDatabaseCache"));
     QVERIFY(!settings.contains("nThreadsScriptVerif"));
-    QVERIFY(!settings.contains("fUseUPnP"));
     QVERIFY(!settings.contains("fListen"));
     QVERIFY(!settings.contains("bPrune"));
     QVERIFY(!settings.contains("nPruneSize"));
