@@ -25,7 +25,8 @@
       "description": "Build GUI, Qt 5",
       "dependencies": [
         "qt5-base",
-        "qt5-tools"
+        "qt5-tools",
+        "libqrencode"
       ]
     },
     "sqlite": {
