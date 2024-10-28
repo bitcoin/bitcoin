@@ -84,11 +84,11 @@ void RandAddSeedPerfmon(CSHA512& hasher)
     while (true) {
         nSize = vData.size();
         ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", nullptr, nullptr, vData.data(), &nSize);
+        RegCloseKey(HKEY_PERFORMANCE_DATA);
         if (ret != ERROR_MORE_DATA || vData.size() >= nMaxSize)
             break;
         vData.resize(std::min((vData.size() * 3) / 2, nMaxSize)); // Grow size of buffer exponentially
     }
-    RegCloseKey(HKEY_PERFORMANCE_DATA);
     if (ret == ERROR_SUCCESS) {
         hasher.Write(vData.data(), nSize);
         memory_cleanse(vData.data(), nSize);
