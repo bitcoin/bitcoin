@@ -239,3 +239,10 @@ const UniValue& find_value(const UniValue& obj, const std::string& name)
     return NullUniValue;
 }
 
+void UniValue::reserve(size_t new_cap)
+{
+    values.reserve(new_cap);
+    if (typ == VOBJ) {
+        keys.reserve(new_cap);
+    }
+}
