@@ -613,7 +613,7 @@ class AssetLocksTest(DashTestFramework):
 
 
         self.log.info("generate many blocks to be sure that mempool is empty after expiring txes...")
-        self.generate_batch(60)
+        self.generate_batch(HEIGHT_DIFF_EXPIRING)
         self.log.info("Checking that credit pool is not changed...")
         assert_equal(new_total, self.get_credit_pool_balance())
         self.check_mempool_size()
@@ -624,7 +624,7 @@ class AssetLocksTest(DashTestFramework):
         self.log.info("Activate mn_rr...")
         locked = self.get_credit_pool_balance()
         self.activate_mn_rr(expected_activation_height=2500)
-        self.log.info(f'height: {node.getblockcount()} credit: {self.get_credit_pool_balance()}')
+        self.log.info(f'mn-rr height: {node.getblockcount()} credit: {self.get_credit_pool_balance()}')
         assert_equal(locked, self.get_credit_pool_balance())
 
         bt = node.getblocktemplate()
@@ -650,8 +650,8 @@ class AssetLocksTest(DashTestFramework):
 
     def test_withdrawal_fork(self, node_wallet, node, pubkey):
         self.log.info("Testing asset unlock after 'withdrawal' activation...")
-        self.activate_by_name('withdrawals')
         assert softfork_active(node_wallet, 'withdrawals')
+        self.log.info(f'post-withdrawals height: {node.getblockcount()} credit: {self.get_credit_pool_balance()}')
 
         index = 501
         while index < 511:
