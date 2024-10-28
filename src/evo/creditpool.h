@@ -117,6 +117,7 @@ public:
     static constexpr int LimitBlocksToTrace = 576;
     static constexpr CAmount LimitAmountLow = 100 * COIN;
     static constexpr CAmount LimitAmountHigh = 1000 * COIN;
+    static constexpr CAmount LimitAmountV22 = 2000 * COIN;
 
     explicit CCreditPoolManager(CEvoDB& _evoDb);
 
