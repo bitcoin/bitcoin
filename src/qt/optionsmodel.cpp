@@ -391,21 +391,21 @@ void OptionsModel::SetPruneEnabled(bool prune, bool force)
     settings.setValue("bPrune", prune);
     const int64_t prune_target_mib = PruneGBtoMiB(settings.value("nPruneSize").toInt());
     std::string prune_val = prune ? ToString(prune_target_mib) : "0";
-    auto maybe_adjust_dash_options = [](){
-        if (gArgs.GetArg("-prune", 0) > 0) {
-            gArgs.SoftSetBoolArg("-disablegovernance", true);
-            gArgs.SoftSetBoolArg("-txindex", false);
-        }
-    };
     if (force) {
         gArgs.ForceSetArg("-prune", prune_val);
-        maybe_adjust_dash_options();
+        if (prune) {
+            gArgs.ForceSetArg("-disablegovernance", "1");
+            gArgs.ForceSetArg("-txindex", "0");
+        }
         return;
     }
     if (!gArgs.SoftSetArg("-prune", prune_val)) {
         addOverriddenOption("-prune");
     }
-    maybe_adjust_dash_options();
+    if (gArgs.GetArg("-prune", 0) > 0) {
+        gArgs.SoftSetBoolArg("-disablegovernance", true);
+        gArgs.SoftSetBoolArg("-txindex", false);
+    }
 }
 
 void OptionsModel::SetPruneTargetGB(int prune_target_gb, bool force)
