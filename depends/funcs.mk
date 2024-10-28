@@ -179,7 +179,8 @@ $(1)_cmake=env CC="$$($(1)_cc)" \
                CXX="$$($(1)_cxx)" \
                CXXFLAGS="$$($(1)_cppflags) $$($(1)_cxxflags)" \
                LDFLAGS="$$($(1)_ldflags)" \
-               cmake -DCMAKE_INSTALL_PREFIX:PATH="$$($($(1)_type)_prefix)" \
+               cmake -G "Unix Makefiles" \
+               -DCMAKE_INSTALL_PREFIX:PATH="$$($($(1)_type)_prefix)" \
                -DCMAKE_AR=`which $$($(1)_ar)` \
                -DCMAKE_NM=`which $$($(1)_nm)` \
                -DCMAKE_RANLIB=`which $$($(1)_ranlib)` \
