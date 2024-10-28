@@ -134,9 +134,13 @@ CCreditPool CCreditPoolManager::ConstructCreditPool(const CBlockIndex* const blo
     if (!block) {
         // If reading of previous block is not successfully, but
         // prev contains credit pool related data, something strange happened
-        assert(prev.locked == 0);
-        assert(prev.indexes.IsEmpty());
-
+        if (prev.locked != 0) {
+            throw std::runtime_error(strprintf("Failed to create CreditPool but previous block has value"));
+        }
+        if (!prev.indexes.IsEmpty()) {
+            throw std::runtime_error(
+                strprintf("Failed to create CreditPool but asset unlock transactions already mined"));
+        }
         CCreditPool emptyPool;
         AddToCache(block_index->GetBlockHash(), block_index->nHeight, emptyPool);
         return emptyPool;
@@ -184,14 +188,17 @@ CCreditPool CCreditPoolManager::ConstructCreditPool(const CBlockIndex* const blo
         currentLimit = std::min(currentLimit, LimitAmountHigh - latelyUnlocked);
     }
 
-    assert(currentLimit >= 0);
-
-    if (currentLimit > 0 || latelyUnlocked > 0 || locked > 0) {
+    if (currentLimit != 0 || latelyUnlocked > 0 || locked > 0) {
         LogPrint(BCLog::CREDITPOOL, /* Continued */
                  "CCreditPoolManager: asset unlock limits on height: %d locked: %d.%08d limit: %d.%08d "
                  "unlocked-in-window: %d.%08d\n",
                  block_index->nHeight, locked / COIN, locked % COIN, currentLimit / COIN, currentLimit % COIN,
                  latelyUnlocked / COIN, latelyUnlocked % COIN);
+    }
+
+    if (currentLimit < 0) {
+        throw std::runtime_error(
+            strprintf("Negative limit for CreditPool: %d.%08d\n", currentLimit / COIN, currentLimit % COIN));
     }
 
     CCreditPool pool{locked, currentLimit, latelyUnlocked, indexes};
