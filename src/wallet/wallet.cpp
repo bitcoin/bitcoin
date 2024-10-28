@@ -2495,7 +2495,7 @@ bool CWallet::DelAddressBookWithDB(WalletBatch& batch, const CTxDestination& add
         // NOTE: This isn't a problem for sending addresses because they don't have any data that needs to be kept.
         // When adding new address data, it should be considered here whether to retain or delete it.
         if (IsMine(address)) {
-            WalletLogPrintf("%s called with IsMine address, NOT SUPPORTED. Please report this bug! %s\n", __func__, PACKAGE_BUGREPORT);
+            WalletLogPrintf("%s called with IsMine address, NOT SUPPORTED. Please report this bug! %s\n", __func__, CLIENT_BUGREPORT);
             return false;
         }
         // Delete data rows associated with this address
@@ -3008,7 +3008,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
                 walletFile));
         }
         else if (nLoadWalletRet == DBErrors::TOO_NEW) {
-            error = strprintf(_("Error loading %s: Wallet requires newer version of %s"), walletFile, PACKAGE_NAME);
+            error = strprintf(_("Error loading %s: Wallet requires newer version of %s"), walletFile, CLIENT_NAME);
             return nullptr;
         }
         else if (nLoadWalletRet == DBErrors::EXTERNAL_SIGNER_SUPPORT_REQUIRED) {
@@ -3017,7 +3017,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         }
         else if (nLoadWalletRet == DBErrors::NEED_REWRITE)
         {
-            error = strprintf(_("Wallet needed to be rewritten: restart %s to complete"), PACKAGE_NAME);
+            error = strprintf(_("Wallet needed to be rewritten: restart %s to complete"), CLIENT_NAME);
             return nullptr;
         } else if (nLoadWalletRet == DBErrors::NEED_RESCAN) {
             warnings.push_back(strprintf(_("Error reading %s! Transaction data may be missing or incorrect."

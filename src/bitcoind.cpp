@@ -136,12 +136,12 @@ static bool ProcessInitCommands(ArgsManager& args)
 {
     // Process help and version before taking care about datadir
     if (HelpRequested(args) || args.IsArgSet("-version")) {
-        std::string strUsage = PACKAGE_NAME " version " + FormatFullVersion() + "\n";
+        std::string strUsage = CLIENT_NAME " version " + FormatFullVersion() + "\n";
 
         if (args.IsArgSet("-version")) {
             strUsage += FormatParagraph(LicenseInfo());
         } else {
-            strUsage += "\nUsage:  bitcoind [options]                     Start " PACKAGE_NAME "\n"
+            strUsage += "\nUsage:  bitcoind [options]                     Start " CLIENT_NAME "\n"
                 "\n";
             strUsage += args.GetHelpMessage();
         }
@@ -195,7 +195,7 @@ static bool AppInit(NodeContext& node)
 
         if (args.GetBoolArg("-daemon", DEFAULT_DAEMON) || args.GetBoolArg("-daemonwait", DEFAULT_DAEMONWAIT)) {
 #if HAVE_DECL_FORK
-            tfm::format(std::cout, PACKAGE_NAME " starting\n");
+            tfm::format(std::cout, CLIENT_NAME " starting\n");
 
             // Daemonize
             switch (fork_daemon(1, 0, daemon_ep)) { // don't chdir (1), do close FDs (0)

@@ -3,9 +3,9 @@ exec_prefix=${prefix}
 libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
 includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
 
-Name: @PACKAGE_NAME@ kernel library
+Name: @CLIENT_NAME@ kernel library
 Description: Experimental library for the Bitcoin Core validation engine.
-Version: @PACKAGE_VERSION@
+Version: @CLIENT_VERSION_STRING@
 Libs: -L${libdir} -lbitcoinkernel
 Libs.private: -L${libdir} @LIBS_PRIVATE@
 Cflags: -I${includedir}
