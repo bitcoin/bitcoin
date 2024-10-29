@@ -44,7 +44,7 @@ from test_framework.wallet_util import bytes_to_wif
 
 llmq_type_test = 106 # LLMQType::LLMQ_TEST_PLATFORM
 tiny_amount = int(Decimal("0.0007") * COIN)
-blocks_in_one_day = 576
+blocks_in_one_day = 100
 HEIGHT_DIFF_EXPIRING = 48
 
 class AssetLocksTest(DashTestFramework):
@@ -52,7 +52,7 @@ class AssetLocksTest(DashTestFramework):
         self.set_dash_test_params(4, 2, [[
                 "-whitelist=127.0.0.1",
                 "-llmqtestinstantsenddip0024=llmq_test_instantsend",
-                "-testactivationheight=mn_rr@2500",
+                "-testactivationheight=mn_rr@1400",
         ]] * 4, evo_count=2)
 
     def skip_test_if_missing_module(self):
@@ -621,9 +621,10 @@ class AssetLocksTest(DashTestFramework):
 
 
     def test_mn_rr(self, node_wallet, node, pubkey):
+        self.log.info(node_wallet.getblockcount())
         self.log.info("Activate mn_rr...")
         locked = self.get_credit_pool_balance()
-        self.activate_mn_rr(expected_activation_height=2500)
+        self.activate_mn_rr(expected_activation_height=1400)
         self.log.info(f'mn-rr height: {node.getblockcount()} credit: {self.get_credit_pool_balance()}')
         assert_equal(locked, self.get_credit_pool_balance())
 
@@ -635,7 +636,7 @@ class AssetLocksTest(DashTestFramework):
         all_mn_rewards = platform_reward + owner_reward + operator_reward
         assert_equal(all_mn_rewards, bt['coinbasevalue'] * 3 // 4)  # 75/25 mn/miner reward split
         assert_equal(platform_reward, all_mn_rewards * 375 // 1000)  # 0.375 platform share
-        assert_equal(platform_reward, 34371430)
+        assert_equal(platform_reward, 57741807)
         assert_equal(locked, self.get_credit_pool_balance())
         self.generate(node, 1)
         locked += platform_reward
