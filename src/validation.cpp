@@ -2307,12 +2307,12 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     ::g_stats_client->gauge("blocks.tip.SigOps", nSigOps, 1.0f);
 
     TRACE6(validation, block_connected,
-        block.GetHash().data(),
+        block_hash.data(),
         pindex->nHeight,
         block.vtx.size(),
         nInputs,
         nSigOps,
-        GetTimeMicros() - nTimeStart // in microseconds (µs)
+        nTime8 - nTimeStart // in microseconds (µs)
     );
 
     return true;
