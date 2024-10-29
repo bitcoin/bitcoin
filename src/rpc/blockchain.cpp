@@ -1818,24 +1818,28 @@ RPCHelpMan getblockchaininfo()
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
     UniValue softforks(UniValue::VOBJ);
-    // sorted by activation block
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_HEIGHTINCB);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_DERSIG);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_CLTV);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_BIP147);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_CSV);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_DIP0001);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_DIP0003);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_DIP0008);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_DIP0020);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_DIP0024);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_BRR);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_V19);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_V20);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_MN_RR);
-    SoftForkDescPushBack(tip, ehfSignals, softforks, consensusParams, Consensus::DEPLOYMENT_WITHDRAWALS);
-    SoftForkDescPushBack(tip, ehfSignals, softforks, consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
-
+    for (auto deploy : { /* sorted by activation block */
+                         Consensus::DEPLOYMENT_HEIGHTINCB,
+                         Consensus::DEPLOYMENT_DERSIG,
+                         Consensus::DEPLOYMENT_CLTV,
+                         Consensus::DEPLOYMENT_BIP147,
+                         Consensus::DEPLOYMENT_CSV,
+                         Consensus::DEPLOYMENT_DIP0001,
+                         Consensus::DEPLOYMENT_DIP0003,
+                         Consensus::DEPLOYMENT_DIP0008,
+                         Consensus::DEPLOYMENT_DIP0020,
+                         Consensus::DEPLOYMENT_DIP0024,
+                         Consensus::DEPLOYMENT_BRR,
+                         Consensus::DEPLOYMENT_V19,
+                         Consensus::DEPLOYMENT_V20,
+                         Consensus::DEPLOYMENT_MN_RR }) {
+        SoftForkDescPushBack(tip, softforks, consensusParams, deploy);
+    }
+    for (auto ehf_deploy : { /* sorted by activation block */
+                             Consensus::DEPLOYMENT_WITHDRAWALS,
+                             Consensus::DEPLOYMENT_TESTDUMMY }) {
+        SoftForkDescPushBack(tip, ehfSignals, softforks, consensusParams, ehf_deploy);
+    }
     obj.pushKV("softforks", softforks);
 
     obj.pushKV("warnings", GetWarnings(false).original);
