@@ -1069,9 +1069,15 @@ class CPartialMerkleTree:
 class CMerkleBlock:
     __slots__ = ("header", "txn")
 
-    def __init__(self, header=CBlockHeader(), txn=CPartialMerkleTree()):
-        self.header = header
-        self.txn = txn
+    def __init__(self, header=None, txn=None):
+        if header is None:
+            self.header = CBlockHeader()
+        else:
+            self.header = header
+        if txn is None:
+            self.txn = CPartialMerkleTree()
+        else:
+            self.txn = txn
 
     def deserialize(self, f):
         self.header.deserialize(f)
