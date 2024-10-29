@@ -295,6 +295,8 @@ public:
         vSporkAddresses = {"Xgtyuk76vhuFW2iT7UAiHgNdWXCf3J34wh"};
         nMinSporkKeys = 1;
 
+        nCreditPoolPeriodBlocks = 576;
+
         checkpointData = {
             {
                 {1500, uint256S("0x000000aaf0300f59f49bc3e970bad15c11f961fe2347accffff19d96ec9778e3")},
@@ -484,6 +486,8 @@ public:
         vSporkAddresses = {"yjPtiKh2uwk3bDutTEA2q9mCtXyiZRWn55"};
         nMinSporkKeys = 1;
 
+        nCreditPoolPeriodBlocks = 576;
+
         checkpointData = {
             {
                 {255, uint256S("0x0000080b600e06f4c07880673f027210f9314575f5f875fafe51971e268b886a")},
@@ -663,6 +667,8 @@ public:
 
         vSporkAddresses = {"yjPtiKh2uwk3bDutTEA2q9mCtXyiZRWn55"};
         nMinSporkKeys = 1;
+
+        nCreditPoolPeriodBlocks = 576;
 
         checkpointData = (CCheckpointData) {
             {
@@ -865,6 +871,8 @@ public:
         // privKey: cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK
         vSporkAddresses = {"yj949n1UH6fDhw6HtVE5VMj2iSTaSWBMcW"};
         nMinSporkKeys = 1;
+
+        nCreditPoolPeriodBlocks = 100;
 
         checkpointData = {
             {
