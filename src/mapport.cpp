@@ -166,9 +166,9 @@ static void MapPortProtoSetEnabled(bool enabled)
     g_mapport_enabled = enabled;
 }
 
-void StartMapPort(bool use_pcp)
+void StartMapPort(bool enable)
 {
-    MapPortProtoSetEnabled(use_pcp);
+    MapPortProtoSetEnabled(enable);
     DispatchMapPort();
 }
 

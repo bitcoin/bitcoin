@@ -7,7 +7,7 @@
 
 static constexpr bool DEFAULT_NATPMP = false;
 
-void StartMapPort(bool use_pcp);
+void StartMapPort(bool enable);
 void InterruptMapPort();
 void StopMapPort();
 
