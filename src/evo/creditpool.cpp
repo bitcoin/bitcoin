@@ -15,6 +15,7 @@
 #include <deploymentstatus.h>
 #include <logging.h>
 #include <node/blockstorage.h>
+#include <util/irange.h>
 #include <validation.h>
 
 #include <algorithm>
@@ -164,7 +165,7 @@ CCreditPool CCreditPoolManager::ConstructCreditPool(const CBlockIndex* const blo
     }
 
     const CBlockIndex* distant_block_index = block_index;
-    for (auto i = 0; i < Params().CreditPoolPeriodBlocks(); ++i) {
+    for ([[maybe_unused]] auto _ : irange::range(Params().CreditPoolPeriodBlocks())) {
         distant_block_index = distant_block_index->pprev;
         if (distant_block_index == nullptr) break;
     }
