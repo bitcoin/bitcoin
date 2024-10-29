@@ -36,7 +36,7 @@ private:
     std::string strFilename;
     std::string strMagicMessage;
 
-    bool CoreWrite(const T& objToSave)
+    [[nodiscard]] bool CoreWrite(const T& objToSave)
     {
         // LOCK(objToSave.cs);
 
@@ -53,8 +53,9 @@ private:
         // open output file, and associate with CAutoFile
         FILE *file = fsbridge::fopen(pathDB, "wb");
         CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
-        if (fileout.IsNull())
+        if (fileout.IsNull()) {
             return error("%s: Failed to open file %s", __func__, fs::PathToString(pathDB));
+        }
 
         // Write and commit header, data
         try {
@@ -71,7 +72,7 @@ private:
         return true;
     }
 
-    ReadResult CoreRead(T& objToLoad)
+    [[nodiscard]] ReadResult CoreRead(T& objToLoad)
     {
         //LOCK(objToLoad.cs);
 
@@ -79,9 +80,8 @@ private:
         // open input file, and associate with CAutoFile
         FILE *file = fsbridge::fopen(pathDB, "rb");
         CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
-        if (filein.IsNull())
-        {
-            error("%s: Failed to open file %s", __func__, fs::PathToString(pathDB));
+        if (filein.IsNull()) {
+            // It is not actually error, maybe it's a first initialization of core.
             return FileError;
         }
 
@@ -156,14 +156,14 @@ private:
         return Ok;
     }
 
-    bool Read(T& objToLoad)
+    [[nodiscard]] bool Read(T& objToLoad)
     {
         ReadResult readResult = CoreRead(objToLoad);
         if (readResult == FileError)
             LogPrintf("Missing file %s, will try to recreate\n", strFilename);
         else if (readResult != Ok)
         {
-            LogPrintf("Error reading %s: ", strFilename);
+            LogPrintf("ERROR: CFlatDB::Read Error reading %s: ", strFilename);
             if(readResult == IncorrectFormat)
             {
                 LogPrintf("%s: Magic is ok but data has invalid format, will try to recreate\n", __func__);
@@ -185,7 +185,7 @@ public:
     {
     }
 
-    bool Load(T& objToLoad)
+    [[nodiscard]] bool Load(T& objToLoad)
     {
         LogPrintf("Reading info from %s...\n", strFilename);
         return Read(objToLoad);
@@ -200,10 +200,10 @@ public:
         int64_t nStart = GetTimeMillis();
 
         LogPrintf("Writing info to %s...\n", strFilename);
-        CoreWrite(objToSave);
+        const bool ret = CoreWrite(objToSave);
         LogPrintf("%s dump finished  %dms\n", strFilename, GetTimeMillis() - nStart);
 
-        return true;
+        return ret;
     }
 };
 

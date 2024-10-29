@@ -14,7 +14,11 @@ import time
 
 from test_framework.test_framework import DashTestFramework
 from test_framework.p2p import P2PInterface
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+    p2p_port,
+)
 from test_framework.messages import (
     CBlock,
     CGovernanceObject,
@@ -99,16 +103,20 @@ class TestP2PConn(P2PInterface):
 
 class DashZMQTest (DashTestFramework):
     def set_test_params(self):
+        self.set_dash_test_params(5, 4)
+
         # That's where the zmq publisher will listen for subscriber
-        self.address = "tcp://127.0.0.1:28331"
+        self.zmq_port_base = p2p_port(self.num_nodes + 1)
+        self.address = f"tcp://127.0.0.1:{self.zmq_port_base}"
+
         # node0 creates all available ZMQ publisher
-        node0_extra_args = ["-zmqpub%s=%s" % (pub.value, self.address) for pub in ZMQPublisher]
+        node0_extra_args = [f"-zmqpub{pub.value}={self.address}" for pub in ZMQPublisher]
         node0_extra_args.append("-whitelist=127.0.0.1")
         node0_extra_args.append("-watchquorums")  # have to watch quorums to receive recsigs and trigger zmq
 
-        extra_args = [[]] * 5
-        extra_args[0] = node0_extra_args
-        self.set_dash_test_params(5, 4, extra_args=extra_args)
+        #extra_args = [node0_extra_args, [], [], [], []]
+        self.extra_args[0] = node0_extra_args
+
         self.set_dash_llmq_test_params(4, 4)
 
     def skip_test_if_missing_module(self):

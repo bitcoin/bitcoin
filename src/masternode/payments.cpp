@@ -51,8 +51,12 @@ CAmount PlatformShare(const CAmount reward)
         LogPrint(BCLog::MNPAYMENTS, "CMNPaymentsProcessor::%s -- MN reward %lld reallocated to credit pool\n", __func__, platformReward);
         voutMasternodePaymentsRet.emplace_back(platformReward, CScript() << OP_RETURN);
     }
-
-    auto dmnPayee = m_dmnman.GetListForBlock(pindexPrev).GetMNPayee(pindexPrev);
+    const auto mnList = m_dmnman.GetListForBlock(pindexPrev);
+    if (mnList.GetAllMNsCount() == 0) {
+        LogPrint(BCLog::MNPAYMENTS, "CMNPaymentsProcessor::%s -- no masternode registered to receive a payment\n", __func__);
+        return true;
+    }
+    const auto dmnPayee = mnList.GetMNPayee(pindexPrev);
     if (!dmnPayee) {
         return false;
     }
@@ -88,7 +92,7 @@ CAmount PlatformShare(const CAmount reward)
     voutMasternodePaymentsRet.clear();
 
     if(!GetBlockTxOuts(pindexPrev, blockSubsidy, feeReward, voutMasternodePaymentsRet)) {
-        LogPrintf("CMNPaymentsProcessor::%s -- No payee (deterministic masternode list empty)\n", __func__);
+        LogPrintf("CMNPaymentsProcessor::%s -- ERROR Failed to get payee\n", __func__);
         return false;
     }
 

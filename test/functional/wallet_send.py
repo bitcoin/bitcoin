@@ -189,9 +189,7 @@ class WalletSendTest(BitcoinTestFramework):
                 "internal": True
             }])
         else:
-            w2.upgradetohd()
-            # TODO: replace upgradetohd to sethdseed when it is implemented
-            # w2.sethdseed(True)
+            w2.sethdseed(True)
 
         # w3 is a watch-only wallet, based on w2
         self.nodes[1].createwallet(wallet_name="w3", disable_private_keys=True)
