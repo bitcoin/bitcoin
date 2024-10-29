@@ -67,7 +67,7 @@ public:
     std::vector<std::pair<CTransactionRef, NodeId>> GetChildrenFromDifferentPeer(const CTransactionRef& parent, NodeId nodeid) const;
 
     /** Return how many entries exist in the orphange */
-    size_t Size()
+    size_t Size() const
     {
         return m_orphans.size();
     }
