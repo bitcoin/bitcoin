@@ -766,7 +766,7 @@ static RPCHelpMan getblock()
 {
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
-    int verbosity{ParseVerbosity(request.params[1], /*default_verbosity=*/1)};
+    int verbosity{ParseVerbosity(request.params[1], /*default_verbosity=*/1, /*allow_bool=*/true)};
 
     const CBlockIndex* pblockindex;
     const CBlockIndex* tip;

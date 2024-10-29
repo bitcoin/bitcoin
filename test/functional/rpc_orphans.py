@@ -2,17 +2,25 @@
 # Copyright (c) 2014-2024 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test the getorphantxs RPC."""
+"""Tests for orphan related RPCs."""
 
-from test_framework.mempool_util import tx_in_orphanage
+import time
+
+from test_framework.mempool_util import (
+    ORPHAN_TX_EXPIRE_TIME,
+    tx_in_orphanage,
+)
 from test_framework.messages import msg_tx
 from test_framework.p2p import P2PInterface
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.wallet import MiniWallet
 
 
-class GetOrphanTxsTest(BitcoinTestFramework):
+class OrphanRPCsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
@@ -20,6 +28,7 @@ class GetOrphanTxsTest(BitcoinTestFramework):
         self.wallet = MiniWallet(self.nodes[0])
         self.test_orphan_activity()
         self.test_orphan_details()
+        self.test_misc()
 
     def test_orphan_activity(self):
         self.log.info("Check that orphaned transactions are returned with getorphantxs")
@@ -37,13 +46,13 @@ class GetOrphanTxsTest(BitcoinTestFramework):
         self.log.info("Check that neither parent is in the mempool")
         assert_equal(node.getmempoolinfo()["size"], 0)
 
-        self.log.info("Check that both children are in the orphanage")
-
         orphanage = node.getorphantxs(verbosity=0)
         self.log.info("Check the size of the orphanage")
         assert_equal(len(orphanage), 2)
-        self.log.info("Check that negative verbosity is treated as 0")
-        assert_equal(orphanage, node.getorphantxs(verbosity=-1))
+        self.log.info("Check that undefined verbosity is disallowed")
+        assert_raises_rpc_error(-8, "Invalid verbosity value -1", node.getorphantxs, verbosity=-1)
+        assert_raises_rpc_error(-8, "Invalid verbosity value 3", node.getorphantxs, verbosity=3)
+        self.log.info("Check that both children are in the orphanage")
         assert tx_in_orphanage(node, tx_child_1["tx"])
         assert tx_in_orphanage(node, tx_child_2["tx"])
 
@@ -86,6 +95,8 @@ class GetOrphanTxsTest(BitcoinTestFramework):
         tx_child_2 = self.wallet.create_self_transfer(utxo_to_spend=tx_parent_2["new_utxo"])
         peer_1 = node.add_p2p_connection(P2PInterface())
         peer_2 = node.add_p2p_connection(P2PInterface())
+        entry_time = int(time.time())
+        node.setmocktime(entry_time)
         peer_1.send_and_ping(msg_tx(tx_child_1["tx"]))
         peer_2.send_and_ping(msg_tx(tx_child_2["tx"]))
 
@@ -105,6 +116,9 @@ class GetOrphanTxsTest(BitcoinTestFramework):
         assert_equal(len(node.getorphantxs()), 1)
         orphan_1 = orphanage[0]
         self.orphan_details_match(orphan_1, tx_child_1, verbosity=1)
+        self.log.info("Checking orphan entry/expiration times")
+        assert_equal(orphan_1["entry"], entry_time)
+        assert_equal(orphan_1["expiration"], entry_time + ORPHAN_TX_EXPIRE_TIME)
 
         self.log.info("Checking orphan details (verbosity 2)")
         orphanage = node.getorphantxs(verbosity=2)
@@ -125,5 +139,15 @@ class GetOrphanTxsTest(BitcoinTestFramework):
             self.log.info("Check the transaction hex of orphan")
             assert_equal(orphan["hex"], tx["hex"])
 
+    def test_misc(self):
+        node = self.nodes[0]
+        assert_raises_rpc_error(-3, "Verbosity was boolean but only integer allowed", node.getorphantxs, verbosity=True)
+        assert_raises_rpc_error(-3, "Verbosity was boolean but only integer allowed", node.getorphantxs, verbosity=False)
+        help_output = node.help()
+        self.log.info("Check that getorphantxs is a hidden RPC")
+        assert "getorphantxs" not in help_output
+        assert "unknown command: getorphantxs" not in node.help("getorphantxs")
+
+
 if __name__ == '__main__':
-    GetOrphanTxsTest(__file__).main()
+    OrphanRPCsTest(__file__).main()
