@@ -1782,10 +1782,10 @@ RPCHelpMan getblockchaininfo()
     LOCK(cs_main);
     CChainState& active_chainstate = chainman.ActiveChainstate();
 
-    const CBlockIndex* tip = CHECK_NONFATAL(active_chainstate.m_chain.Tip());
-    const int height = tip->nHeight;
+    const CBlockIndex& tip{*CHECK_NONFATAL(active_chainstate.m_chain.Tip())};
+    const int height{tip.nHeight};
 
-    const auto ehfSignals = CHECK_NONFATAL(node.mnhf_manager)->GetSignalsStage(tip);
+    const auto ehfSignals{CHECK_NONFATAL(node.mnhf_manager)->GetSignalsStage(&tip)};
 
     UniValue obj(UniValue::VOBJ);
     if (args.IsArgSet("-devnet")) {
@@ -1795,18 +1795,17 @@ RPCHelpMan getblockchaininfo()
     }
     obj.pushKV("blocks", height);
     obj.pushKV("headers", chainman.m_best_header ? chainman.m_best_header->nHeight : -1);
-    obj.pushKV("bestblockhash", tip->GetBlockHash().GetHex());
-    obj.pushKV("difficulty", (double)GetDifficulty(tip));
-    obj.pushKV("time", (int64_t)tip->nTime);
-    obj.pushKV("mediantime", (int64_t)tip->GetMedianTimePast());
-    obj.pushKV("verificationprogress", GuessVerificationProgress(Params().TxData(), tip));
+    obj.pushKV("bestblockhash", tip.GetBlockHash().GetHex());
+    obj.pushKV("difficulty", GetDifficulty(&tip));
+    obj.pushKV("time", int64_t{tip.nTime});
+    obj.pushKV("mediantime", tip.GetMedianTimePast());
+    obj.pushKV("verificationprogress", GuessVerificationProgress(Params().TxData(), &tip));
     obj.pushKV("initialblockdownload", active_chainstate.IsInitialBlockDownload());
-    obj.pushKV("chainwork", tip->nChainWork.GetHex());
+    obj.pushKV("chainwork", tip.nChainWork.GetHex());
     obj.pushKV("size_on_disk", chainman.m_blockman.CalculateCurrentUsage());
     obj.pushKV("pruned", fPruneMode);
     if (fPruneMode) {
-        const CBlockIndex* block = CHECK_NONFATAL(tip);
-        obj.pushKV("pruneheight", GetFirstStoredBlock(block)->nHeight);
+        obj.pushKV("pruneheight", GetFirstStoredBlock(&tip)->nHeight);
 
         // if 0, execution bypasses the whole if block.
         bool automatic_pruning{args.GetArg("-prune", 0) != 1};
@@ -1833,12 +1832,12 @@ RPCHelpMan getblockchaininfo()
                          Consensus::DEPLOYMENT_V19,
                          Consensus::DEPLOYMENT_V20,
                          Consensus::DEPLOYMENT_MN_RR }) {
-        SoftForkDescPushBack(tip, softforks, consensusParams, deploy);
+        SoftForkDescPushBack(&tip, softforks, consensusParams, deploy);
     }
     for (auto ehf_deploy : { /* sorted by activation block */
                              Consensus::DEPLOYMENT_WITHDRAWALS,
                              Consensus::DEPLOYMENT_TESTDUMMY }) {
-        SoftForkDescPushBack(tip, ehfSignals, softforks, consensusParams, ehf_deploy);
+        SoftForkDescPushBack(&tip, ehfSignals, softforks, consensusParams, ehf_deploy);
     }
     obj.pushKV("softforks", softforks);
 
