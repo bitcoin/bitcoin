@@ -190,18 +190,6 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("nPruneSize", DEFAULT_PRUNE_TARGET_GB);
     SetPruneEnabled(settings.value("bPrune").toBool());
 
-    // If GUI is setting prune, then we also must set disablegovernance and txindex
-    if (settings.value("bPrune").toBool()) {
-        if (gArgs.SoftSetBoolArg("-disablegovernance", true)) {
-            LogPrintf("%s: parameter interaction: -prune=true -> setting -disablegovernance=true\n", __func__);
-            addOverriddenOption("-disablegovernance");
-        }
-        if (gArgs.SoftSetBoolArg("-txindex", false)) {
-            LogPrintf("%s: parameter interaction: -prune=true -> setting -txindex=false\n", __func__);
-            addOverriddenOption("-txindex");
-        }
-    }
-
     if (!settings.contains("nDatabaseCache"))
         settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
     if (!gArgs.SoftSetArg("-dbcache", settings.value("nDatabaseCache").toString().toStdString()))
@@ -405,10 +393,18 @@ void OptionsModel::SetPruneEnabled(bool prune, bool force)
     std::string prune_val = prune ? ToString(prune_target_mib) : "0";
     if (force) {
         gArgs.ForceSetArg("-prune", prune_val);
+        if (prune) {
+            gArgs.ForceSetArg("-disablegovernance", "1");
+            gArgs.ForceSetArg("-txindex", "0");
+        }
         return;
     }
     if (!gArgs.SoftSetArg("-prune", prune_val)) {
         addOverriddenOption("-prune");
+    }
+    if (gArgs.GetArg("-prune", 0) > 0) {
+        gArgs.SoftSetBoolArg("-disablegovernance", true);
+        gArgs.SoftSetBoolArg("-txindex", false);
     }
 }
 
