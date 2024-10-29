@@ -93,8 +93,6 @@ EXTENDED_SCRIPTS = [
 BASE_SCRIPTS = [
     # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
-    'feature_dip3_deterministicmns.py --legacy-wallet', # NOTE: needs dash_hash to pass
-    'feature_dip3_deterministicmns.py --descriptors', # NOTE: needs dash_hash to pass
     'feature_llmq_data_recovery.py',
     'wallet_hd.py --legacy-wallet',
     'wallet_hd.py --descriptors',
@@ -122,23 +120,27 @@ BASE_SCRIPTS = [
     'wallet_dump.py --legacy-wallet',
     'feature_multikeysporks.py',
     'feature_dip3_v19.py',
+    'feature_asset_locks.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_connections.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_is_retroactive.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_chainlocks.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_simplepose.py', # NOTE: needs dash_hash to pass
+    'feature_dip3_deterministicmns.py --legacy-wallet', # NOTE: needs dash_hash to pass
+    'feature_dip3_deterministicmns.py --descriptors', # NOTE: needs dash_hash to pass
     'feature_llmq_signing.py', # NOTE: needs dash_hash to pass
     'feature_llmq_signing.py --spork21', # NOTE: needs dash_hash to pass
-    'feature_llmq_chainlocks.py', # NOTE: needs dash_hash to pass
     'feature_llmq_rotation.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_connections.py', # NOTE: needs dash_hash to pass
     'feature_llmq_evo.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_simplepose.py', # NOTE: needs dash_hash to pass
     'feature_llmq_is_cl_conflicts.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_is_retroactive.py', # NOTE: needs dash_hash to pass
     'feature_llmq_dkgerrors.py', # NOTE: needs dash_hash to pass
     'feature_dip4_coinbasemerkleroots.py', # NOTE: needs dash_hash to pass
-    'feature_asset_locks.py', # NOTE: needs dash_hash to pass
     'feature_mnehf.py', # NOTE: needs dash_hash to pass
     'feature_governance.py --legacy-wallet',
     'feature_governance.py --descriptors',
     'feature_governance_cl.py --legacy-wallet',
     'feature_governance_cl.py --descriptors',
+    'rpc_verifyislock.py',
+    'feature_notifications.py',
     # vv Tests less than 60s vv
     'p2p_sendheaders.py', # NOTE: needs dash_hash to pass
     'p2p_sendheaders_compressed.py', # NOTE: needs dash_hash to pass
@@ -252,7 +254,6 @@ BASE_SCRIPTS = [
     'feature_backwards_compatibility.py --legacy-wallet',
     'feature_backwards_compatibility.py --descriptors',
     'wallet_txn_clone.py --mineblock',
-    'feature_notifications.py',
     'rpc_getblockfilter.py',
     'rpc_getblockfrompeer.py',
     'rpc_invalidateblock.py',
@@ -330,7 +331,6 @@ BASE_SCRIPTS = [
     'rpc_coinjoin.py',
     'rpc_masternode.py',
     'rpc_mnauth.py',
-    'rpc_verifyislock.py',
     'rpc_verifychainlock.py',
     'wallet_create_tx.py --legacy-wallet',
     'wallet_send.py --legacy-wallet',
