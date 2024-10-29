@@ -161,14 +161,9 @@ static void DispatchMapPort()
     }
 }
 
-static void MapPortProtoSetEnabled(bool enabled)
-{
-    g_mapport_enabled = enabled;
-}
-
 void StartMapPort(bool enable)
 {
-    MapPortProtoSetEnabled(enable);
+    g_mapport_enabled = enable;
     DispatchMapPort();
 }
 
