@@ -1081,23 +1081,6 @@ AC_CHECK_DECLS([bswap_16, bswap_32, bswap_64],,,
                  #include <byteswap.h>
                  #endif])
 
-AC_MSG_CHECKING(for __builtin_clzl)
-
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
- (void) __builtin_clzl(0);
-  ]])],
- [ AC_MSG_RESULT(yes); have_clzl=yes; AC_DEFINE(HAVE_BUILTIN_CLZL, 1, [Define this symbol if you have __builtin_clzl])],
- [ AC_MSG_RESULT(no); have_clzl=no;]
-)
-
-AC_MSG_CHECKING(for __builtin_clzll)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
-  (void) __builtin_clzll(0);
-  ]])],
- [ AC_MSG_RESULT(yes); have_clzll=yes; AC_DEFINE(HAVE_BUILTIN_CLZLL, 1, [Define this symbol if you have __builtin_clzll])],
- [ AC_MSG_RESULT(no); have_clzll=no;]
-)
-
 dnl Check for mallopt(M_ARENA_MAX) (to set glibc arenas)
 AC_MSG_CHECKING(for mallopt M_ARENA_MAX)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <malloc.h>]],
@@ -1870,7 +1853,6 @@ AM_CONDITIONAL([USE_UPNP],[test x$use_upnp = xyes])
 
 dnl for minisketch
 AM_CONDITIONAL([ENABLE_CLMUL],[test x$enable_clmul = xyes])
-AM_CONDITIONAL([HAVE_CLZ],[test x$have_clzl$have_clzll = xyesyes])
 
 AC_DEFINE(CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MAJOR, [Major version])
 AC_DEFINE(CLIENT_VERSION_MINOR, _CLIENT_VERSION_MINOR, [Minor version])
