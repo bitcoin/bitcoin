@@ -110,7 +110,6 @@ jobs:
         run: |
           docker run --privileged -d --rm -t \
             --name guix-daemon \
-            -e ADDITIONAL_GUIX_COMMON_FLAGS="--max-jobs=$(nproc --all)" \
             -v ${{ github.workspace }}/dash:/src/dash \
             -v ${{ github.workspace }}/.cache:/home/ubuntu/.cache \
             -w /src/dash \
