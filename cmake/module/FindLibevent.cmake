@@ -35,7 +35,9 @@ function(check_evhttp_connection_get_peer target)
     " HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR
   )
   cmake_pop_check_state()
-  set(HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR ${HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR} PARENT_SCOPE)
+  target_compile_definitions(${target} INTERFACE
+    $<$<BOOL:${HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR}>:HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR>
+  )
 endfunction()
 
 set(_libevent_components core extra)

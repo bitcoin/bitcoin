@@ -71,9 +71,6 @@
    */
 #cmakedefine01 HAVE_DECL_SETSID
 
-/* Define this symbol if evhttp_connection_get_peer expects const char** */
-#cmakedefine HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR 1
-
 /* Define to 1 if fdatasync is available. */
 #cmakedefine HAVE_FDATASYNC 1
 
