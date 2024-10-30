@@ -4,6 +4,7 @@
 
 #include <httpserver.h>
 #include <rpc/protocol.h>
+#include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
@@ -12,10 +13,38 @@
 using http_bitcoin::HTTPHeaders;
 using http_bitcoin::HTTPRequest;
 using http_bitcoin::HTTPResponse;
+using http_bitcoin::HTTPServer;
 using http_bitcoin::MAX_HEADERS_SIZE;
 using util::LineReader;
 
-BOOST_FIXTURE_TEST_SUITE(httpserver_tests, BasicTestingSetup)
+// Reading request captured from bitcoin-cli
+const std::string full_request =
+    "504f5354202f20485454502f312e310d0a486f73743a203132372e302e302e310d"
+    "0a436f6e6e656374696f6e3a20636c6f73650d0a436f6e74656e742d547970653a"
+    "206170706c69636174696f6e2f6a736f6e0d0a417574686f72697a6174696f6e3a"
+    "204261736963205831396a6232397261575666587a6f354f4751354f4451334d57"
+    "4e6d4e6a67304e7a417a59546b7a4e32457a4e7a6b305a44466c4f4451314e6a5a"
+    "6d5954526b5a6a4a694d7a466b596a68684f4449345a4759344d6a566a4f546735"
+    "5a4749344f54566c0d0a436f6e74656e742d4c656e6774683a2034360d0a0d0a7b"
+    "226d6574686f64223a22676574626c6f636b636f756e74222c22706172616d7322"
+    "3a5b5d2c226964223a317d0a";
+
+/// Save the value of CreateSock and restore it when the test ends.
+class HTTPTestingSetup : public BasicTestingSetup
+{
+public:
+    explicit HTTPTestingSetup() : m_create_sock_orig{CreateSock} {};
+
+    ~HTTPTestingSetup()
+    {
+        CreateSock = m_create_sock_orig;
+    }
+
+private:
+    const decltype(CreateSock) m_create_sock_orig;
+};
+
+BOOST_FIXTURE_TEST_SUITE(httpserver_tests, HTTPTestingSetup)
 
 BOOST_AUTO_TEST_CASE(test_query_parameters)
 {
@@ -129,17 +158,6 @@ BOOST_AUTO_TEST_CASE(http_response_tests)
 BOOST_AUTO_TEST_CASE(http_request_tests)
 {
     {
-        // Reading request captured from bitcoin-cli
-        const std::string full_request =
-            "504f5354202f20485454502f312e310d0a486f73743a203132372e302e302e310d"
-            "0a436f6e6e656374696f6e3a20636c6f73650d0a436f6e74656e742d547970653a"
-            "206170706c69636174696f6e2f6a736f6e0d0a417574686f72697a6174696f6e3a"
-            "204261736963205831396a6232397261575666587a6f354f4751354f4451334d57"
-            "4e6d4e6a67304e7a417a59546b7a4e32457a4e7a6b305a44466c4f4451314e6a5a"
-            "6d5954526b5a6a4a694d7a466b596a68684f4449345a4759344d6a566a4f546735"
-            "5a4749344f54566c0d0a436f6e74656e742d4c656e6774683a2034360d0a0d0a7b"
-            "226d6574686f64223a22676574626c6f636b636f756e74222c22706172616d7322"
-            "3a5b5d2c226964223a317d0a";
         HTTPRequest req;
         std::vector<std::byte> buffer{TryParseHex<std::byte>(full_request).value()};
         LineReader reader(buffer, MAX_HEADERS_SIZE);
@@ -258,6 +276,67 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadControlData(reader));
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(!req.LoadBody(reader));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(http_client_server_tests)
+{
+    // Queue of connected sockets returned by listening socket (represents network interface)
+    std::shared_ptr<DynSock::Queue> accepted_sockets{std::make_shared<DynSock::Queue>()};
+
+    CreateSock = [&accepted_sockets](int, int, int) {
+        // This is a mock Listening Socket that the HTTP server will "bind" to and
+        // listen to for incoming connections. We won't need to access its I/O
+        // pipes because we don't read or write directly to it. It will return
+        // Connected Sockets from the queue via its Accept() method.
+        return std::make_unique<DynSock>(std::make_shared<DynSock::Pipes>(), accepted_sockets);
+    };
+
+    {
+        // I/O pipes of one mock Connected Socket we can read and write to.
+        std::shared_ptr<DynSock::Pipes> connected_socket_pipes(std::make_shared<DynSock::Pipes>());
+
+        // Insert the payload: a correctly formatted HTTP request
+        std::vector<std::byte> buffer{TryParseHex<std::byte>(full_request).value()};
+        connected_socket_pipes->recv.PushBytes(buffer.data(), buffer.size());
+
+        // Mock Connected Socket that represents a client.
+        // It needs I/O pipes but its queue can remain empty
+        std::unique_ptr<DynSock> connected_socket{std::make_unique<DynSock>(connected_socket_pipes, std::make_shared<DynSock::Queue>())};
+
+        // Prepare queue of accepted_sockets: just one connection with no data
+        accepted_sockets->Push(std::move(connected_socket));
+
+        // Instantiate server
+        HTTPServer server = HTTPServer();
+        BOOST_REQUIRE(server.m_no_clients);
+
+        // This address won't actually get used because we stubbed CreateSock()
+        const std::optional<CService> addr{Lookup("127.0.0.1", 8333, false)};
+        bilingual_str strError;
+        // Bind to mock Listening Socket
+        BOOST_REQUIRE(server.BindAndStartListening(addr.value(), strError));
+        // Start the I/O loop, accepting connections
+        SockMan::Options sockman_options;
+        server.StartSocketsThreads(sockman_options);
+
+        // Wait up to one minute for mock client to connect.
+        // Given that the mock client is itself a mock socket
+        // with hard-coded data it should only take a fraction of that.
+        int attempts{6000};
+        while (attempts > 0)
+        {
+            if (!server.m_no_clients) break;
+
+            std::this_thread::sleep_for(10ms);
+            --attempts;
+        }
+        BOOST_REQUIRE(!server.m_no_clients);
+
+        // Close server
+        server.interruptNet();
+        // Wait for I/O loop to finish, after all sockets are closed
+        server.JoinSocketsThreads();
     }
 }
 BOOST_AUTO_TEST_SUITE_END()
