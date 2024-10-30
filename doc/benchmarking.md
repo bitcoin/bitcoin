@@ -22,18 +22,18 @@ After compiling bitcoin-core, the benchmarks can be run with:
 
 The output will look similar to:
 ```
-|               ns/op |                op/s |    err% |     total | benchmark
-|--------------------:|--------------------:|--------:|----------:|:----------
-|       57,927,463.00 |               17.26 |    3.6% |      0.66 | `AddrManAdd`
-|          677,816.00 |            1,475.33 |    4.9% |      0.01 | `AddrManGetAddr`
-
 ...
-
-|             ns/byte |              byte/s |    err% |     total | benchmark
-|--------------------:|--------------------:|--------:|----------:|:----------
-|              127.32 |        7,854,302.69 |    0.3% |      0.00 | `Base58CheckEncode`
-|               31.95 |       31,303,226.99 |    0.2% |      0.00 | `Base58Decode`
-
+|               ns/op |                op/s |    err% |          ins/op |          cyc/op |    IPC |         bra/op |   miss% |     total | benchmark
+|--------------------:|--------------------:|--------:|----------------:|----------------:|-------:|---------------:|--------:|----------:|:----------
+|          720,914.00 |            1,387.13 |    1.4% |    7,412,886.58 |    3,161,517.17 |  2.345 |   1,021,129.90 |    1.0% |      0.20 | `AddAndRemoveDisconnectedBlockTransactions10`
+|          611,867.00 |            1,634.34 |    0.5% |    7,649,982.92 |    2,670,775.17 |  2.864 |   1,056,808.83 |    0.4% |      0.07 | `AddAndRemoveDisconnectedBlockTransactions90`
+|          619,097.20 |            1,615.26 |    1.0% |    7,668,842.50 |    2,668,561.30 |  2.874 |   1,059,370.50 |    0.3% |      0.07 | `AddAndRemoveDisconnectedBlockTransactionsAll`
+|          159,134.17 |            6,284.01 |    1.3% |    2,071,425.00 |      694,174.43 |  2.984 |     267,128.50 |    0.4% |      0.01 | `AssembleBlock`
+...
+|               ns/op |                op/s |    err% |          ins/op |          cyc/op |    IPC |         bra/op |   miss% |     total | benchmark
+|--------------------:|--------------------:|--------:|----------------:|----------------:|-------:|---------------:|--------:|----------:|:----------
+|            7,188.44 |          139,112.17 |    2.0% |       86,159.12 |       29,225.32 |  2.948 |       8,224.78 |    1.3% |      0.01 | `Linearize16TxWorstCase120Iters`
+|            2,030.32 |          492,532.65 |    1.1% |       22,864.15 |        8,028.46 |  2.848 |       2,367.65 |    0.9% |      0.01 | `Linearize16TxWorstCase20Iters`
 ...
 ```
 
@@ -47,12 +47,30 @@ or using a regex filter to only run certain benchmarks.
 
 Notes
 ---------------------
-More benchmarks are needed for, in no particular order:
-- Script Validation
-- Coins database
-- Memory pool
-- Cuckoo Cache
-- P2P throughput
+
+Benchmarks help with monitoring for performance regressions and act as a scope
+for future performance improvements. They should cover components that impact
+performance critical functions of the system. Functions are performance
+critical, if their performance impacts users and the cost associated with a
+degradation in performance is high. A non-exhaustive list:
+
+- Initial block download (Cost: slow IBD results in full node operation being
+  less accessible)
+- Block template creation (Cost: slow block template creation may result in
+  lower fee revenue for miners)
+- Block propagation (Cost: slow block propagation may increase the rate of
+  orphaned blocks)
+
+Benchmark additions and performance improvements are valuable if they target
+the user facing functions mentioned above. If a clear end-to-end performance
+improvement cannot be demonstrated, the pull request is likely to be rejected.
+The change might also be rejected if the code bloat or review/maintenance is
+too much to justify the improvement.
+
+Benchmarks are ill-suited for testing of denial of service issues as they are
+restricted to the same input set (introducing bias). [Fuzz
+tests](/doc/fuzzing.md) are better suited for this purpose, as they are much
+better (and aimed) at exploring the possible input space.
 
 Going Further
 --------------------
