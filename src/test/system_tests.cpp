@@ -27,13 +27,6 @@ BOOST_AUTO_TEST_CASE(dummy)
 
 BOOST_AUTO_TEST_CASE(run_command)
 {
-#ifdef WIN32
-    // https://www.winehq.org/pipermail/wine-devel/2008-September/069387.html
-    auto hntdll = GetModuleHandleA("ntdll.dll");
-    assert(hntdll);
-    const bool wine_runtime = GetProcAddress(hntdll, "wine_get_version");
-#endif
-
     {
         const UniValue result = RunCommandParseJSON("");
         BOOST_CHECK(result.isNull());
@@ -74,19 +67,11 @@ BOOST_AUTO_TEST_CASE(run_command)
     {
         // Return non-zero exit code, with error message for stderr
 #ifdef WIN32
-        std::string command;
-        std::string expected;
-        if (wine_runtime) {
-            command = "cmd.exe /c \"echo err 1>&2 && exit 1\"";
-            expected = "err";
-        } else {
-            command = "cmd.exe /c \"echo err 1>&2 && exit 1\"";
-            expected = "err";
-        }
+        const std::string command{"cmd.exe /c \"echo err 1>&2 && exit 1\""};
 #else
         const std::string command{"sh -c 'echo err 1>&2 && false'"};
-        const std::string expected{"err"};
 #endif
+        const std::string expected{"err"};
         BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, [&](const std::runtime_error& e) {
             const std::string what(e.what());
             BOOST_CHECK(what.find(strprintf("RunCommandParseJSON error: process(%s) returned", command)) != std::string::npos);
