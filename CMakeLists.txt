@@ -542,6 +542,12 @@ endif()
 if(BUILD_TESTS)
   enable_testing()
 endif()
+
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.29)
+  # have "make test" depend on "make all"
+  set(CMAKE_SKIP_TEST_ALL_DEPENDENCY FALSE)
+endif()
+
 # TODO: The `CMAKE_SKIP_BUILD_RPATH` variable setting can be deleted
 #       in the future after reordering Guix script commands to
 #       perform binary checks after the installation step.
