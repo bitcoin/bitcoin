@@ -905,4 +905,17 @@ bool HTTPRequest::LoadBody(LineReader& reader)
 
     return true;
 }
+
+bool HTTPServer::EventNewConnectionAccepted(NodeId node_id,
+                                            const CService& me,
+                                            const CService& them)
+{
+    auto client = std::make_shared<HTTPClient>(node_id, them);
+    // Point back to the server
+    client->m_server = this;
+    LogDebug(BCLog::HTTP, "HTTP Connection accepted from %s (id=%d)\n", client->m_origin, client->m_node_id);
+    m_connected_clients.emplace(client->m_node_id, std::move(client));
+    m_no_clients = false;
+    return true;
+}
 } // namespace http_bitcoin
