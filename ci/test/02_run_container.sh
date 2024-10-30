@@ -97,6 +97,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
                   --mount "${CI_DEPENDS_MOUNT}" \
                   --mount "${CI_DEPENDS_SOURCES_MOUNT}" \
                   --mount "${CI_PREVIOUS_RELEASES_MOUNT}" \
+                  --mount "type=tmpfs,destination=${BASE_TEST_TEMP_DIR},tmpfs-size=12G" \
                   --env-file /tmp/env-$USER-$CONTAINER_NAME \
                   --name "$CONTAINER_NAME" \
                   --network ci-ip6net \
@@ -108,6 +109,7 @@ else
   echo "Create missing folders"
   mkdir -p "${CCACHE_DIR}"
   mkdir -p "${PREVIOUS_RELEASES_DIR}"
+  mkdir -p "${BASE_TEST_TEMP_DIR}"
 fi
 
 if [ "$CI_OS_NAME" == "macos" ]; then

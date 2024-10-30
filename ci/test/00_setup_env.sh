@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2019-2022 The Bitcoin Core developers
+# Copyright (c) 2019-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,10 +19,15 @@ export BASE_ROOT_DIR="${BASE_ROOT_DIR:-/ci_container_base}"
 # The depends dir.
 # This folder exists only on the ci guest, and on the ci host as a volume.
 export DEPENDS_DIR=${DEPENDS_DIR:-$BASE_ROOT_DIR/depends}
-# A folder for the ci system to put temporary files (build result, datadirs for tests, ...)
+# A folder for the ci system to put temporary files (build result, qa-assets, ...)
 # This folder only exists on the ci guest.
 export BASE_SCRATCH_DIR=${BASE_SCRATCH_DIR:-$BASE_ROOT_DIR/ci/scratch}
-# A folder for the ci system to put executables.
+# A folder for the ci system to put temporary test files (datadirs for tests, ...)
+# The folder is mounted as tmpfs with a size of MIN_NO_CLEANUP_SPACE, however,
+# with default ci settings the real usage should be lower and closer to 3GB.
+# This folder only exists on the ci guest.
+export BASE_TEST_TEMP_DIR="${BASE_ROOT_DIR}/ci_test_temp"
+# A folder for the ci system to put executables (busybox, ...).
 # This folder only exists on the ci guest.
 export BINS_SCRATCH_DIR="${BASE_SCRATCH_DIR}/bins/"
 

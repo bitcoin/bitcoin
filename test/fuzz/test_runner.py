@@ -31,6 +31,8 @@ def get_fuzz_env(*, target, source_dir):
     if platform.system() == "Windows":
         # On Windows, `env` option must include valid `SystemRoot`.
         fuzz_env = {**fuzz_env, 'SystemRoot': os.environ.get('SystemRoot')}
+    if (tmpdir := os.environ.get("TMPDIR")) is not None:
+        fuzz_env = {**fuzz_env, "TMPDIR": tmpdir}  # Required to modify the test datadir location
     return fuzz_env
 
 
