@@ -15,6 +15,7 @@
 #include <deploymentstatus.h>
 #include <logging.h>
 #include <node/blockstorage.h>
+#include <util/irange.h>
 #include <validation.h>
 
 #include <algorithm>
@@ -153,7 +154,7 @@ CCreditPool CCreditPoolManager::ConstructCreditPool(const CBlockIndex* const blo
         return opt_cbTx->creditPoolBalance;
     }();
 
-    // We use here sliding window with LimitBlocksToTrace to determine
+    // We use here sliding window with Params().CreditPoolPeriodBlocks to determine
     // current limits for asset unlock transactions.
     // Indexes should not be duplicated since genesis block, but the Unlock Amount
     // of withdrawal transaction is limited only by this window
@@ -164,7 +165,7 @@ CCreditPool CCreditPoolManager::ConstructCreditPool(const CBlockIndex* const blo
     }
 
     const CBlockIndex* distant_block_index = block_index;
-    for (size_t i = 0; i < CCreditPoolManager::LimitBlocksToTrace; ++i) {
+    for ([[maybe_unused]] auto _ : irange::range(Params().CreditPoolPeriodBlocks())) {
         distant_block_index = distant_block_index->pprev;
         if (distant_block_index == nullptr) break;
     }
