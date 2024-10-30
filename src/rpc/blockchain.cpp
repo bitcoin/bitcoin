@@ -1335,8 +1335,9 @@ static RPCHelpMan pruneblockchain()
     CChain& active_chain = active_chainstate.m_chain;
 
     int heightParam = request.params[0].get_int();
-    if (heightParam < 0)
+    if (heightParam < 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative block height.");
+    }
 
     // Height value more than a billion is too high to be a block height, and
     // too low to be a block time (corresponds to timestamp from Sep 2001).
@@ -1361,8 +1362,8 @@ static RPCHelpMan pruneblockchain()
     }
 
     PruneBlockFilesManual(active_chainstate, height);
-    const CBlockIndex* block = CHECK_NONFATAL(active_chain.Tip());
-    const CBlockIndex* last_block = GetFirstStoredBlock(block);
+    const CBlockIndex& block{*CHECK_NONFATAL(active_chain.Tip())};
+    const CBlockIndex* last_block{active_chainstate.m_blockman.GetFirstStoredBlock(block)};
 
     return static_cast<uint64_t>(last_block->nHeight);
 },
@@ -1782,10 +1783,10 @@ RPCHelpMan getblockchaininfo()
     LOCK(cs_main);
     CChainState& active_chainstate = chainman.ActiveChainstate();
 
-    const CBlockIndex* tip = CHECK_NONFATAL(active_chainstate.m_chain.Tip());
-    const int height = tip->nHeight;
+    const CBlockIndex& tip{*CHECK_NONFATAL(active_chainstate.m_chain.Tip())};
+    const int height{tip.nHeight};
 
-    const auto ehfSignals = CHECK_NONFATAL(node.mnhf_manager)->GetSignalsStage(tip);
+    const auto ehfSignals{CHECK_NONFATAL(node.mnhf_manager)->GetSignalsStage(&tip)};
 
     UniValue obj(UniValue::VOBJ);
     if (args.IsArgSet("-devnet")) {
@@ -1795,18 +1796,17 @@ RPCHelpMan getblockchaininfo()
     }
     obj.pushKV("blocks", height);
     obj.pushKV("headers", chainman.m_best_header ? chainman.m_best_header->nHeight : -1);
-    obj.pushKV("bestblockhash", tip->GetBlockHash().GetHex());
-    obj.pushKV("difficulty", (double)GetDifficulty(tip));
-    obj.pushKV("time", (int64_t)tip->nTime);
-    obj.pushKV("mediantime", (int64_t)tip->GetMedianTimePast());
-    obj.pushKV("verificationprogress", GuessVerificationProgress(Params().TxData(), tip));
+    obj.pushKV("bestblockhash", tip.GetBlockHash().GetHex());
+    obj.pushKV("difficulty", GetDifficulty(&tip));
+    obj.pushKV("time", tip.GetBlockTime());
+    obj.pushKV("mediantime", tip.GetMedianTimePast());
+    obj.pushKV("verificationprogress", GuessVerificationProgress(Params().TxData(), &tip));
     obj.pushKV("initialblockdownload", active_chainstate.IsInitialBlockDownload());
-    obj.pushKV("chainwork", tip->nChainWork.GetHex());
+    obj.pushKV("chainwork", tip.nChainWork.GetHex());
     obj.pushKV("size_on_disk", chainman.m_blockman.CalculateCurrentUsage());
     obj.pushKV("pruned", fPruneMode);
     if (fPruneMode) {
-        const CBlockIndex* block = CHECK_NONFATAL(tip);
-        obj.pushKV("pruneheight", GetFirstStoredBlock(block)->nHeight);
+        obj.pushKV("pruneheight", chainman.m_blockman.GetFirstStoredBlock(tip)->nHeight);
 
         // if 0, execution bypasses the whole if block.
         bool automatic_pruning{args.GetArg("-prune", 0) != 1};
@@ -1818,24 +1818,28 @@ RPCHelpMan getblockchaininfo()
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
     UniValue softforks(UniValue::VOBJ);
-    // sorted by activation block
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_HEIGHTINCB);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_DERSIG);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_CLTV);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_BIP147);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_CSV);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_DIP0001);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_DIP0003);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_DIP0008);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_DIP0020);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_DIP0024);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_BRR);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_V19);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_V20);
-    SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_MN_RR);
-    SoftForkDescPushBack(tip, ehfSignals, softforks, consensusParams, Consensus::DEPLOYMENT_WITHDRAWALS);
-    SoftForkDescPushBack(tip, ehfSignals, softforks, consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
-
+    for (auto deploy : { /* sorted by activation block */
+                         Consensus::DEPLOYMENT_HEIGHTINCB,
+                         Consensus::DEPLOYMENT_DERSIG,
+                         Consensus::DEPLOYMENT_CLTV,
+                         Consensus::DEPLOYMENT_BIP147,
+                         Consensus::DEPLOYMENT_CSV,
+                         Consensus::DEPLOYMENT_DIP0001,
+                         Consensus::DEPLOYMENT_DIP0003,
+                         Consensus::DEPLOYMENT_DIP0008,
+                         Consensus::DEPLOYMENT_DIP0020,
+                         Consensus::DEPLOYMENT_DIP0024,
+                         Consensus::DEPLOYMENT_BRR,
+                         Consensus::DEPLOYMENT_V19,
+                         Consensus::DEPLOYMENT_V20,
+                         Consensus::DEPLOYMENT_MN_RR }) {
+        SoftForkDescPushBack(&tip, softforks, consensusParams, deploy);
+    }
+    for (auto ehf_deploy : { /* sorted by activation block */
+                             Consensus::DEPLOYMENT_WITHDRAWALS,
+                             Consensus::DEPLOYMENT_TESTDUMMY }) {
+        SoftForkDescPushBack(&tip, ehfSignals, softforks, consensusParams, ehf_deploy);
+    }
     obj.pushKV("softforks", softforks);
 
     obj.pushKV("warnings", GetWarnings(false).original);

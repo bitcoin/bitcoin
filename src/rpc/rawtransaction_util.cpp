@@ -58,7 +58,12 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
         if (nOutput < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout cannot be negative");
 
-        uint32_t nSequence = (rawTx.nLockTime ? CTxIn::SEQUENCE_FINAL - 1 : CTxIn::SEQUENCE_FINAL);
+        uint32_t nSequence;
+        if (rawTx.nLockTime) {
+            nSequence = CTxIn::MAX_SEQUENCE_NONFINAL; /* CTxIn::SEQUENCE_FINAL - 1 */
+        } else {
+            nSequence = CTxIn::SEQUENCE_FINAL;
+        }
 
         // set the sequence number if passed in the parameters object
         const UniValue& sequenceObj = find_value(o, "sequence");

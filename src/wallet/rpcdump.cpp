@@ -1007,7 +1007,7 @@ RPCHelpMan dumpwallet()
         file << "# HD seed: " << HexStr(vchSeed) << "\n\n";
 
         CExtKey masterKey;
-        masterKey.SetSeed(vchSeed);
+        masterKey.SetSeed(MakeByteSpan(vchSeed));
 
         file << "# extended private masterkey: " << EncodeExtKey(masterKey) << "\n";
 

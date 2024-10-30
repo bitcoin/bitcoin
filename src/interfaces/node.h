@@ -35,6 +35,7 @@ class UniValue;
 class Proxy;
 struct bilingual_str;
 enum class SynchronizationState;
+enum class TransactionError;
 struct CNodeStateStats;
 struct NodeContext;
 
@@ -263,6 +264,9 @@ public:
 
     //! Get unspent outputs associated with a transaction.
     virtual bool getUnspentOutput(const COutPoint& output, Coin& coin) = 0;
+
+    //! Broadcast transaction.
+    virtual TransactionError broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, bilingual_str& err_string) = 0;
 
     //! Get wallet loader.
     virtual WalletLoader& walletLoader() = 0;
