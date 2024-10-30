@@ -12,6 +12,7 @@
 #include <string>
 
 #include <rpc/protocol.h>
+#include <common/sockman.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
@@ -204,6 +205,7 @@ private:
 
 namespace http_bitcoin {
 using util::LineReader;
+using NodeId = SockMan::Id;
 
 // shortest valid request line, used by libevent in evhttp_parse_request_line()
 static const size_t MIN_REQUEST_LINE_LENGTH{strlen("GET / HTTP/1.0")};
@@ -255,6 +257,85 @@ public:
     bool LoadControlData(LineReader& reader);
     bool LoadHeaders(LineReader& reader);
     bool LoadBody(LineReader& reader);
+};
+
+class HTTPServer;
+
+class HTTPClient
+{
+public:
+    // ID provided by SockMan, inherited by HTTPServer
+    NodeId m_node_id;
+    // Remote address of connected client
+    CService m_addr;
+    // IP:port of connected client, cached for logging purposes
+    std::string m_origin;
+    // Pointer back to the server so we can call Sockman I/O methods from the client
+    // Ok to remain null for unit tests.
+    HTTPServer* m_server;
+
+    explicit HTTPClient(NodeId node_id, CService addr) : m_node_id(node_id), m_addr(addr)
+    {
+        m_origin = addr.ToStringAddrPort();
+    };
+
+    // Disable copies (should only be used as shared pointers)
+    HTTPClient(const HTTPClient&) = delete;
+    HTTPClient& operator=(const HTTPClient&) = delete;
+};
+
+class HTTPServer : public SockMan
+{
+public:
+    // Set in the Sockman I/O loop and only checked by main thread when shutting
+    // down to wait for all clients to be disconnected.
+    std::atomic_bool m_no_clients{true};
+
+    //! Connected clients with live HTTP connections
+    std::unordered_map<NodeId, std::shared_ptr<HTTPClient>> m_connected_clients;
+
+    /**
+     * Be notified when a new connection has been accepted.
+     * @param[in] node_id Id of the newly accepted connection.
+     * @param[in] me The address and port at our side of the connection.
+     * @param[in] them The address and port at the peer's side of the connection.
+     * @retval true The new connection was accepted at the higher level.
+     * @retval false The connection was refused at the higher level, so the
+     * associated socket and node_id should be discarded by `SockMan`.
+     */
+    virtual bool EventNewConnectionAccepted(NodeId node_id, const CService& me, const CService& them) override;
+
+    /**
+     * Called when the socket is ready to send data and `ShouldTryToSend()` has
+     * returned true. This is where the higher level code serializes its messages
+     * and calls `SockMan::SendBytes()`.
+     * @param[in] node_id Id of the node whose socket is ready to send.
+     * @param[out] cancel_recv Should always be set upon return and if it is true,
+     * then the next attempt to receive data from that node will be omitted.
+     */
+    virtual void EventReadyToSend(NodeId node_id, bool& cancel_recv) override {};
+
+    /**
+     * Called when new data has been received.
+     * @param[in] node_id Connection for which the data arrived.
+     * @param[in] data Received data.
+     */
+    virtual void EventGotData(NodeId node_id, std::span<const uint8_t> data) override {};
+
+    /**
+     * Called when the remote peer has sent an EOF on the socket. This is a graceful
+     * close of their writing side, we can still send and they will receive, if it
+     * makes sense at the application level.
+     * @param[in] node_id Node whose socket got EOF.
+     */
+    virtual void EventGotEOF(NodeId node_id) override {};
+
+    /**
+     * Called when we get an irrecoverable error trying to read from a socket.
+     * @param[in] node_id Node whose socket got an error.
+     * @param[in] errmsg Message describing the error.
+     */
+    virtual void EventGotPermanentReadError(NodeId node_id, const std::string& errmsg) override {};
 };
 } // namespace http_bitcoin
 
