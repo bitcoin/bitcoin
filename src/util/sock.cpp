@@ -26,11 +26,6 @@
 #include <poll.h>
 #endif
 
-static inline bool IOErrorIsPermanent(int err)
-{
-    return err != WSAEAGAIN && err != WSAEINTR && err != WSAEWOULDBLOCK && err != WSAEINPROGRESS;
-}
-
 Sock::Sock(SOCKET s) : m_socket(s) {}
 
 Sock::Sock(Sock&& other)
