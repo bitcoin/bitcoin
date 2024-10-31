@@ -251,6 +251,8 @@ public:
     std::string StringifyHeaders() const;
 };
 
+class HTTPClient;
+
 class HTTPRequest
 {
 public:
@@ -269,6 +271,13 @@ public:
     HTTPHeaders m_headers;
     std::string m_body;
 
+    //! Pointer to the client that made the request so we know who to respond to.
+    std::shared_ptr<HTTPClient> m_client;
+
+    explicit HTTPRequest(std::shared_ptr<HTTPClient> client) : m_client(client) {};
+    //! Construct with a null client for unit tests
+    explicit HTTPRequest() : m_client(nullptr) {};
+
     /**
      * Methods that attempt to parse HTTP request fields line-by-line
      * from a receive buffer.
@@ -284,8 +293,6 @@ public:
     /// @}
 };
 
-class HTTPClient;
-
 class HTTPServer
 {
 public:
@@ -293,6 +300,8 @@ public:
      * Each connection is assigned an unique id of this type.
      */
     using Id = int64_t;
+
+    explicit HTTPServer(std::function<void(std::unique_ptr<HTTPRequest>&&)> func) : m_request_dispatcher(func) {};
 
     virtual ~HTTPServer()
     {
@@ -322,13 +331,6 @@ public:
      * Get the number of HTTPClients we are connected to
      */
     size_t GetConnectionsCount() const { return m_connected_size.load(std::memory_order_acquire); }
-
-    /**
-     * This is a temporary method used to get a pointer to an HTTPClient
-     * so its connection can be inspected in a unit test.
-     * It will be removed in a future commit.
-     */
-    std::shared_ptr<HTTPClient> GetFirstConnection() { return m_connected.front(); }
 
     /**
      * Start the necessary threads for sockets IO.
@@ -415,6 +417,11 @@ private:
      */
     std::thread m_thread_socket_handler;
 
+    /*
+     * What to do with HTTP requests once received, validated and parsed
+     */
+    std::function<void(std::unique_ptr<HTTPRequest>&&)> m_request_dispatcher;
+
     /**
      * Accept a connection.
      * @param[in] listen_sock Socket on which to accept the connection.
@@ -437,6 +444,12 @@ private:
     void NewSockAccepted(std::unique_ptr<Sock>&& sock, const CService& them);
 
     /**
+     * Do the read/write for connected sockets that are ready for IO.
+     * @param[in] io_readiness Which sockets are ready and their corresponding HTTPClients.
+     */
+    void SocketHandlerConnected(const IOReadiness& io_readiness) const;
+
+    /**
      * Accept incoming connections, one from each read-ready listening socket.
      * @param[in] events_per_sock Sockets that are ready for IO.
      */
@@ -454,6 +467,15 @@ private:
      * This is the main I/O loop of the server.
      */
     void ThreadSocketHandler();
+
+    /**
+     * Try to read HTTPRequests from a client's receive buffer.
+     * Complete requests are dispatched, incomplete requests are
+     * left in the buffer to wait for more data. Some read errors
+     * will mark this client for disconnection.
+     * @param[in] client The HTTPClient to read requests from
+     */
+    void MaybeDispatchRequestsFromClient(std::shared_ptr<HTTPClient> client) const;
 };
 
 class HTTPClient
@@ -467,6 +489,13 @@ public:
 
     //! IP:port of connected client, cached for logging purposes
     std::string m_origin;
+
+    /**
+     * In lieu of an intermediate transport class like p2p uses,
+     * we copy data from the socket buffer to the client object
+     * and attempt to read HTTP requests from here.
+     */
+    std::vector<std::byte> m_recv_buffer{};
 
     /**
      * Mutex that serializes the Send() and Recv() calls on `m_sock`. Reading
@@ -490,6 +519,13 @@ public:
     // Disable copies (should only be used as shared pointers)
     HTTPClient(const HTTPClient&) = delete;
     HTTPClient& operator=(const HTTPClient&) = delete;
+
+    /**
+     * Try to read an HTTP request from the receive buffer.
+     * @param[in]   req     A pointer to an HTTPRequest to read
+     * @returns true on success, false on failure.
+     */
+    bool ReadRequest(const std::unique_ptr<HTTPRequest>& req);
 };
 } // namespace http_bitcoin
 
