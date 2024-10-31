@@ -15,4 +15,3 @@ export BITCOIN_CONFIG="-DBUILD_GUI=ON -DWITH_ZMQ=ON -DREDUCE_EXPORTS=ON"
 export CI_OS_NAME="macos"
 export NO_DEPENDS=1
 export OSX_SDK=""
-export RUN_FUZZ_TESTS=true
