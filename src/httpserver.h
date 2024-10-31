@@ -240,6 +240,8 @@ public:
     std::string StringifyHeaders() const;
 };
 
+class HTTPClient;
+
 class HTTPRequest
 {
 public:
@@ -250,6 +252,13 @@ public:
     int m_version_minor{1};
     HTTPHeaders m_headers;
     std::string m_body;
+
+    // Keep a pointer to the client that made the request so
+    // we know who to respond to.
+    std::shared_ptr<HTTPClient> m_client;
+    explicit HTTPRequest(std::shared_ptr<HTTPClient> client) : m_client(client) {};
+    // Null client for unit tests
+    explicit HTTPRequest() : m_client(nullptr) {};
 
     // Readers return false if they need more data from the
     // socket to parse properly. They throw errors if
@@ -274,10 +283,18 @@ public:
     // Ok to remain null for unit tests.
     HTTPServer* m_server;
 
+    // In lieu of an intermediate transport class like p2p uses,
+    // we copy data from the socket buffer to the client object
+    // and attempt to read HTTP requests from here.
+    std::vector<std::byte> m_recv_buffer{};
+
     explicit HTTPClient(NodeId node_id, CService addr) : m_node_id(node_id), m_addr(addr)
     {
         m_origin = addr.ToStringAddrPort();
     };
+
+    // Try to read an HTTP request from the receive buffer
+    bool ReadRequest(std::unique_ptr<HTTPRequest>& req);
 
     // Disable copies (should only be used as shared pointers)
     HTTPClient(const HTTPClient&) = delete;
@@ -287,12 +304,18 @@ public:
 class HTTPServer : public SockMan
 {
 public:
+    explicit HTTPServer(std::function<void(std::unique_ptr<HTTPRequest>)> func) : m_request_dispatcher(func) {};
+
     // Set in the Sockman I/O loop and only checked by main thread when shutting
     // down to wait for all clients to be disconnected.
     std::atomic_bool m_no_clients{true};
-
     //! Connected clients with live HTTP connections
     std::unordered_map<NodeId, std::shared_ptr<HTTPClient>> m_connected_clients;
+
+    // What to do with HTTP requests once received, validated and parsed
+    std::function<void(std::unique_ptr<HTTPRequest>)> m_request_dispatcher;
+
+    std::shared_ptr<HTTPClient> GetClientById(NodeId node_id) const;
 
     /**
      * Be notified when a new connection has been accepted.
@@ -320,7 +343,7 @@ public:
      * @param[in] node_id Connection for which the data arrived.
      * @param[in] data Received data.
      */
-    virtual void EventGotData(NodeId node_id, std::span<const uint8_t> data) override {};
+    virtual void EventGotData(NodeId node_id, std::span<const uint8_t> data) override;
 
     /**
      * Called when the remote peer has sent an EOF on the socket. This is a graceful
