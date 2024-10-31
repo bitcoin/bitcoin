@@ -151,20 +151,15 @@ void StartThreadMapPort()
     }
 }
 
-static void DispatchMapPort()
+void StartMapPort(bool enable)
 {
+    g_mapport_enabled = enable;
     if (!g_mapport_current && g_mapport_enabled) {
         StartThreadMapPort();
     } else if (g_mapport_current && !g_mapport_enabled) {
         InterruptMapPort();
         StopMapPort();
     }
-}
-
-void StartMapPort(bool enable)
-{
-    g_mapport_enabled = enable;
-    DispatchMapPort();
 }
 
 void InterruptMapPort()
