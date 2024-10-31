@@ -106,18 +106,6 @@ public:
     //! used to decide whether to make a new block template.
     virtual unsigned int getTransactionsUpdated() = 0;
 
-    /**
-     * Check a block is completely valid from start to finish.
-     * Only works on top of our current best block.
-     * Does not check proof-of-work.
-     *
-     * @param[in] block the block to validate
-     * @param[in] check_merkle_root call CheckMerkleRoot()
-     * @param[out] state details of why a block failed to validate
-     * @returns false if it does not build on the current tip, or any of the checks fail
-     */
-    virtual bool testBlockValidity(const CBlock& block, bool check_merkle_root, BlockValidationState& state) = 0;
-
     //! Get internal node context. Useful for RPC and testing,
     //! but not accessible across processes.
     virtual node::NodeContext* context() { return nullptr; }

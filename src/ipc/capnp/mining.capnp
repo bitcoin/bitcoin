@@ -20,7 +20,6 @@ interface Mining $Proxy.wrap("interfaces::Mining") {
     createNewBlock @4 (options: BlockCreateOptions) -> (result: BlockTemplate);
     processNewBlock @5 (context :Proxy.Context, block: Data) -> (newBlock: Bool, result: Bool);
     getTransactionsUpdated @6 (context :Proxy.Context) -> (result: UInt32);
-    testBlockValidity @7 (context :Proxy.Context, block: Data, checkMerkleRoot: Bool) -> (state: BlockValidationState, result: Bool);
 }
 
 interface BlockTemplate $Proxy.wrap("interfaces::BlockTemplate") {

@@ -384,9 +384,10 @@ static RPCHelpMan generateblock()
     RegenerateCommitments(block, chainman);
 
     {
+        LOCK(::cs_main);
         BlockValidationState state;
-        if (!miner.testBlockValidity(block, /*check_merkle_root=*/false, state)) {
-            throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("testBlockValidity failed: %s", state.ToString()));
+        if (!TestBlockValidity(state, chainman.GetParams(), chainman.ActiveChainstate(), block, chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock),  /*fCheckPOW=*/false, /*fCheckMerkleRoot=*/false)) {
+            throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("TestBlockValidity failed: %s", state.ToString()));
         }
     }
 
@@ -709,12 +710,12 @@ static RPCHelpMan getblocktemplate()
                 return "duplicate-inconclusive";
             }
 
-            // testBlockValidity only supports blocks built on the current Tip
+            // TestBlockValidity only supports blocks built on the current Tip
             if (block.hashPrevBlock != tip) {
                 return "inconclusive-not-best-prevblk";
             }
             BlockValidationState state;
-            miner.testBlockValidity(block, /*check_merkle_root=*/true, state);
+            TestBlockValidity(state, chainman.GetParams(), chainman.ActiveChainstate(), block, chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock), /*fCheckPOW=*/false, /*fCheckMerkleRoot=*/true);
             return BIP22ValidationResult(state);
         }
 
