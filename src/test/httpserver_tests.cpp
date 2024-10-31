@@ -17,6 +17,18 @@ using http_bitcoin::HTTPServer;
 using http_bitcoin::MAX_HEADERS_SIZE;
 using util::LineReader;
 
+// HTTP request captured from bitcoin-cli
+const std::vector<std::byte> full_request{TryParseHex<std::byte>(
+    "504f5354202f20485454502f312e310d0a486f73743a203132372e302e302e310d"
+    "0a436f6e6e656374696f6e3a20636c6f73650d0a436f6e74656e742d547970653a"
+    "206170706c69636174696f6e2f6a736f6e0d0a417574686f72697a6174696f6e3a"
+    "204261736963205831396a6232397261575666587a6f354f4751354f4451334d57"
+    "4e6d4e6a67304e7a417a59546b7a4e32457a4e7a6b305a44466c4f4451314e6a5a"
+    "6d5954526b5a6a4a694d7a466b596a68684f4449345a4759344d6a566a4f546735"
+    "5a4749344f54566c0d0a436f6e74656e742d4c656e6774683a2034360d0a0d0a7b"
+    "226d6574686f64223a22676574626c6f636b636f756e74222c22706172616d7322"
+    "3a5b5d2c226964223a317d0a").value()};
+
 BOOST_FIXTURE_TEST_SUITE(httpserver_tests, SocketTestingSetup)
 
 BOOST_AUTO_TEST_CASE(test_query_parameters)
@@ -130,20 +142,8 @@ BOOST_AUTO_TEST_CASE(http_response_tests)
 BOOST_AUTO_TEST_CASE(http_request_tests)
 {
     {
-        // Reading request captured from bitcoin-cli
-        const std::string full_request =
-            "504f5354202f20485454502f312e310d0a486f73743a203132372e302e302e310d"
-            "0a436f6e6e656374696f6e3a20636c6f73650d0a436f6e74656e742d547970653a"
-            "206170706c69636174696f6e2f6a736f6e0d0a417574686f72697a6174696f6e3a"
-            "204261736963205831396a6232397261575666587a6f354f4751354f4451334d57"
-            "4e6d4e6a67304e7a417a59546b7a4e32457a4e7a6b305a44466c4f4451314e6a5a"
-            "6d5954526b5a6a4a694d7a466b596a68684f4449345a4759344d6a566a4f546735"
-            "5a4749344f54566c0d0a436f6e74656e742d4c656e6774683a2034360d0a0d0a7b"
-            "226d6574686f64223a22676574626c6f636b636f756e74222c22706172616d7322"
-            "3a5b5d2c226964223a317d0a";
         HTTPRequest req;
-        std::vector<std::byte> buffer{TryParseHex<std::byte>(full_request).value()};
-        LineReader reader(buffer, MAX_HEADERS_SIZE);
+        LineReader reader(full_request, MAX_HEADERS_SIZE);
         BOOST_CHECK(req.LoadControlData(reader));
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(req.LoadBody(reader));
@@ -264,7 +264,16 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
 
 BOOST_AUTO_TEST_CASE(http_server_socket_tests)
 {
-    HTTPServer server;
+    // Prepare a request handler that just stores received requests so we can examine them.
+    // Mutex is required to prevent a race between this test's main thread and the server's I/O loop.
+    Mutex requests_mutex;
+    std::deque<std::unique_ptr<HTTPRequest>> requests;
+    auto StoreRequest = [&](std::unique_ptr<HTTPRequest>&& req) {
+        LOCK(requests_mutex);
+        requests.push_back(std::move(req));
+    };
+
+    HTTPServer server{StoreRequest};
 
     {
         // We can only bind to NET_IPV4 and NET_IPV6
@@ -290,8 +299,8 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
     // No connections yet
     BOOST_CHECK_EQUAL(server.GetConnectionsCount(), 0);
 
-    // Create a mock client and add it to the local CreateSock queue
-    ConnectClient();
+    // Create a mock client with pre-loaded request data and add it to the local CreateSock queue
+    ConnectClient(full_request);
 
     // Wait up to a minute to find and connect the client in the I/O loop
     int attempts{6000};
@@ -300,9 +309,31 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
         BOOST_REQUIRE(--attempts > 0);
     }
 
-    // Inspect the connection
-    auto client{server.GetFirstConnection()};
-    BOOST_CHECK_EQUAL(client->m_origin, "5.5.5.5:6789");
+    // Prepare a pointer to the client, we'll assign it from the request itself.
+    std::shared_ptr<HTTPClient> client;
+
+    // Wait up to a minute to read the request from the client.
+    // Given that the mock client is itself a mock socket
+    // with hard-coded data it should only take a fraction of that.
+    attempts = 6000;
+    do {
+        {
+            LOCK(requests_mutex);
+            // Connected client should have one request already from the static content.
+            if (requests.size() == 1) {
+                // Check the received request
+                BOOST_CHECK_EQUAL(requests.front()->m_body, "{\"method\":\"getblockcount\",\"params\":[],\"id\":1}\n");
+
+                // Inspect the connection pointed to from the request
+                client = requests.front()->m_client;
+                BOOST_CHECK_EQUAL(client->m_origin, "5.5.5.5:6789");
+
+                break;
+            }
+        }
+        std::this_thread::sleep_for(10ms);
+        BOOST_REQUIRE(--attempts > 0);
+    } while (true);
 
     // Close connection
     BOOST_REQUIRE(server.CloseConnection(client));
