@@ -307,8 +307,17 @@ BOOST_AUTO_TEST_CASE(http_client_server_tests)
         // Prepare queue of accepted_sockets: just one connection with no data
         accepted_sockets->Push(std::move(connected_socket));
 
-        // Instantiate server
-        HTTPServer server = HTTPServer();
+        // Prepare a request handler that just stores received requests so we can examine them
+        // Mutex is required to prevent a race between this test's main thread and the Sockman I/O loop.
+        Mutex requests_mutex;
+        std::deque<std::unique_ptr<HTTPRequest>> requests;
+        auto StoreRequest = [&](std::unique_ptr<HTTPRequest> req) {
+            LOCK(requests_mutex);
+            requests.push_back(std::move(req));
+        };
+
+        // Instantiate server with dead-end request handler
+        HTTPServer server = HTTPServer(StoreRequest);
         BOOST_REQUIRE(server.m_no_clients);
 
         // This address won't actually get used because we stubbed CreateSock()
@@ -332,6 +341,15 @@ BOOST_AUTO_TEST_CASE(http_client_server_tests)
             --attempts;
         }
         BOOST_REQUIRE(!server.m_no_clients);
+
+        {
+            LOCK(requests_mutex);
+            // Connected client should have one request already from the static content.
+            BOOST_CHECK_EQUAL(requests.size(), 1);
+
+            // Check the received request
+            BOOST_CHECK_EQUAL(requests.front()->m_body, "{\"method\":\"getblockcount\",\"params\":[],\"id\":1}\n");
+        }
 
         // Close server
         server.interruptNet();

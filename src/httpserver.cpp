@@ -906,6 +906,24 @@ bool HTTPRequest::LoadBody(LineReader& reader)
     return true;
 }
 
+bool HTTPClient::ReadRequest(std::unique_ptr<HTTPRequest>& req)
+{
+    LineReader reader(m_recv_buffer, MAX_HEADERS_SIZE);
+
+    if (!req->LoadControlData(reader)) return false;
+    if (!req->LoadHeaders(reader)) return false;
+    if (!req->LoadBody(reader)) return false;
+
+    // Remove the bytes read out of the buffer.
+    // If one of the above calls throws an error, the caller must
+    // catch it and disconnect the client.
+    m_recv_buffer.erase(
+        m_recv_buffer.begin(),
+        m_recv_buffer.begin() + (reader.it - reader.start));
+
+    return true;
+}
+
 bool HTTPServer::EventNewConnectionAccepted(NodeId node_id,
                                             const CService& me,
                                             const CService& them)
@@ -917,5 +935,64 @@ bool HTTPServer::EventNewConnectionAccepted(NodeId node_id,
     m_connected_clients.emplace(client->m_node_id, std::move(client));
     m_no_clients = false;
     return true;
+}
+
+void HTTPServer::EventGotData(NodeId node_id, std::span<const uint8_t> data)
+{
+    // Get the HTTPClient
+    auto client{GetClientById(node_id)};
+    if (client == nullptr) {
+        return;
+    }
+
+    // Copy data from socket buffer to client receive buffer
+    client->m_recv_buffer.insert(
+        client->m_recv_buffer.end(),
+        reinterpret_cast<const std::byte*>(data.data()),
+        reinterpret_cast<const std::byte*>(data.data() + data.size())
+    );
+
+    // Try reading (potentially multiple) HTTP requests from the buffer
+    while (client->m_recv_buffer.size() > 0) {
+        // Create a new request object and try to fill it with data from the receive buffer
+        auto req = std::make_unique<HTTPRequest>(client);
+        try {
+            // Stop reading if we need more data from the client to parse a complete request
+            if (!client->ReadRequest(req)) break;
+        } catch (const std::runtime_error& e) {
+            LogDebug(
+                BCLog::HTTP,
+                "Error reading HTTP request from client %s (id=%lld): %s\n",
+                client->m_origin,
+                client->m_node_id,
+                e.what());
+
+            // We failed to read a complete request from the buffer
+            // TODO: respond with HTTP_BAD_REQUEST and disconnect
+
+            break;
+        }
+
+        // We read a complete request from the buffer into the queue
+        LogDebug(
+            BCLog::HTTP,
+            "Received a %s request for %s from %s (id=%lld)\n",
+            req->m_method,
+            req->m_target,
+            req->m_client->m_origin,
+            req->m_client->m_node_id);
+
+        // handle request
+        m_request_dispatcher(std::move(req));
+    }
+}
+
+std::shared_ptr<HTTPClient> HTTPServer::GetClientById(NodeId node_id) const
+{
+    auto it{m_connected_clients.find(node_id)};
+    if (it != m_connected_clients.end()) {
+        return it->second;
+    }
+    return nullptr;
 }
 } // namespace http_bitcoin
