@@ -162,20 +162,19 @@ public:
     //! Adding a flag also requires a self reference to the pair that contains
     //! this entry in the CCoinsCache map and a reference to the sentinel of the
     //! flagged pair linked list.
-    void AddFlags(uint8_t flags, CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept
+    static void AddFlags(uint8_t flags, CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept
     {
         Assume(flags & (DIRTY | FRESH));
-        Assume(&pair.second == this);
-        if (!m_flags) {
-            m_prev = sentinel.second.m_prev;
-            m_next = &sentinel;
+        if (!pair.second.m_flags) {
+            pair.second.m_prev = sentinel.second.m_prev;
+            pair.second.m_next = &sentinel;
             sentinel.second.m_prev = &pair;
-            m_prev->second.m_next = &pair;
+            pair.second.m_prev->second.m_next = &pair;
         }
-        m_flags |= flags;
+        pair.second.m_flags |= flags;
     }
-    static void SetDirty(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { pair.second.AddFlags(DIRTY, pair, sentinel); }
-    static void SetFresh(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { pair.second.AddFlags(FRESH, pair, sentinel); }
+    static void SetDirty(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(DIRTY, pair, sentinel); }
+    static void SetFresh(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(FRESH, pair, sentinel); }
 
     void SetClean() noexcept
     {
