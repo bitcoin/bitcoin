@@ -55,6 +55,7 @@
   },
   "overrides": [
     {
+      "$comment": "Newer unreleased libevent versions cause https://github.com/bitcoin/bitcoin/issues/30096",
       "name": "libevent",
       "version": "2.1.12#7"
     }
