@@ -430,8 +430,9 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
             }
         );
 
-        // Jump ahead in time
-        time += fuzzed_data_provider.PickValueInArray(TIME_SKIPS);
+        auto time_skip = fuzzed_data_provider.PickValueInArray(TIME_SKIPS);
+        if (fuzzed_data_provider.ConsumeBool()) time_skip *= -1;
+        time += time_skip;
         CheckInvariants(txdownload_impl, max_orphan_count);
     }
     // Disconnect everybody, check that all data structures are empty.
