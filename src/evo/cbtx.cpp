@@ -454,6 +454,11 @@ std::optional<CCbTx> GetCoinbaseTx(const CBlockIndex* pindex)
         return std::nullopt;
     }
 
+    // There's no CbTx before DIP0003 activation
+    if (!DeploymentActiveAt(*pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003)) {
+        return std::nullopt;
+    }
+
     CBlock block;
     if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
         return std::nullopt;
