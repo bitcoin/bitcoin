@@ -57,10 +57,6 @@
     {
       "name": "libevent",
       "version": "2.1.12#7"
-    },
-    {
-      "name": "liblzma",
-      "version": "5.4.1#1"
     }
   ]
 }
