@@ -32,6 +32,6 @@ uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated = nullptr);
  *
  * @return merkle path ordered from the deepest
  */
-std::vector<uint256> BlockMerkleBranch(const CBlock& block, uint32_t position = 0);
+std::vector<uint256> TransactionMerklePath(const CBlock& block, uint32_t position = 0);
 
 #endif // BITCOIN_CONSENSUS_MERKLE_H
