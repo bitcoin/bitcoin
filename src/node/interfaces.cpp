@@ -979,11 +979,6 @@ public:
         return BlockRef{chainman().ActiveChain().Tip()->GetBlockHash(), chainman().ActiveChain().Tip()->nHeight};
     }
 
-    bool processNewBlock(const std::shared_ptr<const CBlock>& block, bool* new_block) override
-    {
-        return chainman().ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/new_block);
-    }
-
     std::unique_ptr<BlockTemplate> createNewBlock(const BlockCreateOptions& options) override
     {
         BlockAssembler::Options assemble_options{options};

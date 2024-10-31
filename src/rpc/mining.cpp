@@ -131,7 +131,7 @@ static RPCHelpMan getnetworkhashps()
     };
 }
 
-static bool GenerateBlock(ChainstateManager& chainman, Mining& miner, CBlock&& block, uint64_t& max_tries, std::shared_ptr<const CBlock>& block_out, bool process_new_block)
+static bool GenerateBlock(ChainstateManager& chainman, CBlock&& block, uint64_t& max_tries, std::shared_ptr<const CBlock>& block_out, bool process_new_block)
 {
     block_out.reset();
     block.hashMerkleRoot = BlockMerkleRoot(block);
@@ -151,7 +151,7 @@ static bool GenerateBlock(ChainstateManager& chainman, Mining& miner, CBlock&& b
 
     if (!process_new_block) return true;
 
-    if (!miner.processNewBlock(block_out, nullptr)) {
+    if (!chainman.ProcessNewBlock(block_out, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
     }
 
@@ -166,7 +166,7 @@ static UniValue generateBlocks(ChainstateManager& chainman, Mining& miner, const
         CHECK_NONFATAL(block_template);
 
         std::shared_ptr<const CBlock> block_out;
-        if (!GenerateBlock(chainman, miner, block_template->getBlock(), nMaxTries, block_out, /*process_new_block=*/true)) {
+        if (!GenerateBlock(chainman, block_template->getBlock(), nMaxTries, block_out, /*process_new_block=*/true)) {
             break;
         }
 
@@ -394,7 +394,7 @@ static RPCHelpMan generateblock()
     std::shared_ptr<const CBlock> block_out;
     uint64_t max_tries{DEFAULT_MAX_TRIES};
 
-    if (!GenerateBlock(chainman, miner, std::move(block), max_tries, block_out, process_new_block) || !block_out) {
+    if (!GenerateBlock(chainman, std::move(block), max_tries, block_out, process_new_block) || !block_out) {
         throw JSONRPCError(RPC_MISC_ERROR, "Failed to make block.");
     }
 
@@ -1034,13 +1034,10 @@ static RPCHelpMan submitblock()
         }
     }
 
-    NodeContext& node = EnsureAnyNodeContext(request.context);
-    Mining& miner = EnsureMining(node);
-
     bool new_block;
     auto sc = std::make_shared<submitblock_StateCatcher>(block.GetHash());
     CHECK_NONFATAL(chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
-    bool accepted = miner.processNewBlock(blockptr, /*new_block=*/&new_block);
+    bool accepted = chainman.ProcessNewBlock(blockptr, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
     CHECK_NONFATAL(chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
     if (!new_block && accepted) {
         return "duplicate";

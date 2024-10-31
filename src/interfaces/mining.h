@@ -93,15 +93,6 @@ public:
      */
     virtual std::unique_ptr<BlockTemplate> createNewBlock(const node::BlockCreateOptions& options = {}) = 0;
 
-    /**
-     * Processes new block. A valid new block is automatically relayed to peers.
-     *
-     * @param[in]   block The block we want to process.
-     * @param[out]  new_block A boolean which is set to indicate if the block was first received via this call
-     * @returns     If the block was processed, independently of block validity
-     */
-    virtual bool processNewBlock(const std::shared_ptr<const CBlock>& block, bool* new_block) = 0;
-
     //! Get internal node context. Useful for RPC and testing,
     //! but not accessible across processes.
     virtual node::NodeContext* context() { return nullptr; }
