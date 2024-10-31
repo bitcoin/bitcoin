@@ -1,10 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "builtin-baseline": "9edb1b8e590cc086563301d735cae4b6e732d2d2",
-  "overrides":[
-    {"name": "libevent", "version": "2.1.12#7"},
-    {"name": "liblzma", "version": "5.4.1#1"}
-  ],
   "dependencies": [
     "boost-date-time",
     "boost-multi-index",
@@ -12,35 +8,59 @@
     "libevent"
   ],
   "default-features": [
-    "wallet",
-    "zeromq",
+    "qt5",
     "tests",
-    "qt5"
+    "wallet",
+    "zeromq"
   ],
   "features": {
-    "wallet": {
-      "description": "Enable wallet",
-      "dependencies": [ "berkeleydb", "sqlite3" ]
-    },
-    "sqlite": {
-      "description": "Enable SQLite wallet support",
-      "dependencies": [ "sqlite3" ]
-    },
     "berkeleydb": {
       "description": "Enable Berkeley DB wallet support",
-      "dependencies": [ "berkeleydb" ]
-    },
-    "zeromq": {
-      "description": "Enable ZMQ notifications",
-      "dependencies": [ "zeromq" ]
-    },
-    "tests": {
-      "description": "Build test_bitcoin.exe executable",
-      "dependencies": [ "boost-test" ]
+      "dependencies": [
+        "berkeleydb"
+      ]
     },
     "qt5": {
       "description": "Build GUI, Qt 5",
-      "dependencies": [ "qt5-base", "qt5-tools" ]
+      "dependencies": [
+        "qt5-base",
+        "qt5-tools"
+      ]
+    },
+    "sqlite": {
+      "description": "Enable SQLite wallet support",
+      "dependencies": [
+        "sqlite3"
+      ]
+    },
+    "tests": {
+      "description": "Build test_bitcoin.exe executable",
+      "dependencies": [
+        "boost-test"
+      ]
+    },
+    "wallet": {
+      "description": "Enable wallet",
+      "dependencies": [
+        "berkeleydb",
+        "sqlite3"
+      ]
+    },
+    "zeromq": {
+      "description": "Enable ZMQ notifications",
+      "dependencies": [
+        "zeromq"
+      ]
     }
-  }
+  },
+  "overrides": [
+    {
+      "name": "libevent",
+      "version": "2.1.12#7"
+    },
+    {
+      "name": "liblzma",
+      "version": "5.4.1#1"
+    }
+  ]
 }
