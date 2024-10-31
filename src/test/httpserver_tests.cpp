@@ -19,6 +19,16 @@ using http_bitcoin::MAX_BODY_SIZE;
 using http_bitcoin::MAX_HEADERS_SIZE;
 using util::LineReader;
 
+// HTTP request captured from bitcoin-cli
+constexpr std::string_view full_request = "POST / HTTP/1.1\r\n"
+                                          "Host: 127.0.0.1\r\n"
+                                          "Connection: close\r\n"
+                                          "Content-Type: application/json\r\n"
+                                          "Authorization: Basic X19jb29raWVfXzo5OGQ5ODQ3MWNmNjg0NzAzYTkzN2EzNzk0ZDFlODQ1NjZmYTRkZjJiMzFkYjhhODI4ZGY4MjVjOTg5ZGI4OTVl\r\n"
+                                          "Content-Length: 46\r\n"
+                                          "\r\n"
+                                          R"({"method":"getblockcount","params":[],"id":1})""\n";
+
 BOOST_FIXTURE_TEST_SUITE(httpserver_tests, SocketTestingSetup)
 
 BOOST_AUTO_TEST_CASE(test_query_parameters)
@@ -174,15 +184,6 @@ BOOST_AUTO_TEST_CASE(http_response_tests)
 BOOST_AUTO_TEST_CASE(http_request_tests)
 {
     {
-        // Reading request captured from bitcoin-cli
-        constexpr std::string_view full_request = "POST / HTTP/1.1\r\n"
-                                                  "Host: 127.0.0.1\r\n"
-                                                  "Connection: close\r\n"
-                                                  "Content-Type: application/json\r\n"
-                                                  "Authorization: Basic X19jb29raWVfXzo5OGQ5ODQ3MWNmNjg0NzAzYTkzN2EzNzk0ZDFlODQ1NjZmYTRkZjJiMzFkYjhhODI4ZGY4MjVjOTg5ZGI4OTVl\r\n"
-                                                  "Content-Length: 46\r\n"
-                                                  "\r\n"
-                                                  R"({"method":"getblockcount","params":[],"id":1})""\n";
         HTTPRequest req;
         LineReader reader(full_request, MAX_HEADERS_SIZE);
         BOOST_CHECK(req.LoadControlData(reader));
@@ -377,7 +378,16 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
 
 BOOST_AUTO_TEST_CASE(http_server_socket_tests)
 {
-    HTTPServer server;
+    // Prepare a request handler that just stores received requests so we can examine them.
+    // Mutex is required to prevent a race between this test's main thread and the server's I/O loop.
+    Mutex requests_mutex;
+    std::deque<std::unique_ptr<HTTPRequest>> requests;
+    auto StoreRequest = [&](std::unique_ptr<HTTPRequest>&& req) {
+        LOCK(requests_mutex);
+        requests.push_back(std::move(req));
+    };
+
+    HTTPServer server{StoreRequest};
 
     {
         // We can only bind to NET_IPV4 and NET_IPV6
@@ -403,8 +413,8 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
     // No connections yet
     BOOST_CHECK_EQUAL(server.GetConnectionsCount(), 0);
 
-    // Create a mock client and add it to the local CreateSock queue
-    ConnectClient();
+    // Create a mock client with pre-loaded request data and add it to the local CreateSock queue
+    ConnectClient(std::as_bytes(std::span(full_request)));
 
     // Wait up to a minute to find and connect the client in the I/O loop
     int attempts{6000};
@@ -413,9 +423,31 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
         BOOST_REQUIRE(--attempts > 0);
     }
 
-    // Inspect the connection
-    const HTTPRemoteClient& client = server.GetFirstConnection();
-    BOOST_CHECK_EQUAL(client.m_origin, "5.5.5.5:6789");
+    // Prepare a pointer to the client, we'll assign it from the request itself.
+    std::shared_ptr<HTTPRemoteClient> client;
+
+    // Wait up to a minute to read the request from the client.
+    // Given that the mock client is itself a mock socket
+    // with hard-coded data it should only take a fraction of that.
+    attempts = 6000;
+    while (true) {
+        {
+            LOCK(requests_mutex);
+            // Connected client should have one request already from the static content.
+            if (requests.size() == 1) {
+                // Check the received request
+                BOOST_CHECK_EQUAL(requests.front()->m_body, R"({"method":"getblockcount","params":[],"id":1})""\n");
+
+                // Inspect the connection pointed to from the request
+                client = requests.front()->m_client;
+                BOOST_CHECK_EQUAL(client->m_origin, "5.5.5.5:6789");
+
+                break;
+            }
+        }
+        std::this_thread::sleep_for(10ms);
+        BOOST_REQUIRE(--attempts > 0);
+    }
 
     // Stop the I/O thread before modifying m_connected. CloseConnection() is a
     // temporary test-only API that is not thread-safe against GenerateWaitSockets(),
@@ -423,7 +455,7 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
     server.InterruptNet();
     server.JoinSocketsThreads();
     // Close connection
-    BOOST_REQUIRE(server.CloseConnection(client));
+    BOOST_REQUIRE(server.CloseConnection(*client));
     // Close all listening sockets
     server.StopListening();
 }
