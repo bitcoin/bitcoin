@@ -20,6 +20,7 @@
 #include <deploymentstatus.h>
 #include <validation.h>
 
+
 bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state)
 {
     if (tx.nType != TRANSACTION_COINBASE) {
@@ -448,7 +449,7 @@ std::string CCbTx::ToString() const
         creditPoolBalance / COIN, creditPoolBalance % COIN);
 }
 
-std::optional<CCbTx> GetCoinbaseTx(const CBlockIndex* pindex)
+std::optional<std::pair<CBLSSignature, uint32_t>> GetNonNullCoinbaseChainlock(const CBlockIndex* pindex)
 {
     if (pindex == nullptr) {
         return std::nullopt;
@@ -464,20 +465,14 @@ std::optional<CCbTx> GetCoinbaseTx(const CBlockIndex* pindex)
         return std::nullopt;
     }
 
-    CTransactionRef cbTx = block.vtx[0];
-    return GetTxPayload<CCbTx>(*cbTx);
-}
-
-std::optional<std::pair<CBLSSignature, uint32_t>> GetNonNullCoinbaseChainlock(const CBlockIndex* pindex)
-{
-    auto opt_cbtx = GetCoinbaseTx(pindex);
+    const CTransactionRef cbTx = block.vtx[0];
+    const auto opt_cbtx = GetTxPayload<CCbTx>(*cbTx);
 
     if (!opt_cbtx.has_value()) {
         return std::nullopt;
     }
 
-    CCbTx& cbtx = opt_cbtx.value();
-
+    const CCbTx& cbtx = opt_cbtx.value();
     if (cbtx.nVersion < CCbTx::Version::CLSIG_AND_BALANCE) {
         return std::nullopt;
     }
