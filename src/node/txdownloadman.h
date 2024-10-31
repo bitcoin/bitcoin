@@ -134,7 +134,8 @@ public:
     /** Deletes all txrequest announcements and orphans for a given peer. */
     void DisconnectedPeer(NodeId nodeid);
 
-    /** New inv has been received. May be added as a candidate to txrequest.
+    /** Consider adding this tx hash to txrequest. Should be called whenever a new inv has been received.
+     * Also called internally when a transaction is missing parents so that we can request them.
      * @param[in] p2p_inv     When true, only add this announcement if we don't already have the tx.
      * Returns true if this was a dropped inv (p2p_inv=true and we already have the tx), false otherwise. */
     bool AddTxAnnouncement(NodeId peer, const GenTxid& gtxid, std::chrono::microseconds now, bool p2p_inv);
