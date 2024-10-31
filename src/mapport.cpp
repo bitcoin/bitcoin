@@ -25,7 +25,6 @@
 
 static CThreadInterrupt g_mapport_interrupt;
 static std::thread g_mapport_thread;
-static std::atomic_bool g_mapport_enabled{false};
 
 using namespace std::chrono_literals;
 static constexpr auto PORT_MAPPING_REANNOUNCE_PERIOD{20min};
@@ -124,20 +123,9 @@ static bool ProcessPCP()
 
 static void ThreadMapPort()
 {
-    bool ok;
     do {
-        ok = false;
-
-        if (g_mapport_enabled) {
-            ok = ProcessPCP();
-            if (ok) continue;
-        }
-
-        if (!g_mapport_enabled) {
-            return;
-        }
-
-    } while (ok || g_mapport_interrupt.sleep_for(PORT_MAPPING_RETRY_PERIOD));
+        ProcessPCP();
+    } while (g_mapport_interrupt.sleep_for(PORT_MAPPING_RETRY_PERIOD));
 }
 
 void StartThreadMapPort()
@@ -150,8 +138,7 @@ void StartThreadMapPort()
 
 void StartMapPort(bool enable)
 {
-    g_mapport_enabled = enable;
-    if (g_mapport_enabled) {
+    if (enable) {
         StartThreadMapPort();
     } else {
         InterruptMapPort();
@@ -161,7 +148,6 @@ void StartMapPort(bool enable)
 
 void InterruptMapPort()
 {
-    g_mapport_enabled = false;
     if (g_mapport_thread.joinable()) {
         g_mapport_interrupt();
     }
