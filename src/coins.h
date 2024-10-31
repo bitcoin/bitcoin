@@ -166,11 +166,13 @@ public:
     {
         Assume(flags & (DIRTY | FRESH));
         if (!pair.second.m_flags) {
+            Assume(!pair.second.m_prev && !pair.second.m_next);
             pair.second.m_prev = sentinel.second.m_prev;
             pair.second.m_next = &sentinel;
             sentinel.second.m_prev = &pair;
             pair.second.m_prev->second.m_next = &pair;
         }
+        Assume(pair.second.m_prev && pair.second.m_next);
         pair.second.m_flags |= flags;
     }
     static void SetDirty(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(DIRTY, pair, sentinel); }
@@ -182,6 +184,7 @@ public:
         m_next->second.m_prev = m_prev;
         m_prev->second.m_next = m_next;
         m_flags = 0;
+        m_prev = m_next = nullptr;
     }
     uint8_t GetFlags() const noexcept { return m_flags; }
     bool IsDirty() const noexcept { return m_flags & DIRTY; }
