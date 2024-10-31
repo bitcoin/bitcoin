@@ -1028,6 +1028,65 @@ void HTTPServer::NewSockAccepted(std::unique_ptr<Sock>&& sock, const CService& t
              them.ToStringAddrPort(), id);
 }
 
+void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
+{
+    for (const auto& [sock, events] : io_readiness.events_per_sock) {
+        if (m_interrupt_net) {
+            return;
+        }
+
+        auto it{io_readiness.httpclients_per_sock.find(sock)};
+        if (it == io_readiness.httpclients_per_sock.end()) {
+            continue;
+        }
+        const std::shared_ptr<HTTPClient>& client{it->second};
+
+        bool send_ready = events.occurred & Sock::SEND;
+        bool recv_ready = events.occurred & Sock::RECV;
+        bool err_ready = events.occurred & Sock::ERR;
+
+        if (send_ready) {
+            // TODO: send data
+        }
+
+        if (recv_ready || err_ready) {
+            std::byte buf[0x10000]; // typical socket buffer is 8K-64K
+
+            const ssize_t nrecv{WITH_LOCK(
+                client->m_sock_mutex,
+                return client->m_sock->Recv(buf, sizeof(buf), MSG_DONTWAIT);)};
+
+            if (nrecv < 0) {
+                const int err = WSAGetLastError();
+                if (IOErrorIsPermanent(err)) {
+                    LogDebug(
+                        BCLog::HTTP,
+                        "Permanent read error from %s (id=%lld): %s",
+                        client->m_origin,
+                        client->m_id,
+                        NetworkErrorString(err));
+                    // TODO: Disconnect
+                }
+            } else if (nrecv == 0) {
+                LogDebug(
+                    BCLog::HTTP,
+                    "Received EOF from %s (id=%lld)",
+                    client->m_origin,
+                    client->m_id);
+                // TODO: Disconnect
+            } else {
+                // Copy data from socket buffer to client receive buffer
+                client->m_recv_buffer.insert(
+                    client->m_recv_buffer.end(),
+                    buf,
+                    buf + nrecv);
+                // Process as much received data as we can
+                MaybeDispatchRequestsFromClient(client);
+            }
+        }
+    }
+}
+
 void HTTPServer::SocketHandlerListening(const Sock::EventsPerSock& events_per_sock)
 {
     for (const auto& sock : m_listen) {
@@ -1087,8 +1146,66 @@ void HTTPServer::ThreadSocketHandler()
             m_interrupt_net.sleep_for(SELECT_TIMEOUT);
         }
 
+        // Service (send/receive) each of the already connected sockets.
+        SocketHandlerConnected(io_readiness);
+
         // Accept new connections from listening sockets.
         SocketHandlerListening(io_readiness.events_per_sock);
     }
+}
+
+void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPClient>& client) const
+{
+    // Try reading (potentially multiple) HTTP requests from the buffer
+    while (!client->m_recv_buffer.empty()) {
+        // Create a new request object and try to fill it with data from the receive buffer
+        auto req = std::make_unique<HTTPRequest>(client);
+        try {
+            // Stop reading if we need more data from the client to parse a complete request
+            if (!client->ReadRequest(req)) break;
+        } catch (const std::runtime_error& e) {
+            LogDebug(
+                BCLog::HTTP,
+                "Error reading HTTP request from client %s (id=%lld): %s",
+                client->m_origin,
+                client->m_id,
+                e.what());
+
+            // We failed to read a complete request from the buffer
+            // TODO: respond with HTTP_BAD_REQUEST and disconnect
+
+            break;
+        }
+
+        // We read a complete request from the buffer into the queue
+        LogDebug(
+            BCLog::HTTP,
+            "Received a %s request for %s from %s (id=%lld)",
+            req->m_method,
+            req->m_target,
+            client->m_origin,
+            client->m_id);
+
+        // handle request
+        m_request_dispatcher(std::move(req));
+    }
+}
+
+bool HTTPClient::ReadRequest(const std::unique_ptr<HTTPRequest>& req)
+{
+    LineReader reader(m_recv_buffer, MAX_HEADERS_SIZE);
+
+    if (!req->LoadControlData(reader)) return false;
+    if (!req->LoadHeaders(reader)) return false;
+    if (!req->LoadBody(reader)) return false;
+
+    // Remove the bytes read out of the buffer.
+    // If one of the above calls throws an error, the caller must
+    // catch it and disconnect the client.
+    m_recv_buffer.erase(
+        m_recv_buffer.begin(),
+        m_recv_buffer.begin() + (reader.it - reader.start));
+
+    return true;
 }
 } // namespace http_bitcoin
