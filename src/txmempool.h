@@ -363,9 +363,7 @@ public:
      * that are guarded by it.
      *
      * @par Consistency guarantees
-     *
      * By design, it is guaranteed that:
-     *
      * 1. Locking both `cs_main` and `mempool.cs` will give a view of mempool
      *    that is consistent with current chain tip (`ActiveChain()` and
      *    `CoinsTip()`) and is fully populated. Fully populated means that if the
@@ -373,7 +371,6 @@ public:
      *    previously active chain, all the missing transactions will have been
      *    re-added to the mempool and should be present if they meet size and
      *    consistency constraints.
-     *
      * 2. Locking `mempool.cs` without `cs_main` will give a view of a mempool
      *    consistent with some chain that was active since `cs_main` was last
      *    locked, and that is fully populated as described above. It is ok for
