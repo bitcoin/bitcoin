@@ -743,6 +743,7 @@ static RPCHelpMan getblocktemplate()
     }
 
     static unsigned int nTransactionsUpdatedLast;
+    const CTxMemPool& mempool = EnsureMemPool(node);
 
     if (!lpval.isNull())
     {
@@ -773,7 +774,7 @@ static RPCHelpMan getblocktemplate()
                 tip = miner.waitTipChanged(hashWatchedChain, checktxtime).hash;
                 // Timeout: Check transactions for update
                 // without holding the mempool lock to avoid deadlocks
-                if (miner.getTransactionsUpdated() != nTransactionsUpdatedLastLP)
+                if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLastLP)
                     break;
                 checktxtime = std::chrono::seconds(10);
             }
@@ -804,13 +805,13 @@ static RPCHelpMan getblocktemplate()
     static int64_t time_start;
     static std::unique_ptr<BlockTemplate> block_template;
     if (!pindexPrev || pindexPrev->GetBlockHash() != tip ||
-        (miner.getTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - time_start > 5))
+        (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - time_start > 5))
     {
         // Clear pindexPrev so future calls make a new block, despite any failures from here on
         pindexPrev = nullptr;
 
         // Store the pindexBest used before createNewBlock, to avoid races
-        nTransactionsUpdatedLast = miner.getTransactionsUpdated();
+        nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
         CBlockIndex* pindexPrevNew = chainman.m_blockman.LookupBlockIndex(tip);
         time_start = GetTime();
 

@@ -102,10 +102,6 @@ public:
      */
     virtual bool processNewBlock(const std::shared_ptr<const CBlock>& block, bool* new_block) = 0;
 
-    //! Return the number of transaction updates in the mempool,
-    //! used to decide whether to make a new block template.
-    virtual unsigned int getTransactionsUpdated() = 0;
-
     //! Get internal node context. Useful for RPC and testing,
     //! but not accessible across processes.
     virtual node::NodeContext* context() { return nullptr; }
