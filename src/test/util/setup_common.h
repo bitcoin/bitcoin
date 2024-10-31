@@ -266,8 +266,8 @@ public:
     explicit SocketTestingSetup();
     ~SocketTestingSetup();
 
-    //! Connect to the socket with a mock client (a DynSock)
-    void ConnectClient() const;
+    //! Connect to the socket with a mock client (a DynSock) and send pre-loaded data.
+    void ConnectClient(std::span<const std::byte> data) const;
 
 private:
     //! Save the original value of CreateSock here and restore it when the test ends.
