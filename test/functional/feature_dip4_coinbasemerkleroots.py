@@ -204,7 +204,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         cbtx = CCbTx()
         cbtx.deserialize(BytesIO(d.cbTx.vExtraPayload))
 
-        if cbtx.version >= 2:
+        if cbtx.nVersion >= 2:
             hashes = []
             for qc in newQuorumList.values():
                 hashes.append(hash256(qc.serialize()))

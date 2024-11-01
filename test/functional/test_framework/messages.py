@@ -1094,14 +1094,14 @@ class CMerkleBlock:
 
 
 class CCbTx:
-    __slots__ = ("version", "height", "merkleRootMNList", "merkleRootQuorums", "bestCLHeightDiff", "bestCLSignature", "lockedAmount")
+    __slots__ = ("nVersion", "nHeight", "merkleRootMNList", "merkleRootQuorums", "bestCLHeightDiff", "bestCLSignature", "assetLockedAmount")
 
-    def __init__(self, version=None, height=None, merkleRootMNList=None, merkleRootQuorums=None, bestCLHeightDiff=None, bestCLSignature=None, lockedAmount=None):
+    def __init__(self, version=None, height=None, merkleRootMNList=None, merkleRootQuorums=None, bestCLHeightDiff=None, bestCLSignature=None, assetLockedAmount=None):
         self.set_null()
         if version is not None:
-            self.version = version
+            self.nVersion = version
         if height is not None:
-            self.height = height
+            self.nHeight = height
         if merkleRootMNList is not None:
             self.merkleRootMNList = merkleRootMNList
         if merkleRootQuorums is not None:
@@ -1110,41 +1110,45 @@ class CCbTx:
             self.bestCLHeightDiff = bestCLHeightDiff
         if bestCLSignature is not None:
             self.bestCLSignature = bestCLSignature
-        if lockedAmount is not None:
-            self.lockedAmount = lockedAmount
+        if assetLockedAmount is not None:
+            self.assetLockedAmount = assetLockedAmount
 
     def set_null(self):
-        self.version = 0
-        self.height = 0
+        self.nVersion = 0
+        self.nHeight = 0
         self.merkleRootMNList = None
+        self.merkleRootQuorums = None
         self.bestCLHeightDiff = 0
         self.bestCLSignature = b'\x00' * 96
-        self.lockedAmount = 0
+        self.assetLockedAmount = 0
 
     def deserialize(self, f):
-        self.version = struct.unpack("<H", f.read(2))[0]
-        self.height = struct.unpack("<i", f.read(4))[0]
+        self.nVersion = struct.unpack("<H", f.read(2))[0]
+        self.nHeight = struct.unpack("<i", f.read(4))[0]
         self.merkleRootMNList = deser_uint256(f)
-        if self.version >= 2:
+        if self.nVersion >= 2:
             self.merkleRootQuorums = deser_uint256(f)
-            if self.version >= 3:
+            if self.nVersion >= 3:
                 self.bestCLHeightDiff = deser_compact_size(f)
                 self.bestCLSignature = f.read(96)
-                self.lockedAmount = struct.unpack("<q", f.read(8))[0]
-
+                self.assetLockedAmount = struct.unpack("<q", f.read(8))[0]
 
     def serialize(self):
         r = b""
-        r += struct.pack("<H", self.version)
-        r += struct.pack("<i", self.height)
+        r += struct.pack("<H", self.nVersion)
+        r += struct.pack("<i", self.nHeight)
         r += ser_uint256(self.merkleRootMNList)
-        if self.version >= 2:
+        if self.nVersion >= 2:
             r += ser_uint256(self.merkleRootQuorums)
-            if self.version >= 3:
+            if self.nVersion >= 3:
                 r += ser_compact_size(self.bestCLHeightDiff)
                 r += self.bestCLSignature
-                r += struct.pack("<q", self.lockedAmount)
+                r += struct.pack("<q", self.assetLockedAmount)
         return r
+
+    def __repr__(self):
+        return "CCbTx(nVersion=%i nHeight=%i merkleRootMNList=%s merkleRootQuorums=%s bestCLHeightDiff=%i bestCLSignature=%s assetLockedAmount=%i)" \
+               % (self.nVersion, self.nHeight, self.merkleRootMNList.hex(), self.merkleRootQuorums.hex(), self.bestCLHeightDiff, self.bestCLSignature.hex(), self.assetLockedAmount)
 
 
 class CAssetLockTx:
