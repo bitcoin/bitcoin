@@ -6,12 +6,12 @@
 #define BITCOIN_PREVECTOR_H
 
 #include <assert.h>
-#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdlib>
 #include <type_traits>
 #include <utility>
 

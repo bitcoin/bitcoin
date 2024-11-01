@@ -5,8 +5,8 @@
 #ifndef BITCOIN_CRYPTO_PKCS5_PBKDF2_HMAC_SHA512_H
 #define BITCOIN_CRYPTO_PKCS5_PBKDF2_HMAC_SHA512_H
 
+#include <cstdlib>
 #include <stdint.h>
-#include <stdlib.h>
 
 /** A rfc2898 implementation of PKCS#5 v2.0 password based encryption key
  * derivation function PBKDF2 with HMAC_SHA512. This implementation is
