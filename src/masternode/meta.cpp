@@ -5,6 +5,7 @@
 #include <masternode/meta.h>
 
 #include <flat-database.h>
+#include <univalue.h>
 #include <util/time.h>
 
 #include <sstream>

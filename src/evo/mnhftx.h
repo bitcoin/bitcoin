@@ -7,14 +7,12 @@
 
 #include <bls/bls.h>
 #include <gsl/pointers.h>
-#include <primitives/transaction.h>
 #include <sync.h>
 #include <threadsafety.h>
 #include <univalue.h>
 
 #include <optional>
 #include <saltedhasher.h>
-#include <unordered_map>
 #include <unordered_lru_cache.h>
 #include <versionbits.h>
 
@@ -22,6 +20,7 @@ class BlockValidationState;
 class CBlock;
 class CBlockIndex;
 class CEvoDB;
+class CTransaction;
 class ChainstateManager;
 class TxValidationState;
 namespace llmq {

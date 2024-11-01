@@ -7,11 +7,10 @@
 
 #include <llmq/clsig.h>
 
-#include <crypto/common.h>
+#include <crypto/common.h> // For ReadLE64
 #include <llmq/signing.h>
-#include <net.h>
+#include <net.h> // For NodeId
 #include <net_types.h>
-#include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <saltedhasher.h>
 #include <sync.h>
@@ -21,10 +20,10 @@
 #include <atomic>
 #include <map>
 #include <unordered_map>
-#include <unordered_set>
 
-class CChainState;
+class CBlock;
 class CBlockIndex;
+class CChainState;
 class CMasternodeSync;
 class CScheduler;
 class CSporkManager;

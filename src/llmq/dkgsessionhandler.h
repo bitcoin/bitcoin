@@ -5,21 +5,28 @@
 #ifndef BITCOIN_LLMQ_DKGSESSIONHANDLER_H
 #define BITCOIN_LLMQ_DKGSESSIONHANDLER_H
 
-#include <ctpl_stl.h>
-#include <net.h>
+#include <net.h> // for NodeId
 
 #include <gsl/pointers.h>
 
 #include <atomic>
+#include <list>
 #include <map>
+#include <memory>
 #include <optional>
+#include <set>
+#include <string>
+#include <thread>
+#include <vector>
 
 class CActiveMasternodeManager;
-class CBlockIndex;
 class CBLSWorker;
+class CBlockIndex;
 class CChainState;
+class CConnman;
 class CDeterministicMNManager;
 class CMasternodeMetaMan;
+class CNode;
 class CSporkManager;
 class PeerManager;
 

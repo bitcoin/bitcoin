@@ -5,10 +5,7 @@
 #ifndef BITCOIN_EVO_CREDITPOOL_H
 #define BITCOIN_EVO_CREDITPOOL_H
 
-#include <coins.h>
-
-#include <evo/assetlocktx.h>
-
+#include <consensus/amount.h>
 #include <saltedhasher.h>
 #include <serialize.h>
 #include <sync.h>
@@ -16,10 +13,13 @@
 #include <unordered_lru_cache.h>
 #include <util/ranges_set.h>
 
+#include <evo/assetlocktx.h>
+
 #include <optional>
 #include <unordered_set>
 
 class BlockManager;
+class CBlock;
 class CBlockIndex;
 class BlockValidationState;
 class CEvoDB;

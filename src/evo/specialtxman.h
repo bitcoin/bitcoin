@@ -5,7 +5,7 @@
 #ifndef BITCOIN_EVO_SPECIALTXMAN_H
 #define BITCOIN_EVO_SPECIALTXMAN_H
 
-#include <primitives/transaction.h>
+#include <consensus/amount.h>
 #include <sync.h>
 #include <threadsafety.h>
 
@@ -17,6 +17,7 @@ class CBlockIndex;
 class CCoinsViewCache;
 class CCreditPoolManager;
 class CDeterministicMNManager;
+class CTransaction;
 class ChainstateManager;
 class CMNHFManager;
 class TxValidationState;

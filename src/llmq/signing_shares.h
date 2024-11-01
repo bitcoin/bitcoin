@@ -5,25 +5,29 @@
 #ifndef BITCOIN_LLMQ_SIGNING_SHARES_H
 #define BITCOIN_LLMQ_SIGNING_SHARES_H
 
-#include <bls/bls.h>
 #include <llmq/signing.h>
-#include <net.h>
+
+#include <bls/bls.h>
 #include <random.h>
 #include <saltedhasher.h>
 #include <serialize.h>
-#include <threadinterrupt.h>
 #include <sync.h>
+#include <threadinterrupt.h>
 #include <uint256.h>
 
 #include <atomic>
+#include <limits>
+#include <memory>
 #include <optional>
+#include <string>
 #include <thread>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
+class CNode;
+class CConnman;
 class CDeterministicMN;
-class CEvoDB;
-class CScheduler;
 class CSporkManager;
 class PeerManager;
 

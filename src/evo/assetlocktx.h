@@ -6,9 +6,9 @@
 #define BITCOIN_EVO_ASSETLOCKTX_H
 
 #include <bls/bls_ies.h>
-#include <primitives/transaction.h>
+#include <consensus/amount.h>
 #include <gsl/pointers.h>
-
+#include <primitives/transaction.h>
 #include <serialize.h>
 #include <univalue.h>
 

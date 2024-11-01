@@ -14,15 +14,11 @@ class CBlockIndex;
 class CChain;
 class CConnman;
 class CDataStream;
-class CDeterministicMN;
 class CDeterministicMNList;
 class CDeterministicMNListDiff;
-class CDeterministicMNManager;
 class CMasternodeMetaMan;
 class CMasternodeSync;
 class CNode;
-
-class UniValue;
 
 enum ServiceFlags : uint64_t;
 

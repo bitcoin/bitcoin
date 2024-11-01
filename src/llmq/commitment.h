@@ -6,15 +6,19 @@
 #define BITCOIN_LLMQ_COMMITMENT_H
 
 #include <bls/bls.h>
-#include <consensus/params.h>
+#include <llmq/params.h>
 #include <primitives/transaction.h>
 #include <util/irange.h>
 #include <util/strencodings.h>
 #include <util/underlying.h>
 
 #include <gsl/pointers.h>
-
 #include <univalue.h>
+
+#include <limits>
+#include <memory>
+#include <string>
+#include <vector>
 
 class CBlockIndex;
 class CDeterministicMNManager;

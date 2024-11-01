@@ -6,14 +6,13 @@
 #define BITCOIN_LLMQ_INSTANTSEND_H
 
 #include <llmq/signing.h>
-#include <unordered_lru_cache.h>
 
-#include <chain.h>
-#include <coins.h>
+#include <consensus/params.h>
 #include <net_types.h>
 #include <primitives/transaction.h>
 #include <threadinterrupt.h>
 #include <txmempool.h>
+#include <unordered_lru_cache.h>
 
 #include <gsl/pointers.h>
 
@@ -21,6 +20,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+class CBlockIndex;
 class CChainState;
 class CDBWrapper;
 class CMasternodeSync;
@@ -365,7 +365,7 @@ public:
     bool IsInstantSendMempoolSigningEnabled() const;
     bool RejectConflictingBlocks() const;
 };
-
+// TODO: split CInstantSendManager and  CInstantSendLock to 2 files
 extern std::unique_ptr<CInstantSendManager> quorumInstantSendManager;
 
 } // namespace llmq
