@@ -21,8 +21,7 @@ template<typename T>
 class CFlatDB
 {
 private:
-
-    enum ReadResult {
+    enum class ReadResult {
         Ok,
         FileError,
         HashReadError,
@@ -82,7 +81,7 @@ private:
         CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
         if (filein.IsNull()) {
             // It is not actually error, maybe it's a first initialization of core.
-            return FileError;
+            return ReadResult::FileError;
         }
 
         // use file size to size memory buffer
@@ -102,7 +101,7 @@ private:
         }
         catch (std::exception &e) {
             error("%s: Deserialize or I/O error - %s", __func__, e.what());
-            return HashReadError;
+            return ReadResult::HashReadError;
         }
         filein.fclose();
 
@@ -113,7 +112,7 @@ private:
         if (hashIn != hashTmp)
         {
             error("%s: Checksum mismatch, data corrupted", __func__);
-            return IncorrectHash;
+            return ReadResult::IncorrectHash;
         }
 
 
@@ -127,7 +126,7 @@ private:
             if (strMagicMessage != strMagicMessageTmp)
             {
                 error("%s: Invalid magic message", __func__);
-                return IncorrectMagicMessage;
+                return ReadResult::IncorrectMagicMessage;
             }
 
 
@@ -138,7 +137,7 @@ private:
             if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
             {
                 error("%s: Invalid network magic number", __func__);
-                return IncorrectMagicNumber;
+                return ReadResult::IncorrectMagicNumber;
             }
 
             // de-serialize data into T object
@@ -147,28 +146,25 @@ private:
         catch (std::exception &e) {
             objToLoad.Clear();
             error("%s: Deserialize or I/O error - %s", __func__, e.what());
-            return IncorrectFormat;
+            return ReadResult::IncorrectFormat;
         }
 
         LogPrintf("Loaded info from %s  %dms\n", strFilename, GetTimeMillis() - nStart);
         LogPrintf("     %s\n", objToLoad.ToString());
 
-        return Ok;
+        return ReadResult::Ok;
     }
 
     [[nodiscard]] bool Read(T& objToLoad)
     {
         ReadResult readResult = CoreRead(objToLoad);
-        if (readResult == FileError)
+        if (readResult == ReadResult::FileError)
             LogPrintf("Missing file %s, will try to recreate\n", strFilename);
-        else if (readResult != Ok)
-        {
+        else if (readResult != ReadResult::Ok) {
             LogPrintf("ERROR: CFlatDB::Read Error reading %s: ", strFilename);
-            if(readResult == IncorrectFormat)
-            {
+            if (readResult == ReadResult::IncorrectFormat) {
                 LogPrintf("%s: Magic is ok but data has invalid format, will try to recreate\n", __func__);
-            }
-            else {
+            } else {
                 LogPrintf("%s: File format is unknown or invalid, please fix it manually\n", __func__);
                 // program should exit with an error
                 return false;
