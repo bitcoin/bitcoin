@@ -2186,11 +2186,12 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
 
     if (m_isman->RejectConflictingBlocks()) {
         // Require other nodes to comply, send them some data in case they are missing it.
+        const bool has_chainlock = m_clhandler->HasChainLock(pindex->nHeight, pindex->GetBlockHash());
         for (const auto& tx : block.vtx) {
             // skip txes that have no inputs
             if (tx->vin.empty()) continue;
             while (llmq::CInstantSendLockPtr conflictLock = m_isman->GetConflictingLock(*tx)) {
-                if (m_clhandler->HasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+                if (has_chainlock) {
                     LogPrint(BCLog::ALL, "ConnectBlock(DASH): chain-locked transaction %s overrides islock %s\n",
                             tx->GetHash().ToString(), ::SerializeHash(*conflictLock).ToString());
                     m_isman->RemoveConflictingLock(::SerializeHash(*conflictLock), *conflictLock);

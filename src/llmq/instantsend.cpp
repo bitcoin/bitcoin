@@ -1124,13 +1124,14 @@ void CInstantSendManager::BlockConnected(const std::shared_ptr<const CBlock>& pb
     }
 
     if (m_mn_sync.IsBlockchainSynced()) {
+        const bool has_chainlock = clhandler.HasChainLock(pindex->nHeight, pindex->GetBlockHash());
         for (const auto& tx : pblock->vtx) {
             if (tx->IsCoinBase() || tx->vin.empty()) {
                 // coinbase and TXs with no inputs can't be locked
                 continue;
             }
 
-            if (!IsLocked(tx->GetHash()) && !clhandler.HasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+            if (!IsLocked(tx->GetHash()) && !has_chainlock) {
                 ProcessTx(*tx, true, Params().GetConsensus());
                 // TX is not locked, so make sure it is tracked
                 AddNonLockedTx(tx, pindex);
