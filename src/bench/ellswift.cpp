@@ -22,7 +22,7 @@ static void EllSwiftCreate(benchmark::Bench& bench)
         key.Set(UCharCast(ret.data()), UCharCast(ret.data()) + 32, true);
         assert(key.IsValid());
         /* Use the last 32 bytes of the ellswift encoded public key as next entropy. */
-        std::copy(ret.begin() + 32, ret.begin() + 64, BytePtr(entropy.data()));
+        std::copy(ret.begin() + 32, ret.begin() + 64, AsBytePtr(entropy.data()));
     });
 
     ECC_Stop();
