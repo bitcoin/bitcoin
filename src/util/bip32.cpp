@@ -3,11 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <sstream>
-#include <stdio.h>
 #include <tinyformat.h>
 #include <util/bip32.h>
 #include <util/strencodings.h>
 
+#include <cstdio>
 
 bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath)
 {
