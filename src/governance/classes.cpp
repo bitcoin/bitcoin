@@ -20,21 +20,6 @@
 
 #include <univalue.h>
 
-// SPLIT UP STRING BY DELIMITER
-std::vector<std::string> SplitBy(const std::string& strCommand, const std::string& strDelimit)
-{
-    std::vector<std::string> vParts = SplitString(strCommand, strDelimit);
-
-    for (int q = 0; q < (int)vParts.size(); q++) {
-        if (strDelimit.find(vParts[q]) != std::string::npos) {
-            vParts.erase(vParts.begin() + q);
-            --q;
-        }
-    }
-
-    return vParts;
-}
-
 CAmount ParsePaymentAmount(const std::string& strAmount)
 {
     CAmount nAmount = 0;
@@ -196,23 +181,20 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
 {
     // SPLIT UP ADDR/AMOUNT STRINGS AND PUT IN VECTORS
 
-    std::vector<std::string> vecParsed1;
-    std::vector<std::string> vecParsed2;
-    std::vector<std::string> vecParsed3;
-    vecParsed1 = SplitBy(strPaymentAddresses, "|");
-    vecParsed2 = SplitBy(strPaymentAmounts, "|");
-    vecParsed3 = SplitBy(strProposalHashes, "|");
+    const auto vecPaymentAddresses = SplitString(strPaymentAddresses, "|");
+    const auto vecPaymentAmounts = SplitString(strPaymentAmounts, "|");
+    const auto vecProposalHashes = SplitString(strProposalHashes, "|");
 
     // IF THESE DON'T MATCH, SOMETHING IS WRONG
 
-    if (vecParsed1.size() != vecParsed2.size() || vecParsed1.size() != vecParsed3.size()) {
+    if (vecPaymentAddresses.size() != vecPaymentAmounts.size() || vecPaymentAddresses.size() != vecProposalHashes.size()) {
         std::ostringstream ostr;
         ostr << "CSuperblock::ParsePaymentSchedule -- Mismatched payments, amounts and proposalHashes";
         LogPrintf("%s\n", ostr.str());
         throw std::runtime_error(ostr.str());
     }
 
-    if (vecParsed1.empty()) {
+    if (vecPaymentAddresses.empty()) {
         std::ostringstream ostr;
         ostr << "CSuperblock::ParsePaymentSchedule -- Error no payments";
         LogPrintf("%s\n", ostr.str());
@@ -225,26 +207,28 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
       AMOUNTS = [AMOUNT1|2|3|4|5|6]
     */
 
-    for (int i = 0; i < (int)vecParsed1.size(); i++) {
-        CTxDestination dest = DecodeDestination(vecParsed1[i]);
+    for (int i = 0; i < (int)vecPaymentAddresses.size(); i++) {
+        CTxDestination dest = DecodeDestination(vecPaymentAddresses[i]);
         if (!IsValidDestination(dest)) {
             std::ostringstream ostr;
-            ostr << "CSuperblock::ParsePaymentSchedule -- Invalid Dash Address : " << vecParsed1[i];
+            ostr << "CSuperblock::ParsePaymentSchedule -- Invalid Dash Address : " << vecPaymentAddresses[i];
             LogPrintf("%s\n", ostr.str());
             throw std::runtime_error(ostr.str());
         }
 
-        CAmount nAmount = ParsePaymentAmount(vecParsed2[i]);
+        CAmount nAmount = ParsePaymentAmount(vecPaymentAmounts[i]);
 
         uint256 proposalHash;
-        if (!ParseHashStr(vecParsed3[i], proposalHash)){
+        if (!ParseHashStr(vecProposalHashes[i], proposalHash)) {
             std::ostringstream ostr;
-            ostr << "CSuperblock::ParsePaymentSchedule -- Invalid proposal hash : " << vecParsed3[i];
+            ostr << "CSuperblock::ParsePaymentSchedule -- Invalid proposal hash : " << vecProposalHashes[i];
             LogPrintf("%s\n", ostr.str());
             throw std::runtime_error(ostr.str());
         }
 
-        LogPrint(BCLog::GOBJECT, "CSuperblock::ParsePaymentSchedule -- i = %d, amount string = %s, nAmount = %lld, proposalHash = %s\n", i, vecParsed2[i], nAmount, proposalHash.ToString());
+        LogPrint(BCLog::GOBJECT, /* Continued */
+                 "CSuperblock::ParsePaymentSchedule -- i = %d, amount string = %s, nAmount = %lld, proposalHash = %s\n",
+                 i, vecPaymentAmounts[i], nAmount, proposalHash.ToString());
 
         CGovernancePayment payment(dest, nAmount, proposalHash);
         if (payment.IsValid()) {
