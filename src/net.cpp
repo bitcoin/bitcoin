@@ -1119,16 +1119,9 @@ constexpr std::array<std::string_view, 256> V2ShortIDs() {
     static_assert(std::size(V2_DASH_IDS) <= 128);
 
     std::array<std::string_view, 256> ret{};
-    for (size_t idx{0}; idx < std::size(ret); idx++) {
-        if (idx < 128 && idx < std::size(V2_BITCOIN_IDS)) {
-            ret[idx] = V2_BITCOIN_IDS[idx];
-        } else if (idx >= 128 && idx - 128 < std::size(V2_DASH_IDS)) {
-            ret[idx] = V2_DASH_IDS[idx - 128];
-        } else {
-            ret[idx] = "";
-        }
-    }
-
+    std::fill(ret.begin(), ret.end(), "");
+    std::copy(V2_BITCOIN_IDS.begin(), V2_BITCOIN_IDS.end(), ret.begin());
+    std::copy(V2_DASH_IDS.begin(), V2_DASH_IDS.end(), ret.begin() + 128);
     return ret;
 }
 
