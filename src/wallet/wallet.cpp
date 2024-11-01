@@ -22,6 +22,7 @@
 #include <policy/settings.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <reverse_iterator.h>
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/sign.h>
@@ -3851,44 +3852,29 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
     }
 
     // Keep only the last 10 backups, including the new one of course
-    typedef std::multimap<std::time_t, fs::path> folder_set_t;
-    folder_set_t folder_set;
-    fs::directory_iterator end_iter;
+    std::multimap<fs::file_time_type, fs::path> folder_set;
     // Build map of backup files for current(!) wallet sorted by last write time
     fs::path currentFile;
-    for (fs::directory_iterator dir_iter(backupsDir); dir_iter != end_iter; ++dir_iter)
-    {
+    for (const auto& entry : fs::directory_iterator(backupsDir)) {
         // Only check regular files
-        if ( fs::is_regular_file(dir_iter->status()))
-        {
-            currentFile = dir_iter->path().filename();
+        if (entry.is_regular_file()) {
+            currentFile = entry.path().filename();
             // Only add the backups for the current wallet, e.g. wallet.dat.*
-            if (fs::PathToString(dir_iter->path().stem()) == strWalletName) {
-                folder_set.insert(folder_set_t::value_type(
-                    // TODO: C++17 compliant time conversion code is abominable, switch to C++20
-                    //       compliant code when C++17 support is dropped
-                    std::chrono::system_clock::to_time_t(
-                        std::chrono::time_point_cast<std::chrono::system_clock::duration>(
-                            fs::last_write_time(dir_iter->path()) - fs::file_time_type::clock::now() + std::chrono::system_clock::now()
-                        )
-                    ),
-                    *dir_iter
-                ));
+            if (fs::PathToString(entry.path().stem()) == strWalletName) {
+                folder_set.insert(decltype(folder_set)::value_type(fs::last_write_time(entry.path()), entry));
             }
         }
     }
 
     // Loop backward through backup files and keep the N newest ones (1 <= N <= 10)
-    int counter = 0;
-    for(auto it = folder_set.rbegin(); it != folder_set.rend(); ++it) {
-        std::pair<const std::time_t, fs::path> file = *it;
+    int counter{0};
+    for (const auto& [entry_time, entry] : reverse_iterate(folder_set)) {
         counter++;
-        if (counter > nWalletBackups)
-        {
+        if (counter > nWalletBackups) {
             // More than nWalletBackups backups: delete oldest one(s)
             try {
-                fs::remove(file.second);
-                WalletLogPrintf("Old backup deleted: %s\n", fs::PathToString(file.second));
+                fs::remove(entry);
+                WalletLogPrintf("Old backup deleted: %s\n", fs::PathToString(entry));
             } catch(fs::filesystem_error &error) {
                 warnings.push_back(strprintf(_("Failed to delete backup, error: %s"), fsbridge::get_filesystem_error_message(error)));
                 WalletLogPrintf("%s\n", Join(warnings, Untranslated("\n")).original);
