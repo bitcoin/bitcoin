@@ -63,26 +63,20 @@ class CGovernanceVote
     friend bool operator<(const CGovernanceVote& vote1, const CGovernanceVote& vote2);
 
 private:
-    bool fValid;     //if the vote is currently valid / counted
-    bool fSynced;    //if we've sent this to our peers
-    int nVoteSignal; // see VOTE_ACTIONS above
+    int nVoteSignal{VOTE_SIGNAL_NONE}; // see VOTE_ACTIONS above
     COutPoint masternodeOutpoint;
     uint256 nParentHash;
-    int nVoteOutcome; // see VOTE_OUTCOMES above
-    int64_t nTime;
+    int nVoteOutcome{VOTE_OUTCOME_NONE}; // see VOTE_OUTCOMES above
+    int64_t nTime{0};
     std::vector<unsigned char> vchSig;
 
     /** Memory only. */
-    const uint256 hash;
+    const uint256 hash{0};
     void UpdateHash() const;
 
 public:
-    CGovernanceVote();
+    CGovernanceVote() = default;
     CGovernanceVote(const COutPoint& outpointMasternodeIn, const uint256& nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn);
-
-    bool IsValid() const { return fValid; }
-
-    bool IsSynced() const { return fSynced; }
 
     int64_t GetTimestamp() const { return nTime; }
 

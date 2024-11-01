@@ -85,27 +85,13 @@ vote_signal_enum_t CGovernanceVoting::ConvertVoteSignal(const std::string& strVo
     return it->second;
 }
 
-CGovernanceVote::CGovernanceVote() :
-    fValid(true),
-    fSynced(false),
-    nVoteSignal(int(VOTE_SIGNAL_NONE)),
-    masternodeOutpoint(),
-    nParentHash(),
-    nVoteOutcome(int(VOTE_OUTCOME_NONE)),
-    nTime(0),
-    vchSig()
-{
-}
-
-CGovernanceVote::CGovernanceVote(const COutPoint& outpointMasternodeIn, const uint256& nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn) :
-    fValid(true),
-    fSynced(false),
+CGovernanceVote::CGovernanceVote(const COutPoint& outpointMasternodeIn, const uint256& nParentHashIn,
+                                 vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn) :
     nVoteSignal(eVoteSignalIn),
     masternodeOutpoint(outpointMasternodeIn),
     nParentHash(nParentHashIn),
     nVoteOutcome(eVoteOutcomeIn),
-    nTime(GetAdjustedTime()),
-    vchSig()
+    nTime(GetAdjustedTime())
 {
     UpdateHash();
 }
