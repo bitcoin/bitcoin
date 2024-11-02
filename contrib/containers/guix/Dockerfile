@@ -2,7 +2,7 @@
 #       to use 'docker compose run guix_ubuntu' to drop into an
 #       interactive shell
 
-FROM ubuntu:focal
+FROM ubuntu:jammy
 
 SHELL ["/bin/bash", "-c"]
 

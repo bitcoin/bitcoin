@@ -1,4 +1,4 @@
-image: "ubuntu:focal"
+image: "ubuntu:jammy"
 
 variables:
   DOCKER_DRIVER: overlay2
