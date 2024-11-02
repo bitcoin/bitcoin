@@ -1,7 +1,7 @@
 Memory management
 =================
 
-Memory management is specially important for immutable data
+Memory management is especially important for immutable data
 structures.  This is mainly due to:
 
 #. In order to preserve the old value, new memory has to be allocated
@@ -39,7 +39,7 @@ Memory policy
 Example: tracing garbage collection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It is note worthy that all aspects of a
+It is noteworthy that all aspects of a
 :cpp:class:`immer::memory_policy` are not completely orthogonal.
 
 Let's say you want to use a `tracing garbage collector`_. Actually, we
@@ -79,7 +79,7 @@ allocate objects of those sizes.
 
 .. _metafunction class: http://www.boost.org/doc/libs/1_62_0/libs/mpl/doc/refmanual/metafunction-class.html
 
-A **heap** is a type with a methods ``void* allocate(std::size_t)``
+A **heap** is a type with methods ``void* allocate(std::size_t)``
 and ``void deallocate(void*)`` that return and release raw memory.
 For a canonical model of this concept check the
 :cpp:class:`immer::cpp_heap`.
@@ -95,8 +95,8 @@ For a canonical model of this concept check the
           On the other hand, having some **scoped state** does make
           sense for some use-cases of immutable data structures.  For
           example, we might want to support variations of `region
-          based allocation`_.  This interface might evolve to evolve
-          to support some kind of non-global state to accommodate
+          based allocation`_.  This interface might evolve to support
+          some kind of non-global state to accommodate
           these use cases.
 
 .. _region based allocation: https://en.wikipedia.org/wiki/Region-based_memory_management
@@ -143,7 +143,7 @@ Heap adaptors
 Inspired by `Andrei Alexandrescu's talk on allocators <allocation
 vexation>`_ and `Emery Berger's heap layers <heap layers>`_ we provide
 allocator adaptors that can be combined using C++ mixins.  These
-enable building more complex allocator out of simpler strategies, or
+enable building more complex allocators out of simpler strategies, or
 provide application specific optimizations on top of general
 allocators.
 

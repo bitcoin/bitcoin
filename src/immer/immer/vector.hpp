@@ -40,7 +40,7 @@ class vector_transient;
  *
  * @rst
  *
- * This cotainer provides a good trade-off between cache locality,
+ * This container provides a good trade-off between cache locality,
  * random access, update performance and structural sharing.  It does
  * so by storing the data in contiguous chunks of :math:`2^{BL}`
  * elements.  By default, when ``sizeof(T) == sizeof(void*)`` then
@@ -339,6 +339,17 @@ public:
      */
     IMMER_NODISCARD transient_type transient() const& { return impl_; }
     IMMER_NODISCARD transient_type transient() && { return std::move(impl_); }
+
+    /*!
+     * Returns a value that can be used as identity for the container.  If two
+     * values have the same identity, they are guaranteed to be equal and to
+     * contain the same objects.  However, two equal containers are not
+     * guaranteed to have the same identity.
+     */
+    std::pair<void*, void*> identity() const
+    {
+        return {impl_.root, impl_.tail};
+    }
 
     // Semi-private
     const impl_t& impl() const { return impl_; }

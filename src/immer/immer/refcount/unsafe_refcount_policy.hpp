@@ -31,7 +31,6 @@ struct unsafe_refcount_policy
 
     void inc() { ++refcount; }
     bool dec() { return --refcount == 0; }
-    void dec_unsafe() { --refcount; }
     bool unique() { return refcount == 1; }
 };
 

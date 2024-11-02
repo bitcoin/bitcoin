@@ -18,7 +18,7 @@ internally, common data with other objects.  We sometimes refer to
 this property as **structural sharing**.  This behaviour is
 transparent to the user.
 
-Assigment
+Assignment
 ---------
 
 We are sorry, we lied. These containers provide *one mutating
@@ -79,14 +79,14 @@ removing it, as in:
    :end-before:  move-good/end
 
 So, is it bad style then to use ``const`` as much as possible?  I
-wouldn't say so and it is advisable when ``std::move()`` is not used.
-An alternative style is to not use ``const`` but adopt an `AAA-style
-<aaa>`_ (*Almost Always use Auto*).  This way, it is easy to look for
+wouldn't say so, and it is advisable when ``std::move()`` is not used.
+An alternative style is to not use ``const`` but adopt an `AAA-style`_
+(*Almost Always use Auto*).  This way, it is easy to look for
 mutations by looking for lines that contain ``=`` but no ``auto``.
 Remember that when using our immutable containers ``operator=`` is the
 only way to mutate a variable.
 
-.. _aaa: https://herbsutter.com/2013/08/12/gotw-94-solution-aaa-style-almost-always-auto/
+.. _AAA-style: https://herbsutter.com/2013/08/12/gotw-94-solution-aaa-style-almost-always-auto/
 
 .. admonition:: Why does ``const`` prevent move semantics?
 
@@ -149,7 +149,7 @@ mutate part of the internal data structure in place when possible.
 If you don't like this syntax, :doc:`transients<transients>` may be
 used to obtain similar performance benefits.
 
-.. admonition:: Assigment guarantees
+.. admonition:: Assignment guarantees
 
    From the language point of view, the only requirement on moved from
    values is that they should still be destructible.  We provide the
@@ -208,7 +208,7 @@ Efficient batch manipulations
 Sometimes you may write a function that needs to do multiple changes
 to a container.  Like most code you write with this library, this
 function is *pure*: it takes one container value in, and produces a
-new container value out, no side-effects.
+new container value out, no side effects.
 
 Let's say we want to write a function that inserts all integers in the
 range :math:`[first, last)` into an immutable vector:

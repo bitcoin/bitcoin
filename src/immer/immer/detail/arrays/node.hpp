@@ -61,7 +61,7 @@ struct node
 
     static void delete_n(node_t* p, size_t sz, size_t cap)
     {
-        destroy_n(p->data(), sz);
+        detail::destroy_n(p->data(), sz);
         heap::deallocate(sizeof_n(cap), p);
     }
 
@@ -98,7 +98,7 @@ struct node
     {
         auto p = make_n(n);
         IMMER_TRY {
-            uninitialized_copy(first, last, p->data());
+            detail::uninitialized_copy(first, last, p->data());
             return p;
         }
         IMMER_CATCH (...) {

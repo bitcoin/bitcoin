@@ -22,4 +22,6 @@ template <typename T,
 using test_set_t = immer::set<T, Hash, Eq, gc_memory, 3u>;
 
 #define SET_T test_set_t
+#define IMMER_IS_LIBGC_TEST 1
+
 #include "generic.ipp"

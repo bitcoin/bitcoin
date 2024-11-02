@@ -6,6 +6,8 @@
 // See accompanying file LICENSE or copy at http://boost.org/LICENSE_1_0.txt
 //
 
+#define IMMER_DEBUG_STATS 1
+
 #include <immer/map.hpp>
 
 #define MAP_T ::immer::map

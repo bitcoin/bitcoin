@@ -8,7 +8,7 @@
 
 #include "extra/fuzzer/fuzzer_input.hpp"
 #include <array>
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <immer/flex_vector.hpp>
 #include <iostream>
 
@@ -174,7 +174,7 @@ TEST_CASE("bug: concatenate too big vectors")
         var4      = var4.push_back(42);
     }
 
-#if __GNUC__ != 9 && __GNUC__ != 8
+#ifndef IMMER_DISABLE_FUZZER_DUE_TO_GCC_BUG
     // Assertion `!p->relaxed()' failed
     SECTION("")
     {

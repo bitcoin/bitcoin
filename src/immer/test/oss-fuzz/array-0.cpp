@@ -10,7 +10,7 @@
 
 #include <immer/array.hpp>
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 namespace {
 

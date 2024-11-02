@@ -1,6 +1,6 @@
 .. image:: https://github.com/arximboldi/immer/workflows/test/badge.svg
    :target: https://github.com/arximboldi/immer/actions?query=workflow%3Atest+branch%3Amaster
-   :alt: Github Actions Badge
+   :alt: GitHub Actions Badge
 
 .. image:: https://codecov.io/gh/arximboldi/immer/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/arximboldi/immer
@@ -13,7 +13,10 @@
 
 .. raw:: html
 
-   <img width="100%" src="https://cdn.rawgit.com/arximboldi/immer/3888170d247359cc0905eed548cd46897caef0f4/doc/_static/logo-front.svg" alt="Logotype"/>
+   <picture>
+     <source media="(prefers-color-scheme: dark)" srcset="https://cdn.rawgit.com/arximboldi/immer/3888170d247359cc0905eed548cd46897caef0f4/doc/_static/logo-black.svg">
+     <img width="100%" src="https://cdn.rawgit.com/arximboldi/immer/3888170d247359cc0905eed548cd46897caef0f4/doc/_static/logo-front.svg" alt="Logotype">
+   </picture>
 
 .. include:introduction/start
 
@@ -74,7 +77,7 @@ Example
   For a **complete example** check `Ewig, a simple didactic
   text-editor <https://github.com/arximboldi/ewig>`_ built with this
   library.  You may also wanna check `Lager, a Redux-like library
-  <https://github.com/arximboldi/lager>`_ for writting interactive
+  <https://github.com/arximboldi/lager>`_ for writing interactive
   software in C++ using a value-oriented design.
 
 

@@ -13,7 +13,7 @@
 #include <immer/vector.hpp>
 #include <immer/vector_transient.hpp>
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 #if IMMER_CXX_STANDARD >= 17
 

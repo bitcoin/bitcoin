@@ -12,12 +12,12 @@
 #include <immer/flex_vector.hpp>
 #include <immer/flex_vector_transient.hpp>
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 #define IMMER_FUZZED_TRACE_ENABLE 1
 
 #if IMMER_FUZZED_TRACE_ENABLE
-#include <fmt/printf.h>
+#include <fmt/ostream.h>
 #define IMMER_FUZZED_TRACE(...) fmt::print(std::cerr, __VA_ARGS__)
 #else
 #define IMMER_FUZZED_TRACE(...)

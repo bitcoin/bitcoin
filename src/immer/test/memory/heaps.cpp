@@ -12,7 +12,7 @@
 #include <immer/heap/malloc_heap.hpp>
 #include <immer/heap/thread_local_free_list_heap.hpp>
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <numeric>
 
 void do_stuff_to(void* buf, std::size_t size)

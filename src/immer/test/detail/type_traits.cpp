@@ -6,7 +6,7 @@
 // See accompanying file LICENSE or copy at http://boost.org/LICENSE_1_0.txt
 //
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <forward_list>
 #include <immer/detail/type_traits.hpp>
 #include <list>

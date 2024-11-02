@@ -33,7 +33,7 @@ class array_transient;
  * .. tip:: Don't be fooled by the bad complexity of this data
  *    structure.  It is a great choice for short sequence or when it
  *    is seldom or never changed.  This depends on the ``sizeof(T)``
- *    and the expensiveness of its ``T``'s copy constructor, in case
+ *    and the expensiveness of its ``T``'s copy constructor. In case
  *    of doubt, measure.  For basic types, using an `array` when
  *    :math:`n < 100` is a good heuristic.
  *
@@ -91,7 +91,7 @@ public:
     {}
 
     /*!
-     * Constructs a array containing the element `val` repeated `n`
+     * Constructs an array containing the element `val` repeated `n`
      * times.
      */
     array(size_type n, T v = {})
@@ -107,7 +107,8 @@ public:
 
     /*!
      * Returns an iterator pointing just after the last element of the
-     * collection. It does not allocate and its complexity is @f$ O(1) @f$.
+     * collection. It does not allocate memory and its complexity is @f$ O(1)
+     * @f$.
      */
     IMMER_NODISCARD iterator end() const { return impl_.data() + impl_.size; }
 
@@ -160,7 +161,7 @@ public:
 
     /*!
      * Returns a `const` reference to the element at position `index`.
-     * It is undefined when @f$ 0 index \geq size() @f$.  It does not
+     * It is undefined when @f$ index \geq size() @f$.  It does not
      * allocate memory and its complexity is *effectively* @f$ O(1)
      * @f$.
      */
@@ -307,6 +308,14 @@ public:
     {
         return transient_type{std::move(impl_)};
     }
+
+    /*!
+     * Returns a value that can be used as identity for the container.  If two
+     * values have the same identity, they are guaranteed to be equal and to
+     * contain the same objects.  However, two equal containers are not
+     * guaranteed to have the same identity.
+     */
+    void* identity() const { return impl_.ptr; }
 
     // Semi-private
     const impl_t& impl() const { return impl_; }

@@ -10,9 +10,10 @@
 
 #include "benchmark/config.hpp"
 
-#include <immer/set.hpp>
-#include <hash_trie.hpp> // Phil Nash
 #include <boost/container/flat_set.hpp>
+#include <hash_trie.hpp> // Phil Nash
+#include <immer/set.hpp>
+#include <immer/set_transient.hpp>
 #include <set>
 #include <unordered_set>
 
@@ -21,8 +22,7 @@ namespace {
 template <typename Generator, typename Set>
 auto benchmark_insert_mut_std()
 {
-    return [] (nonius::chronometer meter)
-    {
+    return [](nonius::chronometer meter) {
         auto n = meter.param<N>();
         auto g = Generator{}(n);
 
@@ -38,8 +38,7 @@ auto benchmark_insert_mut_std()
 template <typename Generator, typename Set>
 auto benchmark_insert()
 {
-    return [] (nonius::chronometer meter)
-    {
+    return [](nonius::chronometer meter) {
         auto n = meter.param<N>();
         auto g = Generator{}(n);
 
@@ -47,6 +46,22 @@ auto benchmark_insert()
             auto v = Set{};
             for (auto i = 0u; i < n; ++i)
                 v = v.insert(g[i]);
+            return v;
+        });
+    };
+}
+
+template <typename Generator, typename Set>
+auto benchmark_insert_move()
+{
+    return [](nonius::chronometer meter) {
+        auto n = meter.param<N>();
+        auto g = Generator{}(n);
+
+        measure(meter, [&] {
+            auto v = Set{};
+            for (auto i = 0u; i < n; ++i)
+                v = std::move(v).insert(g[i]);
             return v;
         });
     };

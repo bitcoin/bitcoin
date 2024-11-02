@@ -16,8 +16,7 @@ foreach(_file IN LISTS immer_unit_tests)
   add_dependencies(tests ${_target})
   target_compile_definitions(${_target} PUBLIC
     -DIMMER_OSS_FUZZ_DATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/oss-fuzz/data"
-    DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
     CATCH_CONFIG_MAIN)
-  target_link_libraries(${_target} PUBLIC immer-dev)
+  target_link_libraries(${_target} PUBLIC immer-dev Catch2::Catch2)
   add_test("test/${_output}" ${_output})
 endforeach()

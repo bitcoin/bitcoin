@@ -14,6 +14,10 @@
 
 #include "../vector_transient/generic.ipp"
 
+IMMER_RANGES_CHECK(std::ranges::contiguous_range<immer::array<std::string>>);
+IMMER_RANGES_CHECK(
+    std::ranges::contiguous_range<immer::array_transient<std::string>>);
+
 TEST_CASE("array_transient default constructor compiles")
 {
     immer::array_transient<int> transient;

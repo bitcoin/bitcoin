@@ -12,6 +12,10 @@
 #include <memory>
 #include <stdexcept>
 
+#if defined(__GNUC__) && (__GNUC__ == 9 || __GNUC__ == 8 || __GNUC__ == 10)
+#define IMMER_DISABLE_FUZZER_DUE_TO_GCC_BUG 1
+#endif
+
 struct no_more_input : std::exception
 {};
 

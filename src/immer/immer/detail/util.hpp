@@ -25,6 +25,18 @@ namespace immer {
 namespace detail {
 
 template <typename T>
+const T* as_const(T* x)
+{
+    return x;
+}
+
+template <typename T>
+const T& as_const(T& x)
+{
+    return x;
+}
+
+template <typename T>
 using aligned_storage_for =
     typename std::aligned_storage<sizeof(T), alignof(T)>::type;
 
@@ -39,26 +51,110 @@ T&& auto_const_cast(const T&& x)
     return const_cast<T&&>(std::move(x));
 }
 
-template <typename Iter1, typename Iter2>
-auto uninitialized_move(Iter1 in1, Iter1 in2, Iter2 out)
+template <class T>
+inline auto destroy_at(T* p) noexcept
+    -> std::enable_if_t<std::is_trivially_destructible<T>::value>
 {
-    return std::uninitialized_copy(
-        std::make_move_iterator(in1), std::make_move_iterator(in2), out);
+    p->~T();
 }
 
 template <class T>
-void destroy(T* first, T* last)
+inline auto destroy_at(T* p) noexcept
+    -> std::enable_if_t<!std::is_trivially_destructible<T>::value>
 {
-    for (; first != last; ++first)
-        first->~T();
+    p->~T();
 }
 
-template <class T, class Size>
-void destroy_n(T* p, Size n)
+template <typename Iter1>
+constexpr bool can_trivially_detroy = std::is_trivially_destructible<
+    typename std::iterator_traits<Iter1>::value_type>::value;
+
+template <class Iter>
+auto destroy(Iter, Iter last) noexcept
+    -> std::enable_if_t<can_trivially_detroy<Iter>, Iter>
 {
-    auto e = p + n;
-    for (; p != e; ++p)
-        p->~T();
+    return last;
+}
+template <class Iter>
+auto destroy(Iter first, Iter last) noexcept
+    -> std::enable_if_t<!can_trivially_detroy<Iter>, Iter>
+{
+    for (; first != last; ++first)
+        detail::destroy_at(std::addressof(*first));
+    return first;
+}
+
+template <class Iter, class Size>
+auto destroy_n(Iter first, Size n) noexcept
+    -> std::enable_if_t<can_trivially_detroy<Iter>, Iter>
+{
+    return first + n;
+}
+template <class Iter, class Size>
+auto destroy_n(Iter first, Size n) noexcept
+    -> std::enable_if_t<!can_trivially_detroy<Iter>, Iter>
+{
+    for (; n > 0; (void) ++first, --n)
+        detail::destroy_at(std::addressof(*first));
+    return first;
+}
+
+template <typename Iter1, typename Iter2>
+constexpr bool can_trivially_copy =
+    std::is_same<typename std::iterator_traits<Iter1>::value_type,
+                 typename std::iterator_traits<Iter2>::value_type>::value&&
+        std::is_trivially_copyable<
+            typename std::iterator_traits<Iter1>::value_type>::value;
+
+template <typename Iter1, typename Iter2>
+auto uninitialized_move(Iter1 first, Iter1 last, Iter2 out) noexcept
+    -> std::enable_if_t<can_trivially_copy<Iter1, Iter2>, Iter2>
+{
+    return std::copy(first, last, out);
+}
+template <typename Iter1, typename Iter2>
+auto uninitialized_move(Iter1 first, Iter1 last, Iter2 out)
+    -> std::enable_if_t<!can_trivially_copy<Iter1, Iter2>, Iter2>
+
+{
+    using value_t = typename std::iterator_traits<Iter2>::value_type;
+    auto current  = out;
+    IMMER_TRY {
+        for (; first != last; ++first, (void) ++current) {
+            ::new (const_cast<void*>(static_cast<const volatile void*>(
+                std::addressof(*current)))) value_t(std::move(*first));
+        }
+        return current;
+    }
+    IMMER_CATCH (...) {
+        detail::destroy(out, current);
+        IMMER_RETHROW;
+    }
+}
+
+template <typename SourceIter, typename Sent, typename SinkIter>
+auto uninitialized_copy(SourceIter first, Sent last, SinkIter out) noexcept
+    -> std::enable_if_t<can_trivially_copy<SourceIter, SinkIter>, SinkIter>
+{
+    return std::copy(first, last, out);
+}
+template <typename SourceIter, typename Sent, typename SinkIter>
+auto uninitialized_copy(SourceIter first, Sent last, SinkIter out)
+    -> std::enable_if_t<!can_trivially_copy<SourceIter, SinkIter>, SinkIter>
+{
+    using value_t = typename std::iterator_traits<SinkIter>::value_type;
+    auto current  = out;
+    IMMER_TRY {
+        for (; first != last; ++first, (void) ++current) {
+            ::new (const_cast<void*>(static_cast<const volatile void*>(
+                std::addressof(*current)))) value_t(*first);
+        }
+        return current;
+    }
+    IMMER_CATCH (...) {
+        detail::destroy(out, current);
+        IMMER_RETHROW;
+    }
 }
 
 template <typename Heap, typename T, typename... Args>
@@ -212,54 +308,6 @@ typename std::iterator_traits<Iterator>::difference_type
 distance(Iterator first, Sentinel last)
 {
     return last - first;
-}
-
-/*!
- * An alias to `std::uninitialized_copy`
- */
-template <
-    typename Iterator,
-    typename Sentinel,
-    typename SinkIter,
-    std::enable_if_t<
-        detail::std_uninitialized_copy_supports_v<Iterator, Sentinel, SinkIter>,
-        bool> = true>
-SinkIter uninitialized_copy(Iterator first, Sentinel last, SinkIter d_first)
-{
-    return std::uninitialized_copy(first, last, d_first);
-}
-
-/*!
- * Equivalent of the `std::uninitialized_copy` applied to the
- * sentinel-delimited forward range @f$ [first, last) @f$
- */
-template <typename SourceIter,
-          typename Sent,
-          typename SinkIter,
-          std::enable_if_t<
-              (!detail::std_uninitialized_copy_supports_v<SourceIter,
-                                                          Sent,
-                                                          SinkIter>) &&detail::
-                      compatible_sentinel_v<SourceIter, Sent> &&
-                  detail::is_forward_iterator_v<SinkIter>,
-              bool> = true>
-SinkIter uninitialized_copy(SourceIter first, Sent last, SinkIter d_first)
-{
-    auto current = d_first;
-    IMMER_TRY {
-        while (first != last) {
-            *current++ = *first;
-            ++first;
-        }
-    }
-    IMMER_CATCH (...) {
-        using Value = typename std::iterator_traits<SinkIter>::value_type;
-        for (; d_first != current; ++d_first) {
-            d_first->~Value();
-        }
-        IMMER_RETHROW;
-    }
-    return current;
 }
 
 } // namespace detail

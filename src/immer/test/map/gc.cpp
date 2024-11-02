@@ -23,4 +23,5 @@ template <typename K,
 using test_map_t = immer::map<K, T, Hash, Eq, gc_memory, 3u>;
 
 #define MAP_T test_map_t
+#define IMMER_IS_LIBGC_TEST 1
 #include "generic.ipp"
