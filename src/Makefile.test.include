@@ -73,6 +73,7 @@ endif
 
 # test_dash binary #
 BITCOIN_TESTS =\
+  test/argsman_tests.cpp \
   test/arith_uint256_tests.cpp \
   test/scriptnum10.h \
   test/addrman_tests.cpp \
