@@ -318,7 +318,12 @@ RPCHelpMan lockunspent()
             });
 
         const Txid txid = Txid::FromUint256(ParseHashO(o, "txid"));
-        const int nOutput = o.find_value("vout").getInt<int>();
+        const UniValue& vout_value = o.find_value("vout");
+        const std::string& vout_str = vout_value.getValStr();
+        if (vout_str.find('.') != std::string::npos) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout must be an integer");
+        }
+        const int nOutput = vout_value.getInt<int>();
         if (nOutput < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout cannot be negative");
         }
