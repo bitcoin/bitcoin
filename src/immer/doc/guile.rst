@@ -1,1 +1,0 @@
-../extra/guile/README.rst
