@@ -4,7 +4,7 @@ cmake_policy(SET CMP0048 NEW) # enable project VERSION
 cmake_policy(SET CMP0056 NEW) # honor link flags in try_compile()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-project(immer VERSION 0.7.0)
+project(immer VERSION 0.8.0)
 
 if (NOT MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wno-unused-parameter -Wno-extended-offsetof -Wno-c++17-extensions -Wno-c++1z-extensions -Wno-unknown-warning-option -Wno-type-limits")
@@ -99,6 +99,14 @@ install(TARGETS immer EXPORT ImmerConfig)
 install(EXPORT ImmerConfig DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Immer")
 install(DIRECTORY immer DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/ImmerConfigVersion.cmake"
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY SameMajorVersion )
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ImmerConfigVersion.cmake" DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Immer" )
+
 # development target to be used in tests, examples, benchmarks...
 immer_canonicalize_cmake_booleans(
   DISABLE_FREE_LIST
@@ -130,6 +138,8 @@ endif()
 
 if (immer_BUILD_TESTS)
   enable_testing()
+
+  find_package(Catch2 REQUIRED)
 
   add_custom_target(check
     COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure

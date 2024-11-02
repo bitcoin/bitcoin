@@ -125,6 +125,51 @@ inline count_t popcount(std::uint8_t x)
     return popcount(static_cast<std::uint32_t>(x));
 }
 
+template <typename bitmap_t>
+class set_bits_range
+{
+    bitmap_t bitmap;
+
+    class set_bits_iterator
+    {
+        bitmap_t bitmap;
+
+        inline static bitmap_t clearlsbit(bitmap_t bitmap)
+        {
+            return bitmap & (bitmap - 1);
+        }
+
+        inline static bitmap_t lsbit(bitmap_t bitmap)
+        {
+            return bitmap ^ clearlsbit(bitmap);
+        }
+
+    public:
+        set_bits_iterator(bitmap_t bitmap)
+            : bitmap(bitmap){};
+
+        set_bits_iterator operator++()
+        {
+            bitmap = clearlsbit(bitmap);
+            return *this;
+        }
+
+        bool operator!=(set_bits_iterator const& other) const
+        {
+            return bitmap != other.bitmap;
+        }
+
+        bitmap_t operator*() const { return lsbit(bitmap); }
+    };
+
+public:
+    set_bits_range(bitmap_t bitmap)
+        : bitmap(bitmap)
+    {}
+    set_bits_iterator begin() const { return set_bits_iterator(bitmap); }
+    set_bits_iterator end() const { return set_bits_iterator(0); }
+};
+
 } // namespace hamts
 } // namespace detail
 } // namespace immer

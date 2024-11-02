@@ -10,7 +10,7 @@
 #error "define the box template to use in ATOM_T"
 #endif
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 template <typename T>
 using BOX_T = typename ATOM_T<T>::box_type;

@@ -8,7 +8,7 @@
 
 #include "extra/fuzzer/fuzzer_input.hpp"
 #include <array>
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <immer/flex_vector.hpp>
 #include <iostream>
 
@@ -205,7 +205,7 @@ TEST_CASE("bug: concat with moving the right side")
         var0      = var0 + std::move(var1);
     }
 
-#if __GNUC__ != 9 && __GNUC__ != 8
+#ifndef IMMER_DISABLE_FUZZER_DUE_TO_GCC_BUG
     SECTION("vm")
     {
         constexpr std::uint8_t input[] = {

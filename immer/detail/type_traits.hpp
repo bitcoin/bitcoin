@@ -201,23 +201,5 @@ struct std_distance_supports<
 template <typename T, typename U>
 constexpr bool std_distance_supports_v = std_distance_supports<T, U>::value;
 
-template <typename T, typename U, typename V, typename = void>
-struct std_uninitialized_copy_supports : std::false_type
-{};
-
-template <typename T, typename U, typename V>
-struct std_uninitialized_copy_supports<
-    T,
-    U,
-    V,
-    void_t<decltype(std::uninitialized_copy(
-        std::declval<T>(), std::declval<U>(), std::declval<V>()))>>
-    : std::true_type
-{};
-
-template <typename T, typename U, typename V>
-constexpr bool std_uninitialized_copy_supports_v =
-    std_uninitialized_copy_supports<T, U, V>::value;
-
 } // namespace detail
 } // namespace immer

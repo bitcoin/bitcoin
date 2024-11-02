@@ -27,6 +27,8 @@ struct champ_iterator
     using tree_t = champ<T, Hash, Eq, MP, B>;
     using node_t = typename tree_t::node_t;
 
+    champ_iterator() = default;
+
     struct end_t
     {};
 

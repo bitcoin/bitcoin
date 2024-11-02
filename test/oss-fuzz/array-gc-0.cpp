@@ -15,7 +15,7 @@
 #include <immer/heap/gc_heap.hpp>
 #include <immer/refcount/no_refcount_policy.hpp>
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 using gc_memory = immer::memory_policy<immer::heap_policy<immer::gc_heap>,
                                        immer::no_refcount_policy,

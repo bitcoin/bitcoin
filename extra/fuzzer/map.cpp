@@ -10,6 +10,8 @@
 
 #include <immer/map.hpp>
 
+#include <immer/algorithm.hpp>
+
 #include <array>
 
 struct colliding_hash_t
@@ -37,7 +39,11 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data,
             op_erase_move,
             op_iterate,
             op_find,
-            op_update
+            op_update,
+            op_update_move,
+            op_update_if_exists,
+            op_update_if_exists_move,
+            op_diff,
         };
         auto src = read<char>(in, is_valid_var);
         auto dst = read<char>(in, is_valid_var);
@@ -81,6 +87,43 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data,
             auto key  = read<size_t>(in);
             vars[dst] = vars[src].update(key, [](int x) { return x + 1; });
             break;
+        }
+        case op_update_move: {
+            auto key = read<size_t>(in);
+            vars[dst] =
+                std::move(vars[src]).update(key, [](int x) { return x + 1; });
+            break;
+        }
+        case op_update_if_exists: {
+            auto key = read<size_t>(in);
+            vars[dst] =
+                vars[src].update_if_exists(key, [](int x) { return x + 1; });
+            break;
+        }
+        case op_update_if_exists_move: {
+            auto key  = read<size_t>(in);
+            vars[dst] = std::move(vars[src]).update_if_exists(
+                key, [](int x) { return x + 1; });
+            break;
+        }
+        case op_diff: {
+            auto&& a = vars[src];
+            auto&& b = vars[dst];
+            diff(
+                a,
+                b,
+                [&](auto&& x) {
+                    assert(!a.count(x.first));
+                    assert(b.count(x.first));
+                },
+                [&](auto&& x) {
+                    assert(a.count(x.first));
+                    assert(!b.count(x.first));
+                },
+                [&](auto&& x, auto&& y) {
+                    assert(x.first == y.first);
+                    assert(x.second != y.second);
+                });
         }
         default:
             break;

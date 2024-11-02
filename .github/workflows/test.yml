@@ -7,15 +7,22 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0 # needed for fetchGit in default.nix
-      - uses: cachix/install-nix-action@v12
+      - uses: cachix/install-nix-action@v20
         with:
           nix_path: nixpkgs=channel:nixos-unstable
-          install_url: "https://releases.nixos.org/nix/nix-2.3.16/install"
-      - uses: cachix/cachix-action@v8
+      - uses: cachix/cachix-action@v12
         with:
           name: arximboldi
           signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
       - run: nix-build
+
+  build-spm:
+     runs-on: macos-latest
+     steps:
+       - uses: actions/checkout@v2
+         with:
+           submodules: true
+       - run: swift build
 
   docs:
     runs-on: ubuntu-latest
@@ -23,11 +30,10 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
-      - uses: cachix/install-nix-action@v12
+      - uses: cachix/install-nix-action@v20
         with:
           nix_path: nixpkgs=channel:nixos-unstable
-          install_url: "https://releases.nixos.org/nix/nix-2.3.16/install"
-      - uses: cachix/cachix-action@v8
+      - uses: cachix/cachix-action@v12
         with:
           name: arximboldi
           signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
@@ -35,12 +41,12 @@ jobs:
       - run: nix-shell --run "cd build && cmake .."
       - run: nix-shell --run "cd build && make docs"
       - uses: shimataro/ssh-key-action@v2
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master' && github.repository_owner == 'arximboldi'
         with:
           key: ${{ secrets.SINUSOIDES_SSH_KEY }}
           known_hosts: ${{ secrets.SINUSOIDES_KNOWN_HOSTS }}
       - run: nix-shell --run "cd build && make upload-docs"
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master' && github.repository_owner == 'arximboldi'
 
   check:
     strategy:
@@ -74,7 +80,7 @@ jobs:
           - type: Debug
             toolchain: llvm-8
             std: 14
-            opts: ['sanitizer']
+            opts: ['sanitize']
           # benchmarks
           - type: Release
             toolchain: gnu-9
@@ -87,11 +93,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: cachix/install-nix-action@v12
+      - uses: cachix/install-nix-action@v20
         with:
           nix_path: nixpkgs=channel:nixos-unstable
-          install_url: "https://releases.nixos.org/nix/nix-2.3.16/install"
-      - uses: cachix/cachix-action@v8
+      - uses: cachix/cachix-action@v12
         with:
           name: arximboldi
           signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
@@ -113,11 +118,11 @@ jobs:
           "
       - run: nix-shell --argstr toolchain ${{ matrix.toolchain }} --run "cd build && make check -j`nproc`"
       - run: nix-shell --argstr toolchain ${{ matrix.toolchain }} --run "bash <(curl -s https://codecov.io/bash)"
-        if: ${{ contains(matrix.opts, 'coverage') }}
+        if: contains(matrix.opts, 'coverage')
       - uses: shimataro/ssh-key-action@v2
-        if: ${{ contains(matrix.opts, 'benchmark') }}
+        if: contains(matrix.opts, 'benchmark') && github.repository_owner == 'arximboldi'
         with:
           key: ${{ secrets.SINUSOIDES_SSH_KEY }}
           known_hosts: ${{ secrets.SINUSOIDES_KNOWN_HOSTS }}
       - run: nix-shell --run "cd build && make upload-benchmark-reports"
-        if: ${{ contains(matrix.opts, 'benchmark') }}
+        if: contains(matrix.opts, 'benchmark') && github.repository_owner == 'arximboldi'

@@ -249,7 +249,7 @@ public:
     }
 
     /*!
-     * Returns a flex_vector with `value` inserted at the frony.  It may
+     * Returns a flex_vector with `value` inserted at the front.  It may
      * allocate memory and its complexity is @f$ O(log(size)) @f$.
      *
      * @rst
@@ -503,6 +503,17 @@ public:
     IMMER_NODISCARD transient_type transient() const& { return impl_; }
     IMMER_NODISCARD transient_type transient() && { return std::move(impl_); }
 
+    /*!
+     * Returns a value that can be used as identity for the container.  If two
+     * values have the same identity, they are guaranteed to be equal and to
+     * contain the same objects.  However, two equal containers are not
+     * guaranteed to have the same identity.
+     */
+    std::pair<void*, void*> identity() const
+    {
+        return {impl_.root, impl_.tail};
+    }
+
     // Semi-private
     const impl_t& impl() const { return impl_; }
 
@@ -604,5 +615,10 @@ private:
 
     impl_t impl_ = {};
 };
+
+static_assert(std::is_nothrow_move_constructible<flex_vector<int>>::value,
+              "flex_vector is not nothrow move constructible");
+static_assert(std::is_nothrow_move_assignable<flex_vector<int>>::value,
+              "flex_vector is not nothrow move assignable");
 
 } // namespace immer
