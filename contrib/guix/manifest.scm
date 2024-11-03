@@ -561,7 +561,8 @@ inspecting signatures in Mach-O binaries.")
                (base32
                 "0wm0if2n4z48kpn85va6yb4iac34crds2f55ddpz1hykx6jp1pb6"))
               (patches (search-our-patches "glibc-2.27-fcommon.patch"
-                                           "glibc-2.27-guix-prefix.patch"))))))
+                                           "glibc-2.27-guix-prefix.patch"
+                                           "glibc-2.27-no-librt.patch"))))))
 
 (packages->manifest
  (append
