@@ -26,7 +26,7 @@ if [[ $HOST = *-mingw32 ]]; then
 fi
 if [ -z "$NO_DEPENDS" ]; then
   if [[ $DOCKER_NAME_TAG == centos* ]]; then
-    SHELL_OPTS="LC_ALL=en_US.UTF-8 CONFIG_SHELL=/bin/bash"
+    SHELL_OPTS="CONFIG_SHELL=/bin/bash"
   else
     SHELL_OPTS="CONFIG_SHELL="
   fi
