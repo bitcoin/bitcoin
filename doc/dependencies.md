@@ -28,7 +28,7 @@ You can find installation instructions in the `build-*.md` file for your platfor
 | --- | --- | --- | --- |
 | [Fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/) | 2.12.1 | 2.6 | Yes |
 | [FreeType](https://freetype.org) | 2.11.0 | 2.3.0 | Yes |
-| [qrencode](https://fukuchi.org/works/qrencode/) | [3.4.4](https://fukuchi.org/works/qrencode) | | No |
+| [qrencode](https://fukuchi.org/works/qrencode/) | [4.1.1](https://fukuchi.org/works/qrencode) | | No |
 | [Qt](https://www.qt.io) | [5.15.13](https://download.qt.io/official_releases/qt/) | [5.11.3](https://github.com/bitcoin/bitcoin/pull/24132) | No |
 
 ### Networking
@@ -40,10 +40,10 @@ You can find installation instructions in the `build-*.md` file for your platfor
 ### Notifications
 | Dependency | Version used | Minimum required | Runtime |
 | --- | --- | --- | --- |
-| [ZeroMQ](https://zeromq.org) | 4.3.1 | 4.0.0 | No |
+| [ZeroMQ](https://zeromq.org) | 4.3.5 | 4.0.0 | No |
 
 ### Wallet
 | Dependency | Version used | Minimum required | Runtime |
 | --- | --- | --- | --- |
 | [Berkeley DB](https://www.oracle.com/technetwork/database/database-technologies/berkeleydb/downloads/index.html) (legacy wallet) | 4.8.30 | 4.8.x | No |
-| [SQLite](https://sqlite.org) | 3.32.1 | [3.7.17](https://github.com/bitcoin/bitcoin/pull/19077) | No |
+| [SQLite](https://sqlite.org) | 3.38.5 | [3.7.17](https://github.com/bitcoin/bitcoin/pull/19077) | No |
