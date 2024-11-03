@@ -203,6 +203,40 @@ chain for " target " development."))
     (search-our-patches "nsis-gcc-10-memmove.patch"
                         "nsis-disable-installer-reloc.patch")))
 
+(define (fix-ppc64-nx-default lief)
+  (package-with-extra-patches lief
+    (search-our-patches "lief-fix-ppc64-nx-default.patch")))
+
+(define-public lief
+  (package
+   (name "python-lief")
+   (version "0.12.1")
+   (source
+    (origin
+     (method git-fetch)
+     (uri (git-reference
+           (url "https://github.com/lief-project/LIEF.git")
+           (commit version)))
+     (file-name (git-file-name name version))
+     (sha256
+      (base32
+       "1xzbh3bxy4rw1yamnx68da1v5s56ay4g081cyamv67256g0qy2i1"))))
+   (build-system python-build-system)
+   (arguments
+    `(#:phases
+      (modify-phases %standard-phases
+        (add-after 'unpack 'parallel-jobs
+          ;; build with multiple cores
+          (lambda _
+            (substitute* "setup.py" (("self.parallel if self.parallel else 1") (number->string (parallel-job-count)))))))))
+   (native-inputs
+    `(("cmake" ,cmake)))
+   (home-page "https://github.com/lief-project/LIEF")
+   (synopsis "Library to Instrument Executable Formats")
+   (description "Python library to to provide a cross platform library which can
+parse, modify and abstract ELF, PE and MachO formats.")
+   (license license:asl2.0)))
+
 (define osslsigncode
   (package
     (name "osslsigncode")
@@ -528,40 +562,6 @@ inspecting signatures in Mach-O binaries.")
                 "0wm0if2n4z48kpn85va6yb4iac34crds2f55ddpz1hykx6jp1pb6"))
               (patches (search-our-patches "glibc-2.27-fcommon.patch"
                                            "glibc-2.27-guix-prefix.patch"))))))
-
-(define (fix-ppc64-nx-default lief)
-  (package-with-extra-patches lief
-    (search-our-patches "lief-fix-ppc64-nx-default.patch")))
-
-(define-public lief
-  (package
-   (name "python-lief")
-   (version "0.12.1")
-   (source
-    (origin
-     (method git-fetch)
-     (uri (git-reference
-           (url "https://github.com/lief-project/LIEF.git")
-           (commit version)))
-     (file-name (git-file-name name version))
-     (sha256
-      (base32
-       "1xzbh3bxy4rw1yamnx68da1v5s56ay4g081cyamv67256g0qy2i1"))))
-   (build-system python-build-system)
-   (arguments
-    `(#:phases
-      (modify-phases %standard-phases
-        (add-after 'unpack 'parallel-jobs
-          ;; build with multiple cores
-          (lambda _
-            (substitute* "setup.py" (("self.parallel if self.parallel else 1") (number->string (parallel-job-count)))))))))
-   (native-inputs
-    `(("cmake" ,cmake)))
-   (home-page "https://github.com/lief-project/LIEF")
-   (synopsis "Library to Instrument Executable Formats")
-   (description "Python library to to provide a cross platform library which can
-parse, modify and abstract ELF, PE and MachO formats.")
-   (license license:asl2.0)))
 
 (packages->manifest
  (append
