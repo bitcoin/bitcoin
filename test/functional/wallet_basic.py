@@ -185,6 +185,9 @@ class WalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Invalid parameter, vout index out of bounds",
                                 self.nodes[2].lockunspent, False,
                                 [{"txid": unspent_0["txid"], "vout": 999}])
+        assert_raises_rpc_error(-8, "Invalid parameter, vout cannot be negative",
+                                self.nodes[2].lockunspent, False,
+                                [{"txid": unspent_0["txid"], "vout": -1}])
 
         # The lock on a manually selected output is ignored
         unspent_0 = self.nodes[1].listunspent()[0]
