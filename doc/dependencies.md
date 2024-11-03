@@ -23,6 +23,10 @@ You can find installation instructions in the `build-*.md` file for your platfor
 
 ## Optional
 
+| Dependency | Version used | Minimum required | Runtime |
+| --- | --- | --- | --- |
+| [libgmp](https://gmplib.org/download/gmp/)<sup>[ \* ](#note1)</sup> | 6.3.0 | [6.2.0](https://github.com/dashpay/bls-signatures/pull/92) | No |
+
 ### GUI
 | Dependency | Version used | Minimum required | Runtime |
 | --- | --- | --- | --- |
@@ -47,3 +51,5 @@ You can find installation instructions in the `build-*.md` file for your platfor
 | --- | --- | --- | --- |
 | [Berkeley DB](https://www.oracle.com/technetwork/database/database-technologies/berkeleydb/downloads/index.html) (legacy wallet) | 4.8.30 | 4.8.x | No |
 | [SQLite](https://sqlite.org) | 3.38.5 | [3.7.17](https://github.com/bitcoin/bitcoin/pull/19077) | No |
+
+<a name="note1">Note \*</a> : The minimum supported version on macOS is 6.3.0
