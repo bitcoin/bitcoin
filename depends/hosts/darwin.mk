@@ -19,6 +19,8 @@ clang_prog=$(build_prefix)/bin/clang
 clangxx_prog=$(clang_prog)++
 llvm_config_prog=$(build_prefix)/bin/llvm-config
 
+darwin_OBJDUMP=$(build_prefix)/bin/$(host)-objdump
+
 else
 # FORCE_USE_SYSTEM_CLANG is non-empty, so we use the clang from the user's
 # system
@@ -37,9 +39,11 @@ clangxx_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v clang++")
 llvm_config_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v llvm-config")
 
 llvm_lib_dir=$(shell $(llvm_config_prog) --libdir)
+
+darwin_OBJDUMP=$(shell $(SHELL) $(.SHELLFLAGS) "command -v llvm-objdump")
 endif
 
-cctools_TOOLS=AR RANLIB STRIP NM OTOOL
+cctools_TOOLS=AR RANLIB STRIP NM
 
 # Make-only lowercase function
 lc = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
