@@ -13,7 +13,7 @@
 #include <immer/heap/gc_heap.hpp>
 #include <immer/map.hpp>
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 using st_memory = immer::memory_policy<immer::heap_policy<immer::cpp_heap>,
                                        immer::unsafe_refcount_policy,
@@ -108,6 +108,16 @@ TEST_CASE("https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=24466")
     {
         auto input = load_input(
             "clusterfuzz-testcase-minimized-map-st-5193157168594944");
+        CHECK(run_input(input.data(), input.size()) == 0);
+    }
+}
+
+TEST_CASE("https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=47700")
+{
+    SECTION("fuzzer")
+    {
+        auto input =
+            load_input("clusterfuzz-testcase-minimized-map-6457979420934144");
         CHECK(run_input(input.data(), input.size()) == 0);
     }
 }

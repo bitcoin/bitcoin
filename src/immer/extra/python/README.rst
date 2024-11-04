@@ -2,7 +2,7 @@
 Python bindings
 ===============
 
-This library includes experimental bindings bring efficient immutable
+This library includes experimental bindings that provide efficient immutable
 vectors for the Python language.  They were developed as part of the
 research for the `ICFP'17 paper`_.  The interface is quite
 **incomplete**, yet you can already do some things like:
@@ -15,7 +15,7 @@ research for the `ICFP'17 paper`_.  The interface is quite
 
     **Do you want to help** making these bindings complete and production
     ready?  Drop a line at `immer@sinusoid.al
-    <mailto:immer@sinusoid.al>`_ or `open an issue on Github
+    <mailto:immer@sinusoid.al>`_ or `open an issue on GitHub
     <https://github.com/arximboldi/immer>`_
 
 Installation

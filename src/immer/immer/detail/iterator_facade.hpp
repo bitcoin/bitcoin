@@ -82,19 +82,6 @@ protected:
         std::is_base_of<std::bidirectional_iterator_tag,
                         IteratorCategoryT>::value;
 
-    class reference_proxy
-    {
-        friend iterator_facade;
-        DerivedT iter_;
-
-        reference_proxy(DerivedT iter)
-            : iter_{std::move(iter)}
-        {}
-
-    public:
-        operator ReferenceT() const { return *iter_; }
-    };
-
     const DerivedT& derived() const
     {
         static_assert(std::is_base_of<iterator_facade, DerivedT>::value,
@@ -111,10 +98,10 @@ protected:
 public:
     ReferenceT operator*() const { return access_t::dereference(derived()); }
     PointerT operator->() const { return &access_t::dereference(derived()); }
-    reference_proxy operator[](DifferenceTypeT n) const
+    ReferenceT operator[](DifferenceTypeT n) const
     {
         static_assert(is_random_access, "");
-        return derived() + n;
+        return *(derived() + n);
     }
 
     friend bool operator==(const DerivedT& a, const DerivedT& b)

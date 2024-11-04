@@ -219,9 +219,9 @@ IMMER_NODISCARD auto operator!=(T2&& b, const box<T, MP>& a)
 template <typename T2, typename T, typename MP>
 IMMER_NODISCARD auto operator<(T2&& b, const box<T, MP>& a)
     -> std::enable_if_t<!std::is_same<box<T, MP>, std::decay_t<T2>>::value,
-                        decltype(a.get() < b)>
+                        decltype(b < a.get())>
 {
-    return a.get() < b;
+    return b < a.get();
 }
 
 } // namespace immer

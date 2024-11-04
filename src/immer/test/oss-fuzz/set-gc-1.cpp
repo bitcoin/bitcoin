@@ -16,12 +16,12 @@
 
 #include <immer/algorithm.hpp>
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 #define IMMER_FUZZED_TRACE_ENABLE 0
 
 #if IMMER_FUZZED_TRACE_ENABLE
-#include <fmt/printf.h>
+#include <fmt/ostream.h>
 #define IMMER_FUZZED_TRACE(...) fmt::print(std::cerr, __VA_ARGS__)
 #else
 #define IMMER_FUZZED_TRACE(...)

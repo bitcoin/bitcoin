@@ -15,9 +15,9 @@
 #include <immer/detail/type_traits.hpp>
 
 #include <cassert>
-#include <stdexcept>
 #include <memory>
 #include <numeric>
+#include <stdexcept>
 
 namespace immer {
 namespace detail {
@@ -465,7 +465,7 @@ struct rbtree
             auto ts    = size - tail_off;
             auto newts = new_size - tail_off;
             if (tail->can_mutate(e)) {
-                destroy_n(tail->leaf() + newts, ts - newts);
+                detail::destroy_n(tail->leaf() + newts, ts - newts);
             } else {
                 auto new_tail = node_t::copy_leaf_e(e, tail, newts);
                 dec_leaf(tail, ts);

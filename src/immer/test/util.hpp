@@ -12,6 +12,18 @@
 #include <boost/range/join.hpp>
 #include <cstddef>
 
+#include <algorithm> // For __cpp_lib_ranges
+
+// If we have ranges, include the header for the concepts, and define
+// IMMER_RANGES_CHECK() to expand to a static_assert of the argument, otherwise
+// define it as a no-op static_assert.
+#if __cpp_lib_ranges
+#include <ranges>
+#define IMMER_RANGES_CHECK(...) static_assert(__VA_ARGS__)
+#else
+#define IMMER_RANGES_CHECK(...) static_assert(true, "")
+#endif
+
 namespace {
 
 struct identity_t

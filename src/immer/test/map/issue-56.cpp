@@ -13,7 +13,7 @@
 #include <immer/map.hpp>
 #include <immer/vector.hpp>
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 TEST_CASE("const map")
 {
