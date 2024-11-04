@@ -220,12 +220,12 @@ void secp256k1_context_set_error_callback(secp256k1_context* ctx, void (*fun)(co
     ctx->error_callback.data = data;
 }
 
-secp256k1_scratch_space* secp256k1_scratch_space_create(const secp256k1_context* ctx, size_t max_size) {
+static secp256k1_scratch_space* secp256k1_scratch_space_create(const secp256k1_context* ctx, size_t max_size) {
     VERIFY_CHECK(ctx != NULL);
     return secp256k1_scratch_create(&ctx->error_callback, max_size);
 }
 
-void secp256k1_scratch_space_destroy(const secp256k1_context *ctx, secp256k1_scratch_space* scratch) {
+static void secp256k1_scratch_space_destroy(const secp256k1_context *ctx, secp256k1_scratch_space* scratch) {
     VERIFY_CHECK(ctx != NULL);
     secp256k1_scratch_destroy(&ctx->error_callback, scratch);
 }
@@ -238,25 +238,13 @@ static SECP256K1_INLINE void secp256k1_declassify(const secp256k1_context* ctx, 
 }
 
 static int secp256k1_pubkey_load(const secp256k1_context* ctx, secp256k1_ge* ge, const secp256k1_pubkey* pubkey) {
-    secp256k1_ge_storage s;
-
-    /* We require that the secp256k1_ge_storage type is exactly 64 bytes.
-     * This is formally not guaranteed by the C standard, but should hold on any
-     * sane compiler in the real world. */
-    STATIC_ASSERT(sizeof(secp256k1_ge_storage) == 64);
-    memcpy(&s, &pubkey->data[0], 64);
-    secp256k1_ge_from_storage(ge, &s);
+    secp256k1_ge_from_bytes(ge, pubkey->data);
     ARG_CHECK(!secp256k1_fe_is_zero(&ge->x));
     return 1;
 }
 
 static void secp256k1_pubkey_save(secp256k1_pubkey* pubkey, secp256k1_ge* ge) {
-    secp256k1_ge_storage s;
-
-    STATIC_ASSERT(sizeof(secp256k1_ge_storage) == 64);
-    VERIFY_CHECK(!secp256k1_ge_is_infinity(ge));
-    secp256k1_ge_to_storage(&s, ge);
-    memcpy(&pubkey->data[0], &s, 64);
+    secp256k1_ge_to_bytes(pubkey->data, ge);
 }
 
 int secp256k1_ec_pubkey_parse(const secp256k1_context* ctx, secp256k1_pubkey* pubkey, const unsigned char *input, size_t inputlen) {
@@ -506,11 +494,13 @@ static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *m
        buffer_append(keydata, &offset, algo16, 16);
    }
    secp256k1_rfc6979_hmac_sha256_initialize(&rng, keydata, offset);
-   memset(keydata, 0, sizeof(keydata));
    for (i = 0; i <= counter; i++) {
        secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
    }
    secp256k1_rfc6979_hmac_sha256_finalize(&rng);
+
+   secp256k1_memclear(keydata, sizeof(keydata));
+   secp256k1_rfc6979_hmac_sha256_clear(&rng);
    return 1;
 }
 
@@ -560,7 +550,7 @@ static int secp256k1_ecdsa_sign_inner(const secp256k1_context* ctx, secp256k1_sc
      * seckey. As a result is_sec_valid is included in ret only after ret was
      * used as a branching variable. */
     ret &= is_sec_valid;
-    memset(nonce32, 0, 32);
+    secp256k1_memclear(nonce32, sizeof(nonce32));
     secp256k1_scalar_clear(&msg);
     secp256k1_scalar_clear(&non);
     secp256k1_scalar_clear(&sec);
@@ -607,6 +597,7 @@ static int secp256k1_ec_pubkey_create_helper(const secp256k1_ecmult_gen_context 
 
     secp256k1_ecmult_gen(ecmult_gen_ctx, &pj, seckey_scalar);
     secp256k1_ge_set_gej(p, &pj);
+    secp256k1_gej_clear(&pj);
     return ret;
 }
 
@@ -811,6 +802,7 @@ int secp256k1_tagged_sha256(const secp256k1_context* ctx, unsigned char *hash32,
     secp256k1_sha256_initialize_tagged(&sha, tag, taglen);
     secp256k1_sha256_write(&sha, msg, msglen);
     secp256k1_sha256_finalize(&sha, hash32);
+    secp256k1_sha256_clear(&sha);
     return 1;
 }
 
@@ -828,6 +820,10 @@ int secp256k1_tagged_sha256(const secp256k1_context* ctx, unsigned char *hash32,
 
 #ifdef ENABLE_MODULE_SCHNORRSIG
 # include "modules/schnorrsig/main_impl.h"
+#endif
+
+#ifdef ENABLE_MODULE_MUSIG
+# include "modules/musig/main_impl.h"
 #endif
 
 #ifdef ENABLE_MODULE_ELLSWIFT

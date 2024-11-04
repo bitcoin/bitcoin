@@ -71,7 +71,7 @@ static void bench_ecmult_teardown_helper(bench_data* data, size_t* seckey_offset
     secp256k1_scalar sum_scalars;
 
     secp256k1_gej_set_infinity(&sum_output);
-    secp256k1_scalar_clear(&sum_scalars);
+    secp256k1_scalar_set_int(&sum_scalars, 0);
     for (i = 0; i < iters; ++i) {
         secp256k1_gej_add_var(&sum_output, &sum_output, &data->output[i], NULL);
         if (scalar_gen_offset != NULL) {
