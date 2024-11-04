@@ -5,6 +5,7 @@ $(package)_file_name=$($(package)_version).tar.gz
 $(package)_sha256_hash=6b73269efdf5c58a070e7357b66ee760501388549d6a12b423723f45888b074b
 $(package)_build_subdir=cctools
 $(package)_dependencies=native_libtapi
+$(package)_patches=no_fixup_chains.patch
 
 define $(package)_set_vars
   $(package)_config_opts=--target=$(host) --enable-lto-support
@@ -18,11 +19,13 @@ ifneq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
 define $(package)_preprocess_cmds
   mkdir -p $($(package)_staging_prefix_dir)/lib && \
   cp $(llvm_lib_dir)/libLTO.so $($(package)_staging_prefix_dir)/lib/ && \
-  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub cctools
+  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub cctools && \
+  patch -p1 < $($(package)_patch_dir)/no_fixup_chains.patch
 endef
 else
 define $(package)_preprocess_cmds
-  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub cctools
+  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub cctools && \
+  patch -p1 < $($(package)_patch_dir)/no_fixup_chains.patch
 endef
 endif
 
