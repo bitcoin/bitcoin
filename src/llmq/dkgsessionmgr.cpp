@@ -18,6 +18,11 @@
 #include <util/underlying.h>
 #include <validation.h>
 
+static bool IsQuorumDKGEnabled(const CSporkManager& sporkman)
+{
+    return sporkman.IsSporkActive(SPORK_17_QUORUM_DKG_ENABLED);
+}
+
 namespace llmq
 {
 static const std::string DB_VVEC = "qdkg_V";
@@ -513,11 +518,6 @@ void CDKGSessionManager::CleanupOldContributions() const
             LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- removed %lld old entries for llmq type %d\n", __func__, cnt_old, uint8_t(params.type));
         }
     }
-}
-
-bool IsQuorumDKGEnabled(const CSporkManager& sporkman)
-{
-    return sporkman.IsSporkActive(SPORK_17_QUORUM_DKG_ENABLED);
 }
 
 } // namespace llmq
