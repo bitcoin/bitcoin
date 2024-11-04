@@ -57,6 +57,7 @@ static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
 static constexpr int DEFAULT_WAIT_CLIENT_TIMEOUT = 0;
 static const bool DEFAULT_NAMED=false;
 static const int CONTINUE_EXECUTION=-1;
+static constexpr uint8_t NETINFO_MAX_LEVEL{4};
 static constexpr int8_t UNKNOWN_NETWORK{-1};
 // See GetNetworkName() in netbase.cpp
 static constexpr std::array NETWORKS{"not_publicly_routable", "ipv4", "ipv6", "onion", "i2p", "cjdns", "internal"};
@@ -90,7 +91,7 @@ static void SetupCliArgs(ArgsManager& argsman)
                    ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
     argsman.AddArg("-addrinfo", "Get the number of addresses known to the node, per network and total, after filtering for quality and recency. The total number of addresses known to the node may be higher.", ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
     argsman.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the output of -getinfo is the result of multiple non-atomic requests. Some entries in the output may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
-    argsman.AddArg("-netinfo", "Get network peer connection information from the remote server. An optional integer argument from 0 to 4 can be passed for different peers listings (default: 0). Pass \"help\" for detailed help documentation.", ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
+    argsman.AddArg("-netinfo", strprintf("Get network peer connection information from the remote server. An optional argument from 0 to %d can be passed for different peers listings (default: 0). If a non-zero value is passed, an additional \"outonly\" (or \"o\") argument can be passed to see outbound peers only. Pass \"help\" (or \"h\") for detailed help documentation.", NETINFO_MAX_LEVEL), ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
 
     SetupChainParamsBaseOptions(argsman);
     argsman.AddArg("-color=<when>", strprintf("Color setting for CLI output (default: %s). Valid values: always, auto (add color codes when standard output is connected to a terminal and OS is not WIN32), never.", DEFAULT_COLOR_SETTING), ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
@@ -379,7 +380,6 @@ public:
 class NetinfoRequestHandler : public BaseRequestHandler
 {
 private:
-    static constexpr uint8_t MAX_DETAIL_LEVEL{4};
     std::array<std::array<uint16_t, NETWORKS.size() + 1>, 3> m_counts{{{}}}; //!< Peer counts by (in/out/total, networks/total)
     uint8_t m_block_relay_peers_count{0};
     uint8_t m_manual_peers_count{0};
@@ -394,18 +394,21 @@ private:
     bool DetailsRequested() const { return m_details_level > 0 && m_details_level < 5; }
     bool IsAddressSelected() const { return m_details_level == 2 || m_details_level == 4; }
     bool IsVersionSelected() const { return m_details_level == 3 || m_details_level == 4; }
+    bool m_outbound_only_selected{false};
     bool m_is_asmap_on{false};
     size_t m_max_addr_length{0};
     size_t m_max_addr_processed_length{5};
     size_t m_max_addr_rate_limited_length{6};
     size_t m_max_age_length{5};
     size_t m_max_id_length{2};
+    size_t m_max_services_length{6};
     struct Peer {
         std::string addr;
         std::string sub_version;
         std::string conn_type;
         std::string network;
         std::string age;
+        std::string services;
         std::string transport_protocol_type;
         double min_ping;
         double ping;
@@ -456,6 +459,15 @@ private:
         if (conn_type == "addr-fetch") return "addr";
         return "";
     }
+    std::string FormatServices(const UniValue& services)
+    {
+        std::string str;
+        for (size_t i = 0; i < services.size(); ++i) {
+            const std::string s{services[i].get_str()};
+            str += s == "NETWORK_LIMITED" ? 'l' : s == "P2P_V2" ? '2' : ToLower(s[0]);
+        }
+        return str;
+    }
 
 public:
     static constexpr int ID_PEERINFO = 0;
@@ -466,9 +478,18 @@ public:
         if (!args.empty()) {
             uint8_t n{0};
             if (ParseUInt8(args.at(0), &n)) {
-                m_details_level = std::min(n, MAX_DETAIL_LEVEL);
+                m_details_level = std::min(n, NETINFO_MAX_LEVEL);
             } else {
-                throw std::runtime_error(strprintf("invalid -netinfo argument: %s\nFor more information, run: bitcoin-cli -netinfo help", args.at(0)));
+                throw std::runtime_error(strprintf("invalid -netinfo level argument: %s\nFor more information, run: bitcoin-cli -netinfo help", args.at(0)));
+            }
+            if (args.size() > 1) {
+                if (std::string_view s{args.at(1)}; n && (s == "o" || s == "outonly")) {
+                    m_outbound_only_selected = true;
+                } else if (n) {
+                    throw std::runtime_error(strprintf("invalid -netinfo outonly argument: %s\nFor more information, run: bitcoin-cli -netinfo help", s));
+                } else {
+                    throw std::runtime_error(strprintf("invalid -netinfo outonly argument: %s\nThe outonly argument is only valid for a level greater than 0 (the first argument). For more information, run: bitcoin-cli -netinfo help", s));
+                }
             }
         }
         UniValue result(UniValue::VARR);
@@ -503,6 +524,7 @@ public:
             ++m_counts.at(2).at(NETWORKS.size());           // total overall
             if (conn_type == "block-relay-only") ++m_block_relay_peers_count;
             if (conn_type == "manual") ++m_manual_peers_count;
+            if (m_outbound_only_selected && !is_outbound) continue;
             if (DetailsRequested()) {
                 // Push data for this peer to the peers vector.
                 const int peer_id{peer["id"].getInt<int>()};
@@ -519,17 +541,19 @@ public:
                 const double ping{peer["pingtime"].isNull() ? -1 : peer["pingtime"].get_real()};
                 const std::string addr{peer["addr"].get_str()};
                 const std::string age{conn_time == 0 ? "" : ToString((time_now - conn_time) / 60)};
+                const std::string services{FormatServices(peer["servicesnames"])};
                 const std::string sub_version{peer["subver"].get_str()};
                 const std::string transport{peer["transport_protocol_type"].isNull() ? "v1" : peer["transport_protocol_type"].get_str()};
                 const bool is_addr_relay_enabled{peer["addr_relay_enabled"].isNull() ? false : peer["addr_relay_enabled"].get_bool()};
                 const bool is_bip152_hb_from{peer["bip152_hb_from"].get_bool()};
                 const bool is_bip152_hb_to{peer["bip152_hb_to"].get_bool()};
-                m_peers.push_back({addr, sub_version, conn_type, NETWORK_SHORT_NAMES[network_id], age, transport, min_ping, ping, addr_processed, addr_rate_limited, last_blck, last_recv, last_send, last_trxn, peer_id, mapped_as, version, is_addr_relay_enabled, is_bip152_hb_from, is_bip152_hb_to, is_outbound, is_tx_relay});
+                m_peers.push_back({addr, sub_version, conn_type, NETWORK_SHORT_NAMES[network_id], age, services, transport, min_ping, ping, addr_processed, addr_rate_limited, last_blck, last_recv, last_send, last_trxn, peer_id, mapped_as, version, is_addr_relay_enabled, is_bip152_hb_from, is_bip152_hb_to, is_outbound, is_tx_relay});
                 m_max_addr_length = std::max(addr.length() + 1, m_max_addr_length);
                 m_max_addr_processed_length = std::max(ToString(addr_processed).length(), m_max_addr_processed_length);
                 m_max_addr_rate_limited_length = std::max(ToString(addr_rate_limited).length(), m_max_addr_rate_limited_length);
                 m_max_age_length = std::max(age.length(), m_max_age_length);
                 m_max_id_length = std::max(ToString(peer_id).length(), m_max_id_length);
+                m_max_services_length = std::max(services.length(), m_max_services_length);
                 m_is_asmap_on |= (mapped_as != 0);
             }
         }
@@ -540,7 +564,8 @@ public:
         // Report detailed peer connections list sorted by direction and minimum ping time.
         if (DetailsRequested() && !m_peers.empty()) {
             std::sort(m_peers.begin(), m_peers.end());
-            result += strprintf("<->   type   net  v  mping   ping send recv  txn  blk  hb %*s%*s%*s ",
+            result += strprintf("<->   type   net %*s  v  mping   ping send recv  txn  blk  hb %*s%*s%*s ",
+                                m_max_services_length, "serv",
                                 m_max_addr_processed_length, "addrp",
                                 m_max_addr_rate_limited_length, "addrl",
                                 m_max_age_length, "age");
@@ -549,10 +574,12 @@ public:
             for (const Peer& peer : m_peers) {
                 std::string version{ToString(peer.version) + peer.sub_version};
                 result += strprintf(
-                    "%3s %6s %5s %2s%7s%7s%5s%5s%5s%5s  %2s %*s%*s%*s%*i %*s %-*s%s\n",
+                    "%3s %6s %5s %*s %2s%7s%7s%5s%5s%5s%5s  %2s %*s%*s%*s%*i %*s %-*s%s\n",
                     peer.is_outbound ? "out" : "in",
                     ConnectionTypeForNetinfo(peer.conn_type),
                     peer.network,
+                    m_max_services_length, // variable spacing
+                    peer.services,
                     (peer.transport_protocol_type.size() == 2 && peer.transport_protocol_type[0] == 'v') ? peer.transport_protocol_type[1] : ' ',
                     PingTimeToString(peer.min_ping),
                     PingTimeToString(peer.ping),
@@ -575,7 +602,7 @@ public:
                     IsAddressSelected() ? peer.addr : "",
                     IsVersionSelected() && version != "0" ? version : "");
             }
-            result += strprintf("                        ms     ms  sec  sec  min  min                %*s\n\n", m_max_age_length, "min");
+            result += strprintf("                %*s         ms     ms  sec  sec  min  min                %*s\n\n", m_max_services_length, "", m_max_age_length, "min");
         }
 
         // Report peer connection totals by type.
@@ -632,25 +659,28 @@ public:
     }
 
     const std::string m_help_doc{
-        "-netinfo level|\"help\" \n\n"
+        "-netinfo (level [outonly]) | help\n\n"
         "Returns a network peer connections dashboard with information from the remote server.\n"
         "This human-readable interface will change regularly and is not intended to be a stable API.\n"
         "Under the hood, -netinfo fetches the data by calling getpeerinfo and getnetworkinfo.\n"
-        + strprintf("An optional integer argument from 0 to %d can be passed for different peers listings; %d to 255 are parsed as %d.\n", MAX_DETAIL_LEVEL, MAX_DETAIL_LEVEL, MAX_DETAIL_LEVEL) +
-        "Pass \"help\" to see this detailed help documentation.\n"
-        "If more than one argument is passed, only the first one is read and parsed.\n"
-        "Suggestion: use with the Linux watch(1) command for a live dashboard; see example below.\n\n"
+        + strprintf("An optional argument from 0 to %d can be passed for different peers listings; values above %d up to 255 are parsed as %d.\n", NETINFO_MAX_LEVEL, NETINFO_MAX_LEVEL, NETINFO_MAX_LEVEL) +
+        "If that argument is passed, an optional additional \"outonly\" argument may be passed to obtain the listing with outbound peers only.\n"
+        "Pass \"help\" or \"h\" to see this detailed help documentation.\n"
+        "If more than two arguments are passed, only the first two are read and parsed.\n"
+        "Suggestion: use -netinfo with the Linux watch(1) command for a live dashboard; see example below.\n\n"
         "Arguments:\n"
-        + strprintf("1. level (integer 0-%d, optional)  Specify the info level of the peers dashboard (default 0):\n", MAX_DETAIL_LEVEL) +
+        + strprintf("1. level (integer 0-%d, optional)  Specify the info level of the peers dashboard (default 0):\n", NETINFO_MAX_LEVEL) +
         "                                  0 - Peer counts for each reachable network as well as for block relay peers\n"
         "                                      and manual peers, and the list of local addresses and ports\n"
         "                                  1 - Like 0 but preceded by a peers listing (without address and version columns)\n"
         "                                  2 - Like 1 but with an address column\n"
         "                                  3 - Like 1 but with a version column\n"
         "                                  4 - Like 1 but with both address and version columns\n"
-        "2. help (string \"help\", optional) Print this help documentation instead of the dashboard.\n\n"
+        "2. outonly (\"outonly\" or \"o\", optional) Return the peers listing with outbound peers only, i.e. to save screen space\n"
+        "                                        when a node has many inbound peers. Only valid if a level is passed.\n\n"
+        "help (\"help\" or \"h\", optional) Print this help documentation instead of the dashboard.\n\n"
         "Result:\n\n"
-        + strprintf("* The peers listing in levels 1-%d displays all of the peers sorted by direction and minimum ping time:\n\n", MAX_DETAIL_LEVEL) +
+        + strprintf("* The peers listing in levels 1-%d displays all of the peers sorted by direction and minimum ping time:\n\n", NETINFO_MAX_LEVEL) +
         "  Column   Description\n"
         "  ------   -----------\n"
         "  <->      Direction\n"
@@ -663,19 +693,27 @@ public:
         "           \"feeler\" - short-lived connection for testing addresses\n"
         "           \"addr\"   - address fetch; short-lived connection for requesting addresses\n"
         "  net      Network the peer connected through (\"ipv4\", \"ipv6\", \"onion\", \"i2p\", \"cjdns\", or \"npr\" (not publicly routable))\n"
+        "  serv     Services offered by the peer\n"
+        "           \"n\" - NETWORK: peer can serve the full block chain\n"
+        "           \"b\" - BLOOM: peer can handle bloom-filtered connections (see BIP 111)\n"
+        "           \"w\" - WITNESS: peer can be asked for blocks and transactions with witness data (SegWit)\n"
+        "           \"c\" - COMPACT_FILTERS: peer can handle basic block filter requests (see BIPs 157 and 158)\n"
+        "           \"l\" - NETWORK_LIMITED: peer limited to serving only the last 288 blocks (~2 days)\n"
+        "           \"2\" - P2P_V2: peer supports version 2 P2P transport protocol, as defined in BIP 324\n"
+        "           \"u\" - UNKNOWN: unrecognized bit flag\n"
         "  v        Version of transport protocol used for the connection\n"
         "  mping    Minimum observed ping time, in milliseconds (ms)\n"
         "  ping     Last observed ping time, in milliseconds (ms)\n"
         "  send     Time since last message sent to the peer, in seconds\n"
         "  recv     Time since last message received from the peer, in seconds\n"
         "  txn      Time since last novel transaction received from the peer and accepted into our mempool, in minutes\n"
-        "           \"*\" - we do not relay transactions to this peer (relaytxes is false)\n"
+        "           \"*\" - we do not relay transactions to this peer (getpeerinfo \"relaytxes\" is false)\n"
         "  blk      Time since last novel block passing initial validity checks received from the peer, in minutes\n"
         "  hb       High-bandwidth BIP152 compact block relay\n"
         "           \".\" (to)   - we selected the peer as a high-bandwidth peer\n"
         "           \"*\" (from) - the peer selected us as a high-bandwidth peer\n"
         "  addrp    Total number of addresses processed, excluding those dropped due to rate limiting\n"
-        "           \".\" - we do not relay addresses to this peer (addr_relay_enabled is false)\n"
+        "           \".\" - we do not relay addresses to this peer (getpeerinfo \"addr_relay_enabled\" is false)\n"
         "  addrl    Total number of addresses dropped due to rate limiting\n"
         "  age      Duration of connection to the peer, in minutes\n"
         "  asmap    Mapped AS (Autonomous System) number at the end of the BGP route to the peer, used for diversifying\n"
@@ -692,9 +730,11 @@ public:
         "The same, preceded by a peers listing without address and version columns\n"
         "> bitcoin-cli -netinfo 1\n\n"
         "Full dashboard\n"
-        + strprintf("> bitcoin-cli -netinfo %d\n\n", MAX_DETAIL_LEVEL) +
+        + strprintf("> bitcoin-cli -netinfo %d\n\n", NETINFO_MAX_LEVEL) +
+        "Full dashboard, but with outbound peers only\n"
+        + strprintf("> bitcoin-cli -netinfo %d outonly\n\n", NETINFO_MAX_LEVEL) +
         "Full live dashboard, adjust --interval or --no-title as needed (Linux)\n"
-        + strprintf("> watch --interval 1 --no-title bitcoin-cli -netinfo %d\n\n", MAX_DETAIL_LEVEL) +
+        + strprintf("> watch --interval 1 --no-title bitcoin-cli -netinfo %d\n\n", NETINFO_MAX_LEVEL) +
         "See this help\n"
         "> bitcoin-cli -netinfo help\n"};
 };
@@ -1219,7 +1259,7 @@ static int CommandLineRPC(int argc, char *argv[])
         if (gArgs.IsArgSet("-getinfo")) {
             rh.reset(new GetinfoRequestHandler());
         } else if (gArgs.GetBoolArg("-netinfo", false)) {
-            if (!args.empty() && args.at(0) == "help") {
+            if (!args.empty() && (args.at(0) == "h" || args.at(0) == "help")) {
                 tfm::format(std::cout, "%s\n", NetinfoRequestHandler().m_help_doc);
                 return 0;
             }
