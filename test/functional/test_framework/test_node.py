@@ -220,10 +220,9 @@ class TestNode():
             extra_args = self.extra_args
 
         # If listening and no -bind is given, then bitcoind would bind P2P ports on
-        # 0.0.0.0:P and 127.0.0.1:18445 (for incoming Tor connections), where P is
+        # 0.0.0.0:P and 127.0.0.1:P+1 (for incoming Tor connections), where P is
         # a unique port chosen by the test framework and configured as port=P in
-        # bitcoin.conf. To avoid collisions on 127.0.0.1:18445, change it to
-        # 127.0.0.1:tor_port().
+        # bitcoin.conf. To avoid collisions, change it to 127.0.0.1:tor_port().
         will_listen = all(e != "-nolisten" and e != "-listen=0" for e in extra_args)
         has_explicit_bind = self.has_explicit_bind or any(e.startswith("-bind=") for e in extra_args)
         if will_listen and not has_explicit_bind:
