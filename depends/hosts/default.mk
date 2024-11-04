@@ -11,6 +11,7 @@ default_host_LIBTOOL = $(host_toolchain)libtool
 default_host_INSTALL_NAME_TOOL = $(host_toolchain)install_name_tool
 default_host_OTOOL = $(host_toolchain)otool
 default_host_NM = $(host_toolchain)nm
+default_host_OBJCOPY = $(host_toolchain)objcopy
 
 define add_host_tool_func
 ifneq ($(filter $(origin $1),undefined default),)
@@ -40,5 +41,5 @@ host_$1 = $$($(host_arch)_$(host_os)_$1)
 host_$(release_type)_$1 = $$($(host_arch)_$(host_os)_$(release_type)_$1)
 endef
 
-$(foreach tool,CC CXX AR RANLIB STRIP NM LIBTOOL OTOOL INSTALL_NAME_TOOL,$(eval $(call add_host_tool_func,$(tool))))
+$(foreach tool,CC CXX AR RANLIB STRIP LIBTOOL NM OBJCOPY OTOOL INSTALL_NAME_TOOL,$(eval $(call add_host_tool_func,$(tool))))
 $(foreach flags,CFLAGS CXXFLAGS CPPFLAGS LDFLAGS, $(eval $(call add_host_flags_func,$(flags))))
