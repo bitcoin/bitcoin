@@ -30,7 +30,7 @@ using namespace std::chrono_literals;
 static constexpr auto PORT_MAPPING_REANNOUNCE_PERIOD{20min};
 static constexpr auto PORT_MAPPING_RETRY_PERIOD{5min};
 
-static bool ProcessPCP()
+static void ProcessPCP()
 {
     // The same nonce is used for all mappings, this is allowed by the spec, and simplifies keeping track of them.
     PCPMappingNonce pcp_nonce;
@@ -106,7 +106,7 @@ static bool ProcessPCP()
         // Sanity-check returned lifetime.
         if (actual_lifetime < 30) {
             LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "portmap: Got impossibly short mapping lifetime of %d seconds\n", actual_lifetime);
-            return false;
+            return;
         }
         // RFC6887 11.2.1 recommends that clients send their first renewal packet at a time chosen with uniform random
         // distribution in the range 1/2 to 5/8 of expiration time.
@@ -117,8 +117,6 @@ static bool ProcessPCP()
 
     // We don't delete the mappings when the thread is interrupted because this would add additional complexity, so
     // we rather just choose a fairly short expiry time.
-
-    return ret;
 }
 
 static void ThreadMapPort()
