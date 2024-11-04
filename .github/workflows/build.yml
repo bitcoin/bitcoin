@@ -15,7 +15,7 @@ env:
 jobs:
   build-image:
     name: Build Image
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       image-tag: ${{ steps.prepare.outputs.image-tag }}
       repo-name: ${{ steps.prepare.outputs.repo-name }}
@@ -59,7 +59,7 @@ jobs:
   build-depends:
     name: Build Dependencies
     needs: build-image
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -116,7 +116,7 @@ jobs:
   build:
     name: Build
     needs: [build-image, build-depends]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -198,7 +198,7 @@ jobs:
 #  test:
 #    name: Test
 #    needs: [build-image, build]
-#    runs-on: ubuntu-20.04
+#    runs-on: ubuntu-22.04
 #    container:
 #      image: ghcr.io/${{ needs.build-image.outputs.repo-name }}/dashcore-ci-runner:${{ needs.build-image.outputs.image-tag }}
 #      options: --user root
