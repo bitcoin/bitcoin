@@ -19,6 +19,7 @@ static int ecdh_hash_function_sha256(unsigned char *output, const unsigned char 
     secp256k1_sha256_write(&sha, &version, 1);
     secp256k1_sha256_write(&sha, x32, 32);
     secp256k1_sha256_finalize(&sha, output);
+    secp256k1_sha256_clear(&sha);
 
     return 1;
 }
@@ -61,9 +62,11 @@ int secp256k1_ecdh(const secp256k1_context* ctx, unsigned char *output, const se
 
     ret = hashfp(output, x, y, data);
 
-    memset(x, 0, 32);
-    memset(y, 0, 32);
+    secp256k1_memclear(x, sizeof(x));
+    secp256k1_memclear(y, sizeof(y));
     secp256k1_scalar_clear(&s);
+    secp256k1_ge_clear(&pt);
+    secp256k1_gej_clear(&res);
 
     return !!ret & !overflow;
 }

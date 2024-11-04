@@ -5,7 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.6.0] - 2024-11-04
+
+#### Added
+ - New module `musig` implements the MuSig2 multisignature scheme according to the [BIP 327 specification](https://github.com/bitcoin/bips/blob/master/bip-0327.mediawiki). See:
+   - Header file `include/secp256k1_musig.h` which defines the new API.
+   - Document `doc/musig.md` for further notes on API usage.
+   - Usage example `examples/musig.c`.
+ - New CMake variable `SECP256K1_APPEND_LDFLAGS` for appending linker flags to the build command.
+
+#### Changed
+ - API functions now use a significantly more robust method to clear secrets from the stack before returning. However, secret clearing remains a best-effort security measure and cannot guarantee complete removal.
+ - Any type `secp256k1_foo` can now be forward-declared using `typedef struct secp256k1_foo secp256k1_foo;` (or also `struct secp256k1_foo;` in C++).
+ - Organized CMake build artifacts into dedicated directories (`bin/` for executables, `lib/` for libraries) to improve build output structure and Windows shared library compatibility.
+
+#### Removed
+ - Removed the `secp256k1_scratch_space` struct and its associated functions `secp256k1_scratch_space_create` and `secp256k1_scratch_space_destroy` because the scratch space was unused in the API.
+
+#### ABI Compatibility
+The symbols `secp256k1_scratch_space_create` and `secp256k1_scratch_space_destroy` were removed.
+Otherwise, the library maintains backward compatibility with versions 0.3.x through 0.5.x.
 
 ## [0.5.1] - 2024-08-01
 
@@ -143,7 +162,7 @@ This version was in fact never released.
 The number was given by the build system since the introduction of autotools in Jan 2014 (ea0fe5a5bf0c04f9cc955b2966b614f5f378c6f6).
 Therefore, this version number does not uniquely identify a set of source files.
 
-[unreleased]: https://github.com/bitcoin-core/secp256k1/compare/v0.5.1...HEAD
+[0.6.0]: https://github.com/bitcoin-core/secp256k1/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/bitcoin-core/secp256k1/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/bitcoin-core/secp256k1/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/bitcoin-core/secp256k1/compare/v0.4.0...v0.4.1
