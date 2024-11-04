@@ -22,7 +22,6 @@ define $(package)_set_vars
   $(package)_cxxflags += -ffile-prefix-map=$($(package)_extract_dir)=/usr
   $(package)_config_opts_mingw32 += -DZMQ_WIN32_WINNT=0x0601 -DZMQ_HAVE_IPC=OFF
   $(package)_config_opts_mingw32 += -DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres
-  $(package)_cxxflags+=-std=c++17
 endef
 
 define $(package)_preprocess_cmds
