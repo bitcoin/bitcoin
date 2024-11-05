@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <bench/bench_bitcoin_settings.h>
 #include <bench/bench.h>
 #include <crypto/sha256.h>
 #include <test/util/setup_common.h>
@@ -9,7 +10,7 @@
 #include <util/fs.h>
 #include <util/time.h>
 
-#include <cstdint>
+#include <algorithm>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
@@ -17,9 +18,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-static const char* DEFAULT_BENCH_FILTER = ".*";
-static constexpr int64_t DEFAULT_MIN_TIME_MS{10};
 
 static void SetupBenchArgs(ArgsManager& argsman)
 {
