@@ -76,7 +76,7 @@ RUN pip3 install \
     codespell==1.17.1 \
     flake8==3.8.3 \
     jinja2 \
-    lief==0.12.3 \
+    lief==0.13.2 \
     pyzmq \
     vulture==2.3 \
     mypy==0.781 \
