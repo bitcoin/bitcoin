@@ -82,7 +82,7 @@ multisig_desc="[$multisig_ext_desc, $multisig_int_desc]"
 
 `external_desc` and `internal_desc` specify the output type (`wsh`, in this case) and the xpubs involved. They also use BIP 67 (`sortedmulti`), so the wallet can be recreated without worrying about the order of xpubs. Conceptually, descriptors describe a list of scriptPubKey (along with information for spending from it) [[source](https://github.com/bitcoin/bitcoin/issues/21199#issuecomment-780772418)].
 
-Note that at least two descriptors are usually used, one for internal derivation paths and external ones. There are discussions about eliminating this redundancy, as can been seen in the issue [#17190](https://github.com/bitcoin/bitcoin/issues/17190).
+Note that at least two descriptors are usually used, one for internal derivation paths and one for external ones. There are discussions about eliminating this redundancy, as can be seen in the issue [#17190](https://github.com/bitcoin/bitcoin/issues/17190).
 
 After creating the descriptors, it is necessary to add the checksum, which is required by the `importdescriptors` RPC.
 
