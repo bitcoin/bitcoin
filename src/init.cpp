@@ -145,11 +145,6 @@ using node::VerifyLoadedChainstate;
 using util::ReplaceAll;
 using util::ToString;
 
-static constexpr bool DEFAULT_PROXYRANDOMIZE{true};
-static constexpr bool DEFAULT_REST_ENABLE{false};
-static constexpr bool DEFAULT_I2P_ACCEPT_INCOMING{true};
-static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
-
 #ifdef WIN32
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
 // accessing block files don't count towards the fd_set size limit
@@ -164,7 +159,6 @@ static constexpr int MIN_CORE_FDS = MIN_LEVELDB_FDS + NUM_FDS_MESSAGE_CAPTURE;
 /**
  * The PID file facilities.
  */
-static const char* BITCOIN_PID_FILENAME = "bitcoind.pid";
 /**
  * True if this process has created a PID file.
  * Used to determine whether we should remove the PID file on shutdown.
