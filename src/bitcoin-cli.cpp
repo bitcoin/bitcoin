@@ -5,6 +5,7 @@
 
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
+#include <bitcoin-cli_settings.h>
 #include <chainparamsbase.h>
 #include <clientversion.h>
 #include <common/args.h>
@@ -52,23 +53,12 @@ using CliClock = std::chrono::system_clock;
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
-static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
-static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
-static constexpr int DEFAULT_WAIT_CLIENT_TIMEOUT = 0;
-static const bool DEFAULT_NAMED=false;
 static const int CONTINUE_EXECUTION=-1;
-static constexpr uint8_t NETINFO_MAX_LEVEL{4};
 static constexpr int8_t UNKNOWN_NETWORK{-1};
 // See GetNetworkName() in netbase.cpp
 static constexpr std::array NETWORKS{"not_publicly_routable", "ipv4", "ipv6", "onion", "i2p", "cjdns", "internal"};
 static constexpr std::array NETWORK_SHORT_NAMES{"npr", "ipv4", "ipv6", "onion", "i2p", "cjdns", "int"};
 static constexpr std::array UNREACHABLE_NETWORK_IDS{/*not_publicly_routable*/0, /*internal*/6};
-
-/** Default number of blocks to generate for RPC generatetoaddress. */
-static const std::string DEFAULT_NBLOCKS = "1";
-
-/** Default -color setting. */
-static const std::string DEFAULT_COLOR_SETTING{"auto"};
 
 static void SetupCliArgs(ArgsManager& argsman)
 {
@@ -1200,7 +1190,7 @@ static void SetGenerateToAddressArgs(const std::string& address, std::vector<std
     if (args.size() == 0) {
         args.emplace_back(DEFAULT_NBLOCKS);
     } else if (args.at(0) == "0") {
-        throw std::runtime_error("the first argument (number of blocks to generate, default: " + DEFAULT_NBLOCKS + ") must be an integer value greater than zero");
+        throw std::runtime_error("the first argument (number of blocks to generate, default: " + std::string{DEFAULT_NBLOCKS} + ") must be an integer value greater than zero");
     }
     args.emplace(args.begin() + 1, address);
 }
