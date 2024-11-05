@@ -38,11 +38,6 @@ class TestSymbolChecks(unittest.TestCase):
         executable = 'test1'
         cc = determine_wellknown_cmd('CC', 'gcc')
 
-        # there's no way to do this test for ARM at the moment; we build for
-        # ARM in a glibc 2.31 envinonment and we allow all symbols from 2.28.
-        if 'arm' in get_machine(cc):
-            self.skipTest("test not available for 32-bit ARM")
-
         # -lutil is part of the libc6 package so a safe bet that it's installed
         # it's also out of context enough that it's unlikely to ever become a real dependency
         source = 'test2.c'
