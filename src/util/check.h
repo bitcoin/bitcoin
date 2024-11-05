@@ -13,7 +13,13 @@
 #include <string_view>
 #include <utility>
 
-extern bool g_fuzzing;
+constexpr bool G_FUZZING{
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    true
+#else
+    false
+#endif
+};
 
 std::string StrFormatInternalBug(std::string_view msg, std::string_view file, int line, std::string_view func);
 
@@ -44,7 +50,7 @@ void assertion_fail(std::string_view file, int line, std::string_view func, std:
 template <bool IS_ASSERT, typename T>
 constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] const char* file, [[maybe_unused]] int line, [[maybe_unused]] const char* func, [[maybe_unused]] const char* assertion)
 {
-    if (IS_ASSERT || std::is_constant_evaluated() || g_fuzzing
+    if (IS_ASSERT || std::is_constant_evaluated() || G_FUZZING
 #ifdef ABORT_ON_FAILED_ASSUME
         || true
 #endif

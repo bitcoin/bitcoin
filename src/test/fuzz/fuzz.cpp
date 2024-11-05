@@ -102,8 +102,6 @@ void ResetCoverageCounters() {}
 
 void initialize()
 {
-    g_fuzzing = true;
-
     // By default, make the RNG deterministic with a fixed seed. This will affect all
     // randomness during the fuzz test, except:
     // - GetStrongRandBytes(), which is used for the creation of private key material.
@@ -154,6 +152,10 @@ void initialize()
     const auto it = FuzzTargets().find(g_fuzz_target);
     if (it == FuzzTargets().end()) {
         std::cerr << "No fuzz target compiled for " << g_fuzz_target << "." << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+    if constexpr (!G_FUZZING) {
+        std::cerr << "Must compile with -DBUILD_FOR_FUZZING=ON to execute a fuzz target." << std::endl;
         std::exit(EXIT_FAILURE);
     }
     Assert(!g_test_one_input);

@@ -139,7 +139,7 @@ bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t heig
 // the most signficant bit of the last byte of the hash is set.
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)
 {
-    if (g_fuzzing) return (hash.data()[31] & 0x80) == 0;
+    if constexpr (G_FUZZING) return (hash.data()[31] & 0x80) == 0;
     return CheckProofOfWorkImpl(hash, nBits, params);
 }
 
