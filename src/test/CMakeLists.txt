@@ -147,6 +147,7 @@ add_executable(test_bitcoin
 
 target_link_libraries(test_bitcoin
   core_interface
+  base_precompiled
   test_util
   bitcoin_cli
   bitcoin_node
