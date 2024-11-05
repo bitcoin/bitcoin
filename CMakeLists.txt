@@ -479,8 +479,7 @@ if(ENABLE_HARDENING)
     try_append_cxx_flags("-fcf-protection=full" TARGET hardening_interface)
 
     if(MINGW)
-      # stack-clash-protection doesn't compile with GCC 10 and earlier.
-      # In any case, it is a no-op for Windows.
+      # stack-clash-protection is a no-op for Windows.
       # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90458 for more details.
     else()
       try_append_cxx_flags("-fstack-clash-protection" TARGET hardening_interface)
