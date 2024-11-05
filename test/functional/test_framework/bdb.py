@@ -6,7 +6,6 @@
 Utilities for working directly with the wallet's BDB database file
 
 This is specific to the configuration of BDB used in this project:
-    - pagesize: 4096 bytes
     - Outer database contains single subdatabase named 'main'
     - btree
     - btree leaf pages
@@ -27,7 +26,7 @@ transactions.
 import struct
 
 # Important constants
-PAGESIZE = 4096
+MIN_PAGESIZE = 512
 OUTER_META_PAGE = 0
 INNER_META_PAGE = 2
 
@@ -132,10 +131,14 @@ def dump_bdb_kv(filename):
     # Read in the BDB file and start deserializing it
     pages = []
     with open(filename, 'rb') as f:
-        data = f.read(PAGESIZE)
+        # Read the outer meta page for the page size. It will always be at least 512 bytes.
+        metadata = dump_meta_page(f.read(MIN_PAGESIZE))
+        f.seek(0)
+
+        data = f.read(metadata["pagesize"])
         while len(data) > 0:
             pages.append(data)
-            data = f.read(PAGESIZE)
+            data = f.read(metadata["pagesize"])
 
     # Sanity check the meta pages
     dump_meta_page(pages[OUTER_META_PAGE])
