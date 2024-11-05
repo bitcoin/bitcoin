@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <bench/bench_bitcoin_settings.h>
 #include <bench/bench.h>
 #include <common/args.h>
 #include <crypto/sha256.h>
@@ -19,11 +20,6 @@
 #include <vector>
 
 using util::SplitString;
-
-static const char* DEFAULT_BENCH_FILTER = ".*";
-static constexpr int64_t DEFAULT_MIN_TIME_MS{10};
-/** Priority level default value, run "all" priority levels */
-static const std::string DEFAULT_PRIORITY{"all"};
 
 static void SetupBenchArgs(ArgsManager& argsman)
 {
