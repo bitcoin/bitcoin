@@ -174,7 +174,7 @@ class BIP65Test(BitcoinTestFramework):
             block.hashMerkleRoot = block.calc_merkle_root()
             block.solve()
 
-            with self.nodes[0].assert_debug_log(expected_msgs=[f'Script validation error in block: {expected_cltv_reject_reason}']):
+            with self.nodes[0].assert_debug_log(expected_msgs=[f'Block validation error: {expected_cltv_reject_reason}']):
                 peer.send_and_ping(msg_block(block))
                 assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
                 peer.sync_with_ping()
