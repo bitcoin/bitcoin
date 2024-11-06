@@ -38,43 +38,47 @@ function(check_evhttp_connection_get_peer target)
   set(HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR ${HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR} PARENT_SCOPE)
 endfunction()
 
+set(_libevent_components core extra)
+if(NOT WIN32)
+  list(APPEND _libevent_components pthreads)
+endif()
+
+find_package(Libevent ${Libevent_FIND_VERSION} QUIET
+  NO_MODULE
+)
 
 include(FindPackageHandleStandardArgs)
-if(VCPKG_TARGET_TRIPLET)
-  find_package(Libevent ${Libevent_FIND_VERSION} NO_MODULE QUIET
-    COMPONENTS extra
+if(Libevent_FOUND)
+  find_package(Libevent ${Libevent_FIND_VERSION} QUIET
+    REQUIRED COMPONENTS ${_libevent_components}
+    NO_MODULE
   )
   find_package_handle_standard_args(Libevent
     REQUIRED_VARS Libevent_DIR
     VERSION_VAR Libevent_VERSION
   )
   check_evhttp_connection_get_peer(libevent::extra)
-  add_library(libevent::libevent ALIAS libevent::extra)
-  mark_as_advanced(Libevent_DIR)
-  mark_as_advanced(_event_h)
-  mark_as_advanced(_event_lib)
 else()
   find_package(PkgConfig REQUIRED)
-  pkg_check_modules(libevent QUIET
-    IMPORTED_TARGET
-    libevent>=${Libevent_FIND_VERSION}
-  )
-  set(_libevent_required_vars libevent_LIBRARY_DIRS libevent_FOUND)
-  if(NOT WIN32)
-    pkg_check_modules(libevent_pthreads QUIET
-      IMPORTED_TARGET
-      libevent_pthreads>=${Libevent_FIND_VERSION}
+  foreach(component IN LISTS _libevent_components)
+    pkg_check_modules(libevent_${component}
+      REQUIRED QUIET
+      IMPORTED_TARGET GLOBAL
+      libevent_${component}>=${Libevent_FIND_VERSION}
     )
-    list(APPEND _libevent_required_vars libevent_pthreads_FOUND)
-  endif()
+    if(TARGET PkgConfig::libevent_${component} AND NOT TARGET libevent::${component})
+      add_library(libevent::${component} ALIAS PkgConfig::libevent_${component})
+    endif()
+  endforeach()
   find_package_handle_standard_args(Libevent
-    REQUIRED_VARS ${_libevent_required_vars}
-    VERSION_VAR libevent_VERSION
+    REQUIRED_VARS libevent_core_LIBRARY_DIRS
+    VERSION_VAR libevent_core_VERSION
   )
-  unset(_libevent_required_vars)
-  check_evhttp_connection_get_peer(PkgConfig::libevent)
-  add_library(libevent::libevent ALIAS PkgConfig::libevent)
-  if(NOT WIN32)
-    add_library(libevent::pthreads ALIAS PkgConfig::libevent_pthreads)
-  endif()
+  check_evhttp_connection_get_peer(PkgConfig::libevent_extra)
 endif()
+
+unset(_libevent_components)
+
+mark_as_advanced(Libevent_DIR)
+mark_as_advanced(_event_h)
+mark_as_advanced(_event_lib)
