@@ -7,6 +7,8 @@
 #ifndef SECP256K1_GROUP_IMPL_H
 #define SECP256K1_GROUP_IMPL_H
 
+#include <string.h>
+
 #include "field.h"
 #include "group.h"
 #include "util.h"
@@ -281,36 +283,27 @@ static void secp256k1_ge_table_set_globalz(size_t len, secp256k1_ge *a, const se
 
 static void secp256k1_gej_set_infinity(secp256k1_gej *r) {
     r->infinity = 1;
-    secp256k1_fe_clear(&r->x);
-    secp256k1_fe_clear(&r->y);
-    secp256k1_fe_clear(&r->z);
+    secp256k1_fe_set_int(&r->x, 0);
+    secp256k1_fe_set_int(&r->y, 0);
+    secp256k1_fe_set_int(&r->z, 0);
 
     SECP256K1_GEJ_VERIFY(r);
 }
 
 static void secp256k1_ge_set_infinity(secp256k1_ge *r) {
     r->infinity = 1;
-    secp256k1_fe_clear(&r->x);
-    secp256k1_fe_clear(&r->y);
+    secp256k1_fe_set_int(&r->x, 0);
+    secp256k1_fe_set_int(&r->y, 0);
 
     SECP256K1_GE_VERIFY(r);
 }
 
 static void secp256k1_gej_clear(secp256k1_gej *r) {
-    r->infinity = 0;
-    secp256k1_fe_clear(&r->x);
-    secp256k1_fe_clear(&r->y);
-    secp256k1_fe_clear(&r->z);
-
-    SECP256K1_GEJ_VERIFY(r);
+    secp256k1_memclear(r, sizeof(secp256k1_gej));
 }
 
 static void secp256k1_ge_clear(secp256k1_ge *r) {
-    r->infinity = 0;
-    secp256k1_fe_clear(&r->x);
-    secp256k1_fe_clear(&r->y);
-
-    SECP256K1_GE_VERIFY(r);
+    secp256k1_memclear(r, sizeof(secp256k1_ge));
 }
 
 static int secp256k1_ge_set_xo_var(secp256k1_ge *r, const secp256k1_fe *x, int odd) {
@@ -939,6 +932,43 @@ static int secp256k1_ge_x_frac_on_curve_var(const secp256k1_fe *xn, const secp25
      secp256k1_fe_mul_int(&t, SECP256K1_B); /* t = 7*xd^4 */
      secp256k1_fe_add(&r, &t); /* r = xd*xn^3 + 7*xd^4 */
      return secp256k1_fe_is_square_var(&r);
+}
+
+static void secp256k1_ge_to_bytes(unsigned char *buf, const secp256k1_ge *a) {
+    secp256k1_ge_storage s;
+
+    /* We require that the secp256k1_ge_storage type is exactly 64 bytes.
+     * This is formally not guaranteed by the C standard, but should hold on any
+     * sane compiler in the real world. */
+    STATIC_ASSERT(sizeof(secp256k1_ge_storage) == 64);
+    VERIFY_CHECK(!secp256k1_ge_is_infinity(a));
+    secp256k1_ge_to_storage(&s, a);
+    memcpy(buf, &s, 64);
+}
+
+static void secp256k1_ge_from_bytes(secp256k1_ge *r, const unsigned char *buf) {
+    secp256k1_ge_storage s;
+
+    STATIC_ASSERT(sizeof(secp256k1_ge_storage) == 64);
+    memcpy(&s, buf, 64);
+    secp256k1_ge_from_storage(r, &s);
+}
+
+static void secp256k1_ge_to_bytes_ext(unsigned char *data, const secp256k1_ge *ge) {
+    if (secp256k1_ge_is_infinity(ge)) {
+        memset(data, 0, 64);
+    } else {
+        secp256k1_ge_to_bytes(data, ge);
+    }
+}
+
+static void secp256k1_ge_from_bytes_ext(secp256k1_ge *ge, const unsigned char *data) {
+    static const unsigned char zeros[64] = { 0 };
+    if (secp256k1_memcmp_var(data, zeros, sizeof(zeros)) == 0) {
+        secp256k1_ge_set_infinity(ge);
+    } else {
+        secp256k1_ge_from_bytes(ge, data);
+    }
 }
 
 #endif /* SECP256K1_GROUP_IMPL_H */

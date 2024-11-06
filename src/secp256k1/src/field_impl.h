@@ -18,6 +18,10 @@
 #error "Please select wide multiplication implementation"
 #endif
 
+SECP256K1_INLINE static void secp256k1_fe_clear(secp256k1_fe *a) {
+    secp256k1_memclear(a, sizeof(secp256k1_fe));
+}
+
 SECP256K1_INLINE static int secp256k1_fe_equal(const secp256k1_fe *a, const secp256k1_fe *b) {
     secp256k1_fe na;
     SECP256K1_FE_VERIFY(a);
@@ -230,15 +234,6 @@ SECP256K1_INLINE static void secp256k1_fe_add_int(secp256k1_fe *r, int a) {
     r->normalized = 0;
 
     SECP256K1_FE_VERIFY(r);
-}
-
-static void secp256k1_fe_impl_clear(secp256k1_fe *a);
-SECP256K1_INLINE static void secp256k1_fe_clear(secp256k1_fe *a) {
-    a->magnitude = 0;
-    a->normalized = 1;
-    secp256k1_fe_impl_clear(a);
-
-    SECP256K1_FE_VERIFY(a);
 }
 
 static int secp256k1_fe_impl_is_zero(const secp256k1_fe *a);

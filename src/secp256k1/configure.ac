@@ -4,18 +4,18 @@ AC_PREREQ([2.60])
 # the API. All changes in experimental modules are treated as
 # backwards-compatible and therefore at most increase the minor version.
 define(_PKG_VERSION_MAJOR, 0)
-define(_PKG_VERSION_MINOR, 5)
-define(_PKG_VERSION_PATCH, 2)
-define(_PKG_VERSION_IS_RELEASE, false)
+define(_PKG_VERSION_MINOR, 6)
+define(_PKG_VERSION_PATCH, 0)
+define(_PKG_VERSION_IS_RELEASE, true)
 
 # The library version is based on libtool versioning of the ABI. The set of
 # rules for updating the version can be found here:
 # https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
 # All changes in experimental modules are treated as if they don't affect the
 # interface and therefore only increase the revision.
-define(_LIB_VERSION_CURRENT, 4)
-define(_LIB_VERSION_REVISION, 2)
-define(_LIB_VERSION_AGE, 2)
+define(_LIB_VERSION_CURRENT, 5)
+define(_LIB_VERSION_REVISION, 0)
+define(_LIB_VERSION_AGE, 0)
 
 AC_INIT([libsecp256k1],m4_join([.], _PKG_VERSION_MAJOR, _PKG_VERSION_MINOR, _PKG_VERSION_PATCH)m4_if(_PKG_VERSION_IS_RELEASE, [true], [], [-dev]),[https://github.com/bitcoin-core/secp256k1/issues],[libsecp256k1],[https://github.com/bitcoin-core/secp256k1])
 
@@ -183,6 +183,10 @@ AC_ARG_ENABLE(module_extrakeys,
 AC_ARG_ENABLE(module_schnorrsig,
     AS_HELP_STRING([--enable-module-schnorrsig],[enable schnorrsig module [default=yes]]), [],
     [SECP_SET_DEFAULT([enable_module_schnorrsig], [yes], [yes])])
+
+AC_ARG_ENABLE(module_musig,
+    AS_HELP_STRING([--enable-module-musig],[enable MuSig2 module [default=yes]]), [],
+    [SECP_SET_DEFAULT([enable_module_musig], [yes], [yes])])
 
 AC_ARG_ENABLE(module_ellswift,
     AS_HELP_STRING([--enable-module-ellswift],[enable ElligatorSwift module [default=yes]]), [],
@@ -398,6 +402,14 @@ if test x"$enable_module_ellswift" = x"yes"; then
   SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DENABLE_MODULE_ELLSWIFT=1"
 fi
 
+if test x"$enable_module_musig" = x"yes"; then
+  if test x"$enable_module_schnorrsig" = x"no"; then
+    AC_MSG_ERROR([Module dependency error: You have disabled the schnorrsig module explicitly, but it is required by the musig module.])
+  fi
+  enable_module_schnorrsig=yes
+  SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DENABLE_MODULE_MUSIG=1"
+fi
+
 if test x"$enable_module_schnorrsig" = x"yes"; then
   if test x"$enable_module_extrakeys" = x"no"; then
     AC_MSG_ERROR([Module dependency error: You have disabled the extrakeys module explicitly, but it is required by the schnorrsig module.])
@@ -449,6 +461,7 @@ AM_CONDITIONAL([ENABLE_MODULE_ECDH], [test x"$enable_module_ecdh" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_RECOVERY], [test x"$enable_module_recovery" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_EXTRAKEYS], [test x"$enable_module_extrakeys" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_SCHNORRSIG], [test x"$enable_module_schnorrsig" = x"yes"])
+AM_CONDITIONAL([ENABLE_MODULE_MUSIG], [test x"$enable_module_musig" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_ELLSWIFT], [test x"$enable_module_ellswift" = x"yes"])
 AM_CONDITIONAL([USE_EXTERNAL_ASM], [test x"$enable_external_asm" = x"yes"])
 AM_CONDITIONAL([USE_ASM_ARM], [test x"$set_asm" = x"arm32"])
@@ -471,6 +484,7 @@ echo "  module ecdh             = $enable_module_ecdh"
 echo "  module recovery         = $enable_module_recovery"
 echo "  module extrakeys        = $enable_module_extrakeys"
 echo "  module schnorrsig       = $enable_module_schnorrsig"
+echo "  module musig            = $enable_module_musig"
 echo "  module ellswift         = $enable_module_ellswift"
 echo
 echo "  asm                     = $set_asm"
