@@ -21,6 +21,17 @@ if [ -n "$DPKG_ADD_ARCH" ]; then
   dpkg --add-architecture "$DPKG_ADD_ARCH"
 fi
 
+if [ -n "${APT_LLVM_V}" ]; then
+  ${CI_RETRY_EXE} apt-get update
+  ${CI_RETRY_EXE} apt-get install curl -y
+  curl "https://apt.llvm.org/llvm-snapshot.gpg.key" | tee "/etc/apt/trusted.gpg.d/apt.llvm.org.asc"
+  (
+    # shellcheck disable=SC2034
+    source /etc/os-release
+    echo "deb http://apt.llvm.org/${VERSION_CODENAME}/ llvm-toolchain-${VERSION_CODENAME}-${APT_LLVM_V} main" > "/etc/apt/sources.list.d/llvm-toolchain-${VERSION_CODENAME}-${APT_LLVM_V}.list"
+  )
+fi
+
 if [[ $CI_IMAGE_NAME_TAG == *centos* ]]; then
   bash -c "dnf -y install epel-release"
   bash -c "dnf -y --allowerasing install $CI_BASE_PACKAGES $PACKAGES"
