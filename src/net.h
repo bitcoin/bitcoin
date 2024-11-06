@@ -1118,8 +1118,13 @@ public:
         whitelist_relay = connOptions.whitelist_relay;
     }
 
-    CConnman(uint64_t seed0, uint64_t seed1, AddrMan& addrman, const NetGroupManager& netgroupman,
-             const CChainParams& params, bool network_active = true);
+    CConnman(uint64_t seed0,
+             uint64_t seed1,
+             AddrMan& addrman,
+             const NetGroupManager& netgroupman,
+             const CChainParams& params,
+             bool network_active = true,
+             std::shared_ptr<CThreadInterrupt> interrupt_net = std::make_shared<CThreadInterrupt>());
 
     ~CConnman();
 
@@ -1543,11 +1548,9 @@ private:
 
     /**
      * This is signaled when network activity should cease.
-     * A pointer to it is saved in `m_i2p_sam_session`, so make sure that
-     * the lifetime of `interruptNet` is not shorter than
-     * the lifetime of `m_i2p_sam_session`.
+     * A copy of this is saved in `m_i2p_sam_session`.
      */
-    CThreadInterrupt interruptNet;
+    const std::shared_ptr<CThreadInterrupt> m_interrupt_net;
 
     /**
      * I2P SAM session.

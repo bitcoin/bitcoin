@@ -13,6 +13,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
+#include <test/fuzz/util/threadinterrupt.h>
 #include <test/util/setup_common.h>
 #include <util/translation.h>
 
@@ -71,7 +72,8 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                      addr_man,
                      netgroupman,
                      Params(),
-                     fuzzed_data_provider.ConsumeBool()};
+                     fuzzed_data_provider.ConsumeBool(),
+                     ConsumeThreadInterrupt(fuzzed_data_provider)};
 
     const uint64_t max_outbound_limit{fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
     CConnman::Options options;
