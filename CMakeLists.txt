@@ -135,8 +135,7 @@ cmake_dependent_option(ENABLE_EXTERNAL_SIGNER "Enable external signer support." 
 
 cmake_dependent_option(WITH_QRENCODE "Enable QR code support." ON "BUILD_GUI" OFF)
 if(WITH_QRENCODE)
-  find_package(PkgConfig REQUIRED)
-  pkg_check_modules(libqrencode REQUIRED IMPORTED_TARGET libqrencode)
+  find_package(QRencode MODULE REQUIRED)
   set(USE_QRCODE TRUE)
 endif()
 
