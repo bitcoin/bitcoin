@@ -16,7 +16,7 @@
 
 #include <optional>
 
-#if defined(USE_BDB) && defined(USE_SQLITE) // only enable benchmark when bdb and sqlite are enabled
+#if defined(USE_SQLITE) // only enable benchmark when sqlite is enabled
 
 namespace wallet{
 
@@ -32,14 +32,8 @@ static void WalletMigration(benchmark::Bench& bench)
     int NUM_WATCH_ONLY_ADDR = 20;
 
     // Setup legacy wallet
-    DatabaseOptions options;
-    options.use_unsafe_sync = true;
-    options.verify = false;
-    DatabaseStatus status;
-    bilingual_str error;
-    auto database = MakeWalletDatabase(fs::PathToString(test_setup->m_path_root / "legacy"), options, status, error);
     uint64_t create_flags = 0;
-    auto wallet = TestLoadWallet(std::move(database), context, create_flags);
+    auto wallet = TestLoadWallet(CreateMockableWalletDatabase(), context, create_flags);
 
     // Add watch-only addresses
     std::vector<CScript> scripts_watch_only;
@@ -62,11 +56,11 @@ static void WalletMigration(benchmark::Bench& bench)
         wallet->AddToWallet(MakeTransactionRef(mtx), TxStateInactive{}, /*update_wtx=*/nullptr, /*fFlushOnClose=*/false, /*rescanning_old_block=*/true);
     }
 
-    // Unload so the migration process loads it
-    TestUnloadWallet(std::move(wallet));
+    // As we don't support legacy wallets anymore, remove wallet from context to make it look like it was externally loaded.
+    RemoveWallet(context, wallet, false);
 
-    bench.epochs(/*numEpochs=*/1).run([&] {
-        util::Result<MigrationResult> res = MigrateLegacyToDescriptor(fs::PathToString(test_setup->m_path_root / "legacy"), "", context);
+    bench.epochs(/*numEpochs=*/1).run([&context, &wallet] {
+        util::Result<MigrationResult> res = MigrateLegacyToDescriptor(std::move(wallet), /*passphrase=*/"", context, /*was_loaded=*/false);
         assert(res);
         assert(res->wallet);
         assert(res->watchonly_wallet);
