@@ -2,14 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/messages.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <key_io.h>
+#include <node/types.h>
 #include <policy/policy.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/util.h>
 #include <script/script.h>
-#include <util/fees.h>
 #include <util/rbf.h>
 #include <util/translation.h>
 #include <util/vector.h>
@@ -22,6 +23,12 @@
 
 #include <univalue.h>
 
+using common::FeeModeFromString;
+using common::FeeModesDetail;
+using common::InvalidEstimateModeErrorMessage;
+using common::StringForFeeReason;
+using common::TransactionErrorString;
+using node::TransactionError;
 
 namespace wallet {
 std::vector<CRecipient> CreateRecipients(const std::vector<std::pair<CTxDestination, CAmount>>& outputs, const std::set<int>& subtract_fee_outputs)
@@ -97,9 +104,9 @@ static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const 
     // so external signers are not asked to sign more than once.
     bool complete;
     pwallet->FillPSBT(psbtx, complete, SIGHASH_DEFAULT, /*sign=*/false, /*bip32derivs=*/true);
-    const TransactionError err{pwallet->FillPSBT(psbtx, complete, SIGHASH_DEFAULT, /*sign=*/true, /*bip32derivs=*/false)};
-    if (err != TransactionError::OK) {
-        throw JSONRPCTransactionError(err);
+    const auto err{pwallet->FillPSBT(psbtx, complete, SIGHASH_DEFAULT, /*sign=*/true, /*bip32derivs=*/false)};
+    if (err) {
+        throw JSONRPCPSBTError(*err);
     }
 
     CMutableTransaction mtx;
@@ -238,7 +245,7 @@ RPCHelpMan sendtoaddress()
                     {"replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "Signal that this transaction can be replaced by a transaction (BIP 125)"},
                     {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
                     {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, "The fee estimate mode, must be one of (case insensitive):\n"
-                     "\"" + FeeModes("\"\n\"") + "\""},
+                      + FeeModesDetail(std::string("economical mode is used if the transaction is replaceable;\notherwise, conservative mode is used"))},
                     {"avoid_reuse", RPCArg::Type::BOOL, RPCArg::Default{true}, "(only available if avoid_reuse wallet flag is set) Avoid spending from dirty addresses; addresses are considered\n"
                                          "dirty if they have previously been used in a transaction. If true, this also activates avoidpartialspends, grouping outputs by their addresses."},
                     {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
@@ -342,7 +349,7 @@ RPCHelpMan sendmany()
                     {"replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "Signal that this transaction can be replaced by a transaction (BIP 125)"},
                     {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
                     {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, "The fee estimate mode, must be one of (case insensitive):\n"
-                     "\"" + FeeModes("\"\n\"") + "\""},
+                      + FeeModesDetail(std::string("economical mode is used if the transaction is replaceable;\notherwise, conservative mode is used"))},
                     {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
                     {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, return extra information about the transaction."},
                 },
@@ -456,7 +463,7 @@ static std::vector<RPCArg> FundTxDoc(bool solving_data = true)
     std::vector<RPCArg> args = {
         {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks", RPCArgOptions{.also_positional = true}},
         {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, "The fee estimate mode, must be one of (case insensitive):\n"
-         "\"" + FeeModes("\"\n\"") + "\"", RPCArgOptions{.also_positional = true}},
+          + FeeModesDetail(std::string("economical mode is used if the transaction is replaceable;\notherwise, conservative mode is used")), RPCArgOptions{.also_positional = true}},
         {
             "replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "Marks this transaction as BIP125-replaceable.\n"
             "Allows this transaction to be replaced by a transaction with higher fees"
@@ -535,6 +542,7 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                 {"minconf", UniValueType(UniValue::VNUM)},
                 {"maxconf", UniValueType(UniValue::VNUM)},
                 {"input_weights", UniValueType(UniValue::VARR)},
+                {"max_tx_weight", UniValueType(UniValue::VNUM)},
             },
             true, true);
 
@@ -653,11 +661,13 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                 FlatSigningProvider desc_out;
                 std::string error;
                 std::vector<CScript> scripts_temp;
-                std::unique_ptr<Descriptor> desc = Parse(desc_str, desc_out, error, true);
-                if (!desc) {
+                auto descs = Parse(desc_str, desc_out, error, true);
+                if (descs.empty()) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unable to parse descriptor '%s': %s", desc_str, error));
                 }
-                desc->Expand(0, desc_out, scripts_temp, desc_out);
+                for (auto& desc : descs) {
+                    desc->Expand(0, desc_out, scripts_temp, desc_out);
+                }
                 coinControl.m_external_provider.Merge(std::move(desc_out));
             }
         }
@@ -692,6 +702,10 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
 
             coinControl.SetInputWeight(COutPoint(txid, vout), weight);
         }
+    }
+
+    if (options.exists("max_tx_weight")) {
+        coinControl.m_max_tx_weight = options["max_tx_weight"].getInt<int>();
     }
 
     if (recipients.empty())
@@ -779,6 +793,8 @@ RPCHelpMan fundrawtransaction()
                                     },
                                 },
                              },
+                            {"max_tx_weight", RPCArg::Type::NUM, RPCArg::Default{MAX_STANDARD_TX_WEIGHT}, "The maximum acceptable transaction weight.\n"
+                                                          "Transaction building will fail if this can not be satisfied."},
                         },
                         FundTxDoc()),
                         RPCArgOptions{
@@ -868,7 +884,7 @@ RPCHelpMan signrawtransactionwithwallet()
                                 {
                                     {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
                                     {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output number"},
-                                    {"scriptPubKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "script key"},
+                                    {"scriptPubKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The output script"},
                                     {"redeemScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2SH) redeem script"},
                                     {"witnessScript", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "(required for P2WSH or P2SH-P2WSH) witness script"},
                                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "(required for Segwit inputs) the amount spent"},
@@ -1004,7 +1020,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
                              "still be replaceable in practice, for example if it has unconfirmed ancestors which\n"
                              "are replaceable).\n"},
                     {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, "The fee estimate mode, must be one of (case insensitive):\n"
-                             "\"" + FeeModes("\"\n\"") + "\""},
+                              + FeeModesDetail(std::string("economical mode is used if the transaction is replaceable;\notherwise, conservative mode is used"))},
                     {"outputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "The outputs specified as key-value pairs.\n"
                              "Each key may only appear once, i.e. there can only be one 'data' output, and no address may be duplicated.\n"
                              "At least one output of either type must be specified.\n"
@@ -1153,8 +1169,8 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     } else {
         PartiallySignedTransaction psbtx(mtx);
         bool complete = false;
-        const TransactionError err = pwallet->FillPSBT(psbtx, complete, SIGHASH_DEFAULT, /*sign=*/false, /*bip32derivs=*/true);
-        CHECK_NONFATAL(err == TransactionError::OK);
+        const auto err{pwallet->FillPSBT(psbtx, complete, SIGHASH_DEFAULT, /*sign=*/false, /*bip32derivs=*/true)};
+        CHECK_NONFATAL(!err);
         CHECK_NONFATAL(!complete);
         DataStream ssTx{};
         ssTx << psbtx;
@@ -1191,7 +1207,7 @@ RPCHelpMan send()
                 RPCArgOptions{.skip_type_check = true}},
             {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, "The fee estimate mode, must be one of (case insensitive):\n"
-             "\"" + FeeModes("\"\n\"") + "\""},
+              + FeeModesDetail(std::string("economical mode is used if the transaction is replaceable;\notherwise, conservative mode is used"))},
             {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
             {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                 Cat<std::vector<RPCArg>>(
@@ -1233,6 +1249,8 @@ RPCHelpMan send()
                             {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
                         },
                     },
+                    {"max_tx_weight", RPCArg::Type::NUM, RPCArg::Default{MAX_STANDARD_TX_WEIGHT}, "The maximum acceptable transaction weight.\n"
+                                                  "Transaction building will fail if this can not be satisfied."},
                 },
                 FundTxDoc()),
                 RPCArgOptions{.oneline_description="options"}},
@@ -1280,6 +1298,9 @@ RPCHelpMan send()
             // Automatically select coins, unless at least one is manually selected. Can
             // be overridden by options.add_inputs.
             coin_control.m_allow_other_inputs = rawTx.vin.size() == 0;
+            if (options.exists("max_tx_weight")) {
+                coin_control.m_max_tx_weight = options["max_tx_weight"].getInt<int>();
+            }
             SetOptionsInputWeights(options["inputs"], options);
             // Clear tx.vout since it is not meant to be used now that we are passing outputs directly.
             // This sets us up for a future PR to completely remove tx from the function signature in favor of passing inputs directly
@@ -1312,7 +1333,7 @@ RPCHelpMan sendall()
             },
             {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, "The fee estimate mode, must be one of (case insensitive):\n"
-             "\"" + FeeModes("\"\n\"") + "\""},
+              + FeeModesDetail(std::string("economical mode is used if the transaction is replaceable;\notherwise, conservative mode is used"))},
             {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
             {
                 "options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
@@ -1610,9 +1631,9 @@ RPCHelpMan walletprocesspsbt()
 
     if (sign) EnsureWalletIsUnlocked(*pwallet);
 
-    const TransactionError err{wallet.FillPSBT(psbtx, complete, nHashType, sign, bip32derivs, nullptr, finalize)};
-    if (err != TransactionError::OK) {
-        throw JSONRPCTransactionError(err);
+    const auto err{wallet.FillPSBT(psbtx, complete, nHashType, sign, bip32derivs, nullptr, finalize)};
+    if (err) {
+        throw JSONRPCPSBTError(*err);
     }
 
     UniValue result(UniValue::VOBJ);
@@ -1690,6 +1711,8 @@ RPCHelpMan walletcreatefundedpsbt()
                                     {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
                                 },
                             },
+                            {"max_tx_weight", RPCArg::Type::NUM, RPCArg::Default{MAX_STANDARD_TX_WEIGHT}, "The maximum acceptable transaction weight.\n"
+                                                          "Transaction building will fail if this can not be satisfied."},
                         },
                         FundTxDoc()),
                         RPCArgOptions{.oneline_description="options"}},
@@ -1744,9 +1767,9 @@ RPCHelpMan walletcreatefundedpsbt()
     // Fill transaction with out data but don't sign
     bool bip32derivs = request.params[4].isNull() ? true : request.params[4].get_bool();
     bool complete = true;
-    const TransactionError err{wallet.FillPSBT(psbtx, complete, 1, /*sign=*/false, /*bip32derivs=*/bip32derivs)};
-    if (err != TransactionError::OK) {
-        throw JSONRPCTransactionError(err);
+    const auto err{wallet.FillPSBT(psbtx, complete, 1, /*sign=*/false, /*bip32derivs=*/bip32derivs)};
+    if (err) {
+        throw JSONRPCPSBTError(*err);
     }
 
     // Serialize the PSBT

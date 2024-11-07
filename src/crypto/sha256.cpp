@@ -2,13 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <crypto/sha256.h>
 #include <crypto/common.h>
 
-#include <assert.h>
-#include <string.h>
+#include <algorithm>
+#include <cassert>
+#include <cstring>
 
 #if !defined(DISABLE_OPTIMIZED_SHA256)
 #include <compat/cpuid.h>
@@ -621,7 +622,7 @@ std::string SHA256AutoDetect(sha256_implementation::UseImplementation use_implem
         }
     }
 
-#if defined(ENABLE_X86_SHANI)
+#if defined(ENABLE_SSE41) && defined(ENABLE_X86_SHANI)
     if (have_x86_shani) {
         Transform = sha256_x86_shani::Transform;
         TransformD64 = TransformD64Wrapper<sha256_x86_shani::Transform>;

@@ -9,9 +9,12 @@
 #ifndef BITCOIN_UTIL_STRENCODINGS_H
 #define BITCOIN_UTIL_STRENCODINGS_H
 
+#include <crypto/hex_base.h> // IWYU pragma: export
 #include <span.h>
 #include <util/string.h>
 
+#include <array>
+#include <bit>
 #include <charconv>
 #include <cstddef>
 #include <cstdint>
@@ -66,14 +69,9 @@ std::vector<Byte> ParseHex(std::string_view hex_str)
 {
     return TryParseHex<Byte>(hex_str).value_or(std::vector<Byte>{});
 }
-signed char HexDigit(char c);
 /* Returns true if each character in str is a hex character, and has an even
  * number of hex digits.*/
 bool IsHex(std::string_view str);
-/**
-* Return true if the string is a hex number, optionally prefixed with "0x"
-*/
-bool IsHexNumber(std::string_view str);
 std::optional<std::vector<unsigned char>> DecodeBase64(std::string_view str);
 std::string EncodeBase64(Span<const unsigned char> input);
 inline std::string EncodeBase64(Span<const std::byte> input) { return EncodeBase64(MakeUCharSpan(input)); }
@@ -122,7 +120,7 @@ T LocaleIndependentAtoi(std::string_view str)
     static_assert(std::is_integral<T>::value);
     T result;
     // Emulate atoi(...) handling of white space and leading +/-.
-    std::string_view s = TrimStringView(str);
+    std::string_view s = util::TrimStringView(str);
     if (!s.empty() && s[0] == '+') {
         if (s.length() >= 2 && s[1] == '-') {
             return 0;
@@ -230,13 +228,6 @@ std::optional<T> ToIntegral(std::string_view str)
  *   false if not the entire string could be parsed or when overflow or underflow occurred.
  */
 [[nodiscard]] bool ParseUInt64(std::string_view str, uint64_t *out);
-
-/**
- * Convert a span of bytes to a lower-case hexadecimal string.
- */
-std::string HexStr(const Span<const uint8_t> s);
-inline std::string HexStr(const Span<const char> s) { return HexStr(MakeUCharSpan(s)); }
-inline std::string HexStr(const Span<const std::byte> s) { return HexStr(MakeUCharSpan(s)); }
 
 /**
  * Format a paragraph of text to a fixed width, adding spaces for
@@ -375,5 +366,80 @@ std::string Capitalize(std::string str);
  *                                 if ToIntegral is false, str is empty, trailing whitespace or overflow
  */
 std::optional<uint64_t> ParseByteUnits(std::string_view str, ByteUnit default_multiplier);
+
+namespace util {
+/** consteval version of HexDigit() without the lookup table. */
+consteval uint8_t ConstevalHexDigit(const char c)
+{
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 0xa;
+
+    throw "Only lowercase hex digits are allowed, for consistency";
+}
+
+/**
+ * ""_hex is a compile-time user-defined literal returning a
+ * `std::array<std::byte>`, equivalent to ParseHex(). Variants provided:
+ *
+ * - ""_hex_v: Returns `std::vector<std::byte>`, useful for heap allocation or
+ *   variable-length serialization.
+ *
+ * - ""_hex_u8: Returns `std::array<uint8_t>`, for cases where `std::byte` is
+ *   incompatible.
+ *
+ * - ""_hex_v_u8: Returns `std::vector<uint8_t>`, combining heap allocation with
+ *   `uint8_t`.
+ *
+ * @warning It could be necessary to use vector instead of array variants when
+ *   serializing, or vice versa, because vectors are assumed to be variable-
+ *   length and serialized with a size prefix, while arrays are considered fixed
+ *   length and serialized with no prefix.
+ *
+ * @warning It may be preferable to use vector variants to save stack space when
+ *   declaring local variables if hex strings are large. Alternatively variables
+ *   could be declared constexpr to avoid using stack space.
+ *
+ * @warning Avoid `uint8_t` variants when not necessary, as the codebase
+ *   migrates to use `std::byte` instead of `unsigned char` and `uint8_t`.
+ *
+ * @note One reason ""_hex uses `std::array` instead of `std::vector` like
+ *   ParseHex() does is because heap-based containers cannot cross the compile-
+ *   time/runtime barrier.
+ */
+inline namespace hex_literals {
+namespace detail {
+
+template <size_t N>
+struct Hex {
+    std::array<std::byte, N / 2> bytes{};
+    consteval Hex(const char (&hex_str)[N])
+        // 2 hex digits required per byte + implicit null terminator
+        requires(N % 2 == 1)
+    {
+        if (hex_str[N - 1]) throw "null terminator required";
+        for (std::size_t i = 0; i < bytes.size(); ++i) {
+            bytes[i] = static_cast<std::byte>(
+                (ConstevalHexDigit(hex_str[2 * i]) << 4) |
+                 ConstevalHexDigit(hex_str[2 * i + 1]));
+        }
+    }
+};
+
+} // namespace detail
+
+template <util::detail::Hex str>
+constexpr auto operator""_hex() { return str.bytes; }
+
+template <util::detail::Hex str>
+constexpr auto operator""_hex_u8() { return std::bit_cast<std::array<uint8_t, str.bytes.size()>>(str.bytes); }
+
+template <util::detail::Hex str>
+constexpr auto operator""_hex_v() { return std::vector<std::byte>{str.bytes.begin(), str.bytes.end()}; }
+
+template <util::detail::Hex str>
+inline auto operator""_hex_v_u8() { return std::vector<uint8_t>{UCharCast(str.bytes.data()), UCharCast(str.bytes.data() + str.bytes.size())}; }
+
+} // inline namespace hex_literals
+} // namespace util
 
 #endif // BITCOIN_UTIL_STRENCODINGS_H

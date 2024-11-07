@@ -49,9 +49,6 @@ class PackageRelayTest(BitcoinTestFramework):
     def raise_network_minfee(self):
         fill_mempool(self, self.nodes[0])
 
-        self.log.debug("Wait for the network to sync mempools")
-        self.sync_mempools()
-
         self.log.debug("Check that all nodes' mempool minimum feerates are above min relay feerate")
         for node in self.nodes:
             assert_equal(node.getmempoolinfo()['minrelaytxfee'], FEERATE_1SAT_VB)
@@ -107,7 +104,7 @@ class PackageRelayTest(BitcoinTestFramework):
 
         # 3: 2-parent-1-child package. Both parents are above mempool min feerate. No package submission happens.
         # We require packages to be child-with-unconfirmed-parents and only allow 1-parent-1-child packages.
-        package_hex_3, parent_31, parent_32, child_3 = self.create_package_2p1c(self.wallet)
+        package_hex_3, parent_31, _parent_32, child_3 = self.create_package_2p1c(self.wallet)
 
         # 4: parent + child package where the child spends 2 different outputs from the parent.
         package_hex_4, parent_4, child_4 = self.create_package_2outs(self.wallet)
@@ -163,4 +160,4 @@ class PackageRelayTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    PackageRelayTest().main()
+    PackageRelayTest(__file__).main()

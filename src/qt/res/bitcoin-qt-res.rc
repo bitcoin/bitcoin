@@ -1,5 +1,7 @@
 IDI_ICON1 ICON DISCARDABLE "icons/bitcoin.ico"
 IDI_ICON2 ICON DISCARDABLE "icons/bitcoin_testnet.ico"
+IDI_ICON3 ICON DISCARDABLE "icons/bitcoin_signet.ico"
+IDI_ICON4 ICON DISCARDABLE "icons/bitcoin_testnet.ico" // testnet4
 
 #include <windows.h>             // needed for VERSIONINFO
 #include "../../clientversion.h" // holds the needed client version information
@@ -20,13 +22,13 @@ BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
             VALUE "CompanyName",        "Bitcoin"
-            VALUE "FileDescription",    PACKAGE_NAME " (GUI node for Bitcoin)"
+            VALUE "FileDescription",    CLIENT_NAME " (GUI node for Bitcoin)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "bitcoin-qt"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the MIT software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
             VALUE "OriginalFilename",   "bitcoin-qt.exe"
-            VALUE "ProductName",        PACKAGE_NAME
+            VALUE "ProductName",        CLIENT_NAME
             VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
         END
     END

@@ -15,8 +15,10 @@ For a description of arguments recognized by test scripts, see
 import argparse
 from collections import deque
 import configparser
+import csv
 import datetime
 import os
+import pathlib
 import platform
 import time
 import shutil
@@ -94,10 +96,13 @@ BASE_SCRIPTS = [
     'feature_fee_estimation.py',
     'feature_taproot.py',
     'feature_block.py',
+    'p2p_node_network_limited.py --v1transport',
+    'p2p_node_network_limited.py --v2transport',
     # vv Tests less than 2m vv
     'mining_getblocktemplate_longpoll.py',
     'p2p_segwit.py',
     'feature_maxuploadtarget.py',
+    'feature_assumeutxo.py',
     'mempool_updatefromblock.py',
     'mempool_persist.py --descriptors',
     # vv Tests less than 60s vv
@@ -155,6 +160,7 @@ BASE_SCRIPTS = [
     'wallet_importmulti.py --legacy-wallet',
     'mempool_limit.py',
     'rpc_txoutproof.py',
+    'rpc_orphans.py',
     'wallet_listreceivedby.py --legacy-wallet',
     'wallet_listreceivedby.py --descriptors',
     'wallet_abandonconflict.py --legacy-wallet',
@@ -262,9 +268,9 @@ BASE_SCRIPTS = [
     'p2p_invalid_tx.py --v2transport',
     'p2p_v2_transport.py',
     'p2p_v2_encrypted.py',
-    'p2p_v2_earlykeyresponse.py',
+    'p2p_v2_misbehaving.py',
     'example_test.py',
-    'mempool_accept_v3.py',
+    'mempool_truc.py',
     'wallet_txn_doublespend.py --legacy-wallet',
     'wallet_multisig_descriptor_psbt.py --descriptors',
     'wallet_txn_doublespend.py --descriptors',
@@ -280,7 +286,9 @@ BASE_SCRIPTS = [
     'mempool_packages.py',
     'mempool_package_onemore.py',
     'mempool_package_limits.py',
+    'mempool_package_rbf.py',
     'feature_versionbits_warning.py',
+    'feature_blocksxor.py',
     'rpc_preciousblock.py',
     'wallet_importprunedfunds.py --legacy-wallet',
     'wallet_importprunedfunds.py --descriptors',
@@ -350,7 +358,6 @@ BASE_SCRIPTS = [
     'wallet_coinbase_category.py --descriptors',
     'feature_filelock.py',
     'feature_loadblock.py',
-    'feature_assumeutxo.py',
     'wallet_assumeutxo.py --descriptors',
     'p2p_dos_header_tree.py',
     'p2p_add_connections.py',
@@ -361,6 +368,7 @@ BASE_SCRIPTS = [
     'feature_addrman.py',
     'feature_asmap.py',
     'feature_fastprune.py',
+    'feature_framework_miniwallet.py',
     'mempool_unbroadcast.py',
     'mempool_compatibility.py',
     'mempool_accept_wtxid.py',
@@ -380,8 +388,6 @@ BASE_SCRIPTS = [
     'feature_coinstatsindex.py',
     'wallet_orphanedreward.py',
     'wallet_timelock.py',
-    'p2p_node_network_limited.py --v1transport',
-    'p2p_node_network_limited.py --v2transport',
     'p2p_permissions.py',
     'feature_blocksdir.py',
     'wallet_startup.py',
@@ -401,6 +407,7 @@ BASE_SCRIPTS = [
     'feature_shutdown.py',
     'wallet_migration.py',
     'p2p_ibd_txrelay.py',
+    'p2p_seednode.py',
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
 ]
@@ -438,9 +445,10 @@ def main():
     parser.add_argument('--filter', help='filter scripts to run by regular expression')
     parser.add_argument("--nocleanup", dest="nocleanup", default=False, action="store_true",
                         help="Leave bitcoinds and test.* datadir on exit or error")
-
+    parser.add_argument('--resultsfile', '-r', help='store test results (as CSV) to the provided file')
 
     args, unknown_args = parser.parse_known_args()
+    fail_on_warn = args.ci
     if not args.ansi:
         global DEFAULT, BOLD, GREEN, RED
         DEFAULT = ("", "")
@@ -470,11 +478,18 @@ def main():
 
     logging.debug("Temporary test directory at %s" % tmpdir)
 
+    results_filepath = None
+    if args.resultsfile:
+        results_filepath = pathlib.Path(args.resultsfile)
+        # Stop early if the parent directory doesn't exist
+        assert results_filepath.parent.exists(), "Results file parent directory does not exist"
+        logging.debug("Test results will be written to " + str(results_filepath))
+
     enable_bitcoind = config["components"].getboolean("ENABLE_BITCOIND")
 
     if not enable_bitcoind:
         print("No functional tests to run.")
-        print("Rerun ./configure with --with-daemon and then make")
+        print("Re-compile with the -DBUILD_DAEMON=ON build option")
         sys.exit(1)
 
     # Build list of tests
@@ -508,15 +523,28 @@ def main():
         test_list += BASE_SCRIPTS
 
     # Remove the test cases that the user has explicitly asked to exclude.
+    # The user can specify a test case with or without the .py extension.
     if args.exclude:
-        exclude_tests = [test.split('.py')[0] for test in args.exclude.split(',')]
-        for exclude_test in exclude_tests:
-            # Remove <test_name>.py and <test_name>.py --arg from the test list
-            exclude_list = [test for test in test_list if test.split('.py')[0] == exclude_test]
+
+        def print_warning_missing_test(test_name):
+            print("{}WARNING!{} Test '{}' not found in current test list. Check the --exclude list.".format(BOLD[1], BOLD[0], test_name))
+            if fail_on_warn:
+                sys.exit(1)
+
+        def remove_tests(exclude_list):
+            if not exclude_list:
+                print_warning_missing_test(exclude_test)
             for exclude_item in exclude_list:
                 test_list.remove(exclude_item)
-            if not exclude_list:
-                print("{}WARNING!{} Test '{}' not found in current test list.".format(BOLD[1], BOLD[0], exclude_test))
+
+        exclude_tests = [test.strip() for test in args.exclude.split(",")]
+        for exclude_test in exclude_tests:
+            # A space in the name indicates it has arguments such as "wallet_basic.py --descriptors"
+            if ' ' in exclude_test:
+                remove_tests([test for test in test_list if test.replace('.py', '') == exclude_test.replace('.py', '')])
+            else:
+                # Exclude all variants of a test
+                remove_tests([test for test in test_list if test.split('.py')[0] == exclude_test.split('.py')[0]])
 
     if args.filter:
         test_list = list(filter(re.compile(args.filter).search, test_list))
@@ -539,7 +567,7 @@ def main():
                   f"A minimum of {MIN_NO_CLEANUP_SPACE // (1024 * 1024 * 1024)} GB of free space is required.")
         passon_args.append("--nocleanup")
 
-    check_script_list(src_dir=config["environment"]["SRCDIR"], fail_on_warn=args.ci)
+    check_script_list(src_dir=config["environment"]["SRCDIR"], fail_on_warn=fail_on_warn)
     check_script_prefixes()
 
     if not args.keepcache:
@@ -547,7 +575,6 @@ def main():
 
     run_tests(
         test_list=test_list,
-        src_dir=config["environment"]["SRCDIR"],
         build_dir=config["environment"]["BUILDDIR"],
         tmpdir=tmpdir,
         jobs=args.jobs,
@@ -556,9 +583,10 @@ def main():
         combined_logs_len=args.combinedlogslen,
         failfast=args.failfast,
         use_term_control=args.ansi,
+        results_filepath=results_filepath,
     )
 
-def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, use_term_control):
+def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, use_term_control, results_filepath=None):
     args = args or []
 
     # Warn if bitcoind is already running
@@ -581,7 +609,7 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
         print(f"{BOLD[1]}WARNING!{BOLD[0]} There may be insufficient free space in {tmpdir} to run the Bitcoin functional test suite. "
               f"Running the test suite with fewer than {min_space // (1024 * 1024)} MB of free space might cause tests to fail.")
 
-    tests_dir = src_dir + '/test/functional/'
+    tests_dir = f"{build_dir}/test/functional/"
     # This allows `test_runner.py` to work from an out-of-source build directory using a symlink,
     # a hard link or a copy on any platform. See https://github.com/bitcoin/bitcoin/pull/27561.
     sys.path.append(tests_dir)
@@ -650,11 +678,14 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
                     break
 
                 if "[Errno 28] No space left on device" in stdout:
-                    sys.exit(f"Early exiting after test failure due to insuffient free space in {tmpdir}\n"
+                    sys.exit(f"Early exiting after test failure due to insufficient free space in {tmpdir}\n"
                              f"Test execution data left in {tmpdir}.\n"
                              f"Additional storage is needed to execute testing.")
 
-    print_results(test_results, max_len_name, (int(time.time() - start_time)))
+    runtime = int(time.time() - start_time)
+    print_results(test_results, max_len_name, runtime)
+    if results_filepath:
+        write_results(test_results, results_filepath, runtime)
 
     if coverage:
         coverage_passed = coverage.report_rpc_coverage()
@@ -700,6 +731,17 @@ def print_results(test_results, max_len_name, runtime):
         results += RED[0]
     results += "Runtime: %s s\n" % (runtime)
     print(results)
+
+
+def write_results(test_results, filepath, total_runtime):
+    with open(filepath, mode="w", encoding="utf8") as results_file:
+        results_writer = csv.writer(results_file)
+        results_writer.writerow(['test', 'status', 'duration(seconds)'])
+        all_passed = True
+        for test_result in test_results:
+            all_passed = all_passed and test_result.was_successful
+            results_writer.writerow([test_result.name, test_result.status, str(test_result.time)])
+        results_writer.writerow(['ALL', ("Passed" if all_passed else "Failed"), str(total_runtime)])
 
 class TestHandler:
     """
@@ -834,7 +876,6 @@ def check_script_list(*, src_dir, fail_on_warn):
     if len(missed_tests) != 0:
         print("%sWARNING!%s The following scripts are not being run: %s. Check the test lists in test_runner.py." % (BOLD[1], BOLD[0], str(missed_tests)))
         if fail_on_warn:
-            # On CI this warning is an error to prevent merging incomplete commits into master
             sys.exit(1)
 
 

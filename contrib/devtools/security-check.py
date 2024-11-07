@@ -7,6 +7,7 @@ Perform basic security checks on a series of executables.
 Exit status will be 0 if successful, and the program will be silent.
 Otherwise the exit status will be 1 and it will log which executables failed which checks.
 '''
+import re
 import sys
 
 import lief
@@ -38,13 +39,13 @@ def check_ELF_RELRO(binary) -> bool:
 
     return have_gnu_relro and have_bindnow
 
-def check_ELF_Canary(binary) -> bool:
+def check_ELF_CANARY(binary) -> bool:
     '''
     Check for use of stack canary
     '''
     return binary.has_symbol('__stack_chk_fail')
 
-def check_ELF_separate_code(binary):
+def check_ELF_SEPARATE_CODE(binary):
     '''
     Check that sections are appropriately separated in virtual memory,
     based on their permissions. This checks for missing -Wl,-z,separate-code
@@ -105,7 +106,7 @@ def check_ELF_separate_code(binary):
                 return False
     return True
 
-def check_ELF_control_flow(binary) -> bool:
+def check_ELF_CONTROL_FLOW(binary) -> bool:
     '''
     Check for control flow instrumentation
     '''
@@ -115,6 +116,25 @@ def check_ELF_control_flow(binary) -> bool:
     if content.tolist() == [243, 15, 30, 250]: # endbr64
         return True
     return False
+
+def check_ELF_FORTIFY(binary) -> bool:
+
+    # bitcoin-util does not currently contain any fortified functions
+    if 'Bitcoin Core bitcoin-util utility version ' in binary.strings:
+        return True
+
+    chk_funcs = set()
+
+    for sym in binary.imported_symbols:
+        match = re.search(r'__[a-z]*_chk', sym.name)
+        if match:
+            chk_funcs.add(match.group(0))
+
+    # ignore stack-protector and bdb
+    chk_funcs.discard('__stack_chk')
+    chk_funcs.discard('__db_chk')
+
+    return len(chk_funcs) >= 1
 
 def check_PE_DYNAMIC_BASE(binary) -> bool:
     '''PIE: DllCharacteristics bit 0x40 signifies dynamicbase (ASLR)'''
@@ -130,7 +150,7 @@ def check_PE_RELOC_SECTION(binary) -> bool:
     '''Check for a reloc section. This is required for functional ASLR.'''
     return binary.has_relocations
 
-def check_PE_control_flow(binary) -> bool:
+def check_PE_CONTROL_FLOW(binary) -> bool:
     '''
     Check for control flow instrumentation
     '''
@@ -145,7 +165,7 @@ def check_PE_control_flow(binary) -> bool:
         return True
     return False
 
-def check_PE_Canary(binary) -> bool:
+def check_PE_CANARY(binary) -> bool:
     '''
     Check for use of stack canary
     '''
@@ -163,7 +183,7 @@ def check_MACHO_FIXUP_CHAINS(binary) -> bool:
     '''
     return binary.has_dyld_chained_fixups
 
-def check_MACHO_Canary(binary) -> bool:
+def check_MACHO_CANARY(binary) -> bool:
     '''
     Check for use of stack canary
     '''
@@ -182,7 +202,7 @@ def check_NX(binary) -> bool:
     '''
     return binary.has_nx
 
-def check_MACHO_control_flow(binary) -> bool:
+def check_MACHO_CONTROL_FLOW(binary) -> bool:
     '''
     Check for control flow instrumentation
     '''
@@ -192,7 +212,7 @@ def check_MACHO_control_flow(binary) -> bool:
         return True
     return False
 
-def check_MACHO_branch_protection(binary) -> bool:
+def check_MACHO_BRANCH_PROTECTION(binary) -> bool:
     '''
     Check for branch protection instrumentation
     '''
@@ -206,8 +226,8 @@ BASE_ELF = [
     ('PIE', check_PIE),
     ('NX', check_NX),
     ('RELRO', check_ELF_RELRO),
-    ('Canary', check_ELF_Canary),
-    ('separate_code', check_ELF_separate_code),
+    ('CANARY', check_ELF_CANARY),
+    ('SEPARATE_CODE', check_ELF_SEPARATE_CODE),
 ]
 
 BASE_PE = [
@@ -216,23 +236,23 @@ BASE_PE = [
     ('HIGH_ENTROPY_VA', check_PE_HIGH_ENTROPY_VA),
     ('NX', check_NX),
     ('RELOC_SECTION', check_PE_RELOC_SECTION),
-    ('CONTROL_FLOW', check_PE_control_flow),
-    ('Canary', check_PE_Canary),
+    ('CONTROL_FLOW', check_PE_CONTROL_FLOW),
+    ('CANARY', check_PE_CANARY),
 ]
 
 BASE_MACHO = [
     ('NOUNDEFS', check_MACHO_NOUNDEFS),
-    ('Canary', check_MACHO_Canary),
+    ('CANARY', check_MACHO_CANARY),
     ('FIXUP_CHAINS', check_MACHO_FIXUP_CHAINS),
 ]
 
 CHECKS = {
     lief.EXE_FORMATS.ELF: {
-        lief.ARCHITECTURES.X86: BASE_ELF + [('CONTROL_FLOW', check_ELF_control_flow)],
-        lief.ARCHITECTURES.ARM: BASE_ELF,
-        lief.ARCHITECTURES.ARM64: BASE_ELF,
-        lief.ARCHITECTURES.PPC: BASE_ELF,
-        lief.ARCHITECTURES.RISCV: BASE_ELF,
+        lief.ARCHITECTURES.X86: BASE_ELF + [('CONTROL_FLOW', check_ELF_CONTROL_FLOW), ('FORTIFY', check_ELF_FORTIFY)],
+        lief.ARCHITECTURES.ARM: BASE_ELF + [('FORTIFY', check_ELF_FORTIFY)],
+        lief.ARCHITECTURES.ARM64: BASE_ELF + [('FORTIFY', check_ELF_FORTIFY)],
+        lief.ARCHITECTURES.PPC: BASE_ELF + [('FORTIFY', check_ELF_FORTIFY)],
+        lief.ARCHITECTURES.RISCV: BASE_ELF, # Skip FORTIFY. See https://github.com/lief-project/LIEF/issues/1082.
     },
     lief.EXE_FORMATS.PE: {
         lief.ARCHITECTURES.X86: BASE_PE,
@@ -240,39 +260,24 @@ CHECKS = {
     lief.EXE_FORMATS.MACHO: {
         lief.ARCHITECTURES.X86: BASE_MACHO + [('PIE', check_PIE),
                                               ('NX', check_NX),
-                                              ('CONTROL_FLOW', check_MACHO_control_flow)],
-        lief.ARCHITECTURES.ARM64: BASE_MACHO + [('BRANCH_PROTECTION', check_MACHO_branch_protection)],
+                                              ('CONTROL_FLOW', check_MACHO_CONTROL_FLOW)],
+        lief.ARCHITECTURES.ARM64: BASE_MACHO + [('BRANCH_PROTECTION', check_MACHO_BRANCH_PROTECTION)],
     }
 }
 
 if __name__ == '__main__':
     retval: int = 0
     for filename in sys.argv[1:]:
-        try:
-            binary = lief.parse(filename)
-            etype = binary.format
-            arch = binary.abstract.header.architecture
-            binary.concrete
+        binary = lief.parse(filename)
+        etype = binary.format
+        arch = binary.abstract.header.architecture
+        binary.concrete
 
-            if etype == lief.EXE_FORMATS.UNKNOWN:
-                print(f'{filename}: unknown executable format')
-                retval = 1
-                continue
-
-            if arch == lief.ARCHITECTURES.NONE:
-                print(f'{filename}: unknown architecture')
-                retval = 1
-                continue
-
-            failed: list[str] = []
-            for (name, func) in CHECKS[etype][arch]:
-                if not func(binary):
-                    failed.append(name)
-            if failed:
-                print(f'{filename}: failed {" ".join(failed)}')
-                retval = 1
-        except IOError:
-            print(f'{filename}: cannot open')
+        failed: list[str] = []
+        for (name, func) in CHECKS[etype][arch]:
+            if not func(binary):
+                failed.append(name)
+        if failed:
+            print(f'{filename}: failed {" ".join(failed)}')
             retval = 1
     sys.exit(retval)
-

@@ -481,7 +481,7 @@
     </message>
     <message>
         <source>%1 behind</source>
-        <translation type="unfinished">%1 артта</translation>
+        <translation type="unfinished">%1 қалмады</translation>
     </message>
     <message>
         <source>Catching up…</source>
@@ -489,7 +489,7 @@
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished">Қате</translation>
+        <translation type="unfinished">қате</translation>
     </message>
     <message>
         <source>Warning</source>
@@ -497,7 +497,7 @@
     </message>
     <message>
         <source>Information</source>
-        <translation type="unfinished">Ақпарат</translation>
+        <translation type="unfinished">Информация</translation>
     </message>
     <message>
         <source>Up to date</source>

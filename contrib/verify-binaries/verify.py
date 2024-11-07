@@ -97,23 +97,17 @@ def bool_from_env(key, default=False) -> bool:
 
 
 VERSION_FORMAT = "<major>.<minor>[.<patch>][-rc[0-9]][-platform]"
-VERSION_EXAMPLE = "22.0-x86_64 or 23.1-rc1-darwin"
+VERSION_EXAMPLE = "22.0 or 23.1-rc1-darwin.dmg or 27.0-x86_64-linux-gnu"
 
 def parse_version_string(version_str):
-    parts = version_str.split('-')
-    version_base = parts[0]
-    version_rc = ""
-    version_os = ""
-    if len(parts) == 2:  # "<version>-rcN" or "version-platform"
-        if "rc" in parts[1]:
-            version_rc = parts[1]
-        else:
-            version_os = parts[1]
-    elif len(parts) == 3:  # "<version>-rcN-platform"
-        version_rc = parts[1]
-        version_os = parts[2]
+    # "<version>[-rcN][-platform]"
+    version_base, _, platform = version_str.partition('-')
+    rc = ""
+    if platform.startswith("rc"): # "<version>-rcN[-platform]"
+        rc, _, platform = platform.partition('-')
+    # else "<version>" or "<version>-platform"
 
-    return version_base, version_rc, version_os
+    return version_base, rc, platform
 
 
 def download_with_wget(remote_file, local_file):
@@ -514,7 +508,9 @@ def verify_published_handler(args: argparse.Namespace) -> ReturnCode:
     # Extract hashes and filenames
     hashes_to_verify = parse_sums_file(SUMS_FILENAME, [os_filter])
     if not hashes_to_verify:
-        log.error("no files matched the platform specified")
+        available_versions = ["-".join(line[1].split("-")[2:]) for line in parse_sums_file(SUMS_FILENAME, [])]
+        closest_match = difflib.get_close_matches(os_filter, available_versions, cutoff=0, n=1)[0]
+        log.error(f"No files matched the platform specified. Did you mean: {closest_match}")
         return ReturnCode.NO_BINARIES_MATCH
 
     # remove binaries that are known not to be hosted by bitcoincore.org

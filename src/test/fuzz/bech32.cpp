@@ -29,8 +29,9 @@ FUZZ_TARGET(bech32)
     std::vector<unsigned char> input;
     ConvertBits<8, 5, true>([&](unsigned char c) { input.push_back(c); }, buffer.begin(), buffer.end());
 
-    if (input.size() + 3 + 6 <= 90) {
-        // If it's possible to encode input in Bech32(m) without exceeding the 90-character limit:
+    // Input data part + 3 characters for the HRP and separator (bc1) + the checksum characters
+    if (input.size() + 3 + bech32::CHECKSUM_SIZE <= bech32::CharLimit::BECH32) {
+        // If it's possible to encode input in Bech32(m) without exceeding the bech32-character limit:
         for (auto encoding : {bech32::Encoding::BECH32, bech32::Encoding::BECH32M}) {
             const std::string encoded = bech32::Encode(encoding, "bc", input);
             assert(!encoded.empty());

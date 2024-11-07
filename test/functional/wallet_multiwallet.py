@@ -204,7 +204,7 @@ class MultiWalletTest(BitcoinTestFramework):
         self.restart_node(0, ['-nowallet', '-walletdir=' + competing_wallet_dir])
         self.nodes[0].createwallet(self.default_wallet_name)
         if self.options.descriptors:
-            exp_stderr = f"Error: SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of {self.config['environment']['PACKAGE_NAME']}?"
+            exp_stderr = f"Error: SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of {self.config['environment']['CLIENT_NAME']}?"
         else:
             exp_stderr = r"Error: Error initializing wallet database environment \"\S+competing_walletdir\S*\"!"
         self.nodes[1].assert_start_raises_init_error(['-walletdir=' + competing_wallet_dir], exp_stderr, match=ErrorMatch.PARTIAL_REGEX)
@@ -229,7 +229,7 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-18, "Requested wallet does not exist or is not loaded", wallet_bad.getwalletinfo)
 
         # accessing wallet RPC without using wallet endpoint fails
-        assert_raises_rpc_error(-19, "Wallet file not specified", node.getwalletinfo)
+        assert_raises_rpc_error(-19, "Multiple wallets are loaded. Please select which wallet", node.getwalletinfo)
 
         w1, w2, w3, w4, *_ = wallets
         self.generatetoaddress(node, nblocks=COINBASE_MATURITY + 1, address=w1.getnewaddress(), sync_fun=self.no_op)
@@ -275,7 +275,7 @@ class MultiWalletTest(BitcoinTestFramework):
         loadwallet_name = node.loadwallet(wallet_names[1])
         assert_equal(loadwallet_name['name'], wallet_names[1])
         assert_equal(node.listwallets(), wallet_names[0:2])
-        assert_raises_rpc_error(-19, "Wallet file not specified", node.getwalletinfo)
+        assert_raises_rpc_error(-19, "Multiple wallets are loaded. Please select which wallet", node.getwalletinfo)
         w2 = node.get_wallet_rpc(wallet_names[1])
         w2.getwalletinfo()
 
@@ -423,4 +423,4 @@ class MultiWalletTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    MultiWalletTest().main()
+    MultiWalletTest(__file__).main()

@@ -42,18 +42,16 @@ int main(void) {
     assert(return_val);
 
     /*** Key Generation ***/
-
-    /* If the secret key is zero or out of range (bigger than secp256k1's
-     * order), we try to sample a new key. Note that the probability of this
-     * happening is negligible. */
-    while (1) {
-        if (!fill_random(seckey1, sizeof(seckey1)) || !fill_random(seckey2, sizeof(seckey2))) {
-            printf("Failed to generate randomness\n");
-            return 1;
-        }
-        if (secp256k1_ec_seckey_verify(ctx, seckey1) && secp256k1_ec_seckey_verify(ctx, seckey2)) {
-            break;
-        }
+    if (!fill_random(seckey1, sizeof(seckey1)) || !fill_random(seckey2, sizeof(seckey2))) {
+        printf("Failed to generate randomness\n");
+        return 1;
+    }
+    /* If the secret key is zero or out of range (greater than secp256k1's
+    * order), we fail. Note that the probability of this occurring is negligible
+    * with a properly functioning random number generator. */
+    if (!secp256k1_ec_seckey_verify(ctx, seckey1) || !secp256k1_ec_seckey_verify(ctx, seckey2)) {
+        printf("Generated secret key is invalid. This indicates an issue with the random number generator.\n");
+        return 1;
     }
 
     /* Public key creation using a valid context with a verified secret key should never fail */
@@ -108,7 +106,7 @@ int main(void) {
 
     /* It's best practice to try to clear secrets from memory after using them.
      * This is done because some bugs can allow an attacker to leak memory, for
-     * example through "out of bounds" array access (see Heartbleed), Or the OS
+     * example through "out of bounds" array access (see Heartbleed), or the OS
      * swapping them to disk. Hence, we overwrite the secret key buffer with zeros.
      *
      * Here we are preventing these writes from being optimized out, as any good compiler

@@ -17,6 +17,9 @@
 
 #include <boost/test/unit_test.hpp>
 
+using util::SplitString;
+using util::TrimString;
+
 BOOST_FIXTURE_TEST_SUITE(logging_tests, BasicTestingSetup)
 
 static void ResetLogger()
@@ -80,15 +83,15 @@ BOOST_AUTO_TEST_CASE(logging_timer)
     BOOST_CHECK_EQUAL(micro_timer.LogMsg("msg").substr(0, result_prefix.size()), result_prefix);
 }
 
-BOOST_FIXTURE_TEST_CASE(logging_LogPrintf_, LogSetup)
+BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
 {
     LogInstance().m_log_sourcelocations = true;
-    LogPrintf_("fn1", "src1", 1, BCLog::LogFlags::NET, BCLog::Level::Debug, "foo1: %s\n", "bar1");
-    LogPrintf_("fn2", "src2", 2, BCLog::LogFlags::NET, BCLog::Level::Info, "foo2: %s\n", "bar2");
-    LogPrintf_("fn3", "src3", 3, BCLog::LogFlags::ALL, BCLog::Level::Debug, "foo3: %s\n", "bar3");
-    LogPrintf_("fn4", "src4", 4, BCLog::LogFlags::ALL, BCLog::Level::Info, "foo4: %s\n", "bar4");
-    LogPrintf_("fn5", "src5", 5, BCLog::LogFlags::NONE, BCLog::Level::Debug, "foo5: %s\n", "bar5");
-    LogPrintf_("fn6", "src6", 6, BCLog::LogFlags::NONE, BCLog::Level::Info, "foo6: %s\n", "bar6");
+    LogInstance().LogPrintStr("foo1: bar1", "fn1", "src1", 1, BCLog::LogFlags::NET, BCLog::Level::Debug);
+    LogInstance().LogPrintStr("foo2: bar2", "fn2", "src2", 2, BCLog::LogFlags::NET, BCLog::Level::Info);
+    LogInstance().LogPrintStr("foo3: bar3", "fn3", "src3", 3, BCLog::LogFlags::ALL, BCLog::Level::Debug);
+    LogInstance().LogPrintStr("foo4: bar4", "fn4", "src4", 4, BCLog::LogFlags::ALL, BCLog::Level::Info);
+    LogInstance().LogPrintStr("foo5: bar5", "fn5", "src5", 5, BCLog::LogFlags::NONE, BCLog::Level::Debug);
+    LogInstance().LogPrintStr("foo6: bar6", "fn6", "src6", 6, BCLog::LogFlags::NONE, BCLog::Level::Info);
     std::ifstream file{tmp_log_path};
     std::vector<std::string> log_lines;
     for (std::string log; std::getline(file, log);) {
@@ -108,13 +111,11 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintf_, LogSetup)
 BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacrosDeprecated, LogSetup)
 {
     LogPrintf("foo5: %s\n", "bar5");
-    LogPrint(BCLog::NET, "foo6: %s\n", "bar6");
     LogPrintLevel(BCLog::NET, BCLog::Level::Trace, "foo4: %s\n", "bar4"); // not logged
     LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "foo7: %s\n", "bar7");
     LogPrintLevel(BCLog::NET, BCLog::Level::Info, "foo8: %s\n", "bar8");
     LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "foo9: %s\n", "bar9");
     LogPrintLevel(BCLog::NET, BCLog::Level::Error, "foo10: %s\n", "bar10");
-    LogPrintfCategory(BCLog::VALIDATION, "foo11: %s\n", "bar11");
     std::ifstream file{tmp_log_path};
     std::vector<std::string> log_lines;
     for (std::string log; std::getline(file, log);) {
@@ -122,23 +123,21 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacrosDeprecated, LogSetup)
     }
     std::vector<std::string> expected = {
         "foo5: bar5",
-        "[net] foo6: bar6",
         "[net] foo7: bar7",
         "[net:info] foo8: bar8",
         "[net:warning] foo9: bar9",
         "[net:error] foo10: bar10",
-        "[validation:info] foo11: bar11",
     };
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }
 
 BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
 {
-    LogTrace(BCLog::NET, "foo6: %s\n", "bar6"); // not logged
-    LogDebug(BCLog::NET, "foo7: %s\n", "bar7");
-    LogInfo("foo8: %s\n", "bar8");
-    LogWarning("foo9: %s\n", "bar9");
-    LogError("foo10: %s\n", "bar10");
+    LogTrace(BCLog::NET, "foo6: %s", "bar6"); // not logged
+    LogDebug(BCLog::NET, "foo7: %s", "bar7");
+    LogInfo("foo8: %s", "bar8");
+    LogWarning("foo9: %s", "bar9");
+    LogError("foo10: %s", "bar10");
     std::ifstream file{tmp_log_path};
     std::vector<std::string> log_lines;
     for (std::string log; std::getline(file, log);) {
@@ -168,7 +167,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros_CategoryName, LogSetup)
 
     std::vector<std::string> expected;
     for (const auto& [category, name] : expected_category_names) {
-        LogPrint(category, "foo: %s\n", "bar");
+        LogDebug(category, "foo: %s\n", "bar");
         std::string expected_log = "[";
         expected_log += name;
         expected_log += "] foo: bar";

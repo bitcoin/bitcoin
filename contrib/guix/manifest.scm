@@ -1,5 +1,4 @@
 (use-modules (gnu packages)
-             (gnu packages autotools)
              ((gnu packages bash) #:select (bash-minimal))
              (gnu packages bison)
              ((gnu packages certs) #:select (nss-certs))
@@ -22,9 +21,9 @@
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
              (guix build-system cmake)
-             (guix build-system gnu)
              (guix build-system python)
              (guix build-system trivial)
+             (guix download)
              (guix gexp)
              (guix git-download)
              ((guix licenses) #:prefix license:)
@@ -91,14 +90,15 @@ chain for " target " development."))
       (home-page (package-home-page xgcc))
       (license (package-license xgcc)))))
 
-(define base-gcc gcc-12)
+(define base-gcc gcc-12) ;; 12.4.0
+
 (define base-linux-kernel-headers linux-libre-headers-6.1)
 
 (define* (make-bitcoin-cross-toolchain target
                                        #:key
                                        (base-gcc-for-libc linux-base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
-                                       (base-libc glibc-2.27)
+                                       (base-libc glibc-2.31)
                                        (base-gcc linux-base-gcc))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
@@ -116,10 +116,17 @@ desirable for building Bitcoin Core release binaries."
   (package-with-extra-patches binutils
     (search-our-patches "binutils-unaligned-default.patch")))
 
+(define (winpthreads-patches mingw-w64-x86_64-winpthreads)
+  (package-with-extra-patches mingw-w64-x86_64-winpthreads
+    (search-our-patches "winpthreads-remap-guix-store.patch")))
+
 (define (make-mingw-pthreads-cross-toolchain target)
   "Create a cross-compilation toolchain package for TARGET"
   (let* ((xbinutils (binutils-mingw-patches (cross-binutils target)))
-         (pthreads-xlibc mingw-w64-x86_64-winpthreads)
+         (machine (substring target 0 (string-index target #\-)))
+         (pthreads-xlibc (winpthreads-patches (make-mingw-w64 machine
+                                         #:xgcc (cross-gcc target #:xgcc (gcc-mingw-patches base-gcc))
+                                         #:with-winpthreads? #t)))
          (pthreads-xgcc (cross-gcc target
                                     #:xgcc (gcc-mingw-patches mingw-w64-base-gcc)
                                     #:xbinutils xbinutils
@@ -427,6 +434,7 @@ inspecting signatures in Mach-O binaries.")
                   "--enable-default-ssp=yes",
                   "--enable-default-pie=yes",
                   "--enable-standard-branch-protection=yes",
+                  "--enable-cet=yes",
                   building-on)))
         ((#:phases phases)
           `(modify-phases ,phases
@@ -440,30 +448,28 @@ inspecting signatures in Mach-O binaries.")
                  (("-rpath=") "-rpath-link="))
                #t))))))))
 
-(define-public glibc-2.27
+(define-public glibc-2.31
+  (let ((commit "8e30f03744837a85e33d84ccd34ed3abe30d37c3"))
   (package
-    (inherit glibc-2.31)
-    (version "2.27")
+    (inherit glibc) ;; 2.35
+    (version "2.31")
     (source (origin
               (method git-fetch)
               (uri (git-reference
                     (url "https://sourceware.org/git/glibc.git")
-                    (commit "73886db6218e613bd6d4edf529f11e008a6c2fa6")))
-              (file-name (git-file-name "glibc" "73886db6218e613bd6d4edf529f11e008a6c2fa6"))
+                    (commit commit)))
+              (file-name (git-file-name "glibc" commit))
               (sha256
                (base32
-                "0azpb9cvnbv25zg8019rqz48h8i2257ngyjg566dlnp74ivrs9vq"))
-              (patches (search-our-patches "glibc-2.27-riscv64-Use-__has_include-to-include-asm-syscalls.h.patch"
-                                           "glibc-2.27-fcommon.patch"
-                                           "glibc-2.27-guix-prefix.patch"
-                                           "glibc-2.27-no-librt.patch"
-                                           "glibc-2.27-powerpc-ldbrx.patch"))))
+                "1zi0s9yy5zkisw823vivn7zlj8w6g9p3mm7lmlqiixcxdkz4dbn6"))
+              (patches (search-our-patches "glibc-guix-prefix.patch"))))
     (arguments
       (substitute-keyword-arguments (package-arguments glibc)
         ((#:configure-flags flags)
           `(append ,flags
             ;; https://www.gnu.org/software/libc/manual/html_node/Configuring-and-compiling.html
             (list "--enable-stack-protector=all",
+                  "--enable-cet",
                   "--enable-bind-now",
                   "--disable-werror",
                   building-on)))
@@ -473,12 +479,13 @@ inspecting signatures in Mach-O binaries.")
              (lambda* (#:key outputs #:allow-other-keys)
                ;; Install the rpc data base file under `$out/etc/rpc'.
                ;; Otherwise build will fail with "Permission denied."
+               ;; Can be removed when we are building 2.32 or later.
                (let ((out (assoc-ref outputs "out")))
                  (substitute* "sunrpc/Makefile"
                    (("^\\$\\(inst_sysconfdir\\)/rpc(.*)$" _ suffix)
                     (string-append out "/etc/rpc" suffix "\n"))
                    (("^install-others =.*$")
-                    (string-append "install-others = " out "/etc/rpc\n"))))))))))))
+                    (string-append "install-others = " out "/etc/rpc\n")))))))))))))
 
 (packages->manifest
  (append
@@ -502,13 +509,10 @@ inspecting signatures in Mach-O binaries.")
         gzip
         xz
         ;; Build tools
+        gcc-toolchain-12
         cmake-minimal
         gnu-make
-        libtool
-        autoconf-2.71
-        automake
         pkg-config
-        bison
         ;; Scripting
         python-minimal ;; (3.10)
         ;; Git
@@ -517,24 +521,19 @@ inspecting signatures in Mach-O binaries.")
         python-lief)
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
-           (list ;; Native GCC 12 toolchain
-                 gcc-toolchain-12
-                 zip
+           (list zip
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
                  nsis-x86_64
                  nss-certs
                  osslsigncode))
           ((string-contains target "-linux-")
-           (list ;; Native GCC 12 toolchain
-                 gcc-toolchain-12
+           (list bison
                  (list gcc-toolchain-12 "static")
                  (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
-           (list ;; Native GCC 11 toolchain
-                 gcc-toolchain-11
-                 clang-toolchain-17
-                 lld-17
-                 (make-lld-wrapper lld-17 #:lld-as-ld? #t)
+           (list clang-toolchain-18
+                 lld-18
+                 (make-lld-wrapper lld-18 #:lld-as-ld? #t)
                  python-signapple
                  zip))
           (else '())))))

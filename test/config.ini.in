@@ -6,8 +6,8 @@
 # test/*/test_runner.py and test/util/rpcauth-test.py
 
 [environment]
-PACKAGE_NAME=@PACKAGE_NAME@
-PACKAGE_BUGREPORT=@PACKAGE_BUGREPORT@
+CLIENT_NAME=@CLIENT_NAME@
+CLIENT_BUGREPORT=@CLIENT_BUGREPORT@
 SRCDIR=@abs_top_srcdir@
 BUILDDIR=@abs_top_builddir@
 EXEEXT=@EXEEXT@

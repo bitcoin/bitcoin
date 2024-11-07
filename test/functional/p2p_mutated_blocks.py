@@ -55,7 +55,7 @@ class MutatedBlocksTest(BitcoinTestFramework):
         # Create mutated version of the block by changing the transaction
         # version on the self-transfer.
         mutated_block = copy.deepcopy(block)
-        mutated_block.vtx[1].nVersion = 4
+        mutated_block.vtx[1].version = 4
 
         # Announce the new block via a compact block through the honest relayer
         cmpctblock = HeaderAndShortIDs()
@@ -104,13 +104,12 @@ class MutatedBlocksTest(BitcoinTestFramework):
         block_missing_prev.hashPrevBlock = 123
         block_missing_prev.solve()
 
-        # Attacker gets a DoS score of 10, not immediately disconnected, so we do it 10 times to get to 100
-        for _ in range(10):
-            assert_equal(len(self.nodes[0].getpeerinfo()), 2)
-            with self.nodes[0].assert_debug_log(expected_msgs=["AcceptBlock FAILED (prev-blk-not-found)"]):
-                attacker.send_message(msg_block(block_missing_prev))
+        # Check that non-connecting block causes disconnect
+        assert_equal(len(self.nodes[0].getpeerinfo()), 2)
+        with self.nodes[0].assert_debug_log(expected_msgs=["AcceptBlock FAILED (prev-blk-not-found)"]):
+            attacker.send_message(msg_block(block_missing_prev))
         attacker.wait_for_disconnect(timeout=5)
 
 
 if __name__ == '__main__':
-    MutatedBlocksTest().main()
+    MutatedBlocksTest(__file__).main()

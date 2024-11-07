@@ -28,7 +28,7 @@ public:
     {
         if (open) Open();
     }
-    ~BerkeleyRODatabase(){};
+    ~BerkeleyRODatabase() = default;
 
     BerkeleyROData m_records;
 
@@ -81,7 +81,7 @@ private:
 
 public:
     explicit BerkeleyROCursor(const BerkeleyRODatabase& database, Span<const std::byte> prefix = {});
-    ~BerkeleyROCursor() {}
+    ~BerkeleyROCursor() = default;
 
     Status Next(DataStream& key, DataStream& value) override;
 };
@@ -102,7 +102,7 @@ private:
 
 public:
     explicit BerkeleyROBatch(const BerkeleyRODatabase& database) : m_database(database) {}
-    ~BerkeleyROBatch() {}
+    ~BerkeleyROBatch() = default;
 
     BerkeleyROBatch(const BerkeleyROBatch&) = delete;
     BerkeleyROBatch& operator=(const BerkeleyROBatch&) = delete;
@@ -115,6 +115,7 @@ public:
     bool TxnBegin() override { return false; }
     bool TxnCommit() override { return false; }
     bool TxnAbort() override { return false; }
+    bool HasActiveTxn() override { return false; }
 };
 
 //! Return object giving access to Berkeley Read Only database at specified path.

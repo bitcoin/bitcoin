@@ -110,7 +110,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
     def create_bip112special(self, input, txversion):
         tx = self.create_self_transfer_from_utxo(input)
-        tx.nVersion = txversion
+        tx.version = txversion
         self.miniwallet.sign_tx(tx)
         tx.vin[0].scriptSig = CScript([-1, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
         tx.rehash()
@@ -118,7 +118,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
     def create_bip112emptystack(self, input, txversion):
         tx = self.create_self_transfer_from_utxo(input)
-        tx.nVersion = txversion
+        tx.version = txversion
         self.miniwallet.sign_tx(tx)
         tx.vin[0].scriptSig = CScript([OP_CHECKSEQUENCEVERIFY] + list(CScript(tx.vin[0].scriptSig)))
         tx.rehash()
@@ -136,7 +136,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         for i, (sdf, srhb, stf, srlb) in enumerate(product(*[[True, False]] * 4)):
             locktime = relative_locktime(sdf, srhb, stf, srlb)
             tx = self.create_self_transfer_from_utxo(bip68inputs[i])
-            tx.nVersion = txversion
+            tx.version = txversion
             tx.vin[0].nSequence = locktime + locktime_delta
             self.miniwallet.sign_tx(tx)
             txs.append({'tx': tx, 'sdf': sdf, 'stf': stf})
@@ -154,7 +154,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
                 tx.vin[0].nSequence = BASE_RELATIVE_LOCKTIME + locktime_delta
             else:  # vary nSequence instead, OP_CSV is fixed
                 tx.vin[0].nSequence = locktime + locktime_delta
-            tx.nVersion = txversion
+            tx.version = txversion
             self.miniwallet.sign_tx(tx)
             if varyOP_CSV:
                 tx.vin[0].scriptSig = CScript([locktime, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
@@ -257,10 +257,10 @@ class BIP68_112_113Test(BitcoinTestFramework):
         # BIP113 test transaction will be modified before each use to put in appropriate block time
         bip113tx_v1 = self.create_self_transfer_from_utxo(bip113input)
         bip113tx_v1.vin[0].nSequence = 0xFFFFFFFE
-        bip113tx_v1.nVersion = 1
+        bip113tx_v1.version = 1
         bip113tx_v2 = self.create_self_transfer_from_utxo(bip113input)
         bip113tx_v2.vin[0].nSequence = 0xFFFFFFFE
-        bip113tx_v2.nVersion = 2
+        bip113tx_v2.version = 2
 
         # For BIP68 test all 16 relative sequence locktimes
         bip68txs_v1 = self.create_bip68txs(bip68inputs, 1)
@@ -482,4 +482,4 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    BIP68_112_113Test().main()
+    BIP68_112_113Test(__file__).main()

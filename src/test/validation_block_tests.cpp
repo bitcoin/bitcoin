@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -65,7 +65,8 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
     static int i = 0;
     static uint64_t time = Params().GenesisBlock().nTime;
 
-    auto ptemplate = BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get()}.CreateNewBlock(CScript{} << i++ << OP_TRUE);
+    BlockAssembler::Options options;
+    auto ptemplate = BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get(), options}.CreateNewBlock(CScript{} << i++ << OP_TRUE);
     auto pblock = std::make_shared<CBlock>(ptemplate->block);
     pblock->hashPrevBlock = prev_hash;
     pblock->nTime = ++time;
@@ -100,7 +101,7 @@ std::shared_ptr<CBlock> MinerTestingSetup::FinalizeBlock(std::shared_ptr<CBlock>
     // submit block header, so that miner can get the block height from the
     // global state and the node has the topology of the chain
     BlockValidationState ignored;
-    BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlockHeaders({pblock->GetBlockHeader()}, true, ignored));
+    BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlockHeaders({{pblock->GetBlockHeader()}}, true, ignored));
 
     return pblock;
 }
@@ -132,8 +133,8 @@ void MinerTestingSetup::BuildChain(const uint256& root, int height, const unsign
 {
     if (height <= 0 || blocks.size() >= max_size) return;
 
-    bool gen_invalid = InsecureRandRange(100) < invalid_rate;
-    bool gen_fork = InsecureRandRange(100) < branch_rate;
+    bool gen_invalid = m_rng.randrange(100U) < invalid_rate;
+    bool gen_fork = m_rng.randrange(100U) < branch_rate;
 
     const std::shared_ptr<const CBlock> pblock = gen_invalid ? BadBlock(root) : GoodBlock(root);
     blocks.push_back(pblock);
@@ -329,7 +330,8 @@ BOOST_AUTO_TEST_CASE(witness_commitment_index)
     LOCK(Assert(m_node.chainman)->GetMutex());
     CScript pubKey;
     pubKey << 1 << OP_TRUE;
-    auto ptemplate = BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get()}.CreateNewBlock(pubKey);
+    BlockAssembler::Options options;
+    auto ptemplate = BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get(), options}.CreateNewBlock(pubKey);
     CBlock pblock = ptemplate->block;
 
     CTxOut witness;

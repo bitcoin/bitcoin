@@ -8,10 +8,9 @@ To Build
 ---------------------
 
 ```bash
-./autogen.sh
-./configure
-make # use "-j N" for N parallel jobs
-make install # optional
+cmake -B build
+cmake --build build    # use "-j N" for N parallel jobs
+cmake --install build  # optional
 ```
 
 See below for instructions on how to [install the dependencies on popular Linux
@@ -22,19 +21,20 @@ distributions](#linux-distribution-specific-instructions), or the
 
 C++ compilers are memory-hungry. It is recommended to have at least 1.5 GB of
 memory available when compiling Bitcoin Core. On systems with less, gcc can be
-tuned to conserve memory with additional CXXFLAGS:
+tuned to conserve memory with additional `CMAKE_CXX_FLAGS`:
 
 
-    ./configure CXXFLAGS="--param ggc-min-expand=1 --param ggc-min-heapsize=32768"
+    cmake -B build -DCMAKE_CXX_FLAGS="--param ggc-min-expand=1 --param ggc-min-heapsize=32768"
 
-Alternatively, or in addition, debugging information can be skipped for compilation. The default compile flags are
-`-g -O2`, and can be changed with:
+Alternatively, or in addition, debugging information can be skipped for compilation.
+For the default build type `RelWithDebInfo`, the default compile flags are
+`-O2 -g`, and can be changed with:
 
-    ./configure CXXFLAGS="-g0"
+    cmake -B build -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-O2 -g0"
 
 Finally, clang (often less resource hungry) can be used instead of gcc, which is used by default:
 
-    ./configure CXX=clang++ CC=clang
+    cmake -B build -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
 
 ## Linux Distribution Specific Instructions
 
@@ -44,7 +44,7 @@ Finally, clang (often less resource hungry) can be used instead of gcc, which is
 
 Build requirements:
 
-    sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
+    sudo apt-get install build-essential cmake pkg-config python3
 
 Now, you can either build from self-compiled [depends](#dependencies) or install the required dependencies:
 
@@ -56,14 +56,9 @@ SQLite is required for the descriptor wallet:
 
 Berkeley DB is only required for the legacy wallet. Ubuntu and Debian have their own `libdb-dev` and `libdb++-dev` packages,
 but these will install Berkeley DB 5.3 or later. This will break binary wallet compatibility with the distributed
-executables, which are based on BerkeleyDB 4.8. If you do not care about wallet compatibility, pass
-`--with-incompatible-bdb` to configure. Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
+executables, which are based on BerkeleyDB 4.8. Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
 
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
-
-Optional port mapping libraries (see: `--with-miniupnpc` and `--with-natpmp`):
-
-    sudo apt install libminiupnpc-dev libnatpmp-dev
 
 ZMQ dependencies (provides ZMQ API):
 
@@ -75,11 +70,8 @@ User-Space, Statically Defined Tracing (USDT) dependencies:
 
 GUI dependencies:
 
-If you want to build bitcoin-qt, make sure that the required packages for Qt development
-are installed. Qt 5 is necessary to build the GUI.
-To build without GUI pass `--without-gui`.
-
-To build with Qt 5 you need the following:
+Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
+the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
 
     sudo apt-get install qtbase5-dev qttools5-dev qttools5-dev-tools
 
@@ -87,12 +79,11 @@ Additionally, to support Wayland protocol for modern desktop environments:
 
     sudo apt install qtwayland5
 
-libqrencode (optional) can be installed with:
+The GUI will be able to encode addresses in QR codes unless this feature is explicitly disabled. To install libqrencode, run:
 
     sudo apt-get install libqrencode-dev
 
-Once these are installed, they will be found by configure and a bitcoin-qt executable will be
-built by default.
+Otherwise, if you don't need QR encoding support, use the `-DWITH_QRENCODE=OFF` option to disable this feature in order to compile the GUI.
 
 
 ### Fedora
@@ -101,7 +92,7 @@ built by default.
 
 Build requirements:
 
-    sudo dnf install gcc-c++ libtool make autoconf automake python3
+    sudo dnf install gcc-c++ cmake make python3
 
 Now, you can either build from self-compiled [depends](#dependencies) or install the required dependencies:
 
@@ -113,14 +104,9 @@ SQLite is required for the descriptor wallet:
 
 Berkeley DB is only required for the legacy wallet. Fedora releases have only `libdb-devel` and `libdb-cxx-devel` packages, but these will install
 Berkeley DB 5.3 or later. This will break binary wallet compatibility with the distributed executables, which
-are based on Berkeley DB 4.8. If you do not care about wallet compatibility,
-pass `--with-incompatible-bdb` to configure. Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
+are based on Berkeley DB 4.8. Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
 
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
-
-Optional port mapping libraries (see: `--with-miniupnpc` and `--with-natpmp`):
-
-    sudo dnf install miniupnpc-devel libnatpmp-devel
 
 ZMQ dependencies (provides ZMQ API):
 
@@ -132,11 +118,8 @@ User-Space, Statically Defined Tracing (USDT) dependencies:
 
 GUI dependencies:
 
-If you want to build bitcoin-qt, make sure that the required packages for Qt development
-are installed. Qt 5 is necessary to build the GUI.
-To build without GUI pass `--without-gui`.
-
-To build with Qt 5 you need the following:
+Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
+the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
 
     sudo dnf install qt5-qttools-devel qt5-qtbase-devel
 
@@ -144,12 +127,11 @@ Additionally, to support Wayland protocol for modern desktop environments:
 
     sudo dnf install qt5-qtwayland
 
-libqrencode (optional) can be installed with:
+The GUI will be able to encode addresses in QR codes unless this feature is explicitly disabled. To install libqrencode, run:
 
     sudo dnf install qrencode-devel
 
-Once these are installed, they will be found by configure and a bitcoin-qt executable will be
-built by default.
+Otherwise, if you don't need QR encoding support, use the `-DWITH_QRENCODE=OFF` option to disable this feature in order to compile the GUI.
 
 ## Dependencies
 
@@ -163,7 +145,7 @@ The legacy wallet uses Berkeley DB. To ensure backwards compatibility it is
 recommended to use Berkeley DB 4.8. If you have to build it yourself, and don't
 want to use any other libraries built in depends, you can do:
 ```bash
-make -C depends NO_BOOST=1 NO_LIBEVENT=1 NO_QT=1 NO_SQLITE=1 NO_NATPMP=1 NO_UPNP=1 NO_ZMQ=1 NO_USDT=1
+make -C depends NO_BOOST=1 NO_LIBEVENT=1 NO_QT=1 NO_SQLITE=1 NO_ZMQ=1 NO_USDT=1
 ...
 to: /path/to/bitcoin/depends/x86_64-pc-linux-gnu
 ```
@@ -171,9 +153,7 @@ and configure using the following:
 ```bash
 export BDB_PREFIX="/path/to/bitcoin/depends/x86_64-pc-linux-gnu"
 
-./configure \
-    BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" \
-    BDB_CFLAGS="-I${BDB_PREFIX}/include"
+cmake -B build -DBerkeleyDB_INCLUDE_DIR:PATH="${BDB_PREFIX}/include" -DWITH_BDB=ON
 ```
 
 **Note**: Make sure that `BDB_PREFIX` is an absolute path.
@@ -185,7 +165,7 @@ Disable-wallet mode
 When the intention is to only run a P2P node, without a wallet, Bitcoin Core can
 be compiled in disable-wallet mode with:
 
-    ./configure --disable-wallet
+    cmake -B build -DENABLE_WALLET=OFF
 
 In this case there is no dependency on SQLite or Berkeley DB.
 
@@ -195,19 +175,19 @@ Additional Configure Flags
 --------------------------
 A list of additional configure flags can be displayed with:
 
-    ./configure --help
+    cmake -B build -LH
 
 
 Setup and Build Example: Arch Linux
 -----------------------------------
 This example lists the steps necessary to setup and build a command line only distribution of the latest changes on Arch Linux:
 
-    pacman --sync --needed autoconf automake boost gcc git libevent libtool make pkgconf python sqlite
+    pacman --sync --needed cmake boost gcc git libevent make pkgconf python sqlite
     git clone https://github.com/bitcoin/bitcoin.git
     cd bitcoin/
-    ./autogen.sh
-    ./configure
-    make check
-    ./src/bitcoind
+    cmake -B build
+    cmake --build build
+    ctest --test-dir build
+    ./build/src/bitcoind
 
 If you intend to work with legacy Berkeley DB wallets, see [Berkeley DB](#berkeley-db) section.

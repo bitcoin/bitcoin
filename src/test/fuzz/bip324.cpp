@@ -4,12 +4,13 @@
 
 #include <bip324.h>
 #include <chainparams.h>
+#include <random.h>
 #include <span.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
-#include <test/util/xoroshiro128plusplus.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <vector>
 
@@ -56,12 +57,12 @@ FUZZ_TARGET(bip324_cipher_roundtrip, .init=Initialize)
     // (potentially buggy) edge cases triggered by specific values of contents/AAD, so we can avoid
     // reading the actual data for those from the fuzzer input (which would need large amounts of
     // data).
-    XoRoShiRo128PlusPlus rng(provider.ConsumeIntegral<uint64_t>());
+    InsecureRandomContext rng(provider.ConsumeIntegral<uint64_t>());
 
     // Compare session IDs and garbage terminators.
-    assert(initiator.GetSessionID() == responder.GetSessionID());
-    assert(initiator.GetSendGarbageTerminator() == responder.GetReceiveGarbageTerminator());
-    assert(initiator.GetReceiveGarbageTerminator() == responder.GetSendGarbageTerminator());
+    assert(std::ranges::equal(initiator.GetSessionID(), responder.GetSessionID()));
+    assert(std::ranges::equal(initiator.GetSendGarbageTerminator(), responder.GetReceiveGarbageTerminator()));
+    assert(std::ranges::equal(initiator.GetReceiveGarbageTerminator(), responder.GetSendGarbageTerminator()));
 
     LIMITED_WHILE(provider.remaining_bytes(), 1000) {
         // Mode:
@@ -79,10 +80,8 @@ FUZZ_TARGET(bip324_cipher_roundtrip, .init=Initialize)
         unsigned length_bits = 2 * ((mode >> 5) & 7);
         unsigned length = provider.ConsumeIntegralInRange<unsigned>(0, (1 << length_bits) - 1);
         // Generate aad and content.
-        std::vector<std::byte> aad(aad_length);
-        for (auto& val : aad) val = std::byte{(uint8_t)rng()};
-        std::vector<std::byte> contents(length);
-        for (auto& val : contents) val = std::byte{(uint8_t)rng()};
+        auto aad = rng.randbytes<std::byte>(aad_length);
+        auto contents = rng.randbytes<std::byte>(length);
 
         // Pick sides.
         auto& sender{from_init ? initiator : responder};

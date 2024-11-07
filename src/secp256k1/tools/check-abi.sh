@@ -49,7 +49,14 @@ checkout_and_build() {
         -DSECP256K1_BUILD_CTIME_TESTS=OFF \
         -DSECP256K1_BUILD_EXAMPLES=OFF
     cmake --build . -j "$(nproc)"
-    abi-dumper src/libsecp256k1.so -o ABI.dump -lver "$2" -public-headers ../include/
+    # FIXME: Just set LIBPATH to lib/libsecp256k1.so once version 0.6.0 is
+    # released.
+    if [ -f "src/libsecp256k1.so" ]; then
+        LIBPATH="src/libsecp256k1.so"
+    else
+        LIBPATH="lib/libsecp256k1.so"
+    fi
+    abi-dumper $LIBPATH -o ABI.dump -lver "$2" -public-headers ../include/
     cd "$_orig_dir"
 }
 

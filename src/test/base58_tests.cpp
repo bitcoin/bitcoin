@@ -17,6 +17,7 @@
 #include <string>
 
 using namespace std::literals;
+using namespace util::hex_literals;
 
 BOOST_FIXTURE_TEST_SUITE(base58_tests, BasicTestingSetup)
 
@@ -72,7 +73,7 @@ BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
     // check that DecodeBase58 skips whitespace, but still fails with unexpected non-whitespace at the end.
     BOOST_CHECK(!DecodeBase58(" \t\n\v\f\r skip \r\f\v\n\t a", result, 3));
     BOOST_CHECK( DecodeBase58(" \t\n\v\f\r skip \r\f\v\n\t ", result, 3));
-    std::vector<unsigned char> expected = ParseHex("971a55");
+    constexpr auto expected{"971a55"_hex_u8};
     BOOST_CHECK_EQUAL_COLLECTIONS(result.begin(), result.end(), expected.begin(), expected.end());
 
     BOOST_CHECK(DecodeBase58Check("3vQB7B6MrGQZaxCuFg4oh"s, result, 100));
@@ -84,14 +85,14 @@ BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
 BOOST_AUTO_TEST_CASE(base58_random_encode_decode)
 {
     for (int n = 0; n < 1000; ++n) {
-        unsigned int len = 1 + InsecureRandBits(8);
-        unsigned int zeroes = InsecureRandBool() ? InsecureRandRange(len + 1) : 0;
-        auto data = Cat(std::vector<unsigned char>(zeroes, '\000'), g_insecure_rand_ctx.randbytes(len - zeroes));
+        unsigned int len = 1 + m_rng.randbits(8);
+        unsigned int zeroes = m_rng.randbool() ? m_rng.randrange(len + 1) : 0;
+        auto data = Cat(std::vector<unsigned char>(zeroes, '\000'), m_rng.randbytes(len - zeroes));
         auto encoded = EncodeBase58Check(data);
         std::vector<unsigned char> decoded;
-        auto ok_too_small = DecodeBase58Check(encoded, decoded, InsecureRandRange(len));
+        auto ok_too_small = DecodeBase58Check(encoded, decoded, m_rng.randrange(len));
         BOOST_CHECK(!ok_too_small);
-        auto ok = DecodeBase58Check(encoded, decoded, len + InsecureRandRange(257 - len));
+        auto ok = DecodeBase58Check(encoded, decoded, len + m_rng.randrange(257 - len));
         BOOST_CHECK(ok);
         BOOST_CHECK(data == decoded);
     }

@@ -41,15 +41,21 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     // new BlockTreeDB tries to delete the existing file, which
     // fails if it's still open from the previous loop. Close it first:
     pblocktree.reset();
-    pblocktree = std::make_unique<BlockTreeDB>(DBParams{
-        .path = chainman.m_options.datadir / "blocks" / "index",
-        .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
-        .memory_only = options.block_tree_db_in_memory,
-        .wipe_data = options.reindex,
-        .options = chainman.m_options.block_tree_db});
+    try {
+        pblocktree = std::make_unique<BlockTreeDB>(DBParams{
+            .path = chainman.m_options.datadir / "blocks" / "index",
+            .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
+            .memory_only = options.block_tree_db_in_memory,
+            .wipe_data = options.wipe_block_tree_db,
+            .options = chainman.m_options.block_tree_db});
+    } catch (dbwrapper_error& err) {
+        LogError("%s\n", err.what());
+        return {ChainstateLoadStatus::FAILURE, _("Error opening block database")};
+    }
 
-    if (options.reindex) {
+    if (options.wipe_block_tree_db) {
         pblocktree->WriteReindexing(true);
+        chainman.m_blockman.m_blockfiles_indexed = false;
         //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
         if (options.prune) {
             chainman.m_blockman.CleanupBlockRevFiles();
@@ -60,8 +66,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
 
     // LoadBlockIndex will load m_have_pruned if we've ever removed a
     // block file from disk.
-    // Note that it also sets m_reindexing based on the disk flag!
-    // From here on, m_reindexing and options.reindex values may be different!
+    // Note that it also sets m_blockfiles_indexed based on the disk flag!
     if (!chainman.LoadBlockIndex()) {
         if (chainman.m_interrupt) return {ChainstateLoadStatus::INTERRUPTED, {}};
         return {ChainstateLoadStatus::FAILURE, _("Error loading block database")};
@@ -84,22 +89,23 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     // If we're not mid-reindex (based on disk + args), add a genesis block on disk
     // (otherwise we use the one already on disk).
     // This is called again in ImportBlocks after the reindex completes.
-    if (!chainman.m_blockman.m_reindexing && !chainman.ActiveChainstate().LoadGenesisBlock()) {
+    if (chainman.m_blockman.m_blockfiles_indexed && !chainman.ActiveChainstate().LoadGenesisBlock()) {
         return {ChainstateLoadStatus::FAILURE, _("Error initializing block database")};
     }
 
     auto is_coinsview_empty = [&](Chainstate* chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
-        return options.reindex || options.reindex_chainstate || chainstate->CoinsTip().GetBestBlock().IsNull();
+        return options.wipe_chainstate_db || chainstate->CoinsTip().GetBestBlock().IsNull();
     };
 
     assert(chainman.m_total_coinstip_cache > 0);
     assert(chainman.m_total_coinsdb_cache > 0);
 
-    // Conservative value which is arbitrarily chosen, as it will ultimately be changed
-    // by a call to `chainman.MaybeRebalanceCaches()`. We just need to make sure
-    // that the sum of the two caches (40%) does not exceed the allowable amount
-    // during this temporary initialization state.
-    double init_cache_fraction = 0.2;
+    // If running with multiple chainstates, limit the cache sizes with a
+    // discount factor. If discounted the actual cache size will be
+    // recalculated by `chainman.MaybeRebalanceCaches()`. The discount factor
+    // is conservatively chosen such that the sum of the caches does not exceed
+    // the allowable amount during this temporary initialization state.
+    double init_cache_fraction = chainman.GetAll().size() > 1 ? 0.2 : 1.0;
 
     // At this point we're either in reindex or we've loaded a useful
     // block tree into BlockIndex()!
@@ -107,10 +113,15 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     for (Chainstate* chainstate : chainman.GetAll()) {
         LogPrintf("Initializing chainstate %s\n", chainstate->ToString());
 
-        chainstate->InitCoinsDB(
-            /*cache_size_bytes=*/chainman.m_total_coinsdb_cache * init_cache_fraction,
-            /*in_memory=*/options.coins_db_in_memory,
-            /*should_wipe=*/options.reindex || options.reindex_chainstate);
+        try {
+            chainstate->InitCoinsDB(
+                /*cache_size_bytes=*/chainman.m_total_coinsdb_cache * init_cache_fraction,
+                /*in_memory=*/options.coins_db_in_memory,
+                /*should_wipe=*/options.wipe_chainstate_db);
+        } catch (dbwrapper_error& err) {
+            LogError("%s\n", err.what());
+            return {ChainstateLoadStatus::FAILURE, _("Error opening coins database")};
+        }
 
         if (options.coins_error_cb) {
             chainstate->CoinsErrorCatcher().AddReadErrCallback(options.coins_error_cb);
@@ -142,7 +153,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         }
     }
 
-    if (!options.reindex) {
+    if (!options.wipe_block_tree_db) {
         auto chainstates{chainman.GetAll()};
         if (std::any_of(chainstates.begin(), chainstates.end(),
                         [](const Chainstate* cs) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return cs->NeedsRedownload(); })) {
@@ -188,7 +199,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     // Load a chain created from a UTXO snapshot, if any exist.
     bool has_snapshot = chainman.DetectSnapshotChainstate();
 
-    if (has_snapshot && (options.reindex || options.reindex_chainstate)) {
+    if (has_snapshot && options.wipe_chainstate_db) {
         LogPrintf("[snapshot] deleting snapshot chainstate due to reindexing\n");
         if (!chainman.DeleteSnapshotChainstate()) {
             return {ChainstateLoadStatus::FAILURE_FATAL, Untranslated("Couldn't remove snapshot chainstate.")};
@@ -236,7 +247,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
             return {init_status, init_error};
         }
     } else {
-        return {ChainstateLoadStatus::FAILURE, _(
+        return {ChainstateLoadStatus::FAILURE_FATAL, _(
            "UTXO snapshot failed to validate. "
            "Restart to resume normal initial block download, or try loading a different snapshot.")};
     }
@@ -247,7 +258,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
 ChainstateLoadResult VerifyLoadedChainstate(ChainstateManager& chainman, const ChainstateLoadOptions& options)
 {
     auto is_coinsview_empty = [&](Chainstate* chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
-        return options.reindex || options.reindex_chainstate || chainstate->CoinsTip().GetBestBlock().IsNull();
+        return options.wipe_chainstate_db || chainstate->CoinsTip().GetBestBlock().IsNull();
     };
 
     LOCK(cs_main);

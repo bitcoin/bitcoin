@@ -20,7 +20,8 @@ static void mineBlock(const node::NodeContext& node, std::chrono::seconds block_
 {
     auto curr_time = GetTime<std::chrono::seconds>();
     SetMockTime(block_time); // update time so the block is created with it
-    CBlock block = node::BlockAssembler{node.chainman->ActiveChainstate(), nullptr}.CreateNewBlock(CScript() << OP_TRUE)->block;
+    node::BlockAssembler::Options options;
+    CBlock block = node::BlockAssembler{node.chainman->ActiveChainstate(), nullptr, options}.CreateNewBlock(CScript() << OP_TRUE)->block;
     while (!CheckProofOfWork(block.GetHash(), block.nBits, node.chainman->GetConsensus())) ++block.nNonce;
     block.fChecked = true; // little speedup
     SetMockTime(curr_time); // process block at current time
@@ -31,7 +32,7 @@ static void mineBlock(const node::NodeContext& node, std::chrono::seconds block_
 // Verifying when network-limited peer connections are desirable based on the node's proximity to the tip
 BOOST_AUTO_TEST_CASE(connections_desirable_service_flags)
 {
-    std::unique_ptr<PeerManager> peerman = PeerManager::make(*m_node.connman, *m_node.addrman, nullptr, *m_node.chainman, *m_node.mempool, {});
+    std::unique_ptr<PeerManager> peerman = PeerManager::make(*m_node.connman, *m_node.addrman, nullptr, *m_node.chainman, *m_node.mempool, *m_node.warnings, {});
     auto consensus = m_node.chainman->GetParams().GetConsensus();
 
     // Check we start connecting to full nodes

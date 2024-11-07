@@ -11,6 +11,8 @@
 #include <netaddress.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
+#include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <walletinitinterface.h>
@@ -19,9 +21,13 @@
 #include <iterator>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
+
+using util::SplitString;
+using util::TrimStringView;
 
 /** WWW-Authenticate to present with 401 Unauthorized response */
 static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
@@ -288,16 +294,29 @@ static bool InitRPCAuthentication()
 {
     if (gArgs.GetArg("-rpcpassword", "") == "")
     {
-        LogPrintf("Using random cookie authentication.\n");
-        if (!GenerateAuthCookie(&strRPCUserColonPass)) {
+        LogInfo("Using random cookie authentication.\n");
+
+        std::optional<fs::perms> cookie_perms{std::nullopt};
+        auto cookie_perms_arg{gArgs.GetArg("-rpccookieperms")};
+        if (cookie_perms_arg) {
+            auto perm_opt = InterpretPermString(*cookie_perms_arg);
+            if (!perm_opt) {
+                LogInfo("Invalid -rpccookieperms=%s; must be one of 'owner', 'group', or 'all'.\n", *cookie_perms_arg);
+                return false;
+            }
+            cookie_perms = *perm_opt;
+        }
+
+        if (!GenerateAuthCookie(&strRPCUserColonPass, cookie_perms)) {
             return false;
         }
     } else {
         LogPrintf("Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.\n");
         strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
     }
-    if (gArgs.GetArg("-rpcauth", "") != "") {
-        LogPrintf("Using rpcauth authentication.\n");
+
+    if (!gArgs.GetArgs("-rpcauth").empty()) {
+        LogInfo("Using rpcauth authentication.\n");
         for (const std::string& rpcauth : gArgs.GetArgs("-rpcauth")) {
             std::vector<std::string> fields{SplitString(rpcauth, ':')};
             const std::vector<std::string> salt_hmac{SplitString(fields.back(), '$')};
@@ -339,7 +358,7 @@ static bool InitRPCAuthentication()
 
 bool StartHTTPRPC(const std::any& context)
 {
-    LogPrint(BCLog::RPC, "Starting HTTP RPC server\n");
+    LogDebug(BCLog::RPC, "Starting HTTP RPC server\n");
     if (!InitRPCAuthentication())
         return false;
 
@@ -357,12 +376,12 @@ bool StartHTTPRPC(const std::any& context)
 
 void InterruptHTTPRPC()
 {
-    LogPrint(BCLog::RPC, "Interrupting HTTP RPC server\n");
+    LogDebug(BCLog::RPC, "Interrupting HTTP RPC server\n");
 }
 
 void StopHTTPRPC()
 {
-    LogPrint(BCLog::RPC, "Stopping HTTP RPC server\n");
+    LogDebug(BCLog::RPC, "Stopping HTTP RPC server\n");
     UnregisterHTTPHandler("/", true);
     if (g_wallet_init_interface.HasWalletSupport()) {
         UnregisterHTTPHandler("/wallet/", false);

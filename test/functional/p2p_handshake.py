@@ -17,6 +17,7 @@ from test_framework.messages import (
     NODE_WITNESS,
 )
 from test_framework.p2p import P2PInterface
+from test_framework.util import p2p_port
 
 
 # Desirable service flags for outbound non-pruned and pruned peers. Note that
@@ -88,6 +89,12 @@ class P2PHandshakeTest(BitcoinTestFramework):
         with node.assert_debug_log([f"feeler connection completed"]):
             self.add_outbound_connection(node, "feeler", NODE_NONE, wait_for_disconnect=True)
 
+        self.log.info("Check that connecting to ourself leads to immediate disconnect")
+        with node.assert_debug_log(["connected to self", "disconnecting"]):
+            node_listen_addr = f"127.0.0.1:{p2p_port(0)}"
+            node.addconnection(node_listen_addr, "outbound-full-relay", self.options.v2transport)
+            self.wait_until(lambda: len(node.getpeerinfo()) == 0)
+
 
 if __name__ == '__main__':
-    P2PHandshakeTest().main()
+    P2PHandshakeTest(__file__).main()

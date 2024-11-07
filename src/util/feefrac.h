@@ -64,13 +64,13 @@ struct FeeFrac
     int32_t size;
 
     /** Construct an IsEmpty() FeeFrac. */
-    inline FeeFrac() noexcept : fee{0}, size{0} {}
+    constexpr inline FeeFrac() noexcept : fee{0}, size{0} {}
 
     /** Construct a FeeFrac with specified fee and size. */
-    inline FeeFrac(int64_t f, int32_t s) noexcept : fee{f}, size{s} {}
+    constexpr inline FeeFrac(int64_t f, int32_t s) noexcept : fee{f}, size{s} {}
 
-    inline FeeFrac(const FeeFrac&) noexcept = default;
-    inline FeeFrac& operator=(const FeeFrac&) noexcept = default;
+    constexpr inline FeeFrac(const FeeFrac&) noexcept = default;
+    constexpr inline FeeFrac& operator=(const FeeFrac&) noexcept = default;
 
     /** Check if this is empty (size and fee are 0). */
     bool inline IsEmpty() const noexcept {

@@ -14,6 +14,9 @@
 #include <string>
 #include <vector>
 
+using util::TrimString;
+using util::TrimStringView;
+
 FUZZ_TARGET(base_encode_decode)
 {
     const std::string random_encoded_string(buffer.begin(), buffer.end());

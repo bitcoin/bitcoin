@@ -365,6 +365,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%1 GB</source>
         <translation type="unfinished">%1 ГБ</translation>
     </message>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">standart hamyon</translation>
+    </message>
 </context>
 <context>
     <name>BitcoinGUI</name>
@@ -443,7 +447,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation type="unfinished">Hamyon shifrlanishi uchun ishlatilgan maxfiy so'zni almashtirish</translation>
+        <translation type="unfinished">Паролни ўзгартириш ҳамённи кодлашда фойдаланилади</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -463,7 +467,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation type="unfinished">Hamyonga tegishli bo'lgan maxfiy so'zlarni shifrlash</translation>
+        <translation type="unfinished">Ҳамёнингизга тегишли махфий калитларни кодлаш</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet…</source>
@@ -479,7 +483,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished">Bitkoin manzillarga ega ekaningizni tasdiqlash uchun xabarni signlang</translation>
+        <translation type="unfinished">Bitcoin манзилидан унинг эгаси эканлигингизни исботлаш учун хабарлар ёзинг</translation>
     </message>
     <message>
         <source>&amp;Verify message…</source>
@@ -487,7 +491,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">Xabar belgilangan Bitkoin manzillari bilan imzolanganligiga ishonch hosil qilish uchun ularni tasdiqlang</translation>
+        <translation type="unfinished">Хабарларни махсус Bitcoin манзилларингиз билан ёзилганлигига ишонч ҳосил қилиш учун уларни тасдиқланг</translation>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
@@ -511,19 +515,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation type="unfinished">&amp;Fayl</translation>
+        <translation type="unfinished">&amp;Файл</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation type="unfinished">&amp;Sozlamalar</translation>
+        <translation type="unfinished">&amp; Созламалар</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation type="unfinished">&amp;Yordam</translation>
+        <translation type="unfinished">&amp;Ёрдам</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation type="unfinished">Yorliqlar menyusi</translation>
+        <translation type="unfinished">Ички ойналар асбоблар панели</translation>
     </message>
     <message>
         <source>Syncing Headers (%1%)…</source>
@@ -547,19 +551,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">Тўловлар (QR кодлари ва bitcoin ёрдамида яратишлар: URI’лар) сўраш</translation>
+        <translation type="unfinished">To'lovlarni so'rash(QR kolar va bitkoin yaratish: URL manzillar)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished">Фойдаланилган жўнатилган манзиллар ва ёрлиқлар рўйхатини кўрсатиш</translation>
+        <translation type="unfinished">Manzillar va yorliqlar ro'yxatini ko'rsatish</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished">Фойдаланилган қабул қилинган манзиллар ва ёрлиқлар рўйхатини кўрсатиш</translation>
+        <translation type="unfinished">Qabul qilish manzillari va yorliqlar ro'yxatini ko'rsatish</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation type="unfinished">&amp;Буйруқлар сатри мосламалари</translation>
+        <translation type="unfinished">&amp;Command-line sozlamalari</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
@@ -570,7 +574,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation type="unfinished">%1 орқада</translation>
+        <translation type="unfinished">%1 yonida</translation>
     </message>
     <message>
         <source>Catching up…</source>
@@ -578,27 +582,27 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation type="unfinished">Сўнги қабул қилинган блок %1 олдин яратилган.</translation>
+        <translation type="unfinished">%1 oldin oxirgi marta blok qabul qilingan edi.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation type="unfinished">Бундан кейинги пул ўтказмалари кўринмайдиган бўлади.</translation>
+        <translation type="unfinished">Shundan keyingi operatsiyalar hali ko'rinmaydi.</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished">Хатолик</translation>
+        <translation type="unfinished">Xatolik</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation type="unfinished">Диққат</translation>
+        <translation type="unfinished">Eslatma</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation type="unfinished">Маълумот</translation>
+        <translation type="unfinished">Informatsiya</translation>
     </message>
     <message>
         <source>Up to date</source>
-        <translation type="unfinished">Янгиланган</translation>
+        <translation type="unfinished">Hozirgi kunda</translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction</source>
@@ -634,7 +638,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Open Wallet</source>
-        <translation type="unfinished">Ochiq hamyon</translation>
+        <translation type="unfinished">Hamyonni ochish</translation>
     </message>
     <message>
         <source>Open a wallet</source>
@@ -655,10 +659,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Mask the values in the Overview tab</source>
         <translation type="unfinished">Umumiy ko'rinish menyusidagi qiymatlarni maskirovka qilish</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">standart hamyon</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -841,7 +841,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Tree mode</source>
-        <translation type="unfinished">Daraxt rejimi</translation>
+        <translation type="unfinished">Дарахт усулида</translation>
     </message>
     <message>
         <source>List mode</source>
@@ -849,7 +849,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished">Miqdor</translation>
+        <translation type="unfinished">Миқдори</translation>
     </message>
     <message>
         <source>Received with label</source>
@@ -865,11 +865,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Confirmations</source>
-        <translation type="unfinished">Tasdiqlar</translation>
+        <translation type="unfinished">Тасдиқлашлар</translation>
     </message>
     <message>
         <source>Confirmed</source>
-        <translation type="unfinished">Tasdiqlangan</translation>
+        <translation type="unfinished">Тасдиқланди</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -893,7 +893,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>L&amp;ock unspent</source>
-        <translation type="unfinished">Sarflanmagan miqdorlarni q&amp;ulflash</translation>
+        <translation type="unfinished">Sarflanmagan tranzaksiyalarni q&amp;ulflash</translation>
     </message>
     <message>
         <source>&amp;Unlock unspent</source>
@@ -917,11 +917,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished">O'zgarishni nusxalash</translation>
+        <translation type="unfinished">Нусха қайтими</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
-        <translation type="unfinished">(%1 qulflangan)</translation>
+        <translation type="unfinished">(%1 қулфланган)</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -929,7 +929,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(Ёрлиқ мавжуд эмас)</translation>
+        <translation type="unfinished">(Yorliqlar mavjud emas)</translation>
     </message>
     <message>
         <source>change from %1 (%2)</source>
@@ -987,10 +987,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Open wallet warning</source>
         <translation type="unfinished">Hamyonni ochish ogohlantirishi</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">standart hamyon</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1821,6 +1817,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Manzilni nusxalash</translation>
     </message>
     <message>
+        <source>None</source>
+        <translation type="unfinished">Йўқ</translation>
+    </message>
+    <message>
         <source>via %1</source>
         <translation type="unfinished">%1 орқали</translation>
     </message>
@@ -2078,7 +2078,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished">O'zgarishni nusxalash</translation>
+        <translation type="unfinished">Нусха қайтими</translation>
     </message>
     <message>
         <source>%1 to %2</source>
@@ -2259,7 +2259,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Amount</source>
-        <translation type="unfinished">Miqdor</translation>
+        <translation type="unfinished">Миқдори</translation>
     </message>
     <message>
         <source>true</source>
@@ -2469,11 +2469,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Send Coins</source>
         <translation type="unfinished">Тангаларни жунат</translation>
     </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">standart hamyon</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>

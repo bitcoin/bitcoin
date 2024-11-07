@@ -6,9 +6,7 @@
 #ifndef BITCOIN_INIT_H
 #define BITCOIN_INIT_H
 
-#include <any>
-#include <memory>
-#include <string>
+#include <atomic>
 
 //! Default value for -daemon option
 static constexpr bool DEFAULT_DAEMON = false;
@@ -76,7 +74,7 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
 /**
  * Register all arguments with the ArgsManager
  */
-void SetupServerArgs(ArgsManager& argsman);
+void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc=false);
 
 /** Validates requirements to run the indexes and spawns each index initial sync thread */
 bool StartIndexBackgroundSync(node::NodeContext& node);

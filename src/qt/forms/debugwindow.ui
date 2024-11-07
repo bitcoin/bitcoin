@@ -249,6 +249,41 @@
         </widget>
        </item>
        <item row="9" column="0">
+        <widget class="QLabel" name="label_14">
+         <property name="text">
+          <string>Local Addresses</string>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="1" colspan="2">
+        <widget class="QLabel" name="localAddresses">
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
+         <property name="wordWrap">
+              <bool>true</bool>
+         </property>
+         <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+         </property>
+         <property name="text">
+          <string notr="true">N/A</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::PlainText</enum>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         </property>
+         <property name="toolTip">
+          <string>Network addresses that your Bitcoin node is currently using to communicate with other nodes.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="10" column="0">
         <widget class="QLabel" name="label_10">
          <property name="font">
           <font>
@@ -261,14 +296,14 @@
          </property>
         </widget>
        </item>
-       <item row="10" column="0">
+       <item row="11" column="0">
         <widget class="QLabel" name="label_3">
          <property name="text">
           <string>Current block height</string>
          </property>
         </widget>
        </item>
-       <item row="10" column="1" colspan="2">
+       <item row="11" column="1" colspan="2">
         <widget class="QLabel" name="numberOfBlocks">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -284,14 +319,14 @@
          </property>
         </widget>
        </item>
-       <item row="11" column="0">
+       <item row="12" column="0">
         <widget class="QLabel" name="labelLastBlockTime">
          <property name="text">
           <string>Last block time</string>
          </property>
         </widget>
        </item>
-       <item row="11" column="1" colspan="2">
+       <item row="12" column="1" colspan="2">
         <widget class="QLabel" name="lastBlockTime">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -307,7 +342,7 @@
          </property>
         </widget>
        </item>
-       <item row="12" column="0">
+       <item row="13" column="0">
         <widget class="QLabel" name="labelMempoolTitle">
          <property name="font">
           <font>
@@ -320,14 +355,14 @@
          </property>
         </widget>
        </item>
-       <item row="13" column="0">
+       <item row="14" column="0">
         <widget class="QLabel" name="labelNumberOfTransactions">
          <property name="text">
           <string>Current number of transactions</string>
          </property>
         </widget>
        </item>
-       <item row="13" column="1">
+       <item row="14" column="1">
         <widget class="QLabel" name="mempoolNumberTxs">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -343,14 +378,14 @@
          </property>
         </widget>
        </item>
-       <item row="14" column="0">
+       <item row="15" column="0">
         <widget class="QLabel" name="labelMemoryUsage">
          <property name="text">
           <string>Memory usage</string>
          </property>
         </widget>
        </item>
-       <item row="14" column="1">
+       <item row="15" column="1">
         <widget class="QLabel" name="mempoolSize">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -366,7 +401,7 @@
          </property>
         </widget>
        </item>
-       <item row="12" column="2" rowspan="3">
+       <item row="13" column="2" rowspan="3">
         <layout class="QVBoxLayout" name="verticalLayoutDebugButton">
          <property name="spacing">
           <number>3</number>
@@ -406,7 +441,7 @@
          </item>
         </layout>
        </item>
-       <item row="15" column="0">
+       <item row="16" column="0">
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -984,42 +1019,117 @@
            </size>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_8">
-           <item>
-            <widget class="QLabel" name="peerHeading">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>32</height>
-              </size>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="cursor">
-              <cursorShape>IBeamCursor</cursorShape>
-             </property>
-             <property name="text">
-              <string>Select a peer to view detailed information.</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignHCenter|Qt::AlignTop</set>
-             </property>
-             <property name="wordWrap">
-              <bool>true</bool>
-             </property>
-             <property name="textInteractionFlags">
-              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-             </property>
-            </widget>
-           </item>
+            <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_8">
+                <property name="topMargin">
+                  <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                  <number>0</number>
+                </property>
+                <item>
+                  <widget class="QLabel" name="peerHeading">
+                  <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                    </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                    <size>
+                    <width>0</width>
+                    <height>32</height>
+                    </size>
+                  </property>
+                  <property name="font">
+                    <font>
+                    <pointsize>10</pointsize>
+                    </font>
+                  </property>
+                  <property name="cursor">
+                    <cursorShape>IBeamCursor</cursorShape>
+                  </property>
+                  <property name="text">
+                    <string>Select a peer to view detailed information.</string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignHCenter|Qt::AlignTop</set>
+                  </property>
+                  <property name="wordWrap">
+                    <bool>true</bool>
+                  </property>
+                  <property name="textInteractionFlags">
+                    <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+                  </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QWidget" name="hidePeersDetail" native="true">
+                    <property name="enabled">
+                      <bool>true</bool>
+                    </property>
+                    <property name="minimumSize">
+                      <size>
+                        <width>32</width>
+                        <height>32</height>
+                      </size>
+                    </property>
+                    <property name="maximumSize">
+                      <size>
+                        <width>32</width>
+                        <height>32</height>
+                      </size>
+                    </property>
+                    <widget class="QToolButton" name="hidePeersDetailButton">
+                      <property name="geometry">
+                        <rect>
+                          <x>0</x>
+                          <y>0</y>
+                          <width>32</width>
+                          <height>32</height>
+                        </rect>
+                      </property>
+                      <property name="minimumSize">
+                        <size>
+                          <width>32</width>
+                          <height>32</height>
+                        </size>
+                      </property>
+                      <property name="baseSize">
+                        <size>
+                          <width>32</width>
+                          <height>32</height>
+                        </size>
+                      </property>
+                      <property name="toolTip">
+                        <string>Hide Peers Detail</string>
+                      </property>
+                      <property name="layoutDirection">
+                        <enum>Qt::LeftToRight</enum>
+                      </property>
+                      <property name="text">
+                        <string />
+                      </property>
+                      <property name="icon">
+                        <iconset resource="../bitcoin.qrc">
+                          <normaloff>:/icons/remove</normaloff>
+                          :/icons/remove
+                        </iconset>
+                      </property>
+                      <property name="iconSize">
+                        <size>
+                          <width>22</width>
+                          <height>22</height>
+                        </size>
+                      </property>
+                      <property name="shortcut">
+                        <string>Ctrl+X</string>
+                      </property>
+                    </widget>
+                  </widget>
+                </item>
+              </layout>
+            </item>
            <item>
             <widget class="QScrollArea" name="scrollArea">
              <property name="widgetResizable">

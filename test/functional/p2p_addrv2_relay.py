@@ -86,11 +86,6 @@ class AddrTest(BitcoinTestFramework):
         addr_source = self.nodes[0].add_p2p_connection(P2PInterface())
         msg = msg_addrv2()
 
-        self.log.info('Send too-large addrv2 message')
-        msg.addrs = ADDRS * 101
-        with self.nodes[0].assert_debug_log(['addrv2 message size = 1010']):
-            addr_source.send_and_ping(msg)
-
         self.log.info('Check that addrv2 message content is relayed and added to addrman')
         addr_receiver = self.nodes[0].add_p2p_connection(AddrReceiver())
         msg.addrs = ADDRS
@@ -106,6 +101,13 @@ class AddrTest(BitcoinTestFramework):
         assert addr_receiver.addrv2_received_and_checked
         assert_equal(len(self.nodes[0].getnodeaddresses(count=0, network="i2p")), 0)
 
+        self.log.info('Send too-large addrv2 message')
+        msg.addrs = ADDRS * 101
+        with self.nodes[0].assert_debug_log(['addrv2 message size = 1010']):
+            addr_source.send_message(msg)
+            addr_source.wait_for_disconnect()
+
+
 
 if __name__ == '__main__':
-    AddrTest().main()
+    AddrTest(__file__).main()

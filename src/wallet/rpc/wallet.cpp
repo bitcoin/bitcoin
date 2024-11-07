@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <core_io.h>
 #include <key_io.h>
@@ -68,7 +68,7 @@ static RPCHelpMan getwalletinfo()
                             {RPCResult::Type::NUM, "duration", "elapsed seconds since scan start"},
                             {RPCResult::Type::NUM, "progress", "scanning progress percentage [0.0, 1.0]"},
                         }, /*skip_type_check=*/true},
-                        {RPCResult::Type::BOOL, "descriptors", "whether this wallet uses descriptors for scriptPubKey management"},
+                        {RPCResult::Type::BOOL, "descriptors", "whether this wallet uses descriptors for output script management"},
                         {RPCResult::Type::BOOL, "external_signer", "whether this wallet is configured to use an external signer such as a hardware wallet"},
                         {RPCResult::Type::BOOL, "blank", "Whether this wallet intentionally does not contain any keys, scripts, or descriptors"},
                         {RPCResult::Type::NUM_TIME, "birthtime", /*optional=*/true, "The start time for blocks scanning. It could be modified by (re)importing any descriptor with an earlier timestamp."},
@@ -169,7 +169,7 @@ static RPCHelpMan listwalletdir()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue wallets(UniValue::VARR);
-    for (const auto& path : ListDatabases(GetWalletDir())) {
+    for (const auto& [path, _] : ListDatabases(GetWalletDir())) {
         UniValue wallet(UniValue::VOBJ);
         wallet.pushKV("name", path.utf8string());
         wallets.push_back(std::move(wallet));
@@ -495,7 +495,7 @@ static RPCHelpMan unloadwallet()
         }
     }
 
-    UnloadWallet(std::move(wallet));
+    WaitForDeleteWallet(std::move(wallet));
 
     UniValue result(UniValue::VOBJ);
     PushWarnings(warnings, result);

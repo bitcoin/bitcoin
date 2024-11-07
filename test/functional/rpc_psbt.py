@@ -8,6 +8,9 @@ from decimal import Decimal
 from itertools import product
 from random import randbytes
 
+from test_framework.blocktools import (
+    MAX_STANDARD_TX_WEIGHT,
+)
 from test_framework.descriptors import descsum_create
 from test_framework.key import H_POINT
 from test_framework.messages import (
@@ -16,6 +19,7 @@ from test_framework.messages import (
     CTxIn,
     CTxOut,
     MAX_BIP125_RBF_SEQUENCE,
+    WITNESS_SCALE_FACTOR,
 )
 from test_framework.psbt import (
     PSBT,
@@ -30,6 +34,7 @@ from test_framework.psbt import (
     PSBT_OUT_TAP_TREE,
 )
 from test_framework.script import CScript, OP_TRUE
+from test_framework.script_util import MIN_STANDARD_TX_NONWITNESS_SIZE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_approx,
@@ -67,6 +72,28 @@ class PSBTTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+
+    def test_psbt_incomplete_after_invalid_modification(self):
+        self.log.info("Check that PSBT is correctly marked as incomplete after invalid modification")
+        node = self.nodes[2]
+        wallet = node.get_wallet_rpc(self.default_wallet_name)
+        address = wallet.getnewaddress()
+        wallet.sendtoaddress(address=address, amount=1.0)
+        self.generate(node, nblocks=1, sync_fun=lambda: self.sync_all(self.nodes[:2]))
+
+        utxos = wallet.listunspent(addresses=[address])
+        psbt = wallet.createpsbt([{"txid": utxos[0]["txid"], "vout": utxos[0]["vout"]}], [{wallet.getnewaddress(): 0.9999}])
+        signed_psbt = wallet.walletprocesspsbt(psbt)["psbt"]
+
+        # Modify the raw transaction by changing the output address, so the signature is no longer valid
+        signed_psbt_obj = PSBT.from_base64(signed_psbt)
+        substitute_addr = wallet.getnewaddress()
+        raw = wallet.createrawtransaction([{"txid": utxos[0]["txid"], "vout": utxos[0]["vout"]}], [{substitute_addr: 0.9999}])
+        signed_psbt_obj.g.map[PSBT_GLOBAL_UNSIGNED_TX] = bytes.fromhex(raw)
+
+        # Check that the walletprocesspsbt call succeeds but also recognizes that the transaction is not complete
+        signed_psbt_incomplete = wallet.walletprocesspsbt(signed_psbt_obj.to_base64(), finalize=False)
+        assert signed_psbt_incomplete["complete"] is False
 
     def test_utxo_conversion(self):
         self.log.info("Check that non-witness UTXOs are removed for segwit v1+ inputs")
@@ -185,6 +212,46 @@ class PSBTTest(BitcoinTestFramework):
     def run_test(self):
         # Create and fund a raw tx for sending 10 BTC
         psbtx1 = self.nodes[0].walletcreatefundedpsbt([], {self.nodes[2].getnewaddress():10})['psbt']
+
+        self.log.info("Test for invalid maximum transaction weights")
+        dest_arg = [{self.nodes[0].getnewaddress(): 1}]
+        min_tx_weight = MIN_STANDARD_TX_NONWITNESS_SIZE * WITNESS_SCALE_FACTOR
+        assert_raises_rpc_error(-4, f"Maximum transaction weight must be between {min_tx_weight} and {MAX_STANDARD_TX_WEIGHT}", self.nodes[0].walletcreatefundedpsbt, [], dest_arg, 0, {"max_tx_weight": -1})
+        assert_raises_rpc_error(-4, f"Maximum transaction weight must be between {min_tx_weight} and {MAX_STANDARD_TX_WEIGHT}", self.nodes[0].walletcreatefundedpsbt, [], dest_arg, 0, {"max_tx_weight": 0})
+        assert_raises_rpc_error(-4, f"Maximum transaction weight must be between {min_tx_weight} and {MAX_STANDARD_TX_WEIGHT}", self.nodes[0].walletcreatefundedpsbt, [], dest_arg, 0, {"max_tx_weight": MAX_STANDARD_TX_WEIGHT + 1})
+
+        # Base transaction vsize: version (4) + locktime (4) + input count (1) + witness overhead (1) = 10 vbytes
+        base_tx_vsize = 10
+        # One P2WPKH output vsize: outpoint (31 vbytes)
+        p2wpkh_output_vsize = 31
+        # 1 vbyte for output count
+        output_count = 1
+        tx_weight_without_inputs = (base_tx_vsize + output_count + p2wpkh_output_vsize) * WITNESS_SCALE_FACTOR
+        # min_tx_weight is greater than transaction weight without inputs
+        assert_greater_than(min_tx_weight, tx_weight_without_inputs)
+
+        # In order to test for when the passed max weight is less than the transaction weight without inputs
+        # Define destination with two outputs.
+        dest_arg_large = [{self.nodes[0].getnewaddress(): 1}, {self.nodes[0].getnewaddress(): 1}]
+        large_tx_vsize_without_inputs = base_tx_vsize + output_count + (p2wpkh_output_vsize * 2)
+        large_tx_weight_without_inputs = large_tx_vsize_without_inputs * WITNESS_SCALE_FACTOR
+        assert_greater_than(large_tx_weight_without_inputs, min_tx_weight)
+        # Test for max_tx_weight less than Transaction weight without inputs
+        assert_raises_rpc_error(-4, "Maximum transaction weight is less than transaction weight without inputs", self.nodes[0].walletcreatefundedpsbt, [], dest_arg_large, 0, {"max_tx_weight": min_tx_weight})
+        assert_raises_rpc_error(-4, "Maximum transaction weight is less than transaction weight without inputs", self.nodes[0].walletcreatefundedpsbt, [], dest_arg_large, 0, {"max_tx_weight": large_tx_weight_without_inputs})
+
+        # Test for max_tx_weight just enough to include inputs but not change output
+        assert_raises_rpc_error(-4, "Maximum transaction weight is too low, can not accommodate change output", self.nodes[0].walletcreatefundedpsbt, [], dest_arg_large, 0, {"max_tx_weight": (large_tx_vsize_without_inputs + 1) * WITNESS_SCALE_FACTOR})
+        self.log.info("Test that a funded PSBT is always faithful to max_tx_weight option")
+        large_tx_vsize_with_change = large_tx_vsize_without_inputs + p2wpkh_output_vsize
+        # It's enough but won't accommodate selected input size
+        assert_raises_rpc_error(-4, "The inputs size exceeds the maximum weight", self.nodes[0].walletcreatefundedpsbt, [], dest_arg_large, 0, {"max_tx_weight": (large_tx_vsize_with_change) * WITNESS_SCALE_FACTOR})
+
+        max_tx_weight_sufficient = 1000 # 1k vbytes is enough
+        psbt = self.nodes[0].walletcreatefundedpsbt(outputs=dest_arg,locktime=0, options={"max_tx_weight": max_tx_weight_sufficient})["psbt"]
+        weight = self.nodes[0].decodepsbt(psbt)["tx"]["weight"]
+        # ensure the transaction's weight is below the specified max_tx_weight.
+        assert_greater_than_or_equal(max_tx_weight_sufficient, weight)
 
         # If inputs are specified, do not automatically add more:
         utxo1 = self.nodes[0].listunspent()[0]
@@ -589,6 +656,7 @@ class PSBTTest(BitcoinTestFramework):
 
         if self.options.descriptors:
             self.test_utxo_conversion()
+        self.test_psbt_incomplete_after_invalid_modification()
 
         self.test_input_confs_control()
 
@@ -700,11 +768,9 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(analysis['next'], 'creator')
         assert_equal(analysis['error'], 'PSBT is not valid. Output amount invalid')
 
-        analysis = self.nodes[0].analyzepsbt('cHNidP8BAJoCAAAAAkvEW8NnDtdNtDpsmze+Ht2LH35IJcKv00jKAlUs21RrAwAAAAD/////S8Rbw2cO1020OmybN74e3Ysffkglwq/TSMoCVSzbVGsBAAAAAP7///8CwLYClQAAAAAWABSNJKzjaUb3uOxixsvh1GGE3fW7zQD5ApUAAAAAFgAUKNw0x8HRctAgmvoevm4u1SbN7XIAAAAAAAEAnQIAAAACczMa321tVHuN4GKWKRncycI22aX3uXgwSFUKM2orjRsBAAAAAP7///9zMxrfbW1Ue43gYpYpGdzJwjbZpfe5eDBIVQozaiuNGwAAAAAA/v///wIA+QKVAAAAABl2qRT9zXUVA8Ls5iVqynLHe5/vSe1XyYisQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAAAAAQEfQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAA==')
-        assert_equal(analysis['next'], 'creator')
-        assert_equal(analysis['error'], 'PSBT is not valid. Input 0 specifies invalid prevout')
+        assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].analyzepsbt, "cHNidP8BAJoCAAAAAkvEW8NnDtdNtDpsmze+Ht2LH35IJcKv00jKAlUs21RrAwAAAAD/////S8Rbw2cO1020OmybN74e3Ysffkglwq/TSMoCVSzbVGsBAAAAAP7///8CwLYClQAAAAAWABSNJKzjaUb3uOxixsvh1GGE3fW7zQD5ApUAAAAAFgAUKNw0x8HRctAgmvoevm4u1SbN7XIAAAAAAAEAnQIAAAACczMa321tVHuN4GKWKRncycI22aX3uXgwSFUKM2orjRsBAAAAAP7///9zMxrfbW1Ue43gYpYpGdzJwjbZpfe5eDBIVQozaiuNGwAAAAAA/v///wIA+QKVAAAAABl2qRT9zXUVA8Ls5iVqynLHe5/vSe1XyYisQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAAAAAQEfQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAA==")
 
-        assert_raises_rpc_error(-25, 'Inputs missing or spent', self.nodes[0].walletprocesspsbt, 'cHNidP8BAJoCAAAAAkvEW8NnDtdNtDpsmze+Ht2LH35IJcKv00jKAlUs21RrAwAAAAD/////S8Rbw2cO1020OmybN74e3Ysffkglwq/TSMoCVSzbVGsBAAAAAP7///8CwLYClQAAAAAWABSNJKzjaUb3uOxixsvh1GGE3fW7zQD5ApUAAAAAFgAUKNw0x8HRctAgmvoevm4u1SbN7XIAAAAAAAEAnQIAAAACczMa321tVHuN4GKWKRncycI22aX3uXgwSFUKM2orjRsBAAAAAP7///9zMxrfbW1Ue43gYpYpGdzJwjbZpfe5eDBIVQozaiuNGwAAAAAA/v///wIA+QKVAAAAABl2qRT9zXUVA8Ls5iVqynLHe5/vSe1XyYisQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAAAAAQEfQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAA==')
+        assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].walletprocesspsbt, "cHNidP8BAJoCAAAAAkvEW8NnDtdNtDpsmze+Ht2LH35IJcKv00jKAlUs21RrAwAAAAD/////S8Rbw2cO1020OmybN74e3Ysffkglwq/TSMoCVSzbVGsBAAAAAP7///8CwLYClQAAAAAWABSNJKzjaUb3uOxixsvh1GGE3fW7zQD5ApUAAAAAFgAUKNw0x8HRctAgmvoevm4u1SbN7XIAAAAAAAEAnQIAAAACczMa321tVHuN4GKWKRncycI22aX3uXgwSFUKM2orjRsBAAAAAP7///9zMxrfbW1Ue43gYpYpGdzJwjbZpfe5eDBIVQozaiuNGwAAAAAA/v///wIA+QKVAAAAABl2qRT9zXUVA8Ls5iVqynLHe5/vSe1XyYisQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAAAAAQEfQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAA==")
 
         self.log.info("Test that we can fund psbts with external inputs specified")
 
@@ -987,4 +1053,4 @@ class PSBTTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    PSBTTest().main()
+    PSBTTest(__file__).main()

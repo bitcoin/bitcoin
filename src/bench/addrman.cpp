@@ -4,12 +4,18 @@
 
 #include <addrman.h>
 #include <bench/bench.h>
+#include <compat/compat.h>
+#include <netaddress.h>
 #include <netbase.h>
 #include <netgroup.h>
+#include <protocol.h>
 #include <random.h>
+#include <span.h>
+#include <uint256.h>
 #include <util/check.h>
 #include <util/time.h>
 
+#include <cstring>
 #include <optional>
 #include <vector>
 
@@ -127,7 +133,7 @@ static void AddrManSelectByNetwork(benchmark::Bench& bench)
     FillAddrMan(addrman);
 
     bench.run([&] {
-        (void)addrman.Select(/*new_only=*/false, NET_I2P);
+        (void)addrman.Select(/*new_only=*/false, {NET_I2P});
     });
 }
 

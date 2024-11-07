@@ -105,4 +105,4 @@ class WalletChangeAddressTest(BitcoinTestFramework):
         self.assert_change_pos(w1, tx, 0)
 
 if __name__ == '__main__':
-    WalletChangeAddressTest().main()
+    WalletChangeAddressTest(__file__).main()

@@ -12,16 +12,8 @@
 
 #include <cassert>
 
-/** Expiration time for orphan transactions */
-static constexpr auto ORPHAN_TX_EXPIRE_TIME{20min};
-/** Minimum time between orphan transactions expire time checks */
-static constexpr auto ORPHAN_TX_EXPIRE_INTERVAL{5min};
-
-
 bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
 {
-    LOCK(m_mutex);
-
     const Txid& hash = tx->GetHash();
     const Wtxid& wtxid = tx->GetWitnessHash();
     if (m_orphans.count(wtxid))
@@ -37,31 +29,24 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
     unsigned int sz = GetTransactionWeight(*tx);
     if (sz > MAX_STANDARD_TX_WEIGHT)
     {
-        LogPrint(BCLog::TXPACKAGES, "ignoring large orphan tx (size: %u, txid: %s, wtxid: %s)\n", sz, hash.ToString(), wtxid.ToString());
+        LogDebug(BCLog::TXPACKAGES, "ignoring large orphan tx (size: %u, txid: %s, wtxid: %s)\n", sz, hash.ToString(), wtxid.ToString());
         return false;
     }
 
-    auto ret = m_orphans.emplace(wtxid, OrphanTx{tx, peer, Now<NodeSeconds>() + ORPHAN_TX_EXPIRE_TIME, m_orphan_list.size()});
+    auto ret = m_orphans.emplace(wtxid, OrphanTx{{tx, peer, Now<NodeSeconds>() + ORPHAN_TX_EXPIRE_TIME}, m_orphan_list.size()});
     assert(ret.second);
     m_orphan_list.push_back(ret.first);
     for (const CTxIn& txin : tx->vin) {
         m_outpoint_to_orphan_it[txin.prevout].insert(ret.first);
     }
 
-    LogPrint(BCLog::TXPACKAGES, "stored orphan tx %s (wtxid=%s), weight: %u (mapsz %u outsz %u)\n", hash.ToString(), wtxid.ToString(), sz,
+    LogDebug(BCLog::TXPACKAGES, "stored orphan tx %s (wtxid=%s), weight: %u (mapsz %u outsz %u)\n", hash.ToString(), wtxid.ToString(), sz,
              m_orphans.size(), m_outpoint_to_orphan_it.size());
     return true;
 }
 
 int TxOrphanage::EraseTx(const Wtxid& wtxid)
 {
-    LOCK(m_mutex);
-    return EraseTxNoLock(wtxid);
-}
-
-int TxOrphanage::EraseTxNoLock(const Wtxid& wtxid)
-{
-    AssertLockHeld(m_mutex);
     std::map<Wtxid, OrphanTx>::iterator it = m_orphans.find(wtxid);
     if (it == m_orphans.end())
         return 0;
@@ -87,7 +72,7 @@ int TxOrphanage::EraseTxNoLock(const Wtxid& wtxid)
     const auto& txid = it->second.tx->GetHash();
     // Time spent in orphanage = difference between current and entry time.
     // Entry time is equal to ORPHAN_TX_EXPIRE_TIME earlier than entry's expiry.
-    LogPrint(BCLog::TXPACKAGES, "   removed orphan tx %s (wtxid=%s) after %ds\n", txid.ToString(), wtxid.ToString(),
+    LogDebug(BCLog::TXPACKAGES, "   removed orphan tx %s (wtxid=%s) after %ds\n", txid.ToString(), wtxid.ToString(),
              Ticks<std::chrono::seconds>(NodeClock::now() + ORPHAN_TX_EXPIRE_TIME - it->second.nTimeExpire));
     m_orphan_list.pop_back();
 
@@ -97,8 +82,6 @@ int TxOrphanage::EraseTxNoLock(const Wtxid& wtxid)
 
 void TxOrphanage::EraseForPeer(NodeId peer)
 {
-    LOCK(m_mutex);
-
     m_peer_work_set.erase(peer);
 
     int nErased = 0;
@@ -108,16 +91,14 @@ void TxOrphanage::EraseForPeer(NodeId peer)
         // increment to avoid iterator becoming invalid after erasure
         const auto& [wtxid, orphan] = *iter++;
         if (orphan.fromPeer == peer) {
-            nErased += EraseTxNoLock(wtxid);
+            nErased += EraseTx(wtxid);
         }
     }
-    if (nErased > 0) LogPrint(BCLog::TXPACKAGES, "Erased %d orphan transaction(s) from peer=%d\n", nErased, peer);
+    if (nErased > 0) LogDebug(BCLog::TXPACKAGES, "Erased %d orphan transaction(s) from peer=%d\n", nErased, peer);
 }
 
 void TxOrphanage::LimitOrphans(unsigned int max_orphans, FastRandomContext& rng)
 {
-    LOCK(m_mutex);
-
     unsigned int nEvicted = 0;
     auto nNow{Now<NodeSeconds>()};
     if (m_next_sweep <= nNow) {
@@ -129,30 +110,27 @@ void TxOrphanage::LimitOrphans(unsigned int max_orphans, FastRandomContext& rng)
         {
             std::map<Wtxid, OrphanTx>::iterator maybeErase = iter++;
             if (maybeErase->second.nTimeExpire <= nNow) {
-                nErased += EraseTxNoLock(maybeErase->second.tx->GetWitnessHash());
+                nErased += EraseTx(maybeErase->second.tx->GetWitnessHash());
             } else {
                 nMinExpTime = std::min(maybeErase->second.nTimeExpire, nMinExpTime);
             }
         }
         // Sweep again 5 minutes after the next entry that expires in order to batch the linear scan.
         m_next_sweep = nMinExpTime + ORPHAN_TX_EXPIRE_INTERVAL;
-        if (nErased > 0) LogPrint(BCLog::TXPACKAGES, "Erased %d orphan tx due to expiration\n", nErased);
+        if (nErased > 0) LogDebug(BCLog::TXPACKAGES, "Erased %d orphan tx due to expiration\n", nErased);
     }
     while (m_orphans.size() > max_orphans)
     {
         // Evict a random orphan:
         size_t randompos = rng.randrange(m_orphan_list.size());
-        EraseTxNoLock(m_orphan_list[randompos]->second.tx->GetWitnessHash());
+        EraseTx(m_orphan_list[randompos]->second.tx->GetWitnessHash());
         ++nEvicted;
     }
-    if (nEvicted > 0) LogPrint(BCLog::TXPACKAGES, "orphanage overflow, removed %u tx\n", nEvicted);
+    if (nEvicted > 0) LogDebug(BCLog::TXPACKAGES, "orphanage overflow, removed %u tx\n", nEvicted);
 }
 
 void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx)
 {
-    LOCK(m_mutex);
-
-
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
         const auto it_by_prev = m_outpoint_to_orphan_it.find(COutPoint(tx.GetHash(), i));
         if (it_by_prev != m_outpoint_to_orphan_it.end()) {
@@ -162,7 +140,7 @@ void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx)
                 std::set<Wtxid>& orphan_work_set = m_peer_work_set.try_emplace(elem->second.fromPeer).first->second;
                 // Add this tx to the work set
                 orphan_work_set.insert(elem->first);
-                LogPrint(BCLog::TXPACKAGES, "added %s (wtxid=%s) to peer %d workset\n",
+                LogDebug(BCLog::TXPACKAGES, "added %s (wtxid=%s) to peer %d workset\n",
                          tx.GetHash().ToString(), tx.GetWitnessHash().ToString(), elem->second.fromPeer);
             }
         }
@@ -171,14 +149,11 @@ void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx)
 
 bool TxOrphanage::HaveTx(const Wtxid& wtxid) const
 {
-    LOCK(m_mutex);
     return m_orphans.count(wtxid);
 }
 
 CTransactionRef TxOrphanage::GetTxToReconsider(NodeId peer)
 {
-    LOCK(m_mutex);
-
     auto work_set_it = m_peer_work_set.find(peer);
     if (work_set_it != m_peer_work_set.end()) {
         auto& work_set = work_set_it->second;
@@ -197,8 +172,6 @@ CTransactionRef TxOrphanage::GetTxToReconsider(NodeId peer)
 
 bool TxOrphanage::HaveTxToReconsider(NodeId peer)
 {
-    LOCK(m_mutex);
-
     auto work_set_it = m_peer_work_set.find(peer);
     if (work_set_it != m_peer_work_set.end()) {
         auto& work_set = work_set_it->second;
@@ -209,8 +182,6 @@ bool TxOrphanage::HaveTxToReconsider(NodeId peer)
 
 void TxOrphanage::EraseForBlock(const CBlock& block)
 {
-    LOCK(m_mutex);
-
     std::vector<Wtxid> vOrphanErase;
 
     for (const CTransactionRef& ptx : block.vtx) {
@@ -231,16 +202,14 @@ void TxOrphanage::EraseForBlock(const CBlock& block)
     if (vOrphanErase.size()) {
         int nErased = 0;
         for (const auto& orphanHash : vOrphanErase) {
-            nErased += EraseTxNoLock(orphanHash);
+            nErased += EraseTx(orphanHash);
         }
-        LogPrint(BCLog::TXPACKAGES, "Erased %d orphan transaction(s) included or conflicted by block\n", nErased);
+        LogDebug(BCLog::TXPACKAGES, "Erased %d orphan transaction(s) included or conflicted by block\n", nErased);
     }
 }
 
 std::vector<CTransactionRef> TxOrphanage::GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId nodeid) const
 {
-    LOCK(m_mutex);
-
     // First construct a vector of iterators to ensure we do not return duplicates of the same tx
     // and so we can sort by nTimeExpire.
     std::vector<OrphanMap::iterator> iters;
@@ -281,8 +250,6 @@ std::vector<CTransactionRef> TxOrphanage::GetChildrenFromSamePeer(const CTransac
 
 std::vector<std::pair<CTransactionRef, NodeId>> TxOrphanage::GetChildrenFromDifferentPeer(const CTransactionRef& parent, NodeId nodeid) const
 {
-    LOCK(m_mutex);
-
     // First construct vector of iterators to ensure we do not return duplicates of the same tx.
     std::vector<OrphanMap::iterator> iters;
 
@@ -309,4 +276,14 @@ std::vector<std::pair<CTransactionRef, NodeId>> TxOrphanage::GetChildrenFromDiff
         children_found.emplace_back(child_iter->second.tx, child_iter->second.fromPeer);
     }
     return children_found;
+}
+
+std::vector<TxOrphanage::OrphanTxBase> TxOrphanage::GetOrphanTransactions() const
+{
+    std::vector<OrphanTxBase> ret;
+    ret.reserve(m_orphans.size());
+    for (auto const& o : m_orphans) {
+        ret.push_back({o.second.tx, o.second.fromPeer, o.second.nTimeExpire});
+    }
+    return ret;
 }

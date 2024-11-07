@@ -412,4 +412,4 @@ class PackageRelayTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    PackageRelayTest().main()
+    PackageRelayTest(__file__).main()

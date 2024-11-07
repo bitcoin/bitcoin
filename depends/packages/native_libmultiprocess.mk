@@ -1,8 +1,8 @@
 package=native_libmultiprocess
-$(package)_version=8da797c5f1644df1bffd84d10c1ae9836dc70d60
+$(package)_version=abe254b9734f2e2b220d1456de195532d6e6ac1e
 $(package)_download_path=https://github.com/chaincodelabs/libmultiprocess/archive
 $(package)_file_name=$($(package)_version).tar.gz
-$(package)_sha256_hash=030f4d393d2ac9deba98d2e1973e22fc439ffc009d5f8ae3225c90639f86beb0
+$(package)_sha256_hash=85777073259fdc75d24ac5777a19991ec1156c5f12db50b252b861c95dcb4f46
 $(package)_dependencies=native_capnp
 
 define $(package)_config_cmds

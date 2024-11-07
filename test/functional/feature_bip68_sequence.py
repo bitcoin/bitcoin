@@ -78,8 +78,8 @@ class BIP68Test(BitcoinTestFramework):
         self.log.info("Activating BIP68 (and 112/113)")
         self.activateCSV()
 
-        self.log.info("Verifying nVersion=2 transactions are standard.")
-        self.log.info("Note that nVersion=2 transactions are always standard (independent of BIP68 activation status).")
+        self.log.info("Verifying version=2 transactions are standard.")
+        self.log.info("Note that version=2 transactions are always standard (independent of BIP68 activation status).")
         self.test_version2_relay()
 
         self.log.info("Passed")
@@ -107,7 +107,7 @@ class BIP68Test(BitcoinTestFramework):
         # This transaction will enable sequence-locks, so this transaction should
         # fail
         tx2 = CTransaction()
-        tx2.nVersion = 2
+        tx2.version = 2
         sequence_value = sequence_value & 0x7fffffff
         tx2.vin = [CTxIn(COutPoint(tx1_id, 0), nSequence=sequence_value)]
         tx2.wit.vtxinwit = [CTxInWitness()]
@@ -119,7 +119,7 @@ class BIP68Test(BitcoinTestFramework):
 
         # Setting the version back down to 1 should disable the sequence lock,
         # so this should be accepted.
-        tx2.nVersion = 1
+        tx2.version = 1
 
         self.wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=tx2.serialize().hex())
 
@@ -159,7 +159,7 @@ class BIP68Test(BitcoinTestFramework):
             using_sequence_locks = False
 
             tx = CTransaction()
-            tx.nVersion = 2
+            tx.version = 2
             value = 0
             for j in range(num_inputs):
                 sequence_value = 0xfffffffe # this disables sequence locks
@@ -228,7 +228,7 @@ class BIP68Test(BitcoinTestFramework):
         # Anyone-can-spend mempool tx.
         # Sequence lock of 0 should pass.
         tx2 = CTransaction()
-        tx2.nVersion = 2
+        tx2.version = 2
         tx2.vin = [CTxIn(COutPoint(tx1.sha256, 0), nSequence=0)]
         tx2.vout = [CTxOut(int(tx1.vout[0].nValue - self.relayfee * COIN), SCRIPT_W0_SH_OP_TRUE)]
         self.wallet.sign_tx(tx=tx2)
@@ -246,7 +246,7 @@ class BIP68Test(BitcoinTestFramework):
                 sequence_value |= SEQUENCE_LOCKTIME_TYPE_FLAG
 
             tx = CTransaction()
-            tx.nVersion = 2
+            tx.version = 2
             tx.vin = [CTxIn(COutPoint(orig_tx.sha256, 0), nSequence=sequence_value)]
             tx.wit.vtxinwit = [CTxInWitness()]
             tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
@@ -360,7 +360,7 @@ class BIP68Test(BitcoinTestFramework):
 
         # Make an anyone-can-spend transaction
         tx2 = CTransaction()
-        tx2.nVersion = 1
+        tx2.version = 1
         tx2.vin = [CTxIn(COutPoint(tx1.sha256, 0), nSequence=0)]
         tx2.vout = [CTxOut(int(tx1.vout[0].nValue - self.relayfee * COIN), SCRIPT_W0_SH_OP_TRUE)]
 
@@ -376,7 +376,7 @@ class BIP68Test(BitcoinTestFramework):
         sequence_value = 100 # 100 block relative locktime
 
         tx3 = CTransaction()
-        tx3.nVersion = 2
+        tx3.version = 2
         tx3.vin = [CTxIn(COutPoint(tx2.sha256, 0), nSequence=sequence_value)]
         tx3.wit.vtxinwit = [CTxInWitness()]
         tx3.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
@@ -412,4 +412,4 @@ class BIP68Test(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    BIP68Test().main()
+    BIP68Test(__file__).main()

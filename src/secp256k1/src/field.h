@@ -81,7 +81,6 @@ static const secp256k1_fe secp256k1_const_beta = SECP256K1_FE_CONST(
 #  define secp256k1_fe_normalizes_to_zero secp256k1_fe_impl_normalizes_to_zero
 #  define secp256k1_fe_normalizes_to_zero_var secp256k1_fe_impl_normalizes_to_zero_var
 #  define secp256k1_fe_set_int secp256k1_fe_impl_set_int
-#  define secp256k1_fe_clear secp256k1_fe_impl_clear
 #  define secp256k1_fe_is_zero secp256k1_fe_impl_is_zero
 #  define secp256k1_fe_is_odd secp256k1_fe_impl_is_odd
 #  define secp256k1_fe_cmp_var secp256k1_fe_impl_cmp_var
@@ -144,11 +143,7 @@ static int secp256k1_fe_normalizes_to_zero_var(const secp256k1_fe *r);
  */
 static void secp256k1_fe_set_int(secp256k1_fe *r, int a);
 
-/** Set a field element to 0.
- *
- * On input, a does not need to be initialized.
- * On output, a represents 0, is normalized and has magnitude 0.
- */
+/** Clear a field element to prevent leaking sensitive information. */
 static void secp256k1_fe_clear(secp256k1_fe *a);
 
 /** Determine whether a represents field element 0.

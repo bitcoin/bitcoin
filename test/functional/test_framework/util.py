@@ -5,7 +5,7 @@
 """Helpful routines for regression testing."""
 
 from base64 import b64encode
-from decimal import Decimal, ROUND_DOWN
+from decimal import Decimal
 from subprocess import CalledProcessError
 import hashlib
 import inspect
@@ -14,13 +14,16 @@ import logging
 import os
 import pathlib
 import platform
+import random
 import re
 import time
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
 from collections.abc import Callable
-from typing import Optional
+from typing import Optional, Union
+
+SATOSHI_PRECISION = Decimal('0.00000001')
 
 logger = logging.getLogger("TestFramework.utils")
 
@@ -247,6 +250,12 @@ def ceildiv(a, b):
     return -(-a // b)
 
 
+def random_bitflip(data):
+    data = list(data)
+    data[random.randrange(len(data))] ^= (1 << (random.randrange(8)))
+    return bytes(data)
+
+
 def get_fee(tx_size, feerate_btc_kvb):
     """Calculate the fee in BTC given a feerate is BTC/kvB. Reflects CFeeRate::GetFee"""
     feerate_sat_kvb = int(feerate_btc_kvb * Decimal(1e8)) # Fee in sat/kvb as an int to avoid float precision errors
@@ -254,8 +263,9 @@ def get_fee(tx_size, feerate_btc_kvb):
     return target_fee_sat / Decimal(1e8) # Return result in  BTC
 
 
-def satoshi_round(amount):
-    return Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
+def satoshi_round(amount: Union[int, float, str], *, rounding: str) -> Decimal:
+    """Rounds a Decimal amount to the nearest satoshi using the specified rounding mode."""
+    return Decimal(amount).quantize(SATOSHI_PRECISION, rounding=rounding)
 
 
 def wait_until_helper_internal(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=None, timeout_factor=1.0):
@@ -304,14 +314,21 @@ def sha256sum_file(filename):
     return h.digest()
 
 
+def util_xor(data, key, *, offset):
+    data = bytearray(data)
+    for i in range(len(data)):
+        data[i] ^= key[(i + offset) % len(key)]
+    return bytes(data)
+
+
 # RPC/P2P connection constants and functions
 ############################################
 
 # The maximum number of nodes a single test can spawn
 MAX_NODES = 12
-# Don't assign rpc or p2p ports lower than this
+# Don't assign p2p, rpc or tor ports lower than this
 PORT_MIN = int(os.getenv('TEST_RUNNER_PORT_MIN', default=11000))
-# The number of ports to "reserve" for p2p and rpc, each
+# The number of ports to "reserve" for p2p, rpc and tor, each
 PORT_RANGE = 5000
 
 
@@ -351,7 +368,11 @@ def p2p_port(n):
 
 
 def rpc_port(n):
-    return PORT_MIN + PORT_RANGE + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
+    return p2p_port(n) + PORT_RANGE
+
+
+def tor_port(n):
+    return p2p_port(n) + PORT_RANGE * 2
 
 
 def rpc_url(datadir, i, chain, rpchost):
@@ -412,7 +433,6 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
         # in tests.
         f.write("peertimeout=999999999\n")
         f.write("printtoconsole=0\n")
-        f.write("upnp=0\n")
         f.write("natpmp=0\n")
         f.write("shrinkdebugfile=0\n")
         f.write("deprecatedrpc=create_bdb\n")  # Required to run the tests

@@ -2,10 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <stdint.h>
-#include <string>
-#include <vector>
-
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <boost/test/unit_test.hpp>
@@ -21,6 +17,13 @@
 #include <script/miniscript.h>
 #include <script/script_error.h>
 #include <script/signingprovider.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <string>
+#include <vector>
+
+using namespace util::hex_literals;
 
 namespace {
 
@@ -48,9 +51,9 @@ struct TestData {
     TestData()
     {
         // All our signatures sign (and are required to sign) this constant message.
-        auto const MESSAGE_HASH = uint256S("f5cd94e18b6fe77dd7aca9e35c2b0c9cbd86356c80a71065");
+        constexpr uint256 MESSAGE_HASH{"0000000000000000f5cd94e18b6fe77dd7aca9e35c2b0c9cbd86356c80a71065"};
         // We don't pass additional randomness when creating a schnorr signature.
-        auto const EMPTY_AUX{uint256S("")};
+        const auto EMPTY_AUX{uint256::ZERO};
 
         // We generate 255 public keys and 255 hashes of each type.
         for (int i = 1; i <= 255; ++i) {
@@ -274,7 +277,7 @@ public:
         XOnlyPubKey pk{pubkey};
         auto it = g_testdata->schnorr_signatures.find(pk);
         if (it == g_testdata->schnorr_signatures.end()) return false;
-        return sig == it->second;
+        return std::ranges::equal(sig, it->second);
     }
 
     bool CheckLockTime(const CScriptNum& locktime) const override {
@@ -340,13 +343,14 @@ void SatisfactionToWitness(miniscript::MiniscriptContext ctx, CScriptWitness& wi
     witness.stack.push_back(*builder.GetSpendData().scripts.begin()->second.begin());
 }
 
+struct MiniScriptTest : BasicTestingSetup {
 /** Run random satisfaction tests. */
 void TestSatisfy(const KeyConverter& converter, const std::string& testcase, const NodeRef& node) {
     auto script = node->ToScript(converter);
     auto challenges = FindChallenges(node); // Find all challenges in the generated miniscript.
     std::vector<Challenge> challist(challenges.begin(), challenges.end());
     for (int iter = 0; iter < 3; ++iter) {
-        Shuffle(challist.begin(), challist.end(), g_insecure_rand_ctx);
+        std::shuffle(challist.begin(), challist.end(), m_rng);
         Satisfier satisfier(converter.MsContext());
         TestSignatureChecker checker(satisfier);
         bool prev_mal_success = false, prev_nonmal_success = false;
@@ -488,10 +492,11 @@ void Test(const std::string& ms, const std::string& hexscript, const std::string
          /*opslimit=*/-1, /*stacklimit=*/-1,
          /*max_wit_size=*/std::nullopt, /*max_tap_wit_size=*/std::nullopt, /*stack_exec=*/std::nullopt);
 }
+}; // struct MiniScriptTest
 
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(miniscript_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(miniscript_tests, MiniScriptTest)
 
 BOOST_AUTO_TEST_CASE(fixed_tests)
 {
@@ -593,11 +598,11 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     //  - no pubkey before the CHECKSIG
     constexpr KeyConverter tap_converter{miniscript::MiniscriptContext::TAPSCRIPT};
     constexpr KeyConverter wsh_converter{miniscript::MiniscriptContext::P2WSH};
-    const auto no_pubkey{ParseHex("ac519c")};
+    const auto no_pubkey{"ac519c"_hex_u8};
     BOOST_CHECK(miniscript::FromScript({no_pubkey.begin(), no_pubkey.end()}, tap_converter) == nullptr);
-    const auto incomplete_multi_a{ParseHex("ba20c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5ba519c")};
+    const auto incomplete_multi_a{"ba20c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5ba519c"_hex_u8};
     BOOST_CHECK(miniscript::FromScript({incomplete_multi_a.begin(), incomplete_multi_a.end()}, tap_converter) == nullptr);
-    const auto incomplete_multi_a_2{ParseHex("ac2079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac20c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5ba519c")};
+    const auto incomplete_multi_a_2{"ac2079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac20c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5ba519c"_hex_u8};
     BOOST_CHECK(miniscript::FromScript({incomplete_multi_a_2.begin(), incomplete_multi_a_2.end()}, tap_converter) == nullptr);
     // Can use multi_a under Tapscript but not P2WSH.
     Test("and_v(v:multi_a(2,03d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85a,025601570cb47f238d2b0286db4a990fa0f3ba28d1a319f5e7cf55c2a2444da7cc),after(1231488000))", "?", "20d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85aac205601570cb47f238d2b0286db4a990fa0f3ba28d1a319f5e7cf55c2a2444da7ccba529d0400046749b1", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG | TESTMODE_P2WSH_INVALID, 4, 2, {}, {}, 3);
@@ -642,12 +647,12 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
 
     // Misc unit tests
     // A Script with a non minimal push is invalid
-    std::vector<unsigned char> nonminpush = ParseHex("0000210232780000feff00ffffffffffff21ff005f00ae21ae00000000060602060406564c2102320000060900fe00005f00ae21ae00100000060606060606000000000000000000000000000000000000000000000000000000000000000000");
+    constexpr auto nonminpush{"0000210232780000feff00ffffffffffff21ff005f00ae21ae00000000060602060406564c2102320000060900fe00005f00ae21ae00100000060606060606000000000000000000000000000000000000000000000000000000000000000000"_hex_u8};
     const CScript nonminpush_script(nonminpush.begin(), nonminpush.end());
     BOOST_CHECK(miniscript::FromScript(nonminpush_script, wsh_converter) == nullptr);
     BOOST_CHECK(miniscript::FromScript(nonminpush_script, tap_converter) == nullptr);
     // A non-minimal VERIFY (<key> CHECKSIG VERIFY 1)
-    std::vector<unsigned char> nonminverify = ParseHex("2103a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7ac6951");
+    constexpr auto nonminverify{"2103a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7ac6951"_hex_u8};
     const CScript nonminverify_script(nonminverify.begin(), nonminverify.end());
     BOOST_CHECK(miniscript::FromScript(nonminverify_script, wsh_converter) == nullptr);
     BOOST_CHECK(miniscript::FromScript(nonminverify_script, tap_converter) == nullptr);
@@ -698,6 +703,12 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     BOOST_CHECK(ms_ins && ms_ins->IsValid() && !ms_ins->IsSane());
     const auto insane_sub = ms_ins->FindInsaneSub();
     BOOST_CHECK(insane_sub && *insane_sub->ToString(wsh_converter) == "and_b(after(1),a:after(1000000000))");
+
+    // Numbers can't be prefixed by a sign.
+    BOOST_CHECK(!miniscript::FromString("after(-1)", wsh_converter));
+    BOOST_CHECK(!miniscript::FromString("after(+1)", wsh_converter));
+    BOOST_CHECK(!miniscript::FromString("thresh(-1,pk(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204))", wsh_converter));
+    BOOST_CHECK(!miniscript::FromString("multi(+1,03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204)", wsh_converter));
 
     // Timelock tests
     Test("after(100)", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL); // only heightlock

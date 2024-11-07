@@ -63,7 +63,7 @@ struct IteratorComparator
     template<typename I>
     bool operator()(const I& a, const I& b) const
     {
-        return &(*a) < &(*b);
+        return a->first < b->first;
     }
 };
 

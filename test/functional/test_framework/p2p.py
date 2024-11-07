@@ -188,6 +188,7 @@ class P2PConnection(asyncio.Protocol):
         self.on_connection_send_msg = None
         self.recvbuf = b""
         self.magic_bytes = MAGIC_BYTES[net]
+        self.p2p_connected_to_node = dstport != 0
 
     def peer_connect(self, dstaddr, dstport, *, net, timeout_factor, supports_v2_p2p):
         self.peer_connect_helper(dstaddr, dstport, net, timeout_factor)
@@ -217,12 +218,18 @@ class P2PConnection(asyncio.Protocol):
     def connection_made(self, transport):
         """asyncio callback when a connection is opened."""
         assert not self._transport
-        logger.debug("Connected & Listening: %s:%d" % (self.dstaddr, self.dstport))
+        info = transport.get_extra_info("socket")
+        us = info.getsockname()
+        them = info.getpeername()
+        logger.debug(f"Connected: us={us[0]}:{us[1]}, them={them[0]}:{them[1]}")
+        self.dstaddr = them[0]
+        self.dstport = them[1]
         self._transport = transport
         # in an inbound connection to the TestNode with P2PConnection as the initiator, [TestNode <---- P2PConnection]
         # send the initial handshake immediately
         if self.supports_v2_p2p and self.v2_state.initiating and not self.v2_state.tried_v2_handshake:
             send_handshake_bytes = self.v2_state.initiate_v2_handshake()
+            logger.debug(f"sending {len(self.v2_state.sent_garbage)} bytes of garbage data")
             self.send_raw_message(send_handshake_bytes)
         # for v1 outbound connections, send version message immediately after opening
         # (for v2 outbound connections, send it after the initial v2 handshake)
@@ -262,6 +269,7 @@ class P2PConnection(asyncio.Protocol):
                     self.v2_state = None
                     return
                 elif send_handshake_bytes:
+                    logger.debug(f"sending {len(self.v2_state.sent_garbage)} bytes of garbage data")
                     self.send_raw_message(send_handshake_bytes)
                 elif send_handshake_bytes == b"":
                     return  # only after send_handshake_bytes are sent can `complete_handshake()` be done
@@ -801,12 +809,13 @@ class P2PDataStore(P2PInterface):
         self.getdata_requests = []
 
     def on_getdata(self, message):
-        """Check for the tx/block in our stores and if found, reply with an inv message."""
+        """Check for the tx/block in our stores and if found, reply with MSG_TX or MSG_BLOCK."""
         for inv in message.inv:
             self.getdata_requests.append(inv.hash)
-            if (inv.type & MSG_TYPE_MASK) == MSG_TX and inv.hash in self.tx_store.keys():
+            invtype = inv.type & MSG_TYPE_MASK
+            if (invtype == MSG_TX or invtype == MSG_WTX) and inv.hash in self.tx_store.keys():
                 self.send_message(msg_tx(self.tx_store[inv.hash]))
-            elif (inv.type & MSG_TYPE_MASK) == MSG_BLOCK and inv.hash in self.block_store.keys():
+            elif invtype == MSG_BLOCK and inv.hash in self.block_store.keys():
                 self.send_message(msg_block(self.block_store[inv.hash]))
             else:
                 logger.debug('getdata message type {} received.'.format(hex(inv.type)))

@@ -40,6 +40,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         self.test_no_blockhash()
         self.test_invalid_blockhash()
         self.test_reorg()
+        self.test_cant_read_block()
         self.test_double_spend()
         self.test_double_send()
         self.double_spends_filtered()
@@ -166,6 +167,31 @@ class ListSinceBlockTest(BitcoinTestFramework):
         transactions = self.nodes[0].listsinceblock(nodes1_last_blockhash)['transactions']
         found = next(tx for tx in transactions if tx['txid'] == senttx)
         assert_equal(found['blockheight'], self.nodes[0].getblockheader(nodes2_first_blockhash)['height'])
+
+    def test_cant_read_block(self):
+        self.log.info('Test the RPC error "Can\'t read block from disk"')
+
+        # Split network into two
+        self.split_network()
+
+        # generate on both sides
+        nodes1_last_blockhash = self.generate(self.nodes[1], 6, sync_fun=lambda: self.sync_all(self.nodes[:2]))[-1]
+        self.generate(self.nodes[2], 7, sync_fun=lambda: self.sync_all(self.nodes[2:]))[0]
+
+        self.join_network()
+
+        # Renaming the block file to induce unsuccessful block read
+        blk_dat = (self.nodes[0].blocks_path / "blk00000.dat")
+        blk_dat_moved = blk_dat.rename(self.nodes[0].blocks_path / "blk00000.dat.moved")
+        assert not blk_dat.exists()
+
+        # listsinceblock(nodes1_last_blockhash) should now fail as blocks are not accessible
+        assert_raises_rpc_error(-32603, "Can't read block from disk",
+            self.nodes[0].listsinceblock, nodes1_last_blockhash)
+
+        # Restoring block file
+        blk_dat_moved.rename(self.nodes[0].blocks_path / "blk00000.dat")
+        assert blk_dat.exists()
 
     def test_double_spend(self):
         '''
@@ -479,4 +505,4 @@ class ListSinceBlockTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    ListSinceBlockTest().main()
+    ListSinceBlockTest(__file__).main()

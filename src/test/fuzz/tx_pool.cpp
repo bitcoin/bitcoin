@@ -6,7 +6,7 @@
 #include <node/context.h>
 #include <node/mempool_args.h>
 #include <node/miner.h>
-#include <policy/v3_policy.h>
+#include <policy/truc_policy.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -15,12 +15,15 @@
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
 #include <test/util/txmempool.h>
+#include <util/check.h>
 #include <util/rbf.h>
+#include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
 
 using node::BlockAssembler;
 using node::NodeContext;
+using util::ToString;
 
 namespace {
 
@@ -116,7 +119,7 @@ void MockTime(FuzzedDataProvider& fuzzed_data_provider, const Chainstate& chains
     SetMockTime(time);
 }
 
-CTxMemPool MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeContext& node)
+std::unique_ptr<CTxMemPool> MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeContext& node)
 {
     // Take the default options for tests...
     CTxMemPool::Options mempool_opts{MemPoolOptionsForTest(node)};
@@ -126,7 +129,12 @@ CTxMemPool MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeConte
     mempool_opts.require_standard = fuzzed_data_provider.ConsumeBool();
 
     // ...and construct a CTxMemPool from it
-    return CTxMemPool{mempool_opts};
+    bilingual_str error;
+    auto mempool{std::make_unique<CTxMemPool>(std::move(mempool_opts), error)};
+    // ... ignore the error since it might be beneficial to fuzz even when the
+    // mempool size is unreasonably small
+    Assert(error.empty() || error.original.starts_with("-maxmempool must be at least "));
+    return mempool;
 }
 
 void CheckATMPInvariants(const MempoolAcceptResult& res, bool txid_in_mempool, bool wtxid_in_mempool)
@@ -198,17 +206,16 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
     constexpr CAmount SUPPLY_TOTAL{COINBASE_MATURITY * 50 * COIN};
 
     SetMempoolConstraints(*node.args, fuzzed_data_provider);
-    CTxMemPool tx_pool_{MakeMempool(fuzzed_data_provider, node)};
-    MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(&tx_pool_);
+    auto tx_pool_{MakeMempool(fuzzed_data_provider, node)};
+    MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(tx_pool_.get());
 
     chainstate.SetMempool(&tx_pool);
 
     // Helper to query an amount
     const CCoinsViewMemPool amount_view{WITH_LOCK(::cs_main, return &chainstate.CoinsTip()), tx_pool};
     const auto GetAmount = [&](const COutPoint& outpoint) {
-        Coin c;
-        Assert(amount_view.GetCoin(outpoint, c));
-        return c.out.nValue;
+        auto coin{amount_view.GetCoin(outpoint).value()};
+        return coin.out.nValue;
     };
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 300)
@@ -226,7 +233,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
         // Create transaction to add to the mempool
         const CTransactionRef tx = [&] {
             CMutableTransaction tx_mut;
-            tx_mut.nVersion = fuzzed_data_provider.ConsumeBool() ? TRUC_VERSION : CTransaction::CURRENT_VERSION;
+            tx_mut.version = fuzzed_data_provider.ConsumeBool() ? TRUC_VERSION : CTransaction::CURRENT_VERSION;
             tx_mut.nLockTime = fuzzed_data_provider.ConsumeBool() ? 0 : fuzzed_data_provider.ConsumeIntegral<uint32_t>();
             const auto num_in = fuzzed_data_provider.ConsumeIntegralInRange<int>(1, outpoints_rbf.size());
             const auto num_out = fuzzed_data_provider.ConsumeIntegralInRange<int>(1, outpoints_rbf.size() * 2);
@@ -312,7 +319,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
         if (accepted) {
             Assert(added.size() == 1); // For now, no package acceptance
             Assert(tx == *added.begin());
-            CheckMempoolV3Invariants(tx_pool);
+            CheckMempoolTRUCInvariants(tx_pool);
         } else {
             // Do not consider rejected transaction removed
             removed.erase(tx);
@@ -376,8 +383,8 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
     }
 
     SetMempoolConstraints(*node.args, fuzzed_data_provider);
-    CTxMemPool tx_pool_{MakeMempool(fuzzed_data_provider, node)};
-    MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(&tx_pool_);
+    auto tx_pool_{MakeMempool(fuzzed_data_provider, node)};
+    MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(tx_pool_.get());
 
     chainstate.SetMempool(&tx_pool);
 
@@ -405,7 +412,7 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
         if (accepted) {
             txids.push_back(tx->GetHash());
-            CheckMempoolV3Invariants(tx_pool);
+            CheckMempoolTRUCInvariants(tx_pool);
         }
     }
     Finish(fuzzed_data_provider, tx_pool, chainstate);

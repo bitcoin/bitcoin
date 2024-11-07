@@ -5,11 +5,11 @@
 #ifndef BITCOIN_SPAN_H
 #define BITCOIN_SPAN_H
 
-#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <span>
 #include <type_traits>
+#include <utility>
 
 #ifdef DEBUG
 #define CONSTEXPR_IF_NOT_DEBUG
@@ -212,13 +212,6 @@ public:
          ASSERT_IF_DEBUG(size() >= count);
          return Span<C>(m_data + m_size - count, count);
     }
-
-    friend constexpr bool operator==(const Span& a, const Span& b) noexcept { return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin()); }
-    friend constexpr bool operator!=(const Span& a, const Span& b) noexcept { return !(a == b); }
-    friend constexpr bool operator<(const Span& a, const Span& b) noexcept { return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end()); }
-    friend constexpr bool operator<=(const Span& a, const Span& b) noexcept { return !(b < a); }
-    friend constexpr bool operator>(const Span& a, const Span& b) noexcept { return (b < a); }
-    friend constexpr bool operator>=(const Span& a, const Span& b) noexcept { return !(a < b); }
 
     template <typename O> friend class Span;
 };

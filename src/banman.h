@@ -34,7 +34,7 @@ class CSubNet;
 // disk on shutdown and reloaded on startup. Banning can be used to
 // prevent connections with spy nodes or other griefers.
 //
-// 2. Discouragement. If a peer misbehaves enough (see Misbehaving() in
+// 2. Discouragement. If a peer misbehaves (see Misbehaving() in
 // net_processing.cpp), we'll mark that address as discouraged. We still allow
 // incoming connections from them, but they're preferred for eviction when
 // we receive new incoming connections. We never make outgoing connections to

@@ -4,14 +4,14 @@ The current precise version for Qt 5 is specified in [qt.mk](/depends/packages/q
 
 ## Compile and run
 
-See build instructions: [Unix](/doc/build-unix.md), [macOS](/doc/build-osx.md), [Windows](/doc/build-windows.md), [FreeBSD](/doc/build-freebsd.md), [NetBSD](/doc/build-netbsd.md), [OpenBSD](/doc/build-openbsd.md)
+See build instructions: [Unix](/doc/build-unix.md), [macOS](/doc/build-osx.md), [Windows](/doc/build-windows-msvc.md), [FreeBSD](/doc/build-freebsd.md), [NetBSD](/doc/build-netbsd.md), [OpenBSD](/doc/build-openbsd.md)
 
 When following your systems build instructions, make sure to install the `Qt` dependencies.
 
 To run:
 
 ```sh
-./src/qt/bitcoin-qt
+./build/src/qt/bitcoin-qt
 ```
 
 ## Files and Directories
@@ -99,7 +99,7 @@ sudo apt-get install qtcreator
 #### Setup Qt Creator
 
 1. Make sure you've installed all dependencies specified in your systems build instructions
-2. Follow the compile instructions for your system, run `./configure` with the `--enable-debug` flag
+2. Follow the compile instructions for your system, adding the `-DCMAKE_BUILD_TYPE=Debug` build flag
 3. Start Qt Creator. At the start page, do: `New` -> `Import Project` -> `Import Existing Project`
 4. Enter `bitcoin-qt` as the Project Name and enter the absolute path to `src/qt` as Location
 5. Check over the file selection, you may need to select the `forms` directory (necessary if you intend to edit *.ui files)

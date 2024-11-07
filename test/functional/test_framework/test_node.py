@@ -39,9 +39,16 @@ from .util import (
     rpc_url,
     wait_until_helper_internal,
     p2p_port,
+    tor_port,
 )
 
 BITCOIND_PROC_WAIT_TIMEOUT = 60
+# The size of the blocks xor key
+# from InitBlocksdirXorKey::xor_key.size()
+NUM_XOR_BYTES = 8
+# The null blocks key (all 0s)
+NULL_BLK_XOR_KEY = bytes([0] * NUM_XOR_BYTES)
+BITCOIN_PID_FILENAME_DEFAULT = "bitcoind.pid"
 
 
 class FailedToStartError(Exception):
@@ -88,8 +95,11 @@ class TestNode():
         self.coverage_dir = coverage_dir
         self.cwd = cwd
         self.descriptors = descriptors
+        self.has_explicit_bind = False
         if extra_conf is not None:
             append_config(self.datadir_path, extra_conf)
+            # Remember if there is bind=... in the config file.
+            self.has_explicit_bind = any(e.startswith("bind=") for e in extra_conf)
         # Most callers will just need to add extra args to the standard list below.
         # For those callers that need more flexibility, they can just set the args property directly.
         # Note that common args are set in the config file (see initialize_datadir)
@@ -210,6 +220,17 @@ class TestNode():
         if extra_args is None:
             extra_args = self.extra_args
 
+        # If listening and no -bind is given, then bitcoind would bind P2P ports on
+        # 0.0.0.0:P and 127.0.0.1:18445 (for incoming Tor connections), where P is
+        # a unique port chosen by the test framework and configured as port=P in
+        # bitcoin.conf. To avoid collisions on 127.0.0.1:18445, change it to
+        # 127.0.0.1:tor_port().
+        will_listen = all(e != "-nolisten" and e != "-listen=0" for e in extra_args)
+        has_explicit_bind = self.has_explicit_bind or any(e.startswith("-bind=") for e in extra_args)
+        if will_listen and not has_explicit_bind:
+            extra_args.append(f"-bind=0.0.0.0:{p2p_port(self.index)}")
+            extra_args.append(f"-bind=127.0.0.1:{tor_port(self.index)}=onion")
+
         self.use_v2transport = "-v2transport=1" in extra_args or (self.default_to_v2 and "-v2transport=0" not in extra_args)
 
         # Add a new stdout and stderr file each time bitcoind is started
@@ -241,7 +262,7 @@ class TestNode():
         if self.start_perf:
             self._start_perf()
 
-    def wait_for_rpc_connection(self):
+    def wait_for_rpc_connection(self, *, wait_for_import=True):
         """Sets up an RPC connection to the bitcoind process. Returns False if unable to connect."""
         # Poll at a rate of four times per second
         poll_per_s = 4
@@ -263,7 +284,7 @@ class TestNode():
                 )
                 rpc.getblockcount()
                 # If the call to getblockcount() succeeds then the RPC connection is up
-                if self.version_is_at_least(190000):
+                if self.version_is_at_least(190000) and wait_for_import:
                     # getmempoolinfo.loaded is available since commit
                     # bb8ae2c (version 0.19.0)
                     self.wait_until(lambda: rpc.getmempoolinfo()['loaded'])
@@ -449,6 +470,14 @@ class TestNode():
     @property
     def blocks_path(self) -> Path:
         return self.chain_path / "blocks"
+
+    @property
+    def blocks_key_path(self) -> Path:
+        return self.blocks_path / "xor.dat"
+
+    def read_xor_key(self) -> bytes:
+        with open(self.blocks_key_path, "rb") as xor_f:
+            return xor_f.read(NUM_XOR_BYTES)
 
     @property
     def wallets_path(self) -> Path:
@@ -666,7 +695,7 @@ class TestNode():
                     assert_msg += "with expected error " + expected_msg
                 self._raise_assertion_error(assert_msg)
 
-    def add_p2p_connection(self, p2p_conn, *, wait_for_verack=True, send_version=True, supports_v2_p2p=None, wait_for_v2_handshake=True, **kwargs):
+    def add_p2p_connection(self, p2p_conn, *, wait_for_verack=True, send_version=True, supports_v2_p2p=None, wait_for_v2_handshake=True, expect_success=True, **kwargs):
         """Add an inbound p2p connection to the node.
 
         This method adds the p2p connection to the self.p2ps list and also
@@ -686,14 +715,14 @@ class TestNode():
         if supports_v2_p2p is None:
             supports_v2_p2p = self.use_v2transport
 
-
-        p2p_conn.p2p_connected_to_node = True
         if self.use_v2transport:
             kwargs['services'] = kwargs.get('services', P2P_SERVICES) | NODE_P2P_V2
         supports_v2_p2p = self.use_v2transport and supports_v2_p2p
         p2p_conn.peer_connect(**kwargs, send_version=send_version, net=self.chain, timeout_factor=self.timeout_factor, supports_v2_p2p=supports_v2_p2p)()
 
         self.p2ps.append(p2p_conn)
+        if not expect_success:
+            return p2p_conn
         p2p_conn.wait_until(lambda: p2p_conn.is_connected, check_connected=False)
         if supports_v2_p2p and wait_for_v2_handshake:
             p2p_conn.wait_until(lambda: p2p_conn.v2_state.tried_v2_handshake)
@@ -752,7 +781,6 @@ class TestNode():
             self.log.debug("Connecting to %s:%d %s" % (address, port, connection_type))
             self.addconnection('%s:%d' % (address, port), connection_type, advertise_v2_p2p)
 
-        p2p_conn.p2p_connected_to_node = False
         if supports_v2_p2p is None:
             supports_v2_p2p = self.use_v2transport
         if advertise_v2_p2p is None:

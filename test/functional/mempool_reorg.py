@@ -162,7 +162,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.log.info("Generate a block")
         last_block = self.generate(self.nodes[0], 1)
         # generate() implicitly syncs blocks, so that peer 1 gets the block before timelock_tx
-        # Otherwise, peer 1 would put the timelock_tx in m_recent_rejects
+        # Otherwise, peer 1 would put the timelock_tx in m_lazy_recent_rejects
 
         self.log.info("The time-locked transaction can now be spent")
         timelock_tx_id = self.nodes[0].sendrawtransaction(timelock_tx)
@@ -194,4 +194,4 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    MempoolCoinbaseTest().main()
+    MempoolCoinbaseTest(__file__).main()

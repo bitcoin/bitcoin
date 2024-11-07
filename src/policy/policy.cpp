@@ -93,7 +93,7 @@ bool IsStandard(const CScript& scriptPubKey, const std::optional<unsigned>& max_
 
 bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_datacarrier_bytes, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
 {
-    if (tx.nVersion > TX_MAX_STANDARD_VERSION || tx.nVersion < 1) {
+    if (tx.version > TX_MAX_STANDARD_VERSION || tx.version < 1) {
         reason = "version";
         return false;
     }
@@ -224,6 +224,11 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
         // get the scriptPubKey corresponding to this input:
         CScript prevScript = prev.scriptPubKey;
+
+        // witness stuffing detected
+        if (prevScript.IsPayToAnchor()) {
+            return false;
+        }
 
         bool p2sh = false;
         if (prevScript.IsPayToScriptHash()) {

@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <netbase.h>
 
@@ -23,9 +23,11 @@
 #include <limits>
 #include <memory>
 
-#if HAVE_SOCKADDR_UN
+#ifdef HAVE_SOCKADDR_UN
 #include <sys/un.h>
 #endif
+
+using util::ContainsNoNUL;
 
 // Settings
 static GlobalMutex g_proxyinfo_mutex;
@@ -48,6 +50,7 @@ std::vector<CNetAddr> WrappedGetAddrInfo(const std::string& name, bool allow_loo
     ai_hint.ai_protocol = IPPROTO_TCP;
     // We don't care which address family (IPv4 or IPv6) is returned
     ai_hint.ai_family = AF_UNSPEC;
+
     // If we allow lookups of hostnames, use the AI_ADDRCONFIG flag to only
     // return addresses whose family we have an address configured for.
     //
@@ -59,7 +62,17 @@ std::vector<CNetAddr> WrappedGetAddrInfo(const std::string& name, bool allow_loo
     addrinfo* ai_res{nullptr};
     const int n_err{getaddrinfo(name.c_str(), nullptr, &ai_hint, &ai_res)};
     if (n_err != 0) {
-        return {};
+        if ((ai_hint.ai_flags & AI_ADDRCONFIG) == AI_ADDRCONFIG) {
+            // AI_ADDRCONFIG on some systems may exclude loopback-only addresses
+            // If first lookup failed we perform a second lookup without AI_ADDRCONFIG
+            ai_hint.ai_flags = (ai_hint.ai_flags & ~AI_ADDRCONFIG);
+            const int n_err_retry{getaddrinfo(name.c_str(), nullptr, &ai_hint, &ai_res)};
+            if (n_err_retry != 0) {
+                return {};
+            }
+        } else {
+            return {};
+        }
     }
 
     // Traverse the linked list starting with ai_trav.
@@ -216,8 +229,8 @@ CService LookupNumeric(const std::string& name, uint16_t portDefault, DNSLookupF
 
 bool IsUnixSocketPath(const std::string& name)
 {
-#if HAVE_SOCKADDR_UN
-    if (name.find(ADDR_PREFIX_UNIX) != 0) return false;
+#ifdef HAVE_SOCKADDR_UN
+    if (!name.starts_with(ADDR_PREFIX_UNIX)) return false;
 
     // Split off "unix:" prefix
     std::string str{name.substr(ADDR_PREFIX_UNIX.length())};
@@ -360,7 +373,7 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
 {
     try {
         IntrRecvError recvr;
-        LogPrint(BCLog::NET, "SOCKS5 connecting %s\n", strDest);
+        LogDebug(BCLog::NET, "SOCKS5 connecting %s\n", strDest);
         if (strDest.size() > 255) {
             LogError("Hostname too long\n");
             return false;
@@ -399,7 +412,7 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
             vAuth.push_back(auth->password.size());
             vAuth.insert(vAuth.end(), auth->password.begin(), auth->password.end());
             sock.SendComplete(vAuth, g_socks5_recv_timeout, g_socks5_interrupt);
-            LogPrint(BCLog::PROXY, "SOCKS5 sending proxy authentication %s:%s\n", auth->username, auth->password);
+            LogDebug(BCLog::PROXY, "SOCKS5 sending proxy authentication %s:%s\n", auth->username, auth->password);
             uint8_t pchRetA[2];
             if (InterruptibleRecv(pchRetA, 2, g_socks5_recv_timeout, sock) != IntrRecvError::OK) {
                 LogError("Error reading proxy authentication response\n");
@@ -443,7 +456,8 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
         }
         if (pchRet2[1] != SOCKS5Reply::SUCCEEDED) {
             // Failures to connect to a peer that are not proxy errors
-            LogPrintf("Socks5() connect to %s:%d failed: %s\n", strDest, port, Socks5ErrorString(pchRet2[1]));
+            LogPrintLevel(BCLog::NET, BCLog::Level::Debug,
+                          "Socks5() connect to %s:%d failed: %s\n", strDest, port, Socks5ErrorString(pchRet2[1]));
             return false;
         }
         if (pchRet2[2] != 0x00) { // Reserved field must be 0
@@ -477,7 +491,7 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
             LogError("Error reading from proxy\n");
             return false;
         }
-        LogPrint(BCLog::NET, "SOCKS5 connected %s\n", strDest);
+        LogDebug(BCLog::NET, "SOCKS5 connected %s\n", strDest);
         return true;
     } catch (const std::runtime_error& e) {
         LogError("Error during SOCKS5 proxy handshake: %s\n", e.what());
@@ -485,23 +499,22 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
     }
 }
 
-std::unique_ptr<Sock> CreateSockOS(sa_family_t address_family)
+std::unique_ptr<Sock> CreateSockOS(int domain, int type, int protocol)
 {
     // Not IPv4, IPv6 or UNIX
-    if (address_family == AF_UNSPEC) return nullptr;
-
-    int protocol{IPPROTO_TCP};
-#if HAVE_SOCKADDR_UN
-    if (address_family == AF_UNIX) protocol = 0;
-#endif
+    if (domain == AF_UNSPEC) return nullptr;
 
     // Create a socket in the specified address family.
-    SOCKET hSocket = socket(address_family, SOCK_STREAM, protocol);
+    SOCKET hSocket = socket(domain, type, protocol);
     if (hSocket == INVALID_SOCKET) {
         return nullptr;
     }
 
     auto sock = std::make_unique<Sock>(hSocket);
+
+    if (domain != AF_INET && domain != AF_INET6 && domain != AF_UNIX) {
+        return sock;
+    }
 
     // Ensure that waiting for I/O on this socket won't result in undefined
     // behavior.
@@ -526,27 +539,31 @@ std::unique_ptr<Sock> CreateSockOS(sa_family_t address_family)
         return nullptr;
     }
 
-#if HAVE_SOCKADDR_UN
-    if (address_family == AF_UNIX) return sock;
+#ifdef HAVE_SOCKADDR_UN
+    if (domain == AF_UNIX) return sock;
 #endif
 
-    // Set the no-delay option (disable Nagle's algorithm) on the TCP socket.
-    const int on{1};
-    if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == SOCKET_ERROR) {
-        LogPrint(BCLog::NET, "Unable to set TCP_NODELAY on a newly created socket, continuing anyway\n");
+    if (protocol == IPPROTO_TCP) {
+        // Set the no-delay option (disable Nagle's algorithm) on the TCP socket.
+        const int on{1};
+        if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == SOCKET_ERROR) {
+            LogDebug(BCLog::NET, "Unable to set TCP_NODELAY on a newly created socket, continuing anyway\n");
+        }
     }
+
     return sock;
 }
 
-std::function<std::unique_ptr<Sock>(const sa_family_t&)> CreateSock = CreateSockOS;
+std::function<std::unique_ptr<Sock>(int, int, int)> CreateSock = CreateSockOS;
 
 template<typename... Args>
-static void LogConnectFailure(bool manual_connection, const char* fmt, const Args&... args) {
+static void LogConnectFailure(bool manual_connection, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+{
     std::string error_message = tfm::format(fmt, args...);
     if (manual_connection) {
         LogPrintf("%s\n", error_message);
     } else {
-        LogPrint(BCLog::NET, "%s\n", error_message);
+        LogDebug(BCLog::NET, "%s\n", error_message);
     }
 }
 
@@ -569,7 +586,7 @@ static bool ConnectToSocket(const Sock& sock, struct sockaddr* sockaddr, socklen
                           NetworkErrorString(WSAGetLastError()));
                 return false;
             } else if (occurred == 0) {
-                LogPrint(BCLog::NET, "connection attempt to %s timed out\n", dest_str);
+                LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "connection attempt to %s timed out\n", dest_str);
                 return false;
             }
 
@@ -607,7 +624,7 @@ static bool ConnectToSocket(const Sock& sock, struct sockaddr* sockaddr, socklen
 
 std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connection)
 {
-    auto sock = CreateSock(dest.GetSAFamily());
+    auto sock = CreateSock(dest.GetSAFamily(), SOCK_STREAM, IPPROTO_TCP);
     if (!sock) {
         LogPrintLevel(BCLog::NET, BCLog::Level::Error, "Cannot create a socket for connecting to %s\n", dest.ToStringAddrPort());
         return {};
@@ -634,8 +651,8 @@ std::unique_ptr<Sock> Proxy::Connect() const
 
     if (!m_is_unix_socket) return ConnectDirectly(proxy, /*manual_connection=*/true);
 
-#if HAVE_SOCKADDR_UN
-    auto sock = CreateSock(AF_UNIX);
+#ifdef HAVE_SOCKADDR_UN
+    auto sock = CreateSock(AF_UNIX, SOCK_STREAM, 0);
     if (!sock) {
         LogPrintLevel(BCLog::NET, BCLog::Level::Error, "Cannot create a socket for connecting to %s\n", m_unix_socket_path);
         return {};

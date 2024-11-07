@@ -205,8 +205,12 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.assert_list_txs_equal(basic2.listtransactions(), basic2_txs)
 
         # Now test migration on a descriptor wallet
-        self.log.info("Test \"nothing to migrate\" when the user tries to migrate a wallet with no legacy data")
+        self.log.info("Test \"nothing to migrate\" when the user tries to migrate a loaded wallet with no legacy data")
         assert_raises_rpc_error(-4, "Error: This wallet is already a descriptor wallet", basic2.migratewallet)
+
+        self.log.info("Test \"nothing to migrate\" when the user tries to migrate an unloaded wallet with no legacy data")
+        basic2.unloadwallet()
+        assert_raises_rpc_error(-4, "Error: This wallet is already a descriptor wallet", self.nodes[0].migratewallet, "basic2")
 
     def test_multisig(self):
         default = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
@@ -467,6 +471,12 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Error: Wallet decryption failed, the wallet passphrase was not provided or was incorrect", wallet.migratewallet, None, "badpass")
         assert_raises_rpc_error(-4, "The passphrase contains a null character", wallet.migratewallet, None, "pass\0with\0null")
 
+        # Check the wallet is still active post-migration failure.
+        # If not, it will throw an exception and abort the test.
+        wallet.walletpassphrase("pass", 99999)
+        wallet.getnewaddress()
+
+        # Verify we can properly migrate the encrypted wallet
         self.migrate_wallet(wallet, passphrase="pass")
 
         info = wallet.getwalletinfo()
@@ -538,10 +548,15 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(info["descriptors"], True)
         assert_equal(info["format"], "sqlite")
 
+        walletdir_list = wallet.listwalletdir()
+        assert {"name": info["walletname"]} in walletdir_list["wallets"]
+
         # Check backup existence and its non-empty wallet filename
-        backup_path = self.nodes[0].wallets_path / f'default_wallet_{curr_time}.legacy.bak'
+        backup_filename = f"default_wallet_{curr_time}.legacy.bak"
+        backup_path = self.nodes[0].wallets_path / backup_filename
         assert backup_path.exists()
         assert_equal(str(backup_path), res['backup_path'])
+        assert {"name": backup_filename} not in walletdir_list["wallets"]
 
     def test_direct_file(self):
         self.log.info("Test migration of a wallet that is not in a wallet directory")
@@ -1022,4 +1037,4 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_blank()
 
 if __name__ == '__main__':
-    WalletMigrationTest().main()
+    WalletMigrationTest(__file__).main()

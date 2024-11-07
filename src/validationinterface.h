@@ -62,6 +62,10 @@ protected:
      */
     virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
     /**
+     * Notifies listeners any time the block chain tip changes, synchronously.
+     */
+    virtual void ActiveTipChange(const CBlockIndex& new_tip, bool is_ibd) {};
+    /**
      * Notifies listeners of a transaction having been added to mempool.
      *
      * Called on a background thread.
@@ -214,6 +218,7 @@ public:
     void SyncWithValidationInterfaceQueue() LOCKS_EXCLUDED(cs_main);
 
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
+    void ActiveTipChange(const CBlockIndex&, bool);
     void TransactionAddedToMempool(const NewMempoolTransactionInfo&, uint64_t mempool_sequence);
     void TransactionRemovedFromMempool(const CTransactionRef&, MemPoolRemovalReason, uint64_t mempool_sequence);
     void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>&, unsigned int nBlockHeight);

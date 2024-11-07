@@ -8,6 +8,7 @@ from decimal import Decimal
 from .blocktools import (
     COINBASE_MATURITY,
 )
+from .messages import CTransaction
 from .util import (
     assert_equal,
     assert_greater_than,
@@ -18,15 +19,14 @@ from .wallet import (
     MiniWallet,
 )
 
+ORPHAN_TX_EXPIRE_TIME = 1200
 
-def fill_mempool(test_framework, node):
+
+def fill_mempool(test_framework, node, *, tx_sync_fun=None):
     """Fill mempool until eviction.
 
     Allows for simpler testing of scenarios with floating mempoolminfee > minrelay
-    Requires -datacarriersize=100000 and
-   -maxmempool=5.
-    It will not ensure mempools become synced as it
-    is based on a single node and assumes -minrelaytxfee
+    Requires -datacarriersize=100000 and -maxmempool=5 and assumes -minrelaytxfee
     is 1 sat/vbyte.
     To avoid unintentional tx dependencies, the mempool filling txs are created with a
     tagged ephemeral miniwallet instance.
@@ -57,18 +57,25 @@ def fill_mempool(test_framework, node):
     tx_to_be_evicted_id = ephemeral_miniwallet.send_self_transfer(
         from_node=node, utxo_to_spend=confirmed_utxos.pop(0), fee_rate=relayfee)["txid"]
 
+    def send_batch(fee):
+        utxos = confirmed_utxos[:tx_batch_size]
+        create_lots_of_big_transactions(ephemeral_miniwallet, node, fee, tx_batch_size, txouts, utxos)
+        del confirmed_utxos[:tx_batch_size]
+
     # Increase the tx fee rate to give the subsequent transactions a higher priority in the mempool
     # The tx has an approx. vsize of 65k, i.e. multiplying the previous fee rate (in sats/kvB)
     # by 130 should result in a fee that corresponds to 2x of that fee rate
     base_fee = relayfee * 130
+    batch_fees = [(i + 1) * base_fee for i in range(num_of_batches)]
 
     test_framework.log.debug("Fill up the mempool with txs with higher fee rate")
-    with node.assert_debug_log(["rolling minimum fee bumped"]):
-        for batch_of_txid in range(num_of_batches):
-            fee = (batch_of_txid + 1) * base_fee
-            utxos = confirmed_utxos[:tx_batch_size]
-            create_lots_of_big_transactions(ephemeral_miniwallet, node, fee, tx_batch_size, txouts, utxos)
-            del confirmed_utxos[:tx_batch_size]
+    for fee in batch_fees[:-3]:
+        send_batch(fee)
+    tx_sync_fun() if tx_sync_fun else test_framework.sync_mempools()  # sync before any eviction
+    assert_equal(node.getmempoolinfo()["mempoolminfee"], Decimal("0.00001000"))
+    for fee in batch_fees[-3:]:
+        send_batch(fee)
+    tx_sync_fun() if tx_sync_fun else test_framework.sync_mempools()  # sync after all evictions
 
     test_framework.log.debug("The tx should be evicted by now")
     # The number of transactions created should be greater than the ones present in the mempool
@@ -79,3 +86,8 @@ def fill_mempool(test_framework, node):
     test_framework.log.debug("Check that mempoolminfee is larger than minrelaytxfee")
     assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
     assert_greater_than(node.getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
+
+def tx_in_orphanage(node, tx: CTransaction) -> bool:
+    """Returns true if the transaction is in the orphanage."""
+    found = [o for o in node.getorphantxs(verbosity=1) if o["txid"] == tx.rehash() and o["wtxid"] == tx.getwtxid()]
+    return len(found) == 1

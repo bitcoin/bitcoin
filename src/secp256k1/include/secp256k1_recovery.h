@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-/** Opaque data structured that holds a parsed ECDSA signature,
+/** Opaque data structure that holds a parsed ECDSA signature,
  *  supporting pubkey recovery.
  *
  *  The exact representation of data inside is implementation defined and not
@@ -21,7 +21,7 @@ extern "C" {
  *  recoverability) will have identical representation, so they can be
  *  memcmp'ed.
  */
-typedef struct {
+typedef struct secp256k1_ecdsa_recoverable_signature {
     unsigned char data[65];
 } secp256k1_ecdsa_recoverable_signature;
 

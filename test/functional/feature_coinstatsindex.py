@@ -242,6 +242,9 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         res12 = index_node.gettxoutsetinfo('muhash')
         assert_equal(res12, res10)
 
+        self.log.info("Test obtaining info for a non-existent block hash")
+        assert_raises_rpc_error(-5, "Block not found", index_node.gettxoutsetinfo, hash_type="none", hash_or_height="ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", use_index=True)
+
     def _test_use_index_option(self):
         self.log.info("Test use_index option for nodes running the index")
 
@@ -321,4 +324,4 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    CoinStatsIndexTest().main()
+    CoinStatsIndexTest(__file__).main()

@@ -265,7 +265,7 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
     return true;
 }
 
-bool CoinStatsIndex::CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip)
+bool CoinStatsIndex::CustomRewind(const interfaces::BlockRef& current_tip, const interfaces::BlockRef& new_tip)
 {
     CDBBatch batch(*m_db);
     std::unique_ptr<CDBIterator> db_it(m_db->NewIterator());
@@ -304,7 +304,7 @@ bool CoinStatsIndex::CustomRewind(const interfaces::BlockKey& current_tip, const
     return true;
 }
 
-static bool LookUpOne(const CDBWrapper& db, const interfaces::BlockKey& block, DBVal& result)
+static bool LookUpOne(const CDBWrapper& db, const interfaces::BlockRef& block, DBVal& result)
 {
     // First check if the result is stored under the height index and the value
     // there matches the block hash. This should be the case if the block is on
@@ -350,7 +350,7 @@ std::optional<CCoinsStats> CoinStatsIndex::LookUpStats(const CBlockIndex& block_
     return stats;
 }
 
-bool CoinStatsIndex::CustomInit(const std::optional<interfaces::BlockKey>& block)
+bool CoinStatsIndex::CustomInit(const std::optional<interfaces::BlockRef>& block)
 {
     if (!m_db->Read(DB_MUHASH, m_muhash)) {
         // Check that the cause of the read failure is that the key does not

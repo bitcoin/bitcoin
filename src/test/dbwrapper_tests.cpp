@@ -12,6 +12,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+using util::ToString;
+
 // Test if a string consists entirely of null characters
 static bool is_null_key(const std::vector<unsigned char>& key) {
     bool isnull = true;
@@ -31,7 +33,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper)
         fs::path ph = m_args.GetDataDirBase() / (obfuscate ? "dbwrapper_obfuscate_true" : "dbwrapper_obfuscate_false");
         CDBWrapper dbw({.path = ph, .cache_bytes = 1 << 20, .memory_only = true, .wipe_data = false, .obfuscate = obfuscate});
         uint8_t key{'k'};
-        uint256 in = InsecureRand256();
+        uint256 in = m_rng.rand256();
         uint256 res;
 
         // Ensure that we're doing real obfuscation when obfuscate=true
@@ -58,65 +60,65 @@ BOOST_AUTO_TEST_CASE(dbwrapper_basic_data)
         BOOST_CHECK(obfuscate != is_null_key(dbwrapper_private::GetObfuscateKey(dbw)));
 
         //Simulate block raw data - "b + block hash"
-        std::string key_block = "b" + InsecureRand256().ToString();
+        std::string key_block = "b" + m_rng.rand256().ToString();
 
-        uint256 in_block = InsecureRand256();
+        uint256 in_block = m_rng.rand256();
         BOOST_CHECK(dbw.Write(key_block, in_block));
         BOOST_CHECK(dbw.Read(key_block, res));
         BOOST_CHECK_EQUAL(res.ToString(), in_block.ToString());
 
         //Simulate file raw data - "f + file_number"
-        std::string key_file = strprintf("f%04x", InsecureRand32());
+        std::string key_file = strprintf("f%04x", m_rng.rand32());
 
-        uint256 in_file_info = InsecureRand256();
+        uint256 in_file_info = m_rng.rand256();
         BOOST_CHECK(dbw.Write(key_file, in_file_info));
         BOOST_CHECK(dbw.Read(key_file, res));
         BOOST_CHECK_EQUAL(res.ToString(), in_file_info.ToString());
 
         //Simulate transaction raw data - "t + transaction hash"
-        std::string key_transaction = "t" + InsecureRand256().ToString();
+        std::string key_transaction = "t" + m_rng.rand256().ToString();
 
-        uint256 in_transaction = InsecureRand256();
+        uint256 in_transaction = m_rng.rand256();
         BOOST_CHECK(dbw.Write(key_transaction, in_transaction));
         BOOST_CHECK(dbw.Read(key_transaction, res));
         BOOST_CHECK_EQUAL(res.ToString(), in_transaction.ToString());
 
         //Simulate UTXO raw data - "c + transaction hash"
-        std::string key_utxo = "c" + InsecureRand256().ToString();
+        std::string key_utxo = "c" + m_rng.rand256().ToString();
 
-        uint256 in_utxo = InsecureRand256();
+        uint256 in_utxo = m_rng.rand256();
         BOOST_CHECK(dbw.Write(key_utxo, in_utxo));
         BOOST_CHECK(dbw.Read(key_utxo, res));
         BOOST_CHECK_EQUAL(res.ToString(), in_utxo.ToString());
 
         //Simulate last block file number - "l"
         uint8_t key_last_blockfile_number{'l'};
-        uint32_t lastblockfilenumber = InsecureRand32();
+        uint32_t lastblockfilenumber = m_rng.rand32();
         BOOST_CHECK(dbw.Write(key_last_blockfile_number, lastblockfilenumber));
         BOOST_CHECK(dbw.Read(key_last_blockfile_number, res_uint_32));
         BOOST_CHECK_EQUAL(lastblockfilenumber, res_uint_32);
 
         //Simulate Is Reindexing - "R"
         uint8_t key_IsReindexing{'R'};
-        bool isInReindexing = InsecureRandBool();
+        bool isInReindexing = m_rng.randbool();
         BOOST_CHECK(dbw.Write(key_IsReindexing, isInReindexing));
         BOOST_CHECK(dbw.Read(key_IsReindexing, res_bool));
         BOOST_CHECK_EQUAL(isInReindexing, res_bool);
 
         //Simulate last block hash up to which UXTO covers - 'B'
         uint8_t key_lastblockhash_uxto{'B'};
-        uint256 lastblock_hash = InsecureRand256();
+        uint256 lastblock_hash = m_rng.rand256();
         BOOST_CHECK(dbw.Write(key_lastblockhash_uxto, lastblock_hash));
         BOOST_CHECK(dbw.Read(key_lastblockhash_uxto, res));
         BOOST_CHECK_EQUAL(lastblock_hash, res);
 
         //Simulate file raw data - "F + filename_number + filename"
         std::string file_option_tag = "F";
-        uint8_t filename_length = InsecureRandBits(8);
+        uint8_t filename_length = m_rng.randbits(8);
         std::string filename = "randomfilename";
         std::string key_file_option = strprintf("%s%01x%s", file_option_tag,filename_length,filename);
 
-        bool in_file_bool = InsecureRandBool();
+        bool in_file_bool = m_rng.randbool();
         BOOST_CHECK(dbw.Write(key_file_option, in_file_bool));
         BOOST_CHECK(dbw.Read(key_file_option, res_bool));
         BOOST_CHECK_EQUAL(res_bool, in_file_bool);
@@ -132,11 +134,11 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
         CDBWrapper dbw({.path = ph, .cache_bytes = 1 << 20, .memory_only = true, .wipe_data = false, .obfuscate = obfuscate});
 
         uint8_t key{'i'};
-        uint256 in = InsecureRand256();
+        uint256 in = m_rng.rand256();
         uint8_t key2{'j'};
-        uint256 in2 = InsecureRand256();
+        uint256 in2 = m_rng.rand256();
         uint8_t key3{'k'};
-        uint256 in3 = InsecureRand256();
+        uint256 in3 = m_rng.rand256();
 
         uint256 res;
         CDBBatch batch(dbw);
@@ -169,10 +171,10 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
 
         // The two keys are intentionally chosen for ordering
         uint8_t key{'j'};
-        uint256 in = InsecureRand256();
+        uint256 in = m_rng.rand256();
         BOOST_CHECK(dbw.Write(key, in));
         uint8_t key2{'k'};
-        uint256 in2 = InsecureRand256();
+        uint256 in2 = m_rng.rand256();
         BOOST_CHECK(dbw.Write(key2, in2));
 
         std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper&>(dbw).NewIterator());
@@ -210,7 +212,7 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
     // Set up a non-obfuscated wrapper to write some initial data.
     std::unique_ptr<CDBWrapper> dbw = std::make_unique<CDBWrapper>(DBParams{.path = ph, .cache_bytes = 1 << 10, .memory_only = false, .wipe_data = false, .obfuscate = false});
     uint8_t key{'k'};
-    uint256 in = InsecureRand256();
+    uint256 in = m_rng.rand256();
     uint256 res;
 
     BOOST_CHECK(dbw->Write(key, in));
@@ -232,7 +234,7 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
     BOOST_CHECK(!odbw.IsEmpty()); // There should be existing data
     BOOST_CHECK(is_null_key(dbwrapper_private::GetObfuscateKey(odbw))); // The key should be an empty string
 
-    uint256 in2 = InsecureRand256();
+    uint256 in2 = m_rng.rand256();
     uint256 res3;
 
     // Check that we can write successfully
@@ -251,7 +253,7 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
     // Set up a non-obfuscated wrapper to write some initial data.
     std::unique_ptr<CDBWrapper> dbw = std::make_unique<CDBWrapper>(DBParams{.path = ph, .cache_bytes = 1 << 10, .memory_only = false, .wipe_data = false, .obfuscate = false});
     uint8_t key{'k'};
-    uint256 in = InsecureRand256();
+    uint256 in = m_rng.rand256();
     uint256 res;
 
     BOOST_CHECK(dbw->Write(key, in));
@@ -269,7 +271,7 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
     BOOST_CHECK(!odbw.Read(key, res2));
     BOOST_CHECK(!is_null_key(dbwrapper_private::GetObfuscateKey(odbw)));
 
-    uint256 in2 = InsecureRand256();
+    uint256 in2 = m_rng.rand256();
     uint256 res3;
 
     // Check that we can write successfully

@@ -13,6 +13,14 @@
 #include <string_view>
 #include <utility>
 
+constexpr bool G_FUZZING{
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    true
+#else
+    false
+#endif
+};
+
 std::string StrFormatInternalBug(std::string_view msg, std::string_view file, int line, std::string_view func);
 
 class NonFatalCheckError : public std::runtime_error
@@ -40,11 +48,11 @@ void assertion_fail(std::string_view file, int line, std::string_view func, std:
 
 /** Helper for Assert()/Assume() */
 template <bool IS_ASSERT, typename T>
-T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] const char* file, [[maybe_unused]] int line, [[maybe_unused]] const char* func, [[maybe_unused]] const char* assertion)
+constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] const char* file, [[maybe_unused]] int line, [[maybe_unused]] const char* func, [[maybe_unused]] const char* assertion)
 {
-    if constexpr (IS_ASSERT
+    if (IS_ASSERT || std::is_constant_evaluated() || G_FUZZING
 #ifdef ABORT_ON_FAILED_ASSUME
-                  || true
+        || true
 #endif
     ) {
         if (!val) {

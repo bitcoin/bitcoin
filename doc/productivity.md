@@ -6,8 +6,8 @@ Table of Contents
 
 * [General](#general)
    * [Cache compilations with `ccache`](#cache-compilations-with-ccache)
-   * [Disable features with `./configure`](#disable-features-with-configure)
-   * [Make use of your threads with `make -j`](#make-use-of-your-threads-with-make--j)
+   * [Disable features when generating the build system](#disable-features-when-generating-the-build-system)
+   * [Make use of your threads with `-j`](#make-use-of-your-threads-with--j)
    * [Only build what you need](#only-build-what-you-need)
    * [Compile on multiple machines](#compile-on-multiple-machines)
    * [Multiple working directories with `git worktrees`](#multiple-working-directories-with-git-worktrees)
@@ -31,9 +31,9 @@ The easiest way to faster compile times is to cache compiles. `ccache` is a way 
 
 > ccache is a compiler cache. It speeds up recompilation by caching the result of previous compilations and detecting when the same compilation is being done again. Supported languages are C, C++, Objective-C and Objective-C++.
 
-Install `ccache` through your distribution's package manager, and run `./configure` with your normal flags to pick it up.
+Install `ccache` through your distribution's package manager, and run `cmake -B build` with your normal configuration options to pick it up.
 
-To use ccache for all your C/C++ projects, follow the symlinks method [here](https://ccache.samba.org/manual/latest.html#_run_modes) to set it up.
+To use ccache for all your C/C++ projects, follow the symlinks method [here](https://ccache.dev/manual/latest.html#_run_modes) to set it up.
 
 To get the most out of ccache, put something like this in `~/.ccache/ccache.conf`:
 
@@ -46,38 +46,32 @@ Note: base_dir is required for ccache to share cached compiles of the same file 
 
 You _must not_ set base_dir to "/", or anywhere that contains system headers (according to the ccache docs).
 
-### Disable features with `./configure`
+### Disable features when generating the build system
 
-After running `./autogen.sh`, which generates the `./configure` file, use `./configure --help` to identify features that you can disable to save on compilation time. A few common flags:
+During the generation of the build system only essential build options are enabled by default to save on compilation time.
 
-```sh
---without-miniupnpc
---without-natpmp
---disable-bench
---disable-wallet
---without-gui
-```
+Run `cmake -B build -LH` to see the full list of available options. GUI tools, such as `ccmake` and `cmake-gui`, can be also helpful.
 
-If you do need the wallet enabled, it is common for devs to add `--with-incompatible-bdb`. This uses your system bdb version for the wallet, so you don't have to find a copy of bdb 4.8. Wallets from such a build will be incompatible with any release binary (and vice versa), so use with caution on mainnet.
+If you do need the wallet enabled (`-DENABLE_WALLET=ON`), it is common for devs to use your system bdb version for the wallet, so you don't have to find a copy of bdb 4.8. Wallets from such a build will be incompatible with any release binary (and vice versa), so use with caution on mainnet.
 
-### Make use of your threads with `make -j`
+### Make use of your threads with `-j`
 
-If you have multiple threads on your machine, you can tell `make` to utilize all of them with:
+If you have multiple threads on your machine, you can utilize all of them with:
 
 ```sh
-make -j"$(($(nproc)+1))"
+cmake --build build -j "$(($(nproc)+1))"
 ```
 
 ### Only build what you need
 
-When rebuilding during development, note that running `make`, without giving a target, will do a lot of work you probably don't need. It will build the GUI (unless you've disabled it) and all the tests (which take much longer to build than the app does).
+When rebuilding during development, note that running `cmake --build build`, without giving a target, will do a lot of work you probably don't need. It will build the GUI (if you've enabled it) and all the tests (which take much longer to build than the app does).
 
 Obviously, it is important to build and run the tests at appropriate times -- but when you just want a quick compile to check your work, consider picking one or a set of build targets relevant to what you're working on, e.g.:
 
 ```sh
-make src/bitcoind src/bitcoin-cli
-make src/qt/bitcoin-qt
-make -C src bitcoin_bench
+cmake --build build --target bitcoind bitcoin-cli
+cmake --build build --target bitcoin-qt
+cmake --build build --target bench_bitcoin
 ```
 
 (You can and should combine this with `-j`, as above, for a parallel build.)
@@ -110,9 +104,9 @@ To squash in `git commit --fixup` commits without rebasing over an updated maste
 git rebase -i --autosquash "$(git merge-base master HEAD)"
 ```
 
-To execute `make check` on every commit since last diverged from master, but without rebasing over an updated master, we can do the following:
+To execute `cmake --build build && ctest --test-dir build` on every commit since last diverged from master, but without rebasing over an updated master, we can do the following:
 ```sh
-git rebase -i --exec "make check" "$(git merge-base master HEAD)"
+git rebase -i --exec "cmake --build build && ctest --test-dir build" "$(git merge-base master HEAD)"
 ```
 
 -----

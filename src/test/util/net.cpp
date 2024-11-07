@@ -28,7 +28,8 @@ void ConnmanTestMsg::Handshake(CNode& node,
     auto& connman{*this};
 
     peerman.InitializeNode(node, local_services);
-    FlushSendBuffer(node); // Drop the version message added by InitializeNode.
+    peerman.SendMessages(&node);
+    FlushSendBuffer(node); // Drop the version message added by SendMessages.
 
     CSerializedNetMsg msg_version{
         NetMsg::Make(NetMsgType::VERSION,
@@ -118,20 +119,20 @@ std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candida
     candidates.reserve(n_candidates);
     for (int id = 0; id < n_candidates; ++id) {
         candidates.push_back({
-            /*id=*/id,
-            /*m_connected=*/std::chrono::seconds{random_context.randrange(100)},
-            /*m_min_ping_time=*/std::chrono::microseconds{random_context.randrange(100)},
-            /*m_last_block_time=*/std::chrono::seconds{random_context.randrange(100)},
-            /*m_last_tx_time=*/std::chrono::seconds{random_context.randrange(100)},
-            /*fRelevantServices=*/random_context.randbool(),
-            /*m_relay_txs=*/random_context.randbool(),
-            /*fBloomFilter=*/random_context.randbool(),
-            /*nKeyedNetGroup=*/random_context.randrange(100),
-            /*prefer_evict=*/random_context.randbool(),
-            /*m_is_local=*/random_context.randbool(),
-            /*m_network=*/ALL_NETWORKS[random_context.randrange(ALL_NETWORKS.size())],
-            /*m_noban=*/false,
-            /*m_conn_type=*/ConnectionType::INBOUND,
+            .id=id,
+            .m_connected=std::chrono::seconds{random_context.randrange(100)},
+            .m_min_ping_time=std::chrono::microseconds{random_context.randrange(100)},
+            .m_last_block_time=std::chrono::seconds{random_context.randrange(100)},
+            .m_last_tx_time=std::chrono::seconds{random_context.randrange(100)},
+            .fRelevantServices=random_context.randbool(),
+            .m_relay_txs=random_context.randbool(),
+            .fBloomFilter=random_context.randbool(),
+            .nKeyedNetGroup=random_context.randrange(100u),
+            .prefer_evict=random_context.randbool(),
+            .m_is_local=random_context.randbool(),
+            .m_network=ALL_NETWORKS[random_context.randrange(ALL_NETWORKS.size())],
+            .m_noban=false,
+            .m_conn_type=ConnectionType::INBOUND,
         });
     }
     return candidates;

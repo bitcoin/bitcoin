@@ -3,12 +3,15 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <arith_uint256.h>
+#include <consensus/validation.h>
+#include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/transaction_utils.h>
 #include <txorphanage.h>
 
 #include <array>
@@ -21,24 +24,26 @@ BOOST_FIXTURE_TEST_SUITE(orphanage_tests, TestingSetup)
 class TxOrphanageTest : public TxOrphanage
 {
 public:
-    inline size_t CountOrphans() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    TxOrphanageTest(FastRandomContext& rng) : m_rng{rng} {}
+
+    inline size_t CountOrphans() const
     {
-        LOCK(m_mutex);
         return m_orphans.size();
     }
 
-    CTransactionRef RandomOrphan() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    CTransactionRef RandomOrphan()
     {
-        LOCK(m_mutex);
         std::map<Wtxid, OrphanTx>::iterator it;
-        it = m_orphans.lower_bound(Wtxid::FromUint256(InsecureRand256()));
+        it = m_orphans.lower_bound(Wtxid::FromUint256(m_rng.rand256()));
         if (it == m_orphans.end())
             it = m_orphans.begin();
         return it->second.tx;
     }
+
+    FastRandomContext& m_rng;
 };
 
-static void MakeNewKeyWithFastRandomContext(CKey& key, FastRandomContext& rand_ctx = g_insecure_rand_ctx)
+static void MakeNewKeyWithFastRandomContext(CKey& key, FastRandomContext& rand_ctx)
 {
     std::vector<unsigned char> keydata;
     keydata = rand_ctx.randbytes(32);
@@ -106,13 +111,17 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     // ecdsa_signature_parse_der_lax are executed during this test.
     // Specifically branches that run only when an ECDSA
     // signature's R and S values have leading zeros.
-    g_insecure_rand_ctx = FastRandomContext{uint256{33}};
+    m_rng.Reseed(uint256{33});
 
-    TxOrphanageTest orphanage;
+    TxOrphanageTest orphanage{m_rng};
     CKey key;
-    MakeNewKeyWithFastRandomContext(key);
+    MakeNewKeyWithFastRandomContext(key, m_rng);
     FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKey(key));
+
+    // Freeze time for length of test
+    auto now{GetTime<std::chrono::seconds>()};
+    SetMockTime(now);
 
     // 50 orphan transactions:
     for (int i = 0; i < 50; i++)
@@ -120,7 +129,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         CMutableTransaction tx;
         tx.vin.resize(1);
         tx.vin[0].prevout.n = 0;
-        tx.vin[0].prevout.hash = Txid::FromUint256(InsecureRand256());
+        tx.vin[0].prevout.hash = Txid::FromUint256(m_rng.rand256());
         tx.vin[0].scriptSig << OP_1;
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
@@ -172,22 +181,52 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         BOOST_CHECK(!orphanage.AddTx(MakeTransactionRef(tx), i));
     }
 
-    // Test EraseOrphansFor:
+    size_t expected_num_orphans = orphanage.CountOrphans();
+
+    // Non-existent peer; nothing should be deleted
+    orphanage.EraseForPeer(/*peer=*/-1);
+    BOOST_CHECK_EQUAL(orphanage.CountOrphans(), expected_num_orphans);
+
+    // Each of first three peers stored
+    // two transactions each.
     for (NodeId i = 0; i < 3; i++)
     {
-        size_t sizeBefore = orphanage.CountOrphans();
         orphanage.EraseForPeer(i);
-        BOOST_CHECK(orphanage.CountOrphans() < sizeBefore);
+        expected_num_orphans -= 2;
+        BOOST_CHECK(orphanage.CountOrphans() == expected_num_orphans);
     }
 
-    // Test LimitOrphanTxSize() function:
+    // Test LimitOrphanTxSize() function, nothing should timeout:
     FastRandomContext rng{/*fDeterministic=*/true};
+    orphanage.LimitOrphans(/*max_orphans=*/expected_num_orphans, rng);
+    BOOST_CHECK_EQUAL(orphanage.CountOrphans(), expected_num_orphans);
+    expected_num_orphans -= 1;
+    orphanage.LimitOrphans(/*max_orphans=*/expected_num_orphans, rng);
+    BOOST_CHECK_EQUAL(orphanage.CountOrphans(), expected_num_orphans);
+    assert(expected_num_orphans > 40);
     orphanage.LimitOrphans(40, rng);
-    BOOST_CHECK(orphanage.CountOrphans() <= 40);
+    BOOST_CHECK_EQUAL(orphanage.CountOrphans(), 40);
     orphanage.LimitOrphans(10, rng);
-    BOOST_CHECK(orphanage.CountOrphans() <= 10);
+    BOOST_CHECK_EQUAL(orphanage.CountOrphans(), 10);
     orphanage.LimitOrphans(0, rng);
-    BOOST_CHECK(orphanage.CountOrphans() == 0);
+    BOOST_CHECK_EQUAL(orphanage.CountOrphans(), 0);
+
+    // Add one more orphan, check timeout logic
+    auto timeout_tx = MakeTransactionSpending(/*outpoints=*/{}, rng);
+    orphanage.AddTx(timeout_tx, 0);
+    orphanage.LimitOrphans(1, rng);
+    BOOST_CHECK_EQUAL(orphanage.CountOrphans(), 1);
+
+    // One second shy of expiration
+    SetMockTime(now + ORPHAN_TX_EXPIRE_TIME - 1s);
+    orphanage.LimitOrphans(1, rng);
+    BOOST_CHECK_EQUAL(orphanage.CountOrphans(), 1);
+
+    // Jump one more second, orphan should be timed out on limiting
+    SetMockTime(now + ORPHAN_TX_EXPIRE_TIME);
+    BOOST_CHECK_EQUAL(orphanage.CountOrphans(), 1);
+    orphanage.LimitOrphans(1, rng);
+    BOOST_CHECK_EQUAL(orphanage.CountOrphans(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(same_txid_diff_witness)
@@ -332,6 +371,23 @@ BOOST_AUTO_TEST_CASE(get_children)
             BOOST_CHECK(EqualTxns(expected_parent2_node2, orphanage.GetChildrenFromDifferentPeer(parent2, node1)));
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(too_large_orphan_tx)
+{
+    TxOrphanage orphanage;
+    CMutableTransaction tx;
+    tx.vin.resize(1);
+
+    // check that txs larger than MAX_STANDARD_TX_WEIGHT are not added to the orphanage
+    BulkTransaction(tx, MAX_STANDARD_TX_WEIGHT + 4);
+    BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction(tx)), MAX_STANDARD_TX_WEIGHT + 4);
+    BOOST_CHECK(!orphanage.AddTx(MakeTransactionRef(tx), 0));
+
+    tx.vout.clear();
+    BulkTransaction(tx, MAX_STANDARD_TX_WEIGHT);
+    BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction(tx)), MAX_STANDARD_TX_WEIGHT);
+    BOOST_CHECK(orphanage.AddTx(MakeTransactionRef(tx), 0));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -11,10 +11,13 @@
 #include <crypto/sha3.h>
 #include <crypto/sha512.h>
 #include <crypto/siphash.h>
-#include <hash.h>
 #include <random.h>
+#include <span.h>
 #include <tinyformat.h>
 #include <uint256.h>
+
+#include <cstdint>
+#include <vector>
 
 /* Number of bytes to hash per iteration */
 static const uint64_t BUFFER_SIZE = 1000*1000;
@@ -196,22 +199,6 @@ static void SipHash_32b(benchmark::Bench& bench)
     });
 }
 
-static void FastRandom_32bit(benchmark::Bench& bench)
-{
-    FastRandomContext rng(true);
-    bench.run([&] {
-        rng.rand32();
-    });
-}
-
-static void FastRandom_1bit(benchmark::Bench& bench)
-{
-    FastRandomContext rng(true);
-    bench.run([&] {
-        rng.randbool();
-    });
-}
-
 static void MuHash(benchmark::Bench& bench)
 {
     MuHash3072 acc;
@@ -274,8 +261,6 @@ BENCHMARK(SHA256D64_1024_STANDARD, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256D64_1024_SSE4, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256D64_1024_AVX2, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256D64_1024_SHANI, benchmark::PriorityLevel::HIGH);
-BENCHMARK(FastRandom_32bit, benchmark::PriorityLevel::HIGH);
-BENCHMARK(FastRandom_1bit, benchmark::PriorityLevel::HIGH);
 
 BENCHMARK(MuHash, benchmark::PriorityLevel::HIGH);
 BENCHMARK(MuHashMul, benchmark::PriorityLevel::HIGH);

@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <rpc/server.h>
 
@@ -11,6 +11,7 @@
 #include <common/system.h>
 #include <logging.h>
 #include <node/context.h>
+#include <node/kernel_notifications.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <sync.h>
@@ -18,14 +19,15 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
-
-#include <boost/signals2/signal.hpp>
+#include <validation.h>
 
 #include <cassert>
 #include <chrono>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
+
+using util::SplitString;
 
 static GlobalMutex g_rpc_warmup_mutex;
 static std::atomic<bool> g_rpc_running{false};
@@ -66,22 +68,6 @@ struct RPCCommandExecution
         g_rpc_server_info.active_commands.erase(it);
     }
 };
-
-static struct CRPCSignals
-{
-    boost::signals2::signal<void ()> Started;
-    boost::signals2::signal<void ()> Stopped;
-} g_rpcSignals;
-
-void RPCServer::OnStarted(std::function<void ()> slot)
-{
-    g_rpcSignals.Started.connect(slot);
-}
-
-void RPCServer::OnStopped(std::function<void ()> slot)
-{
-    g_rpcSignals.Stopped.connect(slot);
-}
 
 std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest& helpreq) const
 {
@@ -168,12 +154,12 @@ static RPCHelpMan help()
 
 static RPCHelpMan stop()
 {
-    static const std::string RESULT{PACKAGE_NAME " stopping"};
+    static const std::string RESULT{CLIENT_NAME " stopping"};
     return RPCHelpMan{"stop",
     // Also accept the hidden 'wait' integer argument (milliseconds)
     // For instance, 'stop 1000' makes the call wait 1 second before returning
     // to the client (intended for testing)
-                "\nRequest a graceful shutdown of " PACKAGE_NAME ".",
+                "\nRequest a graceful shutdown of " CLIENT_NAME ".",
                 {
                     {"wait", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "how long to wait in ms", RPCArgOptions{.hidden=true}},
                 },
@@ -183,7 +169,7 @@ static RPCHelpMan stop()
 {
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
-    CHECK_NONFATAL((*CHECK_NONFATAL(EnsureAnyNodeContext(jsonRequest.context).shutdown))());
+    CHECK_NONFATAL((CHECK_NONFATAL(EnsureAnyNodeContext(jsonRequest.context).shutdown_request))());
     if (jsonRequest.params[0].isNum()) {
         UninterruptibleSleep(std::chrono::milliseconds{jsonRequest.params[0].getInt<int>()});
     }
@@ -293,9 +279,8 @@ bool CRPCTable::removeCommand(const std::string& name, const CRPCCommand* pcmd)
 
 void StartRPC()
 {
-    LogPrint(BCLog::RPC, "Starting RPC\n");
+    LogDebug(BCLog::RPC, "Starting RPC\n");
     g_rpc_running = true;
-    g_rpcSignals.Started();
 }
 
 void InterruptRPC()
@@ -303,7 +288,7 @@ void InterruptRPC()
     static std::once_flag g_rpc_interrupt_flag;
     // This function could be called twice if the GUI has been started with -server=1.
     std::call_once(g_rpc_interrupt_flag, []() {
-        LogPrint(BCLog::RPC, "Interrupting RPC\n");
+        LogDebug(BCLog::RPC, "Interrupting RPC\n");
         // Interrupt e.g. running longpolls
         g_rpc_running = false;
     });
@@ -314,11 +299,11 @@ void StopRPC()
     static std::once_flag g_rpc_stop_flag;
     // This function could be called twice if the GUI has been started with -server=1.
     assert(!g_rpc_running);
-    std::call_once(g_rpc_stop_flag, []() {
-        LogPrint(BCLog::RPC, "Stopping RPC\n");
+    std::call_once(g_rpc_stop_flag, [&]() {
+        LogDebug(BCLog::RPC, "Stopping RPC\n");
         WITH_LOCK(g_deadline_timers_mutex, deadlineTimers.clear());
         DeleteAuthCookie();
-        g_rpcSignals.Stopped();
+        LogDebug(BCLog::RPC, "RPC stopped.\n");
     });
 }
 
@@ -581,7 +566,7 @@ void RPCRunLater(const std::string& name, std::function<void()> func, int64_t nS
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No timer handler registered for RPC");
     LOCK(g_deadline_timers_mutex);
     deadlineTimers.erase(name);
-    LogPrint(BCLog::RPC, "queue run of timer %s in %i seconds (using %s)\n", name, nSeconds, timerInterface->Name());
+    LogDebug(BCLog::RPC, "queue run of timer %s in %i seconds (using %s)\n", name, nSeconds, timerInterface->Name());
     deadlineTimers.emplace(name, std::unique_ptr<RPCTimerBase>(timerInterface->NewTimer(func, nSeconds*1000)));
 }
 

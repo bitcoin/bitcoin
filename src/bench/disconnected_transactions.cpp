@@ -5,8 +5,17 @@
 #include <bench/bench.h>
 #include <kernel/disconnected_transactions.h>
 #include <primitives/block.h>
-#include <test/util/random.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
 #include <test/util/setup_common.h>
+
+#include <algorithm>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <iterator>
+#include <memory>
+#include <vector>
 
 constexpr size_t BLOCK_VTX_COUNT{4000};
 constexpr size_t BLOCK_VTX_COUNT_10PERCENT{400};

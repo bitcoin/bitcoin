@@ -38,4 +38,4 @@ class SymlinkTest(BitcoinTestFramework):
 
 
 if __name__ == "__main__":
-    SymlinkTest().main()
+    SymlinkTest(__file__).main()

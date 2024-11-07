@@ -69,10 +69,10 @@ static std::optional<std::pair<WalletDescriptor, FlatSigningProvider>> CreateWal
 
     FlatSigningProvider keys;
     std::string error;
-    std::unique_ptr<Descriptor> parsed_desc{Parse(desc_str.value(), keys, error, false)};
-    if (!parsed_desc) return std::nullopt;
+    std::vector<std::unique_ptr<Descriptor>> parsed_descs = Parse(desc_str.value(), keys, error, false);
+    if (parsed_descs.empty()) return std::nullopt;
 
-    WalletDescriptor w_desc{std::move(parsed_desc), /*creation_time=*/0, /*range_start=*/0, /*range_end=*/1, /*next_index=*/1};
+    WalletDescriptor w_desc{std::move(parsed_descs.at(0)), /*creation_time=*/0, /*range_start=*/0, /*range_end=*/1, /*next_index=*/1};
     return std::make_pair(w_desc, keys);
 }
 
@@ -94,6 +94,7 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
         LOCK(wallet.cs_wallet);
         wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
         wallet.SetLastBlockProcessed(chainstate.m_chain.Height(), chainstate.m_chain.Tip()->GetBlockHash());
+        wallet.m_keypool_size = 1;
     }
 
     auto wallet_desc{CreateWalletDescriptor(fuzzed_data_provider)};
@@ -101,22 +102,22 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
     auto spk_manager{CreateDescriptor(wallet_desc->first, wallet_desc->second, wallet)};
     if (spk_manager == nullptr) return;
 
+    if (fuzzed_data_provider.ConsumeBool()) {
+        auto wallet_desc{CreateWalletDescriptor(fuzzed_data_provider)};
+        if (!wallet_desc.has_value()) {
+            return;
+        }
+        std::string error;
+        if (spk_manager->CanUpdateToWalletDescriptor(wallet_desc->first, error)) {
+            auto new_spk_manager{CreateDescriptor(wallet_desc->first, wallet_desc->second, wallet)};
+            if (new_spk_manager != nullptr) spk_manager = new_spk_manager;
+        }
+    }
+
     bool good_data{true};
-    LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 300) {
+    LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 20) {
         CallOneOf(
             fuzzed_data_provider,
-            [&] {
-                auto wallet_desc{CreateWalletDescriptor(fuzzed_data_provider)};
-                if (!wallet_desc.has_value()) {
-                    good_data = false;
-                    return;
-                }
-                std::string error;
-                if (spk_manager->CanUpdateToWalletDescriptor(wallet_desc->first, error)) {
-                    auto new_spk_manager{CreateDescriptor(wallet_desc->first, wallet_desc->second, wallet)};
-                    if (new_spk_manager != nullptr) spk_manager = new_spk_manager;
-                }
-            },
             [&] {
                 const CScript script{ConsumeScript(fuzzed_data_provider)};
                 auto is_mine{spk_manager->IsMine(script)};
@@ -143,28 +144,10 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
             },
             [&] {
                 auto spks{spk_manager->GetScriptPubKeys()};
-                for (const CScript& spk : spks) {
-                    if (fuzzed_data_provider.ConsumeBool()) {
-                        spk_manager->MarkUnusedAddresses(spk);
-                    }
+                if (!spks.empty()) {
+                    auto& spk{PickValue(fuzzed_data_provider, spks)};
+                    (void)spk_manager->MarkUnusedAddresses(spk);
                 }
-            },
-            [&] {
-                CKey key{ConsumePrivateKey(fuzzed_data_provider, /*compressed=*/fuzzed_data_provider.ConsumeBool())};
-                if (!key.IsValid()) {
-                    good_data = false;
-                    return;
-                }
-                spk_manager->AddDescriptorKey(key, key.GetPubKey());
-                spk_manager->TopUp();
-                LOCK(spk_manager->cs_desc_man);
-                auto particular_key{spk_manager->GetKey(key.GetPubKey().GetID())};
-                assert(*particular_key == key);
-                assert(spk_manager->HasPrivKey(key.GetPubKey().GetID()));
-            },
-            [&] {
-                std::string descriptor;
-                (void)spk_manager->GetDescriptorString(descriptor, /*priv=*/fuzzed_data_provider.ConsumeBool());
             },
             [&] {
                 LOCK(spk_manager->cs_desc_man);
@@ -203,11 +186,16 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
                 auto psbt{*opt_psbt};
                 const PrecomputedTransactionData txdata{PrecomputePSBTData(psbt)};
                 const int sighash_type{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 150)};
-                (void)spk_manager->FillPSBT(psbt, txdata, sighash_type, fuzzed_data_provider.ConsumeBool(), fuzzed_data_provider.ConsumeBool(), nullptr, fuzzed_data_provider.ConsumeBool());
+                auto sign  = fuzzed_data_provider.ConsumeBool();
+                auto bip32derivs = fuzzed_data_provider.ConsumeBool();
+                auto finalize = fuzzed_data_provider.ConsumeBool();
+                (void)spk_manager->FillPSBT(psbt, txdata, sighash_type, sign, bip32derivs, nullptr, finalize);
             }
         );
     }
 
+    std::string descriptor;
+    (void)spk_manager->GetDescriptorString(descriptor, /*priv=*/fuzzed_data_provider.ConsumeBool());
     (void)spk_manager->GetEndRange();
     (void)spk_manager->GetKeyPoolSize();
 }

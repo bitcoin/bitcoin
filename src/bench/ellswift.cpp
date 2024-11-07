@@ -3,9 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-
 #include <key.h>
+#include <pubkey.h>
 #include <random.h>
+#include <span.h>
+#include <uint256.h>
+
+#include <algorithm>
+#include <cassert>
 
 static void EllSwiftCreate(benchmark::Bench& bench)
 {

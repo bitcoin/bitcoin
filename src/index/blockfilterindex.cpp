@@ -112,7 +112,7 @@ BlockFilterIndex::BlockFilterIndex(std::unique_ptr<interfaces::Chain> chain, Blo
     m_filter_fileseq = std::make_unique<FlatFileSeq>(std::move(path), "fltr", FLTR_FILE_CHUNK_SIZE);
 }
 
-bool BlockFilterIndex::CustomInit(const std::optional<interfaces::BlockKey>& block)
+bool BlockFilterIndex::CustomInit(const std::optional<interfaces::BlockRef>& block)
 {
     if (!m_db->Read(DB_FILTER_POS, m_next_filter_pos)) {
         // Check that the cause of the read failure is that the key does not exist. Any other errors
@@ -151,7 +151,7 @@ bool BlockFilterIndex::CustomCommit(CDBBatch& batch)
         LogError("%s: Failed to open filter file %d\n", __func__, pos.nFile);
         return false;
     }
-    if (!FileCommit(file.Get())) {
+    if (!file.Commit()) {
         LogError("%s: Failed to commit filter file %d\n", __func__, pos.nFile);
         return false;
     }
@@ -201,11 +201,11 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
             LogPrintf("%s: Failed to open filter file %d\n", __func__, pos.nFile);
             return 0;
         }
-        if (!TruncateFile(last_file.Get(), pos.nPos)) {
+        if (!last_file.Truncate(pos.nPos)) {
             LogPrintf("%s: Failed to truncate filter file %d\n", __func__, pos.nFile);
             return 0;
         }
-        if (!FileCommit(last_file.Get())) {
+        if (!last_file.Commit()) {
             LogPrintf("%s: Failed to commit filter file %d\n", __func__, pos.nFile);
             return 0;
         }
@@ -316,7 +316,7 @@ bool BlockFilterIndex::Write(const BlockFilter& filter, uint32_t block_height, c
     return true;
 }
 
-bool BlockFilterIndex::CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip)
+bool BlockFilterIndex::CustomRewind(const interfaces::BlockRef& current_tip, const interfaces::BlockRef& new_tip)
 {
     CDBBatch batch(*m_db);
     std::unique_ptr<CDBIterator> db_it(m_db->NewIterator());

@@ -3,17 +3,21 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <consensus/validation.h>
-#include <crypto/sha256.h>
+#include <consensus/consensus.h>
 #include <node/miner.h>
+#include <primitives/transaction.h>
 #include <random.h>
+#include <script/script.h>
+#include <sync.h>
 #include <test/util/mining.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
-#include <txmempool.h>
 #include <validation.h>
 
-
+#include <array>
+#include <cassert>
+#include <cstddef>
+#include <memory>
 #include <vector>
 
 static void AssembleBlock(benchmark::Bench& bench)

@@ -2,12 +2,12 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Create a new address</source>
-        <translation type="unfinished">نیا پتہ تخلیق کریں</translation>
+        <source>Right-click to edit address or label</source>
+        <translation type="unfinished">ایڈریس یا لیبل میں ترمیم کرنے کے لیے رائیٹ کلک کریں</translation>
     </message>
     <message>
-        <source>&amp;New</source>
-        <translation type="unfinished">اور نیا</translation>
+        <source>Create a new address</source>
+        <translation type="unfinished">نیا ایڈریس بنائیں</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -87,6 +87,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
         <translation type="unfinished">پتا فہرست محفوظ کرتے ہوئے %1 نقص کا سامنا ہوا۔ دوبارہ کوشش کریں۔</translation>
+    </message>
+    <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">بھیجنے والے پتے - %1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">وصول کرنے والے پتے - %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -171,6 +179,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">پرس کے لئے پرانا پاسفریج اور نیا پاسفریز درج کریں۔</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">جاری رکھیں</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">پیچھے</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">یاد رکھیں کہ آپ کے پرس کو خفیہ کرنا آپ کے بٹ کوائنز کو میلویئر/چور سے آپ کے کمپیوٹر میں انفیکشن لگانے کے ذریعہ چوری ہونے سے پوری طرح محفوظ نہیں رکھ سکتا ہے۔</translation>
     </message>
@@ -209,6 +225,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
         <translation type="unfinished">بٹوے کی ڈکرپشن کے لئے درج کردہ پاس فریس غلط تھا۔</translation>
+    </message>
+    <message>
+        <source>The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
+        <translation type="unfinished">آپ کا والٹ کھولنے کے لیے جو خفیہ لفظ (passphrase) دیا گیا ہے وہ غلط ہے۔ اس میں ایک خالی حرف (null character) موجود ہے۔ اگر یہ خفیہ لفظ اس سافٹ ویئر کے ورژن 25.0 سے پہلے والے ورژن میں بنایا گیا تھا تو براہِ کرم پہلے خالی حرف سے پہلے تک کے حروف استعمال کرکے دوبارہ کوشش کریں۔ اگر یہ کامیاب ہوجائے تو مستقبل میں اس مسئلے سے بچنے کے لیے نیا خفیہ لفظ مقرر کرلیں۔</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
@@ -263,6 +283,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Do you want to reset settings to default values, or to abort without making changes?</source>
         <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
         <translation type="unfinished">کیا آپ ترتیبات کو ڈیفالٹ اقدار پر دوبارہ ترتیب دینا چاہتے ہیں، یا تبدیلیاں کیے بغیر اسقاط کرنا چاہتے ہیں؟</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation type="unfinished">ایک سنگین خرابی واقع ہوئی ہے۔ براہ کرم چیک کریں کہ سیٹنگز فائل میں ترمیم کی جاسکتی ہے، یا پھر "-nosettings" کے ساتھ چلانے کی کوشش کریں۔</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -335,7 +360,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">پہلے سے طے شدہ والیٹ</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -563,6 +592,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">جزوی طور پر دستخط شدہ بٹ کوائن ٹرانزیکشن لوڈ کریں۔</translation>
     </message>
     <message>
+        <source>Load PSBT from &amp;clipboard…</source>
+        <translation type="unfinished">PSBT کو &amp;clipboard سے لوڈ کریں...</translation>
+    </message>
+    <message>
         <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
         <translation type="unfinished">کلپ بورڈ سے جزوی طور پر دستخط شدہ بٹ کوائن ٹرانزیکشن لوڈ کریں۔</translation>
     </message>
@@ -599,8 +632,26 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">والیٹ بند کریں</translation>
     </message>
     <message>
+        <source>Restore Wallet…</source>
+        <extracomment>Name of the menu item that restores wallet from a backup file.</extracomment>
+        <translation type="unfinished">والیٹ بحال کریں...</translation>
+    </message>
+    <message>
+        <source>Restore a wallet from a backup file</source>
+        <extracomment>Status tip for Restore Wallet menu item</extracomment>
+        <translation type="unfinished">بیک اپ فائل سے والیٹ بحال کریں</translation>
+    </message>
+    <message>
         <source>Close all wallets</source>
         <translation type="unfinished">تمام والیٹس بند کریں</translation>
+    </message>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">والیٹ منتقل کریں</translation>
+    </message>
+    <message>
+        <source>Migrate a wallet</source>
+        <translation type="unfinished">ایک والیٹ منتقل کریں</translation>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
@@ -615,12 +666,23 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">جائزہ ٹیب میں اقدار کو ماسک کریں۔</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation type="unfinished">پہلے سے طے شدہ والیٹ</translation>
-    </message>
-    <message>
         <source>No wallets available</source>
         <translation type="unfinished">کوئی والیٹ دستیاب نہیں ہیں۔</translation>
+    </message>
+    <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation type="unfinished">والیٹ کا ڈیٹا</translation>
+    </message>
+    <message>
+        <source>Load Wallet Backup</source>
+        <extracomment>The title for Restore Wallet File Windows</extracomment>
+        <translation type="unfinished">والیٹ بیک اپ لوڈ کریں</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
+        <translation type="unfinished">والیٹ بحال کریں</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -670,6 +732,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Enable network activity</source>
         <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
         <translation type="unfinished">نیٹ ورک کی سرگرمی کو فعال کریں۔</translation>
+    </message>
+    <message>
+        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
+        <translation type="unfinished">نیا والیٹ نہیں بنایا جا سکتا، اس سافٹ ویئر کو sqlite سپورٹ کے بغیر کمپائل کیا گیا ہے (ڈسکرپٹر والیٹ کے لیے درکار)۔</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -733,7 +799,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation type="unfinished">نجی کلید &lt;b&gt;غیر فعال &lt;b/&gt;ہے۔</translation>
+        <translation type="unfinished">نجی کلید &lt;b&gt;غیر فعال&lt;/b&gt; ہے۔</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation type="unfinished">والٹ &lt;b&gt;خفیہ کردہ &lt;/b&gt;ہے اور فی الحال &lt;b&gt;غیر مقفل&lt;/b&gt; ہے</translation>
     </message>
     <message>
         <source>Original message:</source>
@@ -904,6 +974,27 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
+If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
+If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
+
+The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
+        <translation type="unfinished">والیٹ کی منتقلی اس والیٹ کو ایک یا ایک سے زیادہ ڈسکرپٹر والیٹ میں تبدیل کر دے گی۔ ایک نیا والیٹ بیک اپ بنانا ہوگا۔
+
+اگر اس والیٹ میں کوئی واچ اونلی اسکرپٹس ہیں، تو ایک نیا والیٹ بنایا جائے گا جس میں وہ واچ اونلی اسکرپٹس ہوں گے۔
+
+اگر اس والیٹ میں کوئی حل طلب لیکن واچ نہیں کیے گئے اسکرپٹس ہیں، تو ایک مختلف اور نیا والیٹ بنایا جائے گا جس میں وہ اسکرپٹس ہوں گے۔
+
+منتقلی کے عمل سے پہلے والیٹ کا بیک اپ بنایا جائے گا۔ اس بیک اپ فائل کا نام &lt;wallet name&gt;- &lt;timestamp&gt;.legacy.bak ہوگا اور یہ اس والیٹ کی ڈائرکٹری میں مل سکتی ہے۔ غلط منتقلی کی صورت میں، بیک اپ کو "Restore Wallet" فعالیت کے ساتھ بحال کیا جا سکتا ہے۔</translation>
+    </message>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">والیٹ منتقل کریں</translation>
+    </message>
+    </context>
+<context>
     <name>OpenWalletActivity</name>
     <message>
         <source>Open wallet failed</source>
@@ -914,13 +1005,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">والیٹ کھولنے کی انتباہ</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation type="unfinished">پہلے سے طے شدہ والیٹ</translation>
-    </message>
-    <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
         <translation type="unfinished">والیٹ کھولیں</translation>
+    </message>
+    </context>
+<context>
+    <name>RestoreWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">والیٹ بحال کریں</translation>
     </message>
     </context>
 <context>
@@ -947,6 +1042,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Create Wallet</source>
         <translation type="unfinished">والیٹ بنائیں</translation>
+    </message>
+    <message>
+        <source>Please provide a name and, if desired, enable any advanced options</source>
+        <translation type="unfinished">براہ کرم ایک نام فراہم کریں اور، اگر مطلوب ہو تو، کوئی بھی اعلی درجے کے اختیارات کو فعال کریں</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -1035,6 +1134,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Edit sending address</source>
         <translation type="unfinished">بھیجنے کے پتے میں ترمیم کریں۔</translation>
+    </message>
+    <message>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation type="unfinished">ایڈریس "%1" پہلے سے ہی لیبل "%2" کے ساتھ وصول کنندہ کے ایڈریس کے طور پر موجود ہے اور اس لیے اسے بھیجنے والے کے ایڈریس کے طور پر شامل نہیں کیا جا سکتا۔</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation type="unfinished">درج کردہ ایڈریس "%1" پہلے سے ہی ایڈریس بک میں لیبل "%2" کے ساتھ موجود ہے۔</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -1331,6 +1438,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Configuration options</source>
         <extracomment>Window title text of pop-up box that allows opening up of configuration file.</extracomment>
         <translation type="unfinished">کنفیگریشن کے اختیارات</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">جاری رکھیں</translation>
     </message>
     <message>
         <source>Error</source>
@@ -2110,10 +2221,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">دستخط - ایک پیغام پر دستخط / تصدیق کریں۔</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished">آپ یہ ثابت کرنے کے لیے اپنے پتوں کے ساتھ پیغامات/معاہدوں پر دستخط کر سکتے ہیں کہ آپ ان پر بھیجے گئے بٹ کوائنز وصول کر سکتے ہیں۔ ہوشیار رہیں کہ کسی بھی مبہم یا بے ترتیب پر دستخط نہ کریں، کیونکہ فریب دہی کے حملے آپ کو اپنی شناخت پر دستخط کرنے کے لیے دھوکہ دینے کی کوشش کر سکتے ہیں۔ صرف مکمل تفصیلی بیانات پر دستخط کریں جن سے آپ اتفاق کرتے ہیں۔</translation>
-    </message>
-    <message>
         <source>The Bitcoin address to sign the message with</source>
         <translation type="unfinished">پیغام پر دستخط کرنے کے لیے بٹ کوائن کا پتہ</translation>
     </message>
@@ -2288,11 +2395,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <source>Send Coins</source>
         <translation type="unfinished">سکے بھیجیں۔</translation>
     </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">پہلے سے طے شدہ والیٹ</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>
@@ -2302,6 +2405,11 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">موجودہ ڈیٹا کو فائیل میں محفوظ کریں</translation>
+    </message>
+    <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation type="unfinished">والیٹ کا ڈیٹا</translation>
     </message>
     </context>
 <context>

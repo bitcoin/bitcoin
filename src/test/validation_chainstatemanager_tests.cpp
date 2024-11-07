@@ -5,6 +5,7 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <kernel/disconnected_transactions.h>
+#include <node/chainstatemanager_args.h>
 #include <node/kernel_notifications.h>
 #include <node/utxo_snapshot.h>
 #include <random.h>
@@ -16,6 +17,8 @@
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
 #include <uint256.h>
+#include <util/result.h>
+#include <util/vector.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -152,10 +155,10 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
         manager.MaybeRebalanceCaches();
     }
 
-    BOOST_CHECK_CLOSE(c1.m_coinstip_cache_size_bytes, max_cache * 0.05, 1);
-    BOOST_CHECK_CLOSE(c1.m_coinsdb_cache_size_bytes, max_cache * 0.05, 1);
-    BOOST_CHECK_CLOSE(c2.m_coinstip_cache_size_bytes, max_cache * 0.95, 1);
-    BOOST_CHECK_CLOSE(c2.m_coinsdb_cache_size_bytes, max_cache * 0.95, 1);
+    BOOST_CHECK_CLOSE(double(c1.m_coinstip_cache_size_bytes), max_cache * 0.05, 1);
+    BOOST_CHECK_CLOSE(double(c1.m_coinsdb_cache_size_bytes), max_cache * 0.05, 1);
+    BOOST_CHECK_CLOSE(double(c2.m_coinstip_cache_size_bytes), max_cache * 0.95, 1);
+    BOOST_CHECK_CLOSE(double(c2.m_coinsdb_cache_size_bytes), max_cache * 0.95, 1);
 }
 
 struct SnapshotTestSetup : TestChain100Setup {
@@ -167,9 +170,10 @@ struct SnapshotTestSetup : TestChain100Setup {
     // destructive filesystem operations.
     SnapshotTestSetup() : TestChain100Setup{
                               {},
-                              {},
-                              /*coins_db_in_memory=*/false,
-                              /*block_tree_db_in_memory=*/false,
+                              {
+                                  .coins_db_in_memory = false,
+                                  .block_tree_db_in_memory = false,
+                              },
                           }
     {
     }
@@ -284,7 +288,7 @@ struct SnapshotTestSetup : TestChain100Setup {
         const auto& au_data = ::Params().AssumeutxoForHeight(snapshot_height);
         const CBlockIndex* tip = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip());
 
-        BOOST_CHECK_EQUAL(tip->nChainTx, au_data->nChainTx);
+        BOOST_CHECK_EQUAL(tip->m_chain_tx_count, au_data->m_chain_tx_count);
 
         // To be checked against later when we try loading a subsequent snapshot.
         uint256 loaded_snapshot_blockhash{*chainman.SnapshotBlockhash()};
@@ -378,7 +382,7 @@ struct SnapshotTestSetup : TestChain100Setup {
             LOCK(::cs_main);
             chainman.ResetChainstates();
             BOOST_CHECK_EQUAL(chainman.GetAll().size(), 0);
-            m_node.notifications = std::make_unique<KernelNotifications>(*Assert(m_node.shutdown), m_node.exit_status);
+            m_node.notifications = std::make_unique<KernelNotifications>(Assert(m_node.shutdown_request), m_node.exit_status, *Assert(m_node.warnings));
             const ChainstateManager::Options chainman_opts{
                 .chainparams = ::Params(),
                 .datadir = chainman.m_options.datadir,
@@ -393,7 +397,7 @@ struct SnapshotTestSetup : TestChain100Setup {
             // For robustness, ensure the old manager is destroyed before creating a
             // new one.
             m_node.chainman.reset();
-            m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown), chainman_opts, blockman_opts);
+            m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown_signal), chainman_opts, blockman_opts);
         }
         return *Assert(m_node.chainman);
     }
@@ -464,7 +468,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_loadblockindex, TestChain100Setup)
         if (i < last_assumed_valid_idx && i >= assumed_valid_start_idx) {
             index->nStatus = BlockStatus::BLOCK_VALID_TREE;
             index->nTx = 0;
-            index->nChainTx = 0;
+            index->m_chain_tx_count = 0;
         }
 
         ++num_indexes;
@@ -714,10 +718,10 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
     CCoinsViewCache& ibd_coins = WITH_LOCK(::cs_main,
         return validation_chainstate.CoinsTip());
     Coin badcoin;
-    badcoin.out.nValue = InsecureRand32();
+    badcoin.out.nValue = m_rng.rand32();
     badcoin.nHeight = 1;
-    badcoin.out.scriptPubKey.assign(InsecureRandBits(6), 0);
-    Txid txid = Txid::FromUint256(InsecureRand256());
+    badcoin.out.scriptPubKey.assign(m_rng.randbits(6), 0);
+    Txid txid = Txid::FromUint256(m_rng.rand256());
     ibd_coins.AddCoin(COutPoint(txid, 0), std::move(badcoin), false);
 
     fs::path snapshot_chainstate_dir = gArgs.GetDataDirNet() / "chainstate_snapshot";
@@ -766,6 +770,65 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
         LOCK(::cs_main);
         BOOST_CHECK_EQUAL(chainman_restarted.ActiveHeight(), 220);
     }
+}
+
+/** Helper function to parse args into args_man and return the result of applying them to opts */
+template <typename Options>
+util::Result<Options> SetOptsFromArgs(ArgsManager& args_man, Options opts,
+                                      const std::vector<const char*>& args)
+{
+    const auto argv{Cat({"ignore"}, args)};
+    std::string error{};
+    if (!args_man.ParseParameters(argv.size(), argv.data(), error)) {
+        return util::Error{Untranslated("ParseParameters failed with error: " + error)};
+    }
+    const auto result{node::ApplyArgsManOptions(args_man, opts)};
+    if (!result) return util::Error{util::ErrorString(result)};
+    return opts;
+}
+
+BOOST_FIXTURE_TEST_CASE(chainstatemanager_args, BasicTestingSetup)
+{
+    //! Try to apply the provided args to a ChainstateManager::Options
+    auto get_opts = [&](const std::vector<const char*>& args) {
+        static kernel::Notifications notifications{};
+        static const ChainstateManager::Options options{
+            .chainparams = ::Params(),
+            .datadir = {},
+            .notifications = notifications};
+        return SetOptsFromArgs(*this->m_node.args, options, args);
+    };
+    //! Like get_opts, but requires the provided args to be valid and unwraps the result
+    auto get_valid_opts = [&](const std::vector<const char*>& args) {
+        const auto result{get_opts(args)};
+        BOOST_REQUIRE_MESSAGE(result, util::ErrorString(result).original);
+        return *result;
+    };
+
+    // test -assumevalid
+    BOOST_CHECK(!get_valid_opts({}).assumed_valid_block);
+    BOOST_CHECK_EQUAL(get_valid_opts({"-assumevalid="}).assumed_valid_block, uint256::ZERO);
+    BOOST_CHECK_EQUAL(get_valid_opts({"-assumevalid=0"}).assumed_valid_block, uint256::ZERO);
+    BOOST_CHECK_EQUAL(get_valid_opts({"-noassumevalid"}).assumed_valid_block, uint256::ZERO);
+    BOOST_CHECK_EQUAL(get_valid_opts({"-assumevalid=0x12"}).assumed_valid_block, uint256{0x12});
+
+    std::string assume_valid{"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"};
+    BOOST_CHECK_EQUAL(get_valid_opts({("-assumevalid=" + assume_valid).c_str()}).assumed_valid_block, uint256::FromHex(assume_valid));
+
+    BOOST_CHECK(!get_opts({"-assumevalid=xyz"}));                                                               // invalid hex characters
+    BOOST_CHECK(!get_opts({"-assumevalid=01234567890123456789012345678901234567890123456789012345678901234"})); // > 64 hex chars
+
+    // test -minimumchainwork
+    BOOST_CHECK(!get_valid_opts({}).minimum_chain_work);
+    BOOST_CHECK_EQUAL(get_valid_opts({"-minimumchainwork=0"}).minimum_chain_work, arith_uint256());
+    BOOST_CHECK_EQUAL(get_valid_opts({"-nominimumchainwork"}).minimum_chain_work, arith_uint256());
+    BOOST_CHECK_EQUAL(get_valid_opts({"-minimumchainwork=0x1234"}).minimum_chain_work, arith_uint256{0x1234});
+
+    std::string minimum_chainwork{"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"};
+    BOOST_CHECK_EQUAL(get_valid_opts({("-minimumchainwork=" + minimum_chainwork).c_str()}).minimum_chain_work, UintToArith256(uint256::FromHex(minimum_chainwork).value()));
+
+    BOOST_CHECK(!get_opts({"-minimumchainwork=xyz"}));                                                               // invalid hex characters
+    BOOST_CHECK(!get_opts({"-minimumchainwork=01234567890123456789012345678901234567890123456789012345678901234"})); // > 64 hex chars
 }
 
 BOOST_AUTO_TEST_SUITE_END()

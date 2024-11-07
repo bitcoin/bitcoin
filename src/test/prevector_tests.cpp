@@ -3,16 +3,15 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <prevector.h>
-#include <vector>
-
-#include <reverse_iterator.h>
 #include <serialize.h>
 #include <streams.h>
-
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <ranges>
+#include <vector>
 
 BOOST_FIXTURE_TEST_SUITE(prevector_tests, TestingSetup)
 
@@ -28,7 +27,6 @@ class prevector_tester {
 
     typedef typename pretype::size_type Size;
     bool passed = true;
-    FastRandomContext rand_cache;
     uint256 rand_seed;
 
 
@@ -58,14 +56,14 @@ class prevector_tester {
         for (const T& v : pre_vector) {
              local_check(v == real_vector[pos++]);
         }
-        for (const T& v : reverse_iterate(pre_vector)) {
-             local_check(v == real_vector[--pos]);
+        for (const T& v : pre_vector | std::views::reverse) {
+            local_check(v == real_vector[--pos]);
         }
         for (const T& v : const_pre_vector) {
              local_check(v == real_vector[pos++]);
         }
-        for (const T& v : reverse_iterate(const_pre_vector)) {
-             local_check(v == real_vector[--pos]);
+        for (const T& v : const_pre_vector | std::views::reverse) {
+            local_check(v == real_vector[--pos]);
         }
         DataStream ss1{};
         DataStream ss2{};
@@ -209,84 +207,83 @@ public:
         BOOST_CHECK_MESSAGE(passed, "insecure_rand: " + rand_seed.ToString());
     }
 
-    prevector_tester() {
-        SeedInsecureRand();
-        rand_seed = InsecureRand256();
-        rand_cache = FastRandomContext(rand_seed);
+    prevector_tester(FastRandomContext& rng) {
+        rand_seed = rng.rand256();
+        rng.Reseed(rand_seed);
     }
 };
 
 BOOST_AUTO_TEST_CASE(PrevectorTestInt)
 {
     for (int j = 0; j < 64; j++) {
-        prevector_tester<8, int> test;
+        prevector_tester<8, int> test{m_rng};
         for (int i = 0; i < 2048; i++) {
-            if (InsecureRandBits(2) == 0) {
-                test.insert(InsecureRandRange(test.size() + 1), int(InsecureRand32()));
+            if (m_rng.randbits(2) == 0) {
+                test.insert(m_rng.randrange(test.size() + 1), int(m_rng.rand32()));
             }
-            if (test.size() > 0 && InsecureRandBits(2) == 1) {
-                test.erase(InsecureRandRange(test.size()));
+            if (test.size() > 0 && m_rng.randbits(2) == 1) {
+                test.erase(m_rng.randrange(test.size()));
             }
-            if (InsecureRandBits(3) == 2) {
-                int new_size = std::max(0, std::min(30, (int)test.size() + (int)InsecureRandRange(5) - 2));
+            if (m_rng.randbits(3) == 2) {
+                int new_size = std::max(0, std::min(30, (int)test.size() + (int)m_rng.randrange(5) - 2));
                 test.resize(new_size);
             }
-            if (InsecureRandBits(3) == 3) {
-                test.insert(InsecureRandRange(test.size() + 1), 1 + InsecureRandBool(), int(InsecureRand32()));
+            if (m_rng.randbits(3) == 3) {
+                test.insert(m_rng.randrange(test.size() + 1), 1 + m_rng.randbool(), int(m_rng.rand32()));
             }
-            if (InsecureRandBits(3) == 4) {
-                int del = std::min<int>(test.size(), 1 + (InsecureRandBool()));
-                int beg = InsecureRandRange(test.size() + 1 - del);
+            if (m_rng.randbits(3) == 4) {
+                int del = std::min<int>(test.size(), 1 + (m_rng.randbool()));
+                int beg = m_rng.randrange(test.size() + 1 - del);
                 test.erase(beg, beg + del);
             }
-            if (InsecureRandBits(4) == 5) {
-                test.push_back(int(InsecureRand32()));
+            if (m_rng.randbits(4) == 5) {
+                test.push_back(int(m_rng.rand32()));
             }
-            if (test.size() > 0 && InsecureRandBits(4) == 6) {
+            if (test.size() > 0 && m_rng.randbits(4) == 6) {
                 test.pop_back();
             }
-            if (InsecureRandBits(5) == 7) {
+            if (m_rng.randbits(5) == 7) {
                 int values[4];
-                int num = 1 + (InsecureRandBits(2));
+                int num = 1 + (m_rng.randbits(2));
                 for (int k = 0; k < num; k++) {
-                    values[k] = int(InsecureRand32());
+                    values[k] = int(m_rng.rand32());
                 }
-                test.insert_range(InsecureRandRange(test.size() + 1), values, values + num);
+                test.insert_range(m_rng.randrange(test.size() + 1), values, values + num);
             }
-            if (InsecureRandBits(5) == 8) {
-                int del = std::min<int>(test.size(), 1 + (InsecureRandBits(2)));
-                int beg = InsecureRandRange(test.size() + 1 - del);
+            if (m_rng.randbits(5) == 8) {
+                int del = std::min<int>(test.size(), 1 + (m_rng.randbits(2)));
+                int beg = m_rng.randrange(test.size() + 1 - del);
                 test.erase(beg, beg + del);
             }
-            if (InsecureRandBits(5) == 9) {
-                test.reserve(InsecureRandBits(5));
+            if (m_rng.randbits(5) == 9) {
+                test.reserve(m_rng.randbits(5));
             }
-            if (InsecureRandBits(6) == 10) {
+            if (m_rng.randbits(6) == 10) {
                 test.shrink_to_fit();
             }
             if (test.size() > 0) {
-                test.update(InsecureRandRange(test.size()), int(InsecureRand32()));
+                test.update(m_rng.randrange(test.size()), int(m_rng.rand32()));
             }
-            if (InsecureRandBits(10) == 11) {
+            if (m_rng.randbits(10) == 11) {
                 test.clear();
             }
-            if (InsecureRandBits(9) == 12) {
-                test.assign(InsecureRandBits(5), int(InsecureRand32()));
+            if (m_rng.randbits(9) == 12) {
+                test.assign(m_rng.randbits(5), int(m_rng.rand32()));
             }
-            if (InsecureRandBits(3) == 3) {
+            if (m_rng.randbits(3) == 3) {
                 test.swap();
             }
-            if (InsecureRandBits(4) == 8) {
+            if (m_rng.randbits(4) == 8) {
                 test.copy();
             }
-            if (InsecureRandBits(5) == 18) {
+            if (m_rng.randbits(5) == 18) {
                 test.move();
             }
-            if (InsecureRandBits(5) == 19) {
-                unsigned int num = 1 + (InsecureRandBits(4));
+            if (m_rng.randbits(5) == 19) {
+                unsigned int num = 1 + (m_rng.randbits(4));
                 std::vector<int> values(num);
                 for (int& v : values) {
-                    v = int(InsecureRand32());
+                    v = int(m_rng.rand32());
                 }
                 test.resize_uninitialized(values);
             }

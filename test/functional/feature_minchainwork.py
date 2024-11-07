@@ -110,9 +110,9 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         self.stop_node(0)
         self.nodes[0].assert_start_raises_init_error(
             ["-minimumchainwork=test"],
-            expected_msg='Error: Invalid non-hex (test) minimum chain work value specified',
+            expected_msg='Error: Invalid minimum work specified (test), must be up to 64 hex digits',
         )
 
 
 if __name__ == '__main__':
-    MinimumChainWorkTest().main()
+    MinimumChainWorkTest(__file__).main()

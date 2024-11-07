@@ -5,8 +5,11 @@
 
 #include <bench/bench.h>
 #include <crypto/poly1305.h>
-
 #include <span.h>
+
+#include <cstddef>
+#include <cstdint>
+#include <vector>
 
 /* Number of bytes to process per iteration */
 static constexpr uint64_t BUFFER_SIZE_TINY  = 64;

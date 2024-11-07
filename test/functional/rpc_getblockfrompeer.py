@@ -58,7 +58,7 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         self.log.info("Node 0 should only have the header for node 1's block 3")
         x = next(filter(lambda x: x['hash'] == short_tip, self.nodes[0].getchaintips()))
         assert_equal(x['status'], "headers-only")
-        assert_raises_rpc_error(-1, "Block not found on disk", self.nodes[0].getblock, short_tip)
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", self.nodes[0].getblock, short_tip)
 
         self.log.info("Fetch block from node 1")
         peers = self.nodes[0].getpeerinfo()
@@ -154,4 +154,4 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    GetBlockFromPeerTest().main()
+    GetBlockFromPeerTest(__file__).main()

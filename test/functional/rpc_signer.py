@@ -77,4 +77,4 @@ class RPCSignerTest(BitcoinTestFramework):
         assert_equal({'fingerprint': '00000001', 'name': 'trezor_t'} in self.nodes[1].enumeratesigners()['signers'], True)
 
 if __name__ == '__main__':
-    RPCSignerTest().main()
+    RPCSignerTest(__file__).main()

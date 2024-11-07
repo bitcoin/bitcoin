@@ -21,8 +21,8 @@ env:
   MAKEFLAGS: '-j4'
   BUILD: 'check'
   ### secp256k1 config
-  ECMULTWINDOW: 'auto'
-  ECMULTGENKB: 'auto'
+  ECMULTWINDOW: 15
+  ECMULTGENKB: 86
   ASM: 'no'
   WIDEMUL: 'auto'
   WITH_VALGRIND: 'yes'
@@ -31,10 +31,12 @@ env:
   EXPERIMENTAL: 'no'
   ECDH: 'no'
   RECOVERY: 'no'
+  EXTRAKEYS: 'no'
   SCHNORRSIG: 'no'
+  MUSIG: 'no'
   ELLSWIFT: 'no'
   ### test options
-  SECP256K1_TEST_ITERS:
+  SECP256K1_TEST_ITERS: 64
   BENCH: 'yes'
   SECP256K1_BENCH_ITERS: 2
   CTIMETESTS: 'yes'
@@ -71,18 +73,18 @@ jobs:
       matrix:
         configuration:
           - env_vars: { WIDEMUL: 'int64',  RECOVERY: 'yes' }
-          - env_vars: { WIDEMUL: 'int64',                   ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - env_vars: { WIDEMUL: 'int64',                   ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
           - env_vars: { WIDEMUL: 'int128' }
-          - env_vars: { WIDEMUL: 'int128_struct',                                           ELLSWIFT: 'yes' }
-          - env_vars: { WIDEMUL: 'int128', RECOVERY: 'yes',              SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
-          - env_vars: { WIDEMUL: 'int128',                  ECDH: 'yes', SCHNORRSIG: 'yes' }
-          - env_vars: { WIDEMUL: 'int128', ASM: 'x86_64',                                   ELLSWIFT: 'yes' }
-          - env_vars: {                    RECOVERY: 'yes',              SCHNORRSIG: 'yes' }
-          - env_vars: { CTIMETESTS: 'no',  RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', CPPFLAGS: '-DVERIFY' }
+          - env_vars: { WIDEMUL: 'int128_struct',                                                             ELLSWIFT: 'yes' }
+          - env_vars: { WIDEMUL: 'int128', RECOVERY: 'yes',              EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
+          - env_vars: { WIDEMUL: 'int128',                  ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes' }
+          - env_vars: { WIDEMUL: 'int128', ASM: 'x86_64',                                                     ELLSWIFT: 'yes' }
+          - env_vars: {                    RECOVERY: 'yes',              EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes' }
+          - env_vars: { CTIMETESTS: 'no',  RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', CPPFLAGS: '-DVERIFY' }
           - env_vars: { BUILD: 'distcheck', WITH_VALGRIND: 'no', CTIMETESTS: 'no', BENCH: 'no' }
           - env_vars: { CPPFLAGS: '-DDETERMINISTIC' }
           - env_vars: { CFLAGS: '-O0', CTIMETESTS: 'no' }
-          - env_vars: { CFLAGS: '-O1',     RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - env_vars: { CFLAGS: '-O1',     RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
           - env_vars: { ECMULTGENKB: 2, ECMULTWINDOW: 2 }
           - env_vars: { ECMULTGENKB: 86, ECMULTWINDOW: 4 }
         cc:
@@ -139,7 +141,9 @@ jobs:
       HOST: 'i686-linux-gnu'
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CC: ${{ matrix.cc }}
 
@@ -183,7 +187,9 @@ jobs:
       WITH_VALGRIND: 'no'
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
 
@@ -234,7 +240,9 @@ jobs:
       WITH_VALGRIND: 'no'
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
 
@@ -279,7 +287,9 @@ jobs:
       WITH_VALGRIND: 'no'
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
 
@@ -334,7 +344,9 @@ jobs:
       WITH_VALGRIND: 'no'
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
 
@@ -386,7 +398,9 @@ jobs:
       WRAPPER_CMD: 'valgrind --error-exitcode=42'
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
       SECP256K1_TEST_ITERS: 2
@@ -437,7 +451,9 @@ jobs:
     env:
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
       CFLAGS: '-fsanitize=undefined,address -g'
@@ -485,18 +501,26 @@ jobs:
       matrix:
         configuration:
           - env_vars:
+              CTIMETESTS: 'yes'
               CFLAGS: '-fsanitize=memory -fsanitize-recover=memory -g'
           - env_vars:
               ECMULTGENKB: 2
               ECMULTWINDOW: 2
+              CTIMETESTS: 'yes'
               CFLAGS: '-fsanitize=memory -fsanitize-recover=memory -g -O3'
+          - env_vars:
+              # -fsanitize-memory-param-retval is clang's default, but our build system disables it
+              # when ctime_tests when enabled.
+              CFLAGS: '-fsanitize=memory -fsanitize-recover=memory -fsanitize-memory-param-retval -g'
+              CTIMETESTS: 'no'
 
     env:
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
-      CTIMETESTS: 'yes'
       CC: 'clang'
       SECP256K1_TEST_ITERS: 32
       ASM: 'no'
@@ -541,7 +565,9 @@ jobs:
       WITH_VALGRIND: 'no'
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
 
@@ -585,10 +611,10 @@ jobs:
         run: env
         if: ${{ always() }}
 
-  macos-native:
-    name: "x86_64: macOS Monterey"
+  x86_64-macos-native:
+    name: "x86_64: macOS Ventura, Valgrind"
     # See: https://github.com/actions/runner-images#available-images.
-    runs-on: macos-12 # Use M1 once available https://github.com/github/roadmap/issues/528
+    runs-on: macos-13
 
     env:
       CC: 'clang'
@@ -599,15 +625,15 @@ jobs:
       fail-fast: false
       matrix:
         env_vars:
-          - { WIDEMUL: 'int64',  RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int64',  RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
           - { WIDEMUL: 'int128_struct', ECMULTGENKB: 2, ECMULTWINDOW: 4 }
-          - { WIDEMUL: 'int128',                  ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int128',                  ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
           - { WIDEMUL: 'int128', RECOVERY: 'yes' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes', CC: 'gcc' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes',            WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes', CC: 'gcc', WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes', CPPFLAGS: '-DVERIFY', CTIMETESTS: 'no' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', CC: 'gcc' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes',            WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', CC: 'gcc', WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', CPPFLAGS: '-DVERIFY', CTIMETESTS: 'no' }
           - BUILD: 'distcheck'
 
     steps:
@@ -616,11 +642,67 @@ jobs:
 
       - name: Install Homebrew packages
         run: |
-          brew install automake libtool gcc
+          brew install --quiet automake libtool gcc
           ln -s $(brew --prefix gcc)/bin/gcc-?? /usr/local/bin/gcc
 
       - name: Install and cache Valgrind
         uses: ./.github/actions/install-homebrew-valgrind
+
+      - name: CI script
+        env: ${{ matrix.env_vars }}
+        run: ./ci/ci.sh
+
+      - run: cat tests.log || true
+        if: ${{ always() }}
+      - run: cat noverify_tests.log || true
+        if: ${{ always() }}
+      - run: cat exhaustive_tests.log || true
+        if: ${{ always() }}
+      - run: cat ctime_tests.log || true
+        if: ${{ always() }}
+      - run: cat bench.log || true
+        if: ${{ always() }}
+      - run: cat config.log || true
+        if: ${{ always() }}
+      - run: cat test_env.log || true
+        if: ${{ always() }}
+      - name: CI env
+        run: env
+        if: ${{ always() }}
+
+  arm64-macos-native:
+    name: "ARM64: macOS Sonoma"
+    # See: https://github.com/actions/runner-images#available-images.
+    runs-on: macos-14
+
+    env:
+      CC: 'clang'
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+      WITH_VALGRIND: 'no'
+      CTIMETESTS: 'no'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        env_vars:
+          - { WIDEMUL: 'int64',  RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int128_struct', ECMULTGENPRECISION: 2, ECMULTWINDOW: 4 }
+          - { WIDEMUL: 'int128',                  ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes', CC: 'gcc' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes', CPPFLAGS: '-DVERIFY' }
+          - BUILD: 'distcheck'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Homebrew packages
+        run: |
+          brew install --quiet automake libtool gcc
+          ln -s $(brew --prefix gcc)/bin/gcc-?? /usr/local/bin/gcc
 
       - name: CI script
         env: ${{ matrix.env_vars }}
@@ -679,14 +761,14 @@ jobs:
         # Use the bash shell included with Git for Windows.
         shell: bash
         run: |
-          cd build/src/RelWithDebInfo && file *tests.exe bench*.exe libsecp256k1-*.dll || true
+          cd build/bin/RelWithDebInfo && file *tests.exe bench*.exe libsecp256k1-*.dll || true
 
       - name: Check
         run: |
           ctest -C RelWithDebInfo --test-dir build -j ([int]$env:NUMBER_OF_PROCESSORS + 1)
-          build\src\RelWithDebInfo\bench_ecmult.exe
-          build\src\RelWithDebInfo\bench_internal.exe
-          build\src\RelWithDebInfo\bench.exe
+          build\bin\RelWithDebInfo\bench_ecmult.exe
+          build\bin\RelWithDebInfo\bench_internal.exe
+          build\bin\RelWithDebInfo\bench.exe
 
   win64-native-headers:
     name: "x64 (MSVC): C++ (public headers)"
@@ -716,7 +798,9 @@ jobs:
       WERROR_CFLAGS:
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
 
     steps:
@@ -802,5 +886,5 @@ jobs:
           CI_BUILD: ${{ runner.temp }}/${{ github.run_id }}${{ github.action }}/build
           CI_INSTALL: ${{ runner.temp }}/${{ github.run_id }}${{ github.action }}/install
         run: |
-          cmake -B ${{ env.CI_BUILD }} -DCMAKE_INSTALL_PREFIX=${{ env.CI_INSTALL }} && cmake --build ${{ env.CI_BUILD }} --target install && ls -RlAh ${{ env.CI_INSTALL }}
+          cmake -B ${{ env.CI_BUILD }} -DCMAKE_INSTALL_PREFIX=${{ env.CI_INSTALL }} && cmake --build ${{ env.CI_BUILD }} && cmake --install ${{ env.CI_BUILD }} && ls -RlAh ${{ env.CI_INSTALL }}
           gcc -o ecdsa examples/ecdsa.c -I ${{ env.CI_INSTALL }}/include -L ${{ env.CI_INSTALL }}/lib*/ -l secp256k1 -Wl,-rpath,"${{ env.CI_INSTALL }}/lib",-rpath,"${{ env.CI_INSTALL }}/lib64" && ./ecdsa

@@ -2,14 +2,25 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
-
 #include <bench/bench.h>
-#include <node/context.h>
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 #include <random.h>
+#include <support/allocators/secure.h>
 #include <test/util/setup_common.h>
+#include <uint256.h>
+#include <util/fs.h>
+#include <util/translation.h>
 #include <wallet/context.h>
+#include <wallet/db.h>
 #include <wallet/wallet.h>
+#include <wallet/walletutil.h>
+
+#include <cassert>
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace wallet {
 static void WalletCreate(benchmark::Bench& bench, bool encrypted)
@@ -42,7 +53,7 @@ static void WalletCreate(benchmark::Bench& bench, bool encrypted)
 
         // Release wallet
         RemoveWallet(context, wallet, /*load_on_start=*/ std::nullopt);
-        UnloadWallet(std::move(wallet));
+        WaitForDeleteWallet(std::move(wallet));
         fs::remove_all(wallet_path);
     });
 }

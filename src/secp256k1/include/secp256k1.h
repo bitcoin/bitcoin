@@ -49,19 +49,6 @@ extern "C" {
  */
 typedef struct secp256k1_context_struct secp256k1_context;
 
-/** Opaque data structure that holds rewritable "scratch space"
- *
- *  The purpose of this structure is to replace dynamic memory allocations,
- *  because we target architectures where this may not be available. It is
- *  essentially a resizable (within specified parameters) block of bytes,
- *  which is initially created either by memory allocation or TODO as a pointer
- *  into some fixed rewritable space.
- *
- *  Unlike the context object, this cannot safely be shared between threads
- *  without additional synchronization logic.
- */
-typedef struct secp256k1_scratch_space_struct secp256k1_scratch_space;
-
 /** Opaque data structure that holds a parsed and valid public key.
  *
  *  The exact representation of data inside is implementation defined and not
@@ -71,11 +58,11 @@ typedef struct secp256k1_scratch_space_struct secp256k1_scratch_space;
  *  use secp256k1_ec_pubkey_serialize and secp256k1_ec_pubkey_parse. To
  *  compare keys, use secp256k1_ec_pubkey_cmp.
  */
-typedef struct {
+typedef struct secp256k1_pubkey {
     unsigned char data[64];
 } secp256k1_pubkey;
 
-/** Opaque data structured that holds a parsed ECDSA signature.
+/** Opaque data structure that holds a parsed ECDSA signature.
  *
  *  The exact representation of data inside is implementation defined and not
  *  guaranteed to be portable between different platforms or versions. It is
@@ -84,7 +71,7 @@ typedef struct {
  *  comparison, use the secp256k1_ecdsa_signature_serialize_* and
  *  secp256k1_ecdsa_signature_parse_* functions.
  */
-typedef struct {
+typedef struct secp256k1_ecdsa_signature {
     unsigned char data[64];
 } secp256k1_ecdsa_signature;
 
@@ -147,6 +134,15 @@ typedef int (*secp256k1_nonce_function)(
      * 1. If using Libtool, it defines DLL_EXPORT automatically.
      * 2. In other cases, SECP256K1_DLL_EXPORT must be defined. */
 #   define SECP256K1_API extern __declspec (dllexport)
+#  else
+    /* Building libsecp256k1 as a static library on Windows.
+     * No declspec is needed, and so we would want the non-Windows-specific
+     * logic below take care of this case. However, this may result in setting
+     * __attribute__ ((visibility("default"))), which is supposed to be a noop
+     * on Windows but may trigger warnings when compiling with -flto due to a
+     * bug in GCC, see
+     * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=116478 . */
+#   define SECP256K1_API extern
 #  endif
   /* The user must define SECP256K1_STATIC when consuming libsecp256k1 as a static
    * library on Windows. */
@@ -156,11 +152,12 @@ typedef int (*secp256k1_nonce_function)(
 # endif
 #endif
 #ifndef SECP256K1_API
+/* All cases not captured by the Windows-specific logic. */
 # if defined(__GNUC__) && (__GNUC__ >= 4) && defined(SECP256K1_BUILD)
-   /* Building libsecp256k1 on non-Windows using GCC or compatible. */
+   /* Building libsecp256k1 using GCC or compatible. */
 #  define SECP256K1_API extern __attribute__ ((visibility ("default")))
 # else
-   /* All cases not captured above. */
+   /* Fall back to standard C's extern. */
 #  define SECP256K1_API extern
 # endif
 #endif
@@ -390,29 +387,6 @@ SECP256K1_API void secp256k1_context_set_error_callback(
     secp256k1_context *ctx,
     void (*fun)(const char *message, void *data),
     const void *data
-) SECP256K1_ARG_NONNULL(1);
-
-/** Create a secp256k1 scratch space object.
- *
- *  Returns: a newly created scratch space.
- *  Args: ctx:  pointer to a context object.
- *  In:   size: amount of memory to be available as scratch space. Some extra
- *              (<100 bytes) will be allocated for extra accounting.
- */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT secp256k1_scratch_space *secp256k1_scratch_space_create(
-    const secp256k1_context *ctx,
-    size_t size
-) SECP256K1_ARG_NONNULL(1);
-
-/** Destroy a secp256k1 scratch space.
- *
- *  The pointer may not be used afterwards.
- *  Args:       ctx: pointer to a context object.
- *          scratch: space to destroy
- */
-SECP256K1_API void secp256k1_scratch_space_destroy(
-    const secp256k1_context *ctx,
-    secp256k1_scratch_space *scratch
 ) SECP256K1_ARG_NONNULL(1);
 
 /** Parse a variable-length public key into the pubkey object.
@@ -679,12 +653,14 @@ SECP256K1_API int secp256k1_ecdsa_sign(
     const void *ndata
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
-/** Verify an ECDSA secret key.
+/** Verify an elliptic curve secret key.
  *
  *  A secret key is valid if it is not 0 and less than the secp256k1 curve order
  *  when interpreted as an integer (most significant byte first). The
  *  probability of choosing a 32-byte string uniformly at random which is an
- *  invalid secret key is negligible.
+ *  invalid secret key is negligible. However, if it does happen it should
+ *  be assumed that the randomness source is severely broken and there should
+ *  be no retry.
  *
  *  Returns: 1: secret key is valid
  *           0: secret key is invalid

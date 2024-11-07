@@ -223,4 +223,4 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
             assert_equal(encrypted_wallet.getbalance(), temp_wallet.getbalance())
 
 if __name__ == '__main__':
-    TransactionTimeRescanTest().main()
+    TransactionTimeRescanTest(__file__).main()

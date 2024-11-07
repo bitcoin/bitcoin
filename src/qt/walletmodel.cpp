@@ -19,6 +19,7 @@
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <node/interface_ui.h>
+#include <node/types.h>
 #include <psbt.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
@@ -534,8 +535,8 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
         // "Create Unsigned" clicked
         PartiallySignedTransaction psbtx(mtx);
         bool complete = false;
-        const TransactionError err = wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/true, nullptr, psbtx, complete);
-        if (err != TransactionError::OK || complete) {
+        const auto err{wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/true, nullptr, psbtx, complete)};
+        if (err || complete) {
             QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Can't draft transaction."));
             return false;
         }
@@ -593,8 +594,7 @@ QString WalletModel::getWalletName() const
 
 QString WalletModel::getDisplayName() const
 {
-    const QString name = getWalletName();
-    return name.isEmpty() ? "["+tr("default wallet")+"]" : name;
+    return GUIUtil::WalletDisplayName(getWalletName());
 }
 
 bool WalletModel::isMultiwallet() const

@@ -44,23 +44,31 @@ FUZZ_TARGET(system, .init = initialize_system)
                 args_manager.SelectConfigNetwork(fuzzed_data_provider.ConsumeRandomLengthString(16));
             },
             [&] {
-                args_manager.SoftSetArg(fuzzed_data_provider.ConsumeRandomLengthString(16), fuzzed_data_provider.ConsumeRandomLengthString(16));
+                auto str_arg = fuzzed_data_provider.ConsumeRandomLengthString(16);
+                auto str_value = fuzzed_data_provider.ConsumeRandomLengthString(16);
+                args_manager.SoftSetArg(str_arg, str_value);
             },
             [&] {
-                args_manager.ForceSetArg(fuzzed_data_provider.ConsumeRandomLengthString(16), fuzzed_data_provider.ConsumeRandomLengthString(16));
+                auto str_arg = fuzzed_data_provider.ConsumeRandomLengthString(16);
+                auto str_value = fuzzed_data_provider.ConsumeRandomLengthString(16);
+                args_manager.ForceSetArg(str_arg, str_value);
             },
             [&] {
-                args_manager.SoftSetBoolArg(fuzzed_data_provider.ConsumeRandomLengthString(16), fuzzed_data_provider.ConsumeBool());
+                auto str_arg = fuzzed_data_provider.ConsumeRandomLengthString(16);
+                auto f_value = fuzzed_data_provider.ConsumeBool();
+                args_manager.SoftSetBoolArg(str_arg, f_value);
             },
             [&] {
-                const OptionsCategory options_category = fuzzed_data_provider.PickValueInArray<OptionsCategory>({OptionsCategory::OPTIONS, OptionsCategory::CONNECTION, OptionsCategory::WALLET, OptionsCategory::WALLET_DEBUG_TEST, OptionsCategory::ZMQ, OptionsCategory::DEBUG_TEST, OptionsCategory::CHAINPARAMS, OptionsCategory::NODE_RELAY, OptionsCategory::BLOCK_CREATION, OptionsCategory::RPC, OptionsCategory::GUI, OptionsCategory::COMMANDS, OptionsCategory::REGISTER_COMMANDS, OptionsCategory::HIDDEN});
+                const OptionsCategory options_category = fuzzed_data_provider.PickValueInArray<OptionsCategory>({OptionsCategory::OPTIONS, OptionsCategory::CONNECTION, OptionsCategory::WALLET, OptionsCategory::WALLET_DEBUG_TEST, OptionsCategory::ZMQ, OptionsCategory::DEBUG_TEST, OptionsCategory::CHAINPARAMS, OptionsCategory::NODE_RELAY, OptionsCategory::BLOCK_CREATION, OptionsCategory::RPC, OptionsCategory::GUI, OptionsCategory::COMMANDS, OptionsCategory::REGISTER_COMMANDS, OptionsCategory::CLI_COMMANDS, OptionsCategory::IPC, OptionsCategory::HIDDEN});
                 // Avoid hitting:
                 // common/args.cpp:563: void ArgsManager::AddArg(const std::string &, const std::string &, unsigned int, const OptionsCategory &): Assertion `ret.second' failed.
                 const std::string argument_name = GetArgumentName(fuzzed_data_provider.ConsumeRandomLengthString(16));
                 if (args_manager.GetArgFlags(argument_name) != std::nullopt) {
                     return;
                 }
-                args_manager.AddArg(argument_name, fuzzed_data_provider.ConsumeRandomLengthString(16), fuzzed_data_provider.ConsumeIntegral<unsigned int>() & ~ArgsManager::COMMAND, options_category);
+                auto help = fuzzed_data_provider.ConsumeRandomLengthString(16);
+                auto flags = fuzzed_data_provider.ConsumeIntegral<unsigned int>() & ~ArgsManager::COMMAND;
+                args_manager.AddArg(argument_name, help, flags, options_category);
             },
             [&] {
                 // Avoid hitting:

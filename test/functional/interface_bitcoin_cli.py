@@ -8,6 +8,7 @@ from decimal import Decimal
 import re
 
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.netutil import test_ipv6_local
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -15,6 +16,7 @@ from test_framework.util import (
     assert_raises_process_error,
     assert_raises_rpc_error,
     get_auth_cookie,
+    rpc_port,
 )
 import time
 
@@ -28,7 +30,12 @@ JSON_PARSING_ERROR = 'error: Error parsing JSON: foo'
 BLOCKS_VALUE_OF_ZERO = 'error: the first argument (number of blocks to generate, default: 1) must be an integer value greater than zero'
 TOO_MANY_ARGS = 'error: too many arguments (maximum 2 for nblocks and maxtries)'
 WALLET_NOT_LOADED = 'Requested wallet does not exist or is not loaded'
-WALLET_NOT_SPECIFIED = 'Wallet file not specified'
+WALLET_NOT_SPECIFIED = (
+    "Multiple wallets are loaded. Please select which wallet to use by requesting the RPC "
+    "through the /wallet/<walletname> URI path. Or for the CLI, specify the \"-rpcwallet=<walletname>\" "
+    "option before the command (run \"bitcoin-cli -h\" for help or \"bitcoin-cli listwallets\" to see "
+    "which wallets are currently loaded)."
+)
 
 
 def cli_get_info_string_to_dict(cli_get_info_string):
@@ -106,6 +113,53 @@ class TestBitcoinCli(BitcoinTestFramework):
 
         self.log.info("Test connecting to a non-existing server")
         assert_raises_process_error(1, "Could not connect to the server", self.nodes[0].cli('-rpcport=1').echo)
+
+        self.log.info("Test handling of invalid ports in rpcconnect")
+        assert_raises_process_error(1, "Invalid port provided in -rpcconnect: 127.0.0.1:notaport", self.nodes[0].cli("-rpcconnect=127.0.0.1:notaport").echo)
+        assert_raises_process_error(1, "Invalid port provided in -rpcconnect: 127.0.0.1:-1", self.nodes[0].cli("-rpcconnect=127.0.0.1:-1").echo)
+        assert_raises_process_error(1, "Invalid port provided in -rpcconnect: 127.0.0.1:0", self.nodes[0].cli("-rpcconnect=127.0.0.1:0").echo)
+        assert_raises_process_error(1, "Invalid port provided in -rpcconnect: 127.0.0.1:65536", self.nodes[0].cli("-rpcconnect=127.0.0.1:65536").echo)
+
+        self.log.info("Checking for IPv6")
+        have_ipv6 = test_ipv6_local()
+        if not have_ipv6:
+            self.log.info("Skipping IPv6 tests")
+
+        if have_ipv6:
+            assert_raises_process_error(1, "Invalid port provided in -rpcconnect: [::1]:notaport", self.nodes[0].cli("-rpcconnect=[::1]:notaport").echo)
+            assert_raises_process_error(1, "Invalid port provided in -rpcconnect: [::1]:-1", self.nodes[0].cli("-rpcconnect=[::1]:-1").echo)
+            assert_raises_process_error(1, "Invalid port provided in -rpcconnect: [::1]:0", self.nodes[0].cli("-rpcconnect=[::1]:0").echo)
+            assert_raises_process_error(1, "Invalid port provided in -rpcconnect: [::1]:65536", self.nodes[0].cli("-rpcconnect=[::1]:65536").echo)
+
+        self.log.info("Test handling of invalid ports in rpcport")
+        assert_raises_process_error(1, "Invalid port provided in -rpcport: notaport", self.nodes[0].cli("-rpcport=notaport").echo)
+        assert_raises_process_error(1, "Invalid port provided in -rpcport: -1", self.nodes[0].cli("-rpcport=-1").echo)
+        assert_raises_process_error(1, "Invalid port provided in -rpcport: 0", self.nodes[0].cli("-rpcport=0").echo)
+        assert_raises_process_error(1, "Invalid port provided in -rpcport: 65536", self.nodes[0].cli("-rpcport=65536").echo)
+
+        self.log.info("Test port usage preferences")
+        node_rpc_port = rpc_port(self.nodes[0].index)
+        # Prevent bitcoin-cli from using existing rpcport in conf
+        conf_rpcport = "rpcport=" + str(node_rpc_port)
+        self.nodes[0].replace_in_config([(conf_rpcport, "#" + conf_rpcport)])
+        # prefer rpcport over rpcconnect
+        assert_raises_process_error(1, "Could not connect to the server 127.0.0.1:1", self.nodes[0].cli(f"-rpcconnect=127.0.0.1:{node_rpc_port}", "-rpcport=1").echo)
+        if have_ipv6:
+            assert_raises_process_error(1, "Could not connect to the server ::1:1", self.nodes[0].cli(f"-rpcconnect=[::1]:{node_rpc_port}", "-rpcport=1").echo)
+
+        assert_equal(BLOCKS, self.nodes[0].cli("-rpcconnect=127.0.0.1:18999", f'-rpcport={node_rpc_port}').getblockcount())
+        if have_ipv6:
+            assert_equal(BLOCKS, self.nodes[0].cli("-rpcconnect=[::1]:18999", f'-rpcport={node_rpc_port}').getblockcount())
+
+        # prefer rpcconnect port over default
+        assert_equal(BLOCKS, self.nodes[0].cli(f"-rpcconnect=127.0.0.1:{node_rpc_port}").getblockcount())
+        if have_ipv6:
+            assert_equal(BLOCKS, self.nodes[0].cli(f"-rpcconnect=[::1]:{node_rpc_port}").getblockcount())
+
+        # prefer rpcport over default
+        assert_equal(BLOCKS, self.nodes[0].cli(f'-rpcport={node_rpc_port}').getblockcount())
+        # Re-enable rpcport in conf if present
+        self.nodes[0].replace_in_config([("#" + conf_rpcport, conf_rpcport)])
 
         self.log.info("Test connecting with non-existing RPC cookie file")
         assert_raises_process_error(1, "Could not locate RPC credentials", self.nodes[0].cli('-rpccookiefile=does-not-exist', '-rpcpassword=').echo)
@@ -282,6 +336,10 @@ class TestBitcoinCli(BitcoinTestFramework):
             n4 = 10
             blocks = self.nodes[0].getblockcount()
 
+            self.log.info('Test -generate -rpcwallet=<filename> raise RPC error')
+            wallet2_path = f'-rpcwallet={self.nodes[0].wallets_path / wallets[2] / self.wallet_data_filename}'
+            assert_raises_rpc_error(-18, WALLET_NOT_LOADED, self.nodes[0].cli(wallet2_path, '-generate').echo)
+
             self.log.info('Test -generate -rpcwallet with no args')
             generate = self.nodes[0].cli(rpcwallet2, '-generate').send_cli()
             assert_equal(set(generate.keys()), {'address', 'blocks'})
@@ -317,7 +375,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         self.log.info("Test -version with node stopped")
         self.stop_node(0)
         cli_response = self.nodes[0].cli('-version').send_cli()
-        assert f"{self.config['environment']['PACKAGE_NAME']} RPC client version" in cli_response
+        assert f"{self.config['environment']['CLIENT_NAME']} RPC client version" in cli_response
 
         self.log.info("Test -rpcwait option successfully waits for RPC connection")
         self.nodes[0].start()  # start node without RPC connection
@@ -332,6 +390,9 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_raises_process_error(1, "Could not connect to the server", self.nodes[0].cli('-rpcwait', '-rpcwaittimeout=5').echo)
         assert_greater_than_or_equal(time.time(), start_time + 5)
 
+        self.log.info("Test that only one of -addrinfo, -generate, -getinfo, -netinfo may be specified at a time")
+        assert_raises_process_error(1, "Only one of -getinfo, -netinfo may be specified", self.nodes[0].cli('-getinfo', '-netinfo').send_cli)
+
 
 if __name__ == '__main__':
-    TestBitcoinCli().main()
+    TestBitcoinCli(__file__).main()

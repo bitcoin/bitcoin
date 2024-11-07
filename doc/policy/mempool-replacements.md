@@ -10,14 +10,12 @@ A transaction ("replacement transaction") may replace its directly conflicting t
 their in-mempool descendants (together, "original transactions") if, in addition to passing all
 other consensus and policy rules, each of the following conditions are met:
 
-1. The directly conflicting transactions all signal replaceability explicitly. A transaction is
+1. If `-mempoolfullrbf=0` (the value is 1 by default), the directly conflicting transactions all signal replaceability explicitly. A transaction is
    signaling BIP125 replaceability if any of its inputs have an nSequence number less than (0xffffffff - 1).
-   A transaction also signals replaceability if its nVersion field is set to 3.
+   A transaction also signals replaceability if its version field is set to 3.
 
    *Rationale*: See [BIP125
    explanation](https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki#motivation).
-   Use the (`-mempoolfullrbf`) configuration option to allow transaction replacement without enforcement of the
-   opt-in signaling rule.
 
 2. The replacement transaction only include an unconfirmed input if that input was included in
    one of the directly conflicting transactions. An unconfirmed input spends an output from a
@@ -80,3 +78,5 @@ This set of rules is similar but distinct from BIP125.
 
 * Full replace-by-fee enabled as a configurable mempool policy as of **v24.0** ([PR
   #25353](https://github.com/bitcoin/bitcoin/pull/25353)).
+
+* Full replace-by-fee is the default policy as of **v28.0** ([PR #30493](https://github.com/bitcoin/bitcoin/pull/30493)).

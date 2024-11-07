@@ -124,4 +124,4 @@ class P2PEvict(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    P2PEvict().main()
+    P2PEvict(__file__).main()

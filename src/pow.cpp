@@ -9,6 +9,7 @@
 #include <chain.h>
 #include <primitives/block.h>
 #include <uint256.h>
+#include <util/check.h>
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
@@ -61,7 +62,19 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
     // Retarget
     const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
     arith_uint256 bnNew;
-    bnNew.SetCompact(pindexLast->nBits);
+
+    // Special difficulty rule for Testnet4
+    if (params.enforce_BIP94) {
+        // Here we use the first block of the difficulty period. This way
+        // the real difficulty is always preserved in the first block as
+        // it is not allowed to use the min-difficulty exception.
+        int nHeightFirst = pindexLast->nHeight - (params.DifficultyAdjustmentInterval()-1);
+        const CBlockIndex* pindexFirst = pindexLast->GetAncestor(nHeightFirst);
+        bnNew.SetCompact(pindexFirst->nBits);
+    } else {
+        bnNew.SetCompact(pindexLast->nBits);
+    }
+
     bnNew *= nActualTimespan;
     bnNew /= params.nPowTargetTimespan;
 
@@ -122,7 +135,15 @@ bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t heig
     return true;
 }
 
+// Bypasses the actual proof of work check during fuzz testing with a simplified validation checking whether
+// the most signficant bit of the last byte of the hash is set.
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)
+{
+    if constexpr (G_FUZZING) return (hash.data()[31] & 0x80) == 0;
+    return CheckProofOfWorkImpl(hash, nBits, params);
+}
+
+bool CheckProofOfWorkImpl(uint256 hash, unsigned int nBits, const Consensus::Params& params)
 {
     bool fNegative;
     bool fOverflow;

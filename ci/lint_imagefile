@@ -4,11 +4,12 @@
 
 # See test/lint/README.md for usage.
 
-FROM debian:bookworm
+FROM docker.io/debian:bookworm
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=C.UTF-8
 
+COPY ./ci/retry/retry /ci_retry
 COPY ./.python-version /.python-version
 COPY ./ci/lint/container-entrypoint.sh /entrypoint.sh
 COPY ./ci/lint/04_install.sh /install.sh

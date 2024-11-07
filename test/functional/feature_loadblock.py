@@ -80,4 +80,4 @@ class LoadblockTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    LoadblockTest().main()
+    LoadblockTest(__file__).main()

@@ -88,4 +88,4 @@ class DataCarrierTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    DataCarrierTest().main()
+    DataCarrierTest(__file__).main()

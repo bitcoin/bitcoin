@@ -7,12 +7,14 @@
 #include <addrman.h>
 #include <banman.h>
 #include <interfaces/chain.h>
+#include <interfaces/mining.h>
 #include <kernel/context.h>
 #include <key.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netgroup.h>
 #include <node/kernel_notifications.h>
+#include <node/warnings.h>
 #include <policy/fees.h>
 #include <scheduler.h>
 #include <txmempool.h>

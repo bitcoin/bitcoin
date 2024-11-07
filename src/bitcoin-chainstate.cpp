@@ -15,10 +15,11 @@
 #include <kernel/chainstatemanager_opts.h>
 #include <kernel/checks.h>
 #include <kernel/context.h>
-#include <kernel/validation_cache_sizes.h>
+#include <kernel/warning.h>
 
 #include <consensus/validation.h>
 #include <core_io.h>
+#include <logging.h>
 #include <node/blockstorage.h>
 #include <node/caches.h>
 #include <node/chainstate.h>
@@ -28,6 +29,7 @@
 #include <util/fs.h>
 #include <util/signalinterrupt.h>
 #include <util/task_runner.h>
+#include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -40,6 +42,12 @@
 
 int main(int argc, char* argv[])
 {
+    // We do not enable logging for this app, so explicitly disable it.
+    // To enable logging instead, replace with:
+    //    LogInstance().m_print_to_console = true;
+    //    LogInstance().StartLogging();
+    LogInstance().DisableLogging();
+
     // SETUP: Argument parsing and handling
     if (argc != 2) {
         std::cerr
@@ -61,13 +69,6 @@ int main(int argc, char* argv[])
     // properly
     assert(kernel::SanityChecks(kernel_context));
 
-    // Necessary for CheckInputScripts (eventually called by ProcessNewBlock),
-    // which will try the script cache first and fall back to actually
-    // performing the check with the signature cache.
-    kernel::ValidationCacheSizes validation_cache_sizes{};
-    Assert(InitSignatureCache(validation_cache_sizes.signature_cache_bytes));
-    Assert(InitScriptExecutionCache(validation_cache_sizes.script_execution_cache_bytes));
-
     ValidationSignals validation_signals{std::make_unique<util::ImmediateTaskRunner>()};
 
     class KernelNotifications : public kernel::Notifications
@@ -86,9 +87,13 @@ int main(int argc, char* argv[])
         {
             std::cout << "Progress: " << title.original << ", " << progress_percent << ", " << resume_possible << std::endl;
         }
-        void warning(const bilingual_str& warning) override
+        void warningSet(kernel::Warning id, const bilingual_str& message) override
         {
-            std::cout << "Warning: " << warning.original << std::endl;
+            std::cout << "Warning " << static_cast<int>(id) << " set: " << message.original << std::endl;
+        }
+        void warningUnset(kernel::Warning id) override
+        {
+            std::cout << "Warning " << static_cast<int>(id) << " unset" << std::endl;
         }
         void flushError(const bilingual_str& message) override
         {
@@ -151,7 +156,7 @@ int main(int argc, char* argv[])
     {
         LOCK(chainman.GetMutex());
         std::cout
-        << "\t" << "Reindexing: " << std::boolalpha << chainman.m_blockman.m_reindexing.load() << std::noboolalpha << std::endl
+        << "\t" << "Blockfiles Indexed: " << std::boolalpha << chainman.m_blockman.m_blockfiles_indexed.load() << std::noboolalpha << std::endl
         << "\t" << "Snapshot Active: " << std::boolalpha << chainman.IsSnapshotActive() << std::noboolalpha << std::endl
         << "\t" << "Active Height: " << chainman.ActiveHeight() << std::endl
         << "\t" << "Active IBD: " << std::boolalpha << chainman.IsInitialBlockDownload() << std::noboolalpha << std::endl;
@@ -278,8 +283,6 @@ int main(int argc, char* argv[])
 epilogue:
     // Without this precise shutdown sequence, there will be a lot of nullptr
     // dereferencing and UB.
-    if (chainman.m_thread_load.joinable()) chainman.m_thread_load.join();
-
     validation_signals.FlushBackgroundCallbacks();
     {
         LOCK(cs_main);

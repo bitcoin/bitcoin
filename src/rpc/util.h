@@ -34,9 +34,14 @@
 class JSONRPCRequest;
 enum ServiceFlags : uint64_t;
 enum class OutputType;
-enum class TransactionError;
 struct FlatSigningProvider;
 struct bilingual_str;
+namespace common {
+enum class PSBTError;
+} // namespace common
+namespace node {
+enum class TransactionError;
+} // namespace node
 
 static constexpr bool DEFAULT_RPC_DOC_CHECK{
 #ifdef RPC_DOC_CHECK
@@ -96,6 +101,17 @@ std::vector<unsigned char> ParseHexV(const UniValue& v, std::string_view name);
 std::vector<unsigned char> ParseHexO(const UniValue& o, std::string_view strKey);
 
 /**
+ * Parses verbosity from provided UniValue.
+ *
+ * @param[in] arg The verbosity argument as an int (0, 1, 2,...) or bool if allow_bool is set to true
+ * @param[in] default_verbosity The value to return if verbosity argument is null
+ * @param[in] allow_bool If true, allows arg to be a bool and parses it
+ * @returns An integer describing the verbosity level (e.g. 0, 1, 2, etc.)
+ * @throws JSONRPCError if allow_bool is false but arg provided is boolean
+ */
+int ParseVerbosity(const UniValue& arg, int default_verbosity, bool allow_bool);
+
+/**
  * Validate and return a CAmount from a UniValue number or string.
  *
  * @param[in] value     UniValue number or string to parse.
@@ -127,8 +143,9 @@ int ParseSighashString(const UniValue& sighash);
 //! Parse a confirm target option and raise an RPC error if it is invalid.
 unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target);
 
-RPCErrorCode RPCErrorFromTransactionError(TransactionError terr);
-UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_string = "");
+RPCErrorCode RPCErrorFromTransactionError(node::TransactionError terr);
+UniValue JSONRPCPSBTError(common::PSBTError err);
+UniValue JSONRPCTransactionError(node::TransactionError terr, const std::string& err_string = "");
 
 //! Parse a JSON range specified as int64, or [int64, int64]
 std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value);
@@ -496,7 +513,5 @@ private:
  */
 void PushWarnings(const UniValue& warnings, UniValue& obj);
 void PushWarnings(const std::vector<bilingual_str>& warnings, UniValue& obj);
-
-UniValue GetNodeWarnings(bool use_deprecated);
 
 #endif // BITCOIN_RPC_UTIL_H

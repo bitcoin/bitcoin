@@ -33,6 +33,13 @@ static constexpr int32_t ADDRMAN_BUCKET_SIZE_LOG2{6};
 static constexpr int ADDRMAN_BUCKET_SIZE{1 << ADDRMAN_BUCKET_SIZE_LOG2};
 
 /**
+ * User-defined type for the internally used nIds
+ * This used to be int, making it feasible for attackers to cause an overflow,
+ * see https://bitcoincore.org/en/2024/07/31/disclose-addrman-int-overflow/
+ */
+using nid_type = int64_t;
+
+/**
  * Extended statistics about a CAddress
  */
 class AddrInfo : public CAddress
@@ -125,7 +132,7 @@ public:
 
     std::pair<CAddress, NodeSeconds> SelectTriedCollision() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    std::pair<CAddress, NodeSeconds> Select(bool new_only, std::optional<Network> network) const
+    std::pair<CAddress, NodeSeconds> Select(bool new_only, const std::unordered_set<Network>& networks) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered = true) const
@@ -179,36 +186,36 @@ private:
     static constexpr uint8_t INCOMPATIBILITY_BASE = 32;
 
     //! last used nId
-    int nIdCount GUARDED_BY(cs){0};
+    nid_type nIdCount GUARDED_BY(cs){0};
 
     //! table with information about all nIds
-    std::unordered_map<int, AddrInfo> mapInfo GUARDED_BY(cs);
+    std::unordered_map<nid_type, AddrInfo> mapInfo GUARDED_BY(cs);
 
     //! find an nId based on its network address and port.
-    std::unordered_map<CService, int, CServiceHash> mapAddr GUARDED_BY(cs);
+    std::unordered_map<CService, nid_type, CServiceHash> mapAddr GUARDED_BY(cs);
 
     //! randomly-ordered vector of all nIds
     //! This is mutable because it is unobservable outside the class, so any
     //! changes to it (even in const methods) are also unobservable.
-    mutable std::vector<int> vRandom GUARDED_BY(cs);
+    mutable std::vector<nid_type> vRandom GUARDED_BY(cs);
 
     // number of "tried" entries
     int nTried GUARDED_BY(cs){0};
 
     //! list of "tried" buckets
-    int vvTried[ADDRMAN_TRIED_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs);
+    nid_type vvTried[ADDRMAN_TRIED_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs);
 
     //! number of (unique) "new" entries
     int nNew GUARDED_BY(cs){0};
 
     //! list of "new" buckets
-    int vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs);
+    nid_type vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs);
 
     //! last time Good was called (memory only). Initially set to 1 so that "never" is strictly worse.
     NodeSeconds m_last_good GUARDED_BY(cs){1s};
 
     //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
-    std::set<int> m_tried_collisions;
+    std::set<nid_type> m_tried_collisions;
 
     /** Perform consistency checks every m_consistency_check_ratio operations (if non-zero). */
     const int32_t m_consistency_check_ratio;
@@ -225,22 +232,22 @@ private:
     std::unordered_map<Network, NewTriedCount> m_network_counts GUARDED_BY(cs);
 
     //! Find an entry.
-    AddrInfo* Find(const CService& addr, int* pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    AddrInfo* Find(const CService& addr, nid_type* pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Create a new entry and add it to the internal data structures mapInfo, mapAddr and vRandom.
-    AddrInfo* Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    AddrInfo* Create(const CAddress& addr, const CNetAddr& addrSource, nid_type* pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Swap two elements in vRandom.
     void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Delete an entry. It must not be in tried, and have refcount 0.
-    void Delete(int nId) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void Delete(nid_type nId) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Clear a position in a "new" table. This is the only place where entries are actually deleted.
     void ClearNew(int nUBucket, int nUBucketPos) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Move an entry from the "new" table(s) to the "tried" table
-    void MakeTried(AddrInfo& info, int nId) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void MakeTried(AddrInfo& info, nid_type nId) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Attempt to add a single address to addrman's new table.
      *  @see AddrMan::Add() for parameters. */
@@ -252,13 +259,13 @@ private:
 
     void Attempt_(const CService& addr, bool fCountFailure, NodeSeconds time) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    std::pair<CAddress, NodeSeconds> Select_(bool new_only, std::optional<Network> network) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::pair<CAddress, NodeSeconds> Select_(bool new_only, const std::unordered_set<Network>& networks) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Helper to generalize looking up an addrman entry from either table.
      *
-     *  @return  int The nid of the entry. If the addrman position is empty or not found, returns -1.
+     *  @return  nid_type The nid of the entry. If the addrman position is empty or not found, returns -1.
      * */
-    int GetEntry(bool use_tried, size_t bucket, size_t position) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    nid_type GetEntry(bool use_tried, size_t bucket, size_t position) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     std::vector<CAddress> GetAddr_(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 

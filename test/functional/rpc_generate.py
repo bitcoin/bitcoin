@@ -87,7 +87,7 @@ class RPCGenerateTest(BitcoinTestFramework):
         txid1 = miniwallet.send_self_transfer(from_node=node)['txid']
         utxo1 = miniwallet.get_utxo(txid=txid1)
         rawtx2 = miniwallet.create_self_transfer(utxo_to_spend=utxo1)['hex']
-        assert_raises_rpc_error(-25, 'TestBlockValidity failed: bad-txns-inputs-missingorspent', self.generateblock, node, address, [rawtx2, txid1])
+        assert_raises_rpc_error(-25, 'testBlockValidity failed: bad-txns-inputs-missingorspent', self.generateblock, node, address, [rawtx2, txid1])
 
         self.log.info('Fail to generate block with txid not in mempool')
         missing_txid = '0000000000000000000000000000000000000000000000000000000000000000'
@@ -126,4 +126,4 @@ class RPCGenerateTest(BitcoinTestFramework):
 
 
 if __name__ == "__main__":
-    RPCGenerateTest().main()
+    RPCGenerateTest(__file__).main()

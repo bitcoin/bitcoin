@@ -10,9 +10,10 @@
 #include <attributes.h>
 #include <chain.h>
 #include <checkqueue.h>
-#include <kernel/chain.h>
 #include <consensus/amount.h>
+#include <cuckoocache.h>
 #include <deploymentstatus.h>
+#include <kernel/chain.h>
 #include <kernel/chainparams.h>
 #include <kernel/chainstatemanager_opts.h>
 #include <kernel/cs_main.h> // IWYU pragma: export
@@ -21,6 +22,7 @@
 #include <policy/packages.h>
 #include <policy/policy.h>
 #include <script/script_error.h>
+#include <script/sigcache.h>
 #include <sync.h>
 #include <txdb.h>
 #include <txmempool.h> // For CTxMemPool::cs
@@ -37,9 +39,9 @@
 #include <memory>
 #include <optional>
 #include <set>
+#include <span>
 #include <stdint.h>
 #include <string>
-#include <thread>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -82,11 +84,6 @@ enum class SynchronizationState {
     INIT_DOWNLOAD,
     POST_INIT
 };
-
-extern GlobalMutex g_best_block_mutex;
-extern std::condition_variable g_best_block_cv;
-/** Used to notify getblocktemplate RPC of new tips. */
-extern uint256 g_best_block;
 
 /** Documentation for argument 'checklevel'. */
 extern const std::vector<std::string> CHECKLEVEL_DOC;
@@ -340,10 +337,11 @@ private:
     bool cacheStore;
     ScriptError error{SCRIPT_ERR_UNKNOWN_ERROR};
     PrecomputedTransactionData *txdata;
+    SignatureCache* m_signature_cache;
 
 public:
-    CScriptCheck(const CTxOut& outIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn, PrecomputedTransactionData* txdataIn) :
-        m_tx_out(outIn), ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), txdata(txdataIn) { }
+    CScriptCheck(const CTxOut& outIn, const CTransaction& txToIn, SignatureCache& signature_cache, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn, PrecomputedTransactionData* txdataIn) :
+        m_tx_out(outIn), ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), txdata(txdataIn), m_signature_cache(&signature_cache) { }
 
     CScriptCheck(const CScriptCheck&) = delete;
     CScriptCheck& operator=(const CScriptCheck&) = delete;
@@ -360,8 +358,28 @@ static_assert(std::is_nothrow_move_assignable_v<CScriptCheck>);
 static_assert(std::is_nothrow_move_constructible_v<CScriptCheck>);
 static_assert(std::is_nothrow_destructible_v<CScriptCheck>);
 
-/** Initializes the script-execution cache */
-[[nodiscard]] bool InitScriptExecutionCache(size_t max_size_bytes);
+/**
+ * Convenience class for initializing and passing the script execution cache
+ * and signature cache.
+ */
+class ValidationCache
+{
+private:
+    //! Pre-initialized hasher to avoid having to recreate it for every hash calculation.
+    CSHA256 m_script_execution_cache_hasher;
+
+public:
+    CuckooCache::cache<uint256, SignatureCacheHasher> m_script_execution_cache;
+    SignatureCache m_signature_cache;
+
+    ValidationCache(size_t script_execution_cache_bytes, size_t signature_cache_bytes);
+
+    ValidationCache(const ValidationCache&) = delete;
+    ValidationCache& operator=(const ValidationCache&) = delete;
+
+    //! Return a copy of the pre-initialized hasher.
+    CSHA256 ScriptExecutionCacheHasher() const { return m_script_execution_cache_hasher; }
+};
 
 /** Functions for validating blocks and updating the block tree */
 
@@ -384,7 +402,7 @@ bool HasValidProofOfWork(const std::vector<CBlockHeader>& headers, const Consens
 bool IsBlockMutated(const CBlock& block, bool check_witness_root);
 
 /** Return the sum of the claimed work on a given set of headers. No verification of PoW is done. */
-arith_uint256 CalculateClaimedHeadersWork(const std::vector<CBlockHeader>& headers);
+arith_uint256 CalculateClaimedHeadersWork(std::span<const CBlockHeader> headers);
 
 enum class VerifyDBResult {
     SUCCESS,
@@ -796,7 +814,6 @@ private:
     friend ChainstateManager;
 };
 
-
 enum class SnapshotCompletionResult {
     SUCCESS,
     SKIPPED,
@@ -884,14 +901,19 @@ private:
 
     CBlockIndex* m_best_invalid GUARDED_BY(::cs_main){nullptr};
 
+    /** The last header for which a headerTip notification was issued. */
+    CBlockIndex* m_last_notified_header GUARDED_BY(GetMutex()){nullptr};
+
+    bool NotifyHeaderTip() LOCKS_EXCLUDED(GetMutex());
+
     //! Internal helper for ActivateSnapshot().
     //!
     //! De-serialization of a snapshot that is created with
-    //! CreateUTXOSnapshot() in rpc/blockchain.cpp.
+    //! the dumptxoutset RPC.
     //! To reduce space the serialization format of the snapshot avoids
     //! duplication of tx hashes. The code takes advantage of the guarantee by
     //! leveldb that keys are lexicographically sorted.
-    [[nodiscard]] bool PopulateAndValidateSnapshot(
+    [[nodiscard]] util::Result<void> PopulateAndValidateSnapshot(
         Chainstate& snapshot_chainstate,
         AutoFile& coins_file,
         const node::SnapshotMetadata& metadata);
@@ -927,6 +949,21 @@ private:
     //! A queue for script verifications that have to be performed by worker threads.
     CCheckQueue<CScriptCheck> m_script_check_queue;
 
+    //! Timers and counters used for benchmarking validation in both background
+    //! and active chainstates.
+    SteadyClock::duration GUARDED_BY(::cs_main) time_check{};
+    SteadyClock::duration GUARDED_BY(::cs_main) time_forks{};
+    SteadyClock::duration GUARDED_BY(::cs_main) time_connect{};
+    SteadyClock::duration GUARDED_BY(::cs_main) time_verify{};
+    SteadyClock::duration GUARDED_BY(::cs_main) time_undo{};
+    SteadyClock::duration GUARDED_BY(::cs_main) time_index{};
+    SteadyClock::duration GUARDED_BY(::cs_main) time_total{};
+    int64_t GUARDED_BY(::cs_main) num_blocks_total{0};
+    SteadyClock::duration GUARDED_BY(::cs_main) time_connect_total{};
+    SteadyClock::duration GUARDED_BY(::cs_main) time_flush{};
+    SteadyClock::duration GUARDED_BY(::cs_main) time_chainstate{};
+    SteadyClock::duration GUARDED_BY(::cs_main) time_post_connect{};
+
 public:
     using Options = kernel::ChainstateManagerOpts;
 
@@ -934,11 +971,11 @@ public:
 
     //! Function to restart active indexes; set dynamically to avoid a circular
     //! dependency on `base/index.cpp`.
-    std::function<void()> restart_indexes = std::function<void()>();
+    std::function<void()> snapshot_download_completed = std::function<void()>();
 
     const CChainParams& GetParams() const { return m_options.chainparams; }
     const Consensus::Params& GetConsensus() const { return m_options.chainparams.GetConsensus(); }
-    bool ShouldCheckBlockIndex() const { return *Assert(m_options.check_block_index); }
+    bool ShouldCheckBlockIndex() const;
     const arith_uint256& MinimumChainWork() const { return *Assert(m_options.minimum_chain_work); }
     const uint256& AssumedValidBlock() const { return *Assert(m_options.assumed_valid_block); }
     kernel::Notifications& GetNotifications() const { return m_options.notifications; };
@@ -965,10 +1002,11 @@ public:
 
     const util::SignalInterrupt& m_interrupt;
     const Options m_options;
-    std::thread m_thread_load;
     //! A single BlockManager instance is shared across each constructed
     //! chainstate to avoid duplicating block metadata.
     node::BlockManager m_blockman;
+
+    ValidationCache m_validation_cache;
 
     /**
      * Whether initial block download has ended and IsInitialBlockDownload
@@ -1050,11 +1088,10 @@ public:
     //! - Verify that the hash of the resulting coinsdb matches the expected hash
     //!   per assumeutxo chain parameters.
     //! - Wait for our headers chain to include the base block of the snapshot.
-    //! - "Fast forward" the tip of the new chainstate to the base of the snapshot,
-    //!   faking nTx* block index data along the way.
+    //! - "Fast forward" the tip of the new chainstate to the base of the snapshot.
     //! - Move the new chainstate to `m_snapshot_chainstate` and make it our
     //!   ChainstateActive().
-    [[nodiscard]] bool ActivateSnapshot(
+    [[nodiscard]] util::Result<CBlockIndex*> ActivateSnapshot(
         AutoFile& coins_file, const node::SnapshotMetadata& metadata, bool in_memory);
 
     //! Once the background validation chainstate has reached the height which
@@ -1174,12 +1211,12 @@ public:
      * May not be called in a
      * validationinterface callback.
      *
-     * @param[in]  block The block headers themselves
+     * @param[in]  headers The block headers themselves
      * @param[in]  min_pow_checked  True if proof-of-work anti-DoS checks have been done by caller for headers chain
      * @param[out] state This may be set to an Error state if any error occurred processing them
      * @param[out] ppindex If set, the pointer will be set to point to the last new block index object for the given headers
      */
-    bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& block, bool min_pow_checked, BlockValidationState& state, const CBlockIndex** ppindex = nullptr) LOCKS_EXCLUDED(cs_main);
+    bool ProcessNewBlockHeaders(std::span<const CBlockHeader> headers, bool min_pow_checked, BlockValidationState& state, const CBlockIndex** ppindex = nullptr) LOCKS_EXCLUDED(cs_main);
 
     /**
      * Sufficiently validate a block for disk storage (and store on disk).

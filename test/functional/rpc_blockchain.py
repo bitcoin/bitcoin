@@ -32,14 +32,16 @@ from test_framework.blocktools import (
     TIME_GENESIS_BLOCK,
     create_block,
     create_coinbase,
+    create_tx_with_script,
 )
 from test_framework.messages import (
     CBlockHeader,
+    COIN,
     from_hex,
     msg_block,
 )
 from test_framework.p2p import P2PInterface
-from test_framework.script import hash256
+from test_framework.script import hash256, OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -58,7 +60,7 @@ TIME_RANGE_STEP = 600  # ten-minute steps
 TIME_RANGE_MTP = TIME_GENESIS_BLOCK + (HEIGHT - 6) * TIME_RANGE_STEP
 TIME_RANGE_TIP = TIME_GENESIS_BLOCK + (HEIGHT - 1) * TIME_RANGE_STEP
 TIME_RANGE_END = TIME_GENESIS_BLOCK + HEIGHT * TIME_RANGE_STEP
-DIFFICULTY_ADJUSTMENT_INTERVAL = 2016
+DIFFICULTY_ADJUSTMENT_INTERVAL = 144
 
 
 class BlockchainTest(BitcoinTestFramework):
@@ -88,6 +90,7 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_getdifficulty()
         self._test_getnetworkhashps()
         self._test_stopatheight()
+        self._test_waitforblock() # also tests waitfornewblock
         self._test_waitforblockheight()
         self._test_getblock()
         self._test_getdeploymentinfo()
@@ -505,6 +508,38 @@ class BlockchainTest(BitcoinTestFramework):
         self.start_node(0)
         assert_equal(self.nodes[0].getblockcount(), HEIGHT + 7)
 
+    def _test_waitforblock(self):
+        self.log.info("Test waitforblock and waitfornewblock")
+        node = self.nodes[0]
+
+        current_height = node.getblock(node.getbestblockhash())['height']
+        current_hash = node.getblock(node.getbestblockhash())['hash']
+
+        self.log.debug("Roll the chain back a few blocks and then reconsider it")
+        rollback_height = current_height - 100
+        rollback_hash = node.getblockhash(rollback_height)
+        rollback_header = node.getblockheader(rollback_hash)
+
+        node.invalidateblock(rollback_hash)
+        assert_equal(node.getblockcount(), rollback_height - 1)
+
+        self.log.debug("waitforblock should return the same block after its timeout")
+        assert_equal(node.waitforblock(blockhash=current_hash, timeout=1)['hash'], rollback_header['previousblockhash'])
+
+        node.reconsiderblock(rollback_hash)
+        # The chain has probably already been restored by the time reconsiderblock returns,
+        # but poll anyway.
+        self.wait_until(lambda: node.waitforblock(blockhash=current_hash, timeout=100)['hash'] == current_hash)
+
+        # roll back again
+        node.invalidateblock(rollback_hash)
+        assert_equal(node.getblockcount(), rollback_height - 1)
+
+        node.reconsiderblock(rollback_hash)
+        # The chain has probably already been restored by the time reconsiderblock returns,
+        # but poll anyway.
+        self.wait_until(lambda: node.waitfornewblock(timeout=100)['hash'] == current_hash)
+
     def _test_waitforblockheight(self):
         self.log.info("Test waitforblockheight")
         node = self.nodes[0]
@@ -556,12 +591,12 @@ class BlockchainTest(BitcoinTestFramework):
             block = node.getblock(blockhash, verbosity)
             assert_equal(blockhash, hash256(bytes.fromhex(block[:160]))[::-1].hex())
 
-        def assert_fee_not_in_block(verbosity):
-            block = node.getblock(blockhash, verbosity)
+        def assert_fee_not_in_block(hash, verbosity):
+            block = node.getblock(hash, verbosity)
             assert 'fee' not in block['tx'][1]
 
-        def assert_fee_in_block(verbosity):
-            block = node.getblock(blockhash, verbosity)
+        def assert_fee_in_block(hash, verbosity):
+            block = node.getblock(hash, verbosity)
             tx = block['tx'][1]
             assert 'fee' in tx
             assert_equal(tx['fee'], tx['vsize'] * fee_per_byte)
@@ -580,8 +615,8 @@ class BlockchainTest(BitcoinTestFramework):
                 total_vout += vout["value"]
             assert_equal(total_vin, total_vout + tx["fee"])
 
-        def assert_vin_does_not_contain_prevout(verbosity):
-            block = node.getblock(blockhash, verbosity)
+        def assert_vin_does_not_contain_prevout(hash, verbosity):
+            block = node.getblock(hash, verbosity)
             tx = block["tx"][1]
             if isinstance(tx, str):
                 # In verbosity level 1, only the transaction hashes are written
@@ -595,16 +630,16 @@ class BlockchainTest(BitcoinTestFramework):
         assert_hexblock_hashes(False)
 
         self.log.info("Test that getblock with verbosity 1 doesn't include fee")
-        assert_fee_not_in_block(1)
-        assert_fee_not_in_block(True)
+        assert_fee_not_in_block(blockhash, 1)
+        assert_fee_not_in_block(blockhash, True)
 
         self.log.info('Test that getblock with verbosity 2 and 3 includes expected fee')
-        assert_fee_in_block(2)
-        assert_fee_in_block(3)
+        assert_fee_in_block(blockhash, 2)
+        assert_fee_in_block(blockhash, 3)
 
         self.log.info("Test that getblock with verbosity 1 and 2 does not include prevout")
-        assert_vin_does_not_contain_prevout(1)
-        assert_vin_does_not_contain_prevout(2)
+        assert_vin_does_not_contain_prevout(blockhash, 1)
+        assert_vin_does_not_contain_prevout(blockhash, 2)
 
         self.log.info("Test that getblock with verbosity 3 includes prevout")
         assert_vin_contains_prevout(3)
@@ -612,7 +647,7 @@ class BlockchainTest(BitcoinTestFramework):
         self.log.info("Test getblock with invalid verbosity type returns proper error message")
         assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", node.getblock, blockhash, "2")
 
-        self.log.info("Test that getblock with verbosity 2 and 3 still works with pruned Undo data")
+        self.log.info("Test that getblock doesn't work with deleted Undo data")
 
         def move_block_file(old, new):
             old_path = self.nodes[0].blocks_path / old
@@ -622,10 +657,8 @@ class BlockchainTest(BitcoinTestFramework):
         # Move instead of deleting so we can restore chain state afterwards
         move_block_file('rev00000.dat', 'rev_wrong')
 
-        assert_fee_not_in_block(2)
-        assert_fee_not_in_block(3)
-        assert_vin_does_not_contain_prevout(2)
-        assert_vin_does_not_contain_prevout(3)
+        assert_raises_rpc_error(-32603, "Undo data expected but can't be read. This could be due to disk corruption or a conflict with a pruning event.", lambda: node.getblock(blockhash, 2))
+        assert_raises_rpc_error(-32603, "Undo data expected but can't be read. This could be due to disk corruption or a conflict with a pruning event.", lambda: node.getblock(blockhash, 3))
 
         # Restore chain state
         move_block_file('rev_wrong', 'rev00000.dat')
@@ -633,6 +666,31 @@ class BlockchainTest(BitcoinTestFramework):
         assert 'previousblockhash' not in node.getblock(node.getblockhash(0))
         assert 'nextblockhash' not in node.getblock(node.getbestblockhash())
 
+        self.log.info("Test getblock when only header is known")
+        current_height = node.getblock(node.getbestblockhash())['height']
+        block_time = node.getblock(node.getbestblockhash())['time'] + 1
+        block = create_block(int(blockhash, 16), create_coinbase(current_height + 1, nValue=100), block_time)
+        block.solve()
+        node.submitheader(block.serialize().hex())
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", lambda: node.getblock(block.hash))
+
+        self.log.info("Test getblock when block data is available but undo data isn't")
+        # Submits a block building on the header-only block, so it can't be connected and has no undo data
+        tx = create_tx_with_script(block.vtx[0], 0, script_sig=bytes([OP_TRUE]), amount=50 * COIN)
+        block_noundo = create_block(block.sha256, create_coinbase(current_height + 2, nValue=100), block_time + 1, txlist=[tx])
+        block_noundo.solve()
+        node.submitblock(block_noundo.serialize().hex())
+
+        assert_fee_not_in_block(block_noundo.hash, 2)
+        assert_fee_not_in_block(block_noundo.hash, 3)
+        assert_vin_does_not_contain_prevout(block_noundo.hash, 2)
+        assert_vin_does_not_contain_prevout(block_noundo.hash, 3)
+
+        self.log.info("Test getblock when block is missing")
+        move_block_file('blk00000.dat', 'blk00000.dat.bak')
+        assert_raises_rpc_error(-1, "Block not found on disk", node.getblock, blockhash)
+        move_block_file('blk00000.dat.bak', 'blk00000.dat')
+
 
 if __name__ == '__main__':
-    BlockchainTest().main()
+    BlockchainTest(__file__).main()

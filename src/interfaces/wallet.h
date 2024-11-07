@@ -6,13 +6,13 @@
 #define BITCOIN_INTERFACES_WALLET_H
 
 #include <addresstype.h>
+#include <common/signmessage.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <pubkey.h>
 #include <script/script.h>
 #include <support/allocators/secure.h>
 #include <util/fs.h>
-#include <util/message.h>
 #include <util/result.h>
 #include <util/ui_change_type.h>
 
@@ -30,9 +30,14 @@ class CFeeRate;
 class CKey;
 enum class FeeReason;
 enum class OutputType;
-enum class TransactionError;
 struct PartiallySignedTransaction;
 struct bilingual_str;
+namespace common {
+enum class PSBTError;
+} // namespace common
+namespace node {
+enum class TransactionError;
+} // namespace node
 namespace wallet {
 class CCoinControl;
 class CWallet;
@@ -60,7 +65,7 @@ using WalletValueMap = std::map<std::string, std::string>;
 class Wallet
 {
 public:
-    virtual ~Wallet() {}
+    virtual ~Wallet() = default;
 
     //! Encrypt wallet.
     virtual bool encryptWallet(const SecureString& wallet_passphrase) = 0;
@@ -202,7 +207,7 @@ public:
         int& num_blocks) = 0;
 
     //! Fill PSBT.
-    virtual TransactionError fillPSBT(int sighash_type,
+    virtual std::optional<common::PSBTError> fillPSBT(int sighash_type,
         bool sign,
         bool bip32derivs,
         size_t* n_signed,
@@ -337,8 +342,11 @@ public:
     //! Migrate a wallet
     virtual util::Result<WalletMigrationResult> migrateWallet(const std::string& name, const SecureString& passphrase) = 0;
 
+    //! Returns true if wallet stores encryption keys
+    virtual bool isEncrypted(const std::string& wallet_name) = 0;
+
     //! Return available wallets in wallet directory.
-    virtual std::vector<std::string> listWalletDir() = 0;
+    virtual std::vector<std::pair<std::string, std::string>> listWalletDir() = 0;
 
     //! Return interfaces for accessing wallets (if any).
     virtual std::vector<std::unique_ptr<Wallet>> getWallets() = 0;

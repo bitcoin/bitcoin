@@ -4,6 +4,7 @@
 //
 
 #include <node/timeoffsets.h>
+#include <node/warnings.h>
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
@@ -24,7 +25,8 @@ BOOST_FIXTURE_TEST_SUITE(timeoffsets_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(timeoffsets)
 {
-    TimeOffsets offsets{};
+    node::Warnings warnings{};
+    TimeOffsets offsets{warnings};
     BOOST_CHECK(offsets.Median() == 0s);
 
     AddMulti(offsets, {{0s, -1s, -2s, -3s}});
@@ -50,7 +52,8 @@ BOOST_AUTO_TEST_CASE(timeoffsets)
 
 static bool IsWarningRaised(const std::vector<std::chrono::seconds>& check_offsets)
 {
-    TimeOffsets offsets{};
+    node::Warnings warnings{};
+    TimeOffsets offsets{warnings};
     AddMulti(offsets, check_offsets);
     return offsets.WarnIfOutOfSync();
 }

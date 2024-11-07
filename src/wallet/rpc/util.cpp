@@ -91,7 +91,7 @@ std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& reques
             RPC_WALLET_NOT_FOUND, "No wallet is loaded. Load a wallet using loadwallet or create a new one with createwallet. (Note: A default wallet is no longer automatically created)");
     }
     throw JSONRPCError(RPC_WALLET_NOT_SPECIFIED,
-        "Wallet file not specified (must request wallet RPC through /wallet/<filename> uri-path).");
+        "Multiple wallets are loaded. Please select which wallet to use by requesting the RPC through the /wallet/<walletname> URI path.");
 }
 
 void EnsureWalletIsUnlocked(const CWallet& wallet)
@@ -179,7 +179,7 @@ void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& st
     }
 }
 
-void AppendLastProcessedBlock(UniValue& entry, const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+void AppendLastProcessedBlock(UniValue& entry, const CWallet& wallet)
 {
     AssertLockHeld(wallet.cs_wallet);
     UniValue lastprocessedblock{UniValue::VOBJ};

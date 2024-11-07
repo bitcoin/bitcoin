@@ -18,12 +18,6 @@
 
 class CRPCCommand;
 
-namespace RPCServer
-{
-    void OnStarted(std::function<void ()> slot);
-    void OnStopped(std::function<void ()> slot);
-}
-
 /** Query whether RPC is running */
 bool IsRPCRunning();
 
@@ -48,7 +42,7 @@ bool RPCIsInWarmup(std::string *outStatus);
 class RPCTimerBase
 {
 public:
-    virtual ~RPCTimerBase() {}
+    virtual ~RPCTimerBase() = default;
 };
 
 /**
@@ -57,7 +51,7 @@ public:
 class RPCTimerInterface
 {
 public:
-    virtual ~RPCTimerInterface() {}
+    virtual ~RPCTimerInterface() = default;
     /** Implementation name */
     virtual const char *Name() = 0;
     /** Factory function for timers.

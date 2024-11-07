@@ -21,6 +21,8 @@
 
 #include <system_error>
 
+using util::Join;
+
 namespace wallet {
 bool VerifyWallets(WalletContext& context)
 {
@@ -67,7 +69,7 @@ bool VerifyWallets(WalletContext& context)
             // Pass write=false because no need to write file and probably
             // better not to. If unnamed wallet needs to be added next startup
             // and the setting is empty, this code will just run again.
-            chain.updateRwSetting("wallet", wallets, /* write= */ false);
+            chain.overwriteRwSetting("wallet", std::move(wallets), interfaces::SettingsAction::SKIP_WRITE);
         }
     }
 
@@ -75,6 +77,11 @@ bool VerifyWallets(WalletContext& context)
     std::set<fs::path> wallet_paths;
 
     for (const auto& wallet : chain.getSettingsList("wallet")) {
+        if (!wallet.isStr()) {
+            chain.initError(_("Invalid value detected for '-wallet' or '-nowallet'. "
+                              "'-wallet' requires a string value, while '-nowallet' accepts only '1' to disable all wallets"));
+            return false;
+        }
         const auto& wallet_file = wallet.get_str();
         const fs::path path = fsbridge::AbsPathJoin(GetWalletDir(), fs::PathFromString(wallet_file));
 
@@ -108,6 +115,11 @@ bool LoadWallets(WalletContext& context)
     try {
         std::set<fs::path> wallet_paths;
         for (const auto& wallet : chain.getSettingsList("wallet")) {
+            if (!wallet.isStr()) {
+                chain.initError(_("Invalid value detected for '-wallet' or '-nowallet'. "
+                                  "'-wallet' requires a string value, while '-nowallet' accepts only '1' to disable all wallets"));
+                return false;
+            }
             const auto& name = wallet.get_str();
             if (!wallet_paths.insert(fs::PathFromString(name)).second) {
                 continue;
@@ -176,7 +188,7 @@ void UnloadWallets(WalletContext& context)
         wallets.pop_back();
         std::vector<bilingual_str> warnings;
         RemoveWallet(context, wallet, /* load_on_start= */ std::nullopt, warnings);
-        UnloadWallet(std::move(wallet));
+        WaitForDeleteWallet(std::move(wallet));
     }
 }
 } // namespace wallet

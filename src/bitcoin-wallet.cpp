@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <chainparams.h>
 #include <chainparamsbase.h>
@@ -23,6 +23,8 @@
 #include <functional>
 #include <string>
 #include <tuple>
+
+using util::Join;
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
@@ -59,15 +61,15 @@ static std::optional<int> WalletAppInit(ArgsManager& args, int argc, char* argv[
     }
     const bool missing_args{argc < 2};
     if (missing_args || HelpRequested(args) || args.IsArgSet("-version")) {
-        std::string strUsage = strprintf("%s bitcoin-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n";
+        std::string strUsage = strprintf("%s bitcoin-wallet version", CLIENT_NAME) + " " + FormatFullVersion() + "\n";
 
         if (args.IsArgSet("-version")) {
             strUsage += FormatParagraph(LicenseInfo());
         } else {
             strUsage += "\n"
-                        "bitcoin-wallet is an offline tool for creating and interacting with " PACKAGE_NAME " wallet files.\n"
+                        "bitcoin-wallet is an offline tool for creating and interacting with " CLIENT_NAME " wallet files.\n"
                         "By default bitcoin-wallet will act on wallets in the default mainnet wallet directory in the datadir.\n"
-                        "To change the target wallet, use the -datadir, -wallet and -regtest/-signet/-testnet arguments.\n\n"
+                        "To change the target wallet, use the -datadir, -wallet and -regtest/-signet/-testnet/-testnet4 arguments.\n\n"
                         "Usage:\n"
                         "  bitcoin-wallet [options] <command>\n";
             strUsage += "\n" + args.GetHelpMessage();

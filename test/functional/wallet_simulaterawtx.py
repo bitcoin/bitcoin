@@ -129,4 +129,4 @@ class SimulateTxTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "One or more transaction inputs are missing or have been spent already", w2.simulaterawtransaction, [tx1, tx2])
 
 if __name__ == '__main__':
-    SimulateTxTest().main()
+    SimulateTxTest(__file__).main()

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -67,13 +67,19 @@ bilingual_str format(const bilingual_str& fmt, const Args&... args)
 /** Translate a message to the native language of the user. */
 const extern std::function<std::string(const char*)> G_TRANSLATION_FUN;
 
+struct ConstevalStringLiteral {
+    const char* const lit;
+    consteval ConstevalStringLiteral(const char* str) : lit{str} {}
+    consteval ConstevalStringLiteral(std::nullptr_t) = delete;
+};
+
 /**
  * Translation function.
  * If no translation function is set, simply return the input.
  */
-inline bilingual_str _(const char* psz)
+inline bilingual_str _(ConstevalStringLiteral str)
 {
-    return bilingual_str{psz, G_TRANSLATION_FUN ? (G_TRANSLATION_FUN)(psz) : psz};
+    return bilingual_str{str.lit, G_TRANSLATION_FUN ? (G_TRANSLATION_FUN)(str.lit) : str.lit};
 }
 
 #endif // BITCOIN_UTIL_TRANSLATION_H

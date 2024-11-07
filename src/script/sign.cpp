@@ -475,6 +475,9 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
 
     case TxoutType::WITNESS_V1_TAPROOT:
         return SignTaproot(provider, creator, WitnessV1Taproot(XOnlyPubKey{vSolutions[0]}), sigdata, ret);
+
+    case TxoutType::ANCHOR:
+        return true;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
@@ -691,27 +694,6 @@ void SignatureData::MergeSignatureData(SignatureData sigdata)
     signatures.insert(std::make_move_iterator(sigdata.signatures.begin()), std::make_move_iterator(sigdata.signatures.end()));
 }
 
-bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, const CAmount& amount, int nHashType, SignatureData& sig_data)
-{
-    assert(nIn < txTo.vin.size());
-
-    MutableTransactionSignatureCreator creator(txTo, nIn, amount, nHashType);
-
-    bool ret = ProduceSignature(provider, creator, fromPubKey, sig_data);
-    UpdateInput(txTo.vin.at(nIn), sig_data);
-    return ret;
-}
-
-bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType, SignatureData& sig_data)
-{
-    assert(nIn < txTo.vin.size());
-    const CTxIn& txin = txTo.vin[nIn];
-    assert(txin.prevout.n < txFrom.vout.size());
-    const CTxOut& txout = txFrom.vout[txin.prevout.n];
-
-    return SignSignature(provider, txout.scriptPubKey, txTo, nIn, txout.nValue, nHashType, sig_data);
-}
-
 namespace {
 /** Dummy signature checker which accepts all signatures. */
 class DummySignatureChecker final : public BaseSignatureChecker
@@ -831,7 +813,7 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
         }
 
         ScriptError serror = SCRIPT_ERR_OK;
-        if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount, txdata, MissingDataBehavior::FAIL), &serror)) {
+        if (!sigdata.complete && !VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount, txdata, MissingDataBehavior::FAIL), &serror)) {
             if (serror == SCRIPT_ERR_INVALID_STACK_OPERATION) {
                 // Unable to sign input and verification failed (possible attempt to partially sign).
                 input_errors[i] = Untranslated("Unable to sign input, invalid stack size (possibly missing key)");

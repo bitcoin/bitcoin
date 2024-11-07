@@ -2,33 +2,44 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <clientversion.h>
-#include <core_io.h>
 #include <common/args.h>
+#include <common/messages.h>
+#include <common/types.h>
 #include <consensus/amount.h>
-#include <script/interpreter.h>
+#include <core_io.h>
 #include <key_io.h>
+#include <node/types.h>
 #include <outputtype.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
+#include <script/interpreter.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
 #include <tinyformat.h>
+#include <uint256.h>
 #include <univalue.h>
 #include <util/check.h>
 #include <util/result.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>
-#include <warnings.h>
 
 #include <algorithm>
 #include <iterator>
 #include <string_view>
 #include <tuple>
 #include <utility>
+
+using common::PSBTError;
+using common::PSBTErrorString;
+using common::TransactionErrorString;
+using node::TransactionError;
+using util::Join;
+using util::SplitString;
+using util::TrimString;
 
 const std::string UNIX_EPOCH_TIME = "UNIX epoch time";
 const std::string EXAMPLE_ADDRESS[2] = {"bc1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl", "bc1q02ad21edsxd23d32dfgqqsz4vv4nmtfzuklhy3"};
@@ -70,6 +81,21 @@ void RPCTypeCheckObj(const UniValue& o,
     }
 }
 
+int ParseVerbosity(const UniValue& arg, int default_verbosity, bool allow_bool)
+{
+    if (!arg.isNull()) {
+        if (arg.isBool()) {
+            if (!allow_bool) {
+                throw JSONRPCError(RPC_TYPE_ERROR, "Verbosity was boolean but only integer allowed");
+            }
+            return arg.get_bool(); // true = 1
+        } else {
+            return arg.getInt<int>();
+        }
+    }
+    return default_verbosity;
+}
+
 CAmount AmountFromValue(const UniValue& value, int decimals)
 {
     if (!value.isNum() && !value.isStr())
@@ -92,11 +118,11 @@ CFeeRate ParseFeeRate(const UniValue& json)
 uint256 ParseHashV(const UniValue& v, std::string_view name)
 {
     const std::string& strHex(v.get_str());
-    if (64 != strHex.length())
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be of length %d (not %d, for '%s')", name, 64, strHex.length(), strHex));
-    if (!IsHex(strHex)) // Note: IsHex("") is false
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be hexadecimal string (not '%s')", name, strHex));
-    return uint256S(strHex);
+    if (auto rv{uint256::FromHex(strHex)}) return *rv;
+    if (auto expected_len{uint256::size() * 2}; strHex.length() != expected_len) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be of length %d (not %d, for '%s')", name, expected_len, strHex.length(), strHex));
+    }
+    throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be hexadecimal string (not '%s')", name, strHex));
 }
 uint256 ParseHashO(const UniValue& o, std::string_view strKey)
 {
@@ -322,6 +348,14 @@ public:
         return obj;
     }
 
+    UniValue operator()(const PayToAnchor& anchor) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("isscript", true);
+        obj.pushKV("iswitness", true);
+        return obj;
+    }
+
     UniValue operator()(const WitnessUnknown& id) const
     {
         UniValue obj(UniValue::VOBJ);
@@ -364,23 +398,33 @@ unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target)
     return unsigned_target;
 }
 
+RPCErrorCode RPCErrorFromPSBTError(PSBTError err)
+{
+    switch (err) {
+        case PSBTError::UNSUPPORTED:
+            return RPC_INVALID_PARAMETER;
+        case PSBTError::SIGHASH_MISMATCH:
+            return RPC_DESERIALIZATION_ERROR;
+        default: break;
+    }
+    return RPC_TRANSACTION_ERROR;
+}
+
 RPCErrorCode RPCErrorFromTransactionError(TransactionError terr)
 {
     switch (terr) {
         case TransactionError::MEMPOOL_REJECTED:
             return RPC_TRANSACTION_REJECTED;
-        case TransactionError::ALREADY_IN_CHAIN:
-            return RPC_TRANSACTION_ALREADY_IN_CHAIN;
-        case TransactionError::P2P_DISABLED:
-            return RPC_CLIENT_P2P_DISABLED;
-        case TransactionError::INVALID_PSBT:
-        case TransactionError::PSBT_MISMATCH:
-            return RPC_INVALID_PARAMETER;
-        case TransactionError::SIGHASH_MISMATCH:
-            return RPC_DESERIALIZATION_ERROR;
+        case TransactionError::ALREADY_IN_UTXO_SET:
+            return RPC_VERIFY_ALREADY_IN_UTXO_SET;
         default: break;
     }
     return RPC_TRANSACTION_ERROR;
+}
+
+UniValue JSONRPCPSBTError(PSBTError err)
+{
+    return JSONRPCError(RPCErrorFromPSBTError(err), PSBTErrorString(err).original);
 }
 
 UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_string)
@@ -655,8 +699,8 @@ UniValue RPCHelpMan::HandleRequest(const JSONRPCRequest& request) const
             throw std::runtime_error{
                 strprintf("Internal bug detected: RPC call \"%s\" returned incorrect type:\n%s\n%s %s\nPlease report this issue here: %s\n",
                           m_name, explain,
-                          PACKAGE_NAME, FormatFullVersion(),
-                          PACKAGE_BUGREPORT)};
+                          CLIENT_NAME, FormatFullVersion(),
+                          CLIENT_BUGREPORT)};
         }
     }
     return ret;
@@ -778,7 +822,7 @@ std::string RPCHelpMan::ToString() const
         if (arg.m_opts.hidden) break; // Any arg that follows is also hidden
 
         // Push named argument name and description
-        sections.m_sections.emplace_back(::ToString(i + 1) + ". " + arg.GetFirstName(), arg.ToDescriptionString(/*is_named_arg=*/true));
+        sections.m_sections.emplace_back(util::ToString(i + 1) + ". " + arg.GetFirstName(), arg.ToDescriptionString(/*is_named_arg=*/true));
         sections.m_max_pad = std::max(sections.m_max_pad, sections.m_sections.back().m_left.size());
 
         // Recursively push nested args
@@ -1317,24 +1361,26 @@ std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, Fl
     }
 
     std::string error;
-    auto desc = Parse(desc_str, provider, error);
-    if (!desc) {
+    auto descs = Parse(desc_str, provider, error);
+    if (descs.empty()) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
     }
-    if (!desc->IsRange()) {
+    if (!descs.at(0)->IsRange()) {
         range.first = 0;
         range.second = 0;
     }
     std::vector<CScript> ret;
     for (int i = range.first; i <= range.second; ++i) {
-        std::vector<CScript> scripts;
-        if (!desc->Expand(i, provider, scripts, provider)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys: '%s'", desc_str));
+        for (const auto& desc : descs) {
+            std::vector<CScript> scripts;
+            if (!desc->Expand(i, provider, scripts, provider)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys: '%s'", desc_str));
+            }
+            if (expand_priv) {
+                desc->ExpandPrivate(/*pos=*/i, provider, /*out=*/provider);
+            }
+            std::move(scripts.begin(), scripts.end(), std::back_inserter(ret));
         }
-        if (expand_priv) {
-            desc->ExpandPrivate(/*pos=*/i, provider, /*out=*/provider);
-        }
-        std::move(scripts.begin(), scripts.end(), std::back_inserter(ret));
     }
     return ret;
 }
@@ -1360,18 +1406,4 @@ void PushWarnings(const std::vector<bilingual_str>& warnings, UniValue& obj)
 {
     if (warnings.empty()) return;
     obj.pushKV("warnings", BilingualStringsToUniValue(warnings));
-}
-
-UniValue GetNodeWarnings(bool use_deprecated)
-{
-    if (use_deprecated) {
-        const auto all_warnings{GetWarnings()};
-        return all_warnings.empty() ? "" : all_warnings.back().original;
-    }
-
-    UniValue warnings{UniValue::VARR};
-    for (auto&& warning : GetWarnings()) {
-        warnings.push_back(std::move(warning.original));
-    }
-    return warnings;
 }

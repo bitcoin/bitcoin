@@ -30,10 +30,4 @@ FUZZ_TARGET(span)
         (void)span.subspan(idx, span.size() - idx);
         (void)span[idx];
     }
-
-    std::string another_str = fuzzed_data_provider.ConsumeBytesAsString(32);
-    const Span<const char> another_span{another_str};
-    assert((span <= another_span) != (span > another_span));
-    assert((span == another_span) != (span != another_span));
-    assert((span >= another_span) != (span < another_span));
 }

@@ -9,6 +9,7 @@
 
 #include <cstring>
 #include <memory>
+#include <type_traits>
 
 /** Data structure largely mimicking std::deque, but using single preallocated ring buffer.
  *

@@ -6,6 +6,7 @@
 
 #include <netaddress.h>
 #include <netbase.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
 #include <util/fs.h>
@@ -48,7 +49,7 @@ static std::vector<const char*> g_args;
 static void SetArgs(int argc, char** argv) {
     for (int i = 1; i < argc; ++i) {
         // Only take into account arguments that start with `--`. The others are for the fuzz engine:
-        // `fuzz -runs=1 fuzz_seed_corpus/address_deserialize_v2 --checkaddrman=5`
+        // `fuzz -runs=1 fuzz_corpora/address_deserialize_v2 --checkaddrman=5`
         if (strlen(argv[i]) > 2 && argv[i][0] == '-' && argv[i][1] == '-') {
             g_args.push_back(argv[i]);
         }
@@ -72,8 +73,8 @@ auto& FuzzTargets()
 
 void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target, FuzzTargetOptions opts)
 {
-    const auto it_ins{FuzzTargets().try_emplace(name, FuzzTarget /* temporary can be dropped after clang-16 */ {std::move(target), std::move(opts)})};
-    Assert(it_ins.second);
+    const auto [it, ins]{FuzzTargets().try_emplace(name, FuzzTarget /* temporary can be dropped after Apple-Clang-16 ? */ {std::move(target), std::move(opts)})};
+    Assert(ins);
 }
 
 static std::string_view g_fuzz_target;
@@ -101,8 +102,15 @@ void ResetCoverageCounters() {}
 
 void initialize()
 {
-    // Terminate immediately if a fuzzing harness ever tries to create a TCP socket.
-    CreateSock = [](const sa_family_t&) -> std::unique_ptr<Sock> { std::terminate(); };
+    // By default, make the RNG deterministic with a fixed seed. This will affect all
+    // randomness during the fuzz test, except:
+    // - GetStrongRandBytes(), which is used for the creation of private key material.
+    // - Creating a BasicTestingSetup or derived class will switch to a random seed.
+    SeedRandomStateForTest(SeedRand::ZEROS);
+
+    // Terminate immediately if a fuzzing harness ever tries to create a socket.
+    // Individual tests can override this by pointing CreateSock to a mocked alternative.
+    CreateSock = [](int, int, int) -> std::unique_ptr<Sock> { std::terminate(); };
 
     // Terminate immediately if a fuzzing harness ever tries to perform a DNS lookup.
     g_dns_lookup = [](const std::string& name, bool allow_lookup) {
@@ -144,6 +152,10 @@ void initialize()
     const auto it = FuzzTargets().find(g_fuzz_target);
     if (it == FuzzTargets().end()) {
         std::cerr << "No fuzz target compiled for " << g_fuzz_target << "." << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+    if constexpr (!G_FUZZING) {
+        std::cerr << "Must compile with -DBUILD_FOR_FUZZING=ON to execute a fuzz target." << std::endl;
         std::exit(EXIT_FAILURE);
     }
     Assert(!g_test_one_input);

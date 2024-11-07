@@ -14,8 +14,10 @@
 #include <test/util/txmempool.h>
 #include <txmempool.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/time.h>
+#include <util/translation.h>
 #include <validation.h>
 #include <versionbits.h>
 
@@ -25,6 +27,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+using namespace util::hex_literals;
 using node::BlockAssembler;
 using node::CBlockTemplate;
 
@@ -46,7 +49,9 @@ struct MinerTestingSetup : public TestingSetup {
         // pointer is not accessed, when the new one should be accessed
         // instead.
         m_node.mempool.reset();
-        m_node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(m_node));
+        bilingual_str error;
+        m_node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(m_node), error);
+        Assert(error.empty());
         return *m_node.mempool;
     }
     BlockAssembler AssemblerForTest(CTxMemPool& tx_mempool);
@@ -363,7 +368,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         while (m_node.chainman->ActiveChain().Tip()->nHeight < 209999) {
             CBlockIndex* prev = m_node.chainman->ActiveChain().Tip();
             CBlockIndex* next = new CBlockIndex();
-            next->phashBlock = new uint256(InsecureRand256());
+            next->phashBlock = new uint256(m_rng.rand256());
             m_node.chainman->ActiveChainstate().CoinsTip().SetBestBlock(next->GetBlockHash());
             next->pprev = prev;
             next->nHeight = prev->nHeight + 1;
@@ -375,7 +380,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         while (m_node.chainman->ActiveChain().Tip()->nHeight < 210000) {
             CBlockIndex* prev = m_node.chainman->ActiveChain().Tip();
             CBlockIndex* next = new CBlockIndex();
-            next->phashBlock = new uint256(InsecureRand256());
+            next->phashBlock = new uint256(m_rng.rand256());
             m_node.chainman->ActiveChainstate().CoinsTip().SetBestBlock(next->GetBlockHash());
             next->pprev = prev;
             next->nHeight = prev->nHeight + 1;
@@ -421,7 +426,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     std::vector<int> prevheights;
 
     // relative height locked
-    tx.nVersion = 2;
+    tx.version = 2;
     tx.vin.resize(1);
     prevheights.resize(1);
     tx.vin[0].prevout.hash = txFirst[0]->GetHash(); // only 1 transaction
@@ -603,7 +608,7 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
 BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 {
     // Note that by default, these tests run with size accounting enabled.
-    CScript scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
+    CScript scriptPubKey = CScript() << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f"_hex << OP_CHECKSIG;
     std::unique_ptr<CBlockTemplate> pblocktemplate;
 
     CTxMemPool& tx_mempool{*m_node.mempool};
@@ -622,7 +627,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             pblock->nVersion = VERSIONBITS_TOP_BITS;
             pblock->nTime = m_node.chainman->ActiveChain().Tip()->GetMedianTimePast()+1;
             CMutableTransaction txCoinbase(*pblock->vtx[0]);
-            txCoinbase.nVersion = 1;
+            txCoinbase.version = 1;
             txCoinbase.vin[0].scriptSig = CScript{} << (m_node.chainman->ActiveChain().Height() + 1) << bi.extranonce;
             txCoinbase.vout.resize(1); // Ignore the (optional) segwit commitment added by CreateNewBlock (as the hardcoded nonces don't account for this)
             txCoinbase.vout[0].scriptPubKey = CScript();

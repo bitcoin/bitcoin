@@ -12,7 +12,10 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import MAGIC_BYTES
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    util_xor,
+)
 
 
 class ReindexTest(BitcoinTestFramework):
@@ -39,9 +42,11 @@ class ReindexTest(BitcoinTestFramework):
         # we're generating them rather than getting them from peers), so to
         # test out-of-order handling, swap blocks 1 and 2 on disk.
         blk0 = self.nodes[0].blocks_path / "blk00000.dat"
+        xor_dat = self.nodes[0].read_xor_key()
+
         with open(blk0, 'r+b') as bf:
             # Read at least the first few blocks (including genesis)
-            b = bf.read(2000)
+            b = util_xor(bf.read(2000), xor_dat, offset=0)
 
             # Find the offsets of blocks 2, 3, and 4 (the first 3 blocks beyond genesis)
             # by searching for the regtest marker bytes (see pchMessageStart).
@@ -55,12 +60,12 @@ class ReindexTest(BitcoinTestFramework):
             b4_start = find_block(b, b3_start)
 
             # Blocks 2 and 3 should be the same size.
-            assert_equal(b3_start-b2_start, b4_start-b3_start)
+            assert_equal(b3_start - b2_start, b4_start - b3_start)
 
             # Swap the second and third blocks (don't disturb the genesis block).
             bf.seek(b2_start)
-            bf.write(b[b3_start:b4_start])
-            bf.write(b[b2_start:b3_start])
+            bf.write(util_xor(b[b3_start:b4_start], xor_dat, offset=b2_start))
+            bf.write(util_xor(b[b2_start:b3_start], xor_dat, offset=b3_start))
 
         # The reindexing code should detect and accommodate out of order blocks.
         with self.nodes[0].assert_debug_log([
@@ -73,6 +78,25 @@ class ReindexTest(BitcoinTestFramework):
         # All blocks should be accepted and processed.
         assert_equal(self.nodes[0].getblockcount(), 12)
 
+    def continue_reindex_after_shutdown(self):
+        node = self.nodes[0]
+        self.generate(node, 1500)
+
+        # Restart node with reindex and stop reindex as soon as it starts reindexing
+        self.log.info("Restarting node while reindexing..")
+        node.stop_node()
+        with node.busy_wait_for_debug_log([b'initload thread start']):
+            node.start(['-blockfilterindex', '-reindex'])
+            node.wait_for_rpc_connection(wait_for_import=False)
+        node.stop_node()
+
+        # Start node without the reindex flag and verify it does not wipe the indexes data again
+        db_path = node.chain_path / 'indexes' / 'blockfilter' / 'basic' / 'db'
+        with node.assert_debug_log(expected_msgs=[f'Opening LevelDB in {db_path}'], unexpected_msgs=[f'Wiping LevelDB in {db_path}']):
+            node.start(['-blockfilterindex'])
+            node.wait_for_rpc_connection(wait_for_import=False)
+        node.stop_node()
+
     def run_test(self):
         self.reindex(False)
         self.reindex(True)
@@ -80,7 +104,8 @@ class ReindexTest(BitcoinTestFramework):
         self.reindex(True)
 
         self.out_of_order()
+        self.continue_reindex_after_shutdown()
 
 
 if __name__ == '__main__':
-    ReindexTest().main()
+    ReindexTest(__file__).main()

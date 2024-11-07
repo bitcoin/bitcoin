@@ -3,12 +3,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-//! @file Public type definitions that are used inside and outside of the wallet
-//! (e.g. by src/wallet and src/interfaces and src/qt code).
+//! @file wallet/types.h is a home for public enum and struct type definitions
+//! that are used by internally by wallet code, but also used externally by node
+//! or GUI code.
 //!
-//! File is home for simple enum and struct definitions that don't deserve
-//! separate header files. More complicated wallet public types like
-//! CCoinControl that are used externally can have separate headers.
+//! This file is intended to define only simple types that do not have external
+//! dependencies. More complicated public wallet types like CCoinControl should
+//! be defined in dedicated header files.
 
 #ifndef BITCOIN_WALLET_TYPES_H
 #define BITCOIN_WALLET_TYPES_H

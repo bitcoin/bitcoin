@@ -193,14 +193,14 @@ In a typical situation, where you're only reachable via Tor, this should suffice
 listen on all devices and another node could establish a clearnet connection, when knowing
 your address. To mitigate this, additionally bind the address of your Tor proxy:
 
-    ./bitcoind ... -bind=127.0.0.1
+    ./bitcoind ... -bind=127.0.0.1:8334=onion
 
 If you don't care too much about hiding your node, and want to be reachable on IPv4
 as well, use `discover` instead:
 
     ./bitcoind ... -discover
 
-and open port 8333 on your firewall (or use port mapping, i.e., `-upnp` or `-natpmp`).
+and open port 8333 on your firewall (or use port mapping, i.e., `-natpmp`).
 
 If you only want to use Tor to reach .onion addresses, but not use it as a proxy
 for normal IPv4/IPv6 communication, use:

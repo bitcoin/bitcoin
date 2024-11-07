@@ -192,7 +192,7 @@ class SpendTooMuch(BadTxTemplate):
 
     def get_tx(self):
         return create_tx_with_script(
-            self.spend_tx, 0, script_pub_key=basic_p2sh, amount=(self.spend_avail + 1))
+            self.spend_tx, 0, output_script=basic_p2sh, amount=(self.spend_avail + 1))
 
 
 class CreateNegative(BadTxTemplate):
@@ -242,7 +242,7 @@ class TooManySigops(BadTxTemplate):
         lotsa_checksigs = CScript([OP_CHECKSIG] * (MAX_BLOCK_SIGOPS))
         return create_tx_with_script(
             self.spend_tx, 0,
-            script_pub_key=lotsa_checksigs,
+            output_script=lotsa_checksigs,
             amount=1)
 
 def getDisabledOpcodeTemplate(opcode):
@@ -262,6 +262,17 @@ def getDisabledOpcodeTemplate(opcode):
         'get_tx': get_tx,
         'valid_in_block' : True
         })
+
+class NonStandardAndInvalid(BadTxTemplate):
+    """A non-standard transaction which is also consensus-invalid should return the consensus error."""
+    reject_reason = "mandatory-script-verify-flag-failed (OP_RETURN was encountered)"
+    expect_disconnect = True
+    valid_in_block = False
+
+    def get_tx(self):
+        return create_tx_with_script(
+            self.spend_tx, 0, script_sig=b'\x00' * 3 + b'\xab\x6a',
+            amount=(self.spend_avail // 2))
 
 # Disabled opcode tx templates (CVE-2010-5137)
 DisabledOpcodeTemplates = [getDisabledOpcodeTemplate(opcode) for opcode in [

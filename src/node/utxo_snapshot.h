@@ -28,16 +28,17 @@ class Chainstate;
 namespace node {
 //! Metadata describing a serialized version of a UTXO set from which an
 //! assumeutxo Chainstate can be constructed.
+//! All metadata fields come from an untrusted file, so must be validated
+//! before being used. Thus, new fields should be added only if needed.
 class SnapshotMetadata
 {
-    const uint16_t m_version{1};
-    const std::set<uint16_t> m_supported_versions{1};
+    inline static const uint16_t VERSION{2};
+    const std::set<uint16_t> m_supported_versions{VERSION};
     const MessageStartChars m_network_magic;
 public:
     //! The hash of the block that reflects the tip of the chain for the
     //! UTXO set contained in this snapshot.
     uint256 m_base_blockhash;
-    uint32_t m_base_blockheight;
 
 
     //! The number of coins in the UTXO set contained in this snapshot. Used
@@ -50,19 +51,16 @@ public:
     SnapshotMetadata(
         const MessageStartChars network_magic,
         const uint256& base_blockhash,
-        const int base_blockheight,
         uint64_t coins_count) :
             m_network_magic(network_magic),
             m_base_blockhash(base_blockhash),
-            m_base_blockheight(base_blockheight),
             m_coins_count(coins_count) { }
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
         s << SNAPSHOT_MAGIC_BYTES;
-        s << m_version;
+        s << VERSION;
         s << m_network_magic;
-        s << m_base_blockheight;
         s << m_base_blockhash;
         s << m_coins_count;
     }
@@ -98,7 +96,6 @@ public:
             }
         }
 
-        s >> m_base_blockheight;
         s >> m_base_blockhash;
         s >> m_coins_count;
     }

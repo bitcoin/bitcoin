@@ -43,6 +43,8 @@
 class CChain;
 class ValidationSignals;
 
+struct bilingual_str;
+
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
@@ -327,9 +329,7 @@ public:
 
     static const int ROLLING_FEE_HALFLIFE = 60 * 60 * 12; // public only for testing
 
-    typedef boost::multi_index_container<
-        CTxMemPoolEntry,
-        boost::multi_index::indexed_by<
+    struct CTxMemPoolEntry_Indices final : boost::multi_index::indexed_by<
             // sorted by txid
             boost::multi_index::hashed_unique<mempoolentry_txid, SaltedTxidHasher>,
             // sorted by wtxid
@@ -357,6 +357,10 @@ public:
                 CompareTxMemPoolEntryByAncestorFee
             >
         >
+        {};
+    typedef boost::multi_index_container<
+        CTxMemPoolEntry,
+        CTxMemPoolEntry_Indices
     > indexed_transaction_set;
 
     /**
@@ -364,9 +368,7 @@ public:
      * that are guarded by it.
      *
      * @par Consistency guarantees
-     *
      * By design, it is guaranteed that:
-     *
      * 1. Locking both `cs_main` and `mempool.cs` will give a view of mempool
      *    that is consistent with current chain tip (`ActiveChain()` and
      *    `CoinsTip()`) and is fully populated. Fully populated means that if the
@@ -374,7 +376,6 @@ public:
      *    previously active chain, all the missing transactions will have been
      *    re-added to the mempool and should be present if they meet size and
      *    consistency constraints.
-     *
      * 2. Locking `mempool.cs` without `cs_main` will give a view of a mempool
      *    consistent with some chain that was active since `cs_main` was last
      *    locked, and that is fully populated as described above. It is ok for
@@ -442,7 +443,7 @@ public:
      * accepting transactions becomes O(N^2) where N is the number of transactions
      * in the pool.
      */
-    explicit CTxMemPool(const Options& opts);
+    explicit CTxMemPool(Options opts, bilingual_str& error);
 
     /**
      * If sanity-checking is turned on, check makes sure the pool is
@@ -850,7 +851,7 @@ public:
     CCoinsViewMemPool(CCoinsView* baseIn, const CTxMemPool& mempoolIn);
     /** GetCoin, returning whether it exists and is not spent. Also updates m_non_base_coins if the
      * coin is not fetched from base. */
-    bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
+    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
     /** Add the coins created by this transaction. These coins are only temporarily stored in
      * m_temp_added and cannot be flushed to the back end. Only used for package validation. */
     void PackageAddTransaction(const CTransactionRef& tx);

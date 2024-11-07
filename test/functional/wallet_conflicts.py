@@ -9,7 +9,6 @@ Test that wallet correctly tracks transactions that have been conflicted by bloc
 
 from decimal import Decimal
 
-from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
         assert_equal,
@@ -37,7 +36,6 @@ class TxConflicts(BitcoinTestFramework):
         """
 
         self.test_block_conflicts()
-        self.generatetoaddress(self.nodes[0], COINBASE_MATURITY + 7, self.nodes[2].getnewaddress())
         self.test_mempool_conflict()
         self.test_mempool_and_block_conflicts()
         self.test_descendants_with_mempool_conflicts()
@@ -425,4 +423,4 @@ class TxConflicts(BitcoinTestFramework):
         carol.unloadwallet()
 
 if __name__ == '__main__':
-    TxConflicts().main()
+    TxConflicts(__file__).main()

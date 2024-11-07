@@ -270,13 +270,6 @@ SECP256K1_INLINE static int secp256k1_fe_impl_is_odd(const secp256k1_fe *a) {
     return a->n[0] & 1;
 }
 
-SECP256K1_INLINE static void secp256k1_fe_impl_clear(secp256k1_fe *a) {
-    int i;
-    for (i=0; i<10; i++) {
-        a->n[i] = 0;
-    }
-}
-
 static int secp256k1_fe_impl_cmp_var(const secp256k1_fe *a, const secp256k1_fe *b) {
     int i;
     for (i = 9; i >= 0; i--) {

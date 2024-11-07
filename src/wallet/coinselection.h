@@ -139,9 +139,9 @@ struct CoinSelectionParams {
     /** Randomness to use in the context of coin selection. */
     FastRandomContext& rng_fast;
     /** Size of a change output in bytes, determined by the output type. */
-    size_t change_output_size = 0;
+    int change_output_size = 0;
     /** Size of the input to spend a change output in virtual bytes. */
-    size_t change_spend_size = 0;
+    int change_spend_size = 0;
     /** Mininmum change to target in Knapsack solver and CoinGrinder:
      * select coins to cover the payment and at least this value of change. */
     CAmount m_min_change_target{0};
@@ -162,7 +162,7 @@ struct CoinSelectionParams {
     CFeeRate m_discard_feerate;
     /** Size of the transaction before coin selection, consisting of the header and recipient
      * output(s), excluding the inputs and change output(s). */
-    size_t tx_noinputs_size = 0;
+    int tx_noinputs_size = 0;
     /** Indicate that we are subtracting the fee from outputs */
     bool m_subtract_fee_outputs = false;
     /** When true, always spend all (up to OUTPUT_GROUP_MAX_ENTRIES) or none of the outputs
@@ -174,10 +174,13 @@ struct CoinSelectionParams {
      * 1) Received from other wallets, 2) replacing other txs, 3) that have been replaced.
      */
     bool m_include_unsafe_inputs = false;
+    /** The maximum weight for this transaction. */
+    std::optional<int> m_max_tx_weight{std::nullopt};
 
-    CoinSelectionParams(FastRandomContext& rng_fast, size_t change_output_size, size_t change_spend_size,
+    CoinSelectionParams(FastRandomContext& rng_fast, int change_output_size, int change_spend_size,
                         CAmount min_change_target, CFeeRate effective_feerate,
-                        CFeeRate long_term_feerate, CFeeRate discard_feerate, size_t tx_noinputs_size, bool avoid_partial)
+                        CFeeRate long_term_feerate, CFeeRate discard_feerate, int tx_noinputs_size, bool avoid_partial,
+                        std::optional<int> max_tx_weight = std::nullopt)
         : rng_fast{rng_fast},
           change_output_size(change_output_size),
           change_spend_size(change_spend_size),
@@ -186,7 +189,8 @@ struct CoinSelectionParams {
           m_long_term_feerate(long_term_feerate),
           m_discard_feerate(discard_feerate),
           tx_noinputs_size(tx_noinputs_size),
-          m_avoid_partial_spends(avoid_partial)
+          m_avoid_partial_spends(avoid_partial),
+          m_max_tx_weight(max_tx_weight)
     {
     }
     CoinSelectionParams(FastRandomContext& rng_fast)
@@ -255,7 +259,7 @@ struct OutputGroup
     /** Total weight of the UTXOs in this group. */
     int m_weight{0};
 
-    OutputGroup() {}
+    OutputGroup() = default;
     OutputGroup(const CoinSelectionParams& params) :
         m_long_term_feerate(params.m_long_term_feerate),
         m_subtract_fee_outputs(params.m_subtract_fee_outputs)
@@ -440,9 +444,9 @@ public:
 };
 
 util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change,
-                                             int max_weight);
+                                             int max_selection_weight);
 
-util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, CAmount change_target, int max_weight);
+util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, CAmount change_target, int max_selection_weight);
 
 /** Select coins by Single Random Draw. OutputGroups are selected randomly from the eligible
  * outputs until the target is satisfied
@@ -450,15 +454,15 @@ util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, c
  * @param[in]  utxo_pool    The positive effective value OutputGroups eligible for selection
  * @param[in]  target_value The target value to select for
  * @param[in]  rng The randomness source to shuffle coins
- * @param[in]  max_weight The maximum allowed weight for a selection result to be valid
+ * @param[in]  max_selection_weight The maximum allowed weight for a selection result to be valid
  * @returns If successful, a valid SelectionResult, otherwise, util::Error
  */
 util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value, CAmount change_fee, FastRandomContext& rng,
-                                             int max_weight);
+                                             int max_selection_weight);
 
 // Original coin selection algorithm as a fallback
 util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue,
-                                             CAmount change_target, FastRandomContext& rng, int max_weight);
+                                             CAmount change_target, FastRandomContext& rng, int max_selection_weight);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_COINSELECTION_H

@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <chain.h>
 #include <chainparams.h>
 #include <clientversion.h>
 #include <node/blockstorage.h>
@@ -27,13 +28,13 @@ BOOST_FIXTURE_TEST_SUITE(blockmanager_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(blockmanager_find_block_pos)
 {
     const auto params {CreateChainParams(ArgsManager{}, ChainType::MAIN)};
-    KernelNotifications notifications{*Assert(m_node.shutdown), m_node.exit_status};
+    KernelNotifications notifications{Assert(m_node.shutdown_request), m_node.exit_status, *Assert(m_node.warnings)};
     const BlockManager::Options blockman_opts{
         .chainparams = *params,
         .blocks_dir = m_args.GetBlocksDirPath(),
         .notifications = notifications,
     };
-    BlockManager blockman{*Assert(m_node.shutdown), blockman_opts};
+    BlockManager blockman{*Assert(m_node.shutdown_signal), blockman_opts};
     // simulate adding a genesis block normally
     BOOST_CHECK_EQUAL(blockman.SaveBlockToDisk(params->GenesisBlock(), 0).nPos, BLOCK_SERIALIZATION_HEADER_SIZE);
     // simulate what happens during reindex
@@ -113,7 +114,7 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_block_data_availability, TestChain100Setup)
     };
 
     // 1) Return genesis block when all blocks are available
-    BOOST_CHECK_EQUAL(blockman.GetFirstStoredBlock(tip), chainman->ActiveChain()[0]);
+    BOOST_CHECK_EQUAL(blockman.GetFirstBlock(tip, BLOCK_HAVE_DATA), chainman->ActiveChain()[0]);
     BOOST_CHECK(blockman.CheckBlockDataAvailability(tip, *chainman->ActiveChain()[0]));
 
     // 2) Check lower_block when all blocks are available
@@ -127,20 +128,20 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_block_data_availability, TestChain100Setup)
     func_prune_blocks(last_pruned_block);
 
     // 3) The last block not pruned is in-between upper-block and the genesis block
-    BOOST_CHECK_EQUAL(blockman.GetFirstStoredBlock(tip), first_available_block);
+    BOOST_CHECK_EQUAL(blockman.GetFirstBlock(tip, BLOCK_HAVE_DATA), first_available_block);
     BOOST_CHECK(blockman.CheckBlockDataAvailability(tip, *first_available_block));
     BOOST_CHECK(!blockman.CheckBlockDataAvailability(tip, *last_pruned_block));
 }
 
 BOOST_AUTO_TEST_CASE(blockmanager_flush_block_file)
 {
-    KernelNotifications notifications{*Assert(m_node.shutdown), m_node.exit_status};
+    KernelNotifications notifications{Assert(m_node.shutdown_request), m_node.exit_status, *Assert(m_node.warnings)};
     node::BlockManager::Options blockman_opts{
         .chainparams = Params(),
         .blocks_dir = m_args.GetBlocksDirPath(),
         .notifications = notifications,
     };
-    BlockManager blockman{*Assert(m_node.shutdown), blockman_opts};
+    BlockManager blockman{*Assert(m_node.shutdown_signal), blockman_opts};
 
     // Test blocks with no transactions, not even a coinbase
     CBlock block1;

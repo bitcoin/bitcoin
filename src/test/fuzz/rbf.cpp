@@ -13,6 +13,8 @@
 #include <test/util/setup_common.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
+#include <util/check.h>
+#include <util/translation.h>
 
 #include <cstdint>
 #include <optional>
@@ -56,7 +58,9 @@ FUZZ_TARGET(rbf, .init = initialize_rbf)
         return;
     }
 
-    CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node)};
+    bilingual_str error;
+    CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node), error};
+    Assert(error.empty());
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), NUM_ITERS)
     {
@@ -87,10 +91,14 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 
-    std::optional<CMutableTransaction> child = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
-    if (!child) return;
+    // "Real" virtual size is not important for this test since ConsumeTxMemPoolEntry generates its own virtual size values
+    // so we construct small transactions for performance reasons. Child simply needs an input for later to perhaps connect to parent.
+    CMutableTransaction child;
+    child.vin.resize(1);
 
-    CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node)};
+    bilingual_str error;
+    CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node), error};
+    Assert(error.empty());
 
     // Add a bunch of parent-child pairs to the mempool, and remember them.
     std::vector<CTransaction> mempool_txs;
@@ -107,15 +115,13 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), NUM_ITERS)
     {
         // Make sure txns only have one input, and that a unique input is given to avoid circular references
-        std::optional<CMutableTransaction> parent = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
-        if (!parent) {
-            return;
-        }
+        CMutableTransaction parent;
         assert(iter <= g_outpoints.size());
-        parent->vin.resize(1);
-        parent->vin[0].prevout = g_outpoints[iter++];
+        parent.vin.resize(1);
+        parent.vin[0].prevout = g_outpoints[iter++];
+        parent.vout.emplace_back(0, CScript());
 
-        mempool_txs.emplace_back(*parent);
+        mempool_txs.emplace_back(parent);
         const auto parent_entry = ConsumeTxMemPoolEntry(fuzzed_data_provider, mempool_txs.back());
         running_vsize_total += parent_entry.GetTxSize();
         if (running_vsize_total > std::numeric_limits<int32_t>::max()) {
@@ -124,10 +130,10 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
             break;
         }
         pool.addUnchecked(parent_entry);
-        if (fuzzed_data_provider.ConsumeBool() && !child->vin.empty()) {
-            child->vin[0].prevout = COutPoint{mempool_txs.back().GetHash(), 0};
+        if (fuzzed_data_provider.ConsumeBool()) {
+            child.vin[0].prevout = COutPoint{mempool_txs.back().GetHash(), 0};
         }
-        mempool_txs.emplace_back(*child);
+        mempool_txs.emplace_back(child);
         const auto child_entry = ConsumeTxMemPoolEntry(fuzzed_data_provider, mempool_txs.back());
         running_vsize_total += child_entry.GetTxSize();
         if (running_vsize_total > std::numeric_limits<int32_t>::max()) {

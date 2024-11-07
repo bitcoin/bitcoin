@@ -22,7 +22,7 @@ namespace interfaces {
 class Handler
 {
 public:
-    virtual ~Handler() {}
+    virtual ~Handler() = default;
 
     //! Disconnect the handler.
     virtual void disconnect() = 0;

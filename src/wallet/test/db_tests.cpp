@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <boost/test/unit_test.hpp>
 
@@ -28,7 +28,7 @@ inline std::ostream& operator<<(std::ostream& os, const std::pair<const Serializ
 {
     Span key{kv.first}, value{kv.second};
     os << "(\"" << std::string_view{reinterpret_cast<const char*>(key.data()), key.size()} << "\", \""
-       << std::string_view{reinterpret_cast<const char*>(key.data()), key.size()} << "\")";
+       << std::string_view{reinterpret_cast<const char*>(value.data()), value.size()} << "\")";
     return os;
 }
 

@@ -10,6 +10,8 @@
 #include <test/util/setup_common.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
+#include <util/check.h>
+#include <util/translation.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -50,9 +52,11 @@ FUZZ_TARGET(partially_downloaded_block, .init = initialize_pdb)
         return;
     }
 
-    CBlockHeaderAndShortTxIDs cmpctblock{*block};
+    CBlockHeaderAndShortTxIDs cmpctblock{*block, fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
 
-    CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node)};
+    bilingual_str error;
+    CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node), error};
+    Assert(error.empty());
     PartiallyDownloadedBlock pdb{&pool};
 
     // Set of available transactions (mempool or extra_txn)

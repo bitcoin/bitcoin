@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 #include <test/util/setup_common.h>
 #include <common/run_command.h>
 #include <univalue.h>
@@ -15,13 +15,6 @@
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(system_tests, BasicTestingSetup)
-
-// At least one test is required (in case ENABLE_EXTERNAL_SIGNER is not defined).
-// Workaround for https://github.com/bitcoin/bitcoin/issues/19128
-BOOST_AUTO_TEST_CASE(dummy)
-{
-    BOOST_CHECK(true);
-}
 
 #ifdef ENABLE_EXTERNAL_SIGNER
 
@@ -54,8 +47,8 @@ BOOST_AUTO_TEST_CASE(run_command)
     }
     {
         // Return non-zero exit code, with error message for stderr
-        const std::string command{"ls nosuchfile"};
-        const std::string expected{"No such file or directory"};
+        const std::string command{"sh -c 'echo err 1>&2 && false'"};
+        const std::string expected{"err"};
         BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, [&](const std::runtime_error& e) {
             const std::string what(e.what());
             BOOST_CHECK(what.find(strprintf("RunCommandParseJSON error: process(%s) returned", command)) != std::string::npos);

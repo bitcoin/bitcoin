@@ -30,8 +30,8 @@ bool operator<(Span<const std::byte> a, BytePrefix b);
 class DatabaseCursor
 {
 public:
-    explicit DatabaseCursor() {}
-    virtual ~DatabaseCursor() {}
+    explicit DatabaseCursor() = default;
+    virtual ~DatabaseCursor() = default;
 
     DatabaseCursor(const DatabaseCursor&) = delete;
     DatabaseCursor& operator=(const DatabaseCursor&) = delete;
@@ -56,8 +56,8 @@ private:
     virtual bool HasKey(DataStream&& key) = 0;
 
 public:
-    explicit DatabaseBatch() {}
-    virtual ~DatabaseBatch() {}
+    explicit DatabaseBatch() = default;
+    virtual ~DatabaseBatch() = default;
 
     DatabaseBatch(const DatabaseBatch&) = delete;
     DatabaseBatch& operator=(const DatabaseBatch&) = delete;
@@ -122,6 +122,7 @@ public:
     virtual bool TxnBegin() = 0;
     virtual bool TxnCommit() = 0;
     virtual bool TxnAbort() = 0;
+    virtual bool HasActiveTxn() = 0;
 };
 
 /** An instance of this class represents one database.
@@ -131,7 +132,7 @@ class WalletDatabase
 public:
     /** Create dummy DB handle */
     WalletDatabase() : nUpdateCounter(0) {}
-    virtual ~WalletDatabase() {};
+    virtual ~WalletDatabase() = default;
 
     /** Open the database if it is not already opened. */
     virtual void Open() = 0;
@@ -216,7 +217,7 @@ enum class DatabaseStatus {
 };
 
 /** Recursively list database paths in directory. */
-std::vector<fs::path> ListDatabases(const fs::path& path);
+std::vector<std::pair<fs::path, std::string>> ListDatabases(const fs::path& path);
 
 void ReadDatabaseArgs(const ArgsManager& args, DatabaseOptions& options);
 std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);

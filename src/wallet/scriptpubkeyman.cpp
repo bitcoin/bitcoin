@@ -5,6 +5,7 @@
 #include <hash.h>
 #include <key_io.h>
 #include <logging.h>
+#include <node/types.h>
 #include <outputtype.h>
 #include <script/descriptor.h>
 #include <script/script.h>
@@ -19,6 +20,9 @@
 #include <wallet/scriptpubkeyman.h>
 
 #include <optional>
+
+using common::PSBTError;
+using util::ToString;
 
 namespace wallet {
 //! Value for the first BIP 32 hardened derivation. Can be used as a bit mask and as a value. See BIP 32 for more details.
@@ -80,7 +84,7 @@ bool PermitsUncompressed(IsMineSigVersion sigversion)
     return sigversion == IsMineSigVersion::TOP || sigversion == IsMineSigVersion::P2SH;
 }
 
-bool HaveKeys(const std::vector<valtype>& pubkeys, const LegacyScriptPubKeyMan& keystore)
+bool HaveKeys(const std::vector<valtype>& pubkeys, const LegacyDataSPKM& keystore)
 {
     for (const valtype& pubkey : pubkeys) {
         CKeyID keyID = CPubKey(pubkey).GetID();
@@ -98,7 +102,7 @@ bool HaveKeys(const std::vector<valtype>& pubkeys, const LegacyScriptPubKeyMan& 
 //!                            scripts or simply treat any script that has been
 //!                            stored in the keystore as spendable
 // NOLINTNEXTLINE(misc-no-recursion)
-IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& scriptPubKey, IsMineSigVersion sigversion, bool recurse_scripthash=true)
+IsMineResult IsMineInner(const LegacyDataSPKM& keystore, const CScript& scriptPubKey, IsMineSigVersion sigversion, bool recurse_scripthash=true)
 {
     IsMineResult ret = IsMineResult::NO;
 
@@ -111,6 +115,7 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
     case TxoutType::NULL_DATA:
     case TxoutType::WITNESS_UNKNOWN:
     case TxoutType::WITNESS_V1_TAPROOT:
+    case TxoutType::ANCHOR:
         break;
     case TxoutType::PUBKEY:
         keyID = CPubKey(vSolutions[0]).GetID();
@@ -213,7 +218,7 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
 
 } // namespace
 
-isminetype LegacyScriptPubKeyMan::IsMine(const CScript& script) const
+isminetype LegacyDataSPKM::IsMine(const CScript& script) const
 {
     switch (IsMineInner(*this, script, IsMineSigVersion::TOP)) {
     case IsMineResult::INVALID:
@@ -227,7 +232,7 @@ isminetype LegacyScriptPubKeyMan::IsMine(const CScript& script) const
     assert(false);
 }
 
-bool LegacyScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key)
+bool LegacyDataSPKM::CheckDecryptionKey(const CKeyingMaterial& master_key)
 {
     {
         LOCK(cs_KeyStore);
@@ -581,7 +586,7 @@ int64_t LegacyScriptPubKeyMan::GetTimeFirstKey() const
     return nTimeFirstKey;
 }
 
-std::unique_ptr<SigningProvider> LegacyScriptPubKeyMan::GetSolvingProvider(const CScript& script) const
+std::unique_ptr<SigningProvider> LegacyDataSPKM::GetSolvingProvider(const CScript& script) const
 {
     return std::make_unique<LegacySigningProvider>(*this);
 }
@@ -627,7 +632,7 @@ SigningResult LegacyScriptPubKeyMan::SignMessage(const std::string& message, con
     return SigningResult::SIGNING_FAILED;
 }
 
-TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
+std::optional<PSBTError> LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
 {
     if (n_signed) {
         *n_signed = 0;
@@ -642,13 +647,13 @@ TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psb
 
         // Get the Sighash type
         if (sign && input.sighash_type != std::nullopt && *input.sighash_type != sighash_type) {
-            return TransactionError::SIGHASH_MISMATCH;
+            return PSBTError::SIGHASH_MISMATCH;
         }
 
         // Check non_witness_utxo has specified prevout
         if (input.non_witness_utxo) {
             if (txin.prevout.n >= input.non_witness_utxo->vout.size()) {
-                return TransactionError::MISSING_INPUTS;
+                return PSBTError::MISSING_INPUTS;
             }
         } else if (input.witness_utxo.IsNull()) {
             // There's no UTXO so we can just skip this now
@@ -670,7 +675,7 @@ TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psb
         UpdatePSBTOutput(HidingSigningProvider(this, true, !bip32derivs), psbtx, i);
     }
 
-    return TransactionError::OK;
+    return {};
 }
 
 std::unique_ptr<CKeyMetadata> LegacyScriptPubKeyMan::GetMetadata(const CTxDestination& dest) const
@@ -717,7 +722,7 @@ void LegacyScriptPubKeyMan::UpdateTimeFirstKey(int64_t nCreateTime)
     NotifyFirstKeyTimeChanged(this, nTimeFirstKey);
 }
 
-bool LegacyScriptPubKeyMan::LoadKey(const CKey& key, const CPubKey &pubkey)
+bool LegacyDataSPKM::LoadKey(const CKey& key, const CPubKey &pubkey)
 {
     return AddKeyPubKeyInner(key, pubkey);
 }
@@ -769,7 +774,7 @@ bool LegacyScriptPubKeyMan::AddKeyPubKeyWithDB(WalletBatch& batch, const CKey& s
     return true;
 }
 
-bool LegacyScriptPubKeyMan::LoadCScript(const CScript& redeemScript)
+bool LegacyDataSPKM::LoadCScript(const CScript& redeemScript)
 {
     /* A sanity check was added in pull #3843 to avoid adding redeemScripts
      * that never can be redeemed. However, old wallets may still contain
@@ -784,18 +789,36 @@ bool LegacyScriptPubKeyMan::LoadCScript(const CScript& redeemScript)
     return FillableSigningProvider::AddCScript(redeemScript);
 }
 
+void LegacyDataSPKM::LoadKeyMetadata(const CKeyID& keyID, const CKeyMetadata& meta)
+{
+    LOCK(cs_KeyStore);
+    mapKeyMetadata[keyID] = meta;
+}
+
 void LegacyScriptPubKeyMan::LoadKeyMetadata(const CKeyID& keyID, const CKeyMetadata& meta)
 {
     LOCK(cs_KeyStore);
+    LegacyDataSPKM::LoadKeyMetadata(keyID, meta);
     UpdateTimeFirstKey(meta.nCreateTime);
-    mapKeyMetadata[keyID] = meta;
+}
+
+void LegacyDataSPKM::LoadScriptMetadata(const CScriptID& script_id, const CKeyMetadata& meta)
+{
+    LOCK(cs_KeyStore);
+    m_script_metadata[script_id] = meta;
 }
 
 void LegacyScriptPubKeyMan::LoadScriptMetadata(const CScriptID& script_id, const CKeyMetadata& meta)
 {
     LOCK(cs_KeyStore);
+    LegacyDataSPKM::LoadScriptMetadata(script_id, meta);
     UpdateTimeFirstKey(meta.nCreateTime);
-    m_script_metadata[script_id] = meta;
+}
+
+bool LegacyDataSPKM::AddKeyPubKeyInner(const CKey& key, const CPubKey& pubkey)
+{
+    LOCK(cs_KeyStore);
+    return FillableSigningProvider::AddKeyPubKey(key, pubkey);
 }
 
 bool LegacyScriptPubKeyMan::AddKeyPubKeyInner(const CKey& key, const CPubKey &pubkey)
@@ -823,7 +846,7 @@ bool LegacyScriptPubKeyMan::AddKeyPubKeyInner(const CKey& key, const CPubKey &pu
     return true;
 }
 
-bool LegacyScriptPubKeyMan::LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret, bool checksum_valid)
+bool LegacyDataSPKM::LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret, bool checksum_valid)
 {
     // Set fDecryptionThoroughlyChecked to false when the checksum is invalid
     if (!checksum_valid) {
@@ -833,7 +856,7 @@ bool LegacyScriptPubKeyMan::LoadCryptedKey(const CPubKey &vchPubKey, const std::
     return AddCryptedKeyInner(vchPubKey, vchCryptedSecret);
 }
 
-bool LegacyScriptPubKeyMan::AddCryptedKeyInner(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret)
+bool LegacyDataSPKM::AddCryptedKeyInner(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret)
 {
     LOCK(cs_KeyStore);
     assert(mapKeys.empty());
@@ -861,13 +884,13 @@ bool LegacyScriptPubKeyMan::AddCryptedKey(const CPubKey &vchPubKey,
     }
 }
 
-bool LegacyScriptPubKeyMan::HaveWatchOnly(const CScript &dest) const
+bool LegacyDataSPKM::HaveWatchOnly(const CScript &dest) const
 {
     LOCK(cs_KeyStore);
     return setWatchOnly.count(dest) > 0;
 }
 
-bool LegacyScriptPubKeyMan::HaveWatchOnly() const
+bool LegacyDataSPKM::HaveWatchOnly() const
 {
     LOCK(cs_KeyStore);
     return (!setWatchOnly.empty());
@@ -901,12 +924,12 @@ bool LegacyScriptPubKeyMan::RemoveWatchOnly(const CScript &dest)
     return true;
 }
 
-bool LegacyScriptPubKeyMan::LoadWatchOnly(const CScript &dest)
+bool LegacyDataSPKM::LoadWatchOnly(const CScript &dest)
 {
     return AddWatchOnlyInMem(dest);
 }
 
-bool LegacyScriptPubKeyMan::AddWatchOnlyInMem(const CScript &dest)
+bool LegacyDataSPKM::AddWatchOnlyInMem(const CScript &dest)
 {
     LOCK(cs_KeyStore);
     setWatchOnly.insert(dest);
@@ -950,7 +973,7 @@ bool LegacyScriptPubKeyMan::AddWatchOnly(const CScript& dest, int64_t nCreateTim
     return AddWatchOnly(dest);
 }
 
-void LegacyScriptPubKeyMan::LoadHDChain(const CHDChain& chain)
+void LegacyDataSPKM::LoadHDChain(const CHDChain& chain)
 {
     LOCK(cs_KeyStore);
     m_hd_chain = chain;
@@ -971,14 +994,14 @@ void LegacyScriptPubKeyMan::AddHDChain(const CHDChain& chain)
     m_hd_chain = chain;
 }
 
-void LegacyScriptPubKeyMan::AddInactiveHDChain(const CHDChain& chain)
+void LegacyDataSPKM::AddInactiveHDChain(const CHDChain& chain)
 {
     LOCK(cs_KeyStore);
     assert(!chain.seed_id.IsNull());
     m_inactive_hd_chains[chain.seed_id] = chain;
 }
 
-bool LegacyScriptPubKeyMan::HaveKey(const CKeyID &address) const
+bool LegacyDataSPKM::HaveKey(const CKeyID &address) const
 {
     LOCK(cs_KeyStore);
     if (!m_storage.HasEncryptionKeys()) {
@@ -987,7 +1010,7 @@ bool LegacyScriptPubKeyMan::HaveKey(const CKeyID &address) const
     return mapCryptedKeys.count(address) > 0;
 }
 
-bool LegacyScriptPubKeyMan::GetKey(const CKeyID &address, CKey& keyOut) const
+bool LegacyDataSPKM::GetKey(const CKeyID &address, CKey& keyOut) const
 {
     LOCK(cs_KeyStore);
     if (!m_storage.HasEncryptionKeys()) {
@@ -1006,7 +1029,7 @@ bool LegacyScriptPubKeyMan::GetKey(const CKeyID &address, CKey& keyOut) const
     return false;
 }
 
-bool LegacyScriptPubKeyMan::GetKeyOrigin(const CKeyID& keyID, KeyOriginInfo& info) const
+bool LegacyDataSPKM::GetKeyOrigin(const CKeyID& keyID, KeyOriginInfo& info) const
 {
     CKeyMetadata meta;
     {
@@ -1026,7 +1049,7 @@ bool LegacyScriptPubKeyMan::GetKeyOrigin(const CKeyID& keyID, KeyOriginInfo& inf
     return true;
 }
 
-bool LegacyScriptPubKeyMan::GetWatchPubKey(const CKeyID &address, CPubKey &pubkey_out) const
+bool LegacyDataSPKM::GetWatchPubKey(const CKeyID &address, CPubKey &pubkey_out) const
 {
     LOCK(cs_KeyStore);
     WatchKeyMap::const_iterator it = mapWatchKeys.find(address);
@@ -1037,7 +1060,7 @@ bool LegacyScriptPubKeyMan::GetWatchPubKey(const CKeyID &address, CPubKey &pubke
     return false;
 }
 
-bool LegacyScriptPubKeyMan::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
+bool LegacyDataSPKM::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
 {
     LOCK(cs_KeyStore);
     if (!m_storage.HasEncryptionKeys()) {
@@ -1156,7 +1179,7 @@ void LegacyScriptPubKeyMan::DeriveNewChildKey(WalletBatch &batch, CKeyMetadata& 
         throw std::runtime_error(std::string(__func__) + ": writing HD chain model failed");
 }
 
-void LegacyScriptPubKeyMan::LoadKeyPool(int64_t nIndex, const CKeyPool &keypool)
+void LegacyDataSPKM::LoadKeyPool(int64_t nIndex, const CKeyPool &keypool)
 {
     LOCK(cs_KeyStore);
     if (keypool.m_pre_split) {
@@ -1619,13 +1642,13 @@ bool LegacyScriptPubKeyMan::ImportPrivKeys(const std::map<CKeyID, CKey>& privkey
     return true;
 }
 
-bool LegacyScriptPubKeyMan::ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, const bool add_keypool, const bool internal, const int64_t timestamp)
+bool LegacyScriptPubKeyMan::ImportPubKeys(const std::vector<std::pair<CKeyID, bool>>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, const bool add_keypool, const int64_t timestamp)
 {
     WalletBatch batch(m_storage.GetDatabase());
     for (const auto& entry : key_origins) {
         AddKeyOriginWithDB(batch, entry.second.first, entry.second.second);
     }
-    for (const CKeyID& id : ordered_pubkeys) {
+    for (const auto& [id, internal] : ordered_pubkeys) {
         auto entry = pubkey_map.find(id);
         if (entry == pubkey_map.end()) {
             continue;
@@ -1677,7 +1700,7 @@ std::set<CKeyID> LegacyScriptPubKeyMan::GetKeys() const
     return set_address;
 }
 
-std::unordered_set<CScript, SaltedSipHasher> LegacyScriptPubKeyMan::GetScriptPubKeys() const
+std::unordered_set<CScript, SaltedSipHasher> LegacyDataSPKM::GetScriptPubKeys() const
 {
     LOCK(cs_KeyStore);
     std::unordered_set<CScript, SaltedSipHasher> spks;
@@ -1735,7 +1758,7 @@ std::unordered_set<CScript, SaltedSipHasher> LegacyScriptPubKeyMan::GetScriptPub
     return spks;
 }
 
-std::unordered_set<CScript, SaltedSipHasher> LegacyScriptPubKeyMan::GetNotMineScriptPubKeys() const
+std::unordered_set<CScript, SaltedSipHasher> LegacyDataSPKM::GetNotMineScriptPubKeys() const
 {
     LOCK(cs_KeyStore);
     std::unordered_set<CScript, SaltedSipHasher> spks;
@@ -1745,7 +1768,7 @@ std::unordered_set<CScript, SaltedSipHasher> LegacyScriptPubKeyMan::GetNotMineSc
     return spks;
 }
 
-std::optional<MigrationData> LegacyScriptPubKeyMan::MigrateToDescriptor()
+std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
 {
     LOCK(cs_KeyStore);
     if (m_storage.IsLocked()) {
@@ -1784,6 +1807,12 @@ std::optional<MigrationData> LegacyScriptPubKeyMan::MigrateToDescriptor()
         keyid_it++;
     }
 
+    WalletBatch batch(m_storage.GetDatabase());
+    if (!batch.TxnBegin()) {
+        LogPrintf("Error generating descriptors for migration, cannot initialize db transaction\n");
+        return std::nullopt;
+    }
+
     // keyids is now all non-HD keys. Each key will have its own combo descriptor
     for (const CKeyID& keyid : keyids) {
         CKey key;
@@ -1808,13 +1837,14 @@ std::optional<MigrationData> LegacyScriptPubKeyMan::MigrateToDescriptor()
         std::string desc_str = "combo(" + origin_str + HexStr(key.GetPubKey()) + ")";
         FlatSigningProvider keys;
         std::string error;
-        std::unique_ptr<Descriptor> desc = Parse(desc_str, keys, error, false);
-        WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
+        std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, error, false);
+        CHECK_NONFATAL(descs.size() == 1); // It shouldn't be possible to have an invalid or multipath descriptor
+        WalletDescriptor w_desc(std::move(descs.at(0)), creation_time, 0, 0, 0);
 
         // Make the DescriptorScriptPubKeyMan and get the scriptPubKeys
-        auto desc_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(m_storage, w_desc, m_keypool_size));
-        desc_spk_man->AddDescriptorKey(key, key.GetPubKey());
-        desc_spk_man->TopUp();
+        auto desc_spk_man = std::make_unique<DescriptorScriptPubKeyMan>(m_storage, w_desc, /*keypool_size=*/0);
+        WITH_LOCK(desc_spk_man->cs_desc_man, desc_spk_man->AddDescriptorKeyWithDB(batch, key, key.GetPubKey()));
+        desc_spk_man->TopUpWithDB(batch);
         auto desc_spks = desc_spk_man->GetScriptPubKeys();
 
         // Remove the scriptPubKeys from our current set
@@ -1852,14 +1882,15 @@ std::optional<MigrationData> LegacyScriptPubKeyMan::MigrateToDescriptor()
             std::string desc_str = "combo(" + xpub + "/0h/" + ToString(i) + "h/*h)";
             FlatSigningProvider keys;
             std::string error;
-            std::unique_ptr<Descriptor> desc = Parse(desc_str, keys, error, false);
+            std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, error, false);
+            CHECK_NONFATAL(descs.size() == 1); // It shouldn't be possible to have an invalid or multipath descriptor
             uint32_t chain_counter = std::max((i == 1 ? chain.nInternalChainCounter : chain.nExternalChainCounter), (uint32_t)0);
-            WalletDescriptor w_desc(std::move(desc), 0, 0, chain_counter, 0);
+            WalletDescriptor w_desc(std::move(descs.at(0)), 0, 0, chain_counter, 0);
 
             // Make the DescriptorScriptPubKeyMan and get the scriptPubKeys
-            auto desc_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(m_storage, w_desc, m_keypool_size));
-            desc_spk_man->AddDescriptorKey(master_key.key, master_key.key.GetPubKey());
-            desc_spk_man->TopUp();
+            auto desc_spk_man = std::make_unique<DescriptorScriptPubKeyMan>(m_storage, w_desc, /*keypool_size=*/0);
+            WITH_LOCK(desc_spk_man->cs_desc_man, desc_spk_man->AddDescriptorKeyWithDB(batch, master_key.key, master_key.key.GetPubKey()));
+            desc_spk_man->TopUpWithDB(batch);
             auto desc_spks = desc_spk_man->GetScriptPubKeys();
 
             // Remove the scriptPubKeys from our current set
@@ -1919,15 +1950,15 @@ std::optional<MigrationData> LegacyScriptPubKeyMan::MigrateToDescriptor()
         } else {
             // Make the DescriptorScriptPubKeyMan and get the scriptPubKeys
             WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
-            auto desc_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(m_storage, w_desc, m_keypool_size));
+            auto desc_spk_man = std::make_unique<DescriptorScriptPubKeyMan>(m_storage, w_desc, /*keypool_size=*/0);
             for (const auto& keyid : privkeyids) {
                 CKey key;
                 if (!GetKey(keyid, key)) {
                     continue;
                 }
-                desc_spk_man->AddDescriptorKey(key, key.GetPubKey());
+                WITH_LOCK(desc_spk_man->cs_desc_man, desc_spk_man->AddDescriptorKeyWithDB(batch, key, key.GetPubKey()));
             }
-            desc_spk_man->TopUp();
+            desc_spk_man->TopUpWithDB(batch);
             auto desc_spks_set = desc_spk_man->GetScriptPubKeys();
             desc_spks.insert(desc_spks.end(), desc_spks_set.begin(), desc_spks_set.end());
 
@@ -1994,13 +2025,26 @@ std::optional<MigrationData> LegacyScriptPubKeyMan::MigrateToDescriptor()
 
     // Make sure that we have accounted for all scriptPubKeys
     assert(spks.size() == 0);
+
+    // Finalize transaction
+    if (!batch.TxnCommit()) {
+        LogPrintf("Error generating descriptors for migration, cannot commit db transaction\n");
+        return std::nullopt;
+    }
+
     return out;
 }
 
-bool LegacyScriptPubKeyMan::DeleteRecords()
+bool LegacyDataSPKM::DeleteRecords()
+{
+    return RunWithinTxn(m_storage.GetDatabase(), /*process_desc=*/"delete legacy records", [&](WalletBatch& batch){
+        return DeleteRecordsWithDB(batch);
+    });
+}
+
+bool LegacyDataSPKM::DeleteRecordsWithDB(WalletBatch& batch)
 {
     LOCK(cs_KeyStore);
-    WalletBatch batch(m_storage.GetDatabase());
     return batch.EraseRecords(DBKeys::LEGACY_TYPES);
 }
 
@@ -2485,7 +2529,7 @@ SigningResult DescriptorScriptPubKeyMan::SignMessage(const std::string& message,
     return SigningResult::OK;
 }
 
-TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
+std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
 {
     if (n_signed) {
         *n_signed = 0;
@@ -2500,7 +2544,7 @@ TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction&
 
         // Get the Sighash type
         if (sign && input.sighash_type != std::nullopt && *input.sighash_type != sighash_type) {
-            return TransactionError::SIGHASH_MISMATCH;
+            return PSBTError::SIGHASH_MISMATCH;
         }
 
         // Get the scriptPubKey to know which SigningProvider to use
@@ -2509,7 +2553,7 @@ TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction&
             script = input.witness_utxo.scriptPubKey;
         } else if (input.non_witness_utxo) {
             if (txin.prevout.n >= input.non_witness_utxo->vout.size()) {
-                return TransactionError::MISSING_INPUTS;
+                return PSBTError::MISSING_INPUTS;
             }
             script = input.non_witness_utxo->vout[txin.prevout.n].scriptPubKey;
         } else {
@@ -2580,7 +2624,7 @@ TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction&
         UpdatePSBTOutput(HidingSigningProvider(keys.get(), /*hide_secret=*/true, /*hide_origin=*/!bip32derivs), psbtx, i);
     }
 
-    return TransactionError::OK;
+    return {};
 }
 
 std::unique_ptr<CKeyMetadata> DescriptorScriptPubKeyMan::GetMetadata(const CTxDestination& dest) const

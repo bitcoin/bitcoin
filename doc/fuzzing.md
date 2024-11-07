@@ -7,14 +7,16 @@ To quickly get started fuzzing Bitcoin Core using [libFuzzer](https://llvm.org/d
 ```sh
 $ git clone https://github.com/bitcoin/bitcoin
 $ cd bitcoin/
-$ ./autogen.sh
-$ CC=clang CXX=clang++ ./configure --enable-fuzz --with-sanitizers=address,fuzzer,undefined
+$ cmake --preset=libfuzzer
 # macOS users: If you have problem with this step then make sure to read "macOS hints for
 # libFuzzer" on https://github.com/bitcoin/bitcoin/blob/master/doc/fuzzing.md#macos-hints-for-libfuzzer
-$ make
-$ FUZZ=process_message src/test/fuzz/fuzz
+$ cmake --build build_fuzz
+$ FUZZ=process_message build_fuzz/src/test/fuzz/fuzz
 # abort fuzzing using ctrl-c
 ```
+
+One can use `--prefix=libfuzzer-nosan` to do the same without common sanitizers enabled.
+See [further](#run-without-sanitizers-for-increased-throughput) for more information.
 
 There is also a runner script to execute all fuzz targets. Refer to
 `./test/fuzz/test_runner.py --help` for more details.
@@ -33,7 +35,7 @@ If you specify a corpus directory then any new coverage increasing inputs will b
 
 ```sh
 $ mkdir -p process_message-seeded-from-thin-air/
-$ FUZZ=process_message src/test/fuzz/fuzz process_message-seeded-from-thin-air/
+$ FUZZ=process_message build_fuzz/src/test/fuzz/fuzz process_message-seeded-from-thin-air/
 INFO: Seed: 840522292
 INFO: Loaded 1 modules   (424174 inline 8-bit counters): 424174 [0x55e121ef9ab8, 0x55e121f613a6),
 INFO: Loaded 1 PC tables (424174 PCs): 424174 [0x55e121f613a8,0x55e1225da288),
@@ -77,7 +79,7 @@ of the test. Just make sure to use double-dash to distinguish them from the
 fuzzer's own arguments:
 
 ```sh
-$ FUZZ=address_deserialize_v2 src/test/fuzz/fuzz -runs=1 fuzz_seed_corpus/address_deserialize_v2 --checkaddrman=5 --printtoconsole=1
+$ FUZZ=address_deserialize_v2 build_fuzz/src/test/fuzz/fuzz -runs=1 fuzz_corpora/address_deserialize_v2 --checkaddrman=5 --printtoconsole=1
 ```
 
 ## Fuzzing corpora
@@ -88,11 +90,11 @@ To fuzz `process_message` using the [`bitcoin-core/qa-assets`](https://github.co
 
 ```sh
 $ git clone https://github.com/bitcoin-core/qa-assets
-$ FUZZ=process_message src/test/fuzz/fuzz qa-assets/fuzz_seed_corpus/process_message/
+$ FUZZ=process_message build_fuzz/src/test/fuzz/fuzz qa-assets/fuzz_corpora/process_message/
 INFO: Seed: 1346407872
 INFO: Loaded 1 modules   (424174 inline 8-bit counters): 424174 [0x55d8a9004ab8, 0x55d8a906c3a6),
 INFO: Loaded 1 PC tables (424174 PCs): 424174 [0x55d8a906c3a8,0x55d8a96e5288),
-INFO:      991 files found in qa-assets/fuzz_seed_corpus/process_message/
+INFO:      991 files found in qa-assets/fuzz_corpora/process_message/
 INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 4096 bytes
 INFO: seed corpus: files: 991 min: 1b max: 1858b total: 288291b rss: 150Mb
 #993    INITED cov: 7063 ft: 8236 corp: 25/3821b exec/s: 0 rss: 181Mb
@@ -101,7 +103,15 @@ INFO: seed corpus: files: 991 min: 1b max: 1858b total: 288291b rss: 150Mb
 
 ## Run without sanitizers for increased throughput
 
-Fuzzing on a harness compiled with `--with-sanitizers=address,fuzzer,undefined` is good for finding bugs. However, the very slow execution even under libFuzzer will limit the ability to find new coverage. A good approach is to perform occasional long runs without the additional bug-detectors (configure `--with-sanitizers=fuzzer`) and then merge new inputs into a corpus as described in the qa-assets repo (https://github.com/bitcoin-core/qa-assets/blob/main/.github/PULL_REQUEST_TEMPLATE.md).  Patience is useful; even with improved throughput, libFuzzer may need days and 10s of millions of executions to reach deep/hard targets.
+Fuzzing on a harness compiled with `-DSANITIZERS=address,fuzzer,undefined` is
+good for finding bugs. However, the very slow execution even under libFuzzer
+will limit the ability to find new coverage. A good approach is to perform
+occasional long runs without the additional bug-detectors
+(`--preset=libfuzzer-nosan`) and then merge new inputs into a corpus as described in
+the qa-assets repo
+(https://github.com/bitcoin-core/qa-assets/blob/main/.github/PULL_REQUEST_TEMPLATE.md).
+Patience is useful; even with improved throughput, libFuzzer may need days and
+10s of millions of executions to reach deep/hard targets.
 
 ## Reproduce a fuzzer crash reported by the CI
 
@@ -112,8 +122,8 @@ Fuzzing on a harness compiled with `--with-sanitizers=address,fuzzer,undefined` 
   more slowly with sanitizers enabled, but a crash should be reproducible very
   quickly from a crash case)
 - run the fuzzer with the case number appended to the seed corpus path:
-  `FUZZ=process_message src/test/fuzz/fuzz
-  qa-assets/fuzz_seed_corpus/process_message/1bc91feec9fc00b107d97dc225a9f2cdaa078eb6`
+  `FUZZ=process_message build_fuzz/src/test/fuzz/fuzz
+  qa-assets/fuzz_corpora/process_message/1bc91feec9fc00b107d97dc225a9f2cdaa078eb6`
 
 ## Submit improved coverage
 
@@ -131,10 +141,13 @@ You may also need to take care of giving the correct path for `clang` and
 `clang++`, like `CC=/path/to/clang CXX=/path/to/clang++` if the non-systems
 `clang` does not come first in your path.
 
-Full configure that was tested on macOS with `brew` installed `llvm`:
+Full configuration step that was tested on macOS with `brew` installed `llvm`:
 
 ```sh
-./configure --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++
+$ cmake --preset=libfuzzer \
+   -DCMAKE_C_COMPILER="$(brew --prefix llvm)/bin/clang" \
+   -DCMAKE_CXX_COMPILER="$(brew --prefix llvm)/bin/clang++" \
+   -DAPPEND_LDFLAGS=-Wl,-no_warn_duplicate_libraries
 ```
 
 Read the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html) for more information. This [libFuzzer tutorial](https://github.com/google/fuzzing/blob/master/tutorial/libFuzzerTutorial.md) might also be of interest.
@@ -150,16 +163,18 @@ $ git clone https://github.com/bitcoin/bitcoin
 $ cd bitcoin/
 $ git clone https://github.com/AFLplusplus/AFLplusplus
 $ make -C AFLplusplus/ source-only
-$ ./autogen.sh
 # If afl-clang-lto is not available, see
 # https://github.com/AFLplusplus/AFLplusplus#a-selecting-the-best-afl-compiler-for-instrumenting-the-target
-$ CC=$(pwd)/AFLplusplus/afl-clang-lto CXX=$(pwd)/AFLplusplus/afl-clang-lto++ ./configure --enable-fuzz
-$ make
-# For macOS you may need to ignore x86 compilation checks when running "make". If so,
-# try compiling using: AFL_NO_X86=1 make
+$ cmake -B build_fuzz \
+   -DCMAKE_C_COMPILER="$(pwd)/AFLplusplus/afl-clang-lto" \
+   -DCMAKE_CXX_COMPILER="$(pwd)/AFLplusplus/afl-clang-lto++" \
+   -DBUILD_FOR_FUZZING=ON
+$ cmake --build build_fuzz
+# For macOS you may need to ignore x86 compilation checks when running "cmake --build". If so,
+# try compiling using: AFL_NO_X86=1 cmake --build build_fuzz
 $ mkdir -p inputs/ outputs/
 $ echo A > inputs/thin-air-input
-$ FUZZ=bech32 AFLplusplus/afl-fuzz -i inputs/ -o outputs/ -- src/test/fuzz/fuzz
+$ FUZZ=bech32 ./AFLplusplus/afl-fuzz -i inputs/ -o outputs/ -- build_fuzz/src/test/fuzz/fuzz
 # You may have to change a few kernel parameters to test optimally - afl-fuzz
 # will print an error and suggestion if so.
 ```
@@ -175,171 +190,30 @@ To quickly get started fuzzing Bitcoin Core using [Honggfuzz](https://github.com
 ```sh
 $ git clone https://github.com/bitcoin/bitcoin
 $ cd bitcoin/
-$ ./autogen.sh
 $ git clone https://github.com/google/honggfuzz
 $ cd honggfuzz/
 $ make
 $ cd ..
-$ CC=$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang CXX=$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang++ ./configure --enable-fuzz --with-sanitizers=address,undefined
-$ make
+$ cmake -B build_fuzz \
+   -DCMAKE_C_COMPILER="$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang" \
+   -DCMAKE_CXX_COMPILER="$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang++" \
+   -DBUILD_FOR_FUZZING=ON \
+   -DSANITIZERS=address,undefined
+$ cmake --build build_fuzz
 $ mkdir -p inputs/
-$ FUZZ=process_message honggfuzz/honggfuzz -i inputs/ -- src/test/fuzz/fuzz
+$ FUZZ=process_message ./honggfuzz/honggfuzz -i inputs/ -- build_fuzz/src/test/fuzz/fuzz
 ```
 
 Read the [Honggfuzz documentation](https://github.com/google/honggfuzz/blob/master/docs/USAGE.md) for more information.
 
-## Fuzzing the Bitcoin Core P2P layer using Honggfuzz NetDriver
-
-Honggfuzz NetDriver allows for very easy fuzzing of TCP servers such as Bitcoin
-Core without having to write any custom fuzzing harness. The `bitcoind` server
-process is largely fuzzed without modification.
-
-This makes the fuzzing highly realistic: a bug reachable by the fuzzer is likely
-also remotely triggerable by an untrusted peer.
-
-To quickly get started fuzzing the P2P layer using Honggfuzz NetDriver:
-
-```sh
-$ mkdir bitcoin-honggfuzz-p2p/
-$ cd bitcoin-honggfuzz-p2p/
-$ git clone https://github.com/bitcoin/bitcoin
-$ cd bitcoin/
-$ ./autogen.sh
-$ git clone https://github.com/google/honggfuzz
-$ cd honggfuzz/
-$ make
-$ cd ..
-$ CC=$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang \
-      CXX=$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang++ \
-      ./configure --disable-wallet --with-gui=no \
-                  --with-sanitizers=address,undefined
-$ git apply << "EOF"
-diff --git a/src/compat/compat.h b/src/compat/compat.h
-index 8195bceaec..cce2b31ff0 100644
---- a/src/compat/compat.h
-+++ b/src/compat/compat.h
-@@ -90,8 +90,12 @@ typedef char* sockopt_arg_type;
- // building with a binutils < 2.36 is subject to this ld bug.
- #define MAIN_FUNCTION __declspec(dllexport) int main(int argc, char* argv[])
- #else
-+#ifdef HFND_FUZZING_ENTRY_FUNCTION_CXX
-+#define MAIN_FUNCTION HFND_FUZZING_ENTRY_FUNCTION_CXX(int argc, char* argv[])
-+#else
- #define MAIN_FUNCTION int main(int argc, char* argv[])
- #endif
-+#endif
-
- // Note these both should work with the current usage of poll, but best to be safe
- // WIN32 poll is broken https://daniel.haxx.se/blog/2012/10/10/wsapoll-is-broken/
-diff --git a/src/net.cpp b/src/net.cpp
-index 7601a6ea84..702d0f56ce 100644
---- a/src/net.cpp
-+++ b/src/net.cpp
-@@ -727,7 +727,7 @@ int V1TransportDeserializer::readHeader(Span<const uint8_t> msg_bytes)
-     }
-
-     // Check start string, network magic
--    if (memcmp(hdr.pchMessageStart, m_chain_params.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) != 0) {
-+    if (false && memcmp(hdr.pchMessageStart, m_chain_params.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) != 0) { // skip network magic checking
-         LogPrint(BCLog::NET, "Header error: Wrong MessageStart %s received, peer=%d\n", HexStr(hdr.pchMessageStart), m_node_id);
-         return -1;
-     }
-@@ -788,7 +788,7 @@ CNetMessage V1TransportDeserializer::GetMessage(const std::chrono::microseconds
-     RandAddEvent(ReadLE32(hash.begin()));
-
-     // Check checksum and header message type string
--    if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) {
-+    if (false && memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) { // skip checksum checking
-         LogPrint(BCLog::NET, "Header error: Wrong checksum (%s, %u bytes), expected %s was %s, peer=%d\n",
-                  SanitizeString(msg.m_type), msg.m_message_size,
-                  HexStr(Span{hash}.first(CMessageHeader::CHECKSUM_SIZE)),
-EOF
-$ make -C src/ bitcoind
-$ mkdir -p inputs/
-$ honggfuzz/honggfuzz --exit_upon_crash --quiet --timeout 4 -n 1 -Q \
-      -E HFND_TCP_PORT=18444 -f inputs/ -- \
-          src/bitcoind -regtest -discover=0 -dns=0 -dnsseed=0 -listenonion=0 \
-                       -nodebuglogfile -bind=127.0.0.1:18444 -logthreadnames \
-                       -debug
-```
-
-# Fuzzing Bitcoin Core using Eclipser (v1.x)
-
-## Quickstart guide
-
-To quickly get started fuzzing Bitcoin Core using [Eclipser v1.x](https://github.com/SoftSec-KAIST/Eclipser/tree/v1.x):
-
-```sh
-$ git clone https://github.com/bitcoin/bitcoin
-$ cd bitcoin/
-$ sudo vim /etc/apt/sources.list # Uncomment the lines starting with 'deb-src'.
-$ sudo apt-get update
-$ sudo apt-get build-dep qemu
-$ sudo apt-get install libtool libtool-bin wget automake autoconf bison gdb
-```
-
-At this point, you must install the .NET core.  The process differs, depending on your Linux distribution.
-See [this link](https://learn.microsoft.com/en-us/dotnet/core/install/linux) for details.
-On Ubuntu 20.04, the following should work:
-
-```sh
-$ wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
-$ sudo dpkg -i packages-microsoft-prod.deb
-$ rm packages-microsoft-prod.deb
-$ sudo apt-get update
-$ sudo apt-get install -y dotnet-sdk-2.1
-```
-
-You will also want to make sure Python is installed as `python` for the Eclipser install to succeed.
-
-```sh
-$ git clone https://github.com/SoftSec-KAIST/Eclipser.git
-$ cd Eclipser
-$ git checkout v1.x
-$ make
-$ cd ..
-$ ./autogen.sh
-$ ./configure --enable-fuzz
-$ make
-$ mkdir -p outputs/
-$ FUZZ=bech32 dotnet Eclipser/build/Eclipser.dll fuzz -p src/test/fuzz/fuzz -t 36000 -o outputs --src stdin
-```
-
-This will perform 10 hours of fuzzing.
-
-To make further use of the inputs generated by Eclipser, you
-must first decode them:
-
-```sh
-$ dotnet Eclipser/build/Eclipser.dll decode -i outputs/testcase -o decoded_outputs
-```
-This will place raw inputs in the directory `decoded_outputs/decoded_stdins`.  Crashes are in the `outputs/crashes` directory, and must
-be decoded in the same way.
-
-Fuzzing with Eclipser will likely be much more effective if using an existing corpus:
-
-```sh
-$ git clone https://github.com/bitcoin-core/qa-assets
-$ FUZZ=bech32 dotnet Eclipser/build/Eclipser.dll fuzz -p src/test/fuzz/fuzz -t 36000 -i qa-assets/fuzz_seed_corpus/bech32 outputs --src stdin
-```
-
-Note that fuzzing with Eclipser on certain targets (those that create 'full nodes', e.g. `process_message*`) will,
-for now, slowly fill `/tmp/` with improperly cleaned-up files, which will cause spurious crashes.
-See [this proposed patch](https://github.com/bitcoin/bitcoin/pull/22472) for more information.
-
-Read the [Eclipser documentation for v1.x](https://github.com/SoftSec-KAIST/Eclipser/tree/v1.x) for more details on using Eclipser.
-
-
 # OSS-Fuzz
 
 Bitcoin Core participates in Google's [OSS-Fuzz](https://github.com/google/oss-fuzz/tree/master/projects/bitcoin-core)
-program, which includes a dashboard of [publicly disclosed vulnerabilities](https://bugs.chromium.org/p/oss-fuzz/issues/list?q=bitcoin-core).
-Generally, we try to disclose vulnerabilities as soon as possible after they
-are fixed to give users the knowledge they need to be protected. However,
-because Bitcoin is a live P2P network, and not just standalone local software,
-we might not fully disclose every issue within Google's standard
+program, which includes a dashboard of [publicly disclosed vulnerabilities](https://issues.oss-fuzz.com/issues?q=bitcoin-core%20status:open).
+
+Bitcoin Core follows its [security disclosure policy](https://bitcoincore.org/en/security-advisories/),
+which may differ from Google's standard
 [90-day disclosure window](https://google.github.io/oss-fuzz/getting-started/bug-disclosure-guidelines/)
-if a partial or delayed disclosure is important to protect users or the
-function of the network.
+.
 
 OSS-Fuzz also produces [a fuzzing coverage report](https://oss-fuzz.com/coverage-report/job/libfuzzer_asan_bitcoin-core/latest).

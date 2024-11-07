@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <qt/bitcoin.h>
 
@@ -60,21 +60,6 @@
 #include <QTranslator>
 #include <QWindow>
 
-#if defined(QT_STATICPLUGIN)
-#include <QtPlugin>
-#if defined(QT_QPA_PLATFORM_XCB)
-Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
-#elif defined(QT_QPA_PLATFORM_WINDOWS)
-Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
-Q_IMPORT_PLUGIN(QWindowsVistaStylePlugin);
-#elif defined(QT_QPA_PLATFORM_COCOA)
-Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
-Q_IMPORT_PLUGIN(QMacStylePlugin);
-#elif defined(QT_QPA_PLATFORM_ANDROID)
-Q_IMPORT_PLUGIN(QAndroidPlatformIntegrationPlugin)
-#endif
-#endif
-
 // Declare meta types used for QMetaObject::invokeMethod
 Q_DECLARE_METATYPE(bool*)
 Q_DECLARE_METATYPE(CAmount)
@@ -84,6 +69,8 @@ Q_DECLARE_METATYPE(uint256)
 #ifdef ENABLE_WALLET
 Q_DECLARE_METATYPE(wallet::AddressPurpose)
 #endif // ENABLE_WALLET
+
+using util::MakeUnorderedList;
 
 static void RegisterMetaTypes()
 {
@@ -175,7 +162,7 @@ static void initTranslations(QTranslator &qtTranslatorBase, QTranslator &qtTrans
 
 static bool ErrorSettingsRead(const bilingual_str& error, const std::vector<std::string>& details)
 {
-    QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error.translated)), QMessageBox::Reset | QMessageBox::Abort);
+    QMessageBox messagebox(QMessageBox::Critical, CLIENT_NAME, QString::fromStdString(strprintf("%s.", error.translated)), QMessageBox::Reset | QMessageBox::Abort);
     /*: Explanatory text shown on startup when the settings file cannot be read.
       Prompts user to make a choice between resetting or aborting. */
     messagebox.setInformativeText(QObject::tr("Do you want to reset settings to default values, or to abort without making changes?"));
@@ -194,7 +181,7 @@ static bool ErrorSettingsRead(const bilingual_str& error, const std::vector<std:
 
 static void ErrorSettingsWrite(const bilingual_str& error, const std::vector<std::string>& details)
 {
-    QMessageBox messagebox(QMessageBox::Critical, PACKAGE_NAME, QString::fromStdString(strprintf("%s.", error.translated)), QMessageBox::Ok);
+    QMessageBox messagebox(QMessageBox::Critical, CLIENT_NAME, QString::fromStdString(strprintf("%s.", error.translated)), QMessageBox::Ok);
     /*: Explanatory text shown on startup when the settings file could not be written.
         Prompts user to check that we have the ability to write to the file.
         Explains that the user has the option of running without a settings file.*/
@@ -210,7 +197,7 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 {
     Q_UNUSED(context);
     if (type == QtDebugMsg) {
-        LogPrint(BCLog::QT, "GUI: %s\n", msg.toStdString());
+        LogDebug(BCLog::QT, "GUI: %s\n", msg.toStdString());
     } else {
         LogPrintf("GUI: %s\n", msg.toStdString());
     }
@@ -273,7 +260,7 @@ bool BitcoinApplication::createOptionsModel(bool resetSettings)
             error.translated += tr("Settings file %1 might be corrupt or invalid.").arg(QString::fromStdString(quoted_path)).toStdString();
         }
         InitError(error);
-        QMessageBox::critical(nullptr, PACKAGE_NAME, QString::fromStdString(error.translated));
+        QMessageBox::critical(nullptr, CLIENT_NAME, QString::fromStdString(error.translated));
         return false;
     }
     return true;
@@ -455,8 +442,8 @@ void BitcoinApplication::handleRunawayException(const QString &message)
 {
     QMessageBox::critical(
         nullptr, tr("Runaway exception"),
-        tr("A fatal error occurred. %1 can no longer continue safely and will quit.").arg(PACKAGE_NAME) +
-        QLatin1String("<br><br>") + GUIUtil::MakeHtmlLink(message, PACKAGE_BUGREPORT));
+        tr("A fatal error occurred. %1 can no longer continue safely and will quit.").arg(CLIENT_NAME) +
+        QLatin1String("<br><br>") + GUIUtil::MakeHtmlLink(message, CLIENT_BUGREPORT));
     ::exit(EXIT_FAILURE);
 }
 
@@ -466,8 +453,8 @@ void BitcoinApplication::handleNonFatalException(const QString& message)
     QMessageBox::warning(
         nullptr, tr("Internal error"),
         tr("An internal error occurred. %1 will attempt to continue safely. This is "
-           "an unexpected bug which can be reported as described below.").arg(PACKAGE_NAME) +
-        QLatin1String("<br><br>") + GUIUtil::MakeHtmlLink(message, PACKAGE_BUGREPORT));
+           "an unexpected bug which can be reported as described below.").arg(CLIENT_NAME) +
+        QLatin1String("<br><br>") + GUIUtil::MakeHtmlLink(message, CLIENT_BUGREPORT));
 }
 
 WId BitcoinApplication::getMainWinId() const
@@ -538,13 +525,13 @@ int GuiMain(int argc, char* argv[])
 
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
     // Command-line options take precedence:
-    SetupServerArgs(gArgs);
+    SetupServerArgs(gArgs, init->canListenIpc());
     SetupUIArgs(gArgs);
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
         InitError(strprintf(Untranslated("Error parsing command line arguments: %s"), error));
         // Create a message box, because the gui has neither been created nor has subscribed to core signals
-        QMessageBox::critical(nullptr, PACKAGE_NAME,
+        QMessageBox::critical(nullptr, CLIENT_NAME,
             // message cannot be translated because translations have not been initialized
             QString::fromStdString("Error parsing command line arguments: %1.").arg(QString::fromStdString(error)));
         return EXIT_FAILURE;
@@ -564,14 +551,14 @@ int GuiMain(int argc, char* argv[])
 #endif
         if (payment_server_token_seen && arg.startsWith("-")) {
             InitError(Untranslated(strprintf("Options ('%s') cannot follow a BIP-21 payment URI", argv[i])));
-            QMessageBox::critical(nullptr, PACKAGE_NAME,
+            QMessageBox::critical(nullptr, CLIENT_NAME,
                                   // message cannot be translated because translations have not been initialized
                                   QString::fromStdString("Options ('%1') cannot follow a BIP-21 payment URI").arg(QString::fromStdString(argv[i])));
             return EXIT_FAILURE;
         }
         if (invalid_token) {
             InitError(Untranslated(strprintf("Command line contains unexpected token '%s', see bitcoin-qt -h for a list of options.", argv[i])));
-            QMessageBox::critical(nullptr, PACKAGE_NAME,
+            QMessageBox::critical(nullptr, CLIENT_NAME,
                                   // message cannot be translated because translations have not been initialized
                                   QString::fromStdString("Command line contains unexpected token '%1', see bitcoin-qt -h for a list of options.").arg(QString::fromStdString(argv[i])));
             return EXIT_FAILURE;
@@ -626,7 +613,7 @@ int GuiMain(int argc, char* argv[])
         } else if (error->status != common::ConfigStatus::ABORTED) {
             // Show a generic message in other cases, and no additional error
             // message in the case of a read error if the user decided to abort.
-            QMessageBox::critical(nullptr, PACKAGE_NAME, QObject::tr("Error: %1").arg(QString::fromStdString(error->message.translated)));
+            QMessageBox::critical(nullptr, CLIENT_NAME, QObject::tr("Error: %1").arg(QString::fromStdString(error->message.translated)));
         }
         return EXIT_FAILURE;
     }
@@ -699,7 +686,7 @@ int GuiMain(int argc, char* argv[])
         if (app.baseInitialize()) {
             app.requestInitialize();
 #if defined(Q_OS_WIN)
-            WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely…").arg(PACKAGE_NAME), (HWND)app.getMainWinId());
+            WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely…").arg(CLIENT_NAME), (HWND)app.getMainWinId());
 #endif
             app.exec();
         } else {

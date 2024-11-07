@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -154,12 +155,12 @@ public:
      *                     an address from the new table or an empty pair. Passing `false` will return an
      *                     empty pair or an address from either the new or tried table (it does not
      *                     guarantee a tried entry).
-     * @param[in] network  Select only addresses of this network (nullopt = all). Passing a network may
+     * @param[in] networks Select only addresses of these networks (empty = all). Passing networks may
      *                     slow down the search.
      * @return    CAddress The record for the selected peer.
      *            seconds  The last time we attempted to connect to that peer.
      */
-    std::pair<CAddress, NodeSeconds> Select(bool new_only = false, std::optional<Network> network = std::nullopt) const;
+    std::pair<CAddress, NodeSeconds> Select(bool new_only = false, const std::unordered_set<Network>& networks = {}) const;
 
     /**
      * Return all or many randomly selected addresses, optionally by network.

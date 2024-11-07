@@ -2,19 +2,28 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <addresstype.h>
 #include <bench/bench.h>
-#include <interfaces/chain.h>
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 #include <key.h>
 #include <key_io.h>
-#include <node/context.h>
+#include <script/descriptor.h>
+#include <script/script.h>
+#include <script/signingprovider.h>
+#include <sync.h>
 #include <test/util/setup_common.h>
-#include <util/translation.h>
-#include <validationinterface.h>
 #include <wallet/context.h>
+#include <wallet/db.h>
 #include <wallet/test/util.h>
+#include <wallet/types.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
+
+#include <cassert>
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <utility>
 
 namespace wallet {
 static void WalletIsMine(benchmark::Bench& bench, bool legacy_wallet, int num_combo = 0)
@@ -43,8 +52,8 @@ static void WalletIsMine(benchmark::Bench& bench, bool legacy_wallet, int num_co
             key.MakeNewKey(/*fCompressed=*/true);
             FlatSigningProvider keys;
             std::string error;
-            std::unique_ptr<Descriptor> desc = Parse("combo(" + EncodeSecret(key) + ")", keys, error, /*require_checksum=*/false);
-            WalletDescriptor w_desc(std::move(desc), /*creation_time=*/0, /*range_start=*/0, /*range_end=*/0, /*next_index=*/0);
+            std::vector<std::unique_ptr<Descriptor>> desc = Parse("combo(" + EncodeSecret(key) + ")", keys, error, /*require_checksum=*/false);
+            WalletDescriptor w_desc(std::move(desc.at(0)), /*creation_time=*/0, /*range_start=*/0, /*range_end=*/0, /*next_index=*/0);
             auto spkm = wallet->AddWalletDescriptor(w_desc, keys, /*label=*/"", /*internal=*/false);
             assert(spkm);
         }

@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <functional>
 #include <memory>
+#include <thread>
 #include <vector>
 
 class ArgsManager;
@@ -27,6 +28,7 @@ class PeerManager;
 namespace interfaces {
 class Chain;
 class ChainClient;
+class Mining;
 class Init;
 class WalletLoader;
 } // namespace interfaces
@@ -39,6 +41,7 @@ class SignalInterrupt;
 
 namespace node {
 class KernelNotifications;
+class Warnings;
 
 //! NodeContext struct containing references to chain state and connection
 //! state.
@@ -56,8 +59,10 @@ struct NodeContext {
     std::unique_ptr<ECC_Context> ecc_context;
     //! Init interface for initializing current process and connecting to other processes.
     interfaces::Init* init{nullptr};
+    //! Function to request a shutdown.
+    std::function<bool()> shutdown_request;
     //! Interrupt object used to track whether node shutdown was requested.
-    util::SignalInterrupt* shutdown{nullptr};
+    util::SignalInterrupt* shutdown_signal{nullptr};
     std::unique_ptr<AddrMan> addrman;
     std::unique_ptr<CConnman> connman;
     std::unique_ptr<CTxMemPool> mempool;
@@ -73,6 +78,7 @@ struct NodeContext {
     std::vector<std::unique_ptr<interfaces::ChainClient>> chain_clients;
     //! Reference to chain client that should used to load or create wallets
     //! opened by the gui.
+    std::unique_ptr<interfaces::Mining> mining;
     interfaces::WalletLoader* wallet_loader{nullptr};
     std::unique_ptr<CScheduler> scheduler;
     std::function<void()> rpc_interruption_point = [] {};
@@ -81,6 +87,9 @@ struct NodeContext {
     //! Issues calls about blocks and transactions
     std::unique_ptr<ValidationSignals> validation_signals;
     std::atomic<int> exit_status{EXIT_SUCCESS};
+    //! Manages all the node warnings
+    std::unique_ptr<node::Warnings> warnings;
+    std::thread background_init_thread;
 
     //! Declare default constructor and destructor that are not inline, so code
     //! instantiating the NodeContext struct doesn't need to #include class

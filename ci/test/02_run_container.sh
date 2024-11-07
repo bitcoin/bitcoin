@@ -15,18 +15,63 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   python3 -c 'import os; [print(f"{key}={value}") for key, value in os.environ.items() if "\n" not in value and "HOME" != key and "PATH" != key and "USER" != key]' | tee "/tmp/env-$USER-$CONTAINER_NAME"
   # System-dependent env vars must be kept as is. So read them from the container.
   docker run --rm "${CI_IMAGE_NAME_TAG}" bash -c "env | grep --extended-regexp '^(HOME|PATH|USER)='" | tee --append "/tmp/env-$USER-$CONTAINER_NAME"
+
+  # Env vars during the build can not be changed. For example, a modified
+  # $MAKEJOBS is ignored in the build process. Use --cpuset-cpus as an
+  # approximation to respect $MAKEJOBS somewhat, if cpuset is available.
+  MAYBE_CPUSET=""
+  if [ "$HAVE_CGROUP_CPUSET" ]; then
+    MAYBE_CPUSET="--cpuset-cpus=$( python3 -c "import random;P=$( nproc );M=min(P,int('$MAKEJOBS'.lstrip('-j')));print(','.join(map(str,sorted(random.sample(range(P),M)))))" )"
+  fi
   echo "Creating $CI_IMAGE_NAME_TAG container to run in"
+
+  # shellcheck disable=SC2086
   DOCKER_BUILDKIT=1 docker build \
       --file "${BASE_READ_ONLY_DIR}/ci/test_imagefile" \
       --build-arg "CI_IMAGE_NAME_TAG=${CI_IMAGE_NAME_TAG}" \
       --build-arg "FILE_ENV=${FILE_ENV}" \
+      $MAYBE_CPUSET \
       --label="${CI_IMAGE_LABEL}" \
       --tag="${CONTAINER_NAME}" \
       "${BASE_READ_ONLY_DIR}"
+
   docker volume create "${CONTAINER_NAME}_ccache" || true
   docker volume create "${CONTAINER_NAME}_depends" || true
   docker volume create "${CONTAINER_NAME}_depends_sources" || true
   docker volume create "${CONTAINER_NAME}_previous_releases" || true
+
+  CI_CCACHE_MOUNT="type=volume,src=${CONTAINER_NAME}_ccache,dst=$CCACHE_DIR"
+  CI_DEPENDS_MOUNT="type=volume,src=${CONTAINER_NAME}_depends,dst=$DEPENDS_DIR/built"
+  CI_DEPENDS_SOURCES_MOUNT="type=volume,src=${CONTAINER_NAME}_depends_sources,dst=$DEPENDS_DIR/sources"
+  CI_PREVIOUS_RELEASES_MOUNT="type=volume,src=${CONTAINER_NAME}_previous_releases,dst=$PREVIOUS_RELEASES_DIR"
+
+  if [ "$DANGER_CI_ON_HOST_CACHE_FOLDERS" ]; then
+    # ensure the directories exist
+    mkdir -p "${CCACHE_DIR}"
+    mkdir -p "${DEPENDS_DIR}/built"
+    mkdir -p "${DEPENDS_DIR}/sources"
+    mkdir -p "${PREVIOUS_RELEASES_DIR}"
+
+    CI_CCACHE_MOUNT="type=bind,src=${CCACHE_DIR},dst=$CCACHE_DIR"
+    CI_DEPENDS_MOUNT="type=bind,src=${DEPENDS_DIR}/built,dst=$DEPENDS_DIR/built"
+    CI_DEPENDS_SOURCES_MOUNT="type=bind,src=${DEPENDS_DIR}/sources,dst=$DEPENDS_DIR/sources"
+    CI_PREVIOUS_RELEASES_MOUNT="type=bind,src=${PREVIOUS_RELEASES_DIR},dst=$PREVIOUS_RELEASES_DIR"
+  fi
+
+  if [ "$DANGER_CI_ON_HOST_CCACHE_FOLDER" ]; then
+   # Temporary exclusion for https://github.com/bitcoin/bitcoin/issues/31108
+   # to allow CI configs and envs generated in the past to work for a bit longer.
+   # Can be removed in March 2025.
+   if [ "${CCACHE_DIR}" != "/tmp/ccache_dir" ]; then
+    if [ ! -d "${CCACHE_DIR}" ]; then
+      echo "Error: Directory '${CCACHE_DIR}' must be created in advance."
+      exit 1
+    fi
+    CI_CCACHE_MOUNT="type=bind,src=${CCACHE_DIR},dst=${CCACHE_DIR}"
+   fi # End temporary exclusion
+  fi
+
+  docker network create --ipv6 --subnet 1111:1111::/112 ci-ip6net || true
 
   if [ -n "${RESTART_CI_DOCKER_BEFORE_RUN}" ] ; then
     echo "Restart docker before run to stop and clear all containers started with --rm"
@@ -48,12 +93,13 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   # shellcheck disable=SC2086
   CI_CONTAINER_ID=$(docker run --cap-add LINUX_IMMUTABLE $CI_CONTAINER_CAP --rm --interactive --detach --tty \
                   --mount "type=bind,src=$BASE_READ_ONLY_DIR,dst=$BASE_READ_ONLY_DIR,readonly" \
-                  --mount "type=volume,src=${CONTAINER_NAME}_ccache,dst=$CCACHE_DIR" \
-                  --mount "type=volume,src=${CONTAINER_NAME}_depends,dst=$DEPENDS_DIR/built" \
-                  --mount "type=volume,src=${CONTAINER_NAME}_depends_sources,dst=$DEPENDS_DIR/sources" \
-                  --mount "type=volume,src=${CONTAINER_NAME}_previous_releases,dst=$PREVIOUS_RELEASES_DIR" \
+                  --mount "${CI_CCACHE_MOUNT}" \
+                  --mount "${CI_DEPENDS_MOUNT}" \
+                  --mount "${CI_DEPENDS_SOURCES_MOUNT}" \
+                  --mount "${CI_PREVIOUS_RELEASES_MOUNT}" \
                   --env-file /tmp/env-$USER-$CONTAINER_NAME \
                   --name "$CONTAINER_NAME" \
+                  --network ci-ip6net \
                   "$CONTAINER_NAME")
   export CI_CONTAINER_ID
   export CI_EXEC_CMD_PREFIX="docker exec ${CI_CONTAINER_ID}"

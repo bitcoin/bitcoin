@@ -99,7 +99,7 @@ CreateAndActivateUTXOSnapshot(
                 assert(pindex->IsValid(BlockStatus::BLOCK_VALID_TREE));
                 pindex->nStatus = BlockStatus::BLOCK_VALID_TREE;
                 pindex->nTx = 0;
-                pindex->nChainTx = 0;
+                pindex->m_chain_tx_count = 0;
                 pindex->nSequenceId = 0;
                 pindex = pindex->pprev;
             }
@@ -124,11 +124,11 @@ CreateAndActivateUTXOSnapshot(
         new_active.m_chain.SetTip(*(tip->pprev));
     }
 
-    bool res = node.chainman->ActivateSnapshot(auto_infile, metadata, in_memory_chainstate);
+    auto res = node.chainman->ActivateSnapshot(auto_infile, metadata, in_memory_chainstate);
 
     // Restore the old tip.
     new_active.m_chain.SetTip(*tip);
-    return res;
+    return !!res;
 }
 
 

@@ -7,11 +7,13 @@
 #include <test/util/txmempool.h>
 #include <test/util/mining.h>
 
-#include <node/mini_miner.h>
 #include <node/miner.h>
+#include <node/mini_miner.h>
 #include <primitives/transaction.h>
 #include <random.h>
 #include <txmempool.h>
+#include <util/check.h>
+#include <util/translation.h>
 
 #include <deque>
 #include <vector>
@@ -33,7 +35,9 @@ void initialize_miner()
 FUZZ_TARGET(mini_miner, .init = initialize_miner)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    CTxMemPool pool{CTxMemPool::Options{}};
+    bilingual_str error;
+    CTxMemPool pool{CTxMemPool::Options{}, error};
+    Assert(error.empty());
     std::vector<COutPoint> outpoints;
     std::deque<COutPoint> available_coins = g_available_coins;
     LOCK2(::cs_main, pool.cs);
@@ -109,7 +113,9 @@ FUZZ_TARGET(mini_miner, .init = initialize_miner)
 FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    CTxMemPool pool{CTxMemPool::Options{}};
+    bilingual_str error;
+    CTxMemPool pool{CTxMemPool::Options{}, error};
+    Assert(error.empty());
     // Make a copy to preserve determinism.
     std::deque<COutPoint> available_coins = g_available_coins;
     std::vector<CTransactionRef> transactions;
@@ -182,9 +188,9 @@ FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
     auto mock_template_txids = mini_miner.GetMockTemplateTxids();
     // MiniMiner doesn't add a coinbase tx.
     assert(mock_template_txids.count(blocktemplate->block.vtx[0]->GetHash()) == 0);
-    mock_template_txids.emplace(blocktemplate->block.vtx[0]->GetHash());
-    assert(mock_template_txids.size() <= blocktemplate->block.vtx.size());
-    assert(mock_template_txids.size() >= blocktemplate->block.vtx.size());
+    auto [iter, new_entry] = mock_template_txids.emplace(blocktemplate->block.vtx[0]->GetHash());
+    assert(new_entry);
+
     assert(mock_template_txids.size() == blocktemplate->block.vtx.size());
     for (const auto& tx : blocktemplate->block.vtx) {
         assert(mock_template_txids.count(tx->GetHash()));

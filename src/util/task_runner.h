@@ -19,7 +19,7 @@ namespace util {
 class TaskRunnerInterface
 {
 public:
-    virtual ~TaskRunnerInterface() {}
+    virtual ~TaskRunnerInterface() = default;
 
     /**
      * The callback can either be queued for later/asynchronous/threaded

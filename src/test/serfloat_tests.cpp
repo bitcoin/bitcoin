@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(double_serfloat_tests) {
         // These specific bits are the sign bit, and the 2 top and bottom bits of
         // exponent and mantissa in the IEEE754 binary64 format.
         for (int x = 0; x < 512; ++x) {
-            uint64_t v = InsecureRandBits(64);
+            uint64_t v = m_rng.randbits(64);
             int x_pos = 0;
             for (int v_pos : {0, 1, 50, 51, 52, 53, 61, 62, 63}) {
                 v &= ~(uint64_t{1} << v_pos);
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(doubles)
     for (int i = 0; i < 1000; i++) {
         ss << EncodeDouble(i);
     }
-    BOOST_CHECK(Hash(ss) == uint256S("43d0c82591953c4eafe114590d392676a01585d25b25d433557f0d7878b23f96"));
+    BOOST_CHECK(Hash(ss) == uint256{"43d0c82591953c4eafe114590d392676a01585d25b25d433557f0d7878b23f96"});
 
     // decode
     for (int i = 0; i < 1000; i++) {

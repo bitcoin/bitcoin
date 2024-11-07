@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <interfaces/init.h>
 #include <interfaces/node.h>
@@ -27,22 +27,6 @@
 #include <QTest>
 
 #include <functional>
-
-#if defined(QT_STATICPLUGIN)
-#include <QtPlugin>
-#if defined(QT_QPA_PLATFORM_MINIMAL)
-Q_IMPORT_PLUGIN(QMinimalIntegrationPlugin);
-#endif
-#if defined(QT_QPA_PLATFORM_XCB)
-Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
-#elif defined(QT_QPA_PLATFORM_WINDOWS)
-Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
-#elif defined(QT_QPA_PLATFORM_COCOA)
-Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
-#elif defined(QT_QPA_PLATFORM_ANDROID)
-Q_IMPORT_PLUGIN(QAndroidPlatformIntegrationPlugin)
-#endif
-#endif
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
@@ -70,11 +54,10 @@ int main(int argc, char* argv[])
     gArgs.ForceSetArg("-discover", "0");
     gArgs.ForceSetArg("-dnsseed", "0");
     gArgs.ForceSetArg("-fixedseeds", "0");
-    gArgs.ForceSetArg("-upnp", "0");
     gArgs.ForceSetArg("-natpmp", "0");
 
     std::string error;
-    if (!gArgs.ReadConfigFiles(error, true)) QWARN(error.c_str());
+    if (!gArgs.ReadConfigFiles(error, true)) qWarning() << error.c_str();
 
     // Prefer the "minimal" platform for the test instead of the normal default
     // platform ("xcb", "windows", or "cocoa") so tests can't unintentionally

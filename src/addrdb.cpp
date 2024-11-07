@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <addrdb.h>
 
@@ -53,7 +53,7 @@ template <typename Data>
 bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data& data)
 {
     // Generate random temporary filename
-    const uint16_t randv{GetRand<uint16_t>()};
+    const uint16_t randv{FastRandomContext().rand<uint16_t>()};
     std::string tmpfn = strprintf("%s.%04x", prefix, randv);
 
     // open temp output file
@@ -73,7 +73,7 @@ bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data
         remove(pathTmp);
         return false;
     }
-    if (!FileCommit(fileout.Get())) {
+    if (!fileout.Commit()) {
         fileout.fclose();
         remove(pathTmp);
         LogError("%s: Failed to flush file %s\n", __func__, fs::PathToString(pathTmp));
@@ -150,7 +150,7 @@ bool CBanDB::Write(const banmap_t& banSet)
 bool CBanDB::Read(banmap_t& banSet)
 {
     if (fs::exists(m_banlist_dat)) {
-        LogPrintf("banlist.dat ignored because it can only be read by " PACKAGE_NAME " version 22.x. Remove %s to silence this warning.\n", fs::quoted(fs::PathToString(m_banlist_dat)));
+        LogPrintf("banlist.dat ignored because it can only be read by " CLIENT_NAME " version 22.x. Remove %s to silence this warning.\n", fs::quoted(fs::PathToString(m_banlist_dat)));
     }
     // If the JSON banlist does not exist, then recreate it
     if (!fs::exists(m_banlist_json)) {
@@ -215,7 +215,7 @@ util::Result<std::unique_ptr<AddrMan>> LoadAddrman(const NetGroupManager& netgro
         DumpPeerAddresses(args, *addrman);
     } catch (const std::exception& e) {
         return util::Error{strprintf(_("Invalid or corrupt peers.dat (%s). If you believe this is a bug, please report it to %s. As a workaround, you can move the file (%s) out of the way (rename, move, or delete) to have a new one created on the next start."),
-                                     e.what(), PACKAGE_BUGREPORT, fs::quoted(fs::PathToString(path_addr)))};
+                                     e.what(), CLIENT_BUGREPORT, fs::quoted(fs::PathToString(path_addr)))};
     }
     return addrman;
 }

@@ -148,7 +148,7 @@ enum
     LOCAL_NONE,   // unknown
     LOCAL_IF,     // address a local interface listens on
     LOCAL_BIND,   // address explicit bound to
-    LOCAL_MAPPED, // address reported by UPnP or NAT-PMP
+    LOCAL_MAPPED, // address reported by PCP
     LOCAL_MANUAL, // address explicitly specified (-externalip=)
 
     LOCAL_MAX
@@ -245,12 +245,15 @@ public:
     CNetMessage(const CNetMessage&) = delete;
     CNetMessage& operator=(CNetMessage&&) = default;
     CNetMessage& operator=(const CNetMessage&) = delete;
+
+    /** Compute total memory usage of this object (own memory + any dynamic memory). */
+    size_t GetMemoryUsage() const noexcept;
 };
 
 /** The Transport converts one connection's sent messages to wire bytes, and received bytes back. */
 class Transport {
 public:
-    virtual ~Transport() {}
+    virtual ~Transport() = default;
 
     struct Info
     {
@@ -963,7 +966,7 @@ private:
     size_t m_msg_process_queue_size GUARDED_BY(m_msg_process_queue_mutex){0};
 
     // Our address, as reported by the peer
-    CService addrLocal GUARDED_BY(m_addr_local_mutex);
+    CService m_addr_local GUARDED_BY(m_addr_local_mutex);
     mutable Mutex m_addr_local_mutex;
 
     mapMsgTypeSize mapSendBytesPerMsgType GUARDED_BY(cs_vSend);
@@ -991,8 +994,8 @@ public:
     /** Mutex for anything that is only accessed via the msg processing thread */
     static Mutex g_msgproc_mutex;
 
-    /** Initialize a peer (setup state, queue any initial messages) */
-    virtual void InitializeNode(CNode& node, ServiceFlags our_services) = 0;
+    /** Initialize a peer (setup state) */
+    virtual void InitializeNode(const CNode& node, ServiceFlags our_services) = 0;
 
     /** Handle removal of a peer (clear state) */
     virtual void FinalizeNode(const CNode& node) = 0;
@@ -1035,7 +1038,7 @@ public:
 
     struct Options
     {
-        ServiceFlags nLocalServices = NODE_NONE;
+        ServiceFlags m_local_services = NODE_NONE;
         int m_max_automatic_connections = 0;
         CClientUIInterface* uiInterface = nullptr;
         NetEventsInterface* m_msgproc = nullptr;
@@ -1065,7 +1068,7 @@ public:
     {
         AssertLockNotHeld(m_total_bytes_sent_mutex);
 
-        nLocalServices = connOptions.nLocalServices;
+        m_local_services = connOptions.m_local_services;
         m_max_automatic_connections = connOptions.m_max_automatic_connections;
         m_max_outbound_full_relay = std::min(MAX_OUTBOUND_FULL_RELAY_CONNECTIONS, m_max_automatic_connections);
         m_max_outbound_block_relay = std::min(MAX_BLOCK_RELAY_ONLY_CONNECTIONS, m_max_automatic_connections - m_max_outbound_full_relay);
@@ -1205,6 +1208,7 @@ public:
     bool AddConnection(const std::string& address, ConnectionType conn_type, bool use_v2transport) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
 
     size_t GetNodeCount(ConnectionDirection) const;
+    std::map<CNetAddr, LocalServiceInfo> getNetLocalAddresses() const;
     uint32_t GetMappedAS(const CNetAddr& addr) const;
     void GetNodeStats(std::vector<CNodeStats>& vstats) const;
     bool DisconnectNode(const std::string& node);
@@ -1219,6 +1223,11 @@ public:
     //! which is used to advertise which services we are offering
     //! that peer during `net_processing.cpp:PushNodeVersion()`.
     ServiceFlags GetLocalServices() const;
+
+    //! Updates the local services that this node advertises to other peers
+    //! during connection handshake.
+    void AddLocalServices(ServiceFlags services) { m_local_services = ServiceFlags(m_local_services | services); };
+    void RemoveLocalServices(ServiceFlags services) { m_local_services = ServiceFlags(m_local_services & ~services); }
 
     uint64_t GetMaxOutboundTarget() const EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
     std::chrono::seconds GetMaxOutboundTimeframe() const;
@@ -1272,7 +1281,7 @@ private:
     void ThreadOpenAddedConnections() EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_reconnections_mutex);
     void AddAddrFetch(const std::string& strDest) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex);
     void ProcessAddrFetch() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_unused_i2p_sessions_mutex);
-    void ThreadOpenConnections(std::vector<std::string> connect) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_reconnections_mutex);
+    void ThreadOpenConnections(std::vector<std::string> connect, Span<const std::string> seed_nodes) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_reconnections_mutex);
     void ThreadMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
     void ThreadI2PAcceptIncoming();
     void AcceptConnection(const ListenSocket& hListenSocket);
@@ -1459,11 +1468,12 @@ private:
      * This data is replicated in each Peer instance we create.
      *
      * This data is not marked const, but after being set it should not
-     * change.
+     * change. Unless AssumeUTXO is started, in which case, the peer
+     * will be limited until the background chain sync finishes.
      *
      * \sa Peer::our_services
      */
-    ServiceFlags nLocalServices;
+    std::atomic<ServiceFlags> m_local_services;
 
     std::unique_ptr<CSemaphore> semOutbound;
     std::unique_ptr<CSemaphore> semAddnode;
@@ -1625,7 +1635,7 @@ private:
                 }
             }
             if (shuffle) {
-                Shuffle(m_nodes_copy.begin(), m_nodes_copy.end(), FastRandomContext{});
+                std::shuffle(m_nodes_copy.begin(), m_nodes_copy.end(), FastRandomContext{});
             }
         }
 

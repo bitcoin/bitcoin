@@ -18,9 +18,9 @@
 #include "examples_util.h"
 
 int main(void) {
-    unsigned char msg[12] = "Hello World!";
+    unsigned char msg[] = {'H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd', '!'};
     unsigned char msg_hash[32];
-    unsigned char tag[17] = "my_fancy_protocol";
+    unsigned char tag[] = {'m', 'y', '_', 'f', 'a', 'n', 'c', 'y', '_', 'p', 'r', 'o', 't', 'o', 'c', 'o', 'l'};
     unsigned char seckey[32];
     unsigned char randomize[32];
     unsigned char auxiliary_rand[32];
@@ -43,20 +43,17 @@ int main(void) {
     assert(return_val);
 
     /*** Key Generation ***/
-
-    /* If the secret key is zero or out of range (bigger than secp256k1's
-     * order), we try to sample a new key. Note that the probability of this
-     * happening is negligible. */
-    while (1) {
-        if (!fill_random(seckey, sizeof(seckey))) {
-            printf("Failed to generate randomness\n");
-            return 1;
-        }
-        /* Try to create a keypair with a valid context, it should only fail if
-         * the secret key is zero or out of range. */
-        if (secp256k1_keypair_create(ctx, &keypair, seckey)) {
-            break;
-        }
+    if (!fill_random(seckey, sizeof(seckey))) {
+        printf("Failed to generate randomness\n");
+        return 1;
+    }
+    /* Try to create a keypair with a valid context. This only fails if the
+     * secret key is zero or out of range (greater than secp256k1's order). Note
+     * that the probability of this occurring is negligible with a properly
+     * functioning random number generator. */
+    if (!secp256k1_keypair_create(ctx, &keypair, seckey)) {
+        printf("Generated secret key is invalid. This indicates an issue with the random number generator.\n");
+        return 1;
     }
 
     /* Extract the X-only public key from the keypair. We pass NULL for
@@ -146,7 +143,7 @@ int main(void) {
 
     /* It's best practice to try to clear secrets from memory after using them.
      * This is done because some bugs can allow an attacker to leak memory, for
-     * example through "out of bounds" array access (see Heartbleed), Or the OS
+     * example through "out of bounds" array access (see Heartbleed), or the OS
      * swapping them to disk. Hence, we overwrite the secret key buffer with zeros.
      *
      * Here we are preventing these writes from being optimized out, as any good compiler

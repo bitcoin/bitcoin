@@ -23,6 +23,7 @@ $(package)_patches += memory_resource.patch
 $(package)_patches += clang_18_libpng.patch
 $(package)_patches += utc_from_string_no_optimize.patch
 $(package)_patches += windows_lto.patch
+$(package)_patches += darwin_no_libm.patch
 $(package)_patches += zlib-timebits64.patch
 
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
@@ -236,6 +237,7 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/utc_from_string_no_optimize.patch && \
   patch -p1 -i $($(package)_patch_dir)/guix_cross_lib_path.patch && \
   patch -p1 -i $($(package)_patch_dir)/windows_lto.patch && \
+  patch -p1 -i $($(package)_patch_dir)/darwin_no_libm.patch && \
   patch -p1 -i $($(package)_patch_dir)/zlib-timebits64.patch && \
   mkdir -p qtbase/mkspecs/macx-clang-linux &&\
   cp -f qtbase/mkspecs/macx-clang/qplatformdefs.h qtbase/mkspecs/macx-clang-linux/ &&\
@@ -263,13 +265,14 @@ define $(package)_build_cmds
   $(MAKE)
 endef
 
+# TODO: Investigate whether specific targets can be used here to minimize the amount of files/components installed.
 define $(package)_stage_cmds
-  $(MAKE) -C qtbase/src INSTALL_ROOT=$($(package)_staging_dir) $(addsuffix -install_subtargets,$(addprefix sub-,$($(package)_qt_libs))) && \
-  $(MAKE) -C qttools/src/linguist INSTALL_ROOT=$($(package)_staging_dir) $(addsuffix -install_subtargets,$(addprefix sub-,$($(package)_linguist_tools))) && \
+  $(MAKE) -C qtbase INSTALL_ROOT=$($(package)_staging_dir) install && \
+  $(MAKE) -C qttools INSTALL_ROOT=$($(package)_staging_dir) install && \
   $(MAKE) -C qttranslations INSTALL_ROOT=$($(package)_staging_dir) install_subtargets
 endef
 
 define $(package)_postprocess_cmds
-  rm -rf native/mkspecs/ native/lib/ lib/cmake/ && \
+  rm -rf doc/ native/lib/ && \
   rm -f lib/lib*.la
 endef

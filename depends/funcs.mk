@@ -46,7 +46,7 @@ endef
 
 define int_get_build_id
 $(eval $(1)_dependencies += $($(1)_$(host_arch)_$(host_os)_dependencies) $($(1)_$(host_os)_dependencies))
-$(eval $(1)_all_dependencies:=$(call int_get_all_dependencies,$(1),$($($(1)_type)_native_toolchain) $($(1)_dependencies)))
+$(eval $(1)_all_dependencies:=$(call int_get_all_dependencies,$(1),$($(1)_dependencies)))
 $(foreach dep,$($(1)_all_dependencies),$(eval $(1)_build_id_deps+=$(dep)-$($(dep)_version)-$($(dep)_recipe_hash)))
 $(eval $(1)_build_id_long:=$(1)-$($(1)_version)-$($(1)_recipe_hash)-$(release_type) $($(1)_build_id_deps) $($($(1)_type)_id))
 $(eval $(1)_build_id:=$(shell echo -n "$($(1)_build_id_long)" | $(build_SHA256SUM) | cut -c-$(HASH_LENGTH)))
@@ -171,7 +171,7 @@ $(1)_autoconf += LDFLAGS="$$($(1)_ldflags)"
 endif
 
 # We hardcode the library install path to "lib" to match the PKG_CONFIG_PATH
-# setting in depends/config.site.in, which also hardcodes "lib".
+# setting in depends/toolchain.cmake.in, which also hardcodes "lib".
 # Without this setting, CMake by default would use the OS library
 # directory, which might be "lib64" or something else, not "lib", on multiarch systems.
 $(1)_cmake=env CC="$$($(1)_cc)" \
@@ -179,7 +179,8 @@ $(1)_cmake=env CC="$$($(1)_cc)" \
                CXX="$$($(1)_cxx)" \
                CXXFLAGS="$$($(1)_cppflags) $$($(1)_cxxflags)" \
                LDFLAGS="$$($(1)_ldflags)" \
-               cmake -DCMAKE_INSTALL_PREFIX:PATH="$$($($(1)_type)_prefix)" \
+               cmake -G "Unix Makefiles" \
+               -DCMAKE_INSTALL_PREFIX:PATH="$$($($(1)_type)_prefix)" \
                -DCMAKE_AR=`which $$($(1)_ar)` \
                -DCMAKE_NM=`which $$($(1)_nm)` \
                -DCMAKE_RANLIB=`which $$($(1)_ranlib)` \
@@ -191,7 +192,7 @@ ifeq ($($(1)_type),build)
 $(1)_cmake += -DCMAKE_INSTALL_RPATH:PATH="$$($($(1)_type)_prefix)/lib"
 else
 ifneq ($(host),$(build))
-$(1)_cmake += -DCMAKE_SYSTEM_NAME=$($(host_os)_cmake_system)
+$(1)_cmake += -DCMAKE_SYSTEM_NAME=$($(host_os)_cmake_system_name)
 $(1)_cmake += -DCMAKE_C_COMPILER_TARGET=$(host)
 $(1)_cmake += -DCMAKE_CXX_COMPILER_TARGET=$(host)
 endif
@@ -297,6 +298,3 @@ $(foreach package,$(all_packages),$(eval $(call int_config_attach_build_config,$
 
 #create build targets
 $(foreach package,$(all_packages),$(eval $(call int_add_cmds,$(package))))
-
-#special exception: if a toolchain package exists, all non-native packages depend on it
-$(foreach package,$(packages),$(eval $($(package)_extracted): |$($($(host_arch)_$(host_os)_native_toolchain)_cached) ))

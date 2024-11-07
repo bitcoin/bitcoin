@@ -468,7 +468,7 @@ size_t minisketch_merge(minisketch* sketch, const minisketch* other_sketch) {
 ssize_t minisketch_decode(const minisketch* sketch, size_t max_elements, uint64_t* output) {
     const Sketch* s = (const Sketch*)sketch;
     s->Check();
-    return s->Decode(max_elements, output);
+    return s->Decode(static_cast<int>(max_elements), output);
 }
 
 void minisketch_set_seed(minisketch* sketch, uint64_t seed) {
