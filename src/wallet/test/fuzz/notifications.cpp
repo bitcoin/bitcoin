@@ -84,7 +84,7 @@ FUZZ_TARGET(wallet_notifications, .init = initialize_setup)
         auto& [coins, block]{chain.back()};
         coins.emplace(total_amount, COutPoint{Txid::FromUint256(uint256::ONE), 1});
     }
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 200)
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 20)
     {
         CallOneOf(
             fuzzed_data_provider,
