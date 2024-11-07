@@ -183,9 +183,9 @@ class Socks5Connection():
                     with socket.create_connection((dest["actual_to_addr"], dest["actual_to_port"])) as conn_to:
                         forward_sockets(self.conn, conn_to)
                 else:
-                    logger.debug(f"Closing connection to {requested_to}: the destinations factory returned None")
+                    logger.debug(f"Can't serve the connection to {requested_to}: the destinations factory returned None")
             else:
-                logger.debug(f"Closing connection to {requested_to}: no destinations factory")
+                logger.debug(f"Can't serve the connection to {requested_to}: no destinations factory")
 
             # Fall through to disconnect
         except Exception as e:
@@ -194,6 +194,8 @@ class Socks5Connection():
         finally:
             if not self.serv.keep_alive:
                 self.conn.close()
+            else:
+                logger.debug(f"Keeping client connection alive")
 
 class Socks5Server():
     def __init__(self, conf):
