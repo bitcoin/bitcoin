@@ -17,7 +17,7 @@ and https://bugreports.qt.io/browse/QTBUG-114316
 
 --- a/qtbase/src/corelib/global/qcompilerdetection.h
 +++ b/qtbase/src/corelib/global/qcompilerdetection.h
-@@ -1050,16 +1050,22 @@
+@@ -1055,16 +1055,22 @@
  #   endif // !_HAS_CONSTEXPR
  #  endif // !__GLIBCXX__ && !_LIBCPP_VERSION
  # endif // Q_OS_QNX
