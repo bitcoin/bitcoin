@@ -24,6 +24,7 @@
 #include <test/util/setup_common.h>
 
 #include <memory>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 
@@ -123,25 +124,40 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vout[0].nValue = 5000000000LL - 1000;
     // This tx has a low fee: 1000 satoshis
     Txid hashParentTx = tx.GetHash(); // save this txid for later use
-    AddToMempool(tx_mempool, entry.Fee(1000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
+    const auto lowFeeTx{entry.Fee(1000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx)};
+    AddToMempool(tx_mempool, lowFeeTx);
 
     // This tx has a medium fee: 10000 satoshis
     tx.vin[0].prevout.hash = txFirst[1]->GetHash();
     tx.vout[0].nValue = 5000000000LL - 10000;
     Txid hashMediumFeeTx = tx.GetHash();
-    AddToMempool(tx_mempool, entry.Fee(10000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
+    const auto mediumFeeTx{entry.Fee(10000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx)};
+    AddToMempool(tx_mempool, mediumFeeTx);
 
     // This tx has a high fee, but depends on the first transaction
     tx.vin[0].prevout.hash = hashParentTx;
     tx.vout[0].nValue = 5000000000LL - 1000 - 50000; // 50k satoshi fee
     Txid hashHighFeeTx = tx.GetHash();
-    AddToMempool(tx_mempool, entry.Fee(50000).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx));
+    const auto highFeeChildTx{entry.Fee(50000).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx)};
+    AddToMempool(tx_mempool, highFeeChildTx);
 
-    std::unique_ptr<CBlockTemplate> pblocktemplate = AssemblerForTest(tx_mempool).CreateNewBlock(scriptPubKey);
+    auto assembler{AssemblerForTest(tx_mempool)};
+    auto pblocktemplate{assembler.CreateNewBlock(scriptPubKey)};
+    const auto blockFeerateHistogram{pblocktemplate->vFeerateHistogram};
     BOOST_REQUIRE_EQUAL(pblocktemplate->block.vtx.size(), 4U);
     BOOST_CHECK(pblocktemplate->block.vtx[1]->GetHash() == hashParentTx);
     BOOST_CHECK(pblocktemplate->block.vtx[2]->GetHash() == hashHighFeeTx);
     BOOST_CHECK(pblocktemplate->block.vtx[3]->GetHash() == hashMediumFeeTx);
+
+    BOOST_CHECK(blockFeerateHistogram.size() == 2);
+    // lowFeeTx and highFeeChildTx are added to the block as a package.
+    const auto packageFee{lowFeeTx.GetFee() + highFeeChildTx.GetFee()};
+    const auto packageSize{lowFeeTx.GetTxSize() + highFeeChildTx.GetTxSize()};
+    FeeFrac packageFeeFrac{packageFee, packageSize};
+    BOOST_CHECK(blockFeerateHistogram[0] == packageFeeFrac);
+
+    FeeFrac mediumTxFeeFrac{mediumFeeTx.GetFee(), mediumFeeTx.GetTxSize()};
+    BOOST_CHECK(blockFeerateHistogram[1] == mediumTxFeeFrac);
 
     // Test that a package below the block min tx fee doesn't get included
     tx.vin[0].prevout.hash = hashHighFeeTx;
