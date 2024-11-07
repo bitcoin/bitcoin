@@ -372,6 +372,26 @@ std::vector<RPCResult> TxDoc(const TxDocOptions& opts)
             {RPCResult::Type::STR_HEX, "hex", "hex-encoded witness data (if any)"},
         }},
     };
+    if (opts.include_scripts) {
+        vin_inner.emplace_back(
+            RPCResult::Type::OBJ, "redeemScript", /*optional=*/true, "The decoded redeem script (only for P2SH and P2SH-P2WSH inputs, omitted if block undo data is not available)",
+            std::vector<RPCResult>{
+                {RPCResult::Type::STR, "asm", "Human readable disassembly of the redeem script"},
+                {RPCResult::Type::STR, "desc", "Descriptor of the redeem script"},
+                {RPCResult::Type::STR, "type", "Type of the redeem script"},
+                {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
+            }
+        );
+        vin_inner.emplace_back(
+            RPCResult::Type::OBJ, "witnessScript", /*optional=*/true, "The decoded witness script (only for P2WSH and P2SH-P2WSH inputs, omitted if block undo data is not available)",
+            std::vector<RPCResult>{
+                {RPCResult::Type::STR, "asm", "Human readable disassembly of the witness script"},
+                {RPCResult::Type::STR, "desc", "Descriptor of the witness script"},
+                {RPCResult::Type::STR, "type", "Type of the witness script"},
+                {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
+            }
+        );
+    }
     if (opts.prevout) {
         vin_inner.emplace_back(
             RPCResult::Type::OBJ, "prevout", opts.prevout_optional, prevout_doc,

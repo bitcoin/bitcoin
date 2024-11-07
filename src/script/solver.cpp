@@ -6,9 +6,11 @@
 #include <script/solver.h>
 
 #include <prevector.h>
+#include <primitives/transaction.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/script.h>
+#include <script/verify_flags.h>
 
 #include <cassert>
 #include <string>
@@ -225,4 +227,40 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
     script << keys.size() << OP_CHECKMULTISIG;
 
     return script;
+}
+
+RedeemAndWitnessScripts GetRedeemAndWitnessScripts(const CScript& prevScript, const CTxIn& txin)
+{
+    RedeemAndWitnessScripts result;
+    CScript script = prevScript;
+    if (script.IsPayToScriptHash()) {
+        std::vector<std::vector<unsigned char>> stack;
+        if (!EvalScript(stack, txin.scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE)) {
+            return result;
+        }
+        if (stack.empty()) {
+            return result;
+        }
+        script = CScript(stack.back().begin(), stack.back().end());
+        result.redeem_script = script;
+    }
+    int witnessversion = 0;
+    std::vector<unsigned char> witnessprogram;
+    if (!script.IsWitnessProgram(witnessversion, witnessprogram)) {
+        // The redeem script (last scriptSig stack item) has already been set above.
+        // For valid P2SH inputs, the scriptSig must be push-only (BIP16).
+        return result;
+    }
+    if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
+        const auto& stack = txin.scriptWitness.stack;
+        if (stack.empty()) return result;  // empty witness stack is invalid for P2WSH
+        const auto& script_data = stack.back();
+        result.witness_script = CScript(script_data.begin(), script_data.end());
+        return result;
+    }
+    // For other witness program types (e.g. P2WPKH, Taproot), the redeem
+    // script set above (if any) is just a witness program, not a meaningful
+    // script, so clear it.
+    result.redeem_script.clear();
+    return result;
 }

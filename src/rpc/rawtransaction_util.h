@@ -75,6 +75,8 @@ struct TxDocOptions {
     bool prevout{false};
     /// Mark prevout field as optional (omitted when undo data unavailable)
     bool prevout_optional{false};
+    /// Include redeemScript and witnessScript fields in RPC documentation
+    bool include_scripts{false};
     /// Include fee field
     bool fee{false};
     /// Include hex field
