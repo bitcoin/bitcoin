@@ -473,6 +473,20 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
 
             amt_total_in += prev_txout.nValue;
 
+            // Extract redeem and witness scripts from the input when undo data is available,
+            // as the previous output's scriptPubKey is needed to identify the script type.
+            auto scripts = GetRedeemAndWitnessScripts(prev_txout.scriptPubKey, txin);
+            if (!scripts.redeem_script.empty()) {
+                UniValue d_redeem_script(UniValue::VOBJ);
+                ScriptToUniv(scripts.redeem_script, d_redeem_script, /*include_hex=*/false, /*include_address=*/true);
+                in.pushKV("redeemScript", std::move(d_redeem_script));
+            }
+            if (!scripts.witness_script.empty()) {
+                UniValue d_witness_script(UniValue::VOBJ);
+                ScriptToUniv(scripts.witness_script, d_witness_script, /*include_hex=*/false, /*include_address=*/true);
+                in.pushKV("witnessScript", std::move(d_witness_script));
+            }
+
             if (verbosity == TxVerbosity::SHOW_DETAILS_AND_PREVOUT) {
                 UniValue o_script_pub_key(UniValue::VOBJ);
                 ScriptToUniv(prev_txout.scriptPubKey, /*out=*/o_script_pub_key, /*include_hex=*/true, /*include_address=*/true);
