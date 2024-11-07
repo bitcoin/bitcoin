@@ -1299,7 +1299,8 @@ void MemPoolAccept::FinalizeSubpackage(const ATMPArgs& args)
                                       it->GetTxSize());
         FeeFrac feerate{m_subpackage.m_total_modified_fees, int32_t(m_subpackage.m_total_vsize)};
         uint256 tx_or_package_hash{};
-        if (m_subpackage.m_changeset->GetTxCount() == 1) {
+        const bool replaced_with_tx{m_subpackage.m_changeset->GetTxCount() == 1};
+        if (replaced_with_tx) {
             const CTransaction& tx = m_subpackage.m_changeset->GetAddedTxn(0);
             tx_or_package_hash = tx.GetHash();
             log_string += strprintf("New tx %s (wtxid=%s, fees=%s, vsize=%s)",
@@ -1324,7 +1325,8 @@ void MemPoolAccept::FinalizeSubpackage(const ATMPArgs& args)
                 std::chrono::duration_cast<std::chrono::duration<std::uint64_t>>(it->GetTime()).count(),
                 tx_or_package_hash.data(),
                 feerate.size,
-                feerate.fee
+                feerate.fee,
+                replaced_with_tx
         );
         m_subpackage.m_replaced_transactions.push_back(it->GetSharedTx());
     }

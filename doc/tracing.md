@@ -245,14 +245,15 @@ Arguments passed:
 2. Replaced transaction virtual size as `int32`
 3. Replaced transaction fee as `int64`
 4. Replaced transaction mempool entry time (epoch) as `uint64`
-5. Replacement transaction ID (hash) as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
+5. Replacement transaction ID or package hash as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
 6. Replacement transaction virtual size as `int32`
 7. Replacement transaction fee as `int64`
+8. `bool` indicating if the argument 5. is a transaction ID or package hash (true if it's a transaction ID)
 
-Note: In cases where a single replacement transaction replaces multiple
+Note: In cases where a replacement transaction or package replaces multiple
 existing transactions in the mempool, the tracepoint is called once for each
-replaced transaction, with data of the replacement transaction being the same
-in each call.
+replaced transaction, with data of the replacement transaction or package
+being the same in each call.
 
 #### Tracepoint `mempool:rejected`
 
