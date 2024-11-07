@@ -173,7 +173,7 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
         network = fuzzed_data_provider.PickValueInArray(ALL_NETWORKS);
     }
     auto max_addresses = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096);
-    auto max_pct = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096);
+    auto max_pct = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 100);
     auto filtered = fuzzed_data_provider.ConsumeBool();
     (void)const_addr_man.GetAddr(max_addresses, max_pct, network, filtered);
 
