@@ -287,7 +287,7 @@ static void CheckInvariants(const node::TxDownloadManagerImpl& txdownload_impl, 
     // We should never have more than the maximum in-flight requests out for a peer.
     for (NodeId peer = 0; peer < NUM_PEERS; ++peer) {
         if (!HasRelayPermissions(peer)) {
-            Assert(txdownload_impl.m_txrequest.CountInFlight(peer) <= node::MAX_PEER_TX_REQUEST_IN_FLIGHT);
+            Assert(txdownload_impl.m_txrequest.Count(peer) <= node::MAX_PEER_TX_ANNOUNCEMENTS);
         }
     }
     txdownload_impl.m_txrequest.SanityCheck();
@@ -430,8 +430,9 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
             }
         );
 
-        // Jump ahead in time
-        time += fuzzed_data_provider.PickValueInArray(TIME_SKIPS);
+        auto time_skip = fuzzed_data_provider.PickValueInArray(TIME_SKIPS);
+        if (fuzzed_data_provider.ConsumeBool()) time_skip *= -1;
+        time += time_skip;
         CheckInvariants(txdownload_impl, max_orphan_count);
     }
     // Disconnect everybody, check that all data structures are empty.

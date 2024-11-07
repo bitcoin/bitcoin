@@ -160,7 +160,9 @@ public:
     void ConnectedPeer(NodeId nodeid, const TxDownloadConnectionInfo& info);
     void DisconnectedPeer(NodeId nodeid);
 
-    /** New inv has been received. May be added as a candidate to txrequest. */
+    /** Consider adding this tx hash to txrequest. Should be called whenever a new inv has been received.
+     * Also called internally when a transaction is missing parents so that we can request them.
+     */
     bool AddTxAnnouncement(NodeId peer, const GenTxid& gtxid, std::chrono::microseconds now, bool p2p_inv);
 
     /** Get getdata requests to send. */

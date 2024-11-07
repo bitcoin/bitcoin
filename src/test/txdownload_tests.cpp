@@ -27,7 +27,7 @@ struct Behaviors {
     bool m_ignore_inv_txid;
     bool m_ignore_inv_wtxid;
 
-    // Constructor. We are passing and casting ints because they are more readable in a table (see all_expected_results).
+    // Constructor. We are passing and casting ints because they are more readable in a table (see expected_behaviors).
     Behaviors(bool txid_rejects, bool wtxid_rejects, bool txid_recon, bool wtxid_recon, bool keep, bool txid_inv, bool wtxid_inv) :
         m_txid_in_rejects(txid_rejects),
         m_wtxid_in_rejects(wtxid_rejects),
