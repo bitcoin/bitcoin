@@ -85,7 +85,7 @@ public:
  * is intended to represent a set of elements.
  *
  * See also https://cseweb.ucsd.edu/~mihir/papers/inchash.pdf and
- * https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2017-May/014337.html.
+ * https://gnusha.org/pi/bitcoindev/CAPg+sBgruEiXya6oFy6VpmR1KPDebjeGDtZZU+facZx5=L_a5w@mail.gmail.com/.
  */
 class MuHash3072
 {

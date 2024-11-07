@@ -1012,7 +1012,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // being able to broadcast descendants of an unconfirmed transaction
         // to be secure by simply only having two immediately-spendable
         // outputs - one for each counterparty. For more info on the uses for
-        // this, see https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/016518.html
+        // this, see https://gnusha.org/pi/bitcoindev/c3f68b73-84c6-7428-4bf6-b47802141392@mattcorallo.com/
         CTxMemPool::Limits cpfp_carve_out_limits{
             .ancestor_count = 2,
             .ancestor_size_vbytes = maybe_rbf_limits.ancestor_size_vbytes,
@@ -4115,7 +4115,7 @@ bool IsBlockMutated(const CBlock& block, bool check_witness_root)
     if (block.vtx.empty() || !block.vtx[0]->IsCoinBase()) {
         // Consider the block mutated if any transaction is 64 bytes in size (see 3.1
         // in "Weaknesses in Bitcoin’s Merkle Root Construction":
-        // https://lists.linuxfoundation.org/pipermail/bitcoin-dev/attachments/20190225/a27d8837/attachment-0001.pdf).
+        // https://gnusha.org/pi/bitcoindev/CAFp6fsGtEm9p-ZQF_XqfqyQGzZK7BS2SNp2z680QBsJiFDraEA@mail.gmail.com/2-BitcoinMerkle.pdf.
         //
         // Note: This is not a consensus change as this only applies to blocks that
         // don't have a coinbase transaction and would therefore already be invalid.
@@ -4556,7 +4556,7 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
         // Skipping AcceptBlock() for CheckBlock() failures means that we will never mark a block as invalid if
         // CheckBlock() fails.  This is protective against consensus failure if there are any unknown forms of block
         // malleability that cause CheckBlock() to fail; see e.g. CVE-2012-2459 and
-        // https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2019-February/016697.html.  Because CheckBlock() is
+        // https://gnusha.org/pi/bitcoindev/CAFp6fsGtEm9p-ZQF_XqfqyQGzZK7BS2SNp2z680QBsJiFDraEA@mail.gmail.com/.  Because CheckBlock() is
         // not very expensive, the anti-DoS benefits of caching failure (of a definitely-invalid block) are not substantial.
         bool ret = CheckBlock(*block, state, GetConsensus());
         if (ret) {

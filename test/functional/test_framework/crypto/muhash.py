@@ -18,7 +18,7 @@ def data_to_num3072(data):
 class MuHash3072:
     """Class representing the MuHash3072 computation of a set.
 
-    See https://cseweb.ucsd.edu/~mihir/papers/inchash.pdf and https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2017-May/014337.html
+    See https://cseweb.ucsd.edu/~mihir/papers/inchash.pdf and https://gnusha.org/pi/bitcoindev/CAPg+sBgruEiXya6oFy6VpmR1KPDebjeGDtZZU+facZx5=L_a5w@mail.gmail.com/
     """
 
     MODULUS = 2**3072 - 1103717
