@@ -200,13 +200,37 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
             o.pushKV("asm", ScriptToAsmStr(txin.scriptSig, true));
             o.pushKV("hex", HexStr(txin.scriptSig));
             in.pushKV("scriptSig", std::move(o));
+
+            CScript redeemScript;
+            std::vector<unsigned char> data;
+            CScript::const_iterator pc = txin.scriptSig.begin();
+            opcodetype opcode;
+            while (txin.scriptSig.GetOp(pc, opcode, data)){
+                 if(pc == txin.scriptSig.end()) {
+                    redeemScript = CScript(data.begin(), data.end());
+                    std::string decompiled = ScriptToAsmStr(redeemScript, true);
+                    UniValue redeemScriptObj(UniValue::VOBJ);
+                    redeemScriptObj.pushKV("asm", decompiled);
+                    redeemScriptObj.pushKV("hex", HexStr(redeemScript));
+                    in.pushKV("redeemScript", std::move(redeemScriptObj));
+                 }
+            }
+
         }
         if (!tx.vin[i].scriptWitness.IsNull()) {
             UniValue txinwitness(UniValue::VARR);
+            const auto& witness_stack = tx.vin[i].scriptWitness.stack;
             for (const auto& item : tx.vin[i].scriptWitness.stack) {
                 txinwitness.push_back(HexStr(item));
             }
             in.pushKV("txinwitness", std::move(txinwitness));
+            if (!witness_stack.empty()) {
+                CScript witnessScript(witness_stack.back().begin(), witness_stack.back().end());
+                UniValue witnessScriptObj(UniValue::VOBJ);
+                witnessScriptObj.pushKV("asm", ScriptToAsmStr(witnessScript, true));
+                witnessScriptObj.pushKV("hex", HexStr(witnessScript));
+                in.pushKV("witnessScript", std::move(witnessScriptObj));
+             }
         }
         if (have_undo) {
             const Coin& prev_coin = txundo->vprevout[i];
