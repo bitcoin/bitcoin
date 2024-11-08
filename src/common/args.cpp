@@ -282,10 +282,14 @@ void ArgsManager::SetDefaultFlags(std::optional<unsigned int> flags)
 fs::path ArgsManager::GetPathArg_(std::string arg, const fs::path& default_value) const
 {
     AssertLockHeld(cs_args);
-    const auto value = GetSetting_(arg);
-    if (value.isFalse()) return {};
+    return SettingToPath(GetSetting_(arg)).value_or(default_value);
+}
+
+std::optional<fs::path> SettingToPath(const common::SettingsValue& value)
+{
+    if (value.isFalse()) return fs::path{};
     std::string path_str = SettingToString(value, "");
-    if (path_str.empty()) return default_value;
+    if (path_str.empty()) return std::nullopt;
     fs::path result = fs::PathFromString(path_str).lexically_normal();
     // Remove trailing slash, if present.
     return result.has_filename() ? result : result.parent_path();
