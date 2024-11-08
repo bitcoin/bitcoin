@@ -4,36 +4,6 @@
 
 This guide describes how to build dashd, command-line utilities, and GUI on FreeBSD.
 
-## Dependencies
-
-The following dependencies are **required**:
-
- Library                                                               | Purpose    | Description
- ----------------------------------------------------------------------|------------|----------------------
- [autoconf](https://svnweb.freebsd.org/ports/head/devel/autoconf/)     | Build      | Automatically configure software source code
- [automake](https://svnweb.freebsd.org/ports/head/devel/automake/)     | Build      | Generate makefile (requires autoconf)
- [libtool](https://svnweb.freebsd.org/ports/head/devel/libtool/)       | Build      | Shared library support
- [pkgconf](https://svnweb.freebsd.org/ports/head/devel/pkgconf/)       | Build      | Configure compiler and linker flags
- [git](https://svnweb.freebsd.org/ports/head/devel/git/)               | Clone      | Version control system
- [gmake](https://svnweb.freebsd.org/ports/head/devel/gmake/)           | Compile    | Generate executables
- [boost-libs](https://svnweb.freebsd.org/ports/head/devel/boost-libs/) | Utility    | Library for threading, data structures, etc
- [libevent](https://svnweb.freebsd.org/ports/head/devel/libevent/)     | Networking | OS independent asynchronous networking
-
-
-The following dependencies are **optional**:
-
-  Library                                                                    | Purpose          | Description
-  ---------------------------------------------------------------------------|------------------|----------------------
-  [db5](https://svnweb.freebsd.org/ports/head/databases/db5/)                | Berkeley DB      | Wallet storage (only needed when wallet enabled)
-  [qt5](https://svnweb.freebsd.org/ports/head/devel/qt5/)                    | GUI              | GUI toolkit (only needed when GUI enabled)
-  [gmp](https://svnweb.freebsd.org/ports/head/math/gmp/)                     | Optimized math routines | Arbitrary precision arithmetic library
-  [libqrencode](https://svnweb.freebsd.org/ports/head/graphics/libqrencode/) | QR codes in GUI  | Generating QR codes (only needed when GUI enabled)
-  [libzmq4](https://svnweb.freebsd.org/ports/head/net/libzmq4/)              | ZMQ notification | Allows generating ZMQ notifications (requires ZMQ version >= 4.0.0)
-  [sqlite3](https://svnweb.freebsd.org/ports/head/databases/sqlite3/)        | SQLite DB        | Wallet storage (only needed when wallet enabled)
-  [python3](https://svnweb.freebsd.org/ports/head/lang/python3/)             | Testing          | Python Interpreter (only needed when running the test suite)
-
-  See [dependencies.md](dependencies.md) for a complete overview.
-
 ## Preparation
 
 ### 1. Install Required Dependencies
@@ -43,6 +13,8 @@ Run the following as root to install the base dependencies for building.
 pkg install autoconf automake boost-libs git gmake libevent libtool pkgconf
 
 ```
+
+See [dependencies.md](dependencies.md) for a complete overview.
 
 ### 2. Clone Dash Repo
 Now that `git` and all the required dependencies are installed, let's clone the Dash Core repository to a directory. All build scripts and commands will run from this directory.
@@ -90,6 +62,14 @@ The GUI can encode addresses in a QR Code. To build in QR support for the GUI, i
 pkg install libqrencode
 ```
 ---
+
+#### Notifications
+###### ZeroMQ
+
+Dash Core can provide notifications via ZeroMQ. If the package is installed, support will be compiled in.
+```bash
+pkg install libzmq4
+```
 
 #### Test Suite Dependencies
 There is an included test suite that is useful for testing code changes when developing.
