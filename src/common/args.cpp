@@ -271,9 +271,14 @@ std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) co
 
 fs::path ArgsManager::GetPathArg(std::string arg, const fs::path& default_value) const
 {
-    if (IsArgNegated(arg)) return fs::path{};
-    std::string path_str = GetArg(arg, "");
-    if (path_str.empty()) return default_value;
+    return SettingToPath(GetSetting(arg)).value_or(default_value);
+}
+
+std::optional<fs::path> SettingToPath(const common::SettingsValue& value)
+{
+    if (value.isFalse()) return fs::path{};
+    std::string path_str = SettingToString(value, "");
+    if (path_str.empty()) return std::nullopt;
     fs::path result = fs::PathFromString(path_str).lexically_normal();
     // Remove trailing slash, if present.
     return result.has_filename() ? result : result.parent_path();
