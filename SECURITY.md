@@ -1,4 +1,4 @@
-# Security Policy
+# Security Poy
 
 ## Supported Versions
 
