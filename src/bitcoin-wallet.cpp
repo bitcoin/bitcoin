@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2022 The Bitcoin Core developers
+// Copyright (c) 2016-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -69,7 +69,7 @@ static std::optional<int> WalletAppInit(ArgsManager& args, int argc, char* argv[
             strUsage += "\n"
                 "bitcoin-wallet is an offline tool for creating and interacting with " CLIENT_NAME " wallet files.\n\n"
                 "By default bitcoin-wallet will act on wallets in the default mainnet wallet directory in the datadir.\n\n"
-                "To change the target wallet, use the -datadir, -wallet and -regtest / -signet / -testnet arguments.\n"
+                "To change the target wallet, use the -datadir, -wallet and (test)chain selection arguments.\n"
                 "\n"
                 "Usage: bitcoin-wallet [options] <command>\n"
                 "\n";
