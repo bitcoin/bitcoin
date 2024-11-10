@@ -70,6 +70,7 @@ mkdir -p "$DISTSRC"
                 osslsigncode attach-signature \
                                  -in "$infile" \
                                  -out "${OUTDIR}/${infile_base/-unsigned}" \
+                                 -CAfile "$GUIX_ENVIRONMENT/etc/ssl/certs/ca-certificates.crt" \
                                  -sigin codesignatures/win/"$infile_base".pem
             done
             ;;
@@ -77,14 +78,11 @@ mkdir -p "$DISTSRC"
             # Apply detached codesignatures to dist/ (in-place)
             signapple apply dist/Dash-Qt.app codesignatures/osx/dist
 
-            # Make an uncompressed DMG from dist/
+            # Make a DMG from dist/
             xorrisofs -D -l -V "$(< osx_volname)" -no-pad -r -dir-mode 0755 \
-                      -o uncompressed.dmg \
+                      -o "${OUTDIR}/${DISTNAME}-${HOST}.dmg" \
                       dist \
                       -- -volume_date all_file_dates ="$SOURCE_DATE_EPOCH"
-
-            # Compress uncompressed.dmg and output to OUTDIR
-            ./dmg dmg uncompressed.dmg "${OUTDIR}/${DISTNAME}-${HOST}.dmg"
             ;;
         *)
             exit 1

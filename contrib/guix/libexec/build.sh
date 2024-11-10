@@ -54,7 +54,8 @@ BASEPREFIX="${PWD}/depends"
 store_path() {
     grep --extended-regexp "/[^-]{32}-${1}-[^-]+${2:+-${2}}" "${GUIX_ENVIRONMENT}/manifest" \
         | head --lines=1 \
-        | sed --expression='s|^[[:space:]]*"||' \
+        | sed --expression='s|\x29*$||' \
+              --expression='s|^[[:space:]]*"||' \
               --expression='s|"[[:space:]]*$||'
 }
 
@@ -71,28 +72,11 @@ unset CPLUS_INCLUDE_PATH
 unset OBJC_INCLUDE_PATH
 unset OBJCPLUS_INCLUDE_PATH
 
-export LIBRARY_PATH="${NATIVE_GCC}/lib:${NATIVE_GCC}/lib64:${NATIVE_GCC_STATIC}/lib:${NATIVE_GCC_STATIC}/lib64"
+export LIBRARY_PATH="${NATIVE_GCC}/lib:${NATIVE_GCC_STATIC}/lib"
 export C_INCLUDE_PATH="${NATIVE_GCC}/include"
 export CPLUS_INCLUDE_PATH="${NATIVE_GCC}/include/c++:${NATIVE_GCC}/include"
 export OBJC_INCLUDE_PATH="${NATIVE_GCC}/include"
 export OBJCPLUS_INCLUDE_PATH="${NATIVE_GCC}/include/c++:${NATIVE_GCC}/include"
-
-prepend_to_search_env_var() {
-    export "${1}=${2}${!1:+:}${!1}"
-}
-
-case "$HOST" in
-    *darwin*)
-        # When targeting darwin, zlib is required by native_libdmg-hfsplus.
-        zlib_store_path=$(store_path "zlib")
-        zlib_static_store_path=$(store_path "zlib" static)
-
-        prepend_to_search_env_var LIBRARY_PATH "${zlib_static_store_path}/lib:${zlib_store_path}/lib"
-        prepend_to_search_env_var C_INCLUDE_PATH "${zlib_store_path}/include"
-        prepend_to_search_env_var CPLUS_INCLUDE_PATH "${zlib_store_path}/include"
-        prepend_to_search_env_var OBJC_INCLUDE_PATH "${zlib_store_path}/include"
-        prepend_to_search_env_var OBJCPLUS_INCLUDE_PATH "${zlib_store_path}/include"
-esac
 
 # Set environment variables to point the CROSS toolchain to the right
 # includes/libs for $HOST
@@ -326,8 +310,7 @@ mkdir -p "$DISTSRC"
             make deploydir ${V:+V=1}
             mkdir -p "unsigned-app-${HOST}"
             cp  --target-directory="unsigned-app-${HOST}" \
-                contrib/macdeploy/detached-sig-create.sh \
-                "${BASEPREFIX}/${HOST}"/native/bin/dmg
+                contrib/macdeploy/detached-sig-create.sh
             mv --target-directory="unsigned-app-${HOST}" dist
             (
                 cd "unsigned-app-${HOST}"

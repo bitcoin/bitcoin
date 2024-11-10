@@ -11,7 +11,7 @@ These are the dependencies currently used by Dash Core. You can find instruction
 | fontconfig | [2.12.1](https://www.freedesktop.org/software/fontconfig/release/) |  | No | Yes |  |
 | FreeType | [2.11.0](https://download.savannah.gnu.org/releases/freetype) |  | No |  | [Yes](https://github.com/dashpay/dash/blob/develop/depends/packages/qt.mk) (Android only) |
 | GCC |  | [7+](https://gcc.gnu.org/) (C++17 support) |  |  |  |
-| glibc | | [2.28](https://www.gnu.org/software/libc/) |  |  |  |  |
+| glibc | | [2.31](https://www.gnu.org/software/libc/) |  |  |  |  |
 | HarfBuzz-NG |  |  |  |  | [Yes](https://github.com/dashpay/dash/blob/develop/depends/packages/qt.mk) |
 | libevent | [2.1.12-stable](https://github.com/libevent/libevent/releases) | [2.0.21](https://github.com/bitcoin/bitcoin/pull/18676) | No |  |  |
 | libnatpmp | git commit [4536032...](https://github.com/miniupnp/libnatpmp/tree/4536032ae32268a45c073a4d5e91bbab4534773a) |  | No |  |  |

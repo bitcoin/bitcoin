@@ -846,7 +846,6 @@ case $host in
            AC_PATH_TOOL([INSTALLNAMETOOL], [install_name_tool], install_name_tool)
            AC_PATH_TOOL([OTOOL], [otool], otool)
            AC_PATH_PROGS([XORRISOFS], [xorrisofs], xorrisofs)
-           AC_PATH_PROGS([DMG], [dmg], dmg)
 
            dnl libtool will try to strip the static lib, which is a problem for
            dnl cross-builds because strip attempts to call a hard-coded ld,
@@ -959,8 +958,6 @@ if test x$ac_cv_sys_large_files != x &&
    test x$ac_cv_sys_large_files != xunknown; then
   CPPFLAGS="$CPPFLAGS -D_LARGE_FILES=$ac_cv_sys_large_files"
 fi
-
-AC_SEARCH_LIBS([clock_gettime],[rt])
 
 if test "x$enable_gprof" = xyes; then
     dnl -pg is incompatible with -pie. Since hardening and profiling together doesn't make sense,
