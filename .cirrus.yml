@@ -186,13 +186,13 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
 
 task:
-  name: 'multiprocess, i686, DEBUG'
+  name: 'no multiprocess, i686, DEBUG'
   << : *GLOBAL_TASK_TEMPLATE
   persistent_worker:
     labels:
       type: medium
   env:
-    FILE_ENV: "./ci/test/00_setup_env_i686_multiprocess.sh"
+    FILE_ENV: "./ci/test/00_setup_env_i686_no_multiprocess.sh"
 
 task:
   name: 'no wallet, libbitcoinkernel'
