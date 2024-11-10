@@ -224,7 +224,6 @@ void AddAllCPUID(CSHA512& hasher)
 
 void RandAddDynamicEnv(CSHA512& hasher)
 {
-    RandAddSeedPerfmon(hasher);
 
     // Various clocks
 #ifdef WIN32
