@@ -28,4 +28,8 @@ cd "${WORKSPACE_PATH}"
 git config --global --add safe.directory "${WORKSPACE_PATH}"
 git status >> /dev/null
 
+export HOSTS="${HOSTS:-x86_64-linux-gnu aarch64-linux-gnu riscv64-linux-gnu
+                       x86_64-w64-mingw32
+                       x86_64-apple-darwin arm64-apple-darwin}"
+
 ./contrib/guix/guix-build
