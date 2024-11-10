@@ -119,7 +119,7 @@ The following can be set when running make: `make FOO=bar`
 - `NO_BDB`: Don't download/build/cache BerkeleyDB
 - `NO_SQLITE`: Don't download/build/cache SQLite
 - `NO_USDT`: Don't download/build/cache packages needed for enabling USDT tracepoints
-- `MULTIPROCESS`: Build libmultiprocess (experimental)
+- `NO_MULTIPROCESS`: Don't build libmultiprocess
 - `DEBUG`: Disable some optimizations and enable more runtime checking
 - `HOST_ID_SALT`: Optional salt to use when generating host package ids
 - `BUILD_ID_SALT`: Optional salt to use when generating build package ids
