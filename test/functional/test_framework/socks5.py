@@ -114,7 +114,7 @@ class Socks5Connection():
         self.conn = conn
 
     def handle(self):
-        """Handle socks5 request according to RFC192."""
+        """Handle socks5 request according to RFC1928."""
         try:
             # Verify socks version
             ver = recvall(self.conn, 1)[0]
