@@ -32,7 +32,6 @@ COutPoint COINS[NUM_COINS];
 static TxValidationResult TESTED_TX_RESULTS[] = {
     // Skip TX_RESULT_UNSET
     TxValidationResult::TX_CONSENSUS,
-    TxValidationResult::TX_RECENT_CONSENSUS_CHANGE,
     TxValidationResult::TX_INPUTS_NOT_STANDARD,
     TxValidationResult::TX_NOT_STANDARD,
     TxValidationResult::TX_MISSING_INPUTS,

@@ -1790,7 +1790,6 @@ void PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidati
     case BlockValidationResult::BLOCK_MISSING_PREV:
         if (peer) Misbehaving(*peer, message);
         return;
-    case BlockValidationResult::BLOCK_RECENT_CONSENSUS_CHANGE:
     case BlockValidationResult::BLOCK_TIME_FUTURE:
         break;
     }
@@ -1810,7 +1809,6 @@ void PeerManagerImpl::MaybePunishNodeForTx(NodeId nodeid, const TxValidationStat
         if (peer) Misbehaving(*peer, "");
         return;
     // Conflicting (but not necessarily invalid) data or different policy:
-    case TxValidationResult::TX_RECENT_CONSENSUS_CHANGE:
     case TxValidationResult::TX_INPUTS_NOT_STANDARD:
     case TxValidationResult::TX_NOT_STANDARD:
     case TxValidationResult::TX_MISSING_INPUTS:
