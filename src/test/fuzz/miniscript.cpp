@@ -22,7 +22,7 @@ using NodeRef = miniscript::NodeRef<CPubKey>;
 using Node = miniscript::Node<CPubKey>;
 using Type = miniscript::Type;
 using MsCtx = miniscript::MiniscriptContext;
-using miniscript::operator"" _mst;
+using miniscript::operator""_mst;
 
 //! Some pre-computed data for more efficient string roundtrips and to simulate challenges.
 struct TestData {
