@@ -8,7 +8,7 @@ export LC_ALL=C.UTF-8
 
 export CI_IMAGE_NAME_TAG="docker.io/ubuntu:24.04"
 export CONTAINER_NAME=ci_native_fuzz_valgrind
-export PACKAGES="clang-16 llvm-16 libclang-rt-16-dev libevent-dev libboost-dev libsqlite3-dev valgrind"
+export PACKAGES="clang-18 llvm-18 libclang-rt-18-dev libevent-dev libboost-dev libsqlite3-dev valgrind"
 export NO_DEPENDS=1
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
@@ -18,7 +18,7 @@ export GOAL="install"
 export BITCOIN_CONFIG="\
  -DBUILD_FOR_FUZZING=ON \
  -DSANITIZERS=fuzzer \
- -DCMAKE_C_COMPILER=clang-16 \
- -DCMAKE_CXX_COMPILER=clang++-16 \
+ -DCMAKE_C_COMPILER=clang-18 \
+ -DCMAKE_CXX_COMPILER=clang++-18 \
 "
-export LLVM_SYMBOLIZER_PATH="/usr/bin/llvm-symbolizer-16"
+export LLVM_SYMBOLIZER_PATH="/usr/bin/llvm-symbolizer-18"
