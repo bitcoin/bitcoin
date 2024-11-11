@@ -35,7 +35,7 @@ class WalletTest(BitcoinTestFramework):
         # whitelist peers to speed up tx relay / mempool sync
         self.noban_tx_relay = True
         self.extra_args = [[
-            "-dustrelayfee=0", "-walletrejectlongchains=0"
+            "-dustrelayfee=0", "-walletrejectlongchains=0", "-deprecatedrpc=settxfee"
         ]] * self.num_nodes
         self.setup_clean_chain = True
         self.supports_cli = False
