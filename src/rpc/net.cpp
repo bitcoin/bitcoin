@@ -1024,7 +1024,7 @@ static RPCHelpMan sendmsgtopeer()
         "This RPC is for testing only.",
         {
             {"peer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "The peer to send the message to."},
-            {"msg_type", RPCArg::Type::STR, RPCArg::Optional::NO, strprintf("The message type (maximum length %i)", CMessageHeader::COMMAND_SIZE)},
+            {"msg_type", RPCArg::Type::STR, RPCArg::Optional::NO, strprintf("The message type (maximum length %i)", CMessageHeader::MESSAGE_TYPE_SIZE)},
             {"msg", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The serialized message body to send, in hex, without a message header"},
         },
         RPCResult{RPCResult::Type::OBJ, "", "", std::vector<RPCResult>{}},
@@ -1033,8 +1033,8 @@ static RPCHelpMan sendmsgtopeer()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
             const NodeId peer_id{request.params[0].getInt<int64_t>()};
             const std::string& msg_type{request.params[1].get_str()};
-            if (msg_type.size() > CMessageHeader::COMMAND_SIZE) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Error: msg_type too long, max length is %i", CMessageHeader::COMMAND_SIZE));
+            if (msg_type.size() > CMessageHeader::MESSAGE_TYPE_SIZE) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Error: msg_type too long, max length is %i", CMessageHeader::MESSAGE_TYPE_SIZE));
             }
             auto msg{TryParseHex<unsigned char>(request.params[2].get_str())};
             if (!msg.has_value()) {

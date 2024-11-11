@@ -64,7 +64,7 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 30)
     {
-        const std::string random_message_type{fuzzed_data_provider.ConsumeBytesAsString(CMessageHeader::COMMAND_SIZE).c_str()};
+        const std::string random_message_type{fuzzed_data_provider.ConsumeBytesAsString(CMessageHeader::MESSAGE_TYPE_SIZE).c_str()};
 
         const auto mock_time = ConsumeTime(fuzzed_data_provider);
         SetMockTime(mock_time);
