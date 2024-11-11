@@ -165,7 +165,7 @@ Then open a Pull Request to the [guix.sigs repository](https://github.com/bitcoi
 In the `guix-build-${VERSION}/output/x86_64-apple-darwin` and `guix-build-${VERSION}/output/arm64-apple-darwin` directories:
 
     tar xf bitcoin-${VERSION}-${ARCH}-apple-darwin-codesigning.tar.gz
-    ./detached-sig-create.sh /path/to/codesign.p12
+    ./detached-sig-create.sh /path/to/codesign.p12 /path/to/AuthKey_foo.p8 uuid
     Enter the keychain password and authorize the signature
     signature-osx.tar.gz will be created
 
