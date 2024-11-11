@@ -1,14 +1,17 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <string>
+#include <limits>
 #include <vector>
-#include <script/script.h>
-#include <script/miniscript.h>
-#include <serialize.h>
 
-#include <assert.h>
+#include <primitives/transaction.h>
+#include <script/miniscript.h>
+#include <script/script.h>
+#include <script/solver.h>
+#include <span.h>
+#include <util/check.h>
+#include <util/vector.h>
 
 namespace miniscript {
 namespace internal {

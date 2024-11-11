@@ -293,7 +293,7 @@ public:
 
 using Fragment = miniscript::Fragment;
 using NodeRef = miniscript::NodeRef<CPubKey>;
-using miniscript::operator"" _mst;
+using miniscript::operator""_mst;
 using Node = miniscript::Node<CPubKey>;
 
 /** Compute all challenges (pubkeys, hashes, timelocks) that occur in a given Miniscript. */
