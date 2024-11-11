@@ -57,6 +57,8 @@
 
 using namespace util::hex_literals;
 
+TRACEPOINT_SEMAPHORE(net, inbound_message);
+
 /** Headers download timeout.
  *  Timeout = base + per_header * (expected number of headers) */
 static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_BASE = 15min;
@@ -4969,7 +4971,7 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     CNetMessage& msg{poll_result->first};
     bool fMoreWork = poll_result->second;
 
-    TRACE6(net, inbound_message,
+    TRACEPOINT(net, inbound_message,
         pfrom->GetId(),
         pfrom->m_addr_name.c_str(),
         pfrom->ConnectionTypeAsString().c_str(),

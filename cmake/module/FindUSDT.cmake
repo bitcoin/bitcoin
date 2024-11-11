@@ -36,13 +36,16 @@ if(USDT_INCLUDE_DIR)
   include(CheckCXXSourceCompiles)
   set(CMAKE_REQUIRED_INCLUDES ${USDT_INCLUDE_DIR})
   check_cxx_source_compiles("
+    // Setting SDT_USE_VARIADIC lets systemtap (sys/sdt.h) know that we want to use
+    // the optional variadic macros to define tracepoints.
+    #define SDT_USE_VARIADIC 1
     #include <sys/sdt.h>
 
     int main()
     {
-      DTRACE_PROBE(context, event);
+      STAP_PROBEV(context, event);
       int a, b, c, d, e, f, g;
-      DTRACE_PROBE7(context, event, a, b, c, d, e, f, g);
+      STAP_PROBEV(context, event, a, b, c, d, e, f, g);
     }
     " HAVE_USDT_H
   )
