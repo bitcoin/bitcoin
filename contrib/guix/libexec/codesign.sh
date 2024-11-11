@@ -27,7 +27,7 @@ fi
 # Check that required environment variables are set
 cat << EOF
 Required environment variables as seen inside the container:
-    UNSIGNED_TARBALL: ${UNSIGNED_TARBALL:?not set}
+    CODESIGNING_TARBALL: ${CODESIGNING_TARBALL:?not set}
     DETACHED_SIGS_REPO: ${DETACHED_SIGS_REPO:?not set}
     DIST_ARCHIVE_BASE: ${DIST_ARCHIVE_BASE:?not set}
     DISTNAME: ${DISTNAME:?not set}
@@ -63,7 +63,7 @@ mkdir -p "$DISTSRC"
 (
     cd "$DISTSRC"
 
-    tar -xf "$UNSIGNED_TARBALL"
+    tar -xf "$CODESIGNING_TARBALL"
 
     mkdir -p codesignatures
     tar -C codesignatures -xf "$CODESIGNATURE_GIT_ARCHIVE"
@@ -105,7 +105,7 @@ mv --no-target-directory "$OUTDIR" "$ACTUAL_OUTDIR" \
 (
     cd /outdir-base
     {
-        echo "$UNSIGNED_TARBALL"
+        echo "$CODESIGNING_TARBALL"
         echo "$CODESIGNATURE_GIT_ARCHIVE"
         find "$ACTUAL_OUTDIR" -type f
     } | xargs realpath --relative-base="$PWD" \
