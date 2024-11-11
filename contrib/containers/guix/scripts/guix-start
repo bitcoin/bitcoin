@@ -17,11 +17,12 @@ XCODE_VERSION="12.2"
 XCODE_RELEASE="12B45b"
 XCODE_ARCHIVE="Xcode-${XCODE_VERSION}-${XCODE_RELEASE}-extracted-SDK-with-libcxx-headers"
 
+export SDK_PATH="${SDK_PATH:-${WORKSPACE_PATH}/depends/SDKs}"
+
 # Check if macOS SDK is present, if not, download it
-if [ ! -d "${WORKSPACE_PATH}/depends/SDKs/${XCODE_ARCHIVE}" ]
-then
-    mkdir -p "${WORKSPACE_PATH}/depends/SDKs"
-    curl -L https://bitcoincore.org/depends-sources/sdks/${XCODE_ARCHIVE}.tar.gz | tar -xz -C "${WORKSPACE_PATH}/depends/SDKs"
+if [[ ! -d "${SDK_PATH}/${XCODE_ARCHIVE}" ]]; then
+    mkdir -p "${SDK_PATH}"
+    curl -L https://bitcoincore.org/depends-sources/sdks/${XCODE_ARCHIVE}.tar.gz | tar -xz -C "${SDK_PATH}"
 fi
 
 cd "${WORKSPACE_PATH}"
