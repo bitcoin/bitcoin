@@ -140,7 +140,7 @@ target_link_libraries(fuzz
   univalue
   secp256k1
   Boost::headers
-  $<TARGET_NAME_IF_EXISTS:libevent::libevent>
+  libevent::extra
 )
 
 if(ENABLE_WALLET)
