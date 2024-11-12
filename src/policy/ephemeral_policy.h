@@ -35,7 +35,7 @@
  */
 
 /** Returns true if transaction contains dust */
-bool HasDust(const CTransactionRef& tx, CFeeRate dust_relay_rate);
+bool HasDust(const CTransaction& tx, CFeeRate dust_relay_rate);
 
 /* All the following checks are only called if standardness rules are being applied. */
 
@@ -43,7 +43,7 @@ bool HasDust(const CTransactionRef& tx, CFeeRate dust_relay_rate);
  * Does context-less checks about a single transaction.
  * Returns false if the fee is non-zero and dust exists, populating state. True otherwise.
  */
-bool PreCheckEphemeralTx(const CTransactionRef& tx, CFeeRate dust_relay_rate, CAmount base_fee, CAmount mod_fee, TxValidationState& state);
+bool PreCheckEphemeralTx(const CTransaction& tx, CFeeRate dust_relay_rate, CAmount base_fee, CAmount mod_fee, TxValidationState& state);
 
 /** Must be called for each transaction(package) if any dust is in the package.
  *  Checks that each transaction's parents have their dust spent by the child,
