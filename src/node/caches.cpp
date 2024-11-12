@@ -7,6 +7,7 @@
 #include <common/args.h>
 #include <common/system.h>
 #include <index/txindex.h>
+#include <init_settings.h>
 #include <kernel/caches.h>
 #include <logging.h>
 #include <node/interface_ui.h>
@@ -28,7 +29,7 @@ static constexpr size_t MAX_32BIT_DBCACHE{1024_MiB};
 namespace node {
 size_t CalculateDbCacheBytes(const ArgsManager& args)
 {
-    if (auto db_cache{args.GetIntArg("-dbcache")}) {
+    if (auto db_cache{DbCacheSetting::Get(args)}) {
         if (*db_cache < 0) db_cache = 0;
         const uint64_t db_cache_bytes{SaturatingLeftShift<uint64_t>(*db_cache, 20)};
         constexpr auto max_db_cache{sizeof(void*) == 4 ? MAX_32BIT_DBCACHE : std::numeric_limits<size_t>::max()};
@@ -42,7 +43,7 @@ CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes)
     size_t total_cache{CalculateDbCacheBytes(args)};
 
     IndexCacheSizes index_sizes;
-    index_sizes.tx_index = std::min(total_cache / 8, args.GetBoolArg("-txindex", DEFAULT_TXINDEX) ? MAX_TX_INDEX_CACHE : 0);
+    index_sizes.tx_index = std::min(total_cache / 8, TxIndexSetting::Get(args) ? MAX_TX_INDEX_CACHE : 0);
     total_cache -= index_sizes.tx_index;
     if (n_indexes > 0) {
         size_t max_cache = std::min(total_cache / 8, MAX_FILTER_INDEX_CACHE);
