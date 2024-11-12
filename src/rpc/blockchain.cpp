@@ -127,7 +127,7 @@ static const CBlockIndex* ParseHashOrHeight(const UniValue& param, ChainstateMan
     }
 }
 
-UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex, llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman)
+UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex, llmq::CChainLocksHandler& clhandler)
 {
     // Serialize passed information without accessing chain state of the active chain!
     AssertLockNotHeld(cs_main); // For performance reasons
@@ -161,7 +161,7 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
 
 UniValue blockToJSON(BlockManager& blockman, const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman, bool txDetails)
 {
-    UniValue result = blockheaderToJSON(tip, blockindex, clhandler, isman);
+    UniValue result = blockheaderToJSON(tip, blockindex, clhandler);
 
     result.pushKV("size", (int)::GetSerializeSize(block, PROTOCOL_VERSION));
     UniValue txs(UniValue::VARR);
@@ -986,7 +986,7 @@ static RPCHelpMan getblockheader()
     }
 
     LLMQContext& llmq_ctx = EnsureLLMQContext(node);
-    return blockheaderToJSON(tip, pblockindex, *llmq_ctx.clhandler, *llmq_ctx.isman);
+    return blockheaderToJSON(tip, pblockindex, *llmq_ctx.clhandler);
 },
     };
 }
@@ -1087,7 +1087,7 @@ static RPCHelpMan getblockheaders()
     LLMQContext& llmq_ctx = EnsureLLMQContext(node);
     for (; pblockindex; pblockindex = active_chain.Next(pblockindex))
     {
-        arrHeaders.push_back(blockheaderToJSON(tip, pblockindex, *llmq_ctx.clhandler, *llmq_ctx.isman));
+        arrHeaders.push_back(blockheaderToJSON(tip, pblockindex, *llmq_ctx.clhandler));
         if (--nCount <= 0)
             break;
     }

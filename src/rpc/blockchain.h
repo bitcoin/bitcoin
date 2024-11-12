@@ -50,7 +50,7 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool, llmq::CInstantSendManager& is
 UniValue MempoolToJSON(const CTxMemPool& pool, llmq::CInstantSendManager* isman, bool verbose = false, bool include_mempool_sequence = false);
 
 /** Block header to JSON */
-UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex, llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman) LOCKS_EXCLUDED(cs_main);
+UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex, llmq::CChainLocksHandler& clhandler) LOCKS_EXCLUDED(cs_main);
 
 /** Used by getblockstats to get feerates at different percentiles by weight  */
 void CalculatePercentilesBySize(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES], std::vector<std::pair<CAmount, int64_t>>& scores, int64_t total_size);

@@ -248,7 +248,7 @@ static bool rest_headers(const CoreContext& context,
     case RetFormat::JSON: {
         UniValue jsonHeaders(UniValue::VARR);
         for (const CBlockIndex *pindex : headers) {
-            jsonHeaders.push_back(blockheaderToJSON(tip, pindex, *llmq::chainLocksHandler, *llmq::quorumInstantSendManager));
+            jsonHeaders.push_back(blockheaderToJSON(tip, pindex, *llmq::chainLocksHandler));
         }
         std::string strJSON = jsonHeaders.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
