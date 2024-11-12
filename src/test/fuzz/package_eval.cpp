@@ -308,7 +308,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
                                    PickValue(fuzzed_data_provider, mempool_outpoints).hash;
             const auto delta = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-50 * COIN, +50 * COIN);
             // We only prioritise out of mempool transactions since PrioritiseTransaction doesn't
-            // filter for ephemeral dust GetEntry
+            // filter for ephemeral dust
             if (tx_pool.exists(GenTxid::Txid(txid))) {
                 const auto tx_info{tx_pool.info(GenTxid::Txid(txid))};
                 if (GetDust(*tx_info.tx, tx_pool.m_opts.dust_relay_feerate).empty()) {
