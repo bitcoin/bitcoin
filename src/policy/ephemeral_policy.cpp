@@ -2,8 +2,23 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <consensus/validation.h>
 #include <policy/ephemeral_policy.h>
+#include <policy/feerate.h>
+#include <policy/packages.h>
 #include <policy/policy.h>
+#include <primitives/transaction.h>
+#include <txmempool.h>
+#include <util/check.h>
+#include <util/hasher.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
 bool PreCheckEphemeralTx(const CTransaction& tx, CFeeRate dust_relay_rate, CAmount base_fee, CAmount mod_fee, TxValidationState& state)
 {

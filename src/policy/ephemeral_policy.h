@@ -5,10 +5,15 @@
 #ifndef BITCOIN_POLICY_EPHEMERAL_POLICY_H
 #define BITCOIN_POLICY_EPHEMERAL_POLICY_H
 
+#include <consensus/amount.h>
 #include <policy/packages.h>
-#include <policy/policy.h>
 #include <primitives/transaction.h>
-#include <txmempool.h>
+
+#include <optional>
+
+class CFeeRate;
+class CTxMemPool;
+class TxValidationState;
 
 /** These utility functions ensure that ephemeral dust is safely
  * created and spent without unduly risking them entering the utxo
