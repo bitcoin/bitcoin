@@ -167,7 +167,7 @@ std::optional<COutPoint> GetChildEvictingPrevout(const CTxMemPool& tx_pool)
     LOCK(tx_pool.cs);
     for (const auto& tx_info : tx_pool.infoAll()) {
         const auto& entry = *Assert(tx_pool.GetEntry(tx_info.tx->GetHash()));
-        std::vector<uint32_t> dust_indexes{GetDustIndexes(tx_info.tx, tx_pool.m_opts.dust_relay_feerate)};
+        std::vector<uint32_t> dust_indexes{GetDust(*tx_info.tx, tx_pool.m_opts.dust_relay_feerate)};
         if (!dust_indexes.empty()) {
             const auto& children = entry.GetMemPoolChildrenConst();
             if (!children.empty()) {
@@ -311,7 +311,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
             // filter for ephemeral dust GetEntry
             if (tx_pool.exists(GenTxid::Txid(txid))) {
                 const auto tx_info{tx_pool.info(GenTxid::Txid(txid))};
-                if (GetDustIndexes(tx_info.tx, tx_pool.m_opts.dust_relay_feerate).empty()) {
+                if (GetDust(*tx_info.tx, tx_pool.m_opts.dust_relay_feerate).empty()) {
                     tx_pool.PrioritiseTransaction(txid.ToUint256(), delta);
                 }
             }

@@ -34,9 +34,6 @@
  * are the only way to bring fees.
  */
 
-/** Returns true if transaction contains dust */
-bool HasDust(const CTransaction& tx, CFeeRate dust_relay_rate);
-
 /* All the following checks are only called if standardness rules are being applied. */
 
 /** Must be called for each transaction once transaction fees are known.

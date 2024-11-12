@@ -5,15 +5,10 @@
 #include <policy/ephemeral_policy.h>
 #include <policy/policy.h>
 
-bool HasDust(const CTransaction& tx, CFeeRate dust_relay_rate)
-{
-    return std::ranges::any_of(tx.vout, [&](const auto& output) { return IsDust(output, dust_relay_rate); });
-}
-
 bool PreCheckEphemeralTx(const CTransaction& tx, CFeeRate dust_relay_rate, CAmount base_fee, CAmount mod_fee, TxValidationState& state)
 {
     // We never want to give incentives to mine this transaction alone
-    if ((base_fee != 0 || mod_fee != 0) && HasDust(tx, dust_relay_rate)) {
+    if ((base_fee != 0 || mod_fee != 0) && !GetDust(tx, dust_relay_rate).empty()) {
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "dust", "tx with dust output must be 0-fee");
     }
 
