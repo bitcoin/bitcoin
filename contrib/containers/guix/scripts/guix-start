@@ -2,11 +2,7 @@
 
 set -eo pipefail
 
-if [[ -n "${1}" ]]; then
-    WORKSPACE_PATH="$1"
-else
-    WORKSPACE_PATH="/src/dash"
-fi
+WORKSPACE_PATH="${1:-$(pwd)}"
 
 if [[ ! -d "$WORKSPACE_PATH" ]]; then
     echo "$0: $WORKSPACE_PATH is not a valid directory, exiting!"
@@ -25,8 +21,11 @@ if [[ ! -d "${SDK_PATH}/${XCODE_ARCHIVE}" ]]; then
     curl -L https://bitcoincore.org/depends-sources/sdks/${XCODE_ARCHIVE}.tar.gz | tar -xz -C "${SDK_PATH}"
 fi
 
-# Avoid adding duplicate safe.directory option
-git config --global --fixed-value --get safe.directory "${WORKSPACE_PATH}" || git config --global --add safe.directory "${WORKSPACE_PATH}"
+# Add safe.directory option only when WORKSPACE_PATH was specified via cmd-line arguments (happens in CI)
+if [[ -n "${1}" ]]; then
+    # Avoid adding duplicates
+    git config --global --fixed-value --get safe.directory "${WORKSPACE_PATH}" || git config --global --add safe.directory "${WORKSPACE_PATH}"
+fi
 
 cd "${WORKSPACE_PATH}"
 git status >> /dev/null
