@@ -13,7 +13,7 @@
              (gnu packages gawk)
              (gnu packages gcc)
              ((gnu packages installers) #:select (nsis-x86_64))
-             ((gnu packages linux) #:select (linux-libre-headers-5.15 util-linux))
+             ((gnu packages linux) #:select (linux-libre-headers-6.1 util-linux))
              (gnu packages llvm)
              (gnu packages mingw)
              (gnu packages moreutils)
@@ -21,13 +21,14 @@
              ((gnu packages python) #:select (python-minimal))
              ((gnu packages python-build) #:select (python-tomli))
              ((gnu packages python-crypto) #:select (python-asn1crypto))
-             ((gnu packages python-web) #:select (python-requests))
+             ((gnu packages python-xyz) #:select (python-altgraph))
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
              (guix build-system cmake)
              (guix build-system gnu)
              (guix build-system python)
              (guix build-system trivial)
+             (guix download)
              (guix gexp)
              (guix git-download)
              ((guix licenses) #:prefix license:)
@@ -94,8 +95,19 @@ chain for " target " development."))
       (home-page (package-home-page xgcc))
       (license (package-license xgcc)))))
 
-(define base-gcc gcc-10)
-(define base-linux-kernel-headers linux-libre-headers-5.15)
+(define base-gcc
+  (package
+    (inherit gcc-12) ;; 12.3.0
+    (version "12.4.0")
+    (source (origin
+              (method url-fetch)
+              (uri (string-append "mirror://gnu/gcc/gcc-"
+                                  version "/gcc-" version ".tar.xz"))
+              (sha256
+               (base32
+                "0xcida8l2wykvvzvpcrcn649gj0ijn64gwxbplacpg6c0hk6akvh"))))))
+
+(define base-linux-kernel-headers linux-libre-headers-6.1)
 
 (define* (make-bitcoin-cross-toolchain target
                                        #:key
@@ -113,13 +125,19 @@ desirable for building Dash Core release binaries."
 
 (define (gcc-mingw-patches gcc)
   (package-with-extra-patches gcc
-    (search-our-patches "gcc-remap-guix-store.patch"
-                        "vmov-alignment.patch")))
+    (search-our-patches "gcc-remap-guix-store.patch")))
+
+(define (binutils-mingw-patches binutils)
+  (package-with-extra-patches binutils
+    (search-our-patches "binutils-unaligned-default.patch")))
 
 (define (make-mingw-pthreads-cross-toolchain target)
   "Create a cross-compilation toolchain package for TARGET"
-  (let* ((xbinutils (cross-binutils target))
-         (pthreads-xlibc mingw-w64-x86_64-winpthreads)
+  (let* ((xbinutils (binutils-mingw-patches (cross-binutils target)))
+         (machine (substring target 0 (string-index target #\-)))
+         (pthreads-xlibc (make-mingw-w64 machine
+                                         #:xgcc (cross-gcc target #:xgcc (gcc-mingw-patches base-gcc))
+                                         #:with-winpthreads? #t))
          (pthreads-xgcc (cross-gcc target
                                     #:xgcc (gcc-mingw-patches mingw-w64-base-gcc)
                                     #:xbinutils xbinutils
@@ -142,10 +160,6 @@ desirable for building Dash Core release binaries."
 chain for " target " development."))
       (home-page (package-home-page pthreads-xgcc))
       (license (package-license pthreads-xgcc)))))
-
-(define (make-nsis-for-gcc-10 base-nsis)
-  (package-with-extra-patches base-nsis
-    (search-our-patches "nsis-gcc-10-memmove.patch")))
 
 ;; While LIEF is packaged in Guix, we maintain our own package,
 ;; to simplify building, and more easily apply updates.
@@ -382,29 +396,6 @@ certificates or paths. Supports various options, including: validation at a
 specific moment in time, whitelisting and revocation checks.")
       (license license:expat))))
 
-(define-public python-altgraph
-  (package
-    (name "python-altgraph")
-    (version "0.17")
-    (source
-     (origin
-       (method git-fetch)
-       (uri (git-reference
-             (url "https://github.com/ronaldoussoren/altgraph")
-             (commit (string-append "v" version))))
-       (file-name (git-file-name name version))
-       (sha256
-        (base32
-         "09sm4srvvkw458pn48ga9q7ykr4xlz7q8gh1h9w7nxpf001qgpwb"))))
-    (build-system python-build-system)
-    (home-page "https://github.com/ronaldoussoren/altgraph")
-    (synopsis "Python graph (network) package")
-    (description "altgraph is a fork of graphlib: a graph (network) package for
-constructing graphs, BFS and DFS traversals, topological sort, shortest paths,
-etc. with graphviz output.")
-    (license license:expat)))
-
-
 (define-public python-macholib
   (package
     (name "python-macholib")
@@ -454,7 +445,7 @@ and endian independent.")
     (license license:expat)))
 
 (define-public python-signapple
-  (let ((commit "8a945a2e7583be2665cf3a6a89d665b70ecd1ab6"))
+  (let ((commit "7a96b4171a360abf0f0f56e499f8f9ed2116280d"))
     (package
       (name "python-signapple")
       (version (git-version "0.1" "1" commit))
@@ -467,14 +458,13 @@ and endian independent.")
          (file-name (git-file-name name commit))
          (sha256
           (base32
-           "0fr1hangvfyiwflca6jg5g8zvg3jc9qr7vd2c12ff89pznf38dlg"))))
+           "0aa4k180jnpal15yhncnm3g3z9gzmi7qb25q5l0kaj444a1p2pm4"))))
       (build-system python-build-system)
       (propagated-inputs
        `(("python-asn1crypto" ,python-asn1crypto)
          ("python-oscrypto" ,python-oscrypto)
          ("python-certvalidator" ,python-certvalidator)
          ("python-elfesteem" ,python-elfesteem)
-         ("python-requests" ,python-requests)
          ("python-macholib" ,python-macholib)))
       ;; There are no tests, but attempting to run python setup.py test leads to
       ;; problems, just disable the test
@@ -512,6 +502,8 @@ inspecting signatures in Mach-O binaries.")
             (list "--enable-initfini-array=yes",
                   "--enable-default-ssp=yes",
                   "--enable-default-pie=yes",
+                  "--enable-standard-branch-protection=yes",
+                  "--enable-cet=yes",
                   building-on)))
         ((#:phases phases)
           `(modify-phases ,phases
@@ -593,9 +585,6 @@ inspecting signatures in Mach-O binaries.")
         automake
         pkg-config
         bison
-        ;; Native GCC 10 toolchain
-        gcc-toolchain-10
-        (list gcc-toolchain-10 "static")
         ;; Scripting
         python-minimal ;; (3.10)
         ;; Git
@@ -604,14 +593,23 @@ inspecting signatures in Mach-O binaries.")
         python-lief)
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
-           ;; Windows
-           (list zip
+           (list ;; Native GCC 12 toolchain
+                 gcc-toolchain-12
+                 zip
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
-                 (make-nsis-for-gcc-10 nsis-x86_64)
+                 nsis-x86_64
                  nss-certs
                  osslsigncode))
           ((string-contains target "-linux-")
-           (list (make-bitcoin-cross-toolchain target)))
+           (list ;; Native GCC 12 toolchain
+                 gcc-toolchain-12
+                 (list gcc-toolchain-12 "static")
+                 (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
-           (list clang-toolchain-10 binutils xorriso python-signapple))
+           (list ;; Native GCC 11 toolchain
+                 gcc-toolchain-11
+                 binutils
+                 clang-toolchain-10
+                 python-signapple
+                 xorriso))
           (else '())))))
