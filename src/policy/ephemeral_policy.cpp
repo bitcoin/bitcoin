@@ -7,7 +7,7 @@
 
 bool HasDust(const CTransaction& tx, CFeeRate dust_relay_rate)
 {
-    return std::any_of(tx.vout.cbegin(), tx.vout.cend(), [&](const auto& output) { return IsDust(output, dust_relay_rate); });
+    return std::ranges::any_of(tx.vout, [&](const auto& output) { return IsDust(output, dust_relay_rate); });
 }
 
 bool PreCheckEphemeralTx(const CTransaction& tx, CFeeRate dust_relay_rate, CAmount base_fee, CAmount mod_fee, TxValidationState& state)
@@ -22,7 +22,7 @@ bool PreCheckEphemeralTx(const CTransaction& tx, CFeeRate dust_relay_rate, CAmou
 
 std::optional<Txid> CheckEphemeralSpends(const Package& package, CFeeRate dust_relay_rate, const CTxMemPool& tx_pool)
 {
-    if (!Assume(std::all_of(package.cbegin(), package.cend(), [](const auto& tx){return tx != nullptr;}))) {
+    if (!Assume(std::ranges::all_of(package, [](const auto& tx){return tx != nullptr;}))) {
         // Bail out of spend checks if caller gave us an invalid package
         return std::nullopt;
     }
