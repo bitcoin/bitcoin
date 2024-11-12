@@ -248,7 +248,8 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
 
                 CAmount amount_in{0};
                 for (int i = 0; i < num_in; ++i) {
-                    // Pop random outpoint
+                    // Pop random outpoint. We erase them to avoid double-spending
+                    // while in this loop, but later add them back (unless last_tx).
                     auto pop = outpoints.begin();
                     std::advance(pop, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, outpoints.size() - 1));
                     auto outpoint = *pop;
@@ -405,7 +406,8 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
 
                 CAmount amount_in{0};
                 for (size_t i = 0; i < num_in; ++i) {
-                    // Pop random outpoint
+                    // Pop random outpoint. We erase them to avoid double-spending
+                    // while in this loop, but later add them back (unless last_tx).
                     auto pop = outpoints.begin();
                     std::advance(pop, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, outpoints.size() - 1));
                     const auto outpoint = *pop;
