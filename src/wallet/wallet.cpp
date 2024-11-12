@@ -2693,22 +2693,36 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, const CCoinControl* c
 
         for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
             bool found = false;
-            if (nCoinType == CoinType::ONLY_FULLY_MIXED) {
-                if (!CoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue;
-                found = IsFullyMixed(COutPoint(wtxid, i));
-            } else if(nCoinType == CoinType::ONLY_READY_TO_MIX) {
-                if (!CoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue;
-                found = !IsFullyMixed(COutPoint(wtxid, i));
-            } else if(nCoinType == CoinType::ONLY_NONDENOMINATED) {
-                if (CoinJoin::IsCollateralAmount(pcoin->tx->vout[i].nValue)) continue; // do not use collateral amounts
-                found = !CoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue);
-            } else if(nCoinType == CoinType::ONLY_MASTERNODE_COLLATERAL) {
-                found = dmn_types::IsCollateralAmount(pcoin->tx->vout[i].nValue);
-            } else if(nCoinType == CoinType::ONLY_COINJOIN_COLLATERAL) {
-                found = CoinJoin::IsCollateralAmount(pcoin->tx->vout[i].nValue);
-            } else {
-                found = true;
-            }
+            switch (nCoinType) {
+                case CoinType::ONLY_FULLY_MIXED: {
+                    found = CoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue) &&
+                            IsFullyMixed(COutPoint(wtxid, i));
+                    break;
+                }
+                case CoinType::ONLY_READY_TO_MIX: {
+                    found = CoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue) &&
+                            !IsFullyMixed(COutPoint(wtxid, i));
+                    break;
+                }
+                case CoinType::ONLY_NONDENOMINATED: {
+                    // NOTE: do not use collateral amounts
+                    found = !CoinJoin::IsCollateralAmount(pcoin->tx->vout[i].nValue) &&
+                            !CoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue);
+                    break;
+                }
+                case CoinType::ONLY_MASTERNODE_COLLATERAL: {
+                    found = dmn_types::IsCollateralAmount(pcoin->tx->vout[i].nValue);
+                    break;
+                }
+                case CoinType::ONLY_COINJOIN_COLLATERAL: {
+                    found = CoinJoin::IsCollateralAmount(pcoin->tx->vout[i].nValue);
+                    break;
+                }
+                case CoinType::ALL_COINS: {
+                    found = true;
+                    break;
+                }
+            } // no default case, so the compiler can warn about missing cases
             if(!found) continue;
 
             // Only consider selected coins if add_inputs is false

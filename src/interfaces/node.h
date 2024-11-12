@@ -39,7 +39,7 @@ enum class TransactionError;
 struct CNodeStateStats;
 struct NodeContext;
 
-enum vote_signal_enum_t : uint8_t;
+enum vote_signal_enum_t : int;
 
 namespace interfaces {
 class Handler;

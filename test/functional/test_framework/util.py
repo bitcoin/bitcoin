@@ -381,19 +381,7 @@ def initialize_datadir(dirname, n, chain):
 
 
 def write_config(config_path, *, n, chain, extra_config=""):
-    # Translate chain subdirectory name to config name
-    if chain == 'testnet3':
-        chain_name_conf_arg = 'testnet'
-        chain_name_conf_section = 'test'
-        chain_name_conf_arg_value = '1'
-    elif chain == 'devnet':
-        chain_name_conf_arg = 'devnet'
-        chain_name_conf_section = 'devnet'
-        chain_name_conf_arg_value = 'devnet1'
-    else:
-        chain_name_conf_arg = chain
-        chain_name_conf_section = chain
-        chain_name_conf_arg_value = '1'
+    (chain_name_conf_arg, chain_name_conf_arg_value, chain_name_conf_section) = get_chain_conf_names(chain)
     with open(config_path, 'w', encoding='utf8') as f:
         if chain_name_conf_arg:
             f.write("{}={}\n".format(chain_name_conf_arg, chain_name_conf_arg_value))
@@ -493,6 +481,24 @@ def get_chain_folder(datadir, chain):
     except:
         pass
     return chain
+
+def get_chain_conf_names(chain):
+    """
+    Translate chain name to config names
+    """
+    if chain == 'testnet3':
+        arg = 'testnet'
+        value = '1'
+        section = 'test'
+    elif chain == 'devnet':
+        arg = 'devnet'
+        value = 'devnet1'
+        section = 'devnet'
+    else:
+        arg = chain
+        value = '1'
+        section = chain
+    return (arg, value, section)
 
 def get_bip9_details(node, key):
     """Return extra info about bip9 softfork"""

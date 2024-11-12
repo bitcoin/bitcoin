@@ -85,27 +85,13 @@ vote_signal_enum_t CGovernanceVoting::ConvertVoteSignal(const std::string& strVo
     return it->second;
 }
 
-CGovernanceVote::CGovernanceVote() :
-    fValid(true),
-    fSynced(false),
-    nVoteSignal(int(VOTE_SIGNAL_NONE)),
-    masternodeOutpoint(),
-    nParentHash(),
-    nVoteOutcome(int(VOTE_OUTCOME_NONE)),
-    nTime(0),
-    vchSig()
-{
-}
-
-CGovernanceVote::CGovernanceVote(const COutPoint& outpointMasternodeIn, const uint256& nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn) :
-    fValid(true),
-    fSynced(false),
-    nVoteSignal(eVoteSignalIn),
+CGovernanceVote::CGovernanceVote(const COutPoint& outpointMasternodeIn, const uint256& nParentHashIn,
+                                 vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn) :
     masternodeOutpoint(outpointMasternodeIn),
     nParentHash(nParentHashIn),
     nVoteOutcome(eVoteOutcomeIn),
-    nTime(GetAdjustedTime()),
-    vchSig()
+    nVoteSignal(eVoteSignalIn),
+    nTime(GetAdjustedTime())
 {
     UpdateHash();
 }
@@ -211,15 +197,15 @@ bool CGovernanceVote::IsValid(const CDeterministicMNList& tip_mn_list, bool useV
         return false;
     }
 
-    // support up to MAX_SUPPORTED_VOTE_SIGNAL, can be extended
-    if (nVoteSignal > MAX_SUPPORTED_VOTE_SIGNAL) {
-        LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- Client attempted to vote on invalid signal(%d) - %s\n", nVoteSignal, GetHash().ToString());
+    if (nVoteSignal < VOTE_SIGNAL_NONE || nVoteSignal >= VOTE_SIGNAL_UNKNOWN) {
+        LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- Client attempted to vote on invalid signal(%d) - %s\n",
+                 nVoteSignal, GetHash().ToString());
         return false;
     }
 
-    // 0=none, 1=yes, 2=no, 3=abstain. Beyond that reject votes
-    if (nVoteOutcome > 3) {
-        LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- Client attempted to vote on invalid outcome(%d) - %s\n", nVoteSignal, GetHash().ToString());
+    if (nVoteOutcome < VOTE_OUTCOME_NONE || nVoteOutcome >= VOTE_OUTCOME_UNKNOWN) {
+        LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- Client attempted to vote on invalid outcome(%d) - %s\n",
+                 nVoteOutcome, GetHash().ToString());
         return false;
     }
 

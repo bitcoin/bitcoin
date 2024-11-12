@@ -31,19 +31,19 @@ struct CActiveMasternodeInfo {
 class CActiveMasternodeManager final : public CValidationInterface
 {
 public:
-    enum masternode_state_t {
-        MASTERNODE_WAITING_FOR_PROTX,
-        MASTERNODE_POSE_BANNED,
-        MASTERNODE_REMOVED,
-        MASTERNODE_OPERATOR_KEY_CHANGED,
-        MASTERNODE_PROTX_IP_CHANGED,
-        MASTERNODE_READY,
-        MASTERNODE_ERROR,
+    enum class MasternodeState {
+        WAITING_FOR_PROTX,
+        POSE_BANNED,
+        REMOVED,
+        OPERATOR_KEY_CHANGED,
+        PROTX_IP_CHANGED,
+        READY,
+        SOME_ERROR,
     };
 
 private:
     mutable SharedMutex cs;
-    masternode_state_t m_state GUARDED_BY(cs) {MASTERNODE_WAITING_FOR_PROTX};
+    MasternodeState m_state GUARDED_BY(cs){MasternodeState::WAITING_FOR_PROTX};
     CActiveMasternodeInfo m_info GUARDED_BY(cs);
     std::string m_error GUARDED_BY(cs);
 

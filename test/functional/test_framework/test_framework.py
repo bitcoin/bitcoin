@@ -48,6 +48,7 @@ from .util import (
     check_json_precision,
     copy_datadir,
     force_finish_mnsync,
+    get_chain_conf_names,
     get_datadir_path,
     initialize_datadir,
     p2p_port,
@@ -610,19 +611,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             if entry not in ['chainstate', 'blocks', 'indexes', 'evodb']:
                 os.remove(os.path.join(new_data_dir, self.chain, entry))
 
-        # Translate chain name to config name
-        if self.chain == 'testnet3':
-            chain_name_conf_arg = 'testnet'
-            chain_name_conf_section = 'test'
-            chain_name_conf_arg_value = '1'
-        elif self.chain == 'devnet':
-            chain_name_conf_arg = 'devnet'
-            chain_name_conf_section = 'devnet'
-            chain_name_conf_arg_value = 'devnet1'
-        else:
-            chain_name_conf_arg = self.chain
-            chain_name_conf_section = self.chain
-            chain_name_conf_arg_value = '1'
+        (chain_name_conf_arg, chain_name_conf_arg_value, chain_name_conf_section) = get_chain_conf_names(self.chain)
 
         with open(os.path.join(new_data_dir, "dash.conf"), 'w', encoding='utf8') as f:
             f.write("{}={}\n".format(chain_name_conf_arg, chain_name_conf_arg_value))
