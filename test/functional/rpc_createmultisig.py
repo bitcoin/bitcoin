@@ -194,12 +194,18 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "redeemScript/witnessScript does not match scriptPubKey", node2.signrawtransactionwithkey, rawtx, priv_keys[0:nsigs-1], [prevtx_err])
 
         rawtx2 = node2.signrawtransactionwithkey(rawtx, priv_keys[0:nsigs - 1], prevtxs)
-        rawtx3 = node2.signrawtransactionwithkey(rawtx2["hex"], [priv_keys[-1]], prevtxs)
-        assert rawtx3['complete']
+        assert_equal(rawtx2["complete"], False)
+        rawtx3 = node2.signrawtransactionwithkey(rawtx, [priv_keys[-1]], prevtxs)
+        assert_equal(rawtx3["complete"], False)
+        assert_raises_rpc_error(-22, "TX decode failed", node2.combinerawtransaction, [rawtx2['hex'], rawtx3['hex'] + "00"])
+        assert_raises_rpc_error(-22, "Missing transactions", node2.combinerawtransaction, [])
+        combined_rawtx = node2.combinerawtransaction([rawtx2["hex"], rawtx3["hex"]])
 
-        tx = node0.sendrawtransaction(rawtx3["hex"], 0)
+        tx = node0.sendrawtransaction(combined_rawtx, 0)
         blk = self.generate(node0, 1)[0]
         assert tx in node0.getblock(blk)["tx"]
+
+        assert_raises_rpc_error(-25, "Input not found or already spent", node2.combinerawtransaction, [rawtx2['hex'], rawtx3['hex']])
 
         # When the wallet is enabled, assert node2 sees the incoming amount
         if self.is_wallet_compiled():
