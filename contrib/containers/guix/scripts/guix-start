@@ -25,8 +25,10 @@ if [[ ! -d "${SDK_PATH}/${XCODE_ARCHIVE}" ]]; then
     curl -L https://bitcoincore.org/depends-sources/sdks/${XCODE_ARCHIVE}.tar.gz | tar -xz -C "${SDK_PATH}"
 fi
 
+# Avoid adding duplicate safe.directory option
+git config --global --fixed-value --get safe.directory "${WORKSPACE_PATH}" || git config --global --add safe.directory "${WORKSPACE_PATH}"
+
 cd "${WORKSPACE_PATH}"
-git config --global --add safe.directory "${WORKSPACE_PATH}"
 git status >> /dev/null
 
 export HOSTS="${HOSTS:-x86_64-linux-gnu aarch64-linux-gnu riscv64-linux-gnu
