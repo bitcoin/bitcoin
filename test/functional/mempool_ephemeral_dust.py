@@ -363,7 +363,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         self.nodes[0].invalidateblock(block_res["hash"])
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"]], sync=False)
 
-        # Also should happen if dust is swept
+        # Should re-enter if dust is swept
         sweep_tx_2 = self.wallet.create_self_transfer_multi(fee_per_output=0, utxos_to_spend=dusty_tx["new_utxos"], version=3)
         self.add_output_to_create_multi_result(sweep_tx_2)
         assert_raises_rpc_error(-26, "min relay fee not met", self.nodes[0].sendrawtransaction, sweep_tx_2["hex"])
