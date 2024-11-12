@@ -232,7 +232,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
             bool last_tx = num_txs > 1 && txs.size() == num_txs - 1;
 
             // Create transaction to add to the mempool
-            const CTransactionRef tx = [&] {
+            txs.emplace_back([&] {
                 CMutableTransaction tx_mut;
                 tx_mut.version = CTransaction::CURRENT_VERSION;
                 tx_mut.nLockTime = 0;
@@ -299,8 +299,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
                     outpoints_value[COutPoint(tx->GetHash(), i)] = tx->vout[i].nValue;
                 }
                 return tx;
-            }();
-            txs.push_back(tx);
+            }());
         }
 
         if (fuzzed_data_provider.ConsumeBool()) {
@@ -392,7 +391,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
             bool last_tx = num_txs > 1 && txs.size() == num_txs - 1;
 
             // Create transaction to add to the mempool
-            const CTransactionRef tx = [&] {
+            txs.emplace_back([&] {
                 CMutableTransaction tx_mut;
                 tx_mut.version = fuzzed_data_provider.ConsumeBool() ? TRUC_VERSION : CTransaction::CURRENT_VERSION;
                 tx_mut.nLockTime = fuzzed_data_provider.ConsumeBool() ? 0 : fuzzed_data_provider.ConsumeIntegral<uint32_t>();
@@ -470,8 +469,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
                     outpoints_value[COutPoint(tx->GetHash(), i)] = tx->vout[i].nValue;
                 }
                 return tx;
-            }();
-            txs.push_back(tx);
+            }());
         }
 
         if (fuzzed_data_provider.ConsumeBool()) {
