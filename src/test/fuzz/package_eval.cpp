@@ -224,18 +224,15 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
 
         std::set<COutPoint> package_outpoints;
         while (txs.size() < num_txs) {
-
-            // Last transaction in a package needs to be a child of parents to get further in validation
-            // so the last transaction to be generated(in a >1 package) must spend all package-made outputs
-            // Note that this test currently only spends package outputs in last transaction.
-            bool last_tx = num_txs > 1 && txs.size() == num_txs - 1;
-
             // Create transaction to add to the mempool
             txs.emplace_back([&] {
                 CMutableTransaction tx_mut;
                 tx_mut.version = CTransaction::CURRENT_VERSION;
                 tx_mut.nLockTime = 0;
-                // Last tx will sweep half or more of all outpoints from package
+                // Last transaction in a package needs to be a child of parents to get further in validation
+                // so the last transaction to be generated(in a >1 package) must spend all package-made outputs
+                // Note that this test currently only spends package outputs in last transaction.
+                bool last_tx = num_txs > 1 && txs.size() == num_txs - 1;
                 const auto num_in = outpoint_to_rbf ? 2 :
                     last_tx ? fuzzed_data_provider.ConsumeIntegralInRange<int>(package_outpoints.size()/2 + 1, package_outpoints.size()) :
                     fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 4);
@@ -377,18 +374,15 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
         const auto num_txs = (size_t) fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 26);
         std::set<COutPoint> package_outpoints;
         while (txs.size() < num_txs) {
-
-            // Last transaction in a package needs to be a child of parents to get further in validation
-            // so the last transaction to be generated(in a >1 package) must spend all package-made outputs
-            // Note that this test currently only spends package outputs in last transaction.
-            bool last_tx = num_txs > 1 && txs.size() == num_txs - 1;
-
             // Create transaction to add to the mempool
             txs.emplace_back([&] {
                 CMutableTransaction tx_mut;
                 tx_mut.version = fuzzed_data_provider.ConsumeBool() ? TRUC_VERSION : CTransaction::CURRENT_VERSION;
                 tx_mut.nLockTime = fuzzed_data_provider.ConsumeBool() ? 0 : fuzzed_data_provider.ConsumeIntegral<uint32_t>();
-                // Last tx will sweep all outpoints in package
+                // Last transaction in a package needs to be a child of parents to get further in validation
+                // so the last transaction to be generated(in a >1 package) must spend all package-made outputs
+                // Note that this test currently only spends package outputs in last transaction.
+                bool last_tx = num_txs > 1 && txs.size() == num_txs - 1;
                 const auto num_in = last_tx ? package_outpoints.size()  : fuzzed_data_provider.ConsumeIntegralInRange<int>(1, mempool_outpoints.size());
                 auto num_out = fuzzed_data_provider.ConsumeIntegralInRange<int>(1, mempool_outpoints.size() * 2);
 
