@@ -470,7 +470,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         self.wallet.rescan_utxos()
         assert_equal(self.nodes[0].getrawmempool(), [])
 
-        # Other topology tests require relaxation of submitpackage topology
+        # Other topology tests (e.g., grandparents and parents both with dust) require relaxation of submitpackage topology
 
         self.restart_node(0, extra_args=[])
         self.restart_node(1, extra_args=[])
