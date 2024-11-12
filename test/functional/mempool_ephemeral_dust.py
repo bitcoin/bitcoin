@@ -462,6 +462,8 @@ class EphemeralDustTest(BitcoinTestFramework):
         # Sweeps all dust, where all dusty txs are already in-mempool
         sweep_tx = self.wallet.create_self_transfer_multi(fee_per_output=25000, utxos_to_spend=all_parent_utxos, version=2)
 
+        # N.B. Since we have multiple parents these are not propagating via 1P1C relay.
+        # minrelay being zero allows them to propagate on their own.
         res = self.nodes[0].submitpackage([dusty_tx["hex"] for dusty_tx in dusty_txs] + [sweep_tx["hex"]])
         assert_equal(res['package_msg'], "success")
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"] for dusty_tx in dusty_txs] + [sweep_tx["tx"], cancel_sweep["tx"]])
