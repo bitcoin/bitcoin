@@ -4,6 +4,7 @@
 
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
+#include <bitcoin-wallet_settings.h>
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <clientversion.h>
@@ -33,12 +34,12 @@ static void SetupWalletToolArgs(ArgsManager& argsman)
     SetupHelpOptions(argsman);
     SetupChainParamsBaseOptions(argsman);
 
-    argsman.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
-    argsman.AddArg("-wallet=<wallet-name>", "Specify wallet name", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-dumpfile=<file name>", "When used with 'dump', writes out the records to this file. When used with 'createfromdump', loads the records into a new wallet.", ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
-    argsman.AddArg("-debug=<category>", "Output debugging information (default: 0).", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-printtoconsole", "Send trace/debug info to console (default: 1 when no -debug is true, 0 otherwise).", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+    VersionSetting::Register(argsman);
+    DataDirSetting::Register(argsman);
+    WalletSetting::Register(argsman);
+    DumpFileSetting::Register(argsman);
+    DebugSetting::Register(argsman);
+    PrintToConsoleSetting::Register(argsman);
 
     argsman.AddCommand("info", "Get wallet info");
     argsman.AddCommand("create", "Create a new descriptor wallet file");
@@ -55,10 +56,10 @@ static std::optional<int> WalletAppInit(ArgsManager& args, int argc, char* argv[
         return EXIT_FAILURE;
     }
     const bool missing_args{argc < 2};
-    if (missing_args || HelpRequested(args) || args.GetBoolArg("-version", false)) {
+    if (missing_args || HelpRequested(args) || VersionSetting::Get(args)) {
         std::string strUsage = strprintf("%s bitcoin-wallet utility version", CLIENT_NAME) + " " + FormatFullVersion() + "\n";
 
-        if (args.GetBoolArg("-version", false)) {
+        if (VersionSetting::Get(args)) {
             strUsage += FormatParagraph(LicenseInfo());
         } else {
             strUsage += "\n"
@@ -79,10 +80,10 @@ static std::optional<int> WalletAppInit(ArgsManager& args, int argc, char* argv[
     }
 
     // check for printtoconsole, allow -debug
-    LogInstance().m_print_to_console = args.GetBoolArg("-printtoconsole", args.GetBoolArg("-debug", false));
+    LogInstance().m_print_to_console = PrintToConsoleSetting::Get(args, DebugSetting::Get(args));
 
     if (!CheckDataDirOption(args)) {
-        tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", args.GetArg("-datadir", ""));
+        tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", DataDirSetting::Get(args));
         return EXIT_FAILURE;
     }
     // Check for chain settings (Params() calls are only valid after this clause)

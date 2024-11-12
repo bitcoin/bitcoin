@@ -25,6 +25,7 @@
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
+#include <wallet/init_settings.h>
 #include <wallet/receive.h>
 #include <wallet/spend.h>
 #include <wallet/transaction.h>
@@ -870,7 +871,7 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
     wallet.chain().getPackageLimits(limit_ancestor_count, limit_descendant_count);
     const size_t max_ancestors = (size_t)std::max<int64_t>(1, limit_ancestor_count);
     const size_t max_descendants = (size_t)std::max<int64_t>(1, limit_descendant_count);
-    const bool fRejectLongChains = gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS);
+    const bool fRejectLongChains = WalletRejectLongChainsSetting::Get(gArgs);
 
     // Cases where we have 101+ outputs all pointing to the same destination may result in
     // privacy leaks as they will potentially be deterministically sorted. We solve that by
@@ -1383,7 +1384,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         return util::Error{TransactionErrorString(TransactionError::MAX_FEE_EXCEEDED)};
     }
 
-    if (gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS)) {
+    if (WalletRejectLongChainsSetting::Get(gArgs)) {
         // Lastly, ensure this tx will pass the mempool's chain limits
         auto result = wallet.chain().checkChainLimits(tx);
         if (!result) {

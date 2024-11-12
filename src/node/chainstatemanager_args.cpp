@@ -7,6 +7,7 @@
 #include <arith_uint256.h>
 #include <common/args.h>
 #include <common/system.h>
+#include <init_settings.h>
 #include <logging.h>
 #include <node/coins_view_args.h>
 #include <node/database_args.h>
@@ -24,12 +25,12 @@
 namespace node {
 util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManager::Options& opts)
 {
-    if (auto value{args.GetIntArg("-checkblockindex")}) {
+    if (auto value{CheckBlockIndexSettingInt::Get(args)}) {
         // Interpret bare -checkblockindex argument as 1 instead of 0.
-        opts.check_block_index = args.GetArg("-checkblockindex")->empty() ? 1 : *value;
+        opts.check_block_index = CheckBlockIndexSetting::Get(args)->empty() ? 1 : *value;
     }
 
-    if (auto value{args.GetArg("-minimumchainwork")}) {
+    if (auto value{MinimumChainWorkSetting::Get(args)}) {
         if (auto min_work{uint256::FromUserHex(*value)}) {
             opts.minimum_chain_work = UintToArith256(*min_work);
         } else {
@@ -37,7 +38,7 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
         }
     }
 
-    if (auto value{args.GetArg("-assumevalid")}) {
+    if (auto value{AssumeValidSetting::Get(args)}) {
         if (auto block_hash{uint256::FromUserHex(*value)}) {
             opts.assumed_valid_block = *block_hash;
         } else {
@@ -45,12 +46,12 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
         }
     }
 
-    if (auto value{args.GetIntArg("-maxtipage")}) opts.max_tip_age = std::chrono::seconds{*value};
+    if (auto value{MaxTipAgeSetting::Get(args)}) opts.max_tip_age = std::chrono::seconds{*value};
 
     ReadDatabaseArgs(args, opts.coins_db);
     ReadCoinsViewArgs(args, opts.coins_view);
 
-    int script_threads = args.GetIntArg("-par", DEFAULT_SCRIPTCHECK_THREADS);
+    int script_threads = ParSetting::Get(args);
     if (script_threads <= 0) {
         // -par=0 means autodetect (number of cores - 1 script threads)
         // -par=-n means "leave n cores free" (number of cores - n - 1 script threads)
@@ -59,7 +60,7 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
     // Subtract 1 because the main thread counts towards the par threads.
     opts.worker_threads_num = script_threads - 1;
 
-    if (auto max_size = args.GetIntArg("-maxsigcachesize")) {
+    if (auto max_size = MaxSigCacheSizeSetting::Get(args)) {
         // 1. When supplied with a max_size of 0, both the signature cache and
         //    script execution cache create the minimum possible cache (2
         //    elements). Therefore, we can use 0 as a floor here.

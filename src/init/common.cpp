@@ -6,6 +6,8 @@
 
 #include <clientversion.h>
 #include <common/args.h>
+#include <init/common_settings.h>
+#include <init_settings.h>
 #include <logging.h>
 #include <node/interface_ui.h>
 #include <tinyformat.h>
@@ -26,40 +28,38 @@ using util::SplitString;
 namespace init {
 void AddLoggingArgs(ArgsManager& argsman)
 {
-    argsman.AddArg("-debuglogfile=<file>", strprintf("Specify location of debug log file (default: %s). Relative paths will be prefixed by a net-specific datadir location. Pass -nodebuglogfile to disable writing the log to a file.", DEFAULT_DEBUGLOGFILE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-debug=<category>", strprintf("Output debug and trace logging (default: -nodebug, supplying <category> is optional). "
-        "If <category> is not supplied or if <category> is 1 or \"all\", output all debug logging. If <category> is 0 or \"none\", any other categories are ignored. Other valid values for <category> are: %s. This option can be specified multiple times to output multiple categories.", LogInstance().LogCategoriesString()),
-        ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-debugexclude=<category>", "Exclude debug and trace logging for a category. Can be used in conjunction with -debug=1 to output debug and trace logging for all categories except the specified category. This option can be specified multiple times to exclude multiple categories. This takes priority over \"-debug\"", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-logips", strprintf("Include IP addresses in debug output (default: %u)", DEFAULT_LOGIPS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-loglevel=<level>|<category>:<level>", strprintf("Set the global or per-category severity level for logging categories enabled with the -debug configuration option or the logging RPC. Possible values are %s (default=%s). The following levels are always logged: error, warning, info. If <category>:<level> is supplied, the setting will override the global one and may be specified multiple times to set multiple category-specific levels. <category> can be: %s.", LogInstance().LogLevelsString(), LogInstance().LogLevelToStr(BCLog::DEFAULT_LOG_LEVEL), LogInstance().LogCategoriesString()), ArgsManager::DISALLOW_NEGATION | ArgsManager::DISALLOW_ELISION | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-logtimestamps", strprintf("Prepend debug output with timestamp (default: %u)", DEFAULT_LOGTIMESTAMPS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-logthreadnames", strprintf("Prepend debug output with name of the originating thread (default: %u)", DEFAULT_LOGTHREADNAMES), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-logsourcelocations", strprintf("Prepend debug output with name of the originating source location (source file, line number and function name) (default: %u)", DEFAULT_LOGSOURCELOCATIONS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-logtimemicros", strprintf("Add microsecond precision to debug timestamps (default: %u)", DEFAULT_LOGTIMEMICROS), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-loglevelalways", strprintf("Always prepend a category and level (default: %u)", DEFAULT_LOGLEVELALWAYS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-logratelimit", strprintf("Apply rate limiting to unconditional logging to mitigate disk-filling attacks (default: %u)", BCLog::DEFAULT_LOGRATELIMIT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-printtoconsole", "Send trace/debug info to console (default: 1 when no -daemon. To disable logging to file, set -nodebuglogfile)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-shrinkdebugfile", "Shrink debug.log file on client startup (default: 1 when no -debug)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+    DebugLogFileSetting::Register(argsman);
+    DebugSetting::Register(argsman);
+    DebugExcludeSetting::Register(argsman);
+    LogIpsSetting::Register(argsman);
+    LogLevelSetting::Register(argsman);
+    LogTimestampsSetting::Register(argsman);
+    LogThreadNamesSetting::Register(argsman);
+    LogSourceLocationsSetting::Register(argsman);
+    LogTimeMicrosSetting::Register(argsman);
+    LogLevelAlwaysSetting::Register(argsman);
+    LogratelimitSetting::Register(argsman);
+    PrintToConsoleSetting::Register(argsman);
+    ShrinkDebugFileSetting::Register(argsman);
 }
 
 void SetLoggingOptions(const ArgsManager& args)
 {
-    LogInstance().m_print_to_file = !args.IsArgNegated("-debuglogfile");
-    LogInstance().m_file_path = AbsPathForConfigVal(args, args.GetPathArg("-debuglogfile", DEFAULT_DEBUGLOGFILE));
-    LogInstance().m_print_to_console = args.GetBoolArg("-printtoconsole", !args.GetBoolArg("-daemon", false));
-    LogInstance().m_log_timestamps = args.GetBoolArg("-logtimestamps", DEFAULT_LOGTIMESTAMPS);
-    LogInstance().m_log_time_micros = args.GetBoolArg("-logtimemicros", DEFAULT_LOGTIMEMICROS);
-    LogInstance().m_log_threadnames = args.GetBoolArg("-logthreadnames", DEFAULT_LOGTHREADNAMES);
-    LogInstance().m_log_sourcelocations = args.GetBoolArg("-logsourcelocations", DEFAULT_LOGSOURCELOCATIONS);
-    LogInstance().m_always_print_category_level = args.GetBoolArg("-loglevelalways", DEFAULT_LOGLEVELALWAYS);
+    LogInstance().m_print_to_file = !DebugLogFileSetting::Value(args).isFalse();
+    LogInstance().m_file_path = AbsPathForConfigVal(args, DebugLogFileSetting::Get(args));
+    LogInstance().m_print_to_console = PrintToConsoleSetting::Get(args, !DaemonSetting::Get(args, false));
+    LogInstance().m_log_timestamps = LogTimestampsSetting::Get(args);
+    LogInstance().m_log_time_micros = LogTimeMicrosSetting::Get(args);
+    LogInstance().m_log_threadnames = LogThreadNamesSetting::Get(args);
+    LogInstance().m_log_sourcelocations = LogSourceLocationsSetting::Get(args);
+    LogInstance().m_always_print_category_level = LogLevelAlwaysSetting::Get(args);
 
-    fLogIPs = args.GetBoolArg("-logips", DEFAULT_LOGIPS);
+    fLogIPs = LogIpsSetting::Get(args);
 }
 
 util::Result<void> SetLoggingLevel(const ArgsManager& args)
 {
-        for (const std::string& level_str : args.GetArgs("-loglevel")) {
+        for (const std::string& level_str : LogLevelSetting::Get(args)) {
             if (level_str.find_first_of(':', 3) == std::string::npos) {
                 // user passed a global log level, i.e. -loglevel=<level>
                 if (!LogInstance().SetLogLevel(level_str)) {
@@ -78,7 +78,7 @@ util::Result<void> SetLoggingLevel(const ArgsManager& args)
 
 util::Result<void> SetLoggingCategories(const ArgsManager& args)
 {
-        const std::vector<std::string> categories = args.GetArgs("-debug");
+        const std::vector<std::string> categories = DebugSetting::Get(args);
 
         // Special-case: Disregard any debugging categories appearing before -debug=0/none
         const auto last_negated = std::find_if(categories.rbegin(), categories.rend(),
@@ -93,7 +93,7 @@ util::Result<void> SetLoggingCategories(const ArgsManager& args)
         }
 
     // Now remove the logging categories which were explicitly excluded
-    for (const std::string& cat : args.GetArgs("-debugexclude")) {
+    for (const std::string& cat : DebugExcludeSetting::Get(args)) {
         if (!LogInstance().DisableCategory(cat)) {
             return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat)};
         }
@@ -104,7 +104,7 @@ util::Result<void> SetLoggingCategories(const ArgsManager& args)
 bool StartLogging(const ArgsManager& args)
 {
     if (LogInstance().m_print_to_file) {
-        if (args.GetBoolArg("-shrinkdebugfile", LogInstance().DefaultShrinkDebugFile())) {
+        if (ShrinkDebugFileSetting::Get(args)) {
             // Do this first since it both loads a bunch of debug.log into memory,
             // and because this needs to happen before any other debug.log printing
             LogInstance().ShrinkDebugFile();
@@ -123,13 +123,13 @@ bool StartLogging(const ArgsManager& args)
 
     // Only log conf file usage message if conf file actually exists.
     fs::path config_file_path = args.GetConfigFilePath();
-    if (args.IsArgNegated("-conf")) {
+    if (ConfSetting::Value(args).isFalse()) {
         LogInfo("Config file: <disabled>");
     } else if (fs::is_directory(config_file_path)) {
         LogWarning("Config file: %s (is directory, not file)", fs::PathToString(config_file_path));
     } else if (fs::exists(config_file_path)) {
         LogInfo("Config file: %s", fs::PathToString(config_file_path));
-    } else if (args.IsArgSet("-conf")) {
+    } else if (!ConfSetting::Value(args).isNull()) {
         InitWarning(strprintf(_("The specified config file %s does not exist"), fs::PathToString(config_file_path)));
     } else {
         // Not categorizing as "Warning" because it's the default behavior

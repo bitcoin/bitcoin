@@ -4,11 +4,13 @@
 
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
+#include <bitcoin_settings.h>
 #include <clientversion.h>
 #include <common/args.h>
 #include <common/system.h>
-#include <util/fs.h>
+#include <init_settings.h>
 #include <util/exec.h>
+#include <util/fs.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 
@@ -168,7 +170,7 @@ bool UseMultiprocess(const CommandLine& cmd)
 
     // If any -ipc* options are set these need to be processed by a
     // multiprocess-capable binary.
-    return args.IsArgSet("-ipcbind") || args.IsArgSet("-ipcconnect") || args.IsArgSet("-ipcfd");
+    return !IpcBindSetting::Value(args).isNull() || !IpcconnectSetting::Value(args).isNull() || !IpcfdSetting::Value(args).isNull();
 }
 
 //! Execute the specified bitcoind, bitcoin-qt or other command line in `args`
