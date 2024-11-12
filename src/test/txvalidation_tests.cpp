@@ -117,7 +117,8 @@ BOOST_FIXTURE_TEST_CASE(ephemeral_tests, RegTestingSetup)
     TestMemPoolEntryHelper entry;
     CTxMemPool::setEntries empty_ancestors;
 
-    CFeeRate minrelay(1000);
+    // Arbitrary non-0 feerate for these tests
+    CFeeRate dustrelay(DUST_RELAY_TX_FEE);
 
     // Basic transaction with dust
     auto grandparent_tx_1 = make_ephemeral_tx(random_outpoints(1), /*version=*/2);
@@ -129,14 +130,14 @@ BOOST_FIXTURE_TEST_CASE(ephemeral_tests, RegTestingSetup)
     // We first start with nothing "in the mempool", using package checks
 
     // Trivial single transaction with no dust
-    BOOST_CHECK(!CheckEphemeralSpends({dust_spend}, minrelay, pool));
+    BOOST_CHECK(!CheckEphemeralSpends({dust_spend}, dustrelay, pool));
 
     // Now with dust, ok because the tx has no dusty parents
-    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1}, minrelay, pool));
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1}, dustrelay, pool));
 
     // Dust checks pass
     BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, dust_spend}, CFeeRate(0), pool));
-    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, dust_spend}, minrelay, pool));
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, dust_spend}, dustrelay, pool));
 
     auto dust_non_spend = make_tx({COutPoint{dust_txid, EPHEMERAL_DUST_INDEX - 1}}, /*version=*/2);
 
@@ -144,73 +145,73 @@ BOOST_FIXTURE_TEST_CASE(ephemeral_tests, RegTestingSetup)
     const auto dust_non_spend_txid{dust_non_spend->GetHash()};
     const Txid null_txid;
     assert(dust_non_spend_txid != null_txid);
-    BOOST_CHECK_EQUAL(CheckEphemeralSpends({grandparent_tx_1, dust_non_spend, dust_spend}, minrelay, pool).value_or(null_txid), dust_non_spend_txid);
-    BOOST_CHECK_EQUAL(CheckEphemeralSpends({grandparent_tx_1, dust_spend, dust_non_spend}, minrelay, pool).value_or(null_txid), dust_non_spend_txid);
-    BOOST_CHECK_EQUAL(CheckEphemeralSpends({grandparent_tx_1, dust_non_spend}, minrelay, pool).value_or(null_txid), dust_non_spend_txid);
+    BOOST_CHECK_EQUAL(CheckEphemeralSpends({grandparent_tx_1, dust_non_spend, dust_spend}, dustrelay, pool).value_or(null_txid), dust_non_spend_txid);
+    BOOST_CHECK_EQUAL(CheckEphemeralSpends({grandparent_tx_1, dust_spend, dust_non_spend}, dustrelay, pool).value_or(null_txid), dust_non_spend_txid);
+    BOOST_CHECK_EQUAL(CheckEphemeralSpends({grandparent_tx_1, dust_non_spend}, dustrelay, pool).value_or(null_txid), dust_non_spend_txid);
 
     auto grandparent_tx_2 = make_ephemeral_tx(random_outpoints(1), /*version=*/2);
     const auto dust_txid_2 = grandparent_tx_2->GetHash();
 
     // Spend dust from one but not another is ok, as long as second grandparent has no child
-    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_spend}, minrelay, pool));
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_spend}, dustrelay, pool));
 
     auto dust_non_spend_both_parents = make_tx({COutPoint{dust_txid, EPHEMERAL_DUST_INDEX}, COutPoint{dust_txid_2, EPHEMERAL_DUST_INDEX - 1}}, /*version=*/2);
     // But if we spend from the parent, it must spend dust
-    BOOST_CHECK_EQUAL(CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_non_spend_both_parents}, minrelay, pool).value_or(null_txid), dust_non_spend_both_parents->GetHash());
+    BOOST_CHECK_EQUAL(CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_non_spend_both_parents}, dustrelay, pool).value_or(null_txid), dust_non_spend_both_parents->GetHash());
 
     auto dust_spend_both_parents = make_tx({COutPoint{dust_txid, EPHEMERAL_DUST_INDEX}, COutPoint{dust_txid_2, EPHEMERAL_DUST_INDEX}}, /*version=*/2);
-    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_spend_both_parents}, minrelay, pool));
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_spend_both_parents}, dustrelay, pool));
 
     // Spending other outputs is also correct, as long as the dusty one is spent
     const std::vector<COutPoint> all_outpoints{COutPoint(dust_txid, 0), COutPoint(dust_txid, 1), COutPoint(dust_txid, 2),
         COutPoint(dust_txid_2, 0), COutPoint(dust_txid_2, 1), COutPoint(dust_txid_2, 2)};
     auto dust_spend_all_outpoints = make_tx(all_outpoints, /*version=*/2);
-    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_spend_all_outpoints}, minrelay, pool));
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_spend_all_outpoints}, dustrelay, pool));
 
     // 2 grandparents with dust <- 1 dust-spending parent with dust <- child with no dust
     auto parent_with_dust = make_ephemeral_tx({COutPoint{dust_txid, EPHEMERAL_DUST_INDEX}, COutPoint{dust_txid_2, EPHEMERAL_DUST_INDEX}}, /*version=*/2);
     // Ok for parent to have dust
-    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, parent_with_dust}, minrelay, pool));
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, parent_with_dust}, dustrelay, pool));
     auto child_no_dust = make_tx({COutPoint{parent_with_dust->GetHash(), EPHEMERAL_DUST_INDEX}}, /*version=*/2);
-    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, parent_with_dust, child_no_dust}, minrelay, pool));
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, parent_with_dust, child_no_dust}, dustrelay, pool));
 
     // 2 grandparents with dust <- 1 dust-spending parent with dust <- child with dust
     auto child_with_dust = make_ephemeral_tx({COutPoint{parent_with_dust->GetHash(), EPHEMERAL_DUST_INDEX}}, /*version=*/2);
-    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, parent_with_dust, child_with_dust}, minrelay, pool));
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, parent_with_dust, child_with_dust}, dustrelay, pool));
 
     // Tests with parents in mempool
 
     // Nothing in mempool, this should pass for any transaction
-    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1}, minrelay, pool));
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1}, dustrelay, pool));
 
     // Add first grandparent to mempool and fetch entry
     pool.addUnchecked(entry.FromTx(grandparent_tx_1));
 
     // Ignores ancestors that aren't direct parents
-    BOOST_CHECK(!CheckEphemeralSpends({child_no_dust}, minrelay, pool));
+    BOOST_CHECK(!CheckEphemeralSpends({child_no_dust}, dustrelay, pool));
 
     // Valid spend of dust with grandparent in mempool
-    BOOST_CHECK(!CheckEphemeralSpends({parent_with_dust}, minrelay, pool));
+    BOOST_CHECK(!CheckEphemeralSpends({parent_with_dust}, dustrelay, pool));
 
     // Second grandparent in same package
-    BOOST_CHECK(!CheckEphemeralSpends({parent_with_dust, grandparent_tx_2}, minrelay, pool));
+    BOOST_CHECK(!CheckEphemeralSpends({parent_with_dust, grandparent_tx_2}, dustrelay, pool));
     // Order in package doesn't matter
-    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_2, parent_with_dust}, minrelay, pool));
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_2, parent_with_dust}, dustrelay, pool));
 
     // Add second grandparent to mempool
     pool.addUnchecked(entry.FromTx(grandparent_tx_2));
 
     // Only spends single dust out of two direct parents
-    BOOST_CHECK_EQUAL(CheckEphemeralSpends({dust_non_spend_both_parents}, minrelay, pool).value_or(null_txid), dust_non_spend_both_parents->GetHash());
+    BOOST_CHECK_EQUAL(CheckEphemeralSpends({dust_non_spend_both_parents}, dustrelay, pool).value_or(null_txid), dust_non_spend_both_parents->GetHash());
 
     // Spends both parents' dust
-    BOOST_CHECK(!CheckEphemeralSpends({parent_with_dust}, minrelay, pool));
+    BOOST_CHECK(!CheckEphemeralSpends({parent_with_dust}, dustrelay, pool));
 
     // Now add dusty parent to mempool
     pool.addUnchecked(entry.FromTx(parent_with_dust));
 
     // Passes dust checks even with non-parent ancestors
-    BOOST_CHECK(!CheckEphemeralSpends({child_no_dust}, minrelay, pool));
+    BOOST_CHECK(!CheckEphemeralSpends({child_no_dust}, dustrelay, pool));
 }
 
 BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
