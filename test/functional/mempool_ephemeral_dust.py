@@ -61,7 +61,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         self.test_non_truc()
         self.test_unspent_ephemeral()
         self.test_reorgs()
-        self.test_free_relay()
+        self.test_no_minrelay_fee()
 
     def test_normal_dust(self):
         self.log.info("Create 0-value dusty output, show that it works inside truc when spent in package")
@@ -401,7 +401,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         self.sync_all()
 
     # N.B. this extra_args can be removed post cluster mempool
-    def test_free_relay(self):
+    def test_no_minrelay_fee(self):
         self.log.info("Test that ephemeral dust works in non-TRUC contexts when there's no minrelay requirement")
 
         # Note: since minrelay is 0, it is not testing 1P1C relay
