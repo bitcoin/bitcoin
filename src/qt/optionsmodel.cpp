@@ -9,6 +9,7 @@
 #include <qt/bitcoinunits.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
+#include <wallet/init_settings.h>
 
 #include <common/args.h>
 #include <interfaces/node.h>
@@ -717,7 +718,7 @@ bool OptionsModel::isRestartRequired() const
 
 bool OptionsModel::hasSigner()
 {
-    return gArgs.GetArg("-signer", "") != "";
+    return wallet::SignerSetting::Get(gArgs) != "";
 }
 
 void OptionsModel::checkAndMigrate()
