@@ -82,7 +82,7 @@ static bool CheckOrphanBehavior(node::TxDownloadManagerImpl& txdownload_impl, co
     }
 
     if (expect_orphan != txdownload_impl.m_orphanage.HaveTx(tx->GetWitnessHash())) {
-        err_msg = strprintf("unexpectedly %s tx in orpanage", expect_orphan ? "did not find" : "found");
+        err_msg = strprintf("unexpectedly %s tx in orphanage", expect_orphan ? "did not find" : "found");
         return false;
     }
     if (expect_keep != ret.m_should_add_extra_compact_tx) {
