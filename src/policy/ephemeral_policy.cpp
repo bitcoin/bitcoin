@@ -72,6 +72,10 @@ std::optional<Txid> CheckEphemeralSpends(const Package& package, CFeeRate dust_r
             processed_parent_set.insert(parent_txid);
         }
 
+        if (unspent_parent_dust.empty()) {
+            continue;
+        }
+
         // Now that we have gathered parents' dust, make sure it's spent
         // by the child
         for (const auto& tx_input : tx->vin) {
