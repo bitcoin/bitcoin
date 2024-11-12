@@ -407,7 +407,7 @@ FUZZ_TARGET(clusterlin_depgraph_serialization)
     SanityCheck(depgraph);
 
     // Verify the graph is a DAG.
-    assert(IsAcyclic(depgraph));
+    assert(depgraph.IsAcyclic());
 }
 
 FUZZ_TARGET(clusterlin_components)
