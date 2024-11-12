@@ -15,7 +15,7 @@
  * set.
 
  * This is ensured by requiring:
- * - CheckValidEphemeralTx checks are respected
+ * - PreCheckEphemeralTx checks are respected
  * - The parent has no child (and 0-fee as implied above to disincentivize mining)
  * - OR the parent transaction has exactly one child, and the dust is spent by that child
  *
@@ -43,7 +43,7 @@ bool HasDust(const CTransactionRef& tx, CFeeRate dust_relay_rate);
  * Does context-less checks about a single transaction.
  * Returns false if the fee is non-zero and dust exists, populating state. True otherwise.
  */
-bool CheckValidEphemeralTx(const CTransactionRef& tx, CFeeRate dust_relay_rate, CAmount base_fee, CAmount mod_fee, TxValidationState& state);
+bool PreCheckEphemeralTx(const CTransactionRef& tx, CFeeRate dust_relay_rate, CAmount base_fee, CAmount mod_fee, TxValidationState& state);
 
 /** Must be called for each transaction(package) if any dust is in the package.
  *  Checks that each transaction's parents have their dust spent by the child,
