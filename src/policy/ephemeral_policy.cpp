@@ -33,7 +33,6 @@ std::optional<Txid> CheckEphemeralSpends(const Package& package, CFeeRate dust_r
     }
 
     for (const auto& tx : package) {
-        Txid txid = tx->GetHash();
         std::unordered_set<Txid, SaltedTxidHasher> processed_parent_set;
         std::unordered_set<COutPoint, SaltedOutpointHasher> unspent_parent_dust;
 
@@ -70,7 +69,7 @@ std::optional<Txid> CheckEphemeralSpends(const Package& package, CFeeRate dust_r
         }
 
         if (!unspent_parent_dust.empty()) {
-            return txid;
+            return tx->GetHash();
         }
     }
 
