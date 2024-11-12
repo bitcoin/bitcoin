@@ -22,7 +22,6 @@ class CConnman;
 class CDeterministicMN;
 class CMasternodeMetaMan;
 class CSporkManager;
-class UniValue;
 
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 

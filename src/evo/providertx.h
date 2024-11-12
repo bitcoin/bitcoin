@@ -17,8 +17,6 @@
 #include <univalue.h>
 #include <util/underlying.h>
 
-class CBlockIndex;
-class CCoinsViewCache;
 class TxValidationState;
 
 class CProRegTx

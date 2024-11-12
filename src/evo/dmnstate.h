@@ -5,12 +5,12 @@
 #ifndef BITCOIN_EVO_DMNSTATE_H
 #define BITCOIN_EVO_DMNSTATE_H
 
-#include <crypto/common.h>
 #include <bls/bls.h>
-#include <pubkey.h>
-#include <netaddress.h>
-#include <script/script.h>
+#include <crypto/sha256.h>
 #include <evo/providertx.h>
+#include <netaddress.h>
+#include <pubkey.h>
+#include <script/script.h>
 
 #include <memory>
 #include <utility>

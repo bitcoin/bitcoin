@@ -12,7 +12,6 @@ class CBLSWorker;
 class CConnman;
 class ChainstateManager;
 class CDeterministicMNManager;
-class CDBWrapper;
 class CEvoDB;
 class CMasternodeMetaMan;
 class CMasternodeSync;

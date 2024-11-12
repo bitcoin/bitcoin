@@ -100,7 +100,6 @@ bool CheckCbTxBestChainlock(const CBlock& block, const CBlockIndex* pindexPrev,
 bool CalcCbTxBestChainlock(const llmq::CChainLocksHandler& chainlock_handler, const CBlockIndex* pindexPrev,
                            uint32_t& bestCLHeightDiff, CBLSSignature& bestCLSignature);
 
-std::optional<CCbTx> GetCoinbaseTx(const CBlockIndex* pindex);
 std::optional<std::pair<CBLSSignature, uint32_t>> GetNonNullCoinbaseChainlock(const CBlockIndex* pindex);
 
 #endif // BITCOIN_EVO_CBTX_H

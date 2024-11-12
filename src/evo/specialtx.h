@@ -11,7 +11,6 @@
 #include <uint256.h>
 #include <version.h>
 
-#include <string_view>
 #include <optional>
 #include <vector>
 

@@ -7,9 +7,7 @@
 
 #include <unordered_lru_cache.h>
 
-#include <chain.h>
-#include <consensus/params.h>
-#include <primitives/block.h>
+#include <llmq/params.h>
 #include <protocol.h>
 #include <saltedhasher.h>
 #include <sync.h>
@@ -19,9 +17,10 @@
 #include <optional>
 
 class BlockValidationState;
+class CBlock;
+class CBlockIndex;
 class CChain;
 class CChainState;
-class CConnman;
 class CDataStream;
 class CDeterministicMNManager;
 class CEvoDB;

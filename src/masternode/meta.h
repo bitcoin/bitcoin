@@ -7,14 +7,17 @@
 
 #include <serialize.h>
 #include <sync.h>
+#include <threadsafety.h>
 #include <uint256.h>
 
-#include <univalue.h>
-
 #include <atomic>
+#include <map>
 #include <memory>
+#include <vector>
 
 class CConnman;
+class UniValue;
+
 template<typename T>
 class CFlatDB;
 

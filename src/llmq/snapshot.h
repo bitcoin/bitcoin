@@ -10,16 +10,16 @@
 #include <llmq/params.h>
 #include <saltedhasher.h>
 #include <serialize.h>
-#include <univalue.h>
+#include <sync.h>
+#include <threadsafety.h>
 #include <unordered_lru_cache.h>
 #include <util/irange.h>
 
 #include <optional>
 
 class CBlockIndex;
-class CDeterministicMN;
-class CDeterministicMNList;
-class CEvoDb;
+class CEvoDB;
+class UniValue;
 
 namespace llmq {
 class CQuorumBlockProcessor;

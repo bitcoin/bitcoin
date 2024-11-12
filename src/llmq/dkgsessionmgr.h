@@ -104,8 +104,6 @@ private:
     void MigrateDKG();
     void CleanupCache() const;
 };
-
-bool IsQuorumDKGEnabled(const CSporkManager& sporkman);
 } // namespace llmq
 
 #endif // BITCOIN_LLMQ_DKGSESSIONMGR_H

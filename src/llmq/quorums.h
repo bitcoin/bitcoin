@@ -5,17 +5,16 @@
 #ifndef BITCOIN_LLMQ_QUORUMS_H
 #define BITCOIN_LLMQ_QUORUMS_H
 
-#include <chain.h>
-#include <consensus/params.h>
-#include <saltedhasher.h>
-#include <threadinterrupt.h>
-#include <unordered_lru_cache.h>
+#include <llmq/params.h>
 
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
-#include <protocol.h>
-
+#include <ctpl_stl.h>
 #include <gsl/pointers.h>
+#include <protocol.h>
+#include <saltedhasher.h>
+#include <threadinterrupt.h>
+#include <unordered_lru_cache.h>
 
 #include <atomic>
 #include <map>
@@ -23,6 +22,7 @@
 
 class CActiveMasternodeManager;
 class CBlockIndex;
+class CChain;
 class CChainState;
 class CConnman;
 class CDataStream;
