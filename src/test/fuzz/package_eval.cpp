@@ -317,11 +317,6 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
             }
         }
 
-        // Remember all added transactions
-        std::set<CTransactionRef> added;
-        auto txr = std::make_shared<TransactionsDelta>(added);
-        node.validation_signals->RegisterSharedValidationInterface(txr);
-
         auto single_submit = txs.size() == 1;
 
         const auto result_package = WITH_LOCK(::cs_main,
@@ -339,7 +334,6 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
         }
 
         node.validation_signals->SyncWithValidationInterfaceQueue();
-        node.validation_signals->UnregisterSharedValidationInterface(txr);
 
         CheckMempoolEphemeralInvariants(tx_pool);
     }
