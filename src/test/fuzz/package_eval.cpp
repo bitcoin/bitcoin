@@ -217,11 +217,10 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
         std::vector<CTransactionRef> txs;
 
         // Find something we may want to double-spend with two input single tx
-        std::optional<COutPoint> outpoint_to_rbf{GetChildEvictingPrevout(tx_pool)};
-        bool should_rbf_eph_spend = outpoint_to_rbf && fuzzed_data_provider.ConsumeBool();
+        std::optional<COutPoint> outpoint_to_rbf{fuzzed_data_provider.ConsumeBool() ? GetChildEvictingPrevout(tx_pool) : std::nullopt};
 
         // Make small packages
-        const auto num_txs = should_rbf_eph_spend ? 1 : (size_t) fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 4);
+        const auto num_txs = outpoint_to_rbf ? 1 : (size_t) fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 4);
 
         std::set<COutPoint> package_outpoints;
         while (txs.size() < num_txs) {
@@ -237,10 +236,10 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
                 tx_mut.version = CTransaction::CURRENT_VERSION;
                 tx_mut.nLockTime = 0;
                 // Last tx will sweep half or more of all outpoints from package
-                const auto num_in = should_rbf_eph_spend ? 2 :
+                const auto num_in = outpoint_to_rbf ? 2 :
                     last_tx ? fuzzed_data_provider.ConsumeIntegralInRange<int>(package_outpoints.size()/2 + 1, package_outpoints.size()) :
                     fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 4);
-                auto num_out = should_rbf_eph_spend ? 1 : fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 4);
+                const auto num_out = outpoint_to_rbf ? 1 : fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 4);
 
                 auto& outpoints = last_tx ? package_outpoints : mempool_outpoints;
 
@@ -254,7 +253,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
                     std::advance(pop, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, outpoints.size() - 1));
                     auto outpoint = *pop;
 
-                    if (i == 0 && should_rbf_eph_spend) {
+                    if (i == 0 && outpoint_to_rbf) {
                         outpoint = *outpoint_to_rbf;
                         outpoints.erase(outpoint);
                     } else {
@@ -278,7 +277,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
                 }
 
                 // Note output amounts can naturally drop to dust on their own.
-                if (!should_rbf_eph_spend && fuzzed_data_provider.ConsumeBool()) {
+                if (!outpoint_to_rbf && fuzzed_data_provider.ConsumeBool()) {
                     uint32_t dust_index = fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(0, num_out);
                     tx_mut.vout.insert(tx_mut.vout.begin() + dust_index, CTxOut(0, P2WSH_EMPTY));
                 }
