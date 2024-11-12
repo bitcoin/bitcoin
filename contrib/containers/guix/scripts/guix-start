@@ -17,6 +17,7 @@ export SDK_PATH="${SDK_PATH:-${WORKSPACE_PATH}/depends/SDKs}"
 
 # Check if macOS SDK is present, if not, download it
 if [[ ! -d "${SDK_PATH}/${XCODE_ARCHIVE}" ]]; then
+    echo "Preparing macOS SDK..."
     mkdir -p "${SDK_PATH}"
     curl -L https://bitcoincore.org/depends-sources/sdks/${XCODE_ARCHIVE}.tar.gz | tar -xz -C "${SDK_PATH}"
 fi
@@ -24,7 +25,8 @@ fi
 # Add safe.directory option only when WORKSPACE_PATH was specified via cmd-line arguments (happens in CI)
 if [[ -n "${1}" ]]; then
     # Avoid adding duplicates
-    git config --global --fixed-value --get safe.directory "${WORKSPACE_PATH}" || git config --global --add safe.directory "${WORKSPACE_PATH}"
+    git config --global --fixed-value --get safe.directory "${WORKSPACE_PATH}" || \
+        (echo "Adding safe.directory" && git config --global --add safe.directory "${WORKSPACE_PATH}")
 fi
 
 cd "${WORKSPACE_PATH}"
