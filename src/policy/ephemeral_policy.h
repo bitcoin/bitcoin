@@ -43,14 +43,14 @@ class TxValidationState;
 
 /** Must be called for each transaction once transaction fees are known.
  * Does context-less checks about a single transaction.
- * Returns false if the fee is non-zero and dust exists, populating state. True otherwise.
+ * @returns false if the fee is non-zero and dust exists, populating state. True otherwise.
  */
 bool PreCheckEphemeralTx(const CTransaction& tx, CFeeRate dust_relay_rate, CAmount base_fee, CAmount mod_fee, TxValidationState& state);
 
 /** Must be called for each transaction(package) if any dust is in the package.
  *  Checks that each transaction's parents have their dust spent by the child,
  *  where parents are either in the mempool or in the package itself.
- *  The function returns std::nullopt if all dust is properly spent, or the txid of the violating child spend.
+ *  @returns std::nullopt if all dust is properly spent, or the txid of the violating child spend.
  */
 std::optional<Txid> CheckEphemeralSpends(const Package& package, CFeeRate dust_relay_rate, const CTxMemPool& tx_pool);
 
