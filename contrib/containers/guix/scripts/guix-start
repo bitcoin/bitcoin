@@ -4,8 +4,8 @@ set -eo pipefail
 
 WORKSPACE_PATH="${1:-$(pwd)}"
 
-if [[ ! -d "$WORKSPACE_PATH" ]]; then
-    echo "$0: $WORKSPACE_PATH is not a valid directory, exiting!"
+if [[ ! -d "${WORKSPACE_PATH}" || ! "${WORKSPACE_PATH}" = /* || ! -f "${WORKSPACE_PATH}/contrib/guix/guix-build" ]]; then
+    echo "${0}: ${WORKSPACE_PATH} is not a valid directory, exiting!"
     exit 1
 fi
 
