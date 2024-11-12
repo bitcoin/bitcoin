@@ -401,13 +401,42 @@ FUZZ_TARGET(clusterlin_depgraph_serialization)
     // Construct a graph by deserializing.
     SpanReader reader(buffer);
     DepGraph<TestBitSet> depgraph;
+    ClusterIndex par_code{0}, chl_code{0};
     try {
-        reader >> Using<DepGraphFormatter>(depgraph);
+        reader >> Using<DepGraphFormatter>(depgraph) >> VARINT(par_code) >> VARINT(chl_code);
     } catch (const std::ios_base::failure&) {}
     SanityCheck(depgraph);
 
     // Verify the graph is a DAG.
-    assert(IsAcyclic(depgraph));
+    assert(depgraph.IsAcyclic());
+
+    // Introduce a cycle, and then test that IsAcyclic returns false.
+    if (depgraph.TxCount() < 2) return;
+    ClusterIndex par(0), chl(0);
+    // Pick any transaction of depgraph as parent.
+    par_code %= depgraph.TxCount();
+    for (auto i : depgraph.Positions()) {
+        if (par_code == 0) {
+            par = i;
+            break;
+        }
+        --par_code;
+    }
+    // Pick any ancestor of par (excluding itself) as child, if any.
+    auto ancestors = depgraph.Ancestors(par) - TestBitSet::Singleton(par);
+    if (ancestors.None()) return;
+    chl_code %= ancestors.Count();
+    for (auto i : ancestors) {
+        if (chl_code == 0) {
+            chl = i;
+            break;
+        }
+        --chl_code;
+    }
+    // Add the cycle-introducing dependency.
+    depgraph.AddDependencies(TestBitSet::Singleton(par), chl);
+    // Check that we now detect a cycle.
+    assert(!depgraph.IsAcyclic());
 }
 
 FUZZ_TARGET(clusterlin_components)

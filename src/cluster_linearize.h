@@ -309,6 +309,17 @@ public:
             return a < b;
         });
     }
+
+    /** Check if this graph is acyclic. */
+    bool IsAcyclic() const noexcept
+    {
+        for (auto i : Positions()) {
+            if ((Ancestors(i) & Descendants(i)) != SetType::Singleton(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
 };
 
 /** A set of transactions together with their aggregate feerate. */
