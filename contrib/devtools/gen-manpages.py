@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import configparser
+import argparse
 
 BINARIES = [
 'build/src/bitcoind',
@@ -16,6 +17,14 @@ BINARIES = [
 'build/src/bitcoin-util',
 'build/src/qt/bitcoin-qt',
 ]
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    '--allow-missing-components',
+    action='store_true',
+    help='Allow missing components when generating manpages',
+)
+args = parser.parse_args()
 
 # Paths to external utilities.
 git = os.getenv('GIT', 'git')
@@ -81,14 +90,15 @@ enabled_components = {
     'ENABLE_USDT_TRACEPOINTS': 'USDT tracepoints',
 }
 
-for component, description in (required_components | enabled_components).items():
-    if not config['components'].getboolean(component, fallback=False):
-        print(
-            "Aborting generating manpages...\n"
-            f"Error: '{component}' ({description}) support is not enabled.\n"
-            "Please enable it and try again."
-        )
-        sys.exit(1)
+if not args.allow_missing_components:
+    for component, description in (required_components | enabled_components).items():
+        if not config['components'].getboolean(component, fallback=False):
+            print(
+                "Aborting generating manpages...\n"
+                f"Error: '{component}' ({description}) support is not enabled.\n"
+                "Please enable it and try again."
+            )
+            sys.exit(1)
 
 for component in config['components']:
     if component.upper() not in required_components and component.upper() not in enabled_components:
