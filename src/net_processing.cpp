@@ -1155,7 +1155,7 @@ void PeerManagerImpl::RemoveBlockRequest(const uint256& hash, std::optional<Node
     Assume(mapBlocksInFlight.count(hash) <= MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK);
 
     while (range.first != range.second) {
-        auto [node_id, list_it] = range.first->second;
+        const auto& [node_id, list_it]{range.first->second};
 
         if (from_peer && *from_peer != node_id) {
             range.first++;
