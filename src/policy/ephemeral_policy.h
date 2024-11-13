@@ -50,8 +50,9 @@ bool PreCheckEphemeralTx(const CTransaction& tx, CFeeRate dust_relay_rate, CAmou
 /** Must be called for each transaction(package) if any dust is in the package.
  *  Checks that each transaction's parents have their dust spent by the child,
  *  where parents are either in the mempool or in the package itself.
- *  @returns std::nullopt if all dust is properly spent, or the txid of the violating child spend.
+ *  Sets out_child_state and out_child_txid on failure.
+ *  @returns true if all dust is properly spent.
  */
-std::optional<Txid> CheckEphemeralSpends(const Package& package, CFeeRate dust_relay_rate, const CTxMemPool& tx_pool);
+bool CheckEphemeralSpends(const Package& package, CFeeRate dust_relay_rate, const CTxMemPool& tx_pool, TxValidationState& out_child_state, Txid& out_child_txid);
 
 #endif // BITCOIN_POLICY_EPHEMERAL_POLICY_H

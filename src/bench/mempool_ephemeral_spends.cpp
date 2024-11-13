@@ -73,9 +73,12 @@ static void MempoolCheckEphemeralSpends(benchmark::Bench& bench)
 
     uint32_t iteration{0};
 
+    TxValidationState dummy_state;
+    Txid dummy_txid;
+
     bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
 
-        CheckEphemeralSpends({tx2_r}, /*dust_relay_rate=*/CFeeRate(iteration * COIN / 10), pool);
+        CheckEphemeralSpends({tx2_r}, /*dust_relay_rate=*/CFeeRate(iteration * COIN / 10), pool, dummy_state, dummy_txid);
         iteration++;
     });
 }

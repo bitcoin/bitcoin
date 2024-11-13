@@ -1441,11 +1441,8 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
     }
 
     if (m_pool.m_opts.require_standard) {
-        if (const auto ephemeral_violation{CheckEphemeralSpends(/*package=*/{ptx}, m_pool.m_opts.dust_relay_feerate, m_pool)}) {
-            const Txid& txid = ephemeral_violation.value();
-            Assume(txid == ptx->GetHash());
-            ws.m_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "missing-ephemeral-spends",
-                          strprintf("tx %s did not spend parent's ephemeral dust", txid.ToString()));
+        Txid dummy_txid;
+        if (!CheckEphemeralSpends(/*package=*/{ptx}, m_pool.m_opts.dust_relay_feerate, m_pool, ws.m_state, dummy_txid)) {
             return MempoolAcceptResult::Failure(ws.m_state);
         }
     }
@@ -1590,11 +1587,9 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
 
     // Now that we've bounded the resulting possible ancestry count, check package for dust spends
     if (m_pool.m_opts.require_standard) {
-        if (const auto ephemeral_violation{CheckEphemeralSpends(txns, m_pool.m_opts.dust_relay_feerate, m_pool)}) {
-            const Txid& child_txid = ephemeral_violation.value();
-            TxValidationState child_state;
-            child_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "missing-ephemeral-spends",
-                          strprintf("tx %s did not spend parent's ephemeral dust", child_txid.ToString()));
+        TxValidationState child_state;
+        Txid child_txid;
+        if (!CheckEphemeralSpends(txns, m_pool.m_opts.dust_relay_feerate, m_pool, child_state, child_txid)) {
             package_state.Invalid(PackageValidationResult::PCKG_TX, "unspent-dust");
             results.emplace(child_txid, MempoolAcceptResult::Failure(child_state));
             return PackageMempoolAcceptResult(package_state, std::move(results));
