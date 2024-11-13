@@ -47,6 +47,8 @@ Percentiles CalculatePercentiles(const std::vector<FeeFrac>& package_feerates, c
 std::string forecastTypeToString(ForecastType forecastType)
 {
     switch (forecastType) {
+    case ForecastType::MEMPOOL_FORECAST:
+        return std::string("Mempool Forecast");
     case ForecastType::BLOCK_POLICY:
         return std::string("Block Policy Estimator");
     }
