@@ -10,10 +10,13 @@
 #include <optional>
 #include <string>
 
+enum class ForecastType {};
+
 struct ForecastResponse {
     FeeFrac low_priority;
     FeeFrac high_priority;
     unsigned int current_block_height{0};
+    ForecastType forecaster;
 };
 
 class ForecastResult
