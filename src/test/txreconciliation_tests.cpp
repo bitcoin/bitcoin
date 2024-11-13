@@ -153,4 +153,54 @@ BOOST_AUTO_TEST_CASE(TryRemovingFromSetTest)
     BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, wtxid));
 }
 
+BOOST_AUTO_TEST_CASE(SortPeersByFewestParentsTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    FastRandomContext frc{/*fDeterministic=*/true};
+
+    std::vector<NodeId> peers = {0, 1, 2, 3, 4, 5, 6, 7};
+    std::vector<Wtxid> parents;
+
+    for (auto &peer_id: peers) {
+        tracker.PreRegisterPeer(peer_id);
+        BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id, true, 1, 1), ReconciliationRegisterResult::SUCCESS);
+
+        // Add a number of parents equal to the peer_id to each peer's reconciliation set.
+        // We purposely want to have a peer with zero parent to cover that edge case
+        parents.push_back(Wtxid::FromUint256(frc.rand256()));
+        for (auto i=0; i<peer_id; i++) {
+            tracker.AddToSet(peer_id, parents[i]);
+        }
+    }
+
+    // We gave each peer a number of parents equal to its peer_id, so we expect the ordering
+    // to match peer_id in ascending order (which matches the insertion order for the peers vector)
+    BOOST_REQUIRE(tracker.SortPeersByFewestParents(parents) == peers);
+
+    // Lets check ties now. Leave the tree first peers with no parent (so they tie)
+    // plus add some to the last two
+    TxReconciliationTracker tracker2(TXRECONCILIATION_VERSION);
+    peers = {0, 1, 2, 3, 4};
+
+    for (auto &peer_id: peers) {
+        tracker2.PreRegisterPeer(peer_id);
+        BOOST_REQUIRE_EQUAL(tracker2.RegisterPeer(peer_id, true, 1, 1), ReconciliationRegisterResult::SUCCESS);
+        if (peer_id > 2) {
+            // Lets make the last two peers be sorted in reverse insertion order
+            for (size_t i=peer_id; i<parents.size(); i++) {
+                tracker2.AddToSet(peer_id, parents[i]);
+            }
+        }
+    }
+
+    auto sorted_peers = tracker2.SortPeersByFewestParents(parents);
+    auto best_peers = std::vector<int>(sorted_peers.begin(), sorted_peers.begin() + 3);
+
+    // best_peers should contain the first three peers in an unknown order, so sorting it should match the head of peers
+    std::sort(best_peers.begin(), best_peers.end());
+    BOOST_REQUIRE(std::equal(peers.begin(), peers.begin() + 3, best_peers.begin()));
+    // The last two peers should be sorted in reverse insertion order
+    BOOST_REQUIRE(std::equal(sorted_peers.begin() + 3, sorted_peers.end(), peers.rbegin(), peers.rend() - 3));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

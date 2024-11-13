@@ -122,6 +122,16 @@ public:
      * Check if a peer is registered to reconcile transactions with us.
      */
     bool IsPeerRegistered(NodeId peer_id) const;
+
+
+    /**
+     * Returns a collections of node ids sorted by how many instances of the provided transaction ids
+     * can be found in their reconciliation sets (from less to more). If two values tie, they will be
+     * sorted in order or addition, which depends on the internal order of [m_states].
+     * This is meant to be called with a collection of ancestor ids for a given transaction in order to
+     * decide whether the transaction should be fanout with ancestors or not.
+    */
+    std::vector<NodeId> SortPeersByFewestParents(std::vector<Wtxid> parents);
 };
 
 #endif // BITCOIN_NODE_TXRECONCILIATION_H
