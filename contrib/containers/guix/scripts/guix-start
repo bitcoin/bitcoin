@@ -26,7 +26,7 @@ fi
 # Add safe.directory option only when WORKSPACE_PATH was specified via cmd-line arguments (happens in CI)
 if [[ -n "${1}" ]]; then
     # Avoid adding duplicates
-    git config --global --fixed-value --get safe.directory "${WORKSPACE_PATH}" || \
+    git config --global --fixed-value --get safe.directory "${WORKSPACE_PATH}" >> /dev/null || \
         (echo "Adding safe.directory" && git config --global --add safe.directory "${WORKSPACE_PATH}")
 fi
 
