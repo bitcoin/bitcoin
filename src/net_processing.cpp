@@ -1,45 +1,60 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <net_processing.h>
 
 #include <addrman.h>
+#include <arith_uint256.h>
 #include <banman.h>
 #include <blockencodings.h>
 #include <blockfilter.h>
+#include <chain.h>
 #include <chainparams.h>
+#include <common/bloom.h>
 #include <consensus/amount.h>
+#include <consensus/params.h>
 #include <consensus/validation.h>
+#include <core_memusage.h>
+#include <crypto/siphash.h>
 #include <deploymentstatus.h>
-#include <hash.h>
+#include <flatfile.h>
 #include <headerssync.h>
 #include <index/blockfilterindex.h>
 #include <kernel/chain.h>
-#include <kernel/mempool_entry.h>
 #include <logging.h>
 #include <merkleblock.h>
+#include <net.h>
+#include <net_permissions.h>
+#include <netaddress.h>
 #include <netbase.h>
 #include <netmessagemaker.h>
 #include <node/blockstorage.h>
+#include <node/connection_types.h>
+#include <node/protocol_version.h>
 #include <node/timeoffsets.h>
 #include <node/txdownloadman.h>
 #include <node/txreconciliation.h>
 #include <node/warnings.h>
+#include <policy/feerate.h>
 #include <policy/fees.h>
+#include <policy/packages.h>
 #include <policy/policy.h>
-#include <policy/settings.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <protocol.h>
 #include <random.h>
 #include <scheduler.h>
+#include <script/script.h>
+#include <serialize.h>
+#include <span.h>
 #include <streams.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <txmempool.h>
 #include <txorphanage.h>
-#include <txrequest.h>
+#include <uint256.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 #include <util/time.h>
@@ -47,11 +62,26 @@
 #include <validation.h>
 
 #include <algorithm>
+#include <array>
 #include <atomic>
+#include <compare>
+#include <cstddef>
+#include <deque>
+#include <exception>
+#include <functional>
 #include <future>
+#include <initializer_list>
+#include <iterator>
+#include <limits>
+#include <list>
+#include <map>
 #include <memory>
 #include <optional>
+#include <queue>
 #include <ranges>
+#include <ratio>
+#include <set>
+#include <span>
 #include <typeinfo>
 #include <utility>
 
