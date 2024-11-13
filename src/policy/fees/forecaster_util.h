@@ -16,6 +16,7 @@
  */
 enum class ForecastType {
     BLOCK_POLICY,
+    MEMPOOL_FORECAST,
 };
 
 /**
