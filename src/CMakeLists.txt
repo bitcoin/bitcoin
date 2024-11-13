@@ -260,6 +260,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   policy/fees.cpp
   policy/fees_args.cpp
   policy/fees/fee_estimator.cpp
+  policy/fees/forecasters/mempool.cpp
   policy/packages.cpp
   policy/rbf.cpp
   policy/settings.cpp

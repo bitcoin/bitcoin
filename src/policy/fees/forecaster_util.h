@@ -11,6 +11,7 @@
 #include <string>
 
 enum class ForecastType {
+    MEMPOOL_FORECAST,
     BLOCK_POLICY_ESTIMATOR,
 };
 
