@@ -32,6 +32,7 @@
 #include <logging/timer.h>
 #include <node/blockstorage.h>
 #include <node/utxo_snapshot.h>
+#include <policy/ephemeral_policy.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <policy/settings.h>
@@ -912,6 +913,13 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                                     fSpendsCoinbase, nSigOpsCost, lock_points.value()));
     ws.m_vsize = entry->GetTxSize();
 
+    // Enforces 0-fee for dust transactions, no incentive to be mined alone
+    if (m_pool.m_opts.require_standard) {
+        if (!CheckValidEphemeralTx(ptx, m_pool.m_opts.dust_relay_feerate, ws.m_base_fees, ws.m_modified_fees, state)) {
+            return false; // state filled in by CheckValidEphemeralTx
+        }
+    }
+
     if (nSigOpsCost > MAX_STANDARD_TX_SIGOPS_COST)
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "bad-txns-too-many-sigops",
                 strprintf("%d", nSigOpsCost));
@@ -1432,6 +1440,16 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
         return MempoolAcceptResult::Failure(ws.m_state);
     }
 
+    if (m_pool.m_opts.require_standard) {
+        if (const auto ephemeral_violation{CheckEphemeralSpends(/*package=*/{ptx}, m_pool.m_opts.dust_relay_feerate, m_pool)}) {
+            const Txid& txid = ephemeral_violation.value();
+            Assume(txid == ptx->GetHash());
+            ws.m_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "missing-ephemeral-spends",
+                          strprintf("tx %s did not spend parent's ephemeral dust", txid.ToString()));
+            return MempoolAcceptResult::Failure(ws.m_state);
+        }
+    }
+
     if (m_subpackage.m_rbf && !ReplacementChecks(ws)) {
         if (ws.m_state.GetResult() == TxValidationResult::TX_RECONSIDERABLE) {
             // Failed for incentives-based fee reasons. Provide the effective feerate and which tx was included.
@@ -1568,6 +1586,19 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
     // because it's unnecessary.
     if (txns.size() > 1 && !PackageMempoolChecks(txns, workspaces, m_subpackage.m_total_vsize, package_state)) {
         return PackageMempoolAcceptResult(package_state, std::move(results));
+    }
+
+    // Now that we've bounded the resulting possible ancestry count, check package for dust spends
+    if (m_pool.m_opts.require_standard) {
+        if (const auto ephemeral_violation{CheckEphemeralSpends(txns, m_pool.m_opts.dust_relay_feerate, m_pool)}) {
+            const Txid& child_txid = ephemeral_violation.value();
+            TxValidationState child_state;
+            child_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "missing-ephemeral-spends",
+                          strprintf("tx %s did not spend parent's ephemeral dust", child_txid.ToString()));
+            package_state.Invalid(PackageValidationResult::PCKG_TX, "unspent-dust");
+            results.emplace(child_txid, MempoolAcceptResult::Failure(child_state));
+            return PackageMempoolAcceptResult(package_state, std::move(results));
+        }
     }
 
     for (Workspace& ws : workspaces) {

@@ -137,6 +137,219 @@ std::unique_ptr<CTxMemPool> MakeMempool(FuzzedDataProvider& fuzzed_data_provider
     return mempool;
 }
 
+std::unique_ptr<CTxMemPool> MakeEphemeralMempool(const NodeContext& node)
+{
+    // Take the default options for tests...
+    CTxMemPool::Options mempool_opts{MemPoolOptionsForTest(node)};
+
+    mempool_opts.check_ratio = 1;
+
+    // Require standardness rules otherwise ephemeral dust is no-op
+    mempool_opts.require_standard = true;
+
+    // And set minrelay to 0 to allow ephemeral parent tx even with non-TRUC
+    mempool_opts.min_relay_feerate = CFeeRate(0);
+
+    bilingual_str error;
+    // ...and construct a CTxMemPool from it
+    auto mempool{std::make_unique<CTxMemPool>(std::move(mempool_opts), error)};
+    Assert(error.empty());
+    return mempool;
+}
+
+// Scan mempool for a tx that has spent dust and return a
+// prevout of the child that isn't the dusty parent itself.
+// This is used to double-spend the child out of the mempool,
+// leaving the parent childless.
+// This assumes CheckMempoolEphemeralInvariants has passed for tx_pool.
+std::optional<COutPoint> GetChildEvictingPrevout(const CTxMemPool& tx_pool)
+{
+    LOCK(tx_pool.cs);
+    for (const auto& tx_info : tx_pool.infoAll()) {
+        const auto& entry = *Assert(tx_pool.GetEntry(tx_info.tx->GetHash()));
+        std::vector<uint32_t> dust_indexes{GetDustIndexes(tx_info.tx, tx_pool.m_opts.dust_relay_feerate)};
+        if (!dust_indexes.empty()) {
+            const auto& children = entry.GetMemPoolChildrenConst();
+            if (!children.empty()) {
+                Assert(children.size() == 1);
+                // Find an input that doesn't spend from parent's txid
+                const auto& only_child = children.begin()->get().GetTx();
+                for (const auto& tx_input : only_child.vin) {
+                    if (tx_input.prevout.hash != tx_info.tx->GetHash()) {
+                        return tx_input.prevout;
+                    }
+                }
+            }
+        }
+    }
+
+    return std::nullopt;
+}
+
+FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
+{
+    FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+    const auto& node = g_setup->m_node;
+    auto& chainstate{static_cast<DummyChainState&>(node.chainman->ActiveChainstate())};
+
+    MockTime(fuzzed_data_provider, chainstate);
+
+    // All RBF-spendable outpoints outside of the unsubmitted package
+    std::set<COutPoint> mempool_outpoints;
+    std::map<COutPoint, CAmount> outpoints_value;
+    for (const auto& outpoint : g_outpoints_coinbase_init_mature) {
+        Assert(mempool_outpoints.insert(outpoint).second);
+        outpoints_value[outpoint] = 50 * COIN;
+    }
+
+    auto outpoints_updater = std::make_shared<OutpointsUpdater>(mempool_outpoints);
+    node.validation_signals->RegisterSharedValidationInterface(outpoints_updater);
+
+    auto tx_pool_{MakeEphemeralMempool(node)};
+    MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(tx_pool_.get());
+
+    chainstate.SetMempool(&tx_pool);
+
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 300)
+    {
+        Assert(!mempool_outpoints.empty());
+
+        std::vector<CTransactionRef> txs;
+
+        // Find something we may want to double-spend with two input single tx
+        std::optional<COutPoint> outpoint_to_rbf{GetChildEvictingPrevout(tx_pool)};
+        bool should_rbf_eph_spend = outpoint_to_rbf && fuzzed_data_provider.ConsumeBool();
+
+        // Make small packages
+        const auto num_txs = should_rbf_eph_spend ? 1 : (size_t) fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 4);
+
+        std::set<COutPoint> package_outpoints;
+        while (txs.size() < num_txs) {
+
+            // Last transaction in a package needs to be a child of parents to get further in validation
+            // so the last transaction to be generated(in a >1 package) must spend all package-made outputs
+            // Note that this test currently only spends package outputs in last transaction.
+            bool last_tx = num_txs > 1 && txs.size() == num_txs - 1;
+
+            // Create transaction to add to the mempool
+            const CTransactionRef tx = [&] {
+                CMutableTransaction tx_mut;
+                tx_mut.version = CTransaction::CURRENT_VERSION;
+                tx_mut.nLockTime = 0;
+                // Last tx will sweep half or more of all outpoints from package
+                const auto num_in = should_rbf_eph_spend ? 2 :
+                    last_tx ? fuzzed_data_provider.ConsumeIntegralInRange<int>(package_outpoints.size()/2 + 1, package_outpoints.size()) :
+                    fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 4);
+                auto num_out = should_rbf_eph_spend ? 1 : fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 4);
+
+                auto& outpoints = last_tx ? package_outpoints : mempool_outpoints;
+
+                Assert((int)outpoints.size() >= num_in && num_in > 0);
+
+                CAmount amount_in{0};
+                for (int i = 0; i < num_in; ++i) {
+                    // Pop random outpoint
+                    auto pop = outpoints.begin();
+                    std::advance(pop, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, outpoints.size() - 1));
+                    auto outpoint = *pop;
+
+                    if (i == 0 && should_rbf_eph_spend) {
+                        outpoint = *outpoint_to_rbf;
+                        outpoints.erase(outpoint);
+                    } else {
+                        outpoints.erase(pop);
+                    }
+                    // no need to update or erase from outpoints_value
+                    amount_in += outpoints_value.at(outpoint);
+
+                    // Create input
+                    CTxIn in;
+                    in.prevout = outpoint;
+                    in.scriptWitness.stack = P2WSH_EMPTY_TRUE_STACK;
+
+                    tx_mut.vin.push_back(in);
+                }
+
+                const auto amount_fee = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(0, amount_in);
+                const auto amount_out = (amount_in - amount_fee) / num_out;
+                for (int i = 0; i < num_out; ++i) {
+                    tx_mut.vout.emplace_back(amount_out, P2WSH_EMPTY);
+                }
+
+                // Note output amounts can naturally drop to dust on their own.
+                if (!should_rbf_eph_spend && fuzzed_data_provider.ConsumeBool()) {
+                    uint32_t dust_index = fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(0, num_out);
+                    tx_mut.vout.insert(tx_mut.vout.begin() + dust_index, CTxOut(0, P2WSH_EMPTY));
+                }
+
+                auto tx = MakeTransactionRef(tx_mut);
+                // Restore previously removed outpoints, except in-package outpoints (to allow RBF)
+                if (!last_tx) {
+                    for (const auto& in : tx->vin) {
+                        Assert(outpoints.insert(in.prevout).second);
+                    }
+                    // Cache the in-package outpoints being made
+                    for (size_t i = 0; i < tx->vout.size(); ++i) {
+                        package_outpoints.emplace(tx->GetHash(), i);
+                    }
+                }
+                // We need newly-created values for the duration of this run
+                for (size_t i = 0; i < tx->vout.size(); ++i) {
+                    outpoints_value[COutPoint(tx->GetHash(), i)] = tx->vout[i].nValue;
+                }
+                return tx;
+            }();
+            txs.push_back(tx);
+        }
+
+        if (fuzzed_data_provider.ConsumeBool()) {
+            const auto& txid = fuzzed_data_provider.ConsumeBool() ?
+                                   txs.back()->GetHash() :
+                                   PickValue(fuzzed_data_provider, mempool_outpoints).hash;
+            const auto delta = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-50 * COIN, +50 * COIN);
+            // We only prioritise out of mempool transactions since PrioritiseTransaction doesn't
+            // filter for ephemeral dust GetEntry
+            if (tx_pool.exists(GenTxid::Txid(txid))) {
+                const auto tx_info{tx_pool.info(GenTxid::Txid(txid))};
+                if (GetDustIndexes(tx_info.tx, tx_pool.m_opts.dust_relay_feerate).empty()) {
+                    tx_pool.PrioritiseTransaction(txid.ToUint256(), delta);
+                }
+            }
+        }
+
+        // Remember all added transactions
+        std::set<CTransactionRef> added;
+        auto txr = std::make_shared<TransactionsDelta>(added);
+        node.validation_signals->RegisterSharedValidationInterface(txr);
+
+        auto single_submit = txs.size() == 1;
+
+        const auto result_package = WITH_LOCK(::cs_main,
+                                    return ProcessNewPackage(chainstate, tx_pool, txs, /*test_accept=*/single_submit, /*client_maxfeerate=*/{}));
+
+        const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, txs.back(), GetTime(),
+                                   /*bypass_limits=*/fuzzed_data_provider.ConsumeBool(), /*test_accept=*/!single_submit));
+
+        if (!single_submit && result_package.m_state.GetResult() != PackageValidationResult::PCKG_POLICY) {
+            // We don't know anything about the validity since transactions were randomly generated, so
+            // just use result_package.m_state here. This makes the expect_valid check meaningless, but
+            // we can still verify that the contents of m_tx_results are consistent with m_state.
+            const bool expect_valid{result_package.m_state.IsValid()};
+            Assert(!CheckPackageMempoolAcceptResult(txs, result_package, expect_valid, &tx_pool));
+        }
+
+        node.validation_signals->SyncWithValidationInterfaceQueue();
+        node.validation_signals->UnregisterSharedValidationInterface(txr);
+
+        CheckMempoolEphemeralInvariants(tx_pool);
+    }
+
+    node.validation_signals->UnregisterSharedValidationInterface(outpoints_updater);
+
+    WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
+}
+
+
 FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
@@ -321,6 +534,11 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
         }
 
         CheckMempoolTRUCInvariants(tx_pool);
+
+        // Dust checks only make sense when dust is enforced
+        if (tx_pool.m_opts.require_standard) {
+            CheckMempoolEphemeralInvariants(tx_pool);
+        }
     }
 
     node.validation_signals->UnregisterSharedValidationInterface(outpoints_updater);

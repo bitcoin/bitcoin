@@ -21,6 +21,20 @@ from .wallet import (
 
 ORPHAN_TX_EXPIRE_TIME = 1200
 
+def assert_mempool_contents(test_framework, node, expected=None, sync=True):
+    """Assert that all transactions in expected are in the mempool,
+    and no additional ones exist. 'expected' is an array of
+    CTransaction objects
+    """
+    if sync:
+        test_framework.sync_mempools()
+    if not expected:
+        expected = []
+    mempool = node.getrawmempool(verbose=False)
+    assert_equal(len(mempool), len(expected))
+    for tx in expected:
+        assert tx.rehash() in mempool
+
 
 def fill_mempool(test_framework, node, *, tx_sync_fun=None):
     """Fill mempool until eviction.

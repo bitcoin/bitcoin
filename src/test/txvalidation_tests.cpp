@@ -6,6 +6,7 @@
 #include <key_io.h>
 #include <policy/packages.h>
 #include <policy/policy.h>
+#include <policy/ephemeral_policy.h>
 #include <policy/truc_policy.h>
 #include <primitives/transaction.h>
 #include <random.h>
@@ -87,6 +88,125 @@ static inline CTransactionRef make_tx(const std::vector<COutPoint>& inputs, int3
         mtx.vout[i].nValue = 10000;
     }
     return MakeTransactionRef(mtx);
+}
+
+// Same as make_tx but adds 2 normal outputs and 0-value dust to end of vout
+static inline CTransactionRef make_ephemeral_tx(const std::vector<COutPoint>& inputs, int32_t version)
+{
+    CMutableTransaction mtx = CMutableTransaction{};
+    mtx.version = version;
+    mtx.vin.resize(inputs.size());
+    mtx.vout.resize(3);
+    for (size_t i{0}; i < inputs.size(); ++i) {
+        mtx.vin[i].prevout = inputs[i];
+    }
+    for (auto i{0}; i < 3; ++i) {
+        mtx.vout[i].scriptPubKey = CScript() << OP_TRUE;
+        mtx.vout[i].nValue = (i == 2) ? 0 : 10000;
+    }
+    return MakeTransactionRef(mtx);
+}
+
+BOOST_FIXTURE_TEST_CASE(ephemeral_tests, RegTestingSetup)
+{
+    CTxMemPool& pool = *Assert(m_node.mempool);
+    LOCK2(cs_main, pool.cs);
+    TestMemPoolEntryHelper entry;
+    CTxMemPool::setEntries empty_ancestors;
+
+    CFeeRate minrelay(1000);
+
+    // Basic transaction with dust
+    auto grandparent_tx_1 = make_ephemeral_tx(random_outpoints(1), /*version=*/2);
+    const auto dust_txid = grandparent_tx_1->GetHash();
+
+    uint32_t dust_index = 2;
+
+    // Child transaction spending dust
+    auto dust_spend = make_tx({COutPoint{dust_txid, dust_index}}, /*version=*/2);
+
+    // We first start with nothing "in the mempool", using package checks
+
+    // Trivial single transaction with no dust
+    BOOST_CHECK(!CheckEphemeralSpends({dust_spend}, minrelay, pool).has_value());
+
+    // Now with dust, ok because the tx has no dusty parents
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1}, minrelay, pool).has_value());
+
+    // Dust checks pass
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, dust_spend}, CFeeRate(0), pool).has_value());
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, dust_spend}, minrelay, pool).has_value());
+
+    auto dust_non_spend = make_tx({COutPoint{dust_txid, dust_index - 1}}, /*version=*/2);
+
+    // Child spending non-dust only from parent should be disallowed even if dust otherwise spent
+    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, dust_non_spend, dust_spend}, minrelay, pool).has_value());
+    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, dust_spend, dust_non_spend}, minrelay, pool).has_value());
+    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, dust_non_spend}, minrelay, pool).has_value());
+
+    auto grandparent_tx_2 = make_ephemeral_tx(random_outpoints(1), /*version=*/2);
+    const auto dust_txid_2 = grandparent_tx_2->GetHash();
+
+    // Spend dust from one but not another is ok, as long as second grandparent has no child
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_spend}, minrelay, pool).has_value());
+
+    auto dust_non_spend_both_parents = make_tx({COutPoint{dust_txid, dust_index}, COutPoint{dust_txid_2, dust_index - 1}}, /*version=*/2);
+    // But if we spend from the parent, it must spend dust
+    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_non_spend_both_parents}, minrelay, pool).has_value());
+
+    auto dust_spend_both_parents = make_tx({COutPoint{dust_txid, dust_index}, COutPoint{dust_txid_2, dust_index}}, /*version=*/2);
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_spend_both_parents}, minrelay, pool).has_value());
+
+    // Spending other outputs is also correct, as long as the dusty one is spent
+    const std::vector<COutPoint> all_outpoints{COutPoint(dust_txid, 0), COutPoint(dust_txid, 1), COutPoint(dust_txid, 2),
+        COutPoint(dust_txid_2, 0), COutPoint(dust_txid_2, 1), COutPoint(dust_txid_2, 2)};
+    auto dust_spend_all_outpoints = make_tx(all_outpoints, /*version=*/2);
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_spend_all_outpoints}, minrelay, pool).has_value());
+
+    // 2 grandparents with dust <- 1 dust-spending parent with dust <- child with no dust
+    auto parent_with_dust = make_ephemeral_tx({COutPoint{dust_txid, dust_index}, COutPoint{dust_txid_2, dust_index}}, /*version=*/2);
+    // Ok for parent to have dust
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, parent_with_dust}, minrelay, pool).has_value());
+    auto child_no_dust = make_tx({COutPoint{parent_with_dust->GetHash(), dust_index}}, /*version=*/2);
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, parent_with_dust, child_no_dust}, minrelay, pool).has_value());
+
+    // 2 grandparents with dust <- 1 dust-spending parent with dust <- child with dust
+    auto child_with_dust = make_ephemeral_tx({COutPoint{parent_with_dust->GetHash(), dust_index}}, /*version=*/2);
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, parent_with_dust, child_with_dust}, minrelay, pool).has_value());
+
+    // Tests with parents in mempool
+
+    // Nothing in mempool, this should pass for any transaction
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1}, minrelay, pool).has_value());
+
+    // Add first grandparent to mempool and fetch entry
+    pool.addUnchecked(entry.FromTx(grandparent_tx_1));
+
+    // Ignores ancestors that aren't direct parents
+    BOOST_CHECK(!CheckEphemeralSpends({child_no_dust}, minrelay, pool).has_value());
+
+    // Valid spend of dust with grandparent in mempool
+    BOOST_CHECK(!CheckEphemeralSpends({parent_with_dust}, minrelay, pool).has_value());
+
+    // Second grandparent in same package
+    BOOST_CHECK(!CheckEphemeralSpends({parent_with_dust, grandparent_tx_2}, minrelay, pool).has_value());
+    // Order in package doesn't matter
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_2, parent_with_dust}, minrelay, pool).has_value());
+
+    // Add second grandparent to mempool
+    pool.addUnchecked(entry.FromTx(grandparent_tx_2));
+
+    // Only spends single dust out of two direct parents
+    BOOST_CHECK(CheckEphemeralSpends({dust_non_spend_both_parents}, minrelay, pool).has_value());
+
+    // Spends both parents' dust
+    BOOST_CHECK(!CheckEphemeralSpends({parent_with_dust}, minrelay, pool).has_value());
+
+    // Now add dusty parent to mempool
+    pool.addUnchecked(entry.FromTx(parent_with_dust));
+
+    // Passes dust checks even with non-parent ancestors
+    BOOST_CHECK(!CheckEphemeralSpends({child_no_dust}, minrelay, pool).has_value());
 }
 
 BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)

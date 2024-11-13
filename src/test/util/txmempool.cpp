@@ -141,6 +141,54 @@ std::optional<std::string> CheckPackageMempoolAcceptResult(const Package& txns,
     return std::nullopt;
 }
 
+std::vector<uint32_t> GetDustIndexes(const CTransactionRef& tx_ref, CFeeRate dust_relay_rate)
+{
+    std::vector<uint32_t> dust_indexes;
+    for (size_t i = 0; i < tx_ref->vout.size(); ++i) {
+        const auto& output = tx_ref->vout[i];
+        if (IsDust(output, dust_relay_rate)) dust_indexes.push_back(i);
+    }
+
+    return dust_indexes;
+}
+
+void CheckMempoolEphemeralInvariants(const CTxMemPool& tx_pool)
+{
+    LOCK(tx_pool.cs);
+    for (const auto& tx_info : tx_pool.infoAll()) {
+        const auto& entry = *Assert(tx_pool.GetEntry(tx_info.tx->GetHash()));
+
+        std::vector<uint32_t> dust_indexes = GetDustIndexes(tx_info.tx, tx_pool.m_opts.dust_relay_feerate);
+
+        Assert(dust_indexes.size() < 2);
+
+        if (dust_indexes.empty()) continue;
+
+        // Transaction must have no base fee
+        Assert(entry.GetFee() == 0 && entry.GetModifiedFee() == 0);
+
+        // Transaction has single dust; make sure it's swept or will not be mined
+        const auto& children = entry.GetMemPoolChildrenConst();
+
+        // Multiple children should never happen as non-dust-spending child
+        // can get mined as package
+        Assert(children.size() < 2);
+
+        if (children.empty()) {
+            // No children and no fees; modified fees aside won't get mined so it's fine
+            // Happens naturally if child spend is RBF cycled away.
+            continue;
+        }
+
+        // Only-child should be spending the dust
+        const auto& only_child = children.begin()->get().GetTx();
+        COutPoint dust_outpoint{tx_info.tx->GetHash(), dust_indexes[0]};
+        Assert(std::any_of(only_child.vin.begin(), only_child.vin.end(), [&dust_outpoint](const CTxIn& txin) {
+            return txin.prevout == dust_outpoint;
+            }));
+    }
+}
+
 void CheckMempoolTRUCInvariants(const CTxMemPool& tx_pool)
 {
     LOCK(tx_pool.cs);
