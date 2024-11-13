@@ -31,6 +31,13 @@ ForecastResult MemPoolForecaster::EstimateFee(ConfirmationTarget& target)
                                             target.value, MEMPOOL_FORECAST_MAX_TARGET, MEMPOOL_FORECAST_MAX_TARGET));
     }
 
+    const auto cached_estimate = cache.get();
+    if (cached_estimate) {
+        response.low_priority = cached_estimate->p75;
+        response.high_priority = cached_estimate->p50;
+        return ForecastResult(response);
+    }
+
     node::BlockAssembler::Options options;
     options.test_block_validity = false;
     node::BlockAssembler assembler(*m_chainstate, m_mempool, options);
@@ -56,6 +63,7 @@ ForecastResult MemPoolForecaster::EstimateFee(ConfirmationTarget& target)
              CFeeRate(percentiles.p75.fee, percentiles.p75.size).GetFeePerK(), CURRENCY_ATOM,
              CFeeRate(percentiles.p95.fee, percentiles.p95.size).GetFeePerK(), CURRENCY_ATOM);
 
+    cache.update(percentiles);
     response.low_priority = percentiles.p75;
     response.high_priority = percentiles.p50;
 
