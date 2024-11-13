@@ -10,7 +10,7 @@
              (gnu packages gawk)
              (gnu packages gcc)
              ((gnu packages installers) #:select (nsis-x86_64))
-             ((gnu packages linux) #:select (linux-libre-headers-6.1 util-linux))
+             ((gnu packages linux) #:select (linux-libre-headers-6.1))
              (gnu packages llvm)
              (gnu packages mingw)
              (gnu packages moreutils)
@@ -493,7 +493,6 @@ inspecting signatures in Mach-O binaries.")
         bash-minimal
         which
         coreutils-minimal
-        util-linux
         ;; File(system) inspection
         file
         grep
