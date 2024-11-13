@@ -67,6 +67,10 @@ hardware implementations will typically implement multiple roles simultaneously.
   input a PSBT, adds UTXO, key, and script data to inputs and outputs that miss
   it, and optionally signs inputs. Where possible it also finalizes the partial
   signatures.
+- **`descriptorprocesspsbt` (Updater, Signer, Finalizer)** is a node RPC that takes
+  as input a PSBT and a list of descriptors. It updates SegWit inputs with
+  information available from the UTXO set and the mempool and signs the inputs using
+  the provided descriptors. Where possible it also finalizes the partial signatures.
 - **`utxoupdatepsbt` (Updater)** is a node RPC that takes a PSBT and updates it
   to include information available from the UTXO set (works only for SegWit
   inputs).
