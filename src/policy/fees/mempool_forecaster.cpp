@@ -28,6 +28,12 @@ ForecastResult MemPoolForecaster::ForecastFeeRate(int target, bool conservative)
         return result;
     }
 
+    const auto cached_estimate = cache.get();
+    if (cached_estimate) {
+        result.feerate = conservative ? cached_estimate->p50 : cached_estimate->p75;
+        return result;
+    }
+
     node::BlockAssembler::Options options;
     options.test_block_validity = false;
     node::BlockAssembler assembler(*m_chainstate, m_mempool, options);
@@ -50,6 +56,7 @@ ForecastResult MemPoolForecaster::ForecastFeeRate(int target, bool conservative)
              CFeeRate(percentiles.p75.fee, percentiles.p75.size).GetFeePerK(), CURRENCY_ATOM,
              CFeeRate(percentiles.p95.fee, percentiles.p95.size).GetFeePerK(), CURRENCY_ATOM);
 
+    cache.update(percentiles);
     result.feerate = conservative ? percentiles.p50 : percentiles.p75;
     return result;
 }
