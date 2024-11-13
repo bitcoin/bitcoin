@@ -4407,6 +4407,9 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         if (!wallet_path) {
             return util::Error{util::ErrorString(wallet_path)};
         }
+        if (!fs::exists(*wallet_path)) {
+            return util::Error{_("Error: Wallet does not exist")};
+        }
         if (!IsBDBFile(BDBDataFile(*wallet_path))) {
             return util::Error{_("Error: This wallet is already a descriptor wallet")};
         }
