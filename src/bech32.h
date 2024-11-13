@@ -37,6 +37,7 @@ enum class Encoding {
  *  and we would never encode an address with such a massive value */
 enum CharLimit : size_t {
     BECH32 = 90,            //!< BIP173/350 imposed character limit for Bech32(m) encoded addresses. This guarantees finding up to 4 errors.
+    CODEX32 = 127,
 };
 
 /** Encode a Bech32 or Bech32m string. If hrp contains uppercase characters, this will cause an
