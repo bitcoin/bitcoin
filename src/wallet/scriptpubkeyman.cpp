@@ -402,7 +402,7 @@ std::vector<WalletDestination> LegacyScriptPubKeyMan::MarkUnusedAddresses(const 
     return result;
 }
 
-bool LegacyScriptPubKeyMan::IsKeyActive(const CScript& script) const
+bool LegacyDataSPKM::IsKeyActive(const CScript& script) const
 {
     LOCK(cs_KeyStore);
 

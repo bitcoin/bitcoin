@@ -316,6 +316,7 @@ public:
 
     // ScriptPubKeyMan overrides
     bool CheckDecryptionKey(const CKeyingMaterial& master_key) override;
+    [[nodiscard]] bool IsKeyActive(const CScript& script) const override;
     std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const override;
     std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const override;
     uint256 GetID() const override { return uint256::ONE; }
@@ -464,8 +465,6 @@ public:
     bool TopUp(unsigned int size = 0) override;
 
     std::vector<WalletDestination> MarkUnusedAddresses(const CScript& script) override;
-
-    [[nodiscard]] bool IsKeyActive(const CScript& script) const override;
 
     //! Upgrade stored CKeyMetadata objects to store key origin info as KeyOriginInfo
     void UpgradeKeyMetadata();
