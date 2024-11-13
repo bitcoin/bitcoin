@@ -812,9 +812,11 @@ nid_type AddrManImpl::GetEntry(bool use_tried, size_t bucket, size_t position) c
 std::vector<CAddress> AddrManImpl::GetAddr_(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered) const
 {
     AssertLockHeld(cs);
+    Assume(max_pct <= 100);
 
     size_t nNodes = vRandom.size();
     if (max_pct != 0) {
+        max_pct = std::min(max_pct, size_t{100});
         nNodes = max_pct * nNodes / 100;
     }
     if (max_addresses != 0) {
