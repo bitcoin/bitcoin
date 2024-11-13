@@ -272,5 +272,5 @@ endef
 
 define $(package)_postprocess_cmds
   rm -rf doc/ native/lib/ lib/pkgconfig/ && \
-  rm -f lib/lib*.la
+  rm -f lib/lib*.la lib/Qt5*.la
 endef
