@@ -271,6 +271,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   rpc/node.cpp
   rpc/output_script.cpp
   rpc/rawtransaction.cpp
+  rpc/schema.cpp
   rpc/server.cpp
   rpc/server_util.cpp
   rpc/signmessage.cpp
