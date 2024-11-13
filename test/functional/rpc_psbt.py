@@ -293,7 +293,7 @@ class PSBTTest(BitcoinTestFramework):
         processed_finalized_psbt = self.nodes[0].walletprocesspsbt(psbt=psbtx, finalize=True)
         finalized_psbt = processed_finalized_psbt['psbt']
         finalized_psbt_hex = processed_finalized_psbt['hex']
-        assert signed_psbt != finalized_psbt
+        assert_not_equal(signed_psbt, finalized_psbt)
         assert finalized_psbt_hex == finalized_hex
 
         # Manually selected inputs can be locked:

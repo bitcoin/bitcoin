@@ -106,7 +106,7 @@ class OrphanRPCsTest(BitcoinTestFramework):
         assert tx_in_orphanage(node, tx_child_2["tx"])
 
         self.log.info("Check that orphan 1 and 2 were from different peers")
-        assert orphanage[0]["from"][0] != orphanage[1]["from"][0]
+        assert_not_equal(orphanage[0]["from"][0], orphanage[1]["from"][0])
 
         self.log.info("Unorphan child 2")
         peer_2.send_and_ping(msg_tx(tx_parent_2["tx"]))

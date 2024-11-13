@@ -283,7 +283,7 @@ def sign_schnorr(key, msg, aux=None, flip_p=False, flip_r=False):
         sec = ORDER - sec
     t = (sec ^ int.from_bytes(TaggedHash("BIP0340/aux", aux), 'big')).to_bytes(32, 'big')
     kp = int.from_bytes(TaggedHash("BIP0340/nonce", t + P.to_bytes_xonly() + msg), 'big') % ORDER
-    assert kp != 0
+    assert_not_equal(kp, 0)
     R = kp * secp256k1.G
     k = kp if R.y.is_even() != flip_r else ORDER - kp
     e = int.from_bytes(TaggedHash("BIP0340/challenge", R.to_bytes_xonly() + P.to_bytes_xonly() + msg), 'big') % ORDER

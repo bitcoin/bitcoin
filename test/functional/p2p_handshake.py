@@ -56,7 +56,7 @@ class P2PHandshakeTest(BitcoinTestFramework):
             expected_result = "disconnect" if expect_disconnect else "connect"
             self.log.info(f'    - services 0x{services:08x}, type "{conn_type}" [{expected_result}]')
             if expect_disconnect:
-                assert (services & desirable_service_flags) != desirable_service_flags
+                assert_not_equal((services & desirable_service_flags), desirable_service_flags)
                 expected_debug_log = f'does not offer the expected services ' \
                         f'({services:08x} offered, {desirable_service_flags:08x} expected)'
                 with node.assert_debug_log([expected_debug_log]):

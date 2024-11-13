@@ -74,7 +74,7 @@ class BindPortDiscoverTest(BitcoinTestFramework):
             if local['address'] == ADDR1:
                 found_addr1 = True
                 assert_equal(local['port'], BIND_PORT)
-            assert local['address'] != ADDR2
+            assert_not_equal(local['address'], ADDR2)
         assert found_addr1
 
 if __name__ == '__main__':

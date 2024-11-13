@@ -41,7 +41,7 @@ class FE:
             num = (num * b._den) % FE.SIZE
         else:
             den = (den * b) % FE.SIZE
-        assert den != 0
+        assert_not_equal(den, 0)
         if num == 0:
             den = 1
         self._num = num

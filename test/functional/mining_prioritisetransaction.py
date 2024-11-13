@@ -303,7 +303,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.nodes[0].setmocktime(mock_time+10)
         new_template = self.nodes[0].getblocktemplate({'rules': ['segwit']})
 
-        assert template != new_template
+        assert_not_equal(template, new_template)
 
 if __name__ == '__main__':
     PrioritiseTransactionTest(__file__).main()

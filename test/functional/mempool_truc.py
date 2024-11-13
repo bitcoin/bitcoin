@@ -480,7 +480,7 @@ class MempoolTRUC(BitcoinTestFramework):
         child_1_conflict = self.wallet.send_self_transfer(from_node=node, version=3, utxo_to_spend=ancestor_tx["new_utxos"][0], fee_rate=Decimal("0.01"))
 
         # Ensure child_1 and child_1_conflict are different transactions
-        assert (child_1_conflict["txid"] != child_1["txid"])
+        assert_not_equal(child_1_conflict["txid"], child_1["txid"])
         self.check_mempool([ancestor_tx["txid"], child_1_conflict["txid"], child_2["txid"]])
         assert_equal(node.getmempoolentry(ancestor_tx["txid"])["descendantcount"], 3)
 

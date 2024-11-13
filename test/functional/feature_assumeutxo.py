@@ -436,7 +436,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(
             dump_output4['txoutset_hash'],
             "8a1db0d6e958ce0d7c963bc6fc91ead596c027129bacec68acc40351037b09d7")
-        assert sha256sum_file(dump_output['path']) != sha256sum_file(dump_output4['path'])
+        assert_not_equal(sha256sum_file(dump_output['path']), sha256sum_file(dump_output4['path']))
 
         # Use a hash instead of a height
         prev_snap_hash = n0.getblockhash(prev_snap_height)

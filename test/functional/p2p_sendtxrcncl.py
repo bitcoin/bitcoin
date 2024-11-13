@@ -122,7 +122,7 @@ class SendTxRcnclTest(BitcoinTestFramework):
         no_txrelay_version_msg.relay = 0
         peer.send_message(no_txrelay_version_msg)
         peer.wait_for_verack()
-        assert peer.nServices & NODE_BLOOM != 0
+        assert_not_equal(peer.nServices & NODE_BLOOM, 0)
         assert not peer.sendtxrcncl_msg_received
         self.nodes[0].disconnect_p2ps()
 

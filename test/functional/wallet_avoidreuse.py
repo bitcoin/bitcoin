@@ -167,7 +167,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         # Make sure it's starting out as change as expected
         assert node.getaddressinfo(changeaddr)['ischange']
         for logical_tx in node.listtransactions():
-            assert logical_tx.get('address') != changeaddr
+            assert_not_equal(logical_tx.get('address'), changeaddr)
 
         # Spend it
         reset_balance(node, node.getnewaddress())
@@ -175,7 +175,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         # It should still be change
         assert node.getaddressinfo(changeaddr)['ischange']
         for logical_tx in node.listtransactions():
-            assert logical_tx.get('address') != changeaddr
+            assert_not_equal(logical_tx.get('address'), changeaddr)
 
     def test_sending_from_reused_address_without_avoid_reuse(self):
         '''

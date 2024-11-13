@@ -55,7 +55,7 @@ class PingPongTest(BitcoinTestFramework):
         self.log.info('Check that ping is sent after connection is established')
         no_pong_node = self.nodes[0].add_p2p_connection(NodeNoPong())
         self.mock_forward(3)
-        assert no_pong_node.last_message.pop('ping').nonce != 0
+        assert_not_equal(no_pong_node.last_message.pop('ping').nonce, 0)
         self.check_peer_info(pingtime=None, minping=None, pingwait=3)
 
         self.log.info('Reply without nonce cancels ping')
