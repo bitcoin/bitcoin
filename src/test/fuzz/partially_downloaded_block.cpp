@@ -114,7 +114,6 @@ FUZZ_TARGET(partially_downloaded_block, .init = initialize_pdb)
         fuzzed_data_provider.PickValueInArray(
             {BlockValidationResult::BLOCK_RESULT_UNSET,
              BlockValidationResult::BLOCK_CONSENSUS,
-             BlockValidationResult::BLOCK_RECENT_CONSENSUS_CHANGE,
              BlockValidationResult::BLOCK_CACHED_INVALID,
              BlockValidationResult::BLOCK_INVALID_HEADER,
              BlockValidationResult::BLOCK_MUTATED,

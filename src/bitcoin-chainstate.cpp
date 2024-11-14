@@ -253,9 +253,6 @@ int main(int argc, char* argv[])
         case BlockValidationResult::BLOCK_CONSENSUS:
             std::cerr << "invalid by consensus rules (excluding any below reasons)" << std::endl;
             break;
-        case BlockValidationResult::BLOCK_RECENT_CONSENSUS_CHANGE:
-            std::cerr << "Invalid by a change to consensus rules more recent than SegWit." << std::endl;
-            break;
         case BlockValidationResult::BLOCK_CACHED_INVALID:
             std::cerr << "this block was cached as being invalid and we didn't store the reason why" << std::endl;
             break;
