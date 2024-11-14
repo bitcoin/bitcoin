@@ -87,15 +87,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT CMAKE_HOST_APPLE)
   set(CMAKE_FRAMEWORK_PATH "@OSX_SDK@/System/Library/Frameworks")
 endif()
 
-
-# Customize pkg-config behaviour.
-cmake_path(APPEND CMAKE_FIND_ROOT_PATH "lib" "pkgconfig" OUTPUT_VARIABLE pkg_config_path)
-set(ENV{PKG_CONFIG_PATH} ${pkg_config_path})
-set(ENV{PKG_CONFIG_LIBDIR} ${pkg_config_path})
-unset(pkg_config_path)
-set(PKG_CONFIG_ARGN --static)
-
-
 # Set configuration options for the main build system.
 set(qt_packages @qt_packages@)
 if("${qt_packages}" STREQUAL "")
