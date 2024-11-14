@@ -175,6 +175,8 @@ static fs::path GetPidFile(const ArgsManager& args)
 
 [[nodiscard]] static bool CreatePidFile(const ArgsManager& args)
 {
+    if (args.IsArgNegated("-pid")) return true;
+
     std::ofstream file{GetPidFile(args)};
     if (file) {
 #ifdef WIN32
