@@ -255,7 +255,7 @@ static RPCHelpMan quorum_info()
         includeSkShare = ParseBoolV(request.params[2], "includeSkShare");
     }
 
-    auto quorum = llmq_ctx.qman->GetQuorum(llmqType, quorumHash);
+    const auto quorum = llmq_ctx.qman->GetQuorum(llmqType, quorumHash);
     if (!quorum) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
     }
@@ -451,13 +451,13 @@ static UniValue quorum_sign_helper(const JSONRPCRequest& request, Consensus::LLM
     if (fSubmit) {
         return llmq_ctx.sigman->AsyncSignIfMember(llmqType, *llmq_ctx.shareman, id, msgHash, quorumHash);
     } else {
-        llmq::CQuorumCPtr pQuorum;
-
-        if (quorumHash.IsNull()) {
-            pQuorum = llmq::SelectQuorumForSigning(llmq_params_opt.value(), chainman.ActiveChain(), *llmq_ctx.qman, id);
-        } else {
-            pQuorum = llmq_ctx.qman->GetQuorum(llmqType, quorumHash);
-        }
+        const auto pQuorum = [&]() {
+            if (quorumHash.IsNull()) {
+                return llmq::SelectQuorumForSigning(llmq_params_opt.value(), chainman.ActiveChain(), *llmq_ctx.qman, id);
+            } else {
+                return llmq_ctx.qman->GetQuorum(llmqType, quorumHash);
+            }
+        }();
 
         if (pQuorum == nullptr) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
@@ -592,7 +592,7 @@ static RPCHelpMan quorum_verify()
     }
 
     uint256 quorumHash(ParseHashV(request.params[4], "quorumHash"));
-    llmq::CQuorumCPtr quorum = llmq_ctx.qman->GetQuorum(llmqType, quorumHash);
+    const auto quorum = llmq_ctx.qman->GetQuorum(llmqType, quorumHash);
 
     if (!quorum) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");

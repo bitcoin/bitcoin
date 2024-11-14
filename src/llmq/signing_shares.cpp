@@ -549,15 +549,14 @@ bool CSigSharesManager::PreVerifyBatchedSigShares(const CActiveMasternodeManager
     return true;
 }
 
-void CSigSharesManager::CollectPendingSigSharesToVerify(
-        size_t maxUniqueSessions,
-        std::unordered_map<NodeId, std::vector<CSigShare>>& retSigShares,
-        std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums)
+bool CSigSharesManager::CollectPendingSigSharesToVerify(
+    size_t maxUniqueSessions, std::unordered_map<NodeId, std::vector<CSigShare>>& retSigShares,
+    std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums)
 {
     {
         LOCK(cs);
         if (nodeStates.empty()) {
-            return;
+            return false;
         }
 
         // This will iterate node states in random order and pick one sig share at a time. This avoids processing
@@ -590,7 +589,7 @@ void CSigSharesManager::CollectPendingSigSharesToVerify(
             rnd);
 
         if (retSigShares.empty()) {
-            return;
+            return false;
         }
     }
 
@@ -605,11 +604,20 @@ void CSigSharesManager::CollectPendingSigSharesToVerify(
                 continue;
             }
 
-            CQuorumCPtr quorum = qman.GetQuorum(llmqType, sigShare.getQuorumHash());
-            assert(quorum != nullptr);
+            auto quorum = qman.GetQuorum(llmqType, sigShare.getQuorumHash());
+            // Despite constructing a convenience map, we assume that the quorum *must* be present.
+            // The absence of it might indicate an inconsistent internal state, so we should report
+            // nothing instead of reporting flawed data.
+            if (!quorum) {
+                LogPrintf("%s: ERROR! Unexpected missing quorum with llmqType=%d, quorumHash=%s\n", __func__,
+                          ToUnderlying(llmqType), sigShare.getQuorumHash().ToString());
+                return false;
+            }
             retQuorums.try_emplace(k, quorum);
         }
     }
+
+    return true;
 }
 
 bool CSigSharesManager::ProcessPendingSigShares(const CConnman& connman)
@@ -618,8 +626,8 @@ bool CSigSharesManager::ProcessPendingSigShares(const CConnman& connman)
     std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher> quorums;
 
     const size_t nMaxBatchSize{32};
-    CollectPendingSigSharesToVerify(nMaxBatchSize, sigSharesByNodes, quorums);
-    if (sigSharesByNodes.empty()) {
+    bool collect_status = CollectPendingSigSharesToVerify(nMaxBatchSize, sigSharesByNodes, quorums);
+    if (!collect_status || sigSharesByNodes.empty()) {
         return false;
     }
 
@@ -1269,11 +1277,14 @@ void CSigSharesManager::Cleanup()
     // Find quorums which became inactive
     for (auto it = quorums.begin(); it != quorums.end(); ) {
         if (IsQuorumActive(it->first.first, qman, it->first.second)) {
-            it->second = qman.GetQuorum(it->first.first, it->first.second);
-            ++it;
-        } else {
-            it = quorums.erase(it);
+            auto quorum = qman.GetQuorum(it->first.first, it->first.second);
+            if (quorum) {
+                it->second = quorum;
+                ++it;
+                continue;
+            }
         }
+        it = quorums.erase(it);
     }
 
     {
