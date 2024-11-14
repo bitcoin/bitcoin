@@ -2,14 +2,10 @@
 
 set -eo pipefail
 
-if [[ -n "${1}" ]]; then
-    WORKSPACE_PATH="$1"
-else
-    WORKSPACE_PATH="/src/dash"
-fi
+WORKSPACE_PATH="${1:-$(pwd)}"
 
-if [[ ! -d "$WORKSPACE_PATH" ]]; then
-    echo "$0: $WORKSPACE_PATH is not a valid directory, exiting!"
+if [[ ! -d "${WORKSPACE_PATH}" || ! "${WORKSPACE_PATH}" = /* || ! -f "${WORKSPACE_PATH}/contrib/guix/libexec/prelude.bash" ]]; then
+    echo "${0##*/}: ${WORKSPACE_PATH} is not the top directory of the Dash Core repository, exiting!"
     exit 1
 fi
 

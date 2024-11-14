@@ -2,30 +2,39 @@
 
 set -eo pipefail
 
-if [[ -n "${1}" ]]; then
-    WORKSPACE_PATH="$1"
-else
-    WORKSPACE_PATH="/src/dash"
-fi
+WORKSPACE_PATH="${1:-$(pwd)}"
 
-if [[ ! -d "$WORKSPACE_PATH" ]]; then
-    echo "$0: $WORKSPACE_PATH is not a valid directory, exiting!"
+if [[ ! -d "${WORKSPACE_PATH}" || ! "${WORKSPACE_PATH}" = /* || ! -f "${WORKSPACE_PATH}/contrib/guix/guix-build" ]]; then
+    echo "${0##*/}: ${WORKSPACE_PATH} is not the top directory of the Dash Core repository, exiting!"
     exit 1
 fi
 
 XCODE_VERSION="12.2"
 XCODE_RELEASE="12B45b"
 XCODE_ARCHIVE="Xcode-${XCODE_VERSION}-${XCODE_RELEASE}-extracted-SDK-with-libcxx-headers"
+XCODE_SOURCE="${XCODE_SOURCE:-https://bitcoincore.org/depends-sources/sdks}"
+
+export SDK_PATH="${SDK_PATH:-${WORKSPACE_PATH}/depends/SDKs}"
 
 # Check if macOS SDK is present, if not, download it
-if [ ! -d "${WORKSPACE_PATH}/depends/SDKs/${XCODE_ARCHIVE}" ]
-then
-    mkdir -p "${WORKSPACE_PATH}/depends/SDKs"
-    curl -L https://bitcoincore.org/depends-sources/sdks/${XCODE_ARCHIVE}.tar.gz | tar -xz -C "${WORKSPACE_PATH}/depends/SDKs"
+if [[ ! -d "${SDK_PATH}/${XCODE_ARCHIVE}" ]]; then
+    echo "Preparing macOS SDK..."
+    mkdir -p "${SDK_PATH}"
+    curl -L "${XCODE_SOURCE}/${XCODE_ARCHIVE}.tar.gz" | tar -xz -C "${SDK_PATH}"
+fi
+
+# Add safe.directory option only when WORKSPACE_PATH was specified via cmd-line arguments (happens in CI)
+if [[ -n "${1}" ]]; then
+    # Avoid adding duplicates
+    git config --global --fixed-value --get safe.directory "${WORKSPACE_PATH}" >> /dev/null || \
+        (echo "Adding safe.directory" && git config --global --add safe.directory "${WORKSPACE_PATH}")
 fi
 
 cd "${WORKSPACE_PATH}"
-git config --global --add safe.directory "${WORKSPACE_PATH}"
 git status >> /dev/null
+
+export HOSTS="${HOSTS:-x86_64-linux-gnu aarch64-linux-gnu riscv64-linux-gnu
+                       x86_64-w64-mingw32
+                       x86_64-apple-darwin arm64-apple-darwin}"
 
 ./contrib/guix/guix-build
