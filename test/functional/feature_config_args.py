@@ -17,15 +17,13 @@ from test_framework import util
 
 
 class ConfArgsTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.supports_cli = False
         self.wallet_names = []
         self.disable_autoconnect = False
+        self.uses_wallet = None
 
     def test_config_file_parser(self):
         self.log.info('Test config file parser')
