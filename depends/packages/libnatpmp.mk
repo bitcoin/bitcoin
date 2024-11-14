@@ -1,8 +1,8 @@
 package=libnatpmp
-$(package)_version=4536032ae32268a45c073a4d5e91bbab4534773a
+$(package)_version=07004b97cf691774efebe70404cf22201e4d330d
 $(package)_download_path=https://github.com/miniupnp/libnatpmp/archive
 $(package)_file_name=$($(package)_version).tar.gz
-$(package)_sha256_hash=543b460aab26acf91e11d15e17d8798f845304199eea2d76c2f444ec749c5383
+$(package)_sha256_hash=9321953ceb39d07c25463e266e50d0ae7b64676bb3a986d932b18881ed94f1fb
 
 define $(package)_set_vars
   $(package)_build_opts=CC="$($(package)_cc)"

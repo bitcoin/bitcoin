@@ -843,7 +843,7 @@ case $host in
            ;;
          *)
            AC_PATH_TOOL([DSYMUTIL], [dsymutil], dsymutil)
-           AC_PATH_TOOL([INSTALLNAMETOOL], [install_name_tool], install_name_tool)
+           AC_PATH_TOOL([INSTALL_NAME_TOOL], [install_name_tool], install_name_tool)
            AC_PATH_TOOL([OTOOL], [otool], otool)
            AC_PATH_PROGS([XORRISOFS], [xorrisofs], xorrisofs)
 
@@ -1047,7 +1047,7 @@ dnl "ad_strip" as the symbol for the entry point.
 if test x$TARGET_OS = xdarwin; then
   AX_CHECK_LINK_FLAG([[-Wl,-dead_strip]], [LDFLAGS="$LDFLAGS -Wl,-dead_strip"],, [[$LDFLAG_WERROR]])
   AX_CHECK_LINK_FLAG([[-Wl,-dead_strip_dylibs]], [LDFLAGS="$LDFLAGS -Wl,-dead_strip_dylibs"],, [[$LDFLAG_WERROR]])
-  AX_CHECK_LINK_FLAG([[-Wl,-bind_at_load]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-bind_at_load"],, [[$LDFLAG_WERROR]])
+  AX_CHECK_LINK_FLAG([[-Wl,-fixup_chains]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-fixup_chains"], [], [[$LDFLAG_WERROR]])
 fi
 
 AC_CHECK_HEADERS([endian.h sys/endian.h byteswap.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h sys/prctl.h sys/sysctl.h vm/vm_param.h sys/vmmeter.h sys/resources.h])
@@ -1952,6 +1952,17 @@ case ${OS} in
    *Windows*)
      sed  's/BUILDDIR="\/\([[a-z]]\)/BUILDDIR="\1:/'  test/config.ini > test/config-2.ini
      mv test/config-2.ini test/config.ini
+   ;;
+esac
+
+dnl An old hack similar to a98356fee to remove hard-coded
+dnl bind_at_load flag from libtool
+case $host in
+  *darwin*)
+     AC_MSG_RESULT([Removing -Wl,bind_at_load from libtool.])
+     sed < libtool > libtool-2 '/bind_at_load/d'
+     mv libtool-2 libtool
+     chmod 755 libtool
    ;;
 esac
 

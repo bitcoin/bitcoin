@@ -158,12 +158,11 @@ def check_MACHO_NOUNDEFS(binary) -> bool:
     '''
     return binary.header.has(lief.MachO.HEADER_FLAGS.NOUNDEFS)
 
-def check_MACHO_LAZY_BINDINGS(binary) -> bool:
+def check_MACHO_FIXUP_CHAINS(binary) -> bool:
     '''
-    Check for no lazy bindings.
-    We don't use or check for MH_BINDATLOAD. See #18295.
+    Check for use of chained fixups.
     '''
-    return binary.dyld_info.lazy_bind == (0,0)
+    return binary.has_dyld_chained_fixups
 
 def check_MACHO_Canary(binary) -> bool:
     '''
@@ -214,8 +213,8 @@ BASE_PE = [
 
 BASE_MACHO = [
     ('NOUNDEFS', check_MACHO_NOUNDEFS),
-    ('LAZY_BINDINGS', check_MACHO_LAZY_BINDINGS),
     ('Canary', check_MACHO_Canary),
+    ('FIXUP_CHAINS', check_MACHO_FIXUP_CHAINS),
 ]
 
 CHECKS = {

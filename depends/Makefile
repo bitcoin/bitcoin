@@ -45,6 +45,9 @@ MULTIPROCESS ?=
 LTO ?=
 FALLBACK_DOWNLOAD_PATH ?= http://dash-depends-sources.s3-website-us-west-2.amazonaws.com
 
+C_STANDARD ?= c11
+CXX_STANDARD ?= c++17
+
 BUILD = $(shell ./config.guess)
 HOST ?= $(BUILD)
 PATCHES_PATH = $(BASEDIR)/patches
@@ -223,6 +226,8 @@ $(host_prefix)/share/config.site : config.site.in $(host_prefix)/.stamp_$(final_
             -e 's|@RANLIB@|$(host_RANLIB)|' \
             -e 's|@NM@|$(host_NM)|' \
             -e 's|@STRIP@|$(host_STRIP)|' \
+            -e 's|@OTOOL@|$(host_OTOOL)|' \
+            -e 's|@INSTALL_NAME_TOOL@|$(host_INSTALL_NAME_TOOL)|' \
             -e 's|@build_os@|$(build_os)|' \
             -e 's|@host_os@|$(host_os)|' \
             -e 's|@CFLAGS@|$(strip $(host_CFLAGS) $(host_$(release_type)_CFLAGS))|' \

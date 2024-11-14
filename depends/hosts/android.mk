@@ -6,6 +6,9 @@ android_CXX=$(ANDROID_TOOLCHAIN_BIN)/$(HOST)$(ANDROID_API_LEVEL)-clang++
 android_CC=$(ANDROID_TOOLCHAIN_BIN)/$(HOST)$(ANDROID_API_LEVEL)-clang
 endif
 
+android_CFLAGS=-std=$(C_STANDARD)
+android_CXXFLAGS=-std=$(CXX_STANDARD)
+
 ifneq ($(LTO),)
 android_CFLAGS += -flto
 android_LDFLAGS += -flto
