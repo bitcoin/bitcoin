@@ -482,6 +482,8 @@ inspecting signatures in Mach-O binaries.")
             (list "--enable-stack-protector=all",
                   "--enable-bind-now",
                   "--disable-werror",
+                  "--disable-timezone-tools",
+                  "--disable-profile",
                   building-on)))
     ((#:phases phases)
         `(modify-phases ,phases
