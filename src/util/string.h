@@ -6,7 +6,6 @@
 #define BITCOIN_UTIL_STRING_H
 
 #include <span.h>
-#include <tinyformat.h>
 
 #include <array>
 #include <cstdint>
@@ -25,53 +24,65 @@ namespace util {
  * strings, to reduce the likelihood of tinyformat throwing exceptions at
  * run-time. Validation is partial to try and prevent the most common errors
  * while avoiding re-implementing the entire parsing logic.
- *
- * @note Counting of `*` dynamic width and precision fields (such as `%*c`,
- * `%2$*3$d`, `%.*f`) is not implemented to minimize code complexity as long as
- * they are not used in the codebase. Usage of these fields is not counted and
- * can lead to run-time exceptions. Code wanting to use the `*` specifier can
- * side-step this struct and call tinyformat directly.
  */
 template <unsigned num_params>
 struct ConstevalFormatString {
     const char* const fmt;
     consteval ConstevalFormatString(const char* str) : fmt{str} { Detail_CheckNumFormatSpecifiers(fmt); }
-    constexpr static void Detail_CheckNumFormatSpecifiers(std::string_view str)
+    constexpr static void Detail_CheckNumFormatSpecifiers(const char* str)
     {
         unsigned count_normal{0}; // Number of "normal" specifiers, like %s
         unsigned count_pos{0};    // Max number in positional specifier, like %8$s
-        for (auto it{str.begin()}; it < str.end();) {
-            if (*it != '%') {
-                ++it;
-                continue;
-            }
+        for (auto it{str}; *it != '\0'; ++it) {
+            if (*it != '%' || *++it == '%') continue; // Skip escaped %%
 
-            if (++it >= str.end()) throw "Format specifier incorrectly terminated by end of string";
-            if (*it == '%') {
-                // Percent escape: %%
-                ++it;
-                continue;
-            }
+            auto add_arg = [&] {
+                unsigned maybe_num{0};
+                while ('0' <= *it && *it <= '9') {
+                    maybe_num *= 10;
+                    maybe_num += *it - '0';
+                    ++it;
+                }
 
-            unsigned maybe_num{0};
-            while ('0' <= *it && *it <= '9') {
-                maybe_num *= 10;
-                maybe_num += *it - '0';
-                ++it;
+                if (*it == '$') {
+                    ++it;
+                    // Positional specifier, like %8$s
+                    if (maybe_num == 0) throw "Positional format specifier must have position of at least 1";
+                    count_pos = std::max(count_pos, maybe_num);
+                } else {
+                    // Non-positional specifier, like %s
+                    ++count_normal;
+                }
             };
 
-            if (*it == '$') {
-                // Positional specifier, like %8$s
-                if (maybe_num == 0) throw "Positional format specifier must have position of at least 1";
-                count_pos = std::max(count_pos, maybe_num);
-                if (++it >= str.end()) throw "Format specifier incorrectly terminated by end of string";
-            } else {
-                // Non-positional specifier, like %s
-                ++count_normal;
+            // Increase argument count and consume positional specifier, if present.
+            add_arg();
+
+            // Consume flags.
+            while (*it == '#' || *it == '0' || *it == '-' || *it == ' ' || *it == '+') ++it;
+
+            auto parse_size = [&] {
+                if (*it == '*') {
+                    ++it;
+                    add_arg();
+                } else {
+                    while ('0' <= *it && *it <= '9') ++it;
+                }
+            };
+
+            // Consume dynamic or static width value.
+            parse_size();
+
+            // Consume dynamic or static precision value.
+            if (*it == '.') {
                 ++it;
+                parse_size();
             }
-            // The remainder "[flags][width][.precision][length]type" of the
-            // specifier is not checked. Parsing continues with the next '%'.
+
+            if (*it == '\0') throw "Format specifier incorrectly terminated by end of string";
+
+            // Length and type in "[flags][width][.precision][length]type"
+            // is not checked. Parsing continues with the next '%'.
         }
         if (count_normal && count_pos) throw "Format specifiers must be all positional or all non-positional!";
         unsigned count{count_normal | count_pos};
@@ -234,13 +245,5 @@ template <typename T1, size_t PREFIX_LEN>
            std::equal(std::begin(prefix), std::end(prefix), std::begin(obj));
 }
 } // namespace util
-
-namespace tinyformat {
-template <typename... Args>
-std::string format(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
-{
-    return format(fmt.fmt, args...);
-}
-} // namespace tinyformat
 
 #endif // BITCOIN_UTIL_STRING_H
