@@ -80,8 +80,12 @@ jobs:
     # See: https://github.com/actions/runner-images#available-images.
     runs-on: macos-14
 
-    # No need to run on the read-only mirror, unless it is a PR.
-    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    # When a contributor maintains a fork of the repo, any pull request they make
+    # to their own fork, or to the main repository, will trigger two CI runs:
+    # one for the branch push and one for the pull request.
+    # This can be avoided by setting SKIP_BRANCH_PUSH=true as a custom env variable
+    # in Github repository settings.
+    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
 
     timeout-minutes: 120
 
@@ -135,8 +139,7 @@ jobs:
     # See: https://github.com/actions/runner-images#available-images.
     runs-on: windows-2022
 
-    # No need to run on the read-only mirror, unless it is a PR.
-    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
 
     env:
       PYTHONUTF8: 1
@@ -215,8 +218,7 @@ jobs:
   asan-lsan-ubsan-integer-no-depends-usdt:
     name: 'ASan + LSan + UBSan + integer, no depends, USDT'
     runs-on: ubuntu-24.04 # has to match container in ci/test/00_setup_env_native_asan.sh for tracing tools
-    # No need to run on the read-only mirror, unless it is a PR.
-    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
     timeout-minutes: 120
     env:
       FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
