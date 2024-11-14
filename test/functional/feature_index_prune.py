@@ -70,7 +70,7 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
 
         self.log.info("prune some blocks")
         for node in self.nodes[:2]:
-            with node.assert_debug_log(['limited pruning to height 689']):
+            with node.assert_debug_log(['Prune: UnlinkPrunedFiles deleted blk/rev (00000)']):
                 pruneheight_new = node.pruneblockchain(400)
                 # the prune heights used here and below are magic numbers that are determined by the
                 # thresholds at which block files wrap, so they depend on disk serialization and default block file size.
@@ -143,7 +143,7 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
         self.sync_index(height=2500)
 
         for node in self.nodes[:2]:
-            with node.assert_debug_log(['limited pruning to height 2489']):
+            with node.assert_debug_log(['Prune: UnlinkPrunedFiles deleted blk/rev (00007)']):
                 pruneheight_new = node.pruneblockchain(2500)
                 assert_equal(pruneheight_new, 2005)
 
