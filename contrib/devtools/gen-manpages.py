@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import argparse
 
 BINARIES = [
 'src/bitcoind',
@@ -15,6 +16,18 @@ BINARIES = [
 'src/bitcoin-util',
 'src/qt/bitcoin-qt',
 ]
+
+parser = argparse.ArgumentParser(
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+)
+parser.add_argument(
+    "-s",
+    "--skip-missing-binaries",
+    action="store_true",
+    default=False,
+    help="skip generation for binaries that are not found in the build path",
+)
+args = parser.parse_args()
 
 # Paths to external utilities.
 git = os.getenv('GIT', 'git')
@@ -38,8 +51,12 @@ for relpath in BINARIES:
     try:
         r = subprocess.run([abspath, "--version"], stdout=subprocess.PIPE, check=True, text=True)
     except IOError:
-        print(f'{abspath} not found or not an executable', file=sys.stderr)
-        sys.exit(1)
+        if(args.skip_missing_binaries):
+            print(f'{abspath} not found or not an executable. Skipping...', file=sys.stderr)
+            continue
+        else:
+            print(f'{abspath} not found or not an executable', file=sys.stderr)
+            sys.exit(1)
     # take first line (which must contain version)
     verstr = r.stdout.splitlines()[0]
     # last word of line is the actual version e.g. v22.99.0-5c6b3d5b3508
