@@ -1719,6 +1719,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
         }
     }
     stats.time_offset = peer->m_time_offset;
+    stats.m_misbehavior_score = WITH_LOCK(peer->m_misbehavior_mutex, return peer->m_should_discourage) ? 100 : 0;
 
     return true;
 }
