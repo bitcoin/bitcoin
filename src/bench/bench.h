@@ -61,6 +61,7 @@ struct Args {
     fs::path output_json;
     std::string regex_filter;
     uint8_t priority;
+    std::vector<std::string> setup_args;
 };
 
 class BenchRunner
