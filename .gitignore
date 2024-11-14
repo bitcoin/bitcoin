@@ -21,3 +21,6 @@ test/lint/test_runner/target/
 /guix-build-*
 
 /ci/scratch/
+
+# ignore so users can symlink `contrib/justfile` into root
+/justfile
