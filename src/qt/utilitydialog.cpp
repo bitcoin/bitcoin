@@ -59,7 +59,7 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         QString header = "The bitcoin-qt application provides a graphical interface for interacting with " CLIENT_NAME ".\n\n"
                          "It combines the core functionalities of bitcoind with a user-friendly interface for wallet management, transaction history, and network statistics.\n\n"
                          "It is suitable for users who prefer a graphical over a command-line interface.\n\n"
-                         "You can optionally specify a payment [URI], in e.g. the BIP21 URI format.\n\n"
+                         "You can optionally specify a payment [URI], in e.g. the BIP20 or BIP21 URI formats.\n\n"
                          "Usage: bitcoin-qt [options] [URI]\n\n";
         QTextCursor cursor(ui->helpMessage->document());
         cursor.insertText(version);
