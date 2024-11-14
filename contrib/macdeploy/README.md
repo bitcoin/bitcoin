@@ -66,9 +66,8 @@ building for macOS.
 
 Apple's version of `binutils` (called `cctools`) contains lots of functionality missing in the
 FSF's `binutils`. In addition to extra linker options for frameworks and sysroots, several
-other tools are needed as well such as `install_name_tool`, `lipo`, and `nmedit`. These
-do not build under Linux, so they have been patched to do so. The work here was used as
-a starting point: [mingwandroid/toolchain4](https://github.com/mingwandroid/toolchain4).
+other tools are needed as well. These do not build under Linux, so they have been patched to
+do so. The work here was used as a starting point: [mingwandroid/toolchain4](https://github.com/mingwandroid/toolchain4).
 
 In order to build a working toolchain, the following source packages are needed from
 Apple: `cctools`, `dyld`, and `ld64`.
