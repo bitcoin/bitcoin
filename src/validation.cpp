@@ -2056,8 +2056,9 @@ void Chainstate::InvalidChainFound(CBlockIndex* pindexNew)
     if (!m_chainman.m_best_invalid || pindexNew->nChainWork > m_chainman.m_best_invalid->nChainWork) {
         m_chainman.m_best_invalid = pindexNew;
     }
+    SetBlockFailureFlags(pindexNew);
     if (m_chainman.m_best_header != nullptr && m_chainman.m_best_header->GetAncestor(pindexNew->nHeight) == pindexNew) {
-        m_chainman.m_best_header = m_chain.Tip();
+        m_chainman.RecalculateBestHeader();
     }
 
     LogPrintf("%s: invalid block=%s  height=%d  log2_work=%f  date=%s\n", __func__,
@@ -3791,6 +3792,17 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
         }
     }
     return true;
+}
+
+void Chainstate::SetBlockFailureFlags(CBlockIndex* invalid_block)
+{
+    AssertLockHeld(cs_main);
+
+    for (auto& [_, block_index] : m_blockman.m_block_index) {
+        if (block_index.GetAncestor(invalid_block->nHeight) == invalid_block && !(block_index.nStatus & BLOCK_FAILED_MASK)) {
+            block_index.nStatus |= BLOCK_FAILED_CHILD;
+        }
+    }
 }
 
 void Chainstate::ResetBlockFailureFlags(CBlockIndex *pindex) {
@@ -6402,6 +6414,17 @@ std::optional<int> ChainstateManager::GetSnapshotBaseHeight() const
 {
     const CBlockIndex* base = this->GetSnapshotBaseBlock();
     return base ? std::make_optional(base->nHeight) : std::nullopt;
+}
+
+void ChainstateManager::RecalculateBestHeader()
+{
+    AssertLockHeld(cs_main);
+    m_best_header = ActiveChain().Tip();
+    for (auto& entry : m_blockman.m_block_index) {
+        if (!(entry.second.nStatus & BLOCK_FAILED_MASK) && m_best_header->nChainWork < entry.second.nChainWork) {
+            m_best_header = &entry.second;
+        }
+    }
 }
 
 bool ChainstateManager::ValidatedSnapshotCleanup()

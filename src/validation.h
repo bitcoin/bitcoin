@@ -729,6 +729,9 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_chainstate_mutex)
         LOCKS_EXCLUDED(::cs_main);
 
+    /** Set invalidity status to all descendants of a block */
+    void SetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
     /** Remove invalidity status from a block and its descendants. */
     void ResetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -1313,6 +1316,11 @@ public:
     //! Return the height of the base block of the snapshot in use, if one exists, else
     //! nullopt.
     std::optional<int> GetSnapshotBaseHeight() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! If, due to invalidation / reconsideration of blocks, the previous
+    //! best header is no longer valid / guaranteed to be the most-work
+    //! header in our block-index not known to be invalid, recalculate it.
+    void RecalculateBestHeader() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     CCheckQueue<CScriptCheck>& GetCheckQueue() { return m_script_check_queue; }
 
