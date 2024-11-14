@@ -33,6 +33,8 @@ enum class QualityLevel
 {
     /** This cluster may have multiple disconnected components, which are all NEEDS_RELINEARIZE. */
     NEEDS_SPLIT,
+    /** This cluster may have multiple disconnected components, which are all ACCEPTABLE. */
+    NEEDS_SPLIT_ACCEPTABLE,
     /** This cluster has undergone changes that warrant re-linearization. */
     NEEDS_RELINEARIZE,
     /** The minimal level of linearization has been performed, but it is not known to be optimal. */
@@ -79,9 +81,10 @@ public:
     // Generic helper functions.
 
     /** Whether the linearization of this Cluster can be exposed. */
-    bool IsAcceptable() const noexcept
+    bool IsAcceptable(bool after_split = false) const noexcept
     {
-        return m_quality == QualityLevel::ACCEPTABLE || m_quality == QualityLevel::OPTIMAL;
+        return m_quality == QualityLevel::ACCEPTABLE || m_quality == QualityLevel::OPTIMAL ||
+               (after_split && m_quality == QualityLevel::NEEDS_SPLIT_ACCEPTABLE);
     }
     /** Whether the linearization of this Cluster is optimal. */
     bool IsOptimal() const noexcept
@@ -91,7 +94,8 @@ public:
     /** Whether this cluster requires splitting. */
     bool NeedsSplitting() const noexcept
     {
-        return m_quality == QualityLevel::NEEDS_SPLIT;
+        return m_quality == QualityLevel::NEEDS_SPLIT ||
+               m_quality == QualityLevel::NEEDS_SPLIT_ACCEPTABLE;
     }
     /** Get the number of transactions in this Cluster. */
     LinearizationIndex GetTxCount() const noexcept { return m_linearization.size(); }
@@ -379,19 +383,35 @@ void Cluster::ApplyRemovals(TxGraphImpl& graph, std::span<GraphIndex>& to_remove
         --graph.m_txcount;
     } while(!to_remove.empty());
 
+    auto quality = m_quality;
     Assume(todo.Any());
     // Wipe from the Cluster's DepGraph (this is O(n) regardless of the number of entries
     // removed, so we benefit from batching all the removals).
     m_depgraph.RemoveTransactions(todo);
     m_mapping.resize(m_depgraph.PositionRange());
 
-    // Filter removals out of m_linearization.
-    m_linearization.erase(std::remove_if(
-        m_linearization.begin(),
-        m_linearization.end(),
-        [&](auto pos) { return todo[pos]; }), m_linearization.end());
-
-    graph.SetClusterQuality(m_quality, m_setindex, QualityLevel::NEEDS_SPLIT);
+    // First remove all removals at the end of the linearization.
+    while (!m_linearization.empty() && todo[m_linearization.back()]) {
+        todo.Reset(m_linearization.back());
+        m_linearization.pop_back();
+    }
+    if (todo.None()) {
+        // If no further removals remain, and thus all removals were at the end, we may be able
+        // to leave the cluster at a better quality level.
+        if (IsAcceptable(/*after_split=*/true)) {
+            quality = QualityLevel::NEEDS_SPLIT_ACCEPTABLE;
+        } else {
+            quality = QualityLevel::NEEDS_SPLIT;
+        }
+    } else {
+        // If more removals remain, filter those out of m_linearization.
+        m_linearization.erase(std::remove_if(
+            m_linearization.begin(),
+            m_linearization.end(),
+            [&](auto pos) { return todo[pos]; }), m_linearization.end());
+        quality = QualityLevel::NEEDS_SPLIT;
+    }
+    graph.SetClusterQuality(m_quality, m_setindex, quality);
     Updated(graph);
 }
 
@@ -399,6 +419,18 @@ bool Cluster::Split(TxGraphImpl& graph) noexcept
 {
     // This function can only be called when the Cluster needs splitting.
     Assume(NeedsSplitting());
+    // Determine the new quality the split-off Clusters will have.
+    QualityLevel new_quality = IsAcceptable(/*after_split=*/true) ? QualityLevel::ACCEPTABLE
+                                                                  : QualityLevel::NEEDS_RELINEARIZE;
+    // If we're going to produce ACCEPTABLE clusters (i.e., when in NEEDS_SPLIT_ACCEPTABLE), we
+    // need to post-linearize to make sure the split-out versions are all connected (as
+    // connectivity may have changed by removing part of the cluster). This could be done on each
+    // resulting split-out cluster separately, but it is simpler to do it once up front before
+    // splitting. This step is not necessary if the resulting clusters are NEEDS_RELINEARIZE, as
+    // they will be post-linearized anyway in MakeAcceptable().
+    if (new_quality == QualityLevel::ACCEPTABLE) {
+        PostLinearize(m_depgraph, m_linearization);
+    }
     /** Which positions are still left in this Cluster. */
     auto todo = m_depgraph.Positions();
     /** Mapping from transaction positions in this Cluster to the Cluster where it ends up, and
@@ -412,7 +444,10 @@ bool Cluster::Split(TxGraphImpl& graph) noexcept
         if (first && component == todo) {
             // The existing Cluster is an entire component. Leave it be, but update its quality.
             Assume(todo == m_depgraph.Positions());
-            graph.SetClusterQuality(m_quality, m_setindex, QualityLevel::NEEDS_RELINEARIZE);
+            graph.SetClusterQuality(m_quality, m_setindex, new_quality);
+            // If this made the quality ACCEPTABLE or OPTIMAL, we need to compute and cache its
+            // chunking.
+            Updated(graph);
             return false;
         }
         first = false;
@@ -424,7 +459,7 @@ bool Cluster::Split(TxGraphImpl& graph) noexcept
         for (auto i : component) {
             remap[i] = {new_cluster.get(), DepGraphIndex(-1)};
         }
-        graph.InsertCluster(std::move(new_cluster), QualityLevel::NEEDS_RELINEARIZE);
+        graph.InsertCluster(std::move(new_cluster), new_quality);
         todo -= component;
     }
     // Redistribute the transactions.
@@ -696,9 +731,11 @@ void TxGraphImpl::SplitAll() noexcept
 {
     // Before splitting all Cluster, first make sure all removals are applied.
     ApplyRemovals();
-    auto& queue = m_clusters[int(QualityLevel::NEEDS_SPLIT)];
-    while (!queue.empty()) {
-        Split(*queue.back().get());
+    for (auto quality : {QualityLevel::NEEDS_SPLIT, QualityLevel::NEEDS_SPLIT_ACCEPTABLE}) {
+        auto& queue = m_clusters[int(quality)];
+        while (!queue.empty()) {
+            Split(*queue.back().get());
+        }
     }
 }
 
@@ -1221,6 +1258,8 @@ void Cluster::SetFee(TxGraphImpl& graph, DepGraphIndex idx, int64_t fee) noexcep
     m_depgraph.FeeRate(idx).fee = fee;
     if (!NeedsSplitting()) {
         graph.SetClusterQuality(m_quality, m_setindex, QualityLevel::NEEDS_RELINEARIZE);
+    } else {
+        graph.SetClusterQuality(m_quality, m_setindex, QualityLevel::NEEDS_SPLIT);
     }
     Updated(graph);
 }
