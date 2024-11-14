@@ -76,6 +76,9 @@ const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 constexpr inline auto TEST_DIR_PATH_ELEMENT{"test_common bitcoin"}; // Includes a space to catch possible path escape issues.
 
+/* Used to group tests executed within the same binary run under the same directory */
+static const std::string g_init_time{util::ToString(TicksSinceEpoch<std::chrono::nanoseconds>(SystemClock::now()))};
+
 struct NetworkSetup
 {
     NetworkSetup()
@@ -87,7 +90,7 @@ static NetworkSetup g_networksetup_instance;
 
 void SetupCommonTestArgs(ArgsManager& argsman)
 {
-    argsman.AddArg("-testdatadir", strprintf("Custom data directory (default: %s<random_string>)", fs::PathToString(fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / "")),
+    argsman.AddArg("-testdatadir", strprintf("Custom data directory (default: %s<current_time>/<test_name>)", fs::PathToString(fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / "")),
                    ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
 }
 
@@ -138,8 +141,7 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
 
     const std::string test_name{G_TEST_GET_FULL_NAME ? G_TEST_GET_FULL_NAME() : ""};
     if (!m_node.args->IsArgSet("-testdatadir")) {
-        const auto now{TicksSinceEpoch<std::chrono::nanoseconds>(SystemClock::now())};
-        m_path_root = fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / test_name / util::ToString(now);
+        m_path_root = fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / g_init_time / test_name;
         TryCreateDirectories(m_path_root);
     } else {
         // Custom data directory
