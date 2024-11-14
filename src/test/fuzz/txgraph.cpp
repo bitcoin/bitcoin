@@ -508,6 +508,24 @@ FUZZ_TARGET(txgraph)
                 // cause it to be re-evaluated in TxGraph).
                 sims.back().oversized = std::nullopt;
                 break;
+            } else if (!main_sim.IsOversized() && command-- == 0) {
+                // CompareMainOrder.
+                auto ref_a = pick_fn();
+                auto ref_b = pick_fn();
+                auto sim_a = main_sim.Find(ref_a);
+                auto sim_b = main_sim.Find(ref_b);
+                // Both transactions must exist in the main graph.
+                if (sim_a == SimTxGraph::MISSING || sim_b == SimTxGraph::MISSING) break;
+                auto cmp = real->CompareMainOrder(*ref_a, *ref_b);
+                // Distinct transactions have distinct places.
+                if (sim_a != sim_b) assert(cmp != 0);
+                // Ancestors go before descendants.
+                if (main_sim.graph.Ancestors(sim_a)[sim_b]) assert(cmp >= 0);
+                if (main_sim.graph.Descendants(sim_a)[sim_b]) assert(cmp <= 0);
+                // Do not verify consistency with chunk feerates, as we cannot easily determine
+                // these here without making more calls to real, which could affect its internal
+                // state. A full comparison is done at the end.
+                break;
             }
         }
     }
@@ -515,6 +533,54 @@ FUZZ_TARGET(txgraph)
     // After running all modifications, perform an internal sanity check (before invoking
     // inspectors that may modify the internal state).
     real->SanityCheck();
+
+    if (!sims[0].IsOversized()) {
+        // If the main graph is not oversized, verify the total ordering implied by
+        // CompareMainOrder.
+        // First construct two distinct randomized permutations of the positions in sims[0].
+        std::vector<SimTxGraph::Pos> vec1;
+        for (auto i : sims[0].graph.Positions()) vec1.push_back(i);
+        std::shuffle(vec1.begin(), vec1.end(), rng);
+        auto vec2 = vec1;
+        std::shuffle(vec2.begin(), vec2.end(), rng);
+        if (vec1 == vec2) std::next_permutation(vec2.begin(), vec2.end());
+        // Sort both according to CompareMainOrder. By having randomized starting points, the order
+        // of CompareMainOrder invocations is somewhat randomized as well.
+        auto cmp = [&](SimTxGraph::Pos a, SimTxGraph::Pos b) noexcept {
+            return real->CompareMainOrder(*sims[0].GetRef(a), *sims[0].GetRef(b)) < 0;
+        };
+        std::sort(vec1.begin(), vec1.end(), cmp);
+        std::sort(vec2.begin(), vec2.end(), cmp);
+
+        // Verify the resulting orderings are identical. This could only fail if the ordering was
+        // not total.
+        assert(vec1 == vec2);
+
+        // Verify that the ordering is topological.
+        auto todo = sims[0].graph.Positions();
+        for (auto i : vec1) {
+            todo.Reset(i);
+            assert(!sims[0].graph.Ancestors(i).Overlaps(todo));
+        }
+        assert(todo.None());
+
+        // For every transaction in the total ordering, find a random one before it and after it,
+        // and compare their chunk feerates, which must be consistent with the ordering.
+        for (size_t pos = 0; pos < vec1.size(); ++pos) {
+            auto pos_feerate = real->GetMainChunkFeerate(*sims[0].GetRef(vec1[pos]));
+            if (pos > 0) {
+                size_t before = rng.randrange<size_t>(pos);
+                auto before_feerate = real->GetMainChunkFeerate(*sims[0].GetRef(vec1[before]));
+                assert(FeeRateCompare(before_feerate, pos_feerate) >= 0);
+            }
+            if (pos + 1 < vec1.size()) {
+                size_t after = pos + 1 + rng.randrange<size_t>(vec1.size() - 1 - pos);
+                auto after_feerate = real->GetMainChunkFeerate(*sims[0].GetRef(vec1[after]));
+                assert(FeeRateCompare(after_feerate, pos_feerate) <= 0);
+            }
+        }
+    }
+
     assert(real->HaveStaging() == (sims.size() > 1));
 
     // Try to run a full comparison, for both main_only=false and main_only=true in TxGraph

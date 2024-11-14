@@ -141,6 +141,9 @@ public:
      *  graph exists, it is queried; otherwise the main graph is queried. This is available even
      *  for oversized graphs. */
     virtual GraphIndex GetTransactionCount(bool main_only = false) noexcept = 0;
+    /** Compare two transactions according to their order in the main graph. Both transactions must
+     *  be in the main graph. The main graph must not be oversized. */
+    virtual std::strong_ordering CompareMainOrder(const Ref& a, const Ref& b) noexcept = 0;
 
     /** Perform an internal consistency check on this object. */
     virtual void SanityCheck() const = 0;
