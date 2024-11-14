@@ -602,8 +602,17 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
         assert(pQuorumBaseBlockIndex);
         // populate cache for keepOldConnections most recent quorums only
         bool populate_cache = vecResultQuorums.size() < static_cast<size_t>(llmq_params_opt->keepOldConnections);
+
+        // We assume that every quorum asked for is available to us on hand, if this
+        // fails then we can assume that something has gone wrong and we should stop
+        // trying to process any further and return a blank.
         auto quorum = GetQuorum(llmqType, pQuorumBaseBlockIndex, populate_cache);
-        assert(quorum != nullptr);
+        if (!quorum) {
+            LogPrintf("%s: ERROR! Unexpected missing quorum with llmqType=%d, blockHash=%s, populate_cache=%s\n",
+                      __func__, ToUnderlying(llmqType), pQuorumBaseBlockIndex->GetBlockHash().ToString(),
+                      populate_cache ? "true" : "false");
+            return {};
+        }
         vecResultQuorums.emplace_back(quorum);
     }
 
@@ -742,7 +751,7 @@ PeerMsgRet CQuorumManager::ProcessMessage(CNode& pfrom, const std::string& msg_t
             return sendQDATA(CQuorumDataRequest::Errors::QUORUM_BLOCK_NOT_FOUND, request_limit_exceeded);
         }
 
-        const CQuorumCPtr pQuorum = GetQuorum(request.GetLLMQType(), pQuorumBaseBlockIndex);
+        const auto pQuorum = GetQuorum(request.GetLLMQType(), pQuorumBaseBlockIndex);
         if (pQuorum == nullptr) {
             return sendQDATA(CQuorumDataRequest::Errors::QUORUM_NOT_FOUND, request_limit_exceeded);
         }

@@ -229,7 +229,7 @@ static RPCHelpMan masternode_status()
     // keep compatibility with legacy status for now (might get deprecated/removed later)
     mnObj.pushKV("outpoint", node.mn_activeman->GetOutPoint().ToStringShort());
     mnObj.pushKV("service", node.mn_activeman->GetService().ToStringAddrPort());
-    CDeterministicMNCPtr dmn = CHECK_NONFATAL(node.dmnman)->GetListAtChainTip().GetMN(node.mn_activeman->GetProTxHash());
+    auto dmn = CHECK_NONFATAL(node.dmnman)->GetListAtChainTip().GetMN(node.mn_activeman->GetProTxHash());
     if (dmn) {
         mnObj.pushKV("proTxHash", dmn->proTxHash.ToString());
         mnObj.pushKV("type", std::string(GetMnType(dmn->nType).description));
@@ -322,9 +322,11 @@ static RPCHelpMan masternode_winners()
     for (int h = nStartHeight; h <= nChainTipHeight; h++) {
         const CBlockIndex* pIndex = pindexTip->GetAncestor(h - 1);
         auto payee = node.dmnman->GetListForBlock(pIndex).GetMNPayee(pIndex);
-        std::string strPayments = GetRequiredPaymentsString(*CHECK_NONFATAL(node.govman), tip_mn_list, h, payee);
-        if (strFilter != "" && strPayments.find(strFilter) == std::string::npos) continue;
-        obj.pushKV(strprintf("%d", h), strPayments);
+        if (payee) {
+            std::string strPayments = GetRequiredPaymentsString(*CHECK_NONFATAL(node.govman), tip_mn_list, h, payee);
+            if (strFilter != "" && strPayments.find(strFilter) == std::string::npos) continue;
+            obj.pushKV(strprintf("%d", h), strPayments);
+        }
     }
 
     auto projection = node.dmnman->GetListForBlock(pindexTip).GetProjectedMNPayees(pindexTip, 20);

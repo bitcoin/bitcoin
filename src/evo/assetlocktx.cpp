@@ -140,7 +140,8 @@ bool CAssetUnlockPayload::VerifySig(const llmq::CQuorumManager& qman, const uint
     const auto quorum = qman.GetQuorum(llmqType, quorumHash);
     // quorum must be valid at this point. Let's check and throw error just in case
     if (!quorum) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "internal-error");
+        LogPrintf("%s: ERROR! No quorum for credit pool found for hash=%s\n", __func__, quorumHash.ToString());
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-assetunlock-quorum-internal-error");
     }
 
     const uint256 requestId = ::SerializeHash(std::make_pair(ASSETUNLOCK_REQUESTID_PREFIX, index));
