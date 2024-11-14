@@ -227,6 +227,8 @@ private:
         Locator m_locator[MAX_LEVELS];
         /** The chunk feerate of this transaction in main (if present in m_locator[0]) */
         FeeFrac m_main_chunk_feerate;
+        /** The position this transaction in the main linearization (if present). /*/
+        LinearizationIndex m_main_lin_index;
 
         /** Check whether this Entry is not present in any Cluster. */
         bool IsWiped() const noexcept
@@ -343,6 +345,7 @@ public:
     std::vector<Ref*> GetDescendants(const Ref& arg, bool main_only = false) noexcept final;
     GraphIndex GetTransactionCount(bool main_only = false) noexcept final;
     bool IsOversized(bool main_only = false) noexcept final;
+    std::strong_ordering CompareMainOrder(const Ref& a, const Ref& b) noexcept final;
 
     void SanityCheck() const final;
 };
@@ -384,9 +387,10 @@ void Cluster::Updated(TxGraphImpl& graph) noexcept
         entry.m_locator[m_level].SetPresent(this, idx);
     }
     // If this is for the main graph (level = 0), and the Cluster's quality is ACCEPTABLE or
-    // OPTIMAL, compute its chunking and store its information in the Entry's m_main_chunk_feerate.
-    // These fields are only accessed after making the entire graph ACCEPTABLE, so it is pointless
-    // to compute these if we haven't reached that quality level yet.
+    // OPTIMAL, compute its chunking and store its information in the Entry's m_main_lin_index
+    // and m_main_chunk_feerate. These fields are only accessed after making the entire graph
+    // ACCEPTABLE, so it is pointless to compute these if we haven't reached that quality level
+    // yet.
     if (m_level == 0 && (m_quality == QualityLevel::OPTIMAL || m_quality == QualityLevel::ACCEPTABLE)) {
         LinearizationChunking chunking(m_depgraph, m_linearization);
         LinearizationIndex lin_idx{0};
@@ -395,9 +399,10 @@ void Cluster::Updated(TxGraphImpl& graph) noexcept
             auto chunk = chunking.GetChunk(chunk_idx);
             // Iterate over the transactions in the linearization, which must match those in chunk.
             while (true) {
-                ClusterIndex idx = m_linearization[lin_idx++];
+                ClusterIndex idx = m_linearization[lin_idx];
                 GraphIndex graph_idx = m_mapping[idx];
                 auto& entry = graph.m_entries[graph_idx];
+                entry.m_main_lin_index = lin_idx++;
                 entry.m_main_chunk_feerate = chunk.feerate;
                 chunk.transactions.Reset(idx);
                 if (chunk.transactions.None()) break;
@@ -472,6 +477,10 @@ void Cluster::ApplyRemovals(TxGraphImpl& graph, std::span<GraphIndex>& to_remove
         todo.Set(locator.index);
         // - Remove from m_mapping.
         m_mapping[locator.index] = GraphIndex(-1);
+        // - Remove its linearization index from the Entry (if in main).
+        if (m_level == 0) {
+            entry.m_main_lin_index = LinearizationIndex(-1);
+        }
         // - Mark it as missing/removed in the Entry's locator.
         graph.ClearLocator(m_level, idx);
         to_remove = to_remove.subspan(1);
@@ -1507,6 +1516,35 @@ void TxGraphImpl::SetTransactionFeerate(Ref& ref, const FeeFrac& feerate) noexce
     }
 }
 
+std::strong_ordering TxGraphImpl::CompareMainOrder(const Ref& a, const Ref& b) noexcept
+{
+    // The references must not be empty.
+    Assume(GetRefGraph(a) == this);
+    Assume(GetRefGraph(b) == this);
+    // Apply dependencies if main is the only level (in every other case, they will have been
+    // applied already prior to the creating of staging, or main is oversized).
+    SplitAll(0);
+    if (m_clustersets.size() == 1) ApplyDependencies();
+    Assume(!m_clustersets[0].m_oversized);
+    // Make both involved Clusters acceptable, so chunk feerates are relevant.
+    const auto& entry_a = m_entries[GetRefIndex(a)];
+    const auto& entry_b = m_entries[GetRefIndex(b)];
+    const auto& locator_a = entry_a.m_locator[0];
+    const auto& locator_b = entry_b.m_locator[0];
+    Assume(locator_a.IsPresent());
+    Assume(locator_b.IsPresent());
+    MakeAcceptable(*locator_a.cluster);
+    MakeAcceptable(*locator_b.cluster);
+    // Compare chunk feerates, and return result if it differs.
+    auto feerate_cmp = FeeRateCompare(entry_b.m_main_chunk_feerate, entry_a.m_main_chunk_feerate);
+    if (feerate_cmp < 0) return std::strong_ordering::less;
+    if (feerate_cmp > 0) return std::strong_ordering::greater;
+    // Compare Cluster* as tie-break for equal chunk feerates.
+    if (locator_a.cluster != locator_b.cluster) return locator_a.cluster <=> locator_b.cluster;
+    // As final tie-break, compare position within cluster linearization.
+    return entry_a.m_main_lin_index <=> entry_b.m_main_lin_index;
+}
+
 void Cluster::SanityCheck(const TxGraphImpl& graph, int level) const
 {
     // There must be an m_mapping for each m_depgraph position (including holes).
@@ -1524,6 +1562,7 @@ void Cluster::SanityCheck(const TxGraphImpl& graph, int level) const
 
     // Verify m_linearization.
     SetType m_done;
+    LinearizationIndex linindex{0};
     assert(m_depgraph.IsAcyclic());
     for (auto lin_pos : m_linearization) {
         assert(lin_pos < m_mapping.size());
@@ -1536,6 +1575,7 @@ void Cluster::SanityCheck(const TxGraphImpl& graph, int level) const
         assert(entry.m_locator[level].index == lin_pos);
         // For top-level entries, check linearization position and chunk feerate.
         if (level == 0 && (m_quality == QualityLevel::OPTIMAL || m_quality == QualityLevel::ACCEPTABLE)) {
+            assert(entry.m_main_lin_index == linindex++);
             if (!linchunking.GetChunk(0).transactions[lin_pos]) {
                 linchunking.MarkDone(linchunking.GetChunk(0).transactions);
             }
