@@ -376,6 +376,11 @@ FUZZ_TARGET(txgraph)
             }
         }
     }
+
+    // After running all modifications, perform an internal sanity check (before invoking
+    // inspectors that may modify the internal state).
+    real->SanityCheck();
+
     // Compare simple properties of the graph with the simulation.
     assert(real->GetTransactionCount() == sim.GetTransactionCount());
 
@@ -431,6 +436,9 @@ FUZZ_TARGET(txgraph)
             }
         }
     }
+
+    // Sanity check again (because invoking inspectors may modify internal unobservable state).
+    real->SanityCheck();
 
     // Remove all remaining transactions, because Refs cannot be destroyed otherwise (this will be
     // addressed in a follow-up commit).
