@@ -311,7 +311,7 @@ void Cluster::ApplyRemovals(TxGraphImpl& graph, std::span<GraphIndex>& to_remove
         auto& locator = entry.m_locator;
         // Stop once we hit an entry that applies to another Cluster.
         if (locator.cluster != this) break;
-        // - Remember it in a set of to-remove ClusterIndexes.
+        // - Remember it in a set of to-remove DepGraphIndexes.
         todo.Set(locator.index);
         // - Remove from m_mapping.
         m_mapping[locator.index] = GraphIndex(-1);
