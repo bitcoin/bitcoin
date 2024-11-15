@@ -178,10 +178,10 @@ public:
             size_t real_total = runner.txrequest.Count(peer);
             size_t real_candidates = runner.txrequest.CountCandidates(peer);
             size_t real_inflight = runner.txrequest.CountInFlight(peer);
-            BOOST_CHECK_MESSAGE(real_total == total, strprintf("[" + comment + "] total %i (%i expected)", real_total, total));
-            BOOST_CHECK_MESSAGE(real_inflight == inflight, strprintf("[" + comment + "] inflight %i (%i expected)", real_inflight, inflight));
-            BOOST_CHECK_MESSAGE(real_candidates == candidates, strprintf("[" + comment + "] candidates %i (%i expected)", real_candidates, candidates));
-            BOOST_CHECK_MESSAGE(ret == expected, "[" + comment + "] mismatching requestables");
+            BOOST_CHECK_MESSAGE(real_total == total, strprintf("[%s] total %i (%i expected)", comment, real_total, total));
+            BOOST_CHECK_MESSAGE(real_inflight == inflight, strprintf("[%s] inflight %i (%i expected)", comment, real_inflight, inflight));
+            BOOST_CHECK_MESSAGE(real_candidates == candidates, strprintf("[%s] candidates %i (%i expected)", comment, real_candidates, candidates));
+            BOOST_CHECK_MESSAGE(ret == expected, strprintf("[%s] mismatching requestables", comment));
         });
     }
 
