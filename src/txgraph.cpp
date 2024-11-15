@@ -13,6 +13,7 @@
 #include <compare>
 #include <map>
 #include <memory>
+#include <set>
 #include <span>
 #include <utility>
 
@@ -78,6 +79,8 @@ public:
 
     /** Get the number of transactions in this Cluster. */
     LinearizationIndex GetTxCount() const noexcept { return m_linearization.size(); }
+    /** Given a ClusterIndex into this Cluster, find the corresponding GraphIndex. */
+    GraphIndex GetClusterEntry(ClusterIndex index) const noexcept { return m_mapping[index]; }
     /** Only called by Graph::SwapIndexes. */
     void UpdateMapping(ClusterIndex cluster_idx, GraphIndex graph_idx) noexcept { m_mapping[cluster_idx] = graph_idx; }
     /** Push changes to Cluster and its linearization to the TxGraphImpl Entry objects. */
@@ -110,6 +113,10 @@ public:
     FeeFrac GetIndividualFeerate(ClusterIndex idx) noexcept;
     /** Modify the feerate of a Cluster element. */
     void SetFeerate(TxGraphImpl& graph, ClusterIndex idx, const FeeFrac& feerate) noexcept;
+
+    // Debugging functions.
+
+    void SanityCheck(const TxGraphImpl& graph) const;
 };
 
 /** The transaction graph.
@@ -161,6 +168,8 @@ private:
         void SetMissing() noexcept { cluster = nullptr; index = 0; }
         /** Mark this Locator as present, in the specified Cluster. */
         void SetPresent(Cluster* c, ClusterIndex i) noexcept { cluster = c; index = i; }
+        /** Check if this Locator is missing. */
+        bool IsMissing() const noexcept { return cluster == nullptr && index == 0; }
         /** Check if this Locator is present (in some Cluster). */
         bool IsPresent() const noexcept { return cluster != nullptr; }
     };
@@ -262,6 +271,8 @@ public:
     std::vector<Ref*> GetAncestors(const Ref& arg) noexcept final;
     std::vector<Ref*> GetDescendants(const Ref& arg) noexcept final;
     GraphIndex GetTransactionCount() noexcept final;
+
+    void SanityCheck() const final;
 };
 
 void Cluster::Updated(TxGraphImpl& graph) noexcept
@@ -1050,6 +1061,104 @@ void TxGraphImpl::SetTransactionFeerate(Ref& ref, const FeeFrac& feerate) noexce
     if (locator.IsPresent()) {
         locator.cluster->SetFeerate(*this, locator.index, feerate);
     }
+}
+
+void Cluster::SanityCheck(const TxGraphImpl& graph) const
+{
+    // There must be an m_mapping for each m_depgraph position (including holes).
+    assert(m_depgraph.PositionRange() == m_mapping.size());
+    // The linearization for this Cluster must contain every transaction once.
+    assert(m_depgraph.TxCount() == m_linearization.size());
+    // m_quality and m_setindex are checked in TxGraphImpl::SanityCheck.
+
+    // Compute the chunking of m_linearization.
+    LinearizationChunking linchunking(m_depgraph, m_linearization);
+
+    // Verify m_linearization.
+    SetType m_done;
+    assert(m_depgraph.IsAcyclic());
+    for (auto lin_pos : m_linearization) {
+        assert(lin_pos < m_mapping.size());
+        const auto& entry = graph.m_entries[m_mapping[lin_pos]];
+        // Check that the linearization is topological.
+        m_done.Set(lin_pos);
+        assert(m_done.IsSupersetOf(m_depgraph.Ancestors(lin_pos)));
+        // Check that the Entry has a locator pointing back to this Cluster & position within it.
+        assert(entry.m_locator.cluster == this);
+        assert(entry.m_locator.index == lin_pos);
+        // Check linearization position and chunk feerate.
+        if (!linchunking.GetChunk(0).transactions[lin_pos]) {
+            linchunking.MarkDone(linchunking.GetChunk(0).transactions);
+        }
+        assert(entry.m_chunk_feerate == linchunking.GetChunk(0).feerate);
+        // If this Cluster has an acceptable quality level, its chunks must be connected.
+        if (m_quality == QualityLevel::ACCEPTABLE || m_quality == QualityLevel::OPTIMAL) {
+            assert(m_depgraph.IsConnected(linchunking.GetChunk(0).transactions));
+        }
+    }
+    // Verify that each element of m_depgraph occured in m_linearization.
+    assert(m_done == m_depgraph.Positions());
+}
+
+void TxGraphImpl::SanityCheck() const
+{
+    /** Which GraphIndexes ought to occur in m_wiped, based on m_entries. */
+    std::set<GraphIndex> expected_wiped;
+    /** Which Clusters ought to occur in m_clusters, based on m_entries. */
+    std::set<const Cluster*> expected_clusters;
+
+    // Go over all Entry objects in m_entries.
+    for (GraphIndex idx = 0; idx < m_entries.size(); ++idx) {
+        const auto& entry = m_entries[idx];
+        if (entry.IsWiped()) {
+            // If the Entry is not IsPresent anywhere, it should be in m_wiped.
+            expected_wiped.insert(idx);
+        } else {
+            // Every non-wiped Entry must have a Ref that points back to it.
+            assert(entry.m_ref != nullptr);
+            assert(GetRefGraph(*entry.m_ref) == this);
+            assert(GetRefIndex(*entry.m_ref) == idx);
+        }
+        // Verify the Entry m_locator.
+        const auto& locator = entry.m_locator;
+        // Every Locator must be in exactly one of these 2 states.
+        assert(locator.IsMissing() + locator.IsPresent() == 1);
+        if (locator.IsPresent()) {
+            // Verify that the Cluster agrees with where the Locator claims the transaction is.
+            assert(locator.cluster->GetClusterEntry(locator.index) == idx);
+            // Remember that we expect said Cluster to appear in the m_clusters.
+            expected_clusters.insert(locator.cluster);
+        }
+
+    }
+
+    std::set<const Cluster*> actual_clusters;
+    // For all quality levels...
+    for (int qual = 0; qual < int(QualityLevel::NONE); ++qual) {
+        QualityLevel quality{qual};
+        const auto& quality_clusters = m_clusters[qual];
+        // ... for all clusters in them ...
+        for (ClusterSetIndex setindex = 0; setindex < quality_clusters.size(); ++setindex) {
+            const auto& cluster = *quality_clusters[setindex];
+            // Remember we saw this Cluster (only if it is non-empty; empty Clusters aren't
+            // expected to be referenced by the Entry vector).
+            if (cluster.GetTxCount() != 0) {
+                actual_clusters.insert(&cluster);
+            }
+            // Sanity check the cluster, according to the Cluster's internal rules.
+            cluster.SanityCheck(*this);
+            // Check that the cluster's quality and setindex matches its position in the quality list.
+            assert(cluster.m_quality == quality);
+            assert(cluster.m_setindex == setindex);
+        }
+    }
+
+    // Verify that the actually encountered clusters match the ones occurring in Entry vector.
+    assert(actual_clusters == expected_clusters);
+
+    // Verify that the contents of m_wiped matches what was expected based on the Entry vector.
+    std::set<GraphIndex> actual_wiped(m_wiped.begin(), m_wiped.end());
+    assert(actual_wiped == expected_wiped);
 }
 
 } // namespace
