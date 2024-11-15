@@ -606,6 +606,12 @@ static RPCHelpMan combinerawtransaction()
 {
 
     UniValue txs = request.params[0].get_array();
+
+    // Can't merge < 2 items
+    if (txs.size() < 2) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Missing transactions. At least two transactions required.");
+    }
+
     std::vector<CMutableTransaction> txVariants(txs.size());
 
     for (unsigned int idx = 0; idx < txs.size(); idx++) {
@@ -614,8 +620,21 @@ static RPCHelpMan combinerawtransaction()
         }
     }
 
-    if (txVariants.empty()) {
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Missing transactions");
+    { // Test Tx relation for mergeability. Strip scriptSigs and scriptWitnesses to facilitate txId comparison
+        std::vector<CMutableTransaction> tx_variants_copy(txVariants);
+        Txid txid{};
+        for (unsigned int k{0}; k < tx_variants_copy.size(); ++k) {
+            // Remove all scriptSigs and scriptWitnesses from inputs
+            for (CTxIn& input : tx_variants_copy[k].vin) {
+                input.scriptSig.clear();
+                input.scriptWitness.SetNull();
+            }
+            if (k == 0) {
+                txid = tx_variants_copy[k].GetHash();
+            } else if (txid != tx_variants_copy[k].GetHash()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Transaction number %d not compatible with first transaction", k+1));
+            }
+        }
     }
 
     // mergedTx will end up with all the signatures; it
