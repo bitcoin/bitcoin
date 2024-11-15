@@ -113,6 +113,9 @@ public:
     virtual std::vector<Ref*> GetDescendants(const Ref& arg) noexcept = 0;
     /** Get the total number of transactions in the graph. */
     virtual GraphIndex GetTransactionCount() noexcept = 0;
+
+    /** Perform an internal consistency check on this object. */
+    virtual void SanityCheck() const = 0;
 };
 
 /** Construct a new TxGraph. */
