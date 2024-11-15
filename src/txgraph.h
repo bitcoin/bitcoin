@@ -94,6 +94,9 @@ public:
     /** Get the total number of transactions in the graph. */
     virtual GraphIndex GetTransactionCount() noexcept = 0;
 
+    /** Perform an internal consistency check on this object. */
+    virtual void SanityCheck() const = 0;
+
 protected:
     // Allow TxGraph::Ref to call UpdateRef and UnlinkRef.
     friend class TxGraph::Ref;
