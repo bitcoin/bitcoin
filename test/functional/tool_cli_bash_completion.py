@@ -258,7 +258,7 @@ class CliCompletionTest(BitcoinTestFramework):
         if self.options.footer is None or len(self.options.footer) == 0:
             self.options.footer = path.join(test_data_dir, 'bitcoin-cli.footer.bash-completion')
 
-        if self.options.completion is None or len(self.option.completion) == 0:
+        if self.options.completion is None or len(self.options.completion) == 0:
             self.options.completion = path.join(src_dir, 'contrib', 'completions', 'bash', 'bitcoin-cli.bash')
 
         self.log.info('Parsing help commands to get all the command arguments...')
