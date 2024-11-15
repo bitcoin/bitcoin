@@ -292,21 +292,25 @@ void Cluster::Updated(TxGraphImpl& graph) noexcept
         auto& entry = graph.m_entries[m_mapping[idx]];
         entry.m_locator.SetPresent(this, idx);
     }
-
-    // Compute its chunking and store its information in the Entry's m_chunk_feerate.
-    LinearizationChunking chunking(m_depgraph, m_linearization);
-    LinearizationIndex lin_idx{0};
-    // Iterate over the chunks.
-    for (unsigned chunk_idx = 0; chunk_idx < chunking.NumChunksLeft(); ++chunk_idx) {
-        auto chunk = chunking.GetChunk(chunk_idx);
-        // Iterate over the transactions in the linearization, which must match those in chunk.
-        while (true) {
-            ClusterIndex idx = m_linearization[lin_idx++];
-            GraphIndex graph_idx = m_mapping[idx];
-            auto& entry = graph.m_entries[graph_idx];
-            entry.m_chunk_feerate = chunk.feerate;
-            chunk.transactions.Reset(idx);
-            if (chunk.transactions.None()) break;
+    // If the Cluster's quality is ACCEPTABLE or OPTIMAL, compute its chunking and store its
+    // information in the Entry's m_chunk_feerate. These fields are only accessed after making
+    // the entire graph ACCEPTABLE, so it is pointless to compute these if we haven't reached that
+    // quality level yet.
+    if (m_quality == QualityLevel::OPTIMAL || m_quality == QualityLevel::ACCEPTABLE) {
+        LinearizationChunking chunking(m_depgraph, m_linearization);
+        LinearizationIndex lin_idx{0};
+        // Iterate over the chunks.
+        for (unsigned chunk_idx = 0; chunk_idx < chunking.NumChunksLeft(); ++chunk_idx) {
+            auto chunk = chunking.GetChunk(chunk_idx);
+            // Iterate over the transactions in the linearization, which must match those in chunk.
+            while (true) {
+                ClusterIndex idx = m_linearization[lin_idx++];
+                GraphIndex graph_idx = m_mapping[idx];
+                auto& entry = graph.m_entries[graph_idx];
+                entry.m_chunk_feerate = chunk.feerate;
+                chunk.transactions.Reset(idx);
+                if (chunk.transactions.None()) break;
+            }
         }
     }
 }
@@ -365,7 +369,8 @@ bool Cluster::Split(TxGraphImpl& graph) noexcept
         if (first && component == todo) {
             // The existing Cluster is an entire component. Leave it be, but update its quality.
             graph.SetClusterQuality(m_quality, m_setindex, QualityLevel::NEEDS_RELINEARIZE);
-            // We need to recompute and cache its chunking.
+            // If this made the quality ACCEPTABLE or OPTIMAL, we need to compute and cache its
+            // chunking.
             Updated(graph);
             return false;
         }
@@ -1125,12 +1130,12 @@ void Cluster::SanityCheck(const TxGraphImpl& graph) const
         assert(entry.m_locator.cluster == this);
         assert(entry.m_locator.index == lin_pos);
         // Check linearization position and chunk feerate.
-        if (!linchunking.GetChunk(0).transactions[lin_pos]) {
-            linchunking.MarkDone(linchunking.GetChunk(0).transactions);
-        }
-        assert(entry.m_chunk_feerate == linchunking.GetChunk(0).feerate);
-        // If this Cluster has an acceptable quality level, its chunks must be connected.
-        if (m_quality == QualityLevel::ACCEPTABLE || m_quality == QualityLevel::OPTIMAL) {
+        if (m_quality == QualityLevel::OPTIMAL || m_quality == QualityLevel::ACCEPTABLE) {
+            if (!linchunking.GetChunk(0).transactions[lin_pos]) {
+                linchunking.MarkDone(linchunking.GetChunk(0).transactions);
+            }
+            assert(entry.m_chunk_feerate == linchunking.GetChunk(0).feerate);
+            // If this Cluster has an acceptable quality level, its chunks must be connected.
             assert(m_depgraph.IsConnected(linchunking.GetChunk(0).transactions));
         }
     }
