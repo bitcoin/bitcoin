@@ -912,6 +912,13 @@ public:
         return strprintf("[%s]", wallet_name);
     };
 
+    /** Return wallet name for display, translating "default wallet" string if returned. */
+    std::string DisplayName() const
+    {
+        std::string name{GetName()};
+        return name.empty() ? _("default wallet") : name;
+    };
+
     /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
     template <typename... Params>
     void WalletLogPrintf(util::ConstevalFormatString<sizeof...(Params)> wallet_fmt, const Params&... params) const
