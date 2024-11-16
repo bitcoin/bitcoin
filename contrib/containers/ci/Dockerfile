@@ -7,13 +7,17 @@ ENV DEBIAN_FRONTEND="noninteractive" TZ="Europe/London"
 # (zlib1g-dev is needed for the Qt host binary builds, but should not be used by target binaries)
 ENV APT_ARGS="-y --no-install-recommends --no-upgrade"
 
-# Install packages for i386; disabled on aarch64 and arm64 hosts
-RUN (dpkg --print-architecture | grep -Eq 'aarch64|arm64' || dpkg --add-architecture i386)
-RUN (dpkg --print-architecture | grep -Eq 'aarch64|arm64' || (apt-get update && apt-get install $APT_ARGS \
-    g++-multilib \
-    wine32) && rm -rf /var/lib/apt/lists/*)
-
-RUN apt-get update && apt-get install $APT_ARGS \
+# Install packages for i386 on amd64 hosts, then install common packages
+RUN set -ex; \
+    apt-get update && \
+    if [ "$(dpkg --print-architecture)" = "amd64" ]; then \
+        dpkg --add-architecture i386 && \
+        apt-get update && \
+        apt-get install $APT_ARGS \
+        g++-multilib \
+        wine32; \
+    fi; \
+    apt-get install $APT_ARGS \
     autotools-dev \
     automake \
     autoconf \
