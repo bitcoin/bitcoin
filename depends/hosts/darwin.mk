@@ -1,7 +1,7 @@
 OSX_MIN_VERSION=11.0
-OSX_SDK_VERSION=11.0
-XCODE_VERSION=12.2
-XCODE_BUILD_ID=12B45b
+OSX_SDK_VERSION=14.0
+XCODE_VERSION=15.0
+XCODE_BUILD_ID=15A240d
 LD64_VERSION=711
 
 OSX_SDK=$(SDK_PATH)/Xcode-$(XCODE_VERSION)-$(XCODE_BUILD_ID)-extracted-SDK-with-libcxx-headers
@@ -71,6 +71,10 @@ $(foreach TOOL,$(cctools_TOOLS),$(eval darwin_$(TOOL) = $$(build_prefix)/bin/$$(
 #
 #         Adds the desired paths from the SDK
 #
+#     -platform_version
+#
+#         Indicate to the linker the platform, the oldest supported version,
+#         and the SDK used.
 
 darwin_CC=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
               -u OBJC_INCLUDE_PATH -u OBJCPLUS_INCLUDE_PATH -u CPATH \
@@ -91,6 +95,7 @@ darwin_CXX=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
 
 darwin_CFLAGS=-pipe -std=$(C_STANDARD)
 darwin_CXXFLAGS=-pipe -std=$(CXX_STANDARD)
+darwin_LDFLAGS=-Wl,-platform_version,macos,$(OSX_MIN_VERSION),$(OSX_SDK_VERSION)
 
 ifneq ($(LTO),)
 darwin_CFLAGS += -flto
