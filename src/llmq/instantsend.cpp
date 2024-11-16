@@ -57,41 +57,25 @@ uint256 CInstantSendLock::GetRequestId() const
 CInstantSendDb::CInstantSendDb(bool unitTests, bool fWipe) :
     db(std::make_unique<CDBWrapper>(unitTests ? "" : (gArgs.GetDataDirNet() / "llmq/isdb"), 32 << 20, unitTests, fWipe))
 {
+    Upgrade(unitTests);
 }
 
 CInstantSendDb::~CInstantSendDb() = default;
 
-void CInstantSendDb::Upgrade()
+void CInstantSendDb::Upgrade(bool unitTests)
 {
-    LOCK2(cs_main, cs_db);
+    LOCK(cs_db);
     int v{0};
     if (!db->Read(DB_VERSION, v) || v < CInstantSendDb::CURRENT_VERSION) {
+        // Wipe db
+        db.reset();
+        db = std::make_unique<CDBWrapper>(unitTests ? "" : (gArgs.GetDataDirNet() / "llmq/isdb"), 32 << 20, unitTests,
+                                          /*fWipe=*/true);
         CDBBatch batch(*db);
-        CInstantSendLock islock;
-
-        auto it = std::unique_ptr<CDBIterator>(db->NewIterator());
-        auto firstKey = std::make_tuple(std::string{DB_ISLOCK_BY_HASH}, uint256());
-        it->Seek(firstKey);
-        decltype(firstKey) curKey;
-
-        while (it->Valid()) {
-            if (!it->GetKey(curKey) || std::get<0>(curKey) != DB_ISLOCK_BY_HASH) {
-                break;
-            }
-            uint256 hashBlock;
-            CTransactionRef tx = GetTransaction(/* block_index */ nullptr, /* mempool */ nullptr, islock.txid, Params().GetConsensus(), hashBlock);
-            if (it->GetValue(islock) && !tx) {
-                // Drop locks for unknown txes
-                batch.Erase(std::make_tuple(DB_HASH_BY_TXID, islock.txid));
-                for (auto& in : islock.inputs) {
-                    batch.Erase(std::make_tuple(DB_HASH_BY_OUTPOINT, in));
-                }
-                batch.Erase(curKey);
-            }
-            it->Next();
-        }
         batch.Write(DB_VERSION, CInstantSendDb::CURRENT_VERSION);
-        db->WriteBatch(batch);
+        // Sync DB changes to disk
+        db->WriteBatch(batch, /*fSync=*/true);
+        batch.Clear();
     }
 }
 

@@ -112,11 +112,11 @@ private:
     uint256 GetInstantSendLockHashByTxidInternal(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs_db);
 
 
+    void Upgrade(bool unitTests) EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
+
 public:
     explicit CInstantSendDb(bool unitTests, bool fWipe);
     ~CInstantSendDb();
-
-    void Upgrade() EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
 
     /**
      * This method is called when an InstantSend Lock is processed and adds the lock to the database
@@ -263,7 +263,6 @@ public:
         shareman(_shareman), spork_manager(sporkman), mempool(_mempool), m_mn_sync(mn_sync), m_peerman(peerman),
         m_is_masternode{is_masternode}
     {
-        db.Upgrade(); // Upgrade DB if need to do it
         workInterrupt.reset();
     }
     ~CInstantSendManager() = default;
