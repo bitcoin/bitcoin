@@ -61,10 +61,9 @@ CInstantSendDb::CInstantSendDb(bool unitTests, bool fWipe) :
 
 CInstantSendDb::~CInstantSendDb() = default;
 
-void CInstantSendDb::Upgrade(const CTxMemPool& mempool)
+void CInstantSendDb::Upgrade()
 {
-    LOCK2(cs_main, mempool.cs);
-    LOCK(cs_db);
+    LOCK2(cs_main, cs_db);
     int v{0};
     if (!db->Read(DB_VERSION, v) || v < CInstantSendDb::CURRENT_VERSION) {
         CDBBatch batch(*db);
@@ -1103,7 +1102,7 @@ void CInstantSendManager::TransactionAddedToMempool(const CTransactionRef& tx)
 
 void CInstantSendManager::TransactionRemovedFromMempool(const CTransactionRef& tx)
 {
-    if (tx->vin.empty() || !fUpgradedDB) {
+    if (tx->vin.empty()) {
         return;
     }
 
@@ -1252,11 +1251,6 @@ void CInstantSendManager::NotifyChainLock(const CBlockIndex* pindexChainLock)
 
 void CInstantSendManager::UpdatedBlockTip(const CBlockIndex* pindexNew)
 {
-    if (!fUpgradedDB && pindexNew->nHeight + 1 >= Params().GetConsensus().DIP0020Height) {
-        db.Upgrade(mempool);
-        fUpgradedDB = true;
-    }
-
     bool fDIP0008Active = pindexNew->pprev && pindexNew->pprev->nHeight >= Params().GetConsensus().DIP0008Height;
 
     if (AreChainLocksEnabled(spork_manager) && fDIP0008Active) {

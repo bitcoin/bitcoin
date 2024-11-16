@@ -116,7 +116,7 @@ public:
     explicit CInstantSendDb(bool unitTests, bool fWipe);
     ~CInstantSendDb();
 
-    void Upgrade(const CTxMemPool& mempool) EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
+    void Upgrade() EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
 
     /**
      * This method is called when an InstantSend Lock is processed and adds the lock to the database
@@ -209,7 +209,6 @@ private:
     const std::unique_ptr<PeerManager>& m_peerman;
 
     const bool m_is_masternode;
-    std::atomic<bool> fUpgradedDB{false};
 
     std::thread workThread;
     CThreadInterrupt workInterrupt;
@@ -264,6 +263,7 @@ public:
         shareman(_shareman), spork_manager(sporkman), mempool(_mempool), m_mn_sync(mn_sync), m_peerman(peerman),
         m_is_masternode{is_masternode}
     {
+        db.Upgrade(); // Upgrade DB if need to do it
         workInterrupt.reset();
     }
     ~CInstantSendManager() = default;
