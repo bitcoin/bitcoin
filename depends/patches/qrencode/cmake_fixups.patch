@@ -1,4 +1,4 @@
-cmake: set minimum version to 3.5
+cmake: set minimum version to 3.10
 
 Correct some dev warning output.
 
@@ -8,7 +8,7 @@ index 773e037..a558145 100644
 +++ b/CMakeLists.txt
 @@ -1,4 +1,4 @@
 -cmake_minimum_required(VERSION 3.1.0)
-+cmake_minimum_required(VERSION 3.5)
++cmake_minimum_required(VERSION 3.10)
  
  project(QRencode VERSION 4.1.1 LANGUAGES C)
  

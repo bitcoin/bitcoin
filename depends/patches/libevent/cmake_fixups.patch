@@ -1,4 +1,11 @@
-cmake: set minimum version to 3.5
+cmake: Update minimum required version
+
+Compatibility with versions of CMake older than 3.10 is now deprecated
+and will be removed from a future version.
+
+
+See: https://github.com/libevent/libevent/pull/1752.
+
 
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
@@ -7,7 +14,7 @@ cmake: set minimum version to 3.5
  #
  
 -cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
-+cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
++cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
  
  if (POLICY CMP0054)
      cmake_policy(SET CMP0054 NEW)
