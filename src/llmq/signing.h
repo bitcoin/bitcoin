@@ -143,8 +143,6 @@ public:
     void CleanupOldVotes(int64_t maxAge);
 
 private:
-    void MigrateRecoveredSigs();
-
     bool ReadRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret) const;
     void RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType llmqType, const uint256& id, bool deleteHashKey, bool deleteTimeKey);
 };

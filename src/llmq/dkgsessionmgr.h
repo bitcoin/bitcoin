@@ -101,7 +101,6 @@ public:
     void CleanupOldContributions() const;
 
 private:
-    void MigrateDKG();
     void CleanupCache() const;
 };
 } // namespace llmq
