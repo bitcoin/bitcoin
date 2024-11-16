@@ -45,7 +45,8 @@ RUN apt-get update && apt-get install $APT_ARGS \
     wget \
     m4 \
     pkg-config \
-    zlib1g-dev
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Clang+LLVM and set it as default
 # We don't need all packages but the default set doesn't include some
@@ -86,7 +87,9 @@ RUN apt-get update && apt-get install $APT_ARGS \
     libssl-dev \
     make \
     tk-dev \
-    xz-utils
+    xz-utils \
+    && rm -rf /var/lib/apt/lists/*
+
 ENV PYENV_ROOT="/usr/local/pyenv"
 ENV PATH="${PYENV_ROOT}/shims:${PYENV_ROOT}/bin:${PATH}"
 RUN curl https://pyenv.run | bash \
@@ -134,7 +137,8 @@ RUN apt-get update && apt-get install $APT_ARGS \
     valgrind \
     wine-stable \
     wine64 \
-    xorriso
+    xorriso \
+    && rm -rf /var/lib/apt/lists/*
 
 ARG CPPCHECK_VERSION=2.13.0
 RUN curl -sL "https://github.com/danmar/cppcheck/archive/${CPPCHECK_VERSION}.tar.gz" | tar -xvzf - --directory /tmp/
