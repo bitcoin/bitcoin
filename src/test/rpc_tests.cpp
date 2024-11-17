@@ -428,6 +428,7 @@ BOOST_AUTO_TEST_CASE(rpc_getblockstats_calculate_percentiles_by_weight)
 {
     int64_t total_weight = 200;
     std::vector<std::pair<CAmount, int64_t>> feerates;
+    feerates.reserve(200);
     CAmount result[NUM_GETBLOCKSTATS_PERCENTILES] = { 0 };
 
     for (int64_t i = 0; i < 100; i++) {
