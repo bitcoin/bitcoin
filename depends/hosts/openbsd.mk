@@ -1,12 +1,6 @@
 openbsd_CFLAGS=-pipe -std=$(C_STANDARD)
 openbsd_CXXFLAGS=-pipe -std=$(CXX_STANDARD)
 
-ifneq ($(LTO),)
-openbsd_CFLAGS += -flto
-openbsd_CXXFLAGS += -flto
-openbsd_LDFLAGS += -flto
-endif
-
 openbsd_release_CFLAGS=-O2
 openbsd_release_CXXFLAGS=$(openbsd_release_CFLAGS)
 

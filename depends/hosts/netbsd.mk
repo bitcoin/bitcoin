@@ -2,10 +2,6 @@ netbsd_CFLAGS=-pipe -std=$(C_STANDARD)
 netbsd_CXXFLAGS=-pipe -std=$(CXX_STANDARD)
 
 ifneq ($(LTO),)
-netbsd_CFLAGS += -flto
-netbsd_CXXFLAGS += -flto
-netbsd_LDFLAGS += -flto
-
 netbsd_AR = $(host_toolchain)gcc-ar
 netbsd_NM = $(host_toolchain)gcc-nm
 netbsd_RANLIB = $(host_toolchain)gcc-ranlib

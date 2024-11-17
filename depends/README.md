@@ -126,7 +126,7 @@ The following can be set when running make: `make FOO=bar`
 - `LOG`: Use file-based logging for individual packages. During a package build its log file
   resides in the `depends` directory, and the log file is printed out automatically in case
   of build error. After successful build log files are moved along with package archives
-- `LTO`: Use LTO when building packages.
+- `LTO`: Enable options needed for LTO. Does not add `-flto` related options to *FLAGS.
 
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate
 options will be passed to Dash Core's configure. In this case, `--disable-wallet`.

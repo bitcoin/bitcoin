@@ -97,12 +97,6 @@ darwin_CFLAGS=-pipe -std=$(C_STANDARD)
 darwin_CXXFLAGS=-pipe -std=$(CXX_STANDARD)
 darwin_LDFLAGS=-Wl,-platform_version,macos,$(OSX_MIN_VERSION),$(OSX_SDK_VERSION)
 
-ifneq ($(LTO),)
-darwin_CFLAGS += -flto
-darwin_CXXFLAGS += -flto
-darwin_LDFLAGS += -flto
-endif
-
 darwin_release_CFLAGS=-O2
 darwin_release_CXXFLAGS=$(darwin_release_CFLAGS)
 
