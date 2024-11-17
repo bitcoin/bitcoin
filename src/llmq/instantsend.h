@@ -112,11 +112,11 @@ private:
     uint256 GetInstantSendLockHashByTxidInternal(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs_db);
 
 
+    void Upgrade(bool unitTests) EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
+
 public:
     explicit CInstantSendDb(bool unitTests, bool fWipe);
     ~CInstantSendDb();
-
-    void Upgrade(const CTxMemPool& mempool) EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
 
     /**
      * This method is called when an InstantSend Lock is processed and adds the lock to the database
@@ -209,7 +209,6 @@ private:
     const std::unique_ptr<PeerManager>& m_peerman;
 
     const bool m_is_masternode;
-    std::atomic<bool> fUpgradedDB{false};
 
     std::thread workThread;
     CThreadInterrupt workInterrupt;
