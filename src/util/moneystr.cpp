@@ -13,7 +13,6 @@
 #include <cstdint>
 #include <optional>
 
-using util::ContainsNoNUL;
 using util::TrimString;
 
 std::string FormatMoney(const CAmount n)
@@ -44,7 +43,7 @@ std::string FormatMoney(const CAmount n)
 
 std::optional<CAmount> ParseMoney(const std::string& money_string)
 {
-    if (!ContainsNoNUL(money_string)) {
+    if (util::ContainsNUL(money_string)) {
         return std::nullopt;
     }
     const std::string str = TrimString(money_string);

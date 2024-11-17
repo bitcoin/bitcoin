@@ -212,14 +212,12 @@ inline std::string MakeUnorderedList(const std::vector<std::string>& items)
 }
 
 /**
- * Check if a string does not contain any embedded NUL (\0) characters
+ * Check if a string contains any embedded NUL (\0) characters
  */
-[[nodiscard]] inline bool ContainsNoNUL(std::string_view str) noexcept
+[[nodiscard]] inline bool ContainsNUL(std::string_view str) noexcept
 {
-    for (auto c : str) {
-        if (c == 0) return false;
-    }
-    return true;
+    // Consider using str.contains('\0') once C++23 is mandatory
+    return str.find('\0') != std::string_view::npos;
 }
 
 /**
