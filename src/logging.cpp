@@ -188,7 +188,7 @@ const CLogCategoryDesc LogCategories[] =
 
 bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
 {
-    if (str == "") {
+    if (str.empty()) {
         flag = BCLog::ALL;
         return true;
     }
@@ -199,6 +199,123 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
         }
     }
     return false;
+}
+
+std::string LogLevelToStr(BCLog::Level level)
+{
+    switch (level) {
+    case BCLog::Level::None:
+        return "none";
+    case BCLog::Level::Debug:
+        return "debug";
+    case BCLog::Level::Info:
+        return "info";
+    case BCLog::Level::Warning:
+        return "warning";
+    case BCLog::Level::Error:
+        return "error";
+    }
+    assert(false);
+}
+
+std::string LogCategoryToStr(BCLog::LogFlags category)
+{
+    // Each log category string representation should sync with LogCategories
+    switch (category) {
+    case BCLog::LogFlags::NONE:
+        return "none";
+    case BCLog::LogFlags::NET:
+        return "net";
+    case BCLog::LogFlags::TOR:
+        return "tor";
+    case BCLog::LogFlags::MEMPOOL:
+        return "mempool";
+    case BCLog::LogFlags::HTTP:
+        return "http";
+    case BCLog::LogFlags::BENCHMARK:
+        return "bench";
+    case BCLog::LogFlags::ZMQ:
+        return "zmq";
+    case BCLog::LogFlags::WALLETDB:
+        return "walletdb";
+    case BCLog::LogFlags::RPC:
+        return "rpc";
+    case BCLog::LogFlags::ESTIMATEFEE:
+        return "estimatefee";
+    case BCLog::LogFlags::ADDRMAN:
+        return "addrman";
+    case BCLog::LogFlags::SELECTCOINS:
+        return "selectcoins";
+    case BCLog::LogFlags::REINDEX:
+        return "reindex";
+    case BCLog::LogFlags::CMPCTBLOCK:
+        return "cmpctblock";
+    case BCLog::LogFlags::RANDOM:
+        return "rand";
+    case BCLog::LogFlags::PRUNE:
+        return "prune";
+    case BCLog::LogFlags::PROXY:
+        return "proxy";
+    case BCLog::LogFlags::MEMPOOLREJ:
+        return "mempoolrej";
+    case BCLog::LogFlags::LIBEVENT:
+        return "libevent";
+    case BCLog::LogFlags::COINDB:
+        return "coindb";
+    case BCLog::LogFlags::QT:
+        return "qt";
+    case BCLog::LogFlags::LEVELDB:
+        return "leveldb";
+    case BCLog::LogFlags::VALIDATION:
+        return "validation";
+    case BCLog::LogFlags::I2P:
+        return "i2p";
+    case BCLog::LogFlags::IPC:
+        return "ipc";
+#ifdef DEBUG_LOCKCONTENTION
+    case BCLog::LogFlags::LOCK:
+        return "lock";
+#endif
+    case BCLog::LogFlags::BLOCKSTORE:
+        return "blockstorage";
+    case BCLog::LogFlags::TXRECONCILIATION:
+        return "txreconciliation";
+    /* Start Dash */
+    case BCLog::LogFlags::CHAINLOCKS:
+        return "chainlocks";
+    case BCLog::LogFlags::GOBJECT:
+        return "gobject";
+    case BCLog::LogFlags::INSTANTSEND:
+        return "instantsend";
+    case BCLog::LogFlags::LLMQ:
+        return "llmq";
+    case BCLog::LogFlags::LLMQ_DKG:
+        return "llmq-dkg";
+    case BCLog::LogFlags::LLMQ_SIGS:
+        return "llmq-sigs";
+    case BCLog::LogFlags::MNPAYMENTS:
+        return "mnpayments";
+    case BCLog::LogFlags::MNSYNC:
+        return "mnsync";
+    case BCLog::LogFlags::COINJOIN:
+        return "coinjoin";
+    case BCLog::LogFlags::SPORK:
+        return "spork";
+    case BCLog::LogFlags::NETCONN:
+        return "netconn";
+    case BCLog::LogFlags::CREDITPOOL:
+        return "creditpool";
+    case BCLog::LogFlags::EHF:
+        return "ehf";
+    case BCLog::LogFlags::DASH:
+        return "dash";
+    case BCLog::LogFlags::NET_NETCONN:
+        return "net|netconn";
+    /* End Dash */
+    case BCLog::LogFlags::ALL:
+        return "all";
+    }
+    assert(false);
 }
 
 std::vector<LogCategory> BCLog::Logger::LogCategoriesList(bool enabled_only) const
@@ -268,10 +385,30 @@ namespace BCLog {
     }
 } // namespace BCLog
 
-void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, const int source_line)
+void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, const int source_line, const BCLog::LogFlags category, const BCLog::Level level)
 {
     StdLockGuard scoped_lock(m_cs);
     std::string str_prefixed = LogEscapeMessage(str);
+
+    if ((category != LogFlags::NONE || level != Level::None) && m_started_new_line) {
+        std::string s{"["};
+
+        if (category != LogFlags::NONE) {
+            s += LogCategoryToStr(category);
+        }
+
+        if (category != LogFlags::NONE && level != Level::None) {
+            // Only add separator if both flag and level are not NONE
+            s += ":";
+        }
+
+        if (level != Level::None) {
+            s += LogLevelToStr(level);
+        }
+
+        s += "] ";
+        str_prefixed.insert(0, s);
+    }
 
     if (m_log_sourcelocations && m_started_new_line) {
         str_prefixed.insert(0, "[" + RemovePrefix(source_file, "./") + ":" + ToString(source_line) + "] [" + logging_function + "] ");
