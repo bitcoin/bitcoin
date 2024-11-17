@@ -628,6 +628,11 @@ public:
         : UniqueHandle{btck_chainstate_manager_options_create(context.get(), data_dir.c_str(), data_dir.length(), blocks_dir.c_str(), blocks_dir.length())}
     {
     }
+
+    void SetWorkerThreads(int worker_threads)
+    {
+        btck_chainstate_manager_options_set_worker_threads_num(get(), worker_threads);
+    }
 };
 
 class ChainMan : UniqueHandle<btck_ChainstateManager, btck_chainstate_manager_destroy>
