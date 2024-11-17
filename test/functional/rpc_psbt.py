@@ -950,6 +950,16 @@ class PSBTTest(BitcoinTestFramework):
         self.log.info("Test walletprocesspsbt raises if an invalid sighashtype is passed")
         assert_raises_rpc_error(-8, "'all' is not a valid sighash parameter.", self.nodes[0].walletprocesspsbt, psbt, sighashtype="all")
 
+        self.log.info("Test walletprocesspsbt raises RPC error with options=boolean")
+        for b in (True, False):
+            assert_raises_rpc_error(-3, "JSON value of type bool is not of expected type object", self.nodes[0].walletprocesspsbt, psbt, options=b)
+
+        self.log.info("Test walletprocesspsbt raises RPC error with sign={options}")
+        assert_raises_rpc_error(-3, "JSON value of type object for field sign is not of expected type bool", self.nodes[0].walletprocesspsbt, psbt, sign={'sign': False})
+
+        self.log.info("Test walletprocesspsbt raises RPC help with both options and non-options sighashtype")
+        assert_raises_rpc_error(-1, "Arguments:", self.nodes[0].walletprocesspsbt, psbt, {'sign': False}, 'ALL')
+
         self.log.info("Test decoding PSBT with per-input preimage types")
         # note that the decodepsbt RPC doesn't check whether preimages and hashes match
         hash_ripemd160, preimage_ripemd160 = randbytes(20), randbytes(50)
