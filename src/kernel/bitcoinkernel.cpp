@@ -685,6 +685,12 @@ btck_ChainstateManagerOptions* btck_chainstate_manager_options_create(const btck
     }
 }
 
+void btck_chainstate_manager_options_set_worker_threads_num(btck_ChainstateManagerOptions* opts, int worker_threads)
+{
+    LOCK(btck_ChainstateManagerOptions::get(opts).m_mutex);
+    btck_ChainstateManagerOptions::get(opts).m_chainman_options.worker_threads_num = worker_threads;
+}
+
 void btck_chainstate_manager_options_destroy(btck_ChainstateManagerOptions* options)
 {
     delete options;
