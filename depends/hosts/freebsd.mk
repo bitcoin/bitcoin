@@ -1,12 +1,6 @@
 freebsd_CFLAGS=-pipe -std=$(C_STANDARD)
 freebsd_CXXFLAGS=-pipe -std=$(CXX_STANDARD)
 
-ifneq ($(LTO),)
-freebsd_CFLAGS += -flto
-freebsd_CXXFLAGS += -flto
-freebsd_LDFLAGS += -flto
-endif
-
 freebsd_release_CFLAGS=-O2
 freebsd_release_CXXFLAGS=$(freebsd_release_CFLAGS)
 

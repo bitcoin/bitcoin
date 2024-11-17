@@ -78,10 +78,6 @@ if test "@host_os@" = darwin; then
   BREW=no
 fi
 
-if test -z "$enable_lto" && test -n "@lto@"; then
-  enable_lto=yes
-fi
-
 PATH="${depends_prefix}/native/bin:${PATH}"
 PKG_CONFIG="$(which pkg-config) --static"
 
@@ -125,14 +121,9 @@ if test -n "@STRIP@"; then
 fi
 
 if test "@host_os@" = darwin; then
-  if test -n "@OTOOL@"; then
-    OTOOL="@OTOOL@"
-    ac_cv_path_ac_pt_OTOOL="${OTOOL}"
-  fi
-
-  if test -n "@INSTALL_NAME_TOOL@"; then
-    INSTALL_NAME_TOOL="@INSTALL_NAME_TOOL@"
-    ac_cv_path_ac_pt_INSTALL_NAME_TOOL="${INSTALL_NAME_TOOL}"
+  if test -n "@OBJDUMP@"; then
+    OBJDUMP="@OBJDUMP@"
+    ac_cv_path_ac_pt_OBJDUMP="${OBJDUMP}"
   fi
 fi
 

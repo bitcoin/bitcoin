@@ -2,10 +2,6 @@ linux_CFLAGS=-pipe -std=$(C_STANDARD)
 linux_CXXFLAGS=-pipe -std=$(CXX_STANDARD)
 
 ifneq ($(LTO),)
-linux_CFLAGS += -flto
-linux_CXXFLAGS += -flto
-linux_LDFLAGS += -flto
-
 linux_AR = $(host_toolchain)gcc-ar
 linux_NM = $(host_toolchain)gcc-nm
 linux_RANLIB = $(host_toolchain)gcc-ranlib

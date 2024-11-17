@@ -28,22 +28,24 @@ def clean_files(source, executable):
     os.remove(source)
     os.remove(executable)
 
-def call_security_check(cc, source, executable, options):
+def env_flags() -> List[str]:
     # This should behave the same as AC_TRY_LINK, so arrange well-known flags
     # in the same order as autoconf would.
     #
     # See the definitions for ac_link in autoconf's lib/autoconf/c.m4 file for
     # reference.
-    env_flags: List[str] = []
+    flags: List[str] = []
     for var in ['CFLAGS', 'CPPFLAGS', 'LDFLAGS']:
-        env_flags += filter(None, os.environ.get(var, '').split(' '))
+        flags += filter(None, os.environ.get(var, '').split(' '))
+    return flags
 
-    subprocess.run([*cc,source,'-o',executable] + env_flags + options, check=True)
+def call_security_check(cc, source, executable, options):
+    subprocess.run([*cc,source,'-o',executable] + env_flags() + options, check=True)
     p = subprocess.run(['./contrib/devtools/security-check.py',executable], stdout=subprocess.PIPE, universal_newlines=True)
     return (p.returncode, p.stdout.rstrip())
 
 def get_arch(cc, source, executable):
-    subprocess.run([*cc, source, '-o', executable], check=True)
+    subprocess.run([*cc, source, '-o', executable] + env_flags(), check=True)
     binary = lief.parse(executable)
     arch = binary.abstract.header.architecture
     os.remove(executable)
@@ -138,12 +140,12 @@ class TestSecurityChecks(unittest.TestCase):
         else:
             # arm64 darwin doesn't support non-PIE binaries, control flow or executable stacks
             self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-flat_namespace','-fno-stack-protector', '-Wl,-no_fixup_chains']),
-                (1, executable+': failed NOUNDEFS Canary FIXUP_CHAINS'))
-            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-flat_namespace','-fno-stack-protector', '-Wl,-fixup_chains']),
+                (1, executable+': failed NOUNDEFS Canary FIXUP_CHAINS BRANCH_PROTECTION'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-flat_namespace','-fno-stack-protector', '-Wl,-fixup_chains', '-mbranch-protection=bti']),
                 (1, executable+': failed NOUNDEFS Canary'))
-            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-flat_namespace','-fstack-protector-all', '-Wl,-fixup_chains']),
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-flat_namespace','-fstack-protector-all', '-Wl,-fixup_chains', '-mbranch-protection=bti']),
                 (1, executable+': failed NOUNDEFS'))
-            self.assertEqual(call_security_check(cc, source, executable, ['-fstack-protector-all', '-Wl,-fixup_chains']),
+            self.assertEqual(call_security_check(cc, source, executable, ['-fstack-protector-all', '-Wl,-fixup_chains', '-mbranch-protection=bti']),
                 (0, ''))
 
 

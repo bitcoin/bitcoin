@@ -6,7 +6,6 @@ $(1)_objc=$$($$($(1)_type)_OBJC)
 $(1)_objcxx=$$($$($(1)_type)_OBJCXX)
 $(1)_ar=$$($$($(1)_type)_AR)
 $(1)_ranlib=$$($$($(1)_type)_RANLIB)
-$(1)_libtool=$$($$($(1)_type)_LIBTOOL)
 $(1)_nm=$$($$($(1)_type)_NM)
 $(1)_cflags=$$($$($(1)_type)_CFLAGS) \
             $$($$($(1)_type)_$$(release_type)_CFLAGS)
@@ -246,7 +245,7 @@ $($(1)_postprocessed): | $($(1)_staged)
 $($(1)_cached): | $($(1)_dependencies) $($(1)_postprocessed)
 	echo Caching $(1)...
 	cd $$($(1)_staging_dir)/$(host_prefix); \
-	  find . ! -name '.stamp_postprocessed' -print0 | TZ=UTC xargs -0r touch -h -m -t 200001011200; \
+	  find . ! -name '.stamp_postprocessed' -print0 | TZ=UTC xargs -0r $(build_TOUCH); \
 	  find . ! -name '.stamp_postprocessed' | LC_ALL=C sort | $(build_TAR) --numeric-owner --no-recursion -czf $$($(1)_staging_dir)/$$(@F) -T -
 	mkdir -p $$(@D)
 	rm -rf $$(@D) && mkdir -p $$(@D)

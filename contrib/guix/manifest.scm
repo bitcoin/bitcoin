@@ -609,7 +609,7 @@ inspecting signatures in Mach-O binaries.")
            (list ;; Native GCC 11 toolchain
                  gcc-toolchain-11
                  binutils
-                 clang-toolchain-15
+                 clang-toolchain-17
                  python-signapple
                  xorriso))
           (else '())))))

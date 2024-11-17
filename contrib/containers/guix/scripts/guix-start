@@ -9,8 +9,8 @@ if [[ ! -d "${WORKSPACE_PATH}" || ! "${WORKSPACE_PATH}" = /* || ! -f "${WORKSPAC
     exit 1
 fi
 
-XCODE_VERSION="12.2"
-XCODE_RELEASE="12B45b"
+XCODE_VERSION="15.0"
+XCODE_RELEASE="15A240d"
 XCODE_ARCHIVE="Xcode-${XCODE_VERSION}-${XCODE_RELEASE}-extracted-SDK-with-libcxx-headers"
 XCODE_SOURCE="${XCODE_SOURCE:-https://bitcoincore.org/depends-sources/sdks}"
 

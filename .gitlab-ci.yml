@@ -42,8 +42,8 @@ builder-image:
   image: $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG
   variables:
     SDK_URL: https://bitcoincore.org/depends-sources/sdks
-    XCODE_VERSION: "12.2"
-    XCODE_BUILD_ID: 12B45b
+    XCODE_VERSION: "15.0"
+    XCODE_BUILD_ID: 15A240d
   before_script:
     - echo HOST=$HOST
     - |
