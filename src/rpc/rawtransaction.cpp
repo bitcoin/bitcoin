@@ -1980,13 +1980,13 @@ RPCHelpMan descriptorprocesspsbt()
                                 RPCArgOptions{.also_positional = true}},
                             {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them", RPCArgOptions{.also_positional = true}},
                             {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible", RPCArgOptions{.also_positional = true}},
+                            {"prevtxs", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "An array of dependant serialized transactions as hex", {
+                                {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A serialized previous transaction in hex"},
+                            }},
                         },
                     RPCArgOptions{.oneline_description="options"}},
                     {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "for backwards compatibility", RPCArgOptions{.hidden=true}},
                     {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "for backwards compatibility", RPCArgOptions{.hidden=true}},
-                    {"prevtxs", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "An array of dependant serialized transactions as hex", {
-                        {"", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A serialized previous transaction in hex"},
-                    }},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -2014,6 +2014,7 @@ RPCHelpMan descriptorprocesspsbt()
     bool bip32derivs = true;
     bool finalize = true;
     int sighash_type = ParseSighashString(NullUniValue); // Use ParseSighashString default
+    std::vector<CTransactionRef> prev_txns;
     if (request.params[2].isStr() || request.params[2].isNull()) {
         // Old style positional parameters
         sighash_type = ParseSighashString(request.params[2]);
@@ -2026,6 +2027,7 @@ RPCHelpMan descriptorprocesspsbt()
             {
                 {"bip32derivs", UniValueType(UniValue::VBOOL)},
                 {"finalize", UniValueType(UniValue::VBOOL)},
+                {"prevtxs", UniValueType(UniValue::VARR)},
                 {"sighashtype", UniValueType(UniValue::VSTR)},
             },
             true, true);
@@ -2035,6 +2037,9 @@ RPCHelpMan descriptorprocesspsbt()
         if (options.exists("finalize")) {
             finalize = options["finalize"].get_bool();
         }
+        if (options.exists("prevtxs")) {
+            prev_txns = ParseTransactionVector(options["prevtxs"]);
+        }
         if (options.exists("sighashtype")) {
             sighash_type = ParseSighashString(options["sighashtype"]);
         }
@@ -2042,11 +2047,6 @@ RPCHelpMan descriptorprocesspsbt()
             // Same behaviour as too many args passed normally
             throw std::runtime_error(self.ToString());
         }
-    }
-
-    std::vector<CTransactionRef> prev_txns;
-    if (!request.params[5].isNull()) {
-        prev_txns = ParseTransactionVector(request.params[5]);
     }
 
     const PartiallySignedTransaction& psbtx = ProcessPSBT(
