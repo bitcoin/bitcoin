@@ -256,13 +256,10 @@ private:
     {
         EnterCritical(pszName, pszFile, nLine, Base::mutex());
 #ifdef DEBUG_LOCKCONTENTION
-        if (!Base::try_lock()) {
-            PrintLockContention(pszName, pszFile, nLine);
+        if (Base::try_lock()) return;
+        LOG_TIME_MICROS_WITH_CATEGORY(strprintf("lock contention %s, %s:%d", pszName, pszFile, nLine), BCLog::LOCK);
 #endif
-            Base::lock();
-#ifdef DEBUG_LOCKCONTENTION
-        }
-#endif
+        Base::lock();
     }
 
     bool TrySharedEnter(const char* pszName, const char* pszFile, int nLine)
