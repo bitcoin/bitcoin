@@ -90,7 +90,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            depends/${{ matrix.host }}
+            depends/built
           key: ${{ runner.os }}-depends-${{ matrix.build_target }}-${{ hashFiles('depends/packages/*') }}
           restore-keys: |
             ${{ runner.os }}-depends-${{ matrix.build_target }}-${{ hashFiles('depends/packages/*') }}
