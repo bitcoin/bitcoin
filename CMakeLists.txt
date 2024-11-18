@@ -174,6 +174,8 @@ option(BUILD_FOR_FUZZING "Build for fuzzing. Enabling this will disable all othe
 
 option(INSTALL_MAN "Install man pages." ON)
 
+option(ENABLE_FUNCTIONAL_TESTS "Include functional tests on ctest" OFF)
+
 set(APPEND_CPPFLAGS "" CACHE STRING "Preprocessor flags that are appended to the command line after all other flags added by the build system. This variable is intended for debugging and special builds.")
 set(APPEND_CFLAGS "" CACHE STRING "C compiler flags that are appended to the command line after all other flags added by the build system. This variable is intended for debugging and special builds.")
 set(APPEND_CXXFLAGS "" CACHE STRING "(Objective) C++ compiler flags that are appended to the command line after all other flags added by the build system. This variable is intended for debugging and special builds.")

@@ -46,3 +46,9 @@ foreach(script ${functional_tests} fuzz/test_runner.py util/rpcauth-test.py util
   file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/${script} ${CMAKE_CURRENT_BINARY_DIR}/${script} COPY_ON_ERROR ${symlink})
 endforeach()
 unset(functional_tests)
+
+if (ENABLE_FUNCTIONAL_TESTS AND PYTHON_COMMAND)
+  add_test(NAME functional_test_runner
+    COMMAND ${PYTHON_COMMAND} ${PROJECT_BINARY_DIR}/test/functional/test_runner.py
+  )
+endif()
