@@ -8,7 +8,7 @@ from decimal import Decimal
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.messages import COIN
-from test_framework.wallet import MiniWallet, getnewdestination
+from test_framework.wallet import MiniWallet, MiniWalletMode, getnewdestination
 
 
 class GetBlocksActivityTest(BitcoinTestFramework):
@@ -30,6 +30,7 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         self.test_invalid_descriptor(node, wallet)
         self.test_confirmed_and_unconfirmed(node, wallet)
         self.test_receive_then_spend(node, wallet)
+        self.test_no_address(node, wallet)
 
     def test_no_activity(self, node):
         _, _, addr_1 = getnewdestination()
@@ -191,6 +192,34 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         # Test that duplicating a blockhash yields the same result.
         assert_equal(result, node.getdescriptoractivity(
             [blockhash_1, blockhash_2, blockhash_2], [wallet.get_descriptor()], True))
+
+    def test_no_address(self, node, wallet):
+        raw_wallet = MiniWallet(self.nodes[0], mode=MiniWalletMode.RAW_P2PK)
+        raw_wallet.generate(100, invalid_call=False)
+
+        no_addr_tx = raw_wallet.send_self_transfer(from_node=node)
+        raw_desc = raw_wallet.get_descriptor()
+
+        blockhash = self.generate(node, 1)[0]
+
+        result = node.getdescriptoractivity([blockhash], [raw_desc], False)
+
+        assert_equal(len(result['activity']), 2)
+
+        a1 = result['activity'][0]
+        a2 = result['activity'][1]
+
+        assert a1['type'] == "spend"
+        assert a1['blockhash'] == blockhash
+        # sPK lacks address.
+        assert_equal(list(a1['prevout_spk'].keys()), ['asm', 'desc', 'hex', 'type'])
+        assert a1['amount'] == no_addr_tx["fee"] + Decimal(no_addr_tx["tx"].vout[0].nValue) / COIN
+
+        assert a2['type'] == "receive"
+        assert a2['blockhash'] == blockhash
+        # sPK lacks address.
+        assert_equal(list(a2['output_spk'].keys()), ['asm', 'desc', 'hex', 'type'])
+        assert a2['amount'] == Decimal(no_addr_tx["tx"].vout[0].nValue) / COIN
 
 
 if __name__ == '__main__':
