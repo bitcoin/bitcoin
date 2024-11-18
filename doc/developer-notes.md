@@ -17,6 +17,7 @@ Developer Notes
         - [`debug.log`](#debuglog)
         - [Testnet and Regtest modes](#testnet-and-regtest-modes)
         - [DEBUG_LOCKORDER](#debug_lockorder)
+        - [DEBUG_LOCKCONTENTION](#debug_lockcontention)
         - [Valgrind suppressions file](#valgrind-suppressions-file)
         - [Compiling for test coverage](#compiling-for-test-coverage)
         - [Performance profiling with perf](#performance-profiling-with-perf)
@@ -411,6 +412,19 @@ multi-threading bugs can be very difficult to track down. The `--enable-debug`
 configure option adds `-DDEBUG_LOCKORDER` to the compiler flags. This inserts
 run-time checks to keep track of which locks are held and adds warnings to the
 `debug.log` file if inconsistencies are detected.
+
+### DEBUG_LOCKCONTENTION
+
+Defining `DEBUG_LOCKCONTENTION` adds a "lock" logging category to the logging
+RPC that, when enabled, logs the location and duration of each lock contention
+to the `debug.log` file.
+
+To enable it, run configure with `-DDEBUG_LOCKCONTENTION` added to your
+CPPFLAGS, e.g. `CPPFLAGS="-DDEBUG_LOCKCONTENTION"`, then build and run dashd.
+
+You can then use the `-debug=lock` configuration option at dashd startup or
+`dash-cli logging '["lock"]'` at runtime to turn on lock contention logging.
+It can be toggled off again with `dash-cli logging [] '["lock"]'`.
 
 ### Assertions and Checks
 

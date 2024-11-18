@@ -15,6 +15,7 @@
 #include <saltedhasher.h>
 #include <threadinterrupt.h>
 #include <unordered_lru_cache.h>
+#include <util/time.h>
 
 #include <atomic>
 #include <map>

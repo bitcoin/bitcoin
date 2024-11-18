@@ -5,6 +5,7 @@
 
 #include <stats/rawsender.h>
 
+#include <logging.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <util/sock.h>

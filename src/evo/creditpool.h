@@ -10,6 +10,7 @@
 #include <serialize.h>
 #include <sync.h>
 #include <threadsafety.h>
+#include <tinyformat.h>
 #include <unordered_lru_cache.h>
 #include <util/ranges_set.h>
 
