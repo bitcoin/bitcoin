@@ -526,9 +526,7 @@ def force_finish_mnsync(node):
     Masternodes won't accept incoming connections while IsSynced is false.
     Force them to switch to this state to speed things up.
     """
-    while True:
-        if node.mnsync("status")['IsSynced']:
-            break
+    while not node.mnsync("status")['IsSynced']:
         node.mnsync("next")
 
 # Transaction/Block functions
