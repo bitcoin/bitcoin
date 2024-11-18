@@ -62,6 +62,7 @@ namespace BCLog {
         I2P         = (1 << 22),
         IPC         = (1 << 23),
         LOCK        = (1 << 24),
+        BLOCKSTORE  = (1 << 26),
         TXRECONCILIATION = (1 << 27),
 
         //Start Dash

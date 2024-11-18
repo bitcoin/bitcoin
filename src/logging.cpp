@@ -161,6 +161,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::I2P, "i2p"},
     {BCLog::IPC, "ipc"},
     {BCLog::LOCK, "lock"},
+    {BCLog::BLOCKSTORE, "blockstorage"},
     {BCLog::TXRECONCILIATION, "txreconciliation"},
     {BCLog::ALL, "1"},
     {BCLog::ALL, "all"},
