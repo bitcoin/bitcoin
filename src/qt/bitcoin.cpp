@@ -680,7 +680,7 @@ int GuiMain(int argc, char* argv[])
     }
     // Validate/set custom css directory
     if (gArgs.IsArgSet("-custom-css-dir")) {
-        fs::path customDir = fs::PathFromString(gArgs.GetArg("-custom-css-dir", ""));
+        fs::path customDir = gArgs.GetPathArg("-custom-css-dir");
         QString strCustomDir = GUIUtil::PathToQString(customDir);
         std::vector<QString> vecRequiredFiles = GUIUtil::listStyleSheets();
         QString strFile;
