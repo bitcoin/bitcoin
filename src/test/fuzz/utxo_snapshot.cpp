@@ -46,14 +46,12 @@ void initialize_chain()
     const auto params{CreateChainParams(ArgsManager{}, ChainType::REGTEST)};
     static const auto chain{CreateBlockChain(2 * COINBASE_MATURITY, *params)};
     g_chain = &chain;
-    static const auto setup{
-        MakeNoLogFileContext<TestingSetup>(ChainType::REGTEST,
-                                           TestOpts{
-                                               .setup_net = false,
-                                               .setup_validation_interface = false,
-                                               .min_validation_cache = true,
-                                           }),
-    };
+    const auto setup = MakeNoLogFileContext<TestingSetup>(ChainType::REGTEST,
+            TestOpts{
+                .setup_net = false,
+                .setup_validation_interface = false,
+                .min_validation_cache = true,
+            });
     if constexpr (INVALID) {
         auto& chainman{*setup->m_node.chainman};
         for (const auto& block : chain) {
