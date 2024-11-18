@@ -25,7 +25,6 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-
       - name: Prepare
         id: prepare
         run: |
@@ -68,18 +67,6 @@ jobs:
           host: arm-linux-gnueabihf
         - build_target: linux64
           host: x86_64-pc-linux-gnu
-        - build_target: linux64_tsan
-          host: x86_64-pc-linux-gnu
-        - build_target: linux64_ubsan
-          host: x86_64-pc-linux-gnu
-        - build_target: linux64_fuzz
-          host: x86_64-pc-linux-gnu
-        - build_target: linux64_cxx20
-          host: x86_64-pc-linux-gnu
-        - build_target: linux64_sqlite
-          host: x86_64-pc-linux-gnu
-        - build_target: linux64_nowallet
-          host: x86_64-pc-linux-gnu
 
     container:
       image: ghcr.io/${{ needs.build-image.outputs.repo-name }}/dashcore-ci-runner:${{ needs.build-image.outputs.image-tag }}
@@ -89,7 +76,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-
 
       - name: Cache depends sources
         uses: actions/cache@v4
@@ -113,6 +99,12 @@ jobs:
       - name: Build dependencies
         run: make -j$(nproc) -C depends HOST=${{ matrix.host }}
 
+      - name: Upload built depends
+        uses: actions/upload-artifact@v4
+        with:
+          name: depends-${{ matrix.build_target }}
+          path: depends/${{ matrix.host }}
+
   build:
     name: Build
     needs: [build-image, build-depends]
@@ -123,20 +115,28 @@ jobs:
         include:
           - build_target: arm-linux
             host: arm-linux-gnueabihf
+            depends_on: arm-linux
           - build_target: linux64
             host: x86_64-pc-linux-gnu
+            depends_on: linux64
           - build_target: linux64_tsan
             host: x86_64-pc-linux-gnu
+            depends_on: linux64
           - build_target: linux64_ubsan
             host: x86_64-pc-linux-gnu
+            depends_on: linux64
           - build_target: linux64_fuzz
             host: x86_64-pc-linux-gnu
+            depends_on: linux64
           - build_target: linux64_cxx20
             host: x86_64-pc-linux-gnu
+            depends_on: linux64
           - build_target: linux64_sqlite
             host: x86_64-pc-linux-gnu
+            depends_on: linux64
           - build_target: linux64_nowallet
             host: x86_64-pc-linux-gnu
+            depends_on: linux64
     container:
       image: ghcr.io/${{ needs.build-image.outputs.repo-name }}/dashcore-ci-runner:${{ needs.build-image.outputs.image-tag }}
       options: --user root
@@ -146,16 +146,11 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-
-      - name: Restore Cache dependencies
-        uses: actions/cache/restore@v4
+      - name: Download built depends
+        uses: actions/download-artifact@v4
         with:
-          path: |
-            depends/${{ matrix.host }}
-          key: ${{ runner.os }}-depends-${{ matrix.build_target }}-${{ hashFiles('depends/packages/*') }}
-          restore-keys: |
-            ${{ runner.os }}-depends-${{ matrix.build_target }}-${{ hashFiles('depends/packages/*') }}
-            ${{ runner.os }}-depends-${{ matrix.build_target }}
+          name: depends-${{ matrix.depends_on }}
+          path: depends/${{ matrix.host }}
 
       - name: Determine PR Base SHA
         id: vars
@@ -192,32 +187,3 @@ jobs:
           name: build-artifacts-${{ matrix.build_target }}
           path: |
             /output
-
-
-# Come back to this later and implement tests :)
-#  test:
-#    name: Test
-#    needs: [build-image, build]
-#    runs-on: ubuntu-22.04
-#    container:
-#      image: ghcr.io/${{ needs.build-image.outputs.repo-name }}/dashcore-ci-runner:${{ needs.build-image.outputs.image-tag }}
-#      options: --user root
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v4
-#        with:
-#          ref: ${{ github.event.pull_request.head.sha }}
-#
-#      - name: Download build artifacts
-#        uses: actions/download-artifact@v4
-#        with:
-#          name: build-artifacts
-#          path: src/
-#
-##      - name: Setup environment
-##        run: |
-##          echo "BUILD_TARGET=${{ needs.build.matrix.build_target }}"
-##          source ./ci/dash/matrix.sh
-#
-#      - name: Run integration tests
-#        run: ./ci/dash/test_integrationtests.sh --extended --exclude feature_pruning,feature_dbcrash
