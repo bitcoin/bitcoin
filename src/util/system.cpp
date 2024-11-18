@@ -481,7 +481,7 @@ fs::path ArgsManager::GetBackupsDirPath()
     if (!IsArgSet("-walletbackupsdir"))
         return GetDataDirNet() / "backups";
 
-    return fs::absolute(fs::PathFromString(GetArg("-walletbackupsdir", "")));
+    return fs::absolute(GetPathArg("-walletbackupsdir"));
 }
 
 void ArgsManager::ClearPathCache()
