@@ -729,6 +729,7 @@ public:
         "           \"T\" - UTREEXO_ARCHIVE peer can handle Utreexo proof requests for all  historical blocks\n"
         "           \"y\" - UTREEXO_TMP? peer can handle Utreexo proof requests\n"
         "           \"m\" - MALICIOUS? peer openly seeks to aid in bypassing network policy/spam filters (OR to sabotage nodes that seek to)\n"
+        "           \"r\" - REPLACE_BY_FEE? peer supports replacement of transactions without BIP 125 signalling\n"
         "           \"u\" - UNKNOWN: unrecognized bit flag\n"
         "  v        Version of transport protocol used for the connection\n"
         "  mping    Minimum observed ping time, in milliseconds (ms)\n"
