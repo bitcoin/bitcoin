@@ -468,7 +468,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         assert_equal(res['package_msg'], "success")
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"] for dusty_tx in dusty_txs] + [sweep_tx["tx"], cancel_sweep["tx"]])
 
-        self.generate(self.nodes[0], 25)
+        self.generate(self.nodes[0], 1)
         self.wallet.rescan_utxos()
         assert_equal(self.nodes[0].getrawmempool(), [])
 
