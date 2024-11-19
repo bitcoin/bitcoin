@@ -12,4 +12,4 @@ export DEP_OPTS="DEBUG=1 MULTIPROCESS=1"
 export GOAL="install"
 export TEST_RUNNER_EXTRA="--v2transport"
 export BITCOIN_CONFIG="--with-boost-process --enable-debug CC=clang CXX=clang++" # Use clang to avoid OOM
-export TEST_RUNNER_ENV="BITCOIND=dash-node"
+export BITCOIND=dash-node  # Used in functional tests

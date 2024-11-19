@@ -29,8 +29,8 @@ if [ "$DIRECT_WINE_EXEC_TESTS" = "true" ]; then
   wine ./src/test/test_dash.exe
 else
   if [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]; then
-    ${TEST_RUNNER_ENV} ./src/test/test_dash --catch_system_errors=no -l test_suite
+    ./src/test/test_dash --catch_system_errors=no -l test_suite
   else
-      ${TEST_RUNNER_ENV} make $MAKEJOBS check VERBOSE=1
+      make $MAKEJOBS check VERBOSE=1
   fi
 fi
