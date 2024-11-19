@@ -213,7 +213,7 @@ x86_64-pc-linux-gnu_multiprocess:
     - .skip-in-fast-mode-template
   variables:
     HOST: x86_64-pc-linux-gnu
-    DEP_OPTS: "MULTIPROCESS=1"
+    DEP_OPTS: "DEBUG=1 MULTIPROCESS=1"
 
 x86_64-apple-darwin:
   extends:

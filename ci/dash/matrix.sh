@@ -26,6 +26,8 @@ elif [ "$BUILD_TARGET" = "linux64_cxx20" ]; then
   source ./ci/test/00_setup_env_native_cxx20.sh
 elif [ "$BUILD_TARGET" = "linux64_fuzz" ]; then
   source ./ci/test/00_setup_env_native_fuzz.sh
+elif [ "$BUILD_TARGET" = "linux64_multiprocess" ]; then
+  source ./ci/test/00_setup_env_native_multiprocess.sh
 elif [ "$BUILD_TARGET" = "linux64_nowallet" ]; then
   source ./ci/test/00_setup_env_native_nowallet.sh
 elif [ "$BUILD_TARGET" = "linux64_sqlite" ]; then
