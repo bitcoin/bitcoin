@@ -65,7 +65,7 @@ private:
     QString m_title;
     QDateTime m_startDate;
     QDateTime m_endDate;
-    float m_paymentAmount;
+    double m_paymentAmount;
     QString m_url;
 
 public:
@@ -74,7 +74,7 @@ public:
     QString hash() const;
     QDateTime startDate() const;
     QDateTime endDate() const;
-    float paymentAmount() const;
+    double paymentAmount() const;
     QString url() const;
     bool isActive() const;
     QString votingStatus(int nAbsVoteReq) const;

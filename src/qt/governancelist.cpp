@@ -63,7 +63,7 @@ QDateTime Proposal::startDate() const { return m_startDate; }
 
 QDateTime Proposal::endDate() const { return m_endDate; }
 
-float Proposal::paymentAmount() const { return m_paymentAmount; }
+double Proposal::paymentAmount() const { return m_paymentAmount; }
 
 QString Proposal::url() const { return m_url; }
 
