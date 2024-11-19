@@ -970,11 +970,15 @@ public:
     BlockRef waitTipChanged(uint256 current_tip, MillisecondsDouble timeout) override
     {
         if (timeout > std::chrono::years{100}) timeout = std::chrono::years{100}; // Upper bound to avoid UB in std::chrono
+
         {
             WAIT_LOCK(notifications().m_tip_block_mutex, lock);
-            notifications().m_tip_block_cv.wait_for(lock, timeout, [&]() EXCLUSIVE_LOCKS_REQUIRED(notifications().m_tip_block_mutex) {
-                return (notifications().m_tip_block && notifications().m_tip_block.value() != current_tip) || chainman().m_interrupt;
-            });
+            // Early return if a tip is connected and already different.
+            if (!notifications().m_tip_block || notifications().m_tip_block.value() == current_tip) {
+                notifications().m_tip_block_cv.wait_for(lock, timeout, [&]() EXCLUSIVE_LOCKS_REQUIRED(notifications().m_tip_block_mutex) {
+                    return (notifications().m_tip_block && notifications().m_tip_block.value() != current_tip) || chainman().m_interrupt;
+                });
+            }
         }
         // Must release m_tip_block_mutex before locking cs_main, to avoid deadlocks.
         LOCK(::cs_main);
