@@ -268,7 +268,28 @@ def satoshi_round(amount: Union[int, float, str], *, rounding: str) -> Decimal:
     return Decimal(amount).quantize(SATOSHI_PRECISION, rounding=rounding)
 
 
-def wait_until_helper_internal(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=None, timeout_factor=1.0):
+def ensure_for(*, duration, f, check_interval=0.2):
+    """Check if the predicate keeps returning True for duration.
+
+    check_interval can be used to configure the wait time between checks.
+    Setting check_interval to 0 will allow to have two checks: one in the
+    beginning and one after duration.
+    """
+    # If check_interval is 0 or negative or larger than duration, we fall back
+    # to checking once in the beginning and once at the end of duration
+    if check_interval <= 0 or check_interval > duration:
+        check_interval = duration
+    time_end = time.time() + duration
+    predicate_source = "''''\n" + inspect.getsource(f) + "'''"
+    while True:
+        if not f():
+            raise AssertionError(f"Predicate {predicate_source} became false within {duration} seconds")
+        if time.time() > time_end:
+            return
+        time.sleep(check_interval)
+
+
+def wait_until_helper_internal(predicate, *, timeout=60, lock=None, timeout_factor=1.0, check_interval=0.05):
     """Sleep until the predicate resolves to be True.
 
     Warning: Note that this method is not recommended to be used in tests as it is
@@ -277,13 +298,10 @@ def wait_until_helper_internal(predicate, *, attempts=float('inf'), timeout=floa
     properly scaled. Furthermore, `wait_until()` from `P2PInterface` class in
     `p2p.py` has a preset lock.
     """
-    if attempts == float('inf') and timeout == float('inf'):
-        timeout = 60
     timeout = timeout * timeout_factor
-    attempt = 0
     time_end = time.time() + timeout
 
-    while attempt < attempts and time.time() < time_end:
+    while time.time() < time_end:
         if lock:
             with lock:
                 if predicate():
@@ -291,17 +309,12 @@ def wait_until_helper_internal(predicate, *, attempts=float('inf'), timeout=floa
         else:
             if predicate():
                 return
-        attempt += 1
-        time.sleep(0.05)
+        time.sleep(check_interval)
 
     # Print the cause of the timeout
     predicate_source = "''''\n" + inspect.getsource(predicate) + "'''"
     logger.error("wait_until() failed. Predicate: {}".format(predicate_source))
-    if attempt >= attempts:
-        raise AssertionError("Predicate {} not true after {} attempts".format(predicate_source, attempts))
-    elif time.time() >= time_end:
-        raise AssertionError("Predicate {} not true after {} seconds".format(predicate_source, timeout))
-    raise RuntimeError('Unreachable')
+    raise AssertionError("Predicate {} not true after {} seconds".format(predicate_source, timeout))
 
 
 def sha256sum_file(filename):

@@ -5,7 +5,6 @@
 """Test segwit transactions and blocks on P2P network."""
 from decimal import Decimal
 import random
-import time
 
 from test_framework.blocktools import (
     WITNESS_COMMITMENT_HEADER,
@@ -83,8 +82,9 @@ from test_framework.script_util import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    softfork_active,
     assert_raises_rpc_error,
+    ensure_for,
+    softfork_active,
 )
 from test_framework.wallet import MiniWallet
 from test_framework.wallet_util import generate_keypair
@@ -184,8 +184,7 @@ class TestP2PConn(P2PInterface):
             else:
                 self.wait_for_getdata([tx.sha256])
         else:
-            time.sleep(5)
-            assert not self.last_message.get("getdata")
+            ensure_for(duration=5, f=lambda: not self.last_message.get("getdata"))
 
     def announce_block_and_wait_for_getdata(self, block, use_header, timeout=60):
         with p2p_lock:
