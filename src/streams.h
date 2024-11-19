@@ -162,6 +162,7 @@ public:
     typedef vector_type::reverse_iterator reverse_iterator;
 
     explicit DataStream() = default;
+    explicit DataStream(size_type n) { reserve(n); }
     explicit DataStream(Span<const uint8_t> sp) : DataStream{AsBytes(sp)} {}
     explicit DataStream(Span<const value_type> sp) : vch(sp.data(), sp.data() + sp.size()) {}
 
