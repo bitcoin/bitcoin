@@ -86,24 +86,19 @@ jobs:
           restore-keys: |
             depends-sources-
 
-      - name: Cache dependencies
+      - name: Cache depends
         uses: actions/cache@v4
         with:
           path: |
             depends/built
+            depends/${{ matrix.host }}
           key: ${{ runner.os }}-depends-${{ matrix.build_target }}-${{ hashFiles('depends/packages/*') }}
           restore-keys: |
             ${{ runner.os }}-depends-${{ matrix.build_target }}-${{ hashFiles('depends/packages/*') }}
             ${{ runner.os }}-depends-${{ matrix.build_target }}
 
-      - name: Build dependencies
+      - name: Build depends
         run: make -j$(nproc) -C depends HOST=${{ matrix.host }}
-
-      - name: Upload built depends
-        uses: actions/upload-artifact@v4
-        with:
-          name: depends-${{ matrix.build_target }}
-          path: depends/${{ matrix.host }}
 
   build:
     name: Build
@@ -146,11 +141,13 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Download built depends
-        uses: actions/download-artifact@v4
+      - name: Restore depends cache
+        uses: actions/cache/restore@v4
         with:
-          name: depends-${{ matrix.depends_on }}
-          path: depends/${{ matrix.host }}
+          path: |
+            depends/built
+            depends/${{ matrix.host }}
+          key: ${{ runner.os }}-depends-${{ matrix.depends_on }}-${{ hashFiles('depends/packages/*') }}
 
       - name: Determine PR Base SHA
         id: vars
