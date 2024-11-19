@@ -15,7 +15,7 @@ from io import BytesIO
 
 from test_framework.messages import CBlock, CCbTx
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, force_finish_mnsync, softfork_active
+from test_framework.util import assert_equal, assert_raises_rpc_error, force_finish_mnsync
 
 
 class LLMQChainLocksTest(DashTestFramework):
@@ -31,8 +31,8 @@ class LLMQChainLocksTest(DashTestFramework):
 
         self.test_coinbase_best_cl(self.nodes[0], expected_cl_in_cb=False)
 
-        self.activate_v20(expected_activation_height=900)
-        self.log.info("Activated v20 at height:" + str(self.nodes[0].getblockcount()))
+        self.activate_mn_rr(expected_activation_height=900)
+        self.log.info("Activated MN_RR at height:" + str(self.nodes[0].getblockcount()))
 
         # v20 is active for the next block, not for the tip
         self.test_coinbase_best_cl(self.nodes[0], expected_cl_in_cb=False)
@@ -335,7 +335,7 @@ class LLMQChainLocksTest(DashTestFramework):
         assert_equal(result, "bad-cbtx-older-clsig")
         assert_equal(self.nodes[1].getbestblockhash(), tip1_hash)
 
-        # Update the sig too and it should pass now when mn_rr is not active and fail otherwise
+        # Update the sig too and it should fail
         old_blockhash = self.nodes[1].getblockhash(self.nodes[1].getblockcount() - 1)
         cbtx.bestCLSignature = bytes.fromhex(self.nodes[1].getblock(old_blockhash, 2)["tx"][0]["cbTx"]["bestCLSignature"])
         mal_block.vtx[0].vExtraPayload = cbtx.serialize()
