@@ -25,7 +25,7 @@ Blank lines are allowed and ignored by the parser.
 A comment starts with a number sign (`#`) and extends to the end of the line. All comments are ignored by the parser.
 
 Comments may appear in two ways:
-- on their own on an otherwise empty line (_preferable_);
+- on their own on an otherwise empty line (_preferred_);
 - after an `option=value` entry.
 
 ### Network specific options
