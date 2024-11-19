@@ -332,7 +332,7 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
 }
 
 bool CheckCbTxBestChainlock(const CBlock& block, const CBlockIndex* pindex,
-                            const llmq::CChainLocksHandler& chainlock_handler, BlockValidationState& state, const bool check_clhdiff)
+                            const llmq::CChainLocksHandler& chainlock_handler, BlockValidationState& state)
 {
     if (block.vtx[0]->nType != TRANSACTION_COINBASE) {
         return true;
@@ -353,18 +353,16 @@ bool CheckCbTxBestChainlock(const CBlock& block, const CBlockIndex* pindex,
         return true;
     }
 
-    if (check_clhdiff) {
-        auto prevBlockCoinbaseChainlock = GetNonNullCoinbaseChainlock(pindex->pprev);
-        // If std::optional prevBlockCoinbaseChainlock is empty, then up to the previous block, coinbase Chainlock is null.
-        if (prevBlockCoinbaseChainlock.has_value()) {
-            // Previous block Coinbase has a non-null Chainlock: current block's Chainlock must be non-null and at least as new as the previous one
-            if (!opt_cbTx->bestCLSignature.IsValid()) {
-                // IsNull() doesn't exist for CBLSSignature: we assume that a non valid BLS sig is null
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-null-clsig");
-            }
-            if (opt_cbTx->bestCLHeightDiff > prevBlockCoinbaseChainlock.value().second + 1) {
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-older-clsig");
-            }
+    const auto prevBlockCoinbaseChainlock = GetNonNullCoinbaseChainlock(pindex->pprev);
+    // If std::optional prevBlockCoinbaseChainlock is empty, then up to the previous block, coinbase Chainlock is null.
+    if (prevBlockCoinbaseChainlock.has_value()) {
+        // Previous block Coinbase has a non-null Chainlock: current block's Chainlock must be non-null and at least as new as the previous one
+        if (!opt_cbTx->bestCLSignature.IsValid()) {
+            // IsNull() doesn't exist for CBLSSignature: we assume that a non valid BLS sig is null
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-null-clsig");
+        }
+        if (opt_cbTx->bestCLHeightDiff > prevBlockCoinbaseChainlock.value().second + 1) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-older-clsig");
         }
     }
 

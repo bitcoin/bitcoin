@@ -20,7 +20,7 @@ from test_framework.util import assert_equal, assert_raises_rpc_error, force_fin
 
 class LLMQChainLocksTest(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(5, 4, [["-testactivationheight=mn_rr@1100"]] * 5)
+        self.set_dash_test_params(5, 4)
 
     def run_test(self):
         # Connect all nodes to node1 so that we always have the whole network connected
@@ -243,14 +243,8 @@ class LLMQChainLocksTest(DashTestFramework):
             assert_equal(tip_1['cbTx']['bestCLSignature'], tip_0['cbTx']['bestCLSignature'])
             assert_equal(tip_1['cbTx']['bestCLHeightDiff'], tip_0['cbTx']['bestCLHeightDiff'] + 1)
 
-        self.log.info("Test that bestCLHeightDiff conditions are relaxed before mn_rr")
-        self.test_bestCLHeightDiff(False)
-
-        self.activate_mn_rr(expected_activation_height=1100)
-        self.log.info("Activated mn_rr at height:" + str(self.nodes[0].getblockcount()))
-
-        self.log.info("Test that bestCLHeightDiff conditions are stricter after mn_rr")
-        self.test_bestCLHeightDiff(True)
+        self.log.info("Test bestCLHeightDiff restrictions")
+        self.test_bestCLHeightDiff()
 
     def create_chained_txs(self, node, amount):
         txid = node.sendtoaddress(node.getnewaddress(), amount)
@@ -293,11 +287,10 @@ class LLMQChainLocksTest(DashTestFramework):
         else:
             assert "bestCLHeightDiff" not in cbtx and "bestCLSignature" not in cbtx
 
-    def test_bestCLHeightDiff(self, mn_rr_active):
+    def test_bestCLHeightDiff(self):
         # We need 2 blocks we can grab clsigs from
         for _ in range(2):
             self.wait_for_chainlocked_block_all_nodes(self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0])
-        assert_equal(softfork_active(self.nodes[1], "mn_rr"), mn_rr_active)
         tip1_hash = self.nodes[1].getbestblockhash()
 
         self.isolate_node(1)
@@ -339,7 +332,7 @@ class LLMQChainLocksTest(DashTestFramework):
         mal_block.hashMerkleRoot = mal_block.calc_merkle_root()
         mal_block.solve()
         result = self.nodes[1].submitblock(mal_block.serialize().hex())
-        assert_equal(result, "bad-cbtx-older-clsig" if mn_rr_active else "bad-cbtx-invalid-clsig")
+        assert_equal(result, "bad-cbtx-older-clsig")
         assert_equal(self.nodes[1].getbestblockhash(), tip1_hash)
 
         # Update the sig too and it should pass now when mn_rr is not active and fail otherwise
@@ -350,12 +343,8 @@ class LLMQChainLocksTest(DashTestFramework):
         mal_block.hashMerkleRoot = mal_block.calc_merkle_root()
         mal_block.solve()
         result = self.nodes[1].submitblock(mal_block.serialize().hex())
-        if mn_rr_active:
-            assert_equal(result, "bad-cbtx-older-clsig")
-            assert_equal(self.nodes[1].getbestblockhash(), tip1_hash)
-        else:
-            assert_equal(result, None)
-            assert not self.nodes[1].getbestblockhash() == tip1_hash
+        assert_equal(result, "bad-cbtx-older-clsig")
+        assert_equal(self.nodes[1].getbestblockhash(), tip1_hash)
 
         self.reconnect_isolated_node(1, 0)
         self.sync_all()
