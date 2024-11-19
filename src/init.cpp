@@ -1795,7 +1795,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if (WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip() == nullptr)) {
         WAIT_LOCK(kernel_notifications.m_tip_block_mutex, lock);
         kernel_notifications.m_tip_block_cv.wait(lock, [&]() EXCLUSIVE_LOCKS_REQUIRED(kernel_notifications.m_tip_block_mutex) {
-            return !kernel_notifications.m_tip_block.IsNull() || ShutdownRequested(node);
+            return kernel_notifications.m_tip_block.has_value() || ShutdownRequested(node);
         });
     }
 
