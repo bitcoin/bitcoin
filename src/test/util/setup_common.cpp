@@ -77,6 +77,11 @@ const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 constexpr inline auto TEST_DIR_PATH_ELEMENT{"test_common bitcoin"}; // Includes a space to catch possible path escape issues.
 /** Random context to get unique temp data dirs. Separate from m_rng, which can be seeded from a const env var */
 static FastRandomContext g_rng_temp_path;
+static const bool g_rng_temp_path_init{[] {
+    // Must be initialized before any SeedRandomForTest
+    (void)g_rng_temp_path.rand64();
+    return true;
+}()};
 
 struct NetworkSetup
 {
@@ -134,8 +139,6 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
         }
     }
 
-    // Use randomly chosen seed for deterministic PRNG, so that (by default) test
-    // data directories use a random name that doesn't overlap with other tests.
     SeedRandomForTest(SeedRand::FIXED_SEED);
 
     const std::string test_name{G_TEST_GET_FULL_NAME ? G_TEST_GET_FULL_NAME() : ""};
