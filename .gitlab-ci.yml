@@ -193,13 +193,13 @@ x86_64-w64-mingw32:
   variables:
     HOST: x86_64-w64-mingw32
 
-x86_64-pc-linux-gnu-debug:
+x86_64-pc-linux-gnu_debug:
   extends: .build-depends-template
   variables:
     HOST: x86_64-pc-linux-gnu
     DEP_OPTS: "DEBUG=1"
 
-x86_64-pc-linux-gnu-nowallet:
+x86_64-pc-linux-gnu_nowallet:
   extends:
     - .build-depends-template
     - .skip-in-fast-mode-template
@@ -207,7 +207,7 @@ x86_64-pc-linux-gnu-nowallet:
     HOST: x86_64-pc-linux-gnu
     DEP_OPTS: "NO_WALLET=1"
 
-x86_64-pc-linux-gnu-multiprocess:
+x86_64-pc-linux-gnu_multiprocess:
   extends:
     - .build-depends-template
     - .skip-in-fast-mode-template
@@ -243,7 +243,7 @@ win64-build:
 linux64-build:
   extends: .build-template
   needs:
-    - x86_64-pc-linux-gnu-debug
+    - x86_64-pc-linux-gnu_debug
   variables:
     BUILD_TARGET: linux64
 
@@ -252,7 +252,7 @@ linux64_cxx20-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-pc-linux-gnu-debug
+    - x86_64-pc-linux-gnu_debug
   variables:
     BUILD_TARGET: linux64_cxx20
 
@@ -261,7 +261,7 @@ linux64_sqlite-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-pc-linux-gnu-debug
+    - x86_64-pc-linux-gnu_debug
   variables:
     BUILD_TARGET: linux64_sqlite
 
@@ -270,7 +270,7 @@ linux64_fuzz-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-pc-linux-gnu-debug
+    - x86_64-pc-linux-gnu_debug
   variables:
     BUILD_TARGET: linux64_fuzz
 
@@ -279,7 +279,7 @@ linux64_fuzz-build:
 #    - .build-template
 #    - .skip-in-fast-mode-template
 #  needs:
-#    - x86_64-pc-linux-gnu-debug
+#    - x86_64-pc-linux-gnu_debug
 #  variables:
 #    BUILD_TARGET: linux64_asan
 
@@ -288,7 +288,7 @@ linux64_tsan-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-pc-linux-gnu-debug
+    - x86_64-pc-linux-gnu_debug
   variables:
     BUILD_TARGET: linux64_tsan
 
@@ -297,7 +297,7 @@ linux64_ubsan-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-pc-linux-gnu-debug
+    - x86_64-pc-linux-gnu_debug
   variables:
     BUILD_TARGET: linux64_ubsan
 
@@ -306,7 +306,7 @@ linux64_nowallet-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-pc-linux-gnu-nowallet
+    - x86_64-pc-linux-gnu_nowallet
   variables:
     BUILD_TARGET: linux64_nowallet
 
@@ -315,7 +315,7 @@ linux64_multiprocess-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-pc-linux-gnu-multiprocess
+    - x86_64-pc-linux-gnu_multiprocess
   variables:
     BUILD_TARGET: linux64_multiprocess
 
@@ -324,7 +324,7 @@ linux64_multiprocess-build:
 #    - .build-template
 #    - .skip-in-fast-mode-template
 #  needs:
-#    - x86_64-pc-linux-gnu-debug
+#    - x86_64-pc-linux-gnu_debug
 #  variables:
 #    BUILD_TARGET: linux64_valgrind
 
