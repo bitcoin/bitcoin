@@ -10,22 +10,26 @@
 class CBatchedLogger
 {
 private:
-    bool accept;
-    std::string m_logging_function;;
+    bool m_accept;
+    BCLog::LogFlags m_category;
+    BCLog::Level m_level;
+    std::string m_logging_function;
     std::string m_source_file;
     const int m_source_line;
-    std::string msg;
+    std::string m_msg;
+
 public:
-    CBatchedLogger(BCLog::LogFlags _category, const std::string& logging_function, const std::string& m_source_file, int m_source_line);
+    CBatchedLogger(BCLog::LogFlags category, BCLog::Level level, const std::string& logging_function,
+                   const std::string& m_source_file, int m_source_line);
     virtual ~CBatchedLogger();
 
     template<typename... Args>
     void Batch(const std::string& fmt, const Args&... args)
     {
-        if (!accept) {
+        if (!m_accept) {
             return;
         }
-        msg += "    " + strprintf(fmt, args...) + "\n";
+        m_msg += "    " + strprintf(fmt, args...) + "\n";
     }
 
     void Flush();

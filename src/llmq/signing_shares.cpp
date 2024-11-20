@@ -1334,7 +1334,7 @@ void CSigSharesManager::Cleanup()
                 const auto& oneSigShare = m->begin()->second;
 
                 std::string strMissingMembers;
-                if (LogAcceptCategory(BCLog::LLMQ_SIGS)) {
+                if (LogAcceptCategory(BCLog::LLMQ_SIGS, BCLog::Level::Debug)) {
                     if (const auto quorumIt = quorums.find(std::make_pair(oneSigShare.getLlmqType(), oneSigShare.getQuorumHash())); quorumIt != quorums.end()) {
                         const auto& quorum = quorumIt->second;
                         for (const auto i : irange::range(quorum->members.size())) {
@@ -1346,11 +1346,15 @@ void CSigSharesManager::Cleanup()
                     }
                 }
 
-                LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- signing session timed out. signHash=%s, id=%s, msgHash=%s, sigShareCount=%d, missingMembers=%s\n", __func__,
-                          signHash.ToString(), oneSigShare.getId().ToString(), oneSigShare.getMsgHash().ToString(), count, strMissingMembers);
+                LogPrintLevel(BCLog::LLMQ_SIGS, BCLog::Level::Info, /* Continued */
+                              "CSigSharesManager::%s -- signing session timed out. signHash=%s, id=%s, msgHash=%s, "
+                              "sigShareCount=%d, missingMembers=%s\n",
+                              __func__, signHash.ToString(), oneSigShare.getId().ToString(),
+                              oneSigShare.getMsgHash().ToString(), count, strMissingMembers);
             } else {
-                LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- signing session timed out. signHash=%s, sigShareCount=%d\n", __func__,
-                          signHash.ToString(), count);
+                LogPrintLevel(BCLog::LLMQ_SIGS, BCLog::Level::Info, /* Continued */
+                              "CSigSharesManager::%s -- signing session timed out. signHash=%s, sigShareCount=%d\n",
+                              __func__, signHash.ToString(), count);
             }
             RemoveSigSharesForSession(signHash);
         }

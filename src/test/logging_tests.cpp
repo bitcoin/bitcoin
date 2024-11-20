@@ -99,10 +99,10 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
 
     LogPrintf("foo5: %s\n", "bar5");
     LogPrint(BCLog::NET, "foo6: %s\n", "bar6");
-    LogPrintLevel(BCLog::Level::Debug, BCLog::NET, "foo7: %s\n", "bar7");
-    LogPrintLevel(BCLog::Level::Info, BCLog::NET, "foo8: %s\n", "bar8");
-    LogPrintLevel(BCLog::Level::Warning, BCLog::NET, "foo9: %s\n", "bar9");
-    LogPrintLevel(BCLog::Level::Error, BCLog::NET, "foo10: %s\n", "bar10");
+    LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "foo7: %s\n", "bar7");
+    LogPrintLevel(BCLog::NET, BCLog::Level::Info, "foo8: %s\n", "bar8");
+    LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "foo9: %s\n", "bar9");
+    LogPrintLevel(BCLog::NET, BCLog::Level::Error, "foo10: %s\n", "bar10");
     std::ifstream file{tmp_log_path};
     std::vector<std::string> log_lines;
     for (std::string log; std::getline(file, log);) {

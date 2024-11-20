@@ -216,7 +216,7 @@ std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRota
     //TODO Check if it is triggered from outside (P2P, block validation). Throwing an exception is probably a wiser choice
     //assert (!newQuarterMembers.empty());
 
-    if (LogAcceptCategory(BCLog::LLMQ)) {
+    if (LogAcceptCategory(BCLog::LLMQ, BCLog::Level::Debug)) {
         for (const size_t i : irange::range(nQuorums)) {
             std::stringstream ss;
 
@@ -249,7 +249,7 @@ std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRota
         std::move(previousQuarters.quarterHMinusC[i].begin(), previousQuarters.quarterHMinusC[i].end(), std::back_inserter(quorumMembers[i]));
         std::move(newQuarterMembers[i].begin(), newQuarterMembers[i].end(), std::back_inserter(quorumMembers[i]));
 
-        if (LogAcceptCategory(BCLog::LLMQ)) {
+        if (LogAcceptCategory(BCLog::LLMQ, BCLog::Level::Debug)) {
             std::stringstream ss;
             ss << " [";
             for (const auto &m: quorumMembers[i]) {
@@ -397,7 +397,7 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(cons
         sortedCombinedMnsList.push_back(std::move(m));
     }
 
-    if (LogAcceptCategory(BCLog::LLMQ)) {
+    if (LogAcceptCategory(BCLog::LLMQ, BCLog::Level::Debug)) {
         std::stringstream ss;
         ss << " [";
         for (const auto &m: sortedCombinedMnsList) {
@@ -517,7 +517,7 @@ std::vector<std::vector<CDeterministicMNCPtr>> GetQuorumQuarterMembersBySnapshot
         std::move(sortedMnsUsedAtH.begin(), sortedMnsUsedAtH.end(), std::back_inserter(sortedCombinedMns));
     }
 
-    if (LogAcceptCategory(BCLog::LLMQ)) {
+    if (LogAcceptCategory(BCLog::LLMQ, BCLog::Level::Debug)) {
         std::stringstream ss;
         ss << " [";
         for (const auto &m: sortedCombinedMns) {
@@ -788,7 +788,8 @@ bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& 
         relayMembers = connections;
     }
     if (!connections.empty()) {
-        if (!connman.HasMasternodeQuorumNodes(llmqParams.type, pQuorumBaseBlockIndex->GetBlockHash()) && LogAcceptCategory(BCLog::LLMQ)) {
+        if (!connman.HasMasternodeQuorumNodes(llmqParams.type, pQuorumBaseBlockIndex->GetBlockHash()) &&
+            LogAcceptCategory(BCLog::LLMQ, BCLog::Level::Debug)) {
             std::string debugMsg = strprintf("%s -- adding masternodes quorum connections for quorum %s:\n", __func__, pQuorumBaseBlockIndex->GetBlockHash().ToString());
             for (const auto& c : connections) {
                 auto dmn = tip_mn_list.GetValidMN(c);
@@ -835,7 +836,7 @@ void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, CConnman
     }
 
     if (!probeConnections.empty()) {
-        if (LogAcceptCategory(BCLog::LLMQ)) {
+        if (LogAcceptCategory(BCLog::LLMQ, BCLog::Level::Debug)) {
             std::string debugMsg = strprintf("%s -- adding masternodes probes for quorum %s:\n", __func__, pQuorumBaseBlockIndex->GetBlockHash().ToString());
             for (const auto& c : probeConnections) {
                 auto dmn = tip_mn_list.GetValidMN(c);

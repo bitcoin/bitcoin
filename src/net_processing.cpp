@@ -3662,7 +3662,7 @@ void PeerManagerImpl::ProcessMessage(
 
         // Log succesful connections unconditionally for outbound, but not for inbound as those
         // can be triggered by an attacker at high rate.
-        if (!pfrom.IsInboundConn() || LogAcceptCategory(BCLog::NET)) {
+        if (!pfrom.IsInboundConn() || LogAcceptCategory(BCLog::NET, BCLog::Level::Debug)) {
             LogPrintf("New %s %s peer connected: version: %d, blocks=%d, peer=%d%s\n",
                       pfrom.ConnectionTypeAsString(),
                       TransportTypeAsString(pfrom.m_transport->GetInfo().transport_type),

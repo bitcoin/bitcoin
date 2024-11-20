@@ -150,11 +150,11 @@ extern const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS;
 
 // Use a macro instead of a function for conditional logging to prevent
 // evaluating arguments when logging for the category is not enabled.
-#define WalletCJLogPrint(wallet, ...)               \
-    do {                                            \
-        if (LogAcceptCategory(BCLog::COINJOIN)) {   \
-            wallet.WalletLogPrintf(__VA_ARGS__);    \
-        }                                           \
+#define WalletCJLogPrint(wallet, ...)                                  \
+    do {                                                               \
+        if (LogAcceptCategory(BCLog::COINJOIN, BCLog::Level::Debug)) { \
+            wallet.WalletLogPrintf(__VA_ARGS__);                       \
+        }                                                              \
     } while (0)
 
 /** A wrapper to reserve an address from a wallet
