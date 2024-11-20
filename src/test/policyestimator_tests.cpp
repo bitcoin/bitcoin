@@ -63,9 +63,9 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                 tx.vin[0].prevout.n = 10000*blocknum+100*j+k; // make transaction unique
                 {
                     LOCK2(cs_main, mpool.cs);
-                    mpool.addUnchecked(entry.Fee(feeV[j]).Time(Now<NodeSeconds>()).Height(blocknum).FromTx(tx));
+                    AddToMempool(mpool, entry.Fee(feeV[j]).Time(Now<NodeSeconds>()).Height(blocknum).FromTx(tx));
                     // Since TransactionAddedToMempool callbacks are generated in ATMP,
-                    // not addUnchecked, we cheat and create one manually here
+                    // not AddToMempool, we cheat and create one manually here
                     const int64_t virtual_size = GetVirtualTransactionSize(*MakeTransactionRef(tx));
                     const NewMempoolTransactionInfo tx_info{NewMempoolTransactionInfo(MakeTransactionRef(tx),
                                                                                       feeV[j],
@@ -164,9 +164,9 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                 tx.vin[0].prevout.n = 10000*blocknum+100*j+k;
                 {
                     LOCK2(cs_main, mpool.cs);
-                    mpool.addUnchecked(entry.Fee(feeV[j]).Time(Now<NodeSeconds>()).Height(blocknum).FromTx(tx));
+                    AddToMempool(mpool, entry.Fee(feeV[j]).Time(Now<NodeSeconds>()).Height(blocknum).FromTx(tx));
                     // Since TransactionAddedToMempool callbacks are generated in ATMP,
-                    // not addUnchecked, we cheat and create one manually here
+                    // not AddToMempool, we cheat and create one manually here
                     const int64_t virtual_size = GetVirtualTransactionSize(*MakeTransactionRef(tx));
                     const NewMempoolTransactionInfo tx_info{NewMempoolTransactionInfo(MakeTransactionRef(tx),
                                                                                       feeV[j],
@@ -228,9 +228,9 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                 tx.vin[0].prevout.n = 10000*blocknum+100*j+k;
                 {
                     LOCK2(cs_main, mpool.cs);
-                    mpool.addUnchecked(entry.Fee(feeV[j]).Time(Now<NodeSeconds>()).Height(blocknum).FromTx(tx));
+                    AddToMempool(mpool, entry.Fee(feeV[j]).Time(Now<NodeSeconds>()).Height(blocknum).FromTx(tx));
                     // Since TransactionAddedToMempool callbacks are generated in ATMP,
-                    // not addUnchecked, we cheat and create one manually here
+                    // not AddToMempool, we cheat and create one manually here
                     const int64_t virtual_size = GetVirtualTransactionSize(*MakeTransactionRef(tx));
                     const NewMempoolTransactionInfo tx_info{NewMempoolTransactionInfo(MakeTransactionRef(tx),
                                                                                       feeV[j],

@@ -7,6 +7,7 @@
      See https://github.com/bitcoin/bitcoin/blob/master/doc/tracing.md#context-mempool
 """
 
+import ctypes
 from decimal import Decimal
 
 # Test will be skipped if we don't have bcc installed
@@ -63,6 +64,7 @@ struct replaced_event
   u8    replacement_hash[HASH_LENGTH];
   s32   replacement_vsize;
   s64   replacement_fee;
+  bool  replaced_by_transaction;
 };
 
 // BPF perf buffer to push the data to user space.
@@ -115,12 +117,26 @@ int trace_replaced(struct pt_regs *ctx) {
   bpf_usdt_readarg_p(5, ctx, &replaced.replacement_hash, HASH_LENGTH);
   bpf_usdt_readarg(6, ctx, &replaced.replacement_vsize);
   bpf_usdt_readarg(7, ctx, &replaced.replacement_fee);
+  bpf_usdt_readarg(8, ctx, &replaced.replaced_by_transaction);
 
   replaced_events.perf_submit(ctx, &replaced, sizeof(replaced));
   return 0;
 }
 
 """
+
+
+class MempoolReplaced(ctypes.Structure):
+    _fields_ = [
+        ("replaced_hash", ctypes.c_ubyte * 32),
+        ("replaced_vsize", ctypes.c_int32),
+        ("replaced_fee", ctypes.c_int64),
+        ("replaced_entry_time", ctypes.c_uint64),
+        ("replacement_hash", ctypes.c_ubyte * 32),
+        ("replacement_vsize", ctypes.c_int32),
+        ("replacement_fee", ctypes.c_int64),
+        ("replaced_by_transaction", ctypes.c_bool),
+    ]
 
 
 class MempoolTracepointTest(BitcoinTestFramework):
@@ -230,7 +246,8 @@ class MempoolTracepointTest(BitcoinTestFramework):
         bpf = BPF(text=MEMPOOL_TRACEPOINTS_PROGRAM, usdt_contexts=[ctx], debug=0, cflags=["-Wno-error=implicit-function-declaration"])
 
         def handle_replaced_event(_, data, __):
-            events.append(bpf["replaced_events"].event(data))
+            event = ctypes.cast(data, ctypes.POINTER(MempoolReplaced)).contents
+            events.append(event)
 
         bpf["replaced_events"].open_perf_buffer(handle_replaced_event)
 
@@ -261,6 +278,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
         assert_equal(bytes(event.replacement_hash)[::-1].hex(), replacement_tx["txid"])
         assert_equal(event.replacement_vsize, replacement_tx["tx"].get_vsize())
         assert_equal(event.replacement_fee, replacement_fee)
+        assert_equal(event.replaced_by_transaction, True)
 
         bpf.cleanup()
         self.generate(self.wallet, 1)

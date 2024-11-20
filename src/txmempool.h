@@ -260,13 +260,13 @@ struct TxMempoolInfo
  *
  * Usually when a new transaction is added to the mempool, it has no in-mempool
  * children (because any such children would be an orphan).  So in
- * addUnchecked(), we:
- * - update a new entry's setMemPoolParents to include all in-mempool parents
- * - update the new entry's direct parents to include the new tx as a child
+ * addNewTransaction(), we:
+ * - update a new entry's m_parents to include all in-mempool parents
+ * - update each of those parent entries to include the new tx as a child
  * - update all ancestors of the transaction to include the new tx's size/fee
  *
  * When a transaction is removed from the mempool, we must:
- * - update all in-mempool parents to not track the tx in setMemPoolChildren
+ * - update all in-mempool parents to not track the tx in their m_children
  * - update all ancestors to not include the tx's size/fees in descendant state
  * - update all in-mempool children to not include it as a parent
  *
@@ -283,7 +283,7 @@ struct TxMempoolInfo
  * unreachable from just looking at transactions in the mempool (the linking
  * transactions may also be in the disconnected block, waiting to be added).
  * Because of this, there's not much benefit in trying to search for in-mempool
- * children in addUnchecked().  Instead, in the special case of transactions
+ * children in addNewTransaction().  Instead, in the special case of transactions
  * being added from a disconnected block, we require the caller to clean up the
  * state, to account for in-mempool, out-of-block descendants for all the
  * in-block transactions by calling UpdateTransactionsFromBlock().  Note that
@@ -453,15 +453,6 @@ public:
      */
     void check(const CCoinsViewCache& active_coins_tip, int64_t spendheight) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    // addUnchecked must updated state for all ancestors of a given transaction,
-    // to track size/count of descendant transactions.  First version of
-    // addUnchecked can be used to have it call CalculateMemPoolAncestors(), and
-    // then invoke the second version.
-    // Note that addUnchecked is ONLY called from ATMP outside of tests
-    // and any other callers may break wallet's in-mempool tracking (due to
-    // lack of CValidationInterface::TransactionAddedToMempool callbacks).
-    void addUnchecked(const CTxMemPoolEntry& entry) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
-    void addUnchecked(const CTxMemPoolEntry& entry, setEntries& setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
 
     void removeRecursive(const CTransaction& tx, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** After reorg, filter the entries that would no longer be valid in the next block, and update
@@ -518,15 +509,6 @@ public:
      * The nth element in txids becomes the nth element in the returned vector. If any of the txids
      * don't actually exist in the mempool, returns an empty vector. */
     std::vector<txiter> GetIterVec(const std::vector<uint256>& txids) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-
-    /** Remove a set of transactions from the mempool.
-     *  If a transaction is in this set, then all in-mempool descendants must
-     *  also be in the set, unless this transaction is being removed for being
-     *  in a block.
-     *  Set updateDescendants to true when removing a tx that was in a block, so
-     *  that any in-mempool descendants have their ancestor state updated.
-     */
-    void RemoveStaged(setEntries& stage, bool updateDescendants, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** UpdateTransactionsFromBlock is called when adding transactions from a
      * disconnected block back to the mempool, new mempool entries may have
@@ -724,29 +706,21 @@ public:
         return m_sequence_number;
     }
 
-    /**
-     * Calculate the sorted chunks for the old and new mempool relating to the
-     * clusters that would be affected by a potential replacement transaction.
-     * (replacement_fees, replacement_vsize) values are gathered from a
-     * proposed set of replacement transactions that are considered as a single
-     * chunk, and represent their complete cluster. In other words, they have no
-     * in-mempool ancestors.
-     *
-     * @param[in] replacement_fees    Package fees
-     * @param[in] replacement_vsize   Package size (must be greater than 0)
-     * @param[in] direct_conflicts    All transactions that would be removed directly by
-     *                                having a conflicting input with a proposed transaction
-     * @param[in] all_conflicts       All transactions that would be removed
-     * @return old and new diagram pair respectively, or an error string if the conflicts don't match a calculable topology
-     */
-    util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CalculateChunksForRBF(CAmount replacement_fees, int64_t replacement_vsize, const setEntries& direct_conflicts, const setEntries& all_conflicts) EXCLUSIVE_LOCKS_REQUIRED(cs);
-
     /* Check that all direct conflicts are in a cluster size of two or less. Each
      * direct conflict may be in a separate cluster.
      */
     std::optional<std::string> CheckConflictTopology(const setEntries& direct_conflicts);
 
 private:
+    /** Remove a set of transactions from the mempool.
+     *  If a transaction is in this set, then all in-mempool descendants must
+     *  also be in the set, unless this transaction is being removed for being
+     *  in a block.
+     *  Set updateDescendants to true when removing a tx that was in a block, so
+     *  that any in-mempool descendants have their ancestor state updated.
+     */
+    void RemoveStaged(setEntries& stage, bool updateDescendants, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
+
     /** UpdateForDescendants is used by UpdateTransactionsFromBlock to update
      *  the descendants for a single transaction that has been added to the
      *  mempool but may have child transactions in the mempool, eg during a
@@ -791,7 +765,7 @@ private:
     /** Before calling removeUnchecked for a given transaction,
      *  UpdateForRemoveFromMempool must be called on the entire (dependent) set
      *  of transactions being removed at the same time.  We use each
-     *  CTxMemPoolEntry's setMemPoolParents in order to walk ancestors of a
+     *  CTxMemPoolEntry's m_parents in order to walk ancestors of a
      *  given transaction that is removed, so we can't remove intermediate
      *  transactions in a chain before we've updated all the state for the
      *  removal.
@@ -816,6 +790,122 @@ public:
         assert(m_epoch.guarded()); // verify guard even when it==nullopt
         return !it || visited(*it);
     }
+
+    /*
+     * CTxMemPool::ChangeSet:
+     *
+     * This class is used for all mempool additions and associated removals (eg
+     * due to rbf). Removals that don't need to be evaluated for acceptance,
+     * such as removing transactions that appear in a block, or due to reorg,
+     * or removals related to mempool limiting or expiry do not need to use
+     * this.
+     *
+     * Callers can interleave calls to StageAddition()/StageRemoval(), and
+     * removals may be invoked in any order, but additions must be done in a
+     * topological order in the case of transaction packages (ie, parents must
+     * be added before children).
+     *
+     * CalculateChunksForRBF() can be used to calculate the feerate diagram of
+     * the proposed set of new transactions and compare with the existing
+     * mempool.
+     *
+     * CalculateMemPoolAncestors() calculates the in-mempool (not including
+     * what is in the change set itself) ancestors of a given transacion.
+     *
+     * Apply() will apply the removals and additions that are staged into the
+     * mempool.
+     *
+     * Only one changeset may exist at a time. While a changeset is
+     * outstanding, no removals or additions may be made directly to the
+     * mempool.
+     */
+    class ChangeSet {
+    public:
+        explicit ChangeSet(CTxMemPool* pool) : m_pool(pool) {}
+        ~ChangeSet() EXCLUSIVE_LOCKS_REQUIRED(m_pool->cs) { m_pool->m_have_changeset = false; }
+
+        ChangeSet(const ChangeSet&) = delete;
+        ChangeSet& operator=(const ChangeSet&) = delete;
+
+        using TxHandle = CTxMemPool::txiter;
+
+        TxHandle StageAddition(const CTransactionRef& tx, const CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, bool spends_coinbase, int64_t sigops_cost, LockPoints lp);
+        void StageRemoval(CTxMemPool::txiter it) { m_to_remove.insert(it); }
+
+        const CTxMemPool::setEntries& GetRemovals() const { return m_to_remove; }
+
+        util::Result<CTxMemPool::setEntries> CalculateMemPoolAncestors(TxHandle tx, const Limits& limits)
+        {
+            // Look up transaction in our cache first
+            auto it = m_ancestors.find(tx);
+            if (it != m_ancestors.end()) return it->second;
+
+            // If not found, try to have the mempool calculate it, and cache
+            // for later.
+            LOCK(m_pool->cs);
+            auto ret{m_pool->CalculateMemPoolAncestors(*tx, limits)};
+            if (ret) m_ancestors.try_emplace(tx, *ret);
+            return ret;
+        }
+
+        std::vector<CTransactionRef> GetAddedTxns() const {
+            std::vector<CTransactionRef> ret;
+            ret.reserve(m_entry_vec.size());
+            for (const auto& entry : m_entry_vec) {
+                ret.emplace_back(entry->GetSharedTx());
+            }
+            return ret;
+        }
+
+        /**
+         * Calculate the sorted chunks for the old and new mempool relating to the
+         * clusters that would be affected by a potential replacement transaction.
+         *
+         * @return old and new diagram pair respectively, or an error string if the conflicts don't match a calculable topology
+         */
+        util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CalculateChunksForRBF();
+
+        size_t GetTxCount() const { return m_entry_vec.size(); }
+        const CTransaction& GetAddedTxn(size_t index) const { return m_entry_vec.at(index)->GetTx(); }
+
+        void Apply() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    private:
+        CTxMemPool* m_pool;
+        CTxMemPool::indexed_transaction_set m_to_add;
+        std::vector<CTxMemPool::txiter> m_entry_vec; // track the added transactions' insertion order
+        // map from the m_to_add index to the ancestors for the transaction
+        std::map<CTxMemPool::txiter, CTxMemPool::setEntries, CompareIteratorByHash> m_ancestors;
+        CTxMemPool::setEntries m_to_remove;
+
+        friend class CTxMemPool;
+    };
+
+    std::unique_ptr<ChangeSet> GetChangeSet() EXCLUSIVE_LOCKS_REQUIRED(cs) {
+        Assume(!m_have_changeset);
+        m_have_changeset = true;
+        return std::make_unique<ChangeSet>(this);
+    }
+
+    bool m_have_changeset GUARDED_BY(cs){false};
+
+    friend class CTxMemPool::ChangeSet;
+
+private:
+    // Apply the given changeset to the mempool, by removing transactions in
+    // the to_remove set and adding transactions in the to_add set.
+    void Apply(CTxMemPool::ChangeSet* changeset) EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    // addNewTransaction must update state for all ancestors of a given transaction,
+    // to track size/count of descendant transactions.  First version of
+    // addNewTransaction can be used to have it call CalculateMemPoolAncestors(), and
+    // then invoke the second version.
+    // Note that addNewTransaction is ONLY called (via Apply()) from ATMP
+    // outside of tests and any other callers may break wallet's in-mempool
+    // tracking (due to lack of CValidationInterface::TransactionAddedToMempool
+    // callbacks).
+    void addNewTransaction(CTxMemPool::txiter it) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void addNewTransaction(CTxMemPool::txiter it, CTxMemPool::setEntries& setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
 
 /**

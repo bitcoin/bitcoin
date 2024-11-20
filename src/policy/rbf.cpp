@@ -184,14 +184,10 @@ std::optional<std::string> PaysForRBF(CAmount original_fees,
     return std::nullopt;
 }
 
-std::optional<std::pair<DiagramCheckError, std::string>> ImprovesFeerateDiagram(CTxMemPool& pool,
-                                                const CTxMemPool::setEntries& direct_conflicts,
-                                                const CTxMemPool::setEntries& all_conflicts,
-                                                CAmount replacement_fees,
-                                                int64_t replacement_vsize)
+std::optional<std::pair<DiagramCheckError, std::string>> ImprovesFeerateDiagram(CTxMemPool::ChangeSet& changeset)
 {
     // Require that the replacement strictly improves the mempool's feerate diagram.
-    const auto chunk_results{pool.CalculateChunksForRBF(replacement_fees, replacement_vsize, direct_conflicts, all_conflicts)};
+    const auto chunk_results{changeset.CalculateChunksForRBF()};
 
     if (!chunk_results.has_value()) {
         return std::make_pair(DiagramCheckError::UNCALCULABLE, util::ErrorString(chunk_results).original);
