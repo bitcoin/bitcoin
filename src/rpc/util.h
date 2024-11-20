@@ -494,6 +494,8 @@ private:
     size_t GetParamIndex(std::string_view key) const;
 };
 
+std::vector<RPCResult> ScriptPubKeyDoc();
+
 /**
  * Push warning messages to an RPC "warnings" field as a JSON array of strings.
  *

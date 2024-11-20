@@ -82,7 +82,7 @@ static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& 
     }
 }
 
-static std::vector<RPCResult> ScriptPubKeyDoc() {
+std::vector<RPCResult> ScriptPubKeyDoc() {
     return
          {
              {RPCResult::Type::STR, "asm", "Disassembly of the output script"},
