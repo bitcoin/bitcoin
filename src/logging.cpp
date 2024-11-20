@@ -5,15 +5,17 @@
 
 #include <fs.h>
 #include <logging.h>
+#include <util/string.h>
 #include <util/system.h>
 #include <util/threadnames.h>
-#include <util/string.h>
 #include <util/time.h>
 
 #include <algorithm>
 #include <array>
+#include <optional>
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
+constexpr auto MAX_USER_SETABLE_SEVERITY_LEVEL{BCLog::Level::Info};
 
 BCLog::Logger& LogInstance()
 {
@@ -122,6 +124,19 @@ bool BCLog::Logger::WillLogCategory(BCLog::LogFlags category) const
     return (m_categories.load(std::memory_order_relaxed) & category) != 0;
 }
 
+bool BCLog::Logger::WillLogCategoryLevel(BCLog::LogFlags category, BCLog::Level level) const
+{
+    // Log messages at Warning and Error level unconditionally, so that
+    // important troubleshooting information doesn't get lost.
+    if (level >= BCLog::Level::Warning) return true;
+
+    if (!WillLogCategory(category)) return false;
+
+    StdLockGuard scoped_lock(m_cs);
+    const auto it{m_category_log_levels.find(category)};
+    return level >= (it == m_category_log_levels.end() ? LogLevel() : it->second);
+}
+
 bool BCLog::Logger::DefaultShrinkDebugFile() const
 {
     return m_categories == BCLog::NONE;
@@ -135,7 +150,7 @@ struct CLogCategoryDesc {
 const CLogCategoryDesc LogCategories[] =
 {
     {BCLog::NONE, "0"},
-    {BCLog::NONE, "none"},
+    {BCLog::NONE, ""},
     {BCLog::NET, "net"},
     {BCLog::TOR, "tor"},
     {BCLog::MEMPOOL, "mempool"},
@@ -201,11 +216,11 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
     return false;
 }
 
-std::string LogLevelToStr(BCLog::Level level)
+std::string BCLog::Logger::LogLevelToStr(BCLog::Level level) const
 {
     switch (level) {
-    case BCLog::Level::None:
-        return "none";
+    case BCLog::Level::Trace:
+        return "trace";
     case BCLog::Level::Debug:
         return "debug";
     case BCLog::Level::Info:
@@ -214,6 +229,8 @@ std::string LogLevelToStr(BCLog::Level level)
         return "warning";
     case BCLog::Level::Error:
         return "error";
+    case BCLog::Level::None:
+        return "";
     }
     assert(false);
 }
@@ -223,7 +240,7 @@ std::string LogCategoryToStr(BCLog::LogFlags category)
     // Each log category string representation should sync with LogCategories
     switch (category) {
     case BCLog::LogFlags::NONE:
-        return "none";
+        return "";
     case BCLog::LogFlags::NET:
         return "net";
     case BCLog::LogFlags::TOR:
@@ -318,6 +335,25 @@ std::string LogCategoryToStr(BCLog::LogFlags category)
     assert(false);
 }
 
+static std::optional<BCLog::Level> GetLogLevel(const std::string& level_str)
+{
+    if (level_str == "trace") {
+        return BCLog::Level::Trace;
+    } else if (level_str == "debug") {
+        return BCLog::Level::Debug;
+    } else if (level_str == "info") {
+        return BCLog::Level::Info;
+    } else if (level_str == "warning") {
+        return BCLog::Level::Warning;
+    } else if (level_str == "error") {
+        return BCLog::Level::Error;
+    } else if (level_str == "none") {
+        return BCLog::Level::None;
+    } else {
+        return std::nullopt;
+    }
+}
+
 std::vector<LogCategory> BCLog::Logger::LogCategoriesList(bool enabled_only) const
 {
     // Sort log categories by alphabetical order.
@@ -336,6 +372,18 @@ std::vector<LogCategory> BCLog::Logger::LogCategoriesList(bool enabled_only) con
         }
     }
     return ret;
+}
+
+/** Log severity levels that can be selected by the user. */
+static constexpr std::array<BCLog::Level, 3> LogLevelsList()
+{
+    return {BCLog::Level::Info, BCLog::Level::Debug, BCLog::Level::Trace};
+}
+
+std::string BCLog::Logger::LogLevelsString() const
+{
+    const auto& levels = LogLevelsList();
+    return Join(std::vector<BCLog::Level>{levels.begin(), levels.end()}, ", ", [this](BCLog::Level level) { return LogLevelToStr(level); });
 }
 
 std::string BCLog::Logger::LogTimestampStr(const std::string& str)
@@ -385,7 +433,7 @@ namespace BCLog {
     }
 } // namespace BCLog
 
-void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, const int source_line, const BCLog::LogFlags category, const BCLog::Level level)
+void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
 {
     StdLockGuard scoped_lock(m_cs);
     std::string str_prefixed = LogEscapeMessage(str);
@@ -493,4 +541,25 @@ void BCLog::Logger::ShrinkDebugFile()
     }
     else if (file != nullptr)
         fclose(file);
+}
+
+bool BCLog::Logger::SetLogLevel(const std::string& level_str)
+{
+    const auto level = GetLogLevel(level_str);
+    if (!level.has_value() || level.value() > MAX_USER_SETABLE_SEVERITY_LEVEL) return false;
+    m_log_level = level.value();
+    return true;
+}
+
+bool BCLog::Logger::SetCategoryLogLevel(const std::string& category_str, const std::string& level_str)
+{
+    BCLog::LogFlags flag;
+    if (!GetLogCategory(flag, category_str)) return false;
+
+    const auto level = GetLogLevel(level_str);
+    if (!level.has_value() || level.value() > MAX_USER_SETABLE_SEVERITY_LEVEL) return false;
+
+    StdLockGuard scoped_lock(m_cs);
+    m_category_log_levels[flag] = level.value();
+    return true;
 }
