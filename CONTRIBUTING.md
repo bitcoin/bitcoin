@@ -36,8 +36,7 @@ list or changes that are
 Some of them might no longer be applicable. So if you are interested, but
 unsure, you might want to leave a comment on the issue first.
 
-You may also participate in the weekly
-[Bitcoin Core PR Review Club](https://bitcoincore.reviews/) meeting.
+You may also participate in the [Bitcoin Core PR Review Club](https://bitcoincore.reviews/).
 
 ### Good First Issue Label
 
