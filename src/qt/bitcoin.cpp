@@ -582,8 +582,8 @@ int GuiMain(int argc, char* argv[])
 
     // Show help message immediately after parsing command-line options (for "-lang") and setting locale,
     // but before showing splash screen.
-    if (HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
-        HelpMessageDialog help(nullptr, gArgs.IsArgSet("-version"));
+    if (HelpRequested(gArgs) || gArgs.GetBoolArg("-version", false)) {
+        HelpMessageDialog help(nullptr, gArgs.GetBoolArg("-version", false));
         help.showOrPrint();
         return EXIT_SUCCESS;
     }

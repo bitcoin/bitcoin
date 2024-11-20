@@ -145,10 +145,10 @@ static int AppInitRPC(int argc, char* argv[])
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
         return EXIT_FAILURE;
     }
-    if (argc < 2 || HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
+    if (argc < 2 || HelpRequested(gArgs) || gArgs.GetBoolArg("-version", false)) {
         std::string strUsage = CLIENT_NAME " RPC client version " + FormatFullVersion() + "\n";
 
-        if (gArgs.IsArgSet("-version")) {
+        if (gArgs.GetBoolArg("-version", false)) {
             strUsage += FormatParagraph(LicenseInfo());
         } else {
             strUsage += "\n"
