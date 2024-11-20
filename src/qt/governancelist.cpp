@@ -12,6 +12,7 @@
 #include <netbase.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
+#include <qt/optionsmodel.h>
 
 #include <univalue.h>
 
@@ -135,8 +136,10 @@ QVariant ProposalModel::data(const QModelIndex& index, int role) const
             return proposal->startDate().date();
         case Column::END_DATE:
             return proposal->endDate().date();
-        case Column::PAYMENT_AMOUNT:
-            return proposal->paymentAmount();
+        case Column::PAYMENT_AMOUNT: {
+            return BitcoinUnits::floorWithUnit(m_display_unit, proposal->paymentAmount() * COIN, false,
+                                               BitcoinUnits::SeparatorStyle::ALWAYS);
+        }
         case Column::IS_ACTIVE:
             return proposal->isActive() ? tr("Yes") : tr("No");
         case Column::VOTING_STATUS:
@@ -283,6 +286,8 @@ const Proposal* ProposalModel::getProposalAt(const QModelIndex& index) const
     return m_data[index.row()];
 }
 
+void ProposalModel::setDisplayUnit(int display_unit) { this->m_display_unit = display_unit; }
+
 //
 // Governance Tab main widget.
 //
@@ -340,6 +345,17 @@ void GovernanceList::setClientModel(ClientModel* model)
 {
     this->clientModel = model;
     updateProposalList();
+    if (model != nullptr) {
+        connect(model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &GovernanceList::updateDisplayUnit);
+    }
+}
+
+void GovernanceList::updateDisplayUnit()
+{
+    if (this->clientModel) {
+        proposalModel->setDisplayUnit(this->clientModel->getOptionsModel()->getDisplayUnit());
+        ui->govTableView->update();
+    }
 }
 
 void GovernanceList::updateProposalList()
