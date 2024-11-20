@@ -420,6 +420,7 @@ inspecting signatures in Mach-O binaries.")
             ;; https://gcc.gnu.org/install/configure.html
             (list "--enable-threads=posix",
                   "--enable-default-ssp=yes",
+                  "--disable-gcov",
                   building-on)))))))
 
 (define-public linux-base-gcc
@@ -435,6 +436,7 @@ inspecting signatures in Mach-O binaries.")
                   "--enable-default-pie=yes",
                   "--enable-standard-branch-protection=yes",
                   "--enable-cet=yes",
+                  "--disable-gcov",
                   building-on)))
         ((#:phases phases)
           `(modify-phases ,phases
