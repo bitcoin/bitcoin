@@ -24,15 +24,16 @@ interface Mining $Proxy.wrap("interfaces::Mining") {
 }
 
 interface BlockTemplate $Proxy.wrap("interfaces::BlockTemplate") {
-    getBlockHeader @0 (context: Proxy.Context) -> (result: Data);
-    getBlock @1 (context: Proxy.Context) -> (result: Data);
-    getTxFees @2 (context: Proxy.Context) -> (result: List(Int64));
-    getTxSigops @3 (context: Proxy.Context) -> (result: List(Int64));
-    getCoinbaseTx @4 (context: Proxy.Context) -> (result: Data);
-    getCoinbaseCommitment @5 (context: Proxy.Context) -> (result: Data);
-    getWitnessCommitmentIndex @6 (context: Proxy.Context) -> (result: Int32);
-    getCoinbaseMerklePath @7 (context: Proxy.Context) -> (result: List(Data));
-    submitSolution@8 (context: Proxy.Context, version: UInt32, timestamp: UInt32, nonce: UInt32, coinbase :Data) -> (result: Bool);
+    destroy @0 (context :Proxy.Context) -> ();
+    getBlockHeader @1 (context: Proxy.Context) -> (result: Data);
+    getBlock @2 (context: Proxy.Context) -> (result: Data);
+    getTxFees @3 (context: Proxy.Context) -> (result: List(Int64));
+    getTxSigops @4 (context: Proxy.Context) -> (result: List(Int64));
+    getCoinbaseTx @5 (context: Proxy.Context) -> (result: Data);
+    getCoinbaseCommitment @6 (context: Proxy.Context) -> (result: Data);
+    getWitnessCommitmentIndex @7 (context: Proxy.Context) -> (result: Int32);
+    getCoinbaseMerklePath @8 (context: Proxy.Context) -> (result: List(Data));
+    submitSolution @9 (context: Proxy.Context, version: UInt32, timestamp: UInt32, nonce: UInt32, coinbase :Data) -> (result: Bool);
 }
 
 struct BlockCreateOptions $Proxy.wrap("node::BlockCreateOptions") {
