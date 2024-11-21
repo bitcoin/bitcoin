@@ -184,6 +184,7 @@ void CheckATMPInvariants(const MempoolAcceptResult& res, bool txid_in_mempool, b
     }
     }
 }
+} // namespace
 
 FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
 {
@@ -417,4 +418,3 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
     }
     Finish(fuzzed_data_provider, tx_pool, chainstate);
 }
-} // namespace

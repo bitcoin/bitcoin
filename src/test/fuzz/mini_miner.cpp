@@ -30,6 +30,7 @@ void initialize_miner()
         g_available_coins.emplace_back(Txid::FromUint256(uint256::ZERO), i);
     }
 }
+} // namespace
 
 // Test that the MiniMiner can run with various outpoints and feerates.
 FUZZ_TARGET(mini_miner, .init = initialize_miner)
@@ -196,4 +197,3 @@ FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
         assert(mock_template_txids.count(tx->GetHash()));
     }
 }
-} // namespace
