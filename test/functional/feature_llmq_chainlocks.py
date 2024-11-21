@@ -56,11 +56,10 @@ class LLMQChainLocksTest(DashTestFramework):
         self.move_to_next_cycle()
         self.log.info("Cycle H+2C height:" + str(self.nodes[0].getblockcount()))
         self.mine_cycle_quorum(llmq_type_name="llmq_test_dip0024", llmq_type=103)
-
-
-        self.log.info("Mine single block, wait for chainlock")
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
+
+        self.log.info("Mine single block, ensure it includes latest chainlock")
+        self.generate(self.nodes[0], 1, sync_fun=self.sync_blocks)
         self.test_coinbase_best_cl(self.nodes[0])
 
         # ChainLock locks all the blocks below it so nocl_block_hash should be locked too
