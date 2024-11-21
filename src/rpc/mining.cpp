@@ -1024,9 +1024,6 @@ static RPCHelpMan submitblock()
             if (pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
                 return "duplicate";
             }
-            if (pindex->nStatus & BLOCK_FAILED_MASK) {
-                return "duplicate-invalid";
-            }
         }
     }
 
