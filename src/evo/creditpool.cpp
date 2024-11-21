@@ -114,17 +114,20 @@ void CCreditPoolManager::AddToCache(const uint256& block_hash, int height, const
 
 static std::optional<CBlock> GetBlockForCreditPool(const CBlockIndex* const block_index, const Consensus::Params& consensusParams)
 {
+    // There's no CbTx before DIP0003 activation
+    if (!DeploymentActiveAt(*block_index, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003)) {
+        return std::nullopt;
+    }
+
     CBlock block;
     if (!ReadBlockFromDisk(block, block_index, consensusParams)) {
         throw std::runtime_error("failed-getcbforblock-read");
     }
 
-    assert(!block.vtx.empty());
-
-    // Should not fail if V20 (DIP0027) is active but it happens for RegChain (unit tests)
-    if (!block.vtx[0]->IsSpecialTxVersion()) return std::nullopt;
-
-    assert(!block.vtx[0]->vExtraPayload.empty());
+    if (block.vtx.empty() || block.vtx[0]->vExtraPayload.empty() || !block.vtx[0]->IsSpecialTxVersion()) {
+        LogPrintf("%s: ERROR: empty CbTx for CreditPool at height=%d\n", __func__, block_index->nHeight);
+        return std::nullopt;
+    }
 
     return block;
 }
