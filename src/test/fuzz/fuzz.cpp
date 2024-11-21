@@ -35,8 +35,6 @@ __AFL_FUZZ_INIT();
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
-const std::function<std::string()> G_TEST_GET_FULL_NAME{};
-
 /**
  * A copy of the command line arguments that start with `--`.
  * First `LLVMFuzzerInitialize()` is called, which saves the arguments to `g_args`.
@@ -80,6 +78,9 @@ void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target,
 static std::string_view g_fuzz_target;
 static const TypeTestOneInput* g_test_one_input{nullptr};
 
+const std::function<std::string()> G_TEST_GET_FULL_NAME{[]{
+    return std::string{g_fuzz_target};
+}};
 
 #if defined(__clang__) && defined(__linux__)
 extern "C" void __llvm_profile_reset_counters(void) __attribute__((weak));
