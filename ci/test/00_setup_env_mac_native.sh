@@ -15,3 +15,5 @@ export CI_OS_NAME="macos"
 export NO_DEPENDS=1
 export OSX_SDK=""
 export BITCOIN_CMD="bitcoin -m" # Used in functional tests
+# Can't run tcpdump: tcpdump: en0: You don't have permission to capture on that device
+export CI_TCPDUMP_OK_TO_FAIL=1
