@@ -34,8 +34,6 @@ namespace llmq
 class CFinalCommitment
 {
 public:
-    static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_REGISTER;
-
     static constexpr uint16_t LEGACY_BLS_NON_INDEXED_QUORUM_VERSION = 1;
     static constexpr uint16_t LEGACY_BLS_INDEXED_QUORUM_VERSION = 2;
     static constexpr uint16_t BASIC_BLS_NON_INDEXED_QUORUM_VERSION = 3;
