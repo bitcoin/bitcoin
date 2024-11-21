@@ -399,7 +399,8 @@ private:
         PendingSignatureData(CQuorumCPtr quorum, const uint256& id, const uint256& msgHash) : quorum(std::move(quorum)), id(id), msgHash(msgHash){}
     };
 
-    std::vector<PendingSignatureData> pendingSigns GUARDED_BY(cs);
+    Mutex cs_pendingSigns;
+    std::vector<PendingSignatureData> pendingSigns GUARDED_BY(cs_pendingSigns);
 
     FastRandomContext rnd GUARDED_BY(cs);
 

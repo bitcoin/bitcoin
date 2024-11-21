@@ -1479,7 +1479,7 @@ void CSigSharesManager::WorkThreadMain()
 
 void CSigSharesManager::AsyncSign(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash)
 {
-    LOCK(cs);
+    LOCK(cs_pendingSigns);
     pendingSigns.emplace_back(quorum, id, msgHash);
 }
 
@@ -1487,7 +1487,7 @@ void CSigSharesManager::SignPendingSigShares()
 {
     std::vector<PendingSignatureData> v;
     {
-        LOCK(cs);
+        LOCK(cs_pendingSigns);
         v = std::move(pendingSigns);
     }
 
