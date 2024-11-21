@@ -4,6 +4,7 @@
 
 #include <test/data/bip341_wallet_vectors.json.h>
 
+#include <addresstype.h>
 #include <key.h>
 #include <key_io.h>
 #include <script/script.h>
@@ -130,9 +131,8 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
     BOOST_CHECK(solutions[1] == ToByteVector(uint256::ONE));
 
     // TxoutType::ANCHOR
-    std::vector<unsigned char> anchor_bytes{0x4e, 0x73};
     s.clear();
-    s << OP_1 << anchor_bytes;
+    s << OP_1 << ANCHOR_BYTES;
     BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::ANCHOR);
     BOOST_CHECK(solutions.empty());
 
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
 
     // TxoutType::ANCHOR but wrong witness version
     s.clear();
-    s << OP_2 << std::vector<unsigned char>{0x4e, 0x73};
+    s << OP_2 << ANCHOR_BYTES;
     BOOST_CHECK(!s.IsPayToAnchor());
     BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::WITNESS_UNKNOWN);
 
@@ -284,9 +284,8 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     BOOST_CHECK(std::get<WitnessV1Taproot>(address) == WitnessV1Taproot(xpk));
 
     // TxoutType::ANCHOR
-    std::vector<unsigned char> anchor_bytes{0x4e, 0x73};
     s.clear();
-    s << OP_1 << anchor_bytes;
+    s << OP_1 << ANCHOR_BYTES;
     BOOST_CHECK(ExtractDestination(s, address));
     BOOST_CHECK(std::get<PayToAnchor>(address) == PayToAnchor());
 
@@ -379,9 +378,8 @@ BOOST_AUTO_TEST_CASE(script_standard_GetScriptFor_)
     BOOST_CHECK(result == expected);
 
     // PayToAnchor
-    std::vector<unsigned char> anchor_bytes{0x4e, 0x73};
     expected.clear();
-    expected << OP_1 << anchor_bytes;
+    expected << OP_1 << ANCHOR_BYTES;
     result = GetScriptForDestination(PayToAnchor());
     BOOST_CHECK(result == expected);
 }
