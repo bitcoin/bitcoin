@@ -633,12 +633,7 @@ void CSigningManager::ProcessRecoveredSig(const std::shared_ptr<const CRecovered
     WITH_LOCK(cs_pending, pendingReconstructedRecoveredSigs.erase(recoveredSig->GetHash()));
 
     if (m_mn_activeman != nullptr) {
-        CInv inv(MSG_QUORUM_RECOVERED_SIG, recoveredSig->GetHash());
-        connman.ForEachNode([&](const CNode* pnode) {
-            if (pnode->fSendRecSigs) {
-                Assert(m_peerman)->PushInventory(pnode->GetId(), inv);
-            }
-        });
+        Assert(m_peerman)->RelayRecoveredSig(recoveredSig->GetHash());
     }
 
     auto listeners = WITH_LOCK(cs_listeners, return recoveredSigsListeners);
