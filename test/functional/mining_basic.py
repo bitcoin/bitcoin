@@ -56,7 +56,12 @@ def assert_template(node, block, expect, rehash=True):
 
 class MiningTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 2
+        self.num_nodes = 3
+        self.extra_args = [
+            [],
+            [],
+            ["-fastprune", "-prune=1"]
+        ]
         self.setup_clean_chain = True
         self.supports_cli = False
 
@@ -167,6 +172,21 @@ class MiningTest(BitcoinTestFramework):
         bad_block.nTime = t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP
         bad_block.solve()
         node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex())
+
+    def test_pruning(self):
+        self.log.info("Test that submitblock stores previously pruned block")
+        prune_node = self.nodes[2]
+        self.generate(prune_node, 400, sync_fun=self.no_op)
+        pruned_block = prune_node.getblock(prune_node.getblockhash(2), verbosity=0)
+        pruned_height = prune_node.pruneblockchain(400)
+        assert_greater_than_or_equal(pruned_height, 2)
+        pruned_blockhash = prune_node.getblockhash(2)
+
+        assert_raises_rpc_error(-1, 'Block not available (pruned data)', prune_node.getblock, pruned_blockhash)
+
+        result = prune_node.submitblock(pruned_block)
+        assert_equal(result, "inconclusive")
+        assert_equal(prune_node.getblock(pruned_blockhash, verbosity=0), pruned_block)
 
     def run_test(self):
         node = self.nodes[0]
@@ -386,6 +406,7 @@ class MiningTest(BitcoinTestFramework):
 
         self.test_blockmintxfee_parameter()
         self.test_timewarp()
+        self.test_pruning()
 
 
 if __name__ == '__main__':
