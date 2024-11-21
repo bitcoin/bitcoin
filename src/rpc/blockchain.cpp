@@ -265,6 +265,7 @@ static RPCHelpMan waitfornewblock()
                 "\nMake sure to use no RPC timeout (bitcoin-cli -rpcclienttimeout=0)",
                 {
                     {"timeout", RPCArg::Type::NUM, RPCArg::Default{0}, "Time in milliseconds to wait for a response. 0 indicates no timeout."},
+                    {"current_tip", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Method waits for the chain tip to differ from this."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -286,9 +287,22 @@ static RPCHelpMan waitfornewblock()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     Mining& miner = EnsureMining(node);
 
+    // If the caller provided a current_tip value, pass it to waitTipChanged().
+    //
+    // If the caller did not provide a current tip hash, call getTip() to get
+    // one and wait for the tip to be different from this value. This mode is
+    // less reliable because if the tip changed between waitfornewblock calls,
+    // it will need to change a second time before this call returns.
     auto block{CHECK_NONFATAL(miner.getTip()).value()};
+
+    uint256 tip_hash{request.params[1].isNull()
+        ? block.hash
+        : ParseHashV(request.params[1], "current_tip")};
+
     if (IsRPCRunning()) {
-        block = timeout ? miner.waitTipChanged(block.hash, std::chrono::milliseconds(timeout)) : miner.waitTipChanged(block.hash);
+        // If the user provided an invalid current_tip then this call immediately
+        // returns the current tip.
+        block = timeout ? miner.waitTipChanged(tip_hash, std::chrono::milliseconds(timeout)) : miner.waitTipChanged(tip_hash);
     }
 
     UniValue ret(UniValue::VOBJ);
