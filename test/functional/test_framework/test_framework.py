@@ -1431,16 +1431,6 @@ class DashTestFramework(BitcoinTestFramework):
 
         self.log.info("Prepared MN %d: collateral_txid=%s, collateral_vout=%d, protxHash=%s" % (idx, txid, collateral_vout, proTxHash))
 
-    def remove_masternode(self, idx):
-        mn = self.mninfo[idx]
-        rawtx = self.nodes[0].createrawtransaction([{"txid": mn.collateral_txid, "vout": mn.collateral_vout}], {self.nodes[0].getnewaddress(): 999.9999})
-        rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)
-        self.nodes[0].sendrawtransaction(rawtx["hex"])
-        self.generate(self.nodes[0], 1)
-        self.mninfo.remove(mn)
-
-        self.log.info("Removed masternode %d", idx)
-
     def prepare_datadirs(self):
         # stop faucet node so that we can copy the datadir
         self.stop_node(0)
@@ -1461,10 +1451,6 @@ class DashTestFramework(BitcoinTestFramework):
         self.add_nodes(self.mn_count)
         executor = ThreadPoolExecutor(max_workers=20)
 
-        def do_connect(idx):
-            # Connect to the control node only, masternodes should take care of intra-quorum connections themselves
-            self.connect_nodes(self.mninfo[idx].nodeIdx, 0)
-
         jobs = []
 
         # start up nodes in parallel
@@ -1479,9 +1465,9 @@ class DashTestFramework(BitcoinTestFramework):
 
         executor.shutdown()
 
-        # connect nodes
+        # Connect to the control node only, masternodes should take care of intra-quorum connections themselves
         for idx in range(0, self.mn_count):
-            do_connect(idx)
+            self.connect_nodes(self.mninfo[idx].nodeIdx, 0)
 
     def start_masternode(self, mninfo, extra_args=None):
         args = ['-masternodeblsprivkey=%s' % mninfo.keyOperator] + self.extra_args[mninfo.nodeIdx]
