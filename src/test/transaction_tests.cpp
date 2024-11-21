@@ -1038,7 +1038,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     }
 
     // Check anchor outputs
-    t.vout[0].scriptPubKey = CScript() << OP_1 << std::vector<unsigned char>{0x4e, 0x73};
+    t.vout[0].scriptPubKey = CScript() << OP_1 << anchor_bytes;
     BOOST_CHECK(t.vout[0].scriptPubKey.IsPayToAnchor());
     t.vout[0].nValue = 240;
     CheckIsStandard(t);
