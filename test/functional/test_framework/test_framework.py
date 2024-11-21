@@ -1511,16 +1511,16 @@ class DashTestFramework(BitcoinTestFramework):
 
         # non-masternodes where disconnected from the control node during prepare_datadirs,
         # let's reconnect them back to make sure they receive updates
-        num_simple_nodes = self.num_nodes - self.mn_count - 1
-        for i in range(0, num_simple_nodes):
-            self.connect_nodes(i+1, 0)
+        num_simple_nodes = self.num_nodes - self.mn_count
+        for i in range(1, num_simple_nodes):
+            self.connect_nodes(i, 0)
 
         self.start_masternodes()
 
         self.bump_mocktime(1)
         self.generate(self.nodes[0], 1)
-        for i in range(0, num_simple_nodes):
-            force_finish_mnsync(self.nodes[i + 1])
+        for i in range(1, num_simple_nodes):
+            force_finish_mnsync(self.nodes[i])
 
         # Enable InstantSend (including block filtering) and ChainLocks by default
         self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 0)
