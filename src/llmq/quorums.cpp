@@ -633,7 +633,20 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
 
 CQuorumCPtr CQuorumManager::GetQuorum(Consensus::LLMQType llmqType, const uint256& quorumHash) const
 {
-    const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return m_chainstate.m_blockman.LookupBlockIndex(quorumHash));
+    const CBlockIndex* pQuorumBaseBlockIndex = [&]() {
+        // Lock contention may still be high here; consider using a shared lock
+        // We cannot hold cs_quorumBaseBlockIndexCache the whole time as that creates lock-order inversion with cs_main;
+        // We cannot aquire cs_main if we have cs_quorumBaseBlockIndexCache held
+        const CBlockIndex* pindex;
+        if (!WITH_LOCK(cs_quorumBaseBlockIndexCache, return quorumBaseBlockIndexCache.get(quorumHash, pindex))) {
+            pindex = WITH_LOCK(cs_main, return m_chainstate.m_blockman.LookupBlockIndex(quorumHash));
+            if (pindex) {
+                LOCK(cs_quorumBaseBlockIndexCache);
+                quorumBaseBlockIndexCache.insert(quorumHash, pindex);
+            }
+        }
+        return pindex;
+    }();
     if (!pQuorumBaseBlockIndex) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- block %s not found\n", __func__, quorumHash.ToString());
         return nullptr;
