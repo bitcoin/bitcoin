@@ -18,8 +18,10 @@ from test_framework.util import assert_equal, force_finish_mnsync, p2p_port
 
 class LLMQSimplePoSeTest(DashTestFramework):
     def set_test_params(self):
+        self.extra_args = [[ f'-testactivationheight=dip0024@9999' ]] * 6
         self.set_dash_test_params(6, 5)
         self.set_dash_llmq_test_params(5, 3)
+        # rotating quorums add instability for this functional tests
 
     def run_test(self):
 
