@@ -309,21 +309,23 @@ struct Peer {
     /**
      * (Bitcoin) Initializes a TxRelay struct for this peer. Can be called at most once for a peer.
      * (Dash)    Enables the flag that allows GetTxRelay() to return m_tx_relay */
-    TxRelay* SetTxRelay()
+    TxRelay* SetTxRelay() LOCKS_EXCLUDED(m_tx_relay_mutex)
     {
+        LOCK(m_tx_relay_mutex);
         Assume(!m_can_tx_relay);
         m_can_tx_relay = true;
-        return WITH_LOCK(m_tx_relay_mutex, return m_tx_relay.get());
+        return m_tx_relay.get();
     };
 
-    TxRelay* GetInvRelay()
+    TxRelay* GetInvRelay() LOCKS_EXCLUDED(m_tx_relay_mutex)
     {
         return WITH_LOCK(m_tx_relay_mutex, return m_tx_relay.get());
     }
 
-    TxRelay* GetTxRelay()
+    TxRelay* GetTxRelay() LOCKS_EXCLUDED(m_tx_relay_mutex)
     {
-        return m_can_tx_relay ? WITH_LOCK(m_tx_relay_mutex, return m_tx_relay.get()) : nullptr;
+        LOCK(m_tx_relay_mutex);
+        return m_can_tx_relay ? m_tx_relay.get() : nullptr;
     };
 
     /** A vector of addresses to send to the peer, limited to MAX_ADDR_TO_SEND. */
@@ -353,8 +355,6 @@ struct Peer {
      *  This field must correlate with whether m_addr_known has been
      *  initialized.*/
     std::atomic_bool m_addr_relay_enabled{false};
-    /** Whether a peer can relay transactions */
-    bool m_can_tx_relay{false};
     /** Whether a getaddr request to this peer is outstanding. */
     bool m_getaddr_sent GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
     /** Guards address sending timers. */
@@ -406,6 +406,8 @@ private:
      *           (non-transaction relay should use GetInvRelay(), which will provide
      *           unconditional access) */
     std::unique_ptr<TxRelay> m_tx_relay GUARDED_BY(m_tx_relay_mutex){std::make_unique<TxRelay>()};
+    /** Whether a peer can relay transactions */
+    bool m_can_tx_relay GUARDED_BY(m_tx_relay_mutex) {false};
 };
 
 using PeerRef = std::shared_ptr<Peer>;
