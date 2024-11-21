@@ -1836,7 +1836,7 @@ class DashTestFramework(BitcoinTestFramework):
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
         if skip_count != 0:
-            self.bump_mocktime(1, nodes=nodes)
+            self.bump_mocktime(1)
             self.generate(self.nodes[0], skip_count, sync_fun=self.no_op)
         self.sync_blocks(nodes)
 
@@ -1844,9 +1844,9 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("Expected quorum_hash:"+str(q))
         self.log.info("Waiting for phase 1 (init)")
         self.wait_for_quorum_phase(q, 1, expected_members, None, 0, mninfos_online, llmq_type_name=llmq_type_name)
-        self.wait_for_quorum_connections(q, expected_connections, mninfos_online, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes), llmq_type_name=llmq_type_name)
+        self.wait_for_quorum_connections(q, expected_connections, mninfos_online, wait_proc=lambda: self.bump_mocktime(1), llmq_type_name=llmq_type_name)
         if spork23_active:
-            self.wait_for_masternode_probes(q, mninfos_online, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
+            self.wait_for_masternode_probes(q, mninfos_online, wait_proc=lambda: self.bump_mocktime(1))
 
         self.move_blocks(nodes, 2)
 
@@ -1877,7 +1877,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.wait_for_quorum_commitment(q, nodes, llmq_type=llmq_type)
 
         self.log.info("Mining final commitment")
-        self.bump_mocktime(1, nodes=nodes)
+        self.bump_mocktime(1)
         self.nodes[0].getblocktemplate() # this calls CreateNewBlock
         self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(nodes))
 
@@ -1928,9 +1928,9 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("quorumIndex 0: Waiting for phase 1 (init)")
         self.wait_for_quorum_phase(q_0, 1, expected_members, None, 0, mninfos_online, llmq_type_name)
         self.log.info("quorumIndex 0: Waiting for quorum connections (init)")
-        self.wait_for_quorum_connections(q_0, expected_connections, mninfos_online, llmq_type_name, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
+        self.wait_for_quorum_connections(q_0, expected_connections, mninfos_online, llmq_type_name, wait_proc=lambda: self.bump_mocktime(1))
         if spork23_active:
-            self.wait_for_masternode_probes(q_0, mninfos_online, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes), llmq_type_name=llmq_type_name)
+            self.wait_for_masternode_probes(q_0, mninfos_online, wait_proc=lambda: self.bump_mocktime(1), llmq_type_name=llmq_type_name)
 
         self.move_blocks(nodes, 1)
 
@@ -1940,9 +1940,9 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("quorumIndex 1: Waiting for phase 1 (init)")
         self.wait_for_quorum_phase(q_1, 1, expected_members, None, 0, mninfos_online, llmq_type_name)
         self.log.info("quorumIndex 1: Waiting for quorum connections (init)")
-        self.wait_for_quorum_connections(q_1, expected_connections, mninfos_online, llmq_type_name, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
+        self.wait_for_quorum_connections(q_1, expected_connections, mninfos_online, llmq_type_name, wait_proc=lambda: self.bump_mocktime(1))
         if spork23_active:
-            self.wait_for_masternode_probes(q_1, mninfos_online, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes), llmq_type_name=llmq_type_name)
+            self.wait_for_masternode_probes(q_1, mninfos_online, wait_proc=lambda: self.bump_mocktime(1), llmq_type_name=llmq_type_name)
 
         self.move_blocks(nodes, 1)
 
@@ -1994,7 +1994,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("quorumIndex 1: Waiting for phase 6 (finalization)")
         self.wait_for_quorum_phase(q_1, 6, expected_members, None, 0, mninfos_online, llmq_type_name)
         self.log.info("Mining final commitments")
-        self.bump_mocktime(1, nodes=nodes)
+        self.bump_mocktime(1)
         self.nodes[0].getblocktemplate() # this calls CreateNewBlock
         self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(nodes))
 
