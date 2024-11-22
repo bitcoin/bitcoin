@@ -1313,7 +1313,7 @@ class DashTestFramework(BitcoinTestFramework):
         collateral_amount = EVONODE_COLLATERAL if evo else MASTERNODE_COLLATERAL
         outputs = {collateral_address: collateral_amount, funds_address: 1}
         collateral_txid = self.nodes[0].sendmany("", outputs)
-        self.wait_for_instantlock(collateral_txid, self.nodes[0])
+        self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
         tip = self.generate(self.nodes[0], 1)[0]
 
         rawtx = self.nodes[0].getrawtransaction(collateral_txid, 1, tip)
@@ -1334,7 +1334,7 @@ class DashTestFramework(BitcoinTestFramework):
         else:
             protx_result = self.nodes[0].protx("register", collateral_txid, collateral_vout, ipAndPort, owner_address, bls['public'], voting_address, operatorReward, reward_address, funds_address, True)
 
-        self.wait_for_instantlock(protx_result, self.nodes[0])
+        self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
         tip = self.generate(self.nodes[0], 1)[0]
 
         assert_equal(self.nodes[0].getrawtransaction(protx_result, 1, tip)['confirmations'], 1)
@@ -1356,14 +1356,14 @@ class DashTestFramework(BitcoinTestFramework):
         platform_http_port = '%d' % (r + 2)
 
         fund_txid = self.nodes[0].sendtoaddress(funds_address, 1)
-        self.wait_for_instantlock(fund_txid, self.nodes[0])
+        self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
         tip = self.generate(self.nodes[0], 1)[0]
         assert_equal(self.nodes[0].getrawtransaction(fund_txid, 1, tip)['confirmations'], 1)
 
         protx_success = False
         try:
             protx_result = self.nodes[0].protx('update_service_evo', evo_info.proTxHash, evo_info.addr, evo_info.keyOperator, platform_node_id, platform_p2p_port, platform_http_port, operator_reward_address, funds_address)
-            self.wait_for_instantlock(protx_result, self.nodes[0])
+            self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
             tip = self.generate(self.nodes[0], 1)[0]
             assert_equal(self.nodes[0].getrawtransaction(protx_result, 1, tip)['confirmations'], 1)
             self.log.info("Updated EvoNode %s: platformNodeID=%s, platformP2PPort=%s, platformHTTPPort=%s" % (evo_info.proTxHash, platform_node_id, platform_p2p_port, platform_http_port))
