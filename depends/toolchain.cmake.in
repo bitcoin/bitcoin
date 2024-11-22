@@ -72,12 +72,12 @@ set(CMAKE_OBJDUMP "@OBJDUMP@")
 # affected by a potentially random environment.
 set(CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH OFF)
 
-set(CMAKE_FIND_ROOT_PATH "@depends_prefix@")
+set(CMAKE_FIND_ROOT_PATH "${CMAKE_CURRENT_LIST_DIR}")
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
-set(QT_TRANSLATIONS_DIR "@depends_prefix@/translations")
+set(QT_TRANSLATIONS_DIR "${CMAKE_CURRENT_LIST_DIR}/translations")
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT CMAKE_HOST_APPLE)
   # The find_package(Qt ...) function internally uses find_library()
