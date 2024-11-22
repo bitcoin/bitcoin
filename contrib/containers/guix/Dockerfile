@@ -18,7 +18,11 @@ RUN apt-get update && \
     sudo \
     wget \
     xz-utils && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/*; \
+    targetLocale="en_US.UTF-8"; \
+    locale-gen ${targetLocale} && \
+    update-locale LC_ALL=${targetLocale} && \
+    update-locale LANG=${targetLocale};
 
 ARG guix_download_path=ftp://ftp.gnu.org/gnu/guix
 ARG guix_version=1.4.0
@@ -30,8 +34,7 @@ ENV PATH="/usr/local/bin:/usr/local/guix/current/bin:$PATH"
 
 # Application Setup
 # https://guix.gnu.org/manual/en/html_node/Application-Setup.html
-ENV GUIX_LOCPATH="/usr/local/guix/profile" \
-    LC_ALL="en_US.UTF-8"
+ENV GUIX_LOCPATH="/usr/local/guix/profile"
 
 RUN guix_file_name=guix-binary-${guix_version}.$(uname -m)-linux.tar.xz          && \
     eval "guix_checksum=\${guix_checksum_$(uname -m)}"                           && \
