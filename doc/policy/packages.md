@@ -76,7 +76,7 @@ The following rules are only enforced for packages to be submitted to the mempoo
 enforced for test accepts):
 
 * Packages must be child-with-unconfirmed-parents packages. This also means packages must contain at
-  least 2 transactions. (#22674)
+  least 1 transaction. (#31096)
 
    - *Rationale*: This allows for fee-bumping by CPFP. Allowing multiple parents makes it possible
      to fee-bump a batch of transactions. Restricting packages to a defined topology is easier to
