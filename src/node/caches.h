@@ -8,14 +8,13 @@
 #include <kernel/caches.h>
 
 #include <cstddef>
-#include <cstdint>
 
 class ArgsManager;
 
 namespace node {
 struct IndexCacheSizes {
-    int64_t tx_index{0};
-    int64_t filter_index{0};
+    size_t tx_index{0};
+    size_t filter_index{0};
 };
 struct CacheSizes {
     IndexCacheSizes index;
