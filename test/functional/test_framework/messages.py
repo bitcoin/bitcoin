@@ -640,6 +640,8 @@ class CBlock(CBlockHeader):
     # Calculate the merkle root given a vector of transaction hashes
     @staticmethod
     def get_merkle_root(hashes):
+        if len(hashes) == 0:
+            return 0
         while len(hashes) > 1:
             newhashes = []
             for i in range(0, len(hashes), 2):
