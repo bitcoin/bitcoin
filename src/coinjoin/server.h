@@ -11,6 +11,7 @@
 
 class CActiveMasternodeManager;
 class CCoinJoinServer;
+class CConnman;
 class CDataStream;
 class CDeterministicMNManager;
 class CDSTXManager;
