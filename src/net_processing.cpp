@@ -2328,13 +2328,13 @@ void PeerManagerImpl::RelayInvFiltered(CInv &inv, const uint256& relatedTxHash, 
 
 void PeerManagerImpl::RelayTransaction(const uint256& txid)
 {
+    const CInv inv{m_cj_ctx->dstxman->GetDSTX(txid) ? MSG_DSTX : MSG_TX, txid};
     LOCK(m_peer_mutex);
     for(auto& it : m_peer_map) {
         Peer& peer = *it.second;
         auto tx_relay = peer.GetTxRelay();
         if (!tx_relay) continue;
 
-        const CInv inv{m_cj_ctx->dstxman->GetDSTX(txid) ? MSG_DSTX : MSG_TX, txid};
         PushInv(peer, inv);
     };
 }
