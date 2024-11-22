@@ -7,7 +7,6 @@
 #include <common/args.h>
 #include <index/txindex.h>
 #include <kernel/caches.h>
-#include <txdb.h>
 
 #include <algorithm>
 #include <string>
@@ -22,8 +21,8 @@ static constexpr int64_t MAX_FILTER_INDEX_CACHE{1024};
 namespace node {
 CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes)
 {
-    int64_t nTotalCache = (args.GetIntArg("-dbcache", nDefaultDbCache) << 20);
-    nTotalCache = std::max(nTotalCache, nMinDbCache << 20); // total cache cannot be less than nMinDbCache
+    int64_t nTotalCache = (args.GetIntArg("-dbcache", DEFAULT_DB_CACHE) << 20);
+    nTotalCache = std::max(nTotalCache, MIN_DB_CACHE << 20);
     IndexCacheSizes sizes;
     sizes.tx_index = std::min(nTotalCache / 8, args.GetBoolArg("-txindex", DEFAULT_TXINDEX) ? MAX_TX_INDEX_CACHE << 20 : 0);
     nTotalCache -= sizes.tx_index;
