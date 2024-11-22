@@ -22,6 +22,7 @@
 
 class CBlockIndex;
 class CChainState;
+class CConnman;
 class CDBWrapper;
 class CMasternodeSync;
 class CSporkManager;
