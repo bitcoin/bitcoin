@@ -619,7 +619,7 @@ public:
                        bool is_masternode, bool fForce = false) override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     size_t GetRequestedObjectCount(NodeId nodeid) const override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool IsInvInFilter(NodeId nodeid, const uint256& hash) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-
+    void AskPeersForTransaction(const uint256& txid, bool is_masternode) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 private:
     /** Helpers to process result of external handlers of message */
     void ProcessPeerMsgRet(const PeerMsgRet& ret, CNode& pfrom) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -633,6 +633,11 @@ private:
 
     /** Retrieve unbroadcast transactions from the mempool and reattempt sending to peers */
     void ReattemptInitialBroadcast(CScheduler& scheduler) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+
+    /**
+     * Private implementation of IsInvInFilter which does not call GetPeerRef; to be prefered when the PeerRef is available.
+     */
+    bool IsInvInFilter(const PeerRef& peer, const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /** Get a shared pointer to the Peer object.
      *  May return an empty shared_ptr if the Peer object can't be found. */
@@ -2242,9 +2247,51 @@ void PeerManagerImpl::SendPings()
     for(auto& it : m_peer_map) it.second->m_ping_queued = true;
 }
 
+void PeerManagerImpl::AskPeersForTransaction(const uint256& txid, bool is_masternode)
+{
+    std::vector<PeerRef> peersToAsk;
+    peersToAsk.reserve(4);
+
+    auto maybe_add_to_nodesToAskFor = [&](const PeerRef& peer) {
+        if (peersToAsk.size() >= 4) {
+            return false;
+        }
+        if (IsInvInFilter(peer, txid)) {
+            peersToAsk.emplace_back(peer);
+        }
+        return true;
+    };
+
+    {
+        LOCK(m_peer_mutex);
+        // TODO consider prioritizing MNs again, once that flag is moved into Peer
+        for (const auto& [_, peer] : m_peer_map) {
+            if (!maybe_add_to_nodesToAskFor(peer)) {
+                break;
+            }
+        }
+    }
+    {
+        CInv inv(MSG_TX, txid);
+        LOCK(cs_main);
+        for (PeerRef& peer : peersToAsk) {
+            LogPrintf("PeerManagerImpl::%s -- txid=%s: asking other peer %d for correct TX\n", __func__,
+                      txid.ToString(), peer->m_id);
+
+            RequestObject(peer->m_id, inv, GetTime<std::chrono::microseconds>(), is_masternode,
+                          /*fForce=*/true);
+        }
+    }
+}
+
 bool PeerManagerImpl::IsInvInFilter(NodeId nodeid, const uint256& hash) const
 {
     PeerRef peer = GetPeerRef(nodeid);
+    return IsInvInFilter(peer, hash);
+}
+
+bool PeerManagerImpl::IsInvInFilter(const PeerRef& peer, const uint256& hash) const
+{
     if (peer == nullptr)
         return false;
     if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {

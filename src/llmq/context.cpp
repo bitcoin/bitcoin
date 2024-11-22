@@ -46,9 +46,9 @@ LLMQContext::LLMQContext(ChainstateManager& chainman, CConnman& connman, CDeterm
     isman{[&]() -> llmq::CInstantSendManager* const {
         assert(llmq::quorumInstantSendManager == nullptr);
         llmq::quorumInstantSendManager = std::make_unique<llmq::CInstantSendManager>(*llmq::chainLocksHandler,
-                                                                                     chainman.ActiveChainstate(),
-                                                                                     connman, *qman, *sigman, *shareman,
-                                                                                     sporkman, mempool, mn_sync, peerman,
+                                                                                     chainman.ActiveChainstate(), *qman,
+                                                                                     *sigman, *shareman, sporkman,
+                                                                                     mempool, mn_sync, peerman,
                                                                                      is_masternode, unit_tests, wipe);
         return llmq::quorumInstantSendManager.get();
     }()},
