@@ -6,27 +6,25 @@
 
 #include <common/args.h>
 #include <index/txindex.h>
+#include <kernel/caches.h>
 #include <txdb.h>
+
+#include <algorithm>
+#include <string>
 
 namespace node {
 CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes)
 {
     int64_t nTotalCache = (args.GetIntArg("-dbcache", nDefaultDbCache) << 20);
     nTotalCache = std::max(nTotalCache, nMinDbCache << 20); // total cache cannot be less than nMinDbCache
-    CacheSizes sizes;
-    sizes.block_tree_db = std::min(nTotalCache / 8, nMaxBlockDBCache << 20);
-    nTotalCache -= sizes.block_tree_db;
+    IndexCacheSizes sizes;
     sizes.tx_index = std::min(nTotalCache / 8, args.GetBoolArg("-txindex", DEFAULT_TXINDEX) ? nMaxTxIndexCache << 20 : 0);
     nTotalCache -= sizes.tx_index;
-    sizes.filter_index = 0;
     if (n_indexes > 0) {
         int64_t max_cache = std::min(nTotalCache / 8, max_filter_index_cache << 20);
         sizes.filter_index = max_cache / n_indexes;
         nTotalCache -= sizes.filter_index * n_indexes;
     }
-    sizes.coins_db = std::min(nTotalCache / 2, nMaxCoinsDBCache << 20);
-    nTotalCache -= sizes.coins_db;
-    sizes.coins = nTotalCache; // the rest goes to in-memory cache
-    return sizes;
+    return {sizes, kernel::CacheSizes{static_cast<size_t>(nTotalCache)}};
 }
 } // namespace node
