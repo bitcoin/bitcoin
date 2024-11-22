@@ -19,6 +19,7 @@ from test_framework.wallet import (
     DEFAULT_FEE,
     MiniWallet,
 )
+from test_framework import mempool_util
 
 MAX_REPLACEMENT_CANDIDATES = 100
 
@@ -37,15 +38,7 @@ class PackageRBFTest(BitcoinTestFramework):
         ]] * self.num_nodes
 
     def assert_mempool_contents(self, expected=None):
-        """Assert that all transactions in expected are in the mempool,
-        and no additional ones exist.
-        """
-        if not expected:
-            expected = []
-        mempool = self.nodes[0].getrawmempool(verbose=False)
-        assert_equal(len(mempool), len(expected))
-        for tx in expected:
-            assert tx.rehash() in mempool
+        mempool_util.assert_mempool_contents(self, self.nodes[0], expected, sync=False)
 
     def create_simple_package(self, parent_coin, parent_fee=DEFAULT_FEE, child_fee=DEFAULT_CHILD_FEE, heavy_child=False):
         """Create a 1 parent 1 child package using the coin passed in as the parent's input. The
