@@ -97,7 +97,7 @@ Follow the relevant Guix README.md sections:
 - [Building](/contrib/guix/README.md#building)
 - [Attesting to build outputs](/contrib/guix/README.md#attesting-to-build-outputs)
 
-_Note: we build releases for some supported HOSTs only so either provide correct `HOSTS` variable or run `./contrib/containers/guix/scripts/guix-start` instead of `./contrib/guix/guix-build` when building binaries_
+_Note: we ship releases for only some supported HOSTs so consider providing limited `HOSTS` variable or run `./contrib/containers/guix/scripts/guix-start` instead of `./contrib/guix/guix-build` when building binaries for quicker builds that exclude the supported but not shipped HOSTs_
 
 ### Verify other builders' signatures to your own. (Optional)
 
