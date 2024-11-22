@@ -19,7 +19,6 @@
 
 class CActiveMasternodeManager;
 class CChainState;
-class CConnman;
 class CDataStream;
 class CDBBatch;
 class CDBWrapper;
@@ -160,7 +159,6 @@ class CSigningManager
 private:
 
     CRecoveredSigsDb db;
-    CConnman& connman;
     const CActiveMasternodeManager* const m_mn_activeman;
     const CChainState& m_chainstate;
     const CQuorumManager& qman;
@@ -179,7 +177,7 @@ private:
     std::vector<CRecoveredSigsListener*> recoveredSigsListeners GUARDED_BY(cs_listeners);
 
 public:
-    CSigningManager(CConnman& _connman, const CActiveMasternodeManager* const mn_activeman, const CChainState& chainstate,
+    CSigningManager(const CActiveMasternodeManager* const mn_activeman, const CChainState& chainstate,
                     const CQuorumManager& _qman, const std::unique_ptr<PeerManager>& peerman, bool fMemory, bool fWipe);
 
     bool AlreadyHave(const CInv& inv) const;

@@ -109,6 +109,9 @@ public:
     virtual void RelayTransaction(const uint256& txid)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main) = 0;
 
+    /** Relay recovered sigs to all interested peers */
+    virtual void RelayRecoveredSig(const uint256& sigHash) = 0;
+
     /** Set the best height */
     virtual void SetBestHeight(int height) = 0;
 

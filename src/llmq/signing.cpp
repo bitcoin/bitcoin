@@ -348,9 +348,9 @@ void CRecoveredSigsDb::CleanupOldVotes(int64_t maxAge)
 
 //////////////////
 
-CSigningManager::CSigningManager(CConnman& _connman, const CActiveMasternodeManager* const mn_activeman, const CChainState& chainstate,
+CSigningManager::CSigningManager(const CActiveMasternodeManager* const mn_activeman, const CChainState& chainstate,
                                  const CQuorumManager& _qman, const std::unique_ptr<PeerManager>& peerman, bool fMemory, bool fWipe) :
-    db(fMemory, fWipe), connman(_connman), m_mn_activeman(mn_activeman), m_chainstate(chainstate), qman(_qman), m_peerman(peerman)
+    db(fMemory, fWipe), m_mn_activeman(mn_activeman), m_chainstate(chainstate), qman(_qman), m_peerman(peerman)
 {
 }
 
@@ -633,12 +633,7 @@ void CSigningManager::ProcessRecoveredSig(const std::shared_ptr<const CRecovered
     WITH_LOCK(cs_pending, pendingReconstructedRecoveredSigs.erase(recoveredSig->GetHash()));
 
     if (m_mn_activeman != nullptr) {
-        CInv inv(MSG_QUORUM_RECOVERED_SIG, recoveredSig->GetHash());
-        connman.ForEachNode([&](const CNode* pnode) {
-            if (pnode->fSendRecSigs) {
-                Assert(m_peerman)->PushInventory(pnode->GetId(), inv);
-            }
-        });
+        Assert(m_peerman)->RelayRecoveredSig(recoveredSig->GetHash());
     }
 
     auto listeners = WITH_LOCK(cs_listeners, return recoveredSigsListeners);

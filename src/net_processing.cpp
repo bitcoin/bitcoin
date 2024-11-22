@@ -271,6 +271,8 @@ struct Peer {
     std::atomic<std::chrono::microseconds> m_ping_start{0us};
     /** Whether a ping has been requested by the user */
     std::atomic<bool> m_ping_queued{false};
+    /** Whether the peer has requested to receive llmq recovered signatures */
+    std::atomic<bool> m_wants_recsigs{false};
 
     struct TxRelay {
         mutable RecursiveMutex m_bloom_filter_mutex;
@@ -607,6 +609,7 @@ public:
     void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayTransaction(const uint256& txid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayRecoveredSig(const uint256& sigHash) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SetBestHeight(int height) override { m_best_height = height; };
     void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message = "") override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
@@ -2339,6 +2342,17 @@ void PeerManagerImpl::RelayTransaction(const uint256& txid)
     };
 }
 
+void PeerManagerImpl::RelayRecoveredSig(const uint256& sigHash)
+{
+    const CInv inv{MSG_QUORUM_RECOVERED_SIG, sigHash};
+    LOCK(m_peer_mutex);
+    for (const auto& [_, peer] : m_peer_map) {
+        if (peer->m_wants_recsigs) {
+            PushInv(*peer, inv);
+        }
+    }
+}
+
 void PeerManagerImpl::RelayAddress(NodeId originator,
                                    const CAddress& addr,
                                    bool fReachable)
@@ -3948,7 +3962,7 @@ void PeerManagerImpl::ProcessMessage(
     if (msg_type == NetMsgType::QSENDRECSIGS) {
         bool b;
         vRecv >> b;
-        pfrom.fSendRecSigs = b;
+        peer->m_wants_recsigs = b;
         return;
     }
 
