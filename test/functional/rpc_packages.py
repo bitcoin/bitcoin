@@ -271,9 +271,11 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert_equal(submitres, {'package_msg': 'conflict-in-package', 'tx-results': {}, 'replaced-transactions': []})
         assert tx_child["txid"] not in node.getrawmempool()
 
-        # ... and without the in-mempool ancestor tx1 included in the call
+        # without the in-mempool ancestor tx1 included in the call, tx2 can be submitted, but
+        # tx_child is missing an input.
         submitres = node.submitpackage([tx2["hex"], tx_child["hex"]])
-        assert_equal(submitres, {'package_msg': 'package-not-child-with-unconfirmed-parents', 'tx-results': {}, 'replaced-transactions': []})
+        assert_equal(submitres["tx-results"][tx_child["wtxid"]], {"txid": tx_child["txid"], "error": "bad-txns-inputs-missingorspent"})
+        assert tx2["txid"] in node.getrawmempool()
 
         # Regardless of error type, the child can never enter the mempool
         assert tx_child["txid"] not in node.getrawmempool()

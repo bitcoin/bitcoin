@@ -441,20 +441,6 @@ BOOST_AUTO_TEST_CASE(package_submission_tests)
         BOOST_CHECK_EQUAL(result_quit_early.m_state.GetResult(), PackageValidationResult::PCKG_TX);
     }
 
-    // Child with missing parent.
-    mtx_child.vin.emplace_back(COutPoint(package_unrelated[0]->GetHash(), 0));
-    Package package_missing_parent;
-    package_missing_parent.push_back(tx_parent);
-    package_missing_parent.push_back(MakeTransactionRef(mtx_child));
-    {
-        const auto result_missing_parent = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
-                                                             package_missing_parent, /*test_accept=*/false, /*client_maxfeerate=*/{});
-        BOOST_CHECK(result_missing_parent.m_state.IsInvalid());
-        BOOST_CHECK_EQUAL(result_missing_parent.m_state.GetResult(), PackageValidationResult::PCKG_POLICY);
-        BOOST_CHECK_EQUAL(result_missing_parent.m_state.GetRejectReason(), "package-not-child-with-unconfirmed-parents");
-        BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
-    }
-
     // Submit package with parent + child.
     {
         const auto submit_parent_child = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
