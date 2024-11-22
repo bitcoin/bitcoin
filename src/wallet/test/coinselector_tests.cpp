@@ -1131,6 +1131,29 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
     };
 
     {
+        // #################################################################################################################
+        // Example) https://github.com/bitcoin/bitcoin/blob/17834bd1976df7a2ff6c2f5f05a59ae3fd3f6875/src/wallet/coinselection.cpp#L214
+        // #################################################################################################################
+        CAmount target = 11;
+        int max_selection_weight = 10; // WU
+        dummy_params.m_min_change_target = 0;
+        const auto& res = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
+            CoinsResult available_coins;
+            add_coin(available_coins, wallet, CAmount(10), CFeeRate(0), 144, false, 0, true, 2);
+            add_coin(available_coins, wallet, CAmount(7), CFeeRate(0), 144, false, 0, true, 1);
+            add_coin(available_coins, wallet, CAmount(5), CFeeRate(0), 144, false, 0, true, 1);
+            add_coin(available_coins, wallet, CAmount(4), CFeeRate(0), 144, false, 0, true, 2);
+            return available_coins;
+        });
+        SelectionResult expected_result(CAmount(0), SelectionAlgorithm::CG);
+        add_coin(CAmount(7), 1, expected_result);
+        add_coin(CAmount(5), 2, expected_result);
+        BOOST_CHECK(EquivalentResult(expected_result, *res));
+        size_t expected_attempts = 6;
+        BOOST_CHECK_MESSAGE(res->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, res->GetSelectionsEvaluated()));
+    }
+
+    {
         // #########################################################
         // 1) Insufficient funds, select all provided coins and fail
         // #########################################################
