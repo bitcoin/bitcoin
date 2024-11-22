@@ -314,6 +314,7 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
             }
             ret.m_mine_immature += CachedTxGetImmatureCredit(wallet, wtx, ISMINE_SPENDABLE);
             ret.m_watchonly_immature += CachedTxGetImmatureCredit(wallet, wtx, ISMINE_WATCH_ONLY);
+            ret.m_total = ret.m_mine_trusted + ret.m_mine_untrusted_pending + ret.m_mine_immature + ret.m_watchonly_trusted + ret.m_watchonly_untrusted_pending + ret.m_watchonly_immature;
         }
     }
     return ret;
