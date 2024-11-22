@@ -8,9 +8,9 @@
 #include <chain.h>
 #include <coins.h>
 #include <consensus/params.h>
+#include <kernel/caches.h>
 #include <logging.h>
 #include <node/blockstorage.h>
-#include <node/caches.h>
 #include <sync.h>
 #include <threadsafety.h>
 #include <tinyformat.h>
@@ -28,6 +28,8 @@
 #include <limits>
 #include <memory>
 #include <vector>
+
+using kernel::CacheSizes;
 
 namespace node {
 // Complete initialization of chainstates after the initial call has been made

@@ -12,6 +12,7 @@
 
 #include <common/args.h>
 #include <interfaces/node.h>
+#include <kernel/caches.h>
 #include <mapport.h>
 #include <net.h>
 #include <netbase.h>
