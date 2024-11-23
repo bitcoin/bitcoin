@@ -35,14 +35,7 @@ class RPCVerifyISLockTest(DashTestFramework):
 
         self.activate_v19(expected_activation_height=900)
         self.log.info("Activated v19 at height:" + str(self.nodes[0].getblockcount()))
-        self.move_to_next_cycle()
-        self.log.info("Cycle H height:" + str(self.nodes[0].getblockcount()))
-        self.move_to_next_cycle()
-        self.log.info("Cycle H+C height:" + str(self.nodes[0].getblockcount()))
-        self.move_to_next_cycle()
-        self.log.info("Cycle H+2C height:" + str(self.nodes[0].getblockcount()))
-
-        self.mine_cycle_quorum(llmq_type_name='llmq_test_dip0024', llmq_type=103)
+        self.mine_cycle_quorum()
         self.bump_mocktime(1)
         self.generate(self.nodes[0], 8, sync_fun=self.sync_blocks())
 
@@ -64,7 +57,7 @@ class RPCVerifyISLockTest(DashTestFramework):
         assert node.verifyislock(request_id, txid, rec_sig, node.getblockcount() + 100)
 
         # Mine one more cycle of rotated quorums
-        self.mine_cycle_quorum(llmq_type_name='llmq_test_dip0024', llmq_type=103)
+        self.mine_cycle_quorum(is_first=False)
         # Create an ISLOCK using an active quorum which will be replaced when a new cycle happens
         request_id = None
         utxos = node.listunspent()
@@ -87,7 +80,7 @@ class RPCVerifyISLockTest(DashTestFramework):
         # Create the ISDLOCK, then mine a cycle quorum to move renew active set
         isdlock = self.create_isdlock(rawtx)
         # Mine one block to trigger the "signHeight + dkgInterval" verification for the ISDLOCK
-        self.mine_cycle_quorum(llmq_type_name='llmq_test_dip0024', llmq_type=103)
+        self.mine_cycle_quorum(is_first=False)
         # Verify the ISLOCK for a transaction that is not yet known by the node
         rawtx_txid = node.decoderawtransaction(rawtx)["txid"]
         assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, rawtx_txid)
