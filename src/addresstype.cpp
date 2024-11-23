@@ -56,10 +56,10 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         CPubKey pubKey(vSolutions[0]);
         if (!pubKey.IsValid()) {
             addressRet = CNoDestination(scriptPubKey);
-        } else {
-            addressRet = PubKeyDestination(pubKey);
+            return false;
         }
-        return false;
+            addressRet = PubKeyDestination(pubKey);
+            return false;
     }
     case TxoutType::PUBKEYHASH: {
         addressRet = PKHash(uint160(vSolutions[0]));
