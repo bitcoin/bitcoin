@@ -12,9 +12,9 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 from test_framework.wallet import (
-    COIN,
     DEFAULT_FEE,
     MiniWallet,
+    btcToSat,
 )
 
 MAX_REPLACEMENT_CANDIDATES = 100
@@ -548,7 +548,7 @@ class MempoolTRUC(BitcoinTestFramework):
         tx_unrelated_replacee = self.wallet.send_self_transfer(from_node=node, utxo_to_spend=utxo_unrelated_conflict)
         assert tx_unrelated_replacee["txid"] in node.getrawmempool()
 
-        fee_to_beat = max(int(tx_v3_child_2["fee"] * COIN), int(tx_unrelated_replacee["fee"]*COIN))
+        fee_to_beat = max(btcToSat(tx_v3_child_2["fee"]), btcToSat(tx_unrelated_replacee["fee"]))
 
         tx_v3_child_3 = self.wallet.create_self_transfer_multi(
             utxos_to_spend=[tx_v3_parent["new_utxos"][0], utxo_unrelated_conflict], fee_per_output=fee_to_beat*2, version=3

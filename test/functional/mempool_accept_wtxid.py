@@ -9,13 +9,13 @@ with identical non-witness data but different witness.
 
 from copy import deepcopy
 from test_framework.messages import (
-    COIN,
     COutPoint,
     CTransaction,
     CTxIn,
     CTxInWitness,
     CTxOut,
     sha256,
+    btcToSat,
 )
 from test_framework.p2p import P2PTxInvStore
 from test_framework.script import (
@@ -56,7 +56,7 @@ class MempoolWtxidTest(BitcoinTestFramework):
 
         parent = CTransaction()
         parent.vin.append(CTxIn(COutPoint(int(txid, 16), 0), b""))
-        parent.vout.append(CTxOut(int(9.99998 * COIN), script_pubkey))
+        parent.vout.append(CTxOut(btcToSat(9.99998), script_pubkey))
         parent.rehash()
 
         privkeys = [node.get_deterministic_priv_key().key]
@@ -73,7 +73,7 @@ class MempoolWtxidTest(BitcoinTestFramework):
 
         child_one = CTransaction()
         child_one.vin.append(CTxIn(COutPoint(int(parent_txid, 16), 0), b""))
-        child_one.vout.append(CTxOut(int(9.99996 * COIN), child_script_pubkey))
+        child_one.vout.append(CTxOut(btcToSat(9.99996), child_script_pubkey))
         child_one.wit.vtxinwit.append(CTxInWitness())
         child_one.wit.vtxinwit[0].scriptWitness.stack = [b'Preimage', b'\x01', witness_script]
         child_one_wtxid = child_one.getwtxid()

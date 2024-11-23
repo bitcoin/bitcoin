@@ -8,6 +8,8 @@ from decimal import Decimal
 from test_framework.messages import (
     COIN,
     CTxOut,
+    satToBtc,
+    btcToSat,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.mempool_util import assert_mempool_contents
@@ -36,7 +38,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         result["tx"].vout.append(CTxOut(output_value, result["tx"].vout[0].scriptPubKey))
         # Take value from first output
         result["tx"].vout[0].nValue -= output_value
-        result["new_utxos"][0]["value"] = Decimal(result["tx"].vout[0].nValue) / COIN
+        result["new_utxos"][0]["value"] = satToBtc(result["tx"].vout[0].nValue)
         new_txid = result["tx"].rehash()
         result["txid"]  = new_txid
         result["wtxid"] = result["tx"].getwtxid()
@@ -45,7 +47,7 @@ class EphemeralDustTest(BitcoinTestFramework):
             new_utxo["txid"] = new_txid
             new_utxo["wtxid"] = result["tx"].getwtxid()
 
-        result["new_utxos"].append({"txid": new_txid, "vout": len(result["tx"].vout) - 1, "value": Decimal(output_value) / COIN, "height": 0, "coinbase": False, "confirmations": 0})
+        result["new_utxos"].append({"txid": new_txid, "vout": len(result["tx"].vout) - 1, "value": satToBtc(output_value), "height": 0, "coinbase": False, "confirmations": 0})
 
     def run_test(self):
 
@@ -134,7 +136,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         sats_fee = 1
         dusty_tx = self.wallet.create_self_transfer_multi(fee_per_output=sats_fee, version=3)
         self.add_output_to_create_multi_result(dusty_tx)
-        assert_equal(int(COIN * dusty_tx["fee"]), sats_fee) # has fees
+        assert_equal(btcToSat(dusty_tx["fee"]), sats_fee) # has fees
         assert_greater_than(dusty_tx["tx"].vout[0].nValue, 330) # main output is not dust
         assert_equal(dusty_tx["tx"].vout[1].nValue, 0) # added one is dust
 

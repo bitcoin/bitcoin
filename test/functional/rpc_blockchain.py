@@ -36,9 +36,9 @@ from test_framework.blocktools import (
 )
 from test_framework.messages import (
     CBlockHeader,
-    COIN,
     from_hex,
     msg_block,
+    btcToSat,
 )
 from test_framework.p2p import P2PInterface
 from test_framework.script import hash256, OP_TRUE
@@ -676,7 +676,7 @@ class BlockchainTest(BitcoinTestFramework):
 
         self.log.info("Test getblock when block data is available but undo data isn't")
         # Submits a block building on the header-only block, so it can't be connected and has no undo data
-        tx = create_tx_with_script(block.vtx[0], 0, script_sig=bytes([OP_TRUE]), amount=50 * COIN)
+        tx = create_tx_with_script(block.vtx[0], 0, script_sig=bytes([OP_TRUE]), amount=btcToSat(50))
         block_noundo = create_block(block.sha256, create_coinbase(current_height + 2, nValue=100), block_time + 1, txlist=[tx])
         block_noundo.solve()
         node.submitblock(block_noundo.serialize().hex())

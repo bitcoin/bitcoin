@@ -17,7 +17,7 @@ except ImportError:
     pass
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.messages import COIN, DEFAULT_MEMPOOL_EXPIRY_HOURS
+from test_framework.messages import DEFAULT_MEMPOOL_EXPIRY_HOURS, satToBtc
 from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -169,7 +169,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
 
         self.log.info("Sending transaction...")
         fee = Decimal(31200)
-        tx = self.wallet.send_self_transfer(from_node=node, fee=fee / COIN)
+        tx = self.wallet.send_self_transfer(from_node=node, fee=satToBtc(fee))
 
         self.log.info("Polling buffer...")
         bpf.perf_buffer_poll(timeout=200)
@@ -206,7 +206,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
 
         self.log.info("Sending transaction...")
         fee = Decimal(31200)
-        tx = self.wallet.send_self_transfer(from_node=node, fee=fee / COIN)
+        tx = self.wallet.send_self_transfer(from_node=node, fee=satToBtc(fee))
         txid = tx["txid"]
 
         self.log.info("Fast-forwarding time to mempool expiry...")
@@ -255,14 +255,14 @@ class MempoolTracepointTest(BitcoinTestFramework):
         utxo = self.wallet.get_utxo(mark_as_spent=True)
         original_fee = Decimal(40000)
         original_tx = self.wallet.send_self_transfer(
-            from_node=node, utxo_to_spend=utxo, fee=original_fee / COIN
+            from_node=node, utxo_to_spend=utxo, fee=satToBtc(original_fee)
         )
         entry_time = node.getmempoolentry(original_tx["txid"])["time"]
 
         self.log.info("Sending replacement transaction...")
         replacement_fee = Decimal(45000)
         replacement_tx = self.wallet.send_self_transfer(
-            from_node=node, utxo_to_spend=utxo, fee=replacement_fee / COIN
+            from_node=node, utxo_to_spend=utxo, fee=satToBtc(replacement_fee)
         )
 
         self.log.info("Polling buffer...")

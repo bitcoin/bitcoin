@@ -5,7 +5,7 @@
 """Test transaction signing using the signrawtransactionwithkey RPC."""
 
 from test_framework.messages import (
-    COIN,
+    btcToSat,
 )
 from test_framework.address import (
     address_to_scriptpubkey,
@@ -50,7 +50,7 @@ class SignRawTransactionWithKeyTest(BitcoinTestFramework):
 
     def send_to_address(self, addr, amount):
         script_pub_key = address_to_scriptpubkey(addr)
-        tx = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=script_pub_key, amount=int(amount * COIN))
+        tx = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=script_pub_key, amount=btcToSat(amount))
         return tx["txid"], tx["sent_vout"]
 
     def assert_signing_completed_successfully(self, signed_tx):

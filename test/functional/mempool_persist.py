@@ -46,7 +46,8 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
 )
-from test_framework.wallet import MiniWallet, COIN
+from test_framework.wallet import MiniWallet
+from test_framework.messages import COIN, btcToSat
 
 
 class MempoolPersistTest(BitcoinTestFramework):
@@ -230,8 +231,8 @@ class MempoolPersistTest(BitcoinTestFramework):
         tx_node01 = self.mini_wallet.create_self_transfer()
         tx_node01_secret = self.mini_wallet.create_self_transfer()
         self.nodes[0].prioritisetransaction(tx_node01["txid"], 0, COIN)
-        self.nodes[0].prioritisetransaction(tx_node01_secret["txid"], 0, 2 * COIN)
-        self.nodes[1].prioritisetransaction(tx_node01_secret["txid"], 0, 3 * COIN)
+        self.nodes[0].prioritisetransaction(tx_node01_secret["txid"], 0, btcToSat(2))
+        self.nodes[1].prioritisetransaction(tx_node01_secret["txid"], 0, btcToSat(3))
         self.nodes[0].sendrawtransaction(tx_node01["hex"])
         self.nodes[1].sendrawtransaction(tx_node01["hex"])
         assert tx_node0["txid"] in self.nodes[0].getrawmempool()

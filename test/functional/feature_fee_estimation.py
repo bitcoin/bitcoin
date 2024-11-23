@@ -11,6 +11,8 @@ import time
 
 from test_framework.messages import (
     COIN,
+    satToBtc,
+    btcToSat,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -57,9 +59,9 @@ def small_txpuzzle_randfee(
         utxos_to_spend=utxos_to_spend,
         fee_per_output=0,
     )["tx"]
-    tx.vout[0].nValue = int((total_in - amount - fee) * COIN)
+    tx.vout[0].nValue = btcToSat((total_in - amount - fee))
     tx.vout.append(deepcopy(tx.vout[0]))
-    tx.vout[1].nValue = int(amount * COIN)
+    tx.vout[1].nValue = btcToSat(amount)
     tx.rehash()
     txid = tx.hash
     tx_hex = tx.serialize().hex()
@@ -125,7 +127,7 @@ def make_tx(wallet, utxo, feerate):
     """Create a 1in-1out transaction with a specific input and feerate (sat/vb)."""
     return wallet.create_self_transfer(
         utxo_to_spend=utxo,
-        fee_rate=Decimal(feerate * 1000) / COIN,
+        fee_rate=satToBtc(feerate * 1000),
     )
 
 def check_fee_estimates_btw_modes(node, expected_conservative, expected_economical):
@@ -298,7 +300,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Only 10% of the transactions were really confirmed with a low feerate,
         # the rest needed to be RBF'd. We must return the 90% conf rate feerate.
-        high_feerate_kvb = Decimal(high_feerate) / COIN * 10 ** 3
+        high_feerate_kvb = satToBtc(high_feerate) * 10 ** 3
         est_feerate = node.estimatesmartfee(2)["feerate"]
         assert_equal(est_feerate, high_feerate_kvb)
 

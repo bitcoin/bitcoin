@@ -8,7 +8,6 @@ Test BIP 37
 
 from test_framework.messages import (
     CInv,
-    COIN,
     MAX_BLOOM_FILTER_SIZE,
     MAX_BLOOM_HASH_FUNCS,
     MSG_WTX,
@@ -20,6 +19,7 @@ from test_framework.messages import (
     msg_getdata,
     msg_mempool,
     msg_version,
+    btcToSat,
 )
 from test_framework.p2p import (
     P2PInterface,
@@ -138,8 +138,8 @@ class FilterTest(BitcoinTestFramework):
         filter_peer = P2PBloomFilter()
 
         self.log.info("Create two tx before connecting, one relevant to the node another that is not")
-        rel_txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=filter_peer.watch_script_pubkey, amount=1 * COIN)["txid"]
-        irr_result = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=2 * COIN)
+        rel_txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=filter_peer.watch_script_pubkey, amount=btcToSat(1))["txid"]
+        irr_result = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=btcToSat(2))
         irr_txid = irr_result["txid"]
         irr_wtxid = irr_result["wtxid"]
 
@@ -157,7 +157,7 @@ class FilterTest(BitcoinTestFramework):
     def test_frelay_false(self, filter_peer):
         self.log.info("Check that a node with fRelay set to false does not receive invs until the filter is set")
         filter_peer.tx_received = False
-        self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=filter_peer.watch_script_pubkey, amount=9 * COIN)
+        self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=filter_peer.watch_script_pubkey, amount=btcToSat(9))
         # Sync to make sure the reason filter_peer doesn't receive the tx is not p2p delays
         filter_peer.sync_with_ping()
         assert not filter_peer.tx_received
@@ -186,21 +186,21 @@ class FilterTest(BitcoinTestFramework):
         self.log.info('Check that we not receive a tx if the filter does not match a mempool tx')
         filter_peer.merkleblock_received = False
         filter_peer.tx_received = False
-        self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=7 * COIN)
+        self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=btcToSat(7))
         filter_peer.sync_with_ping()
         assert not filter_peer.merkleblock_received
         assert not filter_peer.tx_received
 
         self.log.info('Check that we receive a tx if the filter matches a mempool tx')
         filter_peer.merkleblock_received = False
-        txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=filter_peer.watch_script_pubkey, amount=9 * COIN)["txid"]
+        txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=filter_peer.watch_script_pubkey, amount=btcToSat(9))["txid"]
         filter_peer.wait_for_tx(txid)
         assert not filter_peer.merkleblock_received
 
         self.log.info('Check that after deleting filter all txs get relayed again')
         filter_peer.send_and_ping(msg_filterclear())
         for _ in range(5):
-            txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=7 * COIN)["txid"]
+            txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=btcToSat(7))["txid"]
             filter_peer.wait_for_tx(txid)
 
         self.log.info('Check that request for filtered blocks is ignored if no filter is set')

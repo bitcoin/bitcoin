@@ -26,7 +26,6 @@ from test_framework.key import (
     compute_xonly_pubkey,
 )
 from test_framework.messages import (
-    COIN,
     COutPoint,
     CTransaction,
     CTxIn,
@@ -34,6 +33,8 @@ from test_framework.messages import (
     CTxOut,
     hash256,
     ser_compact_size,
+    satToBtc,
+    btcToSat,
 )
 from test_framework.script import (
     CScript,
@@ -318,12 +319,12 @@ class MiniWallet:
         assert_equal(len(utxos_to_spend), len(sequence))
 
         # calculate output amount
-        inputs_value_total = sum([int(COIN * utxo['value']) for utxo in utxos_to_spend])
+        inputs_value_total = sum([btcToSat(utxo['value']) for utxo in utxos_to_spend])
         outputs_value_total = inputs_value_total - fee_per_output * num_outputs
         amount_per_output = amount_per_output or (outputs_value_total // num_outputs)
         assert amount_per_output > 0
         outputs_value_total = amount_per_output * num_outputs
-        fee = Decimal(inputs_value_total - outputs_value_total) / COIN
+        fee = satToBtc(inputs_value_total - outputs_value_total)
 
         # create tx
         tx = CTransaction()
@@ -342,7 +343,7 @@ class MiniWallet:
             "new_utxos": [self._create_utxo(
                 txid=txid,
                 vout=i,
-                value=Decimal(tx.vout[i].nValue) / COIN,
+                value=satToBtc(tx.vout[i].nValue),
                 height=0,
                 coinbase=False,
                 confirmations=0,
@@ -382,7 +383,7 @@ class MiniWallet:
         # create tx
         tx = self.create_self_transfer_multi(
             utxos_to_spend=[utxo_to_spend],
-            amount_per_output=int(COIN * send_value),
+            amount_per_output=btcToSat(send_value),
             target_vsize=target_vsize,
             **kwargs,
         )

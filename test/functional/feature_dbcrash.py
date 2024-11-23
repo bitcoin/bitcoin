@@ -32,7 +32,7 @@ import time
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import (
-    COIN,
+    btcToSat,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -189,7 +189,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         random.shuffle(utxo_list)
         while len(utxo_list) >= 2 and num_transactions < count:
             utxos_to_spend = [utxo_list.pop() for _ in range(2)]
-            input_amount = int(sum([utxo['value'] for utxo in utxos_to_spend]) * COIN)
+            input_amount = btcToSat(sum([utxo['value'] for utxo in utxos_to_spend]))
             if input_amount < FEE:
                 # Sanity check -- if we chose inputs that are too small, skip
                 continue

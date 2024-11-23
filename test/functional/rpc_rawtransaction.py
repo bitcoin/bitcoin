@@ -18,10 +18,10 @@ from itertools import product
 
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
-    COIN,
     CTransaction,
     CTxOut,
     tx_from_hex,
+    btcToSat,
 )
 from test_framework.script import (
     CScript,
@@ -359,42 +359,42 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Test that datacarrier transaction with default maxburnamount (0) does not get sent
         tx = self.wallet.create_self_transfer()['tx']
         tx_val = 0.001
-        tx.vout = [CTxOut(int(Decimal(tx_val) * COIN), CScript([OP_RETURN] + [OP_FALSE] * 30))]
+        tx.vout = [CTxOut(btcToSat(Decimal(tx_val)), CScript([OP_RETURN] + [OP_FALSE] * 30))]
         tx_hex = tx.serialize().hex()
         assert_raises_rpc_error(-25, max_burn_exceeded, self.nodes[2].sendrawtransaction, tx_hex)
 
         # Test that oversized script gets rejected by sendrawtransaction
         tx = self.wallet.create_self_transfer()['tx']
         tx_val = 0.001
-        tx.vout = [CTxOut(int(Decimal(tx_val) * COIN), CScript([OP_FALSE] * 10001))]
+        tx.vout = [CTxOut(btcToSat(Decimal(tx_val)), CScript([OP_FALSE] * 10001))]
         tx_hex = tx.serialize().hex()
         assert_raises_rpc_error(-25, max_burn_exceeded, self.nodes[2].sendrawtransaction, tx_hex)
 
         # Test that script containing invalid opcode gets rejected by sendrawtransaction
         tx = self.wallet.create_self_transfer()['tx']
         tx_val = 0.01
-        tx.vout = [CTxOut(int(Decimal(tx_val) * COIN), CScript([OP_INVALIDOPCODE]))]
+        tx.vout = [CTxOut(btcToSat(Decimal(tx_val)), CScript([OP_INVALIDOPCODE]))]
         tx_hex = tx.serialize().hex()
         assert_raises_rpc_error(-25, max_burn_exceeded, self.nodes[2].sendrawtransaction, tx_hex)
 
         # Test a transaction where our burn exceeds maxburnamount
         tx = self.wallet.create_self_transfer()['tx']
         tx_val = 0.001
-        tx.vout = [CTxOut(int(Decimal(tx_val) * COIN), CScript([OP_RETURN] + [OP_FALSE] * 30))]
+        tx.vout = [CTxOut(btcToSat(Decimal(tx_val)), CScript([OP_RETURN] + [OP_FALSE] * 30))]
         tx_hex = tx.serialize().hex()
         assert_raises_rpc_error(-25, max_burn_exceeded, self.nodes[2].sendrawtransaction, tx_hex, 0, 0.0009)
 
         # Test a transaction where our burn falls short of maxburnamount
         tx = self.wallet.create_self_transfer()['tx']
         tx_val = 0.001
-        tx.vout = [CTxOut(int(Decimal(tx_val) * COIN), CScript([OP_RETURN] + [OP_FALSE] * 30))]
+        tx.vout = [CTxOut(btcToSat(Decimal(tx_val)), CScript([OP_RETURN] + [OP_FALSE] * 30))]
         tx_hex = tx.serialize().hex()
         self.nodes[2].sendrawtransaction(hexstring=tx_hex, maxfeerate='0', maxburnamount='0.0011')
 
         # Test a transaction where our burn equals maxburnamount
         tx = self.wallet.create_self_transfer()['tx']
         tx_val = 0.001
-        tx.vout = [CTxOut(int(Decimal(tx_val) * COIN), CScript([OP_RETURN] + [OP_FALSE] * 30))]
+        tx.vout = [CTxOut(btcToSat(Decimal(tx_val)), CScript([OP_RETURN] + [OP_FALSE] * 30))]
         tx_hex = tx.serialize().hex()
         self.nodes[2].sendrawtransaction(hexstring=tx_hex, maxfeerate='0', maxburnamount='0.001')
 

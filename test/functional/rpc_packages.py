@@ -23,9 +23,9 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 from test_framework.wallet import (
-    COIN,
     DEFAULT_FEE,
     MiniWallet,
+    btcToSat,
 )
 
 
@@ -245,7 +245,7 @@ class RPCPackagesTest(BitcoinTestFramework):
 
         # Add a child that spends both at high feerate to submit via submitpackage
         tx_child = self.wallet.create_self_transfer_multi(
-            fee_per_output=int(DEFAULT_FEE * 5 * COIN),
+            fee_per_output=btcToSat(DEFAULT_FEE * 5),
             utxos_to_spend=[tx1["new_utxo"], tx2["new_utxo"]],
         )
 

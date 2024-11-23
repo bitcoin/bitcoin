@@ -30,6 +30,7 @@ import unittest
 
 from test_framework.crypto.siphash import siphash256
 from test_framework.util import assert_equal
+from decimal import Decimal
 
 MAX_LOCATOR_SZ = 101
 MAX_BLOCK_WEIGHT = 4000000
@@ -232,6 +233,14 @@ def from_binary(cls, stream):
     if was_bytes:
         assert len(stream.read()) == 0
     return obj
+
+
+def satToBtc(sat_value: int) -> Decimal:
+    return Decimal(sat_value) / COIN
+
+
+def btcToSat(btc_value: Decimal) -> int:
+    return int(btc_value * COIN)
 
 
 # Objects that map to bitcoind objects, which can be serialized/deserialized
@@ -662,7 +671,7 @@ class CTransaction:
     def is_valid(self):
         self.calc_sha256()
         for tout in self.vout:
-            if tout.nValue < 0 or tout.nValue > 21000000 * COIN:
+            if tout.nValue < 0 or tout.nValue > btcToSat(21000000):
                 return False
         return True
 
