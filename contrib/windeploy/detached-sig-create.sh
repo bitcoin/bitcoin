@@ -23,6 +23,7 @@ TIMESERVER=http://timestamp.comodoca.com
 CERTFILE="win-codesign.cert"
 
 mkdir -p "${OUTSUBDIR}"
+# shellcheck disable=SC2046
 basename -a $(ls -1 "${SRCDIR}"/*-unsigned.exe) | while read UNSIGNED; do
   echo Signing "${UNSIGNED}"
   "${OSSLSIGNCODE}" sign -certs "${CERTFILE}" -t "${TIMESERVER}" -h sha256 -in "${SRCDIR}/${UNSIGNED}" -out "${WORKDIR}/${UNSIGNED}" "$@"

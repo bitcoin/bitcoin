@@ -25,7 +25,8 @@ test/lint/lint-all.sh
 
 if [ "$CIRRUS_REPO_FULL_NAME" = "dashpay/dash" ] && [ -n "$CIRRUS_CRON" ]; then
     git log --merges --before="2 days ago" -1 --format='%H' > ./contrib/verify-commits/trusted-sha512-root-commit
-    ${CI_RETRY_EXE}  gpg --keyserver hkps://keys.openpgp.org --recv-keys $(<contrib/verify-commits/trusted-keys) &&
+    mapfile -t KEYS < contrib/verify-commits/trusted-keys
+    ${CI_RETRY_EXE} gpg --keyserver hkps://keys.openpgp.org --recv-keys "${KEYS[@]}" &&
     ./contrib/verify-commits/verify-commits.py --clean-merge=2;
 fi
 

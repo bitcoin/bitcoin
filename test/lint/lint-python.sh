@@ -101,6 +101,7 @@ fi
 
 EXIT_CODE=0
 
+# shellcheck disable=SC2046
 if ! PYTHONWARNINGS="ignore" $FLAKECMD --ignore=B,C,E,F,I,N,W --select=$(IFS=","; echo "${enabled[*]}") $(
     if [[ $# == 0 ]]; then
         git ls-files "*.py" | grep -vE "src/(immer)/"
@@ -111,7 +112,8 @@ if ! PYTHONWARNINGS="ignore" $FLAKECMD --ignore=B,C,E,F,I,N,W --select=$(IFS=","
     EXIT_CODE=1
 fi
 
-if ! mypy --ignore-missing-imports --show-error-codes $(git ls-files "test/functional/*.py" "contrib/devtools/*.py" | grep -v contrib/devtools/github-merge.py) ; then
+mapfile -t FILES < <(git ls-files "test/functional/*.py" "contrib/devtools/*.py" | grep -v contrib/devtools/github-merge.py)
+if ! mypy --ignore-missing-imports --show-error-codes "${FILES[@]}"; then
     EXIT_CODE=1
 fi
 
