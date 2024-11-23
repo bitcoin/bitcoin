@@ -77,10 +77,10 @@ RUN pip3 install \
     flake8==3.8.3 \
     jinja2 \
     lief==0.13.2 \
-    pyzmq \
-    vulture==2.3 \
-    mypy==0.781 \
-    multiprocess
+    multiprocess \
+    mypy==0.910 \
+    pyzmq==22.3.0 \
+    vulture==2.3
 
 # dash_hash
 ARG DASH_HASH_VERSION=1.4.0
