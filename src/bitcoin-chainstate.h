@@ -103,6 +103,34 @@ protected:
     }
 };
 
+class Epilogue
+{
+public:
+    Epilogue(ValidationSignals& validation_signals, ChainstateManager& chainman, std::ostream& out)
+        : m_validation_signals(validation_signals), m_chainman(chainman), m_out(out) {}
+
+    ~Epilogue()
+    {
+        m_out << "Shutting down." << std::endl;
+
+        m_validation_signals.FlushBackgroundCallbacks();
+        {
+            LOCK(cs_main);
+            for (Chainstate* chainstate : m_chainman.GetAll()) {
+                if (chainstate->CanFlushToDisk()) {
+                    chainstate->ForceFlushStateToDisk();
+                    chainstate->ResetCoinsViews();
+                }
+            }
+        }
+    }
+
+private:
+    ValidationSignals& m_validation_signals;
+    ChainstateManager& m_chainman;
+    std::ostream& m_out;
+};
+
 inline int process(
     const fs::path& datadir,
     std::istream& in = std::cin,
@@ -114,9 +142,6 @@ inline int process(
 
     // SETUP: Context
     kernel::Context kernel_context{};
-    // We can't use a goto here, but we can use an assert since none of the
-    // things instantiated so far requires running the epilogue to be torn down
-    // properly
     assert(kernel::SanityChecks(kernel_context));
 
     ValidationSignals validation_signals{std::make_unique<util::ImmediateTaskRunner>()};
@@ -139,6 +164,9 @@ inline int process(
     util::SignalInterrupt interrupt;
     ChainstateManager chainman{interrupt, chainman_opts, blockman_opts};
 
+    // RAII Epilogue
+    Epilogue epilogue(validation_signals, chainman, out);
+
     node::CacheSizes cache_sizes;
     cache_sizes.block_tree_db = 2 << 20;
     cache_sizes.coins_db = 2 << 22;
@@ -147,12 +175,12 @@ inline int process(
     auto [status, error] = node::LoadChainstate(chainman, cache_sizes, options);
     if (status != node::ChainstateLoadStatus::SUCCESS) {
         err << "Failed to load Chain state from your datadir." << std::endl;
-        goto epilogue;
+        return 1;
     } else {
         std::tie(status, error) = node::VerifyLoadedChainstate(chainman, options);
         if (status != node::ChainstateLoadStatus::SUCCESS) {
             err << "Failed to verify loaded Chain state from your datadir." << std::endl;
-            goto epilogue;
+            return 1;
         }
     }
 
@@ -160,7 +188,7 @@ inline int process(
         BlockValidationState state;
         if (!chainstate->ActivateBestChain(state, nullptr)) {
             err << "Failed to connect best block (" << state.ToString() << ")" << std::endl;
-            goto epilogue;
+            return 1;
         }
     }
 
@@ -185,7 +213,7 @@ inline int process(
     for (std::string line; std::getline(in, line);) {
         if (line.empty()) {
             err << "Empty line found" << std::endl;
-            break;
+            return 1;
         }
 
         std::shared_ptr<CBlock> blockptr = std::make_shared<CBlock>();
@@ -193,12 +221,12 @@ inline int process(
 
         if (!DecodeHexBlk(block, line)) {
             err << "Block decode failed" << std::endl;
-            break;
+            return 1;
         }
 
         if (block.vtx.empty() || !block.vtx[0]->IsCoinBase()) {
             err << "Block does not start with a coinbase" << std::endl;
-            break;
+            return 1;
         }
 
         uint256 hash = block.GetHash();
@@ -208,11 +236,11 @@ inline int process(
             if (pindex) {
                 if (pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
                     err << "duplicate" << std::endl;
-                    break;
+                    return 1;
                 }
                 if (pindex->nStatus & BLOCK_FAILED_MASK) {
                     err << "duplicate-invalid" << std::endl;
-                    break;
+                    return 1;
                 }
             }
         }
@@ -232,60 +260,44 @@ inline int process(
         validation_signals.UnregisterSharedValidationInterface(sc);
         if (!new_block && accepted) {
             err << "duplicate" << std::endl;
-            break;
+            return 1;
         }
         if (!sc->found) {
             err << "inconclusive" << std::endl;
-            break;
+            return 1;
         }
         out << sc->state.ToString() << std::endl;
         switch (sc->state.GetResult()) {
         case BlockValidationResult::BLOCK_RESULT_UNSET:
             err << "initial value. Block has not yet been rejected" << std::endl;
-            break;
+            return 1;
         case BlockValidationResult::BLOCK_HEADER_LOW_WORK:
             err << "the block header may be on a too-little-work chain" << std::endl;
-            break;
+            return 1;
         case BlockValidationResult::BLOCK_CONSENSUS:
             err << "invalid by consensus rules (excluding any below reasons)" << std::endl;
-            break;
+            return 1;
         case BlockValidationResult::BLOCK_CACHED_INVALID:
             err << "this block was cached as being invalid and we didn't store the reason why" << std::endl;
-            break;
+            return 1;
         case BlockValidationResult::BLOCK_INVALID_HEADER:
             err << "invalid proof of work or time too old" << std::endl;
-            break;
+            return 1;
         case BlockValidationResult::BLOCK_MUTATED:
             err << "the block's data didn't match the data committed to by the PoW" << std::endl;
-            break;
+            return 1;
         case BlockValidationResult::BLOCK_MISSING_PREV:
             err << "We don't have the previous block the checked one is built on" << std::endl;
-            break;
+            return 1;
         case BlockValidationResult::BLOCK_INVALID_PREV:
             err << "A block this one builds on is invalid" << std::endl;
-            break;
+            return 1;
         case BlockValidationResult::BLOCK_TIME_FUTURE:
             err << "block timestamp was > 2 hours in the future (or our clock is bad)" << std::endl;
-            break;
+            return 1;
         case BlockValidationResult::BLOCK_CHECKPOINT:
             err << "the block failed to meet one of our checkpoints" << std::endl;
-            break;
-        }
-    }
-
-epilogue:
-    // Without this precise shutdown sequence, there will be a lot of nullptr
-    // dereferencing and UB.
-    out << "Shutting down." << std::endl;
-
-    validation_signals.FlushBackgroundCallbacks();
-    {
-        LOCK(cs_main);
-        for (Chainstate* chainstate : chainman.GetAll()) {
-            if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
-                chainstate->ResetCoinsViews();
-            }
+            return 1;
         }
     }
     return 0;

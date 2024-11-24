@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(chainstate_load_failure_test)
     std::stringstream out, err;
     int result{kernel_chainstate::process(custom_datadir, std::cin, out, err)};
 
-    BOOST_CHECK_EQUAL(result, 0); // TODO: This should be 1
+    BOOST_CHECK_EQUAL(result, 1);
     BOOST_CHECK(Contains(err.str(), "Failed to load Chain state"));
     BOOST_CHECK(Contains(out.str(), "Shutting down"));
 }
