@@ -139,6 +139,12 @@ std::vector<T> Split(const Span<const char>& sp, char sep)
     return Split<std::string>(str, separators);
 }
 
+[[nodiscard]] inline bool Contains(const std::string& haystack, const std::string_view needle)
+{
+    // TODO: Replace with .contains() in C++23
+    return haystack.find(needle) != std::string::npos;
+}
+
 [[nodiscard]] inline std::string_view TrimStringView(std::string_view str, std::string_view pattern = " \f\n\r\t\v")
 {
     std::string::size_type front = str.find_first_not_of(pattern);

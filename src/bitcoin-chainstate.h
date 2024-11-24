@@ -39,41 +39,48 @@ namespace kernel_chainstate {
 class KernelNotifications final : public kernel::Notifications
 {
 public:
+    KernelNotifications(std::ostream& out, std::ostream& err)
+        : m_out(out), m_err(err) {}
+
     kernel::InterruptResult blockTip(SynchronizationState, CBlockIndex&) override
     {
-        std::cout << "Block tip changed" << std::endl;
+        m_out << "Block tip changed" << std::endl;
         return {};
     }
 
     void headerTip(SynchronizationState, int64_t height, int64_t timestamp, bool presync) override
     {
-        std::cout << "Header tip changed: " << height << ", " << timestamp << ", " << presync << std::endl;
+        m_out << "Header tip changed: " << height << ", " << timestamp << ", " << presync << std::endl;
     }
 
     void progress(const bilingual_str& title, int progress_percent, bool resume_possible) override
     {
-        std::cout << "Progress: " << title.original << ", " << progress_percent << ", " << resume_possible << std::endl;
+        m_out << "Progress: " << title.original << ", " << progress_percent << ", " << resume_possible << std::endl;
     }
 
     void warningSet(kernel::Warning id, const bilingual_str& message) override
     {
-        std::cout << "Warning " << static_cast<int>(id) << " set: " << message.original << std::endl;
+        m_out << "Warning " << static_cast<int>(id) << " set: " << message.original << std::endl;
     }
 
     void warningUnset(kernel::Warning id) override
     {
-        std::cout << "Warning " << static_cast<int>(id) << " unset" << std::endl;
+        m_out << "Warning " << static_cast<int>(id) << " unset" << std::endl;
     }
 
     void flushError(const bilingual_str& message) override
     {
-        std::cerr << "Error flushing block data to disk: " << message.original << std::endl;
+        m_err << "Error flushing block data to disk: " << message.original << std::endl;
     }
 
     void fatalError(const bilingual_str& message) override
     {
-        std::cerr << "Error: " << message.original << std::endl;
+        m_err << "Error: " << message.original << std::endl;
     }
+
+private:
+    std::ostream& m_out;
+    std::ostream& m_err;
 };
 
 // Adapted from rpc/mining.cpp
@@ -97,7 +104,10 @@ protected:
 };
 
 inline int process(
-    const fs::path& datadir)
+    const fs::path& datadir,
+    std::istream& in = std::cin,
+    std::ostream& out = std::cout,
+    std::ostream& err = std::cerr)
 {
     fs::path abs_datadir{fs::absolute(datadir)};
     fs::create_directories(abs_datadir);
@@ -111,7 +121,7 @@ inline int process(
 
     ValidationSignals validation_signals{std::make_unique<util::ImmediateTaskRunner>()};
 
-    auto notifications = std::make_unique<KernelNotifications>();
+    auto notifications = std::make_unique<KernelNotifications>(out, err);
 
     // SETUP: Chainstate
     auto chainparams = CChainParams::Main();
@@ -136,12 +146,12 @@ inline int process(
     node::ChainstateLoadOptions options;
     auto [status, error] = node::LoadChainstate(chainman, cache_sizes, options);
     if (status != node::ChainstateLoadStatus::SUCCESS) {
-        std::cerr << "Failed to load Chain state from your datadir." << std::endl;
+        err << "Failed to load Chain state from your datadir." << std::endl;
         goto epilogue;
     } else {
         std::tie(status, error) = node::VerifyLoadedChainstate(chainman, options);
         if (status != node::ChainstateLoadStatus::SUCCESS) {
-            std::cerr << "Failed to verify loaded Chain state from your datadir." << std::endl;
+            err << "Failed to verify loaded Chain state from your datadir." << std::endl;
             goto epilogue;
         }
     }
@@ -149,32 +159,32 @@ inline int process(
     for (Chainstate* chainstate : WITH_LOCK(::cs_main, return chainman.GetAll())) {
         BlockValidationState state;
         if (!chainstate->ActivateBestChain(state, nullptr)) {
-            std::cerr << "Failed to connect best block (" << state.ToString() << ")" << std::endl;
+            err << "Failed to connect best block (" << state.ToString() << ")" << std::endl;
             goto epilogue;
         }
     }
 
     // Main program logic starts here
-    std::cout
+    out
         << "Hello! I'm going to print out some information about your datadir." << std::endl
         << "\t"
         << "Path: " << abs_datadir << std::endl;
     {
         LOCK(chainman.GetMutex());
-        std::cout
+        out
         << "\t" << "Blockfiles Indexed: " << std::boolalpha << chainman.m_blockman.m_blockfiles_indexed.load() << std::noboolalpha << std::endl
         << "\t" << "Snapshot Active: " << std::boolalpha << chainman.IsSnapshotActive() << std::noboolalpha << std::endl
         << "\t" << "Active Height: " << chainman.ActiveHeight() << std::endl
         << "\t" << "Active IBD: " << std::boolalpha << chainman.IsInitialBlockDownload() << std::noboolalpha << std::endl;
         CBlockIndex* tip = chainman.ActiveTip();
         if (tip) {
-            std::cout << "\t" << tip->ToString() << std::endl;
+            out << "\t" << tip->ToString() << std::endl;
         }
     }
 
-    for (std::string line; std::getline(std::cin, line);) {
+    for (std::string line; std::getline(in, line);) {
         if (line.empty()) {
-            std::cerr << "Empty line found" << std::endl;
+            err << "Empty line found" << std::endl;
             break;
         }
 
@@ -182,12 +192,12 @@ inline int process(
         CBlock& block = *blockptr;
 
         if (!DecodeHexBlk(block, line)) {
-            std::cerr << "Block decode failed" << std::endl;
+            err << "Block decode failed" << std::endl;
             break;
         }
 
         if (block.vtx.empty() || !block.vtx[0]->IsCoinBase()) {
-            std::cerr << "Block does not start with a coinbase" << std::endl;
+            err << "Block does not start with a coinbase" << std::endl;
             break;
         }
 
@@ -197,11 +207,11 @@ inline int process(
             const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(hash);
             if (pindex) {
                 if (pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
-                    std::cerr << "duplicate" << std::endl;
+                    err << "duplicate" << std::endl;
                     break;
                 }
                 if (pindex->nStatus & BLOCK_FAILED_MASK) {
-                    std::cerr << "duplicate-invalid" << std::endl;
+                    err << "duplicate-invalid" << std::endl;
                     break;
                 }
             }
@@ -221,44 +231,44 @@ inline int process(
         bool accepted = chainman.ProcessNewBlock(blockptr, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
         validation_signals.UnregisterSharedValidationInterface(sc);
         if (!new_block && accepted) {
-            std::cerr << "duplicate" << std::endl;
+            err << "duplicate" << std::endl;
             break;
         }
         if (!sc->found) {
-            std::cerr << "inconclusive" << std::endl;
+            err << "inconclusive" << std::endl;
             break;
         }
-        std::cout << sc->state.ToString() << std::endl;
+        out << sc->state.ToString() << std::endl;
         switch (sc->state.GetResult()) {
         case BlockValidationResult::BLOCK_RESULT_UNSET:
-            std::cerr << "initial value. Block has not yet been rejected" << std::endl;
+            err << "initial value. Block has not yet been rejected" << std::endl;
             break;
         case BlockValidationResult::BLOCK_HEADER_LOW_WORK:
-            std::cerr << "the block header may be on a too-little-work chain" << std::endl;
+            err << "the block header may be on a too-little-work chain" << std::endl;
             break;
         case BlockValidationResult::BLOCK_CONSENSUS:
-            std::cerr << "invalid by consensus rules (excluding any below reasons)" << std::endl;
+            err << "invalid by consensus rules (excluding any below reasons)" << std::endl;
             break;
         case BlockValidationResult::BLOCK_CACHED_INVALID:
-            std::cerr << "this block was cached as being invalid and we didn't store the reason why" << std::endl;
+            err << "this block was cached as being invalid and we didn't store the reason why" << std::endl;
             break;
         case BlockValidationResult::BLOCK_INVALID_HEADER:
-            std::cerr << "invalid proof of work or time too old" << std::endl;
+            err << "invalid proof of work or time too old" << std::endl;
             break;
         case BlockValidationResult::BLOCK_MUTATED:
-            std::cerr << "the block's data didn't match the data committed to by the PoW" << std::endl;
+            err << "the block's data didn't match the data committed to by the PoW" << std::endl;
             break;
         case BlockValidationResult::BLOCK_MISSING_PREV:
-            std::cerr << "We don't have the previous block the checked one is built on" << std::endl;
+            err << "We don't have the previous block the checked one is built on" << std::endl;
             break;
         case BlockValidationResult::BLOCK_INVALID_PREV:
-            std::cerr << "A block this one builds on is invalid" << std::endl;
+            err << "A block this one builds on is invalid" << std::endl;
             break;
         case BlockValidationResult::BLOCK_TIME_FUTURE:
-            std::cerr << "block timestamp was > 2 hours in the future (or our clock is bad)" << std::endl;
+            err << "block timestamp was > 2 hours in the future (or our clock is bad)" << std::endl;
             break;
         case BlockValidationResult::BLOCK_CHECKPOINT:
-            std::cerr << "the block failed to meet one of our checkpoints" << std::endl;
+            err << "the block failed to meet one of our checkpoints" << std::endl;
             break;
         }
     }
@@ -266,6 +276,8 @@ inline int process(
 epilogue:
     // Without this precise shutdown sequence, there will be a lot of nullptr
     // dereferencing and UB.
+    out << "Shutting down." << std::endl;
+
     validation_signals.FlushBackgroundCallbacks();
     {
         LOCK(cs_main);

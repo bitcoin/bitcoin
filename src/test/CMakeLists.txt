@@ -146,6 +146,10 @@ add_executable(test_bitcoin
   versionbits_tests.cpp
 )
 
+if(BUILD_UTIL_CHAINSTATE)
+  target_sources(test_bitcoin PRIVATE bitcoin_chainstate_tests.cpp)
+endif()
+
 target_link_libraries(test_bitcoin
   core_interface
   test_util
