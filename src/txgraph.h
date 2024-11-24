@@ -12,8 +12,7 @@
 #ifndef BITCOIN_TXGRAPH_H
 #define BITCOIN_TXGRAPH_H
 
-/** No connected component within TxGraph is allowed to exceed this number of transactions. */
-static constexpr unsigned CLUSTER_COUNT_LIMIT{64};
+static constexpr unsigned MAX_CLUSTER_COUNT_LIMIT{64};
 
 /** Data structure to encapsulate fees, sizes, and dependencies for a set of transactions. */
 class TxGraph
@@ -82,36 +81,43 @@ public:
      *  removed), this has no effect. */
     virtual void SetTransactionFeerate(Ref& arg, const FeeFrac& feerate) noexcept = 0;
     /** Return a vector of pointers to Ref objects for transactions which have been removed from
-     *  the graph, and have not been destroyed yet. Each transaction is only reported once by
-     *  Cleanup(). Afterwards, all Refs will be empty. */
+     *  the graph, and have not been destroyed yet. This has no effect if the graph is oversized
+     *  (see below). Each transaction is only reported once by Cleanup(). Afterwards, all Refs will
+     *  be empty. */
     [[nodiscard]] virtual std::vector<Ref*> Cleanup() noexcept = 0;
 
     /** Determine whether arg exists in this graph (i.e., was not removed). */
     virtual bool Exists(const Ref& arg) noexcept = 0;
+    /** Determine whether the graph is oversized (contains a connected component of more than the
+     *  configured maximum cluster count). Some of the functions below are not available
+     *  for oversized graphs. The mutators above are always available. */
+    virtual bool IsOversized() noexcept = 0;
     /** Get the feerate of the chunk which transaction arg is in. Returns the empty FeeFrac if arg
-     *  does not exist. */
+     *  does not exist. The graph must not be oversized. */
     virtual FeeFrac GetChunkFeerate(const Ref& arg) noexcept = 0;
     /** Get the individual transaction feerate of transaction arg. Returns the empty FeeFrac if
-     *  arg does not exist. */
+     *  arg does not exist. This is available even for oversized graphs. */
     virtual FeeFrac GetIndividualFeerate(const Ref& arg) noexcept = 0;
     /** Get pointers to all transactions in the connected component ("cluster") which arg is in.
      *  The transactions will be returned in a topologically-valid order of acceptable quality.
      *  Returns {} if arg does not exist in the queried graph. */
     virtual std::vector<Ref*> GetCluster(const Ref& arg) noexcept = 0;
-    /** Get pointers to all ancestors of the specified transaction. Returns {} if arg does not
-     *  exist. */
+    /** Get pointers to all ancestors of the specified transaction. The queried graph must not be
+     *  oversized. Returns {} if arg does not exist. */
     virtual std::vector<Ref*> GetAncestors(const Ref& arg) noexcept = 0;
-    /** Get pointers to all descendants of the specified transaction. Returns {} if arg does not
-     *  exist in the graph. */
+    /** Get pointers to all descendants of the specified transaction. The graph must not be
+     *  oversized. Returns {} if arg does not exist in the graph. */
     virtual std::vector<Ref*> GetDescendants(const Ref& arg) noexcept = 0;
-    /** Get the total number of transactions in the graph. */
+    /** Get the total number of transactions in the graph. This is available even for oversized
+     *  graphs. */
     virtual GraphIndex GetTransactionCount() noexcept = 0;
 
     /** Perform an internal consistency check on this object. */
     virtual void SanityCheck() const = 0;
 };
 
-/** Construct a new TxGraph. */
-std::unique_ptr<TxGraph> MakeTxGraph() noexcept;
+/** Construct a new TxGraph with the specified limit on transactions within a cluster. That
+ *  number cannot exceed MAX_CLUSTER_COUNT_LIMIT. */
+std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count) noexcept;
 
 #endif // BITCOIN_TXGRAPH_H
