@@ -304,7 +304,7 @@ static void MutateTxAddOutAddr(CMutableTransaction& tx, const std::string& strIn
     CAmount value = ExtractAndValidateValue(vStrInputParts[0]);
 
     // extract and validate ADDRESS
-    std::string strAddr = vStrInputParts[1];
+    const std::string& strAddr = vStrInputParts[1];
     CTxDestination destination = DecodeDestination(strAddr);
     if (!IsValidDestination(destination)) {
         throw std::runtime_error("invalid TX output address");
@@ -337,7 +337,7 @@ static void MutateTxAddOutPubKey(CMutableTransaction& tx, const std::string& str
     bool bSegWit = false;
     bool bScriptHash = false;
     if (vStrInputParts.size() == 3) {
-        std::string flags = vStrInputParts[2];
+        const std::string& flags = vStrInputParts[2];
         bSegWit = (flags.find('W') != std::string::npos);
         bScriptHash = (flags.find('S') != std::string::npos);
     }
@@ -398,7 +398,7 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
     bool bSegWit = false;
     bool bScriptHash = false;
     if (vStrInputParts.size() == numkeys + 4) {
-        std::string flags = vStrInputParts.back();
+        const std::string& flags = vStrInputParts.back();
         bSegWit = (flags.find('W') != std::string::npos);
         bScriptHash = (flags.find('S') != std::string::npos);
     }
@@ -473,14 +473,14 @@ static void MutateTxAddOutScript(CMutableTransaction& tx, const std::string& str
     CAmount value = ExtractAndValidateValue(vStrInputParts[0]);
 
     // extract and validate script
-    std::string strScript = vStrInputParts[1];
+    const std::string& strScript = vStrInputParts[1];
     CScript scriptPubKey = ParseScript(strScript);
 
     // Extract FLAGS
     bool bSegWit = false;
     bool bScriptHash = false;
     if (vStrInputParts.size() == 3) {
-        std::string flags = vStrInputParts.back();
+        const std::string& flags = vStrInputParts.back();
         bSegWit = (flags.find('W') != std::string::npos);
         bScriptHash = (flags.find('S') != std::string::npos);
     }
