@@ -27,7 +27,7 @@ struct SimTxGraph
     /** Maximum number of transactions to support simultaneously. Set this higher than txgraph's
      *  cluster count, so we can exercise situations with more transactions than fit in one
      *  cluster. */
-    static constexpr unsigned MAX_TRANSACTIONS = CLUSTER_COUNT_LIMIT * 2;
+    static constexpr unsigned MAX_TRANSACTIONS = MAX_CLUSTER_COUNT_LIMIT * 2;
     /** Set type to use in the simulation. */
     using SetType = BitSet<MAX_TRANSACTIONS>;
     /** Data type for representing positions within SimTxGraph::graph. */
@@ -44,6 +44,31 @@ struct SimTxGraph
     std::map<const TxGraph::Ref*, Pos> simrevmap;
     /** The set of TxGraph::Ref entries that have been removed, but not yet destroyed. */
     std::vector<std::unique_ptr<TxGraph::Ref>> removed;
+    /** Whether the graph is oversized (true = yes, false = no, std::nullopt = unknown). */
+    std::optional<bool> oversized;
+    /** The configured maximum number of transactions per cluster. */
+    DepGraphIndex max_cluster_count;
+
+    /** Construct a new SimData with the specified maximum cluster count. */
+    explicit SimTxGraph(DepGraphIndex max_cluster) : max_cluster_count(max_cluster) {}
+
+    /** Check whether this graph is oversized (contains a connected component whose number of
+     *  transactions exceeds max_cluster_count. */
+    bool IsOversized()
+    {
+        if (!oversized.has_value()) {
+            // Only recompute when oversized isn't already known.
+            oversized = false;
+            auto todo = graph.Positions();
+            // Iterate over all connected components of the graph.
+            while (todo.Any()) {
+                auto component = graph.FindConnectedComponent(todo);
+                if (component.Count() > max_cluster_count) oversized = true;
+                todo -= component;
+            }
+        }
+        return *oversized;
+    }
 
     /** Determine the number of (non-removed) transactions in the graph. */
     DepGraphIndex GetTransactionCount() const { return graph.TxCount(); }
@@ -84,6 +109,8 @@ struct SimTxGraph
         auto chl_pos = Find(child);
         if (chl_pos == MISSING) return;
         graph.AddDependencies(SetType::Singleton(par_pos), chl_pos);
+        // This may invalidate our cached oversized value.
+        if (oversized.has_value() && !*oversized) oversized = std::nullopt;
     }
 
     /** Modify the transaction fee of a ref, if it exists. */
@@ -105,6 +132,8 @@ struct SimTxGraph
         // invoked until the simulation explicitly decided to do so.
         removed.push_back(std::move(simmap[pos]));
         simmap[pos].reset();
+        // This may invalidate our cached oversized value.
+        if (oversized.has_value() && *oversized) oversized = std::nullopt;
     }
 
     /** Construct the set with all positions in this graph corresponding to the specified
@@ -170,9 +199,12 @@ FUZZ_TARGET(txgraph)
     /** Variable used whenever an empty TxGraph::Ref is needed. */
     TxGraph::Ref empty_ref;
 
+    // Decide the maximum number of transactions per cluster we will use in this simulation.
+    auto max_count = provider.ConsumeIntegralInRange<DepGraphIndex>(1, MAX_CLUSTER_COUNT_LIMIT);
+
     // Construct a real and a simulated graph.
-    auto real = MakeTxGraph();
-    SimTxGraph sim;
+    auto real = MakeTxGraph(max_count);
+    SimTxGraph sim(max_count);
 
     /** Function to pick any Ref (from sim.simmap or sim.removed, or the empty Ref). */
     auto pick_fn = [&]() noexcept -> TxGraph::Ref* {
@@ -245,17 +277,6 @@ FUZZ_TARGET(txgraph)
                     // Determine if adding this would introduce a cycle (not allowed by TxGraph),
                     // and if so, skip.
                     if (sim.graph.Ancestors(pos_par)[pos_chl]) break;
-                    // Determine if adding this would violate CLUSTER_COUNT_LIMIT, and if so, skip.
-                    auto temp_depgraph = sim.graph;
-                    temp_depgraph.AddDependencies(SimTxGraph::SetType::Singleton(pos_par), pos_chl);
-                    auto todo = temp_depgraph.Positions();
-                    bool oversize{false};
-                    while (todo.Any()) {
-                        auto component = temp_depgraph.FindConnectedComponent(todo);
-                        if (component.Count() > CLUSTER_COUNT_LIMIT) oversize = true;
-                        todo -= component;
-                    }
-                    if (oversize) break;
                 }
                 sim.AddDependency(par, chl);
                 real->AddDependency(*par, *chl);
@@ -311,6 +332,10 @@ FUZZ_TARGET(txgraph)
                 assert(exists == should_exist);
                 break;
             } else if (command-- == 0) {
+                // IsOversized.
+                assert(sim.IsOversized() == real->IsOversized());
+                break;
+            } else if (command-- == 0) {
                 // GetIndividualFeerate.
                 auto ref = pick_fn();
                 auto feerate = real->GetIndividualFeerate(*ref);
@@ -321,7 +346,7 @@ FUZZ_TARGET(txgraph)
                     assert(feerate == sim.graph.FeeRate(simpos));
                 }
                 break;
-            } else if (command-- == 0) {
+            } else if (!sim.IsOversized() && command-- == 0) {
                 // GetChunkFeerate.
                 auto ref = pick_fn();
                 auto feerate = real->GetChunkFeerate(*ref);
@@ -334,20 +359,22 @@ FUZZ_TARGET(txgraph)
                     assert(feerate.size >= sim.graph.FeeRate(simpos).size);
                 }
                 break;
-            } else if (command-- == 0) {
+            } else if (!sim.IsOversized() && command-- == 0) {
                 // GetAncestors/GetDescendants.
                 auto ref = pick_fn();
-                auto result_set = sim.MakeSet(alt ? real->GetDescendants(*ref) :
-                                                    real->GetAncestors(*ref));
+                auto result = alt ? real->GetDescendants(*ref) : real->GetAncestors(*ref);
+                assert(result.size() <= max_count);
+                auto result_set = sim.MakeSet(result);
+                assert(result.size() == result_set.Count());
                 auto expect_set = sim.GetAncDesc(ref, alt);
                 assert(result_set == expect_set);
                 break;
-            } else if (command-- == 0) {
+            } else if (!sim.IsOversized() && command-- == 0) {
                 // GetCluster.
                 auto ref = pick_fn();
                 auto result = real->GetCluster(*ref);
                 // Check cluster count limit.
-                assert(result.size() <= CLUSTER_COUNT_LIMIT);
+                assert(result.size() <= max_count);
                 // Require the result to be topologically valid and not contain duplicates.
                 auto left = sim.graph.Positions();
                 for (auto refptr : result) {
@@ -382,56 +409,62 @@ FUZZ_TARGET(txgraph)
     real->SanityCheck();
 
     // Compare simple properties of the graph with the simulation.
+    assert(real->IsOversized() == sim.IsOversized());
     assert(real->GetTransactionCount() == sim.GetTransactionCount());
 
-    // Perform a full comparison.
-    auto todo = sim.graph.Positions();
-    // Iterate over all connected components of the resulting (simulated) graph, each of which
-    // should correspond to a cluster in the real one.
-    while (todo.Any()) {
-        auto component = sim.graph.FindConnectedComponent(todo);
-        todo -= component;
-        // Iterate over the transactions in that component.
-        for (auto i : component) {
-            // Check its individual feerate against simulation.
-            assert(sim.graph.FeeRate(i) == real->GetIndividualFeerate(*sim.GetRef(i)));
-            // Check its ancestors against simulation.
-            auto expect_anc = sim.graph.Ancestors(i);
-            auto anc = sim.MakeSet(real->GetAncestors(*sim.GetRef(i)));
-            assert(anc == expect_anc);
-            // Check its descendants against simulation.
-            auto expect_desc = sim.graph.Descendants(i);
-            auto desc = sim.MakeSet(real->GetDescendants(*sim.GetRef(i)));
-            assert(desc == expect_desc);
-            // Check the cluster the transaction is part of.
-            auto cluster = real->GetCluster(*sim.GetRef(i));
-            assert(sim.MakeSet(cluster) == component);
-            // Check that the cluster is reported in a valid topological order (its
-            // linearization).
-            std::vector<DepGraphIndex> simlin;
-            SimTxGraph::SetType done;
-            for (TxGraph::Ref* ptr : cluster) {
-                auto simpos = sim.Find(ptr);
-                assert(sim.graph.Descendants(simpos).IsSubsetOf(component - done));
-                done.Set(simpos);
-                assert(sim.graph.Ancestors(simpos).IsSubsetOf(done));
-                simlin.push_back(simpos);
-            }
-            // Construct a chunking object for the simulated graph, using the reported cluster
-            // linearization as ordering, and compare it against the reported chunk feerates.
-            cluster_linearize::LinearizationChunking simlinchunk(sim.graph, simlin);
-            DepGraphIndex idx{0};
-            for (unsigned chunknum = 0; chunknum < simlinchunk.NumChunksLeft(); ++chunknum) {
-                auto chunk = simlinchunk.GetChunk(chunknum);
-                // Require that the chunks of cluster linearizations are connected (this must
-                // be the case as all linearizations inside are PostLinearized).
-                assert(sim.graph.IsConnected(chunk.transactions));
-                // Check the chunk feerates of all transactions in the cluster.
-                while (chunk.transactions.Any()) {
-                    assert(chunk.transactions[simlin[idx]]);
-                    chunk.transactions.Reset(simlin[idx]);
-                    assert(chunk.feerate == real->GetChunkFeerate(*cluster[idx]));
-                    ++idx;
+    // If the graph (and the simulation) are not oversized, perform a full comparison.
+    if (!sim.IsOversized()) {
+        auto todo = sim.graph.Positions();
+        // Iterate over all connected components of the resulting (simulated) graph, each of which
+        // should correspond to a cluster in the real one.
+        while (todo.Any()) {
+            auto component = sim.graph.FindConnectedComponent(todo);
+            todo -= component;
+            // Iterate over the transactions in that component.
+            for (auto i : component) {
+                // Check its individual feerate against simulation.
+                assert(sim.graph.FeeRate(i) == real->GetIndividualFeerate(*sim.GetRef(i)));
+                // Check its ancestors against simulation.
+                auto expect_anc = sim.graph.Ancestors(i);
+                auto anc = sim.MakeSet(real->GetAncestors(*sim.GetRef(i)));
+                assert(anc.Count() <= max_count);
+                assert(anc == expect_anc);
+                // Check its descendants against simulation.
+                auto expect_desc = sim.graph.Descendants(i);
+                auto desc = sim.MakeSet(real->GetDescendants(*sim.GetRef(i)));
+                assert(desc.Count() <= max_count);
+                assert(desc == expect_desc);
+                // Check the cluster the transaction is part of.
+                auto cluster = real->GetCluster(*sim.GetRef(i));
+                assert(cluster.size() <= max_count);
+                assert(sim.MakeSet(cluster) == component);
+                // Check that the cluster is reported in a valid topological order (its
+                // linearization).
+                std::vector<DepGraphIndex> simlin;
+                SimTxGraph::SetType done;
+                for (TxGraph::Ref* ptr : cluster) {
+                    auto simpos = sim.Find(ptr);
+                    assert(sim.graph.Descendants(simpos).IsSubsetOf(component - done));
+                    done.Set(simpos);
+                    assert(sim.graph.Ancestors(simpos).IsSubsetOf(done));
+                    simlin.push_back(simpos);
+                }
+                // Construct a chunking object for the simulated graph, using the reported cluster
+                // linearization as ordering, and compare it against the reported chunk feerates.
+                cluster_linearize::LinearizationChunking simlinchunk(sim.graph, simlin);
+                DepGraphIndex idx{0};
+                for (unsigned chunknum = 0; chunknum < simlinchunk.NumChunksLeft(); ++chunknum) {
+                    auto chunk = simlinchunk.GetChunk(chunknum);
+                    // Require that the chunks of cluster linearizations are connected (this must
+                    // be the case as all linearizations inside are PostLinearized).
+                    assert(sim.graph.IsConnected(chunk.transactions));
+                    // Check the chunk feerates of all transactions in the cluster.
+                    while (chunk.transactions.Any()) {
+                        assert(chunk.transactions[simlin[idx]]);
+                        chunk.transactions.Reset(simlin[idx]);
+                        assert(chunk.feerate == real->GetChunkFeerate(*cluster[idx]));
+                        ++idx;
+                    }
                 }
             }
         }
