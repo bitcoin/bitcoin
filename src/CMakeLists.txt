@@ -411,6 +411,7 @@ endif()
 
 if(BUILD_UTIL_CHAINSTATE)
   add_executable(bitcoin-chainstate
+    bitcoin-chainstate.h
     bitcoin-chainstate.cpp
   )
   # TODO: The `SKIP_BUILD_RPATH` property setting can be deleted
