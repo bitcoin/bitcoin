@@ -258,6 +258,8 @@ public:
     ClusterSetIndex InsertCluster(std::unique_ptr<Cluster>&& cluster, QualityLevel quality) noexcept;
     /** Change the QualityLevel of a Cluster (identified by old_quality and old_index). */
     void SetClusterQuality(QualityLevel old_quality, ClusterSetIndex old_index, QualityLevel new_quality) noexcept;
+    /** Make a transaction not exist. */
+    void ClearLocator(GraphIndex index) noexcept;
 
     // Functions for handling Refs.
 
@@ -319,6 +321,16 @@ public:
     void SanityCheck() const final;
 };
 
+void TxGraphImpl::ClearLocator(GraphIndex idx) noexcept
+{
+    auto& entry = m_entries[idx];
+    Assume(entry.m_locator.IsPresent());
+    // Change the locator from Present to Missing.
+    entry.m_locator.SetMissing();
+    // Update the transaction count.
+    --m_clusterset.m_txcount;
+}
+
 void Cluster::Updated(TxGraphImpl& graph) noexcept
 {
     // Update all the Locators for this Cluster's Entrys.
@@ -366,9 +378,8 @@ void Cluster::ApplyRemovals(TxGraphImpl& graph, std::span<GraphIndex>& to_remove
         // - Remove from m_mapping.
         m_mapping[locator.index] = GraphIndex(-1);
         // - Mark it as removed in the Entry's locator.
-        locator.SetMissing();
+        graph.ClearLocator(idx);
         to_remove = to_remove.subspan(1);
-        --graph.m_clusterset.m_txcount;
     } while(!to_remove.empty());
 
     auto quality = m_quality;
