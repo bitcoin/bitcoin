@@ -88,9 +88,11 @@ if(MSVC)
     _CRT_NONSTDC_NO_WARNINGS
   )
 else()
-  target_compile_options(nowarn_leveldb_interface INTERFACE
-    -Wno-conditional-uninitialized
-    -Wno-suggest-override
+  try_append_cxx_flags("-Wconditional-uninitialized" TARGET nowarn_leveldb_interface SKIP_LINK
+    IF_CHECK_PASSED "-Wno-conditional-uninitialized"
+  )
+  try_append_cxx_flags("-Wsuggest-override" TARGET nowarn_leveldb_interface SKIP_LINK
+    IF_CHECK_PASSED "-Wno-suggest-override"
   )
 endif()
 
