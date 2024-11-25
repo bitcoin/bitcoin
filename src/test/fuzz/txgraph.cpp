@@ -573,6 +573,41 @@ FUZZ_TARGET(txgraph)
                     assert(FeeRateCompare(staged_diagram[i], staged_diagram[i - 1]) <= 0);
                 }
                 break;
+            } else if (!main_sim.IsOversized() && command-- == 0) {
+                // GetBlockBuilder.
+                uint8_t frac = provider.ConsumeIntegral<uint8_t>();
+                auto builder = real->GetBlockBuilder();
+                SimTxGraph::SetType done;
+                FeeFrac prev_chunk_feerate;
+                while (*builder) {
+                    // Chunk feerates must be monotonously decreasing.
+                    if (!prev_chunk_feerate.IsEmpty()) {
+                        assert(FeeRateCompare(builder->GetCurrentChunkFeerate(), prev_chunk_feerate) <= 0);
+                    }
+                    prev_chunk_feerate = builder->GetCurrentChunkFeerate();
+                    // Only include a fraction of frac/255 out of all chunks.
+                    if (rng.randrange(255) <= frac) {
+                        FeeFrac sum_feerate;
+                        for (TxGraph::Ref* ref : builder->GetCurrentChunk()) {
+                            // Each transaction in the chunk must exist in the main graph.
+                            auto simpos = main_sim.Find(*ref);
+                            assert(simpos != SimTxGraph::MISSING);
+                            // Verify the claimed chunk feerate.
+                            sum_feerate += main_sim.graph.FeeRate(simpos);
+                            // Make sure the chunk contains no duplicate transactions.
+                            assert(!done[simpos]);
+                            done.Set(simpos);
+                            // The concatenation of all included chunks, in order, must be
+                            // topologically valid.
+                            assert(main_sim.graph.Ancestors(simpos).IsSubsetOf(done));
+                        }
+                        assert(sum_feerate == builder->GetCurrentChunkFeerate());
+                        builder->Include();
+                    } else {
+                        builder->Skip();
+                    }
+                }
+                break;
             }
         }
     }
@@ -626,6 +661,27 @@ FUZZ_TARGET(txgraph)
                 assert(FeeRateCompare(after_feerate, pos_feerate) <= 0);
             }
         }
+
+        // The same order should be obtained through a BlockBuilder, if nothing is skipped.
+        auto builder = real->GetBlockBuilder();
+        std::vector<SimTxGraph::Pos> vec_builder;
+        while (*builder) {
+            FeeFrac sum;
+            for (TxGraph::Ref* ref : builder->GetCurrentChunk()) {
+                // The reported chunk feerate must match the chunk feerate obtained by asking
+                // it for each of the chunk's transactions individually.
+                assert(real->GetMainChunkFeerate(*ref) == builder->GetCurrentChunkFeerate());
+                // Verify the chunk feerate matches the sum of the reported individual feerates.
+                sum += real->GetIndividualFeerate(*ref);
+                // Chunks must contain transactions that exist in the graph.
+                auto simpos = sims[0].Find(*ref);
+                assert(simpos != SimTxGraph::MISSING);
+                vec_builder.push_back(simpos);
+            }
+            assert(sum == builder->GetCurrentChunkFeerate());
+            builder->Include();
+        }
+        assert(vec_builder == vec1);
 
         // Check that the implied ordering gives rise to a combined diagram that matches the
         // diagram constructed from the individual cluster linearization chunkings.
