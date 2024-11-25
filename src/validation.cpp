@@ -3669,6 +3669,8 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
     // Map to cache candidates not in the main chain that might need invalidating.
     // Maps fork block in chain to the candidates for invalidation.
     std::multimap<const CBlockIndex*, CBlockIndex*> cand_invalid_descendants;
+    // Map to cache candidates for m_best_header
+    std::multimap<const arith_uint256, CBlockIndex*> best_header_blocks_by_work;
 
     {
         LOCK(cs_main);
@@ -3689,6 +3691,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
             if (!m_chain.Contains(candidate) &&
                 !CBlockIndexWorkComparator()(candidate, pindex->pprev)) {
                 cand_invalid_descendants.insert(std::make_pair(m_chain.FindFork(candidate), candidate));
+                best_header_blocks_by_work.insert(std::make_pair(candidate->nChainWork, candidate));
             }
         }
     }
@@ -3741,6 +3744,22 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
         auto range = cand_invalid_descendants.equal_range(invalid_walk_tip);
         for (auto it = range.first; it != range.second; ++it) {
             it->second->nStatus |= BLOCK_FAILED_CHILD;
+        }
+
+        // Determine new best header
+        if (m_chainman.m_best_header->nStatus & BLOCK_FAILED_MASK) {
+            m_chainman.m_best_header = invalid_walk_tip->pprev;
+            auto best_header_it = best_header_blocks_by_work.lower_bound(m_chainman.m_best_header->nChainWork);
+            while (best_header_it != best_header_blocks_by_work.end()) {
+                if (best_header_it->second->nStatus & BLOCK_FAILED_MASK) {
+                    best_header_it = best_header_blocks_by_work.erase(best_header_it);
+                } else {
+                    if (!CBlockIndexWorkComparator()(best_header_it->second, m_chainman.m_best_header)) {
+                        m_chainman.m_best_header = best_header_it->second;
+                    }
+                    ++best_header_it;
+                }
+            }
         }
 
         // Add any equal or more work headers to setBlockIndexCandidates
