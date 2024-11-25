@@ -332,7 +332,7 @@ test/lint/lint-files.py
 You can run all the shell-based lint tests by running:
 
 ```
-test/lint/lint-all.sh
+test/lint/lint-all.py
 ```
 
 # Writing functional tests
