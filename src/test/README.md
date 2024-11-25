@@ -1,4 +1,6 @@
-# Unit tests
+gdb build/src/test/test_bitcoin core
+
+(gdb) bt  # produce a backtrace for where a segfault occurred# Unit tests
 
 The sources in this directory are unit test cases. Boost includes a
 unit testing framework, and since Bitcoin Core already uses Boost, it makes
