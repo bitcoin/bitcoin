@@ -3,9 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compare>
-#include <stdint.h>
 #include <memory>
+#include <optional>
+#include <stdint.h>
 #include <vector>
+#include <utility>
 
 #include <util/feefrac.h>
 
@@ -79,6 +81,29 @@ public:
         // Ref pointing to it.
         Ref& operator=(const Ref&) = delete;
         Ref(const Ref&) = delete;
+    };
+
+    /** Interface returned by GetBlockBuilder. */
+    class BlockBuilder
+    {
+    protected:
+        /** The next chunk, in topological order plus feerate, or std::nullopt if done. */
+        std::optional<std::pair<std::span<Ref*>, FeePerWeight>> m_current_chunk;
+        /** Make constructor non-public (use TxGraph::GetBlockBuilder()). */
+        BlockBuilder() noexcept = default;
+    public:
+        /** Support safe inheritance. */
+        virtual ~BlockBuilder() = default;
+        /** Determine whether there are more transactions to be included. */
+        explicit operator bool() noexcept { return m_current_chunk.has_value(); }
+        /** Get the chunk that is currently suggested to be included. */
+        const std::span<Ref*>& GetCurrentChunk() noexcept { return m_current_chunk->first; }
+        /** Get the feerate of the currently suggested chunk. */
+        const FeePerWeight& GetCurrentChunkFeerate() noexcept { return m_current_chunk->second; }
+        /** Mark the current chunk as included, and progress to the next one. */
+        virtual void Include() noexcept = 0;
+        /** Mark the current chunk as skipped, and progress to the next one. */
+        virtual void Skip() noexcept = 0;
     };
 
 protected:
@@ -203,6 +228,10 @@ public:
      *  oversized), ignoring unmodified components in both. Use FeeFrac rather than FeePerWeight
      *  so CompareChunks is usable without type-conversion. */
     virtual std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> GetMainStagingDiagrams() noexcept = 0;
+
+    /** Construct a block builder, drawing chunks in order, from the main graph, which cannot be
+     *  oversized. While the returned object exists, no mutators on the main graph are allowed. */
+    virtual std::unique_ptr<BlockBuilder> GetBlockBuilder() noexcept = 0;
 
     /** Perform an internal consistency check on this object. */
     virtual void SanityCheck() const = 0;
