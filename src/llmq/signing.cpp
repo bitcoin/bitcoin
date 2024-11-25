@@ -520,10 +520,8 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
 void CSigningManager::ProcessPendingReconstructedRecoveredSigs()
 {
     decltype(pendingReconstructedRecoveredSigs) m;
-    {
-        LOCK(cs_pending);
-        m = std::move(pendingReconstructedRecoveredSigs);
-    }
+    WITH_LOCK(cs_pending, swap(m, pendingReconstructedRecoveredSigs));
+
     for (const auto& p : m) {
         ProcessRecoveredSig(p.second);
     }

@@ -1490,10 +1490,7 @@ void CSigSharesManager::AsyncSign(const CQuorumCPtr& quorum, const uint256& id, 
 void CSigSharesManager::SignPendingSigShares()
 {
     std::vector<PendingSignatureData> v;
-    {
-        LOCK(cs_pendingSigns);
-        v = std::move(pendingSigns);
-    }
+    WITH_LOCK(cs_pendingSigns, v.swap(pendingSigns));
 
     for (const auto& [pQuorum, id, msgHash] : v) {
         auto opt_sigShare = CreateSigShare(pQuorum, id, msgHash);
