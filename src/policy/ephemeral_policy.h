@@ -30,7 +30,7 @@ class TxValidationState;
  * TxC, spends TxA's dust
  *
  * All the dust is spent if TxA+TxB+TxC is accepted, but the mining template may just pick
- * up TxA+TxB rather than the three "legal configurations:
+ * up TxA+TxB rather than the three "legal configurations":
  * 1) None
  * 2) TxA+TxB+TxC
  * 3) TxA+TxC
