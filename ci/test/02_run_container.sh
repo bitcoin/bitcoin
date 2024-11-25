@@ -123,6 +123,10 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   # When detecting podman-docker, `--external` should be added.
   docker image prune --force --filter "label=$CI_IMAGE_LABEL"
 
+  STACK_LIMIT=""
+  if [ -n "${CI_LIMIT_STACK_SIZE}" ]; then
+    STACK_LIMIT="--ulimit stack=524288:524288"
+  fi
   # Append $USER to /tmp/env to support multi-user systems and $CONTAINER_NAME
   # to allow support starting multiple runs simultaneously by the same user.
   # shellcheck disable=SC2086
@@ -133,6 +137,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
                   --mount "${CI_DEPENDS_SOURCES_MOUNT}" \
                   --mount "${CI_PREVIOUS_RELEASES_MOUNT}" \
                   ${CI_BUILD_MOUNT} \
+                  ${STACK_LIMIT} \
                   --env-file /tmp/env-$USER-$CONTAINER_NAME \
                   --name "$CONTAINER_NAME" \
                   --network ci-ip6net \
