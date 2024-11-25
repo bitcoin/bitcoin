@@ -61,7 +61,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         self.test_non_truc()
         self.test_unspent_ephemeral()
         self.test_reorgs()
-        self.test_free_relay()
+        self.test_no_minrelay_fee()
 
     def test_normal_dust(self):
         self.log.info("Create 0-value dusty output, show that it works inside truc when spent in package")
@@ -363,7 +363,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         self.nodes[0].invalidateblock(block_res["hash"])
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"]], sync=False)
 
-        # Also should happen if dust is swept
+        # Should re-enter if dust is swept
         sweep_tx_2 = self.wallet.create_self_transfer_multi(fee_per_output=0, utxos_to_spend=dusty_tx["new_utxos"], version=3)
         self.add_output_to_create_multi_result(sweep_tx_2)
         assert_raises_rpc_error(-26, "min relay fee not met", self.nodes[0].sendrawtransaction, sweep_tx_2["hex"])
@@ -401,7 +401,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         self.sync_all()
 
     # N.B. this extra_args can be removed post cluster mempool
-    def test_free_relay(self):
+    def test_no_minrelay_fee(self):
         self.log.info("Test that ephemeral dust works in non-TRUC contexts when there's no minrelay requirement")
 
         # Note: since minrelay is 0, it is not testing 1P1C relay
@@ -462,15 +462,17 @@ class EphemeralDustTest(BitcoinTestFramework):
         # Sweeps all dust, where all dusty txs are already in-mempool
         sweep_tx = self.wallet.create_self_transfer_multi(fee_per_output=25000, utxos_to_spend=all_parent_utxos, version=2)
 
+        # N.B. Since we have multiple parents these are not propagating via 1P1C relay.
+        # minrelay being zero allows them to propagate on their own.
         res = self.nodes[0].submitpackage([dusty_tx["hex"] for dusty_tx in dusty_txs] + [sweep_tx["hex"]])
         assert_equal(res['package_msg'], "success")
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"] for dusty_tx in dusty_txs] + [sweep_tx["tx"], cancel_sweep["tx"]])
 
-        self.generate(self.nodes[0], 25)
+        self.generate(self.nodes[0], 1)
         self.wallet.rescan_utxos()
         assert_equal(self.nodes[0].getrawmempool(), [])
 
-        # Other topology tests require relaxation of submitpackage topology
+        # Other topology tests (e.g., grandparents and parents both with dust) require relaxation of submitpackage topology
 
         self.restart_node(0, extra_args=[])
         self.restart_node(1, extra_args=[])

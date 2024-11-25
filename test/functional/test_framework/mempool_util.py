@@ -30,6 +30,7 @@ def assert_mempool_contents(test_framework, node, expected=None, sync=True):
         test_framework.sync_mempools()
     if not expected:
         expected = []
+    assert_equal(len(expected), len(set(expected)))
     mempool = node.getrawmempool(verbose=False)
     assert_equal(len(mempool), len(expected))
     for tx in expected:

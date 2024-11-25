@@ -5,17 +5,22 @@
 #ifndef BITCOIN_POLICY_EPHEMERAL_POLICY_H
 #define BITCOIN_POLICY_EPHEMERAL_POLICY_H
 
+#include <consensus/amount.h>
 #include <policy/packages.h>
-#include <policy/policy.h>
 #include <primitives/transaction.h>
-#include <txmempool.h>
+
+#include <optional>
+
+class CFeeRate;
+class CTxMemPool;
+class TxValidationState;
 
 /** These utility functions ensure that ephemeral dust is safely
  * created and spent without unduly risking them entering the utxo
  * set.
 
  * This is ensured by requiring:
- * - CheckValidEphemeralTx checks are respected
+ * - PreCheckEphemeralTx checks are respected
  * - The parent has no child (and 0-fee as implied above to disincentivize mining)
  * - OR the parent transaction has exactly one child, and the dust is spent by that child
  *
@@ -34,22 +39,20 @@
  * are the only way to bring fees.
  */
 
-/** Returns true if transaction contains dust */
-bool HasDust(const CTransactionRef& tx, CFeeRate dust_relay_rate);
-
 /* All the following checks are only called if standardness rules are being applied. */
 
 /** Must be called for each transaction once transaction fees are known.
  * Does context-less checks about a single transaction.
- * Returns false if the fee is non-zero and dust exists, populating state. True otherwise.
+ * @returns false if the fee is non-zero and dust exists, populating state. True otherwise.
  */
-bool CheckValidEphemeralTx(const CTransactionRef& tx, CFeeRate dust_relay_rate, CAmount base_fee, CAmount mod_fee, TxValidationState& state);
+bool PreCheckEphemeralTx(const CTransaction& tx, CFeeRate dust_relay_rate, CAmount base_fee, CAmount mod_fee, TxValidationState& state);
 
 /** Must be called for each transaction(package) if any dust is in the package.
  *  Checks that each transaction's parents have their dust spent by the child,
  *  where parents are either in the mempool or in the package itself.
- *  The function returns std::nullopt if all dust is properly spent, or the txid of the violating child spend.
+ *  Sets out_child_state and out_child_txid on failure.
+ *  @returns true if all dust is properly spent.
  */
-std::optional<Txid> CheckEphemeralSpends(const Package& package, CFeeRate dust_relay_rate, const CTxMemPool& tx_pool);
+bool CheckEphemeralSpends(const Package& package, CFeeRate dust_relay_rate, const CTxMemPool& tx_pool, TxValidationState& out_child_state, Txid& out_child_txid);
 
 #endif // BITCOIN_POLICY_EPHEMERAL_POLICY_H
