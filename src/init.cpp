@@ -448,10 +448,15 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     const auto regtestChainParams = CreateChainParams(argsman, ChainType::REGTEST);
 
     // Hidden Options
-    std::vector<std::string> hidden_args = {
-        "-dbcrashratio", "-forcecompactdb",
-        // GUI args. These will be overwritten by SetupUIArgs for the GUI
-        "-choosedatadir", "-lang=<lang>", "-min", "-resetguisettings", "-splash", "-uiplatform"};
+    argsman.AddHiddenArgs({"-dbcrashratio"});
+    argsman.AddHiddenArgs({"-forcecompactdb"});
+    // GUI args. These will be overwritten by SetupUIArgs for the GUI
+    argsman.AddHiddenArgs({"-choosedatadir"});
+    argsman.AddHiddenArgs({"-lang=<lang>"});
+    argsman.AddHiddenArgs({"-min"});
+    argsman.AddHiddenArgs({"-resetguisettings"});
+    argsman.AddHiddenArgs({"-splash"});
+    argsman.AddHiddenArgs({"-uiplatform"});
 
     argsman.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #if HAVE_SYSTEM
@@ -579,16 +584,16 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-zmqpubrawtxhwm=<n>", strprintf("Set publish raw transaction outbound message high water mark (default: %d)", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM), ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubsequencehwm=<n>", strprintf("Set publish hash sequence message high water mark (default: %d)", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM), ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
 #else
-    hidden_args.emplace_back("-zmqpubhashblock=<address>");
-    hidden_args.emplace_back("-zmqpubhashtx=<address>");
-    hidden_args.emplace_back("-zmqpubrawblock=<address>");
-    hidden_args.emplace_back("-zmqpubrawtx=<address>");
-    hidden_args.emplace_back("-zmqpubsequence=<n>");
-    hidden_args.emplace_back("-zmqpubhashblockhwm=<n>");
-    hidden_args.emplace_back("-zmqpubhashtxhwm=<n>");
-    hidden_args.emplace_back("-zmqpubrawblockhwm=<n>");
-    hidden_args.emplace_back("-zmqpubrawtxhwm=<n>");
-    hidden_args.emplace_back("-zmqpubsequencehwm=<n>");
+    argsman.AddHiddenArgs({"-zmqpubhashblock=<address>"});
+    argsman.AddHiddenArgs({"-zmqpubhashtx=<address>"});
+    argsman.AddHiddenArgs({"-zmqpubrawblock=<address>"});
+    argsman.AddHiddenArgs({"-zmqpubrawtx=<address>"});
+    argsman.AddHiddenArgs({"-zmqpubsequence=<n>"});
+    argsman.AddHiddenArgs({"-zmqpubhashblockhwm=<n>"});
+    argsman.AddHiddenArgs({"-zmqpubhashtxhwm=<n>"});
+    argsman.AddHiddenArgs({"-zmqpubrawblockhwm=<n>"});
+    argsman.AddHiddenArgs({"-zmqpubrawtxhwm=<n>"});
+    argsman.AddHiddenArgs({"-zmqpubsequencehwm=<n>"});
 #endif
 
     argsman.AddArg("-checkblocks=<n>", strprintf("How many blocks to check at startup (default: %u, 0 = all)", DEFAULT_CHECKBLOCKS), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
@@ -664,12 +669,9 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-daemon", strprintf("Run in the background as a daemon and accept commands (default: %d)", DEFAULT_DAEMON), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-daemonwait", strprintf("Wait for initialization to be finished before exiting. This implies -daemon (default: %d)", DEFAULT_DAEMONWAIT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #else
-    hidden_args.emplace_back("-daemon");
-    hidden_args.emplace_back("-daemonwait");
+    argsman.AddHiddenArgs({"-daemon"});
+    argsman.AddHiddenArgs({"-daemonwait"});
 #endif
-
-    // Add the hidden options
-    argsman.AddHiddenArgs(hidden_args);
 }
 
 #if HAVE_SYSTEM
