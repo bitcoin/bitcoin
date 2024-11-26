@@ -33,7 +33,7 @@ namespace llmq
 {
 
 CDKGLogger::CDKGLogger(const CDKGSession& _quorumDkg, std::string_view _func, int source_line) :
-    CBatchedLogger(BCLog::LLMQ_DKG,
+    CBatchedLogger(BCLog::LLMQ_DKG, BCLog::Level::Debug,
                    strprintf("QuorumDKG(type=%s, qIndex=%d, h=%d, member=%d)", _quorumDkg.params.name, _quorumDkg.quorumIndex,
                              _quorumDkg.m_quorum_base_block_index->nHeight, _quorumDkg.AreWeMember()),
                    __FILE__, source_line)
@@ -120,7 +120,7 @@ bool CDKGSession::Init(const uint256& _myProTxHash, int _quorumIndex)
 
     CDKGLogger logger(*this, __func__, __LINE__);
 
-    if (LogAcceptCategory(BCLog::LLMQ) && IsQuorumRotationEnabled(params, m_quorum_base_block_index)) {
+    if (LogAcceptCategory(BCLog::LLMQ, BCLog::Level::Debug) && IsQuorumRotationEnabled(params, m_quorum_base_block_index)) {
         int cycleQuorumBaseHeight = m_quorum_base_block_index->nHeight - quorumIndex;
         const CBlockIndex* pCycleQuorumBaseBlockIndex = m_quorum_base_block_index->GetAncestor(cycleQuorumBaseHeight);
         std::stringstream ss;
@@ -138,7 +138,7 @@ bool CDKGSession::Init(const uint256& _myProTxHash, int _quorumIndex)
     if (!myProTxHash.IsNull()) {
         dkgDebugManager.InitLocalSessionStatus(params, quorumIndex, m_quorum_base_block_index->GetBlockHash(), m_quorum_base_block_index->nHeight);
         relayMembers = utils::GetQuorumRelayMembers(params, m_dmnman, m_quorum_base_block_index, myProTxHash, true);
-        if (LogAcceptCategory(BCLog::LLMQ)) {
+        if (LogAcceptCategory(BCLog::LLMQ, BCLog::Level::Debug)) {
             std::stringstream ss;
             for (const auto& r : relayMembers) {
                 ss << r.ToString().substr(0, 4) << " | ";

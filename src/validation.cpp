@@ -2463,8 +2463,8 @@ bool CChainState::FlushStateToDisk(
         // Flush best chain related state. This can only be done if the blocks / block index write was also done.
         if (fDoFullFlush && !CoinsTip().GetBestBlock().IsNull()) {
             {
-                LOG_TIME_SECONDS(strprintf("write coins cache to disk (%d coins, %.2fkB)",
-                    coins_count, coins_mem_usage / 1000));
+                LOG_TIME_MILLIS_WITH_CATEGORY(strprintf("write coins cache to disk (%d coins, %.2fkB)",
+                    coins_count, coins_mem_usage / 1000), BCLog::BENCHMARK);
 
                 // Typical Coin structures on disk are around 48 bytes in size.
                 // Pushing a new one to the database can cause it to be written
@@ -3756,7 +3756,7 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
             if (ppindex)
                 *ppindex = pindex;
             if (pindex->nStatus & BLOCK_FAILED_MASK) {
-                LogPrintf("ERROR: %s: block %s is marked invalid\n", __func__, hash.ToString());
+                LogPrint(BCLog::VALIDATION, "%s: block %s is marked invalid\n", __func__, hash.ToString());
                 return state.Invalid(BlockValidationResult::BLOCK_CACHED_INVALID, "duplicate");
             }
             if (pindex->nStatus & BLOCK_CONFLICT_CHAINLOCK) {
@@ -3775,25 +3775,26 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
         CBlockIndex* pindexPrev = nullptr;
         BlockMap::iterator mi{m_blockman.m_block_index.find(block.hashPrevBlock)};
         if (mi == m_blockman.m_block_index.end()) {
-            LogPrintf("ERROR: %s: prev block not found\n", __func__);
+            LogPrint(BCLog::VALIDATION, "%s: %s prev block not found\n", __func__, hash.ToString());
             return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "prev-blk-not-found");
         }
         pindexPrev = &((*mi).second);
         assert(pindexPrev);
 
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK) {
-            LogPrintf("ERROR: %s: prev block invalid\n", __func__);
+            LogPrint(BCLog::VALIDATION, "%s: %s prev block invalid\n", __func__, hash.ToString());
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
         }
 
         if (pindexPrev->nStatus & BLOCK_CONFLICT_CHAINLOCK) {
             // it's ok-ish, the other node is probably missing the latest chainlock
-            LogPrintf("ERROR: %s: prev block %s conflicts with chainlock\n", __func__, block.hashPrevBlock.ToString());
+            LogPrint(BCLog::VALIDATION, "%s: prev block %s conflicts with chainlock\n", __func__, block.hashPrevBlock.ToString());
             return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-prevblk-chainlock");
         }
 
         if (!ContextualCheckBlockHeader(block, state, m_blockman, chainparams, pindexPrev, GetAdjustedTime())) {
-            return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), state.ToString());
+            LogPrint(BCLog::VALIDATION, "%s: Consensus::ContextualCheckBlockHeader: %s, %s\n", __func__, hash.ToString(), state.ToString());
+            return false;
         }
 
         /* Determine if this block descends from any block which has been found
@@ -3829,7 +3830,7 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
                         m_blockman.m_dirty_blockindex.insert(invalid_walk);
                         invalid_walk = invalid_walk->pprev;
                     }
-                    LogPrintf("ERROR: %s: prev block invalid\n", __func__);
+                    LogPrint(BCLog::VALIDATION, "%s: %s prev block invalid\n", __func__, hash.ToString());
                     return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
                 }
             }

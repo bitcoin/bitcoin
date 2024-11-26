@@ -17,6 +17,7 @@ Developer Notes
         - [`debug.log`](#debuglog)
         - [Testnet and Regtest modes](#testnet-and-regtest-modes)
         - [DEBUG_LOCKORDER](#debug_lockorder)
+        - [DEBUG_LOCKCONTENTION](#debug_lockcontention)
         - [Valgrind suppressions file](#valgrind-suppressions-file)
         - [Compiling for test coverage](#compiling-for-test-coverage)
         - [Performance profiling with perf](#performance-profiling-with-perf)
@@ -389,8 +390,10 @@ Run configure with the `--enable-gprof` option, then make.
 If the code is behaving strangely, take a look in the `debug.log` file in the data directory;
 error and debugging messages are written there.
 
-The `-debug=...` command-line option controls debugging; running with just `-debug` or `-debug=1` will turn
-on all categories (and give you a very large `debug.log` file).
+Debug logging can be enabled on startup with the `-debug` and `-loglevel`
+configuration options and toggled while dashd is running with the `logging`
+RPC.  For instance, launching dashd with `-debug` or `-debug=1` will turn on
+all log categories and `-loglevel=trace` will turn on all log severity levels.
 
 The Qt code routes `qDebug()` output to `debug.log` under category "qt": run with `-debug=qt`
 to see it.
@@ -411,6 +414,21 @@ multi-threading bugs can be very difficult to track down. The `--enable-debug`
 configure option adds `-DDEBUG_LOCKORDER` to the compiler flags. This inserts
 run-time checks to keep track of which locks are held and adds warnings to the
 `debug.log` file if inconsistencies are detected.
+
+### DEBUG_LOCKCONTENTION
+
+Defining `DEBUG_LOCKCONTENTION` adds a "lock" logging category to the logging
+RPC that, when enabled, logs the location and duration of each lock contention
+to the `debug.log` file.
+
+The `--enable-debug` configure option adds `-DDEBUG_LOCKCONTENTION` to the
+compiler flags. You may also enable it manually for a non-debug build by running
+configure with `-DDEBUG_LOCKCONTENTION` added to your CPPFLAGS,
+i.e. `CPPFLAGS="-DDEBUG_LOCKCONTENTION"`, then build and run dashd.
+
+You can then use the `-debug=lock` configuration option at dashd startup or
+`dash-cli logging '["lock"]'` at runtime to turn on lock contention logging.
+It can be toggled off again with `dash-cli logging [] '["lock"]'`.
 
 ### Assertions and Checks
 
@@ -845,11 +863,6 @@ int GetInt(Tabs tab)
 
 Strings and formatting
 ------------------------
-
-- Be careful of `LogPrint` versus `LogPrintf`. `LogPrint` takes a `category` argument, `LogPrintf` does not.
-
-  - *Rationale*: Confusion of these can result in runtime exceptions due to
-    formatting mismatch, and it is easy to get wrong because of subtly similar naming.
 
 - Use `std::string`, avoid C string manipulation functions.
 

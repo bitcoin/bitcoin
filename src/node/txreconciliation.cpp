@@ -83,7 +83,7 @@ public:
         AssertLockNotHeld(m_txreconciliation_mutex);
         LOCK(m_txreconciliation_mutex);
 
-        LogPrint(BCLog::TXRECONCILIATION, "Pre-register peer=%d\n", peer_id);
+        LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Pre-register peer=%d\n", peer_id);
         const uint64_t local_salt{GetRand(UINT64_MAX)};
 
         // We do this exactly once per peer (which are unique by NodeId, see GetNewNodeId) so it's
@@ -116,7 +116,8 @@ public:
         // v1 is the lowest version, so suggesting something below must be a protocol violation.
         if (recon_version < 1) return ReconciliationRegisterResult::PROTOCOL_VIOLATION;
 
-        LogPrint(BCLog::TXRECONCILIATION, "Register peer=%d (inbound=%i)\n", peer_id, is_peer_inbound);
+        LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Register peer=%d (inbound=%i)\n",
+                      peer_id, is_peer_inbound);
 
         const uint256 full_salt{ComputeSalt(local_salt, remote_salt)};
         recon_state->second = TxReconciliationState(!is_peer_inbound, full_salt.GetUint64(0), full_salt.GetUint64(1));
@@ -128,7 +129,7 @@ public:
         AssertLockNotHeld(m_txreconciliation_mutex);
         LOCK(m_txreconciliation_mutex);
         if (m_states.erase(peer_id)) {
-            LogPrint(BCLog::TXRECONCILIATION, "Forget txreconciliation state of peer=%d\n", peer_id);
+            LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Forget txreconciliation state of peer=%d\n", peer_id);
         }
     }
 

@@ -125,6 +125,8 @@ class TestNode():
             self.args.append("-logthreadnames")
         if self.version_is_at_least(21000000):
             self.args.append("-logsourcelocations")
+        if self.version_is_at_least(22010000):
+            self.args.append("-loglevel=trace")
 
         # Default behavior from global -v2transport flag is added to args to persist it over restarts.
         # May be overwritten in individual tests, using extra_args.

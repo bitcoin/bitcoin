@@ -481,7 +481,7 @@ static CAddress GetBindAddress(const Sock& sock)
         if (!sock.GetSockName((struct sockaddr*)&sockaddr_bind, &sockaddr_bind_len)) {
             addr_bind.SetSockAddr((const struct sockaddr*)&sockaddr_bind);
         } else {
-            LogPrint(BCLog::NET, "Warning: getsockname failed\n");
+            LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "getsockname failed\n");
         }
     }
     return addr_bind;
@@ -509,14 +509,14 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
 
     /// debug print
     if (fLogIPs) {
-        LogPrint(BCLog::NET, "trying %s connection %s lastseen=%.1fhrs\n",
-            use_v2transport ? "v2" : "v1",
-            pszDest ? pszDest : addrConnect.ToStringAddrPort(),
-            pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime)/3600.0);
+        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "trying %s connection %s lastseen=%.1fhrs\n",
+                      use_v2transport ? "v2" : "v1",
+                      pszDest ? pszDest : addrConnect.ToStringAddrPort(),
+                      pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime)/3600.0);
     } else {
-        LogPrint(BCLog::NET, "trying %s connection lastseen=%.1fhrs\n",
-            use_v2transport ? "v2" : "v1",
-            pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime)/3600.0);
+        LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "trying %s connection lastseen=%.1fhrs\n",
+                      use_v2transport ? "v2" : "v1",
+                      pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime)/3600.0);
     }
 
     // Resolve
@@ -1963,7 +1963,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket, CMasternodeSy
     }
 
     if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr)) {
-        LogPrintf("Warning: Unknown socket family\n");
+        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "Unknown socket family\n");
     } else {
         addr = CAddress{MaybeFlipIPv6toCJDNS(addr), NODE_NONE};
     }
@@ -4068,14 +4068,14 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
     if (!addrBind.GetSockAddr((struct sockaddr*)&sockaddr, &len))
     {
         strError = strprintf(Untranslated("Error: Bind address family for %s not supported"), addrBind.ToStringAddrPort());
-        LogPrintf("%s\n", strError.original);
+        LogPrintLevel(BCLog::NET, BCLog::Level::Error, "%s\n", strError.original);
         return false;
     }
 
     std::unique_ptr<Sock> sock = CreateSock(addrBind);
     if (!sock) {
-        strError = strprintf(Untranslated("Error: Couldn't open socket for incoming connections (socket returned error %s)"), NetworkErrorString(WSAGetLastError()));
-        LogPrintf("%s\n", strError.original);
+        strError = strprintf(Untranslated("Couldn't open socket for incoming connections (socket returned error %s)"), NetworkErrorString(WSAGetLastError()));
+        LogPrintLevel(BCLog::NET, BCLog::Level::Error, "%s\n", strError.original);
         return false;
     }
 
@@ -4110,7 +4110,7 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
             strError = strprintf(_("Unable to bind to %s on this computer. %s is probably already running."), addrBind.ToStringAddrPort(), PACKAGE_NAME);
         else
             strError = strprintf(_("Unable to bind to %s on this computer (bind returned error %s)"), addrBind.ToStringAddrPort(), NetworkErrorString(nErr));
-        LogPrintf("%s\n", strError.original);
+        LogPrintLevel(BCLog::NET, BCLog::Level::Error, "%s\n", strError.original);
         return false;
     }
     LogPrintf("Bound to %s\n", addrBind.ToStringAddrPort());
@@ -4118,8 +4118,8 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
     // Listen for incoming connections
     if (sock->Listen(SOMAXCONN) == SOCKET_ERROR)
     {
-        strError = strprintf(_("Error: Listening for incoming connections failed (listen returned error %s)"), NetworkErrorString(WSAGetLastError()));
-        LogPrintf("%s\n", strError.original);
+        strError = strprintf(_("Listening for incoming connections failed (listen returned error %s)"), NetworkErrorString(WSAGetLastError()));
+        LogPrintLevel(BCLog::NET, BCLog::Level::Error, "%s\n", strError.original);
         return false;
     }
 

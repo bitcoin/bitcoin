@@ -770,7 +770,7 @@ void CoinControlDialog::updateView()
 
             // CoinJoin rounds
             int nRounds = model->getRealOutpointCoinJoinRounds(output);
-            if (nRounds >= 0 || LogAcceptCategory(BCLog::COINJOIN)) {
+            if (nRounds >= 0 || LogAcceptCategory(BCLog::COINJOIN, BCLog::Level::Debug)) {
                 itemOutput->setText(COLUMN_COINJOIN_ROUNDS, QString::number(nRounds));
             } else {
                 itemOutput->setText(COLUMN_COINJOIN_ROUNDS, tr("n/a"));

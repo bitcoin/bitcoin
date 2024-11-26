@@ -340,15 +340,15 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& group
         util::insert(setCoinsRet, lowest_larger->m_outputs);
         nValueRet += lowest_larger->m_value;
     } else {
-        std::string s = "CWallet::SelectCoinsMinConf best subset: ";
+        std::string log_message{"Coin selection best subset: "};
         for (unsigned int i = 0; i < applicable_groups.size(); i++) {
             if (vfBest[i]) {
                 util::insert(setCoinsRet, applicable_groups[i].m_outputs);
                 nValueRet += applicable_groups[i].m_value;
-                s += FormatMoney(applicable_groups[i].m_value) + " ";
+                log_message += strprintf("%s ", FormatMoney(applicable_groups[i].m_value));
             }
         }
-        LogPrint(BCLog::SELECTCOINS, "%s - total %s\n", s, FormatMoney(nBest));
+        LogPrint(BCLog::SELECTCOINS, "%stotal %s\n", log_message, FormatMoney(nBest));
     }
 
     // There is no change in PS, so we know the fee beforehand,
