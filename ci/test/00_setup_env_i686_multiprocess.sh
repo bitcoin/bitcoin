@@ -20,4 +20,4 @@ export BITCOIN_CONFIG="\
  -DCMAKE_CXX_COMPILER='clang++;-m32' \
  -DAPPEND_CPPFLAGS='-DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE' \
 "
-export BITCOIND=bitcoin-node  # Used in functional tests
+export BITCOIN_CMD="bitcoin -m" # Used in functional tests
