@@ -7,6 +7,7 @@
 #include <logging.h>
 #include <node/types.h>
 #include <outputtype.h>
+#include <policy/policy.h>
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/sign.h>
@@ -185,11 +186,6 @@ IsMineResult IsMineInner(const LegacyDataSPKM& keystore, const CScript& scriptPu
 
     case TxoutType::MULTISIG:
     {
-        // Never treat bare multisig outputs as ours (they can still be made watchonly-though)
-        if (sigversion == IsMineSigVersion::TOP) {
-            break;
-        }
-
         // Only consider transactions "mine" if we own ALL the
         // keys involved. Multi-signature transactions that are
         // partially owned (somebody else has a key that can spend
@@ -202,6 +198,16 @@ IsMineResult IsMineInner(const LegacyDataSPKM& keystore, const CScript& scriptPu
                     return IsMineResult::INVALID;
                 }
             }
+        }
+        // Follow consensus rules, never treat too large legacy multisig scripts as valid
+        if (sigversion == IsMineSigVersion::P2SH && scriptPubKey.size() > MAX_SCRIPT_ELEMENT_SIZE) {
+            return IsMineResult::INVALID;
+        }
+
+        // Never treat bare multisig outputs as ours (they can still be made watchonly-though)
+        if (sigversion == IsMineSigVersion::TOP) {
+            if (keys.size() > MAX_BARE_MULTISIG_PUBKEYS_NUM) return IsMineResult::INVALID; // These are standard wise non-spendable
+            break;
         }
         if (HaveKeys(keys, keystore)) {
             ret = std::max(ret, IsMineResult::SPENDABLE);
