@@ -132,7 +132,7 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataS
             WITH_LOCK(cs_vecqueue, vecCoinJoinQueue.push_back(dsq));
         }
     } // cs_ProcessDSQueue
-    dsq.Relay(connman, *peerman);
+    peerman->RelayDSQ(dsq);
     return {};
 }
 

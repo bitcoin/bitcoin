@@ -16,6 +16,7 @@
 class CActiveMasternodeManager;
 class AddrMan;
 class CTxMemPool;
+class CCoinJoinQueue;
 class CDeterministicMNManager;
 class CMasternodeMetaMan;
 class CMasternodeSync;
@@ -92,6 +93,9 @@ public:
 
     /** Broadcast inventory message to a specific peer. */
     virtual void PushInventory(NodeId nodeid, const CInv& inv) = 0;
+
+    /** Relay DSQ based on peer preference */
+    virtual void RelayDSQ(const CCoinJoinQueue& queue) = 0;
 
     /** Relay inventories to all peers */
     virtual void RelayInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION) = 0;

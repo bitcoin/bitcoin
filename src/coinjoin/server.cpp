@@ -186,7 +186,7 @@ PeerMsgRet CCoinJoinServer::ProcessDSQUEUE(const CNode& peer, CDataStream& vRecv
         TRY_LOCK(cs_vecqueue, lockRecv);
         if (!lockRecv) return {};
         vecCoinJoinQueue.push_back(dsq);
-        dsq.Relay(connman, *m_peerman);
+        m_peerman->RelayDSQ(dsq);
     }
     return {};
 }
@@ -519,7 +519,7 @@ void CCoinJoinServer::CheckForCompleteQueue()
         LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CheckForCompleteQueue -- queue is ready, signing and relaying (%s) " /* Continued */
                                      "with %d participants\n", dsq.ToString(), vecSessionCollaterals.size());
         dsq.Sign(*m_mn_activeman);
-        dsq.Relay(connman, *m_peerman);
+        m_peerman->RelayDSQ(dsq);
     }
 }
 
@@ -732,7 +732,7 @@ bool CCoinJoinServer::CreateNewSession(const CCoinJoinAccept& dsa, PoolMessage& 
                             GetAdjustedTime(), false);
         LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CreateNewSession -- signing and relaying new queue: %s\n", dsq.ToString());
         dsq.Sign(*m_mn_activeman);
-        dsq.Relay(connman, *m_peerman);
+        m_peerman->RelayDSQ(dsq);
         LOCK(cs_vecqueue);
         vecCoinJoinQueue.push_back(dsq);
     }
