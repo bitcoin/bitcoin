@@ -4,6 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 export LC_ALL=C
 set -e -o pipefail
+
+# Environment variables for determinism
+export TAR_OPTIONS="--owner=0 --group=0 --numeric-owner --mtime='@${SOURCE_DATE_EPOCH}' --sort=name"
 export TZ=UTC
 
 # Although Guix _does_ set umask when building its own packages (in our case,
@@ -82,8 +85,17 @@ mkdir -p "$DISTSRC"
             done
             ;;
         *darwin*)
-            # Apply detached codesignatures to dist/ (in-place)
-            signapple apply dist/Bitcoin-Qt.app codesignatures/osx/dist/Bitcoin-Qt.app
+            case "$HOST" in
+                arm64*) ARCH="arm64" ;;
+                x86_64*) ARCH="x86_64" ;;
+            esac
+
+            # Apply detached codesignatures (in-place)
+            signapple apply dist/Bitcoin-Qt.app codesignatures/osx/"${HOST}"/dist/Bitcoin-Qt.app
+            find "${DISTNAME}" -wholename "*/bin/*" -type f | while read -r bin
+            do
+                signapple apply "${bin}" "codesignatures/osx/${HOST}/${bin}.${ARCH}sign"
+            done
 
             # Make a .zip from dist/
             cd dist/
@@ -91,6 +103,14 @@ mkdir -p "$DISTSRC"
                 | xargs -0r touch --no-dereference --date="@${SOURCE_DATE_EPOCH}"
             find . | sort \
                 | zip -X@ "${OUTDIR}/${DISTNAME}-${HOST}.zip"
+            cd ..
+
+            # Make a .tar.gz from bins
+            find "${DISTNAME}" -print0 \
+                | sort --zero-terminated \
+                | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
+                | gzip -9n > "${OUTDIR}/${DISTNAME}-${HOST}.tar.gz" \
+                || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST}.tar.gz" && exit 1 )
             ;;
         *)
             exit 1
