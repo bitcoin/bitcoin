@@ -14,7 +14,6 @@
 #include <masternode/node.h>
 #include <masternode/sync.h>
 #include <messagesigner.h>
-#include <net_processing.h>
 #include <netmessagemaker.h>
 #include <txmempool.h>
 #include <util/moneystr.h>
@@ -68,19 +67,6 @@ bool CCoinJoinQueue::CheckSignature(const CBLSPublicKey& blsPubKey) const
         return false;
     }
 
-    return true;
-}
-
-bool CCoinJoinQueue::Relay(CConnman& connman, PeerManager& peerman)
-{
-    CInv inv(MSG_DSQ, GetHash());
-    peerman.RelayInv(inv, DSQ_INV_VERSION);
-    connman.ForEachNode([&connman, this](CNode* pnode) {
-        CNetMsgMaker msgMaker(pnode->GetCommonVersion());
-        if (pnode->fSendDSQueue && pnode->nVersion < DSQ_INV_VERSION) {
-            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSQUEUE, (*this)));
-        }
-    });
     return true;
 }
 

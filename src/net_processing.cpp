@@ -366,6 +366,15 @@ struct Peer {
     /** Whether the peer has signaled support for receiving ADDRv2 (BIP155)
      *  messages, indicating a preference to receive ADDRv2 instead of ADDR ones. */
     std::atomic_bool m_wants_addrv2{false};
+
+    enum class WantsDSQ {
+        NONE, // Peer doesn't want DSQs
+        INV, // Peer will be notified of DSQs over Inventory System (see: DSQ_INV_VERSION)
+        ALL, // Peer will be notified of all DSQs, by simply sending them the DSQ
+    };
+
+    std::atomic<WantsDSQ> m_wants_dsq{WantsDSQ::NONE};
+
     /** Whether this peer has already sent us a getaddr message. */
     bool m_getaddr_recvd GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
     /** Number of addresses that can be processed from this peer. Start at 1 to
@@ -607,6 +616,7 @@ public:
     void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayTransaction(const uint256& txid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayDSQ(const CCoinJoinQueue& queue) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SetBestHeight(int height) override { m_best_height = height; };
     void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message = "") override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
@@ -2276,6 +2286,34 @@ void PeerManagerImpl::RelayInv(CInv &inv, const int minProtoVersion)
     });
 }
 
+void PeerManagerImpl::RelayDSQ(const CCoinJoinQueue& queue)
+{
+    CInv inv{MSG_DSQ, queue.GetHash()};
+    std::vector<NodeId> nodes_send_all;
+    {
+        LOCK(m_peer_mutex);
+        for (const auto& [nodeid, peer] : m_peer_map) {
+            switch (peer->m_wants_dsq) {
+            case Peer::WantsDSQ::NONE:
+                break;
+            case Peer::WantsDSQ::INV:
+                PushInv(*peer, inv);
+                break;
+            case Peer::WantsDSQ::ALL:
+                nodes_send_all.push_back(nodeid);
+                break;
+            }
+        }
+    }
+    for (auto nodeId : nodes_send_all) {
+        m_connman.ForNode(nodeId, [&](CNode* pnode) -> bool {
+            CNetMsgMaker msgMaker(pnode->GetCommonVersion());
+            m_connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSQUEUE, queue));
+            return true;
+        });
+    }
+}
+
 void PeerManagerImpl::RelayInvFiltered(CInv &inv, const CTransaction& relatedTx, const int minProtoVersion)
 {
     // TODO: Migrate to iteration through m_peer_map
@@ -3940,7 +3978,13 @@ void PeerManagerImpl::ProcessMessage(
     {
         bool b;
         vRecv >> b;
-        pfrom.fSendDSQueue = b;
+        if (!b) {
+            peer->m_wants_dsq = Peer::WantsDSQ::NONE;
+        } else if (pfrom.GetCommonVersion() < DSQ_INV_VERSION) {
+            peer->m_wants_dsq = Peer::WantsDSQ::ALL;
+        } else {
+            peer->m_wants_dsq = Peer::WantsDSQ::INV;
+        }
         return;
     }
 
