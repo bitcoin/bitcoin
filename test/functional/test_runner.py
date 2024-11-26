@@ -51,23 +51,23 @@ except UnicodeDecodeError:
     CROSS = "x "
     CIRCLE = "o "
 
-if platform.system() != 'Windows' or sys.getwindowsversion() >= (10, 0, 14393): #type:ignore
-    if platform.system() == 'Windows':
-        import ctypes
-        kernel32 = ctypes.windll.kernel32  # type: ignore
-        ENABLE_VIRTUAL_TERMINAL_PROCESSING = 4
-        STD_OUTPUT_HANDLE = -11
-        STD_ERROR_HANDLE = -12
-        # Enable ascii color control to stdout
-        stdout = kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
-        stdout_mode = ctypes.c_int32()
-        kernel32.GetConsoleMode(stdout, ctypes.byref(stdout_mode))
-        kernel32.SetConsoleMode(stdout, stdout_mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
-        # Enable ascii color control to stderr
-        stderr = kernel32.GetStdHandle(STD_ERROR_HANDLE)
-        stderr_mode = ctypes.c_int32()
-        kernel32.GetConsoleMode(stderr, ctypes.byref(stderr_mode))
-        kernel32.SetConsoleMode(stderr, stderr_mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+if platform.system() == 'Windows':
+    import ctypes
+    kernel32 = ctypes.windll.kernel32  # type: ignore
+    ENABLE_VIRTUAL_TERMINAL_PROCESSING = 4
+    STD_OUTPUT_HANDLE = -11
+    STD_ERROR_HANDLE = -12
+    # Enable ascii color control to stdout
+    stdout = kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
+    stdout_mode = ctypes.c_int32()
+    kernel32.GetConsoleMode(stdout, ctypes.byref(stdout_mode))
+    kernel32.SetConsoleMode(stdout, stdout_mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+    # Enable ascii color control to stderr
+    stderr = kernel32.GetStdHandle(STD_ERROR_HANDLE)
+    stderr_mode = ctypes.c_int32()
+    kernel32.GetConsoleMode(stderr, ctypes.byref(stderr_mode))
+    kernel32.SetConsoleMode(stderr, stderr_mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+else:
     # primitive formatting on supported
     # terminal via ANSI escape sequences:
     DEFAULT = ('\033[0m', '\033[0m')
