@@ -24,14 +24,12 @@
 
 class CActiveMasternodeManager;
 class CChainState;
-class CConnman;
 class CBLSPublicKey;
 class CBlockIndex;
 class ChainstateManager;
 class CMasternodeSync;
 class CTxMemPool;
 class TxValidationState;
-class PeerManager;
 
 namespace llmq {
 class CChainLocksHandler;
@@ -220,8 +218,6 @@ public:
     bool Sign(const CActiveMasternodeManager& mn_activeman);
     /// Check if we have a valid Masternode address
     [[nodiscard]] bool CheckSignature(const CBLSPublicKey& blsPubKey) const;
-
-    bool Relay(CConnman& connman, PeerManager& peerman);
 
     /// Check if a queue is too old or too far into the future
     [[nodiscard]] bool IsTimeOutOfBounds(int64_t current_time = GetAdjustedTime()) const;

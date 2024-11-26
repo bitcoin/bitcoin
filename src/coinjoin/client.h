@@ -28,6 +28,7 @@ class CMasternodeSync;
 class CNode;
 class CoinJoinWalletManager;
 class CTxMemPool;
+class PeerManager;
 
 class UniValue;
 
