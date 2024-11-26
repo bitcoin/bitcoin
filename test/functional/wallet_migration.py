@@ -299,6 +299,40 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(ms1_solvable.getbalance(), 0)
         assert_equal(ms1_solvable.listtransactions(), [])
 
+    def test_multisig_invalid(self):
+        self.log.info("Test migration of a legacy-wise non-standard bare multisig")
+        wallet = self.create_legacy_wallet("multi_nonstandard")
+
+        # Create enough keys for all coming tests
+        addys = [wallet.getnewaddress()] * 20
+        pubkeys = []
+        privkeys = []
+        for addr in addys:
+            pubkeys.append(wallet.getaddressinfo(addr)['pubkey'])
+            privkeys.append(wallet.dumpprivkey(addr))
+
+        # Create a non-standard multi(4, keys)
+        res = wallet.createmultisig(4, pubkeys[:4])
+        # Import script as a bare multisig. This is standard-wise non-spendable, and it is not allowed descriptors' wise
+        wallet.importaddress(address=res['redeemScript'])
+
+        # Now migrate it and verify we don't crash due to a non-allowed descriptor migration
+        wallet.migratewallet()
+        wallet.unloadwallet()
+
+        ##############################################################
+        # Import a consensus-wise invalid p2sh multisig with 20 keys #
+        ##############################################################
+        self.log.info("Test importing an invalid p2sh multisig")
+        wallet = self.create_legacy_wallet("large_multi")
+        res = wallet.createmultisig(20, pubkeys, "bech32")
+        script_sh_pkh = script_to_p2sh_script(res['redeemScript'])
+        wallet.importaddress(address=res['redeemScript'])
+        wallet.importaddress(address=script_sh_pkh.hex())
+
+        # Now migrate it and verify we don't crash due to a non-allowed descriptor migration
+        wallet.migratewallet()
+        wallet.unloadwallet()
 
     def test_other_watchonly(self):
         default = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
@@ -1019,6 +1053,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         # TODO: Test the actual records in the wallet for these tests too. The behavior may be correct, but the data written may not be what we actually want
         self.test_basic()
         self.test_multisig()
+        self.test_multisig_invalid()
         self.test_other_watchonly()
         self.test_no_privkeys()
         self.test_pk_coinbases()
