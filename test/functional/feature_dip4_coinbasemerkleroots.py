@@ -253,17 +253,6 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
 
         return d
 
-    def activate_dip8(self, slow_mode=False):
-        # NOTE: set slow_mode=True if you are activating dip8 after a huge reorg
-        # or nodes might fail to catch up otherwise due to a large
-        # (MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16 blocks) reorg error.
-        self.log.info("Wait for dip0008 activation")
-        while self.nodes[0].getblockcount() < DIP0008_HEIGHT:
-            self.bump_mocktime(10)
-            self.generate(self.nodes[0], 10, sync_fun=self.no_op)
-            if slow_mode:
-                self.sync_blocks()
-        self.sync_blocks()
 
     def test_dip8_quorum_merkle_root_activation(self, with_initial_quorum, slow_mode=False):
         if with_initial_quorum:
@@ -279,7 +268,9 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]
         assert cbtx["cbTx"]["version"] == 1
 
-        self.activate_dip8(slow_mode)
+        self.activate_by_name('dip0008', expected_activation_height=DIP0008_HEIGHT)
+        self.log.info("Mine one more block with new rules of dip0008")
+        self.generate(self.nodes[0], 1)
 
         # Assert that merkleRootQuorums is present and 0 (we have no quorums yet)
         cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]

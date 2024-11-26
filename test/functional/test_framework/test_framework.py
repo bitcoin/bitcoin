@@ -1206,7 +1206,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.quorum_data_request_expiration_timeout = 360
 
 
-    def activate_by_name(self, name, expected_activation_height=None):
+    def activate_by_name(self, name, expected_activation_height=None, slow_mode=True):
         assert not softfork_active(self.nodes[0], name)
         self.log.info("Wait for " + name + " activation")
 
@@ -1217,7 +1217,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.wait_for_sporks_same()
 
         # mine blocks in batches
-        batch_size = 50
+        batch_size = 50 if not slow_mode else 10
         if expected_activation_height is not None:
             height = self.nodes[0].getblockcount()
             assert height < expected_activation_height
