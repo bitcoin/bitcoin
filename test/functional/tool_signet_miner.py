@@ -5,6 +5,7 @@
 """Test signet miner tool"""
 
 import os.path
+import shlex
 import subprocess
 import sys
 import time
@@ -54,10 +55,10 @@ class SignetMinerTest(BitcoinTestFramework):
         subprocess.run([
                 sys.executable,
                 signet_miner_path,
-                f'--cli={" ".join(rpc_argv)}',
+                f'--cli={shlex.join(rpc_argv)}',
                 'generate',
                 f'--address={node.getnewaddress()}',
-                f'--grind-cmd={" ".join(util_argv)}',
+                f'--grind-cmd={shlex.join(util_argv)}',
                 f'--nbits={DIFF_1_N_BITS:08x}',
                 f'--set-block-time={int(time.time())}',
                 '--poolnum=99',
