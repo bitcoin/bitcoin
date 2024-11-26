@@ -19,7 +19,7 @@ from test_framework.descriptors import descsum_create
 from test_framework.key import ECPubKey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import COIN, CTransaction, CTxOut
-from test_framework.script_util import key_to_p2pkh_script, script_to_p2sh_script, script_to_p2wsh_script
+from test_framework.script_util import key_to_p2pkh_script, key_to_p2pk_script, script_to_p2sh_script, script_to_p2wsh_script
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -27,6 +27,7 @@ from test_framework.util import (
 )
 from test_framework.wallet_util import (
     get_generate_key,
+    generate_keypair,
 )
 
 
@@ -1006,6 +1007,17 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         wallet.unloadwallet()
 
+    def test_migrate_simple_watch_only(self):
+        self.log.info("Test migrating a watch-only p2pk script")
+        wallet = self.create_legacy_wallet("bare_p2pk", blank=True)
+        _, pubkey = generate_keypair()
+        p2pk_script = key_to_p2pk_script(pubkey)
+        wallet.importaddress(address=p2pk_script.hex())
+        # Migrate wallet in the latest node
+        res, _ = self.migrate_and_get_rpc("bare_p2pk")
+        wo_wallet = self.master_node.get_wallet_rpc(res['watchonly_name'])
+        assert_equal(wo_wallet.listdescriptors()['descriptors'][0]['desc'], descsum_create(f'pk({pubkey.hex()})'))
+        wo_wallet.unloadwallet()
 
     def run_test(self):
         self.master_node = self.nodes[0]
@@ -1032,6 +1044,8 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_avoidreuse()
         self.test_preserve_tx_extra_info()
         self.test_blank()
+        self.test_migrate_simple_watch_only()
+
 
 if __name__ == '__main__':
     WalletMigrationTest(__file__).main()
