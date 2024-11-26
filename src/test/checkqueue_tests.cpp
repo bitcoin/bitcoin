@@ -360,6 +360,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
     auto queue = std::make_unique<Standard_Queue>(QUEUE_BATCH_SIZE, SCRIPT_CHECK_THREADS);
     {
         std::vector<std::thread> tg;
+        tg.reserve(3);
         std::atomic<int> nThreads {0};
         std::atomic<int> fails {0};
         for (size_t i = 0; i < 3; ++i) {

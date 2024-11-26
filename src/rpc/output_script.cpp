@@ -123,6 +123,7 @@ static RPCHelpMan createmultisig()
             // Get the public keys
             const UniValue& keys = request.params[1].get_array();
             std::vector<CPubKey> pubkeys;
+            pubkeys.reserve(keys.size());
             for (unsigned int i = 0; i < keys.size(); ++i) {
                 pubkeys.push_back(HexToPubKey(keys[i].get_str()));
             }
