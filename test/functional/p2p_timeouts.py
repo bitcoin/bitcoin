@@ -91,8 +91,8 @@ class TimeoutsTest(BitcoinTestFramework):
         else:
             expected_timeout_logs = [
                 "version handshake timeout, disconnecting peer=0",
-                "socket no message in first 3 seconds, 1 0, disconnecting peer=1",
-                "socket no message in first 3 seconds, 0 0, disconnecting peer=2",
+                "socket no message in first 3 seconds, never sent to peer, disconnecting peer=1",
+                "socket no message in first 3 seconds, never received from peer, never sent to peer, disconnecting peer=2",
             ]
 
         with self.nodes[0].assert_debug_log(expected_msgs=expected_timeout_logs):

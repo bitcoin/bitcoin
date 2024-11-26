@@ -1982,12 +1982,17 @@ bool CConnman::InactivityCheck(const CNode& node) const
 
     if (!ShouldRunInactivityChecks(node, now)) return false;
 
-    if (last_recv.count() == 0 || last_send.count() == 0) {
+    bool has_received{last_recv.count() != 0};
+    bool has_sent{last_send.count() != 0};
+
+    if (!has_received || !has_sent) {
+        std::string has_never;
+        if (!has_received) has_never += ", never received from peer";
+        if (!has_sent) has_never += ", never sent to peer";
         LogDebug(BCLog::NET,
-            "socket no message in first %i seconds, %d %d, %s\n",
+            "socket no message in first %i seconds%s, %s\n",
             count_seconds(m_peer_connect_timeout),
-            last_recv.count() != 0,
-            last_send.count() != 0,
+            has_never,
             node.DisconnectMsg(fLogIPs)
         );
         return true;
