@@ -147,6 +147,7 @@ template<typename B = uint8_t>
 {
     const size_t n_elements = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, max_vector_size);
     std::vector<std::string> r;
+    r.reserve(n_elements);
     for (size_t i = 0; i < n_elements; ++i) {
         r.push_back(fuzzed_data_provider.ConsumeRandomLengthString(max_string_length));
     }
@@ -158,6 +159,7 @@ template <typename T>
 {
     const size_t n_elements = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, max_vector_size);
     std::vector<T> r;
+    r.reserve(n_elements);
     for (size_t i = 0; i < n_elements; ++i) {
         r.push_back(fuzzed_data_provider.ConsumeIntegral<T>());
     }
