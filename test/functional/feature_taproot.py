@@ -81,6 +81,7 @@ from test_framework.script import (
     TaggedHash,
     TaprootSignatureMsg,
     is_op_success,
+    OP_SUCCESS_OVERRIDES,
     taproot_construct,
 )
 from test_framework.script_util import (
@@ -1143,6 +1144,8 @@ def spenders_taproot_active():
         opcode = CScriptOp(opval)
         if not is_op_success(opcode):
             continue
+        if opcode in OP_SUCCESS_OVERRIDES:
+            continue
         scripts = [
             ("bare_success", CScript([opcode])),
             ("bare_nop", CScript([OP_NOP])),
@@ -1173,6 +1176,9 @@ def spenders_taproot_active():
     for opval in range(0, 0x100):
         opcode = CScriptOp(opval)
         if is_op_success(opcode):
+            continue
+        if opcode in OP_SUCCESS_OVERRIDES:
+            # TODO: remove this once CHECKSIGFROMSTACK gets a regtest deployment.
             continue
         scripts = [
             ("normal", CScript([OP_RETURN, opcode] + [OP_NOP] * 75)),
