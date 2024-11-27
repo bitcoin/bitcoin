@@ -385,6 +385,7 @@ BASE_SCRIPTS = [
     'feature_help.py',
     'feature_framework_startup_failures.py',
     'feature_shutdown.py',
+    'feature_mine.py',
     'wallet_migration.py',
     'p2p_ibd_txrelay.py',
     'p2p_seednode.py',
