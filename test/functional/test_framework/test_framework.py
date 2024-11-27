@@ -287,6 +287,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             "bitcoin-util": "BITCOINUTIL",
             "bitcoin-tx": "BITCOINTX",
             "bitcoin-chainstate": "BITCOINCHAINSTATE",
+            "bitcoin-mine": "BITCOINMINE",
             "bitcoin-wallet": "BITCOINWALLET",
         }
         # Set paths to bitcoin core binaries allowing overrides with environment
