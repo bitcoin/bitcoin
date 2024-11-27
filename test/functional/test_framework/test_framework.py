@@ -290,6 +290,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         paths = types.SimpleNamespace()
         binaries = {
+            "bitcoin": "BITCOIN_BIN",
             "bitcoind": "BITCOIND",
             "bitcoin-cli": "BITCOINCLI",
             "bitcoin-util": "BITCOINUTIL",
@@ -297,6 +298,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             "bitcoin-chainstate": "BITCOINCHAINSTATE",
             "bitcoin-wallet": "BITCOINWALLET",
         }
+        # Set paths to bitcoin core binaries allowing overrides with environment
+        # variables.
         for binary, env_variable_name in binaries.items():
             default_filename = os.path.join(
                 self.config["environment"]["BUILDDIR"],
