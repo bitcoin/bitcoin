@@ -275,6 +275,7 @@ jobs:
         if: matrix.job-type == 'standard'
         working-directory: build
         env:
+          BITCOIN_BIN: '${{ github.workspace }}\build\bin\Release\bitcoin.exe'
           BITCOIND: '${{ github.workspace }}\build\bin\Release\bitcoind.exe'
           BITCOINCLI: '${{ github.workspace }}\build\bin\Release\bitcoin-cli.exe'
           BITCOINTX: '${{ github.workspace }}\build\bin\Release\bitcoin-tx.exe'
