@@ -130,8 +130,9 @@ public:
     std::vector<TxGraph::Ref*> GetAncestorRefs(const TxGraphImpl& graph, DepGraphIndex idx) noexcept;
     /** Get a vector of Refs for the descendants of a given Cluster element. */
     std::vector<TxGraph::Ref*> GetDescendantRefs(const TxGraphImpl& graph, DepGraphIndex idx) noexcept;
-    /** Get a vector of Refs for all elements of this Cluster, in linearization order. */
-    void GetClusterRefs(TxGraphImpl& graph, std::span<TxGraph::Ref*> range, LinearizationIndex start_pos) noexcept;
+    /** Get a vector of Refs for all elements of this Cluster, in linearization order. Returns
+     *  the range ends at the end of the cluster. */
+    bool GetClusterRefs(TxGraphImpl& graph, std::span<TxGraph::Ref*> range, LinearizationIndex start_pos) noexcept;
     /** Get the individual transaction feerate of a Cluster element. */
     FeePerWeight GetIndividualFeerate(DepGraphIndex idx) noexcept;
     /** Modify the fee of a Cluster element. */
@@ -470,8 +471,8 @@ class BlockBuilderImpl final : public TxGraph::BlockBuilder
     /** Vector for actual storage pointed to by TxGraph::BlockBuilder::m_current_chunk. */
     std::vector<TxGraph::Ref*> m_chunkdata;
     /** Which cluster the current chunk belongs to, so we can exclude further transaction from it
-     *  when that chunk is skipped. */
-    Cluster* m_remaining_cluster{nullptr};
+     *  when that chunk is skipped, or std::nullopt if we're at the end of the current cluster. */
+    std::optional<Cluster*> m_remaining_cluster{nullptr};
     /** Clusters which we're not including further transactions from. */
     std::set<Cluster*> m_excluded_clusters;
     /** Iterator to the next chunk (after the current one) in the chunk index. end() if nothing
@@ -1556,7 +1557,7 @@ std::vector<TxGraph::Ref*> Cluster::GetDescendantRefs(const TxGraphImpl& graph, 
     return ret;
 }
 
-void Cluster::GetClusterRefs(TxGraphImpl& graph, std::span<TxGraph::Ref*> range, LinearizationIndex start_pos) noexcept
+bool Cluster::GetClusterRefs(TxGraphImpl& graph, std::span<TxGraph::Ref*> range, LinearizationIndex start_pos) noexcept
 {
     // Translate the transactions in the Cluster (in linearization order, starting at start_pos in
     // the linearization) to Refs, and fill them in range.
@@ -1565,6 +1566,8 @@ void Cluster::GetClusterRefs(TxGraphImpl& graph, std::span<TxGraph::Ref*> range,
         Assume(entry.m_ref != nullptr);
         ref = entry.m_ref;
     }
+    // Return whether this was the end of the Cluster.
+    return start_pos == m_linearization.size();
 }
 
 FeePerWeight Cluster::GetIndividualFeerate(DepGraphIndex idx) noexcept
@@ -2118,8 +2121,12 @@ void BlockBuilderImpl::Next() noexcept
         // Populate m_current_chunk.
         m_chunkdata.resize(chunk_data.m_chunk_count);
         auto start_pos = chunk_end_entry.m_main_lin_index + 1 - chunk_data.m_chunk_count;
-        cluster->GetClusterRefs(*m_graph, m_chunkdata, start_pos);
-        m_remaining_cluster = cluster;
+        bool is_end = cluster->GetClusterRefs(*m_graph, m_chunkdata, start_pos);
+        if (is_end) {
+            m_remaining_cluster = std::nullopt;
+        } else {
+            m_remaining_cluster = cluster;
+        }
         m_current_chunk.emplace(m_chunkdata, chunk_end_entry.m_main_chunk_feerate);
         return;
     }
@@ -2161,7 +2168,9 @@ void BlockBuilderImpl::Skip() noexcept
 {
     // When skipping a chunk we need to not include anything more of the cluster, as that could make
     // the result topologically invalid.
-    m_excluded_clusters.insert(m_remaining_cluster);
+    if (m_remaining_cluster.has_value()) {
+        m_excluded_clusters.insert(*m_remaining_cluster);
+    }
     Next();
 }
 
