@@ -353,6 +353,7 @@ BASE_SCRIPTS = [
     'rpc_help.py',
     'p2p_handshake.py',
     'p2p_handshake.py --v2transport',
+    'interface_ipc_mining.py',
     'feature_dirsymlinks.py',
     'feature_help.py',
     'feature_framework_startup_failures.py',
