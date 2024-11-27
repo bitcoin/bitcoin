@@ -23,6 +23,7 @@
 #include <vector>
 
 static const std::string MNEHF_REQUESTID_PREFIX = "mnhf";
+static const std::string DB_SIGNALS = "mnhf";
 static const std::string DB_SIGNALS_v2 = "mnhf_s2";
 
 uint256 MNHFTxPayload::GetRequestId() const
@@ -333,6 +334,14 @@ std::optional<CMNHFManager::Signals> CMNHFManager::GetFromCache(const CBlockInde
         LOCK(cs_cache);
         mnhfCache.insert(blockHash, signals);
         return signals;
+    }
+    if (!DeploymentActiveAt(*pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_MN_RR)) {
+        // before mn_rr activation we are safe
+        if (m_evoDb.Read(std::make_pair(DB_SIGNALS, blockHash), signals)) {
+            LOCK(cs_cache);
+            mnhfCache.insert(blockHash, signals);
+            return signals;
+        }
     }
     return std::nullopt;
 }
