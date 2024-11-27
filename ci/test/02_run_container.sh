@@ -25,6 +25,29 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   fi
   echo "Creating $CI_IMAGE_NAME_TAG container to run in"
 
+  DOCKER_BUILD_CACHE_ARG=""
+  DOCKER_BUILD_CACHE_TEMPDIR=""
+  DOCKER_BUILD_CACHE_OLD_DIR=""
+  DOCKER_BUILD_CACHE_NEW_DIR=""
+  # If set, use an `docker build` cache directory on the CI host
+  # to cache docker image layers for the CI container image.
+  # This cache can be multiple GB in size. Prefixed with DANGER
+  # as setting it removes (old cache) files from the host.
+  if [ "$DANGER_DOCKER_BUILD_CACHE_HOST_DIR" ]; then
+    # Directory where the current cache for this run could be. If not existing
+    # or empty, "docker build" will warn, but treat it as cache-miss and continue.
+    DOCKER_BUILD_CACHE_OLD_DIR="${DANGER_DOCKER_BUILD_CACHE_HOST_DIR}/${CONTAINER_NAME}"
+    # Temporary directory for a newly created cache. We can't write the new
+    # cache into OLD_DIR directly, as old cache layers would not be removed.
+    # The NEW_DIR contents are moved to OLD_DIR after OLD_DIR has been cleared.
+    # This happens after `docker build`. If a task fails or is aborted, the
+    # DOCKER_BUILD_CACHE_TEMPDIR might be retained on the host. If the host isn't
+    # ephemeral, it has to take care of cleaning old TEMPDIR's up.
+    DOCKER_BUILD_CACHE_TEMPDIR="$(mktemp --directory ci-docker-build-cache-XXXXXXXXXX)"
+    DOCKER_BUILD_CACHE_NEW_DIR="${DOCKER_BUILD_CACHE_TEMPDIR}/${CONTAINER_NAME}"
+    DOCKER_BUILD_CACHE_ARG="--cache-from type=local,src=${DOCKER_BUILD_CACHE_OLD_DIR} --cache-to type=local,dest=${DOCKER_BUILD_CACHE_NEW_DIR},mode=max"
+  fi
+
   # shellcheck disable=SC2086
   DOCKER_BUILDKIT=1 docker build \
       --file "${BASE_READ_ONLY_DIR}/ci/test_imagefile" \
@@ -33,7 +56,17 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
       $MAYBE_CPUSET \
       --label="${CI_IMAGE_LABEL}" \
       --tag="${CONTAINER_NAME}" \
+      $DOCKER_BUILD_CACHE_ARG \
       "${BASE_READ_ONLY_DIR}"
+
+  if [ "$DANGER_DOCKER_BUILD_CACHE_HOST_DIR" ]; then
+    if [ -e "${DOCKER_BUILD_CACHE_NEW_DIR}/index.json" ]; then
+      echo "Removing the existing docker build cache in ${DOCKER_BUILD_CACHE_OLD_DIR}"
+      rm -rf "${DOCKER_BUILD_CACHE_OLD_DIR}"
+      echo "Moving the contents of ${DOCKER_BUILD_CACHE_NEW_DIR} to ${DOCKER_BUILD_CACHE_OLD_DIR}"
+      mv "${DOCKER_BUILD_CACHE_NEW_DIR}" "${DOCKER_BUILD_CACHE_OLD_DIR}"
+    fi
+  fi
 
   docker volume create "${CONTAINER_NAME}_ccache" || true
   docker volume create "${CONTAINER_NAME}_depends" || true
