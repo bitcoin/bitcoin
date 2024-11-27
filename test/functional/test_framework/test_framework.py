@@ -1016,6 +1016,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if not self.is_cli_compiled():
             raise SkipTest("bitcoin-cli has not been compiled.")
 
+    def skip_if_no_ipc(self):
+        """Skip the running test if ipc is not compiled."""
+        if not self.is_ipc_compiled():
+            raise SkipTest("ipc has not been compiled.")
+
     def skip_if_no_previous_releases(self):
         """Skip the running test if previous releases are not available."""
         if not self.has_previous_releases():
@@ -1074,6 +1079,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_usdt_compiled(self):
         """Checks whether the USDT tracepoints were compiled."""
         return self.config["components"].getboolean("ENABLE_USDT_TRACEPOINTS")
+
+    def is_ipc_compiled(self):
+        """Checks whether ipc was compiled."""
+        return self.config["components"].getboolean("ENABLE_IPC")
 
     def has_blockfile(self, node, filenum: str):
         return (node.blocks_path/ f"blk{filenum}.dat").is_file()
