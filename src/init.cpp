@@ -396,9 +396,9 @@ void Shutdown(NodeContext& node)
     if (node.validation_signals) {
         node.validation_signals->UnregisterAllValidationInterfaces();
     }
+    node.chainman.reset();
     node.mempool.reset();
     node.fee_estimator.reset();
-    node.chainman.reset();
     node.validation_signals.reset();
     node.scheduler.reset();
     node.ecc_context.reset();
@@ -1277,8 +1277,8 @@ static ChainstateLoadResult InitAndLoadChainstate(
 {
     // This function may be called twice, so any dirty state must be reset.
     node.notifications.reset(); // Drop state, such as a cached tip block
-    node.mempool.reset();
     node.chainman.reset(); // Drop state, such as an initialized m_block_tree_db
+    node.mempool.reset();
 
     const CChainParams& chainparams = Params();
 
