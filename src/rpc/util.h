@@ -514,4 +514,6 @@ private:
 void PushWarnings(const UniValue& warnings, UniValue& obj);
 void PushWarnings(const std::vector<bilingual_str>& warnings, UniValue& obj);
 
+std::vector<RPCResult> ScriptPubKeyDoc();
+
 #endif // BITCOIN_RPC_UTIL_H
