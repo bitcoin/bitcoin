@@ -23,7 +23,7 @@
 #include <vector>
 
 static const std::string MNEHF_REQUESTID_PREFIX = "mnhf";
-static const std::string DB_SIGNALS = "mnhf";
+static const std::string DB_SIGNALS = "mnhf_s";
 static const std::string DB_SIGNALS_v2 = "mnhf_s2";
 
 uint256 MNHFTxPayload::GetRequestId() const
