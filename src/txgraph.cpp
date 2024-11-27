@@ -255,7 +255,7 @@ private:
     {
         /** The Entry which is the last transaction of the chunk. */
         mutable GraphIndex m_graph_index;
-        /** How many transactions the chunk contains. */
+        /** How many transactions the chunk contains (-1 = singleton tail of cluster). */
         LinearizationIndex m_chunk_count;
 
         ChunkData(GraphIndex graph_index, LinearizationIndex chunk_count) noexcept :
@@ -664,6 +664,12 @@ void Cluster::Updated(TxGraphImpl& graph) noexcept
                 chunk.transactions.Reset(idx);
                 if (chunk.transactions.None()) {
                     // Last transaction in the chunk.
+                    if (chunk_count == 1 && chunk_idx + 1 == chunking.NumChunksLeft()) {
+                        // If this is the final chunk of the cluster, and it contains just a single
+                        // transaction (which will always be true for the very common singleton
+                        // clusters), store the special value -1 as chunk count.
+                        chunk_count = LinearizationIndex(-1);
+                    }
                     graph.CreateChunkData(graph_idx, chunk_count);
                     break;
                 }
@@ -2307,13 +2313,22 @@ void BlockBuilderImpl::Next() noexcept
         // If we previously skipped a chunk from this cluster we cannot include more from it.
         if (m_excluded_clusters.contains(cluster)) continue;
         // Populate m_current_chunk.
-        m_chunkdata.resize(chunk_data.m_chunk_count);
-        auto start_pos = chunk_end_entry.m_main_lin_index + 1 - chunk_data.m_chunk_count;
-        bool is_end = cluster->GetClusterRefs(*m_graph, m_chunkdata, start_pos);
-        if (is_end) {
+        if (chunk_data.m_chunk_count == LinearizationIndex(-1)) {
+            // Special case in case just a single transaction remains, avoiding the need to
+            // dispatch to and dereference Cluster.
+            m_chunkdata.resize(1);
+            Assume(chunk_end_entry.m_ref != nullptr);
+            m_chunkdata[0] = chunk_end_entry.m_ref;
             m_remaining_cluster = std::nullopt;
         } else {
-            m_remaining_cluster = cluster;
+           m_chunkdata.resize(chunk_data.m_chunk_count);
+           auto start_pos = chunk_end_entry.m_main_lin_index + 1 - chunk_data.m_chunk_count;
+           bool is_end = cluster->GetClusterRefs(*m_graph, m_chunkdata, start_pos);
+           if (is_end) {
+               m_remaining_cluster = std::nullopt;
+           } else {
+               m_remaining_cluster = cluster;
+           }
         }
         m_current_chunk.emplace(m_chunkdata, chunk_end_entry.m_main_chunk_feerate);
         return;
@@ -2376,10 +2391,17 @@ std::pair<std::vector<TxGraph::Ref*>, FeePerWeight> TxGraphImpl::GetWorstMainChu
         const auto& chunk_data = *m_chunkindex.rbegin();
         const auto& chunk_end_entry = m_entries[chunk_data.m_graph_index];
         Cluster* cluster = chunk_end_entry.m_locator[0].cluster;
-        ret.first.resize(chunk_data.m_chunk_count);
-        auto start_pos = chunk_end_entry.m_main_lin_index + 1 - chunk_data.m_chunk_count;
-        cluster->GetClusterRefs(*this, ret.first, start_pos);
-        std::reverse(ret.first.begin(), ret.first.end());
+        if (chunk_data.m_chunk_count == LinearizationIndex(-1) || chunk_data.m_chunk_count == 1)  {
+            // Special case for singletons.
+            ret.first.resize(1);
+            Assume(chunk_end_entry.m_ref != nullptr);
+            ret.first[0] = chunk_end_entry.m_ref;
+        } else {
+            ret.first.resize(chunk_data.m_chunk_count);
+            auto start_pos = chunk_end_entry.m_main_lin_index + 1 - chunk_data.m_chunk_count;
+            cluster->GetClusterRefs(*this, ret.first, start_pos);
+            std::reverse(ret.first.begin(), ret.first.end());
+        }
         ret.second = chunk_end_entry.m_main_chunk_feerate;
     }
     return ret;
