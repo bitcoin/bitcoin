@@ -6215,7 +6215,6 @@ ChainstateManager::~ChainstateManager()
     for (const auto& chainstate : m_chainstates) {
         if (chainstate->CanFlushToDisk()) {
             chainstate->ForceFlushStateToDisk();
-            chainstate->ResetCoinsViews();
         }
     }
 
