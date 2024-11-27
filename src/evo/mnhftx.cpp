@@ -75,7 +75,8 @@ CMNHFManager::Signals CMNHFManager::GetSignalsStage(const CBlockIndex* const pin
             if (deployment.bit != signal.first) continue;
             if (signal_time < deployment.nStartTime) {
                 // new deployment is using the same bit as the old one
-                LogPrintf("CMNHFManager::GetSignalsStage: mnhf signal bit=%d height:%d is expired at height=%d\n", signal.first, signal.second, height);
+                LogPrintf("CMNHFManager::GetSignalsStage: mnhf signal bit=%d height:%d is expired at height=%d\n",
+                          signal.first, signal.second, height);
                 expired = true;
             }
         }
