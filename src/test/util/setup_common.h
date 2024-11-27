@@ -114,6 +114,8 @@ struct ChainTestingSetup : public BasicTestingSetup {
 
     // Supplies a chainstate, if one is needed
     void LoadVerifyActivateChainstate();
+
+    CTxMemPool& ReplaceMempool();
 };
 
 /** Testing setup that configures a complete environment.

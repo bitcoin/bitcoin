@@ -329,6 +329,25 @@ void ChainTestingSetup::LoadVerifyActivateChainstate()
     }
 }
 
+CTxMemPool& ChainTestingSetup::ReplaceMempool()
+{
+    // Delete the previous mempool to ensure with valgrind that the old
+    // pointer is not accessed, when the new one should be accessed
+    // instead.
+    m_node.mempool.reset();
+    bilingual_str error;
+    auto opts = MemPoolOptionsForTest(m_node);
+    // The "block size > limit" test creates a cluster of 1192590 vbytes,
+    // so set the cluster vbytes limit big enough so that the txgraph
+    // doesn't become oversized.
+    opts.limits.cluster_size_vbytes = 1'200'000;
+    m_node.mempool = std::make_unique<CTxMemPool>(opts, error);
+    Assert(error.empty());
+    auto& dummy_chainstate{static_cast<DummyChainState&>(m_node.chainman->ActiveChainstate())};
+    dummy_chainstate.SetMempool(m_node.mempool.get());
+    return *m_node.mempool;
+}
+
 TestingSetup::TestingSetup(
     const ChainType chainType,
     TestOpts opts)
