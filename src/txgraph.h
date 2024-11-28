@@ -162,6 +162,11 @@ public:
      *  main clusters are counted. Refs that do not exist in the queried graph are ignored. Refs
      *  can not be null. The queried graph must not be oversized. */
     virtual GraphIndex CountDistinctClusters(std::span<const Ref* const>, bool main_only = false) noexcept = 0;
+    /** For both main and staging (which must both exist and not be oversized), return the combined
+     *  respective feerate diagrams, including chunks from all clusters, but excluding clusters
+     *  that appear identically in both. Use FeeFrac rather than FeePerWeight so CompareChunks is
+     *  usable without type-conversion. */
+    virtual std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> GetMainStagingDiagrams() noexcept = 0;
 
     /** Perform an internal consistency check on this object. */
     virtual void SanityCheck() const = 0;
