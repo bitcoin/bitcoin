@@ -226,7 +226,7 @@ namespace BCLog {
 BCLog::Logger& LogInstance();
 
 /** Return true if log accepts specified category, at the specified level. */
-static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level level)
+static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level level = BCLog::Level::Debug)
 {
     return LogInstance().WillLogCategoryLevel(category, level);
 }

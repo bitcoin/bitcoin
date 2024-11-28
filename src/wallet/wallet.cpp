@@ -3432,11 +3432,11 @@ std::vector<CompactTallyItem> CWallet::SelectCoinsGroupedByAddresses(bool fSkipD
     }
 
     // debug
-    if (LogAcceptCategory(BCLog::SELECTCOINS, BCLog::Level::Debug)) {
+    if (LogAcceptCategory(BCLog::SELECTCOINS)) {
         std::string strMessage = "SelectCoinsGroupedByAddresses - vecTallyRet:\n";
         for (const auto& item : vecTallyRet)
             strMessage += strprintf("  %s %f\n", EncodeDestination(item.txdest), float(item.nAmount)/COIN);
-        LogPrint(BCLog::SELECTCOINS, "%s", strMessage); /* Continued */
+        LogPrintf("%s", strMessage); /* Continued */
     }
 
     return vecTallyRet;
