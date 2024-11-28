@@ -375,6 +375,25 @@ void CMNHFManager::ConnectManagers(gsl::not_null<ChainstateManager*> chainman, g
     m_qman = qman;
 }
 
+bool CMNHFManager::ForceSignalDBUpdate()
+{
+    // force ehf signals db update
+    auto dbTx = m_evoDb.BeginTransaction();
+
+    const bool last_legacy = bls::bls_legacy_scheme.load();
+    bls::bls_legacy_scheme.store(false);
+    GetSignalsStage(m_chainman->ActiveChainstate().m_chain.Tip());
+    bls::bls_legacy_scheme.store(last_legacy);
+
+    dbTx->Commit();
+    // flush it to disk
+    if (!m_evoDb.CommitRootTransaction()) {
+        LogPrintf("CMNHFManager::%s -- failed to commit to evoDB\n", __func__);
+        return false;
+    }
+    return true;
+}
+
 std::string MNHFTx::ToString() const
 {
     return strprintf("MNHFTx(versionBit=%d, quorumHash=%s, sig=%s)",

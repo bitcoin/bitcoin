@@ -155,6 +155,8 @@ public:
      */
     void DisconnectManagers() { m_chainman = nullptr; m_qman = nullptr; };
 
+    bool ForceSignalDBUpdate();
+
 private:
     void AddToCache(const Signals& signals, const CBlockIndex* const pindex);
 
