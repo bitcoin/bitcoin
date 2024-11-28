@@ -31,7 +31,7 @@ section](#choosing-your-security-model) before proceeding to perform a build.
 
 In order to perform a build for macOS (which is included in the default set of
 platform triples to build), you'll need to extract the macOS SDK tarball using
-tools found in the [`macdeploy` directory](../macdeploy/README.md).
+tools found in the [`macdeploy` directory](../macdeploy/README.md#sdk-extraction).
 
 You can then either point to the SDK using the `SDK_PATH` environment variable:
 
