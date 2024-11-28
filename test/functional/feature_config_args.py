@@ -39,6 +39,29 @@ class ConfArgsTest(BitcoinTestFramework):
         self.nodes[0].debug_log_path.parent.mkdir()
         self.nodes[0].debug_log_path.touch()
 
+    def test_dir_config(self):
+        self.log.info('Error should be emitted if config file is a directory')
+        conf_path = self.nodes[0].datadir_path / 'bitcoin.conf'
+        os.rename(conf_path, conf_path.with_suffix('.confbkp'))
+        conf_path.mkdir()
+        self.stop_node(0)
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=['-regtest'],
+            expected_msg=f'Error: Error reading configuration file: Config file "{conf_path}" is a directory.',
+        )
+        conf_path.rmdir()
+        os.rename(conf_path.with_suffix('.confbkp'), conf_path)
+
+        self.log.debug('Verifying includeconf directive pointing to directory is caught')
+        with open(conf_path, 'a', encoding='utf-8') as conf:
+            conf.write(f'includeconf={self.nodes[0].datadir_path}\n')
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=['-regtest'],
+            expected_msg=f'Error: Error reading configuration file: Included config file "{self.nodes[0].datadir_path}" is a directory.',
+        )
+
+        self.nodes[0].replace_in_config([(f'includeconf={self.nodes[0].datadir_path}', '')])
+
     def test_negated_config(self):
         self.log.info('Disabling configuration via -noconf')
 
@@ -467,6 +490,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.test_networkactive()
         self.test_connect_with_seednode()
 
+        self.test_dir_config()
         self.test_negated_config()
         self.test_config_file_parser()
         self.test_config_file_log()
