@@ -143,6 +143,9 @@ public:
      *  from high to low chunk feerate). Both transactions must be in the main graph. The main
      *  graph must not be oversized. */
     virtual std::strong_ordering CompareMainOrder(const Ref& a, const Ref& b) noexcept = 0;
+    /** Get feerate diagrams (comparable using CompareChunks()) for both main and staging (which
+     *  must both exist and not be oversized), ignoring unmodified components in both. */
+    virtual std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> GetMainStagingDiagrams() noexcept = 0;
 
     /** Perform an internal consistency check on this object. */
     virtual void SanityCheck() const = 0;
