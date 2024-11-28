@@ -348,6 +348,12 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
                 }
             }
             if (!fRejectedParents) {
+                // Filter parents that we already have.
+                // Exclude m_lazy_recent_rejects_reconsiderable: the missing parent may have been
+                // previously rejected for being too low feerate. This orphan might CPFP it.
+                std::erase_if(unique_parents, [&](const auto& txid){
+                    return AlreadyHaveTx(GenTxid::Txid(txid), /*include_reconsiderable=*/false);
+                });
                 const auto current_time{GetTime<std::chrono::microseconds>()};
 
                 for (const uint256& parent_txid : unique_parents) {
@@ -357,11 +363,7 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
                     // Eventually we should replace this with an improved
                     // protocol for getting all unconfirmed parents.
                     const auto gtxid{GenTxid::Txid(parent_txid)};
-                    // Exclude m_lazy_recent_rejects_reconsiderable: the missing parent may have been
-                    // previously rejected for being too low feerate. This orphan might CPFP it.
-                    if (!AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) {
-                        AddTxAnnouncement(nodeid, gtxid, current_time, /*p2p_inv=*/false);
-                    }
+                    AddTxAnnouncement(nodeid, gtxid, current_time, /*p2p_inv=*/false);
                 }
 
                 // Potentially flip add_extra_compact_tx to false if AddTx returns false because the tx was already there
