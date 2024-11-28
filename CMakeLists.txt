@@ -172,6 +172,8 @@ option(BUILD_BENCH "Build bench_bitcoin executable." OFF)
 option(BUILD_FUZZ_BINARY "Build fuzz binary." OFF)
 option(BUILD_FOR_FUZZING "Build for fuzzing. Enabling this will disable all other targets and override BUILD_FUZZ_BINARY." OFF)
 
+option(BUILD_FOR_COVERAGE "Build with Code Coverage instrumentation" OFF)
+
 option(INSTALL_MAN "Install man pages." ON)
 
 set(APPEND_CPPFLAGS "" CACHE STRING "Preprocessor flags that are appended to the command line after all other flags added by the build system. This variable is intended for debugging and special builds.")
@@ -369,6 +371,29 @@ if(BUILD_FUZZ_BINARY)
       extern \"C\" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) { return 0; }
       // No main() function.
     " FUZZ_BINARY_LINKS_WITHOUT_MAIN_FUNCTION
+  )
+endif()
+
+# The coverage_interface library is intended to be used
+# only for code whose coverage report is of interest.
+add_library(coverage_interface INTERFACE)
+if(BUILD_FOR_COVERAGE)
+  if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    message(FATAL_ERROR "BUILD_FOR_COVERAGE can only be specified when compiling with Clang.")
+  endif()
+  if(NOT PROFILE_FILE_PATTERN)
+    if(NOT PROFILE_DATA_DIR)
+      file(TO_NATIVE_PATH "${PROJECT_BINARY_DIR}/profiles" PROFILE_DATA_DIR)
+    endif()
+    file(TO_NATIVE_PATH "${PROFILE_DATA_DIR}/%m.profraw" PROFILE_FILE_PATTERN)
+  endif()
+  target_compile_options(coverage_interface INTERFACE
+    -fprofile-instr-generate=${PROFILE_FILE_PATTERN}
+    -fcoverage-mapping
+  )
+  target_link_options(coverage_interface INTERFACE
+    -fprofile-instr-generate=${PROFILE_FILE_PATTERN}
+    -fcoverage-mapping
   )
 endif()
 
@@ -624,6 +649,7 @@ message("  test_bitcoin ........................ ${BUILD_TESTS}")
 message("  test_bitcoin-qt ..................... ${BUILD_GUI_TESTS}")
 message("  bench_bitcoin ....................... ${BUILD_BENCH}")
 message("  fuzz binary ......................... ${BUILD_FUZZ_BINARY}")
+message("  Code Coverage instrumentation ....... ${BUILD_FOR_COVERAGE}")
 message("")
 if(CMAKE_CROSSCOMPILING)
   set(cross_status "TRUE, for ${CMAKE_SYSTEM_NAME}, ${CMAKE_SYSTEM_PROCESSOR}")
