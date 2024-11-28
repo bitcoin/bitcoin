@@ -3439,7 +3439,7 @@ void PeerManagerImpl::PostProcessMessage(MessageProcessingResult&& result, NodeI
         WITH_LOCK(cs_main, RelayTransaction(tx));
     }
     if (result.m_inventory) {
-        RelayInv(result.m_inventory.value(), MIN_PEER_PROTO_VERSION);
+        RelayInv(result.m_inventory.value());
     }
 }
 
