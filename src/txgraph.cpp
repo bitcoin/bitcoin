@@ -119,6 +119,8 @@ public:
     void ApplyDependencies(TxGraphImpl& graph, std::span<std::pair<GraphIndex, GraphIndex>> to_apply) noexcept;
     /** Improve the linearization of this Cluster. */
     void Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept;
+    /** For every chunk in the cluster, append its FeeFrac to ret. */
+    void AppendChunkFeerates(std::vector<FeeFrac>& ret) const noexcept;
 
     // Functions that implement the Cluster-specific side of public TxGraph functions.
 
@@ -338,6 +340,8 @@ public:
     void ApplyDependencies() noexcept;
     /** Make a specified Cluster have quality ACCEPTABLE or OPTIMAL. */
     void MakeAcceptable(Cluster& cluster) noexcept;
+    /** Make all Clusters at the specified level have quality ACCEPTABLE or OPTIMAL. */
+    void MakeAllAcceptable(int level) noexcept;
 
     // Implementations for the public TxGraph interface.
 
@@ -361,6 +365,7 @@ public:
     GraphIndex GetTransactionCount(bool main_only = false) noexcept final;
     bool IsOversized(bool main_only = false) noexcept final;
     std::strong_ordering CompareMainOrder(const Ref& a, const Ref& b) noexcept final;
+    std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> GetMainStagingDiagrams() noexcept final;
 
     void SanityCheck() const final;
 };
@@ -558,6 +563,12 @@ void Cluster::LevelDown(TxGraphImpl& graph) noexcept
     auto cluster = graph.ExtractCluster(level, quality, m_setindex);
     graph.InsertCluster(level - 1, std::move(cluster), quality);
     Updated(graph);
+}
+
+void Cluster::AppendChunkFeerates(std::vector<FeeFrac>& ret) const noexcept
+{
+    auto chunk_feerates = ChunkLinearization(m_depgraph, m_linearization);
+    ret.insert(ret.end(), chunk_feerates.begin(), chunk_feerates.end());
 }
 
 bool Cluster::Split(TxGraphImpl& graph) noexcept
@@ -1261,6 +1272,15 @@ void TxGraphImpl::MakeAcceptable(Cluster& cluster) noexcept
     }
 }
 
+void TxGraphImpl::MakeAllAcceptable(int level) noexcept
+{
+    if (size_t(level) == m_clustersets.size() - 1) ApplyDependencies();
+    auto& queue = m_clustersets[level].m_clusters[int(QualityLevel::NEEDS_RELINEARIZE)];
+    while (!queue.empty()) {
+        MakeAcceptable(*queue.back().get());
+    }
+}
+
 Cluster::Cluster(TxGraphImpl& graph, const FeeFrac& feerate, GraphIndex graph_index) noexcept
 {
     // Create a new transaction in the DepGraph, and remember its position in m_mapping.
@@ -1647,6 +1667,28 @@ std::strong_ordering TxGraphImpl::CompareMainOrder(const Ref& a, const Ref& b) n
     if (locator_a.cluster != locator_b.cluster) return locator_a.cluster <=> locator_b.cluster;
     // As final tie-break, compare position within cluster linearization.
     return entry_a.m_main_lin_index <=> entry_b.m_main_lin_index;
+}
+
+std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> TxGraphImpl::GetMainStagingDiagrams() noexcept
+{
+    Assume(m_clustersets.size() >= 2);
+    ApplyDependencies();
+    MakeAllAcceptable(m_clustersets.size() - 2);
+    MakeAllAcceptable(m_clustersets.size() - 1);
+    auto main_clusters = GetConflicts();
+    std::vector<FeeFrac> main_feerates, staging_feerates;
+    for (Cluster* cluster : main_clusters) {
+        cluster->AppendChunkFeerates(main_feerates);
+    }
+    const auto& staging = m_clustersets.back();
+    for (int quality = 0; quality < int(QualityLevel::NONE); ++quality) {
+        for (const auto& cluster : staging.m_clusters[quality]) {
+            cluster->AppendChunkFeerates(staging_feerates);
+        }
+    }
+    std::sort(main_feerates.begin(), main_feerates.end(), [](auto& a, auto& b) { return FeeRateCompare(a, b) > 0; });
+    std::sort(staging_feerates.begin(), staging_feerates.end(), [](auto& a, auto& b) { return FeeRateCompare(a, b) > 0; });
+    return std::make_pair(std::move(main_feerates), std::move(staging_feerates));
 }
 
 void Cluster::SanityCheck(const TxGraphImpl& graph, int level) const
