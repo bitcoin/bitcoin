@@ -127,10 +127,11 @@ public:
      *  is aborted or committed. */
     virtual bool IsOversized(bool main_only = false) noexcept = 0;
     /** Get the feerate of the chunk which transaction arg is in the main graph. Returns the empty
-     *  FeeFrac if arg does not exist in the main graph. The main graph must not be oversized. */
+     *  FeePerWeight if arg does not exist in the main graph. The main graph must not be
+     *  oversized. */
     virtual FeePerWeight GetMainChunkFeerate(const Ref& arg) noexcept = 0;
-    /** Get the individual transaction feerate of transaction arg. Returns the empty FeeFrac if
-     *  arg does not exist in either main or staging. This is available even for oversized
+    /** Get the individual transaction feerate of transaction arg. Returns the empty FeePerWeight
+     *  if arg does not exist in either main or staging. This is available even for oversized
      *  graphs. */
     virtual FeePerWeight GetIndividualFeerate(const Ref& arg) noexcept = 0;
     /** Get pointers to all transactions in the connected component ("cluster") which arg is in.
@@ -166,6 +167,10 @@ public:
      *  main clusters are counted. Refs that do not exist in the graph are not counted. The
      *  queried graph must not be oversized. */
     virtual GraphIndex CountDistinctClusters(std::span<const Ref* const>, bool main_only = false) noexcept = 0;
+    /** Get feerate diagrams for both main and staging (which must both exist and not be
+     *  oversized), ignoring unmodified components in both. Use FeeFrac rather than FeePerWeight
+     *  so CompareChunks is usable without type-conversion. */
+    virtual std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> GetMainStagingDiagrams() noexcept = 0;
 
     /** Perform an internal consistency check on this object. */
     virtual void SanityCheck() const = 0;

@@ -141,6 +141,8 @@ public:
     void ApplyDependencies(TxGraphImpl& graph, std::span<std::pair<GraphIndex, GraphIndex>> to_apply) noexcept;
     /** Improve the linearization of this Cluster. */
     void Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept;
+    /** For every chunk in the cluster, append its FeeFrac to ret. */
+    void AppendChunkFeerates(std::vector<FeeFrac>& ret) const noexcept;
 
     // Functions that implement the Cluster-specific side of public TxGraph functions.
 
@@ -450,6 +452,7 @@ public:
     bool IsOversized(bool main_only = false) noexcept final;
     std::strong_ordering CompareMainOrder(const Ref& a, const Ref& b) noexcept final;
     GraphIndex CountDistinctClusters(std::span<const Ref* const> refs, bool main_only = false) noexcept final;
+    std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> GetMainStagingDiagrams() noexcept final;
 
     void SanityCheck() const final;
 };
@@ -649,6 +652,14 @@ void Cluster::LevelDown(TxGraphImpl& graph) noexcept
     auto cluster = graph.ExtractCluster(level, quality, m_setindex);
     graph.InsertCluster(level - 1, std::move(cluster), quality);
     Updated(graph);
+}
+
+void Cluster::AppendChunkFeerates(std::vector<FeeFrac>& ret) const noexcept
+{
+    auto chunk_feerates = ChunkLinearization(m_depgraph, m_linearization);
+    for (const auto& feerate : chunk_feerates) {
+        ret.push_back(feerate);
+    }
 }
 
 bool Cluster::Split(TxGraphImpl& graph) noexcept
@@ -1858,6 +1869,33 @@ TxGraph::GraphIndex TxGraphImpl::CountDistinctClusters(std::span<const Ref* cons
         last = cluster;
     }
     return ret;
+}
+
+std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> TxGraphImpl::GetMainStagingDiagrams() noexcept
+{
+    Assume(m_clustersets.size() >= 2);
+    MakeAllAcceptable(m_clustersets.size() - 2);
+    Assume(m_clustersets[m_clustersets.size() - 2].m_deps_to_add.empty());
+    MakeAllAcceptable(m_clustersets.size() - 1);
+    Assume(m_clustersets[m_clustersets.size() - 1].m_deps_to_add.empty());
+    // For all Clusters in main which conflict with Clusters in staging (i.e., all that are removed
+    // by, or replaced in, staging), gather their chunk feerates.
+    auto main_clusters = GetConflicts();
+    std::vector<FeeFrac> main_feerates, staging_feerates;
+    for (Cluster* cluster : main_clusters) {
+        cluster->AppendChunkFeerates(main_feerates);
+    }
+    // Do the same for the Clusters in staging themselves.
+    const auto& staging = m_clustersets.back();
+    for (int quality = 0; quality < int(QualityLevel::NONE); ++quality) {
+        for (const auto& cluster : staging.m_clusters[quality]) {
+            cluster->AppendChunkFeerates(staging_feerates);
+        }
+    }
+    // Sort both by decreasing feerate to obtain diagrams, and return them.
+    std::sort(main_feerates.begin(), main_feerates.end(), [](auto& a, auto& b) { return a >> b; });
+    std::sort(staging_feerates.begin(), staging_feerates.end(), [](auto& a, auto& b) { return a >> b; });
+    return std::make_pair(std::move(main_feerates), std::move(staging_feerates));
 }
 
 void Cluster::SanityCheck(const TxGraphImpl& graph, int level) const

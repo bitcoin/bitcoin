@@ -36,7 +36,7 @@ std::partial_ordering CompareChunks(Span<const FeeFrac> chunks0, Span<const FeeF
         // Let `P` be the next point on diagram unproc_side, and `A` and `B` the previous and next points
         // on the other diagram. We want to know if P lies above or below the line AB. To determine this, we
         // compute the slopes of line AB and of line AP, and compare them. These slopes are fee per size,
-        // and can thus be expressed as FeeFracs.
+        // and can thus be expressed as FeeRates.
         const FeeFrac& point_p = next_point(unproc_side);
         const FeeFrac& point_a = prev_point(!unproc_side);
 
