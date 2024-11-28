@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,7 +8,9 @@
 
 #include <chrono> // IWYU pragma: export
 #include <cstdint>
+#include <optional>
 #include <string>
+#include <string_view>
 
 using namespace std::chrono_literals;
 
@@ -105,6 +107,7 @@ T GetTime()
  */
 std::string FormatISO8601DateTime(int64_t nTime);
 std::string FormatISO8601Date(int64_t nTime);
+std::optional<int64_t> ParseISO8601DateTime(std::string_view str);
 
 /**
  * Convert milliseconds to a struct timeval for e.g. select.
