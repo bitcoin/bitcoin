@@ -11,6 +11,7 @@
 #include <util/feefrac.h>
 
 #include <algorithm>
+#include <iterator>
 #include <map>
 #include <memory>
 #include <set>
@@ -52,6 +53,9 @@ struct SimTxGraph
     std::optional<bool> oversized;
     /** The configured maximum number of transactions per cluster. */
     DepGraphIndex max_cluster_count;
+    /** Which transactions have been modified in the graph since creation, either directly or by
+     *  being in a cluster which includes modifications. Only relevant for the staging graph. */
+    SetType modified;
 
     /** Construct a new SimTxGraph with the specified maximum cluster count. */
     explicit SimTxGraph(DepGraphIndex max_cluster) : max_cluster_count(max_cluster) {}
@@ -80,8 +84,23 @@ struct SimTxGraph
         return *oversized;
     }
 
+    void MakeModified(DepGraphIndex index)
+    {
+        modified |= graph.GetConnectedComponent(graph.Positions(), index);
+    }
+
     /** Determine the number of (non-removed) transactions in the graph. */
     DepGraphIndex GetTransactionCount() const { return graph.TxCount(); }
+
+    /** Get the sum of all fees/sizes in the graph. */
+    FeePerWeight SumAll() const
+    {
+        FeePerWeight ret;
+        for (auto i : graph.Positions()) {
+            ret += graph.FeeRate(i);
+        }
+        return ret;
+    }
 
     /** Get the position where ref occurs in this simulated graph, or -1 if it does not. */
     Pos Find(const TxGraph::Ref* ref) const
@@ -104,6 +123,7 @@ struct SimTxGraph
     {
         assert(graph.TxCount() < MAX_TRANSACTIONS);
         auto simpos = graph.AddTransaction(feerate);
+        MakeModified(simpos);
         assert(graph.Positions()[simpos]);
         simmap[simpos] = std::make_shared<TxGraph::Ref>();
         auto ptr = simmap[simpos].get();
@@ -119,6 +139,7 @@ struct SimTxGraph
         auto chl_pos = Find(child);
         if (chl_pos == MISSING) return;
         graph.AddDependencies(SetType::Singleton(par_pos), chl_pos);
+        MakeModified(par_pos);
         // This may invalidate our cached oversized value.
         if (oversized.has_value() && !*oversized) oversized = std::nullopt;
     }
@@ -128,6 +149,7 @@ struct SimTxGraph
     {
         auto pos = Find(ref);
         if (pos == MISSING) return;
+        // No need to invoke MakeModified, because this equally affects main and staging.
         graph.FeeRate(pos).fee = fee;
     }
 
@@ -136,6 +158,7 @@ struct SimTxGraph
     {
         auto pos = Find(ref);
         if (pos == MISSING) return;
+        MakeModified(pos);
         graph.RemoveTransactions(SetType::Singleton(pos));
         simrevmap.erase(simmap[pos].get());
         // Retain the TxGraph::Ref corresponding to this position, so the Ref destruction isn't
@@ -160,6 +183,7 @@ struct SimTxGraph
             auto remove = std::partition(removed.begin(), removed.end(), [&](auto& arg) { return arg.get() != ref; });
             removed.erase(remove, removed.end());
         } else {
+            MakeModified(pos);
             graph.RemoveTransactions(SetType::Singleton(pos));
             simrevmap.erase(simmap[pos].get());
             simmap[pos].reset();
@@ -280,6 +304,39 @@ FUZZ_TARGET(txgraph)
         // Return empty.
         assert(choice == 0);
         return &empty_ref;
+    };
+
+    /** Function to construct the correct fee-size diagram a real graph has based on its graph
+     *  order (as reported by GetCluster(), so it works for both main and staging). */
+    auto get_diagram_fn = [&](bool main_only) -> std::vector<FeeFrac> {
+        int level = main_only ? 0 : sims.size() - 1;
+        auto& sim = sims[level];
+        // For every transaction in the graph, request its cluster, and throw them into a set.
+        std::set<std::vector<TxGraph::Ref*>> clusters;
+        for (auto i : sim.graph.Positions()) {
+            auto ref = sim.GetRef(i);
+            clusters.insert(real->GetCluster(*ref, main_only));
+        }
+        // Compute the chunkings of each (deduplicated) cluster.
+        size_t num_tx{0};
+        std::vector<FeeFrac> chunk_feerates;
+        for (const auto& cluster : clusters) {
+            num_tx += cluster.size();
+            std::vector<SimTxGraph::Pos> linearization;
+            linearization.reserve(cluster.size());
+            for (auto refptr : cluster) linearization.push_back(sim.Find(refptr));
+            for (const FeeFrac& chunk_feerate : ChunkLinearization(sim.graph, linearization)) {
+                chunk_feerates.push_back(chunk_feerate);
+            }
+        }
+        // Verify the number of transactions after deduplicating clusters. This implicitly verifies
+        // that GetCluster on each element of a cluster reports the cluster transactions in the same
+        // order.
+        assert(num_tx == sim.GetTransactionCount());
+        // Sort by feerate only, since violating topological constraints within same-feerate
+        // chunks won't affect diagram comparisons.
+        std::sort(chunk_feerates.begin(), chunk_feerates.end(), std::greater{});
+        return chunk_feerates;
     };
 
     LIMITED_WHILE(provider.remaining_bytes() > 0, 200) {
@@ -444,6 +501,7 @@ FUZZ_TARGET(txgraph)
                     // Just do some quick checks that the reported value is in range. A full
                     // recomputation of expected chunk feerates is done at the end.
                     assert(feerate.size >= main_sim.graph.FeeRate(simpos).size);
+                    assert(feerate.size <= main_sim.SumAll().size);
                 }
                 break;
             } else if (!sel_sim.IsOversized() && command-- == 0) {
@@ -517,6 +575,7 @@ FUZZ_TARGET(txgraph)
             } else if (sims.size() < 2 && command-- == 0) {
                 // StartStaging.
                 sims.emplace_back(sims.back());
+                sims.back().modified = SimTxGraph::SetType{};
                 real->StartStaging();
                 break;
             } else if (sims.size() > 1 && command-- == 0) {
@@ -586,6 +645,25 @@ FUZZ_TARGET(txgraph)
                 // DoWork.
                 real->DoWork();
                 break;
+            } else if (sims.size() == 2 && !sims[0].IsOversized() && !sims[1].IsOversized() && command-- == 0) {
+                // GetMainStagingDiagrams()
+                auto [real_main_diagram, real_staged_diagram] = real->GetMainStagingDiagrams();
+                auto real_sum_main = std::accumulate(real_main_diagram.begin(), real_main_diagram.end(), FeeFrac{});
+                auto real_sum_staged = std::accumulate(real_staged_diagram.begin(), real_staged_diagram.end(), FeeFrac{});
+                auto real_gain = real_sum_staged - real_sum_main;
+                auto sim_gain = sims[1].SumAll() - sims[0].SumAll();
+                // Just check that the total fee gained/lost and size gained/lost according to the
+                // diagram matches the difference in these values in the simulated graph. A more
+                // complete check of the GetMainStagingDiagrams result is performed at the end.
+                assert(sim_gain == real_gain);
+                // Check that the feerates in each diagram are monotonically decreasing.
+                for (size_t i = 1; i < real_main_diagram.size(); ++i) {
+                    assert(FeeRateCompare(real_main_diagram[i], real_main_diagram[i - 1]) <= 0);
+                }
+                for (size_t i = 1; i < real_staged_diagram.size(); ++i) {
+                    assert(FeeRateCompare(real_staged_diagram[i], real_staged_diagram[i - 1]) <= 0);
+                }
+                break;
             }
         }
     }
@@ -638,6 +716,62 @@ FUZZ_TARGET(txgraph)
                 auto after_feerate = real->GetMainChunkFeerate(*sims[0].GetRef(vec1[after]));
                 assert(FeeRateCompare(after_feerate, pos_feerate) <= 0);
             }
+        }
+
+        // Check that the implied ordering gives rise to a combined diagram that matches the
+        // diagram constructed from the individual cluster linearization chunkings.
+        auto main_real_diagram = get_diagram_fn(/*main_only=*/true);
+        auto main_implied_diagram = ChunkLinearization(sims[0].graph, vec1);
+        assert(CompareChunks(main_real_diagram, main_implied_diagram) == 0);
+
+        if (sims.size() >= 2 && !sims[1].IsOversized()) {
+            // When the staging graph is not oversized as well, call GetMainStagingDiagrams, and
+            // fully verify the result.
+            auto [main_cmp_diagram, stage_cmp_diagram] = real->GetMainStagingDiagrams();
+            // Check that the feerates in each diagram are monotonically decreasing.
+            for (size_t i = 1; i < main_cmp_diagram.size(); ++i) {
+                assert(FeeRateCompare(main_cmp_diagram[i], main_cmp_diagram[i - 1]) <= 0);
+            }
+            for (size_t i = 1; i < stage_cmp_diagram.size(); ++i) {
+                assert(FeeRateCompare(stage_cmp_diagram[i], stage_cmp_diagram[i - 1]) <= 0);
+            }
+            // Treat the diagrams as sets of chunk feerates, and sort them in the same way so that
+            // std::set_difference can be used on them below. The exact ordering does not matter
+            // here, but it has to be consistent with the one used in main_real_diagram and
+            // stage_real_diagram).
+            std::sort(main_cmp_diagram.begin(), main_cmp_diagram.end(), std::greater{});
+            std::sort(stage_cmp_diagram.begin(), stage_cmp_diagram.end(), std::greater{});
+            // Find the chunks that appear in main_diagram but are missing from main_cmp_diagram.
+            // This is allowed, because GetMainStagingDiagrams omits clusters in main unaffected
+            // by staging.
+            std::vector<FeeFrac> missing_main_cmp;
+            std::set_difference(main_real_diagram.begin(), main_real_diagram.end(),
+                                main_cmp_diagram.begin(), main_cmp_diagram.end(),
+                                std::inserter(missing_main_cmp, missing_main_cmp.end()),
+                                std::greater{});
+            assert(main_cmp_diagram.size() + missing_main_cmp.size() == main_real_diagram.size());
+            // Do the same for chunks in stage_diagram missing from stage_cmp_diagram.
+            auto stage_real_diagram = get_diagram_fn(/*main_only=*/false);
+            std::vector<FeeFrac> missing_stage_cmp;
+            std::set_difference(stage_real_diagram.begin(), stage_real_diagram.end(),
+                                stage_cmp_diagram.begin(), stage_cmp_diagram.end(),
+                                std::inserter(missing_stage_cmp, missing_stage_cmp.end()),
+                                std::greater{});
+            assert(stage_cmp_diagram.size() + missing_stage_cmp.size() == stage_real_diagram.size());
+            // The missing chunks must be equal across main & staging (otherwise they couldn't have
+            // been omitted).
+            assert(missing_main_cmp == missing_stage_cmp);
+
+            // The missing part must include at least all transactions in staging which have not been
+            // modified, or been in a cluster together with modified transactions, since they were
+            // copied from main. Note that due to the reordering of removals w.r.t. dependency
+            // additions, it is possible that the real implementation found more unaffected things.
+            FeeFrac missing_real;
+            for (const auto& feerate : missing_main_cmp) missing_real += feerate;
+            FeeFrac missing_expected = sims[1].graph.FeeRate(sims[1].graph.Positions() - sims[1].modified);
+            // Note that missing_real.fee < missing_expected.fee is possible to due the presence of
+            // negative-fee transactions.
+            assert(missing_real.size >= missing_expected.size);
         }
     }
 
