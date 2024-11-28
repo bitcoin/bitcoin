@@ -14,7 +14,6 @@ target_sources(test_bitcoin
     init_tests.cpp
     ismine_tests.cpp
     psbt_wallet_tests.cpp
-    rpc_util_tests.cpp
     scriptpubkeyman_tests.cpp
     spend_tests.cpp
     wallet_crypto_tests.cpp

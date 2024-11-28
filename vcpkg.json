@@ -3,7 +3,6 @@
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "builtin-baseline": "c82f74667287d3dc386bce81e44964370c91a289",
   "dependencies": [
-    "boost-date-time",
     "boost-multi-index",
     "boost-signals2",
     "libevent"
