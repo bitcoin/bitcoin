@@ -176,11 +176,6 @@ public:
     /** Marks a tx as ReceivedResponse in txrequest. */
     void ReceivedNotFound(NodeId nodeid, const std::vector<uint256>& txhashes);
 
-    /** Look for a child of this transaction in the orphanage to form a 1-parent-1-child package,
-     * skipping any combinations that have already been tried. Return the resulting package along with
-     * the senders of its respective transactions, or std::nullopt if no package is found. */
-    std::optional<PackageToValidate> Find1P1CPackage(const CTransactionRef& ptx, NodeId nodeid);
-
     void MempoolAcceptedTx(const CTransactionRef& tx);
     RejectedTxTodo MempoolRejectedTx(const CTransactionRef& ptx, const TxValidationState& state, NodeId nodeid, bool first_time_failure);
     void MempoolRejectedPackage(const Package& package);
@@ -200,6 +195,11 @@ protected:
      * std::nullopt if this peer cannot be added because it has reached download/orphanage limits.
      * */
     std::optional<std::chrono::seconds> OrphanResolutionCandidate(NodeId nodeid, const Wtxid& orphan_wtxid);
+
+    /** Look for a child of this transaction in the orphanage to form a 1-parent-1-child package,
+     * skipping any combinations that have already been tried. Return the resulting package along with
+     * the senders of its respective transactions, or std::nullopt if no package is found. */
+    std::optional<PackageToValidate> Find1P1CPackage(const CTransactionRef& ptx, NodeId nodeid);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_IMPL_H
