@@ -428,6 +428,20 @@ if(BUILD_FOR_COVERAGE)
       DEPENDS ${PROJECT_BINARY_DIR}/total.coverage/index.html
     )
     add_dependencies(total_coverage test_bitcoin_coverage)
+  else()
+    if(NOT FUZZ_CORPORA_DIR)
+      set(FUZZ_CORPORA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/qa-assets/fuzz_corpora)
+    endif()
+    add_custom_command(
+      OUTPUT ${PROJECT_BINARY_DIR}/fuzz.coverage/index.html
+      COMMAND Python3::Interpreter test/fuzz/test_runner.py ${FUZZ_CORPORA_DIR} --loglevel DEBUG
+      COMMAND llvm-profdata merge --instr ${PROFILE_DATA_DIR}/*.profraw --output ${PROFILE_DATA_DIR}/fuzz.profdata
+      COMMAND llvm-cov show -instr-profile=${PROFILE_DATA_DIR}/fuzz.profdata -object=$<TARGET_FILE:fuzz> -output-dir=${PROJECT_BINARY_DIR}/fuzz.coverage -format=html ${coverage_ignore_paths}
+      DEPENDS fuzz
+    )
+    add_custom_target(fuzz_coverage
+      DEPENDS ${PROJECT_BINARY_DIR}/fuzz.coverage/index.html
+    )
   endif()
 endif()
 
