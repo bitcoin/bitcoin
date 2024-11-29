@@ -395,6 +395,28 @@ if(BUILD_FOR_COVERAGE)
     -fprofile-instr-generate=${PROFILE_FILE_PATTERN}
     -fcoverage-mapping
   )
+
+  set(coverage_ignore_paths
+    src/leveldb/
+    src/crc32c/
+    src/crypto/ctaes/
+    src/minisketch/
+    src/secp256k1/
+  )
+  list(TRANSFORM coverage_ignore_paths PREPEND "-ignore-filename-regex=")
+
+  if(NOT BUILD_FOR_FUZZING)
+    add_custom_command(
+      OUTPUT ${PROJECT_BINARY_DIR}/test_bitcoin.coverage/index.html
+      COMMAND ${CMAKE_CTEST_COMMAND} --test-dir ${PROJECT_BINARY_DIR} --exclude-regex secp256k1_
+      COMMAND llvm-profdata merge --instr ${PROFILE_DATA_DIR}/*.profraw --output ${PROFILE_DATA_DIR}/test_bitcoin.profdata
+      COMMAND llvm-cov show -instr-profile=${PROFILE_DATA_DIR}/test_bitcoin.profdata -object=$<TARGET_FILE:test_bitcoin> -object=$<TARGET_FILE:bitcoin-util> -object=$<TARGET_FILE:bitcoin-tx> -output-dir=${PROJECT_BINARY_DIR}/test_bitcoin.coverage -format=html ${coverage_ignore_paths}
+      DEPENDS test_bitcoin bitcoin-util bitcoin-tx unitester object
+    )
+    add_custom_target(test_bitcoin_coverage
+      DEPENDS ${PROJECT_BINARY_DIR}/test_bitcoin.coverage/index.html
+    )
+  endif()
 endif()
 
 include(AddBoostIfNeeded)
