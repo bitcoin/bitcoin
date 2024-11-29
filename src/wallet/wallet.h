@@ -152,7 +152,7 @@ extern const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS;
 // evaluating arguments when logging for the category is not enabled.
 #define WalletCJLogPrint(wallet, ...)               \
     do {                                            \
-        if (LogAcceptCategory(BCLog::COINJOIN)) {   \
+        if (LogAcceptDebug(BCLog::COINJOIN)) {      \
             wallet->WalletLogPrintf(__VA_ARGS__);   \
         }                                           \
     } while (0)

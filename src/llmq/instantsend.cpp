@@ -639,7 +639,7 @@ void CInstantSendManager::HandleNewInputLockRecoveredSig(const CRecoveredSig& re
         return;
     }
 
-    if (LogAcceptCategory(BCLog::INSTANTSEND)) {
+    if (LogAcceptDebug(BCLog::INSTANTSEND)) {
         for (const auto& in : tx->vin) {
             auto id = ::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, in.prevout));
             if (id == recoveredSig.getId()) {
@@ -1469,7 +1469,7 @@ void CInstantSendManager::ProcessPendingRetryLockTxs()
 
         // CheckCanLock is already called by ProcessTx, so we should avoid calling it twice. But we also shouldn't spam
         // the logs when retrying TXs that are not ready yet.
-        if (LogAcceptCategory(BCLog::INSTANTSEND)) {
+        if (LogAcceptDebug(BCLog::INSTANTSEND)) {
             if (!CheckCanLock(*tx, false, Params().GetConsensus())) {
                 continue;
             }

@@ -82,7 +82,7 @@ bool CFinalCommitment::Verify(CDeterministicMNManager& dmnman, gsl::not_null<con
         return false;
     }
     auto members = utils::GetAllQuorumMembers(llmqType, dmnman, pQuorumBaseBlockIndex);
-    if (LogAcceptCategory(BCLog::LLMQ)) {
+    if (LogAcceptDebug(BCLog::LLMQ)) {
         std::stringstream ss;
         std::stringstream ss2;
         for (const auto i: irange::range(llmq_params.size)) {
@@ -106,7 +106,7 @@ bool CFinalCommitment::Verify(CDeterministicMNManager& dmnman, gsl::not_null<con
     // sigs are only checked when the block is processed
     if (checkSigs) {
         uint256 commitmentHash = BuildCommitmentHash(llmq_params.type, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
-        if (LogAcceptCategory(BCLog::LLMQ)) {
+        if (LogAcceptDebug(BCLog::LLMQ)) {
             std::stringstream ss3;
             for (const auto &mn: members) {
                 ss3 << mn->proTxHash.ToString().substr(0, 4) << " | ";
@@ -181,7 +181,7 @@ bool CheckLLMQCommitment(CDeterministicMNManager& dmnman, const ChainstateManage
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-qc-commitment-type");
     }
 
-    if (LogAcceptCategory(BCLog::LLMQ)) {
+    if (LogAcceptDebug(BCLog::LLMQ)) {
         std::stringstream ss;
         for (const auto i: irange::range(llmq_params_opt->size)) {
             ss << "v[" << i << "]=" << qcTx.commitment.validMembers[i];
