@@ -416,6 +416,18 @@ if(BUILD_FOR_COVERAGE)
     add_custom_target(test_bitcoin_coverage
       DEPENDS ${PROJECT_BINARY_DIR}/test_bitcoin.coverage/index.html
     )
+
+    add_custom_command(
+      OUTPUT ${PROJECT_BINARY_DIR}/total.coverage/index.html
+      COMMAND Python3::Interpreter ${PROJECT_BINARY_DIR}/test/functional/test_runner.py
+      COMMAND llvm-profdata merge --instr ${PROFILE_DATA_DIR}/*.profraw --output ${PROFILE_DATA_DIR}/total.profdata
+      COMMAND llvm-cov show -instr-profile=${PROFILE_DATA_DIR}/total.profdata -object=$<TARGET_FILE:bitcoind> -object=$<TARGET_FILE:bitcoin-cli> -object=$<TARGET_FILE:bitcoin-wallet> -object=$<TARGET_FILE:test_bitcoin> -object=$<TARGET_FILE:bitcoin-util> -object=$<TARGET_FILE:bitcoin-tx> -output-dir=${PROJECT_BINARY_DIR}/total.coverage -format=html ${coverage_ignore_paths}
+      DEPENDS bitcoind bitcoin-cli bitcoin-wallet
+    )
+    add_custom_target(total_coverage
+      DEPENDS ${PROJECT_BINARY_DIR}/total.coverage/index.html
+    )
+    add_dependencies(total_coverage test_bitcoin_coverage)
   endif()
 endif()
 
