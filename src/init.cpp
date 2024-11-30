@@ -1017,6 +1017,13 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         }
     }
 
+    if (args.IsArgSet("-blockmaxweight")) {
+        const auto customMaxBlockWeight = args.GetIntArg("-blockmaxweight", MAX_BLOCK_WEIGHT);
+        if (customMaxBlockWeight > MAX_BLOCK_WEIGHT) {
+            return InitError(strprintf(_("Specified -blockmaxweight (%d) exceeds consensus maximum block weight (%d)"), customMaxBlockWeight, MAX_BLOCK_WEIGHT));
+        }
+    }
+
     nBytesPerSigOp = args.GetIntArg("-bytespersigop", nBytesPerSigOp);
 
     if (!g_wallet_init_interface.ParameterInteraction()) return false;
