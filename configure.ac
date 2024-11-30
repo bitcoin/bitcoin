@@ -293,6 +293,11 @@ AC_ARG_ENABLE([external-signer],
     [use_external_signer=$enableval],
     [use_external_signer=yes])
 
+AC_ARG_ENABLE([tor-subprocess],
+    [AS_HELP_STRING([--disable-tor-subprocess],[compile support for executing a dedicated Tor node (default is yes)])],
+    [use_tor_subprocess=$enableval],
+    [use_tor_subprocess=yes])
+
 AC_LANG_PUSH([C++])
 
 dnl Always set -g -O2 in our CXXFLAGS. Autoconf will try and set CXXFLAGS to "-g -O2" by default,
@@ -1102,6 +1107,7 @@ if test "$enable_fuzz" = "yes"; then
   bitcoin_enable_qt_dbus=no
   use_bench=no
   use_tests=no
+  use_tor_subprocess=no
   use_external_signer=no
   use_upnp=no
   use_natpmp=no
@@ -1283,6 +1289,11 @@ if test "$use_external_signer" = "yes"; then
   AC_DEFINE([ENABLE_EXTERNAL_SIGNER], [1], [Define if external signer support is enabled])
 fi
 AM_CONDITIONAL([ENABLE_EXTERNAL_SIGNER], [test "$use_external_signer" = "yes"])
+
+if test "$use_tor_subprocess" = "yes"; then
+  AC_DEFINE([ENABLE_TOR_SUBPROCESS], [1], [Define if Tor subprocess support is enabled])
+fi
+AM_CONDITIONAL([ENABLE_TOR_SUBPROCESS], [test "$use_tor_subprocess" = "yes"])
 
 dnl Check for reduced exports
 if test "$use_reduce_exports" = "yes"; then
@@ -1654,6 +1665,7 @@ AC_SUBST(LIBTOOL_APP_LDFLAGS)
 AC_SUBST(USE_SQLITE)
 AC_SUBST(USE_BDB)
 AC_SUBST(ENABLE_EXTERNAL_SIGNER)
+AC_SUBST(ENABLE_TOR_SUBPROCESS)
 AC_SUBST(USE_UPNP)
 AC_SUBST(USE_QRCODE)
 AC_SUBST(TESTDEFS)
@@ -1720,6 +1732,7 @@ esac
 echo
 echo "Options used to compile and link:"
 echo "  external signer = $use_external_signer"
+echo "  tor subprocess  = $use_tor_subprocess"
 echo "  multiprocess    = $build_multiprocess"
 echo "  with wallet     = $enable_wallet"
 if test "$enable_wallet" != "no"; then
