@@ -22,6 +22,7 @@ from test_framework.messages import (
     CBlock,
     CBlockHeader,
     COIN,
+    DEFAULT_COINBASE_TX_WEIGHT,
     ser_uint256,
 )
 from test_framework.p2p import P2PDataStore
@@ -73,7 +74,7 @@ class MiningTest(BitcoinTestFramework):
         mining_info = self.nodes[0].getmininginfo()
         assert_equal(mining_info['blocks'], 200)
         assert_equal(mining_info['currentblocktx'], 0)
-        assert_equal(mining_info['currentblockweight'], 4000)
+        assert_equal(mining_info['currentblockweight'], DEFAULT_COINBASE_TX_WEIGHT)
 
         self.log.info('test blockversion')
         self.restart_node(0, extra_args=[f'-mocktime={t}', '-blockversion=1337'])
