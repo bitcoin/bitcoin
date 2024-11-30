@@ -24,15 +24,13 @@
 namespace llmq
 {
 
-CDKGSessionHandler::CDKGSessionHandler(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman,
-                                       CDeterministicMNManager& dmnman, CDKGDebugManager& _dkgDebugManager,
-                                       CDKGSessionManager& _dkgManager, CMasternodeMetaMan& mn_metaman,
-                                       CQuorumBlockProcessor& _quorumBlockProcessor,
+CDKGSessionHandler::CDKGSessionHandler(CBLSWorker& _blsWorker, CChainState& chainstate, CDeterministicMNManager& dmnman,
+                                       CDKGDebugManager& _dkgDebugManager, CDKGSessionManager& _dkgManager,
+                                       CMasternodeMetaMan& mn_metaman, CQuorumBlockProcessor& _quorumBlockProcessor,
                                        const CActiveMasternodeManager* const mn_activeman, const CSporkManager& sporkman,
                                        const Consensus::LLMQParams& _params, int _quorumIndex) :
     blsWorker(_blsWorker),
     m_chainstate(chainstate),
-    connman(_connman),
     m_dmnman(dmnman),
     dkgDebugManager(_dkgDebugManager),
     dkgManager(_dkgManager),
@@ -42,8 +40,8 @@ CDKGSessionHandler::CDKGSessionHandler(CBLSWorker& _blsWorker, CChainState& chai
     m_sporkman(sporkman),
     params(_params),
     quorumIndex(_quorumIndex),
-    curSession(std::make_unique<CDKGSession>(nullptr, _params, _blsWorker, _connman, dmnman, _dkgManager,
-                                             _dkgDebugManager, m_mn_metaman, m_mn_activeman, sporkman)),
+    curSession(std::make_unique<CDKGSession>(nullptr, _params, _blsWorker, dmnman, _dkgManager, _dkgDebugManager,
+                                             m_mn_metaman, m_mn_activeman, sporkman)),
     pendingContributions(
         (size_t)_params.size * 2,
         MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
@@ -165,7 +163,7 @@ void CDKGSessionHandler::ProcessMessage(const CNode& pfrom, PeerManager& peerman
     }
 }
 
-void CDKGSessionHandler::StartThread(PeerManager& peerman)
+void CDKGSessionHandler::StartThread(CConnman& connman, PeerManager& peerman)
 {
     if (phaseHandlerThread.joinable()) {
         throw std::runtime_error("Tried to start an already started CDKGSessionHandler thread.");
@@ -173,7 +171,7 @@ void CDKGSessionHandler::StartThread(PeerManager& peerman)
 
     m_thread_name = strprintf("llmq-%d-%d", ToUnderlying(params.type), quorumIndex);
     phaseHandlerThread = std::thread(&util::TraceThread, m_thread_name.c_str(),
-                                     [this, &peerman] { PhaseHandlerThread(peerman); });
+                                     [this, &connman, &peerman] { PhaseHandlerThread(connman, peerman); });
 }
 
 void CDKGSessionHandler::StopThread()
@@ -190,7 +188,7 @@ bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pQuorumBaseBlockIndex)
         return false;
     }
 
-    curSession = std::make_unique<CDKGSession>(pQuorumBaseBlockIndex, params, blsWorker, connman, m_dmnman, dkgManager,
+    curSession = std::make_unique<CDKGSession>(pQuorumBaseBlockIndex, params, blsWorker, m_dmnman, dkgManager,
                                                dkgDebugManager, m_mn_metaman, m_mn_activeman, m_sporkman);
 
     if (!curSession->Init(m_mn_activeman->GetProTxHash(), quorumIndex)) {
@@ -528,7 +526,7 @@ bool ProcessPendingMessageBatch(CConnman& connman, CDKGSession& session, CDKGPen
     return true;
 }
 
-void CDKGSessionHandler::HandleDKGRound(PeerManager& peerman)
+void CDKGSessionHandler::HandleDKGRound(CConnman& connman, PeerManager& peerman)
 {
     WaitForNextPhase(std::nullopt, QuorumPhase::Initialized);
 
@@ -562,15 +560,17 @@ void CDKGSessionHandler::HandleDKGRound(PeerManager& peerman)
 
     // Contribute
     auto fContributeStart = [this, &peerman]() { curSession->Contribute(pendingContributions, peerman); };
-    auto fContributeWait = [this, &peerman] {
+    auto fContributeWait = [this, &connman, &peerman] {
         return ProcessPendingMessageBatch<CDKGContribution, MSG_QUORUM_CONTRIB>(connman, *curSession,
                                                                                 pendingContributions, peerman, 8);
     };
     HandlePhase(QuorumPhase::Contribute, QuorumPhase::Complain, curQuorumHash, 0.05, fContributeStart, fContributeWait);
 
     // Complain
-    auto fComplainStart = [this, &peerman]() { curSession->VerifyAndComplain(pendingComplaints, peerman); };
-    auto fComplainWait = [this, &peerman] {
+    auto fComplainStart = [this, &connman, &peerman]() {
+        curSession->VerifyAndComplain(connman, pendingComplaints, peerman);
+    };
+    auto fComplainWait = [this, &connman, &peerman] {
         return ProcessPendingMessageBatch<CDKGComplaint, MSG_QUORUM_COMPLAINT>(connman, *curSession, pendingComplaints,
                                                                                peerman, 8);
     };
@@ -578,7 +578,7 @@ void CDKGSessionHandler::HandleDKGRound(PeerManager& peerman)
 
     // Justify
     auto fJustifyStart = [this, &peerman]() { curSession->VerifyAndJustify(pendingJustifications, peerman); };
-    auto fJustifyWait = [this, &peerman] {
+    auto fJustifyWait = [this, &connman, &peerman] {
         return ProcessPendingMessageBatch<CDKGJustification, MSG_QUORUM_JUSTIFICATION>(connman, *curSession,
                                                                                        pendingJustifications, peerman, 8);
     };
@@ -586,7 +586,7 @@ void CDKGSessionHandler::HandleDKGRound(PeerManager& peerman)
 
     // Commit
     auto fCommitStart = [this, &peerman]() { curSession->VerifyAndCommit(pendingPrematureCommitments, peerman); };
-    auto fCommitWait = [this, &peerman] {
+    auto fCommitWait = [this, &connman, &peerman] {
         return ProcessPendingMessageBatch<CDKGPrematureCommitment, MSG_QUORUM_PREMATURE_COMMITMENT>(
             connman, *curSession, pendingPrematureCommitments, peerman, 8);
     };
@@ -600,12 +600,12 @@ void CDKGSessionHandler::HandleDKGRound(PeerManager& peerman)
     }
 }
 
-void CDKGSessionHandler::PhaseHandlerThread(PeerManager& peerman)
+void CDKGSessionHandler::PhaseHandlerThread(CConnman& connman, PeerManager& peerman)
 {
     while (!stopRequested) {
         try {
             LogPrint(BCLog::LLMQ_DKG, "CDKGSessionHandler::%s -- %s qi[%d] - starting HandleDKGRound\n", __func__, params.name, quorumIndex);
-            HandleDKGRound(peerman);
+            HandleDKGRound(connman, peerman);
         } catch (AbortPhaseException& e) {
             dkgDebugManager.UpdateLocalSessionStatus(params.type, quorumIndex, [&](CDKGDebugSessionStatus& status) {
                 status.statusBits.aborted = true;

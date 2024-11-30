@@ -280,7 +280,6 @@ private:
 
     CBLSWorker& blsWorker;
     CBLSWorkerCache cache;
-    CConnman& connman;
     CDeterministicMNManager& m_dmnman;
     CDKGSessionManager& dkgManager;
     CDKGDebugManager& dkgDebugManager;
@@ -327,9 +326,9 @@ private:
 
 public:
     CDKGSession(const CBlockIndex* pQuorumBaseBlockIndex, const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker,
-                CConnman& _connman, CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager,
-                CDKGDebugManager& _dkgDebugManager, CMasternodeMetaMan& mn_metaman,
-                const CActiveMasternodeManager* const mn_activeman, const CSporkManager& sporkman);
+                CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager, CDKGDebugManager& _dkgDebugManager,
+                CMasternodeMetaMan& mn_metaman, const CActiveMasternodeManager* const mn_activeman,
+                const CSporkManager& sporkman);
 
     // TODO: remove Init completely
     bool Init(const uint256& _myProTxHash, int _quorumIndex);
@@ -357,8 +356,8 @@ public:
     void VerifyPendingContributions() EXCLUSIVE_LOCKS_REQUIRED(cs_pending);
 
     // Phase 2: complaint
-    void VerifyAndComplain(CDKGPendingMessages& pendingMessages, PeerManager& peerman);
-    void VerifyConnectionAndMinProtoVersions() const;
+    void VerifyAndComplain(CConnman& connman, CDKGPendingMessages& pendingMessages, PeerManager& peerman);
+    void VerifyConnectionAndMinProtoVersions(CConnman& connman) const;
     void SendComplaint(CDKGPendingMessages& pendingMessages, PeerManager& peerman);
     bool PreVerifyMessage(const CDKGComplaint& qc, bool& retBan) const;
     std::optional<CInv> ReceiveMessage(const CDKGComplaint& qc);

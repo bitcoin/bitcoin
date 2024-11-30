@@ -72,14 +72,12 @@ CDKGMember::CDKGMember(const CDeterministicMNCPtr& _dmn, size_t _idx) :
 }
 
 CDKGSession::CDKGSession(const CBlockIndex* pQuorumBaseBlockIndex, const Consensus::LLMQParams& _params,
-                         CBLSWorker& _blsWorker, CConnman& _connman, CDeterministicMNManager& dmnman,
-                         CDKGSessionManager& _dkgManager, CDKGDebugManager& _dkgDebugManager,
-                         CMasternodeMetaMan& mn_metaman, const CActiveMasternodeManager* const mn_activeman,
-                         const CSporkManager& sporkman) :
+                         CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager,
+                         CDKGDebugManager& _dkgDebugManager, CMasternodeMetaMan& mn_metaman,
+                         const CActiveMasternodeManager* const mn_activeman, const CSporkManager& sporkman) :
     params(_params),
     blsWorker(_blsWorker),
     cache(_blsWorker),
-    connman(_connman),
     m_dmnman(dmnman),
     dkgManager(_dkgManager),
     dkgDebugManager(_dkgDebugManager),
@@ -417,7 +415,7 @@ void CDKGSession::VerifyPendingContributions()
     pendingContributionVerifications.clear();
 }
 
-void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages, PeerManager& peerman)
+void CDKGSession::VerifyAndComplain(CConnman& connman, CDKGPendingMessages& pendingMessages, PeerManager& peerman)
 {
     if (!AreWeMember()) {
         return;
@@ -453,12 +451,12 @@ void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages, PeerMa
     logger.Batch("verified contributions. time=%d", t1.count());
     logger.Flush();
 
-    VerifyConnectionAndMinProtoVersions();
+    VerifyConnectionAndMinProtoVersions(connman);
 
     SendComplaint(pendingMessages, peerman);
 }
 
-void CDKGSession::VerifyConnectionAndMinProtoVersions() const
+void CDKGSession::VerifyConnectionAndMinProtoVersions(CConnman& connman) const
 {
     assert(m_mn_metaman.IsValid());
 

@@ -29,15 +29,14 @@ static const std::string DB_VVEC = "qdkg_V";
 static const std::string DB_SKCONTRIB = "qdkg_S";
 static const std::string DB_ENC_CONTRIB = "qdkg_E";
 
-CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman,
-                                       CDeterministicMNManager& dmnman, CDKGDebugManager& _dkgDebugManager,
-                                       CMasternodeMetaMan& mn_metaman, CQuorumBlockProcessor& _quorumBlockProcessor,
+CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chainstate, CDeterministicMNManager& dmnman,
+                                       CDKGDebugManager& _dkgDebugManager, CMasternodeMetaMan& mn_metaman,
+                                       CQuorumBlockProcessor& _quorumBlockProcessor,
                                        const CActiveMasternodeManager* const mn_activeman,
                                        const CSporkManager& sporkman, bool unitTests, bool fWipe) :
     db(std::make_unique<CDBWrapper>(unitTests ? "" : (gArgs.GetDataDirNet() / "llmq/dkgdb"), 1 << 20, unitTests, fWipe)),
     blsWorker(_blsWorker),
     m_chainstate(chainstate),
-    connman(_connman),
     m_dmnman(dmnman),
     dkgDebugManager(_dkgDebugManager),
     quorumBlockProcessor(_quorumBlockProcessor),
@@ -53,8 +52,8 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chai
         auto session_count = (params.useRotation) ? params.signingActiveQuorumCount : 1;
         for (const auto i : irange::range(session_count)) {
             dkgSessionHandlers.emplace(std::piecewise_construct, std::forward_as_tuple(params.type, i),
-                                       std::forward_as_tuple(blsWorker, m_chainstate, connman, dmnman, dkgDebugManager,
-                                                             *this, mn_metaman, quorumBlockProcessor, mn_activeman,
+                                       std::forward_as_tuple(blsWorker, m_chainstate, dmnman, dkgDebugManager, *this,
+                                                             mn_metaman, quorumBlockProcessor, mn_activeman,
                                                              spork_manager, params, i));
         }
     }
@@ -62,10 +61,10 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chai
 
 CDKGSessionManager::~CDKGSessionManager() = default;
 
-void CDKGSessionManager::StartThreads(PeerManager& peerman)
+void CDKGSessionManager::StartThreads(CConnman& connman, PeerManager& peerman)
 {
     for (auto& it : dkgSessionHandlers) {
-        it.second.StartThread(peerman);
+        it.second.StartThread(connman, peerman);
     }
 }
 

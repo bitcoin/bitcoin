@@ -129,7 +129,6 @@ private:
 
     CBLSWorker& blsWorker;
     CChainState& m_chainstate;
-    CConnman& connman;
     CDeterministicMNManager& m_dmnman;
     CDKGDebugManager& dkgDebugManager;
     CDKGSessionManager& dkgManager;
@@ -156,9 +155,8 @@ private:
     CDKGPendingMessages pendingPrematureCommitments;
 
 public:
-    CDKGSessionHandler(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman,
-                       CDeterministicMNManager& dmnman, CDKGDebugManager& _dkgDebugManager,
-                       CDKGSessionManager& _dkgManager, CMasternodeMetaMan& mn_metaman,
+    CDKGSessionHandler(CBLSWorker& _blsWorker, CChainState& chainstate, CDeterministicMNManager& dmnman,
+                       CDKGDebugManager& _dkgDebugManager, CDKGSessionManager& _dkgManager, CMasternodeMetaMan& mn_metaman,
                        CQuorumBlockProcessor& _quorumBlockProcessor, const CActiveMasternodeManager* const mn_activeman,
                        const CSporkManager& sporkman, const Consensus::LLMQParams& _params, int _quorumIndex);
     ~CDKGSessionHandler();
@@ -166,7 +164,7 @@ public:
     void UpdatedBlockTip(const CBlockIndex *pindexNew);
     void ProcessMessage(const CNode& pfrom, PeerManager& peerman, const std::string& msg_type, CDataStream& vRecv);
 
-    void StartThread(PeerManager& peerman);
+    void StartThread(CConnman& connman, PeerManager& peerman);
     void StopThread();
 
     bool GetContribution(const uint256& hash, CDKGContribution& ret) const;
@@ -191,8 +189,8 @@ private:
     void WaitForNewQuorum(const uint256& oldQuorumHash) const;
     void SleepBeforePhase(QuorumPhase curPhase, const uint256& expectedQuorumHash, double randomSleepFactor, const WhileWaitFunc& runWhileWaiting) const;
     void HandlePhase(QuorumPhase curPhase, QuorumPhase nextPhase, const uint256& expectedQuorumHash, double randomSleepFactor, const StartPhaseFunc& startPhaseFunc, const WhileWaitFunc& runWhileWaiting);
-    void HandleDKGRound(PeerManager& peerman);
-    void PhaseHandlerThread(PeerManager& peerman);
+    void HandleDKGRound(CConnman& connman, PeerManager& peerman);
+    void PhaseHandlerThread(CConnman& connman, PeerManager& peerman);
 };
 
 } // namespace llmq

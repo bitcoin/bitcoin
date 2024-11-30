@@ -42,7 +42,6 @@ private:
 
     CBLSWorker& blsWorker;
     CChainState& m_chainstate;
-    CConnman& connman;
     CDeterministicMNManager& m_dmnman;
     CDKGDebugManager& dkgDebugManager;
     CQuorumBlockProcessor& quorumBlockProcessor;
@@ -71,13 +70,13 @@ private:
     mutable std::map<ContributionsCacheKey, ContributionsCacheEntry> contributionsCache GUARDED_BY(contributionsCacheCs);
 
 public:
-    CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman,
-                       CDeterministicMNManager& dmnman, CDKGDebugManager& _dkgDebugManager, CMasternodeMetaMan& mn_metaman,
+    CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chainstate, CDeterministicMNManager& dmnman,
+                       CDKGDebugManager& _dkgDebugManager, CMasternodeMetaMan& mn_metaman,
                        CQuorumBlockProcessor& _quorumBlockProcessor, const CActiveMasternodeManager* const mn_activeman,
                        const CSporkManager& sporkman, bool unitTests, bool fWipe);
     ~CDKGSessionManager();
 
-    void StartThreads(PeerManager& peerman);
+    void StartThreads(CConnman& connman, PeerManager& peerman);
     void StopThreads();
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
