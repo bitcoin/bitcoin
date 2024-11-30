@@ -23,7 +23,7 @@ const unsigned int WALLET_CRYPTO_IV_SIZE = 16;
  * derived using derivation method nDerivationMethod
  * (0 == EVP_sha512()) and derivation iterations nDeriveIterations.
  * vchOtherDerivationParameters is provided for alternative algorithms
- * which may require more parameters (such as scrypt).
+ * which may require more parameters.
  *
  * Wallet Private Keys are then encrypted using AES-256-CBC
  * with the double-sha256 of the public key as the IV, and the
@@ -37,11 +37,9 @@ public:
     std::vector<unsigned char> vchCryptedKey;
     std::vector<unsigned char> vchSalt;
     //! 0 = EVP_sha512()
-    //! 1 = scrypt()
     unsigned int nDerivationMethod;
     unsigned int nDeriveIterations;
-    //! Use this for more parameters to key derivation,
-    //! such as the various parameters to scrypt
+    //! Use this for more parameters to key derivation (currently unused)
     std::vector<unsigned char> vchOtherDerivationParameters;
 
     SERIALIZE_METHODS(CMasterKey, obj)
