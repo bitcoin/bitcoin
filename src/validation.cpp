@@ -3753,18 +3753,30 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
             m_blockman.m_dirty_blockindex.insert(to_mark_failed);
         }
 
-        // Add any equal or more work headers to setBlockIndexCandidates
+        // Mark out-of-chain descendants of the invalidated block as invalid
+        // (possibly replacing a pre-existing BLOCK_FAILED_VALID with BLOCK_FAILED_CHILD)
+        // Add any equal or more work headers that are not invalidated to setBlockIndexCandidates
         auto candidate_it = highpow_outofchain_headers.lower_bound(invalid_walk_tip->pprev->nChainWork);
         while (candidate_it != highpow_outofchain_headers.end()) {
             CBlockIndex* candidate{candidate_it->second};
+            if (candidate->GetAncestor(invalid_walk_tip->nHeight) == invalid_walk_tip) {
+                // Children of failed blocks should be marked as BLOCK_FAILED_CHILD instead.
+                candidate->nStatus &= ~BLOCK_FAILED_VALID;
+                candidate->nStatus |= BLOCK_FAILED_CHILD;
+                m_blockman.m_dirty_blockindex.insert(candidate);
+                // If invalidated, the block is irrelevant for setBlockIndexCandidates
+                // and can be removed from the cache.
+                candidate_it = highpow_outofchain_headers.erase(candidate_it);
+                continue;
+            }
             if (!CBlockIndexWorkComparator()(candidate, invalid_walk_tip->pprev) &&
                 candidate->IsValid(BLOCK_VALID_TRANSACTIONS) &&
                 candidate->HaveNumChainTxs()) {
                 setBlockIndexCandidates.insert(candidate);
-                candidate_it = highpow_outofchain_headers.erase(candidate_it);
-            } else {
-                ++candidate_it;
+                // Do not remove candidate from the highpow_outofchain_headers cache, because it might be a descendant of the block being invalidated
+                // which needs to be marked failed later.
             }
+            ++candidate_it;
         }
 
         // Track the last disconnected block, so we can correct its BLOCK_FAILED_CHILD status in future
