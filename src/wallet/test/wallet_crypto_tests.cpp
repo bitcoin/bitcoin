@@ -83,7 +83,7 @@ static void TestEncrypt(const CCrypter& crypt, const std::span<const unsigned ch
 BOOST_AUTO_TEST_CASE(passphrase) {
     // These are expensive.
 
-    TestCrypter::TestPassphrase("0000deadbeef0000"_hex_u8, "test", 25000,
+    TestCrypter::TestPassphrase("0000deadbeef0000"_hex_u8, "test", CMasterKey::DEFAULT_DERIVE_ITERATIONS,
                                 "fc7aba077ad5f4c3a0988d8daa4810d0d4a0e3bcb53af662998898f33df0556a"_hex_u8,
                                 "cf2f2691526dd1aa220896fb8bf7c369"_hex_u8);
 
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(passphrase) {
 BOOST_AUTO_TEST_CASE(encrypt) {
     constexpr std::array<uint8_t, WALLET_CRYPTO_SALT_SIZE> salt{"0000deadbeef0000"_hex_u8};
     CCrypter crypt;
-    crypt.SetKeyFromPassphrase("passphrase", salt, 25000, 0);
+    crypt.SetKeyFromPassphrase("passphrase", salt, CMasterKey::DEFAULT_DERIVE_ITERATIONS, 0);
     TestCrypter::TestEncrypt(crypt, "22bcade09ac03ff6386914359cfe885cfeb5f77ff0d670f102f619687453b29d"_hex_u8);
 
     for (int i = 0; i != 100; i++)
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(encrypt) {
 BOOST_AUTO_TEST_CASE(decrypt) {
     constexpr std::array<uint8_t, WALLET_CRYPTO_SALT_SIZE> salt{"0000deadbeef0000"_hex_u8};
     CCrypter crypt;
-    crypt.SetKeyFromPassphrase("passphrase", salt, 25000, 0);
+    crypt.SetKeyFromPassphrase("passphrase", salt, CMasterKey::DEFAULT_DERIVE_ITERATIONS, 0);
 
     // Some corner cases the came up while testing
     TestCrypter::TestDecrypt(crypt,"795643ce39d736088367822cdc50535ec6f103715e3e48f4f3b1a60a08ef59ca"_hex_u8);
