@@ -3666,6 +3666,9 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
     // build a map once so that we can look up candidate blocks by chain
     // work as we go.
     std::multimap<const arith_uint256, CBlockIndex *> candidate_blocks_by_work;
+    // Map to cache candidates not in the main chain that might need invalidating.
+    // Maps fork block in chain to the candidates for invalidation.
+    std::multimap<const CBlockIndex*, CBlockIndex*> cand_invalid_descendants;
 
     {
         LOCK(cs_main);
@@ -3681,6 +3684,11 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
                     candidate->IsValid(BLOCK_VALID_TRANSACTIONS) &&
                     candidate->HaveNumChainTxs()) {
                 candidate_blocks_by_work.insert(std::make_pair(candidate->nChainWork, candidate));
+            }
+            // Similarly, populate cache for blocks not in main chain to invalidate
+            if (!m_chain.Contains(candidate) &&
+                !CBlockIndexWorkComparator()(candidate, pindex->pprev)) {
+                cand_invalid_descendants.insert(std::make_pair(m_chain.FindFork(candidate), candidate));
             }
         }
     }
@@ -3727,6 +3735,12 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
             // need to be BLOCK_FAILED_CHILD instead.
             to_mark_failed->nStatus = (to_mark_failed->nStatus ^ BLOCK_FAILED_VALID) | BLOCK_FAILED_CHILD;
             m_blockman.m_dirty_blockindex.insert(to_mark_failed);
+        }
+
+        // Mark descendants of the invalidated block as invalid
+        auto range = cand_invalid_descendants.equal_range(invalid_walk_tip);
+        for (auto it = range.first; it != range.second; ++it) {
+            it->second->nStatus |= BLOCK_FAILED_CHILD;
         }
 
         // Add any equal or more work headers to setBlockIndexCandidates
