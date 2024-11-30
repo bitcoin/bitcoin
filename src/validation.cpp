@@ -3754,17 +3754,24 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
             m_blockman.m_dirty_blockindex.insert(to_mark_failed);
         }
 
-        // Add any equal or more work headers to setBlockIndexCandidates
+        // Mark descendants of the invalidated block as invalid
+        // (possibly replacing a pre-existing BLOCK_FAILED_VALID with BLOCK_FAILED_CHILD)
+        // Add any equal or more work headers that are not invalidated to setBlockIndexCandidates
         auto candidate_it = highpow_outofchain_headers.lower_bound(invalid_walk_tip->pprev->nChainWork);
         while (candidate_it != highpow_outofchain_headers.end()) {
+            if (candidate_it->second->GetAncestor(invalid_walk_tip->nHeight) == invalid_walk_tip) {
+                candidate_it->second->nStatus = (candidate_it->second->nStatus & ~BLOCK_FAILED_VALID) | BLOCK_FAILED_CHILD;
+                m_blockman.m_dirty_blockindex.insert(candidate_it->second);
+                // If invalidated, the block is irrelevant for setBlockIndexCandidates and can be removed from the cache
+                candidate_it = highpow_outofchain_headers.erase(candidate_it);
+                continue;
+            }
             if (!CBlockIndexWorkComparator()(candidate_it->second, invalid_walk_tip->pprev) &&
                 candidate_it->second->IsValid(BLOCK_VALID_TRANSACTIONS) &&
                 candidate_it->second->HaveNumChainTxs()) {
                 setBlockIndexCandidates.insert(candidate_it->second);
-                candidate_it = highpow_outofchain_headers.erase(candidate_it);
-            } else {
-                ++candidate_it;
             }
+            ++candidate_it;
         }
 
         // Track the last disconnected block, so we can correct its BLOCK_FAILED_CHILD status in future
