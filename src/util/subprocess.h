@@ -919,6 +919,7 @@ private:
  *    Command provided in a single string.
  * wait()             - Wait for the child to exit.
  * retcode()          - The return code of the exited child.
+ * poll()             - Check the status of the running child.
  * send(...)          - Send input to the input channel of the child.
  * communicate(...)   - Get the output/error from the child and close the channels
  *                      from the parent side.
@@ -968,6 +969,8 @@ public:
   int retcode() const noexcept { return retcode_; }
 
   int wait() noexcept(false);
+
+  int poll() noexcept(false);
 
   void set_out_buf_cap(size_t cap) { stream_.set_out_buf_cap(cap); }
 
@@ -1076,6 +1079,56 @@ inline int Popen::wait() noexcept(false)
   else return 255;
 
   return 0;
+#endif
+}
+
+inline int Popen::poll() noexcept(false)
+{
+#ifdef __USING_WINDOWS__
+  int ret = WaitForSingleObject(process_handle_, 0);
+  if (ret != WAIT_OBJECT_0) return -1;
+
+  DWORD dretcode_;
+  if (FALSE == GetExitCodeProcess(process_handle_, &dretcode_))
+      throw OSError("GetExitCodeProcess", 0);
+
+  retcode_ = (int)dretcode_;
+  CloseHandle(process_handle_);
+
+  return retcode_;
+#else
+  if (!child_created_) return -1; // TODO: ??
+
+  int status;
+
+  // Returns zero if child is still running
+  int ret = waitpid(child_pid_, &status, WNOHANG);
+  if (ret == 0) return -1;
+
+  if (ret == child_pid_) {
+    if (WIFSIGNALED(status)) {
+      retcode_ = WTERMSIG(status);
+    } else if (WIFEXITED(status)) {
+      retcode_ = WEXITSTATUS(status);
+    } else {
+      retcode_ = 255;
+    }
+    return retcode_;
+  }
+
+  if (ret == -1) {
+    // From subprocess.py
+    // This happens if SIGCHLD is set to be ignored
+    // or waiting for child process has otherwise been disabled
+    // for our process. This child is dead, we cannot get the
+    // status.
+    if (errno == ECHILD) retcode_ = 0;
+    else throw OSError("waitpid failed", errno);
+  } else {
+    retcode_ = ret;
+  }
+
+  return retcode_;
 #endif
 }
 
