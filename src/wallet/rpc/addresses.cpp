@@ -292,6 +292,13 @@ RPCHelpMan addmultisigaddress()
     CScript inner;
     CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, output_type, provider, inner);
 
+    // Before importing the scripts into the wallet, check we can make a descriptor out of it.
+    std::unique_ptr<Descriptor> descriptor = InferDescriptor(GetScriptForDestination(dest), spk_man);
+    if (!descriptor) {
+        // Shouldn't happen; we crafted the destination internally.
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Invalid descriptor generated");
+    }
+
     // Import scripts into the wallet
     for (const auto& [id, script] : provider.scripts) {
         // Due to a bug in the legacy wallet, the p2sh maximum script size limit is also imposed on 'p2sh-segwit' and 'bech32' redeem scripts.
@@ -312,9 +319,6 @@ RPCHelpMan addmultisigaddress()
 
     // Store destination in the addressbook
     pwallet->SetAddressBook(dest, label, AddressPurpose::SEND);
-
-    // Make the descriptor
-    std::unique_ptr<Descriptor> descriptor = InferDescriptor(GetScriptForDestination(dest), spk_man);
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("address", EncodeDestination(dest));

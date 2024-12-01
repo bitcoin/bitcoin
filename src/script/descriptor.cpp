@@ -1853,7 +1853,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         }
         if (ctx == ParseScriptContext::TOP) {
             if (providers.size() > MAX_BARE_MULTISIG_PUBKEYS_NUM) {
-                error = strprintf("Cannot have %u pubkeys in bare multisig; only at most %d pubkeys", providers.size(), MAX_BARE_MULTISIG_PUBKEYS_NUM);
+                error = strprintf("Cannot have %u pubkeys in bare multisig; only at most %u pubkeys", providers.size(), MAX_BARE_MULTISIG_PUBKEYS_NUM);
                 return {};
             }
         }
@@ -2239,6 +2239,17 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
                 break;
             }
         }
+
+        // Check bare multisig pubkeys number limit
+        if (ctx == ParseScriptContext::TOP && providers.size() > MAX_BARE_MULTISIG_PUBKEYS_NUM) {
+            return nullptr;
+        }
+
+        // Verify we don't exceed consensus limits
+        if (ctx == ParseScriptContext::P2SH && script.size() > MAX_SCRIPT_ELEMENT_SIZE) {
+            return nullptr;
+        }
+
         if (ok) return std::make_unique<MultisigDescriptor>((int)data[0][0], std::move(providers));
     }
     if (txntype == TxoutType::SCRIPTHASH && ctx == ParseScriptContext::TOP) {

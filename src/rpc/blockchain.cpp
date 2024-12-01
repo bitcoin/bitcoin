@@ -1105,7 +1105,7 @@ static RPCHelpMan gettxout()
                 {RPCResult::Type::STR_AMOUNT, "value", "The transaction value in " + CURRENCY_UNIT},
                 {RPCResult::Type::OBJ, "scriptPubKey", "", {
                     {RPCResult::Type::STR, "asm", "Disassembly of the output script"},
-                    {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
+                    {RPCResult::Type::STR, "desc", /*optional=*/true, "Inferred top level descriptor for the script (if any)"},
                     {RPCResult::Type::STR_HEX, "hex", "The raw output script bytes, hex-encoded"},
                     {RPCResult::Type::STR, "type", "The type, eg pubkeyhash"},
                     {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
@@ -2287,9 +2287,10 @@ static RPCHelpMan scantxoutset()
             FlatSigningProvider provider;
             auto scripts = EvalDescriptorStringOrObject(scanobject, provider);
             for (CScript& script : scripts) {
-                std::string inferred = InferDescriptor(script, provider)->ToString();
+                auto desc = InferDescriptor(script, provider);
+                if (!desc) throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid descriptor found: '%s'", scanobject.get_str()));
                 needles.emplace(script);
-                descriptors.emplace(std::move(script), std::move(inferred));
+                descriptors.emplace(std::move(script), desc->ToString());
             }
         }
 
