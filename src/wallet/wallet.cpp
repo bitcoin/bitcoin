@@ -605,19 +605,30 @@ static bool EncryptMasterKey(const SecureString& wallet_passphrase, const CKeyin
     return true;
 }
 
-bool CWallet::Unlock(const SecureString& strWalletPassphrase)
+static bool DecryptMasterKey(const SecureString& wallet_passphrase, const CMasterKey& master_key, CKeyingMaterial& plain_master_key)
 {
     CCrypter crypter;
+    if (!crypter.SetKeyFromPassphrase(wallet_passphrase, master_key.vchSalt, master_key.nDeriveIterations, master_key.nDerivationMethod)) {
+        return false;
+    }
+    if (!crypter.Decrypt(master_key.vchCryptedKey, plain_master_key)) {
+        return false;
+    }
+
+    return true;
+}
+
+bool CWallet::Unlock(const SecureString& strWalletPassphrase)
+{
     CKeyingMaterial _vMasterKey;
 
     {
         LOCK(cs_wallet);
         for (const MasterKeyMap::value_type& pMasterKey : mapMasterKeys)
         {
-            if(!crypter.SetKeyFromPassphrase(strWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
-                return false;
-            if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, _vMasterKey))
+            if (!DecryptMasterKey(strWalletPassphrase, pMasterKey.second, _vMasterKey)) {
                 continue; // try another master key
+            }
             if (Unlock(_vMasterKey)) {
                 // Now that we've unlocked, upgrade the key metadata
                 UpgradeKeyMetadata();
@@ -638,14 +649,12 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
         LOCK2(m_relock_mutex, cs_wallet);
         Lock();
 
-        CCrypter crypter;
         CKeyingMaterial _vMasterKey;
         for (MasterKeyMap::value_type& pMasterKey : mapMasterKeys)
         {
-            if(!crypter.SetKeyFromPassphrase(strOldWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
+            if (!DecryptMasterKey(strOldWalletPassphrase, pMasterKey.second, _vMasterKey)) {
                 return false;
-            if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, _vMasterKey))
-                return false;
+            }
             if (Unlock(_vMasterKey))
             {
                 if (!EncryptMasterKey(strNewWalletPassphrase, _vMasterKey, pMasterKey.second)) {
