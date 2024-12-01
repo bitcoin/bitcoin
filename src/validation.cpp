@@ -4520,6 +4520,7 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
         if (state.IsInvalid() && state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
             m_blockman.m_dirty_blockindex.insert(pindex);
+            ActiveChainstate().InvalidChainFound(pindex);
         }
         LogError("%s: %s\n", __func__, state.ToString());
         return false;
