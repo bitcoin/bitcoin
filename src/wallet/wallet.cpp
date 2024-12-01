@@ -620,16 +620,16 @@ static bool DecryptMasterKey(const SecureString& wallet_passphrase, const CMaste
 
 bool CWallet::Unlock(const SecureString& strWalletPassphrase)
 {
-    CKeyingMaterial _vMasterKey;
+    CKeyingMaterial plain_master_key;
 
     {
         LOCK(cs_wallet);
-        for (const MasterKeyMap::value_type& pMasterKey : mapMasterKeys)
+        for (const auto& [_, master_key] : mapMasterKeys)
         {
-            if (!DecryptMasterKey(strWalletPassphrase, pMasterKey.second, _vMasterKey)) {
+            if (!DecryptMasterKey(strWalletPassphrase, master_key, plain_master_key)) {
                 continue; // try another master key
             }
-            if (Unlock(_vMasterKey)) {
+            if (Unlock(plain_master_key)) {
                 // Now that we've unlocked, upgrade the key metadata
                 UpgradeKeyMetadata();
                 // Now that we've unlocked, upgrade the descriptor cache
@@ -649,20 +649,20 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
         LOCK2(m_relock_mutex, cs_wallet);
         Lock();
 
-        CKeyingMaterial _vMasterKey;
-        for (MasterKeyMap::value_type& pMasterKey : mapMasterKeys)
+        CKeyingMaterial plain_master_key;
+        for (auto& [master_key_id, master_key] : mapMasterKeys)
         {
-            if (!DecryptMasterKey(strOldWalletPassphrase, pMasterKey.second, _vMasterKey)) {
+            if (!DecryptMasterKey(strOldWalletPassphrase, master_key, plain_master_key)) {
                 return false;
             }
-            if (Unlock(_vMasterKey))
+            if (Unlock(plain_master_key))
             {
-                if (!EncryptMasterKey(strNewWalletPassphrase, _vMasterKey, pMasterKey.second)) {
+                if (!EncryptMasterKey(strNewWalletPassphrase, plain_master_key, master_key)) {
                     return false;
                 }
-                WalletLogPrintf("Wallet passphrase changed to an nDeriveIterations of %i\n", pMasterKey.second.nDeriveIterations);
+                WalletLogPrintf("Wallet passphrase changed to an nDeriveIterations of %i\n", master_key.nDeriveIterations);
 
-                WalletBatch(GetDatabase()).WriteMasterKey(pMasterKey.first, pMasterKey.second);
+                WalletBatch(GetDatabase()).WriteMasterKey(master_key_id, master_key);
                 if (fWasLocked)
                     Lock();
                 return true;
@@ -837,35 +837,35 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
     if (IsCrypted())
         return false;
 
-    CKeyingMaterial _vMasterKey;
+    CKeyingMaterial plain_master_key;
 
-    _vMasterKey.resize(WALLET_CRYPTO_KEY_SIZE);
-    GetStrongRandBytes(_vMasterKey);
+    plain_master_key.resize(WALLET_CRYPTO_KEY_SIZE);
+    GetStrongRandBytes(plain_master_key);
 
-    CMasterKey kMasterKey;
+    CMasterKey master_key;
 
-    kMasterKey.vchSalt.resize(WALLET_CRYPTO_SALT_SIZE);
-    GetStrongRandBytes(kMasterKey.vchSalt);
+    master_key.vchSalt.resize(WALLET_CRYPTO_SALT_SIZE);
+    GetStrongRandBytes(master_key.vchSalt);
 
-    if (!EncryptMasterKey(strWalletPassphrase, _vMasterKey, kMasterKey)) {
+    if (!EncryptMasterKey(strWalletPassphrase, plain_master_key, master_key)) {
         return false;
     }
-    WalletLogPrintf("Encrypting Wallet with an nDeriveIterations of %i\n", kMasterKey.nDeriveIterations);
+    WalletLogPrintf("Encrypting Wallet with an nDeriveIterations of %i\n", master_key.nDeriveIterations);
 
     {
         LOCK2(m_relock_mutex, cs_wallet);
-        mapMasterKeys[++nMasterKeyMaxID] = kMasterKey;
+        mapMasterKeys[++nMasterKeyMaxID] = master_key;
         WalletBatch* encrypted_batch = new WalletBatch(GetDatabase());
         if (!encrypted_batch->TxnBegin()) {
             delete encrypted_batch;
             encrypted_batch = nullptr;
             return false;
         }
-        encrypted_batch->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
+        encrypted_batch->WriteMasterKey(nMasterKeyMaxID, master_key);
 
         for (const auto& spk_man_pair : m_spk_managers) {
             auto spk_man = spk_man_pair.second.get();
-            if (!spk_man->Encrypt(_vMasterKey, encrypted_batch)) {
+            if (!spk_man->Encrypt(plain_master_key, encrypted_batch)) {
                 encrypted_batch->TxnAbort();
                 delete encrypted_batch;
                 encrypted_batch = nullptr;
