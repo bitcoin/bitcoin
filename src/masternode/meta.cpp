@@ -122,9 +122,8 @@ void CMasternodeMetaMan::RemoveGovernanceObject(const uint256& nGovernanceObject
 
 std::vector<uint256> CMasternodeMetaMan::GetAndClearDirtyGovernanceObjectHashes()
 {
-    LOCK(cs);
-    std::vector<uint256> vecTmp = std::move(vecDirtyGovernanceObjectHashes);
-    vecDirtyGovernanceObjectHashes.clear();
+    std::vector<uint256> vecTmp;
+    WITH_LOCK(cs, vecTmp.swap(vecDirtyGovernanceObjectHashes));
     return vecTmp;
 }
 
