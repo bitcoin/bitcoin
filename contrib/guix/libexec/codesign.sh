@@ -73,16 +73,34 @@ mkdir -p "$DISTSRC"
 
     case "$HOST" in
         *mingw*)
-            find "$PWD" -name "*-unsigned.exe" | while read -r infile; do
-                infile_base="$(basename "$infile")"
-
-                # Codesigned *-unsigned.exe and output to OUTDIR
+            # Apply detached codesignatures
+            WORKDIR=".tmp"
+            mkdir -p ${WORKDIR}
+            cp -r --target-directory="${WORKDIR}" "unsigned/${DISTNAME}"
+            find "${WORKDIR}/${DISTNAME}" -name "*.exe" -type f -exec rm {} \;
+            find unsigned/ -name "*.exe" -type f | while read -r bin
+            do
+                bin_base="$(realpath --relative-to=unsigned/ "${bin}")"
+                mkdir -p "${WORKDIR}/$(dirname "${bin_base}")"
                 osslsigncode attach-signature \
-                                 -in "$infile" \
-                                 -out "${OUTDIR}/${infile_base/-unsigned}" \
+                                 -in "${bin}" \
+                                 -out "${WORKDIR}/${bin_base/-unsigned}" \
                                  -CAfile "$GUIX_ENVIRONMENT/etc/ssl/certs/ca-certificates.crt" \
-                                 -sigin codesignatures/win/"$infile_base".pem
+                                 -sigin codesignatures/win/"${bin_base}".pem
             done
+
+            # Move installer to outdir
+            cd "${WORKDIR}"
+            find . -name "*setup.exe" -print0 \
+                | xargs -0r mv --target-directory="${OUTDIR}"
+
+            # Make .zip from binaries
+            find "${DISTNAME}" -print0 \
+                | xargs -0r touch --no-dereference --date="@${SOURCE_DATE_EPOCH}"
+            find "${DISTNAME}" \
+                | sort \
+                | zip -X@ "${OUTDIR}/${DISTNAME}-${HOST//x86_64-w64-mingw32/win64}.zip" \
+                || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST//x86_64-w64-mingw32/win64}.zip" && exit 1 )
             ;;
         *darwin*)
             case "$HOST" in
