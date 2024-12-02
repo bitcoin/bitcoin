@@ -24,7 +24,12 @@ export PACKAGES="systemtap-sdt-dev clang-${APT_LLVM_V} llvm-${APT_LLVM_V} libcla
 export NO_DEPENDS=1
 export GOAL="install"
 export BITCOIN_CONFIG="\
- -DWITH_USDT=ON -DWITH_ZMQ=ON -DWITH_BDB=ON -DWARN_INCOMPATIBLE_BDB=OFF -DBUILD_GUI=ON \
+ -DWITH_MULTIPROCESS=OFF \
+ -DWITH_USDT=ON \
+ -DWITH_ZMQ=ON \
+ -DWITH_BDB=ON \
+ -DWARN_INCOMPATIBLE_BDB=OFF \
+ -DBUILD_GUI=ON \
  -DSANITIZERS=address,float-divide-by-zero,integer,undefined \
  -DCMAKE_C_COMPILER=clang-${APT_LLVM_V} \
  -DCMAKE_CXX_COMPILER=clang++-${APT_LLVM_V} \
