@@ -125,6 +125,8 @@ bool StartLogging(const ArgsManager& args)
     fs::path config_file_path = args.GetConfigFilePath();
     if (args.IsArgNegated("-conf")) {
         LogInfo("Config file: <disabled>");
+    } else if (fs::is_directory(config_file_path)) {
+        LogWarning("Config file: %s (is directory, not file)", fs::PathToString(config_file_path));
     } else if (fs::exists(config_file_path)) {
         LogPrintf("Config file: %s\n", fs::PathToString(config_file_path));
     } else if (args.IsArgSet("-conf")) {
