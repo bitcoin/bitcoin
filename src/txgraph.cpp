@@ -9,6 +9,7 @@
 #include <util/bitset.h>
 #include <util/check.h>
 #include <util/feefrac.h>
+#include <util/vector.h>
 
 #include <compare>
 #include <memory>
@@ -267,6 +268,8 @@ private:
     ChunkIndex m_chunkindex;
     /** Number of index-observing objects in existence (BlockBuilderImpl). */
     size_t m_chunkindex_observers{0};
+    /** Cache of discarded ChunkIndex node handles. */
+    std::vector<ChunkIndex::node_type> m_chunkindex_discarded;
 
     /** A Locator that describes whether, where, and in which Cluster an Entry appears.
      *  Every Entry has MAX_LEVELS locators, as it may appear in one Cluster per level. */
@@ -350,6 +353,10 @@ public:
     void ClearLocator(int level, GraphIndex index) noexcept;
     /** Find which Clusters conflict with the top level. */
     std::vector<Cluster*> GetConflicts() const noexcept;
+    /** Clear an Entry's ChunkData. */
+    void ClearChunkData(Entry& entry) noexcept;
+    /** Give an Entry a ChunkData object. */
+    void CreateChunkData(GraphIndex idx, LinearizationIndex chunk_count) noexcept;
 
     // Functions for handling Refs.
 
@@ -485,6 +492,37 @@ public:
     void Skip() noexcept final;
 };
 
+void TxGraphImpl::ClearChunkData(Entry& entry) noexcept
+{
+    if (entry.m_chunkindex_iterator != m_chunkindex.end()) {
+        Assume(m_chunkindex_observers == 0);
+        // If the Entry has a non-empty m_chunkindex_iterator, extract it, and move the handle
+        // to the cache of discarded chunkindex entries.
+        m_chunkindex_discarded.emplace_back(m_chunkindex.extract(entry.m_chunkindex_iterator));
+        entry.m_chunkindex_iterator = m_chunkindex.end();
+    }
+}
+
+void TxGraphImpl::CreateChunkData(GraphIndex idx, LinearizationIndex chunk_count) noexcept
+{
+    auto& entry = m_entries[idx];
+    if (!m_chunkindex_discarded.empty()) {
+        // Reuse an discarded node handle.
+        auto& node = m_chunkindex_discarded.back().value();
+        node.m_graph_index = idx;
+        node.m_chunk_count = chunk_count;
+        auto insert_result = m_chunkindex.insert(std::move(m_chunkindex_discarded.back()));
+        Assume(insert_result.inserted);
+        entry.m_chunkindex_iterator = insert_result.position;
+        m_chunkindex_discarded.pop_back();
+    } else {
+        // Construct a new entry.
+        auto emplace_result = m_chunkindex.emplace(idx, chunk_count);
+        Assume(emplace_result.second);
+        entry.m_chunkindex_iterator = emplace_result.first;
+    }
+}
+
 void TxGraphImpl::ClearLocator(int level, GraphIndex idx) noexcept
 {
     auto& entry = m_entries[idx];
@@ -509,11 +547,7 @@ void TxGraphImpl::ClearLocator(int level, GraphIndex idx) noexcept
             --m_clustersets[after_level].m_txcount;
         }
     }
-    if (level == 0 && entry.m_chunkindex_iterator != m_chunkindex.end()) {
-        Assume(m_chunkindex_observers == 0);
-        m_chunkindex.erase(entry.m_chunkindex_iterator);
-        entry.m_chunkindex_iterator = m_chunkindex.end();
-    }
+    if (level == 0) ClearChunkData(entry);
 }
 
 void Cluster::Updated(TxGraphImpl& graph) noexcept
@@ -521,13 +555,9 @@ void Cluster::Updated(TxGraphImpl& graph) noexcept
     // Update all the Locators for this Cluster's Entrys.
     for (DepGraphIndex idx : m_linearization) {
         auto& entry = graph.m_entries[m_mapping[idx]];
-        if (m_level == 0 && entry.m_chunkindex_iterator != graph.m_chunkindex.end()) {
-            // Destroy any potential ChunkData prior to modifying the Cluster (as that could
-            // invalidate its ordering).
-            Assume(graph.m_chunkindex_observers == 0);
-            graph.m_chunkindex.erase(entry.m_chunkindex_iterator);
-            entry.m_chunkindex_iterator = graph.m_chunkindex.end();
-        }
+        // Discard any potential ChunkData prior to modifying the Cluster (as that could
+        // invalidate its ordering).
+        if (m_level == 0) graph.ClearChunkData(entry);
         entry.m_locator[m_level].SetPresent(this, idx);
     }
     // If this is for the main graph (level = 0), and the Cluster's quality is ACCEPTABLE or
@@ -554,9 +584,7 @@ void Cluster::Updated(TxGraphImpl& graph) noexcept
                 chunk.transactions.Reset(idx);
                 if (chunk.transactions.None()) {
                     // Last transaction in the chunk.
-                    auto [it, inserted] = graph.m_chunkindex.emplace(graph_idx, chunk_count);
-                    Assume(inserted);
-                    entry.m_chunkindex_iterator = it;
+                    graph.CreateChunkData(graph_idx, chunk_count);
                     break;
                 }
             }
@@ -811,13 +839,9 @@ void Cluster::Merge(TxGraphImpl& graph, Cluster& other) noexcept
         // feerates, as Updated() will be invoked by Cluster::ApplyDependencies on the resulting
         // merged Cluster later anyway).
         auto& entry = graph.m_entries[idx];
-        if (m_level == 0 && entry.m_chunkindex_iterator != graph.m_chunkindex.end()) {
-            // Destroy any potential ChunkData prior to modifying the Cluster (as that could
-            // invalidate its ordering).
-            Assume(graph.m_chunkindex_observers == 0);
-            graph.m_chunkindex.erase(entry.m_chunkindex_iterator);
-            entry.m_chunkindex_iterator = graph.m_chunkindex.end();
-        }
+        // Discard any potential ChunkData prior to modifying the Cluster (as that could
+        // invalidate its ordering).
+        if (m_level == 0) graph.ClearChunkData(entry);
         entry.m_locator[m_level].SetPresent(this, new_pos);
     }
     // Purge the other Cluster, now that everything has been moved.
@@ -1045,6 +1069,9 @@ void TxGraphImpl::Compact() noexcept
         if (!clusterset.m_to_remove.empty()) return;
         if (!clusterset.m_removed.empty()) return;
     }
+
+    // Release memory used by discarded ChunkData index entries.
+    ClearShrink(m_chunkindex_discarded);
 
     // Sort the GraphIndexes that need to be cleaned up. They are sorted in reverse, so the last
     // ones get processed first. This means earlier-processed GraphIndexes will not cause moving of
@@ -1553,11 +1580,7 @@ void Cluster::MakeTransactionsMissing(TxGraphImpl& graph) noexcept
         GraphIndex idx = m_mapping[ci];
         auto& entry = graph.m_entries[idx];
         entry.m_locator[m_level].SetMissing();
-        if (m_level == 0 && entry.m_chunkindex_iterator != graph.m_chunkindex.end()) {
-            Assume(graph.m_chunkindex_observers == 0);
-            graph.m_chunkindex.erase(entry.m_chunkindex_iterator);
-            entry.m_chunkindex_iterator = graph.m_chunkindex.end();
-        }
+        if (m_level == 0) graph.ClearChunkData(entry);
     }
 }
 
