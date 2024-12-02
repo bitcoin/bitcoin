@@ -76,15 +76,6 @@ class LLMQEvoNodesTest(DashTestFramework):
         self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 0)
         self.wait_for_sporks_same()
 
-        self.move_to_next_cycle()
-        self.log.info("Cycle H height:" + str(self.nodes[0].getblockcount()))
-        self.move_to_next_cycle()
-        self.log.info("Cycle H+C height:" + str(self.nodes[0].getblockcount()))
-        self.move_to_next_cycle()
-        self.log.info("Cycle H+2C height:" + str(self.nodes[0].getblockcount()))
-
-        self.mine_cycle_quorum(llmq_type_name='llmq_test_dip0024', llmq_type=103)
-
         evo_protxhash_list = list()
         for i in range(self.evo_count):
             evo_info = self.dynamically_add_masternode(evo=True)
