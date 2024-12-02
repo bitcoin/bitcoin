@@ -108,7 +108,7 @@ bool CTransactionBuilderOutput::UpdateAmount(const CAmount nNewAmount)
     return true;
 }
 
-CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, const CompactTallyItem& tallyItemIn) :
+CTransactionBuilder::CTransactionBuilder(const std::shared_ptr<CWallet> pwalletIn, const CompactTallyItem& tallyItemIn) :
     pwallet(pwalletIn),
     dummyReserveDestination(pwalletIn.get()),
     tallyItem(tallyItemIn)

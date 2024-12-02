@@ -153,7 +153,7 @@ extern const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS;
 #define WalletCJLogPrint(wallet, ...)                                  \
     do {                                                               \
         if (LogAcceptCategory(BCLog::COINJOIN, BCLog::Level::Debug)) { \
-            wallet.WalletLogPrintf(__VA_ARGS__);                       \
+            wallet->WalletLogPrintf(__VA_ARGS__);                      \
         }                                                              \
     } while (0)
 
