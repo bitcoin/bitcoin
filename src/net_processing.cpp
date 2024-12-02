@@ -637,7 +637,7 @@ private:
     /**
      * Private implementation of IsInvInFilter which does not call GetPeerRef; to be prefered when the PeerRef is available.
      */
-    bool IsInvInFilter(const PeerRef& peer, const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    bool IsInvInFilter(const PeerRef& peer, const uint256& hash) const;
 
     /** Get a shared pointer to the Peer object.
      *  May return an empty shared_ptr if the Peer object can't be found. */
@@ -2252,22 +2252,15 @@ void PeerManagerImpl::AskPeersForTransaction(const uint256& txid, bool is_master
     std::vector<PeerRef> peersToAsk;
     peersToAsk.reserve(4);
 
-    auto maybe_add_to_nodesToAskFor = [&](const PeerRef& peer) {
-        if (peersToAsk.size() >= 4) {
-            return false;
-        }
-        if (IsInvInFilter(peer, txid)) {
-            peersToAsk.emplace_back(peer);
-        }
-        return true;
-    };
-
     {
         LOCK(m_peer_mutex);
         // TODO consider prioritizing MNs again, once that flag is moved into Peer
         for (const auto& [_, peer] : m_peer_map) {
-            if (!maybe_add_to_nodesToAskFor(peer)) {
+            if (peersToAsk.size() >= 4) {
                 break;
+            }
+            if (IsInvInFilter(peer, txid)) {
+                peersToAsk.emplace_back(peer);
             }
         }
     }
