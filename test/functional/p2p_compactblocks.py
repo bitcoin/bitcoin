@@ -738,7 +738,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         test_node.send_and_ping(msg)
 
         # Check that the tip didn't advance
-        assert int(node.getbestblockhash(), 16) is not block.sha256
+        assert int(node.getbestblockhash(), 16) != block.sha256
         test_node.sync_with_ping()
 
     # Helper for enabling cb announcements
