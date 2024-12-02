@@ -3041,7 +3041,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             if (coin_control.m_include_unsafe_inputs
                 && SelectCoinsMinConf(value_to_select,
                     CoinEligibilityFilter(0 /* conf_mine */, 0 /* conf_theirs */, max_ancestors-1, max_descendants-1, true /* include_partial_groups */),
-                    vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) {
+                    vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used, nCoinType)) {
                 return true;
             }
             // Try with unlimited ancestors/descendants. The transaction will still need to meet
