@@ -301,7 +301,7 @@ static bool InitRPCAuthentication()
         if (cookie_perms_arg) {
             auto perm_opt = InterpretPermString(*cookie_perms_arg);
             if (!perm_opt) {
-                LogInfo("Invalid -rpccookieperms=%s; must be one of 'owner', 'group', or 'all'.\n", *cookie_perms_arg);
+                LogError("Invalid -rpccookieperms=%s; must be one of 'owner', 'group', or 'all'.", *cookie_perms_arg);
                 return false;
             }
             cookie_perms = *perm_opt;
