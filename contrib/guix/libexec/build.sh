@@ -368,6 +368,9 @@ mkdir -p "$DISTSRC"
                 cd ./windeploy
                 mkdir -p unsigned
                 cp --target-directory=unsigned/ "${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
+                cp -r --target-directory=unsigned/ "${INSTALLPATH}"
+                find unsigned/ -name "*.dbg" -print0 \
+                    | xargs -0r rm
                 find . -print0 \
                     | sort --zero-terminated \
                     | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
