@@ -174,7 +174,7 @@ In the `guix-build-${VERSION}/output/x86_64-apple-darwin` and `guix-build-${VERS
 In the `guix-build-${VERSION}/output/x86_64-w64-mingw32` directory:
 
     tar xf bitcoin-${VERSION}-win64-codesigning.tar.gz
-    ./detached-sig-create.sh -key /path/to/codesign.key
+    ./detached-sig-create.sh /path/to/codesign.key
     Enter the passphrase for the key when prompted
     signature-win.tar.gz will be created
 
