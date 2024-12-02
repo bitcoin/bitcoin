@@ -614,6 +614,7 @@ public:
     bool IgnoresIncomingTxs() override { return m_ignore_incoming_txs; }
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);;
     void PushInventory(NodeId nodeid, const CInv& inv) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayInv(CInv &inv) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayInv(CInv &inv, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -2289,6 +2290,15 @@ void PeerManagerImpl::RelayInv(CInv &inv, const int minProtoVersion)
     });
 }
 
+void PeerManagerImpl::RelayInv(CInv &inv)
+{
+    LOCK(m_peer_mutex);
+    for (const auto& [_, peer] : m_peer_map) {
+        if (!peer->GetInvRelay()) continue;
+        PushInv(*peer, inv);
+    }
+}
+
 void PeerManagerImpl::RelayDSQ(const CCoinJoinQueue& queue)
 {
     CInv inv{MSG_DSQ, queue.GetHash()};
@@ -3429,7 +3439,7 @@ void PeerManagerImpl::PostProcessMessage(MessageProcessingResult&& result, NodeI
         WITH_LOCK(cs_main, RelayTransaction(tx));
     }
     if (result.m_inventory) {
-        RelayInv(result.m_inventory.value(), MIN_PEER_PROTO_VERSION);
+        RelayInv(result.m_inventory.value());
     }
 }
 

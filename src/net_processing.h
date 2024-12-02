@@ -98,7 +98,8 @@ public:
     virtual void RelayDSQ(const CCoinJoinQueue& queue) = 0;
 
     /** Relay inventories to all peers */
-    virtual void RelayInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION) = 0;
+    virtual void RelayInv(CInv &inv) = 0;
+    virtual void RelayInv(CInv &inv, const int minProtoVersion) = 0;
     virtual void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx,
                                   const int minProtoVersion = MIN_PEER_PROTO_VERSION) = 0;
 
