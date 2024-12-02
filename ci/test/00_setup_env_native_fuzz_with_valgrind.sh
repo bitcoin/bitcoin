@@ -16,6 +16,7 @@ export RUN_FUZZ_TESTS=true
 export FUZZ_TESTS_CONFIG="--valgrind"
 export GOAL="install"
 export BITCOIN_CONFIG="\
+ -DWITH_MULTIPROCESS=ON \
  -DBUILD_FOR_FUZZING=ON \
  -DSANITIZERS=fuzzer \
  -DCMAKE_C_COMPILER=clang-16 \
