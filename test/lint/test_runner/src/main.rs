@@ -236,6 +236,7 @@ fn lint_py_lint() -> LintResult {
             "F822", // undefined name name in __all__
             "F823", // local variable name … referenced before assignment
             "F841", // local variable 'foo' is assigned to but never used
+            "PLE", // Pylint errors
             "W191", // indentation contains tabs
             "W291", // trailing whitespace
             "W292", // no newline at end of file
