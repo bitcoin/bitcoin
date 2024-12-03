@@ -327,6 +327,11 @@ struct Peer {
         LOCK(m_tx_relay_mutex);
         return m_can_tx_relay ? m_tx_relay.get() : nullptr;
     };
+    const TxRelay* GetTxRelay() const LOCKS_EXCLUDED(m_tx_relay_mutex)
+    {
+        LOCK(m_tx_relay_mutex);
+        return m_can_tx_relay ? m_tx_relay.get() : nullptr;
+    };
 
     /** A vector of addresses to send to the peer, limited to MAX_ADDR_TO_SEND. */
     std::vector<CAddress> m_addrs_to_send GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
@@ -398,7 +403,7 @@ struct Peer {
     {}
 
 private:
-    Mutex m_tx_relay_mutex;
+    mutable Mutex m_tx_relay_mutex;
 
     /** Transaction relay data.
      * (Bitcoin) Transaction relay data. May be a nullptr.
@@ -637,7 +642,7 @@ private:
     /**
      * Private implementation of IsInvInFilter which does not call GetPeerRef; to be prefered when the PeerRef is available.
      */
-    bool IsInvInFilter(const PeerRef& peer, const uint256& hash) const;
+    bool IsInvInFilter(const Peer& peer, const uint256& hash) const;
 
     /** Get a shared pointer to the Peer object.
      *  May return an empty shared_ptr if the Peer object can't be found. */
@@ -2259,7 +2264,7 @@ void PeerManagerImpl::AskPeersForTransaction(const uint256& txid, bool is_master
             if (peersToAsk.size() >= 4) {
                 break;
             }
-            if (IsInvInFilter(peer, txid)) {
+            if (IsInvInFilter(*peer, txid)) {
                 peersToAsk.emplace_back(peer);
             }
         }
@@ -2280,14 +2285,14 @@ void PeerManagerImpl::AskPeersForTransaction(const uint256& txid, bool is_master
 bool PeerManagerImpl::IsInvInFilter(NodeId nodeid, const uint256& hash) const
 {
     PeerRef peer = GetPeerRef(nodeid);
-    return IsInvInFilter(peer, hash);
-}
-
-bool PeerManagerImpl::IsInvInFilter(const PeerRef& peer, const uint256& hash) const
-{
     if (peer == nullptr)
         return false;
-    if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
+    return IsInvInFilter(*peer, hash);
+}
+
+bool PeerManagerImpl::IsInvInFilter(const Peer& peer, const uint256& hash) const
+{
+    if (auto tx_relay = peer.GetTxRelay(); tx_relay != nullptr) {
         LOCK(tx_relay->m_tx_inventory_mutex);
         return tx_relay->m_tx_inventory_known_filter.contains(hash);
     }
