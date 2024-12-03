@@ -38,7 +38,7 @@ class RPCSetTxFeeTest(BitcoinTestFramework):
         assert_equal(node.settxfee(0.001), True)
         assert_equal(str(node.getwalletinfo()['paytxfee']), "0.00100000")
 
-        self.log.debug("Test that settxfeerate set the feerate in v/vB")
+        self.log.debug("Test that settxfeerate set the feerate in sat/vB")
         assert_equal(node.settxfeerate(6), True)
         assert_equal(str(node.getwalletinfo()['paytxfee']), "0.00006000")
 
