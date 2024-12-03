@@ -41,8 +41,8 @@ public:
         /** Construct an empty Ref. Non-empty Refs can only be created using
          *  TxGraph::AddTransaction. */
         Ref() noexcept = default;
-        /** Destroy this Ref. This is only allowed when it is empty, or the transaction it refers
-         *  to does not exist in the graph (in main nor staging). */
+        /** Destroy this Ref. If it is not empty, the corresponding transaction is removed (in both
+         *  main and staging, if it exists). */
         virtual ~Ref();
         // Support moving a Ref.
         Ref& operator=(Ref&& other) noexcept;
@@ -114,7 +114,9 @@ public:
     /** Determine whether the graph is oversized (contains a connected component of more than the
      *  configured maximum cluster count). If main_only is false and a staging graph exists, it is
      *  queried; otherwise the main graph is queried. Some of the functions below are not available
-     *  for oversized graphs. The mutators above are always available. */
+     *  for oversized graphs. The mutators above are always available. Removing a transaction by
+     *  destroying its Ref while staging exists will not clear main's oversizedness until staging
+     *  is aborted or committed. */
     virtual bool IsOversized(bool main_only = false) noexcept = 0;
     /** Get the feerate of the chunk which transaction arg is in the main graph. Returns the empty
      *  FeeFrac if arg does not exist in the main graph. The main graph must not be oversized. */
