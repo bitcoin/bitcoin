@@ -84,7 +84,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
             assert_equal(entry, mempool[x])
 
             # Check that gettxspendingprevout is consistent with getrawmempool
-            witnesstx = self.nodes[0].getrawtransaction(txid=x, verbose=True)
+            witnesstx = self.nodes[0].getrawtransaction(txid=x, verbosity=1)
             for tx_in in witnesstx["vin"]:
                 spending_result = self.nodes[0].gettxspendingprevout([ {'txid' : tx_in["txid"], 'vout' : tx_in["vout"]} ])
                 assert_equal(spending_result, [ {'txid' : tx_in["txid"], 'vout' : tx_in["vout"], 'spendingtxid' : x} ])

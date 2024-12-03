@@ -131,9 +131,8 @@ class RawTransactionsTest(BitcoinTestFramework):
                 for verbose in [None, 0, False, 1, True]:
                     assert_raises_rpc_error(-5, err_msg, self.nodes[n].getrawtransaction, txId, verbose)
 
-            # 6. invalid parameters - supply txid and invalid boolean values (strings) for verbose
+            # 6. invalid parameters - supply txid and invalid boolean values (strings) for verbosity
             for value in ["True", "False"]:
-                assert_raises_rpc_error(-3, "not of expected type number", self.nodes[n].getrawtransaction, txid=txId, verbose=value)
                 assert_raises_rpc_error(-3, "not of expected type number", self.nodes[n].getrawtransaction, txid=txId, verbosity=value)
 
             # 7. invalid parameters - supply txid and empty array
@@ -148,7 +147,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         for n in [0, 2]:
             self.log.info(f"Test getrawtransaction {'with' if n == 0 else 'without'} -txindex, with blockhash")
             # We should be able to get the raw transaction by providing the correct block
-            gottx = self.nodes[n].getrawtransaction(txid=tx, verbose=True, blockhash=block1)
+            gottx = self.nodes[n].getrawtransaction(txid=tx, verbosity=1, blockhash=block1)
             assert_equal(gottx['txid'], tx)
             assert_equal(gottx['in_active_chain'], True)
             if n == 0:
@@ -159,7 +158,7 @@ class RawTransactionsTest(BitcoinTestFramework):
                     assert 'in_active_chain' not in gottx
             else:
                 self.log.info("Test getrawtransaction without -txindex, without blockhash: expect the call to raise")
-                assert_raises_rpc_error(-5, err_msg, self.nodes[n].getrawtransaction, txid=tx, verbose=True)
+                assert_raises_rpc_error(-5, err_msg, self.nodes[n].getrawtransaction, txid=tx, verbosity=1)
             # We should not get the tx if we provide an unrelated block
             assert_raises_rpc_error(-5, "No such transaction found", self.nodes[n].getrawtransaction, txid=tx, blockhash=block2)
             # An invalid block hash should raise the correct errors
@@ -172,7 +171,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             assert_raises_rpc_error(-5, "Block hash not found", self.nodes[n].getrawtransaction, txid=tx, blockhash=bar)
             # Undo the blocks and verify that "in_active_chain" is false.
             self.nodes[n].invalidateblock(block1)
-            gottx = self.nodes[n].getrawtransaction(txid=tx, verbose=True, blockhash=block1)
+            gottx = self.nodes[n].getrawtransaction(txid=tx, verbosity=True, blockhash=block1)
             assert_equal(gottx['in_active_chain'], False)
             self.nodes[n].reconsiderblock(block1)
             assert_equal(self.nodes[n].getbestblockhash(), block2)
