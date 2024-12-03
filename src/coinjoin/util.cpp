@@ -87,14 +87,15 @@ void CKeyHolderStorage::ReturnAll()
     }
 }
 
-CTransactionBuilderOutput::CTransactionBuilderOutput(CTransactionBuilder* pTxBuilderIn, std::shared_ptr<CWallet> pwalletIn, CAmount nAmountIn) :
+CTransactionBuilderOutput::CTransactionBuilderOutput(CTransactionBuilder* pTxBuilderIn,
+                                                     const std::shared_ptr<CWallet>& wallet, CAmount nAmountIn) :
     pTxBuilder(pTxBuilderIn),
-    dest(pwalletIn.get()),
+    dest(wallet.get()),
     nAmount(nAmountIn)
 {
     assert(pTxBuilder);
     CTxDestination txdest;
-    LOCK(pwalletIn->cs_wallet);
+    LOCK(wallet->cs_wallet);
     dest.GetReservedDestination(txdest, false);
     script = ::GetScriptForDestination(txdest);
 }
@@ -108,15 +109,15 @@ bool CTransactionBuilderOutput::UpdateAmount(const CAmount nNewAmount)
     return true;
 }
 
-CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, const CompactTallyItem& tallyItemIn) :
-    pwallet(pwalletIn),
-    dummyReserveDestination(pwalletIn.get()),
+CTransactionBuilder::CTransactionBuilder(const std::shared_ptr<CWallet>& wallet, const CompactTallyItem& tallyItemIn) :
+    m_wallet(wallet),
+    dummyReserveDestination(wallet.get()),
     tallyItem(tallyItemIn)
 {
     // Generate a feerate which will be used to consider if the remainder is dust and will go into fees or not
-    coinControl.m_discard_feerate = ::GetDiscardRate(*pwallet);
+    coinControl.m_discard_feerate = ::GetDiscardRate(*m_wallet);
     // Generate a feerate which will be used by calculations of this class and also by CWallet::CreateTransaction
-    coinControl.m_feerate = std::max(GetRequiredFeeRate(*pwallet), pwallet->m_pay_tx_fee);
+    coinControl.m_feerate = std::max(GetRequiredFeeRate(*m_wallet), m_wallet->m_pay_tx_fee);
     // Change always goes back to origin
     coinControl.destChange = tallyItemIn.txdest;
     // Only allow tallyItems inputs for tx creation
@@ -131,16 +132,16 @@ CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, con
     // Get a comparable dummy scriptPubKey, avoid writing/flushing to the actual wallet db
     CScript dummyScript;
     {
-        LOCK(pwallet->cs_wallet);
-        WalletBatch dummyBatch(pwallet->GetDatabase(), false);
+        LOCK(m_wallet->cs_wallet);
+        WalletBatch dummyBatch(m_wallet->GetDatabase(), false);
         dummyBatch.TxnBegin();
         CKey secret;
-        secret.MakeNewKey(pwallet->CanSupportFeature(FEATURE_COMPRPUBKEY));
+        secret.MakeNewKey(m_wallet->CanSupportFeature(FEATURE_COMPRPUBKEY));
         CPubKey dummyPubkey = secret.GetPubKey();
         dummyBatch.TxnAbort();
         dummyScript = ::GetScriptForDestination(PKHash(dummyPubkey));
         // Calculate required bytes for the dummy signed tx with tallyItem's inputs only
-        nBytesBase = CalculateMaximumSignedTxSize(CTransaction(dummyTx), pwallet.get(), false);
+        nBytesBase = CalculateMaximumSignedTxSize(CTransaction(dummyTx), m_wallet.get(), false);
     }
     // Calculate the output size
     nBytesOutput = ::GetSerializeSize(CTxOut(0, dummyScript), PROTOCOL_VERSION);
@@ -204,7 +205,7 @@ CTransactionBuilderOutput* CTransactionBuilder::AddOutput(CAmount nAmountOutput)
 {
     if (CouldAddOutput(nAmountOutput)) {
         LOCK(cs_outputs);
-        vecOutputs.push_back(std::make_unique<CTransactionBuilderOutput>(this, pwallet, nAmountOutput));
+        vecOutputs.push_back(std::make_unique<CTransactionBuilderOutput>(this, m_wallet, nAmountOutput));
         return vecOutputs.back().get();
     }
     return nullptr;
@@ -233,12 +234,12 @@ CAmount CTransactionBuilder::GetAmountUsed() const
 CAmount CTransactionBuilder::GetFee(unsigned int nBytes) const
 {
     CAmount nFeeCalc = coinControl.m_feerate->GetFee(nBytes);
-    CAmount nRequiredFee = GetRequiredFee(*pwallet, nBytes);
+    CAmount nRequiredFee = GetRequiredFee(*m_wallet, nBytes);
     if (nRequiredFee > nFeeCalc) {
         nFeeCalc = nRequiredFee;
     }
-    if (nFeeCalc > pwallet->m_default_max_tx_fee) {
-        nFeeCalc = pwallet->m_default_max_tx_fee;
+    if (nFeeCalc > m_wallet->m_default_max_tx_fee) {
+        nFeeCalc = m_wallet->m_default_max_tx_fee;
     }
     return nFeeCalc;
 }
@@ -273,9 +274,9 @@ bool CTransactionBuilder::Commit(bilingual_str& strResult)
 
     CTransactionRef tx;
     {
-        LOCK2(pwallet->cs_wallet, cs_main);
+        LOCK2(m_wallet->cs_wallet, cs_main);
         FeeCalculation fee_calc_out;
-        if (!pwallet->CreateTransaction(vecSend, tx, nFeeRet, nChangePosRet, strResult, coinControl, fee_calc_out)) {
+        if (!m_wallet->CreateTransaction(vecSend, tx, nFeeRet, nChangePosRet, strResult, coinControl, fee_calc_out)) {
             return false;
         }
     }
@@ -312,8 +313,8 @@ bool CTransactionBuilder::Commit(bilingual_str& strResult)
     }
 
     {
-        LOCK2(pwallet->cs_wallet, cs_main);
-        pwallet->CommitTransaction(tx, {}, {});
+        LOCK2(m_wallet->cs_wallet, cs_main);
+        m_wallet->CommitTransaction(tx, {}, {});
     }
 
     fKeepKeys = true;
