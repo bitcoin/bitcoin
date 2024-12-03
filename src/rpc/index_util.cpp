@@ -10,6 +10,11 @@
 #include <txmempool.h>
 #include <uint256.h>
 
+bool IsAddressIndexAvailable()
+{
+    return fAddressIndex;
+}
+
 bool GetAddressIndex(CBlockTreeDB& block_tree_db, const uint160& addressHash, const AddressType type,
                      std::vector<CAddressIndexEntry>& addressIndex,
                      const int32_t start, const int32_t end)
@@ -67,6 +72,11 @@ bool GetMempoolAddressDeltaIndex(const CTxMemPool& mempool,
     return true;
 }
 
+bool IsSpentIndexAvailable()
+{
+    return fSpentIndex;
+}
+
 bool GetSpentIndex(CBlockTreeDB& block_tree_db, const CTxMemPool& mempool, const CSpentIndexKey& key,
                    CSpentIndexValue& value)
 {
@@ -82,6 +92,11 @@ bool GetSpentIndex(CBlockTreeDB& block_tree_db, const CTxMemPool& mempool, const
         return error("Unable to get spend information");
 
     return true;
+}
+
+bool IsTimestampIndexAvailable()
+{
+    return fTimestampIndex;
 }
 
 bool GetTimestampIndex(CBlockTreeDB& block_tree_db, const uint32_t high, const uint32_t low,

@@ -24,6 +24,7 @@ enum class AddressType : uint8_t;
 
 extern RecursiveMutex cs_main;
 
+bool IsAddressIndexAvailable();
 bool GetAddressIndex(CBlockTreeDB& block_tree_db, const uint160& addressHash, const AddressType type,
                      std::vector<CAddressIndexEntry>& addressIndex,
                      const int32_t start = 0, const int32_t end = 0)
@@ -35,9 +36,13 @@ bool GetMempoolAddressDeltaIndex(const CTxMemPool& mempool,
                                  const std::vector<CMempoolAddressDeltaKey>& addressDeltaIndex,
                                  std::vector<CMempoolAddressDeltaEntry>& addressDeltaEntries,
                                  const bool timestamp_sort = false);
+
+bool IsSpentIndexAvailable();
 bool GetSpentIndex(CBlockTreeDB& block_tree_db, const CTxMemPool& mempool, const CSpentIndexKey& key,
                    CSpentIndexValue& value)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+bool IsTimestampIndexAvailable();
 bool GetTimestampIndex(CBlockTreeDB& block_tree_db, const uint32_t high, const uint32_t low,
                        std::vector<uint256>& hashes)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main);

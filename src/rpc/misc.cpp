@@ -742,6 +742,10 @@ static RPCHelpMan getaddressmempool()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    if (!IsAddressIndexAvailable()) {
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Address index is disabled. You should run Dash Core with -addressindex (requires reindex)");
+    }
+
     CTxMemPool& mempool = EnsureAnyMemPool(request.context);
 
     std::vector<std::pair<uint160, AddressType>> addresses;
@@ -814,6 +818,9 @@ static RPCHelpMan getaddressutxos()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    if (!IsAddressIndexAvailable()) {
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Address index is disabled. You should run Dash Core with -addressindex (requires reindex)");
+    }
 
     std::vector<std::pair<uint160, AddressType> > addresses;
 
@@ -887,7 +894,9 @@ static RPCHelpMan getaddressdeltas()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-
+    if (!IsAddressIndexAvailable()) {
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Address index is disabled. You should run Dash Core with -addressindex (requires reindex)");
+    }
 
     UniValue startValue = find_value(request.params[0].get_obj(), "start");
     UniValue endValue = find_value(request.params[0].get_obj(), "end");
@@ -979,6 +988,9 @@ static RPCHelpMan getaddressbalance()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    if (!IsAddressIndexAvailable()) {
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Address index is disabled. You should run Dash Core with -addressindex (requires reindex)");
+    }
 
     std::vector<std::pair<uint160, AddressType> > addresses;
 
@@ -1052,6 +1064,9 @@ static RPCHelpMan getaddresstxids()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    if (!IsAddressIndexAvailable()) {
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Address index is disabled. You should run Dash Core with -addressindex (requires reindex)");
+    }
 
     std::vector<std::pair<uint160, AddressType> > addresses;
 
@@ -1142,6 +1157,9 @@ static RPCHelpMan getspentinfo()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    if (!IsSpentIndexAvailable()) {
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Spent index is disabled. You should run Dash Core with -spentindex (requires reindex)");
+    }
 
     UniValue txidValue = find_value(request.params[0].get_obj(), "txid");
     UniValue indexValue = find_value(request.params[0].get_obj(), "index");

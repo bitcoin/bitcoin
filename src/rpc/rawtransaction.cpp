@@ -71,27 +71,32 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, CTxMemPool& mempo
     // data into the returned UniValue.
 
     uint256 txid = tx.GetHash();
+    CSpentIndexTxInfo *txSpentInfoPtr{nullptr};
 
     // Add spent information if spentindex is enabled
     CSpentIndexTxInfo txSpentInfo;
-    for (const auto& txin : tx.vin) {
-        if (!tx.IsCoinBase()) {
+    if (IsSpentIndexAvailable()) {
+        txSpentInfo = CSpentIndexTxInfo{};
+        for (const auto& txin : tx.vin) {
+            if (!tx.IsCoinBase()) {
+                CSpentIndexValue spentInfo;
+                CSpentIndexKey spentKey(txin.prevout.hash, txin.prevout.n);
+                if (GetSpentIndex(*active_chainstate.m_blockman.m_block_tree_db, mempool, spentKey, spentInfo)) {
+                    txSpentInfo.mSpentInfo.emplace(spentKey, spentInfo);
+                }
+            }
+        }
+        for (unsigned int i = 0; i < tx.vout.size(); i++) {
             CSpentIndexValue spentInfo;
-            CSpentIndexKey spentKey(txin.prevout.hash, txin.prevout.n);
+            CSpentIndexKey spentKey(txid, i);
             if (GetSpentIndex(*active_chainstate.m_blockman.m_block_tree_db, mempool, spentKey, spentInfo)) {
                 txSpentInfo.mSpentInfo.emplace(spentKey, spentInfo);
             }
         }
-    }
-    for (unsigned int i = 0; i < tx.vout.size(); i++) {
-        CSpentIndexValue spentInfo;
-        CSpentIndexKey spentKey(txid, i);
-        if (GetSpentIndex(*active_chainstate.m_blockman.m_block_tree_db, mempool, spentKey, spentInfo)) {
-            txSpentInfo.mSpentInfo.emplace(spentKey, spentInfo);
-        }
+        txSpentInfoPtr = &txSpentInfo;
     }
 
-    TxToUniv(tx, uint256(), entry, true, /* txundo = */ nullptr, &txSpentInfo);
+    TxToUniv(tx, uint256(), entry, true, /* txundo = */ nullptr, txSpentInfoPtr);
 
     bool chainLock = false;
     if (!hashBlock.IsNull()) {
