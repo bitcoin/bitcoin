@@ -219,7 +219,7 @@ struct RPCArg {
     using Default = UniValue;
     using Fallback = std::variant<Optional, DefaultHint, Default>;
 
-    const std::string m_names; //!< The name of the arg (can be empty for inner args, can contain multiple aliases separated by | for named request arguments)
+    const std::string m_name; //!< The name of the arg (can be empty for inner args)
     const Type m_type;
     const std::vector<RPCArg> m_inner; //!< Only used for arrays or dicts
     const Fallback m_fallback;
@@ -232,12 +232,13 @@ struct RPCArg {
         Fallback fallback,
         std::string description,
         RPCArgOptions opts = {})
-        : m_names{std::move(name)},
+        : m_name{std::move(name)},
           m_type{std::move(type)},
           m_fallback{std::move(fallback)},
           m_description{std::move(description)},
           m_opts{std::move(opts)}
     {
+        CHECK_NONFATAL(std::string::npos == m_name.find('|'));
         CHECK_NONFATAL(type != Type::ARR && type != Type::OBJ && type != Type::OBJ_NAMED_PARAMS && type != Type::OBJ_USER_KEYS);
     }
 
@@ -248,13 +249,14 @@ struct RPCArg {
         std::string description,
         std::vector<RPCArg> inner,
         RPCArgOptions opts = {})
-        : m_names{std::move(name)},
+        : m_name{std::move(name)},
           m_type{std::move(type)},
           m_inner{std::move(inner)},
           m_fallback{std::move(fallback)},
           m_description{std::move(description)},
           m_opts{std::move(opts)}
     {
+        CHECK_NONFATAL(std::string::npos == m_name.find('|'));
         CHECK_NONFATAL(type == Type::ARR || type == Type::OBJ || type == Type::OBJ_NAMED_PARAMS || type == Type::OBJ_USER_KEYS);
     }
 
@@ -265,12 +267,6 @@ struct RPCArg {
      * Returns true if type matches, or object describing error(s) if not.
      */
     UniValue MatchesType(const UniValue& request) const;
-
-    /** Return the first of all aliases */
-    std::string GetFirstName() const;
-
-    /** Return the name, throws when there are aliases */
-    std::string GetName() const;
 
     /**
      * Return the type string of the argument.
