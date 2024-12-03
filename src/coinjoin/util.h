@@ -54,7 +54,7 @@ class CTransactionBuilderOutput
     CScript script;
 
 public:
-    CTransactionBuilderOutput(CTransactionBuilder* pTxBuilderIn, std::shared_ptr<CWallet> pwalletIn, CAmount nAmountIn);
+    CTransactionBuilderOutput(CTransactionBuilder* pTxBuilderIn, const std::shared_ptr<CWallet>& wallet, CAmount nAmountIn);
     CTransactionBuilderOutput(CTransactionBuilderOutput&&) = delete;
     CTransactionBuilderOutput& operator=(CTransactionBuilderOutput&&) = delete;
     /// Get the scriptPubKey of this output
@@ -77,7 +77,7 @@ public:
 class CTransactionBuilder
 {
     /// Wallet the transaction will be build for
-    std::shared_ptr<CWallet> pwallet;
+    const std::shared_ptr<CWallet>& m_wallet;
     /// See CTransactionBuilder() for initialization
     CCoinControl coinControl;
     /// Dummy since we anyway use tallyItem's destination as change destination in coincontrol.
@@ -100,7 +100,7 @@ class CTransactionBuilder
     friend class CTransactionBuilderOutput;
 
 public:
-    CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, const CompactTallyItem& tallyItemIn);
+    CTransactionBuilder(const std::shared_ptr<CWallet>& wallet, const CompactTallyItem& tallyItemIn);
     ~CTransactionBuilder();
     /// Check it would be possible to add a single output with the amount nAmount. Returns true if its possible and false if not.
     bool CouldAddOutput(CAmount nAmountOutput) const EXCLUSIVE_LOCKS_REQUIRED(!cs_outputs);
