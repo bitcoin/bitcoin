@@ -2058,6 +2058,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     strLoadError = _("Error upgrading evo database");
                     break;
                 }
+                if (!node.mnhf_manager->ForceSignalDBUpdate()) {
+                    strLoadError = _("Error upgrading evo database for EHF");
+                    break;
+                }
 
                 for (CChainState* chainstate : chainman.GetAll()) {
                     if (!is_coinsview_empty(chainstate)) {
