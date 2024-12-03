@@ -128,12 +128,14 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
     }
 
     const auto conf_path{GetConfigFilePath()};
-    std::ifstream stream{conf_path};
-
-    // not ok to have a config file specified that cannot be opened
-    if (IsArgSet("-conf") && !stream.good()) {
-        error = strprintf("specified config file \"%s\" could not be opened.", fs::PathToString(conf_path));
-        return false;
+    std::ifstream stream;
+    if (!conf_path.empty()) { // path is empty when -noconf is specified
+        stream = std::ifstream{conf_path};
+        // If the file is explicitly specified, it must be readable
+        if (IsArgSet("-conf") && !stream.good()) {
+            error = strprintf("specified config file \"%s\" could not be opened.", fs::PathToString(conf_path));
+            return false;
+        }
     }
     // ok to not have a config file
     if (stream.good()) {
@@ -213,7 +215,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
 
 fs::path AbsPathForConfigVal(const ArgsManager& args, const fs::path& path, bool net_specific)
 {
-    if (path.is_absolute()) {
+    if (path.is_absolute() || path.empty()) {
         return path;
     }
     return fsbridge::AbsPathJoin(net_specific ? args.GetDataDirNet() : args.GetDataDirBase(), path);
