@@ -59,6 +59,10 @@ static std::shared_ptr<CWallet> TestLoadWallet(interfaces::Chain* chain, interfa
     std::vector<bilingual_str> warnings;
     auto database = MakeWalletDatabase("", options, status, error);
     auto wallet = CWallet::Create(chain, coinjoin_loader, "", std::move(database), options.create_flags, error, warnings);
+    if (coinjoin_loader) {
+        // TODO: see CreateWalletWithoutChain
+        AddWallet(wallet);
+    }
     if (chain) {
         wallet->postInitProcess();
     }

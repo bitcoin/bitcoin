@@ -96,7 +96,7 @@ public:
         }
     }
 
-    void Add(CWallet& wallet);
+    void Add(const std::shared_ptr<CWallet>& wallet);
     void DoMaintenance();
 
     void Remove(const std::string& name);
@@ -138,7 +138,7 @@ private:
 class CCoinJoinClientSession : public CCoinJoinBaseSession
 {
 private:
-    CWallet& m_wallet;
+    const std::shared_ptr<CWallet> m_wallet;
     CoinJoinWalletManager& m_walletman;
     CCoinJoinClientManager& m_clientman;
     CDeterministicMNManager& m_dmnman;
@@ -163,15 +163,15 @@ private:
     /// Create denominations
     bool CreateDenominated(CAmount nBalanceToDenominate);
     bool CreateDenominated(CAmount nBalanceToDenominate, const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals)
-        EXCLUSIVE_LOCKS_REQUIRED(m_wallet.cs_wallet);
+        EXCLUSIVE_LOCKS_REQUIRED(m_wallet->cs_wallet);
 
     /// Split up large inputs or make fee sized inputs
     bool MakeCollateralAmounts();
     bool MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated)
-        EXCLUSIVE_LOCKS_REQUIRED(m_wallet.cs_wallet);
+        EXCLUSIVE_LOCKS_REQUIRED(m_wallet->cs_wallet);
 
     bool CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason)
-        EXCLUSIVE_LOCKS_REQUIRED(m_wallet.cs_wallet);
+        EXCLUSIVE_LOCKS_REQUIRED(m_wallet->cs_wallet);
 
     bool JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CConnman& connman);
     bool StartNewQueue(CAmount nBalanceNeedsAnonymized, CConnman& connman);
@@ -181,7 +181,7 @@ private:
     /// step 1: prepare denominated inputs and outputs
     bool PrepareDenominate(int nMinRounds, int nMaxRounds, std::string& strErrorRet, const std::vector<CTxDSIn>& vecTxDSIn,
                            std::vector<std::pair<CTxDSIn, CTxOut>>& vecPSInOutPairsRet, bool fDryRun = false)
-        EXCLUSIVE_LOCKS_REQUIRED(m_wallet.cs_wallet);
+        EXCLUSIVE_LOCKS_REQUIRED(m_wallet->cs_wallet);
     /// step 2: send denominated inputs and outputs prepared in step 1
     bool SendDenominate(const std::vector<std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsIn, CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(!cs_coinjoin);
 
@@ -200,7 +200,7 @@ private:
     void SetNull() override EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
 public:
-    explicit CCoinJoinClientSession(CWallet& wallet, CoinJoinWalletManager& walletman,
+    explicit CCoinJoinClientSession(const std::shared_ptr<CWallet>& wallet, CoinJoinWalletManager& walletman,
                                     CCoinJoinClientManager& clientman, CDeterministicMNManager& dmnman,
                                     CMasternodeMetaMan& mn_metaman, const CMasternodeSync& mn_sync,
                                     const std::unique_ptr<CCoinJoinClientQueueManager>& queueman, bool is_masternode);
@@ -267,7 +267,7 @@ public:
 class CCoinJoinClientManager
 {
 private:
-    CWallet& m_wallet;
+    const std::shared_ptr<CWallet> m_wallet;
     CoinJoinWalletManager& m_walletman;
     CDeterministicMNManager& m_dmnman;
     CMasternodeMetaMan& m_mn_metaman;
@@ -306,11 +306,19 @@ public:
     CCoinJoinClientManager(CCoinJoinClientManager const&) = delete;
     CCoinJoinClientManager& operator=(CCoinJoinClientManager const&) = delete;
 
-    explicit CCoinJoinClientManager(CWallet& wallet, CoinJoinWalletManager& walletman, CDeterministicMNManager& dmnman,
-                                    CMasternodeMetaMan& mn_metaman, const CMasternodeSync& mn_sync,
+    explicit CCoinJoinClientManager(const std::shared_ptr<CWallet>& wallet, CoinJoinWalletManager& walletman,
+                                    CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
+                                    const CMasternodeSync& mn_sync,
                                     const std::unique_ptr<CCoinJoinClientQueueManager>& queueman, bool is_masternode) :
-        m_wallet(wallet), m_walletman(walletman), m_dmnman(dmnman), m_mn_metaman(mn_metaman), m_mn_sync(mn_sync), m_queueman(queueman),
-        m_is_masternode{is_masternode} {}
+        m_wallet(wallet),
+        m_walletman(walletman),
+        m_dmnman(dmnman),
+        m_mn_metaman(mn_metaman),
+        m_mn_sync(mn_sync),
+        m_queueman(queueman),
+        m_is_masternode{is_masternode}
+    {
+    }
 
     void ProcessMessage(CNode& peer, CChainState& active_chainstate, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);
 
