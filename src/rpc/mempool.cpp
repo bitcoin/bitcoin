@@ -926,7 +926,7 @@ static RPCHelpMan submitpackage()
         ,
         {
             {"package", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of raw transactions.\n"
-                "The package must solely consist of a child and its parents. None of the parents may depend on each other.\n"
+                "The package must solely consist of a child transaction and all of its unconfirmed parents, if any. None of the parents may depend on each other.\n"
                 "The package must be topologically sorted, with the child being the last element in the array.",
                 {
                     {"rawtx", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
@@ -968,15 +968,15 @@ static RPCHelpMan submitpackage()
             },
         },
         RPCExamples{
-            HelpExampleRpc("submitpackage", R"(["rawtx1", "rawtx2"])") +
-            HelpExampleCli("submitpackage", R"('["rawtx1", "rawtx2"]')")
+            HelpExampleRpc("submitpackage", R"(["raw-parent-tx-1", "raw-parent-tx-2", "raw-child-tx"])") +
+            HelpExampleCli("submitpackage", R"('["raw-tx-without-unconfirmed-parents"]')")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
             const UniValue raw_transactions = request.params[0].get_array();
-            if (raw_transactions.size() < 2 || raw_transactions.size() > MAX_PACKAGE_COUNT) {
+            if (raw_transactions.empty() || raw_transactions.size() > MAX_PACKAGE_COUNT) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER,
-                                   "Array must contain between 2 and " + ToString(MAX_PACKAGE_COUNT) + " transactions.");
+                                   "Array must contain between 1 and " + ToString(MAX_PACKAGE_COUNT) + " transactions.");
             }
 
             // Fee check needs to be run with chainstate and package context
@@ -1007,7 +1007,8 @@ static RPCHelpMan submitpackage()
 
                 txns.emplace_back(MakeTransactionRef(std::move(mtx)));
             }
-            if (!IsChildWithParentsTree(txns)) {
+            CHECK_NONFATAL(!txns.empty());
+            if (txns.size() > 1 && !IsChildWithParentsTree(txns)) {
                 throw JSONRPCTransactionError(TransactionError::INVALID_PACKAGE, "package topology disallowed. not child-with-parents or parents depend on each other.");
             }
 
