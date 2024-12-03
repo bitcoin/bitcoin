@@ -534,13 +534,31 @@ if(WERROR)
   unset(werror_flag)
 endif()
 
-find_package(Python3 3.10 COMPONENTS Interpreter)
-if(Python3_EXECUTABLE)
-  set(PYTHON_COMMAND ${Python3_EXECUTABLE})
-else()
-  list(APPEND configure_warnings
-    "Minimum required Python not found. Utils and rpcauth tests are disabled."
-  )
+# First check for active virtual environment
+if(DEFINED ENV{VIRTUAL_ENV})
+  if(WIN32)
+    if(EXISTS "$ENV{VIRTUAL_ENV}/Scripts/python.exe")
+      set(Python3_EXECUTABLE "$ENV{VIRTUAL_ENV}/Scripts/python.exe")
+      set(PYTHON_COMMAND ${Python3_EXECUTABLE})
+    endif()
+  else()
+    if(EXISTS "$ENV{VIRTUAL_ENV}/bin/python3")
+      set(Python3_EXECUTABLE "$ENV{VIRTUAL_ENV}/bin/python3")
+      set(PYTHON_COMMAND ${Python3_EXECUTABLE})
+    endif()
+  endif()
+endif()
+
+if(NOT DEFINED PYTHON_COMMAND)
+  # Fall back to system Python if no venv is active or found
+  find_package(Python3 3.10 COMPONENTS Interpreter)
+  if(Python3_EXECUTABLE)
+    set(PYTHON_COMMAND ${Python3_EXECUTABLE})
+  else()
+    list(APPEND configure_warnings
+      "Minimum required Python not found. Utils and rpcauth tests are disabled."
+    )
+  endif()
 endif()
 
 target_compile_definitions(core_interface INTERFACE ${DEPENDS_COMPILE_DEFINITIONS})
