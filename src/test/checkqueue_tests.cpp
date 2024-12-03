@@ -42,28 +42,26 @@ static const unsigned int QUEUE_BATCH_SIZE = 128;
 static const int SCRIPT_CHECK_THREADS = 3;
 
 struct FakeCheck {
-    bool operator()() const
+    std::optional<int> operator()() const
     {
-        return true;
+        return std::nullopt;
     }
 };
 
 struct FakeCheckCheckCompletion {
     static std::atomic<size_t> n_calls;
-    bool operator()()
+    std::optional<int> operator()()
     {
         n_calls.fetch_add(1, std::memory_order_relaxed);
-        return true;
+        return std::nullopt;
     }
 };
 
-struct FailingCheck {
-    bool fails;
-    FailingCheck(bool _fails) : fails(_fails){};
-    bool operator()() const
-    {
-        return !fails;
-    }
+struct FixedCheck
+{
+    std::optional<int> m_result;
+    FixedCheck(std::optional<int> result) : m_result(result){};
+    std::optional<int> operator()() const { return m_result; }
 };
 
 struct UniqueCheck {
@@ -71,11 +69,11 @@ struct UniqueCheck {
     static std::unordered_multiset<size_t> results GUARDED_BY(m);
     size_t check_id;
     UniqueCheck(size_t check_id_in) : check_id(check_id_in){};
-    bool operator()()
+    std::optional<int> operator()()
     {
         LOCK(m);
         results.insert(check_id);
-        return true;
+        return std::nullopt;
     }
 };
 
@@ -83,9 +81,9 @@ struct UniqueCheck {
 struct MemoryCheck {
     static std::atomic<size_t> fake_allocated_memory;
     bool b {false};
-    bool operator()() const
+    std::optional<int> operator()() const
     {
-        return true;
+        return std::nullopt;
     }
     MemoryCheck(const MemoryCheck& x)
     {
@@ -110,9 +108,9 @@ struct FrozenCleanupCheck {
     static std::condition_variable cv;
     static std::mutex m;
     bool should_freeze{true};
-    bool operator()() const
+    std::optional<int> operator()() const
     {
-        return true;
+        return std::nullopt;
     }
     FrozenCleanupCheck() = default;
     ~FrozenCleanupCheck()
@@ -149,7 +147,7 @@ std::atomic<size_t> MemoryCheck::fake_allocated_memory{0};
 // Queue Typedefs
 typedef CCheckQueue<FakeCheckCheckCompletion> Correct_Queue;
 typedef CCheckQueue<FakeCheck> Standard_Queue;
-typedef CCheckQueue<FailingCheck> Failing_Queue;
+typedef CCheckQueue<FixedCheck> Fixed_Queue;
 typedef CCheckQueue<UniqueCheck> Unique_Queue;
 typedef CCheckQueue<MemoryCheck> Memory_Queue;
 typedef CCheckQueue<FrozenCleanupCheck> FrozenCleanup_Queue;
@@ -174,7 +172,7 @@ void CheckQueueTest::Correct_Queue_range(std::vector<size_t> range)
             total -= vChecks.size();
             control.Add(std::move(vChecks));
         }
-        BOOST_REQUIRE(control.Wait());
+        BOOST_REQUIRE(!control.Complete().has_value());
         BOOST_REQUIRE_EQUAL(FakeCheckCheckCompletion::n_calls, i);
     }
 }
@@ -217,27 +215,27 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct_Random)
 }
 
 
-/** Test that failing checks are caught */
+/** Test that distinct failing checks are caught */
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
 {
-    auto fail_queue = std::make_unique<Failing_Queue>(QUEUE_BATCH_SIZE, SCRIPT_CHECK_THREADS);
+    auto fixed_queue = std::make_unique<Fixed_Queue>(QUEUE_BATCH_SIZE, SCRIPT_CHECK_THREADS);
     for (size_t i = 0; i < 1001; ++i) {
-        CCheckQueueControl<FailingCheck> control(fail_queue.get());
+        CCheckQueueControl<FixedCheck> control(fixed_queue.get());
         size_t remaining = i;
         while (remaining) {
             size_t r = m_rng.randrange(10);
 
-            std::vector<FailingCheck> vChecks;
+            std::vector<FixedCheck> vChecks;
             vChecks.reserve(r);
             for (size_t k = 0; k < r && remaining; k++, remaining--)
-                vChecks.emplace_back(remaining == 1);
+                vChecks.emplace_back(remaining == 1 ? std::make_optional<int>(17 * i) : std::nullopt);
             control.Add(std::move(vChecks));
         }
-        bool success = control.Wait();
+        auto result = control.Complete();
         if (i > 0) {
-            BOOST_REQUIRE(!success);
-        } else if (i == 0) {
-            BOOST_REQUIRE(success);
+            BOOST_REQUIRE(result.has_value() && *result == static_cast<int>(17 * i));
+        } else {
+            BOOST_REQUIRE(!result.has_value());
         }
     }
 }
@@ -245,17 +243,17 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Catches_Failure)
 // future blocks, ie, the bad state is cleared.
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Recovers_From_Failure)
 {
-    auto fail_queue = std::make_unique<Failing_Queue>(QUEUE_BATCH_SIZE, SCRIPT_CHECK_THREADS);
+    auto fail_queue = std::make_unique<Fixed_Queue>(QUEUE_BATCH_SIZE, SCRIPT_CHECK_THREADS);
     for (auto times = 0; times < 10; ++times) {
         for (const bool end_fails : {true, false}) {
-            CCheckQueueControl<FailingCheck> control(fail_queue.get());
+            CCheckQueueControl<FixedCheck> control(fail_queue.get());
             {
-                std::vector<FailingCheck> vChecks;
-                vChecks.resize(100, false);
-                vChecks[99] = end_fails;
+                std::vector<FixedCheck> vChecks;
+                vChecks.resize(100, FixedCheck(std::nullopt));
+                vChecks[99] = FixedCheck(end_fails ? std::make_optional<int>(2) : std::nullopt);
                 control.Add(std::move(vChecks));
             }
-            bool r =control.Wait();
+            bool r = !control.Complete().has_value();
             BOOST_REQUIRE(r != end_fails);
         }
     }
@@ -329,8 +327,8 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_FrozenCleanup)
         CCheckQueueControl<FrozenCleanupCheck> control(queue.get());
         std::vector<FrozenCleanupCheck> vChecks(1);
         control.Add(std::move(vChecks));
-        bool waitResult = control.Wait(); // Hangs here
-        assert(waitResult);
+        auto result = control.Complete(); // Hangs here
+        assert(!result);
     });
     {
         std::unique_lock<std::mutex> l(FrozenCleanupCheck::m);
