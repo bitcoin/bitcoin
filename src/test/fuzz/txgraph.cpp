@@ -146,6 +146,30 @@ struct SimTxGraph
         if (oversized.has_value() && *oversized) oversized = std::nullopt;
     }
 
+    /** Destroy the transaction from the graph, including from the removed set. This will
+     *  trigger TxGraph::Ref::~Ref. reset_oversize controls whether the cached oversized
+     *  value is cleared (destroying does not clear oversizedness in TxGraph of the main
+     *  graph while staging exists). */
+    void DestroyTransaction(TxGraph::Ref* ref, bool reset_oversize)
+    {
+        auto pos = Find(ref);
+        if (pos == MISSING) {
+            // Wipe the ref, if it exists, from the removed vector. Use std::partition rather
+            // than std::erase because we don't care about the order of the entries that
+            // remain.
+            auto remove = std::partition(removed.begin(), removed.end(), [&](auto& arg) { return arg.get() != ref; });
+            removed.erase(remove, removed.end());
+        } else {
+            graph.RemoveTransactions(SetType::Singleton(pos));
+            simrevmap.erase(simmap[pos].get());
+            simmap[pos].reset();
+            // This may invalidate our cached oversized value.
+            if (reset_oversize && oversized.has_value() && *oversized) {
+                oversized = std::nullopt;
+            }
+        }
+    }
+
     /** Construct the set with all positions in this graph corresponding to the specified
      *  TxGraph::Refs. All of them must occur in this graph and not be removed. */
     SetType MakeSet(std::span<TxGraph::Ref* const> arg)
@@ -327,9 +351,9 @@ FUZZ_TARGET(txgraph)
                 }
                 break;
             } else if (sel_sim.removed.size() > 0 && command-- == 0) {
-                // ~Ref. Destroying a TxGraph::Ref has an observable effect on the TxGraph it
-                // refers to, so this simulation permits doing so separately from other actions on
-                // TxGraph.
+                // ~Ref (of an already-removed transaction). Destroying a TxGraph::Ref has an
+                // observable effect on the TxGraph it refers to, so this simulation permits doing
+                // so separately from other actions on TxGraph.
 
                 // Pick a Ref of sel_sim.removed to destroy. Note that the same Ref may still occur
                 // in the other graph, and thus not actually trigger ~Ref yet (which is exactly
@@ -340,6 +364,28 @@ FUZZ_TARGET(txgraph)
                     std::swap(sel_sim.removed[removed_pos], sel_sim.removed.back());
                 }
                 sel_sim.removed.pop_back();
+                break;
+            } else if (command-- == 0) {
+                // ~Ref (of any transaction).
+                std::vector<TxGraph::Ref*> to_destroy;
+                to_destroy.push_back(pick_fn());
+                while (true) {
+                    // Keep adding either the ancestors or descendants the already picked
+                    // transactions have in both graphs (main and staging) combined. Destroying
+                    // will trigger deletions in both, so to have consistent TxGraph behavior, the
+                    // set must be closed under ancestors, or descendants, in both graphs.
+                    auto old_size = to_destroy.size();
+                    for (auto& sim : sims) sim.IncludeAncDesc(to_destroy, alt);
+                    if (to_destroy.size() == old_size) break;
+                }
+                // The order in which these ancestors/descendants are destroyed should not matter;
+                // randomly shuffle them.
+                std::shuffle(to_destroy.begin(), to_destroy.end(), rng);
+                for (TxGraph::Ref* ptr : to_destroy) {
+                    for (size_t level = 0; level < sims.size(); ++level) {
+                        sims[level].DestroyTransaction(ptr, level == sims.size() - 1);
+                    }
+                }
                 break;
             } else if (command-- == 0) {
                 // SetTransactionFee.
@@ -457,6 +503,10 @@ FUZZ_TARGET(txgraph)
                 // AbortStaging.
                 real->AbortStaging();
                 sims.pop_back();
+                // Reset the cached oversized value (if TxGraph::Ref destructions triggered
+                // removals of main transactions while staging was active, then aborting will
+                // cause it to be re-evaluated in TxGraph).
+                sims.back().oversized = std::nullopt;
                 break;
             }
         }
@@ -537,13 +587,4 @@ FUZZ_TARGET(txgraph)
 
     // Sanity check again (because invoking inspectors may modify internal unobservable state).
     real->SanityCheck();
-
-    // Remove all remaining transactions, because Refs cannot be destroyed otherwise (this will be
-    // addressed in a follow-up commit).
-    for (auto& sim : sims) {
-        for (auto i : sim.graph.Positions()) {
-            auto ref = sim.GetRef(i);
-            real->RemoveTransaction(*ref);
-        }
-    }
 }
