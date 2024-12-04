@@ -71,18 +71,19 @@ private:
     mutable std::map<ContributionsCacheKey, ContributionsCacheEntry> contributionsCache GUARDED_BY(contributionsCacheCs);
 
 public:
-    CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman,
-                       CDKGDebugManager& _dkgDebugManager, CMasternodeMetaMan& mn_metaman, CQuorumBlockProcessor& _quorumBlockProcessor,
-                       const CActiveMasternodeManager* const mn_activeman, const CSporkManager& sporkman,
-                       const std::unique_ptr<PeerManager>& peerman, bool unitTests, bool fWipe);
+    CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman,
+                       CDeterministicMNManager& dmnman, CDKGDebugManager& _dkgDebugManager, CMasternodeMetaMan& mn_metaman,
+                       CQuorumBlockProcessor& _quorumBlockProcessor, const CActiveMasternodeManager* const mn_activeman,
+                       const CSporkManager& sporkman, bool unitTests, bool fWipe);
     ~CDKGSessionManager();
 
-    void StartThreads();
+    void StartThreads(PeerManager& peerman);
     void StopThreads();
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
 
-    PeerMsgRet ProcessMessage(CNode& pfrom, PeerManager* peerman, bool is_masternode, const std::string& msg_type, CDataStream& vRecv);
+    PeerMsgRet ProcessMessage(CNode& pfrom, PeerManager& peerman, bool is_masternode, const std::string& msg_type,
+                              CDataStream& vRecv);
     bool AlreadyHave(const CInv& inv) const;
     bool GetContribution(const uint256& hash, CDKGContribution& ret) const;
     bool GetComplaint(const uint256& hash, CDKGComplaint& ret) const;

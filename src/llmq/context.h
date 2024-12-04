@@ -46,7 +46,7 @@ public:
     ~LLMQContext();
 
     void Interrupt();
-    void Start();
+    void Start(PeerManager& peerman);
     void Stop();
 
     /** Guaranteed if LLMQContext is initialized then all members are valid too

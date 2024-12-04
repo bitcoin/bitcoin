@@ -29,7 +29,7 @@ LLMQContext::LLMQContext(ChainstateManager& chainman, CConnman& connman, CDeterm
     quorum_block_processor{std::make_unique<llmq::CQuorumBlockProcessor>(chainman.ActiveChainstate(), dmnman, evo_db)},
     qdkgsman{std::make_unique<llmq::CDKGSessionManager>(*bls_worker, chainman.ActiveChainstate(), connman, dmnman,
                                                         *dkg_debugman, mn_metaman, *quorum_block_processor,
-                                                        mn_activeman, sporkman, peerman, unit_tests, wipe)},
+                                                        mn_activeman, sporkman, unit_tests, wipe)},
     qman{std::make_unique<llmq::CQuorumManager>(*bls_worker, chainman.ActiveChainstate(), connman, dmnman, *qdkgsman,
                                                 evo_db, *quorum_block_processor, mn_activeman, mn_sync, sporkman,
                                                 unit_tests, wipe)},
@@ -74,12 +74,13 @@ void LLMQContext::Interrupt() {
     llmq::quorumInstantSendManager->InterruptWorkerThread();
 }
 
-void LLMQContext::Start() {
+void LLMQContext::Start(PeerManager& peerman)
+{
     assert(clhandler == llmq::chainLocksHandler.get());
     assert(isman == llmq::quorumInstantSendManager.get());
 
     if (is_masternode) {
-        qdkgsman->StartThreads();
+        qdkgsman->StartThreads(peerman);
     }
     qman->Start();
     shareman->RegisterAsRecoveredSigsListener();

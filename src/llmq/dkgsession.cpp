@@ -156,7 +156,7 @@ bool CDKGSession::Init(const uint256& _myProTxHash, int _quorumIndex)
     return true;
 }
 
-void CDKGSession::Contribute(CDKGPendingMessages& pendingMessages)
+void CDKGSession::Contribute(CDKGPendingMessages& pendingMessages, PeerManager& peerman)
 {
     CDKGLogger logger(*this, __func__, __LINE__);
 
@@ -174,10 +174,10 @@ void CDKGSession::Contribute(CDKGPendingMessages& pendingMessages)
     logger.Batch("generated contributions. time=%d", t1.count());
     logger.Flush();
 
-    SendContributions(pendingMessages);
+    SendContributions(pendingMessages, peerman);
 }
 
-void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
+void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages, PeerManager& peerman)
 {
     CDKGLogger logger(*this, __func__, __LINE__);
 
@@ -226,7 +226,7 @@ void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
         return true;
     });
 
-    pendingMessages.PushPendingMessage(-1, nullptr, qc);
+    pendingMessages.PushPendingMessage(-1, qc, peerman);
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
@@ -417,7 +417,7 @@ void CDKGSession::VerifyPendingContributions()
     pendingContributionVerifications.clear();
 }
 
-void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages)
+void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages, PeerManager& peerman)
 {
     if (!AreWeMember()) {
         return;
@@ -455,7 +455,7 @@ void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages)
 
     VerifyConnectionAndMinProtoVersions();
 
-    SendComplaint(pendingMessages);
+    SendComplaint(pendingMessages, peerman);
 }
 
 void CDKGSession::VerifyConnectionAndMinProtoVersions() const
@@ -499,7 +499,7 @@ void CDKGSession::VerifyConnectionAndMinProtoVersions() const
     }
 }
 
-void CDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages)
+void CDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages, PeerManager& peerman)
 {
     CDKGLogger logger(*this, __func__, __LINE__);
 
@@ -538,7 +538,7 @@ void CDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages)
         return true;
     });
 
-    pendingMessages.PushPendingMessage(-1, nullptr, qc);
+    pendingMessages.PushPendingMessage(-1, qc, peerman);
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
@@ -645,7 +645,7 @@ std::optional<CInv> CDKGSession::ReceiveMessage(const CDKGComplaint& qc)
     return inv;
 }
 
-void CDKGSession::VerifyAndJustify(CDKGPendingMessages& pendingMessages)
+void CDKGSession::VerifyAndJustify(CDKGPendingMessages& pendingMessages, PeerManager& peerman)
 {
     if (!AreWeMember()) {
         return;
@@ -682,11 +682,12 @@ void CDKGSession::VerifyAndJustify(CDKGPendingMessages& pendingMessages)
 
     logger.Flush();
     if (!justifyFor.empty()) {
-        SendJustification(pendingMessages, justifyFor);
+        SendJustification(pendingMessages, peerman, justifyFor);
     }
 }
 
-void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const std::set<uint256>& forMembers)
+void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, PeerManager& peerman,
+                                    const std::set<uint256>& forMembers)
 {
     CDKGLogger logger(*this, __func__, __LINE__);
 
@@ -731,7 +732,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const 
         return true;
     });
 
-    pendingMessages.PushPendingMessage(-1, nullptr, qj);
+    pendingMessages.PushPendingMessage(-1, qj, peerman);
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
@@ -885,7 +886,7 @@ std::optional<CInv> CDKGSession::ReceiveMessage(const CDKGJustification& qj)
     return inv;
 }
 
-void CDKGSession::VerifyAndCommit(CDKGPendingMessages& pendingMessages)
+void CDKGSession::VerifyAndCommit(CDKGPendingMessages& pendingMessages, PeerManager& peerman)
 {
     if (!AreWeMember()) {
         return;
@@ -927,10 +928,10 @@ void CDKGSession::VerifyAndCommit(CDKGPendingMessages& pendingMessages)
 
     logger.Flush();
 
-    SendCommitment(pendingMessages);
+    SendCommitment(pendingMessages, peerman);
 }
 
-void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
+void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages, PeerManager& peerman)
 {
     CDKGLogger logger(*this, __func__, __LINE__);
 
@@ -1041,7 +1042,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
         return true;
     });
 
-    pendingMessages.PushPendingMessage(-1, nullptr, qc);
+    pendingMessages.PushPendingMessage(-1, qc, peerman);
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
