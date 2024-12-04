@@ -167,6 +167,7 @@ class TxGraphImpl final : public TxGraph
 {
     friend class Cluster;
     friend class BlockBuilderImpl;
+    friend class EvictorImpl;
 private:
     /** Internal RNG. */
     FastRandomContext m_rng;
@@ -254,7 +255,7 @@ private:
 
     /** Index of ChunkData objects. */
     ChunkIndex m_chunkindex;
-    /** Number of index-observing objects in existence (BlockBuilderImpl). */
+    /** Number of index-observing objects in existence (BlockBuilderImpl, EvictorImpl). */
     size_t m_chunkindex_observers{0};
 
     /** A Locator that describes whether, where, and in which Cluster an Entry appears.
@@ -362,7 +363,6 @@ public:
     void UnlinkRef(GraphIndex idx) noexcept final
     {
         auto& entry = m_entries[idx];
-        Assume(m_chunkindex_observers == 0);
         Assume(entry.m_ref != nullptr);
         entry.m_ref = nullptr;
         if (!entry.IsWiped()) {
@@ -418,6 +418,7 @@ public:
     std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> GetMainStagingDiagrams() noexcept final;
 
     std::unique_ptr<BlockBuilder> GetBlockBuilder() noexcept final;
+    std::unique_ptr<Evictor> GetEvictor() noexcept final;
 
     void SanityCheck() const final;
 };
@@ -451,6 +452,27 @@ public:
     ~BlockBuilderImpl() final;
     void Include() noexcept final;
     void Skip() noexcept final;
+};
+
+/** Implementation of the TxGraph::Evictor interface. */
+class EvictorImpl final : public TxGraph::Evictor
+{
+    /** Which TxGraphImpl this object is doing eviction. It will have its m_chunkindex_observers
+     *  incremented as long as this EvictorImpl exists. */
+    TxGraphImpl* const m_graph;
+    /** Vector for actual storage pointed to by TxGraph::Evictor::m_current_chunk. */
+    std::vector<TxGraph::Ref*> m_chunkdata;
+    /** Iterator to the next chunk (after the current one) in the chunk index. rend() if nothing
+     *  further remains. */
+    TxGraphImpl::ChunkIndex::const_reverse_iterator m_next_iter;
+
+public:
+    /** Construct a new EvictorImpl for the provided graph. */
+    EvictorImpl(TxGraphImpl& graph) noexcept;
+
+    // Implement the public interface.
+    ~EvictorImpl() final;
+    void Next() noexcept final;
 };
 
 void TxGraphImpl::ClearLocator(int level, GraphIndex idx) noexcept
@@ -2040,6 +2062,55 @@ void BlockBuilderImpl::Skip() noexcept
 std::unique_ptr<TxGraph::BlockBuilder> TxGraphImpl::GetBlockBuilder() noexcept
 {
     return std::make_unique<BlockBuilderImpl>(*this);
+}
+
+void EvictorImpl::Next() noexcept
+{
+    while (m_next_iter != m_graph->m_chunkindex.rend()) {
+        // Find the cluster pointed to by m_next_iter (and advance it).
+        const auto& chunk_data = *(m_next_iter++);
+        const auto& chunk_end_entry = m_graph->m_entries[chunk_data.m_graph_index];
+        Cluster* cluster = chunk_end_entry.m_locator[0].cluster;
+        // Populate m_current_chunk.
+        m_chunkdata.resize(chunk_data.m_chunk_count);
+        auto start_pos = chunk_end_entry.m_main_lin_index + 1 - chunk_data.m_chunk_count;
+        cluster->GetClusterRefs(*m_graph, m_chunkdata, start_pos);
+        m_current_chunk.emplace(m_chunkdata, chunk_end_entry.m_main_chunk_feerate);
+        // GetClusterRefs emits in topological order; Evictor interface expects children before
+        // parents, so reverse.
+        std::reverse(m_chunkdata.begin(), m_chunkdata.end());
+        return;
+    }
+    // We reached the end of m_chunkindex.
+    m_current_chunk = std::nullopt;
+}
+
+EvictorImpl::EvictorImpl(TxGraphImpl& graph) noexcept : m_graph(&graph)
+{
+    // Make sure all clusters in main are up to date, and acceptable.
+    m_graph->SplitAll(0);
+    if (m_graph->m_clustersets.size() == 1) m_graph->ApplyDependencies();
+    m_graph->MakeAllAcceptable(0);
+    // The main graph cannot be oversized, as that implies unappliable dependencies.
+    Assume(!m_graph->m_clustersets[0].m_oversized);
+    // Remember that this object is observing the graph's index, so that we can detect concurrent
+    // modifications.
+    ++m_graph->m_chunkindex_observers;
+    // Find the first chunk.
+    m_next_iter = m_graph->m_chunkindex.rbegin();
+    Next();
+}
+
+EvictorImpl::~EvictorImpl()
+{
+    Assume(m_graph->m_chunkindex_observers > 0);
+    // Permit modifications to the main graph again after destroying the BlockBuilderImpl.
+    --m_graph->m_chunkindex_observers;
+}
+
+std::unique_ptr<TxGraph::Evictor> TxGraphImpl::GetEvictor() noexcept
+{
+    return std::make_unique<EvictorImpl>(*this);
 }
 
 } // namespace
