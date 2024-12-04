@@ -1917,11 +1917,11 @@ void CoinJoinWalletManager::Add(const std::shared_ptr<CWallet>& wallet)
     g_wallet_init_interface.InitCoinJoinSettings(*this);
 }
 
-void CoinJoinWalletManager::DoMaintenance()
+void CoinJoinWalletManager::DoMaintenance(CConnman& connman)
 {
     LOCK(cs_wallet_manager_map);
     for (auto& [_, clientman] : m_wallet_manager_map) {
-        clientman->DoMaintenance(m_chainman, m_connman, m_mempool);
+        clientman->DoMaintenance(m_chainman, connman, m_mempool);
     }
 }
 

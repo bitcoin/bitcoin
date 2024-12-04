@@ -76,11 +76,10 @@ public:
     using wallet_name_cjman_map = std::map<const std::string, std::unique_ptr<CCoinJoinClientManager>>;
 
 public:
-    CoinJoinWalletManager(ChainstateManager& chainman, CConnman& connman, CDeterministicMNManager& dmnman,
-                          CMasternodeMetaMan& mn_metaman, const CTxMemPool& mempool, const CMasternodeSync& mn_sync,
+    CoinJoinWalletManager(ChainstateManager& chainman, CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
+                          const CTxMemPool& mempool, const CMasternodeSync& mn_sync,
                           const std::unique_ptr<CCoinJoinClientQueueManager>& queueman, bool is_masternode) :
         m_chainman(chainman),
-        m_connman(connman),
         m_dmnman(dmnman),
         m_mn_metaman(mn_metaman),
         m_mempool(mempool),
@@ -97,7 +96,7 @@ public:
     }
 
     void Add(const std::shared_ptr<CWallet>& wallet);
-    void DoMaintenance();
+    void DoMaintenance(CConnman& connman);
 
     void Remove(const std::string& name);
     void Flush(const std::string& name);
@@ -122,7 +121,6 @@ public:
 
 private:
     ChainstateManager& m_chainman;
-    CConnman& m_connman;
     CDeterministicMNManager& m_dmnman;
     CMasternodeMetaMan& m_mn_metaman;
     const CTxMemPool& m_mempool;
