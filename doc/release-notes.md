@@ -1,9 +1,9 @@
-27.2 Release Notes
+27.x Release Notes
 =====================
 
-Bitcoin Core version 27.2 is now available from:
+Bitcoin Core version 27.x is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-27.2/>
+  <https://bitcoincore.org/bin/bitcoin-core-27.x/>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -40,53 +40,27 @@ unsupported systems.
 Notable changes
 ===============
 
-### P2P
-
-- #30394 net: fix race condition in self-connect detection
-
-### Init
-
-- #30435 init: change shutdown order of load block thread and scheduler
-
-### RPC
-
-- #30357 Fix cases of calls to FillPSBT errantly returning complete=true
-
-### PSBT
-
-- #29855 psbt: Check non witness utxo outpoint early
-
 ### Test
 
-- #30552 test: fix constructor of msg_tx
-
-### Doc
-
-- #30504 doc: use proper doxygen formatting for CTxMemPool::cs
+- #31419 test: fix MIN macro redefinition
 
 ### Build
 
-- #30283 upnp: fix build with miniupnpc 2.2.8
-- #30633 Fixes for GCC 15 compatibility
+- #31502 depends: Fix CXXFLAGS on NetBSD
+- #31627 depends: Fix spacing issue
 
-### CI
+### Misc
 
-- #30193 ci: move ASan job to GitHub Actions from Cirrus CI
-- #30299 ci: remove unused bcc variable from workflow
+- #31623 tracing: Rename the MIN macro to TRACEPOINT_TEST_MIN in log_raw_p2p_msgs
+
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- Ava Chow
-- Cory Fields
-- Martin Zumsande
-- Matt Whitlock
-- Max Edwards
-- Sebastian Falbesoner
-- Vasil Dimov
-- willcl-ark
+- 0xb10c
+- Hennadii Stepanov
 
 As well as to everyone that helped with translations on
 [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
