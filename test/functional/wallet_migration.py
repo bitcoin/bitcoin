@@ -1027,7 +1027,11 @@ class WalletMigrationTest(BitcoinTestFramework):
         res = wallet.migratewallet()
         wo_wallet = self.nodes[0].get_wallet_rpc(res['watchonly_name'])
         assert_equal(wo_wallet.listdescriptors()['descriptors'][0]['desc'], descsum_create(f'pk({pubkey.get_bytes().hex()})'))
-        wallet.unloadwallet()
+        # Ensure that migrating a wallet with watch-only scripts does not create a spendable wallet.
+        assert_equal('bare_p2pk_watchonly', res['wallet_name'])
+        assert "bare_p2pk" not in self.nodes[0].listwallets()
+
+        wo_wallet.unloadwallet()
 
     def test_manual_keys_import(self):
         self.log.info("Test migrating standalone private keys")
@@ -1068,7 +1072,9 @@ class WalletMigrationTest(BitcoinTestFramework):
         # Verify all expected descriptors were migrated
         migrated_desc = [item['desc'] for item in wo_wallet.listdescriptors()['descriptors']]
         assert_equal(expected_descs, migrated_desc)
-        wallet.unloadwallet()
+        # Ensure that migrating a wallet with watch-only scripts does not create a spendable wallet.
+        assert_equal('import_pubkeys_watchonly', res['wallet_name'])
+        assert "import_pubkeys" not in self.nodes[0].listwallets()
         wo_wallet.unloadwallet()
 
     def run_test(self):
