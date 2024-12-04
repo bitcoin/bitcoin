@@ -10,6 +10,9 @@
 #include <functional>
 #include <string>
 
+/** Translate a message to the native language of the user. */
+const extern std::function<std::string(const char*)> G_TRANSLATION_FUN;
+
 /**
  * Bilingual messages:
  *   - in GUI: user's native language + untranslated (i.e. English)
@@ -63,9 +66,6 @@ bilingual_str format(const bilingual_str& fmt, const Args&... args)
                          tfm::format(fmt.translated, translate_arg(args, true)...)};
 }
 } // namespace tinyformat
-
-/** Translate a message to the native language of the user. */
-const extern std::function<std::string(const char*)> G_TRANSLATION_FUN;
 
 struct ConstevalStringLiteral {
     const char* const lit;
