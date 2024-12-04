@@ -200,7 +200,6 @@ private:
 
     CChainLocksHandler& clhandler;
     CChainState& m_chainstate;
-    CConnman& connman;
     CQuorumManager& qman;
     CSigningManager& sigman;
     CSigSharesManager& shareman;
@@ -255,13 +254,21 @@ private:
     std::unordered_set<uint256, StaticSaltedHasher> pendingRetryTxs GUARDED_BY(cs_pendingRetry);
 
 public:
-    explicit CInstantSendManager(CChainLocksHandler& _clhandler, CChainState& chainstate, CConnman& _connman,
-                                 CQuorumManager& _qman, CSigningManager& _sigman, CSigSharesManager& _shareman,
-                                 CSporkManager& sporkman, CTxMemPool& _mempool, const CMasternodeSync& mn_sync,
-                                 const std::unique_ptr<PeerManager>& peerman, bool is_masternode, bool unitTests, bool fWipe) :
+    explicit CInstantSendManager(CChainLocksHandler& _clhandler, CChainState& chainstate, CQuorumManager& _qman,
+                                 CSigningManager& _sigman, CSigSharesManager& _shareman, CSporkManager& sporkman,
+                                 CTxMemPool& _mempool, const CMasternodeSync& mn_sync,
+                                 const std::unique_ptr<PeerManager>& peerman, bool is_masternode, bool unitTests,
+                                 bool fWipe) :
         db(unitTests, fWipe),
-        clhandler(_clhandler), m_chainstate(chainstate), connman(_connman), qman(_qman), sigman(_sigman),
-        shareman(_shareman), spork_manager(sporkman), mempool(_mempool), m_mn_sync(mn_sync), m_peerman(peerman),
+        clhandler(_clhandler),
+        m_chainstate(chainstate),
+        qman(_qman),
+        sigman(_sigman),
+        shareman(_shareman),
+        spork_manager(sporkman),
+        mempool(_mempool),
+        m_mn_sync(mn_sync),
+        m_peerman(peerman),
         m_is_masternode{is_masternode}
     {
         workInterrupt.reset();
@@ -315,7 +322,6 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_inputReqests, !cs_nonLocked, !cs_pendingRetry);
     void ResolveBlockConflicts(const uint256& islockHash, const CInstantSendLock& islock)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_inputReqests, !cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
-    static void AskNodesForLockedTx(const uint256& txid, const CConnman& connman, PeerManager& peerman, bool is_masternode);
     void ProcessPendingRetryLockTxs()
         EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests, !cs_nonLocked, !cs_pendingRetry);
 

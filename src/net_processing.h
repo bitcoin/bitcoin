@@ -91,6 +91,9 @@ public:
     /** Is an inventory in the known inventory filter. Used by InstantSend. */
     virtual bool IsInvInFilter(NodeId nodeid, const uint256& hash) const = 0;
 
+    /** Ask a number of our peers, which have a transaction in their inventory, for the transaction. */
+    virtual void AskPeersForTransaction(const uint256& txid, bool is_masternode) = 0;
+
     /** Broadcast inventory message to a specific peer. */
     virtual void PushInventory(NodeId nodeid, const CInv& inv) = 0;
 

@@ -1047,7 +1047,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
         // bump mempool counter to make sure newly locked txes are picked up by getblocktemplate
         mempool.AddTransactionsUpdated(1);
     } else {
-        AskNodesForLockedTx(islock->txid, connman, *m_peerman, m_is_masternode);
+        m_peerman->AskPeersForTransaction(islock->txid, m_is_masternode);
     }
 }
 
@@ -1321,7 +1321,7 @@ void CInstantSendManager::RemoveMempoolConflictsForLock(const uint256& hash, con
         for (const auto& p : toDelete) {
             RemoveConflictedTx(*p.second);
         }
-        AskNodesForLockedTx(islock.txid, connman, *m_peerman, m_is_masternode);
+        m_peerman->AskPeersForTransaction(islock.txid, m_is_masternode);
     }
 }
 
@@ -1423,46 +1423,6 @@ void CInstantSendManager::RemoveConflictingLock(const uint256& islockHash, const
     for (const auto& h : removedIslocks) {
         LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: removed (child) ISLOCK %s\n", __func__,
                   islock.txid.ToString(), islockHash.ToString(), h.ToString());
-    }
-}
-
-void CInstantSendManager::AskNodesForLockedTx(const uint256& txid, const CConnman& connman, PeerManager& peerman,
-                                              bool is_masternode)
-{
-    std::vector<CNode*> nodesToAskFor;
-    nodesToAskFor.reserve(4);
-
-    auto maybe_add_to_nodesToAskFor = [&peerman, &nodesToAskFor, &txid](CNode* pnode) {
-        if (nodesToAskFor.size() >= 4) {
-            return;
-        }
-        if (peerman.IsInvInFilter(pnode->GetId(), txid)) {
-            pnode->AddRef();
-            nodesToAskFor.emplace_back(pnode);
-        }
-    };
-
-    connman.ForEachNode([&](CNode* pnode) {
-        // Check masternodes first
-        if (pnode->m_masternode_connection) maybe_add_to_nodesToAskFor(pnode);
-    });
-    connman.ForEachNode([&](CNode* pnode) {
-        // Check non-masternodes next
-        if (!pnode->m_masternode_connection) maybe_add_to_nodesToAskFor(pnode);
-    });
-    {
-        LOCK(cs_main);
-        for (const CNode* pnode : nodesToAskFor) {
-            LogPrintf("CInstantSendManager::%s -- txid=%s: asking other peer %d for correct TX\n", __func__,
-                      txid.ToString(), pnode->GetId());
-
-            CInv inv(MSG_TX, txid);
-            peerman.RequestObject(pnode->GetId(), inv, GetTime<std::chrono::microseconds>(), is_masternode,
-                                  /* fForce = */ true);
-        }
-    }
-    for (CNode* pnode : nodesToAskFor) {
-        pnode->Release();
     }
 }
 

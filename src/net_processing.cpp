@@ -329,6 +329,11 @@ struct Peer {
         LOCK(m_tx_relay_mutex);
         return m_can_tx_relay ? m_tx_relay.get() : nullptr;
     };
+    const TxRelay* GetTxRelay() const LOCKS_EXCLUDED(m_tx_relay_mutex)
+    {
+        LOCK(m_tx_relay_mutex);
+        return m_can_tx_relay ? m_tx_relay.get() : nullptr;
+    };
 
     /** A vector of addresses to send to the peer, limited to MAX_ADDR_TO_SEND. */
     std::vector<CAddress> m_addrs_to_send GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
@@ -409,7 +414,7 @@ struct Peer {
     {}
 
 private:
-    Mutex m_tx_relay_mutex;
+    mutable Mutex m_tx_relay_mutex;
 
     /** Transaction relay data.
      * (Bitcoin) Transaction relay data. May be a nullptr.
@@ -633,7 +638,7 @@ public:
                        bool is_masternode, bool fForce = false) override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     size_t GetRequestedObjectCount(NodeId nodeid) const override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool IsInvInFilter(NodeId nodeid, const uint256& hash) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-
+    void AskPeersForTransaction(const uint256& txid, bool is_masternode) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 private:
     /** Helpers to process result of external handlers of message */
     void ProcessPeerMsgRet(const PeerMsgRet& ret, CNode& pfrom) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -647,6 +652,11 @@ private:
 
     /** Retrieve unbroadcast transactions from the mempool and reattempt sending to peers */
     void ReattemptInitialBroadcast(CScheduler& scheduler) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+
+    /**
+     * Private implementation of IsInvInFilter which does not call GetPeerRef; to be prefered when the PeerRef is available.
+     */
+    bool IsInvInFilter(const Peer& peer, const uint256& hash) const;
 
     /** Get a shared pointer to the Peer object.
      *  May return an empty shared_ptr if the Peer object can't be found. */
@@ -2256,12 +2266,47 @@ void PeerManagerImpl::SendPings()
     for(auto& it : m_peer_map) it.second->m_ping_queued = true;
 }
 
+void PeerManagerImpl::AskPeersForTransaction(const uint256& txid, bool is_masternode)
+{
+    std::vector<PeerRef> peersToAsk;
+    peersToAsk.reserve(4);
+
+    {
+        LOCK(m_peer_mutex);
+        // TODO consider prioritizing MNs again, once that flag is moved into Peer
+        for (const auto& [_, peer] : m_peer_map) {
+            if (peersToAsk.size() >= 4) {
+                break;
+            }
+            if (IsInvInFilter(*peer, txid)) {
+                peersToAsk.emplace_back(peer);
+            }
+        }
+    }
+    {
+        CInv inv(MSG_TX, txid);
+        LOCK(cs_main);
+        for (PeerRef& peer : peersToAsk) {
+            LogPrintf("PeerManagerImpl::%s -- txid=%s: asking other peer %d for correct TX\n", __func__,
+                      txid.ToString(), peer->m_id);
+
+            RequestObject(peer->m_id, inv, GetTime<std::chrono::microseconds>(), is_masternode,
+                          /*fForce=*/true);
+        }
+    }
+}
+
 bool PeerManagerImpl::IsInvInFilter(NodeId nodeid, const uint256& hash) const
 {
     PeerRef peer = GetPeerRef(nodeid);
     if (peer == nullptr)
         return false;
-    if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
+    return IsInvInFilter(*peer, hash);
+}
+
+bool PeerManagerImpl::IsInvInFilter(const Peer& peer, const uint256& hash) const
+{
+    if (auto tx_relay = peer.GetTxRelay(); tx_relay != nullptr) {
         LOCK(tx_relay->m_tx_inventory_mutex);
         return tx_relay->m_tx_inventory_known_filter.contains(hash);
     }
