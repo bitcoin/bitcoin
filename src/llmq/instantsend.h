@@ -206,7 +206,6 @@ private:
     CSporkManager& spork_manager;
     CTxMemPool& mempool;
     const CMasternodeSync& m_mn_sync;
-    const std::unique_ptr<PeerManager>& m_peerman;
 
     const bool m_is_masternode;
 
@@ -256,9 +255,8 @@ private:
 public:
     explicit CInstantSendManager(CChainLocksHandler& _clhandler, CChainState& chainstate, CQuorumManager& _qman,
                                  CSigningManager& _sigman, CSigSharesManager& _shareman, CSporkManager& sporkman,
-                                 CTxMemPool& _mempool, const CMasternodeSync& mn_sync,
-                                 const std::unique_ptr<PeerManager>& peerman, bool is_masternode, bool unitTests,
-                                 bool fWipe) :
+                                 CTxMemPool& _mempool, const CMasternodeSync& mn_sync, bool is_masternode,
+                                 bool unitTests, bool fWipe) :
         db(unitTests, fWipe),
         clhandler(_clhandler),
         m_chainstate(chainstate),
@@ -268,14 +266,13 @@ public:
         spork_manager(sporkman),
         mempool(_mempool),
         m_mn_sync(mn_sync),
-        m_peerman(peerman),
         m_is_masternode{is_masternode}
     {
         workInterrupt.reset();
     }
     ~CInstantSendManager() = default;
 
-    void Start();
+    void Start(PeerManager& peerman);
     void Stop();
     void InterruptWorkerThread() { workInterrupt(); };
 
@@ -295,18 +292,15 @@ private:
                            const Consensus::Params& params) EXCLUSIVE_LOCKS_REQUIRED(!cs_inputReqests);
     void TrySignInstantSendLock(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(!cs_creating);
 
-    PeerMsgRet ProcessMessageInstantSendLock(const CNode& pfrom, const CInstantSendLockPtr& islock);
-    bool ProcessPendingInstantSendLocks()
+    PeerMsgRet ProcessMessageInstantSendLock(const CNode& pfrom, PeerManager& peerman, const CInstantSendLockPtr& islock);
+    bool ProcessPendingInstantSendLocks(PeerManager& peerman)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests, !cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
 
-    std::unordered_set<uint256, StaticSaltedHasher> ProcessPendingInstantSendLocks(const Consensus::LLMQParams& llmq_params,
-                                                                                   int signOffset,
-                                                                                   const std::unordered_map<uint256,
-                                                                                   std::pair<NodeId, CInstantSendLockPtr>,
-                                                                                   StaticSaltedHasher>& pend,
-                                                                                   bool ban)
+    std::unordered_set<uint256, StaticSaltedHasher> ProcessPendingInstantSendLocks(
+        const Consensus::LLMQParams& llmq_params, PeerManager& peerman, int signOffset,
+        const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher>& pend, bool ban)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests, !cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
-    void ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLockPtr& islock)
+    void ProcessInstantSendLock(NodeId from, PeerManager& peerman, const uint256& hash, const CInstantSendLockPtr& islock)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests, !cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
 
     void AddNonLockedTx(const CTransactionRef& tx, const CBlockIndex* pindexMined)
@@ -318,14 +312,14 @@ private:
     void TruncateRecoveredSigsForInputs(const CInstantSendLock& islock)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_inputReqests);
 
-    void RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock)
+    void RemoveMempoolConflictsForLock(PeerManager& peerman, const uint256& hash, const CInstantSendLock& islock)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_inputReqests, !cs_nonLocked, !cs_pendingRetry);
     void ResolveBlockConflicts(const uint256& islockHash, const CInstantSendLock& islock)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_inputReqests, !cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
     void ProcessPendingRetryLockTxs()
         EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests, !cs_nonLocked, !cs_pendingRetry);
 
-    void WorkThreadMain()
+    void WorkThreadMain(PeerManager& peerman)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests, !cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
 
     void HandleFullyConfirmedBlock(const CBlockIndex* pindex)
@@ -339,9 +333,9 @@ public:
     [[nodiscard]] MessageProcessingResult HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests, !cs_pendingLocks);
 
-    PeerMsgRet ProcessMessage(const CNode& pfrom, std::string_view msg_type, CDataStream& vRecv);
+    PeerMsgRet ProcessMessage(const CNode& pfrom, PeerManager& peerman, std::string_view msg_type, CDataStream& vRecv);
 
-    void TransactionAddedToMempool(const CTransactionRef& tx)
+    void TransactionAddedToMempool(PeerManager& peerman, const CTransactionRef& tx)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests, !cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
     void TransactionRemovedFromMempool(const CTransactionRef& tx);
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)

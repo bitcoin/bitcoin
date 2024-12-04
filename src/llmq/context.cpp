@@ -47,8 +47,8 @@ LLMQContext::LLMQContext(ChainstateManager& chainman, CConnman& connman, CDeterm
         llmq::quorumInstantSendManager = std::make_unique<llmq::CInstantSendManager>(*llmq::chainLocksHandler,
                                                                                      chainman.ActiveChainstate(), *qman,
                                                                                      *sigman, *shareman, sporkman,
-                                                                                     mempool, mn_sync, peerman,
-                                                                                     is_masternode, unit_tests, wipe);
+                                                                                     mempool, mn_sync, is_masternode,
+                                                                                     unit_tests, wipe);
         return llmq::quorumInstantSendManager.get();
     }()},
     ehfSignalsHandler{std::make_unique<llmq::CEHFSignalsHandler>(chainman, mnhfman, *sigman, *shareman, *qman)}
@@ -87,7 +87,7 @@ void LLMQContext::Start(CConnman& connman, PeerManager& peerman)
     sigman->StartWorkerThread(peerman);
 
     llmq::chainLocksHandler->Start();
-    llmq::quorumInstantSendManager->Start();
+    llmq::quorumInstantSendManager->Start(peerman);
 }
 
 void LLMQContext::Stop() {
