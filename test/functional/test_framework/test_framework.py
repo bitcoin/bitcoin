@@ -1895,31 +1895,32 @@ class DashTestFramework(BitcoinTestFramework):
 
         return new_quorum
 
-    def mine_cycle_quorum(self, llmq_type_name="llmq_test_dip0024", llmq_type=103,  expected_connections=None, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None):
+    def mine_cycle_quorum(self, is_first=True):
         spork21_active = self.nodes[0].spork('show')['SPORK_21_QUORUM_ALL_CONNECTED'] <= 1
         spork23_active = self.nodes[0].spork('show')['SPORK_23_QUORUM_POSE'] <= 1
 
-        if expected_connections is None:
-            expected_connections = (self.llmq_size_dip0024 - 1) if spork21_active else 2
-        if expected_members is None:
-            expected_members = self.llmq_size_dip0024
-        if expected_contributions is None:
-            expected_contributions = self.llmq_size_dip0024
-        if expected_commitments is None:
-            expected_commitments = self.llmq_size_dip0024
-        if mninfos_online is None:
-            mninfos_online = self.mninfo.copy()
+        llmq_type_name="llmq_test_dip0024"
+        llmq_type=103
+        expected_connections = (self.llmq_size_dip0024 - 1) if spork21_active else 2
+        expected_members = self.llmq_size_dip0024
+        expected_contributions = self.llmq_size_dip0024
+        expected_commitments = self.llmq_size_dip0024
+        mninfos_online = self.mninfo.copy()
+        expected_complaints=0
+        expected_justifications=0
 
-        self.log.info("Mining quorum: expected_members=%d, expected_connections=%d, expected_contributions=%d, expected_complaints=%d, expected_justifications=%d, "
-                      "expected_commitments=%d" % (expected_members, expected_connections, expected_contributions, expected_complaints,
-                                                   expected_justifications, expected_commitments))
+        self.log.info(f"Mining quorum: expected_members={expected_members}, expected_connections={expected_connections}, expected_contributions={expected_contributions}, expected_commitments={expected_commitments}, no complains and justfications expected")
 
         nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
 
-        # move forward to next DKG
-        skip_count = 24 - (self.nodes[0].getblockcount() % 24)
+        cycle_length = 24
+        cur_block = self.nodes[0].getblockcount()
 
-        self.move_blocks(nodes, skip_count)
+        skip_count = cycle_length - (cur_block % cycle_length)
+        # move forward to next 3 DKG rounds for the first quorum
+        extra_blocks = 24 * 3 if is_first else 0
+        self.move_blocks(nodes, extra_blocks + skip_count)
+        self.log.info('Moved from block %d to %d' % (cur_block, self.nodes[0].getblockcount()))
 
         q_0 = self.nodes[0].getbestblockhash()
         self.log.info("Expected quorum_0 at:" + str(self.nodes[0].getblockcount()))
@@ -2017,20 +2018,6 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("h("+str(block_height)+"):"+str(quorum_rotation_info))
 
         return (quorum_info_0, quorum_info_1)
-
-    def move_to_next_cycle(self):
-        cycle_length = 24
-        mninfos_online = self.mninfo.copy()
-        nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
-        cur_block = self.nodes[0].getblockcount()
-
-        # move forward to next DKG
-        skip_count = cycle_length - (cur_block % cycle_length)
-        if skip_count != 0:
-            self.bump_mocktime(1, nodes=nodes)
-            self.generate(self.nodes[0], skip_count, sync_fun=self.no_op)
-        self.sync_blocks(nodes)
-        self.log.info('Moved from block %d to %d' % (cur_block, self.nodes[0].getblockcount()))
 
     def wait_for_recovered_sig(self, rec_sig_id, rec_sig_msg_hash, llmq_type=100, timeout=10):
         def check_recovered_sig():

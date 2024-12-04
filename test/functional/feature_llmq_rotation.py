@@ -154,7 +154,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
             self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
 
-        (quorum_info_0_0, quorum_info_0_1) = self.mine_cycle_quorum(llmq_type_name=llmq_type_name, llmq_type=llmq_type)
+        (quorum_info_0_0, quorum_info_0_1) = self.mine_cycle_quorum(is_first=False)
         assert(self.test_quorum_listextended(quorum_info_0_0, llmq_type_name))
         assert(self.test_quorum_listextended(quorum_info_0_1, llmq_type_name))
         quorum_members_0_0 = extract_quorum_members(quorum_info_0_0)
@@ -176,7 +176,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
         self.log.info("Wait for chainlock")
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
-        (quorum_info_1_0, quorum_info_1_1) = self.mine_cycle_quorum(llmq_type_name=llmq_type_name, llmq_type=llmq_type)
+        (quorum_info_1_0, quorum_info_1_1) = self.mine_cycle_quorum(is_first=False)
         assert(self.test_quorum_listextended(quorum_info_1_0, llmq_type_name))
         assert(self.test_quorum_listextended(quorum_info_1_1, llmq_type_name))
         quorum_members_1_0 = extract_quorum_members(quorum_info_1_0)
@@ -210,7 +210,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
         self.log.info("Mine a quorum to invalidate")
-        (quorum_info_3_0, quorum_info_3_1) = self.mine_cycle_quorum(llmq_type_name=llmq_type_name, llmq_type=llmq_type)
+        (quorum_info_3_0, quorum_info_3_1) = self.mine_cycle_quorum(is_first=False)
 
         new_quorum_list = self.nodes[0].quorum("list", llmq_type)
         assert_equal(len(new_quorum_list[llmq_type_name]), len(quorum_list[llmq_type_name]) + 2)
@@ -382,6 +382,20 @@ class LLMQQuorumRotationTest(DashTestFramework):
                 return False
             return True
         return False
+
+    def move_to_next_cycle(self):
+        cycle_length = 24
+        mninfos_online = self.mninfo.copy()
+        nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
+        cur_block = self.nodes[0].getblockcount()
+
+        # move forward to next DKG
+        skip_count = cycle_length - (cur_block % cycle_length)
+        if skip_count != 0:
+            self.bump_mocktime(1, nodes=nodes)
+            self.generate(self.nodes[0], skip_count, sync_fun=self.no_op)
+        self.sync_blocks(nodes)
+        self.log.info('Moved from block %d to %d' % (cur_block, self.nodes[0].getblockcount()))
 
 
 if __name__ == '__main__':
