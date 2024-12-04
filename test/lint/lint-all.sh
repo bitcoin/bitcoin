@@ -30,13 +30,13 @@ if ! command -v parallel > /dev/null; then
 else
   SCRIPTS=()
 
-  for f in "${SCRIPTDIR}"/lint-*.sh; do
+  for f in "${SCRIPTDIR}"/lint-*; do
     if [ "$(basename "$f")" != "$LINTALL" ]; then
       SCRIPTS+=("$f")
     fi
   done
 
-  if ! parallel --jobs 100% --will-cite --joblog parallel_out.log bash ::: "${SCRIPTS[@]}"; then
+  if ! parallel --jobs 100% --will-cite --joblog parallel_out.log ::: "${SCRIPTS[@]}"; then
     echo "^---- failure generated"
     EXIT_CODE=1
   fi

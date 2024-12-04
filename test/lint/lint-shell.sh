@@ -29,8 +29,10 @@ fi
 
 SHELLCHECK_CMD=(shellcheck --external-sources --check-sourced)
 EXCLUDE="--exclude=$(IFS=','; echo "${disabled[*]}")"
-SOURCED_FILES=$(git ls-files | xargs gawk '/^# shellcheck shell=/ {print FILENAME} {nextfile}')  # Check shellcheck directive used for sourced files
-if ! "${SHELLCHECK_CMD[@]}" "$EXCLUDE" $SOURCED_FILES $(git ls-files -- '*.sh' | grep -vE 'src/(dashbls|immer|leveldb|secp256k1|minisketch|univalue)/'); then
+# Check shellcheck directive used for sourced files
+mapfile -t SOURCED_FILES < <(git ls-files | xargs gawk '/^# shellcheck shell=/ {print FILENAME} {nextfile}')
+mapfile -t FILES < <(git ls-files -- '*.sh' | grep -vE 'src/(dashbls|immer|leveldb|secp256k1|minisketch|univalue)/')
+if ! "${SHELLCHECK_CMD[@]}" "$EXCLUDE" "${SOURCED_FILES[@]}" "${FILES[@]}"; then
     EXIT_CODE=1
 fi
 

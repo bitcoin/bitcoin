@@ -5,20 +5,24 @@ etc.
 
 This directory contains the following sets of tests:
 
+- [fuzz](/test/fuzz) A runner to execute all fuzz targets from
+  [/src/test/fuzz](/src/test/fuzz).
 - [functional](/test/functional) which test the functionality of
 dashd and dash-qt by interacting with them through the RPC and P2P
 interfaces.
-- [util](/test/util) which tests the dash utilities, currently only
-dash-tx.
+- [util](/test/util) which tests the utilities (dash-tx, ...).
 - [lint](/test/lint/) which perform various static analysis checks.
 
-The util tests are run as part of `make check` target. The functional
+The util tests are run as part of `make check` target. The fuzz tests, functional
 tests and lint scripts can be run as explained in the sections below.
 
 # Running tests locally
 
 Before tests can be run locally, Dash Core must be built.  See the [building instructions](/doc#building) for help.
 
+## Fuzz tests
+
+See [/doc/fuzzing.md](/doc/fuzzing.md)
 
 ### Functional tests
 
@@ -297,20 +301,23 @@ For ways to generate more granular profiles, see the README in
 
 ### Util tests
 
-Util tests can be run locally by running `test/util/bitcoin-util-test.py`.
+Util tests can be run locally by running `test/util/test_runner.py`.
 Use the `-v` option for verbose output.
 
 ### Lint tests
 
 #### Dependencies
 
-| Lint test | Dependency | Version [used by CI](../ci/lint/04_install.sh) | Installation
-|-----------|:----------:|:-------------------------------------------:|--------------
-| [`lint-python.sh`](lint/lint-python.sh) | [flake8](https://gitlab.com/pycqa/flake8) | [3.8.3](https://github.com/bitcoin/bitcoin/pull/19348) | `pip3 install flake8==3.8.3`
-| [`lint-python.sh`](lint/lint-python.sh) | [mypy](https://github.com/python/mypy) | [0.781](https://github.com/bitcoin/bitcoin/pull/19348) | `pip3 install mypy==0.781`
-| [`lint-shell.sh`](lint/lint-shell.sh) | [ShellCheck](https://github.com/koalaman/shellcheck) | [0.7.2](https://github.com/bitcoin/bitcoin/pull/21749) | [details...](https://github.com/koalaman/shellcheck#installing)
-| [`lint-shell.sh`](lint/lint-shell.sh) | [yq](https://github.com/kislyuk/yq) | default | `pip3 install yq`
-| [`lint-spelling.sh`](lint/lint-spelling.sh) | [codespell](https://github.com/codespell-project/codespell) | [2.0.0](https://github.com/bitcoin/bitcoin/pull/20817) | `pip3 install codespell==2.0.0`
+| Lint test | Dependency |
+|-----------|:----------:|
+| [`lint-python.sh`](lint/lint-python.sh) | [flake8](https://gitlab.com/pycqa/flake8)
+| [`lint-python.sh`](lint/lint-python.sh) | [mypy](https://github.com/python/mypy)
+| [`lint-python.sh`](lint/lint-python.sh) | [pyzmq](https://github.com/zeromq/pyzmq)
+| [`lint-python-dead-code.py`](lint/lint-python-dead-code.py) | [vulture](https://github.com/jendrikseipp/vulture)
+| [`lint-shell.sh`](lint/lint-shell.sh) | [ShellCheck](https://github.com/koalaman/shellcheck)
+| [`lint-spelling.py`](lint/lint-spelling.py) | [codespell](https://github.com/codespell-project/codespell)
+
+In use versions and install instructions are available in the [CI setup](../ci/lint/04_install.sh).
 
 Please be aware that on Linux distributions all dependencies are usually available as packages, but could be outdated.
 
@@ -319,7 +326,7 @@ Please be aware that on Linux distributions all dependencies are usually availab
 Individual tests can be run by directly calling the test script, e.g.:
 
 ```
-test/lint/lint-files.sh
+test/lint/lint-files.py
 ```
 
 You can run all the shell-based lint tests by running:
