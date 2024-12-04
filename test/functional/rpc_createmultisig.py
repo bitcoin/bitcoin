@@ -11,7 +11,7 @@ import os
 from test_framework.address import address_to_scriptpubkey
 from test_framework.descriptors import descsum_create, drop_origins
 from test_framework.key import ECPubKey
-from test_framework.messages import COIN
+from test_framework.messages import COIN, btc_to_sat
 from test_framework.script_util import keys_to_multisig_script
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -156,7 +156,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
         spk = address_to_scriptpubkey(madd)
         value = decimal.Decimal("0.00004000")
-        tx = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=spk, amount=int(value * COIN))
+        tx = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=spk, amount=btc_to_sat(value))
         prevtxs = [{"txid": tx["txid"], "vout": tx["sent_vout"], "scriptPubKey": spk.hex(), "redeemScript": mredeem, "amount": value}]
 
         self.generate(node0, 1)

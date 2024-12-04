@@ -13,6 +13,7 @@ from test_framework.mempool_util import (
 )
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
+    btc_to_sat,
     tx_from_hex,
 )
 from test_framework.p2p import P2PTxInvStore
@@ -245,7 +246,7 @@ class RPCPackagesTest(BitcoinTestFramework):
 
         # Add a child that spends both at high feerate to submit via submitpackage
         tx_child = self.wallet.create_self_transfer_multi(
-            fee_per_output=int(DEFAULT_FEE * 5 * COIN),
+            fee_per_output=btc_to_sat(DEFAULT_FEE * 5),
             utxos_to_spend=[tx1["new_utxo"], tx2["new_utxo"]],
         )
 

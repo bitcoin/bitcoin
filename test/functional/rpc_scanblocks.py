@@ -8,7 +8,7 @@ from test_framework.blockfilter import (
     bip158_basic_element_hash,
     bip158_relevant_scriptpubkeys,
 )
-from test_framework.messages import COIN
+from test_framework.messages import COIN, btc_to_sat
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -31,14 +31,14 @@ class ScanblocksTest(BitcoinTestFramework):
 
         # send 1.0, mempool only
         _, spk_1, addr_1 = getnewdestination()
-        wallet.send_to(from_node=node, scriptPubKey=spk_1, amount=1 * COIN)
+        wallet.send_to(from_node=node, scriptPubKey=spk_1, amount=btc_to_sat(1))
 
         parent_key = "tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B"
         # send 1.0, mempool only
         # childkey 5 of `parent_key`
         wallet.send_to(from_node=node,
                        scriptPubKey=address_to_scriptpubkey("mkS4HXoTYWRTescLGaUTGbtTTYX5EjJyEE"),
-                       amount=1 * COIN)
+                       amount=btc_to_sat(1))
 
         # mine a block and assure that the mined blockhash is in the filterresult
         blockhash = self.generate(node, 1)[0]

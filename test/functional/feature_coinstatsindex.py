@@ -19,6 +19,7 @@ from test_framework.blocktools import (
 from test_framework.messages import (
     COIN,
     CTxOut,
+    btc_to_sat,
 )
 from test_framework.script import (
     CScript,
@@ -152,7 +153,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         tx1 = self.wallet.send_to(
             from_node=node,
             scriptPubKey=self.wallet.get_scriptPubKey(),
-            amount=21 * COIN,
+            amount=btc_to_sat(21),
         )
 
         # Find the right position of the 21 BTC output
@@ -161,7 +162,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         # Generate and send another tx with an OP_RETURN output (which is unspendable)
         tx2 = self.wallet.create_self_transfer(utxo_to_spend=tx1_out_21)['tx']
         tx2_val = '20.99'
-        tx2.vout = [CTxOut(int(Decimal(tx2_val) * COIN), CScript([OP_RETURN] + [OP_FALSE] * 30))]
+        tx2.vout = [CTxOut(btc_to_sat(Decimal(tx2_val)), CScript([OP_RETURN] + [OP_FALSE] * 30))]
         tx2_hex = tx2.serialize().hex()
         self.nodes[0].sendrawtransaction(tx2_hex, 0, tx2_val)
 
@@ -189,7 +190,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         # Create a coinbase that does not claim full subsidy and also
         # has two outputs
         cb = create_coinbase(109, nValue=35)
-        cb.vout.append(CTxOut(5 * COIN, CScript([OP_FALSE])))
+        cb.vout.append(CTxOut(btc_to_sat(5), CScript([OP_FALSE])))
         cb.rehash()
 
         # Generate a block that includes previous coinbase

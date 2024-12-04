@@ -15,6 +15,7 @@ from test_framework.messages import (
     COIN,
     CTransaction,
     CTxOut,
+    btc_to_sat,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -164,7 +165,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         address = self.nodes[0].getnewaddress("bech32")
         tx = CTransaction()
         tx.vin = []
-        tx.vout = [CTxOut(1 * COIN, bytearray(address_to_scriptpubkey(address)))] * 2
+        tx.vout = [CTxOut(btc_to_sat(1), bytearray(address_to_scriptpubkey(address)))] * 2
         tx.nLockTime = 0
         tx_hex = tx.serialize().hex()
         res = w.fundrawtransaction(tx_hex, add_inputs=True)
@@ -1301,7 +1302,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # with 71-byte signatures we should expect following tx size
         # tx overhead (10) + 2 inputs (41 each) + 2 p2wpkh (31 each) + (segwit marker and flag (2) + 2 p2wpkh 71 byte sig witnesses (107 each)) / witness scaling factor (4)
         tx_size = ceil(10 + 41*2 + 31*2 + (2 + 107*2)/4)
-        assert_equal(fundedtx['fee'] * COIN, tx_size * 10)
+        assert_equal(btc_to_sat(fundedtx['fee']), tx_size * 10)
 
         # Using the other output should have 72 byte sigs
         rawtx = wallet.createrawtransaction([ext_utxo], [{self.nodes[0].getnewaddress(): 13}])
@@ -1309,7 +1310,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         fundedtx = wallet.fundrawtransaction(rawtx, fee_rate=10, change_type="bech32", solving_data={"descriptors": [ext_desc]})
         # tx overhead (10) + 3 inputs (41 each) + 2 p2wpkh(31 each) + (segwit marker and flag (2) + 2 p2wpkh 71 bytes sig witnesses (107 each) + p2wpkh 72 byte sig witness (108)) / witness scaling factor (4)
         tx_size = ceil(10 + 41*3 + 31*2 + (2 + 107*2 + 108)/4)
-        assert_equal(fundedtx['fee'] * COIN, tx_size * 10)
+        assert_equal(btc_to_sat(fundedtx['fee']), tx_size * 10)
 
         self.nodes[2].unloadwallet("test_weight_calculation")
 

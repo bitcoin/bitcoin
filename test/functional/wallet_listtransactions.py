@@ -10,6 +10,7 @@ import shutil
 
 from test_framework.messages import (
     COIN,
+    btc_to_sat,
     tx_from_hex,
 )
 from test_framework.test_framework import BitcoinTestFramework
@@ -195,7 +196,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.log.info("Test tx with unknown RBF state (bip125-replaceable=unknown)")
         # Replace tx3, and check that tx4 becomes unknown
         tx3_b = tx3_modified
-        tx3_b.vout[0].nValue -= int(Decimal("0.004") * COIN)  # bump the fee
+        tx3_b.vout[0].nValue -= btc_to_sat(Decimal("0.004"))  # bump the fee
         tx3_b = tx3_b.serialize().hex()
         tx3_b_signed = self.nodes[0].signrawtransactionwithwallet(tx3_b)['hex']
         txid_3b = self.nodes[0].sendrawtransaction(tx3_b_signed, 0)

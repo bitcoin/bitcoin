@@ -13,7 +13,7 @@ try:
     from bcc import BPF, USDT # type: ignore[import]
 except ImportError:
     pass
-from test_framework.messages import COIN
+from test_framework.messages import COIN, btc_to_sat
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
@@ -192,7 +192,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
                 assert_equal(block_1_coinbase_txid, bytes(event.txid[::-1]).hex())
                 assert_equal(0, event.index)  # prevout index
                 assert_equal(EARLY_BLOCK_HEIGHT, event.height)
-                assert_equal(50 * COIN, event.value)
+                assert_equal(btc_to_sat(50), event.value)
                 assert_equal(True, event.is_coinbase)
             except AssertionError:
                 self.log.exception("Assertion failed")
@@ -298,7 +298,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
                         "txid": vin["txid"],
                         "index": vin["vout"],
                         "height": prevout_tx_block["height"],
-                        "value": int(prevout_tx["vout"][vin["vout"]]["value"] * COIN),
+                        "value": btc_to_sat(prevout_tx["vout"][vin["vout"]]["value"]),
                         "is_coinbase": spends_coinbase,
                     })
             for (i, vout) in enumerate(tx["vout"]):
@@ -307,7 +307,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
                         "txid": tx["txid"],
                         "index": i,
                         "height": block["height"],
-                        "value": int(vout["value"] * COIN),
+                        "value": btc_to_sat(vout["value"]),
                         "is_coinbase": block_index == 0,
                     })
 

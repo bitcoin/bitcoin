@@ -5,7 +5,7 @@
 
 from decimal import Decimal
 
-from test_framework.messages import sat_to_btc
+from test_framework.messages import btc_to_sat, sat_to_btc
 from test_framework.messages import (
     COIN,
     CTxOut,
@@ -142,7 +142,7 @@ class EphemeralDustTest(BitcoinTestFramework):
 
         sats_fee = 1
         dusty_tx, sweep_tx = self.create_ephemeral_dust_package(tx_version=3, dust_tx_fee=sats_fee)
-        assert_equal(int(COIN * dusty_tx["fee"]), sats_fee) # has fees
+        assert_equal(btc_to_sat(dusty_tx["fee"]), sats_fee) # has fees
         assert_greater_than(dusty_tx["tx"].vout[0].nValue, 330) # main output is not dust
         assert_equal(dusty_tx["tx"].vout[1].nValue, 0) # added one is dust
 

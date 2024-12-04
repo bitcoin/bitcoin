@@ -15,6 +15,7 @@ import urllib.parse
 from test_framework.messages import (
     BLOCK_HEADER_SIZE,
     COIN,
+    btc_to_sat,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -96,7 +97,7 @@ class RESTTest (BitcoinTestFramework):
         self.wallet = MiniWallet(self.nodes[0])
 
         self.log.info("Broadcast test transaction and sync nodes")
-        txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=int(0.1 * COIN))["txid"]
+        txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=btc_to_sat(0.1))["txid"]
         self.sync_all()
 
         self.log.info("Test the /tx URI")
@@ -173,7 +174,7 @@ class RESTTest (BitcoinTestFramework):
         # found with or without /checkmempool.
 
         # do a tx and don't sync
-        txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=int(0.1 * COIN))["txid"]
+        txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=btc_to_sat(0.1))["txid"]
         json_obj = self.test_rest_request(f"/tx/{txid}")
         # get the spent output to later check for utxo (should be spent by then)
         spent = (json_obj['vin'][0]['txid'], json_obj['vin'][0]['vout'])

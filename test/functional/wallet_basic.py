@@ -11,6 +11,7 @@ from test_framework.descriptors import descsum_create
 from test_framework.messages import (
     COIN,
     DEFAULT_ANCESTOR_LIMIT,
+    btc_to_sat,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -814,7 +815,7 @@ class WalletTest(BitcoinTestFramework):
             this_unspent = next(utxo_info for utxo_info in wallet_unspent if utxo_info["txid"] == t["txid"])
             assert_equal(this_unspent['ancestorcount'], i + 1)
             assert_equal(this_unspent['ancestorsize'], ancestor_vsize)
-            assert_equal(this_unspent['ancestorfees'], ancestor_fees * COIN)
+            assert_equal(this_unspent['ancestorfees'], btc_to_sat(ancestor_fees))
 
 
 if __name__ == '__main__':

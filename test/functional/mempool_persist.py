@@ -39,6 +39,7 @@ from decimal import Decimal
 import os
 import time
 
+from test_framework.messages import btc_to_sat
 from test_framework.p2p import P2PTxInvStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -230,8 +231,8 @@ class MempoolPersistTest(BitcoinTestFramework):
         tx_node01 = self.mini_wallet.create_self_transfer()
         tx_node01_secret = self.mini_wallet.create_self_transfer()
         self.nodes[0].prioritisetransaction(tx_node01["txid"], 0, COIN)
-        self.nodes[0].prioritisetransaction(tx_node01_secret["txid"], 0, 2 * COIN)
-        self.nodes[1].prioritisetransaction(tx_node01_secret["txid"], 0, 3 * COIN)
+        self.nodes[0].prioritisetransaction(tx_node01_secret["txid"], 0, btc_to_sat(2))
+        self.nodes[1].prioritisetransaction(tx_node01_secret["txid"], 0, btc_to_sat(3))
         self.nodes[0].sendrawtransaction(tx_node01["hex"])
         self.nodes[1].sendrawtransaction(tx_node01["hex"])
         assert tx_node0["txid"] in self.nodes[0].getrawmempool()

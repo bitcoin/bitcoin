@@ -7,7 +7,7 @@
 from decimal import Decimal
 import time
 
-from test_framework.messages import sat_to_btc
+from test_framework.messages import btc_to_sat, sat_to_btc
 from test_framework.messages import (
     COIN,
     MAX_BLOCK_WEIGHT,
@@ -46,7 +46,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.nodes[0].prioritisetransaction(tx_replacee["txid"], 0, 100)
         assert_equal(self.nodes[0].getprioritisedtransactions(), { tx_replacee["txid"] : { "fee_delta" : 100, "in_mempool" : False}})
         self.nodes[0].sendrawtransaction(tx_replacee["hex"])
-        assert_equal(self.nodes[0].getprioritisedtransactions(), { tx_replacee["txid"] : { "fee_delta" : 100, "in_mempool" : True, "modified_fee": int(tx_replacee["fee"] * COIN + 100)}})
+        assert_equal(self.nodes[0].getprioritisedtransactions(), { tx_replacee["txid"] : { "fee_delta" : 100, "in_mempool" : True, "modified_fee": btc_to_sat(tx_replacee["fee"]) + 100}})
         self.nodes[0].sendrawtransaction(tx_replacement["hex"])
         assert tx_replacee["txid"] not in self.nodes[0].getrawmempool()
         assert_equal(self.nodes[0].getprioritisedtransactions(), { tx_replacee["txid"] : { "fee_delta" : 100, "in_mempool" : False}})
@@ -54,7 +54,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         # PrioritiseTransaction is additive
         self.nodes[0].prioritisetransaction(tx_replacee["txid"], 0, COIN)
         self.nodes[0].sendrawtransaction(tx_replacee["hex"])
-        assert_equal(self.nodes[0].getprioritisedtransactions(), { tx_replacee["txid"] : { "fee_delta" : COIN + 100, "in_mempool" : True, "modified_fee": int(tx_replacee["fee"] * COIN + COIN + 100)}})
+        assert_equal(self.nodes[0].getprioritisedtransactions(), { tx_replacee["txid"] : { "fee_delta" : COIN + 100, "in_mempool" : True, "modified_fee": btc_to_sat(tx_replacee["fee"] + 1) + 100}})
         self.generate(self.nodes[0], 1)
         assert_equal(self.nodes[0].getprioritisedtransactions(), {})
 
@@ -98,9 +98,9 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         fee_delta_b = sat_to_btc(9999)
         fee_delta_c_1 = sat_to_btc(-1234) 
         fee_delta_c_2 = sat_to_btc(8888)
-        self.nodes[0].prioritisetransaction(txid=txid_b, fee_delta=int(fee_delta_b * COIN))
-        self.nodes[0].prioritisetransaction(txid=txid_c, fee_delta=int(fee_delta_c_1 * COIN))
-        self.nodes[0].prioritisetransaction(txid=txid_c, fee_delta=int(fee_delta_c_2 * COIN))
+        self.nodes[0].prioritisetransaction(txid=txid_b, fee_delta=btc_to_sat(fee_delta_b))
+        self.nodes[0].prioritisetransaction(txid=txid_c, fee_delta=btc_to_sat(fee_delta_c_1))
+        self.nodes[0].prioritisetransaction(txid=txid_c, fee_delta=btc_to_sat(fee_delta_c_2))
         raw_before[txid_a]["fees"]["descendant"] += fee_delta_b + fee_delta_c_1 + fee_delta_c_2
         raw_before[txid_b]["fees"]["modified"] += fee_delta_b
         raw_before[txid_b]["fees"]["ancestor"] += fee_delta_b
@@ -112,7 +112,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         raw_after = self.nodes[0].getrawmempool(verbose=True)
         assert_equal(raw_before[txid_a], raw_after[txid_a])
         assert_equal(raw_before, raw_after)
-        assert_equal(self.nodes[0].getprioritisedtransactions(), {txid_b: {"fee_delta" : fee_delta_b*COIN, "in_mempool" : True, "modified_fee": int(fee_delta_b*COIN + COIN * tx_o_b["fee"])}, txid_c: {"fee_delta" : (fee_delta_c_1 + fee_delta_c_2)*COIN, "in_mempool" : True, "modified_fee": int((fee_delta_c_1 + fee_delta_c_2 ) * COIN + COIN * tx_o_c["fee"])}})
+        assert_equal(self.nodes[0].getprioritisedtransactions(), {txid_b: {"fee_delta" : btc_to_sat(fee_delta_b), "in_mempool" : True, "modified_fee": int(btc_to_sat(fee_delta_b) + btc_to_sat(tx_o_b["fee"]))}, txid_c: {"fee_delta" : btc_to_sat(fee_delta_c_1 + fee_delta_c_2), "in_mempool" : True, "modified_fee": btc_to_sat(fee_delta_c_1 + fee_delta_c_2) + btc_to_sat(tx_o_c["fee"])}})
         # Clear prioritisation, otherwise the transactions' fee deltas are persisted to mempool.dat and loaded again when the node
         # is restarted at the end of this subtest. Deltas are removed when a transaction is mined, but only at that time. We do
         # not check whether mapDeltas transactions were mined when loading from mempool.dat.
@@ -122,16 +122,16 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.restart_node(0, extra_args=["-nopersistmempool"])
         self.nodes[0].setmocktime(mock_time)
         assert_equal(self.nodes[0].getmempoolinfo()["size"], 0)
-        self.nodes[0].prioritisetransaction(txid=txid_b, fee_delta=int(fee_delta_b * COIN))
-        self.nodes[0].prioritisetransaction(txid=txid_c, fee_delta=int(fee_delta_c_1 * COIN))
-        self.nodes[0].prioritisetransaction(txid=txid_c, fee_delta=int(fee_delta_c_2 * COIN))
-        assert_equal(self.nodes[0].getprioritisedtransactions(), {txid_b: {"fee_delta" : fee_delta_b*COIN, "in_mempool" : False}, txid_c: {"fee_delta" : (fee_delta_c_1 + fee_delta_c_2)*COIN, "in_mempool" : False}})
+        self.nodes[0].prioritisetransaction(txid=txid_b, fee_delta=btc_to_sat(fee_delta_b))
+        self.nodes[0].prioritisetransaction(txid=txid_c, fee_delta=btc_to_sat(fee_delta_c_1))
+        self.nodes[0].prioritisetransaction(txid=txid_c, fee_delta=btc_to_sat(fee_delta_c_2))
+        assert_equal(self.nodes[0].getprioritisedtransactions(), {txid_b: {"fee_delta" : btc_to_sat(fee_delta_b), "in_mempool" : False}, txid_c: {"fee_delta" : btc_to_sat(fee_delta_c_1 + fee_delta_c_2), "in_mempool" : False}})
         for t in [tx_o_a["hex"], tx_o_b["hex"], tx_o_c["hex"], tx_o_d["hex"]]:
             self.nodes[0].sendrawtransaction(t)
         raw_after = self.nodes[0].getrawmempool(verbose=True)
         assert_equal(raw_before[txid_a], raw_after[txid_a])
         assert_equal(raw_before, raw_after)
-        assert_equal(self.nodes[0].getprioritisedtransactions(), {txid_b: {"fee_delta" : fee_delta_b*COIN, "in_mempool" : True, "modified_fee": int(fee_delta_b*COIN + COIN * tx_o_b["fee"])}, txid_c: {"fee_delta" : (fee_delta_c_1 + fee_delta_c_2)*COIN, "in_mempool" : True, "modified_fee": int((fee_delta_c_1 + fee_delta_c_2 ) * COIN + COIN * tx_o_c["fee"])}})
+        assert_equal(self.nodes[0].getprioritisedtransactions(), {txid_b: {"fee_delta" : btc_to_sat(fee_delta_b), "in_mempool" : True, "modified_fee": btc_to_sat(fee_delta_b) + btc_to_sat(tx_o_b["fee"])}, txid_c: {"fee_delta" : btc_to_sat(fee_delta_c_1 + fee_delta_c_2), "in_mempool" : True, "modified_fee": btc_to_sat(fee_delta_c_1 + fee_delta_c_2) + btc_to_sat(tx_o_c["fee"])}})
 
         # Clear mempool
         self.generate(self.nodes[0], 1)
@@ -211,14 +211,14 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getprioritisedtransactions(), {})
         # add a fee delta to something in the cheapest bucket and make sure it gets mined
         # also check that a different entry in the cheapest bucket is NOT mined
-        self.nodes[0].prioritisetransaction(txid=txids[0][0], fee_delta=int(3*base_fee*COIN))
-        assert_equal(self.nodes[0].getprioritisedtransactions(), {txids[0][0] : { "fee_delta" : 3*base_fee*COIN, "in_mempool" : True, "modified_fee": int(3*base_fee*COIN + COIN * 1 * base_fee)}})
+        self.nodes[0].prioritisetransaction(txid=txids[0][0], fee_delta=btc_to_sat(3*base_fee))
+        assert_equal(self.nodes[0].getprioritisedtransactions(), {txids[0][0] : { "fee_delta" : btc_to_sat(3*base_fee), "in_mempool" : True, "modified_fee": btc_to_sat(3*base_fee) + btc_to_sat(base_fee)}})
 
         # Priority disappears when prioritisetransaction is called with an inverse value...
-        self.nodes[0].prioritisetransaction(txid=txids[0][0], fee_delta=int(-3*base_fee*COIN))
+        self.nodes[0].prioritisetransaction(txid=txids[0][0], fee_delta=btc_to_sat(-3*base_fee))
         assert txids[0][0] not in self.nodes[0].getprioritisedtransactions()
         # ... and reappears when prioritisetransaction is called again.
-        self.nodes[0].prioritisetransaction(txid=txids[0][0], fee_delta=int(3*base_fee*COIN))
+        self.nodes[0].prioritisetransaction(txid=txids[0][0], fee_delta=btc_to_sat(3*base_fee))
         assert txids[0][0] in self.nodes[0].getprioritisedtransactions()
 
         self.generate(self.nodes[0], 1)
@@ -238,8 +238,8 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
 
         # Add a prioritisation before a tx is in the mempool (de-prioritising a
         # high-fee transaction so that it's now low fee).
-        self.nodes[0].prioritisetransaction(txid=high_fee_tx, fee_delta=-int(2*base_fee*COIN))
-        assert_equal(self.nodes[0].getprioritisedtransactions()[high_fee_tx], { "fee_delta" : -2*base_fee*COIN, "in_mempool" : False})
+        self.nodes[0].prioritisetransaction(txid=high_fee_tx, fee_delta=-btc_to_sat(2*base_fee))
+        assert_equal(self.nodes[0].getprioritisedtransactions()[high_fee_tx], { "fee_delta" : btc_to_sat(-2*base_fee), "in_mempool" : False})
 
         # Add everything back to mempool
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
@@ -259,7 +259,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         mempool = self.nodes[0].getrawmempool()
         self.log.info("Assert that de-prioritised transaction is still in mempool")
         assert high_fee_tx in mempool
-        assert_equal(self.nodes[0].getprioritisedtransactions()[high_fee_tx], { "fee_delta" : -2*base_fee*COIN, "in_mempool" : True, "modified_fee": int(-2*base_fee*COIN + COIN * 3 * base_fee)})
+        assert_equal(self.nodes[0].getprioritisedtransactions()[high_fee_tx], { "fee_delta" : btc_to_sat(-2*base_fee), "in_mempool" : True, "modified_fee": btc_to_sat(-2*base_fee) + btc_to_sat(3 * base_fee)})
         for x in txids[2]:
             if (x != high_fee_tx):
                 assert x not in mempool
@@ -282,20 +282,20 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         # This is a less than 1000-byte transaction, so just set the fee
         # to be the minimum for a 1000-byte transaction and check that it is
         # accepted.
-        self.nodes[0].prioritisetransaction(txid=tx_id, fee_delta=int(self.relayfee*COIN))
-        assert_equal(self.nodes[0].getprioritisedtransactions()[tx_id], { "fee_delta" : self.relayfee*COIN, "in_mempool" : False})
+        self.nodes[0].prioritisetransaction(txid=tx_id, fee_delta=btc_to_sat(self.relayfee))
+        assert_equal(self.nodes[0].getprioritisedtransactions()[tx_id], { "fee_delta" : btc_to_sat(self.relayfee), "in_mempool" : False})
 
         self.log.info("Assert that prioritised free transaction is accepted to mempool")
         assert_equal(self.nodes[0].sendrawtransaction(tx_hex), tx_id)
         assert tx_id in self.nodes[0].getrawmempool()
-        assert_equal(self.nodes[0].getprioritisedtransactions()[tx_id], { "fee_delta" : self.relayfee*COIN, "in_mempool" : True, "modified_fee": int(self.relayfee*COIN + COIN * tx_res["fee"])})
+        assert_equal(self.nodes[0].getprioritisedtransactions()[tx_id], { "fee_delta" : btc_to_sat(self.relayfee), "in_mempool" : True, "modified_fee": btc_to_sat(self.relayfee) + btc_to_sat(tx_res["fee"])})
 
         # Test that calling prioritisetransaction is sufficient to trigger
         # getblocktemplate to (eventually) return a new block.
         mock_time = int(time.time())
         self.nodes[0].setmocktime(mock_time)
         template = self.nodes[0].getblocktemplate({'rules': ['segwit']})
-        self.nodes[0].prioritisetransaction(txid=tx_id, fee_delta=-int(self.relayfee*COIN))
+        self.nodes[0].prioritisetransaction(txid=tx_id, fee_delta=-btc_to_sat(self.relayfee))
 
         # Calling prioritisetransaction with the inverse amount should delete its prioritisation entry
         assert tx_id not in self.nodes[0].getprioritisedtransactions()

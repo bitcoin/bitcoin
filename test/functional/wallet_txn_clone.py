@@ -10,6 +10,7 @@ from test_framework.util import (
 )
 from test_framework.messages import (
     COIN,
+    btc_to_sat,
     tx_from_hex,
 )
 
@@ -83,7 +84,7 @@ class TxnMallTest(BitcoinTestFramework):
 
         # createrawtransaction randomizes the order of its outputs, so swap them if necessary.
         clone_tx = tx_from_hex(clone_raw)
-        if (rawtx1["vout"][0]["value"] == 40 and clone_tx.vout[0].nValue != 40*COIN or rawtx1["vout"][0]["value"] != 40 and clone_tx.vout[0].nValue == 40*COIN):
+        if (rawtx1["vout"][0]["value"] == 40 and clone_tx.vout[0].nValue != btc_to_sat(40) or rawtx1["vout"][0]["value"] != 40 and clone_tx.vout[0].nValue == btc_to_sat(40)):
             (clone_tx.vout[0], clone_tx.vout[1]) = (clone_tx.vout[1], clone_tx.vout[0])
 
         # Use a different signature hash type to sign.  This creates an equivalent but malleated clone.

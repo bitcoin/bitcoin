@@ -15,6 +15,7 @@ from test_framework.messages import (
     CTxIn,
     CTxInWitness,
     CTxOut,
+    btc_to_sat,
     sha256,
 )
 from test_framework.p2p import P2PTxInvStore
@@ -56,7 +57,7 @@ class MempoolWtxidTest(BitcoinTestFramework):
 
         parent = CTransaction()
         parent.vin.append(CTxIn(COutPoint(int(txid, 16), 0), b""))
-        parent.vout.append(CTxOut(int(9.99998 * COIN), script_pubkey))
+        parent.vout.append(CTxOut(btc_to_sat(9.99998), script_pubkey))
         parent.rehash()
 
         privkeys = [node.get_deterministic_priv_key().key]
@@ -73,7 +74,7 @@ class MempoolWtxidTest(BitcoinTestFramework):
 
         child_one = CTransaction()
         child_one.vin.append(CTxIn(COutPoint(int(parent_txid, 16), 0), b""))
-        child_one.vout.append(CTxOut(int(9.99996 * COIN), child_script_pubkey))
+        child_one.vout.append(CTxOut(btc_to_sat(9.99996), child_script_pubkey))
         child_one.wit.vtxinwit.append(CTxInWitness())
         child_one.wit.vtxinwit[0].scriptWitness.stack = [b'Preimage', b'\x01', witness_script]
         child_one_wtxid = child_one.getwtxid()

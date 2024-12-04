@@ -6,6 +6,7 @@
 
 from decimal import Decimal
 
+from test_framework.messages import btc_to_sat
 from test_framework.mempool_util import (
     fill_mempool,
 )
@@ -251,7 +252,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         # - When there is mid-package eviction, high enough feerate to meet the new mempoolminfee
         # - When there is no mid-package eviction, low enough feerate to be evicted immediately after submission.
         magic_satoshis = 1200
-        cpfp_satoshis = int(cpfp_fee * COIN) + magic_satoshis
+        cpfp_satoshis = btc_to_sat(cpfp_fee) + magic_satoshis
 
         child = self.wallet.create_self_transfer_multi(utxos_to_spend=parent_utxos, fee_per_output=cpfp_satoshis)
         package_hex.append(child["hex"])
@@ -320,7 +321,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         # Create a child spending everything, CPFPing the low-feerate parent.
         approx_child_vsize = self.wallet.create_self_transfer_multi(utxos_to_spend=parent_utxos)["tx"].get_vsize()
         cpfp_fee = (2 * mempoolmin_feerate / 1000) * (cpfp_parent["tx"].get_vsize() + approx_child_vsize) - cpfp_parent["fee"]
-        child = self.wallet.create_self_transfer_multi(utxos_to_spend=parent_utxos, fee_per_output=int(cpfp_fee * COIN))
+        child = self.wallet.create_self_transfer_multi(utxos_to_spend=parent_utxos, fee_per_output=btc_to_sat(cpfp_fee))
         # It's very important that the cpfp_parent is before replacement_tx so that its input (from
         # replaced_tx) is first looked up *before* replacement_tx is submitted.
         package_hex = [cpfp_parent["hex"], replacement_tx["hex"], child["hex"]]
@@ -369,7 +370,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         # another is below the mempool minimum feerate but bumped by the child.
         tx_poor = miniwallet.create_self_transfer(fee_rate=relayfee)
         tx_rich = miniwallet.create_self_transfer(fee=0, fee_rate=0)
-        node.prioritisetransaction(tx_rich["txid"], 0, int(DEFAULT_FEE * COIN))
+        node.prioritisetransaction(tx_rich["txid"], 0, btc_to_sat(DEFAULT_FEE))
         package_txns = [tx_rich, tx_poor]
         coins = [tx["new_utxo"] for tx in package_txns]
         tx_child = miniwallet.create_self_transfer_multi(utxos_to_spend=coins, fee_per_output=10000) #DEFAULT_FEE

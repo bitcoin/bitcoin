@@ -663,7 +663,7 @@ class CTransaction:
     def is_valid(self):
         self.calc_sha256()
         for tout in self.vout:
-            if tout.nValue < 0 or tout.nValue > 21000000 * COIN:
+            if tout.nValue < 0 or tout.nValue > btc_to_sat(21000000):
                 return False
         return True
 
@@ -1916,3 +1916,6 @@ class TestFrameworkScript(unittest.TestCase):
 
 def sat_to_btc(amount: int) -> Decimal:
     return Decimal(amount) / COIN
+
+def btc_to_sat(amount: Decimal) -> int:
+    return int(amount * COIN)

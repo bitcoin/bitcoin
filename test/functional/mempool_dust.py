@@ -8,6 +8,7 @@ from decimal import Decimal
 from test_framework.messages import (
     COIN,
     CTxOut,
+    btc_to_sat,
 )
 from test_framework.script import (
     CScript,
@@ -50,7 +51,7 @@ class DustRelayFeeTest(BitcoinTestFramework):
         else:
             tx_size = len(CTxOut(nValue=0, scriptPubKey=output_script).serialize())
             tx_size += 67 if output_script.IsWitnessProgram() else 148
-            dust_threshold = int(get_fee(tx_size, dust_relay_fee) * COIN)
+            dust_threshold = btc_to_sat(get_fee(tx_size, dust_relay_fee))
         self.log.info(f"-> Test {type_desc} output (size {len(output_script)}, limit {dust_threshold})")
 
         # amount right on the dust threshold should pass

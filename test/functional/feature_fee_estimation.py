@@ -9,7 +9,7 @@ import os
 import random
 import time
 
-from test_framework.messages import sat_to_btc
+from test_framework.messages import btc_to_sat, sat_to_btc
 from test_framework.messages import (
     COIN,
 )
@@ -58,9 +58,9 @@ def small_txpuzzle_randfee(
         utxos_to_spend=utxos_to_spend,
         fee_per_output=0,
     )["tx"]
-    tx.vout[0].nValue = int((total_in - amount - fee) * COIN)
+    tx.vout[0].nValue = btc_to_sat(total_in - amount - fee)
     tx.vout.append(deepcopy(tx.vout[0]))
-    tx.vout[1].nValue = int(amount * COIN)
+    tx.vout[1].nValue = btc_to_sat(amount)
     tx.rehash()
     txid = tx.hash
     tx_hex = tx.serialize().hex()

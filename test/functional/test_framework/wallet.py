@@ -11,7 +11,7 @@ from typing import (
     Any,
     Optional,
 )
-from test_framework.messages import sat_to_btc
+from test_framework.messages import btc_to_sat, sat_to_btc
 from test_framework.address import (
     address_to_scriptpubkey,
     create_deterministic_address_bcrt1_p2tr_op_true,
@@ -319,7 +319,7 @@ class MiniWallet:
         assert_equal(len(utxos_to_spend), len(sequence))
 
         # calculate output amount
-        inputs_value_total = sum([int(COIN * utxo['value']) for utxo in utxos_to_spend])
+        inputs_value_total = btc_to_sat(sum([utxo['value'] for utxo in utxos_to_spend]))
         outputs_value_total = inputs_value_total - fee_per_output * num_outputs
         amount_per_output = amount_per_output or (outputs_value_total // num_outputs)
         assert amount_per_output > 0
@@ -383,7 +383,7 @@ class MiniWallet:
         # create tx
         tx = self.create_self_transfer_multi(
             utxos_to_spend=[utxo_to_spend],
-            amount_per_output=int(COIN * send_value),
+            amount_per_output=btc_to_sat(send_value),
             target_vsize=target_vsize,
             **kwargs,
         )

@@ -22,6 +22,7 @@ from test_framework.messages import (
     CTxOut,
     MAX_BLOCK_WEIGHT,
     SEQUENCE_FINAL,
+    btc_to_sat,
     uint256_from_compact,
     uint256_from_str,
 )
@@ -808,7 +809,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.log.info("Reject a block with a transaction with outputs > inputs")
         self.move_tip(57)
         self.next_block(59)
-        tx = self.create_and_sign_transaction(out[17], 51 * COIN)
+        tx = self.create_and_sign_transaction(out[17], btc_to_sat(51))
         b59 = self.update_block(59, [tx])
         self.send_blocks([b59], success=False, reject_reason='bad-txns-in-belowout', reconnect=True)
 
@@ -1158,18 +1159,18 @@ class FullBlockTest(BitcoinTestFramework):
         self.log.info("Test transaction resurrection during a re-org")
         self.move_tip(76)
         self.next_block(77)
-        tx77 = self.create_and_sign_transaction(out[24], 10 * COIN)
+        tx77 = self.create_and_sign_transaction(out[24], btc_to_sat(10))
         b77 = self.update_block(77, [tx77])
         self.send_blocks([b77], True)
         self.save_spendable_output()
 
         self.next_block(78)
-        tx78 = self.create_tx(tx77, 0, 9 * COIN)
+        tx78 = self.create_tx(tx77, 0, btc_to_sat(9))
         b78 = self.update_block(78, [tx78])
         self.send_blocks([b78], True)
 
         self.next_block(79)
-        tx79 = self.create_tx(tx78, 0, 8 * COIN)
+        tx79 = self.create_tx(tx78, 0, btc_to_sat(8))
         b79 = self.update_block(79, [tx79])
         self.send_blocks([b79], True)
 

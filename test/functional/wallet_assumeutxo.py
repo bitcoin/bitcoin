@@ -13,7 +13,7 @@ See feature_assumeutxo.py for background.
 """
 from test_framework.address import address_to_scriptpubkey
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.messages import COIN
+from test_framework.messages import COIN, btc_to_sat
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -119,8 +119,8 @@ class AssumeutxoTest(BitcoinTestFramework):
         w2_skp = address_to_scriptpubkey(w2_address)
         for i in range(100):
             if i % 3 == 0:
-                self.mini_wallet.send_to(from_node=n0, scriptPubKey=w_skp, amount=1 * COIN)
-                self.mini_wallet.send_to(from_node=n0, scriptPubKey=w2_skp, amount=10 * COIN)
+                self.mini_wallet.send_to(from_node=n0, scriptPubKey=w_skp, amount=btc_to_sat(1))
+                self.mini_wallet.send_to(from_node=n0, scriptPubKey=w2_skp, amount=btc_to_sat(10))
             self.generate(n0, nblocks=1, sync_fun=self.no_op)
 
         assert_equal(n0.getblockcount(), FINAL_HEIGHT)

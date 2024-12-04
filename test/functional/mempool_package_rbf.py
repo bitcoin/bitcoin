@@ -5,9 +5,8 @@
 
 from decimal import Decimal
 
-from test_framework.messages import sat_to_btc
+from test_framework.messages import btc_to_sat, sat_to_btc
 from test_framework.messages import (
-    COIN,
     MAX_BIP125_RBF_SEQUENCE,
 )
 from test_framework.test_framework import BitcoinTestFramework
@@ -63,7 +62,7 @@ class PackageRBFTest(BitcoinTestFramework):
         child_result = self.wallet.create_self_transfer_multi(
             utxos_to_spend=[parent_result["new_utxo"]],
             num_outputs=num_child_outputs,
-            fee_per_output=int(child_fee * COIN // num_child_outputs),
+            fee_per_output=btc_to_sat(child_fee) // num_child_outputs,
             sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
         )
         package_hex = [parent_result["hex"], child_result["hex"]]
@@ -279,7 +278,7 @@ class PackageRBFTest(BitcoinTestFramework):
         # to in-mempool ancestry
         self.ctr += 1
         child_result = self.wallet.create_self_transfer_multi(
-            fee_per_output=int(DEFAULT_CHILD_FEE * COIN),
+            fee_per_output=btc_to_sat(DEFAULT_CHILD_FEE),
             utxos_to_spend=[parent_result1["new_utxo"], parent_result2["new_utxo"]],
             sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
         )
@@ -312,14 +311,14 @@ class PackageRBFTest(BitcoinTestFramework):
 
         self.ctr += 1
         child_result = self.wallet.create_self_transfer_multi(
-            fee_per_output=int(DEFAULT_FEE * COIN),
+            fee_per_output=btc_to_sat(DEFAULT_FEE),
             utxos_to_spend=[parent_result["new_utxo"], coin2],
             sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
         )
 
         self.ctr += 1
         grandchild_result = self.wallet.create_self_transfer_multi(
-            fee_per_output=int(DEFAULT_FEE * COIN),
+            fee_per_output=btc_to_sat(DEFAULT_FEE),
             utxos_to_spend=[child_result["new_utxos"][0], coin3],
             sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
         )
@@ -365,14 +364,14 @@ class PackageRBFTest(BitcoinTestFramework):
 
         self.ctr += 1
         parent2_result = self.wallet.create_self_transfer_multi(
-            fee_per_output=int(DEFAULT_FEE * COIN),
+            fee_per_output=btc_to_sat(DEFAULT_FEE),
             utxos_to_spend=[coin2],
             sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
         )
 
         self.ctr += 1
         child_result = self.wallet.create_self_transfer_multi(
-            fee_per_output=int(DEFAULT_FEE * COIN),
+            fee_per_output=btc_to_sat(DEFAULT_FEE),
             utxos_to_spend=[parent1_result["new_utxo"], parent2_result["new_utxos"][0], coin3],
             sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
         )
@@ -410,7 +409,7 @@ class PackageRBFTest(BitcoinTestFramework):
 
         self.ctr += 1
         parent_result = self.wallet.create_self_transfer_multi(
-            fee_per_output=int(DEFAULT_FEE * COIN),
+            fee_per_output=btc_to_sat(DEFAULT_FEE),
             num_outputs=2,
             utxos_to_spend=[coin1],
             sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
@@ -418,14 +417,14 @@ class PackageRBFTest(BitcoinTestFramework):
 
         self.ctr += 1
         child1_result = self.wallet.create_self_transfer_multi(
-            fee_per_output=int(DEFAULT_FEE * COIN),
+            fee_per_output=btc_to_sat(DEFAULT_FEE),
             utxos_to_spend=[parent_result["new_utxos"][0], coin2],
             sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
         )
 
         self.ctr += 1
         child2_result = self.wallet.create_self_transfer_multi(
-            fee_per_output=int(DEFAULT_FEE * COIN),
+            fee_per_output=btc_to_sat(DEFAULT_FEE),
             utxos_to_spend=[parent_result["new_utxos"][1], coin3],
             sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
         )
@@ -489,7 +488,7 @@ class PackageRBFTest(BitcoinTestFramework):
         # to pkg size
         self.ctr += 1
         child_result = self.wallet.create_self_transfer_multi(
-            fee_per_output=int(DEFAULT_CHILD_FEE * COIN),
+            fee_per_output=btc_to_sat(DEFAULT_CHILD_FEE),
             utxos_to_spend=[parent_result1["new_utxo"], parent_result2["new_utxo"]],
             sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
         )
@@ -577,7 +576,7 @@ class PackageRBFTest(BitcoinTestFramework):
         # which is not inside the current package
         self.ctr += 1
         child_result = self.wallet.create_self_transfer_multi(
-            fee_per_output=int(DEFAULT_CHILD_FEE * COIN),
+            fee_per_output=btc_to_sat(DEFAULT_CHILD_FEE),
             utxos_to_spend=[parent_result["new_utxo"], coin],
             sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
         )

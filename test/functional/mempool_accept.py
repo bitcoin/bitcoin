@@ -21,6 +21,7 @@ from test_framework.messages import (
     WITNESS_SCALE_FACTOR,
     MAX_MONEY,
     SEQUENCE_FINAL,
+    btc_to_sat,
     tx_from_hex,
 )
 from test_framework.script import (
@@ -88,8 +89,8 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.log.info('A transaction already in the blockchain')
         tx = self.wallet.create_self_transfer()['tx']  # Pick a random coin(base) to spend
         tx.vout.append(deepcopy(tx.vout[0]))
-        tx.vout[0].nValue = int(0.3 * COIN)
-        tx.vout[1].nValue = int(49 * COIN)
+        tx.vout[0].nValue = btc_to_sat(0.3)
+        tx.vout[1].nValue = btc_to_sat(49)
         raw_tx_in_block = tx.serialize().hex()
         txid_in_block = self.wallet.sendrawtransaction(from_node=node, tx_hex=raw_tx_in_block)
         self.generate(node, 1)
@@ -117,7 +118,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         fee = Decimal('0.000007')
         utxo_to_spend = self.wallet.get_utxo(txid=txid_in_block)  # use 0.3 BTC UTXO
         tx = self.wallet.create_self_transfer(utxo_to_spend=utxo_to_spend, sequence=MAX_BIP125_RBF_SEQUENCE)['tx']
-        tx.vout[0].nValue = int((Decimal('0.3') - fee) * COIN)
+        tx.vout[0].nValue = btc_to_sat((Decimal('0.3') - fee))
         raw_tx_0 = tx.serialize().hex()
         txid_0 = tx.rehash()
         self.check_mempool_result(
@@ -131,7 +132,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             sequence=SEQUENCE_FINAL,
             locktime=node.getblockcount() + 2000,  # Can be anything
         )['tx']
-        tx.vout[0].nValue = int(output_amount * COIN)
+        tx.vout[0].nValue = btc_to_sat(output_amount)
         raw_tx_final = tx.serialize().hex()
         tx = tx_from_hex(raw_tx_final)
         fee_expected = Decimal('50.0') - output_amount
@@ -153,7 +154,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
 
         self.log.info('A transaction that replaces a mempool transaction')
         tx = tx_from_hex(raw_tx_0)
-        tx.vout[0].nValue -= int(fee * COIN)  # Double the fee
+        tx.vout[0].nValue -= btc_to_sat(fee)  # Double the fee
         raw_tx_0 = tx.serialize().hex()
         txid_0 = tx.rehash()
         self.check_mempool_result(
@@ -181,7 +182,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.wit.vtxinwit.append(deepcopy(tx.wit.vtxinwit[0]))
         tx.vin[0].prevout = COutPoint(hash=int(txid_0, 16), n=0)
         tx.vin[1].prevout = COutPoint(hash=int(txid_1, 16), n=0)
-        tx.vout[0].nValue = int(0.1 * COIN)
+        tx.vout[0].nValue = btc_to_sat(0.1)
         raw_tx_spend_both = tx.serialize().hex()
         txid_spend_both = self.wallet.sendrawtransaction(from_node=node, tx_hex=raw_tx_spend_both)
         self.generate(node, 1)
@@ -199,7 +200,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.log.info('Create a "reference" tx for later use')
         utxo_to_spend = self.wallet.get_utxo(txid=txid_spend_both)
         tx = self.wallet.create_self_transfer(utxo_to_spend=utxo_to_spend, sequence=SEQUENCE_FINAL)['tx']
-        tx.vout[0].nValue = int(0.05 * COIN)
+        tx.vout[0].nValue = btc_to_sat(0.05)
         raw_tx_reference = tx.serialize().hex()
         # Reference tx should be valid on itself
         self.check_mempool_result(
@@ -386,7 +387,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         # First spend has non-empty witness, will be rejected to prevent third party wtxid malleability
         anchor_nonempty_wit_spend = CTransaction()
         anchor_nonempty_wit_spend.vin.append(CTxIn(COutPoint(int(create_anchor_tx["txid"], 16), create_anchor_tx["sent_vout"]), b""))
-        anchor_nonempty_wit_spend.vout.append(CTxOut(anchor_value - int(fee*COIN), script_to_p2wsh_script(CScript([OP_TRUE]))))
+        anchor_nonempty_wit_spend.vout.append(CTxOut(anchor_value - btc_to_sat(fee), script_to_p2wsh_script(CScript([OP_TRUE]))))
         anchor_nonempty_wit_spend.wit.vtxinwit.append(CTxInWitness())
         anchor_nonempty_wit_spend.wit.vtxinwit[0].scriptWitness.stack.append(b"f")
         anchor_nonempty_wit_spend.rehash()
@@ -406,7 +407,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
 
         anchor_spend = CTransaction()
         anchor_spend.vin.append(CTxIn(COutPoint(int(create_anchor_tx["txid"], 16), create_anchor_tx["sent_vout"]), b""))
-        anchor_spend.vout.append(CTxOut(anchor_value - int(fee*COIN), script_to_p2wsh_script(CScript([OP_TRUE]))))
+        anchor_spend.vout.append(CTxOut(anchor_value - btc_to_sat(fee), script_to_p2wsh_script(CScript([OP_TRUE]))))
         anchor_spend.wit.vtxinwit.append(CTxInWitness())
         # It's "segwit" but txid == wtxid since there is no witness data
         assert_equal(anchor_spend.rehash(), anchor_spend.getwtxid())
@@ -426,7 +427,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         nested_anchor_spend = CTransaction()
         nested_anchor_spend.vin.append(CTxIn(COutPoint(nested_anchor_tx.sha256, 0), b""))
         nested_anchor_spend.vin[0].scriptSig = CScript([bytes(PAY_TO_ANCHOR)])
-        nested_anchor_spend.vout.append(CTxOut(nested_anchor_tx.vout[0].nValue - int(fee*COIN), script_to_p2wsh_script(CScript([OP_TRUE]))))
+        nested_anchor_spend.vout.append(CTxOut(nested_anchor_tx.vout[0].nValue - btc_to_sat(fee), script_to_p2wsh_script(CScript([OP_TRUE]))))
         nested_anchor_spend.rehash()
 
         self.check_mempool_result(
@@ -446,7 +447,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.generateblock(node, address, [tx.serialize().hex()])
         tx_spend = CTransaction()
         tx_spend.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
-        tx_spend.vout.append(CTxOut(tx.vout[0].nValue - int(fee*COIN), script_to_p2wsh_script(CScript([OP_TRUE]))))
+        tx_spend.vout.append(CTxOut(tx.vout[0].nValue - btc_to_sat(fee), script_to_p2wsh_script(CScript([OP_TRUE]))))
         tx_spend.rehash()
         sign_input_legacy(tx_spend, 0, tx.vout[0].scriptPubKey, privkey, sighash_type=SIGHASH_ALL)
         tx_spend.vin[0].scriptSig = bytes(CScript([OP_0])) + tx_spend.vin[0].scriptSig

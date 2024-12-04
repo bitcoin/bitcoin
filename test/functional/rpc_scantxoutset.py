@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the scantxoutset rpc call."""
 from test_framework.address import address_to_scriptpubkey
-from test_framework.messages import COIN
+from test_framework.messages import COIN, btc_to_sat
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet import (
@@ -27,7 +27,7 @@ class ScantxoutsetTest(BitcoinTestFramework):
         # interpret strings as addresses, assume scriptPubKey otherwise
         if isinstance(destination, str):
             destination = address_to_scriptpubkey(destination)
-        self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=destination, amount=int(COIN * amount))
+        self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=destination, amount=btc_to_sat(amount))
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
