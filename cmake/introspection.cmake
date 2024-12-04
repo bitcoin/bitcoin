@@ -17,7 +17,9 @@ if(NOT WIN32)
 endif()
 
 include(TestAppendRequiredLibraries)
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Generic")
 test_append_atomic_library(core_interface)
+endif()
 
 # Even though ::system is part of the standard library, we still check
 # for it, to support building targets that don't have it, such as iOS.
