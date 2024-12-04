@@ -1902,8 +1902,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     node.llmq_ctx->Stop();
                 }
                 node.llmq_ctx.reset();
-                node.llmq_ctx = std::make_unique<LLMQContext>(chainman, *node.connman, *node.dmnman, *node.evodb, *node.mn_metaman, *node.mnhf_manager, *node.sporkman,
-                                                              *node.mempool, node.mn_activeman.get(), *node.mn_sync, node.peerman, /* unit_tests = */ false, /* wipe = */ fReset || fReindexChainState);
+                node.llmq_ctx = std::make_unique<LLMQContext>(chainman, *node.dmnman, *node.evodb, *node.mn_metaman, *node.mnhf_manager, *node.sporkman,
+                                                              *node.mempool, node.mn_activeman.get(), *node.mn_sync, /*unit_tests=*/false, /*wipe=*/fReset || fReindexChainState);
                 // Enable CMNHFManager::{Process, Undo}Block
                 node.mnhf_manager->ConnectManagers(node.chainman.get(), node.llmq_ctx->qman.get());
 

@@ -18,11 +18,10 @@
 #include <llmq/signing.h>
 #include <llmq/signing_shares.h>
 
-LLMQContext::LLMQContext(ChainstateManager& chainman, CConnman& connman, CDeterministicMNManager& dmnman,
-                         CEvoDB& evo_db, CMasternodeMetaMan& mn_metaman, CMNHFManager& mnhfman, CSporkManager& sporkman,
+LLMQContext::LLMQContext(ChainstateManager& chainman, CDeterministicMNManager& dmnman, CEvoDB& evo_db,
+                         CMasternodeMetaMan& mn_metaman, CMNHFManager& mnhfman, CSporkManager& sporkman,
                          CTxMemPool& mempool, const CActiveMasternodeManager* const mn_activeman,
-                         const CMasternodeSync& mn_sync, const std::unique_ptr<PeerManager>& peerman, bool unit_tests,
-                         bool wipe) :
+                         const CMasternodeSync& mn_sync, bool unit_tests, bool wipe) :
     is_masternode{mn_activeman != nullptr},
     bls_worker{std::make_shared<CBLSWorker>()},
     dkg_debugman{std::make_unique<llmq::CDKGDebugManager>()},
