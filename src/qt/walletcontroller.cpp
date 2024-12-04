@@ -468,7 +468,7 @@ void MigrateWalletActivity::migrate(const std::string& name)
         auto res{node().walletLoader().migrateWallet(name, passphrase)};
 
         if (res) {
-            m_success_message = tr("The wallet '%1' was migrated successfully.").arg(GUIUtil::HtmlEscape(GUIUtil::WalletDisplayName(res->wallet->getWalletName())));
+            m_success_message = tr("The wallet '%1' was migrated successfully.").arg(GUIUtil::HtmlEscape(GUIUtil::WalletDisplayName(name)));
             if (res->watchonly_wallet_name) {
                 m_success_message += QChar(' ') + tr("Watchonly scripts have been migrated to a new wallet named '%1'.").arg(GUIUtil::HtmlEscape(GUIUtil::WalletDisplayName(res->watchonly_wallet_name.value())));
             }
