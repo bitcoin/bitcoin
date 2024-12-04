@@ -20,6 +20,9 @@ namespace {
 
 using namespace cluster_linearize;
 
+/** The maximum number of levels a TxGraph can have (0 = main, 1 = staging). */
+static constexpr int MAX_LEVELS{2};
+
 // Forward declare the TxGraph implementation class.
 class TxGraphImpl;
 
@@ -65,6 +68,8 @@ class Cluster
     QualityLevel m_quality{QualityLevel::NONE};
     /** Which position this Cluster has in Graph::ClusterSet::m_clusters[m_quality]. */
     ClusterSetIndex m_setindex{ClusterSetIndex(-1)};
+    /** Which level this Cluster is at in the graph (-1=not inserted, 0=main, 1=staging). */
+    int m_level{-1};
 
 public:
     /** Construct an empty Cluster. */
@@ -72,7 +77,7 @@ public:
     /** Construct a singleton Cluster. */
     explicit Cluster(TxGraphImpl& graph, const FeePerWeight& feerate, GraphIndex graph_index) noexcept;
 
-    // Cannot move or copy (would invalidate Cluster* in Locator and TxGraphImpl::ClusterSet). */
+    // Cannot move or copy (would invalidate Cluster* in Locator and ClusterSet). */
     Cluster(const Cluster&) = delete;
     Cluster& operator=(const Cluster&) = delete;
     Cluster(Cluster&&) = delete;
@@ -105,6 +110,17 @@ public:
     void UpdateMapping(DepGraphIndex cluster_idx, GraphIndex graph_idx) noexcept { m_mapping[cluster_idx] = graph_idx; }
     /** Push changes to Cluster and its linearization to the TxGraphImpl Entry objects. */
     void Updated(TxGraphImpl& graph) noexcept;
+    /** Create a copy of this Cluster in staging, returning a pointer to it (used by PullIn). */
+    Cluster* CopyToStaging(TxGraphImpl& graph) const noexcept;
+    /** Get the list of Clusters in main that conflict with this one (which is assumed to be in staging). */
+    void GetConflicts(const TxGraphImpl& graph, std::vector<Cluster*>& out) const noexcept;
+    /** Mark all the Entry objects belonging to this staging Cluster as missing. The Cluster must be
+     *  deleted immediately after. */
+    void MakeStagingTransactionsMissing(TxGraphImpl& graph) noexcept;
+    /** Remove all transactions from a Cluster. */
+    void Clear(TxGraphImpl& graph) noexcept;
+    /** Change a Cluster's level from 1 (staging) to 0 (main). */
+    void MoveToMain(TxGraphImpl& graph) noexcept;
 
     // Functions that implement the Cluster-specific side of internal TxGraphImpl mutations.
 
@@ -136,15 +152,19 @@ public:
 
     // Debugging functions.
 
-    void SanityCheck(const TxGraphImpl& graph) const;
+    void SanityCheck(const TxGraphImpl& graph, int level) const;
 };
 
-/** The transaction graph.
+/** The transaction graph, including staged changes.
  *
  * The overall design of the data structure consists of 3 interlinked representations:
  * - The transactions (held as a vector of TxGraphImpl::Entry inside TxGraphImpl).
- * - The clusters (Cluster objects in per-quality vectors inside TxGraphImpl).
+ * - The clusters (Cluster objects in per-quality vectors inside TxGraphImpl::ClusterSet).
  * - The Refs (TxGraph::Ref objects, held externally by users of the TxGraph class)
+ *
+ * The Clusters are kept in one or two ClusterSet objects, one for the "main" graph, and one for
+ * the proposed changes ("staging"). If a transaction occurs in both, they share the same Entry,
+ * but there will be a separate Cluster per graph.
  *
  * Clusters and Refs contain the index of the Entry objects they refer to, and the Entry objects
  * refer back to the Clusters and Refs the corresponding transaction is contained in.
@@ -204,28 +224,68 @@ private:
         std::vector<std::pair<GraphIndex, GraphIndex>> m_deps_to_add;
         /** Information about the merges to be performed, if known. */
         std::optional<GroupData> m_group_data = GroupData{};
+        /** Which entries were removed in this ClusterSet (so they can be wiped on abort). This
+         *  includes all entries which have an (R) removed locator at this level (staging only). */
+        std::vector<GraphIndex> m_removed;
         /** Total number of transactions in this graph (sum of all transaction counts in all
-         *  Clusters). */
+         *  Clusters, and for staging also those inherited from the main ClusterSet). */
         GraphIndex m_txcount{0};
+
+        ClusterSet() noexcept = default;
     };
 
-    /** The ClusterSet for this TxGraphImpl. */
-    ClusterSet m_clusterset;
+    /** The main ClusterSet. */
+    ClusterSet m_main_clusterset;
+    /** The staging ClusterSet, if any. */
+    std::optional<ClusterSet> m_staging_clusterset;
 
-    /** A Locator that describes whether, where, and in which Cluster an Entry appears. */
+    /** A Locator that describes whether, where, and in which Cluster an Entry appears.
+     *  Every Entry has MAX_LEVELS locators, as it may appear in one Cluster per level.
+     *
+     *  Each level of a Locator is in one of three states:
+     *
+     *  - (P)resent: actually occurs in a Cluster at that level.
+     *
+     *  - (M)issing:
+     *    - In the main graph:    the transaction does not exist in main.
+     *    - In the staging graph: the transaction's existence is the same as in main. If it doesn't
+     *                            exist in main, (M) in staging means it does not exist there
+     *                            either. If it does exist in main, (M) in staging means the
+     *                            cluster it is in has not been modified in staging, and thus the
+     *                            transaction implicitly exists in staging too (without explicit
+     *                            Cluster object; see PullIn() to create it in staging too).
+     *
+     *  - (R)emoved: only possible in staging; it means the transaction exists in main, but is
+     *               removed in staging.
+     *
+     * The following combinations are possible:
+     * - (M,M): the transaction doesn't exist in either graph.
+     * - (P,M): the transaction exists in both, but only exists explicitly in a Cluster object in
+     *          main. Its existence in staging is inherited from main.
+     * - (P,P): the transaction exists in both, and is materialized in both. Thus, the clusters
+     *          and/or their linearizations may be different in main and staging.
+     * - (M,P): the transaction is added in staging, and does not exist in main.
+     * - (P,R): the transaction exists in main, but is removed in staging.
+     *
+     * When staging does not exist, only (M,M) and (P,M) are possible.
+     */
     struct Locator
     {
         /** Which Cluster the Entry appears in (nullptr = missing). */
         Cluster* cluster{nullptr};
-        /** Where in the Cluster it appears (only if cluster != nullptr). */
+        /** Where in the Cluster it appears (if cluster == nullptr: 0 = missing, -1 = removed). */
         DepGraphIndex index{0};
 
-        /** Mark this Locator as missing. */
+        /** Mark this Locator as missing (= same as lower level, or non-existing if level 0). */
         void SetMissing() noexcept { cluster = nullptr; index = 0; }
+        /** Mark this Locator as removed (not allowed in level 0). */
+        void SetRemoved() noexcept { cluster = nullptr; index = DepGraphIndex(-1); }
         /** Mark this Locator as present, in the specified Cluster. */
         void SetPresent(Cluster* c, DepGraphIndex i) noexcept { cluster = c; index = i; }
         /** Check if this Locator is missing. */
         bool IsMissing() const noexcept { return cluster == nullptr && index == 0; }
+        /** Check if this Locator is removed. */
+        bool IsRemoved() const noexcept { return cluster == nullptr && index == DepGraphIndex(-1); }
         /** Check if this Locator is present (in some Cluster). */
         bool IsPresent() const noexcept { return cluster != nullptr; }
     };
@@ -235,13 +295,13 @@ private:
     {
         /** Pointer to the corresponding Ref object if any, or nullptr if unlinked. */
         Ref* m_ref{nullptr};
-        /** Which Cluster and position therein this Entry appears in. */
-        Locator m_locator;
-        /** The chunk feerate of this transaction (if not missing). */
-        FeePerWeight m_chunk_feerate;
+        /** Which Cluster and position therein this Entry appears in. ([0] = main, [1] = staged). */
+        Locator m_locator[MAX_LEVELS];
+        /** The chunk feerate of this transaction in main (if present in m_locator[0]). */
+        FeePerWeight m_main_chunk_feerate;
     };
 
-    /** The set of all transactions. GraphIndex values index into this. */
+    /** The set of all transactions (in all levels combined). GraphIndex values index into this. */
     std::vector<Entry> m_entries;
 
     /** Set of Entries which have no linked Ref anymore. */
@@ -266,16 +326,28 @@ public:
 
     /** Swap the Entrys referred to by a and b. */
     void SwapIndexes(GraphIndex a, GraphIndex b) noexcept;
-    /** Extract a Cluster. */
-    std::unique_ptr<Cluster> ExtractCluster(QualityLevel quality, ClusterSetIndex setindex) noexcept;
+    /** If idx exists in the specified level ClusterSet (explicitly, or in the level below and not
+    *   removed), return the Cluster it is in. Otherwise, return nullptr. */
+    Cluster* FindCluster(GraphIndex idx, int level) const noexcept;
+    /** Extract a Cluster from its ClusterSet. */
+    std::unique_ptr<Cluster> ExtractCluster(int level, QualityLevel quality, ClusterSetIndex setindex) noexcept;
     /** Delete a Cluster. */
     void DeleteCluster(Cluster& cluster) noexcept;
-    /** Insert a Cluster. */
-    ClusterSetIndex InsertCluster(std::unique_ptr<Cluster>&& cluster, QualityLevel quality) noexcept;
+    /** Insert a Cluster into its ClusterSet. */
+    ClusterSetIndex InsertCluster(int level, std::unique_ptr<Cluster>&& cluster, QualityLevel quality) noexcept;
     /** Change the QualityLevel of a Cluster (identified by old_quality and old_index). */
-    void SetClusterQuality(QualityLevel old_quality, ClusterSetIndex old_index, QualityLevel new_quality) noexcept;
-    /** Make a transaction not exist. It must currently exist. */
-    void ClearLocator(GraphIndex index) noexcept;
+    void SetClusterQuality(int level, QualityLevel old_quality, ClusterSetIndex old_index, QualityLevel new_quality) noexcept;
+    /** Get the index of the top level ClusterSet (staging if it exists, main otherwise). */
+    int GetTopLevel() const noexcept { return m_staging_clusterset.has_value(); }
+    /** Get the specified level (staging if it exists and main_only is not specified, main otherwise). */
+    int GetSpecifiedLevel(bool main_only) const noexcept { return m_staging_clusterset.has_value() && !main_only; }
+    /** Get a reference to the ClusterSet at the specified level (which must exist). */
+    ClusterSet& GetClusterSet(int level) noexcept;
+    const ClusterSet& GetClusterSet(int level) const noexcept;
+    /** Make a transaction not exist at a specified level. It must currently exist there. */
+    void ClearLocator(int level, GraphIndex index) noexcept;
+    /** Find which Clusters in main conflict with ones in staging. */
+    std::vector<Cluster*> GetConflicts() const noexcept;
 
     // Functions for handling Refs.
 
@@ -300,21 +372,25 @@ public:
     // Functions related to various normalization/application steps.
     /** Get rid of unlinked Entry objects in m_entries, if possible (this changes the GraphIndex
      *  values for remaining Entrys, so this only does something when no to-be-applied operations
-     *  referring to GraphIndexes remain). */
+     *  or staged removals referring to GraphIndexes remain). */
     void Compact() noexcept;
+    /** If cluster is not in staging, copy it there, and return a pointer to it. This has no
+    *   effect if only a main graph exists, but if staging exists this modifies the locators of its
+    *   transactions from inherited (P,M) to explicit (P,P). */
+    Cluster* PullIn(Cluster* cluster) noexcept;
     /** Apply all removals queued up in m_to_remove to the relevant Clusters (which get a
-     *  NEEDS_SPLIT* QualityLevel). */
-    void ApplyRemovals() noexcept;
-    /** Split an individual cluster. */
+     *  NEEDS_SPLIT* QualityLevel) in the specified level. */
+    void ApplyRemovals(int level) noexcept;
+    /** Split an individual cluster (which must be in the top-level ClusterSet). */
     void Split(Cluster& cluster) noexcept;
-    /** Split all clusters that need splitting. */
-    void SplitAll() noexcept;
-    /** Populate m_group_data based on m_deps_to_add. */
-    void GroupClusters() noexcept;
+    /** Split all clusters that need splitting in the specified level. */
+    void SplitAll(int level) noexcept;
+    /** Populate m_group_data based on m_deps_to_add in the specified level. */
+    void GroupClusters(int level) noexcept;
     /** Merge the specified clusters. */
     void Merge(std::span<Cluster*> to_merge) noexcept;
-    /** Apply all m_deps_to_add to the relevant Clusters. */
-    void ApplyDependencies() noexcept;
+    /** Apply all m_deps_to_add to the relevant Clusters in the specified level. */
+    void ApplyDependencies(int level) noexcept;
     /** Make a specified Cluster have quality ACCEPTABLE or OPTIMAL. */
     void MakeAcceptable(Cluster& cluster) noexcept;
 
@@ -325,26 +401,53 @@ public:
     void AddDependency(const Ref& parent, const Ref& child) noexcept final;
     void SetTransactionFee(const Ref&, int64_t fee) noexcept final;
 
-    bool Exists(const Ref& arg) noexcept final;
-    FeePerWeight GetChunkFeerate(const Ref& arg) noexcept final;
+    void StartStaging() noexcept final;
+    void CommitStaging() noexcept final;
+    void AbortStaging() noexcept final;
+    bool HaveStaging() const noexcept final { return m_staging_clusterset.has_value(); }
+
+    bool Exists(const Ref& arg, bool main_only = false) noexcept final;
+    FeePerWeight GetMainChunkFeerate(const Ref& arg) noexcept final;
     FeePerWeight GetIndividualFeerate(const Ref& arg) noexcept final;
-    std::vector<Ref*> GetCluster(const Ref& arg) noexcept final;
-    std::vector<Ref*> GetAncestors(const Ref& arg) noexcept final;
-    std::vector<Ref*> GetDescendants(const Ref& arg) noexcept final;
-    GraphIndex GetTransactionCount() noexcept final;
-    bool IsOversized() noexcept final;
+    std::vector<Ref*> GetCluster(const Ref& arg, bool main_only = false) noexcept final;
+    std::vector<Ref*> GetAncestors(const Ref& arg, bool main_only = false) noexcept final;
+    std::vector<Ref*> GetDescendants(const Ref& arg, bool main_only = false) noexcept final;
+    GraphIndex GetTransactionCount(bool main_only = false) noexcept final;
+    bool IsOversized(bool main_only = false) noexcept final;
 
     void SanityCheck() const final;
 };
 
-void TxGraphImpl::ClearLocator(GraphIndex idx) noexcept
+TxGraphImpl::ClusterSet& TxGraphImpl::GetClusterSet(int level) noexcept
+{
+    if (level == 0) return m_main_clusterset;
+    Assume(level == 1);
+    Assume(m_staging_clusterset.has_value());
+    return *m_staging_clusterset;
+}
+
+const TxGraphImpl::ClusterSet& TxGraphImpl::GetClusterSet(int level) const noexcept
+{
+    if (level == 0) return m_main_clusterset;
+    Assume(level == 1);
+    Assume(m_staging_clusterset.has_value());
+    return *m_staging_clusterset;
+}
+
+void TxGraphImpl::ClearLocator(int level, GraphIndex idx) noexcept
 {
     auto& entry = m_entries[idx];
-    Assume(entry.m_locator.IsPresent());
-    // Change the locator from Present to Missing.
-    entry.m_locator.SetMissing();
+    auto& clusterset = GetClusterSet(level);
+    Assume(entry.m_locator[level].IsPresent());
+    // Change the locator from Present to Missing or Removed.
+    if (level == 0 || !entry.m_locator[level - 1].IsPresent()) {
+        entry.m_locator[level].SetMissing();
+    } else {
+        entry.m_locator[level].SetRemoved();
+        clusterset.m_removed.push_back(idx);
+    }
     // Update the transaction count.
-    --m_clusterset.m_txcount;
+    --clusterset.m_txcount;
 }
 
 void Cluster::Updated(TxGraphImpl& graph) noexcept
@@ -352,13 +455,13 @@ void Cluster::Updated(TxGraphImpl& graph) noexcept
     // Update all the Locators for this Cluster's Entrys.
     for (DepGraphIndex idx : m_linearization) {
         auto& entry = graph.m_entries[m_mapping[idx]];
-        entry.m_locator.SetPresent(this, idx);
+        entry.m_locator[m_level].SetPresent(this, idx);
     }
-    // If the Cluster's quality is ACCEPTABLE or OPTIMAL, compute its chunking and store its
-    // information in the Entry's m_chunk_feerate. These fields are only accessed after making
-    // the entire graph ACCEPTABLE, so it is pointless to compute these if we haven't reached that
-    // quality level yet.
-    if (IsAcceptable()) {
+    // If this is for the main graph (level = 0), and the Cluster's quality is ACCEPTABLE or
+    // OPTIMAL, compute its chunking and store its information in the Entry's m_main_chunk_feerate.
+    // These fields are only accessed after making the entire graph ACCEPTABLE, so it is pointless
+    // to compute these if we haven't reached that quality level yet.
+    if (m_level == 0 && IsAcceptable()) {
         LinearizationChunking chunking(m_depgraph, m_linearization);
         LinearizationIndex lin_idx{0};
         // Iterate over the chunks.
@@ -370,12 +473,65 @@ void Cluster::Updated(TxGraphImpl& graph) noexcept
                 DepGraphIndex idx = m_linearization[lin_idx++];
                 GraphIndex graph_idx = m_mapping[idx];
                 auto& entry = graph.m_entries[graph_idx];
-                entry.m_chunk_feerate = FeePerWeight::FromFeeFrac(chunk.feerate);
+                entry.m_main_chunk_feerate = FeePerWeight::FromFeeFrac(chunk.feerate);
                 Assume(chunk.transactions[idx]);
                 chunk.transactions.Reset(idx);
             } while(chunk.transactions.Any());
         }
     }
+}
+
+void Cluster::GetConflicts(const TxGraphImpl& graph, std::vector<Cluster*>& out) const noexcept
+{
+    Assume(m_level == 1);
+    for (auto i : m_linearization) {
+        auto& entry = graph.m_entries[m_mapping[i]];
+        // For every transaction Entry in this Cluster, if it also exists in a lower-level Cluster,
+        // then that Cluster conflicts.
+        if (entry.m_locator[0].IsPresent()) {
+            out.push_back(entry.m_locator[0].cluster);
+        }
+    }
+}
+
+std::vector<Cluster*> TxGraphImpl::GetConflicts() const noexcept
+{
+    Assume(GetTopLevel() == 1);
+    auto& clusterset = GetClusterSet(1);
+    std::vector<Cluster*> ret;
+    // All main Clusters containing transactions in m_removed (so (P,R) ones) are conflicts.
+    for (auto i : clusterset.m_removed) {
+        auto& entry = m_entries[i];
+        Assume(entry.m_locator[0].IsPresent());
+        ret.push_back(entry.m_locator[0].cluster);
+    }
+    // Then go over all Clusters at this level, and find their conflicts (the (P,P) ones).
+    for (int quality = 0; quality < int(QualityLevel::NONE); ++quality) {
+        auto& clusters = clusterset.m_clusters[quality];
+        for (const auto& cluster : clusters) {
+            cluster->GetConflicts(*this, ret);
+        }
+    }
+    // Deduplicate the result (the same Cluster may appear multiple times).
+    std::sort(ret.begin(), ret.end());
+    ret.erase(std::unique(ret.begin(), ret.end()), ret.end());
+    return ret;
+}
+
+Cluster* Cluster::CopyToStaging(TxGraphImpl& graph) const noexcept
+{
+    // Construct an empty Cluster.
+    auto ret = std::make_unique<Cluster>();
+    auto ptr = ret.get();
+    // Copy depgraph, mapping, and linearization/
+    ptr->m_depgraph = m_depgraph;
+    ptr->m_mapping = m_mapping;
+    ptr->m_linearization = m_linearization;
+    // Insert the new Cluster into the graph.
+    graph.InsertCluster(1, std::move(ret), m_quality);
+    // Update its Locators.
+    ptr->Updated(graph);
+    return ptr;
 }
 
 void Cluster::ApplyRemovals(TxGraphImpl& graph, std::span<GraphIndex>& to_remove) noexcept
@@ -387,7 +543,7 @@ void Cluster::ApplyRemovals(TxGraphImpl& graph, std::span<GraphIndex>& to_remove
         GraphIndex idx = to_remove.front();
         Assume(idx < graph.m_entries.size());
         auto& entry = graph.m_entries[idx];
-        auto& locator = entry.m_locator;
+        auto& locator = entry.m_locator[m_level];
         // Stop once we hit an entry that applies to another Cluster.
         if (locator.cluster != this) break;
         // - Remember it in a set of to-remove DepGraphIndexes.
@@ -396,8 +552,8 @@ void Cluster::ApplyRemovals(TxGraphImpl& graph, std::span<GraphIndex>& to_remove
         //   are just never accessed, but set it to -1 here to increase the ability to detect a bug
         //   that causes it to be accessed regardless.
         m_mapping[locator.index] = GraphIndex(-1);
-        // - Mark it as removed in the Entry's locator.
-        graph.ClearLocator(idx);
+        // - Mark it as missing/removed in the Entry's locator.
+        graph.ClearLocator(m_level, idx);
         to_remove = to_remove.subspan(1);
     } while(!to_remove.empty());
 
@@ -429,7 +585,31 @@ void Cluster::ApplyRemovals(TxGraphImpl& graph, std::span<GraphIndex>& to_remove
             [&](auto pos) { return todo[pos]; }), m_linearization.end());
         quality = QualityLevel::NEEDS_SPLIT;
     }
-    graph.SetClusterQuality(m_quality, m_setindex, quality);
+    graph.SetClusterQuality(m_level, m_quality, m_setindex, quality);
+    Updated(graph);
+}
+
+void Cluster::Clear(TxGraphImpl& graph) noexcept
+{
+    for (auto i : m_linearization) {
+        graph.ClearLocator(m_level, m_mapping[i]);
+    }
+    m_depgraph = {};
+    m_linearization.clear();
+    m_mapping.clear();
+}
+
+void Cluster::MoveToMain(TxGraphImpl& graph) noexcept
+{
+    Assume(m_level == 1);
+    for (auto i : m_linearization) {
+        GraphIndex idx = m_mapping[i];
+        auto& entry = graph.m_entries[idx];
+        entry.m_locator[1].SetMissing();
+    }
+    auto quality = m_quality;
+    auto cluster = graph.ExtractCluster(1, quality, m_setindex);
+    graph.InsertCluster(0, std::move(cluster), quality);
     Updated(graph);
 }
 
@@ -462,7 +642,7 @@ bool Cluster::Split(TxGraphImpl& graph) noexcept
         if (first && component == todo) {
             // The existing Cluster is an entire component. Leave it be, but update its quality.
             Assume(todo == m_depgraph.Positions());
-            graph.SetClusterQuality(m_quality, m_setindex, new_quality);
+            graph.SetClusterQuality(m_level, m_quality, m_setindex, new_quality);
             // If this made the quality ACCEPTABLE or OPTIMAL, we need to compute and cache its
             // chunking.
             Updated(graph);
@@ -477,7 +657,7 @@ bool Cluster::Split(TxGraphImpl& graph) noexcept
         for (auto i : component) {
             remap[i] = {new_cluster.get(), DepGraphIndex(-1)};
         }
-        graph.InsertCluster(std::move(new_cluster), new_quality);
+        graph.InsertCluster(m_level, std::move(new_cluster), new_quality);
         todo -= component;
     }
     // Redistribute the transactions.
@@ -539,7 +719,7 @@ void Cluster::Merge(TxGraphImpl& graph, Cluster& other) noexcept
         // Update the transaction's Locator. There is no need to call Updated() to update chunk
         // feerates, as Updated() will be invoked by Cluster::ApplyDependencies on the resulting
         // merged Cluster later anyway).
-        graph.m_entries[idx].m_locator.SetPresent(this, new_pos);
+        graph.m_entries[idx].m_locator[m_level].SetPresent(this, new_pos);
     }
     // Purge the other Cluster, now that everything has been moved.
     other.m_depgraph = DepGraph<SetType>{};
@@ -562,14 +742,14 @@ void Cluster::ApplyDependencies(TxGraphImpl& graph, std::span<std::pair<GraphInd
     // Iterate over groups of to-be-added dependencies with the same child.
     auto it = to_apply.begin();
     while (it != to_apply.end()) {
-        auto& first_child = graph.m_entries[it->second].m_locator;
+        auto& first_child = graph.m_entries[it->second].m_locator[m_level];
         const auto child_idx = first_child.index;
         // Iterate over all to-be-added dependencies within that same child, gather the relevant
         // parents.
         SetType parents;
         while (it != to_apply.end()) {
-            auto& child = graph.m_entries[it->second].m_locator;
-            auto& parent = graph.m_entries[it->first].m_locator;
+            auto& child = graph.m_entries[it->second].m_locator[m_level];
+            auto& parent = graph.m_entries[it->first].m_locator[m_level];
             Assume(child.cluster == this && parent.cluster == this);
             if (child.index != child_idx) break;
             parents.Set(parent.index);
@@ -590,23 +770,26 @@ void Cluster::ApplyDependencies(TxGraphImpl& graph, std::span<std::pair<GraphInd
     Updated(graph);
 }
 
-std::unique_ptr<Cluster> TxGraphImpl::ExtractCluster(QualityLevel quality, ClusterSetIndex setindex) noexcept
+std::unique_ptr<Cluster> TxGraphImpl::ExtractCluster(int level, QualityLevel quality, ClusterSetIndex setindex) noexcept
 {
     Assume(quality != QualityLevel::NONE);
 
-    auto& quality_clusters = m_clusterset.m_clusters[int(quality)];
+    auto& clusterset = GetClusterSet(level);
+    auto& quality_clusters = clusterset.m_clusters[int(quality)];
     Assume(setindex < quality_clusters.size());
 
     // Extract the Cluster-owning unique_ptr.
     std::unique_ptr<Cluster> ret = std::move(quality_clusters[setindex]);
     ret->m_quality = QualityLevel::NONE;
     ret->m_setindex = ClusterSetIndex(-1);
+    ret->m_level = -1;
 
     // Clean up space in quality_cluster.
     auto max_setindex = quality_clusters.size() - 1;
     if (setindex != max_setindex) {
         // If the cluster was not the last element of quality_clusters, move that to take its place.
         quality_clusters.back()->m_setindex = setindex;
+        quality_clusters.back()->m_level = level;
         quality_clusters[setindex] = std::move(quality_clusters.back());
     }
     // The last element of quality_clusters is now unused; drop it.
@@ -615,7 +798,7 @@ std::unique_ptr<Cluster> TxGraphImpl::ExtractCluster(QualityLevel quality, Clust
     return ret;
 }
 
-ClusterSetIndex TxGraphImpl::InsertCluster(std::unique_ptr<Cluster>&& cluster, QualityLevel quality) noexcept
+ClusterSetIndex TxGraphImpl::InsertCluster(int level, std::unique_ptr<Cluster>&& cluster, QualityLevel quality) noexcept
 {
     // Cannot insert with quality level NONE (as that would mean not inserted).
     Assume(quality != QualityLevel::NONE);
@@ -623,48 +806,92 @@ ClusterSetIndex TxGraphImpl::InsertCluster(std::unique_ptr<Cluster>&& cluster, Q
     Assume(cluster->m_quality == QualityLevel::NONE);
 
     // Append it at the end of the relevant TxGraphImpl::m_cluster.
-    auto& quality_clusters = m_clusterset.m_clusters[int(quality)];
+    auto& clusterset = GetClusterSet(level);
+    auto& quality_clusters = clusterset.m_clusters[int(quality)];
     ClusterSetIndex ret = quality_clusters.size();
     cluster->m_quality = quality;
     cluster->m_setindex = ret;
+    cluster->m_level = level;
     quality_clusters.push_back(std::move(cluster));
     return ret;
 }
 
-void TxGraphImpl::SetClusterQuality(QualityLevel old_quality, ClusterSetIndex old_index, QualityLevel new_quality) noexcept
+void TxGraphImpl::SetClusterQuality(int level, QualityLevel old_quality, ClusterSetIndex old_index, QualityLevel new_quality) noexcept
 {
     Assume(new_quality != QualityLevel::NONE);
 
     // Don't do anything if the quality did not change.
     if (old_quality == new_quality) return;
     // Extract the cluster from where it currently resides.
-    auto cluster_ptr = ExtractCluster(old_quality, old_index);
+    auto cluster_ptr = ExtractCluster(level, old_quality, old_index);
     // And re-insert it where it belongs.
-    InsertCluster(std::move(cluster_ptr), new_quality);
+    InsertCluster(level, std::move(cluster_ptr), new_quality);
 }
 
 void TxGraphImpl::DeleteCluster(Cluster& cluster) noexcept
 {
     // Extract the cluster from where it currently resides.
-    auto cluster_ptr = ExtractCluster(cluster.m_quality, cluster.m_setindex);
+    auto cluster_ptr = ExtractCluster(cluster.m_level, cluster.m_quality, cluster.m_setindex);
     // And throw it away.
     cluster_ptr.reset();
 }
 
-void TxGraphImpl::ApplyRemovals() noexcept
+Cluster* TxGraphImpl::FindCluster(GraphIndex idx, int level) const noexcept
 {
-    auto& clusterset = m_clusterset;
+    Assume(level >= 0 && level <= GetTopLevel());
+    auto& entry = m_entries[idx];
+    // Search the entry's locators from top to bottom.
+    for (int l = level; l >= 0; --l) {
+        // If the locator is missing, dig deeper; it may exist at a lower level and therefore be
+        // implicitly existing at this level too.
+        if (entry.m_locator[l].IsMissing()) continue;
+        // If the locator has the entry marked as explicitly removed, stop.
+        if (entry.m_locator[l].IsRemoved()) break;
+        // Otherwise, we have found the topmost ClusterSet that contains this entry.
+        return entry.m_locator[l].cluster;
+    }
+    // If no non-empty locator was found, or an explicitly removed was hit, return nothing.
+    return nullptr;
+}
+
+Cluster* TxGraphImpl::PullIn(Cluster* cluster) noexcept
+{
+    int to_level = GetTopLevel();
+    if (to_level == 0) return cluster;
+    int level = cluster->m_level;
+    Assume(level <= to_level);
+    // Copy the Cluster from main to staging, if it's not already there.
+    if (level == 0) {
+        // Make the Cluster Acceptable before copying. This isn't strictly necessary, but doing it
+        // now avoids doing double work later.
+        MakeAcceptable(*cluster);
+        cluster = cluster->CopyToStaging(*this);
+    }
+    return cluster;
+}
+
+void TxGraphImpl::ApplyRemovals(int level) noexcept
+{
+    auto& clusterset = GetClusterSet(level);
     auto& to_remove = clusterset.m_to_remove;
     // Skip if there is nothing to remove.
     if (to_remove.empty()) return;
+    // There cannot be removals to be applied in main when staging exists (they should have been
+    // applied in StartStaging already, and none can be added to main while staging exists).
+    Assume(level == GetTopLevel());
+    // Pull in all Clusters that are not in staging.
+    for (GraphIndex index : to_remove) {
+        auto cluster = FindCluster(index, level);
+        PullIn(cluster);
+    }
     // Group the set of to-be-removed entries by Cluster*.
     std::sort(to_remove.begin(), to_remove.end(), [&](GraphIndex a, GraphIndex b) noexcept {
-        return std::less{}(m_entries[a].m_locator.cluster, m_entries[b].m_locator.cluster);
+        return std::less{}(m_entries[a].m_locator[level].cluster, m_entries[b].m_locator[level].cluster);
     });
     // Process per Cluster.
     std::span to_remove_span{to_remove};
     while (!to_remove_span.empty()) {
-        Cluster* cluster = m_entries[to_remove_span.front()].m_locator.cluster;
+        Cluster* cluster = m_entries[to_remove_span.front()].m_locator[level].cluster;
         if (cluster != nullptr) {
             // If the first to_remove_span entry's Cluster exists, hand to_remove_span to it, so it
             // can pop off whatever applies to it.
@@ -691,21 +918,29 @@ void TxGraphImpl::SwapIndexes(GraphIndex a, GraphIndex b) noexcept
         Entry& entry = m_entries[idx];
         // Update linked Ref.
         if (entry.m_ref) GetRefIndex(*entry.m_ref) = idx;
-        // Update the locator. The rest of the Entry information will not change, so no need to
-        // invoke Cluster::Updated().
-        Locator& locator = entry.m_locator;
-        if (locator.IsPresent()) {
-            locator.cluster->UpdateMapping(locator.index, idx);
+        // Update the locators for both levels. The rest of the Entry information will not change,
+        // so no need to invoke Cluster::Updated().
+        for (int level = 0; level < MAX_LEVELS; ++level) {
+            Locator& locator = entry.m_locator[level];
+            if (locator.IsPresent()) {
+                locator.cluster->UpdateMapping(locator.index, idx);
+            }
         }
     }
 }
 
 void TxGraphImpl::Compact() noexcept
 {
-    // We cannot compact while any to-be-applied operations remain, as we'd need to rewrite them.
-    // It is easier to delay the compaction until they have been applied.
-    if (!m_clusterset.m_deps_to_add.empty()) return;
-    if (!m_clusterset.m_to_remove.empty()) return;
+    // We cannot compact while any to-be-applied operations or staged removals remain as we'd need
+    // to rewrite them. It is easier to delay the compaction until they have been applied.
+    if (!m_main_clusterset.m_deps_to_add.empty()) return;
+    if (!m_main_clusterset.m_to_remove.empty()) return;
+    if (!m_main_clusterset.m_removed.empty()) return;
+    if (m_staging_clusterset.has_value()) {
+        if (!m_staging_clusterset->m_deps_to_add.empty()) return;
+        if (!m_staging_clusterset->m_to_remove.empty()) return;
+        if (!m_staging_clusterset->m_removed.empty()) return;
+    }
 
     // Sort the GraphIndexes that need to be cleaned up. They are sorted in reverse, so the last
     // ones get processed first. This means earlier-processed GraphIndexes will not cause moving of
@@ -724,7 +959,9 @@ void TxGraphImpl::Compact() noexcept
         Entry& entry = m_entries[idx];
         Assume(entry.m_ref == nullptr);
         // Make sure the entry does not occur in the graph.
-        Assume(!entry.m_locator.IsPresent());
+        for (int level = 0; level < MAX_LEVELS; ++level) {
+            Assume(!entry.m_locator[level].IsPresent());
+        }
 
         // Move the entry to the end.
         if (idx != m_entries.size() - 1) SwapIndexes(idx, m_entries.size() - 1);
@@ -738,7 +975,7 @@ void TxGraphImpl::Split(Cluster& cluster) noexcept
 {
     // To split a Cluster, first make sure all removals are applied (as we might need to split
     // again afterwards otherwise).
-    ApplyRemovals();
+    ApplyRemovals(cluster.m_level);
     bool del = cluster.Split(*this);
     if (del) {
         // Cluster::Split reports whether the Cluster is to be deleted.
@@ -746,28 +983,32 @@ void TxGraphImpl::Split(Cluster& cluster) noexcept
     }
 }
 
-void TxGraphImpl::SplitAll() noexcept
+void TxGraphImpl::SplitAll(int level) noexcept
 {
     // Before splitting all Cluster, first make sure all removals are applied.
-    ApplyRemovals();
+    ApplyRemovals(level);
     for (auto quality : {QualityLevel::NEEDS_SPLIT, QualityLevel::NEEDS_SPLIT_ACCEPTABLE}) {
-        auto& queue = m_clusterset.m_clusters[int(quality)];
+        auto& queue = GetClusterSet(level).m_clusters[int(quality)];
         while (!queue.empty()) {
             Split(*queue.back().get());
         }
     }
 }
 
-void TxGraphImpl::GroupClusters() noexcept
+void TxGraphImpl::GroupClusters(int level) noexcept
 {
-    auto& clusterset = m_clusterset;
+    auto& clusterset = GetClusterSet(level);
     // If the groupings have been computed already, nothing is left to be done.
     if (clusterset.m_group_data.has_value()) return;
+    // We should never need to compute main grouping while staging exists (it should have already
+    // been computing in StartStaging, and no modifications that invalidate it can be made while
+    // staging exists).
+    Assume(level == GetTopLevel());
 
     // Before computing which Clusters need to be merged together, first apply all removals and
     // split the Clusters into connected components. If we would group first, we might end up
     // with inefficient and/or oversized Clusters which just end up being split again anyway.
-    SplitAll();
+    SplitAll(level);
 
     /** Annotated clusters: an entry for each Cluster, together with the representative for the
      *  partition it is in if known, or with nullptr if not yet known. */
@@ -779,8 +1020,8 @@ void TxGraphImpl::GroupClusters() noexcept
 
     // Construct a an_clusters entry for every parent and child in the to-be-applied dependencies.
     for (const auto& [par, chl] : clusterset.m_deps_to_add) {
-        auto par_cluster = m_entries[par].m_locator.cluster;
-        auto chl_cluster = m_entries[chl].m_locator.cluster;
+        auto par_cluster = FindCluster(par, level);
+        auto chl_cluster = FindCluster(chl, level);
         // Skip dependencies for which the parent or child transaction is removed.
         if (par_cluster == nullptr || chl_cluster == nullptr) continue;
         an_clusters.emplace_back(par_cluster, nullptr);
@@ -797,8 +1038,8 @@ void TxGraphImpl::GroupClusters() noexcept
     std::sort(clusterset.m_deps_to_add.begin(), clusterset.m_deps_to_add.end(), [&](auto& a, auto& b) noexcept {
         auto [_a_par, a_chl] = a;
         auto [_b_par, b_chl] = b;
-        auto a_chl_cluster = m_entries[a_chl].m_locator.cluster;
-        auto b_chl_cluster = m_entries[b_chl].m_locator.cluster;
+        auto a_chl_cluster = FindCluster(a_chl, level);
+        auto b_chl_cluster = FindCluster(b_chl, level);
         return std::less{}(a_chl_cluster, b_chl_cluster);
     });
 
@@ -872,8 +1113,8 @@ void TxGraphImpl::GroupClusters() noexcept
         Cluster* last_chl_cluster{nullptr};
         PartitionData* last_partition{nullptr};
         for (const auto& [par, chl] : clusterset.m_deps_to_add) {
-            auto par_cluster = m_entries[par].m_locator.cluster;
-            auto chl_cluster = m_entries[chl].m_locator.cluster;
+            auto par_cluster = FindCluster(par, level);
+            auto chl_cluster = FindCluster(chl, level);
             // Nothing to do if parent and child are in the same Cluster.
             if (par_cluster == chl_cluster) continue;
             // Nothing to do if either parent or child transaction is removed already.
@@ -905,12 +1146,12 @@ void TxGraphImpl::GroupClusters() noexcept
             // Find all dependencies whose child Cluster is Cluster i, and annotate them with rep.
             while (deps_it != clusterset.m_deps_to_add.end()) {
                 auto [par, chl] = *deps_it;
-                auto chl_cluster = m_entries[chl].m_locator.cluster;
+                auto chl_cluster = FindCluster(chl, level);
                 if (std::greater{}(chl_cluster, data.cluster)) break;
                 // Skip dependencies that apply to earlier Clusters (those necessary are for
                 // deleted transactions, as otherwise we'd have processed them already).
                 if (chl_cluster == data.cluster) {
-                    auto par_cluster = m_entries[par].m_locator.cluster;
+                    auto par_cluster = FindCluster(par, level);
                     // Also filter out dependencies applying to a removed parent.
                     if (par_cluster != nullptr) an_deps.emplace_back(*deps_it, rep);
                 }
@@ -993,11 +1234,11 @@ void TxGraphImpl::Merge(std::span<Cluster*> to_merge) noexcept
     }
 }
 
-void TxGraphImpl::ApplyDependencies() noexcept
+void TxGraphImpl::ApplyDependencies(int level) noexcept
 {
-    auto& clusterset = m_clusterset;
+    auto& clusterset = GetClusterSet(level);
     // Compute the groups of to-be-merged Clusters (which also applies all removals, and splits).
-    GroupClusters();
+    GroupClusters(level);
     Assume(clusterset.m_group_data.has_value());
     // Nothing to do if there are no dependencies to be added.
     if (clusterset.m_deps_to_add.empty()) return;
@@ -1006,16 +1247,20 @@ void TxGraphImpl::ApplyDependencies() noexcept
 
     // For each group of to-be-merged Clusters.
     for (const auto& group_data : clusterset.m_group_data->m_groups) {
-        // Invoke Merge() to merge them into a single Cluster.
         auto cluster_span = std::span{clusterset.m_group_data->m_group_clusters}
                                 .subspan(group_data.m_cluster_offset, group_data.m_cluster_count);
+        // Pull in all the Clusters that contain dependencies.
+        for (Cluster*& cluster : cluster_span) {
+            cluster = PullIn(cluster);
+        }
+        // Invoke Merge() to merge them into a single Cluster.
         Merge(cluster_span);
         // Actually apply all to-be-added dependencies (all parents and children from this grouping
         // belong to the same Cluster at this point because of the merging above).
         auto deps_span = std::span{clusterset.m_deps_to_add}
                              .subspan(group_data.m_deps_offset, group_data.m_deps_count);
         Assume(!deps_span.empty());
-        const auto& loc = m_entries[deps_span[0].second].m_locator;
+        const auto& loc = m_entries[deps_span[0].second].m_locator[level];
         Assume(loc.IsPresent());
         loc.cluster->ApplyDependencies(*this, deps_span);
     }
@@ -1044,7 +1289,7 @@ void Cluster::Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept
     m_linearization = std::move(linearization);
     // Update the Cluster's quality.
     auto new_quality = optimal ? QualityLevel::OPTIMAL : QualityLevel::ACCEPTABLE;
-    graph.SetClusterQuality(m_quality, m_setindex, new_quality);
+    graph.SetClusterQuality(m_level, m_quality, m_setindex, new_quality);
     // Update the Entry objects.
     Updated(graph);
 }
@@ -1079,9 +1324,11 @@ TxGraph::Ref TxGraphImpl::AddTransaction(const FeePerWeight& feerate) noexcept
     // Construct a new singleton Cluster (which is necessarily optimally linearized).
     auto cluster = std::make_unique<Cluster>(*this, feerate, idx);
     auto cluster_ptr = cluster.get();
-    InsertCluster(std::move(cluster), QualityLevel::OPTIMAL);
+    int level = GetTopLevel();
+    auto& clusterset = GetClusterSet(level);
+    InsertCluster(level, std::move(cluster), QualityLevel::OPTIMAL);
     cluster_ptr->Updated(*this);
-    ++m_clusterset.m_txcount;
+    ++clusterset.m_txcount;
     // Return the Ref.
     return ret;
 }
@@ -1093,12 +1340,14 @@ void TxGraphImpl::RemoveTransaction(const Ref& arg) noexcept
     if (GetRefGraph(arg) == nullptr) return;
     Assume(GetRefGraph(arg) == this);
     // Find the Cluster the transaction is in, and stop if it isn't in any.
-    auto cluster = m_entries[GetRefIndex(arg)].m_locator.cluster;
+    int level = GetTopLevel();
+    auto cluster = FindCluster(GetRefIndex(arg), level);
     if (cluster == nullptr) return;
     // Remember that the transaction is to be removed.
-    m_clusterset.m_to_remove.push_back(GetRefIndex(arg));
+    auto& clusterset = GetClusterSet(level);
+    clusterset.m_to_remove.push_back(GetRefIndex(arg));
     // Wipe m_group_data (as it will need to be recomputed).
-    m_clusterset.m_group_data.reset();
+    clusterset.m_group_data.reset();
 }
 
 void TxGraphImpl::AddDependency(const Ref& parent, const Ref& child) noexcept
@@ -1111,23 +1360,27 @@ void TxGraphImpl::AddDependency(const Ref& parent, const Ref& child) noexcept
     if (GetRefIndex(parent) == GetRefIndex(child)) return;
     // Find the Cluster the parent and child transaction are in, and stop if either appears to be
     // already removed.
-    auto par_cluster = m_entries[GetRefIndex(parent)].m_locator.cluster;
+    int level = GetTopLevel();
+    auto par_cluster = FindCluster(GetRefIndex(parent), level);
     if (par_cluster == nullptr) return;
-    auto chl_cluster = m_entries[GetRefIndex(child)].m_locator.cluster;
+    auto chl_cluster = FindCluster(GetRefIndex(child), level);
     if (chl_cluster == nullptr) return;
     // Remember that this dependency is to be applied.
-    m_clusterset.m_deps_to_add.emplace_back(GetRefIndex(parent), GetRefIndex(child));
+    auto& clusterset = GetClusterSet(level);
+    clusterset.m_deps_to_add.emplace_back(GetRefIndex(parent), GetRefIndex(child));
     // Wipe m_group_data (as it will need to be recomputed).
-    m_clusterset.m_group_data.reset();
+    clusterset.m_group_data.reset();
 }
 
-bool TxGraphImpl::Exists(const Ref& arg) noexcept
+bool TxGraphImpl::Exists(const Ref& arg, bool main_only) noexcept
 {
     if (GetRefGraph(arg) == nullptr) return false;
     Assume(GetRefGraph(arg) == this);
+    size_t level = GetSpecifiedLevel(main_only);
     // Make sure the transaction isn't scheduled for removal.
-    ApplyRemovals();
-    return m_entries[GetRefIndex(arg)].m_locator.IsPresent();
+    ApplyRemovals(level);
+    auto cluster = FindCluster(GetRefIndex(arg), level);
+    return cluster != nullptr;
 }
 
 std::vector<TxGraph::Ref*> Cluster::GetAncestorRefs(const TxGraphImpl& graph, DepGraphIndex idx) noexcept
@@ -1171,59 +1424,76 @@ FeePerWeight Cluster::GetIndividualFeerate(DepGraphIndex idx) noexcept
     return FeePerWeight::FromFeeFrac(m_depgraph.FeeRate(idx));
 }
 
-std::vector<TxGraph::Ref*> TxGraphImpl::GetAncestors(const Ref& arg) noexcept
+void Cluster::MakeStagingTransactionsMissing(TxGraphImpl& graph) noexcept
 {
-    // Return the empty vector if the Ref is empty.
-    if (GetRefGraph(arg) == nullptr) return {};
-    Assume(GetRefGraph(arg) == this);
-    // Apply all removals and dependencies, as the result might be incorrect otherwise.
-    ApplyDependencies();
-    // Ancestry cannot be known if unapplied dependencies remain.
-    Assume(m_clusterset.m_deps_to_add.empty());
-    // Find the Cluster the argument is in, and return the empty vector if it isn't in any.
-    auto cluster = m_entries[GetRefIndex(arg)].m_locator.cluster;
-    if (cluster == nullptr) return {};
-    // Dispatch to the Cluster.
-    return cluster->GetAncestorRefs(*this, m_entries[GetRefIndex(arg)].m_locator.index);
+    Assume(m_level == 1);
+    // Mark all transactions of a Cluster missing, needed when aborting staging, so that the
+    // corresponding Locators don't retain references into aborted Clusters.
+    for (auto ci : m_linearization) {
+        GraphIndex idx = m_mapping[ci];
+        auto& entry = graph.m_entries[idx];
+        entry.m_locator[1].SetMissing();
+    }
 }
 
-std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendants(const Ref& arg) noexcept
+std::vector<TxGraph::Ref*> TxGraphImpl::GetAncestors(const Ref& arg, bool main_only) noexcept
 {
     // Return the empty vector if the Ref is empty.
     if (GetRefGraph(arg) == nullptr) return {};
     Assume(GetRefGraph(arg) == this);
     // Apply all removals and dependencies, as the result might be incorrect otherwise.
-    ApplyDependencies();
+    size_t level = GetSpecifiedLevel(main_only);
+    ApplyDependencies(level);
     // Ancestry cannot be known if unapplied dependencies remain.
-    Assume(m_clusterset.m_deps_to_add.empty());
+    Assume(GetClusterSet(level).m_deps_to_add.empty());
     // Find the Cluster the argument is in, and return the empty vector if it isn't in any.
-    auto cluster = m_entries[GetRefIndex(arg)].m_locator.cluster;
+    auto cluster = FindCluster(GetRefIndex(arg), level);
     if (cluster == nullptr) return {};
     // Dispatch to the Cluster.
-    return cluster->GetDescendantRefs(*this, m_entries[GetRefIndex(arg)].m_locator.index);
+    return cluster->GetAncestorRefs(*this, m_entries[GetRefIndex(arg)].m_locator[cluster->m_level].index);
 }
 
-std::vector<TxGraph::Ref*> TxGraphImpl::GetCluster(const Ref& arg) noexcept
+std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendants(const Ref& arg, bool main_only) noexcept
 {
     // Return the empty vector if the Ref is empty.
     if (GetRefGraph(arg) == nullptr) return {};
     Assume(GetRefGraph(arg) == this);
     // Apply all removals and dependencies, as the result might be incorrect otherwise.
-    ApplyDependencies();
+    size_t level = GetSpecifiedLevel(main_only);
+    ApplyDependencies(level);
+    // Ancestry cannot be known if unapplied dependencies remain.
+    Assume(GetClusterSet(level).m_deps_to_add.empty());
+    // Find the Cluster the argument is in, and return the empty vector if it isn't in any.
+    auto cluster = FindCluster(GetRefIndex(arg), level);
+    if (cluster == nullptr) return {};
+    // Dispatch to the Cluster.
+    return cluster->GetDescendantRefs(*this, m_entries[GetRefIndex(arg)].m_locator[cluster->m_level].index);
+}
+
+std::vector<TxGraph::Ref*> TxGraphImpl::GetCluster(const Ref& arg, bool main_only) noexcept
+{
+    // Return the empty vector if the Ref is empty (which may be indicative of the transaction
+    // having been removed already.
+    if (GetRefGraph(arg) == nullptr) return {};
+    Assume(GetRefGraph(arg) == this);
+    // Apply all removals and dependencies, as the result might be incorrect otherwise.
+    size_t level = GetSpecifiedLevel(main_only);
+    ApplyDependencies(level);
     // Cluster linearization cannot be known if unapplied dependencies remain.
-    Assume(m_clusterset.m_deps_to_add.empty());
+    Assume(GetClusterSet(level).m_deps_to_add.empty());
     // Find the Cluster the argument is in, and return the empty vector if it isn't in any.
-    auto cluster = m_entries[GetRefIndex(arg)].m_locator.cluster;
+    auto cluster = FindCluster(GetRefIndex(arg), level);
     if (cluster == nullptr) return {};
     // Make sure the Cluster has an acceptable quality level, and then dispatch to it.
     MakeAcceptable(*cluster);
     return cluster->GetClusterRefs(*this);
 }
 
-TxGraph::GraphIndex TxGraphImpl::GetTransactionCount() noexcept
+TxGraph::GraphIndex TxGraphImpl::GetTransactionCount(bool main_only) noexcept
 {
-    ApplyRemovals();
-    return m_clusterset.m_txcount;
+    size_t level = GetSpecifiedLevel(main_only);
+    ApplyRemovals(level);
+    return GetClusterSet(level).m_txcount;
 }
 
 FeePerWeight TxGraphImpl::GetIndividualFeerate(const Ref& arg) noexcept
@@ -1231,41 +1501,121 @@ FeePerWeight TxGraphImpl::GetIndividualFeerate(const Ref& arg) noexcept
     // Return the empty FeePerWeight if the passed Ref is empty.
     if (GetRefGraph(arg) == nullptr) return {};
     Assume(GetRefGraph(arg) == this);
-    // Apply removals, so that we can correctly report FeePerWeight{} for non-existing transaction.
-    ApplyRemovals();
-    // Find the cluster the argument is in, and return the empty FeePerWeight if it isn't in any.
-    auto cluster = m_entries[GetRefIndex(arg)].m_locator.cluster;
+    // Find the cluster the argument is in (the level does not matter as individual feerates will
+    // be identical if it occurs in both), and return the empty FeePerWeight if it isn't in any.
+    Cluster* cluster{nullptr};
+    for (int level = 0; level <= GetTopLevel(); ++level) {
+        // Apply removals, so that we can correctly report FeePerWeight{} for non-existing transaction.
+        ApplyRemovals(level);
+        if (m_entries[GetRefIndex(arg)].m_locator[level].IsPresent()) {
+            cluster = m_entries[GetRefIndex(arg)].m_locator[level].cluster;
+            break;
+        }
+    }
     if (cluster == nullptr) return {};
     // Dispatch to the Cluster.
-    return cluster->GetIndividualFeerate(m_entries[GetRefIndex(arg)].m_locator.index);
+    return cluster->GetIndividualFeerate(m_entries[GetRefIndex(arg)].m_locator[cluster->m_level].index);
 }
 
-FeePerWeight TxGraphImpl::GetChunkFeerate(const Ref& arg) noexcept
+FeePerWeight TxGraphImpl::GetMainChunkFeerate(const Ref& arg) noexcept
 {
     // Return the empty FeePerWeight if the passed Ref is empty.
     if (GetRefGraph(arg) == nullptr) return {};
     Assume(GetRefGraph(arg) == this);
     // Apply all removals and dependencies, as the result might be inaccurate otherwise.
-    ApplyDependencies();
+    ApplyDependencies(/*level=*/0);
     // Chunk feerates cannot be accurately known if unapplied dependencies remain.
-    Assume(m_clusterset.m_deps_to_add.empty());
+    Assume(m_main_clusterset.m_deps_to_add.empty());
     // Find the cluster the argument is in, and return the empty FeePerWeight if it isn't in any.
-    auto cluster = m_entries[GetRefIndex(arg)].m_locator.cluster;
+    auto cluster = FindCluster(GetRefIndex(arg), 0);
     if (cluster == nullptr) return {};
     // Make sure the Cluster has an acceptable quality level, and then return the transaction's
     // chunk feerate.
     MakeAcceptable(*cluster);
     const auto& entry = m_entries[GetRefIndex(arg)];
-    return entry.m_chunk_feerate;
+    return entry.m_main_chunk_feerate;
 }
 
-bool TxGraphImpl::IsOversized() noexcept
+bool TxGraphImpl::IsOversized(bool main_only) noexcept
 {
+    size_t level = GetSpecifiedLevel(main_only);
     // Find which Clusters will need to be merged together, as that is where the oversize
     // property is assessed.
-    GroupClusters();
-    Assume(m_clusterset.m_group_data.has_value());
-    return m_clusterset.m_group_data->m_group_oversized;
+    GroupClusters(level);
+    auto& clusterset = GetClusterSet(level);
+    Assume(clusterset.m_group_data.has_value());
+    return clusterset.m_group_data->m_group_oversized;
+}
+
+void TxGraphImpl::StartStaging() noexcept
+{
+    // Staging cannot already exist.
+    Assume(!m_staging_clusterset.has_value());
+    // Apply all remaining dependencies in main before creating a staging graph. Once staging
+    // exists, we cannot merge Clusters anymore (because of interference with Clusters being
+    // pulled into staging), so to make sure all inspectors are available (if not oversized),
+    // do all merging work now. This also involves applying all removals.
+    ApplyDependencies(0);
+    // Construct the staging ClusterSet.
+    m_staging_clusterset.emplace();
+    // Copy statistics, precomputed data, and to-be-applied dependencies (only if oversized) to
+    // the new graph. To-be-applied removals will always be empty at this point.
+    m_staging_clusterset->m_txcount = m_main_clusterset.m_txcount;
+    m_staging_clusterset->m_deps_to_add = m_main_clusterset.m_deps_to_add;
+    m_staging_clusterset->m_group_data = m_main_clusterset.m_group_data;
+}
+
+void TxGraphImpl::AbortStaging() noexcept
+{
+    // Staging must exist.
+    Assume(m_staging_clusterset.has_value());
+    // Mark all removed transactions as Missing (so the staging locator for these transactions
+    // can be reused if another staging is created).
+    for (auto idx : m_staging_clusterset->m_removed) {
+        m_entries[idx].m_locator[1].SetMissing();
+    }
+    // Do the same with the non-removed transactions in staging Clusters.
+    for (int quality = 0; quality < int(QualityLevel::NONE); ++quality) {
+        for (auto& cluster : m_staging_clusterset->m_clusters[quality]) {
+            cluster->MakeStagingTransactionsMissing(*this);
+        }
+    }
+    // Destroy the staging ClusterSet.
+    m_staging_clusterset.reset();
+    Compact();
+}
+
+void TxGraphImpl::CommitStaging() noexcept
+{
+    // Staging must exist.
+    Assume(m_staging_clusterset.has_value());
+    // Delete all conflicting Clusters in main, to make place for moving the staging ones
+    // there. All of these have been copied to staging in PullIn().
+    auto conflicts = GetConflicts();
+    for (Cluster* conflict : conflicts) {
+        conflict->Clear(*this);
+        DeleteCluster(*conflict);
+    }
+    // Mark the removed transactions as Missing (so the staging locator for these transactions
+    // can be reused if another staging is created).
+    for (auto idx : m_staging_clusterset->m_removed) {
+        m_entries[idx].m_locator[1].SetMissing();
+    }
+    // Then move all Clusters in staging to main.
+    for (int quality = 0; quality < int(QualityLevel::NONE); ++quality) {
+        auto& stage_sets = m_staging_clusterset->m_clusters[quality];
+        while (!stage_sets.empty()) {
+            stage_sets.back()->MoveToMain(*this);
+        }
+    }
+    // Move all statistics, precomputed data, and to-be-applied removals and dependencies.
+    m_main_clusterset.m_deps_to_add = std::move(m_staging_clusterset->m_deps_to_add);
+    m_main_clusterset.m_to_remove = std::move(m_staging_clusterset->m_to_remove);
+    m_main_clusterset.m_group_data = std::move(m_staging_clusterset->m_group_data);
+    m_main_clusterset.m_txcount = std::move(m_staging_clusterset->m_txcount);
+    // Delete the old staging graph, after all its information was moved to main.
+    m_staging_clusterset.reset();
+    Compact();
 }
 
 void Cluster::SetFee(TxGraphImpl& graph, DepGraphIndex idx, int64_t fee) noexcept
@@ -1278,9 +1628,9 @@ void Cluster::SetFee(TxGraphImpl& graph, DepGraphIndex idx, int64_t fee) noexcep
     // in the same Cluster.
     m_depgraph.FeeRate(idx).fee = fee;
     if (!NeedsSplitting()) {
-        graph.SetClusterQuality(m_quality, m_setindex, QualityLevel::NEEDS_RELINEARIZE);
+        graph.SetClusterQuality(m_level, m_quality, m_setindex, QualityLevel::NEEDS_RELINEARIZE);
     } else {
-        graph.SetClusterQuality(m_quality, m_setindex, QualityLevel::NEEDS_SPLIT);
+        graph.SetClusterQuality(m_level, m_quality, m_setindex, QualityLevel::NEEDS_SPLIT);
     }
     Updated(graph);
 }
@@ -1292,13 +1642,15 @@ void TxGraphImpl::SetTransactionFee(const Ref& ref, int64_t fee) noexcept
     Assume(GetRefGraph(ref) == this);
     // Find the entry, its locator, and inform its Cluster about the new feerate, if any.
     auto& entry = m_entries[GetRefIndex(ref)];
-    auto& locator = entry.m_locator;
-    if (locator.IsPresent()) {
-        locator.cluster->SetFee(*this, locator.index, fee);
+    for (int level = 0; level < MAX_LEVELS; ++level) {
+        auto& locator = entry.m_locator[level];
+        if (locator.IsPresent()) {
+            locator.cluster->SetFee(*this, locator.index, fee);
+        }
     }
 }
 
-void Cluster::SanityCheck(const TxGraphImpl& graph) const
+void Cluster::SanityCheck(const TxGraphImpl& graph, int level) const
 {
     // There must be an m_mapping for each m_depgraph position (including holes).
     assert(m_depgraph.PositionRange() == m_mapping.size());
@@ -1306,6 +1658,8 @@ void Cluster::SanityCheck(const TxGraphImpl& graph) const
     assert(m_depgraph.TxCount() == m_linearization.size());
     // The number of transactions in a Cluster cannot exceed m_max_cluster_count.
     assert(m_linearization.size() <= graph.m_max_cluster_count);
+    // The level must match the level the Cluster occurs in.
+    assert(m_level == level);
     // m_quality and m_setindex are checked in TxGraphImpl::SanityCheck.
 
     // Compute the chunking of m_linearization.
@@ -1321,14 +1675,14 @@ void Cluster::SanityCheck(const TxGraphImpl& graph) const
         m_done.Set(lin_pos);
         assert(m_done.IsSupersetOf(m_depgraph.Ancestors(lin_pos)));
         // Check that the Entry has a locator pointing back to this Cluster & position within it.
-        assert(entry.m_locator.cluster == this);
-        assert(entry.m_locator.index == lin_pos);
-        // Check linearization position and chunk feerate.
-        if (IsAcceptable()) {
+        assert(entry.m_locator[level].cluster == this);
+        assert(entry.m_locator[level].index == lin_pos);
+        // For main-level entries, check linearization position and chunk feerate.
+        if (level == 0 && IsAcceptable()) {
             if (!linchunking.GetChunk(0).transactions[lin_pos]) {
                 linchunking.MarkDone(linchunking.GetChunk(0).transactions);
             }
-            assert(entry.m_chunk_feerate == linchunking.GetChunk(0).feerate);
+            assert(entry.m_main_chunk_feerate == linchunking.GetChunk(0).feerate);
             // If this Cluster has an acceptable quality level, its chunks must be connected.
             assert(m_depgraph.IsConnected(linchunking.GetChunk(0).transactions));
         }
@@ -1341,8 +1695,12 @@ void TxGraphImpl::SanityCheck() const
 {
     /** Which GraphIndexes ought to occur in m_unlinked, based on m_entries. */
     std::set<GraphIndex> expected_unlinked;
-    /** Which Clusters ought to occur in m_clusters, based on m_entries. */
-    std::set<const Cluster*> expected_clusters;
+    /** Which Clusters ought to occur in ClusterSet::m_clusters, based on m_entries. */
+    std::set<const Cluster*> expected_clusters[MAX_LEVELS];
+    /** Which GraphIndexes ought to occur in ClusterSet::m_removed, based on m_entries. */
+    std::set<GraphIndex> expected_removed[MAX_LEVELS];
+    /** Whether compaction is possible in the current state. */
+    bool compact_possible{true};
 
     // Go over all Entry objects in m_entries.
     for (GraphIndex idx = 0; idx < m_entries.size(); ++idx) {
@@ -1355,63 +1713,91 @@ void TxGraphImpl::SanityCheck() const
             assert(GetRefGraph(*entry.m_ref) == this);
             assert(GetRefIndex(*entry.m_ref) == idx);
         }
-        const auto& locator = entry.m_locator;
-        // Every Locator must be in exactly one of these 2 states.
-        assert(locator.IsMissing() + locator.IsPresent() == 1);
-        if (locator.IsPresent()) {
-            // Verify that the Cluster agrees with where the Locator claims the transaction is.
-            assert(locator.cluster->GetClusterEntry(locator.index) == idx);
-            // Remember that we expect said Cluster to appear in the m_clusters.
-            expected_clusters.insert(locator.cluster);
-        }
-
-    }
-
-    auto& clusterset = m_clusterset;
-    std::set<const Cluster*> actual_clusters;
-    // For all quality levels...
-    for (int qual = 0; qual < int(QualityLevel::NONE); ++qual) {
-        QualityLevel quality{qual};
-        const auto& quality_clusters = clusterset.m_clusters[qual];
-        // ... for all clusters in them ...
-        for (ClusterSetIndex setindex = 0; setindex < quality_clusters.size(); ++setindex) {
-            const auto& cluster = *quality_clusters[setindex];
-            // Remember we saw this Cluster (only if it is non-empty; empty Clusters aren't
-            // expected to be referenced by the Entry vector).
-            if (cluster.GetTxCount() != 0) {
-                actual_clusters.insert(&cluster);
+        // Verify the Entry m_locators.
+        bool was_present{false}, was_removed{false};
+        for (int level = 0; level < MAX_LEVELS; ++level) {
+            const auto& locator = entry.m_locator[level];
+            // Every Locator must be in exactly one of these 3 states.
+            assert(locator.IsMissing() + locator.IsRemoved() + locator.IsPresent() == 1);
+            if (locator.IsPresent()) {
+                // Once removed, a transaction cannot be revived.
+                assert(!was_removed);
+                // Verify that the Cluster agrees with where the Locator claims the transaction is.
+                assert(locator.cluster->GetClusterEntry(locator.index) == idx);
+                // Remember that we expect said Cluster to appear in the ClusterSet::m_clusters.
+                expected_clusters[level].insert(locator.cluster);
+                was_present = true;
+            } else if (locator.IsRemoved()) {
+                // Level 0 (main) cannot have IsRemoved locators (IsMissing there means non-existing).
+                assert(level > 0);
+                // A Locator can only be IsRemoved if it was IsPresent before, and only once.
+                assert(was_present && !was_removed);
+                // Remember that we expect this GraphIndex to occur in the ClusterSet::m_removed.
+                expected_removed[level].insert(idx);
+                was_removed = true;
             }
-            // Sanity check the cluster, according to the Cluster's internal rules.
-            cluster.SanityCheck(*this);
-            // Check that the cluster's quality and setindex matches its position in the quality list.
-            assert(cluster.m_quality == quality);
-            assert(cluster.m_setindex == setindex);
         }
     }
 
-    // Verify that all to-be-removed transactions have valid identifiers, and aren't removed yet.
-    for (GraphIndex idx : m_clusterset.m_to_remove) {
-        assert(idx < m_entries.size());
-        assert(m_entries[idx].m_locator.IsPresent());
-    }
+    // For all levels (0 = main, 1 = staged)...
+    for (int level = 0; level <= GetTopLevel(); ++level) {
+        assert(level < MAX_LEVELS);
+        auto& clusterset = GetClusterSet(level);
+        std::set<const Cluster*> actual_clusters;
 
-    // Verify that all to-be-added dependencies have valid identifiers.
-    for (auto [par_idx, chl_idx] : m_clusterset.m_deps_to_add) {
-        assert(par_idx != chl_idx);
-        assert(par_idx < m_entries.size());
-        assert(chl_idx < m_entries.size());
-    }
+        // For all quality levels...
+        for (int qual = 0; qual < int(QualityLevel::NONE); ++qual) {
+            QualityLevel quality{qual};
+            const auto& quality_clusters = clusterset.m_clusters[qual];
+            // ... for all clusters in them ...
+            for (ClusterSetIndex setindex = 0; setindex < quality_clusters.size(); ++setindex) {
+                const auto& cluster = *quality_clusters[setindex];
+                // Remember we saw this Cluster (only if it is non-empty; empty Clusters aren't
+                // expected to be referenced by the Entry vector).
+                if (cluster.GetTxCount() != 0) {
+                    actual_clusters.insert(&cluster);
+                }
+                // Sanity check the cluster, according to the Cluster's internal rules.
+                cluster.SanityCheck(*this, level);
+                // Check that the cluster's quality and setindex matches its position in the quality list.
+                assert(cluster.m_quality == quality);
+                assert(cluster.m_setindex == setindex);
+            }
+        }
 
-    // Verify that the actually encountered clusters match the ones occurring in Entry vector.
-    assert(actual_clusters == expected_clusters);
+        // Verify that all to-be-removed transactions have valid identifiers, and aren't removed yet.
+        for (GraphIndex idx : clusterset.m_to_remove) {
+            assert(idx < m_entries.size());
+            assert(FindCluster(idx, level) != nullptr);
+        }
+
+        // Verify that all to-be-added dependencies have valid identifiers.
+        for (auto [par_idx, chl_idx] : clusterset.m_deps_to_add) {
+            assert(par_idx != chl_idx);
+            assert(par_idx < m_entries.size());
+            assert(chl_idx < m_entries.size());
+        }
+
+        // Verify that the actually encountered clusters match the ones occurring in Entry vector.
+        assert(actual_clusters == expected_clusters[level]);
+
+        // Verify that the contents of m_removed matches what was expected based on the Entry vector.
+        std::set<GraphIndex> actual_removed(clusterset.m_removed.begin(), clusterset.m_removed.end());
+        assert(actual_removed == expected_removed[level]);
+
+        // If any GraphIndex entries remain in this ClusterSet, compact is not possible.
+        if (!clusterset.m_deps_to_add.empty()) compact_possible = false;
+        if (!clusterset.m_to_remove.empty()) compact_possible = false;
+        if (!clusterset.m_removed.empty()) compact_possible = false;
+    }
 
     // Verify that the contents of m_unlinked matches what was expected based on the Entry vector.
     std::set<GraphIndex> actual_unlinked(m_unlinked.begin(), m_unlinked.end());
     assert(actual_unlinked == expected_unlinked);
 
-    // If no to-be-removed transactions, or to-be-added dependencies remain, m_unlinked must be
+    // If compaction was possible, it should have been performed already, and m_unlinked must be
     // empty (to prevent memory leaks due to an ever-growing m_entries vector).
-    if (clusterset.m_to_remove.empty() && clusterset.m_deps_to_add.empty()) {
+    if (compact_possible) {
         assert(actual_unlinked.empty());
     }
 }
