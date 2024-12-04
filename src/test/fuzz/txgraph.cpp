@@ -608,6 +608,53 @@ FUZZ_TARGET(txgraph)
                     }
                 }
                 break;
+            } else if (/*sims.size() == 1 &&*/ !main_sim.IsOversized() && command-- == 0) {
+                // GetEvictor.
+                auto num_to_evict = provider.ConsumeIntegralInRange<int32_t>(0, main_sim.GetTransactionCount());
+                auto evictor = real->GetEvictor();
+                SimTxGraph::SetType done;
+                FeeFrac prev_chunk_feerate;
+                while (*evictor && num_to_evict >= 0) {
+                    // Chunk feerates must be monotonously increasing.
+                    if (!prev_chunk_feerate.IsEmpty()) {
+                        assert(FeeRateCompare(evictor->GetCurrentChunkFeerate(), prev_chunk_feerate) >= 0);
+                    }
+                    prev_chunk_feerate = evictor->GetCurrentChunkFeerate();
+                    FeeFrac sum_feerate;
+                    for (TxGraph::Ref* ref : evictor->GetCurrentChunk()) {
+                        // Each transaction in the chunk must exist in the main graph.
+                        auto simpos = main_sim.Find(*ref);
+                        assert(simpos != SimTxGraph::MISSING);
+                        // Verify the claimed chunk feerate.
+                        sum_feerate += main_sim.graph.FeeRate(simpos);
+                        // Make sure the chunk contains no duplicate transactions.
+                        assert(!done[simpos]);
+                        done.Set(simpos);
+                        // The concatenation of all reported transaction, in order, must be
+                        // anti-topologically valid (all children before parents).
+                        assert(main_sim.graph.Descendants(simpos).IsSubsetOf(done));
+                        if (num_to_evict > 0) {
+                            // Before destroying Ref, also remove any descendants it may have in
+                            // staging, so that dependencies are consistent.
+                            if (sims.size() == 2) {
+                                auto stage_simpos = top_sim.Find(*ref);
+                                if (stage_simpos != SimTxGraph::MISSING) {
+                                    for (auto desc : top_sim.graph.Descendants(stage_simpos)) {
+                                        auto& desc_ref = top_sim.GetRef(desc);
+                                        top_sim.RemoveTransaction(desc_ref);
+                                        real->RemoveTransaction(desc_ref);
+                                    }
+                                }
+                            }
+                            // Destroy the Ref for both sims.
+                            for (auto& sim : sims) sim.DestroyTransaction(*ref, true);
+                            --num_to_evict;
+                        }
+                    }
+                    assert(sum_feerate == evictor->GetCurrentChunkFeerate());
+                    evictor->Next();
+                }
+                break;
             }
         }
     }
@@ -682,6 +729,30 @@ FUZZ_TARGET(txgraph)
             builder->Include();
         }
         assert(vec_builder == vec1);
+        builder.reset();
+
+        // The reverse order should be obtained through an Evictor, if nothing is destroyed.
+        auto evictor = real->GetEvictor();
+        std::vector<SimTxGraph::Pos> vec_evictor;
+        while (*evictor) {
+            FeeFrac sum;
+            for (TxGraph::Ref* ref : evictor->GetCurrentChunk()) {
+                // The reported chunk feerate must match the chunk feerate obtained by asking
+                // it for each of the chunk's transactions individually.
+                assert(real->GetMainChunkFeerate(*ref) == evictor->GetCurrentChunkFeerate());
+                // Verify the chunk feerate matches the sum of the reported individual feerates.
+                sum += real->GetIndividualFeerate(*ref);
+                // Chunks must contain transactions that exist in the graph.
+                auto simpos = sims[0].Find(*ref);
+                assert(simpos != SimTxGraph::MISSING);
+                vec_evictor.push_back(simpos);
+            }
+            assert(sum == evictor->GetCurrentChunkFeerate());
+            evictor->Next();
+        }
+        std::reverse(vec_evictor.begin(), vec_evictor.end());
+        assert(vec_evictor == vec1);
+        evictor.reset();
 
         // Check that the implied ordering gives rise to a combined diagram that matches the
         // diagram constructed from the individual cluster linearization chunkings.

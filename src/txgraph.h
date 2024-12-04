@@ -56,27 +56,44 @@ public:
         Ref(const Ref&) = delete;
     };
 
-    /** Interface returned by GetBlockBuilder. */
-    class BlockBuilder
+    /** Base class for BlockBuilder and Evictor. */
+    class ChunkIterator
     {
     protected:
         /** The next chunk, in topological order plus feerate, or std::nullopt if done. */
         std::optional<std::pair<std::span<Ref*>, FeeFrac>> m_current_chunk;
         /** Make constructor non-public (use TxGraph::GetBlockBuilder()). */
-        BlockBuilder() noexcept = default;
+        ChunkIterator() noexcept = default;
     public:
         /** Support safe inheritance. */
-        virtual ~BlockBuilder() = default;
-        /** Determine whether there are more transactions to be included. */
+        virtual ~ChunkIterator() = default;
+        /** Determine whether there are more transactions to be processed. */
         explicit operator bool() noexcept { return m_current_chunk.has_value(); }
         /** Get the chunk that is currently suggested to be included. */
         const std::span<Ref*>& GetCurrentChunk() noexcept { return m_current_chunk->first; }
         /** Get the feerate of the currently suggested chunk. */
         const FeeFrac& GetCurrentChunkFeerate() noexcept { return m_current_chunk->second; }
+    };
+
+    /** Interface returned by GetBlockBuilder. */
+    class BlockBuilder : public ChunkIterator
+    {
+    public:
         /** Mark the current chunk as included, and progress to the next one. */
         virtual void Include() noexcept = 0;
         /** Mark the current chunk as skipped, and progress to the next one. */
         virtual void Skip() noexcept = 0;
+    };
+
+    /** Interface returned by GetEvictor. */
+    class Evictor : public ChunkIterator
+    {
+    public:
+        /** Progress to the next chunk. It is allowed to destroy the Ref objects pointed to by
+         *  GetCurrentChunk before calling Next(), but not other modifications to the main graph
+         *  are allowed while the Evictor exists. Children will always be reported before parents.
+         */
+        virtual void Next() noexcept = 0;
     };
 
 protected:
@@ -175,6 +192,10 @@ public:
     /** Construct a block builder, drawing from the main graph, which cannot be oversized. While
      *  the returned object exists, no mutators on the main graph are allowed. */
     virtual std::unique_ptr<BlockBuilder> GetBlockBuilder() noexcept = 0;
+    /** Construct an evictor, drawing from the main graph, which cannot be oversized. While
+     *  the returned object exists, no mutators on the main graph are allowed, except destroying
+     *  the Refs reported by Evictor::GetCurrentChunk */
+    virtual std::unique_ptr<Evictor> GetEvictor() noexcept = 0;
 
     /** Perform an internal consistency check on this object. */
     virtual void SanityCheck() const = 0;
