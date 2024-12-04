@@ -9,7 +9,7 @@
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\test\fuzz\*.cpp" />
+    <ClCompile Include="..\..\src\test\fuzz\*.cpp" Exclude="..\..\src\test\fuzz\utxo_snapshot.cpp" />
     <ClCompile Include="..\..\src\test\fuzz\util\descriptor.cpp">
       <ObjectFileName>$(IntDir)test_fuzz_util_descriptor.obj</ObjectFileName>
     </ClCompile>

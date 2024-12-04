@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,20 +6,24 @@
 #define BITCOIN_SCRIPT_MINISCRIPT_H
 
 #include <algorithm>
-#include <functional>
-#include <numeric>
+#include <compare>
+#include <cstdint>
+#include <cstdlib>
+#include <iterator>
 #include <memory>
 #include <optional>
-#include <string>
+#include <set>
+#include <stdexcept>
+#include <tuple>
+#include <utility>
 #include <vector>
 
-#include <assert.h>
-#include <cstdlib>
-
+#include <consensus/consensus.h>
 #include <policy/policy.h>
-#include <primitives/transaction.h>
+#include <script/interpreter.h>
 #include <script/parsing.h>
 #include <script/script.h>
+#include <serialize.h>
 #include <span.h>
 #include <util/check.h>
 #include <util/strencodings.h>
@@ -150,7 +154,8 @@ public:
 };
 
 //! Literal operator to construct Type objects.
-inline consteval Type operator"" _mst(const char* c, size_t l) {
+inline consteval Type operator""_mst(const char* c, size_t l)
+{
     Type typ{Type::Make(0)};
 
     for (const char *p = c; p < c + l; p++) {
