@@ -157,7 +157,7 @@ class WalletBackupTest(BitcoinTestFramework):
         node.pruneblockchain(250)
         # The backup should be updated with the latest height (locator) for
         # the backup to load successfully this close to the prune height
-        node.restorewallet(f'pruned', node.datadir_path / 'wallet_pruned.bak')
+        node.restorewallet('pruned', node.datadir_path / 'wallet_pruned.bak')
 
     def run_test(self):
         self.log.info("Generating initial blockchain")

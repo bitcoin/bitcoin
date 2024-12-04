@@ -26,7 +26,7 @@ class DataCarrierTest(BitcoinTestFramework):
             [],
             ["-datacarrier=0"],
             ["-datacarrier=1", f"-datacarriersize={MAX_OP_RETURN_RELAY - 1}"],
-            ["-datacarrier=1", f"-datacarriersize=2"],
+            ["-datacarrier=1", "-datacarriersize=2"],
         ]
 
     def test_null_data_transaction(self, node: TestNode, data, success: bool) -> None:

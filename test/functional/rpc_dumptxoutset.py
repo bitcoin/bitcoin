@@ -67,14 +67,14 @@ class DumptxoutsetTest(BitcoinTestFramework):
         assert_raises_rpc_error(
             -8, "Couldn't open file {}.incomplete for writing".format(invalid_path), node.dumptxoutset, invalid_path, "latest")
 
-        self.log.info(f"Test that dumptxoutset with unknown dump type fails")
+        self.log.info("Test that dumptxoutset with unknown dump type fails")
         assert_raises_rpc_error(
             -8, 'Invalid snapshot type "bogus" specified. Please specify "rollback" or "latest"', node.dumptxoutset, 'utxos.dat', "bogus")
 
-        self.log.info(f"Test that dumptxoutset failure does not leave the network activity suspended when it was on previously")
+        self.log.info("Test that dumptxoutset failure does not leave the network activity suspended when it was on previously")
         self.check_expected_network(node, True)
 
-        self.log.info(f"Test that dumptxoutset failure leaves the network activity suspended when it was off")
+        self.log.info("Test that dumptxoutset failure leaves the network activity suspended when it was off")
         node.setnetworkactive(False)
         self.check_expected_network(node, False)
         node.setnetworkactive(True)

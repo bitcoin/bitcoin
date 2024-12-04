@@ -72,7 +72,7 @@ class ConfArgsTest(BitcoinTestFramework):
 
         self.log.debug('Verifying garbage in config can be detected')
         with open(conf_path, 'a', encoding='utf-8') as conf:
-            conf.write(f'garbage\n')
+            conf.write('garbage\n')
         self.nodes[0].assert_start_raises_init_error(
             extra_args=['-regtest'],
             expected_msg='Error: Error reading configuration file: parse error on line 1: garbage',
@@ -98,7 +98,7 @@ class ConfArgsTest(BitcoinTestFramework):
 
         # Check that startup fails if conf= is set in bitcoin.conf or in an included conf file
         bad_conf_file_path = self.nodes[0].datadir_path / "bitcoin_bad.conf"
-        util.write_config(bad_conf_file_path, n=0, chain='', extra_config=f'conf=some.conf\n')
+        util.write_config(bad_conf_file_path, n=0, chain='', extra_config='conf=some.conf\n')
         conf_in_config_file_err = 'Error: Error reading configuration file: conf cannot be set in the configuration file; use includeconf= if you want to include additional config files'
         self.nodes[0].assert_start_raises_init_error(
             extra_args=[f'-conf={bad_conf_file_path}'],

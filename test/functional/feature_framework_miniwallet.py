@@ -34,7 +34,7 @@ class FeatureFrameworkMiniWalletTest(BitcoinTestFramework):
 
     def test_wallet_tagging(self):
         """Verify that tagged wallet instances are able to send funds."""
-        self.log.info(f"Test tagged wallet instances...")
+        self.log.info("Test tagged wallet instances...")
         node = self.nodes[0]
         untagged_wallet = self.wallets[0][1]
         for i in range(10):
