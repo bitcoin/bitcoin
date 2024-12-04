@@ -54,9 +54,13 @@ LLMQContext::LLMQContext(ChainstateManager& chainman, CConnman& connman, CDeterm
     }()},
     ehfSignalsHandler{std::make_unique<llmq::CEHFSignalsHandler>(chainman, mnhfman, *sigman, *shareman, *qman)}
 {
+    // Have to start it early to let VerifyDB check ChainLock signatures in coinbase
+    bls_worker->Start();
 }
 
 LLMQContext::~LLMQContext() {
+    bls_worker->Stop();
+
     // LLMQContext doesn't own these objects, but still need to care of them for consistency:
     llmq::quorumInstantSendManager.reset();
     llmq::chainLocksHandler.reset();
@@ -74,7 +78,6 @@ void LLMQContext::Start() {
     assert(clhandler == llmq::chainLocksHandler.get());
     assert(isman == llmq::quorumInstantSendManager.get());
 
-    bls_worker->Start();
     if (is_masternode) {
         qdkgsman->StartThreads();
     }
@@ -101,5 +104,4 @@ void LLMQContext::Stop() {
     if (is_masternode) {
         qdkgsman->StopThreads();
     }
-    bls_worker->Stop();
 }
