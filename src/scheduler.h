@@ -152,4 +152,4 @@ public:
     size_t CallbacksPending() EXCLUSIVE_LOCKS_REQUIRED(!m_callbacks_mutex);
 };
 
-#endif
+#endif // BITCOIN_SCHEDULER_H

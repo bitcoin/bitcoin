@@ -56,4 +56,4 @@ private:
     EdgeTriggeredEvents* m_edge_trig_events{nullptr};
 };
 
-#endif /* BITCOIN_UTIL_WPIPE_H */
+#endif // BITCOIN_UTIL_WPIPE_H

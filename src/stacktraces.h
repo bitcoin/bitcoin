@@ -37,4 +37,4 @@ inline std::string GetExceptionWhat(const T& e)
 void RegisterPrettyTerminateHander();
 void RegisterPrettySignalHandlers();
 
-#endif//BITCOIN_STACKTRACES_H
+#endif // BITCOIN_STACKTRACES_H

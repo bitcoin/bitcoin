@@ -35,4 +35,4 @@ public:
     void Flush();
 };
 
-#endif//BITCOIN_BATCHEDLOGGER_H
+#endif // BITCOIN_BATCHEDLOGGER_H

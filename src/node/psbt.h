@@ -50,4 +50,4 @@ struct PSBTAnalysis {
  */
 PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx);
 
-#endif // BITCOIN_PSBT_H
+#endif // BITCOIN_NODE_PSBT_H

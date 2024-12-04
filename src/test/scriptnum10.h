@@ -179,4 +179,4 @@ private:
 };
 
 
-#endif // BITCOIN_TEST_BIGNUM_H
+#endif // BITCOIN_TEST_SCRIPTNUM10_H

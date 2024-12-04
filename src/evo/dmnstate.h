@@ -377,4 +377,4 @@ public:
 };
 
 
-#endif //BITCOIN_EVO_DMNSTATE_H
+#endif // BITCOIN_EVO_DMNSTATE_H

@@ -42,4 +42,4 @@ bool GetTimestampIndex(CBlockTreeDB& block_tree_db, const uint32_t high, const u
                        std::vector<uint256>& hashes)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-#endif // BITCOIN_RPC_CLIENT_H
+#endif // BITCOIN_RPC_INDEX_UTIL_H

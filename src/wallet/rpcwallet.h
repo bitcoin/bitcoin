@@ -41,4 +41,4 @@ RPCHelpMan getaddressinfo();
 RPCHelpMan getrawchangeaddress();
 RPCHelpMan addmultisigaddress();
 RPCHelpMan signrawtransactionwithwallet();
-#endif //BITCOIN_WALLET_RPCWALLET_H
+#endif // BITCOIN_WALLET_RPCWALLET_H
