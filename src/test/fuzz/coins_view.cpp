@@ -128,7 +128,8 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                 LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 10'000)
                 {
                     CCoinsCacheEntry coins_cache_entry;
-                    const auto flags{fuzzed_data_provider.ConsumeIntegral<uint8_t>()};
+                    const auto dirty{fuzzed_data_provider.ConsumeBool()};
+                    const auto fresh{fuzzed_data_provider.ConsumeBool()};
                     if (fuzzed_data_provider.ConsumeBool()) {
                         coins_cache_entry.coin = random_coin;
                     } else {
@@ -140,7 +141,8 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                         coins_cache_entry.coin = *opt_coin;
                     }
                     auto it{coins_map.emplace(random_out_point, std::move(coins_cache_entry)).first};
-                    it->second.AddFlags(flags, *it, sentinel);
+                    if (dirty) CCoinsCacheEntry::SetDirty(*it, sentinel);
+                    if (fresh) CCoinsCacheEntry::SetFresh(*it, sentinel);
                     usage += it->second.coin.DynamicMemoryUsage();
                 }
                 bool expected_code_path = false;
