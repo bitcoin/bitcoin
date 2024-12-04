@@ -11,6 +11,7 @@ from typing import (
     Any,
     Optional,
 )
+from test_framework.messages import sat_to_btc
 from test_framework.address import (
     address_to_scriptpubkey,
     create_deterministic_address_bcrt1_p2tr_op_true,
@@ -323,7 +324,7 @@ class MiniWallet:
         amount_per_output = amount_per_output or (outputs_value_total // num_outputs)
         assert amount_per_output > 0
         outputs_value_total = amount_per_output * num_outputs
-        fee = Decimal(inputs_value_total - outputs_value_total) / COIN
+        fee = sat_to_btc(inputs_value_total - outputs_value_total)
 
         # create tx
         tx = CTransaction()
@@ -342,7 +343,7 @@ class MiniWallet:
             "new_utxos": [self._create_utxo(
                 txid=txid,
                 vout=i,
-                value=Decimal(tx.vout[i].nValue) / COIN,
+                value=sat_to_btc(tx.vout[i].nValue),
                 height=0,
                 coinbase=False,
                 confirmations=0,

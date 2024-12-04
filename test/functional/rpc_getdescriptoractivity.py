@@ -5,6 +5,7 @@
 
 from decimal import Decimal
 
+from test_framework.messages import sat_to_btc
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.messages import COIN
@@ -213,13 +214,13 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         assert a1['blockhash'] == blockhash
         # sPK lacks address.
         assert_equal(list(a1['prevout_spk'].keys()), ['asm', 'desc', 'hex', 'type'])
-        assert a1['amount'] == no_addr_tx["fee"] + Decimal(no_addr_tx["tx"].vout[0].nValue) / COIN
+        assert a1['amount'] == no_addr_tx["fee"] + sat_to_btc(no_addr_tx["tx"].vout[0].nValue)
 
         assert a2['type'] == "receive"
         assert a2['blockhash'] == blockhash
         # sPK lacks address.
         assert_equal(list(a2['output_spk'].keys()), ['asm', 'desc', 'hex', 'type'])
-        assert a2['amount'] == Decimal(no_addr_tx["tx"].vout[0].nValue) / COIN
+        assert a2['amount'] == sat_to_btc(no_addr_tx["tx"].vout[0].nValue)
 
 
 if __name__ == '__main__':

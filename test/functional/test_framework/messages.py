@@ -20,6 +20,7 @@ by tests, compromising their intended effect.
 """
 from base64 import b32decode, b32encode
 import copy
+from decimal import Decimal
 import hashlib
 from io import BytesIO
 import math
@@ -489,7 +490,7 @@ class CTxOut:
 
     def __repr__(self):
         return "CTxOut(nValue=%i.%08i scriptPubKey=%s)" \
-            % (self.nValue // COIN, self.nValue % COIN,
+            % (int(sat_to_btc(self.nValue)), self.nValue % COIN,
                self.scriptPubKey.hex())
 
 
@@ -1911,3 +1912,7 @@ class TestFrameworkScript(unittest.TestCase):
         check_addrv2("2bqghnldu6mcug4pikzprwhtjjnsyederctvci6klcwzepnjd46ikjyd.onion", CAddress.NET_TORV3)
         check_addrv2("255fhcp6ajvftnyo7bwz3an3t4a4brhopm3bamyh2iu5r3gnr2rq.b32.i2p", CAddress.NET_I2P)
         check_addrv2("fc32:17ea:e415:c3bf:9808:149d:b5a2:c9aa", CAddress.NET_CJDNS)
+
+
+def sat_to_btc(amount: int) -> Decimal:
+    return Decimal(amount) / COIN

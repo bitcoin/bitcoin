@@ -5,6 +5,7 @@
 
 from decimal import Decimal
 
+from test_framework.messages import sat_to_btc
 from test_framework.messages import (
     COIN,
     CTxOut,
@@ -36,7 +37,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         result["tx"].vout.append(CTxOut(output_value, result["tx"].vout[0].scriptPubKey))
         # Take value from first output
         result["tx"].vout[0].nValue -= output_value
-        result["new_utxos"][0]["value"] = Decimal(result["tx"].vout[0].nValue) / COIN
+        result["new_utxos"][0]["value"] = sat_to_btc(result["tx"].vout[0].nValue)
         new_txid = result["tx"].rehash()
         result["txid"]  = new_txid
         result["wtxid"] = result["tx"].getwtxid()
@@ -45,7 +46,7 @@ class EphemeralDustTest(BitcoinTestFramework):
             new_utxo["txid"] = new_txid
             new_utxo["wtxid"] = result["tx"].getwtxid()
 
-        result["new_utxos"].append({"txid": new_txid, "vout": len(result["tx"].vout) - 1, "value": Decimal(output_value) / COIN, "height": 0, "coinbase": False, "confirmations": 0})
+        result["new_utxos"].append({"txid": new_txid, "vout": len(result["tx"].vout) - 1, "value": sat_to_btc(output_value), "height": 0, "coinbase": False, "confirmations": 0})
 
     def create_ephemeral_dust_package(self, *, tx_version, dust_tx_fee=0, dust_value=0, num_dust_outputs=1, extra_sponsors=None):
         """Creates a 1P1C package containing ephemeral dust. By default, the parent transaction

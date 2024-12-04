@@ -6,6 +6,7 @@
 
 from decimal import Decimal
 
+from test_framework.messages import sat_to_btc
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
     COIN,
@@ -208,7 +209,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         dbl_tx_hex = self.wallet.create_self_transfer(
             utxo_to_spend=tx0_outpoint,
             sequence=0,
-            fee=(Decimal(fee) / COIN) * n,
+            fee=sat_to_btc(fee) * n,
         )["hex"]
         # This will raise an exception due to insufficient fee
         assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, dbl_tx_hex, 0)
@@ -217,7 +218,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         dbl_tx_hex = self.wallet.create_self_transfer(
             utxo_to_spend=tx0_outpoint,
             sequence=0,
-            fee=(Decimal(fee) / COIN) * n + Decimal("0.1"),
+            fee=sat_to_btc(fee) * n + Decimal("0.1"),
         )["hex"]
         self.nodes[0].sendrawtransaction(dbl_tx_hex, 0)
 
@@ -237,7 +238,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             dbl_tx_hex = self.wallet.create_self_transfer(
                 utxo_to_spend=tx0_outpoint,
                 sequence=0,
-                fee=2 * (Decimal(fee) / COIN) * n,
+                fee=2 * sat_to_btc(fee) * n,
             )["hex"]
             # This will raise an exception
             assert_raises_rpc_error(-26, "too many potential replacements", self.nodes[0].sendrawtransaction, dbl_tx_hex, 0)
@@ -353,7 +354,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
                 from_node=self.nodes[0],
                 utxo_to_spend=utxo,
                 sequence=0,
-                fee=Decimal(fee) / COIN,
+                fee=sat_to_btc(fee),
             )
 
         # Now create doublespend of the whole lot; should fail.

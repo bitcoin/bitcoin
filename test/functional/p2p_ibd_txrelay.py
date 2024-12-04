@@ -11,6 +11,7 @@
 from decimal import Decimal
 import time
 
+from test_framework.messages import sat_to_btc
 from test_framework.messages import (
         CInv,
         COIN,
@@ -28,8 +29,8 @@ from test_framework.p2p import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 
-MAX_FEE_FILTER = Decimal(9170997) / COIN
-NORMAL_FEE_FILTER = Decimal(100) / COIN
+MAX_FEE_FILTER = sat_to_btc(9170997)
+NORMAL_FEE_FILTER = sat_to_btc(100)
 
 
 class P2PIBDTxRelayTest(BitcoinTestFramework):

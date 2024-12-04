@@ -5,6 +5,7 @@
 
 from decimal import Decimal
 
+from test_framework.messages import sat_to_btc
 from test_framework.messages import (
     COIN,
     MAX_BIP125_RBF_SEQUENCE,
@@ -163,7 +164,7 @@ class PackageRBFTest(BitcoinTestFramework):
         self.log.info("Check replacement pays for incremental bandwidth")
         _, placeholder_txns3 = self.create_simple_package(coin)
         package_3_size = sum([tx.get_vsize() for tx in placeholder_txns3])
-        incremental_sats_required = Decimal(package_3_size) / COIN
+        incremental_sats_required = sat_to_btc(package_3_size)
         incremental_sats_short = incremental_sats_required - Decimal("0.00000001")
         # Recreate the package with slightly higher fee once we know the size of the new package, but still short of required fee
         failure_package_hex3, failure_package_txns3 = self.create_simple_package(coin, parent_fee=DEFAULT_FEE, child_fee=DEFAULT_CHILD_FEE + incremental_sats_short)

@@ -7,6 +7,7 @@
 from decimal import Decimal
 import time
 
+from test_framework.messages import sat_to_btc
 from test_framework.messages import (
     COIN,
     MAX_BLOCK_WEIGHT,
@@ -94,9 +95,9 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
 
         self.log.info("Test priority while txs are in mempool")
         raw_before = self.nodes[0].getrawmempool(verbose=True)
-        fee_delta_b = Decimal(9999) / COIN
-        fee_delta_c_1 = Decimal(-1234) / COIN
-        fee_delta_c_2 = Decimal(8888) / COIN
+        fee_delta_b = sat_to_btc(9999)
+        fee_delta_c_1 = sat_to_btc(-1234) 
+        fee_delta_c_2 = sat_to_btc(8888)
         self.nodes[0].prioritisetransaction(txid=txid_b, fee_delta=int(fee_delta_b * COIN))
         self.nodes[0].prioritisetransaction(txid=txid_c, fee_delta=int(fee_delta_c_1 * COIN))
         self.nodes[0].prioritisetransaction(txid=txid_c, fee_delta=int(fee_delta_c_2 * COIN))

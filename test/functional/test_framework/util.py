@@ -18,6 +18,7 @@ import random
 import re
 import time
 
+
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
 from collections.abc import Callable
@@ -581,3 +582,4 @@ def find_vout_for_address(node, txid, addr):
         if addr == tx["vout"][i]["scriptPubKey"]["address"]:
             return i
     raise RuntimeError("Vout not found for address: txid=%s, addr=%s" % (txid, addr))
+
