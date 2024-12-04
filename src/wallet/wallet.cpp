@@ -4092,6 +4092,9 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         return util::Error{Untranslated(STR_INTERNAL_BUG("Error: Legacy wallet data missing"))};
     }
 
+    // When the legacy wallet has no spendable scripts, it will be replaced by the watch-only/solvable wallets.
+    bool empty_local_wallet = data.desc_spkms.empty() && !data.master_key.key.IsValid();
+
     // Get all invalid or non-watched scripts that will not be migrated
     std::set<CTxDestination> not_migrated_dests;
     for (const auto& script : legacy_spkm->GetNotMineScriptPubKeys()) {
@@ -4123,9 +4126,9 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
     m_external_spk_managers.clear();
     m_internal_spk_managers.clear();
 
-    // Setup new descriptors
+    // Setup new descriptors (only if we are migrating any key material)
     SetWalletFlagWithDB(local_wallet_batch, WALLET_FLAG_DESCRIPTORS);
-    if (!IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+    if (!empty_local_wallet && !IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         // Use the existing master key if we have it
         if (data.master_key.key.IsValid()) {
             SetupDescriptorScriptPubKeyMans(local_wallet_batch, data.master_key);
@@ -4275,6 +4278,14 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         }
     }
 
+    // If there was no key material in the main wallet, there should be no records on it anymore.
+    // This wallet will be discarded at the end of the process. Only wallets that contain the
+    // migrated records will be presented to the user.
+    if (empty_local_wallet) {
+        if (!m_address_book.empty()) return util::Error{_("Error: Not all address book records were migrated")};
+        if (!mapWallet.empty()) return util::Error{_("Error: Not all transaction records were migrated")};
+    }
+
     return {}; // all good
 }
 
@@ -4283,7 +4294,7 @@ bool CWallet::CanGrindR() const
     return !IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER);
 }
 
-bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, MigrationResult& res) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, MigrationResult& res, bool& empty_local_wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     AssertLockHeld(wallet.cs_wallet);
 
@@ -4392,6 +4403,11 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
             return false;
         }
         wallet.WalletLogPrintf("Wallet migration complete.\n");
+
+        // When the legacy wallet had no spendable scripts, the local wallet will contain no information after migration.
+        // In such case, we notify the caller to not add it to the result. The user is not expecting to have a spendable
+        // wallet.
+        empty_local_wallet = data->desc_spkms.empty() && !data->master_key.key.IsValid();
         return true;
     });
 }
@@ -4513,6 +4529,14 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
         }
     }
 
+    // Indicates whether the current wallet is empty after migration.
+    // Notes:
+    // When non-empty: the local wallet becomes the main spendable wallet.
+    // When empty: The local wallet is excluded from the result, as the
+    //             user does not expect a spendable wallet after migrating
+    //             only watch-only scripts.
+    bool empty_local_wallet = false;
+
     {
         LOCK(local_wallet->cs_wallet);
         // First change to using SQLite
@@ -4521,7 +4545,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
         // Do the migration of keys and scripts for non-blank wallets, and cleanup if it fails
         success = local_wallet->IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET);
         if (!success) {
-            success = DoMigration(*local_wallet, context, error, res);
+            success = DoMigration(*local_wallet, context, error, res, empty_local_wallet);
         } else {
             // Make sure that descriptors flag is actually set
             local_wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
@@ -4535,20 +4559,32 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
     std::set<fs::path> wallet_dirs;
     if (success) {
         // Migration successful, unload all wallets locally, then reload them.
-        // Reload the main wallet
         wallet_dirs.insert(fs::PathFromString(local_wallet->GetDatabase().Filename()).parent_path());
-        success = reload_wallet(local_wallet);
-        res.wallet = local_wallet;
-        res.wallet_name = wallet_name;
+        // Reload and set the main spendable wallet only if needed
+        if (!empty_local_wallet) {
+            success = reload_wallet(local_wallet);
+            res.wallet = local_wallet;
+            res.wallet_name = wallet_name;
+        } else {
+            // At this point, the main wallet is empty after migration, meaning it has no records.
+            // Therefore, we can safely remove it.
+            std::vector<fs::path> paths_to_remove = local_wallet->GetDatabase().Files();
+            local_wallet.reset();
+            for (const auto& path_to_remove : paths_to_remove) fs::remove_all(path_to_remove);
+        }
         if (success && res.watchonly_wallet) {
             // Reload watchonly
             wallet_dirs.insert(fs::PathFromString(res.watchonly_wallet->GetDatabase().Filename()).parent_path());
             success = reload_wallet(res.watchonly_wallet);
+            // When no spendable wallet is created, set the wallet name to the watch-only wallet name
+            if (res.wallet_name.empty()) res.wallet_name = res.watchonly_wallet->GetName();
         }
         if (success && res.solvables_wallet) {
             // Reload solvables
             wallet_dirs.insert(fs::PathFromString(res.solvables_wallet->GetDatabase().Filename()).parent_path());
             success = reload_wallet(res.solvables_wallet);
+            // When no spendable neither watch-only wallets are created, set the wallet name to the solvables-only wallet name
+            if (res.wallet_name.empty()) res.wallet_name = res.solvables_wallet->GetName();
         }
     }
     if (!success) {
