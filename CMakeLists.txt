@@ -204,22 +204,28 @@ endif()
 # Check and set PIC/PIE
 #=============================
 set(configure_warnings)
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Generic")
 include(CheckLinkerSupportsPIE)
 # Set CMAKE_POSITION_INDEPENDENT_CODE early so it applies to all
 # subsequent checks, including dependency packages and tool flags.
 check_linker_supports_pie(configure_warnings)
+endif()
 
 #=============================
 # Find dependencies
 #=============================
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Generic")
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 target_link_libraries(core_interface INTERFACE
   Threads::Threads
 )
+endif()
 
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Generic")
 include(AddBoostIfNeeded)
 add_boost_if_needed()
+endif()
 
 if(ENABLE_WALLET)
   if(VCPKG_TARGET_TRIPLET)
