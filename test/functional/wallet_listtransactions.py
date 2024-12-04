@@ -9,7 +9,6 @@ import os
 import shutil
 
 from test_framework.messages import (
-    COIN,
     btc_to_sat,
     tx_from_hex,
 )

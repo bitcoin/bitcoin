@@ -14,7 +14,6 @@ import urllib.parse
 
 from test_framework.messages import (
     BLOCK_HEADER_SIZE,
-    COIN,
     btc_to_sat,
 )
 from test_framework.test_framework import BitcoinTestFramework

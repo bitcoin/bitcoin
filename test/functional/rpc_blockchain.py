@@ -36,7 +36,6 @@ from test_framework.blocktools import (
 )
 from test_framework.messages import (
     CBlockHeader,
-    COIN,
     btc_to_sat,
     from_hex,
     msg_block,

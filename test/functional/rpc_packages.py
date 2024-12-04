@@ -24,7 +24,6 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 from test_framework.wallet import (
-    COIN,
     DEFAULT_FEE,
     MiniWallet,
 )

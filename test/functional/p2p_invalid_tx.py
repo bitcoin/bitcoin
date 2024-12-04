@@ -7,7 +7,6 @@
 In this test we connect to one node over p2p, and test tx requests."""
 from test_framework.blocktools import create_block, create_coinbase
 from test_framework.messages import (
-    COIN,
     COutPoint,
     CTransaction,
     CTxIn,

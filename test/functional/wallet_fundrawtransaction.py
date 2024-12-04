@@ -12,7 +12,6 @@ from test_framework.address import address_to_scriptpubkey
 
 from test_framework.descriptors import descsum_create
 from test_framework.messages import (
-    COIN,
     CTransaction,
     CTxOut,
     btc_to_sat,

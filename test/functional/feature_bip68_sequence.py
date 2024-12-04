@@ -13,7 +13,6 @@ from test_framework.blocktools import (
     script_to_p2wsh_script,
 )
 from test_framework.messages import (
-    COIN,
     COutPoint,
     CTransaction,
     CTxIn,

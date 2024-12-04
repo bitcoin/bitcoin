@@ -96,7 +96,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.log.info("Test priority while txs are in mempool")
         raw_before = self.nodes[0].getrawmempool(verbose=True)
         fee_delta_b = sat_to_btc(9999)
-        fee_delta_c_1 = sat_to_btc(-1234) 
+        fee_delta_c_1 = sat_to_btc(-1234)
         fee_delta_c_2 = sat_to_btc(8888)
         self.nodes[0].prioritisetransaction(txid=txid_b, fee_delta=btc_to_sat(fee_delta_b))
         self.nodes[0].prioritisetransaction(txid=txid_c, fee_delta=btc_to_sat(fee_delta_c_1))

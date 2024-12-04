@@ -13,7 +13,7 @@ See feature_assumeutxo.py for background.
 """
 from test_framework.address import address_to_scriptpubkey
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.messages import COIN, btc_to_sat
+from test_framework.messages import btc_to_sat
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,

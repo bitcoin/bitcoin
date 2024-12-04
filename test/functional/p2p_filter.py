@@ -8,7 +8,6 @@ Test BIP 37
 
 from test_framework.messages import (
     CInv,
-    COIN,
     MAX_BLOOM_FILTER_SIZE,
     MAX_BLOOM_HASH_FUNCS,
     MSG_WTX,

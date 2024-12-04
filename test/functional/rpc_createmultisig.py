@@ -11,7 +11,7 @@ import os
 from test_framework.address import address_to_scriptpubkey
 from test_framework.descriptors import descsum_create, drop_origins
 from test_framework.key import ECPubKey
-from test_framework.messages import COIN, btc_to_sat
+from test_framework.messages import btc_to_sat
 from test_framework.script_util import keys_to_multisig_script
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (

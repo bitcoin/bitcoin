@@ -17,7 +17,6 @@ from test_framework.blocktools import (
     create_coinbase,
 )
 from test_framework.messages import (
-    COIN,
     CTxOut,
     btc_to_sat,
 )

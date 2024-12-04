@@ -17,7 +17,6 @@ from .address import (
 )
 from .messages import (
     CBlock,
-    COIN,
     COutPoint,
     CTransaction,
     CTxIn,

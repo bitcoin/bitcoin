@@ -8,7 +8,7 @@ from test_framework.blockfilter import (
     bip158_basic_element_hash,
     bip158_relevant_scriptpubkeys,
 )
-from test_framework.messages import COIN, btc_to_sat
+from test_framework.messages import btc_to_sat
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,

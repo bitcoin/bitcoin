@@ -18,7 +18,6 @@ from itertools import product
 
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
-    COIN,
     CTransaction,
     CTxOut,
     btc_to_sat,

@@ -15,7 +15,6 @@ from test_framework.blocktools import (
 )
 from test_framework.messages import (
     CBlock,
-    COIN,
     COutPoint,
     CTransaction,
     CTxIn,

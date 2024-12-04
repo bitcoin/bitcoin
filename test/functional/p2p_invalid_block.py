@@ -21,7 +21,7 @@ from test_framework.blocktools import (
     create_coinbase,
     create_tx_with_script,
 )
-from test_framework.messages import COIN, btc_to_sat
+from test_framework.messages import btc_to_sat
 from test_framework.p2p import P2PDataStore
 from test_framework.script import OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework

@@ -5,7 +5,6 @@
 """Test transaction signing using the signrawtransactionwithkey RPC."""
 
 from test_framework.messages import (
-    COIN,
     btc_to_sat,
 )
 from test_framework.address import (

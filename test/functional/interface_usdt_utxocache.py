@@ -13,7 +13,7 @@ try:
     from bcc import BPF, USDT # type: ignore[import]
 except ImportError:
     pass
-from test_framework.messages import COIN, btc_to_sat
+from test_framework.messages import btc_to_sat
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet

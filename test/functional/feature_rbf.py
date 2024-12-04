@@ -6,10 +6,9 @@
 
 from decimal import Decimal
 
-from test_framework.messages import btc_to_sat, sat_to_btc
+from test_framework.messages import COIN, btc_to_sat, sat_to_btc
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
-    COIN,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -172,7 +171,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         initial_nValue = btc_to_sat(5)
         tx0_outpoint = self.make_utxo(self.nodes[0], initial_nValue)
 
-        def branch(prevout, initial_value, max_txs, tree_width=5, fee=btc_to_sat(0.00001), _total_txs=None):
+        def branch(prevout, initial_value, max_txs, tree_width=5, fee=0.00001 * COIN, _total_txs=None):
             if _total_txs is None:
                 _total_txs = [0]
             if _total_txs[0] >= max_txs:

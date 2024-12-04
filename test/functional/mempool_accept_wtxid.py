@@ -9,7 +9,6 @@ with identical non-witness data but different witness.
 
 from copy import deepcopy
 from test_framework.messages import (
-    COIN,
     COutPoint,
     CTransaction,
     CTxIn,

@@ -8,13 +8,11 @@
 - Ignore all transaction messages
 """
 
-from decimal import Decimal
 import time
 
 from test_framework.messages import sat_to_btc
 from test_framework.messages import (
         CInv,
-        COIN,
         CTransaction,
         from_hex,
         msg_inv,

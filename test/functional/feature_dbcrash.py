@@ -32,7 +32,6 @@ import time
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import (
-    COIN,
     btc_to_sat,
 )
 from test_framework.test_framework import BitcoinTestFramework

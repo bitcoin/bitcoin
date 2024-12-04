@@ -39,7 +39,7 @@ from decimal import Decimal
 import os
 import time
 
-from test_framework.messages import btc_to_sat
+from test_framework.messages import COIN, btc_to_sat
 from test_framework.p2p import P2PTxInvStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -47,7 +47,7 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
 )
-from test_framework.wallet import MiniWallet, COIN
+from test_framework.wallet import MiniWallet
 
 
 class MempoolPersistTest(BitcoinTestFramework):

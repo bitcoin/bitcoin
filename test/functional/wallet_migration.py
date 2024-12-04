@@ -18,7 +18,7 @@ from test_framework.bdb import BTREE_MAGIC
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECPubKey
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.messages import COIN, CTransaction, CTxOut, btc_to_sat
+from test_framework.messages import CTransaction, CTxOut, btc_to_sat
 from test_framework.script_util import key_to_p2pkh_script, script_to_p2sh_script, script_to_p2wsh_script
 from test_framework.util import (
     assert_equal,

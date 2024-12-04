@@ -9,7 +9,6 @@ from itertools import product
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.descriptors import descsum_create
 from test_framework.messages import (
-    COIN,
     DEFAULT_ANCESTOR_LIMIT,
     btc_to_sat,
 )

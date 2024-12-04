@@ -18,7 +18,7 @@ except ImportError:
 
 from test_framework.messages import sat_to_btc
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.messages import COIN, DEFAULT_MEMPOOL_EXPIRY_HOURS
+from test_framework.messages import DEFAULT_MEMPOOL_EXPIRY_HOURS
 from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal

@@ -19,7 +19,6 @@ from test_framework.blocktools import (
 )
 from test_framework.descriptors import descsum_create
 from test_framework.messages import (
-    COIN,
     COutPoint,
     CTransaction,
     CTxIn,

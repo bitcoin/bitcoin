@@ -9,7 +9,6 @@ from test_framework.util import (
     assert_equal,
 )
 from test_framework.messages import (
-    COIN,
     btc_to_sat,
     tx_from_hex,
 )

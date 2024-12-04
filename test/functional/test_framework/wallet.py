@@ -27,7 +27,6 @@ from test_framework.key import (
     compute_xonly_pubkey,
 )
 from test_framework.messages import (
-    COIN,
     COutPoint,
     CTransaction,
     CTxIn,
