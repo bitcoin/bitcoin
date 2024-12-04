@@ -1,5 +1,5 @@
 AC_PREREQ([2.60])
-AC_INIT([libdashbls],[1.3.3])
+AC_INIT([libdashbls],[1.3.4])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
@@ -100,7 +100,7 @@ dnl warning about something unrelated, for example about some path issue. If tha
 dnl -Werror cannot be used because all of those warnings would be turned into errors.
 AX_CHECK_COMPILE_FLAG([-Werror], [FLAG_WERROR="-Werror"], [FLAG_WERROR=""])
 
-if [[[ "$use_debug" == "yes" || "$use_optimizations" == "no" ]]]; then
+if test x"$use_debug" = x"yes" -o x"$use_optimizations" = x"no"; then
   dnl Clear default -g -O2 flags
   if test x"$CFLAGS_overridden" = x"no"; then
     CFLAGS=""
@@ -112,7 +112,7 @@ if [[[ "$use_debug" == "yes" || "$use_optimizations" == "no" ]]]; then
   dnl Disable optimizations
   AX_CHECK_COMPILE_FLAG([-O0], [[DEBUG_FLAGS="$DEBUG_FLAGS -O0"]], [], [[$FLAG_WERROR]])
 
-  if [[[ "$use_debug" == "yes" ]]]; then
+  if test x"$use_debug" = x"yes"; then
     dnl Prefer -g3, fall back to -g if that is unavailable.
     AX_CHECK_COMPILE_FLAG(
       [-g3],
@@ -220,7 +220,11 @@ case $host in
         GMP_LDFLAGS="-L$gmp_prefix/lib"
       fi
     fi
-  ;;
+    ;;
+  *freebsd*)
+    GMP_CPPFLAGS="-I/usr/local/include"
+    GMP_LDFLAGS="-L/usr/local/lib"
+    ;;
 esac
 
 if test x"$want_backend" = x"auto"; then
@@ -432,44 +436,74 @@ fi
 
 use_pkgconfig=yes
 
-if [[[ "$host_cpu" == x86_64 && "$use_optimizations" == "yes" ]]]; then
-  dnl Support for AMD64 (also known as x86_64 on some platforms) processors
-  CPU_ARCH="x64"
-  AC_DEFINE([ARCH], [X64], [Architecture.])
-  AC_DEFINE([WSIZE], [64], [Size of word in this architecture.])
-elif [[[ "$host_cpu" == aarch* && "$use_optimizations" == "yes" ]]]; then
-  dnl Support for 64-bit ARM processors
-  dnl Relic doesn't support aarch64 yet, set CPU_ARCH to none and ARCH to RELIC_NONE.
-  CPU_ARCH="none"
-  AC_DEFINE([ARCH], [RELIC_NONE], [Architecture.])
-  AC_DEFINE([WSIZE], [64], [Size of word in this architecture.])
-elif [[[ "$host_cpu" == i?86 && "$use_optimizations" == "yes" ]]]; then
-  dnl Support for Intel x86 processors
-  CPU_ARCH="x86"
-  AC_DEFINE([ARCH], [X86], [Architecture.])
-  AC_DEFINE([WSIZE], [32], [Size of word in this architecture.])
-elif [[[ "$host_cpu" == arm* && "$use_optimizations" == "yes" ]]]; then
-  dnl Support for 32-bit native ARM processors
-  CPU_ARCH="arm"
-  AC_DEFINE([ARCH], [ARM], [Architecture.])
-  AC_DEFINE([WSIZE], [32], [Size of word in this architecture.])
-elif [[[ "$host_cpu" == *64* ]]]; then
-  dnl Support for an undefined 64-bit architecture
-  CPU_ARCH="none"
-  AC_DEFINE([ARCH], [RELIC_NONE], [Architecture.])
-  AC_DEFINE([WSIZE], [64], [Size of word in this architecture.])
-elif [[[ "$host_cpu" == *32* || "$host_cpu" == arm* || "$host_cpu" == i?86 ]]]; then
-  dnl Support for an undefined 32-bit architecture
-  CPU_ARCH="none"
-  AC_DEFINE([ARCH], [RELIC_NONE], [Architecture.])
-  AC_DEFINE([WSIZE], [32], [Size of word in this architecture.])
+if test x"$use_optimizations" = x"yes"; then
+  case $host_cpu in
+    amd64 | x86_64)
+      dnl Support for AMD64 (also known as x86_64 on some platforms) processors
+      CPU_ARCH="x64"
+      AC_DEFINE([ARCH], [X64], [Architecture.])
+      AC_DEFINE([WSIZE], [64], [Size of word in this architecture.])
+      ;;
+    aarch*)
+      dnl Support for 64-bit ARM processors
+      dnl Relic does not support aarch64 yet, set CPU_ARCH to none and ARCH to RELIC_NONE.
+      CPU_ARCH="none"
+      AC_DEFINE([ARCH], [RELIC_NONE], [Architecture.])
+      AC_DEFINE([WSIZE], [64], [Size of word in this architecture.])
+      ;;
+    i?86)
+      dnl Support for Intel x86 processors
+      CPU_ARCH="x86"
+      AC_DEFINE([ARCH], [X86], [Architecture.])
+      AC_DEFINE([WSIZE], [32], [Size of word in this architecture.])
+      ;;
+    arm*)
+      dnl Support for 32-bit native ARM processors
+      CPU_ARCH="arm"
+      AC_DEFINE([ARCH], [ARM], [Architecture.])
+      AC_DEFINE([WSIZE], [32], [Size of word in this architecture.])
+      ;;
+    *64*)
+      dnl Support for an undefined 64-bit architecture
+      CPU_ARCH="none"
+      AC_DEFINE([ARCH], [RELIC_NONE], [Architecture.])
+      AC_DEFINE([WSIZE], [64], [Size of word in this architecture.])
+      ;;
+    *32*)
+      dnl Support for an undefined 32-bit architecture
+      CPU_ARCH="none"
+      AC_DEFINE([ARCH], [RELIC_NONE], [Architecture.])
+      AC_DEFINE([WSIZE], [32], [Size of word in this architecture.])
+      ;;
+    *)
+      AC_MSG_ERROR([Unable to determine host architecture, may not be supported!])
+      ;;
+  esac
 else
-  AC_MSG_ERROR([Unable to determine host architecture, may not be supported!])
+  case $host_cpu in
+    *64*)
+      dnl Support for an undefined 64-bit architecture
+      CPU_ARCH="none"
+      AC_DEFINE([ARCH], [RELIC_NONE], [Architecture.])
+      AC_DEFINE([WSIZE], [64], [Size of word in this architecture.])
+      ;;
+    *32* | arm* | i?86)
+      dnl Support for an undefined 32-bit architecture
+      CPU_ARCH="none"
+      AC_DEFINE([ARCH], [RELIC_NONE], [Architecture.])
+      AC_DEFINE([WSIZE], [32], [Size of word in this architecture.])
+      ;;
+    *)
+      AC_MSG_ERROR([Unable to determine host architecture, may not be supported!])
+      ;;
+  esac
 fi
 
 case $host in
   *darwin*)
      AC_DEFINE([OPSYS], [MACOSX], [Detected operation system.])
+     TARGET_OS=darwin
+
      AC_PATH_PROG([BREW],brew,)
      if test x$BREW = x; then
        AC_PATH_PROG([PORT],port,)
@@ -482,8 +516,10 @@ case $host in
      fi
      ;;
   *mingw*)
-     use_pkgconfig=no
      AC_DEFINE([OPSYS], [WINDOWS], [Detected operation system.])
+     TARGET_OS=windows
+
+     use_pkgconfig=no
      LIBTOOL_APP_LDFLAGS="$LIBTOOL_APP_LDFLAGS -all-static"
 
      dnl libtool insists upon adding -nostdlib and a list of objects/libs to link against.
@@ -496,16 +532,21 @@ case $host in
      ;;
   *linux*)
     AC_DEFINE([OPSYS], [LINUX], [Detected operation system.])
+    TARGET_OS=linux
+
     RELIC_CPPFLAGS="-D_GNU_SOURCE"
     ;;
   *android*)
     AC_DEFINE([OPSYS], [DROID], [Detected operation system.])
+    TARGET_OS=android
     ;;
   *freebsd*)
     AC_DEFINE([OPSYS], [FREEBSD], [Detected operation system.])
+    TARGET_OS=freebsd
     ;;
   *netbsd*)
     AC_DEFINE([OPSYS], [NETBSD], [Detected operation system.])
+    TARGET_OS=netbsd
     ;;
   *)
     AC_DEFINE([OPSYS], [RELIC_NONE], [Detected operation system.])
@@ -555,7 +596,7 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[char foo;]])],
       CFLAGS="$saved_CFLAGS"
     ])
 
-if [[[ "$CFLAGS_overridden" == "no" && "$CXXFLAGS_overridden" == "no" ]]]; then
+if test x"$CFLAGS_overridden" = x"no" -a x"$CXXFLAGS_overridden" = x"no"; then
   dnl Enable warnings
   AX_CHECK_COMPILE_FLAG([-Wall],[WARN_FLAGS="$WARN_FLAGS -Wall"], [], [[$FLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wcast-align],[WARN_FLAGS="$WARN_FLAGS -Wcast-align"], [], [[$FLAG_WERROR]])
@@ -743,7 +784,6 @@ CORE_CPPFLAGS="$CORE_CPPFLAGS -DHAVE_BUILD_INFO"
 
 case $host in
   *mingw*)
-     TARGET_OS=windows
      AC_CHECK_LIB([user32],   [main],                    [], [AC_MSG_ERROR([libuser32 missing])])
      AC_CHECK_LIB([shell32],  [SHGetSpecialFolderPathW], [], [AC_MSG_ERROR([libshell32 missing])])
      AC_CHECK_LIB([advapi32], [CryptAcquireContextW],    [], [AC_MSG_ERROR([libadvapi32 missing])])
@@ -771,14 +811,9 @@ case $host in
      AX_CHECK_LINK_FLAG([-Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1"], [], [])
      ;;
   *darwin*)
-     TARGET_OS=darwin
-
      AX_CHECK_LINK_FLAG([-Wl,-headerpad_max_install_names], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-headerpad_max_install_names"], [], [])
      CORE_CPPFLAGS="$CORE_CPPFLAGS -DMAC_OSX -DOBJC_OLD_DISPATCH_PROTOTYPES=0"
      OBJCXXFLAGS="$CXXFLAGS"
-     ;;
-   *linux*)
-     TARGET_OS=linux
      ;;
 esac
 
@@ -799,19 +834,15 @@ AC_LANG_POP([C])
 AC_MSG_CHECKING([whether to build runtest])
 if test x$use_tests = xyes; then
   AC_MSG_RESULT([yes])
-  BUILD_TEST="yes"
 else
   AC_MSG_RESULT([no])
-  BUILD_TEST=""
 fi
 
 AC_MSG_CHECKING([whether to build runbench])
 if test x$use_bench = xyes; then
   AC_MSG_RESULT([yes])
-  BUILD_BENCH="yes"
 else
   AC_MSG_RESULT([no])
-  BUILD_BENCH=""
 fi
 
 AM_CONDITIONAL([TARGET_DARWIN], [test "$TARGET_OS" = "darwin"])
@@ -836,8 +867,8 @@ AM_CONDITIONAL(WITH_MPC, test 1 -eq 1)
 AM_CONDITIONAL(WITH_DV, test 1 -eq 1)
 AM_CONDITIONAL(WITH_FBX, test 1 -eq 1)
 
-AM_CONDITIONAL([USE_TESTS], [test x$BUILD_TEST = xyes])
-AM_CONDITIONAL([USE_BENCH], [test x$BUILD_BENCH = xyes])
+AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" = x"yes"])
+AM_CONDITIONAL([USE_BENCH], [test x"$use_bench" = x"yes"])
 AM_CONDITIONAL([HARDEN], [test "$use_hardening" = "yes"])
 AM_CONDITIONAL([OPTIMIZE], [test "$use_optimizations" = "yes"])
 
@@ -874,8 +905,8 @@ echo
 echo "Options used to compile and link:"
 echo "  target os           = $TARGET_OS"
 echo "  backend             = $want_backend"
-echo "  build bench         = $BUILD_BENCH"
-echo "  build test          = $BUILD_TEST"
+echo "  build bench         = $use_tests"
+echo "  build test          = $use_bench"
 echo "  use debug           = $use_debug"
 echo "  use hardening       = $use_hardening"
 echo "  use optimizations   = $use_optimizations"

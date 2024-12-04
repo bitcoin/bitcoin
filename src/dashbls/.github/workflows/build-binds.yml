@@ -23,8 +23,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest]
-        golang: [ '1.17' ]
-        python: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        golang: [ '1.22' ]
+        python: ['3.9', '3.10', '3.11', '3.12']
 
     steps:
     - name: Checkout code
