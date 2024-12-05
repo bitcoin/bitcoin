@@ -366,7 +366,7 @@ public:
         if (count) {
             unsigned i = 0;
             while (count > LIMB_BITS) {
-                ret.m_val[i++] = ~I{0};
+                ret.m_val[i++] = I(~I{0});
                 count -= LIMB_BITS;
             }
             ret.m_val[i] = I(~I{0}) >> (LIMB_BITS - count);
