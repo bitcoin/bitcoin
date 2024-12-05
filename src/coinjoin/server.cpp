@@ -520,6 +520,7 @@ void CCoinJoinServer::CheckForCompleteQueue()
                                      "with %d participants\n", dsq.ToString(), vecSessionCollaterals.size());
         dsq.Sign(*m_mn_activeman);
         m_peerman->RelayDSQ(dsq);
+        WITH_LOCK(cs_vecqueue, vecCoinJoinQueue.push_back(dsq));
     }
 }
 
