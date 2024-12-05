@@ -34,7 +34,7 @@ LLMQContext::LLMQContext(ChainstateManager& chainman, CConnman& connman, CDeterm
                                                 *quorum_block_processor, mn_activeman, mn_sync, sporkman, unit_tests,
                                                 wipe)},
     sigman{std::make_unique<llmq::CSigningManager>(mn_activeman, chainman.ActiveChainstate(), *qman, unit_tests, wipe)},
-    shareman{std::make_unique<llmq::CSigSharesManager>(connman, *sigman, mn_activeman, *qman, sporkman, peerman)},
+    shareman{std::make_unique<llmq::CSigSharesManager>(*sigman, mn_activeman, *qman, sporkman)},
     clhandler{[&]() -> llmq::CChainLocksHandler* const {
         assert(llmq::chainLocksHandler == nullptr);
         llmq::chainLocksHandler = std::make_unique<llmq::CChainLocksHandler>(chainman.ActiveChainstate(), *qman,
@@ -83,7 +83,7 @@ void LLMQContext::Start(CConnman& connman, PeerManager& peerman)
     }
     qman->Start();
     shareman->RegisterAsRecoveredSigsListener();
-    shareman->StartWorkerThread();
+    shareman->StartWorkerThread(connman, peerman);
     sigman->StartWorkerThread(peerman);
 
     llmq::chainLocksHandler->Start();

@@ -4651,13 +4651,13 @@ void CConnman::SetMasternodeQuorumRelayMembers(Consensus::LLMQType llmqType, con
     });
 }
 
-bool CConnman::HasMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash)
+bool CConnman::HasMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash) const
 {
     LOCK(cs_vPendingMasternodes);
     return masternodeQuorumNodes.count(std::make_pair(llmqType, quorumHash));
 }
 
-std::set<uint256> CConnman::GetMasternodeQuorums(Consensus::LLMQType llmqType)
+std::set<uint256> CConnman::GetMasternodeQuorums(Consensus::LLMQType llmqType) const
 {
     LOCK(cs_vPendingMasternodes);
     std::set<uint256> result;
@@ -4700,7 +4700,7 @@ void CConnman::RemoveMasternodeQuorumNodes(Consensus::LLMQType llmqType, const u
     masternodeQuorumRelayMembers.erase(std::make_pair(llmqType, quorumHash));
 }
 
-bool CConnman::IsMasternodeQuorumNode(const CNode* pnode, const CDeterministicMNList& tip_mn_list)
+bool CConnman::IsMasternodeQuorumNode(const CNode* pnode, const CDeterministicMNList& tip_mn_list) const
 {
     // Let's see if this is an outgoing connection to an address that is known to be a masternode
     // We however only need to know this if the node did not authenticate itself as a MN yet

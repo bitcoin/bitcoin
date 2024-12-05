@@ -433,7 +433,8 @@ std::set<NodeId> BatchVerifyMessageSigs(CDKGSession& session, const std::vector<
     return ret;
 }
 
-static void RelayInvToParticipants(const CDKGSession& session, CConnman& connman, PeerManager& peerman, const CInv& inv)
+static void RelayInvToParticipants(const CDKGSession& session, const CConnman& connman, PeerManager& peerman,
+                                   const CInv& inv)
 {
     CDKGLogger logger(session, __func__, __LINE__);
     std::stringstream ss;
@@ -466,7 +467,7 @@ static void RelayInvToParticipants(const CDKGSession& session, CConnman& connman
 }
 
 template <typename Message, int MessageType>
-bool ProcessPendingMessageBatch(CConnman& connman, CDKGSession& session, CDKGPendingMessages& pendingMessages,
+bool ProcessPendingMessageBatch(const CConnman& connman, CDKGSession& session, CDKGPendingMessages& pendingMessages,
                                 PeerManager& peerman, size_t maxCount)
 {
     auto msgs = pendingMessages.PopAndDeserializeMessages<Message>(maxCount);
