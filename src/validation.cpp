@@ -3057,7 +3057,7 @@ void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
     UpdateTipLog(coins_tip, pindexNew, params, __func__, "",
                  warning_messages_joined.original);
     if (!warning_messages.empty()) {
-        m_chainman.GetNotifications().warningSet(kernel::Warning::UNKNOWN_NEW_RULES_ACTIVATED, warning_messages_joined);
+        m_chainman.GetNotifications().warningSet(kernel::Warning::UNKNOWN_NEW_RULES_ACTIVATED, warning_messages_joined, /*update=*/true);
     }
 }
 

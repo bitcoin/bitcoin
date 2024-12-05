@@ -89,18 +89,18 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # Build UNKNOWN_VERSION_SCHEMA_THRESHOLD blocks signaling some unknown schema
         self.send_blocks_with_version(peer, UNKNOWN_VERSION_SCHEMA_THRESHOLD, UNKNOWN_VERSION_SCHEMA)
         # Check that get*info() shows the 51/100 unknown block version warning
-        assert(WARN_UNKNOWN_RULES_MINED in node.getmininginfo()["warnings"])
-        assert(WARN_UNKNOWN_RULES_MINED in node.getnetworkinfo()["warnings"])
+        assert(WARN_UNKNOWN_RULES_MINED in ",".join(node.getmininginfo()["warnings"]))
+        assert(WARN_UNKNOWN_RULES_MINED in ",".join(node.getnetworkinfo()["warnings"]))
         # Close the period normally
         self.generatetoaddress(node, VB_PERIOD - UNKNOWN_VERSION_SCHEMA_THRESHOLD, node_deterministic_address)
         # Make sure the warning remains
-        assert(WARN_UNKNOWN_RULES_MINED in node.getmininginfo()["warnings"])
-        assert(WARN_UNKNOWN_RULES_MINED in node.getnetworkinfo()["warnings"])
+        assert(WARN_UNKNOWN_RULES_MINED in ",".join(node.getmininginfo()["warnings"]))
+        assert(WARN_UNKNOWN_RULES_MINED in ",".join(node.getnetworkinfo()["warnings"]))
 
         # Stop-start the node, and make sure the warning is gone
         self.restart_node(0)
-        assert(WARN_UNKNOWN_RULES_MINED not in node.getmininginfo()["warnings"])
-        assert(WARN_UNKNOWN_RULES_MINED not in node.getnetworkinfo()["warnings"])
+        assert(WARN_UNKNOWN_RULES_MINED not in ",".join(node.getmininginfo()["warnings"]))
+        assert(WARN_UNKNOWN_RULES_MINED not in ",".join(node.getnetworkinfo()["warnings"]))
         peer = node.add_p2p_connection(P2PInterface())
 
         self.log.info("Check that there is a warning if >50 blocks in the last 100 were an unknown version")
@@ -109,21 +109,21 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         self.generatetoaddress(node, VB_PERIOD - VB_THRESHOLD, node_deterministic_address)
 
         # Check that get*info() shows the 51/100 unknown block version warning
-        assert(WARN_UNKNOWN_BIT_MINED in node.getmininginfo()["warnings"])
-        assert(WARN_UNKNOWN_BIT_MINED in node.getnetworkinfo()["warnings"])
+        assert(WARN_UNKNOWN_BIT_MINED in ",".join(node.getmininginfo()["warnings"]))
+        assert(WARN_UNKNOWN_BIT_MINED in ",".join(node.getnetworkinfo()["warnings"]))
 
         self.log.info("Check that there is a warning if >75 blocks in the last 100 were a BIP320 version")
         self.send_blocks_with_version(peer, VB_BIP320_THRESHOLD - 1, VB_BIP320_VERSION)
         # Check that get*info() doesn't shows the 76/100 unknown block version warning yet.
-        assert(WARN_BIP320_BIT_MINED not in node.getmininginfo()["warnings"])
-        assert(WARN_BIP320_BIT_MINED not in node.getnetworkinfo()["warnings"])
+        assert(WARN_BIP320_BIT_MINED not in ",".join(node.getmininginfo()["warnings"]))
+        assert(WARN_BIP320_BIT_MINED not in ",".join(node.getnetworkinfo()["warnings"]))
         self.send_blocks_with_version(peer, 1, VB_BIP320_VERSION)
         # Check that get*info() shows the 76/100 unknown block version warning.
-        assert(WARN_BIP320_BIT_MINED in node.getmininginfo()["warnings"])
-        assert(WARN_BIP320_BIT_MINED in node.getnetworkinfo()["warnings"])
+        assert(WARN_BIP320_BIT_MINED in ",".join(node.getmininginfo()["warnings"]))
+        assert(WARN_BIP320_BIT_MINED in ",".join(node.getnetworkinfo()["warnings"]))
         self.generatetoaddress(node, 1, node_deterministic_address)
-        assert(WARN_BIP320_BIT_MINED in node.getmininginfo()["warnings"])
-        assert(WARN_BIP320_BIT_MINED in node.getnetworkinfo()["warnings"])
+        assert(WARN_BIP320_BIT_MINED in ",".join(node.getmininginfo()["warnings"]))
+        assert(WARN_BIP320_BIT_MINED in ",".join(node.getnetworkinfo()["warnings"]))
         self.generatetoaddress(node, VB_PERIOD - VB_BIP320_THRESHOLD - 1, node_deterministic_address)
 
         self.log.info("Check that there is a warning if previous VB_BLOCKS have >=VB_THRESHOLD blocks with unknown versionbits version.")
