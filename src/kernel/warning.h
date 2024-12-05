@@ -9,6 +9,8 @@ namespace kernel {
 enum class Warning {
     UNKNOWN_NEW_RULES_ACTIVATED,
     LARGE_WORK_INVALID_CHAIN,
+    UNKNOWN_NEW_RULES_SIGNAL_VBITS,
+    UNKNOWN_NEW_RULES_SIGNAL_INTVER,
 };
 } // namespace kernel
 #endif // BITCOIN_KERNEL_WARNING_H
