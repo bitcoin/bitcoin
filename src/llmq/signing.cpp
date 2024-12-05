@@ -349,8 +349,11 @@ void CRecoveredSigsDb::CleanupOldVotes(int64_t maxAge)
 //////////////////
 
 CSigningManager::CSigningManager(const CActiveMasternodeManager* const mn_activeman, const CChainState& chainstate,
-                                 const CQuorumManager& _qman, const std::unique_ptr<PeerManager>& peerman, bool fMemory, bool fWipe) :
-    db(fMemory, fWipe), m_mn_activeman(mn_activeman), m_chainstate(chainstate), qman(_qman), m_peerman(peerman)
+                                 const CQuorumManager& _qman, bool fMemory, bool fWipe) :
+    db(fMemory, fWipe),
+    m_mn_activeman(mn_activeman),
+    m_chainstate(chainstate),
+    qman(_qman)
 {
 }
 
@@ -381,13 +384,14 @@ bool CSigningManager::GetRecoveredSigForGetData(const uint256& hash, CRecoveredS
     return true;
 }
 
-PeerMsgRet CSigningManager::ProcessMessage(const CNode& pfrom, const std::string& msg_type, CDataStream& vRecv)
+PeerMsgRet CSigningManager::ProcessMessage(const CNode& pfrom, PeerManager& peerman, const std::string& msg_type,
+                                           CDataStream& vRecv)
 {
     if (msg_type == NetMsgType::QSIGREC) {
         auto recoveredSig = std::make_shared<CRecoveredSig>();
         vRecv >> *recoveredSig;
 
-        return ProcessMessageRecoveredSig(pfrom, recoveredSig);
+        return ProcessMessageRecoveredSig(pfrom, peerman, recoveredSig);
     }
     return {};
 }
@@ -416,10 +420,11 @@ static bool PreVerifyRecoveredSig(const CQuorumManager& quorum_manager, const CR
     return true;
 }
 
-PeerMsgRet CSigningManager::ProcessMessageRecoveredSig(const CNode& pfrom, const std::shared_ptr<const CRecoveredSig>& recoveredSig)
+PeerMsgRet CSigningManager::ProcessMessageRecoveredSig(const CNode& pfrom, PeerManager& peerman,
+                                                       const std::shared_ptr<const CRecoveredSig>& recoveredSig)
 {
-    WITH_LOCK(::cs_main, Assert(m_peerman)->EraseObjectRequest(pfrom.GetId(),
-                                                               CInv(MSG_QUORUM_RECOVERED_SIG, recoveredSig->GetHash())));
+    WITH_LOCK(::cs_main,
+              peerman.EraseObjectRequest(pfrom.GetId(), CInv(MSG_QUORUM_RECOVERED_SIG, recoveredSig->GetHash())));
 
     bool ban = false;
     if (!PreVerifyRecoveredSig(qman, *recoveredSig, ban)) {
@@ -517,22 +522,22 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
     }
 }
 
-void CSigningManager::ProcessPendingReconstructedRecoveredSigs()
+void CSigningManager::ProcessPendingReconstructedRecoveredSigs(PeerManager& peerman)
 {
     decltype(pendingReconstructedRecoveredSigs) m;
     WITH_LOCK(cs_pending, swap(m, pendingReconstructedRecoveredSigs));
 
     for (const auto& p : m) {
-        ProcessRecoveredSig(p.second);
+        ProcessRecoveredSig(p.second, peerman);
     }
 }
 
-bool CSigningManager::ProcessPendingRecoveredSigs()
+bool CSigningManager::ProcessPendingRecoveredSigs(PeerManager& peerman)
 {
     std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>> recSigsByNode;
     std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher> quorums;
 
-    ProcessPendingReconstructedRecoveredSigs();
+    ProcessPendingReconstructedRecoveredSigs(peerman);
 
     const size_t nMaxBatchSize{32};
     CollectPendingRecoveredSigsToVerify(nMaxBatchSize, recSigsByNode, quorums);
@@ -575,7 +580,7 @@ bool CSigningManager::ProcessPendingRecoveredSigs()
 
         if (batchVerifier.badSources.count(nodeId)) {
             LogPrint(BCLog::LLMQ, "CSigningManager::%s -- invalid recSig from other node, banning peer=%d\n", __func__, nodeId);
-            Assert(m_peerman)->Misbehaving(nodeId, 100);
+            peerman.Misbehaving(nodeId, 100);
             continue;
         }
 
@@ -584,7 +589,7 @@ bool CSigningManager::ProcessPendingRecoveredSigs()
                 continue;
             }
 
-            ProcessRecoveredSig(recSig);
+            ProcessRecoveredSig(recSig, peerman);
         }
     }
 
@@ -592,7 +597,7 @@ bool CSigningManager::ProcessPendingRecoveredSigs()
 }
 
 // signature must be verified already
-void CSigningManager::ProcessRecoveredSig(const std::shared_ptr<const CRecoveredSig>& recoveredSig)
+void CSigningManager::ProcessRecoveredSig(const std::shared_ptr<const CRecoveredSig>& recoveredSig, PeerManager& peerman)
 {
     auto llmqType = recoveredSig->getLlmqType();
 
@@ -631,12 +636,12 @@ void CSigningManager::ProcessRecoveredSig(const std::shared_ptr<const CRecovered
     WITH_LOCK(cs_pending, pendingReconstructedRecoveredSigs.erase(recoveredSig->GetHash()));
 
     if (m_mn_activeman != nullptr) {
-        Assert(m_peerman)->RelayRecoveredSig(recoveredSig->GetHash());
+        peerman.RelayRecoveredSig(recoveredSig->GetHash());
     }
 
     auto listeners = WITH_LOCK(cs_listeners, return recoveredSigsListeners);
     for (auto& l : listeners) {
-        Assert(m_peerman)->PostProcessMessage(l->HandleNewRecoveredSig(*recoveredSig));
+        peerman.PostProcessMessage(l->HandleNewRecoveredSig(*recoveredSig));
     }
 
     GetMainSignals().NotifyRecoveredSig(recoveredSig);
@@ -799,14 +804,14 @@ bool CSigningManager::GetVoteForId(Consensus::LLMQType llmqType, const uint256& 
     return db.GetVoteForId(llmqType, id, msgHashRet);
 }
 
-void CSigningManager::StartWorkerThread()
+void CSigningManager::StartWorkerThread(PeerManager& peerman)
 {
     // can't start new thread if we have one running already
     if (workThread.joinable()) {
         assert(false);
     }
 
-    workThread = std::thread(&util::TraceThread, "sigshares", [this] { WorkThreadMain(); });
+    workThread = std::thread(&util::TraceThread, "sigshares", [this, &peerman] { WorkThreadMain(peerman); });
 }
 
 void CSigningManager::StopWorkerThread()
@@ -826,10 +831,10 @@ void CSigningManager::InterruptWorkerThread()
     workInterrupt();
 }
 
-void CSigningManager::WorkThreadMain()
+void CSigningManager::WorkThreadMain(PeerManager& peerman)
 {
     while (!workInterrupt) {
-        bool fMoreWork = ProcessPendingRecoveredSigs();
+        bool fMoreWork = ProcessPendingRecoveredSigs(peerman);
 
         Cleanup();
 
