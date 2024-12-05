@@ -107,7 +107,7 @@ void DashTestSetup(NodeContext& node, const CChainParams& chainparams)
 {
     CChainState& chainstate = Assert(node.chainman)->ActiveChainstate();
 
-    node.dmnman = std::make_unique<CDeterministicMNManager>(chainstate, *node.connman, *node.evodb);
+    node.dmnman = std::make_unique<CDeterministicMNManager>(chainstate, *node.evodb);
     node.mempool->ConnectManagers(node.dmnman.get());
 
     node.cj_ctx = std::make_unique<CJContext>(*node.chainman, *node.connman, *node.dmnman, *node.mn_metaman, *node.mempool,

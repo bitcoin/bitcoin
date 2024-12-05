@@ -1888,7 +1888,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
                 // Same logic as above with pblocktree
                 node.dmnman.reset();
-                node.dmnman = std::make_unique<CDeterministicMNManager>(chainman.ActiveChainstate(), *node.connman, *node.evodb);
+                node.dmnman = std::make_unique<CDeterministicMNManager>(chainman.ActiveChainstate(), *node.evodb);
                 node.mempool->ConnectManagers(node.dmnman.get());
 
                 node.cpoolman.reset();

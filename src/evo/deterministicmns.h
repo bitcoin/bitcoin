@@ -30,7 +30,6 @@ class CBlock;
 class CBlockIndex;
 class CChainState;
 class CCoinsViewCache;
-class CConnman;
 class CEvoDB;
 class TxValidationState;
 
@@ -583,7 +582,6 @@ private:
     std::atomic<int> to_cleanup {0};
 
     CChainState& m_chainstate;
-    CConnman& connman;
     CEvoDB& m_evoDb;
 
     std::unordered_map<uint256, CDeterministicMNList, StaticSaltedHasher> mnListsCache GUARDED_BY(cs);
@@ -592,8 +590,11 @@ private:
     const CBlockIndex* m_initial_snapshot_index GUARDED_BY(cs) {nullptr};
 
 public:
-    explicit CDeterministicMNManager(CChainState& chainstate, CConnman& _connman, CEvoDB& evoDb) :
-        m_chainstate(chainstate), connman(_connman), m_evoDb(evoDb) {}
+    explicit CDeterministicMNManager(CChainState& chainstate, CEvoDB& evoDb) :
+        m_chainstate(chainstate),
+        m_evoDb(evoDb)
+    {
+    }
     ~CDeterministicMNManager() = default;
 
     bool ProcessBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex, BlockValidationState& state,
