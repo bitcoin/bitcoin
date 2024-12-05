@@ -45,6 +45,7 @@ BOOST_AUTO_TEST_CASE(ConstevalFormatString_NumSpec)
     PassFmt<0>("");
     PassFmt<0>("%%");
     PassFmt<1>("%s");
+    PassFmt<1>("%c");
     PassFmt<0>("%%s");
     PassFmt<0>("s%%");
     PassFmt<1>("%%%s");
