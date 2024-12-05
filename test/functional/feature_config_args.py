@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2022 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test various command line arguments and configuration file parameters."""
@@ -31,7 +31,7 @@ class ConfArgsTest(BitcoinTestFramework):
     def setup_network(self):
         self.setup_nodes()
 
-    # Overriden to not start nodes automatically - doing so is the
+    # Overridden to not start nodes automatically - doing so is the
     # responsibility of each test function.
     def setup_nodes(self):
         self.add_nodes(self.num_nodes, self.extra_args)
