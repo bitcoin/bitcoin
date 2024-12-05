@@ -26,9 +26,20 @@ Warnings::Warnings()
              _("This is a pre-release test build - use at your own risk - do not use for mining or merchant applications")});
     }
 }
-bool Warnings::Set(warning_type id, bilingual_str message)
+bool Warnings::Set(warning_type id, bilingual_str message, const bool update)
 {
-    const auto& [_, inserted]{WITH_LOCK(m_mutex, return m_warnings.insert({id, std::move(message)}))};
+    bool inserted{false};
+    if (update) {
+        LOCK(m_mutex);
+        auto& warning_msg = m_warnings[id];
+        if (warning_msg.original != message.original) {
+            warning_msg = message;
+            inserted = true;
+        }
+    } else {
+        const auto& [_, inserted_res]{WITH_LOCK(m_mutex, return m_warnings.insert({id, std::move(message)}))};
+        inserted = inserted_res;
+    }
     if (inserted) uiInterface.NotifyAlertChanged();
     return inserted;
 }

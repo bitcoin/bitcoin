@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
         {
             std::cout << "Progress: " << title.original << ", " << progress_percent << ", " << resume_possible << std::endl;
         }
-        void warningSet(kernel::Warning id, const bilingual_str& message) override
+        void warningSet(kernel::Warning id, const bilingual_str& message, bool update) override
         {
             std::cout << "Warning " << static_cast<int>(id) << " set: " << message.original << std::endl;
         }
