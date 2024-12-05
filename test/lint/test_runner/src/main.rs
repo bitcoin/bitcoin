@@ -530,7 +530,7 @@ fn lint_markdown() -> LintResult {
                 r#"
 One or more markdown links are broken.
 
-Relative links are preferred (but not required) as jumping to file works natively within Emacs.
+Note: relative links are preferred as jump-to-file works natively within Emacs, but they are not required.
 
 Markdown link errors found:
 {}
