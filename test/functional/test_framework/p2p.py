@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2010 ArtForz -- public domain half-a-node
 # Copyright (c) 2012 Jeff Garzik
-# Copyright (c) 2010-2022 The Bitcoin Core developers
+# Copyright (c) 2010-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test objects for interacting with a bitcoind node over the p2p protocol.
@@ -369,7 +369,7 @@ class P2PConnection(asyncio.Protocol):
                 self.on_message(t)
         except Exception as e:
             if not self.reconnect:
-                logger.exception('Error reading message:', repr(e))
+                logger.exception(f"Error reading message: {repr(e)}")
             raise
 
     def on_message(self, message):
@@ -659,7 +659,7 @@ class P2PInterface(P2PConnection):
         def test_function():
             last_getheaders = self.last_message.pop("getheaders", None)
             if block_hash is None:
-                 return last_getheaders
+                return last_getheaders
             if last_getheaders is None:
                 return False
             return block_hash == last_getheaders.locator.vHave[0]
