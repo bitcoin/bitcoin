@@ -1866,6 +1866,26 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
+#ifdef __APPLE__
+    auto check_and_warn_fs{[&](const fs::path& path, std::string_view desc) {
+        const auto path_desc{strprintf("%s (\"%s\")", desc, fs::PathToString(path))};
+        switch (GetFilesystemType(path)) {
+        case FSType::EXFAT:
+            InitWarning(strprintf(_("The %s path uses exFAT, which is known to have intermittent corruption problems on macOS. "
+                "Move this directory to a different filesystem to avoid data loss."), path_desc));
+            break;
+        case FSType::ERROR:
+            LogInfo("Failed to detect filesystem type for %s", path_desc);
+            break;
+        case FSType::OTHER:
+            break;
+        }
+    }};
+
+    check_and_warn_fs(args.GetDataDirNet(), "data directory");
+    check_and_warn_fs(args.GetBlocksDirPath(), "blocks directory");
+#endif
+
 #if HAVE_SYSTEM
     const std::string block_notify = args.GetArg("-blocknotify", "");
     if (!block_notify.empty()) {
