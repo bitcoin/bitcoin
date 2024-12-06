@@ -8,21 +8,22 @@
 #include <test/util/setup_common.h>
 
 using namespace util;
+using util::detail::CheckNumFormatSpecifiers;
 
 BOOST_AUTO_TEST_SUITE(util_string_tests)
 
 // Helper to allow compile-time sanity checks while providing the number of
 // args directly. Normally PassFmt<sizeof...(Args)> would be used.
 template <unsigned NumArgs>
-inline void PassFmt(util::ConstevalFormatString<NumArgs> fmt)
+void PassFmt(ConstevalFormatString<NumArgs> fmt)
 {
     // Execute compile-time check again at run-time to get code coverage stats
-    util::detail::CheckNumFormatSpecifiers<NumArgs>(fmt.fmt);
+    BOOST_CHECK_NO_THROW(CheckNumFormatSpecifiers<NumArgs>(fmt.fmt));
 }
 template <unsigned WrongNumArgs>
-inline void FailFmtWithError(const char* wrong_fmt, std::string_view error)
+void FailFmtWithError(const char* wrong_fmt, std::string_view error)
 {
-    BOOST_CHECK_EXCEPTION(util::detail::CheckNumFormatSpecifiers<WrongNumArgs>(wrong_fmt), const char*, HasReason{error});
+    BOOST_CHECK_EXCEPTION(CheckNumFormatSpecifiers<WrongNumArgs>(wrong_fmt), const char*, HasReason{error});
 }
 
 BOOST_AUTO_TEST_CASE(ConstevalFormatString_NumSpec)
