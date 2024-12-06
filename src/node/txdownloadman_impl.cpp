@@ -39,9 +39,9 @@ void TxDownloadManager::DisconnectedPeer(NodeId nodeid)
 {
     m_impl->DisconnectedPeer(nodeid);
 }
-bool TxDownloadManager::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid, std::chrono::microseconds now, bool p2p_inv)
+bool TxDownloadManager::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid, std::chrono::microseconds now)
 {
-    return m_impl->AddTxAnnouncement(peer, gtxid, now, p2p_inv);
+    return m_impl->AddTxAnnouncement(peer, gtxid, now);
 }
 std::vector<GenTxid> TxDownloadManager::GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time)
 {
@@ -173,14 +173,14 @@ void TxDownloadManagerImpl::DisconnectedPeer(NodeId nodeid)
 
 }
 
-bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid, std::chrono::microseconds now, bool p2p_inv)
+bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid, std::chrono::microseconds now)
 {
     // If this is an orphan we are trying to resolve, consider this peer as a orphan resolution candidate instead.
     // - received as an p2p inv
     // - is wtxid matching something in orphanage
     // - exists in orphanage
     // - peer can be an orphan resolution candidate
-    if (p2p_inv && gtxid.IsWtxid()) {
+    if (gtxid.IsWtxid()) {
         if (auto parent_txids{m_orphanage.GetParentTxids(Wtxid::FromUint256(gtxid.GetHash()))}) {
             if (auto delay{OrphanResolutionCandidate(peer, Wtxid::FromUint256(gtxid.GetHash()))}) {
                 m_orphanage.AddAnnouncer(Wtxid::FromUint256(gtxid.GetHash()), peer);
@@ -199,7 +199,7 @@ bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid,
     }
 
     // If this is an inv received from a peer and we already have it, we can drop it.
-    if (p2p_inv && AlreadyHaveTx(gtxid, /*include_reconsiderable=*/true)) return true;
+    if (AlreadyHaveTx(gtxid, /*include_reconsiderable=*/true)) return true;
 
     auto it = m_peer_info.find(peer);
     if (it == m_peer_info.end()) return false;
