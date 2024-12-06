@@ -131,6 +131,13 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_block_data_availability, TestChain100Setup)
     BOOST_CHECK_EQUAL(blockman.GetFirstBlock(tip, BLOCK_HAVE_DATA), first_available_block);
     BOOST_CHECK(blockman.CheckBlockDataAvailability(tip, *first_available_block));
     BOOST_CHECK(!blockman.CheckBlockDataAvailability(tip, *last_pruned_block));
+    // Simulate that the first available block is missing undo data and
+    // detect this by using a status mask.
+    first_available_block->nStatus &= ~BLOCK_HAVE_UNDO;
+    BOOST_CHECK_EQUAL(blockman.GetFirstBlock(tip, BLOCK_HAVE_DATA, nullptr), first_available_block);
+    BOOST_CHECK_NE(blockman.GetFirstBlock(tip, BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO, nullptr), first_available_block);
+    BOOST_CHECK(blockman.CheckBlockDataAvailability(tip, *first_available_block, BLOCK_HAVE_DATA));
+    BOOST_CHECK(!blockman.CheckBlockDataAvailability(tip, *first_available_block, BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO));
 }
 
 BOOST_AUTO_TEST_CASE(blockmanager_flush_block_file)
