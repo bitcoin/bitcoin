@@ -4,6 +4,7 @@
 
 #include <crypto/hmac_sha512.h>
 
+#include <crypto/sha512.h>
 #include <string.h>
 
 CHMAC_SHA512::CHMAC_SHA512(const unsigned char* key, size_t keylen)

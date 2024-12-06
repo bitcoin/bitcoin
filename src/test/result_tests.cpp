@@ -63,6 +63,12 @@ void ExpectSuccess(const util::Result<T>& result, const bilingual_str& str, Args
 {
     ExpectResult(result, true, str);
     BOOST_CHECK_EQUAL(result.has_value(), true);
+    // Boost.Test versions < 1.87 contain a bug that triggers
+    // a false-positive clang-tidy warning.
+    // See upstream references:
+    // - Issue: https://github.com/boostorg/test/issues/343
+    // - Fix: https://github.com/boostorg/test/pull/348
+    // NOLINTNEXTLINE(bugprone-use-after-move)
     BOOST_CHECK_EQUAL(result.value(), T{std::forward<Args>(args)...});
     BOOST_CHECK_EQUAL(&result.value(), &*result);
 }

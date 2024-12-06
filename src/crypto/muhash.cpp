@@ -7,9 +7,10 @@
 #include <crypto/chacha20.h>
 #include <crypto/common.h>
 #include <hash.h>
+#include <span.h>
+#include <uint256.h>
 
 #include <cassert>
-#include <cstdio>
 #include <limits>
 
 namespace {
