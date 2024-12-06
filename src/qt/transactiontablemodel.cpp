@@ -106,10 +106,11 @@ public:
 
     /* Query entire wallet anew from core.
      */
-    void refreshWallet(interfaces::Wallet& wallet)
+    void refreshWallet(interfaces::Wallet& wallet, bool force = false)
     {
         parent->beginResetModel();
-        assert(!m_loaded);
+        assert(!m_loaded || force);
+        cachedWallet.clear();
         try {
             for (const auto& wtx : wallet.getWalletTxs()) {
                 if (TransactionRecord::showTransaction()) {
@@ -284,9 +285,9 @@ TransactionTableModel::~TransactionTableModel()
     delete priv;
 }
 
-void TransactionTableModel::refreshWallet()
+void TransactionTableModel::refreshWallet(bool force)
 {
-    priv->refreshWallet(walletModel->wallet());
+    priv->refreshWallet(walletModel->wallet(), force);
 }
 
 /** Updates the column title to "Amount (DisplayUnit)" and emits headerDataChanged() signal for table headers to react. */
@@ -846,12 +847,13 @@ void TransactionTablePriv::DispatchNotifications()
 
             vQueueNotifications[i].invoke(parent);
         }
+        vQueueNotifications.clear();
     } else {
-        // it's much faster to just refresh the whole thing instead
-        bool invoked = QMetaObject::invokeMethod(parent, "refreshWallet", Qt::QueuedConnection);
+        // it's much faster to just drop all the queued notifications and refresh the whole thing instead
+        vQueueNotifications.clear();
+        bool invoked = QMetaObject::invokeMethod(parent, "refreshWallet", Qt::QueuedConnection, Q_ARG(bool, true));
         assert(invoked);
     }
-    vQueueNotifications.clear();
 }
 
 void TransactionTableModel::subscribeToCoreSignals()
