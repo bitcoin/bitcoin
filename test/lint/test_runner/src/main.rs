@@ -226,6 +226,7 @@ fn lint_py_lint() -> LintResult {
             "F405", // foo_function may be undefined, or defined from star imports: bar_module
             "F406", // "from module import *" only allowed at module level
             "F407", // an undefined __future__ feature name was imported
+            "F541", // f-string without any placeholders
             "F601", // dictionary key name repeated with different values
             "F602", // dictionary key variable name repeated with different values
             "F621", // too many expressions in an assignment with star-unpacking
