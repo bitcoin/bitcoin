@@ -5158,15 +5158,8 @@ void ChainstateManager::LoadExternalBlockFile(
 
                 // Activate the genesis block so normal node progress can continue
                 if (hash == params.GetConsensus().hashGenesisBlock) {
-                    bool genesis_activation_failure = false;
-                    for (auto c : GetAll()) {
-                        BlockValidationState state;
-                        if (!c->ActivateBestChain(state, nullptr)) {
-                            genesis_activation_failure = true;
-                            break;
-                        }
-                    }
-                    if (genesis_activation_failure) {
+                    BlockValidationState state;
+                    if (!ActiveChainstate().ActivateBestChain(state, nullptr)) {
                         break;
                     }
                 }
