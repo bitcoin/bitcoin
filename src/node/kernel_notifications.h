@@ -56,9 +56,9 @@ public:
 
     Mutex m_tip_block_mutex;
     std::condition_variable m_tip_block_cv GUARDED_BY(m_tip_block_mutex);
-    //! The block for which the last blockTip notification was received for.
-    //! The initial ZERO means that no block has been connected yet, which may
-    //! be true even long after startup, until shutdown.
+    //! The block for which the last blockTip notification was received.
+    //! It's first set when the tip is connected during node initialization.
+    //! Might be unset during an early shutdown.
     uint256 m_tip_block GUARDED_BY(m_tip_block_mutex){uint256::ZERO};
 
 private:
