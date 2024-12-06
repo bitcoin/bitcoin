@@ -146,8 +146,8 @@ BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
                     /*txid_recon=*/txdownload_impl.RecentRejectsReconsiderableFilter().contains(parent_txid),
                     /*wtxid_recon=*/txdownload_impl.RecentRejectsReconsiderableFilter().contains(parent_wtxid),
                     /*keep=*/keep,
-                    /*txid_inv=*/txdownload_impl.AddTxAnnouncement(nodeid, GenTxid::Txid(parent_txid), now, /*p2p_inv=*/true),
-                    /*wtxid_inv=*/txdownload_impl.AddTxAnnouncement(nodeid, GenTxid::Wtxid(parent_wtxid), now, /*p2p_inv=*/true),
+                    /*txid_inv=*/txdownload_impl.AddTxAnnouncement(nodeid, GenTxid::Txid(parent_txid), now),
+                    /*wtxid_inv=*/txdownload_impl.AddTxAnnouncement(nodeid, GenTxid::Wtxid(parent_wtxid), now),
                 };
                 BOOST_TEST_MESSAGE("Testing behavior for " << result << (segwit_parent ? " segwit " : " nonsegwit"));
                 actual_behavior.CheckEqual(expected_behavior, /*segwit=*/segwit_parent);
