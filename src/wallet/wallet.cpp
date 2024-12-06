@@ -519,7 +519,7 @@ std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& b
     } catch (const std::exception& e) {
         assert(!wallet);
         if (!error.empty()) error += Untranslated("\n");
-        error += strprintf(Untranslated("Unexpected exception: %s"), e.what());
+        error += Untranslated(strprintf("Unexpected exception: %s", e.what()));
     }
     if (!wallet) {
         fs::remove_all(wallet_path);

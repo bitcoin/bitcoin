@@ -35,7 +35,7 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
         if (auto min_work{uint256::FromUserHex(*value)}) {
             opts.minimum_chain_work = UintToArith256(*min_work);
         } else {
-            return util::Error{strprintf(Untranslated("Invalid minimum work specified (%s), must be up to %d hex digits"), *value, uint256::size() * 2)};
+            return util::Error{Untranslated(strprintf("Invalid minimum work specified (%s), must be up to %d hex digits", *value, uint256::size() * 2))};
         }
     }
 
@@ -43,7 +43,7 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
         if (auto block_hash{uint256::FromUserHex(*value)}) {
             opts.assumed_valid_block = *block_hash;
         } else {
-            return util::Error{strprintf(Untranslated("Invalid assumevalid block hash specified (%s), must be up to %d hex digits (or 0 to disable)"), *value, uint256::size() * 2)};
+            return util::Error{Untranslated(strprintf("Invalid assumevalid block hash specified (%s), must be up to %d hex digits (or 0 to disable)", *value, uint256::size() * 2))};
         }
     }
 

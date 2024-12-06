@@ -42,7 +42,7 @@ util::Result<int> IntFn(int i, bool success)
 util::Result<bilingual_str> StrFn(bilingual_str s, bool success)
 {
     if (success) return s;
-    return util::Error{strprintf(Untranslated("str %s error."), s.original)};
+    return util::Error{Untranslated(strprintf("str %s error.", s.original))};
 }
 
 util::Result<NoCopy> NoCopyFn(int i, bool success)

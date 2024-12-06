@@ -3058,14 +3058,14 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
     socklen_t len = sizeof(sockaddr);
     if (!addrBind.GetSockAddr((struct sockaddr*)&sockaddr, &len))
     {
-        strError = strprintf(Untranslated("Bind address family for %s not supported"), addrBind.ToStringAddrPort());
+        strError = Untranslated(strprintf("Bind address family for %s not supported", addrBind.ToStringAddrPort()));
         LogPrintLevel(BCLog::NET, BCLog::Level::Error, "%s\n", strError.original);
         return false;
     }
 
     std::unique_ptr<Sock> sock = CreateSock(addrBind.GetSAFamily(), SOCK_STREAM, IPPROTO_TCP);
     if (!sock) {
-        strError = strprintf(Untranslated("Couldn't open socket for incoming connections (socket returned error %s)"), NetworkErrorString(WSAGetLastError()));
+        strError = Untranslated(strprintf("Couldn't open socket for incoming connections (socket returned error %s)", NetworkErrorString(WSAGetLastError())));
         LogPrintLevel(BCLog::NET, BCLog::Level::Error, "%s\n", strError.original);
         return false;
     }
@@ -3073,7 +3073,7 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
     // Allow binding if the port is still in TIME_WAIT state after
     // the program was closed and restarted.
     if (sock->SetSockOpt(SOL_SOCKET, SO_REUSEADDR, (sockopt_arg_type)&nOne, sizeof(int)) == SOCKET_ERROR) {
-        strError = strprintf(Untranslated("Error setting SO_REUSEADDR on socket: %s, continuing anyway"), NetworkErrorString(WSAGetLastError()));
+        strError = Untranslated(strprintf("Error setting SO_REUSEADDR on socket: %s, continuing anyway", NetworkErrorString(WSAGetLastError())));
         LogPrintf("%s\n", strError.original);
     }
 
@@ -3082,14 +3082,14 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
     if (addrBind.IsIPv6()) {
 #ifdef IPV6_V6ONLY
         if (sock->SetSockOpt(IPPROTO_IPV6, IPV6_V6ONLY, (sockopt_arg_type)&nOne, sizeof(int)) == SOCKET_ERROR) {
-            strError = strprintf(Untranslated("Error setting IPV6_V6ONLY on socket: %s, continuing anyway"), NetworkErrorString(WSAGetLastError()));
+            strError = Untranslated(strprintf("Error setting IPV6_V6ONLY on socket: %s, continuing anyway", NetworkErrorString(WSAGetLastError())));
             LogPrintf("%s\n", strError.original);
         }
 #endif
 #ifdef WIN32
         int nProtLevel = PROTECTION_LEVEL_UNRESTRICTED;
         if (sock->SetSockOpt(IPPROTO_IPV6, IPV6_PROTECTION_LEVEL, (const char*)&nProtLevel, sizeof(int)) == SOCKET_ERROR) {
-            strError = strprintf(Untranslated("Error setting IPV6_PROTECTION_LEVEL on socket: %s, continuing anyway"), NetworkErrorString(WSAGetLastError()));
+            strError = Untranslated(strprintf("Error setting IPV6_PROTECTION_LEVEL on socket: %s, continuing anyway", NetworkErrorString(WSAGetLastError())));
             LogPrintf("%s\n", strError.original);
         }
 #endif

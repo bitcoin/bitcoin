@@ -5719,20 +5719,20 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
         if (!GetParams().AssumeutxoForBlockhash(base_blockhash).has_value()) {
             auto available_heights = GetParams().GetAvailableSnapshotHeights();
             std::string heights_formatted = util::Join(available_heights, ", ", [&](const auto& i) { return util::ToString(i); });
-            return util::Error{strprintf(Untranslated("assumeutxo block hash in snapshot metadata not recognized (hash: %s). The following snapshot heights are available: %s"),
+            return util::Error{Untranslated(strprintf("assumeutxo block hash in snapshot metadata not recognized (hash: %s). The following snapshot heights are available: %s",
                 base_blockhash.ToString(),
-                heights_formatted)};
+                heights_formatted))};
         }
 
         snapshot_start_block = m_blockman.LookupBlockIndex(base_blockhash);
         if (!snapshot_start_block) {
-            return util::Error{strprintf(Untranslated("The base block header (%s) must appear in the headers chain. Make sure all headers are syncing, and call loadtxoutset again"),
-                          base_blockhash.ToString())};
+            return util::Error{Untranslated(strprintf("The base block header (%s) must appear in the headers chain. Make sure all headers are syncing, and call loadtxoutset again",
+                          base_blockhash.ToString()))};
         }
 
         bool start_block_invalid = snapshot_start_block->nStatus & BLOCK_FAILED_MASK;
         if (start_block_invalid) {
-            return util::Error{strprintf(Untranslated("The base block header (%s) is part of an invalid chain"), base_blockhash.ToString())};
+            return util::Error{Untranslated(strprintf("The base block header (%s) is part of an invalid chain", base_blockhash.ToString()))};
         }
 
         if (!m_best_header || m_best_header->GetAncestor(snapshot_start_block->nHeight) != snapshot_start_block) {
@@ -5811,7 +5811,7 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
 
     if (auto res{this->PopulateAndValidateSnapshot(*snapshot_chainstate, coins_file, metadata)}; !res) {
         LOCK(::cs_main);
-        return cleanup_bad_snapshot(strprintf(Untranslated("Population failed: %s"), util::ErrorString(res)));
+        return cleanup_bad_snapshot(Untranslated(strprintf("Population failed: %s", util::ErrorString(res).original)));
     }
 
     LOCK(::cs_main);  // cs_main required for rest of snapshot activation.
@@ -5892,16 +5892,16 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
     if (!snapshot_start_block) {
         // Needed for ComputeUTXOStats to determine the
         // height and to avoid a crash when base_blockhash.IsNull()
-        return util::Error{strprintf(Untranslated("Did not find snapshot start blockheader %s"),
-                  base_blockhash.ToString())};
+        return util::Error{Untranslated(strprintf("Did not find snapshot start blockheader %s",
+                  base_blockhash.ToString()))};
     }
 
     int base_height = snapshot_start_block->nHeight;
     const auto& maybe_au_data = GetParams().AssumeutxoForHeight(base_height);
 
     if (!maybe_au_data) {
-        return util::Error{strprintf(Untranslated("Assumeutxo height in snapshot metadata not recognized "
-                  "(%d) - refusing to load snapshot"), base_height)};
+        return util::Error{Untranslated(strprintf("Assumeutxo height in snapshot metadata not recognized "
+                  "(%d) - refusing to load snapshot", base_height))};
     }
 
     const AssumeutxoData& au_data = *maybe_au_data;
@@ -5939,12 +5939,12 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
                 if (coin.nHeight > base_height ||
                     outpoint.n >= std::numeric_limits<decltype(outpoint.n)>::max() // Avoid integer wrap-around in coinstats.cpp:ApplyHash
                 ) {
-                    return util::Error{strprintf(Untranslated("Bad snapshot data after deserializing %d coins"),
-                              coins_count - coins_left)};
+                    return util::Error{Untranslated(strprintf("Bad snapshot data after deserializing %d coins",
+                              coins_count - coins_left))};
                 }
                 if (!MoneyRange(coin.out.nValue)) {
-                    return util::Error{strprintf(Untranslated("Bad snapshot data after deserializing %d coins - bad tx out value"),
-                              coins_count - coins_left)};
+                    return util::Error{Untranslated(strprintf("Bad snapshot data after deserializing %d coins - bad tx out value",
+                              coins_count - coins_left))};
                 }
                 coins_cache.EmplaceCoinInternalDANGER(std::move(outpoint), std::move(coin));
 
@@ -5982,8 +5982,8 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
                 }
             }
         } catch (const std::ios_base::failure&) {
-            return util::Error{strprintf(Untranslated("Bad snapshot format or truncated snapshot after deserializing %d coins"),
-                      coins_processed)};
+            return util::Error{Untranslated(strprintf("Bad snapshot format or truncated snapshot after deserializing %d coins",
+                      coins_processed))};
         }
     }
 
@@ -6003,8 +6003,8 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
         out_of_coins = true;
     }
     if (!out_of_coins) {
-        return util::Error{strprintf(Untranslated("Bad snapshot - coins left over after deserializing %d coins"),
-            coins_count)};
+        return util::Error{Untranslated(strprintf("Bad snapshot - coins left over after deserializing %d coins",
+            coins_count))};
     }
 
     LogPrintf("[snapshot] loaded %d (%.2f MB) coins from snapshot %s\n",
@@ -6035,8 +6035,8 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
 
     // Assert that the deserialized chainstate contents match the expected assumeutxo value.
     if (AssumeutxoHash{maybe_stats->hashSerialized} != au_data.hash_serialized) {
-        return util::Error{strprintf(Untranslated("Bad snapshot content hash: expected %s, got %s"),
-            au_data.hash_serialized.ToString(), maybe_stats->hashSerialized.ToString())};
+        return util::Error{Untranslated(strprintf("Bad snapshot content hash: expected %s, got %s",
+            au_data.hash_serialized.ToString(), maybe_stats->hashSerialized.ToString()))};
     }
 
     snapshot_chainstate.m_chain.SetTip(*snapshot_start_block);
@@ -6142,7 +6142,7 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
 
         auto rename_result = m_snapshot_chainstate->InvalidateCoinsDBOnDisk();
         if (!rename_result) {
-            user_error = strprintf(Untranslated("%s\n%s"), user_error, util::ErrorString(rename_result));
+            user_error += Untranslated("\n") + util::ErrorString(rename_result);
         }
 
         GetNotifications().fatalError(user_error);

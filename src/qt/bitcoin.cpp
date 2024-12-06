@@ -529,7 +529,7 @@ int GuiMain(int argc, char* argv[])
     SetupUIArgs(gArgs);
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
-        InitError(strprintf(Untranslated("Error parsing command line arguments: %s"), error));
+        InitError(Untranslated(strprintf("Error parsing command line arguments: %s", error)));
         // Create a message box, because the gui has neither been created nor has subscribed to core signals
         QMessageBox::critical(nullptr, CLIENT_NAME,
             // message cannot be translated because translations have not been initialized
