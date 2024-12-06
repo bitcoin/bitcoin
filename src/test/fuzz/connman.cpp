@@ -63,13 +63,15 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     connman.Init(options);
 
     CNetAddr random_netaddr;
-    CNode random_node = ConsumeNode(fuzzed_data_provider);
+    NodeId node_id{0};
+    CNode& random_node{*ConsumeNodeAsUniquePtr(fuzzed_data_provider, node_id++).release()};
+    connman.AddTestNode(random_node, std::make_unique<FuzzedSock>(fuzzed_data_provider));
     CSubNet random_subnet;
     std::string random_string;
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100) {
-        CNode& p2p_node{*ConsumeNodeAsUniquePtr(fuzzed_data_provider).release()};
-        connman.AddTestNode(p2p_node);
+        CNode& p2p_node{*ConsumeNodeAsUniquePtr(fuzzed_data_provider, node_id++).release()};
+        connman.AddTestNode(p2p_node, std::make_unique<FuzzedSock>(fuzzed_data_provider));
     }
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
