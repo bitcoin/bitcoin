@@ -114,7 +114,7 @@ private:
 
 public Q_SLOTS:
     /* Refresh the whole wallet, helpful for huge notification queues */
-    void refreshWallet();
+    void refreshWallet(bool foce = false);
     /* New transaction, or transaction changed status */
     void updateTransaction(const QString &hash, int status, bool showTransaction);
     void updateAddressBook(const QString &address, const QString &label,
