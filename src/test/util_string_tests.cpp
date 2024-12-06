@@ -126,6 +126,15 @@ BOOST_AUTO_TEST_CASE(ConstevalFormatString_NumSpec)
     FailFmtWithError<2>("%1$.*2$", err_term);
     FailFmtWithError<2>("%1$9.*2$", err_term);
 
+    // Non-parity between tinyformat and ConstevalFormatString.
+    // tinyformat throws but ConstevalFormatString does not.
+    BOOST_CHECK_EXCEPTION(tfm::format(ConstevalFormatString<1>{"%n"}, 0), tfm::format_error,
+        HasReason{"tinyformat: %n conversion spec not supported"});
+    BOOST_CHECK_EXCEPTION(tfm::format(ConstevalFormatString<2>{"%*s"}, "hi", "hi"), tfm::format_error,
+        HasReason{"tinyformat: Cannot convert from argument type to integer for use as variable width or precision"});
+    BOOST_CHECK_EXCEPTION(tfm::format(ConstevalFormatString<2>{"%.*s"}, "hi", "hi"), tfm::format_error,
+        HasReason{"tinyformat: Cannot convert from argument type to integer for use as variable width or precision"});
+
     // Ensure that tinyformat throws if format string contains wrong number
     // of specifiers. PassFmt relies on this to verify tinyformat successfully
     // formats the strings, and will need to be updated if tinyformat is changed
