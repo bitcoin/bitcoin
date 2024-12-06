@@ -20,6 +20,7 @@ implicit-integer-sign-change:*/new_allocator.h
 implicit-integer-sign-change:crc32c/
 implicit-integer-sign-change:minisketch/
 implicit-integer-sign-change:secp256k1/
+implicit-integer-sign-change:*/qarraydata.h
 implicit-signed-integer-truncation:*/include/c++/
 implicit-signed-integer-truncation:leveldb/
 implicit-signed-integer-truncation:secp256k1/
