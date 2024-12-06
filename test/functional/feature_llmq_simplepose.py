@@ -179,6 +179,11 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 self.log.info("Expecting instant PoSe banning")
                 self.reset_probe_timeouts()
                 self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_complaints, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
+
+                if not self.check_banned(mn):
+                    self.log.info("Instant ban still requires 2 missing DKG round. If it is not banned yet, mine 2nd one")
+                    self.reset_probe_timeouts()
+                    self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_complaints, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
             else:
                 # It's ok to miss probes/quorum connections up to 5 times.
                 # 6th time is when it should be banned for sure.
