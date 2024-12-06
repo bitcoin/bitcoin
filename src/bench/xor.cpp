@@ -7,17 +7,24 @@
 #include <span.h>
 #include <streams.h>
 
+#include <cmath>
 #include <cstddef>
+#include <map>
 #include <vector>
 
 static void Xor(benchmark::Bench& bench)
 {
-    FastRandomContext frc{/*fDeterministic=*/true};
-    auto data{frc.randbytes<std::byte>(1024)};
-    auto key{frc.randbytes<std::byte>(31)};
+    FastRandomContext rng{/*fDeterministic=*/true};
+    auto test_data{rng.randbytes<std::byte>(1 << 20)};
 
-    bench.batch(data.size()).unit("byte").run([&] {
-        util::Xor(data, key);
+    std::vector key_bytes{rng.randbytes<std::byte>(8)};
+    uint64_t key;
+    std::memcpy(&key, key_bytes.data(), 8);
+
+    size_t offset{0};
+    bench.batch(test_data.size()).unit("byte").run([&] {
+        util::Xor(test_data, key_bytes, offset++);
+        ankerl::nanobench::doNotOptimizeAway(test_data);
     });
 }
 
