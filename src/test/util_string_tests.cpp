@@ -12,6 +12,14 @@ using util::detail::CheckNumFormatSpecifiers;
 
 BOOST_AUTO_TEST_SUITE(util_string_tests)
 
+template <unsigned NumArgs>
+void TfmFormatZeroes(const std::string& fmt)
+{
+    std::apply([&](auto... args) {
+        (void)tfm::format(fmt, args...);
+    }, std::array<int, NumArgs>{});
+}
+
 // Helper to allow compile-time sanity checks while providing the number of
 // args directly. Normally PassFmt<sizeof...(Args)> would be used.
 template <unsigned NumArgs>
@@ -19,6 +27,12 @@ void PassFmt(ConstevalFormatString<NumArgs> fmt)
 {
     // Execute compile-time check again at run-time to get code coverage stats
     BOOST_CHECK_NO_THROW(CheckNumFormatSpecifiers<NumArgs>(fmt.fmt));
+
+    // If ConstevalFormatString didn't throw above, make sure tinyformat doesn't
+    // throw either for the same format string and parameter count combination.
+    // Proves that we have some extent of protection from runtime errors
+    // (tinyformat may still throw for some type mismatches).
+    BOOST_CHECK_NO_THROW(TfmFormatZeroes<NumArgs>(fmt.fmt));
 }
 template <unsigned WrongNumArgs>
 void FailFmtWithError(const char* wrong_fmt, std::string_view error)
@@ -111,6 +125,15 @@ BOOST_AUTO_TEST_CASE(ConstevalFormatString_NumSpec)
     FailFmtWithError<2>("%1$*2$", err_term);
     FailFmtWithError<2>("%1$.*2$", err_term);
     FailFmtWithError<2>("%1$9.*2$", err_term);
+
+    // Ensure that tinyformat throws if format string contains wrong number
+    // of specifiers. PassFmt relies on this to verify tinyformat successfully
+    // formats the strings, and will need to be updated if tinyformat is changed
+    // not to throw on failure.
+    BOOST_CHECK_EXCEPTION(TfmFormatZeroes<2>("%s"), tfm::format_error,
+        HasReason{"tinyformat: Not enough conversion specifiers in format string"});
+    BOOST_CHECK_EXCEPTION(TfmFormatZeroes<1>("%s %s"), tfm::format_error,
+        HasReason{"tinyformat: Too many conversion specifiers in format string"});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
