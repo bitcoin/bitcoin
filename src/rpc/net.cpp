@@ -966,7 +966,7 @@ static RPCHelpMan getnodeaddresses()
 
     for (const CAddress& addr : vAddr) {
         UniValue obj(UniValue::VOBJ);
-        obj.pushKV("time", (int)addr.nTime);
+        obj.pushKV("time", int64_t{TicksSinceEpoch<std::chrono::seconds>(addr.nTime)});
         obj.pushKV("services", (uint64_t)addr.nServices);
         obj.pushKV("address", addr.ToStringAddr());
         obj.pushKV("port", addr.GetPort());
@@ -1015,7 +1015,7 @@ static RPCHelpMan addpeeraddress()
 
     if (net_addr.has_value()) {
         CAddress address{{net_addr.value(), port}, ServiceFlags{NODE_NETWORK}};
-        address.nTime = GetAdjustedTime();
+        address.nTime = AdjustedTime();
         // The source address is set equal to the address. This is equivalent to the peer
         // announcing itself.
         if (node.addrman->Add({address}, address)) {
