@@ -1901,7 +1901,7 @@ bool CConnman::AttemptToEvictConnection()
                 // follow when the incoming connection is from another masternode. When a message other than MNAUTH
                 // is received after VERSION/VERACK, the protection is lifted immediately.
                 bool isProtected = GetTime<std::chrono::seconds>() - node->m_connected < INBOUND_EVICTION_PROTECTION_TIME;
-                if (node->nTimeFirstMessageReceived != 0 && !node->fFirstMessageIsMNAUTH) {
+                if (node->nTimeFirstMessageReceived.load() != 0s && !node->fFirstMessageIsMNAUTH) {
                     isProtected = false;
                 }
                 // if MNAUTH was valid, the node is always protected (and at the same time not accounted when
@@ -3754,7 +3754,7 @@ void CConnman::ThreadOpenMasternodeConnections(CDeterministicMNManager& dmnman, 
                         // we probably connected to it before it became a masternode
                         // or maybe we are still waiting for mnauth
                         (void)ForNode(addr2, [&](CNode* pnode) {
-                            if (pnode->nTimeFirstMessageReceived != 0 && GetTimeSeconds() - pnode->nTimeFirstMessageReceived > 5) {
+                            if (pnode->nTimeFirstMessageReceived.load() != 0s && GetTime<std::chrono::seconds>() - pnode->nTimeFirstMessageReceived.load() > 5s) {
                                 // clearly not expecting mnauth to take that long even if it wasn't the first message
                                 // we received (as it should normally), disconnect
                                 LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- dropping non-mnauth connection to %s, service=%s\n", _func_, proRegTxHash.ToString(), addr2.ToStringAddrPort());

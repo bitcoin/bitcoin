@@ -3936,9 +3936,9 @@ void PeerManagerImpl::ProcessMessage(
         return;
     }
 
-    if (pfrom.nTimeFirstMessageReceived == 0) {
+    if (pfrom.nTimeFirstMessageReceived.load() == 0s) {
         // First message after VERSION/VERACK
-        pfrom.nTimeFirstMessageReceived = GetTimeSeconds();
+        pfrom.nTimeFirstMessageReceived = GetTime<std::chrono::seconds>();
         pfrom.fFirstMessageIsMNAUTH = msg_type == NetMsgType::MNAUTH;
         // Note: do not break the flow here
 
