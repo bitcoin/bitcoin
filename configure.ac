@@ -399,11 +399,11 @@ else
     # Stacktraces will be suboptimal due to optimization, but better than nothing. Also, -fno-omit-frame-pointer
     # mitigates this a little bit
     if test "x$GCC" = xyes; then
-        CFLAGS="$CFLAGS -g1 -fno-omit-frame-pointer"
+        DEBUG_CFLAGS="$DEBUG_CFLAGS -g1 -fno-omit-frame-pointer"
     fi
 
     if test "x$GXX" = xyes; then
-        CXXFLAGS="$CXXFLAGS -g1 -fno-omit-frame-pointer"
+        DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -g1 -fno-omit-frame-pointer"
     fi
 fi
 
@@ -431,7 +431,7 @@ if test x$LINK_WRAP_SUPPORTED = "xyes"; then
 fi
 
 # Needed for MinGW targets when debug symbols are enabled as compiled objects get very large
-AX_CHECK_COMPILE_FLAG([-Wa,-mbig-obj], [CXXFLAGS="$CXXFLAGS -Wa,-mbig-obj"],,,)
+AX_CHECK_COMPILE_FLAG([-Wa,-mbig-obj], [DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -Wa,-mbig-obj"],,,)
 
 if test x$use_sanitizers != x; then
   dnl First check if the compiler accepts flags. If an incompatible pair like
@@ -1880,10 +1880,11 @@ AC_SUBST(RELDFLAGS)
 AC_SUBST(CORE_LDFLAGS)
 AC_SUBST(CORE_CPPFLAGS)
 AC_SUBST(CORE_CXXFLAGS)
+AC_SUBST(DEBUG_CFLAGS)
 AC_SUBST(DEBUG_CPPFLAGS)
+AC_SUBST(DEBUG_CXXFLAGS)
 AC_SUBST(WARN_CXXFLAGS)
 AC_SUBST(NOWARN_CXXFLAGS)
-AC_SUBST(DEBUG_CXXFLAGS)
 AC_SUBST(ERROR_CXXFLAGS)
 AC_SUBST(GPROF_CXXFLAGS)
 AC_SUBST(GPROF_LDFLAGS)
@@ -2005,7 +2006,7 @@ echo "  target os           = $host_os"
 echo "  build os            = $build_os"
 echo
 echo "  CC                  = $CC"
-echo "  CFLAGS              = $PTHREAD_CFLAGS $CFLAGS"
+echo "  CFLAGS              = $DEBUG_CFLAGS $PTHREAD_CFLAGS $CFLAGS"
 echo "  CPPFLAGS            = $DEBUG_CPPFLAGS $HARDENED_CPPFLAGS $CORE_CPPFLAGS $CPPFLAGS"
 echo "  CXX                 = $CXX"
 echo "  CXXFLAGS            = $DEBUG_CXXFLAGS $HARDENED_CXXFLAGS $WARN_CXXFLAGS $NOWARN_CXXFLAGS $ERROR_CXXFLAGS $GPROF_CXXFLAGS $CORE_CXXFLAGS $CXXFLAGS"
