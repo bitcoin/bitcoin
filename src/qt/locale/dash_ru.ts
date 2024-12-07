@@ -94,8 +94,8 @@
         <translation>&amp;Правка</translation>
     </message>
     <message>
-        <source>&amp;Show address QR code</source>
-        <translation>&amp;Показать QR-код адреса</translation>
+        <source>Show address &amp;QR code</source>
+        <translation>Показать QR-&amp;код адреса</translation>
     </message>
     <message>
         <source>QR code</source>
@@ -107,7 +107,7 @@
     </message>
     <message>
         <source>Comma separated file</source>
-        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
         <translation>Текст, разделённый запятыми</translation>
     </message>
     <message>
@@ -314,6 +314,10 @@
 <context>
     <name>BitcoinApplication</name>
     <message>
+        <source>Runaway exception</source>
+        <translation>Неконтролируемое исключение</translation>
+    </message>
+    <message>
         <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
         <translation>Произошла критическая ошибка. Дальнейшая безопасная работа %1 невозможна, программа будет закрыта.</translation>
     </message>
@@ -321,7 +325,11 @@
         <source>Internal error</source>
         <translation>Внутренняя ошибка</translation>
     </message>
-    </context>
+    <message>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation>Произошла внутренняя ошибка. %1 попытается продолжить работу в безопасном режиме. Это неожиданная ошибка, о которой можно сообщить, как описано ниже.</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -347,6 +355,10 @@
     <message>
         <source>Request payments (generates QR codes and dash: URIs)</source>
         <translation>Запросить платежи (создать QR-коды и dash: URI)</translation>
+    </message>
+    <message>
+        <source>Ctrl+Q</source>
+        <translation>Ctrl+Q</translation>
     </message>
     <message>
         <source>&amp;Options…</source>
@@ -664,6 +676,7 @@
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Dash network</source>
+        <extracomment>A substring of the tooltip.</extracomment>
         <translation><numerusform>%n активное соединение с сетью Dash</numerusform><numerusform>%n активных соединения с сетью Dash</numerusform><numerusform>%n активных соединений с сетью Dash</numerusform><numerusform>%n активных соединений с сетью Dash</numerusform></translation>
     </message>
     <message>
@@ -689,6 +702,34 @@
     <message>
         <source>Close All Wallets…</source>
         <translation>Закрыть все кошельки…</translation>
+    </message>
+    <message>
+        <source>Ctrl+Shift+D</source>
+        <translation>Ctrl+Shift+D</translation>
+    </message>
+    <message>
+        <source>Ctrl+M</source>
+        <translation>Ctrl+M</translation>
+    </message>
+    <message>
+        <source>Click for more actions.</source>
+        <extracomment>A substring of the tooltip. "More actions" are available via the context menu.</extracomment>
+        <translation>Нажмите, для других действий</translation>
+    </message>
+    <message>
+        <source>Show Peers tab</source>
+        <extracomment>A context menu item. The "Peers tab" is an element of the "Node window".</extracomment>
+        <translation>Показать вкладку с пирами</translation>
+    </message>
+    <message>
+        <source>Disable network activity</source>
+        <extracomment>A context menu item.</extracomment>
+        <translation>Отключить сеть</translation>
+    </message>
+    <message>
+        <source>Enable network activity</source>
+        <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
+        <translation>Включить сеть</translation>
     </message>
     <message>
         <source>Syncing Headers (%1%)…</source>
@@ -924,28 +965,32 @@
         <translation>Подтверждено</translation>
     </message>
     <message>
-        <source>Copy address</source>
-        <translation>Копировать адрес</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Копировать метку</translation>
-    </message>
-    <message>
         <source>Copy amount</source>
         <translation>Скопировать сумму</translation>
     </message>
     <message>
-        <source>Copy transaction ID</source>
-        <translation>Скопировать ID транзакции</translation>
+        <source>&amp;Copy address</source>
+        <translation>&amp;Копировать адрес</translation>
     </message>
     <message>
-        <source>Lock unspent</source>
-        <translation>Заблокировать непотраченное</translation>
+        <source>Copy &amp;label</source>
+        <translation>Копировать &amp;метку</translation>
     </message>
     <message>
-        <source>Unlock unspent</source>
-        <translation>Разблокировать непотраченное</translation>
+        <source>Copy &amp;amount</source>
+        <translation>Скопировать &amp;сумму</translation>
+    </message>
+    <message>
+        <source>Copy transaction &amp;ID and output index</source>
+        <translation>Скопировать ID &amp;транзакции</translation>
+    </message>
+    <message>
+        <source>L&amp;ock unspent</source>
+        <translation>&amp;Заблокировать непотраченное</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock unspent</source>
+        <translation>&amp;Разблокировать непотраченное</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -1035,7 +1080,13 @@
 <context>
     <name>CreateWalletActivity</name>
     <message>
+        <source>Create Wallet</source>
+        <extracomment>Title of window indicating the progress of creation of a new wallet.</extracomment>
+        <translation>Создать кошелёк</translation>
+    </message>
+    <message>
         <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the create wallet progress window which indicates to the user which wallet is currently being created.</extracomment>
         <translation>Создается кошелёк&lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
     <message>
@@ -1090,10 +1141,22 @@
         <translation>Создать пустой кошелёк</translation>
     </message>
     <message>
+        <source>Use descriptors for scriptPubKey management. This feature is well-tested but still considered experimental and not recommended for use yet.</source>
+        <translation>Используйте дескрипторы для управления scriptPubKey. Эта функция хорошо протестирована, но все еще считается экспериментальной и пока не рекомендуется к использованию.</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet (EXPERIMENTAL)</source>
+        <translation>Descriptor Wallet (ЭКСПЕРИМЕНТАЛЬНО)</translation>
+    </message>
+    <message>
         <source>Create</source>
         <translation>Создать</translation>
     </message>
-    </context>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation>Скомпилировано без поддержки sqlite (требуется для дескрипторных кошельков).</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1518,7 +1581,13 @@
         <translation>кошелек по умолчанию</translation>
     </message>
     <message>
+        <source>Open Wallet</source>
+        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
+        <translation>Открыть кошелёк</translation>
+    </message>
+    <message>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the open wallet progress window which indicates to the user which wallet is currently being opened.</extracomment>
         <translation>Открывается кошелёк&lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
 </context>
@@ -1585,6 +1654,26 @@
         <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
         <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
         <translation>Установить количество потоков проверки скриптов. Отрицательные значения соответствуют количеству ядер, которые останутся доступными для системы.</translation>
+    </message>
+    <message>
+        <source>This allows you or a third party tool to communicate with the node through command-line and JSON-RPC commands.</source>
+        <extracomment>Tooltip text for Options window setting that enables the RPC server.</extracomment>
+        <translation>Это позволит вам или стороннему инструменту взаимодействовать с нодой через команды командной строки и JSON-RPC.</translation>
+    </message>
+    <message>
+        <source>Enable R&amp;PC server</source>
+        <extracomment>An Options window setting to enable the RPC server.</extracomment>
+        <translation>Включить сервер R&amp;PC</translation>
+    </message>
+    <message>
+        <source>Whether to set subtract fee from amount as default or not.</source>
+        <extracomment>Tooltip text for Options window setting that sets subtracting the fee from a sending amount as default.</extracomment>
+        <translation>Вычитать комиссию из суммы по умолчанию или нет</translation>
+    </message>
+    <message>
+        <source>Subtract &amp;fee from amount by default</source>
+        <extracomment>An Options window setting to set subtracting the fee from a sending amount as default.</extracomment>
+        <translation>Вычесть &amp;комиссию из суммы по умолчанию</translation>
     </message>
     <message>
         <source>Whether to keep the specified custom change address or not.</source>
@@ -2212,6 +2301,10 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation> * отправляет %1 на %2</translation>
     </message>
     <message>
+        <source>own address</source>
+        <translation>свой адрес</translation>
+    </message>
+    <message>
         <source>Unable to calculate transaction fee or total transaction amount.</source>
         <translation>Невозможно вычислить комиссию или полную сумму транзакции.</translation>
     </message>
@@ -2238,6 +2331,10 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>Transaction still needs signature(s).</source>
         <translation>Транзакции все еще нужны подписи.</translation>
+    </message>
+    <message>
+        <source>(But no wallet is loaded.)</source>
+        <translation>(Нету загруженных кошельков)</translation>
     </message>
     <message>
         <source>(But this wallet cannot sign transactions.)</source>
@@ -2275,12 +2372,10 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>'dash://' не является валидным URI. Используйте 'dash:'.</translation>
     </message>
     <message>
-        <source>Cannot process payment request as BIP70 is no longer supported.</source>
-        <translation>Невозможно обработать запрос платежа так как BIP70 больше не поддерживается.</translation>
-    </message>
-    <message>
-        <source>Due to discontinued support, you should request the merchant to provide you with a BIP21 compatible URI or use a wallet that does continue to support BIP70.</source>
-        <translation>В связи с прекращением поддержки следует запросить у мерчанта URI, совместимый с BIP21, или использовать кошелек, который продолжает поддерживать BIP70.</translation>
+        <source>Cannot process payment request as BIP70 is no longer supported.
+Due to discontinued support, you should request the merchant to provide you with a BIP21 compatible URI or use a wallet that does continue to support BIP70.</source>
+        <translation>Невозможно обработать запрос так как BIP70 больше не поддерживается.
+В связи с прекращением поддержки следует запросить у мерчанта URI, совместимый с BIP21, или использовать кошелек, который продолжает поддерживать BIP70.</translation>
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
@@ -2309,6 +2404,16 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Пир</translation>
     </message>
     <message>
+        <source>Age</source>
+        <extracomment>Title of Peers Table column which indicates the duration (length of time) since the peer connection started.</extracomment>
+        <translation>Возраст</translation>
+    </message>
+    <message>
+        <source>Direction</source>
+        <extracomment>Title of Peers Table column which indicates the direction the peer connection was initiated from.</extracomment>
+        <translation>Направление</translation>
+    </message>
+    <message>
         <source>Type</source>
         <extracomment>Title of Peers Table column which describes the type of peer connection. The "type" describes why the connection exists.</extracomment>
         <translation>Тип</translation>
@@ -2332,6 +2437,16 @@ https://explore.transifex.com/dash/dash/</translation>
         <source>Network</source>
         <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
         <translation>Сеть</translation>
+    </message>
+    <message>
+        <source>Inbound</source>
+        <extracomment>An Inbound Connection from a Peer.</extracomment>
+        <translation>Входящее</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <extracomment>An Outbound Connection to a Peer.</extracomment>
+        <translation>Исходящее</translation>
     </message>
 </context>
 <context>
@@ -2392,7 +2507,7 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Вы хотите сбросить настройки в значения по умолчанию или прервать без внесения изменений?</translation>
     </message>
     <message>
-        <source>A fatal error occured. Check that settings file is writable, or try running with -nosettings.</source>
+        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
         <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
         <translation>Произошла критическая ошибка. Убедитесь, что файл настроек доступен для записи или попробуйте запустить с флагом -nosettings.</translation>
     </message>
@@ -2497,6 +2612,10 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Вы также можете поменять их позже на закладке "Внешний вид" в настройках.</translation>
     </message>
     <message>
+        <source>Ctrl+W</source>
+        <translation>Ctrl+W</translation>
+    </message>
+    <message>
         <source>Unroutable</source>
         <translation>Немаршрутизируемый</translation>
     </message>
@@ -2513,6 +2632,31 @@ https://explore.transifex.com/dash/dash/</translation>
         <source>Outbound</source>
         <extracomment>An outbound connection to a peer. An outbound connection is a connection initiated by us.</extracomment>
         <translation>Исходящее</translation>
+    </message>
+    <message>
+        <source>Full Relay</source>
+        <extracomment>Peer connection type that relays all network information.</extracomment>
+        <translation>Полная трансляция</translation>
+    </message>
+    <message>
+        <source>Block Relay</source>
+        <extracomment>Peer connection type that relays network information about blocks and not transactions or addresses.</extracomment>
+        <translation>Трансляция блоков</translation>
+    </message>
+    <message>
+        <source>Manual</source>
+        <extracomment>Peer connection type established manually through one of several methods.</extracomment>
+        <translation>Ручное</translation>
+    </message>
+    <message>
+        <source>Feeler</source>
+        <extracomment>Short-lived peer connection type that tests the aliveness of known addresses.</extracomment>
+        <translation>Пробное</translation>
+    </message>
+    <message>
+        <source>Address Fetch</source>
+        <extracomment>Short-lived peer connection type that solicits known addresses from a peer.</extracomment>
+        <translation>Запрос адресов</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -2575,8 +2719,8 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>%1 Б</translation>
     </message>
     <message>
-        <source>%1 KB</source>
-        <translation>%1 КБ</translation>
+        <source>%1 kB</source>
+        <translation>%1 кБ</translation>
     </message>
     <message>
         <source>%1 MB</source>
@@ -2634,7 +2778,7 @@ https://explore.transifex.com/dash/dash/</translation>
     </message>
     <message>
         <source>PNG Image</source>
-        <extracomment>Expanded name of the PNG file format. See https://en.wikipedia.org/wiki/Portable_Network_Graphics</extracomment>
+        <extracomment>Expanded name of the PNG file format. See: https://en.wikipedia.org/wiki/Portable_Network_Graphics.</extracomment>
         <translation>PNG изображение</translation>
     </message>
 </context>
@@ -2745,6 +2889,22 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Версия</translation>
     </message>
     <message>
+        <source>Whether the peer requested us to relay transactions.</source>
+        <translation>Запрашивал ли пир ретрансляцию транзакций.</translation>
+    </message>
+    <message>
+        <source>Wants Tx Relay</source>
+        <translation>Хочет ретрансляцию Tx</translation>
+    </message>
+    <message>
+        <source>High bandwidth BIP152 compact block relay: %1</source>
+        <translation>Компактное блочное реле BIP152 с высокой пропускной способностью: %1</translation>
+    </message>
+    <message>
+        <source>High Bandwidth</source>
+        <translation>Высокая пропускная способность</translation>
+    </message>
+    <message>
         <source>Starting Block</source>
         <translation>Начальный блок</translation>
     </message>
@@ -2757,8 +2917,17 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Синхронизированные блоки</translation>
     </message>
     <message>
+        <source>Elapsed time since a novel block passing initial validity checks was received from this peer.</source>
+        <translation>Прошло время с тех пор, как от этого однорангового узла был получен новый блок, прошедший первоначальную проверку на достоверность.</translation>
+    </message>
+    <message>
         <source>Last Block</source>
         <translation>Последний блок</translation>
+    </message>
+    <message>
+        <source>Elapsed time since a novel transaction accepted into our mempool was received from this peer.</source>
+        <extracomment>Tooltip text for the Last Transaction field in the peer details area.</extracomment>
+        <translation>Прошло время с тех пор, как от этого однорангового узла была получена новая транзакция, принятая в наш mempool.</translation>
     </message>
     <message>
         <source>Last Transaction</source>
@@ -2771,6 +2940,26 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>Mapped AS</source>
         <translation>Сопоставление AS</translation>
+    </message>
+    <message>
+        <source>Whether we relay addresses to this peer.</source>
+        <extracomment>Tooltip text for the Address Relay field in the peer details area, which displays whether we relay addresses to this peer (Yes/No).</extracomment>
+        <translation>Будем ли мы передавать адреса этому пиру.</translation>
+    </message>
+    <message>
+        <source>Address Relay</source>
+        <extracomment>Text title for the Address Relay field in the peer details area, which displays whether we relay addresses to this peer (Yes/No).</extracomment>
+        <translation>Трансляция адресов</translation>
+    </message>
+    <message>
+        <source>Addresses Processed</source>
+        <extracomment>Text title for the Addresses Processed field in the peer details area, which displays the total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</extracomment>
+        <translation>Обработано адресов</translation>
+    </message>
+    <message>
+        <source>Addresses Rate-Limited</source>
+        <extracomment>Text title for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
+        <translation>Отброшено адресов</translation>
     </message>
     <message>
         <source>Rescan blockchain files 1</source>
@@ -2869,12 +3058,32 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>PoSe штраф</translation>
     </message>
     <message>
+        <source>The transport layer version: %1</source>
+        <translation>Версия транспортного уровня: %1</translation>
+    </message>
+    <message>
+        <source>Transport</source>
+        <translation>Транспорт</translation>
+    </message>
+    <message>
+        <source>The BIP324 session ID string in hex.</source>
+        <translation>Строка идентификатора сеанса BIP324 в HEX формате.</translation>
+    </message>
+    <message>
+        <source>Session ID</source>
+        <translation>ID сессии</translation>
+    </message>
+    <message>
         <source>The network protocol this peer is connected through: IPv4, IPv6, Onion, I2P, or CJDNS.</source>
         <translation>Сетевой протокол, через который подсоединён этот пир: IPv4, IPv6, Onion, I2P или CJDNS.</translation>
     </message>
     <message>
         <source>Permissions</source>
         <translation>Разрешения</translation>
+    </message>
+    <message>
+        <source>The direction and type of peer connection: %1</source>
+        <translation>Направление и тип одноранговой связи: %1</translation>
     </message>
     <message>
         <source>Direction/Type</source>
@@ -2921,6 +3130,16 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Ремонт &amp;кошелька</translation>
     </message>
     <message>
+        <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
+        <extracomment>Tooltip text for the Addresses Processed field in the peer details area, which displays the total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</extracomment>
+        <translation>Общее количество адресов, полученных от этого узла и обработанных (не включая адреса, отброшенные из-за ограничения скорости).</translation>
+    </message>
+    <message>
+        <source>The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</source>
+        <extracomment>Tooltip text for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
+        <translation>Общее количество адресов, полученных от этого пира и отброшенных (не обработанных) из-за ограничения скорости.</translation>
+    </message>
+    <message>
         <source>Wallet repair options.</source>
         <translation>Варианты ремонта кошелька.</translation>
     </message>
@@ -2933,12 +3152,58 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>-reindex: Перестроить индекс цепочки блоков из текущих файлов blk000??.dat.</translation>
     </message>
     <message>
+        <source>Inbound: initiated by peer</source>
+        <extracomment>Explanatory text for an inbound peer connection.</extracomment>
+        <translation>Входящее: инициируются одноранговым узлом</translation>
+    </message>
+    <message>
+        <source>Outbound Full Relay: default</source>
+        <extracomment>Explanatory text for an outbound peer connection that relays all network information. This is the default behavior for outbound connections.</extracomment>
+        <translation>Исходящее полное соединение: по умолчанию</translation>
+    </message>
+    <message>
+        <source>Outbound Block Relay: does not relay transactions or addresses</source>
+        <extracomment>Explanatory text for an outbound peer connection that relays network information about blocks and not transactions or addresses.</extracomment>
+        <translation>Исходящее соединение для передачи блоков: не передает транзакции или адреса</translation>
+    </message>
+    <message>
+        <source>Outbound Manual: added using RPC %1 or %2/%3 configuration options</source>
+        <extracomment>Explanatory text for an outbound peer connection that was established manually through one of several methods. The numbered arguments are stand-ins for the methods available to establish manual connections.</extracomment>
+        <translation>Исходящее соединение вручную: добавлено с использованием RPC %1 или параметров конфигурации %2/%3</translation>
+    </message>
+    <message>
+        <source>Outbound Feeler: short-lived, for testing addresses</source>
+        <extracomment>Explanatory text for a short-lived outbound peer connection that is used to test the aliveness of known addresses.</extracomment>
+        <translation>Исходящее тестовое соединение: кратковременное, для проверки активности адресов</translation>
+    </message>
+    <message>
+        <source>Outbound Address Fetch: short-lived, for soliciting addresses</source>
+        <extracomment>Explanatory text for a short-lived outbound peer connection that is used to request addresses from a peer.</extracomment>
+        <translation>Исходящее соединение для получения адресов: кратковременное, используется для запроса адресов у узла."</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Для</translation>
+    </message>
+    <message>
+        <source>we selected the peer for high bandwidth relay</source>
+        <translation>Мы выбрали этот узел для высокоскоростной передачи данных</translation>
+    </message>
+    <message>
         <source>From</source>
         <translation>От</translation>
     </message>
     <message>
+        <source>the peer selected us for high bandwidth relay</source>
+        <translation>Этот узел выбрал нас для высокоскоростной передачи данных.</translation>
+    </message>
+    <message>
         <source>No</source>
         <translation>Нет</translation>
+    </message>
+    <message>
+        <source>no high bandwidth relay selected</source>
+        <translation>Высокоскоростная передача данных не выбрана.</translation>
     </message>
     <message>
         <source>&amp;Disconnect</source>
@@ -2953,10 +3218,6 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>1 &amp;час</translation>
     </message>
     <message>
-        <source>1 &amp;day</source>
-        <translation>1 &amp;день</translation>
-    </message>
-    <message>
         <source>1 &amp;week</source>
         <translation>1 &amp;неделя</translation>
     </message>
@@ -2967,26 +3228,6 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>&amp;Unban</source>
         <translation>&amp;Разблокировать</translation>
-    </message>
-    <message>
-        <source>Welcome to the %1 RPC console.</source>
-        <translation>Добро пожаловать в RPC-консоль %1.</translation>
-    </message>
-    <message>
-        <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
-        <translation>Используйте стрелки вверх и вниз для просмотра истории и %1 для очистки экрана.</translation>
-    </message>
-    <message>
-        <source>Type %1 for an overview of available commands.</source>
-        <translation>Введите %1 для просмотра доступных команд.</translation>
-    </message>
-    <message>
-        <source>For more information on using this console type %1.</source>
-        <translation>Для получения дополнительной информации по использованию этой консоли введите %1.</translation>
-    </message>
-    <message>
-        <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
-        <translation>ВНИМАНИЕ: Мошенники могут попросить Вас ввести сюда команды и таким образом украсть Ваши средства. Не используйте эту консоль, если Вы не до конца понимаете последствия вводимых команд.</translation>
     </message>
     <message>
         <source>In:</source>
@@ -3009,8 +3250,99 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Выполнение команд без какого либо кошелька</translation>
     </message>
     <message>
+        <source>Ctrl++</source>
+        <extracomment>Main shortcut to increase the RPC console font size.</extracomment>
+        <translation>Ctrl++</translation>
+    </message>
+    <message>
+        <source>Ctrl+=</source>
+        <extracomment>Secondary shortcut to increase the RPC console font size.</extracomment>
+        <translation>Ctrl+=</translation>
+    </message>
+    <message>
+        <source>Ctrl+-</source>
+        <extracomment>Main shortcut to decrease the RPC console font size.</extracomment>
+        <translation>Ctrl+-</translation>
+    </message>
+    <message>
+        <source>Ctrl+_</source>
+        <extracomment>Secondary shortcut to decrease the RPC console font size.</extracomment>
+        <translation>Ctrl+_</translation>
+    </message>
+    <message>
+        <source>Ctrl+Shift+I</source>
+        <translation>Ctrl+Shift+I</translation>
+    </message>
+    <message>
+        <source>Ctrl+Shift+C</source>
+        <translation>Ctrl+Shift+C</translation>
+    </message>
+    <message>
+        <source>Ctrl+Shift+G</source>
+        <translation>Ctrl+Shift+G</translation>
+    </message>
+    <message>
+        <source>Ctrl+Shift+P</source>
+        <translation>Ctrl+Shift+P</translation>
+    </message>
+    <message>
+        <source>Ctrl+Shift+R</source>
+        <translation>Ctrl+Shift+R</translation>
+    </message>
+    <message>
         <source>Executing command using "%1" wallet</source>
         <translation>Выполнение команд, используя "%1" кошелек</translation>
+    </message>
+    <message>
+        <source>detecting: peer could be v1 or v2</source>
+        <extracomment>Explanatory text for "detecting" transport type.</extracomment>
+        <translation>Обнаружение: узел может использовать версию протокола v1 или v2.</translation>
+    </message>
+    <message>
+        <source>v1: unencrypted, plaintext transport protocol</source>
+        <extracomment>Explanatory text for v1 transport type.</extracomment>
+        <translation>v1: нешифрованный протокол передачи данных в открытом виде.</translation>
+    </message>
+    <message>
+        <source>v2: BIP324 encrypted transport protocol</source>
+        <extracomment>Explanatory text for v2 transport type.</extracomment>
+        <translation>v2: зашифрованный протокол передачи данных BIP324.</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <extracomment>Context menu action to copy the address of a peer</extracomment>
+        <translation>&amp;Копировать адрес</translation>
+    </message>
+    <message>
+        <source>1 d&amp;ay</source>
+        <translation>1 &amp;день</translation>
+    </message>
+    <message>
+        <source>&amp;Copy IP/Netmask</source>
+        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address see: https://en.wikipedia.org/wiki/IP_address</extracomment>
+        <translation>&amp;Копировать IP/Маску сети</translation>
+    </message>
+    <message>
+        <source>Welcome to the %1 RPC console.
+Use up and down arrows to navigate history, and %2 to clear screen.
+Use %3 and %4 to increase or decrease the font size.
+Type %5 for an overview of available commands.
+For more information on using this console, type %6.
+
+%7WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.%8</source>
+        <extracomment>RPC console welcome message. Placeholders %7 and %8 are style tags for the warning content, and they are not space separated from the rest of the text intentionally.</extracomment>
+        <translation>Добро пожаловать в RPC-консоль %1.
+Используйте стрелки вверх и вниз для навигации по истории, и %2 для очистки экрана.
+Используйте %3 и %4 для увеличения или уменьшения размера шрифта.
+Введите %5 для просмотра списка доступных команд.
+Для получения дополнительной информации о работе с этой консолью введите %6.
+
+%7ВНИМАНИЕ: Мошенники активно используют команды, вводимые в этой консоли, чтобы похищать содержимое кошельков. Не используйте эту консоль без полного понимания последствий выполнения команд.%8</translation>
+    </message>
+    <message>
+        <source>Executing…</source>
+        <extracomment>A console message indicating an entered command is currently being executed.</extracomment>
+        <translation>Выполняется…</translation>
     </message>
     <message>
         <source>(peer: %1)</source>
@@ -3031,6 +3363,10 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>Verified Masternode</source>
         <translation>Проверенная мастернода</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Да</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -3120,30 +3456,34 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Введите сообщение для прикрепления к запросу платежа</translation>
     </message>
     <message>
-        <source>Copy URI</source>
-        <translation>Копировать URI</translation>
+        <source>Copy &amp;URI</source>
+        <translation>Копировать &amp;URI</translation>
     </message>
     <message>
-        <source>Copy address</source>
-        <translation>Копировать адрес</translation>
+        <source>&amp;Copy address</source>
+        <translation>&amp;Копировать адрес</translation>
     </message>
     <message>
-        <source>Copy label</source>
-        <translation>Копировать метку</translation>
+        <source>Copy &amp;label</source>
+        <translation>Копировать &amp;метку</translation>
     </message>
     <message>
-        <source>Copy message</source>
-        <translation>Копировать сообщение</translation>
+        <source>Copy &amp;message</source>
+        <translation>Копировать &amp;сообщение</translation>
     </message>
     <message>
-        <source>Copy amount</source>
-        <translation>Скопировать сумму</translation>
+        <source>Copy &amp;amount</source>
+        <translation>Скопировать &amp;сумму</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
         <translation>Не удается разблокировать кошелёк.</translation>
     </message>
-    </context>
+    <message>
+        <source>Could not generate new address</source>
+        <translation>Не удалось сгенерировать новый адрес</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -3836,10 +4176,21 @@ https://explore.transifex.com/dash/dash/</translation>
     </message>
 </context>
 <context>
+    <name>SplashScreen</name>
+    <message>
+        <source>(press q to shutdown and continue later)</source>
+        <translation>(нажмите q для завершения и продолжите позже)</translation>
+    </message>
+    <message>
+        <source>press q to shutdown</source>
+        <translation>нажмите q для завершения</translation>
+    </message>
+</context>
+<context>
     <name>TrafficGraphWidget</name>
     <message>
-        <source>KB/s</source>
-        <translation>КБ/сек</translation>
+        <source>kB/s</source>
+        <translation>кБ/с</translation>
     </message>
     <message>
         <source>Total</source>
@@ -3915,6 +4266,10 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>Generated</source>
         <translation>Сгенерированно</translation>
+    </message>
+    <message>
+        <source>Platform Transfer</source>
+        <translation>Перевод платформы</translation>
     </message>
     <message>
         <source>From</source>
@@ -4115,6 +4470,10 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Добыто</translation>
     </message>
     <message>
+        <source>Platform Transfer</source>
+        <translation>Перевод платформы</translation>
+    </message>
+    <message>
         <source>%1 Mixing</source>
         <translation>%1 Перемешивание</translation>
     </message>
@@ -4242,6 +4601,10 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Добытые</translation>
     </message>
     <message>
+        <source>Platform Transfer</source>
+        <translation>Перевод платформы</translation>
+    </message>
+    <message>
         <source>Other</source>
         <translation>Другое</translation>
     </message>
@@ -4254,48 +4617,48 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Мин. сумма</translation>
     </message>
     <message>
-        <source>Abandon transaction</source>
-        <translation>Сбросить транзакцию</translation>
+        <source>&amp;Copy address</source>
+        <translation>Копировать &amp;адрес</translation>
     </message>
     <message>
-        <source>Resend transaction</source>
-        <translation>Отправить транзакцию еще раз</translation>
+        <source>Copy &amp;label</source>
+        <translation>Копировать &amp;метку</translation>
     </message>
     <message>
-        <source>Copy address</source>
-        <translation>Копировать адрес</translation>
+        <source>Copy &amp;amount</source>
+        <translation>Скопировать &amp;сумму</translation>
     </message>
     <message>
-        <source>Copy label</source>
-        <translation>Копировать метку</translation>
+        <source>Copy transaction &amp;ID</source>
+        <translation>Скопировать ID &amp;транзакции</translation>
     </message>
     <message>
-        <source>Copy amount</source>
-        <translation>Скопировать сумму</translation>
+        <source>Copy &amp;raw transaction</source>
+        <translation>Скопировать код тран&amp;закции</translation>
     </message>
     <message>
-        <source>Copy transaction ID</source>
-        <translation>Скопировать ID транзакции</translation>
+        <source>Copy full transaction &amp;details</source>
+        <translation>Скопировать все &amp;детали транзакции</translation>
     </message>
     <message>
-        <source>Copy raw transaction</source>
-        <translation>Скопировать код транзакции</translation>
+        <source>&amp;Show transaction details</source>
+        <translation>&amp;Показать подробности транзакции</translation>
     </message>
     <message>
-        <source>Copy full transaction details</source>
-        <translation>Скопировать все детали транзакции</translation>
+        <source>A&amp;bandon transaction</source>
+        <translation>С&amp;бросить транзакцию</translation>
     </message>
     <message>
-        <source>Edit address label</source>
-        <translation>Изменить метку адреса</translation>
+        <source>Rese&amp;nd transaction</source>
+        <translation>&amp;Отправить транзакцию еще раз</translation>
     </message>
     <message>
-        <source>Show transaction details</source>
-        <translation>Показать подробности транзакции</translation>
+        <source>&amp;Edit address label</source>
+        <translation>&amp;Изменить метку адреса</translation>
     </message>
     <message>
-        <source>Show address QR code</source>
-        <translation>Показать QR-код адреса</translation>
+        <source>Show address &amp;QR code</source>
+        <translation>Показать QR-&amp;код адреса</translation>
     </message>
     <message>
         <source>Export Transaction History</source>
@@ -4303,7 +4666,7 @@ https://explore.transifex.com/dash/dash/</translation>
     </message>
     <message>
         <source>Comma separated file</source>
-        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
         <translation>Текст, разделённый запятыми</translation>
     </message>
     <message>
@@ -4407,6 +4770,30 @@ Go to File &gt; Open Wallet to load a wallet.
         <source>Create a new wallet</source>
         <translation>Создать новый кошелёк</translation>
     </message>
+    <message>
+        <source>Error</source>
+        <translation>Ошибка</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT from clipboard (invalid base64)</source>
+        <translation>Невозможно декодировать PSBT из буфера обмена (некорректный base64)</translation>
+    </message>
+    <message>
+        <source>Load Transaction Data</source>
+        <translation>Загрузить данные транзакции</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (*.psbt)</source>
+        <translation>Частично подписанная транзакция (*.psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT file must be smaller than 100 MiB</source>
+        <translation>Файл PSBT должен быть меньше 100 МиБ</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT</source>
+        <translation>Невозможно декодировать PSBT</translation>
+    </message>
 </context>
 <context>
     <name>WalletModel</name>
@@ -4434,33 +4821,9 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Сумма выбранных:</translation>
     </message>
     <message>
-        <source>Unable to decode PSBT from clipboard (invalid base64)</source>
-        <translation>Невозможно декодировать PSBT из буфера обмена (некорректный base64)</translation>
-    </message>
-    <message>
-        <source>Load Transaction Data</source>
-        <translation>Загрузить данные транзакции</translation>
-    </message>
-    <message>
-        <source>Partially Signed Transaction (*.psbt)</source>
-        <translation>Частично подписанная транзакция (*.psbt)</translation>
-    </message>
-    <message>
-        <source>Unable to decode PSBT</source>
-        <translation>Невозможно декодировать PSBT</translation>
-    </message>
-    <message>
         <source>Wallet Data</source>
         <extracomment>Name of the wallet data file format.</extracomment>
         <translation>Данные кошелька</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Ошибка</translation>
-    </message>
-    <message>
-        <source>PSBT file must be smaller than 100 MiB</source>
-        <translation>Файл PSBT должен быть меньше 100 МиБ</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
@@ -4552,6 +4915,18 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Error reading from database, shutting down.</source>
         <translation>Ошибка чтения базы данных, завершение работы.</translation>
+    </message>
+    <message>
+        <source>Error: Missing checksum</source>
+        <translation>Ошибка: Отсутствует контрольная сумма</translation>
+    </message>
+    <message>
+        <source>Error: Unable to parse version %u as a uint32_t</source>
+        <translation>Ошибка: Не удалось проанализировать версию %u как uint32_t</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write record to new wallet</source>
+        <translation>Ошибка: не удалось импортировать данные в новый wallet.</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -4770,10 +5145,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Кошелек заблокирован, невозможно пополнить пул ключей! Автоматические резервные копии и перемешивание отключены. Пожалуйста, разблокируйте кошелек для пополнения пула ключей.</translation>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex to change -timestampindex</source>
-        <translation>Вам необходимо пересобрать базы данных с помощью -reindex, чтобы изменить -timestampindex</translation>
-    </message>
-    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>Вам необходимо пересоздать базы данных, запустив клиент с ключом -reindex, чтобы вернуться в полный режим. Это приведет к повторному скачиванию всей цепи блоков.</translation>
     </message>
@@ -4818,12 +5189,32 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Ошибка обновления базы данных evo</translation>
     </message>
     <message>
+        <source>Error: Couldn't create cursor into database</source>
+        <translation>Ошибка: Не удалось создать cursor в базе данных</translation>
+    </message>
+    <message>
         <source>Error: Disk space is low for %s</source>
         <translation>Ошибка: мало места на диске для %s</translation>
     </message>
     <message>
+        <source>Error: Dumpfile checksum does not match. Computed %s, expected %s</source>
+        <translation>Ошибка: Контрольная сумма файла дампа не совпадает. Вычисленный %s, ожидаемый %s</translation>
+    </message>
+    <message>
+        <source>Error: Got key that was not hex: %s</source>
+        <translation>Ошибка: Получен ключ, который не был HEX: %s</translation>
+    </message>
+    <message>
+        <source>Error: Got value that was not hex: %s</source>
+        <translation>Ошибка: Получено значение, которое не было HEX: %s</translation>
+    </message>
+    <message>
         <source>Error: Keypool ran out, please call keypoolrefill first</source>
         <translation>Ошибка: Не осталось ключей, пожалуйста, выполните команду keypoolrefill</translation>
+    </message>
+    <message>
+        <source>Error: No addresses available.</source>
+        <translation>Ошибка: Нет доступных адресов.</translation>
     </message>
     <message>
         <source>Exceeded max tries.</source>
@@ -4854,12 +5245,20 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Ошибка проверки базы данных</translation>
     </message>
     <message>
+        <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
+        <translation>Указанная комиссия (%s) ниже минимальной установленной комиссии (%s)</translation>
+    </message>
+    <message>
         <source>Found enough users, signing…</source>
         <translation>Найдено достаточное количество участников, подписываем…</translation>
     </message>
     <message>
         <source>Ignoring duplicate -wallet %s.</source>
         <translation>Игнорирование дублирования -wallet %s.</translation>
+    </message>
+    <message>
+        <source>Input not found or already spent</source>
+        <translation>Вход не найден или уже израсходован</translation>
     </message>
     <message>
         <source>Invalid P2P permission: '%s'</source>
@@ -4888,6 +5287,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Mixing in progress…</source>
         <translation>Выполняется перемешивание…</translation>
+    </message>
+    <message>
+        <source>No addresses available</source>
+        <translation>Нету доступных адресов</translation>
     </message>
     <message>
         <source>No errors detected.</source>
@@ -5002,6 +5405,14 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Не удалось сгенерировать начальные ключи</translation>
     </message>
     <message>
+        <source>Unable to open %s for writing</source>
+        <translation>Невозможно открыть %s для записи</translation>
+    </message>
+    <message>
+        <source>Unable to parse -maxuploadtarget: '%s' (possible integer overflow?)</source>
+        <translation>Невозможно пропарсить -maxuploadtarget: '%s' (возможно integer overflow?)</translation>
+    </message>
+    <message>
         <source>Unknown -blockfilterindex value %s.</source>
         <translation>Неизвестное значение -blockfilterindex %s.</translation>
     </message>
@@ -5038,14 +5449,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Вы не можете запустить мастерноду с включенным кошельком.</translation>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex to change -addressindex</source>
-        <translation>Вам необходимо пересобрать базы данных с помощью -reindex, чтобы изменить -addressindex</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -spentindex</source>
-        <translation>Вам необходимо пересобрать базы данных с помощью -reindex, чтобы изменить -spentindex</translation>
-    </message>
-    <message>
         <source>no mixing available.</source>
         <translation>перемешивание недоступно.</translation>
     </message>
@@ -5062,8 +5465,28 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>%s использует только номиналы, возможно, Вам просто нужно перемешать немного больше монет.</translation>
     </message>
     <message>
+        <source>-reindex-chainstate option is not compatible with -blockfilterindex. Please temporarily disable blockfilterindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
+        <translation>опция -reindex-chainstate несовместима с -blockfilterindex. Пожалуйста, временно отключите blockfilterindex при использовании -reindex-chainstate или замените -reindex-chainstate на -reindex для полного восстановления всех индексов.</translation>
+    </message>
+    <message>
+        <source>-reindex-chainstate option is not compatible with -coinstatsindex. Please temporarily disable coinstatsindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
+        <translation>Опция -reindex-chainstate несовместима с -coinstatsindex. Пожалуйста, временно отключите coinstatsindex при использовании -reindex-chainstate или замените -reindex-chainstate на -reindex для полного восстановления всех индексов.</translation>
+    </message>
+    <message>
+        <source>-reindex-chainstate option is not compatible with -txindex. Please temporarily disable txindex while using -reindex-chainstate, or replace -reindex-chainstate with -reindex to fully rebuild all indexes.</source>
+        <translation>Опция -reindex-chainstate несовместима с -txindex. Пожалуйста, временно отключите txindex при использовании -reindex-chainstate или замените -reindex-chainstate на -reindex для полного восстановления всех индексов.</translation>
+    </message>
+    <message>
+        <source>Cannot downgrade wallet from version %i to version %i. Wallet version unchanged.</source>
+        <translation>Невозможно понизить версию кошелька с %i до %i. Версия кошелька не изменена.</translation>
+    </message>
+    <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation>Не удалось установить блокировку на каталог данных %s. Возможно, %s уже запущен.</translation>
+    </message>
+    <message>
+        <source>Cannot upgrade a non HD wallet from version %i to version %i which is non-HD wallet. Use upgradetohd RPC</source>
+        <translation>Невозможно обновить не-HD кошелек с версии %i до версии %i, которая также является не-HD кошельком. Используйте команду upgradetohd RPC.</translation>
     </message>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
@@ -5074,12 +5497,64 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Ошибка загрузки %s: Вы не можете включить HD режим для существующего не-HD кошелька</translation>
     </message>
     <message>
+        <source>Error loading wallet. Wallet requires blocks to be downloaded, and software does not currently support loading wallets while blocks are being downloaded out of order when using assumeutxo snapshots. Wallet should be able to load successfully after node sync reaches height %s</source>
+        <translation>Ошибка загрузки кошелька. Для работы кошелька требуется загрузка блоков, а текущее программное обеспечение не поддерживает загрузку кошельков во время загрузки блоков вне порядка при использовании снимков assumeutxo. Кошелек должен успешно загрузиться после того, как синхронизация ноды достигнет высоты %s.</translation>
+    </message>
+    <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>Ошибка чтения %s! Все ключи прочитаны верно, но данные транзакций или записи адресной книги могут отсутствовать или быть неправильными.</translation>
     </message>
     <message>
+        <source>Error: Dumpfile format record is incorrect. Got "%s", expected "format".</source>
+        <translation>Ошибка: формат записи файла дампа некорректен. Получено: "%s", ожидалось: "format".</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile identifier record is incorrect. Got "%s", expected "%s".</source>
+        <translation>Ошибка: идентификатор записи файла дампа некорректен. Получено: "%s", ожидалось: "%s".</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
+        <translation>Ошибка: версия файла дампа не поддерживается. Эта версия bitcoin-wallet поддерживает только файлы дампа версии 1. Получен файл дампа версии %s.</translation>
+    </message>
+    <message>
+        <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
+        <translation>Не удалось переименовать некорректный файл peers.dat. Пожалуйста, переместите или удалите его и повторите попытку.</translation>
+    </message>
+    <message>
+        <source>File %s already exists. If you are sure this is what you want, move it out of the way first.</source>
+        <translation>Файл %s уже существует. Если вы уверены, что это необходимо, сначала переместите его в другое место.</translation>
+    </message>
+    <message>
+        <source>Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6</source>
+        <translation>Несовместимые параметры: указано -dnsseed=1, но параметр -onlynet запрещает подключения к IPv4/IPv6.</translation>
+    </message>
+    <message>
         <source>Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?</source>
         <translation>Неверный или отсутствующий начальный блок devnet. Неправильный каталог данных для devnet?</translation>
+    </message>
+    <message>
+        <source>Invalid or corrupt peers.dat (%s). If you believe this is a bug, please report it to %s. As a workaround, you can move the file (%s) out of the way (rename, move, or delete) to have a new one created on the next start.</source>
+        <translation>Некорректный или поврежденный файл peers.dat (%s). Если вы считаете, что это ошибка, пожалуйста, сообщите об этом на %s. В качестве временного решения вы можете переместить файл (%s) (переименовать, переместить или удалить), чтобы при следующем запуске был создан новый файл.</translation>
+    </message>
+    <message>
+        <source>No dump file provided. To use createfromdump, -dumpfile=&lt;filename&gt; must be provided.</source>
+        <translation>Файл дампа не указан. Для использования createfromdump необходимо указать -dumpfile=&lt;filename&gt;.</translation>
+    </message>
+    <message>
+        <source>No dump file provided. To use dump, -dumpfile=&lt;filename&gt; must be provided.</source>
+        <translation>Файл дампа не указан. Для использования команды dump необходимо задать параметр -dumpfile=&lt;filename&gt;.</translation>
+    </message>
+    <message>
+        <source>No wallet file format provided. To use createfromdump, -format=&lt;format&gt; must be provided.</source>
+        <translation>Формат файла кошелька не указан. Для использования команды createfromdump необходимо задать параметр -format=&lt;format&gt;.</translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is explicitly forbidden: -onion=0</source>
+        <translation>Исходящие подключения ограничены сетью Tor (-onlynet=onion), но прокси для подключения к сети Tor явно запрещен: -onion=0.</translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is not provided: none of -proxy, -onion or -listenonion is given</source>
+        <translation>Исходящие подключения ограничены сетью Tor (-onlynet=onion), но прокси для подключения к сети Tor не указан: отсутствуют параметры -proxy, -onion или -listenonion.</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
@@ -5088,6 +5563,22 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation>Пожалуйста, поддержите нас, если считаете %s полезным. Посетите %s для дополнительной информации.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead.</source>
+        <translation>Режим prune несовместим с параметром -reindex-chainstate. Используйте полный параметр -reindex вместо этого.</translation>
+    </message>
+    <message>
+        <source>The -txindex upgrade started by a previous version can not be completed. Restart with the previous version or run a full -reindex.</source>
+        <translation>Обновление -txindex, начатое предыдущей версией, не может быть завершено. Перезапустите с предыдущей версией или выполните полный -reindex.</translation>
+    </message>
+    <message>
+        <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
+        <translation>База данных индекса блоков содержит устаревший 'txindex'. Чтобы освободить занятое дисковое пространство, выполните полный -reindex, в противном случае игнорируйте эту ошибку. Это сообщение об ошибке больше не будет отображаться.</translation>
+    </message>
+    <message>
+        <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
+        <translation>Это максимальная комиссия за транзакцию, которую вы платите (в дополнение к обычной комиссии), чтобы отдать приоритет частичному избеганию траты монет по сравнению с обычным выбором монет.</translation>
     </message>
     <message>
         <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
@@ -5102,8 +5593,24 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Невозможно повторить блоки. Необходимо перестроить базы даных с помощью -reindex-chainstate.</translation>
     </message>
     <message>
+        <source>Unknown wallet file format "%s" provided. Please provide one of "bdb" or "sqlite".</source>
+        <translation>Указан неизвестный формат файла кошелька "%s". Пожалуйста, укажите один из следующих: "bdb" или "sqlite".</translation>
+    </message>
+    <message>
+        <source>Warning: Dumpfile wallet format "%s" does not match command line specified format "%s".</source>
+        <translation>Предупреждение: формат кошелька в файле дампа "%s" не соответствует указанному в командной строке формату "%s".</translation>
+    </message>
+    <message>
         <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
         <translation>Внимание: Закрытые ключи обнаружены в кошельке {%s} с отключенными закрытыми ключами</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to enable -timestampindex</source>
+        <translation>Для включения параметра -timestampindex необходимо перестроить базу данных с использованием параметра -reindex.</translation>
+    </message>
+    <message>
+        <source>%s -- Incorrect seed, it should be a hex string</source>
+        <translation>%s — Некорректный seed, он должен быть строкой в HEX формате.</translation>
     </message>
     <message>
         <source>%s is not a valid backup folder!</source>
@@ -5154,6 +5661,14 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Слишком мало места на диске!</translation>
     </message>
     <message>
+        <source>Dump file %s does not exist.</source>
+        <translation>Файл %s дампа не существует.</translation>
+    </message>
+    <message>
+        <source>Error creating %s</source>
+        <translation>Ошибка при создании %s.</translation>
+    </message>
+    <message>
         <source>Error loading %s</source>
         <translation>Ошибка при загрузке %s</translation>
     </message>
@@ -5168,6 +5683,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
         <translation>Ошибка загрузки %s: Вы не можете отключить HD режим для существующего HD кошелька</translation>
+    </message>
+    <message>
+        <source>Error reading next record from wallet database</source>
+        <translation>Ошибка чтения следующей записи из базы данных кошелька.</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
@@ -5266,10 +5785,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>В -sporkaddr указан некорректный адрес</translation>
     </message>
     <message>
-        <source>Prune mode is incompatible with -coinstatsindex.</source>
-        <translation>Режим удаления блоков несовместим с -coinstatsindex.</translation>
-    </message>
-    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Настройка -maxconnections снижена с %d до %d из-за ограничений системы.</translation>
     </message>
@@ -5366,10 +5881,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Неподдерживаемая категория отладочной информации %s=%s.</translation>
     </message>
     <message>
-        <source>Upgrading txindex database</source>
-        <translation>Обновление базы txindex</translation>
-    </message>
-    <message>
         <source>Very low number of keys left: %d</source>
         <translation>Осталось очень мало ключей: %d</translation>
     </message>
@@ -5398,8 +5909,24 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Вы не можете отключить проверку данных управления на мастерноде.</translation>
     </message>
     <message>
+        <source>You need to rebuild the database using -reindex to enable -addressindex</source>
+        <translation>Вам необходимо перестроить базы данных с помощью -reindex, чтобы включить -addressindex</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to enable -spentindex</source>
+        <translation>Вам необходимо перестроить базы данных с помощью -reindex, чтобы включить -spentindex</translation>
+    </message>
+    <message>
         <source>Your entries added successfully.</source>
         <translation>Ваши записи успешно добавлены.</translation>
+    </message>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation>Не удалось прочитать файл настроек.</translation>
+    </message>
+    <message>
+        <source>Settings file could not be written</source>
+        <translation>Не удалось записать файл настроек.</translation>
     </message>
 </context>
 </TS>
