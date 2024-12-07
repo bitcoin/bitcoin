@@ -14,6 +14,12 @@
 #include <string>
 #include <vector>
 
+template <typename... Args>
+void fuzz_fmt(const std::string& fmt, const Args&... args)
+{
+    (void)tfm::format(tfm::RuntimeFormat{fmt}, args...);
+}
+
 FUZZ_TARGET(str_printf)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
@@ -51,22 +57,22 @@ FUZZ_TARGET(str_printf)
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeRandomLengthString(32));
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeRandomLengthString(32));
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeRandomLengthString(32).c_str());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeRandomLengthString(32).c_str());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<signed char>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeIntegral<signed char>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<unsigned char>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeIntegral<unsigned char>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<char>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeIntegral<char>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeBool());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeBool());
             });
     } catch (const tinyformat::format_error&) {
     }
@@ -91,28 +97,28 @@ FUZZ_TARGET(str_printf)
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeFloatingPoint<float>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeFloatingPoint<float>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeFloatingPoint<double>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeFloatingPoint<double>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<int16_t>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeIntegral<int16_t>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<uint16_t>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeIntegral<uint16_t>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<int32_t>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeIntegral<int32_t>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<uint32_t>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeIntegral<uint32_t>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<int64_t>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeIntegral<int64_t>());
             },
             [&] {
-                (void)strprintf(format_string, fuzzed_data_provider.ConsumeIntegral<uint64_t>());
+                fuzz_fmt(format_string, fuzzed_data_provider.ConsumeIntegral<uint64_t>());
             });
     } catch (const tinyformat::format_error&) {
     }
