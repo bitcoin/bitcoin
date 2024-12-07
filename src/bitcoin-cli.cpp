@@ -47,7 +47,6 @@
 // trivial to get the mocked time from the server, nor is it needed for now, so
 // just use a plain system_clock.
 using CliClock = std::chrono::system_clock;
-using CliSeconds = std::chrono::time_point<CliClock, std::chrono::seconds>;
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = urlDecode;
@@ -491,7 +490,7 @@ public:
         if (networkinfo["version"].get_int() < 200000) {
             throw std::runtime_error("-netinfo requires dashd server to be running v20.0 and up");
         }
-        const int64_t time_now{count_seconds(Now<CliSeconds>())};
+        const int64_t time_now{TicksSinceEpoch<std::chrono::seconds>(CliClock::now())};
 
         // Count peer connection totals, and if DetailsRequested(), store peer data in a vector of structs.
         for (const UniValue& peer : batch[ID_PEERINFO]["result"].getValues()) {
