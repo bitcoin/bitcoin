@@ -102,6 +102,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         # Reload to force write that record
         self.old_node.unloadwallet(wallet_name)
         self.old_node.loadwallet(wallet_name)
+        assert_equal(self.old_node.get_wallet_rpc(wallet_name).getwalletinfo()["descriptors"], False)
         # Now unload so we can copy it to the master node for the migration test
         self.old_node.unloadwallet(wallet_name)
         if wallet_name == "":
@@ -111,7 +112,10 @@ class WalletMigrationTest(BitcoinTestFramework):
         # Migrate, checking that rescan does not occur
         with self.master_node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Rescanning"]):
             migrate_info = self.master_node.migratewallet(wallet_name=wallet_name, **kwargs)
-        return migrate_info, self.master_node.get_wallet_rpc(wallet_name)
+        wallet = self.master_node.get_wallet_rpc(wallet_name)
+        assert_equal(wallet.getwalletinfo()["descriptors"], True)
+        self.assert_is_sqlite(wallet_name)
+        return migrate_info, wallet
 
     def test_basic(self):
         default = self.master_node.get_wallet_rpc(self.default_wallet_name)
@@ -131,10 +135,6 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         # Note: migration could take a while.
         _, basic0 = self.migrate_and_get_rpc("basic0")
-
-        # Verify created descriptors
-        assert_equal(basic0.getwalletinfo()["descriptors"], True)
-        self.assert_is_sqlite("basic0")
 
         # The wallet should create the following descriptors:
         # * BIP32 descriptors in the form of "0h/0h/*" and "0h/1h/*" (2 descriptors)
@@ -172,8 +172,6 @@ class WalletMigrationTest(BitcoinTestFramework):
         addr_gps = basic1.listaddressgroupings()
 
         basic1_migrate, basic1 = self.migrate_and_get_rpc("basic1")
-        assert_equal(basic1.getwalletinfo()["descriptors"], True)
-        self.assert_is_sqlite("basic1")
         assert_equal(basic1.getbalance(), bal)
         self.assert_list_txs_equal(basic1.listtransactions(), txs)
 
@@ -191,8 +189,6 @@ class WalletMigrationTest(BitcoinTestFramework):
         default = self.master_node.get_wallet_rpc(self.default_wallet_name)
         self.master_node.loadwallet("basic1")
         basic1 = self.master_node.get_wallet_rpc("basic1")
-        assert_equal(basic1.getwalletinfo()["descriptors"], True)
-        self.assert_is_sqlite("basic1")
         assert_equal(basic1.getbalance(), bal)
         self.assert_list_txs_equal(basic1.listtransactions(), txs)
 
@@ -214,8 +210,6 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         # Now migrate and test that we still have the same balance/transactions
         _, basic2 = self.migrate_and_get_rpc("basic2")
-        assert_equal(basic2.getwalletinfo()["descriptors"], True)
-        self.assert_is_sqlite("basic2")
         assert_equal(basic2.getbalance(), basic2_balance)
         self.assert_list_txs_equal(basic2.listtransactions(), basic2_txs)
 
@@ -240,8 +234,6 @@ class WalletMigrationTest(BitcoinTestFramework):
         ms_info = multisig0.addmultisigaddress(2, [addr1, addr2, addr3])
 
         _, multisig0 = self.migrate_and_get_rpc("multisig0")
-        assert_equal(multisig0.getwalletinfo()["descriptors"], True)
-        self.assert_is_sqlite("multisig0")
         ms_addr_info = multisig0.getaddressinfo(ms_info["address"])
         assert_equal(ms_addr_info["ismine"], True)
         assert_equal(ms_addr_info["desc"], ms_info["descriptor"])
@@ -275,8 +267,6 @@ class WalletMigrationTest(BitcoinTestFramework):
         # A new wallet multisig1_watchonly is created which has the multisig address
         # Transaction to multisig is in multisig1_watchonly and not multisig1
         _, multisig1 = self.migrate_and_get_rpc("multisig1")
-        assert_equal(multisig1.getwalletinfo()["descriptors"], True)
-        self.assert_is_sqlite("multisig1")
         assert_equal(multisig1.getaddressinfo(addr1)["ismine"], False)
         assert_equal(multisig1.getaddressinfo(addr1)["iswatchonly"], False)
         assert_equal(multisig1.getaddressinfo(addr1)["solvable"], False)
@@ -361,8 +351,6 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         # Migrate
         _, imports0 = self.migrate_and_get_rpc("imports0")
-        assert_equal(imports0.getwalletinfo()["descriptors"], True)
-        self.assert_is_sqlite("imports0")
         assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", imports0.gettransaction, received_watchonly_txid)
         assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", imports0.gettransaction, received_sent_watchonly_utxo['txid'])
         assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", imports0.gettransaction, sent_watchonly_txid)
@@ -918,7 +906,6 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(wallet.getwalletinfo()["blank"], True)
         _, wallet = self.migrate_and_get_rpc("blank")
         assert_equal(wallet.getwalletinfo()["blank"], True)
-        assert_equal(wallet.getwalletinfo()["descriptors"], True)
 
     def test_avoidreuse(self):
         self.log.info("Test that avoidreuse persists after migration")
