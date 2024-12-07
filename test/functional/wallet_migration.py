@@ -102,6 +102,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         # Reload to force write that record
         self.old_node.unloadwallet(wallet_name)
         self.old_node.loadwallet(wallet_name)
+        assert_equal(self.old_node.get_wallet_rpc(wallet_name).getwalletinfo()["descriptors"], False)
         # Now unload so we can copy it to the master node for the migration test
         self.old_node.unloadwallet(wallet_name)
         if wallet_name == "":
@@ -111,7 +112,9 @@ class WalletMigrationTest(BitcoinTestFramework):
         # Migrate, checking that rescan does not occur
         with self.master_node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Rescanning"]):
             migrate_info = self.master_node.migratewallet(wallet_name=wallet_name, **kwargs)
-        return migrate_info, self.master_node.get_wallet_rpc(wallet_name)
+        rpc = self.master_node.get_wallet_rpc(wallet_name)
+        assert_equal(rpc.getwalletinfo()["descriptors"], True)
+        return migrate_info, rpc
 
     def test_basic(self):
         default = self.master_node.get_wallet_rpc(self.default_wallet_name)
