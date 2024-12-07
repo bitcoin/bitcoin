@@ -103,7 +103,7 @@ bilingual_str format(util::BilingualFmt<sizeof...(Args)> fmt, const Args&... arg
         }
     }};
     return bilingual_str{tfm::format(fmt.original, original_arg(args)...),
-                         tfm::format(std::string{fmt.lit}, translate_arg(args)...)};
+                         tfm::format(RuntimeFormat{std::string{fmt.lit}}, translate_arg(args)...)};
 }
 } // namespace tinyformat
 
