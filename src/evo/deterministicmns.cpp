@@ -21,7 +21,7 @@
 #include <univalue.h>
 #include <messagesigner.h>
 #include <uint256.h>
-#include <statsd_client.h>
+#include <stats/client.h>
 
 #include <optional>
 #include <memory>
@@ -650,14 +650,14 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<co
         updatesRet = {newList, oldList, diff};
     }
 
-    statsClient.gauge("masternodes.count", newList.GetAllMNsCount());
-    statsClient.gauge("masternodes.weighted_count", newList.GetValidWeightedMNsCount());
-    statsClient.gauge("masternodes.enabled", newList.GetValidMNsCount());
-    statsClient.gauge("masternodes.weighted_enabled", newList.GetValidWeightedMNsCount());
-    statsClient.gauge("masternodes.evo.count", newList.GetAllEvoCount());
-    statsClient.gauge("masternodes.evo.enabled", newList.GetValidEvoCount());
-    statsClient.gauge("masternodes.mn.count", newList.GetAllMNsCount() - newList.GetAllEvoCount());
-    statsClient.gauge("masternodes.mn.enabled", newList.GetValidMNsCount() - newList.GetValidEvoCount());
+    ::g_stats_client->gauge("masternodes.count", newList.GetAllMNsCount());
+    ::g_stats_client->gauge("masternodes.weighted_count", newList.GetValidWeightedMNsCount());
+    ::g_stats_client->gauge("masternodes.enabled", newList.GetValidMNsCount());
+    ::g_stats_client->gauge("masternodes.weighted_enabled", newList.GetValidWeightedMNsCount());
+    ::g_stats_client->gauge("masternodes.evo.count", newList.GetAllEvoCount());
+    ::g_stats_client->gauge("masternodes.evo.enabled", newList.GetValidEvoCount());
+    ::g_stats_client->gauge("masternodes.mn.count", newList.GetAllMNsCount() - newList.GetAllEvoCount());
+    ::g_stats_client->gauge("masternodes.mn.enabled", newList.GetValidMNsCount() - newList.GetValidEvoCount());
 
     if (nHeight == consensusParams.DIP0003EnforcementHeight) {
         if (!consensusParams.DIP0003EnforcementHash.IsNull() && consensusParams.DIP0003EnforcementHash != pindex->GetBlockHash()) {

@@ -2968,12 +2968,12 @@ bool CChainState::DisconnectTip(BlockValidationState& state, DisconnectedBlockTr
     for (const auto& tx : block.vtx) {
         nSigOps += GetLegacySigOpCount(*tx);
     }
-    statsClient.timing("DisconnectTip_ms", (nTime2 - nTime1) / 1000, 1.0f);
-    statsClient.gauge("blocks.tip.SizeBytes", ::GetSerializeSize(block, PROTOCOL_VERSION), 1.0f);
-    statsClient.gauge("blocks.tip.Height", m_chain.Height(), 1.0f);
-    statsClient.gauge("blocks.tip.Version", block.nVersion, 1.0f);
-    statsClient.gauge("blocks.tip.NumTransactions", block.vtx.size(), 1.0f);
-    statsClient.gauge("blocks.tip.SigOps", nSigOps, 1.0f);
+    ::g_stats_client->timing("DisconnectTip_ms", (nTime2 - nTime1) / 1000, 1.0f);
+    ::g_stats_client->gauge("blocks.tip.SizeBytes", ::GetSerializeSize(block, PROTOCOL_VERSION), 1.0f);
+    ::g_stats_client->gauge("blocks.tip.Height", m_chain.Height(), 1.0f);
+    ::g_stats_client->gauge("blocks.tip.Version", block.nVersion, 1.0f);
+    ::g_stats_client->gauge("blocks.tip.NumTransactions", block.vtx.size(), 1.0f);
+    ::g_stats_client->gauge("blocks.tip.SigOps", nSigOps, 1.0f);
     return true;
 }
 

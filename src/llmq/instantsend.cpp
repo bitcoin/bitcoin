@@ -23,7 +23,7 @@
 #include <util/ranges.h>
 #include <util/thread.h>
 #include <validation.h>
-#include <statsd_client.h>
+#include <stats/client.h>
 
 #include <cxxtimer.hpp>
 
@@ -784,7 +784,7 @@ PeerMsgRet CInstantSendManager::ProcessMessageInstantSendLock(const CNode& pfrom
         // But if we received the islock and don't know when we got the tx, then say 0, to indicate we received the islock first.
         return 0;
     }();
-    statsClient.timing("islock_ms", time_diff);
+    ::g_stats_client->timing("islock_ms", time_diff);
 
     LOCK(cs_pendingLocks);
     pendingInstantSendLocks.emplace(hash, std::make_pair(pfrom.GetId(), islock));
