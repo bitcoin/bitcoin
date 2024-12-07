@@ -91,7 +91,7 @@ bilingual_str format(util::BilingualFmt<sizeof...(Args)> fmt, const Args&... arg
         }
     }};
     return bilingual_str{tfm::format(fmt.original, translate_arg(args, false)...),
-                         tfm::format(util::translate(fmt.original.fmt), translate_arg(args, true)...)};
+                         tfm::format(RuntimeFormat{util::translate(fmt.original.fmt)}, translate_arg(args, true)...)};
 }
 } // namespace tinyformat
 
