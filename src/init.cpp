@@ -866,10 +866,12 @@ static void PeriodicStats(NodeContext& node)
         return workDiff.getdouble() / timeDiff;
     }();
 
-    ::g_stats_client->gaugeDouble("network.hashesPerSecond", nNetworkHashPS);
-    ::g_stats_client->gaugeDouble("network.terahashesPerSecond", nNetworkHashPS / 1e12);
-    ::g_stats_client->gaugeDouble("network.petahashesPerSecond", nNetworkHashPS / 1e15);
-    ::g_stats_client->gaugeDouble("network.exahashesPerSecond", nNetworkHashPS / 1e18);
+    if (nNetworkHashPS > 0.0) {
+        ::g_stats_client->gaugeDouble("network.hashesPerSecond", nNetworkHashPS);
+        ::g_stats_client->gaugeDouble("network.terahashesPerSecond", nNetworkHashPS / 1e12);
+        ::g_stats_client->gaugeDouble("network.petahashesPerSecond", nNetworkHashPS / 1e15);
+        ::g_stats_client->gaugeDouble("network.exahashesPerSecond", nNetworkHashPS / 1e18);
+    }
     // No need for cs_main, we never use null tip here
     ::g_stats_client->gaugeDouble("network.difficulty", (double)GetDifficulty(tip));
 
