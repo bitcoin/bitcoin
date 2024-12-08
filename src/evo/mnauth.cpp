@@ -7,7 +7,6 @@
 #include <bls/bls.h>
 #include <chain.h>
 #include <chainparams.h>
-#include <deploymentstatus.h>
 #include <evo/deterministicmns.h>
 #include <llmq/utils.h>
 #include <masternode/meta.h>
@@ -19,8 +18,7 @@
 #include <util/time.h>
 #include <validation.h>
 
-void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CActiveMasternodeManager& mn_activeman,
-                         const CBlockIndex* tip)
+void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CActiveMasternodeManager& mn_activeman)
 {
     CMNAuth mnauth;
     if (mn_activeman.GetProTxHash().IsNull()) {
@@ -41,9 +39,8 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CActiveMasternode
     if (Params().NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
         nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
     }
-    const bool is_basic_scheme_active{DeploymentActiveAfter(tip, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
     auto pk = mn_activeman.GetPubKey();
-    const CBLSPublicKeyVersionWrapper pubKey(pk, !is_basic_scheme_active);
+    const CBLSPublicKey pubKey(pk);
     uint256 signHash = [&]() {
         if (peer.nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
             return ::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, peer.IsInboundConn()));
@@ -61,7 +58,7 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CActiveMasternode
 }
 
 PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, ServiceFlags node_services, CConnman& connman, CMasternodeMetaMan& mn_metaman, const CActiveMasternodeManager* const mn_activeman,
-                                   const CChain& active_chain, const CMasternodeSync& mn_sync, const CDeterministicMNList& tip_mn_list,
+                                   const CMasternodeSync& mn_sync, const CDeterministicMNList& tip_mn_list,
                                    std::string_view msg_type, CDataStream& vRecv)
 {
     assert(mn_metaman.IsValid());
@@ -106,9 +103,7 @@ PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, ServiceFlags node_services, CCon
     if (Params().NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
         nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
     }
-    const CBlockIndex* tip = active_chain.Tip();
-    const bool is_basic_scheme_active{DeploymentActiveAfter(tip, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
-    ConstCBLSPublicKeyVersionWrapper pubKey(dmn->pdmnState->pubKeyOperator.Get(), !is_basic_scheme_active);
+    const CBLSPublicKey pubKey(dmn->pdmnState->pubKeyOperator.Get());
     // See comment in PushMNAUTH (fInbound is negated here as we're on the other side of the connection)
     if (peer.nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
         signHash = ::SerializeHash(std::make_tuple(pubKey, peer.GetSentMNAuthChallenge(), !peer.IsInboundConn()));
