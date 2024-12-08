@@ -179,13 +179,19 @@ namespace tfm = tinyformat;
 
 namespace tinyformat {
 
+// Similar to std::runtime_format from C++26.
+struct RuntimeFormat {
+    explicit RuntimeFormat(std::string str) : fmt{std::move(str)} {}
+    std::string fmt;
+};
+
 // Added for Bitcoin Core. Wrapper for checking format strings at compile time.
 // Unlike ConstevalFormatString this supports std::string for runtime string
 // formatting without compile time checks.
 template <unsigned num_params>
 struct FormatStringCheck {
     consteval FormatStringCheck(const char* str) : fmt{util::ConstevalFormatString<num_params>{str}.fmt} {}
-    FormatStringCheck(const std::string& str) : fmt{str.c_str()} {}
+    FormatStringCheck(const RuntimeFormat& run) : fmt{run.fmt.c_str()} {}
     FormatStringCheck(util::ConstevalFormatString<num_params> str) : fmt{str.fmt} {}
     operator const char*() { return fmt; }
     const char* fmt;
