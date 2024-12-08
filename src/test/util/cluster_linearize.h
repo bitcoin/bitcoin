@@ -23,18 +23,6 @@ using namespace cluster_linearize;
 
 using TestBitSet = BitSet<32>;
 
-/** Check if a graph is acyclic. */
-template<typename SetType>
-bool IsAcyclic(const DepGraph<SetType>& depgraph) noexcept
-{
-    for (ClusterIndex i : depgraph.Positions()) {
-        if ((depgraph.Ancestors(i) & depgraph.Descendants(i)) != SetType::Singleton(i)) {
-            return false;
-        }
-    }
-    return true;
-}
-
 /** A formatter for a bespoke serialization for acyclic DepGraph objects.
  *
  * The serialization format outputs information about transactions in a topological order (parents
@@ -337,7 +325,7 @@ void SanityCheck(const DepGraph<SetType>& depgraph)
             assert((depgraph.Descendants(child) & children).IsSubsetOf(SetType::Singleton(child)));
         }
     }
-    if (IsAcyclic(depgraph)) {
+    if (depgraph.IsAcyclic()) {
         // If DepGraph is acyclic, serialize + deserialize must roundtrip.
         std::vector<unsigned char> ser;
         VectorWriter writer(ser, 0);
