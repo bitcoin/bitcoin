@@ -1,10 +1,31 @@
+
 package=boost
-$(package)_version=1.81.0
-$(package)_download_path=https://archives.boost.io/release/$($(package)_version)/source/
-$(package)_file_name=boost_$(subst .,_,$($(package)_version)).tar.gz
-$(package)_sha256_hash=205666dea9f6a7cfed87c7a6dfbeb52a2c1b9de55712c9c1a87735d7181452b6
+$(package)_version=1.86.0
+$(package)_download_path=https://github.com/boostorg/boost/releases/download/boost-$($(package)_version)
+$(package)_file_name=boost-$($(package)_version)-cmake.tar.gz
+$(package)_sha256_hash=c62ce6e64d34414864fef946363db91cea89c1b90360eabed0515f0eda74c75c
+$(package)_build_subdir=build
+
+# This compiles a few libs unnecessarily because date_time and test don't have
+# header-only build/install options
+
+define $(package)_set_vars
+  $(package)_config_opts=-DBOOST_INCLUDE_LIBRARIES="date_time;multi_index;signals2;test" -DBOOST_INSTALL_LAYOUT=system
+  $(package)_config_opts_darwin=-DCMAKE_PLATFORM_HAS_INSTALLNAME="FALSE"
+endef
+
+define $(package)_config_cmds
+  $($(package)_cmake) -S .. -B .
+endef
+
+define $(package)_build_cmds
+  $(MAKE)
+endef
 
 define $(package)_stage_cmds
-  mkdir -p $($(package)_staging_prefix_dir)/include && \
-  cp -r boost $($(package)_staging_prefix_dir)/include
+  $(MAKE) DESTDIR=$($(package)_staging_dir) install
+endef
+
+define $(package)_postprocess_cmds
+  rm -rf lib/libboost*
 endef
