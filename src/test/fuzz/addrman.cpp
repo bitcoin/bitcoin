@@ -7,6 +7,7 @@
 #include <addrman_impl.h>
 #include <chainparams.h>
 #include <common/args.h>
+#include <init_settings.h>
 #include <merkleblock.h>
 #include <random.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -29,7 +30,7 @@ const BasicTestingSetup* g_setup;
 
 int32_t GetCheckRatio()
 {
-    return std::clamp<int32_t>(g_setup->m_node.args->GetIntArg("-checkaddrman", 0), 0, 1000000);
+    return std::clamp<int32_t>(CheckaddrmanSetting::Get(*g_setup->m_node.args, 0), 0, 1000000);
 }
 } // namespace
 

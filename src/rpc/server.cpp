@@ -9,6 +9,7 @@
 
 #include <common/args.h>
 #include <common/system.h>
+#include <init_settings.h>
 #include <logging.h>
 #include <node/context.h>
 #include <node/kernel_notifications.h>
@@ -340,7 +341,7 @@ bool RPCIsInWarmup(std::string *outStatus)
 
 bool IsDeprecatedRPCEnabled(const std::string& method)
 {
-    const std::vector<std::string> enabled_methods = gArgs.GetArgs("-deprecatedrpc");
+    const std::vector<std::string> enabled_methods = DeprecatedrpcSetting::Get(gArgs);
 
     return find(enabled_methods.begin(), enabled_methods.end(), method) != enabled_methods.end();
 }

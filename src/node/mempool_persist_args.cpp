@@ -5,6 +5,7 @@
 #include <node/mempool_persist_args.h>
 
 #include <common/args.h>
+#include <init_settings.h>
 #include <util/fs.h>
 #include <validation.h>
 
@@ -12,7 +13,7 @@ namespace node {
 
 bool ShouldPersistMempool(const ArgsManager& argsman)
 {
-    return argsman.GetBoolArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL);
+    return PersistmempoolSetting::Get(argsman);
 }
 
 fs::path MempoolPath(const ArgsManager& argsman)

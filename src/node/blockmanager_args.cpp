@@ -5,6 +5,7 @@
 #include <node/blockmanager_args.h>
 
 #include <common/args.h>
+#include <init_settings.h>
 #include <node/blockstorage.h>
 #include <tinyformat.h>
 #include <util/result.h>
@@ -16,9 +17,9 @@
 namespace node {
 util::Result<void> ApplyArgsManOptions(const ArgsManager& args, BlockManager::Options& opts)
 {
-    if (auto value{args.GetBoolArg("-blocksxor")}) opts.use_xor = *value;
+    if (auto value{BlocksxorSetting::Get(args)}) opts.use_xor = *value;
     // block pruning; get the amount of disk space (in MiB) to allot for block & undo files
-    int64_t nPruneArg{args.GetIntArg("-prune", opts.prune_target)};
+    int64_t nPruneArg{PruneSetting::Get(args, opts.prune_target)};
     if (nPruneArg < 0) {
         return util::Error{_("Prune cannot be configured with a negative value.")};
     }
@@ -32,7 +33,7 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, BlockManager::Op
     }
     opts.prune_target = nPruneTarget;
 
-    if (auto value{args.GetBoolArg("-fastprune")}) opts.fast_prune = *value;
+    if (auto value{FastpruneSetting::Get(args)}) opts.fast_prune = *value;
 
     return {};
 }

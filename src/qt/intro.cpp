@@ -5,6 +5,8 @@
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <chainparams.h>
+#include <init_settings.h>
+#include <qt/bitcoin_settings.h>
 #include <qt/intro.h>
 #include <qt/forms/ui_intro.h>
 #include <util/chaintype.h>
@@ -113,7 +115,7 @@ namespace {
 //! Return pruning size that will be used if automatic pruning is enabled.
 int GetPruneTargetGB()
 {
-    int64_t prune_target_mib = gArgs.GetIntArg("-prune", 0);
+    int64_t prune_target_mib = PruneSetting::Get(gArgs, 0);
     // >1 means automatic pruning is enabled by config, 1 means manual pruning, 0 means no pruning.
     return prune_target_mib > 1 ? PruneMiBtoGB(prune_target_mib) : DEFAULT_PRUNE_TARGET_GB;
 }
@@ -140,9 +142,9 @@ Intro::Intro(QWidget *parent, int64_t blockchain_size_gb, int64_t chain_state_si
 
     const int min_prune_target_GB = std::ceil(MIN_DISK_SPACE_FOR_BLOCK_FILES / 1e9);
     ui->pruneGB->setRange(min_prune_target_GB, std::numeric_limits<int>::max());
-    if (gArgs.IsArgSet("-prune")) {
+    if (!PruneSetting::Value(gArgs).isNull()) {
         m_prune_checkbox_is_default = false;
-        ui->prune->setChecked(gArgs.GetIntArg("-prune", 0) >= 1);
+        ui->prune->setChecked(PruneSetting::Get(gArgs, 0) >= 1);
         ui->prune->setEnabled(false);
     }
     ui->pruneGB->setValue(m_prune_target_gb);
@@ -209,14 +211,14 @@ bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
     QSettings settings;
     /* If data directory provided on command line, no need to look at settings
        or show a picking dialog */
-    if(!gArgs.GetArg("-datadir", "").empty())
+    if(!DatadirSetting::Get(gArgs).empty())
         return true;
     /* 1) Default data directory for operating system */
     QString dataDir = GUIUtil::getDefaultDataDirectory();
     /* 2) Allow QSettings to override default dir */
     dataDir = settings.value("strDataDir", dataDir).toString();
 
-    if(!fs::exists(GUIUtil::QStringToPath(dataDir)) || gArgs.GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR) || settings.value("fReset", false).toBool() || gArgs.GetBoolArg("-resetguisettings", false))
+    if(!fs::exists(GUIUtil::QStringToPath(dataDir)) || ChoosedatadirSetting::Get(gArgs) || settings.value("fReset", false).toBool() || ResetguisettingsSetting::Get(gArgs))
     {
         /* Use selectParams here to guarantee Params() can be used by node interface */
         try {
