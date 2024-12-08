@@ -8,6 +8,7 @@
 #include <util/fs.h>
 
 #include <cstdint>
+#include <span>
 #include <vector>
 
 uint32_t Interpret(const std::vector<bool> &asmap, const std::vector<bool> &ip);
@@ -16,5 +17,7 @@ bool SanityCheckASMap(const std::vector<bool>& asmap, int bits);
 
 /** Read asmap from provided binary file */
 std::vector<bool> DecodeAsmap(fs::path path);
+/** Read asmap from embedded data */
+std::vector<bool> DecodeAsmap(const std::span<const std::byte> data);
 
 #endif // BITCOIN_UTIL_ASMAP_H
