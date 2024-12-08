@@ -320,11 +320,13 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   endif()
 endif()
 
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Generic")
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 target_link_libraries(core_interface INTERFACE
   Threads::Threads
 )
+endif()
 
 add_library(sanitize_interface INTERFACE)
 target_link_libraries(core_interface INTERFACE sanitize_interface)
@@ -372,8 +374,10 @@ if(BUILD_FUZZ_BINARY)
   )
 endif()
 
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Generic")
 include(AddBoostIfNeeded)
 add_boost_if_needed()
+endif()
 
 if(BUILD_DAEMON OR BUILD_GUI OR BUILD_CLI OR BUILD_TESTS OR BUILD_BENCH OR BUILD_FUZZ_BINARY)
   find_package(Libevent 2.1.8 MODULE REQUIRED)
