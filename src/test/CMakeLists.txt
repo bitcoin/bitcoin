@@ -148,6 +148,7 @@ add_executable(test_bitcoin
 
 target_link_libraries(test_bitcoin
   core_interface
+  coverage_interface
   test_util
   bitcoin_cli
   bitcoin_node
@@ -165,6 +166,7 @@ if(WITH_MULTIPROCESS)
   target_link_libraries(bitcoin_ipc_test
     PRIVATE
       core_interface
+      coverage_interface
       univalue
   )
 

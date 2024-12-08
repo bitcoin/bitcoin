@@ -13,6 +13,7 @@ add_library(test_fuzz STATIC EXCLUDE_FROM_ALL
 target_link_libraries(test_fuzz
   PRIVATE
     core_interface
+    coverage_interface
     test_util
     bitcoin_node
     Boost::headers
