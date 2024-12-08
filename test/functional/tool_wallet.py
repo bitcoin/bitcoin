@@ -12,7 +12,10 @@ import textwrap
 
 from collections import OrderedDict
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import (
+    BitcoinEnv,
+    BitcoinTestFramework,
+)
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -44,7 +47,7 @@ class ToolWalletTest(BitcoinTestFramework):
         if "dump" in args and self.options.bdbro:
             default_args.append("-withinternalbdb")
 
-        return subprocess.Popen([self.options.bitcoinwallet] + default_args + list(args), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        return subprocess.Popen(BitcoinEnv(self.paths).wallet_args() + default_args + list(args), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
     def assert_raises_tool_error(self, error, *args):
         p = self.bitcoin_wallet_process(*args)
