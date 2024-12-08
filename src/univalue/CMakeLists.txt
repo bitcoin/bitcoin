@@ -16,10 +16,6 @@ target_link_libraries(univalue PRIVATE core_interface)
 
 if(BUILD_TESTS)
   add_executable(unitester test/unitester.cpp)
-  target_compile_definitions(unitester
-    PRIVATE
-      JSON_TEST_SRC=\"${CMAKE_CURRENT_SOURCE_DIR}/test\"
-  )
   target_link_libraries(unitester
     PRIVATE
       core_interface
@@ -27,6 +23,9 @@ if(BUILD_TESTS)
   )
   add_test(NAME univalue_test
     COMMAND unitester
+  )
+  set_property(TEST univalue_test PROPERTY
+    ENVIRONMENT_MODIFICATION UNIVALUE_JSON_TEST_SRC=set:${CMAKE_CURRENT_SOURCE_DIR}/test
   )
 
   add_executable(object test/object.cpp)
