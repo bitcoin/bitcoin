@@ -209,7 +209,6 @@ $(host_prefix)/toolchain.cmake : toolchain.cmake.in $(host_prefix)/.stamp_$(fina
             -e 's|@STRIP@|$(host_STRIP)|' \
             -e 's|@OBJCOPY@|$(host_OBJCOPY)|' \
             -e 's|@OBJDUMP@|$(host_OBJDUMP)|' \
-            -e 's|@depends_prefix@|$(host_prefix)|' \
             -e 's|@CFLAGS@|$(strip $(host_CFLAGS))|' \
             -e 's|@CFLAGS_RELEASE@|$(strip $(host_release_CFLAGS))|' \
             -e 's|@CFLAGS_DEBUG@|$(strip $(host_debug_CFLAGS))|' \
