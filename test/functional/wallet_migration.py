@@ -19,7 +19,8 @@ from test_framework.descriptors import descsum_create
 from test_framework.key import ECPubKey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import COIN, CTransaction, CTxOut
-from test_framework.script_util import key_to_p2pkh_script, script_to_p2sh_script, script_to_p2wsh_script
+from test_framework.script import hash160
+from test_framework.script_util import key_to_p2pkh_script, key_to_p2pk_script, script_to_p2sh_script, script_to_p2wsh_script
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -27,6 +28,7 @@ from test_framework.util import (
 )
 from test_framework.wallet_util import (
     get_generate_key,
+    generate_keypair,
 )
 
 
@@ -1006,6 +1008,61 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         wallet.unloadwallet()
 
+    def test_migrate_simple_watch_only(self):
+        self.log.info("Test migrating a watch-only p2pk script")
+        wallet = self.create_legacy_wallet("bare_p2pk", blank=True)
+        _, pubkey = generate_keypair()
+        p2pk_script = key_to_p2pk_script(pubkey)
+        wallet.importaddress(address=p2pk_script.hex())
+        # Migrate wallet in the latest node
+        res, _ = self.migrate_and_get_rpc("bare_p2pk")
+        wo_wallet = self.master_node.get_wallet_rpc(res['watchonly_name'])
+        assert_equal(wo_wallet.listdescriptors()['descriptors'][0]['desc'], descsum_create(f'pk({pubkey.hex()})'))
+        wo_wallet.unloadwallet()
+
+    def test_manual_keys_import(self):
+        self.log.info("Test migrating standalone private keys")
+        wallet = self.create_legacy_wallet("import_privkeys", blank=True)
+        privkey, pubkey = generate_keypair(wif=True)
+        wallet.importprivkey(privkey=privkey, label="hi", rescan=False)
+
+        # Migrate and verify
+        res, wallet = self.migrate_and_get_rpc("import_privkeys")
+
+        # There should be descriptors containing the imported key for: pk(), pkh(), sh(wpkh()), wpkh()
+        key_origin = hash160(pubkey)[:4].hex()
+        pubkey_hex = pubkey.hex()
+        pk_desc = descsum_create(f'pk([{key_origin}]{pubkey_hex})')
+        pkh_desc = descsum_create(f'pkh([{key_origin}]{pubkey_hex})')
+        sh_wpkh_desc = descsum_create(f'sh(wpkh([{key_origin}]{pubkey_hex}))')
+        wpkh_desc = descsum_create(f'wpkh([{key_origin}]{pubkey_hex})')
+        expected_descs = [pk_desc, pkh_desc, sh_wpkh_desc, wpkh_desc]
+
+        # Verify all expected descriptors were migrated
+        migrated_desc = [item['desc'] for item in wallet.listdescriptors()['descriptors'] if pubkey.hex() in item['desc']]
+        assert_equal(expected_descs, migrated_desc)
+        wallet.unloadwallet()
+
+        ######################################################
+        self.log.info("Test migrating standalone public keys")
+        wallet = self.create_legacy_wallet("import_pubkeys", blank=True)
+        wallet.importpubkey(pubkey=pubkey_hex, rescan=False)
+
+        res, _ = self.migrate_and_get_rpc("import_pubkeys")
+
+        # Same as before, there should be descriptors in the watch-only wallet for the imported pubkey
+        wo_wallet = self.nodes[0].get_wallet_rpc(res['watchonly_name'])
+        # As we imported the pubkey only, there will be no key origin in the following descriptors
+        pk_desc = descsum_create(f'pk({pubkey_hex})')
+        pkh_desc = descsum_create(f'pkh({pubkey_hex})')
+        sh_wpkh_desc = descsum_create(f'sh(wpkh({pubkey_hex}))')
+        wpkh_desc = descsum_create(f'wpkh({pubkey_hex})')
+        expected_descs = [pk_desc, pkh_desc, sh_wpkh_desc, wpkh_desc]
+
+        # Verify all expected descriptors were migrated
+        migrated_desc = [item['desc'] for item in wo_wallet.listdescriptors()['descriptors']]
+        assert_equal(expected_descs, migrated_desc)
+        wo_wallet.unloadwallet()
 
     def run_test(self):
         self.master_node = self.nodes[0]
@@ -1032,6 +1089,9 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_avoidreuse()
         self.test_preserve_tx_extra_info()
         self.test_blank()
+        self.test_migrate_simple_watch_only()
+        self.test_manual_keys_import()
+
 
 if __name__ == '__main__':
     WalletMigrationTest(__file__).main()
