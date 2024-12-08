@@ -1,0 +1,28 @@
+# dependencies:
+#   just: https://github.com/casey/just
+#   watchexec: https://github.com/watchexec/watchexec
+
+set positional-arguments
+
+n := num_cpus()
+
+build: configure
+  cmake --build build -j {{ n }}
+
+configure:
+  @[[ -d build ]] || cmake -B build
+
+clean:
+  rm -rf build
+
+d *args:
+  ./build/src/bitcoind -regtest "$@"
+
+cli *args:
+  ./build/src/bitcoin-cli -regtest "$@"
+
+test: build
+  ctest --test-dir build -j {{ n }}
+
+watch:
+  watchexec 'just build'
