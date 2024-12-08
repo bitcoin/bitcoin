@@ -96,6 +96,16 @@ class DecodeScriptTest(BitcoinTestFramework):
         assert_equal('witness_v0_scripthash', rpc_result['segwit']['type'])
         assert_equal('0 ' + multisig_script_hash, rpc_result['segwit']['asm'])
 
+        # Check decoding a multisig redeem script doesn't return an invalid descriptor
+        self.log.info("- multisig invalid")
+        # Decode a +520 bytes consensus-invalid p2sh multisig - provided script translates to multi(20, keys)
+        large_multisig_script = '0114' + push_public_key * 20 + '0114' + 'ae'
+        rpc_result = self.nodes[0].decodescript(large_multisig_script)
+        # Verify it is valid only under segwit rules, not for bare multisig nor p2sh.
+        assert 'desc' not in rpc_result
+        assert 'p2sh' not in rpc_result
+        assert 'segwit' in rpc_result
+
         self.log.info ("- P2SH")
         # OP_HASH160 <Hash160(redeemScript)> OP_EQUAL.
         # push_public_key_hash here should actually be the hash of a redeem script.
