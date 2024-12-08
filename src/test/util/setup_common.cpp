@@ -178,7 +178,7 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
 
     SelectParams(chainType);
     if (G_TEST_LOG_FUN) LogInstance().PushBackCallback(G_TEST_LOG_FUN);
-    InitLogging(*m_node.args);
+    InitLogging(*m_node.args, /* log_suffix= */ nullptr);
     AppInitParameterInteraction(*m_node.args);
     LogInstance().StartLogging();
     m_node.warnings = std::make_unique<node::Warnings>();
