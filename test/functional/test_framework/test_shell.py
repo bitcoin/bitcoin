@@ -7,6 +7,14 @@ import pathlib
 from test_framework.test_framework import BitcoinTestFramework
 
 
+# BitcoinTestFramework instances are supposed to be constructed with the path
+# of the calling test in order to find shared data like configuration and the
+# cache. Since TestShell is meant for interactive use, there is no concrete
+# test; passing a dummy name is fine though, as only the containing directory
+# is relevant for successful initialization.
+tests_directory = pathlib.Path(__file__).absolute().parent.parent
+dummy_testshell_file = tests_directory / "testshell_dummy.py"
+
 class TestShell:
     """Wrapper Class for BitcoinTestFramework.
 
@@ -61,7 +69,7 @@ class TestShell:
                 print("Shutdown TestShell before resetting!")
             else:
                 self.num_nodes = None
-                super().__init__()
+                super().__init__(dummy_testshell_file)
 
     instance = None
 
@@ -69,13 +77,7 @@ class TestShell:
         # This implementation enforces singleton pattern, and will return the
         # previously initialized instance if available
         if not TestShell.instance:
-            # BitcoinTestFramework instances are supposed to be constructed with the path
-            # of the calling test in order to find shared data like configuration and the
-            # cache. Since TestShell is meant for interactive use, there is no concrete
-            # test; passing a dummy name is fine though, as only the containing directory
-            # is relevant for successful initialization.
-            tests_directory = pathlib.Path(__file__).resolve().parent.parent
-            TestShell.instance = TestShell.__TestShell(tests_directory / "testshell_dummy.py")
+            TestShell.instance = TestShell.__TestShell(dummy_testshell_file)
             TestShell.instance.running = False
         return TestShell.instance
 
