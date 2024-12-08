@@ -72,7 +72,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         self.log.info("Bump time & check that transaction is rebroadcast")
         # Transaction should be rebroadcast approximately 24 hours in the future,
         # but can range from 12-36. So bump 36 hours to be sure.
-        with node.assert_debug_log(['resubmit 1 unconfirmed transactions']):
+        with node.assert_debug_log(['resubmit 1 unconfirmed transactions'], wallet=True):
             node.setmocktime(now + 36 * 60 * 60)
             # Tell scheduler to call MaybeResendWalletTxs now.
             node.mockscheduler(60)
@@ -130,7 +130,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
 
         evict_time = block_time + 60 * 60 * DEFAULT_MEMPOOL_EXPIRY_HOURS + 5
         # Flush out currently scheduled resubmit attempt now so that there can't be one right between eviction and check.
-        with node.assert_debug_log(['resubmit 2 unconfirmed transactions']):
+        with node.assert_debug_log(['resubmit 2 unconfirmed transactions'], wallet=True):
             node.setmocktime(evict_time)
             node.mockscheduler(60)
 
@@ -141,7 +141,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-5, "Transaction not in mempool", node.getmempoolentry, child_txid)
 
         # Rebroadcast and check that parent and child are both in the mempool
-        with node.assert_debug_log(['resubmit 2 unconfirmed transactions']):
+        with node.assert_debug_log(['resubmit 2 unconfirmed transactions'], wallet=True):
             node.setmocktime(evict_time + 36 * 60 * 60) # 36 hrs is the upper limit of the resend timer
             node.mockscheduler(60)
         node.getmempoolentry(txid)
