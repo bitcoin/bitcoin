@@ -111,7 +111,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     // block tree into BlockIndex()!
 
     for (Chainstate* chainstate : chainman.GetAll()) {
-        LogPrintf("Initializing chainstate %s\n", chainstate->ToString());
+        LogInfo("Initializing chainstate %s\n", chainstate->ToString());
 
         try {
             chainstate->InitCoinsDB(
@@ -174,18 +174,18 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
                                     const ChainstateLoadOptions& options)
 {
     if (!chainman.AssumedValidBlock().IsNull()) {
-        LogPrintf("Assuming ancestors of block %s have valid signatures.\n", chainman.AssumedValidBlock().GetHex());
+        LogInfo("Assuming ancestors of block %s have valid signatures.\n", chainman.AssumedValidBlock().GetHex());
     } else {
-        LogPrintf("Validating signatures for all blocks.\n");
+        LogInfo("Validating signatures for all blocks.\n");
     }
-    LogPrintf("Setting nMinimumChainWork=%s\n", chainman.MinimumChainWork().GetHex());
+    LogInfo("Setting nMinimumChainWork=%s\n", chainman.MinimumChainWork().GetHex());
     if (chainman.MinimumChainWork() < UintToArith256(chainman.GetConsensus().nMinimumChainWork)) {
-        LogPrintf("Warning: nMinimumChainWork set below default value of %s\n", chainman.GetConsensus().nMinimumChainWork.GetHex());
+        LogInfo("Warning: nMinimumChainWork set below default value of %s\n", chainman.GetConsensus().nMinimumChainWork.GetHex());
     }
     if (chainman.m_blockman.GetPruneTarget() == BlockManager::PRUNE_TARGET_MANUAL) {
-        LogPrintf("Block pruning enabled.  Use RPC call pruneblockchain(height) to manually prune block and undo files.\n");
+        LogInfo("Block pruning enabled.  Use RPC call pruneblockchain(height) to manually prune block and undo files.\n");
     } else if (chainman.m_blockman.GetPruneTarget()) {
-        LogPrintf("Prune configured to target %u MiB on disk for block and undo files.\n", chainman.m_blockman.GetPruneTarget() / 1024 / 1024);
+        LogInfo("Prune configured to target %u MiB on disk for block and undo files.\n", chainman.m_blockman.GetPruneTarget() / 1024 / 1024);
     }
 
     LOCK(cs_main);
@@ -200,7 +200,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     bool has_snapshot = chainman.DetectSnapshotChainstate();
 
     if (has_snapshot && options.wipe_chainstate_db) {
-        LogPrintf("[snapshot] deleting snapshot chainstate due to reindexing\n");
+        LogInfo("[snapshot] deleting snapshot chainstate due to reindexing\n");
         if (!chainman.DeleteSnapshotChainstate()) {
             return {ChainstateLoadStatus::FAILURE_FATAL, Untranslated("Couldn't remove snapshot chainstate.")};
         }
@@ -224,7 +224,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     if (snapshot_completion == SnapshotCompletionResult::SKIPPED) {
         // do nothing; expected case
     } else if (snapshot_completion == SnapshotCompletionResult::SUCCESS) {
-        LogPrintf("[snapshot] cleaning up unneeded background chainstate, then reinitializing\n");
+        LogInfo("[snapshot] cleaning up unneeded background chainstate, then reinitializing\n");
         if (!chainman.ValidatedSnapshotCleanup()) {
             return {ChainstateLoadStatus::FAILURE_FATAL, Untranslated("Background chainstate cleanup failed unexpectedly.")};
         }
