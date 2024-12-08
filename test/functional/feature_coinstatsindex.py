@@ -10,6 +10,9 @@ the index.
 """
 
 from decimal import Decimal
+import os
+from pathlib import Path
+import shutil
 
 from test_framework.blocktools import (
     COINBASE_MATURITY,
@@ -53,6 +56,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self._test_reorg_index()
         self._test_index_rejects_hash_serialized()
         self._test_init_index_after_reorg()
+        self._test_outdated_index_version()
 
     def block_sanity_check(self, block_info):
         block_subsidy = 50
@@ -321,6 +325,18 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self.sync_index_node()
         res1 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=None, use_index=True)
         assert_equal(res["muhash"], res1["muhash"])
+
+    def _test_outdated_index_version(self):
+        self.log.info("Test a node doesn't start with an outdated index version")
+        index_node = self.nodes[1]
+        self.stop_node(1)
+        index_db = index_node.chain_path / 'indexes' / 'coinstats' / 'db'
+        shutil.rmtree(index_db)
+        v0_index_db = Path(os.path.dirname(os.path.realpath(__file__))) / 'data' / 'coinstatsindex_v0'
+        shutil.copytree(v0_index_db, index_db)
+        msg = "[error] coinstatsindex version mismatch: expected 1 but 0 was found. In order to rebuild the index, remove the indexes/coinstats directory in your datadir"
+        with index_node.assert_debug_log(expected_msgs=[msg]):
+            index_node.assert_start_raises_init_error(extra_args=["-coinstatsindex"])
 
 
 if __name__ == '__main__':
