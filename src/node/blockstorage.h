@@ -241,7 +241,7 @@ private:
 
     const bool m_prune_mode;
 
-    const std::vector<std::byte> m_xor_key;
+    const uint64_t m_xor_key;
 
     /** Dirty block index entries. */
     std::set<CBlockIndex*> m_dirty_blockindex;
