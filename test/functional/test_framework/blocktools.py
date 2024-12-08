@@ -17,13 +17,13 @@ from .address import (
 )
 from .messages import (
     CBlock,
-    COIN,
     COutPoint,
     CTransaction,
     CTxIn,
     CTxInWitness,
     CTxOut,
     SEQUENCE_FINAL,
+    btc_to_sat,
     hash256,
     ser_uint256,
     tx_from_hex,
@@ -134,7 +134,7 @@ def create_coinbase(height, pubkey=None, *, script_pubkey=None, extra_output_scr
     coinbase = CTransaction()
     coinbase.vin.append(CTxIn(COutPoint(0, 0xffffffff), script_BIP34_coinbase_height(height), SEQUENCE_FINAL))
     coinbaseoutput = CTxOut()
-    coinbaseoutput.nValue = nValue * COIN
+    coinbaseoutput.nValue = btc_to_sat(nValue)
     if nValue == 50:
         halvings = int(height / 150)  # regtest
         coinbaseoutput.nValue >>= halvings

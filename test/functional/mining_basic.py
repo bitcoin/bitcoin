@@ -22,6 +22,7 @@ from test_framework.messages import (
     CBlock,
     CBlockHeader,
     COIN,
+    sat_to_btc,
     ser_uint256,
 )
 from test_framework.p2p import P2PDataStore
@@ -105,7 +106,7 @@ class MiningTest(BitcoinTestFramework):
             tx_with_min_feerate = self.wallet.send_self_transfer(from_node=node, fee_rate=blockmintxfee_btc_kvb)
             assert_equal(tx_with_min_feerate["fee"], get_fee(tx_with_min_feerate["tx"].get_vsize(), blockmintxfee_btc_kvb))
             if blockmintxfee_btc_kvb > 0:
-                lowerfee_btc_kvb = blockmintxfee_btc_kvb - Decimal(10)/COIN  # 0.01 sat/vbyte lower
+                lowerfee_btc_kvb = blockmintxfee_btc_kvb - sat_to_btc(10)  # 0.01 sat/vbyte lower
                 tx_below_min_feerate = self.wallet.send_self_transfer(from_node=node, fee_rate=lowerfee_btc_kvb)
                 assert_equal(tx_below_min_feerate["fee"], get_fee(tx_below_min_feerate["tx"].get_vsize(), lowerfee_btc_kvb))
             else:  # go below zero fee by using modified fees

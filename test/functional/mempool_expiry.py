@@ -15,6 +15,7 @@ from datetime import timedelta
 from test_framework.messages import (
     COIN,
     DEFAULT_MEMPOOL_EXPIRY_HOURS,
+    btc_to_sat,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -43,7 +44,7 @@ class MempoolExpiryTest(BitcoinTestFramework):
 
         # Add prioritisation to this transaction to check that it persists after the expiry
         node.prioritisetransaction(parent_txid, 0, COIN)
-        assert_equal(node.getprioritisedtransactions()[parent_txid], { "fee_delta" : COIN, "in_mempool" : True, "modified_fee": COIN + COIN * parent["fee"] })
+        assert_equal(node.getprioritisedtransactions()[parent_txid], { "fee_delta" : COIN, "in_mempool" : True, "modified_fee": COIN + btc_to_sat(parent["fee"]) })
 
         # Ensure the transactions we send to trigger the mempool check spend utxos that are independent of
         # the transactions being tested for expiration.

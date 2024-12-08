@@ -5,6 +5,7 @@
 
 from decimal import Decimal
 
+from test_framework.messages import btc_to_sat, sat_to_btc
 from test_framework.messages import (
     COIN,
     CTxOut,
@@ -36,7 +37,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         result["tx"].vout.append(CTxOut(output_value, result["tx"].vout[0].scriptPubKey))
         # Take value from first output
         result["tx"].vout[0].nValue -= output_value
-        result["new_utxos"][0]["value"] = Decimal(result["tx"].vout[0].nValue) / COIN
+        result["new_utxos"][0]["value"] = sat_to_btc(result["tx"].vout[0].nValue)
         new_txid = result["tx"].rehash()
         result["txid"]  = new_txid
         result["wtxid"] = result["tx"].getwtxid()
@@ -45,7 +46,7 @@ class EphemeralDustTest(BitcoinTestFramework):
             new_utxo["txid"] = new_txid
             new_utxo["wtxid"] = result["tx"].getwtxid()
 
-        result["new_utxos"].append({"txid": new_txid, "vout": len(result["tx"].vout) - 1, "value": Decimal(output_value) / COIN, "height": 0, "coinbase": False, "confirmations": 0})
+        result["new_utxos"].append({"txid": new_txid, "vout": len(result["tx"].vout) - 1, "value": sat_to_btc(output_value), "height": 0, "coinbase": False, "confirmations": 0})
 
     def create_ephemeral_dust_package(self, *, tx_version, dust_tx_fee=0, dust_value=0, num_dust_outputs=1, extra_sponsors=None):
         """Creates a 1P1C package containing ephemeral dust. By default, the parent transaction
@@ -141,7 +142,7 @@ class EphemeralDustTest(BitcoinTestFramework):
 
         sats_fee = 1
         dusty_tx, sweep_tx = self.create_ephemeral_dust_package(tx_version=3, dust_tx_fee=sats_fee)
-        assert_equal(int(COIN * dusty_tx["fee"]), sats_fee) # has fees
+        assert_equal(btc_to_sat(dusty_tx["fee"]), sats_fee) # has fees
         assert_greater_than(dusty_tx["tx"].vout[0].nValue, 330) # main output is not dust
         assert_equal(dusty_tx["tx"].vout[1].nValue, 0) # added one is dust
 

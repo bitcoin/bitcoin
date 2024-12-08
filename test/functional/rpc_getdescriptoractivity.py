@@ -5,9 +5,9 @@
 
 from decimal import Decimal
 
+from test_framework.messages import btc_to_sat, sat_to_btc
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
-from test_framework.messages import COIN
 from test_framework.wallet import MiniWallet, MiniWalletMode, getnewdestination
 
 
@@ -39,7 +39,7 @@ class GetBlocksActivityTest(BitcoinTestFramework):
 
     def test_activity_in_block(self, node, wallet):
         _, spk_1, addr_1 = getnewdestination(address_type='bech32m')
-        txid = wallet.send_to(from_node=node, scriptPubKey=spk_1, amount=1 * COIN)['txid']
+        txid = wallet.send_to(from_node=node, scriptPubKey=spk_1, amount=btc_to_sat(1))['txid']
         blockhash = self.generate(node, 1)[0]
 
         # Test getdescriptoractivity with the specific blockhash
@@ -68,11 +68,11 @@ class GetBlocksActivityTest(BitcoinTestFramework):
 
     def test_no_mempool_inclusion(self, node, wallet):
         _, spk_1, addr_1 = getnewdestination()
-        wallet.send_to(from_node=node, scriptPubKey=spk_1, amount=1 * COIN)
+        wallet.send_to(from_node=node, scriptPubKey=spk_1, amount=btc_to_sat(1))
 
         _, spk_2, addr_2 = getnewdestination()
         wallet.send_to(
-            from_node=node, scriptPubKey=spk_2, amount=1 * COIN)
+            from_node=node, scriptPubKey=spk_2, amount=btc_to_sat(1))
 
         # Do not generate a block to keep the transaction in the mempool
 
@@ -83,8 +83,8 @@ class GetBlocksActivityTest(BitcoinTestFramework):
     def test_multiple_addresses(self, node, wallet):
         _, spk_1, addr_1 = getnewdestination()
         _, spk_2, addr_2 = getnewdestination()
-        wallet.send_to(from_node=node, scriptPubKey=spk_1, amount=1 * COIN)
-        wallet.send_to(from_node=node, scriptPubKey=spk_2, amount=2 * COIN)
+        wallet.send_to(from_node=node, scriptPubKey=spk_1, amount=btc_to_sat(1))
+        wallet.send_to(from_node=node, scriptPubKey=spk_2, amount=btc_to_sat(2))
 
         blockhash = self.generate(node, 1)[0]
 
@@ -116,7 +116,7 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         self.generate(node, 20) # Generate to get more fees
 
         _, spk_1, addr_1 = getnewdestination()
-        wallet.send_to(from_node=node, scriptPubKey=spk_1, amount=1 * COIN)
+        wallet.send_to(from_node=node, scriptPubKey=spk_1, amount=btc_to_sat(1))
 
         invalid_blockhash = "0000000000000000000000000000000000000000000000000000000000000000"
 
@@ -137,12 +137,12 @@ class GetBlocksActivityTest(BitcoinTestFramework):
 
         _, spk_1, addr_1 = getnewdestination()
         txid_1 = wallet.send_to(
-            from_node=node, scriptPubKey=spk_1, amount=1 * COIN)['txid']
+            from_node=node, scriptPubKey=spk_1, amount=btc_to_sat(1))['txid']
         blockhash = self.generate(node, 1)[0]
 
         _, spk_2, to_addr = getnewdestination()
         txid_2 = wallet.send_to(
-            from_node=node, scriptPubKey=spk_2, amount=1 * COIN)['txid']
+            from_node=node, scriptPubKey=spk_2, amount=btc_to_sat(1))['txid']
 
         result = node.getdescriptoractivity(
             [blockhash], [f"addr({addr_1})", f"addr({to_addr})"], True)
@@ -213,13 +213,13 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         assert a1['blockhash'] == blockhash
         # sPK lacks address.
         assert_equal(list(a1['prevout_spk'].keys()), ['asm', 'desc', 'hex', 'type'])
-        assert a1['amount'] == no_addr_tx["fee"] + Decimal(no_addr_tx["tx"].vout[0].nValue) / COIN
+        assert a1['amount'] == no_addr_tx["fee"] + sat_to_btc(no_addr_tx["tx"].vout[0].nValue)
 
         assert a2['type'] == "receive"
         assert a2['blockhash'] == blockhash
         # sPK lacks address.
         assert_equal(list(a2['output_spk'].keys()), ['asm', 'desc', 'hex', 'type'])
-        assert a2['amount'] == Decimal(no_addr_tx["tx"].vout[0].nValue) / COIN
+        assert a2['amount'] == sat_to_btc(no_addr_tx["tx"].vout[0].nValue)
 
 
 if __name__ == '__main__':
