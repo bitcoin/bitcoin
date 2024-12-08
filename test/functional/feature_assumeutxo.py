@@ -9,6 +9,7 @@ to a hash that has been compiled into bitcoind.
 The assumeutxo value generated and used here is committed to in
 `CRegTestParams::m_assumeutxo_data` in `src/kernel/chainparams.cpp`.
 """
+import os
 from shutil import rmtree
 
 from dataclasses import dataclass
@@ -165,9 +166,10 @@ class AssumeutxoTest(BitcoinTestFramework):
             with self.nodes[0].assert_debug_log([log_msg]):
                 self.nodes[0].assert_start_raises_init_error(expected_msg=error_msg)
 
-        expected_error_msg = "Error: A fatal internal error occurred, see debug.log for details: Assumeutxo data not found for the given blockhash '7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a'."
-        error_details = "Assumeutxo data not found for the given blockhash"
-        expected_error(log_msg=error_details, error_msg=expected_error_msg)
+        assumeutxo_error = "Assumeutxo data not found for the given blockhash '7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a'."
+        blockindex_error = "Error loading block database"
+        expected_error_msg = f"Error: A fatal internal error occurred, see debug.log for details: {assumeutxo_error}{os.linesep}Error: {assumeutxo_error} {blockindex_error}"
+        expected_error(log_msg=assumeutxo_error, error_msg=expected_error_msg)
 
         # resurrect node again
         rmtree(chainstate_snapshot_path)

@@ -17,6 +17,8 @@
 #include <validationinterface.h>
 #include <versionbits.h>
 
+using kernel::AbortFailure;
+using kernel::FlushResult;
 using node::BlockAssembler;
 using node::NodeContext;
 
@@ -96,7 +98,9 @@ COutPoint MineBlock(const NodeContext& node, std::shared_ptr<CBlock>& block)
     bool new_block;
     BlockValidationStateCatcher bvsc{block->GetHash()};
     node.validation_signals->RegisterValidationInterface(&bvsc);
-    const bool processed{chainman.ProcessNewBlock(block, true, true, &new_block)};
+    FlushResult<void, AbortFailure> process_result;
+    const bool processed{chainman.ProcessNewBlock(block, true, true, &new_block, process_result)};
+    assert(process_result);
     const bool duplicate{!new_block && processed};
     assert(!duplicate);
     node.validation_signals->UnregisterValidationInterface(&bvsc);
