@@ -64,7 +64,6 @@ public:
         SetInfo best(m_depgraph, m_todo);
         // Process the queue.
         while (!queue.empty() && iterations_left) {
-            --iterations_left;
             // Pop top element of the queue.
             auto [inc, und] = queue.back();
             queue.pop_back();
@@ -75,6 +74,7 @@ public:
                 // transactions that share ancestry with inc so far (which means only connected
                 // sets will be considered).
                 if (inc_none || inc.Overlaps(m_depgraph.Ancestors(split))) {
+                    --iterations_left;
                     // Add a queue entry with split included.
                     SetInfo new_inc(m_depgraph, inc | (m_todo & m_depgraph.Ancestors(split)));
                     queue.emplace_back(new_inc.transactions, und - new_inc.transactions);
@@ -92,9 +92,8 @@ public:
 
 /** A very simple finder class for optimal candidate sets, which tries every subset.
  *
- * It is even simpler than SimpleCandidateFinder, and is primarily included here to test the
- * correctness of SimpleCandidateFinder, which is then used to test the correctness of
- * SearchCandidateFinder.
+ * It is even simpler than SimpleCandidateFinder, and exists just to help test the correctness of
+ * SimpleCandidateFinder, which is then used to test the correctness of SearchCandidateFinder.
  */
 template<typename SetType>
 class ExhaustiveCandidateFinder
@@ -185,12 +184,16 @@ void MakeConnected(DepGraph<BS>& depgraph)
 
 /** Given a dependency graph, and a todo set, read a topological subset of todo from reader. */
 template<typename SetType>
-SetType ReadTopologicalSet(const DepGraph<SetType>& depgraph, const SetType& todo, SpanReader& reader)
+SetType ReadTopologicalSet(const DepGraph<SetType>& depgraph, const SetType& todo, SpanReader& reader, bool non_empty)
 {
+    // Read a bitmask from the fuzzing input. Add 1 if non_empty, so the mask is definitely not
+    // zero in that case.
     uint64_t mask{0};
     try {
         reader >> VARINT(mask);
     } catch(const std::ios_base::failure&) {}
+    mask += non_empty;
+
     SetType ret;
     for (auto i : todo) {
         if (!ret[i]) {
@@ -198,7 +201,17 @@ SetType ReadTopologicalSet(const DepGraph<SetType>& depgraph, const SetType& tod
             mask >>= 1;
         }
     }
-    return ret & todo;
+    ret &= todo;
+
+    // While mask starts off non-zero if non_empty is true, it is still possible that all its low
+    // bits are 0, and ret ends up being empty. As a last resort, use the in-todo ancestry of the
+    // first todo position.
+    if (non_empty && ret.None()) {
+        Assume(todo.Any());
+        ret = depgraph.Ancestors(todo.First()) & todo;
+        Assume(ret.Any());
+    }
+    return ret;
 }
 
 /** Given a dependency graph, construct any valid linearization for it, reading from a SpanReader. */
@@ -581,10 +594,10 @@ FUZZ_TARGET(clusterlin_ancestor_finder)
         assert(real_best_anc.has_value());
         assert(*real_best_anc == best_anc);
 
-        // Find a topologically valid subset of transactions to remove from the graph.
-        auto del_set = ReadTopologicalSet(depgraph, todo, reader);
-        // If we did not find anything, use best_anc itself, because we should remove something.
-        if (del_set.None()) del_set = best_anc.transactions;
+        // Find a non-empty topologically valid subset of transactions to remove from the graph.
+        // Using an empty set would mean the next iteration is identical to the current one, and
+        // could cause an infinite loop.
+        auto del_set = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
         todo -= del_set;
         anc_finder.MarkDone(del_set);
     }
@@ -594,11 +607,99 @@ FUZZ_TARGET(clusterlin_ancestor_finder)
 
 static constexpr auto MAX_SIMPLE_ITERATIONS = 300000;
 
+FUZZ_TARGET(clusterlin_simple_finder)
+{
+    // Verify that SimpleCandidateFinder works as expected by sanity checking the results
+    // and comparing them (if claimed to be optimal) against the sets found by
+    // ExhaustiveCandidateFinder and AncestorCandidateFinder.
+    //
+    // Note that SimpleCandidateFinder is only used in tests; the purpose of this fuzz test is to
+    // establish confidence in SimpleCandidateFinder, so that it can be used to test
+    // SearchCandidateFinder below.
+
+    // Retrieve a depgraph from the fuzz input.
+    SpanReader reader(buffer);
+    DepGraph<TestBitSet> depgraph;
+    try {
+        reader >> Using<DepGraphFormatter>(depgraph);
+    } catch (const std::ios_base::failure&) {}
+
+    // Instantiate the SimpleCandidateFinder to be tested, and the ExhaustiveCandidateFinder and
+    // AncestorCandidateFinder it is being tested against.
+    SimpleCandidateFinder smp_finder(depgraph);
+    ExhaustiveCandidateFinder exh_finder(depgraph);
+    AncestorCandidateFinder anc_finder(depgraph);
+
+    auto todo = depgraph.Positions();
+    while (todo.Any()) {
+        assert(!smp_finder.AllDone());
+        assert(!exh_finder.AllDone());
+        assert(!anc_finder.AllDone());
+        assert(anc_finder.NumRemaining() == todo.Count());
+
+        // Call SimpleCandidateFinder.
+        auto [found, iterations_done] = smp_finder.FindCandidateSet(MAX_SIMPLE_ITERATIONS);
+        bool optimal = (iterations_done != MAX_SIMPLE_ITERATIONS);
+
+        // Sanity check the result.
+        assert(iterations_done <= MAX_SIMPLE_ITERATIONS);
+        assert(found.transactions.Any());
+        assert(found.transactions.IsSubsetOf(todo));
+        assert(depgraph.FeeRate(found.transactions) == found.feerate);
+        // Check that it is topologically valid.
+        for (auto i : found.transactions) {
+            assert(found.transactions.IsSupersetOf(depgraph.Ancestors(i) & todo));
+        }
+
+        // At most 2^(N-1) iterations can be required: the number of non-empty connected subsets a
+        // graph with N transactions can have. If MAX_SIMPLE_ITERATIONS exceeds this number, the
+        // result is necessarily optimal.
+        assert(iterations_done <= (uint64_t{1} << (todo.Count() - 1)));
+        if (MAX_SIMPLE_ITERATIONS > (uint64_t{1} << (todo.Count() - 1))) assert(optimal);
+
+        // Perform quality checks only if SimpleCandidateFinder claims an optimal result.
+        if (optimal) {
+            // Optimal sets are always connected.
+            assert(depgraph.IsConnected(found.transactions));
+
+            // Compare with AncestorCandidateFinder.
+            auto anc = anc_finder.FindCandidateSet();
+            assert(anc.feerate <= found.feerate);
+
+            if (todo.Count() <= 12) {
+                // Compare with ExhaustiveCandidateFinder. This quickly gets computationally
+                // expensive for large clusters (O(2^n)), so only do it for sufficiently small ones.
+                auto exhaustive = exh_finder.FindCandidateSet();
+                assert(exhaustive.feerate == found.feerate);
+            }
+
+            // Compare with a non-empty topological set read from the fuzz input (comparing with an
+            // empty set is not interesting).
+            auto read_topo = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
+            assert(found.feerate >= depgraph.FeeRate(read_topo));
+        }
+
+        // Find a non-empty topologically valid subset of transactions to remove from the graph.
+        // Using an empty set would mean the next iteration is identical to the current one, and
+        // could cause an infinite loop.
+        auto del_set = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
+        todo -= del_set;
+        smp_finder.MarkDone(del_set);
+        exh_finder.MarkDone(del_set);
+        anc_finder.MarkDone(del_set);
+    }
+
+    assert(smp_finder.AllDone());
+    assert(exh_finder.AllDone());
+    assert(anc_finder.AllDone());
+    assert(anc_finder.NumRemaining() == 0);
+}
+
 FUZZ_TARGET(clusterlin_search_finder)
 {
     // Verify that SearchCandidateFinder works as expected by sanity checking the results
-    // and comparing with the results from SimpleCandidateFinder, ExhaustiveCandidateFinder, and
-    // AncestorCandidateFinder.
+    // and comparing with the results from SimpleCandidateFinder and AncestorCandidateFinder,
+    // if the result is claimed to be optimal.
 
     // Retrieve an RNG seed, a depgraph, and whether to make it connected, from the fuzz input.
     SpanReader reader(buffer);
@@ -612,17 +713,15 @@ FUZZ_TARGET(clusterlin_search_finder)
     // the graph to be connected.
     if (make_connected) MakeConnected(depgraph);
 
-    // Instantiate ALL the candidate finders.
+    // Instantiate the candidate finders.
     SearchCandidateFinder src_finder(depgraph, rng_seed);
     SimpleCandidateFinder smp_finder(depgraph);
-    ExhaustiveCandidateFinder exh_finder(depgraph);
     AncestorCandidateFinder anc_finder(depgraph);
 
     auto todo = depgraph.Positions();
     while (todo.Any()) {
         assert(!src_finder.AllDone());
         assert(!smp_finder.AllDone());
-        assert(!exh_finder.AllDone());
         assert(!anc_finder.AllDone());
         assert(anc_finder.NumRemaining() == todo.Count());
 
@@ -633,11 +732,13 @@ FUZZ_TARGET(clusterlin_search_finder)
         } catch (const std::ios_base::failure&) {}
         max_iterations &= 0xfffff;
 
-        // Read an initial subset from the fuzz input.
-        SetInfo init_best(depgraph, ReadTopologicalSet(depgraph, todo, reader));
+        // Read an initial subset from the fuzz input (allowed to be empty).
+        auto init_set = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/false);
+        SetInfo init_best(depgraph, init_set);
 
         // Call the search finder's FindCandidateSet for what remains of the graph.
         auto [found, iterations_done] = src_finder.FindCandidateSet(max_iterations, init_best);
+        bool optimal = iterations_done < max_iterations;
 
         // Sanity check the result.
         assert(iterations_done <= max_iterations);
@@ -663,7 +764,7 @@ FUZZ_TARGET(clusterlin_search_finder)
         }
 
         // Perform quality checks only if SearchCandidateFinder claims an optimal result.
-        if (iterations_done < max_iterations) {
+        if (optimal) {
             // Optimal sets are always connected.
             assert(depgraph.IsConnected(found.transactions));
 
@@ -678,34 +779,24 @@ FUZZ_TARGET(clusterlin_search_finder)
             auto anc = anc_finder.FindCandidateSet();
             assert(found.feerate >= anc.feerate);
 
-            // Compare with ExhaustiveCandidateFinder. This quickly gets computationally expensive
-            // for large clusters (O(2^n)), so only do it for sufficiently small ones.
-            if (todo.Count() <= 12) {
-                auto exhaustive = exh_finder.FindCandidateSet();
-                assert(exhaustive.feerate == found.feerate);
-                // Also compare ExhaustiveCandidateFinder with SimpleCandidateFinder (this is
-                // primarily a test for SimpleCandidateFinder's correctness).
-                assert(exhaustive.feerate >= simple.feerate);
-                if (simple_iters < MAX_SIMPLE_ITERATIONS) {
-                    assert(exhaustive.feerate == simple.feerate);
-                }
-            }
+            // Compare with a non-empty topological set read from the fuzz input (comparing with an
+            // empty set is not interesting).
+            auto read_topo = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
+            assert(found.feerate >= depgraph.FeeRate(read_topo));
         }
 
-        // Find a topologically valid subset of transactions to remove from the graph.
-        auto del_set = ReadTopologicalSet(depgraph, todo, reader);
-        // If we did not find anything, use found itself, because we should remove something.
-        if (del_set.None()) del_set = found.transactions;
+        // Find a non-empty topologically valid subset of transactions to remove from the graph.
+        // Using an empty set would mean the next iteration is identical to the current one, and
+        // could cause an infinite loop.
+        auto del_set = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
         todo -= del_set;
         src_finder.MarkDone(del_set);
         smp_finder.MarkDone(del_set);
-        exh_finder.MarkDone(del_set);
         anc_finder.MarkDone(del_set);
     }
 
     assert(src_finder.AllDone());
     assert(smp_finder.AllDone());
-    assert(exh_finder.AllDone());
     assert(anc_finder.AllDone());
     assert(anc_finder.NumRemaining() == 0);
 }
@@ -721,9 +812,10 @@ FUZZ_TARGET(clusterlin_linearization_chunking)
         reader >> Using<DepGraphFormatter>(depgraph);
     } catch (const std::ios_base::failure&) {}
 
-    // Retrieve a topologically-valid subset of depgraph.
+    // Retrieve a topologically-valid subset of depgraph (allowed to be empty, because the argument
+    // to LinearizationChunking::Intersect is allowed to be empty).
     auto todo = depgraph.Positions();
-    auto subset = SetInfo(depgraph, ReadTopologicalSet(depgraph, todo, reader));
+    auto subset = SetInfo(depgraph, ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/false));
 
     // Retrieve a valid linearization for depgraph.
     auto linearization = ReadLinearization(depgraph, reader);
@@ -812,19 +904,86 @@ FUZZ_TARGET(clusterlin_linearization_chunking)
             }
         }
 
-        // Find a subset to remove from linearization.
-        auto done = ReadTopologicalSet(depgraph, todo, reader);
-        if (done.None()) {
-            // We need to remove a non-empty subset, so fall back to the unlinearized ancestors of
-            // the first transaction in todo if done is empty.
-            done = depgraph.Ancestors(todo.First()) & todo;
-        }
+        // Find a non-empty topologically valid subset of transactions to remove from the graph.
+        // Using an empty set would mean the next iteration is identical to the current one, and
+        // could cause an infinite loop.
+        auto done = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
         todo -= done;
         chunking.MarkDone(done);
         subset = SetInfo(depgraph, subset.transactions - done);
     }
 
     assert(chunking.NumChunksLeft() == 0);
+}
+
+FUZZ_TARGET(clusterlin_simple_linearize)
+{
+    // Verify the behavior of SimpleLinearize(). Note that SimpleLinearize is only used in tests;
+    // the purpose of this fuzz test is to establish confidence in SimpleLinearize, so that it can
+    // be used to test the real Linearize function in the fuzz test below.
+
+    // Retrieve an iteration count and a depgraph from the fuzz input.
+    SpanReader reader(buffer);
+    uint64_t iter_count{0};
+    DepGraph<TestBitSet> depgraph;
+    try {
+        reader >> VARINT(iter_count) >> Using<DepGraphFormatter>(depgraph);
+    } catch (const std::ios_base::failure&) {}
+    iter_count %= MAX_SIMPLE_ITERATIONS;
+
+    // Invoke SimpleLinearize().
+    auto [linearization, optimal] = SimpleLinearize(depgraph, iter_count);
+    SanityCheck(depgraph, linearization);
+    auto simple_chunking = ChunkLinearization(depgraph, linearization);
+
+    // If the iteration count is sufficiently high, an optimal linearization must be found.
+    // SimpleLinearize on k transactions can take up to 2^(k-1) iterations (one per non-empty
+    // connected topologically valid subset), which sums over k=1..n to (2^n)-1.
+    const uint64_t n = depgraph.TxCount();
+    if (n <= 63 && (iter_count >> n)) {
+        assert(optimal);
+    }
+
+    // If SimpleLinearize claims optimal result, and the cluster is sufficiently small (there are
+    // n! linearizations), test that the result is as good as every valid linearization.
+    if (optimal && depgraph.TxCount() <= 8) {
+        std::vector<ClusterIndex> perm_linearization;
+        // Initialize with the lexicographically-first linearization.
+        for (ClusterIndex i : depgraph.Positions()) perm_linearization.push_back(i);
+        // Iterate over all valid permutations.
+        do {
+            /** What prefix of perm_linearization is topological. */
+            ClusterIndex topo_length{0};
+            TestBitSet perm_done;
+            while (topo_length < perm_linearization.size()) {
+                auto i = perm_linearization[topo_length];
+                perm_done.Set(i);
+                if (!depgraph.Ancestors(i).IsSubsetOf(perm_done)) break;
+                ++topo_length;
+            }
+            if (topo_length == perm_linearization.size()) {
+                // If all of perm_linearization is topological, verify that the obtained
+                // linearization is no worse than it.
+                auto perm_chunking = ChunkLinearization(depgraph, perm_linearization);
+                auto cmp = CompareChunks(simple_chunking, perm_chunking);
+                assert(cmp >= 0);
+            } else {
+                // Otherwise, fast forward to the last permutation with the same non-topological
+                // prefix.
+                auto first_non_topo = perm_linearization.begin() + topo_length;
+                assert(std::is_sorted(first_non_topo + 1, perm_linearization.end()));
+                std::reverse(first_non_topo + 1, perm_linearization.end());
+            }
+        } while(std::next_permutation(perm_linearization.begin(), perm_linearization.end()));
+    }
+
+    if (optimal) {
+        // Compare with a linearization read from the fuzz input.
+        auto read = ReadLinearization(depgraph, reader);
+        auto read_chunking = ChunkLinearization(depgraph, read);
+        auto cmp = CompareChunks(simple_chunking, read_chunking);
+        assert(cmp >= 0);
+    }
 }
 
 FUZZ_TARGET(clusterlin_linearize)
@@ -903,30 +1062,11 @@ FUZZ_TARGET(clusterlin_linearize)
         // SimpleLinearize is broken).
         if (simple_optimal) assert(cmp == 0);
 
-        // Only for very small clusters, test every topologically-valid permutation.
-        if (depgraph.TxCount() <= 7) {
-            std::vector<ClusterIndex> perm_linearization;
-            for (ClusterIndex i : depgraph.Positions()) perm_linearization.push_back(i);
-            // Iterate over all valid permutations.
-            do {
-                // Determine whether perm_linearization is topological.
-                TestBitSet perm_done;
-                bool perm_is_topo{true};
-                for (auto i : perm_linearization) {
-                    perm_done.Set(i);
-                    if (!depgraph.Ancestors(i).IsSubsetOf(perm_done)) {
-                        perm_is_topo = false;
-                        break;
-                    }
-                }
-                // If so, verify that the obtained linearization is as good as the permutation.
-                if (perm_is_topo) {
-                    auto perm_chunking = ChunkLinearization(depgraph, perm_linearization);
-                    auto cmp = CompareChunks(chunking, perm_chunking);
-                    assert(cmp >= 0);
-                }
-            } while(std::next_permutation(perm_linearization.begin(), perm_linearization.end()));
-        }
+        // Compare with a linearization read from the fuzz input.
+        auto read = ReadLinearization(depgraph, reader);
+        auto read_chunking = ChunkLinearization(depgraph, read);
+        auto cmp_read = CompareChunks(simple_chunking, read_chunking);
+        assert(cmp_read >= 0);
     }
 }
 
