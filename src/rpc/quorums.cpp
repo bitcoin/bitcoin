@@ -818,7 +818,7 @@ static RPCHelpMan quorum_getdata()
     const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(quorumHash));
 
     return connman.ForNode(nodeId, [&](CNode* pNode) {
-        return llmq_ctx.qman->RequestQuorumData(pNode, llmqType, pQuorumBaseBlockIndex, nDataMask, proTxHash);
+        return llmq_ctx.qman->RequestQuorumData(pNode, connman, llmqType, pQuorumBaseBlockIndex, nDataMask, proTxHash);
     });
 },
     };

@@ -93,7 +93,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     m_llmq_ctx->isman->UpdatedBlockTip(pindexNew);
     m_llmq_ctx->clhandler->UpdatedBlockTip();
 
-    m_llmq_ctx->qman->UpdatedBlockTip(pindexNew, fInitialDownload);
+    m_llmq_ctx->qman->UpdatedBlockTip(pindexNew, m_connman, fInitialDownload);
     m_llmq_ctx->qdkgsman->UpdatedBlockTip(pindexNew, fInitialDownload);
     m_llmq_ctx->ehfSignalsHandler->UpdatedBlockTip(pindexNew, /* is_masternode = */ m_mn_activeman != nullptr);
 
@@ -107,7 +107,7 @@ void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef& 
 {
     assert(m_cj_ctx && m_llmq_ctx);
 
-    m_llmq_ctx->isman->TransactionAddedToMempool(ptx);
+    m_llmq_ctx->isman->TransactionAddedToMempool(m_peerman, ptx);
     m_llmq_ctx->clhandler->TransactionAddedToMempool(ptx, nAcceptTime);
     m_cj_ctx->dstxman->TransactionAddedToMempool(ptx);
 }

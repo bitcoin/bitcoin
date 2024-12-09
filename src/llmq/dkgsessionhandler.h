@@ -7,8 +7,6 @@
 
 #include <net.h> // for NodeId
 
-#include <gsl/pointers.h>
-
 #include <atomic>
 #include <list>
 #include <map>
@@ -65,7 +63,6 @@ public:
     using BinaryMessage = std::pair<NodeId, std::shared_ptr<CDataStream>>;
 
 private:
-    std::atomic<PeerManager*> m_peerman{nullptr};
     const int invType;
     const size_t maxMessagesPerNode;
     mutable Mutex cs_messages;
@@ -77,18 +74,18 @@ public:
     explicit CDKGPendingMessages(size_t _maxMessagesPerNode, int _invType) :
             invType(_invType), maxMessagesPerNode(_maxMessagesPerNode) {};
 
-    void PushPendingMessage(NodeId from, PeerManager* peerman, CDataStream& vRecv);
+    void PushPendingMessage(NodeId from, CDataStream& vRecv, PeerManager& peerman);
     std::list<BinaryMessage> PopPendingMessages(size_t maxCount);
     bool HasSeen(const uint256& hash) const;
-    void Misbehaving(NodeId from, int score);
+    void Misbehaving(NodeId from, int score, PeerManager& peerman);
     void Clear();
 
-    template<typename Message>
-    void PushPendingMessage(NodeId from, PeerManager* peerman, Message& msg)
+    template <typename Message>
+    void PushPendingMessage(NodeId from, Message& msg, PeerManager& peerman)
     {
         CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
         ds << msg;
-        PushPendingMessage(from, peerman, ds);
+        PushPendingMessage(from, ds, peerman);
     }
 
     // Might return nullptr messages, which indicates that deserialization failed for some reason
@@ -132,7 +129,6 @@ private:
 
     CBLSWorker& blsWorker;
     CChainState& m_chainstate;
-    CConnman& connman;
     CDeterministicMNManager& m_dmnman;
     CDKGDebugManager& dkgDebugManager;
     CDKGSessionManager& dkgManager;
@@ -140,7 +136,6 @@ private:
     CQuorumBlockProcessor& quorumBlockProcessor;
     const CActiveMasternodeManager* const m_mn_activeman;
     const CSporkManager& m_sporkman;
-    const std::unique_ptr<PeerManager>& m_peerman;
     const Consensus::LLMQParams params;
     const int quorumIndex;
 
@@ -160,16 +155,16 @@ private:
     CDKGPendingMessages pendingPrematureCommitments;
 
 public:
-    CDKGSessionHandler(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman,
+    CDKGSessionHandler(CBLSWorker& _blsWorker, CChainState& chainstate, CDeterministicMNManager& dmnman,
                        CDKGDebugManager& _dkgDebugManager, CDKGSessionManager& _dkgManager, CMasternodeMetaMan& mn_metaman,
                        CQuorumBlockProcessor& _quorumBlockProcessor, const CActiveMasternodeManager* const mn_activeman,
-                       const CSporkManager& sporkman, const std::unique_ptr<PeerManager>& peerman, const Consensus::LLMQParams& _params, int _quorumIndex);
+                       const CSporkManager& sporkman, const Consensus::LLMQParams& _params, int _quorumIndex);
     ~CDKGSessionHandler();
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew);
-    void ProcessMessage(const CNode& pfrom, gsl::not_null<PeerManager*> peerman, const std::string& msg_type, CDataStream& vRecv);
+    void ProcessMessage(const CNode& pfrom, PeerManager& peerman, const std::string& msg_type, CDataStream& vRecv);
 
-    void StartThread();
+    void StartThread(CConnman& connman, PeerManager& peerman);
     void StopThread();
 
     bool GetContribution(const uint256& hash, CDKGContribution& ret) const;
@@ -194,8 +189,8 @@ private:
     void WaitForNewQuorum(const uint256& oldQuorumHash) const;
     void SleepBeforePhase(QuorumPhase curPhase, const uint256& expectedQuorumHash, double randomSleepFactor, const WhileWaitFunc& runWhileWaiting) const;
     void HandlePhase(QuorumPhase curPhase, QuorumPhase nextPhase, const uint256& expectedQuorumHash, double randomSleepFactor, const StartPhaseFunc& startPhaseFunc, const WhileWaitFunc& runWhileWaiting);
-    void HandleDKGRound();
-    void PhaseHandlerThread();
+    void HandleDKGRound(CConnman& connman, PeerManager& peerman);
+    void PhaseHandlerThread(CConnman& connman, PeerManager& peerman);
 };
 
 } // namespace llmq

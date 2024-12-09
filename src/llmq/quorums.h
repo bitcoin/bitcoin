@@ -238,7 +238,6 @@ private:
 
     CBLSWorker& blsWorker;
     CChainState& m_chainstate;
-    CConnman& connman;
     CDeterministicMNManager& m_dmnman;
     CDKGSessionManager& dkgManager;
     CQuorumBlockProcessor& quorumBlockProcessor;
@@ -261,7 +260,7 @@ private:
     mutable CThreadInterrupt quorumThreadInterrupt;
 
 public:
-    CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman,
+    CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, CDeterministicMNManager& dmnman,
                    CDKGSessionManager& _dkgManager, CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor,
                    const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
                    const CSporkManager& sporkman, bool unit_tests, bool wipe);
@@ -270,15 +269,17 @@ public:
     void Start();
     void Stop();
 
-    void TriggerQuorumDataRecoveryThreads(const CBlockIndex* pIndex) const;
+    void TriggerQuorumDataRecoveryThreads(CConnman& connman, const CBlockIndex* pIndex) const;
 
-    void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload) const;
+    void UpdatedBlockTip(const CBlockIndex* pindexNew, CConnman& connman, bool fInitialDownload) const;
 
-    PeerMsgRet ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv);
+    PeerMsgRet ProcessMessage(CNode& pfrom, CConnman& connman, const std::string& msg_type, CDataStream& vRecv);
 
     static bool HasQuorum(Consensus::LLMQType llmqType, const CQuorumBlockProcessor& quorum_block_processor, const uint256& quorumHash);
 
-    bool RequestQuorumData(CNode* pfrom, Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, uint16_t nDataMask, const uint256& proTxHash = uint256()) const;
+    bool RequestQuorumData(CNode* pfrom, CConnman& connman, Consensus::LLMQType llmqType,
+                           const CBlockIndex* pQuorumBaseBlockIndex, uint16_t nDataMask,
+                           const uint256& proTxHash = uint256()) const;
 
     // all these methods will lock cs_main for a short period of time
     CQuorumCPtr GetQuorum(Consensus::LLMQType llmqType, const uint256& quorumHash) const;
@@ -289,7 +290,8 @@ public:
 
 private:
     // all private methods here are cs_main-free
-    void CheckQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex *pindexNew) const;
+    void CheckQuorumConnections(CConnman& connman, const Consensus::LLMQParams& llmqParams,
+                                const CBlockIndex* pindexNew) const;
 
     CQuorumPtr BuildQuorumFromCommitment(Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, bool populate_cache) const;
     bool BuildQuorumContributions(const CFinalCommitmentPtr& fqc, const std::shared_ptr<CQuorum>& quorum) const;
@@ -301,7 +303,8 @@ private:
     size_t GetQuorumRecoveryStartOffset(const CQuorumCPtr pQuorum, const CBlockIndex* pIndex) const;
 
     void StartCachePopulatorThread(const CQuorumCPtr pQuorum) const;
-    void StartQuorumDataRecoveryThread(const CQuorumCPtr pQuorum, const CBlockIndex* pIndex, uint16_t nDataMask) const;
+    void StartQuorumDataRecoveryThread(CConnman& connman, const CQuorumCPtr pQuorum, const CBlockIndex* pIndex,
+                                       uint16_t nDataMask) const;
 
     void StartCleanupOldQuorumDataThread(const CBlockIndex* pIndex) const;
     void MigrateOldQuorumDB(CEvoDB& evoDb) const;

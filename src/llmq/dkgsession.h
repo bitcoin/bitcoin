@@ -22,6 +22,7 @@ class CConnman;
 class CDeterministicMN;
 class CMasternodeMetaMan;
 class CSporkManager;
+class PeerManager;
 
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
@@ -279,7 +280,6 @@ private:
 
     CBLSWorker& blsWorker;
     CBLSWorkerCache cache;
-    CConnman& connman;
     CDeterministicMNManager& m_dmnman;
     CDKGSessionManager& dkgManager;
     CDKGDebugManager& dkgDebugManager;
@@ -326,9 +326,9 @@ private:
 
 public:
     CDKGSession(const CBlockIndex* pQuorumBaseBlockIndex, const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker,
-                CConnman& _connman, CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager,
-                CDKGDebugManager& _dkgDebugManager, CMasternodeMetaMan& mn_metaman,
-                const CActiveMasternodeManager* const mn_activeman, const CSporkManager& sporkman);
+                CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager, CDKGDebugManager& _dkgDebugManager,
+                CMasternodeMetaMan& mn_metaman, const CActiveMasternodeManager* const mn_activeman,
+                const CSporkManager& sporkman);
 
     // TODO: remove Init completely
     bool Init(const uint256& _myProTxHash, int _quorumIndex);
@@ -349,28 +349,28 @@ public:
      */
 
     // Phase 1: contribution
-    void Contribute(CDKGPendingMessages& pendingMessages);
-    void SendContributions(CDKGPendingMessages& pendingMessages);
+    void Contribute(CDKGPendingMessages& pendingMessages, PeerManager& peerman);
+    void SendContributions(CDKGPendingMessages& pendingMessages, PeerManager& peerman);
     bool PreVerifyMessage(const CDKGContribution& qc, bool& retBan) const;
     std::optional<CInv> ReceiveMessage(const CDKGContribution& qc);
     void VerifyPendingContributions() EXCLUSIVE_LOCKS_REQUIRED(cs_pending);
 
     // Phase 2: complaint
-    void VerifyAndComplain(CDKGPendingMessages& pendingMessages);
-    void VerifyConnectionAndMinProtoVersions() const;
-    void SendComplaint(CDKGPendingMessages& pendingMessages);
+    void VerifyAndComplain(CConnman& connman, CDKGPendingMessages& pendingMessages, PeerManager& peerman);
+    void VerifyConnectionAndMinProtoVersions(CConnman& connman) const;
+    void SendComplaint(CDKGPendingMessages& pendingMessages, PeerManager& peerman);
     bool PreVerifyMessage(const CDKGComplaint& qc, bool& retBan) const;
     std::optional<CInv> ReceiveMessage(const CDKGComplaint& qc);
 
     // Phase 3: justification
-    void VerifyAndJustify(CDKGPendingMessages& pendingMessages);
-    void SendJustification(CDKGPendingMessages& pendingMessages, const std::set<uint256>& forMembers);
+    void VerifyAndJustify(CDKGPendingMessages& pendingMessages, PeerManager& peerman);
+    void SendJustification(CDKGPendingMessages& pendingMessages, PeerManager& peerman, const std::set<uint256>& forMembers);
     bool PreVerifyMessage(const CDKGJustification& qj, bool& retBan) const;
     std::optional<CInv> ReceiveMessage(const CDKGJustification& qj);
 
     // Phase 4: commit
-    void VerifyAndCommit(CDKGPendingMessages& pendingMessages);
-    void SendCommitment(CDKGPendingMessages& pendingMessages);
+    void VerifyAndCommit(CDKGPendingMessages& pendingMessages, PeerManager& peerman);
+    void SendCommitment(CDKGPendingMessages& pendingMessages, PeerManager& peerman);
     bool PreVerifyMessage(const CDKGPrematureCommitment& qc, bool& retBan) const;
     std::optional<CInv> ReceiveMessage(const CDKGPrematureCommitment& qc);
 

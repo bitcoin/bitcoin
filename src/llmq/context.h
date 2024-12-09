@@ -39,14 +39,14 @@ private:
 public:
     LLMQContext() = delete;
     LLMQContext(const LLMQContext&) = delete;
-    LLMQContext(ChainstateManager& chainman, CConnman& connman, CDeterministicMNManager& dmnman, CEvoDB& evo_db,
+    LLMQContext(ChainstateManager& chainman, CDeterministicMNManager& dmnman, CEvoDB& evo_db,
                 CMasternodeMetaMan& mn_metaman, CMNHFManager& mnhfman, CSporkManager& sporkman, CTxMemPool& mempool,
-                const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
-                const std::unique_ptr<PeerManager>& peerman, bool unit_tests, bool wipe);
+                const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync, bool unit_tests,
+                bool wipe);
     ~LLMQContext();
 
     void Interrupt();
-    void Start();
+    void Start(CConnman& connman, PeerManager& peerman);
     void Stop();
 
     /** Guaranteed if LLMQContext is initialized then all members are valid too

@@ -30,18 +30,20 @@
 #include <memory>
 #include <univalue.h>
 
-PeerMsgRet CCoinJoinClientQueueManager::ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv)
+PeerMsgRet CCoinJoinClientQueueManager::ProcessMessage(const CNode& peer, CConnman& connman, PeerManager& peerman,
+                                                       std::string_view msg_type, CDataStream& vRecv)
 {
     if (m_is_masternode) return {};
     if (!m_mn_sync.IsBlockchainSynced()) return {};
 
     if (msg_type == NetMsgType::DSQUEUE) {
-        return CCoinJoinClientQueueManager::ProcessDSQueue(peer, vRecv);
+        return CCoinJoinClientQueueManager::ProcessDSQueue(peer, connman, peerman, vRecv);
     }
     return {};
 }
 
-PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataStream& vRecv)
+PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CConnman& connman, PeerManager& peerman,
+                                                       CDataStream& vRecv)
 {
     assert(m_mn_metaman.IsValid());
 
@@ -50,7 +52,7 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataS
 
     {
         LOCK(cs_main);
-        Assert(peerman)->EraseObjectRequest(peer.GetId(), CInv(MSG_DSQ, dsq.GetHash()));
+        peerman.EraseObjectRequest(peer.GetId(), CInv(MSG_DSQ, dsq.GetHash()));
     }
 
     if (dsq.masternodeOutpoint.IsNull() && dsq.m_protxHash.IsNull()) {
@@ -102,8 +104,9 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataS
         }
 
         // if the queue is ready, submit if we can
-        if (dsq.fReady && m_walletman.ForAnyCJClientMan([this, &dmn](std::unique_ptr<CCoinJoinClientManager>& clientman) {
-                return clientman->TrySubmitDenominate(dmn->pdmnState->addr, this->connman);
+        if (dsq.fReady &&
+            m_walletman.ForAnyCJClientMan([this, &connman, &dmn](std::unique_ptr<CCoinJoinClientManager>& clientman) {
+                return clientman->TrySubmitDenominate(dmn->pdmnState->addr, connman);
             })) {
             LogPrint(BCLog::COINJOIN, "DSQUEUE -- CoinJoin queue (%s) is ready on masternode %s\n", dsq.ToString(),
                      dmn->pdmnState->addr.ToStringAddrPort());
@@ -132,7 +135,7 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataS
             WITH_LOCK(cs_vecqueue, vecCoinJoinQueue.push_back(dsq));
         }
     } // cs_ProcessDSQueue
-    peerman->RelayDSQ(dsq);
+    peerman.RelayDSQ(dsq);
     return {};
 }
 
@@ -1917,11 +1920,11 @@ void CoinJoinWalletManager::Add(const std::shared_ptr<CWallet>& wallet)
     g_wallet_init_interface.InitCoinJoinSettings(*this);
 }
 
-void CoinJoinWalletManager::DoMaintenance()
+void CoinJoinWalletManager::DoMaintenance(CConnman& connman)
 {
     LOCK(cs_wallet_manager_map);
     for (auto& [_, clientman] : m_wallet_manager_map) {
-        clientman->DoMaintenance(m_chainman, m_connman, m_mempool);
+        clientman->DoMaintenance(m_chainman, connman, m_mempool);
     }
 }
 
