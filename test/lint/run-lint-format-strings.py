@@ -15,6 +15,8 @@ import sys
 FALSE_POSITIVES = [
     ("src/clientversion.cpp", "strprintf(_(COPYRIGHT_HOLDERS), COPYRIGHT_HOLDERS_SUBSTITUTION)"),
     ("src/test/translation_tests.cpp", "strprintf(format, arg)"),
+    ("src/bitcoin.cpp", "tfm::format(std::cout, HELP_USAGE, argv[0])"),
+    ("src/bitcoin.cpp", "tfm::format(std::cout, HELP_COMMANDS, argv[0])"),
 ]
 
 
