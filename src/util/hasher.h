@@ -12,8 +12,7 @@
 
 #include <cstdint>
 #include <cstring>
-
-template <typename C> class Span;
+#include <span>
 
 class SaltedTxidHasher
 {

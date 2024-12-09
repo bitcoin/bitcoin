@@ -45,6 +45,8 @@ class LEVELDB_EXPORT Slice {
 
   // Return a pointer to the beginning of the referenced data
   const char* data() const { return data_; }
+  const char* begin() const { return data_; }
+  const char* end() const { return data_+size_; }
 
   // Return the length (in bytes) of the referenced data
   size_t size() const { return size_; }
