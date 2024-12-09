@@ -277,8 +277,7 @@ public:
 
     static bool HasQuorum(Consensus::LLMQType llmqType, const CQuorumBlockProcessor& quorum_block_processor, const uint256& quorumHash);
 
-    bool RequestQuorumData(CNode* pfrom, CConnman& connman, Consensus::LLMQType llmqType,
-                           const CBlockIndex* pQuorumBaseBlockIndex, uint16_t nDataMask,
+    bool RequestQuorumData(CNode* pfrom, CConnman& connman, const CQuorumCPtr pQuorum, uint16_t nDataMask,
                            const uint256& proTxHash = uint256()) const;
 
     // all these methods will lock cs_main for a short period of time

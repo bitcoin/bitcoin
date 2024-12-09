@@ -793,7 +793,6 @@ static RPCHelpMan quorum_getdata()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    const ChainstateManager& chainman = EnsureChainman(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
     CConnman& connman = EnsureConnman(node);
 
@@ -815,10 +814,12 @@ static RPCHelpMan quorum_getdata()
         }
     }
 
-    const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(quorumHash));
-
+    const auto quorum = llmq_ctx.qman->GetQuorum(llmqType, quorumHash);
+    if (!quorum) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
+    }
     return connman.ForNode(nodeId, [&](CNode* pNode) {
-        return llmq_ctx.qman->RequestQuorumData(pNode, connman, llmqType, pQuorumBaseBlockIndex, nDataMask, proTxHash);
+        return llmq_ctx.qman->RequestQuorumData(pNode, connman, quorum, nDataMask, proTxHash);
     });
 },
     };

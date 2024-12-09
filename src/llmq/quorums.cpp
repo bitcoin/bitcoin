@@ -469,8 +469,7 @@ bool CQuorumManager::HasQuorum(Consensus::LLMQType llmqType, const CQuorumBlockP
     return quorum_block_processor.HasMinedCommitment(llmqType, quorumHash);
 }
 
-bool CQuorumManager::RequestQuorumData(CNode* pfrom, CConnman& connman, Consensus::LLMQType llmqType,
-                                       const CBlockIndex* pQuorumBaseBlockIndex, uint16_t nDataMask,
+bool CQuorumManager::RequestQuorumData(CNode* pfrom, CConnman& connman, CQuorumCPtr pQuorum, uint16_t nDataMask,
                                        const uint256& proTxHash) const
 {
     if (pfrom == nullptr) {
@@ -485,22 +484,20 @@ bool CQuorumManager::RequestQuorumData(CNode* pfrom, CConnman& connman, Consensu
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- pfrom is not a verified masternode\n", __func__);
         return false;
     }
+    const Consensus::LLMQType llmqType = pQuorum->qc->llmqType;
     if (!Params().GetLLMQ(llmqType).has_value()) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Invalid llmqType: %d\n", __func__, ToUnderlying(llmqType));
         return false;
     }
-    if (pQuorumBaseBlockIndex == nullptr) {
-        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Invalid pQuorumBaseBlockIndex: nullptr\n", __func__);
-        return false;
-    }
-    if (GetQuorum(llmqType, pQuorumBaseBlockIndex) == nullptr) {
-        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Quorum not found: %s, %d\n", __func__, pQuorumBaseBlockIndex->GetBlockHash().ToString(), ToUnderlying(llmqType));
+    const CBlockIndex* pindex{pQuorum->m_quorum_base_block_index};
+    if (pindex == nullptr) {
+        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Invalid m_quorum_base_block_index : nullptr\n", __func__);
         return false;
     }
 
     LOCK(cs_data_requests);
-    const CQuorumDataRequestKey key(pfrom->GetVerifiedProRegTxHash(), true, pQuorumBaseBlockIndex->GetBlockHash(), llmqType);
-    const CQuorumDataRequest request(llmqType, pQuorumBaseBlockIndex->GetBlockHash(), nDataMask, proTxHash);
+    const CQuorumDataRequestKey key(pfrom->GetVerifiedProRegTxHash(), true, pindex->GetBlockHash(), llmqType);
+    const CQuorumDataRequest request(llmqType, pindex->GetBlockHash(), nDataMask, proTxHash);
     auto [old_pair, inserted] = mapQuorumDataRequests.emplace(key, request);
     if (!inserted) {
         if (old_pair->second.IsExpired(/*add_bias=*/true)) {
@@ -1006,8 +1003,7 @@ void CQuorumManager::StartQuorumDataRecoveryThread(CConnman& connman, const CQuo
                     return;
                 }
 
-                if (RequestQuorumData(pNode, connman, pQuorum->qc->llmqType, pQuorum->m_quorum_base_block_index,
-                                      nDataMask, proTxHash)) {
+                if (RequestQuorumData(pNode, connman, pQuorum, nDataMask, proTxHash)) {
                     nTimeLastSuccess = GetTime<std::chrono::seconds>().count();
                     printLog("Requested");
                 } else {
