@@ -19,16 +19,12 @@ NUM_BLOCKS = 6       # number of blocks to mine
 
 
 class WalletFastRescanTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser, legacy=False)
-
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [[f'-keypool={KEYPOOL_SIZE}', '-blockfilterindex=1']]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
-        self.skip_if_no_sqlite()
 
     def get_wallet_txids(self, node: TestNode, wallet_name: str) -> list[str]:
         w = node.get_wallet_rpc(wallet_name)

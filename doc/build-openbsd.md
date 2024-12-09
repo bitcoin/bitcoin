@@ -103,7 +103,7 @@ There are many ways to configure Bitcoin Core, here are a few common examples:
 This enables descriptor wallet support and the GUI, assuming SQLite and Qt 5 are installed.
 
 ```bash
-cmake -B build -DWITH_SQLITE=ON -DBUILD_GUI=ON
+cmake -B build -DBUILD_GUI=ON
 ```
 
 Run `cmake -B build -LH` to see the full list of available options.
