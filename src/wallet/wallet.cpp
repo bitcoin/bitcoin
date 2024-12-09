@@ -490,30 +490,44 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
     return wallet;
 }
 
+// Re-creates wallet from backup file by renaming and moving the backup into the wallet's directory.
+bool RestoreWalletDbFromBackup(const fs::path& backup_file, const std::string& wallet_name, DatabaseStatus& status, bilingual_str& error)
+{
+    const fs::path wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), fs::u8path(wallet_name));
+    auto wallet_file = wallet_path / "wallet.dat";
+
+    if (!fs::exists(backup_file)) {
+        error = Untranslated("Backup file does not exist");
+        status = DatabaseStatus::FAILED_INVALID_BACKUP_FILE;
+        return false;
+    }
+
+    if (fs::exists(wallet_path) || !TryCreateDirectories(wallet_path)) {
+        error = Untranslated(strprintf("Failed to create database path '%s'. Database already exists.", fs::PathToString(wallet_path)));
+        status = DatabaseStatus::FAILED_ALREADY_EXISTS;
+        return false;
+    }
+
+    if (!fs::copy_file(backup_file, wallet_file, fs::copy_options::none)) {
+        error = Untranslated(strprintf("Failed to copy backup file from %s to %s", fs::PathToString(backup_file), fs::PathToString(wallet_path)));
+        status = DatabaseStatus::FAILED_CREATE;
+        return false;
+    }
+
+    return true;
+}
+
 std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     DatabaseOptions options;
     ReadDatabaseArgs(*context.args, options);
     options.require_existing = true;
 
-    const fs::path wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), fs::u8path(wallet_name));
-    auto wallet_file = wallet_path / "wallet.dat";
     std::shared_ptr<CWallet> wallet;
-
     try {
-        if (!fs::exists(backup_file)) {
-            error = Untranslated("Backup file does not exist");
-            status = DatabaseStatus::FAILED_INVALID_BACKUP_FILE;
+        if (!RestoreWalletDbFromBackup(backup_file, wallet_name, status, error)) {
             return nullptr;
         }
-
-        if (fs::exists(wallet_path) || !TryCreateDirectories(wallet_path)) {
-            error = Untranslated(strprintf("Failed to create database path '%s'. Database already exists.", fs::PathToString(wallet_path)));
-            status = DatabaseStatus::FAILED_ALREADY_EXISTS;
-            return nullptr;
-        }
-
-        fs::copy_file(backup_file, wallet_file, fs::copy_options::none);
 
         wallet = LoadWallet(context, wallet_name, load_on_start, options, status, error, warnings);
     } catch (const std::exception& e) {
@@ -522,6 +536,7 @@ std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& b
         error += Untranslated(strprintf("Unexpected exception: %s", e.what()));
     }
     if (!wallet) {
+        const fs::path wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), fs::u8path(wallet_name));
         fs::remove_all(wallet_path);
     }
 
@@ -4523,7 +4538,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
     }
     if (!success) {
         // Migration failed, cleanup
-        // Copy the backup to the actual wallet dir
+        // Before deleting the wallet's directory, copy the backup to the top-level wallets dir
         fs::path temp_backup_location = fsbridge::AbsPathJoin(GetWalletDir(), backup_filename);
         fs::copy_file(backup_path, temp_backup_location, fs::copy_options::none);
 
@@ -4560,14 +4575,24 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         }
 
         // Restore the backup
-        DatabaseStatus status;
-        std::vector<bilingual_str> warnings;
-        if (!RestoreWallet(context, temp_backup_location, wallet_name, /*load_on_start=*/std::nullopt, status, error, warnings)) {
-            error += _("\nUnable to restore backup of wallet.");
-            return util::Error{error};
+        // Depending on whether BDB support is enabled, load or not the wallet back into the context.
+        // When BDB is not supported, avoid leaving the wallet dangling in memory in read-only mode by
+        // only restoring the wallet from the backup file and not performing any other operation with it.
+        if (IsBDBSupported()) {
+            if (!RestoreWallet(context, temp_backup_location, wallet_name, /*load_on_start=*/std::nullopt, status, error, warnings)) {
+                error += _("\nUnable to restore and load backup of wallet.");
+                return util::Error{error};
+            }
+        } else {
+            // BDB is not enabled.
+            // Convert backup file the wallet db file by renaming it and moving it into the wallet's directory.
+            if (!RestoreWalletDbFromBackup(temp_backup_location, wallet_name, status, error)) {
+                error += _("\nUnable to restore backup of wallet.");
+                return util::Error{error};
+            }
         }
 
-        // Move the backup to the wallet dir
+        // The wallet directory has been restored, but just in case, copy the previously created backup to the wallet dir
         fs::copy_file(temp_backup_location, backup_path, fs::copy_options::none);
         fs::remove(temp_backup_location);
 

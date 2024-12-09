@@ -894,7 +894,8 @@ class WalletMigrationTest(BitcoinTestFramework):
         shutil.copytree(self.old_node.wallets_path / "failed", self.master_node.wallets_path / "failed")
         assert_raises_rpc_error(-4, "Failed to create database", self.master_node.migratewallet, "failed")
 
-        assert "failed" in self.master_node.listwallets()
+        # Only when bdb is enabled, migration re-loads the original wallet after failure
+        assert_equal("failed" in self.master_node.listwallets(), self.is_bdb_compiled() is not None)
         assert "failed_watchonly" not in self.master_node.listwallets()
         assert "failed_solvables" not in self.master_node.listwallets()
 
