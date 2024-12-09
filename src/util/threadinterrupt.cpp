@@ -9,9 +9,14 @@
 
 CThreadInterrupt::CThreadInterrupt() : flag(false) {}
 
-CThreadInterrupt::operator bool() const
+bool CThreadInterrupt::interrupted() const
 {
     return flag.load(std::memory_order_acquire);
+}
+
+CThreadInterrupt::operator bool() const
+{
+    return interrupted();
 }
 
 void CThreadInterrupt::reset()
