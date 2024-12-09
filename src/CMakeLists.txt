@@ -20,6 +20,7 @@ add_library(bitcoin_clientversion OBJECT EXCLUDE_FROM_ALL
 target_link_libraries(bitcoin_clientversion
   PRIVATE
     core_interface
+    coverage_interface
 )
 add_dependencies(bitcoin_clientversion generate_build_info)
 
@@ -95,6 +96,7 @@ add_library(bitcoin_consensus STATIC EXCLUDE_FROM_ALL
 target_link_libraries(bitcoin_consensus
   PRIVATE
     core_interface
+    coverage_interface
     bitcoin_crypto
     secp256k1
 )
@@ -159,6 +161,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
 target_link_libraries(bitcoin_common
   PRIVATE
     core_interface
+    coverage_interface
     bitcoin_consensus
     bitcoin_util
     univalue
@@ -182,6 +185,7 @@ if(ENABLE_WALLET)
     add_windows_resources(bitcoin-wallet bitcoin-wallet-res.rc)
     target_link_libraries(bitcoin-wallet
       core_interface
+      coverage_interface
       bitcoin_wallet
       bitcoin_common
       bitcoin_util
@@ -292,6 +296,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
 target_link_libraries(bitcoin_node
   PRIVATE
     core_interface
+    coverage_interface
     bitcoin_common
     bitcoin_util
     $<TARGET_NAME_IF_EXISTS:bitcoin_zmq>
@@ -315,6 +320,7 @@ if(BUILD_DAEMON)
   add_windows_resources(bitcoind bitcoind-res.rc)
   target_link_libraries(bitcoind
     core_interface
+    coverage_interface
     bitcoin_node
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
   )
@@ -327,6 +333,7 @@ if(WITH_MULTIPROCESS)
   )
   target_link_libraries(bitcoin-node
     core_interface
+    coverage_interface
     bitcoin_node
     bitcoin_ipc
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
@@ -358,6 +365,7 @@ add_library(bitcoin_cli STATIC EXCLUDE_FROM_ALL
 target_link_libraries(bitcoin_cli
   PUBLIC
     core_interface
+    coverage_interface
     univalue
 )
 
@@ -368,6 +376,7 @@ if(BUILD_CLI)
   add_windows_resources(bitcoin-cli bitcoin-cli-res.rc)
   target_link_libraries(bitcoin-cli
     core_interface
+    coverage_interface
     bitcoin_cli
     bitcoin_common
     bitcoin_util
@@ -383,6 +392,7 @@ if(BUILD_TX)
   add_windows_resources(bitcoin-tx bitcoin-tx-res.rc)
   target_link_libraries(bitcoin-tx
     core_interface
+    coverage_interface
     bitcoin_common
     bitcoin_util
     univalue
@@ -396,6 +406,7 @@ if(BUILD_UTIL)
   add_windows_resources(bitcoin-util bitcoin-util-res.rc)
   target_link_libraries(bitcoin-util
     core_interface
+    coverage_interface
     bitcoin_common
     bitcoin_util
   )
@@ -428,6 +439,7 @@ if(BUILD_UTIL_CHAINSTATE)
   target_link_libraries(bitcoin-chainstate
     PRIVATE
       core_interface
+      coverage_interface
       bitcoinkernel
   )
 endif()
