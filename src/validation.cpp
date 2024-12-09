@@ -2332,7 +2332,7 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
                 COutPoint out(hash, o);
                 Coin coin;
                 bool is_spent = view.SpendCoin(out, &coin);
-                if (!is_spent || tx.vout[o] != coin.out || pindex->nHeight != coin.nHeight || is_coinbase != coin.fCoinBase) {
+                if (!is_spent || tx.vout[o] != coin.out || pindex->nHeight != coin.nHeight || is_coinbase != coin.IsCoinBase()) {
                     if (!is_bip30_exception) {
                         fClean = false; // transaction output mismatch
                     }
