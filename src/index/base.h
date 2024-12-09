@@ -94,6 +94,7 @@ private:
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
 
     virtual bool AllowPrune() const = 0;
+    virtual uint32_t GetVersion() const = 0;
 
     template <typename... Args>
     void FatalErrorf(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args);
