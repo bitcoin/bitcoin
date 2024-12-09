@@ -188,7 +188,12 @@ class AuthServiceProxy():
                 {'code': -342, 'message': 'non-JSON HTTP response with \'%i %s\' from server' % (http_response.status, http_response.reason)},
                 http_response.status)
 
-        responsedata = http_response.read().decode('utf8')
+        data = http_response.read()
+        try:
+            responsedata = data.decode('utf8')
+        except UnicodeDecodeError as e:
+            raise JSONRPCException({
+                'code': -342, 'message': f'Cannot decode response in utf8 format, content: {data}, exception: {e}'})
         response = json.loads(responsedata, parse_float=decimal.Decimal)
         elapsed = time.time() - req_start_time
         if "error" in response and response["error"] is None:
