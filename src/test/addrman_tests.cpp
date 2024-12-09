@@ -8,6 +8,7 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <hash.h>
+#include <init_settings.h>
 #include <netbase.h>
 #include <random.h>
 #include <test/data/asmap.raw.h>
@@ -29,7 +30,7 @@ static const bool DETERMINISTIC{true};
 
 static int32_t GetCheckRatio(const NodeContext& node_ctx)
 {
-    return std::clamp<int32_t>(node_ctx.args->GetIntArg("-checkaddrman", 100), 0, 1000000);
+    return std::clamp<int32_t>(CheckaddrmanSetting::Get(*node_ctx.args, 100), 0, 1000000);
 }
 
 static CNetAddr ResolveIP(const std::string& ip)

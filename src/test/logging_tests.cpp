@@ -5,6 +5,7 @@
 #include <init/common.h>
 #include <logging.h>
 #include <logging/timer.h>
+#include <test/logging_tests_settings.h>
 #include <test/util/setup_common.h>
 #include <util/string.h>
 
@@ -221,7 +222,7 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
     {
         ResetLogger();
         ArgsManager args;
-        args.AddArg("-loglevel", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+        LoglevelSetting2::Register(args);
         const char* argv_test[] = {"bitcoind", "-loglevel=debug"};
         std::string err;
         BOOST_REQUIRE(args.ParseParameters(2, argv_test, err));
@@ -235,7 +236,7 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
     {
         ResetLogger();
         ArgsManager args;
-        args.AddArg("-loglevel", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+        LoglevelSetting2::Register(args);
         const char* argv_test[] = {"bitcoind", "-loglevel=net:trace"};
         std::string err;
         BOOST_REQUIRE(args.ParseParameters(2, argv_test, err));
@@ -254,7 +255,7 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
     {
         ResetLogger();
         ArgsManager args;
-        args.AddArg("-loglevel", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+        LoglevelSetting2::Register(args);
         const char* argv_test[] = {"bitcoind", "-loglevel=debug", "-loglevel=net:trace", "-loglevel=http:info"};
         std::string err;
         BOOST_REQUIRE(args.ParseParameters(4, argv_test, err));

@@ -4,6 +4,7 @@
 
 #include <chainparams.h>
 #include <common/args.h>
+#include <init_settings.h>
 #include <common/init.h>
 #include <logging.h>
 #include <tinyformat.h>
@@ -19,7 +20,7 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
 {
     try {
         if (!CheckDataDirOption(args)) {
-            return ConfigError{ConfigStatus::FAILED, strprintf(_("Specified data directory \"%s\" does not exist."), args.GetArg("-datadir", ""))};
+            return ConfigError{ConfigStatus::FAILED, strprintf(_("Specified data directory \"%s\" does not exist."), DatadirSetting::Get(args))};
         }
 
         // Record original datadir and config paths before parsing the config
@@ -32,7 +33,7 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
         // parse error, and specifying a datadir= location containing another
         // bitcoin.conf file just ignores the other file.)
         const fs::path orig_datadir_path{args.GetDataDirBase()};
-        const fs::path orig_config_path{AbsPathForConfigVal(args, args.GetPathArg("-conf", BITCOIN_CONF_FILENAME), /*net_specific=*/false)};
+        const fs::path orig_config_path{AbsPathForConfigVal(args, ConfSettingPath::Get(args), /*net_specific=*/false)};
 
         std::string error;
         if (!args.ReadConfigFiles(error, true)) {
@@ -72,7 +73,7 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
                     fs::quoted(fs::PathToString(base_path)),
                     fs::quoted(BITCOIN_CONF_FILENAME));
             } else if (!fs::equivalent(orig_config_path, base_config_path)) {
-                const std::string cli_config_path = args.GetArg("-conf", "");
+                const std::string cli_config_path = ConfSetting::Get(args);
                 const std::string config_source = cli_config_path.empty()
                     ? strprintf("data directory %s", fs::quoted(fs::PathToString(orig_datadir_path)))
                     : strprintf("command line argument %s", fs::quoted("-conf=" + cli_config_path));
@@ -86,7 +87,7 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
                     fs::quoted(BITCOIN_CONF_FILENAME),
                     fs::quoted(fs::PathToString(orig_config_path)),
                     config_source);
-                if (args.GetBoolArg("-allowignoredconf", false)) {
+                if (AllowignoredconfSetting::Get(args)) {
                     LogWarning("%s", error);
                 } else {
                     error += "\n- Set allowignoredconf=1 option to treat this condition as a warning, not an error.";

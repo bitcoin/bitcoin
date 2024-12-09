@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <common/args.h>
+#include <init_settings.h>
 
 #include <common/settings.h>
 #include <logging.h>
@@ -125,7 +126,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
         LOCK(cs_args);
         m_settings.ro_config.clear();
         m_config_sections.clear();
-        m_config_path = AbsPathForConfigVal(*this, GetPathArg("-conf", BITCOIN_CONF_FILENAME), /*net_specific=*/false);
+        m_config_path = AbsPathForConfigVal(*this, ConfSettingPath::Get(*this), /*net_specific=*/false);
     }
 
     const auto conf_path{GetConfigFilePath()};
@@ -137,7 +138,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
         }
         stream = std::ifstream{conf_path};
         // If the file is explicitly specified, it must be readable
-        if (IsArgSet("-conf") && !stream.good()) {
+        if (!ConfSetting::Value(*this).isNull() && !stream.good()) {
             error = strprintf("specified config file \"%s\" could not be opened.", fs::PathToString(conf_path));
             return false;
         }
@@ -217,7 +218,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
     // If datadir is changed in .conf file:
     ClearPathCache();
     if (!CheckDataDirOption(*this)) {
-        error = strprintf("specified data directory \"%s\" does not exist.", GetArg("-datadir", ""));
+        error = strprintf("specified data directory \"%s\" does not exist.", DatadirSetting::Get(*this));
         return false;
     }
     return true;

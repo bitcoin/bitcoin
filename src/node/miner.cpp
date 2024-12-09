@@ -15,6 +15,7 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
+#include <init_settings.h>
 #include <logging.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
@@ -86,11 +87,11 @@ BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool
 void ApplyArgsManOptions(const ArgsManager& args, BlockAssembler::Options& options)
 {
     // Block resource limits
-    options.nBlockMaxWeight = args.GetIntArg("-blockmaxweight", options.nBlockMaxWeight);
-    if (const auto blockmintxfee{args.GetArg("-blockmintxfee")}) {
+    options.nBlockMaxWeight = BlockmaxweightSetting::Get(args, options.nBlockMaxWeight);
+    if (const auto blockmintxfee{BlockmintxfeeSetting::Get(args)}) {
         if (const auto parsed{ParseMoney(*blockmintxfee)}) options.blockMinFeeRate = CFeeRate{*parsed};
     }
-    options.print_modified_fee = args.GetBoolArg("-printpriority", options.print_modified_fee);
+    options.print_modified_fee = PrintprioritySetting::Get(args, options.print_modified_fee);
 }
 
 void BlockAssembler::resetBlock()
@@ -129,7 +130,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // -regtest only: allow overriding block.nVersion with
     // -blockversion=N to test forking scenarios
     if (chainparams.MineBlocksOnDemand()) {
-        pblock->nVersion = gArgs.GetIntArg("-blockversion", pblock->nVersion);
+        pblock->nVersion = BlockversionSetting::Get(gArgs, pblock->nVersion);
     }
 
     pblock->nTime = TicksSinceEpoch<std::chrono::seconds>(NodeClock::now());

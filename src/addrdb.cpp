@@ -14,6 +14,7 @@
 #include <common/settings.h>
 #include <cstdint>
 #include <hash.h>
+#include <init_settings.h>
 #include <logging.h>
 #include <logging/timer.h>
 #include <netbase.h>
@@ -190,7 +191,7 @@ void ReadFromStream(AddrMan& addr, DataStream& ssPeers)
 
 util::Result<std::unique_ptr<AddrMan>> LoadAddrman(const NetGroupManager& netgroupman, const ArgsManager& args)
 {
-    auto check_addrman = std::clamp<int32_t>(args.GetIntArg("-checkaddrman", DEFAULT_ADDRMAN_CONSISTENCY_CHECKS), 0, 1000000);
+    auto check_addrman = std::clamp<int32_t>(CheckaddrmanSetting::Get(args, DEFAULT_ADDRMAN_CONSISTENCY_CHECKS), 0, 1000000);
     bool deterministic = HasTestOption(args, "addrman"); // use a deterministic addrman only for tests
 
     auto addrman{std::make_unique<AddrMan>(netgroupman, deterministic, /*consistency_check_ratio=*/check_addrman)};

@@ -7,6 +7,7 @@
 #include <common/args.h>
 #include <crypto/hmac_sha256.h>
 #include <httpserver.h>
+#include <init_settings.h>
 #include <logging.h>
 #include <netaddress.h>
 #include <rpc/protocol.h>
@@ -291,10 +292,10 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
 
 static bool InitRPCAuthentication()
 {
-    if (gArgs.GetArg("-rpcpassword", "") == "")
+    if (RpcpasswordSetting::Get(gArgs) == "")
     {
         std::optional<fs::perms> cookie_perms{std::nullopt};
-        auto cookie_perms_arg{gArgs.GetArg("-rpccookieperms")};
+        auto cookie_perms_arg{RpccookiepermsSetting::Get(gArgs)};
         if (cookie_perms_arg) {
             auto perm_opt = InterpretPermString(*cookie_perms_arg);
             if (!perm_opt) {
@@ -315,12 +316,12 @@ static bool InitRPCAuthentication()
         }
     } else {
         LogPrintf("Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.\n");
-        strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
+        strRPCUserColonPass = RpcuserSetting::Get(gArgs) + ":" + RpcpasswordSetting::Get(gArgs);
     }
 
-    if (!gArgs.GetArgs("-rpcauth").empty()) {
+    if (!RpcauthSetting::Get(gArgs).empty()) {
         LogInfo("Using rpcauth authentication.\n");
-        for (const std::string& rpcauth : gArgs.GetArgs("-rpcauth")) {
+        for (const std::string& rpcauth : RpcauthSetting::Get(gArgs)) {
             std::vector<std::string> fields{SplitString(rpcauth, ':')};
             const std::vector<std::string> salt_hmac{SplitString(fields.back(), '$')};
             if (fields.size() == 2 && salt_hmac.size() == 2) {
@@ -334,8 +335,8 @@ static bool InitRPCAuthentication()
         }
     }
 
-    g_rpc_whitelist_default = gArgs.GetBoolArg("-rpcwhitelistdefault", gArgs.IsArgSet("-rpcwhitelist"));
-    for (const std::string& strRPCWhitelist : gArgs.GetArgs("-rpcwhitelist")) {
+    g_rpc_whitelist_default = RpcwhitelistdefaultSetting::Get(gArgs, !RpcwhitelistSetting::Value(gArgs).isNull());
+    for (const std::string& strRPCWhitelist : RpcwhitelistSetting::Get(gArgs)) {
         auto pos = strRPCWhitelist.find(':');
         std::string strUser = strRPCWhitelist.substr(0, pos);
         bool intersect = g_rpc_whitelist.count(strUser);

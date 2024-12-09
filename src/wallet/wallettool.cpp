@@ -6,6 +6,7 @@
 
 #include <wallet/wallettool.h>
 
+#include <bitcoin-wallet_settings.h>
 #include <common/args.h>
 #include <util/fs.h>
 #include <util/translation.h>
@@ -112,27 +113,27 @@ static void WalletShowInfo(CWallet* wallet_instance)
 
 bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
 {
-    if (args.IsArgSet("-format") && command != "createfromdump") {
+    if (!FormatSetting::Value(args).isNull() && command != "createfromdump") {
         tfm::format(std::cerr, "The -format option can only be used with the \"createfromdump\" command.\n");
         return false;
     }
-    if (args.IsArgSet("-dumpfile") && command != "dump" && command != "createfromdump") {
+    if (!DumpfileSetting::Value(args).isNull() && command != "dump" && command != "createfromdump") {
         tfm::format(std::cerr, "The -dumpfile option can only be used with the \"dump\" and \"createfromdump\" commands.\n");
         return false;
     }
-    if (args.IsArgSet("-descriptors") && command != "create") {
+    if (!DescriptorsSetting::Value(args).isNull() && command != "create") {
         tfm::format(std::cerr, "The -descriptors option can only be used with the 'create' command.\n");
         return false;
     }
-    if (args.IsArgSet("-legacy") && command != "create") {
+    if (!LegacySetting::Value(args).isNull() && command != "create") {
         tfm::format(std::cerr, "The -legacy option can only be used with the 'create' command.\n");
         return false;
     }
-    if (command == "create" && !args.IsArgSet("-wallet")) {
+    if (command == "create" && WalletSetting::Value(args).isNull()) {
         tfm::format(std::cerr, "Wallet name must be provided when creating a new wallet.\n");
         return false;
     }
-    const std::string name = args.GetArg("-wallet", "");
+    const std::string name = WalletSetting::Get(args);
     const fs::path path = fsbridge::AbsPathJoin(GetWalletDir(), fs::PathFromString(name));
 
     if (command == "create") {
@@ -140,9 +141,9 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         ReadDatabaseArgs(args, options);
         options.require_create = true;
         // If -legacy is set, use it. Otherwise default to false.
-        bool make_legacy = args.GetBoolArg("-legacy", false);
+        bool make_legacy = LegacySetting::Get(args);
         // If neither -legacy nor -descriptors is set, default to true. If -descriptors is set, use its value.
-        bool make_descriptors = (!args.IsArgSet("-descriptors") && !args.IsArgSet("-legacy")) || (args.IsArgSet("-descriptors") && args.GetBoolArg("-descriptors", true));
+        bool make_descriptors = (DescriptorsSetting::Value(args).isNull() && LegacySetting::Value(args).isNull()) || (!DescriptorsSetting::Value(args).isNull() && DescriptorsSetting::Get(args));
         if (make_legacy && make_descriptors) {
             tfm::format(std::cerr, "Only one of -legacy or -descriptors can be set to true, not both\n");
             return false;
@@ -193,7 +194,7 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         options.require_existing = true;
         DatabaseStatus status;
 
-        if (args.GetBoolArg("-withinternalbdb", false) && IsBDBFile(BDBDataFile(path))) {
+        if (WithinternalbdbSetting::Get(args) && IsBDBFile(BDBDataFile(path))) {
             options.require_format = DatabaseFormat::BERKELEY_RO;
         }
 

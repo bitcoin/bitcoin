@@ -11,6 +11,7 @@
 #include <common/init.h>
 #include <common/system.h>
 #include <init.h>
+#include <init_settings.h>
 #include <interfaces/handler.h>
 #include <interfaces/init.h>
 #include <interfaces/node.h>
@@ -18,6 +19,7 @@
 #include <node/context.h>
 #include <node/interface_ui.h>
 #include <noui.h>
+#include <qt/bitcoin_settings.h>
 #include <qt/bitcoingui.h>
 #include <qt/clientmodel.h>
 #include <qt/guiconstants.h>
@@ -109,7 +111,7 @@ static QString GetLangTerritory()
     if(!lang_territory_qsettings.isEmpty())
         lang_territory = lang_territory_qsettings;
     // 3) -lang command line argument
-    lang_territory = QString::fromStdString(gArgs.GetArg("-lang", lang_territory.toStdString()));
+    lang_territory = QString::fromStdString(LangSetting::Get(gArgs, lang_territory.toStdString()));
     return lang_territory;
 }
 
@@ -220,7 +222,7 @@ void BitcoinApplication::setupPlatformStyle()
     // This must be done inside the BitcoinApplication constructor, or after it, because
     // PlatformStyle::instantiate requires a QApplication
     std::string platformName;
-    platformName = gArgs.GetArg("-uiplatform", BitcoinGUI::DEFAULT_UIPLATFORM);
+    platformName = UiplatformSetting::Get(gArgs);
     platformStyle = PlatformStyle::instantiate(QString::fromStdString(platformName));
     if (!platformStyle) // Fall back to "other" if specified name not found
         platformStyle = PlatformStyle::instantiate("other");
@@ -399,7 +401,7 @@ void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHead
         window->setClientModel(clientModel, &tip_info);
 
         // If '-min' option passed, start window minimized (iconified) or minimized to tray
-        bool start_minimized = gArgs.GetBoolArg("-min", false);
+        bool start_minimized = MinSetting::Get(gArgs);
 #ifdef ENABLE_WALLET
         if (WalletModel::isWalletEnabled()) {
             m_wallet_controller = new WalletController(*clientModel, platformStyle, this);
@@ -477,12 +479,12 @@ bool BitcoinApplication::event(QEvent* e)
 
 static void SetupUIArgs(ArgsManager& argsman)
 {
-    argsman.AddArg("-choosedatadir", strprintf("Choose data directory on startup (default: %u)", DEFAULT_CHOOSE_DATADIR), ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
-    argsman.AddArg("-lang=<lang>", "Set language, for example \"de_DE\" (default: system locale)", ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
-    argsman.AddArg("-min", "Start minimized", ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
-    argsman.AddArg("-resetguisettings", "Reset all settings changed in the GUI", ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
-    argsman.AddArg("-splash", strprintf("Show splash screen on startup (default: %u)", DEFAULT_SPLASHSCREEN), ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
-    argsman.AddArg("-uiplatform", strprintf("Select platform to customize UI for (one of windows, macosx, other; default: %s)", BitcoinGUI::DEFAULT_UIPLATFORM), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::GUI);
+    ChoosedatadirSetting::Register(argsman);
+    LangSetting::Register(argsman);
+    MinSetting::Register(argsman);
+    ResetguisettingsSetting::Register(argsman);
+    SplashSetting::Register(argsman);
+    UiplatformSetting::Register(argsman);
 }
 
 int GuiMain(int argc, char* argv[])
@@ -582,8 +584,8 @@ int GuiMain(int argc, char* argv[])
 
     // Show help message immediately after parsing command-line options (for "-lang") and setting locale,
     // but before showing splash screen.
-    if (HelpRequested(gArgs) || gArgs.GetBoolArg("-version", false)) {
-        HelpMessageDialog help(nullptr, gArgs.GetBoolArg("-version", false));
+    if (HelpRequested(gArgs) || VersionSetting::Get(gArgs)) {
+        HelpMessageDialog help(nullptr, VersionSetting::Get(gArgs));
         help.showOrPrint();
         return EXIT_SUCCESS;
     }
@@ -662,13 +664,13 @@ int GuiMain(int argc, char* argv[])
     app.parameterSetup();
     GUIUtil::LogQtInfo();
 
-    if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))
+    if (SplashSetting::Get(gArgs) && !MinSetting::Get(gArgs))
         app.createSplashScreen(networkStyle.data());
 
     app.createNode(*init);
 
     // Load GUI settings from QSettings
-    if (!app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false))) {
+    if (!app.createOptionsModel(ResetguisettingsSetting::Get(gArgs))) {
         return EXIT_FAILURE;
     }
 

@@ -8,14 +8,15 @@
 #include <common/args.h>
 #include <key_io.h>
 #include <logging.h>
+#include <wallet/init_settings.h>
 
 namespace wallet {
 fs::path GetWalletDir()
 {
     fs::path path;
 
-    if (gArgs.IsArgSet("-walletdir")) {
-        path = gArgs.GetPathArg("-walletdir");
+    if (!WalletdirSetting::Value(gArgs).isNull()) {
+        path = WalletdirSetting::Get(gArgs);
         if (!fs::is_directory(path)) {
             // If the path specified doesn't exist, we return the deliberately
             // invalid empty string.
