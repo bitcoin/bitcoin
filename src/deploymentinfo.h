@@ -7,6 +7,7 @@
 
 #include <consensus/params.h>
 
+#include <array>
 #include <optional>
 #include <string>
 
@@ -17,7 +18,7 @@ struct VBDeploymentInfo {
     bool gbt_force;
 };
 
-extern const VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS];
+extern const std::array<VBDeploymentInfo,Consensus::MAX_VERSION_BITS_DEPLOYMENTS> VersionBitsDeploymentInfo;
 
 std::string DeploymentName(Consensus::BuriedDeployment dep);
 
