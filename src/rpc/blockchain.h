@@ -59,4 +59,7 @@ UniValue CreateUTXOSnapshot(
 std::optional<int> GetPruneHeight(const node::BlockManager& blockman, const CChain& chain) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 void CheckBlockDataAvailability(node::BlockManager& blockman, const CBlockIndex& blockindex, bool check_for_undo) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+void ReconsiderBlock(ChainstateManager& chainman, uint256 block_hash);
+void InvalidateBlock(ChainstateManager& chainman, const uint256 block_hash);
+
 #endif // BITCOIN_RPC_BLOCKCHAIN_H
