@@ -215,7 +215,7 @@ class PackageRelayTest(BitcoinTestFramework):
 
     @cleanup
     def test_orphan_consensus_failure(self):
-        self.log.info("Check opportunistic 1p1c logic with consensus-invalid orphan causes disconnect of the correct peer")
+        self.log.info("Check opportunistic 1p1c logic requires parent and child to be from the same peer")
         node = self.nodes[0]
         low_fee_parent = self.create_tx_below_mempoolminfee(self.wallet)
         coin = low_fee_parent["new_utxo"]
@@ -239,15 +239,17 @@ class PackageRelayTest(BitcoinTestFramework):
         parent_txid_int = int(low_fee_parent["txid"], 16)
         bad_orphan_sender.wait_for_getdata([parent_txid_int])
 
-        # 3. A different peer relays the parent. Parent+Child are evaluated as a package and rejected.
-        parent_sender.send_message(msg_tx(low_fee_parent["tx"]))
+        # 3. A different peer relays the parent. Package is not evaluated because the transactions
+        # were not sent from the same peer.
+        parent_sender.send_and_ping(msg_tx(low_fee_parent["tx"]))
 
         # 4. Transactions should not be in mempool.
         node_mempool = node.getrawmempool()
         assert low_fee_parent["txid"] not in node_mempool
         assert tx_orphan_bad_wit.rehash() not in node_mempool
 
-        # 5. Peer that sent a consensus-invalid transaction should be disconnected.
+        # 5. Have the other peer send the tx too, so that tx_orphan_bad_wit package is attempted.
+        bad_orphan_sender.send_message(msg_tx(low_fee_parent["tx"]))
         bad_orphan_sender.wait_for_disconnect()
 
         # The peer that didn't provide the orphan should not be disconnected.
@@ -279,20 +281,17 @@ class PackageRelayTest(BitcoinTestFramework):
         package_sender.wait_for_getdata([parent_txid_int])
 
         # 3. A different node relays the parent. The parent is first evaluated by itself and
-        # rejected for being too low feerate. Then it is evaluated as a package and, after passing
-        # feerate checks, rejected for having a bad signature (consensus error).
-        fake_parent_sender.send_message(msg_tx(tx_parent_bad_wit))
+        # rejected for being too low feerate. It is not evaluated as a package because the child was
+        # sent from a different peer, so we don't find out that the child is consensus-invalid.
+        fake_parent_sender.send_and_ping(msg_tx(tx_parent_bad_wit))
 
         # 4. Transactions should not be in mempool.
         node_mempool = node.getrawmempool()
         assert tx_parent_bad_wit.rehash() not in node_mempool
         assert high_fee_child["txid"] not in node_mempool
 
-        # 5. Peer sent a consensus-invalid transaction.
-        fake_parent_sender.wait_for_disconnect()
-
         self.log.info("Check that fake parent does not cause orphan to be deleted and real package can still be submitted")
-        # 6. Child-sending should not have been punished and the orphan should remain in orphanage.
+        # 5. Child-sending should not have been punished and the orphan should remain in orphanage.
         # It can send the "real" parent transaction, and the package is accepted.
         parent_wtxid_int = int(low_fee_parent["tx"].getwtxid(), 16)
         package_sender.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=parent_wtxid_int)]))
