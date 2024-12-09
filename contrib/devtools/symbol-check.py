@@ -34,11 +34,11 @@ import lief
 MAX_VERSIONS = {
 'GCC':       (4,3,0),
 'GLIBC': {
-    lief.ELF.ARCH.x86_64: (2,31),
-    lief.ELF.ARCH.ARM:    (2,31),
-    lief.ELF.ARCH.AARCH64:(2,31),
-    lief.ELF.ARCH.PPC64:  (2,31),
-    lief.ELF.ARCH.RISCV:  (2,31),
+    lief.ELF.ARCH.x86_64: (2,33),
+    lief.ELF.ARCH.ARM:    (2,33),
+    lief.ELF.ARCH.AARCH64:(2,33),
+    lief.ELF.ARCH.PPC64:  (2,33),
+    lief.ELF.ARCH.RISCV:  (2,33),
 },
 'LIBATOMIC': (1,0),
 'V':         (0,5,0),  # xkb (bitcoin-qt only)
@@ -47,20 +47,20 @@ MAX_VERSIONS = {
 # Ignore symbols that are exported as part of every executable
 IGNORE_EXPORTS = {
 'environ', '_environ', '__environ', '_fini', '_init', 'stdin',
-'stdout', 'stderr',
+'stdout', 'stderr', '__libc_single_threaded',
 }
 
 # Expected linker-loader names can be found here:
 # https://sourceware.org/glibc/wiki/ABIList?action=recall&rev=16
 ELF_INTERPRETER_NAMES: dict[lief.ELF.ARCH, dict[lief.ENDIANNESS, str]] = {
     lief.ELF.ARCH.x86_64:  {
-        lief.ENDIANNESS.LITTLE: "/lib64/ld-linux-x86-64.so.2",
+        lief.ENDIANNESS.LITTLE: "",
     },
     lief.ELF.ARCH.ARM:     {
         lief.ENDIANNESS.LITTLE: "/lib/ld-linux-armhf.so.3",
     },
     lief.ELF.ARCH.AARCH64: {
-        lief.ENDIANNESS.LITTLE: "/lib/ld-linux-aarch64.so.1",
+        lief.ENDIANNESS.LITTLE: "",
     },
     lief.ELF.ARCH.PPC64:   {
         lief.ENDIANNESS.BIG: "/lib64/ld64.so.1",
@@ -219,6 +219,13 @@ def check_RUNPATH(binary) -> bool:
 
 def check_ELF_libraries(binary) -> bool:
     ok: bool = True
+
+    if binary.header.machine_type == lief.ELF.ARCH.x86_64:
+        return len(binary.libraries) == 0
+
+    if binary.header.machine_type == lief.ELF.ARCH.AARCH64:
+        return len(binary.libraries) == 0
+
     for library in binary.libraries:
         if library not in ELF_ALLOWED_LIBRARIES:
             print(f'{filename}: {library} is not in ALLOWED_LIBRARIES!')
