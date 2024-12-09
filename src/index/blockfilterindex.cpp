@@ -151,7 +151,7 @@ bool BlockFilterIndex::CustomCommit(CDBBatch& batch)
         LogError("%s: Failed to open filter file %d\n", __func__, pos.nFile);
         return false;
     }
-    if (!file.Commit()) {
+    if (!file.Commit() || file.fclose() != 0) {
         LogError("%s: Failed to commit filter file %d\n", __func__, pos.nFile);
         return false;
     }
@@ -205,7 +205,7 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
             LogPrintf("%s: Failed to truncate filter file %d\n", __func__, pos.nFile);
             return 0;
         }
-        if (!last_file.Commit()) {
+        if (!last_file.Commit() || last_file.fclose() != 0) {
             LogPrintf("%s: Failed to commit filter file %d\n", __func__, pos.nFile);
             return 0;
         }
@@ -229,6 +229,12 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
     }
 
     fileout << filter.GetBlockHash() << filter.GetEncodedFilter();
+
+    if (fileout.fclose() != 0) {
+        LogPrintf("%s: Failed to close filter file %d\n", __func__, pos.nFile);
+        return 0;
+    }
+
     return data_size;
 }
 
