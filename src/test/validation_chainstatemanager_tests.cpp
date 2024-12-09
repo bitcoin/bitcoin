@@ -369,23 +369,12 @@ struct SnapshotTestSetup : TestChain100Setup {
     // @returns a reference to the "restarted" ChainstateManager
     ChainstateManager& SimulateNodeRestart()
     {
-        ChainstateManager& chainman = *Assert(m_node.chainman);
-
         BOOST_TEST_MESSAGE("Simulating node restart");
         {
-            for (Chainstate* cs : chainman.GetAll()) {
-                LOCK(::cs_main);
-                cs->ForceFlushStateToDisk();
-            }
-            // Process all callbacks referring to the old manager before wiping it.
-            m_node.validation_signals->SyncWithValidationInterfaceQueue();
-            LOCK(::cs_main);
-            chainman.ResetChainstates();
-            BOOST_CHECK_EQUAL(chainman.GetAll().size(), 0);
             m_node.notifications = std::make_unique<KernelNotifications>(Assert(m_node.shutdown_request), m_node.exit_status, *Assert(m_node.warnings));
             const ChainstateManager::Options chainman_opts{
                 .chainparams = ::Params(),
-                .datadir = chainman.m_options.datadir,
+                .datadir = Assert(m_node.chainman)->m_options.datadir,
                 .notifications = *m_node.notifications,
                 .signals = m_node.validation_signals.get(),
             };
@@ -397,7 +386,11 @@ struct SnapshotTestSetup : TestChain100Setup {
             // For robustness, ensure the old manager is destroyed before creating a
             // new one.
             m_node.chainman.reset();
+            // Process all callbacks referring to the old manager before creating a
+            // new one.
+            m_node.validation_signals->SyncWithValidationInterfaceQueue();
             m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown_signal), chainman_opts, blockman_opts);
+            BOOST_CHECK_EQUAL(m_node.chainman->GetAll().size(), 0);
         }
         return *Assert(m_node.chainman);
     }
