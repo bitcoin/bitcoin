@@ -79,7 +79,7 @@ FUZZ_TARGET(utxo_total_supply)
     };
     const auto UpdateUtxoStats = [&]() {
         LOCK(chainman.GetMutex());
-        chainman.ActiveChainstate().ForceFlushStateToDisk();
+        Assert(chainman.ActiveChainstate().ForceFlushStateToDisk());
         utxo_stats = std::move(
             *Assert(kernel::ComputeUTXOStats(kernel::CoinStatsHashType::NONE, &chainman.ActiveChainstate().CoinsDB(), chainman.m_blockman, {})));
         // Check that miner can't print more money than they are allowed to
