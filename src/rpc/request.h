@@ -44,6 +44,8 @@ public:
     std::string peerAddr;
     std::any context;
     JSONRPCVersion m_json_version = JSONRPCVersion::V1_LEGACY;
+    // Note: If you add fields to this struct, you should also update the
+    // JSONRPCRequest struct in ipc/capnp/chain.capnp.
 
     void parse(const UniValue& valRequest);
     [[nodiscard]] bool IsNotification() const { return !id.has_value() && m_json_version == JSONRPCVersion::V2; };
