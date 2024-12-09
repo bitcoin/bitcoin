@@ -848,25 +848,30 @@ static void PeriodicStats(NodeContext& node)
         LogPrintf("%s: GetUTXOStats failed\n", __func__);
     }
 
-    // short version of GetNetworkHashPS(120, -1);
     CBlockIndex *tip = chainman.ActiveChain().Tip();
-    CBlockIndex *pindex = tip;
-    int64_t minTime = pindex->GetBlockTime();
-    int64_t maxTime = minTime;
-    for (int i = 0; i < 120 && pindex->pprev != nullptr; i++) {
-        pindex = pindex->pprev;
-        int64_t time = pindex->GetBlockTime();
-        minTime = std::min(time, minTime);
-        maxTime = std::max(time, maxTime);
-    }
-    arith_uint256 workDiff = tip->nChainWork - pindex->nChainWork;
-    int64_t timeDiff = maxTime - minTime;
-    double nNetworkHashPS = workDiff.getdouble() / timeDiff;
+    double nNetworkHashPS = [&]() {
+        // Short version of GetNetworkHashPS(120, -1);
+        CBlockIndex *pindex = tip;
+        int64_t minTime = pindex->GetBlockTime();
+        int64_t maxTime = minTime;
+        for (int i = 0; i < 120 && pindex->pprev != nullptr; i++) {
+            pindex = pindex->pprev;
+            int64_t time = pindex->GetBlockTime();
+            minTime = std::min(time, minTime);
+            maxTime = std::max(time, maxTime);
+        }
+        if (minTime == maxTime) return 0.0;
+        arith_uint256 workDiff = tip->nChainWork - pindex->nChainWork;
+        int64_t timeDiff = maxTime - minTime;
+        return workDiff.getdouble() / timeDiff;
+    }();
 
-    ::g_stats_client->gaugeDouble("network.hashesPerSecond", nNetworkHashPS);
-    ::g_stats_client->gaugeDouble("network.terahashesPerSecond", nNetworkHashPS / 1e12);
-    ::g_stats_client->gaugeDouble("network.petahashesPerSecond", nNetworkHashPS / 1e15);
-    ::g_stats_client->gaugeDouble("network.exahashesPerSecond", nNetworkHashPS / 1e18);
+    if (nNetworkHashPS > 0.0) {
+        ::g_stats_client->gaugeDouble("network.hashesPerSecond", nNetworkHashPS);
+        ::g_stats_client->gaugeDouble("network.terahashesPerSecond", nNetworkHashPS / 1e12);
+        ::g_stats_client->gaugeDouble("network.petahashesPerSecond", nNetworkHashPS / 1e15);
+        ::g_stats_client->gaugeDouble("network.exahashesPerSecond", nNetworkHashPS / 1e18);
+    }
     // No need for cs_main, we never use null tip here
     ::g_stats_client->gaugeDouble("network.difficulty", (double)GetDifficulty(tip));
 
