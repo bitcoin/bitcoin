@@ -59,8 +59,11 @@ If you do need the wallet enabled (`-DENABLE_WALLET=ON`), it is common for devs 
 If you have multiple threads on your machine, you can utilize all of them with:
 
 ```sh
-cmake --build build -j "$(($(nproc)+1))"
+cmake --build build -j$(nproc)
 ```
+
+Note: On macOS, the `nproc` command is not available by default.
+You can install it by running `brew install coreutils`.
 
 ### Only build what you need
 
