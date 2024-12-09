@@ -1432,11 +1432,12 @@ void CGovernanceManager::AddCachedTriggers()
 void CGovernanceManager::InitOnLoad()
 {
     LOCK(cs);
-    int64_t nStart = GetTimeMillis();
+    const auto start{SteadyClock::now()};
     LogPrintf("Preparing masternode indexes and governance triggers...\n");
     RebuildIndexes();
     AddCachedTriggers();
-    LogPrintf("Masternode indexes and governance triggers prepared  %dms\n", GetTimeMillis() - nStart);
+    LogPrintf("Masternode indexes and governance triggers prepared  %dms\n",
+              Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
     LogPrintf("     %s\n", ToString());
 }
 

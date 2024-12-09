@@ -3100,12 +3100,12 @@ void CConnman::ThreadDNSAddressSeed()
 
 void CConnman::DumpAddresses()
 {
-    int64_t nStart = GetTimeMillis();
+    const auto start{SteadyClock::now()};
 
     DumpPeerAddresses(::gArgs, addrman);
 
     LogPrint(BCLog::NET, "Flushed %d addresses to peers.dat  %dms\n",
-             addrman.Size(), GetTimeMillis() - nStart);
+             addrman.Size(), Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
 }
 
 void CConnman::ProcessAddrFetch()

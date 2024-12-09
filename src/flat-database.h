@@ -39,7 +39,7 @@ private:
     {
         // LOCK(objToSave.cs);
 
-        int64_t nStart = GetTimeMillis();
+        const auto start{SteadyClock::now()};
 
         // serialize, checksum data up to that point, then append checksum
         CDataStream ssObj(SER_DISK, CLIENT_VERSION);
@@ -65,7 +65,7 @@ private:
         }
         fileout.fclose();
 
-        LogPrintf("Written info to %s  %dms\n", strFilename, GetTimeMillis() - nStart);
+        LogPrintf("Written info to %s  %dms\n", strFilename, Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
         LogPrintf("     %s\n", objToSave.ToString());
 
         return true;
@@ -75,7 +75,7 @@ private:
     {
         //LOCK(objToLoad.cs);
 
-        int64_t nStart = GetTimeMillis();
+        const auto start{SteadyClock::now()};
         // open input file, and associate with CAutoFile
         FILE *file = fsbridge::fopen(pathDB, "rb");
         CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
@@ -149,7 +149,7 @@ private:
             return ReadResult::IncorrectFormat;
         }
 
-        LogPrintf("Loaded info from %s  %dms\n", strFilename, GetTimeMillis() - nStart);
+        LogPrintf("Loaded info from %s  %dms\n", strFilename, Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
         LogPrintf("     %s\n", objToLoad.ToString());
 
         return ReadResult::Ok;
@@ -193,11 +193,11 @@ public:
         T tmpObjToLoad;
         if (!Read(tmpObjToLoad)) return false;
 
-        int64_t nStart = GetTimeMillis();
+        const auto start{SteadyClock::now()};
 
         LogPrintf("Writing info to %s...\n", strFilename);
         const bool ret = CoreWrite(objToSave);
-        LogPrintf("%s dump finished  %dms\n", strFilename, GetTimeMillis() - nStart);
+        LogPrintf("%s dump finished  %dms\n", strFilename, Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
 
         return ret;
     }
