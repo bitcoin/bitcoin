@@ -3,6 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <bitcoin-build-config.h> // IWYU pragma: keep
+
 #include <chainparams.h>
 #include <common/args.h>
 #include <logging.h>
@@ -157,6 +159,14 @@ void ReadDatabaseArgs(const ArgsManager& args, DatabaseOptions& options)
     options.use_unsafe_sync = args.GetBoolArg("-unsafesqlitesync", options.use_unsafe_sync);
     options.use_shared_memory = !args.GetBoolArg("-privdb", !options.use_shared_memory);
     options.max_log_mb = args.GetIntArg("-dblogsize", options.max_log_mb);
+}
+
+bool IsBDBSupported()
+{
+#ifdef USE_BDB
+    return true;
+#endif
+    return false;
 }
 
 } // namespace wallet

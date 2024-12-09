@@ -226,6 +226,8 @@ fs::path BDBDataFile(const fs::path& path);
 fs::path SQLiteDataFile(const fs::path& path);
 bool IsBDBFile(const fs::path& path);
 bool IsSQLiteFile(const fs::path& path);
+// Returns true when compiled with BDB support
+bool IsBDBSupported();
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_DB_H
