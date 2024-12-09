@@ -1852,8 +1852,8 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
             return {};
         }
         if (ctx == ParseScriptContext::TOP) {
-            if (providers.size() > 3) {
-                error = strprintf("Cannot have %u pubkeys in bare multisig; only at most 3 pubkeys", providers.size());
+            if (providers.size() > MAX_BARE_MULTISIG_PUBKEYS_NUM) {
+                error = strprintf("Cannot have %u pubkeys in bare multisig; only at most %d pubkeys", providers.size(), MAX_BARE_MULTISIG_PUBKEYS_NUM);
                 return {};
             }
         }
