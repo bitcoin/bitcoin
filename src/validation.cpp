@@ -4721,6 +4721,13 @@ bool Chainstate::LoadChainTip()
               m_chain.Height(),
               FormatISO8601DateTime(tip->GetBlockTime()),
               GuessVerificationProgress(m_chainman.GetParams().TxData(), tip));
+
+    // Ensure KernelNotifications m_tip_block is set even if no new block arrives.
+    if (this->GetRole() != ChainstateRole::BACKGROUND) {
+        // Ignoring return value for now.
+        (void)m_chainman.GetNotifications().blockTip(GetSynchronizationState(/*init=*/true, m_chainman.m_blockman.m_blockfiles_indexed), *pindex);
+    }
+
     return true;
 }
 
