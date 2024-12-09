@@ -222,6 +222,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         config = configparser.ConfigParser()
         config.read_file(open(self.options.configfile))
         self.config = config
+        self.set_binary_paths()
         if self.options.v1transport:
             self.options.v2transport=False
 
@@ -254,13 +255,16 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             "bitcoin-util": ("bitcoinutil", "BITCOINUTIL"),
             "bitcoin-wallet": ("bitcoinwallet", "BITCOINWALLET"),
         }
-        for binary, [attribute_name, env_variable_name] in binaries.items():
-            default_filename = os.path.join(
+        def binary_path(binary):
+            return os.path.join(
                 self.config["environment"]["BUILDDIR"],
                 "src",
                 binary + self.config["environment"]["EXEEXT"],
             )
-            setattr(self.options, attribute_name, os.getenv(env_variable_name, default=default_filename))
+        for binary, [attribute_name, env_variable_name] in binaries.items():
+            setattr(self.options, attribute_name, os.getenv(env_variable_name) or binary_path(binary))
+        self.options.bitcoin_mine = binary_path("bitcoin-mine")
+        self.options.bitcoin_node = binary_path("bitcoin-node")
 
     def setup(self):
         """Call this method to start up the test framework object with options set."""
@@ -270,8 +274,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.options.cachedir = os.path.abspath(self.options.cachedir)
 
         config = self.config
-
-        self.set_binary_paths()
 
         os.environ['PATH'] = os.pathsep.join([
             os.path.join(config['environment']['BUILDDIR'], 'src'),
@@ -997,6 +999,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if not self.is_cli_compiled():
             raise SkipTest("bitcoin-cli has not been compiled.")
 
+    def skip_if_no_multiprocess(self):
+        """Skip the running test if multiprocess binaries are not compiled."""
+        if not self.is_multiprocess_compiled():
+            raise SkipTest("multiprocess binaries have not been compiled.")
+
     def skip_if_no_previous_releases(self):
         """Skip the running test if previous releases are not available."""
         if not self.has_previous_releases():
@@ -1058,6 +1065,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_bdb_compiled(self):
         """Checks whether the wallet module was compiled with BDB support."""
         return self.config["components"].getboolean("USE_BDB")
+
+    def is_multiprocess_compiled(self):
+        """Checks whether multiprocess binaries are compiled."""
+        return self.config["components"].getboolean("WITH_MULTIPROCESS")
 
     def has_blockfile(self, node, filenum: str):
         return (node.blocks_path/ f"blk{filenum}.dat").is_file()
