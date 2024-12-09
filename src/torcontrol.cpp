@@ -711,9 +711,9 @@ void StopTorControl()
     }
 }
 
-CService DefaultOnionServiceTarget()
+CService DefaultOnionServiceTarget(uint16_t port)
 {
     struct in_addr onion_service_target;
     onion_service_target.s_addr = htonl(INADDR_LOOPBACK);
-    return {onion_service_target, BaseParams().OnionServiceTargetPort()};
+    return {onion_service_target, port};
 }
