@@ -1019,7 +1019,8 @@ bool CWallet::LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx
     if (!fill_wtx(wtx, ins.second)) {
         return false;
     }
-    // If wallet doesn't have a chain (e.g dash-wallet), don't bother to update txn.
+    // If wallet doesn't have a chain (e.g when using dash-wallet tool),
+    // don't bother to update txn.
     if (HaveChain()) {
         bool active;
         int height;
