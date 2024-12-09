@@ -7,6 +7,8 @@
 
 #include <script/descriptor.h>
 #include <util/fs.h>
+#include <support/allocators/zeroafterfree.h>
+#include <wallet/db.h>
 
 #include <vector>
 
@@ -120,6 +122,85 @@ public:
 };
 
 WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& output_type, bool internal);
+
+using MockableData = std::map<SerializeData, SerializeData, std::less<>>;
+
+class MockableCursor: public DatabaseCursor
+{
+public:
+    MockableData::const_iterator m_cursor;
+    MockableData::const_iterator m_cursor_end;
+    bool m_pass;
+
+    explicit MockableCursor(const MockableData& records, bool pass) : m_cursor(records.begin()), m_cursor_end(records.end()), m_pass(pass) {}
+    MockableCursor(const MockableData& records, bool pass, Span<const std::byte> prefix);
+    ~MockableCursor() = default;
+
+    Status Next(DataStream& key, DataStream& value) override;
+};
+
+class MockableBatch : public DatabaseBatch
+{
+private:
+    MockableData& m_records;
+    bool m_pass;
+
+    bool ReadKey(DataStream&& key, DataStream& value) override;
+    bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite=true) override;
+    bool EraseKey(DataStream&& key) override;
+    bool HasKey(DataStream&& key) override;
+    bool ErasePrefix(Span<const std::byte> prefix) override;
+
+public:
+    explicit MockableBatch(MockableData& records, bool pass) : m_records(records), m_pass(pass) {}
+    ~MockableBatch() = default;
+
+    void Flush() override {}
+    void Close() override {}
+
+    std::unique_ptr<DatabaseCursor> GetNewCursor() override
+    {
+        return std::make_unique<MockableCursor>(m_records, m_pass);
+    }
+    std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(Span<const std::byte> prefix) override {
+        return std::make_unique<MockableCursor>(m_records, m_pass, prefix);
+    }
+    bool TxnBegin() override { return m_pass; }
+    bool TxnCommit() override { return m_pass; }
+    bool TxnAbort() override { return m_pass; }
+    bool HasActiveTxn() override { return false; }
+};
+
+/** A WalletDatabase whose contents and return values can be modified as needed for testing
+ **/
+class MockableDatabase : public WalletDatabase
+{
+public:
+    MockableData m_records;
+    bool m_pass{true};
+
+    MockableDatabase(MockableData records = {}) : WalletDatabase(), m_records(records) {}
+    ~MockableDatabase() = default;
+
+    void Open() override {}
+    void AddRef() override {}
+    void RemoveRef() override {}
+
+    bool Rewrite(const char* pszSkip=nullptr) override { return m_pass; }
+    bool Backup(const std::string& strDest) const override { return m_pass; }
+    void Flush() override {}
+    void Close() override {}
+    bool PeriodicFlush() override { return m_pass; }
+    void IncrementUpdateCounter() override {}
+    void ReloadDbEnv() override {}
+
+    std::string Filename() override { return "mockable"; }
+    std::string Format() override { return "mock"; }
+    std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override { return std::make_unique<MockableBatch>(m_records, m_pass); }
+};
+
+std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase(MockableData records = {});
+
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_WALLETUTIL_H
