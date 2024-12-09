@@ -314,10 +314,7 @@ void TransactionTableModel::updateAddressBook(const QString& address, const QStr
 void TransactionTableModel::updateConfirmations()
 {
     // Blocks came in since last poll.
-    // Invalidate status (number of confirmations) and (possibly) description
-    //  for all rows. Qt is smart enough to only actually request the data for the
-    //  visible rows.
-    Q_EMIT dataChanged(index(0, Status), index(priv->size()-1, Status));
+    Q_EMIT dataChanged(QModelIndex(), QModelIndex());
 }
 
 
@@ -799,7 +796,7 @@ void TransactionTableModel::updateDisplayUnit()
 {
     // emit dataChanged to update Amount column with the current unit
     updateAmountColumnTitle();
-    Q_EMIT dataChanged(index(0, Amount), index(priv->size()-1, Amount));
+    Q_EMIT dataChanged(QModelIndex(), QModelIndex());
 }
 
 void TransactionTablePriv::NotifyTransactionChanged(const uint256 &hash, ChangeType status)
