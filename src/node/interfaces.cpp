@@ -30,7 +30,7 @@
 #include <node/blockstorage.h>
 #include <node/coin.h>
 #include <node/context.h>
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <node/transaction.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>

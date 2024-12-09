@@ -12,7 +12,7 @@
 #include <consensus/validation.h>
 #include <masternode/sync.h>
 #include <node/blockstorage.h>
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <scheduler.h>
 #include <spork.h>
 #include <txmempool.h>

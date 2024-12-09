@@ -39,7 +39,7 @@
 #include <netgroup.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <node/txreconciliation.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>

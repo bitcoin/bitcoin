@@ -280,7 +280,7 @@ BITCOIN_CORE_H = \
   node/psbt.h \
   node/transaction.h \
   node/txreconciliation.h \
-  node/ui_interface.h \
+  node/interface_ui.h \
   node/utxo_snapshot.h \
   noui.h \
   outputtype.h \
@@ -513,7 +513,7 @@ libbitcoin_server_a_SOURCES = \
   node/psbt.cpp \
   node/transaction.cpp \
   node/txreconciliation.cpp \
-  node/ui_interface.cpp \
+  node/interface_ui.cpp \
   noui.cpp \
   policy/fees.cpp \
   policy/packages.cpp \

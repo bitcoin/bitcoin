@@ -25,7 +25,7 @@
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <protocol.h>
 #include <random.h>
 #include <scheduler.h>
