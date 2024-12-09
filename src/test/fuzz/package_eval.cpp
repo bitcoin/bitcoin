@@ -21,6 +21,7 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+using node::BlockAssembler;
 using node::NodeContext;
 
 namespace {
@@ -42,8 +43,11 @@ void initialize_tx_pool()
     static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
     g_setup = testing_setup.get();
 
+    BlockAssembler::Options options;
+    options.coinbase_output_script = P2WSH_EMPTY;
+
     for (int i = 0; i < 2 * COINBASE_MATURITY; ++i) {
-        COutPoint prevout{MineBlock(g_setup->m_node, P2WSH_EMPTY)};
+        COutPoint prevout{MineBlock(g_setup->m_node, options)};
         if (i < COINBASE_MATURITY) {
             // Remember the txids to avoid expensive disk access later on
             g_outpoints_coinbase_init_mature.push_back(prevout);
