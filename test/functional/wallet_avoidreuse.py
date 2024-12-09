@@ -59,9 +59,12 @@ def assert_unspent(node, total_count=None, total_sum=None, reused_supported=None
 
 def assert_balances(node, mine, margin=0.001):
     '''Make assertions about a node's getbalances output'''
-    got = node.getbalances()["mine"]
+    balances, total = node.getbalances(), 0
     for k,v in mine.items():
-        assert_approx(got[k], v, margin)
+        assert_approx(balances["mine"][k], v, margin)
+        total += v
+    assert_approx(balances["total"], total, margin)
+
 
 class AvoidReuseTest(BitcoinTestFramework):
     def add_options(self, parser):
