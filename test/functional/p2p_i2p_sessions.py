@@ -7,6 +7,7 @@ Test whether persistent or transient I2P sessions are being used, based on `-i2p
 """
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_raises_rpc_error
 
 
 class I2PSessions(BitcoinTestFramework):
@@ -24,12 +25,12 @@ class I2PSessions(BitcoinTestFramework):
         self.log.info("Ensure we create a persistent session when -i2pacceptincoming=1")
         node0 = self.nodes[0]
         with node0.assert_debug_log(expected_msgs=["Creating persistent SAM session"]):
-            node0.addnode(node=addr, command="onetry")
+            assert_raises_rpc_error(-24, "Unable to open connection", node0.addnode, node=addr, command='onetry')
 
         self.log.info("Ensure we create a transient session when -i2pacceptincoming=0")
         node1 = self.nodes[1]
         with node1.assert_debug_log(expected_msgs=["Creating transient SAM session"]):
-            node1.addnode(node=addr, command="onetry")
+            assert_raises_rpc_error(-24, "Unable to open connection", node1.addnode, node=addr, command='onetry')
 
 
 if __name__ == '__main__':
