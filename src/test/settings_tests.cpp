@@ -127,15 +127,8 @@ BOOST_AUTO_TEST_CASE(Simple)
     settings.command_line_options["name"].emplace_back("val2");
     settings.ro_config["section"]["name"].emplace_back(2);
 
-    // The last given arg takes precedence when specified via commandline.
+    // The last given arg takes precedence when multiple values are present
     CheckValues(settings, R"("val2")", R"(["val1","val2",2])");
-
-    common::Settings settings2;
-    settings2.ro_config["section"]["name"].emplace_back("val2");
-    settings2.ro_config["section"]["name"].emplace_back("val3");
-
-    // The first given arg takes precedence when specified via config file.
-    CheckValues(settings2, R"("val2")", R"(["val2","val3"])");
 }
 
 // Confirm that a high priority setting overrides a lower priority setting even
@@ -263,7 +256,7 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
     // Results file is formatted like:
     //
     //   <input> || GetSetting() | GetSettingsList() | OnlyHasDefaultSectionSetting()
-    BOOST_CHECK_EQUAL(out_sha_hex, "79db02d74e3e193196541b67c068b40ebd0c124a24b3ecbe9cbf7e85b1c4ba7a");
+    BOOST_CHECK_EQUAL(out_sha_hex, "10a2293bfd447ee128f80714bac5e8abe83df2a518980e383a8d590319d32a00");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

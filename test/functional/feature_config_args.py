@@ -215,7 +215,7 @@ class ConfArgsTest(BitcoinTestFramework):
 
     def test_invalid_command_line_options(self):
         self.nodes[0].assert_start_raises_init_error(
-            expected_msg='Error: Error parsing command line arguments: Can not set -proxy with no value. Please specify value with -proxy=value.',
+            expected_msg='Error: Error parsing command line arguments: Cannot set -proxy with no value. Please specify value with -proxy=value.',
             extra_args=['-proxy'],
         )
         # Provide a value different from 1 to the -wallet negated option
