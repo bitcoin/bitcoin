@@ -21,8 +21,9 @@ using util::RemovePrefixView;
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 constexpr auto MAX_USER_SETABLE_SEVERITY_LEVEL{BCLog::Level::Info};
 
-BCLog::Logger& LogInstance()
-{
+bool fLogIPs = DEFAULT_LOGIPS;
+
+namespace BCLog {
 /**
  * NOTE: the logger instances is leaked on exit. This is ugly, but will be
  * cleaned up by the OS/libc. Defining a logger as a global object doesn't work
@@ -38,15 +39,27 @@ BCLog::Logger& LogInstance()
  * This method of initialization was originally introduced in
  * ee3374234c60aba2cc4c5cd5cac1c0aefc2d817c.
  */
-    static BCLog::Logger* g_logger{new BCLog::Logger()};
-    return *g_logger;
-}
-
-bool fLogIPs = DEFAULT_LOGIPS;
+Logger* g_logger{nullptr};
+} // namespace BCLog
 
 static int FileWriteStr(std::string_view str, FILE *fp)
 {
     return fwrite(str.data(), 1, str.size(), fp);
+}
+
+BCLog::Logger& LogInstance()
+{
+    return *Assert(BCLog::g_logger);
+}
+
+BCLog::Logger::Logger()
+{
+    if (!g_logger) g_logger = this;
+}
+
+BCLog::Logger::~Logger()
+{
+    if (g_logger == this) g_logger = nullptr;
 }
 
 bool BCLog::Logger::StartLogging()

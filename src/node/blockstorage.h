@@ -13,6 +13,7 @@
 #include <kernel/chainparams.h>
 #include <kernel/cs_main.h>
 #include <kernel/messagestartchars.h>
+#include <logging.h>
 #include <primitives/block.h>
 #include <streams.h>
 #include <sync.h>
@@ -267,8 +268,9 @@ private:
 public:
     using Options = kernel::BlockManagerOpts;
 
-    explicit BlockManager(const util::SignalInterrupt& interrupt, Options opts);
+    explicit BlockManager(BCLog::Logger& logger, const util::SignalInterrupt& interrupt, Options opts);
 
+    const BCLog::Source m_log;
     const util::SignalInterrupt& m_interrupt;
     std::atomic<bool> m_importing{false};
 

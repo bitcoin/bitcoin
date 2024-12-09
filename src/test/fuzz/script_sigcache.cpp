@@ -18,9 +18,14 @@
 #include <optional>
 #include <vector>
 
+namespace {
+BasicTestingSetup* g_setup;
+} // namespace
+
 void initialize_script_sigcache()
 {
-    static const auto testing_setup = MakeNoLogFileContext<>();
+    static const auto testing_setup = MakeNoLogFileContext<BasicTestingSetup>();
+    g_setup = testing_setup.get();
 }
 
 FUZZ_TARGET(script_sigcache, .init = initialize_script_sigcache)
@@ -28,7 +33,7 @@ FUZZ_TARGET(script_sigcache, .init = initialize_script_sigcache)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     const auto max_sigcache_bytes{fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, DEFAULT_SIGNATURE_CACHE_BYTES)};
-    SignatureCache signature_cache{max_sigcache_bytes};
+    SignatureCache signature_cache{g_setup->m_logger, max_sigcache_bytes};
 
     const std::optional<CMutableTransaction> mutable_transaction = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
     const CTransaction tx{mutable_transaction ? *mutable_transaction : CMutableTransaction{}};
