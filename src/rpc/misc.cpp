@@ -7,7 +7,6 @@
 #include <addressindex.h>
 #include <chainparams.h>
 #include <consensus/consensus.h>
-#include <deploymentstatus.h>
 #include <evo/mnauth.h>
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
@@ -633,11 +632,8 @@ static RPCHelpMan mnauth()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "proTxHash invalid");
     }
 
-    ChainstateManager& chainman = EnsureAnyChainman(request.context);
-
     CBLSPublicKey publicKey;
-    const bool bls_legacy_scheme{!DeploymentActiveAfter(chainman.ActiveChain().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
-    publicKey.SetHexStr(request.params[2].get_str(), bls_legacy_scheme);
+    publicKey.SetHexStr(request.params[2].get_str(), /*bls_legacy_scheme=*/false);
     if (!publicKey.IsValid()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "publicKey invalid");
     }

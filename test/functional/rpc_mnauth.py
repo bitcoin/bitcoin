@@ -20,12 +20,12 @@ class FakeMNAUTHTest(DashTestFramework):
         self.set_dash_test_params(2, 1)
 
     def run_test(self):
+        self.activate_v19(expected_activation_height=900)
 
         masternode = self.mninfo[0]
         masternode.node.add_p2p_connection(P2PInterface())
 
         protx_hash = masternode.proTxHash
-        #TODO: Fix that with basic BLS
         public_key = masternode.pubKeyOperator
 
         # The peerinfo should not yet contain verified_proregtx_hash/verified_pubkey_hash

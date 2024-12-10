@@ -309,21 +309,6 @@ public:
 
 };
 
-class ConstCBLSPublicKeyVersionWrapper {
-private:
-    const CBLSPublicKey& obj;
-    bool legacy;
-public:
-    ConstCBLSPublicKeyVersionWrapper(const CBLSPublicKey& obj, bool legacy)
-            : obj(obj)
-            , legacy(legacy)
-    {}
-    template <typename Stream>
-    inline void Serialize(Stream& s) const {
-        obj.Serialize(s, legacy);
-    }
-};
-
 class CBLSPublicKeyVersionWrapper {
 private:
     CBLSPublicKey& obj;

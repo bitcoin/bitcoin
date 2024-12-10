@@ -34,9 +34,9 @@ ENCRYPTED_CONTRIBUTIONS_MISSING = 6
 
 # Used to overwrite MNAUTH for mininode connections
 fake_mnauth_1 = ["cecf37bf0ec05d2d22cb8227f88074bb882b94cd2081ba318a5a444b1b15b9fd",
-                 "087ba00bf61135f3860c4944a0debabe186ef82628fbe4ceaed1ad51d672c58dde14ea4b321efe0b89257a40322bc972"]
+                 "8e7afdb849e5e2a085b035b62e21c0940c753f2d4501325743894c37162f287bccaffbedd60c36581dabbf127a22e43f"]
 fake_mnauth_2 = ["6ad7ed7a2d6c2c1db30fc364114602b36b2730a9aa96d8f11f1871a9cee37378",
-                 "122463411a86362966a5161805f24cf6a0eef08a586b8e00c4f0ad0b084c5bb3f5c9a60ee5ffc78db2313897e3ab2223"]
+                 "ad38860c03c3d1d875771f41b8a9b933415f72929c21a4276c101d8f0268f6fcdfeed46507c16c00e74f26ce1181e69f"]
 
 # Used to distinguish mininode connections
 uacomment_m3_1 = "MN3_1"
@@ -400,6 +400,7 @@ class QuorumDataMessagesTest(DashTestFramework):
                                     mn1.node.quorum, "getdata", 0, 100, quorum_hash, 0x03,
                                     "0000000000000000000000000000000000000000000000000000000000000000")
 
+        self.activate_v19(expected_activation_height=900)
         # Enable DKG and disable ChainLocks
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
