@@ -12,7 +12,7 @@ netbsd_CXXFLAGS=$(netbsd_CFLAGS)
 netbsd_release_CFLAGS=-O2
 netbsd_release_CXXFLAGS=$(netbsd_release_CFLAGS)
 
-netbsd_debug_CFLAGS=-O1
+netbsd_debug_CFLAGS=-O1 -g
 netbsd_debug_CXXFLAGS=$(netbsd_debug_CFLAGS)
 
 ifeq (86,$(findstring 86,$(build_arch)))
