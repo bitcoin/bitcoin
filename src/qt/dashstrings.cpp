@@ -23,6 +23,18 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "-maxtxfee is set very high! Fees this large could be paid on a single "
 "transaction."),
 QT_TRANSLATE_NOOP("dash-core", ""
+"-reindex-chainstate option is not compatible with -blockfilterindex. Please "
+"temporarily disable blockfilterindex while using -reindex-chainstate, or "
+"replace -reindex-chainstate with -reindex to fully rebuild all indexes."),
+QT_TRANSLATE_NOOP("dash-core", ""
+"-reindex-chainstate option is not compatible with -coinstatsindex. Please "
+"temporarily disable coinstatsindex while using -reindex-chainstate, or "
+"replace -reindex-chainstate with -reindex to fully rebuild all indexes."),
+QT_TRANSLATE_NOOP("dash-core", ""
+"-reindex-chainstate option is not compatible with -txindex. Please "
+"temporarily disable txindex while using -reindex-chainstate, or replace -"
+"reindex-chainstate with -reindex to fully rebuild all indexes."),
+QT_TRANSLATE_NOOP("dash-core", ""
 "Cannot downgrade wallet from version %i to version %i. Wallet version "
 "unchanged."),
 QT_TRANSLATE_NOOP("dash-core", ""
@@ -38,6 +50,11 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "%s"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Error loading %s: You can't enable HD on an already existing non-HD wallet"),
+QT_TRANSLATE_NOOP("dash-core", ""
+"Error loading wallet. Wallet requires blocks to be downloaded, and software "
+"does not currently support loading wallets while blocks are being downloaded "
+"out of order when using assumeutxo snapshots. Wallet should be able to load "
+"successfully after node sync reaches height %s"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Error reading %s! All keys read correctly, but transaction data or address "
 "book entries might be missing or incorrect."),
@@ -55,6 +72,9 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "restarted wallet in less than 60 seconds. You can continue if you are ok "
 "with this."),
 QT_TRANSLATE_NOOP("dash-core", ""
+"Failed to rename invalid peers.dat file. Please move or delete it and try "
+"again."),
+QT_TRANSLATE_NOOP("dash-core", ""
 "Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -"
 "fallbackfee."),
 QT_TRANSLATE_NOOP("dash-core", ""
@@ -63,6 +83,9 @@ QT_TRANSLATE_NOOP("dash-core", ""
 QT_TRANSLATE_NOOP("dash-core", ""
 "Found unconfirmed denominated outputs, will wait till they confirm to "
 "continue."),
+QT_TRANSLATE_NOOP("dash-core", ""
+"Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet "
+"forbids connections to IPv4/IPv6"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Incorrect or no devnet genesis block found. Wrong datadir for devnet "
 "specified?"),
@@ -105,16 +128,26 @@ QT_TRANSLATE_NOOP("dash-core", ""
 QT_TRANSLATE_NOOP("dash-core", ""
 "Prune configured below the minimum of %d MiB.  Please use a higher number."),
 QT_TRANSLATE_NOOP("dash-core", ""
+"Prune mode is incompatible with -reindex-chainstate. Use full -reindex "
+"instead."),
+QT_TRANSLATE_NOOP("dash-core", ""
 "Prune: last wallet synchronisation goes beyond pruned data. You need to -"
 "reindex (download the whole blockchain again in case of pruned node)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is "
 "supported"),
 QT_TRANSLATE_NOOP("dash-core", ""
+"The -txindex upgrade started by a previous version can not be completed. "
+"Restart with the previous version or run a full -reindex."),
+QT_TRANSLATE_NOOP("dash-core", ""
 "The block database contains a block which appears to be from the future. "
 "This may be due to your computer's date and time being set incorrectly. Only "
 "rebuild the block database if you are sure that your computer's date and "
 "time are correct"),
+QT_TRANSLATE_NOOP("dash-core", ""
+"The block index db contains a legacy 'txindex'. To clear the occupied disk "
+"space, run a full -reindex, otherwise ignore this error. This error message "
+"will not be displayed again."),
 QT_TRANSLATE_NOOP("dash-core", ""
 "The transaction amount is too small to send after the fee has been deducted"),
 QT_TRANSLATE_NOOP("dash-core", ""
@@ -162,7 +195,7 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Warning: We do not appear to fully agree with our peers! You may need to "
 "upgrade, or other nodes may need to upgrade."),
 QT_TRANSLATE_NOOP("dash-core", ""
-"You need to rebuild the database using -reindex to change -timestampindex"),
+"You need to rebuild the database using -reindex to enable -timestampindex"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "You need to rebuild the database using -reindex to go back to unpruned "
 "mode.  This will redownload the entire blockchain"),
@@ -221,6 +254,7 @@ QT_TRANSLATE_NOOP("dash-core", "Error: Got key that was not hex: %s"),
 QT_TRANSLATE_NOOP("dash-core", "Error: Got value that was not hex: %s"),
 QT_TRANSLATE_NOOP("dash-core", "Error: Keypool ran out, please call keypoolrefill first"),
 QT_TRANSLATE_NOOP("dash-core", "Error: Missing checksum"),
+QT_TRANSLATE_NOOP("dash-core", "Error: No addresses available."),
 QT_TRANSLATE_NOOP("dash-core", "Error: Unable to parse version %u as a uint32_t"),
 QT_TRANSLATE_NOOP("dash-core", "Error: Unable to write record to new wallet"),
 QT_TRANSLATE_NOOP("dash-core", "Exceeded max tries."),
@@ -240,6 +274,7 @@ QT_TRANSLATE_NOOP("dash-core", "Failed to load sporks cache from %s"),
 QT_TRANSLATE_NOOP("dash-core", "Failed to rescan the wallet during initialization"),
 QT_TRANSLATE_NOOP("dash-core", "Failed to start a new mixing queue"),
 QT_TRANSLATE_NOOP("dash-core", "Failed to verify database"),
+QT_TRANSLATE_NOOP("dash-core", "Fee rate (%s) is lower than the minimum fee rate setting (%s)"),
 QT_TRANSLATE_NOOP("dash-core", "Found enough users, signing ( waiting %s )"),
 QT_TRANSLATE_NOOP("dash-core", "Found enough users, signing…"),
 QT_TRANSLATE_NOOP("dash-core", "Ignoring duplicate -wallet %s."),
@@ -250,6 +285,7 @@ QT_TRANSLATE_NOOP("dash-core", "Incorrect -rescan mode, falling back to default 
 QT_TRANSLATE_NOOP("dash-core", "Incorrect or no genesis block found. Wrong datadir for network?"),
 QT_TRANSLATE_NOOP("dash-core", "Initialization sanity check failed. %s is shutting down."),
 QT_TRANSLATE_NOOP("dash-core", "Input is not valid."),
+QT_TRANSLATE_NOOP("dash-core", "Input not found or already spent"),
 QT_TRANSLATE_NOOP("dash-core", "Inputs vs outputs size mismatch."),
 QT_TRANSLATE_NOOP("dash-core", "Insufficient funds."),
 QT_TRANSLATE_NOOP("dash-core", "Invalid '%s'. Allowed values: 128, 160, 192, 224, 256."),
@@ -279,6 +315,7 @@ QT_TRANSLATE_NOOP("dash-core", "Missing input transaction information."),
 QT_TRANSLATE_NOOP("dash-core", "Mixing in progress…"),
 QT_TRANSLATE_NOOP("dash-core", "Need to specify a port with -whitebind: '%s'"),
 QT_TRANSLATE_NOOP("dash-core", "No Masternodes detected."),
+QT_TRANSLATE_NOOP("dash-core", "No addresses available"),
 QT_TRANSLATE_NOOP("dash-core", "No compatible Masternode found."),
 QT_TRANSLATE_NOOP("dash-core", "No errors detected."),
 QT_TRANSLATE_NOOP("dash-core", "No matching denominations found for mixing."),
@@ -288,7 +325,6 @@ QT_TRANSLATE_NOOP("dash-core", "Not enough file descriptors available."),
 QT_TRANSLATE_NOOP("dash-core", "Not enough funds to mix."),
 QT_TRANSLATE_NOOP("dash-core", "Not in the Masternode list."),
 QT_TRANSLATE_NOOP("dash-core", "Prune cannot be configured with a negative value."),
-QT_TRANSLATE_NOOP("dash-core", "Prune mode is incompatible with -coinstatsindex."),
 QT_TRANSLATE_NOOP("dash-core", "Prune mode is incompatible with -disablegovernance=false."),
 QT_TRANSLATE_NOOP("dash-core", "Prune mode is incompatible with -txindex."),
 QT_TRANSLATE_NOOP("dash-core", "Pruning blockstore…"),
@@ -337,6 +373,7 @@ QT_TRANSLATE_NOOP("dash-core", "Unable to generate initial keys"),
 QT_TRANSLATE_NOOP("dash-core", "Unable to locate enough mixed funds for this transaction."),
 QT_TRANSLATE_NOOP("dash-core", "Unable to locate enough non-denominated funds for this transaction."),
 QT_TRANSLATE_NOOP("dash-core", "Unable to open %s for writing"),
+QT_TRANSLATE_NOOP("dash-core", "Unable to parse -maxuploadtarget: '%s' (possible integer overflow?)"),
 QT_TRANSLATE_NOOP("dash-core", "Unable to sign spork message, wrong key?"),
 QT_TRANSLATE_NOOP("dash-core", "Unable to start HTTP server. See debug log for details."),
 QT_TRANSLATE_NOOP("dash-core", "Unknown -blockfilterindex value %s."),
@@ -346,7 +383,6 @@ QT_TRANSLATE_NOOP("dash-core", "Unknown response."),
 QT_TRANSLATE_NOOP("dash-core", "Unknown state: id = %u"),
 QT_TRANSLATE_NOOP("dash-core", "Unsupported logging category %s=%s."),
 QT_TRANSLATE_NOOP("dash-core", "Upgrading UTXO database"),
-QT_TRANSLATE_NOOP("dash-core", "Upgrading txindex database"),
 QT_TRANSLATE_NOOP("dash-core", "User Agent comment (%s) contains unsafe characters."),
 QT_TRANSLATE_NOOP("dash-core", "Verifying blocks…"),
 QT_TRANSLATE_NOOP("dash-core", "Verifying wallet(s)…"),
@@ -361,8 +397,8 @@ QT_TRANSLATE_NOOP("dash-core", "Wiping wallet transactions…"),
 QT_TRANSLATE_NOOP("dash-core", "You are starting with governance validation disabled."),
 QT_TRANSLATE_NOOP("dash-core", "You can not disable governance validation on a masternode."),
 QT_TRANSLATE_NOOP("dash-core", "You can not start a masternode with wallet enabled."),
-QT_TRANSLATE_NOOP("dash-core", "You need to rebuild the database using -reindex to change -addressindex"),
-QT_TRANSLATE_NOOP("dash-core", "You need to rebuild the database using -reindex to change -spentindex"),
+QT_TRANSLATE_NOOP("dash-core", "You need to rebuild the database using -reindex to enable -addressindex"),
+QT_TRANSLATE_NOOP("dash-core", "You need to rebuild the database using -reindex to enable -spentindex"),
 QT_TRANSLATE_NOOP("dash-core", "Your entries added successfully."),
 QT_TRANSLATE_NOOP("dash-core", "no mixing available."),
 QT_TRANSLATE_NOOP("dash-core", "see debug.log for details."),

@@ -94,10 +94,6 @@
         <translation>编辑(&amp;E)</translation>
     </message>
     <message>
-        <source>&amp;Show address QR code</source>
-        <translation>&amp;显示地址二维码</translation>
-    </message>
-    <message>
         <source>QR code</source>
         <translation>二维码</translation>
     </message>
@@ -618,6 +614,7 @@
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Dash network</source>
+        <extracomment>A substring of the tooltip.</extracomment>
         <translation><numerusform>%n个有效的Dash网络连接</numerusform></translation>
     </message>
     <message>
@@ -874,28 +871,8 @@
         <translation>已确认</translation>
     </message>
     <message>
-        <source>Copy address</source>
-        <translation>复制地址</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>复制标签</translation>
-    </message>
-    <message>
         <source>Copy amount</source>
         <translation>复制金额</translation>
-    </message>
-    <message>
-        <source>Copy transaction ID</source>
-        <translation>复制交易编号</translation>
-    </message>
-    <message>
-        <source>Lock unspent</source>
-        <translation>锁定未花费</translation>
-    </message>
-    <message>
-        <source>Unlock unspent</source>
-        <translation>解锁未花费</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -986,6 +963,7 @@
     <name>CreateWalletActivity</name>
     <message>
         <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the create wallet progress window which indicates to the user which wallet is currently being created.</extracomment>
         <translation>正在创建钱包 &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
     <message>
@@ -1424,6 +1402,7 @@
     </message>
     <message>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the open wallet progress window which indicates to the user which wallet is currently being opened.</extracomment>
         <translation>正在打开钱包 &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
 </context>
@@ -1991,14 +1970,6 @@
         <translation>'dash://' 不是一个有效链接. 请使用'dash:'</translation>
     </message>
     <message>
-        <source>Cannot process payment request as BIP70 is no longer supported.</source>
-        <translation>无法处理付款请求因为不再支持BIP70.</translation>
-    </message>
-    <message>
-        <source>Due to discontinued support, you should request the merchant to provide you with a BIP21 compatible URI or use a wallet that does continue to support BIP70.</source>
-        <translation>由于终止支持, 您应当要求商家为您提供一个兼容BIP21的URI, 或使用仍支持BIP70的钱包.</translation>
-    </message>
-    <message>
         <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
         <translation>URI不能被解析! 原因可能是无效的Dash地址或URI参数格式错误。</translation>
     </message>
@@ -2241,10 +2212,6 @@
     <message>
         <source>%1 B</source>
         <translation>%1 B</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 KB</translation>
     </message>
     <message>
         <source>%1 MB</source>
@@ -2572,10 +2539,6 @@
         <translation>1 小时(&amp;H)</translation>
     </message>
     <message>
-        <source>1 &amp;day</source>
-        <translation>1 天(&amp;D)</translation>
-    </message>
-    <message>
         <source>1 &amp;week</source>
         <translation>1 周(&amp;W)</translation>
     </message>
@@ -2586,26 +2549,6 @@
     <message>
         <source>&amp;Unban</source>
         <translation>解禁(&amp;U)</translation>
-    </message>
-    <message>
-        <source>Welcome to the %1 RPC console.</source>
-        <translation>欢迎使用 %1 的 RPC 控制台。</translation>
-    </message>
-    <message>
-        <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
-        <translation>使用上下方向键浏览历史,  %1清除屏幕。</translation>
-    </message>
-    <message>
-        <source>Type %1 for an overview of available commands.</source>
-        <translation>输入 %1 以获得可用命令描述.</translation>
-    </message>
-    <message>
-        <source>For more information on using this console type %1.</source>
-        <translation>关于使用此控制台的更多信息, 请输入 %1.</translation>
-    </message>
-    <message>
-        <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
-        <translation>警告: 骗子总是积极地劝说用户在此输入指令, 以窃取用户钱包中的资金. 在没有完全理解各命令行作用前, 请不要使用控制台。</translation>
     </message>
     <message>
         <source>In:</source>
@@ -2729,26 +2672,6 @@
     <message>
         <source>Enter a message to attach to the payment request</source>
         <translation>输入消息以添加到支付请求中</translation>
-    </message>
-    <message>
-        <source>Copy URI</source>
-        <translation>复制URI</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>复制地址</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>复制标签</translation>
-    </message>
-    <message>
-        <source>Copy message</source>
-        <translation>复制消息 </translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>复制金额</translation>
     </message>
     </context>
 <context>
@@ -3390,11 +3313,10 @@
     </message>
 </context>
 <context>
+    <name>SplashScreen</name>
+    </context>
+<context>
     <name>TrafficGraphWidget</name>
-    <message>
-        <source>KB/s</source>
-        <translation>KB/s</translation>
-    </message>
     <message>
         <source>Total</source>
         <translation>总额</translation>
@@ -3808,50 +3730,6 @@
         <translation>最小金额</translation>
     </message>
     <message>
-        <source>Abandon transaction</source>
-        <translation>放弃交易</translation>
-    </message>
-    <message>
-        <source>Resend transaction</source>
-        <translation>重新发送交易</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>复制地址</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>复制标签</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>复制金额</translation>
-    </message>
-    <message>
-        <source>Copy transaction ID</source>
-        <translation>复制交易编号</translation>
-    </message>
-    <message>
-        <source>Copy raw transaction</source>
-        <translation>复制原始交易</translation>
-    </message>
-    <message>
-        <source>Copy full transaction details</source>
-        <translation>复制完整交易详情</translation>
-    </message>
-    <message>
-        <source>Edit address label</source>
-        <translation>编辑地址标签</translation>
-    </message>
-    <message>
-        <source>Show transaction details</source>
-        <translation>显示交易详情</translation>
-    </message>
-    <message>
-        <source>Show address QR code</source>
-        <translation>显示地址二维码</translation>
-    </message>
-    <message>
         <source>Export Transaction History</source>
         <translation>导出交易历史</translation>
     </message>
@@ -3948,7 +3826,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <source>Create a new wallet</source>
         <translation>创建一个新钱包</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletModel</name>
     <message>
@@ -4274,10 +4152,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>钱包被锁定，无法补充keypool！自动备份和混合功能被禁用，请解锁您的钱包以补充keypool。</translation>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex to change -timestampindex</source>
-        <translation>您需要通过使用-reindex改变-timestampindex来重新建立数据库</translation>
-    </message>
-    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>您需要使用 -reindex 重新构建数据库以返回未修剪的模式。这将重新下载整个区块链</translation>
     </message>
@@ -4520,14 +4394,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>You can not start a masternode with wallet enabled.</source>
         <translation>您无法在开启钱包时启动主节点.</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -addressindex</source>
-        <translation>您需要通过使用-reindex改变-addressindex来重新建立数据库</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -spentindex</source>
-        <translation>您需要通过使用-reindex改变-spentindex来重新建立数据库</translation>
     </message>
     <message>
         <source>no mixing available.</source>
@@ -4834,10 +4700,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>不支持的日志记录类别 %s=%s.</translation>
     </message>
     <message>
-        <source>Upgrading txindex database</source>
-        <translation>正在升级交易指数数据库</translation>
-    </message>
-    <message>
         <source>Very low number of keys left: %d</source>
         <translation>尚余少量的密匙：%d</translation>
     </message>
@@ -4869,5 +4731,5 @@ Go to File &gt; Open Wallet to load a wallet.
         <source>Your entries added successfully.</source>
         <translation>您的词条已添加成功.</translation>
     </message>
-</context>
+    </context>
 </TS>

@@ -94,10 +94,6 @@
         <translation>&amp;Modifica</translation>
     </message>
     <message>
-        <source>&amp;Show address QR code</source>
-        <translation>&amp;Mostra l'indirizzo del codice QR</translation>
-    </message>
-    <message>
         <source>QR code</source>
         <translation>codice QR</translation>
     </message>
@@ -107,7 +103,7 @@
     </message>
     <message>
         <source>Comma separated file</source>
-        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
         <translation>File separato da virgole</translation>
     </message>
     <message>
@@ -390,11 +386,11 @@
     </message>
     <message>
         <source>Open Wallet</source>
-        <translation>Portafoglio aperto</translation>
+        <translation>Apri Wallet</translation>
     </message>
     <message>
         <source>Open a wallet</source>
-        <translation>Apri un portafoglio</translation>
+        <translation>Apri Wallet</translation>
     </message>
     <message>
         <source>Close wallet</source>
@@ -656,6 +652,7 @@
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Dash network</source>
+        <extracomment>A substring of the tooltip.</extracomment>
         <translation><numerusform>%n connessione attiva alla rete Dash</numerusform><numerusform>%n connessioni attive alla rete Dash</numerusform><numerusform>%n connessioni attive alla rete Dash</numerusform></translation>
     </message>
     <message>
@@ -916,28 +913,8 @@
         <translation>Confermato</translation>
     </message>
     <message>
-        <source>Copy address</source>
-        <translation>Copia l'indirizzo</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Copia l'etichetta</translation>
-    </message>
-    <message>
         <source>Copy amount</source>
         <translation>Copia l'importo</translation>
-    </message>
-    <message>
-        <source>Copy transaction ID</source>
-        <translation>Copia l'ID della transazione</translation>
-    </message>
-    <message>
-        <source>Lock unspent</source>
-        <translation>Blocca i non spesi</translation>
-    </message>
-    <message>
-        <source>Unlock unspent</source>
-        <translation>Sblocca i non spesi</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -1028,6 +1005,7 @@
     <name>CreateWalletActivity</name>
     <message>
         <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the create wallet progress window which indicates to the user which wallet is currently being created.</extracomment>
         <translation>Creazione del portafoglio&lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
     <message>
@@ -1490,6 +1468,7 @@
     </message>
     <message>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the open wallet progress window which indicates to the user which wallet is currently being opened.</extracomment>
         <translation>Apertura Portafoglio &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
 </context>
@@ -2232,14 +2211,6 @@
         <translation>"dash: //" non è un URI valido. Utilizza  "dash:".</translation>
     </message>
     <message>
-        <source>Cannot process payment request as BIP70 is no longer supported.</source>
-        <translation>Impossibile elaborare la richiesta di pagamento in quanto BIP70 non è più supportato.</translation>
-    </message>
-    <message>
-        <source>Due to discontinued support, you should request the merchant to provide you with a BIP21 compatible URI or use a wallet that does continue to support BIP70.</source>
-        <translation>A causa dell'interruzione del supporto, dovresti richiedere al commerciante di fornirti un URI compatibile con BIP21 o utilizzare un portafoglio che continui a supportare BIP70.</translation>
-    </message>
-    <message>
         <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
         <translation>Impossibile interpretare l'URI! La causa puó essere un indirizzo Dash non valido o parametri URI non corretti.</translation>
     </message>
@@ -2280,7 +2251,7 @@
         <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
         <translation>Network</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Proposal</name>
     <message>
@@ -2337,11 +2308,6 @@
         <source>Do you want to reset settings to default values, or to abort without making changes?</source>
         <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
         <translation>Desideri ripristinare le impostazioni sui valori predefiniti o interrompere senza apportare modifiche?</translation>
-    </message>
-    <message>
-        <source>A fatal error occured. Check that settings file is writable, or try running with -nosettings.</source>
-        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
-        <translation>Si è verificato un errore irreversibile. Controlla che il file delle impostazioni sia scrivibile o prova a eseguirlo con -nosettings.</translation>
     </message>
     <message>
         <source>Choose data directory on startup (default: %u)</source>
@@ -2512,10 +2478,6 @@
         <translation>%1 B</translation>
     </message>
     <message>
-        <source>%1 KB</source>
-        <translation>%1 KB</translation>
-    </message>
-    <message>
         <source>%1 MB</source>
         <translation>%1 MB</translation>
     </message>
@@ -2571,7 +2533,7 @@
     </message>
     <message>
         <source>PNG Image</source>
-        <extracomment>Expanded name of the PNG file format. See https://en.wikipedia.org/wiki/Portable_Network_Graphics</extracomment>
+        <extracomment>Expanded name of the PNG file format. See: https://en.wikipedia.org/wiki/Portable_Network_Graphics.</extracomment>
         <translation>Immagine PNG</translation>
     </message>
 </context>
@@ -2870,10 +2832,6 @@
         <translation>1 &amp;ora</translation>
     </message>
     <message>
-        <source>1 &amp;day</source>
-        <translation>1 &amp;giorno</translation>
-    </message>
-    <message>
         <source>1 &amp;week</source>
         <translation>1 &amp;settimana</translation>
     </message>
@@ -2884,26 +2842,6 @@
     <message>
         <source>&amp;Unban</source>
         <translation>&amp;Elimina Ban</translation>
-    </message>
-    <message>
-        <source>Welcome to the %1 RPC console.</source>
-        <translation>Benvenuto nella console RPC di %1.</translation>
-    </message>
-    <message>
-        <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
-        <translation>Usa le frecce direzionali per navigare nella cronologia, e %1 per cancellarla.</translation>
-    </message>
-    <message>
-        <source>Type %1 for an overview of available commands.</source>
-        <translation>Digita %1 per una panoramica dei comandi disponibili.</translation>
-    </message>
-    <message>
-        <source>For more information on using this console type %1.</source>
-        <translation>Per ulteriori informazioni sull'utilizzo di questo tipo di console %1.</translation>
-    </message>
-    <message>
-        <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
-        <translation>ATTENZIONE: truffatori sono stati attivi, chiedendo agli utenti di digitare comandi qui, rubando il contenuto del loro portafoglio. Non utilizzare questa console senza comprendere appieno la diramazione di un comando.</translation>
     </message>
     <message>
         <source>In:</source>
@@ -3027,26 +2965,6 @@
     <message>
         <source>Enter a message to attach to the payment request</source>
         <translation>Inserisci un messaggio da allegare alla richiesta di pagamento</translation>
-    </message>
-    <message>
-        <source>Copy URI</source>
-        <translation>Copia URI</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>Copia Indirizzo</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Copia l'etichetta</translation>
-    </message>
-    <message>
-        <source>Copy message</source>
-        <translation>Copia messaggio</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Copia l'importo</translation>
     </message>
     </context>
 <context>
@@ -3741,11 +3659,10 @@
     </message>
 </context>
 <context>
+    <name>SplashScreen</name>
+    </context>
+<context>
     <name>TrafficGraphWidget</name>
-    <message>
-        <source>KB/s</source>
-        <translation>KB/s</translation>
-    </message>
     <message>
         <source>Total</source>
         <translation>Totale</translation>
@@ -4159,56 +4076,12 @@
         <translation>Importo minimo</translation>
     </message>
     <message>
-        <source>Abandon transaction</source>
-        <translation>Abbandona transazione </translation>
-    </message>
-    <message>
-        <source>Resend transaction</source>
-        <translation>Invia nuovamente la transazione</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>Copia l'indirizzo</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Copia l'etichetta</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Copia l'importo</translation>
-    </message>
-    <message>
-        <source>Copy transaction ID</source>
-        <translation>Copia l'ID transazione</translation>
-    </message>
-    <message>
-        <source>Copy raw transaction</source>
-        <translation>Copia la transazione raw</translation>
-    </message>
-    <message>
-        <source>Copy full transaction details</source>
-        <translation>Copia i dettagli dell'intera transazione</translation>
-    </message>
-    <message>
-        <source>Edit address label</source>
-        <translation>Modifica etichetta indirizzo</translation>
-    </message>
-    <message>
-        <source>Show transaction details</source>
-        <translation>Mostra i dettagli della transazione</translation>
-    </message>
-    <message>
-        <source>Show address QR code</source>
-        <translation>Mostra indirizzo del codice QR</translation>
-    </message>
-    <message>
         <source>Export Transaction History</source>
         <translation>Esporta lo storico delle transazioni</translation>
     </message>
     <message>
         <source>Comma separated file</source>
-        <extracomment>Expanded name of the CSV file format. See https://en.wikipedia.org/wiki/Comma-separated_values</extracomment>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
         <translation>File separato da virgole</translation>
     </message>
     <message>
@@ -4312,7 +4185,7 @@ Vai su File &gt; Apri Wallet per caricare un Wallet.
         <source>Create a new wallet</source>
         <translation>Crea un nuovo Wallet</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletModel</name>
     <message>
@@ -4339,33 +4212,9 @@ Vai su File &gt; Apri Wallet per caricare un Wallet.
         <translation>Importo selezionato:</translation>
     </message>
     <message>
-        <source>Unable to decode PSBT from clipboard (invalid base64)</source>
-        <translation>Impossibile decodificare PSBT dagli appunti (base64 non valido)</translation>
-    </message>
-    <message>
-        <source>Load Transaction Data</source>
-        <translation>Carica i Dati della Transazione</translation>
-    </message>
-    <message>
-        <source>Partially Signed Transaction (*.psbt)</source>
-        <translation>Transazione parzialmente firmata (*.psbt)</translation>
-    </message>
-    <message>
-        <source>Unable to decode PSBT</source>
-        <translation>Impossibile decodificare PSBT</translation>
-    </message>
-    <message>
         <source>Wallet Data</source>
         <extracomment>Name of the wallet data file format.</extracomment>
         <translation>Dati del wallet</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Errore</translation>
-    </message>
-    <message>
-        <source>PSBT file must be smaller than 100 MiB</source>
-        <translation>Il file PSBT deve essere inferiore a 100 MiB</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
@@ -4675,10 +4524,6 @@ Vai su File &gt; Apri Wallet per caricare un Wallet.
         <translation>Il Portafoglio è bloccato, non può ricostituire il keypool! I backup e il mixaggio automatici sono disabilitati, sblocca il tuo portafoglio per ricostituire il keypool.</translation>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex to change -timestampindex</source>
-        <translation>È necessario ricostruire il database usando -reindex per cambiare -timestampindex</translation>
-    </message>
-    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>Per ritornare alla modalità unpruned sarà necessario ricostruire il database utilizzando l'opzione -reindex. L'intera blockchain sarà riscaricata.</translation>
     </message>
@@ -4943,14 +4788,6 @@ Vai su File &gt; Apri Wallet per caricare un Wallet.
         <translation>Non è possibile avviare un nodo principale con il wallet abilitato.</translation>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex to change -addressindex</source>
-        <translation>È necessario ricostruire il database usando -reindex per cambiare -addressindex</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -spentindex</source>
-        <translation>È necessario ricostruire il database usando -reindex per cambiare -spentindex</translation>
-    </message>
-    <message>
         <source>no mixing available.</source>
         <translation>nessun mixing disponibile.</translation>
     </message>
@@ -5171,10 +5008,6 @@ Vai su File &gt; Apri Wallet per caricare un Wallet.
         <translation>Indirizzo di spork non valido specificato con -sporkaddr</translation>
     </message>
     <message>
-        <source>Prune mode is incompatible with -coinstatsindex.</source>
-        <translation>La modalità Prune è incompatibile con -coinstatsindex.</translation>
-    </message>
-    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Riduzione -maxconnections da %d a %d a causa di limitazioni di sistema.</translation>
     </message>
@@ -5271,10 +5104,6 @@ Vai su File &gt; Apri Wallet per caricare un Wallet.
         <translation>Categoria di registrazione non supportata %s=%s.</translation>
     </message>
     <message>
-        <source>Upgrading txindex database</source>
-        <translation>Aggiornamento del database txindex</translation>
-    </message>
-    <message>
         <source>Very low number of keys left: %d</source>
         <translation>Il numero di chiavi rimaste è molto basso: %d</translation>
     </message>
@@ -5306,5 +5135,5 @@ Vai su File &gt; Apri Wallet per caricare un Wallet.
         <source>Your entries added successfully.</source>
         <translation>Le tue voci sono state aggiunte con successo.</translation>
     </message>
-</context>
+    </context>
 </TS>
