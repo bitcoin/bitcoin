@@ -6,13 +6,17 @@
 #include <rpc/index_util.h>
 
 #include <node/blockstorage.h>
+#include <rpc/protocol.h>
+#include <rpc/request.h>
 #include <txdb.h>
 #include <txmempool.h>
 #include <uint256.h>
 
-bool IsAddressIndexAvailable()
+static void EnsureAddressIndexAvailable()
 {
-    return fAddressIndex;
+    if (!fAddressIndex) {
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Address index is disabled. You should run Dash Core with -addressindex (requires reindex)");
+    }
 }
 
 bool GetAddressIndex(CBlockTreeDB& block_tree_db, const uint160& addressHash, const AddressType type,
@@ -20,12 +24,11 @@ bool GetAddressIndex(CBlockTreeDB& block_tree_db, const uint160& addressHash, co
                      const int32_t start, const int32_t end)
 {
     AssertLockHeld(::cs_main);
+    EnsureAddressIndexAvailable();
 
-    if (!fAddressIndex)
-        return error("Address index not enabled");
-
-    if (!block_tree_db.ReadAddressIndex(addressHash, type, addressIndex, start, end))
+    if (!block_tree_db.ReadAddressIndex(addressHash, type, addressIndex, start, end)) {
         return error("Unable to get txids for address");
+    }
 
     return true;
 }
@@ -34,9 +37,7 @@ bool GetAddressUnspentIndex(CBlockTreeDB& block_tree_db, const uint160& addressH
                             std::vector<CAddressUnspentIndexEntry>& unspentOutputs, const bool height_sort)
 {
     AssertLockHeld(::cs_main);
-
-    if (!fAddressIndex)
-        return error("Address index not enabled");
+    EnsureAddressIndexAvailable();
 
     if (!block_tree_db.ReadAddressUnspentIndex(addressHash, type, unspentOutputs))
         return error("Unable to get txids for address");
@@ -56,8 +57,7 @@ bool GetMempoolAddressDeltaIndex(const CTxMemPool& mempool,
                                  std::vector<CMempoolAddressDeltaEntry>& addressDeltaEntries,
                                  const bool timestamp_sort)
 {
-    if (!fAddressIndex)
-        return error("Address index not enabled");
+    EnsureAddressIndexAvailable();
 
     if (!mempool.getAddressIndex(addressDeltaIndex, addressDeltaEntries))
         return error("Unable to get address delta information");
@@ -72,18 +72,14 @@ bool GetMempoolAddressDeltaIndex(const CTxMemPool& mempool,
     return true;
 }
 
-bool IsSpentIndexAvailable()
-{
-    return fSpentIndex;
-}
-
 bool GetSpentIndex(CBlockTreeDB& block_tree_db, const CTxMemPool& mempool, const CSpentIndexKey& key,
                    CSpentIndexValue& value)
 {
     AssertLockHeld(::cs_main);
 
-    if (!fSpentIndex)
-        return error("Spent index not enabled");
+    if (!fSpentIndex) {
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Spent index is disabled. You should run Dash Core with -spentindex (requires reindex)");
+    }
 
     if (mempool.getSpentIndex(key, value))
         return true;
@@ -94,18 +90,14 @@ bool GetSpentIndex(CBlockTreeDB& block_tree_db, const CTxMemPool& mempool, const
     return true;
 }
 
-bool IsTimestampIndexAvailable()
-{
-    return fTimestampIndex;
-}
-
 bool GetTimestampIndex(CBlockTreeDB& block_tree_db, const uint32_t high, const uint32_t low,
                        std::vector<uint256>& hashes)
 {
     AssertLockHeld(::cs_main);
 
-    if (!fTimestampIndex)
-        return error("Timestamp index not enabled");
+    if (!fTimestampIndex) {
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Timestamp index is disabled. You should run Dash Core with -timestampindex (requires reindex)");
+    }
 
     if (!block_tree_db.ReadTimestampIndex(high, low, hashes))
         return error("Unable to get hashes for timestamps");

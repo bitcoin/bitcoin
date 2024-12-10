@@ -75,7 +75,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, CTxMemPool& mempo
 
     // Add spent information if spentindex is enabled
     CSpentIndexTxInfo txSpentInfo;
-    if (IsSpentIndexAvailable()) {
+    if (fSpentIndex) {
         txSpentInfo = CSpentIndexTxInfo{};
         for (const auto& txin : tx.vin) {
             if (!tx.IsCoinBase()) {

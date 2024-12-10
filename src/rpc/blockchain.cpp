@@ -870,10 +870,6 @@ static RPCHelpMan getblockhashes()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if (!IsTimestampIndexAvailable()) {
-        throw JSONRPCError(RPC_INVALID_REQUEST, "Timestamp index is disabled. You should run Dash Core with -timestampindex (requires reindex)");
-    }
-
     unsigned int high = request.params[0].get_int();
     unsigned int low = request.params[1].get_int();
     std::vector<uint256> blockHashes;
