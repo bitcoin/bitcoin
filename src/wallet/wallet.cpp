@@ -4010,7 +4010,7 @@ util::Result<ScriptPubKeyMan*> CWallet::AddWalletDescriptor(WalletDescriptor& de
     return spk_man;
 }
 
-bool CWallet::MigrateToSQLite(bilingual_str& error)
+bool CWallet::MigrateToSQLite(bilingual_str& error, bool in_memory)
 {
     AssertLockHeld(cs_wallet);
 
@@ -4061,6 +4061,7 @@ bool CWallet::MigrateToSQLite(bilingual_str& error)
     DatabaseOptions opts;
     opts.require_create = true;
     opts.require_format = DatabaseFormat::SQLITE;
+    opts.in_memory = in_memory;
     DatabaseStatus db_status;
     std::unique_ptr<WalletDatabase> new_db = MakeDatabase(wallet_path, opts, db_status, error);
     assert(new_db); // This is to prevent doing anything further with this wallet. The original file was deleted, but a backup exists.
@@ -4476,10 +4477,10 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         return util::Error{Untranslated("Wallet loading failed.") + Untranslated(" ") + error};
     }
 
-    return MigrateLegacyToDescriptor(std::move(local_wallet), passphrase, context, was_loaded);
+    return MigrateLegacyToDescriptor(std::move(local_wallet), passphrase, context, was_loaded, /*in_memory=*/false);
 }
 
-util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet> local_wallet, const SecureString& passphrase, WalletContext& context, bool was_loaded)
+util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet> local_wallet, const SecureString& passphrase, WalletContext& context, bool was_loaded, bool in_memory)
 {
     MigrationResult res;
     bilingual_str error;
@@ -4541,7 +4542,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
     {
         LOCK(local_wallet->cs_wallet);
         // First change to using SQLite
-        if (!local_wallet->MigrateToSQLite(error)) return util::Error{error};
+        if (!local_wallet->MigrateToSQLite(error, in_memory)) return util::Error{error};
 
         // Do the migration of keys and scripts for non-empty wallets, and cleanup if it fails
         if (HasLegacyRecords(*local_wallet)) {
@@ -4580,7 +4581,10 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
         // Migration failed, cleanup
         // Before deleting the wallet's directory, copy the backup file to the top-level wallets dir
         fs::path temp_backup_location = fsbridge::AbsPathJoin(GetWalletDir(), backup_filename);
-        fs::copy_file(backup_path, temp_backup_location, fs::copy_options::none);
+
+        if (!in_memory) {
+            fs::copy_file(backup_path, temp_backup_location, fs::copy_options::none);
+        }
 
         // Make list of wallets to cleanup
         std::vector<std::shared_ptr<CWallet>> created_wallets;
@@ -4625,8 +4629,10 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
         }
 
         // The wallet directory has been restored, but just in case, copy the previously created backup to the wallet dir
-        fs::copy_file(temp_backup_location, backup_path, fs::copy_options::none);
-        fs::remove(temp_backup_location);
+        if (!in_memory) {
+            fs::copy_file(temp_backup_location, backup_path, fs::copy_options::none);
+            fs::remove(temp_backup_location);
+        }
 
         // Verify that there is no dangling wallet: when the wallet wasn't loaded before, expect null.
         // This check is performed after restoration to avoid an early error before saving the backup.
