@@ -94,10 +94,6 @@
         <translation>&amp;แก้ไข</translation>
     </message>
     <message>
-        <source>&amp;Show address QR code</source>
-        <translation>&amp;แสดง ที่อยู่ QR code</translation>
-    </message>
-    <message>
         <source>QR code</source>
         <translation>โค้ด QR</translation>
     </message>
@@ -618,6 +614,7 @@
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Dash network</source>
+        <extracomment>A substring of the tooltip.</extracomment>
         <translation><numerusform>%n เชื่อมต่อใช้งานกับเครือข่าย Dash</numerusform></translation>
     </message>
     <message>
@@ -874,28 +871,8 @@
         <translation>ยืนยันแล้ว</translation>
     </message>
     <message>
-        <source>Copy address</source>
-        <translation>คัดลอกที่อยู่</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>คัดลอกป้ายชื่อ</translation>
-    </message>
-    <message>
         <source>Copy amount</source>
         <translation>คัดลอกจำนวน</translation>
-    </message>
-    <message>
-        <source>Copy transaction ID</source>
-        <translation>คัดลอก ID ธุรกรรม</translation>
-    </message>
-    <message>
-        <source>Lock unspent</source>
-        <translation>Lock unspent</translation>
-    </message>
-    <message>
-        <source>Unlock unspent</source>
-        <translation>Unlock unspent</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -986,6 +963,7 @@
     <name>CreateWalletActivity</name>
     <message>
         <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the create wallet progress window which indicates to the user which wallet is currently being created.</extracomment>
         <translation>การสร้างกระเป๋าเงิน &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
     <message>
@@ -1424,6 +1402,7 @@
     </message>
     <message>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the open wallet progress window which indicates to the user which wallet is currently being opened.</extracomment>
         <translation>เปิดกระเป๋า &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
 </context>
@@ -1991,14 +1970,6 @@
         <translation>'dash://' ไม่ใช่ URI ที่ถูกต้องใช้ 'dash:' แทน</translation>
     </message>
     <message>
-        <source>Cannot process payment request as BIP70 is no longer supported.</source>
-        <translation>ไม่สามารถดำเนินการคำขอชำระเงินได้เนื่องจากไม่รองรับ BIP70 อีกต่อไป</translation>
-    </message>
-    <message>
-        <source>Due to discontinued support, you should request the merchant to provide you with a BIP21 compatible URI or use a wallet that does continue to support BIP70.</source>
-        <translation>เนื่องจากการสนับสนุนถูกยกเลิก คุณควรขอให้ผู้ค้าจัดเตรียม URI ที่เข้ากันได้กับ BIP21 หรือใช้กระเป๋าเงินที่รองรับ BIP70 ต่อไป</translation>
-    </message>
-    <message>
         <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
         <translation>ไม่สามารถประมวลผล URI ได้สำเร็จ ! ซึ่งอาจเกิดจากที่อยู่ Dash ไม่ถูกต้องหรือพารามิเตอร์ URI ที่มีรูปแบบไม่ถูกต้อง</translation>
     </message>
@@ -2241,10 +2212,6 @@
     <message>
         <source>%1 B</source>
         <translation>%1 B</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 KB</translation>
     </message>
     <message>
         <source>%1 MB</source>
@@ -2572,10 +2539,6 @@
         <translation>1 &amp;ชั่วโมง</translation>
     </message>
     <message>
-        <source>1 &amp;day</source>
-        <translation>1 &amp;วัน</translation>
-    </message>
-    <message>
         <source>1 &amp;week</source>
         <translation>1 &amp;สัปดาห์</translation>
     </message>
@@ -2586,26 +2549,6 @@
     <message>
         <source>&amp;Unban</source>
         <translation>&amp;Unban</translation>
-    </message>
-    <message>
-        <source>Welcome to the %1 RPC console.</source>
-        <translation>ยินดีต้อนรับสู่คอนโซล %1 RPC</translation>
-    </message>
-    <message>
-        <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
-        <translation>ใช้ลูกศรขึ้นและลงเพื่อเลื่อนดูประวัติ และ %1 เพื่อเคลียร์หน้าจอ</translation>
-    </message>
-    <message>
-        <source>Type %1 for an overview of available commands.</source>
-        <translation>พิมพ์ %1 สำหรับภาพรวมของคำสั่งที่ใช้ได้</translation>
-    </message>
-    <message>
-        <source>For more information on using this console type %1.</source>
-        <translation>สำหรับข้อมูลเพิ่มเติมเกี่ยวกับการใช้คอนโซลประเภทนี้พิมพ์ %1</translation>
-    </message>
-    <message>
-        <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
-        <translation>คำเตือน: สแกมเมอร์กำลังใช้งานอยู่, กำลังบอกให้ผู้ใช้พิมพ์คำสั่งที่นี่, ขโมยเนื้อหาใน wallet ได้ ห้ามใช้คอนโซลนี้โดยไม่เข้าใจส่วนย่อยของคำสั่ง</translation>
     </message>
     <message>
         <source>In:</source>
@@ -2729,26 +2672,6 @@
     <message>
         <source>Enter a message to attach to the payment request</source>
         <translation>ป้อนข้อความที่จะแนบไปร้องขอการชำระเงิน</translation>
-    </message>
-    <message>
-        <source>Copy URI</source>
-        <translation>คัดลอก URI</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>คัดลอกที่อยู่</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>คัดลอกป้ายชื่อ</translation>
-    </message>
-    <message>
-        <source>Copy message</source>
-        <translation>คัดลอกข้อความ</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>คัดลอกจำนวน</translation>
     </message>
     </context>
 <context>
@@ -3390,11 +3313,10 @@
     </message>
 </context>
 <context>
+    <name>SplashScreen</name>
+    </context>
+<context>
     <name>TrafficGraphWidget</name>
-    <message>
-        <source>KB/s</source>
-        <translation>KB/s</translation>
-    </message>
     <message>
         <source>Total</source>
         <translation>ยอดรวม: </translation>
@@ -3808,50 +3730,6 @@
         <translation>จำนวนเงินขั้นต่ำ</translation>
     </message>
     <message>
-        <source>Abandon transaction</source>
-        <translation>ยกเลิกรายการ</translation>
-    </message>
-    <message>
-        <source>Resend transaction</source>
-        <translation>ส่งการทำธุรกรรมอีกครั้ง</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>คัดลอกที่อยู่</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>คัดลอกป้ายชื่อ</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>คัดลอกจำนวน</translation>
-    </message>
-    <message>
-        <source>Copy transaction ID</source>
-        <translation>คัดลอก ID ธุรกรรม</translation>
-    </message>
-    <message>
-        <source>Copy raw transaction</source>
-        <translation>คัดลอกธุรกรรมดิบ</translation>
-    </message>
-    <message>
-        <source>Copy full transaction details</source>
-        <translation>คัดลอกรายละเอียดธุรกรรมทั้งหมด</translation>
-    </message>
-    <message>
-        <source>Edit address label</source>
-        <translation>แก้ไขที่อยู่ฉลาก</translation>
-    </message>
-    <message>
-        <source>Show transaction details</source>
-        <translation>แสดงรายละเอียดธุรกรรม</translation>
-    </message>
-    <message>
-        <source>Show address QR code</source>
-        <translation>แสดงที่อยู่ของ QR code</translation>
-    </message>
-    <message>
         <source>Export Transaction History</source>
         <translation>ส่งออกประวัติการทำธุรกรรม</translation>
     </message>
@@ -3948,7 +3826,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <source>Create a new wallet</source>
         <translation>สร้างกระเป๋าเงินใหม่</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletModel</name>
     <message>
@@ -4274,10 +4152,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>กระเป๋าสตางค์ถูกล็อคไม่สามารถเติม keypool! ปิดใช้งานการสำรองข้อมูลและการผสมข้อมูลอัตโนมัติ โปรดปลดล็อกเพื่อใส่พวง keypool</translation>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex to change -timestampindex</source>
-        <translation>คุณจำเป็นต้องสร้างฐานข้อมูลโดยใช้ -reindex เพื่อเปลี่ยน -timestampindex</translation>
-    </message>
-    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>คุณจำเป็นต้องสร้างฐานข้อมูลโดยใช้ -reindex ที่จะกลับไปที่โหมด unpruned  และนี่จะดาวน์โหลด blockchain  ที่เหลือใหม่ทั้งหมด</translation>
     </message>
@@ -4520,14 +4394,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>You can not start a masternode with wallet enabled.</source>
         <translation>คุณไม่สามารถเริ่มต้น masternode กับกระเป๋าสตางค์เปิดการใช้งาน</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -addressindex</source>
-        <translation>คุณจำเป็นต้องสร้างฐานข้อมูลโดยใช้ -reindex เพื่อเปลี่ยน -addressindex</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -spentindex</source>
-        <translation>คุณจำเป็นต้องสร้างฐานข้อมูลโดยใช้ -reindex เพื่อเปลี่ยน -spentindex</translation>
     </message>
     <message>
         <source>no mixing available.</source>
@@ -4834,10 +4700,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>การบันทึกประเภทที่ไม่ได้รับการสนับสนุน %s=%s</translation>
     </message>
     <message>
-        <source>Upgrading txindex database</source>
-        <translation>การอัพเกรดฐานข้อมูล txindex</translation>
-    </message>
-    <message>
         <source>Very low number of keys left: %d</source>
         <translation>จำนวนคีย์ที่เหลืออยู่ต่ำมาก: %d</translation>
     </message>
@@ -4869,5 +4731,5 @@ Go to File &gt; Open Wallet to load a wallet.
         <source>Your entries added successfully.</source>
         <translation>เพิ่มรายการของคุณเรียบร้อยแล้ว</translation>
     </message>
-</context>
+    </context>
 </TS>
