@@ -289,6 +289,19 @@ public:
         // Delegate to Satisfier.
         return ctx.CheckOlder(sequence.GetInt64());
     }
+
+    bool CheckTaprootCommitment(const std::vector<unsigned char>& control,
+                                const std::vector<unsigned char>& program,
+                                const uint256& tapleaf_hash) const override
+    {
+        return true;
+    }
+
+    bool CheckWitnessScriptHash(Span<const unsigned char> program,
+                                const CScript& exec_script) const override
+    {
+        return true;
+    }
 };
 
 using Fragment = miniscript::Fragment;

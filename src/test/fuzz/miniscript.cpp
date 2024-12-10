@@ -299,6 +299,18 @@ const struct CheckerContext: BaseSignatureChecker {
     }
     bool CheckLockTime(const CScriptNum& nLockTime) const override { return nLockTime.GetInt64() & 1; }
     bool CheckSequence(const CScriptNum& nSequence) const override { return nSequence.GetInt64() & 1; }
+
+    bool CheckTaprootCommitment(const std::vector<unsigned char>& control,
+                                const std::vector<unsigned char>& program,
+                                const uint256& tapleaf_hash) const override
+    {
+        return true;
+    }
+    bool CheckWitnessScriptHash(Span<const unsigned char> program,
+                                const CScript& exec_script) const override
+    {
+        return true;
+    }
 } CHECKER_CTX;
 
 //! Context to check for duplicates when instancing a Node.

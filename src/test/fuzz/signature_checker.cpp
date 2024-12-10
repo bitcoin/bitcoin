@@ -44,6 +44,18 @@ public:
         return m_fuzzed_data_provider.ConsumeBool();
     }
 
+    bool CheckTaprootCommitment(const std::vector<unsigned char>& control,
+                                const std::vector<unsigned char>& program,
+                                const uint256& tapleaf_hash) const override
+    {
+        return m_fuzzed_data_provider.ConsumeBool();
+    }
+    bool CheckWitnessScriptHash(Span<const unsigned char> program,
+                                const CScript& exec_script) const override
+    {
+        return m_fuzzed_data_provider.ConsumeBool();
+    }
+
     virtual ~FuzzedSignatureChecker() = default;
 };
 } // namespace

@@ -1781,6 +1781,35 @@ bool GenericTransactionSignatureChecker<T>::CheckSequence(const CScriptNum& nSeq
     return true;
 }
 
+template <class T>
+bool GenericTransactionSignatureChecker<T>::CheckTaprootCommitment(
+    const std::vector<unsigned char>& control,
+    const std::vector<unsigned char>& program,
+    const uint256& tapleaf_hash) const
+{
+    assert(control.size() >= TAPROOT_CONTROL_BASE_SIZE);
+    assert(program.size() >= uint256::size());
+    //! The internal pubkey (x-only, so no Y coordinate parity).
+    const XOnlyPubKey p{Span{control}.subspan(1, TAPROOT_CONTROL_BASE_SIZE - 1)};
+    //! The output pubkey (taken from the scriptPubKey).
+    const XOnlyPubKey q{program};
+    // Compute the Merkle root from the leaf and the provided path.
+    const uint256 merkle_root = ComputeTaprootMerkleRoot(control, tapleaf_hash);
+    // Verify that the output pubkey matches the tweaked internal pubkey, after correcting for parity.
+    return q.CheckTapTweak(p, merkle_root, control[0] & 1);
+}
+
+template <class T>
+bool GenericTransactionSignatureChecker<T>::CheckWitnessScriptHash(
+    Span<const unsigned char> program,
+    const CScript& exec_script) const
+{
+    assert(program.size() >= uint256::size());
+    uint256 hash_exec_script;
+    CSHA256().Write(exec_script.data(), exec_script.size()).Finalize(hash_exec_script.begin());
+    return memcmp(hash_exec_script.begin(), program.data(), uint256::size()) == 0;
+}
+
 // explicit instantiation
 template class GenericTransactionSignatureChecker<CTransaction>;
 template class GenericTransactionSignatureChecker<CMutableTransaction>;
@@ -1856,20 +1885,6 @@ uint256 ComputeTaprootMerkleRoot(Span<const unsigned char> control, const uint25
     return k;
 }
 
-static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, const std::vector<unsigned char>& program, const uint256& tapleaf_hash)
-{
-    assert(control.size() >= TAPROOT_CONTROL_BASE_SIZE);
-    assert(program.size() >= uint256::size());
-    //! The internal pubkey (x-only, so no Y coordinate parity).
-    const XOnlyPubKey p{Span{control}.subspan(1, TAPROOT_CONTROL_BASE_SIZE - 1)};
-    //! The output pubkey (taken from the scriptPubKey).
-    const XOnlyPubKey q{program};
-    // Compute the Merkle root from the leaf and the provided path.
-    const uint256 merkle_root = ComputeTaprootMerkleRoot(control, tapleaf_hash);
-    // Verify that the output pubkey matches the tweaked internal pubkey, after correcting for parity.
-    return q.CheckTapTweak(p, merkle_root, control[0] & 1);
-}
-
 static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, const std::vector<unsigned char>& program, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror, bool is_p2sh)
 {
     CScript exec_script; //!< Actually executed script (last stack item in P2WSH; implied P2PKH script in P2WPKH; leaf script in P2TR)
@@ -1884,9 +1899,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             }
             const valtype& script_bytes = SpanPopBack(stack);
             exec_script = CScript(script_bytes.begin(), script_bytes.end());
-            uint256 hash_exec_script;
-            CSHA256().Write(exec_script.data(), exec_script.size()).Finalize(hash_exec_script.begin());
-            if (memcmp(hash_exec_script.begin(), program.data(), 32)) {
+            if (!checker.CheckWitnessScriptHash(program, exec_script)) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
             }
             return ExecuteWitnessScript(stack, exec_script, flags, SigVersion::WITNESS_V0, checker, execdata, serror);
@@ -1927,7 +1940,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
                 return set_error(serror, SCRIPT_ERR_TAPROOT_WRONG_CONTROL_SIZE);
             }
             execdata.m_tapleaf_hash = ComputeTapleafHash(control[0] & TAPROOT_LEAF_MASK, script);
-            if (!VerifyTaprootCommitment(control, program, execdata.m_tapleaf_hash)) {
+            if (!checker.CheckTaprootCommitment(control, program, execdata.m_tapleaf_hash)) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
             }
             execdata.m_tapleaf_hash_init = true;

@@ -265,6 +265,18 @@ public:
          return false;
     }
 
+    virtual bool CheckTaprootCommitment(const std::vector<unsigned char>& control,
+                                        const std::vector<unsigned char>& program,
+                                        const uint256& tapleaf_hash) const
+    {
+         return false;
+    }
+    virtual bool CheckWitnessScriptHash(Span<const unsigned char> program,
+                                        const CScript& exec_script) const
+    {
+         return false;
+    }
+
     virtual ~BaseSignatureChecker() = default;
 };
 
@@ -301,6 +313,11 @@ public:
     bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const override;
     bool CheckLockTime(const CScriptNum& nLockTime) const override;
     bool CheckSequence(const CScriptNum& nSequence) const override;
+    bool CheckTaprootCommitment(const std::vector<unsigned char>& control,
+                                const std::vector<unsigned char>& program,
+                                const uint256& tapleaf_hash) const override;
+    bool CheckWitnessScriptHash(Span<const unsigned char> program,
+                                const CScript& exec_script) const override;
 };
 
 using TransactionSignatureChecker = GenericTransactionSignatureChecker<CTransaction>;
@@ -331,6 +348,18 @@ public:
     bool CheckSequence(const CScriptNum& nSequence) const override
     {
         return m_checker.CheckSequence(nSequence);
+    }
+
+    bool CheckTaprootCommitment(const std::vector<unsigned char>& control,
+                                const std::vector<unsigned char>& program,
+                                const uint256& tapleaf_hash) const override
+    {
+        return m_checker.CheckTaprootCommitment(control, program, tapleaf_hash);
+    }
+    bool CheckWitnessScriptHash(Span<const unsigned char> program,
+                                const CScript& exec_script) const override
+    {
+        return m_checker.CheckWitnessScriptHash(program, exec_script);
     }
 };
 
