@@ -526,6 +526,15 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             binary = [get_bin_from_version(v, 'bitcoind', self.options.bitcoind) for v in versions]
         if binary_cli is None:
             binary_cli = [get_bin_from_version(v, 'bitcoin-cli', self.options.bitcoincli) for v in versions]
+        # Fail test if any of the needed release binaries is missing
+        bins_missing = False
+        for bin_path in binary + binary_cli:
+            if shutil.which(bin_path) is None:
+                self.log.error(f"Binary not found: {bin_path}")
+                bins_missing = True
+        if bins_missing:
+            raise AssertionError("At least one release binary is missing. "
+                                 "Previous releases binaries can be downloaded via `test/get_previous_releases.py -b`.")
         assert_equal(len(extra_confs), num_nodes)
         assert_equal(len(extra_args), num_nodes)
         assert_equal(len(versions), num_nodes)
