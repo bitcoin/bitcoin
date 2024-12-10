@@ -72,8 +72,8 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
     ChainstateManager& chainman = *Assert(m_node.chainman);
     const auto get_notify_tip{[&]() {
         LOCK(m_node.notifications->m_tip_block_mutex);
-        BOOST_REQUIRE(m_node.notifications->m_tip_block);
-        return *m_node.notifications->m_tip_block;
+        BOOST_REQUIRE(m_node.notifications->TipBlock());
+        return *m_node.notifications->TipBlock();
     }};
     uint256 curr_tip = get_notify_tip();
 
