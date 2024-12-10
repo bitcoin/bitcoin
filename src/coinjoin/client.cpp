@@ -1485,7 +1485,7 @@ bool CCoinJoinClientSession::MakeCollateralAmounts(const CompactTallyItem& tally
         return false;
     }
 
-    CTransactionBuilder txBuilder(m_wallet, tallyItem);
+    CTransactionBuilder txBuilder(*m_wallet, tallyItem);
 
     WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::%s -- Start %s\n", __func__, txBuilder.ToString());
 
@@ -1648,7 +1648,7 @@ bool CCoinJoinClientSession::CreateDenominated(CAmount nBalanceToDenominate, con
         return false;
     }
 
-    CTransactionBuilder txBuilder(m_wallet, tallyItem);
+    CTransactionBuilder txBuilder(*m_wallet, tallyItem);
 
     WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::%s -- Start %s\n", __func__, txBuilder.ToString());
 
