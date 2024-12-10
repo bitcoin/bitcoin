@@ -121,11 +121,13 @@ class DashGovernanceTest (DashTestFramework):
         assert_equal(len(self.nodes[0].gobject("list-prepared")), 3)
         assert_equal(len(self.nodes[0].gobject("list")), 0)
 
+        self.log.info("Submit objects")
         self.p0_hash = self.nodes[0].gobject("submit", "0", 1, proposal_time, p0_collateral_prepare["hex"], p0_collateral_prepare["collateralHash"])
         self.p1_hash = self.nodes[0].gobject("submit", "0", 1, proposal_time, p1_collateral_prepare["hex"], p1_collateral_prepare["collateralHash"])
         self.p2_hash = self.nodes[0].gobject("submit", "0", 1, proposal_time, p2_collateral_prepare["hex"], p2_collateral_prepare["collateralHash"])
 
         assert_equal(len(self.nodes[0].gobject("list")), 3)
+        self.wait_until(lambda: len(self.nodes[1].gobject("list")) == 3, timeout = 5)
 
         assert_equal(self.nodes[0].gobject("get", self.p0_hash)["FundingResult"]["YesCount"], 0)
         assert_equal(self.nodes[0].gobject("get", self.p0_hash)["FundingResult"]["NoCount"], 0)
@@ -136,22 +138,29 @@ class DashGovernanceTest (DashTestFramework):
         assert_equal(self.nodes[0].gobject("get", self.p2_hash)["FundingResult"]["YesCount"], 0)
         assert_equal(self.nodes[0].gobject("get", self.p2_hash)["FundingResult"]["NoCount"], 0)
 
+        self.log.info("Cast votes")
         self.nodes[0].gobject("vote-alias", self.p0_hash, map_vote_signals[1], map_vote_outcomes[2], self.mninfo[0].proTxHash)
         self.nodes[0].gobject("vote-many", self.p0_hash, map_vote_signals[1], map_vote_outcomes[1])
         assert_equal(self.nodes[0].gobject("get", self.p0_hash)["FundingResult"]["YesCount"], self.mn_count - 1)
         assert_equal(self.nodes[0].gobject("get", self.p0_hash)["FundingResult"]["NoCount"], 1)
+        self.wait_until(lambda: self.nodes[1].gobject("get", self.p0_hash)["FundingResult"]["YesCount"] == self.mn_count - 1, timeout = 5)
+        self.wait_until(lambda: self.nodes[1].gobject("get", self.p0_hash)["FundingResult"]["NoCount"] == 1, timeout = 5)
 
         self.nodes[0].gobject("vote-alias", self.p1_hash, map_vote_signals[1], map_vote_outcomes[2], self.mninfo[0].proTxHash)
         self.nodes[0].gobject("vote-alias", self.p1_hash, map_vote_signals[1], map_vote_outcomes[2], self.mninfo[1].proTxHash)
         self.nodes[0].gobject("vote-many", self.p1_hash, map_vote_signals[1], map_vote_outcomes[1])
         assert_equal(self.nodes[0].gobject("get", self.p1_hash)["FundingResult"]["YesCount"], self.mn_count - 2)
         assert_equal(self.nodes[0].gobject("get", self.p1_hash)["FundingResult"]["NoCount"], 2)
+        self.wait_until(lambda: self.nodes[1].gobject("get", self.p1_hash)["FundingResult"]["YesCount"] == self.mn_count - 2, timeout = 5)
+        self.wait_until(lambda: self.nodes[1].gobject("get", self.p1_hash)["FundingResult"]["NoCount"] == 2, timeout = 5)
 
         self.nodes[0].gobject("vote-alias", self.p2_hash, map_vote_signals[1], map_vote_outcomes[2], self.mninfo[0].proTxHash)
         self.nodes[0].gobject("vote-alias", self.p2_hash, map_vote_signals[1], map_vote_outcomes[2], self.mninfo[1].proTxHash)
         self.nodes[0].gobject("vote-many", self.p2_hash, map_vote_signals[1], map_vote_outcomes[1])
         assert_equal(self.nodes[0].gobject("get", self.p2_hash)["FundingResult"]["YesCount"], self.mn_count - 2)
         assert_equal(self.nodes[0].gobject("get", self.p2_hash)["FundingResult"]["NoCount"], 2)
+        self.wait_until(lambda: self.nodes[1].gobject("get", self.p2_hash)["FundingResult"]["YesCount"] == self.mn_count - 2, timeout = 5)
+        self.wait_until(lambda: self.nodes[1].gobject("get", self.p2_hash)["FundingResult"]["NoCount"] == 2, timeout = 5)
 
         assert_equal(len(self.nodes[0].gobject("list", "valid", "triggers")), 0)
 
