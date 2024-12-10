@@ -220,7 +220,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
         std::optional<COutPoint> outpoint_to_rbf{fuzzed_data_provider.ConsumeBool() ? GetChildEvictingPrevout(tx_pool) : std::nullopt};
 
         // Make small packages
-        const auto num_txs = outpoint_to_rbf ? 1 : (size_t) fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 4);
+        const auto num_txs = outpoint_to_rbf ? 1 : fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, 4);
 
         std::unordered_set<COutPoint, SaltedOutpointHasher> package_outpoints;
         while (txs.size() < num_txs) {
@@ -371,7 +371,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
         std::vector<CTransactionRef> txs;
 
         // Make packages of 1-to-26 transactions
-        const auto num_txs = (size_t) fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 26);
+        const auto num_txs = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, 26);
         std::unordered_set<COutPoint, SaltedOutpointHasher> package_outpoints;
         while (txs.size() < num_txs) {
             // Create transaction to add to the mempool
