@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -53,9 +53,9 @@ void initialize_tx_pool()
 }
 
 struct OutpointsUpdater final : public CValidationInterface {
-    std::set<COutPoint>& m_mempool_outpoints;
+    std::unordered_set<COutPoint, SaltedOutpointHasher>& m_mempool_outpoints;
 
-    explicit OutpointsUpdater(std::set<COutPoint>& r)
+    explicit OutpointsUpdater(std::unordered_set<COutPoint, SaltedOutpointHasher>& r)
         : m_mempool_outpoints{r} {}
 
     void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t /* mempool_sequence */) override
@@ -195,8 +195,8 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
     MockTime(fuzzed_data_provider, chainstate);
 
     // All RBF-spendable outpoints outside of the unsubmitted package
-    std::set<COutPoint> mempool_outpoints;
-    std::map<COutPoint, CAmount> outpoints_value;
+    std::unordered_set<COutPoint, SaltedOutpointHasher> mempool_outpoints;
+    std::unordered_map<COutPoint, CAmount, SaltedOutpointHasher> outpoints_value;
     for (const auto& outpoint : g_outpoints_coinbase_init_mature) {
         Assert(mempool_outpoints.insert(outpoint).second);
         outpoints_value[outpoint] = 50 * COIN;
@@ -222,7 +222,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
         // Make small packages
         const auto num_txs = outpoint_to_rbf ? 1 : (size_t) fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 4);
 
-        std::set<COutPoint> package_outpoints;
+        std::unordered_set<COutPoint, SaltedOutpointHasher> package_outpoints;
         while (txs.size() < num_txs) {
             // Create transaction to add to the mempool
             txs.emplace_back([&] {
@@ -349,8 +349,8 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
     MockTime(fuzzed_data_provider, chainstate);
 
     // All RBF-spendable outpoints outside of the unsubmitted package
-    std::set<COutPoint> mempool_outpoints;
-    std::map<COutPoint, CAmount> outpoints_value;
+    std::unordered_set<COutPoint, SaltedOutpointHasher> mempool_outpoints;
+    std::unordered_map<COutPoint, CAmount, SaltedOutpointHasher> outpoints_value;
     for (const auto& outpoint : g_outpoints_coinbase_init_mature) {
         Assert(mempool_outpoints.insert(outpoint).second);
         outpoints_value[outpoint] = 50 * COIN;
@@ -372,7 +372,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
 
         // Make packages of 1-to-26 transactions
         const auto num_txs = (size_t) fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 26);
-        std::set<COutPoint> package_outpoints;
+        std::unordered_set<COutPoint, SaltedOutpointHasher> package_outpoints;
         while (txs.size() < num_txs) {
             // Create transaction to add to the mempool
             txs.emplace_back([&] {
