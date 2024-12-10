@@ -4678,7 +4678,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
             success = reload_wallet(res.solvables_wallet);
         }
     }
-    if (!success) {
+    if (!success && !in_memory) {
         // Migration failed, cleanup
         // Copy the backup to the actual wallet dir
         fs::path temp_backup_location = fsbridge::AbsPathJoin(GetWalletDir(), backup_filename);
