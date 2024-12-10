@@ -11,16 +11,17 @@ from test_framework.util import (
 )
 from test_framework.governance import EXPECTED_STDERR_NO_GOV_PRUNE
 
-DEPLOYMENT_ARG = "-testactivationheight=v20@3000"
+# TODO: remove testactivationheight=v20@3000 when it will be activated from block 1
+DEPLOYMENT_ARGS = ["-testactivationheight=v20@3000", "-dip3params=3000:3000"]
 
 class FeatureIndexPruneTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.extra_args = [
-            ["-fastprune", "-prune=1", "-blockfilterindex=1", DEPLOYMENT_ARG],
-            ["-fastprune", "-prune=1", "-coinstatsindex=1", DEPLOYMENT_ARG],
-            ["-fastprune", "-prune=1", "-blockfilterindex=1", "-coinstatsindex=1", DEPLOYMENT_ARG],
-            [DEPLOYMENT_ARG]
+            ["-fastprune", "-prune=1", "-blockfilterindex=1"] + DEPLOYMENT_ARGS,
+            ["-fastprune", "-prune=1", "-coinstatsindex=1"] + DEPLOYMENT_ARGS,
+            ["-fastprune", "-prune=1", "-blockfilterindex=1", "-coinstatsindex=1"] + DEPLOYMENT_ARGS,
+            [] + DEPLOYMENT_ARGS,
         ]
 
     def sync_index(self, height):
@@ -51,7 +52,7 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
 
     def restart_without_indices(self):
         for i in range(3):
-            self.restart_node(i, extra_args=["-fastprune", "-prune=1", DEPLOYMENT_ARG], expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
+            self.restart_node(i, extra_args=["-fastprune", "-prune=1"] + DEPLOYMENT_ARGS, expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
         self.reconnect_nodes()
 
     def run_test(self):
@@ -110,7 +111,7 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
         self.log.info("prune exactly up to the indices best blocks while the indices are disabled")
         for i in range(3):
             pruneheight_2 = self.nodes[i].pruneblockchain(1000)
-            assert_equal(pruneheight_2, 932)
+            assert_equal(pruneheight_2, 732)
             # Restart the nodes again with the indices activated
             self.restart_node(i, extra_args=self.extra_args[i], expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
 
@@ -145,7 +146,7 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
         for node in self.nodes[:2]:
             with node.assert_debug_log(['limited pruning to height 2489']):
                 pruneheight_new = node.pruneblockchain(2500)
-                assert_equal(pruneheight_new, 2197)
+                assert_equal(pruneheight_new, 2125)
 
         self.log.info("ensure that prune locks don't prevent indices from failing in a reorg scenario")
         with self.nodes[0].assert_debug_log(['basic block filter index prune lock moved back to 2480']):

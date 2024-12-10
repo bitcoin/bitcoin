@@ -267,16 +267,20 @@ bool CSpecialTxProcessor::CheckCreditPoolDiffForBlock(const CBlock& block, const
 
     try {
         if (!DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_DIP0003)) return true;
+        if (!DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_DIP0008)) return true;
         if (!DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_V20)) return true;
 
         auto creditPoolDiff = GetCreditPoolDiffForBlock(m_cpoolman, m_chainman.m_blockman, m_qman, block, pindex->pprev, m_consensus_params, blockSubsidy, state);
         if (!creditPoolDiff.has_value()) return false;
 
         // If we get there we have v20 activated and credit pool amount must be included in block CbTx
+        if (block.vtx.empty()) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-missing-cbtx");
+        }
         const auto& tx = *block.vtx[0];
-        assert(tx.IsCoinBase());
-        assert(tx.IsSpecialTxVersion());
-        assert(tx.nType == TRANSACTION_COINBASE);
+        if (!tx.IsCoinBase() || !tx.IsSpecialTxVersion() || tx.nType != TRANSACTION_COINBASE) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-type");
+        }
 
         const auto opt_cbTx = GetTxPayload<CCbTx>(tx);
         if (!opt_cbTx) {

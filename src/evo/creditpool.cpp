@@ -112,24 +112,29 @@ void CCreditPoolManager::AddToCache(const uint256& block_hash, int height, const
     }
 }
 
-static std::optional<CBlock> GetBlockForCreditPool(const CBlockIndex* const block_index, const Consensus::Params& consensusParams)
+static std::optional<CBlock> GetBlockForCreditPool(const gsl::not_null<const CBlockIndex*> block_index,
+                                                   const Consensus::Params& consensusParams)
 {
+    // There's no CbTx before DIP0003 activation
+    if (!DeploymentActiveAt(*block_index, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003)) {
+        return std::nullopt;
+    }
+
     CBlock block;
     if (!ReadBlockFromDisk(block, block_index, consensusParams)) {
         throw std::runtime_error("failed-getcbforblock-read");
     }
 
-    assert(!block.vtx.empty());
-
-    // Should not fail if V20 (DIP0027) is active but it happens for RegChain (unit tests)
-    if (!block.vtx[0]->IsSpecialTxVersion()) return std::nullopt;
-
-    assert(!block.vtx[0]->vExtraPayload.empty());
+    if (block.vtx.empty() || block.vtx[0]->vExtraPayload.empty() || !block.vtx[0]->IsSpecialTxVersion()) {
+        LogPrintf("%s: ERROR: empty CbTx for CreditPool at height=%d\n", __func__, block_index->nHeight);
+        return std::nullopt;
+    }
 
     return block;
 }
 
-CCreditPool CCreditPoolManager::ConstructCreditPool(const CBlockIndex* const block_index, CCreditPool prev, const Consensus::Params& consensusParams)
+CCreditPool CCreditPoolManager::ConstructCreditPool(const gsl::not_null<const CBlockIndex*> block_index,
+                                                    CCreditPool prev, const Consensus::Params& consensusParams)
 {
     std::optional<CBlock> block = GetBlockForCreditPool(block_index, consensusParams);
     if (!block) {
@@ -210,7 +215,7 @@ CCreditPool CCreditPoolManager::ConstructCreditPool(const CBlockIndex* const blo
 
 CCreditPool CCreditPoolManager::GetCreditPool(const CBlockIndex* block_index, const Consensus::Params& consensusParams)
 {
-    std::stack<const CBlockIndex *> to_calculate;
+    std::stack<gsl::not_null<const CBlockIndex*>> to_calculate;
 
     std::optional<CCreditPool> poolTmp;
     while (block_index != nullptr && !(poolTmp = GetFromCache(*block_index)).has_value()) {

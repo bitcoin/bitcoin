@@ -116,26 +116,26 @@ std::map<Consensus::LLMQType, QvvecSyncMode> GetEnabledQuorumVvecSyncEntries()
 
 bool IsQuorumTypeEnabled(Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pindexPrev)
 {
-    return IsQuorumTypeEnabledInternal(llmqType, pindexPrev, std::nullopt, std::nullopt);
+    return IsQuorumTypeEnabledInternal(llmqType, pindexPrev, std::nullopt);
 }
 
 bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pindexPrev,
-                                std::optional<bool> optDIP0024IsActive, std::optional<bool> optHaveDIP0024Quorums)
+                                 std::optional<bool> optIsDIP0024Active)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
 
-    const bool fDIP0024IsActive{optDIP0024IsActive.value_or(DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_DIP0024))};
-    const bool fHaveDIP0024Quorums{optHaveDIP0024Quorums.value_or(pindexPrev->nHeight >= consensusParams.DIP0024QuorumsHeight)};
+    const bool fDIP0024IsActive{
+        optIsDIP0024Active.value_or(DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_DIP0024))};
     switch (llmqType)
     {
         case Consensus::LLMQType::LLMQ_DEVNET:
             return true;
         case Consensus::LLMQType::LLMQ_50_60:
-            return !fDIP0024IsActive || !fHaveDIP0024Quorums || Params().NetworkIDString() == CBaseChainParams::TESTNET ||
+            return !fDIP0024IsActive || Params().NetworkIDString() == CBaseChainParams::TESTNET ||
                    Params().NetworkIDString() == CBaseChainParams::DEVNET;
         case Consensus::LLMQType::LLMQ_TEST_INSTANTSEND:
-            return !fDIP0024IsActive || !fHaveDIP0024Quorums ||
-                    consensusParams.llmqTypeDIP0024InstantSend == Consensus::LLMQType::LLMQ_TEST_INSTANTSEND;
+            return !fDIP0024IsActive ||
+                   consensusParams.llmqTypeDIP0024InstantSend == Consensus::LLMQType::LLMQ_TEST_INSTANTSEND;
         case Consensus::LLMQType::LLMQ_TEST:
         case Consensus::LLMQType::LLMQ_TEST_PLATFORM:
         case Consensus::LLMQType::LLMQ_400_60:
