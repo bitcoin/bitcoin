@@ -94,10 +94,6 @@
         <translation>&amp;Edytuj</translation>
     </message>
     <message>
-        <source>&amp;Show address QR code</source>
-        <translation>&amp;Pokaż adres kodu QR</translation>
-    </message>
-    <message>
         <source>QR code</source>
         <translation>Kod QR</translation>
     </message>
@@ -618,6 +614,7 @@
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Dash network</source>
+        <extracomment>A substring of the tooltip.</extracomment>
         <translation><numerusform>%n aktywne połączenie z siecią Dash</numerusform><numerusform>%n aktywne połączenia z siecią Dash</numerusform><numerusform>%n aktywnych połączeń z siecią Dash</numerusform><numerusform>%n aktywne połączenia z siecią Dash</numerusform></translation>
     </message>
     <message>
@@ -874,28 +871,8 @@
         <translation>Potwierdzony</translation>
     </message>
     <message>
-        <source>Copy address</source>
-        <translation>Kopiuj adres</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Kopiuj etykietę</translation>
-    </message>
-    <message>
         <source>Copy amount</source>
         <translation>Kopiuj kwotę</translation>
-    </message>
-    <message>
-        <source>Copy transaction ID</source>
-        <translation>Skopiuj ID transakcji</translation>
-    </message>
-    <message>
-        <source>Lock unspent</source>
-        <translation>Zablokuj</translation>
-    </message>
-    <message>
-        <source>Unlock unspent</source>
-        <translation>Odblokuj</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -986,6 +963,7 @@
     <name>CreateWalletActivity</name>
     <message>
         <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the create wallet progress window which indicates to the user which wallet is currently being created.</extracomment>
         <translation>Tworzenie Portfela &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
     <message>
@@ -1424,6 +1402,7 @@
     </message>
     <message>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the open wallet progress window which indicates to the user which wallet is currently being opened.</extracomment>
         <translation>Otwieranie Portfela &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
 </context>
@@ -1991,14 +1970,6 @@
         <translation>'Dash: //' nie jest prawidłowym identyfikatorem URI. Zamiast tego użyj 'Dash:'.</translation>
     </message>
     <message>
-        <source>Cannot process payment request as BIP70 is no longer supported.</source>
-        <translation>Nie można przetworzyć żądania płatności, ponieważ BIP70 nie jest już obsługiwany.</translation>
-    </message>
-    <message>
-        <source>Due to discontinued support, you should request the merchant to provide you with a BIP21 compatible URI or use a wallet that does continue to support BIP70.</source>
-        <translation>Ze względu na wycofanie wsparcia należy poprosić sprzedawcę o dostarczenie identyfikatora URI zgodnego z BIP21 lub skorzystać z portfela, który nadal obsługuje BIP70.</translation>
-    </message>
-    <message>
         <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
         <translation>URI nie może zostać przeanalizowany! Mogło to być spowodowane przez niewłaściwy adres Dash lub niewłaściwe parametry URI</translation>
     </message>
@@ -2241,10 +2212,6 @@
     <message>
         <source>%1 B</source>
         <translation>%1 B</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 KB</translation>
     </message>
     <message>
         <source>%1 MB</source>
@@ -2572,10 +2539,6 @@
         <translation>1 &amp;godzinę</translation>
     </message>
     <message>
-        <source>1 &amp;day</source>
-        <translation>1 &amp;dzień</translation>
-    </message>
-    <message>
         <source>1 &amp;week</source>
         <translation>1 &amp;tydzień</translation>
     </message>
@@ -2586,26 +2549,6 @@
     <message>
         <source>&amp;Unban</source>
         <translation>&amp;Miejski</translation>
-    </message>
-    <message>
-        <source>Welcome to the %1 RPC console.</source>
-        <translation>Witaj w konsoli %1 RPC.</translation>
-    </message>
-    <message>
-        <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
-        <translation>Użyj strzałek do przewijania historii i %1 aby wyczyścić ekran</translation>
-    </message>
-    <message>
-        <source>Type %1 for an overview of available commands.</source>
-        <translation>Wpisz %1 aby uzyskać listę dostępnych komend.</translation>
-    </message>
-    <message>
-        <source>For more information on using this console type %1.</source>
-        <translation>Aby uzyskać więcej informacji jak używać tę konsolę wpisz %1.</translation>
-    </message>
-    <message>
-        <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
-        <translation>UWAGA: Oszuści często mówią użytkownikom aby wpisywali tutaj komendy, co umożliwia kradzież monet. Nie używaj tej konsoli, jeśli nie rozumiesz funkcji używanych komend.</translation>
     </message>
     <message>
         <source>In:</source>
@@ -2729,26 +2672,6 @@
     <message>
         <source>Enter a message to attach to the payment request</source>
         <translation>Wprowadź wiadomość, którą chcesz dołączyć do żądania zapłaty</translation>
-    </message>
-    <message>
-        <source>Copy URI</source>
-        <translation>Kopiuj URI</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>Kopiuj adres</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Kopiuj etykietę</translation>
-    </message>
-    <message>
-        <source>Copy message</source>
-        <translation>Kopiuj wiadomość</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Kopiuj kwotę</translation>
     </message>
     </context>
 <context>
@@ -3390,11 +3313,10 @@
     </message>
 </context>
 <context>
+    <name>SplashScreen</name>
+    </context>
+<context>
     <name>TrafficGraphWidget</name>
-    <message>
-        <source>KB/s</source>
-        <translation>KB/s</translation>
-    </message>
     <message>
         <source>Total</source>
         <translation>Całkowity</translation>
@@ -3808,50 +3730,6 @@
         <translation>Min suma</translation>
     </message>
     <message>
-        <source>Abandon transaction</source>
-        <translation>Porzuć transakcję</translation>
-    </message>
-    <message>
-        <source>Resend transaction</source>
-        <translation>Wyślij ponownie transakcje</translation>
-    </message>
-    <message>
-        <source>Copy address</source>
-        <translation>Kopiuj adres</translation>
-    </message>
-    <message>
-        <source>Copy label</source>
-        <translation>Kopiuj etykietę</translation>
-    </message>
-    <message>
-        <source>Copy amount</source>
-        <translation>Kopiuj kwotę</translation>
-    </message>
-    <message>
-        <source>Copy transaction ID</source>
-        <translation>Skopiuj ID transakcji</translation>
-    </message>
-    <message>
-        <source>Copy raw transaction</source>
-        <translation>Kopiuj surowa transakcje</translation>
-    </message>
-    <message>
-        <source>Copy full transaction details</source>
-        <translation>Skopiuj wszystkie szczegóły transakcji.</translation>
-    </message>
-    <message>
-        <source>Edit address label</source>
-        <translation>Zmień nazwę adresu</translation>
-    </message>
-    <message>
-        <source>Show transaction details</source>
-        <translation>Pokaż szczegóły transakcji</translation>
-    </message>
-    <message>
-        <source>Show address QR code</source>
-        <translation>Pokaż adres kodu QR</translation>
-    </message>
-    <message>
         <source>Export Transaction History</source>
         <translation>Eksport historii transakcji</translation>
     </message>
@@ -3948,7 +3826,7 @@ Przejdź do Plik &gt; Otwórz portfel, aby załadować portfel.
         <source>Create a new wallet</source>
         <translation>Stwórz nowy portfel</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletModel</name>
     <message>
@@ -4274,10 +4152,6 @@ Przejdź do Plik &gt; Otwórz portfel, aby załadować portfel.
         <translation>Portfel jest zamknięty , nie można uzupełnić pul* kluczy! Automatyczne tworzenie kopi zapasowych oraz miksowanie są wyłączone. Otwórz porfel aby uzupełnić pul* kluczy.</translation>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex to change -timestampindex</source>
-        <translation>Musisz odnowić bazę danych używając -reindex aby zmienić -timestampindex</translation>
-    </message>
-    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>Aby wrócić do trybu bez bez obcinki, musisz odtworzyć bazę danych za pomocą komendy -reindex. Cały blockchain zostanie ponownie ściągnięty.</translation>
     </message>
@@ -4520,14 +4394,6 @@ Przejdź do Plik &gt; Otwórz portfel, aby załadować portfel.
     <message>
         <source>You can not start a masternode with wallet enabled.</source>
         <translation>Nie możesz uruchomić masternode z włączonym portfelem.</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -addressindex</source>
-        <translation>Musisz odnowić bazę danych używając -reindex aby zmienić -addressindex</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -spentindex</source>
-        <translation>Musisz odnowić bazę danych używając -reindex aby zmienić -spentindex</translation>
     </message>
     <message>
         <source>no mixing available.</source>
@@ -4834,10 +4700,6 @@ Przejdź do Plik &gt; Otwórz portfel, aby załadować portfel.
         <translation>Nieobsługiwana kategoria rejestrowania %s=%s.</translation>
     </message>
     <message>
-        <source>Upgrading txindex database</source>
-        <translation>Aktualizowanie bazy danych txindex</translation>
-    </message>
-    <message>
         <source>Very low number of keys left: %d</source>
         <translation>Pozostało bardzo mało kluczy: %d</translation>
     </message>
@@ -4869,5 +4731,5 @@ Przejdź do Plik &gt; Otwórz portfel, aby załadować portfel.
         <source>Your entries added successfully.</source>
         <translation>Twoje wejścia zostały dodane z powodzeniem.</translation>
     </message>
-</context>
+    </context>
 </TS>
