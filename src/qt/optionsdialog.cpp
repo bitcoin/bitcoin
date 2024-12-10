@@ -544,7 +544,9 @@ void OptionsDialog::updateWidth()
     // Add 10 per button as padding and use minimum 585 which is what we used in css before
     int nWidth = std::max<int>(585, (nWidthWidestButton + 10) * nButtonsVisible);
     setMinimumWidth(nWidth);
-    resize(nWidth, height());
+
+    // Resize to new minimum width but don't shrink window
+    resize(std::max(width(), nWidth), height());
 }
 
 void OptionsDialog::showEvent(QShowEvent* event)

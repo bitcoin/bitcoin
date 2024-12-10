@@ -1419,7 +1419,9 @@ void BitcoinGUI::updateWidth()
     // Use nButtonsVisible + 1 <- for the dash logo
     int nWidth = std::max<int>(980, (nWidthWidestButton + 30) * (nButtonsVisible + 1));
     setMinimumWidth(nWidth);
-    resize(nWidth, height());
+
+    // Resize to new minimum width but don't shrink window
+    resize(std::max(width(), nWidth), height());
 }
 
 void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QString& blockHash, double nVerificationProgress, bool header, SynchronizationState sync_state)
