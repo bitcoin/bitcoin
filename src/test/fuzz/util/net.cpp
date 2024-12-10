@@ -376,7 +376,9 @@ int FuzzedSock::GetSockName(sockaddr* name, socklen_t* name_len) const
         SetFuzzedErrNo(m_fuzzed_data_provider, getsockname_errnos);
         return -1;
     }
-    *name_len = m_fuzzed_data_provider.ConsumeData(name, *name_len);
+    std::memcpy(name,
+                ConsumeFixedLengthByteVector(m_fuzzed_data_provider, *name_len).data(),
+                *name_len);
     return 0;
 }
 
