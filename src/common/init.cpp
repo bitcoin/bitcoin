@@ -79,7 +79,10 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
             FSType fs_type = GetFilesystemType(check.path);
             switch(fs_type) {
                 case FSType::EXFAT:
-                    InitWarning(strprintf(_("Specified %s \"%s\" is exFAT which is known to have intermittent corruption problems on MacOS."), check.description, fs::PathToString(check.path)));
+                    InitWarning(strprintf(_("Specified %s \"%s\" is exFAT which is known to have intermittent corruption problems on MacOS. "
+                        "See https://github.com/bitcoin/bitcoin/blob/master/doc/files.md#filesystem-recommendations for more information."),
+                        check.description,
+                        fs::PathToString(check.path)));
                     break;
                 case FSType::ERROR:
                     LogInfo("Failed to detect filesystem type of %s: %s\n", check.description, fs::PathToString(check.path));
