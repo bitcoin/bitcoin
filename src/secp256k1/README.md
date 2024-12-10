@@ -13,7 +13,7 @@ Features:
 * Additive and multiplicative tweaking of secret/public keys.
 * Serialization/parsing of secret keys, public keys, signatures.
 * Constant time, constant memory access signing and public key generation.
-* Derandomized ECDSA (via RFC6979 or with a caller provided function.)
+* Derandomized ECDSA (via RFC6979 or with a caller provided function).
 * Very efficient implementation.
 * Suitable for embedded systems.
 * No runtime dependencies.
@@ -57,7 +57,7 @@ Implementation details
   * Use a precomputed table of multiples of powers of 16 multiplied with the generator, so general multiplication becomes a series of additions.
   * Intended to be completely free of timing sidechannels for secret-key operations (on reasonable hardware/toolchains)
     * Access the table with branch-free conditional moves so memory access is uniform.
-    * No data-dependent branches
+    * No data-dependent branches.
   * Optional runtime blinding which attempts to frustrate differential power analysis.
   * The precomputed tables add and eventually subtract points for which no known scalar (secret key) is known, preventing even an attacker with control over the secret key used to control the data internally.
 
