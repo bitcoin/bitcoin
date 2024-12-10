@@ -512,6 +512,38 @@ if(ENABLE_HARDENING)
     if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
       try_append_linker_flag("-Wl,-fixup_chains" TARGET hardening_interface)
     endif()
+
+    if(HAVE_LIBCPP)
+      # https://libcxx.llvm.org/Hardening.html
+      if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        target_compile_options(hardening_interface INTERFACE
+          -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG
+          -D_LIBCPP_ABI_BOUNDED_ITERATORS
+          -D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STRING
+          -D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_VECTOR
+          -D_LIBCPP_ABI_BOUNDED_UNIQUE_PTR
+          -D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STD_ARRAY
+        )
+      else()
+        target_compile_options(hardening_interface INTERFACE -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST)
+      endif()
+    endif()
+
+    if(HAVE_LIBSTDCPP)
+      # https://gcc.gnu.org/wiki/LibstdcxxDebugMode
+      # https://gcc.gnu.org/onlinedocs/libstdc++/manual/debug_mode.html
+      if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        target_compile_options(hardening_interface INTERFACE -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC)
+
+        find_library(HAVE_LIBSTDCPPEXP stdc++exp)
+        if(HAVE_LIBSTDCPPEXP)
+          target_compile_options(hardening_interface INTERFACE -D_GLIBCXX_DEBUG_BACKTRACE)
+          target_link_libraries(hardening_interface INTERFACE stdc++exp)
+        endif()
+      else()
+        target_compile_options(hardening_interface INTERFACE -D_GLIBCXX_ASSERTIONS)
+      endif()
+    endif()
   endif()
 endif()
 
