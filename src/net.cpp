@@ -5118,16 +5118,16 @@ bool CConnman::IsMasternodeOrDisconnectRequested(const CService& addr) {
 CConnman::NodesSnapshot::NodesSnapshot(const CConnman& connman, std::function<bool(const CNode* pnode)> filter,
                                        bool shuffle)
 {
-    LOCK(connman.m_nodes_mutex);
-    m_nodes_copy.reserve(connman.m_nodes.size());
+    {
+        LOCK(connman.m_nodes_mutex);
+        m_nodes_copy.reserve(connman.m_nodes.size());
 
-    for (auto& node : connman.m_nodes) {
-        if (!filter(node))
-            continue;
-        node->AddRef();
-        m_nodes_copy.push_back(node);
+        for (auto& node : connman.m_nodes) {
+            if (!filter(node)) continue;
+            node->AddRef();
+            m_nodes_copy.push_back(node);
+        }
     }
-
     if (shuffle) {
         Shuffle(m_nodes_copy.begin(), m_nodes_copy.end(), FastRandomContext{});
     }
