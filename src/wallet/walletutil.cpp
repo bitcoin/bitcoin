@@ -99,4 +99,98 @@ WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const Ou
     return w_desc;
 }
 
+MockableCursor::MockableCursor(const MockableData& records, bool pass, Span<const std::byte> prefix)
+{
+    m_pass = pass;
+    std::tie(m_cursor, m_cursor_end) = records.equal_range(BytePrefix{prefix});
+}
+
+DatabaseCursor::Status MockableCursor::Next(DataStream& key, DataStream& value)
+{
+    if (!m_pass) {
+        return Status::FAIL;
+    }
+    if (m_cursor == m_cursor_end) {
+        return Status::DONE;
+    }
+    key.clear();
+    value.clear();
+    const auto& [key_data, value_data] = *m_cursor;
+    key.write(key_data);
+    value.write(value_data);
+    m_cursor++;
+    return Status::MORE;
+}
+
+bool MockableBatch::ReadKey(DataStream&& key, DataStream& value)
+{
+    if (!m_pass) {
+        return false;
+    }
+    SerializeData key_data{key.begin(), key.end()};
+    const auto& it = m_records.find(key_data);
+    if (it == m_records.end()) {
+        return false;
+    }
+    value.clear();
+    value.write(it->second);
+    return true;
+}
+
+bool MockableBatch::WriteKey(DataStream&& key, DataStream&& value, bool overwrite)
+{
+    if (!m_pass) {
+        return false;
+    }
+    SerializeData key_data{key.begin(), key.end()};
+    SerializeData value_data{value.begin(), value.end()};
+    auto [it, inserted] = m_records.emplace(key_data, value_data);
+    if (!inserted && overwrite) { // Overwrite if requested
+        it->second = value_data;
+        inserted = true;
+    }
+    return inserted;
+}
+
+bool MockableBatch::EraseKey(DataStream&& key)
+{
+    if (!m_pass) {
+        return false;
+    }
+    SerializeData key_data{key.begin(), key.end()};
+    m_records.erase(key_data);
+    return true;
+}
+
+bool MockableBatch::HasKey(DataStream&& key)
+{
+    if (!m_pass) {
+        return false;
+    }
+    SerializeData key_data{key.begin(), key.end()};
+    return m_records.count(key_data) > 0;
+}
+
+bool MockableBatch::ErasePrefix(Span<const std::byte> prefix)
+{
+    if (!m_pass) {
+        return false;
+    }
+    auto it = m_records.begin();
+    while (it != m_records.end()) {
+        auto& key = it->first;
+        if (key.size() < prefix.size() || std::search(key.begin(), key.end(), prefix.begin(), prefix.end()) != key.begin()) {
+            it++;
+            continue;
+        }
+        it = m_records.erase(it);
+    }
+    return true;
+}
+
+std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase(MockableData records)
+{
+    return std::make_unique<MockableDatabase>(records);
+}
+
 } // namespace wallet
