@@ -365,6 +365,7 @@ static RPCHelpMan coinjoinsalt_set()
 }
 #endif // ENABLE_WALLET
 
+// TODO: remove it completely
 static RPCHelpMan getpoolinfo()
 {
     return RPCHelpMan{"getpoolinfo",
@@ -469,7 +470,6 @@ void RegisterCoinJoinRPCCommands(CRPCTable &t)
 static const CRPCCommand commands[] =
 { //  category               actor (function)
   //  ---------------------  -----------------------
-    { "dash",                &getpoolinfo,            },
     { "dash",                &getcoinjoininfo,        },
 #ifdef ENABLE_WALLET
     { "dash",                &coinjoin,               },
@@ -480,6 +480,8 @@ static const CRPCCommand commands[] =
     { "dash",                &coinjoinsalt_generate,  },
     { "dash",                &coinjoinsalt_get,       },
     { "dash",                &coinjoinsalt_set,       },
+
+    { "hidden",              &getpoolinfo,            },
 #endif // ENABLE_WALLET
 };
 // clang-format on
