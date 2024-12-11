@@ -166,6 +166,15 @@ public:
     void IncrementUpdateCounter() override { ++nUpdateCounter; }
 
     std::string Filename() override { return m_file_path; }
+    /** Return paths to all database created files */
+    std::vector<fs::path> Files() override
+    {
+        std::vector<fs::path> files;
+        files.emplace_back(m_dir_path / fs::PathFromString(m_file_path));
+        files.emplace_back(m_dir_path / "database");
+        files.emplace_back(m_dir_path / "db.log");
+        return files;
+    }
     std::string Format() override { return "sqlite"; }
 
     /** Make a SQLiteBatch connected to this database */
