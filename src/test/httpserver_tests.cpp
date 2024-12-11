@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadControlData(reader));
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(req.LoadBody(reader));
-        BOOST_CHECK_EQUAL(req.m_method, "POST");
+        BOOST_CHECK_EQUAL(req.m_method, HTTPRequestMethod::POST);
         BOOST_CHECK_EQUAL(req.m_target, "/");
         BOOST_CHECK_EQUAL(req.m_version.major, 1);
         BOOST_CHECK_EQUAL(req.m_version.minor, 1);
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadControlData(reader));
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(req.LoadBody(reader));
-        BOOST_CHECK_EQUAL(req.m_method, "GET");
+        BOOST_CHECK_EQUAL(req.m_method, HTTPRequestMethod::GET);
         BOOST_CHECK_EQUAL(req.m_target, "/");
         BOOST_CHECK_EQUAL(req.m_version.major, 1);
         BOOST_CHECK_EQUAL(req.m_version.minor, 0);
