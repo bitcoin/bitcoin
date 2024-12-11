@@ -16,13 +16,15 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/system.h>
+#include <util/time.h>
 
 #include <boost/signals2/signal.hpp>
 
 #include <algorithm>
 #include <atomic>
 #include <cassert>
-#include <memory> // for unique_ptr
+#include <chrono>
+#include <memory>
 #include <mutex>
 #include <unordered_map>
 
@@ -43,7 +45,7 @@ static const std::string defaultPlatformUser = "platform-user";
 struct RPCCommandExecutionInfo
 {
     std::string method;
-    int64_t start;
+    SteadyClock::time_point start;
 };
 
 struct RPCServerInfo
@@ -60,7 +62,7 @@ struct RPCCommandExecution
     explicit RPCCommandExecution(const std::string& method)
     {
         LOCK(g_rpc_server_info.mutex);
-        it = g_rpc_server_info.active_commands.insert(g_rpc_server_info.active_commands.end(), {method, GetTimeMicros()});
+        it = g_rpc_server_info.active_commands.insert(g_rpc_server_info.active_commands.end(), {method, SteadyClock::now()});
     }
     ~RPCCommandExecution()
     {
@@ -272,7 +274,7 @@ static RPCHelpMan getrpcinfo()
     for (const RPCCommandExecutionInfo& info : g_rpc_server_info.active_commands) {
         UniValue entry(UniValue::VOBJ);
         entry.pushKV("method", info.method);
-        entry.pushKV("duration", GetTimeMicros() - info.start);
+        entry.pushKV("duration", int64_t{Ticks<std::chrono::microseconds>(SteadyClock::now() - info.start)});
         active_commands.push_back(entry);
     }
 

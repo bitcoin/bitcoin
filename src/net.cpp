@@ -232,7 +232,7 @@ static std::vector<CAddress> ConvertSeeds(const std::vector<uint8_t> &vSeedsIn)
     // it'll get a pile of addresses with newer timestamps.
     // Seed nodes are given a random 'last seen time' of between one and two
     // weeks ago.
-    const int64_t nOneWeek = 7*24*60*60;
+    const auto one_week{7 * 24h};
     std::vector<CAddress> vSeedsOut;
     FastRandomContext rng;
     CDataStream s(vSeedsIn, SER_NETWORK, PROTOCOL_VERSION | ADDRV2_FORMAT);
@@ -240,7 +240,7 @@ static std::vector<CAddress> ConvertSeeds(const std::vector<uint8_t> &vSeedsIn)
         CService endpoint;
         s >> endpoint;
         CAddress addr{endpoint, GetDesirableServiceFlags(NODE_NONE)};
-        addr.nTime = GetTime() - rng.randrange(nOneWeek) - nOneWeek;
+        addr.nTime = rng.rand_uniform_delay(Now<NodeSeconds>() - one_week, -one_week);
         LogPrint(BCLog::NET, "Added hardcoded seed: %s\n", addr.ToStringAddrPort());
         vSeedsOut.push_back(addr);
     }
@@ -512,11 +512,11 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "trying %s connection %s lastseen=%.1fhrs\n",
                       use_v2transport ? "v2" : "v1",
                       pszDest ? pszDest : addrConnect.ToStringAddrPort(),
-                      pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime)/3600.0);
+                      Ticks<HoursDouble>(pszDest ? 0h : Now<NodeSeconds>() - addrConnect.nTime));
     } else {
         LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "trying %s connection lastseen=%.1fhrs\n",
                       use_v2transport ? "v2" : "v1",
-                      pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime)/3600.0);
+                      Ticks<HoursDouble>(pszDest ? 0h : Now<NodeSeconds>() - addrConnect.nTime));
     }
 
     // Resolve
@@ -1901,7 +1901,7 @@ bool CConnman::AttemptToEvictConnection()
                 // follow when the incoming connection is from another masternode. When a message other than MNAUTH
                 // is received after VERSION/VERACK, the protection is lifted immediately.
                 bool isProtected = GetTime<std::chrono::seconds>() - node->m_connected < INBOUND_EVICTION_PROTECTION_TIME;
-                if (node->nTimeFirstMessageReceived != 0 && !node->fFirstMessageIsMNAUTH) {
+                if (node->nTimeFirstMessageReceived.load() != 0s && !node->fFirstMessageIsMNAUTH) {
                     isProtected = false;
                 }
                 // if MNAUTH was valid, the node is always protected (and at the same time not accounted when
@@ -3080,9 +3080,8 @@ void CConnman::ThreadDNSAddressSeed()
             const auto addresses{LookupHost(host, nMaxIPs, true)};
             if (!addresses.empty()) {
                 for (const CNetAddr& ip : addresses) {
-                    int nOneDay = 24*3600;
                     CAddress addr = CAddress(CService(ip, Params().GetDefaultPort()), requiredServiceBits);
-                    addr.nTime = GetTime() - 3*nOneDay - rng.randrange(4*nOneDay); // use a random age between 3 and 7 days old
+                    addr.nTime = rng.rand_uniform_delay(Now<NodeSeconds>() - 3 * 24h, -4 * 24h); // use a random age between 3 and 7 days old
                     vAdd.push_back(addr);
                     found++;
                 }
@@ -3101,12 +3100,12 @@ void CConnman::ThreadDNSAddressSeed()
 
 void CConnman::DumpAddresses()
 {
-    int64_t nStart = GetTimeMillis();
+    const auto start{SteadyClock::now()};
 
     DumpPeerAddresses(::gArgs, addrman);
 
     LogPrint(BCLog::NET, "Flushed %d addresses to peers.dat  %dms\n",
-             addrman.Size(), GetTimeMillis() - nStart);
+             addrman.Size(), Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
 }
 
 void CConnman::ProcessAddrFetch()
@@ -3451,7 +3450,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
 
         auto mnList = dmnman.GetListAtChainTip();
 
-        int64_t nANow = GetAdjustedTime();
+        const auto current_time{NodeClock::now()};
         int nTries = 0;
         while (!interruptNet)
         {
@@ -3474,7 +3473,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                 break;
 
             CAddress addr;
-            int64_t addr_last_try{0};
+            NodeSeconds addr_last_try{0s};
 
             if (fFeeler) {
                 // First, try to get a tried table collision address. This returns
@@ -3530,8 +3529,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
             if (onion_only && !addr.IsTor()) continue;
 
             // only consider very recently tried nodes after 30 failed attempts
-            if (nANow - addr_last_try < 600 && nTries < 30)
+            if (current_time - addr_last_try < 10min && nTries < 30) {
                 continue;
+            }
 
             // for non-feelers, require all the services we'll want,
             // for feelers, only require they be a full node (only because most
@@ -3754,7 +3754,7 @@ void CConnman::ThreadOpenMasternodeConnections(CDeterministicMNManager& dmnman, 
                         // we probably connected to it before it became a masternode
                         // or maybe we are still waiting for mnauth
                         (void)ForNode(addr2, [&](CNode* pnode) {
-                            if (pnode->nTimeFirstMessageReceived != 0 && GetTimeSeconds() - pnode->nTimeFirstMessageReceived > 5) {
+                            if (pnode->nTimeFirstMessageReceived.load() != 0s && GetTime<std::chrono::seconds>() - pnode->nTimeFirstMessageReceived.load() > 5s) {
                                 // clearly not expecting mnauth to take that long even if it wasn't the first message
                                 // we received (as it should normally), disconnect
                                 LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- dropping non-mnauth connection to %s, service=%s\n", _func_, proRegTxHash.ToString(), addr2.ToStringAddrPort());

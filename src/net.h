@@ -766,7 +766,7 @@ public:
     const std::chrono::seconds m_connected;
     std::atomic<int64_t> nTimeOffset{0};
     std::atomic<int64_t> nLastWarningTime{0};
-    std::atomic<int64_t> nTimeFirstMessageReceived{0};
+    std::atomic<std::chrono::seconds> nTimeFirstMessageReceived{0s};
     std::atomic<bool> fFirstMessageIsMNAUTH{false};
     // Address of this peer
     const CAddress addr;

@@ -11,6 +11,7 @@
 #include <chainparamsbase.h>
 #include <clientversion.h>
 #include <compat.h>
+#include <compat/stdin.h>
 #include <policy/feerate.h>
 #include <rpc/client.h>
 #include <rpc/mining.h>
@@ -18,17 +19,19 @@
 #include <rpc/request.h>
 #include <stacktraces.h>
 #include <tinyformat.h>
+#include <univalue.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <util/url.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
+#include <cstdio>
 #include <functional>
 #include <memory>
 #include <optional>
-#include <stdio.h>
 #include <string>
 #include <tuple>
 
@@ -40,8 +43,10 @@
 #include <event2/keyvalq_struct.h>
 #include <support/events.h>
 
-#include <univalue.h>
-#include <compat/stdin.h>
+// The server returns time values from a mockable system clock, but it is not
+// trivial to get the mocked time from the server, nor is it needed for now, so
+// just use a plain system_clock.
+using CliClock = std::chrono::system_clock;
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = urlDecode;
@@ -454,7 +459,6 @@ private:
         if (conn_type == "addr-fetch") return "addr";
         return "";
     }
-    const int64_t m_time_now{GetTimeSeconds()};
 
 public:
     static constexpr int ID_PEERINFO = 0;
@@ -486,6 +490,7 @@ public:
         if (networkinfo["version"].get_int() < 200000) {
             throw std::runtime_error("-netinfo requires dashd server to be running v20.0 and up");
         }
+        const int64_t time_now{TicksSinceEpoch<std::chrono::seconds>(CliClock::now())};
 
         // Count peer connection totals, and if DetailsRequested(), store peer data in a vector of structs.
         for (const UniValue& peer : batch[ID_PEERINFO]["result"].getValues()) {
@@ -516,7 +521,7 @@ public:
                 const double min_ping{peer["minping"].isNull() ? -1 : peer["minping"].get_real()};
                 const double ping{peer["pingtime"].isNull() ? -1 : peer["pingtime"].get_real()};
                 const std::string addr{peer["addr"].get_str()};
-                const std::string age{conn_time == 0 ? "" : ToString((m_time_now - conn_time) / 60)};
+                const std::string age{conn_time == 0 ? "" : ToString((time_now - conn_time) / 60)};
                 const std::string sub_version{peer["subver"].get_str()};
                 const std::string transport{peer["transport_protocol_type"].isNull() ? "v1" : peer["transport_protocol_type"].get_str()};
                 const bool is_addr_relay_enabled{peer["addr_relay_enabled"].isNull() ? false : peer["addr_relay_enabled"].get_bool()};
@@ -554,10 +559,10 @@ public:
                     peer.transport_protocol_type.rfind('v', 0) == 0 ? peer.transport_protocol_type[1] : ' ',
                     PingTimeToString(peer.min_ping),
                     PingTimeToString(peer.ping),
-                    peer.last_send ? ToString(m_time_now - peer.last_send) : "",
-                    peer.last_recv ? ToString(m_time_now - peer.last_recv) : "",
-                    peer.last_trxn ? ToString((m_time_now - peer.last_trxn) / 60) : peer.is_block_relay ? "*" : "",
-                    peer.last_blck ? ToString((m_time_now - peer.last_blck) / 60) : "",
+                    peer.last_send ? ToString(time_now - peer.last_send) : "",
+                    peer.last_recv ? ToString(time_now - peer.last_recv) : "",
+                    peer.last_trxn ? ToString((time_now - peer.last_trxn) / 60) : peer.is_block_relay ? "*" : "",
+                    peer.last_blck ? ToString((time_now - peer.last_blck) / 60) : "",
                     strprintf("%s%s", peer.is_bip152_hb_to ? "." : " ", peer.is_bip152_hb_from ? "*" : " "),
                     m_max_addr_processed_length, // variable spacing
                     peer.addr_processed ? ToString(peer.addr_processed) : peer.is_addr_relay_enabled ? "" : ".",
@@ -869,7 +874,7 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
     // Execute and handle connection failures with -rpcwait.
     const bool fWait = gArgs.GetBoolArg("-rpcwait", false);
     const int timeout = gArgs.GetArg("-rpcwaittimeout", DEFAULT_WAIT_CLIENT_TIMEOUT);
-    const auto deadline{GetTime<std::chrono::microseconds>() + 1s * timeout};
+    const auto deadline{std::chrono::steady_clock::now() + 1s * timeout};
 
     do {
         try {
@@ -882,8 +887,7 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
             }
             break; // Connection succeeded, no need to retry.
         } catch (const CConnectionFailed& e) {
-            const auto now{GetTime<std::chrono::microseconds>()};
-            if (fWait && (timeout <= 0 || now < deadline)) {
+            if (fWait && (timeout <= 0 || std::chrono::steady_clock::now() < deadline)) {
                 UninterruptibleSleep(1s);
             } else {
                 throw CConnectionFailed(strprintf("timeout on transient error: %s", e.what()));

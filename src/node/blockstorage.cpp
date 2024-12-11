@@ -908,13 +908,13 @@ void ThreadImport(ChainstateManager& chainman, CDeterministicMNManager& dmnman, 
         // and reduce further locking overhead for cs_main in other parts of code including GUI
         LogPrintf("Filling coin cache with masternode UTXOs...\n");
         LOCK(cs_main);
-        int64_t nStart = GetTimeMillis();
+        const auto start{SteadyClock::now()};
         auto mnList = dmnman.GetListAtChainTip();
         mnList.ForEachMN(false, [&](auto& dmn) {
             Coin coin;
             GetUTXOCoin(chainman.ActiveChainstate(), dmn.collateralOutpoint, coin);
         });
-        LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
+        LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
     }
 
     if (mn_activeman != nullptr) {

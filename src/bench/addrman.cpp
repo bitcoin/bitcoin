@@ -42,7 +42,7 @@ static void CreateAddresses()
 
         CAddress ret(CService(addr, port), NODE_NETWORK);
 
-        ret.nTime = GetAdjustedTime();
+        ret.nTime = Now<NodeSeconds>();
 
         return ret;
     };
@@ -118,7 +118,7 @@ static void AddrManSelectByNetwork(benchmark::Bench& bench)
     CService i2p_service;
     i2p_service.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p");
     CAddress i2p_address(i2p_service, NODE_NONE);
-    i2p_address.nTime = GetAdjustedTime();
+    i2p_address.nTime = Now<NodeSeconds>();
     const CNetAddr source{LookupHost("252.2.2.2", false).value()};
     addrman.Add({i2p_address}, source);
 

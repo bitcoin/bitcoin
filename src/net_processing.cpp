@@ -28,6 +28,7 @@
 #include <reverse_iterator.h>
 #include <scheduler.h>
 #include <streams.h>
+#include <timedata.h>
 #include <tinyformat.h>
 #include <index/txindex.h>
 #include <txmempool.h>
@@ -156,6 +157,8 @@ static const unsigned int NODE_NETWORK_LIMITED_MIN_BLOCKS = 288;
 static constexpr auto AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL{24h};
 /** Average delay between peer address broadcasts */
 static constexpr auto AVG_ADDRESS_BROADCAST_INTERVAL{30s};
+/** Delay between rotating the peers we relay a particular address to */
+static constexpr auto ROTATE_ADDR_RELAY_DEST_INTERVAL{24h};
 /** Average delay between trickled inventory transmissions for inbound peers.
  *  Blocks and peers with NetPermissionFlags::NoBan permission bypass this. */
 static constexpr auto INBOUND_INVENTORY_BROADCAST_INTERVAL{5s};
@@ -2462,7 +2465,10 @@ void PeerManagerImpl::RelayAddress(NodeId originator,
     // Use deterministic randomness to send to the same nodes for 24 hours
     // at a time so the m_addr_knowns of the chosen nodes prevent repeats
     const uint64_t hashAddr{addr.GetHash()};
-    const CSipHasher hasher{m_connman.GetDeterministicRandomizer(RANDOMIZER_ID_ADDRESS_RELAY).Write(hashAddr).Write((GetTime() + hashAddr) / (24 * 60 * 60))};
+    const auto current_time{GetTime<std::chrono::seconds>()};
+    // Adding address hash makes exact rotation time different per address, while preserving periodicity.
+    const uint64_t time_addr{(static_cast<uint64_t>(count_seconds(current_time)) + hashAddr) / count_seconds(ROTATE_ADDR_RELAY_DEST_INTERVAL)};
+    const CSipHasher hasher{m_connman.GetDeterministicRandomizer(RANDOMIZER_ID_ADDRESS_RELAY).Write(hashAddr).Write(time_addr)};
     FastRandomContext insecure_rand;
 
     // Relay reachable addresses to 2 peers. Unreachable addresses are relayed randomly to 1 or 2 peers.
@@ -3690,7 +3696,7 @@ void PeerManagerImpl::ProcessMessage(
             // indicate to the peer that we will participate in addr relay.
             if (fListen && !m_chainman.ActiveChainstate().IsInitialBlockDownload())
             {
-                CAddress addr{GetLocalAddress(pfrom), peer->m_our_services, (uint32_t)GetAdjustedTime()};
+                CAddress addr{GetLocalAddress(pfrom), peer->m_our_services, Now<NodeSeconds>()};
                 FastRandomContext insecure_rand;
                 if (addr.IsRoutable())
                 {
@@ -3931,9 +3937,9 @@ void PeerManagerImpl::ProcessMessage(
         return;
     }
 
-    if (pfrom.nTimeFirstMessageReceived == 0) {
+    if (pfrom.nTimeFirstMessageReceived.load() == 0s) {
         // First message after VERSION/VERACK
-        pfrom.nTimeFirstMessageReceived = GetTimeSeconds();
+        pfrom.nTimeFirstMessageReceived = GetTime<std::chrono::seconds>();
         pfrom.fFirstMessageIsMNAUTH = msg_type == NetMsgType::MNAUTH;
         // Note: do not break the flow here
 
@@ -3977,8 +3983,7 @@ void PeerManagerImpl::ProcessMessage(
 
         // Store the new addresses
         std::vector<CAddress> vAddrOk;
-        int64_t nNow = GetAdjustedTime();
-        int64_t nSince = nNow - 10 * 60;
+        const auto current_a_time{Now<NodeSeconds>()};
 
         // Update/increment addr rate limiting bucket.
         const auto current_time{GetTime<std::chrono::microseconds>()};
@@ -4014,8 +4019,9 @@ void PeerManagerImpl::ProcessMessage(
             if (!MayHaveUsefulAddressDB(addr.nServices) && !HasAllDesirableServiceFlags(addr.nServices))
                 continue;
 
-            if (addr.nTime <= 100000000 || addr.nTime > nNow + 10 * 60)
-                addr.nTime = nNow - 5 * 24 * 60 * 60;
+            if (addr.nTime <= NodeSeconds{100000000s} || addr.nTime > current_a_time + 10min) {
+                addr.nTime = current_a_time - 5 * 24h;
+            }
             AddAddressKnown(*peer, addr);
             if (m_banman && (m_banman->IsDiscouraged(addr) || m_banman->IsBanned(addr))) {
                 // Do not process banned/discouraged addresses beyond remembering we received them
@@ -4023,7 +4029,7 @@ void PeerManagerImpl::ProcessMessage(
             }
             ++num_proc;
             bool fReachable = IsReachable(addr);
-            if (addr.nTime > nSince && !peer->m_getaddr_sent && vAddr.size() <= 10 && addr.IsRoutable()) {
+            if (addr.nTime > current_a_time - 10min && !peer->m_getaddr_sent && vAddr.size() <= 10 && addr.IsRoutable()) {
                 // Relay to a limited number of other nodes
                 RelayAddress(pfrom.GetId(), addr, fReachable);
             }
@@ -4036,7 +4042,7 @@ void PeerManagerImpl::ProcessMessage(
         LogPrint(BCLog::NET, "Received addr: %u addresses (%u processed, %u rate-limited) from peer=%d\n",
                  vAddr.size(), num_proc, num_rate_limit, pfrom.GetId());
 
-        m_addrman.Add(vAddrOk, pfrom.addr, 2 * 60 * 60);
+        m_addrman.Add(vAddrOk, pfrom.addr, 2h);
         if (vAddr.size() < 1000) peer->m_getaddr_sent = false;
 
         // AddrFetch: Require multiple addresses to avoid disconnecting on self-announcements
@@ -5662,7 +5668,7 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
             peer.m_addr_known->reset();
         }
         if (std::optional<CService> local_service = GetLocalAddrForPeer(node)) {
-            CAddress local_addr{*local_service, peer.m_our_services, (uint32_t)GetAdjustedTime()};
+            CAddress local_addr{*local_service, peer.m_our_services, Now<NodeSeconds>()};
             FastRandomContext insecure_rand;
             PushAddress(peer, local_addr, insecure_rand);
         }

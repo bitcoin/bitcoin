@@ -1870,7 +1870,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
         do {
             bool failed_verification = false;
-            const int64_t load_block_index_start_time = GetTimeMillis();
+            const auto load_block_index_start_time{SteadyClock::now()};
 
             try {
                 LOCK(cs_main);
@@ -2131,7 +2131,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
             if (!failed_verification) {
                 fLoaded = true;
-                LogPrintf(" block index %15dms\n", GetTimeMillis() - load_block_index_start_time);
+                LogPrintf(" block index %15dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - load_block_index_start_time));
             }
         } while(false);
 

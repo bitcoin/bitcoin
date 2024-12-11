@@ -3,10 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef __cplusplus
-#error This header can only be compiled as C++.
-#endif
-
 #ifndef BITCOIN_PROTOCOL_H
 #define BITCOIN_PROTOCOL_H
 
@@ -15,13 +11,11 @@
 #include <serialize.h>
 #include <streams.h>
 #include <uint256.h>
-#include <version.h>
-
 #include <util/expected.h>
+#include <util/time.h>
 
-
+#include <cstdint>
 #include <limits>
-#include <stdint.h>
 #include <string>
 
 /** Message header.
@@ -404,7 +398,7 @@ static inline bool MayHaveUsefulAddressDB(ServiceFlags services)
 /** A CService with information about it as peer */
 class CAddress : public CService
 {
-    static constexpr uint32_t TIME_INIT{100000000};
+    static constexpr std::chrono::seconds TIME_INIT{100000000};
 
     /** Historically, CAddress disk serialization stored the CLIENT_VERSION, optionally OR'ed with
      *  the ADDRV2_FORMAT flag to indicate V2 serialization. The first field has since been
@@ -434,7 +428,7 @@ class CAddress : public CService
 public:
     CAddress() : CService{} {};
     explicit CAddress(CService ipIn, ServiceFlags nServicesIn) : CService{ipIn}, nServices{nServicesIn} {};
-    CAddress(CService ipIn, ServiceFlags nServicesIn, uint32_t nTimeIn) : CService{ipIn}, nTime{nTimeIn}, nServices{nServicesIn} {};
+    CAddress(CService ipIn, ServiceFlags nServicesIn, NodeSeconds time) : CService{ipIn}, nTime{time}, nServices{nServicesIn} {};
 
     SERIALIZE_METHODS(CAddress, obj)
     {
@@ -467,8 +461,7 @@ public:
             use_v2 = s.GetVersion() & ADDRV2_FORMAT;
         }
 
-        SER_READ(obj, obj.nTime = TIME_INIT);
-        READWRITE(obj.nTime);
+        READWRITE(Using<LossyChronoFormatter<uint32_t>>(obj.nTime));
         // nServices is serialized as CompactSize in V2; as uint64_t in V1.
         if (use_v2) {
             uint64_t services_tmp;
@@ -483,8 +476,8 @@ public:
         SerReadWriteMany(os, ser_action, ReadWriteAsHelper<CService>(obj));
     }
 
-    //! Always included in serialization.
-    uint32_t nTime{TIME_INIT};
+    //! Always included in serialization. The behavior is unspecified if the value is not representable as uint32_t.
+    NodeSeconds nTime{TIME_INIT};
     //! Serialized as uint64_t in V1, and as CompactSize in V2.
     ServiceFlags nServices{NODE_NONE};
 
