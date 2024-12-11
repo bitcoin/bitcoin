@@ -9,6 +9,7 @@ Test the following RPCs:
     - getchaintxstats
     - gettxoutsetinfo
     - getblockheader
+    - getblockheaders
     - getdifficulty
     - getnetworkhashps
     - waitforblockheight
@@ -76,7 +77,8 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_getblockchaininfo()
         self._test_getchaintxstats()
         self._test_gettxoutsetinfo()
-        self._test_getblockheader()
+        self._test_getblockheader(rpc_name='getblockheader')
+        self._test_getblockheader(rpc_name='getblockheaders')
         self._test_getdifficulty()
         self._test_getnetworkhashps()
         self._test_stopatheight()
@@ -319,17 +321,20 @@ class BlockchainTest(BitcoinTestFramework):
         # Unknown hash_type raises an error
         assert_raises_rpc_error(-8, "'foo hash' is not a valid hash_type", node.gettxoutsetinfo, "foo hash")
 
-    def _test_getblockheader(self):
-        self.log.info("Test getblockheader")
+    def _test_getblockheader(self, rpc_name):
+        self.log.info(f"Test {rpc_name}")
         node = self.nodes[0]
-
-        assert_raises_rpc_error(-8, "hash must be of length 64 (not 8, for 'nonsense')", node.getblockheader, "nonsense")
-        assert_raises_rpc_error(-8, "hash must be hexadecimal string (not 'ZZZ7bb8b1697ea987f3b223ba7819250cae33efacb068d23dc24859824a77844')", node.getblockheader, "ZZZ7bb8b1697ea987f3b223ba7819250cae33efacb068d23dc24859824a77844")
-        assert_raises_rpc_error(-5, "Block not found", node.getblockheader, "0cf7bb8b1697ea987f3b223ba7819250cae33efacb068d23dc24859824a77844")
+        rpc_call = getattr(node, rpc_name)
+        assert_raises_rpc_error(-8, "hash must be of length 64 (not 8, for 'nonsense')", rpc_call, "nonsense")
+        assert_raises_rpc_error(-8, "hash must be hexadecimal string (not 'ZZZ7bb8b1697ea987f3b223ba7819250cae33efacb068d23dc24859824a77844')", rpc_call, "ZZZ7bb8b1697ea987f3b223ba7819250cae33efacb068d23dc24859824a77844")
+        assert_raises_rpc_error(-5, "Block not found", rpc_call, "0cf7bb8b1697ea987f3b223ba7819250cae33efacb068d23dc24859824a77844")
 
         besthash = node.getbestblockhash()
         secondbesthash = node.getblockhash(HEIGHT - 1)
-        header = node.getblockheader(blockhash=besthash)
+        header = rpc_call(blockhash=besthash)
+        if rpc_name == 'getblockheaders':
+            assert_equal(len(header), 1)
+            header = header[0]
 
         assert_equal(header['hash'], besthash)
         assert_equal(header['height'], HEIGHT)
@@ -349,15 +354,19 @@ class BlockchainTest(BitcoinTestFramework):
         assert isinstance(header['difficulty'], Decimal)
 
         # Test with verbose=False, which should return the header as hex.
-        header_hex = node.getblockheader(blockhash=besthash, verbose=False)
+        header_hex = rpc_call(blockhash=besthash, verbose=False)
+        if rpc_name == 'getblockheaders':
+            header_hex = header_hex[0]
+
         assert_is_hex_string(header_hex)
 
         header = from_hex(CBlockHeader(), header_hex)
         header.calc_sha256()
         assert_equal(header.hash, besthash)
 
-        assert 'previousblockhash' not in node.getblockheader(node.getblockhash(0))
-        assert 'nextblockhash' not in node.getblockheader(node.getbestblockhash())
+        if rpc_name == 'getblockheader':
+            assert 'previousblockhash' not in node.getblockheader(node.getblockhash(0))
+            assert 'nextblockhash' not in node.getblockheader(node.getbestblockhash())
 
     def _test_getdifficulty(self):
         self.log.info("Test getdifficulty")
