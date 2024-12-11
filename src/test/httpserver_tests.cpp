@@ -321,6 +321,10 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
 
 BOOST_AUTO_TEST_CASE(http_server_socket_tests)
 {
+    // Hard code the timestamp for the Date header in the HTTP response
+    // Wed Dec 11 00:47:09 2024 UTC
+    SetMockTime(1733878029);
+
     // Prepare a request handler that just stores received requests so we can examine them.
     // Mutex is required to prevent a race between this test's main thread and the server's I/O loop.
     Mutex requests_mutex;
@@ -356,8 +360,10 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
     // No connections yet
     BOOST_CHECK_EQUAL(server.GetConnectionsCount(), 0);
 
-    // Create a mock client with pre-loaded request data and add it to the local CreateSock queue
-    ConnectClient(full_request);
+    // Create a mock client with pre-loaded request data and add it to the local CreateSock queue.
+    // Keep a handle for the mock client's send and receive pipes so we can examine
+    // the data it "receives".
+    std::shared_ptr<DynSock::Pipes> mock_client_socket_pipes{ConnectClient(full_request)};
 
     // Wait up to a minute to find and connect the client in the I/O loop
     int attempts{6000};
@@ -385,12 +391,40 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
                 client = requests.front()->m_client;
                 BOOST_CHECK_EQUAL(client->m_origin, "5.5.5.5:6789");
 
+                // Respond to request
+                requests.front()->WriteReply(HTTP_OK, "874140\n");
+
                 break;
             }
         }
         std::this_thread::sleep_for(10ms);
         BOOST_REQUIRE(--attempts > 0);
     } while (true);
+
+    // Check the sent response from the mock client at the other end of the mock socket
+    std::string actual;
+    // Wait up to one minute for all the bytes to appear in the "send" pipe.
+    char buf[0x10000] = {};
+    attempts = 6000;
+    while (attempts > 0)
+    {
+        ssize_t bytes_read = mock_client_socket_pipes->send.GetBytes(buf, sizeof(buf), 0);
+        if (bytes_read > 0) {
+            actual.append(buf, bytes_read);
+            if (actual.length() == 146) {
+                break;
+            }
+        }
+        std::this_thread::sleep_for(10ms);
+        --attempts;
+    }
+    BOOST_CHECK(actual.starts_with("HTTP/1.1 200 OK\r\n"));
+    BOOST_CHECK(actual.ends_with("\r\n874140\n"));
+    // Headers can be sorted in any order, and will be, since we use unordered_map
+    BOOST_CHECK(actual.find("Connection: close\r\n") != std::string::npos);
+    BOOST_CHECK(actual.find("Content-Length: 7\r\n") != std::string::npos);
+    BOOST_CHECK(actual.find("Content-Type: text/html; charset=ISO-8859-1\r\n") != std::string::npos);
+    BOOST_CHECK(actual.find("Date: Wed, 11 Dec 2024 00:47:09 GMT\r\n") != std::string::npos);
 
     // Close connection
     BOOST_REQUIRE(server.CloseConnection(client));

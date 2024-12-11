@@ -14,6 +14,7 @@
 #include <netbase.h>
 #include <node/interface_ui.h>
 #include <rpc/protocol.h>
+#include <span.h>
 #include <sync.h>
 #include <util/check.h>
 #include <util/signalinterrupt.h>
@@ -950,6 +951,92 @@ bool HTTPRequest::LoadBody(LineReader& reader)
     }
 }
 
+void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> reply_body)
+{
+    HTTPResponse res;
+
+    // Some response headers are determined in advance and stored in the request
+    res.m_headers = std::move(m_response_headers);
+
+    // Response version matches request version
+    res.m_version_major = m_version_major;
+    res.m_version_minor = m_version_minor;
+
+    // Add response code and look up reason string
+    res.m_status = status;
+    res.m_reason = HTTPReason.find(status)->second;
+
+    // See libevent evhttp_response_needs_body()
+    // Response headers are different if no body is needed
+    bool needs_body{status != HTTP_NO_CONTENT && (status < 100 || status >= 200)};
+
+    // See libevent evhttp_make_header_response()
+    // Expected response headers depend on protocol version
+    if (m_version_major == 1) {
+        // HTTP/1.0
+        if (m_version_minor == 0) {
+            auto connection_header{m_headers.Find("Connection")};
+            if (connection_header && ToLower(connection_header.value()) == "keep-alive") {
+                res.m_headers.Write("Connection", "keep-alive");
+                res.m_keep_alive = true;
+            }
+        }
+
+        // HTTP/1.1
+        if (m_version_minor >= 1) {
+            const int64_t now_seconds{TicksSinceEpoch<std::chrono::seconds>(NodeClock::now())};
+            res.m_headers.Write("Date", FormatRFC1123DateTime(now_seconds));
+
+            if (needs_body) {
+                res.m_headers.Write("Content-Length", strprintf("%d", reply_body.size()));
+            }
+
+            // Default for HTTP/1.1
+            res.m_keep_alive = true;
+        }
+    }
+
+    if (needs_body && !res.m_headers.Find("Content-Type")) {
+        // Default type from libevent evhttp_new_object()
+        res.m_headers.Write("Content-Type", "text/html; charset=ISO-8859-1");
+    }
+
+    auto connection_header{m_headers.Find("Connection")};
+    if (connection_header && ToLower(connection_header.value()) == "close") {
+        // Might not exist already but we need to replace it, not append to it
+        res.m_headers.Remove("Connection");
+        res.m_headers.Write("Connection", "close");
+        res.m_keep_alive = false;
+    }
+
+    // Serialize the response headers
+    const std::string headers{res.StringifyHeaders()};
+    const auto headers_bytes{std::as_bytes(std::span(headers.begin(), headers.end()))};
+
+    // Fill the send buffer with the complete serialized response headers + body
+    {
+        LOCK(m_client->m_send_mutex);
+        m_client->m_send_buffer.insert(m_client->m_send_buffer.end(), headers_bytes.begin(), headers_bytes.end());
+
+        // We've been using std::span up until now but it is finally time to copy
+        // data. The original data will go out of scope when WriteReply() returns.
+        // This is analogous to the memcpy() in libevent's evbuffer_add()
+        m_client->m_send_buffer.insert(m_client->m_send_buffer.end(), reply_body.begin(), reply_body.end());
+    }
+
+    // Inform HTTPServer I/O loop that there is data that is ready to be sent to
+    // this client in the next loop iteration.
+    m_client->m_send_ready = true;
+
+    LogDebug(
+        BCLog::HTTP,
+        "HTTPResponse (status code: %d size: %lld) added to send buffer for client %s (id=%lld)\n",
+        status,
+        headers_bytes.size() + reply_body.size(),
+        m_client->m_origin,
+        m_client->m_id);
+}
+
 util::Result<void> HTTPServer::BindAndStartListening(const CService& to)
 {
     // Create socket for listening for incoming connections
@@ -1138,7 +1225,12 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
         bool err_ready = events.occurred & Sock::ERR;
 
         if (send_ready) {
-            // TODO: send data
+            // Try to send as much data as is ready for this client.
+            // If there's an error we can skip the receive phase for this client
+            // because we need to disconnect.
+            if (!client->MaybeSendBytesFromBuffer()) {
+                recv_ready = false;
+            }
         }
 
         if (recv_ready || err_ready) {
@@ -1207,15 +1299,12 @@ HTTPServer::IOReadiness HTTPServer::GenerateWaitSockets() const
     }
 
     for (const auto& http_client : m_connected) {
-        // TODO: Implement HTTPClient methods for send/receive readiness
-        const bool select_recv{true};
-        const bool select_send{true};
-        if (!select_recv && !select_send) continue;
-
         // Safely copy the shared pointer to the socket
         std::shared_ptr<Sock> sock{WITH_LOCK(http_client->m_sock_mutex, return http_client->m_sock;)};
 
-        Sock::Event event = (select_send ? Sock::SEND : 0) | (select_recv ? Sock::RECV : 0);
+        // Check if client is ready to send data. Don't try to receive again
+        // until the send buffer is cleared (all data sent to client).
+        Sock::Event event = (http_client->m_send_ready ? Sock::SEND : Sock::RECV);
         io_readiness.events_per_sock.emplace(sock, Sock::Events{event});
         io_readiness.httpclients_per_sock.emplace(sock, http_client);
     }
@@ -1297,6 +1386,72 @@ bool HTTPClient::ReadRequest(const std::unique_ptr<HTTPRequest>& req)
     m_recv_buffer.erase(
         m_recv_buffer.begin(),
         m_recv_buffer.begin() + (reader.it - reader.start));
+
+    return true;
+}
+
+bool HTTPClient::MaybeSendBytesFromBuffer()
+{
+    // Send as much data from this client's buffer as we can
+    LOCK(m_send_mutex);
+    if (!m_send_buffer.empty()) {
+        // Socket flags (See kernel docs for send(2) and tcp(7) for more details).
+        // MSG_NOSIGNAL: If the remote end of the connection is closed,
+        //               fail with EPIPE (an error) as opposed to triggering
+        //               SIGPIPE which terminates the process.
+        // MSG_DONTWAIT: Makes the send operation non-blocking regardless of socket blocking mode.
+        // MSG_MORE:     We do not set this flag here because http responses are usually
+        //               small and we want the kernel to send them right away. Setting MSG_MORE
+        //               would "cork" the socket to prevent sending out partial frames.
+        int flags{MSG_NOSIGNAL | MSG_DONTWAIT};
+
+        // Try to send bytes through socket
+        ssize_t bytes_sent;
+        {
+            LOCK(m_sock_mutex);
+            bytes_sent = m_sock->Send(m_send_buffer.data(),
+                                      m_send_buffer.size(),
+                                      flags);
+        }
+
+        if (bytes_sent < 0) {
+            // Something went wrong
+            const int err{WSAGetLastError()};
+            // These errors can be safely ignored, and we should try the send again
+            // on the next I/O loop. See send(2) for more details.
+            // EWOULDBLOCK: The requested operation would block.
+            //              The non-blocking socket operation cannot complete immediately.
+            // EMSGSIZE:    Message too large. The receive buffer is too small for the incoming message.
+            // EINTR:       Interrupted function call. The socket operation was interrupted by another thread.
+            // EINPROGRESS: A socket operation in already progress.
+            if (err == WSAEWOULDBLOCK || err == WSAEMSGSIZE || err == WSAEINTR || err == WSAEINPROGRESS) {
+                return true;
+            }
+
+            // Unrecoverbale error, log and disconnect client.
+            LogDebug(
+                BCLog::HTTP,
+                "Error sending HTTP response data to client %s (id=%lld): %s\n",
+                m_origin,
+                m_id,
+                NetworkErrorString(err));
+            // TODO: disconnect
+            // Do not attempt to read from this client.
+            return false;
+        }
+
+        // Successful send, remove sent bytes from our local buffer.
+        Assume(static_cast<size_t>(bytes_sent) <= m_send_buffer.size());
+        m_send_buffer.erase(m_send_buffer.begin(),
+                            m_send_buffer.begin() + bytes_sent);
+
+        LogDebug(
+            BCLog::HTTP,
+            "Sent %d bytes to client %s (id=%lld)\n",
+            bytes_sent,
+            m_origin,
+            m_id);
+    }
 
     return true;
 }
