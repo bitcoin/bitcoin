@@ -274,6 +274,9 @@ public:
     //! Pointer to the client that made the request so we know who to respond to.
     std::shared_ptr<HTTPClient> m_client;
 
+    //! Response headers may be set in advance before response body is known
+    HTTPHeaders m_response_headers;
+
     explicit HTTPRequest(std::shared_ptr<HTTPClient> client) : m_client(client) {};
     //! Construct with a null client for unit tests
     explicit HTTPRequest() : m_client(nullptr) {};
@@ -291,6 +294,12 @@ public:
     bool LoadHeaders(LineReader& reader);
     bool LoadBody(LineReader& reader);
     /// @}
+
+    void WriteReply(HTTPStatusCode status, std::span<const std::byte> reply_body = {});
+    void WriteReply(HTTPStatusCode status, std::string_view reply_body_view)
+    {
+        WriteReply(status, std::as_bytes(std::span{reply_body_view}));
+    }
 };
 
 class HTTPServer
@@ -498,6 +507,22 @@ public:
     std::vector<std::byte> m_recv_buffer{};
 
     /**
+     * Response data destined for this client.
+     * Written to by http worker threads, read and erased by HTTPServer I/O thread
+     */
+    /// @{
+    Mutex m_send_mutex;
+    std::vector<std::byte> m_send_buffer GUARDED_BY(m_send_mutex);
+    /// @}
+
+    /**
+     * Set true by worker threads after writing a response to m_send_buffer.
+     * Set false by the HTTPServer I/O thread after flushing m_send_buffer.
+     * Checked in the HTTPServer I/O loop to avoid locking m_send_mutex if there's nothing to send.
+     */
+    std::atomic_bool m_send_ready{false};
+
+    /**
      * Mutex that serializes the Send() and Recv() calls on `m_sock`. Reading
      * from the client occurs in the I/O thread but writing back to a client
      * may occur in a worker thread.
@@ -526,6 +551,12 @@ public:
      * @returns true on success, false on failure.
      */
     bool ReadRequest(const std::unique_ptr<HTTPRequest>& req);
+
+    /**
+     * Push data (if there is any) from client's m_send_buffer to the connected socket.
+     * @returns false if we are done with this client and HTTPServer can skip the next read operation from it.
+     */
+    bool MaybeSendBytesFromBuffer() EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
 };
 } // namespace http_bitcoin
 
