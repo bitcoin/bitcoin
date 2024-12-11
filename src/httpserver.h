@@ -266,6 +266,15 @@ public:
     bool LoadControlData(LineReader& reader);
     bool LoadHeaders(LineReader& reader);
     bool LoadBody(LineReader& reader);
+
+    // Response headers may be set in advance before response body is known
+    HTTPHeaders m_response_headers;
+    void WriteReply(HTTPStatusCode status, std::span<const std::byte> reply_body = {});
+    void WriteReply(HTTPStatusCode status, const char* reply_body) {
+        auto reply_body_view = std::string_view(reply_body);
+        std::span<const std::byte> byte_span(reinterpret_cast<const std::byte*>(reply_body_view.data()), reply_body_view.size());
+        WriteReply(status, byte_span);
+    }
 };
 
 class HTTPServer;
@@ -288,6 +297,15 @@ public:
     // and attempt to read HTTP requests from here.
     std::vector<std::byte> m_recv_buffer{};
 
+    // Response data destined for this client.
+    // Written to directly by http worker threads, read and erased by Sockman I/O
+    Mutex m_send_mutex;
+    std::vector<std::byte> m_send_buffer GUARDED_BY(m_send_mutex);
+    // Set true by worker threads after writing a response to m_send_buffer.
+    // Set false by the Sockman I/O thread after flushing m_send_buffer.
+    // Checked in the Sockman I/O loop to avoid locking m_send_mutex if there's nothing to send.
+    std::atomic_bool m_send_ready{false};
+
     explicit HTTPClient(NodeId node_id, CService addr) : m_node_id(node_id), m_addr(addr)
     {
         m_origin = addr.ToStringAddrPort();
@@ -295,6 +313,11 @@ public:
 
     // Try to read an HTTP request from the receive buffer
     bool ReadRequest(std::unique_ptr<HTTPRequest>& req);
+
+    // Push data from m_send_buffer to the connected socket via m_server
+    // Returns false if we are done with this client and Sockman can
+    // therefore skip the next read operation from it.
+    bool SendBytesFromBuffer() EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
 
     // Disable copies (should only be used as shared pointers)
     HTTPClient(const HTTPClient&) = delete;
@@ -336,7 +359,7 @@ public:
      * @param[out] cancel_recv Should always be set upon return and if it is true,
      * then the next attempt to receive data from that node will be omitted.
      */
-    virtual void EventReadyToSend(NodeId node_id, bool& cancel_recv) override {};
+    virtual void EventReadyToSend(NodeId node_id, bool& cancel_recv) override;
 
     /**
      * Called when new data has been received.
@@ -359,6 +382,22 @@ public:
      * @param[in] errmsg Message describing the error.
      */
     virtual void EventGotPermanentReadError(NodeId node_id, const std::string& errmsg) override {};
+
+    /**
+     * Can be used to temporarily pause sends on a connection.
+     * SockMan would only call EventReadyToSend() if this returns true.
+     * The implementation in SockMan always returns true.
+     * @param[in] node_id Connection for which to confirm or omit the next call to EventReadyToSend().
+     */
+    virtual bool ShouldTryToSend(NodeId node_id) const override;
+
+    /**
+     * SockMan would only call Recv() on a connection's socket if this returns true.
+     * Can be used to temporarily pause receives on a connection.
+     * The implementation in SockMan always returns true.
+     * @param[in] node_id Connection for which to confirm or omit the next receive.
+     */
+    virtual bool ShouldTryToRecv(NodeId node_id) const override;
 };
 } // namespace http_bitcoin
 
