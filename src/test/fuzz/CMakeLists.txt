@@ -76,6 +76,7 @@ add_executable(fuzz
   p2p_transport_serialization.cpp
   package_eval.cpp
   parse_hd_keypath.cpp
+  parse_iso8601.cpp
   parse_numbers.cpp
   parse_script.cpp
   parse_univalue.cpp

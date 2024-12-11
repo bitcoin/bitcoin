@@ -131,7 +131,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_arm.sh"
 
 task:
-  name: 'Win64, unit tests, no gui tests, no functional tests'
+  name: 'Win64-cross'
   << : *GLOBAL_TASK_TEMPLATE
   persistent_worker:
     labels:

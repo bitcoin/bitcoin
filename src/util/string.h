@@ -17,6 +17,69 @@
 #include <vector>
 
 namespace util {
+namespace detail {
+template <unsigned num_params>
+constexpr static void CheckNumFormatSpecifiers(const char* str)
+{
+    unsigned count_normal{0}; // Number of "normal" specifiers, like %s
+    unsigned count_pos{0};    // Max number in positional specifier, like %8$s
+    for (auto it{str}; *it != '\0'; ++it) {
+        if (*it != '%' || *++it == '%') continue; // Skip escaped %%
+
+        auto add_arg = [&] {
+            unsigned maybe_num{0};
+            while ('0' <= *it && *it <= '9') {
+                maybe_num *= 10;
+                maybe_num += *it - '0';
+                ++it;
+            }
+
+            if (*it == '$') {
+                ++it;
+                // Positional specifier, like %8$s
+                if (maybe_num == 0) throw "Positional format specifier must have position of at least 1";
+                count_pos = std::max(count_pos, maybe_num);
+            } else {
+                // Non-positional specifier, like %s
+                ++count_normal;
+            }
+        };
+
+        // Increase argument count and consume positional specifier, if present.
+        add_arg();
+
+        // Consume flags.
+        while (*it == '#' || *it == '0' || *it == '-' || *it == ' ' || *it == '+') ++it;
+
+        auto parse_size = [&] {
+            if (*it == '*') {
+                ++it;
+                add_arg();
+            } else {
+                while ('0' <= *it && *it <= '9') ++it;
+            }
+        };
+
+        // Consume dynamic or static width value.
+        parse_size();
+
+        // Consume dynamic or static precision value.
+        if (*it == '.') {
+            ++it;
+            parse_size();
+        }
+
+        if (*it == '\0') throw "Format specifier incorrectly terminated by end of string";
+
+        // Length and type in "[flags][width][.precision][length]type"
+        // is not checked. Parsing continues with the next '%'.
+    }
+    if (count_normal && count_pos) throw "Format specifiers must be all positional or all non-positional!";
+    unsigned count{count_normal | count_pos};
+    if (num_params != count) throw "Format specifier count must match the argument count!";
+}
+} // namespace detail
+
 /**
  * @brief A wrapper for a compile-time partially validated format string
  *
@@ -28,66 +91,7 @@ namespace util {
 template <unsigned num_params>
 struct ConstevalFormatString {
     const char* const fmt;
-    consteval ConstevalFormatString(const char* str) : fmt{str} { Detail_CheckNumFormatSpecifiers(fmt); }
-    constexpr static void Detail_CheckNumFormatSpecifiers(const char* str)
-    {
-        unsigned count_normal{0}; // Number of "normal" specifiers, like %s
-        unsigned count_pos{0};    // Max number in positional specifier, like %8$s
-        for (auto it{str}; *it != '\0'; ++it) {
-            if (*it != '%' || *++it == '%') continue; // Skip escaped %%
-
-            auto add_arg = [&] {
-                unsigned maybe_num{0};
-                while ('0' <= *it && *it <= '9') {
-                    maybe_num *= 10;
-                    maybe_num += *it - '0';
-                    ++it;
-                }
-
-                if (*it == '$') {
-                    ++it;
-                    // Positional specifier, like %8$s
-                    if (maybe_num == 0) throw "Positional format specifier must have position of at least 1";
-                    count_pos = std::max(count_pos, maybe_num);
-                } else {
-                    // Non-positional specifier, like %s
-                    ++count_normal;
-                }
-            };
-
-            // Increase argument count and consume positional specifier, if present.
-            add_arg();
-
-            // Consume flags.
-            while (*it == '#' || *it == '0' || *it == '-' || *it == ' ' || *it == '+') ++it;
-
-            auto parse_size = [&] {
-                if (*it == '*') {
-                    ++it;
-                    add_arg();
-                } else {
-                    while ('0' <= *it && *it <= '9') ++it;
-                }
-            };
-
-            // Consume dynamic or static width value.
-            parse_size();
-
-            // Consume dynamic or static precision value.
-            if (*it == '.') {
-                ++it;
-                parse_size();
-            }
-
-            if (*it == '\0') throw "Format specifier incorrectly terminated by end of string";
-
-            // Length and type in "[flags][width][.precision][length]type"
-            // is not checked. Parsing continues with the next '%'.
-        }
-        if (count_normal && count_pos) throw "Format specifiers must be all positional or all non-positional!";
-        unsigned count{count_normal | count_pos};
-        if (num_params != count) throw "Format specifier count must match the argument count!";
-    }
+    consteval ConstevalFormatString(const char* str) : fmt{str} { detail::CheckNumFormatSpecifiers<num_params>(fmt); }
 };
 
 void ReplaceAll(std::string& in_out, const std::string& search, const std::string& substitute);

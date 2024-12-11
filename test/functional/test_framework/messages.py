@@ -327,7 +327,7 @@ class CAddress:
         elif self.net == self.NET_CJDNS:
             self.ip = socket.inet_ntop(socket.AF_INET6, addr_bytes)
         else:
-            raise Exception(f"Address type not supported")
+            raise Exception("Address type not supported")
 
         self.port = int.from_bytes(f.read(2), "big")
 
@@ -354,7 +354,7 @@ class CAddress:
         elif self.net == self.NET_CJDNS:
             r += socket.inet_pton(socket.AF_INET6, self.ip)
         else:
-            raise Exception(f"Address type not supported")
+            raise Exception("Address type not supported")
         r += self.port.to_bytes(2, "big")
         return r
 

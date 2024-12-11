@@ -141,24 +141,13 @@ std::optional<std::string> CheckPackageMempoolAcceptResult(const Package& txns,
     return std::nullopt;
 }
 
-std::vector<uint32_t> GetDustIndexes(const CTransactionRef& tx_ref, CFeeRate dust_relay_rate)
-{
-    std::vector<uint32_t> dust_indexes;
-    for (size_t i = 0; i < tx_ref->vout.size(); ++i) {
-        const auto& output = tx_ref->vout[i];
-        if (IsDust(output, dust_relay_rate)) dust_indexes.push_back(i);
-    }
-
-    return dust_indexes;
-}
-
 void CheckMempoolEphemeralInvariants(const CTxMemPool& tx_pool)
 {
     LOCK(tx_pool.cs);
     for (const auto& tx_info : tx_pool.infoAll()) {
         const auto& entry = *Assert(tx_pool.GetEntry(tx_info.tx->GetHash()));
 
-        std::vector<uint32_t> dust_indexes = GetDustIndexes(tx_info.tx, tx_pool.m_opts.dust_relay_feerate);
+        std::vector<uint32_t> dust_indexes = GetDust(*tx_info.tx, tx_pool.m_opts.dust_relay_feerate);
 
         Assert(dust_indexes.size() < 2);
 

@@ -74,6 +74,7 @@ class P2PIBDStallingTest(BitcoinTestFramework):
 
         self.log.info("Check that a staller does not get disconnected if the 1024 block lookahead buffer is filled")
         self.mocktime = int(time.time()) + 1
+        node.setmocktime(self.mocktime)
         for id in range(NUM_PEERS):
             peers.append(node.add_outbound_p2p_connection(P2PStaller(stall_block), p2p_idx=id, connection_type="outbound-full-relay"))
             peers[-1].block_store = block_dict

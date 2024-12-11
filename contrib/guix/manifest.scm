@@ -13,7 +13,6 @@
              ((gnu packages linux) #:select (linux-libre-headers-6.1))
              (gnu packages llvm)
              (gnu packages mingw)
-             (gnu packages moreutils)
              (gnu packages pkg-config)
              ((gnu packages python) #:select (python-minimal))
              ((gnu packages python-build) #:select (python-tomli))
@@ -21,6 +20,7 @@
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
              (guix build-system cmake)
+             (guix build-system gnu)
              (guix build-system python)
              (guix build-system trivial)
              (guix download)
@@ -28,7 +28,7 @@
              (guix git-download)
              ((guix licenses) #:prefix license:)
              (guix packages)
-             ((guix utils) #:select (substitute-keyword-arguments)))
+             ((guix utils) #:select (cc-for-target substitute-keyword-arguments)))
 
 (define-syntax-rule (search-our-patches file-name ...)
   "Return the list of absolute file names corresponding to each
@@ -487,6 +487,36 @@ inspecting signatures in Mach-O binaries.")
                    (("^install-others =.*$")
                     (string-append "install-others = " out "/etc/rpc\n")))))))))))))
 
+;; The sponge tool from moreutils.
+(define-public sponge
+  (package
+    (name "sponge")
+    (version "0.69")
+    (source (origin
+              (method url-fetch)
+              (uri (string-append
+                    "https://git.joeyh.name/index.cgi/moreutils.git/snapshot/
+                    moreutils-" version ".tar.gz"))
+              (file-name (string-append "moreutils-" version ".tar.gz"))
+              (sha256
+               (base32
+                "1l859qnzccslvxlh5ghn863bkq2vgmqgnik6jr21b9kc6ljmsy8g"))))
+    (build-system gnu-build-system)
+    (arguments
+     (list #:phases
+           #~(modify-phases %standard-phases
+               (delete 'configure)
+               (replace 'install
+                (lambda* (#:key outputs #:allow-other-keys)
+                  (let ((bin (string-append (assoc-ref outputs "out") "/bin")))
+                  (install-file "sponge" bin)))))
+           #:make-flags
+           #~(list "sponge" (string-append "CC=" #$(cc-for-target)))))
+    (home-page "https://joeyh.name/code/moreutils/")
+    (synopsis "Miscellaneous general-purpose command-line tools")
+    (description "Just sponge")
+    (license license:gpl2+)))
+
 (packages->manifest
  (append
   (list ;; The Basics
@@ -502,7 +532,7 @@ inspecting signatures in Mach-O binaries.")
         patch
         gawk
         sed
-        moreutils
+        sponge
         ;; Compression and archiving
         tar
         gzip

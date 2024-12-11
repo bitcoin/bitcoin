@@ -529,7 +529,7 @@ int GuiMain(int argc, char* argv[])
     SetupUIArgs(gArgs);
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
-        InitError(strprintf(Untranslated("Error parsing command line arguments: %s"), error));
+        InitError(Untranslated(strprintf("Error parsing command line arguments: %s", error)));
         // Create a message box, because the gui has neither been created nor has subscribed to core signals
         QMessageBox::critical(nullptr, CLIENT_NAME,
             // message cannot be translated because translations have not been initialized
@@ -582,8 +582,8 @@ int GuiMain(int argc, char* argv[])
 
     // Show help message immediately after parsing command-line options (for "-lang") and setting locale,
     // but before showing splash screen.
-    if (HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
-        HelpMessageDialog help(nullptr, gArgs.IsArgSet("-version"));
+    if (HelpRequested(gArgs) || gArgs.GetBoolArg("-version", false)) {
+        HelpMessageDialog help(nullptr, gArgs.GetBoolArg("-version", false));
         help.showOrPrint();
         return EXIT_SUCCESS;
     }

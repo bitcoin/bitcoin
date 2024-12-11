@@ -733,12 +733,12 @@ class CompactBlocksTest(BitcoinTestFramework):
         # Now send the compact block with all transactions prefilled, and
         # verify that we don't get disconnected.
         comp_block = HeaderAndShortIDs()
-        comp_block.initialize_from_block(block, prefill_list=[0, 1, 2, 3, 4], use_witness=True)
+        comp_block.initialize_from_block(block, prefill_list=list(range(len(block.vtx))), use_witness=True)
         msg = msg_cmpctblock(comp_block.to_p2p())
         test_node.send_and_ping(msg)
 
         # Check that the tip didn't advance
-        assert int(node.getbestblockhash(), 16) is not block.sha256
+        assert int(node.getbestblockhash(), 16) != block.sha256
         test_node.sync_with_ping()
 
     # Helper for enabling cb announcements

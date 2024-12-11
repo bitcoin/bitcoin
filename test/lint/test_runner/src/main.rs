@@ -226,6 +226,7 @@ fn lint_py_lint() -> LintResult {
             "F405", // foo_function may be undefined, or defined from star imports: bar_module
             "F406", // "from module import *" only allowed at module level
             "F407", // an undefined __future__ feature name was imported
+            "F541", // f-string without any placeholders
             "F601", // dictionary key name repeated with different values
             "F602", // dictionary key variable name repeated with different values
             "F621", // too many expressions in an assignment with star-unpacking
@@ -236,6 +237,7 @@ fn lint_py_lint() -> LintResult {
             "F822", // undefined name name in __all__
             "F823", // local variable name … referenced before assignment
             "F841", // local variable 'foo' is assigned to but never used
+            "PLE", // Pylint errors
             "W191", // indentation contains tabs
             "W291", // trailing whitespace
             "W292", // no newline at end of file
@@ -516,6 +518,7 @@ fn lint_markdown() -> LintResult {
         "--ignore-path",
         md_ignore_path_str.as_str(),
         "--gitignore",
+        "--gituntracked",
         "--root-dir",
         ".",
     ])
@@ -529,7 +532,7 @@ fn lint_markdown() -> LintResult {
                 r#"
 One or more markdown links are broken.
 
-Relative links are preferred (but not required) as jumping to file works natively within Emacs.
+Note: relative links are preferred as jump-to-file works natively within Emacs, but they are not required.
 
 Markdown link errors found:
 {}

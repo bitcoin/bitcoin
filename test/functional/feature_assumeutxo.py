@@ -165,8 +165,8 @@ class AssumeutxoTest(BitcoinTestFramework):
             with self.nodes[0].assert_debug_log([log_msg]):
                 self.nodes[0].assert_start_raises_init_error(expected_msg=error_msg)
 
-        expected_error_msg = f"Error: A fatal internal error occurred, see debug.log for details: Assumeutxo data not found for the given blockhash '7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a'."
-        error_details = f"Assumeutxo data not found for the given blockhash"
+        expected_error_msg = "Error: A fatal internal error occurred, see debug.log for details: Assumeutxo data not found for the given blockhash '7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a'."
+        error_details = "Assumeutxo data not found for the given blockhash"
         expected_error(log_msg=error_details, error_msg=expected_error_msg)
 
         # resurrect node again
@@ -417,7 +417,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         assert_equal(n0.getblockchaininfo()["blocks"], FINAL_HEIGHT)
 
-        self.log.info(f"Check that dumptxoutset works for past block heights")
+        self.log.info("Check that dumptxoutset works for past block heights")
         # rollback defaults to the snapshot base height
         dump_output2 = n0.dumptxoutset('utxos2.dat', "rollback")
         check_dump_output(dump_output2)

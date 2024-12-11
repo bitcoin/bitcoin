@@ -5,25 +5,31 @@
 #ifndef BITCOIN_CHECKQUEUE_H
 #define BITCOIN_CHECKQUEUE_H
 
+#include <logging.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <util/threadnames.h>
 
 #include <algorithm>
 #include <iterator>
+#include <optional>
 #include <vector>
 
 /**
  * Queue for verifications that have to be performed.
   * The verifications are represented by a type T, which must provide an
-  * operator(), returning a bool.
+  * operator(), returning an std::optional<R>.
+  *
+  * The overall result of the computation is std::nullopt if all invocations
+  * return std::nullopt, or one of the other results otherwise.
   *
   * One thread (the master) is assumed to push batches of verifications
   * onto the queue, where they are processed by N-1 worker threads. When
   * the master is done adding work, it temporarily joins the worker pool
   * as an N'th worker, until all jobs are done.
+  *
   */
-template <typename T>
+template <typename T, typename R = std::remove_cvref_t<decltype(std::declval<T>()().value())>>
 class CCheckQueue
 {
 private:
@@ -47,7 +53,7 @@ private:
     int nTotal GUARDED_BY(m_mutex){0};
 
     //! The temporary evaluation result.
-    bool fAllOk GUARDED_BY(m_mutex){true};
+    std::optional<R> m_result GUARDED_BY(m_mutex);
 
     /**
      * Number of verifications that haven't completed yet.
@@ -62,24 +68,28 @@ private:
     std::vector<std::thread> m_worker_threads;
     bool m_request_stop GUARDED_BY(m_mutex){false};
 
-    /** Internal function that does bulk of the verification work. */
-    bool Loop(bool fMaster) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    /** Internal function that does bulk of the verification work. If fMaster, return the final result. */
+    std::optional<R> Loop(bool fMaster) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         std::condition_variable& cond = fMaster ? m_master_cv : m_worker_cv;
         std::vector<T> vChecks;
         vChecks.reserve(nBatchSize);
         unsigned int nNow = 0;
-        bool fOk = true;
+        std::optional<R> local_result;
+        bool do_work;
         do {
             {
                 WAIT_LOCK(m_mutex, lock);
                 // first do the clean-up of the previous loop run (allowing us to do it in the same critsect)
                 if (nNow) {
-                    fAllOk &= fOk;
+                    if (local_result.has_value() && !m_result.has_value()) {
+                        std::swap(local_result, m_result);
+                    }
                     nTodo -= nNow;
-                    if (nTodo == 0 && !fMaster)
+                    if (nTodo == 0 && !fMaster) {
                         // We processed the last element; inform the master it can exit and return the result
                         m_master_cv.notify_one();
+                    }
                 } else {
                     // first iteration
                     nTotal++;
@@ -88,18 +98,19 @@ private:
                 while (queue.empty() && !m_request_stop) {
                     if (fMaster && nTodo == 0) {
                         nTotal--;
-                        bool fRet = fAllOk;
+                        std::optional<R> to_return = std::move(m_result);
                         // reset the status for new work later
-                        fAllOk = true;
+                        m_result = std::nullopt;
                         // return the current status
-                        return fRet;
+                        return to_return;
                     }
                     nIdle++;
                     cond.wait(lock); // wait
                     nIdle--;
                 }
                 if (m_request_stop) {
-                    return false;
+                    // return value does not matter, because m_request_stop is only set in the destructor.
+                    return std::nullopt;
                 }
 
                 // Decide how many work units to process now.
@@ -112,12 +123,15 @@ private:
                 vChecks.assign(std::make_move_iterator(start_it), std::make_move_iterator(queue.end()));
                 queue.erase(start_it, queue.end());
                 // Check whether we need to do work at all
-                fOk = fAllOk;
+                do_work = !m_result.has_value();
             }
             // execute work
-            for (T& check : vChecks)
-                if (fOk)
-                    fOk = check();
+            if (do_work) {
+                for (T& check : vChecks) {
+                    local_result = check();
+                    if (local_result.has_value()) break;
+                }
+            }
             vChecks.clear();
         } while (true);
     }
@@ -130,6 +144,7 @@ public:
     explicit CCheckQueue(unsigned int batch_size, int worker_threads_num)
         : nBatchSize(batch_size)
     {
+        LogInfo("Script verification uses %d additional threads", worker_threads_num);
         m_worker_threads.reserve(worker_threads_num);
         for (int n = 0; n < worker_threads_num; ++n) {
             m_worker_threads.emplace_back([this, n]() {
@@ -146,8 +161,9 @@ public:
     CCheckQueue(CCheckQueue&&) = delete;
     CCheckQueue& operator=(CCheckQueue&&) = delete;
 
-    //! Wait until execution finishes, and return whether all evaluations were successful.
-    bool Wait() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    //! Join the execution until completion. If at least one evaluation wasn't successful, return
+    //! its error.
+    std::optional<R> Complete() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         return Loop(true /* master thread */);
     }
@@ -188,11 +204,11 @@ public:
  * RAII-style controller object for a CCheckQueue that guarantees the passed
  * queue is finished before continuing.
  */
-template <typename T>
+template <typename T, typename R = std::remove_cvref_t<decltype(std::declval<T>()().value())>>
 class CCheckQueueControl
 {
 private:
-    CCheckQueue<T> * const pqueue;
+    CCheckQueue<T, R> * const pqueue;
     bool fDone;
 
 public:
@@ -207,13 +223,12 @@ public:
         }
     }
 
-    bool Wait()
+    std::optional<R> Complete()
     {
-        if (pqueue == nullptr)
-            return true;
-        bool fRet = pqueue->Wait();
+        if (pqueue == nullptr) return std::nullopt;
+        auto ret = pqueue->Complete();
         fDone = true;
-        return fRet;
+        return ret;
     }
 
     void Add(std::vector<T>&& vChecks)
@@ -226,7 +241,7 @@ public:
     ~CCheckQueueControl()
     {
         if (!fDone)
-            Wait();
+            Complete();
         if (pqueue != nullptr) {
             LEAVE_CRITICAL_SECTION(pqueue->m_control_mutex);
         }

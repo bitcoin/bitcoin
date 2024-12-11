@@ -73,6 +73,9 @@ if(DEFINED ENV{CFLAGS})
 endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
 add_subdirectory(secp256k1)
+set_target_properties(secp256k1 PROPERTIES
+  EXCLUDE_FROM_ALL TRUE
+)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 string(APPEND CMAKE_C_COMPILE_OBJECT " ${APPEND_CPPFLAGS} ${APPEND_CFLAGS}")
 
@@ -296,8 +299,8 @@ target_link_libraries(bitcoin_node
     minisketch
     univalue
     Boost::headers
-    libevent::core
-    libevent::extra
+    $<TARGET_NAME_IF_EXISTS:libevent::core>
+    $<TARGET_NAME_IF_EXISTS:libevent::extra>
     $<TARGET_NAME_IF_EXISTS:libevent::pthreads>
     $<TARGET_NAME_IF_EXISTS:USDT::headers>
 )

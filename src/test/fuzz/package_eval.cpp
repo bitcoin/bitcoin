@@ -167,7 +167,7 @@ std::optional<COutPoint> GetChildEvictingPrevout(const CTxMemPool& tx_pool)
     LOCK(tx_pool.cs);
     for (const auto& tx_info : tx_pool.infoAll()) {
         const auto& entry = *Assert(tx_pool.GetEntry(tx_info.tx->GetHash()));
-        std::vector<uint32_t> dust_indexes{GetDustIndexes(tx_info.tx, tx_pool.m_opts.dust_relay_feerate)};
+        std::vector<uint32_t> dust_indexes{GetDust(*tx_info.tx, tx_pool.m_opts.dust_relay_feerate)};
         if (!dust_indexes.empty()) {
             const auto& children = entry.GetMemPoolChildrenConst();
             if (!children.empty()) {
@@ -210,37 +210,33 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
 
     chainstate.SetMempool(&tx_pool);
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 300)
+    LIMITED_WHILE(fuzzed_data_provider.remaining_bytes() > 0, 300)
     {
         Assert(!mempool_outpoints.empty());
 
         std::vector<CTransactionRef> txs;
 
         // Find something we may want to double-spend with two input single tx
-        std::optional<COutPoint> outpoint_to_rbf{GetChildEvictingPrevout(tx_pool)};
-        bool should_rbf_eph_spend = outpoint_to_rbf && fuzzed_data_provider.ConsumeBool();
+        std::optional<COutPoint> outpoint_to_rbf{fuzzed_data_provider.ConsumeBool() ? GetChildEvictingPrevout(tx_pool) : std::nullopt};
 
         // Make small packages
-        const auto num_txs = should_rbf_eph_spend ? 1 : (size_t) fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 4);
+        const auto num_txs = outpoint_to_rbf ? 1 : (size_t) fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 4);
 
         std::set<COutPoint> package_outpoints;
         while (txs.size() < num_txs) {
-
-            // Last transaction in a package needs to be a child of parents to get further in validation
-            // so the last transaction to be generated(in a >1 package) must spend all package-made outputs
-            // Note that this test currently only spends package outputs in last transaction.
-            bool last_tx = num_txs > 1 && txs.size() == num_txs - 1;
-
             // Create transaction to add to the mempool
-            const CTransactionRef tx = [&] {
+            txs.emplace_back([&] {
                 CMutableTransaction tx_mut;
                 tx_mut.version = CTransaction::CURRENT_VERSION;
                 tx_mut.nLockTime = 0;
-                // Last tx will sweep half or more of all outpoints from package
-                const auto num_in = should_rbf_eph_spend ? 2 :
+                // Last transaction in a package needs to be a child of parents to get further in validation
+                // so the last transaction to be generated(in a >1 package) must spend all package-made outputs
+                // Note that this test currently only spends package outputs in last transaction.
+                bool last_tx = num_txs > 1 && txs.size() == num_txs - 1;
+                const auto num_in = outpoint_to_rbf ? 2 :
                     last_tx ? fuzzed_data_provider.ConsumeIntegralInRange<int>(package_outpoints.size()/2 + 1, package_outpoints.size()) :
                     fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 4);
-                auto num_out = should_rbf_eph_spend ? 1 : fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 4);
+                const auto num_out = outpoint_to_rbf ? 1 : fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 4);
 
                 auto& outpoints = last_tx ? package_outpoints : mempool_outpoints;
 
@@ -248,12 +244,13 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
 
                 CAmount amount_in{0};
                 for (int i = 0; i < num_in; ++i) {
-                    // Pop random outpoint
+                    // Pop random outpoint. We erase them to avoid double-spending
+                    // while in this loop, but later add them back (unless last_tx).
                     auto pop = outpoints.begin();
                     std::advance(pop, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, outpoints.size() - 1));
                     auto outpoint = *pop;
 
-                    if (i == 0 && should_rbf_eph_spend) {
+                    if (i == 0 && outpoint_to_rbf) {
                         outpoint = *outpoint_to_rbf;
                         outpoints.erase(outpoint);
                     } else {
@@ -277,7 +274,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
                 }
 
                 // Note output amounts can naturally drop to dust on their own.
-                if (!should_rbf_eph_spend && fuzzed_data_provider.ConsumeBool()) {
+                if (!outpoint_to_rbf && fuzzed_data_provider.ConsumeBool()) {
                     uint32_t dust_index = fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(0, num_out);
                     tx_mut.vout.insert(tx_mut.vout.begin() + dust_index, CTxOut(0, P2WSH_EMPTY));
                 }
@@ -298,8 +295,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
                     outpoints_value[COutPoint(tx->GetHash(), i)] = tx->vout[i].nValue;
                 }
                 return tx;
-            }();
-            txs.push_back(tx);
+            }());
         }
 
         if (fuzzed_data_provider.ConsumeBool()) {
@@ -308,19 +304,14 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
                                    PickValue(fuzzed_data_provider, mempool_outpoints).hash;
             const auto delta = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-50 * COIN, +50 * COIN);
             // We only prioritise out of mempool transactions since PrioritiseTransaction doesn't
-            // filter for ephemeral dust GetEntry
+            // filter for ephemeral dust
             if (tx_pool.exists(GenTxid::Txid(txid))) {
                 const auto tx_info{tx_pool.info(GenTxid::Txid(txid))};
-                if (GetDustIndexes(tx_info.tx, tx_pool.m_opts.dust_relay_feerate).empty()) {
+                if (GetDust(*tx_info.tx, tx_pool.m_opts.dust_relay_feerate).empty()) {
                     tx_pool.PrioritiseTransaction(txid.ToUint256(), delta);
                 }
             }
         }
-
-        // Remember all added transactions
-        std::set<CTransactionRef> added;
-        auto txr = std::make_shared<TransactionsDelta>(added);
-        node.validation_signals->RegisterSharedValidationInterface(txr);
 
         auto single_submit = txs.size() == 1;
 
@@ -339,7 +330,6 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
         }
 
         node.validation_signals->SyncWithValidationInterfaceQueue();
-        node.validation_signals->UnregisterSharedValidationInterface(txr);
 
         CheckMempoolEphemeralInvariants(tx_pool);
     }
@@ -374,7 +364,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
 
     chainstate.SetMempool(&tx_pool);
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 300)
+    LIMITED_WHILE(fuzzed_data_provider.remaining_bytes() > 0, 300)
     {
         Assert(!mempool_outpoints.empty());
 
@@ -384,18 +374,15 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
         const auto num_txs = (size_t) fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 26);
         std::set<COutPoint> package_outpoints;
         while (txs.size() < num_txs) {
-
-            // Last transaction in a package needs to be a child of parents to get further in validation
-            // so the last transaction to be generated(in a >1 package) must spend all package-made outputs
-            // Note that this test currently only spends package outputs in last transaction.
-            bool last_tx = num_txs > 1 && txs.size() == num_txs - 1;
-
             // Create transaction to add to the mempool
-            const CTransactionRef tx = [&] {
+            txs.emplace_back([&] {
                 CMutableTransaction tx_mut;
                 tx_mut.version = fuzzed_data_provider.ConsumeBool() ? TRUC_VERSION : CTransaction::CURRENT_VERSION;
                 tx_mut.nLockTime = fuzzed_data_provider.ConsumeBool() ? 0 : fuzzed_data_provider.ConsumeIntegral<uint32_t>();
-                // Last tx will sweep all outpoints in package
+                // Last transaction in a package needs to be a child of parents to get further in validation
+                // so the last transaction to be generated(in a >1 package) must spend all package-made outputs
+                // Note that this test currently only spends package outputs in last transaction.
+                bool last_tx = num_txs > 1 && txs.size() == num_txs - 1;
                 const auto num_in = last_tx ? package_outpoints.size()  : fuzzed_data_provider.ConsumeIntegralInRange<int>(1, mempool_outpoints.size());
                 auto num_out = fuzzed_data_provider.ConsumeIntegralInRange<int>(1, mempool_outpoints.size() * 2);
 
@@ -405,7 +392,8 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
 
                 CAmount amount_in{0};
                 for (size_t i = 0; i < num_in; ++i) {
-                    // Pop random outpoint
+                    // Pop random outpoint. We erase them to avoid double-spending
+                    // while in this loop, but later add them back (unless last_tx).
                     auto pop = outpoints.begin();
                     std::advance(pop, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, outpoints.size() - 1));
                     const auto outpoint = *pop;
@@ -468,8 +456,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
                     outpoints_value[COutPoint(tx->GetHash(), i)] = tx->vout[i].nValue;
                 }
                 return tx;
-            }();
-            txs.push_back(tx);
+            }());
         }
 
         if (fuzzed_data_provider.ConsumeBool()) {

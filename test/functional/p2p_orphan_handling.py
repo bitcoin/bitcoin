@@ -339,7 +339,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
 
         # The wtxid and txid need to be the same for the node to recognize that the missing input
         # and in-flight request for inflight_parent_AB are the same transaction.
-        assert_equal(inflight_parent_AB["txid"], inflight_parent_AB["tx"].getwtxid())
+        assert_equal(inflight_parent_AB["txid"], inflight_parent_AB["wtxid"])
 
         # Announce inflight_parent_AB and wait for getdata
         peer_txrequest.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=int(inflight_parent_AB["tx"].getwtxid(), 16))]))
@@ -364,6 +364,10 @@ class OrphanHandlingTest(BitcoinTestFramework):
         # because they are already being requested from peer_txrequest and peer_orphans respectively.
         peer_orphans.wait_for_parent_requests([int(missing_parent_B["txid"], 16)])
         peer_orphans.assert_never_requested(int(inflight_parent_AB["txid"], 16))
+
+        # But inflight_parent_AB will be requested eventually if original peer doesn't respond
+        node.bumpmocktime(GETDATA_TX_INTERVAL)
+        peer_orphans.wait_for_parent_requests([int(inflight_parent_AB["txid"], 16)])
 
     @cleanup
     def test_orphan_of_orphan(self):

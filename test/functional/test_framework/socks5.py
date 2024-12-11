@@ -195,7 +195,7 @@ class Socks5Connection():
             if not self.serv.keep_alive:
                 self.conn.close()
             else:
-                logger.debug(f"Keeping client connection alive")
+                logger.debug("Keeping client connection alive")
 
 class Socks5Server():
     def __init__(self, conf):

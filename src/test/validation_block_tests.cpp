@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
             bool ignored;
             FastRandomContext insecure;
             for (int i = 0; i < 1000; i++) {
-                auto block = blocks[insecure.randrange(blocks.size() - 1)];
+                const auto& block = blocks[insecure.randrange(blocks.size() - 1)];
                 Assert(m_node.chainman)->ProcessNewBlock(block, true, true, &ignored);
             }
 

@@ -15,7 +15,7 @@ $ FUZZ=process_message build_fuzz/src/test/fuzz/fuzz
 # abort fuzzing using ctrl-c
 ```
 
-One can use `--prefix=libfuzzer-nosan` to do the same without common sanitizers enabled.
+One can use `--preset=libfuzzer-nosan` to do the same without common sanitizers enabled.
 See [further](#run-without-sanitizers-for-increased-throughput) for more information.
 
 There is also a runner script to execute all fuzz targets. Refer to

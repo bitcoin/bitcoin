@@ -86,7 +86,7 @@ class P2PHandshakeTest(BitcoinTestFramework):
                                           DESIRABLE_SERVICE_FLAGS_PRUNED, expect_disconnect=False)
 
         self.log.info("Check that feeler connections get disconnected immediately")
-        with node.assert_debug_log([f"feeler connection completed"]):
+        with node.assert_debug_log(["feeler connection completed"]):
             self.add_outbound_connection(node, "feeler", NODE_NONE, wait_for_disconnect=True)
 
         self.log.info("Check that connecting to ourself leads to immediate disconnect")

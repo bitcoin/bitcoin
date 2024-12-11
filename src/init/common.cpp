@@ -17,6 +17,7 @@
 #include <util/translation.h>
 
 #include <algorithm>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -111,8 +112,8 @@ bool StartLogging(const ArgsManager& args)
         }
     }
     if (!LogInstance().StartLogging()) {
-            return InitError(strprintf(Untranslated("Could not open debug log file %s"),
-                fs::PathToString(LogInstance().m_file_path)));
+            return InitError(Untranslated(strprintf("Could not open debug log file %s",
+                fs::PathToString(LogInstance().m_file_path))));
     }
 
     if (!LogInstance().m_log_timestamps)
@@ -122,10 +123,13 @@ bool StartLogging(const ArgsManager& args)
 
     // Only log conf file usage message if conf file actually exists.
     fs::path config_file_path = args.GetConfigFilePath();
-    if (fs::exists(config_file_path)) {
+    if (args.IsArgNegated("-conf")) {
+        LogInfo("Config file: <disabled>");
+    } else if (fs::is_directory(config_file_path)) {
+        LogWarning("Config file: %s (is directory, not file)", fs::PathToString(config_file_path));
+    } else if (fs::exists(config_file_path)) {
         LogPrintf("Config file: %s\n", fs::PathToString(config_file_path));
     } else if (args.IsArgSet("-conf")) {
-        // Warn if no conf file exists at path provided by user
         InitWarning(strprintf(_("The specified config file %s does not exist"), fs::PathToString(config_file_path)));
     } else {
         // Not categorizing as "Warning" because it's the default behavior

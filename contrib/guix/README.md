@@ -31,7 +31,7 @@ section](#choosing-your-security-model) before proceeding to perform a build.
 
 In order to perform a build for macOS (which is included in the default set of
 platform triples to build), you'll need to extract the macOS SDK tarball using
-tools found in the [`macdeploy` directory](../macdeploy/README.md).
+tools found in the [`macdeploy` directory](../macdeploy/README.md#sdk-extraction).
 
 You can then either point to the SDK using the `SDK_PATH` environment variable:
 
@@ -68,7 +68,7 @@ following from the top of a clean repository:
 
 The `guix-codesign` command attaches codesignatures (produced by codesigners) to
 existing non-codesigned outputs. Please see the [release process
-documentation](/doc/release-process.md) for more context.
+documentation](/doc/release-process.md#codesigning) for more context.
 
 It respects many of the same environment variable flags as `guix-build`, with 2
 crucial differences:
