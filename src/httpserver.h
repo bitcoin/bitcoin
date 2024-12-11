@@ -38,6 +38,14 @@ struct evhttp_request;
 struct event_base;
 class CService;
 
+enum HTTPRequestMethod {
+    UNKNOWN,
+    GET,
+    POST,
+    HEAD,
+    PUT
+};
+
 namespace http_libevent {
 class HTTPRequest;
 
@@ -89,14 +97,6 @@ public:
     explicit HTTPRequest(struct evhttp_request* req, const util::SignalInterrupt& interrupt, bool replySent = false);
     ~HTTPRequest();
 
-    enum RequestMethod {
-        UNKNOWN,
-        GET,
-        POST,
-        HEAD,
-        PUT
-    };
-
     /** Get requested URI.
      */
     std::string GetURI() const;
@@ -107,7 +107,7 @@ public:
 
     /** Get request method.
      */
-    RequestMethod GetRequestMethod() const;
+    HTTPRequestMethod GetRequestMethod() const;
 
     /** Get the query parameter value from request uri for a specified key, or std::nullopt if the
      * key is not found.
@@ -253,7 +253,7 @@ class HTTPClient;
 class HTTPRequest
 {
 public:
-    std::string m_method;
+    HTTPRequestMethod m_method;
     std::string m_target;
     // Default protocol version is used by error responses to unreadable requests
     int m_version_major{1};
