@@ -12,6 +12,7 @@ from test_framework.util import (
     assert_array_result,
     assert_equal,
     assert_fee_amount,
+    assert_greater_than,
     assert_raises_rpc_error,
     count_bytes,
 )
@@ -324,6 +325,33 @@ class WalletTest(BitcoinTestFramework):
                 found = True
                 assert_equal(uTx['amount'], Decimal('0'))
         assert found
+
+        self.log.info("Test listunspent with coinType option")
+        # 0=ALL_COINS
+        # 1=ONLY_FULLY_MIXED
+        # 2=ONLY_READY_TO_MIX
+        # 3=ONLY_NONDENOMINATED
+        # 4=ONLY_MASTERNODE_COLLATERAL
+        # 5=ONLY_COINJOIN_COLLATERAL
+        assert_greater_than(self.nodes[1].getbalance(), 1001)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        for cointype in range(6):
+            len_cointype = len(self.nodes[0].listunspent(minconf=0, maxconf=0, include_unsafe=True, query_options={'coinType': cointype}))
+            assert_equal(len_cointype, 0)
+        address = self.nodes[0].getnewaddress()
+        for amount in {0.00100001, 0.00100000, 1000, 0.00010000}:
+            self.nodes[1].sendtoaddress(address=address, amount=amount)
+        self.sync_mempools(self.nodes[0:2])
+        for cointype in range(2, 6):
+            len_cointype = len(self.nodes[0].listunspent(minconf=0, maxconf=0, include_unsafe=True, query_options={'coinType': cointype}))
+            assert_equal(len_cointype,  2 if cointype == 3 else 1) # masternode collaterals are counted as ONLY_NONDENOMINATED too
+        len_default = len(self.nodes[0].listunspent(minconf=0, maxconf=0, include_unsafe=True))
+        len0 = len(self.nodes[0].listunspent(minconf=0, maxconf=0, include_unsafe=True, query_options={'coinType': 0}))
+        len1 = len(self.nodes[0].listunspent(minconf=0, maxconf=0, include_unsafe=True, query_options={'coinType': 1}))
+        assert_equal(len_default, len0)
+        assert_equal(len0, 4)
+        assert_equal(len1, 0)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         self.log.info("Test -walletbroadcast")
         self.stop_nodes()
