@@ -279,6 +279,10 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
 
 BOOST_AUTO_TEST_CASE(http_client_server_tests)
 {
+    // Hard code the timestamp for the Date header in the HTTP response
+    // Wed Dec 11 00:47:09 2024 UTC
+    SetMockTime(1733878029);
+
     // Queue of connected sockets returned by listening socket (represents network interface)
     std::shared_ptr<DynSock::Queue> accepted_sockets{std::make_shared<DynSock::Queue>()};
 
@@ -347,7 +351,38 @@ BOOST_AUTO_TEST_CASE(http_client_server_tests)
 
             // Check the received request
             BOOST_CHECK_EQUAL(requests.front()->m_body, "{\"method\":\"getblockcount\",\"params\":[],\"id\":1}\n");
+
+            // Respond to request
+            requests.front()->WriteReply(HTTP_OK, "874140\n");
         }
+
+        // Check the sent response from the mock client at the other end of the mock socket
+        std::string actual;
+        bool expected{false};
+        // Wait up to one minute for all the bytes to appear in the "send" pipe.
+        char buf[0x10000] = {};
+        attempts = 6000;
+        while (attempts > 0)
+        {
+            ssize_t bytes_read = connected_socket_pipes->send.GetBytes(buf, sizeof(buf), 0);
+            if (bytes_read > 0) {
+                actual.append(buf, bytes_read);
+                if (actual.ends_with("\r\n\r\n874140\n") &&
+                    actual.find("HTTP/1.1 200 OK\r\n") != std::string::npos &&
+                    actual.find("Connection: close\r\n") != std::string::npos &&
+                    actual.find("Content-Length: 7\r\n") != std::string::npos &&
+                    actual.find("Content-Type: text/html; charset=ISO-8859-1\r\n") != std::string::npos &&
+                    actual.find("Date: Wed, 11 Dec 2024 00:47:09 GMT\r\n") != std::string::npos
+                ) {
+                    expected = true;
+                    break;
+                }
+            }
+
+            std::this_thread::sleep_for(10ms);
+            --attempts;
+        }
+        BOOST_REQUIRE(expected);
 
         // Close server
         server.interruptNet();
