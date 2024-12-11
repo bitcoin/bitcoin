@@ -155,6 +155,9 @@ public:
     /** Return path to main database file for logs and error messages. */
     virtual std::string Filename() = 0;
 
+    /** Return paths to all database created files */
+    virtual std::vector<fs::path> Files() = 0;
+
     virtual std::string Format() = 0;
 
     /** Make a DatabaseBatch connected to this database */
