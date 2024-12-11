@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2022 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Class for bitcoind node under test"""
@@ -265,6 +265,8 @@ class TestNode():
         """Sets up an RPC connection to the bitcoind process. Returns False if unable to connect."""
         # Poll at a rate of four times per second
         poll_per_s = 4
+        suppressed_errors = collections.defaultdict(int)
+        latest_error = ""
         for _ in range(poll_per_s * self.rpc_timeout):
             if self.process.poll() is not None:
                 # Attach abrupt shutdown error/s to the exception message
@@ -317,6 +319,8 @@ class TestNode():
                 # -342 Service unavailable, could be starting up or shutting down
                 if e.error['code'] not in [-28, -342]:
                     raise  # unknown JSON RPC exception
+                suppressed_errors[f"JSONRPCException {e.error['code']}"] += 1
+                latest_error = repr(e)
             except OSError as e:
                 # Suppress similarly to the above JSONRPCException errors.
                 if e.errno not in [
@@ -326,12 +330,16 @@ class TestNode():
                     errno.ECONNREFUSED  # Port not yet open?
                 ]:
                     raise  # unknown OS error
+                suppressed_errors[f"OSError {errno.errorcode[e.errno]}"] += 1
+                latest_error = repr(e)
             except ValueError as e:
                 # Suppress if cookie file isn't generated yet and no rpcuser or rpcpassword; bitcoind may be starting.
                 if "No RPC credentials" not in str(e):
                     raise
+                suppressed_errors["missing_credentials"] += 1
+                latest_error = repr(e)
             time.sleep(1.0 / poll_per_s)
-        self._raise_assertion_error("Unable to connect to bitcoind after {}s".format(self.rpc_timeout))
+        self._raise_assertion_error(f"Unable to connect to bitcoind after {self.rpc_timeout}s (ignored errors: {str(dict(suppressed_errors))}, latest error: {latest_error})")
 
     def wait_for_cookie_credentials(self):
         """Ensures auth cookie credentials can be read, e.g. for testing CLI with -rpcwait before RPC connection is up."""
