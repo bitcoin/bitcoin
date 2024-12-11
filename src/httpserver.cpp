@@ -243,18 +243,18 @@ static bool InitHTTPAllowList()
 }
 
 /** HTTP request method as string - use for logging only */
-std::string RequestMethodString(HTTPRequest::RequestMethod m)
+std::string RequestMethodString(HTTPRequestMethod m)
 {
     switch (m) {
-    case HTTPRequest::GET:
+    case HTTPRequestMethod::GET:
         return "GET";
-    case HTTPRequest::POST:
+    case HTTPRequestMethod::POST:
         return "POST";
-    case HTTPRequest::HEAD:
+    case HTTPRequestMethod::HEAD:
         return "HEAD";
-    case HTTPRequest::PUT:
+    case HTTPRequestMethod::PUT:
         return "PUT";
-    case HTTPRequest::UNKNOWN:
+    case HTTPRequestMethod::UNKNOWN:
         return "unknown";
     } // no default case, so the compiler can warn about missing cases
     assert(false);
@@ -297,7 +297,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
     }
 
     // Early reject unknown HTTP methods
-    if (hreq->GetRequestMethod() == HTTPRequest::UNKNOWN) {
+    if (hreq->GetRequestMethod() == HTTPRequestMethod::UNKNOWN) {
         LogDebug(BCLog::HTTP, "HTTP request from %s rejected: Unknown HTTP request method\n",
                  hreq->GetPeer().ToStringAddrPort());
         hreq->WriteReply(HTTP_BAD_METHOD);
@@ -710,19 +710,19 @@ std::string HTTPRequest::GetURI() const
     return evhttp_request_get_uri(req);
 }
 
-HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod() const
+HTTPRequestMethod HTTPRequest::GetRequestMethod() const
 {
     switch (evhttp_request_get_command(req)) {
     case EVHTTP_REQ_GET:
-        return GET;
+        return HTTPRequestMethod::GET;
     case EVHTTP_REQ_POST:
-        return POST;
+        return HTTPRequestMethod::POST;
     case EVHTTP_REQ_HEAD:
-        return HEAD;
+        return HTTPRequestMethod::HEAD;
     case EVHTTP_REQ_PUT:
-        return PUT;
+        return HTTPRequestMethod::PUT;
     default:
-        return UNKNOWN;
+        return HTTPRequestMethod::UNKNOWN;
     }
 }
 
