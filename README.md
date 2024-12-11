@@ -1,3 +1,4 @@
+![Bitcoin](./doc/bitcoin.svg)
 Bitcoin Core integration/staging tree
 =====================================
 
