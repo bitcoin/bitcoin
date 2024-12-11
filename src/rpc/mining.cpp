@@ -368,7 +368,7 @@ static RPCHelpMan generateblock()
     }
 
     CChainParams chainparams(Params());
-    LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+    const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
     ChainstateManager& chainman = EnsureChainman(node);
     CChainState& active_chainstate = chainman.ActiveChainstate();
@@ -709,7 +709,7 @@ static RPCHelpMan getblocktemplate()
                 return "duplicate-inconclusive";
             }
 
-            LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+            const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
             CBlockIndex* const pindexPrev = active_chain.Tip();
             // TestBlockValidity only supports blocks built on the current Tip
