@@ -308,10 +308,11 @@ class TestNode():
                     # overhead is trivial, and the added guarantees are worth
                     # the minimal performance cost.
                 self.log.debug("RPC successfully started")
+                # Set rpc_connected even if we are in use_cli mode so that we know we can call self.stop() if needed.
+                self.rpc_connected = True
                 if self.use_cli:
                     return
                 self.rpc = rpc
-                self.rpc_connected = True
                 self.url = self.rpc.rpc_url
                 return
             except JSONRPCException as e:
@@ -397,14 +398,27 @@ class TestNode():
         if not self.running:
             return
         self.log.debug("Stopping node")
-        try:
-            # Do not use wait argument when testing older nodes, e.g. in wallet_backwards_compatibility.py
-            if self.version_is_at_least(180000):
-                self.stop(wait=wait)
+        if self.rpc_connected:
+            try:
+                # Do not use wait argument when testing older nodes, e.g. in wallet_backwards_compatibility.py
+                if self.version_is_at_least(180000):
+                    self.stop(wait=wait)
+                else:
+                    self.stop()
+            except http.client.CannotSendRequest:
+                self.log.exception("Unable to stop node.")
+        else:
+            return_code = self.process.poll()
+            if return_code is None:
+                self.log.warning("Cannot call stop-RPC as we are not connected. "
+                    f"Killing process {self.process.pid} so that wait_until_stopped will not time out.")
+                self.expected_ret_code = 1 if platform.system() == "Windows" else -9
+                self.process.kill()
             else:
-                self.stop()
-        except http.client.CannotSendRequest:
-            self.log.exception("Unable to stop node.")
+                self.log.warning(f"Process {self.process.pid} already died with return code {return_code}.")
+                # If we no longer have a running process once stop_node() is called, assume we've already triggered an
+                # error such as FailedToStartError. Set the expected return code to avoid knock-on errors.
+                self.expected_ret_code = return_code
 
         # If there are any running perf processes, stop them.
         for profile_name in tuple(self.perf_subprocesses.keys()):
