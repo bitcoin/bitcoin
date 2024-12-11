@@ -12,6 +12,7 @@
 #include <netbase.h>
 #include <node/interface_ui.h>
 #include <rpc/protocol.h> // For HTTP status codes
+#include <span.h>
 #include <sync.h>
 #include <util/check.h>
 #include <util/signalinterrupt.h>
@@ -940,6 +941,92 @@ bool HTTPRequest::LoadBody(LineReader& reader)
     }
 }
 
+void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> reply_body)
+{
+    HTTPResponse res;
+
+    // Some response headers are determined in advance and stored in the request
+    res.m_headers = std::move(m_response_headers);
+
+    // Response version matches request version
+    res.m_version_major = m_version_major;
+    res.m_version_minor = m_version_minor;
+
+    // Add response code and look up reason string
+    res.m_status = status;
+    res.m_reason = HTTPReason.find(status)->second;
+
+    // See libevent evhttp_response_needs_body()
+    // Response headers are different if no body is needed
+    bool needs_body{status != HTTP_NO_CONTENT && (status < 100 || status >= 200)};
+
+    // See libevent evhttp_make_header_response()
+    // Expected response headers depend on protocol version
+    if (m_version_major == 1) {
+        // HTTP/1.0
+        if (m_version_minor == 0) {
+            auto connection_header{m_headers.Find("Connection")};
+            if (connection_header && ToLower(connection_header.value()) == "keep-alive") {
+                res.m_headers.Write("Connection", "keep-alive");
+                res.m_keep_alive = true;
+            }
+        }
+
+        // HTTP/1.1
+        if (m_version_minor >= 1) {
+            const int64_t now_seconds{TicksSinceEpoch<std::chrono::seconds>(NodeClock::now())};
+            res.m_headers.Write("Date", FormatRFC7231DateTime(now_seconds));
+
+            if (needs_body) {
+                res.m_headers.Write("Content-Length", strprintf("%d", reply_body.size()));
+            }
+
+            // Default for HTTP/1.1
+            res.m_keep_alive = true;
+        }
+    }
+
+    if (needs_body && !res.m_headers.Find("Content-Type")) {
+        // Default type from libevent evhttp_new_object()
+        res.m_headers.Write("Content-Type", "text/html; charset=ISO-8859-1");
+    }
+
+    auto connection_header{m_headers.Find("Connection")};
+    if (connection_header && ToLower(connection_header.value()) == "close") {
+        // Might not exist already but we need to replace it, not append to it
+        res.m_headers.Remove("Connection");
+        res.m_headers.Write("Connection", "close");
+        res.m_keep_alive = false;
+    }
+
+    // Serialize the response headers
+    const std::string headers{res.StringifyHeaders()};
+    const auto headers_bytes{std::as_bytes(std::span(headers.begin(), headers.end()))};
+
+    // Fill the send buffer with the complete serialized response headers + body
+    {
+        LOCK(m_client->m_send_mutex);
+        m_client->m_send_buffer.insert(m_client->m_send_buffer.end(), headers_bytes.begin(), headers_bytes.end());
+
+        // We've been using std::span up until now but it is finally time to copy
+        // data. The original data will go out of scope when WriteReply() returns.
+        // This is analogous to the memcpy() in libevent's evbuffer_add()
+        m_client->m_send_buffer.insert(m_client->m_send_buffer.end(), reply_body.begin(), reply_body.end());
+    }
+
+    // Inform Sockman I/O there is data that is ready to be sent to this client
+    // in the next loop iteration.
+    m_client->m_send_ready = true;
+
+    LogDebug(
+        BCLog::HTTP,
+        "HTTPResponse (status code: %d size: %lld) added to send buffer for client %s (id=%lld)\n",
+        status,
+        headers_bytes.size() + reply_body.size(),
+        m_client->m_origin,
+        m_client->m_node_id);
+}
+
 bool HTTPClient::ReadRequest(std::unique_ptr<HTTPRequest>& req)
 {
     LineReader reader(m_recv_buffer, MAX_HEADERS_SIZE);
@@ -958,6 +1045,41 @@ bool HTTPClient::ReadRequest(std::unique_ptr<HTTPRequest>& req)
     return true;
 }
 
+bool HTTPClient::SendBytesFromBuffer()
+{
+    Assume(m_server);
+
+    // Send as much data from this client's buffer as we can
+    LOCK(m_send_mutex);
+    if (!m_send_buffer.empty()) {
+        std::string err;
+        // We don't intend to "send more" because http responses are usually small and we want the kernel to send them right away.
+        ssize_t bytes_sent = m_server->SendBytes(m_node_id, MakeUCharSpan(m_send_buffer), /*will_send_more=*/false, err);
+        if (bytes_sent < 0) {
+            LogDebug(
+                BCLog::HTTP,
+                "Error sending HTTP response data to client %s (id=%lld): %s\n",
+                m_origin,
+                m_node_id,
+                err);
+            // TODO: disconnect
+            return false;
+        }
+
+        Assume(static_cast<size_t>(bytes_sent) <= m_send_buffer.size());
+        m_send_buffer.erase(m_send_buffer.begin(), m_send_buffer.begin() + bytes_sent);
+
+        LogDebug(
+            BCLog::HTTP,
+            "Sent %d bytes to client %s (id=%lld)\n",
+            bytes_sent,
+            m_origin,
+            m_node_id);
+    }
+
+    return true;
+}
+
 bool HTTPServer::EventNewConnectionAccepted(NodeId node_id,
                                             const CService& me,
                                             const CService& them)
@@ -969,6 +1091,23 @@ bool HTTPServer::EventNewConnectionAccepted(NodeId node_id,
     m_connected_clients.emplace(client->m_node_id, std::move(client));
     m_no_clients = false;
     return true;
+}
+
+void HTTPServer::EventReadyToSend(NodeId node_id, bool& cancel_recv)
+{
+    // Next attempt to receive data from this node is permitted
+    cancel_recv = false;
+
+    // Get the HTTPClient
+    auto client{GetClientById(node_id)};
+    if (client == nullptr) {
+        return;
+    }
+
+    // SendBytesFromBuffer() returns true if we should keep the client around,
+    // false if we are done with it. Invert that boolean to inform Sockman
+    // whether it should cancel the next receive attempt from this client.
+    cancel_recv = !client->SendBytesFromBuffer();
 }
 
 void HTTPServer::EventGotData(NodeId node_id, std::span<const uint8_t> data)
@@ -1019,6 +1158,29 @@ void HTTPServer::EventGotData(NodeId node_id, std::span<const uint8_t> data)
         // handle request
         m_request_dispatcher(std::move(req));
     }
+}
+
+bool HTTPServer::ShouldTryToSend(NodeId node_id) const
+{
+    // Get the HTTPClient
+    auto client{GetClientById(node_id)};
+    if (client == nullptr) {
+        return false;
+    }
+
+    return client->m_send_ready;
+}
+
+bool HTTPServer::ShouldTryToRecv(NodeId node_id) const
+{
+    // Get the HTTPClient
+    auto client{GetClientById(node_id)};
+    if (client == nullptr) {
+        return false;
+    }
+
+    // Don't try to receive again until we've cleared the send buffer to this client
+    return !client->m_send_ready;
 }
 
 std::shared_ptr<HTTPClient> HTTPServer::GetClientById(NodeId node_id) const
