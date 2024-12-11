@@ -27,11 +27,11 @@ static const int64_t nDefaultDbCache = 450;
 static const int64_t nDefaultDbBatchSize = 16 << 20;
 //! min. -dbcache (MiB)
 static const int64_t nMinDbCache = 4;
-//! Max memory allocated to block tree DB specific cache, if no -txindex (MiB)
+//! Max memory allocated to block tree DB specific cache (MiB)
 static const int64_t nMaxBlockDBCache = 2;
-//! Max memory allocated to block tree DB specific cache, if -txindex (MiB)
 // Unlike for the UTXO database, for the txindex scenario the leveldb cache make
 // a meaningful difference: https://github.com/bitcoin/bitcoin/pull/8273#issuecomment-229601991
+//! Max memory allocated to tx index DB specific cache in MiB.
 static const int64_t nMaxTxIndexCache = 1024;
 //! Max memory allocated to all block filter index caches combined in MiB.
 static const int64_t max_filter_index_cache = 1024;
