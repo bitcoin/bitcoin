@@ -104,7 +104,7 @@ class SQLiteDatabase : public WalletDatabase
 private:
     const bool m_mock{false};
 
-    const std::string m_dir_path;
+    const fs::path m_dir_path;
 
     const std::string m_file_path;
 
