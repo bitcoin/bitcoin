@@ -21,8 +21,9 @@ class FakeMNAUTHTest(DashTestFramework):
 
     def run_test(self):
         self.activate_v19(expected_activation_height=900)
+        self.dynamically_add_masternode()
 
-        masternode = self.mninfo[0]
+        masternode = self.mninfo[1]
         masternode.node.add_p2p_connection(P2PInterface())
 
         protx_hash = masternode.proTxHash
