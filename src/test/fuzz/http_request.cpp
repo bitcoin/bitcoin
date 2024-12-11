@@ -22,11 +22,12 @@
 
 extern "C" int evhttp_parse_firstline_(struct evhttp_request*, struct evbuffer*);
 extern "C" int evhttp_parse_headers_(struct evhttp_request*, struct evbuffer*);
+
+std::string_view RequestMethodString(HTTPRequestMethod m);
+
 FUZZ_TARGET(http_request)
 {
     using http_libevent::HTTPRequest;
-
-    std::string RequestMethodString(HTTPRequest::RequestMethod m);
 
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     evhttp_request* evreq = evhttp_request_new(nullptr, nullptr);
@@ -51,7 +52,7 @@ FUZZ_TARGET(http_request)
 
     util::SignalInterrupt interrupt;
     HTTPRequest http_request{evreq, interrupt, true};
-    const HTTPRequest::RequestMethod request_method = http_request.GetRequestMethod();
+    const HTTPRequestMethod request_method = http_request.GetRequestMethod();
     (void)RequestMethodString(request_method);
     (void)http_request.GetURI();
     (void)http_request.GetHeader("Host");
