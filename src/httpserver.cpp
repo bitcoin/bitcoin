@@ -256,19 +256,15 @@ static bool InitHTTPAllowList()
 }
 
 /** HTTP request method as string - use for logging only */
-std::string RequestMethodString(HTTPRequest::RequestMethod m)
+std::string_view RequestMethodString(HTTPRequestMethod m)
 {
     switch (m) {
-    case HTTPRequest::GET:
-        return "GET";
-    case HTTPRequest::POST:
-        return "POST";
-    case HTTPRequest::HEAD:
-        return "HEAD";
-    case HTTPRequest::PUT:
-        return "PUT";
-    case HTTPRequest::UNKNOWN:
-        return "unknown";
+        using enum HTTPRequestMethod;
+        case GET: return "GET";
+        case POST: return "POST";
+        case HEAD: return "HEAD";
+        case PUT: return "PUT";
+        case UNKNOWN: return "unknown";
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
@@ -310,7 +306,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
     }
 
     // Early reject unknown HTTP methods
-    if (hreq->GetRequestMethod() == HTTPRequest::UNKNOWN) {
+    if (hreq->GetRequestMethod() == HTTPRequestMethod::UNKNOWN) {
         LogDebug(BCLog::HTTP, "HTTP request from %s rejected: Unknown HTTP request method\n",
                  hreq->GetPeer().ToStringAddrPort());
         hreq->WriteReply(HTTP_BAD_METHOD);
@@ -721,19 +717,19 @@ std::string HTTPRequest::GetURI() const
     return evhttp_request_get_uri(req);
 }
 
-HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod() const
+HTTPRequestMethod HTTPRequest::GetRequestMethod() const
 {
     switch (evhttp_request_get_command(req)) {
     case EVHTTP_REQ_GET:
-        return GET;
+        return HTTPRequestMethod::GET;
     case EVHTTP_REQ_POST:
-        return POST;
+        return HTTPRequestMethod::POST;
     case EVHTTP_REQ_HEAD:
-        return HEAD;
+        return HTTPRequestMethod::HEAD;
     case EVHTTP_REQ_PUT:
-        return PUT;
+        return HTTPRequestMethod::PUT;
     default:
-        return UNKNOWN;
+        return HTTPRequestMethod::UNKNOWN;
     }
 }
 
@@ -877,7 +873,19 @@ bool HTTPRequest::LoadControlData(LineReader& reader)
 
     const std::vector<std::string_view> parts{Split<std::string_view>(request_line, " ")};
     if (parts.size() != 3) throw std::runtime_error("HTTP request line malformed");
-    m_method = parts[0];
+
+    if (parts[0] == "GET") {
+        m_method = HTTPRequestMethod::GET;
+    } else if (parts[0] == "POST") {
+        m_method = HTTPRequestMethod::POST;
+    } else if (parts[0] == "HEAD") {
+        m_method = HTTPRequestMethod::HEAD;
+    } else if (parts[0] == "PUT") {
+        m_method = HTTPRequestMethod::PUT;
+    } else {
+        m_method = HTTPRequestMethod::UNKNOWN;
+    }
+
     m_target = parts[1];
 
     if (parts[2].rfind("HTTP/") != 0) throw std::runtime_error("HTTP request line malformed");
@@ -1374,7 +1382,7 @@ void HTTPServer::MaybeDispatchRequestsFromClient(std::shared_ptr<HTTPClient> cli
         LogDebug(
             BCLog::HTTP,
             "Received a %s request for %s from %s (id=%lld)\n",
-            req->m_method,
+            RequestMethodString(req->m_method),
             req->m_target,
             client->m_origin,
             client->m_id);
