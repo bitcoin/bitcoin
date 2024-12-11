@@ -60,7 +60,7 @@
 
 #include <univalue.h>
 
-void TxToJSON(const CTransaction& tx, const uint256 hashBlock, CTxMemPool& mempool, CChainState& active_chainstate, llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman, UniValue& entry)
+void TxToJSON(const CTransaction& tx, const uint256 hashBlock, const  CTxMemPool& mempool, const CChainState& active_chainstate, const llmq::CChainLocksHandler& clhandler, const llmq::CInstantSendManager& isman, UniValue& entry)
 {
     LOCK(::cs_main);
 
@@ -264,8 +264,8 @@ static RPCHelpMan getrawtransaction()
         return EncodeHexTx(*tx);
     }
 
-    LLMQContext& llmq_ctx = EnsureLLMQContext(node);
-    CTxMemPool& mempool = EnsureMemPool(node);
+    const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+    const CTxMemPool& mempool = EnsureMemPool(node);
 
     UniValue result(UniValue::VOBJ);
     if (blockindex) result.pushKV("in_active_chain", in_active_chain);
