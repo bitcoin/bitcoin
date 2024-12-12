@@ -9,6 +9,7 @@
 #include <chainparamsbase.h>
 #include <common/args.h>
 #include <common/messages.h>
+#include <common/url.h>
 #include <compat/compat.h>
 #include <logging.h>
 #include <netbase.h>
@@ -1083,6 +1084,54 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
 
     // Signal to the I/O loop that we are ready to handle the next request.
     m_client->m_req_busy = false;
+}
+
+CService HTTPRequest::GetPeer() const
+{
+    return m_client->m_addr;
+}
+
+std::optional<std::string> HTTPRequest::GetQueryParameter(const std::string_view key) const
+{
+    return GetQueryParameterFromUri(m_target, key);
+}
+
+// See libevent http.c evhttp_parse_query_impl()
+// and https://www.rfc-editor.org/rfc/rfc3986#section-3.4
+std::optional<std::string> GetQueryParameterFromUri(const std::string_view uri, const std::string_view key)
+{
+    // find query in URI
+    size_t start = uri.find('?');
+    if (start == std::string::npos) return std::nullopt;
+    size_t end = uri.find('#', start);
+    if (end == std::string::npos) {
+        end = uri.length();
+    }
+    const std::string_view query{uri.data() + start + 1, end - start - 1};
+    // find requested parameter in query
+    const std::vector<std::string_view> params{Split<std::string_view>(query, "&")};
+    for (const std::string_view& param : params) {
+        size_t delim = param.find('=');
+        if (key == UrlDecode(param.substr(0, delim))) {
+            if (delim == std::string::npos) {
+                return "";
+            } else {
+                return std::string(UrlDecode(param.substr(delim + 1)));
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+std::pair<bool, std::string> HTTPRequest::GetHeader(const std::string_view hdr) const
+{
+    std::optional<std::string> found{m_headers.FindFirst(hdr)};
+    return std::pair{found.has_value(), std::move(found).value_or("")};
+}
+
+void HTTPRequest::WriteHeader(std::string&& hdr, std::string&& value)
+{
+    m_response_headers.Write(std::move(hdr), std::move(value));
 }
 
 util::Expected<void, std::string> HTTPServer::BindAndStartListening(const CService& to)

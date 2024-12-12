@@ -31,36 +31,76 @@ constexpr std::string_view full_request = "POST / HTTP/1.1\r\n"
 
 BOOST_FIXTURE_TEST_SUITE(httpserver_tests, SocketTestingSetup)
 
-BOOST_AUTO_TEST_CASE(test_query_parameters)
+BOOST_AUTO_TEST_CASE(test_query_parameters_new_behavior)
 {
-    using http_libevent::GetQueryParameterFromUri;
+    // The legacy code that relied on libevent couldn't handle an invalid URI encoding.
+    // The new code is more tolerant and so we expect a difference in behavior.
+    // Re: libevent evhttp_uri_parse() see:
+    //   "bugfix: rest: avoid segfault for invalid URI" https://github.com/bitcoin/bitcoin/pull/27468
+    //   "httpserver, rest: improving URI validation" https://github.com/bitcoin/bitcoin/pull/27253
+    // Re: More tolerant URI decoding see:
+    //   "refactor: Use our own implementation of urlDecode" https://github.com/bitcoin/bitcoin/pull/29904
+
+    std::string uri {};
+    // This is an invalid URI because it contains a % that is not followed by two hex digits
+    uri = "/rest/endpoint/someresource.json?p1=v1&p2=v2%";
+    // Old behavior: URI with invalid characters (%) raises a runtime error regardless of which query parameter is queried
+    BOOST_CHECK_EXCEPTION(http_libevent::GetQueryParameterFromUri(uri.c_str(), "p1"), std::runtime_error, HasReason("URI parsing failed, it likely contained RFC 3986 invalid characters"));
+    // New behavior: Tolerate as much as we can
+    BOOST_CHECK_EQUAL(http_bitcoin::GetQueryParameterFromUri(uri, "p1"), "v1");
+    BOOST_CHECK_EQUAL(http_bitcoin::GetQueryParameterFromUri(uri, "p2"), "v2%");
+}
+
+// Ensure new behavior matches old behavior
+template <typename func>
+void test_query_parameters(func GetQueryParameterFromUri) {
     std::string uri {};
 
     // No parameters
     uri = "localhost:8080/rest/headers/someresource.json";
-    BOOST_CHECK(!GetQueryParameterFromUri(uri.c_str(), "p1").has_value());
+    BOOST_CHECK(!GetQueryParameterFromUri(uri.c_str(), "p1"));
 
     // Single parameter
     uri = "localhost:8080/rest/endpoint/someresource.json?p1=v1";
-    BOOST_CHECK_EQUAL(GetQueryParameterFromUri(uri.c_str(), "p1").value(), "v1");
-    BOOST_CHECK(!GetQueryParameterFromUri(uri.c_str(), "p2").has_value());
+    BOOST_CHECK_EQUAL(GetQueryParameterFromUri(uri.c_str(), "p1"), "v1");
+    BOOST_CHECK(!GetQueryParameterFromUri(uri.c_str(), "p2"));
 
     // Multiple parameters
     uri = "/rest/endpoint/someresource.json?p1=v1&p2=v2";
-    BOOST_CHECK_EQUAL(GetQueryParameterFromUri(uri.c_str(), "p1").value(), "v1");
-    BOOST_CHECK_EQUAL(GetQueryParameterFromUri(uri.c_str(), "p2").value(), "v2");
+    BOOST_CHECK_EQUAL(GetQueryParameterFromUri(uri.c_str(), "p1"), "v1");
+    BOOST_CHECK_EQUAL(GetQueryParameterFromUri(uri.c_str(), "p2"), "v2");
 
     // If the query string contains duplicate keys, the first value is returned
     uri = "/rest/endpoint/someresource.json?p1=v1&p1=v2";
-    BOOST_CHECK_EQUAL(GetQueryParameterFromUri(uri.c_str(), "p1").value(), "v1");
+    BOOST_CHECK_EQUAL(GetQueryParameterFromUri(uri.c_str(), "p1"), "v1");
 
     // Invalid query string syntax is the same as not having parameters
     uri = "/rest/endpoint/someresource.json&p1=v1&p2=v2";
-    BOOST_CHECK(!GetQueryParameterFromUri(uri.c_str(), "p1").has_value());
+    BOOST_CHECK(!GetQueryParameterFromUri(uri.c_str(), "p1"));
 
-    // URI with invalid characters (%) raises a runtime error regardless of which query parameter is queried
-    uri = "/rest/endpoint/someresource.json&p1=v1&p2=v2%";
-    BOOST_CHECK_EXCEPTION(GetQueryParameterFromUri(uri.c_str(), "p1"), std::runtime_error, HasReason("URI parsing failed, it likely contained RFC 3986 invalid characters"));
+    // Multiple parameters, some characters encoded
+    uri = "/rest/endpoint/someresource.json?p1=v1%20&p2=100%25";
+    BOOST_CHECK_EQUAL(GetQueryParameterFromUri(uri.c_str(), "p1"), "v1 ");
+    BOOST_CHECK_EQUAL(GetQueryParameterFromUri(uri.c_str(), "p2"), "100%");
+
+    // Encoded query delimiters are part of the parameter value, not structure.
+    uri = "/rest/endpoint/someresource.json?p=a%26b%3Dc%23frag&other=x";
+    BOOST_CHECK_EQUAL(GetQueryParameterFromUri(uri.c_str(), "p"), "a&b=c#frag");
+    BOOST_CHECK_EQUAL(GetQueryParameterFromUri(uri.c_str(), "other"), "x");
+
+    // An encoded question mark in the path does not introduce a query section.
+    uri = "/rest/endpoint/someresource.json%3Fp1%3Dv1%26p2%3D100%25";
+    BOOST_CHECK(!GetQueryParameterFromUri(uri.c_str(), "p1"));
+}
+
+BOOST_AUTO_TEST_CASE(test_query_parameters_libevent)
+{
+    test_query_parameters(http_libevent::GetQueryParameterFromUri);
+}
+
+BOOST_AUTO_TEST_CASE(test_query_parameters_bitcoin)
+{
+    test_query_parameters(http_bitcoin::GetQueryParameterFromUri);
 }
 
 BOOST_AUTO_TEST_CASE(http_headers_tests)
@@ -190,7 +230,9 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(req.LoadBody(reader));
         BOOST_CHECK_EQUAL(req.m_method, HTTPRequestMethod::POST);
+        BOOST_CHECK_EQUAL(req.GetRequestMethod(), HTTPRequestMethod::POST);
         BOOST_CHECK_EQUAL(req.m_target, "/");
+        BOOST_CHECK_EQUAL(req.GetURI(), "/");
         BOOST_CHECK_EQUAL(req.m_version.major, 1);
         BOOST_CHECK_EQUAL(req.m_version.minor, 1);
         BOOST_CHECK_EQUAL(req.m_headers.FindFirst("Host"), "127.0.0.1");
@@ -554,6 +596,7 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
             if (requests.size() == 1) {
                 // Check the received request
                 BOOST_CHECK_EQUAL(requests.front()->m_body, R"({"method":"getblockcount","params":[],"id":1})""\n");
+                BOOST_CHECK_EQUAL(requests.front()->GetPeer().ToStringAddrPort(), "5.5.5.5:6789");
 
                 // Inspect the connection pointed to from the request
                 client = requests.front()->m_client;
