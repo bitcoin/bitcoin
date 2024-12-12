@@ -232,7 +232,7 @@ static SECP256K1_INLINE void secp256k1_memclear(void *ptr, size_t len) {
      *    As best as we can tell, this is sufficient to break any optimisations that
      *    might try to eliminate "superfluous" memsets.
      * This method is used in memzero_explicit() the Linux kernel, too. Its advantage is that it
-     * is pretty efficient, because the compiler can still implement the memset() efficently,
+     * is pretty efficient, because the compiler can still implement the memset() efficiently,
      * just not remove it entirely. See "Dead Store Elimination (Still) Considered Harmful" by
      * Yang et al. (USENIX Security 2017) for more background.
      */
