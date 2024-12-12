@@ -159,15 +159,6 @@ SettingsValue GetSetting(const Settings& settings,
         // even though normal non-negated values there would be ignored.
         const bool never_ignore_negated_setting = span.last_negated();
 
-        // Weird behavior preserved for backwards compatibility: Take first
-        // assigned value instead of last. In general, later settings take
-        // precedence over early settings, but for backwards compatibility in
-        // the config file the precedence is reversed for all settings except
-        // chain type settings.
-        const bool reverse_precedence =
-            (source == Source::CONFIG_FILE_NETWORK_SECTION || source == Source::CONFIG_FILE_DEFAULT_SECTION) &&
-            !get_chain_type;
-
         // Weird behavior preserved for backwards compatibility: Negated
         // -regtest and -testnet arguments which you would expect to override
         // values set in the configuration file are currently accepted but
@@ -190,7 +181,7 @@ SettingsValue GetSetting(const Settings& settings,
         if (skip_negated_command_line && span.last_negated()) return;
 
         if (!span.empty()) {
-            result = reverse_precedence ? span.begin()[0] : span.end()[-1];
+            result = span.end()[-1];
             done = true;
         } else if (span.last_negated()) {
             result = false;
