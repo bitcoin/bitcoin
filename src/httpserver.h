@@ -275,6 +275,16 @@ public:
     bool LoadHeaders(LineReader& reader);
     bool LoadBody(LineReader& reader);
 
+    // These methods reimplement the API from http_libevent::HTTPRequest
+    // for downstream JSONRPC and REST modules.
+    std::string GetURI() const {return m_target;};
+    CService GetPeer() const;
+    HTTPRequestMethod GetRequestMethod() const {return m_method;};
+    std::optional<std::string> GetQueryParameter(const std::string& key) const;
+    std::pair<bool, std::string> GetHeader(const std::string& hdr) const;
+    std::string ReadBody() const {return m_body;};
+    void WriteHeader(const std::string& hdr, const std::string& value);
+
     // Response headers may be set in advance before response body is known
     HTTPHeaders m_response_headers;
     void WriteReply(HTTPStatusCode status, std::span<const std::byte> reply_body = {});
@@ -283,6 +293,8 @@ public:
         WriteReply(status, std::as_bytes(std::span{reply_body_view}));
     }
 };
+
+std::optional<std::string> GetQueryParameterFromUri(const std::string& uri, const std::string& key);
 
 class HTTPServer;
 
