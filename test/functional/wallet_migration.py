@@ -33,9 +33,6 @@ from test_framework.wallet_util import (
 
 
 class WalletMigrationTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
@@ -896,7 +893,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         shutil.copytree(self.old_node.wallets_path / "failed", self.master_node.wallets_path / "failed")
         assert_raises_rpc_error(-4, "Failed to create database", self.master_node.migratewallet, "failed")
 
-        assert "failed" in self.master_node.listwallets()
+        assert "failed" not in self.master_node.listwallets()
         assert "failed_watchonly" not in self.master_node.listwallets()
         assert "failed_solvables" not in self.master_node.listwallets()
 

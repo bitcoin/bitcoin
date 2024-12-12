@@ -27,9 +27,6 @@ OUT_OF_RANGE = "Amount out of range"
 
 
 class WalletTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 4
         # whitelist peers to speed up tx relay / mempool sync
@@ -439,125 +436,6 @@ class WalletTest(BitcoinTestFramework):
         # This will raise an exception since generate does not accept a string
         assert_raises_rpc_error(-3, "not of expected type number", self.generate, self.nodes[0], "2")
 
-        if not self.options.descriptors:
-
-            # This will raise an exception for the invalid private key format
-            assert_raises_rpc_error(-5, "Invalid private key encoding", self.nodes[0].importprivkey, "invalid")
-
-            # This will raise an exception for importing an address with the PS2H flag
-            temp_address = self.nodes[1].getnewaddress("", "p2sh-segwit")
-            assert_raises_rpc_error(-5, "Cannot use the p2sh flag with an address - use a script instead", self.nodes[0].importaddress, temp_address, "label", False, True)
-
-            # This will raise an exception for attempting to dump the private key of an address you do not own
-            assert_raises_rpc_error(-3, "Address does not refer to a key", self.nodes[0].dumpprivkey, temp_address)
-
-            # This will raise an exception for attempting to get the private key of an invalid Bitcoin address
-            assert_raises_rpc_error(-5, "Invalid Bitcoin address", self.nodes[0].dumpprivkey, "invalid")
-
-            # This will raise an exception for attempting to set a label for an invalid Bitcoin address
-            assert_raises_rpc_error(-5, "Invalid Bitcoin address", self.nodes[0].setlabel, "invalid address", "label")
-
-            # This will raise an exception for importing an invalid address
-            assert_raises_rpc_error(-5, "Invalid Bitcoin address or script", self.nodes[0].importaddress, "invalid")
-
-            # This will raise an exception for attempting to import a pubkey that isn't in hex
-            assert_raises_rpc_error(-5, 'Pubkey "not hex" must be a hex string', self.nodes[0].importpubkey, "not hex")
-
-            # This will raise exceptions for importing a pubkeys with invalid length / invalid coordinates
-            too_short_pubkey = "5361746f736869204e616b616d6f746f"
-            assert_raises_rpc_error(-5, f'Pubkey "{too_short_pubkey}" must have a length of either 33 or 65 bytes', self.nodes[0].importpubkey, too_short_pubkey)
-            not_on_curve_pubkey = bytes([4] + [0]*64).hex()  # pubkey with coordinates (0,0) is not on curve
-            assert_raises_rpc_error(-5, f'Pubkey "{not_on_curve_pubkey}" must be cryptographically valid', self.nodes[0].importpubkey, not_on_curve_pubkey)
-
-            # Bech32m addresses cannot be imported into a legacy wallet
-            assert_raises_rpc_error(-5, "Bech32m addresses cannot be imported into legacy wallets", self.nodes[0].importaddress, "bcrt1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqc8gma6")
-
-            # Import address and private key to check correct behavior of spendable unspents
-            # 1. Send some coins to generate new UTXO
-            address_to_import = self.nodes[2].getnewaddress()
-            utxo = self.create_outpoints(self.nodes[0], outputs=[{address_to_import: 1}])[0]
-            self.sync_mempools(self.nodes[0:3])
-            self.nodes[2].lockunspent(False, [utxo])
-            self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))
-
-            self.log.info("Test sendtoaddress with fee_rate param (explicit fee rate in sat/vB)")
-            prebalance = self.nodes[2].getbalance()
-            assert prebalance > 2
-            address = self.nodes[1].getnewaddress()
-            amount = 3
-            fee_rate_sat_vb = 2
-            fee_rate_btc_kvb = fee_rate_sat_vb * 1e3 / 1e8
-            # Test passing fee_rate as an integer
-            txid = self.nodes[2].sendtoaddress(address=address, amount=amount, fee_rate=fee_rate_sat_vb)
-            tx_size = self.get_vsize(self.nodes[2].gettransaction(txid)['hex'])
-            self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))
-            postbalance = self.nodes[2].getbalance()
-            fee = prebalance - postbalance - Decimal(amount)
-            assert_fee_amount(fee, tx_size, Decimal(fee_rate_btc_kvb))
-
-            prebalance = self.nodes[2].getbalance()
-            amount = Decimal("0.001")
-            fee_rate_sat_vb = 1.23
-            fee_rate_btc_kvb = fee_rate_sat_vb * 1e3 / 1e8
-            # Test passing fee_rate as a string
-            txid = self.nodes[2].sendtoaddress(address=address, amount=amount, fee_rate=str(fee_rate_sat_vb))
-            tx_size = self.get_vsize(self.nodes[2].gettransaction(txid)['hex'])
-            self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))
-            postbalance = self.nodes[2].getbalance()
-            fee = prebalance - postbalance - amount
-            assert_fee_amount(fee, tx_size, Decimal(fee_rate_btc_kvb))
-
-            # Test setting explicit fee rate just below the minimum.
-            self.log.info("Test sendtoaddress raises 'fee rate too low' if fee_rate of 0.99999999 is passed")
-            assert_raises_rpc_error(-6, "Fee rate (0.999 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)",
-                self.nodes[2].sendtoaddress, address=address, amount=1, fee_rate=0.999)
-
-            self.log.info("Test sendtoaddress raises if an invalid fee_rate is passed")
-            # Test fee_rate with zero values.
-            msg = "Fee rate (0.000 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)"
-            for zero_value in [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]:
-                assert_raises_rpc_error(-6, msg, self.nodes[2].sendtoaddress, address=address, amount=1, fee_rate=zero_value)
-            msg = "Invalid amount"
-            # Test fee_rate values that don't pass fixed-point parsing checks.
-            for invalid_value in ["", 0.000000001, 1e-09, 1.111111111, 1111111111111111, "31.999999999999999999999"]:
-                assert_raises_rpc_error(-3, msg, self.nodes[2].sendtoaddress, address=address, amount=1.0, fee_rate=invalid_value)
-            # Test fee_rate values that cannot be represented in sat/vB.
-            for invalid_value in [0.0001, 0.00000001, 0.00099999, 31.99999999]:
-                assert_raises_rpc_error(-3, msg, self.nodes[2].sendtoaddress, address=address, amount=10, fee_rate=invalid_value)
-            # Test fee_rate out of range (negative number).
-            assert_raises_rpc_error(-3, OUT_OF_RANGE, self.nodes[2].sendtoaddress, address=address, amount=1.0, fee_rate=-1)
-            # Test type error.
-            for invalid_value in [True, {"foo": "bar"}]:
-                assert_raises_rpc_error(-3, NOT_A_NUMBER_OR_STRING, self.nodes[2].sendtoaddress, address=address, amount=1.0, fee_rate=invalid_value)
-
-            self.log.info("Test sendtoaddress raises if an invalid conf_target or estimate_mode is passed")
-            for target, mode in product([-1, 0, 1009], ["economical", "conservative"]):
-                assert_raises_rpc_error(-8, "Invalid conf_target, must be between 1 and 1008",  # max value of 1008 per src/policy/fees.h
-                    self.nodes[2].sendtoaddress, address=address, amount=1, conf_target=target, estimate_mode=mode)
-            for target, mode in product([-1, 0], ["btc/kb", "sat/b"]):
-                assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"',
-                    self.nodes[2].sendtoaddress, address=address, amount=1, conf_target=target, estimate_mode=mode)
-
-            # 2. Import address from node2 to node1
-            self.nodes[1].importaddress(address_to_import)
-
-            # 3. Validate that the imported address is watch-only on node1
-            assert self.nodes[1].getaddressinfo(address_to_import)["iswatchonly"]
-
-            # 4. Check that the unspents after import are not spendable
-            assert_array_result(self.nodes[1].listunspent(),
-                                {"address": address_to_import},
-                                {"spendable": False})
-
-            # 5. Import private key of the previously imported address on node1
-            priv_key = self.nodes[2].dumpprivkey(address_to_import)
-            self.nodes[1].importprivkey(priv_key)
-
-            # 6. Check that the unspents are now spendable on node1
-            assert_array_result(self.nodes[1].listunspent(),
-                                {"address": address_to_import},
-                                {"spendable": True})
-
         # Mine a block from node0 to an address from node1
         coinbase_addr = self.nodes[1].getnewaddress()
         block_hash = self.generatetoaddress(self.nodes[0], 1, coinbase_addr, sync_fun=lambda: self.sync_all(self.nodes[0:3]))[0]
@@ -716,38 +594,37 @@ class WalletTest(BitcoinTestFramework):
         txid_feeReason_four = self.nodes[2].sendmany(dummy='', amounts={address: 5}, verbose=False)
         assert_equal(self.nodes[2].gettransaction(txid_feeReason_four)['txid'], txid_feeReason_four)
 
-        if self.options.descriptors:
-            self.log.info("Testing 'listunspent' outputs the parent descriptor(s) of coins")
-            # Create two multisig descriptors, and send a UTxO each.
-            multi_a = descsum_create("wsh(multi(1,tpubD6NzVbkrYhZ4YBNjUo96Jxd1u4XKWgnoc7LsA1jz3Yc2NiDbhtfBhaBtemB73n9V5vtJHwU6FVXwggTbeoJWQ1rzdz8ysDuQkpnaHyvnvzR/*,tpubD6NzVbkrYhZ4YHdDGMAYGaWxMSC1B6tPRTHuU5t3BcfcS3nrF523iFm5waFd1pP3ZvJt4Jr8XmCmsTBNx5suhcSgtzpGjGMASR3tau1hJz4/*))")
-            multi_b = descsum_create("wsh(multi(1,tpubD6NzVbkrYhZ4YHdDGMAYGaWxMSC1B6tPRTHuU5t3BcfcS3nrF523iFm5waFd1pP3ZvJt4Jr8XmCmsTBNx5suhcSgtzpGjGMASR3tau1hJz4/*,tpubD6NzVbkrYhZ4Y2RLiuEzNQkntjmsLpPYDm3LTRBYynUQtDtpzeUKAcb9sYthSFL3YR74cdFgF5mW8yKxv2W2CWuZDFR2dUpE5PF9kbrVXNZ/*))")
-            addr_a = self.nodes[0].deriveaddresses(multi_a, 0)[0]
-            addr_b = self.nodes[0].deriveaddresses(multi_b, 0)[0]
-            txid_a = self.nodes[0].sendtoaddress(addr_a, 0.01)
-            txid_b = self.nodes[0].sendtoaddress(addr_b, 0.01)
-            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-            # Now import the descriptors, make sure we can identify on which descriptor each coin was received.
-            self.nodes[0].createwallet(wallet_name="wo", descriptors=True, disable_private_keys=True)
-            wo_wallet = self.nodes[0].get_wallet_rpc("wo")
-            wo_wallet.importdescriptors([
-                {
-                    "desc": multi_a,
-                    "active": False,
-                    "timestamp": "now",
-                },
-                {
-                    "desc": multi_b,
-                    "active": False,
-                    "timestamp": "now",
-                },
-            ])
-            coins = wo_wallet.listunspent(minconf=0)
-            assert_equal(len(coins), 2)
-            coin_a = next(c for c in coins if c["txid"] == txid_a)
-            assert_equal(coin_a["parent_descs"][0], multi_a)
-            coin_b = next(c for c in coins if c["txid"] == txid_b)
-            assert_equal(coin_b["parent_descs"][0], multi_b)
-            self.nodes[0].unloadwallet("wo")
+        self.log.info("Testing 'listunspent' outputs the parent descriptor(s) of coins")
+        # Create two multisig descriptors, and send a UTxO each.
+        multi_a = descsum_create("wsh(multi(1,tpubD6NzVbkrYhZ4YBNjUo96Jxd1u4XKWgnoc7LsA1jz3Yc2NiDbhtfBhaBtemB73n9V5vtJHwU6FVXwggTbeoJWQ1rzdz8ysDuQkpnaHyvnvzR/*,tpubD6NzVbkrYhZ4YHdDGMAYGaWxMSC1B6tPRTHuU5t3BcfcS3nrF523iFm5waFd1pP3ZvJt4Jr8XmCmsTBNx5suhcSgtzpGjGMASR3tau1hJz4/*))")
+        multi_b = descsum_create("wsh(multi(1,tpubD6NzVbkrYhZ4YHdDGMAYGaWxMSC1B6tPRTHuU5t3BcfcS3nrF523iFm5waFd1pP3ZvJt4Jr8XmCmsTBNx5suhcSgtzpGjGMASR3tau1hJz4/*,tpubD6NzVbkrYhZ4Y2RLiuEzNQkntjmsLpPYDm3LTRBYynUQtDtpzeUKAcb9sYthSFL3YR74cdFgF5mW8yKxv2W2CWuZDFR2dUpE5PF9kbrVXNZ/*))")
+        addr_a = self.nodes[0].deriveaddresses(multi_a, 0)[0]
+        addr_b = self.nodes[0].deriveaddresses(multi_b, 0)[0]
+        txid_a = self.nodes[0].sendtoaddress(addr_a, 0.01)
+        txid_b = self.nodes[0].sendtoaddress(addr_b, 0.01)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        # Now import the descriptors, make sure we can identify on which descriptor each coin was received.
+        self.nodes[0].createwallet(wallet_name="wo", descriptors=True, disable_private_keys=True)
+        wo_wallet = self.nodes[0].get_wallet_rpc("wo")
+        wo_wallet.importdescriptors([
+            {
+                "desc": multi_a,
+                "active": False,
+                "timestamp": "now",
+            },
+            {
+                "desc": multi_b,
+                "active": False,
+                "timestamp": "now",
+            },
+        ])
+        coins = wo_wallet.listunspent(minconf=0)
+        assert_equal(len(coins), 2)
+        coin_a = next(c for c in coins if c["txid"] == txid_a)
+        assert_equal(coin_a["parent_descs"][0], multi_a)
+        coin_b = next(c for c in coins if c["txid"] == txid_b)
+        assert_equal(coin_b["parent_descs"][0], multi_b)
+        self.nodes[0].unloadwallet("wo")
 
         self.log.info("Test -spendzeroconfchange")
         self.restart_node(0, ["-spendzeroconfchange=0"])
@@ -791,8 +668,6 @@ class WalletTest(BitcoinTestFramework):
         self.test_chain_listunspent()
 
     def test_chain_listunspent(self):
-        if not self.options.descriptors:
-            return
         self.wallet = MiniWallet(self.nodes[0])
         self.nodes[0].get_wallet_rpc(self.default_wallet_name).sendtoaddress(self.wallet.get_address(), "5")
         self.generate(self.wallet, 1, sync_fun=self.no_op)

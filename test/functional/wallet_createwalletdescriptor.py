@@ -14,9 +14,6 @@ from test_framework.wallet_util import WalletUnlock
 
 
 class WalletCreateDescriptorTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser, descriptors=True, legacy=False)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

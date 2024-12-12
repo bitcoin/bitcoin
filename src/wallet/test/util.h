@@ -5,8 +5,6 @@
 #ifndef BITCOIN_WALLET_TEST_UTIL_H
 #define BITCOIN_WALLET_TEST_UTIL_H
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
-
 #include <addresstype.h>
 #include <wallet/db.h>
 
@@ -26,12 +24,7 @@ class WalletDatabase;
 struct WalletContext;
 
 static const DatabaseFormat DATABASE_FORMATS[] = {
-#ifdef USE_SQLITE
        DatabaseFormat::SQLITE,
-#endif
-#ifdef USE_BDB
-       DatabaseFormat::BERKELEY,
-#endif
 };
 
 const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj";
