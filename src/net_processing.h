@@ -123,6 +123,14 @@ public:
      */
     virtual void CheckForStaleTipAndEvictPeers() = 0;
 
+    /**
+     * We should have outbound peers with broad-enough mempools (comparable to ours) to accept
+     * transactions constructed according to our mempool. Otherwise, the lower-fee transactions
+     * will never be relayed to the network.
+     */
+    virtual void CheckForLimitedMempoolAndEvictPeers() = 0;
+
+
     /** Process a single message from a peer. Public for fuzz testing */
     virtual void ProcessMessage(CNode& pfrom, const std::string& msg_type, DataStream& vRecv,
                                 const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
