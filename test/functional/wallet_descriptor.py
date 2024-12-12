@@ -22,9 +22,6 @@ from test_framework.wallet_util import WalletUnlock
 
 
 class WalletDescriptorTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser, legacy=False)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
@@ -33,7 +30,6 @@ class WalletDescriptorTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
-        self.skip_if_no_sqlite()
         self.skip_if_no_py_sqlite3()
 
     def test_concurrent_writes(self):
@@ -72,15 +68,6 @@ class WalletDescriptorTest(BitcoinTestFramework):
         assert_equal(cache_records, 1000)
 
     def run_test(self):
-        if self.is_bdb_compiled():
-            # Make a legacy wallet and check it is BDB
-            self.nodes[0].createwallet(wallet_name="legacy1", descriptors=False)
-            wallet_info = self.nodes[0].getwalletinfo()
-            assert_equal(wallet_info['format'], 'bdb')
-            self.nodes[0].unloadwallet("legacy1")
-        else:
-            self.log.warning("Skipping BDB test")
-
         # Make a descriptor wallet
         self.log.info("Making a descriptor wallet")
         self.nodes[0].createwallet(wallet_name="desc1", descriptors=True)
@@ -148,18 +135,6 @@ class WalletDescriptorTest(BitcoinTestFramework):
         self.log.info("Test sending and receiving")
         addr = recv_wrpc.getnewaddress()
         send_wrpc.sendtoaddress(addr, 10)
-
-        # Make sure things are disabled
-        self.log.info("Test disabled RPCs")
-        assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.importprivkey, "cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW")
-        assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.importpubkey, send_wrpc.getaddressinfo(send_wrpc.getnewaddress())["pubkey"])
-        assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.importaddress, recv_wrpc.getnewaddress())
-        assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.importmulti, [])
-        assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.addmultisigaddress, 1, [recv_wrpc.getnewaddress()])
-        assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.dumpprivkey, recv_wrpc.getnewaddress())
-        assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.dumpwallet, 'wallet.dump')
-        assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.importwallet, 'wallet.dump')
-        assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.sethdseed)
 
         self.log.info("Test encryption")
         # Get the master fingerprint before encrypt
