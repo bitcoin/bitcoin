@@ -73,7 +73,7 @@ builder-image:
       - depends/built
       - depends/sdk-sources
   artifacts:
-    name: depends
+    name: depends-${CI_JOB_NAME}
     when: on_success
     paths:
       - depends/$HOST
@@ -130,7 +130,7 @@ builder-image:
     paths:
       - cache/ccache
   artifacts:
-    name: binaries
+    name: build-${BUILD_TARGET}
     when: always
     paths:
       - build-ci
