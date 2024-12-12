@@ -50,7 +50,37 @@ BOOST_FIXTURE_TEST_SUITE(httpserver_tests, HTTPTestingSetup)
 
 BOOST_AUTO_TEST_CASE(test_query_parameters)
 {
-    using http_libevent::GetQueryParameterFromUri;
+    // The legacy code that relied on libevent couldn't handle an invalid URI encoding.
+    // The new code is more tolerant and so we expect a difference in behavior.
+    // Re: libevent evhttp_uri_parse() see:
+    //   "bugfix: rest: avoid segfault for invalid URI" https://github.com/bitcoin/bitcoin/pull/27468
+    //   "httpserver, rest: improving URI validation" https://github.com/bitcoin/bitcoin/pull/27253
+    // Re: More tolerant URI decoding see:
+    //   "refactor: Use our own implementation of urlDecode" https://github.com/bitcoin/bitcoin/pull/29904
+
+    std::string uri {};
+    // This is an invalid URI because it contains a % that is not followed by two hex digits
+    uri = "/rest/endpoint/someresource.json?p1=v1&p2=v2%";
+    // Old behavior: URI with invalid characters (%) raises a runtime error regardless of which query parameter is queried
+    BOOST_CHECK_EXCEPTION(http_libevent::GetQueryParameterFromUri(uri.c_str(), "p1"), std::runtime_error, HasReason("URI parsing failed, it likely contained RFC 3986 invalid characters"));
+    // New behavior: Tolerate as much as we can even
+    BOOST_CHECK_EQUAL(http_bitcoin::GetQueryParameterFromUri(uri.c_str(), "p1").value(), "v1");
+    BOOST_CHECK_EQUAL(http_bitcoin::GetQueryParameterFromUri(uri.c_str(), "p2").value(), "v2%");
+
+    // This is a valid URI because the %XX encoding is correct: `?p1=v1&p2=100%`
+    uri = "/rest/endpoint/someresource.json%3Fp1%3Dv1%26p2%3D100%25";
+    // Old behavior: libevent does not decode the URI before parsing, so it does not detect or return the query
+    //               (libevent will parse the entire argument string as the uri path)
+    BOOST_CHECK(!http_libevent::GetQueryParameterFromUri(uri.c_str(), "p1").has_value());
+    BOOST_CHECK(!http_libevent::GetQueryParameterFromUri(uri.c_str(), "p2").has_value());
+    // New behavior: Decode before parsing the URI so reserved characters like ? & = are interpreted correctly
+    BOOST_CHECK_EQUAL(http_bitcoin::GetQueryParameterFromUri(uri.c_str(), "p1").value(), "v1");
+    BOOST_CHECK_EQUAL(http_bitcoin::GetQueryParameterFromUri(uri.c_str(), "p2").value(), "100%");
+}
+
+// Ensure new behavior matches old behavior
+template <typename func>
+void test_query_parameters(func GetQueryParameterFromUri) {
     std::string uri {};
 
     // No parameters
@@ -75,9 +105,20 @@ BOOST_AUTO_TEST_CASE(test_query_parameters)
     uri = "/rest/endpoint/someresource.json&p1=v1&p2=v2";
     BOOST_CHECK(!GetQueryParameterFromUri(uri.c_str(), "p1").has_value());
 
-    // URI with invalid characters (%) raises a runtime error regardless of which query parameter is queried
-    uri = "/rest/endpoint/someresource.json&p1=v1&p2=v2%";
-    BOOST_CHECK_EXCEPTION(GetQueryParameterFromUri(uri.c_str(), "p1"), std::runtime_error, HasReason("URI parsing failed, it likely contained RFC 3986 invalid characters"));
+    // Multiple parameters, some characters encoded
+    uri = "/rest/endpoint/someresource.json?p1=v1%20&p2=100%25";
+    BOOST_CHECK_EQUAL(GetQueryParameterFromUri(uri.c_str(), "p1").value(), "v1 ");
+    BOOST_CHECK_EQUAL(GetQueryParameterFromUri(uri.c_str(), "p2").value(), "100%");
+}
+
+BOOST_AUTO_TEST_CASE(test_query_parameters_libevent)
+{
+    test_query_parameters(http_libevent::GetQueryParameterFromUri);
+}
+
+BOOST_AUTO_TEST_CASE(test_query_parameters_bitcoin)
+{
+    test_query_parameters(http_bitcoin::GetQueryParameterFromUri);
 }
 
 BOOST_AUTO_TEST_CASE(http_headers_tests)
@@ -167,7 +208,9 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(req.LoadBody(reader));
         BOOST_CHECK_EQUAL(req.m_method, "POST");
+        BOOST_CHECK_EQUAL(req.GetRequestMethod(), HTTPRequestMethod::POST);
         BOOST_CHECK_EQUAL(req.m_target, "/");
+        BOOST_CHECK_EQUAL(req.GetURI(), "/");
         BOOST_CHECK_EQUAL(req.m_version_major, 1);
         BOOST_CHECK_EQUAL(req.m_version_minor, 1);
         BOOST_CHECK_EQUAL(req.m_headers.Find("Host").value(), "127.0.0.1");
@@ -355,6 +398,7 @@ BOOST_AUTO_TEST_CASE(http_client_server_tests)
 
             // Check the received request
             BOOST_CHECK_EQUAL(requests.front()->m_body, "{\"method\":\"getblockcount\",\"params\":[],\"id\":1}\n");
+            BOOST_CHECK_EQUAL(requests.front()->GetPeer().ToStringAddrPort(), "5.5.5.5:6789");
 
             // Respond to request
             requests.front()->WriteReply(HTTP_OK, "874140\n");
