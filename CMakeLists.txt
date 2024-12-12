@@ -297,6 +297,14 @@ if(WIN32)
     # As a best effort, target Windows 8.
     try_append_linker_flag("-Wl,--major-subsystem-version,6" TARGET core_interface)
     try_append_linker_flag("-Wl,--minor-subsystem-version,2" TARGET core_interface)
+
+
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+      # Workaround producing large object files, which cannot be handled by the assembler.
+      # More likely to happen with no, or lower levels of optimsation.
+      # See discussion in https://github.com/bitcoin/bitcoin/issues/28109.
+      try_append_cxx_flags("-Wa,-mbig-obj" TARGET core_interface SKIP_LINK)
+    endif()
   endif()
 endif()
 
