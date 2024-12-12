@@ -25,6 +25,7 @@ struct TransactionStatus {
         Confirmed,          /**< Have 6 or more confirmations (normal tx) or fully mature (mined tx) **/
         /// Normal (sent/received) transactions
         Unconfirmed,        /**< Not yet mined into a block **/
+        AssumedConfirmed,   /**< Confirmed, but background validation hasn't finished  */
         Confirming,         /**< Confirmed, but waiting for the recommended number of confirmations **/
         Conflicted,         /**< Conflicts with other transaction or mempool **/
         Abandoned,          /**< Abandoned from the wallet **/
