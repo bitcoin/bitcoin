@@ -11,6 +11,7 @@
 #include <common/system.h>
 #include <compat/compat.h>
 #include <compat/stdin.h>
+#include <logging.h>
 #include <policy/feerate.h>
 #include <rpc/client.h>
 #include <rpc/mining.h>
@@ -1331,6 +1332,7 @@ MAIN_FUNCTION
     common::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();
 #endif
+    BCLog::Logger logger;
     SetupEnvironment();
     if (!SetupNetworking()) {
         tfm::format(std::cerr, "Error: Initializing networking failed\n");

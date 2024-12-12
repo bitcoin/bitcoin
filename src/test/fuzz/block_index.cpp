@@ -14,7 +14,7 @@
 
 namespace {
 
-const BasicTestingSetup* g_setup;
+BasicTestingSetup* g_setup;
 
 // Hardcoded block hash and nBits to make sure the blocks we store pass the pow check.
 uint256 g_block_hash;
@@ -46,7 +46,7 @@ CBlockHeader ConsumeBlockHeader(FuzzedDataProvider& provider)
 
 void init_block_index()
 {
-    static const auto testing_setup = MakeNoLogFileContext<>(ChainType::MAIN);
+    static const auto testing_setup = MakeNoLogFileContext<BasicTestingSetup>(ChainType::MAIN);
     g_setup = testing_setup.get();
     g_block_hash = Params().GenesisBlock().GetHash();
 }
@@ -54,7 +54,7 @@ void init_block_index()
 FUZZ_TARGET(block_index, .init = init_block_index)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    auto block_index = kernel::BlockTreeDB(DBParams{
+    auto block_index = kernel::BlockTreeDB(g_setup->m_logger, DBParams{
         .path = "", // Memory only.
         .cache_bytes = 1 << 20, // 1MB.
         .memory_only = true,
