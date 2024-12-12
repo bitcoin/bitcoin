@@ -1799,7 +1799,7 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
                 keyid_it++;
                 continue;
             }
-            if (m_hd_chain.seed_id == meta.hd_seed_id || m_inactive_hd_chains.count(meta.hd_seed_id) > 0) {
+            if (!meta.hd_seed_id.IsNull() && (m_hd_chain.seed_id == meta.hd_seed_id || m_inactive_hd_chains.count(meta.hd_seed_id) > 0)) {
                 keyid_it = keyids.erase(keyid_it);
                 continue;
             }
