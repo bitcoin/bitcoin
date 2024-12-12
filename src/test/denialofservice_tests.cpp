@@ -450,6 +450,8 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     peerLogic->Misbehaving(dummyNode.GetId(), DISCOURAGEMENT_THRESHOLD);
     BOOST_CHECK(peerLogic->SendMessages(&dummyNode));
     BOOST_CHECK(banman->IsDiscouraged(addr));
+    banman->ClearDiscouraged();
+    BOOST_CHECK(!banman->IsDiscouraged(addr));
 
     peerLogic->FinalizeNode(dummyNode);
 }
