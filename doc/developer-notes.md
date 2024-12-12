@@ -1468,6 +1468,22 @@ A few guidelines for introducing and reviewing new RPC interfaces:
   - *Rationale*: JSON strings are Unicode strings, not byte strings, and
     RFC8259 requires JSON to be encoded as UTF-8.
 
+A few guidelines for modifying and reviewing existing RPC interfaces:
+
+- If an RPC is being changed in a backward-incompatible way, add an associated `-deprecatedrpc=` option to retain previous RPC behavior during the deprecation period. Backward-incompatible changes include: data types changes (e.g. from `{"result":{"warnings":""}}` to `{"result":{"warnings":[]}}`, changing a value from a string to a number, etc.), logical meaning changes of a value, or key name changes (e.g. `{"result":{"warning":""}}` to `{"result":{"warnings":""}}`). Adding a key to an object is generally considered backwards compatible. A release note should be included that refers to RPC help for details of feature deprecation and re-enabling previous behavior. Example RPC help:
+    ```c++
+        (IsDeprecatedRPCEnabled("warnings") ?
+            RPCResult{RPCResult::Type::STR, "warnings", "any network and blockchain warnings (DEPRECATED)"} :
+            RPCResult{RPCResult::Type::ARR, "warnings", "any network and blockchain warnings (run with `-deprecatedrpc=warnings` to return the latest warning as a single string)",
+            {
+                {RPCResult::Type::STR, "", "warning"},
+            }
+            }
+        ),
+    ```
+
+  - *Rationale*: Changes in RPC JSON structure can break downstream application compatibility. Implementation of `deprecatedrpc` provides a grace-period for downstream applications to migrate. Release notes provide notification to downstream users.
+
 Internal interface guidelines
 -----------------------------
 
