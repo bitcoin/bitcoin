@@ -7,6 +7,7 @@
 #include <chainparamsbase.h>
 #include <common/args.h>
 #include <common/messages.h>
+#include <common/url.h>
 #include <compat/compat.h>
 #include <logging.h>
 #include <netbase.h>
@@ -939,6 +940,69 @@ bool HTTPRequest::LoadBody(LineReader& reader)
 
         return true;
     }
+}
+
+CService HTTPRequest::GetPeer() const
+{
+    return m_client->m_addr;
+}
+
+HTTPRequestMethod HTTPRequest::GetRequestMethod() const
+{
+    if (m_method == "GET") return HTTPRequestMethod::GET;
+    if (m_method == "POST") return HTTPRequestMethod::POST;
+    if (m_method == "HEAD") return HTTPRequestMethod::HEAD;
+    if (m_method == "PUT") return HTTPRequestMethod::PUT;
+    return HTTPRequestMethod::UNKNOWN;
+}
+
+std::optional<std::string> HTTPRequest::GetQueryParameter(const std::string& key) const
+{
+    return GetQueryParameterFromUri(GetURI(), key);
+}
+
+// See libevent http.c evhttp_parse_query_impl()
+// and https://www.rfc-editor.org/rfc/rfc3986#section-3.4
+std::optional<std::string> GetQueryParameterFromUri(const std::string& uri, const std::string& key)
+{
+    // Handle %XX encoding
+    std::string decoded_uri{UrlDecode(uri)};
+
+    // find query in URI
+    size_t start = decoded_uri.find('?');
+    if (start == std::string::npos) return std::nullopt;
+    size_t end = decoded_uri.find('#', start);
+    if (end == std::string::npos) {
+        end = decoded_uri.length();
+    }
+    const std::string query{decoded_uri.substr(start + 1, end - start - 1)};
+    // find requested parameter in query
+    const std::vector<std::string> params{SplitString(query, "&")};
+    for (const std::string& param : params) {
+        size_t delim = param.find('=');
+        if (key == param.substr(0, delim)) {
+            if (delim == std::string::npos) {
+                return "";
+            } else {
+                return param.substr(delim + 1);
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+std::pair<bool, std::string> HTTPRequest::GetHeader(const std::string& hdr) const
+{
+    std::optional<std::string> found{m_headers.Find(hdr)};
+    if (found.has_value()) {
+        return std::make_pair(true, found.value());
+    } else
+        return std::make_pair(false, "");
+}
+
+void HTTPRequest::WriteHeader(const std::string& hdr, const std::string& value)
+{
+    m_response_headers.Write(hdr, value);
 }
 
 void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> reply_body)
