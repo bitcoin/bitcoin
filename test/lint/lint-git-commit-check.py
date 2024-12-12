@@ -36,10 +36,10 @@ def main():
     assert os.getenv("COMMIT_RANGE")  # E.g. COMMIT_RANGE='HEAD~n..HEAD'
     commit_range = os.getenv("COMMIT_RANGE")
 
-    commit_hashes = check_output(["git", "log", commit_range, "--format=%H"], text=True, encoding="utf8").splitlines()
+    commit_hashes = check_output(["git", "-c", "log.showSignature=false", "log", commit_range, "--format=%H"], text=True, encoding="utf8").splitlines()
 
     for hash in commit_hashes:
-        commit_info = check_output(["git", "log", "--format=%B", "-n", "1", hash], text=True, encoding="utf8").splitlines()
+        commit_info = check_output(["git", "-c", "log.showSignature=false", "log", "--format=%B", "-n", "1", hash], text=True, encoding="utf8").splitlines()
         if len(commit_info) >= 2:
             if commit_info[1]:
                 print(f"The subject line of commit hash {hash} is followed by a non-empty line. Subject lines should always be followed by a blank line.")
