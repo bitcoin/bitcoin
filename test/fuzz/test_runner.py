@@ -278,6 +278,7 @@ def generate_corpus(*, fuzz_pool, src_dir, fuzz_bin, corpus_dir, targets):
         use_value_profile = int(random.random() < .3)
         command = [
             fuzz_bin,
+            "-detect_leaks=0",  # Disable leak detection on every iteration, it is still run on shutdown.
             "-rss_limit_mb=8000",
             "-max_total_time=6000",
             "-reload=0",
