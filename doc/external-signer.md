@@ -37,7 +37,7 @@ The master key fingerprint is used to identify a device.
 Create a wallet, this automatically imports the public keys:
 
 ```sh
-$ bitcoin-cli createwallet "hww" true true "" true true true
+$ bitcoin-cli -named createwallet wallet_name="hww" disable_private_keys=true passphrase="" descriptors=true external_signer=true
 ```
 
 ### Verify an address
