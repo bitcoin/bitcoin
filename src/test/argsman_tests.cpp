@@ -24,6 +24,384 @@ using util::ToString;
 
 BOOST_FIXTURE_TEST_SUITE(argsman_tests, BasicTestingSetup)
 
+//! Example code showing how to declare and parse options using ArgsManager flags.
+namespace example_options {
+struct Address {
+    std::string host;
+    uint16_t port;
+};
+
+struct RescanOptions {
+    std::optional<int> start_height;
+};
+
+struct Options {
+    //! Whether to use UPnP to map the listening port.
+    //! Example of a boolean option defaulting to false.
+    bool enable_upnp{false};
+
+    //! Whether to listen for RPC commands.
+    //! Example of a boolean option defaulting to true.
+    bool enable_rpc_server{true};
+
+    //! Whether to look for peers with DNS lookup.
+    //! Example of a boolean option without a default value. (If unspecified,
+    //! default behavior depends on other options.)
+    std::optional<bool> enable_dns_seed;
+
+    //! Amount of time to ban peers
+    //! Example of a simple integer setting.
+    std::chrono::seconds bantime{86400};
+
+    //! Equivalent bytes per sigop.
+    //! Example of a where negation should be disallowed.
+    int bytes_per_sigop{20};
+
+    //! Hash of block to assume valid and skip script verification.
+    //! Example of a simple string option.
+    std::optional<uint256> assumevalid;
+
+    //! Path to log file
+    //! Example of a simple string option with a default value.
+    fs::path log_file{"debug.log"};
+
+    //! Chain name.
+    //! Example of a simple string option that canoot be negated
+    ChainType chain{ChainType::MAIN};
+
+    //! Whether rescan wallets starting from an optional height.
+    //! Example of an imperative integer setting that uses ALLOW_BOOL flag.
+    std::optional<RescanOptions> wallet_rescan;
+
+    //! Whether to bind to an IPC socket. False to not bind, true to bind to the
+    //! default path, and string to bind to the specified path.
+    //! Example of an imperative string setting that uses ALLOW_BOOL flag.
+    std::variant<bool, std::string> ipc_bind{false};
+
+    //! Paths of block files to load before starting.
+    //! Example of a simple string list setting.
+    std::vector<fs::path> load_block;
+
+    //! Addresses to listen on.
+    //! Example of a list setting where negating the setting is different than
+    //! not specifying it.
+    std::optional<std::vector<Address>> listen_addresses;
+};
+
+void RegisterArgs(ArgsManager& args)
+{
+    args.AddArg("-upnp", "",          ArgsManager::ALLOW_BOOL, {});
+    args.AddArg("-rpcserver", "",     ArgsManager::ALLOW_BOOL, {});
+    args.AddArg("-dnsseed", "",       ArgsManager::ALLOW_BOOL, {});
+    args.AddArg("-bantime", "",       ArgsManager::ALLOW_INT, {});
+    args.AddArg("-bytespersigop", "", ArgsManager::ALLOW_INT | ArgsManager::DISALLOW_NEGATION, {});
+    args.AddArg("-assumevalid", "",   ArgsManager::ALLOW_STRING, {});
+    args.AddArg("-logfile", "",       ArgsManager::ALLOW_STRING, {});
+    args.AddArg("-chain", "",         ArgsManager::ALLOW_STRING | ArgsManager::DISALLOW_NEGATION, {});
+    args.AddArg("-rescan", "",        ArgsManager::ALLOW_INT | ArgsManager::ALLOW_BOOL, {});
+    args.AddArg("-ipcbind", "",       ArgsManager::ALLOW_STRING | ArgsManager::ALLOW_BOOL, {});
+    args.AddArg("-loadblock", "",     ArgsManager::ALLOW_STRING | ArgsManager::ALLOW_LIST, {});
+    args.AddArg("-listen", "",        ArgsManager::ALLOW_STRING | ArgsManager::ALLOW_LIST, {});
+}
+
+void ReadOptions(const ArgsManager& args, Options& options)
+{
+    if (auto value = args.GetBoolArg("-upnp")) options.enable_upnp = *value;
+
+    if (auto value = args.GetBoolArg("-rpcserver")) options.enable_rpc_server = *value;
+
+    if (auto value = args.GetBoolArg("-dnsseed")) options.enable_dns_seed = *value;
+
+    if (auto value = args.GetIntArg("-bantime")) {
+        if (*value < 0) throw std::runtime_error(strprintf("-bantime value %i is negative", *value));
+        options.bantime = std::chrono::seconds{*value};
+    }
+
+    if (auto value = args.GetIntArg("-bytespersigop")) {
+        if (*value < 1) throw std::runtime_error(strprintf("-bytespersigop value %i is less than 1", *value));
+        options.bytes_per_sigop = *value;
+    }
+
+    if (auto value = args.GetArg("-assumevalid"); value && !value->empty()) {
+        if (auto hash{uint256::FromHex(*value)}) {
+            options.assumevalid = *hash;
+        } else {
+            throw std::runtime_error(strprintf("-assumevalid value '%s' is not a valid hash", *value));
+        }
+    }
+
+    if (auto value = args.GetArg("-logfile")) {
+        options.log_file = fs::PathFromString(*value);
+    }
+
+    if (auto value = args.GetArg("-chain")) {
+        if (auto chain_type{ChainTypeFromString(*value)}) {
+           options.chain = *chain_type;
+        } else {
+            throw std::runtime_error(strprintf("Invalid chain type '%s'", *value));
+        }
+    }
+
+    if (auto value{args.GetBoolArg("-rescan")}) {
+        // If -rescan was passed with no height, enable wallet rescan with
+        // default options. If -norescan was passed, do nothing.
+        if (*value) options.wallet_rescan.emplace();
+    } else if (auto value = args.GetIntArg("-rescan")) {
+        // If -rescan=<height> command was passed enable wallet rescan from the
+        // specified height.
+        options.wallet_rescan = RescanOptions{.start_height=*value};
+    }
+
+    if (auto value{args.GetBoolArg("-ipcbind")}) {
+        // If -ipcbind was passed with no address, set ipc_bind = true, or if
+        // -noipcbind was passed, set ipc_bind = false.
+        options.ipc_bind = *value;
+    } else if (auto value = args.GetArg("-ipcbind")) {
+        // If -ipcbind=<address> was passed, set ipc_bind = <address>
+        options.ipc_bind = *value;
+    }
+
+    for (const std::string& value : args.GetArgs("-loadblock")) {
+        if (value.empty()) throw std::runtime_error(strprintf("-loadblock value '%s' is not a valid file path", value));
+        options.load_block.push_back(fs::PathFromString(value));
+    }
+
+    if (args.IsArgNegated("-listen")) {
+        // If -nolisten was passed, disable listening by assigning an empty list
+        // of listening addresses.
+        options.listen_addresses.emplace();
+    } else if (auto addresses{args.GetArgs("-listen")}; !addresses.empty()) {
+        // If -listen=<addresses> options were passed, explicitly add these as
+        // listening addresses, otherwise leave listening option unset to enable
+        // default listening behavior.
+        options.listen_addresses.emplace();
+        for (const std::string& value : addresses) {
+            Address addr{"", 8333};
+            if (!SplitHostPort(value, addr.port, addr.host) || addr.host.empty()) {
+                throw std::runtime_error(strprintf("-listen address '%s' is not a valid host[:port]", value));
+            }
+            options.listen_addresses->emplace_back(std::move(addr));
+        }
+    }
+}
+
+//! Return Options::ipc_bind as a human readable string for easier testing.
+std::string IpcBindStr(const Options& options)
+{
+    if (auto address{std::get_if<std::string>(&options.ipc_bind)}) {
+        return *address;
+    } else if (auto enabled{std::get_if<bool>(&options.ipc_bind)}; enabled && *enabled) {
+        // Default address in this example when -ipcbind is specified without an
+        // address is "node.sock".
+        return "node.sock";
+    }
+    return "";
+}
+
+//! Return Options::load_block as a human readable string for easier testing.
+std::string LoadBlockStr(const Options& options)
+{
+    std::string ret;
+    for (const auto& block : options.load_block) {
+        if (!ret.empty()) ret += " ";
+        ret += fs::PathToString(block);
+    }
+    return ret;
+}
+
+//! Return Options::listen_addresses as a human readable string for easier
+//! testing.
+std::string ListenStr(const Options& options)
+{
+    if (!options.listen_addresses) {
+        // Default listening behavior in this example is just to listen on port
+        // 8333. In reality, it could be arbitrarily complicated and depend on
+        // other settings.
+        return "0.0.0.0:8333";
+    } else {
+        std::string ret;
+        for (const auto& addr : *options.listen_addresses) {
+            if (!ret.empty()) ret += " ";
+            ret += strprintf("%s:%d", addr.host, addr.port);
+        }
+        return ret;
+    }
+}
+
+struct TestSetup : public BasicTestingSetup
+{
+    Options ParseOptions(const std::vector<std::string>& opts)
+    {
+        ArgsManager args;
+        RegisterArgs(args);
+        std::vector<const char*> argv{"ignored"};
+        for (const auto& opt : opts) {
+            argv.push_back(opt.c_str());
+        }
+        std::string error;
+        if (!args.ParseParameters(argv.size(), argv.data(), error)) {
+            throw std::runtime_error(error);
+        }
+        BOOST_CHECK_EQUAL(error, "");
+        Options options;
+        ReadOptions(args, options);
+        return options;
+    }
+};
+} // namespace example_options
+
+BOOST_FIXTURE_TEST_CASE(ExampleOptions, example_options::TestSetup)
+{
+    // Check default upnp value is false
+    BOOST_CHECK_EQUAL(ParseOptions({}).enable_upnp, false);
+    // Check passing -upnp makes it true.
+    BOOST_CHECK_EQUAL(ParseOptions({"-upnp"}).enable_upnp, true);
+    // Check passing -upnp=1 makes it true.
+    BOOST_CHECK_EQUAL(ParseOptions({"-upnp=1"}).enable_upnp, true);
+    // Check adding -upnp= sets it back to default.
+    BOOST_CHECK_EQUAL(ParseOptions({"-upnp=1", "-upnp="}).enable_upnp, false);
+    // Check passing invalid value.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-upnp=yes"}), std::exception, HasReason{"Cannot set -upnp value to 'yes'. It must be set to 0 or 1."});
+
+    // Check default rpcserver value is true.
+    BOOST_CHECK_EQUAL(ParseOptions({}).enable_rpc_server, true);
+    // Check passing -norpcserver makes it false.
+    BOOST_CHECK_EQUAL(ParseOptions({"-norpcserver"}).enable_rpc_server, false);
+    // Check passing -rpcserver=0 makes it false.
+    BOOST_CHECK_EQUAL(ParseOptions({"-rpcserver=0"}).enable_rpc_server, false);
+    // Check adding -rpcserver= sets it back to default.
+    BOOST_CHECK_EQUAL(ParseOptions({"-rpcserver=0", "-rpcserver="}).enable_rpc_server, true);
+    // Check passing invalid value.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-rpcserver=yes"}), std::exception, HasReason{"Cannot set -rpcserver value to 'yes'. It must be set to 0 or 1."});
+
+    // Check default dnsseed value is unset.
+    BOOST_CHECK_EQUAL(ParseOptions({}).enable_dns_seed, std::nullopt);
+    // Check passing -dnsseed makes it true.
+    BOOST_CHECK_EQUAL(ParseOptions({"-dnsseed"}).enable_dns_seed, true);
+    // Check passing -dnsseed=1 makes it true.
+    BOOST_CHECK_EQUAL(ParseOptions({"-dnsseed=1"}).enable_dns_seed, true);
+    // Check passing -nodnsseed makes it false.
+    BOOST_CHECK_EQUAL(ParseOptions({"-nodnsseed"}).enable_dns_seed, false);
+    // Check passing -dnsseed=0 makes it false.
+    BOOST_CHECK_EQUAL(ParseOptions({"-dnsseed=0"}).enable_dns_seed, false);
+    // Check adding -dnsseed= sets it back to default.
+    BOOST_CHECK_EQUAL(ParseOptions({"-dnsseed=1", "-dnsseed="}).enable_dns_seed, std::nullopt);
+    // Check passing invalid value.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-dnsseed=yes"}), std::exception, HasReason{"Cannot set -dnsseed value to 'yes'. It must be set to 0 or 1."});
+
+    // Check default bantime value is unset.
+    BOOST_CHECK_EQUAL(ParseOptions({}).bantime.count(), 86400);
+    // Check passing -bantime=3600 overrides it.
+    BOOST_CHECK_EQUAL(ParseOptions({"-bantime=3600"}).bantime.count(), 3600);
+    // Check passing -nobantime makes it 0.
+    BOOST_CHECK_EQUAL(ParseOptions({"-nobantime"}).bantime.count(), 0);
+    // Check passing -bantime=0 makes it 0.
+    BOOST_CHECK_EQUAL(ParseOptions({"-bantime=0"}).bantime.count(), 0);
+    // Check adding -bantime= sets it back to default.
+    BOOST_CHECK_EQUAL(ParseOptions({"-bantime=3600", "-bantime="}).bantime.count(), 86400);
+    // Check passing invalid values.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-bantime"}), std::exception, HasReason{"Cannot set -bantime with no value. Please specify value with -bantime=value. It must be set to an integer."});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-bantime=abc"}), std::exception, HasReason{"Cannot set -bantime value to 'abc'. It must be set to an integer."});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-bantime=-1000"}), std::exception, HasReason{"-bantime value -1000 is negative"});
+
+    // Check default bytespersigop value.
+    BOOST_CHECK_EQUAL(ParseOptions({}).bytes_per_sigop, 20);
+    // Check passing -bytespersigop=30 overrides it.
+    BOOST_CHECK_EQUAL(ParseOptions({"-bytespersigop=30"}).bytes_per_sigop, 30);
+    // Check adding -bytespersigop= sets it back to default.
+    BOOST_CHECK_EQUAL(ParseOptions({"-bytespersigop=30", "-bytespersigop="}).bytes_per_sigop, 20);
+    // Check passing invalid values.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-bytespersigop"}), std::exception, HasReason{"Cannot set -bytespersigop with no value. Please specify value with -bytespersigop=value. It must be set to an integer."});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-nobytespersigop"}), std::exception, HasReason{"Negating of -bytespersigop is meaningless and therefore forbidden"});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-bytespersigop=0"}), std::exception, HasReason{"-bytespersigop value 0 is less than 1"});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-bytespersigop=abc"}), std::exception, HasReason{"Cannot set -bytespersigop value to 'abc'. It must be set to an integer."});
+
+    // Check default assumevalid value is unset.
+    BOOST_CHECK_EQUAL(ParseOptions({}).assumevalid, std::nullopt);
+    // Check passing -assumevalid=<hash> makes it set that hash.
+    BOOST_CHECK_EQUAL(ParseOptions({"-assumevalid=0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff"}).assumevalid, uint256{"0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff"});
+    // Check passing -noassumevalid makes it not assumevalid.
+    BOOST_CHECK_EQUAL(ParseOptions({"-noassumevalid"}).assumevalid, std::nullopt);
+    // Check adding -assumevalid= sets it back to default.
+    BOOST_CHECK_EQUAL(ParseOptions({"-assumevalid=0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff", "-assumevalid="}).assumevalid, std::nullopt);
+    // Check passing invalid values.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-assumevalid"}), std::exception, HasReason{"Cannot set -assumevalid with no value. Please specify value with -assumevalid=value. It must be set to a string."});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-assumevalid=1"}), std::exception, HasReason{"-assumevalid value '1' is not a valid hash"});
+
+    // Check default logfile value.
+    BOOST_CHECK_EQUAL(ParseOptions({}).log_file, fs::path{"debug.log"});
+    // Check passing -logfile=custom.log overrides it.
+    BOOST_CHECK_EQUAL(ParseOptions({"-logfile=custom.log"}).log_file, fs::path{"custom.log"});
+    // Check passing -nologfile makes it disables logging.
+    BOOST_CHECK_EQUAL(ParseOptions({"-nologfile"}).log_file, fs::path{});
+    // Check adding -logfile= sets it back to default.
+    BOOST_CHECK_EQUAL(ParseOptions({"-logfile=custom.log", "-logfile="}).log_file, fs::path{"debug.log"});
+    BOOST_CHECK_EQUAL(ParseOptions({"-nologfile", "-logfile="}).log_file, fs::path{"debug.log"});
+    // Check passing invalid values.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-logfile"}), std::exception, HasReason{"Cannot set -logfile with no value. Please specify value with -logfile=value. It must be set to a string."});
+
+    // Check default chain value.
+    BOOST_CHECK_EQUAL(ParseOptions({}).chain, ChainType::MAIN);
+    // Check passing -chain=regtest overrides it.
+    BOOST_CHECK_EQUAL(ParseOptions({"-chain=regtest"}).chain, ChainType::REGTEST);
+    // Check adding -chain= sets it back to default.
+    BOOST_CHECK_EQUAL(ParseOptions({"-chain=regtest", "-chain="}).chain, ChainType::MAIN);
+    // Check passing invalid values.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-chain"}), std::exception, HasReason{"Cannot set -chain with no value. Please specify value with -chain=value. It must be set to a string."});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-chain=abc"}), std::exception, HasReason{"Invalid chain type 'abc'"});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-nochain"}), std::exception, HasReason{"Negating of -chain is meaningless and therefore forbidden"});
+
+    // Check default rescan value is unset.
+    BOOST_CHECK(!ParseOptions({}).wallet_rescan);
+    // Check passing -rescan makes it rescan from default height
+    BOOST_CHECK_EQUAL(ParseOptions({"-rescan"}).wallet_rescan.value().start_height, std::nullopt);
+    // Check passing -rescan=500000 makes it scan from specified height.
+    BOOST_CHECK_EQUAL(ParseOptions({"-rescan=500000"}).wallet_rescan.value().start_height, 500000);
+    // Check passing -norescan makes it not rescan.
+    BOOST_CHECK(!ParseOptions({"-norescan"}).wallet_rescan);
+    // Check passing -rescan=0 does not simply set the bool but treats it as a height.
+    BOOST_CHECK_EQUAL(ParseOptions({"-rescan=0"}).wallet_rescan.value().start_height, 0);
+    // Check passing -rescan=1 does not simply set the bool but treats it as a height.
+    BOOST_CHECK_EQUAL(ParseOptions({"-rescan=1"}).wallet_rescan.value().start_height, 1);
+    // Check adding -rescan= sets it back to default.
+    BOOST_CHECK(!ParseOptions({"-rescan=500000", "-rescan="}).wallet_rescan);
+    // Check passing invalid value.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-rescan=yes"}), std::exception, HasReason{"Cannot set -rescan value to 'yes'. It must be set to an integer."});
+
+    // Check default ipcbind value is disabled.
+    BOOST_CHECK_EQUAL(IpcBindStr(ParseOptions({})), "");
+    // Check passing -ipcbind enables it at default address.
+    BOOST_CHECK_EQUAL(IpcBindStr(ParseOptions({"-ipcbind"})), "node.sock");
+    // Check passing -noipcbind makes it disabled.
+    BOOST_CHECK_EQUAL(IpcBindStr(ParseOptions({"-noipcbind"})), "");
+    // Check passing -ipcbind=address sets an address.
+    BOOST_CHECK_EQUAL(IpcBindStr(ParseOptions({"-ipcbind=address"})), "address");
+    // Check adding -ipcbind= sets it back to default.
+    BOOST_CHECK_EQUAL(IpcBindStr(ParseOptions({"-ipcbind=address", "-ipcbind="})), "");
+
+    // Check default loadblock value is empty.
+    BOOST_CHECK_EQUAL(LoadBlockStr(ParseOptions({})), "");
+    // Check passing -loadblock can set multiple values.
+    BOOST_CHECK_EQUAL(LoadBlockStr(ParseOptions({"-loadblock=a", "-loadblock=b"})), "a b");
+    // Check passing -noloadblock clears previous values.
+    BOOST_CHECK_EQUAL(LoadBlockStr(ParseOptions({"-loadblock=a", "-noloadblock", "-loadblock=b", "-loadblock=c"})), "b c");
+    // Check passing invalid values.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-loadblock"}), std::exception, HasReason{"Cannot set -loadblock with no value. Please specify value with -loadblock=value. It must be set to a string."});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-loadblock="}), std::exception, HasReason{"-loadblock value '' is not a valid file path"});
+
+    // Check default listen value.
+    BOOST_CHECK_EQUAL(ListenStr(ParseOptions({})), "0.0.0.0:8333");
+    // Check passing -listen can set multiple values.
+    BOOST_CHECK_EQUAL(ListenStr(ParseOptions({"-listen=a", "-listen=b"})), "a:8333 b:8333");
+    // Check passing -nolisten clears previous values.
+    BOOST_CHECK_EQUAL(ListenStr(ParseOptions({"-listen=a", "-nolisten", "-listen=b", "-listen=c"})), "b:8333 c:8333");
+    // Check final -nolisten disables listening.
+    BOOST_CHECK_EQUAL(ListenStr(ParseOptions({"-listen=a", "-nolisten"})), "");
+    // Check passing invalid values.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-listen"}), std::exception, HasReason{"Cannot set -listen with no value. Please specify value with -listen=value. It must be set to a string."});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-listen="}), std::exception, HasReason{"-listen address '' is not a valid host[:port]"});
+}
+
 BOOST_AUTO_TEST_CASE(util_datadir)
 {
     // Use local args variable instead of m_args to avoid making assumptions about test setup
@@ -73,6 +451,49 @@ struct TestArgsManager : public ArgsManager
         for (const auto& arg : args) {
             AddArg(arg.first, "", arg.second, OptionsCategory::OPTIONS);
         }
+    }
+    //! Return registered argument information.
+    Arg* FindArg(const std::string& name)
+    {
+        LOCK(cs_args);
+        for (auto& category : m_available_args) {
+            if (Arg* arg = common::FindKey(category.second, name)) {
+                return arg;
+            }
+        }
+        return nullptr;
+    }
+    //! Look up current registered argument flags so they can be modified, and
+    //! restore them on destruction.
+    struct TestFlags {
+        TestFlags(TestArgsManager& test, const std::string& name) : arg(test.FindArg(name)) {}
+        ~TestFlags() { if (arg) arg->m_flags = prev_flags; }
+        Arg* arg;
+        unsigned int prev_flags = arg ? arg->m_flags : 0;
+    };
+    //! Call GetArgs(), temporarily enabling ALLOW_LIST so call can succeed.
+    //! This is called by old tests written before ALLOW_LIST was enforced.
+    std::vector<std::string> TestArgList(const std::string& name)
+    {
+        TestFlags test(*this, name);
+        if (test.arg) test.arg->m_flags |= ALLOW_LIST;
+        return GetArgs(name);
+    }
+    //! Call GetArg(), temporarily disabling ALLOW_LIST so call can succeed.
+    //! This is called by old tests written before ALLOW_LIST was enforced.
+    std::string TestArgString(const std::string& name, const std::string& default_value)
+    {
+        TestFlags test(*this, name);
+        if (test.arg) test.arg->m_flags &= ~ALLOW_LIST;
+        return GetArg(name, default_value);
+    }
+    //! Call GetBoolArg(), temporarily disabling ALLOW_LIST so call can succeed.
+    //! This is called by old tests written before ALLOW_LIST was enforced.
+    bool TestArgBool(const std::string& name, bool default_value)
+    {
+        TestFlags test(*this, name);
+        if (test.arg) test.arg->m_flags &= ~ALLOW_LIST;
+        return GetBoolArg(name, default_value);
     }
     using ArgsManager::GetSetting;
     using ArgsManager::GetSettingsList;
@@ -127,7 +548,7 @@ public:
 
         if (expect.error) {
             BOOST_CHECK(!success);
-            BOOST_CHECK_NE(error.find(expect.error), std::string::npos);
+            BOOST_CHECK_EQUAL(error, expect.error);
         } else {
             BOOST_CHECK(success);
             BOOST_CHECK_EQUAL(error, "");
@@ -137,16 +558,26 @@ public:
             BOOST_CHECK_EQUAL(test.GetArg("-value", "zzzzz"), "zzzzz");
         } else if (expect.string_value) {
             BOOST_CHECK_EQUAL(test.GetArg("-value", "zzzzz"), expect.string_value);
-        } else {
-            BOOST_CHECK(!success);
+        } else if (success) {
+            // Extra check to ensure complete test coverage. Assert that if
+            // caller did not call Expect::DefaultString() or Expect::String(),
+            // then this test case must be one where ParseParameters() fails, or
+            // one where GetArg() throws logic_error because ALLOW_STRING is not
+            // specified.
+            BOOST_CHECK_THROW(test.GetArg("-value", "zzzzz"), std::logic_error);
         }
 
         if (expect.default_int) {
             BOOST_CHECK_EQUAL(test.GetIntArg("-value", 99999), 99999);
         } else if (expect.int_value) {
             BOOST_CHECK_EQUAL(test.GetIntArg("-value", 99999), *expect.int_value);
-        } else {
-            BOOST_CHECK(!success);
+        } else if (success) {
+            // Extra check to ensure complete test coverage. Assert that if
+            // caller did not call Expect::DefaultInt() or Expect::Int(), then
+            // this test case must be one where ParseParameters() fails, or one
+            // where GetArg() throws logic_error because ALLOW_INT is not
+            // specified.
+            BOOST_CHECK_THROW(test.GetIntArg("-value", 99999), std::logic_error);
         }
 
         if (expect.default_bool) {
@@ -155,15 +586,21 @@ public:
         } else if (expect.bool_value) {
             BOOST_CHECK_EQUAL(test.GetBoolArg("-value", false), *expect.bool_value);
             BOOST_CHECK_EQUAL(test.GetBoolArg("-value", true), *expect.bool_value);
-        } else {
-            BOOST_CHECK(!success);
+        } else if (success) {
+            // Extra check to ensure complete test coverage. Assert that if
+            // caller did not call Expect::DefaultBool() or Expect::Bool(), then
+            // this test case must be one where ParseParameters() fails, or one
+            // where GetArg() throws logic_error because ALLOW_BOOL is not
+            // specified.
+            BOOST_CHECK_THROW(test.GetBoolArg("-value", false), std::logic_error);
+            BOOST_CHECK_THROW(test.GetBoolArg("-value", true), std::logic_error);
         }
 
         if (expect.list_value) {
             auto l = test.GetArgs("-value");
             BOOST_CHECK_EQUAL_COLLECTIONS(l.begin(), l.end(), expect.list_value->begin(), expect.list_value->end());
-        } else {
-            BOOST_CHECK(!success);
+        } else if (success) {
+            BOOST_CHECK_THROW(test.GetArgs("-value"), std::logic_error);
         }
     }
 };
@@ -172,19 +609,163 @@ BOOST_FIXTURE_TEST_CASE(util_CheckValue, CheckValueTest)
 {
     using M = ArgsManager;
 
-    CheckValue(M::ALLOW_ANY, nullptr, Expect{{}}.DefaultString().DefaultInt().DefaultBool().List({}));
-    CheckValue(M::ALLOW_ANY, "-novalue", Expect{false}.String("0").Int(0).Bool(false).List({}));
-    CheckValue(M::ALLOW_ANY, "-novalue=", Expect{false}.String("0").Int(0).Bool(false).List({}));
-    CheckValue(M::ALLOW_ANY, "-novalue=0", Expect{true}.String("1").Int(1).Bool(true).List({"1"}));
-    CheckValue(M::ALLOW_ANY, "-novalue=1", Expect{false}.String("0").Int(0).Bool(false).List({}));
-    CheckValue(M::ALLOW_ANY, "-novalue=2", Expect{false}.String("0").Int(0).Bool(false).List({}));
-    CheckValue(M::ALLOW_ANY, "-novalue=abc", Expect{true}.String("1").Int(1).Bool(true).List({"1"}));
-    CheckValue(M::ALLOW_ANY, "-value", Expect{""}.String("").Int(0).Bool(true).List({""}));
-    CheckValue(M::ALLOW_ANY, "-value=", Expect{""}.String("").Int(0).Bool(true).List({""}));
-    CheckValue(M::ALLOW_ANY, "-value=0", Expect{"0"}.String("0").Int(0).Bool(false).List({"0"}));
-    CheckValue(M::ALLOW_ANY, "-value=1", Expect{"1"}.String("1").Int(1).Bool(true).List({"1"}));
-    CheckValue(M::ALLOW_ANY, "-value=2", Expect{"2"}.String("2").Int(2).Bool(true).List({"2"}));
-    CheckValue(M::ALLOW_ANY, "-value=abc", Expect{"abc"}.String("abc").Int(0).Bool(false).List({"abc"}));
+    CheckValue(M::ALLOW_ANY, nullptr, Expect{{}}.DefaultString().DefaultInt().DefaultBool());
+    CheckValue(M::ALLOW_ANY, "-novalue", Expect{false}.String("0").Int(0).Bool(false));
+    CheckValue(M::ALLOW_ANY, "-novalue=", Expect{false}.String("0").Int(0).Bool(false));
+    CheckValue(M::ALLOW_ANY, "-novalue=0", Expect{true}.String("1").Int(1).Bool(true));
+    CheckValue(M::ALLOW_ANY, "-novalue=1", Expect{false}.String("0").Int(0).Bool(false));
+    CheckValue(M::ALLOW_ANY, "-novalue=2", Expect{false}.String("0").Int(0).Bool(false));
+    CheckValue(M::ALLOW_ANY, "-novalue=abc", Expect{true}.String("1").Int(1).Bool(true));
+    CheckValue(M::ALLOW_ANY, "-value", Expect{""}.String("").Int(0).Bool(true));
+    CheckValue(M::ALLOW_ANY, "-value=", Expect{""}.String("").Int(0).Bool(true));
+    CheckValue(M::ALLOW_ANY, "-value=0", Expect{"0"}.String("0").Int(0).Bool(false));
+    CheckValue(M::ALLOW_ANY, "-value=1", Expect{"1"}.String("1").Int(1).Bool(true));
+    CheckValue(M::ALLOW_ANY, "-value=2", Expect{"2"}.String("2").Int(2).Bool(true));
+    CheckValue(M::ALLOW_ANY, "-value=abc", Expect{"abc"}.String("abc").Int(0).Bool(false));
+
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, nullptr, Expect{{}}.List({}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-novalue", Expect{false}.List({}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-novalue=", Expect{false}.List({}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-novalue=0", Expect{true}.List({"1"}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-novalue=1", Expect{false}.List({}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-novalue=2", Expect{false}.List({}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-novalue=abc", Expect{true}.List({"1"}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-value", Expect{""}.List({""}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-value=", Expect{""}.List({""}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-value=0", Expect{"0"}.List({"0"}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-value=1", Expect{"1"}.List({"1"}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-value=2", Expect{"2"}.List({"2"}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-value=abc", Expect{"abc"}.List({"abc"}));
+
+    CheckValue(M::ALLOW_BOOL, nullptr, Expect{{}}.DefaultBool());
+    CheckValue(M::ALLOW_BOOL, "-novalue", Expect{false}.Bool(false));
+    CheckValue(M::ALLOW_BOOL, "-novalue=", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('')."));
+    CheckValue(M::ALLOW_BOOL, "-novalue=0", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('0')."));
+    CheckValue(M::ALLOW_BOOL, "-novalue=1", Expect{false}.Bool(false));
+    CheckValue(M::ALLOW_BOOL, "-novalue=2", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('2')."));
+    CheckValue(M::ALLOW_BOOL, "-novalue=abc", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('abc')."));
+    CheckValue(M::ALLOW_BOOL, "-value", Expect{true}.Bool(true));
+    CheckValue(M::ALLOW_BOOL, "-value=", Expect{""}.DefaultBool());
+    CheckValue(M::ALLOW_BOOL, "-value=0", Expect{false}.Bool(false));
+    CheckValue(M::ALLOW_BOOL, "-value=1", Expect{true}.Bool(true));
+    CheckValue(M::ALLOW_BOOL, "-value=2", Expect{{}}.Error("Cannot set -value value to '2'. It must be set to 0 or 1."));
+    CheckValue(M::ALLOW_BOOL, "-value=abc", Expect{{}}.Error("Cannot set -value value to 'abc'. It must be set to 0 or 1."));
+
+    CheckValue(M::ALLOW_INT, nullptr, Expect{{}}.DefaultInt());
+    CheckValue(M::ALLOW_INT, "-novalue", Expect{false}.Int(0));
+    CheckValue(M::ALLOW_INT, "-novalue=", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('')."));
+    CheckValue(M::ALLOW_INT, "-novalue=0", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('0')."));
+    CheckValue(M::ALLOW_INT, "-novalue=1", Expect{false}.Int(0));
+    CheckValue(M::ALLOW_INT, "-novalue=2", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('2')."));
+    CheckValue(M::ALLOW_INT, "-novalue=abc", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('abc')."));
+    CheckValue(M::ALLOW_INT, "-value", Expect{{}}.Error("Cannot set -value with no value. Please specify value with -value=value. It must be set to an integer."));
+    CheckValue(M::ALLOW_INT, "-value=", Expect{""}.DefaultInt());
+    CheckValue(M::ALLOW_INT, "-value=0", Expect{0}.Int(0));
+    CheckValue(M::ALLOW_INT, "-value=1", Expect{1}.Int(1));
+    CheckValue(M::ALLOW_INT, "-value=2", Expect{2}.Int(2));
+    CheckValue(M::ALLOW_INT, "-value=abc", Expect{{}}.Error("Cannot set -value value to 'abc'. It must be set to an integer."));
+
+    CheckValue(M::ALLOW_STRING, nullptr, Expect{{}}.DefaultString());
+    CheckValue(M::ALLOW_STRING, "-novalue", Expect{false}.String(""));
+    CheckValue(M::ALLOW_STRING, "-novalue=", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('')."));
+    CheckValue(M::ALLOW_STRING, "-novalue=0", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('0')."));
+    CheckValue(M::ALLOW_STRING, "-novalue=1", Expect{false}.String(""));
+    CheckValue(M::ALLOW_STRING, "-novalue=2", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('2')."));
+    CheckValue(M::ALLOW_STRING, "-novalue=abc", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('abc')."));
+    CheckValue(M::ALLOW_STRING, "-value", Expect{{}}.Error("Cannot set -value with no value. Please specify value with -value=value. It must be set to a string."));
+    CheckValue(M::ALLOW_STRING, "-value=", Expect{""}.DefaultString());
+    CheckValue(M::ALLOW_STRING, "-value=0", Expect{"0"}.String("0"));
+    CheckValue(M::ALLOW_STRING, "-value=1", Expect{"1"}.String("1"));
+    CheckValue(M::ALLOW_STRING, "-value=2", Expect{"2"}.String("2"));
+    CheckValue(M::ALLOW_STRING, "-value=abc", Expect{"abc"}.String("abc"));
+
+    CheckValue(M::ALLOW_INT | M::ALLOW_BOOL, nullptr, Expect{{}}.DefaultInt().DefaultBool());
+    CheckValue(M::ALLOW_INT | M::ALLOW_BOOL, "-novalue", Expect{false}.Int(0).Bool(false));
+    CheckValue(M::ALLOW_INT | M::ALLOW_BOOL, "-novalue=", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('')."));
+    CheckValue(M::ALLOW_INT | M::ALLOW_BOOL, "-novalue=0", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('0')."));
+    CheckValue(M::ALLOW_INT | M::ALLOW_BOOL, "-novalue=1", Expect{false}.Int(0).Bool(false));
+    CheckValue(M::ALLOW_INT | M::ALLOW_BOOL, "-novalue=2", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('2')."));
+    CheckValue(M::ALLOW_INT | M::ALLOW_BOOL, "-novalue=abc", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('abc')."));
+    CheckValue(M::ALLOW_INT | M::ALLOW_BOOL, "-value", Expect{true}.Int(1).Bool(true));
+    CheckValue(M::ALLOW_INT | M::ALLOW_BOOL, "-value=", Expect{""}.DefaultInt().DefaultBool());
+    CheckValue(M::ALLOW_INT | M::ALLOW_BOOL, "-value=0", Expect{0}.Int(0).DefaultBool());
+    CheckValue(M::ALLOW_INT | M::ALLOW_BOOL, "-value=1", Expect{1}.Int(1).DefaultBool());
+    CheckValue(M::ALLOW_INT | M::ALLOW_BOOL, "-value=2", Expect{2}.Int(2).DefaultBool());
+    CheckValue(M::ALLOW_INT | M::ALLOW_BOOL, "-value=abc", Expect{{}}.Error("Cannot set -value value to 'abc'. It must be set to an integer."));
+
+    CheckValue(M::ALLOW_STRING | M::ALLOW_BOOL, nullptr, Expect{{}}.DefaultString().DefaultBool());
+    CheckValue(M::ALLOW_STRING | M::ALLOW_BOOL, "-novalue", Expect{false}.String("").Bool(false));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_BOOL, "-novalue=", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('')."));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_BOOL, "-novalue=0", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('0')."));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_BOOL, "-novalue=1", Expect{false}.String("").Bool(false));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_BOOL, "-novalue=2", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('2')."));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_BOOL, "-novalue=abc", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('abc')."));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_BOOL, "-value", Expect{true}.DefaultString().Bool(true));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_BOOL, "-value=", Expect{""}.DefaultString().DefaultBool());
+    CheckValue(M::ALLOW_STRING | M::ALLOW_BOOL, "-value=0", Expect{"0"}.String("0").DefaultBool());
+    CheckValue(M::ALLOW_STRING | M::ALLOW_BOOL, "-value=1", Expect{"1"}.String("1").DefaultBool());
+    CheckValue(M::ALLOW_STRING | M::ALLOW_BOOL, "-value=2", Expect{"2"}.String("2").DefaultBool());
+    CheckValue(M::ALLOW_STRING | M::ALLOW_BOOL, "-value=abc", Expect{"abc"}.String("abc").DefaultBool());
+
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, nullptr, Expect{{}}.List({}));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-novalue", Expect{false}.List({}));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-novalue=", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('')."));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-novalue=0", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('0')."));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-novalue=1", Expect{false}.List({}));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-novalue=2", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('2')."));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-novalue=abc", Expect{{}}.Error("Cannot negate -value at the same time as setting a value ('abc')."));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-value", Expect{{}}.Error("Cannot set -value with no value. Please specify value with -value=value. It must be set to a string."));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-value=", Expect{""}.List({""}));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-value=0", Expect{"0"}.List({"0"}));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-value=1", Expect{"1"}.List({"1"}));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-value=2", Expect{"2"}.List({"2"}));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_LIST, "-value=abc", Expect{"abc"}.List({"abc"}));
+}
+
+BOOST_FIXTURE_TEST_CASE(util_CheckBoolStringsNotSpecial, CheckValueTest)
+{
+    // Check that "true" and "false" strings are rejected for ALLOW_BOOL
+    // arguments. We might want to change this behavior in the future and
+    // interpret strings like "true" as true, and strings like "false" as false.
+    // But because it would be confusing to interpret "true" as true for
+    // ALLOW_BOOL arguments but false for ALLOW_ANY arguments (because
+    // atoi("true")==0), for now it is safer to just disallow strings like
+    // "true" and "false" for ALLOW_BOOL arguments as long as there are still
+    // other boolean arguments interpreted with ALLOW_ANY.
+    using M = ArgsManager;
+    CheckValue(M::ALLOW_BOOL, "-value=true", Expect{{}}.Error("Cannot set -value value to 'true'. It must be set to 0 or 1."));
+    CheckValue(M::ALLOW_BOOL, "-value=false", Expect{{}}.Error("Cannot set -value value to 'false'. It must be set to 0 or 1."));
+
+    // Similarly, check "true" and "false" are not treated specially when
+    // ALLOW_BOOL is combined with ALLOW_INT and ALLOW_STRING. (The only
+    // difference ALLOW_BOOL makes for int and string arguments is that it
+    // enables "-foo" syntax with no equal sign assigning explicit int or string
+    // values. This is useful for arguments like "-upgradewallet" or "-listen"
+    // that primarily toggle features on and off, but also accept optional int
+    // or string values to influence behavior.)
+    CheckValue(M::ALLOW_INT | M::ALLOW_BOOL, "-value=true", Expect{{}}.Error("Cannot set -value value to 'true'. It must be set to an integer."));
+    CheckValue(M::ALLOW_INT | M::ALLOW_BOOL, "-value=false", Expect{{}}.Error("Cannot set -value value to 'false'. It must be set to an integer."));
+    CheckValue(M::ALLOW_STRING | M::ALLOW_BOOL, "-value=true", Expect{"true"}.String("true").DefaultBool());
+    CheckValue(M::ALLOW_STRING | M::ALLOW_BOOL, "-value=false", Expect{"false"}.String("false").DefaultBool());
+}
+
+BOOST_AUTO_TEST_CASE(util_CheckSingleValue)
+{
+    TestArgsManager test;
+    test.SetupArgs({{"-single", ArgsManager::ALLOW_INT}});
+    std::istringstream stream("single=1\nsingle=2\n");
+    std::string error;
+    BOOST_CHECK(!test.ReadConfigStream(stream, "file.conf", error));
+    BOOST_CHECK_EQUAL(error, "Multiple values specified for -single in same section of config file.");
+}
+
+BOOST_AUTO_TEST_CASE(util_CheckBadFlagCombinations)
+{
+    TestArgsManager test;
+    using M = ArgsManager;
+    BOOST_CHECK_THROW(test.AddArg("-arg1", "name", M::ALLOW_BOOL | M::ALLOW_ANY, OptionsCategory::OPTIONS), std::logic_error);
+    BOOST_CHECK_THROW(test.AddArg("-arg2", "name", M::ALLOW_BOOL | M::DISALLOW_ELISION, OptionsCategory::OPTIONS), std::logic_error);
+    BOOST_CHECK_THROW(test.AddArg("-arg3", "name", M::ALLOW_INT | M::ALLOW_STRING, OptionsCategory::OPTIONS), std::logic_error);
 }
 
 struct NoIncludeConfTest {
@@ -211,7 +792,7 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
     TestArgsManager testArgs;
     const auto a = std::make_pair("-a", ArgsManager::ALLOW_ANY);
     const auto b = std::make_pair("-b", ArgsManager::ALLOW_ANY);
-    const auto ccc = std::make_pair("-ccc", ArgsManager::ALLOW_ANY);
+    const auto ccc = std::make_pair("-ccc", ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST);
     const auto d = std::make_pair("-d", ArgsManager::ALLOW_ANY);
 
     const char *argv_test[] = {"-ignored", "-a", "-b", "-ccc=argument", "-ccc=multiple", "f", "-d=e"};
@@ -365,7 +946,7 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     TestArgsManager testArgs;
 
     // Params test
-    const auto foo = std::make_pair("-foo", ArgsManager::ALLOW_ANY);
+    const auto foo = std::make_pair("-foo", ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST);
     const auto bar = std::make_pair("-bar", ArgsManager::ALLOW_ANY);
     const char *argv_test[] = {"ignored", "-nofoo", "-foo", "-nobar=0"};
     testArgs.SetupArgs({foo, bar});
@@ -374,7 +955,7 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
 
     // This was passed twice, second one overrides the negative setting.
     BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
-    BOOST_CHECK(testArgs.GetArg("-foo", "xxx") == "");
+    BOOST_CHECK(testArgs.TestArgString("-foo", "xxx") == "");
 
     // A double negative is a positive, and not marked as negated.
     BOOST_CHECK(!testArgs.IsArgNegated("-bar"));
@@ -388,7 +969,7 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     // This was passed twice, second one overrides the negative setting,
     // and the value.
     BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
-    BOOST_CHECK(testArgs.GetArg("-foo", "xxx") == "1");
+    BOOST_CHECK(testArgs.TestArgString("-foo", "xxx") == "1");
 
     // A double negative is a positive, and does not count as negated.
     BOOST_CHECK(!testArgs.IsArgNegated("-bar"));
@@ -402,14 +983,14 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
 
     // Command line overrides, but doesn't erase old setting
     BOOST_CHECK(testArgs.IsArgNegated("-foo"));
-    BOOST_CHECK(testArgs.GetArg("-foo", "xxx") == "0");
+    BOOST_CHECK(testArgs.TestArgString("-foo", "xxx") == "0");
     BOOST_CHECK(testArgs.GetArgs("-foo").size() == 0);
 
     // Command line overrides, but doesn't erase old setting
     BOOST_CHECK(!testArgs.IsArgNegated("-bar"));
     BOOST_CHECK(testArgs.GetArg("-bar", "xxx") == "");
-    BOOST_CHECK(testArgs.GetArgs("-bar").size() == 1
-                && testArgs.GetArgs("-bar").front() == "");
+    BOOST_CHECK(testArgs.TestArgList("-bar").size() == 1
+                && testArgs.TestArgList("-bar").front() == "");
 }
 
 BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
@@ -440,13 +1021,13 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     LOCK(test_args.cs_args);
     const auto a = std::make_pair("-a", ArgsManager::ALLOW_ANY);
     const auto b = std::make_pair("-b", ArgsManager::ALLOW_ANY);
-    const auto ccc = std::make_pair("-ccc", ArgsManager::ALLOW_ANY);
+    const auto ccc = std::make_pair("-ccc", ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST);
     const auto d = std::make_pair("-d", ArgsManager::ALLOW_ANY);
     const auto e = std::make_pair("-e", ArgsManager::ALLOW_ANY);
     const auto fff = std::make_pair("-fff", ArgsManager::ALLOW_ANY);
     const auto ggg = std::make_pair("-ggg", ArgsManager::ALLOW_ANY);
-    const auto h = std::make_pair("-h", ArgsManager::ALLOW_ANY);
-    const auto i = std::make_pair("-i", ArgsManager::ALLOW_ANY);
+    const auto h = std::make_pair("-h", ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST);
+    const auto i = std::make_pair("-i", ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST);
     const auto iii = std::make_pair("-iii", ArgsManager::ALLOW_ANY);
     test_args.SetupArgs({a, b, ccc, d, e, fff, ggg, h, i, iii});
 
@@ -486,46 +1067,46 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
 
     BOOST_CHECK_EQUAL(test_args.GetArg("-a", "xxx"), "");
     BOOST_CHECK_EQUAL(test_args.GetArg("-b", "xxx"), "1");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-ccc", "xxx"), "argument");
+    BOOST_CHECK_EQUAL(test_args.TestArgString("-ccc", "xxx"), "argument");
     BOOST_CHECK_EQUAL(test_args.GetArg("-d", "xxx"), "e");
     BOOST_CHECK_EQUAL(test_args.GetArg("-fff", "xxx"), "0");
     BOOST_CHECK_EQUAL(test_args.GetArg("-ggg", "xxx"), "1");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-h", "xxx"), "0");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-i", "xxx"), "1");
+    BOOST_CHECK_EQUAL(test_args.TestArgString("-h", "xxx"), "0");
+    BOOST_CHECK_EQUAL(test_args.TestArgString("-i", "xxx"), "1");
     BOOST_CHECK_EQUAL(test_args.GetArg("-zzz", "xxx"), "xxx");
     BOOST_CHECK_EQUAL(test_args.GetArg("-iii", "xxx"), "xxx");
 
     for (const bool def : {false, true}) {
         BOOST_CHECK(test_args.GetBoolArg("-a", def));
         BOOST_CHECK(test_args.GetBoolArg("-b", def));
-        BOOST_CHECK(!test_args.GetBoolArg("-ccc", def));
+        BOOST_CHECK(!test_args.TestArgBool("-ccc", def));
         BOOST_CHECK(!test_args.GetBoolArg("-d", def));
         BOOST_CHECK(!test_args.GetBoolArg("-fff", def));
         BOOST_CHECK(test_args.GetBoolArg("-ggg", def));
-        BOOST_CHECK(!test_args.GetBoolArg("-h", def));
-        BOOST_CHECK(test_args.GetBoolArg("-i", def));
+        BOOST_CHECK(!test_args.TestArgBool("-h", def));
+        BOOST_CHECK(test_args.TestArgBool("-i", def));
         BOOST_CHECK(test_args.GetBoolArg("-zzz", def) == def);
         BOOST_CHECK(test_args.GetBoolArg("-iii", def) == def);
     }
 
-    BOOST_CHECK(test_args.GetArgs("-a").size() == 1
-                && test_args.GetArgs("-a").front() == "");
-    BOOST_CHECK(test_args.GetArgs("-b").size() == 1
-                && test_args.GetArgs("-b").front() == "1");
+    BOOST_CHECK(test_args.TestArgList("-a").size() == 1
+                && test_args.TestArgList("-a").front() == "");
+    BOOST_CHECK(test_args.TestArgList("-b").size() == 1
+                && test_args.TestArgList("-b").front() == "1");
     BOOST_CHECK(test_args.GetArgs("-ccc").size() == 2
                 && test_args.GetArgs("-ccc").front() == "argument"
                 && test_args.GetArgs("-ccc").back() == "multiple");
-    BOOST_CHECK(test_args.GetArgs("-fff").size() == 0);
-    BOOST_CHECK(test_args.GetArgs("-nofff").size() == 0);
-    BOOST_CHECK(test_args.GetArgs("-ggg").size() == 1
-                && test_args.GetArgs("-ggg").front() == "1");
-    BOOST_CHECK(test_args.GetArgs("-noggg").size() == 0);
+    BOOST_CHECK(test_args.TestArgList("-fff").size() == 0);
+    BOOST_CHECK(test_args.TestArgList("-nofff").size() == 0);
+    BOOST_CHECK(test_args.TestArgList("-ggg").size() == 1
+                && test_args.TestArgList("-ggg").front() == "1");
+    BOOST_CHECK(test_args.TestArgList("-noggg").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-h").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-noh").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-i").size() == 1
                 && test_args.GetArgs("-i").front() == "1");
     BOOST_CHECK(test_args.GetArgs("-noi").size() == 0);
-    BOOST_CHECK(test_args.GetArgs("-zzz").size() == 0);
+    BOOST_CHECK(test_args.TestArgList("-zzz").size() == 0);
 
     BOOST_CHECK(!test_args.IsArgNegated("-a"));
     BOOST_CHECK(!test_args.IsArgNegated("-b"));
@@ -550,9 +1131,9 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     // d is overridden
     BOOST_CHECK(test_args.GetArg("-d", "xxx") == "eee");
     // section-specific setting
-    BOOST_CHECK(test_args.GetArg("-h", "xxx") == "1");
+    BOOST_CHECK(test_args.TestArgString("-h", "xxx") == "1");
     // section takes priority for multiple values
-    BOOST_CHECK(test_args.GetArg("-ccc", "xxx") == "extend1");
+    BOOST_CHECK(test_args.TestArgString("-ccc", "xxx") == "extend1");
     // check multiple values works
     const std::vector<std::string> sec1_ccc_expected = {"extend1","extend2","argument","multiple"};
     const auto& sec1_ccc_res = test_args.GetArgs("-ccc");
@@ -567,11 +1148,11 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     BOOST_CHECK(test_args.GetArg("-fff", "xxx") == "0");
     BOOST_CHECK(test_args.GetArg("-ggg", "xxx") == "1");
     BOOST_CHECK(test_args.GetArg("-zzz", "xxx") == "xxx");
-    BOOST_CHECK(test_args.GetArg("-h", "xxx") == "0");
+    BOOST_CHECK(test_args.TestArgString("-h", "xxx") == "0");
     // section-specific setting
     BOOST_CHECK(test_args.GetArg("-iii", "xxx") == "2");
     // section takes priority for multiple values
-    BOOST_CHECK(test_args.GetArg("-ccc", "xxx") == "extend3");
+    BOOST_CHECK(test_args.TestArgString("-ccc", "xxx") == "extend3");
     // check multiple values works
     const std::vector<std::string> sec2_ccc_expected = {"extend3","argument","multiple"};
     const auto& sec2_ccc_res = test_args.GetArgs("-ccc");
@@ -586,19 +1167,19 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     test_args.SelectConfigNetwork(ChainTypeToString(ChainType::MAIN));
     BOOST_CHECK(test_args.GetArg("-d", "xxx") == "e");
     BOOST_CHECK(test_args.GetArgs("-ccc").size() == 2);
-    BOOST_CHECK(test_args.GetArg("-h", "xxx") == "0");
+    BOOST_CHECK(test_args.TestArgString("-h", "xxx") == "0");
 
     test_args.SelectConfigNetwork("sec1");
     BOOST_CHECK(test_args.GetArg("-d", "xxx") == "eee");
-    BOOST_CHECK(test_args.GetArgs("-d").size() == 1);
+    BOOST_CHECK(test_args.TestArgList("-d").size() == 1);
     BOOST_CHECK(test_args.GetArgs("-ccc").size() == 2);
-    BOOST_CHECK(test_args.GetArg("-h", "xxx") == "1");
+    BOOST_CHECK(test_args.TestArgString("-h", "xxx") == "1");
 
     test_args.SelectConfigNetwork("sec2");
     BOOST_CHECK(test_args.GetArg("-d", "xxx") == "xxx");
-    BOOST_CHECK(test_args.GetArgs("-d").size() == 0);
+    BOOST_CHECK(test_args.TestArgList("-d").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-ccc").size() == 1);
-    BOOST_CHECK(test_args.GetArg("-h", "xxx") == "0");
+    BOOST_CHECK(test_args.TestArgString("-h", "xxx") == "0");
 }
 
 BOOST_AUTO_TEST_CASE(util_GetArg)
@@ -828,7 +1409,7 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
 
         const std::string& name = net_specific ? "wallet" : "server";
         const std::string key = "-" + name;
-        parser.AddArg(key, name, ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+        parser.AddArg(key, name, ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST, OptionsCategory::OPTIONS);
         if (net_specific) parser.SetNetworkOnlyArg(key);
 
         auto args = GetValues(arg_actions, section, name, "a");
@@ -871,14 +1452,14 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
         if (!parser.IsArgSet(key)) {
             desc += "unset";
             BOOST_CHECK(!parser.IsArgNegated(key));
-            BOOST_CHECK_EQUAL(parser.GetArg(key, "default"), "default");
+            BOOST_CHECK_EQUAL(parser.TestArgString(key, "default"), "default");
             BOOST_CHECK(parser.GetArgs(key).empty());
         } else if (parser.IsArgNegated(key)) {
             desc += "negated";
-            BOOST_CHECK_EQUAL(parser.GetArg(key, "default"), "0");
+            BOOST_CHECK_EQUAL(parser.TestArgString(key, "default"), "0");
             BOOST_CHECK(parser.GetArgs(key).empty());
         } else {
-            desc += parser.GetArg(key, "default");
+            desc += parser.TestArgString(key, "default");
             desc += " |";
             for (const auto& arg : parser.GetArgs(key)) {
                 desc += " ";
@@ -955,8 +1536,8 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
     ForEachMergeSetup([&](const ActionList& arg_actions, const ActionList& conf_actions) {
         TestArgsManager parser;
         LOCK(parser.cs_args);
-        parser.AddArg("-regtest", "regtest", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-        parser.AddArg("-testnet", "testnet", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+        parser.AddArg("-regtest", "regtest", ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST, OptionsCategory::OPTIONS);
+        parser.AddArg("-testnet", "testnet", ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST, OptionsCategory::OPTIONS);
 
         auto arg = [](Action action) { return action == ENABLE_TEST  ? "-testnet=1"   :
                                               action == DISABLE_TEST ? "-testnet=0"   :
