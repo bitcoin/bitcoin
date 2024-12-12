@@ -14,6 +14,7 @@ import logging
 import os
 import platform
 import re
+import signal
 import subprocess
 import tempfile
 import time
@@ -463,9 +464,13 @@ class TestNode():
     def chain_path(self) -> Path:
         return self.datadir_path / self.chain
 
-    @property
-    def debug_log_path(self) -> Path:
-        return self.chain_path / 'debug.log'
+    def debug_log_path(self, wallet: bool) -> Path:
+        path = self.chain_path / 'debug.log'
+        if wallet:
+            wallet_path = path.with_name(path.name + ".wallet")
+            if wallet_path.exists():
+                path = wallet_path
+        return path
 
     @property
     def blocks_path(self) -> Path:
@@ -483,26 +488,26 @@ class TestNode():
     def wallets_path(self) -> Path:
         return self.chain_path / "wallets"
 
-    def debug_log_size(self, **kwargs) -> int:
-        with open(self.debug_log_path, **kwargs) as dl:
+    def debug_log_size(self, wallet: bool, **kwargs) -> int:
+        with open(self.debug_log_path(wallet), **kwargs) as dl:
             dl.seek(0, 2)
             return dl.tell()
 
     @contextlib.contextmanager
-    def assert_debug_log(self, expected_msgs, unexpected_msgs=None, timeout=2):
+    def assert_debug_log(self, expected_msgs, unexpected_msgs=None, timeout=2, wallet=False):
         if unexpected_msgs is None:
             unexpected_msgs = []
         assert_equal(type(expected_msgs), list)
         assert_equal(type(unexpected_msgs), list)
 
         time_end = time.time() + timeout * self.timeout_factor
-        prev_size = self.debug_log_size(encoding="utf-8")  # Must use same encoding that is used to read() below
+        prev_size = self.debug_log_size(wallet, encoding="utf-8")  # Must use same encoding that is used to read() below
 
         yield
 
         while True:
             found = True
-            with open(self.debug_log_path, encoding="utf-8", errors="replace") as dl:
+            with open(self.debug_log_path(wallet), encoding="utf-8", errors="replace") as dl:
                 dl.seek(prev_size)
                 log = dl.read()
             print_log = " - " + "\n - ".join(log.splitlines())
@@ -520,20 +525,20 @@ class TestNode():
         self._raise_assertion_error('Expected messages "{}" does not partially match log:\n\n{}\n\n'.format(str(expected_msgs), print_log))
 
     @contextlib.contextmanager
-    def busy_wait_for_debug_log(self, expected_msgs, timeout=60):
+    def busy_wait_for_debug_log(self, expected_msgs, timeout=60, wallet=False):
         """
         Block until we see a particular debug log message fragment or until we exceed the timeout.
         Return:
             the number of log lines we encountered when matching
         """
         time_end = time.time() + timeout * self.timeout_factor
-        prev_size = self.debug_log_size(mode="rb")  # Must use same mode that is used to read() below
+        prev_size = self.debug_log_size(wallet, mode="rb")  # Must use same mode that is used to read() below
 
         yield
 
         while True:
             found = True
-            with open(self.debug_log_path, "rb") as dl:
+            with open(self.debug_log_path(wallet), "rb") as dl:
                 dl.seek(prev_size)
                 log = dl.read()
 
@@ -839,6 +844,23 @@ class TestNode():
 
     def wait_until(self, test_function, timeout=60, check_interval=0.05):
         return wait_until_helper_internal(test_function, timeout=timeout, timeout_factor=self.timeout_factor, check_interval=check_interval)
+
+    def kill(self):
+        """Abruptly kill the node to test recovery from an unclean shutdown."""
+        # Before killing the node, check the log to see if it spawned a wallet
+        # process. If it did, we need to send a kill signal to the wallet
+        # process as well, so the wallet shutdown is unclean and the wallet
+        # databases are not flushed. If the wallet process were not killed here,
+        # it would shut down cleanly instead of uncleanly when it lost the
+        # connection to the node, which is not what we want for testing.
+        wallet_pid = None
+        with open(self.debug_log_path(wallet=False), encoding="utf-8", errors="replace") as dl:
+            for line in dl:
+                if m := re.search(r"\[spawnProcess\] \[ipc\] Process bitcoin-wallet pid ([0-9]+) launched", line):
+                    wallet_pid = int(m.group(1))
+        if wallet_pid is not None:
+            os.kill(wallet_pid, signal.SIGKILL)
+        self.process.kill()
 
 
 class TestNodeCLIAttr:
