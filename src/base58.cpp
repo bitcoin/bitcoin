@@ -14,7 +14,7 @@
 
 #include <limits>
 
-using util::ContainsNoNUL;
+using util::ContainsNUL;
 
 /** All alphanumeric characters except for "0", "I", "O", and "l" */
 static const char* pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
@@ -128,7 +128,7 @@ std::string EncodeBase58(Span<const unsigned char> input)
 
 bool DecodeBase58(const std::string& str, std::vector<unsigned char>& vchRet, int max_ret_len)
 {
-    if (!ContainsNoNUL(str)) {
+    if (ContainsNUL(str)) {
         return false;
     }
     return DecodeBase58(str.c_str(), vchRet, max_ret_len);
@@ -162,7 +162,7 @@ std::string EncodeBase58Check(Span<const unsigned char> input)
 
 bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRet, int max_ret)
 {
-    if (!ContainsNoNUL(str)) {
+    if (ContainsNUL(str)) {
         return false;
     }
     return DecodeBase58Check(str.c_str(), vchRet, max_ret);
