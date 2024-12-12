@@ -23,6 +23,7 @@ enum class TransactionError {
     MEMPOOL_REJECTED,
     MEMPOOL_ERROR,
     MAX_FEE_EXCEEDED,
+    MAX_FEE_RATE_EXCEEDED,
     MAX_BURN_EXCEEDED,
     INVALID_PACKAGE,
 };
