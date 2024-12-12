@@ -5,6 +5,7 @@
 #ifndef BITCOIN_KERNEL_BLOCKMANAGER_OPTS_H
 #define BITCOIN_KERNEL_BLOCKMANAGER_OPTS_H
 
+#include <dbwrapper.h>
 #include <kernel/notifications_interface.h>
 #include <util/fs.h>
 
@@ -27,6 +28,14 @@ struct BlockManagerOpts {
     bool fast_prune{false};
     const fs::path blocks_dir;
     Notifications& notifications;
+    const fs::path block_tree_db_dir;
+    // Whether to wipe the block tree database when loading it. If set, this
+    // will also set a reindexing flag so any existing block data files will be
+    // scanned and added to the database.
+    bool wipe_block_tree_db{false};
+    bool block_tree_db_in_memory{false};
+    DBOptions block_tree_db_options{};
+    int64_t block_tree_db_cache_size;
 };
 
 } // namespace kernel

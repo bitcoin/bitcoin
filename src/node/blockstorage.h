@@ -259,8 +259,6 @@ private:
 
     BlockfileType BlockfileTypeForHeight(int height);
 
-    const kernel::BlockManagerOpts m_opts;
-
     const FlatFileSeq m_block_file_seq;
     const FlatFileSeq m_undo_file_seq;
 
@@ -269,6 +267,7 @@ public:
 
     explicit BlockManager(const util::SignalInterrupt& interrupt, Options opts);
 
+    const kernel::BlockManagerOpts m_opts;
     const util::SignalInterrupt& m_interrupt;
     std::atomic<bool> m_importing{false};
 
