@@ -1279,7 +1279,7 @@ class DashTestFramework(BitcoinTestFramework):
             return
 
         self.dynamically_initialize_datadir(node_p2p_port, node_rpc_port)
-        node_info = self.add_dynamically_node(self.extra_args[1])
+        node_info = self.add_dynamically_node(self.extra_args[0])
 
         args = ['-masternodeblsprivkey=%s' % created_mn_info.keyOperator] + node_info.extra_args
         self.start_node(mn_idx, args)
