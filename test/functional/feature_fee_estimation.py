@@ -11,6 +11,8 @@ import time
 
 from test_framework.messages import (
     COIN,
+    DEFAULT_BLOCK_MAX_WEIGHT,
+    WITNESS_SCALE_FACTOR,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -24,6 +26,7 @@ from test_framework.wallet import MiniWallet
 
 MAX_FILE_AGE = 60
 SECONDS_PER_HOUR = 60 * 60
+MEMPOOL_FORECASTER_CACHE_LIFE = 30 # Seconds
 
 def small_txpuzzle_randfee(
     wallet, from_node, conflist, unconflist, amount, min_fee, fee_increment, batch_reqs
@@ -136,6 +139,13 @@ def check_fee_estimates_btw_modes(node, expected_conservative, expected_economic
     assert_equal(fee_est_economical, expected_economical)
     assert_equal(fee_est_default, expected_economical)
 
+def verify_estimate_response(estimate, min_relay_fee, low_fee, high_fee, forecaster, errors):
+    assert_equal(estimate["minrelayfee"], min_relay_fee)
+    if low_fee and high_fee:
+        assert_equal(estimate["low"], low_fee)
+        assert_equal(estimate["high"], high_fee)
+        assert_equal(estimate["forecaster"], forecaster)
+    assert_equal(estimate["errors"], errors)
 
 class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -408,22 +418,91 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.sync_mempools()
         self.generate(miner, 1)
 
+
+    def setup_and_broadcast(self, fee_rate, blocks, txs):
+        """Helper for broadcasting transactions from node 1 and mining them using node 2 consecutively."""
+        for _ in range(blocks):
+            self.broadcast_and_mine(self.nodes[1], self.nodes[2], fee_rate, txs)
+
+    def send_transactions(self, utxos, fee_rate, target_vsize):
+        for utxo in utxos:
+            self.wallet.send_self_transfer(
+                from_node=self.nodes[0],
+                utxo_to_spend=utxo,
+                fee_rate=fee_rate,
+                target_vsize=target_vsize,
+            )
+
+
     def test_estimation_modes(self):
         low_feerate = Decimal("0.001")
         high_feerate = Decimal("0.005")
         tx_count = 24
         # Broadcast and mine high fee transactions for the first 12 blocks.
-        for _ in range(12):
-            self.broadcast_and_mine(self.nodes[1], self.nodes[2], high_feerate, tx_count)
-        check_fee_estimates_btw_modes(self.nodes[0], high_feerate, high_feerate)
+        self.setup_and_broadcast(high_feerate, blocks=12, txs=tx_count)
 
         # We now track 12 blocks; short horizon stats will start decaying.
         # Broadcast and mine low fee transactions for the next 4 blocks.
-        for _ in range(4):
-            self.broadcast_and_mine(self.nodes[1], self.nodes[2], low_feerate, tx_count)
+        self.setup_and_broadcast(low_feerate, blocks=4, txs=tx_count)
         # conservative mode will consider longer time horizons while economical mode does not
         # Check the fee estimates for both modes after mining low fee transactions.
         check_fee_estimates_btw_modes(self.nodes[0], high_feerate, low_feerate)
+
+
+    def test_estimatefee(self):
+        node0 = self.nodes[0]
+        self.log.info("Ensure node0's mempool is empty at the start")
+        assert_equal(node0.getmempoolinfo()['size'], 0)
+
+        self.log.info("Test estimatefee after restart with empty mempool and no block policy estimator data")
+        mempool_forecast_error = "Mempool Forecast: No enough transactions in the mempool to provide a fee rate forecast"
+        block_policy_error = "Block Policy Estimator: Insufficient data or no feerate found"
+        generic_error = "Failed to get estimate from forecasters"
+        estimate_after_restart = node0.estimatefee(1)
+        min_relay_fee = Decimal("0.0000100")
+        verify_estimate_response(estimate_after_restart, min_relay_fee, None, None, None, [generic_error, block_policy_error, mempool_forecast_error])
+
+        self.log.info("Test estimatefee after gathering sufficient block policy estimator data")
+        # Generate high-feerate transactions and mine them over 6 blocks
+        high_feerate, tx_count = Decimal("0.004"), 24
+        self.setup_and_broadcast(high_feerate, blocks=6, txs=tx_count)
+        estimate_from_block_policy = node0.estimatefee(1)
+        verify_estimate_response(estimate_from_block_policy, min_relay_fee, high_feerate, high_feerate, "Block Policy Estimator", [mempool_forecast_error])
+
+        self.log.info("Verify we return block policy estimator estimate when mempool provides higher estimate")
+        # Add 10 large high-feerate transactions enough to generate a block template
+        num_txs = 10
+        target_vsize = int((DEFAULT_BLOCK_MAX_WEIGHT / WITNESS_SCALE_FACTOR - 4000) / num_txs) # Account for coinbase space
+        self.restart_node(0, extra_args=[f"-datacarriersize={target_vsize}"])
+        utxos = [self.wallet.get_utxo(confirmed_only=True) for _ in range(num_txs)]
+        insane_feerate = Decimal("0.01")
+        self.send_transactions(utxos, insane_feerate, target_vsize)
+        estimate_after_spike = node0.estimatefee(1)
+        verify_estimate_response(estimate_after_spike, min_relay_fee, high_feerate, high_feerate, "Block Policy Estimator", [])
+
+        self.log.info("Test caching of recent estimates")
+        # Restart node with empty mempool, then broadcast low-feerate transactions
+        # Check that estimate reflects the lower feerate even after higher-feerate transactions were recently broadcasted
+        self.stop_node(0)
+        os.remove(node0.chain_path / "mempool.dat")
+        self.restart_node(0, extra_args=[f"-datacarriersize={target_vsize}"])
+
+        low_feerate = Decimal("0.00004")
+        self.send_transactions(utxos, low_feerate, target_vsize)
+        lower_estimate = node0.estimatefee(1)
+        verify_estimate_response(lower_estimate, min_relay_fee, low_feerate, low_feerate, "Mempool Forecast", [])
+
+        # Verify cache persists low-feerate estimate after broadcasting higher-feerate transactions
+        med_feerate = Decimal("0.002")
+        self.send_transactions(utxos, med_feerate, target_vsize)  # Double-spend UTXOs with medium feerate
+        cached_estimate = node0.estimatefee(1)
+        verify_estimate_response(cached_estimate, min_relay_fee, low_feerate, low_feerate, "Mempool Forecast", [])
+
+        self.log.info("Test estimate refresh after cache expiration")
+        current_timestamp = int(time.time())
+        node0.setmocktime(current_timestamp + (MEMPOOL_FORECASTER_CACHE_LIFE + 1))
+        new_estimate = node0.estimatefee(1)
+        verify_estimate_response(new_estimate, min_relay_fee, med_feerate, med_feerate, "Mempool Forecast", [])
 
 
     def run_test(self):
@@ -471,6 +550,10 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.clear_estimates()
         self.log.info("Test estimatesmartfee modes")
         self.test_estimation_modes()
+
+        self.clear_estimates()
+        self.log.info("Test estimatefee RPC")
+        self.test_estimatefee()
 
         self.log.info("Testing that fee estimation is disabled in blocksonly.")
         self.restart_node(0, ["-blocksonly"])
