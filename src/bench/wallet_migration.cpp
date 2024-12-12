@@ -35,11 +35,9 @@ static void WalletMigration(benchmark::Bench& bench)
     DatabaseOptions options;
     options.use_unsafe_sync = true;
     options.verify = false;
-    DatabaseStatus status;
-    bilingual_str error;
-    auto database = MakeWalletDatabase(fs::PathToString(test_setup->m_path_root / "legacy"), options, status, error);
+    auto database = MakeWalletDatabase(fs::PathToString(test_setup->m_path_root / "legacy"), options);
     uint64_t create_flags = 0;
-    auto wallet = TestLoadWallet(std::move(database), context, create_flags);
+    auto wallet = TestLoadWallet(std::move(database.value()), context, create_flags);
 
     // Add watch-only addresses
     std::vector<CScript> scripts_watch_only;
