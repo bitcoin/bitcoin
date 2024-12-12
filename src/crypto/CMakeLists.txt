@@ -25,6 +25,7 @@ add_library(bitcoin_crypto STATIC EXCLUDE_FROM_ALL
 target_link_libraries(bitcoin_crypto
   PRIVATE
     core_interface
+    coverage_interface
 )
 
 if(HAVE_SSE41)
@@ -33,7 +34,7 @@ if(HAVE_SSE41)
   )
   target_compile_definitions(bitcoin_crypto_sse41 PUBLIC ENABLE_SSE41)
   target_compile_options(bitcoin_crypto_sse41 PRIVATE ${SSE41_CXXFLAGS})
-  target_link_libraries(bitcoin_crypto_sse41 PRIVATE core_interface)
+  target_link_libraries(bitcoin_crypto_sse41 PRIVATE core_interface coverage_interface)
   target_link_libraries(bitcoin_crypto PRIVATE bitcoin_crypto_sse41)
 endif()
 
@@ -43,7 +44,7 @@ if(HAVE_AVX2)
   )
   target_compile_definitions(bitcoin_crypto_avx2 PUBLIC ENABLE_AVX2)
   target_compile_options(bitcoin_crypto_avx2 PRIVATE ${AVX2_CXXFLAGS})
-  target_link_libraries(bitcoin_crypto_avx2 PRIVATE core_interface)
+  target_link_libraries(bitcoin_crypto_avx2 PRIVATE core_interface coverage_interface)
   target_link_libraries(bitcoin_crypto PRIVATE bitcoin_crypto_avx2)
 endif()
 
@@ -53,7 +54,7 @@ if(HAVE_SSE41 AND HAVE_X86_SHANI)
   )
   target_compile_definitions(bitcoin_crypto_x86_shani PUBLIC ENABLE_SSE41 ENABLE_X86_SHANI)
   target_compile_options(bitcoin_crypto_x86_shani PRIVATE ${X86_SHANI_CXXFLAGS})
-  target_link_libraries(bitcoin_crypto_x86_shani PRIVATE core_interface)
+  target_link_libraries(bitcoin_crypto_x86_shani PRIVATE core_interface coverage_interface)
   target_link_libraries(bitcoin_crypto PRIVATE bitcoin_crypto_x86_shani)
 endif()
 
@@ -63,6 +64,6 @@ if(HAVE_ARM_SHANI)
   )
   target_compile_definitions(bitcoin_crypto_arm_shani PUBLIC ENABLE_ARM_SHANI)
   target_compile_options(bitcoin_crypto_arm_shani PRIVATE ${ARM_SHANI_CXXFLAGS})
-  target_link_libraries(bitcoin_crypto_arm_shani PRIVATE core_interface)
+  target_link_libraries(bitcoin_crypto_arm_shani PRIVATE core_interface coverage_interface)
   target_link_libraries(bitcoin_crypto PRIVATE bitcoin_crypto_arm_shani)
 endif()

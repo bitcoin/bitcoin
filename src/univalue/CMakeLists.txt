@@ -12,7 +12,11 @@ target_include_directories(univalue
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
-target_link_libraries(univalue PRIVATE core_interface)
+target_link_libraries(univalue
+  PRIVATE
+    core_interface
+    coverage_interface
+)
 
 if(BUILD_TESTS)
   add_executable(unitester test/unitester.cpp)
@@ -23,6 +27,7 @@ if(BUILD_TESTS)
   target_link_libraries(unitester
     PRIVATE
       core_interface
+      coverage_interface
       univalue
   )
   add_test(NAME univalue_test
@@ -33,6 +38,7 @@ if(BUILD_TESTS)
   target_link_libraries(object
     PRIVATE
       core_interface
+      coverage_interface
       univalue
   )
   add_test(NAME univalue_object_test

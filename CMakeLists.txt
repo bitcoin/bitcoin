@@ -172,6 +172,8 @@ option(BUILD_BENCH "Build bench_bitcoin executable." OFF)
 option(BUILD_FUZZ_BINARY "Build fuzz binary." OFF)
 option(BUILD_FOR_FUZZING "Build for fuzzing. Enabling this will disable all other targets and override BUILD_FUZZ_BINARY." OFF)
 
+option(BUILD_FOR_COVERAGE "Build with Code Coverage instrumentation" OFF)
+
 option(INSTALL_MAN "Install man pages." ON)
 
 set(APPEND_CPPFLAGS "" CACHE STRING "Preprocessor flags that are appended to the command line after all other flags added by the build system. This variable is intended for debugging and special builds.")
@@ -370,6 +372,77 @@ if(BUILD_FUZZ_BINARY)
       // No main() function.
     " FUZZ_BINARY_LINKS_WITHOUT_MAIN_FUNCTION
   )
+endif()
+
+# The coverage_interface library is intended to be used
+# only for code whose coverage report is of interest.
+add_library(coverage_interface INTERFACE)
+if(BUILD_FOR_COVERAGE)
+  if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    message(FATAL_ERROR "BUILD_FOR_COVERAGE can only be specified when compiling with Clang.")
+  endif()
+  if(NOT PROFILE_FILE_PATTERN)
+    if(NOT PROFILE_DATA_DIR)
+      file(TO_NATIVE_PATH "${PROJECT_BINARY_DIR}/profiles" PROFILE_DATA_DIR)
+    endif()
+    file(TO_NATIVE_PATH "${PROFILE_DATA_DIR}/%m.profraw" PROFILE_FILE_PATTERN)
+  endif()
+  target_compile_options(coverage_interface INTERFACE
+    -fprofile-instr-generate=${PROFILE_FILE_PATTERN}
+    -fcoverage-mapping
+  )
+  target_link_options(coverage_interface INTERFACE
+    -fprofile-instr-generate=${PROFILE_FILE_PATTERN}
+    -fcoverage-mapping
+  )
+
+  set(coverage_ignore_paths
+    src/leveldb/
+    src/crc32c/
+    src/crypto/ctaes/
+    src/minisketch/
+    src/secp256k1/
+  )
+  list(TRANSFORM coverage_ignore_paths PREPEND "-ignore-filename-regex=")
+
+  if(NOT BUILD_FOR_FUZZING)
+    add_custom_command(
+      OUTPUT ${PROJECT_BINARY_DIR}/test_bitcoin.coverage/index.html
+      COMMAND ${CMAKE_CTEST_COMMAND} --test-dir ${PROJECT_BINARY_DIR} --exclude-regex secp256k1_
+      COMMAND llvm-profdata merge --instr ${PROFILE_DATA_DIR}/*.profraw --output ${PROFILE_DATA_DIR}/test_bitcoin.profdata
+      COMMAND llvm-cov show -instr-profile=${PROFILE_DATA_DIR}/test_bitcoin.profdata -object=$<TARGET_FILE:test_bitcoin> -object=$<TARGET_FILE:bitcoin-util> -object=$<TARGET_FILE:bitcoin-tx> -output-dir=${PROJECT_BINARY_DIR}/test_bitcoin.coverage -format=html ${coverage_ignore_paths}
+      DEPENDS test_bitcoin bitcoin-util bitcoin-tx unitester object
+    )
+    add_custom_target(test_bitcoin_coverage
+      DEPENDS ${PROJECT_BINARY_DIR}/test_bitcoin.coverage/index.html
+    )
+
+    add_custom_command(
+      OUTPUT ${PROJECT_BINARY_DIR}/total.coverage/index.html
+      COMMAND Python3::Interpreter ${PROJECT_BINARY_DIR}/test/functional/test_runner.py
+      COMMAND llvm-profdata merge --instr ${PROFILE_DATA_DIR}/*.profraw --output ${PROFILE_DATA_DIR}/total.profdata
+      COMMAND llvm-cov show -instr-profile=${PROFILE_DATA_DIR}/total.profdata -object=$<TARGET_FILE:bitcoind> -object=$<TARGET_FILE:bitcoin-cli> -object=$<TARGET_FILE:bitcoin-wallet> -object=$<TARGET_FILE:test_bitcoin> -object=$<TARGET_FILE:bitcoin-util> -object=$<TARGET_FILE:bitcoin-tx> -output-dir=${PROJECT_BINARY_DIR}/total.coverage -format=html ${coverage_ignore_paths}
+      DEPENDS bitcoind bitcoin-cli bitcoin-wallet
+    )
+    add_custom_target(total_coverage
+      DEPENDS ${PROJECT_BINARY_DIR}/total.coverage/index.html
+    )
+    add_dependencies(total_coverage test_bitcoin_coverage)
+  else()
+    if(NOT FUZZ_CORPORA_DIR)
+      set(FUZZ_CORPORA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/qa-assets/fuzz_corpora)
+    endif()
+    add_custom_command(
+      OUTPUT ${PROJECT_BINARY_DIR}/fuzz.coverage/index.html
+      COMMAND Python3::Interpreter test/fuzz/test_runner.py ${FUZZ_CORPORA_DIR} --loglevel DEBUG
+      COMMAND llvm-profdata merge --instr ${PROFILE_DATA_DIR}/*.profraw --output ${PROFILE_DATA_DIR}/fuzz.profdata
+      COMMAND llvm-cov show -instr-profile=${PROFILE_DATA_DIR}/fuzz.profdata -object=$<TARGET_FILE:fuzz> -output-dir=${PROJECT_BINARY_DIR}/fuzz.coverage -format=html ${coverage_ignore_paths}
+      DEPENDS fuzz
+    )
+    add_custom_target(fuzz_coverage
+      DEPENDS ${PROJECT_BINARY_DIR}/fuzz.coverage/index.html
+    )
+  endif()
 endif()
 
 include(AddBoostIfNeeded)
@@ -624,6 +697,7 @@ message("  test_bitcoin ........................ ${BUILD_TESTS}")
 message("  test_bitcoin-qt ..................... ${BUILD_GUI_TESTS}")
 message("  bench_bitcoin ....................... ${BUILD_BENCH}")
 message("  fuzz binary ......................... ${BUILD_FUZZ_BINARY}")
+message("  Code Coverage instrumentation ....... ${BUILD_FOR_COVERAGE}")
 message("")
 if(CMAKE_CROSSCOMPILING)
   set(cross_status "TRUE, for ${CMAKE_SYSTEM_NAME}, ${CMAKE_SYSTEM_PROCESSOR}")

@@ -16,6 +16,7 @@ target_compile_definitions(bitcoin_zmq
 target_link_libraries(bitcoin_zmq
   PRIVATE
     core_interface
+    coverage_interface
     univalue
     zeromq
 )
