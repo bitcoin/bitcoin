@@ -55,7 +55,7 @@ public:
      *
      * @returns if the block was processed, independent of block validity
      */
-    virtual bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CMutableTransaction coinbase) = 0;
+    virtual bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) = 0;
 };
 
 //! Interface giving clients (RPC, Stratum v2 Template Provider in the future)
