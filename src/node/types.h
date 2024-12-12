@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 //! @file node/types.h is a home for public enum and struct type definitions
-//! that are used by internally by node code, but also used externally by wallet
-//! or GUI code.
+//! that are used by internally by node code, but also used externally by wallet,
+//! mining or GUI code.
 //!
 //! This file is intended to define only simple types that do not have external
 //! dependencies. More complicated types should be defined in dedicated header
@@ -14,6 +14,7 @@
 #define BITCOIN_NODE_TYPES_H
 
 #include <cstddef>
+#include <script/script.h>
 
 namespace node {
 enum class TransactionError {
@@ -43,6 +44,22 @@ struct BlockCreateOptions {
      * transaction outputs.
      */
     size_t coinbase_output_max_additional_sigops{400};
+    /**
+     * Script to put in the coinbase transaction. The default is an
+     * anyone-can-spend dummy.
+     *
+     * Should only be used for tests, when the default doesn't suffice.
+     *
+     * Note that higher level code like the getblocktemplate RPC may omit the
+     * coinbase transaction entirely. It's instead constructed by pool software
+     * using fields like coinbasevalue, coinbaseaux and default_witness_commitment.
+     * This software typically also controls the payout outputs, even for solo
+     * mining.
+     *
+     * The size and sigops are not checked against
+     * coinbase_max_additional_weight and coinbase_output_max_additional_sigops.
+     */
+    CScript coinbase_output_script{CScript() << OP_TRUE};
 };
 } // namespace node
 
