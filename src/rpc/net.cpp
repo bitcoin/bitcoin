@@ -1126,10 +1126,10 @@ static const CRPCCommand commands[] =
     { "network",             &setban,                  },
     { "network",             &listbanned,              },
     { "network",             &clearbanned,             },
-    { "network",             &cleardiscouraged,        },
     { "network",             &setnetworkactive,        },
     { "network",             &getnodeaddresses,        },
 
+    { "hidden",              &cleardiscouraged,        },
     { "hidden",              &addconnection,           },
     { "hidden",              &addpeeraddress,          },
     { "hidden",              &sendmsgtopeer            },
