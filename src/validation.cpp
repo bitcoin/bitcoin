@@ -2997,7 +2997,7 @@ static void UpdateTipLog(
         tip->GetBlockHash().ToString(), tip->nHeight, tip->nVersion,
         log(tip->nChainWork.getdouble()) / log(2.0), tip->m_chain_tx_count,
         FormatISO8601DateTime(tip->GetBlockTime()),
-        GuessVerificationProgress(params.TxData(), tip),
+        GuessVerificationProgress(params.TxData(), tip, tip),
         coins_tip.DynamicMemoryUsage() * (1.0 / (1 << 20)),
         coins_tip.GetCacheSize(),
         !warning_messages.empty() ? strprintf(" warning='%s'", warning_messages) : "");
@@ -4720,7 +4720,7 @@ bool Chainstate::LoadChainTip()
               tip->GetBlockHash().ToString(),
               m_chain.Height(),
               FormatISO8601DateTime(tip->GetBlockTime()),
-              GuessVerificationProgress(m_chainman.GetParams().TxData(), tip));
+              GuessVerificationProgress(m_chainman.GetParams().TxData(), tip, tip));
     return true;
 }
 
@@ -5602,9 +5602,9 @@ bool Chainstate::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
     return ret;
 }
 
-//! Guess how far we are in the verification process at the given block index
+//! Guess how far we are in the verification process at the given block index and the best headers chain
 //! require cs_main if pindex has not been validated yet (because m_chain_tx_count might be unset)
-double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex *pindex) {
+double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex* pindex, const CBlockIndex* hindex) {
     if (pindex == nullptr)
         return 0.0;
 
@@ -5614,17 +5614,23 @@ double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex *pin
         return 0.0;
     }
 
-    int64_t nNow = time(nullptr);
+    int64_t end_of_chain_timestamp = pindex->GetBlockTime();
+
+    if (hindex && hindex->nChainWork > pindex->nChainWork) {
+        int64_t header_age = time(nullptr) - hindex->GetBlockTime();
+        if (header_age < 24 * 60 * 60) {
+            end_of_chain_timestamp = std::max(end_of_chain_timestamp, hindex->GetBlockTime());
+        }
+    }
 
     double fTxTotal;
 
     if (pindex->m_chain_tx_count <= data.tx_count) {
-        fTxTotal = data.tx_count + (nNow - data.nTime) * data.dTxRate;
+        fTxTotal = data.tx_count + (end_of_chain_timestamp - data.nTime) * data.dTxRate;
     } else {
-        fTxTotal = pindex->m_chain_tx_count + (nNow - pindex->GetBlockTime()) * data.dTxRate;
+        fTxTotal = pindex->m_chain_tx_count + (end_of_chain_timestamp - pindex->GetBlockTime()) * data.dTxRate;
     }
-
-    return std::min<double>(pindex->m_chain_tx_count / fTxTotal, 1.0);
+    return pindex->m_chain_tx_count / fTxTotal;
 }
 
 std::optional<uint256> ChainstateManager::SnapshotBlockhash() const
