@@ -14,16 +14,6 @@
 
 using util::ToString;
 
-// Test if a string consists entirely of null characters
-static bool is_null_key(const std::vector<unsigned char>& key) {
-    bool isnull = true;
-
-    for (unsigned int i = 0; i < key.size(); i++)
-        isnull &= (key[i] == '\x00');
-
-    return isnull;
-}
-
 BOOST_FIXTURE_TEST_SUITE(dbwrapper_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(dbwrapper)
@@ -37,7 +27,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper)
         uint256 res;
 
         // Ensure that we're doing real obfuscation when obfuscate=true
-        BOOST_CHECK(obfuscate != is_null_key(dbwrapper_private::GetObfuscateKey(dbw)));
+        BOOST_CHECK(obfuscate != (dbwrapper_private::GetObfuscateKey(dbw) == 0));
 
         BOOST_CHECK(dbw.Write(key, in));
         BOOST_CHECK(dbw.Read(key, res));
@@ -57,7 +47,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_basic_data)
         bool res_bool;
 
         // Ensure that we're doing real obfuscation when obfuscate=true
-        BOOST_CHECK(obfuscate != is_null_key(dbwrapper_private::GetObfuscateKey(dbw)));
+        BOOST_CHECK(obfuscate != (dbwrapper_private::GetObfuscateKey(dbw) == 0));
 
         //Simulate block raw data - "b + block hash"
         std::string key_block = "b" + m_rng.rand256().ToString();
@@ -232,7 +222,7 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
     BOOST_CHECK_EQUAL(res2.ToString(), in.ToString());
 
     BOOST_CHECK(!odbw.IsEmpty()); // There should be existing data
-    BOOST_CHECK(is_null_key(dbwrapper_private::GetObfuscateKey(odbw))); // The key should be an empty string
+    BOOST_CHECK_EQUAL(dbwrapper_private::GetObfuscateKey(odbw), 0); // The key should be empty
 
     uint256 in2 = m_rng.rand256();
     uint256 res3;
@@ -269,7 +259,7 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
     // Check that the key/val we wrote with unobfuscated wrapper doesn't exist
     uint256 res2;
     BOOST_CHECK(!odbw.Read(key, res2));
-    BOOST_CHECK(!is_null_key(dbwrapper_private::GetObfuscateKey(odbw)));
+    BOOST_CHECK_NE(dbwrapper_private::GetObfuscateKey(odbw), 0);
 
     uint256 in2 = m_rng.rand256();
     uint256 res3;
