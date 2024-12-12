@@ -5,6 +5,7 @@
 #ifndef BITCOIN_TEST_UTIL_TXMEMPOOL_H
 #define BITCOIN_TEST_UTIL_TXMEMPOOL_H
 
+#include <net.h>
 #include <policy/packages.h>
 #include <txmempool.h>
 #include <util/time.h>
@@ -13,6 +14,7 @@ namespace node {
 struct NodeContext;
 }
 struct PackageMempoolAcceptResult;
+class TxOrphanage;
 
 CTxMemPool::Options MemPoolOptionsForTest(const node::NodeContext& node);
 
@@ -66,5 +68,8 @@ void CheckMempoolTRUCInvariants(const CTxMemPool& tx_pool);
 /** One-line wrapper for creating a mempool changeset with a single transaction
  *  and applying it. */
 void AddToMempool(CTxMemPool& tx_pool, const CTxMemPoolEntry& entry);
+
+/** Wrapper for adding a new transaction to orphanage and passing out the return result. */
+bool AddToOrphanage(TxOrphanage& orphanage, const CTransactionRef& tx, NodeId peer);
 
 #endif // BITCOIN_TEST_UTIL_TXMEMPOOL_H
