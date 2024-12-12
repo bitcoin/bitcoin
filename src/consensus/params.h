@@ -18,6 +18,7 @@ namespace Consensus {
 /**
  * A buried deployment is one where the height of the activation has been hardcoded into
  * the client implementation long after the consensus change has activated. See BIP 90.
+ * Consensus changes for which the new rules enforced from genesis are not listed here.
  */
 enum BuriedDeployment : int16_t {
     // buried deployments get negative values to avoid overlap with DeploymentPos
@@ -25,14 +26,16 @@ enum BuriedDeployment : int16_t {
     DEPLOYMENT_CLTV,
     DEPLOYMENT_DERSIG,
     DEPLOYMENT_CSV,
+    // SCRIPT_VERIFY_WITNESS is enforced from genesis, but the check for downloading
+    // missing witness data is not. BIP 147 also relies on hardcoded activation height.
     DEPLOYMENT_SEGWIT,
 };
 constexpr bool ValidDeployment(BuriedDeployment dep) { return dep <= DEPLOYMENT_SEGWIT; }
 
 enum DeploymentPos : uint16_t {
     DEPLOYMENT_TESTDUMMY,
-    DEPLOYMENT_TAPROOT, // Deployment of Schnorr/Taproot (BIPs 340-342)
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in deploymentinfo.cpp
+    // Removing an entry may require bumping MinBIP9WarningHeight.
     MAX_VERSION_BITS_DEPLOYMENTS
 };
 constexpr bool ValidDeployment(DeploymentPos dep) { return dep < MAX_VERSION_BITS_DEPLOYMENTS; }
@@ -95,7 +98,7 @@ struct Params {
      * BIP 16 exception blocks. */
     int SegwitHeight;
     /** Don't warn about unknown BIP 9 activations below this height.
-     * This prevents us from warning about the CSV and segwit activations. */
+     * This prevents us from warning about the CSV, segwit and taproot activations. */
     int MinBIP9WarningHeight;
     /**
      * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargeting period,
