@@ -56,6 +56,19 @@ public:
      * @returns if the block was processed, independent of block validity
      */
     virtual bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CMutableTransaction coinbase) = 0;
+
+    /**
+     * Waits for fees in the next block to rise, a new tip or the timeout.
+     *
+     * @param[in] fee_threshold By how much total fees for the next block should rise.
+     *                          Default is to not monitor fee changes and only wait for a new chaintip.
+     * @param[in] timeout       How long to wait. Default is forever.
+     *
+     * @returns a new BlockTemplate or nullptr if the timeout occurs. Immediately
+     *          returns a new BlockTemplate if called with both fee_threshold and
+     *          timeout set to 0.
+     */
+    virtual std::unique_ptr<BlockTemplate> waitNext(CAmount fee_threshold = MAX_MONEY, MillisecondsDouble timeout = MillisecondsDouble::max()) = 0;
 };
 
 //! Interface giving clients (RPC, Stratum v2 Template Provider in the future)
