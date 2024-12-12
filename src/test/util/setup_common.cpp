@@ -148,8 +148,7 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
         // same time, add a random element to the path. Keep it small enough to
         // avoid a MAX_PATH violation on Windows.
         const auto rand{HexStr(g_rng_temp_path.randbytes(10))};
-        m_path_root = fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / test_name / rand;
-        TryCreateDirectories(m_path_root);
+        m_path_lock = fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / test_name / rand;
     } else {
         // Custom data directory
         m_has_custom_datadir = true;
@@ -158,21 +157,24 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
 
         root_dir = fs::absolute(root_dir);
         m_path_lock = root_dir / TEST_DIR_PATH_ELEMENT / fs::PathFromString(test_name);
-        m_path_root = m_path_lock / "datadir";
+    }
 
-        // Try to obtain the lock; if unsuccessful don't disturb the existing test.
-        TryCreateDirectories(m_path_lock);
-        if (util::LockDirectory(m_path_lock, ".lock", /*probe_only=*/false) != util::LockResult::Success) {
-            ExitFailure("Cannot obtain a lock on test data lock directory " + fs::PathToString(m_path_lock) + '\n' + "The test executable is probably already running.");
-        }
+    m_path_root = m_path_lock / "datadir";
+    // Try to obtain the lock; if unsuccessful don't disturb the existing test.
+    TryCreateDirectories(m_path_lock);
+    if (util::LockDirectory(m_path_lock, ".lock", /*probe_only=*/false) != util::LockResult::Success) {
+        ExitFailure("Cannot obtain a lock on test data lock directory " + fs::PathToString(m_path_lock) + '\n' + "The test directory and .lock file already exist.");
+    }
 
-        // Always start with a fresh data directory; this doesn't delete the .lock file located one level above.
-        fs::remove_all(m_path_root);
-        if (!TryCreateDirectories(m_path_root)) ExitFailure("Cannot create test data directory");
+    // Always start with a fresh data directory; this doesn't delete the .lock file located one level above.
+    fs::remove_all(m_path_root);
+    if (!TryCreateDirectories(m_path_root)) ExitFailure("Cannot create test data directory");
 
+    if (m_has_custom_datadir) {
         // Print the test directory name if custom.
         std::cout << "Test directory (will not be deleted): " << m_path_root << std::endl;
     }
+
     m_args.ForceSetArg("-datadir", fs::PathToString(m_path_root));
     gArgs.ForceSetArg("-datadir", fs::PathToString(m_path_root));
 
@@ -200,12 +202,13 @@ BasicTestingSetup::~BasicTestingSetup()
     m_node.kernel.reset();
     SetMockTime(0s); // Reset mocktime for following tests
     LogInstance().DisconnectTestLogger();
-    if (m_has_custom_datadir) {
-        // Only remove the lock file, preserve the data directory.
-        UnlockDirectory(m_path_lock, ".lock");
-        fs::remove(m_path_lock / ".lock");
-    } else {
-        fs::remove_all(m_path_root);
+
+    UnlockDirectory(m_path_lock, ".lock");
+    fs::remove(m_path_lock / ".lock");
+
+    // Only delete dir if not a custom datadir
+    if (!m_has_custom_datadir) {
+        fs::remove_all(m_path_lock);
     }
     gArgs.ClearArgs();
 }
