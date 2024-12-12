@@ -261,34 +261,8 @@ std::string RequestMethodString(HTTPRequestMethod m)
     assert(false);
 }
 
-/** HTTP request callback */
-static void http_request_cb(struct evhttp_request* req, void* arg)
+static void MaybeDispatchRequestToWorker(std::unique_ptr<HTTPRequest> hreq)
 {
-    evhttp_connection* conn{evhttp_request_get_connection(req)};
-    // Track active requests
-    {
-        g_requests.AddRequest(req);
-        evhttp_request_set_on_complete_cb(req, [](struct evhttp_request* req, void*) {
-            g_requests.RemoveRequest(req);
-        }, nullptr);
-        evhttp_connection_set_closecb(conn, [](evhttp_connection* conn, void* arg) {
-            g_requests.RemoveConnection(conn);
-        }, nullptr);
-    }
-
-    // Disable reading to work around a libevent bug, fixed in 2.1.9
-    // See https://github.com/libevent/libevent/commit/5ff8eb26371c4dc56f384b2de35bea2d87814779
-    // and https://github.com/bitcoin/bitcoin/pull/11593.
-    if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02010900) {
-        if (conn) {
-            bufferevent* bev = evhttp_connection_get_bufferevent(conn);
-            if (bev) {
-                bufferevent_disable(bev, EV_READ);
-            }
-        }
-    }
-    auto hreq{std::make_unique<HTTPRequest>(req, *static_cast<const util::SignalInterrupt*>(arg))};
-
     // Early address-based allow check
     if (!ClientAllowed(hreq->GetPeer())) {
         LogDebug(BCLog::HTTP, "HTTP request from %s rejected: Client network is not allowed RPC access\n",
@@ -339,6 +313,36 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
     } else {
         hreq->WriteReply(HTTP_NOT_FOUND);
     }
+}
+
+/** HTTP request callback */
+static void http_request_cb(struct evhttp_request* req, void* arg)
+{
+    evhttp_connection* conn{evhttp_request_get_connection(req)};
+    // Track active requests
+    {
+        g_requests.AddRequest(req);
+        evhttp_request_set_on_complete_cb(req, [](struct evhttp_request* req, void*) {
+            g_requests.RemoveRequest(req);
+        }, nullptr);
+        evhttp_connection_set_closecb(conn, [](evhttp_connection* conn, void* arg) {
+            g_requests.RemoveConnection(conn);
+        }, nullptr);
+    }
+
+    // Disable reading to work around a libevent bug, fixed in 2.1.9
+    // See https://github.com/libevent/libevent/commit/5ff8eb26371c4dc56f384b2de35bea2d87814779
+    // and https://github.com/bitcoin/bitcoin/pull/11593.
+    if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02010900) {
+        if (conn) {
+            bufferevent* bev = evhttp_connection_get_bufferevent(conn);
+            if (bev) {
+                bufferevent_disable(bev, EV_READ);
+            }
+        }
+    }
+    auto hreq{std::make_unique<http_libevent::HTTPRequest>(req, *static_cast<const util::SignalInterrupt*>(arg))};
+    MaybeDispatchRequestToWorker(std::move(hreq));
 }
 
 /** Callback to reject HTTP requests after shutdown. */
