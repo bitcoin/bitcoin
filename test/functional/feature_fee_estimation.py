@@ -128,6 +128,15 @@ def make_tx(wallet, utxo, feerate):
         fee_rate=Decimal(feerate * 1000) / COIN,
     )
 
+
+def send_tx(wallet, node, utxo, feerate):
+    """Broadcast a 1in-1out transaction with a specific input and feerate (sat/vb)."""
+    return wallet.send_self_transfer(
+        from_node=node,
+        utxo_to_spend=utxo,
+        fee_rate=Decimal(feerate * 1000) / COIN,
+    )
+
 def check_fee_estimates_btw_modes(node, expected_conservative, expected_economical):
     fee_est_conservative = node.estimatesmartfee(1, estimate_mode="conservative")['feerate']
     fee_est_economical = node.estimatesmartfee(1, estimate_mode="economical")['feerate']
@@ -273,6 +282,11 @@ class EstimateFeeTest(BitcoinTestFramework):
             # Broadcast 5 low fee transaction which don't need to
             for _ in range(5):
                 tx = make_tx(self.wallet, utxos.pop(0), low_feerate)
+                self.confutxo.append({
+                    "txid": tx["txid"],
+                    "vout": 0,
+                    "value": Decimal(tx["tx"].vout[0].nValue) / COIN
+                })
                 txs.append(tx)
             batch_send_tx = [node.sendrawtransaction.get_request(tx["hex"]) for tx in txs]
             for n in self.nodes:
@@ -286,11 +300,15 @@ class EstimateFeeTest(BitcoinTestFramework):
             while len(utxos_to_respend) > 0:
                 u = utxos_to_respend.pop(0)
                 tx = make_tx(self.wallet, u, high_feerate)
+                self.confutxo.append({
+                    "txid": tx["txid"],
+                    "vout": 0,
+                    "value": Decimal(tx["tx"].vout[0].nValue) / COIN
+                })
                 node.sendrawtransaction(tx["hex"])
                 txs.append(tx)
             dec_txs = [res["result"] for res in node.batch([node.decoderawtransaction.get_request(tx["hex"]) for tx in txs])]
             self.wallet.scan_txs(dec_txs)
-
 
         # Mine the last replacement txs
         self.sync_mempools(wait=0.1, nodes=[node, miner])
@@ -390,6 +408,64 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.start_node(0,extra_args=["-acceptstalefeeestimates"])
         assert_equal(self.nodes[0].estimatesmartfee(1)["feerate"], fee_rate)
 
+
+    def send_and_mine_child_tx(self, broadcaster, miner, parent_tx, feerate):
+        u = {"txid": parent_tx["txid"], "vout": 0, "value": Decimal(parent_tx["tx"].vout[0].nValue) / COIN}
+        send_tx(wallet=self.wallet, node=broadcaster, utxo=u, feerate=feerate)
+        self.sync_mempools(wait=0.1, nodes=[broadcaster, miner])
+        self.generate(miner, 1)
+
+    def sanity_check_cpfp_estimates(self, utxos):
+        """The BlockPolicyEstimator currently does not take CPFP into account. This test
+        sanity checks its behaviour when receiving transactions that were confirmed because
+        of their child's feerate.
+        """
+        # The broadcaster and block producer
+        broadcaster = self.nodes[0]
+        miner = self.nodes[1]
+        # In sat/vb
+        [low_feerate, med_feerate, high_feerate] = [Decimal(2), Decimal(15), Decimal(20)]
+
+        self.log.info("Test that fee estimator will ignore all transaction with in block child")
+        # If a transaction got mined and has a child in the same block it was mined
+        # if the child does not CPFP the parent, the parent got accounted in fee estimation.
+        low_fee_parent = send_tx(wallet=self.wallet, node=broadcaster, utxo=None, feerate=low_feerate)
+        self.send_and_mine_child_tx(broadcaster=broadcaster, miner=miner, parent_tx=low_fee_parent, feerate=high_feerate)
+        assert_equal(broadcaster.estimaterawfee(1)["short"]["fail"]["totalconfirmed"], 0)
+
+        # If the child CPFP the parent, the parent is not accounted in fee estimation
+        high_fee_parent = send_tx(wallet=self.wallet, node=broadcaster, utxo=None, feerate=high_feerate)
+        self.send_and_mine_child_tx(broadcaster=broadcaster, miner=miner, parent_tx=high_fee_parent, feerate=low_feerate)
+        assert_equal(broadcaster.estimaterawfee(1)["short"]["fail"]["totalconfirmed"], 1)
+
+        # Generate and mine packages of transactions, 80% of them are a [low fee, high fee] package
+        # which get mined because of the child transaction. 20% are single-transaction packages with
+        # a medium-high feerate.
+        # Test that we don't give the low feerate as estimate, assuming the low fee transactions
+        # got mined on their own.
+        for _ in range(5):
+            txs = []  # Batch the RPCs calls.
+            for _ in range(20):
+                u = utxos.pop(0)
+                parent_tx = make_tx(wallet=self.wallet, utxo=u, feerate=low_feerate)
+                txs.append(parent_tx)
+                u = {
+                    "txid": parent_tx["txid"],
+                    "vout": 0,
+                    "value": Decimal(parent_tx["tx"].vout[0].nValue) / COIN
+                }
+                child_tx = make_tx(wallet=self.wallet, utxo=u, feerate=high_feerate)
+                txs.append(child_tx)
+            for _ in range(5):
+                u = utxos.pop(0)
+                tx = make_tx(wallet=self.wallet, utxo=u, feerate=med_feerate)
+                txs.append(tx)
+            batch_send_tx = (broadcaster.sendrawtransaction.get_request(tx["hex"]) for tx in txs)
+            broadcaster.batch(batch_send_tx)
+            self.sync_mempools(wait=0.1, nodes=[broadcaster, miner])
+            self.generate(miner, 1)
+        assert_equal(broadcaster.estimatesmartfee(2)["feerate"], med_feerate * 1000 / COIN)
+
     def clear_estimates(self):
         self.log.info("Restarting node with fresh estimation")
         self.stop_node(0)
@@ -466,7 +542,11 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.clear_estimates()
 
         self.log.info("Testing estimates with RBF.")
-        self.sanity_check_rbf_estimates(self.confutxo + self.memutxo)
+        self.sanity_check_rbf_estimates(self.confutxo)
+
+        self.clear_estimates()
+        self.log.info("Testing estimates with CPFP.")
+        self.sanity_check_cpfp_estimates(self.confutxo)
 
         self.clear_estimates()
         self.log.info("Test estimatesmartfee modes")
