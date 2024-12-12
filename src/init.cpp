@@ -1770,7 +1770,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     node.background_init_thread = std::thread(&util::TraceThread, "initload", [=, &chainman, &args, &node] {
         ScheduleBatchPriority();
-        // Import blocks
+        // Import blocks and ActivateBestChain()
         ImportBlocks(chainman, vImportFiles);
         if (args.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
             LogPrintf("Stopping after block import\n");
@@ -1793,8 +1793,18 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     });
 
-    // Wait for genesis block to be processed
-    if (WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip() == nullptr)) {
+    /*
+     * Wait for genesis block to be processed. Typically kernel_notifications.m_tip_block
+     * has already been set by a call to LoadChainTip() in CompleteChainstateInitialization().
+     * But this is skipped if the chainstate doesn't exist yet or is being wiped:
+     *
+     * 1. first startup with an empty datadir
+     * 2. reindex
+     * 3. reindex-chainstate
+     *
+     * In these case it's connected by a call to ActivateBestChain() in the initload thread.
+     */
+    {
         WAIT_LOCK(kernel_notifications.m_tip_block_mutex, lock);
         kernel_notifications.m_tip_block_cv.wait(lock, [&]() EXCLUSIVE_LOCKS_REQUIRED(kernel_notifications.m_tip_block_mutex) {
             return !kernel_notifications.m_tip_block.IsNull() || ShutdownRequested(node);
