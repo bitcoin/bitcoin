@@ -3975,7 +3975,7 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
     return spk_man;
 }
 
-bool CWallet::MigrateToSQLite(bilingual_str& error)
+bool CWallet::MigrateToSQLite(bilingual_str& error, bool in_memory)
 {
     AssertLockHeld(cs_wallet);
 
@@ -4026,6 +4026,7 @@ bool CWallet::MigrateToSQLite(bilingual_str& error)
     DatabaseOptions opts;
     opts.require_create = true;
     opts.require_format = DatabaseFormat::SQLITE;
+    opts.in_memory = in_memory;
     DatabaseStatus db_status;
     std::unique_ptr<WalletDatabase> new_db = MakeDatabase(wallet_path, opts, db_status, error);
     assert(new_db); // This is to prevent doing anything further with this wallet. The original file was deleted, but a backup exists.
@@ -4526,6 +4527,158 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         }
     }
     if (!success) {
+        // Migration failed, cleanup
+        // Copy the backup to the actual wallet dir
+        fs::path temp_backup_location = fsbridge::AbsPathJoin(GetWalletDir(), backup_filename);
+        fs::copy_file(backup_path, temp_backup_location, fs::copy_options::none);
+
+        // Make list of wallets to cleanup
+        std::vector<std::shared_ptr<CWallet>> created_wallets;
+        if (local_wallet) created_wallets.push_back(std::move(local_wallet));
+        if (res.watchonly_wallet) created_wallets.push_back(std::move(res.watchonly_wallet));
+        if (res.solvables_wallet) created_wallets.push_back(std::move(res.solvables_wallet));
+
+        // Get the directories to remove after unloading
+        for (std::shared_ptr<CWallet>& w : created_wallets) {
+            wallet_dirs.emplace(fs::PathFromString(w->GetDatabase().Filename()).parent_path());
+        }
+
+        // Unload the wallets
+        for (std::shared_ptr<CWallet>& w : created_wallets) {
+            if (w->HaveChain()) {
+                // Unloading for wallets that were loaded for normal use
+                if (!RemoveWallet(context, w, /*load_on_start=*/false)) {
+                    error += _("\nUnable to cleanup failed migration");
+                    return util::Error{error};
+                }
+                WaitForDeleteWallet(std::move(w));
+            } else {
+                // Unloading for wallets in local context
+                assert(w.use_count() == 1);
+                w.reset();
+            }
+        }
+
+        // Delete the wallet directories
+        for (const fs::path& dir : wallet_dirs) {
+            fs::remove_all(dir);
+        }
+
+        // Restore the backup
+        DatabaseStatus status;
+        std::vector<bilingual_str> warnings;
+        if (!RestoreWallet(context, temp_backup_location, wallet_name, /*load_on_start=*/std::nullopt, status, error, warnings)) {
+            error += _("\nUnable to restore backup of wallet.");
+            return util::Error{error};
+        }
+
+        // Move the backup to the wallet dir
+        fs::copy_file(temp_backup_location, backup_path, fs::copy_options::none);
+        fs::remove(temp_backup_location);
+
+        return util::Error{error};
+    }
+    return res;
+}
+
+util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet> local_wallet, const SecureString& passphrase, WalletContext& context, bool was_loaded, bool in_memory)
+{
+    MigrationResult res;
+    bilingual_str error;
+    std::vector<bilingual_str> warnings;
+
+    DatabaseOptions options;
+    options.require_existing = true;
+    DatabaseStatus status;
+
+    const std::string wallet_name = local_wallet->GetName();
+
+    // Helper to reload as normal for some of our exit scenarios
+    const auto& reload_wallet = [&](std::shared_ptr<CWallet>& to_reload) {
+        assert(to_reload.use_count() == 1);
+        std::string name = to_reload->GetName();
+        to_reload.reset();
+        to_reload = LoadWallet(context, name, /*load_on_start=*/std::nullopt, options, status, error, warnings);
+        return to_reload != nullptr;
+    };
+
+    // Before anything else, check if there is something to migrate.
+    if (local_wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+        if (was_loaded) {
+            reload_wallet(local_wallet);
+        }
+        return util::Error{_("Error: This wallet is already a descriptor wallet")};
+    }
+
+    // Make a backup of the DB
+    fs::path this_wallet_dir = fs::absolute(fs::PathFromString(local_wallet->GetDatabase().Filename())).parent_path();
+    fs::path backup_filename = fs::PathFromString(strprintf("%s_%d.legacy.bak", (wallet_name.empty() ? "default_wallet" : wallet_name), GetTime()));
+    fs::path backup_path = this_wallet_dir / backup_filename;
+    if (!local_wallet->BackupWallet(fs::PathToString(backup_path))) {
+        if (was_loaded) {
+            reload_wallet(local_wallet);
+        }
+        return util::Error{_("Error: Unable to make a backup of your wallet")};
+    }
+    res.backup_path = backup_path;
+
+    bool success = false;
+
+    // Unlock the wallet if needed
+    if (local_wallet->IsLocked() && !local_wallet->Unlock(passphrase)) {
+        if (was_loaded) {
+            reload_wallet(local_wallet);
+        }
+        if (passphrase.find('\0') == std::string::npos) {
+            return util::Error{Untranslated("Error: Wallet decryption failed, the wallet passphrase was not provided or was incorrect.")};
+        } else {
+            return util::Error{Untranslated("Error: Wallet decryption failed, the wallet passphrase entered was incorrect. "
+                                            "The passphrase contains a null character (ie - a zero byte). "
+                                            "If this passphrase was set with a version of this software prior to 25.0, "
+                                            "please try again with only the characters up to — but not including — "
+                                            "the first null character.")};
+        }
+    }
+
+    {
+        LOCK(local_wallet->cs_wallet);
+        // First change to using SQLite
+        if (!local_wallet->MigrateToSQLite(error, in_memory)) return util::Error{error};
+
+        // Do the migration of keys and scripts for non-blank wallets, and cleanup if it fails
+        success = local_wallet->IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET);
+        if (!success) {
+            success = DoMigration(*local_wallet, context, error, res);
+        } else {
+            // Make sure that descriptors flag is actually set
+            local_wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+        }
+    }
+
+    // In case of reloading failure, we need to remember the wallet dirs to remove
+    // Set is used as it may be populated with the same wallet directory paths multiple times,
+    // both before and after reloading. This ensures the set is complete even if one of the wallets
+    // fails to reload.
+    std::set<fs::path> wallet_dirs;
+    if (success) {
+        // Migration successful, unload all wallets locally, then reload them.
+        // Reload the main wallet
+        wallet_dirs.insert(fs::PathFromString(local_wallet->GetDatabase().Filename()).parent_path());
+        success = reload_wallet(local_wallet);
+        res.wallet = local_wallet;
+        res.wallet_name = wallet_name;
+        if (success && res.watchonly_wallet) {
+            // Reload watchonly
+            wallet_dirs.insert(fs::PathFromString(res.watchonly_wallet->GetDatabase().Filename()).parent_path());
+            success = reload_wallet(res.watchonly_wallet);
+        }
+        if (success && res.solvables_wallet) {
+            // Reload solvables
+            wallet_dirs.insert(fs::PathFromString(res.solvables_wallet->GetDatabase().Filename()).parent_path());
+            success = reload_wallet(res.solvables_wallet);
+        }
+    }
+    if (!success && !in_memory) {
         // Migration failed, cleanup
         // Copy the backup to the actual wallet dir
         fs::path temp_backup_location = fsbridge::AbsPathJoin(GetWalletDir(), backup_filename);
