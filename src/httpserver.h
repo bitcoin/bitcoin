@@ -301,6 +301,16 @@ public:
     {
         WriteReply(status, std::as_bytes(std::span{reply_body_view}));
     }
+
+    // These methods reimplement the API from http_libevent::HTTPRequest
+    // for downstream JSONRPC and REST modules.
+    std::string GetURI() const {return m_target;};
+    CService GetPeer() const;
+    HTTPRequestMethod GetRequestMethod() const { return m_method; }
+    std::optional<std::string> GetQueryParameter(const std::string& key) const;
+    std::pair<bool, std::string> GetHeader(const std::string& hdr) const;
+    std::string ReadBody() const {return m_body;};
+    void WriteHeader(const std::string& hdr, const std::string& value);
 };
 
 class HTTPServer
@@ -492,6 +502,8 @@ private:
      */
     void DisconnectClients();
 };
+
+std::optional<std::string> GetQueryParameterFromUri(const std::string& uri, const std::string& key);
 
 class HTTPClient
 {
