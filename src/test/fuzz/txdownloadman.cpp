@@ -278,6 +278,7 @@ static bool HasRelayPermissions(NodeId peer) { return peer == 0; }
 
 static void CheckInvariants(const node::TxDownloadManagerImpl& txdownload_impl, size_t max_orphan_count)
 {
+    LOCK(txdownload_impl.m_txdownload_mutex);
     const TxOrphanage& orphanage = txdownload_impl.m_orphanage;
 
     // Orphanage usage should never exceed what is allowed
@@ -332,7 +333,9 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
             },
             [&] {
                 txdownload_impl.ActiveTipChange();
+
                 // After a block update, nothing should be in the rejection caches
+                LOCK(txdownload_impl.m_txdownload_mutex);
                 for (const auto& tx : TRANSACTIONS) {
                     Assert(!txdownload_impl.RecentRejectsFilter().contains(tx->GetWitnessHash().ToUint256()));
                     Assert(!txdownload_impl.RecentRejectsFilter().contains(tx->GetHash().ToUint256()));
@@ -345,10 +348,13 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                 block.vtx.push_back(rand_tx);
                 txdownload_impl.BlockConnected(std::make_shared<CBlock>(block));
                 // Block transactions must be removed from orphanage
+                LOCK(txdownload_impl.m_txdownload_mutex);
                 Assert(!txdownload_impl.m_orphanage.HaveTx(rand_tx->GetWitnessHash()));
             },
             [&] {
                 txdownload_impl.BlockDisconnected();
+
+                LOCK(txdownload_impl.m_txdownload_mutex);
                 Assert(!txdownload_impl.RecentConfirmedTransactionsFilter().contains(rand_tx->GetWitnessHash().ToUint256()));
                 Assert(!txdownload_impl.RecentConfirmedTransactionsFilter().contains(rand_tx->GetHash().ToUint256()));
             },
@@ -360,7 +366,8 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                 state.Invalid(fuzzed_data_provider.PickValueInArray(TESTED_TX_RESULTS), "");
                 bool first_time_failure{fuzzed_data_provider.ConsumeBool()};
 
-                bool reject_contains_wtxid{txdownload_impl.RecentRejectsFilter().contains(rand_tx->GetWitnessHash().ToUint256())};
+                bool reject_contains_wtxid{WITH_LOCK(txdownload_impl.m_txdownload_mutex,
+                        return txdownload_impl.RecentRejectsFilter().contains(rand_tx->GetWitnessHash().ToUint256()))};
 
                 node::RejectedTxTodo todo = txdownload_impl.MempoolRejectedTx(rand_tx, state, rand_peer, first_time_failure);
                 Assert(first_time_failure || !todo.m_should_add_extra_compact_tx);
@@ -394,6 +401,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                 if (maybe_package.has_value()) {
                     CheckPackageToValidate(*maybe_package, rand_peer);
 
+                    LOCK(txdownload_impl.m_txdownload_mutex);
                     const auto& package = maybe_package->m_txns;
                     // Parent is in m_lazy_recent_rejects_reconsiderable and child is in m_orphanage
                     Assert(txdownload_impl.RecentRejectsReconsiderableFilter().contains(rand_tx->GetWitnessHash().ToUint256()));
