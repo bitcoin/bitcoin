@@ -535,9 +535,7 @@ if(WERROR)
 endif()
 
 find_package(Python3 3.10 COMPONENTS Interpreter)
-if(Python3_EXECUTABLE)
-  set(PYTHON_COMMAND ${Python3_EXECUTABLE})
-else()
+if(NOT TARGET Python3::Interpreter)
   list(APPEND configure_warnings
     "Minimum required Python not found. Utils and rpcauth tests are disabled."
   )
