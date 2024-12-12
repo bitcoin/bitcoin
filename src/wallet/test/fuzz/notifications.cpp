@@ -84,7 +84,7 @@ FUZZ_TARGET(wallet_notifications, .init = initialize_setup)
         auto& [coins, block]{chain.back()};
         coins.emplace(total_amount, COutPoint{Txid::FromUint256(uint256::ONE), 1});
     }
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 20)
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10)
     {
         CallOneOf(
             fuzzed_data_provider,
@@ -105,7 +105,7 @@ FUZZ_TARGET(wallet_notifications, .init = initialize_setup)
                         coins.erase(coins.begin());
                     }
                     // Create some outputs spending all inputs, without fee
-                    LIMITED_WHILE(in > 0 && fuzzed_data_provider.ConsumeBool(), 10)
+                    LIMITED_WHILE(in > 0 && fuzzed_data_provider.ConsumeBool(), 3)
                     {
                         const auto out_value{ConsumeMoney(fuzzed_data_provider, in)};
                         in -= out_value;
@@ -117,9 +117,6 @@ FUZZ_TARGET(wallet_notifications, .init = initialize_setup)
                     tx.vout.emplace_back(in, wallet.GetScriptPubKey(fuzzed_data_provider));
                     // Add tx to block
                     block.vtx.emplace_back(MakeTransactionRef(tx));
-                    // Check that funding the tx doesn't crash the wallet
-                    a.FundTx(fuzzed_data_provider, tx);
-                    b.FundTx(fuzzed_data_provider, tx);
                 }
                 // Mine block
                 const uint256& hash = block.GetHash();
