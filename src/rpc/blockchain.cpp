@@ -1336,7 +1336,7 @@ RPCHelpMan getblockchaininfo()
     obj.pushKV("difficulty", GetDifficulty(tip));
     obj.pushKV("time", tip.GetBlockTime());
     obj.pushKV("mediantime", tip.GetMedianTimePast());
-    obj.pushKV("verificationprogress", GuessVerificationProgress(chainman.GetParams().TxData(), &tip));
+    obj.pushKV("verificationprogress", chainman.GuessVerificationProgress(&tip));
     obj.pushKV("initialblockdownload", chainman.IsInitialBlockDownload());
     obj.pushKV("chainwork", tip.nChainWork.GetHex());
     obj.pushKV("size_on_disk", chainman.m_blockman.CalculateCurrentUsage());
@@ -3338,7 +3338,7 @@ return RPCHelpMan{
         data.pushKV("blocks",                (int)chain.Height());
         data.pushKV("bestblockhash",         tip->GetBlockHash().GetHex());
         data.pushKV("difficulty", GetDifficulty(*tip));
-        data.pushKV("verificationprogress",  GuessVerificationProgress(Params().TxData(), tip));
+        data.pushKV("verificationprogress", chainman.GuessVerificationProgress(tip));
         data.pushKV("coins_db_cache_bytes",  cs.m_coinsdb_cache_size_bytes);
         data.pushKV("coins_tip_cache_bytes", cs.m_coinstip_cache_size_bytes);
         if (cs.m_from_snapshot_blockhash) {

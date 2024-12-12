@@ -324,7 +324,7 @@ public:
     }
     double getVerificationProgress() override
     {
-        return GuessVerificationProgress(chainman().GetParams().TxData(), WITH_LOCK(::cs_main, return chainman().ActiveChain().Tip()));
+        return chainman().GuessVerificationProgress(WITH_LOCK(chainman().GetMutex(), return chainman().ActiveChain().Tip()));
     }
     bool isInitialBlockDownload() override
     {
@@ -406,9 +406,9 @@ public:
     }
     std::unique_ptr<Handler> handleNotifyBlockTip(NotifyBlockTipFn fn) override
     {
-        return MakeSignalHandler(::uiInterface.NotifyBlockTip_connect([fn](SynchronizationState sync_state, const CBlockIndex* block) {
+        return MakeSignalHandler(::uiInterface.NotifyBlockTip_connect([fn, this](SynchronizationState sync_state, const CBlockIndex* block) {
             fn(sync_state, BlockTip{block->nHeight, block->GetBlockTime(), block->GetBlockHash()},
-                GuessVerificationProgress(Params().TxData(), block));
+               chainman().GuessVerificationProgress(block));
         }));
     }
     std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) override
@@ -639,8 +639,8 @@ public:
     void findCoins(std::map<COutPoint, Coin>& coins) override { return FindCoins(m_node, coins); }
     double guessVerificationProgress(const uint256& block_hash) override
     {
-        LOCK(::cs_main);
-        return GuessVerificationProgress(chainman().GetParams().TxData(), chainman().m_blockman.LookupBlockIndex(block_hash));
+        LOCK(chainman().GetMutex());
+        return chainman().GuessVerificationProgress(chainman().m_blockman.LookupBlockIndex(block_hash));
     }
     bool hasBlocks(const uint256& block_hash, int min_height, std::optional<int> max_height) override
     {
