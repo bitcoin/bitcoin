@@ -27,7 +27,7 @@ void StartTorControl(CService onion_service_target);
 void InterruptTorControl();
 void StopTorControl();
 
-CService DefaultOnionServiceTarget();
+CService DefaultOnionServiceTarget(uint16_t port);
 
 /** Reply from Tor, can be single or multi-line */
 class TorControlReply
