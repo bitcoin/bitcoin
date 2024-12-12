@@ -302,8 +302,8 @@ public:
     //! Registers db txn callback functions
     void RegisterTxnListener(const DbTxnListener& l);
 
-private:
     std::unique_ptr<DatabaseBatch> m_batch;
+private:
     WalletDatabase& m_database;
 
     // External functions listening to the current db txn outcome.
