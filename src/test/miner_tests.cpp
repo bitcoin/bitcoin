@@ -28,6 +28,8 @@
 #include <boost/test/unit_test.hpp>
 
 using namespace util::hex_literals;
+using kernel::AbortFailure;
+using kernel::FlushResult;
 using node::BlockAssembler;
 using node::CBlockTemplate;
 
@@ -639,7 +641,9 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             pblock->nNonce = bi.nonce;
         }
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
-        BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr));
+        FlushResult<void, AbortFailure> process_result;
+        BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr, process_result));
+        BOOST_CHECK(process_result);
         pblock->hashPrevBlock = pblock->GetHash();
     }
 
