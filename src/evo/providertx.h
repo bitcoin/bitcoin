@@ -112,7 +112,7 @@ public:
         return obj;
     }
 
-    bool IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const;
+    bool IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const;
 };
 
 class CProUpServTx
@@ -192,7 +192,7 @@ public:
         return obj;
     }
 
-    bool IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const;
+    bool IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const;
 };
 
 class CProUpRegTx
@@ -257,7 +257,7 @@ public:
         return obj;
     }
 
-    bool IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const;
+    bool IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const;
 };
 
 class CProUpRevTx
@@ -321,7 +321,7 @@ public:
         return obj;
     }
 
-    bool IsTriviallyValid(bool is_bls_legacy_scheme, TxValidationState& state) const;
+    bool IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const;
 };
 
 template <typename ProTx>
