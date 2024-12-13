@@ -112,6 +112,7 @@ add_executable(test_bitcoin
   scriptnum_tests.cpp
   serfloat_tests.cpp
   serialize_tests.cpp
+  setting_tests.cpp
   settings_tests.cpp
   sighash_tests.cpp
   sigopcount_tests.cpp
