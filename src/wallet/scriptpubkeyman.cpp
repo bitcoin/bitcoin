@@ -28,6 +28,8 @@ namespace wallet {
 
 typedef std::vector<unsigned char> valtype;
 
+// Legacy wallet IsMine(). Used only in migration
+// DO NOT USE ANYTHING IN THIS NAMESPACE OUTSIDE OF MIGRATION
 namespace {
 
 /**
@@ -79,7 +81,7 @@ bool HaveKeys(const std::vector<valtype>& pubkeys, const LegacyDataSPKM& keystor
 //!                            scripts or simply treat any script that has been
 //!                            stored in the keystore as spendable
 // NOLINTNEXTLINE(misc-no-recursion)
-IsMineResult IsMineInner(const LegacyDataSPKM& keystore, const CScript& scriptPubKey, IsMineSigVersion sigversion, bool recurse_scripthash=true)
+IsMineResult LegacyWalletIsMineInnerDONOTUSE(const LegacyDataSPKM& keystore, const CScript& scriptPubKey, IsMineSigVersion sigversion, bool recurse_scripthash=true)
 {
     IsMineResult ret = IsMineResult::NO;
 
@@ -115,7 +117,7 @@ IsMineResult IsMineInner(const LegacyDataSPKM& keystore, const CScript& scriptPu
             // This also applies to the P2WSH case.
             break;
         }
-        ret = std::max(ret, IsMineInner(keystore, GetScriptForDestination(PKHash(uint160(vSolutions[0]))), IsMineSigVersion::WITNESS_V0));
+        ret = std::max(ret, LegacyWalletIsMineInnerDONOTUSE(keystore, GetScriptForDestination(PKHash(uint160(vSolutions[0]))), IsMineSigVersion::WITNESS_V0));
         break;
     }
     case TxoutType::PUBKEYHASH:
@@ -139,7 +141,7 @@ IsMineResult IsMineInner(const LegacyDataSPKM& keystore, const CScript& scriptPu
         CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
         CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
-            ret = std::max(ret, recurse_scripthash ? IsMineInner(keystore, subscript, IsMineSigVersion::P2SH) : IsMineResult::SPENDABLE);
+            ret = std::max(ret, recurse_scripthash ? LegacyWalletIsMineInnerDONOTUSE(keystore, subscript, IsMineSigVersion::P2SH) : IsMineResult::SPENDABLE);
         }
         break;
     }
@@ -155,7 +157,7 @@ IsMineResult IsMineInner(const LegacyDataSPKM& keystore, const CScript& scriptPu
         CScriptID scriptID{RIPEMD160(vSolutions[0])};
         CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
-            ret = std::max(ret, recurse_scripthash ? IsMineInner(keystore, subscript, IsMineSigVersion::WITNESS_V0) : IsMineResult::SPENDABLE);
+            ret = std::max(ret, recurse_scripthash ? LegacyWalletIsMineInnerDONOTUSE(keystore, subscript, IsMineSigVersion::WITNESS_V0) : IsMineResult::SPENDABLE);
         }
         break;
     }
@@ -197,7 +199,7 @@ IsMineResult IsMineInner(const LegacyDataSPKM& keystore, const CScript& scriptPu
 
 isminetype LegacyDataSPKM::IsMine(const CScript& script) const
 {
-    switch (IsMineInner(*this, script, IsMineSigVersion::TOP)) {
+    switch (LegacyWalletIsMineInnerDONOTUSE(*this, script, IsMineSigVersion::TOP)) {
     case IsMineResult::INVALID:
     case IsMineResult::NO:
         return ISMINE_NO;
@@ -256,7 +258,7 @@ std::unique_ptr<SigningProvider> LegacyDataSPKM::GetSolvingProvider(const CScrip
 
 bool LegacyDataSPKM::CanProvide(const CScript& script, SignatureData& sigdata)
 {
-    IsMineResult ismine = IsMineInner(*this, script, IsMineSigVersion::TOP, /* recurse_scripthash= */ false);
+    IsMineResult ismine = LegacyWalletIsMineInnerDONOTUSE(*this, script, IsMineSigVersion::TOP, /* recurse_scripthash= */ false);
     if (ismine == IsMineResult::SPENDABLE || ismine == IsMineResult::WATCH_ONLY) {
         // If ismine, it means we recognize keys or script ids in the script, or
         // are watching the script itself, and we can at least provide metadata
