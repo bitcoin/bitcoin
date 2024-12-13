@@ -591,7 +591,7 @@ std::unique_ptr<SigningProvider> LegacyDataSPKM::GetSolvingProvider(const CScrip
     return std::make_unique<LegacySigningProvider>(*this);
 }
 
-bool LegacyScriptPubKeyMan::CanProvide(const CScript& script, SignatureData& sigdata)
+bool LegacyDataSPKM::CanProvide(const CScript& script, SignatureData& sigdata)
 {
     IsMineResult ismine = IsMineInner(*this, script, IsMineSigVersion::TOP, /* recurse_scripthash= */ false);
     if (ismine == IsMineResult::SPENDABLE || ismine == IsMineResult::WATCH_ONLY) {
