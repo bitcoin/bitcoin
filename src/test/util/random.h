@@ -9,6 +9,7 @@
 #include <random.h>
 #include <uint256.h>
 
+#include <atomic>
 #include <cstdint>
 
 enum class SeedRand {
@@ -26,6 +27,9 @@ enum class SeedRand {
 
 /** Seed the global RNG state for testing and log the seed value. This affects all randomness, except GetStrongRandBytes(). */
 void SeedRandomStateForTest(SeedRand seed);
+
+extern std::atomic<bool> g_seeded_g_prng_zero;
+extern std::atomic<bool> g_used_g_prng;
 
 template <RandomNumberGenerator Rng>
 inline CAmount RandMoney(Rng&& rng)
