@@ -75,8 +75,8 @@ public:
     virtual std::optional<BlockRef> getTip() = 0;
 
     /**
-     * Waits for the connected tip to change. If the tip was not connected on
-     * startup, this will wait.
+     * Waits for the connected tip to change. During node initialization, this will
+     * wait until the tip is connected.
      *
      * @param[in] current_tip block hash of the current chain tip. Function waits
      *                        for the chain tip to differ from this.
