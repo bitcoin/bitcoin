@@ -1928,6 +1928,21 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
 
         // InferDescriptor as that will get us all the solving info if it is there
         std::unique_ptr<Descriptor> desc = InferDescriptor(spk, *GetSolvingProvider(spk));
+
+        // Past bugs in InferDescriptor have caused it to create descriptors which cannot be re-parsed.
+        // Re-parse the descriptors to detect that, and skip any that do not parse.
+        {
+            std::string desc_str = desc->ToString();
+            FlatSigningProvider parsed_keys;
+            std::string parse_error;
+            std::vector<std::unique_ptr<Descriptor>> parsed_descs = Parse(desc_str, parsed_keys, parse_error);
+            if (parsed_descs.empty()) {
+                // Remove this scriptPubKey from the set
+                it = spks.erase(it);
+                continue;
+            }
+        }
+
         // Get the private keys for this descriptor
         std::vector<CScript> scripts;
         FlatSigningProvider keys;
