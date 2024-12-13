@@ -1201,6 +1201,60 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         wallet.unloadwallet()
 
+    def test_miniscript(self):
+        # It turns out that due to how signing logic works, legacy wallets that have valid miniscript witnessScripts
+        # and the private keys for them can still sign and spend them, even though output scripts involving them
+        # as a witnessScript would not be detected as ISMINE_SPENDABLE.
+        self.log.info("Test migration of a legacy wallet containing miniscript")
+        def_wallet = self.master_node.get_wallet_rpc(self.default_wallet_name)
+        wallet = self.create_legacy_wallet("miniscript")
+
+        privkey, _ = generate_keypair(compressed=True, wif=True)
+
+        # Make a descriptor where we only have some of the keys. This will be migrated to the watchonly wallet.
+        some_keys_priv_desc = descsum_create(f"wsh(or_b(pk({privkey}),s:pk(029ffbe722b147f3035c87cb1c60b9a5947dd49c774cc31e94773478711a929ac0)))")
+        some_keys_addr = self.master_node.deriveaddresses(some_keys_priv_desc)[0]
+
+        # Make a descriptor where we have all of the keys. This will stay in the migrated wallet
+        all_keys_priv_desc = descsum_create(f"wsh(and_v(v:pk({privkey}),1))")
+        all_keys_addr = self.master_node.deriveaddresses(all_keys_priv_desc)[0]
+
+        imp = wallet.importmulti([
+            {
+                "desc": some_keys_priv_desc,
+                "timestamp": "now",
+            },
+            {
+                "desc": all_keys_priv_desc,
+                "timestamp": "now",
+            }
+        ])
+        assert_equal(imp[0]["success"], True)
+        assert_equal(imp[1]["success"], True)
+
+        def_wallet.sendtoaddress(some_keys_addr, 1)
+        def_wallet.sendtoaddress(all_keys_addr, 1)
+        self.generate(self.master_node, 6)
+        # Check that the miniscript can be spent by the legacy wallet
+        send_res = wallet.send(outputs=[{some_keys_addr: 1},{all_keys_addr: 0.75}], include_watching=True, change_address=def_wallet.getnewaddress())
+        assert_equal(send_res["complete"], True)
+        self.generate(self.old_node, 6)
+        assert_equal(wallet.getbalances()["watchonly"]["trusted"], 1.75)
+
+        _, wallet = self.migrate_and_get_rpc("miniscript")
+
+        # The miniscript with all keys should be in the migrated wallet
+        assert_equal(wallet.getbalances()["mine"], {"trusted": 0.75, "untrusted_pending": 0, "immature": 0})
+        assert_equal(wallet.getaddressinfo(all_keys_addr)["ismine"], True)
+        assert_equal(wallet.getaddressinfo(some_keys_addr)["ismine"], False)
+
+        # The miniscript with some keys should be in the watchonly wallet
+        assert "miniscript_watchonly" in self.master_node.listwallets()
+        watchonly = self.master_node.get_wallet_rpc("miniscript_watchonly")
+        assert_equal(watchonly.getbalances()["mine"], {"trusted": 1, "untrusted_pending": 0, "immature": 0})
+        assert_equal(watchonly.getaddressinfo(some_keys_addr)["ismine"], True)
+        assert_equal(watchonly.getaddressinfo(all_keys_addr)["ismine"], False)
+
     def run_test(self):
         self.master_node = self.nodes[0]
         self.old_node = self.nodes[1]
@@ -1230,6 +1284,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_manual_keys_import()
         self.test_p2wsh()
         self.test_disallowed_p2wsh()
+        self.test_miniscript()
 
 if __name__ == '__main__':
     WalletMigrationTest(__file__).main()
