@@ -1700,59 +1700,62 @@ std::set<CKeyID> LegacyScriptPubKeyMan::GetKeys() const
     return set_address;
 }
 
-std::unordered_set<CScript, SaltedSipHasher> LegacyDataSPKM::GetScriptPubKeys() const
+std::unordered_set<CScript, SaltedSipHasher> LegacyDataSPKM::GetCandidateScriptPubKeys() const
 {
     LOCK(cs_KeyStore);
+    std::unordered_set<CScript, SaltedSipHasher> candidate_spks;
+
+    // For every private key in the wallet, there should be a P2PK, P2PKH, P2WPKH, and P2SH-P2WPKH
+    const auto& add_pubkey = [&candidate_spks](const CPubKey& pub) -> void {
+        candidate_spks.insert(GetScriptForRawPubKey(pub));
+        candidate_spks.insert(GetScriptForDestination(PKHash(pub)));
+
+        CScript wpkh = GetScriptForDestination(WitnessV0KeyHash(pub));
+        candidate_spks.insert(wpkh);
+        candidate_spks.insert(GetScriptForDestination(ScriptHash(wpkh)));
+    };
+    for (const auto& [_, key] : mapKeys) {
+        add_pubkey(key.GetPubKey());
+    }
+    for (const auto& [_, ckeypair] : mapCryptedKeys) {
+        add_pubkey(ckeypair.first);
+    }
+
+    // mapScripts contains all redeemScripts and witnessScripts. Therefore each script in it has
+    // itself, P2SH, P2WSH, and P2SH-P2WSH as a candidate.
+    // Invalid scripts such as P2SH-P2SH and P2WSH-P2SH, among others, will be added as candidates.
+    // Callers of this function will need to remove such scripts.
+    const auto& add_script = [&candidate_spks](const CScript& script) -> void {
+        candidate_spks.insert(script);
+        candidate_spks.insert(GetScriptForDestination(ScriptHash(script)));
+
+        CScript wsh = GetScriptForDestination(WitnessV0ScriptHash(script));
+        candidate_spks.insert(wsh);
+        candidate_spks.insert(GetScriptForDestination(ScriptHash(wsh)));
+    };
+    for (const auto& [_, script] : mapScripts) {
+        add_script(script);
+    }
+
+    // Although setWatchOnly should only contain output scripts, we will also include each script's
+    // P2SH, P2WSH, and P2SH-P2WSH as a precaution.
+    for (const auto& script : setWatchOnly) {
+        add_script(script);
+    }
+
+    return candidate_spks;
+}
+
+std::unordered_set<CScript, SaltedSipHasher> LegacyDataSPKM::GetScriptPubKeys() const
+{
+    // Run IsMine() on each candidate output script. Any script that is not ISMINE_NO is an output
+    // script to return.
+    // This both filters out things that are not watched by the wallet, and things that are invalid.
     std::unordered_set<CScript, SaltedSipHasher> spks;
-
-    // All keys have at least P2PK and P2PKH
-    for (const auto& key_pair : mapKeys) {
-        const CPubKey& pub = key_pair.second.GetPubKey();
-        spks.insert(GetScriptForRawPubKey(pub));
-        spks.insert(GetScriptForDestination(PKHash(pub)));
-    }
-    for (const auto& key_pair : mapCryptedKeys) {
-        const CPubKey& pub = key_pair.second.first;
-        spks.insert(GetScriptForRawPubKey(pub));
-        spks.insert(GetScriptForDestination(PKHash(pub)));
-    }
-
-    // For every script in mapScript, only the ISMINE_SPENDABLE ones are being tracked.
-    // The watchonly ones will be in setWatchOnly which we deal with later
-    // For all keys, if they have segwit scripts, those scripts will end up in mapScripts
-    for (const auto& script_pair : mapScripts) {
-        const CScript& script = script_pair.second;
-        if (IsMine(script) == ISMINE_SPENDABLE) {
-            // Add ScriptHash for scripts that are not already P2SH
-            if (!script.IsPayToScriptHash()) {
-                spks.insert(GetScriptForDestination(ScriptHash(script)));
-            }
-            // For segwit scripts, we only consider them spendable if we have the segwit spk
-            int wit_ver = -1;
-            std::vector<unsigned char> witprog;
-            if (script.IsWitnessProgram(wit_ver, witprog) && wit_ver == 0) {
-                spks.insert(script);
-            }
-        } else {
-            // Multisigs are special. They don't show up as ISMINE_SPENDABLE unless they are in a P2SH
-            // So check the P2SH of a multisig to see if we should insert it
-            std::vector<std::vector<unsigned char>> sols;
-            TxoutType type = Solver(script, sols);
-            if (type == TxoutType::MULTISIG) {
-                CScript ms_spk = GetScriptForDestination(ScriptHash(script));
-                if (IsMine(ms_spk) != ISMINE_NO) {
-                    spks.insert(ms_spk);
-                }
-            }
+    for (const CScript& script : GetCandidateScriptPubKeys()) {
+        if (IsMine(script) != ISMINE_NO) {
+            spks.insert(script);
         }
-    }
-
-    // All watchonly scripts are raw
-    for (const CScript& script : setWatchOnly) {
-        // As the legacy wallet allowed to import any script, we need to verify the validity here.
-        // LegacyScriptPubKeyMan::IsMine() return 'ISMINE_NO' for invalid or not watched scripts (IsMineResult::INVALID or IsMineResult::NO).
-        // e.g. a "sh(sh(pkh()))" which legacy wallets allowed to import!.
-        if (IsMine(script) != ISMINE_NO) spks.insert(script);
     }
 
     return spks;

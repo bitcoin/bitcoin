@@ -302,6 +302,10 @@ protected:
     virtual bool AddKeyPubKeyInner(const CKey& key, const CPubKey &pubkey);
     bool AddCryptedKeyInner(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
 
+    // Helper function to retrieve a conservative superset of all output scripts that may be relevant to this LegacyDataSPKM.
+    // It may include scripts that are invalid or not actually watched by this LegacyDataSPKM.
+    // Used only in migration.
+    std::unordered_set<CScript, SaltedSipHasher> GetCandidateScriptPubKeys() const;
 public:
     using ScriptPubKeyMan::ScriptPubKeyMan;
 
