@@ -63,19 +63,21 @@ void FuncSetHexStr(const bool legacy_scheme)
 {
     bls::bls_legacy_scheme.store(legacy_scheme);
 
+    // Note: 2nd bool argument for SetHexStr for bls::PrivateKey has a meaning modOrder, not is-legacy
     CBLSSecretKey sk;
     std::string strValidSecret = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
     // Note: invalid string passed to SetHexStr() should cause it to fail and reset key internal data
-    BOOST_CHECK(sk.SetHexStr(strValidSecret, legacy_scheme));
-    BOOST_CHECK(!sk.SetHexStr("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1g", legacy_scheme)); // non-hex
+    BOOST_CHECK(sk.SetHexStr(strValidSecret, false));
+    BOOST_CHECK(!sk.SetHexStr("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1g", false)); // non-hex
     BOOST_CHECK(!sk.IsValid());
     BOOST_CHECK(sk == CBLSSecretKey());
     // Try few more invalid strings
-    BOOST_CHECK(sk.SetHexStr(strValidSecret, legacy_scheme));
-    BOOST_CHECK(!sk.SetHexStr("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e", legacy_scheme)); // hex but too short
+    BOOST_CHECK(sk.SetHexStr(strValidSecret, false));
+    BOOST_CHECK(!sk.SetHexStr("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e", false)); // hex but too short
     BOOST_CHECK(!sk.IsValid());
-    BOOST_CHECK(sk.SetHexStr(strValidSecret, legacy_scheme));
-    BOOST_CHECK(!sk.SetHexStr("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20", legacy_scheme)); // hex but too long
+    BOOST_CHECK(sk.SetHexStr(strValidSecret, false));
+    BOOST_CHECK(
+        !sk.SetHexStr("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20", false)); // hex but too long
     BOOST_CHECK(!sk.IsValid());
 
     return;
