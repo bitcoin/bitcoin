@@ -188,6 +188,7 @@ std::optional<COutPoint> GetChildEvictingPrevout(const CTxMemPool& tx_pool)
 
 FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const auto& node = g_setup->m_node;
     auto& chainstate{static_cast<DummyChainState&>(node.chainman->ActiveChainstate())};
@@ -342,6 +343,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
 
 FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const auto& node = g_setup->m_node;
     auto& chainstate{static_cast<DummyChainState&>(node.chainman->ActiveChainstate())};

@@ -21,6 +21,7 @@ void initialize_i2p()
 
 FUZZ_TARGET(i2p, .init = initialize_i2p)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
     SetMockTime(ConsumeTime(fuzzed_data_provider));

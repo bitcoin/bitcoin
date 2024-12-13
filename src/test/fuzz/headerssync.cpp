@@ -48,6 +48,7 @@ public:
 
 FUZZ_TARGET(headers_sync_state, .init = initialize_headers_sync_state_fuzz)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     auto mock_time{ConsumeTime(fuzzed_data_provider)};
 

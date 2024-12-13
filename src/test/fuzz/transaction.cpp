@@ -14,6 +14,7 @@
 #include <primitives/transaction.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
+#include <test/util/random.h>
 #include <univalue.h>
 #include <util/chaintype.h>
 #include <util/rbf.h>
@@ -28,6 +29,7 @@ void initialize_transaction()
 
 FUZZ_TARGET(transaction, .init = initialize_transaction)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     DataStream ds{buffer};
     bool valid_tx = true;
     const CTransaction tx = [&] {

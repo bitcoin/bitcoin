@@ -44,6 +44,7 @@ PartiallyDownloadedBlock::CheckBlockFn FuzzedCheckBlock(std::optional<BlockValid
 
 FUZZ_TARGET(partially_downloaded_block, .init = initialize_pdb)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
     auto block{ConsumeDeserializable<CBlock>(fuzzed_data_provider, TX_WITH_WITNESS)};
