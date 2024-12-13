@@ -2,6 +2,26 @@ Contents
 ========
 This directory contains tools for developers working on this repository.
 
+deterministic-fuzz-coverage
+===========================
+
+A tool to check for non-determinism in fuzz coverage. To get the help, run:
+
+```
+RUST_BACKTRACE=1 cargo run --manifest-path ./contrib/devtools/deterministic-fuzz-coverage/Cargo.toml -- --help
+```
+
+To execute the tool, compilation has to be done with the build options
+`-DCMAKE_C_COMPILER='clang' -DCMAKE_CXX_COMPILER='clang++'
+-DBUILD_FOR_FUZZING=ON -DCMAKE_CXX_FLAGS='-fPIC -fprofile-instr-generate
+-fcoverage-mapping'`. Both llvm-profdata and llvm-cov must be installed. Also,
+the qa-assets repository must have been cloned. Finally, a fuzz target has to
+be picked before running the tool:
+
+```
+RUST_BACKTRACE=1 cargo run --manifest-path ./contrib/devtools/deterministic-fuzz-coverage/Cargo.toml -- $PWD/build_dir $PWD/qa-assets/corpora-dir fuzz_target_name
+```
+
 clang-format-diff.py
 ===================
 
