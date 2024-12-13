@@ -36,6 +36,7 @@
 #include <util/trace.h>
 #include <util/translation.h>
 #include <util/vector.h>
+#include <torcontrol.h>
 
 #ifdef WIN32
 #include <string.h>
@@ -142,8 +143,10 @@ uint16_t GetListenPort()
     // If -bind= is provided with ":port" part, use that (first one if multiple are provided).
     for (const std::string& bind_arg : gArgs.GetArgs("-bind")) {
         constexpr uint16_t dummy_port = 0;
+        // maybe bind_arg has "=onion"
+        const std::string truncated_bind_arg = bind_arg.substr(0, bind_arg.rfind('='));
 
-        const std::optional<CService> bind_addr{Lookup(bind_arg, dummy_port, /*fAllowLookup=*/false)};
+        const std::optional<CService> bind_addr{Lookup(truncated_bind_arg, dummy_port, /*fAllowLookup=*/false)};
         if (bind_addr.has_value() && bind_addr->GetPort() != dummy_port) return bind_addr->GetPort();
     }
 
@@ -3211,7 +3214,7 @@ bool CConnman::InitBinds(const Options& options)
             return false;
         }
     }
-    if (options.bind_on_any) {
+    if (options.bind_on_any && options.vBinds.empty() && options.onion_binds.empty()) {
         // Don't consider errors to bind on IPv6 "::" fatal because the host OS
         // may not have IPv6 support and the user did not explicitly ask us to
         // bind on that.
@@ -3222,6 +3225,11 @@ bool CConnman::InitBinds(const Options& options)
         inaddr_any.s_addr = htonl(INADDR_ANY);
         const CService ipv4_any{inaddr_any, GetListenPort()}; // 0.0.0.0
         if (!Bind(ipv4_any, BF_REPORT_ERROR, NetPermissionFlags::None)) {
+            return false;
+        }
+
+        const CService onion_addr = DefaultOnionServiceTarget(); // 127.0.0.1
+        if (!Bind(onion_addr, BF_REPORT_ERROR | BF_DONT_ADVERTISE, NetPermissionFlags::None)) {
             return false;
         }
     }
