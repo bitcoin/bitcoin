@@ -1955,6 +1955,7 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
         std::string desc_str;
         bool watchonly = !desc->ToPrivateString(*this, desc_str);
         if (watchonly && !m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+            WalletLogPrintf("%s\n", desc->ToString());
             out.watch_descs.emplace_back(desc->ToString(), creation_time);
 
             // Get the scriptPubKeys without writing this to the wallet
