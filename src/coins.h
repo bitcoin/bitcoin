@@ -108,6 +108,27 @@ using CoinsCachePair = std::pair<const COutPoint, CCoinsCacheEntry>;
 struct CCoinsCacheEntry
 {
 private:
+    enum Flags {
+        /**
+         * DIRTY means the CCoinsCacheEntry is potentially different from the
+         * version in the parent cache. Failure to mark a coin as DIRTY when
+         * it is potentially different from the parent cache will cause a
+         * consensus failure, since the coin's state won't get written to the
+         * parent when the cache is flushed.
+         */
+        DIRTY = (1 << 0),
+        /**
+         * FRESH means the parent cache does not have this coin or that it is a
+         * spent coin in the parent cache. If a FRESH coin in the cache is
+         * later spent, it can be deleted entirely and doesn't ever need to be
+         * flushed to the parent. This is a performance optimization. Marking a
+         * coin as FRESH when it exists unspent in the parent cache will cause a
+         * consensus failure, since it might not be deleted from the parent
+         * when this cache is flushed.
+         */
+        FRESH = (1 << 1),
+    };
+
     /**
      * These are used to create a doubly linked list of flagged entries.
      * They are set in SetDirty, SetFresh, and unset in SetClean.
@@ -145,27 +166,6 @@ private:
 
 public:
     Coin coin; // The actual cached data.
-
-    enum Flags {
-        /**
-         * DIRTY means the CCoinsCacheEntry is potentially different from the
-         * version in the parent cache. Failure to mark a coin as DIRTY when
-         * it is potentially different from the parent cache will cause a
-         * consensus failure, since the coin's state won't get written to the
-         * parent when the cache is flushed.
-         */
-        DIRTY = (1 << 0),
-        /**
-         * FRESH means the parent cache does not have this coin or that it is a
-         * spent coin in the parent cache. If a FRESH coin in the cache is
-         * later spent, it can be deleted entirely and doesn't ever need to be
-         * flushed to the parent. This is a performance optimization. Marking a
-         * coin as FRESH when it exists unspent in the parent cache will cause a
-         * consensus failure, since it might not be deleted from the parent
-         * when this cache is flushed.
-         */
-        FRESH = (1 << 1),
-    };
 
     CCoinsCacheEntry() noexcept = default;
     explicit CCoinsCacheEntry(Coin&& coin_) noexcept : coin(std::move(coin_)) {}
