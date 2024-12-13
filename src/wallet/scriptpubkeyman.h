@@ -188,7 +188,7 @@ static const std::unordered_set<OutputType> LEGACY_OUTPUT_TYPES {
 // This is the minimum necessary to load a legacy wallet so that it can be migrated.
 class LegacyDataSPKM : public ScriptPubKeyMan, public FillableSigningProvider
 {
-protected:
+private:
     using WatchOnlySet = std::set<CScript>;
     using WatchKeyMap = std::map<CKeyID, CPubKey>;
     using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
@@ -212,6 +212,9 @@ protected:
     // It may include scripts that are invalid or not actually watched by this LegacyDataSPKM.
     // Used only in migration.
     std::unordered_set<CScript, SaltedSipHasher> GetCandidateScriptPubKeys() const;
+
+    isminetype IsMine(const CScript& script) const override;
+    bool CanProvide(const CScript& script, SignatureData& sigdata) override;
 public:
     using ScriptPubKeyMan::ScriptPubKeyMan;
 
@@ -226,9 +229,6 @@ public:
     std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const override;
     std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const override;
     uint256 GetID() const override { return uint256::ONE; }
-    // TODO: Remove IsMine when deleting LegacyScriptPubKeyMan
-    isminetype IsMine(const CScript& script) const override;
-    bool CanProvide(const CScript& script, SignatureData& sigdata) override;
 
     // FillableSigningProvider overrides
     bool HaveKey(const CKeyID &address) const override;
