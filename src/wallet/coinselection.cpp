@@ -478,7 +478,6 @@ util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, c
             // Neither adding to the current selection nor exploring the omission branch of the last selected UTXO can
             // find any solutions. Redirect to exploring the Omission branch of the penultimate selected UTXO (i.e.
             // set `next_utxo` to one after the penultimate selected, then deselect the last two selected UTXOs)
-            should_cut = false;
             deselect_last();
             should_shift  = true;
         }
