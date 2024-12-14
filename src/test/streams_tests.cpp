@@ -27,6 +27,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
         BOOST_CHECK_EXCEPTION(xor_file << std::byte{}, std::ios_base::failure, HasReason{"AutoFile::write: file handle is nullpt"});
         BOOST_CHECK_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: file handle is nullpt"});
         BOOST_CHECK_EXCEPTION(xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: file handle is nullpt"});
+        BOOST_CHECK_EXCEPTION(xor_file.size(), std::ios_base::failure, HasReason{"AutoFile::size: file handle is nullptr"});
     }
     {
 #ifdef __MINGW64__
@@ -37,6 +38,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
 #endif
         AutoFile xor_file{raw_file(mode), xor_pat};
         xor_file << test1 << test2;
+        BOOST_CHECK_EQUAL(xor_file.size(), 14);
     }
     {
         // Read raw from disk
@@ -46,6 +48,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
         BOOST_CHECK_EQUAL(HexStr(raw), "fc01fd03fd04fa");
         // Check that no padding exists
         BOOST_CHECK_EXCEPTION(non_xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: end of file"});
+        BOOST_CHECK_EQUAL(non_xor_file.size(), 14);
     }
     {
         AutoFile xor_file{raw_file("rb"), xor_pat};
@@ -55,6 +58,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
         BOOST_CHECK_EQUAL(HexStr(read2), HexStr(test2));
         // Check that eof was reached
         BOOST_CHECK_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: end of file"});
+        BOOST_CHECK_EQUAL(xor_file.size(), 14);
     }
     {
         AutoFile xor_file{raw_file("rb"), xor_pat};
@@ -66,6 +70,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
         // Check that ignore and read fail now
         BOOST_CHECK_EXCEPTION(xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: end of file"});
         BOOST_CHECK_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: end of file"});
+        BOOST_CHECK_EQUAL(xor_file.size(), 14);
     }
 }
 
