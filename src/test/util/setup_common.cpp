@@ -30,6 +30,8 @@
 #include <net.h>
 #include <net_processing.h>
 #include <noui.h>
+#include <node/blockstorage.h> // for fReindex, fPruneMode
+#include <node/chainstate.h> // for LoadChainstate
 #include <node/miner.h>
 #include <policy/fees.h>
 #include <pow.h>
@@ -38,6 +40,7 @@
 #include <rpc/server.h>
 #include <scheduler.h>
 #include <script/sigcache.h>
+#include <shutdown.h> // for ShutdownRequested
 #include <spork.h>
 #include <stats/client.h>
 #include <streams.h>
@@ -103,37 +106,38 @@ std::ostream& operator<<(std::ostream& os, const uint256& num)
     return os;
 }
 
-void DashTestSetup(NodeContext& node, const CChainParams& chainparams)
+void DashChainstateSetup(ChainstateManager& chainman,
+                         NodeContext& node,
+                         bool fReset,
+                         bool fReindexChainState,
+                         const Consensus::Params& consensus_params)
 {
-    CChainState& chainstate = Assert(node.chainman)->ActiveChainstate();
+    DashChainstateSetup(chainman, *Assert(node.govman.get()), *Assert(node.mn_metaman.get()), *Assert(node.mn_sync.get()),
+                        *Assert(node.sporkman.get()), node.mn_activeman, node.chain_helper, node.cpoolman, node.dmnman,
+                        node.evodb, node.mnhf_manager, llmq::quorumSnapshotManager, node.llmq_ctx,
+                        Assert(node.mempool.get()), fReset, fReindexChainState, consensus_params);
+}
 
-    node.dmnman = std::make_unique<CDeterministicMNManager>(chainstate, *node.evodb);
-    node.mempool->ConnectManagers(node.dmnman.get());
+void DashChainstateSetupClose(NodeContext& node)
+{
+    DashChainstateSetupClose(node.chain_helper, node.cpoolman, node.dmnman, node.mnhf_manager,
+                             llmq::quorumSnapshotManager, node.llmq_ctx, Assert(node.mempool.get()));
+}
 
+void DashPostChainstateSetup(NodeContext& node)
+{
     node.cj_ctx = std::make_unique<CJContext>(*node.chainman, *node.connman, *node.dmnman, *node.mn_metaman, *node.mempool,
                                               /*mn_activeman=*/nullptr, *node.mn_sync, node.peerman, /*relay_txes=*/true);
 #ifdef ENABLE_WALLET
     node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);
 #endif // ENABLE_WALLET
-    node.llmq_ctx = std::make_unique<LLMQContext>(*node.chainman, *node.dmnman, *node.evodb, *node.mn_metaman, *node.mnhf_manager, *node.sporkman, *node.mempool,
-                                                  /*mn_activeman=*/nullptr, *node.mn_sync, /*unit_tests=*/true, /*wipe=*/false);
-    Assert(node.mnhf_manager)->ConnectManagers(node.chainman.get(), node.llmq_ctx->qman.get());
-    node.chain_helper = std::make_unique<CChainstateHelper>(*node.cpoolman, *node.dmnman, *node.mnhf_manager, *node.govman, *(node.llmq_ctx->quorum_block_processor), *node.chainman,
-                                                            chainparams.GetConsensus(), *node.mn_sync, *node.sporkman, *(node.llmq_ctx->clhandler), *(node.llmq_ctx->qman));
 }
 
-void DashTestSetupClose(NodeContext& node)
+void DashPostChainstateSetupClose(NodeContext& node)
 {
-    node.chain_helper.reset();
-    node.llmq_ctx->Interrupt();
-    node.llmq_ctx->Stop();
-    Assert(node.mnhf_manager)->DisconnectManagers();
-    node.llmq_ctx.reset();
 #ifdef ENABLE_WALLET
     node.coinjoin_loader.reset();
 #endif // ENABLE_WALLET
-    node.mempool->DisconnectManagers();
-    node.dmnman.reset();
     node.cj_ctx.reset();
 }
 
@@ -240,8 +244,10 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     m_node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
     m_node.mempool = std::make_unique<CTxMemPool>(m_node.fee_estimator.get(), 1);
 
+    m_cache_sizes = CalculateCacheSizes(m_args);
+
     m_node.chainman = std::make_unique<ChainstateManager>();
-    m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(1 << 20, true);
+    m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(m_cache_sizes.block_tree_db, true);
 
     m_node.mn_metaman = std::make_unique<CMasternodeMetaMan>();
     m_node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
@@ -280,19 +286,38 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
 
-    {
-        LOCK(::cs_main);
-
-        m_node.chainman->InitializeChainstate(m_node.mempool.get(), *m_node.evodb, m_node.chain_helper, llmq::chainLocksHandler, llmq::quorumInstantSendManager);
-        m_node.chainman->ActiveChainstate().InitCoinsDB(
-            /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
-        assert(!m_node.chainman->ActiveChainstate().CanFlushToDisk());
-        m_node.chainman->ActiveChainstate().InitCoinsCache(1 << 23);
-        assert(m_node.chainman->ActiveChainstate().CanFlushToDisk());
-        if (!m_node.chainman->ActiveChainstate().LoadGenesisBlock()) {
-            throw std::runtime_error("LoadGenesisBlock failed.");
-        }
-    }
+    auto rv = LoadChainstate(fReindex.load(),
+                             *Assert(m_node.chainman.get()),
+                             *Assert(m_node.govman.get()),
+                             *Assert(m_node.mn_metaman.get()),
+                             *Assert(m_node.mn_sync.get()),
+                             *Assert(m_node.sporkman.get()),
+                             m_node.mn_activeman,
+                             m_node.chain_helper,
+                             m_node.cpoolman,
+                             m_node.dmnman,
+                             m_node.evodb,
+                             m_node.mnhf_manager,
+                             llmq::chainLocksHandler,
+                             llmq::quorumInstantSendManager,
+                             llmq::quorumSnapshotManager,
+                             m_node.llmq_ctx,
+                             Assert(m_node.mempool.get()),
+                             fPruneMode,
+                             m_args.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX),
+                             !m_args.GetBoolArg("-disablegovernance", !DEFAULT_GOVERNANCE_ENABLE),
+                             m_args.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX),
+                             m_args.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX),
+                             m_args.GetBoolArg("-txindex", DEFAULT_TXINDEX),
+                             chainparams.GetConsensus(),
+                             chainparams.NetworkIDString(),
+                             m_args.GetBoolArg("-reindex-chainstate", false),
+                             m_cache_sizes.block_tree_db,
+                             m_cache_sizes.coins_db,
+                             m_cache_sizes.coins,
+                             /*block_tree_db_in_memory=*/true,
+                             /*coins_db_in_memory=*/true);
+    assert(!rv.has_value());
 
     m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.peerman = PeerManager::make(chainparams, *m_node.connman, *m_node.addrman, m_node.banman.get(),
@@ -305,7 +330,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         m_node.connman->Init(options);
     }
 
-    DashTestSetup(m_node, chainparams);
+    DashPostChainstateSetup(m_node);
 
     BlockValidationState state;
     if (!m_node.chainman->ActiveChainstate().ActivateBestChain(state)) {
@@ -315,8 +340,21 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
 TestingSetup::~TestingSetup()
 {
-    DashTestSetupClose(m_node);
-    m_node.connman->Stop();
+    DashPostChainstateSetupClose(m_node);
+
+    // Interrupt() and PrepareShutdown() routines
+    if (m_node.llmq_ctx) {
+        m_node.llmq_ctx->Interrupt();
+        m_node.llmq_ctx->Stop();
+    }
+    if (m_node.connman) {
+        m_node.connman->Stop();
+    }
+
+    // DashChainstateSetup() is called by LoadChainstate() internally but
+    // winding them down is our responsibility
+    DashChainstateSetupClose(m_node);
+
     m_node.peerman.reset();
     m_node.banman.reset();
 }
