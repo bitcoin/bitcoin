@@ -137,6 +137,8 @@ struct Params {
     int BRRHeight;
     /** Block height at which DIP0020, DIP0021 and LLMQ_100_67 quorums become active */
     int DIP0020Height;
+    /** Block height at which DIP0024 (Quorum Rotation) and decreased governance proposal fee becomes active */
+    int DIP0024Height;
     /** Block height at which the first DIP0024 quorum was mined */
     int DIP0024QuorumsHeight;
     /** Block height at which V19 (Basic BLS and EvoNodes) becomes active */
@@ -203,7 +205,7 @@ struct Params {
         case DEPLOYMENT_DIP0020:
             return DIP0020Height;
         case DEPLOYMENT_DIP0024:
-            return DIP0024QuorumsHeight;
+            return DIP0024Height;
         case DEPLOYMENT_BRR:
             return BRRHeight;
         case DEPLOYMENT_V19:
