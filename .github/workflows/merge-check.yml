@@ -25,16 +25,20 @@ jobs:
 
       - name: Check merge --ff-only
         run: |
-          git fetch origin master:master
-          if [[ "${{ github.event_name }}" == "pull_request"* ]]; then
-            git fetch origin ${{ github.event.pull_request.base.ref }}:base_branch
-            git checkout base_branch
-            git pull --rebase=false origin pull/${{ github.event.pull_request.number }}/head
-            git checkout master
-            git merge --ff-only base_branch
+          if [[ "${{ github.ref_name }}" == "master" ]]; then
+            echo "Already on master, no need to check --ff-only"
           else
-            git checkout master
-            git merge --ff-only ${{ github.sha }}
+            git fetch origin master:master
+            if [[ "${{ github.event_name }}" == "pull_request"* ]]; then
+              git fetch origin ${{ github.event.pull_request.base.ref }}:base_branch
+              git checkout base_branch
+              git pull --rebase=false origin pull/${{ github.event.pull_request.number }}/head
+              git checkout master
+              git merge --ff-only base_branch
+            else
+              git checkout master
+              git merge --ff-only ${{ github.sha }}
+            fi
           fi
 
       - name: add labels
