@@ -25,8 +25,7 @@ export JOB_NUMBER=${JOB_NUMBER:-1}
 
 echo "Fallback to default values in env (if not yet set)"
 # The number of parallel jobs to pass down to make and test_runner.py
-MAKEJOBS="-j$(nproc)"
-export MAKEJOBS
+export MAKEJOBS=${MAKEJOBS:--j$(nproc)}
 # A folder for the ci system to put temporary files (ccache, datadirs for tests, ...)
 # This folder only exists on the ci host.
 export BASE_SCRATCH_DIR=${BASE_SCRATCH_DIR:-$BASE_ROOT_DIR/ci/scratch}
