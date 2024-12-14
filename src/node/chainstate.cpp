@@ -69,7 +69,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
             mnhf_manager.reset();
             mnhf_manager = std::make_unique<CMNHFManager>(*evodb);
 
-            chainman.InitializeChainstate(Assert(mempool), *evodb, chain_helper, clhandler, isman);
+            chainman.InitializeChainstate(mempool, *evodb, chain_helper, clhandler, isman);
             chainman.m_total_coinstip_cache = nCoinCacheUsage;
             chainman.m_total_coinsdb_cache = nCoinDBCache;
 
