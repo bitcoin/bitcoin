@@ -136,6 +136,8 @@ builder-image:
       - build-ci
     # Exclude some less important binaries to reduce the size of the artifacts
     exclude:
+      - build-ci/dashcore-$BUILD_TARGET/src/**/*.a
+      - build-ci/dashcore-$BUILD_TARGET/src/**/*.o
       - build-ci/dashcore-$BUILD_TARGET/src/bench/bench_dash
       - build-ci/dashcore-$BUILD_TARGET/src/bench/bench_dash.exe
       - build-ci/dashcore-$BUILD_TARGET/src/qt/test/test_dash-qt
