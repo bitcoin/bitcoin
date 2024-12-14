@@ -17,10 +17,11 @@ Tests mnauth RPC command
 
 class FakeMNAUTHTest(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(2, 1)
+        self.set_dash_test_params(1, 0)
 
     def run_test(self):
         self.activate_v19(expected_activation_height=900)
+        self.dynamically_add_masternode()
 
         masternode = self.mninfo[0]
         masternode.node.add_p2p_connection(P2PInterface())
