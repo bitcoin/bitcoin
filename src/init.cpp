@@ -1869,13 +1869,18 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                  chainman,
                                  node,
                                  fPruneMode,
+                                 args.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX),
                                  is_governance_enabled,
+                                 args.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX),
+                                 args.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX),
+                                 args.GetBoolArg("-txindex", DEFAULT_TXINDEX),
                                  chainparams,
-                                 args,
                                  fReindexChainState,
                                  nBlockTreeDBCache,
                                  nCoinDBCache,
-                                 nCoinCacheUsage);
+                                 nCoinCacheUsage,
+                                 args.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS),
+                                 args.GetArg("-checklevel", DEFAULT_CHECKLEVEL));
         if (rv.has_value()) {
             switch (rv.value()) {
             case ChainstateLoadingError::ERROR_LOADING_BLOCK_DB:
