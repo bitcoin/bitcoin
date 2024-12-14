@@ -18,6 +18,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
 I2P_ADDR = "c4gfnttsuwqomiygupdqqqyy5y5emnk5c73hrfvatri67prd7vyq.b32.i2p"
+ONION_ADDR = "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"
 
 ADDRS: List[CAddress] = []
 
@@ -37,6 +38,16 @@ class AddrReceiver(P2PInterface):
     def wait_for_addrv2(self):
         self.wait_until(lambda: "addrv2" in self.last_message)
 
+def calc_addrv2_msg_size(addrs):
+    size = 1  # vector length byte
+    for addr in addrs:
+        size += 4  # time
+        size += 1  # services, COMPACTSIZE(P2P_SERVICES)
+        size += 1  # network id
+        size += 1  # address length byte
+        size += addr.ADDRV2_ADDRESS_LENGTH[addr.net]  # address
+        size += 2  # port
+    return size
 
 class AddrTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -48,14 +59,18 @@ class AddrTest(BitcoinTestFramework):
         for i in range(10):
             addr = CAddress()
             addr.time = int(self.mocktime) + i
+            addr.port = 8333 + i
             addr.nServices = NODE_NETWORK
-            # Add one I2P address at an arbitrary position.
+            # Add one I2P and one onion V3 address at an arbitrary position.
             if i == 5:
                 addr.net = addr.NET_I2P
                 addr.ip = I2P_ADDR
+                addr.port = 0
+            elif i == 8:
+                addr.net = addr.NET_TORV3
+                addr.ip = ONION_ADDR
             else:
                 addr.ip = f"123.123.123.{i % 256}"
-            addr.port = 8333 + i
             ADDRS.append(addr)
 
         self.log.info('Create connection that sends addrv2 messages')
@@ -73,14 +88,15 @@ class AddrTest(BitcoinTestFramework):
         addr_source = self.nodes[0].add_p2p_connection(P2PInterface())
         addr_receiver = self.nodes[0].add_p2p_connection(AddrReceiver())
         msg.addrs = ADDRS
+        msg_size = calc_addrv2_msg_size(ADDRS)
         with self.nodes[0].assert_debug_log([
-                'received: addrv2 (159 bytes) peer=1',
+                f'received: addrv2 ({msg_size} bytes) peer=1',
         ]):
             addr_source.send_and_ping(msg)
 
         # Wait until "Added ..." before bumping mocktime to make sure addv2 is (almost) fully processed
         with self.nodes[0].assert_debug_log([
-                'sending addrv2 (159 bytes) peer=2',
+                f'sending addrv2 ({msg_size} bytes) peer=2',
         ]):
             self.bump_mocktime(30 * 60)
             addr_receiver.wait_for_addrv2()

@@ -76,6 +76,7 @@ TEST_FRAMEWORK_MODULES = [
     "crypto.chacha20",
     "crypto.ellswift",
     "key",
+    "messages",
     "crypto.muhash",
     "crypto.poly1305",
     "crypto.ripemd160",
