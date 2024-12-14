@@ -9,9 +9,9 @@
 #include <functional> // for std::function
 #include <memory> // for std::unique_ptr
 #include <optional> // for std::optional
+#include <string> // for std::string
 
 class CActiveMasternodeManager;
-class CChainParams;
 class CChainstateHelper;
 class CCreditPoolManager;
 class CDeterministicMNManager;
@@ -29,6 +29,10 @@ namespace llmq {
 class CChainLocksHandler;
 class CInstantSendManager;
 class CQuorumSnapshotManager;
+}
+
+namespace Consensus {
+struct Params;
 }
 
 enum class ChainstateLoadingError {
@@ -100,7 +104,8 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      bool is_spentindex_enabled,
                                                      bool is_timeindex_enabled,
                                                      bool is_txindex_enabled,
-                                                     const CChainParams& chainparams,
+                                                     const Consensus::Params& consensus_params,
+                                                     const std::string& network_id,
                                                      bool fReindexChainState,
                                                      int64_t nBlockTreeDBCache,
                                                      int64_t nCoinDBCache,
@@ -119,7 +124,7 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
                                                                 CEvoDB& evodb,
                                                                 bool fReset,
                                                                 bool fReindexChainState,
-                                                                const CChainParams& chainparams,
+                                                                const Consensus::Params& consensus_params,
                                                                 unsigned int check_blocks,
                                                                 unsigned int check_level,
                                                                 std::function<int64_t()> get_unix_time_seconds);

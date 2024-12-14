@@ -367,7 +367,7 @@ public:
     ~CVerifyDB();
     bool VerifyDB(
         CChainState& chainstate,
-        const CChainParams& chainparams,
+        const Consensus::Params& consensus_params,
         CCoinsView& coinsview,
         CEvoDB& evoDb,
         int nCheckLevel,

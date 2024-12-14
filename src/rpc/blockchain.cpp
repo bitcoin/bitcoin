@@ -1642,7 +1642,7 @@ static RPCHelpMan verifychain()
 
     CChainState& active_chainstate = chainman.ActiveChainstate();
     return CVerifyDB().VerifyDB(
-        active_chainstate, Params(), active_chainstate.CoinsTip(), *CHECK_NONFATAL(node.evodb), check_level, check_depth);
+        active_chainstate, Params().GetConsensus(), active_chainstate.CoinsTip(), *CHECK_NONFATAL(node.evodb), check_level, check_depth);
 },
     };
 }
