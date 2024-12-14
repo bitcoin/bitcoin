@@ -115,6 +115,33 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      std::function<bool()> shutdown_requested = nullptr,
                                                      std::function<void()> coins_error_cb = nullptr);
 
+/** Initialize Dash-specific components during chainstate initialization */
+void DashChainstateSetup(ChainstateManager& chainman,
+                         CGovernanceManager& govman,
+                         CMasternodeMetaMan& mn_metaman,
+                         CMasternodeSync& mn_sync,
+                         CSporkManager& sporkman,
+                         std::unique_ptr<CActiveMasternodeManager>& mn_activeman,
+                         std::unique_ptr<CChainstateHelper>& chain_helper,
+                         std::unique_ptr<CCreditPoolManager>& cpoolman,
+                         std::unique_ptr<CDeterministicMNManager>& dmnman,
+                         std::unique_ptr<CEvoDB>& evodb,
+                         std::unique_ptr<CMNHFManager>& mnhf_manager,
+                         std::unique_ptr<llmq::CQuorumSnapshotManager>& qsnapman,
+                         std::unique_ptr<LLMQContext>& llmq_ctx,
+                         CTxMemPool* mempool,
+                         bool fReset,
+                         bool fReindexChainState,
+                         const Consensus::Params& consensus_params);
+
+void DashChainstateSetupClose(std::unique_ptr<CChainstateHelper>& chain_helper,
+                              std::unique_ptr<CCreditPoolManager>& cpoolman,
+                              std::unique_ptr<CDeterministicMNManager>& dmnman,
+                              std::unique_ptr<CMNHFManager>& mnhf_manager,
+                              std::unique_ptr<llmq::CQuorumSnapshotManager>& qsnapman,
+                              std::unique_ptr<LLMQContext>& llmq_ctx,
+                              CTxMemPool* mempool);
+
 enum class ChainstateLoadVerifyError {
     ERROR_BLOCK_FROM_FUTURE,
     ERROR_CORRUPTED_BLOCK_DB,

@@ -77,30 +77,9 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
         pblocktree.reset();
         pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, block_tree_db_in_memory, fReset));
 
-        // Same logic as above with pblocktree
-        dmnman.reset();
-        dmnman = std::make_unique<CDeterministicMNManager>(chainman.ActiveChainstate(), *evodb);
-        mempool->ConnectManagers(dmnman.get());
-
-        cpoolman.reset();
-        cpoolman = std::make_unique<CCreditPoolManager>(*evodb);
-
-        qsnapman.reset();
-        qsnapman.reset(new llmq::CQuorumSnapshotManager(*evodb));
-
-        if (llmq_ctx) {
-            llmq_ctx->Interrupt();
-            llmq_ctx->Stop();
-        }
-        llmq_ctx.reset();
-        llmq_ctx = std::make_unique<LLMQContext>(chainman, *dmnman, *evodb, mn_metaman, *mnhf_manager, sporkman,
-                                                 *mempool, mn_activeman.get(), mn_sync, /*unit_tests=*/false, /*wipe=*/fReset || fReindexChainState);
-        // Enable CMNHFManager::{Process, Undo}Block
-        mnhf_manager->ConnectManagers(&chainman, llmq_ctx->qman.get());
-
-        chain_helper.reset();
-        chain_helper = std::make_unique<CChainstateHelper>(*cpoolman, *dmnman, *mnhf_manager, govman, *(llmq_ctx->quorum_block_processor), chainman,
-                                                           consensus_params, mn_sync, sporkman, *(llmq_ctx->clhandler), *(llmq_ctx->qman));
+        DashChainstateSetup(chainman, govman, mn_metaman, mn_sync, sporkman, mn_activeman, chain_helper, cpoolman,
+                            dmnman, evodb, mnhf_manager, qsnapman, llmq_ctx, mempool, fReset, fReindexChainState,
+                            consensus_params);
 
         if (fReset) {
             pblocktree->WriteReindexing(true);
@@ -227,6 +206,70 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
     }
 
     return std::nullopt;
+}
+
+void DashChainstateSetup(ChainstateManager& chainman,
+                         CGovernanceManager& govman,
+                         CMasternodeMetaMan& mn_metaman,
+                         CMasternodeSync& mn_sync,
+                         CSporkManager& sporkman,
+                         std::unique_ptr<CActiveMasternodeManager>& mn_activeman,
+                         std::unique_ptr<CChainstateHelper>& chain_helper,
+                         std::unique_ptr<CCreditPoolManager>& cpoolman,
+                         std::unique_ptr<CDeterministicMNManager>& dmnman,
+                         std::unique_ptr<CEvoDB>& evodb,
+                         std::unique_ptr<CMNHFManager>& mnhf_manager,
+                         std::unique_ptr<llmq::CQuorumSnapshotManager>& qsnapman,
+                         std::unique_ptr<LLMQContext>& llmq_ctx,
+                         CTxMemPool* mempool,
+                         bool fReset,
+                         bool fReindexChainState,
+                         const Consensus::Params& consensus_params)
+{
+    // Same logic as pblocktree
+    dmnman.reset();
+    dmnman = std::make_unique<CDeterministicMNManager>(chainman.ActiveChainstate(), *evodb);
+    mempool->ConnectManagers(dmnman.get());
+
+    cpoolman.reset();
+    cpoolman = std::make_unique<CCreditPoolManager>(*evodb);
+
+    qsnapman.reset();
+    qsnapman.reset(new llmq::CQuorumSnapshotManager(*evodb));
+
+    if (llmq_ctx) {
+        llmq_ctx->Interrupt();
+        llmq_ctx->Stop();
+    }
+    llmq_ctx.reset();
+    llmq_ctx = std::make_unique<LLMQContext>(chainman, *dmnman, *evodb, mn_metaman, *mnhf_manager, sporkman,
+                                             *mempool, mn_activeman.get(), mn_sync, /*unit_tests=*/false, /*wipe=*/fReset || fReindexChainState);
+    // Enable CMNHFManager::{Process, Undo}Block
+    mnhf_manager->ConnectManagers(&chainman, llmq_ctx->qman.get());
+
+    chain_helper.reset();
+    chain_helper = std::make_unique<CChainstateHelper>(*cpoolman, *dmnman, *mnhf_manager, govman, *(llmq_ctx->quorum_block_processor), chainman,
+                                                       consensus_params, mn_sync, sporkman, *(llmq_ctx->clhandler), *(llmq_ctx->qman));
+}
+
+void DashChainstateSetupClose(std::unique_ptr<CChainstateHelper>& chain_helper,
+                              std::unique_ptr<CCreditPoolManager>& cpoolman,
+                              std::unique_ptr<CDeterministicMNManager>& dmnman,
+                              std::unique_ptr<CMNHFManager>& mnhf_manager,
+                              std::unique_ptr<llmq::CQuorumSnapshotManager>& qsnapman,
+                              std::unique_ptr<LLMQContext>& llmq_ctx,
+                              CTxMemPool* mempool)
+
+{
+    chain_helper.reset();
+    if (mnhf_manager) {
+        mnhf_manager->DisconnectManagers();
+    }
+    llmq_ctx.reset();
+    qsnapman.reset();
+    cpoolman.reset();
+    mempool->DisconnectManagers();
+    dmnman.reset();
 }
 
 std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManager& chainman,

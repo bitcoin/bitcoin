@@ -335,15 +335,8 @@ void PrepareShutdown(NodeContext& node)
                 chainstate->ResetCoinsViews();
             }
         }
-        node.chain_helper.reset();
-        if (node.mnhf_manager) {
-            node.mnhf_manager->DisconnectManagers();
-        }
-        node.llmq_ctx.reset();
-        llmq::quorumSnapshotManager.reset();
-        node.mempool->DisconnectManagers();
-        node.dmnman.reset();
-        node.cpoolman.reset();
+        DashChainstateSetupClose(node.chain_helper, node.cpoolman, node.dmnman, node.mnhf_manager,
+                                 llmq::quorumSnapshotManager, node.llmq_ctx, Assert(node.mempool.get()));
         node.mnhf_manager.reset();
         node.evodb.reset();
     }
