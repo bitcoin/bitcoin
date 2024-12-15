@@ -4,6 +4,12 @@
 
 add_subdirectory(util)
 
+if(POLICY CMP0156)
+  # De-duplicate libraries on link lines based on linker capabilities.
+  # See: https://cmake.org/cmake/help/latest/policy/CMP0156.html
+  cmake_policy(SET CMP0156 NEW)
+endif()
+
 add_executable(fuzz
   addition_overflow.cpp
   addrman.cpp
