@@ -114,22 +114,22 @@ jobs:
           - build_target: linux64
             host: x86_64-pc-linux-gnu
             depends_on: linux64
-          - build_target: linux64_tsan
-            host: x86_64-pc-linux-gnu
-            depends_on: linux64
-          - build_target: linux64_ubsan
+          - build_target: linux64_cxx20
             host: x86_64-pc-linux-gnu
             depends_on: linux64
           - build_target: linux64_fuzz
             host: x86_64-pc-linux-gnu
             depends_on: linux64
-          - build_target: linux64_cxx20
+          - build_target: linux64_nowallet
             host: x86_64-pc-linux-gnu
             depends_on: linux64
           - build_target: linux64_sqlite
             host: x86_64-pc-linux-gnu
             depends_on: linux64
-          - build_target: linux64_nowallet
+          - build_target: linux64_tsan
+            host: x86_64-pc-linux-gnu
+            depends_on: linux64
+          - build_target: linux64_ubsan
             host: x86_64-pc-linux-gnu
             depends_on: linux64
     container:
