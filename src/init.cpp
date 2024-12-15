@@ -1939,6 +1939,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 break;
             }
         } else {
+            LogPrintf("%s: address index %s\n", __func__, fAddressIndex ? "enabled" : "disabled");
+            LogPrintf("%s: timestamp index %s\n", __func__, fTimestampIndex ? "enabled" : "disabled");
+            LogPrintf("%s: spent index %s\n", __func__, fSpentIndex ? "enabled" : "disabled");
+
             std::optional<ChainstateLoadVerifyError> rv2;
             try {
                 uiInterface.InitMessage(_("Verifying blocks…").translated);
@@ -1954,7 +1958,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                              chainparams.GetConsensus(),
                                              check_blocks,
                                              args.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
-                                             static_cast<int64_t(*)()>(GetTime));
+                                             static_cast<int64_t(*)()>(GetTime),
+                                             [](bool bls_state) {
+                                                LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls_state);
+                                             });
             } catch (const std::exception& e) {
                 LogPrintf("%s\n", e.what());
                 rv2 = ChainstateLoadVerifyError::ERROR_GENERIC_FAILURE;

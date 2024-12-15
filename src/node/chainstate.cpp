@@ -133,10 +133,6 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
 
     chainman.InitAdditionalIndexes();
 
-    LogPrintf("%s: address index %s\n", __func__, fAddressIndex ? "enabled" : "disabled");
-    LogPrintf("%s: timestamp index %s\n", __func__, fTimestampIndex ? "enabled" : "disabled");
-    LogPrintf("%s: spent index %s\n", __func__, fSpentIndex ? "enabled" : "disabled");
-
     // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
     // in the past, but is now trying to run unpruned.
     if (chainman.m_blockman.m_have_pruned && !fPruneMode) {
@@ -277,7 +273,8 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
                                                                 const Consensus::Params& consensus_params,
                                                                 unsigned int check_blocks,
                                                                 unsigned int check_level,
-                                                                std::function<int64_t()> get_unix_time_seconds)
+                                                                std::function<int64_t()> get_unix_time_seconds,
+                                                                std::function<void(bool)> notify_bls_state)
 {
     auto is_coinsview_empty = [&](CChainState* chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         return fReset || fReindexChainState || chainstate->CoinsTip().GetBestBlock().IsNull();
@@ -294,7 +291,7 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
             const bool v19active{DeploymentActiveAfter(tip, consensus_params, Consensus::DEPLOYMENT_V19)};
             if (v19active) {
                 bls::bls_legacy_scheme.store(false);
-                LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
+                if (notify_bls_state) notify_bls_state(bls::bls_legacy_scheme.load());
             }
 
             if (!CVerifyDB().VerifyDB(
@@ -309,7 +306,7 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
             // Make sure we use the right scheme.
             if (v19active && bls::bls_legacy_scheme.load()) {
                 bls::bls_legacy_scheme.store(false);
-                LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
+                if (notify_bls_state) notify_bls_state(bls::bls_legacy_scheme.load());
             }
 
             if (check_level >= 3) {

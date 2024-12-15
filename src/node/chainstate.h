@@ -156,6 +156,7 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
                                                                 const Consensus::Params& consensus_params,
                                                                 unsigned int check_blocks,
                                                                 unsigned int check_level,
-                                                                std::function<int64_t()> get_unix_time_seconds);
+                                                                std::function<int64_t()> get_unix_time_seconds,
+                                                                std::function<void(bool)> notify_bls_state = nullptr);
 
 #endif // BITCOIN_NODE_CHAINSTATE_H
