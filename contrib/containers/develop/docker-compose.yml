@@ -1,17 +1,18 @@
-version: "3.9"
 services:
   container:
     entrypoint: /bin/bash
     build:
       context: '..'
       dockerfile: './develop/Dockerfile'
-    tty: true         # Equivalent to -t
-    stdin_open: true  # Equivalent to -i
     ports:
       - "9998:9998"           # Mainnet Ports
       - "9999:9999"
       - "19998:19998"         # Testnet Ports
       - "19999:19999"
+    security_opt:
+      - seccomp:unconfined
+    stdin_open: true  # Equivalent to -i
+    tty: true         # Equivalent to -t
 
 # A note about volumes:
 #
