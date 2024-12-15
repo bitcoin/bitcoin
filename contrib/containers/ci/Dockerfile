@@ -68,6 +68,8 @@ RUN set -ex; \
         lldbUpdAltArgs="${lldbUpdAltArgs} --slave /usr/bin/${binName} ${binName} /usr/bin/${binName}-${LLVM_VERSION}"; \
     done; \
     sh -c "${lldbUpdAltArgs}";
+# LD_LIBRARY_PATH is empty by default, this is the first entry
+ENV LD_LIBRARY_PATH="/usr/lib/llvm-${LLVM_VERSION}/lib"
 
 # Python setup
 # PYTHON_VERSION should match the value in .python-version
@@ -107,14 +109,15 @@ ARG DASH_HASH_VERSION=1.4.0
 RUN git clone --depth 1 --no-tags --branch=${DASH_HASH_VERSION} https://github.com/dashpay/dash_hash
 RUN cd dash_hash && pip3 install -r requirements.txt .
 
+# Add user with specified (or default) user/group ids and setup configuration files
 ARG USER_ID=1000
 ARG GROUP_ID=1000
-
-# add user with specified (or default) user/group ids
-ENV USER_ID="${USER_ID}"
-ENV GROUP_ID="${GROUP_ID}"
-RUN groupadd -g ${GROUP_ID} dash
-RUN useradd -u ${USER_ID} -g dash -s /bin/bash -m -d /home/dash dash
+RUN set -ex; \
+    groupadd -g ${GROUP_ID} dash; \
+    useradd -u ${USER_ID} -g dash -s /bin/bash -m -d /home/dash dash; \
+    mkdir -p /home/dash/.config/gdb; \
+    echo "add-auto-load-safe-path /usr/lib/llvm-${LLVM_VERSION}/lib" | tee /home/dash/.config/gdb/gdbinit; \
+    chown ${USER_ID}:${GROUP_ID} -R /home/dash
 
 # Packages needed for all target builds
 RUN apt-get update && apt-get install $APT_ARGS \
