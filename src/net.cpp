@@ -15,7 +15,7 @@
 #include <addrman.h>
 #include <banman.h>
 #include <clientversion.h>
-#include <compat.h>
+#include <compat/compat.h>
 #include <consensus/consensus.h>
 #include <crypto/sha256.h>
 #include <node/eviction.h>
@@ -25,7 +25,7 @@
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <protocol.h>
 #include <random.h>
 #include <scheduler.h>

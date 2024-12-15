@@ -14,22 +14,23 @@
 #include <crypto/sha512.h>
 #include <span.h>
 #include <support/cleanse.h>
-#include <util/time.h> // for GetTime()
-#ifdef WIN32
-#include <compat.h> // for Windows API
-#endif
+#include <util/time.h>
 
 #include <algorithm>
 #include <atomic>
+#include <cstdint>
+#include <cstring>
 #include <chrono>
 #include <climits>
 #include <thread>
 #include <vector>
 
-#include <stdint.h>
-#include <string.h>
-#ifndef WIN32
 #include <sys/types.h> // must go before a number of other headers
+
+#ifdef WIN32
+#include <windows.h>
+#include <winreg.h>
+#else
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/resource.h>

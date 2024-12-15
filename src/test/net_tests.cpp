@@ -6,7 +6,7 @@
 
 #include <chainparams.h>
 #include <clientversion.h>
-#include <compat.h>
+#include <compat/compat.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netaddress.h>

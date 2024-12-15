@@ -11,7 +11,7 @@
 #include <crypto/sha256.h>
 #include <key.h>
 #include <logging.h>
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <random.h>
 #include <util/string.h>
 #include <util/system.h>

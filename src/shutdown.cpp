@@ -12,7 +12,7 @@
 #include <logging.h>
 #include <util/tokenpipe.h>
 
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <warnings.h>
 
 #include <assert.h>

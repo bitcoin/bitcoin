@@ -22,7 +22,7 @@
 #include <qt/walletmodel.h>
 
 #include <interfaces/node.h>
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <util/strencodings.h>
 
 #include <QAction>

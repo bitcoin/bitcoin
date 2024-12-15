@@ -8,11 +8,11 @@
 #include <governance/governance.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <shutdown.h>
-#include <validation.h>
 #include <util/time.h>
 #include <util/translation.h>
+#include <validation.h>
 
 class CMasternodeSync;
 

@@ -5,7 +5,7 @@
 #include <qt/walletframe.h>
 
 #include <fs.h>
-#include <node/ui_interface.h>
+#include <node/interface_ui.h>
 #include <psbt.h>
 #include <qt/governancelist.h>
 #include <qt/guiutil.h>

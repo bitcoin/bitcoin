@@ -8,6 +8,7 @@
 #ifndef BITCOIN_COMPAT_ASSUMPTIONS_H
 #define BITCOIN_COMPAT_ASSUMPTIONS_H
 
+#include <cstddef>
 #include <limits>
 
 // Assumption: We assume that the macro NDEBUG is not defined.

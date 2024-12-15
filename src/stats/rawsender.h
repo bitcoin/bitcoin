@@ -6,7 +6,7 @@
 #ifndef BITCOIN_STATS_RAWSENDER_H
 #define BITCOIN_STATS_RAWSENDER_H
 
-#include <compat.h>
+#include <compat/compat.h>
 #include <sync.h>
 #include <threadinterrupt.h>
 

@@ -16,8 +16,8 @@
 #endif
 
 #include <attributes.h>
-#include <compat.h>
 #include <compat/assumptions.h>
+#include <compat/compat.h>
 #include <consensus/amount.h>
 #include <fs.h>
 #include <logging.h>

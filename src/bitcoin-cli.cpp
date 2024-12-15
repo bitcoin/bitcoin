@@ -10,7 +10,7 @@
 
 #include <chainparamsbase.h>
 #include <clientversion.h>
-#include <compat.h>
+#include <compat/compat.h>
 #include <compat/stdin.h>
 #include <policy/feerate.h>
 #include <rpc/client.h>

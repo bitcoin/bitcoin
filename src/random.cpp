@@ -9,24 +9,23 @@
 #include <crypto/chacha20.h>
 #include <crypto/sha256.h>
 #include <crypto/sha512.h>
-#include <support/cleanse.h>
-#ifdef WIN32
-#include <compat.h> // for Windows API
-#include <wincrypt.h>
-#endif
 #include <logging.h>
 #include <randomenv.h>
-#include <support/allocators/secure.h>
 #include <span.h>
-#include <sync.h>     // for Mutex
-#include <util/time.h> // for GetTimeMicros()
+#include <support/allocators/secure.h>
+#include <support/cleanse.h>
+#include <sync.h>
+#include <util/time.h>
 
 #include <array>
 #include <cmath>
 #include <stdlib.h>
 #include <thread>
 
-#ifndef WIN32
+#ifdef WIN32
+#include <windows.h>
+#include <wincrypt.h>
+#else
 #include <fcntl.h>
 #endif
 
@@ -729,7 +728,7 @@ bool Random_SanityCheck()
      * GetOSRand() overwrites all 32 bytes of the output given a maximum
      * number of tries.
      */
-    static const ssize_t MAX_TRIES = 1024;
+    static constexpr int MAX_TRIES{1024};
     uint8_t data[NUM_OS_RANDOM_BYTES];
     bool overwritten[NUM_OS_RANDOM_BYTES] = {}; /* Tracks which bytes have been overwritten at least once */
     int num_overwritten;
