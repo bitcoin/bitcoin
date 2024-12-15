@@ -892,6 +892,14 @@ class RPCCoverage():
         # Consider RPC generate covered, because it is overloaded in
         # test_framework/test_node.py and not seen by the coverage check.
         covered_cmds = set({'generate'})
+        # TODO: implement functional tests for coinjoinsalt
+        covered_cmds.add('coinjoinsalt')
+        # TODO: implement functional tests for voteraw
+        covered_cmds.add('voteraw')
+        # TODO: implement functional tests for getmerkleblocks
+        covered_cmds.add('getmerkleblocks')
+        # TODO: drop it with v23+: remove `debug` in favour of `logging`
+        covered_cmds.add('debug')
 
         if not os.path.isfile(coverage_ref_filename):
             raise RuntimeError("No coverage reference found")

@@ -134,6 +134,7 @@ static UniValue GetNextMasternodeForPayment(const CChain& active_chain, CDetermi
     return obj;
 }
 
+// TODO: drop it
 static RPCHelpMan masternode_winner()
 {
     return RPCHelpMan{"masternode winner",
@@ -154,6 +155,7 @@ static RPCHelpMan masternode_winner()
     };
 }
 
+// TODO: drop it
 static RPCHelpMan masternode_current()
 {
     return RPCHelpMan{"masternode current",
@@ -227,7 +229,7 @@ static RPCHelpMan masternode_status()
     }
 
     UniValue mnObj(UniValue::VOBJ);
-    // keep compatibility with legacy status for now (might get deprecated/removed later)
+    // keep compatibility with legacy status for now (TODO: get deprecated/removed later)
     mnObj.pushKV("outpoint", node.mn_activeman->GetOutPoint().ToStringShort());
     mnObj.pushKV("service", node.mn_activeman->GetService().ToStringAddrPort());
     auto dmn = CHECK_NONFATAL(node.dmnman)->GetListAtChainTip().GetMN(node.mn_activeman->GetProTxHash());
@@ -750,8 +752,8 @@ static const CRPCCommand commands[] =
     { "dash",               &masternode_status,        },
     { "dash",               &masternode_payments,      },
     { "dash",               &masternode_winners,       },
-    { "dash",               &masternode_current,       },
-    { "dash",               &masternode_winner,        },
+    { "hidden",             &masternode_current,       },
+    { "hidden",             &masternode_winner,        },
 };
 // clang-format on
     for (const auto& command : commands) {

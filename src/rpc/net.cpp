@@ -241,7 +241,7 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("masternode", stats.m_masternode_connection);
         if (fStateStats) {
             if (IsDeprecatedRPCEnabled("banscore")) {
-                // banscore is deprecated in v21 for removal in v22
+                // TODO: banscore is deprecated in v21 for removal in v22, maybe impossible due to usages in p2p_quorum_data.py
                 obj.pushKV("banscore", statestats.m_misbehavior_score);
             }
             obj.pushKV("startingheight", statestats.m_starting_height);
@@ -1126,10 +1126,10 @@ static const CRPCCommand commands[] =
     { "network",             &setban,                  },
     { "network",             &listbanned,              },
     { "network",             &clearbanned,             },
-    { "network",             &cleardiscouraged,        },
     { "network",             &setnetworkactive,        },
     { "network",             &getnodeaddresses,        },
 
+    { "hidden",              &cleardiscouraged,        },
     { "hidden",              &addconnection,           },
     { "hidden",              &addpeeraddress,          },
     { "hidden",              &sendmsgtopeer            },
