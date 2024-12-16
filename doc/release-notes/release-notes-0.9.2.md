@@ -78,7 +78,7 @@ Command-line options:
 - Fix `-printblocktree` output
 - Show error message if ReadConfigFile fails
 
-Block-chain handling and storage:
+Blockchain handling and storage:
 
 - Fix for GetBlockValue() after block 13,440,000 (BIP42)
 - Upgrade leveldb to 1.17
