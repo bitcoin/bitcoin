@@ -74,7 +74,11 @@ class TestShell:
             # cache. Since TestShell is meant for interactive use, there is no concrete
             # test; passing a dummy name is fine though, as only the containing directory
             # is relevant for successful initialization.
-            tests_directory = pathlib.Path(__file__).resolve().parent.parent
+            # The cmake build system writes the required config.ini file to the build/
+            # directory, but the build/.../test–framework/ directory there symlinks back to the
+            # working directory in the repository, where there is no config.ini file.
+            # For that reason, we do NOT follow symlinks from the dummy file.
+            tests_directory = pathlib.Path(__file__).parent.parent
             TestShell.instance = TestShell.__TestShell(tests_directory / "testshell_dummy.py")
             TestShell.instance.running = False
         return TestShell.instance

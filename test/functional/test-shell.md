@@ -24,13 +24,17 @@ user inputs. Such environments include the Python3 command line interpreter or
 
 ## 2. Importing `TestShell` from the Bitcoin Core repository
 
-We can import the `TestShell` by adding the path of the Bitcoin Core
+We can import the `TestShell` by adding the path of the configured Bitcoin Core
 `test_framework` module to the beginning of the PATH variable, and then
-importing the `TestShell` class from the `test_shell` sub-package.
+importing the `TestShell` class from the `test_shell` sub-package. Since
+the build system creates a copy of the `test_framework` module into a new `build/`
+directory along with the required configuration file, the path to the build copy
+must be used.
+
 
 ```
 >>> import sys
->>> sys.path.insert(0, "/path/to/bitcoin/test/functional")
+>>> sys.path.insert(0, "/path/to/bitcoin/build/test/functional")
 >>> from test_framework.test_shell import TestShell
 ```
 
