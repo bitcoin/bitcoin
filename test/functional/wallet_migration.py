@@ -1314,6 +1314,35 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(watchonly.getaddressinfo(tr_addr)["ismine"], True)
         assert_equal(watchonly.getaddressinfo(tr_script_addr)["ismine"], True)
 
+    def test_solvable_no_privs(self):
+        self.log.info("Test migrating a multisig that we do not have any private keys for")
+        wallet = self.create_legacy_wallet("multisig_noprivs")
+
+        _, pubkey = generate_keypair(compressed=True, wif=True)
+
+        add_ms_res = wallet.addmultisigaddress(nrequired=1, keys=[pubkey.hex()])
+        addr = add_ms_res["address"]
+
+        # The multisig address should be ISMINE_NO but we should have the script info
+        addr_info = wallet.getaddressinfo(addr)
+        assert_equal(addr_info["ismine"], False)
+        assert "hex" in addr_info
+
+        migrate_res, wallet = self.migrate_and_get_rpc("multisig_noprivs")
+        assert_equal(migrate_res["solvables_name"], "multisig_noprivs_solvables")
+        solvables = self.master_node.get_wallet_rpc(migrate_res["solvables_name"])
+
+        # The multisig should not be in the spendable wallet
+        addr_info = wallet.getaddressinfo(addr)
+        assert_equal(addr_info["ismine"], False)
+        assert "hex" not in addr_info
+
+        # The multisig address should be in the solvables wallet
+        addr_info = solvables.getaddressinfo(addr)
+        assert_equal(addr_info["ismine"], True)
+        assert_equal(addr_info["solvable"], True)
+        assert "hex" in addr_info
+
     def run_test(self):
         self.master_node = self.nodes[0]
         self.old_node = self.nodes[1]
@@ -1345,6 +1374,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_disallowed_p2wsh()
         self.test_miniscript()
         self.test_taproot()
+        self.test_solvable_no_privs()
 
 if __name__ == '__main__':
     WalletMigrationTest(__file__).main()
