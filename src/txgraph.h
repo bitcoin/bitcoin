@@ -196,6 +196,10 @@ public:
      *  oversized), ignoring unmodified components in both. Use FeeFrac rather than FeePerWeight
      *  so CompareChunks is usable without type-conversion. */
     virtual std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> GetMainStagingDiagrams() noexcept = 0;
+    /** Trim all clusters (and would-be clusters) to the TxGraph's cluster count and size
+     *  constraints. Returns the list of all removed transactions, which will always include all
+     *  its own descendants. Applies to staging if it exists, and main otherwise. */
+    virtual std::vector<Ref*> Trim() noexcept = 0;
 
     /** Construct a block builder, drawing from the main graph, which cannot be oversized. While
      *  the returned object exists, no mutators on the main graph are allowed. */
