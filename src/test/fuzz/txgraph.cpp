@@ -67,23 +67,31 @@ struct SimTxGraph
     SimTxGraph(SimTxGraph&&) noexcept = default;
     SimTxGraph& operator=(SimTxGraph&&) noexcept = default;
 
+    /** Get the set of components of the graph which violate count or size limits. */
+    std::vector<SetType> GetOversizedClusters()
+    {
+        std::vector<SetType> ret;
+        auto todo = graph.Positions();
+        // Iterate over all connected components of the graph.
+        while (todo.Any()) {
+            auto component = graph.FindConnectedComponent(todo);
+            uint64_t component_size{0};
+            for (auto i : component) component_size += graph.FeeRate(i).size;
+            if (component.Count() > max_cluster_count || component_size > max_cluster_size) {
+                ret.push_back(component);
+            }
+            todo -= component;
+        }
+        return ret;
+    }
+
     /** Check whether this graph is oversized (contains a connected component whose number of
      *  transactions exceeds max_cluster_count. */
     bool IsOversized()
     {
         if (!oversized.has_value()) {
             // Only recompute when oversized isn't already known.
-            oversized = false;
-            auto todo = graph.Positions();
-            // Iterate over all connected components of the graph.
-            while (todo.Any()) {
-                auto component = graph.FindConnectedComponent(todo);
-                if (component.Count() > max_cluster_count) oversized = true;
-                uint64_t component_size{0};
-                for (auto i : component) component_size += graph.FeeRate(i).size;
-                if (component_size > max_cluster_size) oversized = true;
-                todo -= component;
-            }
+            oversized = !GetOversizedClusters().empty();
         }
         return *oversized;
     }
@@ -680,6 +688,47 @@ FUZZ_TARGET(txgraph)
                     }
                     assert(sum_feerate == evictor->GetCurrentChunkFeerate());
                     evictor->Next();
+                }
+                break;
+            } else if (command-- == 0) {
+                bool was_oversized = top_sim.IsOversized();
+                real->Trim();
+                if (was_oversized) {
+                    // Trim only makes changes when the graph was oversized, but what those changes
+                    // are is not well specified, so we will need to make queries to real to figure
+                    // out what happened and make the simulation reflect that. Sadly, these queries
+                    // may change the state, so they could in theory mask problems. Start by doing
+                    // a sanity check before any querying to detect some potential problems.
+                    real->SanityCheck();
+                    // Find oversized clusters in the simulation, so we can query whether they were
+                    // removed. Only query those to minimize impact of TxGraph's state, as we know
+                    // the other ones should not be affected anyway.
+                    std::vector<TxGraph::Ref*> oversized;
+                    for (const auto& component : top_sim.GetOversizedClusters()) {
+                        for (auto simpos : component) {
+                            oversized.push_back(&top_sim.GetRef(simpos));
+                        }
+                    }
+                    // Randomize the order of querying, in case this affects the state.
+                    std::shuffle(oversized.begin(), oversized.end(), rng);
+                    // Determine what was removed.
+                    std::vector<TxGraph::Ref*> removed;
+                    for (TxGraph::Ref* ref : oversized) {
+                        if (!real->Exists(*ref)) removed.push_back(ref);
+                    }
+                    auto removed_set = top_sim.MakeSet(removed);
+                    // The removed set must be anti-topological (include all its own descendants).
+                    for (auto simpos : removed_set) {
+                        assert(top_sim.graph.Descendants(simpos).IsSubsetOf(removed_set));
+                    }
+                    // Apply all removals to the simulations, and verify the result is no longer
+                    // oversized. Don't query the real graph for oversizedness; it is compared
+                    // against the simulation anyway later.
+                    std::shuffle(removed.begin(), removed.end(), rng);
+                    for (TxGraph::Ref* ref : removed) {
+                        top_sim.RemoveTransaction(*ref);
+                    }
+                    assert(!top_sim.IsOversized());
                 }
                 break;
             }
