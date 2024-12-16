@@ -169,6 +169,11 @@ public:
      *  that appear identically in both. Use FeeFrac rather than FeePerWeight so CompareChunks is
      *  usable without type-conversion. */
     virtual std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> GetMainStagingDiagrams() noexcept = 0;
+    /** Remove transactions (including their own descendants) according to a fast but best-effort
+     *  strategy such that the TxGraph's cluster and size limits are respected. Applies to staging
+     *  if it exists, and to main otherwise. Returns the list of all removed transactions in
+     *  unspecified order. This has no effect unless the relevant graph is oversized. */
+    virtual std::vector<Ref*> Trim() noexcept = 0;
 
     /** Interface returned by GetBlockBuilder. */
     class BlockBuilder

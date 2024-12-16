@@ -247,6 +247,31 @@ struct SimTxGraph
             }
         }
     }
+
+
+    /** Verify that set contains transactions from every oversized cluster, and nothing from
+     *  non-oversized ones. */
+    bool MatchesOversizedClusters(const SetType& set)
+    {
+        if (set.Any() && !IsOversized()) return false;
+
+        auto todo = graph.Positions();
+        if (!set.IsSubsetOf(todo)) return false;
+
+        // Walk all clusters, and make sure all of set doesn't come from non-oversized clusters
+        while (todo.Any()) {
+            auto component = graph.FindConnectedComponent(todo);
+            // Determine whether component is oversized, due to either the size or count limit.
+            bool is_oversized = component.Count() > max_cluster_count;
+            uint64_t component_size{0};
+            for (auto i : component) component_size += graph.FeeRate(i).size;
+            is_oversized |= component_size > max_cluster_size;
+            // Check whether overlap with set matches is_oversized.
+            if (is_oversized != set.Overlaps(component)) return false;
+            todo -= component;
+        }
+        return true;
+    }
 };
 
 } // namespace
@@ -788,6 +813,30 @@ FUZZ_TARGET(txgraph)
                     }
                     assert(sum == worst_chunk_feerate);
                 }
+                break;
+            } else if ((block_builders.empty() || sims.size() > 1) && command-- == 0) {
+                // Trim.
+                bool was_oversized = top_sim.IsOversized();
+                auto removed = real->Trim();
+                // Verify that something was removed if and only if there was an oversized cluster.
+                assert(was_oversized == !removed.empty());
+                if (!was_oversized) break;
+                auto removed_set = top_sim.MakeSet(removed);
+                // The removed set must contain all its own descendants.
+                for (auto simpos : removed_set) {
+                    assert(top_sim.graph.Descendants(simpos).IsSubsetOf(removed_set));
+                }
+                // Something from every oversized cluster should have been removed, and nothing
+                // else.
+                assert(top_sim.MatchesOversizedClusters(removed_set));
+
+                // Apply all removals to the simulation, and verify the result is no longer
+                // oversized. Don't query the real graph for oversizedness; it is compared
+                // against the simulation anyway later.
+                for (auto simpos : removed_set) {
+                    top_sim.RemoveTransaction(top_sim.GetRef(simpos));
+                }
+                assert(!top_sim.IsOversized());
                 break;
             }
         }
