@@ -6,11 +6,29 @@
 #define BITCOIN_NODE_CHAINSTATE_H
 
 #include <cstdint> // for int64_t
+#include <memory> // for std::unique_ptr
 #include <optional> // for std::optional
 
+class CActiveMasternodeManager;
 class CChainParams;
+class CChainstateHelper;
+class CCreditPoolManager;
+class CDeterministicMNManager;
+class CEvoDB;
+class CGovernanceManager;
 class ChainstateManager;
-struct NodeContext;
+class CMasternodeMetaMan;
+class CMasternodeSync;
+class CMNHFManager;
+class CSporkManager;
+class CTxMemPool;
+struct LLMQContext;
+
+namespace llmq {
+class CChainLocksHandler;
+class CInstantSendManager;
+class CQuorumSnapshotManager;
+}
 
 enum class ChainstateLoadingError {
     ERROR_LOADING_BLOCK_DB,
@@ -63,7 +81,21 @@ enum class ChainstateLoadingError {
  */
 std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      ChainstateManager& chainman,
-                                                     NodeContext& node,
+                                                     CGovernanceManager& govman,
+                                                     CMasternodeMetaMan& mn_metaman,
+                                                     CMasternodeSync& mn_sync,
+                                                     CSporkManager& sporkman,
+                                                     std::unique_ptr<CActiveMasternodeManager>& mn_activeman,
+                                                     std::unique_ptr<CChainstateHelper>& chain_helper,
+                                                     std::unique_ptr<CCreditPoolManager>& cpoolman,
+                                                     std::unique_ptr<CDeterministicMNManager>& dmnman,
+                                                     std::unique_ptr<CEvoDB>& evodb,
+                                                     std::unique_ptr<CMNHFManager>& mnhf_manager,
+                                                     std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
+                                                     std::unique_ptr<llmq::CInstantSendManager>& isman,
+                                                     std::unique_ptr<llmq::CQuorumSnapshotManager>& qsnapman,
+                                                     std::unique_ptr<LLMQContext>& llmq_ctx,
+                                                     CTxMemPool* mempool,
                                                      bool fPruneMode,
                                                      bool is_addrindex_enabled,
                                                      bool is_governance_enabled,

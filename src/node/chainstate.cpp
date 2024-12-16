@@ -9,7 +9,6 @@
 #include <rpc/blockchain.h> // for RPCNotifyBlockChange
 #include <util/time.h> // for GetTime
 #include <node/blockstorage.h> // for CleanupBlockRevFiles, fHavePruned, fReindex
-#include <node/context.h> // for NodeContext
 #include <node/ui_interface.h> // for InitError, uiInterface, and CClientUIInterface member access
 #include <shutdown.h> // for ShutdownRequested
 #include <validation.h> // for a lot of things
@@ -26,7 +25,21 @@
 
 std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      ChainstateManager& chainman,
-                                                     NodeContext& node,
+                                                     CGovernanceManager& govman,
+                                                     CMasternodeMetaMan& mn_metaman,
+                                                     CMasternodeSync& mn_sync,
+                                                     CSporkManager& sporkman,
+                                                     std::unique_ptr<CActiveMasternodeManager>& mn_activeman,
+                                                     std::unique_ptr<CChainstateHelper>& chain_helper,
+                                                     std::unique_ptr<CCreditPoolManager>& cpoolman,
+                                                     std::unique_ptr<CDeterministicMNManager>& dmnman,
+                                                     std::unique_ptr<CEvoDB>& evodb,
+                                                     std::unique_ptr<CMNHFManager>& mnhf_manager,
+                                                     std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
+                                                     std::unique_ptr<llmq::CInstantSendManager>& isman,
+                                                     std::unique_ptr<llmq::CQuorumSnapshotManager>& qsnapman,
+                                                     std::unique_ptr<LLMQContext>& llmq_ctx,
+                                                     CTxMemPool* mempool,
                                                      bool fPruneMode,
                                                      bool is_addrindex_enabled,
                                                      bool is_governance_enabled,
@@ -50,13 +63,13 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
             LOCK(cs_main);
 
             int64_t nEvoDbCache{64 * 1024 * 1024}; // TODO
-            node.evodb.reset();
-            node.evodb = std::make_unique<CEvoDB>(nEvoDbCache, false, fReset || fReindexChainState);
+            evodb.reset();
+            evodb = std::make_unique<CEvoDB>(nEvoDbCache, false, fReset || fReindexChainState);
 
-            node.mnhf_manager.reset();
-            node.mnhf_manager = std::make_unique<CMNHFManager>(*node.evodb);
+            mnhf_manager.reset();
+            mnhf_manager = std::make_unique<CMNHFManager>(*evodb);
 
-            chainman.InitializeChainstate(Assert(node.mempool.get()), *node.evodb, node.chain_helper, llmq::chainLocksHandler, llmq::quorumInstantSendManager);
+            chainman.InitializeChainstate(Assert(mempool), *evodb, chain_helper, clhandler, isman);
             chainman.m_total_coinstip_cache = nCoinCacheUsage;
             chainman.m_total_coinsdb_cache = nCoinDBCache;
 
@@ -67,29 +80,29 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
             pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
 
             // Same logic as above with pblocktree
-            node.dmnman.reset();
-            node.dmnman = std::make_unique<CDeterministicMNManager>(chainman.ActiveChainstate(), *node.evodb);
-            node.mempool->ConnectManagers(node.dmnman.get());
+            dmnman.reset();
+            dmnman = std::make_unique<CDeterministicMNManager>(chainman.ActiveChainstate(), *evodb);
+            mempool->ConnectManagers(dmnman.get());
 
-            node.cpoolman.reset();
-            node.cpoolman = std::make_unique<CCreditPoolManager>(*node.evodb);
+            cpoolman.reset();
+            cpoolman = std::make_unique<CCreditPoolManager>(*evodb);
 
-            llmq::quorumSnapshotManager.reset();
-            llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*node.evodb));
+            qsnapman.reset();
+            qsnapman.reset(new llmq::CQuorumSnapshotManager(*evodb));
 
-            if (node.llmq_ctx) {
-                node.llmq_ctx->Interrupt();
-                node.llmq_ctx->Stop();
+            if (llmq_ctx) {
+                llmq_ctx->Interrupt();
+                llmq_ctx->Stop();
             }
-            node.llmq_ctx.reset();
-            node.llmq_ctx = std::make_unique<LLMQContext>(chainman, *node.dmnman, *node.evodb, *node.mn_metaman, *node.mnhf_manager, *node.sporkman,
-                                                          *node.mempool, node.mn_activeman.get(), *node.mn_sync, /*unit_tests=*/false, /*wipe=*/fReset || fReindexChainState);
+            llmq_ctx.reset();
+            llmq_ctx = std::make_unique<LLMQContext>(chainman, *dmnman, *evodb, mn_metaman, *mnhf_manager, sporkman,
+                                                     *mempool, mn_activeman.get(), mn_sync, /*unit_tests=*/false, /*wipe=*/fReset || fReindexChainState);
             // Enable CMNHFManager::{Process, Undo}Block
-            node.mnhf_manager->ConnectManagers(node.chainman.get(), node.llmq_ctx->qman.get());
+            mnhf_manager->ConnectManagers(&chainman, llmq_ctx->qman.get());
 
-            node.chain_helper.reset();
-            node.chain_helper = std::make_unique<CChainstateHelper>(*node.cpoolman, *node.dmnman, *node.mnhf_manager, *node.govman, *(node.llmq_ctx->quorum_block_processor), *node.chainman,
-                                                                    chainparams.GetConsensus(), *node.mn_sync, *node.sporkman, *(node.llmq_ctx->clhandler), *(node.llmq_ctx->qman));
+            chain_helper.reset();
+            chain_helper = std::make_unique<CChainstateHelper>(*cpoolman, *dmnman, *mnhf_manager, govman, *(llmq_ctx->quorum_block_processor), chainman,
+                                                               chainparams.GetConsensus(), mn_sync, sporkman, *(llmq_ctx->clhandler), *(llmq_ctx->qman));
 
             if (fReset) {
                 pblocktree->WriteReindexing(true);
@@ -198,7 +211,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                 // TODO: CEvoDB instance should probably be a part of CChainState
                 // (for multiple chainstates to actually work in parallel)
                 // and not a global
-                if (&chainman.ActiveChainstate() == chainstate && !node.evodb->CommitRootTransaction()) {
+                if (&chainman.ActiveChainstate() == chainstate && !evodb->CommitRootTransaction()) {
                     return ChainstateLoadingError::ERROR_COMMITING_EVO_DB;
                 }
 
@@ -211,10 +224,10 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                 }
             }
 
-            if (!node.dmnman->MigrateDBIfNeeded() || !node.dmnman->MigrateDBIfNeeded2()) {
+            if (!dmnman->MigrateDBIfNeeded() || !dmnman->MigrateDBIfNeeded2()) {
                 return ChainstateLoadingError::ERROR_UPGRADING_EVO_DB;
             }
-            if (!node.mnhf_manager->ForceSignalDBUpdate()) {
+            if (!mnhf_manager->ForceSignalDBUpdate()) {
                 return ChainstateLoadingError::ERROR_UPGRADING_SIGNALS_DB;
             }
         } catch (const std::exception& e) {
@@ -246,7 +259,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
 
                     if (!CVerifyDB().VerifyDB(
                             *chainstate, chainparams, chainstate->CoinsDB(),
-                            *node.evodb,
+                            *evodb,
                             check_level,
                             check_blocks)) {
                         return ChainstateLoadingError::ERROR_CORRUPTED_BLOCK_DB;
@@ -267,7 +280,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                     // TODO: CEvoDB instance should probably be a part of CChainState
                     // (for multiple chainstates to actually work in parallel)
                     // and not a global
-                    if (&chainman.ActiveChainstate() == chainstate && !node.evodb->IsEmpty()) {
+                    if (&chainman.ActiveChainstate() == chainstate && !evodb->IsEmpty()) {
                         // EvoDB processed some blocks earlier but we have no blocks anymore, something is wrong
                         return ChainstateLoadingError::ERROR_EVO_DB_SANITY_FAILED;
                     }
