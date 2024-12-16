@@ -728,6 +728,27 @@ FUZZ_TARGET(txgraph)
                     assert(sum == worst_chunk_feerate);
                 }
                 break;
+            } else if ((block_builders.empty() || sims.size() > 1) && command-- == 0) {
+                // Trim.
+                bool was_oversized = top_sim.IsOversized();
+                auto removed = real->Trim();
+                if (!was_oversized) {
+                    assert(removed.empty());
+                    break;
+                }
+                auto removed_set = top_sim.MakeSet(removed);
+                // The removed set must contain all its own descendants.
+                for (auto simpos : removed_set) {
+                    assert(top_sim.graph.Descendants(simpos).IsSubsetOf(removed_set));
+                }
+                // Apply all removals to the simulation, and verify the result is no longer
+                // oversized. Don't query the real graph for oversizedness; it is compared
+                // against the simulation anyway later.
+                for (auto simpos : removed_set) {
+                    top_sim.RemoveTransaction(top_sim.GetRef(simpos));
+                }
+                assert(!top_sim.IsOversized());
+                break;
             }
         }
     }
