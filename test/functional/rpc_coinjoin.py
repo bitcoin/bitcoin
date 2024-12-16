@@ -29,8 +29,8 @@ class CoinJoinTest(BitcoinTestFramework):
         node.createwallet(wallet_name='w1', blank=True, disable_private_keys=False)
         w1 = node.get_wallet_rpc('w1')
         self.test_coinjoin_start_stop(w1)
-        self.test_coinjoin_setamount(w1)
-        self.test_coinjoin_setrounds(w1)
+        self.test_setcoinjoinamount(w1)
+        self.test_setcoinjoinrounds(w1)
 
     def test_coinjoin_start_stop(self, node):
         # Start Mixing
@@ -49,22 +49,16 @@ class CoinJoinTest(BitcoinTestFramework):
         assert_equal(cj_info['enabled'], True)
         assert_equal(cj_info['running'], False)
 
-    def test_coinjoin_setamount(self, node):
-        # Try normal values
-        node.setcoinjoinamount(50)
-        cj_info = node.getcoinjoininfo()
-        assert_equal(cj_info['max_amount'], 50)
+    def test_setcoinjoinamount(self, node):
+        # Test normal and large values
+        for value in [50, 1200000]:
+            node.setcoinjoinamount(value)
+            assert_equal(node.getcoinjoininfo()['max_amount'], value)
 
-        # Try large values
-        node.setcoinjoinamount(1200000)
-        cj_info = node.getcoinjoininfo()
-        assert_equal(cj_info['max_amount'], 1200000)
-
-    def test_coinjoin_setrounds(self, node):
-        # Try normal values
+    def test_setcoinjoinrounds(self, node):
+        # Test normal values
         node.setcoinjoinrounds(5)
-        cj_info = node.getcoinjoininfo()
-        assert_equal(cj_info['max_rounds'], 5)
+        assert_equal(node.getcoinjoininfo()['max_rounds'], 5)
 
 
 if __name__ == '__main__':
