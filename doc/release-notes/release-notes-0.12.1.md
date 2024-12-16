@@ -95,7 +95,7 @@ in any transaction in that block.
 
 Miners get to choose what time they use for their header time, with the
 consensus rule being that no node will accept a block whose time is more
-than two hours in the future.  This creates a incentive for miners to
+than two hours in the future.  This creates an incentive for miners to
 set their header times to future values in order to include locktimed
 transactions which weren't supposed to be included for up to two more
 hours.
