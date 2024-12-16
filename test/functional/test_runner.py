@@ -892,8 +892,6 @@ class RPCCoverage():
         # Consider RPC generate covered, because it is overloaded in
         # test_framework/test_node.py and not seen by the coverage check.
         covered_cmds = set({'generate'})
-        # TODO: implement functional tests for coinjoinsalt
-        covered_cmds.add('coinjoinsalt')
         # TODO: implement functional tests for voteraw
         covered_cmds.add('voteraw')
         # TODO: implement functional tests for getmerkleblocks
