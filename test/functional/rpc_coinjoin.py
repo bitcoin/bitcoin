@@ -19,43 +19,51 @@ class CoinJoinTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
-    def run_test(self):
-        self.test_coinjoin_start_stop()
-        self.test_coinjoin_setamount()
-        self.test_coinjoin_setrounds()
+    def setup_nodes(self):
+        self.add_nodes(self.num_nodes)
+        self.start_nodes()
 
-    def test_coinjoin_start_stop(self):
+    def run_test(self):
+        node = self.nodes[0]
+
+        node.createwallet(wallet_name='w1', blank=True, disable_private_keys=False)
+        w1 = node.get_wallet_rpc('w1')
+        self.test_coinjoin_start_stop(w1)
+        self.test_coinjoin_setamount(w1)
+        self.test_coinjoin_setrounds(w1)
+
+    def test_coinjoin_start_stop(self, node):
         # Start Mixing
-        self.nodes[0].coinjoin("start")
+        node.coinjoin('start')
         # Get CoinJoin info
-        cj_info = self.nodes[0].getcoinjoininfo()
+        cj_info = node.getcoinjoininfo()
         # Ensure that it started properly
         assert_equal(cj_info['enabled'], True)
         assert_equal(cj_info['running'], True)
 
         # Stop mixing
-        self.nodes[0].coinjoin("stop")
+        node.coinjoin('stop')
         # Get CoinJoin info
-        cj_info = self.nodes[0].getcoinjoininfo()
+        cj_info = node.getcoinjoininfo()
         # Ensure that it stopped properly
         assert_equal(cj_info['enabled'], True)
         assert_equal(cj_info['running'], False)
 
-    def test_coinjoin_setamount(self):
+    def test_coinjoin_setamount(self, node):
         # Try normal values
-        self.nodes[0].setcoinjoinamount(50)
-        cj_info = self.nodes[0].getcoinjoininfo()
+        node.setcoinjoinamount(50)
+        cj_info = node.getcoinjoininfo()
         assert_equal(cj_info['max_amount'], 50)
 
         # Try large values
-        self.nodes[0].setcoinjoinamount(1200000)
-        cj_info = self.nodes[0].getcoinjoininfo()
+        node.setcoinjoinamount(1200000)
+        cj_info = node.getcoinjoininfo()
         assert_equal(cj_info['max_amount'], 1200000)
 
-    def test_coinjoin_setrounds(self):
+    def test_coinjoin_setrounds(self, node):
         # Try normal values
-        self.nodes[0].setcoinjoinrounds(5)
-        cj_info = self.nodes[0].getcoinjoininfo()
+        node.setcoinjoinrounds(5)
+        cj_info = node.getcoinjoininfo()
         assert_equal(cj_info['max_rounds'], 5)
 
 
