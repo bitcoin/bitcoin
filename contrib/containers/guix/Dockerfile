@@ -77,18 +77,19 @@ RUN usermod -aG sudo ${USERNAME} && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # Copy required files to container
-COPY --from=docker_root ./motd.txt           /etc/motd
-COPY --from=docker_root ./scripts/entrypoint /usr/local/bin/entrypoint
-COPY --from=docker_root ./scripts/guix-check /usr/local/bin/guix-check
-COPY --from=docker_root ./scripts/guix-start /usr/local/bin/guix-start
+COPY --from=docker_root ./motd.txt             /etc/motd
+COPY --from=docker_root ./scripts/entrypoint   /usr/local/bin/entrypoint
+COPY --from=docker_root ./scripts/guix-check   /usr/local/bin/guix-check
+COPY --from=docker_root ./scripts/guix-start   /usr/local/bin/guix-start
+COPY --from=docker_root ./scripts/setup-sdk    /usr/local/bin/setup-sdk
 
 # Create directories for mounting to save/restore cache and grant necessary permissions
 RUN mkdir -p \
         /home/${USERNAME}/.cache \
-        /src/dash/depends/{built,sources,work} && \
+        /src/dash/depends/{built,sources,work}; \
     chown -R ${USER_ID}:${GROUP_ID} \
         /home/${USERNAME}/.cache \
-        /src
+        /src;
 
 WORKDIR "/src/dash"
 
