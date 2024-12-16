@@ -25,7 +25,7 @@ Incompatible Changes
 This release no longer maintains a full index of historical transaction ids
 by default, so looking up an arbitrary transaction using the getrawtransaction
 RPC call will not work. If you need that functionality, you must run once
-with -txindex=1 -reindex=1 to rebuild block-chain indices (see below for more
+with -txindex=1 -reindex=1 to rebuild blockchain indices (see below for more
 details).
 
 Improvements
