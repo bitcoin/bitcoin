@@ -20,7 +20,7 @@ SaltedSipHasher::SaltedSipHasher() :
     m_k0{FastRandomContext().rand64()},
     m_k1{FastRandomContext().rand64()} {}
 
-size_t SaltedSipHasher::operator()(const Span<const unsigned char>& script) const
+size_t SaltedSipHasher::operator()(const std::span<const unsigned char>& script) const
 {
     return CSipHasher(m_k0, m_k1).Write(script).Finalize();
 }

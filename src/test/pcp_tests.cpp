@@ -101,7 +101,7 @@ public:
 
     ssize_t Send(const void* data, size_t len, int) const override {
         if (!m_connected) return -1;
-        Span in_pkt = Span(static_cast<const uint8_t*>(data), len);
+        std::span in_pkt = std::span(static_cast<const uint8_t*>(data), len);
         if (AtEndOfScript() || CurOp().op != TestOp::SEND) {
             // Ignore sends after end of script, or sends when we expect a receive.
             FailScript();

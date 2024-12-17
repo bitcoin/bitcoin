@@ -33,8 +33,8 @@ public:
     static constexpr size_t OUTPUT_SIZE = 32;
 
     SHA3_256() = default;
-    SHA3_256& Write(Span<const unsigned char> data);
-    SHA3_256& Finalize(Span<unsigned char> output);
+    SHA3_256& Write(std::span<const unsigned char> data);
+    SHA3_256& Finalize(std::span<unsigned char> output);
     SHA3_256& Reset();
 };
 

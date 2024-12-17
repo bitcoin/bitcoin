@@ -73,7 +73,7 @@
 
 /** Pop the last element off a span, and return a reference to that element. */
 template <typename T>
-T& SpanPopBack(Span<T>& span)
+T& SpanPopBack(std::span<T>& span)
 {
     size_t size = span.size();
     T& back = span.back();
