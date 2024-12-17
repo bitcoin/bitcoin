@@ -651,7 +651,7 @@ void CNode::CopyStats(CNodeStats& stats)
 }
 #undef X
 
-bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
+bool CNode::ReceiveMsgBytes(std::span<const uint8_t> msg_bytes, bool& complete)
 {
     complete = false;
     const auto time = GetTime<std::chrono::microseconds>();
@@ -719,7 +719,7 @@ Transport::Info V1Transport::GetInfo() const noexcept
     return {.transport_type = TransportProtocolType::V1, .session_id = {}};
 }
 
-int V1Transport::readHeader(Span<const uint8_t> msg_bytes)
+int V1Transport::readHeader(std::span<const uint8_t> msg_bytes)
 {
     AssertLockHeld(m_recv_mutex);
     // copy data to temporary parsing buffer
@@ -760,7 +760,7 @@ int V1Transport::readHeader(Span<const uint8_t> msg_bytes)
     return nCopy;
 }
 
-int V1Transport::readData(Span<const uint8_t> msg_bytes)
+int V1Transport::readData(std::span<const uint8_t> msg_bytes)
 {
     AssertLockHeld(m_recv_mutex);
     unsigned int nRemaining = hdr.nMessageSize - nDataPos;
@@ -811,7 +811,7 @@ CNetMessage V1Transport::GetReceivedMessage(const std::chrono::microseconds time
     if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) {
         LogDebug(BCLog::NET, "Header error: Wrong checksum (%s, %u bytes), expected %s was %s, peer=%d\n",
                  SanitizeString(msg.m_type), msg.m_message_size,
-                 HexStr(Span{hash}.first(CMessageHeader::CHECKSUM_SIZE)),
+                 HexStr(std::span{hash}.first(CMessageHeader::CHECKSUM_SIZE)),
                  HexStr(hdr.pchChecksum),
                  m_node_id);
         reject_message = true;
@@ -856,14 +856,14 @@ Transport::BytesToSend V1Transport::GetBytesToSend(bool have_next_message) const
     AssertLockNotHeld(m_send_mutex);
     LOCK(m_send_mutex);
     if (m_sending_header) {
-        return {Span{m_header_to_send}.subspan(m_bytes_sent),
+        return {std::span{m_header_to_send}.subspan(m_bytes_sent),
                 // We have more to send after the header if the message has payload, or if there
                 // is a next message after that.
                 have_next_message || !m_message_to_send.data.empty(),
                 m_message_to_send.m_type
                };
     } else {
-        return {Span{m_message_to_send.data}.subspan(m_bytes_sent),
+        return {std::span{m_message_to_send.data}.subspan(m_bytes_sent),
                 // We only have more to send after this message's payload if there is another
                 // message.
                 have_next_message,
@@ -985,7 +985,7 @@ void V2Transport::StartSendingHandshake() noexcept
     // We cannot wipe m_send_garbage as it will still be used as AAD later in the handshake.
 }
 
-V2Transport::V2Transport(NodeId nodeid, bool initiating, const CKey& key, Span<const std::byte> ent32, std::vector<uint8_t> garbage) noexcept
+V2Transport::V2Transport(NodeId nodeid, bool initiating, const CKey& key, std::span<const std::byte> ent32, std::vector<uint8_t> garbage) noexcept
     : m_cipher{key, ent32}, m_initiating{initiating}, m_nodeid{nodeid},
       m_v1_fallback{nodeid},
       m_recv_state{initiating ? RecvState::KEY : RecvState::KEY_MAYBE_V1},
@@ -1086,7 +1086,7 @@ void V2Transport::ProcessReceivedMaybeV1Bytes() noexcept
     } else if (m_recv_buffer.size() == v1_prefix.size()) {
         // Full match with the v1 prefix, so fall back to v1 behavior.
         LOCK(m_send_mutex);
-        Span<const uint8_t> feedback{m_recv_buffer};
+        std::span<const uint8_t> feedback{m_recv_buffer};
         // Feed already received bytes to v1 transport. It should always accept these, because it's
         // less than the size of a v1 header, and these are the first bytes fed to m_v1_fallback.
         bool ret = m_v1_fallback.ReceivedBytes(feedback);
@@ -1120,7 +1120,7 @@ bool V2Transport::ProcessReceivedKeyBytes() noexcept
     if (!m_initiating && m_recv_buffer.size() >= OFFSET + MATCH.size()) {
         if (std::equal(MATCH.begin(), MATCH.end(), m_recv_buffer.begin() + OFFSET)) {
             LogDebug(BCLog::NET, "V2 transport error: V1 peer with wrong MessageStart %s\n",
-                     HexStr(Span(m_recv_buffer).first(OFFSET)));
+                     HexStr(std::span(m_recv_buffer).first(OFFSET)));
             return false;
         }
     }
@@ -1307,7 +1307,7 @@ size_t V2Transport::GetMaxBytesToProcess() noexcept
     return 0;
 }
 
-bool V2Transport::ReceivedBytes(Span<const uint8_t>& msg_bytes) noexcept
+bool V2Transport::ReceivedBytes(std::span<const uint8_t>& msg_bytes) noexcept
 {
     AssertLockNotHeld(m_recv_mutex);
     /** How many bytes to allocate in the receive buffer at most above what is received so far. */
@@ -1397,7 +1397,7 @@ bool V2Transport::ReceivedBytes(Span<const uint8_t>& msg_bytes) noexcept
     return true;
 }
 
-std::optional<std::string> V2Transport::GetMessageType(Span<const uint8_t>& contents) noexcept
+std::optional<std::string> V2Transport::GetMessageType(std::span<const uint8_t>& contents) noexcept
 {
     if (contents.size() == 0) return std::nullopt; // Empty contents
     uint8_t first_byte = contents[0];
@@ -1444,7 +1444,7 @@ CNetMessage V2Transport::GetReceivedMessage(std::chrono::microseconds time, bool
     if (m_recv_state == RecvState::V1) return m_v1_fallback.GetReceivedMessage(time, reject_message);
 
     Assume(m_recv_state == RecvState::APP_READY);
-    Span<const uint8_t> contents{m_recv_decode_buffer};
+    std::span<const uint8_t> contents{m_recv_decode_buffer};
     auto msg_type = GetMessageType(contents);
     CNetMessage msg{DataStream{}};
     // Note that BIP324Cipher::EXPANSION also includes the length descriptor size.
@@ -1507,7 +1507,7 @@ Transport::BytesToSend V2Transport::GetBytesToSend(bool have_next_message) const
     if (m_send_state == SendState::MAYBE_V1) Assume(m_send_buffer.empty());
     Assume(m_send_pos <= m_send_buffer.size());
     return {
-        Span{m_send_buffer}.subspan(m_send_pos),
+        std::span{m_send_buffer}.subspan(m_send_pos),
         // We only have more to send after the current m_send_buffer if there is a (next)
         // message to be sent, and we're capable of sending packets. */
         have_next_message && m_send_state == SendState::READY,
@@ -2026,7 +2026,7 @@ bool CConnman::InactivityCheck(const CNode& node) const
     return false;
 }
 
-Sock::EventsPerSock CConnman::GenerateWaitSockets(Span<CNode* const> nodes)
+Sock::EventsPerSock CConnman::GenerateWaitSockets(std::span<CNode* const> nodes)
 {
     Sock::EventsPerSock events_per_sock;
 
@@ -2487,7 +2487,7 @@ bool CConnman::MaybePickPreferredNetwork(std::optional<Network>& network)
     return false;
 }
 
-void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, Span<const std::string> seed_nodes)
+void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std::span<const std::string> seed_nodes)
 {
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
     AssertLockNotHeld(m_reconnections_mutex);
@@ -3952,7 +3952,7 @@ void CConnman::ASMapHealthCheck()
 // Dump binary message to file, with timestamp.
 static void CaptureMessageToFile(const CAddress& addr,
                                  const std::string& msg_type,
-                                 Span<const unsigned char> data,
+                                 std::span<const unsigned char> data,
                                  bool is_incoming)
 {
     // Note: This function captures the message at the time of processing,
@@ -3972,7 +3972,7 @@ static void CaptureMessageToFile(const CAddress& addr,
     AutoFile f{fsbridge::fopen(path, "ab")};
 
     ser_writedata64(f, now.count());
-    f << Span{msg_type};
+    f << std::span{msg_type};
     for (auto i = msg_type.length(); i < CMessageHeader::MESSAGE_TYPE_SIZE; ++i) {
         f << uint8_t{'\0'};
     }
@@ -3983,6 +3983,6 @@ static void CaptureMessageToFile(const CAddress& addr,
 
 std::function<void(const CAddress& addr,
                    const std::string& msg_type,
-                   Span<const unsigned char> data,
+                   std::span<const unsigned char> data,
                    bool is_incoming)>
     CaptureMessage = CaptureMessageToFile;
