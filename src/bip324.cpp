@@ -22,8 +22,8 @@
 #include <iterator>
 #include <string>
 
-BIP324Cipher::BIP324Cipher(const CKey& key, Span<const std::byte> ent32) noexcept :
-    m_key(key)
+BIP324Cipher::BIP324Cipher(const CKey& key, std::span<const std::byte> ent32) noexcept
+    : m_key(key)
 {
     m_our_pubkey = m_key.EllSwiftCreate(ent32);
 }
