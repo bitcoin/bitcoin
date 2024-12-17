@@ -24,8 +24,7 @@ CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes)
         sizes.filter_index = max_cache / n_indexes;
         nTotalCache -= sizes.filter_index * n_indexes;
     }
-    sizes.coins_db = std::min(nTotalCache / 2, (nTotalCache / 4) + (1 << 23)); // use 25%-50% of the remainder for disk cache
-    sizes.coins_db = std::min(sizes.coins_db, nMaxCoinsDBCache << 20); // cap total coins db cache
+    sizes.coins_db = std::min(nTotalCache / 2, nMaxCoinsDBCache << 20);
     nTotalCache -= sizes.coins_db;
     sizes.coins = nTotalCache; // the rest goes to in-memory cache
     return sizes;
