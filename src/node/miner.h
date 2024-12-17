@@ -10,6 +10,7 @@
 #include <policy/policy.h>
 #include <primitives/block.h>
 #include <txmempool.h>
+#include <util/feefrac.h>
 
 #include <memory>
 #include <optional>
@@ -39,6 +40,7 @@ struct CBlockTemplate
     std::vector<CAmount> vTxFees;
     std::vector<int64_t> vTxSigOpsCost;
     std::vector<unsigned char> vchCoinbaseCommitment;
+    std::vector<FeeFrac> vFeerateHistogram;
 };
 
 // Container for tracking updates to ancestor feerate as we include (parent)
@@ -148,6 +150,7 @@ private:
     uint64_t nBlockSigOpsCost;
     CAmount nFees;
     std::unordered_set<Txid, SaltedTxidHasher> inBlock;
+    std::vector<FeeFrac> feerateHistogram;
 
     // Chain context for the block
     int nHeight;
