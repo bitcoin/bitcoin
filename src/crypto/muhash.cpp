@@ -295,7 +295,7 @@ void Num3072::ToBytes(unsigned char (&out)[BYTE_SIZE]) {
     }
 }
 
-Num3072 MuHash3072::ToNum3072(Span<const unsigned char> in) {
+Num3072 MuHash3072::ToNum3072(std::span<const unsigned char> in) {
     unsigned char tmp[Num3072::BYTE_SIZE];
 
     uint256 hashed_in{(HashWriter{} << in).GetSHA256()};
@@ -306,7 +306,7 @@ Num3072 MuHash3072::ToNum3072(Span<const unsigned char> in) {
     return out;
 }
 
-MuHash3072::MuHash3072(Span<const unsigned char> in) noexcept
+MuHash3072::MuHash3072(std::span<const unsigned char> in) noexcept
 {
     m_numerator = ToNum3072(in);
 }
@@ -336,12 +336,12 @@ MuHash3072& MuHash3072::operator/=(const MuHash3072& div) noexcept
     return *this;
 }
 
-MuHash3072& MuHash3072::Insert(Span<const unsigned char> in) noexcept {
+MuHash3072& MuHash3072::Insert(std::span<const unsigned char> in) noexcept {
     m_numerator.Multiply(ToNum3072(in));
     return *this;
 }
 
-MuHash3072& MuHash3072::Remove(Span<const unsigned char> in) noexcept {
+MuHash3072& MuHash3072::Remove(std::span<const unsigned char> in) noexcept {
     m_denominator.Multiply(ToNum3072(in));
     return *this;
 }
