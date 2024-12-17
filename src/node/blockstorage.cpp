@@ -951,7 +951,7 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
             return false;
         }
         // Open history file to append
-        AutoFile fileout{OpenUndoFile(pos)};
+        BufferedWriteOnlyFile fileout{m_undo_file_seq, pos, m_xor_key};
         if (fileout.IsNull()) {
             LogError("OpenUndoFile failed");
             return FatalError(m_opts.notifications, state, _("Failed to write undo data."));
@@ -1096,7 +1096,7 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
         LogError("FindNextBlockPos failed");
         return FlatFilePos();
     }
-    AutoFile fileout{OpenBlockFile(pos)};
+    BufferedWriteOnlyFile fileout{m_block_file_seq, pos, m_xor_key};
     if (fileout.IsNull()) {
         LogError("OpenBlockFile failed");
         m_opts.notifications.fatalError(_("Failed to write block."));

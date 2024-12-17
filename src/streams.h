@@ -652,4 +652,51 @@ public:
     template <typename T> void operator>>(T&& obj) { ::Unserialize(*this, obj); }
 };
 
+class BufferedWriteOnlyFile {
+    const std::vector<std::byte>& m_xor_key;
+    AutoFile m_dest;
+    std::vector<std::byte> m_buf;
+    size_t m_buf_pos{0};
+
+    void flush() {
+        if (m_buf_pos == 0) return;
+
+        const auto bytes = (m_buf_pos == m_buf.size()) ? m_buf : Span{m_buf}.first(m_buf_pos);
+        util::Xor(bytes, m_xor_key, m_dest.tell());
+        m_dest.write(bytes);
+
+        m_buf_pos = 0;
+    }
+
+public:
+    explicit BufferedWriteOnlyFile(const FlatFileSeq& block_file_seq,
+                                   const FlatFilePos& pos,
+                                   const std::vector<std::byte>& m_xor_key,
+                                   const size_t buf_size = 1 << 20)
+        : m_xor_key{m_xor_key},
+          m_dest{block_file_seq.Open(pos, /*read_only=*/false), {}}, // We'll handle obfuscation internally
+          m_buf{buf_size} {}
+
+    ~BufferedWriteOnlyFile() { flush(); }
+
+    void write(Span<const std::byte> src) {
+        while (!src.empty()) {
+            if (m_buf_pos == m_buf.size()) flush();
+
+            const size_t chunk = Assert(std::min(src.size(), m_buf.size() - m_buf_pos));
+            std::memcpy(m_buf.data() + m_buf_pos, src.data(), chunk);
+            m_buf_pos += chunk;
+            src = src.subspan(chunk);
+        }
+    }
+
+    bool IsNull() const { return m_dest.IsNull(); }
+    int64_t tell() { return m_dest.tell() + m_buf_pos; }
+
+    template<typename T> BufferedWriteOnlyFile& operator<<(const T& obj) {
+        ::Serialize(*this, obj);
+        return *this;
+    }
+};
+
 #endif // BITCOIN_STREAMS_H
