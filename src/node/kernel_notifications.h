@@ -59,12 +59,14 @@ public:
     //! The block for which the last blockTip notification was received.
     //! It's first set when the tip is connected during node initialization.
     //! Might be unset during an early shutdown.
-    std::optional<uint256> m_tip_block GUARDED_BY(m_tip_block_mutex);
+    std::optional<uint256> TipBlock() EXCLUSIVE_LOCKS_REQUIRED(m_tip_block_mutex);
 
 private:
     const std::function<bool()>& m_shutdown_request;
     std::atomic<int>& m_exit_status;
     node::Warnings& m_warnings;
+
+    std::optional<uint256> m_tip_block GUARDED_BY(m_tip_block_mutex);
 };
 
 void ReadNotificationArgs(const ArgsManager& args, KernelNotifications& notifications);
