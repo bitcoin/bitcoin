@@ -290,9 +290,10 @@ template <typename B>
 concept BasicByte = requires { UCharCast(std::span<B>{}.data()); };
 
 // Helper function to safely convert a Span to a Span<[const] unsigned char>.
-template <typename T> constexpr auto UCharSpanCast(Span<T> s) -> Span<typename std::remove_pointer<decltype(UCharCast(s.data()))>::type> { return {UCharCast(s.data()), s.size()}; }
+template <typename T, size_t N> constexpr auto UCharSpanCast(std::span<T, N> s) -> std::span<typename std::remove_pointer_t<decltype(UCharCast(s.data()))>> { return {UCharCast(s.data()), s.size()}; }
 
 /** Like the Span constructor, but for (const) unsigned char member types only. Only works for (un)signed char containers. */
-template <typename V> constexpr auto MakeUCharSpan(V&& v) -> decltype(UCharSpanCast(Span{std::forward<V>(v)})) { return UCharSpanCast(Span{std::forward<V>(v)}); }
+template <typename V> constexpr auto MakeUCharSpan(const V& v) -> decltype(UCharSpanCast(std::span{v})) { return UCharSpanCast(std::span{v}); }
+template <typename V> constexpr auto MakeWritableUCharSpan(V&& v) -> decltype(UCharSpanCast(std::span{std::forward<V>(v)})) { return UCharSpanCast(std::span{std::forward<V>(v)}); }
 
 #endif // BITCOIN_SPAN_H
