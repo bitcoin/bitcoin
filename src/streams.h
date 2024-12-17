@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <cstddef>
 #include <cstdio>
+#include <flatfile.h>
 #include <ios>
 #include <limits>
 #include <optional>
@@ -23,6 +24,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <util/check.h>
 
 namespace util {
 inline void Xor(Span<std::byte> write, Span<const std::byte> key, size_t key_offset = 0)
@@ -428,7 +430,7 @@ public:
     bool IsNull() const { return m_file == nullptr; }
 
     /** Continue with a different XOR key */
-    void SetXor(std::vector<std::byte> data_xor) { m_xor = data_xor; }
+    void SetXor(const std::vector<std::byte>& data_xor) { m_xor = data_xor; }
 
     /** Implementation detail, only used internally. */
     std::size_t detail_fread(Span<std::byte> dst);
@@ -612,6 +614,41 @@ public:
             if (buf_offset >= vchBuf.size()) buf_offset = 0;
         }
     }
+};
+
+class BufferedReadOnlyFile
+{
+    AutoFile m_src;
+    std::vector<std::byte> m_buf;
+    size_t m_buf_start{0}, m_buf_end{0};
+
+public:
+    explicit BufferedReadOnlyFile(const FlatFileSeq& block_file_seq,
+                                  const FlatFilePos& pos,
+                                  const std::vector<std::byte>& m_xor_key)
+        : m_src{block_file_seq.Open(pos, /*read_only=*/true), m_xor_key},
+          m_buf{16 << 10} {}
+
+    void read(Span<std::byte> dst)
+    {
+        if (m_buf_start < m_buf_end) {
+            const size_t chunk = Assert(std::min(dst.size(), m_buf_end - m_buf_start));
+            std::memcpy(dst.data(), m_buf.data() + m_buf_start, chunk);
+            m_buf_start += chunk;
+            dst = dst.subspan(chunk);
+        }
+        if (!dst.empty()) {
+            Assume(m_buf_start == m_buf_end);
+            m_src.read(dst);
+
+            m_buf_start = 0;
+            m_buf_end = m_src.detail_fread(m_buf);
+        }
+    }
+
+    bool IsNull() const { return m_src.IsNull(); }
+
+    template <typename T> void operator>>(T&& obj) { ::Unserialize(*this, obj); }
 };
 
 #endif // BITCOIN_STREAMS_H

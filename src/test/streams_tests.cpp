@@ -9,6 +9,7 @@
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
+#include <node/blockstorage.h>
 
 using namespace std::string_literals;
 
@@ -551,6 +552,42 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
         }
     }
     fs::remove(streams_test_filename);
+}
+
+BOOST_AUTO_TEST_CASE(buffered_read_only_file_matches_autofile_random_content)
+{
+    const FlatFileSeq test_file{m_args.GetDataDirBase(), "buffered_file_test_random", node::BLOCKFILE_CHUNK_SIZE};
+    constexpr size_t file_size{1 << 20};
+    constexpr size_t max_read_length{100};
+    const FlatFilePos pos{0, 0};
+
+    FastRandomContext rng{/*fDeterministic=*/false};
+    const std::vector obfuscation{rng.randbytes<std::byte>(8)};
+    AutoFile{test_file.Open(pos, false), obfuscation}.write(rng.randbytes<std::byte>(file_size));
+    AutoFile auto_file{test_file.Open(pos, true), obfuscation};
+    BufferedReadOnlyFile buffered{test_file, pos, obfuscation};
+
+    for (size_t total_read{0}; total_read < file_size;) {
+        const size_t read{Assert(std::min(rng.randrange(max_read_length) + 1, file_size - total_read))};
+
+        std::vector<std::byte> auto_file_buffer{read};
+        auto_file.read(auto_file_buffer);
+
+        std::vector<std::byte> buffered_buffer{read};
+        buffered.read(buffered_buffer);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(
+            auto_file_buffer.begin(), auto_file_buffer.end(),
+            buffered_buffer.begin(), buffered_buffer.end()
+        );
+
+        total_read += read;
+    }
+    std::vector<std::byte> excess{1};
+    BOOST_CHECK_EXCEPTION(auto_file.read(excess), std::ios_base::failure, HasReason{"end of file"});
+    BOOST_CHECK_EXCEPTION(buffered.read(excess), std::ios_base::failure, HasReason{"end of file"});
+
+    fs::remove(test_file.FileName(pos));
 }
 
 BOOST_AUTO_TEST_CASE(streams_hashed)

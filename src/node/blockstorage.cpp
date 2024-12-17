@@ -674,7 +674,7 @@ bool BlockManager::UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex& in
     const FlatFilePos pos{WITH_LOCK(::cs_main, return index.GetUndoPos())};
 
     // Open history file to read
-    AutoFile filein{OpenUndoFile(pos, true)};
+    BufferedReadOnlyFile filein{m_undo_file_seq, pos, m_xor_key};
     if (filein.IsNull()) {
         LogError("%s: OpenUndoFile failed for %s\n", __func__, pos.ToString());
         return false;
@@ -999,7 +999,7 @@ bool BlockManager::ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos) cons
     block.SetNull();
 
     // Open history file to read
-    AutoFile filein{OpenBlockFile(pos, true)};
+    BufferedReadOnlyFile filein{m_block_file_seq, pos, m_xor_key};
     if (filein.IsNull()) {
         LogError("%s: OpenBlockFile failed for %s\n", __func__, pos.ToString());
         return false;
