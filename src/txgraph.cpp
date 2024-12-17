@@ -88,6 +88,8 @@ public:
 
     /** Get the number of transactions in this Cluster. */
     LinearizationIndex GetTxCount() const noexcept { return m_linearization.size(); }
+    /** Get the total size of the transactions in this Cluster. */
+    uint64_t GetTxSize() const noexcept;
     /** Given a ClusterIndex into this Cluster, find the corresponding GraphIndex. */
     GraphIndex GetClusterEntry(ClusterIndex index) const noexcept { return m_mapping[index]; }
     /** Only called by Graph::SwapIndexes. */
@@ -175,6 +177,8 @@ private:
     FastRandomContext m_rng;
     /** This TxGraphImpl's maximum cluster count limit. */
     const ClusterIndex m_max_cluster_count;
+    /** This TxGraphImpl's maximum cluster size limit. */
+    const uint64_t m_max_cluster_size;
 
     /** Information about one group of Clusters to be merged. */
     struct GroupData
@@ -317,9 +321,10 @@ private:
     std::vector<GraphIndex> m_wiped;
 
 public:
-    /** Construct a new TxGraphImpl with the specified maximum cluster count. */
-    explicit TxGraphImpl(ClusterIndex max_cluster_count) noexcept :
+    /** Construct a new TxGraphImpl with the specified limits. */
+    explicit TxGraphImpl(ClusterIndex max_cluster_count, uint64_t max_cluster_size) noexcept :
         m_max_cluster_count(max_cluster_count),
+        m_max_cluster_size(max_cluster_size),
         m_chunkindex(ChunkOrder(this))
     {
         Assume(max_cluster_count <= MAX_CLUSTER_COUNT_LIMIT);
@@ -511,6 +516,15 @@ void TxGraphImpl::CreateChunkData(GraphIndex idx, LinearizationIndex chunk_count
         Assume(emplace_result.second);
         entry.m_chunkindex_iterator = emplace_result.first;
     }
+}
+
+uint64_t Cluster::GetTxSize() const noexcept
+{
+    uint64_t ret{0};
+    for (auto i : m_linearization) {
+        ret += m_depgraph.FeeRate(i).size;
+    }
+    return ret;
 }
 
 void TxGraphImpl::ClearLocator(int level, GraphIndex idx) noexcept
@@ -1320,10 +1334,12 @@ void TxGraphImpl::GroupClusters() noexcept
         new_entry.m_deps_offset = clusterset.m_deps_to_add.size();
         new_entry.m_deps_count = 0;
         uint32_t total_count{0};
+        uint64_t total_size{0};
         // Add all its clusters to it (copying those from an_clusters to m_group_clusters).
         while (an_clusters_it != an_clusters.end() && an_clusters_it->second == rep) {
             clusterset.m_group_clusters.push_back(an_clusters_it->first);
             total_count += an_clusters_it->first->GetTxCount();
+            total_size += an_clusters_it->first->GetTxSize();
             ++an_clusters_it;
             ++new_entry.m_cluster_count;
         }
@@ -1334,7 +1350,7 @@ void TxGraphImpl::GroupClusters() noexcept
             ++new_entry.m_deps_count;
         }
         // Detect oversizedness.
-        if (total_count > m_max_cluster_count) {
+        if (total_count > m_max_cluster_count || total_size > m_max_cluster_size) {
             clusterset.m_oversized = true;
         }
     }
@@ -1462,6 +1478,7 @@ Cluster::Cluster(TxGraphImpl& graph, const FeeFrac& feerate, GraphIndex graph_in
 TxGraph::Ref TxGraphImpl::AddTransaction(const FeeFrac& feerate) noexcept
 {
     Assume(m_chunkindex_observers == 0 || m_clustersets.size() > 1);
+    Assume(feerate.size > 0 && uint64_t(feerate.size) <= m_max_cluster_size);
     // Construct a new Ref.
     Ref ret;
     // Construct a new Entry, and link it with the Ref.
@@ -1881,6 +1898,8 @@ void Cluster::SanityCheck(const TxGraphImpl& graph, int level) const
     assert(m_linearization.size() <= graph.m_max_cluster_count);
     // The level must match the level the Cluster occurs in.
     assert(m_level == level);
+    // The sum of their sizes cannot exceed m_max_cluster_size.
+    assert(GetTxSize() <= graph.m_max_cluster_size);
     // m_quality and m_setindex are checked in TxGraphImpl::SanityCheck.
 
     // Compute the chunking of m_linearization.
@@ -2202,7 +2221,7 @@ TxGraph::Ref::Ref(Ref&& other) noexcept
     std::swap(m_index, other.m_index);
 }
 
-std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count) noexcept
+std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count, uint64_t max_cluster_size) noexcept
 {
-    return std::make_unique<TxGraphImpl>(max_cluster_count);
+    return std::make_unique<TxGraphImpl>(max_cluster_count, max_cluster_size);
 }

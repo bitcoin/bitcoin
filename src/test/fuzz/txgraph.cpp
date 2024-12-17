@@ -54,9 +54,12 @@ struct SimTxGraph
     std::optional<bool> oversized;
     /** The configured maximum number of transactions per cluster. */
     ClusterIndex max_cluster_count;
+    /** The configured maximum total size of transactions per cluster. */
+    uint64_t max_cluster_size;
 
     /** Construct a new SimTxGraph with the specified maximum cluster count. */
-    explicit SimTxGraph(ClusterIndex max_cluster) : max_cluster_count(max_cluster) {}
+    explicit SimTxGraph(ClusterIndex max_cluster, uint64_t max_size) :
+        max_cluster_count(max_cluster), max_cluster_size(max_size) {}
 
     // Permit copying and moving.
     SimTxGraph(const SimTxGraph&) noexcept = default;
@@ -76,6 +79,9 @@ struct SimTxGraph
             while (todo.Any()) {
                 auto component = graph.FindConnectedComponent(todo);
                 if (component.Count() > max_cluster_count) oversized = true;
+                uint64_t component_size{0};
+                for (auto i : component) component_size += graph.FeeRate(i).size;
+                if (component_size > max_cluster_size) oversized = true;
                 todo -= component;
             }
         }
@@ -245,12 +251,16 @@ FUZZ_TARGET(txgraph)
 
     // Decide the maximum number of transactions per cluster we will use in this simulation.
     auto max_count = provider.ConsumeIntegralInRange<ClusterIndex>(1, MAX_CLUSTER_COUNT_LIMIT);
+    // And the maximum combined size of transactions per cluster.
+    auto max_size = provider.ConsumeIntegralInRange<uint64_t>(1, 0x3fffff * MAX_CLUSTER_COUNT_LIMIT);
+    // Maximum individual transaction size.
+    auto max_tx_size = std::min<uint64_t>(0x3fffff, max_size);
 
     // Construct a real graph, and a vector of simulated graphs (main, and possibly staging).
-    auto real = MakeTxGraph(max_count);
+    auto real = MakeTxGraph(max_count, max_size);
     std::vector<SimTxGraph> sims;
     sims.reserve(2);
-    sims.emplace_back(max_count);
+    sims.emplace_back(max_count, max_size);
 
     /** Function to pick any Ref (in either sim graph, either sim.removed, or empty). */
     auto pick_fn = [&]() noexcept -> TxGraph::Ref& {
@@ -348,10 +358,10 @@ FUZZ_TARGET(txgraph)
                 int32_t size;
                 if (alt) {
                     fee = provider.ConsumeIntegralInRange<int64_t>(-0x8000000000000, 0x7ffffffffffff);
-                    size = provider.ConsumeIntegralInRange<int32_t>(1, 0x3fffff);
+                    size = provider.ConsumeIntegralInRange<int32_t>(1, max_tx_size);
                 } else {
                     fee = provider.ConsumeIntegral<uint8_t>();
-                    size = provider.ConsumeIntegral<uint8_t>() + 1;
+                    size = provider.ConsumeIntegralInRange<uint32_t>(1, std::min<uint32_t>(0xff, max_tx_size));
                 }
                 FeeFrac feerate{fee, size};
                 // Create a real TxGraph::Ref.
@@ -503,13 +513,17 @@ FUZZ_TARGET(txgraph)
                 assert(result.size() <= max_count);
                 // Require the result to be topologically valid and not contain duplicates.
                 auto left = sel_sim.graph.Positions();
+                uint64_t total_size{0};
                 for (auto refptr : result) {
                     auto simpos = sel_sim.Find(*refptr);
+                    total_size += sel_sim.graph.FeeRate(simpos).size;
                     assert(simpos != SimTxGraph::MISSING);
                     assert(left[simpos]);
                     left.Reset(simpos);
                     assert(!sel_sim.graph.Ancestors(simpos).Overlaps(left));
                 }
+                // Check cluster size limit.
+                assert(total_size <= max_size);
                 // Require the set to be connected.
                 auto result_set = sel_sim.MakeSet(result);
                 assert(sel_sim.graph.IsConnected(result_set));
@@ -851,13 +865,17 @@ FUZZ_TARGET(txgraph)
                     // linearization).
                     std::vector<ClusterIndex> simlin;
                     SimTxGraph::SetType done;
+                    uint64_t total_size{0};
                     for (TxGraph::Ref* ptr : cluster) {
                         auto simpos = sim.Find(*ptr);
                         assert(sim.graph.Descendants(simpos).IsSubsetOf(component - done));
                         done.Set(simpos);
                         assert(sim.graph.Ancestors(simpos).IsSubsetOf(done));
                         simlin.push_back(simpos);
+                        total_size += sim.graph.FeeRate(simpos).size;
                     }
+                    // Check cluster size.
+                    assert(total_size <= max_size);
                     // Construct a chunking object for the simulated graph, using the reported cluster
                     // linearization as ordering, and compare it against the reported chunk feerates.
                     if (sims.size() == 1 || main_only) {
