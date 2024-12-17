@@ -7,14 +7,17 @@ ENV DEBIAN_FRONTEND="noninteractive" TZ="Europe/London"
 # (zlib1g-dev is needed for the Qt host binary builds, but should not be used by target binaries)
 ENV APT_ARGS="-y --no-install-recommends --no-upgrade"
 
-
-# Install packages for i386; disabled on aarch64 and arm64 hosts
-RUN (dpkg --print-architecture | grep -Eq 'aarch64|arm64' || dpkg --add-architecture i386)
-RUN (dpkg --print-architecture | grep -Eq 'aarch64|arm64' || (apt-get update && apt-get install $APT_ARGS \
-    g++-multilib \
-    wine32) && rm -rf /var/lib/apt/lists/*)
-
-RUN apt-get update && apt-get install $APT_ARGS \
+# Install packages for i386 on amd64 hosts, then install common packages
+RUN set -ex; \
+    apt-get update && \
+    if [ "$(dpkg --print-architecture)" = "amd64" ]; then \
+        dpkg --add-architecture i386 && \
+        apt-get update && \
+        apt-get install $APT_ARGS \
+        g++-multilib \
+        wine32; \
+    fi; \
+    apt-get install $APT_ARGS \
     autotools-dev \
     automake \
     autoconf \
@@ -23,13 +26,11 @@ RUN apt-get update && apt-get install $APT_ARGS \
     bsdmainutils \
     curl \
     ccache \
-    clang \
     cmake \
     g++ \
     gettext \
     git \
-    libc++-dev \
-    libc++abi-dev \
+    gnupg \
     libtool \
     libxcb-icccm4 \
     libxcb-image0 \
@@ -42,11 +43,38 @@ RUN apt-get update && apt-get install $APT_ARGS \
     libxcb-xinerama0 \
     libxcb-xkb1 \
     libxkbcommon-x11-0 \
-    wget \
+    lsb-release \
+    software-properties-common \
     unzip \
+    wget \
     m4 \
     pkg-config \
-    zlib1g-dev
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Clang+LLVM and set it as default
+# We don't need all packages but the default set doesn't include some
+# packages we want so we will need to install some of them manually.
+ARG LLVM_VERSION=16
+RUN set -ex; \
+    echo "Installing LLVM and Clang ${LLVM_VERSION}..."; \
+    curl -sL https://apt.llvm.org/llvm.sh | bash -s "${LLVM_VERSION}"; \
+    echo "Installing additional packages..."; \
+    apt-get update && apt-get install $APT_ARGS \
+    "clang-format-${LLVM_VERSION}" \
+    "clang-tidy-${LLVM_VERSION}" \
+    "libc++-${LLVM_VERSION}-dev" \
+    "libc++abi-${LLVM_VERSION}-dev" \
+    "libclang-rt-${LLVM_VERSION}-dev"; \
+    rm -rf /var/lib/apt/lists/*; \
+    echo "Setting defaults..."; \
+    lldbUpdAltArgs="update-alternatives --install /usr/bin/llvm-config llvm-config /usr/bin/llvm-config-${LLVM_VERSION} 100"; \
+    for binName in clang clang++ clang-format clang-tidy clangd ld.lld lldb lldb-server; do \
+        lldbUpdAltArgs="${lldbUpdAltArgs} --slave /usr/bin/${binName} ${binName} /usr/bin/${binName}-${LLVM_VERSION}"; \
+    done; \
+    sh -c "${lldbUpdAltArgs}";
+# LD_LIBRARY_PATH is empty by default, this is the first entry
+ENV LD_LIBRARY_PATH="/usr/lib/llvm-${LLVM_VERSION}/lib"
 
 # Python setup
 # PYTHON_VERSION should match the value in .python-version
@@ -61,10 +89,11 @@ RUN apt-get update && apt-get install $APT_ARGS \
     libreadline-dev \
     libsqlite3-dev \
     libssl-dev \
-    llvm \
     make \
     tk-dev \
-    xz-utils
+    xz-utils \
+    && rm -rf /var/lib/apt/lists/*
+
 ENV PYENV_ROOT="/usr/local/pyenv"
 ENV PATH="${PYENV_ROOT}/shims:${PYENV_ROOT}/bin:${PATH}"
 RUN curl https://pyenv.run | bash \
@@ -82,19 +111,38 @@ RUN pip3 install \
     pyzmq==22.3.0 \
     vulture==2.3
 
-# dash_hash
 ARG DASH_HASH_VERSION=1.4.0
-RUN git clone --depth 1 --no-tags --branch=${DASH_HASH_VERSION} https://github.com/dashpay/dash_hash
-RUN cd dash_hash && pip3 install -r requirements.txt .
+RUN set -ex; \
+    cd /tmp; \
+    git clone --depth 1 --no-tags --branch=${DASH_HASH_VERSION} https://github.com/dashpay/dash_hash; \
+    cd dash_hash && pip3 install -r requirements.txt .; \
+    cd .. && rm -rf dash_hash
 
+ARG CPPCHECK_VERSION=2.13.0
+RUN set -ex; \
+    curl -fL "https://github.com/danmar/cppcheck/archive/${CPPCHECK_VERSION}.tar.gz" -o /tmp/cppcheck.tar.gz; \
+    mkdir -p /opt/cppcheck && tar -xzf /tmp/cppcheck.tar.gz -C /opt/cppcheck --strip-components=1 && rm /tmp/cppcheck.tar.gz; \
+    cd /opt/cppcheck; \
+    mkdir build && cd build && cmake .. && cmake --build . -j "$(( $(nproc) - 1 ))"; \
+    mkdir /usr/local/share/Cppcheck && ln -s /opt/cppcheck/cfg/ /usr/local/share/Cppcheck/cfg; \
+    rm -rf /tmp/cppcheck.tar.gz
+ENV PATH="/opt/cppcheck/build/bin:${PATH}"
+
+ARG SHELLCHECK_VERSION=v0.7.1
+RUN set -ex; \
+    curl -fL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" -o /tmp/shellcheck.tar.xz; \
+    mkdir -p /opt/shellcheck && tar -xf /tmp/shellcheck.tar.xz -C /opt/shellcheck --strip-components=1 && rm /tmp/shellcheck.tar.xz
+ENV PATH="/opt/shellcheck:${PATH}"
+
+# Add user with specified (or default) user/group ids and setup configuration files
 ARG USER_ID=1000
 ARG GROUP_ID=1000
-
-# add user with specified (or default) user/group ids
-ENV USER_ID="${USER_ID}"
-ENV GROUP_ID="${GROUP_ID}"
-RUN groupadd -g ${GROUP_ID} dash
-RUN useradd -u ${USER_ID} -g dash -s /bin/bash -m -d /home/dash dash
+RUN set -ex; \
+    groupadd -g ${GROUP_ID} dash; \
+    useradd -u ${USER_ID} -g dash -s /bin/bash -m -d /home/dash dash; \
+    mkdir -p /home/dash/.config/gdb; \
+    echo "add-auto-load-safe-path /usr/lib/llvm-${LLVM_VERSION}/lib" | tee /home/dash/.config/gdb/gdbinit; \
+    chown ${USER_ID}:${GROUP_ID} -R /home/dash
 
 # Packages needed for all target builds
 RUN apt-get update && apt-get install $APT_ARGS \
@@ -111,17 +159,8 @@ RUN apt-get update && apt-get install $APT_ARGS \
     valgrind \
     wine-stable \
     wine64 \
-    xorriso
-
-ARG CPPCHECK_VERSION=2.13.0
-RUN curl -sL "https://github.com/danmar/cppcheck/archive/${CPPCHECK_VERSION}.tar.gz" | tar -xvzf - --directory /tmp/
-RUN cd /tmp/cppcheck-${CPPCHECK_VERSION} && mkdir build && cd build && cmake .. && cmake --build . -j 8
-ENV PATH="/tmp/cppcheck-${CPPCHECK_VERSION}/build/bin:${PATH}"
-RUN mkdir /usr/local/share/Cppcheck && ln -s /tmp/cppcheck-${CPPCHECK_VERSION}/cfg/ /usr/local/share/Cppcheck/cfg
-
-ARG SHELLCHECK_VERSION=v0.7.1
-RUN curl -sL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar --xz -xf - --directory /tmp/
-ENV PATH="/tmp/shellcheck-${SHELLCHECK_VERSION}:${PATH}"
+    xorriso \
+    && rm -rf /var/lib/apt/lists/*
 
 # This is a hack. It is needed because gcc-multilib and g++-multilib are conflicting with g++-arm-linux-gnueabihf. This is
 # due to gcc-multilib installing the following symbolic link, which is needed for -m32 support. However, this causes
@@ -134,20 +173,6 @@ RUN \
   update-alternatives --set x86_64-w64-mingw32-gcc  /usr/bin/x86_64-w64-mingw32-gcc-posix; \
   update-alternatives --set x86_64-w64-mingw32-g++  /usr/bin/x86_64-w64-mingw32-g++-posix; \
   exit 0
-
-ARG LLVM_VERSION=16
-# Setup Clang+LLVM support
-RUN apt-get update && apt-get install $APT_ARGS \
-    lsb-release \
-    software-properties-common \
-    gnupg \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN cd /tmp && \
-    wget https://apt.llvm.org/llvm.sh && \
-    chmod +x llvm.sh && \
-    /tmp/llvm.sh ${LLVM_VERSION} && \
-    rm -rf /tmp/llvm.sh
 
 RUN \
   mkdir -p /src/dash && \
