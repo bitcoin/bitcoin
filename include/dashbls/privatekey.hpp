@@ -82,6 +82,7 @@ class PrivateKey {
     // Serialize the key into bytes
     void Serialize(uint8_t *buffer) const;
     std::vector<uint8_t> Serialize(bool fLegacy = false) const;
+    std::array<uint8_t, PrivateKey::PRIVATE_KEY_SIZE> SerializeToArray(bool fLegacy = false) const;
 
     G2Element SignG2(
         const uint8_t *msg,
