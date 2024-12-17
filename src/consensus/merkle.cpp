@@ -4,6 +4,7 @@
 
 #include <consensus/merkle.h>
 #include <hash.h>
+#include <util/check.h>
 
 /*     WARNING! If you're reading this because you're learning about crypto
        and/or designing a new system that will use merkle trees, keep in mind
@@ -87,6 +88,7 @@ uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated)
 static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot, bool* pmutated, uint32_t leaf_pos, std::vector<uint256>* path)
 {
     if (path) path->clear();
+    Assume(leaves.size() <= UINT32_MAX);
     if (leaves.size() == 0) {
         if (pmutated) *pmutated = false;
         if (proot) *proot = uint256();
