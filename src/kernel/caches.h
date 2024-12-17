@@ -9,8 +9,8 @@
 
 #include <algorithm>
 
-//! Suggested default amount of cache reserved for the kernel (MiB)
-static constexpr int64_t DEFAULT_KERNEL_CACHE{450};
+//! Suggested default amount of cache reserved for the kernel (bytes)
+static constexpr size_t DEFAULT_KERNEL_CACHE{450_MiB};
 //! Max memory allocated to block tree DB specific cache (bytes)
 static constexpr size_t MAX_BLOCK_DB_CACHE{2_MiB};
 //! Max memory allocated to coin DB specific cache (bytes)

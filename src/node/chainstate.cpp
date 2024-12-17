@@ -46,7 +46,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     try {
         pblocktree = std::make_unique<BlockTreeDB>(DBParams{
             .path = chainman.m_options.datadir / "blocks" / "index",
-            .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
+            .cache_bytes = cache_sizes.block_tree_db,
             .memory_only = options.block_tree_db_in_memory,
             .wipe_data = options.wipe_block_tree_db,
             .options = chainman.m_options.block_tree_db});

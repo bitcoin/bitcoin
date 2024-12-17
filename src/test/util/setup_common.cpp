@@ -252,7 +252,7 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
         LOCK(m_node.chainman->GetMutex());
         m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<BlockTreeDB>(DBParams{
             .path = m_args.GetDataDirNet() / "blocks" / "index",
-            .cache_bytes = static_cast<size_t>(m_kernel_cache_sizes.block_tree_db),
+            .cache_bytes = m_kernel_cache_sizes.block_tree_db,
             .memory_only = true,
         });
     };

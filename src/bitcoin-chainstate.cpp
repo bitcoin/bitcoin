@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
     util::SignalInterrupt interrupt;
     ChainstateManager chainman{interrupt, chainman_opts, blockman_opts};
 
-    kernel::CacheSizes cache_sizes{DEFAULT_KERNEL_CACHE << 20};
+    kernel::CacheSizes cache_sizes{DEFAULT_KERNEL_CACHE};
     node::ChainstateLoadOptions options;
     auto [status, error] = node::LoadChainstate(chainman, cache_sizes, options);
     if (status != node::ChainstateLoadStatus::SUCCESS) {
