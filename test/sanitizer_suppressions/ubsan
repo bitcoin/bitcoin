@@ -48,7 +48,6 @@ implicit-integer-sign-change:*/include/c++/
 implicit-integer-sign-change:*/new_allocator.h
 implicit-integer-sign-change:addrman.h
 implicit-integer-sign-change:bech32.cpp
-implicit-integer-sign-change:common/bloom.cpp
 implicit-integer-sign-change:chain.cpp
 implicit-integer-sign-change:chain.h
 implicit-integer-sign-change:compat/stdin.cpp

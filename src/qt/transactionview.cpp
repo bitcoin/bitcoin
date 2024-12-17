@@ -23,6 +23,7 @@
 #include <optional>
 
 #include <QCalendarWidget>
+#include <chrono>
 #include <QComboBox>
 #include <QDateTimeEdit>
 #include <QDesktopServices>
@@ -114,8 +115,8 @@ TransactionView::TransactionView(QWidget* parent) :
     amountWidget->setObjectName("amountWidget");
     hlayout->addWidget(amountWidget);
 
-    // Delay before filtering transactions in ms
-    static const int input_filter_delay = 200;
+    // Delay before filtering transactions
+    static constexpr auto input_filter_delay{200ms};
 
     QTimer* amount_typing_delay = new QTimer(this);
     amount_typing_delay->setSingleShot(true);

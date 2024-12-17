@@ -24,6 +24,8 @@
 #include <util/underlying.h>
 
 #include <QButtonGroup>
+#include <chrono>
+
 #include <QDataWidgetMapper>
 #include <QDir>
 #include <QIntValidator>
@@ -457,7 +459,7 @@ void OptionsDialog::showRestartWarning(bool fPersistent)
         ui->statusLabel->setText(tr("This change would require a client restart."));
         // clear non-persistent status label after 10 seconds
         // Todo: should perhaps be a class attribute, if we extend the use of statusLabel
-        QTimer::singleShot(10000, this, &OptionsDialog::clearStatusLabel);
+        QTimer::singleShot(10s, this, &OptionsDialog::clearStatusLabel);
     }
 }
 
