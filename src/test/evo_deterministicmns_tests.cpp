@@ -816,8 +816,8 @@ void FuncVerifyDB(TestChainSetup& setup)
 
     // Verify db consistency
     LOCK(cs_main);
-    BOOST_REQUIRE(CVerifyDB().VerifyDB(chainman.ActiveChainstate(), Params(), chainman.ActiveChainstate().CoinsTip(),
-                                       *(setup.m_node.evodb), 4, 2));
+    BOOST_REQUIRE(CVerifyDB().VerifyDB(chainman.ActiveChainstate(), Params().GetConsensus(),
+                                       chainman.ActiveChainstate().CoinsTip(), *(setup.m_node.evodb), 4, 2));
 }
 
 BOOST_AUTO_TEST_SUITE(evo_dip3_activation_tests)

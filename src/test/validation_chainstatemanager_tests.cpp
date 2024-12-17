@@ -8,7 +8,9 @@
 #include <index/txindex.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
+#include <llmq/context.h>
 #include <llmq/instantsend.h>
+#include <node/chainstate.h>
 #include <node/utxo_snapshot.h>
 #include <random.h>
 #include <rpc/blockchain.h>
@@ -33,7 +35,7 @@ BOOST_FIXTURE_TEST_SUITE(validation_chainstatemanager_tests, ChainTestingSetup)
 //! First create a legacy (IBD) chainstate, then create a snapshot chainstate.
 BOOST_AUTO_TEST_CASE(chainstatemanager)
 {
-    const CChainParams& chainparams = Params();
+    const Consensus::Params& consensus_params = Params().GetConsensus();
     ChainstateManager& manager = *m_node.chainman;
     CTxMemPool& mempool = *m_node.mempool;
     CEvoDB& evodb = *m_node.evodb;
@@ -49,7 +51,8 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     WITH_LOCK(::cs_main, c1.InitCoinsCache(1 << 23));
 
-    DashTestSetup(m_node, chainparams);
+    DashChainstateSetup(manager, m_node, /*fReset=*/false, /*fReindexChainState=*/false, consensus_params);
+    DashPostChainstateSetup(m_node);
 
     BOOST_CHECK(!manager.IsSnapshotActive());
     BOOST_CHECK(WITH_LOCK(::cs_main, return !manager.IsSnapshotValidated()));
@@ -67,7 +70,12 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
 
     BOOST_CHECK(!manager.SnapshotBlockhash().has_value());
 
-    DashTestSetupClose(m_node);
+    DashPostChainstateSetupClose(m_node);
+    if (m_node.llmq_ctx) {
+        m_node.llmq_ctx->Interrupt();
+        m_node.llmq_ctx->Stop();
+    }
+    DashChainstateSetupClose(m_node);
 
     // Create a snapshot-based chainstate.
     //
@@ -78,7 +86,8 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
     );
     chainstates.push_back(&c2);
 
-    DashTestSetup(m_node, chainparams);
+    DashChainstateSetup(manager, m_node, /*fReset=*/false, /*fReindexChainState=*/false, consensus_params);
+    DashPostChainstateSetup(m_node);
 
     BOOST_CHECK_EQUAL(manager.SnapshotBlockhash().value(), snapshot_blockhash);
 
@@ -113,7 +122,12 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
     // Let scheduler events finish running to avoid accessing memory that is going to be unloaded
     SyncWithValidationInterfaceQueue();
 
-    DashTestSetupClose(m_node);
+    DashPostChainstateSetupClose(m_node);
+    if (m_node.llmq_ctx) {
+        m_node.llmq_ctx->Interrupt();
+        m_node.llmq_ctx->Stop();
+    }
+    DashChainstateSetupClose(m_node);
 }
 
 //! Test rebalancing the caches associated with each chainstate.
