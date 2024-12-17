@@ -43,7 +43,7 @@ def load_file(input_file):
                 entries = None
                 break
             prefix, asn = fields
-            if len(asn) <= 2 or asn[:2] != "AS" or any(c < '0' or c > '9' for c in asn[2:]):
+            if len(asn) <= 2 or not asn.startswith("AS") or any(c < '0' or c > '9' for c in asn[2:]):
                 txt_error = f"invalid ASN '{asn}'"
                 entries = None
                 break
