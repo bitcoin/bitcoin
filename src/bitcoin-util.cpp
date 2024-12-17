@@ -13,6 +13,7 @@
 #include <common/system.h>
 #include <compat/compat.h>
 #include <core_io.h>
+#include <logging.h>
 #include <streams.h>
 #include <util/exception.h>
 #include <util/strencodings.h>
@@ -152,6 +153,7 @@ static int Grind(const std::vector<std::string>& args, std::string& strPrint)
 MAIN_FUNCTION
 {
     ArgsManager& args = gArgs;
+    BCLog::Logger logger;
     SetupEnvironment();
 
     try {

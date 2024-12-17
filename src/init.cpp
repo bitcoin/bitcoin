@@ -1062,7 +1062,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         if (!blockman_result) {
             return InitError(util::ErrorString(blockman_result));
         }
-        CTxMemPool::Options mempool_opts{};
+        CTxMemPool::Options mempool_opts{.logger = &LogInstance()};
         auto mempool_result{ApplyArgsManOptions(args, chainparams, mempool_opts)};
         if (!mempool_result) {
             return InitError(util::ErrorString(mempool_result));
@@ -1183,6 +1183,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
     const CChainParams& chainparams = Params();
     CTxMemPool::Options mempool_opts{
         .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
+        .logger = &LogInstance(),
         .signals = node.validation_signals.get(),
     };
     Assert(ApplyArgsManOptions(args, chainparams, mempool_opts)); // no error can happen, already checked in AppInitParameterInteraction
@@ -1206,7 +1207,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
     };
     Assert(ApplyArgsManOptions(args, blockman_opts)); // no error can happen, already checked in AppInitParameterInteraction
     try {
-        node.chainman = std::make_unique<ChainstateManager>(*Assert(node.shutdown_signal), chainman_opts, blockman_opts);
+        node.chainman = std::make_unique<ChainstateManager>(LogInstance(), *Assert(node.shutdown_signal), chainman_opts, blockman_opts);
     } catch (std::exception& e) {
         return {ChainstateLoadStatus::FAILURE_FATAL, Untranslated(strprintf("Failed to initialize ChainstateManager: %s", e.what()))};
     }
