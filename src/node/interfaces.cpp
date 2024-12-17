@@ -913,19 +913,17 @@ public:
 
     std::vector<uint256> getCoinbaseMerklePath() override
     {
-        return BlockMerkleBranch(m_block_template->block);
+        return TransactionMerklePath(m_block_template->block, 0);
     }
 
-    bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CMutableTransaction coinbase) override
+    bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) override
     {
         CBlock block{m_block_template->block};
 
-        auto cb = MakeTransactionRef(std::move(coinbase));
-
         if (block.vtx.size() == 0) {
-            block.vtx.push_back(cb);
+            block.vtx.push_back(coinbase);
         } else {
-            block.vtx[0] = cb;
+            block.vtx[0] = coinbase;
         }
 
         block.nVersion = version;
