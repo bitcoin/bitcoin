@@ -49,7 +49,7 @@ Avoid dividing up a message into fragments. Translators see every string separat
 ### Avoid HTML in translation strings
 
 There have been difficulties with the use of HTML in translation strings; translators should not be able to accidentally affect the formatting of messages.
-This may sometimes be at conflict with the recommendation in the previous section.
+This may sometimes be in conflict with the recommendation in the previous section.
 
 ### Plurals
 
