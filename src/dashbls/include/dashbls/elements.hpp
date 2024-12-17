@@ -59,6 +59,7 @@ public:
     GTElement Pair(const G2Element &b) const;
     uint32_t GetFingerprint(bool fLegacy = false) const;
     std::vector<uint8_t> Serialize(bool fLegacy = false) const;
+    std::array<uint8_t, SIZE> SerializeToArray(bool fLegacy = false) const;
     G1Element Copy();
 
     friend bool operator==(const G1Element &a, const G1Element &b);
@@ -102,6 +103,7 @@ public:
     G2Element Negate() const;
     GTElement Pair(const G1Element &a) const;
     std::vector<uint8_t> Serialize(bool fLegacy = false) const;
+    std::array<uint8_t, G2Element::SIZE> SerializeToArray(bool fLegacy = false) const;
     G2Element Copy();
 
     friend bool operator==(G2Element const &a, G2Element const &b);
@@ -127,6 +129,7 @@ public:
 
     void Serialize(uint8_t *buffer) const;
     std::vector<uint8_t> Serialize() const;
+    std::array<uint8_t, SIZE> SerializeToArray() const;
 
     friend bool operator==(GTElement const &a, GTElement const &b);
     friend bool operator!=(GTElement const &a, GTElement const &b);
