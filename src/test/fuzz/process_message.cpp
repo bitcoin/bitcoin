@@ -45,7 +45,7 @@ void initialize_process_message()
             {.extra_args = {"-txreconciliation"}});
     g_setup = testing_setup.get();
     for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
-        MineBlock(g_setup->m_node, CScript() << OP_TRUE);
+        MineBlock(g_setup->m_node, {});
     }
     g_setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
 }

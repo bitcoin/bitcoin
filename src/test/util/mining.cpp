@@ -24,9 +24,10 @@ COutPoint generatetoaddress(const NodeContext& node, const std::string& address)
 {
     const auto dest = DecodeDestination(address);
     assert(IsValidDestination(dest));
-    const auto coinbase_script = GetScriptForDestination(dest);
+    BlockAssembler::Options assembler_options;
+    assembler_options.coinbase_output_script = {GetScriptForDestination(dest)};
 
-    return MineBlock(node, coinbase_script);
+    return MineBlock(node, assembler_options);
 }
 
 std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const CChainParams& params)
@@ -60,9 +61,9 @@ std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const
     return ret;
 }
 
-COutPoint MineBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey)
+COutPoint MineBlock(const NodeContext& node, const node::BlockAssembler::Options& assembler_options)
 {
-    auto block = PrepareBlock(node, coinbase_scriptPubKey);
+    auto block = PrepareBlock(node, assembler_options);
     auto valid = MineBlock(node, block);
     assert(!valid.IsNull());
     return valid;
@@ -108,12 +109,12 @@ COutPoint MineBlock(const NodeContext& node, std::shared_ptr<CBlock>& block)
     return {};
 }
 
-std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey,
+std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node,
                                      const BlockAssembler::Options& assembler_options)
 {
     auto block = std::make_shared<CBlock>(
         BlockAssembler{Assert(node.chainman)->ActiveChainstate(), Assert(node.mempool.get()), assembler_options}
-            .CreateNewBlock(coinbase_scriptPubKey)
+            .CreateNewBlock()
             ->block);
 
     LOCK(cs_main);
@@ -125,6 +126,7 @@ std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node, const CScript& coi
 std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey)
 {
     BlockAssembler::Options assembler_options;
+    assembler_options.coinbase_output_script = coinbase_scriptPubKey;
     ApplyArgsManOptions(*node.args, assembler_options);
-    return PrepareBlock(node, coinbase_scriptPubKey, assembler_options);
+    return PrepareBlock(node, assembler_options);
 }
