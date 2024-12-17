@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(util_HexStr)
         constexpr std::string_view out_exp{"04678afdb0"};
         constexpr std::span in_s{HEX_PARSE_OUTPUT, out_exp.size() / 2};
         const Span<const uint8_t> in_u{MakeUCharSpan(in_s)};
-        const Span<const std::byte> in_b{MakeByteSpan(in_s)};
+        const std::span<const std::byte> in_b{MakeByteSpan(in_s)};
 
         BOOST_CHECK_EQUAL(HexStr(in_u), out_exp);
         BOOST_CHECK_EQUAL(HexStr(in_s), out_exp);

@@ -266,14 +266,14 @@ Span<std::byte> AsWritableBytes(Span<T> s) noexcept
 }
 
 template <typename V>
-Span<const std::byte> MakeByteSpan(V&& v) noexcept
+auto MakeByteSpan(const V& v) noexcept
 {
-    return AsBytes(Span{std::forward<V>(v)});
+    return std::as_bytes(std::span{v});
 }
 template <typename V>
-Span<std::byte> MakeWritableByteSpan(V&& v) noexcept
+auto MakeWritableByteSpan(V&& v) noexcept
 {
-    return AsWritableBytes(Span{std::forward<V>(v)});
+    return std::as_writable_bytes(std::span{std::forward<V>(v)});
 }
 
 // Helper functions to safely cast basic byte pointers to unsigned char pointers.

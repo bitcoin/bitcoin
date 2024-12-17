@@ -130,8 +130,8 @@ private:
     const std::unique_ptr<IteratorImpl> m_impl_iter;
 
     void SeekImpl(Span<const std::byte> key);
-    Span<const std::byte> GetKeyImpl() const;
-    Span<const std::byte> GetValueImpl() const;
+    std::span<const std::byte> GetKeyImpl() const;
+    std::span<const std::byte> GetValueImpl() const;
 
 public:
 

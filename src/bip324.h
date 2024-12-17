@@ -45,7 +45,7 @@ public:
     BIP324Cipher() = delete;
 
     /** Initialize a BIP324 cipher with specified key and encoding entropy (testing only). */
-    BIP324Cipher(const CKey& key, Span<const std::byte> ent32) noexcept;
+    BIP324Cipher(const CKey& key, std::span<const std::byte> ent32) noexcept;
 
     /** Initialize a BIP324 cipher with specified key (testing only). */
     BIP324Cipher(const CKey& key, const EllSwiftPubKey& pubkey) noexcept;
