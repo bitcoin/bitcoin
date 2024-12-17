@@ -87,7 +87,7 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
         // Metadata
         if (fuzzed_data_provider.ConsumeBool()) {
             std::vector<uint8_t> metadata{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
-            outfile << Span{metadata};
+            outfile << std::span{metadata};
         } else {
             auto msg_start = chainman.GetParams().MessageStart();
             int base_blockheight{fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 2 * COINBASE_MATURITY)};
@@ -99,7 +99,7 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
         // Coins
         if (fuzzed_data_provider.ConsumeBool()) {
             std::vector<uint8_t> file_data{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
-            outfile << Span{file_data};
+            outfile << std::span{file_data};
         } else {
             int height{0};
             for (const auto& block : *g_chain) {

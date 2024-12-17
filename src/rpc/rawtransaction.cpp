@@ -1074,7 +1074,7 @@ static RPCHelpMan decodepsbt()
 
             UniValue keypath(UniValue::VOBJ);
             keypath.pushKV("xpub", EncodeBase58Check(ser_xpub));
-            keypath.pushKV("master_fingerprint", HexStr(Span<unsigned char>(xpub_pair.first.fingerprint, xpub_pair.first.fingerprint + 4)));
+            keypath.pushKV("master_fingerprint", HexStr(std::span<unsigned char>(xpub_pair.first.fingerprint, xpub_pair.first.fingerprint + 4)));
             keypath.pushKV("path", WriteHDKeypath(xpub_pair.first.path));
             global_xpubs.push_back(std::move(keypath));
         }

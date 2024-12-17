@@ -71,7 +71,7 @@ void ConnmanTestMsg::Handshake(CNode& node,
     }
 }
 
-void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_bytes, bool& complete) const
+void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, std::span<const uint8_t> msg_bytes, bool& complete) const
 {
     assert(node.ReceiveMsgBytes(msg_bytes, complete));
     if (complete) {
@@ -279,7 +279,7 @@ std::optional<CNetMessage> DynSock::Pipe::GetNetMsg()
         }
 
         for (;;) {
-            Span<const uint8_t> s{m_data};
+            std::span<const uint8_t> s{m_data};
             if (!transport.ReceivedBytes(s)) {  // Consumed bytes are removed from the front of s.
                 return std::nullopt;
             }
