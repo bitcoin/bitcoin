@@ -39,7 +39,7 @@ def load_file(input_file):
                 continue
             fields = line.split(' ')
             if len(fields) != 2:
-                txt_error = f"unparseable line '{line}'"
+                txt_error = f"unparsable line '{line}'"
                 entries = None
                 break
             prefix, asn = fields
