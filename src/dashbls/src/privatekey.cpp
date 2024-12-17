@@ -284,6 +284,13 @@ std::vector<uint8_t> PrivateKey::Serialize(const bool fLegacy) const
     return data;
 }
 
+std::array<uint8_t, PrivateKey::PRIVATE_KEY_SIZE> PrivateKey::SerializeToArray(bool fLegacy) const
+{
+    std::array<uint8_t, PRIVATE_KEY_SIZE> data{};
+    Serialize(data.data());
+    return data;
+}
+
 G2Element PrivateKey::SignG2(
     const uint8_t *msg,
     size_t len,

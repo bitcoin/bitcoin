@@ -171,11 +171,16 @@ uint32_t G1Element::GetFingerprint(const bool fLegacy) const
 }
 
 std::vector<uint8_t> G1Element::Serialize(const bool fLegacy) const {
+    const auto arr = G1Element::SerializeToArray(fLegacy);
+    return std::vector<uint8_t>{arr.begin(), arr.end()};
+}
+
+std::array<uint8_t, G1Element::SIZE> G1Element::SerializeToArray(const bool fLegacy) const {
     uint8_t buffer[G1Element::SIZE + 1];
     g1_write_bin(buffer, G1Element::SIZE + 1, p, 1);
 
+    std::array<uint8_t, G1Element::SIZE> result{};
     if (buffer[0] == 0x00) {  // infinity
-        std::vector<uint8_t> result(G1Element::SIZE, 0);
         result[0] = 0xc0;
         return result;
     }
@@ -187,7 +192,9 @@ std::vector<uint8_t> G1Element::Serialize(const bool fLegacy) const {
     if (!fLegacy) {
         buffer[1] |= 0x80;  // indicate compression
     }
-    return std::vector<uint8_t>(buffer + 1, buffer + 1 + G1Element::SIZE);
+
+    std::copy_n(buffer + 1, G1Element::SIZE, result.begin());
+    return result;
 }
 
 bool operator==(const G1Element & a, const G1Element &b)
@@ -386,11 +393,18 @@ G2Element G2Element::Negate() const
 GTElement G2Element::Pair(const G1Element& a) const { return a & (*this); }
 
 std::vector<uint8_t> G2Element::Serialize(const bool fLegacy) const {
+    const auto arr = G2Element::SerializeToArray(fLegacy);
+    return std::vector<uint8_t>{arr.begin(), arr.end()};
+}
+
+std::array<uint8_t, G2Element::SIZE> G2Element::SerializeToArray(const bool fLegacy) const {
     uint8_t buffer[G2Element::SIZE + 1];
     g2_write_bin(buffer, G2Element::SIZE + 1, (g2_st*)q, 1);
 
+    std::array<uint8_t, G2Element::SIZE> result{};
+
     if (buffer[0] == 0x00) {  // infinity
-        std::vector<uint8_t> result(G2Element::SIZE, 0);
+        result.fill(0);
         result[0] = 0xc0;
         return result;
     }
@@ -410,7 +424,6 @@ std::vector<uint8_t> G2Element::Serialize(const bool fLegacy) const {
         }
     }
 
-    std::vector<uint8_t> result(G2Element::SIZE, 0);
     if (fLegacy) {
         std::memcpy(result.data(), buffer + 1, G2Element::SIZE);
     } else {
@@ -547,6 +560,13 @@ void GTElement::Serialize(uint8_t* buffer) const
 std::vector<uint8_t> GTElement::Serialize() const
 {
     std::vector<uint8_t> data(GTElement::SIZE);
+    Serialize(data.data());
+    return data;
+}
+
+std::array<uint8_t, GTElement::SIZE> GTElement::SerializeToArray() const
+{
+    std::array<uint8_t, GTElement::SIZE> data{};
     Serialize(data.data());
     return data;
 }
