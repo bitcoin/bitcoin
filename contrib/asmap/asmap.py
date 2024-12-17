@@ -729,7 +729,6 @@ class TestASMap(unittest.TestCase):
                         entries = asmap.to_entries(overlapping=overlapping, fill=False)
                         random.shuffle(entries)
                         asmap2 = ASMap(entries)
-                        assert asmap2 is not None
                         self.assertEqual(asmap2, asmap)
                         entries = asmap.to_entries(overlapping=overlapping, fill=True)
                         random.shuffle(entries)
