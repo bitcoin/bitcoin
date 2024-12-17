@@ -39,6 +39,9 @@ void SeedRandomStateForTest(SeedRand seedtype)
     }();
 
     g_seeded_g_prng_zero = seedtype == SeedRand::ZEROS;
+    if constexpr (G_FUZZING) {
+        Assert(g_seeded_g_prng_zero); // Only SeedRandomStateForTest(SeedRand::ZEROS) is allowed in fuzz tests
+    }
     const uint256& seed{seedtype == SeedRand::FIXED_SEED ? ctx_seed : uint256::ZERO};
     LogInfo("Setting random seed for current tests to %s=%s\n", RANDOM_CTX_SEED, seed.GetHex());
     MakeRandDeterministicDANGEROUS(seed);
