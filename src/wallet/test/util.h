@@ -61,7 +61,7 @@ public:
     bool m_pass;
 
     explicit MockableCursor(const MockableData& records, bool pass) : m_cursor(records.begin()), m_cursor_end(records.end()), m_pass(pass) {}
-    MockableCursor(const MockableData& records, bool pass, Span<const std::byte> prefix);
+    MockableCursor(const MockableData& records, bool pass, std::span<const std::byte> prefix);
     ~MockableCursor() = default;
 
     Status Next(DataStream& key, DataStream& value) override;
@@ -77,7 +77,7 @@ private:
     bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite=true) override;
     bool EraseKey(DataStream&& key) override;
     bool HasKey(DataStream&& key) override;
-    bool ErasePrefix(Span<const std::byte> prefix) override;
+    bool ErasePrefix(std::span<const std::byte> prefix) override;
 
 public:
     explicit MockableBatch(MockableData& records, bool pass) : m_records(records), m_pass(pass) {}
@@ -90,7 +90,7 @@ public:
     {
         return std::make_unique<MockableCursor>(m_records, m_pass);
     }
-    std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(Span<const std::byte> prefix) override {
+    std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(std::span<const std::byte> prefix) override {
         return std::make_unique<MockableCursor>(m_records, m_pass, prefix);
     }
     bool TxnBegin() override { return m_pass; }

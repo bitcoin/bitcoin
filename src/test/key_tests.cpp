@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(key_ellswift)
         BOOST_CHECK(key.IsValid());
 
         uint256 ent32 = m_rng.rand256();
-        auto ellswift = key.EllSwiftCreate(AsBytes(Span{ent32}));
+        auto ellswift = key.EllSwiftCreate(std::as_bytes(std::span{ent32}));
 
         CPubKey decoded_pubkey = ellswift.Decode();
         if (!key.IsCompressed()) {

@@ -15,7 +15,7 @@ struct Ignore
     template<typename T> Ignore(T&&) {}
 };
 template<typename T>
-bool Spannable(T&& value, decltype(Span{value})* enable = nullptr)
+bool Spannable(T&& value, decltype(std::span{value})* enable = nullptr)
 {
     return true;
 }
@@ -42,9 +42,9 @@ using namespace spannable;
 
 BOOST_AUTO_TEST_SUITE(span_tests)
 
-// Make sure template Span template deduction guides accurately enable calls to
-// Span constructor overloads that work, and disable calls to constructor overloads that
-// don't work. This makes it is possible to use the Span constructor in a SFINAE
+// Make sure template std::span template deduction guides accurately enable calls to
+// std::span constructor overloads that work, and disable calls to constructor overloads that
+// don't work. This makes it is possible to use the std::span constructor in a SFINAE
 // contexts like in the Spannable function above to detect whether types are or
 // aren't compatible with Spans at compile time.
 BOOST_AUTO_TEST_CASE(span_constructor_sfinae)
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(span_constructor_sfinae)
     BOOST_CHECK(!Spannable(std::set<int>{}));
     BOOST_CHECK(!Spannable(std::vector<bool>{}));
     BOOST_CHECK(Spannable(std::array<int, 3>{}));
-    BOOST_CHECK(Spannable(Span<int>{}));
+    BOOST_CHECK(Spannable(std::span<int>{}));
     BOOST_CHECK(Spannable("char array"));
     BOOST_CHECK(Spannable(SpannableYes{}));
     BOOST_CHECK(!Spannable(SpannableNo{}));

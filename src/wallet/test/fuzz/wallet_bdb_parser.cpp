@@ -44,7 +44,7 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
 
     {
         AutoFile outfile{fsbridge::fopen(wallet_path, "wb")};
-        outfile << Span{buffer};
+        outfile << std::span{buffer};
     }
 
     const DatabaseOptions options{};

@@ -10,7 +10,7 @@
 #include <bit>
 #include <string>
 
-unsigned int MurmurHash3(unsigned int nHashSeed, Span<const unsigned char> vDataToHash)
+unsigned int MurmurHash3(unsigned int nHashSeed, std::span<const unsigned char> vDataToHash)
 {
     // The following is MurmurHash3 (x86_32), see https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp
     uint32_t h1 = nHashSeed;

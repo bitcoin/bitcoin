@@ -543,7 +543,7 @@ bool DecodeBase64PSBT(PartiallySignedTransaction& psbt, const std::string& base6
     return DecodeRawPSBT(psbt, MakeByteSpan(*tx_data), error);
 }
 
-bool DecodeRawPSBT(PartiallySignedTransaction& psbt, Span<const std::byte> tx_data, std::string& error)
+bool DecodeRawPSBT(PartiallySignedTransaction& psbt, std::span<const std::byte> tx_data, std::string& error)
 {
     DataStream ss_data{tx_data};
     try {

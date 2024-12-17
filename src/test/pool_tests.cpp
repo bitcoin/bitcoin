@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(allocate_any_byte)
 
     uint8_t num_allocs = 200;
 
-    auto data = std::vector<Span<uint8_t>>();
+    auto data = std::vector<std::span<uint8_t>>();
 
     // allocate an increasing number of bytes
     for (uint8_t num_bytes = 0; num_bytes < num_allocs; ++num_bytes) {

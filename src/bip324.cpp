@@ -70,7 +70,7 @@ void BIP324Cipher::Initialize(const EllSwiftPubKey& their_pubkey, bool initiator
     m_key = CKey();
 }
 
-void BIP324Cipher::Encrypt(Span<const std::byte> contents, Span<const std::byte> aad, bool ignore, Span<std::byte> output) noexcept
+void BIP324Cipher::Encrypt(std::span<const std::byte> contents, std::span<const std::byte> aad, bool ignore, std::span<std::byte> output) noexcept
 {
     assert(output.size() == contents.size() + EXPANSION);
 
@@ -86,7 +86,7 @@ void BIP324Cipher::Encrypt(Span<const std::byte> contents, Span<const std::byte>
     m_send_p_cipher->Encrypt(header, contents, aad, output.subspan(LENGTH_LEN));
 }
 
-uint32_t BIP324Cipher::DecryptLength(Span<const std::byte> input) noexcept
+uint32_t BIP324Cipher::DecryptLength(std::span<const std::byte> input) noexcept
 {
     assert(input.size() == LENGTH_LEN);
 
@@ -97,7 +97,7 @@ uint32_t BIP324Cipher::DecryptLength(Span<const std::byte> input) noexcept
     return uint32_t(buf[0]) + (uint32_t(buf[1]) << 8) + (uint32_t(buf[2]) << 16);
 }
 
-bool BIP324Cipher::Decrypt(Span<const std::byte> input, Span<const std::byte> aad, bool& ignore, Span<std::byte> contents) noexcept
+bool BIP324Cipher::Decrypt(std::span<const std::byte> input, std::span<const std::byte> aad, bool& ignore, std::span<std::byte> contents) noexcept
 {
     assert(input.size() + LENGTH_LEN == contents.size() + EXPANSION);
 

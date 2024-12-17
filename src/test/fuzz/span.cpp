@@ -18,7 +18,7 @@ FUZZ_TARGET(span)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     std::string str = fuzzed_data_provider.ConsumeBytesAsString(32);
-    const Span<const char> span{str};
+    const std::span<const char> span{str};
     (void)span.data();
     (void)span.begin();
     (void)span.end();
