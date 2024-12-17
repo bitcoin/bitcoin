@@ -353,7 +353,7 @@ bool CPubKey::Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChi
     return true;
 }
 
-EllSwiftPubKey::EllSwiftPubKey(Span<const std::byte> ellswift) noexcept
+EllSwiftPubKey::EllSwiftPubKey(std::span<const std::byte> ellswift) noexcept
 {
     assert(ellswift.size() == SIZE);
     std::copy(ellswift.begin(), ellswift.end(), m_pubkey.begin());
