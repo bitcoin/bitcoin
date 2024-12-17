@@ -114,13 +114,13 @@ Setup:
 - All three now run `addmultisigaddress 2 ["Kalice","Kbob","Kcarol"]` to teach
   their wallet about the multisig script. Call the address produced by this
   command *Amulti*. They may be required to explicitly specify the same
-  addresstype option each, to avoid constructing different versions due to
+  address type option each, to avoid constructing different versions due to
   differences in configuration.
 - They also run `importaddress "Amulti" "" false` to make their wallets treat
   payments to *Amulti* as contributing to the watch-only balance.
 - Others can verify the produced address by running
   `createmultisig 2 ["Kalice","Kbob","Kcarol"]`, and expecting *Amulti* as
-  output. Again, it may be necessary to explicitly specify the addresstype
+  output. Again, it may be necessary to explicitly specify the address type
   in order to get a result that matches. This command won't enable them to
   initiate transactions later, however.
 - They can now give out *Amulti* as address others can pay to.
