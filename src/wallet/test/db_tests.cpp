@@ -26,7 +26,7 @@
 
 inline std::ostream& operator<<(std::ostream& os, const std::pair<const SerializeData, SerializeData>& kv)
 {
-    Span key{kv.first}, value{kv.second};
+    std::span key{kv.first}, value{kv.second};
     os << "(\"" << std::string_view{reinterpret_cast<const char*>(key.data()), key.size()} << "\", \""
        << std::string_view{reinterpret_cast<const char*>(value.data()), value.size()} << "\")";
     return os;
@@ -45,7 +45,7 @@ static SerializeData StringData(std::string_view str)
     return SerializeData{bytes.begin(), bytes.end()};
 }
 
-static void CheckPrefix(DatabaseBatch& batch, Span<const std::byte> prefix, MockableData expected)
+static void CheckPrefix(DatabaseBatch& batch, std::span<const std::byte> prefix, MockableData expected)
 {
     std::unique_ptr<DatabaseCursor> cursor = batch.GetNewPrefixCursor(prefix);
     MockableData actual;
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(db_cursor_prefix_byte_test)
         } else {
             // Write elements to it if not berkeleyro
             for (const auto& [k, v] : {e, p, ps, f, fs, ff, ffs}) {
-                batch->Write(Span{k}, Span{v});
+                batch->Write(std::span{k}, std::span{v});
             }
         }
 
