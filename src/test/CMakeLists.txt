@@ -18,7 +18,6 @@ generate_header_from_raw(data/asmap.raw test::data)
 # SOURCES property is processed to gather test suite macros.
 add_executable(test_bitcoin
   main.cpp
-  $<TARGET_OBJECTS:bitcoin_consensus>
   ${CMAKE_CURRENT_BINARY_DIR}/data/asmap.raw.h
   ${CMAKE_CURRENT_BINARY_DIR}/data/base58_encode_decode.json.h
   ${CMAKE_CURRENT_BINARY_DIR}/data/bip341_wallet_vectors.json.h
@@ -151,6 +150,7 @@ target_link_libraries(test_bitcoin
   test_util
   bitcoin_cli
   bitcoin_node
+  bitcoin_consensus
   minisketch
   secp256k1
   Boost::headers
