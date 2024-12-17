@@ -942,7 +942,6 @@ bool BlockManager::SaveBlockUndo(const CBlockUndo& blockundo, BlockValidationSta
     const BlockfileType type = BlockfileTypeForHeight(block.nHeight);
     auto& cursor = *Assert(WITH_LOCK(cs_LastBlockFile, return m_blockfile_cursors[type]));
 
-    // Write undo information to disk
     if (block.GetUndoPos().IsNull()) {
         FlatFilePos pos;
         const uint32_t blockundo_size{static_cast<uint32_t>(GetSerializeSize(blockundo))};
@@ -950,8 +949,7 @@ bool BlockManager::SaveBlockUndo(const CBlockUndo& blockundo, BlockValidationSta
             LogError("%s: FindUndoPos failed\n", __func__);
             return false;
         }
-        // Open history file to append
-        AutoFile fileout{OpenUndoFile(pos)};
+        BufferedWriteOnlyFile fileout{m_undo_file_seq, pos, m_xor_key};
         if (fileout.IsNull()) {
             LogError("%s: OpenUndoFile failed\n", __func__);
             return FatalError(m_opts.notifications, state, _("Failed to write undo data."));
@@ -1095,7 +1093,7 @@ FlatFilePos BlockManager::SaveBlock(const CBlock& block, int nHeight)
         LogError("%s: FindNextBlockPos failed\n", __func__);
         return FlatFilePos();
     }
-    AutoFile fileout{OpenBlockFile(pos)};
+    BufferedWriteOnlyFile fileout{m_block_file_seq, pos, m_xor_key};
     if (fileout.IsNull()) {
         LogError("%s: OpenBlockFile failed\n", __func__);
         m_opts.notifications.fatalError(_("Failed to write block."));
