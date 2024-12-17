@@ -52,6 +52,7 @@ void initialize_process_message()
 
 FUZZ_TARGET(process_message, .init = initialize_process_message)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     ConnmanTestMsg& connman = *static_cast<ConnmanTestMsg*>(g_setup->m_node.connman.get());

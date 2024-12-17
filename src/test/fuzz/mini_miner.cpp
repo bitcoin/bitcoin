@@ -34,6 +34,7 @@ void initialize_miner()
 // Test that the MiniMiner can run with various outpoints and feerates.
 FUZZ_TARGET(mini_miner, .init = initialize_miner)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     bilingual_str error;
     CTxMemPool pool{CTxMemPool::Options{}, error};
@@ -112,6 +113,7 @@ FUZZ_TARGET(mini_miner, .init = initialize_miner)
 // Test that MiniMiner and BlockAssembler build the same block given the same transactions and constraints.
 FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     bilingual_str error;
     CTxMemPool pool{CTxMemPool::Options{}, error};

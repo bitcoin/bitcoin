@@ -6,6 +6,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/util/random.h>
 #include <uint256.h>
 
 #include <cassert>
@@ -16,6 +17,7 @@
 
 FUZZ_TARGET(rolling_bloom_filter)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     CRollingBloomFilter rolling_bloom_filter{

@@ -165,6 +165,7 @@ void CheckPackageToValidate(const node::PackageToValidate& package_to_validate, 
 
 FUZZ_TARGET(txdownloadman, .init = initialize)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     // Initialize txdownloadman
@@ -294,6 +295,7 @@ static void CheckInvariants(const node::TxDownloadManagerImpl& txdownload_impl, 
 
 FUZZ_TARGET(txdownloadman_impl, .init = initialize)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     // Initialize a TxDownloadManagerImpl

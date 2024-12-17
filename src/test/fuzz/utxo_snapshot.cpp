@@ -70,6 +70,7 @@ void initialize_chain()
 template <bool INVALID>
 void utxo_snapshot_fuzz(FuzzBufferType buffer)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     auto& setup{*g_setup};
     bool dirty_chainman{false}; // Re-use the global chainman, but reset it when it is dirty

@@ -153,6 +153,7 @@ void initialize()
 
 FUZZ_TARGET(p2p_headers_presync, .init = initialize)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     ChainstateManager& chainman = *g_testing_setup->m_node.chainman;
 
     LOCK(NetEventsInterface::g_msgproc_mutex);

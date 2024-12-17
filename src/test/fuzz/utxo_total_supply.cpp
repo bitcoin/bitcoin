@@ -28,6 +28,7 @@ FUZZ_TARGET(utxo_total_supply)
             .extra_args = {"-testactivationheight=bip34@2"},
         },
     };
+    SeedRandomStateForTest(SeedRand::ZEROS); // Can not be done before test_setup
     // Create chainstate
     test_setup.LoadVerifyActivateChainstate();
     auto& node{test_setup.m_node};

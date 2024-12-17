@@ -56,6 +56,7 @@ void initialize_setup()
 
 FUZZ_TARGET(wallet_notifications, .init = initialize_setup)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     // The total amount, to be distributed to the wallets a and b in txs
     // without fee. Thus, the balance of the wallets should always equal the

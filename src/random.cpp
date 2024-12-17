@@ -671,9 +671,11 @@ void MakeRandDeterministicDANGEROUS(const uint256& seed) noexcept
 {
     GetRNGState().MakeDeterministic(seed);
 }
+std::atomic<bool> g_used_g_prng{false}; // Only accessed from tests
 
 void GetRandBytes(Span<unsigned char> bytes) noexcept
 {
+    g_used_g_prng = true;
     ProcRand(bytes.data(), bytes.size(), RNGLevel::FAST, /*always_use_real_rng=*/false);
 }
 
