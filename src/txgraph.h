@@ -95,9 +95,9 @@ public:
     /** Virtual destructor, so inheriting is safe. */
     virtual ~TxGraph() = default;
     /** Construct a new transaction with the specified feerate, and return a Ref to it.
-     *  If a staging graph exists, the new transaction is only created there. In all
-     *  further calls, only Refs created by AddTransaction() are allowed to be passed to this
-     *  TxGraph object (or empty Ref objects). */
+     *  If a staging graph exists, the new transaction is only created there. feerate.size cannot
+     *  exceed the graph's max cluster size. In all further calls, only Refs created by
+     *  AddTransaction() are allowed to be passed to this TxGraph object (or empty Ref objects). */
     [[nodiscard]] virtual Ref AddTransaction(const FeePerWeight& feerate) noexcept = 0;
     /** Remove the specified transaction. If a staging graph exists, the removal only happens
      *  there. This is a no-op if the transaction was already removed.
@@ -209,8 +209,9 @@ public:
     virtual void SanityCheck() const = 0;
 };
 
-/** Construct a new TxGraph with the specified limit on transactions within a cluster. That
- *  number cannot exceed MAX_CLUSTER_COUNT_LIMIT. */
-std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count) noexcept;
+/** Construct a new TxGraph with the specified limit on transactions within a cluster, and the
+ *  specified limit on the sum of transaction sizes within a cluster. max_cluster_count cannot
+ *  exceed MAX_CLUSTER_COUNT_LIMIT. */
+std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count, uint64_t max_cluster_size) noexcept;
 
 #endif // BITCOIN_TXGRAPH_H
