@@ -151,7 +151,7 @@ class Class
 public:
     bool Function(const std::string& s, int n)
     {
-        // Comment summarising what this section of code does
+        // Comment summarizing what this section of code does
         for (int i = 0; i < n; ++i) {
             int total_sum{0};
             // When something fails, return early
