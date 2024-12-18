@@ -10,7 +10,7 @@ Running
 
 For benchmarking, you only need to compile `bench_bitcoin`.  The bench runner
 warns if you configure with `-DCMAKE_BUILD_TYPE=Debug`, but consider if building without
-it will impact the benchmark(s) you are interested in by unlatching log printers
+it will impact the benchmark(s) you are interested in by disabling log printers
 and lock analysis.
 
     cmake -B build -DBUILD_BENCH=ON
