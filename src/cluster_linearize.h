@@ -75,7 +75,7 @@ public:
      *
      * @param depgraph   The original DepGraph that is being remapped.
      *
-     * @param mapping    A std::span such that mapping[i] gives the position in the new DepGraph
+     * @param mapping    A span such that mapping[i] gives the position in the new DepGraph
      *                   for position i in the old depgraph. Its size must be equal to
      *                   depgraph.PositionRange(). The value of mapping[i] is ignored if
      *                   position i is a hole in depgraph (i.e., if !depgraph.Positions()[i]).
