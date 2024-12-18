@@ -52,6 +52,7 @@ kernel::InterruptResult KernelNotifications::blockTip(SynchronizationState state
 {
     {
         LOCK(m_tip_block_mutex);
+        Assume(index.GetBlockHash() != uint256::ZERO);
         m_tip_block = index.GetBlockHash();
         m_tip_block_cv.notify_all();
     }
@@ -98,6 +99,13 @@ void KernelNotifications::fatalError(const bilingual_str& message)
     node::AbortNode(m_shutdown_on_fatal_error ? m_shutdown_request : nullptr,
                     m_exit_status, message, &m_warnings);
 }
+
+std::optional<uint256> KernelNotifications::TipBlock()
+{
+    AssertLockHeld(m_tip_block_mutex);
+    return m_tip_block;
+};
+
 
 void ReadNotificationArgs(const ArgsManager& args, KernelNotifications& notifications)
 {
