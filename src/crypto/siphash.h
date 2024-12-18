@@ -19,6 +19,11 @@ private:
     uint8_t count; // Only the low 8 bits of the input size matter.
 
 public:
+    static constexpr uint64_t C0 = 0x736f6d6570736575ULL;
+    static constexpr uint64_t C1 = 0x646f72616e646f6dULL;
+    static constexpr uint64_t C2 = 0x6c7967656e657261ULL;
+    static constexpr uint64_t C3 = 0x7465646279746573ULL;
+
     /** Construct a SipHash calculator initialized with 128-bit key (k0, k1) */
     CSipHasher(uint64_t k0, uint64_t k1);
     /** Hash a 64-bit integer worth of data
@@ -43,6 +48,6 @@ public:
  *      .Finalize()
  */
 uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val);
-uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint32_t extra);
+uint64_t SipHashUint256Extra(uint64_t v0, uint64_t v1, uint64_t v2, uint64_t v3, const uint256& val, uint32_t extra);
 
 #endif // BITCOIN_CRYPTO_SIPHASH_H
