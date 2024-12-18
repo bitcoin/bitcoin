@@ -936,27 +936,6 @@ bool BlockManager::FindUndoPos(BlockValidationState& state, int nFile, FlatFileP
     return true;
 }
 
-bool BlockManager::WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const
-{
-    // Open history file to append
-    AutoFile fileout{OpenBlockFile(pos)};
-    if (fileout.IsNull()) {
-        LogError("%s: OpenBlockFile failed\n", __func__);
-        return false;
-    }
-
-    // Write index header
-    unsigned int nSize = GetSerializeSize(TX_WITH_WITNESS(block));
-    fileout << GetParams().MessageStart() << nSize;
-
-    // Write block
-    long fileOutPos = fileout.tell();
-    pos.nPos = (unsigned int)fileOutPos;
-    fileout << TX_WITH_WITNESS(block);
-
-    return true;
-}
-
 bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
 {
     AssertLockHeld(::cs_main);
@@ -1117,16 +1096,30 @@ FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight)
     // Account for the 4 magic message start bytes + the 4 length bytes (8 bytes total,
     // defined as BLOCK_SERIALIZATION_HEADER_SIZE)
     nBlockSize += static_cast<unsigned int>(BLOCK_SERIALIZATION_HEADER_SIZE);
-    FlatFilePos blockPos{FindNextBlockPos(nBlockSize, nHeight, block.GetBlockTime())};
-    if (blockPos.IsNull()) {
+    FlatFilePos pos{FindNextBlockPos(nBlockSize, nHeight, block.GetBlockTime())};
+    if (pos.IsNull()) {
         LogError("%s: FindNextBlockPos failed\n", __func__);
         return FlatFilePos();
     }
-    if (!WriteBlockToDisk(block, blockPos)) {
+
+    // Open history file to append
+    AutoFile fileout{OpenBlockFile(pos)};
+    if (fileout.IsNull()) {
+        LogError("%s: OpenBlockFile failed\n", __func__);
         m_opts.notifications.fatalError(_("Failed to write block."));
         return FlatFilePos();
     }
-    return blockPos;
+
+    // Write index header
+    unsigned int nSize = GetSerializeSize(TX_WITH_WITNESS(block));
+    fileout << GetParams().MessageStart() << nSize;
+
+    // Write block
+    long fileOutPos = fileout.tell();
+    pos.nPos = (unsigned int)fileOutPos;
+    fileout << TX_WITH_WITNESS(block);
+
+    return pos;
 }
 
 static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
