@@ -180,8 +180,11 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vout[0].nValue = 5000000000LL - 1000 - 50000 - feeToUse;
     Txid hashLowFeeTx = tx.GetHash();
     AddToMempool(tx_mempool, entry.Fee(feeToUse).FromTx(tx));
-    block_template = mining->createNewBlock(options);
-    BOOST_REQUIRE(block_template);
+
+    // waitNext() should return nullptr because there is no better template
+    auto should_be_nullptr = block_template->waitNext({.timeout = MillisecondsDouble{0}, .fee_threshold = 1});
+    BOOST_REQUIRE(should_be_nullptr == nullptr);
+
     block = block_template->getBlock();
     // Verify that the free tx and the low fee tx didn't get selected
     for (size_t i=0; i<block.vtx.size(); ++i) {
@@ -196,7 +199,9 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vout[0].nValue -= 2; // Now we should be just over the min relay fee
     hashLowFeeTx = tx.GetHash();
     AddToMempool(tx_mempool, entry.Fee(feeToUse + 2).FromTx(tx));
-    block_template = mining->createNewBlock(options);
+
+    // waitNext() should return if fees for the new template are at least 1 sat up
+    block_template = block_template->waitNext({.fee_threshold = 1});
     BOOST_REQUIRE(block_template);
     block = block_template->getBlock();
     BOOST_REQUIRE_EQUAL(block.vtx.size(), 6U);
@@ -671,9 +676,15 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     for (const auto& bi : BLOCKINFO) {
         const int current_height{mining->getTip()->height};
 
-        // Simple block creation, nothing special yet:
-        block_template = mining->createNewBlock(options);
-        BOOST_REQUIRE(block_template);
+        /**
+         * Simple block creation, nothing special yet.
+         * If current_height is odd, block_template will have already been
+         * set at the end of the previous loop.
+         */
+        if (current_height % 2 == 0) {
+            block_template = mining->createNewBlock(options);
+            BOOST_REQUIRE(block_template);
+        }
 
         CBlock block{block_template->getBlock()};
         CMutableTransaction txCoinbase(*block.vtx[0]);
@@ -709,8 +720,13 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             auto maybe_new_tip{Assert(m_node.chainman)->ActiveChain().Tip()};
             BOOST_REQUIRE_EQUAL(maybe_new_tip->GetBlockHash(), block.GetHash());
         }
-        // This just adds coverage
-        mining->waitTipChanged(block.hashPrevBlock);
+        if (current_height % 2 == 0) {
+            block_template = block_template->waitNext();
+            BOOST_REQUIRE(block_template);
+        } else {
+            // This just adds coverage
+            mining->waitTipChanged(block.hashPrevBlock);
+        }
     }
 
     LOCK(cs_main);

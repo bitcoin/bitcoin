@@ -13,9 +13,11 @@
 #ifndef BITCOIN_NODE_TYPES_H
 #define BITCOIN_NODE_TYPES_H
 
+#include <consensus/amount.h>
 #include <cstddef>
 #include <policy/policy.h>
 #include <script/script.h>
+#include <util/time.h>
 
 namespace node {
 enum class TransactionError {
@@ -61,6 +63,28 @@ struct BlockCreateOptions {
      */
     CScript coinbase_output_script{CScript() << OP_TRUE};
 };
+
+struct BlockWaitOptions {
+    /**
+     * How long to wait before returning nullptr instead of a new template.
+     * Default is to wait forever.
+     */
+    MillisecondsDouble timeout{MillisecondsDouble::max()};
+
+    /**
+     * The wait method will not return a new template unless it has fees at
+     * least fee_threshold sats higher than the current template, or unless
+     * the chain tip changes and the previous template is no longer valid.
+     *
+     * A caller may not be interested in templates with higher fees, and
+     * determining whether fee_threshold is reached is also expensive. So as
+     * an optimization, when fee_threshold is set to MAX_MONEY (default), the
+     * implementation is able to be much more efficient, skipping expensive
+     * checks and only returning new templates when the chain tip changes.
+     */
+    CAmount fee_threshold{MAX_MONEY};
+};
+
 } // namespace node
 
 #endif // BITCOIN_NODE_TYPES_H
