@@ -979,29 +979,6 @@ public:
         return BlockRef{chainman().ActiveChain().Tip()->GetBlockHash(), chainman().ActiveChain().Tip()->nHeight};
     }
 
-    bool processNewBlock(const std::shared_ptr<const CBlock>& block, bool* new_block) override
-    {
-        return chainman().ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/new_block);
-    }
-
-    unsigned int getTransactionsUpdated() override
-    {
-        return context()->mempool->GetTransactionsUpdated();
-    }
-
-    bool testBlockValidity(const CBlock& block, bool check_merkle_root, BlockValidationState& state) override
-    {
-        LOCK(cs_main);
-        CBlockIndex* tip{chainman().ActiveChain().Tip()};
-        // Fail if the tip updated before the lock was taken
-        if (block.hashPrevBlock != tip->GetBlockHash()) {
-            state.Error("Block does not connect to current chain tip.");
-            return false;
-        }
-
-        return TestBlockValidity(state, chainman().GetParams(), chainman().ActiveChainstate(), block, tip, /*fCheckPOW=*/false, check_merkle_root);
-    }
-
     std::unique_ptr<BlockTemplate> createNewBlock(const BlockCreateOptions& options) override
     {
         BlockAssembler::Options assemble_options{options};

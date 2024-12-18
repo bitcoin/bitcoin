@@ -93,31 +93,6 @@ public:
      */
     virtual std::unique_ptr<BlockTemplate> createNewBlock(const node::BlockCreateOptions& options = {}) = 0;
 
-    /**
-     * Processes new block. A valid new block is automatically relayed to peers.
-     *
-     * @param[in]   block The block we want to process.
-     * @param[out]  new_block A boolean which is set to indicate if the block was first received via this call
-     * @returns     If the block was processed, independently of block validity
-     */
-    virtual bool processNewBlock(const std::shared_ptr<const CBlock>& block, bool* new_block) = 0;
-
-    //! Return the number of transaction updates in the mempool,
-    //! used to decide whether to make a new block template.
-    virtual unsigned int getTransactionsUpdated() = 0;
-
-    /**
-     * Check a block is completely valid from start to finish.
-     * Only works on top of our current best block.
-     * Does not check proof-of-work.
-     *
-     * @param[in] block the block to validate
-     * @param[in] check_merkle_root call CheckMerkleRoot()
-     * @param[out] state details of why a block failed to validate
-     * @returns false if it does not build on the current tip, or any of the checks fail
-     */
-    virtual bool testBlockValidity(const CBlock& block, bool check_merkle_root, BlockValidationState& state) = 0;
-
     //! Get internal node context. Useful for RPC and testing,
     //! but not accessible across processes.
     virtual node::NodeContext* context() { return nullptr; }
