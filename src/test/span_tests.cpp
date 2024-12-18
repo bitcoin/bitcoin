@@ -47,13 +47,6 @@ BOOST_AUTO_TEST_SUITE(span_tests)
 // don't work. This makes it is possible to use the Span constructor in a SFINAE
 // contexts like in the Spannable function above to detect whether types are or
 // aren't compatible with Spans at compile time.
-//
-// Previously there was a bug where writing a SFINAE check for vector<bool> was
-// not possible, because in libstdc++ vector<bool> has a data() member
-// returning void, and the Span template guide ignored the data() return value,
-// so the template substitution would succeed, but the constructor would fail,
-// resulting in a fatal compile error, rather than a SFINAE error that could be
-// handled.
 BOOST_AUTO_TEST_CASE(span_constructor_sfinae)
 {
     BOOST_CHECK(Spannable(std::vector<int>{}));
