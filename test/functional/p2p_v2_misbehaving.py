@@ -151,7 +151,7 @@ class EncryptedP2PMisbehaving(BitcoinTestFramework):
         # Ensure that the bytes sent after 4 bytes network magic are actually received.
         self.wait_until(lambda: node0.getpeerinfo()[-1]["bytesrecv"] > 4)
         self.wait_until(lambda: node0.getpeerinfo()[-1]["bytessent"] > 0)
-        with node0.assert_debug_log(['V2 handshake timeout peer=0']):
+        with node0.assert_debug_log(['V2 handshake timeout, disconnecting peer=0']):
             node0.bumpmocktime(4)  # `InactivityCheck()` triggers now
             peer1.wait_for_disconnect(timeout=1)
         self.log.info('successful disconnection since modified ellswift was sent as response')
@@ -162,7 +162,7 @@ class EncryptedP2PMisbehaving(BitcoinTestFramework):
         expected_debug_message = [
             [],  # EARLY_KEY_RESPONSE
             ["V2 transport error: missing garbage terminator, peer=1"],  # EXCESS_GARBAGE
-            ["V2 handshake timeout peer=3"],  # WRONG_GARBAGE_TERMINATOR
+            ["V2 handshake timeout, disconnecting peer=3"],  # WRONG_GARBAGE_TERMINATOR
             ["V2 transport error: packet decryption failure"],  # WRONG_GARBAGE
             ["V2 transport error: packet decryption failure"],  # SEND_NO_AAD
             [],  # SEND_NON_EMPTY_VERSION_PACKET

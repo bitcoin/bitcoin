@@ -168,7 +168,7 @@ class SendTxRcnclTest(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log(["received: sendtxrcncl"]):
             peer.send_message(create_sendtxrcncl_msg())
         self.log.info('second SENDTXRCNCL triggers a disconnect')
-        with self.nodes[0].assert_debug_log(["(sendtxrcncl received from already registered peer); disconnecting"]):
+        with self.nodes[0].assert_debug_log(["(sendtxrcncl received from already registered peer), disconnecting peer=0"]):
             peer.send_message(create_sendtxrcncl_msg())
             peer.wait_for_disconnect()
 
@@ -226,7 +226,7 @@ class SendTxRcnclTest(BitcoinTestFramework):
         self.log.info('SENDTXRCNCL if block-relay-only triggers a disconnect')
         peer = self.nodes[0].add_outbound_p2p_connection(
             PeerNoVerack(), wait_for_verack=False, p2p_idx=0, connection_type="block-relay-only")
-        with self.nodes[0].assert_debug_log(["we indicated no tx relay; disconnecting"]):
+        with self.nodes[0].assert_debug_log(["we indicated no tx relay, disconnecting peer=5"]):
             peer.send_message(create_sendtxrcncl_msg())
             peer.wait_for_disconnect()
 
