@@ -946,7 +946,6 @@ bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValid
     if (block.GetUndoPos().IsNull()) {
         FlatFilePos pos;
         const uint32_t blockundo_size{static_cast<uint32_t>(GetSerializeSize(blockundo))};
-        assert(UNDO_DATA_DISK_OVERHEAD == 40);
         if (!FindUndoPos(state, block.nFile, pos, blockundo_size + UNDO_DATA_DISK_OVERHEAD)) {
             LogError("%s: FindUndoPos failed\n", __func__);
             return false;
@@ -959,10 +958,8 @@ bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValid
         }
 
         // Write index header
-        assert(blockundo_size == GetSerializeSize(blockundo));
         fileout << GetParams().MessageStart() << blockundo_size;
         pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
-        assert(pos.nPos == fileout.tell());
         fileout << blockundo;
 
         // calculate & write checksum
@@ -1105,10 +1102,8 @@ FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight)
         return FlatFilePos();
     }
 
-    assert(block_size == GetSerializeSize(TX_WITH_WITNESS(block)));
     fileout << GetParams().MessageStart() << block_size;
     pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
-    assert(pos.nPos == fileout.tell());
     fileout << TX_WITH_WITNESS(block);
     return pos;
 }
