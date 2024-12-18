@@ -19,6 +19,7 @@
 #include <common/args.h>
 #include <common/system.h>
 #include <consensus/amount.h>
+#include <consensus/consensus.h>
 #include <deploymentstatus.h>
 #include <hash.h>
 #include <httprpc.h>
@@ -54,6 +55,7 @@
 #include <node/mempool_persist_args.h>
 #include <node/miner.h>
 #include <node/peerman_args.h>
+#include <node/types.h> // for BlockCreateOptions
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/fees_args.h>
@@ -647,7 +649,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-whitelistrelay", strprintf("Add 'relay' permission to whitelisted peers with default permissions. This will accept relayed transactions even when not relaying transactions (default: %d)", DEFAULT_WHITELISTRELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
 
 
-    argsman.AddArg("-blockmaxweight=<n>", strprintf("Set maximum BIP141 block weight (default: %d)", DEFAULT_BLOCK_MAX_WEIGHT), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
+    argsman.AddArg("-blockmaxweight=<n>", strprintf("Set maximum BIP141 block weight (default: %d). Note that getblocktemplate reserves %d weight units for the pool to customize the coinbase.", MAX_BLOCK_WEIGHT, node::BlockCreateOptions{}.coinbase_max_additional_weight), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-blockmintxfee=<amt>", strprintf("Set lowest fee rate (in %s/kvB) for transactions to be included in block creation. (default: %s)", CURRENCY_UNIT, FormatMoney(DEFAULT_BLOCK_MIN_TX_FEE)), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-blockversion=<n>", "Override block version to test forking scenarios", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::BLOCK_CREATION);
 
@@ -1012,6 +1014,13 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     if (args.IsArgSet("-blockmintxfee")) {
         if (!ParseMoney(args.GetArg("-blockmintxfee", ""))) {
             return InitError(AmountErrMsg("blockmintxfee", args.GetArg("-blockmintxfee", "")));
+        }
+    }
+
+    if (args.IsArgSet("-blockmaxweight")) {
+        const auto customMaxBlockWeight = args.GetIntArg("-blockmaxweight", MAX_BLOCK_WEIGHT);
+        if (customMaxBlockWeight > MAX_BLOCK_WEIGHT) {
+            return InitError(strprintf(_("Specified -blockmaxweight (%d) exceeds consensus maximum block weight (%d)"), customMaxBlockWeight, MAX_BLOCK_WEIGHT));
         }
     }
 
