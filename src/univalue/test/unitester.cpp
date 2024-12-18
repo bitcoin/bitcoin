@@ -6,13 +6,19 @@
 
 #include <cassert>
 #include <cstdio>
+#include <cstdlib>
 #include <string>
 
 #ifndef JSON_TEST_SRC
 #error JSON_TEST_SRC must point to test source directory
 #endif
 
-std::string srcdir(JSON_TEST_SRC);
+std::string srcdir = []() {
+    if (const char* env_srcdir = std::getenv("UNIVALUE_JSON_TEST_SRC")) {
+        return env_srcdir;
+    }
+    return JSON_TEST_SRC;
+}();
 
 static std::string rtrim(std::string s)
 {
