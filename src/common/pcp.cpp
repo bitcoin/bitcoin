@@ -426,7 +426,7 @@ std::variant<MappingResult, MappingError> PCPRequestPortMap(const PCPMappingNonc
         return MappingError::NETWORK_ERROR;
     }
     CService internal;
-    if (!internal.SetSockAddr((struct sockaddr*)&internal_addr)) return MappingError::NETWORK_ERROR;
+    if (!internal.SetSockAddr((struct sockaddr*)&internal_addr, internal_addrlen)) return MappingError::NETWORK_ERROR;
     LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "pcp: Internal address after connect: %s\n", internal.ToStringAddr());
 
     // Build request packet. Make sure the packet is zeroed so that reserved fields are zero
