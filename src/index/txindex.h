@@ -27,7 +27,13 @@ private:
 protected:
     bool CustomAppend(const interfaces::BlockInfo& block) override;
 
+    bool RequiresBlockUndoData() const override { return false; }
+
     BaseIndex::DB& GetDB() const override;
+
+    std::any CustomProcessBlock(const interfaces::BlockInfo& block) override {
+        return CustomAppend(block);
+    }
 
 public:
     /// Constructs the index, which becomes available to be queried.
@@ -35,6 +41,8 @@ public:
 
     // Destructor is declared because this class contains a unique_ptr to an incomplete type.
     virtual ~TxIndex() override;
+
+    bool AllowParallelSync() override { return true; }
 
     /// Look up a transaction by hash.
     ///
