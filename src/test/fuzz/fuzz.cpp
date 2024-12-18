@@ -116,6 +116,9 @@ void initialize()
     // - Creating a BasicTestingSetup or derived class will switch to a random seed.
     SeedRandomStateForTest(SeedRand::ZEROS);
 
+    // Set time to the genesis block timestamp for deterministic initialization.
+    SetMockTime(1231006505);
+
     // Terminate immediately if a fuzzing harness ever tries to create a socket.
     // Individual tests can override this by pointing CreateSock to a mocked alternative.
     CreateSock = [](int, int, int) -> std::unique_ptr<Sock> { std::terminate(); };

@@ -18,6 +18,7 @@
 #include <test/util/txmempool.h>
 #include <util/hasher.h>
 #include <util/rbf.h>
+#include <util/time.h>
 #include <txmempool.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -167,6 +168,7 @@ FUZZ_TARGET(txdownloadman, .init = initialize)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+    SetMockTime(ConsumeTime(fuzzed_data_provider));
 
     // Initialize txdownloadman
     bilingual_str error;
@@ -297,6 +299,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+    SetMockTime(ConsumeTime(fuzzed_data_provider));
 
     // Initialize a TxDownloadManagerImpl
     bilingual_str error;
