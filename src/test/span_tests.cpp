@@ -44,9 +44,9 @@ BOOST_AUTO_TEST_SUITE(span_tests)
 
 // Make sure template std::span template deduction guides accurately enable calls to
 // std::span constructor overloads that work, and disable calls to constructor overloads that
-// don't work. This makes it is possible to use the std::span constructor in a SFINAE
+// don't work. This makes it possible to use the std::span constructor in a SFINAE
 // contexts like in the Spannable function above to detect whether types are or
-// aren't compatible with Spans at compile time.
+// aren't compatible with std::span at compile time.
 BOOST_AUTO_TEST_CASE(span_constructor_sfinae)
 {
     BOOST_CHECK(Spannable(std::vector<int>{}));

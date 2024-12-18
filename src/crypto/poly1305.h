@@ -33,7 +33,7 @@ void poly1305_finish(poly1305_context *st, unsigned char mac[16]) noexcept;
 
 }  // namespace poly1305_donna
 
-/** C++ wrapper with std::byte std::span interface around poly1305_donna code. */
+/** C++ wrapper with std::byte span interface around poly1305_donna code. */
 class Poly1305
 {
     poly1305_donna::poly1305_context m_ctx;

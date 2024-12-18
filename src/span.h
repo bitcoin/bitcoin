@@ -11,38 +11,38 @@
 #include <type_traits>
 #include <utility>
 
-/** A Span is an object that can refer to a contiguous sequence of objects.
+/** A span is an object that can refer to a contiguous sequence of objects.
  *
- * Things to be aware of when writing code that deals with Spans:
+ * Things to be aware of when writing code that deals with spans:
  *
- * - Similar to references themselves, Spans are subject to reference lifetime
+ * - Similar to references themselves, spans are subject to reference lifetime
  *   issues. The user is responsible for making sure the objects pointed to by
- *   a Span live as long as the Span is used. For example:
+ *   a span live as long as the span is used. For example:
  *
  *       std::vector<int> vec{1,2,3,4};
- *       Span<int> sp(vec);
+ *       std::span<int> sp(vec);
  *       vec.push_back(5);
  *       printf("%i\n", sp.front()); // UB!
  *
  *   may exhibit undefined behavior, as increasing the size of a vector may
  *   invalidate references.
  *
- * - One particular pitfall is that Spans can be constructed from temporaries,
- *   but this is unsafe when the Span is stored in a variable, outliving the
+ * - One particular pitfall is that spans can be constructed from temporaries,
+ *   but this is unsafe when the span is stored in a variable, outliving the
  *   temporary. For example, this will compile, but exhibits undefined behavior:
  *
- *       Span<const int> sp(std::vector<int>{1, 2, 3});
+ *       std::span<const int> sp(std::vector<int>{1, 2, 3});
  *       printf("%i\n", sp.front()); // UB!
  *
  *   The lifetime of the vector ends when the statement it is created in ends.
- *   Thus the Span is left with a dangling reference, and using it is undefined.
+ *   Thus the span is left with a dangling reference, and using it is undefined.
  *
- * - Due to Span's automatic creation from range-like objects (arrays, and data
+ * - Due to spans automatic creation from range-like objects (arrays, and data
  *   types that expose a data() and size() member function), functions that
- *   accept a Span as input parameter can be called with any compatible
+ *   accept a span as input parameter can be called with any compatible
  *   range-like object. For example, this works:
  *
- *       void Foo(Span<const int> arg);
+ *       void Foo(std::span<const int> arg);
  *
  *       Foo(std::vector<int>{1, 2, 3}); // Works
  *
@@ -50,10 +50,10 @@
  *   container, and only about having exactly a range of elements. However it
  *   may also be surprising to see automatic conversions in this case.
  *
- *   When a function accepts a Span with a mutable element type, it will not
+ *   When a function accepts a span with a mutable element type, it will not
  *   accept temporaries; only variables or other references. For example:
  *
- *       void FooMut(Span<int> arg);
+ *       void FooMut(std::span<int> arg);
  *
  *       FooMut(std::vector<int>{1, 2, 3}); // Does not compile
  *       std::vector<int> baz{1, 2, 3};
@@ -69,7 +69,6 @@
  *   result will be present in that variable after the call. Passing a temporary
  *   is useless in that context.
  */
-#define Span std::span
 
 /** Pop the last element off a span, and return a reference to that element. */
 template <typename T>
@@ -79,18 +78,6 @@ T& SpanPopBack(std::span<T>& span)
     T& back = span.back();
     span = span.first(size - 1);
     return back;
-}
-
-// From C++20 as_bytes and as_writeable_bytes
-template <typename T>
-Span<const std::byte> AsBytes(Span<T> s) noexcept
-{
-    return {reinterpret_cast<const std::byte*>(s.data()), s.size_bytes()};
-}
-template <typename T>
-Span<std::byte> AsWritableBytes(Span<T> s) noexcept
-{
-    return {reinterpret_cast<std::byte*>(s.data()), s.size_bytes()};
 }
 
 template <typename V>
@@ -117,10 +104,10 @@ inline const unsigned char* UCharCast(const std::byte* c) { return reinterpret_c
 template <typename B>
 concept BasicByte = requires { UCharCast(std::span<B>{}.data()); };
 
-// Helper function to safely convert a Span to a Span<[const] unsigned char>.
+// Helper function to safely convert a span to a span<[const] unsigned char>.
 template <typename T, size_t N> constexpr auto UCharSpanCast(std::span<T, N> s) { return std::span<std::remove_pointer_t<decltype(UCharCast(s.data()))>, N>{UCharCast(s.data()), s.size()}; }
 
-/** Like the Span constructor, but for (const) unsigned char member types only. Only works for (un)signed char containers. */
+/** Like the std::span constructor, but for (const) unsigned char member types only. Only works for (un)signed char containers. */
 template <typename V> constexpr auto MakeUCharSpan(const V& v) -> decltype(UCharSpanCast(std::span{v})) { return UCharSpanCast(std::span{v}); }
 template <typename V> constexpr auto MakeWritableUCharSpan(V&& v) -> decltype(UCharSpanCast(std::span{std::forward<V>(v)})) { return UCharSpanCast(std::span{std::forward<V>(v)}); }
 

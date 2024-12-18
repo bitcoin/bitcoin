@@ -263,7 +263,7 @@ public:
         }
     }
 
-    /** Fill a std::span with random bytes. */
+    /** Fill a span with random bytes. */
     void fillrand(std::span<std::byte> span) noexcept
     {
         while (span.size() >= 8) {
@@ -400,7 +400,7 @@ public:
         return ReadLE64(buf.data());
     }
 
-    /** Fill a byte std::span with random bytes. This overrides the RandomMixin version. */
+    /** Fill a byte span with random bytes. This overrides the RandomMixin version. */
     void fillrand(std::span<std::byte> output) noexcept;
 };
 

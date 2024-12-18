@@ -593,7 +593,7 @@ private:
      *   child. It can modify the state. Children of a given node will have downfn()
      *   called in order.
      * - upfn is a callable (State&&, const Node&, std::span<Result>) -> std::optional<Result>,
-     *   which given a node, its state, and a std::span of the results of its children,
+     *   which given a node, its state, and a span of the results of its children,
      *   computes the result of the node. If std::nullopt is returned by upfn,
      *   TreeEvalMaybe() immediately returns std::nullopt.
      * The return value of TreeEvalMaybe is the result of the root node.
