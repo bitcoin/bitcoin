@@ -19,7 +19,7 @@
 #include <memory>
 #include <vector>
 
-static FlatFilePos WriteBlockToDisk(ChainstateManager& chainman)
+static FlatFilePos SaveBlockToDisk(ChainstateManager& chainman)
 {
     DataStream stream{benchmark::data::block413567};
     CBlock block;
@@ -34,7 +34,7 @@ static void ReadBlockFromDiskTest(benchmark::Bench& bench)
     ChainstateManager& chainman{*testing_setup->m_node.chainman};
 
     CBlock block;
-    const auto pos{WriteBlockToDisk(chainman)};
+    const auto pos{SaveBlockToDisk(chainman)};
 
     bench.run([&] {
         const auto success{chainman.m_blockman.ReadBlockFromDisk(block, pos)};
@@ -48,7 +48,7 @@ static void ReadRawBlockFromDiskTest(benchmark::Bench& bench)
     ChainstateManager& chainman{*testing_setup->m_node.chainman};
 
     std::vector<uint8_t> block_data;
-    const auto pos{WriteBlockToDisk(chainman)};
+    const auto pos{SaveBlockToDisk(chainman)};
 
     bench.run([&] {
         const auto success{chainman.m_blockman.ReadRawBlockFromDisk(block_data, pos)};

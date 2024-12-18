@@ -74,7 +74,7 @@ static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
 /** The maximum size of a blk?????.dat file (since 0.8) */
 static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 
-/** Size of header written by WriteBlockToDisk before a serialized CBlock */
+/** Size of header written by SaveBlockToDisk before a serialized CBlock */
 static constexpr size_t BLOCK_SERIALIZATION_HEADER_SIZE = std::tuple_size_v<MessageStartChars> + sizeof(unsigned int);
 
 // Because validation code takes pointers to the map's CBlockIndex objects, if
@@ -161,21 +161,13 @@ private:
      * blockfile info, and checks if there is enough disk space to save the block.
      *
      * The nAddSize argument passed to this function should include not just the size of the serialized CBlock, but also the size of
-     * separator fields which are written before it by WriteBlockToDisk (BLOCK_SERIALIZATION_HEADER_SIZE).
+     * separator fields (BLOCK_SERIALIZATION_HEADER_SIZE).
      */
     [[nodiscard]] FlatFilePos FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime);
     [[nodiscard]] bool FlushChainstateBlockFile(int tip_height);
     bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
 
     AutoFile OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false) const;
-
-    /**
-     * Write a block to disk. The pos argument passed to this function is modified by this call. Before this call, it should
-     * point to an unused file location where separator fields will be written, followed by the serialized CBlock data.
-     * After this call, it will point to the beginning of the serialized CBlock data, after the separator fields
-     * (BLOCK_SERIALIZATION_HEADER_SIZE)
-     */
-    bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const;
 
     /* Calculate the block/rev files to delete based on height specified by user with RPC command pruneblockchain */
     void FindFilesToPruneManual(
@@ -346,8 +338,7 @@ public:
      *
      * @param[in]  block        the block being processed
      * @param[in]  nHeight      the height of the block
-     * @param[in]  pos          the position of the serialized CBlock on disk. This is the position returned
-     *                          by WriteBlockToDisk pointing at the CBlock, not the separator fields before it
+     * @param[in]  pos          the position of the serialized CBlock on disk
      */
     void UpdateBlockInfo(const CBlock& block, unsigned int nHeight, const FlatFilePos& pos);
 
