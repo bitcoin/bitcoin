@@ -176,6 +176,16 @@ struct CoinSelectionParams {
     bool m_include_unsafe_inputs = false;
     /** The maximum weight for this transaction. */
     std::optional<int> m_max_tx_weight{std::nullopt};
+    /**
+     * When set, excess value for changeless results will be added to the target amount at the given position
+     * and not counted as waste. Otherwise excess value will be be applied to fees and counted as waste.
+    */
+    std::optional<uint32_t> m_add_excess_to_recipient_position;
+    /***
+     * amount that changeless spends can exceed the target amount.
+    */
+    CAmount m_max_excess{0};
+
 
     CoinSelectionParams(FastRandomContext& rng_fast, int change_output_size, int change_spend_size,
                         CAmount min_change_target, CFeeRate effective_feerate,
@@ -375,6 +385,9 @@ public:
     /** How much individual inputs overestimated the bump fees for shared ancestries */
     void SetBumpFeeDiscount(const CAmount discount);
 
+    /** Reset target to the current selected amount */
+    CAmount ResetTargetToSelectedValue();
+
     /** Calculates and stores the waste for this result given the cost of change
      * and the opportunity cost of spending these inputs now vs in the future.
      * If change exists, waste = change_cost + inputs * (effective_feerate - long_term_feerate) - bump_fee_group_discount
@@ -443,8 +456,8 @@ public:
     int GetWeight() const { return m_weight; }
 };
 
-util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change,
-                                             int max_selection_weight);
+util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& max_excess,
+                                             int max_selection_weight, const bool add_excess_to_target);
 
 util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, CAmount change_target, int max_selection_weight);
 

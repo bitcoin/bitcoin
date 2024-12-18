@@ -130,7 +130,7 @@ static void BnBExhaustion(benchmark::Bench& bench)
     bench.run([&] {
         // Benchmark
         CAmount target = make_hard_case(17, utxo_pool);
-        SelectCoinsBnB(utxo_pool, target, 0, MAX_STANDARD_TX_WEIGHT); // Should exhaust
+        SelectCoinsBnB(utxo_pool, target, 0, MAX_STANDARD_TX_WEIGHT, /*add_excess_to_target=*/false); // Should exhaust
 
         // Cleanup
         utxo_pool.clear();
