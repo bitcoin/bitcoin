@@ -653,12 +653,13 @@ uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256
     return proTxHash2;
 }
 
-std::set<uint256> GetQuorumConnections(const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman, const CSporkManager& sporkman,
-                                       gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& forMember, bool onlyOutbound)
+std::unordered_set<uint256, StaticSaltedHasher> GetQuorumConnections(
+    const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman, const CSporkManager& sporkman,
+    gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& forMember, bool onlyOutbound)
 {
     if (IsAllMembersConnectedEnabled(llmqParams.type, sporkman)) {
         auto mns = GetAllQuorumMembers(llmqParams.type, dmnman, pQuorumBaseBlockIndex);
-        std::set<uint256> result;
+        std::unordered_set<uint256, StaticSaltedHasher> result;
 
         for (const auto& dmn : mns) {
             if (dmn->proTxHash == forMember) {
@@ -677,23 +678,25 @@ std::set<uint256> GetQuorumConnections(const Consensus::LLMQParams& llmqParams, 
     return GetQuorumRelayMembers(llmqParams, dmnman, pQuorumBaseBlockIndex, forMember, onlyOutbound);
 }
 
-std::set<uint256> GetQuorumRelayMembers(const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
-                                        const uint256& forMember, bool onlyOutbound)
+std::unordered_set<uint256, StaticSaltedHasher> GetQuorumRelayMembers(const Consensus::LLMQParams& llmqParams,
+                                                                      CDeterministicMNManager& dmnman,
+                                                                      gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
+                                                                      const uint256& forMember, bool onlyOutbound)
 {
     auto mns = GetAllQuorumMembers(llmqParams.type, dmnman, pQuorumBaseBlockIndex);
-    std::set<uint256> result;
+    std::unordered_set<uint256, StaticSaltedHasher> result;
 
     auto calcOutbound = [&](size_t i, const uint256& proTxHash) {
+        // Relay to nodes at indexes (i+2^k)%n, where
+        //   k: 0..max(1, floor(log2(n-1))-1)
+        //   n: size of the quorum/ring
+        std::unordered_set<uint256, StaticSaltedHasher> r{};
         if (mns.size() == 1) {
             // No outbound connections are needed when there is one MN only.
             // Also note that trying to calculate results via the algorithm below
             // would result in an endless loop.
-            return std::set<uint256>();
+            return r;
         }
-        // Relay to nodes at indexes (i+2^k)%n, where
-        //   k: 0..max(1, floor(log2(n-1))-1)
-        //   n: size of the quorum/ring
-        std::set<uint256> r;
         int gap = 1;
         int gap_max = (int)mns.size() - 1;
         int k = 0;
@@ -775,8 +778,8 @@ bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& 
     LogPrint(BCLog::NET_NETCONN, "%s -- isMember=%d for quorum %s:\n",
             __func__, isMember, pQuorumBaseBlockIndex->GetBlockHash().ToString());
 
-    std::set<uint256> connections;
-    std::set<uint256> relayMembers;
+    std::unordered_set<uint256, StaticSaltedHasher> connections;
+    std::unordered_set<uint256, StaticSaltedHasher> relayMembers;
     if (isMember) {
         connections = GetQuorumConnections(llmqParams, dmnman, sporkman, pQuorumBaseBlockIndex, myProTxHash, true);
         relayMembers = GetQuorumRelayMembers(llmqParams, dmnman, pQuorumBaseBlockIndex, myProTxHash, true);
