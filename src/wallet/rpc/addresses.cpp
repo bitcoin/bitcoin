@@ -315,6 +315,7 @@ RPCHelpMan addmultisigaddress()
 
     // Make the descriptor
     std::unique_ptr<Descriptor> descriptor = InferDescriptor(GetScriptForDestination(dest), spk_man);
+    if (!descriptor) throw JSONRPCError(RPC_INTERNAL_ERROR, "Invalid descriptor generated");
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("address", EncodeDestination(dest));
