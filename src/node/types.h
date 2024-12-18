@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 //! @file node/types.h is a home for public enum and struct type definitions
-//! that are used by internally by node code, but also used externally by wallet,
+//! that are used internally by node code, but also used externally by wallet,
 //! mining or GUI code.
 //!
 //! This file is intended to define only simple types that do not have external
