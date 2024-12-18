@@ -393,6 +393,9 @@ struct SnapshotTestSetup : TestChain100Setup {
                 .chainparams = chainman_opts.chainparams,
                 .blocks_dir = m_args.GetBlocksDirPath(),
                 .notifications = chainman_opts.notifications,
+                .block_tree_db_dir = chainman.m_blockman.m_opts.block_tree_db_dir,
+                .block_tree_db_in_memory = chainman.m_blockman.m_opts.block_tree_db_in_memory,
+                .block_tree_db_cache_size = chainman.m_blockman.m_opts.block_tree_db_cache_size,
             };
             // For robustness, ensure the old manager is destroyed before creating a
             // new one.
