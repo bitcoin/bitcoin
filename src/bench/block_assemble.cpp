@@ -64,6 +64,9 @@ static void BlockAssemblerAddPackageTxns(benchmark::Bench& bench)
     assembler_options.test_block_validity = false;
     assembler_options.coinbase_output_script = P2WSH_OP_TRUE;
 
+    // Connect genesis block
+    assert(testing_setup->m_node.chainman->ActiveChainstate().LoadGenesisBlock());
+
     bench.run([&] {
         PrepareBlock(testing_setup->m_node, assembler_options);
     });
