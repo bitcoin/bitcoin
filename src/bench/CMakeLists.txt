@@ -11,9 +11,6 @@ add_executable(bench_bitcoin
   nanobench.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/data/block413567.raw.h
 # Benchmarks:
-  addrman.cpp
-  base58.cpp
-  bech32.cpp
   bip324_ecdh.cpp
   block_assemble.cpp
   ccoins_caching.cpp
@@ -23,7 +20,6 @@ add_executable(bench_bitcoin
   checkqueue.cpp
   cluster_linearize.cpp
   crypto_hash.cpp
-  descriptors.cpp
   disconnected_transactions.cpp
   duplicate_inputs.cpp
   ellswift.cpp
@@ -33,13 +29,10 @@ add_executable(bench_bitcoin
   index_blockfilter.cpp
   load_external.cpp
   lockedpool.cpp
-  logging.cpp
   mempool_ephemeral_spends.cpp
   mempool_eviction.cpp
   mempool_stress.cpp
   merkle_root.cpp
-  parse_hex.cpp
-  peer_eviction.cpp
   poly1305.cpp
   pool.cpp
   prevector.cpp
@@ -50,8 +43,6 @@ add_executable(bench_bitcoin
   rpc_mempool.cpp
   sign_transaction.cpp
   streams_findbyte.cpp
-  strencodings.cpp
-  util_time.cpp
   verify_script.cpp
   xor.cpp
 )
