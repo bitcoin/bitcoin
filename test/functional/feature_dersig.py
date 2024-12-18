@@ -109,18 +109,23 @@ class BIP66Test(BitcoinTestFramework):
         self.log.info("Test that transactions with non-DER signatures cannot appear in a block")
         block.nVersion = 4
 
-        spendtx = self.create_tx(self.coinbase_txids[1])
+        coin_txid = self.coinbase_txids[1]
+        spendtx = self.create_tx(coin_txid)
         unDERify(spendtx)
         spendtx.rehash()
 
         # First we show that this tx is valid except for DERSIG by getting it
         # rejected from the mempool for exactly that reason.
+        spendtx_txid = spendtx.hash
+        spendtx_wtxid = spendtx.getwtxid()
         assert_equal(
             [{
-                'txid': spendtx.hash,
-                'wtxid': spendtx.getwtxid(),
+                'txid': spendtx_txid,
+                'wtxid': spendtx_wtxid,
                 'allowed': False,
                 'reject-reason': 'mandatory-script-verify-flag-failed (Non-canonical DER signature)',
+                'reject-details': 'mandatory-script-verify-flag-failed (Non-canonical DER signature), ' +
+                                  f"input 0 of {spendtx_txid} (wtxid {spendtx_wtxid}), spending {coin_txid}:0"
             }],
             self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0),
         )
