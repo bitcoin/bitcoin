@@ -93,6 +93,7 @@ constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] con
  * - For fatal errors, use Assert().
  * - For non-fatal errors in interactive sessions (e.g. RPC or command line
  *   interfaces), CHECK_NONFATAL() might be more appropriate.
+ *   Note that the assumption is always fully evaluated - even in non-debug builds.
  */
 #define Assume(val) inline_assertion_check<false>(val, __FILE__, __LINE__, __func__, #val)
 
