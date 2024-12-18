@@ -1,6 +1,6 @@
 # OpenBSD Build Guide
 
-**Updated for OpenBSD [7.5](https://www.openbsd.org/75.html)**
+**Updated for OpenBSD [7.6](https://www.openbsd.org/76.html)**
 
 This guide describes how to build bitcoind, command-line utilities, and GUI on OpenBSD.
 
@@ -90,7 +90,7 @@ There is an included test suite that is useful for testing code changes when dev
 To run the test suite (recommended), you will need to have Python 3 installed:
 
 ```bash
-pkg_add python  # Select the newest version of the package.
+pkg_add python py3-zmq  # Select the newest version of the python package if necessary.
 ```
 
 ## Building Bitcoin Core
