@@ -24,12 +24,12 @@ struct CheckGlobalsImpl {
                          "The current fuzz target used the global random state.\n\n"
 
                          "This is acceptable, but requires the fuzz target to call \n"
-                         "SeedRandomStateForTest(SeedRand::ZEROS) at the beginning \n"
-                         "of processing the fuzz input.\n\n"
+                         "SeedRandomStateForTest(SeedRand::ZEROS) in the first line \n"
+                         "of the FUZZ_TARGET function.\n\n"
 
                          "An alternative solution would be to avoid any use of globals.\n\n"
 
-                         "Without a solution, fuzz stability and determinism can lead \n"
+                         "Without a solution, fuzz instability and non-determinism can lead \n"
                          "to non-reproducible bugs or inefficient fuzzing.\n\n"
                       << std::endl;
             std::abort(); // Abort, because AFL may try to recover from a std::exit

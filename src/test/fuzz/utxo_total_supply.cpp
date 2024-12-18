@@ -21,6 +21,7 @@ using node::BlockAssembler;
 
 FUZZ_TARGET(utxo_total_supply)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     /** The testing setup that creates a chainman only (no chainstate) */
     ChainTestingSetup test_setup{
         ChainType::REGTEST,
@@ -28,7 +29,6 @@ FUZZ_TARGET(utxo_total_supply)
             .extra_args = {"-testactivationheight=bip34@2"},
         },
     };
-    SeedRandomStateForTest(SeedRand::ZEROS); // Can not be done before test_setup
     // Create chainstate
     test_setup.LoadVerifyActivateChainstate();
     auto& node{test_setup.m_node};
