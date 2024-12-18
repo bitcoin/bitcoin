@@ -159,7 +159,15 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vout[0].nValue = 5000000000LL - 1000 - 50000 - feeToUse;
     Txid hashLowFeeTx = tx.GetHash();
     AddToMempool(tx_mempool, entry.Fee(feeToUse).FromTx(tx));
-    block_template = miner->createNewBlock(options);
+
+    // waitNext() should return nullptr because there is no better template
+    auto should_be_nullptr = block_template->waitNext(1, MillisecondsDouble{0});
+    BOOST_REQUIRE(should_be_nullptr == nullptr);
+
+    // Unless it's called with fee_threshold=0 and timeout=0
+    block_template = block_template->waitNext(0, MillisecondsDouble{0});
+    BOOST_REQUIRE(block_template != nullptr);
+
     BOOST_REQUIRE(block_template);
     block = block_template->getBlock();
     // Verify that the free tx and the low fee tx didn't get selected
@@ -175,7 +183,9 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vout[0].nValue -= 2; // Now we should be just over the min relay fee
     hashLowFeeTx = tx.GetHash();
     AddToMempool(tx_mempool, entry.Fee(feeToUse + 2).FromTx(tx));
-    block_template = miner->createNewBlock(options);
+
+    // waitNext() should return if fees for the new template are at least 1 sat up
+    block_template = block_template->waitNext(1);
     BOOST_REQUIRE(block_template);
     block = block_template->getBlock();
     BOOST_REQUIRE_EQUAL(block.vtx.size(), 6U);
@@ -650,7 +660,9 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         const int current_height{miner->getTip()->height};
 
         // Simple block creation, nothing special yet:
-        block_template = miner->createNewBlock(options);
+        if (current_height % 2 == 0) {
+            block_template = miner->createNewBlock(options);
+        } // for odd heights the next template is created at the end of this loop
         BOOST_REQUIRE(block_template);
 
         CBlock block{block_template->getBlock()};
@@ -677,13 +689,17 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         if (current_height % 2 == 0) {
             BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
         } else {
-            BOOST_REQUIRE(block_template->submitSolution(block.nVersion, block.nTime, block.nNonce, MakeTransactionRef(std::move(txCoinbase))));
+            BOOST_REQUIRE(block_template->submitSolution(block.nVersion, block.nTime, block.nNonce, MakeTransactionRef(txCoinbase)));
         }
         // ProcessNewBlock and submitSolution do not check if the new block is
         // valid. If it is, they will wait for the tip to update. Therefore the
-        // following check will either return immediately, or be stuck indefinately.
-        // It's mainly there to increase test coverage.
-        miner->waitTipChanged(block.hashPrevBlock);
+        // following checks will either return immediately, or be stuck indefinately.
+        // They're mainly there to increase test coverage.
+        if (current_height % 2 == 0) {
+            block_template = block_template->waitNext();
+        } else {
+            miner->waitTipChanged(block.hashPrevBlock);
+        }
     }
 
     LOCK(cs_main);
