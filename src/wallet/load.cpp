@@ -52,7 +52,7 @@ bool VerifyWallets(WalletContext& context)
 
     LogPrintf("Using wallet directory %s\n", fs::PathToString(GetWalletDir()));
 
-    chain.initMessage(_("Verifying wallet(s)…").translated);
+    chain.initMessage(_("Verifying wallet(s)…"));
 
     // For backwards compatibility if an unnamed top level wallet exists in the
     // wallets directory, include it in the default list of wallets to load.
@@ -135,7 +135,7 @@ bool LoadWallets(WalletContext& context)
             if (!database && status == DatabaseStatus::FAILED_NOT_FOUND) {
                 continue;
             }
-            chain.initMessage(_("Loading wallet…").translated);
+            chain.initMessage(_("Loading wallet…"));
             std::shared_ptr<CWallet> pwallet = database ? CWallet::Create(context, name, std::move(database), options.create_flags, error, warnings) : nullptr;
             if (!warnings.empty()) chain.initWarning(Join(warnings, Untranslated("\n")));
             if (!pwallet) {
