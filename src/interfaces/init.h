@@ -37,6 +37,7 @@ public:
     virtual std::unique_ptr<WalletLoader> makeWalletLoader(Chain& chain) { return nullptr; }
     virtual std::unique_ptr<Echo> makeEcho() { return nullptr; }
     virtual Ipc* ipc() { return nullptr; }
+    virtual bool canConnectIpc() { return false; }
     virtual bool canListenIpc() { return false; }
 };
 
