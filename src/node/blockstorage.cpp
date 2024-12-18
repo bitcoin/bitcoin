@@ -945,7 +945,9 @@ bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValid
     // Write undo information to disk
     if (block.GetUndoPos().IsNull()) {
         FlatFilePos pos;
-        if (!FindUndoPos(state, block.nFile, pos, ::GetSerializeSize(blockundo) + 40)) {
+        const uint32_t blockundo_size{static_cast<uint32_t>(GetSerializeSize(blockundo))};
+        assert(UNDO_DATA_DISK_OVERHEAD == 40);
+        if (!FindUndoPos(state, block.nFile, pos, blockundo_size + UNDO_DATA_DISK_OVERHEAD)) {
             LogError("%s: FindUndoPos failed\n", __func__);
             return false;
         }
@@ -957,12 +959,10 @@ bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValid
         }
 
         // Write index header
-        unsigned int nSize = GetSerializeSize(blockundo);
-        fileout << GetParams().MessageStart() << nSize;
-
-        // Write undo data
-        long fileOutPos = fileout.tell();
-        pos.nPos = (unsigned int)fileOutPos;
+        assert(blockundo_size == GetSerializeSize(blockundo));
+        fileout << GetParams().MessageStart() << blockundo_size;
+        pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
+        assert(pos.nPos == fileout.tell());
         fileout << blockundo;
 
         // calculate & write checksum
@@ -1092,17 +1092,12 @@ bool BlockManager::ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatF
 
 FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight)
 {
-    unsigned int nBlockSize = ::GetSerializeSize(TX_WITH_WITNESS(block));
-    // Account for the 4 magic message start bytes + the 4 length bytes (8 bytes total,
-    // defined as BLOCK_SERIALIZATION_HEADER_SIZE)
-    nBlockSize += static_cast<unsigned int>(BLOCK_SERIALIZATION_HEADER_SIZE);
-    FlatFilePos pos{FindNextBlockPos(nBlockSize, nHeight, block.GetBlockTime())};
+    const uint32_t block_size{static_cast<uint32_t>(GetSerializeSize(TX_WITH_WITNESS(block)))};
+    FlatFilePos pos{FindNextBlockPos(block_size + BLOCK_SERIALIZATION_HEADER_SIZE, nHeight, block.GetBlockTime())};
     if (pos.IsNull()) {
         LogError("%s: FindNextBlockPos failed\n", __func__);
         return FlatFilePos();
     }
-
-    // Open history file to append
     AutoFile fileout{OpenBlockFile(pos)};
     if (fileout.IsNull()) {
         LogError("%s: OpenBlockFile failed\n", __func__);
@@ -1110,15 +1105,11 @@ FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight)
         return FlatFilePos();
     }
 
-    // Write index header
-    unsigned int nSize = GetSerializeSize(TX_WITH_WITNESS(block));
-    fileout << GetParams().MessageStart() << nSize;
-
-    // Write block
-    long fileOutPos = fileout.tell();
-    pos.nPos = (unsigned int)fileOutPos;
+    assert(block_size == GetSerializeSize(TX_WITH_WITNESS(block)));
+    fileout << GetParams().MessageStart() << block_size;
+    pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
+    assert(pos.nPos == fileout.tell());
     fileout << TX_WITH_WITNESS(block);
-
     return pos;
 }
 
