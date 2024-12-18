@@ -676,7 +676,7 @@ bool BlockManager::UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex& in
     // Open history file to read
     AutoFile filein{OpenUndoFile(pos, true)};
     if (filein.IsNull()) {
-        LogError("%s: OpenUndoFile failed for %s\n", __func__, pos.ToString());
+        LogError("OpenUndoFile failed for %s", pos.ToString());
         return false;
     }
 
@@ -946,24 +946,21 @@ bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValid
     if (block.GetUndoPos().IsNull()) {
         FlatFilePos pos;
         const unsigned int blockundo_size{static_cast<unsigned int>(GetSerializeSize(blockundo))};
-        static_assert(UNDO_DATA_DISK_OVERHEAD == 40); // TODO remove
         if (!FindUndoPos(state, block.nFile, pos, blockundo_size + UNDO_DATA_DISK_OVERHEAD)) {
-            LogError("%s: FindUndoPos failed\n", __func__);
+            LogError("FindUndoPos failed");
             return false;
         }
         // Open history file to append
         AutoFile fileout{OpenUndoFile(pos)};
         if (fileout.IsNull()) {
-            LogError("%s: OpenUndoFile failed\n", __func__);
+            LogError("OpenUndoFile failed");
             return FatalError(m_opts.notifications, state, _("Failed to write undo data."));
         }
 
         // Write index header
-        assert(blockundo_size == GetSerializeSize(blockundo)); // TODO remove
         fileout << GetParams().MessageStart() << blockundo_size;
         // Write undo data
         pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
-        assert(pos.nPos == fileout.tell()); // TODO remove
         fileout << blockundo;
 
         // Calculate & write checksum
@@ -1096,22 +1093,20 @@ FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight)
     const unsigned int block_size{static_cast<unsigned int>(GetSerializeSize(TX_WITH_WITNESS(block)))};
     FlatFilePos pos{FindNextBlockPos(block_size + BLOCK_SERIALIZATION_HEADER_SIZE, nHeight, block.GetBlockTime())};
     if (pos.IsNull()) {
-        LogError("%s: FindNextBlockPos failed\n", __func__);
+        LogError("FindNextBlockPos failed");
         return FlatFilePos();
     }
     AutoFile fileout{OpenBlockFile(pos)};
     if (fileout.IsNull()) {
-        LogError("%s: OpenBlockFile failed\n", __func__);
+        LogError("OpenBlockFile failed");
         m_opts.notifications.fatalError(_("Failed to write block."));
         return FlatFilePos();
     }
 
-    assert(block_size == GetSerializeSize(TX_WITH_WITNESS(block))); // TODO remove
     // Write index header
     fileout << GetParams().MessageStart() << block_size;
     // Write block
     pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
-    assert(pos.nPos == fileout.tell()); // TODO remove
     fileout << TX_WITH_WITNESS(block);
     return pos;
 }
