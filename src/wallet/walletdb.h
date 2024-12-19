@@ -21,6 +21,7 @@ class uint256;
 struct CBlockLocator;
 
 namespace wallet {
+struct BestBlock;
 class CKeyPool;
 class CMasterKey;
 class CWallet;
@@ -249,8 +250,8 @@ public:
     bool WriteWatchOnly(const CScript &script, const CKeyMetadata &keymeta);
     bool EraseWatchOnly(const CScript &script);
 
-    bool WriteBestBlock(const CBlockLocator& locator);
-    bool ReadBestBlock(CBlockLocator& locator);
+    bool WriteBestBlock(const BestBlock& best_block);
+    bool ReadBestBlock(BestBlock& best_block);
 
     // Returns true if wallet stores encryption keys
     bool IsEncrypted();
