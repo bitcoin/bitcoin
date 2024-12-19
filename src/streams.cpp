@@ -51,7 +51,7 @@ void AutoFile::seek(int64_t offset, int origin)
     }
 }
 
-int64_t AutoFile::tell()
+int64_t AutoFile::tell() const
 {
     if (!m_position.has_value()) throw std::ios_base::failure("AutoFile::tell: position unknown");
     return *m_position;
