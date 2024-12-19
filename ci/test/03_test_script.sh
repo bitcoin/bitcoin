@@ -146,21 +146,74 @@ if [ "$RUN_CHECK_DEPS" = "true" ]; then
   "${BASE_ROOT_DIR}/contrib/devtools/check-deps.sh" .
 fi
 
+function get_interfaces()
+{
+  set -o pipefail
+  ifconfig | awk -F ':| ' '/^[^[:space:]]/ { if (!match($1, /^lo/)) { print $1 } }'
+  set +o pipefail
+}
+
+function tcpdump_file()
+{
+  echo "/tmp/tcpdump_$1_$2"
+}
+
+function traffic_monitor_begin()
+{
+  test_name="$1"
+  for ifname in $(get_interfaces) ; do
+    tcpdump -nU -i "$ifname" -w "$(tcpdump_file "$test_name" "$ifname")" &
+  done
+}
+
+function traffic_monitor_end()
+{
+  test_name="$1"
+
+  for ifname in $(get_interfaces) ; do
+    f=$(tcpdump_file "$test_name" "$ifname")
+    if [ ! -e "$f" ] && [ "$FILE_ENV" != "./ci/test/00_setup_env_native_asan.sh" ] ; then
+      # In some CI environments this script is not running as root and so the
+      # tcpdump errors and does not create $f. Skip silently those, but we
+      # need at least one where tcpdump can run and this is the ASAN one. So
+      # treat the absence of $f as an error only on the ASAN task.
+      continue
+    fi
+    # We are running as root and those files are created with owner:group =
+    # tcpdump:tcpdump and then `tcpdump -r` refuses to read them with an error
+    # "permission denied" if they are not owned by root:root.
+    chown root:root "$f"
+    out="$(tcpdump -n -r "$f" --direction=out tcp or udp)"
+    if [ -n "$out" ] ; then
+      echo "Error: outbound TCP or UDP packets on the non loopback interface generated during $test_name tests:" >&2
+      tcpdump -n -r "$f" tcp or udp
+      exit 1
+    fi
+  done
+}
+
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
+  traffic_monitor_begin "unitparallel"
   DIR_UNIT_TEST_DATA="${DIR_UNIT_TEST_DATA}" LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" CTEST_OUTPUT_ON_FAILURE=ON ctest --stop-on-failure "${MAKEJOBS}" --timeout $(( TEST_RUNNER_TIMEOUT_FACTOR * 60 ))
+  traffic_monitor_end "unitparallel"
 fi
 
 if [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]; then
+  traffic_monitor_begin "unitsequential"
   DIR_UNIT_TEST_DATA="${DIR_UNIT_TEST_DATA}" LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" "${BASE_OUTDIR}"/bin/test_bitcoin --catch_system_errors=no -l test_suite
+  traffic_monitor_end "unitsequential"
 fi
 
 if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
+  traffic_monitor_begin "functional"
   # parses TEST_RUNNER_EXTRA as an array which allows for multiple arguments such as TEST_RUNNER_EXTRA='--exclude "rpc_bind.py --ipv6"'
   eval "TEST_RUNNER_EXTRA=($TEST_RUNNER_EXTRA)"
   LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" test/functional/test_runner.py --ci "${MAKEJOBS}" --tmpdirprefix "${BASE_SCRATCH_DIR}"/test_runner/ --ansi --combinedlogslen=99999999 --timeout-factor="${TEST_RUNNER_TIMEOUT_FACTOR}" "${TEST_RUNNER_EXTRA[@]}" --quiet --failfast
+  traffic_monitor_end "functional"
 fi
 
 if [ "${RUN_TIDY}" = "true" ]; then
+  traffic_monitor_begin "tidy"
   cmake -B /tidy-build -DLLVM_DIR=/usr/lib/llvm-"${TIDY_LLVM_V}"/cmake -DCMAKE_BUILD_TYPE=Release -S "${BASE_ROOT_DIR}"/contrib/devtools/bitcoin-tidy
   cmake --build /tidy-build "$MAKEJOBS"
   cmake --build /tidy-build --target bitcoin-tidy-tests "$MAKEJOBS"
@@ -185,9 +238,12 @@ if [ "${RUN_TIDY}" = "true" ]; then
   cd "${BASE_ROOT_DIR}/src"
   python3 "/include-what-you-use/fix_includes.py" --nosafe_headers < /tmp/iwyu_ci.out
   git --no-pager diff
+  traffic_monitor_end "tidy"
 fi
 
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
+  traffic_monitor_begin "fuzz"
   # shellcheck disable=SC2086
   LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" test/fuzz/test_runner.py ${FUZZ_TESTS_CONFIG} "${MAKEJOBS}" -l DEBUG "${DIR_FUZZ_IN}" --empty_min_time=60
+  traffic_monitor_end "fuzz"
 fi
