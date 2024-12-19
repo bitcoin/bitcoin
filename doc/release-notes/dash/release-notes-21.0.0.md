@@ -235,7 +235,7 @@ Remote Procedure Calls (RPCs)
   support for coin selection and a custom fee rate. The `send` RPC is experimental
   and may change in subsequent releases. Using it is encouraged once it's no
   longer experimental: `sendmany` and `sendtoaddress` may be deprecated in a future release.
-- A new `quorum signplatform` RPC is added for Platform needs. This composite command limits Platform to only request signatures from the Platform quorum type. It is equivalent to `quorum sign <platform type>`.
+- A new `quorum platformsign` RPC is added for Platform needs. This composite command limits Platform to only request signatures from the Platform quorum type. It is equivalent to `quorum sign <platform type>`.
 
 ### RPC changes
 - `createwallet` has an updated argument list: `createwallet "wallet_name" ( disable_private_keys blank "passphrase" avoid_reuse descriptors load_on_startup )`

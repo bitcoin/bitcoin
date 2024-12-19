@@ -86,10 +86,10 @@ likely require a reindex.
 - **glibc Requirement**
     - The minimum required glibc to run Dash Core is now **2.31**. This means that **RHEL 8** and **Ubuntu 18.04 (Bionic)** are no longer supported.
 
-## New RPCs
+- **FreeBSD Improvements**
+    - Fixed issues with building Dash Core on FreeBSD.
 
-- **`quorum platformsign`**
-    - A new subcommand has been introduced, offering a structured way to perform platform-related quorum signing operations.
+## New RPCs
 
 - **`coinjoinsalt`**
     - Allows manipulation of a CoinJoin salt stored in a wallet.
@@ -153,7 +153,7 @@ likely require a reindex.
 ## Devnet Breaking Changes
 
 - **Hardfork Activation Changes**
-    - `BRR` (`realloc`), `DIP0020`, `DIP0024`, `V19`, `V20`, and `MN_R` hardforks are now activated at **block 2** instead of block **300** on devnets.
+    - `BRR` (`realloc`), `DIP0020`, `DIP0024`, `V19`, `V20`, and `MN_RR` hardforks are now activated at **block 2** instead of block **300** on devnets.
     - **Implications:**
         - Breaking change.
         - Inability to sync on devnets created with earlier Dash Core versions and vice versa.
