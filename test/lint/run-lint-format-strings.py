@@ -14,6 +14,7 @@ import sys
 
 FALSE_POSITIVES = [
     ("src/clientversion.cpp", "strprintf(_(COPYRIGHT_HOLDERS), COPYRIGHT_HOLDERS_SUBSTITUTION)"),
+    ("src/test/logging_tests.cpp", 'tfm::format("Custom #%d %s", ++m_counter, tfm::format(fmt, args...))'),
     ("src/test/translation_tests.cpp", "strprintf(format, arg)"),
     ("src/test/util_string_tests.cpp", 'tfm::format(ConstevalFormatString<2>{"%*s"}, "hi", "hi")'),
     ("src/test/util_string_tests.cpp", 'tfm::format(ConstevalFormatString<2>{"%.*s"}, "hi", "hi")'),
