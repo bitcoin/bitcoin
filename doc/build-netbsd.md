@@ -64,13 +64,13 @@ pkgin install db4
 ```
 
 #### GUI Dependencies
-###### Qt5
+###### Qt6
 
 Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
 the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
 
 ```bash
-pkgin install qt5-qtbase qt5-qttools
+pkgin install qt6-qtbase qt6-qttools
 ```
 
 ###### libqrencode
