@@ -77,7 +77,7 @@ static const char *filenames[] = {
         "fail15.json",
         "fail16.json",
         "fail17.json",
-        //"fail18.json",             // investigate
+        "fail18.json",
         "fail19.json",
         "fail1.json",
         "fail20.json",
