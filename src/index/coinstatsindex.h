@@ -51,6 +51,8 @@ protected:
 
     bool CustomRewind(const interfaces::BlockRef& current_tip, const interfaces::BlockRef& new_tip) override;
 
+    bool RequiresBlockUndoData() const override { return true; }
+
     BaseIndex::DB& GetDB() const override { return *m_db; }
 
 public:
