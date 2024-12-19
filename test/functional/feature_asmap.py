@@ -54,6 +54,12 @@ class AsmapTest(BitcoinTestFramework):
         with self.node.assert_debug_log(['Using /16 prefix for IP bucketing']):
             self.start_node(0)
 
+    def test_noasmap_arg(self):
+        self.log.info('Test bitcoind with -noasmap arg passed')
+        self.stop_node(0)
+        with self.node.assert_debug_log(['Using /16 prefix for IP bucketing']):
+            self.start_node(0, ["-noasmap"])
+
     def test_asmap_with_absolute_path(self):
         self.log.info('Test bitcoind -asmap=<absolute path>')
         self.stop_node(0)
@@ -137,6 +143,7 @@ class AsmapTest(BitcoinTestFramework):
         self.asmap_raw = os.path.join(base_dir, ASMAP)
 
         self.test_without_asmap_arg()
+        self.test_noasmap_arg()
         self.test_asmap_with_absolute_path()
         self.test_asmap_with_relative_path()
         self.test_default_asmap()
