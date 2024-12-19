@@ -26,7 +26,9 @@ if(HAVE_SYS_TYPES_H AND HAVE_IFADDRS_H)
 endif()
 
 include(TestAppendRequiredLibraries)
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Generic")
 test_append_atomic_library(core_interface)
+endif()
 
 check_cxx_symbol_exists(std::system "cstdlib" HAVE_STD_SYSTEM)
 check_cxx_symbol_exists(::_wsystem "stdlib.h" HAVE__WSYSTEM)
