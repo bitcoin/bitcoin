@@ -7,8 +7,9 @@
 
 #include <stdint.h>
 
-#include <span.h>
-#include <uint256.h>
+class uint256;
+template <typename C>
+class Span;
 
 /** SipHash-2-4 */
 class CSipHasher

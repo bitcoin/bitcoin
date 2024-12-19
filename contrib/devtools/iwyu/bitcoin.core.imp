@@ -1,3 +1,11 @@
-# Nothing for now.
 [
+  # Compiler intrinsics
+  { include: [ "<emmintrin.h>", private, "<immintrin.h>", public ] },
+  { include: [ "<smmintrin.h>", private, "<immintrin.h>", public ] },
+  { include: [ "<tmmintrin.h>", private, "<immintrin.h>", public ] },
+
+  # False positive warnings
+  # See: https://github.com/include-what-you-use/include-what-you-use/issues/1616
+  { include: [ "<iterator>", public, "<utility>", public ] },
+  { include: [ "<tuple>", public, "<array>", public ] },
 ]
