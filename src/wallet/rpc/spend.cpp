@@ -418,7 +418,7 @@ RPCHelpMan sendmany()
 RPCHelpMan settxfee()
 {
     return RPCHelpMan{"settxfee",
-                "\nSet the transaction fee rate in " + CURRENCY_UNIT + "/kvB for this wallet. Overrides the global -paytxfee command line parameter.\n"
+                "\n(DEPRECATED)Set the transaction fee rate in " + CURRENCY_UNIT + "/kvB for this wallet. Overrides the global -paytxfee command line parameter.\n"
                 "Can be deactivated by passing 0 as the fee. In that case automatic fee selection will be used by default.\n",
                 {
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The transaction fee rate in " + CURRENCY_UNIT + "/kvB"},
@@ -436,6 +436,10 @@ RPCHelpMan settxfee()
     if (!pwallet) return UniValue::VNULL;
 
     LOCK(pwallet->cs_wallet);
+
+    if (!pwallet->chain().rpcEnableDeprecated("settxfee")) {
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "Using settxfee is deprecated. Use settxfeerate instead or restart bitcoind with -deprecatedrpc=settxfee. This functionality will be removed in x.xx");
+    }
 
     CAmount nAmount = AmountFromValue(request.params[0]);
     CFeeRate tx_fee_rate(nAmount, 1000);
@@ -456,6 +460,53 @@ RPCHelpMan settxfee()
     };
 }
 
+RPCHelpMan settxfeerate()
+{
+    return RPCHelpMan{"settxfeerate",
+                "\nSet the transaction fee rate in " + CURRENCY_ATOM + "/vB for this wallet. Overrides the global -paytxfee command line parameter.\n"
+                "Can be deactivated by passing 0 as the fee. In that case automatic fee selection will be used by default.\n",
+                {
+                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The transaction fee rate in " + CURRENCY_ATOM + "/vB"},
+                },
+                RPCResult{
+                    RPCResult::Type::BOOL, "", "Returns true if successful"
+                },
+                RPCExamples{
+                    HelpExampleCli("settxfeerate", "1")
+            + HelpExampleRpc("settxfeerate", "1")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+
+    CAmount test = AmountFromValue(request.params[0]);
+    double conv_ammount = (static_cast<double>(test) / COIN) / 100000;  // Convert to BTC/kvB
+    CAmount nAmount = AmountFromValue(UniValue(conv_ammount));
+
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+
+    if (!pwallet) return UniValue::VNULL;
+
+    LOCK(pwallet->cs_wallet);
+
+    CFeeRate tx_fee_rate(nAmount, 1000);
+    CFeeRate max_tx_fee_rate(pwallet->m_default_max_tx_fee, 1000);
+    if (tx_fee_rate == CFeeRate(0)) {
+        // automatic selection
+    } else if (tx_fee_rate < pwallet->chain().relayMinFee()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("txfee cannot be less than min relay tx fee (%s)", pwallet->chain().relayMinFee().ToString(FeeEstimateMode::SAT_VB)));
+    } else if (tx_fee_rate < pwallet->m_min_fee) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("txfee cannot be less than wallet min fee (%s)", pwallet->m_min_fee.ToString(FeeEstimateMode::SAT_VB)));
+    } else if (tx_fee_rate > max_tx_fee_rate) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("txfee cannot be more than wallet max tx fee (%s)", max_tx_fee_rate.ToString(FeeEstimateMode::SAT_VB)));
+    }
+
+    pwallet->m_pay_tx_fee = tx_fee_rate;
+    return true;
+
+
+},
+    };
+}
 
 // Only includes key documentation where the key is snake_case in all RPC methods. MixedCase keys can be added later.
 static std::vector<RPCArg> FundTxDoc(bool solving_data = true)
