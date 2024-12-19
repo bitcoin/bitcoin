@@ -6,8 +6,10 @@
 #include <common/args.h>
 #include <common/init.h>
 #include <logging.h>
+#include <node/interface_ui.h>
 #include <tinyformat.h>
 #include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/translation.h>
 
 #include <algorithm>
@@ -61,6 +63,35 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
         if (!fs::exists(net_path)) {
             fs::create_directories(net_path / "wallets");
         }
+
+        // Warn if we are trying to put the datadir on an exFAT fs on MacOS
+        // This is an upstream issue known to cause bugs, see #28552
+#ifdef __APPLE__
+        struct PathCheck {
+            fs::path path;
+            std::string_view description;
+        };
+        std::array<PathCheck, 2> paths_to_check{{
+            {args.GetDataDirNet(), "data directory"},
+            {args.GetBlocksDirPath(), "blocks directory"}
+        }};
+        for (const auto& check : paths_to_check) {
+            FSType fs_type = GetFilesystemType(check.path);
+            switch(fs_type) {
+                case FSType::EXFAT:
+                    InitWarning(strprintf(_("Specified %s \"%s\" is exFAT which is known to have intermittent corruption problems on MacOS. "
+                        "See https://github.com/bitcoin/bitcoin/blob/master/doc/files.md#filesystem-recommendations for more information."),
+                        check.description,
+                        fs::PathToString(check.path)));
+                    break;
+                case FSType::ERROR:
+                    LogInfo("Failed to detect filesystem type of %s: %s\n", check.description, fs::PathToString(check.path));
+                    break;
+                default:
+                    break;
+            }
+        }
+#endif
 
         // Show an error or warn/log if there is a bitcoin.conf file in the
         // datadir that is being ignored.
