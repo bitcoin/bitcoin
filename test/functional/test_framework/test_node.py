@@ -425,6 +425,9 @@ class TestNode():
         # Check that stderr is as expected
         self.stderr.seek(0)
         stderr = self.stderr.read().decode('utf-8').strip()
+        # On systems such as NetBSD, the following warning is typically printed.
+        allowed_warning = r"Warning: Reducing -maxconnections from \d+ to \d+, because of system limitations\."
+        stderr = re.sub(allowed_warning, "", stderr).strip()
         if stderr != expected_stderr:
             raise AssertionError("Unexpected stderr {} != {}".format(stderr, expected_stderr))
 
@@ -671,6 +674,9 @@ class TestNode():
                 if expected_msg is not None:
                     log_stderr.seek(0)
                     stderr = log_stderr.read().decode('utf-8').strip()
+                    # On systems such as NetBSD, the following warning is typically printed.
+                    allowed_warning = r"Warning: Reducing -maxconnections from \d+ to \d+, because of system limitations\."
+                    stderr = re.sub(allowed_warning, "", stderr).strip()
                     if match == ErrorMatch.PARTIAL_REGEX:
                         if re.search(expected_msg, stderr, flags=re.MULTILINE) is None:
                             self._raise_assertion_error(
