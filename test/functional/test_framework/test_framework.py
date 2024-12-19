@@ -13,11 +13,13 @@ import platform
 import pdb
 import random
 import re
+import shlex
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
+import types
 
 from .address import create_deterministic_address_bcrt1_p2tr_op_true
 from .authproxy import JSONRPCException
@@ -54,6 +56,33 @@ class SkipTest(Exception):
 
     def __init__(self, message):
         self.message = message
+
+
+class BitcoinEnv:
+    def __init__(self, paths, bin_path=None):
+        self.paths = paths
+        self.bin_path = bin_path
+
+    def daemon_args(self):
+        return self.args("daemon", "bitcoind")
+
+    def rpc_args(self):
+        # Add -nonamed because "bitcoin rpc" enables -named by default, but bitcoin-cli doesn't
+        return self.args("rpc", "bitcoincli") + ["-nonamed"]
+
+    def util_args(self):
+        return self.args("util", "bitcoinutil")
+
+    def wallet_args(self):
+        return self.args("wallet", "bitcoinwallet")
+
+    def args(self, command, path_attr):
+        if self.bin_path is not None:
+            return [os.path.join(self.bin_path, os.path.basename(getattr(self.paths, path_attr)))]
+        elif self.paths.bitcoin_cmd is not None:
+            return self.paths.bitcoin_cmd + [command]
+        else:
+            return [getattr(self.paths, path_attr)]
 
 
 class BitcoinTestMetaClass(type):
@@ -222,6 +251,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         config = configparser.ConfigParser()
         config.read_file(open(self.options.configfile))
         self.config = config
+        self.paths = self.get_binary_paths()
         if self.options.v1transport:
             self.options.v2transport=False
 
@@ -245,9 +275,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         PortSeed.n = self.options.port_seed
 
-    def set_binary_paths(self):
-        """Update self.options with the paths of all binaries from environment variables or their default values"""
+    def get_binary_paths(self):
+        """Get paths of all binaries from environment variables or their default values"""
 
+        paths = types.SimpleNamespace()
         binaries = {
             "bitcoind": ("bitcoind", "BITCOIND"),
             "bitcoin-cli": ("bitcoincli", "BITCOINCLI"),
@@ -260,7 +291,12 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 "src",
                 binary + self.config["environment"]["EXEEXT"],
             )
-            setattr(self.options, attribute_name, os.getenv(env_variable_name, default=default_filename))
+            setattr(paths, attribute_name, os.getenv(env_variable_name, default=default_filename))
+
+        # BITCOIN_CMD environment variable can be specified to invoke bitcoin
+        # binary wrapper binary instead of other executables.
+        paths.bitcoin_cmd = shlex.split(os.getenv("BITCOIN_CMD", "")) or None
+        return paths
 
     def setup(self):
         """Call this method to start up the test framework object with options set."""
@@ -270,8 +306,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.options.cachedir = os.path.abspath(self.options.cachedir)
 
         config = self.config
-
-        self.set_binary_paths()
 
         os.environ['PATH'] = os.pathsep.join([
             os.path.join(config['environment']['BUILDDIR'], 'src'),
@@ -482,14 +516,14 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             group.add_argument("--legacy-wallet", action='store_const', const=False, **kwargs,
                                help="Run test using legacy wallets", dest='descriptors')
 
-    def add_nodes(self, num_nodes: int, extra_args=None, *, rpchost=None, binary=None, binary_cli=None, versions=None):
+    def add_nodes(self, num_nodes: int, extra_args=None, *, rpchost=None, versions=None):
         """Instantiate TestNode objects.
 
         Should only be called once after the nodes have been specified in
         set_test_params()."""
-        def get_bin_from_version(version, bin_name, bin_default):
+        def bin_path_from_version(version):
             if not version:
-                return bin_default
+                return None
             if version > 219999:
                 # Starting at client version 220000 the first two digits represent
                 # the major version, e.g. v22.0 instead of v0.22.0.
@@ -507,7 +541,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     ),
                 ),
                 'bin',
-                bin_name,
             )
 
         if self.bind_to_localhost_only:
@@ -522,15 +555,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 extra_args[i] = extra_args[i] + ["-whitelist=noban,in,out@127.0.0.1"]
         if versions is None:
             versions = [None] * num_nodes
-        if binary is None:
-            binary = [get_bin_from_version(v, 'bitcoind', self.options.bitcoind) for v in versions]
-        if binary_cli is None:
-            binary_cli = [get_bin_from_version(v, 'bitcoin-cli', self.options.bitcoincli) for v in versions]
+        bin_path = [bin_path_from_version(v) for v in versions]
         assert_equal(len(extra_confs), num_nodes)
         assert_equal(len(extra_args), num_nodes)
         assert_equal(len(versions), num_nodes)
-        assert_equal(len(binary), num_nodes)
-        assert_equal(len(binary_cli), num_nodes)
+        assert_equal(len(bin_path), num_nodes)
         for i in range(num_nodes):
             args = list(extra_args[i])
             test_node_i = TestNode(
@@ -540,8 +569,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 rpchost=rpchost,
                 timewait=self.rpc_timeout,
                 timeout_factor=self.options.timeout_factor,
-                bitcoind=binary[i],
-                bitcoin_cli=binary_cli[i],
+                env=BitcoinEnv(self.paths, bin_path[i]),
                 version=versions[i],
                 coverage_dir=self.options.coveragedir,
                 cwd=self.options.tmpdir,
@@ -857,8 +885,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     rpchost=None,
                     timewait=self.rpc_timeout,
                     timeout_factor=self.options.timeout_factor,
-                    bitcoind=self.options.bitcoind,
-                    bitcoin_cli=self.options.bitcoincli,
+                    env=BitcoinEnv(self.paths),
                     coverage_dir=None,
                     cwd=self.options.tmpdir,
                     descriptors=self.options.descriptors,
