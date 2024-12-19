@@ -428,6 +428,8 @@ public:
     bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex& index) const;
 
     void CleanupBlockRevFiles() const;
+    /** Clear internal state (test-only, only for fuzzing) **/
+    void CleanupForFuzzing();
 };
 
 // Calls ActivateBestChain() even if no blocks are imported.
