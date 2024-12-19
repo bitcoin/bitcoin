@@ -9,7 +9,7 @@
 #include <set>
 #include <vector>
 
-namespace {
+namespace spannable {
 struct Ignore
 {
     template<typename T> Ignore(T&&) {}
@@ -24,25 +24,21 @@ bool Spannable(Ignore)
     return false;
 }
 
-#if defined(__clang__)
-#    pragma clang diagnostic push
-#    pragma clang diagnostic ignored "-Wunneeded-member-function"
-#    pragma clang diagnostic ignored "-Wunused-member-function"
-#endif
 struct SpannableYes
 {
     int* data();
+    int* begin();
+    int* end();
     size_t size();
 };
 struct SpannableNo
 {
-    void* data();
+    void data();
     size_t size();
 };
-#if defined(__clang__)
-#    pragma clang diagnostic pop
-#endif
-} // namespace
+} // namespace spannable
+
+using namespace spannable;
 
 BOOST_AUTO_TEST_SUITE(span_tests)
 
@@ -54,7 +50,7 @@ BOOST_AUTO_TEST_SUITE(span_tests)
 //
 // Previously there was a bug where writing a SFINAE check for vector<bool> was
 // not possible, because in libstdc++ vector<bool> has a data() member
-// returning void*, and the Span template guide ignored the data() return value,
+// returning void, and the Span template guide ignored the data() return value,
 // so the template substitution would succeed, but the constructor would fail,
 // resulting in a fatal compile error, rather than a SFINAE error that could be
 // handled.
