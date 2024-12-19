@@ -71,7 +71,6 @@
         "BUILD_GUI_TESTS": "ON",
         "BUILD_KERNEL_LIB": "ON",
         "BUILD_SHARED_LIBS": "ON",
-        "BUILD_TESTING": "ON",
         "BUILD_TESTS": "ON",
         "BUILD_TX": "ON",
         "BUILD_UTIL": "ON",
