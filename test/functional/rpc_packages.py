@@ -110,17 +110,21 @@ class RPCPackagesTest(BitcoinTestFramework):
         self.assert_testres_equal(package_bad, testres_bad)
 
         self.log.info("Check testmempoolaccept tells us when some transactions completed validation successfully")
-        tx_bad_sig_hex = node.createrawtransaction([{"txid": coin["txid"], "vout": 0}],
+        tx_bad_sig_hex = node.createrawtransaction([{"txid": coin["txid"], "vout": coin["vout"]}],
                                            {address : coin["amount"] - Decimal("0.0001")})
         tx_bad_sig = tx_from_hex(tx_bad_sig_hex)
         testres_bad_sig = node.testmempoolaccept(self.independent_txns_hex + [tx_bad_sig_hex])
         # By the time the signature for the last transaction is checked, all the other transactions
         # have been fully validated, which is why the node returns full validation results for all
         # transactions here but empty results in other cases.
+        tx_bad_sig_txid = tx_bad_sig.rehash()
+        tx_bad_sig_wtxid = tx_bad_sig.getwtxid()
         assert_equal(testres_bad_sig, self.independent_txns_testres + [{
-            "txid": tx_bad_sig.rehash(),
-            "wtxid": tx_bad_sig.getwtxid(), "allowed": False,
-            "reject-reason": "mandatory-script-verify-flag-failed (Operation not valid with the current stack size)"
+            "txid": tx_bad_sig_txid,
+            "wtxid": tx_bad_sig_wtxid, "allowed": False,
+            "reject-reason": "mandatory-script-verify-flag-failed (Operation not valid with the current stack size)",
+            "reject-details": "mandatory-script-verify-flag-failed (Operation not valid with the current stack size), " +
+                              f"input 0 of {tx_bad_sig_txid} (wtxid {tx_bad_sig_wtxid}), spending {coin['txid']}:{coin['vout']}"
         }])
 
         self.log.info("Check testmempoolaccept reports txns in packages that exceed max feerate")
@@ -304,7 +308,8 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert testres_rbf_single[0]["allowed"]
         testres_rbf_package = self.independent_txns_testres_blank + [{
             "txid": replacement_tx["txid"], "wtxid": replacement_tx["wtxid"], "allowed": False,
-            "reject-reason": "bip125-replacement-disallowed"
+            "reject-reason": "bip125-replacement-disallowed",
+            "reject-details": "bip125-replacement-disallowed"
         }]
         self.assert_testres_equal(self.independent_txns_hex + [replacement_tx["hex"]], testres_rbf_package)
 
