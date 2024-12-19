@@ -971,7 +971,9 @@ public:
         {
             WAIT_LOCK(notifications().m_tip_block_mutex, lock);
             notifications().m_tip_block_cv.wait_for(lock, timeout, [&]() EXCLUSIVE_LOCKS_REQUIRED(notifications().m_tip_block_mutex) {
-                return (notifications().m_tip_block != current_tip && notifications().m_tip_block != uint256::ZERO) || chainman().m_interrupt;
+                // We need to wait for m_tip_block to be set AND for the value
+                // to differ from the current_tip value.
+                return (notifications().TipBlock() && notifications().TipBlock() != current_tip) || chainman().m_interrupt;
             });
         }
         // Must release m_tip_block_mutex before locking cs_main, to avoid deadlocks.
