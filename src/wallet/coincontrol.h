@@ -117,6 +117,9 @@ public:
     std::optional<uint32_t> m_version;
     //! Caps weight of resulting tx
     std::optional<int> m_max_tx_weight{std::nullopt};
+    // Note: If you add fields to this struct, you should also update the
+    // CoinControl struct in ipc/capnp/wallet.capnp and IPC serialization code
+    // in src/ipc/capnp/wallet.cpp.
 
     CCoinControl();
 
