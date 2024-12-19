@@ -6,8 +6,8 @@
 #ifndef BITCOIN_NODE_MINER_H
 #define BITCOIN_NODE_MINER_H
 
+#include <consensus/consensus.h>
 #include <node/types.h>
-#include <policy/policy.h>
 #include <primitives/block.h>
 #include <txmempool.h>
 
@@ -160,7 +160,7 @@ private:
 public:
     struct Options : BlockCreateOptions {
         // Configuration parameters for the block size
-        size_t nBlockMaxWeight{DEFAULT_BLOCK_MAX_WEIGHT};
+        size_t nBlockMaxWeight{MAX_BLOCK_WEIGHT};
         CFeeRate blockMinFeeRate{DEFAULT_BLOCK_MIN_TX_FEE};
         // Whether to call TestBlockValidity() at the end of CreateNewBlock().
         bool test_block_validity{true};
