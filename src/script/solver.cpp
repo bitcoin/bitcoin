@@ -55,10 +55,10 @@ static bool MatchPayToPubkeyHash(const CScript& script, valtype& pubkeyhash)
     return false;
 }
 
-/** Test for "small positive integer" script opcodes - OP_1 through OP_16. */
+/** Test for "small positive integer" script opcodes - OP_0 through OP_16 and OP_1NEGATE. */
 static constexpr bool IsSmallInteger(opcodetype opcode)
 {
-    return opcode >= OP_1 && opcode <= OP_16;
+    return opcode == OP_0 || (opcode >= OP_1 && opcode <= OP_16) || opcode == OP_1NEGATE;
 }
 
 /** Retrieve a minimally-encoded number in range [min,max] from an (opcode, data) pair,
