@@ -8,7 +8,6 @@
 
 #include <serialize.h>
 #include <span.h>
-#include <support/allocators/zeroafterfree.h>
 #include <util/overflow.h>
 
 #include <algorithm>
@@ -138,6 +137,7 @@ public:
     }
 };
 
+using SerializeData = std::vector<std::byte>;
 /** Double ended buffer combining vector and stream-like interfaces.
  *
  * >> and << read and write unformatted data using the above serialization templates.
