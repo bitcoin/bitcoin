@@ -108,9 +108,9 @@ void ChaCha20SplitFuzz(FuzzedDataProvider& provider)
         // This tests that Keystream() has the same behavior as Crypt() applied
         // to 0x00 input bytes.
         if (UseCrypt || provider.ConsumeBool()) {
-            crypt2.Crypt(Span{data2}.subspan(bytes2, now), Span{data2}.subspan(bytes2, now));
+            crypt2.Crypt(std::span{data2}.subspan(bytes2, now), std::span{data2}.subspan(bytes2, now));
         } else {
-            crypt2.Keystream(Span{data2}.subspan(bytes2, now));
+            crypt2.Keystream(std::span{data2}.subspan(bytes2, now));
         }
         bytes2 += now;
         if (is_last) break;

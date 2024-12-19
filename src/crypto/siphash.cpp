@@ -45,7 +45,7 @@ CSipHasher& CSipHasher::Write(uint64_t data)
     return *this;
 }
 
-CSipHasher& CSipHasher::Write(Span<const unsigned char> data)
+CSipHasher& CSipHasher::Write(std::span<const unsigned char> data)
 {
     uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
     uint64_t t = tmp;
