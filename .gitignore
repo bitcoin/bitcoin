@@ -21,3 +21,6 @@ test/lint/test_runner/target/
 /guix-build-*
 
 /ci/scratch/
+
+# Test data that includes .log files
+!test/functional/data/coinstatsindex_v0/*

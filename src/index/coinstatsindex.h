@@ -28,19 +28,22 @@ private:
     uint64_t m_transaction_output_count{0};
     uint64_t m_bogo_size{0};
     CAmount m_total_amount{0};
-    CAmount m_total_subsidy{0};
     CAmount m_total_unspendable_amount{0};
-    CAmount m_total_prevout_spent_amount{0};
-    CAmount m_total_new_outputs_ex_coinbase_amount{0};
-    CAmount m_total_coinbase_amount{0};
-    CAmount m_total_unspendables_genesis_block{0};
-    CAmount m_total_unspendables_bip30{0};
-    CAmount m_total_unspendables_scripts{0};
-    CAmount m_total_unspendables_unclaimed_rewards{0};
+
+    CAmount m_block_subsidy{0};
+    CAmount m_block_prevout_spent_amount{0};
+    CAmount m_block_new_outputs_ex_coinbase_amount{0};
+    CAmount m_block_coinbase_amount{0};
+
+    CAmount m_block_unspendables_genesis_block{0};
+    CAmount m_block_unspendables_bip30{0};
+    CAmount m_block_unspendables_scripts{0};
+    CAmount m_block_unspendables_unclaimed_rewards{0};
 
     [[nodiscard]] bool ReverseBlock(const CBlock& block, const CBlockIndex* pindex);
 
     bool AllowPrune() const override { return true; }
+    uint32_t GetVersion() const override { return 1; }
 
 protected:
     bool CustomInit(const std::optional<interfaces::BlockRef>& block) override;
