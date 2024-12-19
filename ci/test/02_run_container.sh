@@ -33,6 +33,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
       $MAYBE_CPUSET \
       --label="${CI_IMAGE_LABEL}" \
       --tag="${CONTAINER_NAME}" \
+      $CI_IMAGE_BUILD_EXTRA_ARGS \
       "${BASE_READ_ONLY_DIR}"
 
   docker volume create "${CONTAINER_NAME}_ccache" || true
