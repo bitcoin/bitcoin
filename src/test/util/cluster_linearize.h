@@ -392,7 +392,7 @@ void SanityCheck(const DepGraph<SetType>& depgraph)
 
 /** Perform a sanity check on a linearization. */
 template<typename SetType>
-void SanityCheck(const DepGraph<SetType>& depgraph, Span<const ClusterIndex> linearization)
+void SanityCheck(const DepGraph<SetType>& depgraph, std::span<const ClusterIndex> linearization)
 {
     // Check completeness.
     assert(linearization.size() == depgraph.TxCount());

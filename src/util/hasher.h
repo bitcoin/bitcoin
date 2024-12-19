@@ -8,12 +8,11 @@
 #include <crypto/common.h>
 #include <crypto/siphash.h>
 #include <primitives/transaction.h>
+#include <span.h>
 #include <uint256.h>
 
 #include <cstdint>
 #include <cstring>
-
-template <typename C> class Span;
 
 class SaltedTxidHasher
 {
@@ -95,7 +94,7 @@ private:
 public:
     SaltedSipHasher();
 
-    size_t operator()(const Span<const unsigned char>& script) const;
+    size_t operator()(const std::span<const unsigned char>& script) const;
 };
 
 #endif // BITCOIN_UTIL_HASHER_H

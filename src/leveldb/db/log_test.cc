@@ -240,7 +240,7 @@ class LogTest {
 size_t LogTest::initial_offset_record_sizes_[] = {
     10000,  // Two sizable records in first block
     10000,
-    2 * log::kBlockSize - 1000,  // Span three blocks
+    2 * log::kBlockSize - 1000,  // std::span three blocks
     1,
     13716,                          // Consume all but two bytes of block 3.
     log::kBlockSize - kHeaderSize,  // Consume the entirety of block 4.

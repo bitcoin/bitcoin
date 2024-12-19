@@ -33,14 +33,14 @@ private:
     bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite=true) override { return true; }
     bool EraseKey(DataStream&& key) override { return true; }
     bool HasKey(DataStream&& key) override { return true; }
-    bool ErasePrefix(Span<const std::byte> prefix) override { return true; }
+    bool ErasePrefix(std::span<const std::byte> prefix) override { return true; }
 
 public:
     void Flush() override {}
     void Close() override {}
 
     std::unique_ptr<DatabaseCursor> GetNewCursor() override { return std::make_unique<DummyCursor>(); }
-    std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(Span<const std::byte> prefix) override { return GetNewCursor(); }
+    std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(std::span<const std::byte> prefix) override { return GetNewCursor(); }
     bool TxnBegin() override { return true; }
     bool TxnCommit() override { return true; }
     bool TxnAbort() override { return true; }
