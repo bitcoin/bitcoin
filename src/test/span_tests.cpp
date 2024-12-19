@@ -9,7 +9,7 @@
 #include <set>
 #include <vector>
 
-namespace {
+namespace blabla {
 struct Ignore
 {
     template<typename T> Ignore(T&&) {}
@@ -32,17 +32,24 @@ bool Spannable(Ignore)
 struct SpannableYes
 {
     int* data();
+    int* begin();
+    int* end();
     size_t size();
 };
+struct It{};
 struct SpannableNo
 {
-    void* data();
+    void data();
+    It begin();
+    It end();
     size_t size();
 };
 #if defined(__clang__)
 #    pragma clang diagnostic pop
 #endif
 } // namespace
+
+using namespace blabla;
 
 BOOST_AUTO_TEST_SUITE(span_tests)
 
