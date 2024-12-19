@@ -69,6 +69,7 @@ static void runtest_file(const char *filename_)
 }
 
 static const char *filenames[] = {
+        "fail1.json",
         "fail10.json",
         "fail11.json",
         "fail12.json",
@@ -77,9 +78,9 @@ static const char *filenames[] = {
         "fail15.json",
         "fail16.json",
         "fail17.json",
-        //"fail18.json",             // investigate
+        "fail18.json",
         "fail19.json",
-        "fail1.json",
+        "fail2.json",
         "fail20.json",
         "fail21.json",
         "fail22.json",
@@ -90,7 +91,7 @@ static const char *filenames[] = {
         "fail27.json",
         "fail28.json",
         "fail29.json",
-        "fail2.json",
+        "fail3.json",
         "fail30.json",
         "fail31.json",
         "fail32.json",
@@ -101,13 +102,12 @@ static const char *filenames[] = {
         "fail37.json",
         "fail38.json",               // invalid unicode: only first half of surrogate pair
         "fail39.json",               // invalid unicode: only second half of surrogate pair
+        "fail4.json",                // extra comma
         "fail40.json",               // invalid unicode: broken UTF-8
         "fail41.json",               // invalid unicode: unfinished UTF-8
         "fail42.json",               // valid json with garbage following a nul byte
         "fail44.json",               // unterminated string
         "fail45.json",               // nested beyond max depth
-        "fail3.json",
-        "fail4.json",                // extra comma
         "fail5.json",
         "fail6.json",
         "fail7.json",
