@@ -98,9 +98,9 @@ std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, 
     return res ? std::optional<SelectionResult>(*res) : std::nullopt;
 }
 
-std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change)
+std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& max_excess)
 {
-    auto res{SelectCoinsBnB(utxo_pool, selection_target, cost_of_change, MAX_STANDARD_TX_WEIGHT)};
+    auto res{SelectCoinsBnB(utxo_pool, selection_target, max_excess, MAX_STANDARD_TX_WEIGHT, /*add_excess_to_target=*/false)};
     return res ? std::optional<SelectionResult>(*res) : std::nullopt;
 }
 
@@ -438,20 +438,73 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         add_coin(available_coins, *wallet, 1 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
 
         CAmount selection_target = 16 * CENT;
-        const auto& no_res = SelectCoinsBnB(GroupCoins(available_coins.All(), /*subtract_fee_outputs*/true),
-                                            selection_target, /*cost_of_change=*/0, MAX_STANDARD_TX_WEIGHT);
+        const auto& no_res = SelectCoinsBnB(GroupCoins(available_coins.All(), /*subtract_fee_outputs=*/true),
+                                            selection_target, /*max_excess=*/0, MAX_STANDARD_TX_WEIGHT, /*add_excess_to_target=*/false);
         BOOST_REQUIRE(!no_res);
         BOOST_CHECK(util::ErrorString(no_res).original.find("The inputs size exceeds the maximum weight") != std::string::npos);
 
         // Now add same coin value with a good size and check that it gets selected
         add_coin(available_coins, *wallet, 5 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
-        const auto& res = SelectCoinsBnB(GroupCoins(available_coins.All(), /*subtract_fee_outputs*/true), selection_target, /*cost_of_change=*/0);
+        const auto& res = SelectCoinsBnB(GroupCoins(available_coins.All(), /*subtract_fee_outputs=*/true), selection_target, /*max_excess=*/0);
 
         expected_result.Clear();
         add_coin(8 * CENT, 2, expected_result);
         add_coin(5 * CENT, 2, expected_result);
         add_coin(3 * CENT, 2, expected_result);
         BOOST_CHECK(EquivalentResult(expected_result, *res));
+    }
+
+    {
+        // Test bnb add_excess_to_target
+        // Select best single input result with least fee waste and excess less than max_excess.
+        // Inputs set [11, 5, 2, 10], Selection Target = 6 and max_excess = 4.
+
+        std::unique_ptr<CWallet> wallet = NewWallet(m_node);
+
+        CoinsResult available_coins;
+        add_coin(available_coins, *wallet, 11 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(available_coins, *wallet, 5 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(available_coins, *wallet, 2 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(available_coins, *wallet, 10 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+
+        CAmount selection_target = 6 * CENT;
+        CAmount max_excess = 4 * CENT;
+        const auto& res = SelectCoinsBnB(GroupCoins(available_coins.All(), /*subtract_fee_outputs=*/false),
+                                            selection_target, /*max_excess=*/max_excess, MAX_STANDARD_TX_WEIGHT, /*add_excess_to_target=*/true);
+        BOOST_REQUIRE(res);
+
+        expected_result.Clear();
+        add_coin(10 * CENT, 2, expected_result);
+        BOOST_CHECK(EquivalentResult(expected_result, *res));
+        CAmount excess = res->GetTarget() - selection_target;
+        BOOST_CHECK(excess < max_excess);
+    }
+
+    {
+        // Test bnb add_excess_to_target
+        // Select best two input result with least fee waste and excess less than max_excess.
+        // Inputs set [3, 11, 2, 5], Selection Target = 6 and max_excess = 4.
+
+        std::unique_ptr<CWallet> wallet = NewWallet(m_node);
+
+        CoinsResult available_coins;
+        add_coin(available_coins, *wallet, 3 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(available_coins, *wallet, 11 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(available_coins, *wallet, 2 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(available_coins, *wallet, 5 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+
+        CAmount selection_target = 6 * CENT;
+        CAmount max_excess = 4 * CENT;
+        const auto& res = SelectCoinsBnB(GroupCoins(available_coins.All(), /*subtract_fee_outputs=*/false),
+                                            selection_target, /*max_excess=*/max_excess, MAX_STANDARD_TX_WEIGHT, /*add_excess_to_target=*/true);
+        BOOST_REQUIRE(res);
+
+        expected_result.Clear();
+        add_coin(5 * CENT, 2, expected_result);
+        add_coin(2 * CENT, 2, expected_result);
+        BOOST_CHECK(EquivalentResult(expected_result, *res));
+        CAmount excess = res->GetTarget() - selection_target;
+        BOOST_CHECK(excess < max_excess);
     }
 }
 

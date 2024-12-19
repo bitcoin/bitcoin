@@ -52,7 +52,7 @@ struct {
 /*
  * This is the Branch and Bound Coin Selection algorithm designed by Murch. It searches for an input
  * set that can pay for the spending target and does not exceed the spending target by more than the
- * cost of creating and spending a change output. The algorithm uses a depth-first search on a binary
+ * specified maximum excess value. The algorithm uses a depth-first search on a binary
  * tree. In the binary tree, each node corresponds to the inclusion or the omission of a UTXO. UTXOs
  * are sorted by their effective values and the tree is explored deterministically per the inclusion
  * branch first. At each node, the algorithm checks whether the selection is within the target range.
@@ -82,16 +82,17 @@ struct {
  *        values are their effective values.
  * @param const CAmount& selection_target This is the value that we want to select. It is the lower
  *        bound of the range.
- * @param const CAmount& cost_of_change This is the cost of creating and spending a change output.
+ * @param const CAmount& max_excess This is the amount of value over the selection target we can select.
  *        This plus selection_target is the upper bound of the range.
  * @param int max_selection_weight The maximum allowed weight for a selection result to be valid.
+ * @param bool add_excess_to_target When true do not count excess as waste and add it to the result target
  * @returns The result of this coin selection algorithm, or std::nullopt
  */
 
 static const size_t TOTAL_TRIES = 100000;
 
-util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change,
-                                             int max_selection_weight)
+util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& max_excess,
+                                             int max_selection_weight, const bool add_excess_to_target)
 {
     SelectionResult result(selection_target, SelectionAlgorithm::BNB);
     CAmount curr_value = 0;
@@ -116,6 +117,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
     CAmount curr_waste = 0;
     std::vector<size_t> best_selection;
     CAmount best_waste = MAX_MONEY;
+    CAmount best_excess = MAX_MONEY;
 
     bool is_feerate_high = utxo_pool.at(0).fee > utxo_pool.at(0).long_term_fee;
     bool max_tx_weight_exceeded = false;
@@ -125,23 +127,32 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
         // Conditions for starting a backtrack
         bool backtrack = false;
         if (curr_value + curr_available_value < selection_target || // Cannot possibly reach target with the amount remaining in the curr_available_value.
-            curr_value > selection_target + cost_of_change || // Selected value is out of range, go back and try other branch
+            curr_value > selection_target + max_excess || // Selected value is out of range, go back and try other branch
             (curr_waste > best_waste && is_feerate_high)) { // Don't select things which we know will be more wasteful if the waste is increasing
             backtrack = true;
         } else if (curr_selection_weight > max_selection_weight) { // Selected UTXOs weight exceeds the maximum weight allowed, cannot find more solutions by adding more inputs
             max_tx_weight_exceeded = true; // at least one selection attempt exceeded the max weight
             backtrack = true;
         } else if (curr_value >= selection_target) {       // Selected value is within range
-            curr_waste += (curr_value - selection_target); // This is the excess value which is added to the waste for the below comparison
             // Adding another UTXO after this check could bring the waste down if the long term fee is higher than the current fee.
             // However we are not going to explore that because this optimization for the waste is only done when we have hit our target
             // value. Adding any more UTXOs will be just burning the UTXO; it will go entirely to fees. Thus we aren't going to
             // explore any more UTXOs to avoid burning money like that.
-            if (curr_waste <= best_waste) {
-                best_selection = curr_selection;
-                best_waste = curr_waste;
+            CAmount curr_excess = (curr_value - selection_target);
+            if (add_excess_to_target) {
+                if (curr_waste < best_waste || (curr_waste == best_waste && curr_excess <= best_excess)) {
+                    best_selection = curr_selection;
+                    best_waste = curr_waste;
+                    best_excess = curr_excess;
+                }
             }
-            curr_waste -= (curr_value - selection_target); // Remove the excess value as we will be selecting different coins now
+            else {
+                if (curr_waste + curr_excess <= best_waste) {
+                    best_selection = curr_selection;
+                    best_waste = curr_waste + curr_excess;
+                }
+            }
+
             backtrack = true;
         }
 
@@ -194,7 +205,11 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
     for (const size_t& i : best_selection) {
         result.AddInput(utxo_pool.at(i));
     }
-    result.RecalculateWaste(cost_of_change, cost_of_change, CAmount{0});
+    if (add_excess_to_target) {
+        auto excess = result.ResetTargetToSelectedValue();
+        assert(best_excess == excess);
+    }
+    result.RecalculateWaste(max_excess, max_excess, CAmount{0});
     assert(best_waste == result.GetWaste());
 
     return result;
@@ -851,6 +866,13 @@ void SelectionResult::RecalculateWaste(const CAmount min_viable_change, const CA
     }
 
     m_waste = waste;
+}
+
+CAmount SelectionResult::ResetTargetToSelectedValue()
+{
+    CAmount excess = (m_use_effective ? GetSelectedEffectiveValue(): GetSelectedValue()) - m_target;
+    m_target += excess;
+    return excess;
 }
 
 void SelectionResult::SetAlgoCompleted(bool algo_completed)
