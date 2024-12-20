@@ -7,13 +7,7 @@
 
 static constexpr bool DEFAULT_NATPMP = false;
 
-enum MapPortProtoFlag : unsigned int {
-    NONE = 0x00,
-    // 0x01 was for UPnP, for which we dropped support.
-    PCP = 0x02,   // PCP with NAT-PMP fallback.
-};
-
-void StartMapPort(bool use_pcp);
+void StartMapPort(bool enable);
 void InterruptMapPort();
 void StopMapPort();
 
