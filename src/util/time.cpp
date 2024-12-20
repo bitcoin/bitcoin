@@ -20,9 +20,11 @@
 void UninterruptibleSleep(const std::chrono::microseconds& n) { std::this_thread::sleep_for(n); }
 
 static std::atomic<std::chrono::seconds> g_mock_time{}; //!< For testing
+std::atomic<bool> g_used_system_time{false};
 
 NodeClock::time_point NodeClock::now() noexcept
 {
+    g_used_system_time = true;
     const auto mocktime{g_mock_time.load(std::memory_order_relaxed)};
     const auto ret{
         mocktime.count() ?
