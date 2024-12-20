@@ -4589,6 +4589,114 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
     return true;
 }
 
+bool ChainstateManager::CheckNewBlock(const CBlock& block, std::string& reason, const bool check_merkle_root, const bool check_pow, const uint256 target)
+{
+    ChainstateManager& chainman{ActiveChainstate().m_chainman};
+
+    // Lock must be held throughout this function for two reasons:
+    // 1. We don't want the tip to change during several of the validation steps
+    // 2. To prevent a CheckBlock() race condition for fChecked, see ProcessNewBlock()
+    LOCK(chainman.GetMutex());
+
+    BlockValidationState state;
+    CBlockIndex* tip{Assert(ActiveTip())};
+
+    if (block.hashPrevBlock != *Assert(tip->phashBlock)) {
+        reason = "inconclusive-not-best-prevblk";
+        return false;
+    }
+
+    bool custom_target{false};
+
+    if (check_pow) {
+        arith_uint256 consensus_target;
+        // The default target value of 0, as well as any target lower than consensus,
+        // is rounded up.
+        arith_uint256 max_target;
+        Assert(DeriveTarget(block.nBits, GetParams().GetConsensus().powLimit, consensus_target));
+        max_target = std::max(UintToArith256(target), consensus_target);
+
+        // Check the actual proof-of-work. The nBits value is checked by
+        // ContextualCheckBlock below. When target equals consensus_target,
+        // have CheckBlock() below do this instead.
+        custom_target = max_target != consensus_target;
+        if (custom_target && UintToArith256(block.GetHash()) > max_target) {
+            reason = "high-hash";
+            return false;
+        }
+    }
+
+    // Sanity check
+    Assert(!block.fChecked);
+    // For signets CheckBlock() verifies the challenge iif fCheckPow is set.
+    if (!CheckBlock(block, state, GetConsensus(), /*fCheckPow=*/check_pow && !custom_target, /*fCheckMerkleRoot=*/check_merkle_root)) {
+        reason = state.GetRejectReason();
+        Assume(!reason.empty());
+        return false;
+    } else {
+        // Sanity check
+        Assume((check_pow && !custom_target) || !block.fChecked);
+    }
+
+    /**
+     * At this point ProcessNewBlock would call AcceptBlock(), but we
+     * don't want to store the block or its header. Run individual checks
+     * instead:
+     * - skip AcceptBlockHeader() because:
+     *   - we don't want to update the block index
+     *   - we do not care about duplicates
+     *   - we already ran CheckBlockHeader() via CheckBlock()
+     *   - we already checked for prev-blk-not-found
+     *   - we know the tip is valid, so no need to check bad-prevblk
+     * - we already ran CheckBlock()
+     * - do run ContextualCheckBlockHeader()
+     * - do run ContextualCheckBlock()
+     */
+
+    if (!ContextualCheckBlockHeader(block, state, ActiveChainstate().m_blockman, chainman, tip)) {
+        Assume(!state.IsValid());
+        reason = state.GetRejectReason();
+        Assume(!reason.empty());
+        return false;
+    }
+    // It's dangerous to continue validation after detecting the block is
+    // invalid. Hence the Assert here vs. Assume above.
+    Assert(state.IsValid());
+
+    if (!ContextualCheckBlock(block, state, *this, tip)) {
+        Assume(!state.IsValid());
+        reason = state.GetRejectReason();
+        Assume(!reason.empty());
+        return false;
+    }
+    Assert(state.IsValid());
+
+
+    CBlockIndex index{block};
+    uint256 block_hash(block.GetHash());
+    index.pprev = tip;
+    index.nHeight = tip->nHeight + 1;
+    index.phashBlock = &block_hash;
+
+    // We don't want ConnectBlock to update the actual chainstate, so create
+    // a cache on top of it.
+    CCoinsViewCache tipView(&ActiveChainstate().CoinsTip());
+    CCoinsView blockCoins;
+    CCoinsViewCache view(&blockCoins);
+    view.SetBackend(tipView);
+
+    // Set fJustCheck to true in order to update, and not clear, validation caches.
+    if(!ActiveChainstate().ConnectBlock(block, state, &index, view, /*fJustCheck=*/true)) {
+        Assume(!state.IsValid());
+        reason = state.GetRejectReason();
+        Assume(!reason.empty());
+        return false;
+    }
+    Assert(state.IsValid());
+
+    return true;
+}
+
 bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block)
 {
     AssertLockNotHeld(cs_main);

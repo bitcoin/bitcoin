@@ -1183,6 +1183,23 @@ public:
         std::multimap<uint256, FlatFilePos>* blocks_with_unknown_parent = nullptr);
 
     /**
+     * Verify a block, including transactions.
+     *
+     * @param[in]   block       The block we want to process. Must connect to the
+     *                          current tip.
+     * @param[out]  reason      rejection reason (BIP22)
+     * @param[in]   check_merkle_root check the merkle root
+     * @param[in]   check_pow   perform proof-of-work check, nBits in the header
+     *                          is always checked
+     * @param[in]   target      apply a higher work target (default 0, rounded up
+     *                          to nBits target)
+     *
+     * For signets the challenge verification is skipped when check_pow is false or
+     * a higher target is provided.
+     */
+    bool CheckNewBlock(const CBlock& block, std::string& reason, const bool check_merkle_root = true, const bool check_pow = true, const uint256 target = uint256::ZERO);
+
+    /**
      * Process an incoming block. This only returns after the best known valid
      * block is made active. Note that it does not, however, guarantee that the
      * specific block passed to it has been checked for validity!
