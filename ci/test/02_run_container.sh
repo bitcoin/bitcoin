@@ -97,6 +97,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
                   --mount "${CI_DEPENDS_MOUNT}" \
                   --mount "${CI_DEPENDS_SOURCES_MOUNT}" \
                   --mount "${CI_PREVIOUS_RELEASES_MOUNT}" \
+                  --ulimit stack=524288:524288 \
                   --env-file /tmp/env-$USER-$CONTAINER_NAME \
                   --name "$CONTAINER_NAME" \
                   --network ci-ip6net \
