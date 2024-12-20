@@ -81,7 +81,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "net -> netmessagemaker -> net",
     "net_processing -> spork -> net_processing",
     "netaddress -> netbase -> netaddress",
-    "policy/policy -> policy/settings -> policy/policy",
     "qt/appearancewidget -> qt/guiutil -> qt/appearancewidget",
     "qt/appearancewidget -> qt/guiutil -> qt/optionsdialog -> qt/appearancewidget",
     "qt/bitcoinaddressvalidator -> qt/guiutil -> qt/bitcoinaddressvalidator",

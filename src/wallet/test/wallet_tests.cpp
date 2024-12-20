@@ -23,6 +23,7 @@
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
 #include <util/translation.h>
+#include <policy/settings.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/test/wallet_test_fixture.h>

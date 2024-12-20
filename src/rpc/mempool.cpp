@@ -7,13 +7,13 @@
 
 #include <core_io.h>
 #include <fs.h>
+#include <policy/settings.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <txmempool.h>
 #include <univalue.h>
-#include <validation.h>
 
 #include <llmq/context.h>
 #include <llmq/instantsend.h>
