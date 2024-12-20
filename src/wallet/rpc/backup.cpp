@@ -377,15 +377,19 @@ RPCHelpMan importprunedfunds()
 RPCHelpMan removeprunedfunds()
 {
     return RPCHelpMan{"removeprunedfunds",
-                "\nDeletes the specified transaction from the wallet. Meant for use with pruned wallets and as a companion to importprunedfunds. This will affect wallet balances.\n",
+                "\nDeletes the specified transactions from the wallet. Meant for use with pruned wallets and as a companion to importprunedfunds. This will affect wallet balances.\n",
                 {
-                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex-encoded id of the transaction you are deleting"},
+                    {"txids", RPCArg::Type::ARR, RPCArg::Optional::NO, "The hex-encoded ids of the transactions you are deleting",
+                        {
+                            {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The hex-encoded id of a transaction you are deleting"},
+                        },
+                    },
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
-                    HelpExampleCli("removeprunedfunds", "\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\"") +
+                    HelpExampleCli("removeprunedfunds", "'[\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\", \"9414f1681fb1255bd168a806254321a837008dd4480c02226063183deb100204\"]'") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("removeprunedfunds", "\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\"")
+            + HelpExampleRpc("removeprunedfunds", "'[\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\", \"9414f1681fb1255bd168a806254321a837008dd4480c02226063183deb100204\"]'")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -394,10 +398,13 @@ RPCHelpMan removeprunedfunds()
 
     LOCK(pwallet->cs_wallet);
 
-    uint256 hash(ParseHashV(request.params[0], "txid"));
-    std::vector<uint256> vHash;
-    vHash.push_back(hash);
-    if (auto res = pwallet->RemoveTxs(vHash); !res) {
+    std::vector<uint256> vHashes;
+    for (const UniValue& txidVal : request.params[0].get_array().getValues()) {
+        uint256 hash(ParseHashV(txidVal, "txid"));
+        vHashes.push_back(hash);
+    }
+
+    if (auto res = pwallet->RemoveTxs(vHashes); !res) {
         throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(res).original);
     }
 
