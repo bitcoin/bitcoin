@@ -8,9 +8,9 @@
 #include <chain.h>
 #include <coins.h>
 #include <consensus/params.h>
+#include <kernel/caches.h>
 #include <logging.h>
 #include <node/blockstorage.h>
-#include <node/caches.h>
 #include <sync.h>
 #include <threadsafety.h>
 #include <tinyformat.h>
@@ -29,6 +29,8 @@
 #include <memory>
 #include <vector>
 
+using kernel::CacheSizes;
+
 namespace node {
 // Complete initialization of chainstates after the initial call has been made
 // to ChainstateManager::InitializeChainstate().
@@ -44,7 +46,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     try {
         pblocktree = std::make_unique<BlockTreeDB>(DBParams{
             .path = chainman.m_options.datadir / "blocks" / "index",
-            .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
+            .cache_bytes = cache_sizes.block_tree_db,
             .memory_only = options.block_tree_db_in_memory,
             .wipe_data = options.wipe_block_tree_db,
             .options = chainman.m_options.block_tree_db});

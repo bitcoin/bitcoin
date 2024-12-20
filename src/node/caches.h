@@ -5,20 +5,25 @@
 #ifndef BITCOIN_NODE_CACHES_H
 #define BITCOIN_NODE_CACHES_H
 
+#include <kernel/caches.h>
+
 #include <cstddef>
 #include <cstdint>
+#include <tuple>
 
 class ArgsManager;
 
+//! min. -dbcache (MiB)
+static constexpr int64_t MIN_DB_CACHE{4};
+//! -dbcache default (MiB)
+static constexpr int64_t DEFAULT_DB_CACHE{DEFAULT_KERNEL_CACHE};
+
 namespace node {
-struct CacheSizes {
-    int64_t block_tree_db;
-    int64_t coins_db;
-    int64_t coins;
-    int64_t tx_index;
-    int64_t filter_index;
+struct IndexCacheSizes {
+    size_t tx_index;
+    size_t filter_index;
 };
-CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes = 0);
+std::tuple<IndexCacheSizes, kernel::CacheSizes> CalculateCacheSizes(const ArgsManager& args, size_t n_indexes = 0);
 } // namespace node
 
 #endif // BITCOIN_NODE_CACHES_H
