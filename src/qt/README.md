@@ -11,7 +11,7 @@ When following your systems build instructions, make sure to install the `Qt` de
 To run:
 
 ```sh
-./build/src/qt/bitcoin-qt
+./build/bin/bitcoin-qt
 ```
 
 ## Files and Directories
