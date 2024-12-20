@@ -108,12 +108,12 @@ void ResetCoverageCounters() {}
 #endif
 
 
-void initialize()
+inline void initialize()
 {
     // By default, make the RNG deterministic with a fixed seed. This will affect all
     // randomness during the fuzz test, except:
     // - GetStrongRandBytes(), which is used for the creation of private key material.
-    // - Creating a BasicTestingSetup or derived class will switch to a random seed.
+    // - Randomness obtained before this call in g_rng_temp_path_init
     SeedRandomStateForTest(SeedRand::ZEROS);
 
     // Terminate immediately if a fuzzing harness ever tries to create a socket.
