@@ -68,32 +68,32 @@
 
 static std::string rtrim(std::string s)
 {
-    s.erase(s.find_last_not_of(" \n\r\t")+1);
+    s.erase(s.find_last_not_of(" \n\r\t") + 1);
     return s;
 }
 
 static void runtest(std::string filename, const std::string& jdata)
 {
-        std::string prefix = filename.substr(0, 4);
+    std::string prefix = filename.substr(0, 4);
 
-        bool wantPass = (prefix == "pass") || (prefix == "roun");
-        bool wantFail = (prefix == "fail");
-        bool wantRoundTrip = (prefix == "roun");
-        assert(wantPass || wantFail);
+    bool wantPass = (prefix == "pass") || (prefix == "roun");
+    bool wantFail = (prefix == "fail");
+    bool wantRoundTrip = (prefix == "roun");
+    assert(wantPass || wantFail);
 
-        UniValue val;
-        bool testResult = val.read(jdata);
+    UniValue val;
+    bool testResult = val.read(jdata);
 
-        if (wantPass) {
-            assert(testResult == true);
-        } else {
-            assert(testResult == false);
-        }
+    if (wantPass) {
+        assert(testResult == true);
+    } else {
+        assert(testResult == false);
+    }
 
-        if (wantRoundTrip) {
-            std::string odata = val.write(0, 0);
-            assert(odata == rtrim(jdata));
-        }
+    if (wantRoundTrip) {
+        std::string odata = val.write(0, 0);
+        assert(odata == rtrim(jdata));
+    }
 }
 
 #define TEST_FILE(name) {#name, json_tests::name}
@@ -185,7 +185,7 @@ void no_nul_test()
     assert(val.read({buf + 3, 7}));
 }
 
-int main (int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     for (const auto& [file, json] : tests) {
         runtest(std::string{file}, std::string{json});
