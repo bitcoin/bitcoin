@@ -127,7 +127,7 @@ add_executable(fuzz
   # Visual Studio 2022 version 17.12 introduced a bug
   # that causes an internal compiler error.
   # See: https://github.com/bitcoin/bitcoin/issues/31303
-  $<$<VERSION_LESS:${MSVC_VERSION},1942>:utxo_snapshot.cpp>
+  $<$<NOT:$<AND:$<CXX_COMPILER_ID:MSVC>,$<VERSION_GREATER_EQUAL:$<CXX_COMPILER_VERSION>,19.42>>>:utxo_snapshot.cpp>
   utxo_total_supply.cpp
   validation_load_mempool.cpp
   vecdeque.cpp

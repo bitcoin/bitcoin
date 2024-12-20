@@ -165,10 +165,13 @@ jobs:
         include:
           - job-type: standard
             generate-options: '-DBUILD_GUI=ON -DWITH_BDB=ON -DWITH_ZMQ=ON -DBUILD_BENCH=ON -DWERROR=ON'
-            job-name: 'Win64 native, VS 2022'
+            job-name: 'Win64 native, MSVC'
+          - job-type: clang-cl
+            generate-options: '-T ClangCL -DBUILD_GUI=ON -DWITH_BDB=ON -DWITH_ZMQ=ON -DBUILD_BENCH=ON'
+            job-name: 'Win64 native, clang-cl'
           - job-type: fuzz
-            generate-options: '-DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="sqlite" -DBUILD_GUI=OFF -DBUILD_FOR_FUZZING=ON -DWERROR=ON'
-            job-name: 'Win64 native fuzz, VS 2022'
+            generate-options: '-T ClangCL -DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="sqlite" -DBUILD_GUI=OFF -DBUILD_FOR_FUZZING=ON'
+            job-name: 'Win64 native, fuzz, clang-cl'
 
     steps:
       - name: Checkout
@@ -225,13 +228,13 @@ jobs:
           cmake --build . -j $env:NUMBER_OF_PROCESSORS --config Release
 
       - name: Run test suite
-        if: matrix.job-type == 'standard'
+        if: matrix.job-type != 'fuzz'
         working-directory: build
         run: |
           ctest --output-on-failure --stop-on-failure -j $env:NUMBER_OF_PROCESSORS -C Release
 
       - name: Run functional tests
-        if: matrix.job-type == 'standard'
+        if: matrix.job-type != 'fuzz'
         working-directory: build
         env:
           BITCOIND: '${{ github.workspace }}\build\src\Release\bitcoind.exe'
