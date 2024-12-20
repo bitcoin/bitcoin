@@ -24,14 +24,6 @@
 #include <memory>
 #include <string>
 
-inline std::ostream& operator<<(std::ostream& os, const std::pair<const SerializeData, SerializeData>& kv)
-{
-    Span key{kv.first}, value{kv.second};
-    os << "(\"" << std::string_view{reinterpret_cast<const char*>(key.data()), key.size()} << "\", \""
-       << std::string_view{reinterpret_cast<const char*>(value.data()), value.size()} << "\")";
-    return os;
-}
-
 namespace wallet {
 
 static Span<const std::byte> StringBytes(std::string_view str)
@@ -57,7 +49,22 @@ static void CheckPrefix(DatabaseBatch& batch, Span<const std::byte> prefix, Mock
         BOOST_CHECK(
             actual.emplace(SerializeData(key.begin(), key.end()), SerializeData(value.begin(), value.end())).second);
     }
-    BOOST_CHECK_EQUAL_COLLECTIONS(actual.begin(), actual.end(), expected.begin(), expected.end());
+
+    // Ensure the sizes of the vectors are equal.
+    BOOST_CHECK_EQUAL(actual.size(), expected.size());
+
+    auto it_actual = actual.begin();
+    auto it_expected = expected.begin();
+
+    while (it_actual != actual.end() && it_expected != expected.end()) {
+        BOOST_CHECK(it_actual->first == it_expected->first);
+        BOOST_CHECK(it_actual->second == it_expected->second);
+        ++it_actual;
+        ++it_expected;
+    }
+
+    BOOST_CHECK(it_actual == actual.end());
+    BOOST_CHECK(it_expected == expected.end());
 }
 
 BOOST_FIXTURE_TEST_SUITE(db_tests, BasicTestingSetup)
