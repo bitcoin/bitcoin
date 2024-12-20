@@ -1076,6 +1076,7 @@ RPCHelpMan encryptwallet();
 RPCHelpMan sendtoaddress();
 RPCHelpMan sendmany();
 RPCHelpMan settxfee();
+RPCHelpMan settxfeerate();
 RPCHelpMan fundrawtransaction();
 RPCHelpMan bumpfee();
 RPCHelpMan psbtbumpfee();
@@ -1156,7 +1157,8 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &sendtoaddress},
         {"wallet", &sethdseed},
         {"wallet", &setlabel},
-        {"wallet", &settxfee},
+        {"hidden", &settxfee},
+        {"wallet", &settxfeerate},
         {"wallet", &setwalletflag},
         {"wallet", &signmessage},
         {"wallet", &signrawtransactionwithwallet},
