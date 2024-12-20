@@ -112,6 +112,8 @@ void BenchTxGraphTrim(benchmark::Bench& bench)
     });
 
     assert(!graph->IsOversized());
+    // At least 99% of chains must survive.
+    assert(graph->GetTransactionCount() >= (NUM_TOP_CHAINS * NUM_TX_PER_TOP_CHAIN * 99) / 100);
 }
 
 } // namespace

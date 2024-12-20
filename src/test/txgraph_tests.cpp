@@ -68,14 +68,11 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_zigzag)
     graph->SanityCheck();
     BOOST_CHECK(!graph->IsOversized(/*main_only=*/false));
 
-    BOOST_CHECK_EQUAL(removed_refs.size(), NUM_TOTAL_TX - MAX_CLUSTER_COUNT);
-    BOOST_CHECK_EQUAL(graph->GetTransactionCount(), MAX_CLUSTER_COUNT);
-
-    // Only prefix of size max_cluster_count is left. That's the first half of the top and first half of the bottom.
+    // We only need to trim the middle bottom transaction to end up with 2 clusters each within cluster limits.
+    BOOST_CHECK_EQUAL(removed_refs.size(), 1);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(), MAX_CLUSTER_COUNT * 2 - 2);
     for (unsigned int i = 0; i < refs.size(); ++i) {
-        const bool first_half = (i < (NUM_BOTTOM_TX / 2)) ||
-                                (i >= NUM_BOTTOM_TX && i < NUM_BOTTOM_TX + NUM_TOP_TX / 2 + 1);
-        BOOST_CHECK_EQUAL(graph->Exists(refs[i]), first_half);
+        BOOST_CHECK_EQUAL(graph->Exists(refs[i]), i != (NUM_BOTTOM_TX / 2));
     }
 }
 
@@ -129,13 +126,12 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_flower)
     graph->SanityCheck();
     BOOST_CHECK(!graph->IsOversized(/*main_only=*/false));
 
-    BOOST_CHECK_EQUAL(removed_refs.size(), NUM_TOTAL_TX - MAX_CLUSTER_COUNT);
-    BOOST_CHECK_EQUAL(graph->GetTransactionCount(), MAX_CLUSTER_COUNT);
-
-    // Only prefix of size max_cluster_count (last max_cluster_count top transactions) is left.
-    for (unsigned int i = 0; i < refs.size(); ++i) {
-        const bool top_highest_feerate = i > (NUM_TOTAL_TX - MAX_CLUSTER_COUNT - 1);
-        BOOST_CHECK_EQUAL(graph->Exists(refs[i]), top_highest_feerate);
+    // Since only the bottom transaction connects these clusters, we only need to remove it.
+    BOOST_CHECK_EQUAL(removed_refs.size(), 1);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(false), MAX_CLUSTER_COUNT * 2);
+    BOOST_CHECK(!graph->Exists(refs[0]));
+    for (unsigned int i = 1; i < refs.size(); ++i) {
+        BOOST_CHECK(graph->Exists(refs[i]));
     }
 }
 
@@ -248,8 +244,8 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_huge)
     BOOST_CHECK(removed_refs.size() == total_tx_count - graph->GetTransactionCount());
     graph->SanityCheck();
 
-    // At least one original chain must survive.
-    BOOST_CHECK(graph->GetTransactionCount() >= NUM_TX_PER_TOP_CHAIN);
+    // At least 99% of chains must survive.
+    BOOST_CHECK(graph->GetTransactionCount() >= (NUM_TOP_CHAINS * NUM_TX_PER_TOP_CHAIN * 99) / 100);
 }
 
 BOOST_AUTO_TEST_CASE(txgraph_trim_big_singletons)
