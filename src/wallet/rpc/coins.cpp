@@ -447,6 +447,7 @@ RPCHelpMan getbalances()
                     {RPCResult::Type::STR_AMOUNT, "immature", "balance from immature coinbase outputs"},
                 }},
                 RESULT_LAST_PROCESSED_BLOCK,
+                {RPCResult::Type::STR_AMOUNT, "total", "total of all balances returned by this RPC"},
             }
             },
         RPCExamples{
@@ -466,6 +467,7 @@ RPCHelpMan getbalances()
 
     const auto bal = GetBalance(wallet);
     UniValue balances{UniValue::VOBJ};
+    const Balance full_bal{GetBalance(wallet, /*min_depth=*/0, /*avoid_reuse=*/false)};
     {
         UniValue balances_mine{UniValue::VOBJ};
         balances_mine.pushKV("trusted", ValueFromAmount(bal.m_mine_trusted));
@@ -474,7 +476,6 @@ RPCHelpMan getbalances()
         if (wallet.IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE)) {
             // If the AVOID_REUSE flag is set, bal has been set to just the un-reused address balance. Get
             // the total balance, and then subtract bal to get the reused address balance.
-            const auto full_bal = GetBalance(wallet, 0, false);
             balances_mine.pushKV("used", ValueFromAmount(full_bal.m_mine_trusted + full_bal.m_mine_untrusted_pending - bal.m_mine_trusted - bal.m_mine_untrusted_pending));
         }
         balances.pushKV("mine", std::move(balances_mine));
@@ -489,6 +490,7 @@ RPCHelpMan getbalances()
     }
 
     AppendLastProcessedBlock(balances, wallet);
+    balances.pushKV("total", ValueFromAmount(full_bal.m_total));
     return balances;
 },
     };
