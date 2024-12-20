@@ -193,14 +193,16 @@ struct MempoolAcceptResult {
     const TxValidationState m_state;
 
     // The following fields are only present when m_result_type = ResultType::VALID
+    /** Virtual size as used by the mempool, calculated using serialized size and sigops. */
+    const std::optional<int64_t> m_vsize;
     /** Raw base fees in satoshis. */
     const std::optional<CAmount> m_base_fees;
     static MempoolAcceptResult Failure(TxValidationState state) {
         return MempoolAcceptResult(state);
     }
 
-    static MempoolAcceptResult Success(CAmount fees) {
-        return MempoolAcceptResult(fees);
+    static MempoolAcceptResult Success(int64_t vsize, CAmount fees) {
+        return MempoolAcceptResult(vsize, fees);
     }
 
 // Private constructors. Use static methods MempoolAcceptResult::Success, etc. to construct.
@@ -212,8 +214,8 @@ private:
         }
 
     /** Constructor for success case */
-    explicit MempoolAcceptResult(CAmount fees)
-        : m_result_type(ResultType::VALID), m_base_fees(fees) {}
+    explicit MempoolAcceptResult(int64_t vsize, CAmount fees)
+        : m_result_type(ResultType::VALID), m_vsize{vsize}, m_base_fees(fees) {}
 };
 
 /**
