@@ -64,10 +64,10 @@ int main(int argc, char* argv[])
 
     // SETUP: Context
     kernel::Context kernel_context{};
-    // We can't use a goto here, but we can use an assert since none of the
-    // things instantiated so far requires running the epilogue to be torn down
-    // properly
-    assert(kernel::SanityChecks(kernel_context));
+    if (!kernel::SanityChecks(kernel_context)) {
+        std::cerr << "Failed sanity check.";
+        return 1;
+    }
 
     ValidationSignals validation_signals{std::make_unique<util::ImmediateTaskRunner>()};
 
@@ -131,12 +131,12 @@ int main(int argc, char* argv[])
     auto [status, error] = node::LoadChainstate(chainman, cache_sizes, options);
     if (status != node::ChainstateLoadStatus::SUCCESS) {
         std::cerr << "Failed to load Chain state from your datadir." << std::endl;
-        goto epilogue;
+        return 1;
     } else {
         std::tie(status, error) = node::VerifyLoadedChainstate(chainman, options);
         if (status != node::ChainstateLoadStatus::SUCCESS) {
             std::cerr << "Failed to verify loaded Chain state from your datadir." << std::endl;
-            goto epilogue;
+            return 1;
         }
     }
 
@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
         BlockValidationState state;
         if (!chainstate->ActivateBestChain(state, nullptr)) {
             std::cerr << "Failed to connect best block (" << state.ToString() << ")" << std::endl;
-            goto epilogue;
+            return 1;
         }
     }
 
@@ -253,20 +253,6 @@ int main(int argc, char* argv[])
         case BlockValidationResult::BLOCK_CHECKPOINT:
             std::cerr << "the block failed to meet one of our checkpoints" << std::endl;
             break;
-        }
-    }
-
-epilogue:
-    // Without this precise shutdown sequence, there will be a lot of nullptr
-    // dereferencing and UB.
-    validation_signals.FlushBackgroundCallbacks();
-    {
-        LOCK(cs_main);
-        for (Chainstate* chainstate : chainman.GetAll()) {
-            if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
-                chainstate->ResetCoinsViews();
-            }
         }
     }
 }
