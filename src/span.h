@@ -248,9 +248,8 @@ template <typename T>
 T& SpanPopBack(Span<T>& span)
 {
     size_t size = span.size();
-    ASSERT_IF_DEBUG(size > 0);
-    T& back = span[size - 1];
-    span = Span<T>(span.data(), size - 1);
+    T& back = span.back();
+    span = span.first(size - 1);
     return back;
 }
 

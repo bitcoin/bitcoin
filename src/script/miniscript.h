@@ -1798,7 +1798,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
         // Get threshold
         int next_comma = FindNextChar(in, ',');
         if (next_comma < 1) return false;
-        const auto k_to_integral{ToIntegral<int64_t>(std::string_view(in.begin(), next_comma))};
+        const auto k_to_integral{ToIntegral<int64_t>(std::string_view(in.data(), next_comma))};
         if (!k_to_integral.has_value()) return false;
         const int64_t k{k_to_integral.value()};
         in = in.subspan(next_comma + 1);
@@ -1954,7 +1954,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
             } else if (Const("after(", in)) {
                 int arg_size = FindNextChar(in, ')');
                 if (arg_size < 1) return {};
-                const auto num{ToIntegral<int64_t>(std::string_view(in.begin(), arg_size))};
+                const auto num{ToIntegral<int64_t>(std::string_view(in.data(), arg_size))};
                 if (!num.has_value() || *num < 1 || *num >= 0x80000000L) return {};
                 constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::AFTER, *num));
                 in = in.subspan(arg_size + 1);
@@ -1962,7 +1962,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
             } else if (Const("older(", in)) {
                 int arg_size = FindNextChar(in, ')');
                 if (arg_size < 1) return {};
-                const auto num{ToIntegral<int64_t>(std::string_view(in.begin(), arg_size))};
+                const auto num{ToIntegral<int64_t>(std::string_view(in.data(), arg_size))};
                 if (!num.has_value() || *num < 1 || *num >= 0x80000000L) return {};
                 constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::OLDER, *num));
                 in = in.subspan(arg_size + 1);
@@ -1974,7 +1974,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
             } else if (Const("thresh(", in)) {
                 int next_comma = FindNextChar(in, ',');
                 if (next_comma < 1) return {};
-                const auto k{ToIntegral<int64_t>(std::string_view(in.begin(), next_comma))};
+                const auto k{ToIntegral<int64_t>(std::string_view(in.data(), next_comma))};
                 if (!k.has_value() || *k < 1) return {};
                 in = in.subspan(next_comma + 1);
                 // n = 1 here because we read the first WRAPPED_EXPR before reaching THRESH
