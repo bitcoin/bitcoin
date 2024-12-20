@@ -4,7 +4,10 @@
 
 #include <crypto/hex_base.h>
 
+#include <span.h>
+
 #include <array>
+#include <cassert>
 #include <cstring>
 #include <string>
 
