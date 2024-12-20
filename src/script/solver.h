@@ -10,6 +10,7 @@
 
 #include <attributes.h>
 #include <script/script.h>
+#include <span.h>
 
 #include <string>
 #include <optional>
@@ -17,7 +18,6 @@
 #include <vector>
 
 class CPubKey;
-template <typename C> class Span;
 
 enum class TxoutType {
     NONSTANDARD,
@@ -59,7 +59,7 @@ CScript GetScriptForRawPubKey(const CPubKey& pubkey);
 
 /** Determine if script is a "multi_a" script. Returns (threshold, keyspans) if so, and nullopt otherwise.
  *  The keyspans refer to bytes in the passed script. */
-std::optional<std::pair<int, std::vector<Span<const unsigned char>>>> MatchMultiA(const CScript& script LIFETIMEBOUND);
+std::optional<std::pair<int, std::vector<std::span<const unsigned char>>>> MatchMultiA(const CScript& script LIFETIMEBOUND);
 
 /** Generate a multisig script. */
 CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);

@@ -12,6 +12,7 @@
 #include <netaddress.h>
 #include <node/connection_types.h>
 #include <node/eviction.h>
+#include <span.h>
 #include <sync.h>
 #include <util/sock.h>
 
@@ -27,9 +28,6 @@
 #include <vector>
 
 class FastRandomContext;
-
-template <typename C>
-class Span;
 
 struct ConnmanTestMsg : public CConnman {
     using CConnman::CConnman;
@@ -80,7 +78,7 @@ struct ConnmanTestMsg : public CConnman {
         return m_msgproc->ProcessMessages(&node, flagInterruptMsgProc);
     }
 
-    void NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_bytes, bool& complete) const;
+    void NodeReceiveMsgBytes(CNode& node, std::span<const uint8_t> msg_bytes, bool& complete) const;
 
     bool ReceiveMsgFrom(CNode& node, CSerializedNetMsg&& ser_msg) const;
     void FlushSendBuffer(CNode& node) const;
