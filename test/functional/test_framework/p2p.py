@@ -108,6 +108,8 @@ TXID_RELAY_DELAY = 2
 OVERLOADED_PEER_TX_DELAY = 2
 # How long to wait before downloading a transaction from an additional peer
 GETDATA_TX_INTERVAL = 60
+# How long to wait before requesting orphan ancpkginfo/parents from an additional peer
+ORPHAN_ANCESTOR_GETDATA_INTERVAL = 60
 
 MESSAGEMAP = {
     b"addr": msg_addr,
