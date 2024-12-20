@@ -36,8 +36,8 @@ class ConfArgsTest(BitcoinTestFramework):
     def setup_nodes(self):
         self.add_nodes(self.num_nodes, self.extra_args)
         # Ensure a log file exists as TestNode.assert_debug_log() expects it.
-        self.nodes[0].debug_log_path.parent.mkdir()
-        self.nodes[0].debug_log_path.touch()
+        self.nodes[0].debug_log_path(wallet=False).parent.mkdir()
+        self.nodes[0].debug_log_path(wallet=False).touch()
 
     def test_dir_config(self):
         self.log.info('Error should be emitted if config file is a directory')
@@ -251,6 +251,7 @@ class ConfArgsTest(BitcoinTestFramework):
                     'Command-line arg: rpcallowip=****',
                 ]):
             self.start_node(0, extra_args=[
+                '-debugexclude=ipc',
                 '-addnode=some.node',
                 '-rpcauth=alice:f7efda5c189b999524f151318c0c86$d5b51b3beffbc0',
                 '-rpcbind=127.1.1.1',
