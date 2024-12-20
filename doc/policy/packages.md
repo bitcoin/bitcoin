@@ -47,3 +47,16 @@ test accepts):
 
 * Packages must be child-with-unconfirmed-parents packages. This also means packages must contain at
   least 2 transactions. (#22674)
+
+* Transactions in the package that have the same txid as another transaction already in the mempool
+  will be removed from the package prior to submission ("deduplication").
+
+   - *Rationale*: Node operators are free to set their mempool policies however they please, nodes
+     may receive transactions in different orders, and malicious counterparties may try to take
+     advantage of policy differences to pin or delay propagation of transactions. As such, it's
+     possible for some package transaction(s) to already be in the mempool, and there is no need to
+     repeat validation for those transactions or double-count them in fees.
+
+   - *Rationale*: We want to prevent potential censorship vectors. We should not reject entire
+     packages because we already have one of the transactions. Also, if an attacker first broadcasts
+     a competing package, the honest package should still be considered for acceptance.
