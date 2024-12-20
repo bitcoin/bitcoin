@@ -1311,7 +1311,7 @@ bool LegacyScriptPubKeyMan::TopUp(unsigned int kpSize)
             return false;
         }
     }
-    if (!batch.TxnCommit()) throw std::runtime_error(strprintf("Error during keypool top up. Cannot commit changes for wallet %s", m_storage.GetDisplayName()));
+    if (!batch.TxnCommit()) throw std::runtime_error(strprintf("Error during keypool top up. Cannot commit changes for wallet [%s]", m_storage.LogName()));
     NotifyCanGetAddressesChanged();
     // Note: Unlike with DescriptorSPKM, LegacySPKM does not need to call
     // m_storage.TopUpCallback() as we do not know what new scripts the LegacySPKM is
@@ -2224,7 +2224,7 @@ bool DescriptorScriptPubKeyMan::TopUp(unsigned int size)
     WalletBatch batch(m_storage.GetDatabase());
     if (!batch.TxnBegin()) return false;
     bool res = TopUpWithDB(batch, size);
-    if (!batch.TxnCommit()) throw std::runtime_error(strprintf("Error during descriptors keypool top up. Cannot commit changes for wallet %s", m_storage.GetDisplayName()));
+    if (!batch.TxnCommit()) throw std::runtime_error(strprintf("Error during descriptors keypool top up. Cannot commit changes for wallet [%s]", m_storage.LogName()));
     return res;
 }
 
