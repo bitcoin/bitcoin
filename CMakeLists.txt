@@ -76,6 +76,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/module)
 #=============================
 include(CMakeDependentOption)
 # When adding a new option, end the <help_text> with a full stop for consistency.
+option(BUILD_BITCOIN_BIN "Build bitcoin executable." ON)
 option(BUILD_DAEMON "Build bitcoind executable." ON)
 option(BUILD_GUI "Build bitcoin-qt executable." OFF)
 option(BUILD_CLI "Build bitcoin-cli executable." ON)
@@ -210,6 +211,7 @@ target_link_libraries(core_interface INTERFACE
 
 if(BUILD_FOR_FUZZING)
   message(WARNING "BUILD_FOR_FUZZING=ON will disable all other targets and force BUILD_FUZZ_BINARY=ON.")
+  set(BUILD_BITCOIN_BIN OFF)
   set(BUILD_DAEMON OFF)
   set(BUILD_CLI OFF)
   set(BUILD_TX OFF)
@@ -602,6 +604,7 @@ message("\n")
 message("Configure summary")
 message("=================")
 message("Executables:")
+message("  bitcoin ............................. ${BUILD_BITCOIN_BIN}")
 message("  bitcoind ............................ ${BUILD_DAEMON}")
 message("  bitcoin-node (multiprocess) ......... ${WITH_MULTIPROCESS}")
 message("  bitcoin-qt (GUI) .................... ${BUILD_GUI}")
