@@ -195,6 +195,9 @@ public:
     /** Count how many announcements are being tracked in total across all peers and transaction hashes. */
     size_t Size() const;
 
+    /** For some tx hash (either txid or wtxid), return all peers with non-COMPLETED announcements. */
+    std::vector<NodeId> GetCandidatePeers(const uint256& txhash) const;
+
     /** Access to the internal priority computation (testing only) */
     uint64_t ComputePriority(const uint256& txhash, NodeId peer, bool preferred) const;
 
