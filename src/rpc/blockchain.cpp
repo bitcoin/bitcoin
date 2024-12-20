@@ -2125,6 +2125,7 @@ static RPCHelpMan reconsiderblock()
         "This can be used to undo the effects of invalidateblock.\n",
         {
             {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hash of the block to reconsider"},
+            {"ignore_chainlocks", RPCArg::Type::BOOL, RPCArg::Default{false}, "if true, existing chainlocks will be ignored"},
         },
         RPCResult{RPCResult::Type::NONE, "", ""},
         RPCExamples{
@@ -2137,6 +2138,7 @@ static RPCHelpMan reconsiderblock()
     CChainState& active_chainstate = chainman.ActiveChainstate();
 
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
+    const bool ignore_chainlocks{request.params[1].isNull() ? false : request.params[1].get_bool()};
 
     {
         LOCK(cs_main);
@@ -2145,7 +2147,7 @@ static RPCHelpMan reconsiderblock()
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
 
-        active_chainstate.ResetBlockFailureFlags(pblockindex);
+        active_chainstate.ResetBlockFailureFlags(pblockindex, ignore_chainlocks);
     }
 
     BlockValidationState state;
