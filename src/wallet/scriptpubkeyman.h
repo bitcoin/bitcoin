@@ -31,8 +31,9 @@
 enum class OutputType;
 
 namespace wallet {
-struct MigrationData;
 class ScriptPubKeyMan;
+class WalletLogSource;
+struct MigrationData;
 
 // Wallet storage things that ScriptPubKeyMans need in order to be able to store things to the wallet database.
 // It provides access to things that are part of the entire wallet and not specific to a ScriptPubKeyMan such as
@@ -44,6 +45,7 @@ class WalletStorage
 public:
     virtual ~WalletStorage() = default;
     virtual std::string GetDisplayName() const = 0;
+    virtual const WalletLogSource& Log() const = 0;
     virtual WalletDatabase& GetDatabase() const = 0;
     virtual bool IsWalletFlagSet(uint64_t) const = 0;
     virtual void UnsetBlankWalletFlag(WalletBatch&) = 0;
@@ -174,10 +176,11 @@ struct WalletDestination
 class ScriptPubKeyMan
 {
 protected:
+    const WalletLogSource& m_log;
     WalletStorage& m_storage;
 
 public:
-    explicit ScriptPubKeyMan(WalletStorage& storage) : m_storage(storage) {}
+    explicit ScriptPubKeyMan(WalletStorage& storage) : m_log{storage.Log()}, m_storage(storage) {}
     virtual ~ScriptPubKeyMan() = default;
     virtual util::Result<CTxDestination> GetNewDestination(const OutputType type) { return util::Error{Untranslated("Not supported")}; }
     virtual isminetype IsMine(const CScript& script) const { return ISMINE_NO; }
@@ -251,13 +254,6 @@ public:
 
     /** Returns a set of all the scriptPubKeys that this ScriptPubKeyMan watches */
     virtual std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const { return {}; };
-
-    /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
-    template <typename... Params>
-    void WalletLogPrintf(util::ConstevalFormatString<sizeof...(Params)> wallet_fmt, const Params&... params) const
-    {
-        LogInfo("%s %s", m_storage.GetDisplayName(), tfm::format(wallet_fmt, params...));
-    };
 
     /** Watch-only address added */
     boost::signals2::signal<void (bool fHaveWatchOnly)> NotifyWatchonlyChanged;
