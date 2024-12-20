@@ -6,7 +6,7 @@ cmake_path(GET JSON_SOURCE_PATH STEM json_source_basename)
 
 file(READ ${JSON_SOURCE_PATH} hex_content HEX)
 string(REGEX REPLACE "................" "\\0\n" formatted_bytes "${hex_content}")
-string(REGEX REPLACE "[^\n][^\n]" "0x\\0, " formatted_bytes "${formatted_bytes}")
+string(REGEX REPLACE "[^\n][^\n]" "'\\\\x\\0'," formatted_bytes "${formatted_bytes}")
 
 set(header_content
 "#include <string_view>
