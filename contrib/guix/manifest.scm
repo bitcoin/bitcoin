@@ -451,7 +451,7 @@ inspecting signatures in Mach-O binaries.")
                #t))))))))
 
 (define-public glibc-2.31
-  (let ((commit "8e30f03744837a85e33d84ccd34ed3abe30d37c3"))
+  (let ((commit "7b27c450c34563a28e634cccb399cd415e71ebfe"))
   (package
     (inherit glibc) ;; 2.35
     (version "2.31")
@@ -463,7 +463,7 @@ inspecting signatures in Mach-O binaries.")
               (file-name (git-file-name "glibc" commit))
               (sha256
                (base32
-                "1zi0s9yy5zkisw823vivn7zlj8w6g9p3mm7lmlqiixcxdkz4dbn6"))
+                "017qdpr5id7ddb4lpkzj2li1abvw916m3fc6n7nw28z4h5qbv2n0"))
               (patches (search-our-patches "glibc-guix-prefix.patch"))))
     (arguments
       (substitute-keyword-arguments (package-arguments glibc)
@@ -474,6 +474,8 @@ inspecting signatures in Mach-O binaries.")
                   "--enable-cet",
                   "--enable-bind-now",
                   "--disable-werror",
+                  "--disable-timezone-tools",
+                  "--disable-profile",
                   building-on)))
     ((#:phases phases)
         `(modify-phases ,phases
