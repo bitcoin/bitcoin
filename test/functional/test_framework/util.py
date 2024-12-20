@@ -453,6 +453,17 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
         f.write("unsafesqlitesync=1\n")
         if disable_autoconnect:
             f.write("connect=0\n")
+        # Limit max connections to mitigate test failures on some systems caused by the warning:
+        # "Warning: Reducing -maxconnections from <...> to <...> due to system limitations".
+        # The value is calculated as follows:
+        #  available_fds = 256          // Same as FD_SETSIZE on NetBSD.
+        #  MIN_CORE_FDS = 151           // Number of file descriptors required for core functionality.
+        #  MAX_ADDNODE_CONNECTIONS = 8  // Maximum number of -addnode outgoing nodes.
+        #  nBind == 3                   // Maximum number of bound interfaces used in a test.
+        #
+        #  min_required_fds = MIN_CORE_FDS + MAX_ADDNODE_CONNECTIONS + nBind = 151 + 8 + 3 = 162;
+        #  nMaxConnections = available_fds - min_required_fds = 256 - 161 = 94;
+        f.write("maxconnections=94\n")
         f.write(extra_config)
 
 
