@@ -580,8 +580,13 @@ endif()
 # Relevant discussions:
 # - https://github.com/hebasto/bitcoin/pull/236#issuecomment-2183120953
 # - https://github.com/bitcoin/bitcoin/pull/30312#issuecomment-2191235833
-set(CMAKE_SKIP_BUILD_RPATH TRUE)
-set(CMAKE_SKIP_INSTALL_RPATH TRUE)
+# NetBSD always requires runtime paths to be set for executables.
+if(CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+else()
+  set(CMAKE_SKIP_BUILD_RPATH TRUE)
+  set(CMAKE_SKIP_INSTALL_RPATH TRUE)
+endif()
 add_subdirectory(test)
 add_subdirectory(doc)
 
