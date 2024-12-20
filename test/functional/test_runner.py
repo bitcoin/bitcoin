@@ -379,6 +379,7 @@ BASE_SCRIPTS = [
     'rpc_getdescriptorinfo.py',
     'rpc_addresses_deprecation.py',
     'rpc_getpeerinfo_deprecation.py',
+    'rpc_mempool_entry_fee_fields_deprecation.py',
     'rpc_help.py',
     'feature_dirsymlinks.py',
     'feature_help.py',
