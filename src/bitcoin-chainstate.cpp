@@ -106,6 +106,10 @@ int main(int argc, char* argv[])
     };
     auto notifications = std::make_unique<KernelNotifications>();
 
+    node::CacheSizes cache_sizes;
+    cache_sizes.block_tree_db = 2 << 20;
+    cache_sizes.coins_db = 2 << 22;
+    cache_sizes.coins = (450 << 20) - (2 << 20) - (2 << 22);
 
     // SETUP: Chainstate
     auto chainparams = CChainParams::Main();
@@ -119,14 +123,12 @@ int main(int argc, char* argv[])
         .chainparams = chainman_opts.chainparams,
         .blocks_dir = abs_datadir / "blocks",
         .notifications = chainman_opts.notifications,
+        .block_tree_db_dir = abs_datadir / "blocks" / "index",
+        .block_tree_db_cache_size = cache_sizes.block_tree_db,
     };
     util::SignalInterrupt interrupt;
     ChainstateManager chainman{interrupt, chainman_opts, blockman_opts};
 
-    node::CacheSizes cache_sizes;
-    cache_sizes.block_tree_db = 2 << 20;
-    cache_sizes.coins_db = 2 << 22;
-    cache_sizes.coins = (450 << 20) - (2 << 20) - (2 << 22);
     node::ChainstateLoadOptions options;
     auto [status, error] = node::LoadChainstate(chainman, cache_sizes, options);
     if (status != node::ChainstateLoadStatus::SUCCESS) {
