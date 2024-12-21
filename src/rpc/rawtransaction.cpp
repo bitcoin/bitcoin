@@ -1867,6 +1867,7 @@ static RPCHelpMan utxoupdatepsbt()
     }
 
     // Fill the inputs
+    const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
     for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
         PSBTInput& input = psbtx.inputs.at(i);
 
@@ -1877,7 +1878,7 @@ static RPCHelpMan utxoupdatepsbt()
         // Update script/keypath information using descriptor data.
         // Note that SignPSBTInput does a lot more than just constructing ECDSA signatures
         // we don't actually care about those here, in fact.
-        SignPSBTInput(public_provider, psbtx, i, /*sighash=*/ SIGHASH_ALL);
+        SignPSBTInput(public_provider, psbtx, i, &txdata, /*sighash=*/SIGHASH_ALL);
     }
 
     // Update script/keypath information using descriptor data.
