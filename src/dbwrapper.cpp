@@ -173,7 +173,7 @@ void CDBBatch::Clear()
 void CDBBatch::WriteImpl(std::span<const std::byte> key, DataStream& ssValue)
 {
     leveldb::Slice slKey(CharCast(key.data()), key.size());
-    ssValue.Obfuscate(dbwrapper_private::GetObfuscation(parent));
+    dbwrapper_private::GetObfuscation(parent)(ssValue);
     leveldb::Slice slValue(CharCast(ssValue.data()), ssValue.size());
     m_impl_batch->batch.Put(slKey, slValue);
 }
@@ -249,21 +249,24 @@ CDBWrapper::CDBWrapper(const DBParams& params)
     }
 
     {
-        m_obfuscation = std::vector<uint8_t>(OBFUSCATION_SIZE_BYTES, '\000'); // Needed for unobfuscated Read() below
-        const bool key_missing{!Read(OBFUSCATION_KEY_KEY, m_obfuscation)};
+        assert(m_obfuscation == 0); // Needed for unobfuscated Read() below
+        std::vector<uint8_t> obfuscation_key_bytes(Obfuscation::SIZE_BYTES, '\000');
+        const bool key_missing{!Read(OBFUSCATION_KEY_KEY, obfuscation_key_bytes)};
         if (key_missing && params.obfuscate && IsEmpty()) {
             // Initialize non-degenerate obfuscation if it won't upset existing, non-obfuscated data.
-            std::vector<uint8_t> new_key(OBFUSCATION_SIZE_BYTES);
-            GetRandBytes(new_key);
+            GetRandBytes(obfuscation_key_bytes);
 
             // Write `new_key` so we don't obfuscate the key with itself
-            Write(OBFUSCATION_KEY_KEY, new_key);
-            m_obfuscation = std::move(new_key);
+            Write(OBFUSCATION_KEY_KEY, obfuscation_key_bytes);
 
-            LogInfo("Wrote new obfuscate key for %s: %s", fs::PathToString(params.path), HexStr(m_obfuscation));
+            LogInfo("Wrote new obfuscate key for %s: %s", fs::PathToString(params.path), HexStr(obfuscation_key_bytes));
         }
-
-        LogInfo("Using obfuscation key for %s: %s", fs::PathToString(params.path), HexStr(m_obfuscation));
+        if (obfuscation_key_bytes.size() == Obfuscation::SIZE_BYTES) {
+            LogInfo("Using obfuscation key for %s: %s", fs::PathToString(params.path), HexStr(obfuscation_key_bytes));
+            m_obfuscation = MakeByteSpan(obfuscation_key_bytes).first<Obfuscation::SIZE_BYTES>();
+        } else {
+            LogError("Invalid obfuscation key for %s: %s - continuing unobfuscated!", fs::PathToString(params.path), HexStr(obfuscation_key_bytes));
+        }
     }
 }
 
@@ -308,8 +311,6 @@ size_t CDBWrapper::DynamicMemoryUsage() const
     }
     return parsed.value();
 }
-
-const unsigned int CDBWrapper::OBFUSCATION_SIZE_BYTES = 8;
 
 std::optional<std::string> CDBWrapper::ReadImpl(std::span<const std::byte> key) const
 {
@@ -394,6 +395,6 @@ void CDBIterator::Next() { m_impl_iter->iter->Next(); }
 
 namespace dbwrapper_private {
 
-const std::vector<unsigned char>& GetObfuscation(const CDBWrapper &w) { return w.m_obfuscation; }
+Obfuscation GetObfuscation(const CDBWrapper& w) { return w.m_obfuscation; }
 
 } // namespace dbwrapper_private

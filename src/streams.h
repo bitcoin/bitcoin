@@ -6,6 +6,7 @@
 #ifndef BITCOIN_STREAMS_H
 #define BITCOIN_STREAMS_H
 
+#include <obfuscation.h>
 #include <serialize.h>
 #include <span.h>
 #include <support/allocators/zeroafterfree.h>
@@ -21,29 +22,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <string>
-#include <utility>
 #include <vector>
-
-namespace util {
-inline void Obfuscate(std::span<std::byte> write, std::span<const std::byte> key, size_t key_offset = 0)
-{
-    if (key.size() == 0) {
-        return;
-    }
-    key_offset %= key.size();
-
-    for (size_t i = 0, j = key_offset; i != write.size(); i++) {
-        write[i] ^= key[j++];
-
-        // This potentially acts on very many bytes of data, so it's
-        // important that we calculate `j`, i.e. the `key` index in this
-        // way instead of doing a %, which would effectively be a division
-        // for each byte Xor'd -- much slower than need be.
-        if (j == key.size())
-            j = 0;
-    }
-}
-} // namespace util
 
 /* Minimal stream for overwriting and/or appending to an existing byte vector
  *
@@ -261,21 +240,11 @@ public:
         return (*this);
     }
 
-    template<typename T>
+    template <typename T>
     DataStream& operator>>(T&& obj)
     {
         ::Unserialize(*this, obj);
         return (*this);
-    }
-
-    /**
-     * XOR the contents of this stream with a certain key.
-     *
-     * @param[in] obfuscation The key used to XOR the data in this stream.
-     */
-    void Obfuscate(const std::vector<unsigned char>& obfuscation)
-    {
-        util::Obfuscate(MakeWritableByteSpan(*this), MakeByteSpan(obfuscation));
     }
 
     /** Compute total memory usage of this object (own memory + any dynamic memory). */
@@ -392,11 +361,11 @@ class AutoFile
 {
 protected:
     std::FILE* m_file;
-    std::vector<std::byte> m_obfuscation;
+    Obfuscation m_obfuscation;
     std::optional<int64_t> m_position;
 
 public:
-    explicit AutoFile(std::FILE* file, std::vector<std::byte> obfuscation={});
+    explicit AutoFile(std::FILE* file, const Obfuscation& obfuscation = 0);
 
     ~AutoFile() { fclose(); }
 
@@ -428,7 +397,7 @@ public:
     bool IsNull() const { return m_file == nullptr; }
 
     /** Continue with a different XOR key */
-    void SetObfuscation(std::vector<std::byte> obfuscation) { m_obfuscation = obfuscation; }
+    void SetObfuscation(const Obfuscation& obfuscation) { m_obfuscation = obfuscation; }
 
     /** Implementation detail, only used internally. */
     std::size_t detail_fread(std::span<std::byte> dst);
