@@ -20,7 +20,7 @@ FUZZ_TARGET(autofile)
     FuzzedFileProvider fuzzed_file_provider{fuzzed_data_provider};
     AutoFile auto_file{
         fuzzed_file_provider.open(),
-        ConsumeRandomLengthByteVector<std::byte>(fuzzed_data_provider),
+        fuzzed_data_provider.ConsumeIntegral<uint64_t>()
     };
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100)
     {

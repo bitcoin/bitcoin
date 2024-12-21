@@ -60,12 +60,11 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
         file >> version;
 
         if (version == MEMPOOL_DUMP_VERSION_NO_XOR_KEY) {
-            std::vector<std::byte> xor_key;
-            file.SetXor(xor_key);
+            file.SetObfuscation(0);
         } else if (version == MEMPOOL_DUMP_VERSION) {
-            std::vector<std::byte> xor_key;
-            file >> xor_key;
-            file.SetXor(xor_key);
+            Obfuscation obfuscation{0};
+            file >> obfuscation;
+            file.SetObfuscation(obfuscation);
         } else {
             return false;
         }
@@ -181,13 +180,11 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
         file << version;
 
         if (!pool.m_opts.persist_v1_dat) {
-            std::vector<std::byte> xor_key(8);
-            FastRandomContext{}.fillrand(xor_key);
-            file << xor_key;
-            file.SetXor(xor_key);
+            const Obfuscation obfuscation{FastRandomContext{}.rand64()};
+            file << obfuscation;
+            file.SetObfuscation(obfuscation);
         } else {
-            std::vector<std::byte> xor_key(8);
-            file.SetXor(xor_key);
+            file.SetObfuscation(0);
         }
 
         uint64_t mempool_transactions_to_write(vinfo.size());

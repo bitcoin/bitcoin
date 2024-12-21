@@ -22,7 +22,7 @@ FUZZ_TARGET(buffered_file)
     std::optional<BufferedFile> opt_buffered_file;
     AutoFile fuzzed_file{
         fuzzed_file_provider.open(),
-        ConsumeRandomLengthByteVector<std::byte>(fuzzed_data_provider),
+        fuzzed_data_provider.ConsumeIntegral<uint64_t>()
     };
     try {
         auto n_buf_size = fuzzed_data_provider.ConsumeIntegralInRange<uint64_t>(0, 4096);
