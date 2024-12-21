@@ -17,13 +17,12 @@ static void Xor(benchmark::Bench& bench)
     FastRandomContext rng{/*fDeterministic=*/true};
     auto test_data{rng.randbytes<std::byte>(1 << 20)};
 
-    std::vector key_bytes{rng.randbytes<std::byte>(8)};
-    uint64_t key;
-    std::memcpy(&key, key_bytes.data(), 8);
+    const Obfuscation obfuscation{rng.rand64()};
+    assert(obfuscation);
 
     size_t offset{0};
     bench.batch(test_data.size()).unit("byte").run([&] {
-        util::Xor(test_data, key_bytes, offset++);
+        obfuscation(test_data, offset++);
         ankerl::nanobench::doNotOptimizeAway(test_data);
     });
 }
