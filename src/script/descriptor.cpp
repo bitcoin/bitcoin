@@ -1787,10 +1787,6 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
             ret.emplace_back(std::make_unique<PKHDescriptor>(std::move(pubkey)));
         }
         return ret;
-    } else if (ctx != ParseScriptContext::P2TR && Func("pkh", expr)) {
-        // Under Taproot, always the Miniscript parser deal with it.
-        error = "Can only have pkh at top level, in sh(), wsh(), or in tr()";
-        return {};
     }
     if (ctx == ParseScriptContext::TOP && Func("combo", expr)) {
         auto pubkeys = ParsePubkey(key_exp_index, expr, ctx, out, error);
