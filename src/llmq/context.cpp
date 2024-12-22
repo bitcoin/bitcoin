@@ -34,16 +34,11 @@ LLMQContext::LLMQContext(ChainstateManager& chainman, CDeterministicMNManager& d
                                                 wipe)},
     sigman{std::make_unique<llmq::CSigningManager>(mn_activeman, chainman.ActiveChainstate(), *qman, unit_tests, wipe)},
     shareman{std::make_unique<llmq::CSigSharesManager>(*sigman, mn_activeman, *qman, sporkman)},
-    clhandler{[&]() -> llmq::CChainLocksHandler* const {
-        assert(llmq::chainLocksHandler == nullptr);
-        llmq::chainLocksHandler = std::make_unique<llmq::CChainLocksHandler>(chainman.ActiveChainstate(), *qman,
-                                                                             *sigman, *shareman, sporkman, mempool,
-                                                                             mn_sync, is_masternode);
-        return llmq::chainLocksHandler.get();
-    }()},
+    clhandler{std::make_unique<llmq::CChainLocksHandler>(chainman.ActiveChainstate(), *qman, *sigman, *shareman,
+                                                         sporkman, mempool, mn_sync, is_masternode)},
     isman{[&]() -> llmq::CInstantSendManager* const {
         assert(llmq::quorumInstantSendManager == nullptr);
-        llmq::quorumInstantSendManager = std::make_unique<llmq::CInstantSendManager>(*llmq::chainLocksHandler,
+        llmq::quorumInstantSendManager = std::make_unique<llmq::CInstantSendManager>(*clhandler,
                                                                                      chainman.ActiveChainstate(), *qman,
                                                                                      *sigman, *shareman, sporkman,
                                                                                      mempool, mn_sync, is_masternode,
@@ -61,7 +56,6 @@ LLMQContext::~LLMQContext() {
 
     // LLMQContext doesn't own these objects, but still need to care of them for consistency:
     llmq::quorumInstantSendManager.reset();
-    llmq::chainLocksHandler.reset();
 }
 
 void LLMQContext::Interrupt() {
@@ -74,7 +68,6 @@ void LLMQContext::Interrupt() {
 
 void LLMQContext::Start(CConnman& connman, PeerManager& peerman)
 {
-    assert(clhandler == llmq::chainLocksHandler.get());
     assert(isman == llmq::quorumInstantSendManager.get());
 
     if (is_masternode) {
@@ -85,16 +78,15 @@ void LLMQContext::Start(CConnman& connman, PeerManager& peerman)
     shareman->StartWorkerThread(connman, peerman);
     sigman->StartWorkerThread(peerman);
 
-    llmq::chainLocksHandler->Start();
+    clhandler->Start();
     llmq::quorumInstantSendManager->Start(peerman);
 }
 
 void LLMQContext::Stop() {
-    assert(clhandler == llmq::chainLocksHandler.get());
     assert(isman == llmq::quorumInstantSendManager.get());
 
     llmq::quorumInstantSendManager->Stop();
-    llmq::chainLocksHandler->Stop();
+    clhandler->Stop();
 
     shareman->StopWorkerThread();
     shareman->UnregisterAsRecoveredSigsListener();

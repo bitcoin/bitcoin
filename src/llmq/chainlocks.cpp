@@ -29,8 +29,6 @@ static bool ChainLocksSigningEnabled(const CSporkManager& sporkman)
 
 namespace llmq
 {
-std::unique_ptr<CChainLocksHandler> chainLocksHandler;
-
 CChainLocksHandler::CChainLocksHandler(CChainState& chainstate, CQuorumManager& _qman, CSigningManager& _sigman,
                                        CSigSharesManager& _shareman, CSporkManager& sporkman, CTxMemPool& _mempool,
                                        const CMasternodeSync& mn_sync, bool is_masternode) :

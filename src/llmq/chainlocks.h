@@ -126,8 +126,6 @@ private:
     void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
 
-extern std::unique_ptr<CChainLocksHandler> chainLocksHandler;
-
 bool AreChainLocksEnabled(const CSporkManager& sporkman);
 } // namespace llmq
 
