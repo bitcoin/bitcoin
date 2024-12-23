@@ -22,7 +22,6 @@ struct CActiveMasternodeInfo {
     uint256 proTxHash;
     COutPoint outpoint;
     CService service;
-    bool legacy{true};
 
     CActiveMasternodeInfo(const CBLSSecretKey& blsKeyOperator, const CBLSPublicKey& blsPubKeyOperator) :
         blsKeyOperator(blsKeyOperator), blsPubKeyOperator(blsPubKeyOperator) {};
@@ -74,7 +73,6 @@ public:
     [[nodiscard]] uint256 GetProTxHash() const { READ_LOCK(cs); return m_info.proTxHash; }
     [[nodiscard]] CService GetService() const { READ_LOCK(cs); return m_info.service; }
     [[nodiscard]] CBLSPublicKey GetPubKey() const;
-    [[nodiscard]] bool IsLegacy() const { READ_LOCK(cs); return m_info.legacy; }
 
 private:
     void InitInternal(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs);
