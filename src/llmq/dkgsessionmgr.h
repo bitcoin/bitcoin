@@ -6,13 +6,17 @@
 #define BITCOIN_LLMQ_DKGSESSIONMGR_H
 
 #include <bls/bls.h>
-#include <bls/bls_ies.h>
 #include <bls/bls_worker.h>
 #include <llmq/dkgsessionhandler.h>
 #include <net_types.h>
 
 #include <map>
 #include <memory>
+
+template <class T>
+class CBLSIESMultiRecipientObjects;
+template <class T>
+class CBLSIESEncryptedObject;
 
 class CActiveMasternodeManager;
 class CBlockIndex;

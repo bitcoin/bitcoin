@@ -5,7 +5,7 @@
 #ifndef BITCOIN_EVO_ASSETLOCKTX_H
 #define BITCOIN_EVO_ASSETLOCKTX_H
 
-#include <bls/bls_ies.h>
+#include <bls/bls.h>
 #include <consensus/amount.h>
 #include <gsl/pointers.h>
 #include <primitives/transaction.h>
