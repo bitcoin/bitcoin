@@ -57,10 +57,6 @@ public:
     static constexpr size_t SerSize = _SerSize;
 
     explicit CBLSWrapper() = default;
-    explicit CBLSWrapper(Span<const unsigned char> vecBytes) : CBLSWrapper<ImplType, _SerSize, C>()
-    {
-        SetByteVector(vecBytes, bls::bls_legacy_scheme.load());
-    }
 
     CBLSWrapper(const CBLSWrapper& ref) = default;
     CBLSWrapper& operator=(const CBLSWrapper& ref) = default;
@@ -272,6 +268,11 @@ public:
     using CBLSWrapper::CBLSWrapper;
 
     CBLSSecretKey() = default;
+    explicit CBLSSecretKey(Span<const unsigned char> vecBytes)
+    {
+        // The second param here is not 'is_legacy', but `modOrder`
+        SetByteVector(vecBytes, false);
+    }
     CBLSSecretKey(const CBLSSecretKey&) = default;
     CBLSSecretKey& operator=(const CBLSSecretKey&) = default;
 
@@ -338,6 +339,10 @@ public:
     using CBLSWrapper::CBLSWrapper;
 
     CBLSSignature() = default;
+    explicit CBLSSignature(Span<const unsigned char> bytes, bool is_serialized_legacy)
+    {
+        SetByteVector(bytes, is_serialized_legacy);
+    }
     CBLSSignature(const CBLSSignature&) = default;
     CBLSSignature& operator=(const CBLSSignature&) = default;
 
