@@ -249,6 +249,7 @@ public:
     explicit CBLSId(const uint256& nHash);
 };
 
+//! CBLSSecretKey is invariant to BLS scheme for Creation / Serialization / Deserialization
 class CBLSSecretKey : public CBLSWrapper<bls::PrivateKey, BLS_CURVE_SECKEY_SIZE, CBLSSecretKey>
 {
 public:
@@ -270,10 +271,13 @@ public:
     static CBLSSecretKey AggregateInsecure(Span<CBLSSecretKey> sks);
 
 #ifndef BUILD_BITCOIN_INTERNAL
+    //! MakeNewKey() is invariant to BLS scheme
     void MakeNewKey();
 #endif
+    //! SecretKeyShare() is invariant to BLS scheme
     bool SecretKeyShare(Span<CBLSSecretKey> msk, const CBLSId& id);
 
+    //! GetPublicKey() is invariant to BLS scheme
     [[nodiscard]] CBLSPublicKey GetPublicKey() const;
     [[nodiscard]] CBLSSignature Sign(const uint256& hash, const bool specificLegacyScheme) const;
 };
