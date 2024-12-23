@@ -653,7 +653,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     tx.nVersion = 3;
     tx.nType = TRANSACTION_PROVIDER_REGISTER;
 
-    const bool use_legacy = isV19active ? specific_legacy_bls_scheme : true;
+    const bool use_legacy = specific_legacy_bls_scheme;
 
     CProRegTx ptx;
     ptx.nType = mnType;
@@ -1107,8 +1107,7 @@ static RPCHelpMan protx_update_registrar_wrapper(bool specific_legacy_bls_scheme
     ptx.keyIDVoting = dmn->pdmnState->keyIDVoting;
     ptx.scriptPayout = dmn->pdmnState->scriptPayout;
 
-    const bool isV19Active{DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
-    const bool use_legacy = isV19Active ? specific_legacy_bls_scheme : true;
+    const bool use_legacy = specific_legacy_bls_scheme;
 
     if (request.params[1].get_str() != "") {
         // new pubkey
