@@ -9,7 +9,6 @@ feature_llmq_evo.py
 Checks EvoNodes
 
 '''
-from _decimal import Decimal
 from io import BytesIO
 
 from test_framework.p2p import P2PInterface
@@ -17,7 +16,7 @@ from test_framework.messages import CBlock, CBlockHeader, CCbTx, CMerkleBlock, f
     QuorumId, ser_uint256
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import (
-    assert_equal, assert_greater_than_or_equal, p2p_port
+    assert_equal, assert_greater_than_or_equal,
 )
 
 
@@ -64,9 +63,6 @@ class LLMQEvoNodesTest(DashTestFramework):
         expectedUpdated = [mn.proTxHash for mn in self.mninfo]
         b_0 = self.nodes[0].getbestblockhash()
         self.test_getmnlistdiff(null_hash, b_0, {}, [], expectedUpdated)
-
-        self.log.info("Test that EvoNodes registration is rejected before v19")
-        self.test_evo_is_rejected_before_v19()
 
         self.test_masternode_count(expected_mns_count=4, expected_evo_count=0)
 
@@ -192,37 +188,6 @@ class LLMQEvoNodesTest(DashTestFramework):
                     found = True
                     assert_equal(mn_list.get(mn)['type'], "Evo")
             assert_equal(found, True)
-
-    def test_evo_is_rejected_before_v19(self):
-        bls = self.nodes[0].bls('generate')
-        collateral_address = self.nodes[0].getnewaddress()
-        funds_address = self.nodes[0].getnewaddress()
-        owner_address = self.nodes[0].getnewaddress()
-        voting_address = self.nodes[0].getnewaddress()
-        reward_address = self.nodes[0].getnewaddress()
-
-        collateral_amount = 4000
-        outputs = {collateral_address: collateral_amount, funds_address: 1}
-        collateral_txid = self.nodes[0].sendmany("", outputs)
-        self.generate(self.nodes[0], 8)
-
-        rawtx = self.nodes[0].getrawtransaction(collateral_txid, 1)
-        collateral_vout = 0
-        for txout in rawtx['vout']:
-            if txout['value'] == Decimal(collateral_amount):
-                collateral_vout = txout['n']
-                break
-        assert collateral_vout is not None
-
-        ipAndPort = '127.0.0.1:%d' % p2p_port(len(self.nodes))
-        operatorReward = len(self.nodes)
-
-        try:
-            self.nodes[0].protx('register_evo', collateral_txid, collateral_vout, ipAndPort, owner_address, bls['public'], voting_address, operatorReward, reward_address, funds_address, True)
-            # this should never succeed
-            assert False
-        except:
-            self.log.info("protx_evo rejected")
 
     def test_masternode_count(self, expected_mns_count, expected_evo_count):
         mn_count = self.nodes[0].masternode('count')
