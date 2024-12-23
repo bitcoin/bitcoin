@@ -45,16 +45,33 @@ struct TestBlockAndIndex {
 
 } // namespace
 
-static void BlockToJsonVerbose(benchmark::Bench& bench)
+static void BlockToJson(benchmark::Bench& bench, TxVerbosity verbosity)
 {
     TestBlockAndIndex data;
     bench.run([&] {
-        auto univalue = blockToJSON(data.testing_setup->m_node.chainman->m_blockman, data.block, data.blockindex, data.blockindex, TxVerbosity::SHOW_DETAILS_AND_PREVOUT);
+        auto univalue = blockToJSON(data.testing_setup->m_node.chainman->m_blockman, data.block, data.blockindex, data.blockindex, verbosity);
         ankerl::nanobench::doNotOptimizeAway(univalue);
     });
 }
 
-BENCHMARK(BlockToJsonVerbose, benchmark::PriorityLevel::HIGH);
+static void BlockToJsonVerbosity1(benchmark::Bench& bench)
+{
+    BlockToJson(bench, TxVerbosity::SHOW_TXID);
+}
+
+static void BlockToJsonVerbosity2(benchmark::Bench& bench)
+{
+    BlockToJson(bench, TxVerbosity::SHOW_DETAILS);
+}
+
+static void BlockToJsonVerbosity3(benchmark::Bench& bench)
+{
+    BlockToJson(bench, TxVerbosity::SHOW_DETAILS_AND_PREVOUT);
+}
+
+BENCHMARK(BlockToJsonVerbosity1, benchmark::PriorityLevel::HIGH);
+BENCHMARK(BlockToJsonVerbosity2, benchmark::PriorityLevel::HIGH);
+BENCHMARK(BlockToJsonVerbosity3, benchmark::PriorityLevel::HIGH);
 
 static void BlockToJsonVerboseWrite(benchmark::Bench& bench)
 {
