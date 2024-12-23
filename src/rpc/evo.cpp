@@ -1705,7 +1705,7 @@ static RPCHelpMan bls_generate()
     return RPCHelpMan{"bls generate",
         "\nReturns a BLS secret/public key pair.\n",
         {
-            {"legacy", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true until the v19 fork is activated, otherwise false"}, "Use legacy BLS scheme"},
+            {"legacy", RPCArg::Type::BOOL, RPCArg::Default{false}, "Set it true if need in legacy BLS scheme"},
             },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -1719,12 +1719,9 @@ static RPCHelpMan bls_generate()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
-    const ChainstateManager& chainman = EnsureChainman(node);
-
     CBLSSecretKey sk;
     sk.MakeNewKey();
-    bool bls_legacy_scheme{!DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
+    bool bls_legacy_scheme{false};
     if (!request.params[0].isNull()) {
         bls_legacy_scheme = ParseBoolV(request.params[0], "bls_legacy_scheme");
     }
@@ -1744,7 +1741,7 @@ static RPCHelpMan bls_fromsecret()
         "\nParses a BLS secret key and returns the secret/public key pair.\n",
         {
             {"secret", RPCArg::Type::STR, RPCArg::Optional::NO, "The BLS secret key"},
-            {"legacy", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true until the v19 fork is activated, otherwise false"}, "Use legacy BLS scheme"},
+            {"legacy", RPCArg::Type::BOOL, RPCArg::Default{false}, "Pass true if you need in legacy scheme"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -1758,10 +1755,7 @@ static RPCHelpMan bls_fromsecret()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
-    const ChainstateManager& chainman = EnsureChainman(node);
-
-    bool bls_legacy_scheme{!DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
+    bool bls_legacy_scheme{false};
     if (!request.params[1].isNull()) {
         bls_legacy_scheme = ParseBoolV(request.params[1], "bls_legacy_scheme");
     }

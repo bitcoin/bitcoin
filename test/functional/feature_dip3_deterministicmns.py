@@ -12,7 +12,7 @@ from decimal import Decimal
 from test_framework.blocktools import create_block_with_mnpayments
 from test_framework.messages import tx_from_hex
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, force_finish_mnsync, p2p_port
+from test_framework.util import assert_equal, force_finish_mnsync, p2p_port, softfork_active
 
 class Masternode(object):
     pass
@@ -226,7 +226,7 @@ class DIP3Test(BitcoinTestFramework):
         mn.p2p_port = p2p_port(mn.idx)
         mn.operator_reward = (mn.idx % self.num_initial_mn)
 
-        blsKey = node.bls('generate')
+        blsKey = node.bls('generate') if softfork_active(node, 'v19') else node.bls('generate', True)
         mn.fundsAddr = node.getnewaddress()
         mn.ownerAddr = node.getnewaddress()
         mn.operatorAddr = blsKey['public']

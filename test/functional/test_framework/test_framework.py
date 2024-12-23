@@ -1303,7 +1303,7 @@ class DashTestFramework(BitcoinTestFramework):
         return created_mn_info
 
     def dynamically_prepare_masternode(self, idx, node_p2p_port, evo=False, rnd=None):
-        bls = self.nodes[0].bls('generate')
+        bls = self.nodes[0].bls('generate') if softfork_active(self.nodes[0], 'v19') else self.nodes[0].bls('generate', True)
         collateral_address = self.nodes[0].getnewaddress()
         funds_address = self.nodes[0].getnewaddress()
         owner_address = self.nodes[0].getnewaddress()
@@ -1387,7 +1387,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         register_fund = (idx % 2) == 0
 
-        bls = self.nodes[0].bls('generate')
+        bls = self.nodes[0].bls('generate') if softfork_active(self.nodes[0], 'v19') else self.nodes[0].bls('generate', True)
         address = self.nodes[0].getnewaddress()
 
         collateral_amount = MASTERNODE_COLLATERAL
