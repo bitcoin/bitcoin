@@ -53,3 +53,7 @@ to a SQLite3 database. The coins are stored in a table with the following schema
 ```
 CREATE TABLE utxos(txid TEXT, vout INT, value INT, coinbase INT, height INT, scriptpubkey TEXT)
 ```
+
+### [Dump-to-SQLite](/contrib/utxo-tools/dump_to_sqlite.sh) ###
+This script creates an UTXO set dump in SQLite3 format on the fly from a running bitcoind instance,
+i.e. with the intermediate step of storing the compact-serialized UTXO set on disk is skipped.
