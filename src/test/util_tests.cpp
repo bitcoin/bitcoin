@@ -1746,6 +1746,15 @@ BOOST_AUTO_TEST_CASE(message_hash)
     BOOST_CHECK_NE(message_hash1, signature_hash);
 }
 
+BOOST_AUTO_TEST_CASE(signing_result_string)
+{
+    BOOST_CHECK_EQUAL(SigningResultString(SigningResult::OK), "No error");
+
+    BOOST_CHECK_EQUAL(SigningResultString(SigningResult::PRIVATE_KEY_NOT_AVAILABLE), "Private key not available");
+
+    BOOST_CHECK_EQUAL(SigningResultString(SigningResult::SIGNING_FAILED), "Sign failed");
+}
+
 BOOST_AUTO_TEST_CASE(remove_prefix)
 {
     BOOST_CHECK_EQUAL(RemovePrefix("./common/system.h", "./"), "common/system.h");
