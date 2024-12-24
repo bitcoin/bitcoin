@@ -45,7 +45,7 @@ class TestP2PConn(P2PInterface):
 
 class LLMQEvoNodesTest(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(5, 4, [["-testactivationheight=v19@900", "-testactivationheight=mn_rr@1200"]] * 5, evo_count=5)
+        self.set_dash_test_params(5, 4, [["-testactivationheight=mn_rr@400"]] * 5, evo_count=5)
         self.set_dash_llmq_test_params(4, 4)
 
     def run_test(self):
@@ -65,9 +65,6 @@ class LLMQEvoNodesTest(DashTestFramework):
         self.test_getmnlistdiff(null_hash, b_0, {}, [], expectedUpdated)
 
         self.test_masternode_count(expected_mns_count=4, expected_evo_count=0)
-
-        self.activate_v19(expected_activation_height=900)
-        self.log.info("Activated v19 at height:" + str(self.nodes[0].getblockcount()))
 
         self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 0)
         self.wait_for_sporks_same()
