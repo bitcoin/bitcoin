@@ -762,7 +762,7 @@ bool CBLSWorker::VerifyVerificationVectors(Span<BLSVerificationVectorPtr> vvecs)
 void CBLSWorker::AsyncSign(const CBLSSecretKey& secKey, const uint256& msgHash, const CBLSWorker::SignDoneCallback& doneCallback)
 {
     workerPool.push([secKey, msgHash, doneCallback](int threadId) {
-        doneCallback(secKey.Sign(msgHash));
+        doneCallback(secKey.Sign(msgHash, bls::bls_legacy_scheme.load()));
     });
 }
 

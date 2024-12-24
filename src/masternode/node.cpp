@@ -275,12 +275,6 @@ template bool CActiveMasternodeManager::Decrypt(const CBLSIESEncryptedObject<CBL
 template bool CActiveMasternodeManager::Decrypt(const CBLSIESMultiRecipientObjects<CBLSSecretKey>& obj, size_t idx,
                                                 CBLSSecretKey& ret_obj, int version) const;
 
-[[nodiscard]] CBLSSignature CActiveMasternodeManager::Sign(const uint256& hash) const
-{
-    AssertLockNotHeld(cs);
-    return WITH_READ_LOCK(cs, return m_info.blsKeyOperator.Sign(hash));
-}
-
 [[nodiscard]] CBLSSignature CActiveMasternodeManager::Sign(const uint256& hash, const bool is_legacy) const
 {
     AssertLockNotHeld(cs);

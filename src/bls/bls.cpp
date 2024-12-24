@@ -117,11 +117,6 @@ CBLSPublicKey CBLSSecretKey::GetPublicKey() const
     return pubKey;
 }
 
-CBLSSignature CBLSSecretKey::Sign(const uint256& hash) const
-{
-    return Sign(hash, bls::bls_legacy_scheme.load());
-}
-
 CBLSSignature CBLSSecretKey::Sign(const uint256& hash, const bool specificLegacyScheme) const
 {
     if (!IsValid()) {

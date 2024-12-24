@@ -51,7 +51,7 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CActiveMasternode
 
     mnauth.proRegTxHash = mn_activeman.GetProTxHash();
 
-    mnauth.sig = mn_activeman.Sign(signHash);
+    mnauth.sig = mn_activeman.Sign(signHash, bls::bls_legacy_scheme.load());
 
     LogPrint(BCLog::NET_NETCONN, "CMNAuth::%s -- Sending MNAUTH, peer=%d\n", __func__, peer.GetId());
     connman.PushMessage(&peer, CNetMsgMaker(peer.GetCommonVersion()).Make(NetMsgType::MNAUTH, mnauth));

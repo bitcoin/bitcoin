@@ -275,7 +275,6 @@ public:
     bool SecretKeyShare(Span<CBLSSecretKey> msk, const CBLSId& id);
 
     [[nodiscard]] CBLSPublicKey GetPublicKey() const;
-    [[nodiscard]] CBLSSignature Sign(const uint256& hash) const;
     [[nodiscard]] CBLSSignature Sign(const uint256& hash, const bool specificLegacyScheme) const;
 };
 

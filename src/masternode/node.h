@@ -65,7 +65,6 @@ public:
     template <template <typename> class EncryptedObj, typename Obj>
     [[nodiscard]] bool Decrypt(const EncryptedObj<Obj>& obj, size_t idx, Obj& ret_obj, int version) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    [[nodiscard]] CBLSSignature Sign(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     [[nodiscard]] CBLSSignature Sign(const uint256& hash, const bool is_legacy) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     /* TODO: Reconsider external locking */

@@ -288,6 +288,7 @@ private:
     const CSporkManager& m_sporkman;
 
     const CBlockIndex* const m_quorum_base_block_index;
+    bool m_use_legacy_bls;
     int quorumIndex{0};
 
 private:
