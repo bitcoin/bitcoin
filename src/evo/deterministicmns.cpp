@@ -1228,12 +1228,6 @@ bool CDeterministicMNManager::MigrateDBIfNeeded()
         return true;
     }
 
-    if (DeploymentActiveAt(*m_chainstate.m_chain.Tip(), consensusParams, Consensus::DEPLOYMENT_V19)) {
-        // too late
-        LogPrintf("CDeterministicMNManager::%s -- migration is not possible\n", __func__);
-        return false;
-    }
-
     // Removing the old EVODB_BEST_BLOCK value early results in older version to crash immediately, even if the upgrade
     // process is cancelled in-between. But if the new version sees that the old EVODB_BEST_BLOCK is already removed,
     // then we must assume that the upgrade process was already running before but was interrupted.
@@ -1255,6 +1249,13 @@ bool CDeterministicMNManager::MigrateDBIfNeeded()
         }
         return true;
     }
+
+    if (DeploymentActiveAt(*m_chainstate.m_chain.Tip(), consensusParams, Consensus::DEPLOYMENT_V19)) {
+        // too late
+        LogPrintf("CDeterministicMNManager::%s -- migration is not possible\n", __func__);
+        return false;
+    }
+
 
     CDBBatch batch(m_evoDb.GetRawDB());
 
@@ -1343,12 +1344,6 @@ bool CDeterministicMNManager::MigrateDBIfNeeded2()
         return true;
     }
 
-    if (DeploymentActiveAt(*m_chainstate.m_chain.Tip(), consensusParams, Consensus::DEPLOYMENT_V19)) {
-        // too late
-        LogPrintf("CDeterministicMNManager::%s -- migration is not possible\n", __func__);
-        return false;
-    }
-
     // Removing the old EVODB_BEST_BLOCK value early results in older version to crash immediately, even if the upgrade
     // process is cancelled in-between. But if the new version sees that the old EVODB_BEST_BLOCK is already removed,
     // then we must assume that the upgrade process was already running before but was interrupted.
@@ -1369,6 +1364,12 @@ bool CDeterministicMNManager::MigrateDBIfNeeded2()
             return false;
         }
         return true;
+    }
+
+    if (DeploymentActiveAt(*m_chainstate.m_chain.Tip(), consensusParams, Consensus::DEPLOYMENT_V19)) {
+        // too late
+        LogPrintf("CDeterministicMNManager::%s -- migration is not possible\n", __func__);
+        return false;
     }
 
     CDBBatch batch(m_evoDb.GetRawDB());
