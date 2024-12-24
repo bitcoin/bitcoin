@@ -44,9 +44,10 @@ class TestP2PConn(P2PInterface):
 class DIP3V19Test(DashTestFramework):
     def set_test_params(self):
         self.extra_args = [[
-            '-testactivationheight=v20@1200', # required otherwise mine_quorum("llmq_test [100]") fails
+            '-testactivationheight=v19@200',
         ]] * 6
         self.set_dash_test_params(6, 5, evo_count=2, extra_args=self.extra_args)
+
 
     def run_test(self):
         # Connect all nodes to node1 so that we always have the whole network connected
@@ -65,6 +66,11 @@ class DIP3V19Test(DashTestFramework):
 
         mn_list_before = self.nodes[0].masternodelist()
         pubkeyoperator_list_before = set([mn_list_before[e]["pubkeyoperator"] for e in mn_list_before])
+
+        self.mine_quorum(llmq_type_name='llmq_test', llmq_type=100)
+
+        self.activate_by_name('v19', expected_activation_height=200)
+        self.log.info("Activated v19 at height:" + str(self.nodes[0].getblockcount()))
 
         mn_list_after = self.nodes[0].masternodelist()
         pubkeyoperator_list_after = set([mn_list_after[e]["pubkeyoperator"] for e in mn_list_after])

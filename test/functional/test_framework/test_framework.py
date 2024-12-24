@@ -1239,9 +1239,6 @@ class DashTestFramework(BitcoinTestFramework):
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", spork17_value)
         self.wait_for_sporks_same()
 
-    def activate_v19(self, expected_activation_height=None):
-        self.activate_by_name('v19', expected_activation_height)
-
     def activate_v20(self, expected_activation_height=None):
         self.activate_by_name('v20', expected_activation_height)
 
