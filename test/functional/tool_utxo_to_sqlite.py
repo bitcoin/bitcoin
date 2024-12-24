@@ -3,11 +3,12 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test utxo-to-sqlite conversion tool"""
-import os.path
+import os
 try:
     import sqlite3
 except ImportError:
     pass
+import platform
 import subprocess
 import sys
 
@@ -36,6 +37,20 @@ from test_framework.util import (
     assert_equal,
 )
 from test_framework.wallet import MiniWallet
+
+
+def calculate_muhash_from_sqlite_utxos(filename):
+    muhash = MuHash3072()
+    con = sqlite3.connect(filename)
+    cur = con.cursor()
+    for (txid_hex, vout, value, coinbase, height, spk_hex) in cur.execute("SELECT * FROM utxos"):
+        # serialize UTXO for MuHash (see function `TxOutSer` in the  coinstats module)
+        utxo_ser = COutPoint(int(txid_hex, 16), vout).serialize()
+        utxo_ser += (height * 2 + coinbase).to_bytes(4, 'little')
+        utxo_ser += CTxOut(value, bytes.fromhex(spk_hex)).serialize()
+        muhash.insert(utxo_ser)
+    con.close()
+    return muhash.digest()[::-1].hex()
 
 
 class UtxoToSqliteTest(BitcoinTestFramework):
@@ -94,20 +109,22 @@ class UtxoToSqliteTest(BitcoinTestFramework):
                        check=True, stderr=subprocess.STDOUT)
 
         self.log.info('Verify that both UTXO sets match by comparing their MuHash')
-        muhash = MuHash3072()
-        con = sqlite3.connect(output_filename)
-        cur = con.cursor()
-        for (txid_hex, vout, value, coinbase, height, spk_hex) in cur.execute("SELECT * FROM utxos"):
-            # serialize UTXO for MuHash (see function `TxOutSer` in the  coinstats module)
-            utxo_ser = COutPoint(int(txid_hex, 16), vout).serialize()
-            utxo_ser += (height * 2 + coinbase).to_bytes(4, 'little')
-            utxo_ser += CTxOut(value, bytes.fromhex(spk_hex)).serialize()
-            muhash.insert(utxo_ser)
-        con.close()
-
-        muhash_sqlite = muhash.digest()[::-1].hex()
+        muhash_sqlite = calculate_muhash_from_sqlite_utxos(output_filename)
         muhash_compact_serialized = node.gettxoutsetinfo('muhash')['muhash']
         assert_equal(muhash_sqlite, muhash_compact_serialized)
+
+        if platform.system() != "Windows":  # FIFOs are not available on Windows
+            self.log.info('Convert UTXO set directly (without intermediate dump) via named pipe')
+            fifo_filename = os.path.join(self.options.tmpdir, "utxos.fifo")
+            os.mkfifo(fifo_filename)
+            output_direct_filename = os.path.join(self.options.tmpdir, "utxos_direct.sqlite")
+            p = subprocess.Popen([sys.executable, utxo_to_sqlite_path, fifo_filename, output_direct_filename],
+                                 stderr=subprocess.STDOUT)
+            node.dumptxoutset(fifo_filename, "latest")
+            p.wait()
+            muhash_direct_sqlite = calculate_muhash_from_sqlite_utxos(output_direct_filename)
+            assert_equal(muhash_sqlite, muhash_direct_sqlite)
+            os.remove(fifo_filename)
 
 
 if __name__ == "__main__":
