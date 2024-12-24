@@ -815,10 +815,12 @@ class CBlock(CBlockHeader):
             return False
         return True
 
-    def solve(self):
+    def solve(self, multiplier = 1):
+        # If a multiplier is provided, ensure work is between
+        # multiplier * target and multiplier / 2 * target
         self.rehash()
         target = uint256_from_compact(self.nBits)
-        while self.sha256 > target:
+        while self.sha256 > target * multiplier or (multiplier != 1 and self.sha256 <= target * multiplier / 4):
             self.nNonce += 1
             self.rehash()
 

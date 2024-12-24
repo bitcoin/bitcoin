@@ -61,6 +61,18 @@ struct BlockCreateOptions {
      */
     CScript coinbase_output_script{CScript() << OP_TRUE};
 };
+
+struct BlockCheckOptions {
+    /**
+     * Set false to omit the proof-of-work check
+     */
+    bool check_pow{true};
+
+    /**
+     * Multiply proof-of-work target to verify a weak block.
+     */
+    size_t multiplier{1};
+};
 } // namespace node
 
 #endif // BITCOIN_NODE_TYPES_H

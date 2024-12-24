@@ -1089,6 +1089,63 @@ static RPCHelpMan submitheader()
     };
 }
 
+static RPCHelpMan checkblock()
+{
+    return RPCHelpMan{"checkblock",
+        "\nChecks a new block without submitting to the network.\n",
+        {
+            {"hexdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hex-encoded block data to submit"},
+            {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
+                {
+                    {"check_pow", RPCArg::Type::BOOL, RPCArg::Default{true}, "verify the proof-of-work. The nBits value is still checked."},
+                    {"multiplier", RPCArg::Type::NUM, RPCArg::Default{1}, "Check against a higher target. The nBits value is checked as if multiplier is 1."},
+                },
+            }
+        },
+        {
+            RPCResult{"If the block passed all checks", RPCResult::Type::NONE, "", ""},
+            RPCResult{"Otherwise", RPCResult::Type::STR, "", "According to BIP22"},
+        },
+        RPCExamples{
+              HelpExampleCli("checkblock", "\"mydata\"")
+            + HelpExampleRpc("checkblock", "\"mydata\"")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    CBlock block;
+    if (!DecodeHexBlk(block, request.params[0].get_str())) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
+    }
+
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    Mining& miner = EnsureMining(node);
+
+    unsigned int multiplier{1};
+    bool check_pow{true};
+
+    if (!request.params[1].isNull()) {
+        UniValue options = request.params[1];
+        RPCTypeCheckObj(options,
+            {
+                {"check_pow", UniValueType(UniValue::VBOOL)},
+                {"multiplier", UniValueType(UniValue::VNUM)},
+            }, /*fAllowNull=*/true, /*fStrict=*/true
+        );
+        if (options.exists("check_pow")) {
+            check_pow = options["check_pow"].get_bool();
+        }
+        if (options.exists("multiplier")) {
+            multiplier = options["multiplier"].getInt<uint32_t>();
+        }
+    }
+
+    std::string reason;
+    bool res = miner.checkBlock(block, {.check_pow = check_pow, .multiplier = multiplier}, reason);
+    return res ? UniValue::VNULL : UniValue{reason};
+},
+    };
+}
+
 void RegisterMiningRPCCommands(CRPCTable& t)
 {
     static const CRPCCommand commands[]{
@@ -1099,6 +1156,7 @@ void RegisterMiningRPCCommands(CRPCTable& t)
         {"mining", &getblocktemplate},
         {"mining", &submitblock},
         {"mining", &submitheader},
+        {"mining", &checkblock},
 
         {"hidden", &generatetoaddress},
         {"hidden", &generatetodescriptor},
