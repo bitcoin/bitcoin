@@ -9,8 +9,7 @@
 
 #include <array>
 
-AutoFile::AutoFile(std::FILE* file, std::vector<std::byte> data_xor)
-    : m_file{file}, m_xor{std::move(data_xor)}
+AutoFile::AutoFile(std::FILE* file, const Obfuscation& obfuscation) : m_file{file}, m_obfuscation{obfuscation}
 {
     if (!IsNull()) {
         auto pos{std::ftell(m_file)};
@@ -21,12 +20,12 @@ AutoFile::AutoFile(std::FILE* file, std::vector<std::byte> data_xor)
 std::size_t AutoFile::detail_fread(Span<std::byte> dst)
 {
     if (!m_file) throw std::ios_base::failure("AutoFile::read: file handle is nullptr");
-    size_t ret = std::fread(dst.data(), 1, dst.size(), m_file);
-    if (!m_xor.empty()) {
-        if (!m_position.has_value()) throw std::ios_base::failure("AutoFile::read: position unknown");
-        util::Xor(dst.subspan(0, ret), m_xor, *m_position);
+    const size_t ret = std::fread(dst.data(), 1, dst.size(), m_file);
+    if (m_obfuscation) {
+        if (!m_position) throw std::ios_base::failure("AutoFile::read: position unknown");
+        m_obfuscation(dst, *m_position);
     }
-    if (m_position.has_value()) *m_position += ret;
+    if (m_position) *m_position += ret;
     return ret;
 }
 
@@ -81,7 +80,7 @@ void AutoFile::ignore(size_t nSize)
 void AutoFile::write(Span<const std::byte> src)
 {
     if (!m_file) throw std::ios_base::failure("AutoFile::write: file handle is nullptr");
-    if (m_xor.empty()) {
+    if (!m_obfuscation) {
         if (std::fwrite(src.data(), 1, src.size(), m_file) != src.size()) {
             throw std::ios_base::failure("AutoFile::write: write failed");
         }
@@ -91,8 +90,8 @@ void AutoFile::write(Span<const std::byte> src)
         std::array<std::byte, 4096> buf;
         while (src.size() > 0) {
             auto buf_now{Span{buf}.first(std::min<size_t>(src.size(), buf.size()))};
-            std::copy(src.begin(), src.begin() + buf_now.size(), buf_now.begin());
-            util::Xor(buf_now, m_xor, *m_position);
+            std::copy_n(src.begin(), buf_now.size(), buf_now.begin());
+            m_obfuscation(buf_now, *m_position);
             if (std::fwrite(buf_now.data(), 1, buf_now.size(), m_file) != buf_now.size()) {
                 throw std::ios_base::failure{"XorFile::write: failed"};
             }
