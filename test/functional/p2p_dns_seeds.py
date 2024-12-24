@@ -10,11 +10,16 @@ from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 
 
+# Easily unreachable address. Attempts to connect to it will stay within the machine.
+# Used to avoid non-loopback traffic or DNS queries.
+DUMMY_PROXY_ARG = '-proxy=127.0.0.1:1'
+
+
 class P2PDNSSeeds(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [["-dnsseed=1"]]
+        self.extra_args = [["-dnsseed=1", DUMMY_PROXY_ARG]]
 
     def run_test(self):
         self.init_arg_tests()
@@ -29,11 +34,11 @@ class P2PDNSSeeds(BitcoinTestFramework):
         self.log.info("Check that setting -connect disables -dnsseed by default")
         self.nodes[0].stop_node()
         with self.nodes[0].assert_debug_log(expected_msgs=["DNS seeding disabled"]):
-            self.start_node(0, [f"-connect={fakeaddr}"])
+            self.start_node(0, extra_args=[f"-connect={fakeaddr}", DUMMY_PROXY_ARG])
 
         self.log.info("Check that running -connect and -dnsseed means DNS logic runs.")
         with self.nodes[0].assert_debug_log(expected_msgs=["Loading addresses from DNS seed"], timeout=12):
-            self.restart_node(0, [f"-connect={fakeaddr}", "-dnsseed=1"])
+            self.restart_node(0, extra_args=[f"-connect={fakeaddr}", "-dnsseed=1", DUMMY_PROXY_ARG])
 
         self.log.info("Check that running -forcednsseed and -dnsseed=0 throws an error.")
         self.nodes[0].stop_node()
@@ -88,7 +93,7 @@ class P2PDNSSeeds(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log(expected_msgs=["Loading addresses from DNS seed"], timeout=12):
             # -dnsseed defaults to 1 in bitcoind, but 0 in the test framework,
             # so pass it explicitly here
-            self.restart_node(0, ["-forcednsseed", "-dnsseed=1"])
+            self.restart_node(0, ["-forcednsseed", "-dnsseed=1", DUMMY_PROXY_ARG])
 
         # Restore default for subsequent tests
         self.restart_node(0)

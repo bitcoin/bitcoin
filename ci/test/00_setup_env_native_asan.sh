@@ -33,3 +33,6 @@ export BITCOIN_CONFIG="\
  -DAPPEND_CXXFLAGS='-std=c++23' \
  -DAPPEND_CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' \
 "
+# It is good to have at least one CI task that sets this to 1 so that changes
+# that result in tests connecting to the internet result in a CI failure.
+export CI_FAIL_IF_NO_TCPDUMP_FILE=1
