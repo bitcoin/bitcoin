@@ -38,24 +38,6 @@ uint256 CBLSIESEncryptedBlob::GetIV(size_t idx) const
     return iv;
 }
 
-bool CBLSIESEncryptedBlob::Encrypt(size_t idx, const CBLSPublicKey& peerPubKey, const void* plainTextData, size_t dataSize)
-{
-    CBLSSecretKey ephemeralSecretKey;
-    ephemeralSecretKey.MakeNewKey();
-    ephemeralPubKey = ephemeralSecretKey.GetPublicKey();
-
-    CBLSPublicKey pk;
-    if (!pk.DHKeyExchange(ephemeralSecretKey, peerPubKey)) {
-        return false;
-    }
-
-    std::vector<unsigned char> symKey = pk.ToByteVector();
-    symKey.resize(32);
-
-    uint256 iv = GetIV(idx);
-    return EncryptBlob(plainTextData, dataSize, data, symKey.data(), iv.begin());
-}
-
 bool CBLSIESEncryptedBlob::Decrypt(size_t idx, const CBLSSecretKey& secretKey, CDataStream& decryptedDataRet) const
 {
     CBLSPublicKey pk;
@@ -73,24 +55,6 @@ bool CBLSIESEncryptedBlob::Decrypt(size_t idx, const CBLSSecretKey& secretKey, C
 bool CBLSIESEncryptedBlob::IsValid() const
 {
     return ephemeralPubKey.IsValid() && !data.empty() && !ivSeed.IsNull();
-}
-
-
-bool CBLSIESMultiRecipientBlobs::Encrypt(const std::vector<CBLSPublicKey>& recipients, const BlobVector& _blobs)
-{
-    if (recipients.size() != _blobs.size()) {
-        return false;
-    }
-
-    InitEncrypt(_blobs.size());
-
-    for (size_t i = 0; i < _blobs.size(); i++) {
-        if (!Encrypt(i, recipients[i], _blobs[i])) {
-            return false;
-        }
-    }
-
-    return true;
 }
 
 void CBLSIESMultiRecipientBlobs::InitEncrypt(size_t count)
