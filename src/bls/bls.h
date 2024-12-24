@@ -211,11 +211,6 @@ public:
         return true;
     }
 
-    inline bool CheckMalleable(Span<uint8_t> vecBytes) const
-    {
-        return CheckMalleable(vecBytes, bls::bls_legacy_scheme.load());
-    }
-
     inline std::string ToString(const bool specificLegacyScheme) const
     {
         std::vector<uint8_t> buf = ToByteVector(specificLegacyScheme);
