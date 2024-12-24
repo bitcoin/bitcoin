@@ -8,6 +8,11 @@
 #include <bls/bls.h>
 #include <streams.h>
 
+/**
+ * All objects in this module working from assumption that basic scheme is
+ * available on all masternodes. Serialization of public key for Encrypt and
+ * Decrypt by bls_ies.h done using Basic Scheme.
+ */
 class CBLSIESEncryptedBlob
 {
 public:

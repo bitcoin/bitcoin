@@ -127,11 +127,6 @@ public:
         return impl.Serialize(specificLegacyScheme);
     }
 
-    std::vector<uint8_t> ToByteVector() const
-    {
-        return ToByteVector(bls::bls_legacy_scheme.load());
-    }
-
     const uint256& GetHash() const
     {
         if (cachedHash.IsNull()) {

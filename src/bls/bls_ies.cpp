@@ -9,8 +9,7 @@
 
 #include <crypto/aes.h>
 
-template <typename Out>
-static bool EncryptBlob(const void* in, size_t inSize, Out& out, const void* symKey, const void* iv)
+static bool EncryptBlob(const void* in, size_t inSize, std::vector<unsigned char>& out, const void* symKey, const void* iv)
 {
     out.resize(inSize);
 
@@ -45,7 +44,7 @@ bool CBLSIESEncryptedBlob::Decrypt(size_t idx, const CBLSSecretKey& secretKey, C
         return false;
     }
 
-    std::vector<unsigned char> symKey = pk.ToByteVector();
+    std::vector<unsigned char> symKey = pk.ToByteVector(false);
     symKey.resize(32);
 
     uint256 iv = GetIV(idx);
@@ -81,7 +80,7 @@ bool CBLSIESMultiRecipientBlobs::Encrypt(size_t idx, const CBLSPublicKey& recipi
         return false;
     }
 
-    std::vector<uint8_t> symKey = pk.ToByteVector();
+    std::vector<uint8_t> symKey = pk.ToByteVector(false);
     symKey.resize(32);
 
     return EncryptBlob(blob.data(), blob.size(), blobs[idx], symKey.data(), ivVector[idx].begin());
@@ -98,7 +97,7 @@ bool CBLSIESMultiRecipientBlobs::Decrypt(size_t idx, const CBLSSecretKey& sk, Bl
         return false;
     }
 
-    std::vector<uint8_t> symKey = pk.ToByteVector();
+    std::vector<uint8_t> symKey = pk.ToByteVector(false);
     symKey.resize(32);
 
     uint256 iv = ivSeed;
