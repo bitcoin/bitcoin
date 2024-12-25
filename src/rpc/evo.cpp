@@ -1702,71 +1702,68 @@ static RPCHelpMan protx_help()
 
 static RPCHelpMan bls_generate()
 {
-    return RPCHelpMan{"bls generate",
+    return RPCHelpMan{
+        "bls generate",
         "\nReturns a BLS secret/public key pair.\n",
         {
             {"legacy", RPCArg::Type::BOOL, RPCArg::Default{false}, "Set it true if need in legacy BLS scheme"},
-            },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR_HEX, "secret", "BLS secret key"},
-                {RPCResult::Type::STR_HEX, "public", "BLS public key"},
-                {RPCResult::Type::STR_HEX, "scheme", "BLS scheme (valid schemes: legacy, basic)"}
-            }},
-        RPCExamples{
-            HelpExampleCli("bls generate", "")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    CBLSSecretKey sk;
-    sk.MakeNewKey();
-    bool bls_legacy_scheme{false};
-    if (!request.params[0].isNull()) {
-        bls_legacy_scheme = ParseBoolV(request.params[0], "bls_legacy_scheme");
-    }
-    UniValue ret(UniValue::VOBJ);
-    ret.pushKV("secret", sk.ToString());
-    ret.pushKV("public", sk.GetPublicKey().ToString(bls_legacy_scheme));
-    std::string bls_scheme_str = bls_legacy_scheme ? "legacy" : "basic";
-    ret.pushKV("scheme", bls_scheme_str);
-    return ret;
-},
+        RPCResult{RPCResult::Type::OBJ,
+                  "",
+                  "",
+                  {{RPCResult::Type::STR_HEX, "secret", "BLS secret key"},
+                   {RPCResult::Type::STR_HEX, "public", "BLS public key"},
+                   {RPCResult::Type::STR_HEX, "scheme", "BLS scheme (valid schemes: legacy, basic)"}}},
+        RPCExamples{HelpExampleCli("bls generate", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            CBLSSecretKey sk;
+            sk.MakeNewKey();
+            bool bls_legacy_scheme{false};
+            if (!request.params[0].isNull()) {
+                bls_legacy_scheme = ParseBoolV(request.params[0], "bls_legacy_scheme");
+            }
+            UniValue ret(UniValue::VOBJ);
+            ret.pushKV("secret", sk.ToString());
+            ret.pushKV("public", sk.GetPublicKey().ToString(bls_legacy_scheme));
+            std::string bls_scheme_str = bls_legacy_scheme ? "legacy" : "basic";
+            ret.pushKV("scheme", bls_scheme_str);
+            return ret;
+        },
     };
 }
 
 static RPCHelpMan bls_fromsecret()
 {
-    return RPCHelpMan{"bls fromsecret",
+    return RPCHelpMan{
+        "bls fromsecret",
         "\nParses a BLS secret key and returns the secret/public key pair.\n",
         {
             {"secret", RPCArg::Type::STR, RPCArg::Optional::NO, "The BLS secret key"},
             {"legacy", RPCArg::Type::BOOL, RPCArg::Default{false}, "Pass true if you need in legacy scheme"},
         },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR_HEX, "secret", "BLS secret key"},
-                {RPCResult::Type::STR_HEX, "public", "BLS public key"},
-                {RPCResult::Type::STR_HEX, "scheme", "BLS scheme (valid schemes: legacy, basic)"},
-            }},
+        RPCResult{RPCResult::Type::OBJ,
+                  "",
+                  "",
+                  {
+                      {RPCResult::Type::STR_HEX, "secret", "BLS secret key"},
+                      {RPCResult::Type::STR_HEX, "public", "BLS public key"},
+                      {RPCResult::Type::STR_HEX, "scheme", "BLS scheme (valid schemes: legacy, basic)"},
+                  }},
         RPCExamples{
-            HelpExampleCli("bls fromsecret", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
+            HelpExampleCli("bls fromsecret", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            bool bls_legacy_scheme{false};
+            if (!request.params[1].isNull()) {
+                bls_legacy_scheme = ParseBoolV(request.params[1], "bls_legacy_scheme");
+            }
+            CBLSSecretKey sk = ParseBLSSecretKey(request.params[0].get_str(), "secretKey");
+            UniValue ret(UniValue::VOBJ);
+            ret.pushKV("secret", sk.ToString());
+            ret.pushKV("public", sk.GetPublicKey().ToString(bls_legacy_scheme));
+            std::string bls_scheme_str = bls_legacy_scheme ? "legacy" : "basic";
+            ret.pushKV("scheme", bls_scheme_str);
+            return ret;
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    bool bls_legacy_scheme{false};
-    if (!request.params[1].isNull()) {
-        bls_legacy_scheme = ParseBoolV(request.params[1], "bls_legacy_scheme");
-    }
-    CBLSSecretKey sk = ParseBLSSecretKey(request.params[0].get_str(), "secretKey");
-    UniValue ret(UniValue::VOBJ);
-    ret.pushKV("secret", sk.ToString());
-    ret.pushKV("public", sk.GetPublicKey().ToString(bls_legacy_scheme));
-    std::string bls_scheme_str = bls_legacy_scheme ? "legacy" : "basic";
-    ret.pushKV("scheme", bls_scheme_str);
-    return ret;
-},
     };
 }
 
