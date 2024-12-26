@@ -506,7 +506,6 @@ bool ProcessPendingMessageBatch(const CConnman& connman, CDKGSession& session, C
 
     auto badNodes = BatchVerifyMessageSigs(session, preverifiedMessages);
     if (!badNodes.empty()) {
-        LOCK(cs_main);
         for (auto nodeId : badNodes) {
             LogPrint(BCLog::LLMQ_DKG, "%s -- failed to verify signature, peer=%d\n", __func__, nodeId);
             pendingMessages.Misbehaving(nodeId, 100, peerman);
