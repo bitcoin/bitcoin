@@ -688,9 +688,9 @@ static RPCHelpMan getnetworkinfo()
         obj.pushKV("connections_mn",   (int)node.connman->GetNodeCount(ConnectionDirection::Verified));
         obj.pushKV("connections_mn_in",   (int)node.connman->GetNodeCount(ConnectionDirection::VerifiedIn));
         obj.pushKV("connections_mn_out",   (int)node.connman->GetNodeCount(ConnectionDirection::VerifiedOut));
-        std::string sem_str = SEMToString(node.connman->GetSocketEventsMode());
+        std::string_view sem_str = SEMToString(node.connman->GetSocketEventsMode());
         CHECK_NONFATAL(sem_str != "unknown");
-        obj.pushKV("socketevents", sem_str);
+        obj.pushKV("socketevents", std::string(sem_str));
     }
     obj.pushKV("networks",      GetNetworksInfo());
     obj.pushKV("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK()));
