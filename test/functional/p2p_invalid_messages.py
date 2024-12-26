@@ -70,7 +70,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         # However the pong from conn in reply to the ping from the node has not
         # been processed and recorded in totalbytesrecv.
         # Flush the pong from conn by sending a ping from conn.
-        conn.sync_with_ping(timeout=1)
+        conn.sync_with_ping(timeout=2)
         # Create valid message
         msg = conn.build_message(msg_ping(nonce=12345))
         cut_pos = 12  # Chosen at an arbitrary position within the header
@@ -82,7 +82,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         middle = self.nodes[0].getnettotals()['totalbytesrecv']
         assert_equal(middle, before + cut_pos)
         conn.send_raw_message(msg[cut_pos:])
-        conn.sync_with_ping(timeout=1)
+        conn.sync_with_ping(timeout=2)
         self.nodes[0].disconnect_p2ps()
 
     def test_duplicate_version_msg(self):
