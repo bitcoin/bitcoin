@@ -398,7 +398,7 @@ static RPCHelpMan protx_register_fund_wrapper(const bool legacy)
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    return protx_register_common_wrapper(request, legacy, ProTxRegisterAction::Fund, MnType::Regular);
+    return protx_register_common_wrapper(request, self.m_name == "protx register_fund_legacy", ProTxRegisterAction::Fund, MnType::Regular);
 },
     };
 }
@@ -445,7 +445,7 @@ static RPCHelpMan protx_register_wrapper(bool legacy)
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    return protx_register_common_wrapper(request, legacy, ProTxRegisterAction::External, MnType::Regular);
+    return protx_register_common_wrapper(request, self.m_name == "protx register_legacy", ProTxRegisterAction::External, MnType::Regular);
 },
     };
 }
@@ -493,7 +493,7 @@ static RPCHelpMan protx_register_prepare_wrapper(const bool legacy)
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    return protx_register_common_wrapper(request, legacy, ProTxRegisterAction::Prepare, MnType::Regular);
+    return protx_register_common_wrapper(request, self.m_name == "protx register_prepare_legacy", ProTxRegisterAction::Prepare, MnType::Regular);
 },
     };
 }
@@ -1060,7 +1060,7 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
     return SignAndSendSpecialTx(request, chain_helper, chainman, tx);
 }
 
-static RPCHelpMan protx_update_registrar_wrapper(bool specific_legacy_bls_scheme)
+static RPCHelpMan protx_update_registrar_wrapper(const bool specific_legacy_bls_scheme)
 {
     std::string rpc_name = specific_legacy_bls_scheme ? "update_registrar_legacy" : "update_registrar";
     std::string rpc_full_name = std::string("protx ").append(rpc_name);
@@ -1073,7 +1073,7 @@ static RPCHelpMan protx_update_registrar_wrapper(bool specific_legacy_bls_scheme
         + HELP_REQUIRING_PASSPHRASE,
         {
             GetRpcArg("proTxHash"),
-            specific_legacy_bls_scheme  ? GetRpcArg("operatorPubKey_update_legacy") : GetRpcArg("operatorPubKey_update"),
+            specific_legacy_bls_scheme ? GetRpcArg("operatorPubKey_update_legacy") : GetRpcArg("operatorPubKey_update"),
             GetRpcArg("votingAddress_update"),
             GetRpcArg("payoutAddress_update"),
             GetRpcArg("feeSourceAddress"),
@@ -1086,6 +1086,7 @@ static RPCHelpMan protx_update_registrar_wrapper(bool specific_legacy_bls_scheme
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    const bool use_legacy{self.m_name == "protx update_registrar_legacy"};
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
 
@@ -1106,8 +1107,6 @@ static RPCHelpMan protx_update_registrar_wrapper(bool specific_legacy_bls_scheme
     }
     ptx.keyIDVoting = dmn->pdmnState->keyIDVoting;
     ptx.scriptPayout = dmn->pdmnState->scriptPayout;
-
-    const bool use_legacy = specific_legacy_bls_scheme;
 
     if (request.params[1].get_str() != "") {
         // new pubkey
