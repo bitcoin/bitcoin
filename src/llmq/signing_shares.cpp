@@ -717,7 +717,7 @@ void CSigSharesManager::ProcessSigShare(PeerManager& peerman, const CSigShare& s
     bool canTryRecovery = false;
 
     // prepare node set for direct-push in case this is our sig share
-    std::set<NodeId> quorumNodes;
+    std::unordered_set<NodeId> quorumNodes;
     if (!IsAllMembersConnectedEnabled(llmqType, m_sporkman) && sigShare.getQuorumMember() == quorum->GetMemberIndex(m_mn_activeman->GetProTxHash())) {
         quorumNodes = connman.GetMasternodeQuorumNodes(sigShare.getLlmqType(), sigShare.getQuorumHash());
     }
