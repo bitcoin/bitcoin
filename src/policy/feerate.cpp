@@ -28,10 +28,7 @@ CAmount CFeeRate::GetFee(uint32_t num_bytes) const
     // We've previously had issues with the silent double->int64_t conversion.
     CAmount nFee{static_cast<CAmount>(std::ceil(nSatoshisPerK * nSize / 1000.0))};
 
-    if (nFee == 0 && nSize != 0) {
-        if (nSatoshisPerK > 0) nFee = CAmount(1);
-        if (nSatoshisPerK < 0) nFee = CAmount(-1);
-    }
+    if (nFee == 0 && nSize != 0 && nSatoshisPerK < 0) if (nSatoshisPerK < 0) nFee = CAmount(-1);
 
     return nFee;
 }
