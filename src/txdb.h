@@ -22,7 +22,7 @@ class COutPoint;
 class uint256;
 
 //! -dbcache default (MiB)
-static const int64_t nDefaultDbCache = 450;
+static const int64_t nDefaultDbCache = 100;
 //! -dbbatchsize default (bytes)
 static const int64_t nDefaultDbBatchSize = 16 << 20;
 //! min. -dbcache (MiB)

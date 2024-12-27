@@ -1352,4 +1352,19 @@ bool IsBIP30Repeat(const CBlockIndex& block_index);
 /** Identifies blocks which coinbase output was subsequently overwritten in the UTXO set (see BIP30) */
 bool IsBIP30Unspendable(const CBlockIndex& block_index);
 
+/**
+ * Check if the system has less than 4GB of RAM and adjust dbcache if necessary.
+ */
+void AdjustDbCacheForLowMemory(int64_t& nDefaultDbCache)
+{
+    // Check if the system has less than 4GB of RAM
+    uint64_t totalMemory = GetTotalSystemMemory();
+    if (totalMemory < 4ULL * 1024 * 1024 * 1024) {
+        // Adjust dbcache to 100 MiB if the system has less than 4GB of RAM
+        if (nDefaultDbCache > 100) {
+            nDefaultDbCache = 100;
+        }
+    }
+}
+
 #endif // BITCOIN_VALIDATION_H
