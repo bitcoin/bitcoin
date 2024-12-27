@@ -860,7 +860,7 @@ struct TestChainV19Setup : public TestChainV19BeforeActivationSetup {
 
 // 5 blocks earlier
 TestChainV19BeforeActivationSetup::TestChainV19BeforeActivationSetup() :
-    TestChainSetup(894, {"-testactivationheight=v19@900"})
+    TestChainSetup(494, {"-testactivationheight=v19@500"})
 {
     bool v19_active{DeploymentActiveAfter(m_node.chainman->ActiveChain().Tip(), Params().GetConsensus(),
                                           Consensus::DEPLOYMENT_V19)};
