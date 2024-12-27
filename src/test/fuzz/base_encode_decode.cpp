@@ -21,10 +21,11 @@ FUZZ_TARGET(base58_encode_decode)
 {
     FuzzedDataProvider provider(buffer.data(), buffer.size());
     const std::string random_string{provider.ConsumeRandomLengthString(1000)};
+    const int max_ret_len{provider.ConsumeIntegralInRange<int>(-1, 1000)};
 
     // Decode/Encode roundtrip
     std::vector<unsigned char> decoded;
-    if (DecodeBase58(random_string, decoded, 100)) {
+    if (DecodeBase58(random_string, decoded, max_ret_len)) {
         const auto encoded_string{EncodeBase58(decoded)};
         assert(encoded_string == TrimStringView(random_string));
         assert(encoded_string.empty() || !DecodeBase58(encoded_string, decoded, provider.ConsumeIntegralInRange<int>(0, decoded.size() - 1)));
@@ -40,10 +41,11 @@ FUZZ_TARGET(base58check_encode_decode)
 {
     FuzzedDataProvider provider(buffer.data(), buffer.size());
     const std::string random_string{provider.ConsumeRandomLengthString(1000)};
+    const int max_ret_len{provider.ConsumeIntegralInRange<int>(-1, 1000)};
 
     // Decode/Encode roundtrip
     std::vector<unsigned char> decoded;
-    if (DecodeBase58Check(random_string, decoded, 100)) {
+    if (DecodeBase58Check(random_string, decoded, max_ret_len)) {
         const auto encoded_string{EncodeBase58Check(decoded)};
         assert(encoded_string == TrimStringView(random_string));
         assert(encoded_string.empty() || !DecodeBase58Check(encoded_string, decoded, provider.ConsumeIntegralInRange<int>(0, decoded.size() - 1)));
