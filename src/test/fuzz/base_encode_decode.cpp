@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 
 #include <base58.h>
@@ -19,16 +20,18 @@ using util::TrimStringView;
 
 FUZZ_TARGET(base_encode_decode)
 {
-    const std::string random_encoded_string(buffer.begin(), buffer.end());
+    FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+    const std::string random_encoded_string(fuzzed_data_provider.ConsumeRandomLengthString());
 
     std::vector<unsigned char> decoded;
-    if (DecodeBase58(random_encoded_string, decoded, 100)) {
+    const auto max_ret_len{fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 300)};
+    if (DecodeBase58(random_encoded_string, decoded, max_ret_len)) {
         const std::string encoded_string = EncodeBase58(decoded);
         assert(encoded_string == TrimStringView(encoded_string));
         assert(ToLower(encoded_string) == ToLower(TrimString(random_encoded_string)));
     }
 
-    if (DecodeBase58Check(random_encoded_string, decoded, 100)) {
+    if (DecodeBase58Check(random_encoded_string, decoded, max_ret_len)) {
         const std::string encoded_string = EncodeBase58Check(decoded);
         assert(encoded_string == TrimString(encoded_string));
         assert(ToLower(encoded_string) == ToLower(TrimString(random_encoded_string)));
