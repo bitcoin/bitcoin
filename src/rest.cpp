@@ -132,6 +132,27 @@ static ChainstateManager* GetChainman(const CoreContext& context, HTTPRequest* r
     return node_context->chainman.get();
 }
 
+/**
+ * Get the node context LLMQContext.
+ *
+ * @param[in]  req The HTTP request, whose status code will be set if node
+ *                 context LLMQContext is not found.
+ * @returns        Pointer to the LLMQContext or nullptr if none found.
+ */
+static LLMQContext* GetLLMQContext(const CoreContext& context, HTTPRequest* req)
+{
+    auto node_context = GetContext<NodeContext>(context);
+    if (!node_context || !node_context->llmq_ctx) {
+        RESTERR(req, HTTP_INTERNAL_SERVER_ERROR,
+                strprintf("%s:%d (%s)\n"
+                          "Internal bug detected: LLMQ context not found!\n"
+                          "You may report this issue here: %s\n",
+                          __FILE__, __LINE__, __func__, PACKAGE_BUGREPORT));
+        return nullptr;
+    }
+    return node_context->llmq_ctx.get();
+}
+
 static RetFormat ParseDataFormat(std::string& param, const std::string& strReq)
 {
     const std::string::size_type pos = strReq.rfind('.');
@@ -247,9 +268,12 @@ static bool rest_headers(const CoreContext& context,
         return true;
     }
     case RetFormat::JSON: {
+        const LLMQContext* llmq_ctx = GetLLMQContext(context, req);
+        if (!llmq_ctx) return false;
+
         UniValue jsonHeaders(UniValue::VARR);
         for (const CBlockIndex *pindex : headers) {
-            jsonHeaders.push_back(blockheaderToJSON(tip, pindex, *llmq::chainLocksHandler));
+            jsonHeaders.push_back(blockheaderToJSON(tip, pindex, *llmq_ctx->clhandler));
         }
         std::string strJSON = jsonHeaders.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
@@ -317,7 +341,10 @@ static bool rest_block(const CoreContext& context,
     }
 
     case RetFormat::JSON: {
-        UniValue objBlock = blockToJSON(chainman.m_blockman, block, tip, pblockindex, *llmq::chainLocksHandler, *llmq::quorumInstantSendManager, showTxDetails);
+        const LLMQContext* llmq_ctx = GetLLMQContext(context, req);
+        if (!llmq_ctx) return false;
+
+        UniValue objBlock = blockToJSON(chainman.m_blockman, block, tip, pblockindex, *llmq_ctx->clhandler, *llmq_ctx->isman, showTxDetails);
         std::string strJSON = objBlock.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
         req->WriteReply(HTTP_OK, strJSON);
@@ -580,7 +607,10 @@ static bool rest_mempool_info(const CoreContext& context, HTTPRequest* req, cons
 
     switch (rf) {
     case RetFormat::JSON: {
-        UniValue mempoolInfoObject = MempoolInfoToJSON(*mempool, *llmq::quorumInstantSendManager);
+        const LLMQContext* llmq_ctx = GetLLMQContext(context, req);
+        if (!llmq_ctx) return false;
+
+        UniValue mempoolInfoObject = MempoolInfoToJSON(*mempool, *llmq_ctx->isman);
 
         std::string strJSON = mempoolInfoObject.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
@@ -603,7 +633,10 @@ static bool rest_mempool_contents(const CoreContext& context, HTTPRequest* req, 
 
     switch (rf) {
     case RetFormat::JSON: {
-        UniValue mempoolObject = MempoolToJSON(*mempool, llmq::quorumInstantSendManager.get(), true);
+        const LLMQContext* llmq_ctx = GetLLMQContext(context, req);
+        if (!llmq_ctx) return false;
+
+        UniValue mempoolObject = MempoolToJSON(*mempool, llmq_ctx->isman, true);
 
         std::string strJSON = mempoolObject.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
