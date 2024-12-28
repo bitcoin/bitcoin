@@ -51,19 +51,14 @@
 #include <validationinterface.h>
 #include <warnings.h>
 
-#include <masternode/payments.h>
-#include <masternode/sync.h>
-
 #include <evo/chainhelper.h>
 #include <evo/deterministicmns.h>
 #include <evo/evodb.h>
 #include <evo/mnhftx.h>
 #include <evo/specialtx.h>
 #include <evo/specialtxman.h>
-#include <governance/governance.h>
-
 #include <llmq/chainlocks.h>
-
+#include <masternode/payments.h>
 #include <stats/client.h>
 
 #include <algorithm>

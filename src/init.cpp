@@ -71,42 +71,36 @@
 #include <util/threadnames.h>
 #include <util/translation.h>
 #include <validation.h>
-
 #include <validationinterface.h>
+#include <walletinitinterface.h>
 
-#include <masternode/node.h>
+#include <bls/bls.h>
 #include <coinjoin/coinjoin.h>
 #include <coinjoin/context.h>
-#ifdef ENABLE_WALLET
-#include <coinjoin/client.h>
-#include <coinjoin/options.h>
-#endif // ENABLE_WALLET
 #include <coinjoin/server.h>
 #include <dsnotificationinterface.h>
+#include <evo/deterministicmns.h>
+#include <evo/evodb.h>
+#include <evo/mnhftx.h>
 #include <flat-database.h>
 #include <governance/governance.h>
+#include <llmq/context.h>
+#include <llmq/dkgsessionmgr.h>
+#include <llmq/options.h>
+#include <llmq/signing.h>
 #include <masternode/meta.h>
+#include <masternode/node.h>
 #include <masternode/sync.h>
 #include <masternode/utils.h>
 #include <messagesigner.h>
 #include <netfulfilledman.h>
 #include <spork.h>
-#include <walletinitinterface.h>
-
-#include <evo/evodb.h>
-#include <evo/chainhelper.h>
-#include <evo/creditpool.h>
-#include <evo/deterministicmns.h>
-#include <evo/mnhftx.h>
-#include <llmq/blockprocessor.h>
-#include <llmq/context.h>
-#include <llmq/quorums.h>
-#include <llmq/dkgsessionmgr.h>
-#include <llmq/options.h>
-#include <llmq/signing.h>
-#include <llmq/signing_shares.h>
-
 #include <stats/client.h>
+
+#ifdef ENABLE_WALLET
+#include <coinjoin/client.h>
+#include <coinjoin/options.h>
+#endif // ENABLE_WALLET
 
 #include <algorithm>
 #include <condition_variable>
@@ -120,8 +114,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-
-#include <bls/bls.h>
 
 #ifndef WIN32
 #include <attributes.h>

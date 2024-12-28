@@ -12,18 +12,9 @@
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <crypto/sha256.h>
-#include <flat-database.h>
-#include <governance/governance.h>
 #include <index/txindex.h>
 #include <init.h>
 #include <interfaces/chain.h>
-#include <netfulfilledman.h>
-#include <llmq/context.h>
-#include <llmq/quorums.h>
-#include <llmq/signing.h>
-#include <llmq/signing_shares.h>
-#include <masternode/meta.h>
-#include <masternode/sync.h>
 #include <net.h>
 #include <net_processing.h>
 #include <noui.h>
@@ -38,8 +29,6 @@
 #include <scheduler.h>
 #include <script/sigcache.h>
 #include <shutdown.h>
-#include <spork.h>
-#include <stats/client.h>
 #include <streams.h>
 #include <test/util/index.h>
 #include <txdb.h>
@@ -56,17 +45,25 @@
 #include <walletinitinterface.h>
 
 #include <bls/bls.h>
-#ifdef ENABLE_WALLET
-#include <interfaces/coinjoin.h>
-#endif // ENABLE_WALLET
 #include <coinjoin/context.h>
 #include <evo/cbtx.h>
-#include <evo/chainhelper.h>
 #include <evo/creditpool.h>
 #include <evo/deterministicmns.h>
 #include <evo/evodb.h>
 #include <evo/mnhftx.h>
 #include <evo/specialtx.h>
+#include <flat-database.h>
+#include <governance/governance.h>
+#include <llmq/context.h>
+#include <masternode/meta.h>
+#include <masternode/sync.h>
+#include <netfulfilledman.h>
+#include <spork.h>
+#include <stats/client.h>
+
+#ifdef ENABLE_WALLET
+#include <interfaces/coinjoin.h>
+#endif // ENABLE_WALLET
 
 #include <stdexcept>
 #include <memory>
