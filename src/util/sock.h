@@ -29,8 +29,7 @@ enum class SocketEventsMode : int8_t {
 };
 
 /* Converts SocketEventsMode value to string with additional check to report modes not compiled for as unknown */
-static std::string SEMToString(const SocketEventsMode val)
-{
+constexpr std::string_view SEMToString(const SocketEventsMode val) {
     switch (val) {
         case (SocketEventsMode::Select):
             return "select";
@@ -52,19 +51,18 @@ static std::string SEMToString(const SocketEventsMode val)
 }
 
 /* Converts string to SocketEventsMode value with additional check to report modes not compiled for as unknown */
-static SocketEventsMode SEMFromString(const std::string str)
-{
+constexpr SocketEventsMode SEMFromString(std::string_view str) {
     if (str == "select") { return SocketEventsMode::Select; }
 #ifdef USE_POLL
-    else if (str == "poll")   { return SocketEventsMode::Poll;   }
+    if (str == "poll")   { return SocketEventsMode::Poll;   }
 #endif /* USE_POLL */
 #ifdef USE_EPOLL
-    else if (str == "epoll")  { return SocketEventsMode::EPoll;  }
+    if (str == "epoll")  { return SocketEventsMode::EPoll;  }
 #endif /* USE_EPOLL */
 #ifdef USE_KQUEUE
-    else if (str == "kqueue") { return SocketEventsMode::KQueue; }
+    if (str == "kqueue") { return SocketEventsMode::KQueue; }
 #endif /* USE_KQUEUE */
-    else { return SocketEventsMode::Unknown; }
+    return SocketEventsMode::Unknown;
 }
 
 /**
