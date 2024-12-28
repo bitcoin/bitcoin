@@ -3,6 +3,7 @@ image: "ubuntu:jammy"
 variables:
   DOCKER_DRIVER: overlay2
   FAST_MODE: "false" # when "true", only run linter on arm and unit/functional tests on linux64, skip everything else
+  CI_FAILFAST_TEST_LEAVE_DANGLING: "1"  # Gitlab CI does not care about dangling process and setting this variable avoids killing the CI script itself on error
 
 workflow:
   rules:
