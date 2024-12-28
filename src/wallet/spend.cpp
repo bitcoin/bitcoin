@@ -958,7 +958,8 @@ bool CWallet::CreateTransactionInternal(
         tx = MakeTransactionRef(std::move(txNew));
 
         // Limit size
-        if (static_cast<size_t>(nBytes) > MAX_STANDARD_TX_SIZE) {
+        if ((sign && ::GetSerializeSize(*tx, PROTOCOL_VERSION) > MAX_STANDARD_TX_SIZE) ||
+            (!sign && static_cast<size_t>(nBytes) > MAX_STANDARD_TX_SIZE)) {
             error = _("Transaction too large");
             return false;
         }
