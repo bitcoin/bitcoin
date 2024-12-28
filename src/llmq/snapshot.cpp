@@ -21,8 +21,6 @@ namespace llmq {
 
 static const std::string DB_QUORUM_SNAPSHOT = "llmq_S";
 
-std::unique_ptr<CQuorumSnapshotManager> quorumSnapshotManager;
-
 UniValue CQuorumSnapshot::ToJson() const
 {
     UniValue obj;

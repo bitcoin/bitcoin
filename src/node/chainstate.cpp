@@ -16,7 +16,6 @@
 #include <evo/evodb.h>
 #include <evo/mnhftx.h>
 #include <llmq/context.h>
-#include <llmq/snapshot.h>
 
 std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      ChainstateManager& chainman,
@@ -30,7 +29,6 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      std::unique_ptr<CDeterministicMNManager>& dmnman,
                                                      std::unique_ptr<CEvoDB>& evodb,
                                                      std::unique_ptr<CMNHFManager>& mnhf_manager,
-                                                     std::unique_ptr<llmq::CQuorumSnapshotManager>& qsnapman,
                                                      std::unique_ptr<LLMQContext>& llmq_ctx,
                                                      CTxMemPool* mempool,
                                                      bool fPruneMode,
@@ -74,7 +72,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
     pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, block_tree_db_in_memory, fReset));
 
     DashChainstateSetup(chainman, govman, mn_metaman, mn_sync, sporkman, mn_activeman, chain_helper, cpoolman,
-                        dmnman, evodb, mnhf_manager, qsnapman, llmq_ctx, mempool, fReset, fReindexChainState,
+                        dmnman, evodb, mnhf_manager, llmq_ctx, mempool, fReset, fReindexChainState,
                         consensus_params);
 
     if (fReset) {
@@ -210,7 +208,6 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          std::unique_ptr<CDeterministicMNManager>& dmnman,
                          std::unique_ptr<CEvoDB>& evodb,
                          std::unique_ptr<CMNHFManager>& mnhf_manager,
-                         std::unique_ptr<llmq::CQuorumSnapshotManager>& qsnapman,
                          std::unique_ptr<LLMQContext>& llmq_ctx,
                          CTxMemPool* mempool,
                          bool fReset,
@@ -223,9 +220,6 @@ void DashChainstateSetup(ChainstateManager& chainman,
 
     cpoolman.reset();
     cpoolman = std::make_unique<CCreditPoolManager>(*evodb);
-
-    qsnapman.reset();
-    qsnapman.reset(new llmq::CQuorumSnapshotManager(*evodb));
 
     if (llmq_ctx) {
         llmq_ctx->Interrupt();
@@ -240,7 +234,7 @@ void DashChainstateSetup(ChainstateManager& chainman,
 
     chain_helper.reset();
     chain_helper = std::make_unique<CChainstateHelper>(*cpoolman, *dmnman, *mnhf_manager, govman, *(llmq_ctx->isman), *(llmq_ctx->quorum_block_processor),
-                                                       *llmq::quorumSnapshotManager, chainman, consensus_params, mn_sync, sporkman, *(llmq_ctx->clhandler),
+                                                       *(llmq_ctx->qsnapman), chainman, consensus_params, mn_sync, sporkman, *(llmq_ctx->clhandler),
                                                        *(llmq_ctx->qman));
 }
 
@@ -248,7 +242,6 @@ void DashChainstateSetupClose(std::unique_ptr<CChainstateHelper>& chain_helper,
                               std::unique_ptr<CCreditPoolManager>& cpoolman,
                               std::unique_ptr<CDeterministicMNManager>& dmnman,
                               std::unique_ptr<CMNHFManager>& mnhf_manager,
-                              std::unique_ptr<llmq::CQuorumSnapshotManager>& qsnapman,
                               std::unique_ptr<LLMQContext>& llmq_ctx,
                               CTxMemPool* mempool)
 
@@ -258,7 +251,6 @@ void DashChainstateSetupClose(std::unique_ptr<CChainstateHelper>& chain_helper,
         mnhf_manager->DisconnectManagers();
     }
     llmq_ctx.reset();
-    qsnapman.reset();
     cpoolman.reset();
     mempool->DisconnectManagers();
     dmnman.reset();

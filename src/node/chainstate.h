@@ -25,10 +25,6 @@ class CSporkManager;
 class CTxMemPool;
 struct LLMQContext;
 
-namespace llmq {
-class CQuorumSnapshotManager;
-}
-
 namespace Consensus {
 struct Params;
 }
@@ -91,7 +87,6 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      std::unique_ptr<CDeterministicMNManager>& dmnman,
                                                      std::unique_ptr<CEvoDB>& evodb,
                                                      std::unique_ptr<CMNHFManager>& mnhf_manager,
-                                                     std::unique_ptr<llmq::CQuorumSnapshotManager>& qsnapman,
                                                      std::unique_ptr<LLMQContext>& llmq_ctx,
                                                      CTxMemPool* mempool,
                                                      bool fPruneMode,
@@ -123,7 +118,6 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          std::unique_ptr<CDeterministicMNManager>& dmnman,
                          std::unique_ptr<CEvoDB>& evodb,
                          std::unique_ptr<CMNHFManager>& mnhf_manager,
-                         std::unique_ptr<llmq::CQuorumSnapshotManager>& qsnapman,
                          std::unique_ptr<LLMQContext>& llmq_ctx,
                          CTxMemPool* mempool,
                          bool fReset,
@@ -134,7 +128,6 @@ void DashChainstateSetupClose(std::unique_ptr<CChainstateHelper>& chain_helper,
                               std::unique_ptr<CCreditPoolManager>& cpoolman,
                               std::unique_ptr<CDeterministicMNManager>& dmnman,
                               std::unique_ptr<CMNHFManager>& mnhf_manager,
-                              std::unique_ptr<llmq::CQuorumSnapshotManager>& qsnapman,
                               std::unique_ptr<LLMQContext>& llmq_ctx,
                               CTxMemPool* mempool);
 

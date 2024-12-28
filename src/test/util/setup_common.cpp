@@ -22,7 +22,6 @@
 #include <llmq/quorums.h>
 #include <llmq/signing.h>
 #include <llmq/signing_shares.h>
-#include <llmq/snapshot.h>
 #include <masternode/meta.h>
 #include <masternode/sync.h>
 #include <net.h>
@@ -112,14 +111,14 @@ void DashChainstateSetup(ChainstateManager& chainman,
 {
     DashChainstateSetup(chainman, *Assert(node.govman.get()), *Assert(node.mn_metaman.get()), *Assert(node.mn_sync.get()),
                         *Assert(node.sporkman.get()), node.mn_activeman, node.chain_helper, node.cpoolman, node.dmnman,
-                        node.evodb, node.mnhf_manager, llmq::quorumSnapshotManager, node.llmq_ctx,
-                        Assert(node.mempool.get()), fReset, fReindexChainState, consensus_params);
+                        node.evodb, node.mnhf_manager, node.llmq_ctx, Assert(node.mempool.get()), fReset, fReindexChainState,
+                        consensus_params);
 }
 
 void DashChainstateSetupClose(NodeContext& node)
 {
-    DashChainstateSetupClose(node.chain_helper, node.cpoolman, node.dmnman, node.mnhf_manager,
-                             llmq::quorumSnapshotManager, node.llmq_ctx, Assert(node.mempool.get()));
+    DashChainstateSetupClose(node.chain_helper, node.cpoolman, node.dmnman, node.mnhf_manager, node.llmq_ctx,
+                             Assert(node.mempool.get()));
 }
 
 void DashPostChainstateSetup(NodeContext& node)
@@ -203,7 +202,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     fCheckBlockIndex = true;
     m_node.evodb = std::make_unique<CEvoDB>(1 << 20, true, true);
     m_node.mnhf_manager = std::make_unique<CMNHFManager>(*m_node.evodb);
-    llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*m_node.evodb));
     m_node.cpoolman = std::make_unique<CCreditPoolManager>(*m_node.evodb);
     static bool noui_connected = false;
     if (!noui_connected) {
@@ -217,7 +215,6 @@ BasicTestingSetup::~BasicTestingSetup()
 {
     SetMockTime(0s); // Reset mocktime for following tests
     m_node.cpoolman.reset();
-    llmq::quorumSnapshotManager.reset();
     m_node.mnhf_manager.reset();
     m_node.evodb.reset();
     m_node.connman.reset();
@@ -297,7 +294,6 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
                              m_node.dmnman,
                              m_node.evodb,
                              m_node.mnhf_manager,
-                             llmq::quorumSnapshotManager,
                              m_node.llmq_ctx,
                              Assert(m_node.mempool.get()),
                              fPruneMode,
@@ -479,7 +475,7 @@ CBlock TestChainSetup::CreateBlock(
         auto cbTx = GetTxPayload<CCbTx>(*block.vtx[0]);
         Assert(cbTx.has_value());
         BlockValidationState state;
-        if (!CalcCbTxMerkleRootMNList(block, chainstate.m_chain.Tip(), cbTx->merkleRootMNList, state, *m_node.dmnman, *llmq::quorumSnapshotManager, chainstate.CoinsTip())) {
+        if (!CalcCbTxMerkleRootMNList(block, chainstate.m_chain.Tip(), cbTx->merkleRootMNList, state, *m_node.dmnman, *m_node.llmq_ctx->qsnapman, chainstate.CoinsTip())) {
             Assert(false);
         }
         if (!CalcCbTxMerkleRootQuorums(block, chainstate.m_chain.Tip(), *m_node.llmq_ctx->quorum_block_processor, cbTx->merkleRootQuorums, state)) {
