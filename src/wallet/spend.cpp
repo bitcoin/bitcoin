@@ -796,12 +796,6 @@ bool CWallet::CreateTransactionInternal(
                         nBytes += GetSizeOfCompactSize(nExtraPayloadSize) + nExtraPayloadSize;
                     }
 
-                    if (static_cast<size_t>(nBytes) > MAX_STANDARD_TX_SIZE) {
-                        // Do not create oversized transactions (bad-txns-oversize).
-                        error = _("Transaction too large");
-                        return false;
-                    }
-
                     // Remove scriptSigs to eliminate the fee calculation dummy signatures
                     for (auto& txin : txNew.vin) {
                         txin.scriptSig = CScript();
@@ -962,6 +956,12 @@ bool CWallet::CreateTransactionInternal(
 
         // Return the constructed transaction data.
         tx = MakeTransactionRef(std::move(txNew));
+
+        // Limit size
+        if (static_cast<size_t>(nBytes) > MAX_STANDARD_TX_SIZE) {
+            error = _("Transaction too large");
+            return false;
+        }
     }
 
     if (nFeeRet > m_default_max_tx_fee) {
