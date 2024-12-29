@@ -104,6 +104,8 @@ static const CAmount DEFAULT_TRANSACTION_MAXFEE = COIN / 10;
 static const CAmount HIGH_TX_FEE_PER_KB = COIN / 100;
 //! -maxtxfee will warn if called with a higher fee than this amount (in satoshis)
 static const CAmount HIGH_MAX_TX_FEE = 100 * HIGH_TX_FEE_PER_KB;
+//! Pre-calculated constants for input size estimation in *virtual size*
+static constexpr size_t DUMMY_NESTED_P2PKH_INPUT_SIZE = 113;
 
 //! if set, all keys will be derived by using BIP39/BIP44
 static const bool DEFAULT_USE_HD_WALLET = true;

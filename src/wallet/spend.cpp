@@ -686,6 +686,18 @@ bool CWallet::CreateTransactionInternal(
                 // change keypool ran out, but change is required.
                 CHECK_NONFATAL(IsValidDestination(dest) != scriptChange.empty());
             }
+            CTxOut change_prototype_txout(0, scriptChange);
+            coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout);
+
+            // Get size of spending the change output
+            int change_spend_size = CalculateMaximumSignedInputSize(change_prototype_txout, this);
+            // If the wallet doesn't know how to sign change output, assume p2sh-p2pkh
+            // as lower-bound to allow BnB to do it's thing
+            if (change_spend_size == -1) {
+                coin_selection_params.change_spend_size = DUMMY_NESTED_P2PKH_INPUT_SIZE;
+            } else {
+                coin_selection_params.change_spend_size = (size_t)change_spend_size;
+            }
 
             // Set discard feerate
             coin_selection_params.m_discard_feerate = coin_control.m_discard_feerate ? *coin_control.m_discard_feerate : GetDiscardRate(*this);
@@ -704,12 +716,18 @@ bool CWallet::CreateTransactionInternal(
                 return false;
             }
 
+            // Get long term estimate
+            CCoinControl cc_temp;
+            cc_temp.m_confirm_target = chain().estimateMaxBlocks();
+            coin_selection_params.m_long_term_feerate = GetMinimumFeeRate(*this, cc_temp, nullptr);
+
             nFeeRet = 0;
             bool pick_new_inputs = true;
             CAmount nValueIn = 0;
 
             // BnB selector is the only selector used when this is true.
             coin_selection_params.use_bnb = false; // Dash: never use BnB
+            coin_selection_params.m_subtract_fee_outputs = nSubtractFeeFromAmount != 0; // If we are doing subtract fee from recipient, don't use effective values
 
             CAmount nAmountToSelectAdditional{0};
             // Start with nAmountToSelectAdditional=0 and loop until there is enough to cover the request + fees, try it 500 times.
@@ -726,7 +744,11 @@ bool CWallet::CreateTransactionInternal(
                     assert(nAmountToSelectAdditional >= 0);
                     nValueToSelect += nAmountToSelectAdditional;
                 }
+
                 // vouts to the payees
+                if (!coin_selection_params.m_subtract_fee_outputs) {
+                    coin_selection_params.tx_noinputs_size = 10; // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count, 1 output count
+                }
                 for (const auto& recipient : vecSend)
                 {
                     CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
@@ -741,6 +763,11 @@ bool CWallet::CreateTransactionInternal(
                             fFirst = false;
                             txout.nValue -= nFeeRet % nSubtractFeeFromAmount;
                         }
+                    }
+
+                    // Include the fee cost for outputs. Note this is only used for BnB right now
+                    if (!coin_selection_params.m_subtract_fee_outputs) {
+                        coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout, PROTOCOL_VERSION);
                     }
 
                     if (IsDust(txout, chain().relayDustFee()))
