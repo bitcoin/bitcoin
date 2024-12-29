@@ -747,7 +747,8 @@ bool CWallet::CreateTransactionInternal(
 
                 // vouts to the payees
                 if (!coin_selection_params.m_subtract_fee_outputs) {
-                    coin_selection_params.tx_noinputs_size = 10; // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count, 1 output count
+                    coin_selection_params.tx_noinputs_size = 9; // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count
+                    coin_selection_params.tx_noinputs_size += GetSizeOfCompactSize(vecSend.size()); // bytes for output count
                 }
                 for (const auto& recipient : vecSend)
                 {
