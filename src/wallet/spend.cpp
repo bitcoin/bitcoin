@@ -946,6 +946,7 @@ bool CWallet::CreateTransactionInternal(
             txNew.vin.push_back(CTxIn(coin.outpoint, CScript(), nSequence));
         }
         if (sort_bip69) { std::sort(txNew.vin.begin(), txNew.vin.end(), CompareInputBIP69()); }
+        else { Shuffle(txNew.vin.begin(), txNew.vin.end(), FastRandomContext()); }
 
         if (sign && !SignTransaction(txNew)) {
             error = _("Signing transaction failed");
