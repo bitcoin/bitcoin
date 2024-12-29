@@ -640,24 +640,6 @@ bool CWallet::CreateTransactionInternal(
 
     CMutableTransaction txNew;
     FeeCalculation feeCalc;
-
-    CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
-    coin_selection_params.m_discard_feerate = coin_control.m_discard_feerate ? *coin_control.m_discard_feerate : GetDiscardRate(*this);
-
-    // Get the fee rate to use effective values in coin selection
-    coin_selection_params.m_effective_feerate = GetMinimumFeeRate(*this, coin_control, &feeCalc);
-    // Do not, ever, assume that it's fine to change the fee rate if the user has explicitly
-    // provided one
-    if (coin_control.m_feerate && coin_selection_params.m_effective_feerate > *coin_control.m_feerate) {
-        error = strprintf(_("Fee rate (%s) is lower than the minimum fee rate setting (%s)"), coin_control.m_feerate->ToString(FeeEstimateMode::DUFF_B), coin_selection_params.m_effective_feerate.ToString(FeeEstimateMode::DUFF_B));
-        return false;
-    }
-    if (feeCalc.reason == FeeReason::FALLBACK && !m_allow_fallback_fee) {
-        // eventually allow a fallback fee
-        error = _("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.");
-        return false;
-    }
-
     int nBytes{0};
     {
         std::set<CInputCoin> setCoins;
@@ -667,14 +649,14 @@ bool CWallet::CreateTransactionInternal(
             CAmount nAmountAvailable{0};
             std::vector<COutput> vAvailableCoins;
             AvailableCoins(vAvailableCoins, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0);
-            coin_selection_params.use_bnb = false; // never use BnB
+            CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
+            coin_selection_params.m_avoid_partial_spends = coin_control.m_avoid_partial_spends;
 
             for (auto out : vAvailableCoins) {
                 if (out.fSpendable) {
                     nAmountAvailable += out.tx->tx->vout[out.i].nValue;
                 }
             }
-            coin_selection_params.m_avoid_partial_spends = coin_control.m_avoid_partial_spends;
 
             // Create change script that will be used if we need change
             // TODO: pass in scriptChange instead of reservedest so
@@ -705,9 +687,30 @@ bool CWallet::CreateTransactionInternal(
                 CHECK_NONFATAL(IsValidDestination(dest) != scriptChange.empty());
             }
 
+            // Set discard feerate
+            coin_selection_params.m_discard_feerate = coin_control.m_discard_feerate ? *coin_control.m_discard_feerate : GetDiscardRate(*this);
+
+            // Get the fee rate to use effective values in coin selection
+            coin_selection_params.m_effective_feerate = GetMinimumFeeRate(*this, coin_control, &feeCalc);
+            // Do not, ever, assume that it's fine to change the fee rate if the user has explicitly
+            // provided one
+            if (coin_control.m_feerate && coin_selection_params.m_effective_feerate > *coin_control.m_feerate) {
+                error = strprintf(_("Fee rate (%s) is lower than the minimum fee rate setting (%s)"), coin_control.m_feerate->ToString(FeeEstimateMode::DUFF_B), coin_selection_params.m_effective_feerate.ToString(FeeEstimateMode::DUFF_B));
+                return false;
+            }
+            if (feeCalc.reason == FeeReason::FALLBACK && !m_allow_fallback_fee) {
+                // eventually allow a fallback fee
+                error = _("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.");
+                return false;
+            }
+
             nFeeRet = 0;
             bool pick_new_inputs = true;
             CAmount nValueIn = 0;
+
+            // BnB selector is the only selector used when this is true.
+            coin_selection_params.use_bnb = false; // Dash: never use BnB
+
             CAmount nAmountToSelectAdditional{0};
             // Start with nAmountToSelectAdditional=0 and loop until there is enough to cover the request + fees, try it 500 times.
             int nMaxTries = 500;
