@@ -447,6 +447,27 @@ static RPCHelpMan getdifficulty()
     };
 }
 
+static RPCHelpMan gettarget()
+{
+    return RPCHelpMan{"gettarget",
+                "\nReturns the proof-of-work target.\n",
+                {},
+                RPCResult{
+                    RPCResult::Type::STR_HEX, "", "the proof-of-work target."},
+                RPCExamples{
+                    HelpExampleCli("gettarget", "")
+            + HelpExampleRpc("gettarget", "")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    LOCK(cs_main);
+    CBlockIndex* tip{CHECK_NONFATAL(chainman.ActiveChain().Tip())};
+    return GetTarget(*tip, chainman.GetParams().GetConsensus().powLimit).GetHex();
+},
+    };
+}
+
 static RPCHelpMan getblockfrompeer()
 {
     return RPCHelpMan{
@@ -3382,6 +3403,7 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"blockchain", &getblockheader},
         {"blockchain", &getchaintips},
         {"blockchain", &getdifficulty},
+        {"blockchain", &gettarget},
         {"blockchain", &getdeploymentinfo},
         {"blockchain", &gettxout},
         {"blockchain", &gettxoutsetinfo},
