@@ -93,6 +93,7 @@ const std::vector<std::string> RPC_COMMANDS_NOT_SAFE_FOR_FUZZING{
 // RPC commands which are safe for fuzzing.
 const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "analyzepsbt",
+    "checkblock",
     "clearbanned",
     "combinepsbt",
     "combinerawtransaction",
