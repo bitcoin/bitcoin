@@ -990,7 +990,7 @@ public:
 
     bool checkBlock(const CBlock& block, const node::BlockCheckOptions& options, std::string& reason) override
     {
-        return chainman().CheckNewBlock(block, reason, options.check_merkle_root, options.check_pow, options.target);
+        return chainman().TestBlockValidity(block, reason, options.check_merkle_root, options.check_pow, options.target);
     }
 
     NodeContext* context() override { return &m_node; }

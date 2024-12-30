@@ -4589,7 +4589,7 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
     return true;
 }
 
-bool ChainstateManager::CheckNewBlock(const CBlock& block, std::string& reason, const bool check_merkle_root, const bool check_pow, const uint256 target)
+bool ChainstateManager::TestBlockValidity(const CBlock& block, std::string& reason, const bool check_merkle_root, const bool check_pow, const uint256 target)
 {
     ChainstateManager& chainman{ActiveChainstate().m_chainman};
 
@@ -4759,44 +4759,6 @@ MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef&
     auto result = AcceptToMemoryPool(active_chainstate, tx, GetTime(), /*bypass_limits=*/ false, test_accept);
     active_chainstate.GetMempool()->check(active_chainstate.CoinsTip(), active_chainstate.m_chain.Height() + 1);
     return result;
-}
-
-bool TestBlockValidity(BlockValidationState& state,
-                       const CChainParams& chainparams,
-                       Chainstate& chainstate,
-                       const CBlock& block,
-                       CBlockIndex* pindexPrev,
-                       bool fCheckPOW,
-                       bool fCheckMerkleRoot)
-{
-    AssertLockHeld(cs_main);
-    assert(pindexPrev && pindexPrev == chainstate.m_chain.Tip());
-    CCoinsViewCache viewNew(&chainstate.CoinsTip());
-    uint256 block_hash(block.GetHash());
-    CBlockIndex indexDummy(block);
-    indexDummy.pprev = pindexPrev;
-    indexDummy.nHeight = pindexPrev->nHeight + 1;
-    indexDummy.phashBlock = &block_hash;
-
-    // NOTE: CheckBlockHeader is called by CheckBlock
-    if (!ContextualCheckBlockHeader(block, state, chainstate.m_blockman, chainstate.m_chainman, pindexPrev)) {
-        LogError("%s: Consensus::ContextualCheckBlockHeader: %s\n", __func__, state.ToString());
-        return false;
-    }
-    if (!CheckBlock(block, state, chainparams.GetConsensus(), fCheckPOW, fCheckMerkleRoot)) {
-        LogError("%s: Consensus::CheckBlock: %s\n", __func__, state.ToString());
-        return false;
-    }
-    if (!ContextualCheckBlock(block, state, chainstate.m_chainman, pindexPrev)) {
-        LogError("%s: Consensus::ContextualCheckBlock: %s\n", __func__, state.ToString());
-        return false;
-    }
-    if (!chainstate.ConnectBlock(block, state, &indexDummy, viewNew, true)) {
-        return false;
-    }
-    assert(state.IsValid());
-
-    return true;
 }
 
 /* This function is called from the RPC code for pruneblockchain */

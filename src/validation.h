@@ -383,15 +383,6 @@ public:
 /** Context-independent validity checks */
 bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
 
-/** Check a block is completely valid from start to finish (only works on top of our current best block) */
-bool TestBlockValidity(BlockValidationState& state,
-                       const CChainParams& chainparams,
-                       Chainstate& chainstate,
-                       const CBlock& block,
-                       CBlockIndex* pindexPrev,
-                       bool fCheckPOW = true,
-                       bool fCheckMerkleRoot = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
 /** Check with the proof of work on each blockheader matches the value in nBits */
 bool HasValidProofOfWork(const std::vector<CBlockHeader>& headers, const Consensus::Params& consensusParams);
 
@@ -1197,7 +1188,7 @@ public:
      * For signets the challenge verification is skipped when check_pow is false or
      * a higher target is provided.
      */
-    bool CheckNewBlock(const CBlock& block, std::string& reason, const bool check_merkle_root = true, const bool check_pow = true, const uint256 target = uint256::ZERO);
+    bool TestBlockValidity(const CBlock& block, std::string& reason, const bool check_merkle_root = true, const bool check_pow = true, const uint256 target = uint256::ZERO);
 
     /**
      * Process an incoming block. This only returns after the best known valid
