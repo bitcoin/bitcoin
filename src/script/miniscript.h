@@ -184,11 +184,11 @@ inline consteval Type operator"" _mst(const char* c, size_t l) {
 using Opcode = std::pair<opcodetype, std::vector<unsigned char>>;
 
 template<typename Key> struct Node;
-template<typename Key> using NodeRef = std::shared_ptr<const Node<Key>>;
+template<typename Key> using NodeRef = std::unique_ptr<const Node<Key>>;
 
 //! Construct a miniscript node as a shared_ptr.
 template<typename Key, typename... Args>
-NodeRef<Key> MakeNodeRef(Args&&... args) { return std::make_shared<const Node<Key>>(std::forward<Args>(args)...); }
+NodeRef<Key> MakeNodeRef(Args&&... args) { return std::make_unique<const Node<Key>>(std::forward<Args>(args)...); }
 
 //! The different node types in miniscript.
 enum class Fragment {
