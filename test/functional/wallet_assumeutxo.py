@@ -17,6 +17,7 @@ from test_framework.messages import COIN
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    ensure_for,
 )
 from test_framework.wallet import MiniWallet
 
@@ -34,9 +35,10 @@ class AssumeutxoTest(BitcoinTestFramework):
 
     def set_test_params(self):
         """Use the pregenerated, deterministic chain up to height 199."""
-        self.num_nodes = 2
+        self.num_nodes = 3
         self.rpc_timeout = 120
         self.extra_args = [
+            [],
             [],
             [],
         ]
@@ -44,7 +46,7 @@ class AssumeutxoTest(BitcoinTestFramework):
     def setup_network(self):
         """Start with the nodes disconnected so that one can generate a snapshot
         including blocks the other hasn't yet seen."""
-        self.add_nodes(2)
+        self.add_nodes(3)
         self.start_nodes(extra_args=self.extra_args)
 
     def run_test(self):
@@ -57,6 +59,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         """
         n0 = self.nodes[0]
         n1 = self.nodes[1]
+        n2 = self.nodes[2]
 
         self.mini_wallet = MiniWallet(n0)
 
@@ -88,6 +91,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
             # make n1 aware of the new header, but don't give it the block.
             n1.submitheader(newblock)
+            n2.submitheader(newblock)
 
         # Ensure everyone is seeing the same headers.
         for n in self.nodes:
@@ -125,6 +129,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         assert_equal(n0.getblockcount(), FINAL_HEIGHT)
         assert_equal(n1.getblockcount(), START_HEIGHT)
+        assert_equal(n2.getblockcount(), START_HEIGHT)
 
         assert_equal(n0.getblockchaininfo()["blocks"], FINAL_HEIGHT)
 
@@ -191,6 +196,13 @@ class AssumeutxoTest(BitcoinTestFramework):
         n1.loadwallet("w")
         w = n1.get_wallet_rpc("w")
         assert_equal(w.getbalance(), 34)
+
+        self.log.info("Check balance of a wallet that is active during snapshot completion")
+        n2.restorewallet("w", "backup_w.dat")
+        loaded = n2.loadtxoutset(dump_output['path'])
+        self.connect_nodes(0, 2)
+        self.wait_until(lambda: len(n2.getchainstates()['chainstates']) == 1)
+        ensure_for(duration=1, f=lambda: (n2.getbalance() == 34))
 
 
 if __name__ == '__main__':
