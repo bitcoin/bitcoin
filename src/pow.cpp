@@ -11,6 +11,20 @@
 #include <uint256.h>
 #include <util/check.h>
 
+bool DeriveTarget(unsigned int nBits, const uint256 pow_limit, arith_uint256& target)
+{
+    bool negative;
+    bool overflow;
+
+    target.SetCompact(nBits, &negative, &overflow);
+
+    // Check range
+    if (negative || target == 0 || overflow || target > UintToArith256(pow_limit)) {
+        return false;
+    }
+    return true;
+}
+
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
