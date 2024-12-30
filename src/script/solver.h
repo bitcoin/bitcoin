@@ -10,6 +10,7 @@
 
 #include <attributes.h>
 #include <script/script.h>
+#include <span.h>
 
 #include <string>
 #include <optional>
@@ -17,7 +18,6 @@
 #include <vector>
 
 class CPubKey;
-template <typename C> class Span;
 
 enum class TxoutType {
     NONSTANDARD,
