@@ -1687,6 +1687,10 @@ public:
         : Node(internal::NoDupCheck{}, ctx.MsContext(), nt, std::move(sub), val) { DuplicateKeyCheck(ctx); }
     template <typename Ctx> Node(const Ctx& ctx, Fragment nt, uint32_t val = 0)
         : Node(internal::NoDupCheck{}, ctx.MsContext(), nt, val) { DuplicateKeyCheck(ctx); }
+
+    // Delete copy constructor and assignment operator
+    Node(const Node&) = delete;
+    Node& operator=(const Node&) = delete;
 };
 
 namespace internal {
