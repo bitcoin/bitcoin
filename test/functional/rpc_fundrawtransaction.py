@@ -368,7 +368,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Create same transaction over sendtoaddress.
         txId = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 11)
-        signedFee = self.nodes[0].getmempoolentry(txId)['fee']
+        signedFee = self.nodes[0].getmempoolentry(txId)['fees']['base']
 
         # Compare fee.
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee)
@@ -391,7 +391,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Create same transaction over sendtoaddress.
         txId = self.nodes[0].sendmany("", outputs)
-        signedFee = self.nodes[0].getmempoolentry(txId)['fee']
+        signedFee = self.nodes[0].getmempoolentry(txId)['fees']['base']
 
         # Compare fee.
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee)
@@ -415,7 +415,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Create same transaction over sendtoaddress.
         txId = self.nodes[0].sendtoaddress(mSigObj, 11)
-        signedFee = self.nodes[0].getmempoolentry(txId)['fee']
+        signedFee = self.nodes[0].getmempoolentry(txId)['fees']['base']
 
         # Compare fee.
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee)
@@ -456,7 +456,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Create same transaction over sendtoaddress.
         txId = self.nodes[0].sendtoaddress(mSigObj, 11)
-        signedFee = self.nodes[0].getmempoolentry(txId)['fee']
+        signedFee = self.nodes[0].getmempoolentry(txId)['fees']['base']
 
         # Compare fee.
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee)
@@ -584,7 +584,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         # Create same transaction over sendtoaddress.
         txId = self.nodes[1].sendmany("", outputs)
-        signedFee = self.nodes[1].getmempoolentry(txId)['fee']
+        signedFee = self.nodes[1].getmempoolentry(txId)['fees']['base']
 
         # Compare fee.
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee)

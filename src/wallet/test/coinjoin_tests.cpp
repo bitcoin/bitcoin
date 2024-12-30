@@ -12,6 +12,7 @@
 #include <consensus/amount.h>
 #include <node/context.h>
 #include <util/translation.h>
+#include <policy/settings.h>
 #include <validation.h>
 #include <wallet/wallet.h>
 

@@ -9,34 +9,32 @@
  * headers for everything under src/rpc/ */
 class CRPCTable;
 
-/** Register block chain RPC commands */
 void RegisterBlockchainRPCCommands(CRPCTable &tableRPC);
-/** Register P2P networking RPC commands */
+void RegisterFeeRPCCommands(CRPCTable&);
+void RegisterMempoolRPCCommands(CRPCTable&);
 void RegisterNetRPCCommands(CRPCTable &tableRPC);
-/** Register miscellaneous RPC commands */
 void RegisterMiscRPCCommands(CRPCTable &tableRPC);
-/** Register mining RPC commands */
 void RegisterMiningRPCCommands(CRPCTable &tableRPC);
-/** Register raw transaction RPC commands */
 void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
-/** Register masternode RPC commands */
+void RegisterSignMessageRPCCommands(CRPCTable&);
+void RegisterTxoutProofRPCCommands(CRPCTable&);
 void RegisterMasternodeRPCCommands(CRPCTable &tableRPC);
-/** Register CoinJoin RPC commands */
 void RegisterCoinJoinRPCCommands(CRPCTable &tableRPC);
-/** Register governance RPC commands */
 void RegisterGovernanceRPCCommands(CRPCTable &tableRPC);
-/** Register Evo RPC commands */
 void RegisterEvoRPCCommands(CRPCTable &tableRPC);
-/** Register Quorums RPC commands */
 void RegisterQuorumsRPCCommands(CRPCTable &tableRPC);
 
 static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
 {
     RegisterBlockchainRPCCommands(t);
+    RegisterFeeRPCCommands(t);
+    RegisterMempoolRPCCommands(t);
     RegisterNetRPCCommands(t);
     RegisterMiscRPCCommands(t);
     RegisterMiningRPCCommands(t);
     RegisterRawTransactionRPCCommands(t);
+    RegisterSignMessageRPCCommands(t);
+    RegisterTxoutProofRPCCommands(t);
     RegisterMasternodeRPCCommands(t);
     RegisterCoinJoinRPCCommands(t);
     RegisterGovernanceRPCCommands(t);

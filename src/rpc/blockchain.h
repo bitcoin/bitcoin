@@ -19,7 +19,6 @@ extern RecursiveMutex cs_main;
 class CBlock;
 class CBlockIndex;
 class CChainState;
-class CTxMemPool;
 class UniValue;
 struct NodeContext;
 namespace llmq {
@@ -42,12 +41,6 @@ void RPCNotifyBlockChange(const CBlockIndex*);
 
 /** Block description to JSON */
 UniValue blockToJSON(BlockManager& blockman, const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, const llmq::CChainLocksHandler& clhandler, const llmq::CInstantSendManager& isman, bool txDetails = false) LOCKS_EXCLUDED(cs_main);
-
-/** Mempool information to JSON */
-UniValue MempoolInfoToJSON(const CTxMemPool& pool, const llmq::CInstantSendManager& isman);
-
-/** Mempool to JSON */
-UniValue MempoolToJSON(const CTxMemPool& pool, const llmq::CInstantSendManager* isman, bool verbose = false, bool include_mempool_sequence = false);
 
 /** Block header to JSON */
 UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex, const llmq::CChainLocksHandler& clhandler) LOCKS_EXCLUDED(cs_main);
