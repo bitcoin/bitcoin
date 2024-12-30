@@ -3443,7 +3443,7 @@ void CConnman::StopNodes()
     std::vector<CNode*> nodes;
     WITH_LOCK(m_nodes_mutex, nodes.swap(m_nodes));
     for (CNode* pnode : nodes) {
-        LogDebug(BCLog::NET, "%s\n", pnode->DisconnectMsg(fLogIPs));
+        LogDebug(BCLog::NET, "Stopping node, %s", pnode->DisconnectMsg(fLogIPs));
         pnode->CloseSocketDisconnect();
         DeleteNode(pnode);
     }
