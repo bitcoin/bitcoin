@@ -188,14 +188,16 @@ TxConfirmStats::TxConfirmStats(const std::vector<double>& defaultBuckets,
         failAvg[i].resize(buckets.size());
     }
 
-    txCtAvg.resize(buckets.size());
-    m_feerate_avg.resize(buckets.size());
+    txCtAvg.reserve(buckets.size()); // Use reserve to avoid multiple reallocations
+    m_feerate_avg.reserve(buckets.size()); // Use reserve to avoid multiple reallocations
 
     resizeInMemoryCounters(buckets.size());
 }
 
 void TxConfirmStats::resizeInMemoryCounters(size_t newbuckets) {
-    // newbuckets must be passed in because the buckets referred to during Read have not been updated yet.
+    if (newbuckets == 0) {
+        throw std::invalid_argument("newbuckets must be greater than 0");
+    }
     unconfTxs.resize(GetMaxConfirms());
     for (unsigned int i = 0; i < unconfTxs.size(); i++) {
         unconfTxs[i].resize(newbuckets);
@@ -219,6 +221,9 @@ void TxConfirmStats::Record(int blocksToConfirm, double feerate)
     if (blocksToConfirm < 1)
         return;
     int periodsToConfirm = (blocksToConfirm + scale - 1) / scale;
+    if (periodsToConfirm > confAvg.size()) {
+        throw std::out_of_range("blocksToConfirm exceeds the maximum tracked periods");
+    }
     unsigned int bucketindex = bucketMap.lower_bound(feerate)->second;
     for (size_t i = periodsToConfirm; i <= confAvg.size(); i++) {
         confAvg[i - 1][bucketindex]++;
@@ -245,27 +250,19 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
                                          double successBreakPoint, unsigned int nBlockHeight,
                                          EstimationResult *result) const
 {
-    // Counters for a bucket (or range of buckets)
-    double nConf = 0; // Number of tx's confirmed within the confTarget
-    double totalNum = 0; // Total number of tx's that were ever confirmed
-    int extraNum = 0;  // Number of tx's still in mempool for confTarget or longer
-    double failNum = 0; // Number of tx's that were never confirmed but removed from the mempool after confTarget
     const int periodTarget = (confTarget + scale - 1) / scale;
     const int maxbucketindex = buckets.size() - 1;
 
-    // We'll combine buckets until we have enough samples.
-    // The near and far variables will define the range we've combined
-    // The best variables are the last range we saw which still had a high
-    // enough confirmation rate to count as success.
-    // The cur variables are the current range we're counting.
+    double nConf = 0;
+    double totalNum = 0;
+    int extraNum = 0;
+    double failNum = 0;
+
     unsigned int curNearBucket = maxbucketindex;
     unsigned int bestNearBucket = maxbucketindex;
     unsigned int curFarBucket = maxbucketindex;
     unsigned int bestFarBucket = maxbucketindex;
 
-    // We'll always group buckets into sets that meet sufficientTxVal --
-    // this ensures that we're using consistent groups between different
-    // confirmation targets.
     double partialNum = 0;
 
     bool foundAnswer = false;
@@ -275,7 +272,6 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
     EstimatorBucket passBucket;
     EstimatorBucket failBucket;
 
-    // Start counting from highest feerate transactions
     for (int bucket = maxbucketindex; bucket >= 0; --bucket) {
         if (newBucketRange) {
             curNearBucket = bucket;
@@ -289,24 +285,16 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
         for (unsigned int confct = confTarget; confct < GetMaxConfirms(); confct++)
             extraNum += unconfTxs[(nBlockHeight - confct) % bins][bucket];
         extraNum += oldUnconfTxs[bucket];
-        // If we have enough transaction data points in this range of buckets,
-        // we can test for success
-        // (Only count the confirmed data points, so that each confirmation count
-        // will be looking at the same amount of data and same bucket breaks)
 
         if (partialNum < sufficientTxVal / (1 - decay)) {
-            // the buckets we've added in this round aren't sufficient
-            // so keep adding
             continue;
         } else {
-            partialNum = 0; // reset for the next range we'll add
+            partialNum = 0;
 
             double curPct = nConf / (totalNum + failNum + extraNum);
 
-            // Check to see if we are no longer getting confirmed at the success rate
             if (curPct < successBreakPoint) {
-                if (passing == true) {
-                    // First time we hit a failure record the failed bucket
+                if (passing) {
                     unsigned int failMinBucket = std::min(curNearBucket, curFarBucket);
                     unsigned int failMaxBucket = std::max(curNearBucket, curFarBucket);
                     failBucket.start = failMinBucket ? buckets[failMinBucket - 1] : 0;
@@ -318,11 +306,8 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
                     passing = false;
                 }
                 continue;
-            }
-            // Otherwise update the cumulative stats, and the bucket variables
-            // and reset the counters
-            else {
-                failBucket = EstimatorBucket(); // Reset any failed bucket, currently passing
+            } else {
+                failBucket = EstimatorBucket();
                 foundAnswer = true;
                 passing = true;
                 passBucket.withinTarget = nConf;
@@ -343,10 +328,6 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
     double median = -1;
     double txSum = 0;
 
-    // Calculate the "average" feerate of the best bucket range that met success conditions
-    // Find the bucket with the median transaction and then report the average feerate from that bucket
-    // This is a compromise between finding the median which we can't since we don't save all tx's
-    // and reporting the average which is less accurate
     unsigned int minBucket = std::min(bestNearBucket, bestFarBucket);
     unsigned int maxBucket = std::max(bestNearBucket, bestFarBucket);
     for (unsigned int j = minBucket; j <= maxBucket; j++) {
@@ -357,7 +338,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
         for (unsigned int j = minBucket; j <= maxBucket; j++) {
             if (txCtAvg[j] < txSum)
                 txSum -= txCtAvg[j];
-            else { // we're in the right bucket
+            else {
                 median = m_feerate_avg[j] / txCtAvg[j];
                 break;
             }
@@ -367,7 +348,6 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
         passBucket.end = buckets[maxBucket];
     }
 
-    // If we were passing until we reached last few buckets with insufficient data, then report those as failed
     if (passing && !newBucketRange) {
         unsigned int failMinBucket = std::min(curNearBucket, curFarBucket);
         unsigned int failMaxBucket = std::max(curNearBucket, curFarBucket);
@@ -397,7 +377,6 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
              failed_within_target_perc,
              failBucket.withinTarget, failBucket.totalConfirmed, failBucket.inMempool, failBucket.leftMempool);
 
-
     if (result) {
         result->pass = passBucket;
         result->fail = failBucket;
@@ -419,12 +398,8 @@ void TxConfirmStats::Write(AutoFile& fileout) const
 
 void TxConfirmStats::Read(AutoFile& filein, size_t numBuckets)
 {
-    // Read data file and do some very basic sanity checking
-    // buckets and bucketMap are not updated yet, so don't access them
-    // If there is a read failure, we'll just discard this entire object anyway
     size_t maxConfirms, maxPeriods;
 
-    // The current version will store the decay with each individual TxConfirmStats and also keep a scale factor
     filein >> Using<EncodedDoubleFormatter>(decay);
     if (decay <= 0 || decay >= 1) {
         throw std::runtime_error("Corrupt estimates file. Decay must be between 0 and 1 (non-inclusive)");
@@ -447,7 +422,7 @@ void TxConfirmStats::Read(AutoFile& filein, size_t numBuckets)
     maxConfirms = scale * maxPeriods;
 
     if (maxConfirms <= 0 || maxConfirms > 6 * 24 * 7) { // one week
-        throw std::runtime_error("Corrupt estimates file.  Must maintain estimates for between 1 and 1008 (one week) confirms");
+        throw std::runtime_error("Corrupt estimates file. Must maintain estimates for between 1 and 1008 (one week) confirms");
     }
     for (unsigned int i = 0; i < maxPeriods; i++) {
         if (confAvg[i].size() != numBuckets) {
