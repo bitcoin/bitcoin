@@ -48,6 +48,7 @@ enum class VerifyRecSigStatus
 
 class CDKGSessionManager;
 class CQuorumBlockProcessor;
+class CQuorumSnapshotManager;
 
 /**
  * Object used as a key to store CQuorumDataRequest
@@ -241,6 +242,7 @@ private:
     CDeterministicMNManager& m_dmnman;
     CDKGSessionManager& dkgManager;
     CQuorumBlockProcessor& quorumBlockProcessor;
+    CQuorumSnapshotManager& m_qsnapman;
     const CActiveMasternodeManager* const m_mn_activeman;
     const CMasternodeSync& m_mn_sync;
     const CSporkManager& m_sporkman;
@@ -262,8 +264,8 @@ private:
 public:
     CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, CDeterministicMNManager& dmnman,
                    CDKGSessionManager& _dkgManager, CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor,
-                   const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
-                   const CSporkManager& sporkman, bool unit_tests, bool wipe);
+                   CQuorumSnapshotManager& qsnapman, const CActiveMasternodeManager* const mn_activeman,
+                   const CMasternodeSync& mn_sync, const CSporkManager& sporkman, bool unit_tests, bool wipe);
     ~CQuorumManager();
 
     void Start();

@@ -212,7 +212,7 @@ bool CQuorum::ReadContributions(const CDBWrapper& db)
 
 CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, CDeterministicMNManager& dmnman,
                                CDKGSessionManager& _dkgManager, CEvoDB& _evoDb,
-                               CQuorumBlockProcessor& _quorumBlockProcessor,
+                               CQuorumBlockProcessor& _quorumBlockProcessor, CQuorumSnapshotManager& qsnapman,
                                const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
                                const CSporkManager& sporkman, bool unit_tests, bool wipe) :
     db(std::make_unique<CDBWrapper>(unit_tests ? "" : (gArgs.GetDataDirNet() / "llmq" / "quorumdb"), 1 << 20,
@@ -222,6 +222,7 @@ CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, 
     m_dmnman(dmnman),
     dkgManager(_dkgManager),
     quorumBlockProcessor(_quorumBlockProcessor),
+    m_qsnapman(qsnapman),
     m_mn_activeman(mn_activeman),
     m_mn_sync(mn_sync),
     m_sporkman(sporkman)
@@ -365,7 +366,9 @@ void CQuorumManager::CheckQuorumConnections(CConnman& connman, const Consensus::
                     });
 
     for (const auto& quorum : lastQuorums) {
-        if (utils::EnsureQuorumConnections(llmqParams, connman, m_dmnman, m_sporkman, m_dmnman.GetListAtChainTip(), quorum->m_quorum_base_block_index, myProTxHash, /* is_masternode = */ m_mn_activeman != nullptr)) {
+        if (utils::EnsureQuorumConnections(llmqParams, connman, m_dmnman, m_sporkman, m_qsnapman,
+                                           m_dmnman.GetListAtChainTip(), quorum->m_quorum_base_block_index, myProTxHash,
+                                           /* is_masternode = */ m_mn_activeman != nullptr)) {
             if (connmanQuorumsToDelete.erase(quorum->qc->quorumHash) > 0) {
                 LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- llmqType[%d] h[%d] keeping mn quorum connections for quorum: [%d:%s]\n", __func__, ToUnderlying(llmqParams.type), pindexNew->nHeight, quorum->m_quorum_base_block_index->nHeight, quorum->m_quorum_base_block_index->GetBlockHash().ToString());
             }
@@ -407,7 +410,7 @@ CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const Consensus::LLMQType l
     const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     assert(llmq_params_opt.has_value());
     auto quorum = std::make_shared<CQuorum>(llmq_params_opt.value(), blsWorker);
-    auto members = utils::GetAllQuorumMembers(qc->llmqType, m_dmnman, pQuorumBaseBlockIndex);
+    auto members = utils::GetAllQuorumMembers(qc->llmqType, m_dmnman, m_qsnapman, pQuorumBaseBlockIndex);
 
     quorum->Init(std::move(qc), pQuorumBaseBlockIndex, minedBlockHash, members);
 

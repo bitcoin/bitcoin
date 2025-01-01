@@ -27,7 +27,8 @@ CFinalCommitment::CFinalCommitment(const Consensus::LLMQParams& params, const ui
 {
 }
 
-bool CFinalCommitment::Verify(CDeterministicMNManager& dmnman, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, bool checkSigs) const
+bool CFinalCommitment::Verify(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
+                              gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, bool checkSigs) const
 {
     const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     if (!llmq_params_opt.has_value()) {
@@ -81,7 +82,7 @@ bool CFinalCommitment::Verify(CDeterministicMNManager& dmnman, gsl::not_null<con
         LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] invalid vvecSig\n", quorumHash.ToString());
         return false;
     }
-    auto members = utils::GetAllQuorumMembers(llmqType, dmnman, pQuorumBaseBlockIndex);
+    auto members = utils::GetAllQuorumMembers(llmqType, dmnman, qsnapman, pQuorumBaseBlockIndex);
     if (LogAcceptDebug(BCLog::LLMQ)) {
         std::stringstream ss;
         std::stringstream ss2;
@@ -166,7 +167,9 @@ bool CFinalCommitment::VerifySizes(const Consensus::LLMQParams& params) const
     return true;
 }
 
-bool CheckLLMQCommitment(CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state)
+bool CheckLLMQCommitment(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
+                         const ChainstateManager& chainman, const CTransaction& tx,
+                         gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state)
 {
     const auto opt_qcTx = GetTxPayload<CFinalCommitmentTxPayload>(tx);
     if (!opt_qcTx) {
@@ -219,7 +222,7 @@ bool CheckLLMQCommitment(CDeterministicMNManager& dmnman, const ChainstateManage
         return true;
     }
 
-    if (!qcTx.commitment.Verify(dmnman, pQuorumBaseBlockIndex, false)) {
+    if (!qcTx.commitment.Verify(dmnman, qsnapman, pQuorumBaseBlockIndex, false)) {
         LogPrint(BCLog::LLMQ, "CFinalCommitment -- h[%d] invalid qcTx.commitment[%s] Verify failed\n", pindexPrev->nHeight, qcTx.commitment.quorumHash.ToString());
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-qc-invalid");
     }

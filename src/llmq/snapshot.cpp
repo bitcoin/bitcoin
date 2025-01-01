@@ -86,7 +86,8 @@ UniValue CQuorumRotationInfo::ToJson() const
     return obj;
 }
 
-bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const CQuorumManager& qman,
+bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
+                             const ChainstateManager& chainman, const CQuorumManager& qman,
                              const CQuorumBlockProcessor& qblockman, const CGetQuorumRotationInfo& request,
                              CQuorumRotationInfo& response, std::string& errorRet)
 {
@@ -207,7 +208,7 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, const ChainstateMa
         return false;
     }
 
-    auto snapshotHMinusC = quorumSnapshotManager->GetSnapshotForBlock(llmqType, pBlockHMinusCIndex);
+    auto snapshotHMinusC = qsnapman.GetSnapshotForBlock(llmqType, pBlockHMinusCIndex);
     if (!snapshotHMinusC.has_value()) {
         errorRet = strprintf("Can not find quorum snapshot at H-C");
         return false;
@@ -219,7 +220,7 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, const ChainstateMa
         return false;
     }
 
-    auto snapshotHMinus2C = quorumSnapshotManager->GetSnapshotForBlock(llmqType, pBlockHMinus2CIndex);
+    auto snapshotHMinus2C = qsnapman.GetSnapshotForBlock(llmqType, pBlockHMinus2CIndex);
     if (!snapshotHMinus2C.has_value()) {
         errorRet = strprintf("Can not find quorum snapshot at H-2C");
         return false;
@@ -231,7 +232,7 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, const ChainstateMa
         return false;
     }
 
-    auto snapshotHMinus3C = quorumSnapshotManager->GetSnapshotForBlock(llmqType, pBlockHMinus3CIndex);
+    auto snapshotHMinus3C = qsnapman.GetSnapshotForBlock(llmqType, pBlockHMinus3CIndex);
     if (!snapshotHMinus3C.has_value()) {
         errorRet = strprintf("Can not find quorum snapshot at H-3C");
         return false;
@@ -247,7 +248,7 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, const ChainstateMa
             return false;
         }
 
-        auto snapshotHMinus4C = quorumSnapshotManager->GetSnapshotForBlock(llmqType, pBlockHMinus4CIndex);
+        auto snapshotHMinus4C = qsnapman.GetSnapshotForBlock(llmqType, pBlockHMinus4CIndex);
         if (!snapshotHMinus4C.has_value()) {
             errorRet = strprintf("Can not find quorum snapshot at H-4C");
             return false;
@@ -303,7 +304,7 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, const ChainstateMa
             return false;
         }
 
-        auto snapshotNeededH = quorumSnapshotManager->GetSnapshotForBlock(llmqType, pNeededBlockIndex);
+        auto snapshotNeededH = qsnapman.GetSnapshotForBlock(llmqType, pNeededBlockIndex);
         if (!snapshotNeededH.has_value()) {
             errorRet = strprintf("Can not find quorum snapshot at H(%d)", h);
             return false;

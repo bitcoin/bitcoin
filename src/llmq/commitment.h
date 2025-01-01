@@ -27,6 +27,7 @@ class TxValidationState;
 
 namespace llmq
 {
+class CQuorumSnapshotManager;
 
 // This message is an aggregation of all received premature commitments and only valid if
 // enough (>=threshold) premature commitments were aggregated
@@ -65,7 +66,8 @@ public:
         return int(std::count(validMembers.begin(), validMembers.end(), true));
     }
 
-    bool Verify(CDeterministicMNManager& dmnman, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, bool checkSigs) const;
+    bool Verify(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
+                gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, bool checkSigs) const;
     bool VerifyNull() const;
     bool VerifySizes(const Consensus::LLMQParams& params) const;
 
@@ -175,7 +177,9 @@ public:
     }
 };
 
-bool CheckLLMQCommitment(CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state);
+bool CheckLLMQCommitment(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
+                         const ChainstateManager& chainman, const CTransaction& tx,
+                         gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state);
 
 uint256 BuildCommitmentHash(Consensus::LLMQType llmqType, const uint256& blockHash, const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey, const uint256& vvecHash);
 

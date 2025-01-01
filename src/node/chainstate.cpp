@@ -240,7 +240,8 @@ void DashChainstateSetup(ChainstateManager& chainman,
 
     chain_helper.reset();
     chain_helper = std::make_unique<CChainstateHelper>(*cpoolman, *dmnman, *mnhf_manager, govman, *(llmq_ctx->isman), *(llmq_ctx->quorum_block_processor),
-                                                       chainman, consensus_params, mn_sync, sporkman, *(llmq_ctx->clhandler), *(llmq_ctx->qman));
+                                                       *llmq::quorumSnapshotManager, chainman, consensus_params, mn_sync, sporkman, *(llmq_ctx->clhandler),
+                                                       *(llmq_ctx->qman));
 }
 
 void DashChainstateSetupClose(std::unique_ptr<CChainstateHelper>& chain_helper,

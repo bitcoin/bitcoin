@@ -62,8 +62,8 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidati
 
 // This can only be done after the block has been fully processed, as otherwise we won't have the finished MN list
 bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CDeterministicMNManager& dmnman,
-                          const llmq::CQuorumBlockProcessor& quorum_block_processor, BlockValidationState& state,
-                          const CCoinsViewCache& view)
+                          llmq::CQuorumSnapshotManager& qsnapman, const llmq::CQuorumBlockProcessor& quorum_block_processor,
+                          BlockValidationState& state, const CCoinsViewCache& view)
 {
     if (block.vtx[0]->nType != TRANSACTION_COINBASE) {
         return true;
@@ -87,7 +87,7 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CDeter
         static int64_t nTimeMerkleQuorum = 0;
 
         uint256 calculatedMerkleRoot;
-        if (!CalcCbTxMerkleRootMNList(block, pindex->pprev, calculatedMerkleRoot, dmnman, state, view)) {
+        if (!CalcCbTxMerkleRootMNList(block, pindex->pprev, calculatedMerkleRoot, state, dmnman, qsnapman, view)) {
             // pass the state returned by the function above
             return false;
         }
@@ -117,7 +117,8 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CDeter
 }
 
 bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet,
-                              CDeterministicMNManager& dmnman, BlockValidationState& state, const CCoinsViewCache& view)
+                              BlockValidationState& state, CDeterministicMNManager& dmnman,
+                              llmq::CQuorumSnapshotManager& qsnapman, const CCoinsViewCache& view)
 {
     try {
         static std::atomic<int64_t> nTimeDMN = 0;
@@ -127,7 +128,7 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
         int64_t nTime1 = GetTimeMicros();
 
         CDeterministicMNList tmpMNList;
-        if (!dmnman.BuildNewListFromBlock(block, pindexPrev, state, view, tmpMNList, false)) {
+        if (!dmnman.BuildNewListFromBlock(block, pindexPrev, state, view, tmpMNList, qsnapman, false)) {
             // pass the state returned by the function above
             return false;
         }

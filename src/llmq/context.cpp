@@ -17,6 +17,7 @@
 #include <llmq/quorums.h>
 #include <llmq/signing.h>
 #include <llmq/signing_shares.h>
+#include <llmq/snapshot.h>
 
 LLMQContext::LLMQContext(ChainstateManager& chainman, CDeterministicMNManager& dmnman, CEvoDB& evo_db,
                          CMasternodeMetaMan& mn_metaman, CMNHFManager& mnhfman, CSporkManager& sporkman,
@@ -25,13 +26,14 @@ LLMQContext::LLMQContext(ChainstateManager& chainman, CDeterministicMNManager& d
     is_masternode{mn_activeman != nullptr},
     bls_worker{std::make_shared<CBLSWorker>()},
     dkg_debugman{std::make_unique<llmq::CDKGDebugManager>()},
-    quorum_block_processor{std::make_unique<llmq::CQuorumBlockProcessor>(chainman.ActiveChainstate(), dmnman, evo_db)},
+    quorum_block_processor{std::make_unique<llmq::CQuorumBlockProcessor>(chainman.ActiveChainstate(), dmnman, evo_db,
+                                                                         *llmq::quorumSnapshotManager)},
     qdkgsman{std::make_unique<llmq::CDKGSessionManager>(*bls_worker, chainman.ActiveChainstate(), dmnman, *dkg_debugman,
-                                                        mn_metaman, *quorum_block_processor, mn_activeman, sporkman,
-                                                        unit_tests, wipe)},
+                                                        mn_metaman, *quorum_block_processor, *llmq::quorumSnapshotManager,
+                                                        mn_activeman, sporkman, unit_tests, wipe)},
     qman{std::make_unique<llmq::CQuorumManager>(*bls_worker, chainman.ActiveChainstate(), dmnman, *qdkgsman, evo_db,
-                                                *quorum_block_processor, mn_activeman, mn_sync, sporkman, unit_tests,
-                                                wipe)},
+                                                *quorum_block_processor, *llmq::quorumSnapshotManager, mn_activeman,
+                                                mn_sync, sporkman, unit_tests, wipe)},
     sigman{std::make_unique<llmq::CSigningManager>(mn_activeman, chainman.ActiveChainstate(), *qman, unit_tests, wipe)},
     shareman{std::make_unique<llmq::CSigSharesManager>(*sigman, mn_activeman, *qman, sporkman)},
     clhandler{std::make_unique<llmq::CChainLocksHandler>(chainman.ActiveChainstate(), *qman, *sigman, *shareman,
