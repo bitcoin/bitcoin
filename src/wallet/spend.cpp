@@ -625,6 +625,7 @@ bool CWallet::CreateTransactionInternal(
     CMutableTransaction txNew;
     FeeCalculation feeCalc;
     int nBytes{0};
+    CAmount fee_needed{0};
     {
         std::set<CInputCoin> setCoins;
         LOCK(cs_wallet);
@@ -806,9 +807,8 @@ bool CWallet::CreateTransactionInternal(
                 nBytes += GetSizeOfCompactSize(nExtraPayloadSize) + nExtraPayloadSize;
             }
 
-            nFeeRet = coin_selection_params.m_effective_feerate.GetFee(nBytes);
+            fee_needed = coin_selection_params.m_effective_feerate.GetFee(nBytes);
 
-            CAmount fee_needed = nFeeRet;
             if (nSubtractFeeFromAmount == 0) {
                 change_position->nValue -= fee_needed;
             }
@@ -827,6 +827,8 @@ bool CWallet::CreateTransactionInternal(
                 nBytes = CalculateMaximumSignedTxSize(CTransaction(txNew), this, coin_control.fAllowWatchOnly);
                 fee_needed = coin_selection_params.m_effective_feerate.GetFee(nBytes);
             }
+
+            nFeeRet = inputs_sum - nValue - change_amount;
 
             // Update nFeeRet in case fee_needed changed due to dropping the change output
             if (fee_needed <= change_and_fee - change_amount) {
@@ -901,6 +903,11 @@ bool CWallet::CreateTransactionInternal(
             error = _("Transaction too large");
             return false;
         }
+    }
+
+    if (fee_needed > nFeeRet) {
+        error = _("Fee needed > fee paid");
+        return false;
     }
 
     if (nFeeRet > m_default_max_tx_fee) {
