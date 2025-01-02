@@ -82,7 +82,7 @@ class BumpFeeTest(BitcoinTestFramework):
         self.log.info("Mining blocks...")
         self.generate(peer_node, 110)
         for _ in range(25):
-            peer_node.sendtoaddress(rbf_node_address, 0.001)
+            peer_node.sendtoaddress(rbf_node_address, Decimal("0.001"))
         self.sync_all()
         self.generate(peer_node, 1)
         assert_equal(rbf_node.getbalance(), Decimal("0.025"))
@@ -176,7 +176,7 @@ class BumpFeeTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Invalid parameter, output argument cannot be an empty array",
                 rbf_node.bumpfee, rbfid, {"outputs": []})
         assert_raises_rpc_error(-8, "Invalid parameter, duplicated address: " + dest_address,
-                rbf_node.bumpfee, rbfid, {"outputs": [{dest_address: 0.1}, {dest_address: 0.2}]})
+                rbf_node.bumpfee, rbfid, {"outputs": [{dest_address: Decimal("0.1")}, {dest_address: Decimal("0.2")}]})
         assert_raises_rpc_error(-8, "Invalid parameter, duplicate key: data",
                 rbf_node.bumpfee, rbfid, {"outputs": [{"data": "deadbeef"}, {"data": "deadbeef"}]})
 
@@ -185,7 +185,7 @@ class BumpFeeTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Change position is out of range", rbf_node.bumpfee, rbfid, {"original_change_index": 2})
 
         self.log.info("Test outputs and original_change_index cannot both be provided")
-        assert_raises_rpc_error(-8, "The options 'outputs' and 'original_change_index' are incompatible. You can only either specify a new set of outputs, or designate a change output to be recycled.", rbf_node.bumpfee, rbfid, {"original_change_index": 2, "outputs": [{dest_address: 0.1}]})
+        assert_raises_rpc_error(-8, "The options 'outputs' and 'original_change_index' are incompatible. You can only either specify a new set of outputs, or designate a change output to be recycled.", rbf_node.bumpfee, rbfid, {"original_change_index": 2, "outputs": [{dest_address: Decimal("0.1")}]})
 
         self.clear_mempool()
 
@@ -315,8 +315,8 @@ def test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address):
         bumped_tx = rbf_node.bumpfee(rbfid, fee_rate=NORMAL)
     elif mode == "new_outputs":
         new_address = peer_node.getnewaddress()
-        bumped_psbt = rbf_node.psbtbumpfee(rbfid, outputs={new_address: 0.0003})
-        bumped_tx = rbf_node.bumpfee(rbfid, outputs={new_address: 0.0003})
+        bumped_psbt = rbf_node.psbtbumpfee(rbfid, outputs={new_address: Decimal("0.0003")})
+        bumped_tx = rbf_node.bumpfee(rbfid, outputs={new_address: Decimal("0.0003")})
     else:
         bumped_psbt = rbf_node.psbtbumpfee(rbfid)
         bumped_tx = rbf_node.bumpfee(rbfid)
@@ -353,7 +353,7 @@ def test_segwit_bumpfee_succeeds(self, rbf_node, dest_address):
     # which spends it, and make sure bumpfee can be called on it.
 
     segwit_out = rbf_node.getnewaddress(address_type='bech32')
-    segwitid = rbf_node.send({segwit_out: "0.0009"}, options={"change_position": 1})["txid"]
+    segwitid = rbf_node.send({segwit_out: Decimal("0.0009")}, options={"change_position": 1})["txid"]
 
     rbfraw = rbf_node.createrawtransaction([{
         'txid': segwitid,
@@ -423,7 +423,7 @@ def test_bumpfee_with_descendant_fails(self, rbf_node, rbf_node_address, dest_ad
     self.log.info('Test that fee cannot be bumped when it has descendant')
     # parent is send-to-self, so we don't have to check which output is change when creating the child tx
     parent_id = spend_one_input(rbf_node, rbf_node_address)
-    tx = rbf_node.createrawtransaction([{"txid": parent_id, "vout": 0}], {dest_address: 0.00020000})
+    tx = rbf_node.createrawtransaction([{"txid": parent_id, "vout": 0}], {dest_address: Decimal("0.00020000")})
     tx = rbf_node.signrawtransactionwithwallet(tx)
     rbf_node.sendrawtransaction(tx["hex"])
     assert_raises_rpc_error(-8, "Transaction has descendants in the wallet", rbf_node.bumpfee, parent_id)
@@ -443,7 +443,7 @@ def test_bumpfee_with_abandoned_descendant_succeeds(self, rbf_node, rbf_node_add
     # parent is send-to-self, so we don't have to check which output is change when creating the child tx
     parent_id = spend_one_input(rbf_node, rbf_node_address)
     # Submit child transaction with low fee
-    child_id = rbf_node.send(outputs={dest_address: 0.00020000},
+    child_id = rbf_node.send(outputs={dest_address: Decimal("0.00020000")},
                              options={"inputs": [{"txid": parent_id, "vout": 0}], "fee_rate": 2})["txid"]
     assert child_id in rbf_node.getrawmempool()
 
@@ -631,12 +631,12 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
 
     funding_address1 = watcher.getnewaddress(address_type='bech32')
     funding_address2 = watcher.getnewaddress(address_type='bech32')
-    peer_node.sendmany("", {funding_address1: 0.001, funding_address2: 0.001})
+    peer_node.sendmany("", {funding_address1: Decimal("0.001"), funding_address2: Decimal("0.001")})
     self.generate(peer_node, 1)
 
     # Create single-input PSBT for transaction to be bumped
     # Ensure the payment amount + change can be fully funded using one of the 0.001BTC inputs.
-    psbt = watcher.walletcreatefundedpsbt([watcher.listunspent()[0]], {dest_address: 0.0005}, 0,
+    psbt = watcher.walletcreatefundedpsbt([watcher.listunspent()[0]], {dest_address: Decimal("0.0005")}, 0,
             {"fee_rate": 1, "add_inputs": False}, True)['psbt']
     psbt_signed = signer.walletprocesspsbt(psbt=psbt, sign=True, sighashtype="ALL", bip32derivs=True)
     original_txid = watcher.sendrawtransaction(psbt_signed["hex"])
@@ -846,7 +846,7 @@ def test_bumpfee_with_feerate_ignores_walletincrementalrelayfee(self, rbf_node, 
 
     # Ensure you can not fee bump if the fee_rate is more than original fee_rate but the total fee from new fee_rate is
     # less than (original fee + incrementalrelayfee)
-    assert_raises_rpc_error(-8, "Insufficient total fee", rbf_node.bumpfee, tx["txid"], {"fee_rate": 2.8})
+    assert_raises_rpc_error(-8, "Insufficient total fee", rbf_node.bumpfee, tx["txid"], {"fee_rate": Decimal("2.8")})
 
     # You can fee bump as long as the new fee set from fee_rate is at least (original fee + incrementalrelayfee)
     rbf_node.bumpfee(tx["txid"], {"fee_rate": 3})

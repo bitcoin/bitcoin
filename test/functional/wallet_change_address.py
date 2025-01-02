@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test wallet change address selection"""
 
+from decimal import Decimal
 import re
 
 from test_framework.blocktools import COINBASE_MATURITY
@@ -66,7 +67,7 @@ class WalletChangeAddressTest(BitcoinTestFramework):
         for i in range(20):
             for n in [1, 2]:
                 self.log.debug(f"Send transaction from node {n}: expected change index {i}")
-                txid = self.nodes[n].sendtoaddress(self.nodes[0].getnewaddress(), 0.2)
+                txid = self.nodes[n].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("0.2"))
                 tx = self.nodes[n].getrawtransaction(txid, True)
                 # find the change output and ensure that expected change index was used
                 self.assert_change_index(self.nodes[n], tx, i)
@@ -78,10 +79,10 @@ class WalletChangeAddressTest(BitcoinTestFramework):
         w2 = self.nodes[2].get_wallet_rpc("w2")
         addr1 = w1.getnewaddress()
         addr2 = w2.getnewaddress()
-        self.nodes[0].sendtoaddress(addr1, 3.0)
-        self.nodes[0].sendtoaddress(addr1, 0.1)
-        self.nodes[0].sendtoaddress(addr2, 3.0)
-        self.nodes[0].sendtoaddress(addr2, 0.1)
+        self.nodes[0].sendtoaddress(addr1, Decimal("3.0"))
+        self.nodes[0].sendtoaddress(addr1, Decimal("0.1"))
+        self.nodes[0].sendtoaddress(addr2, Decimal("3.0"))
+        self.nodes[0].sendtoaddress(addr2, Decimal("0.1"))
         self.generate(self.nodes[0], 1)
 
         sendTo1 = self.nodes[0].getnewaddress()

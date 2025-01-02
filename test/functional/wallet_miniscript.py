@@ -4,6 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Miniscript descriptors integration in the wallet."""
 
+from decimal import Decimal
+
 from test_framework.descriptors import descsum_create
 from test_framework.psbt import PSBT, PSBT_IN_SHA256
 from test_framework.test_framework import BitcoinTestFramework
@@ -289,7 +291,7 @@ class WalletMiniscriptTest(BitcoinTestFramework):
                     "sequence": seq,
                 }
             ],
-            [{dest_addr: 0.009}],
+            [{dest_addr: Decimal("0.009")}],
             lt,
         )
 

@@ -26,6 +26,7 @@ total. This ensures we are not relying on specific values for the UTXOs,
 but still know when to expect mixing due to the wallet being close to empty.
 
 """
+from decimal import Decimal
 
 import random
 from test_framework.test_framework import BitcoinTestFramework
@@ -172,7 +173,7 @@ class AddressInputTypeGrouping(BitcoinTestFramework):
             self.generate(A, 1)
             assert is_same_type(B, tx)
 
-        tx = self.make_payment(A, B, 30.99, random.choice(ADDRESS_TYPES))
+        tx = self.make_payment(A, B, Decimal("30.99"), random.choice(ADDRESS_TYPES))
         assert not is_same_type(B, tx)
 
 

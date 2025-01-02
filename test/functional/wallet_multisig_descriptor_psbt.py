@@ -7,6 +7,8 @@
 This is meant to be documentation as much as functional tests, so it is kept as simple and readable as possible.
 """
 
+from decimal import Decimal
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_approx,
@@ -104,7 +106,7 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
         coordinator_wallet = participants["signers"][0]
         self.generatetoaddress(self.nodes[0], 101, coordinator_wallet.getnewaddress())
 
-        deposit_amount = 6.15
+        deposit_amount = Decimal("6.15")
         multisig_receiving_address = participants["multisigs"][0].getnewaddress()
         self.log.info("Send funds to the resulting multisig receiving address...")
         coordinator_wallet.sendtoaddress(multisig_receiving_address, deposit_amount)

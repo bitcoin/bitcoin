@@ -199,9 +199,9 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         self.nodes[0].sendtoaddress(self.nodes[3].get_wallet_rpc(self.default_wallet_name).getnewaddress(), self.watchonly_amount / 10)
 
-        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1.5)
-        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1.0)
-        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 5.0)
+        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), Decimal("1.5"))
+        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), Decimal("1.0"))
+        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), Decimal("5.0"))
 
         self.generate(self.nodes[0], 1)
 
@@ -210,7 +210,7 @@ class RawTransactionsTest(BitcoinTestFramework):
     def test_simple(self):
         self.log.info("Test fundrawtxn")
         inputs  = [ ]
-        outputs = { self.nodes[0].getnewaddress() : 1.0 }
+        outputs = { self.nodes[0].getnewaddress() : Decimal("1.0") }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
@@ -219,7 +219,7 @@ class RawTransactionsTest(BitcoinTestFramework):
     def test_simple_two_coins(self):
         self.log.info("Test fundrawtxn with 2 coins")
         inputs  = [ ]
-        outputs = { self.nodes[0].getnewaddress() : 2.2 }
+        outputs = { self.nodes[0].getnewaddress() : Decimal("2.2") }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
@@ -230,7 +230,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.log.info("Test fundrawtxn with 2 outputs")
 
         inputs  = [ ]
-        outputs = { self.nodes[0].getnewaddress() : 2.6, self.nodes[1].getnewaddress() : 2.5 }
+        outputs = { self.nodes[0].getnewaddress() : Decimal("2.6"), self.nodes[1].getnewaddress() : Decimal("2.5") }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
 
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
@@ -244,7 +244,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         utx = get_unspent(self.nodes[2].listunspent(), 5)
 
         inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']}]
-        outputs = { self.nodes[0].getnewaddress() : 1.0 }
+        outputs = { self.nodes[0].getnewaddress() : Decimal("1.0") }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
@@ -341,7 +341,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         utx = get_unspent(self.nodes[2].listunspent(), 1)
 
         inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']}]
-        outputs = { self.nodes[0].getnewaddress() : 1.0 }
+        outputs = { self.nodes[0].getnewaddress() : Decimal("1.0") }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
 
         # 4-byte version + 1-byte vin count + 36-byte prevout then script_len
@@ -376,7 +376,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         utx2 = get_unspent(self.nodes[2].listunspent(), 5)
 
         inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']},{'txid' : utx2['txid'], 'vout' : utx2['vout']} ]
-        outputs = { self.nodes[0].getnewaddress() : 6.0 }
+        outputs = { self.nodes[0].getnewaddress() : Decimal("6.0") }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
@@ -407,7 +407,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         utx2 = get_unspent(self.nodes[2].listunspent(), 5)
 
         inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']},{'txid' : utx2['txid'], 'vout' : utx2['vout']} ]
-        outputs = { self.nodes[0].getnewaddress() : 6.0, self.nodes[0].getnewaddress() : 1.0 }
+        outputs = { self.nodes[0].getnewaddress() : Decimal("6.0"), self.nodes[0].getnewaddress() : Decimal("1.0") }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
@@ -430,7 +430,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         txid = "1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1"
         vout = 0
         inputs  = [ {'txid' : txid, 'vout' : vout} ] #invalid vin!
-        outputs = { self.nodes[0].getnewaddress() : 1.0}
+        outputs = { self.nodes[0].getnewaddress() : Decimal("1.0")}
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         assert_raises_rpc_error(-4, "Unable to find UTXO for external input", self.nodes[2].fundrawtransaction, rawtx)
 
@@ -439,12 +439,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.log.info("Test fundrawtxn p2pkh fee")
         self.lock_outputs_type(self.nodes[0], "p2pkh")
         inputs = []
-        outputs = {self.nodes[1].getnewaddress():1.1}
+        outputs = {self.nodes[1].getnewaddress():Decimal("1.1")}
         rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
         fundedTx = self.nodes[0].fundrawtransaction(rawtx)
 
         # Create same transaction over sendtoaddress.
-        txId = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 1.1)
+        txId = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), Decimal("1.1"))
         signedFee = self.nodes[0].getmempoolentry(txId)['fees']['base']
 
         # Compare fee.
@@ -459,12 +459,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.lock_outputs_type(self.nodes[0], "p2pkh")
         inputs = []
         outputs = {
-            self.nodes[1].getnewaddress():1.1,
-            self.nodes[1].getnewaddress():1.2,
-            self.nodes[1].getnewaddress():0.1,
-            self.nodes[1].getnewaddress():1.3,
-            self.nodes[1].getnewaddress():0.2,
-            self.nodes[1].getnewaddress():0.3,
+            self.nodes[1].getnewaddress():Decimal("1.1"),
+            self.nodes[1].getnewaddress():Decimal("1.2"),
+            self.nodes[1].getnewaddress():Decimal("0.1"),
+            self.nodes[1].getnewaddress():Decimal("1.3"),
+            self.nodes[1].getnewaddress():Decimal("0.2"),
+            self.nodes[1].getnewaddress():Decimal("0.3"),
         }
         rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
         fundedTx = self.nodes[0].fundrawtransaction(rawtx)
@@ -492,12 +492,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         mSigObj = self.nodes[3].createmultisig(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])['address']
 
         inputs = []
-        outputs = {mSigObj:1.1}
+        outputs = {mSigObj:Decimal("1.1")}
         rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
         fundedTx = self.nodes[0].fundrawtransaction(rawtx)
 
         # Create same transaction over sendtoaddress.
-        txId = self.nodes[0].sendtoaddress(mSigObj, 1.1)
+        txId = self.nodes[0].sendtoaddress(mSigObj, Decimal("1.1"))
         signedFee = self.nodes[0].getmempoolentry(txId)['fees']['base']
 
         # Compare fee.
@@ -536,12 +536,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         )['address']
 
         inputs = []
-        outputs = {mSigObj:1.1}
+        outputs = {mSigObj:Decimal("1.1")}
         rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
         fundedTx = self.nodes[0].fundrawtransaction(rawtx)
 
         # Create same transaction over sendtoaddress.
-        txId = self.nodes[0].sendtoaddress(mSigObj, 1.1)
+        txId = self.nodes[0].sendtoaddress(mSigObj, Decimal("1.1"))
         signedFee = self.nodes[0].getmempoolentry(txId)['fees']['base']
 
         # Compare fee.
@@ -575,12 +575,12 @@ class RawTransactionsTest(BitcoinTestFramework):
             wmulti.importaddress(mSigObj)
 
         # Send 1.2 BTC to msig addr.
-        self.nodes[0].sendtoaddress(mSigObj, 1.2)
+        self.nodes[0].sendtoaddress(mSigObj, Decimal("1.2"))
         self.generate(self.nodes[0], 1)
 
         oldBalance = self.nodes[1].getbalance()
         inputs = []
-        outputs = {self.nodes[1].getnewaddress():1.1}
+        outputs = {self.nodes[1].getnewaddress():Decimal("1.1")}
         funded_psbt = wmulti.walletcreatefundedpsbt(inputs=inputs, outputs=outputs, changeAddress=w2.getrawchangeaddress())['psbt']
 
         signed_psbt = w2.walletprocesspsbt(funded_psbt)
@@ -649,12 +649,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         with WalletUnlock(wallet, "test"):
             wallet.keypoolrefill(8) #need to refill the keypool to get an internal change address
 
-        assert_raises_rpc_error(-13, "walletpassphrase", wallet.sendtoaddress, self.nodes[0].getnewaddress(), 1.2)
+        assert_raises_rpc_error(-13, "walletpassphrase", wallet.sendtoaddress, self.nodes[0].getnewaddress(), Decimal("1.2"))
 
         oldBalance = self.nodes[0].getbalance()
 
         inputs = []
-        outputs = {self.nodes[0].getnewaddress():1.1}
+        outputs = {self.nodes[0].getnewaddress():Decimal("1.1")}
         rawtx = wallet.createrawtransaction(inputs, outputs)
         fundedTx = wallet.fundrawtransaction(rawtx)
         assert fundedTx["changepos"] != -1
@@ -682,12 +682,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.generate(self.nodes[1], 1)
 
         for _ in range(20):
-            self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
+            self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), Decimal("0.01"))
         self.generate(self.nodes[0], 1)
 
         # Fund a tx with ~20 small inputs.
         inputs = []
-        outputs = {self.nodes[0].getnewaddress():0.15,self.nodes[0].getnewaddress():0.04}
+        outputs = {self.nodes[0].getnewaddress():Decimal("0.15"),self.nodes[0].getnewaddress():Decimal("0.04")}
         rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
         fundedTx = self.nodes[1].fundrawtransaction(rawtx)
 
@@ -708,14 +708,14 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.generate(self.nodes[1], 1)
 
         for _ in range(20):
-            self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
+            self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), Decimal("0.01"))
         self.generate(self.nodes[0], 1)
 
         # Fund a tx with ~20 small inputs.
         oldBalance = self.nodes[0].getbalance()
 
         inputs = []
-        outputs = {self.nodes[0].getnewaddress():0.15,self.nodes[0].getnewaddress():0.04}
+        outputs = {self.nodes[0].getnewaddress():Decimal("0.15"),self.nodes[0].getnewaddress():Decimal("0.04")}
         rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
         fundedTx = self.nodes[1].fundrawtransaction(rawtx)
         fundedAndSignedTx = self.nodes[1].signrawtransactionwithwallet(fundedTx['hex'])
@@ -860,20 +860,20 @@ class RawTransactionsTest(BitcoinTestFramework):
             assert_raises_rpc_error(-3, "Amount is not a number or string",
                 node.fundrawtransaction, rawtx, add_inputs=True, **{param: {"foo": "bar"}})
             # Test fee rate values that don't pass fixed-point parsing checks.
-            for invalid_value in ["", 0.000000001, 1e-09, 1.111111111, 1111111111111111, "31.999999999999999999999"]:
+            for invalid_value in [""] + list(map(Decimal, "0.000000001 1e-09 1.111111111 1111111111111111 31.999999999999999999999".split())):
                 assert_raises_rpc_error(-3, "Invalid amount", node.fundrawtransaction, rawtx, add_inputs=True, **{param: invalid_value})
         # Test fee_rate values that cannot be represented in sat/vB.
-        for invalid_value in [0.0001, 0.00000001, 0.00099999, 31.99999999]:
+        for invalid_value in list(map(Decimal, "0.0001 0.00000001 0.00099999 31.99999999".split())):
             assert_raises_rpc_error(-3, "Invalid amount",
                 node.fundrawtransaction, rawtx, fee_rate=invalid_value, add_inputs=True)
 
         self.log.info("Test min fee rate checks are bypassed with fundrawtxn, e.g. a fee_rate under 1 sat/vB is allowed")
-        node.fundrawtransaction(rawtx, fee_rate=0.999, add_inputs=True)
-        node.fundrawtransaction(rawtx, feeRate=0.00000999, add_inputs=True)
+        node.fundrawtransaction(rawtx, fee_rate=Decimal("0.999"), add_inputs=True)
+        node.fundrawtransaction(rawtx, feeRate=Decimal("0.00000999"), add_inputs=True)
 
         self.log.info("- raises RPC error if both feeRate and fee_rate are passed")
         assert_raises_rpc_error(-8, "Cannot specify both fee_rate (sat/vB) and feeRate (BTC/kvB)",
-            node.fundrawtransaction, rawtx, fee_rate=0.1, feeRate=0.1, add_inputs=True)
+            node.fundrawtransaction, rawtx, fee_rate=Decimal("0.1"), feeRate=Decimal("0.1"), add_inputs=True)
 
         self.log.info("- raises RPC error if both feeRate and estimate_mode passed")
         assert_raises_rpc_error(-8, "Cannot specify both estimate_mode and feeRate",
@@ -955,7 +955,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(change[3] + result[3]['fee'], change[4])
 
         inputs = []
-        outputs = {self.nodes[2].getnewaddress(): value for value in (1.0, 1.1, 1.2, 1.3)}
+        outputs = {self.nodes[2].getnewaddress(): value for value in list(map(Decimal, "1.0 1.1 1.2 1.3".split()))}
         rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
 
         result = [self.nodes[3].fundrawtransaction(rawtx),
@@ -1011,7 +1011,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
         recipient = self.nodes[0].get_wallet_rpc("large")
         outputs = {}
-        rawtx = recipient.createrawtransaction([], {wallet.getnewaddress(): 147.99899260})
+        rawtx = recipient.createrawtransaction([], {wallet.getnewaddress(): Decimal("147.99899260")})
 
         # Make 1500 0.1 BTC outputs. The amount that we target for funding is in
         # the BnB range when these outputs are used.  However if these outputs
@@ -1021,7 +1021,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # First, force the wallet to bulk-generate the addresses we'll need.
         recipient.keypoolrefill(1500)
         for _ in range(1500):
-            outputs[recipient.getnewaddress()] = 0.1
+            outputs[recipient.getnewaddress()] = Decimal("0.1")
         wallet.sendmany("", outputs)
         self.generate(self.nodes[0], 10)
         assert_raises_rpc_error(-4, "The inputs size exceeds the maximum weight. "
@@ -1321,12 +1321,12 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         outputs = []
         for _ in range(1472):
-            outputs.append({wallet.getnewaddress(address_type="legacy"): 0.1})
+            outputs.append({wallet.getnewaddress(address_type="legacy"): Decimal("0.1")})
         txid = self.nodes[0].send(outputs=outputs, change_position=0)["txid"]
         self.generate(self.nodes[0], 1)
 
         # 272 WU per input (273 when high-s); picking 1471 inputs will exceed the max standard tx weight.
-        rawtx = wallet.createrawtransaction([], [{wallet.getnewaddress(): 0.1 * 1471}])
+        rawtx = wallet.createrawtransaction([], [{wallet.getnewaddress(): Decimal("0.1") * 1471}])
 
         # 1) Try to fund transaction only using the preset inputs (pick all 1472 inputs to cover the fee)
         input_weights = []
@@ -1360,7 +1360,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sync_mempools()
 
         # Unsafe inputs are ignored by default.
-        rawtx = wallet.createrawtransaction([], [{self.nodes[2].getnewaddress(): 7.5}])
+        rawtx = wallet.createrawtransaction([], [{self.nodes[2].getnewaddress(): Decimal("7.5")}])
         assert_raises_rpc_error(-4, "Insufficient funds", wallet.fundrawtransaction, rawtx)
 
         # But we can opt-in to use them for funding.
@@ -1405,8 +1405,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         # Create transactions in order to calculate fees for the target bounds that can trigger this bug
-        change_tx = tester.fundrawtransaction(tester.createrawtransaction([], [{funds.getnewaddress(): 1.5}]))
-        tx = tester.createrawtransaction([], [{funds.getnewaddress(): 2}])
+        change_tx = tester.fundrawtransaction(tester.createrawtransaction([], [{funds.getnewaddress(): Decimal("1.5")}]))
+        tx = tester.createrawtransaction([], [{funds.getnewaddress(): Decimal("2")}])
         no_change_tx = tester.fundrawtransaction(tx, subtractFeeFromOutputs=[0])
 
         overhead_fees = feerate * len(tx) / 2 / 1000
@@ -1458,8 +1458,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         # In the former case, the calculated needed fee is higher than the actual fee being paid, so an assertion is reached
         # To test this does not happen, we subtract 202 sats from the input value. If working correctly, this should
         # fail with insufficient funds rather than bitcoind asserting.
-        rawtx = w.createrawtransaction(inputs=[], outputs=[{self.nodes[0].getnewaddress(address_type="bech32"): 1 - 0.00000202}])
-        assert_raises_rpc_error(-4, "Insufficient funds", w.fundrawtransaction, rawtx, fee_rate=1.85)
+        rawtx = w.createrawtransaction(inputs=[], outputs=[{self.nodes[0].getnewaddress(address_type="bech32"): Decimal("1") - Decimal("0.00000202")}])
+        assert_raises_rpc_error(-4, "Insufficient funds", w.fundrawtransaction, rawtx, fee_rate=Decimal("1.85"))
 
     def test_input_confs_control(self):
         self.nodes[0].createwallet("minconf")
@@ -1470,12 +1470,12 @@ class RawTransactionsTest(BitcoinTestFramework):
             self.nodes[2].sendmany("", {wallet.getnewaddress():1, wallet.getnewaddress():1})
             self.generate(self.nodes[2], 1)
 
-        unconfirmed_txid = wallet.sendtoaddress(wallet.getnewaddress(), 0.5)
+        unconfirmed_txid = wallet.sendtoaddress(wallet.getnewaddress(), Decimal("0.5"))
 
         self.log.info("Crafting TX using an unconfirmed input")
         target_address = self.nodes[2].getnewaddress()
-        raw_tx1 = wallet.createrawtransaction([], {target_address: 0.1}, 0, True)
-        funded_tx1 = wallet.fundrawtransaction(raw_tx1, {'fee_rate': 1, 'maxconf': 0})['hex']
+        raw_tx1 = wallet.createrawtransaction([], {target_address: Decimal("0.1")}, 0, True)
+        funded_tx1 = wallet.fundrawtransaction(raw_tx1, {'fee_rate': Decimal("1"), 'maxconf': 0})['hex']
 
         # Make sure we only had the one input
         tx1_inputs = self.nodes[0].decoderawtransaction(funded_tx1)['vin']

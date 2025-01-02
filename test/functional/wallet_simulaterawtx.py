@@ -87,9 +87,9 @@ class SimulateTxTest(BitcoinTestFramework):
         tx1hex = tx1ob["txid"]
         tx1vout = 1 - tx1changepos
         # tx3 spends new w1 UTXO paying to w0
-        tx3 = node.createrawtransaction([{"txid": tx1hex, "vout": tx1vout}], {w0.getnewaddress(): 4.9999})
+        tx3 = node.createrawtransaction([{"txid": tx1hex, "vout": tx1vout}], {w0.getnewaddress(): Decimal("4.9999")})
         # tx4 spends new w1 UTXO paying to w1
-        tx4 = node.createrawtransaction([{"txid": tx1hex, "vout": tx1vout}], {w1.getnewaddress(): 4.9999})
+        tx4 = node.createrawtransaction([{"txid": tx1hex, "vout": tx1vout}], {w1.getnewaddress(): Decimal("4.9999")})
 
         # on their own, both should fail due to missing input(s)
         assert_raises_rpc_error(-8, "One or more transaction inputs are missing or have been spent already", w0.simulaterawtransaction, [tx3])
