@@ -31,7 +31,10 @@ from test_framework.util import (
 )
 
 import collections
-from decimal import Decimal
+from decimal import (
+    Decimal,
+    ROUND_HALF_UP,
+)
 import enum
 import itertools
 import random
@@ -149,7 +152,7 @@ def get_rand_amount(min_amount=AMOUNT_DUST):
     assert min_amount <= 1
     r = random.uniform(min_amount, 1)
     # note: min_amount can get rounded down here
-    return Decimal(str(round(r, 8)))
+    return Decimal(r).quantize(Decimal("1E-8"), rounding=ROUND_HALF_UP)
 
 
 class ImportRescanTest(BitcoinTestFramework):
