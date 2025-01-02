@@ -21,4 +21,28 @@ void FeeEstimator::RegisterForecaster(std::unique_ptr<Forecaster>&& forecaster)
     forecasters.emplace(forecaster->GetForecastType(), std::move(forecaster));
 }
 
+ForecastResult FeeEstimator::GetPolicyEstimatorEstimate(ConfirmationTarget& target) const
+{
+    ForecastResponse response;
+    response.forecaster = ForecastType::BLOCK_POLICY_ESTIMATOR;
+    if (target.type != ConfirmationTargetType::BLOCKS) {
+        return ForecastResult(response, "Forecaster can only provide an estimate for block targets");
+    }
+    bool conservative = true;
+    FeeCalculation feeCalcConservative;
+    CFeeRate feerate_conservative{block_policy_estimator.value()->estimateSmartFee(target.value, &feeCalcConservative, conservative)};
+    FeeCalculation feeCalcEconomical;
+    CFeeRate feerate_economical{block_policy_estimator.value()->estimateSmartFee(target.value, &feeCalcEconomical, !conservative)};
+    response.current_block_height = feeCalcEconomical.bestheight;
+    if (feerate_conservative == CFeeRate(0) || feerate_economical == CFeeRate(0)) {
+        return ForecastResult(response, "Insufficient data or no feerate found");
+    }
+    // Note: size can be any positive non-zero integer; the evaluated fee/size will result in the same fee rate,
+    // and we only care that the fee rate remains consistent.
+    int32_t size = 1000;
+    response.low_priority = FeeFrac(feerate_economical.GetFee(size), size);
+    response.high_priority = FeeFrac(feerate_conservative.GetFee(size), size);
+    return ForecastResult(response);
+}
+
 FeeEstimator::~FeeEstimator() = default;

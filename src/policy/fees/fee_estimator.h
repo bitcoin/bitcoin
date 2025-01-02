@@ -17,6 +17,8 @@ class ForecastResult;
 
 enum class ForecastType;
 
+struct ConfirmationTarget;
+
 /** \class FeeEstimator
  * Module for managing and utilising multiple fee rate forecasters to provide fee estimates.
  *
@@ -28,6 +30,9 @@ class FeeEstimator
 private:
     //! Map of all registered forecasters to their shared pointers.
     std::unordered_map<ForecastType, std::unique_ptr<Forecaster>> forecasters;
+
+    //! Given a confirmation target get a fee estimate from Block Policy Estimator
+    ForecastResult GetPolicyEstimatorEstimate(ConfirmationTarget& target) const;
 
 public:
     //! Optional unique pointer to block Block policy estimator.
