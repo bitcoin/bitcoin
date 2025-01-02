@@ -62,6 +62,15 @@ bool EqualDescriptor(std::string a, std::string b)
     return a == b;
 }
 
+bool EqualSigningProviders(const FlatSigningProvider& a, const FlatSigningProvider& b)
+{
+    return a.scripts == b.scripts
+        && a.pubkeys == b.pubkeys
+        && a.origins == b.origins
+        && a.keys == b.keys
+        && a.tr_trees == b.tr_trees;
+}
+
 std::string UseHInsteadOfApostrophe(const std::string& desc)
 {
     std::string ret = desc;
@@ -214,6 +223,15 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
             BOOST_CHECK_MESSAGE(EqualDescriptor(prv, prv1), "Private ser: " + prv1 + " Private desc: " + prv);
         }
         BOOST_CHECK(!parse_pub->ToPrivateString(keys_pub, prv1));
+
+        // Check that both can ExpandPrivate and get the same SigningProviders
+        FlatSigningProvider priv_prov;
+        parse_priv->ExpandPrivate(0, keys_priv, priv_prov);
+
+        FlatSigningProvider pub_prov;
+        parse_pub->ExpandPrivate(0, keys_priv, pub_prov);
+
+        BOOST_CHECK_MESSAGE(EqualSigningProviders(priv_prov, pub_prov), "Private desc: " + prv + " Pub desc: " + pub);
     }
 
     // Check that private can produce the normalized descriptors
