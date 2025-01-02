@@ -12,6 +12,7 @@
 #include <unordered_map>
 
 class CBlockPolicyEstimator;
+class CTxMemPool;
 class Forecaster;
 class ForecastResult;
 
@@ -28,6 +29,7 @@ struct ConfirmationTarget;
 class FeeEstimator
 {
 private:
+    const CTxMemPool* m_mempool;
     //! Map of all registered forecasters to their shared pointers.
     std::unordered_map<ForecastType, std::unique_ptr<Forecaster>> forecasters;
 
@@ -44,7 +46,7 @@ public:
      * @param[in] block_policy_estimator_file_path Path to the Block policy estimator estimator dump file.
      * @param[in] read_stale_block_policy_estimates Boolean flag indicating whether to read stale Block policy estimator estimates.
      */
-    FeeEstimator(const fs::path& block_policy_estimator_file_path, const bool read_stale_block_policy_estimates);
+    FeeEstimator(const fs::path& block_policy_estimator_file_path, const bool read_stale_block_policy_estimates, const CTxMemPool* mempool);
 
     /**
      * Default constructor that initialises without a Block policy estimator estimator.
@@ -59,6 +61,17 @@ public:
      * @param[in] forecaster unique pointer to a Forecaster instance.
      */
     void RegisterForecaster(std::unique_ptr<Forecaster>&& forecaster);
+
+    /**
+     * Get a fee rate estimate from all registered forecasters for a given confirmation target.
+     *
+     * Polls all registered forecasters and selects the lowest fee rate
+     * estimate with acceptable confidence.
+     *
+     * @param[in] target The target within which the transaction should be confirmed.
+     * @return A pair consisting of the forecast result and a vector of forecaster names.
+     */
+    std::pair<std::optional<ForecastResult>, std::vector<std::string>> GetFeeEstimateFromForecasters(ConfirmationTarget& target);
 };
 
 #endif // BITCOIN_POLICY_FEES_FEE_ESTIMATOR_H

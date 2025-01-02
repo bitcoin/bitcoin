@@ -57,6 +57,7 @@
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/fees/fee_estimator.h>
+#include <policy/fees/forecasters/mempool.h>
 #include <policy/fees_args.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
@@ -1434,23 +1435,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                               rng.rand64(),
                                               *node.addrman, *node.netgroupman, chainparams, args.GetBoolArg("-networkactive", true));
 
-    assert(!node.fee_estimator);
-    // Don't initialize block policy fee estimator if we don't relay transactions,
-    // as new data will not be appended and old data will never be updated.
-    if (!peerman_opts.ignore_incoming_txs) {
-        bool read_stale_estimates = args.GetBoolArg("-acceptstalefeeestimates", DEFAULT_ACCEPT_STALE_FEE_ESTIMATES);
-        if (read_stale_estimates && (chainparams.GetChainType() != ChainType::REGTEST)) {
-            return InitError(strprintf(_("acceptstalefeeestimates is not supported on %s chain."), chainparams.GetChainTypeString()));
-        }
-
-        node.fee_estimator = std::make_unique<FeeEstimator>(FeeestPath(args), read_stale_estimates);
-
-        // Flush block policy estimates to disk periodically
-        CBlockPolicyEstimator* block_policy_estimator = node.fee_estimator->block_policy_estimator->get();
-        scheduler.scheduleEvery([block_policy_estimator] { block_policy_estimator->FlushFeeEstimates(); }, FEE_FLUSH_INTERVAL);
-        validation_signals.RegisterValidationInterface(block_policy_estimator);
-    }
-
     for (const std::string& socket_addr : args.GetArgs("-bind")) {
         std::string host_out;
         uint16_t port_out{0};
@@ -1663,6 +1647,24 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     ChainstateManager& chainman = *Assert(node.chainman);
+
+    assert(!node.fee_estimator);
+    // Don't initialize block policy fee estimator if we don't relay transactions,
+    // as new data will not be appended and old data will never be updated.
+    if (!peerman_opts.ignore_incoming_txs) {
+        bool read_stale_estimates = args.GetBoolArg("-acceptstalefeeestimates", DEFAULT_ACCEPT_STALE_FEE_ESTIMATES);
+        if (read_stale_estimates && (chainparams.GetChainType() != ChainType::REGTEST)) {
+            return InitError(strprintf(_("acceptstalefeeestimates is not supported on %s chain."), chainparams.GetChainTypeString()));
+        }
+
+        node.fee_estimator = std::make_unique<FeeEstimator>(FeeestPath(args), read_stale_estimates, node.mempool.get());
+        node.fee_estimator->RegisterForecaster(std::make_unique<MemPoolForecaster>(node.mempool.get(), &(chainman.ActiveChainstate())));
+
+        // Flush block policy estimates to disk periodically
+        CBlockPolicyEstimator* block_policy_estimator = node.fee_estimator->block_policy_estimator->get();
+        scheduler.scheduleEvery([block_policy_estimator] { block_policy_estimator->FlushFeeEstimates(); }, FEE_FLUSH_INTERVAL);
+        validation_signals.RegisterValidationInterface(block_policy_estimator);
+    }
 
     assert(!node.peerman);
     node.peerman = PeerManager::make(*node.connman, *node.addrman,
