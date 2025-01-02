@@ -16,6 +16,7 @@ class CMasternodeSync;
 class CGovernanceManager;
 class CSpecialTxProcessor;
 class CSporkManager;
+class uint256;
 
 namespace Consensus { struct Params; }
 namespace llmq {
@@ -26,6 +27,9 @@ class CQuorumManager;
 
 class CChainstateHelper
 {
+private:
+    const llmq::CChainLocksHandler& clhandler;
+
 public:
     explicit CChainstateHelper(CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman, CMNHFManager& mnhfman, CGovernanceManager& govman,
                                llmq::CQuorumBlockProcessor& qblockman, const ChainstateManager& chainman, const Consensus::Params& consensus_params,
@@ -35,6 +39,11 @@ public:
 
     CChainstateHelper() = delete;
     CChainstateHelper(const CChainstateHelper&) = delete;
+
+    /** Passthrough functions to CChainLocksHandler */
+    bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const;
+    bool HasChainLock(int nHeight, const uint256& blockHash) const;
+    int32_t GetBestChainLockHeight() const;
 
 public:
     const std::unique_ptr<CMNPaymentsProcessor> mn_payments;

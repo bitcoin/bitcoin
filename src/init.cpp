@@ -99,7 +99,6 @@
 #include <evo/deterministicmns.h>
 #include <evo/mnhftx.h>
 #include <llmq/blockprocessor.h>
-#include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <llmq/instantsend.h>
 #include <llmq/quorums.h>
@@ -1858,7 +1857,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                 node.dmnman,
                                 node.evodb,
                                 node.mnhf_manager,
-                                llmq::chainLocksHandler,
                                 llmq::quorumInstantSendManager,
                                 llmq::quorumSnapshotManager,
                                 node.llmq_ctx,

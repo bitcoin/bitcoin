@@ -18,7 +18,6 @@
 #include <init.h>
 #include <interfaces/chain.h>
 #include <netfulfilledman.h>
-#include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <llmq/instantsend.h>
 #include <llmq/quorums.h>
@@ -298,7 +297,6 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
                              m_node.dmnman,
                              m_node.evodb,
                              m_node.mnhf_manager,
-                             llmq::chainLocksHandler,
                              llmq::quorumInstantSendManager,
                              llmq::quorumSnapshotManager,
                              m_node.llmq_ctx,

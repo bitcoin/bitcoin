@@ -26,7 +26,6 @@ class CTxMemPool;
 struct LLMQContext;
 
 namespace llmq {
-class CChainLocksHandler;
 class CInstantSendManager;
 class CQuorumSnapshotManager;
 }
@@ -93,7 +92,6 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      std::unique_ptr<CDeterministicMNManager>& dmnman,
                                                      std::unique_ptr<CEvoDB>& evodb,
                                                      std::unique_ptr<CMNHFManager>& mnhf_manager,
-                                                     std::unique_ptr<llmq::CChainLocksHandler>& clhandler,
                                                      std::unique_ptr<llmq::CInstantSendManager>& isman,
                                                      std::unique_ptr<llmq::CQuorumSnapshotManager>& qsnapman,
                                                      std::unique_ptr<LLMQContext>& llmq_ctx,
