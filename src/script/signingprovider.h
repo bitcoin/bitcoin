@@ -136,6 +136,8 @@ public:
     std::vector<std::tuple<uint8_t, uint8_t, std::vector<unsigned char>>> GetTreeTuples() const;
     /** Returns true if there are any tapscripts */
     bool HasScripts() const { return !m_branch.empty(); }
+
+    bool operator==(const TaprootBuilder& other) const { return GetTreeTuples() == other.GetTreeTuples(); }
 };
 
 /** Given a TaprootSpendData and the output key, reconstruct its script tree.
