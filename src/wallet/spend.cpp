@@ -617,7 +617,7 @@ bool CWallet::CreateTransactionInternal(
     CAmount nValue = 0;
     ReserveDestination reservedest(this);
     int nChangePosRequest = nChangePosInOut;
-    const bool sort_bip69{false};
+    const bool sort_bip69{nChangePosRequest == -1};
     unsigned int nSubtractFeeFromAmount = 0;
     for (const auto& recipient : vecSend)
     {
@@ -798,8 +798,17 @@ bool CWallet::CreateTransactionInternal(
                 assert(nChangePosInOut != -1);
                 auto change_position = txNew.vout.insert(txNew.vout.begin() + nChangePosInOut, newTxOut);
 
+                // We're making a copy of vecSend because it's const, sortedVecSend should be used
+                // in place of vecSend in all subsequent usage.
+                std::vector<CRecipient> sortedVecSend{vecSend};
                 if (sort_bip69) {
                     std::sort(txNew.vout.begin(), txNew.vout.end(), CompareOutputBIP69());
+                    // The output reduction loop uses vecSend to map to txNew.vout, we need to
+                    // shuffle them both to ensure this mapping remains consistent
+                    std::sort(sortedVecSend.begin(), sortedVecSend.end(),
+                              [](const CRecipient& a, const CRecipient& b) {
+                                    return a.nAmount < b.nAmount || (a.nAmount == b.nAmount && a.scriptPubKey < b.scriptPubKey);
+                              });
 
                     // If there was a change output added before, we must update its position now
                     if (const auto it = std::find(txNew.vout.begin(), txNew.vout.end(), newTxOut); it != txNew.vout.end()) {
@@ -859,7 +868,7 @@ bool CWallet::CreateTransactionInternal(
                     CAmount to_reduce = fee_needed + change_amount - change_and_fee;
                     int i = 0;
                     bool fFirst = true;
-                    for (const auto& recipient : vecSend)
+                    for (const auto& recipient : sortedVecSend)
                     {
                         if (i == nChangePosInOut) {
                             ++i;
