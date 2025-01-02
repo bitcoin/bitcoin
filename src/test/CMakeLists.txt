@@ -62,6 +62,7 @@ add_executable(test_bitcoin
   descriptor_tests.cpp
   disconnected_transactions.cpp
   feefrac_tests.cpp
+  forecaster_util_tests.cpp
   flatfile_tests.cpp
   fs_tests.cpp
   getarg_tests.cpp
