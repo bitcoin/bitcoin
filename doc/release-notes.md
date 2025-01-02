@@ -1,6 +1,6 @@
-Bitcoin Core version 28.1rc1 is now available from:
+Bitcoin Core version 28.1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-28.1/test.rc1>
+  <https://bitcoincore.org/bin/bitcoin-core-28.1>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
@@ -68,12 +68,14 @@ Notable changes
 ### Build
 
 - #31013 depends: For mingw cross compile use `-gcc-posix` to prevent library conflict
+- #31502 depends: Fix CXXFLAGS on NetBSD
 
 ### Test
 
 - #31016 test: add missing sync to feature_fee_estimation.py
 - #31448 fuzz: add cstdlib to FuzzedDataProvider
 - #31419 test: fix MIN macro redefinition
+- #31563 rpc: Extend scope of validation mutex in generateblock
 
 ### Doc
 
@@ -92,6 +94,7 @@ Credits
 =======
 
 - fanquake
+- Hennadii Stepanov
 - laanwj
 - MarcoFalke
 - Martin Zumsande
