@@ -312,15 +312,7 @@ public:
     bool ToPrivateString(const SigningProvider& arg, std::string& ret) const override
     {
         CKey key;
-        if (m_xonly) {
-            for (const auto& keyid : XOnlyPubKey(m_pubkey).GetKeyIDs()) {
-                arg.GetKey(keyid, key);
-                if (key.IsValid()) break;
-            }
-        } else {
-            arg.GetKey(m_pubkey.GetID(), key);
-        }
-        if (!key.IsValid()) return false;
+        if (!GetPrivKey(/*pos=*/0, arg, key)) return false;
         ret = EncodeSecret(key);
         return true;
     }
@@ -331,7 +323,8 @@ public:
     }
     bool GetPrivKey(int pos, const SigningProvider& arg, CKey& key) const override
     {
-        return arg.GetKey(m_pubkey.GetID(), key);
+        return m_xonly ? arg.GetKeyByXOnly(XOnlyPubKey(m_pubkey), key) :
+                         arg.GetKey(m_pubkey.GetID(), key);
     }
     std::optional<CPubKey> GetRootPubKey() const override
     {
