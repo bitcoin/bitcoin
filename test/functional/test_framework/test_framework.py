@@ -1524,8 +1524,9 @@ class DashTestFramework(BitcoinTestFramework):
 
         self.start_masternodes()
 
-        self.bump_mocktime(1)
-        self.generate(self.nodes[0], 1)
+        # it should be at least 8 blocks since v20 when MN can be used in quorums
+        self.bump_mocktime(8)
+        self.generate(self.nodes[0], 8)
         for i in range(1, num_simple_nodes):
             force_finish_mnsync(self.nodes[i])
 
