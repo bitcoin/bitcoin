@@ -1218,13 +1218,37 @@ public:
     std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 32; }
 
     std::optional<int64_t> MaxSatisfactionWeight(bool) const override {
-        // FIXME: We assume keypath spend, which can lead to very large underestimations.
-        return 1 + 65;
+        // Start from the size of a keypath spend.
+        int64_t max_weight = 1 + 65;
+
+        // Then go through all the existing leaves to check if there is anything more expensive.
+        const bool dummy_max_sig = true;
+        for (size_t i = 0; i < m_subdescriptor_args.size(); ++i) {
+            // Anything inside a Tapscript leaf must have its satisfaction and script size set.
+            const auto sat_size = *Assume(m_subdescriptor_args[i]->MaxSatSize(dummy_max_sig));
+            const auto script_size = *Assume(m_subdescriptor_args[i]->ScriptSize());
+            const auto control_size = 33 + 32 * m_depths[i];
+            const auto total_weight = GetSizeOfCompactSize(control_size) + control_size + GetSizeOfCompactSize(script_size) + script_size + GetSizeOfCompactSize(sat_size) + sat_size;
+            if (total_weight > max_weight) max_weight = total_weight;
+        }
+
+        return max_weight;
     }
 
     std::optional<int64_t> MaxSatisfactionElems() const override {
-        // FIXME: See above, we assume keypath spend.
-        return 1;
+        // Start from the stack size of a keypath spend.
+        int64_t max_stack_size = 1;
+
+        // Then go through all the existing leaves to check if there is anything more expensive.
+        for (size_t i = 0; i < m_subdescriptor_args.size(); ++i) {
+            // Anything inside a Tapscript leaf must have its satisfaction stack size set.
+            const auto sat_stack_size = *Assume(m_subdescriptor_args[i]->MaxSatisfactionElems());
+            // Control block + script + script satisfaction
+            const auto stack_size = 1 + 1 + sat_stack_size;
+            if (stack_size > max_stack_size) max_stack_size = stack_size;
+        }
+
+        return max_stack_size;
     }
 
     std::unique_ptr<DescriptorImpl> Clone() const override
