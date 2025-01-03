@@ -13,6 +13,19 @@
 class CBlockHeader;
 class CBlockIndex;
 class uint256;
+class arith_uint256;
+
+/**
+ * Convert nBits value to target.
+ *
+ * @param[in] nBits     compact representation of the target
+ * @param[in] pow_limit PoW limit (consensus parameter)
+ * @param[out] target   the proof-of-work target
+ *
+ * @return              false if the nBits value is invalid (due to overflow or
+ *                      exceeding pow_limit)
+ */
+bool DeriveTarget(unsigned int nBits, const uint256 pow_limit, arith_uint256& target);
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&);
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params&);

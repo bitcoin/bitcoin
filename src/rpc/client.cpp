@@ -133,6 +133,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "submitpackage", 0, "package" },
     { "submitpackage", 1, "maxfeerate" },
     { "submitpackage", 2, "maxburnamount" },
+    { "checkblock", 1, "options" },
+    { "checkblock", 1, "check_pow"},
     { "combinerawtransaction", 0, "txs" },
     { "fundrawtransaction", 1, "options" },
     { "fundrawtransaction", 1, "add_inputs"},
