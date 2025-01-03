@@ -618,6 +618,7 @@ bool CWallet::CreateTransactionInternal(
     CAmount nValue = 0;
     ReserveDestination reservedest(this);
     int nChangePosRequest = nChangePosInOut;
+    const bool sort_bip69{nChangePosRequest == -1};
     unsigned int nSubtractFeeFromAmount = 0;
     for (const auto& recipient : vecSend)
     {
@@ -659,7 +660,7 @@ bool CWallet::CreateTransactionInternal(
 
     int nBytes{0};
     {
-        std::vector<CInputCoin> vecCoins;
+        std::set<CInputCoin> setCoins;
         LOCK(cs_wallet);
         txNew.nLockTime = GetLocktimeForNewTransaction(chain(), GetLastBlockHash(), GetLastBlockHeight());
         {
@@ -759,8 +760,8 @@ bool CWallet::CreateTransactionInternal(
                 bool bnb_used = false;
                 if (pick_new_inputs) {
                     nValueIn = 0;
-                    std::set<CInputCoin> setCoinsTmp;
-                    if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoinsTmp, nValueIn, coin_control, coin_selection_params, bnb_used)) {
+                    setCoins.clear();
+                    if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coin_control, coin_selection_params, bnb_used)) {
                         if (coin_control.nCoinType == CoinType::ONLY_NONDENOMINATED) {
                             error = _("Unable to locate enough non-denominated funds for this transaction.");
                         } else if (coin_control.nCoinType == CoinType::ONLY_FULLY_MIXED) {
@@ -771,16 +772,13 @@ bool CWallet::CreateTransactionInternal(
                         }
                         return false;
                     }
-                    vecCoins.assign(setCoinsTmp.begin(), setCoinsTmp.end());
                 }
 
-                // Fill vin
+                // Dummy fill vin for maximum size estimation
                 //
-                // Note how the sequence number is set to max()-1 so that the
-                // nLockTime set above actually works.
                 txNew.vin.clear();
-                for (const auto& coin : vecCoins) {
-                    txNew.vin.emplace_back(coin.outpoint, CScript(), CTxIn::SEQUENCE_FINAL - 1);
+                for (const auto& coin : setCoins) {
+                    txNew.vin.push_back(CTxIn(coin.outpoint, CScript()));
                 }
 
                 auto calculateFee = [&](CAmount& nFee) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) -> bool {
@@ -889,24 +887,13 @@ bool CWallet::CreateTransactionInternal(
                     continue;
                 }
 
-                // If no specific change position was requested, apply BIP69
-                if (nChangePosRequest == -1) {
-                    std::sort(vecCoins.begin(), vecCoins.end(), CompareInputCoinBIP69());
-                    std::sort(txNew.vin.begin(), txNew.vin.end(), CompareInputBIP69());
+                if (sort_bip69) {
                     std::sort(txNew.vout.begin(), txNew.vout.end(), CompareOutputBIP69());
 
                     // If there was a change output added before, we must update its position now
-                    if (nChangePosInOut != -1) {
-                        int i = 0;
-                        for (const CTxOut& txOut : txNew.vout)
-                        {
-                            if (txOut == newTxOut)
-                            {
-                                nChangePosInOut = i;
-                                break;
-                            }
-                            i++;
-                        }
+                    if (const auto it = std::find(txNew.vout.begin(), txNew.vout.end(), newTxOut);
+                        it != txNew.vout.end() && nChangePosInOut != -1) {
+                        nChangePosInOut = std::distance(txNew.vout.begin(), it);
                     }
                 }
 
@@ -948,6 +935,17 @@ bool CWallet::CreateTransactionInternal(
 
         // Make sure change position was updated one way or another
         assert(nChangePosInOut != std::numeric_limits<int>::max());
+
+        // Fill in final vin and shuffle/sort it
+        txNew.vin.clear();
+
+        // Note how the sequence number is set to non-maxint so that
+        // the nLockTime set above actually works.
+        const uint32_t nSequence = CTxIn::SEQUENCE_FINAL - 1;
+        for (const auto& coin : setCoins) {
+            txNew.vin.push_back(CTxIn(coin.outpoint, CScript(), nSequence));
+        }
+        if (sort_bip69) { std::sort(txNew.vin.begin(), txNew.vin.end(), CompareInputBIP69()); }
 
         if (sign && !SignTransaction(txNew)) {
             error = _("Signing transaction failed");
