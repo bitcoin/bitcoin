@@ -14,6 +14,12 @@ generate_header_from_json(data/tx_invalid.json)
 generate_header_from_json(data/tx_valid.json)
 generate_header_from_raw(data/asmap.raw test::data)
 
+if(POLICY CMP0156)
+  # De-duplicate libraries on link lines based on linker capabilities.
+  # See: https://cmake.org/cmake/help/latest/policy/CMP0156.html
+  cmake_policy(SET CMP0156 NEW)
+endif()
+
 # Do not use generator expressions in test sources because the
 # SOURCES property is processed to gather test suite macros.
 add_executable(test_bitcoin
