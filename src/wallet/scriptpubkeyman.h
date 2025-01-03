@@ -302,6 +302,9 @@ protected:
     virtual bool AddKeyPubKeyInner(const CKey& key, const CPubKey &pubkey);
     bool AddCryptedKeyInner(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
 
+    // Helper function to retrieve a set of all output scripts that may be relevant to this LegacyDataSPKM
+    // Used only in migration.
+    std::unordered_set<CScript, SaltedSipHasher> GetCandidateScriptPubKeys() const;
 public:
     using ScriptPubKeyMan::ScriptPubKeyMan;
 
@@ -318,6 +321,7 @@ public:
     uint256 GetID() const override { return uint256::ONE; }
     // TODO: Remove IsMine when deleting LegacyScriptPubKeyMan
     isminetype IsMine(const CScript& script) const override;
+    bool CanProvide(const CScript& script, SignatureData& sigdata) override;
 
     // FillableSigningProvider overrides
     bool HaveKey(const CKeyID &address) const override;
@@ -485,8 +489,6 @@ public:
     std::unique_ptr<CKeyMetadata> GetMetadata(const CTxDestination& dest) const override;
 
     bool CanGetAddresses(bool internal = false) const override;
-
-    bool CanProvide(const CScript& script, SignatureData& sigdata) override;
 
     bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const override;
     SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const override;
