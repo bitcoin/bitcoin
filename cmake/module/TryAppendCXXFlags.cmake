@@ -40,10 +40,10 @@ In configuration output, this function prints a string by the following pattern:
 ]=]
 function(try_append_cxx_flags flags)
   cmake_parse_arguments(PARSE_ARGV 1
-    TACXXF                            # prefix
-    "SKIP_LINK"                       # options
-    "TARGET;VAR;SOURCE;RESULT_VAR"    # one_value_keywords
-    "IF_CHECK_PASSED"                 # multi_value_keywords
+    TACXXF                  # prefix
+    "SKIP_LINK"             # options
+    "TARGET;VAR;RESULT_VAR" # one_value_keywords
+    "IF_CHECK_PASSED"       # multi_value_keywords
   )
 
   set(flags_as_string "${flags}")
@@ -53,12 +53,6 @@ function(try_append_cxx_flags flags)
   string(TOUPPER "${id_string}" id_string)
 
   set(source "int main() { return 0; }")
-  if(DEFINED TACXXF_SOURCE AND NOT TACXXF_SOURCE STREQUAL source)
-    set(source "${TACXXF_SOURCE}")
-    string(SHA256 source_hash "${source}")
-    string(SUBSTRING ${source_hash} 0 4 source_hash_head)
-    string(APPEND id_string _${source_hash_head})
-  endif()
 
   # This avoids running a linker.
   set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
