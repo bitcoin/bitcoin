@@ -3,7 +3,6 @@
              ((gnu packages bash) #:select (bash-minimal))
              (gnu packages bison)
              ((gnu packages certs) #:select (nss-certs))
-             ((gnu packages cdrom) #:select (xorriso))
              ((gnu packages cmake) #:select (cmake-minimal))
              (gnu packages commencement)
              (gnu packages compression)
@@ -611,5 +610,5 @@ inspecting signatures in Mach-O binaries.")
                  binutils
                  clang-toolchain-17
                  python-signapple
-                 xorriso))
+                 zip))
           (else '())))))

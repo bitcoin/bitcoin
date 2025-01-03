@@ -88,7 +88,7 @@ git -C ./guix.sigs pull
 _Note: this step can be skipped if [our CI](https://github.com/dashpay/dash/blob/master/ci/test/00_setup_env.sh#L64) still uses bitcoin's SDK package (see SDK_URL)_
 
 Create the macOS SDK tarball, see the [macOS build
-instructions](build-osx.md#deterministic-macos-dmg-notes) for
+instructions](build-osx.md#deterministic-macos-app-notes) for
 details.
 
 ### Build and attest to build outputs:
