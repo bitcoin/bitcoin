@@ -148,15 +148,15 @@ class UnconfirmedInputTest(BitcoinTestFramework):
         self.def_wallet.sendtoaddress(address=wallet.getnewaddress(), amount=2)
         self.generate(self.nodes[0], 1) # confirm funding tx
 
-        parent_one_txid = wallet.sendtoaddress(address=wallet.getnewaddress(), amount=1.5, fee_rate=2)
+        parent_one_txid = wallet.sendtoaddress(address=wallet.getnewaddress(), amount=Decimal("1.5"), fee_rate=2)
         p_one_tx = wallet.gettransaction(txid=parent_one_txid, verbose=True)
         self.assert_undershoots_target(p_one_tx)
 
-        parent_two_txid = wallet.sendtoaddress(address=wallet.getnewaddress(), amount=1.5, fee_rate=1)
+        parent_two_txid = wallet.sendtoaddress(address=wallet.getnewaddress(), amount=Decimal("1.5"), fee_rate=1)
         p_two_tx = wallet.gettransaction(txid=parent_two_txid, verbose=True)
         self.assert_undershoots_target(p_two_tx)
 
-        ancestor_aware_txid = wallet.sendtoaddress(address=self.def_wallet.getnewaddress(), amount=2.8, fee_rate=self.target_fee_rate)
+        ancestor_aware_txid = wallet.sendtoaddress(address=self.def_wallet.getnewaddress(), amount=Decimal("2.8"), fee_rate=self.target_fee_rate)
         ancestor_aware_tx = wallet.gettransaction(txid=ancestor_aware_txid, verbose=True)
         self.assert_spends_only_parents(ancestor_aware_tx, [parent_one_txid, parent_two_txid])
 
@@ -176,17 +176,17 @@ class UnconfirmedInputTest(BitcoinTestFramework):
         self.def_wallet.sendtoaddress(address=wallet.getnewaddress(), amount=2)
         self.generate(self.nodes[0], 1) # confirm funding tx
 
-        high_parent_txid = wallet.sendtoaddress(address=wallet.getnewaddress(), amount=1.5, fee_rate=self.target_fee_rate*2)
+        high_parent_txid = wallet.sendtoaddress(address=wallet.getnewaddress(), amount=Decimal("1.5"), fee_rate=self.target_fee_rate*2)
         p_high_tx = wallet.gettransaction(txid=high_parent_txid, verbose=True)
         # This time the parent is greater than the child
         self.assert_beats_target(p_high_tx)
 
-        parent_low_txid = wallet.sendtoaddress(address=wallet.getnewaddress(), amount=1.5, fee_rate=1)
+        parent_low_txid = wallet.sendtoaddress(address=wallet.getnewaddress(), amount=Decimal("1.5"), fee_rate=1)
         p_low_tx = wallet.gettransaction(txid=parent_low_txid, verbose=True)
         # Other parent needs bump
         self.assert_undershoots_target(p_low_tx)
 
-        ancestor_aware_txid = wallet.sendtoaddress(address=self.def_wallet.getnewaddress(), amount=2.8, fee_rate=self.target_fee_rate)
+        ancestor_aware_txid = wallet.sendtoaddress(address=self.def_wallet.getnewaddress(), amount=Decimal("2.8"), fee_rate=self.target_fee_rate)
         ancestor_aware_tx = wallet.gettransaction(txid=ancestor_aware_txid, verbose=True)
         self.assert_spends_only_parents(ancestor_aware_tx, [parent_low_txid, high_parent_txid])
 
@@ -370,12 +370,12 @@ class UnconfirmedInputTest(BitcoinTestFramework):
         self.assert_undershoots_target(parent_tx)
 
         # create sibling tx
-        sibling_txid = wallet.sendtoaddress(address=self.def_wallet.getnewaddress(), amount=0.9, fee_rate=1)
+        sibling_txid = wallet.sendtoaddress(address=self.def_wallet.getnewaddress(), amount=Decimal("0.9"), fee_rate=1)
         sibling_tx = wallet.gettransaction(txid=sibling_txid, verbose=True)
         self.assert_undershoots_target(sibling_tx)
 
         # spend both outputs from parent transaction
-        ancestor_aware_txid = wallet.sendtoaddress(address=self.def_wallet.getnewaddress(), amount=0.5, fee_rate=self.target_fee_rate)
+        ancestor_aware_txid = wallet.sendtoaddress(address=self.def_wallet.getnewaddress(), amount=Decimal("0.5"), fee_rate=self.target_fee_rate)
         ancestor_aware_tx = wallet.gettransaction(txid=ancestor_aware_txid, verbose=True)
 
         self.assert_spends_only_parents(ancestor_aware_tx, [parent_txid])
@@ -397,12 +397,12 @@ class UnconfirmedInputTest(BitcoinTestFramework):
         self.assert_undershoots_target(parent_tx)
 
         # create sibling tx
-        sibling_txid = wallet.sendtoaddress(address=self.def_wallet.getnewaddress(), amount=0.9, fee_rate=3*self.target_fee_rate)
+        sibling_txid = wallet.sendtoaddress(address=self.def_wallet.getnewaddress(), amount=Decimal("0.9"), fee_rate=3*self.target_fee_rate)
         sibling_tx = wallet.gettransaction(txid=sibling_txid, verbose=True)
         self.assert_beats_target(sibling_tx)
 
         # spend both outputs from parent transaction
-        ancestor_aware_txid = wallet.sendtoaddress(address=self.def_wallet.getnewaddress(), amount=0.5, fee_rate=self.target_fee_rate)
+        ancestor_aware_txid = wallet.sendtoaddress(address=self.def_wallet.getnewaddress(), amount=Decimal("0.5"), fee_rate=self.target_fee_rate)
         ancestor_aware_tx = wallet.gettransaction(txid=ancestor_aware_txid, verbose=True)
 
         self.assert_spends_only_parents(ancestor_aware_tx, [parent_txid])
@@ -426,10 +426,10 @@ class UnconfirmedInputTest(BitcoinTestFramework):
         wallet = self.setup_and_fund_wallet("confirmed_and_unconfirmed_wallet")
         confirmed_parent_txid = wallet.sendtoaddress(address=wallet.getnewaddress(), amount=1, fee_rate=self.target_fee_rate)
         self.generate(self.nodes[0], 1) # Wallet has two confirmed UTXOs of ~1BTC each
-        unconfirmed_parent_txid = wallet.sendtoaddress(address=wallet.getnewaddress(), amount=0.5, fee_rate=0.5*self.target_fee_rate)
+        unconfirmed_parent_txid = wallet.sendtoaddress(address=wallet.getnewaddress(), amount=Decimal("0.5"), fee_rate=0.5*self.target_fee_rate)
 
         # wallet has one confirmed UTXO of 1BTC and two unconfirmed UTXOs of ~0.5BTC each
-        ancestor_aware_txid = wallet.sendtoaddress(address=self.def_wallet.getnewaddress(), amount=1.4, fee_rate=self.target_fee_rate)
+        ancestor_aware_txid = wallet.sendtoaddress(address=self.def_wallet.getnewaddress(), amount=Decimal("1.4"), fee_rate=self.target_fee_rate)
         ancestor_aware_tx = wallet.gettransaction(txid=ancestor_aware_txid, verbose=True)
         self.assert_spends_only_parents(ancestor_aware_tx, [confirmed_parent_txid, unconfirmed_parent_txid])
         resulting_fee_rate = self.calc_fee_rate(ancestor_aware_tx)

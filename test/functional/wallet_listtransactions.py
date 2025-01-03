@@ -35,7 +35,7 @@ class ListTransactionsTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("Test simple send from node0 to node1")
-        txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
+        txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), Decimal("0.1"))
         self.sync_all()
         assert_array_result(self.nodes[0].listtransactions(),
                             {"txid": txid},
@@ -54,7 +54,7 @@ class ListTransactionsTest(BitcoinTestFramework):
                             {"category": "receive", "amount": Decimal("0.1"), "confirmations": 1, "blockhash": blockhash, "blockheight": blockheight})
 
         self.log.info("Test send-to-self on node0")
-        txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 0.2)
+        txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("0.2"))
         assert_array_result(self.nodes[0].listtransactions(),
                             {"txid": txid, "category": "send"},
                             {"amount": Decimal("-0.2")})
@@ -63,10 +63,10 @@ class ListTransactionsTest(BitcoinTestFramework):
                             {"amount": Decimal("0.2")})
 
         self.log.info("Test sendmany from node1: twice to self, twice to node0")
-        send_to = {self.nodes[0].getnewaddress(): 0.11,
-                   self.nodes[1].getnewaddress(): 0.22,
-                   self.nodes[0].getnewaddress(): 0.33,
-                   self.nodes[1].getnewaddress(): 0.44}
+        send_to = {self.nodes[0].getnewaddress(): Decimal("0.11"),
+                   self.nodes[1].getnewaddress(): Decimal("0.22"),
+                   self.nodes[0].getnewaddress(): Decimal("0.33"),
+                   self.nodes[1].getnewaddress(): Decimal("0.44")}
         txid = self.nodes[1].sendmany("", send_to)
         self.sync_all()
         assert_array_result(self.nodes[1].listtransactions(),
@@ -100,7 +100,7 @@ class ListTransactionsTest(BitcoinTestFramework):
             pubkey = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress())['pubkey']
             multisig = self.nodes[1].createmultisig(1, [pubkey])
             self.nodes[0].importaddress(multisig["redeemScript"], "watchonly", False, True)
-            txid = self.nodes[1].sendtoaddress(multisig["address"], 0.1)
+            txid = self.nodes[1].sendtoaddress(multisig["address"], Decimal("0.1"))
             self.generate(self.nodes[1], 1)
             assert_equal(len(self.nodes[0].listtransactions(label="watchonly", include_watchonly=True)), 1)
             assert_equal(len(self.nodes[0].listtransactions(dummy="watchonly", include_watchonly=True)), 1)
@@ -284,8 +284,8 @@ class ListTransactionsTest(BitcoinTestFramework):
 
     def run_coinjoin_test(self):
         self.log.info('Check "coin-join" transaction')
-        input_0 = next(i for i in self.nodes[0].listunspent(query_options={"minimumAmount": 0.2}, include_unsafe=False))
-        input_1 = next(i for i in self.nodes[1].listunspent(query_options={"minimumAmount": 0.2}, include_unsafe=False))
+        input_0 = next(i for i in self.nodes[0].listunspent(query_options={"minimumAmount": Decimal("0.2")}, include_unsafe=False))
+        input_1 = next(i for i in self.nodes[1].listunspent(query_options={"minimumAmount": Decimal("0.2")}, include_unsafe=False))
         raw_hex = self.nodes[0].createrawtransaction(
             inputs=[
                 {

@@ -5,6 +5,8 @@
 """Test createwallet watchonly arguments.
 """
 
+from decimal import Decimal
+
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -55,8 +57,8 @@ class CreateWalletWatchonlyTest(BitcoinTestFramework):
 
         self.log.info('Test sending from a watch-only wallet raises RPC error')
         msg = "Error: Private keys are disabled for this wallet"
-        assert_raises_rpc_error(-4, msg, wo_wallet.sendtoaddress, a1, 0.1)
-        assert_raises_rpc_error(-4, msg, wo_wallet.sendmany, amounts={a1: 0.1})
+        assert_raises_rpc_error(-4, msg, wo_wallet.sendtoaddress, a1, Decimal("0.1"))
+        assert_raises_rpc_error(-4, msg, wo_wallet.sendmany, amounts={a1: Decimal("0.1")})
 
         self.log.info('Testing listreceivedbyaddress watch-only defaults')
         result = wo_wallet.listreceivedbyaddress()

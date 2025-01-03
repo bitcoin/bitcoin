@@ -244,7 +244,7 @@ class WalletTest(BitcoinTestFramework):
         before = self.nodes[1].getbalances()['mine']['untrusted_pending']
         dst = self.nodes[1].getnewaddress()
         self.nodes[1].unloadwallet(self.default_wallet_name)
-        self.nodes[0].sendtoaddress(dst, 0.1)
+        self.nodes[0].sendtoaddress(dst, Decimal('0.1'))
         self.sync_all()
         self.nodes[1].loadwallet(self.default_wallet_name)
         after = self.nodes[1].getbalances()['mine']['untrusted_pending']
@@ -296,7 +296,7 @@ class WalletTest(BitcoinTestFramework):
             self.log.info('Check if mempool is taken into account after import*')
             address = self.nodes[0].getnewaddress()
             privkey = self.nodes[0].dumpprivkey(address)
-            self.nodes[0].sendtoaddress(address, 0.1)
+            self.nodes[0].sendtoaddress(address, Decimal("0.1"))
             self.nodes[0].unloadwallet('')
             # check importaddress on fresh wallet
             self.nodes[0].createwallet('w1', False, True)
@@ -333,7 +333,7 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(walletinfo['lastprocessedblock']['hash'], prev_hash)
 
         self.log.info("Test gettransaction returns expected lastprocessedblock json object")
-        txid = self.nodes[1].sendtoaddress(self.nodes[1].getnewaddress(), 0.01)
+        txid = self.nodes[1].sendtoaddress(self.nodes[1].getnewaddress(), Decimal("0.01"))
         tx_info = self.nodes[1].gettransaction(txid)
         assert_equal(tx_info['lastprocessedblock']['height'], prev_height)
         assert_equal(tx_info['lastprocessedblock']['hash'], prev_hash)

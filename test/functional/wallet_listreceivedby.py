@@ -36,7 +36,7 @@ class ReceivedByTest(BitcoinTestFramework):
 
         # Send from node 0 to 1
         addr = self.nodes[1].getnewaddress()
-        txid = self.nodes[0].sendtoaddress(addr, 0.1)
+        txid = self.nodes[0].sendtoaddress(addr, Decimal("0.1"))
         self.sync_all()
 
         # Check not listed in listreceivedbyaddress because has 0 confirmations
@@ -83,7 +83,7 @@ class ReceivedByTest(BitcoinTestFramework):
         res = self.nodes[1].listreceivedbyaddress(0, True, True)
         assert_equal(len(res), 2 + num_cb_reward_addresses)  # Right now 2 entries
         other_addr = self.nodes[1].getnewaddress()
-        txid2 = self.nodes[0].sendtoaddress(other_addr, 0.1)
+        txid2 = self.nodes[0].sendtoaddress(other_addr, Decimal("0.1"))
         self.generate(self.nodes[0], 1)
         # Same test as above should still pass
         expected = {"address": addr, "label": "", "amount": Decimal("0.1"), "confirmations": 11, "txids": [txid, ]}
@@ -108,7 +108,7 @@ class ReceivedByTest(BitcoinTestFramework):
 
         # Send from node 0 to 1
         addr = self.nodes[1].getnewaddress()
-        txid = self.nodes[0].sendtoaddress(addr, 0.1)
+        txid = self.nodes[0].sendtoaddress(addr, Decimal("0.1"))
         self.sync_all()
 
         # Check balance is 0 because of 0 confirmations
@@ -136,7 +136,7 @@ class ReceivedByTest(BitcoinTestFramework):
         received_by_label_json = [r for r in self.nodes[1].listreceivedbylabel() if r["label"] == label][0]
         balance_by_label = self.nodes[1].getreceivedbylabel(label)
 
-        txid = self.nodes[0].sendtoaddress(addr, 0.1)
+        txid = self.nodes[0].sendtoaddress(addr, Decimal("0.1"))
         self.sync_all()
 
         # getreceivedbylabel returns an error if the wallet doesn't own the label

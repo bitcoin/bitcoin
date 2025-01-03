@@ -343,7 +343,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.log.info("Test sendrawtransaction with missing input")
         inputs = [{'txid': TXID, 'vout': 1}]  # won't exist
         address = getnewdestination()[2]
-        outputs = {address: 4.998}
+        outputs = {address: Decimal("4.998")}
         rawtx = self.nodes[2].createrawtransaction(inputs, outputs)
         assert_raises_rpc_error(-25, "bad-txns-inputs-missingorspent", self.nodes[2].sendrawtransaction, rawtx)
 
@@ -382,7 +382,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         tx_val = 0.001
         tx.vout = [CTxOut(int(Decimal(tx_val) * COIN), CScript([OP_RETURN] + [OP_FALSE] * 30))]
         tx_hex = tx.serialize().hex()
-        assert_raises_rpc_error(-25, max_burn_exceeded, self.nodes[2].sendrawtransaction, tx_hex, 0, 0.0009)
+        assert_raises_rpc_error(-25, max_burn_exceeded, self.nodes[2].sendrawtransaction, tx_hex, 0, Decimal("0.0009"))
 
         # Test a transaction where our burn falls short of maxburnamount
         tx = self.wallet.create_self_transfer()['tx']
@@ -406,11 +406,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Fee rate is 0.00100000 BTC/kvB
         tx = self.wallet.create_self_transfer(fee_rate=Decimal('0.00100000'))
         # Thus, testmempoolaccept should reject
-        testres = self.nodes[2].testmempoolaccept([tx['hex']], 0.00001000)[0]
+        testres = self.nodes[2].testmempoolaccept([tx['hex']], Decimal("0.00001000"))[0]
         assert_equal(testres['allowed'], False)
         assert_equal(testres['reject-reason'], 'max-fee-exceeded')
         # and sendrawtransaction should throw
-        assert_raises_rpc_error(-25, fee_exceeds_max, self.nodes[2].sendrawtransaction, tx['hex'], 0.00001000)
+        assert_raises_rpc_error(-25, fee_exceeds_max, self.nodes[2].sendrawtransaction, tx['hex'], Decimal("0.00001000"))
         # and the following calls should both succeed
         testres = self.nodes[2].testmempoolaccept(rawtxs=[tx['hex']])[0]
         assert_equal(testres['allowed'], True)
@@ -535,7 +535,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey']])['address']
 
-        txId = self.nodes[0].sendtoaddress(mSigObj, 2.2)
+        txId = self.nodes[0].sendtoaddress(mSigObj, Decimal("2.2"))
         decTx = self.nodes[0].gettransaction(txId)
         rawTx = self.nodes[0].decoderawtransaction(decTx['hex'])
         self.sync_all()
@@ -551,7 +551,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         bal = self.nodes[0].getbalance()
         inputs = [{"txid": txId, "vout": vout['n'], "scriptPubKey": vout['scriptPubKey']['hex'], "amount": vout['value']}]
-        outputs = {self.nodes[0].getnewaddress(): 2.19}
+        outputs = {self.nodes[0].getnewaddress(): Decimal("2.19")}
         rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
         rawTxPartialSigned = self.nodes[1].signrawtransactionwithwallet(rawTx, inputs)
         assert_equal(rawTxPartialSigned['complete'], False)  # node1 only has one key, can't comp. sign the tx
@@ -576,7 +576,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])['address']
         mSigObjValid = self.nodes[2].getaddressinfo(mSigObj)
 
-        txId = self.nodes[0].sendtoaddress(mSigObj, 2.2)
+        txId = self.nodes[0].sendtoaddress(mSigObj, Decimal("2.2"))
         decTx = self.nodes[0].gettransaction(txId)
         rawTx2 = self.nodes[0].decoderawtransaction(decTx['hex'])
         self.sync_all()
@@ -590,7 +590,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         bal = self.nodes[0].getbalance()
         inputs = [{"txid": txId, "vout": vout['n'], "scriptPubKey": vout['scriptPubKey']['hex'], "redeemScript": mSigObjValid['hex'], "amount": vout['value']}]
-        outputs = {self.nodes[0].getnewaddress(): 2.19}
+        outputs = {self.nodes[0].getnewaddress(): Decimal("2.19")}
         rawTx2 = self.nodes[2].createrawtransaction(inputs, outputs)
         rawTxPartialSigned1 = self.nodes[1].signrawtransactionwithwallet(rawTx2, inputs)
         self.log.debug(rawTxPartialSigned1)
