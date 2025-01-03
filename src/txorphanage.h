@@ -33,6 +33,8 @@ public:
     /** Add an additional announcer to an orphan if it exists. Otherwise, do nothing. */
     bool AddAnnouncer(const Wtxid& wtxid, NodeId peer);
 
+    CTransactionRef GetTx(const Wtxid& wtxid) const;
+
     /** Check if we already have an orphan transaction (by wtxid only) */
     bool HaveTx(const Wtxid& wtxid) const;
 
