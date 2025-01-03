@@ -13,96 +13,84 @@
 #include <cstring>
 
 template <typename B>
-concept ByteType = std::same_as<B, unsigned char> || std::same_as<B, std::byte>;
+concept ByteType = std::same_as<B, uint8_t> || std::same_as<B, std::byte>;
 
-template <ByteType B>
-inline uint16_t ReadLE16(const B* ptr)
+uint16_t ReadLE16(const ByteType auto* ptr) noexcept
 {
     uint16_t x;
-    memcpy(&x, ptr, 2);
+    std::memcpy(&x, ptr, sizeof(x));
     return le16toh_internal(x);
 }
 
-template <ByteType B>
-inline uint32_t ReadLE32(const B* ptr)
+uint32_t ReadLE32(const ByteType auto* ptr) noexcept
 {
     uint32_t x;
-    memcpy(&x, ptr, 4);
+    std::memcpy(&x, ptr, sizeof(x));
     return le32toh_internal(x);
 }
 
-template <ByteType B>
-inline uint64_t ReadLE64(const B* ptr)
+uint64_t ReadLE64(const ByteType auto* ptr) noexcept
 {
     uint64_t x;
-    memcpy(&x, ptr, 8);
+    std::memcpy(&x, ptr, sizeof(x));
     return le64toh_internal(x);
 }
 
-template <ByteType B>
-inline void WriteLE16(B* ptr, uint16_t x)
+void WriteLE16(ByteType auto* ptr, const uint16_t x) noexcept
 {
-    uint16_t v = htole16_internal(x);
-    memcpy(ptr, &v, 2);
+    const uint16_t v{htole16_internal(x)};
+    std::memcpy(ptr, &v, sizeof(v));
 }
 
-template <ByteType B>
-inline void WriteLE32(B* ptr, uint32_t x)
+void WriteLE32(ByteType auto* ptr, const uint32_t x) noexcept
 {
-    uint32_t v = htole32_internal(x);
-    memcpy(ptr, &v, 4);
+    const uint32_t v{htole32_internal(x)};
+    std::memcpy(ptr, &v, sizeof(v));
 }
 
-template <ByteType B>
-inline void WriteLE64(B* ptr, uint64_t x)
+void WriteLE64(ByteType auto* ptr, const uint64_t x) noexcept
 {
-    uint64_t v = htole64_internal(x);
-    memcpy(ptr, &v, 8);
+    const uint64_t v{htole64_internal(x)};
+    std::memcpy(ptr, &v, sizeof(v));
 }
 
-template <ByteType B>
-inline uint16_t ReadBE16(const B* ptr)
+uint16_t ReadBE16(const ByteType auto* ptr) noexcept
 {
     uint16_t x;
-    memcpy(&x, ptr, 2);
+    std::memcpy(&x, ptr, sizeof(x));
     return be16toh_internal(x);
 }
 
-template <ByteType B>
-inline uint32_t ReadBE32(const B* ptr)
+uint32_t ReadBE32(const ByteType auto* ptr) noexcept
 {
     uint32_t x;
-    memcpy(&x, ptr, 4);
+    std::memcpy(&x, ptr, sizeof(x));
     return be32toh_internal(x);
 }
 
-template <ByteType B>
-inline uint64_t ReadBE64(const B* ptr)
+uint64_t ReadBE64(const ByteType auto* ptr) noexcept
 {
     uint64_t x;
-    memcpy(&x, ptr, 8);
+    std::memcpy(&x, ptr, sizeof(x));
     return be64toh_internal(x);
 }
 
-template <ByteType B>
-inline void WriteBE16(B* ptr, uint16_t x)
+void WriteBE16(ByteType auto* ptr, const uint16_t x) noexcept
 {
-    uint16_t v = htobe16_internal(x);
-    memcpy(ptr, &v, 2);
+    const uint16_t v{htobe16_internal(x)};
+    std::memcpy(ptr, &v, sizeof(v));
 }
 
-template <ByteType B>
-inline void WriteBE32(B* ptr, uint32_t x)
+void WriteBE32(ByteType auto* ptr, const uint32_t x) noexcept
 {
-    uint32_t v = htobe32_internal(x);
-    memcpy(ptr, &v, 4);
+    const uint32_t v{htobe32_internal(x)};
+    std::memcpy(ptr, &v, sizeof(v));
 }
 
-template <ByteType B>
-inline void WriteBE64(B* ptr, uint64_t x)
+void WriteBE64(ByteType auto* ptr, const uint64_t x) noexcept
 {
-    uint64_t v = htobe64_internal(x);
-    memcpy(ptr, &v, 8);
+    const uint64_t v{htobe64_internal(x)};
+    std::memcpy(ptr, &v, sizeof(v));
 }
 
 #endif // BITCOIN_CRYPTO_COMMON_H
