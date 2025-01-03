@@ -669,36 +669,12 @@ CBlockFileInfo* BlockManager::GetBlockFileInfo(size_t n)
     return &m_blockfile_info.at(n);
 }
 
-bool BlockManager::UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos, const uint256& hashBlock) const
-{
-    // Open history file to append
-    AutoFile fileout{OpenUndoFile(pos)};
-    if (fileout.IsNull()) {
-        LogError("%s: OpenUndoFile failed\n", __func__);
-        return false;
-    }
-
-    // Write index header
-    unsigned int nSize = GetSerializeSize(blockundo);
-    fileout << GetParams().MessageStart() << nSize;
-
-    // Write undo data
-    long fileOutPos = fileout.tell();
-    pos.nPos = (unsigned int)fileOutPos;
-    fileout << blockundo;
-
-    // calculate & write checksum
-    HashWriter hasher{};
-    hasher << hashBlock;
-    hasher << blockundo;
-    fileout << hasher.GetHash();
-
-    return true;
-}
-
 bool BlockManager::UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex& index) const
 {
-    const FlatFilePos pos{WITH_LOCK(::cs_main, return index.GetUndoPos())};
+    FlatFilePos pos{WITH_LOCK(::cs_main, return index.GetUndoPos())};
+    if (pos.nPos < BLOCK_SERIALIZATION_HEADER_SIZE) return false;
+    uint32_t undo_size;
+    pos.nPos -= sizeof undo_size;
 
     // Open history file to read
     AutoFile filein{OpenUndoFile(pos, true)};
@@ -708,20 +684,26 @@ bool BlockManager::UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex& in
     }
 
     // Read block
-    uint256 hashChecksum;
-    HashVerifier verifier{filein}; // Use HashVerifier as reserializing may lose data, c.f. commit d342424301013ec47dc146a4beb49d5c9319d80a
     try {
+        filein >> undo_size;
+        if (undo_size > MAX_SIZE) throw std::runtime_error{strprintf("Refusing to read undo data of size: %d", undo_size)};
+
+        std::vector<uint8_t> mem(undo_size);
+        filein >> Span{mem};
+
+        SpanReader reader{mem};
+        HashVerifier verifier{reader}; // Use HashVerifier as reserializing may lose data, c.f. commit d342424301013ec47dc146a4beb49d5c9319d80a
         verifier << index.pprev->GetBlockHash();
         verifier >> blockundo;
+
+        uint256 hashChecksum;
         filein >> hashChecksum;
+        if (hashChecksum != verifier.GetHash()) {
+            LogError("%s: Checksum mismatch at %s\n", __func__, pos.ToString());
+            return false;
+        }
     } catch (const std::exception& e) {
         LogError("%s: Deserialize or I/O error - %s at %s\n", __func__, e.what(), pos.ToString());
-        return false;
-    }
-
-    // Verify checksum
-    if (hashChecksum != verifier.GetHash()) {
-        LogError("%s: Checksum mismatch at %s\n", __func__, pos.ToString());
         return false;
     }
 
@@ -815,13 +797,13 @@ void BlockManager::UnlinkPrunedFiles(const std::set<int>& setFilesToPrune) const
 
 AutoFile BlockManager::OpenBlockFile(const FlatFilePos& pos, bool fReadOnly) const
 {
-    return AutoFile{m_block_file_seq.Open(pos, fReadOnly), m_xor_key};
+    return AutoFile{m_block_file_seq.Open(pos, fReadOnly), m_obfuscation};
 }
 
 /** Open an undo file (rev?????.dat) */
 AutoFile BlockManager::OpenUndoFile(const FlatFilePos& pos, bool fReadOnly) const
 {
-    return AutoFile{m_undo_file_seq.Open(pos, fReadOnly), m_xor_key};
+    return AutoFile{m_undo_file_seq.Open(pos, fReadOnly), m_obfuscation};
 }
 
 fs::path BlockManager::GetBlockPosFilename(const FlatFilePos& pos) const
@@ -963,62 +945,64 @@ bool BlockManager::FindUndoPos(BlockValidationState& state, int nFile, FlatFileP
     return true;
 }
 
-bool BlockManager::WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const
-{
-    // Open history file to append
-    AutoFile fileout{OpenBlockFile(pos)};
-    if (fileout.IsNull()) {
-        LogError("%s: OpenBlockFile failed\n", __func__);
-        return false;
-    }
-
-    // Write index header
-    unsigned int nSize = GetSerializeSize(TX_WITH_WITNESS(block));
-    fileout << GetParams().MessageStart() << nSize;
-
-    // Write block
-    long fileOutPos = fileout.tell();
-    pos.nPos = (unsigned int)fileOutPos;
-    fileout << TX_WITH_WITNESS(block);
-
-    return true;
-}
-
-bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
+bool BlockManager::SaveBlockUndo(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
 {
     AssertLockHeld(::cs_main);
     const BlockfileType type = BlockfileTypeForHeight(block.nHeight);
     auto& cursor = *Assert(WITH_LOCK(cs_LastBlockFile, return m_blockfile_cursors[type]));
 
-    // Write undo information to disk
     if (block.GetUndoPos().IsNull()) {
-        FlatFilePos _pos;
-        if (!FindUndoPos(state, block.nFile, _pos, ::GetSerializeSize(blockundo) + 40)) {
+        FlatFilePos pos;
+        const uint32_t blockundo_size{static_cast<uint32_t>(GetSerializeSize(blockundo))};
+        if (!FindUndoPos(state, block.nFile, pos, blockundo_size + UNDO_DATA_DISK_OVERHEAD)) {
             LogError("%s: FindUndoPos failed\n", __func__);
             return false;
         }
-        if (!UndoWriteToDisk(blockundo, _pos, block.pprev->GetBlockHash())) {
+        AutoFile fileout{m_undo_file_seq.Open(pos, false), 0}; // We'll obfuscate ourselves
+        if (fileout.IsNull()) {
+            LogError("%s: OpenUndoFile failed\n", __func__);
             return FatalError(m_opts.notifications, state, _("Failed to write undo data."));
         }
+
+        {
+            DataStream header;
+            header.reserve(BLOCK_SERIALIZATION_HEADER_SIZE);
+            header << GetParams().MessageStart() << blockundo_size;
+            m_obfuscation(header, pos.nPos);
+            fileout.write(header);
+        }
+        pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
+        {
+            HashWriter hasher;
+            hasher << block.pprev->GetBlockHash();
+            hasher << blockundo;
+
+            DataStream undo_data;
+            undo_data.reserve(blockundo_size + sizeof(uint256));
+            undo_data << blockundo << hasher.GetHash();
+            m_obfuscation(undo_data, pos.nPos);
+            fileout.write(undo_data);
+        }
+
         // rev files are written in block height order, whereas blk files are written as blocks come in (often out of order)
         // we want to flush the rev (undo) file once we've written the last block, which is indicated by the last height
         // in the block file info as below; note that this does not catch the case where the undo writes are keeping up
         // with the block writes (usually when a synced up node is getting newly mined blocks) -- this case is caught in
         // the FindNextBlockPos function
-        if (_pos.nFile < cursor.file_num && static_cast<uint32_t>(block.nHeight) == m_blockfile_info[_pos.nFile].nHeightLast) {
+        if (pos.nFile < cursor.file_num && static_cast<uint32_t>(block.nHeight) == m_blockfile_info[pos.nFile].nHeightLast) {
             // Do not propagate the return code, a failed flush here should not
             // be an indication for a failed write. If it were propagated here,
             // the caller would assume the undo data not to be written, when in
             // fact it is. Note though, that a failed flush might leave the data
             // file untrimmed.
-            if (!FlushUndoFile(_pos.nFile, true)) {
-                LogPrintLevel(BCLog::BLOCKSTORAGE, BCLog::Level::Warning, "Failed to flush undo file %05i\n", _pos.nFile);
+            if (!FlushUndoFile(pos.nFile, true)) {
+                LogPrintLevel(BCLog::BLOCKSTORAGE, BCLog::Level::Warning, "Failed to flush undo file %05i\n", pos.nFile);
             }
-        } else if (_pos.nFile == cursor.file_num && block.nHeight > cursor.undo_height) {
+        } else if (pos.nFile == cursor.file_num && block.nHeight > cursor.undo_height) {
             cursor.undo_height = block.nHeight;
         }
         // update nUndoPos in block index
-        block.nUndoPos = _pos.nPos;
+        block.nUndoPos = pos.nPos;
         block.nStatus |= BLOCK_HAVE_UNDO;
         m_dirty_blockindex.insert(&block);
     }
@@ -1026,20 +1010,26 @@ bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValid
     return true;
 }
 
-bool BlockManager::ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos) const
+bool BlockManager::ReadBlockFromDisk(CBlock& block, FlatFilePos pos) const
 {
     block.SetNull();
 
-    // Open history file to read
+    if (pos.nPos < BLOCK_SERIALIZATION_HEADER_SIZE) return false;
+    uint32_t blk_size;
+    pos.nPos -= sizeof blk_size;
     AutoFile filein{OpenBlockFile(pos, true)};
     if (filein.IsNull()) {
         LogError("%s: OpenBlockFile failed for %s\n", __func__, pos.ToString());
         return false;
     }
 
-    // Read block
     try {
-        filein >> TX_WITH_WITNESS(block);
+        filein >> blk_size;
+        if (blk_size > MAX_SIZE) throw std::runtime_error{strprintf("Refusing to read block of size: %d", blk_size)};
+
+        std::vector<uint8_t> mem(blk_size);
+        filein >> Span{mem};
+        SpanReader(mem) >> TX_WITH_WITNESS(block);
     } catch (const std::exception& e) {
         LogError("%s: Deserialize or I/O error - %s at %s\n", __func__, e.what(), pos.ToString());
         return false;
@@ -1119,25 +1109,41 @@ bool BlockManager::ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatF
     return true;
 }
 
-FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight)
+FlatFilePos BlockManager::SaveBlock(const CBlock& block, int nHeight)
 {
-    unsigned int nBlockSize = ::GetSerializeSize(TX_WITH_WITNESS(block));
-    // Account for the 4 magic message start bytes + the 4 length bytes (8 bytes total,
-    // defined as BLOCK_SERIALIZATION_HEADER_SIZE)
-    nBlockSize += static_cast<unsigned int>(BLOCK_SERIALIZATION_HEADER_SIZE);
-    FlatFilePos blockPos{FindNextBlockPos(nBlockSize, nHeight, block.GetBlockTime())};
-    if (blockPos.IsNull()) {
+    const uint32_t block_size{static_cast<uint32_t>(GetSerializeSize(TX_WITH_WITNESS(block)))};
+    FlatFilePos pos{FindNextBlockPos(BLOCK_SERIALIZATION_HEADER_SIZE + block_size, nHeight, block.GetBlockTime())};
+    if (pos.IsNull()) {
         LogError("%s: FindNextBlockPos failed\n", __func__);
         return FlatFilePos();
     }
-    if (!WriteBlockToDisk(block, blockPos)) {
+    AutoFile fileout{m_block_file_seq.Open(pos, false), 0}; // We'll obfuscate ourselves
+    if (fileout.IsNull()) {
+        LogError("%s: OpenBlockFile failed\n", __func__);
         m_opts.notifications.fatalError(_("Failed to write block."));
         return FlatFilePos();
     }
-    return blockPos;
+
+    {
+        DataStream header;
+        header.reserve(BLOCK_SERIALIZATION_HEADER_SIZE);
+        header << GetParams().MessageStart() << block_size;
+        m_obfuscation(header, pos.nPos);
+        fileout.write(header);
+    }
+    pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
+    {
+        DataStream block_data;
+        block_data.reserve(block_size);
+        block_data << TX_WITH_WITNESS(block);
+        m_obfuscation(block_data, pos.nPos);
+        fileout.write(block_data);
+    }
+
+    return pos;
 }
 
-static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
+static Obfuscation InitBlocksdirXorKey(const BlockManager::Options& opts)
 {
     // Bytes are serialized without length indicator, so this is also the exact
     // size of the XOR-key file.
@@ -1174,12 +1180,12 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
         };
     }
     LogInfo("Using obfuscation key for blocksdir *.dat files (%s): '%s'\n", fs::PathToString(opts.blocks_dir), HexStr(xor_key));
-    return std::vector<std::byte>{xor_key.begin(), xor_key.end()};
+    return Obfuscation{xor_key};
 }
 
 BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
     : m_prune_mode{opts.prune_target > 0},
-      m_xor_key{InitBlocksdirXorKey(opts)},
+      m_obfuscation{InitBlocksdirXorKey(opts)},
       m_opts{std::move(opts)},
       m_block_file_seq{FlatFileSeq{m_opts.blocks_dir, "blk", m_opts.fast_prune ? 0x4000 /* 16kB */ : BLOCKFILE_CHUNK_SIZE}},
       m_undo_file_seq{FlatFileSeq{m_opts.blocks_dir, "rev", UNDOFILE_CHUNK_SIZE}},
