@@ -7,6 +7,7 @@
 
 #include <crypto/sha256.h>
 #include <script/script.h>
+#include <test/util/random.h>
 
 static const std::vector<uint8_t> WITNESS_STACK_ELEM_OP_TRUE{uint8_t{OP_TRUE}};
 static const CScript P2WSH_OP_TRUE{
@@ -32,5 +33,8 @@ static const std::vector<std::vector<uint8_t>> P2WSH_EMPTY_TWO_STACK{{static_cas
 
 /** Flags that are not forbidden by an assert in script validation */
 bool IsValidFlagCombination(unsigned flags);
+
+/** Returns a randomly filled 64-byte CScript */
+CScript RandScript(FastRandomContext& rng, uint16_t length);
 
 #endif // BITCOIN_TEST_UTIL_SCRIPT_H
