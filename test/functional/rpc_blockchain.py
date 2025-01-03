@@ -31,10 +31,12 @@ from test_framework.blocktools import (
     MAX_FUTURE_BLOCK_TIME,
     TIME_GENESIS_BLOCK,
     REGTEST_N_BITS,
+    REGTEST_TARGET,
     create_block,
     create_coinbase,
     create_tx_with_script,
     nbits_str,
+    target_str,
 )
 from test_framework.messages import (
     CBlockHeader,
@@ -415,6 +417,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_is_hash_string(header['previousblockhash'])
         assert_is_hash_string(header['merkleroot'])
         assert_equal(header['bits'], nbits_str(REGTEST_N_BITS))
+        assert_equal(header['target'], target_str(REGTEST_TARGET))
         assert isinstance(header['time'], int)
         assert_equal(header['mediantime'], TIME_RANGE_MTP)
         assert isinstance(header['nonce'], int)

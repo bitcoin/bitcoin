@@ -27,6 +27,7 @@ from .messages import (
     hash256,
     ser_uint256,
     tx_from_hex,
+    uint256_from_compact,
     uint256_from_str,
     WITNESS_SCALE_FACTOR,
 )
@@ -66,9 +67,14 @@ VERSIONBITS_LAST_OLD_BLOCK_VERSION = 4
 MIN_BLOCKS_TO_KEEP = 288
 
 REGTEST_N_BITS = 0x207fffff  # difficulty retargeting is disabled in REGTEST chainparams"
+REGTEST_TARGET = 0x7fffff0000000000000000000000000000000000000000000000000000000000
+assert_equal(uint256_from_compact(REGTEST_N_BITS), REGTEST_TARGET)
 
 def nbits_str(nbits):
     return f"{nbits:08x}"
+
+def target_str(target):
+    return f"{target:064x}"
 
 def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl=None, txlist=None):
     """Create a block (with regtest difficulty)."""
