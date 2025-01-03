@@ -64,6 +64,7 @@
 using kernel::CCoinsStats;
 using kernel::CoinStatsHashType;
 
+using interfaces::BlockRef;
 using interfaces::Mining;
 using node::BlockManager;
 using node::NodeContext;
@@ -264,6 +265,7 @@ static RPCHelpMan waitfornewblock()
                 "\nMake sure to use no RPC timeout (bitcoin-cli -rpcclienttimeout=0)",
                 {
                     {"timeout", RPCArg::Type::NUM, RPCArg::Default{0}, "Time in milliseconds to wait for a response. 0 indicates no timeout."},
+                    {"current_tip", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Method waits for the chain tip to differ from this."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -285,10 +287,25 @@ static RPCHelpMan waitfornewblock()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     Mining& miner = EnsureMining(node);
 
-    auto block{CHECK_NONFATAL(miner.getTip()).value()};
-    if (IsRPCRunning()) {
-        block = timeout ? miner.waitTipChanged(block.hash, std::chrono::milliseconds(timeout)) : miner.waitTipChanged(block.hash);
-    }
+    /**
+     * If the caller provided a current_tip value, pass it to waitTipChanged().
+     * If the caller did not provide a current tip hash, call getTip() to get
+     * one and wait for the tip to be different from this value.
+     *
+     * (This mode is less reliable because if the tip changed between
+     * waitfornewblock calls, it will need to change a second time before
+     * this call returns.)
+     *
+     * If getTip() returns null, which can happen during startup, pass 0 to
+     * waitTipChanged() so it will wait for any tip hash to be set.
+     */
+    uint256 current_tip{request.params[1].isNull()
+        ? miner.getTip().value_or(BlockRef{}).hash
+        : ParseHashV(request.params[1], "current_tip")};
+
+    BlockRef block{timeout > 0
+        ? miner.waitTipChanged(current_tip, std::chrono::milliseconds(timeout))
+        : miner.waitTipChanged(current_tip)};
 
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("hash", block.hash.GetHex());
@@ -3397,7 +3414,7 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"blockchain", &getchainstates},
         {"hidden", &invalidateblock},
         {"hidden", &reconsiderblock},
-        {"hidden", &waitfornewblock},
+        {"blockchain", &waitfornewblock},
         {"hidden", &waitforblock},
         {"hidden", &waitforblockheight},
         {"hidden", &syncwithvalidationinterfacequeue},
