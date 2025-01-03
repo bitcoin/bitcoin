@@ -318,7 +318,7 @@ void Chainstate::MaybeUpdateMempoolForReorg(
                         MempoolAcceptResult::ResultType::VALID) {
                 // If the transaction doesn't make it in to the mempool, remove any
                 // transactions that depend on it (which would now be orphans).
-                m_mempool->removeRecursive(**it, MemPoolRemovalReason::REORG);
+                m_mempool->removeRecursive(**it, ReorgReason{});
             } else if (m_mempool->exists(GenTxid::Txid((*it)->GetHash()))) {
                 vHashUpdate.push_back((*it)->GetHash());
             }
@@ -3107,7 +3107,7 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
         // Save transactions to re-add to mempool at end of reorg. If any entries are evicted for
         // exceeding memory limits, remove them and their descendants from the mempool.
         for (auto&& evicted_tx : disconnectpool->AddTransactionsFromBlock(block.vtx)) {
-            m_mempool->removeRecursive(*evicted_tx, MemPoolRemovalReason::REORG);
+            m_mempool->removeRecursive(*evicted_tx, ReorgReason{});
         }
     }
 
@@ -3235,7 +3235,7 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
              Ticks<MillisecondsDouble>(m_chainman.time_chainstate) / m_chainman.num_blocks_total);
     // Remove conflicting transactions from the mempool.;
     if (m_mempool) {
-        m_mempool->removeForBlock(blockConnecting.vtx, pindexNew->nHeight);
+        m_mempool->removeForBlock(blockConnecting.vtx, pindexNew->GetBlockHash(), pindexNew->nHeight);
         disconnectpool.removeForBlock(blockConnecting.vtx);
     }
     // Update m_chain & related variables.
