@@ -82,9 +82,9 @@ FUZZ_TARGET(utxo_total_supply)
         tx.vin.emplace_back(txo.first);
         tx.vout.emplace_back(txo.second.nValue, txo.second.scriptPubKey); // "Forward" coin with no fee
     };
-    const auto UpdateUtxoStats = [&]() {
+    const auto UpdateUtxoStats = [&](bool wipe_cache) {
         LOCK(chainman.GetMutex());
-        chainman.ActiveChainstate().ForceFlushStateToDisk();
+        chainman.ActiveChainstate().ForceFlushStateToDisk(/*wipe_cache=*/wipe_cache);
         utxo_stats = std::move(
             *Assert(kernel::ComputeUTXOStats(kernel::CoinStatsHashType::NONE, &chainman.ActiveChainstate().CoinsDB(), chainman.m_blockman, {})));
         // Check that miner can't print more money than they are allowed to
@@ -94,7 +94,7 @@ FUZZ_TARGET(utxo_total_supply)
 
     // Update internal state to chain tip
     StoreLastTxo();
-    UpdateUtxoStats();
+    UpdateUtxoStats(/*wipe_cache=*/fuzzed_data_provider.ConsumeBool());
     assert(ActiveHeight() == 0);
     // Get at which height we duplicate the coinbase
     // Assuming that the fuzzer will mine relatively short chains (less than 200 blocks), we want the duplicate coinbase to be not too high.
@@ -119,7 +119,7 @@ FUZZ_TARGET(utxo_total_supply)
     circulation += GetBlockSubsidy(ActiveHeight(), Params().GetConsensus());
 
     assert(ActiveHeight() == 1);
-    UpdateUtxoStats();
+    UpdateUtxoStats(/*wipe_cache=*/fuzzed_data_provider.ConsumeBool());
     current_block = PrepareNextBlock();
     StoreLastTxo();
 
@@ -158,7 +158,7 @@ FUZZ_TARGET(utxo_total_supply)
                     circulation += GetBlockSubsidy(ActiveHeight(), Params().GetConsensus());
                 }
 
-                UpdateUtxoStats();
+                UpdateUtxoStats(/*wipe_cache=*/fuzzed_data_provider.ConsumeBool());
 
                 if (!was_valid) {
                     // utxo stats must not change
