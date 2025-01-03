@@ -50,7 +50,6 @@
     echo "BEGIN AR"
     bash -c "${AR} --version"
     env | grep '^AR_'
-    echo "ZERO_AR_DATE=${ZERO_AR_DATE}"
     echo "END AR"
 
     echo "BEGIN RANLIB"

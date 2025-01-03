@@ -58,19 +58,23 @@ RUN set -ex; \
 ARG LLVM_VERSION=16
 RUN set -ex; \
     echo "Installing LLVM and Clang ${LLVM_VERSION}..."; \
-    curl -sL https://apt.llvm.org/llvm.sh | bash -s "${LLVM_VERSION}"; \
+    curl -sL https://apt.llvm.org/llvm.sh | bash -s -- "${LLVM_VERSION}"; \
     echo "Installing additional packages..."; \
     apt-get update && apt-get install $APT_ARGS \
     "clang-format-${LLVM_VERSION}" \
     "clang-tidy-${LLVM_VERSION}" \
     "libc++-${LLVM_VERSION}-dev" \
     "libc++abi-${LLVM_VERSION}-dev" \
-    "libclang-rt-${LLVM_VERSION}-dev"; \
+    "libclang-rt-${LLVM_VERSION}-dev" \
+    "lld-${LLVM_VERSION}"; \
     rm -rf /var/lib/apt/lists/*; \
     echo "Setting defaults..."; \
     lldbUpdAltArgs="update-alternatives --install /usr/bin/llvm-config llvm-config /usr/bin/llvm-config-${LLVM_VERSION} 100"; \
-    for binName in clang clang++ clang-format clang-tidy clangd ld.lld lldb lldb-server; do \
+    for binName in clang clang++ clang-format clang-tidy clangd dsymutil lld lldb lldb-server llvm-ar llvm-cov llvm-nm llvm-objdump llvm-ranlib llvm-strip; do \
         lldbUpdAltArgs="${lldbUpdAltArgs} --slave /usr/bin/${binName} ${binName} /usr/bin/${binName}-${LLVM_VERSION}"; \
+    done; \
+    for binName in ld64.lld ld.lld lld-link wasm-ld; do \
+        lldbUpdAltArgs="${lldbUpdAltArgs} --slave /usr/bin/${binName} ${binName} /usr/bin/lld-${LLVM_VERSION}"; \
     done; \
     sh -c "${lldbUpdAltArgs}";
 # LD_LIBRARY_PATH is empty by default, this is the first entry

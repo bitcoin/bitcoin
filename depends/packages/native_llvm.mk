@@ -16,9 +16,14 @@ define $(package)_stage_cmds
   mkdir -p $($(package)_staging_prefix_dir)/include/llvm-c && \
   cp bin/clang $($(package)_staging_prefix_dir)/bin/ && \
   cp -P bin/clang++ $($(package)_staging_prefix_dir)/bin/ && \
-  cp bin/dsymutil $($(package)_staging_prefix_dir)/bin/$(host)-dsymutil && \
+  cp bin/dsymutil $($(package)_staging_prefix_dir)/bin/dsymutil && \
+  cp bin/ld64.lld $($(package)_staging_prefix_dir)/bin/ld64.lld && \
+  cp bin/llvm-ar $($(package)_staging_prefix_dir)/bin/llvm-ar && \
   cp bin/llvm-config $($(package)_staging_prefix_dir)/bin/ && \
-  cp bin/llvm-objdump $($(package)_staging_prefix_dir)/bin/$(host)-objdump && \
+  cp bin/llvm-nm $($(package)_staging_prefix_dir)/bin/llvm-nm && \
+  cp bin/llvm-objdump $($(package)_staging_prefix_dir)/bin/llvm-objdump && \
+  cp bin/llvm-ranlib $($(package)_staging_prefix_dir)/bin/llvm-ranlib && \
+  cp bin/llvm-strip $($(package)_staging_prefix_dir)/bin/llvm-strip && \
   cp include/llvm-c/ExternC.h $($(package)_staging_prefix_dir)/include/llvm-c && \
   cp include/llvm-c/lto.h $($(package)_staging_prefix_dir)/include/llvm-c && \
   cp lib/libLTO.so $($(package)_staging_prefix_dir)/lib/ && \
