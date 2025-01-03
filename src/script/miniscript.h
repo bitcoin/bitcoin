@@ -189,11 +189,11 @@ inline consteval Type operator""_mst(const char* c, size_t l)
 using Opcode = std::pair<opcodetype, std::vector<unsigned char>>;
 
 template<typename Key> struct Node;
-template<typename Key> using NodeRef = std::shared_ptr<const Node<Key>>;
+template<typename Key> using NodeRef = std::unique_ptr<const Node<Key>>;
 
 //! Construct a miniscript node as a shared_ptr.
 template<typename Key, typename... Args>
-NodeRef<Key> MakeNodeRef(Args&&... args) { return std::make_shared<const Node<Key>>(std::forward<Args>(args)...); }
+NodeRef<Key> MakeNodeRef(Args&&... args) { return std::make_unique<const Node<Key>>(std::forward<Args>(args)...); }
 
 //! The different node types in miniscript.
 enum class Fragment {
@@ -526,6 +526,35 @@ struct Node {
                 node->subs.pop_back();
             }
         }
+    }
+
+    NodeRef<Key> Clone() const
+    {
+        // Use TreeEval() to avoid a stack-overflow due to recursion
+        auto upfn = [](const Node& node, Span<NodeRef<Key>> children) {
+            NodeRef<Key> ret;
+            // As all members of Node are const, except for subs, we need to construct the cloned node with all of these members.
+            // However, there is no constructor that takes all three of data, keys, and subs.
+            // But, they are mutually exclusive, so we can use the appropriate constructor depending on what is available.
+            if (!node.keys.empty()) {
+                Assert(node.data.empty() && node.subs.empty());
+                ret = MakeNodeRef<Key>(internal::NoDupCheck{}, node.m_script_ctx, node.fragment, node.keys, node.k);
+            } else if (!node.data.empty()) {
+                Assert(node.keys.empty() && node.subs.empty());
+                ret = MakeNodeRef<Key>(internal::NoDupCheck{}, node.m_script_ctx, node.fragment, node.data, node.k);
+            } else if (!node.subs.empty()) {
+                Assert(node.data.empty() && node.keys.empty());
+                std::vector<NodeRef<Key>> new_subs;
+                for (auto child = children.begin(); child != children.end(); ++child) {
+                    new_subs.emplace_back(std::move(*child));
+                }
+                ret = MakeNodeRef<Key>(internal::NoDupCheck{}, node.m_script_ctx, node.fragment, std::move(new_subs), node.k);
+            } else {
+                ret = MakeNodeRef<Key>(internal::NoDupCheck{}, node.m_script_ctx, node.fragment, node.k);
+            }
+            return ret;
+        };
+        return TreeEval<NodeRef<Key>>(upfn);
     }
 
 private:
@@ -1663,6 +1692,10 @@ public:
         : Node(internal::NoDupCheck{}, ctx.MsContext(), nt, std::move(sub), val) { DuplicateKeyCheck(ctx); }
     template <typename Ctx> Node(const Ctx& ctx, Fragment nt, uint32_t val = 0)
         : Node(internal::NoDupCheck{}, ctx.MsContext(), nt, val) { DuplicateKeyCheck(ctx); }
+
+    // Delete copy constructor and assignment operator
+    Node(const Node&) = delete;
+    Node& operator=(const Node&) = delete;
 };
 
 namespace internal {
