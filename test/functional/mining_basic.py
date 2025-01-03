@@ -136,20 +136,27 @@ class MiningTest(BitcoinTestFramework):
 
         for _ in range(n):
             t += 600
-            self.nodes[0].setmocktime(t)
+            node.setmocktime(t)
             self.generate(self.wallet, 1, sync_fun=self.no_op)
 
-        self.log.info("Create block two hours in the future")
-        self.nodes[0].setmocktime(t + MAX_FUTURE_BLOCK_TIME)
+        self.log.info("Create block MAX_TIMEWARP < t < MAX_FUTURE_BLOCK_TIME in the future")
+        # This forces the next block to have a timestamp in the future
+        future = t + MAX_TIMEWARP + 1
+        # Witout violating the 2 hour in the future rule
+        assert_greater_than_or_equal(t + MAX_FUTURE_BLOCK_TIME, future)
+        node.setmocktime(future)
         self.generate(self.wallet, 1, sync_fun=self.no_op)
-        assert_equal(node.getblock(node.getbestblockhash())['time'], t + MAX_FUTURE_BLOCK_TIME)
+        assert_equal(node.getblock(node.getbestblockhash())['time'], future)
 
         self.log.info("First block template of retarget period can't use wall clock time")
-        self.nodes[0].setmocktime(t)
-        # The template will have an adjusted timestamp, which we then modify
+        node.setmocktime(t)
+        # The template will have an adjusted timestamp.
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
-        assert_greater_than_or_equal(tmpl['curtime'], t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP)
+        assert_equal(tmpl['curtime'], t + 1)
+        # mintime and curtime should match
+        assert_equal(tmpl['mintime'], tmpl['curtime'])
 
+        # Check that the adjusted timestamp results in a valid block
         block = CBlock()
         block.nVersion = tmpl["version"]
         block.hashPrevBlock = int(tmpl["previousblockhash"], 16)
@@ -161,18 +168,29 @@ class MiningTest(BitcoinTestFramework):
         assert_template(node, block, None)
 
         bad_block = copy.deepcopy(block)
+        # Use wall clock instead of the adjusted timestamp. This could happen
+        # by accident if pool software ignores mintime and curtime.
         bad_block.nTime = t
         bad_block.solve()
         assert_raises_rpc_error(-25, 'time-timewarp-attack', lambda: node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex()))
 
-        self.log.info("Test timewarp protection boundary")
-        bad_block.nTime = t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP - 1
+        # It can also happen if the pool implements its own logic to adjust its
+        # timestamp to MTP + 1, but doesn't take the new timewarp rule into
+        # account (and ignores mintime).
+        mtp = node.getblock(node.getbestblockhash())["mediantime"] + 1
+        bad_block.nTime = mtp + 1
         bad_block.solve()
         assert_raises_rpc_error(-25, 'time-timewarp-attack', lambda: node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex()))
 
-        bad_block.nTime = t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP
+        self.log.info("Test timewarp protection boundary")
+        bad_block.nTime = future - MAX_TIMEWARP - 1
         bad_block.solve()
-        node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex())
+        assert_raises_rpc_error(-25, 'time-timewarp-attack', lambda: node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex()))
+
+        good_block = copy.deepcopy(bad_block)
+        good_block.nTime = future - MAX_TIMEWARP
+        good_block.solve()
+        node.submitheader(hexdata=CBlockHeader(good_block).serialize().hex())
 
     def test_pruning(self):
         self.log.info("Test that submitblock stores previously pruned block")

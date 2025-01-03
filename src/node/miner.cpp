@@ -28,18 +28,24 @@
 #include <utility>
 
 namespace node {
-int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
-{
-    int64_t nOldTime = pblock->nTime;
-    int64_t nNewTime{std::max<int64_t>(pindexPrev->GetMedianTimePast() + 1, TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()))};
 
+int64_t GetMinimumTime(const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams)
+{
+    int64_t min_time{pindexPrev->GetMedianTimePast() + 1};
     if (consensusParams.enforce_BIP94) {
         // Height of block to be mined.
         const int height{pindexPrev->nHeight + 1};
         if (height % consensusParams.DifficultyAdjustmentInterval() == 0) {
-            nNewTime = std::max<int64_t>(nNewTime, pindexPrev->GetBlockTime() - MAX_TIMEWARP);
+            min_time = std::max<int64_t>(min_time, pindexPrev->GetBlockTime() - MAX_TIMEWARP);
         }
     }
+    return min_time;
+}
+
+int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
+{
+    int64_t nOldTime = pblock->nTime;
+    int64_t nNewTime{std::max<int64_t>(GetMinimumTime(pindexPrev, consensusParams), TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()))};
 
     if (nOldTime < nNewTime) {
         pblock->nTime = nNewTime;
