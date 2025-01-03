@@ -89,15 +89,26 @@ std::vector<TxOrphanage::OrphanTxBase> TxDownloadManager::GetOrphanTransactions(
 }
 
 // TxDownloadManagerImpl
-void TxDownloadManagerImpl::ActiveTipChange()
+void TxDownloadManagerImpl::ActiveTipChange() EXCLUSIVE_LOCKS_REQUIRED(!m_txdownload_mutex)
 {
+    AssertLockNotHeld(m_txdownload_mutex);
+    LOCK(m_txdownload_mutex);
+
     RecentRejectsFilter().reset();
     RecentRejectsReconsiderableFilter().reset();
 }
 
 void TxDownloadManagerImpl::BlockConnected(const std::shared_ptr<const CBlock>& pblock)
+    EXCLUSIVE_LOCKS_REQUIRED(!m_txdownload_mutex)
 {
-    m_orphanage.EraseForBlock(*pblock);
+    AssertLockNotHeld(m_txdownload_mutex);
+    LOCK(m_txdownload_mutex);
+    // Orphanage may include transactions conflicted by this block. There should not be any
+    // transactions in m_orphan_resolution_tracker that aren't in orphanage, so this should include
+    // all of the relevant orphans we were working on.
+    for (const auto& erased_orphan_wtxid : m_orphanage.EraseForBlock(*pblock)) {
+        m_orphan_resolution_tracker.ForgetTxHash(erased_orphan_wtxid);
+    }
 
     for (const auto& ptx : pblock->vtx) {
         RecentConfirmedTransactionsFilter().insert(ptx->GetHash().ToUint256());
@@ -109,8 +120,11 @@ void TxDownloadManagerImpl::BlockConnected(const std::shared_ptr<const CBlock>& 
     }
 }
 
-void TxDownloadManagerImpl::BlockDisconnected()
+void TxDownloadManagerImpl::BlockDisconnected() EXCLUSIVE_LOCKS_REQUIRED(!m_txdownload_mutex)
 {
+    AssertLockNotHeld(m_txdownload_mutex);
+    LOCK(m_txdownload_mutex);
+
     // To avoid relay problems with transactions that were previously
     // confirmed, clear our filter of recently confirmed transactions whenever
     // there's a reorg.
@@ -123,7 +137,18 @@ void TxDownloadManagerImpl::BlockDisconnected()
 }
 
 bool TxDownloadManagerImpl::AlreadyHaveTx(const GenTxid& gtxid, bool include_reconsiderable)
+    EXCLUSIVE_LOCKS_REQUIRED(!m_txdownload_mutex)
 {
+    AssertLockNotHeld(m_txdownload_mutex);
+    LOCK(m_txdownload_mutex);
+    return AlreadyHaveTxInternal(gtxid, include_reconsiderable);
+}
+
+bool TxDownloadManagerImpl::AlreadyHaveTxInternal(const GenTxid& gtxid, bool include_reconsiderable)
+    EXCLUSIVE_LOCKS_REQUIRED(m_txdownload_mutex)
+{
+    AssertLockHeld(m_txdownload_mutex);
+
     const uint256& hash = gtxid.GetHash();
 
     if (gtxid.IsWtxid()) {
@@ -152,7 +177,11 @@ bool TxDownloadManagerImpl::AlreadyHaveTx(const GenTxid& gtxid, bool include_rec
 }
 
 void TxDownloadManagerImpl::ConnectedPeer(NodeId nodeid, const TxDownloadConnectionInfo& info)
+    EXCLUSIVE_LOCKS_REQUIRED(!m_txdownload_mutex)
 {
+    AssertLockNotHeld(m_txdownload_mutex);
+    LOCK(m_txdownload_mutex);
+
     // If already connected (shouldn't happen in practice), exit early.
     if (m_peer_info.contains(nodeid)) return;
 
@@ -160,10 +189,14 @@ void TxDownloadManagerImpl::ConnectedPeer(NodeId nodeid, const TxDownloadConnect
     if (info.m_wtxid_relay) m_num_wtxid_peers += 1;
 }
 
-void TxDownloadManagerImpl::DisconnectedPeer(NodeId nodeid)
+void TxDownloadManagerImpl::DisconnectedPeer(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(!m_txdownload_mutex)
 {
+    AssertLockNotHeld(m_txdownload_mutex);
+    LOCK(m_txdownload_mutex);
+
     m_orphanage.EraseForPeer(nodeid);
     m_txrequest.DisconnectedPeer(nodeid);
+    m_orphan_resolution_tracker.DisconnectedPeer(nodeid);
 
     if (auto it = m_peer_info.find(nodeid); it != m_peer_info.end()) {
         if (it->second.m_connection_info.m_wtxid_relay) m_num_wtxid_peers -= 1;
@@ -173,11 +206,32 @@ void TxDownloadManagerImpl::DisconnectedPeer(NodeId nodeid)
 }
 
 bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid, std::chrono::microseconds now, bool p2p_inv)
+    EXCLUSIVE_LOCKS_REQUIRED(!m_txdownload_mutex)
 {
+    AssertLockNotHeld(m_txdownload_mutex);
+    LOCK(m_txdownload_mutex);
+
+    // If this is an inv received from a peer but it's an orphan we are trying to resolve, instead
+    // of adding it to m_txrequest, remember this peer as a potential orphan resolution candidate.
+    if (p2p_inv && m_orphanage.HaveTx(Wtxid::FromUint256(gtxid.GetHash()))) {
+        // m_orphan_resolution_tracker only tracks wtxids
+        if (gtxid.IsWtxid()) {
+            if (auto delay{OrphanResolutionCandidate(peer, Wtxid::FromUint256(gtxid.GetHash()))}) {
+                const auto& info = m_peer_info.at(peer).m_connection_info;
+                m_orphanage.AddAnnouncer(Wtxid::FromUint256(gtxid.GetHash()), peer);
+                m_orphan_resolution_tracker.ReceivedInv(peer, GenTxid::Wtxid(gtxid.GetHash()), info.m_preferred, now + *delay);
+                LogDebug(BCLog::TXPACKAGES, "added peer=%d as a candidate for resolving orphan %s\n", peer, gtxid.GetHash().ToString());
+            }
+        }
+        return true;
+    }
+
+    const bool already_had{AlreadyHaveTxInternal(gtxid, /*include_reconsiderable=*/true)};
+
     // If this is an inv received from a peer and we already have it, we can drop it.
     // If this is a request for the parent of an orphan, we don't drop transactions that we already have. In particular,
     // we *do* want to request parents that are in m_lazy_recent_rejects_reconsiderable, since they can be CPFP'd.
-    if (p2p_inv && AlreadyHaveTx(gtxid, /*include_reconsiderable=*/true)) return true;
+    if (p2p_inv && already_had) return true;
 
     auto it = m_peer_info.find(peer);
     if (it == m_peer_info.end()) return false;
@@ -204,8 +258,90 @@ bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid,
     return false;
 }
 
-std::vector<GenTxid> TxDownloadManagerImpl::GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time)
+std::optional<std::chrono::seconds> TxDownloadManagerImpl::OrphanResolutionCandidate(NodeId nodeid, const Wtxid& orphan_wtxid)
+    EXCLUSIVE_LOCKS_REQUIRED(m_txdownload_mutex)
 {
+    AssertLockHeld(m_txdownload_mutex);
+
+    if (m_peer_info.count(nodeid) == 0) return std::nullopt;
+
+    const auto& peer_entry = m_peer_info.at(nodeid);
+    const auto& info = peer_entry.m_connection_info;
+    // TODO: add delays and limits based on the amount of orphan resolution we are already doing
+    // with this peer, how much they are using the orphanage, etc.
+    if (!info.m_relay_permissions) {
+        // This mirrors the delaying and dropping behavior in AddTxAnnouncement in order to preserve
+        // existing behavior: drop if we are tracking too many invs for this peer already. Each
+        // orphan resolution involves at least 1 transaction request which may or may not be
+        // currently tracked in m_txrequest, so we include that in the count.
+        if (m_txrequest.Count(nodeid) + m_orphan_resolution_tracker.Count(nodeid) >= MAX_PEER_TX_ANNOUNCEMENTS) return std::nullopt;
+    }
+
+    std::chrono::seconds delay{0s};
+    if (!info.m_preferred) delay += NONPREF_PEER_TX_DELAY;
+    // The orphan wtxid is used, but resolution entails requesting the parents by txid. Sometimes
+    // parent and child are announced and thus requested around the same time, and we happen to
+    // receive child sooner. Waiting a few seconds may allow us to cancel the orphan resolution
+    // request if the parent arrives in that time.
+    if (m_num_wtxid_peers > 0) delay += TXID_RELAY_DELAY;
+    const bool overloaded = !info.m_relay_permissions && m_txrequest.CountInFlight(nodeid) >= MAX_PEER_TX_REQUEST_IN_FLIGHT;
+    if (overloaded) delay += OVERLOADED_PEER_TX_DELAY;
+
+    return delay;
+}
+
+std::vector<GenTxid> TxDownloadManagerImpl::GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time)
+    EXCLUSIVE_LOCKS_REQUIRED(!m_txdownload_mutex)
+{
+    AssertLockNotHeld(m_txdownload_mutex);
+    LOCK(m_txdownload_mutex);
+
+    // First process orphan resolution so that the tx requests can be sent asap
+    std::vector<std::pair<NodeId, GenTxid>> expired_orphan_resolution;
+    const auto orphans_ready = m_orphan_resolution_tracker.GetRequestable(nodeid, current_time, &expired_orphan_resolution);
+
+    // Expire orphan resolution attempts
+    for (const auto& [nodeid, orphan_gtxid] : expired_orphan_resolution) {
+        LogDebug(BCLog::TXPACKAGES, "timeout of in-flight orphan resolution %s for peer=%d\n", orphan_gtxid.GetHash().ToString(), nodeid);
+        // All txhashes in m_orphan_resolution_tracker are wtxids.
+        Assume(orphan_gtxid.IsWtxid());
+        const auto wtxid = Wtxid::FromUint256(orphan_gtxid.GetHash());
+        m_orphanage.EraseOrphanOfPeer(wtxid, nodeid);
+        Assume(!m_orphanage.HaveTxAndPeer(wtxid, nodeid));
+    }
+
+    // Process orphan resolution attempts that are ready: schedule the parent requests.
+    for (const auto& orphan_gtxid : orphans_ready) {
+        Assume(orphan_gtxid.IsWtxid());
+        const auto wtxid = Wtxid::FromUint256(orphan_gtxid.GetHash());
+        Assume(m_orphanage.HaveTxAndPeer(wtxid, nodeid));
+
+        const auto parent_txids{m_orphanage.GetParentTxids(wtxid)};
+
+        if (parent_txids.has_value()) {
+            if (!Assume(m_peer_info.count(nodeid) > 0)) continue;
+
+            const auto& info = m_peer_info.at(nodeid).m_connection_info;
+            bool requesting{false};
+
+            for (const auto& txid : *parent_txids) {
+                // Schedule with no delay instead of using AddTxAnnouncement. This means it's scheduled
+                // for request immediately unless there is already a request out for the same txhash
+                // (e.g. if there is another orphan that needs this parent).
+                m_txrequest.ReceivedInv(nodeid, GenTxid::Txid(txid), info.m_preferred, current_time);
+                requesting = true;
+                LogDebug(BCLog::TXPACKAGES, "scheduled parent request %s from peer=%d for orphan %s\n",
+                    txid.ToString(), nodeid, orphan_gtxid.GetHash().ToString());
+            }
+
+            if (requesting) m_orphan_resolution_tracker.RequestedTx(nodeid, orphan_gtxid.GetHash(), current_time + ORPHAN_ANCESTOR_GETDATA_INTERVAL);
+        } else {
+            LogDebug(BCLog::TXPACKAGES, "couldn't find parent txids to resolve orphan %s with peer=%d\n", orphan_gtxid.GetHash().ToString(), nodeid);
+            m_orphan_resolution_tracker.ForgetTxHash(orphan_gtxid.GetHash());
+        }
+    }
+
+    // Now process txrequest
     std::vector<GenTxid> requests;
     std::vector<std::pair<NodeId, GenTxid>> expired;
     auto requestable = m_txrequest.GetRequestable(nodeid, current_time, &expired);
@@ -214,7 +350,7 @@ std::vector<GenTxid> TxDownloadManagerImpl::GetRequestsToSend(NodeId nodeid, std
             entry.second.GetHash().ToString(), entry.first);
     }
     for (const GenTxid& gtxid : requestable) {
-        if (!AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) {
+        if (!AlreadyHaveTxInternal(gtxid, /*include_reconsiderable=*/false)) {
             LogDebug(BCLog::NET, "Requesting %s %s peer=%d\n", gtxid.IsWtxid() ? "wtx" : "tx",
                 gtxid.GetHash().ToString(), nodeid);
             requests.emplace_back(gtxid);
@@ -229,8 +365,12 @@ std::vector<GenTxid> TxDownloadManagerImpl::GetRequestsToSend(NodeId nodeid, std
 }
 
 void TxDownloadManagerImpl::ReceivedNotFound(NodeId nodeid, const std::vector<uint256>& txhashes)
+    EXCLUSIVE_LOCKS_REQUIRED(!m_txdownload_mutex)
 {
-    for (const auto& txhash : txhashes) {
+    AssertLockNotHeld(m_txdownload_mutex);
+    LOCK(m_txdownload_mutex);
+
+    for (const auto& txhash: txhashes) {
         // If we receive a NOTFOUND message for a tx we requested, mark the announcement for it as
         // completed in TxRequestTracker.
         m_txrequest.ReceivedResponse(nodeid, txhash);
@@ -238,14 +378,19 @@ void TxDownloadManagerImpl::ReceivedNotFound(NodeId nodeid, const std::vector<ui
 }
 
 std::optional<PackageToValidate> TxDownloadManagerImpl::Find1P1CPackage(const CTransactionRef& ptx, NodeId nodeid)
+    EXCLUSIVE_LOCKS_REQUIRED(m_txdownload_mutex)
 {
+    AssertLockHeld(m_txdownload_mutex);
+
     const auto& parent_wtxid{ptx->GetWitnessHash()};
 
     Assume(RecentRejectsReconsiderableFilter().contains(parent_wtxid.ToUint256()));
 
-    // Prefer children from this peer. This helps prevent censorship attempts in which an attacker
+    // Only consider children from this peer. This helps prevent censorship attempts in which an attacker
     // sends lots of fake children for the parent, and we (unluckily) keep selecting the fake
-    // children instead of the real one provided by the honest peer.
+    // children instead of the real one provided by the honest peer. Since we track all announcers
+    // of an orphan, this does not exclude parent + orphan pairs that we happened to request from
+    // different peers.
     const auto cpfp_candidates_same_peer{m_orphanage.GetChildrenFromSamePeer(ptx, nodeid)};
 
     // These children should be sorted from newest to oldest. In the (probably uncommon) case
@@ -258,39 +403,14 @@ std::optional<PackageToValidate> TxDownloadManagerImpl::Find1P1CPackage(const CT
             return PackageToValidate{ptx, child, nodeid, nodeid};
         }
     }
-
-    // If no suitable candidate from the same peer is found, also try children that were provided by
-    // a different peer. This is useful because sometimes multiple peers announce both transactions
-    // to us, and we happen to download them from different peers (we wouldn't have known that these
-    // 2 transactions are related). We still want to find 1p1c packages then.
-    //
-    // If we start tracking all announcers of orphans, we can restrict this logic to parent + child
-    // pairs in which both were provided by the same peer, i.e. delete this step.
-    const auto cpfp_candidates_different_peer{m_orphanage.GetChildrenFromDifferentPeer(ptx, nodeid)};
-
-    // Find the first 1p1c that hasn't already been rejected. We randomize the order to not
-    // create a bias that attackers can use to delay package acceptance.
-    //
-    // Create a random permutation of the indices.
-    std::vector<size_t> tx_indices(cpfp_candidates_different_peer.size());
-    std::iota(tx_indices.begin(), tx_indices.end(), 0);
-    std::shuffle(tx_indices.begin(), tx_indices.end(), m_opts.m_rng);
-
-    for (const auto index : tx_indices) {
-        // If we already tried a package and failed for any reason, the combined hash was
-        // cached in m_lazy_recent_rejects_reconsiderable.
-        const auto [child_tx, child_sender] = cpfp_candidates_different_peer.at(index);
-        Package maybe_cpfp_package{ptx, child_tx};
-        if (!RecentRejectsReconsiderableFilter().contains(GetPackageHash(maybe_cpfp_package)) &&
-            !RecentRejectsFilter().contains(child_tx->GetHash().ToUint256())) {
-            return PackageToValidate{ptx, child_tx, nodeid, child_sender};
-        }
-    }
     return std::nullopt;
 }
 
-void TxDownloadManagerImpl::MempoolAcceptedTx(const CTransactionRef& tx)
+void TxDownloadManagerImpl::MempoolAcceptedTx(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(!m_txdownload_mutex)
 {
+    AssertLockNotHeld(m_txdownload_mutex);
+    LOCK(m_txdownload_mutex);
+
     // As this version of the transaction was acceptable, we can forget about any requests for it.
     // No-op if the tx is not in txrequest.
     m_txrequest.ForgetTxHash(tx->GetHash());
@@ -299,16 +419,21 @@ void TxDownloadManagerImpl::MempoolAcceptedTx(const CTransactionRef& tx)
     m_orphanage.AddChildrenToWorkSet(*tx);
     // If it came from the orphanage, remove it. No-op if the tx is not in txorphanage.
     m_orphanage.EraseTx(tx->GetWitnessHash());
+    m_orphan_resolution_tracker.ForgetTxHash(tx->GetWitnessHash());
 }
 
 node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransactionRef& ptx, const TxValidationState& state, NodeId nodeid, bool first_time_failure)
+    EXCLUSIVE_LOCKS_REQUIRED(!m_txdownload_mutex)
 {
+    AssertLockNotHeld(m_txdownload_mutex);
+    LOCK(m_txdownload_mutex);
+
     const CTransaction& tx{*ptx};
     // Results returned to caller
     // Whether we should call AddToCompactExtraTransactions at the end
     bool add_extra_compact_tx{first_time_failure};
     // Hashes to pass to AddKnownTx later
-    std::vector<uint256> unique_parents;
+    std::vector<Txid> unique_parents;
     // Populated if failure is reconsiderable and eligible package is found.
     std::optional<node::PackageToValidate> package_to_validate;
 
@@ -348,31 +473,51 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
                 }
             }
             if (!fRejectedParents) {
-                const auto current_time{GetTime<std::chrono::microseconds>()};
+                // Filter parents that we already have.
+                // Exclude m_lazy_recent_rejects_reconsiderable: the missing parent may have been
+                // previously rejected for being too low feerate. This orphan might CPFP it.
+                std::erase_if(unique_parents, [&](const auto& txid) EXCLUSIVE_LOCKS_REQUIRED(m_txdownload_mutex) {
+                    return AlreadyHaveTxInternal(GenTxid::Txid(txid), /*include_reconsiderable=*/false);
+                });
+                const auto now{GetTime<std::chrono::microseconds>()};
+                const auto& wtxid = ptx->GetWitnessHash();
+                // Potentially flip add_extra_compact_tx to false if tx is already in orphanage, which
+                // means it was already added to vExtraTxnForCompact.
+                add_extra_compact_tx &= !m_orphanage.HaveTx(wtxid);
 
-                for (const uint256& parent_txid : unique_parents) {
-                    // Here, we only have the txid (and not wtxid) of the
-                    // inputs, so we only request in txid mode, even for
-                    // wtxidrelay peers.
-                    // Eventually we should replace this with an improved
-                    // protocol for getting all unconfirmed parents.
-                    const auto gtxid{GenTxid::Txid(parent_txid)};
-                    // Exclude m_lazy_recent_rejects_reconsiderable: the missing parent may have been
-                    // previously rejected for being too low feerate. This orphan might CPFP it.
-                    if (!AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) {
-                        AddTxAnnouncement(nodeid, gtxid, current_time, /*p2p_inv=*/false);
+                auto add_orphan_reso_candidate = [&](const CTransactionRef& orphan_tx, std::vector<Txid> unique_parents, NodeId nodeid, std::chrono::microseconds now)
+                    EXCLUSIVE_LOCKS_REQUIRED(m_txdownload_mutex)
+                {
+                    const auto& wtxid = orphan_tx->GetWitnessHash();
+                    if (auto delay{OrphanResolutionCandidate(nodeid, wtxid)}) {
+                        const auto& info = m_peer_info.at(nodeid).m_connection_info;
+                        m_orphanage.AddTx(orphan_tx, nodeid, unique_parents);
+                        m_orphan_resolution_tracker.ReceivedInv(nodeid, GenTxid::Wtxid(wtxid), info.m_preferred, now + *delay);
+                        LogDebug(BCLog::TXPACKAGES, "added peer=%d as a candidate for resolving orphan %s\n", nodeid, wtxid.ToString());
                     }
-                }
+                };
 
-                // Potentially flip add_extra_compact_tx to false if AddTx returns false because the tx was already there
-                add_extra_compact_tx &= m_orphanage.AddTx(ptx, nodeid);
+                // If there is no candidate for orphan resolution, AddTx will not be called. This means
+                // that if a peer is overloading us with invs and orphans, they will eventually not be
+                // able to add any more transactions to the orphanage.
+                add_orphan_reso_candidate(ptx, unique_parents, nodeid, now);
+                for (const auto& candidate : m_txrequest.GetCandidatePeers(wtxid)) {
+                    add_orphan_reso_candidate(ptx, unique_parents, candidate, now);
+                }
+                for (const auto& candidate : m_txrequest.GetCandidatePeers(ptx->GetHash())) {
+                    add_orphan_reso_candidate(ptx, unique_parents, candidate, now);
+                }
 
                 // Once added to the orphan pool, a tx is considered AlreadyHave, and we shouldn't request it anymore.
                 m_txrequest.ForgetTxHash(tx.GetHash());
                 m_txrequest.ForgetTxHash(tx.GetWitnessHash());
 
                 // DoS prevention: do not allow m_orphanage to grow unbounded (see CVE-2012-3789)
-                m_orphanage.LimitOrphans(m_opts.m_max_orphan_txs, m_opts.m_rng);
+                // Note that, if the orphanage reaches capacity, it's possible that we immediately evict
+                // the transaction we just added.
+                for (const auto& wtxid : m_orphanage.LimitOrphans(m_opts.m_max_orphan_txs, m_opts.m_rng)) {
+                    m_orphan_resolution_tracker.ForgetTxHash(wtxid.ToUint256());
+                }
             } else {
                 unique_parents.clear();
                 LogDebug(BCLog::MEMPOOL, "not keeping orphan with rejected parents %s (wtxid=%s)\n",
@@ -442,6 +587,7 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
     // If the tx failed in ProcessOrphanTx, it should be removed from the orphanage unless the
     // tx was still missing inputs. If the tx was not in the orphanage, EraseTx does nothing and returns 0.
     if (state.GetResult() != TxValidationResult::TX_MISSING_INPUTS && m_orphanage.EraseTx(ptx->GetWitnessHash()) > 0) {
+        m_orphan_resolution_tracker.ForgetTxHash(ptx->GetWitnessHash());
         LogDebug(BCLog::TXPACKAGES, "   removed orphan tx %s (wtxid=%s)\n", ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString());
     }
 
@@ -452,13 +598,20 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
     };
 }
 
-void TxDownloadManagerImpl::MempoolRejectedPackage(const Package& package)
+void TxDownloadManagerImpl::MempoolRejectedPackage(const Package& package) EXCLUSIVE_LOCKS_REQUIRED(!m_txdownload_mutex)
 {
+    AssertLockNotHeld(m_txdownload_mutex);
+    LOCK(m_txdownload_mutex);
+
     RecentRejectsReconsiderableFilter().insert(GetPackageHash(package));
 }
 
 std::pair<bool, std::optional<PackageToValidate>> TxDownloadManagerImpl::ReceivedTx(NodeId nodeid, const CTransactionRef& ptx)
+    EXCLUSIVE_LOCKS_REQUIRED(!m_txdownload_mutex)
 {
+    AssertLockNotHeld(m_txdownload_mutex);
+    LOCK(m_txdownload_mutex);
+
     const uint256& txid = ptx->GetHash();
     const uint256& wtxid = ptx->GetWitnessHash();
 
@@ -467,7 +620,7 @@ std::pair<bool, std::optional<PackageToValidate>> TxDownloadManagerImpl::Receive
     if (ptx->HasWitness()) m_txrequest.ReceivedResponse(nodeid, wtxid);
 
     // First check if we should drop this tx.
-    // We do the AlreadyHaveTx() check using wtxid, rather than txid - in the
+    // We check if we already have something using wtxid, rather than txid - in the
     // absence of witness malleation, this is strictly better, because the
     // recent rejects filter may contain the wtxid but rarely contains
     // the txid of a segwit transaction that has been rejected.
@@ -479,7 +632,7 @@ std::pair<bool, std::optional<PackageToValidate>> TxDownloadManagerImpl::Receive
     // already; and an adversary can already relay us old transactions
     // (older than our recency filter) if trying to DoS us, without any need
     // for witness malleation.
-    if (AlreadyHaveTx(GenTxid::Wtxid(wtxid), /*include_reconsiderable=*/false)) {
+    if (AlreadyHaveTxInternal(GenTxid::Wtxid(wtxid), /*include_reconsiderable=*/false)) {
         // If a tx is detected by m_lazy_recent_rejects it is ignored. Because we haven't
         // submitted the tx to our mempool, we won't have computed a DoS
         // score for it or determined exactly why we consider it invalid.
@@ -509,28 +662,42 @@ std::pair<bool, std::optional<PackageToValidate>> TxDownloadManagerImpl::Receive
     return {true, std::nullopt};
 }
 
-bool TxDownloadManagerImpl::HaveMoreWork(NodeId nodeid)
+bool TxDownloadManagerImpl::HaveMoreWork(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(!m_txdownload_mutex)
 {
+    AssertLockNotHeld(m_txdownload_mutex);
+    LOCK(m_txdownload_mutex);
     return m_orphanage.HaveTxToReconsider(nodeid);
 }
 
-CTransactionRef TxDownloadManagerImpl::GetTxToReconsider(NodeId nodeid)
+CTransactionRef TxDownloadManagerImpl::GetTxToReconsider(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(!m_txdownload_mutex)
 {
+    AssertLockNotHeld(m_txdownload_mutex);
+    LOCK(m_txdownload_mutex);
     return m_orphanage.GetTxToReconsider(nodeid);
 }
 
-void TxDownloadManagerImpl::CheckIsEmpty(NodeId nodeid)
+void TxDownloadManagerImpl::CheckIsEmpty(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(!m_txdownload_mutex)
 {
+    AssertLockNotHeld(m_txdownload_mutex);
+    LOCK(m_txdownload_mutex);
+
     assert(m_txrequest.Count(nodeid) == 0);
+    Assume(m_orphan_resolution_tracker.Count(nodeid) == 0);
 }
-void TxDownloadManagerImpl::CheckIsEmpty()
+void TxDownloadManagerImpl::CheckIsEmpty() EXCLUSIVE_LOCKS_REQUIRED(!m_txdownload_mutex)
 {
+    AssertLockNotHeld(m_txdownload_mutex);
+    LOCK(m_txdownload_mutex);
+
     assert(m_orphanage.Size() == 0);
     assert(m_txrequest.Size() == 0);
     assert(m_num_wtxid_peers == 0);
+    Assume(m_orphan_resolution_tracker.Size() == 0);
 }
 std::vector<TxOrphanage::OrphanTxBase> TxDownloadManagerImpl::GetOrphanTransactions() const
 {
+    AssertLockNotHeld(m_txdownload_mutex);
+    LOCK(m_txdownload_mutex);
     return m_orphanage.GetOrphanTransactions();
 }
 } // namespace node
