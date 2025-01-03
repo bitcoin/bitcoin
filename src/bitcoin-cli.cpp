@@ -374,7 +374,7 @@ public:
             result.pushKV("paytxfee", batch[ID_WALLETINFO]["result"]["paytxfee"]);
         }
         if (!batch[ID_BALANCES]["result"].isNull()) {
-            result.pushKV("balance", batch[ID_BALANCES]["result"]["mine"]["trusted"]);
+            result.pushKV("balance", batch[ID_BALANCES]["result"]["total"]);
         }
         result.pushKV("relayfee", batch[ID_NETWORKINFO]["result"]["relayfee"]);
         result.pushKV("warnings", batch[ID_NETWORKINFO]["result"]["warnings"]);
@@ -1007,7 +1007,7 @@ static void ParseError(const UniValue& error, std::string& strPrint, int& nRet)
 
 /**
  * GetWalletBalances calls listwallets; if more than one wallet is loaded, it then
- * fetches mine.trusted balances for each loaded wallet and pushes them to `result`.
+ * fetches the total balance for each loaded wallet and pushes it to `result`.
  *
  * @param result  Reference to UniValue object the wallet names and balances are pushed to.
  */
@@ -1023,7 +1023,7 @@ static void GetWalletBalances(UniValue& result)
     for (const UniValue& wallet : wallets.getValues()) {
         const std::string& wallet_name = wallet.get_str();
         const UniValue getbalances = ConnectAndCallRPC(&rh, "getbalances", /* args=*/{}, wallet_name);
-        const UniValue& balance = getbalances.find_value("result")["mine"]["trusted"];
+        const UniValue& balance = getbalances.find_value("result")["total"];
         balances.pushKV(wallet_name, balance);
     }
     result.pushKV("balances", std::move(balances));
