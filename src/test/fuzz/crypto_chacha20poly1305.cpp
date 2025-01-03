@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,9 +18,9 @@ constexpr static inline void crypt_till_rekey(FSChaCha20Poly1305& aead, int reke
     for (int i = 0; i < rekey_interval; ++i) {
         std::byte dummy_tag[FSChaCha20Poly1305::EXPANSION] = {{}};
         if (encrypt) {
-            aead.Encrypt(Span{dummy_tag}.first(0), Span{dummy_tag}.first(0), dummy_tag);
+            aead.Encrypt(std::span{dummy_tag}.first(0), std::span{dummy_tag}.first(0), dummy_tag);
         } else {
-            aead.Decrypt(dummy_tag, Span{dummy_tag}.first(0), Span{dummy_tag}.first(0));
+            aead.Decrypt(dummy_tag, std::span{dummy_tag}.first(0), std::span{dummy_tag}.first(0));
         }
     }
 }
@@ -62,7 +62,7 @@ FUZZ_TARGET(crypto_aeadchacha20poly1305)
 
         if (use_splits && length > 0) {
             size_t split_index = provider.ConsumeIntegralInRange<size_t>(1, length);
-            aead.Encrypt(Span{plain}.first(split_index), Span{plain}.subspan(split_index), aad, nonce, cipher);
+            aead.Encrypt(std::span{plain}.first(split_index), std::span{plain}.subspan(split_index), aad, nonce, cipher);
         } else {
             aead.Encrypt(plain, aad, nonce, cipher);
         }
@@ -102,7 +102,7 @@ FUZZ_TARGET(crypto_aeadchacha20poly1305)
 
         if (use_splits && length > 0) {
             size_t split_index = provider.ConsumeIntegralInRange<size_t>(1, length);
-            ok = aead.Decrypt(cipher, aad, nonce, Span{decrypted_contents}.first(split_index), Span{decrypted_contents}.subspan(split_index));
+            ok = aead.Decrypt(cipher, aad, nonce, std::span{decrypted_contents}.first(split_index), std::span{decrypted_contents}.subspan(split_index));
         } else {
             ok = aead.Decrypt(cipher, aad, nonce, decrypted_contents);
         }
@@ -152,7 +152,7 @@ FUZZ_TARGET(crypto_fschacha20poly1305)
         crypt_till_rekey(enc_aead, rekey_interval, true);
         if (use_splits && length > 0) {
             size_t split_index = provider.ConsumeIntegralInRange<size_t>(1, length);
-            enc_aead.Encrypt(Span{plain}.first(split_index), Span{plain}.subspan(split_index), aad, cipher);
+            enc_aead.Encrypt(std::span{plain}.first(split_index), std::span{plain}.subspan(split_index), aad, cipher);
         } else {
             enc_aead.Encrypt(plain, aad, cipher);
         }
@@ -187,7 +187,7 @@ FUZZ_TARGET(crypto_fschacha20poly1305)
         crypt_till_rekey(dec_aead, rekey_interval, false);
         if (use_splits && length > 0) {
             size_t split_index = provider.ConsumeIntegralInRange<size_t>(1, length);
-            ok = dec_aead.Decrypt(cipher, aad, Span{decrypted_contents}.first(split_index), Span{decrypted_contents}.subspan(split_index));
+            ok = dec_aead.Decrypt(cipher, aad, std::span{decrypted_contents}.first(split_index), std::span{decrypted_contents}.subspan(split_index));
         } else {
             ok = dec_aead.Decrypt(cipher, aad, decrypted_contents);
         }
