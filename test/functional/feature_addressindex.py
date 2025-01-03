@@ -7,10 +7,19 @@
 # Test addressindex generation and fetching
 #
 
-from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut
+from test_framework.messages import (
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxOut,
+    COIN,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import ErrorMatch
-from test_framework.script import CScript, OP_CHECKSIG, OP_DUP, OP_EQUAL, OP_EQUALVERIFY, OP_HASH160
+from test_framework.script_util import (
+    keyhash_to_p2pkh_script,
+    scripthash_to_p2sh_script,
+)
 from test_framework.util import assert_equal
 
 class AddressIndexTest(BitcoinTestFramework):
@@ -127,7 +136,7 @@ class AddressIndexTest(BitcoinTestFramework):
         # Check that outputs with the same address will only return one txid
         self.log.info("Testing for txid uniqueness...")
         addressHash = bytes.fromhex("FE30B718DCF0BF8A2A686BF1820C073F8B2C3B37")
-        scriptPubKey = CScript([OP_HASH160, addressHash, OP_EQUAL])
+        scriptPubKey = scripthash_to_p2sh_script(addressHash)
         unspent = self.nodes[0].listunspent()
         tx = CTransaction()
         tx.vin = [CTxIn(COutPoint(int(unspent[0]["txid"], 16), unspent[0]["vout"]))]
@@ -153,7 +162,7 @@ class AddressIndexTest(BitcoinTestFramework):
         privkey2 = "cU4zhap7nPJAWeMFu4j6jLrfPmqakDAzy8zn8Fhb3oEevdm4e5Lc"
         address2 = "yeMpGzMj3rhtnz48XsfpB8itPHhHtgxLc3"
         addressHash2 = bytes.fromhex("C5E4FB9171C22409809A3E8047A29C83886E325D")
-        scriptPubKey2 = CScript([OP_DUP, OP_HASH160, addressHash2, OP_EQUALVERIFY, OP_CHECKSIG])
+        scriptPubKey2 = keyhash_to_p2pkh_script(addressHash2)
         self.nodes[0].importprivkey(privkey2)
 
         unspent = self.nodes[0].listunspent()
@@ -245,9 +254,9 @@ class AddressIndexTest(BitcoinTestFramework):
         privKey3 = "cRyrMvvqi1dmpiCmjmmATqjAwo6Wu7QTjKu1ABMYW5aFG4VXW99K"
         address3 = "yWB15aAdpeKuSaQHFVJpBDPbNSLZJSnDLA"
         addressHash3 = bytes.fromhex("6C186B3A308A77C779A9BB71C3B5A7EC28232A13")
-        scriptPubKey3 = CScript([OP_DUP, OP_HASH160, addressHash3, OP_EQUALVERIFY, OP_CHECKSIG])
+        scriptPubKey3 = keyhash_to_p2pkh_script(addressHash3)
         # address4 = "2N8oFVB2vThAKury4vnLquW2zVjsYjjAkYQ"
-        scriptPubKey4 = CScript([OP_HASH160, addressHash3, OP_EQUAL])
+        scriptPubKey4 = scripthash_to_p2sh_script(addressHash3)
         unspent = self.nodes[2].listunspent()
 
         tx = CTransaction()
@@ -310,7 +319,7 @@ class AddressIndexTest(BitcoinTestFramework):
         privkey1 = "cMvZn1pVWntTEcsK36ZteGQXRAcZ8CoTbMXF1QasxBLdnTwyVQCc"
         address1 = "yM9Eed1bxjy7tYxD3yZDHxjcVT48WdRoB1"
         address1hash = bytes.fromhex("0909C84A817651502E020AAD0FBCAE5F656E7D8A")
-        address1script = CScript([OP_DUP, OP_HASH160, address1hash, OP_EQUALVERIFY, OP_CHECKSIG])
+        address1script = keyhash_to_p2pkh_script(address1hash)
 
         self.nodes[0].sendtoaddress(address1, 10)
         self.generate(self.nodes[0], 1)
