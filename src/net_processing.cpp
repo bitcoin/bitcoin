@@ -2978,7 +2978,7 @@ std::optional<node::PackageToValidate> PeerManagerImpl::ProcessInvalidTx(NodeId 
     if (add_extra_compact_tx && RecursiveDynamicUsage(*ptx) < 100000) {
         AddToCompactExtraTransactions(ptx);
     }
-    for (const uint256& parent_txid : unique_parents) {
+    for (const Txid& parent_txid : unique_parents) {
         if (peer) AddKnownTx(*peer, parent_txid);
     }
 
@@ -3934,7 +3934,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 AddKnownTx(*peer, inv.hash);
 
                 if (!m_chainman.IsInitialBlockDownload()) {
-                    const bool fAlreadyHave{m_txdownloadman.AddTxAnnouncement(pfrom.GetId(), gtxid, current_time, /*p2p_inv=*/true)};
+                    const bool fAlreadyHave{m_txdownloadman.AddTxAnnouncement(pfrom.GetId(), gtxid, current_time)};
                     LogDebug(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
                 }
             } else {
