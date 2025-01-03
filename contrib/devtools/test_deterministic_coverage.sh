@@ -34,7 +34,7 @@ NON_DETERMINISTIC_TESTS=(
     "wallet_tests/wallet_disableprivkeys"                     # validation.cpp: if (signals.CallbacksPending() > 10)
 )
 
-TEST_BITCOIN_BINARY="src/test/test_bitcoin"
+TEST_BITCOIN_BINARY="build/src/test/test_bitcoin"
 
 print_usage() {
     echo "Usage: $0 [custom test filter (default: all but known non-deterministic tests)] [number of test runs (default: 2)]"
@@ -86,7 +86,7 @@ if [[ ! -e ${TEST_BITCOIN_BINARY} ]]; then
 fi
 
 get_file_suffix_count() {
-    find src/ -type f -name "*.$1" | wc -l
+    find build/src/ -type f -name "*.$1" | wc -l
 }
 
 if [[ $(get_file_suffix_count gcno) == 0 ]]; then
@@ -102,7 +102,7 @@ TEST_RUN_ID=0
 while [[ ${TEST_RUN_ID} -lt ${N_TEST_RUNS} ]]; do
     TEST_RUN_ID=$((TEST_RUN_ID + 1))
     echo "[$(date +"%Y-%m-%d %H:%M:%S")] Measuring coverage, run #${TEST_RUN_ID} of ${N_TEST_RUNS}"
-    find src/ -type f -name "*.gcda" -exec rm {} \;
+    find build/src/ -type f -name "*.gcda" -exec rm {} \;
     if [[ $(get_file_suffix_count gcda) != 0 ]]; then
         echo "Error: Stale *.gcda files found. Exiting."
         exit 1
@@ -119,7 +119,7 @@ while [[ ${TEST_RUN_ID} -lt ${N_TEST_RUNS} ]]; do
         exit 1
     fi
     GCOVR_TEMPFILE=$(mktemp)
-    if ! gcovr --gcov-executable "${GCOV_EXECUTABLE}" -r src/ > "${GCOVR_TEMPFILE}"; then
+    if ! gcovr --gcov-executable "${GCOV_EXECUTABLE}" -r src/ build/src > "${GCOVR_TEMPFILE}"; then
         echo "Error: gcovr failed. Output written to ${GCOVR_TEMPFILE}. Exiting."
         exit 1
     fi
