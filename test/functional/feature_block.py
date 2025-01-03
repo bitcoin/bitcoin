@@ -12,6 +12,7 @@ from test_framework.blocktools import (
     create_tx_with_script,
     get_legacy_sigopcount_block,
     MAX_BLOCK_SIGOPS,
+    REGTEST_N_BITS,
 )
 from test_framework.messages import (
     CBlock,
@@ -590,7 +591,7 @@ class FullBlockTest(BitcoinTestFramework):
         b44 = CBlock()
         b44.nTime = self.tip.nTime + 1
         b44.hashPrevBlock = self.tip.sha256
-        b44.nBits = 0x207fffff
+        b44.nBits = REGTEST_N_BITS
         b44.vtx.append(coinbase)
         tx = self.create_and_sign_transaction(out[14], 1)
         b44.vtx.append(tx)
@@ -606,7 +607,7 @@ class FullBlockTest(BitcoinTestFramework):
         b45 = CBlock()
         b45.nTime = self.tip.nTime + 1
         b45.hashPrevBlock = self.tip.sha256
-        b45.nBits = 0x207fffff
+        b45.nBits = REGTEST_N_BITS
         b45.vtx.append(non_coinbase)
         b45.hashMerkleRoot = b45.calc_merkle_root()
         b45.solve()
@@ -620,7 +621,7 @@ class FullBlockTest(BitcoinTestFramework):
         b46 = CBlock()
         b46.nTime = b44.nTime + 1
         b46.hashPrevBlock = b44.sha256
-        b46.nBits = 0x207fffff
+        b46.nBits = REGTEST_N_BITS
         b46.vtx = []
         b46.hashMerkleRoot = 0
         b46.solve()

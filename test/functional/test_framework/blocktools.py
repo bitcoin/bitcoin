@@ -27,6 +27,7 @@ from .messages import (
     hash256,
     ser_uint256,
     tx_from_hex,
+    uint256_from_compact,
     uint256_from_str,
     WITNESS_SCALE_FACTOR,
 )
@@ -65,6 +66,23 @@ NORMAL_GBT_REQUEST_PARAMS = {"rules": ["segwit"]}
 VERSIONBITS_LAST_OLD_BLOCK_VERSION = 4
 MIN_BLOCKS_TO_KEEP = 288
 
+REGTEST_N_BITS = 0x207fffff  # difficulty retargeting is disabled in REGTEST chainparams"
+REGTEST_TARGET = 0x7fffff0000000000000000000000000000000000000000000000000000000000
+assert_equal(uint256_from_compact(REGTEST_N_BITS), REGTEST_TARGET)
+
+DIFF_1_N_BITS = 0x1d00ffff
+DIFF_1_TARGET = 0x00000000ffff0000000000000000000000000000000000000000000000000000
+assert_equal(uint256_from_compact(DIFF_1_N_BITS), DIFF_1_TARGET)
+
+DIFF_4_N_BITS = 0x1c3fffc0
+DIFF_4_TARGET = int(DIFF_1_TARGET / 4)
+assert_equal(uint256_from_compact(DIFF_4_N_BITS), DIFF_4_TARGET)
+
+def nbits_str(nbits):
+    return f"{nbits:08x}"
+
+def target_str(target):
+    return f"{target:064x}"
 
 def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl=None, txlist=None):
     """Create a block (with regtest difficulty)."""
@@ -77,7 +95,7 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
     if tmpl and tmpl.get('bits') is not None:
         block.nBits = struct.unpack('>I', bytes.fromhex(tmpl['bits']))[0]
     else:
-        block.nBits = 0x207fffff  # difficulty retargeting is disabled in REGTEST chainparams
+        block.nBits = REGTEST_N_BITS
     if coinbase is None:
         coinbase = create_coinbase(height=tmpl['height'])
     block.vtx.append(coinbase)

@@ -225,6 +225,7 @@ static bool rest_headers(const std::any& context,
     const CBlockIndex* tip = nullptr;
     std::vector<const CBlockIndex*> headers;
     headers.reserve(*parsed_count);
+    uint256 pow_limit;
     {
         ChainstateManager* maybe_chainman = GetChainman(context, req);
         if (!maybe_chainman) return false;
@@ -240,6 +241,8 @@ static bool rest_headers(const std::any& context,
             }
             pindex = active_chain.Next(pindex);
         }
+
+        pow_limit = chainman.GetParams().GetConsensus().powLimit;
     }
 
     switch (rf) {
@@ -268,7 +271,7 @@ static bool rest_headers(const std::any& context,
     case RESTResponseFormat::JSON: {
         UniValue jsonHeaders(UniValue::VARR);
         for (const CBlockIndex *pindex : headers) {
-            jsonHeaders.push_back(blockheaderToJSON(*tip, *pindex));
+            jsonHeaders.push_back(blockheaderToJSON(*tip, *pindex, pow_limit));
         }
         std::string strJSON = jsonHeaders.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
@@ -302,6 +305,7 @@ static bool rest_block(const std::any& context,
     ChainstateManager* maybe_chainman = GetChainman(context, req);
     if (!maybe_chainman) return false;
     ChainstateManager& chainman = *maybe_chainman;
+    uint256 pow_limit;
     {
         LOCK(cs_main);
         tip = chainman.ActiveChain().Tip();
@@ -316,6 +320,7 @@ static bool rest_block(const std::any& context,
             return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not available (not fully downloaded)");
         }
         pos = pblockindex->GetBlockPos();
+        pow_limit = chainman.GetParams().GetConsensus().powLimit;
     }
 
     std::vector<uint8_t> block_data{};
@@ -341,7 +346,7 @@ static bool rest_block(const std::any& context,
         CBlock block{};
         DataStream block_stream{block_data};
         block_stream >> TX_WITH_WITNESS(block);
-        UniValue objBlock = blockToJSON(chainman.m_blockman, block, *tip, *pblockindex, tx_verbosity);
+        UniValue objBlock = blockToJSON(chainman.m_blockman, block, *tip, *pblockindex, tx_verbosity, pow_limit);
         std::string strJSON = objBlock.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
         req->WriteReply(HTTP_OK, strJSON);
