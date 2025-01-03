@@ -278,15 +278,18 @@ void SQLiteDatabase::Open()
 
     // Acquire an exclusive lock on the database
     // First change the locking mode to exclusive
-    SetPragma(m_db, "locking_mode", "exclusive", "Unable to change database locking mode to exclusive");
-    // Now begin a transaction to acquire the exclusive lock. This lock won't be released until we close because of the exclusive locking mode.
-    int ret = sqlite3_exec(m_db, "BEGIN EXCLUSIVE TRANSACTION", nullptr, nullptr, nullptr);
-    if (ret != SQLITE_OK) {
-        throw std::runtime_error("SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of " CLIENT_NAME "?\n");
-    }
-    ret = sqlite3_exec(m_db, "COMMIT", nullptr, nullptr, nullptr);
-    if (ret != SQLITE_OK) {
-        throw std::runtime_error(strprintf("SQLiteDatabase: Unable to end exclusive lock transaction: %s\n", sqlite3_errstr(ret)));
+    int ret;
+    if (!m_mock) {
+        SetPragma(m_db, "locking_mode", "exclusive", "Unable to change database locking mode to exclusive");
+        // Now begin a transaction to acquire the exclusive lock. This lock won't be released until we close because of the exclusive locking mode.
+        ret = sqlite3_exec(m_db, "BEGIN EXCLUSIVE TRANSACTION", nullptr, nullptr, nullptr);
+        if (ret != SQLITE_OK) {
+            throw std::runtime_error("SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of " CLIENT_NAME "?\n");
+        }
+        ret = sqlite3_exec(m_db, "COMMIT", nullptr, nullptr, nullptr);
+        if (ret != SQLITE_OK) {
+            throw std::runtime_error(strprintf("SQLiteDatabase: Unable to end exclusive lock transaction: %s\n", sqlite3_errstr(ret)));
+        }
     }
 
     // Enable fullfsync for the platforms that use it
@@ -695,7 +698,7 @@ std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const D
 {
     try {
         fs::path data_file = SQLiteDataFile(path);
-        auto db = std::make_unique<SQLiteDatabase>(data_file.parent_path(), data_file, options);
+        auto db = std::make_unique<SQLiteDatabase>(data_file.parent_path(), data_file, options, options.in_memory ? true : false);
         if (options.verify && !db->Verify(error)) {
             status = DatabaseStatus::FAILED_VERIFY;
             return nullptr;
