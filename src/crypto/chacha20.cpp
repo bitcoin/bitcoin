@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -25,14 +25,14 @@
 void ChaCha20Aligned::SetKey(Span<const std::byte> key) noexcept
 {
     assert(key.size() == KEYLEN);
-    input[0] = ReadLE32(UCharCast(key.data() + 0));
-    input[1] = ReadLE32(UCharCast(key.data() + 4));
-    input[2] = ReadLE32(UCharCast(key.data() + 8));
-    input[3] = ReadLE32(UCharCast(key.data() + 12));
-    input[4] = ReadLE32(UCharCast(key.data() + 16));
-    input[5] = ReadLE32(UCharCast(key.data() + 20));
-    input[6] = ReadLE32(UCharCast(key.data() + 24));
-    input[7] = ReadLE32(UCharCast(key.data() + 28));
+    input[0] = ReadLE32(key.data() + 0);
+    input[1] = ReadLE32(key.data() + 4);
+    input[2] = ReadLE32(key.data() + 8);
+    input[3] = ReadLE32(key.data() + 12);
+    input[4] = ReadLE32(key.data() + 16);
+    input[5] = ReadLE32(key.data() + 20);
+    input[6] = ReadLE32(key.data() + 24);
+    input[7] = ReadLE32(key.data() + 28);
     input[8] = 0;
     input[9] = 0;
     input[10] = 0;
