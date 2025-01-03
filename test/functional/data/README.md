@@ -3,7 +3,7 @@
 ## mainnet_alt.json
 
 For easier testing the difficulty is maximally increased in the first (and only)
-regarget period, by producing blocks approximately 2 minutes apart.
+retarget period, by producing blocks approximately 2 minutes apart.
 
 The alternate mainnet chain was generated as follows:
 - use faketime to set node clock to 2 minutes after genesis block
