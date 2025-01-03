@@ -26,6 +26,7 @@ class base_uint
 protected:
     static_assert(BITS / 32 > 0 && BITS % 32 == 0, "Template parameter BITS must be a positive multiple of 32.");
     static constexpr int WIDTH = BITS / 32;
+    /** Big integer represented with 32-bit digits, least-significant first. */
     uint32_t pn[WIDTH];
 public:
 
