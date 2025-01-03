@@ -250,7 +250,9 @@ BOOST_AUTO_TEST_CASE(same_txid_diff_witness)
     // EraseTx fails as transaction by this wtxid doesn't exist.
     BOOST_CHECK_EQUAL(orphanage.EraseTx(mutated_wtxid), 0);
     BOOST_CHECK(orphanage.HaveTx(normal_wtxid));
+    BOOST_CHECK(orphanage.GetTx(normal_wtxid) == child_normal);
     BOOST_CHECK(!orphanage.HaveTx(mutated_wtxid));
+    BOOST_CHECK(orphanage.GetTx(mutated_wtxid) == nullptr);
 
     // Must succeed. Both transactions should be present in orphanage.
     BOOST_CHECK(orphanage.AddTx(child_mutated, peer));

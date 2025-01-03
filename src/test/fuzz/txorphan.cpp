@@ -157,5 +157,8 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
             ptx_potential_parent = tx;
         }
 
+        const bool have_tx{orphanage.HaveTx(tx->GetWitnessHash())};
+        const bool get_tx_nonnull{orphanage.GetTx(tx->GetWitnessHash()) != nullptr};
+        Assert(have_tx == get_tx_nonnull);
     }
 }
