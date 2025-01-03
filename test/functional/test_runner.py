@@ -275,6 +275,7 @@ BASE_SCRIPTS = [
     'mempool_truc.py',
     'wallet_txn_doublespend.py --legacy-wallet',
     'wallet_multisig_descriptor_psbt.py --descriptors',
+    'wallet_miniscript_decaying_multisig_descriptor_psbt.py --descriptors',
     'wallet_txn_doublespend.py --descriptors',
     'wallet_backwards_compatibility.py --legacy-wallet',
     'wallet_backwards_compatibility.py --descriptors',
