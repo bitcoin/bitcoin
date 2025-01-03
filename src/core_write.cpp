@@ -153,7 +153,9 @@ void ScriptToUniv(const CScript& script, UniValue& out, bool include_hex, bool i
 
     out.pushKV("asm", ScriptToAsmStr(script));
     if (include_address) {
-        out.pushKV("desc", InferDescriptor(script, provider ? *provider : DUMMY_SIGNING_PROVIDER)->ToString());
+        auto desc = InferDescriptor(script, provider ? *provider : DUMMY_SIGNING_PROVIDER);
+        // future: make 'InferDescriptor' return the error cause
+        if (desc) out.pushKV("desc", desc->ToString());
     }
     if (include_hex) {
         out.pushKV("hex", HexStr(script));
