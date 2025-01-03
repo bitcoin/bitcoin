@@ -199,7 +199,9 @@ BasicTestingSetup::~BasicTestingSetup()
 {
     m_node.ecc_context.reset();
     m_node.kernel.reset();
-    SetMockTime(0s); // Reset mocktime for following tests
+    if constexpr (!G_FUZZING) {
+        SetMockTime(0s); // Reset mocktime for following tests
+    }
     LogInstance().DisconnectTestLogger();
     if (m_has_custom_datadir) {
         // Only remove the lock file, preserve the data directory.

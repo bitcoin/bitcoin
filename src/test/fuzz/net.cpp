@@ -16,6 +16,7 @@
 #include <test/util/setup_common.h>
 #include <util/asmap.h>
 #include <util/chaintype.h>
+#include <util/time.h>
 
 #include <cstdint>
 #include <optional>
@@ -79,6 +80,7 @@ FUZZ_TARGET(net, .init = initialize_net)
 FUZZ_TARGET(local_address, .init = initialize_net)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+    SetMockTime(ConsumeTime(fuzzed_data_provider));
     CService service{ConsumeService(fuzzed_data_provider)};
     CNode node{ConsumeNode(fuzzed_data_provider)};
     {
