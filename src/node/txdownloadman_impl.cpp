@@ -301,6 +301,21 @@ void TxDownloadManagerImpl::MempoolAcceptedTx(const CTransactionRef& tx)
     m_orphanage.EraseTx(tx->GetWitnessHash());
 }
 
+std::vector<Txid> TxDownloadManagerImpl::GetUniqueParents(const CTransaction& tx)
+{
+    std::vector<Txid> unique_parents;
+    unique_parents.reserve(tx.vin.size());
+    for (const CTxIn& txin : tx.vin) {
+        // We start with all parents, and then remove duplicates below.
+        unique_parents.push_back(txin.prevout.hash);
+    }
+
+    std::sort(unique_parents.begin(), unique_parents.end());
+    unique_parents.erase(std::unique(unique_parents.begin(), unique_parents.end()), unique_parents.end());
+
+    return unique_parents;
+}
+
 node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransactionRef& ptx, const TxValidationState& state, NodeId nodeid, bool first_time_failure)
 {
     const CTransaction& tx{*ptx};
@@ -320,13 +335,7 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
 
             // Deduplicate parent txids, so that we don't have to loop over
             // the same parent txid more than once down below.
-            unique_parents.reserve(tx.vin.size());
-            for (const CTxIn& txin : tx.vin) {
-                // We start with all parents, and then remove duplicates below.
-                unique_parents.push_back(txin.prevout.hash);
-            }
-            std::sort(unique_parents.begin(), unique_parents.end());
-            unique_parents.erase(std::unique(unique_parents.begin(), unique_parents.end()), unique_parents.end());
+            unique_parents = GetUniqueParents(tx);
 
             // Distinguish between parents in m_lazy_recent_rejects and m_lazy_recent_rejects_reconsiderable.
             // We can tolerate having up to 1 parent in m_lazy_recent_rejects_reconsiderable since we
