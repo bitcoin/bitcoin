@@ -126,7 +126,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[0].getrawmempool()), 2)
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"], sweep_tx["tx"]])
 
-        # Node restart; doesn't allow allow ephemeral transaction back in due to individual submission
+        # Node restart; doesn't allow ephemeral transaction back in due to individual submission
         # resulting in 0-fee. Supporting re-submission of CPFP packages on restart is desired but not
         # yet implemented.
         self.restart_node(0)
