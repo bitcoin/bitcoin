@@ -38,7 +38,7 @@ struct BlockCreateOptions {
      * scriptSig, witness and outputs. This must include any additional
      * weight needed for larger CompactSize encoded lengths.
      */
-    size_t coinbase_max_additional_weight{4000};
+    size_t coinbase_max_additional_weight{8000};
     /**
      * The maximum additional sigops which the pool will add in coinbase
      * transaction outputs.

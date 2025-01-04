@@ -67,11 +67,11 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
 
 static BlockAssembler::Options ClampOptions(BlockAssembler::Options options)
 {
-    Assert(options.coinbase_max_additional_weight <= DEFAULT_BLOCK_MAX_WEIGHT);
+    Assert(options.coinbase_max_additional_weight <= MAX_BLOCK_WEIGHT);
     Assert(options.coinbase_output_max_additional_sigops <= MAX_BLOCK_SIGOPS_COST);
-    // Limit weight to between coinbase_max_additional_weight and DEFAULT_BLOCK_MAX_WEIGHT for sanity:
+    // Limit weight to between coinbase_max_additional_weight and MAX_BLOCK_WEIGHT for sanity:
     // Coinbase (reserved) outputs can safely exceed -blockmaxweight, but the rest of the block template will be empty.
-    options.nBlockMaxWeight = std::clamp<size_t>(options.nBlockMaxWeight, options.coinbase_max_additional_weight, DEFAULT_BLOCK_MAX_WEIGHT);
+    options.nBlockMaxWeight = std::clamp<size_t>(options.nBlockMaxWeight, options.coinbase_max_additional_weight, MAX_BLOCK_WEIGHT);
     return options;
 }
 
@@ -96,12 +96,9 @@ void ApplyArgsManOptions(const ArgsManager& args, BlockAssembler::Options& optio
 void BlockAssembler::resetBlock()
 {
     inBlock.clear();
-
-    // Reserve space for coinbase tx
-    nBlockWeight = m_options.coinbase_max_additional_weight;
-    nBlockSigOpsCost = m_options.coinbase_output_max_additional_sigops;
-
     // These counters do not include coinbase tx
+    nBlockWeight = 0;
+    nBlockSigOpsCost = 0;
     nBlockTx = 0;
     nFees = 0;
 }
@@ -197,10 +194,12 @@ void BlockAssembler::onlyUnconfirmed(CTxMemPool::setEntries& testSet)
 bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost) const
 {
     // TODO: switch to weight-based accounting for packages instead of vsize-based accounting.
-    if (nBlockWeight + WITNESS_SCALE_FACTOR * packageSize >= m_options.nBlockMaxWeight) {
+    auto coinbase_adjusted_block_weight = nBlockWeight + m_options.coinbase_max_additional_weight; // Account for coinbase tx weight.
+    if (coinbase_adjusted_block_weight + WITNESS_SCALE_FACTOR * packageSize >= m_options.nBlockMaxWeight) {
         return false;
     }
-    if (nBlockSigOpsCost + packageSigOpsCost >= MAX_BLOCK_SIGOPS_COST) {
+    auto coinbase_adjusted_block_sigopcost = nBlockSigOpsCost + m_options.coinbase_output_max_additional_sigops; // Account for the sigop cost coinbase tx.
+    if (coinbase_adjusted_block_sigopcost + packageSigOpsCost >= MAX_BLOCK_SIGOPS_COST) {
         return false;
     }
     return true;
