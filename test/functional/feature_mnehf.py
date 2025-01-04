@@ -163,14 +163,14 @@ class MnehfTest(DashTestFramework):
             self.generate(node, 1)
 
 
-        for _ in range(4):
+        for _ in range(4 // 2):
             self.check_fork('started')
-            self.generate(node, 1)
+            self.generate(node, 2)
 
 
-        for i in range(4):
+        for i in range(4 // 2):
             self.check_fork('locked_in')
-            self.generate(node, 1)
+            self.generate(node, 2)
             if i == 1:
                 self.restart_all_nodes()
 
@@ -182,9 +182,8 @@ class MnehfTest(DashTestFramework):
             inode.invalidateblock(ehf_blockhash)
 
         self.log.info("Expecting for fork to be defined in next blocks because no MnEHF tx here")
-        for _ in range(4):
-            self.check_fork('defined')
-            self.generate(node, 1)
+        self.generate(node, 4)
+        self.check_fork('defined')
 
 
         self.log.info("Re-sending MnEHF for new fork")
@@ -195,8 +194,7 @@ class MnehfTest(DashTestFramework):
         assert tx_sent_2 in node.getblock(ehf_blockhash_2)['tx']
 
         self.log.info(f"Generate some more block to jump to `started` status")
-        for _ in range(4):
-            self.generate(node, 1)
+        self.generate(node, 4)
         self.check_fork('started')
         self.restart_node(0)
         self.check_fork('started')
