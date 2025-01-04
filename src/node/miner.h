@@ -172,7 +172,9 @@ public:
     /** Construct a new block template with coinbase to scriptPubKeyIn */
     std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);
 
+    /** The number of transactions in the last assembled block (excluding coinbase transaction) */
     inline static std::optional<int64_t> m_last_block_num_txs{};
+    /** The weight of the last assembled block (excluding coinbase transaction) */
     inline static std::optional<int64_t> m_last_block_weight{};
 
 private:
