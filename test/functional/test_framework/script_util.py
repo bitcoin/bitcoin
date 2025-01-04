@@ -5,12 +5,12 @@
 """Useful Script constants and utils."""
 from test_framework.script import (
     CScript,
-    hash160,
-    OP_DUP,
-    OP_HASH160,
     OP_CHECKSIG,
+    OP_DUP,
     OP_EQUAL,
     OP_EQUALVERIFY,
+    OP_HASH160,
+    hash160,
 )
 
 # To prevent a "tx-size-small" policy rule error, a transaction has to have a
@@ -32,6 +32,11 @@ from test_framework.script import (
 # met.
 DUMMY_P2SH_SCRIPT = CScript([b'a' * 22])
 DUMMY_2_P2SH_SCRIPT = CScript([b'b' * 22])
+
+
+def key_to_p2pk_script(key):
+    key = check_key(key)
+    return CScript([key, OP_CHECKSIG])
 
 
 def keyhash_to_p2pkh_script(hash):

@@ -22,7 +22,15 @@ from .messages import (
     from_hex,
     uint256_to_string,
 )
-from .script import CScript, CScriptNum, CScriptOp, OP_TRUE, OP_CHECKSIG
+from .script import (
+    CScript,
+    CScriptNum,
+    CScriptOp,
+    OP_TRUE
+)
+from .script_util import (
+    key_to_p2pk_script,
+)
 from .util import assert_equal
 from io import BytesIO
 
@@ -179,7 +187,7 @@ def create_coinbase(height, pubkey=None, dip4_activated=False, v20_activated=Fal
         halvings = int(height / 150)  # regtest
         coinbaseoutput.nValue >>= halvings
     if (pubkey is not None):
-        coinbaseoutput.scriptPubKey = CScript([pubkey, OP_CHECKSIG])
+        coinbaseoutput.scriptPubKey = key_to_p2pk_script(pubkey)
     else:
         coinbaseoutput.scriptPubKey = CScript([OP_TRUE])
     coinbase.vout = [coinbaseoutput]
