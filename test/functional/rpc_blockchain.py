@@ -133,6 +133,7 @@ class BlockchainTest(BitcoinTestFramework):
 
         keys = [
             'bestblockhash',
+            'bits',
             'blocks',
             'chain',
             'chainwork',
@@ -142,6 +143,7 @@ class BlockchainTest(BitcoinTestFramework):
             'mediantime',
             'pruned',
             'size_on_disk',
+            'target',
             'time',
             'verificationprogress',
             'warnings',
@@ -197,6 +199,9 @@ class BlockchainTest(BitcoinTestFramework):
         assert res['automatic_pruning']
         assert_equal(res['prune_target_size'], 576716800)
         assert_greater_than(res['size_on_disk'], 0)
+
+        assert_equal(res['bits'], nbits_str(REGTEST_N_BITS))
+        assert_equal(res['target'], target_str(REGTEST_TARGET))
 
     def check_signalling_deploymentinfo_result(self, gdi_result, height, blockhash, status_next):
         assert height >= 144 and height <= 287
