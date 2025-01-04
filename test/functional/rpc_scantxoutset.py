@@ -3,11 +3,16 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the scantxoutset rpc call."""
+from test_framework.messages import COIN
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, Decimal
+from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.wallet import (
+    MiniWallet,
+    address_to_scriptpubkey,
+    getnewdestination,
+)
 
-import shutil
-import os
+from decimal import Decimal
 
 def descriptors(out):
     return sorted(u['desc'] for u in out['unspents'])
@@ -15,49 +20,42 @@ def descriptors(out):
 class ScantxoutsetTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.setup_clean_chain = True
         self.supports_cli = False
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
+    def sendtodestination(self, destination, amount):
+        # interpret strings as addresses, assume scriptPubKey otherwise
+        if isinstance(destination, str):
+            destination = address_to_scriptpubkey(destination)
+        self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=destination, amount=int(COIN * amount))
 
     def run_test(self):
-        self.log.info("Mining blocks...")
-        self.generate(self.nodes[0], 110)
+        self.wallet = MiniWallet(self.nodes[0])
+        self.wallet.rescan_utxos()
 
-        addr1 = self.nodes[0].getnewaddress("")
-        pubk1 = self.nodes[0].getaddressinfo(addr1)['pubkey']
-        addr2 = self.nodes[0].getnewaddress("")
-        pubk2 = self.nodes[0].getaddressinfo(addr2)['pubkey']
-        addr3 = self.nodes[0].getnewaddress("")
-        pubk3 = self.nodes[0].getaddressinfo(addr3)['pubkey']
-        self.nodes[0].sendtoaddress(addr1, 0.001)
-        self.nodes[0].sendtoaddress(addr2, 0.002)
-        self.nodes[0].sendtoaddress(addr3, 0.004)
+        self.log.info("Create UTXOs...")
+        pubk1, spk1, addr1 = getnewdestination("legacy")
+        pubk2, spk2, addr2 = getnewdestination("legacy")
+        pubk3, spk3, addr3 = getnewdestination("legacy")
+        self.sendtodestination(spk1, 0.001)
+        self.sendtodestination(spk2, 0.002)
+        self.sendtodestination(spk3, 0.004)
 
         #send to child keys of tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK
-        self.nodes[0].sendtoaddress("yR5yZLjevw5kX3UxGiQN1g96LXGJni2wSS", 0.008) # (m/0'/0'/0')
-        self.nodes[0].sendtoaddress("yPcxzaQekxTjaJVSaZ58r22o37H8moWPK2", 0.016) # (m/0'/0'/1')
-        self.nodes[0].sendtoaddress("yhv7iRHSx4SgyvCPmkm6Js8gTuJTtJH9ec", 0.032) # (m/0'/0'/1500')
-        self.nodes[0].sendtoaddress("yWEdyyKVNbmaiXHkg3LVPqgoXpMA3S6Xt7", 0.064) # (m/0'/0'/0)
-        self.nodes[0].sendtoaddress("yTGAdq8sSHJ1QrcqSUaMHs8RMj3Bqz3bkb", 0.128) # (m/0'/0'/1)
-        self.nodes[0].sendtoaddress("yRTNkmjXjhatND4Dv3V4GwBzYJQ4o9ukQr", 0.256) # (m/0'/0'/1500)
-        self.nodes[0].sendtoaddress("yPwUp9Vwmr4zE6rSuZg3TBxeyRerdRAbNd", 0.512) # (m/1/1/0')
-        self.nodes[0].sendtoaddress("yLapNU3bG8E8JNGXRhZbRHHDifrqTucGcg", 1.024) # (m/1/1/1')
-        self.nodes[0].sendtoaddress("yUhbAKf7AcTC5sPXb2dkABKm3FYENqdzv2", 2.048) # (m/1/1/1500')
-        self.nodes[0].sendtoaddress("yZTyMdEJjZWJi6CwY6g3WurLESH3UsWrrM", 4.096) # (m/1/1/0)
-        self.nodes[0].sendtoaddress("ydccVGNV2EcEouAxbbgdu8pi8gkdaqkiav", 8.192) # (m/1/1/1)
-        self.nodes[0].sendtoaddress("yVCdQxPXJ3SrtTLv8FuLXDNaynz6kmjPNq", 16.384) # (m/1/1/1500)
+        self.sendtodestination("yR5yZLjevw5kX3UxGiQN1g96LXGJni2wSS", 0.008) # (m/0'/0'/0')
+        self.sendtodestination("yPcxzaQekxTjaJVSaZ58r22o37H8moWPK2", 0.016) # (m/0'/0'/1')
+        self.sendtodestination("yhv7iRHSx4SgyvCPmkm6Js8gTuJTtJH9ec", 0.032) # (m/0'/0'/1500')
+        self.sendtodestination("yWEdyyKVNbmaiXHkg3LVPqgoXpMA3S6Xt7", 0.064) # (m/0'/0'/0)
+        self.sendtodestination("yTGAdq8sSHJ1QrcqSUaMHs8RMj3Bqz3bkb", 0.128) # (m/0'/0'/1)
+        self.sendtodestination("yRTNkmjXjhatND4Dv3V4GwBzYJQ4o9ukQr", 0.256) # (m/0'/0'/1500)
+        self.sendtodestination("yPwUp9Vwmr4zE6rSuZg3TBxeyRerdRAbNd", 0.512) # (m/1/1/0')
+        self.sendtodestination("yLapNU3bG8E8JNGXRhZbRHHDifrqTucGcg", 1.024) # (m/1/1/1')
+        self.sendtodestination("yUhbAKf7AcTC5sPXb2dkABKm3FYENqdzv2", 2.048) # (m/1/1/1500')
+        self.sendtodestination("yZTyMdEJjZWJi6CwY6g3WurLESH3UsWrrM", 4.096) # (m/1/1/0)
+        self.sendtodestination("ydccVGNV2EcEouAxbbgdu8pi8gkdaqkiav", 8.192) # (m/1/1/1)
+        self.sendtodestination("yVCdQxPXJ3SrtTLv8FuLXDNaynz6kmjPNq", 16.384) # (m/1/1/1500)
 
 
         self.generate(self.nodes[0], 1)
-
-        self.log.info("Stop node, remove wallet, mine again some blocks...")
-        self.stop_node(0)
-        shutil.rmtree(os.path.join(self.nodes[0].datadir, self.chain, 'wallets'))
-        self.start_node(0, ['-nowallet'])
-        self.import_deterministic_coinbase_privkeys()
-        self.generate(self.nodes[0], 110)
 
         scan = self.nodes[0].scantxoutset("start", [])
         info = self.nodes[0].gettxoutsetinfo()
@@ -66,13 +64,12 @@ class ScantxoutsetTest(BitcoinTestFramework):
         assert_equal(scan['txouts'], info['txouts'])
         assert_equal(scan['bestblock'], info['bestblock'])
 
-        self.restart_node(0, ['-nowallet'])
         self.log.info("Test if we have found the non HD unspent outputs.")
-        assert_equal(self.nodes[0].scantxoutset("start", [ "pkh(" + pubk1 + ")", "pkh(" + pubk2 + ")", "pkh(" + pubk3 + ")"])['total_amount'], Decimal("0.007"))
-        assert_equal(self.nodes[0].scantxoutset("start", [ "combo(" + pubk1 + ")", "combo(" + pubk2 + ")", "combo(" + pubk3 + ")"])['total_amount'], Decimal("0.007"))
-        assert_equal(self.nodes[0].scantxoutset("start", [ "addr(" + addr1 + ")", "addr(" + addr2 + ")", "combo(" + pubk3 + ")"])['total_amount'], Decimal("0.007"))
+        assert_equal(self.nodes[0].scantxoutset("start", [ "pkh(" + pubk1.hex() + ")", "pkh(" + pubk2.hex() + ")", "pkh(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.007"))
+        assert_equal(self.nodes[0].scantxoutset("start", [ "combo(" + pubk1.hex() + ")", "combo(" + pubk2.hex() + ")", "combo(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.007"))
+        assert_equal(self.nodes[0].scantxoutset("start", [ "addr(" + addr1 + ")", "addr(" + addr2 + ")", "combo(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.007"))
         assert_equal(self.nodes[0].scantxoutset("start", [ "addr(" + addr1 + ")", "addr(" + addr2 + ")", "addr(" + addr3 + ")"])['total_amount'], Decimal("0.007"))
-        assert_equal(self.nodes[0].scantxoutset("start", [ "addr(" + addr1 + ")", "addr(" + addr2 + ")", "pkh(" + pubk3 + ")"])['total_amount'], Decimal("0.007"))
+        assert_equal(self.nodes[0].scantxoutset("start", [ "addr(" + addr1 + ")", "addr(" + addr2 + ")", "pkh(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.007"))
 
         self.log.info("Test range validation.")
         assert_raises_rpc_error(-8, "End of range is too high", self.nodes[0].scantxoutset, "start", [ {"desc": "desc", "range": -1}])

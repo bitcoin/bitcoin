@@ -7,7 +7,11 @@
 from copy import deepcopy
 from decimal import Decimal
 from enum import Enum
-from test_framework.address import ADDRESS_BCRT1_P2SH_OP_TRUE
+from test_framework.address import (
+    base58_to_byte,
+    key_to_p2pkh,
+    ADDRESS_BCRT1_P2SH_OP_TRUE,
+)
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECKey
 from random import choice
@@ -30,6 +34,8 @@ from test_framework.script import (
 from test_framework.script_util import (
     key_to_p2pk_script,
     key_to_p2pkh_script,
+    keyhash_to_p2pkh_script,
+    scripthash_to_p2sh_script,
 )
 from test_framework.util import (
     assert_equal,
@@ -213,12 +219,33 @@ class MiniWallet:
         return txid
 
 
-def random_p2pkh():
-    """Generate a random P2PKH scriptPubKey. Can be used when a random destination is needed,
-    but no compiled wallet is available (e.g. as replacement to the getnewaddress RPC)."""
+def getnewdestination(address_type='legacy'):
+    """Generate a random destination of the specified type and return the
+       corresponding public key, scriptPubKey and address. Supported types are
+       'legacy'. Can be used when a random destination is needed, but no
+       compiled wallet is available (e.g. as replacement to the
+       getnewaddress/getaddressinfo RPCs)."""
     key = ECKey()
     key.generate()
-    return key_to_p2pkh_script(key.get_pubkey().get_bytes())
+    pubkey = key.get_pubkey().get_bytes()
+    if address_type == 'legacy':
+        scriptpubkey = key_to_p2pkh_script(pubkey)
+        address = key_to_p2pkh(pubkey)
+    else:
+        assert False
+    return pubkey, scriptpubkey, address
+
+
+def address_to_scriptpubkey(address):
+    """Converts a given address to the corresponding output script (scriptPubKey)."""
+    payload, version = base58_to_byte(address)
+    if version == 140:  # testnet pubkey hash
+        return keyhash_to_p2pkh_script(payload)
+    elif version == 19:  # testnet script hash
+        return scripthash_to_p2sh_script(payload)
+    # TODO: also support other address formats
+    else:
+        assert False
 
 
 def make_chain(node, address, privkeys, parent_txid, parent_value, n=0, parent_locking_script=None, fee=DEFAULT_FEE):
