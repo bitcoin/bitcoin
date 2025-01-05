@@ -350,8 +350,8 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, const bool avoid_reuse
             ret.m_mine_immature += wtx.GetImmatureCredit();
             ret.m_watchonly_immature += wtx.GetImmatureWatchOnlyCredit();
             if (CCoinJoinClientOptions::IsEnabled()) {
-                ret.m_anonymized += wtx.GetAnonymizedCredit();
-                const auto balance_anonymized = wtx.GetDenominatedCredit();
+                const auto balance_anonymized = wtx.GetAnonymizedBalance();
+                ret.m_anonymized += balance_anonymized.m_anonymized;
                 if (balance_anonymized.is_unconfirmed) {
                     ret.m_denominated_untrusted_pending += balance_anonymized.m_denom_credit;
                 } else {
