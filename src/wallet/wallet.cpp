@@ -1993,7 +1993,7 @@ std::set<uint256> CWalletTx::GetConflicts() const
     return result;
 }
 
-CAmount CWalletTx::GetAnonymizedCredit(const CCoinControl* coinControl) const
+CAmount CWalletTx::GetAnonymizedCredit(const CCoinControl& coinControl) const
 {
     if (!pwallet)
         return 0;
@@ -2004,9 +2004,6 @@ CAmount CWalletTx::GetAnonymizedCredit(const CCoinControl* coinControl) const
     if (IsCoinBase() || GetDepthInMainChain() < 0)
         return 0;
 
-    if (coinControl == nullptr && m_amounts[ANON_CREDIT].m_cached[ISMINE_SPENDABLE])
-        return m_amounts[ANON_CREDIT].m_value[ISMINE_SPENDABLE];
-
     CAmount nCredit = 0;
     uint256 hashTx = GetHash();
     for (unsigned int i = 0; i < tx->vout.size(); i++)
@@ -2014,7 +2011,7 @@ CAmount CWalletTx::GetAnonymizedCredit(const CCoinControl* coinControl) const
         const CTxOut &txout = tx->vout[i];
         const COutPoint outpoint = COutPoint(hashTx, i);
 
-        if (coinControl != nullptr && coinControl->HasSelected() && !coinControl->IsSelected(outpoint)) {
+        if (coinControl.HasSelected() && !coinControl.IsSelected(outpoint)) {
             continue;
         }
 
@@ -2027,39 +2024,67 @@ CAmount CWalletTx::GetAnonymizedCredit(const CCoinControl* coinControl) const
         }
     }
 
-    if (coinControl == nullptr) {
-        m_amounts[ANON_CREDIT].Set(ISMINE_SPENDABLE, nCredit);
+    return nCredit;
+}
+
+CAmount CWalletTx::GetAnonymizedCredit() const
+{
+    if (!pwallet)
+        return 0;
+
+    AssertLockHeld(pwallet->cs_wallet);
+
+    // Exclude coinbase and conflicted txes
+    if (IsCoinBase() || GetDepthInMainChain() < 0)
+        return 0;
+
+    if (m_amounts[ANON_CREDIT].m_cached[ISMINE_SPENDABLE])
+        return m_amounts[ANON_CREDIT].m_value[ISMINE_SPENDABLE];
+
+    CAmount nCredit = 0;
+    uint256 hashTx = GetHash();
+    for (unsigned int i = 0; i < tx->vout.size(); i++)
+    {
+        const CTxOut &txout = tx->vout[i];
+        const COutPoint outpoint = COutPoint(hashTx, i);
+
+        if (pwallet->IsSpent(hashTx, i) || !CoinJoin::IsDenominatedAmount(txout.nValue)) continue;
+
+        if (pwallet->IsFullyMixed(outpoint)) {
+            nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
+            if (!MoneyRange(nCredit))
+                throw std::runtime_error(std::string(__func__) + ": value out of range");
+        }
     }
+
+    m_amounts[ANON_CREDIT].Set(ISMINE_SPENDABLE, nCredit);
 
     return nCredit;
 }
 
-CAmount CWalletTx::GetDenominatedCredit(bool unconfirmed, bool fUseCache) const
+CWalletTx::BalanceAnonymized CWalletTx::GetDenominatedCredit() const
 {
+    CWalletTx::BalanceAnonymized ret{0, false};
     if (pwallet == nullptr)
-        return 0;
+        return ret;
 
     AssertLockHeld(pwallet->cs_wallet);
 
     // Must wait until coinbase is safely deep enough in the chain before valuing it
     if (IsCoinBase() && GetBlocksToMaturity() > 0)
-        return 0;
+        return ret;
 
     int nDepth = GetDepthInMainChain();
-    if (nDepth < 0) return 0;
+    if (nDepth < 0) return ret;
 
-    bool isUnconfirmed = IsTrusted() && nDepth == 0;
-    if (unconfirmed != isUnconfirmed) return 0;
+    ret.is_unconfirmed = IsTrusted() && nDepth == 0;
 
-    if (fUseCache) {
-        if(unconfirmed && m_amounts[DENOM_UCREDIT].m_cached[ISMINE_SPENDABLE]) {
-            return m_amounts[DENOM_UCREDIT].m_value[ISMINE_SPENDABLE];
-        } else if (!unconfirmed && m_amounts[DENOM_CREDIT].m_cached[ISMINE_SPENDABLE]) {
-            return m_amounts[DENOM_CREDIT].m_value[ISMINE_SPENDABLE];
-        }
+    if(ret.is_unconfirmed && m_amounts[DENOM_UCREDIT].m_cached[ISMINE_SPENDABLE]) {
+        return {m_amounts[DENOM_UCREDIT].m_value[ISMINE_SPENDABLE], ret.is_unconfirmed};
+    } else if (!ret.is_unconfirmed && m_amounts[DENOM_CREDIT].m_cached[ISMINE_SPENDABLE]) {
+        return {m_amounts[DENOM_CREDIT].m_value[ISMINE_SPENDABLE], ret.is_unconfirmed};
     }
 
-    CAmount nCredit = 0;
     uint256 hashTx = GetHash();
     for (unsigned int i = 0; i < tx->vout.size(); i++)
     {
@@ -2067,17 +2092,17 @@ CAmount CWalletTx::GetDenominatedCredit(bool unconfirmed, bool fUseCache) const
 
         if (pwallet->IsSpent(hashTx, i) || !CoinJoin::IsDenominatedAmount(txout.nValue)) continue;
 
-        nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
-        if (!MoneyRange(nCredit))
+        ret.m_denom_credit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
+        if (!MoneyRange(ret.m_denom_credit))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     }
 
-    if (unconfirmed) {
-        m_amounts[DENOM_UCREDIT].Set(ISMINE_SPENDABLE, nCredit);
+    if (ret.is_unconfirmed) {
+        m_amounts[DENOM_UCREDIT].Set(ISMINE_SPENDABLE, ret.m_denom_credit);
     } else {
-        m_amounts[DENOM_CREDIT].Set(ISMINE_SPENDABLE, nCredit);
+        m_amounts[DENOM_CREDIT].Set(ISMINE_SPENDABLE, ret.m_denom_credit);
     }
-    return nCredit;
+    return ret;
 }
 
 // Rebroadcast transactions from the wallet. We do this on a random timer

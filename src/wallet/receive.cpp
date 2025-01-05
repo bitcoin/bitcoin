@@ -313,7 +313,19 @@ bool CWalletTx::IsTrusted() const
     return pwallet->IsTrusted(*this, trusted_parents);
 }
 
-CWallet::Balance CWallet::GetBalance(const int min_depth, const bool avoid_reuse, const bool fAddLocked, const CCoinControl* coinControl) const
+CAmount CWallet::GetBalanceAnonymized(const CCoinControl& coinControl) const
+{
+    if (!CCoinJoinClientOptions::IsEnabled()) return 0;
+
+    CAmount anonymized_amount{0};
+    LOCK(cs_wallet);
+    for (auto pcoin : GetSpendableTXs()) {
+        anonymized_amount += pcoin->GetAnonymizedCredit(coinControl);
+    }
+    return anonymized_amount;
+}
+
+CWallet::Balance CWallet::GetBalance(const int min_depth, const bool avoid_reuse, const bool fAddLocked) const
 {
     Balance ret;
     isminefilter reuse_filter = avoid_reuse ? ISMINE_NO : ISMINE_USED;
@@ -338,9 +350,13 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, const bool avoid_reuse
             ret.m_mine_immature += wtx.GetImmatureCredit();
             ret.m_watchonly_immature += wtx.GetImmatureWatchOnlyCredit();
             if (CCoinJoinClientOptions::IsEnabled()) {
-                ret.m_anonymized += wtx.GetAnonymizedCredit(coinControl);
-                ret.m_denominated_trusted += wtx.GetDenominatedCredit(false);
-                ret.m_denominated_untrusted_pending += wtx.GetDenominatedCredit(true);
+                ret.m_anonymized += wtx.GetAnonymizedCredit();
+                const auto balance_anonymized = wtx.GetDenominatedCredit();
+                if (balance_anonymized.is_unconfirmed) {
+                    ret.m_denominated_untrusted_pending += balance_anonymized.m_denom_credit;
+                } else {
+                    ret.m_denominated_trusted += balance_anonymized.m_denom_credit;
+                }
             }
         }
     }
