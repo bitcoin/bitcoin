@@ -1,0 +1,98 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# This workflow will validate the IAM policies in the CloudFormation (CFN) templates with using the standard and custom checks in AWS IAM Access Analyzer
+# To use this workflow, you will need to complete the following set up steps before start using it:
+# 1. Configure an AWS IAM role to use the Access Analyzer's ValidatePolicy, CheckNoNewAccess and CheckAccessNotGranted. This IAM role must be configured to call from the GitHub Actions, use the following [doc](https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws/) for steps. In the below workflow, ARN of such role is stored in the GitHub secrets with name `POLICY_VALIDATOR_ROLE`
+# 2. If you're using CHECK_NO_NEW_ACCESS policy-check-type, you need to create a reference policy. Use the guide [here](https://github.com/aws-samples/iam-access-analyzer-custom-policy-check-samples?tab=readme-ov-file#how-do-i-write-my-own-reference-policies) and store it your GitHub repo.
+# 3. If you're using the CHECK_ACCESS_NOT_GRANTED policy-check-type, identify the list of critical actions that shouldn't be granted access by the policies in the given CFN templates.
+# 4. Start using the GitHub actions by generating the GitHub events matching the defined criteria in your workflow.
+name: Validate AWS IAM policies in CloudFormation templates using Policy Validator
+on:
+  push:
+    branches: ["master" ]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: ["master"]
+env:
+  AWS_ROLE: MY_ROLE # set this with the role ARN which has permissions to invoke access-analyzer:ValidatePolicy,access-analyzer:CheckNoNewAccess, access-analyzer:CheckAccessNotGranted and can be used in GitHub actions
+  REGION: MY_AWS_REGION # set this to your preferred AWS region where you plan to deploy your policies, e.g. us-west-1
+  TEMPLATE_PATH: FILE_PATH_TO_CFN_TEMPLATE # set to the file path to the CloudFormation template.
+  ACTIONS: MY_LIST_OF_ACTIONS # set to pass list of actions in the format action1, action2,.. One of `ACTIONS` or `RESOURCES` is required if you are using `CHECK_ACCESS_NOT_GRANTED` policy-check-type.
+  RESOURCES: MY_LIST_OF_RESOURCES # set to pass list of resource ARNs in the format resource1, resource2,.. One of `ACTIONS` or `RESOURCES` is required if you are using `CHECK_ACCESS_NOT_GRANTED` policy-check-type.
+  REFERENCE_POLICY: REFERENCE_POLICY # set to pass a JSON formatted file that specifies the path to the reference policy that is used for a permissions comparison. For example, if you stored such path in a GitHub secret with name REFERENCE_IDENTITY_POLICY , you can pass ${{ secrets.REFERENCE_IDENTITY_POLICY }}. If not you have the reference policy in the repository, you can directly pass it's file path. This is required if you are using `CHECK_NO_NEW_ACCESS_CHECK` policy-check-type.
+  REFERENCE_POLICY_TYPE: TYPE_OF_REFERENCE_POLICY # set to pass the policy type associated with the IAM policy under analysis and the reference policy. This is required if you are using `CHECK_NO_NEW_ACCESS_CHECK` policy-check-type.
+jobs:
+  policy-validator:
+    runs-on: ubuntu-latest # Virtual machine to run the workflow (configurable)
+    # https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services#updating-your-github-actions-workflow
+    # https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws/
+    permissions:
+      id-token: write # This is required for requesting the JWT
+      contents: read # This is required for actions/checkout
+    name: Policy Validator checks for AWS IAM policies
+    steps:
+      # checkout the repo for workflow to access the contents
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      # Configure AWS Credentials. More configuration details here - https://github.com/aws-actions/configure-aws-credentials
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+        with:
+          role-to-assume: ${{ env.AWS_ROLE }}
+          aws-region: ${{ env.REGION }}
+      # Run the VALIDATE_POLICY check. More configuration details here - https://github.com/aws-actions/cloudformation-aws-iam-policy-validator
+      - name: Run AWS AccessAnalyzer ValidatePolicy check
+        id: run-aws-validate-policy
+        uses: aws-actions/cloudformation-aws-iam-policy-validator@8cadb086bd7cce9ffd5a0bb8051b36f778b556bd #v1.0.2
+        with:
+          policy-check-type: "VALIDATE_POLICY"
+          template-path: ${{ env.TEMPLATE_PATH}}
+          region: ${{ env.REGION }}
+      # Print result from VALIDATE_POLICY check
+      - name: Print the result for ValidatePolicy check
+        if: success() || failure()
+        run: echo "${{ steps.run-aws-validate-policy.outputs.result }}"
+      # Run the CHECK_ACCESS_NOT_GRANTED check. More configuration details here - https://github.com/aws-actions/cloudformation-aws-iam-policy-validator
+      - name: Run AWS AccessAnalyzer CheckAccessNotGranted check
+        id: run-aws-check-access-not-granted
+        uses: aws-actions/cloudformation-aws-iam-policy-validator@8cadb086bd7cce9ffd5a0bb8051b36f778b556bd #v1.0.2
+        with:
+          policy-check-type: "CHECK_ACCESS_NOT_GRANTED"
+          template-path: ${{ env.TEMPLATE_PATH}}
+          actions: ${{ env.ACTIONS }}
+          resources: ${{ env.RESOURCES }}
+          region: ${{ env.REGION }}
+      # Print result from CHECK_ACCESS_NOT_GRANTED check
+      - name: Print the result for CheckAccessNotGranted check
+        if: success() || failure()
+        run: echo "${{ steps.run-aws-check-access-not-granted.outputs.result }}"
+      # Run the CHECK_NO_NEW_ACCESS check. More configuration details here - https://github.com/aws-actions/cloudformation-aws-iam-policy-validator
+      # reference-policy is stored in GitHub secrets
+      - name: Run AWS AccessAnalyzer CheckNoNewAccess check
+        id: run-aws-check-no-new-access
+        uses: aws-actions/cloudformation-aws-iam-policy-validator@8cadb086bd7cce9ffd5a0bb8051b36f778b556bd #v1.0.2
+        with:
+          policy-check-type: "CHECK_NO_NEW_ACCESS"
+          template-path: ${{ env.TEMPLATE_PATH}}
+          reference-policy: ${{ env.REFERENCE_POLICY }}
+          reference-policy-type: ${{ env.REFERENCE_POLICY_TYPE }}
+          region: ${{env.REGION }}
+      # Print result from CHECK_NO_NEW_ACCESS check
+      - name: Print the result for CheckNoNewAccess check
+        if: success() || failure()
+        run: echo "${{ steps.run-aws-check-no-new-access.outputs.result }}"
+      # Run the CHECK_NO_PUBLIC_ACCESS check. More configuration details here - https://github.com/aws-actions/cloudformation-aws-iam-policy-validator
+      - name: Run AWS AccessAnalyzer CheckNoPublicAccess check
+        id: run-aws-check-no-public-access
+        uses: aws-actions/cloudformation-aws-iam-policy-validator@8cadb086bd7cce9ffd5a0bb8051b36f778b556bd #v1.0.2
+        with:
+          policy-check-type: "CHECK_NO_PUBLIC_ACCESS"
+          template-path: ${{ env.TEMPLATE_PATH }}
+          region: ${{ env.REGION }}
+      # Print result from CHECK_NO_PUBLIC_ACCESS check
+      - name: Print the result for CheckNoPublicAccess check
+        if: success() || failure()
+        run: echo "${{ steps.run-aws-check-no-public-access.outputs.result }}"
