@@ -49,9 +49,9 @@ LLMQContext::~LLMQContext() {
 }
 
 void LLMQContext::Interrupt() {
-    sigman->InterruptWorkerThread();
-    shareman->InterruptWorkerThread();
     isman->InterruptWorkerThread();
+    shareman->InterruptWorkerThread();
+    sigman->InterruptWorkerThread();
 }
 
 void LLMQContext::Start(CConnman& connman, PeerManager& peerman)
@@ -60,9 +60,9 @@ void LLMQContext::Start(CConnman& connman, PeerManager& peerman)
         qdkgsman->StartThreads(connman, peerman);
     }
     qman->Start();
+    sigman->StartWorkerThread(peerman);
     shareman->RegisterAsRecoveredSigsListener();
     shareman->StartWorkerThread(connman, peerman);
-    sigman->StartWorkerThread(peerman);
     clhandler->Start(*isman);
     isman->Start(peerman);
 }
