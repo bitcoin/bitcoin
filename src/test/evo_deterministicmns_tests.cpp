@@ -22,6 +22,8 @@
 #include <evo/deterministicmns.h>
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
+#include <llmq/context.h>
+#include <llmq/instantsend.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -653,7 +655,7 @@ void FuncTestMempoolReorg(TestChainSetup& setup)
 
     CTxMemPool testPool;
     if (setup.m_node.dmnman) {
-        testPool.ConnectManagers(setup.m_node.dmnman.get());
+        testPool.ConnectManagers(setup.m_node.dmnman.get(), setup.m_node.llmq_ctx->isman);
     }
     TestMemPoolEntryHelper entry;
     LOCK2(cs_main, testPool.cs);
@@ -727,7 +729,7 @@ void FuncTestMempoolDualProregtx(TestChainSetup& setup)
 
     CTxMemPool testPool;
     if (setup.m_node.dmnman) {
-        testPool.ConnectManagers(setup.m_node.dmnman.get());
+        testPool.ConnectManagers(setup.m_node.dmnman.get(), setup.m_node.llmq_ctx->isman);
     }
     TestMemPoolEntryHelper entry;
     LOCK2(cs_main, testPool.cs);

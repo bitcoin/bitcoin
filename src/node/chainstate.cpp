@@ -220,7 +220,6 @@ void DashChainstateSetup(ChainstateManager& chainman,
     // Same logic as pblocktree
     dmnman.reset();
     dmnman = std::make_unique<CDeterministicMNManager>(chainman.ActiveChainstate(), *evodb);
-    mempool->ConnectManagers(dmnman.get());
 
     cpoolman.reset();
     cpoolman = std::make_unique<CCreditPoolManager>(*evodb);
@@ -235,6 +234,7 @@ void DashChainstateSetup(ChainstateManager& chainman,
     llmq_ctx.reset();
     llmq_ctx = std::make_unique<LLMQContext>(chainman, *dmnman, *evodb, mn_metaman, *mnhf_manager, sporkman,
                                              *mempool, mn_activeman.get(), mn_sync, /*unit_tests=*/false, /*wipe=*/fReset || fReindexChainState);
+    mempool->ConnectManagers(dmnman.get(), llmq_ctx->isman);
     // Enable CMNHFManager::{Process, Undo}Block
     mnhf_manager->ConnectManagers(&chainman, llmq_ctx->qman.get());
 

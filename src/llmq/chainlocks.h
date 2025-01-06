@@ -31,6 +31,7 @@ class CTxMemPool;
 
 namespace llmq
 {
+class CInstantSendManager;
 class CSigningManager;
 class CSigSharesManager;
 enum class VerifyRecSigStatus;
@@ -89,7 +90,7 @@ public:
                                 const CMasternodeSync& mn_sync, bool is_masternode);
     ~CChainLocksHandler();
 
-    void Start();
+    void Start(const llmq::CInstantSendManager& isman);
     void Stop();
 
     bool AlreadyHave(const CInv& inv) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
@@ -100,12 +101,12 @@ public:
                                                               const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> pindexNew) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    void UpdatedBlockTip();
+    void UpdatedBlockTip(const llmq::CInstantSendManager& isman);
     void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindexDisconnected) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void CheckActiveState() EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    void TrySignChainTip() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void TrySignChainTip(const llmq::CInstantSendManager& isman) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void EnforceBestChainLock() EXCLUSIVE_LOCKS_REQUIRED(!cs);
     [[nodiscard]] MessageProcessingResult HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs);

@@ -52,14 +52,14 @@ CChainLocksHandler::~CChainLocksHandler()
     scheduler_thread->join();
 }
 
-void CChainLocksHandler::Start()
+void CChainLocksHandler::Start(const llmq::CInstantSendManager& isman)
 {
     sigman.RegisterRecoveredSigsListener(this);
     scheduler->scheduleEvery([&]() {
         CheckActiveState();
         EnforceBestChainLock();
         // regularly retry signing the current chaintip as it might have failed before due to missing islocks
-        TrySignChainTip();
+        TrySignChainTip(isman);
     }, std::chrono::seconds{5});
 }
 
@@ -183,7 +183,7 @@ void CChainLocksHandler::AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> p
     }
 }
 
-void CChainLocksHandler::UpdatedBlockTip()
+void CChainLocksHandler::UpdatedBlockTip(const llmq::CInstantSendManager& isman)
 {
     // don't call TrySignChainTip directly but instead let the scheduler call it. This way we ensure that cs_main is
     // never locked and TrySignChainTip is not called twice in parallel. Also avoids recursive calls due to
@@ -193,7 +193,7 @@ void CChainLocksHandler::UpdatedBlockTip()
         scheduler->scheduleFromNow([&]() {
             CheckActiveState();
             EnforceBestChainLock();
-            TrySignChainTip();
+            TrySignChainTip(isman);
             tryLockChainTipScheduled = false;
         }, std::chrono::seconds{0});
     }
@@ -215,7 +215,7 @@ void CChainLocksHandler::CheckActiveState()
     }
 }
 
-void CChainLocksHandler::TrySignChainTip()
+void CChainLocksHandler::TrySignChainTip(const llmq::CInstantSendManager& isman)
 {
     Cleanup();
 
@@ -272,7 +272,7 @@ void CChainLocksHandler::TrySignChainTip()
     // considered safe when it is islocked or at least known since 10 minutes (from mempool or block). These checks are
     // performed for the tip (which we try to sign) and the previous 5 blocks. If a ChainLocked block is found on the
     // way down, we consider all TXs to be safe.
-    if (quorumInstantSendManager->IsInstantSendEnabled() && quorumInstantSendManager->RejectConflictingBlocks()) {
+    if (isman.IsInstantSendEnabled() && isman.RejectConflictingBlocks()) {
         const auto* pindexWalk = pindex;
         while (pindexWalk != nullptr) {
             if (pindex->nHeight - pindexWalk->nHeight > 5) {
@@ -303,7 +303,7 @@ void CChainLocksHandler::TrySignChainTip()
                     }
                 }
 
-                if (txAge < WAIT_FOR_ISLOCK_TIMEOUT && !quorumInstantSendManager->IsLocked(txid)) {
+                if (txAge < WAIT_FOR_ISLOCK_TIMEOUT && !isman.IsLocked(txid)) {
                     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- not signing block %s due to TX %s not being islocked and not old enough. age=%d\n", __func__,
                               pindexWalk->GetBlockHash().ToString(), txid.ToString(), txAge);
                     return;

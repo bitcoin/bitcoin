@@ -22,6 +22,9 @@ class CMasternodeMetaMan;
 class CMasternodeSync;
 class CTxMemPool;
 class PeerManager;
+namespace llmq {
+class CInstantSendManager;
+};
 
 #ifdef ENABLE_WALLET
 class CCoinJoinClientQueueManager;
@@ -33,7 +36,8 @@ struct CJContext {
     CJContext(const CJContext&) = delete;
     CJContext(ChainstateManager& chainman, CConnman& connman, CDeterministicMNManager& dmnman,
               CMasternodeMetaMan& mn_metaman, CTxMemPool& mempool, const CActiveMasternodeManager* const mn_activeman,
-              const CMasternodeSync& mn_sync, std::unique_ptr<PeerManager>& peerman, bool relay_txes);
+              const CMasternodeSync& mn_sync, const llmq::CInstantSendManager& isman,
+              std::unique_ptr<PeerManager>& peerman, bool relay_txes);
     ~CJContext();
 
     const std::unique_ptr<CDSTXManager> dstxman;

@@ -125,7 +125,8 @@ void DashChainstateSetupClose(NodeContext& node)
 void DashPostChainstateSetup(NodeContext& node)
 {
     node.cj_ctx = std::make_unique<CJContext>(*node.chainman, *node.connman, *node.dmnman, *node.mn_metaman, *node.mempool,
-                                              /*mn_activeman=*/nullptr, *node.mn_sync, node.peerman, /*relay_txes=*/true);
+                                              /*mn_activeman=*/nullptr, *node.mn_sync, *node.llmq_ctx->isman, node.peerman,
+                                              /*relay_txes=*/true);
 #ifdef ENABLE_WALLET
     node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);
 #endif // ENABLE_WALLET

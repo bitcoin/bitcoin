@@ -78,7 +78,7 @@ void LLMQContext::Start(CConnman& connman, PeerManager& peerman)
     shareman->StartWorkerThread(connman, peerman);
     sigman->StartWorkerThread(peerman);
 
-    clhandler->Start();
+    clhandler->Start(*isman);
     llmq::quorumInstantSendManager->Start(peerman);
 }
 

@@ -166,6 +166,7 @@ void CCoinJoinClientManager::ProcessMessage(CNode& peer, CChainState& active_cha
 CCoinJoinClientSession::CCoinJoinClientSession(const std::shared_ptr<CWallet>& wallet, CoinJoinWalletManager& walletman,
                                                CCoinJoinClientManager& clientman, CDeterministicMNManager& dmnman,
                                                CMasternodeMetaMan& mn_metaman, const CMasternodeSync& mn_sync,
+                                               const llmq::CInstantSendManager& isman,
                                                const std::unique_ptr<CCoinJoinClientQueueManager>& queueman,
                                                bool is_masternode) :
     m_wallet(wallet),
@@ -174,6 +175,7 @@ CCoinJoinClientSession::CCoinJoinClientSession(const std::shared_ptr<CWallet>& w
     m_dmnman(dmnman),
     m_mn_metaman(mn_metaman),
     m_mn_sync(mn_sync),
+    m_isman{isman},
     m_queueman(queueman),
     m_is_masternode{is_masternode}
 {}
@@ -589,7 +591,8 @@ bool CCoinJoinClientSession::SignFinalTransaction(CNode& peer, CChainState& acti
 
     // Make sure all inputs/outputs are valid
     PoolMessage nMessageID{MSG_NOERR};
-    if (!IsValidInOuts(active_chainstate, mempool, finalMutableTransaction.vin, finalMutableTransaction.vout, nMessageID, nullptr)) {
+    if (!IsValidInOuts(active_chainstate, m_isman, mempool, finalMutableTransaction.vin, finalMutableTransaction.vout,
+                       nMessageID, nullptr)) {
         WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::%s -- ERROR! IsValidInOuts() failed: %s\n", __func__, CoinJoin::GetMessageByID(nMessageID).translated);
         UnlockCoins();
         keyHolderStorage.ReturnAll();
@@ -953,7 +956,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(ChainstateManager& chainman
                 return false;
             }
         } else {
-            if (!CoinJoin::IsCollateralValid(chainman, mempool, CTransaction(txMyCollateral))) {
+            if (!CoinJoin::IsCollateralValid(chainman, m_isman, mempool, CTransaction(txMyCollateral))) {
                 WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::DoAutomaticDenominating -- invalid collateral, recreating...\n");
                 if (!CreateCollateralTransaction(txMyCollateral, strReason)) {
                     WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::DoAutomaticDenominating -- create collateral error: %s\n", strReason);
@@ -1012,7 +1015,7 @@ bool CCoinJoinClientManager::DoAutomaticDenominating(ChainstateManager& chainman
     AssertLockNotHeld(cs_deqsessions);
     LOCK(cs_deqsessions);
     if (int(deqSessions.size()) < CCoinJoinClientOptions::GetSessions()) {
-        deqSessions.emplace_back(m_wallet, m_walletman, *this, m_dmnman, m_mn_metaman, m_mn_sync, m_queueman,
+        deqSessions.emplace_back(m_wallet, m_walletman, *this, m_dmnman, m_mn_metaman, m_mn_sync, m_isman, m_queueman,
                                  m_is_masternode);
     }
     for (auto& session : deqSessions) {
@@ -1915,7 +1918,8 @@ void CoinJoinWalletManager::Add(const std::shared_ptr<CWallet>& wallet)
         LOCK(cs_wallet_manager_map);
         m_wallet_manager_map.try_emplace(wallet->GetName(),
                                          std::make_unique<CCoinJoinClientManager>(wallet, *this, m_dmnman, m_mn_metaman,
-                                                                                  m_mn_sync, m_queueman, m_is_masternode));
+                                                                                  m_mn_sync, m_isman, m_queueman,
+                                                                                  m_is_masternode));
     }
     g_wallet_init_interface.InitCoinJoinSettings(*this);
 }
