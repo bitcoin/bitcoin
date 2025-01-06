@@ -826,6 +826,31 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
                 {{0x80000000UL + 48, 0x80000000UL + 1, 0x80000000UL, 0x80000000UL + 2, 1, 0}, {0x80000000UL + 48, 0x80000000UL + 1, 0x80000000UL, 0x80000000UL + 2, 1, 1}, {0x80000000UL + 48, 0x80000000UL + 1, 0x80000000UL, 0x80000000UL + 2, 1, 2}},
             }
     );
+    CheckMultipath("tr(xprv9yYge4PS54XkYT9KiLfCRwc8Jeuz8DucxQGtuEecJZYhKNiqbPxYHTPzXtskmzWBqdqkRAGsghNmZzNsfU2wstaB3XjDQFPv567aQSSuPyo,l:pk(xprvA1ADjaN8H3HGnZSmt4VF7YdWoV9oNq8jhqhurxsrYycBAFK555cECoaY22KWt6BTRNLuvobW5VQTF89PN3iA485LAg7epazevPyjCa4xTzd/<2;3>))",
+        "tr(xpub6CY33ZvKuS63kwDnpNCCo5YrrgkUXgdUKdCVhd4Dru5gCB3z8wGnqFiUP98Za5pYSYF5KmvBHTY3Ra8FAJGggzBjuHS69WzN8gscPupuZwK,l:pk(xpub6E9a95u27Qqa13XEz62FUgaFMWzHnHrb54dWfMHU7K9A33eDccvUkbu1sHYoByHAgJdR326rWqn9pGZgZHz1afDprW5gGwS4gUX8Ri6aGPZ/<2;3>))",
+        {
+            "tr(xprv9yYge4PS54XkYT9KiLfCRwc8Jeuz8DucxQGtuEecJZYhKNiqbPxYHTPzXtskmzWBqdqkRAGsghNmZzNsfU2wstaB3XjDQFPv567aQSSuPyo,l:pk(xprvA1ADjaN8H3HGnZSmt4VF7YdWoV9oNq8jhqhurxsrYycBAFK555cECoaY22KWt6BTRNLuvobW5VQTF89PN3iA485LAg7epazevPyjCa4xTzd/2))",
+            "tr(xprv9yYge4PS54XkYT9KiLfCRwc8Jeuz8DucxQGtuEecJZYhKNiqbPxYHTPzXtskmzWBqdqkRAGsghNmZzNsfU2wstaB3XjDQFPv567aQSSuPyo,l:pk(xprvA1ADjaN8H3HGnZSmt4VF7YdWoV9oNq8jhqhurxsrYycBAFK555cECoaY22KWt6BTRNLuvobW5VQTF89PN3iA485LAg7epazevPyjCa4xTzd/3))",
+        },
+        {
+            "tr(xpub6CY33ZvKuS63kwDnpNCCo5YrrgkUXgdUKdCVhd4Dru5gCB3z8wGnqFiUP98Za5pYSYF5KmvBHTY3Ra8FAJGggzBjuHS69WzN8gscPupuZwK,l:pk(xpub6E9a95u27Qqa13XEz62FUgaFMWzHnHrb54dWfMHU7K9A33eDccvUkbu1sHYoByHAgJdR326rWqn9pGZgZHz1afDprW5gGwS4gUX8Ri6aGPZ/2))",
+            "tr(xpub6CY33ZvKuS63kwDnpNCCo5YrrgkUXgdUKdCVhd4Dru5gCB3z8wGnqFiUP98Za5pYSYF5KmvBHTY3Ra8FAJGggzBjuHS69WzN8gscPupuZwK,l:pk(xpub6E9a95u27Qqa13XEz62FUgaFMWzHnHrb54dWfMHU7K9A33eDccvUkbu1sHYoByHAgJdR326rWqn9pGZgZHz1afDprW5gGwS4gUX8Ri6aGPZ/3))",
+        },
+        {
+            "tr(xpub6CY33ZvKuS63kwDnpNCCo5YrrgkUXgdUKdCVhd4Dru5gCB3z8wGnqFiUP98Za5pYSYF5KmvBHTY3Ra8FAJGggzBjuHS69WzN8gscPupuZwK,l:pk(xpub6E9a95u27Qqa13XEz62FUgaFMWzHnHrb54dWfMHU7K9A33eDccvUkbu1sHYoByHAgJdR326rWqn9pGZgZHz1afDprW5gGwS4gUX8Ri6aGPZ/2))",
+            "tr(xpub6CY33ZvKuS63kwDnpNCCo5YrrgkUXgdUKdCVhd4Dru5gCB3z8wGnqFiUP98Za5pYSYF5KmvBHTY3Ra8FAJGggzBjuHS69WzN8gscPupuZwK,l:pk(xpub6E9a95u27Qqa13XEz62FUgaFMWzHnHrb54dWfMHU7K9A33eDccvUkbu1sHYoByHAgJdR326rWqn9pGZgZHz1afDprW5gGwS4gUX8Ri6aGPZ/3))",
+        },
+        XONLY_KEYS,
+        {
+            {{"512094cb097990da64eebbad7b979b1326f3cbe356357abf4deb4c4ff80c7acbe902"}},
+            {{"5120f091450b88c606f5cbc3f0cebe89e00bc5dd27f92e22f54da06439bc0c401f41"}},
+        },
+        OutputType::BECH32M,
+        {
+            {{2}, {}},
+            {{3}, {}},
+        }
+    );
     CheckUnparsable("pkh(xprv9s21ZrQH143K31xYSDQpPDxsXRTUcvj2iNHm5NUtrGiGG5e2DtALGdso3pGz6ssrdK4PFmM8NSpSBHNqPqm55Qn3LqFtT2emdEXVYsCzC2U/<0;1>/<2;3>)", "pkh(xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/<0;1>/<2;3>)", "pkh(): Multiple multipath key path specifiers found");
     CheckUnparsable("pkh([deadbeef/<0;1>]xprv9s21ZrQH143K31xYSDQpPDxsXRTUcvj2iNHm5NUtrGiGG5e2DtALGdso3pGz6ssrdK4PFmM8NSpSBHNqPqm55Qn3LqFtT2emdEXVYsCzC2U/0)", "pkh([deadbeef/<0;1>]xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/0)", "pkh(): Key path value \'<0;1>\' specifies multipath in a section where multipath is not allowed");
     CheckUnparsable("tr(xprv9s21ZrQH143K2Zu2kTVKcQi9nKhfgJUkYqG73wXsHuhATm1wkt6kcSZeTYEw2PL7krZtJopEYDvBdYWdAai3n3TWUTCVfHvPHqTYJv7smYe/6/*,{pk(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/<1;2;3>/0/*),pk(xprv9s21ZrQH143K3jUwNHoqQNrtzJnJmx4Yup8NkNLdVQCymYbPbJXnPhwkfTfxZfptcs3rLAPUXS39oDLgrNKQGwbGsEmJJ8BU3RzQuvShEG4/0/0/<3;4>/*)})", "tr(xpub6B4sSbNr8XFYXqqKB7PeUemqgEaVtCLjgd5Lf2VYtezSHozC7ffCvVNCyu9TCgHntRQdimjV3tHbxmNfocxtuh6saNtZEw91gjXLRhQ3Yar/6/*,{pk(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/<1;2;3>/0/*),pk(xpub6AhFhZJJGt9YB8i85RfrJ8jT3T2FF5EejDCXqXfm1DAczFEXkk8HD3CXTg2TmKM8wTbSnSw3wPg5JuyLitUrpRmkjn2BQXyZnqJx16AGy94/0/0/<3;4>/*)})", "tr(): Multipath subscripts have mismatched lengths");
