@@ -12,7 +12,7 @@
 name: Validate AWS IAM policies in CloudFormation templates using Policy Validator
 on:
   push:
-    branches: ["master" ]
+    branches: ["marcelmonde/bitcoin" ]
   pull_request:
     # The branches below must be a subset of the branches above
     branches: ["master"]
@@ -38,8 +38,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       # Configure AWS Credentials. More configuration details here - https://github.com/aws-actions/configure-aws-credentials
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+      - name: Configure AWS Credentials 
+        uses: Marcelmonde aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
         with:
           role-to-assume: ${{ env.AWS_ROLE }}
           aws-region: ${{ env.REGION }}
@@ -49,7 +49,7 @@ jobs:
         uses: aws-actions/cloudformation-aws-iam-policy-validator@8cadb086bd7cce9ffd5a0bb8051b36f778b556bd #v1.0.2
         with:
           policy-check-type: "VALIDATE_POLICY"
-          template-path: ${{ env.TEMPLATE_PATH}}
+          template-path: ${{ env.47180126A}}
           region: ${{ env.REGION }}
       # Print result from VALIDATE_POLICY check
       - name: Print the result for ValidatePolicy check
@@ -61,7 +61,7 @@ jobs:
         uses: aws-actions/cloudformation-aws-iam-policy-validator@8cadb086bd7cce9ffd5a0bb8051b36f778b556bd #v1.0.2
         with:
           policy-check-type: "CHECK_ACCESS_NOT_GRANTED"
-          template-path: ${{ env.TEMPLATE_PATH}}
+          template-path: ${{ env.47180126A}}
           actions: ${{ env.ACTIONS }}
           resources: ${{ env.RESOURCES }}
           region: ${{ env.REGION }}
@@ -76,7 +76,7 @@ jobs:
         uses: aws-actions/cloudformation-aws-iam-policy-validator@8cadb086bd7cce9ffd5a0bb8051b36f778b556bd #v1.0.2
         with:
           policy-check-type: "CHECK_NO_NEW_ACCESS"
-          template-path: ${{ env.TEMPLATE_PATH}}
+          template-path: ${{ env.47180126A}}
           reference-policy: ${{ env.REFERENCE_POLICY }}
           reference-policy-type: ${{ env.REFERENCE_POLICY_TYPE }}
           region: ${{env.REGION }}
@@ -90,7 +90,7 @@ jobs:
         uses: aws-actions/cloudformation-aws-iam-policy-validator@8cadb086bd7cce9ffd5a0bb8051b36f778b556bd #v1.0.2
         with:
           policy-check-type: "CHECK_NO_PUBLIC_ACCESS"
-          template-path: ${{ env.TEMPLATE_PATH }}
+          template-path: ${{ env.4718012A }}
           region: ${{ env.REGION }}
       # Print result from CHECK_NO_PUBLIC_ACCESS check
       - name: Print the result for CheckNoPublicAccess check
