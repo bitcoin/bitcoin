@@ -636,7 +636,7 @@ static bool rest_mempool_contents(const CoreContext& context, HTTPRequest* req, 
         const LLMQContext* llmq_ctx = GetLLMQContext(context, req);
         if (!llmq_ctx) return false;
 
-        UniValue mempoolObject = MempoolToJSON(*mempool, llmq_ctx->isman, true);
+        UniValue mempoolObject = MempoolToJSON(*mempool, llmq_ctx->isman.get(), true);
 
         std::string strJSON = mempoolObject.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");

@@ -36,15 +36,8 @@ LLMQContext::LLMQContext(ChainstateManager& chainman, CDeterministicMNManager& d
     shareman{std::make_unique<llmq::CSigSharesManager>(*sigman, mn_activeman, *qman, sporkman)},
     clhandler{std::make_unique<llmq::CChainLocksHandler>(chainman.ActiveChainstate(), *qman, *sigman, *shareman,
                                                          sporkman, mempool, mn_sync, is_masternode)},
-    isman{[&]() -> llmq::CInstantSendManager* const {
-        assert(llmq::quorumInstantSendManager == nullptr);
-        llmq::quorumInstantSendManager = std::make_unique<llmq::CInstantSendManager>(*clhandler,
-                                                                                     chainman.ActiveChainstate(), *qman,
-                                                                                     *sigman, *shareman, sporkman,
-                                                                                     mempool, mn_sync, is_masternode,
-                                                                                     unit_tests, wipe);
-        return llmq::quorumInstantSendManager.get();
-    }()},
+    isman{std::make_unique<llmq::CInstantSendManager>(*clhandler, chainman.ActiveChainstate(), *qman, *sigman, *shareman,
+                                                      sporkman, mempool, mn_sync, is_masternode, unit_tests, wipe)},
     ehfSignalsHandler{std::make_unique<llmq::CEHFSignalsHandler>(chainman, mnhfman, *sigman, *shareman, *qman)}
 {
     // Have to start it early to let VerifyDB check ChainLock signatures in coinbase
@@ -53,23 +46,16 @@ LLMQContext::LLMQContext(ChainstateManager& chainman, CDeterministicMNManager& d
 
 LLMQContext::~LLMQContext() {
     bls_worker->Stop();
-
-    // LLMQContext doesn't own these objects, but still need to care of them for consistency:
-    llmq::quorumInstantSendManager.reset();
 }
 
 void LLMQContext::Interrupt() {
     sigman->InterruptWorkerThread();
     shareman->InterruptWorkerThread();
-
-    assert(isman == llmq::quorumInstantSendManager.get());
-    llmq::quorumInstantSendManager->InterruptWorkerThread();
+    isman->InterruptWorkerThread();
 }
 
 void LLMQContext::Start(CConnman& connman, PeerManager& peerman)
 {
-    assert(isman == llmq::quorumInstantSendManager.get());
-
     if (is_masternode) {
         qdkgsman->StartThreads(connman, peerman);
     }
@@ -77,17 +63,13 @@ void LLMQContext::Start(CConnman& connman, PeerManager& peerman)
     shareman->RegisterAsRecoveredSigsListener();
     shareman->StartWorkerThread(connman, peerman);
     sigman->StartWorkerThread(peerman);
-
     clhandler->Start(*isman);
-    llmq::quorumInstantSendManager->Start(peerman);
+    isman->Start(peerman);
 }
 
 void LLMQContext::Stop() {
-    assert(isman == llmq::quorumInstantSendManager.get());
-
-    llmq::quorumInstantSendManager->Stop();
+    isman->Stop();
     clhandler->Stop();
-
     shareman->StopWorkerThread();
     shareman->UnregisterAsRecoveredSigsListener();
     sigman->StopWorkerThread();

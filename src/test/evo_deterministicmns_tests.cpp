@@ -655,7 +655,7 @@ void FuncTestMempoolReorg(TestChainSetup& setup)
 
     CTxMemPool testPool;
     if (setup.m_node.dmnman) {
-        testPool.ConnectManagers(setup.m_node.dmnman.get(), setup.m_node.llmq_ctx->isman);
+        testPool.ConnectManagers(setup.m_node.dmnman.get(), setup.m_node.llmq_ctx->isman.get());
     }
     TestMemPoolEntryHelper entry;
     LOCK2(cs_main, testPool.cs);
@@ -729,7 +729,7 @@ void FuncTestMempoolDualProregtx(TestChainSetup& setup)
 
     CTxMemPool testPool;
     if (setup.m_node.dmnman) {
-        testPool.ConnectManagers(setup.m_node.dmnman.get(), setup.m_node.llmq_ctx->isman);
+        testPool.ConnectManagers(setup.m_node.dmnman.get(), setup.m_node.llmq_ctx->isman.get());
     }
     TestMemPoolEntryHelper entry;
     LOCK2(cs_main, testPool.cs);

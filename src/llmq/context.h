@@ -67,7 +67,7 @@ public:
     const std::unique_ptr<llmq::CSigningManager> sigman;
     const std::unique_ptr<llmq::CSigSharesManager> shareman;
     const std::unique_ptr<llmq::CChainLocksHandler> clhandler;
-    llmq::CInstantSendManager* const isman;
+    const std::unique_ptr<llmq::CInstantSendManager> isman; // TODO: split CInstantSendManager and CInstantSendLock to 2 files
     const std::unique_ptr<llmq::CEHFSignalsHandler> ehfSignalsHandler;
 };
 

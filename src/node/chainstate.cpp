@@ -234,7 +234,7 @@ void DashChainstateSetup(ChainstateManager& chainman,
     llmq_ctx.reset();
     llmq_ctx = std::make_unique<LLMQContext>(chainman, *dmnman, *evodb, mn_metaman, *mnhf_manager, sporkman,
                                              *mempool, mn_activeman.get(), mn_sync, /*unit_tests=*/false, /*wipe=*/fReset || fReindexChainState);
-    mempool->ConnectManagers(dmnman.get(), llmq_ctx->isman);
+    mempool->ConnectManagers(dmnman.get(), llmq_ctx->isman.get());
     // Enable CMNHFManager::{Process, Undo}Block
     mnhf_manager->ConnectManagers(&chainman, llmq_ctx->qman.get());
 
