@@ -6,7 +6,6 @@
 #include <consensus/validation.h>
 #include <evo/evodb.h>
 #include <index/txindex.h>
-#include <llmq/instantsend.h>
 #include <random.h>
 #include <sync.h>
 #include <rpc/blockchain.h>
@@ -42,7 +41,7 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
         return outp;
     };
 
-    CChainState& c1 = WITH_LOCK(cs_main, return manager.InitializeChainstate(&mempool, *m_node.evodb, m_node.chain_helper, llmq::quorumInstantSendManager));
+    CChainState& c1 = WITH_LOCK(cs_main, return manager.InitializeChainstate(&mempool, *m_node.evodb, m_node.chain_helper));
     c1.InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     WITH_LOCK(::cs_main, c1.InitCoinsCache(1 << 23));

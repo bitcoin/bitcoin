@@ -100,7 +100,6 @@
 #include <evo/mnhftx.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/context.h>
-#include <llmq/instantsend.h>
 #include <llmq/quorums.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/options.h>
@@ -1857,7 +1856,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                 node.dmnman,
                                 node.evodb,
                                 node.mnhf_manager,
-                                llmq::quorumInstantSendManager,
                                 llmq::quorumSnapshotManager,
                                 node.llmq_ctx,
                                 Assert(node.mempool.get()),

@@ -16,7 +16,6 @@
 #include <evo/evodb.h>
 #include <evo/mnhftx.h>
 #include <llmq/context.h>
-#include <llmq/instantsend.h>
 #include <llmq/snapshot.h>
 
 std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
@@ -31,7 +30,6 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      std::unique_ptr<CDeterministicMNManager>& dmnman,
                                                      std::unique_ptr<CEvoDB>& evodb,
                                                      std::unique_ptr<CMNHFManager>& mnhf_manager,
-                                                     std::unique_ptr<llmq::CInstantSendManager>& isman,
                                                      std::unique_ptr<llmq::CQuorumSnapshotManager>& qsnapman,
                                                      std::unique_ptr<LLMQContext>& llmq_ctx,
                                                      CTxMemPool* mempool,
@@ -65,7 +63,7 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
     mnhf_manager.reset();
     mnhf_manager = std::make_unique<CMNHFManager>(*evodb);
 
-    chainman.InitializeChainstate(mempool, *evodb, chain_helper, isman);
+    chainman.InitializeChainstate(mempool, *evodb, chain_helper);
     chainman.m_total_coinstip_cache = nCoinCacheUsage;
     chainman.m_total_coinsdb_cache = nCoinDBCache;
 
@@ -241,8 +239,8 @@ void DashChainstateSetup(ChainstateManager& chainman,
     mnhf_manager->ConnectManagers(&chainman, llmq_ctx->qman.get());
 
     chain_helper.reset();
-    chain_helper = std::make_unique<CChainstateHelper>(*cpoolman, *dmnman, *mnhf_manager, govman, *(llmq_ctx->quorum_block_processor), chainman,
-                                                       consensus_params, mn_sync, sporkman, *(llmq_ctx->clhandler), *(llmq_ctx->qman));
+    chain_helper = std::make_unique<CChainstateHelper>(*cpoolman, *dmnman, *mnhf_manager, govman, *(llmq_ctx->isman), *(llmq_ctx->quorum_block_processor),
+                                                       chainman, consensus_params, mn_sync, sporkman, *(llmq_ctx->clhandler), *(llmq_ctx->qman));
 }
 
 void DashChainstateSetupClose(std::unique_ptr<CChainstateHelper>& chain_helper,

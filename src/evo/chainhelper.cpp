@@ -7,13 +7,16 @@
 #include <consensus/params.h>
 #include <evo/specialtxman.h>
 #include <llmq/chainlocks.h>
+#include <llmq/instantsend.h>
 #include <masternode/payments.h>
 
-CChainstateHelper::CChainstateHelper(CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman, CMNHFManager& mnhfman,
-                                     CGovernanceManager& govman, llmq::CQuorumBlockProcessor& qblockman,
+CChainstateHelper::CChainstateHelper(CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman,
+                                     CMNHFManager& mnhfman, CGovernanceManager& govman,
+                                     llmq::CInstantSendManager& isman, llmq::CQuorumBlockProcessor& qblockman,
                                      const ChainstateManager& chainman, const Consensus::Params& consensus_params,
                                      const CMasternodeSync& mn_sync, const CSporkManager& sporkman,
                                      const llmq::CChainLocksHandler& clhandler, const llmq::CQuorumManager& qman) :
+    isman{isman},
     clhandler{clhandler},
     mn_payments{std::make_unique<CMNPaymentsProcessor>(dmnman, govman, chainman, consensus_params, mn_sync, sporkman)},
     special_tx{std::make_unique<CSpecialTxProcessor>(cpoolman, dmnman, mnhfman, qblockman, chainman, consensus_params,
@@ -34,3 +37,24 @@ bool CChainstateHelper::HasChainLock(int nHeight, const uint256& blockHash) cons
 }
 
 int32_t CChainstateHelper::GetBestChainLockHeight() const { return clhandler.GetBestChainLock().getHeight(); }
+
+/** Passthrough functions to CInstantSendManager */
+std::optional<std::pair</*islock_hash=*/uint256, /*txid=*/uint256>> CChainstateHelper::ConflictingISLockIfAny(
+    const CTransaction& tx) const
+{
+    const auto islock = isman.GetConflictingLock(tx);
+    if (!islock) return std::nullopt;
+    return std::make_pair(::SerializeHash(*islock), islock->txid);
+}
+
+bool CChainstateHelper::IsInstantSendWaitingForTx(const uint256& hash) const { return isman.IsWaitingForTx(hash); }
+
+bool CChainstateHelper::RemoveConflictingISLockByTx(const CTransaction& tx)
+{
+    const auto islock = isman.GetConflictingLock(tx);
+    if (!islock) return false;
+    isman.RemoveConflictingLock(::SerializeHash(*islock), *islock);
+    return true;
+}
+
+bool CChainstateHelper::ShouldInstantSendRejectConflicts() const { return isman.RejectConflictingBlocks(); }
