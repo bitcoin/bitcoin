@@ -1969,6 +1969,8 @@ RPCHelpMan listdescriptors()
             {
                 {RPCResult::Type::OBJ, "", "", {
                     {RPCResult::Type::STR, "desc", "Descriptor string representation"},
+                    {RPCResult::Type::STR, "mnemonic", "The mnemonic for this Descriptor wallet (bip39, english words). Presented only if private=true and created with mnemonic"},
+                    {RPCResult::Type::STR, "mnemonicpassphrase", "The mnemonic passphrase for this Descriptor wallet (bip39). Presented only if private=true and created with mnemonic"},
                     {RPCResult::Type::NUM, "timestamp", "The creation time of the descriptor"},
                     {RPCResult::Type::BOOL, "active", "Whether this descriptor is currently used to generate new addresses"},
                     {RPCResult::Type::BOOL, "internal", /*optional=*/true, "True if this descriptor is used to generate change addresses. False if this descriptor is used to generate receiving addresses; defined only for active descriptors"},
@@ -2014,6 +2016,14 @@ RPCHelpMan listdescriptors()
 
         if (!desc_spk_man->GetDescriptorString(descriptor, priv)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Can't get descriptor string.");
+        }
+        if (priv) {
+            SecureString mnemonic;
+            SecureString mnemonic_passphrase;
+            if (desc_spk_man->GetMnemonicString(mnemonic, mnemonic_passphrase) && !mnemonic.empty()) {
+                spk.pushKV("mnemonic", mnemonic.c_str());
+                spk.pushKV("mnemonicpassphrase", mnemonic_passphrase.c_str());
+            }
         }
         spk.pushKV("desc", descriptor);
         spk.pushKV("timestamp", wallet_descriptor.creation_time);
