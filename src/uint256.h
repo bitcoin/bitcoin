@@ -69,16 +69,27 @@ public:
 
     /** @name Hex representation
      *
-     * The reverse-byte hex representation is a convenient way to view the blob
-     * as a number, because it is consistent with the way the base_uint class
-     * converts blobs to numbers.
+     * The hex representation used by GetHex(), ToString(), FromHex() and
+     * SetHexDeprecated() is unusual, since it shows bytes of the base_blob in
+     * reverse order. For example, a 4-byte blob {0x12, 0x34, 0x56, 0x78} is
+     * represented as "78563412" instead of the more typical "12345678"
+     * representation that would be shown in a hex editor or used by typical
+     * byte-array / hex conversion functions like python's bytes.hex() and
+     * bytes.fromhex().
      *
-     * @note base_uint treats the blob as an array of bytes with the numerically
-     * least significant byte first and the most significant byte last. Because
-     * numbers are typically written with the most significant digit first and
-     * the least significant digit last, the reverse hex display of the blob
-     * corresponds to the same numeric value that base_uint interprets from the
-     * blob.
+     * The nice thing about the reverse-byte representation, even though it is
+     * unusual, is that if a blob contains an arithmetic number in little endian
+     * format (with least significant bytes first, and most significant bytes
+     * last), the GetHex() output will match the way the number would normally
+     * be written in base-16 (with most significant digits first and least
+     * significant digits last).
+     *
+     * This means, for example, that ArithToUint256(num).GetHex() can be used to
+     * display an arith_uint256 num value as a number, because
+     * ArithToUint256() converts the number to a blob in little-endian format,
+     * so the arith_uint256 class doesn't need to have its own number parsing
+     * and formatting functions.
+     *
      * @{*/
     std::string GetHex() const;
     /** Unlike FromHex this accepts any invalid input, thus it is fragile and deprecated!
