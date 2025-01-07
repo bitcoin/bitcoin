@@ -94,6 +94,10 @@
         <translation>&amp;Edytuj</translation>
     </message>
     <message>
+        <source>Show address &amp;QR code</source>
+        <translation>Pokaż adres &amp;QR kod</translation>
+    </message>
+    <message>
         <source>QR code</source>
         <translation>Kod QR</translation>
     </message>
@@ -299,6 +303,10 @@
 </context>
 <context>
     <name>BitcoinApplication</name>
+    <message>
+        <source>Internal error</source>
+        <translation>Wewnętrzny błąd</translation>
+    </message>
     </context>
 <context>
     <name>BitcoinGUI</name>
@@ -325,6 +333,10 @@
     <message>
         <source>Request payments (generates QR codes and dash: URIs)</source>
         <translation>Poproś o płatności (generuje kod QR oraz dash: link)</translation>
+    </message>
+    <message>
+        <source>Ctrl+Q</source>
+        <translation>Ctrl+Q</translation>
     </message>
     <message>
         <source>&amp;Options…</source>
@@ -585,6 +597,10 @@
         <translation>Stwórz nowy portfel</translation>
     </message>
     <message>
+        <source>Close all wallets</source>
+        <translation>Zamknij wszystkie portfele</translation>
+    </message>
+    <message>
         <source>%1 &amp;information</source>
         <translation>%1 &amp;Informacje</translation>
     </message>
@@ -636,6 +652,18 @@
     <message>
         <source>Create Wallet…</source>
         <translation>Stwórz Portfel…</translation>
+    </message>
+    <message>
+        <source>Close All Wallets…</source>
+        <translation>Zamknij Wszystkie Portfele</translation>
+    </message>
+    <message>
+        <source>Ctrl+Shift+D</source>
+        <translation>Ctrl+Shift+D</translation>
+    </message>
+    <message>
+        <source>Ctrl+M</source>
+        <translation>Ctrl+M</translation>
     </message>
     <message>
         <source>Syncing Headers (%1%)…</source>
@@ -962,6 +990,11 @@
 <context>
     <name>CreateWalletActivity</name>
     <message>
+        <source>Create Wallet</source>
+        <extracomment>Title of window indicating the progress of creation of a new wallet.</extracomment>
+        <translation>Stwórz Portfel</translation>
+    </message>
+    <message>
         <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
         <extracomment>Descriptive text of the create wallet progress window which indicates to the user which wallet is currently being created.</extracomment>
         <translation>Tworzenie Portfela &lt;b&gt;%1&lt;/b&gt;…</translation>
@@ -986,12 +1019,20 @@
         <translation>Nazwa Portfela</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Portfel</translation>
+    </message>
+    <message>
         <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
         <translation>Zaszyfruj portfel. Portfel zostanie zaszyfrowany wybranym przez ciebie hasłem.</translation>
     </message>
     <message>
         <source>Encrypt Wallet</source>
         <translation>Zaszyfruj Portfel</translation>
+    </message>
+    <message>
+        <source>Advanced Options</source>
+        <translation>Opcje Zaawansowane</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -1401,6 +1442,11 @@
         <translation>domyślny portfel</translation>
     </message>
     <message>
+        <source>Open Wallet</source>
+        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
+        <translation>Otwórz Portfel</translation>
+    </message>
+    <message>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
         <extracomment>Descriptive text of the open wallet progress window which indicates to the user which wallet is currently being opened.</extracomment>
         <translation>Otwieranie Portfela &lt;b&gt;%1&lt;/b&gt;…</translation>
@@ -1527,6 +1573,14 @@
     <message>
         <source>Target balance</source>
         <translation>Docelowe saldo</translation>
+    </message>
+    <message>
+        <source>Target</source>
+        <translation>Cel</translation>
+    </message>
+    <message>
+        <source>Maximum</source>
+        <translation>Maksimum</translation>
     </message>
     <message>
         <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1950,6 +2004,30 @@
 </context>
 <context>
     <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Sign Tx</source>
+        <translation>Podpisz Tx</translation>
+    </message>
+    <message>
+        <source>Broadcast Tx</source>
+        <translation>Transmituj Tx</translation>
+    </message>
+    <message>
+        <source>Copy to Clipboard</source>
+        <translation>Wklej do schowka</translation>
+    </message>
+    <message>
+        <source>Save…</source>
+        <translation>Zapisz...</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Zamknij</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>lub</translation>
+    </message>
     </context>
 <context>
     <name>PaymentServer</name>
@@ -1991,6 +2069,21 @@
         <translation>Ping</translation>
     </message>
     <message>
+        <source>Age</source>
+        <extracomment>Title of Peers Table column which indicates the duration (length of time) since the peer connection started.</extracomment>
+        <translation>Wiek</translation>
+    </message>
+    <message>
+        <source>Direction</source>
+        <extracomment>Title of Peers Table column which indicates the direction the peer connection was initiated from.</extracomment>
+        <translation>Cel</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <extracomment>Title of Peers Table column which describes the type of peer connection. The "type" describes why the connection exists.</extracomment>
+        <translation>Typ</translation>
+    </message>
+    <message>
         <source>Sent</source>
         <extracomment>Title of Peers Table column which indicates the total amount of network information we have sent to the peer.</extracomment>
         <translation>Wysłany</translation>
@@ -1999,6 +2092,16 @@
         <source>Received</source>
         <extracomment>Title of Peers Table column which indicates the total amount of network information we have received from the peer.</extracomment>
         <translation>Otrzymany</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
+        <translation>Adres</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
+        <translation>Sieć</translation>
     </message>
     </context>
 <context>
@@ -2152,6 +2255,14 @@
     <message>
         <source>This can also be adjusted later in the "Appearance" tab of the preferences.</source>
         <translation>Może to być później zmienione w zakładce preferencji nazwanej "Wygląd"</translation>
+    </message>
+    <message>
+        <source>Ctrl+W</source>
+        <translation>Ctrl+W</translation>
+    </message>
+    <message>
+        <source>Internal</source>
+        <translation>Wewnętrzny</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -2571,6 +2682,46 @@
         <translation>Wykonywanie polecenia bez żadnego portfela</translation>
     </message>
     <message>
+        <source>Ctrl++</source>
+        <extracomment>Main shortcut to increase the RPC console font size.</extracomment>
+        <translation>Ctrl++</translation>
+    </message>
+    <message>
+        <source>Ctrl+=</source>
+        <extracomment>Secondary shortcut to increase the RPC console font size.</extracomment>
+        <translation>Ctrl+=</translation>
+    </message>
+    <message>
+        <source>Ctrl+-</source>
+        <extracomment>Main shortcut to decrease the RPC console font size.</extracomment>
+        <translation>Ctrl+-</translation>
+    </message>
+    <message>
+        <source>Ctrl+_</source>
+        <extracomment>Secondary shortcut to decrease the RPC console font size.</extracomment>
+        <translation>Ctrl+_</translation>
+    </message>
+    <message>
+        <source>Ctrl+Shift+I</source>
+        <translation>Ctrl+Shift+I</translation>
+    </message>
+    <message>
+        <source>Ctrl+Shift+C</source>
+        <translation>Ctrl+Shift+C</translation>
+    </message>
+    <message>
+        <source>Ctrl+Shift+G</source>
+        <translation>Ctrl+Shift+G</translation>
+    </message>
+    <message>
+        <source>Ctrl+Shift+P</source>
+        <translation>Ctrl+Shift+P</translation>
+    </message>
+    <message>
+        <source>Ctrl+Shift+R</source>
+        <translation>Ctrl+Shift+R</translation>
+    </message>
+    <message>
         <source>Executing command using "%1" wallet</source>
         <translation>Wykonywanie polecenia używając portfel "%1"</translation>
     </message>
@@ -2591,10 +2742,18 @@
         <translation>Zweryfikowany Masternode</translation>
     </message>
     <message>
+        <source>Yes</source>
+        <translation>Tak</translation>
+    </message>
+    <message>
         <source>Unknown</source>
         <translation>nieznane</translation>
     </message>
-    </context>
+    <message>
+        <source>Never</source>
+        <translation>Nigdy</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
@@ -2672,6 +2831,18 @@
     <message>
         <source>Enter a message to attach to the payment request</source>
         <translation>Wprowadź wiadomość, którą chcesz dołączyć do żądania zapłaty</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation>&amp;Skopiuj adres</translation>
+    </message>
+    <message>
+        <source>Copy &amp;message</source>
+        <translation>Skopiuj &amp;wiadomość</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation>Skopiuj &amp;ilość</translation>
     </message>
     </context>
 <context>
@@ -3393,6 +3564,10 @@
         <translation>Wygenerowano</translation>
     </message>
     <message>
+        <source>Platform Transfer</source>
+        <translation>Platform Transfer</translation>
+    </message>
+    <message>
         <source>From</source>
         <translation>Od</translation>
     </message>
@@ -3591,6 +3766,10 @@
         <translation>Wydobyto</translation>
     </message>
     <message>
+        <source>Platform Transfer</source>
+        <translation>Platform Transfer</translation>
+    </message>
+    <message>
         <source>%1 Mixing</source>
         <translation>%1 miksowanie</translation>
     </message>
@@ -3718,6 +3897,10 @@
         <translation>Wydobyto</translation>
     </message>
     <message>
+        <source>Platform Transfer</source>
+        <translation>Platform Transfer</translation>
+    </message>
+    <message>
         <source>Other</source>
         <translation>Inne</translation>
     </message>
@@ -3825,6 +4008,10 @@ Przejdź do Plik &gt; Otwórz portfel, aby załadować portfel.
     <message>
         <source>Create a new wallet</source>
         <translation>Stwórz nowy portfel</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Błąd</translation>
     </message>
     </context>
 <context>
