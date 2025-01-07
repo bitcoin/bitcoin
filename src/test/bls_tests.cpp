@@ -24,8 +24,8 @@ void FuncSign(const bool legacy_scheme)
     uint256 msgHash1 = uint256::ONE;
     uint256 msgHash2 = uint256::TWO;
 
-    auto sig1 = sk1.Sign(msgHash1);
-    auto sig2 = sk2.Sign(msgHash1);
+    auto sig1 = sk1.Sign(msgHash1, legacy_scheme);
+    auto sig2 = sk2.Sign(msgHash1, legacy_scheme);
     BOOST_CHECK(sig1.VerifyInsecure(sk1.GetPublicKey(), msgHash1));
     BOOST_CHECK(!sig1.VerifyInsecure(sk1.GetPublicKey(), msgHash2));
     BOOST_CHECK(!sig2.VerifyInsecure(sk1.GetPublicKey(), msgHash1));
@@ -44,7 +44,7 @@ void FuncSerialize(const bool legacy_scheme)
     uint256 msgHash = uint256::ONE;
 
     sk.MakeNewKey();
-    CBLSSignature sig1 = sk.Sign(msgHash);
+    CBLSSignature sig1 = sk.Sign(msgHash, legacy_scheme);
     ds2 << sig1;
     ds3 << CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(sig1), !legacy_scheme);
 
@@ -63,19 +63,21 @@ void FuncSetHexStr(const bool legacy_scheme)
 {
     bls::bls_legacy_scheme.store(legacy_scheme);
 
+    // Note: 2nd bool argument for SetHexStr for bls::PrivateKey has a meaning modOrder, not is-legacy
     CBLSSecretKey sk;
     std::string strValidSecret = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
     // Note: invalid string passed to SetHexStr() should cause it to fail and reset key internal data
-    BOOST_CHECK(sk.SetHexStr(strValidSecret, legacy_scheme));
-    BOOST_CHECK(!sk.SetHexStr("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1g", legacy_scheme)); // non-hex
+    BOOST_CHECK(sk.SetHexStr(strValidSecret, false));
+    BOOST_CHECK(!sk.SetHexStr("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1g", false)); // non-hex
     BOOST_CHECK(!sk.IsValid());
     BOOST_CHECK(sk == CBLSSecretKey());
     // Try few more invalid strings
-    BOOST_CHECK(sk.SetHexStr(strValidSecret, legacy_scheme));
-    BOOST_CHECK(!sk.SetHexStr("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e", legacy_scheme)); // hex but too short
+    BOOST_CHECK(sk.SetHexStr(strValidSecret, false));
+    BOOST_CHECK(!sk.SetHexStr("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e", false)); // hex but too short
     BOOST_CHECK(!sk.IsValid());
-    BOOST_CHECK(sk.SetHexStr(strValidSecret, legacy_scheme));
-    BOOST_CHECK(!sk.SetHexStr("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20", legacy_scheme)); // hex but too long
+    BOOST_CHECK(sk.SetHexStr(strValidSecret, false));
+    BOOST_CHECK(
+        !sk.SetHexStr("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20", false)); // hex but too long
     BOOST_CHECK(!sk.IsValid());
 
     return;
@@ -100,7 +102,7 @@ void FuncKeyAgg(const bool legacy_scheme)
     uint256 msgHash1 = uint256::ONE;
     uint256 msgHash2 = uint256::TWO;
 
-    auto sig = ag_sk.Sign(msgHash1);
+    auto sig = ag_sk.Sign(msgHash1, legacy_scheme);
     BOOST_CHECK(sig.VerifyInsecure(ag_pk, msgHash1));
     BOOST_CHECK(!sig.VerifyInsecure(ag_pk, msgHash2));
 }
@@ -142,7 +144,7 @@ void FuncKeyAggVec(const bool legacy_scheme)
     uint256 msgHash1 = uint256::ONE;
     uint256 msgHash2 = uint256::TWO;
 
-    auto sig = ag_sk.Sign(msgHash1);
+    auto sig = ag_sk.Sign(msgHash1, legacy_scheme);
     BOOST_CHECK(sig.VerifyInsecure(ag_pk, msgHash1));
     BOOST_CHECK(!sig.VerifyInsecure(ag_pk, msgHash2));
 }
@@ -168,7 +170,7 @@ void FuncSigAggSub(const bool legacy_scheme)
         vec_pks.push_back(sk.GetPublicKey());
         hash = GetRandHash();
         vec_hashes.push_back(hash);
-        CBLSSignature sig_i = sk.Sign(hash);
+        CBLSSignature sig_i = sk.Sign(hash, legacy_scheme);
         vec_sigs.push_back(sig_i);
         if (i == 0) {
             // first sig is assigned directly
@@ -219,7 +221,7 @@ void FuncSigAggSecure(const bool legacy_scheme)
     for (int i = 0; i < count; i++) {
         sk.MakeNewKey();
         vec_pks.push_back(sk.GetPublicKey());
-        vec_sigs.push_back(sk.Sign(hash));
+        vec_sigs.push_back(sk.Sign(hash, legacy_scheme));
     }
 
     auto sec_agg_sig = CBLSSignature::AggregateSecure(vec_sigs, vec_pks, hash);
@@ -262,19 +264,20 @@ struct Message
 
 static void AddMessage(std::vector<Message>& vec, uint32_t sourceId, uint32_t msgId, uint8_t msgHash, bool valid)
 {
+    bool legacy_scheme = bls::bls_legacy_scheme.load();
     Message m;
     m.sourceId = sourceId;
     m.msgId = msgId;
     m.msgHash = uint256(msgHash);
     m.sk.MakeNewKey();
     m.pk = m.sk.GetPublicKey();
-    m.sig = m.sk.Sign(m.msgHash);
+    m.sig = m.sk.Sign(m.msgHash, legacy_scheme);
     m.valid = valid;
 
     if (!valid) {
         CBLSSecretKey tmp;
         tmp.MakeNewKey();
-        m.sig = tmp.Sign(m.msgHash);
+        m.sig = tmp.Sign(m.msgHash, legacy_scheme);
     }
 
     vec.emplace_back(m);
@@ -379,7 +382,7 @@ void FuncThresholdSignature(const bool legacy_scheme)
 
     CBLSSecretKey thr_sk = v_threshold_sks[0];
     CBLSPublicKey thr_pk = v_threshold_pks[0];
-    CBLSSignature thr_sig = thr_sk.Sign(hash);
+    CBLSSignature thr_sig = thr_sk.Sign(hash, legacy_scheme);
 
     std::vector<CBLSId> v_size_ids;
     std::vector<CBLSSecretKey> v_size_sk_shares;
@@ -396,7 +399,7 @@ void FuncThresholdSignature(const bool legacy_scheme)
         std::vector<CBLSSignature> v_share_sigs;
         std::vector<CBLSId> v_share_ids;
         for ([[maybe_unused]] const auto j : irange::range(m_shares)) {
-            v_share_sigs.emplace_back(v_size_sk_shares[j].Sign(hash));
+            v_share_sigs.emplace_back(v_size_sk_shares[j].Sign(hash, legacy_scheme));
             BOOST_CHECK(v_share_sigs.back().VerifyInsecure(v_size_pk_shares[j], hash));
             v_share_ids.push_back(v_size_ids[j]);
         }

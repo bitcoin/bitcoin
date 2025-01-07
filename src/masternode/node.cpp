@@ -174,7 +174,6 @@ void CActiveMasternodeManager::InitInternal(const CBlockIndex* pindex)
 
     m_info.proTxHash = dmn->proTxHash;
     m_info.outpoint = dmn->collateralOutpoint;
-    m_info.legacy = dmn->pdmnState->nVersion == CProRegTx::LEGACY_BLS_VERSION;
     m_state = MasternodeState::READY;
 }
 
@@ -275,12 +274,6 @@ template bool CActiveMasternodeManager::Decrypt(const CBLSIESEncryptedObject<CBL
                                                 CBLSSecretKey& ret_obj, int version) const;
 template bool CActiveMasternodeManager::Decrypt(const CBLSIESMultiRecipientObjects<CBLSSecretKey>& obj, size_t idx,
                                                 CBLSSecretKey& ret_obj, int version) const;
-
-[[nodiscard]] CBLSSignature CActiveMasternodeManager::Sign(const uint256& hash) const
-{
-    AssertLockNotHeld(cs);
-    return WITH_READ_LOCK(cs, return m_info.blsKeyOperator.Sign(hash));
-}
 
 [[nodiscard]] CBLSSignature CActiveMasternodeManager::Sign(const uint256& hash, const bool is_legacy) const
 {

@@ -8,6 +8,7 @@
 #include <llmq/params.h>
 #include <llmq/utils.h>
 
+#include <bls/bls_ies.h>
 #include <chainparams.h>
 #include <dbwrapper.h>
 #include <deploymentstatus.h>

@@ -197,11 +197,12 @@ static CBLSPublicKey ParseBLSPubKey(const std::string& hexKey, const std::string
     return pubKey;
 }
 
-static CBLSSecretKey ParseBLSSecretKey(const std::string& hexKey, const std::string& paramName, bool specific_legacy_bls_scheme)
+static CBLSSecretKey ParseBLSSecretKey(const std::string& hexKey, const std::string& paramName)
 {
     CBLSSecretKey secKey;
 
-    if (!secKey.SetHexStr(hexKey, specific_legacy_bls_scheme)) {
+    // Actually, bool flag for bls::PrivateKey has other meaning (modOrder)
+    if (!secKey.SetHexStr(hexKey, false)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid BLS secret key", paramName));
     }
     return secKey;
@@ -306,13 +307,14 @@ static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxP
     }
 }
 
-template<typename SpecialTxPayload>
-static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxPayload& payload, const CBLSSecretKey& key)
+template <typename SpecialTxPayload>
+static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxPayload& payload,
+                                       const CBLSSecretKey& key, bool use_legacy)
 {
     UpdateSpecialTxInputsHash(tx, payload);
 
     uint256 hash = ::SerializeHash(payload);
-    payload.sig = key.Sign(hash);
+    payload.sig = key.Sign(hash, use_legacy);
 }
 
 static std::string SignAndSendSpecialTx(const JSONRPCRequest& request, CChainstateHelper& chain_helper, const ChainstateManager& chainman, const CMutableTransaction& tx, bool fSubmit = true)
@@ -397,7 +399,7 @@ static RPCHelpMan protx_register_fund_wrapper(const bool legacy)
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    return protx_register_common_wrapper(request, legacy, ProTxRegisterAction::Fund, MnType::Regular);
+    return protx_register_common_wrapper(request, self.m_name == "protx register_fund_legacy", ProTxRegisterAction::Fund, MnType::Regular);
 },
     };
 }
@@ -444,7 +446,7 @@ static RPCHelpMan protx_register_wrapper(bool legacy)
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    return protx_register_common_wrapper(request, legacy, ProTxRegisterAction::External, MnType::Regular);
+    return protx_register_common_wrapper(request, self.m_name == "protx register_legacy", ProTxRegisterAction::External, MnType::Regular);
 },
     };
 }
@@ -492,7 +494,7 @@ static RPCHelpMan protx_register_prepare_wrapper(const bool legacy)
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    return protx_register_common_wrapper(request, legacy, ProTxRegisterAction::Prepare, MnType::Regular);
+    return protx_register_common_wrapper(request, self.m_name == "protx register_prepare_legacy", ProTxRegisterAction::Prepare, MnType::Regular);
 },
     };
 }
@@ -652,7 +654,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     tx.nVersion = 3;
     tx.nType = TRANSACTION_PROVIDER_REGISTER;
 
-    const bool use_legacy = isV19active ? specific_legacy_bls_scheme : true;
+    const bool use_legacy = specific_legacy_bls_scheme;
 
     CProRegTx ptx;
     ptx.nType = mnType;
@@ -964,7 +966,6 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
     EnsureWalletIsUnlocked(*wallet);
 
     const bool isV19active{DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
-    const bool is_bls_legacy = !isV19active;
     if (isEvoRequested && !isV19active) {
         throw JSONRPCError(RPC_INVALID_REQUEST, "EvoNodes aren't allowed yet");
     }
@@ -979,7 +980,7 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
         throw std::runtime_error(strprintf("invalid network address %s", request.params[1].get_str()));
     }
 
-    CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[2].get_str(), "operatorKey", is_bls_legacy);
+    CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[2].get_str(), "operatorKey");
 
     size_t paramIdx = 3;
     if (isEvoRequested) {
@@ -1054,13 +1055,13 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
 
     FundSpecialTx(*wallet, tx, ptx, feeSource);
 
-    SignSpecialTxPayloadByHash(tx, ptx, keyOperator);
+    SignSpecialTxPayloadByHash(tx, ptx, keyOperator, !isV19active);
     SetTxPayload(tx, ptx);
 
     return SignAndSendSpecialTx(request, chain_helper, chainman, tx);
 }
 
-static RPCHelpMan protx_update_registrar_wrapper(bool specific_legacy_bls_scheme)
+static RPCHelpMan protx_update_registrar_wrapper(const bool specific_legacy_bls_scheme)
 {
     std::string rpc_name = specific_legacy_bls_scheme ? "update_registrar_legacy" : "update_registrar";
     std::string rpc_full_name = std::string("protx ").append(rpc_name);
@@ -1073,7 +1074,7 @@ static RPCHelpMan protx_update_registrar_wrapper(bool specific_legacy_bls_scheme
         + HELP_REQUIRING_PASSPHRASE,
         {
             GetRpcArg("proTxHash"),
-            specific_legacy_bls_scheme  ? GetRpcArg("operatorPubKey_update_legacy") : GetRpcArg("operatorPubKey_update"),
+            specific_legacy_bls_scheme ? GetRpcArg("operatorPubKey_update_legacy") : GetRpcArg("operatorPubKey_update"),
             GetRpcArg("votingAddress_update"),
             GetRpcArg("payoutAddress_update"),
             GetRpcArg("feeSourceAddress"),
@@ -1086,6 +1087,7 @@ static RPCHelpMan protx_update_registrar_wrapper(bool specific_legacy_bls_scheme
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    const bool use_legacy{self.m_name == "protx update_registrar_legacy"};
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
 
@@ -1106,9 +1108,6 @@ static RPCHelpMan protx_update_registrar_wrapper(bool specific_legacy_bls_scheme
     }
     ptx.keyIDVoting = dmn->pdmnState->keyIDVoting;
     ptx.scriptPayout = dmn->pdmnState->scriptPayout;
-
-    const bool isV19Active{DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
-    const bool use_legacy = isV19Active ? specific_legacy_bls_scheme : true;
 
     if (request.params[1].get_str() != "") {
         // new pubkey
@@ -1210,12 +1209,11 @@ static RPCHelpMan protx_revoke()
     EnsureWalletIsUnlocked(*pwallet);
 
     const bool isV19active{DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
-    const bool is_bls_legacy = !isV19active;
     CProUpRevTx ptx;
     ptx.nVersion = CProUpRevTx::GetVersion(isV19active);
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
 
-    CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[1].get_str(), "operatorKey", is_bls_legacy);
+    CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[1].get_str(), "operatorKey");
 
     if (!request.params[2].isNull()) {
         int32_t nReason = ParseInt32V(request.params[2], "reason");
@@ -1257,7 +1255,7 @@ static RPCHelpMan protx_revoke()
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No payout or fee source addresses found, can't revoke");
     }
 
-    SignSpecialTxPayloadByHash(tx, ptx, keyOperator);
+    SignSpecialTxPayloadByHash(tx, ptx, keyOperator, !isV19active);
     SetTxPayload(tx, ptx);
 
     return SignAndSendSpecialTx(request, chain_helper, chainman, tx);
@@ -1703,77 +1701,68 @@ static RPCHelpMan protx_help()
 
 static RPCHelpMan bls_generate()
 {
-    return RPCHelpMan{"bls generate",
+    return RPCHelpMan{
+        "bls generate",
         "\nReturns a BLS secret/public key pair.\n",
         {
-            {"legacy", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true until the v19 fork is activated, otherwise false"}, "Use legacy BLS scheme"},
-            },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR_HEX, "secret", "BLS secret key"},
-                {RPCResult::Type::STR_HEX, "public", "BLS public key"},
-                {RPCResult::Type::STR_HEX, "scheme", "BLS scheme (valid schemes: legacy, basic)"}
-            }},
-        RPCExamples{
-            HelpExampleCli("bls generate", "")
+            {"legacy", RPCArg::Type::BOOL, RPCArg::Default{false}, "Set it true if need in legacy BLS scheme"},
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
-    const ChainstateManager& chainman = EnsureChainman(node);
-
-    CBLSSecretKey sk;
-    sk.MakeNewKey();
-    bool bls_legacy_scheme{!DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
-    if (!request.params[0].isNull()) {
-        bls_legacy_scheme = ParseBoolV(request.params[0], "bls_legacy_scheme");
-    }
-    UniValue ret(UniValue::VOBJ);
-    ret.pushKV("secret", sk.ToString());
-    ret.pushKV("public", sk.GetPublicKey().ToString(bls_legacy_scheme));
-    std::string bls_scheme_str = bls_legacy_scheme ? "legacy" : "basic";
-    ret.pushKV("scheme", bls_scheme_str);
-    return ret;
-},
+        RPCResult{RPCResult::Type::OBJ,
+                  "",
+                  "",
+                  {{RPCResult::Type::STR_HEX, "secret", "BLS secret key"},
+                   {RPCResult::Type::STR_HEX, "public", "BLS public key"},
+                   {RPCResult::Type::STR_HEX, "scheme", "BLS scheme (valid schemes: legacy, basic)"}}},
+        RPCExamples{HelpExampleCli("bls generate", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            CBLSSecretKey sk;
+            sk.MakeNewKey();
+            bool bls_legacy_scheme{false};
+            if (!request.params[0].isNull()) {
+                bls_legacy_scheme = ParseBoolV(request.params[0], "bls_legacy_scheme");
+            }
+            UniValue ret(UniValue::VOBJ);
+            ret.pushKV("secret", sk.ToString());
+            ret.pushKV("public", sk.GetPublicKey().ToString(bls_legacy_scheme));
+            std::string bls_scheme_str = bls_legacy_scheme ? "legacy" : "basic";
+            ret.pushKV("scheme", bls_scheme_str);
+            return ret;
+        },
     };
 }
 
 static RPCHelpMan bls_fromsecret()
 {
-    return RPCHelpMan{"bls fromsecret",
+    return RPCHelpMan{
+        "bls fromsecret",
         "\nParses a BLS secret key and returns the secret/public key pair.\n",
         {
             {"secret", RPCArg::Type::STR, RPCArg::Optional::NO, "The BLS secret key"},
-            {"legacy", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true until the v19 fork is activated, otherwise false"}, "Use legacy BLS scheme"},
+            {"legacy", RPCArg::Type::BOOL, RPCArg::Default{false}, "Pass true if you need in legacy scheme"},
         },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR_HEX, "secret", "BLS secret key"},
-                {RPCResult::Type::STR_HEX, "public", "BLS public key"},
-                {RPCResult::Type::STR_HEX, "scheme", "BLS scheme (valid schemes: legacy, basic)"},
-            }},
+        RPCResult{RPCResult::Type::OBJ,
+                  "",
+                  "",
+                  {
+                      {RPCResult::Type::STR_HEX, "secret", "BLS secret key"},
+                      {RPCResult::Type::STR_HEX, "public", "BLS public key"},
+                      {RPCResult::Type::STR_HEX, "scheme", "BLS scheme (valid schemes: legacy, basic)"},
+                  }},
         RPCExamples{
-            HelpExampleCli("bls fromsecret", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
+            HelpExampleCli("bls fromsecret", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            bool bls_legacy_scheme{false};
+            if (!request.params[1].isNull()) {
+                bls_legacy_scheme = ParseBoolV(request.params[1], "bls_legacy_scheme");
+            }
+            CBLSSecretKey sk = ParseBLSSecretKey(request.params[0].get_str(), "secretKey");
+            UniValue ret(UniValue::VOBJ);
+            ret.pushKV("secret", sk.ToString());
+            ret.pushKV("public", sk.GetPublicKey().ToString(bls_legacy_scheme));
+            std::string bls_scheme_str = bls_legacy_scheme ? "legacy" : "basic";
+            ret.pushKV("scheme", bls_scheme_str);
+            return ret;
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
-    const ChainstateManager& chainman = EnsureChainman(node);
-
-    bool bls_legacy_scheme{!DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
-    if (!request.params[1].isNull()) {
-        bls_legacy_scheme = ParseBoolV(request.params[1], "bls_legacy_scheme");
-    }
-    CBLSSecretKey sk = ParseBLSSecretKey(request.params[0].get_str(), "secretKey", bls_legacy_scheme);
-    UniValue ret(UniValue::VOBJ);
-    ret.pushKV("secret", sk.ToString());
-    ret.pushKV("public", sk.GetPublicKey().ToString(bls_legacy_scheme));
-    std::string bls_scheme_str = bls_legacy_scheme ? "legacy" : "basic";
-    ret.pushKV("scheme", bls_scheme_str);
-    return ret;
-},
     };
 }
 

@@ -22,7 +22,6 @@ struct CActiveMasternodeInfo {
     uint256 proTxHash;
     COutPoint outpoint;
     CService service;
-    bool legacy{true};
 
     CActiveMasternodeInfo(const CBLSSecretKey& blsKeyOperator, const CBLSPublicKey& blsPubKeyOperator) :
         blsKeyOperator(blsKeyOperator), blsPubKeyOperator(blsPubKeyOperator) {};
@@ -66,7 +65,6 @@ public:
     template <template <typename> class EncryptedObj, typename Obj>
     [[nodiscard]] bool Decrypt(const EncryptedObj<Obj>& obj, size_t idx, Obj& ret_obj, int version) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    [[nodiscard]] CBLSSignature Sign(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     [[nodiscard]] CBLSSignature Sign(const uint256& hash, const bool is_legacy) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     /* TODO: Reconsider external locking */
@@ -74,7 +72,6 @@ public:
     [[nodiscard]] uint256 GetProTxHash() const { READ_LOCK(cs); return m_info.proTxHash; }
     [[nodiscard]] CService GetService() const { READ_LOCK(cs); return m_info.service; }
     [[nodiscard]] CBLSPublicKey GetPubKey() const;
-    [[nodiscard]] bool IsLegacy() const { READ_LOCK(cs); return m_info.legacy; }
 
 private:
     void InitInternal(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs);

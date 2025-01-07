@@ -60,9 +60,10 @@ BOOST_AUTO_TEST_CASE(verify_mnhf_specialtx_tests)
     BOOST_CHECK(ag_sk.IsValid());
     BOOST_CHECK(ag_pk.IsValid());
 
+    const bool use_legacy{false};
     uint256 verHash = uint256S(ToString(bit));
-    auto sig = ag_sk.Sign(verHash);
-    BOOST_CHECK(sig.VerifyInsecure(ag_pk, verHash));
+    auto sig = ag_sk.Sign(verHash, use_legacy);
+    BOOST_CHECK(sig.VerifyInsecure(ag_pk, verHash, use_legacy));
 
     auto& chainman = Assert(m_node.chainman);
     auto& qman = *Assert(m_node.llmq_ctx)->qman;

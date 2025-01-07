@@ -134,7 +134,7 @@ static CMutableTransaction CreateProUpServTx(const CChain& active_chain, const C
     tx.nType = TRANSACTION_PROVIDER_UPDATE_SERVICE;
     FundTransaction(active_chain, tx, utxos, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey())), 1 * COIN, coinbaseKey);
     proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
-    proTx.sig = operatorKey.Sign(::SerializeHash(proTx));
+    proTx.sig = operatorKey.Sign(::SerializeHash(proTx), bls::bls_legacy_scheme);
     SetTxPayload(tx, proTx);
     SignTransaction(mempool, tx, coinbaseKey);
 
@@ -173,7 +173,7 @@ static CMutableTransaction CreateProUpRevTx(const CChain& active_chain, const CT
     tx.nType = TRANSACTION_PROVIDER_UPDATE_REVOKE;
     FundTransaction(active_chain, tx, utxos, GetScriptForDestination(PKHash(coinbaseKey.GetPubKey())), 1 * COIN, coinbaseKey);
     proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
-    proTx.sig = operatorKey.Sign(::SerializeHash(proTx));
+    proTx.sig = operatorKey.Sign(::SerializeHash(proTx), bls::bls_legacy_scheme);
     SetTxPayload(tx, proTx);
     SignTransaction(mempool, tx, coinbaseKey);
 

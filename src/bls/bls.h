@@ -57,10 +57,6 @@ public:
     static constexpr size_t SerSize = _SerSize;
 
     explicit CBLSWrapper() = default;
-    explicit CBLSWrapper(Span<const unsigned char> vecBytes) : CBLSWrapper<ImplType, _SerSize, C>()
-    {
-        SetByteVector(vecBytes, bls::bls_legacy_scheme.load());
-    }
 
     CBLSWrapper(const CBLSWrapper& ref) = default;
     CBLSWrapper& operator=(const CBLSWrapper& ref) = default;
@@ -129,11 +125,6 @@ public:
             return std::vector<uint8_t>(SerSize, 0);
         }
         return impl.Serialize(specificLegacyScheme);
-    }
-
-    std::vector<uint8_t> ToByteVector() const
-    {
-        return ToByteVector(bls::bls_legacy_scheme.load());
     }
 
     const uint256& GetHash() const
@@ -215,11 +206,6 @@ public:
         return true;
     }
 
-    inline bool CheckMalleable(Span<uint8_t> vecBytes) const
-    {
-        return CheckMalleable(vecBytes, bls::bls_legacy_scheme.load());
-    }
-
     inline std::string ToString(const bool specificLegacyScheme) const
     {
         std::vector<uint8_t> buf = ToByteVector(specificLegacyScheme);
@@ -263,6 +249,7 @@ public:
     explicit CBLSId(const uint256& nHash);
 };
 
+//! CBLSSecretKey is invariant to BLS scheme for Creation / Serialization / Deserialization
 class CBLSSecretKey : public CBLSWrapper<bls::PrivateKey, BLS_CURVE_SECKEY_SIZE, CBLSSecretKey>
 {
 public:
@@ -272,6 +259,11 @@ public:
     using CBLSWrapper::CBLSWrapper;
 
     CBLSSecretKey() = default;
+    explicit CBLSSecretKey(Span<const unsigned char> vecBytes)
+    {
+        // The second param here is not 'is_legacy', but `modOrder`
+        SetByteVector(vecBytes, false);
+    }
     CBLSSecretKey(const CBLSSecretKey&) = default;
     CBLSSecretKey& operator=(const CBLSSecretKey&) = default;
 
@@ -279,12 +271,14 @@ public:
     static CBLSSecretKey AggregateInsecure(Span<CBLSSecretKey> sks);
 
 #ifndef BUILD_BITCOIN_INTERNAL
+    //! MakeNewKey() is invariant to BLS scheme
     void MakeNewKey();
 #endif
+    //! SecretKeyShare() is invariant to BLS scheme
     bool SecretKeyShare(Span<CBLSSecretKey> msk, const CBLSId& id);
 
+    //! GetPublicKey() is invariant to BLS scheme
     [[nodiscard]] CBLSPublicKey GetPublicKey() const;
-    [[nodiscard]] CBLSSignature Sign(const uint256& hash) const;
     [[nodiscard]] CBLSSignature Sign(const uint256& hash, const bool specificLegacyScheme) const;
 };
 
@@ -338,6 +332,10 @@ public:
     using CBLSWrapper::CBLSWrapper;
 
     CBLSSignature() = default;
+    explicit CBLSSignature(Span<const unsigned char> bytes, bool is_serialized_legacy)
+    {
+        SetByteVector(bytes, is_serialized_legacy);
+    }
     CBLSSignature(const CBLSSignature&) = default;
     CBLSSignature& operator=(const CBLSSignature&) = default;
 

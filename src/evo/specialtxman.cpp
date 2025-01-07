@@ -209,7 +209,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
         nTimeMnehf += nTime7 - nTime6;
         LogPrint(BCLog::BENCHMARK, "        - m_mnhfman: %.2fms [%.2fs]\n", 0.001 * (nTime7 - nTime6), nTimeMnehf * 0.000001);
 
-        if (Params().GetConsensus().V19Height == pindex->nHeight + 1) {
+        if (DeploymentActiveAfter(pindex, m_consensus_params, Consensus::DEPLOYMENT_V19) && bls::bls_legacy_scheme.load()) {
             // NOTE: The block next to the activation is the one that is using new rules.
             // V19 activated just activated, so we must switch to the new rules here.
             bls::bls_legacy_scheme.store(false);
@@ -230,7 +230,7 @@ bool CSpecialTxProcessor::UndoSpecialTxsInBlock(const CBlock& block, const CBloc
     auto bls_legacy_scheme = bls::bls_legacy_scheme.load();
 
     try {
-        if (Params().GetConsensus().V19Height == pindex->nHeight + 1) {
+        if (!DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_V19) && !bls_legacy_scheme) {
             // NOTE: The block next to the activation is the one that is using new rules.
             // Removing the activation block here, so we must switch back to the old rules.
             bls::bls_legacy_scheme.store(true);

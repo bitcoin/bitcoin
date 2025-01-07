@@ -8,6 +8,11 @@
 #include <bls/bls.h>
 #include <streams.h>
 
+/**
+ * All objects in this module working from assumption that basic scheme is
+ * available on all masternodes. Serialization of public key for Encrypt and
+ * Decrypt by bls_ies.h done using Basic Scheme.
+ */
 class CBLSIESEncryptedBlob
 {
 public:
@@ -22,7 +27,6 @@ public:
         READWRITE(obj.ephemeralPubKey, obj.ivSeed, obj.data);
     }
 
-    bool Encrypt(size_t idx, const CBLSPublicKey& peerPubKey, const void* data, size_t dataSize);
     bool Decrypt(size_t idx, const CBLSSecretKey& secretKey, CDataStream& decryptedDataRet) const;
     bool IsValid() const;
 };
@@ -38,17 +42,6 @@ public:
         ephemeralPubKey = ephemeralPubKeyIn;
         ivSeed = ivSeedIn;
         data = dataIn;
-    }
-
-    bool Encrypt(size_t idx, const CBLSPublicKey& peerPubKey, const Object& obj, int nVersion)
-    {
-        try {
-            CDataStream ds(SER_NETWORK, nVersion);
-            ds << obj;
-            return CBLSIESEncryptedBlob::Encrypt(idx, peerPubKey, ds.data(), ds.size());
-        } catch (const std::exception&) {
-            return false;
-        }
     }
 
     bool Decrypt(size_t idx, const CBLSSecretKey& secretKey, Object& objRet, int nVersion) const
@@ -80,8 +73,6 @@ public:
     CBLSSecretKey ephemeralSecretKey;
     std::vector<uint256> ivVector;
 
-    bool Encrypt(const std::vector<CBLSPublicKey>& recipients, const BlobVector& _blobs);
-
     void InitEncrypt(size_t count);
     bool Encrypt(size_t idx, const CBLSPublicKey& recipient, const Blob& blob);
     bool Decrypt(size_t idx, const CBLSSecretKey& sk, Blob& blobRet) const;
@@ -96,28 +87,6 @@ template <typename Object>
 class CBLSIESMultiRecipientObjects : public CBLSIESMultiRecipientBlobs
 {
 public:
-    using ObjectVector = std::vector<Object>;
-
-    bool Encrypt(const std::vector<CBLSPublicKey>& recipients, const ObjectVector& _objects, int nVersion)
-    {
-        BlobVector blobs;
-        blobs.resize(_objects.size());
-
-        try {
-            CDataStream ds(SER_NETWORK, nVersion);
-            for (size_t i = 0; i < _objects.size(); i++) {
-                ds.clear();
-
-                ds << _objects[i];
-                blobs[i].assign(UCharCast(ds.data()), UCharCast(ds.data() + ds.size()));
-            }
-        } catch (const std::exception&) {
-            return false;
-        }
-
-        return CBLSIESMultiRecipientBlobs::Encrypt(recipients, blobs);
-    }
-
     bool Encrypt(size_t idx, const CBLSPublicKey& recipient, const Object& obj, int nVersion)
     {
         CDataStream ds(SER_NETWORK, nVersion);

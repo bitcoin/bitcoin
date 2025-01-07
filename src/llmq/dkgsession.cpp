@@ -86,7 +86,8 @@ CDKGSession::CDKGSession(const CBlockIndex* pQuorumBaseBlockIndex, const Consens
     m_qsnapman(qsnapman),
     m_mn_activeman(mn_activeman),
     m_sporkman(sporkman),
-    m_quorum_base_block_index{pQuorumBaseBlockIndex}
+    m_quorum_base_block_index{pQuorumBaseBlockIndex},
+    m_use_legacy_bls{!DeploymentActiveAfter(m_quorum_base_block_index, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)}
 {
 }
 
@@ -218,7 +219,7 @@ void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages, PeerMa
 
     logger.Batch("encrypted contributions. time=%d", t1.count());
 
-    qc.sig = m_mn_activeman->Sign(qc.GetSignHash());
+    qc.sig = m_mn_activeman->Sign(qc.GetSignHash(), m_use_legacy_bls);
 
     logger.Flush();
 
@@ -530,7 +531,7 @@ void CDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages, PeerManage
 
     logger.Batch("sending complaint. badCount=%d, complaintCount=%d", badCount, complaintCount);
 
-    qc.sig = m_mn_activeman->Sign(qc.GetSignHash());
+    qc.sig = m_mn_activeman->Sign(qc.GetSignHash(), m_use_legacy_bls);
 
     logger.Flush();
 
@@ -724,7 +725,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, PeerMa
         return;
     }
 
-    qj.sig = m_mn_activeman->Sign(qj.GetSignHash());
+    qj.sig = m_mn_activeman->Sign(qj.GetSignHash(), m_use_legacy_bls);
 
     logger.Flush();
 
@@ -1014,19 +1015,17 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages, PeerManag
         (*commitmentHash.begin())++;
     }
 
-    qc.sig = m_mn_activeman->Sign(commitmentHash);
-    qc.quorumSig = skShare.Sign(commitmentHash);
+    qc.sig = m_mn_activeman->Sign(commitmentHash, m_use_legacy_bls);
+    qc.quorumSig = skShare.Sign(commitmentHash, m_use_legacy_bls);
 
     if (lieType == 3) {
-        const bool is_bls_legacy = bls::bls_legacy_scheme.load();
-        std::vector<uint8_t> buf = qc.sig.ToByteVector(is_bls_legacy);
+        std::vector<uint8_t> buf = qc.sig.ToByteVector(m_use_legacy_bls);
         buf[5]++;
-        qc.sig.SetByteVector(buf, is_bls_legacy);
+        qc.sig.SetByteVector(buf, m_use_legacy_bls);
     } else if (lieType == 4) {
-        const bool is_bls_legacy = bls::bls_legacy_scheme.load();
-        std::vector<uint8_t> buf = qc.quorumSig.ToByteVector(is_bls_legacy);
+        std::vector<uint8_t> buf = qc.quorumSig.ToByteVector(m_use_legacy_bls);
         buf[5]++;
-        qc.quorumSig.SetByteVector(buf, is_bls_legacy);
+        qc.quorumSig.SetByteVector(buf, m_use_legacy_bls);
     }
 
     t3.stop();

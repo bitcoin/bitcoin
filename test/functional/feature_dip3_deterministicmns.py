@@ -12,7 +12,7 @@ from decimal import Decimal
 from test_framework.blocktools import create_block_with_mnpayments
 from test_framework.messages import tx_from_hex
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, force_finish_mnsync, p2p_port
+from test_framework.util import assert_equal, force_finish_mnsync, p2p_port, softfork_active
 
 class Masternode(object):
     pass
@@ -211,7 +211,7 @@ class DIP3Test(BitcoinTestFramework):
         assert old_voting_address != new_voting_address
         # also check if funds from payout address are used when no fee source address is specified
         node.sendtoaddress(mn.rewards_address, 0.001)
-        node.protx('update_registrar', mn.protx_hash, "", new_voting_address, "")
+        node.protx('update_registrar' if softfork_active(node, 'v19') else 'update_registrar_legacy', mn.protx_hash, "", new_voting_address, "")
         self.generate(node, 1)
         new_dmnState = mn.node.masternode("status")["dmnState"]
         new_voting_address_from_rpc = new_dmnState["votingAddress"]
@@ -226,7 +226,7 @@ class DIP3Test(BitcoinTestFramework):
         mn.p2p_port = p2p_port(mn.idx)
         mn.operator_reward = (mn.idx % self.num_initial_mn)
 
-        blsKey = node.bls('generate')
+        blsKey = node.bls('generate') if softfork_active(node, 'v19') else node.bls('generate', True)
         mn.fundsAddr = node.getnewaddress()
         mn.ownerAddr = node.getnewaddress()
         mn.operatorAddr = blsKey['public']
@@ -254,7 +254,7 @@ class DIP3Test(BitcoinTestFramework):
         mn.collateral_address = node.getnewaddress()
         mn.rewards_address = node.getnewaddress()
 
-        mn.protx_hash = node.protx('register_fund', mn.collateral_address, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, mn.operator_reward, mn.rewards_address, mn.fundsAddr)
+        mn.protx_hash = node.protx('register_fund' if softfork_active(node, 'v19') else 'register_fund_legacy', mn.collateral_address, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, mn.operator_reward, mn.rewards_address, mn.fundsAddr)
         mn.collateral_txid = mn.protx_hash
         mn.collateral_vout = None
 
@@ -270,7 +270,7 @@ class DIP3Test(BitcoinTestFramework):
         node.sendtoaddress(mn.fundsAddr, 0.001)
         mn.rewards_address = node.getnewaddress()
 
-        mn.protx_hash = node.protx('register', mn.collateral_txid, mn.collateral_vout, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, mn.operator_reward, mn.rewards_address, mn.fundsAddr)
+        mn.protx_hash = node.protx('register' if softfork_active(node, 'v19') else 'register_legacy', mn.collateral_txid, mn.collateral_vout, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, mn.operator_reward, mn.rewards_address, mn.fundsAddr)
         self.generate(node, 1, sync_fun=self.no_op)
 
     def start_mn(self, mn):
@@ -288,7 +288,7 @@ class DIP3Test(BitcoinTestFramework):
 
     def update_mn_payee(self, mn, payee):
         self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)
-        self.nodes[0].protx('update_registrar', mn.protx_hash, '', '', payee, mn.fundsAddr)
+        self.nodes[0].protx('update_registrar' if softfork_active(self.nodes[0], 'v19') else 'update_registrar_legacy', mn.protx_hash, '', '', payee, mn.fundsAddr)
         self.generate(self.nodes[0], 1)
         info = self.nodes[0].protx('info', mn.protx_hash)
         assert info['state']['payoutAddress'] == payee

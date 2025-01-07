@@ -4315,6 +4315,9 @@ bool TestBlockValidity(BlockValidationState& state,
     AssertLockHeld(cs_main);
     assert(pindexPrev && pindexPrev == chainstate.m_chain.Tip());
 
+    // TODO: instead restoring bls_legacy_scheme better to keep it unchanged
+    // Moreover, current implementation is working incorrent if current function
+    // will return value too early due to error: old value won't be restored
     auto bls_legacy_scheme = bls::bls_legacy_scheme.load();
 
     uint256 hash = block.GetHash();

@@ -1303,7 +1303,8 @@ class DashTestFramework(BitcoinTestFramework):
         return created_mn_info
 
     def dynamically_prepare_masternode(self, idx, node_p2p_port, evo=False, rnd=None):
-        bls = self.nodes[0].bls('generate')
+        v19_active = softfork_active(self.nodes[0], 'v19')
+        bls = self.nodes[0].bls('generate') if v19_active else self.nodes[0].bls('generate', True)
         collateral_address = self.nodes[0].getnewaddress()
         funds_address = self.nodes[0].getnewaddress()
         owner_address = self.nodes[0].getnewaddress()
@@ -1336,7 +1337,7 @@ class DashTestFramework(BitcoinTestFramework):
         if evo:
             protx_result = self.nodes[0].protx("register_evo", collateral_txid, collateral_vout, ipAndPort, owner_address, bls['public'], voting_address, operatorReward, reward_address, platform_node_id, platform_p2p_port, platform_http_port, funds_address, True)
         else:
-            protx_result = self.nodes[0].protx("register", collateral_txid, collateral_vout, ipAndPort, owner_address, bls['public'], voting_address, operatorReward, reward_address, funds_address, True)
+            protx_result = self.nodes[0].protx("register" if v19_active else "register_legacy", collateral_txid, collateral_vout, ipAndPort, owner_address, bls['public'], voting_address, operatorReward, reward_address, funds_address, True)
 
         self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
         tip = self.generate(self.nodes[0], 1)[0]
@@ -1387,7 +1388,9 @@ class DashTestFramework(BitcoinTestFramework):
 
         register_fund = (idx % 2) == 0
 
-        bls = self.nodes[0].bls('generate')
+        v19_active = softfork_active(self.nodes[0], 'v19')
+
+        bls = self.nodes[0].bls('generate') if v19_active else self.nodes[0].bls('generate', True)
         address = self.nodes[0].getnewaddress()
 
         collateral_amount = MASTERNODE_COLLATERAL
@@ -1416,10 +1419,10 @@ class DashTestFramework(BitcoinTestFramework):
         submit = (idx % 4) < 2
 
         if register_fund:
-            protx_result = self.nodes[0].protx('register_fund', address, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, address, submit)
+            protx_result = self.nodes[0].protx('register_fund' if v19_active else 'register_fund_legacy', address, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, address, submit)
         else:
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-            protx_result = self.nodes[0].protx('register', txid, collateral_vout, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, address, submit)
+            protx_result = self.nodes[0].protx('register' if v19_active else 'register_legacy', txid, collateral_vout, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, address, submit)
 
         if submit:
             proTxHash = protx_result
