@@ -36,6 +36,7 @@
 #include <llmq/context.h>
 #include <llmq/instantsend.h>
 #include <llmq/options.h>
+#include <llmq/snapshot.h>
 #include <masternode/payments.h>
 #include <spork.h>
 
@@ -75,6 +76,7 @@ BlockAssembler::BlockAssembler(CChainState& chainstate, const NodeContext& node,
       m_mnhfman(*Assert(node.mnhf_manager)),
       m_clhandler(*Assert(Assert(node.llmq_ctx)->clhandler)),
       m_isman(*Assert(Assert(node.llmq_ctx)->isman)),
+      m_qsnapman(*Assert(Assert(node.llmq_ctx)->qsnapman)),
       chainparams(params),
       m_mempool(mempool),
       m_quorum_block_processor(*Assert(Assert(node.llmq_ctx)->quorum_block_processor)),
@@ -222,7 +224,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         cbTx.nHeight = nHeight;
 
         BlockValidationState state;
-        if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, m_dmnman, state, m_chainstate.CoinsTip())) {
+        if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state, m_dmnman, m_qsnapman, m_chainstate.CoinsTip())) {
             throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, state.ToString()));
         }
         if (fDIP0008Active_context) {

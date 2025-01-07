@@ -201,7 +201,7 @@ RPCHelpMan getrawmempool()
     const CTxMemPool& mempool = EnsureMemPool(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-    return MempoolToJSON(mempool, llmq_ctx.isman, fVerbose, include_mempool_sequence);
+    return MempoolToJSON(mempool, llmq_ctx.isman.get(), fVerbose, include_mempool_sequence);
 },
     };
 }
@@ -264,7 +264,7 @@ RPCHelpMan getmempoolancestors()
             const CTxMemPoolEntry &e = *ancestorIt;
             const uint256& _hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
-            entryToJSON(mempool, info, e, llmq_ctx.isman);
+            entryToJSON(mempool, info, e, llmq_ctx.isman.get());
             o.pushKV(_hash.ToString(), info);
         }
         return o;
@@ -332,7 +332,7 @@ RPCHelpMan getmempooldescendants()
             const CTxMemPoolEntry &e = *descendantIt;
             const uint256& _hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
-            entryToJSON(mempool, info, e, llmq_ctx.isman);
+            entryToJSON(mempool, info, e, llmq_ctx.isman.get());
             o.pushKV(_hash.ToString(), info);
         }
         return o;
@@ -372,7 +372,7 @@ RPCHelpMan getmempoolentry()
     const CTxMemPoolEntry &e = *it;
     UniValue info(UniValue::VOBJ);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
-    entryToJSON(mempool, info, e, llmq_ctx.isman);
+    entryToJSON(mempool, info, e, llmq_ctx.isman.get());
     return info;
 },
     };

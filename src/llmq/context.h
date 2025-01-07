@@ -28,6 +28,7 @@ class CEHFSignalsHandler;
 class CInstantSendManager;
 class CQuorumBlockProcessor;
 class CQuorumManager;
+class CQuorumSnapshotManager;
 class CSigSharesManager;
 class CSigningManager;
 }
@@ -61,13 +62,14 @@ public:
      */
     const std::shared_ptr<CBLSWorker> bls_worker;
     const std::unique_ptr<llmq::CDKGDebugManager> dkg_debugman;
+    const std::unique_ptr<llmq::CQuorumSnapshotManager> qsnapman;
     const std::unique_ptr<llmq::CQuorumBlockProcessor> quorum_block_processor;
     const std::unique_ptr<llmq::CDKGSessionManager> qdkgsman;
     const std::unique_ptr<llmq::CQuorumManager> qman;
     const std::unique_ptr<llmq::CSigningManager> sigman;
     const std::unique_ptr<llmq::CSigSharesManager> shareman;
-    llmq::CChainLocksHandler* const clhandler;
-    llmq::CInstantSendManager* const isman;
+    const std::unique_ptr<llmq::CChainLocksHandler> clhandler;
+    const std::unique_ptr<llmq::CInstantSendManager> isman; // TODO: split CInstantSendManager and CInstantSendLock to 2 files
     const std::unique_ptr<llmq::CEHFSignalsHandler> ehfSignalsHandler;
 };
 

@@ -41,8 +41,6 @@ static const std::string_view DB_ARCHIVED_BY_HASH = "is_a2";
 
 static const std::string_view DB_VERSION = "is_v";
 
-std::unique_ptr<CInstantSendManager> quorumInstantSendManager;
-
 uint256 CInstantSendLock::GetRequestId() const
 {
     CHashWriter hw(SER_GETHASH, 0);

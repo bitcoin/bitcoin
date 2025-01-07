@@ -25,9 +25,10 @@ struct MNListUpdates;
 
 namespace Consensus { struct Params; }
 namespace llmq {
+class CChainLocksHandler;
 class CQuorumBlockProcessor;
 class CQuorumManager;
-class CChainLocksHandler;
+class CQuorumSnapshotManager;
 } // namespace llmq
 
 extern RecursiveMutex cs_main;
@@ -39,6 +40,7 @@ private:
     CDeterministicMNManager& m_dmnman;
     CMNHFManager& m_mnhfman;
     llmq::CQuorumBlockProcessor& m_qblockman;
+    llmq::CQuorumSnapshotManager& m_qsnapman;
     const ChainstateManager& m_chainman;
     const Consensus::Params& m_consensus_params;
     const llmq::CChainLocksHandler& m_clhandler;
@@ -50,10 +52,20 @@ private:
 
 public:
     explicit CSpecialTxProcessor(CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman, CMNHFManager& mnhfman,
-                                 llmq::CQuorumBlockProcessor& qblockman, const ChainstateManager& chainman, const Consensus::Params& consensus_params,
+                                 llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumSnapshotManager& qsnapman,
+                                 const ChainstateManager& chainman, const Consensus::Params& consensus_params,
                                  const llmq::CChainLocksHandler& clhandler, const llmq::CQuorumManager& qman) :
-        m_cpoolman(cpoolman), m_dmnman{dmnman}, m_mnhfman{mnhfman}, m_qblockman{qblockman}, m_chainman(chainman), m_consensus_params{consensus_params},
-        m_clhandler{clhandler}, m_qman{qman} {}
+        m_cpoolman(cpoolman),
+        m_dmnman{dmnman},
+        m_mnhfman{mnhfman},
+        m_qblockman{qblockman},
+        m_qsnapman{qsnapman},
+        m_chainman(chainman),
+        m_consensus_params{consensus_params},
+        m_clhandler{clhandler},
+        m_qman{qman}
+    {
+    }
 
     bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, bool check_sigs, TxValidationState& state)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);

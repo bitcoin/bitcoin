@@ -207,7 +207,10 @@ std::string CCoinJoinBaseSession::GetStateString() const
     }
 }
 
-bool CCoinJoinBaseSession::IsValidInOuts(CChainState& active_chainstate, const CTxMemPool& mempool, const std::vector<CTxIn>& vin, const std::vector<CTxOut>& vout, PoolMessage& nMessageIDRet, bool* fConsumeCollateralRet) const
+bool CCoinJoinBaseSession::IsValidInOuts(CChainState& active_chainstate, const llmq::CInstantSendManager& isman,
+                                         const CTxMemPool& mempool, const std::vector<CTxIn>& vin,
+                                         const std::vector<CTxOut>& vout, PoolMessage& nMessageIDRet,
+                                         bool* fConsumeCollateralRet) const
 {
     std::set<CScript> setScripPubKeys;
     nMessageIDRet = MSG_NOERR;
@@ -268,7 +271,7 @@ bool CCoinJoinBaseSession::IsValidInOuts(CChainState& active_chainstate, const C
 
         Coin coin;
         if (!viewMemPool.GetCoin(txin.prevout, coin) || coin.IsSpent() ||
-            (coin.nHeight == MEMPOOL_HEIGHT && !llmq::quorumInstantSendManager->IsLocked(txin.prevout.hash))) {
+            (coin.nHeight == MEMPOOL_HEIGHT && !isman.IsLocked(txin.prevout.hash))) {
             LogPrint(BCLog::COINJOIN, "CCoinJoinBaseSession::%s -- ERROR: missing, spent or non-locked mempool input! txin=%s\n", __func__, txin.ToString());
             nMessageIDRet = ERR_MISSING_TX;
             return false;
@@ -313,7 +316,8 @@ bool ATMPIfSaneFee(ChainstateManager& chainman, const CTransactionRef& tx, bool 
 }
 
 // check to make sure the collateral provided by the client is valid
-bool CoinJoin::IsCollateralValid(ChainstateManager& chainman, const CTxMemPool& mempool, const CTransaction& txCollateral)
+bool CoinJoin::IsCollateralValid(ChainstateManager& chainman, const llmq::CInstantSendManager& isman,
+                                 const CTxMemPool& mempool, const CTransaction& txCollateral)
 {
     if (txCollateral.vout.empty()) return false;
     if (txCollateral.nLockTime != 0) return false;
@@ -334,7 +338,7 @@ bool CoinJoin::IsCollateralValid(ChainstateManager& chainman, const CTxMemPool& 
         Coin coin;
         auto mempoolTx = mempool.get(txin.prevout.hash);
         if (mempoolTx != nullptr) {
-            if (mempool.isSpent(txin.prevout) || !llmq::quorumInstantSendManager->IsLocked(txin.prevout.hash)) {
+            if (mempool.isSpent(txin.prevout) || !isman.IsLocked(txin.prevout.hash)) {
                 LogPrint(BCLog::COINJOIN, "CoinJoin::IsCollateralValid -- spent or non-locked mempool input! txin=%s\n", txin.ToString());
                 return false;
             }

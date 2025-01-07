@@ -296,7 +296,7 @@ static RPCHelpMan quorum_dkgstatus()
     llmq::CDKGDebugStatus status;
     llmq_ctx.dkg_debugman->GetLocalDebugStatus(status);
 
-    auto ret = status.ToJson(*CHECK_NONFATAL(node.dmnman), chainman, detailLevel);
+    auto ret = status.ToJson(*CHECK_NONFATAL(node.dmnman), *llmq_ctx.qsnapman, chainman, detailLevel);
 
     CBlockIndex* pindexTip = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
     int tipHeight = pindexTip->nHeight;
@@ -324,8 +324,12 @@ static RPCHelpMan quorum_dkgstatus()
                     obj.pushKV("quorumHash", pQuorumBaseBlockIndex->GetBlockHash().ToString());
                     obj.pushKV("pindexTip", pindexTip->nHeight);
 
-                    auto allConnections = llmq::utils::GetQuorumConnections(llmq_params, *node.dmnman, *node.sporkman, pQuorumBaseBlockIndex, proTxHash, false);
-                    auto outboundConnections = llmq::utils::GetQuorumConnections(llmq_params, *node.dmnman, *node.sporkman, pQuorumBaseBlockIndex, proTxHash, true);
+                    auto allConnections = llmq::utils::GetQuorumConnections(llmq_params, *node.dmnman,
+                                                                            *llmq_ctx.qsnapman, *node.sporkman,
+                                                                            pQuorumBaseBlockIndex, proTxHash, false);
+                    auto outboundConnections = llmq::utils::GetQuorumConnections(llmq_params, *node.dmnman,
+                                                                                 *llmq_ctx.qsnapman, *node.sporkman,
+                                                                                 pQuorumBaseBlockIndex, proTxHash, true);
                     std::map<uint256, CAddress> foundConnections;
                     connman.ForEachNode([&](const CNode* pnode) {
                         auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
@@ -859,8 +863,8 @@ static RPCHelpMan quorum_rotationinfo()
 
     LOCK(cs_main);
 
-    if (!BuildQuorumRotationInfo(*CHECK_NONFATAL(node.dmnman), chainman, *llmq_ctx.qman, *llmq_ctx.quorum_block_processor,
-                                 cmd, quorumRotationInfoRet, strError)) {
+    if (!BuildQuorumRotationInfo(*CHECK_NONFATAL(node.dmnman), *llmq_ctx.qsnapman, chainman, *llmq_ctx.qman,
+                                 *llmq_ctx.quorum_block_processor, cmd, quorumRotationInfoRet, strError)) {
         throw JSONRPCError(RPC_INVALID_REQUEST, strError);
     }
 

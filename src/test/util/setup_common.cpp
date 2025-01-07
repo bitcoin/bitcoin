@@ -12,21 +12,9 @@
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <crypto/sha256.h>
-#include <flat-database.h>
-#include <governance/governance.h>
 #include <index/txindex.h>
 #include <init.h>
 #include <interfaces/chain.h>
-#include <netfulfilledman.h>
-#include <llmq/chainlocks.h>
-#include <llmq/context.h>
-#include <llmq/instantsend.h>
-#include <llmq/quorums.h>
-#include <llmq/signing.h>
-#include <llmq/signing_shares.h>
-#include <llmq/snapshot.h>
-#include <masternode/meta.h>
-#include <masternode/sync.h>
 #include <net.h>
 #include <net_processing.h>
 #include <noui.h>
@@ -41,8 +29,6 @@
 #include <scheduler.h>
 #include <script/sigcache.h>
 #include <shutdown.h>
-#include <spork.h>
-#include <stats/client.h>
 #include <streams.h>
 #include <test/util/index.h>
 #include <txdb.h>
@@ -59,17 +45,25 @@
 #include <walletinitinterface.h>
 
 #include <bls/bls.h>
-#ifdef ENABLE_WALLET
-#include <interfaces/coinjoin.h>
-#endif // ENABLE_WALLET
 #include <coinjoin/context.h>
 #include <evo/cbtx.h>
-#include <evo/chainhelper.h>
 #include <evo/creditpool.h>
 #include <evo/deterministicmns.h>
 #include <evo/evodb.h>
 #include <evo/mnhftx.h>
 #include <evo/specialtx.h>
+#include <flat-database.h>
+#include <governance/governance.h>
+#include <llmq/context.h>
+#include <masternode/meta.h>
+#include <masternode/sync.h>
+#include <netfulfilledman.h>
+#include <spork.h>
+#include <stats/client.h>
+
+#ifdef ENABLE_WALLET
+#include <interfaces/coinjoin.h>
+#endif // ENABLE_WALLET
 
 #include <stdexcept>
 #include <memory>
@@ -114,20 +108,21 @@ void DashChainstateSetup(ChainstateManager& chainman,
 {
     DashChainstateSetup(chainman, *Assert(node.govman.get()), *Assert(node.mn_metaman.get()), *Assert(node.mn_sync.get()),
                         *Assert(node.sporkman.get()), node.mn_activeman, node.chain_helper, node.cpoolman, node.dmnman,
-                        node.evodb, node.mnhf_manager, llmq::quorumSnapshotManager, node.llmq_ctx,
-                        Assert(node.mempool.get()), fReset, fReindexChainState, consensus_params);
+                        node.evodb, node.mnhf_manager, node.llmq_ctx, Assert(node.mempool.get()), fReset, fReindexChainState,
+                        consensus_params);
 }
 
 void DashChainstateSetupClose(NodeContext& node)
 {
-    DashChainstateSetupClose(node.chain_helper, node.cpoolman, node.dmnman, node.mnhf_manager,
-                             llmq::quorumSnapshotManager, node.llmq_ctx, Assert(node.mempool.get()));
+    DashChainstateSetupClose(node.chain_helper, node.cpoolman, node.dmnman, node.mnhf_manager, node.llmq_ctx,
+                             Assert(node.mempool.get()));
 }
 
 void DashPostChainstateSetup(NodeContext& node)
 {
     node.cj_ctx = std::make_unique<CJContext>(*node.chainman, *node.connman, *node.dmnman, *node.mn_metaman, *node.mempool,
-                                              /*mn_activeman=*/nullptr, *node.mn_sync, node.peerman, /*relay_txes=*/true);
+                                              /*mn_activeman=*/nullptr, *node.mn_sync, *node.llmq_ctx->isman, node.peerman,
+                                              /*relay_txes=*/true);
 #ifdef ENABLE_WALLET
     node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);
 #endif // ENABLE_WALLET
@@ -204,7 +199,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     fCheckBlockIndex = true;
     m_node.evodb = std::make_unique<CEvoDB>(1 << 20, true, true);
     m_node.mnhf_manager = std::make_unique<CMNHFManager>(*m_node.evodb);
-    llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*m_node.evodb));
     m_node.cpoolman = std::make_unique<CCreditPoolManager>(*m_node.evodb);
     static bool noui_connected = false;
     if (!noui_connected) {
@@ -218,7 +212,6 @@ BasicTestingSetup::~BasicTestingSetup()
 {
     SetMockTime(0s); // Reset mocktime for following tests
     m_node.cpoolman.reset();
-    llmq::quorumSnapshotManager.reset();
     m_node.mnhf_manager.reset();
     m_node.evodb.reset();
     m_node.connman.reset();
@@ -298,9 +291,6 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
                              m_node.dmnman,
                              m_node.evodb,
                              m_node.mnhf_manager,
-                             llmq::chainLocksHandler,
-                             llmq::quorumInstantSendManager,
-                             llmq::quorumSnapshotManager,
                              m_node.llmq_ctx,
                              Assert(m_node.mempool.get()),
                              fPruneMode,
@@ -482,7 +472,7 @@ CBlock TestChainSetup::CreateBlock(
         auto cbTx = GetTxPayload<CCbTx>(*block.vtx[0]);
         Assert(cbTx.has_value());
         BlockValidationState state;
-        if (!CalcCbTxMerkleRootMNList(block, chainstate.m_chain.Tip(), cbTx->merkleRootMNList, *m_node.dmnman, state, chainstate.CoinsTip())) {
+        if (!CalcCbTxMerkleRootMNList(block, chainstate.m_chain.Tip(), cbTx->merkleRootMNList, state, *m_node.dmnman, *m_node.llmq_ctx->qsnapman, chainstate.CoinsTip())) {
             Assert(false);
         }
         if (!CalcCbTxMerkleRootQuorums(block, chainstate.m_chain.Tip(), *m_node.llmq_ctx->quorum_block_processor, cbTx->merkleRootQuorums, state)) {

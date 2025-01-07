@@ -595,7 +595,10 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
     mnInternalIdMap = mnInternalIdMap.erase(dmn->GetInternalId());
 }
 
-bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex, BlockValidationState& state, const CCoinsViewCache& view, bool fJustCheck, std::optional<MNListUpdates>& updatesRet)
+bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex,
+                                           BlockValidationState& state, const CCoinsViewCache& view,
+                                           llmq::CQuorumSnapshotManager& qsnapman, bool fJustCheck,
+                                           std::optional<MNListUpdates>& updatesRet)
 {
     AssertLockHeld(cs_main);
 
@@ -610,7 +613,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<co
     int nHeight = pindex->nHeight;
 
     try {
-        if (!BuildNewListFromBlock(block, pindex->pprev, state, view, newList, true)) {
+        if (!BuildNewListFromBlock(block, pindex->pprev, state, view, newList, qsnapman, true)) {
             // pass the state returned by the function above
             return false;
         }
@@ -700,7 +703,10 @@ void CDeterministicMNManager::UpdatedBlockTip(gsl::not_null<const CBlockIndex*> 
     tipIndex = pindex;
 }
 
-bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindexPrev, BlockValidationState& state, const CCoinsViewCache& view, CDeterministicMNList& mnListRet, bool debugLogs)
+bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindexPrev,
+                                                    BlockValidationState& state, const CCoinsViewCache& view,
+                                                    CDeterministicMNList& mnListRet,
+                                                    llmq::CQuorumSnapshotManager& qsnapman, bool debugLogs)
 {
     int nHeight = pindexPrev->nHeight + 1;
 
@@ -923,7 +929,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, gsl::no
                     return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-quorum-hash");
                 }
 
-                HandleQuorumCommitment(opt_qc->commitment, pQuorumBaseBlockIndex, newList, debugLogs);
+                HandleQuorumCommitment(opt_qc->commitment, pQuorumBaseBlockIndex, newList, qsnapman, debugLogs);
             }
         }
     }
@@ -995,11 +1001,14 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, gsl::no
     return true;
 }
 
-void CDeterministicMNManager::HandleQuorumCommitment(const llmq::CFinalCommitment& qc, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, CDeterministicMNList& mnList, bool debugLogs)
+void CDeterministicMNManager::HandleQuorumCommitment(const llmq::CFinalCommitment& qc,
+                                                     gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
+                                                     CDeterministicMNList& mnList,
+                                                     llmq::CQuorumSnapshotManager& qsnapman, bool debugLogs)
 {
     // The commitment has already been validated at this point, so it's safe to use members of it
 
-    auto members = llmq::utils::GetAllQuorumMembers(qc.llmqType, *this, pQuorumBaseBlockIndex);
+    auto members = llmq::utils::GetAllQuorumMembers(qc.llmqType, *this, qsnapman, pQuorumBaseBlockIndex);
 
     for (size_t i = 0; i < members.size(); i++) {
         if (!mnList.HasMN(members[i]->proTxHash)) {

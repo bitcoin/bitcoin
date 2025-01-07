@@ -365,9 +365,6 @@ public:
     bool IsInstantSendMempoolSigningEnabled() const;
     bool RejectConflictingBlocks() const;
 };
-// TODO: split CInstantSendManager and  CInstantSendLock to 2 files
-extern std::unique_ptr<CInstantSendManager> quorumInstantSendManager;
-
 } // namespace llmq
 
 #endif // BITCOIN_LLMQ_INSTANTSEND_H

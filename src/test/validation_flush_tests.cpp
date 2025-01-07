@@ -3,8 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 #include <evo/evodb.h>
-#include <llmq/chainlocks.h>
-#include <llmq/instantsend.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
@@ -23,8 +21,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
 {
     CTxMemPool mempool;
     BlockManager blockman{};
-    CChainState chainstate(&mempool, blockman, *Assert(m_node.chainman), *m_node.evodb, m_node.chain_helper,
-                           llmq::chainLocksHandler, llmq::quorumInstantSendManager);
+    CChainState chainstate(&mempool, blockman, *Assert(m_node.chainman), *m_node.evodb, m_node.chain_helper);
     chainstate.InitCoinsDB(/*cache_size_bytes*/ 1 << 10, /*in_memory*/ true, /*should_wipe*/ false);
     WITH_LOCK(::cs_main, chainstate.InitCoinsCache(1 << 10));
 

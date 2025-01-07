@@ -319,6 +319,10 @@ struct ancestor_score {};
 class CBlockPolicyEstimator;
 class CDeterministicMNManager;
 
+namespace llmq {
+class CInstantSendManager;
+};
+
 /**
  * Information about a mempool transaction.
  */
@@ -430,6 +434,7 @@ protected:
     std::atomic<unsigned int> nTransactionsUpdated{0}; //!< Used by getblocktemplate to trigger CreateNewBlock() invocation
     CBlockPolicyEstimator* const minerPolicyEstimator;
     CDeterministicMNManager* m_dmnman{nullptr};
+    llmq::CInstantSendManager* m_isman{nullptr};
 
     uint64_t totalTxSize GUARDED_BY(cs);      //!< sum of all mempool tx' byte sizes
     CAmount m_total_fee GUARDED_BY(cs);       //!< sum of all mempool tx's fees (NOT modified fee)
@@ -579,19 +584,19 @@ public:
     explicit CTxMemPool(CBlockPolicyEstimator* estimator = nullptr, int check_ratio = 0);
 
     /**
-     * Set CDeterministicMNManager pointer.
+     * Set CDeterministicMNManager and CInstantSendManager pointers.
      *
      * Separated from constructor as it's initialized after CTxMemPool
      * is created. Required for ProTx processing.
      */
-    void ConnectManagers(gsl::not_null<CDeterministicMNManager*> dmnman);
+    void ConnectManagers(gsl::not_null<CDeterministicMNManager*> dmnman, gsl::not_null<llmq::CInstantSendManager*> isman);
 
     /**
-     * Reset CDeterministicMNManager pointer.
+     * Reset CDeterministicMNManager and CInstantSendManager pointers.
      *
-     * @pre Must be called before CDeterministicMNManager is destroyed.
+     * @pre Must be called before CDeterministicMNManager and CInstantSendManager are destroyed.
      */
-    void DisconnectManagers() { m_dmnman = nullptr; }
+    void DisconnectManagers() { m_dmnman = nullptr; m_isman = nullptr; }
 
     /**
      * If sanity-checking is turned on, check makes sure the pool is
@@ -739,7 +744,10 @@ public:
       */
     void TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpendsRemaining = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions. */
+    /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions.
+     * @pre Caller must ensure that CInstantSendManager exists and has been set using
+     *      ConnectManagers() for InstantSend awareness
+    */
     int Expire(std::chrono::seconds time) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /**

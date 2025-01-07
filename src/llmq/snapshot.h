@@ -207,7 +207,8 @@ public:
     [[nodiscard]] UniValue ToJson() const;
 };
 
-bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const CQuorumManager& qman,
+bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
+                             const ChainstateManager& chainman, const CQuorumManager& qman,
                              const CQuorumBlockProcessor& qblockman, const CGetQuorumRotationInfo& request,
                              CQuorumRotationInfo& response, std::string& errorRet) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 uint256 GetLastBaseBlockHash(Span<const CBlockIndex*> baseBlockIndexes, const CBlockIndex* blockIndex);
@@ -228,9 +229,6 @@ public:
     std::optional<CQuorumSnapshot> GetSnapshotForBlock(Consensus::LLMQType llmqType, const CBlockIndex* pindex);
     void StoreSnapshotForBlock(Consensus::LLMQType llmqType, const CBlockIndex* pindex, const CQuorumSnapshot& snapshot);
 };
-
-extern std::unique_ptr<CQuorumSnapshotManager> quorumSnapshotManager;
-
 } // namespace llmq
 
 #endif // BITCOIN_LLMQ_SNAPSHOT_H

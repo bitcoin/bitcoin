@@ -36,6 +36,7 @@ private:
     CTxMemPool& mempool;
     const CActiveMasternodeManager* const m_mn_activeman;
     const CMasternodeSync& m_mn_sync;
+    const llmq::CInstantSendManager& m_isman;
     std::unique_ptr<PeerManager>& m_peerman;
 
     // Mixing uses collateral transactions to trust parties entering the pool
@@ -94,7 +95,7 @@ public:
     explicit CCoinJoinServer(ChainstateManager& chainman, CConnman& _connman, CDeterministicMNManager& dmnman,
                              CDSTXManager& dstxman, CMasternodeMetaMan& mn_metaman, CTxMemPool& mempool,
                              const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
-                             std::unique_ptr<PeerManager>& peerman) :
+                             const llmq::CInstantSendManager& isman, std::unique_ptr<PeerManager>& peerman) :
         m_chainman(chainman),
         connman(_connman),
         m_dmnman(dmnman),
@@ -103,6 +104,7 @@ public:
         mempool(mempool),
         m_mn_activeman(mn_activeman),
         m_mn_sync(mn_sync),
+        m_isman{isman},
         m_peerman(peerman),
         vecSessionCollaterals(),
         fUnitTest(false)

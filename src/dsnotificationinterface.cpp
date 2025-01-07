@@ -91,7 +91,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 #endif // ENABLE_WALLET
 
     m_llmq_ctx->isman->UpdatedBlockTip(pindexNew);
-    m_llmq_ctx->clhandler->UpdatedBlockTip();
+    m_llmq_ctx->clhandler->UpdatedBlockTip(*m_llmq_ctx->isman);
 
     m_llmq_ctx->qman->UpdatedBlockTip(pindexNew, m_connman, fInitialDownload);
     m_llmq_ctx->qdkgsman->UpdatedBlockTip(pindexNew, fInitialDownload);
