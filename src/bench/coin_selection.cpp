@@ -32,7 +32,6 @@ static void CoinSelection(benchmark::Bench& bench)
     NodeContext node;
     auto chain = interfaces::MakeChain(node);
     CWallet wallet(chain.get(), /*coinjoin_loader=*/ nullptr, "", CreateDummyWalletDatabase());
-    wallet.SetupLegacyScriptPubKeyMan();
     std::vector<std::unique_ptr<CWalletTx>> wtxs;
     LOCK(wallet.cs_wallet);
 
