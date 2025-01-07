@@ -5,7 +5,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import struct
-import time
 from io import BytesIO
 
 from test_framework.authproxy import JSONRPCException
@@ -25,7 +24,7 @@ from test_framework.util import (
 
 class MnehfTest(DashTestFramework):
     def set_test_params(self):
-        extra_args = [["-vbparams=testdummy:0:999999999999:0:4:4:4:5:1", "-persistmempool=0"] for _ in range(4)]
+        extra_args = [["-vbparams=testdummy:0:999999999999:0:4:4:4:5:1", "-persistmempool=0"]] * 4
         self.set_dash_test_params(4, 3, extra_args=extra_args)
 
     def skip_test_if_missing_module(self):
@@ -122,8 +121,8 @@ class MnehfTest(DashTestFramework):
         node = self.nodes[0]
 
         self.set_sporks()
+        self.log.info("Consensus rules assume there're no EHF signal before V20")
         self.activate_v20()
-        self.log.info(f"After v20 activation should be plenty of blocks: {node.getblockcount()}")
 
         self.log.info("Mine a quorum...")
         self.mine_quorum()
@@ -164,17 +163,15 @@ class MnehfTest(DashTestFramework):
             self.generate(node, 1)
 
 
-        self.restart_all_nodes()
-
-        for _ in range(4):
+        for _ in range(4 // 2):
             self.check_fork('started')
-            self.generate(node, 1)
+            self.generate(node, 2)
 
 
-        for i in range(4):
+        for i in range(4 // 2):
             self.check_fork('locked_in')
-            self.generate(node, 1)
-            if i == 7:
+            self.generate(node, 2)
+            if i == 1:
                 self.restart_all_nodes()
 
         self.check_fork('active')
@@ -185,9 +182,8 @@ class MnehfTest(DashTestFramework):
             inode.invalidateblock(ehf_blockhash)
 
         self.log.info("Expecting for fork to be defined in next blocks because no MnEHF tx here")
-        for _ in range(4):
-            self.check_fork('defined')
-            self.generate(node, 1)
+        self.generate(node, 4)
+        self.check_fork('defined')
 
 
         self.log.info("Re-sending MnEHF for new fork")
@@ -198,10 +194,9 @@ class MnehfTest(DashTestFramework):
         assert tx_sent_2 in node.getblock(ehf_blockhash_2)['tx']
 
         self.log.info(f"Generate some more block to jump to `started` status")
-        for _ in range(4):
-            self.generate(node, 1)
+        self.generate(node, 4)
         self.check_fork('started')
-        self.restart_all_nodes()
+        self.restart_node(0)
         self.check_fork('started')
 
 
@@ -226,17 +221,15 @@ class MnehfTest(DashTestFramework):
         self.restart_all_nodes(params=[self.mocktime, self.mocktime + 1000000])
         self.check_fork('defined')
 
+        self.log.info("Wait MNs to sign EHF message")
         self.mine_quorum()
         self.check_fork('defined')
 
-        self.log.info("Waiting a bit to make EHF activating...")
-        self.mine_quorum()
-        for _ in range(4 * 4):
-            time.sleep(1)
+        def check_ehf_activated(self):
             self.bump_mocktime(1)
             self.generate(self.nodes[1], 1)
-        self.check_fork('active')
-
+            return get_bip9_details(self.nodes[0], 'testdummy')['status'] == 'active'
+        self.wait_until(lambda: check_ehf_activated(self))
 
 if __name__ == '__main__':
     MnehfTest().main()

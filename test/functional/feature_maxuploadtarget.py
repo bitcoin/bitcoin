@@ -121,7 +121,6 @@ class MaxUploadTest(BitcoinTestFramework):
         getdata_request.inv = [CInv(MSG_BLOCK, big_new_block)]
         for i in range(200):
             p2p_conns[1].send_and_ping(getdata_request)
-            p2p_conns[1].sync_with_ping()
             assert_equal(p2p_conns[1].block_receive_map[big_new_block], i+1)
 
         self.log.info("Peer 1 able to repeatedly download new block")
