@@ -75,7 +75,7 @@ libconftest.dylib*
 
 *.log
 *.trs
-*.dmg
+*.zip
 
 *.json.h
 *.raw.h

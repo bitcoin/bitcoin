@@ -8,7 +8,7 @@ export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_macos_cross
 export HOST=x86_64-apple-darwin
-export PACKAGES="cmake libz-dev python3-setuptools xorriso"
+export PACKAGES="clang cmake lld llvm  zip"
 export XCODE_VERSION=15.0
 export XCODE_BUILD_ID=15A240d
 export RUN_UNIT_TESTS=false

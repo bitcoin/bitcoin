@@ -3,7 +3,6 @@
              ((gnu packages bash) #:select (bash-minimal))
              (gnu packages bison)
              ((gnu packages certs) #:select (nss-certs))
-             ((gnu packages cdrom) #:select (xorriso))
              ((gnu packages cmake) #:select (cmake-minimal))
              (gnu packages commencement)
              (gnu packages compression)
@@ -578,6 +577,7 @@ inspecting signatures in Mach-O binaries.")
         gzip
         xz
         ;; Build tools
+        gcc-toolchain-12
         cmake-minimal
         gnu-make
         libtool
@@ -593,23 +593,18 @@ inspecting signatures in Mach-O binaries.")
         python-lief)
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
-           (list ;; Native GCC 12 toolchain
-                 gcc-toolchain-12
-                 zip
+           (list zip
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
                  nsis-x86_64
                  nss-certs
                  osslsigncode))
           ((string-contains target "-linux-")
-           (list ;; Native GCC 12 toolchain
-                 gcc-toolchain-12
-                 (list gcc-toolchain-12 "static")
+           (list (list gcc-toolchain-12 "static")
                  (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
-           (list ;; Native GCC 11 toolchain
-                 gcc-toolchain-11
-                 binutils
-                 clang-toolchain-17
+           (list clang-toolchain-18
+                 lld-18
+                 (make-lld-wrapper lld-18 #:lld-as-ld? #t)
                  python-signapple
-                 xorriso))
+                 zip))
           (else '())))))

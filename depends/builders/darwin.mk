@@ -5,6 +5,7 @@ build_darwin_RANLIB:=$(shell xcrun -f ranlib)
 build_darwin_STRIP:=$(shell xcrun -f strip)
 build_darwin_OBJDUMP:=$(shell xcrun -f objdump)
 build_darwin_NM:=$(shell xcrun -f nm)
+build_darwin_DSYMUTIL:=$(shell xcrun -f dsymutil)
 build_darwin_SHA256SUM=shasum -a 256
 build_darwin_DOWNLOAD=curl --location --fail --connect-timeout $(DOWNLOAD_CONNECT_TIMEOUT) --retry $(DOWNLOAD_RETRIES) -o
 
@@ -16,8 +17,7 @@ darwin_RANLIB:=$(shell xcrun -f ranlib)
 darwin_STRIP:=$(shell xcrun -f strip)
 darwin_OBJDUMP:=$(shell xcrun -f objdump)
 darwin_NM:=$(shell xcrun -f nm)
-darwin_native_binutils=
-darwin_native_toolchain=
+darwin_DSYMUTIL:=$(shell xcrun -f dsymutil)
 
 x86_64_darwin_CFLAGS += -arch x86_64
 x86_64_darwin_CXXFLAGS += -arch x86_64
