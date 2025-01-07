@@ -119,6 +119,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.log.info("Test migration of a basic keys only wallet without balance")
         basic0 = self.create_legacy_wallet("basic0")
 
+        assert_raises_rpc_error(-4, "importdescriptors is not available for non-descriptor wallets", basic0.importdescriptors, [{"desc": "abc", "timestamp": "now"}])
         addr = basic0.getnewaddress()
         change = basic0.getrawchangeaddress()
 
