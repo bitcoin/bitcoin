@@ -2433,13 +2433,22 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         // This setting doesn't force the selection of any particular chain but makes validating some faster by
         //  effectively caching the result of part of the verification.
         BlockMap::const_iterator it{m_blockman.m_block_index.find(m_chainman.AssumedValidBlock())};
-        if (it == m_blockman.m_block_index.end()) {
+        bool is_present_in_index{it != m_blockman.m_block_index.end()};
+        bool is_reindexing{m_chainman.m_blockman.IsReindexing()};
+        if (!is_present_in_index && !is_reindexing) {
+            // The previous IBD run may have been interrupted before it downloaded the assumevalid block.
+            // Therefore, bypass this check during a reindex.
             script_check_reason = "assumevalid hash not in headers";
-        } else if (it->second.GetAncestor(pindex->nHeight) != pindex) {
+        } else if (is_present_in_index && it->second.GetAncestor(pindex->nHeight) != pindex) {
             script_check_reason = (pindex->nHeight > it->second.nHeight) ? "block height above assumevalid height" : "block not in assumevalid chain";
         } else if (m_chainman.m_best_header->GetAncestor(pindex->nHeight) != pindex) {
             script_check_reason = "block not in best header chain";
-        } else if (m_chainman.m_best_header->nChainWork < m_chainman.MinimumChainWork()) {
+        } else if (m_chainman.m_best_header->nChainWork < m_chainman.MinimumChainWork() && !is_reindexing) {
+            // The minimumchainwork threshold is typically aligned with the assumevalid block height.
+            // However, if assumevalid points to an older block while minimumchainwork remains high,
+            //  we may find the assumevalid block in our index before accumulating sufficient chainwork.
+            // Therefore, during reindex operations, we bypass the minimumchainwork check since a prior IBD
+            //  may have been interrupted before reaching the required chainwork threshold.
             script_check_reason = "best header chainwork below minimumchainwork";
         } else if (GetBlockProofEquivalentTime(*m_chainman.m_best_header, *pindex, *m_chainman.m_best_header, params.GetConsensus()) <= TWO_WEEKS_IN_SECONDS) {
             script_check_reason = "block too recent relative to best header";
