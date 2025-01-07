@@ -163,6 +163,7 @@ BITCOIN_TESTS =\
 
 if ENABLE_WALLET
 BITCOIN_TESTS += \
+  wallet/test/db_tests.cpp \
   wallet/test/feebumper_tests.cpp \
   wallet/test/psbt_wallet_tests.cpp \
   wallet/test/spend_tests.cpp \
@@ -180,10 +181,6 @@ BITCOIN_TESTS += \
 FUZZ_SUITE_LD_COMMON +=\
  $(SQLITE_LIBS) \
  $(BDB_LIBS)
-
-if USE_BDB
-BITCOIN_TESTS += wallet/test/db_tests.cpp
-endif
 
 FUZZ_WALLET_SRC = \
  wallet/test/fuzz/coinselection.cpp

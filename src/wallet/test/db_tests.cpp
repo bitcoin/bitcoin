@@ -15,6 +15,7 @@
 namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(db_tests, BasicTestingSetup)
 
+#ifdef USE_BDB
 static std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& path, fs::path& database_filename)
 {
     fs::path data_file = BDBDataFile(path);
@@ -77,6 +78,7 @@ BOOST_AUTO_TEST_CASE(getwalletenv_g_dbenvs_free_instance)
     BOOST_CHECK(env_1_a != env_1_b);
     BOOST_CHECK(env_2_a == env_2_b);
 }
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
