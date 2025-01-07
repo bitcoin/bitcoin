@@ -2434,7 +2434,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         if (it != m_blockman.m_block_index.end()) {
             if (it->second.GetAncestor(pindex->nHeight) == pindex &&
                 m_chainman.m_best_header->GetAncestor(pindex->nHeight) == pindex &&
-                m_chainman.m_best_header->nChainWork >= m_chainman.MinimumChainWork()) {
+                (m_chainman.m_best_header->nChainWork >= m_chainman.MinimumChainWork() || m_chainman.m_blockman.IsReindexing())) {
                 // This block is a member of the assumed verified chain and an ancestor of the best header.
                 // Script verification is skipped when connecting blocks under the
                 // assumevalid block. Assuming the assumevalid block is valid this
@@ -2449,8 +2449,17 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
                 //  artificially set the default assumed verified block further back.
                 // The test against the minimum chain work prevents the skipping when denied access to any chain at
                 //  least as good as the expected chain.
+                // The minimumchainwork threshold is typically aligned with the assumevalid block height.
+                // However, if assumevalid points to an older block while minimumchainwork remains high,
+                //  we may find the assumevalid block in our index before accumulating sufficient chainwork.
+                // Therefore, during reindex operations, we bypass the minimumchainwork check since a prior IBD
+                //  may have been interrupted before reaching the required chainwork threshold.
                 fScriptChecks = (GetBlockProofEquivalentTime(*m_chainman.m_best_header, *pindex, *m_chainman.m_best_header, params.GetConsensus()) <= 60 * 60 * 24 * 7 * 2);
             }
+        } else if (m_chainman.m_blockman.IsReindexing()) {
+            // During a reindex, the assumed valid block may not be in the index
+            // if the previous IBD run was interrupted before it downloaded the assumedvalid block.
+            fScriptChecks = false;
         }
     }
 
