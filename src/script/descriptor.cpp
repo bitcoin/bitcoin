@@ -1709,7 +1709,7 @@ struct KeyParser {
         if (miniscript::IsTapscript(m_script_ctx) && end - begin == 32) {
             XOnlyPubKey pubkey;
             std::copy(begin, end, pubkey.begin());
-            if (auto pubkey_provider = InferPubkey(pubkey.GetEvenCorrespondingCPubKey(), ParseContext(), *m_in)) {
+            if (auto pubkey_provider = InferXOnlyPubkey(pubkey, ParseContext(), *m_in)) {
                 m_keys.emplace_back();
                 m_keys.back().push_back(std::move(pubkey_provider));
                 return key;
