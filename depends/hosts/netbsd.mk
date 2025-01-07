@@ -7,8 +7,6 @@ netbsd_NM = $(host_toolchain)gcc-nm
 netbsd_RANLIB = $(host_toolchain)gcc-ranlib
 endif
 
-netbsd_CXXFLAGS=$(netbsd_CFLAGS)
-
 netbsd_release_CFLAGS=-O2
 netbsd_release_CXXFLAGS=$(netbsd_release_CFLAGS)
 
