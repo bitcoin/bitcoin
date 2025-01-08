@@ -375,7 +375,7 @@ PrecomputedTransactionData PrecomputePSBTData(const PartiallySignedTransaction& 
     return txdata;
 }
 
-PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, int sighash,  SignatureData* out_sigdata, bool finalize)
+PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, std::optional<int> sighash,  SignatureData* out_sigdata, bool finalize)
 {
     PSBTInput& input = psbt.inputs.at(index);
     const CMutableTransaction& tx = *psbt.tx;
@@ -413,12 +413,24 @@ PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransact
         return PSBTError::MISSING_INPUTS;
     }
 
+    // Get the sighash type
+    // If both the field and the parameter are provided, they must match
+    // For user safety, the desired sighash must be provided if the PSBT wants something other than DEFAULT
+    // If only the parameter is provided, use it and add it to the PSBT if it is other than SIGHASH_DEFAULT
+    // for all input types, and not SIGHASH_ALL for non-taproot input types.
+    // If neither are provided, use SIGHASH_DEFAULT
+    if (!sighash) sighash = utxo.scriptPubKey.IsPayToTaproot() ? SIGHASH_DEFAULT : SIGHASH_ALL;
+    if (input.sighash_type && input.sighash_type != sighash) {
+        return PSBTError::SIGHASH_MISMATCH;
+    }
+    Assert(sighash.has_value());
+
     sigdata.witness = false;
     bool sig_complete;
     if (txdata == nullptr) {
         sig_complete = ProduceSignature(provider, DUMMY_SIGNATURE_CREATOR, utxo.scriptPubKey, sigdata);
     } else {
-        MutableTransactionSignatureCreator creator(tx, index, utxo.nValue, txdata, sighash);
+        MutableTransactionSignatureCreator creator(tx, index, utxo.nValue, txdata, *sighash);
         sig_complete = ProduceSignature(provider, creator, utxo.scriptPubKey, sigdata);
     }
     // Verify that a witness signature was produced in case one was required.
@@ -489,7 +501,7 @@ bool FinalizePSBT(PartiallySignedTransaction& psbtx)
     bool complete = true;
     const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
     for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        complete &= (SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, &txdata, SIGHASH_ALL, nullptr, true) == PSBTError::OK);
+        complete &= (SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, &txdata, std::nullopt, nullptr, true) == PSBTError::OK);
     }
 
     return complete;
