@@ -449,6 +449,7 @@ public:
     std::pair<std::vector<FeePerWeight>, std::vector<FeePerWeight>> GetMainStagingDiagrams() noexcept final;
 
     std::unique_ptr<BlockBuilder> GetBlockBuilder() noexcept final;
+    std::pair<std::vector<Ref*>, FeePerWeight> GetWorstMainChunk() noexcept final;
 
     void SanityCheck() const final;
 };
@@ -2144,6 +2145,28 @@ void BlockBuilderImpl::Skip() noexcept
 std::unique_ptr<TxGraph::BlockBuilder> TxGraphImpl::GetBlockBuilder() noexcept
 {
     return std::make_unique<BlockBuilderImpl>(*this);
+}
+
+std::pair<std::vector<TxGraph::Ref*>, FeePerWeight> TxGraphImpl::GetWorstMainChunk() noexcept
+{
+    std::pair<std::vector<Ref*>, FeePerWeight> ret;
+    // Make sure all clusters in main are up to date, and acceptable.
+    SplitAll(0);
+    if (m_clustersets.size() == 1) ApplyDependencies();
+    MakeAllAcceptable(0);
+    Assume(m_clustersets[0].m_deps_to_add.empty());
+    // If the graph is not empty, populate ret.
+    if (!m_chunkindex.empty()) {
+        const auto& chunk_data = *m_chunkindex.rbegin();
+        const auto& chunk_end_entry = m_entries[chunk_data.m_graph_index];
+        Cluster* cluster = chunk_end_entry.m_locator[0].cluster;
+        ret.first.resize(chunk_data.m_chunk_count);
+        auto start_pos = chunk_end_entry.m_main_lin_index + 1 - chunk_data.m_chunk_count;
+        cluster->GetClusterRefs(*this, ret.first, start_pos);
+        std::reverse(ret.first.begin(), ret.first.end());
+        ret.second = chunk_end_entry.m_main_chunk_feerate;
+    }
+    return ret;
 }
 
 } // namespace
