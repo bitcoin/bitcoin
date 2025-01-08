@@ -375,7 +375,7 @@ PrecomputedTransactionData PrecomputePSBTData(const PartiallySignedTransaction& 
     return txdata;
 }
 
-PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, int sighash,  SignatureData* out_sigdata, bool finalize)
+PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, std::optional<int> sighash,  SignatureData* out_sigdata, bool finalize)
 {
     PSBTInput& input = psbt.inputs.at(index);
     const CMutableTransaction& tx = *psbt.tx;
@@ -413,12 +413,24 @@ PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransact
         return PSBTError::MISSING_INPUTS;
     }
 
+    // Get the sighash type
+    // If both the field and the parameter are provided, they must match
+    // If only the parameter is provided, use it and add it to the PSBT if it is other than SIGHASH_DEFAULT
+    // for all input types, and not SIGHASH_ALL for non-taproot input types.
+    // If neither are provided, use SIGHASH_DEFAULT if it is taproot, and SIGHASH_ALL for everything else.
+    if (!sighash) sighash = utxo.scriptPubKey.IsPayToTaproot() ? SIGHASH_DEFAULT : SIGHASH_ALL;
+    Assert(sighash.has_value());
+    // For user safety, the desired sighash must be provided if the PSBT wants something other than the default set in the previous line.
+    if (input.sighash_type && input.sighash_type != sighash) {
+        return PSBTError::SIGHASH_MISMATCH;
+    }
+
     sigdata.witness = false;
     bool sig_complete;
     if (txdata == nullptr) {
         sig_complete = ProduceSignature(provider, DUMMY_SIGNATURE_CREATOR, utxo.scriptPubKey, sigdata);
     } else {
-        MutableTransactionSignatureCreator creator(tx, index, utxo.nValue, txdata, sighash);
+        MutableTransactionSignatureCreator creator(tx, index, utxo.nValue, txdata, *sighash);
         sig_complete = ProduceSignature(provider, creator, utxo.scriptPubKey, sigdata);
     }
     // Verify that a witness signature was produced in case one was required.
@@ -448,10 +460,11 @@ PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransact
     return sig_complete ? PSBTError::OK : PSBTError::INCOMPLETE;
 }
 
-void RemoveUnnecessaryTransactions(PartiallySignedTransaction& psbtx, const int& sighash_type)
+void RemoveUnnecessaryTransactions(PartiallySignedTransaction& psbtx, std::optional<int> sighash_type)
 {
+    if (!sighash_type) sighash_type = SIGHASH_DEFAULT;
     // Only drop non_witness_utxos if sighash_type != SIGHASH_ANYONECANPAY
-    if ((sighash_type & 0x80) != SIGHASH_ANYONECANPAY) {
+    if ((*sighash_type & 0x80) != SIGHASH_ANYONECANPAY) {
         // Figure out if any non_witness_utxos should be dropped
         std::vector<unsigned int> to_drop;
         for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
@@ -489,7 +502,7 @@ bool FinalizePSBT(PartiallySignedTransaction& psbtx)
     bool complete = true;
     const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
     for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        complete &= (SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, &txdata, SIGHASH_ALL, nullptr, true) == PSBTError::OK);
+        complete &= (SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, &txdata, std::nullopt, nullptr, true) == PSBTError::OK);
     }
 
     return complete;
