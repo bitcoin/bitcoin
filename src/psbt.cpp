@@ -4,11 +4,14 @@
 
 #include <psbt.h>
 
+#include <common/types.h>
 #include <node/types.h>
 #include <policy/policy.h>
 #include <script/signingprovider.h>
 #include <util/check.h>
 #include <util/strencodings.h>
+
+using common::PSBTError;
 
 PartiallySignedTransaction::PartiallySignedTransaction(const CMutableTransaction& tx) : tx(tx)
 {
@@ -372,13 +375,13 @@ PrecomputedTransactionData PrecomputePSBTData(const PartiallySignedTransaction& 
     return txdata;
 }
 
-bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, int sighash,  SignatureData* out_sigdata, bool finalize)
+PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, int sighash,  SignatureData* out_sigdata, bool finalize)
 {
     PSBTInput& input = psbt.inputs.at(index);
     const CMutableTransaction& tx = *psbt.tx;
 
     if (PSBTInputSignedAndVerified(psbt, index, txdata)) {
-        return true;
+        return PSBTError::OK;
     }
 
     // Fill SignatureData with input info
@@ -393,10 +396,10 @@ bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& 
         // If we're taking our information from a non-witness UTXO, verify that it matches the prevout.
         COutPoint prevout = tx.vin[index].prevout;
         if (prevout.n >= input.non_witness_utxo->vout.size()) {
-            return false;
+            return PSBTError::MISSING_INPUTS;
         }
         if (input.non_witness_utxo->GetHash() != prevout.hash) {
-            return false;
+            return PSBTError::MISSING_INPUTS;
         }
         utxo = input.non_witness_utxo->vout[prevout.n];
     } else if (!input.witness_utxo.IsNull()) {
@@ -407,7 +410,7 @@ bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& 
         // a witness signature in this situation.
         require_witness_sig = true;
     } else {
-        return false;
+        return PSBTError::MISSING_INPUTS;
     }
 
     sigdata.witness = false;
@@ -419,7 +422,7 @@ bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& 
         sig_complete = ProduceSignature(provider, creator, utxo.scriptPubKey, sigdata);
     }
     // Verify that a witness signature was produced in case one was required.
-    if (require_witness_sig && !sigdata.witness) return false;
+    if (require_witness_sig && !sigdata.witness) return PSBTError::INCOMPLETE;
 
     // If we are not finalizing, set sigdata.complete to false to not set the scriptWitness
     if (!finalize && sigdata.complete) sigdata.complete = false;
@@ -442,7 +445,7 @@ bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& 
         out_sigdata->missing_witness_script = sigdata.missing_witness_script;
     }
 
-    return sig_complete;
+    return sig_complete ? PSBTError::OK : PSBTError::INCOMPLETE;
 }
 
 void RemoveUnnecessaryTransactions(PartiallySignedTransaction& psbtx, const int& sighash_type)
@@ -486,7 +489,7 @@ bool FinalizePSBT(PartiallySignedTransaction& psbtx)
     bool complete = true;
     const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
     for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        complete &= SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, &txdata, SIGHASH_ALL, nullptr, true);
+        complete &= (SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, &txdata, SIGHASH_ALL, nullptr, true) == PSBTError::OK);
     }
 
     return complete;

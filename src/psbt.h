@@ -5,6 +5,7 @@
 #ifndef BITCOIN_PSBT_H
 #define BITCOIN_PSBT_H
 
+#include <common/types.h>
 #include <node/transaction.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
@@ -20,6 +21,8 @@
 namespace node {
 enum class TransactionError;
 } // namespace node
+
+using common::PSBTError;
 
 // Magic bytes
 static constexpr uint8_t PSBT_MAGIC_BYTES[5] = {'p', 's', 'b', 't', 0xff};
@@ -1401,7 +1404,7 @@ bool PSBTInputSignedAndVerified(const PartiallySignedTransaction psbt, unsigned 
  * txdata should be the output of PrecomputePSBTData (which can be shared across
  * multiple SignPSBTInput calls). If it is nullptr, a dummy signature will be created.
  **/
-bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, int sighash = SIGHASH_ALL, SignatureData* out_sigdata = nullptr, bool finalize = true);
+[[nodiscard]] PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, int sighash = SIGHASH_ALL, SignatureData* out_sigdata = nullptr, bool finalize = true);
 
 /**  Reduces the size of the PSBT by dropping unnecessary `non_witness_utxos` (i.e. complete previous transactions) from a psbt when all inputs are segwit v1. */
 void RemoveUnnecessaryTransactions(PartiallySignedTransaction& psbtx, const int& sighash_type);
