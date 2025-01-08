@@ -383,7 +383,7 @@ public:
         }
         return {};
     }
-    std::optional<PSBTError> fillPSBT(int sighash_type,
+    std::optional<PSBTError> fillPSBT(std::optional<int> sighash_type,
         bool sign,
         bool bip32derivs,
         size_t* n_signed,
