@@ -421,6 +421,7 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
         }
 
         ++nPackagesSelected;
+        pblocktemplate->m_package_feerates.emplace_back(packageFees, static_cast<int32_t>(packageSize));
 
         // Update transactions that depend on each of these
         nDescendantsUpdated += UpdatePackagesForAdded(mempool, ancestors, mapModifiedTx);
