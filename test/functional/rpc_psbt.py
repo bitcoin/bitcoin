@@ -212,6 +212,12 @@ class PSBTTest(BitcoinTestFramework):
         def_wallet.sendtoaddress(addr, 5)
         self.generate(self.nodes[0], 6)
 
+        # Retrieve the descriptors so we can do all of the tests with descriptorprocesspsbt as well
+        if self.options.descriptors:
+            descs = wallet.listdescriptors(True)["descriptors"]
+        else:
+            descs = [descsum_create(f"wpkh({wallet.dumpprivkey(addr)})")]
+
         # Make a PSBT
         psbt = wallet.walletcreatefundedpsbt([], [{def_wallet.getnewaddress(): 1}])["psbt"]
 
@@ -226,6 +232,15 @@ class PSBTTest(BitcoinTestFramework):
 
         # Matching sighash type succeeds
         proc = wallet.walletprocesspsbt(psbt, True, "ALL|ANYONECANPAY")
+        assert_equal(proc["complete"], True)
+
+        # Repeat with descriptorprocesspsbt
+        # Mismatching sighash type fails, including when no type is specified
+        for sighash in ["DEFAULT", "ALL", "NONE", "SINGLE", "NONE|ANYONECANPAY", "SINGLE|ANYONECANPAY", None]:
+            assert_raises_rpc_error(-22, "Specified sighash value does not match value stored in PSBT", self.nodes[0].descriptorprocesspsbt, psbt, descs, sighash)
+
+        # Matching sighash type succeeds
+        proc = self.nodes[0].descriptorprocesspsbt(psbt, descs, "ALL|ANYONECANPAY")
         assert_equal(proc["complete"], True)
 
         wallet.unloadwallet()
