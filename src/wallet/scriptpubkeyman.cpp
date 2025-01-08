@@ -733,7 +733,7 @@ bool LegacyScriptPubKeyMan::SignSpecialTxPayload(const uint256& hash, const CKey
     return CHashSigner::SignHash(hash, key, vchSig);
 }
 
-TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, int sighash_type, bool sign, bool bip32derivs, int* n_signed) const
+TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
 {
     if (n_signed) {
         *n_signed = 0;
@@ -747,7 +747,7 @@ TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psb
         }
 
         // Get the Sighash type
-        if (sign && input.sighash_type > 0 && input.sighash_type != sighash_type) {
+        if (sign && input.sighash_type != std::nullopt && *input.sighash_type != sighash_type) {
             return TransactionError::SIGHASH_MISMATCH;
         }
 
@@ -762,7 +762,7 @@ TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psb
         }
         SignatureData sigdata;
         input.FillSignatureData(sigdata);
-        SignPSBTInput(HidingSigningProvider(this, !sign, !bip32derivs), psbtx, i, sighash_type);
+        SignPSBTInput(HidingSigningProvider(this, !sign, !bip32derivs), psbtx, i, &txdata, sighash_type, nullptr, finalize);
 
         bool signed_one = PSBTInputSigned(input);
         if (n_signed && (signed_one || !sign)) {
@@ -2229,7 +2229,7 @@ bool DescriptorScriptPubKeyMan::SignSpecialTxPayload(const uint256& hash, const 
     return CHashSigner::SignHash(hash, key, vchSig);
 }
 
-TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, int sighash_type, bool sign, bool bip32derivs, int* n_signed) const
+TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
 {
     if (n_signed) {
         *n_signed = 0;
@@ -2243,7 +2243,7 @@ TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction&
         }
 
         // Get the Sighash type
-        if (sign && input.sighash_type > 0 && input.sighash_type != sighash_type) {
+        if (sign && input.sighash_type != std::nullopt && *input.sighash_type != sighash_type) {
             return TransactionError::SIGHASH_MISMATCH;
         }
 
@@ -2277,7 +2277,8 @@ TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction&
             }
         }
 
-        SignPSBTInput(HidingSigningProvider(keys.get(), !sign, !bip32derivs), psbtx, i, sighash_type);
+        SignPSBTInput(HidingSigningProvider(keys.get(), !sign, !bip32derivs), psbtx, i, &txdata, sighash_type, nullptr, finalize);
+
         bool signed_one = PSBTInputSigned(input);
         if (n_signed && (signed_one || !sign)) {
             // If sign is false, we assume that we _could_ sign if we get here. This

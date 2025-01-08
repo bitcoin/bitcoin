@@ -4,6 +4,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <base58.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
@@ -1172,6 +1173,26 @@ static RPCHelpMan decodepsbt()
                 {
                     {RPCResult::Type::ELISION, "", "The layout is the same as the output of decoderawtransaction."},
                 }},
+                {RPCResult::Type::ARR, "global_xpubs", "",
+                {
+                    {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "xpub", "The extended public key this path corresponds to"},
+                        {RPCResult::Type::STR_HEX, "master_fingerprint", "The fingerprint of the master key"},
+                        {RPCResult::Type::STR, "path", "The path"},
+                    }},
+                }},
+                {RPCResult::Type::NUM, "psbt_version", "The PSBT version number. Not to be confused with the unsigned transaction version"},
+                {RPCResult::Type::ARR, "proprietary", "The global proprietary map",
+                {
+                    {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "identifier", "The hex string for the proprietary identifier"},
+                        {RPCResult::Type::NUM, "subtype", "The number for the subtype"},
+                        {RPCResult::Type::STR_HEX, "key", "The hex for the key"},
+                        {RPCResult::Type::STR_HEX, "value", "The hex for the value"},
+                    }},
+                }},
                 {RPCResult::Type::OBJ_DYN, "unknown", "The unknown global fields",
                 {
                      {RPCResult::Type::STR_HEX, "key", "(key-value pair) An unknown key-value pair"},
@@ -1208,9 +1229,35 @@ static RPCHelpMan decodepsbt()
                             {RPCResult::Type::STR, "asm", "The asm"},
                             {RPCResult::Type::STR, "hex", "The hex"},
                         }},
-                        {RPCResult::Type::OBJ_DYN, "unknown", "The unknown global fields",
+                        {RPCResult::Type::OBJ_DYN, "ripemd160_preimages", /*optional=*/ true, "",
+                        {
+                            {RPCResult::Type::STR, "hash", "The hash and preimage that corresponds to it."},
+                        }},
+                        {RPCResult::Type::OBJ_DYN, "sha256_preimages", /*optional=*/ true, "",
+                        {
+                            {RPCResult::Type::STR, "hash", "The hash and preimage that corresponds to it."},
+                        }},
+                        {RPCResult::Type::OBJ_DYN, "hash160_preimages", /*optional=*/ true, "",
+                        {
+                            {RPCResult::Type::STR, "hash", "The hash and preimage that corresponds to it."},
+                        }},
+                        {RPCResult::Type::OBJ_DYN, "hash256_preimages", /*optional=*/ true, "",
+                        {
+                            {RPCResult::Type::STR, "hash", "The hash and preimage that corresponds to it."},
+                        }},
+                        {RPCResult::Type::OBJ_DYN, "unknown", /*optional=*/ true, "The unknown input fields",
                         {
                             {RPCResult::Type::STR_HEX, "key", "(key-value pair) An unknown key-value pair"},
+                        }},
+                        {RPCResult::Type::ARR, "proprietary", "The input proprietary map",
+                        {
+                            {RPCResult::Type::OBJ, "", "",
+                            {
+                                {RPCResult::Type::STR_HEX, "identifier", "The hex string for the proprietary identifier"},
+                                {RPCResult::Type::NUM, "subtype", "The number for the subtype"},
+                                {RPCResult::Type::STR_HEX, "key", "The hex for the key"},
+                                {RPCResult::Type::STR_HEX, "value", "The hex for the value"},
+                            }},
                         }},
                     }},
                 }},
@@ -1237,6 +1284,16 @@ static RPCHelpMan decodepsbt()
                         {
                             {RPCResult::Type::STR_HEX, "key", "(key-value pair) An unknown key-value pair"},
                         }},
+                        {RPCResult::Type::ARR, "proprietary", "The output proprietary map",
+                        {
+                            {RPCResult::Type::OBJ, "", "",
+                            {
+                                {RPCResult::Type::STR_HEX, "identifier", "The hex string for the proprietary identifier"},
+                                {RPCResult::Type::NUM, "subtype", "The number for the subtype"},
+                                {RPCResult::Type::STR_HEX, "key", "The hex for the key"},
+                                {RPCResult::Type::STR_HEX, "value", "The hex for the value"},
+                            }},
+                        }},
                     }},
                 }},
                 {RPCResult::Type::STR_AMOUNT, "fee", /* optional */ true, "The transaction fee paid if all UTXOs slots in the PSBT have been filled."},
@@ -1262,6 +1319,38 @@ static RPCHelpMan decodepsbt()
     UniValue tx_univ(UniValue::VOBJ);
     TxToUniv(CTransaction(*psbtx.tx), uint256(), tx_univ, false);
     result.pushKV("tx", tx_univ);
+
+    // Add the global xpubs
+    UniValue global_xpubs(UniValue::VARR);
+    for (std::pair<KeyOriginInfo, std::set<CExtPubKey>> xpub_pair : psbtx.m_xpubs) {
+        for (auto& xpub : xpub_pair.second) {
+            std::vector<unsigned char> ser_xpub;
+            ser_xpub.assign(BIP32_EXTKEY_WITH_VERSION_SIZE, 0);
+            xpub.EncodeWithVersion(ser_xpub.data());
+
+            UniValue keypath(UniValue::VOBJ);
+            keypath.pushKV("xpub", EncodeBase58Check(ser_xpub));
+            keypath.pushKV("master_fingerprint", HexStr(Span<unsigned char>(xpub_pair.first.fingerprint, xpub_pair.first.fingerprint + 4)));
+            keypath.pushKV("path", WriteHDKeypath(xpub_pair.first.path));
+            global_xpubs.push_back(keypath);
+        }
+    }
+    result.pushKV("global_xpubs", global_xpubs);
+
+    // PSBT version
+    result.pushKV("psbt_version", static_cast<uint64_t>(psbtx.GetVersion()));
+
+    // Proprietary
+    UniValue proprietary(UniValue::VARR);
+    for (const auto& entry : psbtx.m_proprietary) {
+        UniValue this_prop(UniValue::VOBJ);
+        this_prop.pushKV("identifier", HexStr(entry.identifier));
+        this_prop.pushKV("subtype", entry.subtype);
+        this_prop.pushKV("key", HexStr(entry.key));
+        this_prop.pushKV("value", HexStr(entry.value));
+        proprietary.push_back(this_prop);
+    }
+    result.pushKV("proprietary", proprietary);
 
     // Unknown data
     UniValue unknowns(UniValue::VOBJ);
@@ -1310,8 +1399,8 @@ static RPCHelpMan decodepsbt()
         }
 
         // Sighash
-        if (input.sighash_type > 0) {
-            in.pushKV("sighash", SighashToStr((unsigned char)input.sighash_type));
+        if (input.sighash_type != std::nullopt) {
+            in.pushKV("sighash", SighashToStr((unsigned char)*input.sighash_type));
         }
 
         // Redeem script
@@ -1341,6 +1430,56 @@ static RPCHelpMan decodepsbt()
             scriptsig.pushKV("asm", ScriptToAsmStr(input.final_script_sig, true));
             scriptsig.pushKV("hex", HexStr(input.final_script_sig));
             in.pushKV("final_scriptSig", scriptsig);
+        }
+
+        // Ripemd160 hash preimages
+        if (!input.ripemd160_preimages.empty()) {
+            UniValue ripemd160_preimages(UniValue::VOBJ);
+            for (const auto& [hash, preimage] : input.ripemd160_preimages) {
+                ripemd160_preimages.pushKV(HexStr(hash), HexStr(preimage));
+            }
+            in.pushKV("ripemd160_preimages", ripemd160_preimages);
+        }
+
+        // Sha256 hash preimages
+        if (!input.sha256_preimages.empty()) {
+            UniValue sha256_preimages(UniValue::VOBJ);
+            for (const auto& [hash, preimage] : input.sha256_preimages) {
+                sha256_preimages.pushKV(HexStr(hash), HexStr(preimage));
+            }
+            in.pushKV("sha256_preimages", sha256_preimages);
+        }
+
+        // Hash160 hash preimages
+        if (!input.hash160_preimages.empty()) {
+            UniValue hash160_preimages(UniValue::VOBJ);
+            for (const auto& [hash, preimage] : input.hash160_preimages) {
+                hash160_preimages.pushKV(HexStr(hash), HexStr(preimage));
+            }
+            in.pushKV("hash160_preimages", hash160_preimages);
+        }
+
+        // Hash256 hash preimages
+        if (!input.hash256_preimages.empty()) {
+            UniValue hash256_preimages(UniValue::VOBJ);
+            for (const auto& [hash, preimage] : input.hash256_preimages) {
+                hash256_preimages.pushKV(HexStr(hash), HexStr(preimage));
+            }
+            in.pushKV("hash256_preimages", hash256_preimages);
+        }
+
+        // Proprietary
+        if (!input.m_proprietary.empty()) {
+            UniValue proprietary(UniValue::VARR);
+            for (const auto& entry : input.m_proprietary) {
+                UniValue this_prop(UniValue::VOBJ);
+                this_prop.pushKV("identifier", HexStr(entry.identifier));
+                this_prop.pushKV("subtype", entry.subtype);
+                this_prop.pushKV("key", HexStr(entry.key));
+                this_prop.pushKV("value", HexStr(entry.value));
+                proprietary.push_back(this_prop);
+            }
+            in.pushKV("proprietary", proprietary);
         }
 
         // Unknown data
@@ -1380,6 +1519,20 @@ static RPCHelpMan decodepsbt()
                 keypaths.push_back(keypath);
             }
             out.pushKV("bip32_derivs", keypaths);
+        }
+
+        // Proprietary
+        if (!output.m_proprietary.empty()) {
+            UniValue proprietary(UniValue::VARR);
+            for (const auto& entry : output.m_proprietary) {
+                UniValue this_prop(UniValue::VOBJ);
+                this_prop.pushKV("identifier", HexStr(entry.identifier));
+                this_prop.pushKV("subtype", entry.subtype);
+                this_prop.pushKV("key", HexStr(entry.key));
+                this_prop.pushKV("value", HexStr(entry.value));
+                proprietary.push_back(this_prop);
+            }
+            out.pushKV("proprietary", proprietary);
         }
 
         // Unknown data
@@ -1712,6 +1865,7 @@ static RPCHelpMan utxoupdatepsbt()
     }
 
     // Fill the inputs
+    const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
     for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
         PSBTInput& input = psbtx.inputs.at(i);
 
@@ -1722,7 +1876,7 @@ static RPCHelpMan utxoupdatepsbt()
         // Update script/keypath information using descriptor data.
         // Note that SignPSBTInput does a lot more than just constructing ECDSA signatures
         // we don't actually care about those here, in fact.
-        SignPSBTInput(public_provider, psbtx, i, /*sighash=*/ SIGHASH_ALL);
+        SignPSBTInput(public_provider, psbtx, i, &txdata, /*sighash=*/SIGHASH_ALL);
     }
 
     // Update script/keypath information using descriptor data.
@@ -1800,6 +1954,13 @@ static RPCHelpMan joinpsbts()
         }
         for (unsigned int i = 0; i < psbt.tx->vout.size(); ++i) {
             merged_psbt.AddOutput(psbt.tx->vout[i], psbt.outputs[i]);
+        }
+        for (auto& xpub_pair : psbt.m_xpubs) {
+            if (merged_psbt.m_xpubs.count(xpub_pair.first) == 0) {
+                merged_psbt.m_xpubs[xpub_pair.first] = xpub_pair.second;
+            } else {
+                merged_psbt.m_xpubs[xpub_pair.first].insert(xpub_pair.second.begin(), xpub_pair.second.end());
+            }
         }
         merged_psbt.unknown.insert(psbt.unknown.begin(), psbt.unknown.end());
     }

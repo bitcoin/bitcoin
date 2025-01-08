@@ -37,6 +37,13 @@ bool PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
     for (unsigned int i = 0; i < outputs.size(); ++i) {
         outputs[i].Merge(psbt.outputs[i]);
     }
+    for (auto& xpub_pair : psbt.m_xpubs) {
+        if (m_xpubs.count(xpub_pair.first) == 0) {
+            m_xpubs[xpub_pair.first] = xpub_pair.second;
+        } else {
+            m_xpubs[xpub_pair.first].insert(xpub_pair.second.begin(), xpub_pair.second.end());
+        }
+    }
     unknown.insert(psbt.unknown.begin(), psbt.unknown.end());
 
     return true;
@@ -63,10 +70,13 @@ bool PartiallySignedTransaction::AddOutput(const CTxOut& txout, const PSBTOutput
 
 bool PartiallySignedTransaction::GetInputUTXO(CTxOut& utxo, int input_index) const
 {
-    PSBTInput input = inputs[input_index];
+    const PSBTInput& input = inputs[input_index];
     uint32_t prevout_index = tx->vin[input_index].prevout.n;
     if (input.non_witness_utxo) {
         if (prevout_index >= input.non_witness_utxo->vout.size()) {
+            return false;
+        }
+        if (input.non_witness_utxo->GetHash() != tx->vin[input_index].prevout.hash) {
             return false;
         }
         utxo = input.non_witness_utxo->vout[prevout_index];
@@ -127,6 +137,10 @@ void PSBTInput::Merge(const PSBTInput& input)
     if (!non_witness_utxo && input.non_witness_utxo) non_witness_utxo = input.non_witness_utxo;
 
     partial_sigs.insert(input.partial_sigs.begin(), input.partial_sigs.end());
+    ripemd160_preimages.insert(input.ripemd160_preimages.begin(), input.ripemd160_preimages.end());
+    sha256_preimages.insert(input.sha256_preimages.begin(), input.sha256_preimages.end());
+    hash160_preimages.insert(input.hash160_preimages.begin(), input.hash160_preimages.end());
+    hash256_preimages.insert(input.hash256_preimages.begin(), input.hash256_preimages.end());
     hd_keypaths.insert(input.hd_keypaths.begin(), input.hd_keypaths.end());
     unknown.insert(input.unknown.begin(), input.unknown.end());
 
@@ -202,7 +216,24 @@ bool PSBTInputSigned(const PSBTInput& input)
     return !input.final_script_sig.empty();
 }
 
-bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, int sighash, SignatureData* out_sigdata, bool use_dummy)
+PrecomputedTransactionData PrecomputePSBTData(const PartiallySignedTransaction& psbt)
+{
+    const CMutableTransaction& tx = *psbt.tx;
+    bool have_all_spent_outputs = true;
+    std::vector<CTxOut> utxos(tx.vin.size());
+    for (size_t idx = 0; idx < tx.vin.size(); ++idx) {
+        if (!psbt.GetInputUTXO(utxos[idx], idx)) have_all_spent_outputs = false;
+    }
+    PrecomputedTransactionData txdata;
+    if (have_all_spent_outputs) {
+        txdata.Init(tx, std::move(utxos), true);
+    } else {
+        txdata.Init(tx, {}, true);
+    }
+    return txdata;
+}
+
+bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, int sighash,  SignatureData* out_sigdata, bool finalize)
 {
     PSBTInput& input = psbt.inputs.at(index);
     const CMutableTransaction& tx = *psbt.tx;
@@ -233,12 +264,16 @@ bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& 
     }
 
     bool sig_complete;
-    if (use_dummy) {
+    if (txdata == nullptr) {
         sig_complete = ProduceSignature(provider, DUMMY_SIGNATURE_CREATOR, utxo.scriptPubKey, sigdata);
     } else {
-        MutableTransactionSignatureCreator creator(&tx, index, utxo.nValue, sighash);
+        MutableTransactionSignatureCreator creator(&tx, index, utxo.nValue, txdata, sighash);
         sig_complete = ProduceSignature(provider, creator, utxo.scriptPubKey, sigdata);
     }
+
+    // If we are not finalizing, set sigdata.complete to false to not set the scriptSig
+    if (!finalize && sigdata.complete) sigdata.complete = false;
+
     input.FromSignatureData(sigdata);
 
     // Fill in the missing info
@@ -258,8 +293,9 @@ bool FinalizePSBT(PartiallySignedTransaction& psbtx)
     //   PartiallySignedTransaction did not understand them), this will combine them into a final
     //   script.
     bool complete = true;
+    const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
     for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        complete &= SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, SIGHASH_ALL);
+        complete &= SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, &txdata, SIGHASH_ALL, nullptr, true);
     }
 
     return complete;
@@ -330,4 +366,12 @@ bool DecodeRawPSBT(PartiallySignedTransaction& psbt, const std::string& tx_data,
         return false;
     }
     return true;
+}
+
+uint32_t PartiallySignedTransaction::GetVersion() const
+{
+    if (m_version != std::nullopt) {
+        return *m_version;
+    }
+    return 0;
 }

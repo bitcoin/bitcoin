@@ -4448,7 +4448,7 @@ RPCHelpMan walletprocesspsbt()
                 HELP_REQUIRING_PASSPHRASE,
         {
             {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction base64 string"},
-            {"sign", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also sign the transaction when updating"},
+            {"sign", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also sign the transaction when updating (requires wallet to be unlocked)"},
             {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"ALL"}, "The signature hash type to sign with if not specified by the PSBT. Must be one of\n"
     "       \"ALL\"\n"
     "       \"NONE\"\n"
@@ -4457,6 +4457,7 @@ RPCHelpMan walletprocesspsbt()
     "       \"NONE|ANYONECANPAY\"\n"
     "       \"SINGLE|ANYONECANPAY\""},
             {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
+            {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -4470,7 +4471,7 @@ RPCHelpMan walletprocesspsbt()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VBOOL, UniValue::VSTR});
+    RPCTypeCheck(request.params, {UniValue::VSTR});
 
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
@@ -4497,8 +4498,12 @@ RPCHelpMan walletprocesspsbt()
     // Fill transaction with our data and also sign
     bool sign = request.params[1].isNull() ? true : request.params[1].get_bool();
     bool bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
+    bool finalize = request.params[4].isNull() ? true : request.params[4].get_bool();
     bool complete = true;
-    const TransactionError err{wallet.FillPSBT(psbtx, complete, nHashType, sign, bip32derivs)};
+
+    if (sign) EnsureWalletIsUnlocked(*pwallet);
+
+    const TransactionError err{wallet.FillPSBT(psbtx, complete, nHashType, sign, bip32derivs, nullptr, finalize)};
     if (err != TransactionError::OK) {
         throw JSONRPCTransactionError(err);
     }

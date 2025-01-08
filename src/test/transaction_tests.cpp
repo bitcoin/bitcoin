@@ -96,7 +96,7 @@ bool CheckTxScripts(const CTransaction& tx, const std::map<COutPoint, CScript>& 
         const CAmount amount = 0;
         try {
             tx_valid = VerifyScript(input.scriptSig, map_prevout_scriptPubKeys.at(input.prevout),
-                flags, TransactionSignatureChecker(&tx, i, amount, txdata), &err);
+                flags, TransactionSignatureChecker(&tx, i, amount, txdata, MissingDataBehavior::ASSERT_FAIL), &err);
         } catch (...) {
             BOOST_ERROR("Bad test: " << strTest);
             return true; // The test format is bad and an error is thrown. Return true to silence further error.

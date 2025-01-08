@@ -42,7 +42,7 @@ FUZZ_TARGET(script_flags)
                 prevout.nValue = 1;
             }
 
-            const TransactionSignatureChecker checker{&tx, i, prevout.nValue, txdata};
+            const TransactionSignatureChecker checker{&tx, i, prevout.nValue, txdata, MissingDataBehavior::ASSERT_FAIL};
 
             ScriptError serror;
             const bool ret = VerifyScript(tx.vin.at(i).scriptSig, prevout.scriptPubKey, verify_flags, checker, &serror);
