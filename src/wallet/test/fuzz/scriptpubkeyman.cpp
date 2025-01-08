@@ -192,7 +192,8 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
                 }
                 auto psbt{*opt_psbt};
                 const PrecomputedTransactionData txdata{PrecomputePSBTData(psbt)};
-                const int sighash_type{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 150)};
+                std::optional<int> sighash_type{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 151)};
+                if (sighash_type == 151) sighash_type = std::nullopt;
                 auto sign  = fuzzed_data_provider.ConsumeBool();
                 auto bip32derivs = fuzzed_data_provider.ConsumeBool();
                 auto finalize = fuzzed_data_provider.ConsumeBool();
