@@ -20,6 +20,7 @@ import time
 import urllib.parse
 import collections
 import shlex
+import sys
 from pathlib import Path
 
 from .authproxy import (
@@ -204,7 +205,7 @@ class TestNode():
             # Should only happen on test failure
             # Avoid using logger, as that may have already been shutdown when
             # this destructor is called.
-            print(self._node_msg("Cleaning up leftover process"))
+            print(self._node_msg("Cleaning up leftover process"), file=sys.stderr)
             self.process.kill()
 
     def __getattr__(self, name):
