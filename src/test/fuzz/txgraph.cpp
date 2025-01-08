@@ -748,6 +748,32 @@ FUZZ_TARGET(txgraph)
                 }
                 builder_data.done = new_done;
                 break;
+            } else if (!main_sim.IsOversized() && command-- == 0) {
+                // GetWorstMainChunk.
+                auto [worst_chunk, worst_chunk_feerate] = real->GetWorstMainChunk();
+                // Just do some sanity checks here. Consistency with GetBlockBuilder is checked
+                // below.
+                if (main_sim.GetTransactionCount() == 0) {
+                    assert(worst_chunk.empty());
+                    assert(worst_chunk_feerate.IsEmpty());
+                } else {
+                    assert(!worst_chunk.empty());
+                    SimTxGraph::SetType done;
+                    FeePerWeight sum;
+                    for (TxGraph::Ref* ref : worst_chunk) {
+                        // Each transaction in the chunk must exist in the main graph.
+                        auto simpos = main_sim.Find(ref);
+                        assert(simpos != SimTxGraph::MISSING);
+                        sum += main_sim.graph.FeeRate(simpos);
+                        // Make sure the chunk contains no duplicate transactions.
+                        assert(!done[simpos]);
+                        done.Set(simpos);
+                        // All elements are preceded by all their descendants.
+                        assert(main_sim.graph.Descendants(simpos).IsSubsetOf(done));
+                    }
+                    assert(sum == worst_chunk_feerate);
+                }
+                break;
             }
         }
     }
@@ -806,6 +832,8 @@ FUZZ_TARGET(txgraph)
         // if nothing is skipped.
         auto builder = real->GetBlockBuilder();
         std::vector<SimTxGraph::Pos> vec_builder;
+        std::vector<TxGraph::Ref*> last_chunk;
+        FeePerWeight last_chunk_feerate;
         while (auto chunk = builder->GetCurrentChunk()) {
             FeePerWeight sum;
             for (TxGraph::Ref* ref : chunk->first) {
@@ -820,9 +848,17 @@ FUZZ_TARGET(txgraph)
                 vec_builder.push_back(simpos);
             }
             assert(sum == chunk->second);
+            last_chunk = std::move(chunk->first);
+            last_chunk_feerate = chunk->second;
             builder->Include();
         }
         assert(vec_builder == vec1);
+
+        // The last chunk returned by the BlockBuilder must match GetWorstMainChunk, in reverse.
+        std::reverse(last_chunk.begin(), last_chunk.end());
+        auto [worst_chunk, worst_chunk_feerate] = real->GetWorstMainChunk();
+        assert(last_chunk == worst_chunk);
+        assert(last_chunk_feerate == worst_chunk_feerate);
 
         // Check that the implied ordering gives rise to a combined diagram that matches the
         // diagram constructed from the individual cluster linearization chunkings.

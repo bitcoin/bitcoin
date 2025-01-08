@@ -192,6 +192,11 @@ public:
      *  oversized. While the returned object exists, no mutators on the main graph are allowed.
      *  The BlockBuilder object must not outlive the TxGraph it was created with. */
     virtual std::unique_ptr<BlockBuilder> GetBlockBuilder() noexcept = 0;
+    /** Get the last chunk in the main graph, i.e., the last chunk that would be returned by a
+     *  BlockBuilder created now, together with its feerate. The chunk is returned in
+     *  reverse-topological order, so every element is preceded by all its descendants. The main
+     *  graph must not be oversized. If the graph is empty, {{}, FeePerWeight{}} is returned. */
+    virtual std::pair<std::vector<Ref*>, FeePerWeight> GetWorstMainChunk() noexcept = 0;
 
     /** Perform an internal consistency check on this object. */
     virtual void SanityCheck() const = 0;
