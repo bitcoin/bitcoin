@@ -956,12 +956,15 @@ RPCHelpMan signrawtransactionwithwallet()
     // Parse the prevtxs array
     ParsePrevouts(request.params[1], nullptr, coins);
 
-    int nHashType = ParseSighashString(request.params[2]);
+    std::optional<int> nHashType = ParseSighashString(request.params[2]);
+    if (!nHashType) {
+        nHashType = SIGHASH_DEFAULT;
+    }
 
     // Script verification errors
     std::map<int, bilingual_str> input_errors;
 
-    bool complete = pwallet->SignTransaction(mtx, coins, nHashType, input_errors);
+    bool complete = pwallet->SignTransaction(mtx, coins, *nHashType, input_errors);
     UniValue result(UniValue::VOBJ);
     SignTransactionResultToJSON(mtx, complete, coins, input_errors, result);
     return result;
@@ -1629,7 +1632,7 @@ RPCHelpMan walletprocesspsbt()
     }
 
     // Get the sighash type
-    int nHashType = ParseSighashString(request.params[2]);
+    std::optional<int> nHashType = ParseSighashString(request.params[2]);
 
     // Fill transaction with our data and also sign
     bool sign = request.params[1].isNull() ? true : request.params[1].get_bool();
