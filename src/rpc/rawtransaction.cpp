@@ -235,8 +235,10 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
         // Note that SignPSBTInput does a lot more than just constructing ECDSA signatures.
         // We only actually care about those if our signing provider doesn't hide private
         // information, as is the case with `descriptorprocesspsbt`
-        // As such, we ignore the return value as any errors just mean that we do not have enough information.
-        (void)SignPSBTInput(provider, psbtx, /*index=*/i, &txdata, sighash_type, /*out_sigdata=*/nullptr, finalize);
+        // Only error for mismatching sighash types as it is critical that the sighash to sign with matches the PSBT's
+        if (SignPSBTInput(provider, psbtx, /*index=*/i, &txdata, sighash_type, /*out_sigdata=*/nullptr, finalize) == common::PSBTError::SIGHASH_MISMATCH) {
+            throw JSONRPCPSBTError(common::PSBTError::SIGHASH_MISMATCH);
+        }
     }
 
     // Update script/keypath information using descriptor data.
