@@ -567,15 +567,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if extra_args is None:
             extra_args = [None] * self.num_nodes
         assert_equal(len(extra_args), self.num_nodes)
-        try:
-            for i, node in enumerate(self.nodes):
-                node.start(extra_args[i], *args, **kwargs)
-            for node in self.nodes:
-                node.wait_for_rpc_connection()
-        except Exception:
-            # If one node failed to start, stop the others
-            self.stop_nodes()
-            raise
+        for i, node in enumerate(self.nodes):
+            node.start(extra_args[i], *args, **kwargs)
+        for node in self.nodes:
+            node.wait_for_rpc_connection()
 
         if self.options.coveragedir is not None:
             for node in self.nodes:
