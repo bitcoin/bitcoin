@@ -28,7 +28,7 @@
 #include <node/peerman_args.h>
 #include <node/warnings.h>
 #include <noui.h>
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
 #include <pow.h>
 #include <random.h>
 #include <rpc/blockchain.h>
