@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
 
 #include <common/system.h>
 #include <consensus/amount.h>
