@@ -230,6 +230,47 @@ class PSBTTest(BitcoinTestFramework):
 
         wallet.unloadwallet()
 
+    def test_sighash_adding(self):
+        self.log.info("Test adding of sighash type field")
+        self.nodes[0].createwallet("sighash_adding")
+        wallet = self.nodes[0].get_wallet_rpc("sighash_adding")
+        def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        outputs = [{wallet.getnewaddress(address_type="bech32"): 1}]
+        if self.options.descriptors:
+            outputs.append({wallet.getnewaddress(address_type="bech32m"): 1})
+        def_wallet.send(outputs)
+        self.generate(self.nodes[0], 6)
+
+        # Make a PSBT
+        psbt = wallet.walletcreatefundedpsbt(wallet.listunspent(), [{def_wallet.getnewaddress(): 0.5}])["psbt"]
+        psbt = wallet.walletprocesspsbt(psbt=psbt, sighashtype="ALL|ANYONECANPAY", finalize=False)["psbt"]
+
+        # Check that the PSBT has a sighash field on all inputs
+        dec_psbt = self.nodes[0].decodepsbt(psbt)
+        for input in dec_psbt["inputs"]:
+            assert_equal(input["sighash"], "ALL|ANYONECANPAY")
+
+        # Make sure we can still finalize the transaction
+        fin_res = self.nodes[0].finalizepsbt(psbt)
+        assert_equal(fin_res["complete"], True)
+        fin_hex = fin_res["hex"]
+
+        # Change the sighash field to a different value and make sure we still finalize to the same thing
+        mod_psbt = PSBT.from_base64(psbt)
+        mod_psbt.i[0].map[PSBT_IN_SIGHASH_TYPE] = (SIGHASH_ALL).to_bytes(4, byteorder="little")
+        if self.options.descriptors:
+            mod_psbt.i[1].map[PSBT_IN_SIGHASH_TYPE] = (SIGHASH_ALL).to_bytes(4, byteorder="little")
+        psbt = mod_psbt.to_base64()
+        fin_res = self.nodes[0].finalizepsbt(psbt)
+        assert_equal(fin_res["complete"], True)
+        assert_equal(fin_res["hex"], fin_hex)
+
+        self.nodes[0].sendrawtransaction(fin_res["hex"])
+        self.generate(self.nodes[0], 1)
+
+        wallet.unloadwallet()
+
     def assert_change_type(self, psbtx, expected_type):
         """Assert that the given PSBT has a change output with the given type."""
 
@@ -1081,6 +1122,7 @@ class PSBTTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "'all' is not a valid sighash parameter.", self.nodes[2].descriptorprocesspsbt, psbt, [descriptor], sighashtype="all")
 
         self.test_sighash_mismatch()
+        self.test_sighash_adding()
 
 if __name__ == '__main__':
     PSBTTest(__file__).main()
