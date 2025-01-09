@@ -1324,11 +1324,6 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
             continue;
         }
 
-        // Get the Sighash type
-        if (sign && input.sighash_type != std::nullopt && *input.sighash_type != sighash_type) {
-            return PSBTError::SIGHASH_MISMATCH;
-        }
-
         // Get the scriptPubKey to know which SigningProvider to use
         CScript script;
         if (!input.witness_utxo.IsNull()) {
