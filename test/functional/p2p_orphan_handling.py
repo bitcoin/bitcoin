@@ -592,6 +592,30 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.wait_until(lambda: len(node.getorphantxs()) == 0)
 
     @cleanup
+    def test_immediately_erased_orphan(self):
+        self.log.info("Check that we fetch parents of an orphan, even if the orphan is not persisted in orphanage")
+
+        # Causes immediate eviction from the orphanage which normally happens randomly with
+        # 1/(DEFAULT_MAX_ORPHAN_TRANSACTIONS + 1) chance when orphanage is full
+        self.restart_node(0, extra_args=["-maxorphantx=0"])
+
+        tx_parent = self.wallet.create_self_transfer()
+        tx_child = self.wallet.create_self_transfer(utxo_to_spend=tx_parent["new_utxo"])
+
+        peer = self.nodes[0].add_p2p_connection(P2PInterface())
+
+        peer.send_and_ping(msg_tx(tx_child["tx"]))
+        assert_equal(len(self.nodes[0].getorphantxs()), 0)
+
+        parent_txid_int = int(tx_parent["txid"], 16)
+        self.nodes[0].bumpmocktime(GETDATA_TX_INTERVAL)
+
+        # parent fetched
+        peer.wait_for_getdata([parent_txid_int])
+
+        self.restart_node(0)
+
+    @cleanup
     def test_max_orphan_amount(self):
         self.log.info("Check that we never exceed our storage limits for orphans")
 
@@ -805,6 +829,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.wallet = MiniWallet(self.nodes[0])
         self.generate(self.wallet, 160)
 
+        self.test_immediately_erased_orphan()
         self.test_arrival_timing_orphan()
         self.test_orphan_rejected_parents_exceptions()
         self.test_orphan_multiple_parents()
