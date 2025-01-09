@@ -19,6 +19,7 @@
 #include <primitives/transaction.h>
 #include <primitives/transaction_identifier.h>
 #include <sync.h>
+#include <txgraph.h>
 #include <util/epochguard.h>
 #include <util/feefrac.h>
 #include <util/hasher.h>
@@ -48,6 +49,11 @@ struct bilingual_str;
 
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
+
+/** How many linearization iterations required for TxGraph clusters to have
+ * "acceptable" quality, if they cannot be optimally linearized with fewer
+ * iterations. */
+static constexpr uint64_t ACCEPTABLE_ITERS = 1'700;
 
 /**
  * Test whether the LockPoints height and time are still valid on the current chain
@@ -376,6 +382,7 @@ public:
 
     uint64_t CalculateDescendantMaximum(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 private:
+    std::unique_ptr<TxGraph> m_txgraph GUARDED_BY(cs);
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
 
 
