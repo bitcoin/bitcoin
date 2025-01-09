@@ -29,7 +29,7 @@ static void AddTx(const CTransactionRef& tx, CTxMemPool& pool) EXCLUSIVE_LOCKS_R
     bool spendsCoinbase = false;
     unsigned int sigOpCost = 4;
     LockPoints lp;
-    AddToMempool(pool, CTxMemPoolEntry(tx, 1000, nTime, nHeight, sequence, spendsCoinbase, sigOpCost, lp));
+    AddToMempool(pool, CTxMemPoolEntry(TxGraph::Ref(), tx, 1000, nTime, nHeight, sequence, spendsCoinbase, sigOpCost, lp));
 }
 
 struct Available {

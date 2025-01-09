@@ -27,7 +27,7 @@ static void AddTx(const CTransactionRef& tx, const CAmount& nFee, CTxMemPool& po
     bool spendsCoinbase = false;
     unsigned int sigOpCost = 4;
     LockPoints lp;
-    AddToMempool(pool, CTxMemPoolEntry(
+    AddToMempool(pool, CTxMemPoolEntry(TxGraph::Ref(),
         tx, nFee, nTime, nHeight, sequence,
         spendsCoinbase, sigOpCost, lp));
 }
