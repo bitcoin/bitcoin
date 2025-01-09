@@ -526,6 +526,10 @@ FUZZ_TARGET(txgraph)
                 // these here without making more calls to real, which could affect its internal
                 // state. A full comparison is done at the end.
                 break;
+            } else if (command-- == 0) {
+                // DoWork.
+                real->DoWork();
+                break;
             }
         }
     }
