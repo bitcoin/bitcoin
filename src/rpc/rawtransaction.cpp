@@ -390,10 +390,10 @@ static RPCHelpMan getrawtransaction()
         TxToJSON(*tx, hash_block, result, chainman.ActiveChainstate());
         return result;
     }
-    if (!chainman.m_blockman.UndoReadFromDisk(blockUndo, *blockindex)) {
+    if (!chainman.m_blockman.ReadBlockUndo(blockUndo, *blockindex)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Undo data expected but can't be read. This could be due to disk corruption or a conflict with a pruning event.");
     }
-    if (!chainman.m_blockman.ReadBlockFromDisk(block, *blockindex)) {
+    if (!chainman.m_blockman.ReadBlock(block, *blockindex)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Block data expected but can't be read. This could be due to disk corruption or a conflict with a pruning event.");
     }
 
