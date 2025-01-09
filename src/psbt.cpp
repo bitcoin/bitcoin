@@ -422,6 +422,12 @@ PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransact
     if (!sighash) sighash = utxo.scriptPubKey.IsPayToTaproot() ? SIGHASH_DEFAULT : SIGHASH_ALL;
     if (input.sighash_type && input.sighash_type != sighash) {
         return PSBTError::SIGHASH_MISMATCH;
+    } else {
+        if ((!utxo.scriptPubKey.IsPayToTaproot() && (sighash != SIGHASH_ALL && sighash != SIGHASH_DEFAULT)) ||
+            (utxo.scriptPubKey.IsPayToTaproot() && sighash != SIGHASH_DEFAULT)
+        ) {
+            input.sighash_type = sighash;
+        }
     }
     Assert(sighash.has_value());
 
@@ -501,7 +507,8 @@ bool FinalizePSBT(PartiallySignedTransaction& psbtx)
     bool complete = true;
     const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
     for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        complete &= (SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, &txdata, std::nullopt, nullptr, true) == PSBTError::OK);
+        PSBTInput& input = psbtx.inputs.at(i);
+        complete &= (SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, &txdata, input.sighash_type, nullptr, true) == PSBTError::OK);
     }
 
     return complete;
