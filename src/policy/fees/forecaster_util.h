@@ -11,6 +11,12 @@
 #include <string>
 
 /**
+ * @enum ForecastType
+ * Identifier for fee rate forecasters.
+ */
+enum class ForecastType {};
+
+/**
  * @class ForecastResult
  * Represents the response returned by a fee rate forecaster.
  */
@@ -39,6 +45,8 @@ public:
          * The chain tip at which the forecast was made.
          */
         unsigned int current_block_height{0};
+        /* This identifies which forecaster is providing this feerate forecast */
+        ForecastType forecaster;
     };
 
     /**
