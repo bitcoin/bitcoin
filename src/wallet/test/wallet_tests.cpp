@@ -26,6 +26,7 @@
 #include <policy/settings.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
+#include <wallet/context.h>
 #include <wallet/test/util.h>
 #include <wallet/test/wallet_test_fixture.h>
 
@@ -47,19 +48,19 @@ static_assert(WALLET_INCREMENTAL_RELAY_FEE >= DEFAULT_INCREMENTAL_RELAY_FEE, "wa
 
 BOOST_FIXTURE_TEST_SUITE(wallet_tests, WalletTestingSetup)
 
-static const std::shared_ptr<CWallet> TestLoadWallet(interfaces::Chain* chain, interfaces::CoinJoin::Loader* coinjoin_loader)
+static const std::shared_ptr<CWallet> TestLoadWallet(WalletContext& context)
 {
     DatabaseOptions options;
     DatabaseStatus status;
     bilingual_str error;
     std::vector<bilingual_str> warnings;
     auto database = MakeWalletDatabase("", options, status, error);
-    auto wallet = CWallet::Create(chain, coinjoin_loader, "", std::move(database), options.create_flags, error, warnings);
-    if (coinjoin_loader) {
+    auto wallet = CWallet::Create(context, "", std::move(database), options.create_flags, error, warnings);
+    if (context.coinjoin_loader) {
         // TODO: see CreateWalletWithoutChain
         AddWallet(wallet);
     }
-    if (chain) {
+    if (context.chain) {
         wallet->postInitProcess();
     }
     return wallet;
@@ -697,7 +698,10 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
 {
     gArgs.ForceSetArg("-unsafesqlitesync", "1");
     // Create new wallet with known key and unload it.
-    auto wallet = TestLoadWallet(m_node.chain.get(), m_node.coinjoin_loader.get());
+    WalletContext context;
+    context.chain = m_node.chain.get();
+    context.coinjoin_loader = m_node.coinjoin_loader.get();
+    auto wallet = TestLoadWallet(context);
     CKey key;
     key.MakeNewKey(true);
     AddKey(*wallet, key);
@@ -737,7 +741,7 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
 
     // Reload wallet and make sure new transactions are detected despite events
     // being blocked
-    wallet = TestLoadWallet(m_node.chain.get(), m_node.coinjoin_loader.get());
+    wallet = TestLoadWallet(context);
     BOOST_CHECK(rescan_completed);
     BOOST_CHECK_EQUAL(addtx_count, 2);
     {
@@ -772,7 +776,7 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
             BOOST_CHECK(m_node.chain->broadcastTransaction(MakeTransactionRef(mempool_tx), DEFAULT_TRANSACTION_MAXFEE, false, error));
             SyncWithValidationInterfaceQueue();
         });
-    wallet = TestLoadWallet(m_node.chain.get(), m_node.coinjoin_loader.get());
+    wallet = TestLoadWallet(context);
     BOOST_CHECK_EQUAL(addtx_count, 4);
     {
         LOCK(wallet->cs_wallet);
@@ -785,8 +789,9 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
 
 BOOST_FIXTURE_TEST_CASE(CreateWalletWithoutChain, BasicTestingSetup)
 {
-    // TODO: FIX FIX FIX - coinjoin_loader is null heere!
-    auto wallet = TestLoadWallet(nullptr, nullptr);
+    WalletContext context;
+    context.coinjoin_loader = nullptr; // TODO: FIX FIX FIX
+    auto wallet = TestLoadWallet(context);
     BOOST_CHECK(wallet);
     UnloadWallet(std::move(wallet));
 }
@@ -794,7 +799,10 @@ BOOST_FIXTURE_TEST_CASE(CreateWalletWithoutChain, BasicTestingSetup)
 BOOST_FIXTURE_TEST_CASE(ZapSelectTx, TestChain100Setup)
 {
     gArgs.ForceSetArg("-unsafesqlitesync", "1");
-    auto wallet = TestLoadWallet(m_node.chain.get(), m_node.coinjoin_loader.get());
+    WalletContext context;
+    context.chain = m_node.chain.get();
+    context.coinjoin_loader = m_node.coinjoin_loader.get();
+    auto wallet = TestLoadWallet(context);
     CKey key;
     key.MakeNewKey(true);
     AddKey(*wallet, key);

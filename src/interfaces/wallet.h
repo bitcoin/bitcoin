@@ -358,6 +358,9 @@ public:
    //! loaded at startup or by RPC.
    using LoadWalletFn = std::function<void(std::unique_ptr<Wallet> wallet)>;
    virtual std::unique_ptr<Handler> handleLoadWallet(LoadWalletFn fn) = 0;
+
+   //! Return pointer to internal context, useful for testing.
+   virtual WalletContext* context() { return nullptr; }
 };
 
 //! Information about one wallet address.

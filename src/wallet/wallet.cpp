@@ -41,6 +41,7 @@
 #endif
 #include <wallet/coincontrol.h>
 #include <wallet/coinselection.h>
+#include <wallet/context.h>
 #include <wallet/fees.h>
 #include <warnings.h>
 
@@ -230,7 +231,7 @@ void UnloadWallet(std::shared_ptr<CWallet>&& wallet)
 }
 
 namespace {
-std::shared_ptr<CWallet> LoadWalletInternal(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> LoadWalletInternal(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     try {
         std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(name, options, status, error);
@@ -239,8 +240,8 @@ std::shared_ptr<CWallet> LoadWalletInternal(interfaces::Chain& chain, interfaces
             return nullptr;
         }
 
-        chain.initMessage(_("Loading wallet…").translated);
-        const std::shared_ptr<CWallet> wallet = CWallet::Create(&chain, &coinjoin_loader, name, std::move(database), options.create_flags, error, warnings);
+        context.chain->initMessage(_("Loading wallet…").translated);
+        const std::shared_ptr<CWallet> wallet = CWallet::Create(context, name, std::move(database), options.create_flags, error, warnings);
         if (!wallet) {
             error = Untranslated("Wallet loading failed.") + Untranslated(" ") + error;
             status = DatabaseStatus::FAILED_LOAD;
@@ -250,7 +251,7 @@ std::shared_ptr<CWallet> LoadWalletInternal(interfaces::Chain& chain, interfaces
         wallet->postInitProcess();
 
         // Write the wallet setting
-        UpdateWalletSetting(chain, name, load_on_start, warnings);
+        UpdateWalletSetting(*context.chain, name, load_on_start, warnings);
 
         return wallet;
     } catch (const std::runtime_error& e) {
@@ -261,7 +262,7 @@ std::shared_ptr<CWallet> LoadWalletInternal(interfaces::Chain& chain, interfaces
 }
 } // namespace
 
-std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> LoadWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     auto result = WITH_LOCK(g_loading_wallet_mutex, return g_loading_wallet_set.insert(name));
     if (!result.second) {
@@ -269,12 +270,12 @@ std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, interfaces::CoinJo
         status = DatabaseStatus::FAILED_LOAD;
         return nullptr;
     }
-    auto wallet = LoadWalletInternal(chain, coinjoin_loader, name, load_on_start, options, status, error, warnings);
+    auto wallet = LoadWalletInternal(context, name, load_on_start, options, status, error, warnings);
     WITH_LOCK(g_loading_wallet_mutex, g_loading_wallet_set.erase(result.first));
     return wallet;
 }
 
-std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, const std::string& name, std::optional<bool> load_on_start, DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     uint64_t wallet_creation_flags = options.create_flags;
     const SecureString& passphrase = options.create_passphrase;
@@ -305,8 +306,8 @@ std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, interfaces::Coin
     }
 
     // Make the wallet
-    chain.initMessage(_("Loading wallet…").translated);
-    const std::shared_ptr<CWallet> wallet = CWallet::Create(&chain, &coinjoin_loader, name, std::move(database), wallet_creation_flags, error, warnings);
+    context.chain->initMessage(_("Loading wallet…").translated);
+    const std::shared_ptr<CWallet> wallet = CWallet::Create(context, name, std::move(database), wallet_creation_flags, error, warnings);
     if (!wallet) {
         error = Untranslated("Wallet creation failed.") + Untranslated(" ") + error;
         status = DatabaseStatus::FAILED_CREATE;
@@ -362,13 +363,13 @@ std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, interfaces::Coin
     wallet->postInitProcess();
 
     // Write the wallet settings
-    UpdateWalletSetting(chain, name, load_on_start, warnings);
+    UpdateWalletSetting(*context.chain, name, load_on_start, warnings);
 
     status = DatabaseStatus::SUCCESS;
     return wallet;
 }
 
-std::shared_ptr<CWallet> RestoreWallet(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     DatabaseOptions options;
     options.require_existing = true;
@@ -390,7 +391,7 @@ std::shared_ptr<CWallet> RestoreWallet(interfaces::Chain& chain, interfaces::Coi
     auto wallet_file = wallet_path / "wallet.dat";
     fs::copy_file(backup_file, wallet_file, fs::copy_options::none);
 
-    auto wallet = LoadWallet(chain, coinjoin_loader, wallet_name, load_on_start, options, status, error, warnings);
+    auto wallet = LoadWallet(context, wallet_name, load_on_start, options, status, error, warnings);
 
     if (!wallet) {
         fs::remove(wallet_file);
@@ -3253,8 +3254,10 @@ std::unique_ptr<WalletDatabase> MakeWalletDatabase(const std::string& name, cons
     return MakeDatabase(wallet_path, options, status, error_string);
 }
 
-std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain* chain, interfaces::CoinJoin::Loader* coinjoin_loader, const std::string& name, std::unique_ptr<WalletDatabase> database, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::string& name, std::unique_ptr<WalletDatabase> database, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
+    interfaces::Chain* chain = context.chain;
+    interfaces::CoinJoin::Loader* coinjoin_loader = context.coinjoin_loader;
     const std::string& walletFile = database->Filename();
 
     const auto start{SteadyClock::now()};

@@ -574,9 +574,9 @@ public:
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
     }
-    bool verify() override { return VerifyWallets(*m_context.chain); }
-    bool load() override { return LoadWallets(*m_context.chain, *m_context.coinjoin_loader); }
-    void start(CScheduler& scheduler) override { return StartWallets(scheduler, *Assert(m_context.args)); }
+    bool verify() override { return VerifyWallets(m_context); }
+    bool load() override { return LoadWallets(m_context); }
+    void start(CScheduler& scheduler) override { return StartWallets(m_context, scheduler); }
     void flush() override { return FlushWallets(); }
     void stop() override { return StopWallets(); }
     void setMockTime(int64_t time) override { return SetMockTime(time); }
@@ -590,19 +590,19 @@ public:
         options.require_create = true;
         options.create_flags = wallet_creation_flags;
         options.create_passphrase = passphrase;
-        return MakeWallet(CreateWallet(*m_context.chain, *m_context.coinjoin_loader, name, true /* load_on_start */, options, status, error, warnings));
+        return MakeWallet(CreateWallet(m_context, name, true /* load_on_start */, options, status, error, warnings));
     }
     std::unique_ptr<Wallet> loadWallet(const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
     {
         DatabaseOptions options;
         DatabaseStatus status;
         options.require_existing = true;
-        return MakeWallet(LoadWallet(*m_context.chain, *m_context.coinjoin_loader, name, true /* load_on_start */, options, status, error, warnings));
+        return MakeWallet(LoadWallet(m_context, name, true /* load_on_start */, options, status, error, warnings));
     }
     std::unique_ptr<Wallet> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
     {
         DatabaseStatus status;
-        return MakeWallet(RestoreWallet(*m_context.chain, *m_context.coinjoin_loader, backup_file, wallet_name, /*load_on_start=*/true, status, error, warnings));
+        return MakeWallet(RestoreWallet(m_context, backup_file, wallet_name, /*load_on_start=*/true, status, error, warnings));
     }
     std::string getWalletDir() override
     {
@@ -628,6 +628,7 @@ public:
     {
         return HandleLoadWallet(std::move(fn));
     }
+    WalletContext* context() override  { return &m_context; }
 
     WalletContext m_context;
     const std::vector<std::string> m_wallet_filenames;

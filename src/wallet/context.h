@@ -27,7 +27,7 @@ class Loader;
 //! behavior.
 struct WalletContext {
     interfaces::Chain* chain{nullptr};
-    ArgsManager* args{nullptr};
+    ArgsManager* args{nullptr}; // Currently a raw pointer because the memory is not managed by this struct
     interfaces::CoinJoin::Loader* coinjoin_loader{nullptr};
 
     //! Declare default constructor and destructor that are not inline, so code

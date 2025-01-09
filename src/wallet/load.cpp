@@ -14,6 +14,7 @@
 #include <util/string.h>
 #include <util/system.h>
 #include <util/translation.h>
+#include <wallet/context.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
 
@@ -21,8 +22,9 @@
 
 #include <system_error>
 
-bool VerifyWallets(interfaces::Chain& chain)
+bool VerifyWallets(WalletContext& context)
 {
+    interfaces::Chain& chain = *context.chain;
     if (gArgs.IsArgSet("-walletdir")) {
         const fs::path wallet_dir{gArgs.GetPathArg("-walletdir")};
         std::error_code error;
@@ -96,8 +98,9 @@ bool VerifyWallets(interfaces::Chain& chain)
     return true;
 }
 
-bool LoadWallets(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader)
+bool LoadWallets(WalletContext& context)
 {
+    interfaces::Chain& chain = *context.chain;
     try {
         std::set<fs::path> wallet_paths;
         for (const auto& wallet : chain.getSettingsList("wallet")) {
@@ -116,7 +119,7 @@ bool LoadWallets(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoi
                 continue;
             }
             chain.initMessage(_("Loading wallet…").translated);
-            const std::shared_ptr<CWallet> pwallet = database ? CWallet::Create(&chain, &coinjoin_loader, name, std::move(database), options.create_flags, error_string, warnings) : nullptr;
+            const std::shared_ptr<CWallet> pwallet = database ? CWallet::Create(context, name, std::move(database), options.create_flags, error_string, warnings) : nullptr;
             if (!warnings.empty()) chain.initWarning(Join(warnings, Untranslated("\n")));
             if (!pwallet) {
                 chain.initError(error_string);
@@ -131,14 +134,14 @@ bool LoadWallets(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoi
     }
 }
 
-void StartWallets(CScheduler& scheduler, const ArgsManager& args)
+void StartWallets(WalletContext& context, CScheduler& scheduler)
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         pwallet->postInitProcess();
     }
 
     // Schedule periodic wallet flushes and tx rebroadcasts
-    if (args.GetBoolArg("-flushwallet", DEFAULT_FLUSHWALLET)) {
+    if (context.args->GetBoolArg("-flushwallet", DEFAULT_FLUSHWALLET)) {
         scheduler.scheduleEvery(MaybeCompactWalletDB, std::chrono::milliseconds{500});
     }
     scheduler.scheduleEvery(MaybeResendWalletTxs, std::chrono::milliseconds{1000});
