@@ -367,6 +367,8 @@ public:
     void ApplyDependencies() noexcept;
     /** Make a specified Cluster have quality ACCEPTABLE or OPTIMAL. */
     void MakeAcceptable(Cluster& cluster) noexcept;
+    /** Make all Clusters at the specified level have quality ACCEPTABLE or OPTIMAL. */
+    void MakeAllAcceptable(int level) noexcept;
 
     // Implementations for the public TxGraph interface.
 
@@ -374,6 +376,8 @@ public:
     void RemoveTransaction(const Ref& arg) noexcept final;
     void AddDependency(const Ref& parent, const Ref& child) noexcept final;
     void SetTransactionFee(const Ref&, int64_t fee) noexcept final;
+
+    void DoWork() noexcept final;
 
     void StartStaging() noexcept final;
     void CommitStaging() noexcept final;
@@ -1279,6 +1283,16 @@ void TxGraphImpl::MakeAcceptable(Cluster& cluster) noexcept
     }
 }
 
+void TxGraphImpl::MakeAllAcceptable(int level) noexcept
+{
+    if (size_t(level) == m_clustersets.size() - 1) ApplyDependencies();
+    if (m_clustersets[level].m_oversized == true) return;
+    auto& queue = m_clustersets[level].m_clusters[int(QualityLevel::NEEDS_RELINEARIZE)];
+    while (!queue.empty()) {
+        MakeAcceptable(*queue.back().get());
+    }
+}
+
 Cluster::Cluster(TxGraphImpl& graph, const FeePerWeight& feerate, GraphIndex graph_index) noexcept
 {
     // Create a new transaction in the DepGraph, and remember its position in m_mapping.
@@ -1836,6 +1850,13 @@ void TxGraphImpl::SanityCheck() const
     // empty (to prevent memory leaks due to an ever-growing m_entries vector).
     if (compact_possible) {
         assert(actual_unlinked.empty());
+    }
+}
+
+void TxGraphImpl::DoWork() noexcept
+{
+    for (int level = 0; level < int(m_clustersets.size()); ++level) {
+        MakeAllAcceptable(level);
     }
 }
 
