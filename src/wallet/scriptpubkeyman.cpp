@@ -651,11 +651,6 @@ std::optional<PSBTError> LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransact
             continue;
         }
 
-        // Get the Sighash type
-        if (sign && input.sighash_type != std::nullopt && *input.sighash_type != sighash_type) {
-            return PSBTError::SIGHASH_MISMATCH;
-        }
-
         // Check non_witness_utxo has specified prevout
         if (input.non_witness_utxo) {
             if (txin.prevout.n >= input.non_witness_utxo->vout.size()) {
@@ -2559,11 +2554,6 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
 
         if (PSBTInputSigned(input)) {
             continue;
-        }
-
-        // Get the Sighash type
-        if (sign && input.sighash_type != std::nullopt && *input.sighash_type != sighash_type) {
-            return PSBTError::SIGHASH_MISMATCH;
         }
 
         // Get the scriptPubKey to know which SigningProvider to use
