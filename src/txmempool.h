@@ -366,6 +366,7 @@ public:
      * the mempool is consistent with the new chain tip and fully populated.
      */
     mutable RecursiveMutex cs;
+    std::unique_ptr<TxGraph> m_txgraph GUARDED_BY(cs);
     indexed_transaction_set mapTx GUARDED_BY(cs);
 
     using txiter = indexed_transaction_set::nth_index<0>::type::const_iterator;
@@ -377,7 +378,6 @@ public:
 
     uint64_t CalculateDescendantMaximum(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 private:
-    std::unique_ptr<TxGraph> m_txgraph GUARDED_BY(cs);
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
 
 
@@ -817,8 +817,13 @@ public:
      */
     class ChangeSet {
     public:
-        explicit ChangeSet(CTxMemPool* pool) : m_pool(pool) {}
-        ~ChangeSet() EXCLUSIVE_LOCKS_REQUIRED(m_pool->cs) { m_pool->m_have_changeset = false; }
+        explicit ChangeSet(CTxMemPool* pool) : m_pool(pool) { m_pool->m_txgraph->StartStaging(); }
+        ~ChangeSet() EXCLUSIVE_LOCKS_REQUIRED(m_pool->cs) {
+            if (m_pool->m_txgraph->HaveStaging()) {
+                m_pool->m_txgraph->AbortStaging();
+            }
+            m_pool->m_have_changeset = false;
+        }
 
         ChangeSet(const ChangeSet&) = delete;
         ChangeSet& operator=(const ChangeSet&) = delete;
@@ -826,7 +831,8 @@ public:
         using TxHandle = CTxMemPool::txiter;
 
         TxHandle StageAddition(const CTransactionRef& tx, const CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, bool spends_coinbase, int64_t sigops_cost, LockPoints lp);
-        void StageRemoval(CTxMemPool::txiter it) { m_to_remove.insert(it); }
+
+        void StageRemoval(CTxMemPool::txiter it);
 
         const CTxMemPool::setEntries& GetRemovals() const { return m_to_remove; }
 
