@@ -591,14 +591,26 @@ public:
     void CleanupTemporaryCoins() EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     // Single transaction acceptance
-    MempoolAcceptResult AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    MempoolAcceptResult AcceptSingleTransactionAndCleanup(const CTransactionRef& ptx, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+        LOCK(m_pool.cs);
+        MempoolAcceptResult result = AcceptSingleTransactionInternal(ptx, args);
+        ClearSubPackageState();
+        return result;
+    }
+    MempoolAcceptResult AcceptSingleTransactionInternal(const CTransactionRef& ptx, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     /**
     * Multiple transaction acceptance. Transactions may or may not be interdependent, but must not
     * conflict with each other, and the transactions cannot already be in the mempool. Parents must
     * come before children if any dependencies exist.
     */
-    PackageMempoolAcceptResult AcceptMultipleTransactions(const std::vector<CTransactionRef>& txns, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    PackageMempoolAcceptResult AcceptMultipleTransactionsAndCleanup(const std::vector<CTransactionRef>& txns, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+        LOCK(m_pool.cs);
+        PackageMempoolAcceptResult result = AcceptMultipleTransactionsInternal(txns, args);
+        ClearSubPackageState();
+        return result;
+    }
+    PackageMempoolAcceptResult AcceptMultipleTransactionsInternal(const std::vector<CTransactionRef>& txns, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     /**
      * Submission of a subpackage.
@@ -1423,10 +1435,10 @@ bool MemPoolAccept::SubmitPackage(const ATMPArgs& args, std::vector<Workspace>& 
     return all_submitted;
 }
 
-MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs& args)
+MempoolAcceptResult MemPoolAccept::AcceptSingleTransactionInternal(const CTransactionRef& ptx, ATMPArgs& args)
 {
     AssertLockHeld(cs_main);
-    LOCK(m_pool.cs); // mempool "read lock" (held through m_pool.m_opts.signals->TransactionAddedToMempool())
+    AssertLockHeld(m_pool.cs);
 
     Workspace ws(ptx);
     const std::vector<Wtxid> single_wtxid{ws.m_ptx->GetWitnessHash()};
@@ -1515,9 +1527,10 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
                                         effective_feerate, single_wtxid);
 }
 
-PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::vector<CTransactionRef>& txns, ATMPArgs& args)
+PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactionsInternal(const std::vector<CTransactionRef>& txns, ATMPArgs& args)
 {
     AssertLockHeld(cs_main);
+    AssertLockHeld(m_pool.cs);
 
     // These context-free package limits can be done before taking the mempool lock.
     PackageValidationState package_state;
@@ -1528,8 +1541,6 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
     std::transform(txns.cbegin(), txns.cend(), std::back_inserter(workspaces),
                    [](const auto& tx) { return Workspace(tx); });
     std::map<Wtxid, MempoolAcceptResult> results;
-
-    LOCK(m_pool.cs);
 
     // Do all PreChecks first and fail fast to avoid running expensive script checks when unnecessary.
     for (Workspace& ws : workspaces) {
@@ -1681,11 +1692,11 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptSubPackage(const std::vector<CTr
     AssertLockHeld(m_pool.cs);
     auto result = [&]() EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_pool.cs) {
         if (subpackage.size() > 1) {
-            return AcceptMultipleTransactions(subpackage, args);
+            return AcceptMultipleTransactionsInternal(subpackage, args);
         }
         const auto& tx = subpackage.front();
         ATMPArgs single_args = ATMPArgs::SingleInPackageAccept(args);
-        const auto single_res = AcceptSingleTransaction(tx, single_args);
+        const auto single_res = AcceptSingleTransactionInternal(tx, single_args);
         PackageValidationState package_state_wrapped;
         if (single_res.m_result_type != MempoolAcceptResult::ResultType::VALID) {
             package_state_wrapped.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
@@ -1863,8 +1874,10 @@ MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTra
     CTxMemPool& pool{*active_chainstate.GetMempool()};
 
     std::vector<COutPoint> coins_to_uncache;
+
     auto args = MemPoolAccept::ATMPArgs::SingleAccept(chainparams, accept_time, bypass_limits, coins_to_uncache, test_accept);
-    MempoolAcceptResult result = MemPoolAccept(pool, active_chainstate).AcceptSingleTransaction(tx, args);
+    MempoolAcceptResult result = MemPoolAccept(pool, active_chainstate).AcceptSingleTransactionAndCleanup(tx, args);
+
     if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
         // Remove coins that were not present in the coins cache before calling
         // AcceptSingleTransaction(); this is to prevent memory DoS in case we receive a large
@@ -1897,7 +1910,7 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
         AssertLockHeld(cs_main);
         if (test_accept) {
             auto args = MemPoolAccept::ATMPArgs::PackageTestAccept(chainparams, GetTime(), coins_to_uncache);
-            return MemPoolAccept(pool, active_chainstate).AcceptMultipleTransactions(package, args);
+            return MemPoolAccept(pool, active_chainstate).AcceptMultipleTransactionsAndCleanup(package, args);
         } else {
             auto args = MemPoolAccept::ATMPArgs::PackageChildWithParents(chainparams, GetTime(), coins_to_uncache, client_maxfeerate);
             return MemPoolAccept(pool, active_chainstate).AcceptPackage(package, args);

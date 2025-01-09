@@ -435,6 +435,8 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n)
 void CTxMemPool::Apply(ChangeSet* changeset)
 {
     AssertLockHeld(cs);
+    m_txgraph->CommitStaging();
+
     RemoveStaged(changeset->m_to_remove, false, MemPoolRemovalReason::REPLACED);
 
     for (size_t i=0; i<changeset->m_entry_vec.size(); ++i) {
@@ -891,7 +893,10 @@ void CTxMemPool::PrioritiseTransaction(const Txid& hash, const CAmount& nFeeDelt
         delta = SaturatingAdd(delta, nFeeDelta);
         txiter it = mapTx.find(hash);
         if (it != mapTx.end()) {
+            // PrioritiseTransaction calls stack on previous ones. Set the new
+            // transaction fee to be current modified fee + feedelta.
             mapTx.modify(it, [&nFeeDelta](CTxMemPoolEntry& e) { e.UpdateModifiedFee(nFeeDelta); });
+            m_txgraph->SetTransactionFee(*it, it->GetModifiedFee());
             // Now update all ancestors' modified fees with descendants
             auto ancestors{AssumeCalculateMemPoolAncestors(__func__, *it, Limits::NoLimits(), /*fSearchForParents=*/false)};
             for (txiter ancestorIt : ancestors) {
@@ -1387,13 +1392,26 @@ CTxMemPool::ChangeSet::TxHandle CTxMemPool::ChangeSet::StageAddition(const CTran
 {
     LOCK(m_pool->cs);
     Assume(m_to_add.find(tx->GetHash()) == m_to_add.end());
-    auto newit = m_to_add.emplace(TxGraph::Ref(), tx, fee, time, entry_height, entry_sequence, spends_coinbase, sigops_cost, lp).first;
+
     CAmount delta{0};
     m_pool->ApplyDelta(tx->GetHash(), delta);
-    if (delta) m_to_add.modify(newit, [&delta](CTxMemPoolEntry& e) { e.UpdateModifiedFee(delta); });
+
+    TxGraph::Ref ref(m_pool->m_txgraph->AddTransaction(FeePerWeight(fee, GetSigOpsAdjustedWeight(GetTransactionWeight(*tx), sigops_cost, ::nBytesPerSigOp))));
+    auto newit = m_to_add.emplace(std::move(ref), tx, fee, time, entry_height, entry_sequence, spends_coinbase, sigops_cost, lp).first;
+    if (delta) {
+        m_to_add.modify(newit, [&delta](CTxMemPoolEntry& e) { e.UpdateModifiedFee(delta); });
+        m_pool->m_txgraph->SetTransactionFee(*newit, newit->GetModifiedFee());
+    }
 
     m_entry_vec.push_back(newit);
     return newit;
+}
+
+void CTxMemPool::ChangeSet::StageRemoval(CTxMemPool::txiter it)
+{
+    LOCK(m_pool->cs);
+    m_pool->m_txgraph->RemoveTransaction(*it);
+    m_to_remove.insert(it);
 }
 
 void CTxMemPool::ChangeSet::Apply()
