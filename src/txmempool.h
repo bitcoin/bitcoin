@@ -18,6 +18,7 @@
 #include <policy/packages.h>
 #include <primitives/transaction.h>
 #include <sync.h>
+#include <txgraph.h>
 #include <util/epochguard.h>
 #include <util/feefrac.h>
 #include <util/hasher.h>
@@ -376,6 +377,7 @@ public:
 
     uint64_t CalculateDescendantMaximum(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 private:
+    std::unique_ptr<TxGraph> m_txgraph GUARDED_BY(cs);
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
 
 
