@@ -377,6 +377,15 @@ linux64_multiprocess-test:
   variables:
     BUILD_TARGET: linux64_multiprocess
 
+linux64_nowallet-test:
+  extends:
+    - .test-template
+    - .skip-in-fast-mode-template
+  needs:
+    - linux64_nowallet-build
+  variables:
+    BUILD_TARGET: linux64_nowallet
+
 #linux64_valgrind-test:
 #  extends:
 #    - .test-template
