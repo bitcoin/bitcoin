@@ -11,6 +11,7 @@
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <primitives/transaction.h>
+#include <txgraph.h>
 #include <util/epochguard.h>
 #include <util/overflow.h>
 
@@ -62,7 +63,7 @@ struct CompareIteratorByHash {
  *
  */
 
-class CTxMemPoolEntry
+class CTxMemPoolEntry : public TxGraph::Ref
 {
 public:
     typedef std::reference_wrapper<const CTxMemPoolEntry> CTxMemPoolEntryRef;
@@ -103,11 +104,13 @@ private:
     int64_t nSigOpCostWithAncestors;
 
 public:
-    CTxMemPoolEntry(const CTransactionRef& tx, CAmount fee,
+    virtual ~CTxMemPoolEntry() = default;
+    CTxMemPoolEntry(TxGraph::Ref&& ref, const CTransactionRef& tx, CAmount fee,
                     int64_t time, unsigned int entry_height, uint64_t entry_sequence,
                     bool spends_coinbase,
                     int64_t sigops_cost, LockPoints lp)
-        : tx{tx},
+        : TxGraph::Ref(std::move(ref)),
+          tx{tx},
           nFee{fee},
           nTxWeight{GetTransactionWeight(*tx)},
           nUsageSize{RecursiveDynamicUsage(tx)},
