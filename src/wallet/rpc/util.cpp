@@ -1,4 +1,4 @@
-// Copyright (c) 2011-present The Bitcoin Core developers
+// Copyright (c) 2011-2012 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,6 +17,11 @@
 namespace wallet {
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 const std::string HELP_REQUIRING_PASSPHRASE{"\nRequires wallet passphrase to be set with walletpassphrase call if wallet is encrypted.\n"};
+
+int64_t ParseISO8601DateTime(const std::string& str)
+{
+    return ::ParseISO8601DateTime(str).value_or(0);
+}
 
 bool GetAvoidReuseFlag(const CWallet& wallet, const UniValue& param) {
     bool can_avoid_reuse = wallet.IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE);
