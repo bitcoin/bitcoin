@@ -59,8 +59,8 @@ public:
     public:
         Marker() = default;
         Marker(const Marker&) = default;
-        Marker(Marker&&) = delete;
-        Marker& operator=(Marker&&) = delete;
+        Marker(Marker&&) = default;
+        Marker& operator=(Marker&&) = default;
         ~Marker() = default;
     };
 
