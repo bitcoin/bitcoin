@@ -12,8 +12,13 @@
  */
 class Forecaster
 {
+protected:
+    const ForecastType m_forecastType;
+
 public:
-    Forecaster() = default;
+    Forecaster(ForecastType forecastType) : m_forecastType(forecastType) {}
+
+    ForecastType GetForecastType() const { return m_forecastType; }
 
     /**
      * Forecast the fee rate required for package to confirm within
