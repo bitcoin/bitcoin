@@ -74,7 +74,7 @@ FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
                         break;
                     }
                     const CTransaction tx{*mtx};
-                    mempool_entries.emplace_back(CTxMemPoolEntry::ExplicitCopy, ConsumeTxMemPoolEntry(fuzzed_data_provider, tx, current_height));
+                    mempool_entries.push_back(ConsumeTxMemPoolEntry(fuzzed_data_provider, tx, current_height));
                 }
                 std::vector<RemovedMempoolTransactionInfo> txs;
                 txs.reserve(mempool_entries.size());
