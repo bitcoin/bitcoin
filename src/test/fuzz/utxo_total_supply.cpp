@@ -17,8 +17,11 @@
 #include <util/chaintype.h>
 #include <validation.h>
 
+using node::BlockAssembler;
+
 FUZZ_TARGET(utxo_total_supply)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     /** The testing setup that creates a chainman only (no chainstate) */
     ChainTestingSetup test_setup{
         ChainType::REGTEST,
@@ -36,9 +39,11 @@ FUZZ_TARGET(utxo_total_supply)
         LOCK(chainman.GetMutex());
         return chainman.ActiveHeight();
     };
+    BlockAssembler::Options options;
+    options.coinbase_output_script = CScript() << OP_FALSE;
     const auto PrepareNextBlock = [&]() {
         // Use OP_FALSE to avoid BIP30 check from hitting early
-        auto block = PrepareBlock(node, CScript{} << OP_FALSE);
+        auto block = PrepareBlock(node, options);
         // Replace OP_FALSE with OP_TRUE
         {
             CMutableTransaction tx{*block->vtx.back()};

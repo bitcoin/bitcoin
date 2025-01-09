@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Migrating a wallet from legacy to descriptor."""
@@ -463,7 +463,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         addr_info = wallet.getaddressinfo(addr)
         desc = descsum_create("pk(" + addr_info["pubkey"] + ")")
 
-        self.master_node.generatetodescriptor(1, desc, invalid_call=False)
+        self.generatetodescriptor(self.master_node, 1, desc)
 
         bals = wallet.getbalances()
 
@@ -1032,15 +1032,11 @@ class WalletMigrationTest(BitcoinTestFramework):
         # There should be descriptors containing the imported key for: pk(), pkh(), sh(wpkh()), wpkh()
         key_origin = hash160(pubkey)[:4].hex()
         pubkey_hex = pubkey.hex()
-        pk_desc = descsum_create(f'pk([{key_origin}]{pubkey_hex})')
-        pkh_desc = descsum_create(f'pkh([{key_origin}]{pubkey_hex})')
-        sh_wpkh_desc = descsum_create(f'sh(wpkh([{key_origin}]{pubkey_hex}))')
-        wpkh_desc = descsum_create(f'wpkh([{key_origin}]{pubkey_hex})')
-        expected_descs = [pk_desc, pkh_desc, sh_wpkh_desc, wpkh_desc]
+        combo_desc = descsum_create(f"combo([{key_origin}]{pubkey_hex})")
 
         # Verify all expected descriptors were migrated
         migrated_desc = [item['desc'] for item in wallet.listdescriptors()['descriptors'] if pubkey.hex() in item['desc']]
-        assert_equal(expected_descs, migrated_desc)
+        assert_equal([combo_desc], migrated_desc)
         wallet.unloadwallet()
 
         ######################################################

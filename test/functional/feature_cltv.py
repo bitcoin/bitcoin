@@ -148,6 +148,10 @@ class BIP65Test(BitcoinTestFramework):
         # create and test one invalid tx per CLTV failure reason (5 in total)
         for i in range(5):
             spendtx = wallet.create_self_transfer()['tx']
+            assert_equal(len(spendtx.vin), 1)
+            coin = spendtx.vin[0]
+            coin_txid = format(coin.prevout.hash, '064x')
+            coin_vout = coin.prevout.n
             cltv_invalidate(spendtx, i)
 
             expected_cltv_reject_reason = [
@@ -159,12 +163,15 @@ class BIP65Test(BitcoinTestFramework):
             ][i]
             # First we show that this tx is valid except for CLTV by getting it
             # rejected from the mempool for exactly that reason.
+            spendtx_txid = spendtx.hash
+            spendtx_wtxid = spendtx.getwtxid()
             assert_equal(
                 [{
-                    'txid': spendtx.hash,
-                    'wtxid': spendtx.getwtxid(),
+                    'txid': spendtx_txid,
+                    'wtxid': spendtx_wtxid,
                     'allowed': False,
                     'reject-reason': expected_cltv_reject_reason,
+                    'reject-details': expected_cltv_reject_reason + f", input 0 of {spendtx_txid} (wtxid {spendtx_wtxid}), spending {coin_txid}:{coin_vout}"
                 }],
                 self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0),
             )

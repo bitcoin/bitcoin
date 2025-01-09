@@ -49,6 +49,16 @@ fn get_linter_list() -> Vec<&'static Linter> {
             lint_fn: lint_std_filesystem
         },
         &Linter {
+            description: "Check that fatal assertions are not used in RPC code",
+            name: "rpc_assert",
+            lint_fn: lint_rpc_assert
+        },
+        &Linter {
+            description: "Check that boost assertions are not used",
+            name: "boost_assert",
+            lint_fn: lint_boost_assert
+        },
+        &Linter {
             description: "Check that release note snippets are in the right folder",
             name: "doc_release_note_snippets",
             lint_fn: lint_doc_release_note_snippets
@@ -237,7 +247,7 @@ fn lint_py_lint() -> LintResult {
             "F822", // undefined name name in __all__
             "F823", // local variable name … referenced before assignment
             "F841", // local variable 'foo' is assigned to but never used
-            "PLE", // Pylint errors
+            "PLE",  // Pylint errors
             "W191", // indentation contains tabs
             "W291", // trailing whitespace
             "W292", // no newline at end of file
@@ -273,6 +283,7 @@ fn lint_std_filesystem() -> LintResult {
     let found = git()
         .args([
             "grep",
+            "--line-number",
             "std::filesystem",
             "--",
             "./src/",
@@ -283,10 +294,66 @@ fn lint_std_filesystem() -> LintResult {
         .success();
     if found {
         Err(r#"
-^^^
 Direct use of std::filesystem may be dangerous and buggy. Please include <util/fs.h> and use the
 fs:: namespace, which has unsafe filesystem functions marked as deleted.
             "#
+        .trim()
+        .to_string())
+    } else {
+        Ok(())
+    }
+}
+
+fn lint_rpc_assert() -> LintResult {
+    let found = git()
+        .args([
+            "grep",
+            "--line-number",
+            "--extended-regexp",
+            r"\<(A|a)ss(ume|ert)\(",
+            "--",
+            "src/rpc/",
+            "src/wallet/rpc*",
+            ":(exclude)src/rpc/server.cpp",
+            // src/rpc/server.cpp is excluded from this check since it's mostly meta-code.
+        ])
+        .status()
+        .expect("command error")
+        .success();
+    if found {
+        Err(r#"
+CHECK_NONFATAL(condition) or NONFATAL_UNREACHABLE should be used instead of assert for RPC code.
+
+Aborting the whole process is undesirable for RPC code. So nonfatal
+checks should be used over assert. See: src/util/check.h
+            "#
+        .trim()
+        .to_string())
+    } else {
+        Ok(())
+    }
+}
+
+fn lint_boost_assert() -> LintResult {
+    let found = git()
+        .args([
+            "grep",
+            "--line-number",
+            "--extended-regexp",
+            r"BOOST_ASSERT\(",
+            "--",
+            "*.cpp",
+            "*.h",
+        ])
+        .status()
+        .expect("command error")
+        .success();
+    if found {
+        Err(r#"
+BOOST_ASSERT must be replaced with Assert, BOOST_REQUIRE, or BOOST_CHECK to avoid an unnecessary
+include of the boost/assert.hpp dependency.
+            "#
+        .trim()
         .to_string())
     } else {
         Ok(())
@@ -303,17 +370,15 @@ fn lint_doc_release_note_snippets() -> LintResult {
     if non_release_notes.is_empty() {
         Ok(())
     } else {
-        Err(format!(
-            r#"
-{}
-^^^
+        println!("{non_release_notes}");
+        Err(r#"
 Release note snippets and other docs must be put into the doc/ folder directly.
 
 The doc/release-notes/ folder is for archived release notes of previous releases only. Snippets are
 expected to follow the naming "/doc/release-notes-<PR number>.md".
-            "#,
-            non_release_notes
-        ))
+            "#
+        .trim()
+        .to_string())
     }
 }
 
@@ -356,7 +421,6 @@ fn lint_trailing_whitespace() -> LintResult {
         .success();
     if trailing_space {
         Err(r#"
-^^^
 Trailing whitespace (including Windows line endings [CR LF]) is problematic, because git may warn
 about it, or editors may remove it by default, forcing developers in the future to either undo the
 changes manually or spend time on review.
@@ -366,6 +430,7 @@ Thus, it is best to remove the trailing space now.
 Please add any false positives, such as subtrees, Windows-related files, patch files, or externally
 sourced files to the exclude list.
             "#
+        .trim()
         .to_string())
     } else {
         Ok(())
@@ -382,7 +447,6 @@ fn lint_tabs_whitespace() -> LintResult {
         .success();
     if tabs {
         Err(r#"
-^^^
 Use of tabs in this codebase is problematic, because existing code uses spaces and tabs will cause
 display issues and conflict with editor settings.
 
@@ -390,6 +454,7 @@ Please remove the tabs.
 
 Please add any false positives, such as subtrees, or externally sourced files to the exclude list.
             "#
+        .trim()
         .to_string())
     } else {
         Ok(())
@@ -464,7 +529,6 @@ fn lint_includes_build_config() -> LintResult {
     if missing {
         return Err(format!(
             r#"
-^^^
 One or more files use a symbol declared in the bitcoin-build-config.h header. However, they are not
 including the header. This is problematic, because the header may or may not be indirectly
 included. If the indirect include were to be intentionally or accidentally removed, the build could
@@ -480,12 +544,13 @@ include again.
 #include <bitcoin-build-config.h> // IWYU pragma: keep
             "#,
             defines_regex
-        ));
+        )
+        .trim()
+        .to_string());
     }
     let redundant = print_affected_files(false);
     if redundant {
         return Err(r#"
-^^^
 None of the files use a symbol declared in the bitcoin-build-config.h header. However, they are including
 the header. Consider removing the unused include.
             "#
@@ -538,7 +603,9 @@ Markdown link errors found:
 {}
                 "#,
                 stderr
-            ))
+            )
+            .trim()
+            .to_string())
         }
         Err(e) if e.kind() == ErrorKind::NotFound => {
             println!("`mlc` was not found in $PATH, skipping markdown lint check.");
@@ -590,10 +657,9 @@ fn main() -> ExitCode {
         env::set_current_dir(&git_root).unwrap();
         if let Err(err) = (linter.lint_fn)() {
             println!(
-                "{err}\n^---- ⚠️ Failure generated from lint check '{}'!",
-                linter.name
+                "^^^\n{err}\n^---- ⚠️ Failure generated from lint check '{}' ({})!\n\n",
+                linter.name, linter.description,
             );
-            println!("{}", linter.description);
             test_failed = true;
         }
     }

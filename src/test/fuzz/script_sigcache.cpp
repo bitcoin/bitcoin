@@ -25,6 +25,7 @@ void initialize_script_sigcache()
 
 FUZZ_TARGET(script_sigcache, .init = initialize_script_sigcache)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     const auto max_sigcache_bytes{fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, DEFAULT_SIGNATURE_CACHE_BYTES)};

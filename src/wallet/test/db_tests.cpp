@@ -34,9 +34,9 @@ inline std::ostream& operator<<(std::ostream& os, const std::pair<const Serializ
 
 namespace wallet {
 
-static Span<const std::byte> StringBytes(std::string_view str)
+inline std::span<const std::byte> StringBytes(std::string_view str)
 {
-    return AsBytes<const char>({str.data(), str.size()});
+    return std::as_bytes(std::span{str});
 }
 
 static SerializeData StringData(std::string_view str)

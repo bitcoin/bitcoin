@@ -41,6 +41,7 @@ void initialize_addrman()
 
 FUZZ_TARGET(data_stream_addr_man, .init = initialize_addrman)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     DataStream data_stream = ConsumeDataStream(fuzzed_data_provider);
     NetGroupManager netgroupman{ConsumeNetGroupManager(fuzzed_data_provider)};
@@ -113,6 +114,7 @@ void FillAddrman(AddrMan& addrman, FuzzedDataProvider& fuzzed_data_provider)
 
 FUZZ_TARGET(addrman, .init = initialize_addrman)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
     NetGroupManager netgroupman{ConsumeNetGroupManager(fuzzed_data_provider)};
@@ -197,6 +199,7 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
 // Check that serialize followed by unserialize produces the same addrman.
 FUZZ_TARGET(addrman_serdeser, .init = initialize_addrman)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 

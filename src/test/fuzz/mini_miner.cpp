@@ -34,6 +34,7 @@ void initialize_miner()
 // Test that the MiniMiner can run with various outpoints and feerates.
 FUZZ_TARGET(mini_miner, .init = initialize_miner)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     bilingual_str error;
     CTxMemPool pool{CTxMemPool::Options{}, error};
@@ -112,6 +113,7 @@ FUZZ_TARGET(mini_miner, .init = initialize_miner)
 // Test that MiniMiner and BlockAssembler build the same block given the same transactions and constraints.
 FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     bilingual_str error;
     CTxMemPool pool{CTxMemPool::Options{}, error};
@@ -174,15 +176,15 @@ FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
     miner_options.blockMinFeeRate = target_feerate;
     miner_options.nBlockMaxWeight = DEFAULT_BLOCK_MAX_WEIGHT;
     miner_options.test_block_validity = false;
+    miner_options.coinbase_output_script = CScript() << OP_0;
 
     node::BlockAssembler miner{g_setup->m_node.chainman->ActiveChainstate(), &pool, miner_options};
     node::MiniMiner mini_miner{pool, outpoints};
     assert(mini_miner.IsReadyToCalculate());
 
-    CScript spk_placeholder = CScript() << OP_0;
     // Use BlockAssembler as oracle. BlockAssembler and MiniMiner should select the same
     // transactions, stopping once packages do not meet target_feerate.
-    const auto blocktemplate{miner.CreateNewBlock(spk_placeholder)};
+    const auto blocktemplate{miner.CreateNewBlock()};
     mini_miner.BuildMockTemplate(target_feerate);
     assert(!mini_miner.IsReadyToCalculate());
     auto mock_template_txids = mini_miner.GetMockTemplateTxids();

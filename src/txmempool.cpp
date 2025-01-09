@@ -442,7 +442,7 @@ void CTxMemPool::Apply(ChangeSet* changeset)
         std::optional<CTxMemPool::setEntries> ancestors;
         if (i == 0) {
             // Note: ChangeSet::CalculateMemPoolAncestors() will return a
-            // cached value if mempool ancestors for this tranaction were
+            // cached value if mempool ancestors for this transaction were
             // previously calculated.
             // We can only use a cached ancestor calculation for the first
             // transaction in a package, because in-package parents won't be

@@ -39,6 +39,7 @@ void initialize()
 
 FUZZ_TARGET(p2p_handshake, .init = ::initialize)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     ConnmanTestMsg& connman = static_cast<ConnmanTestMsg&>(*g_setup->m_node.connman);

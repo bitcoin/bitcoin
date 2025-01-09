@@ -35,13 +35,14 @@ void initialize_process_messages()
             {.extra_args = {"-txreconciliation"}});
     g_setup = testing_setup.get();
     for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
-        MineBlock(g_setup->m_node, CScript() << OP_TRUE);
+        MineBlock(g_setup->m_node, {});
     }
     g_setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
 }
 
 FUZZ_TARGET(process_messages, .init = initialize_process_messages)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     ConnmanTestMsg& connman = *static_cast<ConnmanTestMsg*>(g_setup->m_node.connman.get());

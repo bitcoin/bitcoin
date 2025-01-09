@@ -72,7 +72,7 @@ static bool ParseAddress(std::string& address,
                   struct sockaddr_un& addr,
                   std::string& error)
 {
-    if (address.compare(0, 4, "unix") == 0 && (address.size() == 4 || address[4] == ':')) {
+    if (address == "unix" || address.starts_with("unix:")) {
         fs::path path;
         if (address.size() <= 5) {
             path = data_dir / fs::PathFromString(strprintf("%s.sock", RemovePrefixView(dest_exe_name, "bitcoin-")));
