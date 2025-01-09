@@ -99,4 +99,21 @@ private:
     std::optional<std::string> m_error; ///< Optional error message.
 };
 
+/**
+ * @enum ConfirmationTargetType
+ * Defines the types of confirmation targets for fee rate forecasters.
+ */
+enum class ConfirmationTargetType {
+    BLOCKS, /**< Forecasters providing estimates for a specific number of blocks use this type. */
+};
+
+/**
+ * @struct ConfirmationTarget
+ * Represents the input for a parameter of fee rate forecaster.
+ */
+struct ConfirmationTarget {
+    unsigned int value;
+    ConfirmationTargetType type;
+};
+
 #endif // BITCOIN_POLICY_FEES_FORECASTER_UTIL_H
