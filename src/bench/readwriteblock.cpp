@@ -28,7 +28,7 @@ static FlatFilePos WriteBlockToDisk(ChainstateManager& chainman)
     return chainman.m_blockman.SaveBlockToDisk(block, 0);
 }
 
-static void ReadBlockFromDiskTest(benchmark::Bench& bench)
+static void ReadBlockFromDiskBench(benchmark::Bench& bench)
 {
     const auto testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN)};
     ChainstateManager& chainman{*testing_setup->m_node.chainman};
@@ -42,7 +42,7 @@ static void ReadBlockFromDiskTest(benchmark::Bench& bench)
     });
 }
 
-static void ReadRawBlockFromDiskTest(benchmark::Bench& bench)
+static void ReadRawBlockFromDiskBench(benchmark::Bench& bench)
 {
     const auto testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN)};
     ChainstateManager& chainman{*testing_setup->m_node.chainman};
@@ -56,5 +56,5 @@ static void ReadRawBlockFromDiskTest(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(ReadBlockFromDiskTest, benchmark::PriorityLevel::HIGH);
-BENCHMARK(ReadRawBlockFromDiskTest, benchmark::PriorityLevel::HIGH);
+BENCHMARK(ReadBlockFromDiskBench, benchmark::PriorityLevel::HIGH);
+BENCHMARK(ReadRawBlockFromDiskBench, benchmark::PriorityLevel::HIGH);
