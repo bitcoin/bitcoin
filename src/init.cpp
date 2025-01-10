@@ -1245,7 +1245,6 @@ static ChainstateLoadResult InitAndLoadChainstate(
             "", CClientUIInterface::MSG_ERROR);
     };
     uiInterface.InitMessage(_("Loading block index…").translated);
-    const auto load_block_index_start_time{SteadyClock::now()};
     auto catch_exceptions = [](auto&& f) {
         try {
             return f();
@@ -1263,7 +1262,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
         }
         std::tie(status, error) = catch_exceptions([&] { return VerifyLoadedChainstate(chainman, options); });
         if (status == node::ChainstateLoadStatus::SUCCESS) {
-            LogPrintf(" block index %15dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - load_block_index_start_time));
+            LogInfo("Block index and chainstate loaded");
         }
     }
     return {status, error};
