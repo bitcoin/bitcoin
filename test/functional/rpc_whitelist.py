@@ -24,7 +24,7 @@ def rpccall(node, user, method):
     conn.connect()
 
     # composite commands are presented without space in whitelist
-    # but space can't be ommitted when using CLI/http rpc
+    # but space can't be omitted when using CLI/http rpc
     # for sack of test, substitute missing space for quorum composite command
     params = []
     if re.match(r"^quorum[^ ]", method):

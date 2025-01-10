@@ -638,7 +638,7 @@ CQuorumCPtr CQuorumManager::GetQuorum(Consensus::LLMQType llmqType, const uint25
     const CBlockIndex* pQuorumBaseBlockIndex = [&]() {
         // Lock contention may still be high here; consider using a shared lock
         // We cannot hold cs_quorumBaseBlockIndexCache the whole time as that creates lock-order inversion with cs_main;
-        // We cannot aquire cs_main if we have cs_quorumBaseBlockIndexCache held
+        // We cannot acquire cs_main if we have cs_quorumBaseBlockIndexCache held
         const CBlockIndex* pindex;
         if (!WITH_LOCK(cs_quorumBaseBlockIndexCache, return quorumBaseBlockIndexCache.get(quorumHash, pindex))) {
             pindex = WITH_LOCK(cs_main, return m_chainstate.m_blockman.LookupBlockIndex(quorumHash));

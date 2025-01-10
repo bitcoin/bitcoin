@@ -193,7 +193,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman); // Deterministic randomness for tests.
 
     // while g_wallet_init_interface is init here at very early stage
-    // we can't get rid of unique_ptr from wallet/contex.h
+    // we can't get rid of unique_ptr from wallet/context.h
     // TODO: remove unique_ptr from wallet/context.h after bitcoin/bitcoin#22219
     g_wallet_init_interface.Construct(m_node);
     fCheckBlockIndex = true;
