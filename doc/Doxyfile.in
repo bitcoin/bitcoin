@@ -204,7 +204,7 @@ QT_AUTOBRIEF           = NO
 # tag to YES if you prefer the old behavior instead.
 #
 # Note that setting this tag to YES also means that rational rose comments are
-# not recognized any more.
+# not recognized anymore.
 # The default value is: NO.
 
 MULTILINE_CPP_IS_BRIEF = NO
