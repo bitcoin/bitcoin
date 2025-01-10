@@ -19,6 +19,7 @@
 #include <test/fuzz/util/descriptor.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
+#include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <wallet/scriptpubkeyman.h>
@@ -87,6 +88,7 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    SetMockTime(ConsumeTime(fuzzed_data_provider));
     const auto& node{g_setup->m_node};
     Chainstate& chainstate{node.chainman->ActiveChainstate()};
     std::unique_ptr<CWallet> wallet_ptr{std::make_unique<CWallet>(node.chain.get(), "", CreateMockableWalletDatabase())};

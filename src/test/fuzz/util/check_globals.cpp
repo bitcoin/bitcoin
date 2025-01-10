@@ -5,6 +5,7 @@
 #include <test/fuzz/util/check_globals.h>
 
 #include <test/util/random.h>
+#include <util/time.h>
 
 #include <iostream>
 #include <memory>
@@ -16,6 +17,8 @@ struct CheckGlobalsImpl {
     {
         g_used_g_prng = false;
         g_seeded_g_prng_zero = false;
+        g_used_system_time = false;
+        SetMockTime(0s);
     }
     ~CheckGlobalsImpl()
     {
@@ -33,6 +36,19 @@ struct CheckGlobalsImpl {
                          "to non-reproducible bugs or inefficient fuzzing.\n\n"
                       << std::endl;
             std::abort(); // Abort, because AFL may try to recover from a std::exit
+        }
+
+        if (g_used_system_time) {
+            std::cerr << "\n\n"
+                         "The current fuzz target accessed system time.\n\n"
+
+                         "This is acceptable, but requires the fuzz target to call \n"
+                         "SetMockTime() at the beginning of processing the fuzz input.\n\n"
+
+                         "Without setting mock time, time-dependent behavior can lead \n"
+                         "to non-reproducible bugs or inefficient fuzzing.\n\n"
+                      << std::endl;
+            std::abort();
         }
     }
 };
