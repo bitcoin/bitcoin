@@ -536,7 +536,7 @@ GUI:
 - `674c070` seed OpenSSL PNRG with Windows event data
 - `509f926` Payment request parsing on startup now only changes network if a valid network name is specified
 - `acd432b` Prevent balloon-spam after rescan
-- `7007402` Implement SI-style (thin space) thoudands separator
+- `7007402` Implement SI-style (thin space) thousands separator
 - `91cce17` Use fixed-point arithmetic in amount spinbox
 - `bdba2dd` Remove an obscure option no-one cares about
 - `bd0aa10` Replace the temporary file hack currently used to change Bitcoin-Qt's dock icon (OS X) with a buffer-based solution
