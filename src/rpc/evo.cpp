@@ -643,11 +643,6 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
         EnsureWalletIsUnlocked(*pwallet);
     }
 
-    const bool isV19active{DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
-    if (isEvoRequested && !isV19active) {
-        throw JSONRPCError(RPC_INVALID_REQUEST, "EvoNodes aren't allowed yet");
-    }
-
     size_t paramIdx = 0;
 
     CMutableTransaction tx;
@@ -965,11 +960,6 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
 
     EnsureWalletIsUnlocked(*wallet);
 
-    const bool isV19active{DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
-    if (isEvoRequested && !isV19active) {
-        throw JSONRPCError(RPC_INVALID_REQUEST, "EvoNodes aren't allowed yet");
-    }
-
     CProUpServTx ptx;
     ptx.nType = mnType;
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
@@ -1055,6 +1045,8 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
 
     FundSpecialTx(*wallet, tx, ptx, feeSource);
 
+    const bool isV19active = DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();),
+                                                   Params().GetConsensus(), Consensus::DEPLOYMENT_V19);
     SignSpecialTxPayloadByHash(tx, ptx, keyOperator, !isV19active);
     SetTxPayload(tx, ptx);
 

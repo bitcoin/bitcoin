@@ -137,8 +137,6 @@ class DashZMQTest (DashTestFramework):
             # Initialize the network
             self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
             self.wait_for_sporks_same()
-            self.activate_v19(expected_activation_height=900)
-            self.log.info("Activated v19 at height:" + str(self.nodes[0].getblockcount()))
 
             self.mine_cycle_quorum()
 
