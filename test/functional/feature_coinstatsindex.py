@@ -16,12 +16,10 @@ from decimal import Decimal
 from test_framework.blocktools import (
     create_block,
     create_coinbase,
+    COINBASE_MATURITY,
 )
 from test_framework.messages import (
     COIN,
-    COutPoint,
-    CTransaction,
-    CTxIn,
     CTxOut,
 )
 from test_framework.script import (
@@ -34,6 +32,11 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
+from test_framework.wallet import (
+    MiniWallet,
+    getnewdestination,
+)
+
 
 class CoinStatsIndexTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -45,10 +48,8 @@ class CoinStatsIndexTest(BitcoinTestFramework):
             ["-coinstatsindex"]
         ]
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def run_test(self):
+        self.wallet = MiniWallet(self.nodes[0])
         self._test_coin_stats_index()
         self._test_use_index_option()
         self._test_reorg_index()
@@ -81,9 +82,8 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         index_hash_options = ['none', 'muhash']
 
         # Generate a normal transaction and mine it
-        self.generate(node, 101)
-        address = self.nodes[0].get_deterministic_priv_key().address
-        node.sendtoaddress(address=address, amount=10, subtractfeefromamount=True)
+        self.generate(self.wallet, COINBASE_MATURITY + 1)
+        self.wallet.send_self_transfer(from_node=node)
         self.generate(node, 1)
 
         self.sync_blocks(timeout=120)
@@ -150,36 +150,31 @@ class CoinStatsIndexTest(BitcoinTestFramework):
             assert_equal(res5['block_info'], {
                 'unspendable': 0,
                 'prevout_spent': 500,
-                'new_outputs_ex_coinbase': Decimal('499.99999775'),
-                'coinbase': Decimal('500.00000225'),
+                'new_outputs_ex_coinbase': Decimal('499.99974500'),
+                'coinbase': Decimal('500.00025500'),
                 'unspendables': {
                     'genesis_block': 0,
                     'bip30': 0,
                     'scripts': 0,
-                    'unclaimed_rewards': 0
+                    'unclaimed_rewards': 0,
                 }
             })
             self.block_sanity_check(res5['block_info'], 101)
 
         # Generate and send a normal tx with two outputs
-        tx1_inputs = []
-        tx1_outputs = {self.nodes[0].getnewaddress(): 21, self.nodes[0].getnewaddress(): 42}
-        raw_tx1 = self.nodes[0].createrawtransaction(tx1_inputs, tx1_outputs)
-        funded_tx1 = self.nodes[0].fundrawtransaction(raw_tx1)
-        signed_tx1 = self.nodes[0].signrawtransactionwithwallet(funded_tx1['hex'])
-        tx1_txid = self.nodes[0].sendrawtransaction(signed_tx1['hex'])
+        tx1_txid, tx1_vout = self.wallet.send_to(
+            from_node=node,
+            scriptPubKey=self.wallet.get_scriptPubKey(),
+            amount=21 * COIN,
+        )
 
         # Find the right position of the 21 BTC output
-        tx1_final = self.nodes[0].gettransaction(tx1_txid)
-        for output in tx1_final['details']:
-            if output['amount'] == Decimal('21.00000000') and output['category'] == 'receive':
-                n = output['vout']
+        tx1_out_21 = self.wallet.get_utxo(txid=tx1_txid, vout=tx1_vout)
 
         # Generate and send another tx with an OP_RETURN output (which is unspendable)
-        tx2 = CTransaction()
-        tx2.vin.append(CTxIn(COutPoint(int(tx1_txid, 16), n), b''))
-        tx2.vout.append(CTxOut(int(Decimal('20.99') * COIN), CScript([OP_RETURN] + [OP_FALSE]*30)))
-        tx2_hex = self.nodes[0].signrawtransactionwithwallet(tx2.serialize().hex())['hex']
+        tx2 = self.wallet.create_self_transfer(utxo_to_spend=tx1_out_21)['tx']
+        tx2.vout = [CTxOut(int(Decimal('20.999') * COIN), CScript([OP_RETURN] + [OP_FALSE] * 30))]
+        tx2_hex = tx2.serialize().hex()
         self.nodes[0].sendrawtransaction(tx2_hex)
 
         # Include both txs in a block
@@ -188,17 +183,17 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         for hash_option in index_hash_options:
             # Check all amounts were registered correctly
             res6 = index_node.gettxoutsetinfo(hash_option, 108)
-            assert_equal(res6['total_unspendable_amount'], Decimal('70.99000000'))
+            assert_equal(res6['total_unspendable_amount'], Decimal('70.99900000'))
             assert_equal(res6['block_info'], {
-                'unspendable': Decimal('20.99000000'),
-                'prevout_spent': 511,
-                'new_outputs_ex_coinbase': Decimal('489.99999741'),
-                'coinbase': Decimal('500.01000259'),
+                'unspendable': Decimal('20.99900000'),
+                'prevout_spent': 521,
+                'new_outputs_ex_coinbase': Decimal('499.99999000'),
+                'coinbase': Decimal('500.00101000'),
                 'unspendables': {
                     'genesis_block': 0,
                     'bip30': 0,
-                    'scripts': Decimal('20.99000000'),
-                    'unclaimed_rewards': 0
+                    'scripts': Decimal('20.99900000'),
+                    'unclaimed_rewards': 0,
                 }
             })
             self.block_sanity_check(res6['block_info'], 107)
@@ -219,7 +214,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
         for hash_option in index_hash_options:
             res7 = index_node.gettxoutsetinfo(hash_option, 109)
-            assert_equal(res7['total_unspendable_amount'], Decimal('530.99000000'))
+            assert_equal(res7['total_unspendable_amount'], Decimal('530.99900000'))
             assert_equal(res7['block_info'], {
                 'unspendable': 460,
                 'prevout_spent': 0,
@@ -279,7 +274,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
         # Generate two block, let the index catch up, then invalidate the blocks
         index_node = self.nodes[1]
-        reorg_blocks = self.generatetoaddress(index_node, 2, index_node.getnewaddress())
+        reorg_blocks = self.generatetoaddress(index_node, 2, getnewdestination()[2])
         reorg_block = reorg_blocks[1]
         res_invalid = index_node.gettxoutsetinfo('muhash')
         index_node.invalidateblock(reorg_blocks[0])

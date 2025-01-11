@@ -29,10 +29,12 @@ from test_framework.messages import (
 )
 from test_framework.script import (
     CScript,
-    OP_CHECKSIG,
     OP_RETURN,
 )
-from test_framework.script_util import key_to_p2pkh_script
+from test_framework.script_util import (
+    key_to_p2pk_script,
+    key_to_p2pkh_script,
+)
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import (
     assert_equal,
@@ -76,7 +78,7 @@ class AssetLocksTest(DashTestFramework):
         remaining = int(COIN * coin['amount']) - tiny_amount - amount
 
         tx_output_ret = CTxOut(amount, CScript([OP_RETURN, b""]))
-        tx_output = CTxOut(remaining, CScript([pubkey, OP_CHECKSIG]))
+        tx_output = CTxOut(remaining, key_to_p2pk_script(pubkey))
 
         lock_tx = CTransaction()
         lock_tx.vin = inputs
@@ -93,7 +95,7 @@ class AssetLocksTest(DashTestFramework):
         node_wallet = self.nodes[0]
         mninfo = self.mninfo
         assert_greater_than(int(withdrawal), fee)
-        tx_output = CTxOut(int(withdrawal) - fee, CScript([pubkey, OP_CHECKSIG]))
+        tx_output = CTxOut(int(withdrawal) - fee, key_to_p2pk_script(pubkey))
 
         # request ID = sha256("plwdtx", index)
         request_id_buf = ser_string(b"plwdtx") + struct.pack("<Q", index)

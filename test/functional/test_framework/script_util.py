@@ -3,7 +3,15 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Useful Script constants and utils."""
-from test_framework.script import CScript, hash160, OP_DUP, OP_HASH160, OP_CHECKSIG, OP_EQUAL, OP_EQUALVERIFY
+from test_framework.script import (
+    CScript,
+    OP_CHECKSIG,
+    OP_DUP,
+    OP_EQUAL,
+    OP_EQUALVERIFY,
+    OP_HASH160,
+    hash160,
+)
 
 # To prevent a "tx-size-small" policy rule error, a transaction has to have a
 # size of at least 83 bytes (MIN_STANDARD_TX_SIZE in
@@ -25,32 +33,43 @@ from test_framework.script import CScript, hash160, OP_DUP, OP_HASH160, OP_CHECK
 DUMMY_P2SH_SCRIPT = CScript([b'a' * 22])
 DUMMY_2_P2SH_SCRIPT = CScript([b'b' * 22])
 
-def keyhash_to_p2pkh_script(hash, main = False):
+
+def key_to_p2pk_script(key):
+    key = check_key(key)
+    return CScript([key, OP_CHECKSIG])
+
+
+def keyhash_to_p2pkh_script(hash):
     assert len(hash) == 20
     return CScript([OP_DUP, OP_HASH160, hash, OP_EQUALVERIFY, OP_CHECKSIG])
 
-def scripthash_to_p2sh_script(hash, main = False):
+
+def scripthash_to_p2sh_script(hash):
     assert len(hash) == 20
     return CScript([OP_HASH160, hash, OP_EQUAL])
 
-def key_to_p2pkh_script(key, main = False):
-    key = check_key(key)
-    return keyhash_to_p2pkh_script(hash160(key), main)
 
-def script_to_p2sh_script(script, main = False):
+def key_to_p2pkh_script(key):
+    key = check_key(key)
+    return keyhash_to_p2pkh_script(hash160(key))
+
+
+def script_to_p2sh_script(script):
     script = check_script(script)
-    return scripthash_to_p2sh_script(hash160(script), main)
+    return scripthash_to_p2sh_script(hash160(script))
+
 
 def check_key(key):
     if isinstance(key, str):
-        key = bytes.fromhex(key) # Assuming this is hex string
+        key = bytes.fromhex(key)  # Assuming this is hex string
     if isinstance(key, bytes) and (len(key) == 33 or len(key) == 65):
         return key
     assert False
 
+
 def check_script(script):
     if isinstance(script, str):
-        script = bytes.fromhex(script) # Assuming this is hex string
+        script = bytes.fromhex(script)  # Assuming this is hex string
     if isinstance(script, bytes) or isinstance(script, CScript):
         return script
     assert False

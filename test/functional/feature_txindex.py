@@ -7,8 +7,15 @@
 # Test txindex generation and fetching
 #
 
-from test_framework.messages import COutPoint, CTransaction, CTxIn, CTxOut
-from test_framework.script import CScript, OP_CHECKSIG, OP_DUP, OP_EQUALVERIFY, OP_HASH160
+from test_framework.messages import (
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxOut,
+)
+from test_framework.script_util import (
+    keyhash_to_p2pkh_script,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
@@ -46,7 +53,7 @@ class TxIndexTest(BitcoinTestFramework):
         self.log.info("Testing transaction index...")
 
         addressHash = bytes.fromhex("C5E4FB9171C22409809A3E8047A29C83886E325D")
-        scriptPubKey = CScript([OP_DUP, OP_HASH160, addressHash, OP_EQUALVERIFY, OP_CHECKSIG])
+        scriptPubKey = keyhash_to_p2pkh_script(addressHash)
         unspent = self.nodes[0].listunspent()
         tx = CTransaction()
         tx_fee_sat = 1000

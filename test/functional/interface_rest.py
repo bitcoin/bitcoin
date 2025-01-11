@@ -6,21 +6,28 @@
 
 from decimal import Decimal
 from enum import Enum
+import http.client
 from io import BytesIO
 import json
 from struct import pack, unpack
-
-import http.client
 import urllib.parse
 
+
+from test_framework.messages import (
+    BLOCK_HEADER_SIZE,
+    COIN,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
 )
+from test_framework.wallet import (
+    MiniWallet,
+    getnewdestination,
+)
 
-from test_framework.messages import BLOCK_HEADER_SIZE
 
 INVALID_PARAM = "abc"
 UNKNOWN_PARAM = "0000000000000000000000000000000000000000000000000000000000000000"
@@ -43,13 +50,12 @@ def filter_output_indices_by_value(vouts, value):
 
 class RESTTest (BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
         self.num_nodes = 2
         self.extra_args = [["-rest", "-blockfilterindex=1"], []]
+        # whitelist peers to speed up tx relay / mempool sync
+        for args in self.extra_args:
+            args.append("-whitelist=noban@127.0.0.1")
         self.supports_cli = False
-
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
 
     def test_rest_request(self, uri, http_method='GET', req_type=ReqType.JSON, body='', status=200, ret_type=RetType.JSON):
         rest_uri = '/rest' + uri
@@ -79,17 +85,11 @@ class RESTTest (BitcoinTestFramework):
 
     def run_test(self):
         self.url = urllib.parse.urlparse(self.nodes[0].url)
-        self.log.info("Mine blocks and send Dash to node 1")
+        self.wallet = MiniWallet(self.nodes[0])
+        self.wallet.rescan_utxos()
 
-        # Random address so node1's balance doesn't increase
-        not_related_address = "yj949n1UH6fDhw6HtVE5VMj2iSTaSWBMcW"
-
-        self.generate(self.nodes[0], 1)
-        self.generatetoaddress(self.nodes[1], 100, not_related_address)
-
-        assert_equal(self.nodes[0].getbalance(), 500)
-
-        txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
+        self.log.info("Broadcast test transaction and sync nodes")
+        txid, _ = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=int(0.1 * COIN))
         self.sync_all()
 
         self.log.info("Test the /tx URI")
@@ -115,10 +115,8 @@ class RESTTest (BitcoinTestFramework):
 
         self.log.info("Query an unspent TXO using the /getutxos URI")
 
-        self.generatetoaddress(self.nodes[1], 1, not_related_address)
+        self.generate(self.wallet, 1)
         bb_hash = self.nodes[0].getbestblockhash()
-
-        assert_equal(self.nodes[1].getbalance(), Decimal("0.1"))
 
         # Check chainTip response
         json_obj = self.test_rest_request(f"/getutxos/{spending[0]}-{spending[1]}")
@@ -161,7 +159,7 @@ class RESTTest (BitcoinTestFramework):
         response_hash = output.read(32)[::-1].hex()
 
         assert_equal(bb_hash, response_hash)  # check if getutxo's chaintip during calculation was fine
-        assert_equal(chain_height, 102)  # chain height must be 102
+        assert_equal(chain_height, 201)  # chain height must be 201 (pre-mined chain [200] + generated block [1])
 
         self.log.info("Test the /getutxos URI with and without /checkmempool")
         # Create a transaction, check that it's found with /checkmempool, but
@@ -169,7 +167,7 @@ class RESTTest (BitcoinTestFramework):
         # found with or without /checkmempool.
 
         # do a tx and don't sync
-        txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
+        txid, _ = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=getnewdestination()[1], amount=int(0.1 * COIN))
         json_obj = self.test_rest_request(f"/tx/{txid}")
         # get the spent output to later check for utxo (should be spent by then)
         spent = (json_obj['vin'][0]['txid'], json_obj['vin'][0]['vout'])
@@ -283,30 +281,38 @@ class RESTTest (BitcoinTestFramework):
         json_obj = self.test_rest_request(f"/headers/5/{bb_hash}")
         assert_equal(len(json_obj), 5)  # now we should have 5 header objects
         json_obj = self.test_rest_request(f"/blockfilterheaders/basic/5/{bb_hash}")
+        first_filter_header = json_obj[0]
         assert_equal(len(json_obj), 5)  # now we should have 5 filter header objects
-        self.test_rest_request(f"/blockfilter/basic/{bb_hash}", req_type=ReqType.BIN, ret_type=RetType.OBJ)
+        json_obj = self.test_rest_request(f"/blockfilter/basic/{bb_hash}")
+
+        # Compare with normal RPC blockfilter response
+        rpc_blockfilter = self.nodes[0].getblockfilter(bb_hash)
+        assert_equal(first_filter_header, rpc_blockfilter['header'])
+        assert_equal(json_obj['filter'], rpc_blockfilter['filter'])
 
         # Test number parsing
         for num in ['5a', '-5', '0', '2001', '99999999999999999999999999999999999']:
             assert_equal(
-                bytes(f'Header count out of acceptable range (1-2000): {num}\r\n', 'ascii'),
+                bytes(f'Header count is invalid or out of acceptable range (1-2000): {num}\r\n', 'ascii'),
                 self.test_rest_request(f"/headers/{num}/{bb_hash}", ret_type=RetType.BYTES, status=400),
             )
 
         self.log.info("Test tx inclusion in the /mempool and /block URIs")
 
-        # Make 3 tx and mine them on node 1
+        # Make 3 chained txs and mine them on node 1
         txs = []
-        txs.append(self.nodes[0].sendtoaddress(not_related_address, 11))
-        txs.append(self.nodes[0].sendtoaddress(not_related_address, 11))
-        txs.append(self.nodes[0].sendtoaddress(not_related_address, 11))
+        input_txid = txid
+        for _ in range(3):
+            utxo_to_spend = self.wallet.get_utxo(txid=input_txid)
+            txs.append(self.wallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_to_spend)['txid'])
+            input_txid = txs[-1]
         self.sync_all()
 
         # Check that there are exactly 3 transactions in the TX memory pool before generating the block
         json_obj = self.test_rest_request("/mempool/info")
         assert_equal(json_obj['size'], 3)
-        # the size of the memory pool should be greater than 3x ~100 bytes
-        assert_greater_than(json_obj['bytes'], 300)
+        # the size of the memory pool should be greater than 3x ~80 bytes
+        assert_greater_than(json_obj['bytes'], 240)
 
         mempool_info = self.nodes[0].getmempoolinfo()
         assert_equal(json_obj, mempool_info)
@@ -346,6 +352,7 @@ class RESTTest (BitcoinTestFramework):
         # Compare with normal RPC getblockchaininfo response
         blockchain_info = self.nodes[0].getblockchaininfo()
         assert_equal(blockchain_info, json_obj)
+
 
 if __name__ == '__main__':
     RESTTest().main()

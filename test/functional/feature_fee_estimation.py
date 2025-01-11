@@ -18,10 +18,10 @@ from test_framework.script import (
     OP_1,
     OP_2,
     OP_DROP,
-    OP_EQUAL,
-    OP_HASH160,
     OP_TRUE,
-    hash160,
+)
+from test_framework.script_util import (
+    script_to_p2sh_script,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -37,8 +37,8 @@ from test_framework.util import (
 # time signing.
 REDEEM_SCRIPT_1 = CScript([OP_1, OP_DROP])
 REDEEM_SCRIPT_2 = CScript([OP_2, OP_DROP])
-P2SH_1 = CScript([OP_HASH160, hash160(REDEEM_SCRIPT_1), OP_EQUAL])
-P2SH_2 = CScript([OP_HASH160, hash160(REDEEM_SCRIPT_2), OP_EQUAL])
+P2SH_1 = script_to_p2sh_script(REDEEM_SCRIPT_1)
+P2SH_2 = script_to_p2sh_script(REDEEM_SCRIPT_2)
 
 # Associated ScriptSig's to spend satisfy P2SH_1 and P2SH_2
 SCRIPT_SIG = [CScript([OP_TRUE, REDEEM_SCRIPT_1]), CScript([OP_TRUE, REDEEM_SCRIPT_2])]

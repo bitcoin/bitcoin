@@ -7,11 +7,18 @@
 from copy import deepcopy
 from decimal import Decimal
 from enum import Enum
-from test_framework.address import ADDRESS_BCRT1_P2SH_OP_TRUE
+from random import choice
+from typing import (
+    Any,
+    Optional,
+)
+from test_framework.address import (
+    base58_to_byte,
+    key_to_p2pkh,
+    ADDRESS_BCRT1_P2SH_OP_TRUE,
+)
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECKey
-from random import choice
-from typing import Optional
 from test_framework.messages import (
     COIN,
     COutPoint,
@@ -23,10 +30,15 @@ from test_framework.messages import (
 from test_framework.script import (
     CScript,
     SignatureHash,
-    OP_CHECKSIG,
     OP_TRUE,
     OP_NOP,
     SIGHASH_ALL,
+)
+from test_framework.script_util import (
+    key_to_p2pk_script,
+    key_to_p2pkh_script,
+    keyhash_to_p2pkh_script,
+    scripthash_to_p2sh_script,
 )
 from test_framework.util import (
     assert_equal,
@@ -73,7 +85,7 @@ class MiniWallet:
             self._priv_key = ECKey()
             self._priv_key.set((1).to_bytes(32, 'big'), True)
             pub_key = self._priv_key.get_pubkey()
-            self._scriptPubKey = bytes(CScript([pub_key.get_bytes(), OP_CHECKSIG]))
+            self._scriptPubKey = key_to_p2pk_script(pub_key.get_bytes())
         elif mode == MiniWalletMode.ADDRESS_OP_TRUE:
             self._address = ADDRESS_BCRT1_P2SH_OP_TRUE
             self._scriptPubKey = bytes.fromhex(self._test_node.validateaddress(self._address)['scriptPubKey'])
@@ -123,24 +135,30 @@ class MiniWallet:
             self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value'], 'height': block_info['height']})
         return blocks
 
+    def get_scriptPubKey(self):
+        return self._scriptPubKey
+
     def get_descriptor(self):
         return descsum_create(f'raw({self._scriptPubKey.hex()})')
 
     def get_address(self):
         return self._address
 
-    def get_utxo(self, *, txid: Optional[str]='', mark_as_spent=True):
+    def get_utxo(self, *, txid: str = '', vout: Optional[int] = None, mark_as_spent=True):
         """
         Returns a utxo and marks it as spent (pops it from the internal list)
 
         Args:
         txid: get the first utxo we find from a specific transaction
         """
-        index = -1  # by default the last utxo
         self._utxos = sorted(self._utxos, key=lambda k: (k['value'], -k['height']))  # Put the largest utxo last
         if txid:
-            utxo = next(filter(lambda utxo: txid == utxo['txid'], self._utxos))
-            index = self._utxos.index(utxo)
+            utxo_filter: Any = filter(lambda utxo: txid == utxo['txid'], self._utxos)
+        else:
+            utxo_filter = reversed(self._utxos)  # By default the largest utxo
+        if vout is not None:
+            utxo_filter = filter(lambda utxo: vout == utxo['vout'], utxo_filter)
+        index = self._utxos.index(next(utxo_filter))
         if mark_as_spent:
             return self._utxos.pop(index)
         else:
@@ -152,8 +170,28 @@ class MiniWallet:
         self.sendrawtransaction(from_node=kwargs['from_node'], tx_hex=tx['hex'])
         return tx
 
-    def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None, mempool_valid=True, locktime=0, sequence=0):
+    def send_to(self, *, from_node, scriptPubKey, amount, fee=1000):
+        """
+        Create and send a tx with an output to a given scriptPubKey/amount,
+        plus a change output to our internal address. To keep things simple, a
+        fixed fee given in Satoshi is used.
+
+        Note that this method fails if there is no single internal utxo
+        available that can cover the cost for the amount and the fixed fee
+        (the utxo with the largest value is taken).
+
+        Returns a tuple (txid, n) referring to the created external utxo outpoint.
+        """
+        tx = self.create_self_transfer(from_node=from_node, fee_rate=0, mempool_valid=False)['tx']
+        assert_greater_than_or_equal(tx.vout[0].nValue, amount + fee)
+        tx.vout[0].nValue -= (amount + fee)           # change output -> MiniWallet
+        tx.vout.append(CTxOut(amount, scriptPubKey))  # arbitrary output -> to be returned
+        txid = self.sendrawtransaction(from_node=from_node, tx_hex=tx.serialize().hex())
+        return txid, 1
+
+    def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node=None, utxo_to_spend=None, mempool_valid=True, locktime=0, sequence=0):
         """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
+        from_node = from_node or self._test_node
         utxo_to_spend = utxo_to_spend or self.get_utxo()
         if self._priv_key is None:
             vsize = Decimal(85)  # anyone-can-spend
@@ -185,9 +223,40 @@ class MiniWallet:
             assert_equal(tx_info['fees']['base'], utxo_to_spend['value'] - Decimal(send_value) / COIN)
         return {'txid': tx_info['txid'], 'hex': tx_hex, 'tx': tx}
 
-    def sendrawtransaction(self, *, from_node, tx_hex):
-        from_node.sendrawtransaction(tx_hex)
+    def sendrawtransaction(self, *, from_node, tx_hex, **kwargs):
+        txid = from_node.sendrawtransaction(hexstring=tx_hex, **kwargs)
         self.scan_tx(from_node.decoderawtransaction(tx_hex))
+        return txid
+
+
+def getnewdestination(address_type='legacy'):
+    """Generate a random destination of the specified type and return the
+       corresponding public key, scriptPubKey and address. Supported types are
+       'legacy'. Can be used when a random destination is needed, but no
+       compiled wallet is available (e.g. as replacement to the
+       getnewaddress/getaddressinfo RPCs)."""
+    key = ECKey()
+    key.generate()
+    pubkey = key.get_pubkey().get_bytes()
+    if address_type == 'legacy':
+        scriptpubkey = key_to_p2pkh_script(pubkey)
+        address = key_to_p2pkh(pubkey)
+    else:
+        assert False
+    return pubkey, scriptpubkey, address
+
+
+def address_to_scriptpubkey(address):
+    """Converts a given address to the corresponding output script (scriptPubKey)."""
+    payload, version = base58_to_byte(address)
+    if version == 140:  # testnet pubkey hash
+        return keyhash_to_p2pkh_script(payload)
+    elif version == 19:  # testnet script hash
+        return scripthash_to_p2sh_script(payload)
+    # TODO: also support other address formats
+    else:
+        assert False
+
 
 def make_chain(node, address, privkeys, parent_txid, parent_value, n=0, parent_locking_script=None, fee=DEFAULT_FEE):
     """Build a transaction that spends parent_txid.vout[n] and produces one output with

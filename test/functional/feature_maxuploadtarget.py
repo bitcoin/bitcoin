@@ -12,10 +12,20 @@ if uploadtarget has been reached.
 """
 from collections import defaultdict
 
-from test_framework.messages import CInv, MAX_BLOCK_SIZE, MSG_BLOCK, msg_getdata
+from test_framework.messages import (
+    CInv,
+    MAX_BLOCK_SIZE,
+    MSG_BLOCK,
+    msg_getdata,
+)
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, mine_large_block, set_node_times
+from test_framework.util import (
+    assert_equal,
+    mine_large_block,
+    set_node_times,
+)
+from test_framework.wallet import MiniWallet
 
 
 class TestP2PConn(P2PInterface):
@@ -41,12 +51,6 @@ class MaxUploadTest(BitcoinTestFramework):
         ]]
         self.supports_cli = False
 
-        # Cache for utxos, as the listunspent may take a long time later in the test
-        self.utxo_cache = []
-
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def run_test(self):
         # Advance all nodes 2 weeks in the future
         old_mocktime = self.mocktime
@@ -60,7 +64,8 @@ class MaxUploadTest(BitcoinTestFramework):
         self.nodes[0].setmocktime(old_mocktime)
 
         # Generate some old blocks
-        self.generate(self.nodes[0], 130)
+        self.wallet = MiniWallet(self.nodes[0])
+        self.generate(self.wallet, 130)
 
         # p2p_conns[0] will only request old blocks
         # p2p_conns[1] will only request new blocks
@@ -72,7 +77,7 @@ class MaxUploadTest(BitcoinTestFramework):
             p2p_conns.append(self.nodes[0].add_p2p_connection(TestP2PConn(), supports_v2_p2p=False))
 
         # Now mine a big block
-        mine_large_block(self, self.nodes[0], self.utxo_cache)
+        mine_large_block(self, self.wallet, self.nodes[0])
 
         # Store the hash; we'll request this later
         big_old_block = self.nodes[0].getbestblockhash()
@@ -83,7 +88,7 @@ class MaxUploadTest(BitcoinTestFramework):
         self.nodes[0].setmocktime(current_mocktime - 2*60*60*24)
 
         # Mine one more block, so that the prior block looks old
-        mine_large_block(self, self.nodes[0], self.utxo_cache)
+        mine_large_block(self, self.wallet, self.nodes[0])
 
         # We'll be requesting this new block too
         big_new_block = self.nodes[0].getbestblockhash()

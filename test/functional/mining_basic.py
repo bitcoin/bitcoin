@@ -28,6 +28,8 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
+from test_framework.wallet import MiniWallet
+
 
 VERSIONBITS_TOP_BITS = 0x20000000
 VERSIONBITS_DEPLOYMENT_TESTDUMMY_BIT = 28
@@ -52,7 +54,7 @@ class MiningTest(BitcoinTestFramework):
         self.log.info('Create some old blocks')
         for t in range(TIME_GENESIS_BLOCK, TIME_GENESIS_BLOCK + 200 * 156, 156):
             self.bump_mocktime(156)
-            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+            self.generate(self.wallet, 1, sync_fun=self.no_op)
         mining_info = self.nodes[0].getmininginfo()
         assert_equal(mining_info['blocks'], 200)
         assert_equal(mining_info['currentblocktx'], 0)
@@ -70,8 +72,9 @@ class MiningTest(BitcoinTestFramework):
         self.connect_nodes(1, 0)
 
     def run_test(self):
-        self.mine_chain()
         node = self.nodes[0]
+        self.wallet = MiniWallet(node)
+        self.mine_chain()
 
         def assert_submitblock(block, result_str_1, result_str_2=None):
             block.solve()
