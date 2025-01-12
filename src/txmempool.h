@@ -43,7 +43,7 @@ class CChain;
 class CChainState;
 extern RecursiveMutex cs_main;
 
-// Forward declation for CBLSLazyPublicKey:
+// Forward declaration for CBLSLazyPublicKey:
 template<typename T> class CBLSLazyWrapper;
 class CBLSPublicKey;
 using CBLSLazyPublicKey = CBLSLazyWrapper<CBLSPublicKey>;
