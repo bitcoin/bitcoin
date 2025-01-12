@@ -110,7 +110,6 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     }
 
     if (relay) {
-        LOCK(cs_main);
         node.peerman->RelayTransaction(txid);
     }
 

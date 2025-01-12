@@ -7,7 +7,6 @@
 #define BITCOIN_NET_PROCESSING_H
 
 #include <net.h>
-#include <sync.h>
 #include <validationinterface.h>
 #include <version.h>
 
@@ -28,8 +27,6 @@ class CSporkManager;
 class CTransaction;
 struct CJContext;
 struct LLMQContext;
-
-extern RecursiveMutex cs_main;
 
 /** Default for -maxorphantxsize, maximum size in megabytes the orphan map can grow before entries are removed */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS_SIZE = 10; // this allows around 100 TXs of max size (and many more of normal size)
@@ -114,8 +111,7 @@ public:
                                   const int minProtoVersion = MIN_PEER_PROTO_VERSION) = 0;
 
     /** Relay transaction to all peers. */
-    virtual void RelayTransaction(const uint256& txid)
-        EXCLUSIVE_LOCKS_REQUIRED(cs_main) = 0;
+    virtual void RelayTransaction(const uint256& txid) = 0;
 
     /** Relay recovered sigs to all interested peers */
     virtual void RelayRecoveredSig(const uint256& sigHash) = 0;

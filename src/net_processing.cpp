@@ -29,6 +29,7 @@
 #include <reverse_iterator.h>
 #include <scheduler.h>
 #include <streams.h>
+#include <sync.h>
 #include <timedata.h>
 #include <tinyformat.h>
 #include <index/txindex.h>
@@ -644,6 +645,8 @@ public:
     bool IsInvInFilter(NodeId nodeid, const uint256& hash) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void AskPeersForTransaction(const uint256& txid, bool is_masternode) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 private:
+    void _RelayTransaction(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
     /** Helpers to process result of external handlers of message */
     void ProcessPeerMsgRet(const PeerMsgRet& ret, CNode& pfrom) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void PostProcessMessage(MessageProcessingResult&& ret, NodeId node) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -1628,7 +1631,8 @@ void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
         CTransactionRef tx = m_mempool.get(txid);
 
         if (tx != nullptr) {
-            RelayTransaction(txid);
+            LOCK(cs_main);
+            _RelayTransaction(txid);
         } else {
             m_mempool.RemoveUnbroadcastTx(txid, true);
         }
@@ -2428,6 +2432,11 @@ void PeerManagerImpl::RelayInvFiltered(CInv &inv, const uint256& relatedTxHash, 
 
 void PeerManagerImpl::RelayTransaction(const uint256& txid)
 {
+    WITH_LOCK(cs_main, _RelayTransaction(txid));
+}
+
+void PeerManagerImpl::_RelayTransaction(const uint256& txid)
+{
     const CInv inv{m_cj_ctx->dstxman->GetDSTX(txid) ? MSG_DSTX : MSG_TX, txid};
     LOCK(m_peer_mutex);
     for(auto& it : m_peer_map) {
@@ -3205,7 +3214,7 @@ void PeerManagerImpl::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
 
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
-            RelayTransaction(porphanTx->GetHash());
+            _RelayTransaction(porphanTx->GetHash());
             m_orphanage.AddChildrenToWorkSet(*porphanTx, orphan_work_set);
             m_orphanage.EraseTx(orphanHash);
             break;
@@ -3488,7 +3497,7 @@ void PeerManagerImpl::PostProcessMessage(MessageProcessingResult&& result, NodeI
         WITH_LOCK(cs_main, EraseObjectRequest(node, result.m_to_erase.value()));
     }
     for (const auto& tx : result.m_transactions) {
-        WITH_LOCK(cs_main, RelayTransaction(tx));
+        WITH_LOCK(cs_main, _RelayTransaction(tx));
     }
     if (result.m_inventory) {
         RelayInv(result.m_inventory.value());
@@ -4476,7 +4485,7 @@ void PeerManagerImpl::ProcessMessage(
                     LogPrintf("Not relaying non-mempool transaction %s from forcerelay peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
                 } else {
                     LogPrintf("Force relaying tx %s from peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
-                    RelayTransaction(tx.GetHash());
+                    _RelayTransaction(tx.GetHash());
                 }
             }
             return;
@@ -4493,7 +4502,7 @@ void PeerManagerImpl::ProcessMessage(
                 m_cj_ctx->dstxman->AddDSTX(dstx);
             }
 
-            RelayTransaction(tx.GetHash());
+            _RelayTransaction(tx.GetHash());
             m_orphanage.AddChildrenToWorkSet(tx, peer->m_orphan_work_set);
 
             pfrom.m_last_tx_time = GetTime<std::chrono::seconds>();
