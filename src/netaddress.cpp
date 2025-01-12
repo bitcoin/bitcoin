@@ -211,7 +211,7 @@ static void Checksum(Span<const uint8_t> addr_pubkey, uint8_t (&checksum)[CHECKS
 
 bool CNetAddr::SetSpecial(const std::string& addr)
 {
-    if (!ValidAsCString(addr)) {
+    if (!ContainsNoNUL(addr)) {
         return false;
     }
 
