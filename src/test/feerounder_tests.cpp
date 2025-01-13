@@ -9,7 +9,7 @@
 
 #include <set>
 
-BOOST_AUTO_TEST_SUITE(policy_fee_tests)
+BOOST_AUTO_TEST_SUITE(fee_rounder_tests)
 
 BOOST_AUTO_TEST_CASE(FeeRounder)
 {
