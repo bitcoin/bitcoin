@@ -65,7 +65,7 @@ static RPCHelpMan estimatesmartfee()
             const CTxMemPool& mempool = EnsureMemPool(node);
 
             CHECK_NONFATAL(mempool.m_opts.signals)->SyncWithValidationInterfaceQueue();
-            unsigned int max_target = fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
+            unsigned int max_target = fee_estimator.MaximumTarget();
             unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
             bool conservative = false;
             if (!request.params[1].isNull()) {
