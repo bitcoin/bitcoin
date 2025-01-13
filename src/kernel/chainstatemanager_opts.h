@@ -21,7 +21,6 @@
 class CChainParams;
 class ValidationSignals;
 
-static constexpr bool DEFAULT_CHECKPOINTS_ENABLED{true};
 static constexpr auto DEFAULT_MAX_TIP_AGE{24h};
 
 namespace kernel {
@@ -35,7 +34,6 @@ struct ChainstateManagerOpts {
     const CChainParams& chainparams;
     fs::path datadir;
     std::optional<int32_t> check_block_index{};
-    bool checkpoints_enabled{DEFAULT_CHECKPOINTS_ENABLED};
     //! If set, it will override the minimum work we will assume exists on some valid chain.
     std::optional<arith_uint256> minimum_chain_work{};
     //! If set, it will override the block hash whose ancestors we will assume to have valid scripts without checking them.
