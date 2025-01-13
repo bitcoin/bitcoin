@@ -1,6 +1,6 @@
-Bitcoin Core version 28.1 is now available from:
+Bitcoin Core version 28.x is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-28.1>
+  <https://bitcoincore.org/bin/bitcoin-core-28.x>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
@@ -44,62 +44,25 @@ unsupported systems.
 Notable changes
 ===============
 
-### P2P
-
-- When the `-port` configuration option is used, the default onion listening port will now
-  be derived to be that port + 1 instead of being set to a fixed value (8334 on mainnet).
-  This re-allows setups with multiple local nodes using different `-port` and not using `-bind`,
-  which would lead to a startup failure in v28.0 due to a port collision.
-
-  Note that a `HiddenServicePort` manually configured in `torrc` may need adjustment if used in
-  connection with the `-port` option.
-  For example, if you are using `-port=5555` with a non-standard value and not using `-bind=...=onion`,
-  previously Bitcoin Core would listen for incoming Tor connections on `127.0.0.1:8334`.
-  Now it would listen on `127.0.0.1:5556` (`-port` plus one). If you configured the hidden service manually
-  in torrc now you have to change it from `HiddenServicePort 8333 127.0.0.1:8334` to `HiddenServicePort 8333
-  127.0.0.1:5556`, or configure bitcoind with `-bind=127.0.0.1:8334=onion` to get the previous behavior.
-  (#31223)
-- #30568 addrman: change internal id counting to int64_t
-
-### Key
-
-- #31166 key: clear out secret data in DecodeExtKey
-
 ### Build
 
-- #31013 depends: For mingw cross compile use `-gcc-posix` to prevent library conflict
-- #31502 depends: Fix CXXFLAGS on NetBSD
+- #31627 depends: Fix spacing issue
+- #31500 depends: Fix compiling libevent package on NetBSD
 
-### Test
+### Tracing
 
-- #31016 test: add missing sync to feature_fee_estimation.py
-- #31448 fuzz: add cstdlib to FuzzedDataProvider
-- #31419 test: fix MIN macro redefinition
-- #31563 rpc: Extend scope of validation mutex in generateblock
-
-### Doc
-
-- #31007 doc: add testnet4 section header for config file
-
-### CI
-
-- #30961 ci: add LLVM_SYMBOLIZER_PATH to Valgrind fuzz job
+- #31623 tracing: Rename the MIN macro to TRACEPOINT_TEST_MIN in log_raw_p2p_msgs
 
 ### Misc
 
-- #31267 refactor: Drop deprecated space in `operator""_mst`
-- #31431 util: use explicit cast in MultiIntBitSet::Fill()
+- #31611 doc: upgrade license to 2025
 
 Credits
 =======
 
-- fanquake
+- 0xB10C
 - Hennadii Stepanov
-- laanwj
-- MarcoFalke
-- Martin Zumsande
-- Marnix
-- Sebastian Falbesoner
+- kehiy
 
 Thanks to everyone who directly contributed to this release:
 
