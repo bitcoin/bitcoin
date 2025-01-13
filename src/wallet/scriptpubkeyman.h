@@ -408,7 +408,7 @@ private:
     //! Adds a key to the store, and saves it to disk.
     bool AddKeyPubKeyWithDB(WalletBatch &batch,const CKey& key, const CPubKey &pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
-    void AddKeypoolPubkeyWithDB(const CPubKey& pubkey, const bool internal, WalletBatch& batch);
+    void AddKeypoolPubkeyWithDB(const CPubKey& pubkey, bool internal, WalletBatch& batch);
 
     //! Adds a script to the store and saves it to disk
     bool AddCScriptWithDB(WalletBatch& batch, const CScript& script);
@@ -423,7 +423,7 @@ private:
     std::map<int64_t, CKeyID> m_index_to_reserved_key;
 
     //! Fetches a key from the keypool
-    bool GetKeyFromPool(CPubKey &key, const OutputType type);
+    bool GetKeyFromPool(CPubKey& key, OutputType type);
 
     /**
      * Reserves a key from the keypool and sets nIndex to its index
@@ -457,11 +457,11 @@ private:
 public:
     LegacyScriptPubKeyMan(WalletStorage& storage, int64_t keypool_size) : LegacyDataSPKM(storage), m_keypool_size(keypool_size) {}
 
-    util::Result<CTxDestination> GetNewDestination(const OutputType type) override;
+    util::Result<CTxDestination> GetNewDestination(OutputType type) override;
 
     bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) override;
 
-    util::Result<CTxDestination> GetReservedDestination(const OutputType type, bool internal, int64_t& index, CKeyPool& keypool) override;
+    util::Result<CTxDestination> GetReservedDestination(OutputType type, bool internal, int64_t& index, CKeyPool& keypool) override;
     void KeepDestination(int64_t index, const OutputType& type) override;
     void ReturnDestination(int64_t index, bool internal, const CTxDestination&) override;
 
@@ -524,9 +524,9 @@ public:
     void MarkPreSplitKeys() EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
     bool ImportScripts(const std::set<CScript>& scripts, int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
-    bool ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
-    bool ImportPubKeys(const std::vector<std::pair<CKeyID, bool>>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, const bool add_keypool, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
-    bool ImportScriptPubKeys(const std::set<CScript>& script_pub_keys, const bool have_solving_data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+    bool ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+    bool ImportPubKeys(const std::vector<std::pair<CKeyID, bool>>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, bool add_keypool, int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+    bool ImportScriptPubKeys(const std::set<CScript>& script_pub_keys, bool have_solving_data, int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
     /* Returns true if the wallet can generate new keys */
     bool CanGenerateKeys() const;
@@ -638,13 +638,13 @@ public:
 
     mutable RecursiveMutex cs_desc_man;
 
-    util::Result<CTxDestination> GetNewDestination(const OutputType type) override;
+    util::Result<CTxDestination> GetNewDestination(OutputType type) override;
     isminetype IsMine(const CScript& script) const override;
 
     bool CheckDecryptionKey(const CKeyingMaterial& master_key) override;
     bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) override;
 
-    util::Result<CTxDestination> GetReservedDestination(const OutputType type, bool internal, int64_t& index, CKeyPool& keypool) override;
+    util::Result<CTxDestination> GetReservedDestination(OutputType type, bool internal, int64_t& index, CKeyPool& keypool) override;
     void ReturnDestination(int64_t index, bool internal, const CTxDestination& addr) override;
 
     // Tops up the descriptor cache and m_map_script_pub_keys. The cache is stored in the wallet file
@@ -704,7 +704,7 @@ public:
     std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys(int32_t minimum_index) const;
     int32_t GetEndRange() const;
 
-    [[nodiscard]] bool GetDescriptorString(std::string& out, const bool priv) const;
+    [[nodiscard]] bool GetDescriptorString(std::string& out, bool priv) const;
 
     void UpgradeDescriptorCache();
 };
