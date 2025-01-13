@@ -577,5 +577,123 @@ BOOST_AUTO_TEST_CASE(pcp_ipv4_fail_unsupported_version)
     BOOST_CHECK_EQUAL(*err, MappingError::UNSUPP_VERSION);
 }
 
+// NAT-PMP IPv4 protocol error scenarii.
+BOOST_AUTO_TEST_CASE(natpmp_protocol_error)
+{
+    // First scenario: non-0 result code when requesting external IP.
+    std::vector<TestOp> script{
+        {
+            0ms, TestOp::SEND,
+            {
+                0x00, 0x00, // version, opcode (request external IP)
+            }, 0
+        },
+        {
+            2ms, TestOp::RECV,
+            {
+                0x00, 0x80, 0x00, 0x42, // version, opcode (external IP), result code (*NOT* success)
+                0x66, 0xfd, 0xa1, 0xee, // seconds sinds start of epoch
+                0x01, 0x02, 0x03, 0x04, // external IP address
+            }, 0
+        },
+    };
+    CreateSock = [this, &script](int domain, int type, int protocol) {
+        if (domain == AF_INET && type == SOCK_DGRAM && protocol == IPPROTO_UDP) return std::make_unique<PCPTestSock>(default_local_ipv4, default_gateway_ipv4, script);
+        return std::unique_ptr<PCPTestSock>();
+    };
+
+    auto res = NATPMPRequestPortMap(default_gateway_ipv4, 1234, 1000, 1, 200ms);
+
+    MappingError* err = std::get_if<MappingError>(&res);
+    BOOST_REQUIRE(err);
+    BOOST_CHECK_EQUAL(*err, MappingError::PROTOCOL_ERROR);
+
+    // First scenario: non-0 result code when requesting port mapping.
+    script = {
+        {
+            0ms, TestOp::SEND,
+            {
+                0x00, 0x00, // version, opcode (request external IP)
+            }, 0
+        },
+        {
+            2ms, TestOp::RECV,
+            {
+                0x00, 0x80, 0x00, 0x00, // version, opcode (external IP), result code (success)
+                0x66, 0xfd, 0xa1, 0xee, // seconds sinds start of epoch
+                0x01, 0x02, 0x03, 0x04, // external IP address
+            }, 0
+        },
+        {
+            0ms, TestOp::SEND,
+            {
+                0x00, 0x02, 0x00, 0x00, // version, opcode (request map TCP)
+                0x04, 0xd2, 0x04, 0xd2, // internal port, suggested external port
+                0x00, 0x00, 0x03, 0xe8, // requested mapping lifetime in seconds
+            }, 0
+        },
+        {
+            2ms, TestOp::RECV,
+            {
+                0x00, 0x82, 0x00, 0x43, // version, opcode (mapped TCP)
+                0x66, 0xfd, 0xa1, 0xee, // seconds sinds start of epoch
+                0x04, 0xd2, 0x04, 0xd2, // internal port, mapped external port
+                0x00, 0x00, 0x01, 0xf4, // mapping lifetime in seconds
+            }, 0
+        },
+    };
+    CreateSock = [this, &script](int domain, int type, int protocol) {
+        if (domain == AF_INET && type == SOCK_DGRAM && protocol == IPPROTO_UDP) return std::make_unique<PCPTestSock>(default_local_ipv4, default_gateway_ipv4, script);
+        return std::unique_ptr<PCPTestSock>();
+    };
+
+    res = NATPMPRequestPortMap(default_gateway_ipv4, 1234, 1000, 1, 200ms);
+
+    err = std::get_if<MappingError>(&res);
+    BOOST_REQUIRE(err);
+    BOOST_CHECK_EQUAL(*err, MappingError::PROTOCOL_ERROR);
+}
+
+// PCP IPv4 protocol error scenario.
+BOOST_AUTO_TEST_CASE(pcp_protocol_error)
+{
+    const std::vector<TestOp> script{
+        {
+            0ms, TestOp::SEND,
+            {
+                0x02, 0x01, 0x00, 0x00, // version, opcode
+                0x00, 0x00, 0x03, 0xe8, // lifetime
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xc0, 0xa8, 0x00, 0x06, // internal IP
+                0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, // nonce
+                0x06, 0x00, 0x00, 0x00, // protocol (TCP), reserved
+                0x04, 0xd2, 0x04, 0xd2, // internal port, suggested external port
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, // suggested external IP
+            }, 0
+        },
+        {
+            250ms, TestOp::RECV, // 250ms delay before answer
+            {
+                0x02, 0x81, 0x00, 0x42, // version, opcode, result error
+                0x00, 0x00, 0x01, 0xf4, // granted lifetime
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // reserved
+                0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, // nonce
+                0x06, 0x00, 0x00, 0x00, // protocol (TCP), reserved
+                0x04, 0xd2, 0x04, 0xd2, // internal port, assigned external port
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0x01, 0x02, 0x03, 0x04, // assigned external IP
+            }, 0
+        },
+    };
+    CreateSock = [this, &script](int domain, int type, int protocol) {
+        if (domain == AF_INET && type == SOCK_DGRAM && protocol == IPPROTO_UDP) return std::make_unique<PCPTestSock>(default_local_ipv4, default_gateway_ipv4, script);
+        return std::unique_ptr<PCPTestSock>();
+    };
+
+    auto res = PCPRequestPortMap(TEST_NONCE, default_gateway_ipv4, bind_any_ipv4, 1234, 1000, 1, 1000ms);
+
+    MappingError* err = std::get_if<MappingError>(&res);
+    BOOST_REQUIRE(err);
+    BOOST_CHECK_EQUAL(*err, MappingError::PROTOCOL_ERROR);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
