@@ -14,7 +14,9 @@
  * @enum ForecastType
  * Identifier for fee rate forecasters.
  */
-enum class ForecastType {};
+enum class ForecastType {
+    BLOCK_POLICY,
+};
 
 /**
  * @struct ForecastResult
