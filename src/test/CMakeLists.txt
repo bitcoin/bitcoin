@@ -62,6 +62,7 @@ add_executable(test_bitcoin
   descriptor_tests.cpp
   disconnected_transactions.cpp
   feefrac_tests.cpp
+  feerounder_tests.cpp
   flatfile_tests.cpp
   fs_tests.cpp
   getarg_tests.cpp
@@ -89,7 +90,6 @@ add_executable(test_bitcoin
   orphanage_tests.cpp
   peerman_tests.cpp
   pmt_tests.cpp
-  policy_fee_tests.cpp
   policyestimator_tests.cpp
   pool_tests.cpp
   pow_tests.cpp
