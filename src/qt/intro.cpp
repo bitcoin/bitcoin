@@ -45,6 +45,7 @@ public:
     enum Status {
         ST_OK,
         ST_ERROR
+        ,ST_WARNING
     };
 
 public Q_SLOTS:
@@ -100,6 +101,13 @@ void FreespaceChecker::check()
                 replyMessage = tr("Path already exists, and is not a directory.");
             }
         }
+#ifdef __APPLE__
+        const FSType fs_type = GetFilesystemType(parentDir);
+        if (fs_type == FSType::EXFAT) {
+            replyStatus = ST_WARNING;
+            replyMessage = tr("Path is on ExFAT filesystem, known to cause corruption on macOS.");
+        }
+#endif
     } catch (const fs::filesystem_error&)
     {
         /* Parent directory does not exist or is not accessible */
@@ -270,6 +278,7 @@ bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
 
 void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable)
 {
+    m_warning_msg = "";
     switch(status)
     {
     case FreespaceChecker::ST_OK:
@@ -278,6 +287,11 @@ void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable
         break;
     case FreespaceChecker::ST_ERROR:
         ui->errorMessage->setText(tr("Error") + ": " + message);
+        ui->errorMessage->setStyleSheet("QLabel { color: #800000 }");
+        break;
+    case FreespaceChecker::ST_WARNING:
+        m_warning_msg = tr("Warning") + ": " + message;
+        ui->errorMessage->setText(m_warning_msg);
         ui->errorMessage->setStyleSheet("QLabel { color: #800000 }");
         break;
     }
@@ -294,6 +308,14 @@ void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable
     }
     /* Don't allow confirm in ERROR state */
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(status != FreespaceChecker::ST_ERROR);
+}
+
+void Intro::accept()
+{
+    if ((!m_warning_msg.isEmpty()) && QMessageBox::warning(this, PACKAGE_NAME, m_warning_msg + "<br><br>" + tr("Ignore warning?"), QMessageBox::Ignore | QMessageBox::Cancel) == QMessageBox::Cancel) {
+        return;
+    }
+    QDialog::accept();
 }
 
 void Intro::UpdateFreeSpaceLabel()
