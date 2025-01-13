@@ -7,6 +7,7 @@
 
 #include <consensus/amount.h>
 #include <policy/feerate.h>
+#include <policy/fees/forecaster.h>
 #include <random.h>
 #include <sync.h>
 #include <threadsafety.h>
@@ -36,9 +37,13 @@ static constexpr std::chrono::hours MAX_FILE_AGE{60};
 static constexpr bool DEFAULT_ACCEPT_STALE_FEE_ESTIMATES{false};
 
 class AutoFile;
+class ForecastResult;
 class TxConfirmStats;
+
+struct ConfirmationTarget;
 struct RemovedMempoolTransactionInfo;
 struct NewMempoolTransactionInfo;
+
 
 /* Identifier for each of the 3 different TxConfirmStats which will track
  * history over different time horizons. */
@@ -146,7 +151,7 @@ struct FeeCalculation
  * a certain number of blocks.  Every time a block is added to the best chain, this class records
  * stats on the transactions included in that block
  */
-class CBlockPolicyEstimator : public CValidationInterface
+class CBlockPolicyEstimator : public Forecaster, public CValidationInterface
 {
 private:
     /** Track confirm delays up to 12 blocks for short horizon */
@@ -270,6 +275,10 @@ protected:
     void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason /*unused*/, uint64_t /*unused*/) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
     void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
+
+    /** Overridden from Forecaster. */
+    ForecastResult EstimateFee(ConfirmationTarget& target) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
 private:
