@@ -218,17 +218,13 @@ $(host_prefix)/toolchain.cmake : toolchain.cmake.in $(host_prefix)/.stamp_$(fina
             -e 's|@OBJCOPY@|$(host_OBJCOPY)|' \
             -e 's|@OBJDUMP@|$(host_OBJDUMP)|' \
             -e 's|@CFLAGS@|$(strip $(host_CFLAGS))|' \
-            -e 's|@CFLAGS_RELEASE@|$(strip $(host_release_CFLAGS))|' \
-            -e 's|@CFLAGS_DEBUG@|$(strip $(host_debug_CFLAGS))|' \
+            -e 's|@CFLAGS_DEPENDS_CONFIG@|$(strip $(host_$(release_type)_CFLAGS))|' \
             -e 's|@CXXFLAGS@|$(strip $(host_CXXFLAGS))|' \
-            -e 's|@CXXFLAGS_RELEASE@|$(strip $(host_release_CXXFLAGS))|' \
-            -e 's|@CXXFLAGS_DEBUG@|$(strip $(host_debug_CXXFLAGS))|' \
+            -e 's|@CXXFLAGS_DEPENDS_CONFIG@|$(strip $(host_$(release_type)_CXXFLAGS))|' \
             -e 's|@CPPFLAGS@|$(strip $(host_CPPFLAGS))|' \
-            -e 's|@CPPFLAGS_RELEASE@|$(strip $(host_release_CPPFLAGS))|' \
-            -e 's|@CPPFLAGS_DEBUG@|$(strip $(host_debug_CPPFLAGS))|' \
+            -e 's|@CPPFLAGS_DEPENDS_CONFIG@|$(strip $(host_$(release_type)_CPPFLAGS))|' \
             -e 's|@LDFLAGS@|$(strip $(host_LDFLAGS))|' \
-            -e 's|@LDFLAGS_RELEASE@|$(strip $(host_release_LDFLAGS))|' \
-            -e 's|@LDFLAGS_DEBUG@|$(strip $(host_debug_LDFLAGS))|' \
+            -e 's|@LDFLAGS_DEPENDS_CONFIG@|$(strip $(host_$(release_type)_LDFLAGS))|' \
             -e 's|@qt_packages@|$(qt_packages_)|' \
             -e 's|@qrencode_packages@|$(qrencode_packages_)|' \
             -e 's|@zmq_packages@|$(zmq_packages_)|' \
