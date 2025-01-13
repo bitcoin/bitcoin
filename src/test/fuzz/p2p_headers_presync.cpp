@@ -146,7 +146,7 @@ HeadersSyncSetup* g_testing_setup;
 
 void initialize()
 {
-    static auto setup = MakeNoLogFileContext<HeadersSyncSetup>(ChainType::MAIN, {.extra_args = {"-checkpoints=0"}});
+    static auto setup = MakeNoLogFileContext<HeadersSyncSetup>(ChainType::MAIN);
     g_testing_setup = setup.get();
 }
 } // namespace

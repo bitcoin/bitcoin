@@ -123,7 +123,6 @@ FUZZ_TARGET(partially_downloaded_block, .init = initialize_pdb)
              BlockValidationResult::BLOCK_MISSING_PREV,
              BlockValidationResult::BLOCK_INVALID_PREV,
              BlockValidationResult::BLOCK_TIME_FUTURE,
-             BlockValidationResult::BLOCK_CHECKPOINT,
              BlockValidationResult::BLOCK_HEADER_LOW_WORK});
     pdb.m_check_block_mock = FuzzedCheckBlock(
         fail_check_block ?
