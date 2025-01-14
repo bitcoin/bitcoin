@@ -1,5 +1,5 @@
-netbsd_CFLAGS=-pipe -std=$(C_STANDARD)
-netbsd_CXXFLAGS=-pipe -std=$(CXX_STANDARD)
+netbsd_CFLAGS=
+netbsd_CXXFLAGS=
 
 ifneq ($(LTO),)
 netbsd_AR = $(host_toolchain)gcc-ar

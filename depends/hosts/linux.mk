@@ -1,5 +1,5 @@
-linux_CFLAGS=-pipe -std=$(C_STANDARD)
-linux_CXXFLAGS=-pipe -std=$(CXX_STANDARD)
+linux_CFLAGS=
+linux_CXXFLAGS=
 
 ifneq ($(LTO),)
 linux_AR = $(host_toolchain)gcc-ar
