@@ -1750,7 +1750,10 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     const CService addr_bind{MaybeFlipIPv6toCJDNS(GetBindAddress(*sock))};
 
     NetPermissionFlags permission_flags = NetPermissionFlags::None;
-    hListenSocket.AddSocketPermissionFlags(permission_flags);
+    auto it{m_listen_permissions.find(addr_bind)};
+    if (it != m_listen_permissions.end()) {
+        NetPermissions::AddFlag(permission_flags, it->second);
+    }
 
     CreateNodeFromAcceptedSocket(std::move(sock), permission_flags, addr_bind, addr);
 }
@@ -3107,7 +3110,7 @@ void CConnman::ThreadI2PAcceptIncoming()
     }
 }
 
-bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError, NetPermissionFlags permissions)
+bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError)
 {
     int nOne = 1;
 
@@ -3172,7 +3175,7 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
         return false;
     }
 
-    vhListenSocket.emplace_back(std::move(sock), permissions);
+    vhListenSocket.emplace_back(std::move(sock));
     return true;
 }
 
@@ -3238,12 +3241,14 @@ bool CConnman::Bind(const CService& addr_, unsigned int flags, NetPermissionFlag
     const CService addr{MaybeFlipIPv6toCJDNS(addr_)};
 
     bilingual_str strError;
-    if (!BindListenPort(addr, strError, permissions)) {
+    if (!BindListenPort(addr, strError)) {
         if ((flags & BF_REPORT_ERROR) && m_client_interface) {
             m_client_interface->ThreadSafeMessageBox(strError, "", CClientUIInterface::MSG_ERROR);
         }
         return false;
     }
+
+    m_listen_permissions.emplace(addr, permissions);
 
     if (addr.IsRoutable() && fDiscover && !(flags & BF_DONT_ADVERTISE) && !NetPermissions::HasFlag(permissions, NetPermissionFlags::NoBan)) {
         AddLocal(addr, LOCAL_BIND);
@@ -3478,6 +3483,7 @@ void CConnman::StopNodes()
         DeleteNode(pnode);
     }
     m_nodes_disconnected.clear();
+    m_listen_permissions.clear();
     vhListenSocket.clear();
     semOutbound.reset();
     semAddnode.reset();
