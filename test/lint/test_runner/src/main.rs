@@ -180,7 +180,17 @@ fn get_git_root() -> PathBuf {
 
 /// Return the commit range, or panic
 fn commit_range() -> String {
-    env::var("COMMIT_RANGE").unwrap()
+    // Use the env var, if set. E.g. COMMIT_RANGE='HEAD~n..HEAD' for the last 'n' commits.
+    env::var("COMMIT_RANGE").unwrap_or_else(|_| {
+        // Otherwise, assume that a merge commit exists. This merge commit is assumed
+        // to be the base, after which linting will be done. If the merge commit is
+        // HEAD, the range will be empty.
+        format!(
+            "{}..HEAD",
+            check_output(git().args(["rev-list", "--max-count=1", "--merges", "HEAD"]))
+                .expect("check_output failed")
+        )
+    })
 }
 
 /// Return all subtree paths
@@ -673,6 +683,10 @@ fn main() -> ExitCode {
     };
 
     let git_root = get_git_root();
+    let commit_range = commit_range();
+    let commit_log = check_output(git().args(["log", "--no-merges", "--oneline", &commit_range]))
+        .expect("check_output failed");
+    println!("Checking commit range ({commit_range}):\n{commit_log}\n");
 
     let mut test_failed = false;
     for linter in linters_to_run {
