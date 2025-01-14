@@ -2474,11 +2474,13 @@ void PeerManagerImpl::RelayAddress(NodeId originator,
     // Relay to a limited number of other nodes
     // Use deterministic randomness to send to the same nodes for 24 hours
     // at a time so the m_addr_knowns of the chosen nodes prevent repeats
-    const uint64_t hashAddr{addr.GetHash()};
+    const uint64_t hash_addr{CServiceHash(0, 0)(addr)};
     const auto current_time{GetTime<std::chrono::seconds>()};
     // Adding address hash makes exact rotation time different per address, while preserving periodicity.
-    const uint64_t time_addr{(static_cast<uint64_t>(count_seconds(current_time)) + hashAddr) / count_seconds(ROTATE_ADDR_RELAY_DEST_INTERVAL)};
-    const CSipHasher hasher{m_connman.GetDeterministicRandomizer(RANDOMIZER_ID_ADDRESS_RELAY).Write(hashAddr).Write(time_addr)};
+    const uint64_t time_addr{(static_cast<uint64_t>(count_seconds(current_time)) + hash_addr) / count_seconds(ROTATE_ADDR_RELAY_DEST_INTERVAL)};
+    const CSipHasher hasher{m_connman.GetDeterministicRandomizer(RANDOMIZER_ID_ADDRESS_RELAY)
+                                .Write(hash_addr)
+                                .Write(time_addr)};
     FastRandomContext insecure_rand;
 
     // Relay reachable addresses to 2 peers. Unreachable addresses are relayed randomly to 1 or 2 peers.

@@ -3543,12 +3543,26 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                 continue;
             }
 
-            // Do not allow non-default ports, unless after 50 invalid
-            // addresses selected already. This is to prevent malicious peers
-            // from advertising themselves as a service on another host and
-            // port, causing a DoS attack as nodes around the network attempt
-            // to connect to it fruitlessly.
-            if ((!isMasternode || !Params().AllowMultiplePorts()) && addr.GetPort() != Params().GetDefaultPort(addr.GetNetwork()) && addr.GetPort() != GetListenPort() && nTries < 50) {
+            // Port validation in Dash has additional rules. Some networks are prohibited
+            // from using a non-default port while others allow any arbitary port so long
+            // it isn't a bad port (and in the case of masternodes, it matches its listen
+            // port)
+            const bool is_prohibited_port = [this, &addr, &isMasternode](){
+                if (!Params().AllowMultiplePorts()) {
+                    const uint16_t default_port{Params().GetDefaultPort(addr.GetNetwork())};
+                    assert(!IsBadPort(default_port)); // Make sure we never set the default port to a bad port
+                    return addr.GetPort() != default_port;
+                }
+                const bool is_bad_port{IsBadPort(addr.GetPort())};
+                if (isMasternode) {
+                    return addr.GetPort() != GetListenPort() || is_bad_port;
+                } else {
+                    return is_bad_port;
+                }
+            }();
+
+            // Do not connect to prohibited ports, unless 50 invalid addresses have been selected already.
+            if (nTries < 50 && is_prohibited_port) {
                 continue;
             }
 
