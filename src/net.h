@@ -1276,21 +1276,17 @@ private:
     struct ListenSocket {
     public:
         std::shared_ptr<Sock> sock;
-        inline void AddSocketPermissionFlags(NetPermissionFlags& flags) const { NetPermissions::AddFlag(flags, m_permissions); }
-        ListenSocket(std::shared_ptr<Sock> sock_, NetPermissionFlags permissions_)
-            : sock{sock_}, m_permissions{permissions_}
+        ListenSocket(std::shared_ptr<Sock> sock_)
+            : sock{sock_}
         {
         }
-
-    private:
-        NetPermissionFlags m_permissions;
     };
 
     //! returns the time left in the current max outbound cycle
     //! in case of no limit, it will always return 0
     std::chrono::seconds GetMaxOutboundTimeLeftInCycle_() const EXCLUSIVE_LOCKS_REQUIRED(m_total_bytes_sent_mutex);
 
-    bool BindListenPort(const CService& bindAddr, bilingual_str& strError, NetPermissionFlags permissions);
+    bool BindListenPort(const CService& bindAddr, bilingual_str& strError);
     bool Bind(const CService& addr, unsigned int flags, NetPermissionFlags permissions);
     bool InitBinds(const Options& options);
 
@@ -1431,6 +1427,12 @@ private:
     unsigned int nReceiveFloodSize{0};
 
     std::vector<ListenSocket> vhListenSocket;
+
+    /**
+     * Permissions that incoming peers get based on our listening address they connected to.
+     */
+    std::unordered_map<CService, NetPermissionFlags, CServiceHash> m_listen_permissions;
+
     std::atomic<bool> fNetworkActive{true};
     bool fAddressesInitialized{false};
     AddrMan& addrman;
