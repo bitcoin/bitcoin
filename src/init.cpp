@@ -19,6 +19,7 @@
 #include <common/args.h>
 #include <common/system.h>
 #include <consensus/amount.h>
+#include <consensus/consensus.h>
 #include <deploymentstatus.h>
 #include <hash.h>
 #include <httprpc.h>
