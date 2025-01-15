@@ -342,7 +342,8 @@ public:
      */
     using Id = uint64_t;
 
-    explicit HTTPServer(std::function<void(std::unique_ptr<HTTPRequest>&&)> func) : m_request_dispatcher{std::move(func)} {}
+    explicit HTTPServer(std::function<void(std::unique_ptr<HTTPRequest>&&)> func)
+        : m_request_dispatcher{std::move(func)} {}
 
     virtual ~HTTPServer()
     {
@@ -393,6 +394,31 @@ public:
      */
     void DisconnectAllClients() { m_disconnect_all_clients = true; }
 
+    /**
+     * Update the request handler method.
+     * Used for shutdown to reject new requests.
+     */
+    void SetRequestHandler(std::function<void(std::unique_ptr<HTTPRequest>&&)> func)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_request_dispatcher_mutex)
+    {
+        WITH_LOCK(m_request_dispatcher_mutex,
+                  m_request_dispatcher = std::move(func));
+    }
+
+    /**
+     * Stop accepting new connections in the I/O loop.
+     * Must be called first in StopHTTPServer() before DisconnectAllClients().
+     * A connection accepted after the "wait for 0 connections" loop exits would
+     * remain in m_connected when the destructor is called.
+     */
+    void StopAccepting() { m_stop_accepting = true; }
+
+    /**
+     * Force-remove all remaining clients from m_connected without waiting for
+     * graceful disconnection. Must only be called after JoinSocketsThreads().
+     */
+    void ClearConnectedClients();
+
 private:
     /**
      * List of listening sockets.
@@ -411,6 +437,12 @@ private:
      * and send replies.
      */
     std::vector<std::shared_ptr<HTTPRemoteClient>> m_connected;
+
+    /**
+     * Flag used during shutdown to stop accepting new connections.
+     * Set by main thread and read by the I/O thread.
+     */
+    std::atomic_bool m_stop_accepting{false};
 
     /**
      * Flag used during shutdown.
@@ -462,9 +494,14 @@ private:
     std::thread m_thread_socket_handler;
 
     /*
-     * What to do with HTTP requests once received, validated and parsed
+     * What to do with HTTP requests once received, validated and parsed.
+     * Set in main thread by server start and interrupt but read in
+     * worker threads.
      */
-    std::function<void(std::unique_ptr<HTTPRequest>&&)> m_request_dispatcher;
+    /// @{
+    mutable Mutex m_request_dispatcher_mutex;
+    std::function<void(std::unique_ptr<HTTPRequest>&&)> m_request_dispatcher GUARDED_BY(m_request_dispatcher_mutex);
+    /// @}
 
     /**
      * Accept a connection.
@@ -491,7 +528,8 @@ private:
      * Do the read/write for connected sockets that are ready for IO.
      * @param[in] io_readiness Which sockets are ready and their corresponding HTTPRemoteClients.
      */
-    void SocketHandlerConnected(const IOReadiness& io_readiness) const;
+    void SocketHandlerConnected(const IOReadiness& io_readiness) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_request_dispatcher_mutex);
 
     /**
      * Accept incoming connections, one from each read-ready listening socket.
@@ -510,7 +548,7 @@ private:
      * Check connected and listening sockets for IO readiness and process them accordingly.
      * This is the main I/O loop of the server.
      */
-    void ThreadSocketHandler();
+    void ThreadSocketHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_request_dispatcher_mutex);
 
     /**
      * Try to read HTTPRequests from a client's receive buffer.
@@ -519,7 +557,8 @@ private:
      * will mark this client for disconnection.
      * @param[in] client The HTTPRemoteClient to read requests from
      */
-    void MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemoteClient>& client) const;
+    void MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemoteClient>& client) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_request_dispatcher_mutex);
 
     /**
      * Close underlying socket connections for flagged clients
@@ -633,6 +672,23 @@ public:
      */
     bool MaybeSendBytesFromBuffer() EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
 };
+
+/** Initialize HTTP server.
+ * Call this before RegisterHTTPHandler or EventBase().
+ */
+bool InitHTTPServer();
+
+/** Start HTTP server.
+ * This is separate from InitHTTPServer to give users race-condition-free time
+ * to register their handlers between InitHTTPServer and StartHTTPServer.
+ */
+void StartHTTPServer();
+
+/** Interrupt HTTP server threads */
+void InterruptHTTPServer();
+
+/** Stop HTTP server */
+void StopHTTPServer();
 } // namespace http_bitcoin
 
 #endif // BITCOIN_HTTPSERVER_H

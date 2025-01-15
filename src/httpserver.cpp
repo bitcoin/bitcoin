@@ -82,6 +82,7 @@ struct HTTPPathHandler
 static struct event_base* eventBase = nullptr;
 //! HTTP server
 static struct evhttp* eventHTTP = nullptr;
+static std::unique_ptr<http_bitcoin::HTTPServer> g_http_server{nullptr};
 //! List of subnets to allow RPC connections from
 static std::vector<CSubNet> rpc_allow_subnets;
 //! Handlers for (sub)paths
@@ -272,6 +273,12 @@ static void MaybeDispatchRequestToWorker(std::shared_ptr<HTTPRequest> hreq)
     } else {
         hreq->WriteReply(HTTP_NOT_FOUND);
     }
+}
+
+static void RejectRequest(std::unique_ptr<http_bitcoin::HTTPRequest> hreq)
+{
+    LogDebug(BCLog::HTTP, "Rejecting request while shutting down");
+    hreq->WriteReply(HTTP_SERVICE_UNAVAILABLE);
 }
 
 /** HTTP request callback */
@@ -1373,6 +1380,7 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
 
 void HTTPServer::SocketHandlerListening(const Sock::EventsPerSock& events_per_sock)
 {
+    if (m_stop_accepting) return;
     for (const auto& sock : m_listen) {
         if (m_interrupt_net) {
             return;
@@ -1492,6 +1500,7 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
 
     // Otherwise, if there is a pending request in the queue, handle it.
     if (!client->m_req_queue.empty()) {
+        LOCK(m_request_dispatcher_mutex);
         client->m_req_busy = true;
         m_request_dispatcher(std::move(client->m_req_queue.front()));
         client->m_req_queue.pop_front();
@@ -1536,6 +1545,15 @@ void HTTPServer::DisconnectClients()
         // Report back to the main thread
         m_connected_size.fetch_sub(erased, std::memory_order_relaxed);
     }
+}
+
+void HTTPServer::ClearConnectedClients()
+{
+    Assume(!m_thread_socket_handler.joinable()); // must be called after JoinSocketsThreads()
+    if (m_connected.empty()) return;
+    LogWarning("Force-disconnecting %d HTTP client(s) that did not disconnect gracefully", m_connected.size());
+    m_connected_size.fetch_sub(m_connected.size(), std::memory_order_relaxed);
+    m_connected.clear();
 }
 
 bool HTTPRemoteClient::ReadRequest(HTTPRequest& req)
@@ -1637,5 +1655,103 @@ bool HTTPRemoteClient::MaybeSendBytesFromBuffer()
     }
 
     return true;
+}
+
+bool InitHTTPServer()
+{
+    if (!InitHTTPAllowList()) {
+        return false;
+    }
+
+    // Create HTTPServer, using a dummy request handler just for this commit
+    g_http_server = std::make_unique<HTTPServer>([&](std::unique_ptr<HTTPRequest> req){});
+
+    // Bind HTTP server to specified addresses
+    std::vector<std::pair<std::string, uint16_t>> endpoints{GetBindAddresses()};
+    bool bind_success{false};
+    for (const auto& [address_string, port] : endpoints) {
+        LogInfo("Binding RPC on address %s port %i", address_string, port);
+        const std::optional<CService> addr{Lookup(address_string, port, false)};
+        if (addr) {
+            if (addr->IsBindAny()) {
+                LogWarning("The RPC server is not safe to expose to untrusted networks such as the public internet");
+            }
+            auto result{g_http_server->BindAndStartListening(addr.value())};
+            if (!result) {
+                LogWarning("Binding RPC on address %s failed: %s", addr->ToStringAddrPort(), result.error());
+            } else {
+                bind_success = true;
+            }
+        } else {
+            LogWarning("Could not bind RPC on address %s port %i: Address lookup failed.", address_string, port);
+        }
+    }
+
+    if (!bind_success) {
+        LogError("Unable to bind any endpoint for RPC server");
+        return false;
+    }
+
+    LogDebug(BCLog::HTTP, "Initialized HTTP server");
+
+    g_max_queue_depth = std::max(gArgs.GetArg<int>("-rpcworkqueue", DEFAULT_HTTP_WORKQUEUE), 1);
+    LogDebug(BCLog::HTTP, "set work queue of depth %d\n", g_max_queue_depth);
+
+    return true;
+}
+
+void StartHTTPServer()
+{
+    auto rpcThreads{std::max(gArgs.GetArg<int>("-rpcthreads", DEFAULT_HTTP_THREADS), 1)};
+    LogInfo("Starting HTTP server with %d worker threads", rpcThreads);
+    g_threadpool_http.Start(rpcThreads);
+    g_http_server->StartSocketsThreads();
+}
+
+void InterruptHTTPServer()
+{
+    LogDebug(BCLog::HTTP, "Interrupting HTTP server");
+    if (g_http_server) {
+        // Reject all new requests
+        g_http_server->SetRequestHandler(RejectRequest);
+    }
+
+    // Interrupt pool after disabling requests
+    g_threadpool_http.Interrupt();
+}
+
+void StopHTTPServer()
+{
+    LogDebug(BCLog::HTTP, "Stopping HTTP server");
+
+    LogDebug(BCLog::HTTP, "Waiting for HTTP worker threads to exit\n");
+    g_threadpool_http.Stop();
+
+    if (g_http_server) {
+        // Must precede DisconnectAllClients(): a connection accepted after
+        // GetConnectionsCount() returns 0 would survive into the destructor.
+        g_http_server->StopAccepting();
+        // Disconnect clients as their remaining responses are flushed
+        g_http_server->DisconnectAllClients();
+        // Wait 30 seconds for all disconnections
+        LogDebug(BCLog::HTTP, "Waiting for HTTP clients to disconnect gracefully");
+        const auto deadline{NodeClock::now() + 30s};
+        while (g_http_server->GetConnectionsCount() != 0) {
+            if (NodeClock::now() > deadline) {
+                LogWarning("Timeout waiting for HTTP clients to disconnect gracefully, continuing shutdown");
+                break;
+            }
+            std::this_thread::sleep_for(50ms);
+        }
+        // Break HTTPServer I/O loop: stop accepting connections, sending and receiving data
+        g_http_server->InterruptNet();
+        // Wait for HTTPServer I/O thread to exit
+        g_http_server->JoinSocketsThreads();
+        // Force-remove any clients that survived the graceful wait
+        g_http_server->ClearConnectedClients();
+        // Close all listening sockets
+        g_http_server->StopListening();
+    }
+    LogDebug(BCLog::HTTP, "Stopped HTTP server");
 }
 } // namespace http_bitcoin
