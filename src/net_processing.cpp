@@ -4142,13 +4142,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         LOCK(cs_main);
 
-        // Note that if we were to be on a chain that forks from the checkpointed
-        // chain, then serving those headers to a peer that has seen the
-        // checkpointed chain would cause that peer to disconnect us. Requiring
-        // that our chainwork exceed the minimum chain work is a protection against
-        // being fed a bogus chain when we started up for the first time and
-        // getting partitioned off the honest network for serving that chain to
-        // others.
+        // Don't serve headers from our active chain until our chainwork is at least
+        // the minimum chain work. This prevents us from starting a low-work headers
+        // sync that will inevitably be aborted by our peer.
         if (m_chainman.ActiveTip() == nullptr ||
                 (m_chainman.ActiveTip()->nChainWork < m_chainman.MinimumChainWork() && !pfrom.HasPermission(NetPermissionFlags::Download))) {
             LogDebug(BCLog::NET, "Ignoring getheaders from peer=%d because active chain has too little work; sending empty response\n", pfrom.GetId());
