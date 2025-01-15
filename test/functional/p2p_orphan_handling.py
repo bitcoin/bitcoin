@@ -776,16 +776,18 @@ class OrphanHandlingTest(BitcoinTestFramework):
         assert tx_replacer_BC["txid"] in node.getrawmempool()
         node.sendrawtransaction(tx_replacer_C["hex"])
         assert tx_replacer_BC["txid"] not in node.getrawmempool()
+        assert parent_peekaboo_AB["txid"] not in node.getrawmempool()
         assert tx_replacer_C["txid"] in node.getrawmempool()
 
-        # Second peer is an additional announcer for this orphan
+        # Second peer is an additional announcer for this orphan, but its missing parents are different from when it was
+        # previously announced.
         peer2 = node.add_p2p_connection(PeerTxRelayer())
         peer2.send_and_ping(msg_inv([orphan_inv]))
         assert_equal(len(node.getorphantxs(verbosity=2)[0]["from"]), 2)
 
         # Disconnect peer1. peer2 should become the new candidate for orphan resolution.
         peer1.peer_disconnect()
-        node.bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
+        node.bumpmocktime(TXREQUEST_TIME_SKIP)
         self.wait_until(lambda: len(node.getorphantxs(verbosity=2)[0]["from"]) == 1)
         # Both parents should be requested, now that they are both missing.
         peer2.wait_for_parent_requests([int(parent_peekaboo_AB["txid"], 16), int(parent_missing["txid"], 16)])
