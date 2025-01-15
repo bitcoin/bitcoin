@@ -94,6 +94,14 @@ endif()
 #=============================
 include(CMakeDependentOption)
 # When adding a new option, end the <help_text> with a full stop for consistency.
+set(configure_warnings)
+option(WCONFIGURE_ERROR "Treat build configuration warnings as errors." OFF)
+if(WCONFIGURE_ERROR)
+  set(configure_warning_message_type FATAL_ERROR)
+else()
+  set(configure_warning_message_type WARNING)
+endif()
+
 option(BUILD_BITCOIN_BIN "Build bitcoin executable." ON)
 option(BUILD_DAEMON "Build bitcoind executable." ON)
 option(BUILD_GUI "Build bitcoin-qt executable." OFF)
@@ -704,14 +712,18 @@ message("C++ compiler .......................... ${CMAKE_CXX_COMPILER_ID} ${CMAK
 include(FlagsSummary)
 flags_summary()
 message("Treat compiler warnings as errors ..... ${WERROR}")
+message("Treat build configuration warnings as errors ..... ${WCONFIGURE_ERROR}")
 message("Use ccache for compiling .............. ${WITH_CCACHE}")
 message("\n")
 if(configure_warnings)
-    message("  ******\n")
-    foreach(warning IN LISTS configure_warnings)
-      message(WARNING "${warning}")
-    endforeach()
-    message("  ******\n")
+  message("  ******\n")
+  foreach(warning IN LISTS configure_warnings)
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.26)
+      message(CONFIGURE_LOG "${warning}") # Log to the cmake-configure-log file before a potentially fatal message.
+    endif()
+    message(${configure_warning_message_type} "${warning}")
+  endforeach()
+  message("  ******\n")
 endif()
 
 # We want all build properties to be encapsulated properly.
