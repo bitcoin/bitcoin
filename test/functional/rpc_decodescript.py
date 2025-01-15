@@ -48,7 +48,7 @@ class DecodeScriptTest(BitcoinTestFramework):
         rpc_result = self.nodes[0].decodescript('5100')
         assert_equal('1 0', rpc_result['asm'])
 
-        # 5) null data scriptSig - no such thing because null data scripts can not be spent.
+        # 5) null data scriptSig - no such thing because null data scripts cannot be spent.
         # thus, no test case for that standard transaction type is here.
 
     def decodescript_script_pub_key(self):

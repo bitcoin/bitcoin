@@ -304,7 +304,7 @@ void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable
 
 void Intro::UpdateFreeSpaceLabel()
 {
-    QString freeString = tr("%1 GB of free space available").arg(m_bytes_available / GB_BYTES);
+    QString freeString = tr("%1 GB of space available").arg(m_bytes_available / GB_BYTES);
     if (m_bytes_available < m_required_space_gb * GB_BYTES) {
         freeString += " " + tr("(of %1 GB needed)").arg(m_required_space_gb);
         ui->freeSpace->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR));

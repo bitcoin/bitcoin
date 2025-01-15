@@ -23,7 +23,7 @@ class UptimeTest(BitcoinTestFramework):
         self._test_uptime()
 
     def _test_negative_time(self):
-        assert_raises_rpc_error(-8, "Mocktime can not be negative: -1.", self.nodes[0].setmocktime, -1)
+        assert_raises_rpc_error(-8, "Mocktime cannot be negative: -1.", self.nodes[0].setmocktime, -1)
 
     def _test_uptime(self):
         wait_time = 10

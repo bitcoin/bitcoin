@@ -194,7 +194,7 @@ fi
 
 if ! getent services http https ftp > /dev/null 2>&1; then
 cat << EOF
-ERR: Your system's C library can not find service database entries for at least
+ERR: Your system's C library cannot find service database entries for at least
      one of the following services: http, https, ftp.
 
 Hint: Most likely, /etc/services does not exist yet (common for docker images

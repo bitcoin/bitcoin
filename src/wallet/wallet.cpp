@@ -3783,7 +3783,7 @@ bool CWallet::CreateTransactionInternal(
                             }
                             else if ((unsigned int)nChangePosRequest > txNew.vout.size())
                             {
-                                error = _("Change index out of range");
+                                error = _("Transaction change output index out of range");
                                 return false;
                             } else {
                                 nChangePosInOut = nChangePosRequest;
