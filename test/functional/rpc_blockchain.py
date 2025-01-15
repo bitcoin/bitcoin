@@ -71,7 +71,15 @@ class BlockchainTest(BitcoinTestFramework):
     def run_test(self):
         self.mine_chain()
         self._test_max_future_block_time()
-        self.restart_node(0, extra_args=['-stopatheight=207', '-prune=1', '-txindex=0'])  # Set extra args with pruning after rescan is complete
+        self.restart_node(
+            0,
+            extra_args=[
+                "-stopatheight=207",
+                "-checkblocks=-1",  # Check all blocks
+                "-prune=1",  # Set pruning after rescan is complete
+                '-txindex=0',
+            ],
+        )
 
         # Actual tests
         self._test_getblockchaininfo()

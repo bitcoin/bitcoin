@@ -1974,16 +1974,16 @@ echo "  boost process       = $with_boost_process"
 echo "  multiprocess        = $build_multiprocess"
 echo "  with libs           = $build_bitcoin_libs"
 echo "  with wallet         = $enable_wallet"
-echo "  with gui / qt       = $bitcoin_enable_qt"
 if test "x$enable_wallet" != "xno"; then
-    echo "  with sqlite         = $use_sqlite"
-    echo "  with bdb            = $use_bdb"
+    echo "    with sqlite       = $use_sqlite"
+    echo "    with bdb          = $use_bdb"
 fi
+echo "  with gui / qt       = $bitcoin_enable_qt"
 if test x$bitcoin_enable_qt != xno; then
     echo "    with qr           = $use_qr"
 fi
 echo "  with zmq            = $use_zmq"
-if test x$enable_fuzz == xno; then
+if test x$enable_fuzz = xno; then
     echo "  with test           = $use_tests"
 else
     echo "  with test           = not building test_dash because fuzzing is enabled"

@@ -372,6 +372,7 @@ BITCOIN_CORE_H = \
   util/sock.h \
   util/string.h \
   util/spanparsing.h \
+  util/syserror.h \
   util/system.h \
   util/time.h \
   util/thread.h \
@@ -825,6 +826,7 @@ libbitcoin_util_a_SOURCES = \
   util/hasher.cpp \
   util/getuniquepath.cpp \
   util/sock.cpp \
+  util/syserror.cpp \
   util/system.cpp \
   util/message.cpp \
   util/moneystr.cpp \

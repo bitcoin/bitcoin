@@ -71,7 +71,7 @@ enum class ChainstateLoadingError {
  *        this sequence, when we explicitly checked shutdown_requested() at
  *        arbitrary points, one of those calls returned true". Therefore, a
  *        return value other than SHUTDOWN_PROBED does not guarantee that
- *        shutdown_requested() hasn't been called indirectly.
+ *        shutdown hasn't been called indirectly.
  *  - else
  *      - Success!
  */
@@ -143,8 +143,8 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
                                                                 bool fReset,
                                                                 bool fReindexChainState,
                                                                 const Consensus::Params& consensus_params,
-                                                                unsigned int check_blocks,
-                                                                unsigned int check_level,
+                                                                int check_blocks,
+                                                                int check_level,
                                                                 std::function<int64_t()> get_unix_time_seconds,
                                                                 std::function<void(bool)> notify_bls_state = nullptr);
 
