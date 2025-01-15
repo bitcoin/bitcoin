@@ -14,7 +14,7 @@
 #ifndef BITCOIN_TXGRAPH_H
 #define BITCOIN_TXGRAPH_H
 
-static constexpr unsigned MAX_CLUSTER_COUNT_LIMIT{64};
+static constexpr unsigned MAX_CLUSTER_COUNT_LIMIT{200};
 
 /** Data structure to encapsulate fees, sizes, and dependencies for a set of transactions. */
 class TxGraph
