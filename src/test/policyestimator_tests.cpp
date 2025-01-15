@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <policy/fees/block_policy_estimator.h>
-#include <policy/fees_args.h>
+#include <policy/fees/block_policy_estimator_args.h>
 #include <policy/policy.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
