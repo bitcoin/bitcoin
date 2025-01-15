@@ -4,7 +4,7 @@
 
 #include <kernel/mempool_entry.h>
 #include <policy/fees/block_policy_estimator.h>
-#include <policy/fees_args.h>
+#include <policy/fees/block_policy_estimator_args.h>
 #include <primitives/transaction.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
