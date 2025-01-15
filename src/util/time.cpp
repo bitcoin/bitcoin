@@ -3,6 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <bitcoin-build-config.h> // IWYU pragma: keep
+
 #include <util/time.h>
 
 #include <compat/compat.h>
@@ -16,6 +18,16 @@
 #include <string>
 #include <string_view>
 #include <thread>
+
+#ifdef HAVE_CLOCK_GETTIME
+#include <time.h>
+#elif defined(HAVE_GETTHREADTIMES)
+#include <windows.h>
+#include <winnt.h>
+
+#include <processthreadsapi.h>
+#endif
+
 
 void UninterruptibleSleep(const std::chrono::microseconds& n) { std::this_thread::sleep_for(n); }
 
@@ -102,4 +114,63 @@ struct timeval MillisToTimeval(int64_t nTimeout)
 struct timeval MillisToTimeval(std::chrono::milliseconds ms)
 {
     return MillisToTimeval(count_milliseconds(ms));
+}
+
+std::chrono::nanoseconds ThreadCpuTime()
+{
+#ifdef HAVE_CLOCK_GETTIME
+    // An alternative to clock_gettime() is getrusage().
+
+    timespec t;
+    if (clock_gettime(CLOCK_THREAD_CPUTIME_ID, &t) == -1) {
+        return std::chrono::nanoseconds{0};
+    }
+    return std::chrono::seconds{t.tv_sec} + std::chrono::nanoseconds{t.tv_nsec};
+#elif defined(HAVE_GETTHREADTIMES)
+    // An alternative to GetThreadTimes() is QueryThreadCycleTime() but it
+    // counts CPU cycles.
+
+    FILETIME creation;
+    FILETIME exit;
+    FILETIME kernel;
+    FILETIME user;
+    // GetThreadTimes():
+    // https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getthreadtimes
+    if (GetThreadTimes(GetCurrentThread(), &creation, &exit, &kernel, &user) == 0) {
+        return std::chrono::nanoseconds{0};
+    }
+
+    // https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-filetime
+    // "... you should copy the low- and high-order parts of the file time to a
+    // ULARGE_INTEGER structure, perform 64-bit arithmetic on the QuadPart
+    // member ..."
+
+    ULARGE_INTEGER kernel_;
+    kernel_.LowPart = kernel.dwLowDateTime;
+    kernel_.HighPart = kernel.dwHighDateTime;
+
+    ULARGE_INTEGER user_;
+    user_.LowPart = user.dwLowDateTime;
+    user_.HighPart = user.dwHighDateTime;
+
+    // https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getthreadtimes
+    // "Thread kernel mode and user mode times are amounts of time. For example,
+    // if a thread has spent one second in kernel mode, this function will fill
+    // the FILETIME structure specified by lpKernelTime with a 64-bit value of
+    // ten million. That is the number of 100-nanosecond units in one second."
+    return std::chrono::nanoseconds{(kernel_.QuadPart + user_.QuadPart) * 100};
+#else
+    return std::chrono::nanoseconds{0};
+#endif
+}
+
+std::chrono::nanoseconds operator+=(std::atomic<std::chrono::nanoseconds>& a, std::chrono::nanoseconds b)
+{
+    std::chrono::nanoseconds expected;
+    std::chrono::nanoseconds desired;
+    do {
+        expected = a.load();
+        desired = expected + b;
+    } while (!a.compare_exchange_weak(expected, desired));
+    return desired;
 }

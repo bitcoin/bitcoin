@@ -105,6 +105,12 @@
 /* Define this symbol if the BSD sysctl(KERN_ARND) is available */
 #cmakedefine HAVE_SYSCTL_ARND 1
 
+/* Define this symbol if you have clock_gettime() */
+#cmakedefine HAVE_CLOCK_GETTIME 1
+
+/* Define this symbol if you have GetThreadTimes() */
+#cmakedefine HAVE_GETTHREADTIMES 1
+
 /* Define to 1 if std::system or ::wsystem is available. */
 #cmakedefine HAVE_SYSTEM 1
 

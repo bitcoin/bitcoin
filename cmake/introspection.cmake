@@ -159,6 +159,40 @@ check_cxx_source_compiles("
   " HAVE_SYSCTL_ARND
 )
 
+# Check for clock_gettime() (POSIX.1b).
+check_cxx_source_compiles("
+  #include <time.h>
+
+  int main(int, char**)
+  {
+    timespec now;
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &now);
+    (void)now.tv_sec;
+    (void)now.tv_nsec;
+    return 0;
+  }
+  " HAVE_CLOCK_GETTIME
+)
+
+# Check for GetThreadTimes() (Windows).
+check_cxx_source_compiles("
+  #include <windows.h>
+  #include <winnt.h>
+
+  #include <processthreadsapi.h>
+
+  int main(int, char**)
+  {
+    FILETIME creation;
+    FILETIME exit;
+    FILETIME kernel;
+    FILETIME user;
+    (void)GetThreadTimes(GetCurrentThread(), &creation, &exit, &kernel, &user);
+    return 0;
+  }
+  " HAVE_GETTHREADTIMES
+)
+
 if(NOT MSVC)
   include(CheckSourceCompilesAndLinks)
 
