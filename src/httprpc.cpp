@@ -28,8 +28,8 @@
 #include <string>
 #include <vector>
 
-using http_libevent::HTTPRequest;
 using node::NodeContext;
+using http_bitcoin::HTTPRequest;
 using util::SplitString;
 using util::TrimStringView;
 
@@ -83,7 +83,7 @@ static void JSONErrorReply(HTTPRequest* req, UniValue objError, const JSONRPCReq
     Assume(jreq.m_json_version != JSONRPCVersion::V2);
 
     // Send error reply from json-rpc error object
-    int nStatus = HTTP_INTERNAL_SERVER_ERROR;
+    HTTPStatusCode nStatus = HTTP_INTERNAL_SERVER_ERROR;
     int code = objError.find_value("code").getInt<int>();
 
     if (code == RPC_INVALID_REQUEST)
