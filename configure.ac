@@ -841,6 +841,42 @@ fi
 
 AC_SEARCH_LIBS([clock_gettime],[rt])
 
+AC_MSG_CHECKING([for clock_gettime w/ CLOCK_THREAD_CPUTIME_ID])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #include <time.h>
+  ]],[[
+    timespec now;
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &now);
+    (void)now.tv_sec;
+    (void)now.tv_nsec;
+  ]])
+],[
+  AC_MSG_RESULT([yes])
+  AC_DEFINE([HAVE_CLOCK_GETTIME], [1], [Define this symbol if you have clock_gettime])
+],[
+  AC_MSG_RESULT([no])
+])
+
+AC_MSG_CHECKING([for GetThreadTimes])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #include <windows.h>
+    #include <winnt.h>
+
+    #include <processthreadsapi.h>
+  ]],[[
+    FILETIME creation;
+    FILETIME exit;
+    FILETIME kernel;
+    FILETIME user;
+    (void)GetThreadTimes(GetCurrentThread(), &creation, &exit, &kernel, &user);
+  ]])
+],[
+  AC_MSG_RESULT([yes])
+  AC_DEFINE([HAVE_GETTHREADTIMES], [1], [Define this symbol if you have GetThreadTimes])
+],[
+  AC_MSG_RESULT([no])
+])
+
 if test "$TARGET_OS" != "windows"; then
   dnl All windows code is PIC, forcing it on just adds useless compile warnings
   AX_CHECK_COMPILE_FLAG([-fPIC], [PIC_FLAGS="-fPIC"])
