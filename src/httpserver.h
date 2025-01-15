@@ -46,6 +46,8 @@ enum HTTPRequestMethod {
     PUT
 };
 
+namespace http_bitcoin {};
+
 namespace http_libevent {
 class HTTPRequest;
 
@@ -66,16 +68,6 @@ void StopHTTPServer();
 /** Change logging level for libevent. */
 void UpdateHTTPServerLogging(bool enable);
 } // namespace http_libevent
-
-/** Handler for requests to a certain HTTP path */
-typedef std::function<bool(http_libevent::HTTPRequest* req, const std::string&)> HTTPRequestHandler;
-/** Register handler for prefix.
- * If multiple handlers match a prefix, the first-registered one will
- * be invoked.
- */
-void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPRequestHandler &handler);
-/** Unregister handler for prefix */
-void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch);
 
 /** Return evhttp event base. This can be used by submodules to
  * queue timers or custom events.
@@ -281,9 +273,15 @@ public:
     // Response headers may be set in advance before response body is known
     HTTPHeaders m_response_headers;
     void WriteReply(HTTPStatusCode status, std::span<const std::byte> reply_body = {});
-    void WriteReply(HTTPStatusCode status, const char* reply_body) {
+    void WriteReply(HTTPStatusCode status, const char* reply_body)
+    {
         auto reply_body_view = std::string_view(reply_body);
         std::span<const std::byte> byte_span(reinterpret_cast<const std::byte*>(reply_body_view.data()), reply_body_view.size());
+        WriteReply(status, byte_span);
+    }
+    void WriteReply(HTTPStatusCode status, const std::string& reply_body)
+    {
+        std::span<const std::byte> byte_span{reinterpret_cast<const std::byte*>(reply_body.data()), reply_body.size()};
         WriteReply(status, byte_span);
     }
 };
@@ -464,5 +462,15 @@ void InterruptHTTPServer();
 /** Stop HTTP server */
 void StopHTTPServer();
 } // namespace http_bitcoin
+
+/** Handler for requests to a certain HTTP path */
+typedef std::function<bool(http_bitcoin::HTTPRequest* req, const std::string&)> HTTPRequestHandler;
+/** Register handler for prefix.
+ * If multiple handlers match a prefix, the first-registered one will
+ * be invoked.
+ */
+void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPRequestHandler &handler);
+/** Unregister handler for prefix */
+void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch);
 
 #endif // BITCOIN_HTTPSERVER_H
