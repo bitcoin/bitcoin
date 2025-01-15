@@ -26,7 +26,7 @@
 #include <string>
 #include <vector>
 
-using http_libevent::HTTPRequest;
+using http_bitcoin::HTTPRequest;
 using util::SplitString;
 using util::TrimStringView;
 
@@ -348,8 +348,6 @@ bool StartHTTPRPC(const std::any& context)
     if (g_wallet_init_interface.HasWalletSupport()) {
         RegisterHTTPHandler("/wallet/", false, handle_rpc);
     }
-    struct event_base* eventBase = EventBase();
-    assert(eventBase);
     return true;
 }
 

@@ -13,10 +13,9 @@ import urllib.parse
 
 # Configuration option for some tests
 RPCSERVERTIMEOUT = 2
-# Set in httpserver.cpp and passed to libevent evhttp_set_max_headers_size()
+# Set in httpserver.h
 MAX_HEADERS_SIZE = 8192
-# Set in serialize.h and passed to libevent evhttp_set_max_body_size()
-MAX_SIZE = 0x02000000
+MAX_BODY_SIZE = 0x02000000
 
 # When a test expects a server disconnection, any of these errors are
 # acceptable. The specific event is determined by race condition and platform OS.
@@ -205,11 +204,6 @@ class HTTPBasicsTest (BitcoinTestFramework):
         headers_below_limit = (MAX_HEADERS_SIZE - 1000) // header_line_length
         headers_above_limit = MAX_HEADERS_SIZE // header_line_length
 
-        # This is a libevent mystery:
-        # libevent does not reject the request until it is more than
-        # 1,000 bytes above the configured limit.
-        headers_above_limit += 1000 // header_line_length
-
         # Many small header lines is ok
         conn = BitcoinHTTPConnection(self.node)
         for i in range(headers_below_limit):
@@ -227,8 +221,8 @@ class HTTPBasicsTest (BitcoinTestFramework):
         # Compute how much data we can add to a request message body
         # to make / break the limit.
         base_request_body_size = len('{"jsonrpc": "2.0", "id": "0", "method": "submitblock", "params": [""]}}')
-        bytes_below_limit = MAX_SIZE - base_request_body_size
-        bytes_above_limit = MAX_SIZE - base_request_body_size + 2
+        bytes_below_limit = MAX_BODY_SIZE - base_request_body_size
+        bytes_above_limit = MAX_BODY_SIZE - base_request_body_size + 2
 
         # Large request body size is ok
         conn = BitcoinHTTPConnection(self.node)
