@@ -13,10 +13,9 @@ import urllib.parse
 
 # Configuration option for some tests
 RPCSERVERTIMEOUT = 2
-# Set in httpserver.cpp and passed to libevent evhttp_set_max_headers_size()
+# Set in httpserver.h
 MAX_HEADERS_SIZE = 8192
-# Set in serialize.h and passed to libevent evhttp_set_max_body_size()
-MAX_SIZE = 0x02000000
+MAX_BODY_SIZE = 32 * 1024 * 1024
 
 # When a test expects a server disconnection, any of these errors are
 # acceptable. The specific event is determined by race condition and platform OS.
@@ -205,11 +204,6 @@ class HTTPBasicsTest (BitcoinTestFramework):
         headers_below_limit = (MAX_HEADERS_SIZE - 1000) // header_line_length
         headers_above_limit = MAX_HEADERS_SIZE // header_line_length
 
-        # This is a libevent mystery:
-        # libevent does not reject the request until it is more than
-        # 1,000 bytes above the configured limit.
-        headers_above_limit += 1000 // header_line_length
-
         # Many small header lines is ok
         conn = BitcoinHTTPConnection(self.node)
         for i in range(headers_below_limit):
@@ -227,8 +221,8 @@ class HTTPBasicsTest (BitcoinTestFramework):
         # Compute how much data we can add to a request message body
         # to make / break the limit.
         base_request_body_size = len('{"jsonrpc": "2.0", "id": "0", "method": "submitblock", "params": [""]}}')
-        bytes_below_limit = MAX_SIZE - base_request_body_size
-        bytes_above_limit = MAX_SIZE - base_request_body_size + 2
+        bytes_below_limit = MAX_BODY_SIZE - base_request_body_size
+        bytes_above_limit = MAX_BODY_SIZE - base_request_body_size + 2
 
         # Large request body size is ok
         conn = BitcoinHTTPConnection(self.node)
@@ -440,11 +434,11 @@ class HTTPBasicsTest (BitcoinTestFramework):
     def check_disallowed_http_methods(self):
         self.log.info("Check that unsafe or unsupported HTTP methods are rejected")
         for method, err in [
-            ['TRACE',   http.client.NOT_IMPLEMENTED],
-            ['CONNECT', http.client.NOT_IMPLEMENTED],
+            ['TRACE',   http.client.METHOD_NOT_ALLOWED],
+            ['CONNECT', http.client.METHOD_NOT_ALLOWED],
             ['DELETE',  http.client.METHOD_NOT_ALLOWED],
-            ['PATCH',   http.client.NOT_IMPLEMENTED],
-            ['OPTIONS', http.client.NOT_IMPLEMENTED],
+            ['PATCH',   http.client.METHOD_NOT_ALLOWED],
+            ['OPTIONS', http.client.METHOD_NOT_ALLOWED],
             ['GET',     http.client.METHOD_NOT_ALLOWED] # RPC endpoint '/' only handles POST
         ]:
             conn = BitcoinHTTPConnection(self.node)
@@ -508,8 +502,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         self.log.info("Check that duplicate Content-Length headers are handled")
         # https://www.rfc-editor.org/rfc/rfc7230#section-3.3.3
         # Multiple Content-Length headers with differing values "MUST"
-        # result in an error, but libevent is lenient about this and
-        # only reads the first.
+        # result in an error.
         conn = BitcoinHTTPConnection(self.node)
         body = '{"method":"getblockcount"}'
         raw = (
@@ -523,9 +516,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         ).encode("ascii")
         conn.send_raw(raw)
         response = conn.recv_raw().decode()
-        assert "HTTP/1.1 200 OK" in response
-        count = self.node.getblockcount()
-        assert f'"result":{count}' in response
+        assert response.startswith("HTTP/1.1 400")
 
 
     def check_null_byte_in_uri(self):
@@ -562,23 +553,20 @@ class HTTPBasicsTest (BitcoinTestFramework):
     def check_whitespace_in_headers(self):
         self.log.info("Check that requests with whitespace in headers are rejected")
         # Extra whitespace before colon in header.
-        # This request should be rejected entirely but libevent handles it oddly:
-        # It allows the header and includes the trailing space in the header field-name.
-        # Authorization fails because "Authorization " != "Authorization"
         conn = BitcoinHTTPConnection(self.node)
         conn.headers = {"Authorization ": f"Basic {str_to_b64str(conn.authpair)}"}
         response = conn.post('/', '{"method": "getbestblockhash"}')
-        assert_equal(response.status, http.client.UNAUTHORIZED)
+        assert_equal(response.status, http.client.BAD_REQUEST)
 
         # Extra whitespace at start of new line.
-        # Libevent implements "line folding" as defined in
+        # "line folding" as defined in
         # https://www.rfc-editor.org/rfc/rfc2616#section-2.2
-        # despite the practice being considered unsafe and explicitly deprecated in
+        # is considered unsafe and is explicitly deprecated in
         # https://www.rfc-editor.org/rfc/rfc7230#section-3.2.4
         conn = BitcoinHTTPConnection(self.node)
         conn.headers = {"Authorization": f"Basic \n {str_to_b64str(conn.authpair)}"}
         response = conn.post('/', '{"method": "getbestblockhash"}')
-        assert_equal(response.status, http.client.OK)
+        assert_equal(response.status, http.client.BAD_REQUEST)
 
 
 if __name__ == '__main__':

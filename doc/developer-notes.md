@@ -703,7 +703,7 @@ and its `cs_KeyStore` lock for example).
   : Parallel script validation threads for transactions in blocks.
 
 - [ThreadHTTP (`b-http`)](https://doxygen.bitcoincore.org/httpserver_8cpp.html#http)
-  : Libevent thread to listen for RPC and REST connections.
+  : Thread to listen for RPC and REST connections.
 
 - [HTTP worker threads (`b-http.xx`)](https://doxygen.bitcoincore.org/httpserver_8cpp.html#http_pool)
   : Threads to service RPC and REST requests.
@@ -716,7 +716,7 @@ and its `cs_KeyStore` lock for example).
   addrman and running asynchronous validationinterface callbacks.
 
 - [TorControlThread (`b-torcontrol`)](https://doxygen.bitcoincore.org/class_tor_controller.html#torcontrol)
-  : Libevent thread for tor connections.
+  : Thread for tor connections.
 
 - Net threads:
 
