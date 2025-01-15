@@ -6,7 +6,10 @@
 #define BITCOIN_POLICY_FEES_FORECASTER_MAN_H
 
 #include <memory>
+#include <optional>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 class CBlockPolicyEstimator;
 class Forecaster;
@@ -34,6 +37,22 @@ public:
      * Return the pointer to block policy estimator.
      */
     CBlockPolicyEstimator* GetBlockPolicyEstimator();
+
+    /**
+     * Get a fee rate forecast from all registered forecasters for a given confirmation target.
+     *
+     * Polls all registered forecasters and selects the lowest fee rate.
+     *
+     * @param[in] target The target within which the transaction should be confirmed.
+     * @param[in] conservative True if the package cannot be fee bumped later.
+     * @return A pair consisting of the forecast result and a vector of error messages.
+     */
+    std::pair<ForecastResult, std::vector<std::string>> ForecastFeeRateFromForecasters(int target, bool conservative) const;
+
+    /**
+     * @brief Returns the maximum supported confirmation target from all forecasters.
+     */
+    unsigned int MaximumTarget() const;
 };
 
 #endif // BITCOIN_POLICY_FEES_FORECASTER_MAN_H
