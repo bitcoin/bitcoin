@@ -157,6 +157,10 @@ static RPCMethod getpeerinfo()
                     {RPCResult::Type::NUM_TIME, "last_block", "The " + UNIX_EPOCH_TIME + " of the last block received from this peer"},
                     {RPCResult::Type::NUM, "bytessent", "The total bytes sent"},
                     {RPCResult::Type::NUM, "bytesrecv", "The total bytes received"},
+                    {RPCResult::Type::NUM, "cpu_load", /*optional=*/true, "Total CPU time spent processing "
+                        "messages to/from the peer, in per milles (‰) of the connection duration, if "
+                        "supported by the platform and measured. High CPU time is not necessarily a bad "
+                        "thing - new valid transactions and blocks require it be validated."},
                     {RPCResult::Type::NUM_TIME, "conntime", "The " + UNIX_EPOCH_TIME + " of the connection"},
                     {RPCResult::Type::NUM, "timeoffset", "The time offset in seconds"},
                     {RPCResult::Type::NUM, "pingtime", /*optional=*/true, "The last ping time in seconds, if any"},
@@ -218,6 +222,8 @@ static RPCMethod getpeerinfo()
 
     UniValue ret(UniValue::VARR);
 
+    const auto now{NodeClock::now()};
+
     for (const CNodeStats& stats : vstats) {
         UniValue obj(UniValue::VOBJ);
         CNodeStateStats statestats;
@@ -255,6 +261,9 @@ static RPCMethod getpeerinfo()
         obj.pushKV("bytessent", stats.nSendBytes);
         obj.pushKV("bytesrecv", stats.nRecvBytes);
         obj.pushKV("conntime", TicksSinceEpoch<std::chrono::seconds>(stats.m_connected));
+        if (stats.m_cpu_time > 0s && now > stats.m_connected) {
+            obj.pushKV("cpu_load", /* ‰ */1000.0 * stats.m_cpu_time / (now - stats.m_connected));
+        }
         obj.pushKV("timeoffset", Ticks<std::chrono::seconds>(statestats.time_offset));
         if (stats.m_last_ping_time > 0us) {
             obj.pushKV("pingtime", Ticks<SecondsDouble>(stats.m_last_ping_time));
