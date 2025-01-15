@@ -93,11 +93,11 @@ class TxDownloadTest(BitcoinTestFramework):
     def test_inv_block(self):
         self.log.info("Generate a transaction on node 0")
         tx = self.wallet.create_self_transfer()
-        txid = int(tx['txid'], 16)
+        wtxid = int(tx['wtxid'], 16)
 
         self.log.info(
             "Announce the transaction to all nodes from all {} incoming peers, but never send it".format(NUM_INBOUND))
-        msg = msg_inv([CInv(t=MSG_TX, h=txid)])
+        msg = msg_inv([CInv(t=MSG_WTX, h=wtxid)])
         for p in self.peers:
             p.send_and_ping(msg)
 
