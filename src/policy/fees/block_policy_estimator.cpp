@@ -729,9 +729,9 @@ ForecastResult CBlockPolicyEstimator::ForecastFeeRate(int target, bool conservat
 {
     ForecastResult result;
     result.forecaster = ForecastType::BLOCK_POLICY;
-    FeeCalculation feeCalcConservative;
-    CFeeRate feerate{estimateSmartFee(target, &feeCalcConservative, conservative)};
-    result.current_block_height = feeCalcConservative.bestheight;
+    FeeCalculation fee_calculation_result;
+    CFeeRate feerate{estimateSmartFee(target, &fee_calculation_result, conservative)};
+    result.current_block_height = fee_calculation_result.best_height;
     if (feerate == CFeeRate(0)) {
         result.error = "Insufficient data or no feerate found";
         return result;
