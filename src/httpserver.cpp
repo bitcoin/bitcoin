@@ -144,6 +144,7 @@ struct HTTPPathHandler
 static struct event_base* eventBase = nullptr;
 //! HTTP server
 static struct evhttp* eventHTTP = nullptr;
+static std::unique_ptr<http_bitcoin::HTTPServer> g_http_server{nullptr};
 //! List of subnets to allow RPC connections from
 static std::vector<CSubNet> rpc_allow_subnets;
 //! Work queue for handling longer requests off the event loop thread
@@ -313,6 +314,12 @@ static void MaybeDispatchRequestToWorker(std::unique_ptr<HTTPRequest> hreq)
     } else {
         hreq->WriteReply(HTTP_NOT_FOUND);
     }
+}
+
+static void RejectAllRequests(std::unique_ptr<http_bitcoin::HTTPRequest> hreq)
+{
+    LogDebug(BCLog::HTTP, "Rejecting request while shutting down\n");
+    hreq->WriteReply(HTTP_SERVICE_UNAVAILABLE);
 }
 
 /** HTTP request callback */
@@ -1345,5 +1352,101 @@ std::shared_ptr<HTTPClient> HTTPServer::GetClientById(NodeId node_id) const
         return it->second;
     }
     return nullptr;
+}
+
+bool InitHTTPServer(const util::SignalInterrupt& interrupt)
+{
+    if (!InitHTTPAllowList())
+        return false;
+
+    // Create HTTPServer, using a dummy request handler just for this commit
+    g_http_server = std::make_unique<HTTPServer>([&](std::unique_ptr<HTTPRequest> req){});
+
+    // Bind HTTP server to specified addresses
+    std::vector<std::pair<std::string, uint16_t>> endpoints{GetBindAddresses()};
+    bool bind_success{false};
+    for (std::vector<std::pair<std::string, uint16_t> >::iterator i = endpoints.begin(); i != endpoints.end(); ++i) {
+        LogPrintf("Binding RPC on address %s port %i\n", i->first, i->second);
+        const std::optional<CService> addr{Lookup(i->first, i->second, false)};
+        if (addr) {
+            if (addr->IsBindAny()) {
+                LogPrintf("WARNING: the RPC server is not safe to expose to untrusted networks such as the public internet\n");
+            }
+            bilingual_str strError;
+            if (!g_http_server->BindAndStartListening(addr.value(), strError)) {
+                LogPrintf("Binding RPC on address %s failed: %s\n", addr->ToStringAddrPort(), strError.original);
+            } else {
+                bind_success = true;
+            }
+        } else {
+            LogPrintf("Binding RPC on address %s port %i failed.\n", i->first, i->second);
+        }
+    }
+
+    if (!bind_success) {
+        LogPrintf("Unable to bind any endpoint for RPC server\n");
+        return false;
+    }
+
+    LogDebug(BCLog::HTTP, "Initialized HTTP server\n");
+    int workQueueDepth = std::max((long)gArgs.GetIntArg("-rpcworkqueue", DEFAULT_HTTP_WORKQUEUE), 1L);
+    LogDebug(BCLog::HTTP, "creating work queue of depth %d\n", workQueueDepth);
+
+    g_work_queue = std::make_unique<WorkQueue<HTTPClosure>>(workQueueDepth);
+
+    return true;
+}
+
+static std::vector<std::thread> g_thread_http_workers;
+
+void StartHTTPServer()
+{
+    int rpcThreads = std::max((long)gArgs.GetIntArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
+    LogInfo("Starting HTTP server with %d worker threads\n", rpcThreads);
+    SockMan::Options sockman_options;
+    sockman_options.socket_handler_thread_name = "http";
+    g_http_server->StartSocketsThreads(sockman_options);
+
+    for (int i = 0; i < rpcThreads; i++) {
+        g_thread_http_workers.emplace_back(HTTPWorkQueueRun, g_work_queue.get(), i);
+    }
+}
+
+void InterruptHTTPServer()
+{
+    LogDebug(BCLog::HTTP, "Interrupting HTTP server\n");
+    if (g_http_server) {
+        // Reject all new requests
+        g_http_server->m_request_dispatcher = RejectAllRequests;
+    }
+    if (g_work_queue) {
+        // Stop workers, killing requests we haven't processed or responded to yet
+        g_work_queue->Interrupt();
+    }
+}
+
+void StopHTTPServer()
+{
+    LogDebug(BCLog::HTTP, "Stopping HTTP server\n");
+    if (g_work_queue) {
+        LogDebug(BCLog::HTTP, "Waiting for HTTP worker threads to exit\n");
+        for (auto& thread : g_thread_http_workers) {
+            thread.join();
+        }
+        g_thread_http_workers.clear();
+    }
+    if (g_http_server) {
+        // Disconnect clients as their remaining responses are flushed
+        g_http_server->m_disconnect_all_clients = true;
+        // Wait for all disconnections
+        while (!g_http_server->m_no_clients) {
+            std::this_thread::sleep_for(std::chrono::milliseconds{50});
+        }
+        // Break sockman I/O loop: stop accepting connections, sending and receiving data
+        g_http_server->interruptNet();
+        // Wait for sockman threads to exit
+        g_http_server->JoinSocketsThreads();
+    }
+    LogDebug(BCLog::HTTP, "Stopped HTTP server\n");
 }
 } // namespace http_bitcoin
