@@ -179,7 +179,8 @@ bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid,
     // - exists in orphanage
     // - peer can be an orphan resolution candidate
     if (gtxid.IsWtxid()) {
-        if (auto orphan_tx{m_orphanage.GetTx(Wtxid::FromUint256(gtxid.GetHash()))}) {
+        const auto wtxid{Wtxid::FromUint256(gtxid.GetHash())};
+        if (auto orphan_tx{m_orphanage.GetTx(wtxid)}) {
             auto unique_parents{GetUniqueParents(*orphan_tx)};
             std::erase_if(unique_parents, [&](const auto& txid){
                 return AlreadyHaveTx(GenTxid::Txid(txid), /*include_reconsiderable=*/false);
@@ -187,7 +188,7 @@ bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid,
 
             if (unique_parents.empty()) return true;
 
-            if (MaybeAddOrphanResolutionCandidate(unique_parents, orphan_tx->GetWitnessHash(), peer, now)) {
+            if (MaybeAddOrphanResolutionCandidate(unique_parents, wtxid, peer, now)) {
                 m_orphanage.AddAnnouncer(orphan_tx->GetWitnessHash(), peer);
             }
 
