@@ -6,11 +6,14 @@
 #define BITCOIN_POLICY_FEES_FORECASTER_MAN_H
 
 #include <memory>
+#include <optional>
 #include <unordered_map>
 
 class CBlockPolicyEstimator;
 class Forecaster;
 class ForecastResult;
+
+struct ConfirmationTarget;
 
 enum class ForecastType;
 
@@ -38,6 +41,17 @@ public:
      * Return the pointer to block policy estimator.
      */
     CBlockPolicyEstimator* GetBlockPolicyEstimator();
+
+    /**
+     * Get a fee rate estimate from all registered forecasters for a given confirmation target.
+     *
+     * Polls all registered forecasters and selects the lowest fee rate
+     * estimate with acceptable confidence.
+     *
+     * @param[in] target The target within which the transaction should be confirmed.
+     * @return A pair consisting of the forecast result and a vector of forecaster names.
+     */
+    std::pair<std::optional<ForecastResult>, std::vector<std::string>> GetFeeEstimateFromForecasters(ConfirmationTarget& target);
 };
 
 #endif // BITCOIN_POLICY_FEES_FORECASTER_MAN_H
