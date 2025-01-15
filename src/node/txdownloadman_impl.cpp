@@ -401,18 +401,19 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
                 // means it was already added to vExtraTxnForCompact.
                 add_extra_compact_tx &= !m_orphanage.HaveTx(wtxid);
 
-                auto add_orphan_reso_candidate = [&](const CTransactionRef& orphan_tx, const std::vector<Txid>& unique_parents, NodeId nodeid, std::chrono::microseconds now) {
-                    if (MaybeAddOrphanResolutionCandidate(unique_parents, orphan_tx->GetWitnessHash(), nodeid, now)) {
-                        m_orphanage.AddTx(orphan_tx, nodeid);
-                    }
-                };
-
                 // If there is no candidate for orphan resolution, AddTx will not be called. This means
                 // that if a peer is overloading us with invs and orphans, they will eventually not be
                 // able to add any more transactions to the orphanage.
-                add_orphan_reso_candidate(ptx, unique_parents, nodeid, now);
-                for (const auto& candidate : m_txrequest.GetCandidatePeers(ptx)) {
-                    add_orphan_reso_candidate(ptx, unique_parents, candidate, now);
+                //
+                // Search by txid and, if the tx has a witness, wtxid
+                std::vector<NodeId> orphan_resolution_candidates{nodeid};
+                m_txrequest.GetCandidatePeers(ptx->GetHash().ToUint256(), orphan_resolution_candidates);
+                if (ptx->HasWitness()) m_txrequest.GetCandidatePeers(ptx->GetWitnessHash().ToUint256(), orphan_resolution_candidates);
+
+                for (const auto& nodeid : orphan_resolution_candidates) {
+                    if (MaybeAddOrphanResolutionCandidate(unique_parents, ptx->GetWitnessHash(), nodeid, now)) {
+                        m_orphanage.AddTx(ptx, nodeid);
+                    }
                 }
 
                 // Once added to the orphan pool, a tx is considered AlreadyHave, and we shouldn't request it anymore.
