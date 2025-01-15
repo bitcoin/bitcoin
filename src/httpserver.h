@@ -367,6 +367,18 @@ public:
      */
     void InterruptNet() { m_interrupt_net(); }
 
+    /**
+     * Update the request handler method.
+     * Used for shutdown to reject new requests.
+     */
+    void SetRequestHandler(std::function<void(std::unique_ptr<HTTPRequest>&&)> func) { m_request_dispatcher = func; }
+
+    /**
+     * Start disconnecting clients when possible in the I/O loop
+     */
+    void DisconnectAllClients() { m_disconnect_all_clients = true; }
+
+
 private:
     /**
      * List of listening sockets.
@@ -600,6 +612,23 @@ public:
      */
     bool MaybeSendBytesFromBuffer() EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
 };
+
+/** Initialize HTTP server.
+ * Call this before RegisterHTTPHandler or EventBase().
+ */
+bool InitHTTPServer();
+
+/** Start HTTP server.
+ * This is separate from InitHTTPServer to give users race-condition-free time
+ * to register their handlers between InitHTTPServer and StartHTTPServer.
+ */
+void StartHTTPServer();
+
+/** Interrupt HTTP server threads */
+void InterruptHTTPServer();
+
+/** Stop HTTP server */
+void StopHTTPServer();
 } // namespace http_bitcoin
 
 #endif // BITCOIN_HTTPSERVER_H
