@@ -126,6 +126,35 @@ struct ConfirmationTarget {
     ConfirmationTargetType type;
 };
 
+// Block percentiles fee rate (in sat/kvB).
+struct Percentiles {
+    FeeFrac p25; // 25th percentile
+    FeeFrac p50; // 50th percentile
+    FeeFrac p75; // 75th percentile
+    FeeFrac p95; // 5th percentile
+
+    Percentiles() = default;
+
+    bool empty() const
+    {
+        return p25.IsEmpty() && p50.IsEmpty() && p75.IsEmpty() && p95.IsEmpty();
+    }
+};
+
+/**
+ * Calculates the percentile fee rates from a given vector of fee rates.
+ *
+ * This function assumes that the fee rates in the input vector are sorted in descending order
+ * based on mining score priority. It ensures that the calculated percentile fee rates
+ * are monotonically decreasing by filtering out outliers. Outliers can occur when
+ * the mining score of a transaction increases due to the inclusion of its ancestors
+ * in different transaction packages.
+ *
+ * @param[in] package_feerates A vector containing fee rates and their corresponding virtual sizes.
+ * @return Percentiles object containing the calculated percentile fee rates.
+ */
+Percentiles CalculatePercentiles(const std::vector<FeeFrac>& package_feerates, const int32_t total_weight);
+
 std::string forecastTypeToString(ForecastType forecastType);
 
 #endif // BITCOIN_POLICY_FEES_FORECASTER_UTIL_H
