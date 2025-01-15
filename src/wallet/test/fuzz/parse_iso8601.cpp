@@ -22,13 +22,8 @@ FUZZ_TARGET(parse_iso8601)
     const std::string iso8601_datetime = FormatISO8601DateTime(random_time);
     (void)FormatISO8601Date(random_time);
     const int64_t parsed_time_1 = wallet::ParseISO8601DateTime(iso8601_datetime);
-    if (random_time >= 0) {
-        assert(parsed_time_1 >= 0);
-        if (iso8601_datetime.length() == 20) {
             assert(parsed_time_1 == random_time);
-        }
-    }
 
+    [[maybe_unused]]
     const int64_t parsed_time_2 = wallet::ParseISO8601DateTime(random_string);
-    assert(parsed_time_2 >= 0);
 }
