@@ -2020,8 +2020,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
         return;
     }
 
-    if (!IsSelectableSocket(sock->Get()))
-    {
+    if (!sock->IsSelectable()) {
         LogPrintf("%s: non-selectable socket\n", strDropped);
         return;
     }
@@ -2306,10 +2305,11 @@ void CConnman::NotifyNumConnectionsChanged(CMasternodeSync& mn_sync)
         mn_sync.Reset();
     }
 
-    if(nodes_size != nPrevNodeCount) {
+    if (nodes_size != nPrevNodeCount) {
         nPrevNodeCount = nodes_size;
-        if(clientInterface)
-            clientInterface->NotifyNumConnectionsChanged(nodes_size);
+        if (m_client_interface) {
+            m_client_interface->NotifyNumConnectionsChanged(nodes_size);
+        }
 
         CalculateNumConnectionsChangedStats();
     }
@@ -3140,6 +3140,12 @@ void CConnman::SetTryNewOutboundPeer(bool flag)
     LogPrint(BCLog::NET, "net: setting try another outbound peer=%s\n", flag ? "true" : "false");
 }
 
+void CConnman::StartExtraBlockRelayPeers()
+{
+    LogPrint(BCLog::NET, "net: enabling extra block-relay-only peers\n");
+    m_start_extra_block_relay_peers = true;
+}
+
 // Return the number of peers we have over our outbound connection limit
 // Exclude peers that are marked for disconnect, or are going to be
 // disconnected soon (eg ADDR_FETCH and FEELER)
@@ -3299,7 +3305,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                 // Therefore, we do not add them to addrman in the first place.
                 // In case previously unreachable networks become reachable
                 // (e.g. in case of -onlynet changes by the user), fixed seeds will
-                // be loaded only for networks for which we have no addressses.
+                // be loaded only for networks for which we have no addresses.
                 seed_addrs.erase(std::remove_if(seed_addrs.begin(), seed_addrs.end(),
                                                 [&fixed_seed_networks](const CAddress& addr) { return fixed_seed_networks.count(addr.GetNetwork()) == 0; }),
                                  seed_addrs.end());
@@ -3542,12 +3548,26 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                 continue;
             }
 
-            // Do not allow non-default ports, unless after 50 invalid
-            // addresses selected already. This is to prevent malicious peers
-            // from advertising themselves as a service on another host and
-            // port, causing a DoS attack as nodes around the network attempt
-            // to connect to it fruitlessly.
-            if ((!isMasternode || !Params().AllowMultiplePorts()) && addr.GetPort() != Params().GetDefaultPort(addr.GetNetwork()) && addr.GetPort() != GetListenPort() && nTries < 50) {
+            // Port validation in Dash has additional rules. Some networks are prohibited
+            // from using a non-default port while others allow any arbitary port so long
+            // it isn't a bad port (and in the case of masternodes, it matches its listen
+            // port)
+            const bool is_prohibited_port = [this, &addr, &isMasternode](){
+                if (!Params().AllowMultiplePorts()) {
+                    const uint16_t default_port{Params().GetDefaultPort(addr.GetNetwork())};
+                    assert(!IsBadPort(default_port)); // Make sure we never set the default port to a bad port
+                    return addr.GetPort() != default_port;
+                }
+                const bool is_bad_port{IsBadPort(addr.GetPort())};
+                if (isMasternode) {
+                    return addr.GetPort() != GetListenPort() || is_bad_port;
+                } else {
+                    return is_bad_port;
+                }
+            }();
+
+            // Do not connect to prohibited ports, unless 50 invalid addresses have been selected already.
+            if (nTries < 50 && is_prohibited_port) {
                 continue;
             }
 
@@ -4196,7 +4216,9 @@ void CConnman::SetNetworkActive(bool active, CMasternodeSync* const mn_sync)
         mn_sync->Reset();
     }
 
-    uiInterface.NotifyNetworkActiveChanged(fNetworkActive);
+    if (m_client_interface) {
+        m_client_interface->NotifyNetworkActiveChanged(fNetworkActive);
+    }
 }
 
 CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, AddrMan& addrman_in,
@@ -4225,8 +4247,8 @@ bool CConnman::Bind(const CService& addr_, unsigned int flags, NetPermissionFlag
 
     bilingual_str strError;
     if (!BindListenPort(addr, strError, permissions)) {
-        if ((flags & BF_REPORT_ERROR) && clientInterface) {
-            clientInterface->ThreadSafeMessageBox(strError, "", CClientUIInterface::MSG_ERROR);
+        if ((flags & BF_REPORT_ERROR) && m_client_interface) {
+            m_client_interface->ThreadSafeMessageBox(strError, "", CClientUIInterface::MSG_ERROR);
         }
         return false;
     }
@@ -4276,8 +4298,8 @@ bool CConnman::Start(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_met
     }
 
     if (fListen && !InitBinds(connOptions)) {
-        if (clientInterface) {
-            clientInterface->ThreadSafeMessageBox(
+        if (m_client_interface) {
+            m_client_interface->ThreadSafeMessageBox(
                 _("Failed to listen on any port. Use -listen=0 if you want this."),
                 "", CClientUIInterface::MSG_ERROR);
         }
@@ -4303,7 +4325,9 @@ bool CConnman::Start(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_met
         LogPrintf("%i block-relay-only anchors will be tried for connections.\n", m_anchors.size());
     }
 
-    uiInterface.InitMessage(_("Starting network threads…").translated);
+    if (m_client_interface) {
+        m_client_interface->InitMessage(_("Starting network threads…").translated);
+    }
 
     fAddressesInitialized = true;
 
@@ -4350,8 +4374,8 @@ bool CConnman::Start(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_met
     threadOpenAddedConnections = std::thread(&util::TraceThread, "addcon", [this] { ThreadOpenAddedConnections(); });
 
     if (connOptions.m_use_addrman_outgoing && !connOptions.m_specified_outgoing.empty()) {
-        if (clientInterface) {
-            clientInterface->ThreadSafeMessageBox(
+        if (m_client_interface) {
+            m_client_interface->ThreadSafeMessageBox(
                 _("Cannot provide specific connections and have addrman find outgoing connections at the same time."),
                 "", CClientUIInterface::MSG_ERROR);
         }

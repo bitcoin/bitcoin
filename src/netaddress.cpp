@@ -732,14 +732,6 @@ std::vector<unsigned char> CNetAddr::GetAddrBytes() const
     return std::vector<unsigned char>(m_addr.begin(), m_addr.end());
 }
 
-uint64_t CNetAddr::GetHash() const
-{
-    uint256 hash = Hash(m_addr);
-    uint64_t nRet;
-    memcpy(&nRet, &hash, sizeof(nRet));
-    return nRet;
-}
-
 // private extensions to enum Network, only returned by GetExtNetwork,
 // and only used in GetReachabilityFrom
 static const int NET_TEREDO = NET_MAX;
@@ -1106,29 +1098,6 @@ std::string CSubNet::ToString() const
 bool CSubNet::IsValid() const
 {
     return valid;
-}
-
-bool CSubNet::SanityCheck() const
-{
-    switch (network.m_net) {
-    case NET_IPV4:
-    case NET_IPV6:
-        break;
-    case NET_ONION:
-    case NET_I2P:
-    case NET_CJDNS:
-        return true;
-    case NET_INTERNAL:
-    case NET_UNROUTABLE:
-    case NET_MAX:
-        return false;
-    }
-
-    for (size_t x = 0; x < network.m_addr.size(); ++x) {
-        if (network.m_addr[x] & ~netmask[x]) return false;
-    }
-
-    return true;
 }
 
 bool operator==(const CSubNet& a, const CSubNet& b)

@@ -203,7 +203,6 @@ public:
 
     enum Network GetNetwork() const;
     std::string ToStringAddr() const;
-    uint64_t GetHash() const;
     bool GetInAddr(struct in_addr* pipv4Addr) const;
     Network GetNetClass() const;
 
@@ -486,8 +485,6 @@ protected:
     /// Is this value valid? (only used to signal parse errors)
     bool valid;
 
-    bool SanityCheck() const;
-
 public:
     /**
      * Construct an invalid subnet (empty, `Match()` always returns false).
@@ -564,6 +561,14 @@ public:
 class CServiceHash
 {
 public:
+    CServiceHash()
+        : m_salt_k0{GetRand(std::numeric_limits<uint64_t>::max())},
+          m_salt_k1{GetRand(std::numeric_limits<uint64_t>::max())}
+    {
+    }
+
+    CServiceHash(uint64_t salt_k0, uint64_t salt_k1) : m_salt_k0{salt_k0}, m_salt_k1{salt_k1} {}
+
     size_t operator()(const CService& a) const noexcept
     {
         CSipHasher hasher(m_salt_k0, m_salt_k1);
@@ -574,8 +579,8 @@ public:
     }
 
 private:
-    const uint64_t m_salt_k0 = GetRand(std::numeric_limits<uint64_t>::max());
-    const uint64_t m_salt_k1 = GetRand(std::numeric_limits<uint64_t>::max());
+    const uint64_t m_salt_k0;
+    const uint64_t m_salt_k1;
 };
 
 #endif // BITCOIN_NETADDRESS_H

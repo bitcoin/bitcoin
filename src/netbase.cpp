@@ -288,8 +288,7 @@ enum class IntrRecvError {
  *          read.
  *
  * @see This function can be interrupted by calling InterruptSocks5(bool).
- *      Sockets can be made non-blocking with SetSocketNonBlocking(const
- *      SOCKET&).
+ *      Sockets can be made non-blocking with Sock::SetNonBlocking().
  */
 static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, const Sock& sock)
 {
@@ -487,7 +486,7 @@ std::unique_ptr<Sock> CreateSockTCP(const CService& address_family)
 
     // Ensure that waiting for I/O on this socket won't result in undefined
     // behavior.
-    if (!IsSelectableSocket(sock->Get())) {
+    if (!sock->IsSelectable()) {
         LogPrintf("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
         return nullptr;
     }
@@ -509,7 +508,7 @@ std::unique_ptr<Sock> CreateSockTCP(const CService& address_family)
     }
 
     // Set the non-blocking option on the socket.
-    if (!SetSocketNonBlocking(sock->Get())) {
+    if (!sock->SetNonBlocking()) {
         LogPrintf("Error setting socket to non-blocking: %s\n", NetworkErrorString(WSAGetLastError()));
         return nullptr;
     }
@@ -701,22 +700,97 @@ bool LookupSubNet(const std::string& subnet_str, CSubNet& subnet_out)
     return false;
 }
 
-bool SetSocketNonBlocking(const SOCKET& hSocket)
-{
-#ifdef WIN32
-    u_long nOne = 1;
-    if (ioctlsocket(hSocket, FIONBIO, &nOne) == SOCKET_ERROR) {
-#else
-    int fFlags = fcntl(hSocket, F_GETFL, 0);
-    if (fcntl(hSocket, F_SETFL, fFlags | O_NONBLOCK) == SOCKET_ERROR) {
-#endif
-        return false;
-    }
-
-    return true;
-}
-
 void InterruptSocks5(bool interrupt)
 {
     interruptSocks5Recv = interrupt;
+}
+
+bool IsBadPort(uint16_t port)
+{
+    /* Don't forget to update doc/p2p-bad-ports.md if you change this list. */
+
+    switch (port) {
+    case 1:     // tcpmux
+    case 7:     // echo
+    case 9:     // discard
+    case 11:    // systat
+    case 13:    // daytime
+    case 15:    // netstat
+    case 17:    // qotd
+    case 19:    // chargen
+    case 20:    // ftp data
+    case 21:    // ftp access
+    case 22:    // ssh
+    case 23:    // telnet
+    case 25:    // smtp
+    case 37:    // time
+    case 42:    // name
+    case 43:    // nicname
+    case 53:    // domain
+    case 69:    // tftp
+    case 77:    // priv-rjs
+    case 79:    // finger
+    case 87:    // ttylink
+    case 95:    // supdup
+    case 101:   // hostname
+    case 102:   // iso-tsap
+    case 103:   // gppitnp
+    case 104:   // acr-nema
+    case 109:   // pop2
+    case 110:   // pop3
+    case 111:   // sunrpc
+    case 113:   // auth
+    case 115:   // sftp
+    case 117:   // uucp-path
+    case 119:   // nntp
+    case 123:   // NTP
+    case 135:   // loc-srv /epmap
+    case 137:   // netbios
+    case 139:   // netbios
+    case 143:   // imap2
+    case 161:   // snmp
+    case 179:   // BGP
+    case 389:   // ldap
+    case 427:   // SLP (Also used by Apple Filing Protocol)
+    case 465:   // smtp+ssl
+    case 512:   // print / exec
+    case 513:   // login
+    case 514:   // shell
+    case 515:   // printer
+    case 526:   // tempo
+    case 530:   // courier
+    case 531:   // chat
+    case 532:   // netnews
+    case 540:   // uucp
+    case 548:   // AFP (Apple Filing Protocol)
+    case 554:   // rtsp
+    case 556:   // remotefs
+    case 563:   // nntp+ssl
+    case 587:   // smtp (rfc6409)
+    case 601:   // syslog-conn (rfc3195)
+    case 636:   // ldap+ssl
+    case 989:   // ftps-data
+    case 990:   // ftps
+    case 993:   // ldap+ssl
+    case 995:   // pop3+ssl
+    case 1719:  // h323gatestat
+    case 1720:  // h323hostcall
+    case 1723:  // pptp
+    case 2049:  // nfs
+    case 3659:  // apple-sasl / PasswordServer
+    case 4045:  // lockd
+    case 5060:  // sip
+    case 5061:  // sips
+    case 6000:  // X11
+    case 6566:  // sane-port
+    case 6665:  // Alternate IRC
+    case 6666:  // Alternate IRC
+    case 6667:  // Standard IRC
+    case 6668:  // Alternate IRC
+    case 6669:  // Alternate IRC
+    case 6697:  // IRC + TLS
+    case 10080: // Amanda
+        return true;
+    }
+    return false;
 }

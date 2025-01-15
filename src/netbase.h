@@ -224,8 +224,6 @@ bool ConnectSocketDirectly(const CService &addrConnect, const Sock& sock, int nT
  */
 bool ConnectThroughProxy(const Proxy& proxy, const std::string& strDest, uint16_t port, const Sock& sock, int nTimeout, bool& outProxyConnectionFailed);
 
-/** Enable non-blocking mode for a socket */
-bool SetSocketNonBlocking(const SOCKET& hSocket);
 void InterruptSocks5(bool interrupt);
 
 /**
@@ -247,5 +245,14 @@ void InterruptSocks5(bool interrupt);
  *      Version 5</a>
  */
 bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* auth, const Sock& socket);
+
+/**
+ * Determine if a port is "bad" from the perspective of attempting to connect
+ * to a node on that port.
+ * @see doc/p2p-bad-ports.md
+ * @param[in] port Port to check.
+ * @returns whether the port is bad
+ */
+bool IsBadPort(uint16_t port);
 
 #endif // BITCOIN_NETBASE_H
