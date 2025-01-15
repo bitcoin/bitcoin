@@ -84,18 +84,19 @@ ChainstateManager& EnsureAnyChainman(const std::any& context)
     return EnsureChainman(EnsureAnyNodeContext(context));
 }
 
-CBlockPolicyEstimator& EnsureFeeEstimator(const NodeContext& node)
+FeeRateForecasterManager& EnsureForecasterMan(const NodeContext& node)
 {
-    if (!node.fee_estimator) {
+    if (!node.forecasterman) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Fee estimation disabled");
     }
-    return *node.fee_estimator;
+    return *node.forecasterman.get();
 }
 
-CBlockPolicyEstimator& EnsureAnyFeeEstimator(const std::any& context)
+FeeRateForecasterManager& EnsureAnyForecasterMan(const std::any& context)
 {
-    return EnsureFeeEstimator(EnsureAnyNodeContext(context));
+    return EnsureForecasterMan(EnsureAnyNodeContext(context));
 }
+
 
 CConnman& EnsureConnman(const NodeContext& node)
 {

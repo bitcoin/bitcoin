@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <policy/fees/forecaster_man.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -16,22 +17,22 @@
 namespace wallet {
 namespace {
 
-struct FeeEstimatorTestingSetup : public TestingSetup {
-    FeeEstimatorTestingSetup(const ChainType chain_type, TestOpts opts) : TestingSetup{chain_type, opts}
+struct FeeRateForecasterTestingSetup : public TestingSetup {
+    FeeRateForecasterTestingSetup(const ChainType chain_type, TestOpts opts) : TestingSetup{chain_type, opts}
     {
     }
 
-    ~FeeEstimatorTestingSetup() {
-        m_node.fee_estimator.reset();
+    ~FeeRateForecasterTestingSetup() {
+        m_node.forecasterman.reset();
     }
 
-    void SetFeeEstimator(std::unique_ptr<CBlockPolicyEstimator> fee_estimator)
+    void SetFeeRateForecasterMan(std::unique_ptr<FeeRateForecasterManager> feerate_forecasterman)
     {
-        m_node.fee_estimator = std::move(fee_estimator);
+        m_node.forecasterman = std::move(feerate_forecasterman);
     }
 };
 
-FeeEstimatorTestingSetup* g_setup;
+FeeRateForecasterTestingSetup* g_setup;
 
 class FuzzedBlockPolicyEstimator : public CBlockPolicyEstimator
 {
@@ -54,7 +55,7 @@ public:
 
 void initialize_setup()
 {
-    static const auto testing_setup = MakeNoLogFileContext<FeeEstimatorTestingSetup>();
+    static const auto testing_setup = MakeNoLogFileContext<FeeRateForecasterTestingSetup>();
     g_setup = testing_setup.get();
 }
 
@@ -73,8 +74,9 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
         .dust_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000)}
     };
     node.mempool = std::make_unique<CTxMemPool>(mempool_opts, error);
-    std::unique_ptr<CBlockPolicyEstimator> fee_estimator = std::make_unique<FuzzedBlockPolicyEstimator>(fuzzed_data_provider);
-    g_setup->SetFeeEstimator(std::move(fee_estimator));
+    std::unique_ptr<FeeRateForecasterManager> feerate_forecasterman = std::make_unique<FeeRateForecasterManager>();
+    feerate_forecasterman->RegisterForecaster(std::make_unique<FuzzedBlockPolicyEstimator>(fuzzed_data_provider));
+    g_setup->SetFeeRateForecasterMan(std::move(feerate_forecasterman));
     auto target_feerate{CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000)}};
     if (target_feerate > node.mempool->m_opts.incremental_relay_feerate &&
         target_feerate > node.mempool->m_opts.min_relay_feerate) {

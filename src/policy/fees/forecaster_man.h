@@ -8,6 +8,7 @@
 #include <memory>
 #include <unordered_map>
 
+class CBlockPolicyEstimator;
 class Forecaster;
 struct ForecastResult;
 
@@ -28,6 +29,11 @@ public:
      * @param[in] forecaster shared pointer to a Forecaster instance.
      */
     void RegisterForecaster(std::shared_ptr<Forecaster> forecaster);
+
+    /*
+     * Return the pointer to block policy estimator.
+     */
+    CBlockPolicyEstimator* GetBlockPolicyEstimator();
 };
 
 #endif // BITCOIN_POLICY_FEES_FORECASTER_MAN_H
