@@ -60,7 +60,7 @@ static constexpr auto SELECT_TIMEOUT{50ms};
 static constexpr int SOCKET_OPTION_TRUE{1};
 
 using common::InvalidPortErrMsg;
-using http_libevent::HTTPRequest;
+using http_bitcoin::HTTPRequest;
 
 /** Maximum size of http request (request line + headers) */
 static const size_t MAX_HEADERS_SIZE = 8192;
@@ -215,9 +215,6 @@ static void MaybeDispatchRequestToWorker(std::shared_ptr<HTTPRequest> hreq)
         return;
     }
 
-    LogDebug(BCLog::HTTP, "Received a %s request for %s from %s\n",
-             RequestMethodString(hreq->GetRequestMethod()), SanitizeString(hreq->GetURI(), SAFE_CHARS_URI).substr(0, 100), hreq->GetPeer().ToStringAddrPort());
-
     // Find registered handler for prefix
     std::string strURI = hreq->GetURI();
     std::string path;
@@ -306,8 +303,12 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
             }
         }
     }
-    auto hreq{std::make_shared<HTTPRequest>(req, *static_cast<const util::SignalInterrupt*>(arg))};
-    MaybeDispatchRequestToWorker(std::move(hreq));
+    auto hreq{std::make_shared<http_libevent::HTTPRequest>(req, *static_cast<const util::SignalInterrupt*>(arg))};
+
+    // Disabled now that http_libevent is deprecated, or code won't compile.
+    // This line is currently unreachable and will be cleaned up in a future commit.
+    // MaybeDispatchRequestToWorker(std::move(hreq));
+    Assume(false);
 }
 
 /** Callback to reject HTTP requests after shutdown. */
@@ -1603,8 +1604,8 @@ bool InitHTTPServer()
         return false;
     }
 
-    // Create HTTPServer, using a dummy request handler just for this commit
-    g_http_server = std::make_unique<HTTPServer>([&](std::unique_ptr<HTTPRequest> req){});
+    // Create HTTPServer
+    g_http_server = std::make_unique<HTTPServer>(MaybeDispatchRequestToWorker);
 
     g_http_server->SetServerTimeout(std::chrono::seconds(gArgs.GetIntArg("-rpcservertimeout", DEFAULT_HTTP_SERVER_TIMEOUT)));
 
