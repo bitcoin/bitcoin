@@ -3729,15 +3729,8 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
         m_blockman.m_dirty_blockindex.insert(invalid_walk_tip);
         setBlockIndexCandidates.erase(invalid_walk_tip);
         setBlockIndexCandidates.insert(invalid_walk_tip->pprev);
-        if (invalid_walk_tip == to_mark_failed->pprev && (to_mark_failed->nStatus & BLOCK_FAILED_VALID)) {
-            // We only want to mark the last disconnected block as BLOCK_FAILED_VALID; its children
-            // need to be BLOCK_FAILED_CHILD instead.
-            to_mark_failed->nStatus = (to_mark_failed->nStatus ^ BLOCK_FAILED_VALID) | BLOCK_FAILED_CHILD;
-            m_blockman.m_dirty_blockindex.insert(to_mark_failed);
-        }
 
         // Mark out-of-chain descendants of the invalidated block as invalid
-        // (possibly replacing a pre-existing BLOCK_FAILED_VALID with BLOCK_FAILED_CHILD)
         // Add any equal or more work headers that are not invalidated to setBlockIndexCandidates
         // Recalculate m_best_header if it became invalid.
         auto candidate_it = highpow_outofchain_headers.lower_bound(invalid_walk_tip->pprev->nChainWork);
@@ -3751,9 +3744,8 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
         while (candidate_it != highpow_outofchain_headers.end()) {
             CBlockIndex* candidate{candidate_it->second};
             if (candidate->GetAncestor(invalid_walk_tip->nHeight) == invalid_walk_tip) {
-                // Children of failed blocks should be marked as BLOCK_FAILED_CHILD instead.
-                candidate->nStatus &= ~BLOCK_FAILED_VALID;
-                candidate->nStatus |= BLOCK_FAILED_CHILD;
+                // Children of failed blocks are marked as BLOCK_FAILED_VALID.
+                candidate->nStatus |= BLOCK_FAILED_VALID;
                 m_blockman.m_dirty_blockindex.insert(candidate);
                 // If invalidated, the block is irrelevant for setBlockIndexCandidates
                 // and for m_best_header and can be removed from the cache.
@@ -3774,8 +3766,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
             ++candidate_it;
         }
 
-        // Track the last disconnected block, so we can correct its BLOCK_FAILED_CHILD status in future
-        // iterations, or, if it's the last one, call InvalidChainFound on it.
+        // Track the last disconnected block to call InvalidChainFound on it.
         to_mark_failed = invalid_walk_tip;
     }
 
