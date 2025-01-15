@@ -186,7 +186,11 @@ bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid,
                 return AlreadyHaveTx(GenTxid::Txid(txid), /*include_reconsiderable=*/false);
             });
 
-            if (unique_parents.empty()) return true;
+            // The missing parents may have all been rejected or accepted since the orphan was added to the orphanage.
+            // Do not delete from the orphanage, as it may be queued for processing.
+            if (unique_parents.empty()) {
+                return true;
+            }
 
             if (MaybeAddOrphanResolutionCandidate(unique_parents, wtxid, peer, now)) {
                 m_orphanage.AddAnnouncer(orphan_tx->GetWitnessHash(), peer);
