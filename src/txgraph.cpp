@@ -454,6 +454,7 @@ public:
     GraphIndex GetTransactionCount(bool main_only = false) noexcept final;
     bool IsOversized(bool main_only = false) noexcept final;
     std::strong_ordering CompareMainOrder(const Ref& a, const Ref& b) noexcept final;
+    GraphIndex CountDistinctClusters(std::span<const Ref* const> refs, bool main_only = false) noexcept final;
 
     void SanityCheck() const final;
 };
@@ -1779,6 +1780,33 @@ std::strong_ordering TxGraphImpl::CompareMainOrder(const Ref& a, const Ref& b) n
     if (locator_a.cluster != locator_b.cluster) return locator_a.cluster <=> locator_b.cluster;
     // As final tie-break, compare position within cluster linearization.
     return entry_a.m_main_lin_index <=> entry_b.m_main_lin_index;
+}
+
+TxGraph::GraphIndex TxGraphImpl::CountDistinctClusters(std::span<const Ref* const> refs, bool main_only) noexcept
+{
+    size_t level = GetSpecifiedLevel(main_only);
+    ApplyDependencies(level);
+    auto& clusterset = GetClusterSet(level);
+    Assume(clusterset.m_deps_to_add.empty());
+    // Build a vector of Clusters that the specified Refs occur in.
+    std::vector<Cluster*> clusters;
+    clusters.reserve(refs.size());
+    for (const Ref* ref : refs) {
+        if (ref == nullptr) continue;
+        if (GetRefGraph(*ref) == nullptr) continue;
+        Assume(GetRefGraph(*ref) == this);
+        auto cluster = FindCluster(GetRefIndex(*ref), level);
+        if (cluster != nullptr) clusters.push_back(cluster);
+    }
+    // Count the number of distinct elements in clusters.
+    std::sort(clusters.begin(), clusters.end());
+    Cluster* last{nullptr};
+    GraphIndex ret{0};
+    for (Cluster* cluster : clusters) {
+        ret += (cluster != last);
+        last = cluster;
+    }
+    return ret;
 }
 
 void Cluster::SanityCheck(const TxGraphImpl& graph, int level) const

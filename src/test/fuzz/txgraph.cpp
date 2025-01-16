@@ -526,6 +526,50 @@ FUZZ_TARGET(txgraph)
                 // these here without making more calls to real, which could affect its internal
                 // state. A full comparison is done at the end.
                 break;
+            } else if (!sel_sim.IsOversized() && command-- == 0) {
+                // CountDistinctClusters.
+                std::vector<TxGraph::Ref*> refs;
+                // Gather a list of up to 15 (or up to 255) Ref pointers.
+                auto count = provider.ConsumeIntegralInRange<size_t>(0, alt ? 255 : 15);
+                refs.resize(count);
+                for (size_t i = 0; i < count; ++i) {
+                    refs[i] = pick_fn();
+                }
+                // Their order should not matter, shuffle them.
+                std::shuffle(refs.begin(), refs.end(), rng);
+                // Invoke the real function.
+                auto result = real->CountDistinctClusters(refs, use_main);
+                // Build a vector with representatives of the clusters the Refs occur in in the
+                // simulated graph. For each, remember the lowest-index transaction SimPos in the
+                // cluster.
+                std::vector<DepGraphIndex> sim_reps;
+                for (auto ref : refs) {
+                    // Skip Refs that do not occur in the simulated graph.
+                    auto simpos = sel_sim.Find(ref);
+                    if (simpos == SimTxGraph::MISSING) continue;
+                    // Start with component equal to just the Ref's SimPos.
+                    auto component = SimTxGraph::SetType::Singleton(simpos);
+                    // Keep adding ancestors/descendants of all elements in component until it no
+                    // longer changes.
+                    while (true) {
+                        auto old_component = component;
+                        for (auto i : component) {
+                            component |= sel_sim.graph.Ancestors(i);
+                            component |= sel_sim.graph.Descendants(i);
+                        }
+                        if (component == old_component) break;
+                    }
+                    // Remember the lowest-index SimPos in component, as a representative for it.
+                    assert(component.Any());
+                    sim_reps.push_back(component.First());
+                }
+                // Remove duplicates from sim_reps.
+                std::sort(sim_reps.begin(), sim_reps.end());
+                sim_reps.erase(std::unique(sim_reps.begin(), sim_reps.end()), sim_reps.end());
+                // Compare the number of deduplicated representatives with the value returned by
+                // the real function.
+                assert(result == sim_reps.size());
+                break;
             } else if (command-- == 0) {
                 // DoWork.
                 real->DoWork();
