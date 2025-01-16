@@ -230,7 +230,7 @@ FUZZ_TARGET(txdownloadman, .init = initialize)
                 GenTxid gtxid = fuzzed_data_provider.ConsumeBool() ?
                                 GenTxid::Txid(rand_tx->GetHash()) :
                                 GenTxid::Wtxid(rand_tx->GetWitnessHash());
-                txdownloadman.AddTxAnnouncement(rand_peer, gtxid, time, /*p2p_inv=*/fuzzed_data_provider.ConsumeBool());
+                txdownloadman.AddTxAnnouncement(rand_peer, gtxid, time);
             },
             [&] {
                 txdownloadman.GetRequestsToSend(rand_peer, time);
@@ -375,7 +375,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                 GenTxid gtxid = fuzzed_data_provider.ConsumeBool() ?
                                 GenTxid::Txid(rand_tx->GetHash()) :
                                 GenTxid::Wtxid(rand_tx->GetWitnessHash());
-                txdownload_impl.AddTxAnnouncement(rand_peer, gtxid, time, /*p2p_inv=*/fuzzed_data_provider.ConsumeBool());
+                txdownload_impl.AddTxAnnouncement(rand_peer, gtxid, time);
             },
             [&] {
                 const auto getdata_requests = txdownload_impl.GetRequestsToSend(rand_peer, time);
