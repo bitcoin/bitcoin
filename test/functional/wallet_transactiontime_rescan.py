@@ -131,13 +131,32 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         set_node_times(self.nodes, cur_time + ten_days + ten_days + ten_days + ten_days)
         self.generatetoaddress(minernode, 10, m1)
 
-        restorewo_wallet.importaddress(wo1, rescan=False)
-        restorewo_wallet.importaddress(wo2, rescan=False)
-        restorewo_wallet.importaddress(wo3, rescan=False)
+        # skip rescan internally it set timestamp as never
+        restorewo_wallet.importaddress(wo1, rescan="never")
+        restorewo_wallet.importaddress(wo2, rescan="never")
+        restorewo_wallet.importaddress(wo3, rescan="never")
 
         # check user has 0 balance and no transactions
         assert_equal(restorewo_wallet.getbalance(), 0)
         assert_equal(len(restorewo_wallet.listtransactions()), 0)
+
+        # rescan with now internally it set timestamp as now
+        restorewo_wallet.importaddress(wo1, rescan="now")
+        restorewo_wallet.importaddress(wo2, rescan="now")
+        restorewo_wallet.importaddress(wo3, rescan="now")
+
+        # check user has 0 balance and no transactions
+        assert_equal(restorewo_wallet.getbalance(), 0)
+        assert_equal(len(restorewo_wallet.listtransactions()), 0)
+
+        # rescan with timestamp as 1 internally it set timestamp as provided value
+        restorewo_wallet.importaddress(wo1, rescan=1)
+        restorewo_wallet.importaddress(wo2, rescan=1)
+        restorewo_wallet.importaddress(wo3, rescan=1)
+
+        # check user has 0 balance and no transactions
+        assert_equal(restorewo_wallet.getbalance(), 16)
+        assert_equal(len(restorewo_wallet.listtransactions()), 3)
 
         # proceed to rescan, first with an incomplete one, then with a full rescan
         self.log.info('Rescan last history part')
