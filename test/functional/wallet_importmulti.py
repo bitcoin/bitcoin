@@ -434,7 +434,7 @@ class ImportMultiTest(BitcoinTestFramework):
         self.log.info("Should throw on invalid or missing timestamp values")
         assert_raises_rpc_error(-3, 'Missing required timestamp field for key',
                                 self.nodes[1].importmulti, [{"scriptPubKey": key.p2pkh_script}])
-        assert_raises_rpc_error(-3, 'Expected number or "now" timestamp value for key. got type string',
+        assert_raises_rpc_error(-3, 'Expected number or "now" or "never" timestamp value for key. got type string',
                                 self.nodes[1].importmulti, [{
                                     "scriptPubKey": key.p2pkh_script,
                                     "timestamp": ""
