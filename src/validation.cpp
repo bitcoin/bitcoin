@@ -3657,10 +3657,6 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
     assert(pindex);
     if (pindex->nHeight == 0) return false;
 
-    CBlockIndex* to_mark_failed = pindex;
-    bool pindex_was_in_chain = false;
-    int disconnected = 0;
-
     // We do not allow ActivateBestChain() to run while InvalidateBlock() is
     // running, as that could cause the tip to change while we disconnect
     // blocks.
@@ -3692,6 +3688,9 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
         }
     }
 
+    bool pindex_was_in_chain = false;
+    int disconnected = 0;
+
     // Disconnect (descendants of) pindex, and mark them invalid.
     while (true) {
         if (m_chainman.m_interrupt) break;
@@ -3705,8 +3704,8 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
         LOCK(MempoolMutex());
         if (!m_chain.Contains(pindex)) break;
         pindex_was_in_chain = true;
-        CBlockIndex *invalid_walk_tip = m_chain.Tip();
 
+        CBlockIndex* disconnected_tip{m_chain.Tip()};
         // ActivateBestChain considers blocks already in m_chain
         // unconditionally valid already, so force disconnect away from it.
         DisconnectedBlockTransactions disconnectpool{MAX_DISCONNECTED_TX_POOL_BYTES};
@@ -3718,32 +3717,33 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
         // keeping the mempool up to date is probably futile anyway).
         MaybeUpdateMempoolForReorg(disconnectpool, /* fAddToMempool = */ (++disconnected <= 10) && ret);
         if (!ret) return false;
-        assert(invalid_walk_tip->pprev == m_chain.Tip());
+        CBlockIndex* new_tip{m_chain.Tip()};
+        assert(disconnected_tip->pprev == new_tip);
 
         // We immediately mark the disconnected blocks as invalid.
         // This prevents a case where pruned nodes may fail to invalidateblock
         // and be left unable to start as they have no tip candidates (as there
         // are no blocks that meet the "have data and are not invalid per
         // nStatus" criteria for inclusion in setBlockIndexCandidates).
-        invalid_walk_tip->nStatus |= BLOCK_FAILED_VALID;
-        m_blockman.m_dirty_blockindex.insert(invalid_walk_tip);
-        setBlockIndexCandidates.erase(invalid_walk_tip);
-        setBlockIndexCandidates.insert(invalid_walk_tip->pprev);
+        disconnected_tip->nStatus |= BLOCK_FAILED_VALID;
+        m_blockman.m_dirty_blockindex.insert(disconnected_tip);
+        setBlockIndexCandidates.erase(disconnected_tip);
+        setBlockIndexCandidates.insert(new_tip);
 
         // Mark out-of-chain descendants of the invalidated block as invalid
         // Add any equal or more work headers that are not invalidated to setBlockIndexCandidates
         // Recalculate m_best_header if it became invalid.
-        auto candidate_it = highpow_outofchain_headers.lower_bound(invalid_walk_tip->pprev->nChainWork);
+        auto candidate_it = highpow_outofchain_headers.lower_bound(new_tip->nChainWork);
 
-        const bool best_header_needs_update{m_chainman.m_best_header->GetAncestor(invalid_walk_tip->nHeight) == invalid_walk_tip};
+        const bool best_header_needs_update{m_chainman.m_best_header->GetAncestor(disconnected_tip->nHeight) == disconnected_tip};
         if (best_header_needs_update) {
             // pprev is definitely still valid at this point, but there may be better ones
-            m_chainman.m_best_header = invalid_walk_tip->pprev;
+            m_chainman.m_best_header = new_tip;
         }
 
         while (candidate_it != highpow_outofchain_headers.end()) {
             CBlockIndex* candidate{candidate_it->second};
-            if (candidate->GetAncestor(invalid_walk_tip->nHeight) == invalid_walk_tip) {
+            if (candidate->GetAncestor(disconnected_tip->nHeight) == disconnected_tip) {
                 // Children of failed blocks are marked as BLOCK_FAILED_VALID.
                 candidate->nStatus |= BLOCK_FAILED_VALID;
                 m_blockman.m_dirty_blockindex.insert(candidate);
@@ -3752,7 +3752,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
                 candidate_it = highpow_outofchain_headers.erase(candidate_it);
                 continue;
             }
-            if (!CBlockIndexWorkComparator()(candidate, invalid_walk_tip->pprev) &&
+            if (!CBlockIndexWorkComparator()(candidate, new_tip) &&
                 candidate->IsValid(BLOCK_VALID_TRANSACTIONS) &&
                 candidate->HaveNumChainTxs()) {
                 setBlockIndexCandidates.insert(candidate);
@@ -3765,16 +3765,13 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
             }
             ++candidate_it;
         }
-
-        // Track the last disconnected block to call InvalidChainFound on it.
-        to_mark_failed = invalid_walk_tip;
     }
 
     m_chainman.CheckBlockIndex();
 
     {
         LOCK(cs_main);
-        if (m_chain.Contains(to_mark_failed)) {
+        if (m_chain.Contains(pindex)) {
             // If the to-be-marked invalid block is in the active chain, something is interfering and we can't proceed.
             return false;
         }
@@ -3799,7 +3796,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
             }
         }
 
-        InvalidChainFound(to_mark_failed);
+        InvalidChainFound(pindex);
     }
 
     // Only notify about a new block tip if the active chain was modified.
@@ -3813,8 +3810,8 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
         // changes.
         (void)m_chainman.GetNotifications().blockTip(
             /*state=*/GetSynchronizationState(m_chainman.IsInitialBlockDownload(), m_chainman.m_blockman.m_blockfiles_indexed),
-            /*index=*/*to_mark_failed->pprev,
-            /*verification_progress=*/WITH_LOCK(m_chainman.GetMutex(), return m_chainman.GuessVerificationProgress(to_mark_failed->pprev)));
+            /*index=*/*pindex->pprev,
+            /*verification_progress=*/WITH_LOCK(m_chainman.GetMutex(), return m_chainman.GuessVerificationProgress(pindex->pprev)));
 
         // Fire ActiveTipChange now for the current chain tip to make sure clients are notified.
         // ActivateBestChain may call this as well, but not necessarily.
