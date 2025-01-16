@@ -66,8 +66,8 @@ def cleanup(func):
 
 class PeerTxRelayer(P2PTxInvStore):
     """A P2PTxInvStore that also remembers all of the getdata and tx messages it receives."""
-    def __init__(self):
-        super().__init__()
+    def __init__(self, wtxidrelay=True):
+        super().__init__(wtxidrelay=wtxidrelay)
         self._tx_received = []
         self._getdata_received = []
 
@@ -402,7 +402,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
         node = self.nodes[0]
         peer1 = node.add_p2p_connection(PeerTxRelayer())
         peer2 = node.add_p2p_connection(PeerTxRelayer())
-        peer3 = node.add_p2p_connection(PeerTxRelayer())
+        peer3 = node.add_p2p_connection(PeerTxRelayer(wtxidrelay=False))
 
         self.log.info("Test that an orphan with rejected parents, along with any descendants, cannot be retried with an alternate witness")
         parent_low_fee_nonsegwit = self.wallet_nonsegwit.create_self_transfer(fee_rate=0)
