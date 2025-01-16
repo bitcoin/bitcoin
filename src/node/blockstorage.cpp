@@ -464,7 +464,7 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
             }
         }
         if (!(pindex->nStatus & BLOCK_FAILED_MASK) && pindex->pprev && (pindex->pprev->nStatus & BLOCK_FAILED_MASK)) {
-            pindex->nStatus |= BLOCK_FAILED_CHILD;
+            pindex->nStatus |= BLOCK_FAILED_VALID;
             m_dirty_blockindex.insert(pindex);
         }
         if (pindex->pprev) {
