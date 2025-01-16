@@ -50,7 +50,6 @@ FUZZ_TARGET(chain)
             BlockStatus::BLOCK_HAVE_UNDO,
             BlockStatus::BLOCK_HAVE_MASK,
             BlockStatus::BLOCK_FAILED_VALID,
-            BlockStatus::BLOCK_FAILED_CHILD,
             BlockStatus::BLOCK_FAILED_MASK,
             BlockStatus::BLOCK_OPT_WITNESS,
         });

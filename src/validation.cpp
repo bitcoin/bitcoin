@@ -3285,7 +3285,7 @@ CBlockIndex* Chainstate::FindMostWorkChain()
                 // Remove the entire chain from the set.
                 while (pindexTest != pindexFailed) {
                     if (fFailedChain) {
-                        pindexFailed->nStatus |= BLOCK_FAILED_CHILD;
+                        pindexFailed->nStatus |= BLOCK_FAILED_VALID;
                         m_blockman.m_dirty_blockindex.insert(pindexFailed);
                     } else if (fMissingData) {
                         // If we're missing data, then add back to m_blocks_unlinked,
@@ -3832,7 +3832,7 @@ void Chainstate::SetBlockFailureFlags(CBlockIndex* invalid_block)
 
     for (auto& [_, block_index] : m_blockman.m_block_index) {
         if (invalid_block != &block_index && block_index.GetAncestor(invalid_block->nHeight) == invalid_block) {
-            block_index.nStatus = (block_index.nStatus & ~BLOCK_FAILED_VALID) | BLOCK_FAILED_CHILD;
+            block_index.nStatus |= BLOCK_FAILED_VALID;
             m_blockman.m_dirty_blockindex.insert(&block_index);
         }
     }
