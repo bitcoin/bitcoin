@@ -1064,11 +1064,11 @@ public:
 
     //! The total number of bytes available for us to use across all in-memory
     //! coins caches. This will be split somehow across chainstates.
-    int64_t m_total_coinstip_cache{0};
+    size_t m_total_coinstip_cache{0};
     //
     //! The total number of bytes available for us to use across all leveldb
     //! coins databases. This will be split somehow across chainstates.
-    int64_t m_total_coinsdb_cache{0};
+    size_t m_total_coinsdb_cache{0};
 
     //! Instantiate a new chainstate.
     //!

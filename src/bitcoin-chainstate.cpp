@@ -19,9 +19,9 @@
 
 #include <consensus/validation.h>
 #include <core_io.h>
+#include <kernel/caches.h>
 #include <logging.h>
 #include <node/blockstorage.h>
-#include <node/caches.h>
 #include <node/chainstate.h>
 #include <random.h>
 #include <script/sigcache.h>
@@ -123,10 +123,7 @@ int main(int argc, char* argv[])
     util::SignalInterrupt interrupt;
     ChainstateManager chainman{interrupt, chainman_opts, blockman_opts};
 
-    node::CacheSizes cache_sizes;
-    cache_sizes.block_tree_db = 2 << 20;
-    cache_sizes.coins_db = 2 << 22;
-    cache_sizes.coins = (450 << 20) - (2 << 20) - (2 << 22);
+    kernel::CacheSizes cache_sizes{DEFAULT_KERNEL_CACHE};
     node::ChainstateLoadOptions options;
     auto [status, error] = node::LoadChainstate(chainman, cache_sizes, options);
     if (status != node::ChainstateLoadStatus::SUCCESS) {

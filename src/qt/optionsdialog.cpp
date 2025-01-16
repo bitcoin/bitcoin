@@ -15,9 +15,9 @@
 
 #include <common/system.h>
 #include <interfaces/node.h>
-#include <node/chainstatemanager_args.h>
 #include <netbase.h>
-#include <txdb.h>
+#include <node/caches.h>
+#include <node/chainstatemanager_args.h>
 #include <util/strencodings.h>
 
 #include <chrono>
@@ -95,7 +95,7 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     ui->verticalLayout->setStretchFactor(ui->tabWidget, 1);
 
     /* Main elements init */
-    ui->databaseCache->setRange(nMinDbCache, std::numeric_limits<int>::max());
+    ui->databaseCache->setRange(MIN_DB_CACHE >> 20, std::numeric_limits<int>::max());
     ui->threadsScriptVerif->setMinimum(-GetNumCores());
     ui->threadsScriptVerif->setMaximum(MAX_SCRIPTCHECK_THREADS);
     ui->pruneWarning->setVisible(false);

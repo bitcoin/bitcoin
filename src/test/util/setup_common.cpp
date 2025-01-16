@@ -66,7 +66,6 @@ using kernel::BlockTreeDB;
 using node::ApplyArgsManOptions;
 using node::BlockAssembler;
 using node::BlockManager;
-using node::CalculateCacheSizes;
 using node::KernelNotifications;
 using node::LoadChainstate;
 using node::RegenerateCommitments;
@@ -231,8 +230,6 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
     Assert(error.empty());
     m_node.warnings = std::make_unique<node::Warnings>();
 
-    m_cache_sizes = CalculateCacheSizes(m_args);
-
     m_node.notifications = std::make_unique<KernelNotifications>(Assert(m_node.shutdown_request), m_node.exit_status, *Assert(m_node.warnings));
 
     m_make_chainman = [this, &chainparams, opts] {
@@ -258,7 +255,7 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
         LOCK(m_node.chainman->GetMutex());
         m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<BlockTreeDB>(DBParams{
             .path = m_args.GetDataDirNet() / "blocks" / "index",
-            .cache_bytes = static_cast<size_t>(m_cache_sizes.block_tree_db),
+            .cache_bytes = m_kernel_cache_sizes.block_tree_db,
             .memory_only = true,
         });
     };
@@ -294,7 +291,7 @@ void ChainTestingSetup::LoadVerifyActivateChainstate()
     options.check_blocks = m_args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
     options.check_level = m_args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL);
     options.require_full_verification = m_args.IsArgSet("-checkblocks") || m_args.IsArgSet("-checklevel");
-    auto [status, error] = LoadChainstate(chainman, m_cache_sizes, options);
+    auto [status, error] = LoadChainstate(chainman, m_kernel_cache_sizes, options);
     assert(status == node::ChainstateLoadStatus::SUCCESS);
 
     std::tie(status, error) = VerifyLoadedChainstate(chainman, options);
