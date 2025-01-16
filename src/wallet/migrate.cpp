@@ -603,7 +603,7 @@ void BerkeleyRODatabase::Open()
 
     // Read subdatabase page number
     // It is written as a big endian 32 bit number
-    uint32_t main_db_page = ReadBE32(UCharCast(std::get<DataRecord>(page.records.at(1)).data.data()));
+    uint32_t main_db_page = ReadBE32(std::get<DataRecord>(page.records.at(1)).data.data());
 
     // The main database is in a page that doesn't exist
     if (main_db_page > outer_meta.last_page) {
