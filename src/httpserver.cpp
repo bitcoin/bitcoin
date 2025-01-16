@@ -272,12 +272,11 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
             return false;
 
         std::string strUserPass64 = TrimString(strAuth.substr(6));
-        bool invalid;
-        std::string strUserPass = DecodeBase64(strUserPass64, &invalid);
-        if (invalid) return false;
-
-        if (strUserPass.find(':') == std::string::npos) return false;
-        const std::string username{strUserPass.substr(0, strUserPass.find(':'))};
+        auto opt_strUserPass = DecodeBase64(strUserPass64);
+        if (!opt_strUserPass.has_value()) return false;
+        auto it = std::find(opt_strUserPass->begin(), opt_strUserPass->end(), ':');
+        if (it == opt_strUserPass->end()) return false;
+        const std::string username = std::string(opt_strUserPass->begin(), it);
         return find(g_external_usernames.begin(), g_external_usernames.end(), username) != g_external_usernames.end();
     }();
 

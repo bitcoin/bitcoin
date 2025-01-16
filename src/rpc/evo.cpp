@@ -815,9 +815,9 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
                     } else if (err != SigningResult::OK){
                         throw JSONRPCError(RPC_WALLET_ERROR, SigningResultString(err));
                     }
-                    bool invalid = false;
-                    ptx.vchSig = DecodeBase64(signed_payload.c_str(), &invalid);
-                    if (invalid) throw JSONRPCError(RPC_INTERNAL_ERROR, "failed to decode base64 ready signature for protx");
+                    auto opt_vchSig = DecodeBase64(signed_payload);
+                    if (!opt_vchSig.has_value()) throw JSONRPCError(RPC_INTERNAL_ERROR, "failed to decode base64 ready signature for protx");
+                    ptx.vchSig = opt_vchSig.value();
                 } // cs_wallet
                 SetTxPayload(tx, ptx);
                 return SignAndSendSpecialTx(request, chain_helper, chainman, tx, fSubmit);
@@ -877,11 +877,11 @@ static RPCHelpMan protx_register_submit()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "payload signature not empty");
     }
 
-    bool decode_fail{false};
-    ptx.vchSig = DecodeBase64(request.params[1].get_str().c_str(), &decode_fail);
-    if (decode_fail) {
+    auto opt_vchSig= DecodeBase64(request.params[1].get_str());
+    if (!opt_vchSig.has_value()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "malformed base64 encoding");
     }
+    ptx.vchSig = opt_vchSig.value();
 
     SetTxPayload(tx, ptx);
     return SignAndSendSpecialTx(request, chain_helper, chainman, tx);

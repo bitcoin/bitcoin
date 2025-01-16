@@ -421,11 +421,10 @@ static bool SignVote(const CWallet& wallet, const CKeyID& keyID, CGovernanceVote
         LogPrintf("SignVote failed due to: %s\n", SigningResultString(err));
         return false;
     }
-    bool failed = true;
-    const auto decoded = DecodeBase64(signature, &failed);
-    CHECK_NONFATAL(!failed); // DecodeBase64 should not fail
+    const auto opt_decoded = DecodeBase64(signature);
+    CHECK_NONFATAL(opt_decoded.has_value()); // DecodeBase64 should not fail
 
-    vote.SetSignature(std::vector<unsigned char>(decoded.data(), decoded.data() + decoded.size()));
+    vote.SetSignature(std::vector<unsigned char>(opt_decoded->data(), opt_decoded->data() + opt_decoded->size()));
     return true;
 }
 
@@ -959,10 +958,9 @@ static RPCHelpMan voteraw()
 
     int64_t nTime = request.params[5].get_int64();
     std::string strSig = request.params[6].get_str();
-    bool fInvalid = false;
-    std::vector<unsigned char> vchSig = DecodeBase64(strSig.c_str(), &fInvalid);
+    auto opt_vchSig = DecodeBase64(strSig);
 
-    if (fInvalid) {
+    if (!opt_vchSig.has_value()) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
     }
 
@@ -975,7 +973,7 @@ static RPCHelpMan voteraw()
 
     CGovernanceVote vote(outpoint, hashGovObj, eVoteSignal, eVoteOutcome);
     vote.SetTime(nTime);
-    vote.SetSignature(vchSig);
+    vote.SetSignature(opt_vchSig.value());
 
     bool onlyVotingKeyAllowed = govObjType == GovernanceObject::PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
 
