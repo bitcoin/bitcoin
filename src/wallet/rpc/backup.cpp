@@ -1234,6 +1234,17 @@ static int64_t GetImportTimestamp(const UniValue& data, int64_t now)
     throw JSONRPCError(RPC_TYPE_ERROR, "Missing required timestamp field for key");
 }
 
+static bool GetImportRescan(const UniValue& data)
+{  
+    if (data.exists("rescan")) {
+        const UniValue& rescan = data["rescan"];
+        if (rescan.isBool()) {
+            return rescan.get_bool();
+        } 
+    }
+    return false;
+}
+
 RPCHelpMan importmulti()
 {
     return RPCHelpMan{"importmulti",
@@ -1674,9 +1685,9 @@ RPCHelpMan importdescriptors()
                 lowest_timestamp = timestamp;
             }
 
-            // If we know the chain tip, and at least one request was successful then allow rescan
-            if (!rescan && result["success"].get_bool()) {
-                rescan = true;
+            if (!rescan)
+            {
+                rescan = GetImportRescan(request);
             }
         }
         pwallet->ConnectScriptPubKeyManNotifiers();
