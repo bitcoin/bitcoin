@@ -138,10 +138,24 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         set_node_times(self.nodes, cur_time + ten_days + ten_days + ten_days + ten_days)
         self.generatetoaddress(minernode, 10, m1)
 
+        # skip rescan internally it set timestamp as never
+        import_res = restorewo_wallet.importdescriptors(
+            [
+                {"desc": wo1_desc, "timestamp": "never"},
+                {"desc": wo2_desc, "timestamp": "never"},
+                {"desc": wo3_desc, "timestamp": "never"},
+            ]
+        )
+        assert_equal(all([r["success"] for r in import_res]), True)
+        # check user has 0 balance and no transactions
+        assert_equal(restorewo_wallet.getbalance(), 0)
+        assert_equal(len(restorewo_wallet.listtransactions()), 0)
+
+        # rescan will continue if anyone of the descriptor has now or valid timestamp
         import_res = restorewo_wallet.importdescriptors(
             [
                 {"desc": wo1_desc, "timestamp": "now"},
-                {"desc": wo2_desc, "timestamp": "now"},
+                {"desc": wo2_desc, "timestamp": "never"},
                 {"desc": wo3_desc, "timestamp": "now"},
             ]
         )
@@ -150,6 +164,20 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         # check user has 0 balance and no transactions
         assert_equal(restorewo_wallet.getbalance(), 0)
         assert_equal(len(restorewo_wallet.listtransactions()), 0)
+
+        # rescan with timestamp as 1 internally it set timestamp as provided value
+        import_res = restorewo_wallet.importdescriptors(
+            [
+                {"desc": wo1_desc, "timestamp": 1},
+                {"desc": wo2_desc, "timestamp": 1},
+                {"desc": wo3_desc, "timestamp": 1},
+            ]
+        )
+        assert_equal(all([r["success"] for r in import_res]), True)
+
+        # check user has 0 balance and no transactions
+        assert_equal(restorewo_wallet.getbalance(), 16)
+        assert_equal(len(restorewo_wallet.listtransactions()), 3)
 
         # proceed to rescan, first with an incomplete one, then with a full rescan
         self.log.info('Rescan last history part')
