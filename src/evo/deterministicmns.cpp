@@ -1018,8 +1018,14 @@ void CDeterministicMNManager::HandleQuorumCommitment(const llmq::CFinalCommitmen
 
 CDeterministicMNList CDeterministicMNManager::GetListForBlockInternal(gsl::not_null<const CBlockIndex*> pindex)
 {
-    AssertLockHeld(cs);
     CDeterministicMNList snapshot;
+
+    if (!DeploymentActiveAt(*pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003)) {
+        return snapshot;
+    }
+
+    AssertLockHeld(cs);
+
     std::list<const CBlockIndex*> listDiffIndexes;
 
     while (true) {
