@@ -120,7 +120,7 @@ Writing code
 
 ### Format C/C++ diffs with `clang-format-diff.py`
 
-See [contrib/devtools/README.md](/contrib/devtools/README.md#clang-format-diff.py).
+See [contrib/devtools/README.md](/contrib/devtools/README.md#clang-format-diffpy).
 
 ### Format Python diffs with `yapf-diff.py`
 

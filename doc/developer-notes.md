@@ -978,7 +978,7 @@ Lifetimebound
 --------------
 
 The [Clang `lifetimebound`
-attribute](https://clang.llvm.org/docs/AttributeReference.html#lifetimebound)
+attribute](https://clang.llvm.org/docs/AttributeReference.html#id11)
 can be used to tell the compiler that a lifetime is bound to an object and
 potentially see a compile-time warning if the object has a shorter lifetime from
 the invalid use of a temporary. You can use the attribute by adding a `LIFETIMEBOUND`
