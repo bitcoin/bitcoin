@@ -24,6 +24,7 @@ from test_framework.descriptors import descsum_create
 from test_framework.script import SEQUENCE_LOCKTIME_TYPE_FLAG
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_raises_rpc_error,
     JSONRPCException,
 )
@@ -54,7 +55,9 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         if wallet is not None:
             wrpc = wallet
 
-        result = wrpc.importdescriptors([req])
+        if not isinstance(req, list):
+            req = [req]
+        result = wrpc.importdescriptors(req)
         observed_warnings = []
         if 'warnings' in result[0]:
             observed_warnings = result[0]['warnings']
@@ -117,6 +120,132 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                              wallet=wallet)
         wallet.unloadwallet()
 
+    def test_importdescriptor_never_timestamp(self, *, node, funding_wallet):
+        self.log.info("Test importing descriptors with timestamp as never")
+        assert_greater_than(funding_wallet.getbalance(), 0)
+
+        funding_amount = 1  # BTC
+
+        # Use a separate key per wallet config to avoid cross-contamination.
+        # If the same key/descriptor is imported into multiple wallets on the same
+        # node, a wallet with timestamp="never" can still detect the tx because the
+        # address was already indexed by a sibling wallet's rescan. Using distinct
+        # keys ensures each wallet only tracks its own independently-funded tx.
+        key_never = get_generate_key()
+        key_now = get_generate_key()
+        key_never_now = get_generate_key()
+        key_funded_never = get_generate_key()
+
+        # Fund key_now, key_never_now, and key_funded_never on-chain.
+        # key_never stays unfunded so never_wallet truly sees no transactions.
+        funding_tx_id_now = funding_wallet.send(outputs=[{key_now.p2wpkh_addr: funding_amount}])["txid"]
+        funding_tx_id_never_now = funding_wallet.send(outputs=[{key_never_now.p2wpkh_addr: funding_amount}])["txid"]
+        funding_tx_id_funded_never = funding_wallet.send(outputs=[{key_funded_never.p2wpkh_addr: funding_amount}])["txid"]
+        self.generate(node, 1, sync_fun=self.no_op)
+
+        wpkh_desc_never = descsum_create("wpkh(" + key_never.pubkey + ")")
+        wpkh_desc_now = descsum_create("wpkh(" + key_now.pubkey + ")")
+        wpkh_desc_never_now = descsum_create("wpkh(" + key_never_now.pubkey + ")")
+        spare_pkh_desc_never_now = descsum_create("pkh(" + key_never_now.pubkey + ")")
+        wpkh_desc_funded_never = descsum_create("wpkh(" + key_funded_never.pubkey + ")")
+
+        wallet_configs = [
+            {
+                "name": "never_wallet",
+                "request": [{"desc": wpkh_desc_never, "timestamp": "never"}],
+                "expected_balance": 0,
+                "expected_msgs": [],
+                "unexpected_msgs": ["Rescanning last"],
+                "expected_txid": None,
+                # key_never is unfunded, so no history to recover even after rescan.
+                "post_rescan_balance": None,
+                "post_rescan_txid": None,
+            },
+            {
+                "name": "now_wallet",
+                "request": [{"desc": wpkh_desc_now, "timestamp": "now"}],
+                "expected_balance": funding_amount,
+                "expected_msgs": ["Rescanning last"],
+                "unexpected_msgs": [],
+                "expected_txid": funding_tx_id_now,
+                # Rescan already happened at import time; no extra step needed.
+                "post_rescan_balance": None,
+                "post_rescan_txid": None,
+            },
+            {
+                "name": "never_now_wallet",
+                "request": [
+                    {"desc": wpkh_desc_never_now, "timestamp": "never"},
+                    {"desc": spare_pkh_desc_never_now, "timestamp": "now"},
+                ],
+                "expected_balance": funding_amount,
+                "expected_msgs": ["Rescanning last"],
+                "unexpected_msgs": [],
+                "expected_txid": funding_tx_id_never_now,
+                # The "now" descriptor triggered a rescan that covered the funded
+                # address, so history was already picked up at import time.
+                "post_rescan_balance": None,
+                "post_rescan_txid": None,
+            },
+            # A funded address imported with timestamp="never" must not be detected
+            # immediately after import — "never" skips the rescan entirely so the
+            # wallet starts blind to pre-existing history even though funds exist
+            # on-chain.  After an explicit rescanblockchain the wallet must discover
+            # those funds, which proves that (a) the initial 0-balance is caused by
+            # the skipped rescan and not by an absence of coins, and (b) the descriptor
+            # was registered correctly so a future rescan can recover the history.
+            {
+                "name": "funded_never_wallet",
+                "request": [{"desc": wpkh_desc_funded_never, "timestamp": "never"}],
+                "expected_balance": 0,
+                "expected_msgs": [],
+                "unexpected_msgs": ["Rescanning last"],
+                "expected_txid": None,
+                # Funds exist on-chain; a manual rescan must reveal them.
+                "post_rescan_balance": funding_amount,
+                "post_rescan_txid": funding_tx_id_funded_never,
+            },
+        ]
+
+        for config in wallet_configs:
+            # Create and open wallet
+            node.createwallet(wallet_name=config["name"], disable_private_keys=True, blank=True)
+            wallet = node.get_wallet_rpc(config["name"])
+
+            # Initial balance check
+            assert_equal(wallet.getbalance(), 0)
+
+            # Debug log validation and descriptor import
+            with node.assert_debug_log(expected_msgs=config["expected_msgs"],
+                                       unexpected_msgs=config["unexpected_msgs"]):
+                self.test_importdesc(config["request"], success=True, wallet=wallet)
+
+            # Validate resulting balance
+            assert_equal(wallet.getbalance(), config["expected_balance"])
+
+            if config["expected_txid"]:
+                for tx in wallet.listtransactions():
+                    assert_equal(tx["txid"], config["expected_txid"])
+            else:
+                assert_equal(wallet.listtransactions(), [])
+
+            # For wallets imported with timestamp="never" whose address was funded
+            # before import, verify that a manual rescan recovers the pre-existing
+            # history.  This confirms the initial 0-balance was due to the skipped
+            # rescan, not a missing on-chain transaction.
+            post_rescan_balance = config.get("post_rescan_balance")
+            if post_rescan_balance is not None:
+                wallet.rescanblockchain()
+                assert_equal(wallet.getbalance(), post_rescan_balance)
+                post_rescan_txid = config.get("post_rescan_txid")
+                if post_rescan_txid is not None:
+                    txids = [tx["txid"] for tx in wallet.listtransactions()]
+                    assert post_rescan_txid in txids, (
+                        f"Expected funding txid {post_rescan_txid} in listtransactions after rescan"
+                    )
+
+            # Unload wallet after processing
+            node.unloadwallet(config["name"])
 
     def run_test(self):
         self.log.info('Setting up wallets')
@@ -745,6 +874,23 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               success=True,
                               warnings=["Unknown output type, cannot set descriptor to active."])
 
+        self.log.info("Test importing a descriptor with negative timestamp")
+        assert_raises_rpc_error(-3, "timestamp must be greater than or equal to zero", w1.importdescriptors, [{"desc": descsum_create("pk(tpubDCJtdt5dgJpdhW4MtaVYDhG4T4tF6jcLR1PxL43q9pq1mxvXgMS9Mzw1HnXG15vxUGQJMMSqCQHMTy3F1eW5VkgVroWzchsPD5BUojrcWs8/*)"),
+                                "active": True,
+                                "range": 1,
+                                "timestamp": -2}])
+
+        self.log.info("Test importing a descriptor with timestamp=0 (valid Unix epoch, triggers full rescan)")
+        key = get_generate_key()
+        self.test_importdesc({"desc": descsum_create("pkh(" + key.pubkey + ")"),
+                            "timestamp": 0},
+                            success=True)
+
+        self.log.info("Test importing a descriptor with invalid string timestamp")
+        assert_raises_rpc_error(-3, 'Invalid timestamp string "yesterday": expected "now" or "never"',
+            w1.importdescriptors, [{"desc": descsum_create("pkh(" + key.pubkey + ")"),
+                                    "timestamp": "yesterday"}])
+
         self.log.info("Test importing a descriptor to an encrypted wallet")
 
         descriptor = {"desc": descsum_create("pkh(" + xpriv + "/1h/*h)"),
@@ -839,6 +985,8 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             assert_equal(w_multipath.getnewaddress(address_type="bech32"), w_multisplit.getnewaddress(address_type="bech32"))
             assert_equal(w_multipath.getrawchangeaddress(address_type="bech32"), w_multisplit.getrawchangeaddress(address_type="bech32"))
         assert_equal(sorted(w_multipath.listdescriptors()["descriptors"], key=lambda x: x["desc"]), sorted(w_multisplit.listdescriptors()["descriptors"], key=lambda x: x["desc"]))
+
+        self.test_importdescriptor_never_timestamp(node=self.nodes[0], funding_wallet=w0)
 
         self.log.info("Test older() safety")
 
