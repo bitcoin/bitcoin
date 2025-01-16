@@ -3274,7 +3274,7 @@ CBlockIndex* Chainstate::FindMostWorkChain()
             // which block files have been deleted.  Remove those as candidates
             // for the most work chain if we come across them; we can't switch
             // to a chain unless we have all the non-active-chain parent blocks.
-            bool fFailedChain = pindexTest->nStatus & BLOCK_FAILED_MASK;
+            bool fFailedChain = pindexTest->nStatus & BLOCK_FAILED_VALID;
             bool fMissingData = !(pindexTest->nStatus & BLOCK_HAVE_DATA);
             if (fFailedChain || fMissingData) {
                 // Candidate chain is not usable (either invalid or missing data)
@@ -3682,7 +3682,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
             // at least as good with CBlockIndexWorkComparator as the new tip.
             if (!m_chain.Contains(candidate) &&
                 !CBlockIndexWorkComparator()(candidate, pindex->pprev) &&
-                !(candidate->nStatus & BLOCK_FAILED_MASK)) {
+                !(candidate->nStatus & BLOCK_FAILED_VALID)) {
                 highpow_outofchain_headers.insert({candidate->nChainWork, candidate});
             }
         }
@@ -3781,7 +3781,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
         }
 
         // Mark pindex as invalid if it never was in the main chain
-        if (!pindex_was_in_chain && !(pindex->nStatus & BLOCK_FAILED_MASK)) {
+        if (!pindex_was_in_chain && !(pindex->nStatus & BLOCK_FAILED_VALID)) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
             m_blockman.m_dirty_blockindex.insert(pindex);
             setBlockIndexCandidates.erase(pindex);
@@ -3845,8 +3845,8 @@ void Chainstate::ResetBlockFailureFlags(CBlockIndex *pindex) {
 
     // Remove the invalidity flag from this block and all its descendants and ancestors.
     for (auto& [_, block_index] : m_blockman.m_block_index) {
-        if ((block_index.nStatus & BLOCK_FAILED_MASK) && (block_index.GetAncestor(nHeight) == pindex || pindex->GetAncestor(block_index.nHeight) == &block_index)) {
-            block_index.nStatus &= ~BLOCK_FAILED_MASK;
+        if ((block_index.nStatus & BLOCK_FAILED_VALID) && (block_index.GetAncestor(nHeight) == pindex || pindex->GetAncestor(block_index.nHeight) == &block_index)) {
+            block_index.nStatus &= ~BLOCK_FAILED_VALID;
             m_blockman.m_dirty_blockindex.insert(&block_index);
             if (block_index.IsValid(BLOCK_VALID_TRANSACTIONS) && block_index.HaveNumChainTxs() && setBlockIndexCandidates.value_comp()(m_chain.Tip(), &block_index)) {
                 setBlockIndexCandidates.insert(&block_index);
@@ -4323,7 +4323,7 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
             CBlockIndex* pindex = &(miSelf->second);
             if (ppindex)
                 *ppindex = pindex;
-            if (pindex->nStatus & BLOCK_FAILED_MASK) {
+            if (pindex->nStatus & BLOCK_FAILED_VALID) {
                 LogDebug(BCLog::VALIDATION, "%s: block %s is marked invalid\n", __func__, hash.ToString());
                 return state.Invalid(BlockValidationResult::BLOCK_CACHED_INVALID, "duplicate-invalid");
             }
@@ -4343,7 +4343,7 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
             return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "prev-blk-not-found");
         }
         pindexPrev = &((*mi).second);
-        if (pindexPrev->nStatus & BLOCK_FAILED_MASK) {
+        if (pindexPrev->nStatus & BLOCK_FAILED_VALID) {
             LogDebug(BCLog::VALIDATION, "header %s has prev block invalid: %s\n", hash.ToString(), block.hashPrevBlock.ToString());
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
         }
@@ -5008,7 +5008,7 @@ bool ChainstateManager::LoadBlockIndex()
                     chainstate->TryAddBlockIndexCandidate(pindex);
                 }
             }
-            if (pindex->nStatus & BLOCK_FAILED_MASK && (!m_best_invalid || pindex->nChainWork > m_best_invalid->nChainWork)) {
+            if (pindex->nStatus & BLOCK_FAILED_VALID && (!m_best_invalid || pindex->nChainWork > m_best_invalid->nChainWork)) {
                 m_best_invalid = pindex;
             }
             if (pindex->IsValid(BLOCK_VALID_TREE) && (m_best_header == nullptr || CBlockIndexWorkComparator()(m_best_header, pindex)))
@@ -5256,7 +5256,7 @@ void ChainstateManager::CheckBlockIndex() const
     // are not yet validated.
     CChain best_hdr_chain;
     assert(m_best_header);
-    assert(!(m_best_header->nStatus & BLOCK_FAILED_MASK));
+    assert(!(m_best_header->nStatus & BLOCK_FAILED_VALID));
     best_hdr_chain.SetTip(*m_best_header);
 
     std::multimap<const CBlockIndex*, const CBlockIndex*> forward;
@@ -5369,9 +5369,9 @@ void ChainstateManager::CheckBlockIndex() const
         if ((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_SCRIPTS) assert(pindexFirstNotScriptsValid == nullptr); // SCRIPTS valid implies all parents are SCRIPTS valid
         if (pindexFirstInvalid == nullptr) {
             // Checks for not-invalid blocks.
-            assert((pindex->nStatus & BLOCK_FAILED_MASK) == 0); // The failed mask cannot be set for blocks without invalid parents.
+            assert((pindex->nStatus & BLOCK_FAILED_VALID) == 0); // The failed flag cannot be set for blocks without invalid parents.
         } else {
-            assert(pindex->nStatus & BLOCK_FAILED_MASK); // Invalid blocks and their descendants must be marked as invalid
+            assert(pindex->nStatus & BLOCK_FAILED_VALID); // Invalid blocks and their descendants must be marked as invalid
         }
         // Make sure m_chain_tx_count sum is correctly computed.
         if (!pindex->pprev) {
@@ -5386,7 +5386,7 @@ void ChainstateManager::CheckBlockIndex() const
             assert((pindex->m_chain_tx_count != 0) == (pindex == snap_base));
         }
         // There should be no block with more work than m_best_header, unless it's known to be invalid
-        assert((pindex->nStatus & BLOCK_FAILED_MASK) || pindex->nChainWork <= m_best_header->nChainWork);
+        assert((pindex->nStatus & BLOCK_FAILED_VALID) || pindex->nChainWork <= m_best_header->nChainWork);
 
         // Chainstate-specific checks on setBlockIndexCandidates
         for (const Chainstate* c : {m_ibd_chainstate.get(), m_snapshot_chainstate.get()}) {
@@ -5730,7 +5730,7 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
                           base_blockhash.ToString()))};
         }
 
-        bool start_block_invalid = snapshot_start_block->nStatus & BLOCK_FAILED_MASK;
+        bool start_block_invalid = snapshot_start_block->nStatus & BLOCK_FAILED_VALID;
         if (start_block_invalid) {
             return util::Error{Untranslated(strprintf("The base block header (%s) is part of an invalid chain", base_blockhash.ToString()))};
         }
@@ -6443,7 +6443,7 @@ void ChainstateManager::RecalculateBestHeader()
     AssertLockHeld(cs_main);
     m_best_header = ActiveChain().Tip();
     for (auto& entry : m_blockman.m_block_index) {
-        if (!(entry.second.nStatus & BLOCK_FAILED_MASK) && m_best_header->nChainWork < entry.second.nChainWork) {
+        if (!(entry.second.nStatus & BLOCK_FAILED_VALID) && m_best_header->nChainWork < entry.second.nChainWork) {
             m_best_header = &entry.second;
         }
     }

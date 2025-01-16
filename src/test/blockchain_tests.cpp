@@ -135,7 +135,7 @@ BOOST_FIXTURE_TEST_CASE(invalidate_block, TestChain100Setup)
     auto pindex = tip_to_invalidate->pprev;
     while (pindex) {
         WITH_LOCK(::cs_main, assert(pindex->IsValid(BLOCK_VALID_TRANSACTIONS)));
-        WITH_LOCK(::cs_main, assert((pindex->nStatus & BLOCK_FAILED_MASK) == 0));
+        WITH_LOCK(::cs_main, assert((pindex->nStatus & BLOCK_FAILED_VALID) == 0));
         pindex = pindex->pprev;
     }
 

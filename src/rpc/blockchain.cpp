@@ -1558,7 +1558,7 @@ static RPCHelpMan getchaintips()
         if (active_chain.Contains(block)) {
             // This block is part of the currently active chain.
             status = "active";
-        } else if (block->nStatus & BLOCK_FAILED_MASK) {
+        } else if (block->nStatus & BLOCK_FAILED_VALID) {
             // This block or one of its ancestors is invalid.
             status = "invalid";
         } else if (!block->HaveNumChainTxs()) {
