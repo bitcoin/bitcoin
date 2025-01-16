@@ -158,7 +158,7 @@ class WalletEncryptionTest(BitcoinTestFramework):
             dumpfile_path = self.nodes[0].datadir_path / "noprivs_enc.dump"
             do_wallet_tool("-wallet=noprivs_enc", f"-dumpfile={dumpfile_path}", "dump")
             with open(dumpfile_path, "r", encoding="utf-8") as f:
-                # Check theres nothing with an 'mkey' prefix
+                # Check there's nothing with an 'mkey' prefix
                 assert_equal(all([not line.startswith("046d6b6579") for line in f]), True)
 
 

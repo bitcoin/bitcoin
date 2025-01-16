@@ -111,7 +111,7 @@ void TxOrphanage::EraseForPeer(NodeId peer)
         if (orphan_it != orphan.announcers.end()) {
             orphan.announcers.erase(peer);
 
-            // No remaining annnouncers: clean up entry
+            // No remaining announcers: clean up entry
             if (orphan.announcers.empty()) {
                 nErased += EraseTx(orphan.tx->GetWitnessHash());
             }
