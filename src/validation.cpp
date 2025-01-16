@@ -3657,7 +3657,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
     assert(pindex);
     if (pindex->nHeight == 0) return false;
 
-    CBlockIndex* to_mark_failed = pindex;
+    CBlockIndex* invalid_walk_tip = pindex;
     bool pindex_was_in_chain = false;
     int disconnected = 0;
 
@@ -3705,7 +3705,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
         LOCK(MempoolMutex());
         if (!m_chain.Contains(pindex)) break;
         pindex_was_in_chain = true;
-        CBlockIndex *invalid_walk_tip = m_chain.Tip();
+        invalid_walk_tip = m_chain.Tip();
 
         // ActivateBestChain considers blocks already in m_chain
         // unconditionally valid already, so force disconnect away from it.
@@ -3765,16 +3765,13 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
             }
             ++candidate_it;
         }
-
-        // Track the last disconnected block to call InvalidChainFound on it.
-        to_mark_failed = invalid_walk_tip;
     }
 
     m_chainman.CheckBlockIndex();
 
     {
         LOCK(cs_main);
-        if (m_chain.Contains(to_mark_failed)) {
+        if (m_chain.Contains(invalid_walk_tip)) {
             // If the to-be-marked invalid block is in the active chain, something is interfering and we can't proceed.
             return false;
         }
@@ -3799,7 +3796,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
             }
         }
 
-        InvalidChainFound(to_mark_failed);
+        InvalidChainFound(invalid_walk_tip);
     }
 
     // Only notify about a new block tip if the active chain was modified.
@@ -3813,8 +3810,8 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
         // changes.
         (void)m_chainman.GetNotifications().blockTip(
             /*state=*/GetSynchronizationState(m_chainman.IsInitialBlockDownload(), m_chainman.m_blockman.m_blockfiles_indexed),
-            /*index=*/*to_mark_failed->pprev,
-            /*verification_progress=*/WITH_LOCK(m_chainman.GetMutex(), return m_chainman.GuessVerificationProgress(to_mark_failed->pprev)));
+            /*index=*/*invalid_walk_tip->pprev,
+            /*verification_progress=*/WITH_LOCK(m_chainman.GetMutex(), return m_chainman.GuessVerificationProgress(invalid_walk_tip->pprev)));
 
         // Fire ActiveTipChange now for the current chain tip to make sure clients are notified.
         // ActivateBestChain may call this as well, but not necessarily.
