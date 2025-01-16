@@ -512,7 +512,7 @@ std::variant<MappingResult, MappingError> PCPRequestPortMap(const PCPMappingNonc
     return MappingResult(PCP_VERSION, CService(internal, port), CService(external_addr, external_port), lifetime_ret);
 }
 
-std::string MappingResult::ToString()
+std::string MappingResult::ToString() const
 {
     Assume(version == NATPMP_VERSION || version == PCP_VERSION);
     return strprintf("%s:%s -> %s (for %ds)",
