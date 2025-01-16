@@ -705,7 +705,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         {
             LOCK(cs_main);
             // The above calls don't guarantee the tip is actually updated, so
-            // we explictly check this.
+            // we explicitly check this.
             auto maybe_new_tip{Assert(m_node.chainman)->ActiveChain().Tip()};
             BOOST_REQUIRE_EQUAL(maybe_new_tip->GetBlockHash(), block.GetHash());
         }
