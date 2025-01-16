@@ -36,6 +36,8 @@ static constexpr auto NONPREF_PEER_TX_DELAY{2s};
 static constexpr auto OVERLOADED_PEER_TX_DELAY{2s};
 /** How long to wait before downloading a transaction from an additional peer */
 static constexpr auto GETDATA_TX_INTERVAL{60s};
+/** How long to wait before requesting orphan parents from an additional peer. */
+static constexpr auto ORPHAN_ANCESTOR_GETDATA_INTERVAL{60s};
 struct TxDownloadOptions {
     /** Read-only reference to mempool. */
     const CTxMemPool& m_mempool;
@@ -92,7 +94,7 @@ struct PackageToValidate {
 struct RejectedTxTodo
 {
     bool m_should_add_extra_compact_tx;
-    std::vector<uint256> m_unique_parents;
+    std::vector<Txid> m_unique_parents;
     std::optional<PackageToValidate> m_package_to_validate;
 };
 
