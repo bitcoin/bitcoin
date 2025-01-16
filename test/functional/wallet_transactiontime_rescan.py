@@ -136,8 +136,34 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         # blocks of the past 2 hours, based on the current MTP timestamp; in order to avoid
         # importing the last address (wo3), we advance the time further and generate 10 blocks
         set_node_times(self.nodes, cur_time + ten_days + ten_days + ten_days + ten_days)
-        self.generatetoaddress(minernode, 10, m1)
 
+        # send 2 btc to our third watch-only address
+        self.log.info('Send 2 btc to user')
+        miner_wallet.sendtoaddress(wo3, 2)
+
+        # generate more blocks and check blockcount
+        self.generatetoaddress(minernode, COINBASE_MATURITY, m1)
+        assert_equal(minernode.getblockcount(), initial_mine + 600)
+
+        self.log.info('Check user\'s final balance and transaction count')
+        assert_equal(wo_wallet.getbalance(), 18)
+        assert_equal(len(wo_wallet.listtransactions()), 4)
+
+        # skip rescan internally it sets timestamp as never
+        import_res = restorewo_wallet.importdescriptors(
+            [
+                {"desc": wo1_desc, "timestamp": "never"},
+                {"desc": wo2_desc, "timestamp": "never"},
+                {"desc": wo3_desc, "timestamp": "never"},
+            ]
+        )
+        assert_equal(all([r["success"] for r in import_res]), True)
+
+        # check user has 0 balance and no transactions
+        assert_equal(restorewo_wallet.getbalance(), 0)
+        assert_equal(len(restorewo_wallet.listtransactions()), 0)
+
+        # rescan will continue if any of the descriptors has now as timestamp
         import_res = restorewo_wallet.importdescriptors(
             [
                 {"desc": wo1_desc, "timestamp": "now"},
@@ -147,9 +173,39 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         )
         assert_equal(all([r["success"] for r in import_res]), True)
 
-        # check user has 0 balance and no transactions
-        assert_equal(restorewo_wallet.getbalance(), 0)
-        assert_equal(len(restorewo_wallet.listtransactions()), 0)
+        # check user has 2 btc balance and 1 transaction
+        assert_equal(restorewo_wallet.getbalance(), 2)
+        assert_equal(len(restorewo_wallet.listtransactions()), 1)
+
+        # importdescriptors with "timestamp": "now" always rescans
+        # blocks of the past 2 hours, based on the current MTP timestamp; in order to avoid
+        # importing the last address (wo3), we advance the time further and generate 10 blocks
+        set_node_times(self.nodes, cur_time + ten_days + ten_days + ten_days + ten_days + ten_days)
+        # send 3 btc to our third watch-only address
+        self.log.info('Send 3 btc to user')
+        miner_wallet.sendtoaddress(wo3, 3)
+
+        # generate more blocks and check blockcount
+        self.generatetoaddress(minernode, COINBASE_MATURITY, m1)
+        assert_equal(minernode.getblockcount(), initial_mine + 700)
+
+        self.log.info('Check user\'s final balance and transaction count')
+        assert_equal(wo_wallet.getbalance(), 21)
+        assert_equal(len(wo_wallet.listtransactions()), 5)
+
+        # rescan will continue if any of the descriptors has now or valid timestamp
+        import_res = restorewo_wallet.importdescriptors(
+            [
+                {"desc": wo1_desc, "timestamp": "now"},
+                {"desc": wo2_desc, "timestamp": "never"},
+                {"desc": wo3_desc, "timestamp": "now"},
+            ]
+        )
+        assert_equal(all([r["success"] for r in import_res]), True)
+
+        # check user has 5 btc balance and 2 transactions
+        assert_equal(restorewo_wallet.getbalance(), 5)
+        assert_equal(len(restorewo_wallet.listtransactions()), 2)
 
         # proceed to rescan, first with an incomplete one, then with a full rescan
         self.log.info('Rescan last history part')
@@ -158,8 +214,8 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         restorewo_wallet.rescanblockchain()
 
         self.log.info('Check user\'s final balance and transaction count after restoration')
-        assert_equal(restorewo_wallet.getbalance(), 16)
-        assert_equal(len(restorewo_wallet.listtransactions()), 3)
+        assert_equal(restorewo_wallet.getbalance(), 21)
+        assert_equal(len(restorewo_wallet.listtransactions()), 5)
 
         self.log.info('Check transaction times after restoration')
         for tx in restorewo_wallet.listtransactions():
@@ -169,9 +225,15 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
             elif tx['address'] == wo2:
                 assert_equal(tx['blocktime'], cur_time + ten_days + ten_days)
                 assert_equal(tx['time'], cur_time + ten_days + ten_days)
-            elif tx['address'] == wo3:
+            elif tx['address'] == wo3 and tx['amount'] == 1:
                 assert_equal(tx['blocktime'], cur_time + ten_days + ten_days + ten_days)
                 assert_equal(tx['time'], cur_time + ten_days + ten_days + ten_days)
+            elif tx['address'] == wo3 and tx['amount'] == 2:
+                assert_equal(tx['blocktime'], cur_time + ten_days + ten_days + ten_days + ten_days)
+                assert_equal(tx['time'], cur_time + ten_days + ten_days + ten_days + ten_days)
+            elif tx['address'] == wo3 and tx['amount'] == 3:
+                assert_equal(tx['blocktime'], cur_time + ten_days + ten_days + ten_days + ten_days + ten_days)
+                assert_equal(tx['time'], cur_time + ten_days + ten_days + ten_days + ten_days + ten_days)
 
 
         self.log.info('Test handling of invalid parameters for rescanblockchain')
