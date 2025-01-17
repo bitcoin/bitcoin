@@ -240,41 +240,47 @@ const Out& AsBase(const In& x)
 template<class T>
 concept CharNotInt8 = std::same_as<T, char> && !std::same_as<T, int8_t>;
 
-// clang-format off
-template <typename Stream, CharNotInt8 V> void Serialize(Stream&, V) = delete; // char serialization forbidden. Use uint8_t or int8_t
-template <typename Stream> void Serialize(Stream& s, std::byte a) { ser_writedata8(s, uint8_t(a)); }
-template <typename Stream> void Serialize(Stream& s, int8_t a)    { ser_writedata8(s, uint8_t(a)); }
-template <typename Stream> void Serialize(Stream& s, uint8_t a)   { ser_writedata8(s, a); }
-template <typename Stream> void Serialize(Stream& s, int16_t a)   { ser_writedata16(s, uint16_t(a)); }
-template <typename Stream> void Serialize(Stream& s, uint16_t a)  { ser_writedata16(s, a); }
-template <typename Stream> void Serialize(Stream& s, int32_t a)   { ser_writedata32(s, uint32_t(a)); }
-template <typename Stream> void Serialize(Stream& s, uint32_t a)  { ser_writedata32(s, a); }
-template <typename Stream> void Serialize(Stream& s, int64_t a)   { ser_writedata64(s, uint64_t(a)); }
-template <typename Stream> void Serialize(Stream& s, uint64_t a)  { ser_writedata64(s, a); }
+template <typename T>
+concept ByteOrIntegral = std::is_same_v<T, std::byte> ||
+    (std::is_integral_v<T> && !std::is_same_v<T, char>);
 
-template <typename Stream, BasicByte B, size_t N> void Serialize(Stream& s, const B (&a)[N])           { s.write(MakeByteSpan(a)); }
-template <typename Stream, BasicByte B, size_t N> void Serialize(Stream& s, const std::array<B, N>& a) { s.write(MakeByteSpan(a)); }
-template <typename Stream, BasicByte B, size_t N> void Serialize(Stream& s, std::span<B, N> span)      { s.write(std::as_bytes(span)); }
-template <typename Stream, BasicByte B>           void Serialize(Stream& s, std::span<B> span)         { s.write(std::as_bytes(span)); }
+template <typename Stream, CharNotInt8 V> void Serialize(Stream&, V) = delete; // char serialization forbidden. Use uint8_t or int8_t
+template <typename Stream, ByteOrIntegral T> void Serialize(Stream& s, T a)
+{
+    if constexpr (sizeof(T) == 1) {
+        ser_writedata8(s, static_cast<uint8_t>(a));   // (u)int8_t or std::byte or bool
+    } else if constexpr (sizeof(T) == 2) {
+        ser_writedata16(s, static_cast<uint16_t>(a)); // (u)int16_t
+    } else if constexpr (sizeof(T) == 4) {
+        ser_writedata32(s, static_cast<uint32_t>(a)); // (u)int32_t
+    } else {
+        static_assert(sizeof(T) == 8);
+        ser_writedata64(s, static_cast<uint64_t>(a)); // (u)int64_t
+    }
+}
+template <typename Stream, BasicByte B, int N> void Serialize(Stream& s, const B (&a)[N]) { s.write(MakeByteSpan(a)); }
+template <typename Stream, BasicByte B, std::size_t N> void Serialize(Stream& s, const std::array<B, N>& a) { s.write(MakeByteSpan(a)); }
+template <typename Stream, BasicByte B, std::size_t N> void Serialize(Stream& s, std::span<B, N> span) { s.write(std::as_bytes(span)); }
+template <typename Stream, BasicByte B> void Serialize(Stream& s, std::span<B> span) { s.write(std::as_bytes(span)); }
 
 template <typename Stream, CharNotInt8 V> void Unserialize(Stream&, V) = delete; // char serialization forbidden. Use uint8_t or int8_t
-template <typename Stream> void Unserialize(Stream& s, std::byte& a) { a = std::byte(ser_readdata8(s)); }
-template <typename Stream> void Unserialize(Stream& s, int8_t& a)    { a = int8_t(ser_readdata8(s)); }
-template <typename Stream> void Unserialize(Stream& s, uint8_t& a)   { a = ser_readdata8(s); }
-template <typename Stream> void Unserialize(Stream& s, int16_t& a)   { a = int16_t(ser_readdata16(s)); }
-template <typename Stream> void Unserialize(Stream& s, uint16_t& a)  { a = ser_readdata16(s); }
-template <typename Stream> void Unserialize(Stream& s, int32_t& a)   { a = int32_t(ser_readdata32(s)); }
-template <typename Stream> void Unserialize(Stream& s, uint32_t& a)  { a = ser_readdata32(s); }
-template <typename Stream> void Unserialize(Stream& s, int64_t& a)   { a = int64_t(ser_readdata64(s)); }
-template <typename Stream> void Unserialize(Stream& s, uint64_t& a)  { a = ser_readdata64(s); }
-
-template <typename Stream, BasicByte B, size_t N> void Unserialize(Stream& s, B (&a)[N])            { s.read(MakeWritableByteSpan(a)); }
-template <typename Stream, BasicByte B, size_t N> void Unserialize(Stream& s, std::array<B, N>& a)  { s.read(MakeWritableByteSpan(a)); }
-template <typename Stream, BasicByte B, size_t N> void Unserialize(Stream& s, std::span<B, N> span) { s.read(std::as_writable_bytes(span)); }
-template <typename Stream, BasicByte B>           void Unserialize(Stream& s, std::span<B> span)    { s.read(std::as_writable_bytes(span)); }
-
-template <typename Stream> void Serialize(Stream& s, bool a)    { uint8_t f = a; ser_writedata8(s, f); }
-template <typename Stream> void Unserialize(Stream& s, bool& a) { uint8_t f = ser_readdata8(s); a = f; }
+template <typename Stream, ByteOrIntegral T> void Unserialize(Stream& s, T& a)
+{
+    if constexpr (sizeof(T) == 1) {
+        a = static_cast<T>(ser_readdata8(s));  // (u)int8_t or std::byte or bool
+    } else if constexpr (sizeof(T) == 2) {
+        a = static_cast<T>(ser_readdata16(s)); // (u)int16_t
+    } else if constexpr (sizeof(T) == 4) {
+        a = static_cast<T>(ser_readdata32(s)); // (u)int32_t
+    } else {
+        static_assert(sizeof(T) == 8);
+        a = static_cast<T>(ser_readdata64(s)); // (u)int64_t
+    }
+}
+template <typename Stream, BasicByte B, int N> void Unserialize(Stream& s, B (&a)[N]) { s.read(MakeWritableByteSpan(a)); }
+template <typename Stream, BasicByte B, std::size_t N> void Unserialize(Stream& s, std::array<B, N>& a) { s.read(MakeWritableByteSpan(a)); }
+template <typename Stream, BasicByte B, std::size_t N> void Unserialize(Stream& s, std::span<B, N> span) { s.read(std::as_writable_bytes(span)); }
+template <typename Stream, BasicByte B> void Unserialize(Stream& s, std::span<B> span) { s.read(std::as_writable_bytes(span)); }
 // clang-format on
 
 
@@ -480,7 +486,7 @@ public:
  * serialization, and Unser(stream, object&) for deserialization. Serialization routines (inside
  * READWRITE, or directly with << and >> operators), can then use Using<Formatter>(object).
  *
- * This works by constructing a Wrapper<Formatter, T>-wrapped version of object, where T is
+ * This works by constructing a Wrapper<Formatter, T&>-wrapped version of object, where T is
  * const during serialization, and non-const during deserialization, which maintains const
  * correctness.
  */
