@@ -253,7 +253,7 @@ if(WITH_MULTIPROCESS)
     bitcoin_ipc
   )
   import_plugins(bitcoin-gui)
-  install_binary_component(bitcoin-gui)
+  install_binary_component(bitcoin-gui INTERNAL)
   if(WIN32)
     set_target_properties(bitcoin-gui PROPERTIES WIN32_EXECUTABLE TRUE)
   endif()
