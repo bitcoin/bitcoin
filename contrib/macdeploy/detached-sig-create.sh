@@ -44,7 +44,7 @@ ${SIGNAPPLE} apply "${UNSIGNED_BUNDLE}" "${OUTROOT}/${BUNDLE_ROOT}/${BUNDLE_NAME
 ${SIGNAPPLE} notarize --detach "${OUTROOT}/${BUNDLE_ROOT}" --passphrase "${api_key_pass}" "$2" "$3" "${UNSIGNED_BUNDLE}"
 
 # Sign each binary
-find . -maxdepth 3 -wholename "*/bin/*" -type f -exec realpath --relative-to=. {} \; | while read -r bin
+find . -maxdepth 3 \( -wholename "*/bin/*" -o -wholename "*/libexec/*" \) -type f -exec realpath --relative-to=. {} \; | while read -r bin
 do
     bin_dir=$(dirname "${bin}")
     bin_name=$(basename "${bin}")
