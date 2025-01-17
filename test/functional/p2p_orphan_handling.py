@@ -59,7 +59,7 @@ def cleanup(func):
             self.nodes[0].disconnect_p2ps()
             self.nodes[0].bumpmocktime(LONG_TIME_SKIP)
             # Check that mempool and orphanage have been cleared
-            assert_equal(0, len(self.nodes[0].getorphantxs()))
+            self.wait_until(lambda: len(self.nodes[0].getorphantxs()) == 0)
             assert_equal(0, len(self.nodes[0].getrawmempool()))
             self.wallet.rescan_utxos(include_mempool=True)
     return wrapper
