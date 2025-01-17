@@ -11,7 +11,7 @@ export CONTAINER_NAME=ci_i686_no_multiprocess
 export CI_IMAGE_NAME_TAG="docker.io/ubuntu:24.04"
 export CI_IMAGE_PLATFORM="linux/amd64"
 export PACKAGES="llvm clang g++-multilib"
-export DEP_OPTS="DEBUG=1"
+export DEP_OPTS="DEBUG=1 NO_MULTIPROCESS=1"
 export GOAL="install"
 export TEST_RUNNER_EXTRA="--v2transport"
 export BITCOIN_CONFIG="\
