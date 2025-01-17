@@ -1259,6 +1259,7 @@ class DashTestFramework(BitcoinTestFramework):
         for i in range(0, self.num_nodes):
             self.extra_args[i].append("-llmqtestparams=%d:%d" % (self.llmq_size, self.llmq_threshold))
             self.extra_args[i].append("-llmqtestinstantsendparams=%d:%d" % (self.llmq_size, self.llmq_threshold))
+            self.extra_args[i].append("-llmqtestplatformparams=%d:%d" % (self.llmq_size, self.llmq_threshold))
 
     def create_simple_node(self, extra_args=None):
         idx = len(self.nodes)
