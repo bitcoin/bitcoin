@@ -67,13 +67,14 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
 
 static BlockAssembler::Options ClampOptions(BlockAssembler::Options options)
 {
+    Assert(options.coinbase_max_additional_size <= MAX_BLOCK_SERIALIZED_SIZE - 1000);
     Assert(options.coinbase_max_additional_weight <= DEFAULT_BLOCK_MAX_WEIGHT);
     Assert(options.coinbase_output_max_additional_sigops <= MAX_BLOCK_SIGOPS_COST);
+    // Limit size to between coinbase_max_additional_size and MAX_BLOCK_SERIALIZED_SIZE-1K for sanity:
+    options.nBlockMaxSize = std::clamp<size_t>(options.nBlockMaxSize, options.coinbase_max_additional_size, MAX_BLOCK_SERIALIZED_SIZE - 1000);
     // Limit weight to between coinbase_max_additional_weight and DEFAULT_BLOCK_MAX_WEIGHT for sanity:
     // Coinbase (reserved) outputs can safely exceed -blockmaxweight, but the rest of the block template will be empty.
     options.nBlockMaxWeight = std::clamp<size_t>(options.nBlockMaxWeight, options.coinbase_max_additional_weight, DEFAULT_BLOCK_MAX_WEIGHT);
-    // Limit size to between 1K and MAX_BLOCK_SERIALIZED_SIZE-1K for sanity:
-    options.nBlockMaxSize = std::clamp<size_t>(options.nBlockMaxSize, 1000, MAX_BLOCK_SERIALIZED_SIZE - 1000);
     return options;
 }
 
@@ -116,7 +117,7 @@ void BlockAssembler::resetBlock()
     inBlock.clear();
 
     // Reserve space for coinbase tx
-    nBlockSize = 1000;
+    nBlockSize = m_options.coinbase_max_additional_size;
     nBlockWeight = m_options.coinbase_max_additional_weight;
     nBlockSigOpsCost = m_options.coinbase_output_max_additional_sigops;
 
@@ -449,7 +450,7 @@ void BlockAssembler::addPackageTxs(const CTxMemPool& mempool, int& nPackagesSele
             if (fNeedSizeAccounting) {
                 ++nConsecutiveFailed;
 
-                if (nConsecutiveFailed > MAX_CONSECUTIVE_FAILURES && nBlockSize > m_options.nBlockMaxSize - 1000) {
+                if (nConsecutiveFailed > MAX_CONSECUTIVE_FAILURES && nBlockSize > m_options.nBlockMaxSize - m_options.coinbase_max_additional_size) {
                     // Give up if we're close to full and haven't succeeded in a while
                     break;
                 }
