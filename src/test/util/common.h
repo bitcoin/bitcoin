@@ -5,8 +5,9 @@
 #ifndef BITCOIN_TEST_UTIL_COMMON_H
 #define BITCOIN_TEST_UTIL_COMMON_H
 
-#include <ostream>
 #include <optional>
+#include <ostream>
+#include <primitives/transaction.h>
 #include <string>
 
 /**
@@ -48,6 +49,11 @@ template <HasToString T>
 inline std::ostream& operator<<(std::ostream& os, const T& obj)
 {
     return os << obj.ToString();
+}
+
+inline std::ostream& operator<<(std::ostream& os, const COutPoint& outpoint)
+{
+    return os << outpoint.hash << ", " << outpoint.n;
 }
 
 // @}
