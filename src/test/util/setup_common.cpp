@@ -633,3 +633,8 @@ std::ostream& operator<<(std::ostream& os, const Txid& txid) {
 std::ostream& operator<<(std::ostream& os, const Wtxid& wtxid) {
     return os << wtxid.ToString();
 }
+
+std::ostream& operator<<(std::ostream& os, const COutPoint& outpoint)
+{
+    return os << outpoint.hash << ", " << outpoint.n;
+}
