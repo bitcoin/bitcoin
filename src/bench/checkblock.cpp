@@ -21,7 +21,7 @@
 #include <optional>
 #include <vector>
 
-static void SizeComputerBlock(benchmark::Bench& bench) {
+static void SizeComputerBlockBench(benchmark::Bench& bench) {
     CBlock block;
     DataStream(benchmark::data::block413567) >> TX_WITH_WITNESS(block);
 
@@ -32,7 +32,7 @@ static void SizeComputerBlock(benchmark::Bench& bench) {
     });
 }
 
-static void SerializeBlock(benchmark::Bench& bench) {
+static void SerializeBlockBench(benchmark::Bench& bench) {
     CBlock block;
     DataStream(benchmark::data::block413567) >> TX_WITH_WITNESS(block);
 
@@ -48,7 +48,7 @@ static void SerializeBlock(benchmark::Bench& bench) {
 // a block off the wire, but before we can relay the block on to peers using
 // compact block relay.
 
-static void DeserializeBlock(benchmark::Bench& bench)
+static void DeserializeBlockBench(benchmark::Bench& bench)
 {
     DataStream stream(benchmark::data::block413567);
     std::byte a{0};
@@ -83,7 +83,7 @@ static void DeserializeAndCheckBlock(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(SizeComputerBlock, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SerializeBlock, benchmark::PriorityLevel::HIGH);
-BENCHMARK(DeserializeBlock, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SizeComputerBlockBench, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SerializeBlockBench, benchmark::PriorityLevel::HIGH);
+BENCHMARK(DeserializeBlockBench, benchmark::PriorityLevel::HIGH);
 BENCHMARK(DeserializeAndCheckBlock, benchmark::PriorityLevel::HIGH);
