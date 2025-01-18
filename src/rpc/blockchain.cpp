@@ -241,6 +241,7 @@ static RPCHelpMan getbestchainlock()
                 {RPCResult::Type::NUM, "height", "The block height or index"},
                 {RPCResult::Type::STR_HEX, "signature", "The ChainLock's BLS signature"},
                 {RPCResult::Type::BOOL, "known_block", "True if the block is known by our node"},
+                {RPCResult::Type::STR_HEX, "hex", "The serialized, hex-encoded data for best ChainLock"},
             }},
         RPCExamples{
             HelpExampleCli("getbestchainlock", "")
@@ -248,8 +249,6 @@ static RPCHelpMan getbestchainlock()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    UniValue result(UniValue::VOBJ);
-
     const NodeContext& node = EnsureAnyNodeContext(request.context);
 
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
@@ -257,13 +256,23 @@ static RPCHelpMan getbestchainlock()
     if (clsig.IsNull()) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to find any ChainLock");
     }
+
+    UniValue result(UniValue::VOBJ);
+
     result.pushKV("blockhash", clsig.getBlockHash().GetHex());
     result.pushKV("height", clsig.getHeight());
     result.pushKV("signature", clsig.getSig().ToString());
 
-    const ChainstateManager& chainman = EnsureChainman(node);
-    LOCK(cs_main);
-    result.pushKV("known_block", chainman.m_blockman.LookupBlockIndex(clsig.getBlockHash()) != nullptr);
+    {
+        const ChainstateManager& chainman = EnsureChainman(node);
+        LOCK(cs_main);
+        result.pushKV("known_block", chainman.m_blockman.LookupBlockIndex(clsig.getBlockHash()) != nullptr);
+    }
+
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    ssTx << clsig;
+    result.pushKV("hex", HexStr(ssTx));
+
     return result;
 },
     };

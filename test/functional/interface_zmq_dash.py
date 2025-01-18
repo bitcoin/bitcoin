@@ -136,6 +136,8 @@ class DashZMQTest (DashTestFramework):
             self.zmq_context = zmq.Context()
             # Initialize the network
             self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
+            self.log.info("Test RPC hex getbestchainlock before any CL appeared")
+            assert_raises_rpc_error(-32603, "Unable to find any ChainLock", self.nodes[0].getbestchainlock)
             self.wait_for_sporks_same()
 
             self.mine_cycle_quorum()
@@ -261,6 +263,7 @@ class DashZMQTest (DashTestFramework):
         assert_equal(uint256_to_string(zmq_chain_lock.blockHash), rpc_chain_lock_hash)
         assert_equal(zmq_chain_locked_block.hash, rpc_chain_lock_hash)
         assert_equal(zmq_chain_lock.sig.hex(), rpc_best_chain_lock_sig)
+        assert_equal(zmq_chain_lock.serialize().hex(), self.nodes[0].getbestchainlock()['hex'])
         # Unsubscribe from ChainLock messages
         self.unsubscribe(chain_lock_publishers)
 
@@ -283,6 +286,7 @@ class DashZMQTest (DashTestFramework):
         # Create two raw TXs, they will conflict with each other
         rpc_raw_tx_1 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)
         rpc_raw_tx_2 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)
+        assert_equal(['None'], self.nodes[0].getislocks([rpc_raw_tx_1['txid']]))
         # Send the first transaction and wait for the InstantLock
         rpc_raw_tx_1_hash = self.nodes[0].sendrawtransaction(rpc_raw_tx_1['hex'])
         self.wait_for_instantlock(rpc_raw_tx_1_hash, self.nodes[0])
@@ -302,6 +306,8 @@ class DashZMQTest (DashTestFramework):
         assert_equal(zmq_tx_lock_tx.hash, rpc_raw_tx_1['txid'])
         zmq_tx_lock = msg_isdlock()
         zmq_tx_lock.deserialize(zmq_tx_lock_sig_stream)
+        assert_equal(rpc_raw_tx_1['txid'], self.nodes[0].getislocks([rpc_raw_tx_1['txid']])[0]['txid'])
+        assert_equal(zmq_tx_lock.serialize().hex(), self.nodes[0].getislocks([rpc_raw_tx_1['txid']])[0]['hex'])
         assert_equal(uint256_to_string(zmq_tx_lock.txid), rpc_raw_tx_1['txid'])
         # Try to send the second transaction. This must throw an RPC error because it conflicts with rpc_raw_tx_1
         # which already got the InstantSend lock.
