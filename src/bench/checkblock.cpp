@@ -60,5 +60,32 @@ static void DeserializeAndCheckBlockTest(benchmark::Bench& bench)
     });
 }
 
+static void SigOpsBlockBench(benchmark::Bench& bench)
+{
+    CBlock block;
+    DataStream(benchmark::data::block413567) >> TX_WITH_WITNESS(block);
+
+    auto GetLegacySigOpCount{[](const CTransaction& tx) {
+        unsigned int nSigOps{0};
+        for (const auto& txin : tx.vin) {
+            nSigOps += txin.scriptSig.GetSigOpCount(/*fAccurate=*/false);
+        }
+        for (const auto& txout : tx.vout) {
+            nSigOps += txout.scriptPubKey.GetSigOpCount(/*fAccurate=*/false);
+        }
+        return nSigOps;
+    }};
+
+    auto expected_sigops{0};
+    for (const auto& tx : block.vtx) expected_sigops += GetLegacySigOpCount(*tx);
+
+    bench.batch(expected_sigops).unit("sigops").run([&] {
+        auto nSigOps{0};
+        for (const auto& tx : block.vtx) nSigOps += GetLegacySigOpCount(*tx);
+        assert(nSigOps == expected_sigops);
+    });
+}
+
 BENCHMARK(DeserializeBlockTest, benchmark::PriorityLevel::HIGH);
 BENCHMARK(DeserializeAndCheckBlockTest, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SigOpsBlockBench, benchmark::PriorityLevel::HIGH);
