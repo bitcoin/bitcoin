@@ -48,18 +48,29 @@ static void LoadExternalBlockFile(benchmark::Bench& bench)
     // because that first writes a compact size.
     ss << Span{benchmark::data::block413567};
 
-    // Create the test file.
-    {
-        // "wb+" is "binary, O_RDWR | O_CREAT | O_TRUNC".
-        FILE* file{fsbridge::fopen(blkfile, "wb+")};
-        // Make the test block file about 128 MB in length.
-        for (size_t i = 0; i < node::MAX_BLOCKFILE_SIZE / ss.size(); ++i) {
-            if (fwrite(ss.data(), 1, ss.size(), file) != ss.size()) {
-                throw std::runtime_error("write to test file failed\n");
-            }
-        }
-        fclose(file);
+    // Ensure the directory exists
+    if (!fs::exists(testing_setup.get()->m_path_root)) {
+        fs::create_directories(testing_setup.get()->m_path_root);
     }
+
+    // Create the test file
+
+    // "wb+" is "binary, O_RDWR | O_CREAT | O_TRUNC".
+    FILE* file = fsbridge::fopen(blkfile, "wb+");
+    if (file == nullptr) {
+        std::cerr << "Error: Unable to open file: " << std::string(reinterpret_cast<const char*>(blkfile.u8string().data())) << std::endl;
+        perror("fopen");
+        throw std::runtime_error("Failed to open test file for writing");
+    }
+
+    // Write to the file
+    // Make the test block file about 128 MB in length.
+    for (size_t i = 0; i < node::MAX_BLOCKFILE_SIZE / ss.size(); ++i) {
+        if (fwrite(ss.data(), 1, ss.size(), file) != ss.size()) {
+            throw std::runtime_error("Write to test file failed\n");
+        }
+    }
+    fclose(file);
 
     std::multimap<uint256, FlatFilePos> blocks_with_unknown_parent;
     FlatFilePos pos;
