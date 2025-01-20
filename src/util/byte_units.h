@@ -10,7 +10,7 @@
 #include <stdexcept>
 
 //! Overflow-safe conversion of MiB to bytes.
-constexpr size_t operator"" _MiB(unsigned long long mebibytes)
+constexpr size_t operator""_MiB(unsigned long long mebibytes)
 {
     auto bytes{CheckedLeftShift(mebibytes, 20)};
     if (!bytes || *bytes > std::numeric_limits<size_t>::max()) {
