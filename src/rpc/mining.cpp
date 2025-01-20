@@ -974,6 +974,11 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("bits", strprintf("%08x", block.nBits));
     result.pushKV("height", (int64_t)(pindexPrev->nHeight+1));
 
+	// cgminer bug
+    UniValue coinbaseaux(UniValue::VOBJ);
+    coinbaseaux.pushKV("flags", "");
+    result.pushKV("coinbaseaux", std::move(coinbaseaux));	
+
     if (consensusParams.signet_blocks) {
         result.pushKV("signet_challenge", HexStr(consensusParams.signet_challenge));
     }
