@@ -36,7 +36,6 @@ namespace node {
 // to ChainstateManager::InitializeChainstate().
 static ChainstateLoadResult CompleteChainstateInitialization(
     ChainstateManager& chainman,
-    const CacheSizes& cache_sizes,
     const ChainstateLoadOptions& options) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     auto& pblocktree{chainman.m_blockman.m_block_tree_db};
@@ -44,18 +43,13 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     // fails if it's still open from the previous loop. Close it first:
     pblocktree.reset();
     try {
-        pblocktree = std::make_unique<BlockTreeDB>(DBParams{
-            .path = chainman.m_options.datadir / "blocks" / "index",
-            .cache_bytes = cache_sizes.block_tree_db,
-            .memory_only = options.block_tree_db_in_memory,
-            .wipe_data = options.wipe_block_tree_db,
-            .options = chainman.m_options.block_tree_db});
+        pblocktree = chainman.m_blockman.MakeBlockTreeDb();
     } catch (dbwrapper_error& err) {
         LogError("%s\n", err.what());
         return {ChainstateLoadStatus::FAILURE, _("Error opening block database")};
     }
 
-    if (options.wipe_block_tree_db) {
+    if (chainman.m_blockman.OptsWipeBlockTreeDb()) {
         pblocktree->WriteReindexing(true);
         chainman.m_blockman.m_blockfiles_indexed = false;
         //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
@@ -206,7 +200,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
         }
     }
 
-    auto [init_status, init_error] = CompleteChainstateInitialization(chainman, cache_sizes, options);
+    auto [init_status, init_error] = CompleteChainstateInitialization(chainman, options);
     if (init_status != ChainstateLoadStatus::SUCCESS) {
         return {init_status, init_error};
     }
@@ -242,7 +236,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
         // for the fully validated chainstate.
         chainman.ActiveChainstate().ClearBlockIndexCandidates();
 
-        auto [init_status, init_error] = CompleteChainstateInitialization(chainman, cache_sizes, options);
+        auto [init_status, init_error] = CompleteChainstateInitialization(chainman, options);
         if (init_status != ChainstateLoadStatus::SUCCESS) {
             return {init_status, init_error};
         }

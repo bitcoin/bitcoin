@@ -1057,6 +1057,10 @@ bool AppInitParameterInteraction(const ArgsManager& args)
             .chainparams = chainman_opts_dummy.chainparams,
             .blocks_dir = args.GetBlocksDirPath(),
             .notifications = chainman_opts_dummy.notifications,
+            .block_tree_db_params = DBParams{
+                .path = args.GetDataDirNet() / "blocks" / "index",
+                .cache_bytes = 0,
+            },
         };
         auto blockman_result{ApplyArgsManOptions(args, blockman_opts_dummy)};
         if (!blockman_result) {
@@ -1199,10 +1203,16 @@ static ChainstateLoadResult InitAndLoadChainstate(
         .signals = node.validation_signals.get(),
     };
     Assert(ApplyArgsManOptions(args, chainman_opts)); // no error can happen, already checked in AppInitParameterInteraction
+
     BlockManager::Options blockman_opts{
         .chainparams = chainman_opts.chainparams,
         .blocks_dir = args.GetBlocksDirPath(),
         .notifications = chainman_opts.notifications,
+        .block_tree_db_params = DBParams{
+            .path = args.GetDataDirNet() / "blocks" / "index",
+            .cache_bytes = cache_sizes.block_tree_db,
+            .wipe_data = do_reindex,
+        },
     };
     Assert(ApplyArgsManOptions(args, blockman_opts)); // no error can happen, already checked in AppInitParameterInteraction
     try {
@@ -1233,7 +1243,6 @@ static ChainstateLoadResult InitAndLoadChainstate(
     };
     node::ChainstateLoadOptions options;
     options.mempool = Assert(node.mempool.get());
-    options.wipe_block_tree_db = do_reindex;
     options.wipe_chainstate_db = do_reindex || do_reindex_chainstate;
     options.prune = chainman.m_blockman.IsPruneMode();
     options.check_blocks = args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
