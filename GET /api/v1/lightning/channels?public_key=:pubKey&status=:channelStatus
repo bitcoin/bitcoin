@@ -1,0 +1,233 @@
+Bitcoin Core integration/staging tree
+=====================================
+
+https://bitcoincore.org
+
+For an immediately usable, binary version of the Bitcoin Core software, see
+https://bitcoincore.org/en/download/.
+
+What is Bitcoin Core?
+---------------------
+
+Bitcoin Core connects to the Bitcoin peer-to-peer network to download and fully
+validate blocks and transactions. It also includes a wallet and graphical user
+interface, which can be optionally built.
+
+Further information about Bitcoin Core is available in the [doc folder](/doc).
+
+License
+-------
+
+Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+information or see https://opensource.org/licenses/MIT.
+
+Development Process
+-------------------
+
+The `master` branch is regularly built (see `doc/build-*.md` for instructions) and tested, but it is not guaranteed to be
+completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
+regularly from release branches to indicate new official, stable release versions of Bitcoin Core.
+
+The https://github.com/bitcoin-core/gui repository is used exclusively for the
+development of the GUI. Its master branch is identical in all monotree
+repositories. Release branches and tags do not exist, so please do not fork
+that repository unless it is for development reasons.
+
+The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
+and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
+
+Testing
+-------
+
+Testing and code review is the bottleneck for development; we get more pull
+requests than we can review and test on short notice. Please be patient and help out by testing
+other people's pull requests, and remember this is a security-critical project where any mistake might cost people
+lots of money.
+
+### Automated Testing
+
+Developers are strongly encouraged to write [unit tests](src/test/README.md) for new code, and to
+submit new unit tests for old code. Unit tests can be compiled and run
+(assuming they weren't disabled during the generation of the build system) with: `ctest`. Further details on running
+and extending unit tests can be found in [/src/test/README.md](/src/test/README.md).
+
+There are also [regression and integration tests](/test), written
+in Python.
+These tests can be run (if the [test dependencies](/test) are installed) with: `build/test/functional/test_runner.py`
+(assuming `build` is your build directory).
+
+The CI (Continuous Integration) systems make sure that every pull request is built for Windows, Linux, and macOS,
+and that unit/sanity tests are run automatically.
+
+### Manual Quality Assurance (QA) Testing
+
+Changes should be tested by somebody other than the developer who wrote the
+code. This is especially important for large or high-risk changes. It is useful
+to add a test plan to the pull request description if testing the changes is
+not straightforward.
+
+Translations
+------------
+
+Changes to translations as well as new translations can be submitted to
+[Bitcoin Core's Transifex page](https://www.transifex.com/bitcoin/bitcoin/).
+
+[
+  {
+    "status": 1,
+    "closing_reason": null,
+    "closing_date": null,
+    "capacity": 200000000,
+    "short_id": "855248x2989x1",
+    "id": "940355120828055553",
+    "fee_rate": 1,
+    "node": {
+      "alias": "yalls.org clearnet-yalls",
+      "public_key": "0288be11d147e1525f7f234f304b094d6627d2c70f3313d7ba3696887b261c4447",
+      "channels": 93,
+      "capacity": "6651565060"
+    }
+  },
+  {
+    "status": 1,
+    "closing_reason": null,
+    "closing_date": null,
+    "capacity": 150000000,
+    "short_id": "865606x2919x1",
+    "id": "951743862263971841",
+    "fee_rate": 100,
+    "node": {
+      "alias": "Megalithic.me",
+      "public_key": "0322d0e43b3d92d30ed187f4e101a9a9605c3ee5fc9721e6dac3ce3d7732fbb13e",
+      "channels": 83,
+      "capacity": "6584980682"
+    }
+  },
+  {
+    "status": 1,
+    "closing_reason": null,
+    "closing_date": null,
+    "capacity": 150000000,
+    "short_id": "867452x3629x1",
+    "id": "953773560775376897",
+    "fee_rate": 2000,
+    "node": {
+      "alias": "cyberdyne.sh",
+      "public_key": "03a93b87bf9f052b8e862d51ebbac4ce5e97b5f4137563cd5128548d7f5978dda9",
+      "channels": 196,
+      "capacity": "8511550562"
+    }
+  },
+  {
+    "status": 1,
+    "closing_reason": null,
+    "closing_date": null,
+    "capacity": 115000000,
+    "short_id": "827084x1086x1",
+    "id": "909388475218657281",
+    "fee_rate": 1000,
+    "node": {
+      "alias": "yalls.org yalls-tor",
+      "public_key": "03d06758583bb5154774a6eb221b1276c9e82d65bbaceca806d90e20c108f4b1c7",
+      "channels": 74,
+      "capacity": "3241046701"
+    }
+  },
+  {
+    "status": 1,
+    "closing_reason": null,
+    "closing_date": null,
+    "capacity": 100000000,
+    "short_id": "740620x2091x0",
+    "id": "814320301900496896",
+    "fee_rate": 3000,
+    "node": {
+      "alias": "okx",
+      "public_key": "0294ac3e099def03c12a37e30fe5364b1223fd60069869142ef96580c8439c2e0a",
+      "channels": 612,
+      "capacity": "73942283559"
+    }
+  },
+  {
+    "status": 1,
+    "closing_reason": null,
+    "closing_date": null,
+    "capacity": 100000000,
+    "short_id": "759240x2353x1",
+    "id": "834793208426856449",
+    "fee_rate": 2500,
+    "node": {
+      "alias": "nicehash-ln1",
+      "public_key": "037659a0ac8eb3b8d0a720114efc861d3a940382dcfa1403746b4f8f6b2e8810ba",
+      "channels": 1055,
+      "capacity": "16787969802"
+    }
+  },
+  {
+    "status": 1,
+    "closing_reason": null,
+    "closing_date": null,
+    "capacity": 100000000,
+    "short_id": "810358x1309x6",
+    "id": "890998043747090438",
+    "fee_rate": 2000,
+    "node": {
+      "alias": "LNBϟG [Edge-4]",
+      "public_key": "039edc94987c8f3adc28dab455efc00dea876089a120f573bd0b03c40d9d3fb1e1",
+      "channels": 241,
+      "capacity": "5095855252"
+    }
+  },
+  {
+    "status": 1,
+    "closing_reason": null,
+    "closing_date": null,
+    "capacity": 100000000,
+    "short_id": "822086x2856x1",
+    "id": "903893116219031553",
+    "fee_rate": 3000,
+    "node": {
+      "alias": "okx",
+      "public_key": "0294ac3e099def03c12a37e30fe5364b1223fd60069869142ef96580c8439c2e0a",
+      "channels": 612,
+      "capacity": "73942283559"
+    }
+  },
+  {
+    "status": 1,
+    "closing_reason": null,
+    "closing_date": null,
+    "capacity": 100000000,
+    "short_id": "822104x753x1",
+    "id": "903912907290509313",
+    "fee_rate": 3000,
+    "node": {
+      "alias": "okx",
+      "public_key": "0294ac3e099def03c12a37e30fe5364b1223fd60069869142ef96580c8439c2e0a",
+      "channels": 612,
+      "capacity": "73942283559"
+    }
+  },
+  {
+    "status": 1,
+    "closing_reason": null,
+    "closing_date": null,
+    "capacity": 100000000,
+    "short_id": "843151x2151x0",
+    "id": "927054328611930112",
+    "fee_rate": 2000,
+    "node": {
+      "alias": "Binance",
+      "public_key": "03a1f3afd646d77bdaf545cceaf079bab6057eae52c6319b63b5803d0989d6a72f",
+      "channels": 211,
+      "capacity": "67249400000"
+    }
+  }
+]
+
+
+Translations are periodically pulled from Transifex and merged into the git repository. See the
+[translation process](doc/translation_process.md) for details on how this works.
+
+**Important**: We do not accept translation changes as GitHub pull requests because the next
+pull from Transifex would automatically overwrite them again.
