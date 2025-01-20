@@ -1,3 +1,22 @@
+What is Niobio (NBR)?
+=====================================
+
+https://niobiocoin.com.br/
+
+It's a Bitcoin clone with minimal changes.
+The goal is to create a Brazilian coin against Brazilian CBDC (DREX).
+Unlike bitcoin, the idea is to be cash, not a new gold.
+So, to build it (or use it) you do the same way as in bitcoin, only the bitcoin folder was renamed to niobiocoin. 
+Everything else is the same, including the names of the executable files.
+This way, keeping the code updated is very easy.
+
+All the changes you can check here:
+https://github.com/bitcoin/bitcoin/compare/master...soldate:niobiocoin:master
+
+=====================================
+BELOW BITCOIN'S README
+=====================================
+
 Bitcoin Core integration/staging tree
 =====================================
 
