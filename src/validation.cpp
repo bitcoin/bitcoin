@@ -88,8 +88,8 @@ using node::CBlockIndexHeightOnlyComparator;
 using node::CBlockIndexWorkComparator;
 using node::SnapshotMetadata;
 
-/** Size threshold for warning about slow UTXO set flush to disk. */
-static constexpr size_t WARN_FLUSH_COINS_SIZE = 1 << 30; // 1 GiB
+/** Threshold for warning when writing this many dirty cache entries to disk. */
+static constexpr size_t WARN_FLUSH_COINS_COUNT = 10'000'000;
 /** Time to wait between writing blocks/block index to disk. */
 static constexpr std::chrono::hours DATABASE_WRITE_INTERVAL{1};
 /** Time to wait between flushing chainstate to disk. */
@@ -2828,7 +2828,8 @@ bool Chainstate::FlushStateToDisk(
     bool full_flush_completed = false;
 
     const size_t coins_count = CoinsTip().GetCacheSize();
-    const size_t coins_mem_usage = CoinsTip().DynamicMemoryUsage();
+    [[maybe_unused]] const size_t coins_mem_usage = CoinsTip().DynamicMemoryUsage();
+    const size_t coins_dirty_count = CoinsTip().GetDirtyCount();
 
     try {
     {
@@ -2931,16 +2932,16 @@ bool Chainstate::FlushStateToDisk(
         }
         // Flush best chain related state. This can only be done if the blocks / block index write was also done.
         if (fDoFullFlush && !CoinsTip().GetBestBlock().IsNull()) {
-            if (coins_mem_usage >= WARN_FLUSH_COINS_SIZE) LogWarning("Flushing large (%d GiB) UTXO set to disk, it may take several minutes", coins_mem_usage >> 30);
-            LOG_TIME_MILLIS_WITH_CATEGORY(strprintf("write coins cache to disk (%d coins, %.2fKiB)",
-                coins_count, coins_mem_usage >> 10), BCLog::BENCH);
+            if (coins_dirty_count >= WARN_FLUSH_COINS_COUNT) LogWarning("Flushing large (%d entries) UTXO set to disk, it may take several minutes", coins_dirty_count);
+            LOG_TIME_MILLIS_WITH_CATEGORY(strprintf("write coins cache to disk (%d out of %d cached coins)",
+                coins_dirty_count, coins_count), BCLog::BENCH);
 
             // Typical Coin structures on disk are around 48 bytes in size.
             // Pushing a new one to the database can cause it to be written
             // twice (once in the log, and once in the tables). This is already
             // an overestimation, as most will delete an existing entry or
             // overwrite one. Still, use a conservative safety factor of 2.
-            if (!CheckDiskSpace(m_chainman.m_options.datadir, 48 * 2 * 2 * CoinsTip().GetCacheSize())) {
+            if (!CheckDiskSpace(m_chainman.m_options.datadir, 2 * 2 * 48 * coins_dirty_count)) {
                 return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
             }
             // Flush the chainstate (which may refer to block index entries).

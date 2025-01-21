@@ -468,6 +468,9 @@ public:
     //! Calculate the size of the cache (in number of transaction outputs)
     unsigned int GetCacheSize() const;
 
+    //! Calculate the number of dirty cache entries (transaction outputs)
+    size_t GetDirtyCount() const noexcept { return m_dirty_count; }
+
     //! Calculate the size of the cache (in bytes)
     size_t DynamicMemoryUsage() const;
 
