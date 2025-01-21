@@ -96,6 +96,7 @@ public:
     CCoinsMap& map() const { return cacheCoins; }
     CoinsCachePair& sentinel() const { return m_sentinel; }
     size_t& usage() const { return cachedCoinsUsage; }
+    size_t& dirty() const { return m_dirty_count; }
 };
 
 } // namespace
@@ -651,8 +652,10 @@ static void WriteCoinsViewEntry(CCoinsView& view, const MaybeCoin& cache_coin)
     CCoinsMapMemoryResource resource;
     CCoinsMap map{0, CCoinsMap::hasher{}, CCoinsMap::key_equal{}, &resource};
     if (cache_coin) InsertCoinsMapEntry(map, sentinel, *cache_coin);
-    auto cursor{CoinsViewCacheCursor(sentinel, map, /*will_erase=*/true)};
+    size_t dirty_count{cache_coin && cache_coin->IsDirty()};
+    auto cursor{CoinsViewCacheCursor(dirty_count, sentinel, map, /*will_erase=*/true)};
     BOOST_CHECK(view.BatchWrite(cursor, {}));
+    BOOST_CHECK_EQUAL(dirty_count, 0U);
 }
 
 class SingleEntryCacheTest
@@ -662,7 +665,10 @@ public:
     {
         auto base_cache_coin{base_value == ABSENT ? MISSING : CoinEntry{base_value, CoinEntry::State::DIRTY}};
         WriteCoinsViewEntry(base, base_cache_coin);
-        if (cache_coin) cache.usage() += InsertCoinsMapEntry(cache.map(), cache.sentinel(), *cache_coin);
+        if (cache_coin) {
+            cache.usage() += InsertCoinsMapEntry(cache.map(), cache.sentinel(), *cache_coin);
+            cache.dirty() += cache_coin->IsDirty();
+        }
     }
 
     CCoinsView root;
@@ -1123,6 +1129,7 @@ BOOST_AUTO_TEST_CASE(ccoins_reset_guard)
 
     const Coin coin{CTxOut{m_rng.randrange(10), CScript{} << m_rng.randbytes(CScriptBase::STATIC_SIZE + 1)}, 1, false};
     cache.EmplaceCoinInternalDANGER(COutPoint{outpoint}, Coin{coin});
+    BOOST_CHECK_EQUAL(cache.GetDirtyCount(), 1U);
 
     uint256 cache_best_block{m_rng.rand256()};
     cache.SetBestBlock(cache_best_block);
@@ -1132,12 +1139,14 @@ BOOST_AUTO_TEST_CASE(ccoins_reset_guard)
         BOOST_CHECK(cache.AccessCoin(outpoint) == coin);
         BOOST_CHECK(!cache.AccessCoin(outpoint).IsSpent());
         BOOST_CHECK_EQUAL(cache.GetCacheSize(), 1);
+        BOOST_CHECK_EQUAL(cache.GetDirtyCount(), 1);
         BOOST_CHECK_EQUAL(cache.GetBestBlock(), cache_best_block);
         BOOST_CHECK(!root_cache.HaveCoinInCache(outpoint));
     }
 
     BOOST_CHECK(cache.AccessCoin(outpoint).IsSpent());
     BOOST_CHECK_EQUAL(cache.GetCacheSize(), 0);
+    BOOST_CHECK_EQUAL(cache.GetDirtyCount(), 0);
     BOOST_CHECK_EQUAL(cache.GetBestBlock(), base_best_block);
     BOOST_CHECK(!root_cache.HaveCoinInCache(outpoint));
 
@@ -1148,8 +1157,13 @@ BOOST_AUTO_TEST_CASE(ccoins_reset_guard)
 
     BOOST_CHECK(cache.AccessCoin(outpoint).IsSpent());
     BOOST_CHECK_EQUAL(cache.GetCacheSize(), 0);
+    BOOST_CHECK_EQUAL(cache.GetDirtyCount(), 0U);
     BOOST_CHECK_EQUAL(cache.GetBestBlock(), base_best_block);
     BOOST_CHECK(!root_cache.HaveCoinInCache(outpoint));
+
+    // Flush should be a no-op after reset.
+    cache.Flush();
+    BOOST_CHECK_EQUAL(cache.GetDirtyCount(), 0U);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
