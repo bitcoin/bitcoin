@@ -8,6 +8,7 @@
 #include <coins.h>
 #include <dbwrapper.h>
 #include <logging.h>
+#include <logging/timer.h>
 #include <primitives/transaction.h>
 #include <random.h>
 #include <serialize.h>
@@ -24,6 +25,9 @@ static constexpr uint8_t DB_BEST_BLOCK{'B'};
 static constexpr uint8_t DB_HEAD_BLOCKS{'H'};
 // Keys used in previous version that might still be found in the DB:
 static constexpr uint8_t DB_COINS{'c'};
+
+// Threshold for warning when writing this many dirty cache entries to disk.
+static constexpr size_t WARN_FLUSH_COINS_COUNT{10'000'000};
 
 bool CCoinsViewDB::NeedsUpgrade()
 {
@@ -96,7 +100,7 @@ std::vector<uint256> CCoinsViewDB::GetHeadBlocks() const {
 bool CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashBlock) {
     CDBBatch batch(*m_db);
     size_t count = 0;
-    size_t changed = 0;
+    const size_t dirty_count{cursor.GetDirtyCount()};
     assert(!hashBlock.IsNull());
 
     uint256 old_tip = GetBestBlock();
@@ -112,6 +116,10 @@ bool CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashB
         }
     }
 
+    if (dirty_count > WARN_FLUSH_COINS_COUNT) LogWarning("Flushing large (%d entries) UTXO set to disk, it may take several minutes", dirty_count);
+    LOG_TIME_MILLIS_WITH_CATEGORY(strprintf("write coins cache to disk (%d out of %d cached coins)",
+        dirty_count, cursor.GetTotalCount()), BCLog::BENCH);
+
     // In the first batch, mark the database as being in the middle of a
     // transition from old_tip to hashBlock.
     // A vector is used for future extensibility, as we may want to support
@@ -126,7 +134,6 @@ bool CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashB
                 batch.Erase(entry);
             else
                 batch.Write(entry, it->second.coin);
-            changed++;
         }
         count++;
         it = cursor.NextAndMaybeErase(*it);
@@ -150,7 +157,7 @@ bool CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashB
 
     LogDebug(BCLog::COINDB, "Writing final batch of %.2f MiB\n", batch.SizeEstimate() * (1.0 / 1048576.0));
     bool ret = m_db->WriteBatch(batch);
-    LogDebug(BCLog::COINDB, "Committed %u changed transaction outputs (out of %u) to coin database...\n", (unsigned int)changed, (unsigned int)count);
+    LogDebug(BCLog::COINDB, "Committed %u changed transaction outputs (out of %u) to coin database...", (unsigned int)dirty_count, (unsigned int)count);
     return ret;
 }
 
