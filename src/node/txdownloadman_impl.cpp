@@ -333,7 +333,7 @@ void TxDownloadManagerImpl::MempoolAcceptedTx(const CTransactionRef& tx)
     m_txrequest.ForgetTxHash(tx->GetHash());
     m_txrequest.ForgetTxHash(tx->GetWitnessHash());
 
-    m_orphanage.AddChildrenToWorkSet(*tx);
+    m_orphanage.AddChildrenToWorkSet(*tx, m_opts.m_rng);
     // If it came from the orphanage, remove it. No-op if the tx is not in txorphanage.
     m_orphanage.EraseTx(tx->GetWitnessHash());
 }
