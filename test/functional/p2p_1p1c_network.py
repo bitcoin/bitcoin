@@ -150,7 +150,7 @@ class PackageRelayTest(BitcoinTestFramework):
             assert_equal(submitpackage_result["package_msg"], "success")
 
         self.log.info("Wait for mempools to sync")
-        self.sync_mempools(timeout=20)
+        self.sync_mempools()
 
 
 if __name__ == '__main__':
