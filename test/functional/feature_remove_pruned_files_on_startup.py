@@ -2,10 +2,11 @@
 # Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test removing undeleted pruned blk files on startup."""
+"""Tests around pruning rev and blk files on startup."""
 
 import platform
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_equal
 
 
 class FeatureRemovePrunedFilesOnStartupTest(BitcoinTestFramework):
@@ -49,6 +50,22 @@ class FeatureRemovePrunedFilesOnStartupTest(BitcoinTestFramework):
         self.restart_node(0)
         assert not blk0.exists()
         assert not rev1.exists()
+
+        self.log.info("Check that a reindex will wipe all files")
+
+        def ls_files():
+            ls = [
+                entry.name
+                for entry in self.nodes[0].blocks_path.iterdir()
+                if entry.is_file() and any(map(entry.name.startswith, ["rev", "blk"]))
+            ]
+            return sorted(ls)
+
+        assert_equal(len(ls_files()), 4)
+        self.restart_node(0, extra_args=self.extra_args[0] + ["-reindex"])
+        assert_equal(self.nodes[0].getblockcount(), 0)
+        self.stop_node(0)  # Stop node to flush the two newly created files
+        assert_equal(ls_files(), ["blk00000.dat", "rev00000.dat"])
 
 
 if __name__ == '__main__':
