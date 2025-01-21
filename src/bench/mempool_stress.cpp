@@ -13,10 +13,19 @@
 #include <test/util/txmempool.h>
 #include <txmempool.h>
 #include <validation.h>
+#include <bench/data/block413567.raw.h>
+#include <node/context.h>
+#include <node/miner.h>
+#include <primitives/block.h>
+#include <test/util/script.h>
+#include <util/check.h>
 
+#include <array>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <streams.h>
 #include <vector>
 
 class CCoinsViewCache;
@@ -126,5 +135,53 @@ static void MempoolCheck(benchmark::Bench& bench)
     });
 }
 
+static void ProcessTransactionBench(benchmark::Bench& bench)
+{
+    const auto testing_setup{MakeNoLogFileContext<const TestingSetup>()};
+    CTxMemPool& pool{*Assert(testing_setup->m_node.mempool)};
+    ChainstateManager& chainman{*testing_setup->m_node.chainman};
+
+    CBlock block;
+    DataStream(benchmark::data::block413567) >> TX_WITH_WITNESS(block);
+
+    std::vector<CTransactionRef> txs(block.vtx.size() - 1);
+    for (size_t i{1}; i < block.vtx.size(); ++i) {
+        CMutableTransaction mtx{*block.vtx[i]};
+        for (auto& txin : mtx.vin) {
+            txin.nSequence = CTxIn::SEQUENCE_FINAL;
+            txin.scriptSig.clear();
+            txin.scriptWitness.stack = {WITNESS_STACK_ELEM_OP_TRUE};
+        }
+        txs[i - 1] = MakeTransactionRef(std::move(mtx));
+    }
+
+    CCoinsViewCache* coins_tip{nullptr};
+    size_t cached_coin_count{0};
+    {
+        LOCK(cs_main);
+        coins_tip = &chainman.ActiveChainstate().CoinsTip();
+        for (const auto& tx : txs) {
+            const Coin coin(CTxOut(2 * tx->GetValueOut(), P2WSH_OP_TRUE), 1, /*fCoinBaseIn=*/false);
+            for (const auto& in : tx->vin) {
+                coins_tip->AddCoin(in.prevout, Coin{coin}, /*possible_overwrite=*/false);
+                cached_coin_count++;
+            }
+        }
+    }
+
+    bench.batch(txs.size()).run([&] {
+        LOCK2(cs_main, pool.cs);
+        assert(coins_tip->GetCacheSize() == cached_coin_count);
+        for (const auto& tx : txs) pool.removeRecursive(*tx, MemPoolRemovalReason::REPLACED);
+        assert(pool.size() == 0);
+
+        for (const auto& tx : txs) {
+            const auto res{chainman.ProcessTransaction(tx, /*test_accept=*/true)};
+            assert(res.m_result_type == MempoolAcceptResult::ResultType::VALID);
+        }
+    });
+}
+
 BENCHMARK(ComplexMemPool, benchmark::PriorityLevel::HIGH);
 BENCHMARK(MempoolCheck, benchmark::PriorityLevel::HIGH);
+BENCHMARK(ProcessTransactionBench, benchmark::PriorityLevel::HIGH);
