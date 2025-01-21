@@ -1252,7 +1252,7 @@ static int64_t GetImportTimestamp(const UniValue& data, int64_t now)
 }
 
 static bool GetImportRescan(const UniValue& data)
-{  
+{
     if (data.exists("rescan")) {
         const UniValue& rescan = data["rescan"];
         if (rescan.isBool()) {
