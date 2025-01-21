@@ -235,6 +235,15 @@ include(ProcessConfigurations)
 include(TryAppendCXXFlags)
 include(TryAppendLinkerFlag)
 
+# Redefine/adjust per-configuration flags.
+target_compile_definitions(core_interface_debug INTERFACE
+  DEBUG
+  DEBUG_LOCKORDER
+  DEBUG_LOCKCONTENTION
+  RPC_DOC_CHECK
+  ABORT_ON_FAILED_ASSUME
+)
+
 if(WIN32)
   #[=[
   This build system supports two ways to build binaries for Windows.
