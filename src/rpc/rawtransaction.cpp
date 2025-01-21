@@ -244,7 +244,7 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
         UpdatePSBTOutput(provider, psbtx, i);
     }
 
-    RemoveUnnecessaryTransactions(psbtx, /*sighash_type=*/std::nullopt);
+    RemoveUnnecessaryTransactions(psbtx);
 
     return psbtx;
 }

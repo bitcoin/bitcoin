@@ -2144,7 +2144,7 @@ std::optional<PSBTError> CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bo
         }
     }
 
-    RemoveUnnecessaryTransactions(psbtx, sighash_type);
+    RemoveUnnecessaryTransactions(psbtx);
 
     // Complete if every input is now signed
     complete = true;

@@ -487,36 +487,40 @@ PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransact
     return sig_complete ? PSBTError::OK : PSBTError::INCOMPLETE;
 }
 
-void RemoveUnnecessaryTransactions(PartiallySignedTransaction& psbtx, std::optional<int> sighash_type)
+void RemoveUnnecessaryTransactions(PartiallySignedTransaction& psbtx)
 {
-    if (!sighash_type) sighash_type = SIGHASH_DEFAULT;
-    // Only drop non_witness_utxos if sighash_type != SIGHASH_ANYONECANPAY
-    if ((*sighash_type & 0x80) != SIGHASH_ANYONECANPAY) {
-        // Figure out if any non_witness_utxos should be dropped
-        std::vector<unsigned int> to_drop;
-        for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
-            const auto& input = psbtx.inputs.at(i);
-            int wit_ver;
-            std::vector<unsigned char> wit_prog;
-            if (input.witness_utxo.IsNull() || !input.witness_utxo.scriptPubKey.IsWitnessProgram(wit_ver, wit_prog)) {
-                // There's a non-segwit input or Segwit v0, so we cannot drop any witness_utxos
-                to_drop.clear();
-                break;
-            }
-            if (wit_ver == 0) {
-                // Segwit v0, so we cannot drop any non_witness_utxos
-                to_drop.clear();
-                break;
-            }
-            if (input.non_witness_utxo) {
-                to_drop.push_back(i);
-            }
+    // Figure out if any non_witness_utxos should be dropped
+    std::vector<unsigned int> to_drop;
+    for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
+        const auto& input = psbtx.inputs.at(i);
+        int wit_ver;
+        std::vector<unsigned char> wit_prog;
+        if (input.witness_utxo.IsNull() || !input.witness_utxo.scriptPubKey.IsWitnessProgram(wit_ver, wit_prog)) {
+            // There's a non-segwit input, so we cannot drop any non_witness_utxos
+            to_drop.clear();
+            break;
+        }
+        if (wit_ver == 0) {
+            // Segwit v0, so we cannot drop any non_witness_utxos
+            to_drop.clear();
+            break;
+        }
+        // non_witness_utxos cannot be dropped if the sighash type includes SIGHASH_ANYONECANPAY
+        // Since callers should have called SignPSBTInput which updates the sighash type in the PSBT, we only
+        // need to look at that field. If it is not present, then we can assume SIGHASH_DEFAULT or SIGHASH_ALL.
+        if (input.sighash_type != std::nullopt && (*input.sighash_type & 0x80) == SIGHASH_ANYONECANPAY) {
+            to_drop.clear();
+            break;
         }
 
-        // Drop the non_witness_utxos that we can drop
-        for (unsigned int i : to_drop) {
-            psbtx.inputs.at(i).non_witness_utxo = nullptr;
+        if (input.non_witness_utxo) {
+            to_drop.push_back(i);
         }
+    }
+
+    // Drop the non_witness_utxos that we can drop
+    for (unsigned int i : to_drop) {
+        psbtx.inputs.at(i).non_witness_utxo = nullptr;
     }
 }
 

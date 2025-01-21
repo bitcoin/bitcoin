@@ -1407,7 +1407,7 @@ bool PSBTInputSignedAndVerified(const PartiallySignedTransaction psbt, unsigned 
 [[nodiscard]] PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, std::optional<int> sighash = std::nullopt, SignatureData* out_sigdata = nullptr, bool finalize = true);
 
 /**  Reduces the size of the PSBT by dropping unnecessary `non_witness_utxos` (i.e. complete previous transactions) from a psbt when all inputs are segwit v1. */
-void RemoveUnnecessaryTransactions(PartiallySignedTransaction& psbtx, std::optional<int> sighash_type);
+void RemoveUnnecessaryTransactions(PartiallySignedTransaction& psbtx);
 
 /** Counts the unsigned inputs of a PSBT. */
 size_t CountPSBTUnsignedInputs(const PartiallySignedTransaction& psbt);
