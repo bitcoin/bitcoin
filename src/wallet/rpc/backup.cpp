@@ -1257,9 +1257,9 @@ static bool GetImportRescan(const UniValue& data)
         const UniValue& rescan = data["rescan"];
         if (rescan.isBool()) {
             return rescan.get_bool();
-        } 
+        }
     }
-    return false;
+    return true;
 }
 
 RPCHelpMan importmulti()
@@ -1649,6 +1649,7 @@ RPCHelpMan importdescriptors()
                                     },
                                     {"internal", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether matching outputs should be treated as not incoming payments (e.g. change)"},
                                     {"label", RPCArg::Type::STR, RPCArg::Default{""}, "Label to assign to the address, only allowed with internal=false. Disabled for ranged descriptors"},
+                                    {"rescan", RPCArg::Type::BOOL, RPCArg::Default{true}, "Scan the chain and mempool for wallet transactions."},
                                 },
                             },
                         },
@@ -1704,7 +1705,7 @@ RPCHelpMan importdescriptors()
     const int64_t minimum_timestamp = 1;
     int64_t now = 0;
     int64_t lowest_timestamp = 0;
-    bool rescan = false;
+    bool rescan = true;
     UniValue response(UniValue::VARR);
     {
         LOCK(pwallet->cs_wallet);
@@ -1722,10 +1723,14 @@ RPCHelpMan importdescriptors()
             if (lowest_timestamp > timestamp ) {
                 lowest_timestamp = timestamp;
             }
-
-            // check rescan option for each request if any request set rescan
-            rescan = GetImportRescan(request);
         }
+
+        rescan = std::all_of(requests.getValues().begin(), requests.getValues().end(), [](const UniValue& request){
+            // check rescan option for each request if any request set rescan
+            auto rescan = GetImportRescan(request);
+            return rescan == true;
+        });
+
         pwallet->ConnectScriptPubKeyManNotifiers();
     }
 
