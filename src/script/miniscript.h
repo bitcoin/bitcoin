@@ -349,8 +349,8 @@ struct InputResult {
 //! Class whose objects represent the maximum of a list of integers.
 template<typename I>
 struct MaxInt {
-    const bool valid;
-    const I value;
+    bool valid;
+    I value;
 
     MaxInt() : valid(false), value(0) {}
     MaxInt(I val) : valid(true), value(val) {}
@@ -421,11 +421,11 @@ struct Ops {
  */
 struct SatInfo {
     //! Whether a canonical satisfaction/dissatisfaction is possible at all.
-    const bool valid;
+    bool valid;
     //! How much higher the stack size at start of execution can be compared to at the end.
-    const int32_t netdiff;
-    //! Mow much higher the stack size can be during execution compared to at the end.
-    const int32_t exec;
+    int32_t netdiff;
+    //! How much higher the stack size can be during execution compared to at the end.
+    int32_t exec;
 
     /** Empty script set. */
     constexpr SatInfo() noexcept : valid(false), netdiff(0), exec(0) {}
@@ -480,7 +480,7 @@ struct SatInfo {
 };
 
 struct StackSize {
-    const SatInfo sat, dsat;
+    SatInfo sat, dsat;
 
     constexpr StackSize(SatInfo in_sat, SatInfo in_dsat) noexcept : sat(in_sat), dsat(in_dsat) {};
     constexpr StackSize(SatInfo in_both) noexcept : sat(in_both), dsat(in_both) {};
@@ -503,17 +503,17 @@ struct NoDupCheck {};
 template<typename Key>
 struct Node {
     //! What node type this node is.
-    const Fragment fragment;
+    Fragment fragment;
     //! The k parameter (time for OLDER/AFTER, threshold for THRESH(_M))
-    const uint32_t k = 0;
+    uint32_t k = 0;
     //! The keys used by this expression (only for PK_K/PK_H/MULTI)
-    const std::vector<Key> keys;
-    //! The data bytes in this expression (only for HASH160/HASH256/SHA256/RIPEMD10).
-    const std::vector<unsigned char> data;
+    std::vector<Key> keys;
+    //! The data bytes in this expression (only for HASH160/HASH256/SHA256/RIPEMD160).
+    std::vector<unsigned char> data;
     //! Subexpressions (for WRAP_*/AND_*/OR_*/ANDOR/THRESH)
     mutable std::vector<NodeRef<Key>> subs;
     //! The Script context for this node. Either P2WSH or Tapscript.
-    const MiniscriptContext m_script_ctx;
+    MiniscriptContext m_script_ctx;
 
     ~Node()
     {
@@ -546,15 +546,15 @@ struct Node {
 
 private:
     //! Cached ops counts.
-    const internal::Ops ops;
+    internal::Ops ops;
     //! Cached stack size bounds.
-    const internal::StackSize ss;
+    internal::StackSize ss;
     //! Cached witness size bounds.
-    const internal::WitnessSize ws;
+    internal::WitnessSize ws;
     //! Cached expression type (computed by CalcType and fed through SanitizeType).
-    const Type typ;
+    Type typ;
     //! Cached script length (computed by CalcScriptLen).
-    const size_t scriptlen;
+    size_t scriptlen;
     //! Whether a public key appears more than once in this node. This value is initialized
     //! by all constructors except the NoDupCheck ones. The NoDupCheck ones skip the
     //! computation, requiring it to be done manually by invoking DuplicateKeyCheck().
