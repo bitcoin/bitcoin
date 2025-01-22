@@ -762,18 +762,20 @@ void TxGraphImpl::GroupClusters() noexcept
             return data;
         };
 
-        /** Given two PartitionDatas, union the partitions they are in. */
+        /** Given two PartitionDatas, union the partitions they are in, and return their
+         *  representative. */
         static constexpr auto union_uf = [](PartitionData* arg1, PartitionData* arg2) noexcept {
             // Find the roots of the trees, and bail out if they are already equal (which would
             // mean they are in the same partition already).
             auto rep1 = find_uf(arg1);
             auto rep2 = find_uf(arg2);
-            if (rep1 == rep2) return;
+            if (rep1 == rep2) return rep1;
             // Pick the lower-rank root to become a child of the higher-rank one.
             // See https://en.wikipedia.org/wiki/Disjoint-set_data_structure#Union_by_rank.
             if (rep1->rank < rep2->rank) std::swap(rep1, rep2);
             rep2->parent = rep1;
             rep1->rank += (rep1->rank == rep2->rank);
+            return rep1;
         };
 
         // Start by initializing every Cluster as its own singleton partition.
@@ -786,6 +788,8 @@ void TxGraphImpl::GroupClusters() noexcept
 
         // Run through all parent/child pairs in m_deps_to_add, and union the
         // the partitions their Clusters are in.
+        Cluster* last_chl_cluster{nullptr};
+        PartitionData* last_partition{nullptr};
         for (const auto& [par, chl] : m_deps_to_add) {
             auto par_cluster = m_entries[par].m_locator.cluster;
             auto chl_cluster = m_entries[chl].m_locator.cluster;
@@ -794,7 +798,15 @@ void TxGraphImpl::GroupClusters() noexcept
             // Nothing to do if either parent or child transaction is removed already.
             if (par_cluster == nullptr || chl_cluster == nullptr) continue;
             Assume(par != chl);
-            union_uf(locate_uf(par_cluster), locate_uf(chl_cluster));
+            if (chl_cluster == last_chl_cluster) {
+                // If the child Clusters is the same as the previous iteration, union with the
+                // tree they were in, avoiding the need for another lookup. Note that m_deps_to_add
+                // is sorted by child Cluster, so batches with the same child are expected.
+                last_partition = union_uf(locate_uf(par_cluster), last_partition);
+            } else {
+                last_chl_cluster = chl_cluster;
+                last_partition = union_uf(locate_uf(par_cluster), locate_uf(chl_cluster));
+            }
         }
 
         // Populate the an_clusters and an_deps data structures with the list of input Clusters,
