@@ -413,7 +413,7 @@ Block and transaction handling:
 - `bc42503` Use unordered_map for CCoinsViewCache with salted hash (optimization)
 - `d4d3fbd` Do not flush the cache after every block outside of IBD (optimization)
 - `ad08d0b` Bugfix: make CCoinsViewMemPool support pruned entries in underlying cache
-- `5734d4d` Only remove actualy failed blocks from setBlockIndexValid
+- `5734d4d` Only remove actually failed blocks from setBlockIndexValid
 - `d70bc52` Rework block processing benchmark code
 - `714a3e6` Only keep setBlockIndexValid entries that are possible improvements
 - `ea100c7` Reduce maximum coinscache size during verification (reduce memory usage)
