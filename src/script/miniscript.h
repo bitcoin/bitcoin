@@ -515,9 +515,11 @@ struct Node {
     //! The Script context for this node. Either P2WSH or Tapscript.
     const MiniscriptContext m_script_ctx;
 
-    /* Destroy the shared pointers iteratively to avoid a stack-overflow due to recursive calls
-     * to the subs' destructors. */
-    ~Node() {
+    ~Node()
+    {
+        // Destroy the subexpressions iteratively after moving out their
+        // subexpressions to avoid a stack-overflow due to recursive calls to
+        // the subs' destructors.
         while (!subs.empty()) {
             auto node = std::move(subs.back());
             subs.pop_back();
