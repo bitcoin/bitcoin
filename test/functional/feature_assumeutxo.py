@@ -38,6 +38,12 @@ from test_framework.wallet import (
     getnewdestination,
     MiniWallet,
 )
+from test_framework.blocktools import (
+    REGTEST_N_BITS,
+    REGTEST_TARGET,
+    nbits_str,
+    target_str,
+)
 
 START_HEIGHT = 199
 SNAPSHOT_BASE_HEIGHT = 299
@@ -228,6 +234,12 @@ class AssumeutxoTest(BitcoinTestFramework):
         normal, snapshot = n3.getchainstates()["chainstates"]
         assert_equal(normal['blocks'], START_HEIGHT + 99)
         assert_equal(snapshot['blocks'], SNAPSHOT_BASE_HEIGHT)
+
+        # Both states should have the same nBits and target
+        assert_equal(normal['bits'], nbits_str(REGTEST_N_BITS))
+        assert_equal(normal['bits'], snapshot['bits'])
+        assert_equal(normal['target'], target_str(REGTEST_TARGET))
+        assert_equal(normal['target'], snapshot['target'])
 
         # Now lets sync the nodes and wait for the background validation to finish
         self.connect_nodes(0, 3)
