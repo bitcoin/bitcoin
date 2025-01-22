@@ -78,7 +78,9 @@ constexpr inline auto TEST_DIR_PATH_ELEMENT{"test_common bitcoin"}; // Includes 
 static FastRandomContext g_rng_temp_path;
 static const bool g_rng_temp_path_init{[] {
     // Must be initialized before any SeedRandomForTest
+    Assert(!g_used_g_prng);
     (void)g_rng_temp_path.rand64();
+    g_used_g_prng = false;
     return true;
 }()};
 
