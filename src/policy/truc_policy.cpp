@@ -70,7 +70,7 @@ std::optional<std::string> PackageTRUCChecks(const CTransactionRef& ptx, int64_t
     // Now we have all ancestors, so we can start checking TRUC rules.
     if (ptx->version == TRUC_VERSION) {
         // SingleTRUCChecks should have checked this already.
-        if (vsize > TRUC_MAX_VSIZE && !ignore_rejects.count(reason_prefix + "vsize-toobig")) {
+        if (!Assume(vsize <= TRUC_MAX_VSIZE || ignore_rejects.count(reason_prefix + "vsize-toobig"))) {
             out_reason = reason_prefix + "vsize-toobig";
             return strprintf("version=3 tx %s (wtxid=%s) is too big: %u > %u virtual bytes",
                              ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(), vsize, TRUC_MAX_VSIZE);
