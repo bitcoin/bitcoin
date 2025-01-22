@@ -117,8 +117,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1628640000; // August 11th, 2021
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 709632; // Approximately November 12th, 2021
 
-        consensus.nMinimumChainWork = uint256{"000000000000000000000000000000000000000088e186b70e0862c193ec44d6"};
-        consensus.defaultAssumeValid = uint256{"000000000000000000011c5890365bdbe5d25b97ce0057589acaef4f1a57263f"}; // 856760
+        consensus.nMinimumChainWork = uint256{"000000000000000000000000000000000000000000000000000c350d350d3500"};
+        consensus.defaultAssumeValid = uint256{"00000000a2082b4d76a7f6fe38b47dc1cc31dcce61f4242a3a14a46ceea28d3f"}; // 856760
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -254,7 +254,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
         consensus.nMinimumChainWork = uint256{"000000000000000000000000000000000000000000000f209695166be8b61fa9"};
-        consensus.defaultAssumeValid = uint256{"00000000a2082b4d76a7f6fe38b47dc1cc31dcce61f4242a3a14a46ceea28d3f"}; // 2873500
+        consensus.defaultAssumeValid = uint256{"000000000000000465b1a66c9f386308e8c75acef9201f3f577811da09fc90ad"}; // 2873500
 
         pchMessageStart[0] = 0x0b;
         pchMessageStart[1] = 0x11;
