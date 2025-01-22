@@ -2569,6 +2569,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, Spa
             bool add_fixed_seeds_now = false;
             // It is cheapest to check if enough time has passed first.
             if (GetTime<std::chrono::seconds>() > start + std::chrono::minutes{1}) {
+                continue; // niobio does not have fixed seeds
                 add_fixed_seeds_now = true;
                 LogPrintf("Adding fixed seeds as 60 seconds have passed and addrman is empty for at least one reachable network\n");
             }
