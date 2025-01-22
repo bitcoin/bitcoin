@@ -189,11 +189,11 @@ inline consteval Type operator""_mst(const char* c, size_t l)
 using Opcode = std::pair<opcodetype, std::vector<unsigned char>>;
 
 template<typename Key> struct Node;
-template<typename Key> using NodeRef = std::shared_ptr<const Node<Key>>;
+template<typename Key> using NodeRef = std::unique_ptr<const Node<Key>>;
 
-//! Construct a miniscript node as a shared_ptr.
+//! Construct a miniscript node as a unique_ptr.
 template<typename Key, typename... Args>
-NodeRef<Key> MakeNodeRef(Args&&... args) { return std::make_shared<const Node<Key>>(std::forward<Args>(args)...); }
+NodeRef<Key> MakeNodeRef(Args&&... args) { return std::make_unique<const Node<Key>>(std::forward<Args>(args)...); }
 
 //! The different node types in miniscript.
 enum class Fragment {
@@ -528,6 +528,20 @@ struct Node {
         }
     }
 
+    NodeRef<Key> Clone() const
+    {
+        // Use TreeEval() to avoid a stack-overflow due to recursion
+        auto upfn = [](const Node& node, Span<NodeRef<Key>> children) {
+            std::vector<NodeRef<Key>> new_subs;
+            for (auto child = children.begin(); child != children.end(); ++child) {
+                new_subs.emplace_back(std::move(*child));
+            }
+            // std::make_unique (and therefore MakeNodeRef) doesn't work on private constructors
+            return std::unique_ptr<Node>{new Node{internal::NoDupCheck{}, node.m_script_ctx, node.fragment, std::move(new_subs), node.keys, node.data, node.k}};
+        };
+        return TreeEval<NodeRef<Key>>(upfn);
+    }
+
 private:
     //! Cached ops counts.
     const internal::Ops ops;
@@ -546,6 +560,11 @@ private:
     //! for all subnodes as well.
     mutable std::optional<bool> has_duplicate_keys;
 
+    // Constructor which takes all of the data that a Node could possibly contain.
+    // This is kept private as no valid fragment has all of these arguments.
+    // Only used by Clone()
+    Node(internal::NoDupCheck, MiniscriptContext script_ctx, Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<Key> key, std::vector<unsigned char> arg, uint32_t val)
+        : fragment(nt), k(val), keys(key), data(std::move(arg)), subs(std::move(sub)), m_script_ctx{script_ctx}, ops(CalcOps()), ss(CalcStackSize()), ws(CalcWitnessSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
 
     //! Compute the length of the script for this miniscript (including children).
     size_t CalcScriptLen() const {
@@ -1663,6 +1682,10 @@ public:
         : Node(internal::NoDupCheck{}, ctx.MsContext(), nt, std::move(sub), val) { DuplicateKeyCheck(ctx); }
     template <typename Ctx> Node(const Ctx& ctx, Fragment nt, uint32_t val = 0)
         : Node(internal::NoDupCheck{}, ctx.MsContext(), nt, val) { DuplicateKeyCheck(ctx); }
+
+    // Delete copy constructor and assignment operator, use Clone() instead
+    Node(const Node&) = delete;
+    Node& operator=(const Node&) = delete;
 };
 
 namespace internal {
