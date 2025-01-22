@@ -16,10 +16,13 @@ def write_testcode(filename):
     with open(filename, 'w', encoding="utf8") as f:
         f.write('''
     #include <cstdio>
-    int main()
+    #include <cstring>
+    int main(int argc, char** argv)
     {
+        int ret;
+        memcpy(&ret, argv, argc);
         std::printf("the quick brown fox jumps over the lazy god\\n");
-        return 0;
+        return ret;
     }
     ''')
 
