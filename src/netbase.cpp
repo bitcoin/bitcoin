@@ -727,7 +727,11 @@ bool IsBadPort(uint16_t port)
     case 6668:  // Alternate IRC
     case 6669:  // Alternate IRC
     case 6697:  // IRC + TLS
+    case 8332:  // Bitcoin RPC
+    case 8333:  // Bitcoin P2P
     case 10080: // Amanda
+    case 18332: // Bitcoin testnet RPC
+    case 18333: // Bitcoin testnet RPC
         return true;
     }
     return false;

@@ -39,7 +39,11 @@ incoming connections.
     6668:  Alternate IRC
     6669:  Alternate IRC
     6697:  IRC + TLS
+    8882:  Bitcoin RPC
+    8883:  Bitcoin P2P
     10080: Amanda
+    18882: Bitcoin testnet RPC
+    18883: Bitcoin testnet P2P
 
 For further information see:
 
