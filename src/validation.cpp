@@ -2457,7 +2457,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     // may have let in a block that violates the rule prior to updating the
     // software, and we would NOT be enforcing the rule here. Fully solving
     // upgrade from one software version to the next after a consensus rule
-    // change is potentially tricky and issue-specific (see NeedsRedownload()
+    // change is potentially tricky and issue-specific (see historical versions of NeedsRedownload()
     // for one approach that was used for BIP 141 deployment).
     // Also, currently the rule against blocks more than 2 hours in the future
     // is enforced in ContextualCheckBlockHeader(); we wouldn't want to
@@ -4989,16 +4989,12 @@ bool Chainstate::NeedsRedownload() const
     AssertLockHeld(cs_main);
 
     // At and above m_params.SegwitHeight, segwit consensus rules must be validated
-    CBlockIndex* block{m_chain.Tip()};
-
-    while (block != nullptr && DeploymentActiveAt(*block, m_chainman, Consensus::DEPLOYMENT_SEGWIT)) {
-        if (!(block->nStatus & BLOCK_OPT_WITNESS)) {
-            // block is insufficiently validated for a segwit client
-            return true;
-        }
-        block = block->pprev;
+    int segwit_height{m_chainman.GetConsensus().DeploymentHeight(Consensus::DEPLOYMENT_SEGWIT)};
+    CBlockIndex* block{m_chain[segwit_height]};
+    if (block && !(block->nStatus & BLOCK_OPT_WITNESS)) {
+        // block is insufficiently validated for a segwit client
+        return true;
     }
-
     return false;
 }
 
@@ -6070,8 +6066,8 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
     for (int i = AFTER_GENESIS_START; i <= snapshot_chainstate.m_chain.Height(); ++i) {
         index = snapshot_chainstate.m_chain[i];
 
-        // Fake BLOCK_OPT_WITNESS so that Chainstate::NeedsRedownload()
-        // won't ask for -reindex on startup.
+        // Set BLOCK_OPT_WITNESS, which would normally be done in ReceivedBlockTransactions
+        // if we had downloaded the block.
         if (DeploymentActiveAt(*index, *this, Consensus::DEPLOYMENT_SEGWIT)) {
             index->nStatus |= BLOCK_OPT_WITNESS;
         }
