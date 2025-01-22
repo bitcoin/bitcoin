@@ -11,78 +11,18 @@ nodes.
 and usually require authentication. A connection attempt (by Dash Core,
 trying to connect because it thinks there is a Dash node on that
 address:port) to such service may be considered a malicious action by an
-ultra-paranoid administrator. An example for such a port is 22 (ssh). On the
-other hand, connection attempts to public services that usually do not require
-authentication are unlikely to be considered a malicious action,
-e.g. port 80 (http).
+ultra-paranoid administrator. An example for such a port is 22 (ssh).
+
+Additionally, ports below 1024 are classified as "system ports" by RFC 6335
+and on some platforms, require administrative privileges in order to use them.
+They are also considered "bad" ports as they require clients to either run Dash
+Core with elevated privileges or configure their system to relax such requirements,
+which may not be possible or desirable in some deployments.
 
 Below is a list of "bad" ports which Dash Core avoids when choosing a peer to
 connect to. If a node is listening on such a port, it will likely receive fewer
 incoming connections.
 
-    1:     tcpmux
-    7:     echo
-    9:     discard
-    11:    systat
-    13:    daytime
-    15:    netstat
-    17:    qotd
-    19:    chargen
-    20:    ftp data
-    21:    ftp access
-    22:    ssh
-    23:    telnet
-    25:    smtp
-    37:    time
-    42:    name
-    43:    nicname
-    53:    domain
-    69:    tftp
-    77:    priv-rjs
-    79:    finger
-    87:    ttylink
-    95:    supdup
-    101:   hostname
-    102:   iso-tsap
-    103:   gppitnp
-    104:   acr-nema
-    109:   pop2
-    110:   pop3
-    111:   sunrpc
-    113:   auth
-    115:   sftp
-    117:   uucp-path
-    119:   nntp
-    123:   NTP
-    135:   loc-srv /epmap
-    137:   netbios
-    139:   netbios
-    143:   imap2
-    161:   snmp
-    179:   BGP
-    389:   ldap
-    427:   SLP (Also used by Apple Filing Protocol)
-    465:   smtp+ssl
-    512:   print / exec
-    513:   login
-    514:   shell
-    515:   printer
-    526:   tempo
-    530:   courier
-    531:   chat
-    532:   netnews
-    540:   uucp
-    548:   AFP (Apple Filing Protocol)
-    554:   rtsp
-    556:   remotefs
-    563:   nntp+ssl
-    587:   smtp (rfc6409)
-    601:   syslog-conn (rfc3195)
-    636:   ldap+ssl
-    989:   ftps-data
-    990:   ftps
-    993:   ldap+ssl
-    995:   pop3+ssl
     1719:  h323gatestat
     1720:  h323hostcall
     1723:  pptp
@@ -112,3 +52,5 @@ For further information see:
 [chromium.googlesource.com](https://chromium.googlesource.com/chromium/src.git/+/refs/heads/main/net/base/port_util.cc)
 
 [hg.mozilla.org](https://hg.mozilla.org/mozilla-central/file/tip/netwerk/base/nsIOService.cpp)
+
+[RFC 6335, Section 6 ("Port Number Ranges")](https://datatracker.ietf.org/doc/html/rfc6335#section-6)
