@@ -357,7 +357,9 @@ int FuzzedSock::GetSockName(sockaddr* name, socklen_t* name_len) const
         SetFuzzedErrNo(m_fuzzed_data_provider, getsockname_errnos);
         return -1;
     }
+    assert(name_len);
     *name_len = m_fuzzed_data_provider.ConsumeData(name, *name_len);
+    if (*name_len < (int)sizeof(sockaddr)) return -1;
     return 0;
 }
 
