@@ -734,6 +734,15 @@ void TxGraphImpl::GroupClusters() noexcept
     std::sort(an_clusters.begin(), an_clusters.end());
     an_clusters.erase(std::unique(an_clusters.begin(), an_clusters.end()), an_clusters.end());
 
+    // Sort the dependencies by child Cluster.
+    std::sort(m_deps_to_add.begin(), m_deps_to_add.end(), [&](auto& a, auto& b) noexcept {
+        auto [_a_par, a_chl] = a;
+        auto [_b_par, b_chl] = b;
+        auto a_chl_cluster = m_entries[a_chl].m_locator.cluster;
+        auto b_chl_cluster = m_entries[b_chl].m_locator.cluster;
+        return std::less{}(a_chl_cluster, b_chl_cluster);
+    });
+
     // Run the union-find algorithm to to find partitions of the input Clusters which need to be
     // grouped together. See https://en.wikipedia.org/wiki/Disjoint-set_data_structure.
     {
@@ -813,6 +822,8 @@ void TxGraphImpl::GroupClusters() noexcept
         // Populate the an_clusters and an_deps data structures with the list of input Clusters,
         // and the input dependencies, annotated with the representative of the Cluster partition
         // it applies to.
+        an_deps.reserve(m_deps_to_add.size());
+        auto deps_it = m_deps_to_add.begin();
         for (size_t i = 0; i < partition_data.size(); ++i) {
             auto& data = partition_data[i];
             // Find the representative of the partition Cluster i is in, and store it with the
@@ -820,18 +831,20 @@ void TxGraphImpl::GroupClusters() noexcept
             auto rep = find_root_fn(&data)->cluster;
             Assume(an_clusters[i].second == nullptr);
             an_clusters[i].second = rep;
-        }
-        an_deps.reserve(m_deps_to_add.size());
-        for (auto [par, chl] : m_deps_to_add) {
-            auto chl_cluster = m_entries[chl].m_locator.cluster;
-            auto par_cluster = m_entries[par].m_locator.cluster;
-            // Nothing to do if either parent or child transaction is removed already.
-            if (par_cluster == nullptr || chl_cluster == nullptr) continue;
-            // Find the representative of the partition which this dependency's child is in (which
-            // should be the same as the one for the parent).
-            auto rep = find_root_fn(locate_fn(chl_cluster))->cluster;
-            // Create an_deps entry.
-            an_deps.emplace_back(std::pair{par, chl}, rep);
+            // Find all dependencies whose child Cluster is Cluster i, and annotate them with rep.
+            while (deps_it != m_deps_to_add.end()) {
+                auto [par, chl] = *deps_it;
+                auto chl_cluster = m_entries[chl].m_locator.cluster;
+                if (std::greater{}(chl_cluster, data.cluster)) break;
+                // Skip dependencies that apply to earlier Clusters (those necessary are for
+                // deleted transactions, as otherwise we'd have processed them already).
+                if (chl_cluster == data.cluster) {
+                    auto par_cluster = m_entries[par].m_locator.cluster;
+                    // Also filter out dependencies applying to a removed parent.
+                    if (par_cluster != nullptr) an_deps.emplace_back(*deps_it, rep);
+                }
+                ++deps_it;
+            }
         }
     }
 
