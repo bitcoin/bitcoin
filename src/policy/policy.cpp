@@ -274,7 +274,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs,
 
         // witness stuffing detected
         if (prevScript.IsPayToAnchor()) {
-            return false;
+            MaybeReject("anchor-not-empty");
         }
 
         bool p2sh = false;
