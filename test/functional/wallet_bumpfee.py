@@ -548,9 +548,9 @@ def test_settxfee(self, rbf_node, dest_address):
     assert_greater_than(Decimal("0.00001000"), abs(requested_feerate - actual_feerate))
     rbf_node.settxfee(Decimal("0.00000000"))  # unset paytxfee
 
-    # check that settxfee respects -maxtxfee
-    self.restart_node(1, ['-maxtxfee=0.000025'] + self.extra_args[1])
-    assert_raises_rpc_error(-8, "txfee cannot be more than wallet max tx fee", rbf_node.settxfee, Decimal('0.00003'))
+    # check that settxfee respects -maxfeerate
+    self.restart_node(1, ['-maxfeerate=0.000025'] + self.extra_args[1])
+    assert_raises_rpc_error(-8, "fee rate cannot be more than wallet max tx fee rate", rbf_node.settxfee, Decimal('0.00003'))
     self.restart_node(1, self.extra_args[1])
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     self.connect_nodes(1, 0)
