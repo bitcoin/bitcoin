@@ -323,9 +323,12 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         self.log.debug('Closing down network thread')
         self.network_thread.close()
-        self.log.info("Stopping nodes")
-        if self.nodes:
-            self.stop_nodes()
+        if self.success == TestStatus.FAILED:
+            self.log.info("Not stopping nodes as test failed. The dangling processes will be cleaned up later.")
+        else:
+            self.log.info("Stopping nodes")
+            if self.nodes:
+                self.stop_nodes()
 
         should_clean_up = (
             not self.options.nocleanup and
