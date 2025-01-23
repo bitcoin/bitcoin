@@ -3517,8 +3517,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
             }
 
             // if we selected an invalid address, restart
-            if (!addr.IsValid() || outbound_ipv46_peer_netgroups.count(m_netgroupman.GetGroup(addr)))
+            if (!addr.IsValid()) {
                 break;
+            }
 
             // don't try to connect to masternodes that we already have a connection to (most likely inbound)
             if (isMasternode && setConnectedMasternodes.count(dmn->proTxHash))
