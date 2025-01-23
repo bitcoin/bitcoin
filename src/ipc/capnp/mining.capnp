@@ -43,4 +43,5 @@ struct BlockCreateOptions $Proxy.wrap("node::BlockCreateOptions") {
 struct BlockCheckOptions $Proxy.wrap("node::BlockCheckOptions") {
     checkMerkleRoot @0 :Bool $Proxy.name("check_merkle_root");
     checkPow @1 :Bool $Proxy.name("check_pow");
+    target @2 :Data $Proxy.name("target");
 }

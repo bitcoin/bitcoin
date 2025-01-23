@@ -1182,10 +1182,13 @@ public:
      * @param[in]   check_pow   perform proof-of-work check, nBits in the header
      *                          is always checked
      * @param[in]   check_merkle_root check the merkle root
+     * @param[in]   target      apply a higher work target (default 0, rounded up
+     *                          to nBits target)
      *
-     * For signets the challenge verification is skipped when check_pow is false.
+     * For signets the challenge verification is skipped when check_pow is false
+     * or a higher target is provided.
      */
-    bool TestBlockValidity(const CBlock& block, std::string& reason, const bool check_pow = true, const bool check_merkle_root = true);
+    bool TestBlockValidity(const CBlock& block, std::string& reason, const bool check_pow = true, const bool check_merkle_root = true, const uint256 target = uint256::ZERO);
 
     /**
      * Process an incoming block. This only returns after the best known valid

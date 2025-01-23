@@ -1124,6 +1124,7 @@ static RPCHelpMan checkblock()
             {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                 {
                     {"check_pow", RPCArg::Type::BOOL, RPCArg::Default{true}, "verify the proof-of-work. The nBits value is still checked."},
+                    {"target", RPCArg::Type::STR_HEX, RPCArg::DefaultHint{"consensus target"}, "Check against a higher target. The nBits value is checked against the original target."},
                 },
             }
         },
@@ -1146,21 +1147,26 @@ static RPCHelpMan checkblock()
     Mining& miner = EnsureMining(node);
 
     bool check_pow{true};
+    uint256 target{uint256::ZERO};
 
     if (!request.params[1].isNull()) {
         UniValue options = request.params[1];
         RPCTypeCheckObj(options,
             {
                 {"check_pow", UniValueType(UniValue::VBOOL)},
+                {"target", UniValueType(UniValue::VSTR)},
             }, /*fAllowNull=*/true, /*fStrict=*/true
         );
         if (options.exists("check_pow")) {
             check_pow = options["check_pow"].get_bool();
         }
+        if (options.exists("target")) {
+            target = ParseHashV(options["target"], "target");
+        }
     }
 
     std::string reason;
-    bool res = miner.checkBlock(block, {.check_pow = check_pow}, reason);
+    bool res = miner.checkBlock(block, {.check_pow = check_pow, .target = target}, reason);
     return res ? UniValue::VNULL : UniValue{reason};
 },
     };

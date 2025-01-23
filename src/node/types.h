@@ -73,6 +73,11 @@ struct BlockCheckOptions {
      * Set false to omit the proof-of-work check
      */
     bool check_pow{true};
+
+    /**
+     * Optionally higher target for weak blocks.
+     */
+    uint256 target{uint256::ZERO};
 };
 } // namespace node
 

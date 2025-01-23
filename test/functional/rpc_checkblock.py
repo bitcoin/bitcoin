@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test checkblock RPC
 
-Generate several blocks and test them against the checkblock RPC.
+Generate several (weak) blocks and test them against the checkblock RPC.
 """
 
 from concurrent.futures import ThreadPoolExecutor
@@ -60,14 +60,15 @@ class CheckBlockTest(BitcoinTestFramework):
 
         assert_equal(node.checkblock(bad_block_2.serialize().hex()), "bad-diffbits")
 
-        self.log.info("Generate a block")
+        self.log.info("Generate a weak block")
         target = uint256_from_compact(block_2.nBits)
         # Ensure that it doesn't meet the target by coincidence
-        while block_2.sha256 <= target:
+        # Leave some room to test a weak block target
+        while block_2.sha256 <= target + 10:
             block_2.nNonce += 1
             block_2.rehash()
 
-        self.log.info("A block without PoW won't pass the check by default")
+        self.log.info("A weak block won't pass the check by default")
         assert_equal(node.checkblock(block_2.serialize().hex()), "high-hash")
 
         self.log.info("Skip the PoW check")

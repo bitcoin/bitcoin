@@ -4653,7 +4653,7 @@ MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef&
     return result;
 }
 
-bool ChainstateManager::TestBlockValidity(const CBlock& block, std::string& reason, const bool check_pow, const bool check_merkle_root)
+bool ChainstateManager::TestBlockValidity(const CBlock& block, std::string& reason, const bool check_pow, const bool check_merkle_root, const uint256 target)
 {
     ChainstateManager& chainman{ActiveChainstate().m_chainman};
 
@@ -4670,16 +4670,34 @@ bool ChainstateManager::TestBlockValidity(const CBlock& block, std::string& reas
         return false;
     }
 
+    bool custom_target{false};
+
+    if (check_pow) {
+        // The default target value of 0, as well as any target lower than consensus,
+        // is rounded up.
+        const arith_uint256 consensus_target{*Assert(DeriveTarget(block.nBits, GetParams().GetConsensus().powLimit))};
+        const arith_uint256 max_target = std::max(UintToArith256(target), consensus_target);
+
+        // Check the actual proof-of-work. The nBits value is checked by
+        // ContextualCheckBlock below. When target equals consensus_target,
+        // have CheckBlock() below do this instead.
+        custom_target = max_target != consensus_target;
+        if (custom_target && UintToArith256(block.GetHash()) > max_target) {
+            reason = "high-hash";
+            return false;
+        }
+    }
+
     // Sanity check
     Assert(!block.fChecked);
     // For signets CheckBlock() verifies the challenge iif fCheckPow is set.
-    if (!CheckBlock(block, state, GetConsensus(), /*fCheckPow=*/check_pow, /*fCheckMerkleRoot=*/check_merkle_root)) {
+    if (!CheckBlock(block, state, GetConsensus(), /*fCheckPow=*/check_pow && !custom_target, /*fCheckMerkleRoot=*/check_merkle_root)) {
         reason = state.GetRejectReason();
         Assume(!reason.empty());
         return false;
     } else {
         // Sanity check
-        Assume(check_pow || !block.fChecked);
+        Assume((check_pow && !custom_target) || !block.fChecked);
     }
 
     /**
