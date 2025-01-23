@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <policy/policy.h>
 #include <script/script.h>
+#include <uint256.h>
 #include <util/time.h>
 
 namespace node {
@@ -85,6 +86,17 @@ struct BlockWaitOptions {
     CAmount fee_threshold{MAX_MONEY};
 };
 
+struct BlockCheckOptions {
+    /**
+     * Set false to omit the merkle root check
+     */
+    bool check_merkle_root{true};
+
+    /**
+     * Set false to omit the proof-of-work check
+     */
+    bool check_pow{true};
+};
 } // namespace node
 
 #endif // BITCOIN_NODE_TYPES_H

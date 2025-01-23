@@ -387,8 +387,10 @@ static RPCHelpMan generateblock()
         block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
         RegenerateCommitments(block, chainman);
 
-        if (BlockValidationState state{TestBlockValidity(chainman.ActiveChainstate(), block, /*check_pow=*/false, /*check_merkle_root=*/false)}; !state.IsValid()) {
-            throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("TestBlockValidity failed: %s", state.ToString()));
+        std::string reason;
+        std::string debug;
+        if (!miner.checkBlock(block, {.check_merkle_root = false, .check_pow = false}, reason, debug)) {
+            throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("TestBlockValidity failed: %s - %s", reason, debug));
         }
     }
 
@@ -741,7 +743,12 @@ static RPCHelpMan getblocktemplate()
                 return "duplicate-inconclusive";
             }
 
-            return BIP22ValidationResult(TestBlockValidity(chainman.ActiveChainstate(), block, /*check_pow=*/false, /*check_merkle_root=*/true));
+            std::string reason;
+            std::string debug;
+            bool res{miner.checkBlock(block, {.check_pow = false}, reason, debug)};
+            if (res) return UniValue::VNULL;
+            LogDebug(BCLog::RPC, "Invalid block: %s", debug);
+            return UniValue{reason};
         }
 
         const UniValue& aClientRules = oparam.find_value("rules");
