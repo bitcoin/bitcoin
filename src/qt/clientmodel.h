@@ -122,7 +122,7 @@ private:
     // representation of the list in UI during initial sync/reindex, so we cache it here too.
     mutable RecursiveMutex cs_mnlinst; // protects mnListCached
     CDeterministicMNListPtr mnListCached;
-    const CBlockIndex* mnListTip;
+    const CBlockIndex* mnListTip{nullptr};
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
