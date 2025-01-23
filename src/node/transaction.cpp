@@ -3,6 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <node/transaction.h>
+
 #include <consensus/validation.h>
 #include <index/txindex.h>
 #include <net.h>
@@ -10,10 +12,10 @@
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/types.h>
+#include <policy/feerate.h>
 #include <txmempool.h>
 #include <validation.h>
 #include <validationinterface.h>
-#include <node/transaction.h>
 
 namespace node {
 static TransactionError HandleATMPError(const TxValidationState& state, std::string& err_string_out)
@@ -29,12 +31,7 @@ static TransactionError HandleATMPError(const TxValidationState& state, std::str
     }
 }
 
-TransactionError BroadcastTransaction(NodeContext& node,
-                                      const CTransactionRef tx,
-                                      std::string& err_string,
-                                      const CAmount& max_tx_fee,
-                                      TxBroadcast broadcast_method,
-                                      bool wait_callback)
+TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, const CFeeRate& max_tx_fee_rate, TxBroadcast broadcast_method, bool wait_callback)
 {
     // BroadcastTransaction can be called by RPC or by the wallet.
     // chainman, mempool and peerman are initialized before the RPC server and wallet are started
@@ -72,13 +69,16 @@ TransactionError BroadcastTransaction(NodeContext& node,
         } else {
             // Transaction is not already in the mempool.
             const bool check_max_fee{max_tx_fee > 0};
-            if (check_max_fee || broadcast_method == TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST) {
+            const bool check_max_feerate{max_tx_fee_rate > CFeeRate(0)};
+            if (check_max_fee || check_max_feerate || broadcast_method == TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST) {
                 // First, call ATMP with test_accept and check the fee. If ATMP
                 // fails here, return error immediately.
                 const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*test_accept=*/ true);
                 if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
                     return HandleATMPError(result.m_state, err_string);
                 } else if (check_max_fee && result.m_base_fees.value() > max_tx_fee) {
+                    return TransactionError::MAX_FEE_EXCEEDED;
+                } else if (check_max_feerate && CFeeRate(result.m_base_fees.value(), result.m_vsize.value()) > max_tx_fee_rate) {
                     return TransactionError::MAX_FEE_EXCEEDED;
                 }
             }
