@@ -135,10 +135,15 @@ inline constexpr bool DEFAULT_DISABLE_WALLET = false;
 inline constexpr bool DEFAULT_WALLETCROSSCHAIN = false;
 //! -maxtxfee default
 inline constexpr CAmount DEFAULT_TRANSACTION_MAXFEE{COIN / 10};
+//! -maxfeerate default
+inline constexpr CFeeRate DEFAULT_MAX_TRANSACTION_FEERATE{COIN / 10};
 //! Discourage users to set fees higher than this amount (in satoshis) per kB
 inline constexpr CAmount HIGH_TX_FEE_PER_KB{COIN / 100};
 //! -maxtxfee will warn if called with a higher fee than this amount (in satoshis)
 inline constexpr CAmount HIGH_MAX_TX_FEE{100 * HIGH_TX_FEE_PER_KB};
+//! A warning will be emitted if -maxfeerate is set higher than this fee rate (in satoshis per kB).
+inline constexpr CFeeRate HIGH_MAX_TX_FEERATE{100 * HIGH_TX_FEE_PER_KB};
+
 //! Pre-calculated constants for input size estimation in *virtual size*
 inline constexpr size_t DUMMY_NESTED_P2WPKH_INPUT_SIZE = 91;
 
@@ -749,6 +754,8 @@ public:
     /** Absolute maximum transaction fee (in satoshis) used by default for the wallet */
     CAmount m_max_tx_fee{DEFAULT_TRANSACTION_MAXFEE};
 
+    /** Maximum transaction fee rate used for the wallet */
+    CFeeRate m_max_tx_fee_rate{DEFAULT_MAX_TRANSACTION_FEERATE};
     /** Number of pre-generated keys/scripts by each spkm (part of the look-ahead process, used to detect payments) */
     int64_t m_keypool_size{DEFAULT_KEYPOOL_SIZE};
 
