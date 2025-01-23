@@ -166,6 +166,7 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CT
                                           const std::set<Txid>& direct_conflicts,
                                           int64_t vsize)
 {
+    LOCK(pool.cs);
     // Check TRUC and non-TRUC inheritance.
     for (const auto& entry : mempool_ancestors) {
         if (ptx->version != TRUC_VERSION && entry->GetTx().version == TRUC_VERSION) {
@@ -215,13 +216,15 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CT
         // If there are any ancestors, this is the only child allowed. The parent cannot have any
         // other descendants. We handle the possibility of multiple children as that case is
         // possible through a reorg.
-        const auto& children = parent_entry->GetMemPoolChildrenConst();
+        CTxMemPool::setEntries descendants;
+        pool.CalculateDescendants(parent_entry, descendants);
+        descendants.erase(parent_entry);
         // Don't double-count a transaction that is going to be replaced. This logic assumes that
         // any descendant of the TRUC transaction is a direct child, which makes sense because a
         // TRUC transaction can only have 1 descendant.
-        const bool child_will_be_replaced = !children.empty() &&
-            std::any_of(children.cbegin(), children.cend(),
-                [&direct_conflicts](const CTxMemPoolEntry& child){return direct_conflicts.count(child.GetTx().GetHash()) > 0;});
+        const bool child_will_be_replaced = !descendants.empty() &&
+            std::any_of(descendants.cbegin(), descendants.cend(),
+                [&direct_conflicts](const CTxMemPool::txiter& child){return direct_conflicts.count(child->GetTx().GetHash()) > 0;});
         if (pool.GetDescendantCount(parent_entry) + 1 > TRUC_DESCENDANT_LIMIT && !child_will_be_replaced) {
             // Allow sibling eviction for TRUC transaction: if another child already exists, even if
             // we don't conflict inputs with it, consider evicting it under RBF rules. We rely on TRUC rules
@@ -229,14 +232,14 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CT
             // which descendant to evict. Skip if this isn't true, e.g. if the transaction has
             // multiple children or the sibling also has descendants due to a reorg.
             const bool consider_sibling_eviction{pool.GetDescendantCount(parent_entry) == 2 &&
-                pool.GetAncestorCount(children.begin()->get()) == 2};
+                pool.GetAncestorCount(**descendants.begin()) == 2};
 
             // Return the sibling if its eviction can be considered. Provide the "descendant count
             // limit" string either way, as the caller may decide not to do sibling eviction.
             return std::make_pair(strprintf("tx %u (wtxid=%s) would exceed descendant count limit",
                                             parent_entry->GetSharedTx()->GetHash().ToString(),
                                             parent_entry->GetSharedTx()->GetWitnessHash().ToString()),
-                                  consider_sibling_eviction ?  children.begin()->get().GetSharedTx() : nullptr);
+                                  consider_sibling_eviction ? (*descendants.begin())->GetSharedTx() : nullptr);
         }
     }
     return std::nullopt;
