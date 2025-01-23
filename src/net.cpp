@@ -493,8 +493,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     assert(conn_type != ConnectionType::INBOUND);
 
     if (pszDest == nullptr) {
-        bool fAllowLocal = Params().AllowMultiplePorts() && addrConnect.GetPort() != GetListenPort();
-        if (!fAllowLocal && IsLocal(addrConnect)) {
+        if (addrConnect.GetPort() == GetListenPort() && IsLocal(addrConnect)) {
             return nullptr;
         }
 
@@ -3525,9 +3524,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
             if (isMasternode && setConnectedMasternodes.count(dmn->proTxHash))
                 break;
 
-            // if we selected a local address, restart (local addresses are allowed in regtest and devnet)
-            bool fAllowLocal = Params().AllowMultiplePorts() && addrConnect.GetPort() != GetListenPort();
-            if (!fAllowLocal && IsLocal(addrConnect)) {
+            // don't connect to ourselves
+            if (addr.GetPort() == GetListenPort() && IsLocal(addr)) {
                 break;
             }
 
@@ -3549,26 +3547,11 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                 continue;
             }
 
-            // Port validation in Dash has additional rules. Some networks are prohibited
-            // from using a non-default port while others allow any arbitary port so long
-            // it isn't a bad port (and in the case of masternodes, it matches its listen
-            // port)
-            const bool is_prohibited_port = [this, &addr, &isMasternode](){
-                if (!Params().AllowMultiplePorts()) {
-                    const uint16_t default_port{Params().GetDefaultPort(addr.GetNetwork())};
-                    assert(!IsBadPort(default_port)); // Make sure we never set the default port to a bad port
-                    return addr.GetPort() != default_port;
-                }
-                const bool is_bad_port{IsBadPort(addr.GetPort())};
-                if (isMasternode) {
-                    return addr.GetPort() != GetListenPort() || is_bad_port;
-                } else {
-                    return is_bad_port;
-                }
-            }();
+            const uint16_t default_port{Params().GetDefaultPort(addr.GetNetwork())};
+            assert(!IsBadPort(default_port)); // Make sure we never set the default port to a bad port
 
             // Do not connect to prohibited ports, unless 50 invalid addresses have been selected already.
-            if (nTries < 50 && is_prohibited_port) {
+            if (nTries < 50 && IsBadPort(addr.GetPort())) {
                 continue;
             }
 
@@ -3919,20 +3902,8 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         // banned, discouraged or exact match?
         if ((m_banman && (m_banman->IsDiscouraged(addrConnect) || m_banman->IsBanned(addrConnect))) || AlreadyConnectedToAddress(addrConnect))
             return;
-        // local and not a connection to itself?
-        bool fAllowLocal = Params().AllowMultiplePorts() && addrConnect.GetPort() != GetListenPort();
-        if (!fAllowLocal && IsLocal(addrConnect))
-            return;
-        // Search for IP:PORT match:
-        //  - if multiple ports for the same IP are allowed,
-        //  - for probe connections
-        // Search for IP-only match otherwise
-        bool searchIPPort = Params().AllowMultiplePorts() || masternode_probe_connection == MasternodeProbeConn::IsConnection;
-        bool skip = searchIPPort ?
-                FindNode(static_cast<CService>(addrConnect)) :
-                FindNode(static_cast<CNetAddr>(addrConnect));
-        if (skip) {
-            LogPrintf("CConnman::%s -- Failed to open new connection to %s, already connected\n", __func__, getIpStr());
+        // connecting to ourselves?
+        if (addrConnect.GetPort() == GetListenPort() && IsLocal(addrConnect)) {
             return;
         }
     } else if (FindNode(std::string(pszDest)))

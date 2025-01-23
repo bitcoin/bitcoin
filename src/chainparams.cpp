@@ -284,7 +284,6 @@ public:
         fRequireRoutableExternalIP = true;
         m_is_test_chain = false;
         fAllowMultipleAddressesFromGroup = false;
-        fAllowMultiplePorts = false;
         nLLMQConnectionRetryTimeout = 60;
         m_is_mockable_chain = false;
 
@@ -476,7 +475,6 @@ public:
         fRequireRoutableExternalIP = true;
         m_is_test_chain = true;
         fAllowMultipleAddressesFromGroup = false;
-        fAllowMultiplePorts = true;
         nLLMQConnectionRetryTimeout = 60;
         m_is_mockable_chain = false;
 
@@ -659,7 +657,6 @@ public:
         fRequireRoutableExternalIP = true;
         m_is_test_chain = true;
         fAllowMultipleAddressesFromGroup = true;
-        fAllowMultiplePorts = true;
         nLLMQConnectionRetryTimeout = 60;
         m_is_mockable_chain = false;
 
@@ -861,7 +858,6 @@ public:
         fRequireRoutableExternalIP = false;
         m_is_test_chain = true;
         fAllowMultipleAddressesFromGroup = true;
-        fAllowMultiplePorts = true;
         nLLMQConnectionRetryTimeout = 1; // must be lower then the LLMQ signing session timeout so that tests have control over failing behavior
         m_is_mockable_chain = true;
 
