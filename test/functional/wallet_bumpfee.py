@@ -14,6 +14,7 @@ added in the future, they should try to follow the same convention and not
 make assumptions about execution order.
 """
 from decimal import Decimal
+import re
 
 from test_framework.blocktools import (
     COINBASE_MATURITY,
@@ -542,6 +543,35 @@ def test_maxtxfee_fails(self, rbf_node, dest_address):
     rbfid = spend_one_input(rbf_node, dest_address)
     # When user passed fee rate causes base fee to be above maxtxfee we fail early
     assert_raises_rpc_error(-4, "Specified or calculated fee 0.0000282 is too high (cannot be higher than -maxtxfee 0.000025)", rbf_node.bumpfee, rbfid, fee_rate=20)
+    self.log.info("Test that a low -maxtxfee, which may prevent tx fee rate from reaching -minrelaytxfee triggers a warning.")
+    low_max_tx_fee = '0.00000100'
+    high_max_tx_fee = '0.001'
+    high_min_relay_fee = '0.00020000'
+    msg = f"Invalid amount for -maxtxfee=<amount>: '{low_max_tx_fee} BTC/kvB' conflicts with the minimum relay transaction feerate {high_min_relay_fee} BTC/kvB. Please set a higher -maxtxfee or lower -minrelaytxfee"
+    self.restart_node(1, extra_args=[f'-minrelaytxfee={high_min_relay_fee}', f'-maxtxfee={low_max_tx_fee}'])
+    warnings = self.nodes[1].createwallet("test-wallet")["warnings"]
+    assert msg in warnings
+
+    self.log.info("Test that a very high -maxtxfee warning does not suppress a -minrelaytxfee conflict warning.")
+    low_conflict_stderr = "Warning: " + msg
+    self.stop_node(1, expected_stderr=low_conflict_stderr)
+    very_high_max_tx_fee = '2.00000000'
+    very_high_min_relay_fee = '3.00000000'
+    high_fee_msg = "-maxtxfee is set very high! Fees this large could be paid on a single transaction."
+    conflict_msg = f"Invalid amount for -maxtxfee=<amount>: '{very_high_max_tx_fee} BTC/kvB' conflicts with the minimum relay transaction feerate {very_high_min_relay_fee} BTC/kvB. Please set a higher -maxtxfee or lower -minrelaytxfee"
+    self.start_node(1, extra_args=[f'-minrelaytxfee={very_high_min_relay_fee}', f'-maxtxfee={very_high_max_tx_fee}'])
+    warnings = self.nodes[1].createwallet("test-wallet-very-high")["warnings"]
+    assert high_fee_msg in warnings
+    assert conflict_msg in warnings
+
+    self.log.info("Test that a -maxtxfee high enough to allow tx fee rate to meet or exceed -minrelaytxfee should start normally.")
+    high_minrelay_msg = "-minrelaytxfee is set very high! The wallet will avoid paying less than the minimum relay fee."
+    self.stop_node(1, expected_stderr=re.compile(
+        f"^Warning: {re.escape(high_fee_msg)}\r?\n"
+        f"{re.escape(conflict_msg)}\r?\n"
+        f"{re.escape(high_minrelay_msg)}$"
+    ))
+    self.start_node(1, extra_args=[f'-minrelaytxfee={high_min_relay_fee}', f'-maxtxfee={high_max_tx_fee}'])
     self.restart_node(1, self.extra_args[1])
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     self.connect_nodes(1, 0)
