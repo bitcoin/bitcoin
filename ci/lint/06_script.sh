@@ -25,7 +25,6 @@ export COMMIT_RANGE
 echo
 git log --no-merges --oneline "$COMMIT_RANGE"
 echo
-test/lint/commit-script-check.sh "$COMMIT_RANGE"
 RUST_BACKTRACE=1 "${LINT_RUNNER_PATH}/test_runner"
 
 if [ "$CIRRUS_REPO_FULL_NAME" = "bitcoin/bitcoin" ] && [ "$CIRRUS_PR" = "" ] ; then

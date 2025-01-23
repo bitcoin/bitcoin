@@ -69,6 +69,11 @@ fn get_linter_list() -> Vec<&'static Linter> {
             lint_fn: lint_subtree
         },
         &Linter {
+            description: "Check scripted-diffs",
+            name: "scripted_diff",
+            lint_fn: lint_scripted_diff
+        },
+        &Linter {
             description: "Check that tabs are not used as whitespace",
             name: "tabs_whitespace",
             lint_fn: lint_tabs_whitespace
@@ -173,6 +178,11 @@ fn get_git_root() -> PathBuf {
     PathBuf::from(check_output(git().args(["rev-parse", "--show-toplevel"])).unwrap())
 }
 
+/// Return the commit range, or panic
+fn commit_range() -> String {
+    env::var("COMMIT_RANGE").unwrap()
+}
+
 /// Return all subtree paths
 fn get_subtrees() -> Vec<&'static str> {
     vec![
@@ -204,6 +214,19 @@ fn lint_subtree() -> LintResult {
             .success();
     }
     if good {
+        Ok(())
+    } else {
+        Err("".to_string())
+    }
+}
+
+fn lint_scripted_diff() -> LintResult {
+    if Command::new("test/lint/commit-script-check.sh")
+        .arg(commit_range())
+        .status()
+        .expect("command error")
+        .success()
+    {
         Ok(())
     } else {
         Err("".to_string())
