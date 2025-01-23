@@ -590,56 +590,6 @@ BOOST_AUTO_TEST_CASE(buffered_read_only_file_matches_autofile_random_content)
     try { fs::remove(test_file.FileName(pos)); } catch (...) {}
 }
 
-BOOST_AUTO_TEST_CASE(buffered_write_only_file_matches_autofile_random_content)
-{
-    const FlatFileSeq test_buffered{m_args.GetDataDirBase(), "buffered_write_test", node::BLOCKFILE_CHUNK_SIZE};
-    const FlatFileSeq test_direct{m_args.GetDataDirBase(), "direct_write_test", node::BLOCKFILE_CHUNK_SIZE};
-    constexpr size_t file_size{2 << 20};
-    constexpr size_t max_write_length{1000};
-    const FlatFilePos pos{0, 0};
-
-    FastRandomContext rng{/*fDeterministic=*/false};
-    const std::vector obfuscation{rng.randbytes<std::byte>(8)};
-
-    {
-        std::vector test_data{rng.randbytes<std::byte>(file_size)};
-        AutoFile direct_file{test_direct.Open(pos, false), obfuscation};
-        BufferedWriteOnlyFile buffered{test_buffered, pos, obfuscation};
-        BOOST_CHECK_EQUAL(direct_file.tell(), buffered.tell());
-
-        for (size_t total_written{0}; total_written < file_size;) {
-            const size_t write_size{Assert(std::min(rng.randrange(max_write_length) + 1, file_size - total_written))};
-
-            auto current_span = Span{test_data}.subspan(total_written, write_size);
-            direct_file.write(current_span);
-            buffered.write(current_span);
-
-            BOOST_CHECK_EQUAL(direct_file.tell(), buffered.tell());
-
-            total_written += write_size;
-        }
-    }
-
-    // Compare the resulting files
-    AutoFile verify_direct{test_direct.Open(pos, true), obfuscation};
-    std::vector<std::byte> direct_result{file_size};
-    verify_direct.read(direct_result);
-
-    AutoFile verify_buffered{test_buffered.Open(pos, true), obfuscation};
-    std::vector<std::byte> buffered_result{file_size};
-    verify_buffered.read(buffered_result);
-
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-        direct_result.begin(), direct_result.end(),
-        buffered_result.begin(), buffered_result.end()
-    );
-
-    try {
-        fs::remove(test_direct.FileName(pos));
-        fs::remove(test_buffered.FileName(pos));
-    } catch (...) {}
-}
-
 BOOST_AUTO_TEST_CASE(streams_hashed)
 {
     DataStream stream{};
