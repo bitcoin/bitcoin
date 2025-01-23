@@ -3522,7 +3522,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
 
             // don't try to connect to masternodes that we already have a connection to (most likely inbound)
             if (isMasternode && setConnectedMasternodes.count(dmn->proTxHash))
-                break;
+                continue;
 
             // don't connect to ourselves
             if (addr.GetPort() == GetListenPort() && IsLocal(addr)) {
