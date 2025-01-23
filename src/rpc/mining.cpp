@@ -387,7 +387,7 @@ static RPCHelpMan generateblock()
         RegenerateCommitments(block, chainman);
 
         std::string reason;
-        if (!chainman.TestBlockValidity(block, reason, /*check_pow=*/false, /*check_merkle_root=*/false)) {
+        if (!miner.checkBlock(block, {.check_merkle_root = false, .check_pow = false}, reason)) {
             throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("TestBlockValidity failed: %s", reason));
         }
     }
@@ -741,7 +741,7 @@ static RPCHelpMan getblocktemplate()
             }
 
             std::string reason;
-            bool res{chainman.TestBlockValidity(block, reason, /*check_pow=*/false, /*check_merkle_root=*/true)};
+            bool res{miner.checkBlock(block, {.check_pow = false}, reason)};
             return res ? UniValue::VNULL : UniValue{reason};
         }
 
