@@ -96,8 +96,7 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
         }
 
         if (!exfat_paths.empty()) {
-            InitWarning(strprintf(_("The following paths are on exFAT which is known to have intermittent corruption problems on MacOS: %s. "
-                "See https://github.com/bitcoin/bitcoin/blob/master/doc/files.md#filesystem-recommendations for more information."),
+            InitWarning(strprintf(_("The following paths are on exFAT which is known to have intermittent corruption problems on MacOS: %s"),
                 util::Join(exfat_paths, ", ")));
         }
 
