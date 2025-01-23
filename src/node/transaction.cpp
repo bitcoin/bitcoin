@@ -79,7 +79,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
                 } else if (check_max_fee && result.m_base_fees.value() > max_tx_fee) {
                     return TransactionError::MAX_FEE_EXCEEDED;
                 } else if (check_max_feerate && result.m_base_fees.value() > max_tx_fee_rate.GetFee(result.m_vsize.value())) {
-                    return TransactionError::MAX_FEE_EXCEEDED;
+                    return TransactionError::MAX_FEE_RATE_EXCEEDED;
                 }
             }
 
