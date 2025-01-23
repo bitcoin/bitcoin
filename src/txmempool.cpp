@@ -1078,6 +1078,17 @@ void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants, MemPool
     }
 }
 
+bool CTxMemPool::CheckPolicyLimits(const CTransactionRef& tx)
+{
+    LOCK(cs);
+    // Use ChangeSet interface to check whether the chain
+    // limits would be violated. Note that the changeset will be destroyed
+    // when it goes out of scope.
+    auto changeset = GetChangeSet();
+    (void) changeset->StageAddition(tx, /*fee=*/0, /*time=*/0, /*entry_height=*/0, /*entry_sequence=*/0, /*spends_coinbase=*/false, /*sigops_cost=*/0, LockPoints{});
+    return changeset->CheckMemPoolPolicyLimits();
+}
+
 int CTxMemPool::Expire(std::chrono::seconds time)
 {
     AssertLockHeld(cs);

@@ -681,6 +681,8 @@ public:
         if (exists(txid)) m_unbroadcast_txids.insert(txid);
     };
 
+    bool CheckPolicyLimits(const CTransactionRef& tx);
+
     /** Removes a transaction from the unbroadcast set */
     void RemoveUnbroadcastTx(const Txid& txid, const bool unchecked = false);
 

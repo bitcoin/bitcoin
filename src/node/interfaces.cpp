@@ -719,10 +719,11 @@ public:
     util::Result<void> checkChainLimits(const CTransactionRef& tx) override
     {
         if (!m_node.mempool) return {};
-        LockPoints lp;
-        CTxMemPoolEntry entry(TxGraph::Ref(), tx, 0, 0, 0, 0, false, 0, lp);
+        if (!m_node.mempool->CheckPolicyLimits(tx)) {
+            return util::Error{Untranslated("too many unconfirmed transactions in cluster")};
+        }
         LOCK(m_node.mempool->cs);
-        return m_node.mempool->CheckPackageLimits({tx}, entry.GetTxSize());
+        return m_node.mempool->CheckPackageLimits({tx}, GetVirtualTransactionSize(*tx));
     }
     CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc) override
     {
