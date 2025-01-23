@@ -142,7 +142,7 @@ std::optional<std::string> PackageTRUCChecks(const CTransactionRef& ptx, int64_t
                 }
             }
 
-            if (parent_info.m_has_mempool_descendant) {
+            if (parent_info.m_has_mempool_descendant && !ignore_rejects.count(reason_prefix + "descendant-toomany")) {
                 out_reason = reason_prefix + "descendant-toomany";
                 return strprintf("tx %s (wtxid=%s) would exceed descendant count limit",
                                 parent_info.m_txid.ToString(), parent_info.m_wtxid.ToString());
