@@ -3507,9 +3507,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                 std::tie(addr, addr_last_try) = addrman.Select(false, preferred_net);
             }
 
-            auto dmn = mnList.GetMNByService(addr);
-            bool isMasternode = dmn != nullptr;
-
             // Require outbound IPv4/IPv6 connections, other than feelers, to be to distinct network groups
             if (!fFeeler && outbound_ipv46_peer_netgroups.count(m_netgroupman.GetGroup(addr))) {
                 continue;
@@ -3519,10 +3516,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
             if (!addr.IsValid()) {
                 break;
             }
-
-            // don't try to connect to masternodes that we already have a connection to (most likely inbound)
-            if (isMasternode && setConnectedMasternodes.count(dmn->proTxHash))
-                continue;
 
             // don't connect to ourselves
             if (addr.GetPort() == GetListenPort() && IsLocal(addr)) {
@@ -3563,6 +3556,11 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                          preferred_net.has_value() ? "network-specific " : "",
                          ConnectionTypeAsString(conn_type), GetNetworkName(addr.GetNetwork()),
                          fLogIPs ? strprintf(": %s", addr.ToStringAddrPort()) : "");
+                continue;
+            }
+
+            // don't try to connect to masternodes that we already have a connection to (most likely inbound)
+            if (auto dmn = mnList.GetMNByService(addr); dmn && setConnectedMasternodes.count(dmn->proTxHash)) {
                 continue;
             }
 
