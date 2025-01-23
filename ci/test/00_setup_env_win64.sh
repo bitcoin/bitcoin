@@ -21,4 +21,4 @@ export GOAL="deploy"
 # cross-compiling for Windows. https://sourceforge.net/p/mingw-w64/bugs/306/
 # https://github.com/mingw-w64/mingw-w64/commit/1690994f515910a31b9fb7c7bd3a52d4ba987abe
 export BITCOIN_CONFIG="-DREDUCE_EXPORTS=ON -DBUILD_GUI_TESTS=OFF \
--DCMAKE_CXX_FLAGS='-Wno-error=return-type -Wno-error=maybe-uninitialized -Wno-error=array-bounds'"
+-DAPPEND_CXXFLAGS='-Wno-error=return-type -Wno-error=maybe-uninitialized -Wno-error=array-bounds'"

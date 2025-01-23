@@ -21,7 +21,7 @@ export BITCOIN_CONFIG="\
  -DCMAKE_BUILD_TYPE=Debug \
  -DCMAKE_C_FLAGS='-funsigned-char' \
  -DCMAKE_C_FLAGS_DEBUG='-g0 -O2' \
- -DCMAKE_CXX_FLAGS='-funsigned-char' \
+ -DAPPEND_CXXFLAGS='-funsigned-char' \
  -DCMAKE_CXX_FLAGS_DEBUG='-g0 -O2' \
  -DAPPEND_CPPFLAGS='-DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE' \
 "

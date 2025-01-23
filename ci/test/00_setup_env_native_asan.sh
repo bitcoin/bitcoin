@@ -29,7 +29,6 @@ export BITCOIN_CONFIG="\
  -DCMAKE_C_COMPILER=clang-${APT_LLVM_V} \
  -DCMAKE_CXX_COMPILER=clang++-${APT_LLVM_V} \
  -DCMAKE_C_FLAGS='-ftrivial-auto-var-init=pattern' \
- -DCMAKE_CXX_FLAGS='-ftrivial-auto-var-init=pattern -Wno-error=deprecated-declarations' \
- -DAPPEND_CXXFLAGS='-std=c++23' \
+ -DAPPEND_CXXFLAGS='-std=c++23 -ftrivial-auto-var-init=pattern -Wno-error=deprecated-declarations' \
  -DAPPEND_CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' \
 "
