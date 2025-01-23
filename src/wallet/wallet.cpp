@@ -3008,13 +3008,22 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
             warnings.push_back(strprintf(_("%s is set very high! Fees this large could be paid on a single transaction."), "-maxtxfee"));
         }
 
-        if (chain && CFeeRate{max_tx_fee.value(), 1000} < chain->relayMinFee()) {
+        walletInstance->m_max_tx_fee = max_tx_fee.value();
+    }
+
+    if (const auto arg{args.GetArg("-maxfeerate")}) {
+        std::optional<CAmount> max_tx_fee_rate = ParseMoney(*arg);
+        if (!max_tx_fee_rate) {
+            error = AmountErrMsg("maxfeerate", args.GetArg("-maxfeerate", ""));
+            return nullptr;
+        }
+        if (chain && CFeeRate(max_tx_fee_rate.value()) < chain->relayMinFee()) {
             error = strprintf(_("Invalid amount for %s=<amount>: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)"),
-                "-maxtxfee", *arg, chain->relayMinFee().ToString());
+                "-maxfeerate", *arg, chain->relayMinFee().ToString());
             return nullptr;
         }
 
-        walletInstance->m_max_tx_fee = max_tx_fee.value();
+        walletInstance->m_max_tx_fee_rate = CFeeRate(max_tx_fee_rate.value());
     }
 
     if (const auto arg{args.GetArg("-consolidatefeerate")}) {
