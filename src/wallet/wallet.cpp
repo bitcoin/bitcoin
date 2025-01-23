@@ -3100,6 +3100,15 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
             return nullptr;
         } else if (max_tx_fee.value() > HIGH_MAX_TX_FEE) {
             warnings.push_back(strprintf(_("%s is set very high! Fees this large could be paid on a single transaction."), "-maxtxfee"));
+
+            // Wallet prevents creating transactions with fee rates lower than minrelaytxfee.
+            // Also the wallet prevents creating transactions with base fee above maxtxfee.
+            // Warn when a 1kvb transaction, with a base fee set to maxtxfee, has a fee rate less than minrelaytxfee.
+            // It is likely that some transactions with fee rates greater than or equal to the minrelaytxfee will exceed maxtxfee.
+            // In such cases, the wallet won't be able to create transactions. Therefore, warn the user.
+        } else if (chain && CFeeRate(max_tx_fee.value(), 1000) < chain->relayMinFee()) {
+            warnings.push_back(strprintf(_("Invalid amount for %s=<amount>: '%s' conflicts with the minimum relay transaction feerate %s. Please set a higher %s or lower %s"),
+                                         "-maxtxfee", args.GetArg("-maxtxfee", ""), chain->relayMinFee().ToString(), "-maxtxfee", "-minrelaytxfee"));
         }
 
         walletInstance->m_max_tx_fee = max_tx_fee.value();
