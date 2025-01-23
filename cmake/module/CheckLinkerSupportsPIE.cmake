@@ -21,7 +21,7 @@ function(check_linker_supports_pie warnings)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON PARENT_SCOPE)
   elseif(NOT WIN32)
     # The warning is superfluous for Windows.
-    message(WARNING "PIE is not supported at link time: ${output}")
+    message(WARNING "PIE is not supported at link time. See the configure log for details.")
     set(${warnings} ${${warnings}} "Position independent code disabled." PARENT_SCOPE)
   endif()
 endfunction()
