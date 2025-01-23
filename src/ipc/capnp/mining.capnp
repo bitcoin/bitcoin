@@ -44,13 +44,3 @@ struct BlockWaitOptions $Proxy.wrap("node::BlockWaitOptions") {
     timeout @0 : Float64 $Proxy.name("timeout");
     feeThreshold @1 : Int64 $Proxy.name("fee_threshold");
 }
-
-# Note: serialization of the BlockValidationState C++ type is somewhat fragile
-# and using the struct can be awkward. It would be good if testBlockValidity
-# method were changed to return validity information in a simpler format.
-struct BlockValidationState {
-    mode @0 :Int32;
-    result @1 :Int32;
-    rejectReason @2 :Text;
-    debugMessage @3 :Text;
-}
