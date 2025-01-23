@@ -572,6 +572,20 @@ def test_maxtxfee_fails(self, rbf_node, dest_address):
 
     # When user passed fee rate causes base fee to be above maxtxfee we fail early
     assert_raises_rpc_error(-4, "Specified or calculated fee 0.0000282 is too high (cannot be higher than -maxtxfee 0.000025)", rbf_node.bumpfee, rbfid, fee_rate=20)
+
+    self.log.info("Test that a low -maxtxfee, which may prevent tx fee rate from reaching -minrelaytxfee triggers a warning.")
+    low_max_tx_fee = '0.000001'
+    high_max_tx_fee = '0.001'
+    high_min_relay_fee = '0.0002'
+    msg = f"Invalid amount for -maxtxfee=<amount>: '{low_max_tx_fee}' conflicts with the minimum relay transaction feerate {format(float(high_min_relay_fee), '.8f')} BTC/kvB. Please set a higher -maxtxfee or lower -minrelaytxfee"
+    self.restart_node(1, extra_args=[f'-minrelaytxfee={high_min_relay_fee}', f'-maxtxfee={low_max_tx_fee}'])
+    warnings = self.nodes[1].createwallet("test-wallet")["warnings"]
+    assert msg in warnings
+
+    self.log.info("Test that a -maxtxfee high enough to allow tx fee rate to meet or exceed -minrelaytxfee should start normally.")
+    msg = "Warning: " + msg
+    self.stop_node(1, expected_stderr=msg)
+    self.start_node(1, extra_args=[f'-minrelaytxfee={high_min_relay_fee}', f'-maxtxfee={high_max_tx_fee}'])
     self.restart_node(1, self.extra_args[1])
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     self.connect_nodes(1, 0)
