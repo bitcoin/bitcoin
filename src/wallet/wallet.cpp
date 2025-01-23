@@ -914,6 +914,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
     CWalletTx& wtx = (*ret.first).second;
     bool fInsertedNew = ret.second;
     bool fUpdated = update_wtx && update_wtx(wtx, fInsertedNew);
+    std::set<COutPoint> candidates;
     if (fInsertedNew) {
         wtx.m_confirm = confirm;
         wtx.nTimeReceived = GetTime();
@@ -921,12 +922,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
         wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
         wtx.nTimeSmart = ComputeTimeSmart(wtx);
         AddToSpends(hash, &batch);
-
-        // TODO: refactor duplicated code between CWallet::AddToWallet and CWallet::AutoLockMasternodeCollaterals
-        auto candidates{AddWalletUTXOs(wtx.tx, /*ret_dups=*/true)};
-        for (const auto& utxo : ListProTxCoins(candidates)) {
-            LockCoin(utxo, &batch);
-        }
+        candidates = AddWalletUTXOs(wtx.tx, /*ret_dups=*/true);
     }
 
     if (!fInsertedNew)
@@ -942,14 +938,11 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
             assert(wtx.m_confirm.hashBlock == confirm.hashBlock);
             assert(wtx.m_confirm.block_height == confirm.block_height);
         }
-
-        // TODO: refactor duplicated code with case fInstertedNew
-        auto candidates{AddWalletUTXOs(wtx.tx, /*ret_dups=*/false)};
+        candidates = AddWalletUTXOs(wtx.tx, /*ret_dups=*/false);
         if (!candidates.empty()) fUpdated = true;
-        for (const auto& utxo : ListProTxCoins(candidates)) {
-            LockCoin(utxo, &batch);
-        }
     }
+
+    LockProTxCoins(candidates, &batch);
 
     //// debug print
     WalletLogPrintf("AddToWallet %s  %s%s\n", hash.ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
@@ -4058,9 +4051,7 @@ void CWallet::AutoLockMasternodeCollaterals()
         candidates.insert(tx_utxos.begin(), tx_utxos.end());
     }
     WalletBatch batch(GetDatabase());
-    for (const auto& utxo : ListProTxCoins(candidates)) {
-        LockCoin(utxo, &batch);
-    }
+    LockProTxCoins(candidates, &batch);
 }
 
 DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut)
@@ -4514,6 +4505,14 @@ std::vector<COutPoint> CWallet::ListProTxCoins(const std::set<COutPoint>& utxos)
         }
     }
     return m_chain->listMNCollaterials(candidates);
+}
+
+void CWallet::LockProTxCoins(const std::set<COutPoint>& utxos, WalletBatch* batch)
+{
+    AssertLockHeld(cs_wallet);
+    for (const auto& utxo : ListProTxCoins(utxos)) {
+        LockCoin(utxo, batch);
+    }
 }
 
 /** @} */ // end of Actions
