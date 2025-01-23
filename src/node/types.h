@@ -15,6 +15,7 @@
 
 #include <cstddef>
 #include <script/script.h>
+#include <uint256.h>
 
 namespace node {
 enum class TransactionError {
@@ -60,6 +61,18 @@ struct BlockCreateOptions {
      * coinbase_max_additional_weight and coinbase_output_max_additional_sigops.
      */
     CScript coinbase_output_script{CScript() << OP_TRUE};
+};
+
+struct BlockCheckOptions {
+    /**
+     * Set false to omit the merkle root heck
+     */
+    bool check_merkle_root{true};
+
+    /**
+     * Set false to omit the proof-of-work check
+     */
+    bool check_pow{true};
 };
 } // namespace node
 
