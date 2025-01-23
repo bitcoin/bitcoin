@@ -3541,9 +3541,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
             // for non-feelers, require all the services we'll want,
             // for feelers, only require they be a full node (only because most
             // SPV clients don't have a good address DB available)
-            if (!isMasternode && !fFeeler && !HasAllDesirableServiceFlags(addr.nServices)) {
+            if (!fFeeler && !HasAllDesirableServiceFlags(addr.nServices)) {
                 continue;
-            } else if (!isMasternode && fFeeler && !MayHaveUsefulAddressDB(addr.nServices)) {
+            } else if (fFeeler && !MayHaveUsefulAddressDB(addr.nServices)) {
                 continue;
             }
 
