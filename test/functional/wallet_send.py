@@ -195,6 +195,20 @@ class WalletSendTest(BitcoinTestFramework):
 
         return res
 
+    def test_maxfeerate(self):
+        self.log.info("Test that -maxfeerate below -minrelaytxfee is rejected.")
+        # Unload the default wallet so its auto-load doesn't abort startup once
+        # -maxfeerate drops below -minrelaytxfee.
+        self.nodes[0].unloadwallet(self.default_wallet_name, load_on_startup=False)
+        self.restart_node(0, extra_args=['-minrelaytxfee=0.00020000', '-maxfeerate=0.0001'])
+        assert_raises_rpc_error(-4,
+                                "Invalid amount for -maxfeerate=<amount>: '0.0001' "
+                                "(must be at least the minrelay fee of 0.00020000 BTC/kvB "
+                                "to prevent stuck transactions)",
+                                self.nodes[0].createwallet, "w_maxfeerate_below_minrelay")
+        self.restart_node(0)
+        self.nodes[0].loadwallet(self.default_wallet_name, load_on_startup=True)
+
     def run_test(self):
         self.log.info("Setup wallets...")
         # w0 is a wallet with coinbase rewards
@@ -527,6 +541,8 @@ class WalletSendTest(BitcoinTestFramework):
 
         # Check tx creation size limits
         self.test_weight_limits()
+
+        self.test_maxfeerate()
 
     def test_weight_limits(self):
         self.log.info("Test weight limits")
