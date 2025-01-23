@@ -719,10 +719,16 @@ public:
     util::Result<void> checkChainLimits(const CTransactionRef& tx) override
     {
         if (!m_node.mempool) return {};
-        LockPoints lp;
-        CTxMemPoolEntry entry(TxGraph::Ref(), tx, 0, 0, 0, 0, false, 0, lp);
         LOCK(m_node.mempool->cs);
-        return m_node.mempool->CheckPackageLimits({tx}, entry.GetTxSize());
+        // Use CTxMemPool's ChangeSet interface to check whether the chain
+        // limits would be violated. Note that the changeset will be destroyed
+        // when it goes out of scope.
+        auto changeset = m_node.mempool->GetChangeSet();
+        auto handle = changeset->StageAddition(tx, 0, 0, 0, 0, false, 0, LockPoints{});
+        if (!changeset->CheckMemPoolPolicyLimits()) {
+            return util::Error{Untranslated("too many unconfirmed transactions in cluster")};
+        }
+        return m_node.mempool->CheckPackageLimits({tx}, handle->GetTxSize());
     }
     CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc) override
     {
