@@ -436,6 +436,12 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(testres['allowed'], True)
         self.nodes[2].sendrawtransaction(hexstring=tx['hex'], maxfeerate='0.20000000')
 
+        self.log.info("Test sendrawtransaction/testmempoolaccept maxfeerate rounding")
+        tx = self.wallet.create_self_transfer(fee=Decimal("0.00000105"))
+        testres = self.nodes[2].testmempoolaccept(rawtxs=[tx['hex']], maxfeerate=Decimal("0.00001009"))[0]
+        assert_equal(testres['allowed'], True)
+        self.nodes[2].sendrawtransaction(hexstring=tx['hex'], maxfeerate=Decimal("0.00001009"))
+
         self.log.info("Test sendrawtransaction/testmempoolaccept with tx outputs already in the utxo set")
         self.generate(self.nodes[2], 1)
         for node in self.nodes:
