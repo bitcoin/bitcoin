@@ -4653,40 +4653,86 @@ MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef&
     return result;
 }
 
-bool TestBlockValidity(BlockValidationState& state,
-                       const CChainParams& chainparams,
-                       Chainstate& chainstate,
-                       const CBlock& block,
-                       CBlockIndex* pindexPrev,
-                       bool fCheckPOW,
-                       bool fCheckMerkleRoot)
+bool ChainstateManager::TestBlockValidity(const CBlock& block, std::string& reason, const bool check_pow, const bool check_merkle_root)
 {
-    AssertLockHeld(cs_main);
-    assert(pindexPrev && pindexPrev == chainstate.m_chain.Tip());
-    CCoinsViewCache viewNew(&chainstate.CoinsTip());
-    uint256 block_hash(block.GetHash());
-    CBlockIndex indexDummy(block);
-    indexDummy.pprev = pindexPrev;
-    indexDummy.nHeight = pindexPrev->nHeight + 1;
-    indexDummy.phashBlock = &block_hash;
+    ChainstateManager& chainman{ActiveChainstate().m_chainman};
 
-    // NOTE: CheckBlockHeader is called by CheckBlock
-    if (!ContextualCheckBlockHeader(block, state, chainstate.m_blockman, chainstate.m_chainman, pindexPrev)) {
-        LogError("%s: Consensus::ContextualCheckBlockHeader: %s\n", __func__, state.ToString());
+    // Lock must be held throughout this function for two reasons:
+    // 1. We don't want the tip to change during several of the validation steps
+    // 2. To prevent a CheckBlock() race condition for fChecked, see ProcessNewBlock()
+    LOCK(chainman.GetMutex());
+
+    BlockValidationState state;
+    CBlockIndex* tip{Assert(ActiveTip())};
+
+    if (block.hashPrevBlock != *Assert(tip->phashBlock)) {
+        reason = "inconclusive-not-best-prevblk";
         return false;
     }
-    if (!CheckBlock(block, state, chainparams.GetConsensus(), fCheckPOW, fCheckMerkleRoot)) {
-        LogError("%s: Consensus::CheckBlock: %s\n", __func__, state.ToString());
+
+    // Sanity check
+    Assert(!block.fChecked);
+    // For signets CheckBlock() verifies the challenge iif fCheckPow is set.
+    if (!CheckBlock(block, state, GetConsensus(), /*fCheckPow=*/check_pow, /*fCheckMerkleRoot=*/check_merkle_root)) {
+        reason = state.GetRejectReason();
+        Assume(!reason.empty());
+        return false;
+    } else {
+        // Sanity check
+        Assume(check_pow || !block.fChecked);
+    }
+
+    /**
+     * At this point ProcessNewBlock would call AcceptBlock(), but we
+     * don't want to store the block or its header. Run individual checks
+     * instead:
+     * - skip AcceptBlockHeader() because:
+     *   - we don't want to update the block index
+     *   - we do not care about duplicates
+     *   - we already ran CheckBlockHeader() via CheckBlock()
+     *   - we already checked for prev-blk-not-found
+     *   - we know the tip is valid, so no need to check bad-prevblk
+     * - we already ran CheckBlock()
+     * - do run ContextualCheckBlockHeader()
+     * - do run ContextualCheckBlock()
+     */
+
+    if (!ContextualCheckBlockHeader(block, state, ActiveChainstate().m_blockman, chainman, tip)) {
+        Assume(!state.IsValid());
+        reason = state.GetRejectReason();
+        Assume(!reason.empty());
         return false;
     }
-    if (!ContextualCheckBlock(block, state, chainstate.m_chainman, pindexPrev)) {
-        LogError("%s: Consensus::ContextualCheckBlock: %s\n", __func__, state.ToString());
+    Assume(state.IsValid());
+
+    if (!ContextualCheckBlock(block, state, *this, tip)) {
+        Assume(!state.IsValid());
+        reason = state.GetRejectReason();
+        Assume(!reason.empty());
         return false;
     }
-    if (!chainstate.ConnectBlock(block, state, &indexDummy, viewNew, true)) {
+    Assume(state.IsValid());
+
+    // We don't want ConnectBlock to update the actual chainstate, so create
+    // a cache on top of it, along with a dummy block index.
+    CBlockIndex index_dummy{block};
+    uint256 block_hash(block.GetHash());
+    index_dummy.pprev = tip;
+    index_dummy.nHeight = tip->nHeight + 1;
+    index_dummy.phashBlock = &block_hash;
+    CCoinsViewCache tip_view(&ActiveChainstate().CoinsTip());
+    CCoinsView blockCoins;
+    CCoinsViewCache view(&blockCoins);
+    view.SetBackend(tip_view);
+
+    // Set fJustCheck to true in order to update, and not clear, validation caches.
+    if(!ActiveChainstate().ConnectBlock(block, state, &index_dummy, view, /*fJustCheck=*/true)) {
+        Assume(!state.IsValid());
+        reason = state.GetRejectReason();
+        Assume(!reason.empty());
         return false;
     }
-    assert(state.IsValid());
+    Assume(state.IsValid());
 
     return true;
 }

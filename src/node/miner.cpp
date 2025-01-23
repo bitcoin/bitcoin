@@ -174,10 +174,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     pblock->nNonce         = 0;
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
-    BlockValidationState state;
-    if (m_options.test_block_validity && !TestBlockValidity(state, chainparams, m_chainstate, *pblock, pindexPrev,
-                                                            /*fCheckPOW=*/false, /*fCheckMerkleRoot=*/false)) {
-        throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, state.ToString()));
+    std::string reason;
+    if (m_options.test_block_validity && !m_chainstate.m_chainman.TestBlockValidity(*pblock, reason, /*check_pow=*/false, /*check_merkle_root=*/false)) {
+        throw std::runtime_error(strprintf("TestBlockValidity failed: %s", reason));
     }
     const auto time_2{SteadyClock::now()};
 
