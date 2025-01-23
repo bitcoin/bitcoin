@@ -79,7 +79,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
                 } else if (max_tx_fee > 0 && result.m_base_fees.value() > max_tx_fee) {
                     return TransactionError::MAX_FEE_EXCEEDED;
                 } else if (max_tx_fee_rate > CFeeRate(0) && CFeeRate(result.m_base_fees.value(), result.m_vsize.value()) > max_tx_fee_rate) {
-                    return TransactionError::MAX_FEE_EXCEEDED;
+                    return TransactionError::MAX_FEE_RATE_EXCEEDED;
                 }
             }
             // Try to submit the transaction to the mempool.
