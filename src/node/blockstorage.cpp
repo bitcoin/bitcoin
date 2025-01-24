@@ -683,7 +683,7 @@ bool BlockManager::ReadBlockUndo(CBlockUndo& blockundo, const CBlockIndex& index
     // Open history file to read
     AutoFile filein{OpenUndoFile(pos, true)};
     if (filein.IsNull()) {
-        LogError("OpenUndoFile failed for %s", pos.ToString());
+        LogError("OpenUndoFile failed for %s while reading", pos.ToString());
         return false;
     }
 
@@ -963,13 +963,13 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
         FlatFilePos pos;
         const unsigned int blockundo_size{static_cast<unsigned int>(GetSerializeSize(blockundo))};
         if (!FindUndoPos(state, block.nFile, pos, blockundo_size + UNDO_DATA_DISK_OVERHEAD)) {
-            LogError("FindUndoPos failed");
+            LogError("FindUndoPos failed for %s while writing", pos.ToString());
             return false;
         }
         // Open history file to append
         AutoFile fileout{OpenUndoFile(pos)};
         if (fileout.IsNull()) {
-            LogError("OpenUndoFile failed");
+            LogError("OpenUndoFile failed for %s while writing", pos.ToString());
             return FatalError(m_opts.notifications, state, _("Failed to write undo data."));
         }
 
@@ -1025,7 +1025,7 @@ bool BlockManager::ReadBlock(CBlock& block, FlatFilePos pos) const
     // Open history file to read
     AutoFile filein{OpenBlockFile(pos, true)};
     if (filein.IsNull()) {
-        LogError("%s: OpenBlockFile failed for %s\n", __func__, pos.ToString());
+        LogError("%s: OpenBlockFile failed for %s", __func__, pos.ToString());
         return false;
     }
 
@@ -1041,19 +1041,19 @@ bool BlockManager::ReadBlock(CBlock& block, FlatFilePos pos) const
         filein >> Span{mem};
         SpanReader(mem) >> TX_WITH_WITNESS(block);
     } catch (const std::exception& e) {
-        LogError("%s: Deserialize or I/O error - %s at %s\n", __func__, e.what(), pos.ToString());
+        LogError("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
         return false;
     }
 
     // Check the header
     if (!CheckProofOfWork(block.GetHash(), block.nBits, GetConsensus())) {
-        LogError("%s: Errors in block header at %s\n", __func__, pos.ToString());
+        LogError("%s: Errors in block header at %s", __func__, pos.ToString());
         return false;
     }
 
     // Signet only: check block solution
     if (GetConsensus().signet_blocks && !CheckSignetBlockSolution(block, GetConsensus())) {
-        LogError("%s: Errors in block solution at %s\n", __func__, pos.ToString());
+        LogError("%s: Errors in block solution at %s", __func__, pos.ToString());
         return false;
     }
 
@@ -1068,7 +1068,7 @@ bool BlockManager::ReadBlock(CBlock& block, const CBlockIndex& index) const
         return false;
     }
     if (block.GetHash() != index.GetBlockHash()) {
-        LogError("%s: GetHash() doesn't match index for %s at %s\n", __func__, index.ToString(), block_pos.ToString());
+        LogError("%s: GetHash() doesn't match index for %s at %s", __func__, index.ToString(), block_pos.ToString());
         return false;
     }
     return true;
@@ -1080,13 +1080,13 @@ bool BlockManager::ReadRawBlock(std::vector<uint8_t>& block, const FlatFilePos& 
     // If nPos is less than 8 the pos is null and we don't have the block data
     // Return early to prevent undefined behavior of unsigned int underflow
     if (hpos.nPos < 8) {
-        LogError("%s: OpenBlockFile failed for %s\n", __func__, pos.ToString());
+        LogError("%s: OpenBlockFile failed for %s", __func__, pos.ToString());
         return false;
     }
     hpos.nPos -= 8; // Seek back 8 bytes for meta header
     AutoFile filein{OpenBlockFile(hpos, true)};
     if (filein.IsNull()) {
-        LogError("%s: OpenBlockFile failed for %s\n", __func__, pos.ToString());
+        LogError("%s: OpenBlockFile failed for %s", __func__, pos.ToString());
         return false;
     }
 
@@ -1097,14 +1097,14 @@ bool BlockManager::ReadRawBlock(std::vector<uint8_t>& block, const FlatFilePos& 
         filein >> blk_start >> blk_size;
 
         if (blk_start != GetParams().MessageStart()) {
-            LogError("%s: Block magic mismatch for %s: %s versus expected %s\n", __func__, pos.ToString(),
+            LogError("%s: Block magic mismatch for %s: %s versus expected %s", __func__, pos.ToString(),
                          HexStr(blk_start),
                          HexStr(GetParams().MessageStart()));
             return false;
         }
 
         if (blk_size > MAX_SIZE) {
-            LogError("%s: Block data is larger than maximum deserialization size for %s: %s versus %s\n", __func__, pos.ToString(),
+            LogError("%s: Block data is larger than maximum deserialization size for %s: %s versus %s", __func__, pos.ToString(),
                          blk_size, MAX_SIZE);
             return false;
         }
@@ -1112,7 +1112,7 @@ bool BlockManager::ReadRawBlock(std::vector<uint8_t>& block, const FlatFilePos& 
         block.resize(blk_size); // Zeroing of memory is intentional here
         filein.read(MakeWritableByteSpan(block));
     } catch (const std::exception& e) {
-        LogError("%s: Read from block file failed: %s for %s\n", __func__, e.what(), pos.ToString());
+        LogError("%s: Read from block file failed: %s for %s", __func__, e.what(), pos.ToString());
         return false;
     }
 
@@ -1124,12 +1124,12 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
     const unsigned int block_size{static_cast<unsigned int>(GetSerializeSize(TX_WITH_WITNESS(block)))};
     FlatFilePos pos{FindNextBlockPos(block_size + BLOCK_SERIALIZATION_HEADER_SIZE, nHeight, block.GetBlockTime())};
     if (pos.IsNull()) {
-        LogError("FindNextBlockPos failed");
+        LogError("FindNextBlockPos failed for %s while writing", pos.ToString());
         return FlatFilePos();
     }
     AutoFile fileout{OpenBlockFile(pos)};
     if (fileout.IsNull()) {
-        LogError("OpenBlockFile failed");
+        LogError("OpenBlockFile failed for %s while writing", pos.ToString());
         m_opts.notifications.fatalError(_("Failed to write block."));
         return FlatFilePos();
     }
