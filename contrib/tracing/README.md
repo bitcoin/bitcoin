@@ -155,7 +155,7 @@ $ python3 contrib/tracing/log_raw_p2p_msgs.py $(pidof bitcoind)
 
 ```
 Logging raw P2P messages.
-Messages larger that about 32kb will be cut off!
+Messages larger than about 32kb will be cut off!
 Some messages might be lost!
  outbound msg 'inv' from peer 4 (outbound-full-relay, XX.XXX.XX.4:8333) with 253 bytes: 0705000000be2245c8f844c9f763748e1a7…
 …
