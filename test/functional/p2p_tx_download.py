@@ -93,11 +93,11 @@ class TxDownloadTest(BitcoinTestFramework):
     def test_inv_block(self):
         self.log.info("Generate a transaction on node 0")
         tx = self.wallet.create_self_transfer()
-        txid = int(tx['txid'], 16)
+        wtxid = int(tx['wtxid'], 16)
 
         self.log.info(
             "Announce the transaction to all nodes from all {} incoming peers, but never send it".format(NUM_INBOUND))
-        msg = msg_inv([CInv(t=MSG_TX, h=txid)])
+        msg = msg_inv([CInv(t=MSG_WTX, h=wtxid)])
         for p in self.peers:
             p.send_and_ping(msg)
 
@@ -270,6 +270,36 @@ class TxDownloadTest(BitcoinTestFramework):
         node.bumpmocktime(MAX_GETDATA_INBOUND_WAIT)
         peer.wait_for_getdata([int(low_fee_tx['wtxid'], 16)])
 
+    def test_inv_wtxidrelay_mismatch(self):
+        self.log.info("Check that INV messages that don't match the wtxidrelay setting are ignored")
+        node = self.nodes[0]
+        wtxidrelay_on_peer = node.add_p2p_connection(TestP2PConn(wtxidrelay=True))
+        wtxidrelay_off_peer = node.add_p2p_connection(TestP2PConn(wtxidrelay=False))
+        random_tx = self.wallet.create_self_transfer()
+
+        # MSG_TX INV from wtxidrelay=True peer -> mismatch, ignored
+        wtxidrelay_on_peer.send_and_ping(msg_inv([CInv(t=MSG_TX, h=int(random_tx['txid'], 16))]))
+        node.setmocktime(int(time.time()))
+        node.bumpmocktime(MAX_GETDATA_INBOUND_WAIT)
+        wtxidrelay_on_peer.sync_with_ping()
+        assert_equal(wtxidrelay_on_peer.tx_getdata_count, 0)
+
+        # MSG_WTX INV from wtxidrelay=False peer -> mismatch, ignored
+        wtxidrelay_off_peer.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=int(random_tx['wtxid'], 16))]))
+        node.bumpmocktime(MAX_GETDATA_INBOUND_WAIT)
+        wtxidrelay_off_peer.sync_with_ping()
+        assert_equal(wtxidrelay_off_peer.tx_getdata_count, 0)
+
+        # MSG_TX INV from wtxidrelay=False peer works
+        wtxidrelay_off_peer.send_and_ping(msg_inv([CInv(t=MSG_TX, h=int(random_tx['txid'], 16))]))
+        node.bumpmocktime(MAX_GETDATA_INBOUND_WAIT)
+        wtxidrelay_off_peer.wait_for_getdata([int(random_tx['txid'], 16)])
+
+        # MSG_WTX INV from wtxidrelay=True peer works
+        wtxidrelay_on_peer.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=int(random_tx['wtxid'], 16))]))
+        node.bumpmocktime(MAX_GETDATA_INBOUND_WAIT)
+        wtxidrelay_on_peer.wait_for_getdata([int(random_tx['wtxid'], 16)])
+
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
 
@@ -291,6 +321,7 @@ class TxDownloadTest(BitcoinTestFramework):
             (self.test_inv_block, True),
             (self.test_tx_requests, True),
             (self.test_rejects_filter_reset, False),
+            (self.test_inv_wtxidrelay_mismatch, False),
         ]:
             self.stop_nodes()
             self.start_nodes()
