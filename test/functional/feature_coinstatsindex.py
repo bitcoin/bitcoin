@@ -151,7 +151,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         # Generate and send a normal tx with two outputs
         tx1 = self.wallet.send_to(
             from_node=node,
-            scriptPubKey=self.wallet.get_scriptPubKey(),
+            scriptPubKey=self.wallet.get_output_script(),
             amount=21 * COIN,
         )
 
