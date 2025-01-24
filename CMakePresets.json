@@ -87,6 +87,37 @@
         "WITH_USDT": "ON",
         "WITH_ZMQ": "ON"
       }
+    },
+    {
+      "name": "bitcoind-release",
+      "displayName": "Minimal build with only bitcoind enabled in release mode",
+      "binaryDir": "${sourceDir}/build_bitcoind_release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_DAEMON": "ON",
+        "ENABLE_HARDENING": "ON",
+        "BUILD_BENCH": "OFF",
+        "BUILD_CLI": "OFF",
+        "BUILD_FUZZ_BINARY": "OFF",
+        "BUILD_GUI": "OFF",
+        "BUILD_GUI_TESTS": "OFF",
+        "BUILD_KERNEL_LIB": "OFF",
+        "BUILD_SHARED_LIBS": "OFF",
+        "BUILD_TESTS": "OFF",
+        "BUILD_TX": "OFF",
+        "BUILD_UTIL": "OFF",
+        "BUILD_UTIL_CHAINSTATE": "OFF",
+        "BUILD_WALLET_TOOL": "OFF",
+        "ENABLE_EXTERNAL_SIGNER": "OFF",
+        "ENABLE_WALLET": "OFF",
+        "INSTALL_MAN": "OFF",
+        "WITH_BDB": "OFF",
+        "WITH_MULTIPROCESS": "OFF",
+        "WITH_QRENCODE": "OFF",
+        "WITH_SQLITE": "OFF",
+        "WITH_USDT": "OFF",
+        "WITH_ZMQ": "OFF"
+      }
     }
   ]
 }
