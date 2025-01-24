@@ -1117,7 +1117,19 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
     // size of the XOR-key file.
     std::array<std::byte, 8> xor_key{};
 
-    if (opts.use_xor && fs::is_empty(opts.blocks_dir)) {
+    // Consider this to be the first run if the blocksdir contains only hidden
+    // files (those which start with a .). Checking for a fully-empty dir would
+    // be too aggressive as a .lock file may have already been written.
+    bool first_run = true;
+    for (const auto& entry : fs::directory_iterator(opts.blocks_dir)) {
+        const std::string path = fs::PathToString(entry.path().filename());
+        if (!entry.is_regular_file() || !path.starts_with('.')) {
+            first_run = false;
+            break;
+        }
+    }
+
+    if (opts.use_xor && first_run) {
         // Only use random fresh key when the boolean option is set and on the
         // very first start of the program.
         FastRandomContext{}.fillrand(xor_key);
