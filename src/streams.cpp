@@ -94,7 +94,7 @@ void AutoFile::write(std::span<const std::byte> src)
             std::copy(src.begin(), src.begin() + buf_now.size(), buf_now.begin());
             util::Xor(buf_now, m_xor, *m_position);
             if (std::fwrite(buf_now.data(), 1, buf_now.size(), m_file) != buf_now.size()) {
-                throw std::ios_base::failure{"XorFile::write: failed"};
+                throw std::ios_base::failure{"AutoFile::write: failed"};
             }
             src = src.subspan(buf_now.size());
             *m_position += buf_now.size();
