@@ -229,6 +229,9 @@ private:
         /** Total number of transactions in this graph (sum of all transaction counts in all
          *  Clusters, and for staging also those inherited from the main ClusterSet). */
         GraphIndex m_txcount{0};
+        /** Whether this graph is oversized (if known). This roughly matches
+         *  m_group_data->m_group_oversized, but may be known even if m_group_data is not. */
+        std::optional<bool> m_oversized{false};
     };
 
     /** The ClusterSets in this TxGraphImpl. Has exactly 1 (main) or exactly 2 elements (main and staged). */
@@ -1180,6 +1183,7 @@ void TxGraphImpl::GroupClusters(int level) noexcept
     }
     Assume(an_deps_it == an_deps.end());
     Assume(an_clusters_it == an_clusters.end());
+    clusterset.m_oversized = clusterset.m_group_data->m_group_oversized;
     Compact();
 }
 
@@ -1213,6 +1217,8 @@ void TxGraphImpl::Merge(std::span<Cluster*> to_merge) noexcept
 void TxGraphImpl::ApplyDependencies(int level) noexcept
 {
     auto& clusterset = m_clustersets[level];
+    // Do not bother computing groups if we already know the result will be oversized.
+    if (clusterset.m_oversized == true) return;
     // Compute the groups of to-be-merged Clusters (which also applies all removals, and splits).
     GroupClusters(level);
     Assume(clusterset.m_group_data.has_value());
@@ -1322,6 +1328,7 @@ void TxGraphImpl::RemoveTransaction(const Ref& arg) noexcept
     clusterset.m_to_remove.push_back(GetRefIndex(arg));
     // Wipe m_group_data (as it will need to be recomputed).
     clusterset.m_group_data.reset();
+    if (clusterset.m_oversized == true) clusterset.m_oversized = std::nullopt;
 }
 
 void TxGraphImpl::AddDependency(const Ref& parent, const Ref& child) noexcept
@@ -1343,6 +1350,7 @@ void TxGraphImpl::AddDependency(const Ref& parent, const Ref& child) noexcept
     clusterset.m_deps_to_add.emplace_back(GetRefIndex(parent), GetRefIndex(child));
     // Wipe m_group_data (as it will need to be recomputed).
     clusterset.m_group_data.reset();
+    if (clusterset.m_oversized == false) clusterset.m_oversized = std::nullopt;
 }
 
 bool TxGraphImpl::Exists(const Ref& arg, bool main_only) noexcept
@@ -1511,11 +1519,17 @@ FeePerWeight TxGraphImpl::GetMainChunkFeerate(const Ref& arg) noexcept
 bool TxGraphImpl::IsOversized(bool main_only) noexcept
 {
     size_t level = main_only ? 0 : m_clustersets.size() - 1;
+    auto& clusterset = m_clustersets[level];
+    if (clusterset.m_oversized.has_value()) {
+        // Return cached value if known.
+        return *clusterset.m_oversized;
+    }
     // Find which Clusters will need to be merged together, as that is where the oversize
     // property is assessed.
     GroupClusters(level);
-    Assume(m_clustersets[level].m_group_data.has_value());
-    return m_clustersets[level].m_group_data->m_group_oversized;
+    Assume(clusterset.m_group_data.has_value());
+    clusterset.m_oversized = clusterset.m_group_data->m_group_oversized;
+    return *clusterset.m_oversized;
 }
 
 void TxGraphImpl::StartStaging() noexcept
@@ -1523,8 +1537,10 @@ void TxGraphImpl::StartStaging() noexcept
     Assume(m_clustersets.size() < MAX_LEVELS);
     // Apply all remaining dependencies in main before creating a staging graph. Once staging
     // exists, we cannot merge Clusters anymore (because of interference with Clusters being
-    // pulled into staging), so to make sure all inspectors are available (if not oversized),
-    // do all merging work now. This also involves applying all removals.
+    // pulled into staging), so to make sure all inspectors are available (if not oversized), do
+    // all merging work now. Call SplitAll() first, so that even if ApplyDependencies does not do
+    // any thing due to knowing the result is oversized, splitting is still performed.
+    SplitAll(m_clustersets.size() - 1);
     ApplyDependencies(m_clustersets.size() - 1);
     // Construct a new graph.
     m_clustersets.emplace_back();
@@ -1535,6 +1551,8 @@ void TxGraphImpl::StartStaging() noexcept
     stage.m_txcount = main.m_txcount;
     stage.m_deps_to_add = main.m_deps_to_add;
     stage.m_group_data = main.m_group_data;
+    stage.m_oversized = main.m_oversized;
+    Assume(stage.m_oversized.has_value());
 }
 
 void TxGraphImpl::AbortStaging() noexcept
@@ -1588,6 +1606,7 @@ void TxGraphImpl::CommitStaging() noexcept
     main.m_deps_to_add = std::move(stage.m_deps_to_add);
     main.m_to_remove = std::move(stage.m_to_remove);
     main.m_group_data = std::move(stage.m_group_data);
+    main.m_oversized = std::move(stage.m_oversized);
     main.m_txcount = std::move(stage.m_txcount);
     // Delete the old staging graph, after all its information was moved to main.
     m_clustersets.pop_back();
@@ -1765,6 +1784,11 @@ void TxGraphImpl::SanityCheck() const
         if (!clusterset.m_deps_to_add.empty()) compact_possible = false;
         if (!clusterset.m_to_remove.empty()) compact_possible = false;
         if (!clusterset.m_removed.empty()) compact_possible = false;
+
+        // If m_group_data exists, its m_group_oversized must match m_oversized.
+        if (clusterset.m_group_data.has_value()) {
+            assert(clusterset.m_oversized == clusterset.m_group_data->m_group_oversized);
+        }
     }
 
     // Verify that the contents of m_unlinked matches what was expected based on the Entry vector.
