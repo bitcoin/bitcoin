@@ -1083,19 +1083,19 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     return true;
 }
 
-static bool LockDirectory(const fs::path& dir, bool probeOnly)
+static bool LockDirectory(const fs::path& datadir, bool probeOnly)
 {
-    // Make sure only a single process is using the directory.
-    switch (util::LockDirectory(dir, ".lock", probeOnly)) {
+    // Make sure only a single Bitcoin process is using the data directory.
+    switch (util::LockDirectory(datadir, ".lock", probeOnly)) {
     case util::LockResult::ErrorWrite:
-        return InitError(strprintf(_("Cannot write to directory '%s'; check permissions."), fs::PathToString(dir)));
+        return InitError(strprintf(_("Cannot write to data directory '%s'; check permissions."), fs::PathToString(datadir)));
     case util::LockResult::ErrorLock:
-        return InitError(strprintf(_("Cannot obtain a lock on directory %s. %s is probably already running."), fs::PathToString(dir), PACKAGE_NAME));
+        return InitError(strprintf(_("Cannot obtain a lock on data directory %s. %s is probably already running."), fs::PathToString(datadir), PACKAGE_NAME));
     case util::LockResult::Success: return true;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
-static bool LockDirectories(bool probeOnly)
+static bool LockDataDirectory(bool probeOnly)
 {
     return LockDirectory(gArgs.GetDataDirNet(), probeOnly) && \
            LockDirectory(gArgs.GetBlocksDirPath(), probeOnly);
@@ -1114,19 +1114,19 @@ bool AppInitSanityChecks(const kernel::Context& kernel)
         return InitError(strprintf(_("Elliptic curve cryptography sanity check failure. %s is shutting down."), PACKAGE_NAME));
     }
 
-    // Probe the directory locks to give an early error message, if possible
-    // We cannot hold the directory locks here, as the forking for daemon() hasn't yet happened,
-    // and a fork will cause weird behavior to them.
-    return LockDirectories(true);
+    // Probe the data directory lock to give an early error message, if possible
+    // We cannot hold the data directory lock here, as the forking for daemon() hasn't yet happened,
+    // and a fork will cause weird behavior to it.
+    return LockDataDirectory(true);
 }
 
-bool AppInitLockDirectories()
+bool AppInitLockDataDirectory()
 {
-    // After daemonization get the directory locks again and hold on to them until exit
+    // After daemonization get the data directory lock again and hold on to it until exit
     // This creates a slight window for a race condition to happen, however this condition is harmless: it
     // will at most make us exit without printing a message to console.
-    if (!LockDirectories(false)) {
-        // Detailed error printed inside LockDirectory
+    if (!LockDataDirectory(false)) {
+        // Detailed error printed inside LockDataDirectory
         return false;
     }
     return true;

@@ -221,10 +221,10 @@ static bool AppInit(NodeContext& node)
             return InitError(Untranslated("-daemon is not supported on this operating system"));
 #endif // HAVE_DECL_FORK
         }
-        // Lock critical directories after daemonization
-        if (!AppInitLockDirectories())
+        // Lock data directory after daemonization
+        if (!AppInitLockDataDirectory())
         {
-            // If locking a directory failed, exit immediately
+            // If locking the data directory failed, exit immediately
             return false;
         }
         fRet = AppInitInterfaces(node) && AppInitMain(node);
