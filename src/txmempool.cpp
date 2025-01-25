@@ -132,12 +132,6 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256>& vHashes
     }
 }
 
-util::Result<void> CTxMemPool::CheckPackageLimits(const Package& package,
-                                                  const int64_t total_vsize) const
-{
-    return {};
-}
-
 bool CTxMemPool::HasDescendants(const Txid& txid) const
 {
     LOCK(cs);
