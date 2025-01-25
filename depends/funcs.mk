@@ -39,9 +39,33 @@ define fetch_file
       $(call fetch_file_inner,$(1),$(FALLBACK_DOWNLOAD_PATH),$(3),$(4),$(5))))
 endef
 
+# Shell script to create a source tarball in $(1)_source from local directory
+# $(1)_local_dir instead of downloading remote sources. Tarball is recreated if
+# any paths in the local directory have a newer mtime, and checksum of the
+# tarball is saved to $(1)_fetched and returned as output.
+define fetch_local_dir_sha256
+    if ! [ -f $($(1)_source) ] || [ -n "$$(find $($(1)_local_dir) -newer $($(1)_source) | head -n1)" ]; then \
+        mkdir -p $(dir $($(1)_source)) && \
+        $(build_TAR) -c -f $($(1)_source) -C $($(1)_local_dir) . && \
+        rm -f $($(1)_fetched); \
+    fi && \
+    if ! [ -f $($(1)_fetched) ] || [ -n "$$(find $($(1)_source) -newer $($(1)_fetched))" ]; then \
+        mkdir -p $(dir $($(1)_fetched)) && \
+        cd $($(1)_source_dir) && \
+        $(build_SHA256SUM) $($(1)_all_sources) > $($(1)_fetched); \
+    fi && \
+    cut -d" " -f1 $($(1)_fetched)
+endef
+
 define int_get_build_recipe_hash
 $(eval $(1)_patches_path?=$(PATCHES_PATH)/$(1))
 $(eval $(1)_all_file_checksums:=$(shell $(build_SHA256SUM) $(meta_depends) packages/$(1).mk $(addprefix $($(1)_patches_path)/,$($(1)_patches)) | cut -d" " -f1))
+# If $(1)_local_dir is set, create a tarball of the local directory contents to
+# use as the source of the package, and include a hash of the tarball in the
+# package id, so if directory contents change, the package and packages
+# depending on it will be rebuilt.
+$(if $($(1)_local_dir),$(eval $(1)_sha256_hash:=$(shell $(call fetch_local_dir_sha256,$(1)))))
+$(if $($(1)_local_dir),$(eval $(1)_all_file_checksums+=$($(1)_sha256_hash)))
 $(eval $(1)_recipe_hash:=$(shell echo -n "$($(1)_all_file_checksums)" | $(build_SHA256SUM) | cut -d" " -f1))
 endef
 
@@ -64,10 +88,19 @@ $(1)_cached:=$(BASE_CACHE)/$(host)/$(1)/$(1)-$($(1)_version)-$($(1)_build_id).ta
 $(1)_build_log:=$(BASEDIR)/$(1)-$($(1)_version)-$($(1)_build_id).log
 endef
 
+# Convert a string to a human-readable filename, replacing dot, slash, and space
+# characters that could cause problems with dashes and collapsing them.
+define int_friendly_file_name
+$(subst $(null) $(null),-,$(strip $(subst ., ,$(subst /, ,$(1)))))
+endef
+
 define int_get_build_properties
 $(1)_build_subdir?=.
 $(1)_download_file?=$($(1)_file_name)
 $(1)_source_dir:=$(SOURCES_PATH)
+# If $(1)_file_name is empty and $(1)_local_dir is nonempty, set file name to a
+# .tar file with a friendly filename named after the directory path.
+$(if $($(1)_file_name),,$(if $($(1)_local_dir),$(eval $(1)_file_name:=$(call int_friendly_file_name,$($(1)_local_dir)).tar)))
 $(1)_source:=$$($(1)_source_dir)/$($(1)_file_name)
 $(1)_download_dir:=$(base_download_dir)/$(1)-$($(1)_version)
 $(1)_prefixbin:=$($($(1)_type)_prefix)/bin/
