@@ -16,6 +16,7 @@
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 
 #ifdef WIN32
 #include <codecvt>    /* for codecvt_utf8_utf16 */
@@ -544,8 +545,18 @@ bool ArgsManager::SoftSetBoolArg(const std::string& strArg, bool fValue)
 
 void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strValue)
 {
+    ForceSetArgV(strArg, common::SettingsValue{strValue});
+}
+
+void ArgsManager::ForceSetArg(const std::string& arg, const int64_t value)
+{
+    ForceSetArg(arg, util::ToString(value));
+}
+
+void ArgsManager::ForceSetArgV(const std::string& arg, const common::SettingsValue& value)
+{
     LOCK(cs_args);
-    m_settings.forced_settings[SettingName(strArg)] = strValue;
+    m_settings.forced_settings[SettingName(arg)] = value;
 }
 
 void ArgsManager::AddCommand(const std::string& cmd, const std::string& help)

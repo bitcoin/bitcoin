@@ -10,6 +10,7 @@
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 
+#include <chainparams.h>
 #include <common/args.h>
 #include <interfaces/node.h>
 #include <mapport.h>
@@ -244,6 +245,12 @@ bool OptionsModel::Init(bilingual_str& error)
     m_sub_fee_from_amount = settings.value("SubFeeFromAmount", false).toBool();
 #endif
 
+    // Network
+    if (!settings.contains("nNetworkPort"))
+        settings.setValue("nNetworkPort", (quint16)Params().GetDefaultPort());
+    if (!gArgs.SoftSetArg("-port", settings.value("nNetworkPort").toString().toStdString()))
+        addOverriddenOption("-port");
+
     // Display
     if (settings.contains("FontForMoney")) {
         m_font_money = FontChoiceFromString(settings.value("FontForMoney").toString());
@@ -255,6 +262,17 @@ bool OptionsModel::Init(bilingual_str& error)
         }
     }
     Q_EMIT fontForMoneyChanged(getFontForMoney());
+
+    if (settings.contains("FontForQRCodes")) {
+        m_font_qrcodes = FontChoiceFromString(settings.value("FontForQRCodes").toString());
+    }
+    Q_EMIT fontForQRCodesChanged(getFontChoiceForQRCodes());
+
+    if (!settings.contains("PeersTabAlternatingRowColors")) {
+        settings.setValue("PeersTabAlternatingRowColors", "false");
+    }
+    m_peers_tab_alternating_row_colors = settings.value("PeersTabAlternatingRowColors").toBool();
+    Q_EMIT peersTabAlternatingRowColorsChanged(m_peers_tab_alternating_row_colors);
 
     m_mask_values = settings.value("mask_values", false).toBool();
 
@@ -407,6 +425,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return m_show_tray_icon;
     case MinimizeToTray:
         return fMinimizeToTray;
+    case NetworkPort:
+        return settings.value("nNetworkPort");
     case MapPortUPnP:
 #ifdef USE_UPNP
         return SettingToBool(setting(), DEFAULT_UPNP);
@@ -465,6 +485,10 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return QString::fromStdString(SettingToString(setting(), ""));
     case FontForMoney:
         return QVariant::fromValue(m_font_money);
+    case FontForQRCodes:
+        return QVariant::fromValue(m_font_qrcodes);
+    case PeersTabAlternatingRowColors:
+        return m_peers_tab_alternating_row_colors;
     case CoinControlFeatures:
         return fCoinControlFeatures;
     case EnablePSBTControls:
@@ -528,6 +552,18 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
     case MinimizeToTray:
         fMinimizeToTray = value.toBool();
         settings.setValue("fMinimizeToTray", fMinimizeToTray);
+        break;
+    case NetworkPort:
+        if (settings.value("nNetworkPort") != value) {
+            // If the port input box is empty, set to default port
+            if (value.toString().isEmpty()) {
+                settings.setValue("nNetworkPort", (quint16)Params().GetDefaultPort());
+            }
+            else {
+                settings.setValue("nNetworkPort", (quint16)value.toInt());
+            }
+            setRestartRequired(true);
+        }
         break;
     case MapPortUPnP: // core option - can be changed on-the-fly
         if (changed()) {
@@ -649,6 +685,20 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         Q_EMIT fontForMoneyChanged(getFontForMoney());
         break;
     }
+    case FontForQRCodes:
+    {
+        const auto& new_font = value.value<FontChoice>();
+        if (m_font_qrcodes == new_font) break;
+        settings.setValue("FontForQRCodes", FontChoiceToString(new_font));
+        m_font_qrcodes = new_font;
+        Q_EMIT fontForQRCodesChanged(new_font);
+        break;
+    }
+    case PeersTabAlternatingRowColors:
+        m_peers_tab_alternating_row_colors = value.toBool();
+        settings.setValue("PeersTabAlternatingRowColors", m_peers_tab_alternating_row_colors);
+        Q_EMIT peersTabAlternatingRowColorsChanged(m_peers_tab_alternating_row_colors);
+        break;
     case CoinControlFeatures:
         fCoinControlFeatures = value.toBool();
         settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
