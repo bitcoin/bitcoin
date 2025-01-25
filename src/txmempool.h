@@ -311,9 +311,6 @@ public:
     std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> GetParents(const CTxMemPoolEntry &entry) const;
 
 private:
-    typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
-
-
     std::vector<indexed_transaction_set::const_iterator> GetSortedScoreWithTopology() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /**
