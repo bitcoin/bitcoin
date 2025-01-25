@@ -721,11 +721,11 @@ public:
         // limits would be violated. Note that the changeset will be destroyed
         // when it goes out of scope.
         auto changeset = m_node.mempool->GetChangeSet();
-        auto handle = changeset->StageAddition(tx, 0, 0, 0, 0, false, 0, LockPoints{});
+        (void) changeset->StageAddition(tx, 0, 0, 0, 0, false, 0, LockPoints{});
         if (!changeset->CheckMemPoolPolicyLimits()) {
             return util::Error{Untranslated("too many unconfirmed transactions in cluster")};
         }
-        return m_node.mempool->CheckPackageLimits({tx}, handle->GetTxSize());
+        return {};
     }
     CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc) override
     {
