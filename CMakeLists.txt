@@ -395,18 +395,22 @@ include(cmake/ccache.cmake)
 add_library(warn_interface INTERFACE)
 target_link_libraries(core_interface INTERFACE warn_interface)
 if(MSVC)
+  # For both cl and clang-cl compilers.
   try_append_cxx_flags("/W3" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("/wd4018" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("/wd4244" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("/wd4267" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("/wd4715" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("/wd4805" TARGET warn_interface SKIP_LINK)
   target_compile_definitions(warn_interface INTERFACE
     _CRT_SECURE_NO_WARNINGS
     _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
   )
 else()
   try_append_cxx_flags("-Wall" TARGET warn_interface SKIP_LINK)
+endif()  
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  try_append_cxx_flags("/wd4018" TARGET warn_interface SKIP_LINK)
+  try_append_cxx_flags("/wd4244" TARGET warn_interface SKIP_LINK)
+  try_append_cxx_flags("/wd4267" TARGET warn_interface SKIP_LINK)
+  try_append_cxx_flags("/wd4715" TARGET warn_interface SKIP_LINK)
+  try_append_cxx_flags("/wd4805" TARGET warn_interface SKIP_LINK)
+else()
   try_append_cxx_flags("-Wextra" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wgnu" TARGET warn_interface SKIP_LINK)
   # Some compilers will ignore -Wformat-security without -Wformat, so just combine the two here.
