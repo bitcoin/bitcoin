@@ -15,13 +15,13 @@ from test_framework.util import (
 
 # Linux allow all characters other than \x00
 # Windows disallow control characters (0-31) and /\?%:|"<>
-FILE_CHAR_START = 32 if platform.system() == 'Windows' else 1
+FILE_CHAR_START = 43 if platform.system() == 'Windows' else 1
 FILE_CHAR_END = 128
-FILE_CHARS_DISALLOWED = '/\\?%*:|"<>' if platform.system() == 'Windows' else '/'
+FILE_CHARS_DISALLOWED = '/:;<>?@[\\]^`{|}' if platform.system() == 'Windows' else '/'
 UNCONFIRMED_HASH_STRING = 'unconfirmed'
 
 def notify_outputname(walletname, txid):
-    return txid if platform.system() == 'Windows' else f'{walletname}_{txid}'
+    return f'{walletname}_{txid}'
 
 
 class NotificationsTest(BitcoinTestFramework):
@@ -33,7 +33,7 @@ class NotificationsTest(BitcoinTestFramework):
         self.setup_clean_chain = True
 
     def setup_network(self):
-        self.wallet = ''.join(chr(i) for i in range(FILE_CHAR_START, FILE_CHAR_END) if chr(i) not in FILE_CHARS_DISALLOWED)
+        self.wallet = 'wallet' + ''.join(chr(i) for i in range(FILE_CHAR_START, FILE_CHAR_END) if chr(i) not in FILE_CHARS_DISALLOWED)
         self.alertnotify_dir = os.path.join(self.options.tmpdir, "alertnotify")
         self.blocknotify_dir = os.path.join(self.options.tmpdir, "blocknotify")
         self.walletnotify_dir = os.path.join(self.options.tmpdir, "walletnotify")
