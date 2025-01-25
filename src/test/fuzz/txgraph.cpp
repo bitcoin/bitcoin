@@ -134,6 +134,8 @@ struct SimTxGraph
         simmap[simpos] = std::make_shared<TxGraph::Ref>();
         auto ptr = simmap[simpos].get();
         simrevmap[ptr] = simpos;
+        // This may invalidate our cached oversized value.
+        if (oversized.has_value() && !*oversized) oversized = std::nullopt;
         return ptr;
     }
 
@@ -269,12 +271,8 @@ FUZZ_TARGET(txgraph)
     /** The maximum number of transactions per (non-oversized) cluster we will use in this
      *  simulation. */
     auto max_cluster_count = provider.ConsumeIntegralInRange<DepGraphIndex>(1, MAX_CLUSTER_COUNT_LIMIT);
-    /** The maximum total size of transactions in a cluster, which also makes it an upper bound
-     *  on the individual size of a transaction (but this restriction will be lifted in a future
-     *  commit). */
+    /** The maximum total size of transactions in a (non-oversized) cluster. */
     auto max_cluster_size = provider.ConsumeIntegralInRange<uint64_t>(1, 0x3fffff * MAX_CLUSTER_COUNT_LIMIT);
-    /** The maximum individual transaction size used in this test (not a TxGraph parameter). */
-    auto max_tx_size = std::min<uint64_t>(0x3fffff, max_cluster_size);
 
     // Construct a real graph, and a vector of simulated graphs (main, and possibly staging).
     auto real = MakeTxGraph(max_cluster_count, max_cluster_size);
@@ -404,12 +402,12 @@ FUZZ_TARGET(txgraph)
                 if (alt) {
                     // If alt is true, pick fee and size from the entire range.
                     fee = provider.ConsumeIntegralInRange<int64_t>(-0x8000000000000, 0x7ffffffffffff);
-                    size = provider.ConsumeIntegralInRange<int32_t>(1, max_tx_size);
+                    size = provider.ConsumeIntegralInRange<int32_t>(1, 0x3fffff);
                 } else {
                     // Otherwise, use smaller range which consume fewer fuzz input bytes, as just
                     // these are likely sufficient to trigger all interesting code paths already.
                     fee = provider.ConsumeIntegral<uint8_t>();
-                    size = provider.ConsumeIntegralInRange<uint32_t>(1, std::min<uint32_t>(0xff, max_tx_size));
+                    size = provider.ConsumeIntegralInRange<uint32_t>(1, 0xff);
                 }
                 FeePerWeight feerate{fee, size};
                 // Create a real TxGraph::Ref.
