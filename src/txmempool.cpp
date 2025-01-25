@@ -61,7 +61,7 @@ std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> CTxMemPool::GetChildren(const C
     setEntries children;
     auto iter = mapNextTx.lower_bound(COutPoint(Txid::FromUint256(entry.GetTx().GetHash()), 0));
     for (; iter != mapNextTx.end() && iter->first->hash == entry.GetTx().GetHash(); ++iter) {
-        children.insert(mapTx.find(iter->second->GetHash()));
+        children.insert(iter->second);
     }
     for (const auto& child : children) {
         ret.emplace_back(*child);
@@ -106,9 +106,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256>& vHashes
         {
             WITH_FRESH_EPOCH(m_epoch);
             for (; iter != mapNextTx.end() && iter->first->hash == hash; ++iter) {
-                const uint256 &childHash = iter->second->GetHash();
-                txiter childIter = mapTx.find(childHash);
-                assert(childIter != mapTx.end());
+                txiter childIter = iter->second;
                 // Add dependencies that are discovered between transactions in the
                 // block and transactions that were in the mempool to txgraph.
                 m_txgraph->AddDependency(*it, *childIter);
@@ -231,7 +229,7 @@ void CTxMemPool::addNewTransaction(CTxMemPool::txiter newit)
     const CTransaction& tx = newit->GetTx();
     std::set<Txid> setParentTransactions;
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
-        mapNextTx.insert(std::make_pair(&tx.vin[i].prevout, &tx));
+        mapNextTx.insert(std::make_pair(&tx.vin[i].prevout, newit));
         setParentTransactions.insert(tx.vin[i].prevout.hash);
     }
     // Don't bother worrying about child transactions of this one.
@@ -326,8 +324,7 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
                 auto it = mapNextTx.find(COutPoint(origTx.GetHash(), i));
                 if (it == mapNextTx.end())
                     continue;
-                txiter nextit = mapTx.find(it->second->GetHash());
-                assert(nextit != mapTx.end());
+                txiter nextit = it->second;
                 txToRemove.insert(nextit);
             }
         }
@@ -367,7 +364,7 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
     for (const CTxIn &txin : tx.vin) {
         auto it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
-            const CTransaction &txConflict = *it->second;
+            const CTransaction &txConflict = it->second->GetTx();
             if (txConflict != tx)
             {
                 ClearPrioritisation(txConflict.GetHash());
@@ -444,7 +441,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
             auto it3 = mapNextTx.find(txin.prevout);
             assert(it3 != mapNextTx.end());
             assert(it3->first == &txin.prevout);
-            assert(it3->second == &tx);
+            assert(&(it3->second->GetTx()) == &tx);
         }
         auto comp = [](const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) -> bool {
             return a.GetTx().GetHash() == b.GetTx().GetHash();
@@ -460,8 +457,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
         std::set<CTxMemPoolEntry::CTxMemPoolEntryRef, CompareIteratorByHash> setChildrenStored;
         auto iter = mapNextTx.lower_bound(COutPoint(it->GetTx().GetHash(), 0));
         for (; iter != mapNextTx.end() && iter->first->hash == it->GetTx().GetHash(); ++iter) {
-            txiter childit = mapTx.find(iter->second->GetHash());
-            assert(childit != mapTx.end()); // mapNextTx points to in-mempool transactions
+            txiter childit = iter->second;
             setChildrenCheck.insert(*childit);
         }
         for (auto &txentry : GetChildren(*it)) {
@@ -478,11 +474,10 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
         AddCoins(mempoolDuplicate, tx, std::numeric_limits<int>::max());
     }
     for (auto it = mapNextTx.cbegin(); it != mapNextTx.cend(); it++) {
-        uint256 hash = it->second->GetHash();
-        indexed_transaction_set::const_iterator it2 = mapTx.find(hash);
+        indexed_transaction_set::const_iterator it2 = it->second;
         const CTransaction& tx = it2->GetTx();
         assert(it2 != mapTx.end());
-        assert(&tx == it->second);
+        assert(&tx == &(it->second->GetTx()));
     }
 
     assert(totalTxSize == checkTotal);
@@ -650,7 +645,7 @@ std::vector<CTxMemPool::delta_info> CTxMemPool::GetPrioritisedTransactions() con
 const CTransaction* CTxMemPool::GetConflictTx(const COutPoint& prevout) const
 {
     const auto it = mapNextTx.find(prevout);
-    return it == mapNextTx.end() ? nullptr : it->second;
+    return it == mapNextTx.end() ? nullptr : &(it->second->GetTx());
 }
 
 std::optional<CTxMemPool::txiter> CTxMemPool::GetIter(const uint256& txid) const
