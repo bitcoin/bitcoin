@@ -35,6 +35,9 @@ using ClusterSetIndex = uint32_t;
 /** Quality levels for cached cluster linearizations. */
 enum class QualityLevel
 {
+    /** This is a singleton cluster consisting of a transaction that individually exceeds the
+     *  cluster size limit. It cannot be merged with anything. */
+    OVERSIZED,
     /** This cluster may have multiple disconnected components, which are all NEEDS_RELINEARIZE. */
     NEEDS_SPLIT,
     /** This cluster may have multiple disconnected components, which are all ACCEPTABLE. */
@@ -101,6 +104,9 @@ public:
     {
         return m_quality == QualityLevel::OPTIMAL;
     }
+    /** Whether this cluster is oversized (just due to the size of its transaction(s), not due to
+     *  dependencies that are yet to be added. */
+    bool IsOversized() const noexcept { return m_quality == QualityLevel::OVERSIZED; }
     /** Whether this cluster requires splitting. */
     bool NeedsSplitting() const noexcept
     {
@@ -248,8 +254,11 @@ private:
         /** Total number of transactions in this graph (sum of all transaction counts in all
          *  Clusters, and for staging also those inherited from the main ClusterSet). */
         GraphIndex m_txcount{0};
+        /** Total number of individually oversized transactions in the graph. */
+        GraphIndex m_txcount_oversized{0};
         /** Whether this graph is oversized (if known). This roughly matches
-         *  m_group_data->m_group_oversized, but may be known even if m_group_data is not. */
+         *  m_group_data->m_group_oversized || (m_txcount_oversized > 0), but may be known even if
+         *  m_group_data is not. */
         std::optional<bool> m_oversized{false};
 
         ClusterSet() noexcept = default;
@@ -437,7 +446,7 @@ public:
     ClusterSet& GetClusterSet(int level) noexcept;
     const ClusterSet& GetClusterSet(int level) const noexcept;
     /** Make a transaction not exist at a specified level. It must currently exist there. */
-    void ClearLocator(int level, GraphIndex index) noexcept;
+    void ClearLocator(int level, GraphIndex index, bool oversized_tx) noexcept;
     /** Find which Clusters in main conflict with ones in staging. */
     std::vector<Cluster*> GetConflicts() const noexcept;
     /** Clear an Entry's ChunkData. */
@@ -638,7 +647,7 @@ uint64_t Cluster::GetTxSize() const noexcept
     return ret;
 }
 
-void TxGraphImpl::ClearLocator(int level, GraphIndex idx) noexcept
+void TxGraphImpl::ClearLocator(int level, GraphIndex idx, bool oversized_tx) noexcept
 {
     auto& entry = m_entries[idx];
     auto& clusterset = GetClusterSet(level);
@@ -652,12 +661,14 @@ void TxGraphImpl::ClearLocator(int level, GraphIndex idx) noexcept
     }
     // Update the transaction count.
     --clusterset.m_txcount;
+    clusterset.m_txcount_oversized -= oversized_tx;
     // If clearing main, adjust the status of Locators of this transaction in staging, if it exists.
     if (level == 0 && GetTopLevel() == 1) {
         if (entry.m_locator[1].IsRemoved()) {
             entry.m_locator[1].SetMissing();
         } else if (!entry.m_locator[1].IsPresent()) {
             --m_staging_clusterset->m_txcount;
+            m_staging_clusterset->m_txcount_oversized -= oversized_tx;
         }
     }
     if (level == 0) ClearChunkData(entry);
@@ -788,7 +799,8 @@ void Cluster::ApplyRemovals(TxGraphImpl& graph, std::span<GraphIndex>& to_remove
             entry.m_main_lin_index = LinearizationIndex(-1);
         }
         // - Mark it as missing/removed in the Entry's locator.
-        graph.ClearLocator(m_level, idx);
+        bool oversized_tx = uint64_t(m_depgraph.FeeRate(locator.index).size) > graph.m_max_cluster_size;
+        graph.ClearLocator(m_level, idx, oversized_tx);
         to_remove = to_remove.subspan(1);
     } while(!to_remove.empty());
 
@@ -804,9 +816,14 @@ void Cluster::ApplyRemovals(TxGraphImpl& graph, std::span<GraphIndex>& to_remove
         todo.Reset(m_linearization.back());
         m_linearization.pop_back();
     }
-    if (todo.None()) {
+    if (m_linearization.empty()) {
+        // Empty Cluster, it just needs to be deleted. Any NEEDS_SPLIT_* state will work.
+        // This will always be hit when the input is QualityLevel::OVERSIZED.
+        quality = QualityLevel::NEEDS_SPLIT_ACCEPTABLE;
+    } else if (todo.None()) {
         // If no further removals remain, and thus all removals were at the end, we may be able
         // to leave the cluster at a better quality level.
+        Assume(quality != QualityLevel::OVERSIZED);
         if (IsAcceptable(/*after_split=*/true)) {
             quality = QualityLevel::NEEDS_SPLIT_ACCEPTABLE;
         } else {
@@ -827,7 +844,10 @@ void Cluster::ApplyRemovals(TxGraphImpl& graph, std::span<GraphIndex>& to_remove
 void Cluster::Clear(TxGraphImpl& graph) noexcept
 {
     for (auto i : m_linearization) {
-        graph.ClearLocator(m_level, m_mapping[i]);
+        // We do not care about setting oversized_tx accurately here, because this function is only
+        // applied to main-graph Clusters in CommitStaging, which will overwrite main's
+        // m_txcount_oversized anyway with the staging graph's value.
+        graph.ClearLocator(m_level, m_mapping[i], /*oversized_tx=*/false);
     }
     m_depgraph = {};
     m_linearization.clear();
@@ -1287,6 +1307,17 @@ void TxGraphImpl::GroupClusters(int level) noexcept
      *  to-be-merged group). */
     std::vector<std::pair<std::pair<GraphIndex, GraphIndex>, uint64_t>> an_deps;
 
+    // Construct an an_clusters entry for every oversized cluster, including ones from levels below,
+    // as they may be inherited in this one.
+    for (int level_iter = 0; level_iter <= level; ++level_iter) {
+        for (auto& cluster : GetClusterSet(level_iter).m_clusters[int(QualityLevel::OVERSIZED)]) {
+            auto graph_idx = cluster->GetClusterEntry(0);
+            auto cur_cluster = FindCluster(graph_idx, level);
+            if (cur_cluster == nullptr) continue;
+            an_clusters.emplace_back(cur_cluster, cur_cluster->m_sequence);
+        }
+    }
+
     // Construct a an_clusters entry for every parent and child in the to-be-applied dependencies,
     // and an an_deps entry for each dependency to be applied.
     an_deps.reserve(clusterset.m_deps_to_add.size());
@@ -1303,7 +1334,7 @@ void TxGraphImpl::GroupClusters(int level) noexcept
         an_deps.emplace_back(std::pair{par, chl}, chl_cluster->m_sequence);
     }
     // Sort and deduplicate an_clusters, so we end up with a sorted list of all involved Clusters
-    // to which dependencies apply.
+    // to which dependencies apply, or which are oversized.
     std::sort(an_clusters.begin(), an_clusters.end(), [](auto& a, auto& b) noexcept { return a.second < b.second; });
     an_clusters.erase(std::unique(an_clusters.begin(), an_clusters.end()), an_clusters.end());
     // Sort an_deps by applying the same order to the involved child cluster.
@@ -1506,7 +1537,7 @@ void TxGraphImpl::ApplyDependencies(int level) noexcept
     // Nothing to do if there are no dependencies to be added.
     if (clusterset.m_deps_to_add.empty()) return;
     // Dependencies cannot be applied if it would result in oversized clusters.
-    if (clusterset.m_group_data->m_group_oversized) return;
+    if (clusterset.m_oversized == true) return;
 
     // For each group of to-be-merged Clusters.
     for (const auto& group_entry : clusterset.m_group_data->m_groups) {
@@ -1562,7 +1593,7 @@ void Cluster::Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept
 void TxGraphImpl::MakeAcceptable(Cluster& cluster) noexcept
 {
     // Relinearize the Cluster if needed.
-    if (!cluster.NeedsSplitting() && !cluster.IsAcceptable()) {
+    if (!cluster.NeedsSplitting() && !cluster.IsAcceptable() && !cluster.IsOversized()) {
         cluster.Relinearize(*this, 10000);
     }
 }
@@ -1592,7 +1623,7 @@ Cluster::Cluster(uint64_t sequence, TxGraphImpl& graph, const FeePerWeight& feer
 TxGraph::Ref TxGraphImpl::AddTransaction(const FeePerWeight& feerate) noexcept
 {
     Assume(m_main_chunkindex_observers == 0 || GetTopLevel() != 0);
-    Assume(feerate.size > 0 && uint64_t(feerate.size) <= m_max_cluster_size);
+    Assume(feerate.size > 0);
     // Construct a new Ref.
     Ref ret;
     // Construct a new Entry, and link it with the Ref.
@@ -1604,13 +1635,20 @@ TxGraph::Ref TxGraphImpl::AddTransaction(const FeePerWeight& feerate) noexcept
     GetRefGraph(ret) = this;
     GetRefIndex(ret) = idx;
     // Construct a new singleton Cluster (which is necessarily optimally linearized).
+    bool oversized = uint64_t(feerate.size) > m_max_cluster_size;
     auto cluster = std::make_unique<Cluster>(m_next_sequence_counter++, *this, feerate, idx);
     auto cluster_ptr = cluster.get();
     int level = GetTopLevel();
     auto& clusterset = GetClusterSet(level);
-    InsertCluster(level, std::move(cluster), QualityLevel::OPTIMAL);
+    InsertCluster(level, std::move(cluster), oversized ? QualityLevel::OVERSIZED : QualityLevel::OPTIMAL);
     cluster_ptr->Updated(*this);
     ++clusterset.m_txcount;
+    // Deal with individually oversized transactions.
+    if (oversized) {
+        ++clusterset.m_txcount_oversized;
+        clusterset.m_oversized = true;
+        clusterset.m_group_data = std::nullopt;
+    }
     // Return the Ref.
     return ret;
 }
@@ -1923,11 +1961,15 @@ bool TxGraphImpl::IsOversized(bool main_only) noexcept
         // Return cached value if known.
         return *clusterset.m_oversized;
     }
-    // Find which Clusters will need to be merged together, as that is where the oversize
-    // property is assessed.
-    GroupClusters(level);
-    Assume(clusterset.m_group_data.has_value());
-    clusterset.m_oversized = clusterset.m_group_data->m_group_oversized;
+    ApplyRemovals(level);
+    if (clusterset.m_txcount_oversized > 0) {
+        clusterset.m_oversized = true;
+    } else {
+        // Find which Clusters will need to be merged together, as that is where the oversize
+        // property is assessed.
+        GroupClusters(level);
+    }
+    Assume(clusterset.m_oversized.has_value());
     return *clusterset.m_oversized;
 }
 
@@ -1947,6 +1989,7 @@ void TxGraphImpl::StartStaging() noexcept
     // Copy statistics, precomputed data, and to-be-applied dependencies (only if oversized) to
     // the new graph. To-be-applied removals will always be empty at this point.
     m_staging_clusterset->m_txcount = m_main_clusterset.m_txcount;
+    m_staging_clusterset->m_txcount_oversized = m_main_clusterset.m_txcount_oversized;
     m_staging_clusterset->m_deps_to_add = m_main_clusterset.m_deps_to_add;
     m_staging_clusterset->m_group_data = m_main_clusterset.m_group_data;
     m_staging_clusterset->m_oversized = m_main_clusterset.m_oversized;
@@ -1974,7 +2017,13 @@ void TxGraphImpl::AbortStaging() noexcept
     if (!m_main_clusterset.m_group_data.has_value()) {
         // In case m_oversized in main was kept after a Ref destruction while staging exists, we
         // need to re-evaluate m_oversized now.
-        m_main_clusterset.m_oversized = std::nullopt;
+        if (m_main_clusterset.m_to_remove.empty() && m_main_clusterset.m_txcount_oversized > 0) {
+            // It is possible that a Ref destruction caused a removal in main while staging existed.
+            // In this case, m_txcount_oversized may be inaccurate.
+            m_main_clusterset.m_oversized = true;
+        } else {
+            m_main_clusterset.m_oversized = std::nullopt;
+        }
     }
 }
 
@@ -2008,6 +2057,7 @@ void TxGraphImpl::CommitStaging() noexcept
     m_main_clusterset.m_group_data = std::move(m_staging_clusterset->m_group_data);
     m_main_clusterset.m_oversized = std::move(m_staging_clusterset->m_oversized);
     m_main_clusterset.m_txcount = std::move(m_staging_clusterset->m_txcount);
+    m_main_clusterset.m_txcount_oversized = std::move(m_staging_clusterset->m_txcount_oversized);
     // Delete the old staging graph, after all its information was moved to main.
     m_staging_clusterset.reset();
     Compact();
@@ -2022,7 +2072,9 @@ void Cluster::SetFee(TxGraphImpl& graph, DepGraphIndex idx, int64_t fee) noexcep
     // Update the fee, remember that relinearization will be necessary, and update the Entries
     // in the same Cluster.
     m_depgraph.FeeRate(idx).fee = fee;
-    if (!NeedsSplitting()) {
+    if (m_quality == QualityLevel::OVERSIZED) {
+        // Nothing to do.
+    } else if (!NeedsSplitting()) {
         graph.SetClusterQuality(m_level, m_quality, m_setindex, QualityLevel::NEEDS_RELINEARIZE);
     } else {
         graph.SetClusterQuality(m_level, m_quality, m_setindex, QualityLevel::NEEDS_SPLIT);
@@ -2138,9 +2190,12 @@ void Cluster::SanityCheck(const TxGraphImpl& graph, int level) const
     assert(m_linearization.size() <= graph.m_max_cluster_count);
     // The level must match the level the Cluster occurs in.
     assert(m_level == level);
-    // The sum of their sizes cannot exceed m_max_cluster_size.
-    assert(GetTxSize() <= graph.m_max_cluster_size);
+    // The sum of their sizes cannot exceed m_max_cluster_size, unless it is oversized.
+    assert(m_quality == QualityLevel::OVERSIZED || GetTxSize() <= graph.m_max_cluster_size);
     // m_quality and m_setindex are checked in TxGraphImpl::SanityCheck.
+
+    // OVERSIZED clusters are singletons.
+    assert(m_quality != QualityLevel::OVERSIZED || m_linearization.size() == 1);
 
     // Compute the chunking of m_linearization.
     LinearizationChunking linchunking(m_depgraph, m_linearization);
@@ -2312,9 +2367,11 @@ void TxGraphImpl::SanityCheck() const
         if (!clusterset.m_to_remove.empty()) compact_possible = false;
         if (!clusterset.m_removed.empty()) compact_possible = false;
 
-        // If m_group_data exists, its m_group_oversized must match m_oversized.
-        if (clusterset.m_group_data.has_value()) {
-            assert(clusterset.m_oversized == clusterset.m_group_data->m_group_oversized);
+        // If m_group_data exists, and no outstanding removals remain, m_group_oversized must match
+        // m_group_oversized || (m_txcount_oversized > 0).
+        if (clusterset.m_group_data.has_value() && clusterset.m_to_remove.empty()) {
+            assert(clusterset.m_oversized ==
+                   (clusterset.m_group_data->m_group_oversized || (clusterset.m_txcount_oversized > 0)));
         }
 
         // For non-top levels, m_oversized must be known (as it cannot change until the level
