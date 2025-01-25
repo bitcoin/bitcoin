@@ -73,7 +73,7 @@ std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> CTxMemPool::GetParents(const CT
 {
     LOCK(cs);
     std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> ret;
-    std::set<uint256> inputs;
+    std::set<Txid> inputs;
     for (const auto& txin : entry.GetTx().vin) {
         inputs.insert(txin.prevout.hash);
     }
@@ -129,12 +129,6 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256>& vHashes
         const CTxMemPoolEntry& entry = *(static_cast<const CTxMemPoolEntry*>(txptr));
         removeUnchecked(mapTx.iterator_to(entry), MemPoolRemovalReason::SIZELIMIT);
     }
-}
-
-util::Result<void> CTxMemPool::CheckPackageLimits(const Package& package,
-                                                  const int64_t total_vsize) const
-{
-    return {};
 }
 
 bool CTxMemPool::HasDescendants(const Txid& txid) const
