@@ -35,6 +35,9 @@ using ClusterSetIndex = uint32_t;
 /** Quality levels for cached cluster linearizations. */
 enum class QualityLevel
 {
+    /** This is a singleton cluster consisting of a transaction that individually exceeds the
+     *  cluster size limit. It cannot be merged with anything. */
+    OVERSIZED,
     /** This cluster may have multiple disconnected components, which are all NEEDS_RELINEARIZE. */
     NEEDS_SPLIT,
     /** This cluster may have multiple disconnected components, which are all ACCEPTABLE. */
@@ -707,9 +710,14 @@ void Cluster::ApplyRemovals(TxGraphImpl& graph, std::span<GraphIndex>& to_remove
         todo.Reset(m_linearization.back());
         m_linearization.pop_back();
     }
-    if (todo.None()) {
+    if (m_linearization.empty()) {
+        // Empty Cluster, it just needs to be deleted. Any NEEDS_SPLIT_* state will work.
+        // This will always be hit when the input is QualityLevel::OVERSIZED.
+        quality = QualityLevel::NEEDS_SPLIT_OPTIMAL;
+    } else if (todo.None()) {
         // If no further removals remain, and thus all removals were at the end, we may be able
         // to leave the cluster at a better quality level.
+        Assume(quality != QualityLevel::OVERSIZED);
         if (quality == QualityLevel::OPTIMAL || quality == QualityLevel::NEEDS_SPLIT_OPTIMAL) {
             quality = QualityLevel::NEEDS_SPLIT_OPTIMAL;
         } else if (quality == QualityLevel::ACCEPTABLE || quality == QualityLevel::NEEDS_SPLIT_ACCEPTABLE) {
@@ -1180,6 +1188,17 @@ void TxGraphImpl::GroupClusters() noexcept
      *  Clusters it applies to. */
     std::vector<std::pair<std::pair<GraphIndex, GraphIndex>, Cluster*>> an_deps;
 
+    // Construct an an_clusters entry for every oversized cluster, including ones from levels below,
+    // as they may be inherited in this one.
+    for (int level_iter = 0; level_iter <= level; ++level_iter) {
+        for (auto& cluster : m_clustersets[level_iter].m_clusters[int(QualityLevel::OVERSIZED)]) {
+            auto graph_idx = cluster->GetClusterEntry(0);
+            auto cur_cluster = FindCluster(graph_idx, level);
+            if (cur_cluster == nullptr) continue;
+            an_clusters.emplace_back(cur_cluster, nullptr);
+        }
+    }
+
     // Construct a an_clusters entry for every parent and child in the to-be-applied dependencies.
     for (const auto& [par, chl] : clusterset.m_deps_to_add) {
         auto par_cluster = FindCluster(par, level);
@@ -1192,7 +1211,7 @@ void TxGraphImpl::GroupClusters() noexcept
         if (chl_cluster != par_cluster) an_clusters.emplace_back(chl_cluster, nullptr);
     }
     // Sort and deduplicate an_clusters, so we end up with a sorted list of all involved Clusters
-    // to which dependencies apply.
+    // to which dependencies apply, or which are oversized.
     std::sort(an_clusters.begin(), an_clusters.end());
     an_clusters.erase(std::unique(an_clusters.begin(), an_clusters.end()), an_clusters.end());
 
@@ -1367,8 +1386,7 @@ void TxGraphImpl::GroupClusters() noexcept
     }
     Assume(an_deps_it == an_deps.end());
     Assume(an_clusters_it == an_clusters.end());
-    clusterset.m_oversized = clusterset.m_group_data->m_group_oversized ||
-                             (clusterset.m_txcount_oversized > 0);
+    clusterset.m_oversized = clusterset.m_group_data->m_group_oversized;
     Compact();
 }
 
@@ -1504,16 +1522,18 @@ TxGraph::Ref TxGraphImpl::AddTransaction(const FeePerWeight& feerate) noexcept
     GetRefGraph(ret) = this;
     GetRefIndex(ret) = idx;
     // Construct a new singleton Cluster (which is necessarily optimally linearized).
+    bool oversized = uint64_t(feerate.size) > m_max_cluster_size;
     auto cluster = std::make_unique<Cluster>(*this, feerate, idx);
     auto cluster_ptr = cluster.get();
     int level = m_clustersets.size() - 1;
-    InsertCluster(level, std::move(cluster), QualityLevel::OPTIMAL);
+    InsertCluster(level, std::move(cluster), oversized ? QualityLevel::OVERSIZED : QualityLevel::OPTIMAL);
     cluster_ptr->Updated(*this);
     ++m_clustersets[level].m_txcount;
     // Deal with individually oversized transactions.
-    if (uint64_t(feerate.size) > m_max_cluster_size) {
+    if (oversized) {
         ++m_clustersets[level].m_txcount_oversized;
         m_clustersets[level].m_oversized = true;
+        m_clustersets[level].m_group_data = std::nullopt;
     }
     // Return the Ref.
     return ret;
@@ -1857,7 +1877,9 @@ void Cluster::SetFee(TxGraphImpl& graph, DepGraphIndex idx, int64_t fee) noexcep
     // Update the fee, remember that relinearization will be necessary, and update the Entries
     // in the same Cluster.
     m_depgraph.FeeRate(idx).fee = fee;
-    if (m_quality == QualityLevel::OPTIMAL || m_quality == QualityLevel::ACCEPTABLE) {
+    if (m_quality == QualityLevel::OVERSIZED) {
+        // Nothing to do.
+    } else if (m_quality == QualityLevel::OPTIMAL || m_quality == QualityLevel::ACCEPTABLE) {
         graph.SetClusterQuality(m_level, m_quality, m_setindex, QualityLevel::NEEDS_RELINEARIZE);
     } else if (m_quality == QualityLevel::NEEDS_SPLIT_OPTIMAL || m_quality == QualityLevel::NEEDS_SPLIT_ACCEPTABLE) {
         graph.SetClusterQuality(m_level, m_quality, m_setindex, QualityLevel::NEEDS_SPLIT);
@@ -1975,9 +1997,12 @@ void Cluster::SanityCheck(const TxGraphImpl& graph, int level) const
     assert(m_linearization.size() <= graph.m_max_cluster_count);
     // The level must match the level the Cluster occurs in.
     assert(m_level == level);
-    // The sum of their sizes cannot exceed m_max_cluster_size.
-    assert(m_linearization.size() == 1 || GetTxSize() <= graph.m_max_cluster_size);
+    // The sum of their sizes cannot exceed m_max_cluster_size, unless it is oversized.
+    assert(m_quality == QualityLevel::OVERSIZED || GetTxSize() <= graph.m_max_cluster_size);
     // m_quality and m_setindex are checked in TxGraphImpl::SanityCheck.
+
+    // OVERSIZED clusters are singletons.
+    assert(m_quality != QualityLevel::OVERSIZED || m_linearization.size() == 1);
 
     // Compute the chunking of m_linearization.
     LinearizationChunking linchunking(m_depgraph, m_linearization);
