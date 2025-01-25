@@ -51,6 +51,7 @@
 #include <validation.h>
 #include <validationinterface.h>
 #include <versionbits.h>
+#include <filesystem>
 
 #include <stdint.h>
 
@@ -3222,6 +3223,61 @@ UniValue CreateUTXOSnapshot(
 {
     auto [cursor, stats, tip]{WITH_LOCK(::cs_main, return PrepareUTXOSnapshot(chainstate, node.rpc_interruption_point))};
     return WriteUTXOSnapshot(chainstate, cursor.get(), &stats, tip, afile, path, tmppath, node.rpc_interruption_point);
+}
+
+UniValue dumptxoutset(const JSONRPCRequest& request)
+{
+    RPCHelpMan{
+        "dumptxoutset",
+        "\nWrite the UTXO set to disk or a named pipe.\n",
+        {
+            {"path", RPCArg::Type::STR, RPCArg::Optional::NO, "The file path or named pipe to write to."},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::BOOL, "success", "Whether the operation was successful"}
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("dumptxoutset", "\"utxo.dat\"") +
+            HelpExampleRpc("dumptxoutset", "\"utxo.dat\"")
+        }
+    };
+
+    std::string path = request.params[0].get_str();
+    fs::path fs_path(path.c_str()); 
+
+    bool is_pipe = fs::is_fifo(fs_path);
+
+    if (!is_pipe) {
+        if (fs::exists(fs_path)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "File already exists.");
+        }
+
+        fs_path += ".incomplete"; 
+    }
+
+    FILE* file = fsbridge::fopen(fs_path, "wb");
+
+    if (!file) {
+        throw JSONRPCError(RPC_MISC_ERROR, strprintf("Unable to open file: %s", path));
+    }
+
+    AutoFile outfile(file, SER_DISK, CLIENT_VERSION);
+
+    if (!DumpUTXOSet(outfile)) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Failed to dump UTXO set.");
+    }
+
+    if (!is_pipe) {
+        fs::rename(fs_path, fs::path(request.params[0].get_str()));
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("success", true);
+
+    return result;
 }
 
 static RPCHelpMan loadtxoutset()
