@@ -44,25 +44,27 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-cb-length");
             }
         }
+    } else if (tx.vin.size() == 2) {
+        if (tx.vin[0].prevout == tx.vin[1].prevout) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputs-duplicate");
+        }
+        if (tx.vin[0].prevout.IsNull() || tx.vin[1].prevout.IsNull()) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-prevout-null");
+        }
     } else {
-        if (tx.vin.size() == 2) {
-            if (tx.vin[0].prevout == tx.vin[1].prevout) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputs-duplicate");
-            }
-        } else {
-            std::vector<COutPoint> sortedPrevouts;
-            sortedPrevouts.reserve(tx.vin.size());
-            for (const auto& txin : tx.vin) {
-                sortedPrevouts.push_back(txin.prevout);
-            }
-            std::sort(sortedPrevouts.begin(), sortedPrevouts.end());
-            if (std::ranges::adjacent_find(sortedPrevouts) != sortedPrevouts.end()) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputs-duplicate");
-            }
+        std::vector<COutPoint> sortedPrevouts;
+        sortedPrevouts.reserve(tx.vin.size());
+        for (const auto& txin : tx.vin) {
+            sortedPrevouts.push_back(txin.prevout);
+        }
+        std::sort(sortedPrevouts.begin(), sortedPrevouts.end());
+        if (std::ranges::adjacent_find(sortedPrevouts) != sortedPrevouts.end()) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputs-duplicate");
         }
 
-        for (const auto& txin : tx.vin) {
-            if (txin.prevout.IsNull()) {
+        for (const auto& in : sortedPrevouts) {
+            if (!in.hash.IsNull()) break; // invalid values can only be at the beginning
+            if (in.IsNull()) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-prevout-null");
             }
         }
