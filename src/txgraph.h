@@ -64,9 +64,9 @@ public:
     virtual ~TxGraph() = default;
     /** Construct a new transaction with the specified feerate, and return a Ref to it.
      *  If a staging graph exists, the new transaction is only created there. feerate.size must be
-     *  strictly positive, and cannot exceed the graph's max cluster size. In all further calls,
-     *  only Refs created by AddTransaction() are allowed to be passed to this TxGraph object (or
-     *  empty Ref objects). Ref objects may outlive the TxGraph they were created for. */
+     *  strictly positive. In all further calls, only Refs created by AddTransaction() are allowed
+     *  to be passed to this TxGraph object (or empty Ref objects). Ref objects may outlive the
+     *  TxGraph they were created for. */
     [[nodiscard]] virtual Ref AddTransaction(const FeePerWeight& feerate) noexcept = 0;
     /** Remove the specified transaction. If a staging graph exists, the removal only happens
      *  there. This is a no-op if the transaction was already removed.
