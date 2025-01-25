@@ -405,10 +405,8 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
         {
             txiter it = mapTx.find(tx->GetHash());
             if (it != mapTx.end()) {
-                setEntries stage;
-                stage.insert(it);
                 txs_removed_for_block.emplace_back(*it);
-                RemoveStaged(stage, MemPoolRemovalReason::BLOCK);
+                removeUnchecked(it, MemPoolRemovalReason::BLOCK);
             }
             removeConflicts(*tx);
             ClearPrioritisation(tx->GetHash());
