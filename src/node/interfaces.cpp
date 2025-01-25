@@ -719,8 +719,7 @@ public:
         if (!m_node.mempool->CheckPolicyLimits(tx)) {
             return util::Error{Untranslated("too many unconfirmed transactions in cluster")};
         }
-        LOCK(m_node.mempool->cs);
-        return m_node.mempool->CheckPackageLimits({tx}, GetVirtualTransactionSize(*tx));
+        return {};
     }
     CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc) override
     {
