@@ -38,22 +38,25 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
     // of a tx as spent, it does not check if the tx has duplicate inputs.
     // Failure to run this check will result in either a crash or an inflation bug, depending on the implementation of
     // the underlying coins database.
-    std::set<COutPoint> vInOutPoints;
-    for (const auto& txin : tx.vin) {
-        if (!vInOutPoints.insert(txin.prevout).second)
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputs-duplicate");
-    }
+    if (tx.vin.size() == 1) {
+        if (tx.IsCoinBase()) {
+            if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-cb-length");
+            }
+        }
+    } else {
+        std::set<COutPoint> vInOutPoints;
+        for (const auto& txin : tx.vin) {
+            if (!vInOutPoints.insert(txin.prevout).second) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputs-duplicate");
+            }
+        }
 
-    if (tx.IsCoinBase())
-    {
-        if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100)
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-cb-length");
-    }
-    else
-    {
-        for (const auto& txin : tx.vin)
-            if (txin.prevout.IsNull())
+        for (const auto& txin : tx.vin) {
+            if (txin.prevout.IsNull()) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-prevout-null");
+            }
+        }
     }
 
     return true;
