@@ -973,16 +973,16 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
         }
 
         // Write index header
-        fileout << GetParams().MessageStart() << blockundo_size;
-        // Write undo data
+        fileout.write_large(DataStream(BLOCK_SERIALIZATION_HEADER_SIZE) << GetParams().MessageStart() << blockundo_size);
         pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
-        fileout << blockundo;
+        {
+            // Calculate checksum
+            HashWriter hasher{};
+            hasher << block.pprev->GetBlockHash() << blockundo;
 
-        // Calculate & write checksum
-        HashWriter hasher{};
-        hasher << block.pprev->GetBlockHash();
-        hasher << blockundo;
-        fileout << hasher.GetHash();
+            // Write undo data & checksum
+            fileout.write_large(DataStream(blockundo_size + sizeof(uint256)) << blockundo << hasher.GetHash());
+        }
 
         // rev files are written in block height order, whereas blk files are written as blocks come in (often out of order)
         // we want to flush the rev (undo) file once we've written the last block, which is indicated by the last height
@@ -1134,10 +1134,11 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
     }
 
     // Write index header
-    fileout << GetParams().MessageStart() << block_size;
-    // Write block
+    fileout.write_large(DataStream(BLOCK_SERIALIZATION_HEADER_SIZE) << GetParams().MessageStart() << block_size);
     pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
-    fileout << TX_WITH_WITNESS(block);
+    // Write block
+    fileout.write_large(DataStream(block_size) << TX_WITH_WITNESS(block));
+
     return pos;
 }
 
