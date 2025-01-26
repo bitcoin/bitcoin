@@ -148,10 +148,23 @@ private:
     /** Information about one group of Clusters to be merged. */
     struct GroupEntry
     {
-        /** Which clusters are to be merged. */
-        std::vector<Cluster*> m_clusters;
-        /** Which dependencies are to be applied to those merged clusters. */
-        std::vector<std::pair<GraphIndex, GraphIndex>> m_deps;
+        /** Where the clusters to be merged start in m_group_clusters. */
+        uint32_t m_cluster_offset;
+        /** How many clusters to merge. */
+        uint32_t m_cluster_count;
+        /** Where the dependencies for this cluster group in m_deps_to_add start. */
+        uint32_t m_deps_offset;
+        /** How many dependencies to add. */
+        uint32_t m_deps_count;
+    };
+
+    /** Information about all groups of Clusters to be merged. */
+    struct GroupData
+    {
+        /** The groups of Clusters to be merged. */
+        std::vector<GroupEntry> m_groups;
+        /** Which clusters are to be merged. GroupEntry::m_cluster_offset indexes into this. */
+        std::vector<Cluster*> m_group_clusters;
     };
 
     /** The vectors of clusters, one vector per quality level. ClusterSetIndex indexes into each. */
@@ -162,7 +175,7 @@ private:
      *  into this. */
     std::vector<std::pair<GraphIndex, GraphIndex>> m_deps_to_add;
     /** Information about the merges to be performed, if known. */
-    std::optional<std::vector<GroupEntry>> m_group_data = std::vector<GroupEntry>{};
+    std::optional<GroupData> m_group_data = GroupData{};
     /** Total number of transactions in this ClusterSet (explicit + implicit). */
     GraphIndex m_txcount{0};
 
@@ -793,24 +806,34 @@ void TxGraphImpl::GroupClusters() noexcept
     std::sort(an_deps.begin(), an_deps.end(), [](auto& a, auto& b) noexcept { return a.second < b.second; });
     std::sort(an_clusters.begin(), an_clusters.end(), [](auto& a, auto& b) noexcept { return a.second < b.second; });
 
-    // Translate the resulting cluster groups to the m_group_data structure.
-    m_group_data = std::vector<GroupEntry>{};
+    // Translate the resulting cluster groups to the m_group_data structure, and the dependencies
+    // back to m_deps_to_add.
+    m_group_data = GroupData{};
+    m_group_data->m_group_clusters.reserve(an_clusters.size());
+    m_deps_to_add.clear();
+    m_deps_to_add.reserve(an_deps.size());
     auto an_deps_it = an_deps.begin();
     auto an_clusters_it = an_clusters.begin();
     while (an_clusters_it != an_clusters.end()) {
         // Process all clusters/dependencies belonging to the partition with representative rep.
         auto rep = an_clusters_it->second;
         // Create and initialize a new GroupData entry for the partition.
-        auto& new_entry = m_group_data->emplace_back();
-        // Add all its clusters to it (copying those from an_clusters to m_clusters).
+        auto& new_entry = m_group_data->m_groups.emplace_back();
+        new_entry.m_cluster_offset = m_group_data->m_group_clusters.size();
+        new_entry.m_cluster_count = 0;
+        new_entry.m_deps_offset = m_deps_to_add.size();
+        new_entry.m_deps_count = 0;
+        // Add all its clusters to it (copying those from an_clusters to m_group_clusters).
         while (an_clusters_it != an_clusters.end() && an_clusters_it->second == rep) {
-            new_entry.m_clusters.push_back(an_clusters_it->first);
+            m_group_data->m_group_clusters.push_back(an_clusters_it->first);
             ++an_clusters_it;
+            ++new_entry.m_cluster_count;
         }
-        // Add all its dependencies to it (copying those back from an_deps to m_deps).
+        // Add all its dependencies to it (copying those back from an_deps to m_deps_to_add).
         while (an_deps_it != an_deps.end() && an_deps_it->second == rep) {
-            new_entry.m_deps.push_back(an_deps_it->first);
+            m_deps_to_add.push_back(an_deps_it->first);
             ++an_deps_it;
+            ++new_entry.m_deps_count;
         }
     }
     Assume(an_deps_it == an_deps.end());
@@ -855,14 +878,19 @@ void TxGraphImpl::ApplyDependencies() noexcept
 
     // For each group of to-be-merged Clusters.
     Assume(m_group_data.has_value());
-    for (auto& group_data : *m_group_data) {
+    for (const auto& group_data : m_group_data->m_groups) {
         // Invoke Merge() to merge them into a single Cluster.
-        Merge(group_data.m_clusters);
+        auto cluster_span = std::span{m_group_data->m_group_clusters}
+                                .subspan(group_data.m_cluster_offset, group_data.m_cluster_count);
+        Merge(cluster_span);
         // Actually apply all to-be-added dependencies (for each, parent and child belong to the
         // same Cluster because of the merging above).
-        const auto& loc = m_entries[group_data.m_deps[0].second].m_locator;
+        auto deps_span = std::span{m_deps_to_add}
+                             .subspan(group_data.m_deps_offset, group_data.m_deps_count);
+        Assume(!deps_span.empty());
+        const auto& loc = m_entries[deps_span[0].second].m_locator;
         Assume(loc.IsPresent());
-        loc.cluster->ApplyDependencies(*this, group_data.m_deps);
+        loc.cluster->ApplyDependencies(*this, deps_span);
     }
 
     // Wipe the list of to-be-added dependencies now that they are applied.
@@ -870,7 +898,7 @@ void TxGraphImpl::ApplyDependencies() noexcept
     Compact();
     // Also no further Cluster mergings are needed (note that we clear, but don't set to
     // std::nullopt, as that would imply the groupings are unknown).
-    m_group_data = std::vector<GroupEntry>{};
+    m_group_data = GroupData{};
 }
 
 void Cluster::Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept
