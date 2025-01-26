@@ -572,11 +572,12 @@ BOOST_AUTO_TEST_CASE(streams_datastream_write_large)
     const uint32_t v1{m_rng.rand32()}, v2{m_rng.rand32()}, v3{m_rng.rand32()};
     const fs::path tmp_path{m_args.GetDataDirBase() / "test_datastream_write_large.bin"};
 
-    // Write out the values to file
+    // Write out the values through a precisely sized BufferedFileW
     {
         AutoFile file{fsbridge::fopen(tmp_path, "w+b")};
-        file << v1 << v2;
-        file.write(std::as_bytes(std::span{&v3, 1}));
+        BufferedFileW f(file, sizeof(v1) + sizeof(v2) + sizeof(v3));
+        f << v1 << v2;
+        f.write(std::as_bytes(std::span{&v3, 1}));
     }
     // Read back and verify using BufferedFileR
     {
