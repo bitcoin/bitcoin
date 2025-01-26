@@ -162,6 +162,7 @@ public:
     typedef vector_type::reverse_iterator reverse_iterator;
 
     explicit DataStream() = default;
+    explicit DataStream(size_type n) { reserve(n); }
     explicit DataStream(Span<const uint8_t> sp) : DataStream{AsBytes(sp)} {}
     explicit DataStream(Span<const value_type> sp) : vch(sp.data(), sp.data() + sp.size()) {}
 
@@ -451,6 +452,7 @@ public:
     void read(Span<std::byte> dst);
     void ignore(size_t nSize);
     void write(Span<const std::byte> src);
+    void write_large(Span<std::byte> src);  // Note that src will be mutated
 
     template <typename T>
     AutoFile& operator<<(const T& obj)
