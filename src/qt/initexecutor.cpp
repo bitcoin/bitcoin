@@ -5,6 +5,7 @@
 #include <qt/initexecutor.h>
 
 #include <interfaces/node.h>
+#include <qt/guiutil.h>
 #include <util/system.h>
 #include <util/threadnames.h>
 
@@ -20,7 +21,7 @@
 InitExecutor::InitExecutor(interfaces::Node& node)
     : QObject(), m_node(node)
 {
-    this->moveToThread(&m_thread);
+    m_context.moveToThread(&m_thread);
     m_thread.start();
 }
 
@@ -40,46 +41,52 @@ void InitExecutor::handleRunawayException(const std::exception_ptr e)
 
 void InitExecutor::initialize()
 {
-    try {
-        util::ThreadRename("qt-init");
-        qDebug() << __func__ << ": Running initialization in thread";
-        interfaces::BlockAndHeaderTipInfo tip_info;
-        bool rv = m_node.appInitMain(&tip_info);
-        Q_EMIT initializeResult(rv, tip_info);
-    } catch (...) {
-        handleRunawayException(std::current_exception());
-    }
+    GUIUtil::ObjectInvoke(&m_context, [this] {
+        try {
+            util::ThreadRename("qt-init");
+            qDebug() << "Running initialization in thread";
+            interfaces::BlockAndHeaderTipInfo tip_info;
+            bool rv = m_node.appInitMain(&tip_info);
+            Q_EMIT initializeResult(rv, tip_info);
+        } catch (...) {
+            handleRunawayException(std::current_exception());
+        }
+    });
 }
 
 void InitExecutor::restart(QStringList args)
 {
-    static bool executing_restart{false};
+    GUIUtil::ObjectInvoke(&m_context, [this, args] {
+        static bool executing_restart{false};
 
-    if(!executing_restart) { // Only restart 1x, no matter how often a user clicks on a restart-button
-        executing_restart = true;
-        try {
-            qDebug() << __func__ << ": Running Restart in thread";
-            m_node.appPrepareShutdown();
-            qDebug() << __func__ << ": Shutdown finished";
-            Q_EMIT shutdownResult();
-            CExplicitNetCleanup::callCleanup();
-            QProcess::startDetached(QApplication::applicationFilePath(), args);
-            qDebug() << __func__ << ": Restart initiated...";
-            QApplication::quit();
-        } catch (...) {
-            handleRunawayException(std::current_exception());
+        if (!executing_restart) { // Only restart 1x, no matter how often a user clicks on a restart-button
+            executing_restart = true;
+            try {
+                qDebug() << "Running Restart in thread";
+                m_node.appPrepareShutdown();
+                qDebug() << "Shutdown finished";
+                Q_EMIT shutdownResult();
+                CExplicitNetCleanup::callCleanup();
+                QProcess::startDetached(QApplication::applicationFilePath(), args);
+                qDebug() << "Restart initiated...";
+                QApplication::quit();
+            } catch (...) {
+                handleRunawayException(std::current_exception());
+            }
         }
-    }
+    });
 }
 
 void InitExecutor::shutdown()
 {
-    try {
-        qDebug() << __func__ << ": Running Shutdown in thread";
-        m_node.appShutdown();
-        qDebug() << __func__ << ": Shutdown finished";
-        Q_EMIT shutdownResult();
-    } catch (...) {
-        handleRunawayException(std::current_exception());
-    }
+    GUIUtil::ObjectInvoke(&m_context, [this] {
+        try {
+            qDebug() << "Running Shutdown in thread";
+            m_node.appShutdown();
+            qDebug() << "Shutdown finished";
+            Q_EMIT shutdownResult();
+        } catch (...) {
+            handleRunawayException(std::current_exception());
+        }
+    });
 }
