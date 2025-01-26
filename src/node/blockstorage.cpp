@@ -959,14 +959,14 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
         }
 
         // Write index header
-        fileout << GetParams().MessageStart() << blockundo_size;
+        BufferedFileW(fileout, HEADER_BYTE_SIZE) << GetParams().MessageStart() << blockundo_size;
         pos.nPos += HEADER_BYTE_SIZE;
         {
             // Calculate checksum
             HashWriter hasher{};
             hasher << block.pprev->GetBlockHash() << blockundo;
             // Write undo data & checksum
-            fileout << blockundo << hasher.GetHash();
+            BufferedFileW(fileout, blockundo_size + sizeof(uint256)) << blockundo << hasher.GetHash();
         }
 
         // rev files are written in block height order, whereas blk files are written as blocks come in (often out of order)
@@ -1117,10 +1117,10 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
     }
 
     // Write index header
-    fileout << GetParams().MessageStart() << block_size;
+    BufferedFileW(fileout, HEADER_BYTE_SIZE) << GetParams().MessageStart() << block_size;
     pos.nPos += HEADER_BYTE_SIZE;
     // Write block
-    fileout << TX_WITH_WITNESS(block);
+    BufferedFileW(fileout, block_size) << TX_WITH_WITNESS(block);
     return pos;
 }
 
