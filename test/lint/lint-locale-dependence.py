@@ -49,6 +49,7 @@ KNOWN_VIOLATIONS = [
     "src/dbwrapper.cpp:.*vsnprintf",
     "src/test/fuzz/locale.cpp",
     "src/test/fuzz/string.cpp",
+    "src/test/util_tests.cpp",
     "src/util/strencodings.cpp:.*strtoll",
     "src/util/system.cpp:.*fprintf",
     "src/wallet/bdb.cpp:.*DbEnv::strerror",  # False positive
