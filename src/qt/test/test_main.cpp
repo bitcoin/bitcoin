@@ -10,6 +10,7 @@
 #include <interfaces/node.h>
 #include <qt/bitcoin.h>
 #include <qt/test/apptests.h>
+#include <qt/test/optiontests.h>
 #include <qt/test/rpcnestedtests.h>
 #include <qt/test/uritests.h>
 #include <qt/test/trafficgraphdatatests.h>
@@ -84,6 +85,10 @@ int main(int argc, char* argv[])
     app.node().context()->args = &gArgs;     // Make gArgs available in the NodeContext
     AppTests app_tests(app);
     if (QTest::qExec(&app_tests) != 0) {
+        fInvalid = true;
+    }
+    OptionTests options_tests(app.node());
+    if (QTest::qExec(&options_tests) != 0) {
         fInvalid = true;
     }
     URITests test1;
