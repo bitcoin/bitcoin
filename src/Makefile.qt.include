@@ -181,7 +181,7 @@ BITCOIN_QT_H = \
   qt/walletview.h \
   qt/winshutdownmonitor.h
 
-RES_ICONS = \
+QT_RES_ICONS = \
   qt/res/icons/dash.ico \
   qt/res/icons/dash_testnet.ico \
   qt/res/icons/dash.png \
@@ -286,7 +286,7 @@ if ENABLE_WALLET
 BITCOIN_QT_CPP += $(BITCOIN_QT_WALLET_CPP)
 endif # ENABLE_WALLET
 
-RES_IMAGES = \
+QT_RES_IMAGES = \
   qt/res/images/arrow_down_dark.png \
   qt/res/images/arrow_down_light.png \
   qt/res/images/arrow_left_dark.png \
@@ -337,13 +337,13 @@ RES_IMAGES = \
   qt/res/images/radio_checked_disabled_light.png \
   qt/res/images/splash.png
 
-RES_CSS = \
+QT_RES_CSS = \
   qt/res/css/dark.css \
   qt/res/css/general.css \
   qt/res/css/light.css \
   qt/res/css/traditional.css
 
-RES_FONTS = \
+QT_RES_FONTS = \
   qt/res/fonts/Montserrat/Montserrat-Black.otf \
   qt/res/fonts/Montserrat/Montserrat-BlackItalic.otf \
   qt/res/fonts/Montserrat/Montserrat-Bold.otf \
@@ -364,9 +364,9 @@ RES_FONTS = \
   qt/res/fonts/Montserrat/Montserrat-ThinItalic.otf \
   qt/res/fonts/RobotoMono-Bold.ttf
 
-RES_ANIMATION = $(wildcard $(srcdir)/qt/res/animation/spinner-*.png)
+QT_RES_ANIMATION = $(wildcard $(srcdir)/qt/res/animation/spinner-*.png)
 
-BITCOIN_RC = qt/res/dash-qt-res.rc
+BITCOIN_QT_RC = qt/res/dash-qt-res.rc
 
 BITCOIN_QT_INCLUDES = -DQT_NO_KEYWORDS -DQT_USE_QSTRINGBUILDER
 
@@ -376,7 +376,7 @@ qt_libbitcoinqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 qt_libbitcoinqt_a_OBJCXXFLAGS = $(AM_OBJCXXFLAGS) $(QT_PIE_FLAGS)
 
 qt_libbitcoinqt_a_SOURCES = $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(QT_FORMS_UI) \
-  $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(RES_ICONS) $(RES_IMAGES) $(RES_CSS) $(RES_FONTS) $(RES_ANIMATION)
+  $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(QT_RES_ICONS) $(QT_RES_IMAGES) $(QT_RES_CSS) $(QT_RES_FONTS) $(QT_RES_ANIMATION)
 if TARGET_DARWIN
   qt_libbitcoinqt_a_SOURCES += $(BITCOIN_MM)
 endif
@@ -399,7 +399,7 @@ bitcoin_qt_cxxflags = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 
 bitcoin_qt_sources = qt/main.cpp
 if TARGET_WINDOWS
-  bitcoin_qt_sources += $(BITCOIN_RC)
+  bitcoin_qt_sources += $(BITCOIN_QT_RC)
 endif
 bitcoin_qt_ldadd = qt/libbitcoinqt.a $(LIBBITCOIN_SERVER)
 if ENABLE_WALLET
@@ -449,7 +449,7 @@ $(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name dash_locale --format-version 1 $(@D)/temp_$(<F) > $@
 	@rm $(@D)/temp_$(<F)
 
-$(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_CSS) $(RES_FONTS) $(RES_ANIMATION)
+$(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(QT_RES_ICONS) $(QT_RES_IMAGES) $(QT_RES_CSS) $(QT_RES_FONTS) $(QT_RES_ANIMATION)
 	@test -f $(RCC)
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name dash --format-version 1 $< > $@
 
