@@ -14,6 +14,7 @@
 #include <qt/optionsmodel.h>
 
 #include <common/system.h>
+#include <index/blockfilterindex.h>
 #include <interfaces/node.h>
 #include <netbase.h>
 #include <node/caches.h>
@@ -371,6 +372,13 @@ void OptionsDialog::setMapper()
 
     mapper->addMapping(ui->peerbloomfilters, OptionsModel::peerbloomfilters);
     mapper->addMapping(ui->peerblockfilters, OptionsModel::peerblockfilters);
+    if (prune_checkstate != Qt::Unchecked && !GetBlockFilterIndex(BlockFilterType::BASIC)) {
+        // Once pruning begins, it's too late to enable block filters, and doing so will prevent starting the client
+        // Rather than try to monitor sync state, just disable the option once pruning is enabled
+        // Advanced users can override this manually anyway
+        ui->peerblockfilters->setEnabled(false);
+        ui->peerblockfilters->setToolTip(ui->peerblockfilters->toolTip() + " " + tr("(only available if enabled at least once before turning on pruning)"));
+    }
 
     /* Window */
 #ifndef Q_OS_MACOS
