@@ -922,14 +922,8 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
         wtx.nTimeSmart = ComputeTimeSmart(wtx);
         AddToSpends(hash, &batch);
 
-        std::set<COutPoint> candidates;
-        for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
-            if (IsMine(wtx.tx->vout[i]) && !IsSpent(hash, i)) {
-                setWalletUTXO.insert(COutPoint(hash, i));
-                candidates.emplace(hash, i);
-            }
-        }
         // TODO: refactor duplicated code between CWallet::AddToWallet and CWallet::AutoLockMasternodeCollaterals
+        auto candidates{AddWalletUTXOs(wtx.tx, /*ret_dups=*/true)};
         for (const auto& utxo : ListProTxCoins(candidates)) {
             LockCoin(utxo, &batch);
         }
@@ -949,17 +943,9 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
             assert(wtx.m_confirm.block_height == confirm.block_height);
         }
 
-        std::set<COutPoint> candidates;
-        for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
-            if (IsMine(wtx.tx->vout[i]) && !IsSpent(hash, i)) {
-                bool new_utxo = setWalletUTXO.insert(COutPoint(hash, i)).second;
-                if (new_utxo) {
-                    candidates.emplace(hash, i);
-                    fUpdated = true;
-                }
-            }
-        }
         // TODO: refactor duplicated code with case fInstertedNew
+        auto candidates{AddWalletUTXOs(wtx.tx, /*ret_dups=*/false)};
+        if (!candidates.empty()) fUpdated = true;
         for (const auto& utxo : ListProTxCoins(candidates)) {
             LockCoin(utxo, &batch);
         }
@@ -1056,6 +1042,21 @@ bool CWallet::LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx
         }
     }
     return true;
+}
+
+std::set<COutPoint> CWallet::AddWalletUTXOs(CTransactionRef tx, bool ret_dups)
+{
+    AssertLockHeld(cs_wallet);
+    std::set<COutPoint> ret;
+    uint256 hash{tx->GetHash()};
+    for (size_t idx = 0; idx < tx->vout.size(); ++idx) {
+        if (IsMine(tx->vout[idx]) && !IsSpent(hash, idx)) {
+            if (auto [_, inserted] = setWalletUTXO.emplace(hash, idx); inserted || ret_dups) {
+                ret.emplace(hash, idx);
+            }
+        }
+    }
+    return ret;
 }
 
 bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, CWalletTx::Confirmation confirm, WalletBatch& batch, bool fUpdate)
@@ -4053,11 +4054,8 @@ void CWallet::AutoLockMasternodeCollaterals()
     std::set<COutPoint> candidates;
     LOCK(cs_wallet);
     for (const auto& [txid, wtx] : mapWallet) {
-        for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
-            if (IsMine(wtx.tx->vout[i]) && !IsSpent(txid, i)) {
-                candidates.emplace(txid, i);
-            }
-        }
+        auto tx_utxos{AddWalletUTXOs(wtx.tx, /*ret_dups=*/true)};
+        candidates.insert(tx_utxos.begin(), tx_utxos.end());
     }
     WalletBatch batch(GetDatabase());
     for (const auto& utxo : ListProTxCoins(candidates)) {

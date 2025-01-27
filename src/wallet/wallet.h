@@ -763,6 +763,12 @@ private:
     void AddToSpends(const uint256& wtxid, WalletBatch* batch = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     std::set<COutPoint> setWalletUTXO;
+    /** Add new UTXOs to the wallet UTXO set
+     *
+     *  @param[in] tx         Transaction to scan eligible UTXOs from
+     *  @param[in] ret_dups   Allow UTXOs already in set to be included in return value
+     *  @returns              Set of all new UTXOs (eligible to be) added to set */
+    std::set<COutPoint> AddWalletUTXOs(CTransactionRef tx, bool ret_dups) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     mutable std::map<COutPoint, int> mapOutpointRoundsCache GUARDED_BY(cs_wallet);
 
     /**
