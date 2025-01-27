@@ -42,6 +42,7 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
     for (const CTxIn& txin : tx->vin) {
         m_outpoint_to_orphan_it[txin.prevout].insert(ret.first);
     }
+    m_total_orphan_usage += sz;
 
     LogDebug(BCLog::TXPACKAGES, "stored orphan tx %s (wtxid=%s), weight: %u (mapsz %u outsz %u)\n", hash.ToString(), wtxid.ToString(), sz,
              m_orphans.size(), m_outpoint_to_orphan_it.size());
@@ -76,6 +77,9 @@ int TxOrphanage::EraseTx(const Wtxid& wtxid)
         if (itPrev->second.empty())
             m_outpoint_to_orphan_it.erase(itPrev);
     }
+
+    const auto tx_size{it->second.GetUsage()};
+    m_total_orphan_usage -= tx_size;
 
     size_t old_pos = it->second.list_pos;
     assert(m_orphan_list[old_pos] == it);
