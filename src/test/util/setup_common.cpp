@@ -313,7 +313,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         *Assert(m_node.chainman),
         *Assert(m_node.evodb.get()),
         fReindex.load(),
-        m_args.GetArg("-reindex-chainstate", false),
+        m_args.GetBoolArg("-reindex-chainstate", false),
         chainparams.GetConsensus(),
         m_args.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS),
         m_args.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
