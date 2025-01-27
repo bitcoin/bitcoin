@@ -30,6 +30,22 @@
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QToolButton" name="pasteButton">
+       <property name="toolTip">
+        <string extracomment="Tooltip text for button that allows you to paste an address that is in your clipboard.">Paste address from clipboard</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>22</width>
+         <height>22</height>
+        </size>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>
@@ -64,7 +80,9 @@
    <header>qt/qvalidatedlineedit.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../dash.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>buttonBox</sender>
