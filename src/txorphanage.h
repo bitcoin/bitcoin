@@ -109,8 +109,14 @@ protected:
      *  -maxorphantx/DEFAULT_MAX_ORPHAN_TRANSACTIONS */
     std::map<Wtxid, OrphanTx> m_orphans;
 
-    /** Which peer provided the orphans that need to be reconsidered */
-    std::map<NodeId, std::set<Wtxid>> m_peer_work_set;
+    struct PeerOrphanInfo {
+        /** List of transactions that should be reconsidered: added to in AddChildrenToWorkSet,
+         * removed from one-by-one with each call to GetTxToReconsider. The wtxids may refer to
+         * transactions that are no longer present in orphanage; these are lazily removed in
+         * GetTxToReconsider. */
+        std::set<Wtxid> m_work_set;
+    };
+    std::map<NodeId, PeerOrphanInfo> m_peer_orphanage_info;
 
     using OrphanMap = decltype(m_orphans);
 

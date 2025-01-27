@@ -103,7 +103,7 @@ int TxOrphanage::EraseTx(const Wtxid& wtxid)
 
 void TxOrphanage::EraseForPeer(NodeId peer)
 {
-    m_peer_work_set.erase(peer);
+    m_peer_orphanage_info.erase(peer);
 
     int nErased = 0;
     std::map<Wtxid, OrphanTx>::iterator iter = m_orphans.begin();
@@ -174,7 +174,7 @@ void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext
 
                 // Get this source peer's work set, emplacing an empty set if it didn't exist
                 // (note: if this peer wasn't still connected, we would have removed the orphan tx already)
-                std::set<Wtxid>& orphan_work_set = m_peer_work_set.try_emplace(announcer).first->second;
+                std::set<Wtxid>& orphan_work_set = m_peer_orphanage_info.try_emplace(announcer).first->second.m_work_set;
                 // Add this tx to the work set
                 orphan_work_set.insert(elem->first);
                 LogDebug(BCLog::TXPACKAGES, "added %s (wtxid=%s) to peer %d workset\n",
@@ -203,17 +203,17 @@ bool TxOrphanage::HaveTxFromPeer(const Wtxid& wtxid, NodeId peer) const
 
 CTransactionRef TxOrphanage::GetTxToReconsider(NodeId peer)
 {
-    auto work_set_it = m_peer_work_set.find(peer);
-    if (work_set_it != m_peer_work_set.end()) {
-        auto& work_set = work_set_it->second;
-        while (!work_set.empty()) {
-            Wtxid wtxid = *work_set.begin();
-            work_set.erase(work_set.begin());
+    auto peer_it = m_peer_orphanage_info.find(peer);
+    if (peer_it == m_peer_orphanage_info.end()) return nullptr;
 
-            const auto orphan_it = m_orphans.find(wtxid);
-            if (orphan_it != m_orphans.end()) {
-                return orphan_it->second.tx;
-            }
+    auto& work_set = peer_it->second.m_work_set;
+    while (!work_set.empty()) {
+        Wtxid wtxid = *work_set.begin();
+        work_set.erase(work_set.begin());
+
+        const auto orphan_it = m_orphans.find(wtxid);
+        if (orphan_it != m_orphans.end()) {
+            return orphan_it->second.tx;
         }
     }
     return nullptr;
@@ -221,12 +221,11 @@ CTransactionRef TxOrphanage::GetTxToReconsider(NodeId peer)
 
 bool TxOrphanage::HaveTxToReconsider(NodeId peer)
 {
-    auto work_set_it = m_peer_work_set.find(peer);
-    if (work_set_it != m_peer_work_set.end()) {
-        auto& work_set = work_set_it->second;
-        return !work_set.empty();
-    }
-    return false;
+    auto peer_it = m_peer_orphanage_info.find(peer);
+    if (peer_it == m_peer_orphanage_info.end()) return false;
+
+    auto& work_set = peer_it->second.m_work_set;
+    return !work_set.empty();
 }
 
 void TxOrphanage::EraseForBlock(const CBlock& block)
