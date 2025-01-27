@@ -164,6 +164,7 @@ void MasternodeList::updateDIP3List()
     }
 
     auto [mnList, pindex] = clientModel->getMasternodeList();
+    if (!pindex) return;
     auto projectedPayees = mnList.GetProjectedMNPayees(pindex);
 
     if (projectedPayees.empty() && mnList.GetValidMNsCount() > 0) {
