@@ -874,7 +874,7 @@ static void PeriodicStats(NodeContext& node)
         ::g_stats_client->gauge("transactions.mempool.totalTransactions", mempool.size(), 1.0f);
         ::g_stats_client->gauge("transactions.mempool.totalTxBytes", (int64_t) mempool.GetTotalTxSize(), 1.0f);
         ::g_stats_client->gauge("transactions.mempool.memoryUsageBytes", (int64_t) mempool.DynamicMemoryUsage(), 1.0f);
-        ::g_stats_client->gauge("transactions.mempool.minFeePerKb", mempool.GetMinFee(args.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK(), 1.0f);
+        ::g_stats_client->gauge("transactions.mempool.minFeePerKb", mempool.GetMinFee(args.GetIntArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK(), 1.0f);
     }
 }
 
@@ -976,7 +976,7 @@ void InitParameterInteraction(ArgsManager& args)
         }
     }
 
-    int64_t nPruneArg = args.GetArg("-prune", 0);
+    int64_t nPruneArg = args.GetIntArg("-prune", 0);
     if (nPruneArg > 0) {
         if (args.SoftSetBoolArg("-disablegovernance", true)) {
             LogPrintf("%s: parameter interaction: -prune=%d -> setting -disablegovernance=true\n", __func__, nPruneArg);
@@ -993,7 +993,7 @@ void InitParameterInteraction(ArgsManager& args)
         args.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX) ||
         args.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX);
 
-    if (fAdditionalIndexes && args.GetArg("-checklevel", DEFAULT_CHECKLEVEL) < 4) {
+    if (fAdditionalIndexes && args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL) < 4) {
         args.ForceSetArg("-checklevel", "4");
         LogPrintf("%s: parameter interaction: additional indexes -> setting -checklevel=4\n", __func__);
     }
@@ -1147,7 +1147,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         nLocalServices = ServiceFlags(nLocalServices | NODE_COMPACT_FILTERS);
     }
 
-    if (args.GetArg("-prune", 0)) {
+    if (args.GetIntArg("-prune", 0)) {
         if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX))
             return InitError(_("Prune mode is incompatible with -txindex."));
         if (args.GetBoolArg("-reindex-chainstate", false)) {
@@ -1186,7 +1186,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     // Make sure enough file descriptors are available
     int nBind = std::max(nUserBind, size_t(1));
-    nUserMaxConnections = args.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
+    nUserMaxConnections = args.GetIntArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
     nMaxConnections = std::max(nUserMaxConnections, 0);
 
     nFD = RaiseFileDescriptorLimit(nMaxConnections + MIN_CORE_FILEDESCRIPTORS + MAX_ADDNODE_CONNECTIONS + nBind + NUM_FDS_MESSAGE_CAPTURE);
@@ -1234,8 +1234,8 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
 
     // mempool limits
-    int64_t nMempoolSizeMax = args.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
-    int64_t nMempoolSizeMin = args.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000 * 40;
+    int64_t nMempoolSizeMax = args.GetIntArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+    int64_t nMempoolSizeMin = args.GetIntArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000 * 40;
     if (nMempoolSizeMax < 0 || nMempoolSizeMax < nMempoolSizeMin)
         return InitError(strprintf(_("-maxmempool must be at least %d MB"), std::ceil(nMempoolSizeMin / 1000000.0)));
     // incremental relay fee sets the minimum feerate increase necessary for BIP 125 replacement in the mempool
@@ -1249,7 +1249,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
 
     // block pruning; get the amount of disk space (in MiB) to allot for block & undo files
-    int64_t nPruneArg = args.GetArg("-prune", 0);
+    int64_t nPruneArg = args.GetIntArg("-prune", 0);
     if (nPruneArg < 0) {
         return InitError(_("Prune cannot be configured with a negative value."));
     }
@@ -1273,12 +1273,12 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         fPruneMode = true;
     }
 
-    nConnectTimeout = args.GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
+    nConnectTimeout = args.GetIntArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
     if (nConnectTimeout <= 0) {
         nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
     }
 
-    peer_connect_timeout = args.GetArg("-peertimeout", DEFAULT_PEER_CONNECT_TIMEOUT);
+    peer_connect_timeout = args.GetIntArg("-peertimeout", DEFAULT_PEER_CONNECT_TIMEOUT);
     if (peer_connect_timeout <= 0) {
         return InitError(Untranslated("peertimeout must be a positive integer."));
     }
@@ -1318,21 +1318,21 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     if (!chainparams.IsTestChain() && !fRequireStandard) {
         return InitError(strprintf(Untranslated("acceptnonstdtxn is not currently supported for %s chain"), chainparams.NetworkIDString()));
     }
-    nBytesPerSigOp = args.GetArg("-bytespersigop", nBytesPerSigOp);
+    nBytesPerSigOp = args.GetIntArg("-bytespersigop", nBytesPerSigOp);
 
     if (!g_wallet_init_interface.ParameterInteraction()) return false;
 
     fIsBareMultisigStd = args.GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
     fAcceptDatacarrier = args.GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER);
-    nMaxDatacarrierBytes = args.GetArg("-datacarriersize", nMaxDatacarrierBytes);
+    nMaxDatacarrierBytes = args.GetIntArg("-datacarriersize", nMaxDatacarrierBytes);
 
     // Option to startup with mocktime set (used for regression testing):
-    SetMockTime(args.GetArg("-mocktime", 0)); // SetMockTime(0) is a no-op
+    SetMockTime(args.GetIntArg("-mocktime", 0)); // SetMockTime(0) is a no-op
 
     if (args.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS))
         nLocalServices = ServiceFlags(nLocalServices | NODE_BLOOM);
 
-    nMaxTipAge = args.GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
+    nMaxTipAge = args.GetIntArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
 
     if (args.GetBoolArg("-reindex-chainstate", false)) {
         // indexes that must be deactivated to prevent index corruption, see #24630
@@ -1367,10 +1367,10 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         if (!args.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS)) {
             return InitError(Untranslated("Masternode must have bloom filters enabled, set -peerbloomfilters=1"));
         }
-        if (args.GetArg("-prune", 0) > 0) {
+        if (args.GetIntArg("-prune", 0) > 0) {
             return InitError(Untranslated("Masternode must have no pruning enabled, set -prune=0"));
         }
-        if (args.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
+        if (args.GetIntArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
             return InitError(strprintf(Untranslated("Masternode must be able to handle at least %d connections, set -maxconnections=%d"), DEFAULT_MAX_PEER_CONNECTIONS, DEFAULT_MAX_PEER_CONNECTIONS));
         }
         if (args.GetBoolArg("-disablegovernance", !DEFAULT_GOVERNANCE_ENABLE)) {
@@ -1469,7 +1469,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     InitSignatureCache();
     InitScriptExecutionCache();
 
-    int script_threads = args.GetArg("-par", DEFAULT_SCRIPTCHECK_THREADS);
+    int script_threads = args.GetIntArg("-par", DEFAULT_SCRIPTCHECK_THREADS);
     if (script_threads <= 0) {
         // -par=0 means autodetect (number of cores - 1 script threads)
         // -par=-n means "leave n cores free" (number of cores - n - 1 script threads)
@@ -1592,7 +1592,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     assert(!node.banman);
-    node.banman = std::make_unique<BanMan>(gArgs.GetDataDirNet() / "banlist", &uiInterface, args.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
+    node.banman = std::make_unique<BanMan>(gArgs.GetDataDirNet() / "banlist", &uiInterface, args.GetIntArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
     assert(!node.connman);
     node.connman = std::make_unique<CConnman>(GetRand(std::numeric_limits<uint64_t>::max()),
                                               GetRand(std::numeric_limits<uint64_t>::max()),
@@ -1626,7 +1626,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
-    int minsporkkeys = args.GetArg("-minsporkkeys", Params().MinSporkKeys());
+    int minsporkkeys = args.GetIntArg("-minsporkkeys", Params().MinSporkKeys());
     if (!node.sporkman->SetMinSporkKeys(minsporkkeys)) {
         return InitError(_("Invalid minimum number of spork signers specified with -minsporkkeys"));
     }
@@ -1798,7 +1798,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // cache size calculations
     CacheSizes cache_sizes = CalculateCacheSizes(args, g_enabled_filter_types.size());
 
-    int64_t nMempoolSizeMax = args.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+    int64_t nMempoolSizeMax = args.GetIntArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     LogPrintf("Cache configuration:\n");
     LogPrintf("* Using %.1f MiB for block index database\n", cache_sizes.block_tree_db * (1.0 / 1024 / 1024));
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
@@ -1815,7 +1815,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.chainman);
     assert(!node.govman);
     assert(!node.mn_sync);
-    const int mempool_check_ratio = std::clamp<int>(args.GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0, 1000000);
+    const int mempool_check_ratio = std::clamp<int>(args.GetIntArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0, 1000000);
 
     for (bool fLoaded = false; !fLoaded && !ShutdownRequested();) {
         node.mempool = std::make_unique<CTxMemPool>(node.fee_estimator.get(), mempool_check_ratio);
@@ -1940,7 +1940,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             std::optional<ChainstateLoadVerifyError> maybe_verify_error;
             try {
                 uiInterface.InitMessage(_("Verifying blocks…").translated);
-                auto check_blocks = args.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS);
+                auto check_blocks = args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
                 if (chainman.m_blockman.m_have_pruned && check_blocks > MIN_BLOCKS_TO_KEEP) {
                     LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks\n",
                               MIN_BLOCKS_TO_KEEP);
@@ -1951,7 +1951,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                                             fReindexChainState,
                                                             chainparams.GetConsensus(),
                                                             check_blocks,
-                                                            args.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
+                                                            args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL),
                                                             /*get_unix_time_seconds=*/static_cast<int64_t(*)()>(GetTime),
                                                             [](bool bls_state) {
                                                                 LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls_state);
@@ -2156,7 +2156,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     if (::g_stats_client->active()) {
-        int nStatsPeriod = std::min(std::max((int)args.GetArg("-statsperiod", DEFAULT_STATSD_PERIOD), MIN_STATSD_PERIOD), MAX_STATSD_PERIOD);
+        int nStatsPeriod = std::min(std::max((int)args.GetIntArg("-statsperiod", DEFAULT_STATSD_PERIOD), MIN_STATSD_PERIOD), MAX_STATSD_PERIOD);
         node.scheduler->scheduleEvery(std::bind(&PeriodicStats, std::ref(node)), std::chrono::seconds{nStatsPeriod});
     }
 
@@ -2267,15 +2267,15 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     connOptions.uiInterface = &uiInterface;
     connOptions.m_banman = node.banman.get();
     connOptions.m_msgproc = node.peerman.get();
-    connOptions.nSendBufferMaxSize = 1000 * args.GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
-    connOptions.nReceiveFloodSize = 1000 * args.GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
+    connOptions.nSendBufferMaxSize = 1000 * args.GetIntArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
+    connOptions.nReceiveFloodSize = 1000 * args.GetIntArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
     connOptions.m_added_nodes = args.GetArgs("-addnode");
     connOptions.nMaxOutboundLimit = *opt_max_upload;
     connOptions.m_peer_connect_timeout = peer_connect_timeout;
 
     // Port to bind to if `-bind=addr` is provided without a `:port` suffix.
     const uint16_t default_bind_port =
-        static_cast<uint16_t>(args.GetArg("-port", Params().GetDefaultPort()));
+        static_cast<uint16_t>(args.GetIntArg("-port", Params().GetDefaultPort()));
 
     const auto BadPortWarning = [](const char* prefix, uint16_t port) {
         return strprintf(_("%s request to listen on port %u. This port is considered \"bad\" and "
@@ -2325,7 +2325,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // Emit a warning if a bad port is given to -port= but only if -bind and -whitebind are not
     // given, because if they are, then -port= is ignored.
     if (connOptions.bind_on_any && args.IsArgSet("-port")) {
-        const uint16_t port_arg = args.GetArg("-port", 0);
+        const uint16_t port_arg = args.GetIntArg("-port", 0);
         if (IsBadPort(port_arg)) {
             InitWarning(BadPortWarning("-port", port_arg));
         }

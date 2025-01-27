@@ -92,7 +92,7 @@ static BlockAssembler::Options DefaultOptions()
     BlockAssembler::Options options;
     options.nBlockMaxSize = DEFAULT_BLOCK_MAX_SIZE;
     if (gArgs.IsArgSet("-blockmaxsize")) {
-        options.nBlockMaxSize = gArgs.GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
+        options.nBlockMaxSize = gArgs.GetIntArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
     }
     if (gArgs.IsArgSet("-blockmintxfee")) {
         std::optional<CAmount> parsed = ParseMoney(gArgs.GetArg("-blockmintxfee", ""));
@@ -155,7 +155,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // Non-mainnet only: allow overriding block.nVersion with
     // -blockversion=N to test forking scenarios
     if (Params().NetworkIDString() != CBaseChainParams::MAIN) {
-        pblock->nVersion = gArgs.GetArg("-blockversion", pblock->nVersion);
+        pblock->nVersion = gArgs.GetIntArg("-blockversion", pblock->nVersion);
     }
 
     pblock->nTime = GetAdjustedTime();

@@ -1199,9 +1199,9 @@ void CDevNetParams::UpdateDevnetSubsidyAndDiffParametersFromArgs(const ArgsManag
 {
     if (!args.IsArgSet("-minimumdifficultyblocks") && !args.IsArgSet("-highsubsidyblocks") && !args.IsArgSet("-highsubsidyfactor")) return;
 
-    int nMinimumDifficultyBlocks = gArgs.GetArg("-minimumdifficultyblocks", consensus.nMinimumDifficultyBlocks);
-    int nHighSubsidyBlocks = gArgs.GetArg("-highsubsidyblocks", consensus.nHighSubsidyBlocks);
-    int nHighSubsidyFactor = gArgs.GetArg("-highsubsidyfactor", consensus.nHighSubsidyFactor);
+    int nMinimumDifficultyBlocks = gArgs.GetIntArg("-minimumdifficultyblocks", consensus.nMinimumDifficultyBlocks);
+    int nHighSubsidyBlocks = gArgs.GetIntArg("-highsubsidyblocks", consensus.nHighSubsidyBlocks);
+    int nHighSubsidyFactor = gArgs.GetIntArg("-highsubsidyfactor", consensus.nHighSubsidyFactor);
     LogPrintf("Setting minimumdifficultyblocks=%ld, highsubsidyblocks=%ld, highsubsidyfactor=%ld\n", nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
     UpdateDevnetSubsidyAndDiffParameters(nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
 }

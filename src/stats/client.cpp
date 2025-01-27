@@ -44,9 +44,9 @@ std::unique_ptr<StatsdClient> InitStatsClient(const ArgsManager& args)
     };
 
     return std::make_unique<StatsdClient>(args.GetArg("-statshost", DEFAULT_STATSD_HOST),
-                                          args.GetArg("-statsport", DEFAULT_STATSD_PORT),
-                                          args.GetArg("-statsbatchsize", DEFAULT_STATSD_BATCH_SIZE),
-                                          args.GetArg("-statsduration", DEFAULT_STATSD_DURATION),
+                                          args.GetIntArg("-statsport", DEFAULT_STATSD_PORT),
+                                          args.GetIntArg("-statsbatchsize", DEFAULT_STATSD_BATCH_SIZE),
+                                          args.GetIntArg("-statsduration", DEFAULT_STATSD_DURATION),
                                           sanitize_string(args.GetArg("-statsprefix", DEFAULT_STATSD_PREFIX)),
                                           sanitize_string(args.GetArg("-statssuffix", DEFAULT_STATSD_SUFFIX)));
 }

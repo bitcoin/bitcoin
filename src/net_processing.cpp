@@ -1453,7 +1453,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
 
     int nProtocolVersion = PROTOCOL_VERSION;
     if (params.NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
-        nProtocolVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
+        nProtocolVersion = gArgs.GetIntArg("-pushversion", PROTOCOL_VERSION);
     }
 
     const bool tx_relay{!RejectIncomingTxs(pnode)};
@@ -1764,7 +1764,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
 
 void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
 {
-    size_t max_extra_txn = gArgs.GetArg("-blockreconstructionextratxn", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN);
+    size_t max_extra_txn = gArgs.GetIntArg("-blockreconstructionextratxn", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN);
     if (max_extra_txn <= 0)
         return;
     if (!vExtraTxnForCompact.size())
@@ -4539,7 +4539,7 @@ void PeerManagerImpl::ProcessMessage(
                 }
 
                 // DoS prevention: do not allow m_orphans to grow unbounded (see CVE-2012-3789)
-                unsigned int nMaxOrphanTxSize = (unsigned int)std::max((int64_t)0, gArgs.GetArg("-maxorphantxsize", DEFAULT_MAX_ORPHAN_TRANSACTIONS_SIZE)) * 1000000;
+                unsigned int nMaxOrphanTxSize = (unsigned int)std::max((int64_t)0, gArgs.GetIntArg("-maxorphantxsize", DEFAULT_MAX_ORPHAN_TRANSACTIONS_SIZE)) * 1000000;
                 unsigned int nEvicted = m_orphanage.LimitOrphans(nMaxOrphanTxSize);
                 if (nEvicted > 0) {
                     LogPrint(BCLog::MEMPOOL, "orphanage overflow, removed %u tx\n", nEvicted);

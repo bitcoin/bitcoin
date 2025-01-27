@@ -419,7 +419,7 @@ void OptionsModel::SetPruneEnabled(bool prune, bool force)
     if (!gArgs.SoftSetArg("-prune", prune_val)) {
         addOverriddenOption("-prune");
     }
-    if (gArgs.GetArg("-prune", 0) > 0) {
+    if (gArgs.GetIntArg("-prune", 0) > 0) {
         gArgs.SoftSetBoolArg("-disablegovernance", true);
         gArgs.SoftSetBoolArg("-txindex", false);
     }

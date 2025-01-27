@@ -1469,7 +1469,7 @@ RPCHelpMan getblockchaininfo()
         obj.pushKV("pruneheight", chainman.m_blockman.GetFirstStoredBlock(tip)->nHeight);
 
         // if 0, execution bypasses the whole if block.
-        bool automatic_pruning{args.GetArg("-prune", 0) != 1};
+        bool automatic_pruning{args.GetIntArg("-prune", 0) != 1};
         obj.pushKV("automatic_pruning",  automatic_pruning);
         if (automatic_pruning) {
             obj.pushKV("prune_target_size",  nPruneTarget);

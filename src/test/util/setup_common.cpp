@@ -189,7 +189,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     m_node.netgroupman = std::make_unique<NetGroupManager>(/*asmap=*/std::vector<bool>());
     m_node.addrman = std::make_unique<AddrMan>(*m_node.netgroupman,
                                                /*deterministic=*/false,
-                                               m_node.args->GetArg("-checkaddrman", 0));
+                                               m_node.args->GetIntArg("-checkaddrman", 0));
     m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman); // Deterministic randomness for tests.
 
     // while g_wallet_init_interface is init here at very early stage
@@ -315,8 +315,8 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         fReindex.load(),
         m_args.GetBoolArg("-reindex-chainstate", false),
         chainparams.GetConsensus(),
-        m_args.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS),
-        m_args.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
+        m_args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS),
+        m_args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL),
         /*get_unix_time_seconds=*/static_cast<int64_t(*)()>(GetTime),
         [](bool bls_state) {
             LogPrintf("%s: bls_legacy_scheme=%d\n", __func__, bls_state);

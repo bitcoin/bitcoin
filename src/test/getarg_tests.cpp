@@ -64,91 +64,91 @@ BOOST_AUTO_TEST_CASE(setting_args)
     set_foo("str");
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "\"str\"");
     BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "str");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", 100), 0);
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 0);
     BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), false);
     BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), false);
 
     set_foo("99");
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "\"99\"");
     BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "99");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", 100), 99);
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 99);
     BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), true);
     BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), true);
 
     set_foo("3.25");
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "\"3.25\"");
     BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "3.25");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", 100), 3);
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 3);
     BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), true);
     BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), true);
 
     set_foo("0");
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "\"0\"");
     BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "0");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", 100), 0);
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 0);
     BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), false);
     BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), false);
 
     set_foo("");
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "\"\"");
     BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", 100), 0);
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 0);
     BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), true);
     BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), true);
 
     set_foo(99);
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "99");
     BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "99");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", 100), 99);
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 99);
     BOOST_CHECK_THROW(args.GetBoolArg("foo", true), std::runtime_error);
     BOOST_CHECK_THROW(args.GetBoolArg("foo", false), std::runtime_error);
 
     set_foo(3.25);
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "3.25");
     BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "3.25");
-    BOOST_CHECK_THROW(args.GetArg("foo", 100), std::runtime_error);
+    BOOST_CHECK_THROW(args.GetIntArg("foo", 100), std::runtime_error);
     BOOST_CHECK_THROW(args.GetBoolArg("foo", true), std::runtime_error);
     BOOST_CHECK_THROW(args.GetBoolArg("foo", false), std::runtime_error);
 
     set_foo(0);
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "0");
     BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "0");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", 100), 0);
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 0);
     BOOST_CHECK_THROW(args.GetBoolArg("foo", true), std::runtime_error);
     BOOST_CHECK_THROW(args.GetBoolArg("foo", false), std::runtime_error);
 
     set_foo(true);
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "true");
     BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "1");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", 100), 1);
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 1);
     BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), true);
     BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), true);
 
     set_foo(false);
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "false");
     BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "0");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", 100), 0);
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 0);
     BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), false);
     BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), false);
 
     set_foo(UniValue::VOBJ);
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "{}");
     BOOST_CHECK_THROW(args.GetArg("foo", "default"), std::runtime_error);
-    BOOST_CHECK_THROW(args.GetArg("foo", 100), std::runtime_error);
+    BOOST_CHECK_THROW(args.GetIntArg("foo", 100), std::runtime_error);
     BOOST_CHECK_THROW(args.GetBoolArg("foo", true), std::runtime_error);
     BOOST_CHECK_THROW(args.GetBoolArg("foo", false), std::runtime_error);
 
     set_foo(UniValue::VARR);
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "[]");
     BOOST_CHECK_THROW(args.GetArg("foo", "default"), std::runtime_error);
-    BOOST_CHECK_THROW(args.GetArg("foo", 100), std::runtime_error);
+    BOOST_CHECK_THROW(args.GetIntArg("foo", 100), std::runtime_error);
     BOOST_CHECK_THROW(args.GetBoolArg("foo", true), std::runtime_error);
     BOOST_CHECK_THROW(args.GetBoolArg("foo", false), std::runtime_error);
 
     set_foo(UniValue::VNULL);
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "null");
     BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "default");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", 100), 100);
+    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 100);
     BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), true);
     BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), false);
 }
@@ -244,25 +244,25 @@ BOOST_AUTO_TEST_CASE(intarg)
     const auto bar = std::make_pair("-bar", ArgsManager::ALLOW_ANY);
     SetupArgs(local_args, {foo, bar});
     ResetArgs(local_args, "");
-    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", 11), 11);
-    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", 0), 0);
+    BOOST_CHECK_EQUAL(local_args.GetIntArg("-foo", 11), 11);
+    BOOST_CHECK_EQUAL(local_args.GetIntArg("-foo", 0), 0);
 
     ResetArgs(local_args, "-foo -bar");
-    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", 11), 0);
-    BOOST_CHECK_EQUAL(local_args.GetArg("-bar", 11), 0);
+    BOOST_CHECK_EQUAL(local_args.GetIntArg("-foo", 11), 0);
+    BOOST_CHECK_EQUAL(local_args.GetIntArg("-bar", 11), 0);
 
     // Check under-/overflow behavior.
     ResetArgs(local_args, "-foo=-9223372036854775809 -bar=9223372036854775808");
-    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", 0), std::numeric_limits<int64_t>::min());
-    BOOST_CHECK_EQUAL(local_args.GetArg("-bar", 0), std::numeric_limits<int64_t>::max());
+    BOOST_CHECK_EQUAL(local_args.GetIntArg("-foo", 0), std::numeric_limits<int64_t>::min());
+    BOOST_CHECK_EQUAL(local_args.GetIntArg("-bar", 0), std::numeric_limits<int64_t>::max());
 
     ResetArgs(local_args, "-foo=11 -bar=12");
-    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", 0), 11);
-    BOOST_CHECK_EQUAL(local_args.GetArg("-bar", 11), 12);
+    BOOST_CHECK_EQUAL(local_args.GetIntArg("-foo", 0), 11);
+    BOOST_CHECK_EQUAL(local_args.GetIntArg("-bar", 11), 12);
 
     ResetArgs(local_args, "-foo=NaN -bar=NotANumber");
-    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", 1), 0);
-    BOOST_CHECK_EQUAL(local_args.GetArg("-bar", 11), 0);
+    BOOST_CHECK_EQUAL(local_args.GetIntArg("-foo", 1), 0);
+    BOOST_CHECK_EQUAL(local_args.GetIntArg("-bar", 11), 0);
 }
 
 BOOST_AUTO_TEST_CASE(patharg)
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(doubledash)
 
     ResetArgs(local_args, "--foo=verbose --bar=1");
     BOOST_CHECK_EQUAL(local_args.GetArg("-foo", ""), "verbose");
-    BOOST_CHECK_EQUAL(local_args.GetArg("-bar", 0), 1);
+    BOOST_CHECK_EQUAL(local_args.GetIntArg("-bar", 0), 1);
 }
 
 BOOST_AUTO_TEST_CASE(boolargno)

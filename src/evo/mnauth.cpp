@@ -37,7 +37,7 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CActiveMasternode
     // This is ok as we only use MNAUTH as a DoS protection and not for sensitive stuff
     int nOurNodeVersion{PROTOCOL_VERSION};
     if (Params().NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
-        nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
+        nOurNodeVersion = gArgs.GetIntArg("-pushversion", PROTOCOL_VERSION);
     }
     auto pk = mn_activeman.GetPubKey();
     const CBLSPublicKey pubKey(pk);
@@ -103,7 +103,7 @@ PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, ServiceFlags node_services, CCon
     uint256 signHash;
     int nOurNodeVersion{PROTOCOL_VERSION};
     if (Params().NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
-        nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
+        nOurNodeVersion = gArgs.GetIntArg("-pushversion", PROTOCOL_VERSION);
     }
     const CBLSPublicKey pubKey(dmn->pdmnState->pubKeyOperator.Get());
     // See comment in PushMNAUTH (fInbound is negated here as we're on the other side of the connection)
