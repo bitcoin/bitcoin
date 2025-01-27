@@ -240,10 +240,7 @@ struct CBLSIdImplicit : public uint256
     {
         return {begin(), end()};
     }
-    [[nodiscard]] std::array<uint8_t, 32> SerializeToArray(const bool fLegacy) const
-    {
-        return m_data;
-    }
+    [[nodiscard]] std::array<uint8_t, 32> SerializeToArray(const bool fLegacy) const { return m_data; }
 };
 
 class CBLSId : public CBLSWrapper<CBLSIdImplicit, BLS_CURVE_ID_SIZE, CBLSId>
@@ -399,8 +396,8 @@ private:
 
 public:
     CBLSLazyWrapper() :
-            vecBytes{0},
-            bufLegacyScheme(bls::bls_legacy_scheme.load())
+        vecBytes{0},
+        bufLegacyScheme(bls::bls_legacy_scheme.load())
     {}
 
     explicit CBLSLazyWrapper(const CBLSLazyWrapper& r)
