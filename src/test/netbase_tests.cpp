@@ -440,18 +440,28 @@ BOOST_AUTO_TEST_CASE(isbadport)
     BOOST_CHECK(IsBadPort(22));
     BOOST_CHECK(IsBadPort(6000));
 
-    BOOST_CHECK(!IsBadPort(80));
-    BOOST_CHECK(!IsBadPort(443));
-    BOOST_CHECK(!IsBadPort(9999));
+    // We don't expect Dash Core to operate over HTTP(S)
+    BOOST_CHECK(IsBadPort(80));
+    BOOST_CHECK(IsBadPort(443));
 
-    // Check all ports, there must be 80 bad ports in total.
+    // We shouldn't use ports used by Bitcoin Core
+    BOOST_CHECK(IsBadPort(8332));
+    BOOST_CHECK(IsBadPort(8333));
+    BOOST_CHECK(IsBadPort(18332));
+    BOOST_CHECK(IsBadPort(18333));
+
+    BOOST_CHECK(!IsBadPort(9998));
+    BOOST_CHECK(!IsBadPort(9999));
+    BOOST_CHECK(!IsBadPort(26656));
+
+    // Check all ports, there must be 21 bad ports in addition to the restriction on privileged ports.
     size_t total_bad_ports{0};
     for (uint16_t port = std::numeric_limits<uint16_t>::max(); port > 0; --port) {
         if (IsBadPort(port)) {
             ++total_bad_ports;
         }
     }
-    BOOST_CHECK_EQUAL(total_bad_ports, 80);
+    BOOST_CHECK_EQUAL(total_bad_ports - PRIVILEGED_PORTS_THRESHOLD, 21);
 }
 
 BOOST_AUTO_TEST_CASE(netbase_parsenetwork)
