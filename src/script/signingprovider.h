@@ -136,6 +136,8 @@ public:
     std::vector<std::tuple<uint8_t, uint8_t, std::vector<unsigned char>>> GetTreeTuples() const;
     /** Returns true if there are any tapscripts */
     bool HasScripts() const { return !m_branch.empty(); }
+
+    bool operator==(const TaprootBuilder& other) const { return GetTreeTuples() == other.GetTreeTuples(); }
 };
 
 /** Given a TaprootSpendData and the output key, reconstruct its script tree.
@@ -215,6 +217,7 @@ struct FlatSigningProvider final : public SigningProvider
     bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
     bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
     bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
+    bool HaveKey(const CKeyID &keyid) const override;
     bool GetKey(const CKeyID& keyid, CKey& key) const override;
     bool GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const override;
     bool GetTaprootBuilder(const XOnlyPubKey& output_key, TaprootBuilder& builder) const override;

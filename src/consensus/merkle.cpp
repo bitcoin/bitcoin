@@ -4,6 +4,7 @@
 
 #include <consensus/merkle.h>
 #include <hash.h>
+#include <util/check.h>
 
 /*     WARNING! If you're reading this because you're learning about crypto
        and/or designing a new system that will use merkle trees, keep in mind
@@ -84,8 +85,10 @@ uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated)
 }
 
 /* This implements a constant-space merkle root/path calculator, limited to 2^32 leaves. */
-static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot, bool* pmutated, uint32_t branchpos, std::vector<uint256>* pbranch) {
-    if (pbranch) pbranch->clear();
+static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot, bool* pmutated, uint32_t leaf_pos, std::vector<uint256>* path)
+{
+    if (path) path->clear();
+    Assume(leaves.size() <= UINT32_MAX);
     if (leaves.size() == 0) {
         if (pmutated) *pmutated = false;
         if (proot) *proot = uint256();
@@ -105,18 +108,18 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
     // First process all leaves into 'inner' values.
     while (count < leaves.size()) {
         uint256 h = leaves[count];
-        bool matchh = count == branchpos;
+        bool matchh = count == leaf_pos;
         count++;
         int level;
         // For each of the lower bits in count that are 0, do 1 step. Each
         // corresponds to an inner value that existed before processing the
         // current leaf, and each needs a hash to combine it.
         for (level = 0; !(count & ((uint32_t{1}) << level)); level++) {
-            if (pbranch) {
+            if (path) {
                 if (matchh) {
-                    pbranch->push_back(inner[level]);
+                    path->push_back(inner[level]);
                 } else if (matchlevel == level) {
-                    pbranch->push_back(h);
+                    path->push_back(h);
                     matchh = true;
                 }
             }
@@ -144,8 +147,8 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
         // If we reach this point, h is an inner value that is not the top.
         // We combine it with itself (Bitcoin's special rule for odd levels in
         // the tree) to produce a higher level one.
-        if (pbranch && matchh) {
-            pbranch->push_back(h);
+        if (path && matchh) {
+            path->push_back(h);
         }
         h = Hash(h, h);
         // Increment count to the value it would have if two entries at this
@@ -154,11 +157,11 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
         level++;
         // And propagate the result upwards accordingly.
         while (!(count & ((uint32_t{1}) << level))) {
-            if (pbranch) {
+            if (path) {
                 if (matchh) {
-                    pbranch->push_back(inner[level]);
+                    path->push_back(inner[level]);
                 } else if (matchlevel == level) {
-                    pbranch->push_back(h);
+                    path->push_back(h);
                     matchh = true;
                 }
             }
@@ -171,18 +174,18 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
     if (proot) *proot = h;
 }
 
-static std::vector<uint256> ComputeMerkleBranch(const std::vector<uint256>& leaves, uint32_t position) {
+static std::vector<uint256> ComputeMerklePath(const std::vector<uint256>& leaves, uint32_t position) {
     std::vector<uint256> ret;
     MerkleComputation(leaves, nullptr, nullptr, position, &ret);
     return ret;
 }
 
-std::vector<uint256> BlockMerkleBranch(const CBlock& block, uint32_t position)
+std::vector<uint256> TransactionMerklePath(const CBlock& block, uint32_t position)
 {
     std::vector<uint256> leaves;
     leaves.resize(block.vtx.size());
     for (size_t s = 0; s < block.vtx.size(); s++) {
         leaves[s] = block.vtx[s]->GetHash();
     }
-    return ComputeMerkleBranch(leaves, position);
+    return ComputeMerklePath(leaves, position);
 }

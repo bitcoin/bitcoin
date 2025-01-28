@@ -38,6 +38,7 @@ void initialize_validation_load_mempool()
 
 FUZZ_TARGET(validation_load_mempool, .init = initialize_validation_load_mempool)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
     FuzzedFileProvider fuzzed_file_provider{fuzzed_data_provider};

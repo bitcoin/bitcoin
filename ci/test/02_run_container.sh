@@ -14,7 +14,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   # Though, exclude those with newlines to avoid parsing problems.
   python3 -c 'import os; [print(f"{key}={value}") for key, value in os.environ.items() if "\n" not in value and "HOME" != key and "PATH" != key and "USER" != key]' | tee "/tmp/env-$USER-$CONTAINER_NAME"
   # System-dependent env vars must be kept as is. So read them from the container.
-  docker run --rm "${CI_IMAGE_NAME_TAG}" bash -c "env | grep --extended-regexp '^(HOME|PATH|USER)='" | tee --append "/tmp/env-$USER-$CONTAINER_NAME"
+  docker run --platform="${CI_IMAGE_PLATFORM}" --rm "${CI_IMAGE_NAME_TAG}" bash -c "env | grep --extended-regexp '^(HOME|PATH|USER)='" | tee --append "/tmp/env-$USER-$CONTAINER_NAME"
 
   # Env vars during the build can not be changed. For example, a modified
   # $MAKEJOBS is ignored in the build process. Use --cpuset-cpus as an
@@ -31,6 +31,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
       --build-arg "CI_IMAGE_NAME_TAG=${CI_IMAGE_NAME_TAG}" \
       --build-arg "FILE_ENV=${FILE_ENV}" \
       $MAYBE_CPUSET \
+      --platform="${CI_IMAGE_PLATFORM}" \
       --label="${CI_IMAGE_LABEL}" \
       --tag="${CONTAINER_NAME}" \
       "${BASE_READ_ONLY_DIR}"
@@ -100,6 +101,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
                   --env-file /tmp/env-$USER-$CONTAINER_NAME \
                   --name "$CONTAINER_NAME" \
                   --network ci-ip6net \
+                  --platform="${CI_IMAGE_PLATFORM}" \
                   "$CONTAINER_NAME")
   export CI_CONTAINER_ID
   export CI_EXEC_CMD_PREFIX="docker exec ${CI_CONTAINER_ID}"

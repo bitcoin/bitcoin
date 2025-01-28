@@ -140,13 +140,13 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_win64.sh"
 
 task:
-  name: '32-bit CentOS, dash, gui'
+  name: 'CentOS, depends, gui'
   << : *GLOBAL_TASK_TEMPLATE
   persistent_worker:
     labels:
       type: small
   env:
-    FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
+    FILE_ENV: "./ci/test/00_setup_env_native_centos.sh"
 
 task:
   name: 'previous releases, depends DEBUG'

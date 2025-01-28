@@ -365,6 +365,7 @@ void initialize_rpc()
 
 FUZZ_TARGET(rpc, .init = initialize_rpc)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     bool good_data{true};
     SetMockTime(ConsumeTime(fuzzed_data_provider));

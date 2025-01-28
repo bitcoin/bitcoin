@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Combine logs from multiple bitcoin nodes as well as the test_framework log.
@@ -81,13 +81,14 @@ def read_logs(tmp_dir):
 
     # Find out what the folder is called that holds node 0's debug.log file
     debug_logs = list(pathlib.Path(tmp_dir).glob('node0/**/debug.log'))
-    if len(debug_logs) > 0:
-        assert len(debug_logs) < 2, 'Max one debug.log is supported, ' \
-            'found several:\n\t' + '\n\t'.join([str(f) for f in debug_logs])
-        path = debug_logs[0]
-        chain = re.search(r'node0/(.+?)/debug\.log$', path.as_posix()).group(1)  # extract the chain name
-    else:
-        chain = 'regtest'  # fallback to regtest (should only happen when none exists)
+    match len(debug_logs):
+        case 0:
+            chain = 'regtest'  # fallback to regtest
+        case 1:
+            chain = re.search(r'node0/(.+?)/debug\.log$', debug_logs[0].as_posix()).group(1)
+        case _:
+            raise RuntimeError('Max one debug.log is supported, found several:\n\t' +
+                               '\n\t'.join(map(str, debug_logs)))
 
     files = [("test", "%s/test_framework.log" % tmp_dir)]
     for i in itertools.count():

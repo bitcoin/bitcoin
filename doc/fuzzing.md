@@ -101,6 +101,18 @@ INFO: seed corpus: files: 991 min: 1b max: 1858b total: 288291b rss: 150Mb
 …
 ```
 
+## Using the MemorySanitizer (MSan)
+
+MSan [requires](https://clang.llvm.org/docs/MemorySanitizer.html#handling-external-code)
+that all linked code be instrumented. The exact steps to achieve this may vary
+but involve compiling `clang` from source, using the built `clang` to compile
+an instrumentalized libc++, then using it to build [Bitcoin Core dependencies
+from source](../depends/README.md) and finally the Bitcoin Core fuzz binary
+itself. One can use the MSan CI job as an example for how to perform these
+steps.
+
+Valgrind is an alternative to MSan that does not require building a custom libc++.
+
 ## Run without sanitizers for increased throughput
 
 Fuzzing on a harness compiled with `-DSANITIZERS=address,fuzzer,undefined` is

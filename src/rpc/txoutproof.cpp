@@ -102,7 +102,7 @@ static RPCHelpMan gettxoutproof()
                 CheckBlockDataAvailability(chainman.m_blockman, *pblockindex, /*check_for_undo=*/false);
             }
             CBlock block;
-            if (!chainman.m_blockman.ReadBlockFromDisk(block, *pblockindex)) {
+            if (!chainman.m_blockman.ReadBlock(block, *pblockindex)) {
                 throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
             }
 

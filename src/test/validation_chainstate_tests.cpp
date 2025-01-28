@@ -72,7 +72,8 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
     ChainstateManager& chainman = *Assert(m_node.chainman);
     const auto get_notify_tip{[&]() {
         LOCK(m_node.notifications->m_tip_block_mutex);
-        return m_node.notifications->m_tip_block;
+        BOOST_REQUIRE(m_node.notifications->TipBlock());
+        return *m_node.notifications->TipBlock();
     }};
     uint256 curr_tip = get_notify_tip();
 
@@ -87,7 +88,7 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
     std::shared_ptr<CBlock> pblockone = std::make_shared<CBlock>();
     {
         LOCK(::cs_main);
-        chainman.m_blockman.ReadBlockFromDisk(*pblockone, *chainman.ActiveChain()[1]);
+        chainman.m_blockman.ReadBlock(*pblockone, *chainman.ActiveChain()[1]);
     }
 
     BOOST_REQUIRE(CreateAndActivateUTXOSnapshot(

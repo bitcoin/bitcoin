@@ -36,6 +36,7 @@ void initialize_connman()
 
 FUZZ_TARGET(connman, .init = initialize_connman)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
     auto netgroupman{ConsumeNetGroupManager(fuzzed_data_provider)};

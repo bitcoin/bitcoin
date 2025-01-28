@@ -219,7 +219,7 @@ class PackageRBFTest(BitcoinTestFramework):
         package_child = self.wallet.create_self_transfer(fee_rate=child_feerate, utxo_to_spend=package_parent["new_utxos"][0])
 
         pkg_results = node.submitpackage([package_parent["hex"], package_child["hex"]], maxfeerate=0)
-        assert_equal(f"package RBF failed: too many potential replacements, rejecting replacement {package_child['tx'].rehash()}; too many potential replacements (102 > 100)\n", pkg_results["package_msg"])
+        assert_equal(f"package RBF failed: too many potential replacements, rejecting replacement {package_child['tx'].rehash()}; too many potential replacements (102 > 100)", pkg_results["package_msg"])
         self.assert_mempool_contents(expected=expected_txns)
 
         # Make singleton tx to conflict with in next batch
@@ -234,7 +234,7 @@ class PackageRBFTest(BitcoinTestFramework):
         package_parent = self.wallet.create_self_transfer_multi(utxos_to_spend=double_spending_coins, fee_per_output=parent_fee_per_conflict)
         package_child = self.wallet.create_self_transfer(fee_rate=child_feerate, utxo_to_spend=package_parent["new_utxos"][0])
         pkg_results = node.submitpackage([package_parent["hex"], package_child["hex"]], maxfeerate=0)
-        assert_equal(f"package RBF failed: too many potential replacements, rejecting replacement {package_child['tx'].rehash()}; too many potential replacements (101 > 100)\n", pkg_results["package_msg"])
+        assert_equal(f"package RBF failed: too many potential replacements, rejecting replacement {package_child['tx'].rehash()}; too many potential replacements (101 > 100)", pkg_results["package_msg"])
         self.assert_mempool_contents(expected=expected_txns)
 
         # Finally, evict MAX_REPLACEMENT_CANDIDATES

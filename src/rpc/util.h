@@ -516,4 +516,14 @@ void PushWarnings(const std::vector<bilingual_str>& warnings, UniValue& obj);
 
 std::vector<RPCResult> ScriptPubKeyDoc();
 
+/***
+ * Get the target for a given block index.
+ *
+ * @param[in] blockindex    the block
+ * @param[in] pow_limit     PoW limit (consensus parameter)
+ *
+ * @return  the target
+ */
+uint256 GetTarget(const CBlockIndex& blockindex, const uint256 pow_limit);
+
 #endif // BITCOIN_RPC_UTIL_H

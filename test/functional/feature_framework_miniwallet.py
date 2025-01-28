@@ -29,8 +29,11 @@ class FeatureFrameworkMiniWalletTest(BitcoinTestFramework):
             utxo = wallet.get_utxo(mark_as_spent=False)
             for target_vsize in [250, 500, 1250, 2500, 5000, 12500, 25000, 50000, 1000000,
                                  248, 501, 1085, 3343, 5805, 12289, 25509, 55855,  999998]:
-                tx = wallet.create_self_transfer(utxo_to_spend=utxo, target_vsize=target_vsize)["tx"]
-                assert_equal(tx.get_vsize(), target_vsize)
+                tx = wallet.create_self_transfer(utxo_to_spend=utxo, target_vsize=target_vsize)
+                assert_equal(tx['tx'].get_vsize(), target_vsize)
+                child_tx = wallet.create_self_transfer_multi(utxos_to_spend=[tx["new_utxo"]], target_vsize=target_vsize)
+                assert_equal(child_tx['tx'].get_vsize(), target_vsize)
+
 
     def test_wallet_tagging(self):
         """Verify that tagged wallet instances are able to send funds."""

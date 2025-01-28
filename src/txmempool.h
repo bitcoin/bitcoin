@@ -810,7 +810,7 @@ public:
      * mempool.
      *
      * CalculateMemPoolAncestors() calculates the in-mempool (not including
-     * what is in the change set itself) ancestors of a given transacion.
+     * what is in the change set itself) ancestors of a given transaction.
      *
      * Apply() will apply the removals and additions that are staged into the
      * mempool.
