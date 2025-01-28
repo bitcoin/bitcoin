@@ -65,26 +65,26 @@ class WalletFastRescanTest(BitcoinTestFramework):
             self.generate(node, 1)
 
         self.log.info("Import wallet backup with block filter index")
-        with node.assert_debug_log(['fast variant using block filters']):
+        with node.assert_debug_log(['fast variant using block filters'], wallet=True):
             node.restorewallet('rescan_fast', WALLET_BACKUP_FILENAME)
         txids_fast = self.get_wallet_txids(node, 'rescan_fast')
 
         self.log.info("Import non-active descriptors with block filter index")
         node.createwallet(wallet_name='rescan_fast_nonactive', descriptors=True, disable_private_keys=True, blank=True)
-        with node.assert_debug_log(['fast variant using block filters']):
+        with node.assert_debug_log(['fast variant using block filters'], wallet=True):
             w = node.get_wallet_rpc('rescan_fast_nonactive')
             w.importdescriptors([{"desc": descriptor['desc'], "timestamp": 0} for descriptor in descriptors])
         txids_fast_nonactive = self.get_wallet_txids(node, 'rescan_fast_nonactive')
 
         self.restart_node(0, [f'-keypool={KEYPOOL_SIZE}', '-blockfilterindex=0'])
         self.log.info("Import wallet backup w/o block filter index")
-        with node.assert_debug_log(['slow variant inspecting all blocks']):
+        with node.assert_debug_log(['slow variant inspecting all blocks'], wallet=True):
             node.restorewallet("rescan_slow", WALLET_BACKUP_FILENAME)
         txids_slow = self.get_wallet_txids(node, 'rescan_slow')
 
         self.log.info("Import non-active descriptors w/o block filter index")
         node.createwallet(wallet_name='rescan_slow_nonactive', descriptors=True, disable_private_keys=True, blank=True)
-        with node.assert_debug_log(['slow variant inspecting all blocks']):
+        with node.assert_debug_log(['slow variant inspecting all blocks'], wallet=True):
             w = node.get_wallet_rpc('rescan_slow_nonactive')
             w.importdescriptors([{"desc": descriptor['desc'], "timestamp": 0} for descriptor in descriptors])
         txids_slow_nonactive = self.get_wallet_txids(node, 'rescan_slow_nonactive')
