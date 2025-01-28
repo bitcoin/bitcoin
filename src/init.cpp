@@ -359,6 +359,13 @@ void PrepareShutdown(NodeContext& node)
 
     UnregisterAllValidationInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
+
+    // We need to manually release our directory locks if we are expected to restart
+    // because the replacement instance will start before this instance stops and the
+    // global context won't be torn down in time to release the locks automatically.
+    if (RestartRequested()) {
+        ReleaseDirectoryLocks();
+    }
 }
 
 /**
