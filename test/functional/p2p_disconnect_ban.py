@@ -65,6 +65,15 @@ class DisconnectBanTest(BitcoinTestFramework):
         self.bump_mocktime(2)
         self.wait_until(lambda: len(self.nodes[1].listbanned()) == 3, timeout=10)
 
+        self.log.info("Test ban_duration and time_remaining")
+        for ban in self.nodes[1].listbanned():
+            if ban["address"] in ["127.0.0.0/32", "127.0.0.0/24"]:
+                assert_equal(ban["ban_duration"], 86400)
+                assert_equal(ban["time_remaining"], 86398)
+            elif ban["address"] == "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/19":
+                assert_equal(ban["ban_duration"], 1000)
+                assert_equal(ban["time_remaining"], 997)
+
         self.restart_node(1)
 
         listAfterShutdown = self.nodes[1].listbanned()
