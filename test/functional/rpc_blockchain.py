@@ -549,6 +549,7 @@ class BlockchainTest(BitcoinTestFramework):
         # The chain has probably already been restored by the time reconsiderblock returns,
         # but poll anyway.
         self.wait_until(lambda: node.waitfornewblock(timeout=100)['hash'] == current_hash)
+        assert_raises_rpc_error(-1, "Negative timeout", node.waitfornewblock, -1)
 
     def _test_waitforblockheight(self):
         self.log.info("Test waitforblockheight")
