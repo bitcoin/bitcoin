@@ -4698,7 +4698,7 @@ bool Chainstate::LoadChainTip()
     // to maintain a consistent best tip over reboots in case of a tie.
     auto target = tip;
     while (target) {
-        target->nSequenceId = 0;
+        target->nSequenceId = SEQ_ID_BEST_CHAIN_FROM_DISK;
         target = target->pprev;
     }
 
@@ -5357,7 +5357,9 @@ void ChainstateManager::CheckBlockIndex() const
                 }
             }
         }
-        if (!pindex->HaveNumChainTxs()) assert(pindex->nSequenceId <= 1); // nSequenceId can't be set higher than 1 for blocks that aren't linked (negative is used for preciousblock, 0 for active chain)
+        // nSequenceId can't be set higher than SEQ_ID_INIT_FROM_DISK{1} for blocks that aren't linked
+        // (negative is used for preciousblock, SEQ_ID_BEST_CHAIN_FROM_DISK{0} for active chain when loaded from disk)
+        if (!pindex->HaveNumChainTxs()) assert(pindex->nSequenceId <= SEQ_ID_INIT_FROM_DISK);
         // VALID_TRANSACTIONS is equivalent to nTx > 0 for all nodes (whether or not pruning has occurred).
         // HAVE_DATA is only equivalent to nTx > 0 (or VALID_TRANSACTIONS) if no pruning has occurred.
         if (!m_blockman.m_have_pruned) {
