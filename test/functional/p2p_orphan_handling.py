@@ -44,11 +44,6 @@ from test_framework.wallet import (
 TXREQUEST_TIME_SKIP = NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY + OVERLOADED_PEER_TX_DELAY + 1
 
 def cleanup(func):
-    # Time to fastfoward (using setmocktime) in between subtests to ensure they do not interfere with
-    # one another, in seconds. Equal to 12 hours, which is enough to expire anything that may exist
-    # (though nothing should since state should be cleared) in p2p data structures.
-    LONG_TIME_SKIP = 12 * 60 * 60
-
     def wrapper(self):
         try:
             func(self)
@@ -56,10 +51,13 @@ def cleanup(func):
             # Clear mempool
             self.generate(self.nodes[0], 1)
             self.nodes[0].disconnect_p2ps()
-            self.nodes[0].bumpmocktime(LONG_TIME_SKIP)
             # Check that mempool and orphanage have been cleared
             self.wait_until(lambda: len(self.nodes[0].getorphantxs()) == 0)
             assert_equal(0, len(self.nodes[0].getrawmempool()))
+
+            self.restart_node(0, extra_args=["-persistmempool=0"])
+            # Allow use of bumpmocktime again
+            self.nodes[0].setmocktime(int(time.time()))
             self.wallet.rescan_utxos(include_mempool=True)
     return wrapper
 
