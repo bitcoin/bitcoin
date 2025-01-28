@@ -20,6 +20,7 @@ import time
 import urllib.parse
 import collections
 import shlex
+import sys
 from pathlib import Path
 
 from .authproxy import (
@@ -158,7 +159,6 @@ class TestNode():
         self.rpc = None
         self.url = None
         self.log = logging.getLogger('TestFramework.node%d' % i)
-        self.cleanup_on_exit = True # Whether to kill the node when this object goes away
         # Cache perf subprocesses here by their data output filename.
         self.perf_subprocesses = {}
 
@@ -200,11 +200,11 @@ class TestNode():
     def __del__(self):
         # Ensure that we don't leave any bitcoind processes lying around after
         # the test ends
-        if self.process and self.cleanup_on_exit:
+        if self.process:
             # Should only happen on test failure
             # Avoid using logger, as that may have already been shutdown when
             # this destructor is called.
-            print(self._node_msg("Cleaning up leftover process"))
+            print(self._node_msg("Cleaning up leftover process"), file=sys.stderr)
             self.process.kill()
 
     def __getattr__(self, name):
