@@ -129,6 +129,9 @@ public:
 
     std::array<uint8_t, SerSize> ToBytes(const bool specificLegacyScheme) const
     {
+        if (!fValid) {
+            return std::array<uint8_t, SerSize>{};
+        }
         return impl.SerializeToArray(specificLegacyScheme);
     }
 
@@ -163,7 +166,8 @@ public:
     template <typename Stream>
     inline void Serialize(Stream& s, const bool specificLegacyScheme) const
     {
-        s.write(AsBytes(Span{ToBytes(specificLegacyScheme).data(), SerSize}));
+        const auto bytes{ToBytes(specificLegacyScheme)};
+        s.write(AsBytes(Span{bytes.data(), SerSize}));
     }
 
     template <typename Stream>
@@ -202,7 +206,8 @@ public:
 
     inline bool CheckMalleable(Span<uint8_t> vecBytes, const bool specificLegacyScheme) const
     {
-        if (memcmp(vecBytes.data(), ToBytes(specificLegacyScheme).data(), SerSize)) {
+        const auto bytes{ToBytes(specificLegacyScheme)};
+        if (memcmp(vecBytes.data(), bytes.data(), SerSize)) {
             // TODO not sure if this is actually possible with the BLS libs. I'm assuming here that somewhere deep inside
             // these libs masking might happen, so that 2 different binary representations could result in the same object
             // representation
@@ -396,7 +401,7 @@ private:
 
 public:
     CBLSLazyWrapper() :
-        vecBytes{0},
+        vecBytes{},
         bufLegacyScheme(bls::bls_legacy_scheme.load())
     {}
 
