@@ -98,6 +98,7 @@ std::streampos GetFileSize(const char* path, std::streamsize max = std::numeric_
 /** Release all directory locks. This is used for unit testing only, at runtime
  * the global destructor will take care of the locks.
  */
+/** Dash: We also use this to release locks earlier when restarting the client */
 void ReleaseDirectoryLocks();
 
 bool TryCreateDirectories(const fs::path& p);
