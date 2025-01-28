@@ -1273,15 +1273,6 @@ public:
     bool MultipleManualOrFullOutboundConns(Network net) const EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
 
 private:
-    struct ListenSocket {
-    public:
-        std::shared_ptr<Sock> sock;
-        ListenSocket(std::shared_ptr<Sock> sock_)
-            : sock{sock_}
-        {
-        }
-    };
-
     //! returns the time left in the current max outbound cycle
     //! in case of no limit, it will always return 0
     std::chrono::seconds GetMaxOutboundTimeLeftInCycle_() const EXCLUSIVE_LOCKS_REQUIRED(m_total_bytes_sent_mutex);
@@ -1296,7 +1287,7 @@ private:
     void ThreadOpenConnections(std::vector<std::string> connect, std::span<const std::string> seed_nodes) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_reconnections_mutex);
     void ThreadMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
     void ThreadI2PAcceptIncoming();
-    void AcceptConnection(const ListenSocket& hListenSocket);
+    void AcceptConnection(const Sock& listen_sock);
 
     /**
      * Create a `CNode` object from a socket that has just been accepted and add the node to
@@ -1426,7 +1417,10 @@ private:
     unsigned int nSendBufferMaxSize{0};
     unsigned int nReceiveFloodSize{0};
 
-    std::vector<ListenSocket> vhListenSocket;
+    /**
+     * List of listening sockets.
+     */
+    std::vector<std::shared_ptr<Sock>> m_listen;
 
     /**
      * Permissions that incoming peers get based on our listening address they connected to.
