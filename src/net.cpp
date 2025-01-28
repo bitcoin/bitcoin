@@ -3540,9 +3540,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                 continue;
             }
 
-            const uint16_t default_port{Params().GetDefaultPort(addr.GetNetwork())};
-            assert(!IsBadPort(default_port)); // Make sure we never set the default port to a bad port
-
             // Do not connect to prohibited ports, unless 50 invalid addresses have been selected already.
             if (nTries < 50 && IsBadPort(addr.GetPort())) {
                 continue;
@@ -4198,6 +4195,12 @@ CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, AddrMan& addrman_in,
     , nSeed0(nSeed0In)
     , nSeed1(nSeed1In)
 {
+    // Make sure we never set the default port to a bad port
+    for (int n = 0; n < NET_MAX; ++n) {
+        const bool is_bad_port = IsBadPort(Params().GetDefaultPort(static_cast<Network>(n)));
+        assert(!is_bad_port);
+    }
+
     SetTryNewOutboundPeer(false);
 
     Options connOptions;
