@@ -21,7 +21,7 @@ class CTransaction;
 struct PartiallySignedTransaction;
 struct WalletContext;
 
-static const std::string HELP_REQUIRING_PASSPHRASE{"\nRequires wallet passphrase to be set with walletpassphrase call if wallet is encrypted.\n"};
+extern const std::string HELP_REQUIRING_PASSPHRASE;
 
 Span<const CRPCCommand> GetWalletRPCCommands();
 
