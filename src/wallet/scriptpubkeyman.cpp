@@ -468,7 +468,7 @@ bool LegacyScriptPubKeyMan::AddHDChainSingle(const CHDChain& chain)
     return AddHDChain(batch, chain);
 }
 
-bool LegacyScriptPubKeyMan::GetDecryptedHDChain(CHDChain& hdChainRet)
+bool LegacyScriptPubKeyMan::GetDecryptedHDChain(CHDChain& hdChainRet) const
 {
     LOCK(cs_KeyStore);
 

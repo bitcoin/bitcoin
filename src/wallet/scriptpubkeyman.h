@@ -456,7 +456,7 @@ public:
      */
 
     bool GetHDChain(CHDChain& hdChainRet) const;
-    bool GetDecryptedHDChain(CHDChain& hdChainRet);
+    bool GetDecryptedHDChain(CHDChain& hdChainRet) const;
 
     /* Generates a new HD chain */
     void GenerateNewHDChain(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, std::optional<CKeyingMaterial> vMasterKey = std::nullopt);
