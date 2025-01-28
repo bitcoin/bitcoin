@@ -1729,10 +1729,10 @@ bool CConnman::AttemptToEvictConnection()
     return false;
 }
 
-void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
+void CConnman::AcceptConnection(const Sock& listen_sock) {
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
-    auto sock = hListenSocket.sock->Accept((struct sockaddr*)&sockaddr, &len);
+    auto sock = listen_sock.Accept((struct sockaddr*)&sockaddr, &len);
 
     if (!sock) {
         const int nErr = WSAGetLastError();
@@ -2064,8 +2064,8 @@ Sock::EventsPerSock CConnman::GenerateWaitSockets(std::span<CNode* const> nodes)
 {
     Sock::EventsPerSock events_per_sock;
 
-    for (const ListenSocket& hListenSocket : vhListenSocket) {
-        events_per_sock.emplace(hListenSocket.sock, Sock::Events{Sock::RECV});
+    for (const auto& sock : m_listen) {
+        events_per_sock.emplace(sock, Sock::Events{Sock::RECV});
     }
 
     for (CNode* pnode : nodes) {
@@ -2221,13 +2221,13 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
 
 void CConnman::SocketHandlerListening(const Sock::EventsPerSock& events_per_sock)
 {
-    for (const ListenSocket& listen_socket : vhListenSocket) {
+    for (const auto& sock : m_listen) {
         if (m_interrupt_net->interrupted()) {
             return;
         }
-        const auto it = events_per_sock.find(listen_socket.sock);
+        const auto it = events_per_sock.find(sock);
         if (it != events_per_sock.end() && it->second.occurred & Sock::RECV) {
-            AcceptConnection(listen_socket);
+            AcceptConnection(*sock);
         }
     }
 }
@@ -3199,7 +3199,8 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError)
         return false;
     }
 
-    vhListenSocket.emplace_back(std::move(sock));
+    m_listen.emplace_back(std::move(sock));
+
     return true;
 }
 
@@ -3514,7 +3515,7 @@ void CConnman::StopNodes()
     }
     m_nodes_disconnected.clear();
     m_listen_permissions.clear();
-    vhListenSocket.clear();
+    m_listen.clear();
     semOutbound.reset();
     semAddnode.reset();
 }
