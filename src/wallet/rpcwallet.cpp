@@ -128,6 +128,15 @@ void EnsureWalletIsUnlocked(const CWallet& wallet)
     }
 }
 
+WalletContext& EnsureWalletContext(const CoreContext& context)
+{
+    auto* wallet_context = GetContext<WalletContext>(context);
+    if (!wallet_context) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Wallet context not found");
+    }
+    return *wallet_context;
+}
+
 // also_create should only be set to true only when the RPC is expected to add things to a blank wallet and make it no longer blank
 LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet, bool also_create)
 {
@@ -148,15 +157,6 @@ const LegacyScriptPubKeyMan& EnsureConstLegacyScriptPubKeyMan(const CWallet& wal
         throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
     }
     return *spk_man;
-}
-
-WalletContext& EnsureWalletContext(const CoreContext& context)
-{
-    auto* wallet_context = GetContext<WalletContext>(context);
-    if (!wallet_context) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Wallet context not found");
-    }
-    return *wallet_context;
 }
 
 static void WalletTxToJSON(interfaces::Chain& chain, const CWalletTx& wtx, UniValue& entry)
