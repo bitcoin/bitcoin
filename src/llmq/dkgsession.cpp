@@ -1019,13 +1019,13 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages, PeerManag
     qc.quorumSig = skShare.Sign(commitmentHash, m_use_legacy_bls);
 
     if (lieType == 3) {
-        std::vector<uint8_t> buf = qc.sig.ToByteVector(m_use_legacy_bls);
+        auto buf = qc.sig.ToBytes(m_use_legacy_bls);
         buf[5]++;
-        qc.sig.SetByteVector(buf, m_use_legacy_bls);
+        qc.sig.SetBytes(buf, m_use_legacy_bls);
     } else if (lieType == 4) {
-        std::vector<uint8_t> buf = qc.quorumSig.ToByteVector(m_use_legacy_bls);
+        auto buf = qc.quorumSig.ToBytes(m_use_legacy_bls);
         buf[5]++;
-        qc.quorumSig.SetByteVector(buf, m_use_legacy_bls);
+        qc.quorumSig.SetBytes(buf, m_use_legacy_bls);
     }
 
     t3.stop();

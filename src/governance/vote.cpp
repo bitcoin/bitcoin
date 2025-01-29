@@ -182,7 +182,7 @@ bool CGovernanceVote::Sign(const CActiveMasternodeManager& mn_activeman)
 bool CGovernanceVote::CheckSignature(const CBLSPublicKey& pubKey) const
 {
     CBLSSignature sig;
-    sig.SetByteVector(vchSig, false);
+    sig.SetBytes(vchSig, false);
     if (!sig.VerifyInsecure(pubKey, GetSignatureHash(), false)) {
         LogPrintf("CGovernanceVote::CheckSignature -- VerifyInsecure() failed\n");
         return false;
