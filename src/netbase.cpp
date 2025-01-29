@@ -709,7 +709,7 @@ bool IsBadPort(uint16_t port)
 {
     /* Don't forget to update doc/p2p-bad-ports.md if you change this list. */
 
-    if (port <= PRIVILEGED_PORTS_THRESHOLD) return true;
+    if (port > 0 && port <= PRIVILEGED_PORTS_THRESHOLD) return true;
     switch (port) {
     case 1719:  // h323gatestat
     case 1720:  // h323hostcall
