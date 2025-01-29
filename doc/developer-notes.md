@@ -513,6 +513,24 @@ To enable test parallelism:
 cmake -DJOBS=$(nproc) -P build/Coverage.cmake
 ```
 
+**Troubleshooting:** While running `cmake -P build/Coverage.cmake` above, you
+may encounter errors similar to the following:
+
+```
+geninfo: ERROR: mismatched end line for _ZN7Num30723SerI10DataStreamEEvRT_RKS_ at /home/espi3/src/bitcoin/src/crypto/muhash.h:62: 67 -> 62
+        (use "geninfo --ignore-errors mismatch ..." to bypass this error)
+
+geninfo: ERROR: Unexpected negative count '-185' for /home/espi3/src/bitcoin/src/secp256k1/src/field_5x52_impl.h:183.
+        Perhaps you need to compile with '-fprofile-update=atomic
+        (use "geninfo --ignore-errors negative ..." to bypass this error)
+```
+
+You can work around these issues using the aforementioned LCOV options:
+
+```
+cmake -DLCOV_OPTS="--ignore-errors mismatch,negative" -P build/Coverage.cmake
+```
+
 ### Performance profiling with perf
 
 Profiling is a good way to get a precise idea of where time is being spent in
