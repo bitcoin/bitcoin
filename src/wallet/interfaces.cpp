@@ -260,10 +260,10 @@ public:
         LOCK(m_wallet->cs_wallet);
         return m_wallet->ListLockedCoins(outputs);
     }
-    void listProTxCoins(std::vector<COutPoint>& outputs) override
+    std::vector<COutPoint> listProTxCoins() override
     {
         LOCK(m_wallet->cs_wallet);
-        return m_wallet->ListProTxCoins(outputs);
+        return m_wallet->ListProTxCoins();
     }
     CTransactionRef createTransaction(const std::vector<CRecipient>& recipients,
         const CCoinControl& coin_control,

@@ -922,18 +922,16 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
         wtx.nTimeSmart = ComputeTimeSmart(wtx);
         AddToSpends(hash, &batch);
 
-        std::vector<std::pair<const CTransactionRef&, unsigned int>> outputs;
-        for(unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
+        std::set<COutPoint> candidates;
+        for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
             if (IsMine(wtx.tx->vout[i]) && !IsSpent(hash, i)) {
                 setWalletUTXO.insert(COutPoint(hash, i));
-                outputs.emplace_back(wtx.tx, i);
+                candidates.emplace(hash, i);
             }
         }
         // TODO: refactor duplicated code between CWallet::AddToWallet and CWallet::AutoLockMasternodeCollaterals
-        if (m_chain) {
-            for (const auto& outPoint : m_chain->listMNCollaterials(outputs)) {
-                LockCoin(outPoint, &batch);
-            }
+        for (const auto& utxo : ListProTxCoins(candidates)) {
+            LockCoin(utxo, &batch);
         }
     }
 
@@ -951,21 +949,19 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
             assert(wtx.m_confirm.block_height == confirm.block_height);
         }
 
-        std::vector<std::pair<const CTransactionRef&, unsigned int>> outputs;
-        for(unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
+        std::set<COutPoint> candidates;
+        for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
             if (IsMine(wtx.tx->vout[i]) && !IsSpent(hash, i)) {
                 bool new_utxo = setWalletUTXO.insert(COutPoint(hash, i)).second;
                 if (new_utxo) {
-                    outputs.emplace_back(wtx.tx, i);
+                    candidates.emplace(hash, i);
                     fUpdated = true;
                 }
             }
         }
         // TODO: refactor duplicated code with case fInstertedNew
-        if (m_chain) {
-            for (const auto& outPoint : m_chain->listMNCollaterials(outputs)) {
-                LockCoin(outPoint);
-            }
+        for (const auto& utxo : ListProTxCoins(candidates)) {
+            LockCoin(utxo, &batch);
         }
     }
 
@@ -4056,20 +4052,18 @@ DBErrors CWallet::LoadWallet()
 // This avoids accidental spending of collaterals. They can still be unlocked manually if a spend is really intended.
 void CWallet::AutoLockMasternodeCollaterals()
 {
-    if (!m_chain) return;
-
-    std::vector<std::pair<const CTransactionRef&, unsigned int>> outputs;
-
+    std::set<COutPoint> candidates;
     LOCK(cs_wallet);
-    for (const auto& pair : mapWallet) {
-        for (unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
-            if (IsMine(pair.second.tx->vout[i]) && !IsSpent(pair.first, i)) {
-                outputs.emplace_back(pair.second.tx, i);
+    for (const auto& [txid, wtx] : mapWallet) {
+        for (unsigned int i = 0; i < wtx.tx->vout.size(); ++i) {
+            if (IsMine(wtx.tx->vout[i]) && !IsSpent(txid, i)) {
+                candidates.emplace(txid, i);
             }
         }
     }
-    for (const auto& outPoint : m_chain->listMNCollaterials(outputs)) {
-        LockCoin(outPoint);
+    WalletBatch batch(GetDatabase());
+    for (const auto& utxo : ListProTxCoins(candidates)) {
+        LockCoin(utxo, &batch);
     }
 }
 
@@ -4512,24 +4506,22 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
     }
 }
 
-void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
-{
-    // TODO: refactor duplicated code between CWallet::AutoLockMasternodeCollaterals and CWallet::ListProTxCoins
-    if (!m_chain) {
-        vOutpts.clear();
-        return;
-    }
-    std::vector<std::pair<const CTransactionRef&, unsigned int>> outputs;
+std::vector<COutPoint> CWallet::ListProTxCoins() const { return ListProTxCoins(setWalletUTXO); }
 
+std::vector<COutPoint> CWallet::ListProTxCoins(const std::set<COutPoint>& utxos) const
+{
     AssertLockHeld(cs_wallet);
-    for (const auto &o : setWalletUTXO) {
-        auto it = mapWallet.find(o.hash);
-        if (it != mapWallet.end()) {
-            const auto &ptx = it->second;
-            outputs.emplace_back(ptx.tx, o.n);
+
+    if (!m_chain) return std::vector<COutPoint>();
+
+    std::vector<std::pair<const CTransactionRef&, /*index=*/uint32_t>> candidates;
+    for (const auto& output : utxos) {
+        if (auto it = mapWallet.find(output.hash); it != mapWallet.end()) {
+            const auto& [hash, wtx] = *it;
+            candidates.emplace_back(wtx.tx, output.n);
         }
     }
-    vOutpts = m_chain->listMNCollaterials(outputs);
+    return m_chain->listMNCollaterials(candidates);
 }
 
 /** @} */ // end of Actions

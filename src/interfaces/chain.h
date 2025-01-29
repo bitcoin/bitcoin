@@ -143,7 +143,7 @@ public:
     virtual bool hasChainLock(int height, const uint256& hash) = 0;
 
     //! Return list of MN Collateral from outputs
-    virtual std::vector<COutPoint> listMNCollaterials(const std::vector<std::pair<const CTransactionRef&, unsigned int>>& outputs) = 0;
+    virtual std::vector<COutPoint> listMNCollaterials(const std::vector<std::pair<const CTransactionRef&, uint32_t>>& outputs) = 0;
     //! Return whether node has the block and optionally return block metadata
     //! or contents.
     virtual bool findBlock(const uint256& hash, const FoundBlock& block={}) = 0;

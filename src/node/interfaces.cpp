@@ -786,7 +786,7 @@ public:
         if (m_node.llmq_ctx == nullptr || m_node.llmq_ctx->clhandler == nullptr) return false;
         return m_node.llmq_ctx->clhandler->HasChainLock(height, hash);
     }
-    std::vector<COutPoint> listMNCollaterials(const std::vector<std::pair<const CTransactionRef&, unsigned int>>& outputs) override
+    std::vector<COutPoint> listMNCollaterials(const std::vector<std::pair<const CTransactionRef&, uint32_t>>& outputs) override
     {
         const CBlockIndex *tip = WITH_LOCK(::cs_main, return chainman().ActiveChain().Tip());
         CDeterministicMNList mnList{};
