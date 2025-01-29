@@ -3,12 +3,18 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+import random
 import time
 
 from test_framework.mempool_util import tx_in_orphanage
 from test_framework.messages import (
     CInv,
+    COutPoint,
+    CTransaction,
+    CTxIn,
     CTxInWitness,
+    CTxOut,
+    DEFAULT_ANCESTOR_LIMIT,
     MSG_TX,
     MSG_WITNESS_TX,
     MSG_WTX,
@@ -26,6 +32,11 @@ from test_framework.p2p import (
     P2PInterface,
     P2PTxInvStore,
     TXID_RELAY_DELAY,
+)
+from test_framework.script import (
+    CScript,
+    OP_NOP,
+    OP_RETURN,
 )
 from test_framework.util import (
     assert_not_equal,
@@ -149,6 +160,16 @@ class OrphanHandlingTest(BitcoinTestFramework):
         assert_not_equal(tx["wtxid"], tx_bad_wit.getwtxid())
 
         return tx_bad_wit
+
+    def create_large_orphan(self):
+        """Create huge orphan transaction"""
+        tx = CTransaction()
+        # Nonexistent UTXO
+        tx.vin = [CTxIn(COutPoint(random.randrange(1 << 256), random.randrange(1, 100)))]
+        tx.wit.vtxinwit = [CTxInWitness()]
+        tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_NOP] * 390000)]
+        tx.vout = [CTxOut(100, CScript([OP_RETURN, b'a' * 20]))]
+        return tx
 
     @cleanup
     def test_arrival_timing_orphan(self):
@@ -628,6 +649,74 @@ class OrphanHandlingTest(BitcoinTestFramework):
         peer_inbound.wait_for_parent_requests([int(parent_tx.rehash(), 16)])
 
     @cleanup
+    def test_maximal_package_protected(self):
+        self.log.info("Test that a node only announcing a maximally sized ancestor package is protected in orphanage")
+        # Needed for transaction size bulking
+        self.restart_node(0, extra_args=["-datacarriersize=100000"])
+        self.nodes[0].setmocktime(int(time.time()))
+        node = self.nodes[0]
+
+        peer_normal = node.add_p2p_connection(P2PInterface())
+        peer_doser = node.add_p2p_connection(P2PInterface())
+
+        # Each of the num_peers peers creates a distinct set of orphans
+        large_orphans = [self.create_large_orphan() for _ in range(60)]
+
+        # Check to make sure these are orphans, within max standard size (to be accepted into the orphanage)
+        for large_orphan in large_orphans:
+            testres = node.testmempoolaccept([large_orphan.serialize().hex()])
+            assert not testres[0]["allowed"]
+            assert_equal(testres[0]["reject-reason"], "missing-inputs")
+
+        num_individual_dosers = 20
+        self.log.info(f"Connect {num_individual_dosers} peers and send a very large orphan from each one")
+        # This test assumes that unrequested transactions are processed (skipping inv and
+        # getdata steps because they require going through request delays)
+        # Connect 20 peers and have each of them send a large orphan.
+        for large_orphan in large_orphans[:num_individual_dosers]:
+            peer_doser_individual = node.add_p2p_connection(P2PInterface())
+            peer_doser_individual.send_and_ping(msg_tx(large_orphan))
+            node.bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY + 1)
+            peer_doser_individual.wait_for_getdata([large_orphan.vin[0].prevout.hash])
+
+        # Make sure that these transactions are going through the orphan handling codepaths.
+        # Subsequent rounds will not wait for getdata because the time mocking will cause the
+        # normal package request to time out.
+        self.wait_until(lambda: len(node.getorphantxs()) == num_individual_dosers)
+
+        # Now honest peer will send a maximally sized ancestor package of 24 orphans chaining
+        # off of a single missing transaction, with a total vsize 404,000Wu
+        ancestor_package = self.wallet.create_self_transfer_chain(chain_length=DEFAULT_ANCESTOR_LIMIT - 1)
+        sum_ancestor_package_vsize = sum([tx["tx"].get_vsize() for tx in ancestor_package])
+        final_tx = self.wallet.create_self_transfer(utxo_to_spend=ancestor_package[-1]["new_utxo"], target_vsize=101000 - sum_ancestor_package_vsize)
+        ancestor_package.append(final_tx)
+
+        # Peer sends all but first tx to fill up orphange with their orphans
+        for orphan in ancestor_package[1:]:
+            peer_normal.send_and_ping(msg_tx(orphan["tx"]))
+
+        orphan_set = node.getorphantxs()
+        for orphan in ancestor_package[1:]:
+            assert orphan["txid"] in orphan_set
+
+        # Wait for ultimate parent request (the root ancestor transaction)
+        parent_txid_int = int(ancestor_package[0]["txid"], 16)
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
+
+        self.wait_until(lambda: "getdata" in peer_normal.last_message and parent_txid_int in [inv.hash for inv in peer_normal.last_message.get("getdata").inv])
+
+        self.log.info("Send another round of very large orphans from a DoSy peer")
+        for large_orphan in large_orphans[num_individual_dosers:]:
+            peer_doser.send_and_ping(msg_tx(large_orphan))
+
+        self.log.info("Provide the top ancestor. The whole package should be re-evaluated after enough time.")
+        peer_normal.send_and_ping(msg_tx(ancestor_package[0]["tx"]))
+
+        # Wait until all transactions have been processed. When the last tx is accepted, it's
+        # guaranteed to have all ancestors.
+        self.wait_until(lambda: node.getmempoolentry(final_tx["txid"])["ancestorcount"] == DEFAULT_ANCESTOR_LIMIT)
+
+    @cleanup
     def test_announcers_before_and_after(self):
         self.log.info("Test that the node uses all peers who announced the tx prior to realizing it's an orphan")
         node = self.nodes[0]
@@ -779,6 +868,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.test_orphan_handling_prefer_outbound()
         self.test_announcers_before_and_after()
         self.test_parents_change()
+        self.test_maximal_package_protected()
 
 
 if __name__ == '__main__':
