@@ -450,6 +450,7 @@ BOOST_AUTO_TEST_CASE(isbadport)
     BOOST_CHECK(IsBadPort(18332));
     BOOST_CHECK(IsBadPort(18333));
 
+    BOOST_CHECK(!IsBadPort(0));
     BOOST_CHECK(!IsBadPort(9998));
     BOOST_CHECK(!IsBadPort(9999));
     BOOST_CHECK(!IsBadPort(26656));
