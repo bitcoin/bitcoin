@@ -198,7 +198,7 @@ protected:
      * this peer; add them as new invs to m_txrequest.
      * @returns whether this transaction was a valid orphan resolution candidate.
      * */
-    bool OrphanResolutionCandidate(const std::vector<Txid>& unique_parents, const Wtxid& wtxid, NodeId nodeid, std::chrono::microseconds now);
+    bool MaybeAddOrphanResolutionCandidate(const std::vector<Txid>& unique_parents, const Wtxid& wtxid, NodeId nodeid, std::chrono::microseconds now);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_IMPL_H

@@ -187,7 +187,7 @@ bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid,
 
             if (unique_parents.empty()) return true;
 
-            if (OrphanResolutionCandidate(unique_parents, orphan_tx->GetWitnessHash(), peer, now)) {
+            if (MaybeAddOrphanResolutionCandidate(unique_parents, orphan_tx->GetWitnessHash(), peer, now)) {
                 m_orphanage.AddAnnouncer(orphan_tx->GetWitnessHash(), peer);
             }
 
@@ -224,7 +224,7 @@ bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid,
     return false;
 }
 
-bool TxDownloadManagerImpl::OrphanResolutionCandidate(const std::vector<Txid>& unique_parents, const Wtxid& wtxid, NodeId nodeid, std::chrono::microseconds now)
+bool TxDownloadManagerImpl::MaybeAddOrphanResolutionCandidate(const std::vector<Txid>& unique_parents, const Wtxid& wtxid, NodeId nodeid, std::chrono::microseconds now)
 {
     auto it_peer = m_peer_info.find(nodeid);
     if (it_peer == m_peer_info.end()) return false;
@@ -402,7 +402,7 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
                 add_extra_compact_tx &= !m_orphanage.HaveTx(wtxid);
 
                 auto add_orphan_reso_candidate = [&](const CTransactionRef& orphan_tx, const std::vector<Txid>& unique_parents, NodeId nodeid, std::chrono::microseconds now) {
-                    if (OrphanResolutionCandidate(unique_parents, orphan_tx->GetWitnessHash(), nodeid, now)) {
+                    if (MaybeAddOrphanResolutionCandidate(unique_parents, orphan_tx->GetWitnessHash(), nodeid, now)) {
                         m_orphanage.AddTx(orphan_tx, nodeid);
                     }
                 };
