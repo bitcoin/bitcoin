@@ -145,7 +145,7 @@ public:
     virtual bool isLockedCoin(const COutPoint& output) = 0;
 
     //! List locked coins.
-    virtual void listLockedCoins(std::vector<COutPoint>& outputs) = 0;
+    virtual std::vector<COutPoint> listLockedCoins() = 0;
 
     //! List protx coins.
     virtual std::vector<COutPoint> listProTxCoins() = 0;

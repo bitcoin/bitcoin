@@ -255,10 +255,10 @@ public:
         LOCK(m_wallet->cs_wallet);
         return m_wallet->IsLockedCoin(output.hash, output.n);
     }
-    void listLockedCoins(std::vector<COutPoint>& outputs) override
+    std::vector<COutPoint> listLockedCoins() override
     {
         LOCK(m_wallet->cs_wallet);
-        return m_wallet->ListLockedCoins(outputs);
+        return m_wallet->ListLockedCoins();
     }
     std::vector<COutPoint> listProTxCoins() override
     {

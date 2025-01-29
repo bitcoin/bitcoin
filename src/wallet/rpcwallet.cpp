@@ -2371,14 +2371,9 @@ static RPCHelpMan listlockunspent()
 
     LOCK(pwallet->cs_wallet);
 
-    std::vector<COutPoint> vOutpts;
-    pwallet->ListLockedCoins(vOutpts);
-
     UniValue ret(UniValue::VARR);
-
-    for (const COutPoint& outpt : vOutpts) {
+    for (const COutPoint& outpt : pwallet->ListLockedCoins()) {
         UniValue o(UniValue::VOBJ);
-
         o.pushKV("txid", outpt.hash.GetHex());
         o.pushKV("vout", (int)outpt.n);
         ret.push_back(o);

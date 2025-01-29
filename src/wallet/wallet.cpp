@@ -2795,12 +2795,10 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins() const
         }
     }
 
-    std::vector<COutPoint> lockedCoins;
-    ListLockedCoins(lockedCoins);
     // Include watch-only for LegacyScriptPubKeyMan wallets without private keys
     const bool include_watch_only = GetLegacyScriptPubKeyMan() && IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
     const isminetype is_mine_filter = include_watch_only ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
-    for (const COutPoint& output : lockedCoins) {
+    for (const COutPoint& output : setLockedCoins) {
         auto it = mapWallet.find(output.hash);
         if (it != mapWallet.end()) {
             int depth = it->second.GetDepthInMainChain();
@@ -4496,14 +4494,10 @@ bool CWallet::IsLockedCoin(uint256 hash, unsigned int n) const
     return (setLockedCoins.count(outpt) > 0);
 }
 
-void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
+std::vector<COutPoint> CWallet::ListLockedCoins() const
 {
     AssertLockHeld(cs_wallet);
-    for (std::set<COutPoint>::iterator it = setLockedCoins.begin();
-         it != setLockedCoins.end(); it++) {
-        COutPoint outpt = (*it);
-        vOutpts.push_back(outpt);
-    }
+    return std::vector<COutPoint>(setLockedCoins.begin(), setLockedCoins.end());
 }
 
 std::vector<COutPoint> CWallet::ListProTxCoins() const { return ListProTxCoins(setWalletUTXO); }
