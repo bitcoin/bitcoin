@@ -32,15 +32,13 @@ CNetFulfilledRequestManager::~CNetFulfilledRequestManager()
 void CNetFulfilledRequestManager::AddFulfilledRequest(const CService& addr, const std::string& strRequest)
 {
     LOCK(cs_mapFulfilledRequests);
-    CService addrSquashed = Params().AllowMultiplePorts() ? addr : CService(addr, 0);
-    mapFulfilledRequests[addrSquashed][strRequest] = GetTime() + Params().FulfilledRequestExpireTime();
+    mapFulfilledRequests[addr][strRequest] = GetTime() + Params().FulfilledRequestExpireTime();
 }
 
 bool CNetFulfilledRequestManager::HasFulfilledRequest(const CService& addr, const std::string& strRequest)
 {
     LOCK(cs_mapFulfilledRequests);
-    CService addrSquashed = Params().AllowMultiplePorts() ? addr : CService(addr, 0);
-    fulfilledreqmap_t::iterator it = mapFulfilledRequests.find(addrSquashed);
+    fulfilledreqmap_t::iterator it = mapFulfilledRequests.find(addr);
 
     return  it != mapFulfilledRequests.end() &&
             it->second.find(strRequest) != it->second.end() &&
@@ -50,8 +48,7 @@ bool CNetFulfilledRequestManager::HasFulfilledRequest(const CService& addr, cons
 void CNetFulfilledRequestManager::RemoveAllFulfilledRequests(const CService& addr)
 {
     LOCK(cs_mapFulfilledRequests);
-    CService addrSquashed = Params().AllowMultiplePorts() ? addr : CService(addr, 0);
-    fulfilledreqmap_t::iterator it = mapFulfilledRequests.find(addrSquashed);
+    fulfilledreqmap_t::iterator it = mapFulfilledRequests.find(addr);
 
     if (it != mapFulfilledRequests.end()) {
         mapFulfilledRequests.erase(it++);

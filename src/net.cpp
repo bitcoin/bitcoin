@@ -493,8 +493,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     assert(conn_type != ConnectionType::INBOUND);
 
     if (pszDest == nullptr) {
-        bool fAllowLocal = Params().AllowMultiplePorts() && addrConnect.GetPort() != GetListenPort();
-        if (!fAllowLocal && IsLocal(addrConnect)) {
+        if (addrConnect.GetPort() == GetListenPort() && IsLocal(addrConnect)) {
             return nullptr;
         }
 
@@ -3508,25 +3507,18 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                 std::tie(addr, addr_last_try) = addrman.Select(false, preferred_net);
             }
 
-            auto dmn = mnList.GetMNByService(addr);
-            bool isMasternode = dmn != nullptr;
-
             // Require outbound IPv4/IPv6 connections, other than feelers, to be to distinct network groups
             if (!fFeeler && outbound_ipv46_peer_netgroups.count(m_netgroupman.GetGroup(addr))) {
                 continue;
             }
 
             // if we selected an invalid address, restart
-            if (!addr.IsValid() || outbound_ipv46_peer_netgroups.count(m_netgroupman.GetGroup(addr)))
+            if (!addr.IsValid()) {
                 break;
+            }
 
-            // don't try to connect to masternodes that we already have a connection to (most likely inbound)
-            if (isMasternode && setConnectedMasternodes.count(dmn->proTxHash))
-                break;
-
-            // if we selected a local address, restart (local addresses are allowed in regtest and devnet)
-            bool fAllowLocal = Params().AllowMultiplePorts() && addrConnect.GetPort() != GetListenPort();
-            if (!fAllowLocal && IsLocal(addrConnect)) {
+            // don't connect to ourselves
+            if (addr.GetPort() == GetListenPort() && IsLocal(addr)) {
                 break;
             }
 
@@ -3542,32 +3534,14 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
             // for non-feelers, require all the services we'll want,
             // for feelers, only require they be a full node (only because most
             // SPV clients don't have a good address DB available)
-            if (!isMasternode && !fFeeler && !HasAllDesirableServiceFlags(addr.nServices)) {
+            if (!fFeeler && !HasAllDesirableServiceFlags(addr.nServices)) {
                 continue;
-            } else if (!isMasternode && fFeeler && !MayHaveUsefulAddressDB(addr.nServices)) {
+            } else if (fFeeler && !MayHaveUsefulAddressDB(addr.nServices)) {
                 continue;
             }
 
-            // Port validation in Dash has additional rules. Some networks are prohibited
-            // from using a non-default port while others allow any arbitary port so long
-            // it isn't a bad port (and in the case of masternodes, it matches its listen
-            // port)
-            const bool is_prohibited_port = [this, &addr, &isMasternode](){
-                if (!Params().AllowMultiplePorts()) {
-                    const uint16_t default_port{Params().GetDefaultPort(addr.GetNetwork())};
-                    assert(!IsBadPort(default_port)); // Make sure we never set the default port to a bad port
-                    return addr.GetPort() != default_port;
-                }
-                const bool is_bad_port{IsBadPort(addr.GetPort())};
-                if (isMasternode) {
-                    return addr.GetPort() != GetListenPort() || is_bad_port;
-                } else {
-                    return is_bad_port;
-                }
-            }();
-
             // Do not connect to prohibited ports, unless 50 invalid addresses have been selected already.
-            if (nTries < 50 && is_prohibited_port) {
+            if (nTries < 50 && IsBadPort(addr.GetPort())) {
                 continue;
             }
 
@@ -3579,6 +3553,11 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                          preferred_net.has_value() ? "network-specific " : "",
                          ConnectionTypeAsString(conn_type), GetNetworkName(addr.GetNetwork()),
                          fLogIPs ? strprintf(": %s", addr.ToStringAddrPort()) : "");
+                continue;
+            }
+
+            // don't try to connect to masternodes that we already have a connection to (most likely inbound)
+            if (auto dmn = mnList.GetMNByService(addr); dmn && setConnectedMasternodes.count(dmn->proTxHash)) {
                 continue;
             }
 
@@ -3918,20 +3897,8 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         // banned, discouraged or exact match?
         if ((m_banman && (m_banman->IsDiscouraged(addrConnect) || m_banman->IsBanned(addrConnect))) || AlreadyConnectedToAddress(addrConnect))
             return;
-        // local and not a connection to itself?
-        bool fAllowLocal = Params().AllowMultiplePorts() && addrConnect.GetPort() != GetListenPort();
-        if (!fAllowLocal && IsLocal(addrConnect))
-            return;
-        // Search for IP:PORT match:
-        //  - if multiple ports for the same IP are allowed,
-        //  - for probe connections
-        // Search for IP-only match otherwise
-        bool searchIPPort = Params().AllowMultiplePorts() || masternode_probe_connection == MasternodeProbeConn::IsConnection;
-        bool skip = searchIPPort ?
-                FindNode(static_cast<CService>(addrConnect)) :
-                FindNode(static_cast<CNetAddr>(addrConnect));
-        if (skip) {
-            LogPrintf("CConnman::%s -- Failed to open new connection to %s, already connected\n", __func__, getIpStr());
+        // connecting to ourselves?
+        if (addrConnect.GetPort() == GetListenPort() && IsLocal(addrConnect)) {
             return;
         }
     } else if (FindNode(std::string(pszDest)))
@@ -4228,6 +4195,12 @@ CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, AddrMan& addrman_in,
     , nSeed0(nSeed0In)
     , nSeed1(nSeed1In)
 {
+    // Make sure we never set the default port to a bad port
+    for (int n = 0; n < NET_MAX; ++n) {
+        const bool is_bad_port = IsBadPort(Params().GetDefaultPort(static_cast<Network>(n)));
+        assert(!is_bad_port);
+    }
+
     SetTryNewOutboundPeer(false);
 
     Options connOptions;
