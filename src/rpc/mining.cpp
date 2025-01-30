@@ -625,6 +625,9 @@ static RPCHelpMan getblocktemplate()
                 {"mode", RPCArg::Type::STR, /* treat as named arg */ RPCArg::Optional::OMITTED, "This must be set to \"template\", \"proposal\" (see BIP 23), or omitted"},
                 {"blockmaxsize", RPCArg::Type::NUM, RPCArg::DefaultHint{"set by -blockmaxsize"}, "limit returned block to specified size (disables template cache)"},
                 {"blockmaxweight", RPCArg::Type::NUM, RPCArg::DefaultHint{"set by -blockmaxweight"}, "limit returned block to specified weight (disables template cache)"},
+                {"blockreservedsigops", RPCArg::Type::NUM, RPCArg::Default{node::BlockCreateOptions{}.coinbase_output_max_additional_sigops}, "reserve specified number of sigops in returned block for generation transaction (disables template cache)"},
+                {"blockreservedsize", RPCArg::Type::NUM, RPCArg::Default{node::BlockCreateOptions{}.block_reserved_size}, "reserve specified size in returned block for generation transaction (disables template cache)"},
+                {"blockreservedweight", RPCArg::Type::NUM, RPCArg::Default{node::BlockCreateOptions{}.block_reserved_weight}, "reserve specified weight in returned block for generation transaction (disables template cache)"},
                 {"capabilities", RPCArg::Type::ARR, /* treat as named arg */ RPCArg::Optional::OMITTED, "A list of strings",
                 {
                     {"str", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "client side supported feature, 'longpoll', 'coinbasevalue', 'proposal', 'skip_validity_test', 'serverlist', 'workid'"},
@@ -778,6 +781,15 @@ static RPCHelpMan getblocktemplate()
         }
         if (!oparam["blockmaxweight"].isNull()) {
             options.nBlockMaxWeight = oparam["blockmaxweight"].getInt<size_t>();
+        }
+        if (!oparam["blockreservedsize"].isNull()) {
+            options.block_reserved_size = oparam["blockreservedsize"].getInt<size_t>();
+        }
+        if (!oparam["blockreservedweight"].isNull()) {
+            options.block_reserved_weight = oparam["blockreservedweight"].getInt<size_t>();
+        }
+        if (!oparam["blockreservedsigops"].isNull()) {
+            options.coinbase_output_max_additional_sigops = oparam["blockreservedsigops"].getInt<size_t>();
         }
         if (!oparam["minfeerate"].isNull()) {
             options.blockMinFeeRate = CFeeRate{AmountFromValue(oparam["minfeerate"]), COIN /* sat/vB */};

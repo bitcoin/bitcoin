@@ -75,10 +75,10 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
 BlockCreateOptions BlockCreateOptions::Clamped() const
 {
     BlockAssembler::Options options = *this;
-    Assert(options.block_reserved_size <= MAX_BLOCK_SERIALIZED_SIZE);
-    Assert(options.block_reserved_weight <= MAX_BLOCK_WEIGHT);
-    Assert(options.block_reserved_weight >= MINIMUM_BLOCK_RESERVED_WEIGHT);
-    Assert(options.coinbase_output_max_additional_sigops <= MAX_BLOCK_SIGOPS_COST);
+    CHECK_NONFATAL(options.block_reserved_size <= MAX_BLOCK_SERIALIZED_SIZE);
+    CHECK_NONFATAL(options.block_reserved_weight <= MAX_BLOCK_WEIGHT);
+    CHECK_NONFATAL(options.block_reserved_weight >= MINIMUM_BLOCK_RESERVED_WEIGHT);
+    CHECK_NONFATAL(options.coinbase_output_max_additional_sigops <= MAX_BLOCK_SIGOPS_COST);
     // Limit size to between block_reserved_size and MAX_BLOCK_SERIALIZED_SIZE-1K for sanity:
     options.nBlockMaxSize = std::clamp<size_t>(options.nBlockMaxSize, options.block_reserved_size, MAX_BLOCK_SERIALIZED_SIZE);
     // Limit weight to between block_reserved_weight and MAX_BLOCK_WEIGHT for sanity:
