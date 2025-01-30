@@ -205,9 +205,7 @@ void MasternodeList::updateDIP3List()
 
     std::set<COutPoint> setOutpts;
     if (walletModel && ui->checkBoxMyMasternodesOnly->isChecked()) {
-        std::vector<COutPoint> vOutpts;
-        walletModel->wallet().listProTxCoins(vOutpts);
-        for (const auto& outpt : vOutpts) {
+        for (const auto& outpt : walletModel->wallet().listProTxCoins()) {
             setOutpts.emplace(outpt);
         }
     }

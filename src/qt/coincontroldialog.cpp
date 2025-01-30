@@ -426,11 +426,10 @@ void CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
 // shows count of locked unspent outputs
 void CoinControlDialog::updateLabelLocked()
 {
-    std::vector<COutPoint> vOutpts;
-    model->wallet().listLockedCoins(vOutpts);
-    if (vOutpts.size() > 0)
+    auto locked_coins{model->wallet().listLockedCoins().size()};
+    if (locked_coins > 0)
     {
-       ui->labelLocked->setText(tr("(%1 locked)").arg(vOutpts.size()));
+       ui->labelLocked->setText(tr("(%1 locked)").arg(locked_coins));
        ui->labelLocked->setVisible(true);
     }
     else ui->labelLocked->setVisible(false);

@@ -1390,10 +1390,8 @@ static RPCHelpMan protx_list()
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
         }
 
-        std::vector<COutPoint> vOutpts;
-        wallet->ListProTxCoins(vOutpts);
         std::set<COutPoint> setOutpts;
-        for (const auto& outpt : vOutpts) {
+        for (const auto& outpt : wallet->ListProTxCoins()) {
             setOutpts.emplace(outpt);
         }
 
