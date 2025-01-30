@@ -105,6 +105,10 @@ public:
         return peer_it == m_peer_orphanage_info.end() ? 0 : peer_it->second.m_total_usage;
     }
 
+    /** Check consistency between PeerOrphanInfo and m_orphans. Recalculate counters and ensure they
+     * match what is cached. */
+    void SanityCheck() const;
+
 protected:
     struct OrphanTx : public OrphanTxBase {
         size_t list_pos;

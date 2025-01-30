@@ -321,3 +321,43 @@ std::vector<TxOrphanage::OrphanTxBase> TxOrphanage::GetOrphanTransactions() cons
     }
     return ret;
 }
+
+void TxOrphanage::SanityCheck() const
+{
+    // Check that cached m_total_announcements is correct
+    unsigned int counted_total_announcements{0};
+    // Check that m_total_orphan_usage is correct
+    unsigned int counted_total_usage{0};
+
+    // Check that cached PeerOrphanInfo::m_total_size is correct
+    std::map<NodeId, unsigned int> counted_size_per_peer;
+
+    for (const auto& [wtxid, orphan] : m_orphans) {
+        counted_total_announcements += orphan.announcers.size();
+        counted_total_usage += orphan.GetUsage();
+
+        Assume(!orphan.announcers.empty());
+        for (const auto& peer : orphan.announcers) {
+            auto& count_peer_entry = counted_size_per_peer.try_emplace(peer).first->second;
+            count_peer_entry += orphan.GetUsage();
+        }
+    }
+
+    Assume(m_total_announcements >= m_orphans.size());
+    Assume(counted_total_announcements == m_total_announcements);
+    Assume(counted_total_usage == m_total_orphan_usage);
+
+    // There must be an entry in m_peer_orphanage_info for each peer
+    // However, there may be m_peer_orphanage_info entries corresponding to peers for whom we
+    // previously had orphans but no longer do.
+    Assume(counted_size_per_peer.size() <= m_peer_orphanage_info.size());
+
+    for (const auto& [peerid, info] : m_peer_orphanage_info) {
+        auto it_counted = counted_size_per_peer.find(peerid);
+        if (it_counted == counted_size_per_peer.end()) {
+            Assume(info.m_total_usage == 0);
+        } else {
+            Assume(it_counted->second == info.m_total_usage);
+        }
+    }
+}

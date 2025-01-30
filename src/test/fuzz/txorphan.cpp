@@ -204,6 +204,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                 });
 
         }
+
         // Set tx as potential parent to be used for future GetChildren() calls.
         if (!ptx_potential_parent || fuzzed_data_provider.ConsumeBool()) {
             ptx_potential_parent = tx;
@@ -213,4 +214,5 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
         const bool get_tx_nonnull{orphanage.GetTx(tx->GetWitnessHash()) != nullptr};
         Assert(have_tx == get_tx_nonnull);
     }
+    orphanage.SanityCheck();
 }
