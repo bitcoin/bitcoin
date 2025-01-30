@@ -94,7 +94,7 @@ option(BUILD_DAEMON "Build bitcoind executable." ON)
 option(BUILD_GUI "Build bitcoin-qt executable." OFF)
 option(BUILD_CLI "Build bitcoin-cli executable." ON)
 
-option(BUILD_TESTS "Build test_bitcoin executable." ON)
+option(BUILD_TESTS "Build test_bitcoin and other unit test executables." ON)
 option(BUILD_TX "Build bitcoin-tx executable." ${BUILD_TESTS})
 option(BUILD_UTIL "Build bitcoin-util executable." ${BUILD_TESTS})
 
