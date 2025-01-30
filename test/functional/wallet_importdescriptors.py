@@ -24,6 +24,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import descsum_create
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_raises_rpc_error,
 )
 from test_framework.wallet_util import (
@@ -704,6 +705,13 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                 self.nodes[0].cli("-rpcwallet=encrypted_wallet").walletpassphrasechange("passphrase", "newpassphrase")
             except JSONRPCException as e:
                 assert e.error["code"] == -4 and "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before changing the passphrase." in e.error["message"]
+
+            wallet_info = self.nodes[0].cli("-rpcwallet=encrypted_wallet").getwalletinfo()
+            try:
+                duration = wallet_info["scanning"]["duration"]
+                assert_greater_than(duration, 0)
+            except Exception:
+                assert "scanning" not in wallet_info
 
             assert_equal(importing.result(), [{"success": True}])
 
