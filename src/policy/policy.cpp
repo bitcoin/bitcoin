@@ -302,6 +302,11 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
     return true;
 }
 
+int64_t GetSigOpsAdjustedWeight(int64_t nWeight, int64_t nSigOpCost, unsigned int bytes_per_sigop)
+{
+    return std::max(nWeight, nSigOpCost * bytes_per_sigop);
+}
+
 int64_t GetVirtualTransactionSize(int64_t nWeight, int64_t nSigOpCost, unsigned int bytes_per_sigop)
 {
     return (std::max(nWeight, nSigOpCost * bytes_per_sigop) + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR;
