@@ -12,6 +12,7 @@
              ((gnu packages installers) #:select (nsis-x86_64))
              ((gnu packages linux) #:select (linux-libre-headers-6.1))
              (gnu packages llvm)
+             (gnu packages man)
              (gnu packages mingw)
              (gnu packages pkg-config)
              ((gnu packages python) #:select (python-minimal))
@@ -545,6 +546,7 @@ inspecting signatures in Mach-O binaries.")
         gcc-toolchain-12
         cmake-minimal
         gnu-make
+        help2man
         ;; Scripting
         python-minimal ;; (3.10)
         ;; Git

@@ -453,9 +453,9 @@ install(TARGETS ${installable_targets}
 unset(installable_targets)
 
 if(INSTALL_MAN)
-  # TODO: these stubs are no longer needed. man pages should be generated at install time.
-  install(DIRECTORY ../doc/man/
+  install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/doc/man)")
+  install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E env BUILDDIR=${PROJECT_BINARY_DIR} MANDIR=${PROJECT_BINARY_DIR}/doc/man ${PROJECT_SOURCE_DIR}/contrib/devtools/gen-manpages.py --skip-missing-binaries)")
+  install(DIRECTORY ${PROJECT_BINARY_DIR}/doc/man/
     DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
-    FILES_MATCHING PATTERN *.1
   )
 endif()
