@@ -11,6 +11,7 @@
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <script/solver.h>
+#include <util/feefrac.h>
 
 #include <cstdint>
 #include <string>
@@ -187,5 +188,9 @@ static inline int64_t GetVirtualTransactionInputSize(const CTxIn& tx)
 {
     return GetVirtualTransactionInputSize(tx, 0, 0);
 }
+
+int64_t GetSigOpsAdjustedWeight(int64_t weight, int64_t sigop_cost, unsigned int bytes_per_sigop);
+
+static inline FeePerVSize ToFeePerVSize(FeePerWeight feerate) { return {feerate.fee, (feerate.size + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR}; }
 
 #endif // BITCOIN_POLICY_POLICY_H
