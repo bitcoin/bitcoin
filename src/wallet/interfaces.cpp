@@ -392,6 +392,8 @@ public:
             result.unconfirmed_watch_only_balance = bal.m_watchonly_untrusted_pending;
             result.immature_watch_only_balance = bal.m_watchonly_immature;
         }
+        result.denominated_untrusted_pending = bal.m_denominated_untrusted_pending;
+        result.denominated_trusted = bal.m_denominated_trusted;
         return result;
     }
     bool tryGetBalances(WalletBalances& balances, uint256& block_hash) override
@@ -411,15 +413,6 @@ public:
     CAmount getAnonymizableBalance(bool fSkipDenominated, bool fSkipUnconfirmed) override
     {
         return m_wallet->GetAnonymizableBalance(fSkipDenominated, fSkipUnconfirmed);
-    }
-    CAmount getDenominatedBalance(bool unconfirmed) override
-    {
-        const auto bal = m_wallet->GetBalance();
-        if (unconfirmed) {
-            return bal.m_denominated_untrusted_pending;
-        } else {
-            return bal.m_denominated_trusted;
-        }
     }
     CAmount getNormalizedAnonymizedBalance() override
     {

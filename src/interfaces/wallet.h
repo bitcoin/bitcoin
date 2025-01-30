@@ -223,9 +223,6 @@ public:
     //! Get anonymizable balance.
     virtual CAmount getAnonymizableBalance(bool fSkipDenominated, bool fSkipUnconfirmed) = 0;
 
-    //! Get denominated balance.
-    virtual CAmount getDenominatedBalance(bool unconfirmed) = 0;
-
     //! Get normalized anonymized balance.
     virtual CAmount getNormalizedAnonymizedBalance() = 0;
 
@@ -385,6 +382,8 @@ struct WalletBalances
     CAmount watch_only_balance = 0;
     CAmount unconfirmed_watch_only_balance = 0;
     CAmount immature_watch_only_balance = 0;
+    CAmount denominated_untrusted_pending = 0;
+    CAmount denominated_trusted = 0;
 
     bool balanceChanged(const WalletBalances& prev) const
     {
