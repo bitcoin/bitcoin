@@ -1213,8 +1213,12 @@ private:
                         }
                     }
                     // The dissatisfaction consists of as many empty vectors as there are keys, which is the same as
+                    InputStack nsat_return;
+                    for (size_t i = 0; i < node.keys.size(); ++i) {
+                        nsat_return = std::move(nsat_return) + ZERO;
+                    }
                     // satisfying 0 keys.
-                    auto& nsat{ZERO};
+                    auto& nsat{nsat_return};
                     assert(node.k != 0);
                     if (num_of_good_sigs < node.k)
                     {
