@@ -623,7 +623,7 @@ static RPCHelpMan getblocktemplate()
             {"template_request", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Format of the template",
             {
                 {"mode", RPCArg::Type::STR, /* treat as named arg */ RPCArg::Optional::OMITTED, "This must be set to \"template\", \"proposal\" (see BIP 23), or omitted"},
-                {"blockmaxsize", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "limit returned block to specified weight (disables template cache)"},
+                {"blockmaxsize", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "limit returned block to specified size (disables template cache)"},
                 {"blockmaxweight", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "limit returned block to specified weight (disables template cache)"},
                 {"capabilities", RPCArg::Type::ARR, /* treat as named arg */ RPCArg::Optional::OMITTED, "A list of strings",
                 {
