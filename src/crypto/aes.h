@@ -7,6 +7,7 @@
 #ifndef BITCOIN_CRYPTO_AES_H
 #define BITCOIN_CRYPTO_AES_H
 
+#include <support/allocators/secure.h>
 extern "C" {
 #include <crypto/ctaes/ctaes.h>
 }
@@ -18,7 +19,8 @@ static const int AES256_KEYSIZE = 32;
 class AES256Encrypt
 {
 private:
-    AES256_ctx ctx;
+    secure_allocator<AES256_ctx> allocator;
+    AES256_ctx *ctx;
 
 public:
     explicit AES256Encrypt(const unsigned char key[32]);
@@ -30,7 +32,8 @@ public:
 class AES256Decrypt
 {
 private:
-    AES256_ctx ctx;
+    secure_allocator<AES256_ctx> allocator;
+    AES256_ctx *ctx;
 
 public:
     explicit AES256Decrypt(const unsigned char key[32]);
