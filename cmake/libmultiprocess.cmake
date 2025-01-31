@@ -29,4 +29,10 @@ function(add_libmultiprocess subdir)
     # Add tests to "all" target so ctest can run them
     set_target_properties(mptests PROPERTIES EXCLUDE_FROM_ALL OFF)
   endif()
+  # Exclude examples from compilation database, because the examples are not
+  # built by default, and they contain generated c++ code. Without this
+  # exclusion, tools like clang-tidy and IWYU that make use of compilation
+  # database would complain that the generated c++ source files do not exist. An
+  # alternate fix could build "mpexamples" by default like "mptests" above.
+  set_target_properties(mpcalculator mpprinter mpexample PROPERTIES EXPORT_COMPILE_COMMANDS OFF)
 endfunction()
