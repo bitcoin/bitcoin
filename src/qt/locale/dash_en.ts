@@ -756,7 +756,7 @@
         <translation>%1 client</translation>
     </message>
     <message>
-        <location line="+773"/>
+        <location line="+775"/>
         <source>Wallet: %1
 </source>
         <translation>Wallet: %1
@@ -768,7 +768,7 @@
         <translation>Wallet is &lt;b&gt;unencrypted&lt;/b&gt;</translation>
     </message>
     <message>
-        <location line="-1303"/>
+        <location line="-1305"/>
         <source>&amp;File</source>
         <translation>&amp;File</translation>
     </message>
@@ -778,17 +778,7 @@
         <translation>Show information about %1</translation>
     </message>
     <message>
-        <location line="+27"/>
-        <source>Load Partially Signed Dash Transaction</source>
-        <translation>Load Partially Signed Dash Transaction</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation>Load Partially Signed Bitcoin Transaction from clipboard</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+34"/>
         <source>Open debugging and diagnostic console</source>
         <translation>Open debugging and diagnostic console</translation>
     </message>
@@ -867,7 +857,7 @@
         <translation>Network activity disabled</translation>
     </message>
     <message numerus="yes">
-        <location line="+198"/>
+        <location line="+200"/>
         <source>Processed %n block(s) of transaction history.</source>
         <translation>
             <numerusform>Processed %n block of transaction history.</numerusform>
@@ -880,12 +870,22 @@
         <translation>%1 behind</translation>
     </message>
     <message>
-        <location line="-1059"/>
+        <location line="-1061"/>
         <source>Close Wallet…</source>
         <translation>Close Wallet…</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-41"/>
+        <source>Load Partially Signed Blockchain Transaction</source>
+        <translation>Load Partially Signed Blockchain Transaction</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Load Partially Signed Blockchain Transaction from clipboard</source>
+        <translation>Load Partially Signed Blockchain Transaction from clipboard</translation>
+    </message>
+    <message>
+        <location line="+42"/>
         <source>Create Wallet…</source>
         <translation>Create Wallet…</translation>
     </message>
@@ -934,7 +934,7 @@
         <translation>Syncing Headers (%1%)…</translation>
     </message>
     <message>
-        <location line="+121"/>
+        <location line="+123"/>
         <source>Synchronizing with network…</source>
         <translation>Synchronizing with network…</translation>
     </message>
@@ -1286,7 +1286,7 @@
         <translation>Please switch to &quot;List mode&quot; to use this function.</translation>
     </message>
     <message>
-        <location line="+211"/>
+        <location line="+210"/>
         <source>(%1 locked)</source>
         <translation>(%1 locked)</translation>
     </message>
@@ -1360,7 +1360,7 @@
 <context>
     <name>CreateWalletActivity</name>
     <message>
-        <location filename="../walletcontroller.cpp" line="+257"/>
+        <location filename="../walletcontroller.cpp" line="+258"/>
         <source>Create Wallet</source>
         <extracomment>Title of window indicating the progress of creation of a new wallet.</extracomment>
         <translation>Create Wallet</translation>
@@ -1579,7 +1579,7 @@
         <translation>Filter by Title</translation>
     </message>
     <message>
-        <location filename="../governancelist.cpp" line="+410"/>
+        <location filename="../governancelist.cpp" line="+426"/>
         <source>Proposal Info: %1</source>
         <translation>Proposal Info: %1</translation>
     </message>
@@ -1671,8 +1671,8 @@
     </message>
     <message>
         <location filename="../intro.cpp" line="+199"/>
-        <source>%1 GB of free space available</source>
-        <translation>%1 GB of free space available</translation>
+        <source>%1 GB of space available</source>
+        <translation>%1 GB of space available</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1828,17 +1828,17 @@
     </message>
     <message>
         <location line="+57"/>
-        <location line="+181"/>
+        <location line="+180"/>
         <source>Please wait…</source>
         <translation>Please wait…</translation>
     </message>
     <message>
-        <location line="-132"/>
+        <location line="-130"/>
         <source>Updating…</source>
         <translation>Updating…</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+36"/>
         <source>ENABLED</source>
         <translation>ENABLED</translation>
     </message>
@@ -1879,7 +1879,7 @@
         <translation>Filter by any property (e.g. address or protx hash)</translation>
     </message>
     <message>
-        <location filename="../masternodelist.cpp" line="+120"/>
+        <location filename="../masternodelist.cpp" line="+121"/>
         <source>Additional information for DIP3 Masternode %1</source>
         <translation>Additional information for DIP3 Masternode %1</translation>
     </message>
@@ -2471,7 +2471,7 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>&amp;Cancel</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+72"/>
+        <location filename="../optionsdialog.cpp" line="+74"/>
         <source>Enable %1 features</source>
         <translation>Enable %1 features</translation>
     </message>
@@ -2847,12 +2847,17 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Failed to load transaction: %1</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+25"/>
         <source>Failed to sign transaction: %1</source>
         <translation>Failed to sign transaction: %1</translation>
     </message>
     <message>
         <location line="+8"/>
+        <source>Cannot sign inputs while wallet is locked.</source>
+        <translation>Cannot sign inputs while wallet is locked.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Could not sign any more inputs.</source>
         <translation>Could not sign any more inputs.</translation>
     </message>
@@ -3095,7 +3100,7 @@ Due to discontinued support, you should request the merchant to provide you with
 <context>
     <name>Proposal</name>
     <message>
-        <location filename="../governancelist.cpp" line="-325"/>
+        <location filename="../governancelist.cpp" line="-340"/>
         <source>Passing +%1</source>
         <translation>Passing +%1</translation>
     </message>
@@ -3108,7 +3113,7 @@ Due to discontinued support, you should request the merchant to provide you with
 <context>
     <name>ProposalModel</name>
     <message>
-        <location line="+54"/>
+        <location line="+56"/>
         <source>Yes</source>
         <translation>Yes</translation>
     </message>
@@ -3156,7 +3161,7 @@ Due to discontinued support, you should request the merchant to provide you with
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../bitcoin.cpp" line="-265"/>
+        <location filename="../bitcoin.cpp" line="-264"/>
         <source>Do you want to reset settings to default values, or to abort without making changes?</source>
         <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
         <translation>Do you want to reset settings to default values, or to abort without making changes?</translation>
@@ -3168,7 +3173,7 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</translation>
     </message>
     <message>
-        <location line="+266"/>
+        <location line="+265"/>
         <source>Choose data directory on startup (default: %u)</source>
         <translation>Choose data directory on startup (default: %u)</translation>
     </message>
@@ -3273,7 +3278,7 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>Amount</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="+301"/>
+        <location filename="../guiutil.cpp" line="+298"/>
         <source>Enter a Dash address (e.g. %1)</source>
         <translation>Enter a Dash address (e.g. %1)</translation>
     </message>
@@ -4545,7 +4550,7 @@ For more information on using this console, type %6.
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+765"/>
+        <location filename="../sendcoinsdialog.cpp" line="+766"/>
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
@@ -4803,12 +4808,7 @@ For more information on using this console, type %6.
         <translation>Cr&amp;eate Unsigned</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</translation>
-    </message>
-    <message>
-        <location line="+106"/>
+        <location line="+107"/>
         <source> from wallet &apos;%1&apos;</source>
         <translation> from wallet &apos;%1&apos;</translation>
     </message>
@@ -4916,7 +4916,12 @@ For more information on using this console, type %6.
         <translation>Send</translation>
     </message>
     <message>
-        <location line="-17"/>
+        <location line="-242"/>
+        <source>Creates a Partially Signed Blockchain Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>Creates a Partially Signed Blockchain Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</translation>
+    </message>
+    <message>
+        <location line="+225"/>
         <source>To review recipient list click &quot;Show Details…&quot;</source>
         <translation>To review recipient list click &quot;Show Details…&quot;</translation>
     </message>
@@ -5616,7 +5621,7 @@ For more information on using this console, type %6.
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="+275"/>
+        <location filename="../transactiontablemodel.cpp" line="+276"/>
         <source>Date</source>
         <translation>Date</translation>
     </message>
@@ -5631,7 +5636,7 @@ For more information on using this console, type %6.
         <translation>Address / Label</translation>
     </message>
     <message numerus="yes">
-        <location line="+81"/>
+        <location line="+78"/>
         <source>Open for %n more block(s)</source>
         <translation>
             <numerusform>Open for %n more block</numerusform>
@@ -5797,7 +5802,7 @@ For more information on using this console, type %6.
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="+69"/>
+        <location filename="../transactionview.cpp" line="+70"/>
         <location line="+13"/>
         <source>All</source>
         <translation>All</translation>
@@ -6092,19 +6097,19 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Create a new wallet</translation>
     </message>
     <message>
-        <location line="+208"/>
-        <location line="+9"/>
+        <location line="+207"/>
+        <location line="+10"/>
         <location line="+10"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location line="-19"/>
+        <location line="-20"/>
         <source>Unable to decode PSBT from clipboard (invalid base64)</source>
         <translation>Unable to decode PSBT from clipboard (invalid base64)</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Load Transaction Data</source>
         <translation>Load Transaction Data</translation>
     </message>
@@ -6194,12 +6199,7 @@ Go to File &gt; Open Wallet to load a wallet.
 <context>
     <name>dash-core</name>
     <message>
-        <location filename="../dashstrings.cpp" line="+68"/>
-        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation>Error: Listening for incoming connections failed (listen returned error %s)</translation>
-    </message>
-    <message>
-        <location line="+9"/>
+        <location filename="../dashstrings.cpp" line="+79"/>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
         <translation>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</translation>
     </message>
@@ -6214,7 +6214,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+40"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</translation>
     </message>
@@ -6224,7 +6224,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Already have that input.</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+8"/>
         <source>Collateral not valid.</source>
         <translation>Collateral not valid.</translation>
     </message>
@@ -6274,7 +6274,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Error reading from database, shutting down.</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Error: Missing checksum</source>
         <translation>Error: Missing checksum</translation>
     </message>
@@ -6294,17 +6294,12 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Failed to listen on any port. Use -listen=0 if you want this.</translation>
     </message>
     <message>
-        <location line="-247"/>
+        <location line="-248"/>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</translation>
     </message>
     <message>
-        <location line="+20"/>
-        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
-        <translation>Cannot provide specific connections and have addrman find outgoing connections at the same.</translation>
-    </message>
-    <message>
-        <location line="+41"/>
+        <location line="+59"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
         <translation>Found unconfirmed denominated outputs, will wait till they confirm to continue.</translation>
     </message>
@@ -6324,22 +6319,47 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+3"/>
+        <source>The -txindex upgrade started by a previous version cannot be completed. Restart with the previous version or run a full -reindex.</source>
+        <translation>The -txindex upgrade started by a previous version cannot be completed. Restart with the previous version or run a full -reindex.</translation>
+    </message>
+    <message>
+        <location line="+32"/>
         <source>Transaction index can&apos;t be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
         <translation>Transaction index can&apos;t be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+13"/>
+        <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
+        <translation>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</translation>
+    </message>
+    <message>
+        <location line="+37"/>
         <source>Can&apos;t mix: no compatible inputs found!</source>
         <translation>Can&apos;t mix: no compatible inputs found!</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+16"/>
         <source>Entry exceeds maximum size.</source>
         <translation>Entry exceeds maximum size.</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+13"/>
+        <source>Error upgrading Evo database</source>
+        <translation>Error upgrading Evo database</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Error upgrading evo database for EHF</source>
+        <translation>Error upgrading evo database for EHF</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Failed to commit Evo database</source>
+        <translation>Failed to commit Evo database</translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>Found enough users, signing ( waiting %s )</source>
         <translation>Found enough users, signing ( waiting %s )</translation>
     </message>
@@ -6384,7 +6404,12 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Invalid minimum number of spork signers specified with -minsporkkeys</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+6"/>
+        <source>Listening for incoming connections failed (listen returned error %s)</source>
+        <translation>Listening for incoming connections failed (listen returned error %s)</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Lock is already in place.</source>
         <translation>Lock is already in place.</translation>
     </message>
@@ -6404,7 +6429,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>No compatible Masternode found.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+5"/>
         <source>Not enough funds to mix.</source>
         <translation>Not enough funds to mix.</translation>
     </message>
@@ -6454,7 +6479,12 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Synchronizing governance objects…</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+12"/>
+        <source>Transaction change output index out of range</source>
+        <translation>Transaction change output index out of range</translation>
+    </message>
+    <message>
+        <location line="+17"/>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation>Unable to start HTTP server. See debug log for details.</translation>
     </message>
@@ -6464,12 +6494,17 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Unknown response.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+2"/>
+        <source>Unsupported global logging level -loglevel=%s. Valid values: %s.</source>
+        <translation>Unsupported global logging level -loglevel=%s. Valid values: %s.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>User Agent comment (%s) contains unsafe characters.</translation>
     </message>
     <message>
-        <location line="-170"/>
+        <location line="-172"/>
         <source>Can&apos;t find random Masternode.</source>
         <translation>Can&apos;t find random Masternode.</translation>
     </message>
@@ -6499,12 +6534,12 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Invalid script detected.</translation>
     </message>
     <message>
-        <location line="-287"/>
+        <location line="-292"/>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>%s file contains all private keys from this wallet. Do not share it with anyone!</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+56"/>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
         <translation>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</translation>
     </message>
@@ -6549,7 +6584,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Transaction needs a change address, but we can&apos;t generate it. Please call keypoolrefill first.</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+12"/>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
         <translation>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</translation>
     </message>
@@ -6584,7 +6619,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Cannot set -peerblockfilters without -blockfilterindex.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
         <translation>Config setting for %s only applied on %s network when in [%s] section.</translation>
     </message>
@@ -6609,12 +6644,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Error loading %s: Private keys can only be disabled during creation</translation>
     </message>
     <message>
-        <location line="+9"/>
-        <source>Error upgrading evo database</source>
-        <translation>Error upgrading evo database</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+11"/>
         <source>Error: Couldn&apos;t create cursor into database</source>
         <translation>Error: Couldn&apos;t create cursor into database</translation>
     </message>
@@ -6654,12 +6684,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Exceeded max tries.</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>Failed to commit EvoDB</source>
-        <translation>Failed to commit EvoDB</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+5"/>
         <source>Failed to create backup %s!</source>
         <translation>Failed to create backup %s!</translation>
     </message>
@@ -6719,7 +6744,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Invalid masternodeblsprivkey. Please see documentation.</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>Masternode queue is full.</source>
         <translation>Masternode queue is full.</translation>
     </message>
@@ -6752,11 +6777,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <location line="+1"/>
         <source>No matching denominations found for mixing.</source>
         <translation>No matching denominations found for mixing.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
-        <translation>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -6854,7 +6874,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Transaction amounts must not be negative</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Transaction has too long of a mempool chain</source>
         <translation>Transaction has too long of a mempool chain</translation>
     </message>
@@ -6904,7 +6924,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Unknown new rules activated (versionbit %i)</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Upgrading UTXO database</source>
         <translation>Upgrading UTXO database</translation>
     </message>
@@ -6949,12 +6969,12 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>see debug.log for details.</translation>
     </message>
     <message>
-        <location line="-392"/>
+        <location line="-399"/>
         <source>The %s developers</source>
         <translation>The %s developers</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+11"/>
         <source>%s uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
         <translation>%s uses exact denominated amounts to send funds, you might simply need to mix some more coins.</translation>
     </message>
@@ -7024,7 +7044,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+7"/>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
         <translation>Failed to rename invalid peers.dat file. Please move or delete it and try again.</translation>
     </message>
@@ -7089,12 +7109,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead.</translation>
     </message>
     <message>
-        <location line="+9"/>
-        <source>The -txindex upgrade started by a previous version can not be completed. Restart with the previous version or run a full -reindex.</source>
-        <translation>The -txindex upgrade started by a previous version can not be completed. Restart with the previous version or run a full -reindex.</translation>
-    </message>
-    <message>
-        <location line="+8"/>
+        <location line="+17"/>
         <source>The block index db contains a legacy &apos;txindex&apos;. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
         <translation>The block index db contains a legacy &apos;txindex&apos;. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</translation>
     </message>
@@ -7124,7 +7139,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Unknown wallet file format &quot;%s&quot; provided. Please provide one of &quot;bdb&quot; or &quot;sqlite&quot;.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+11"/>
         <source>Warning: Dumpfile wallet format &quot;%s&quot; does not match command line specified format &quot;%s&quot;.</source>
         <translation>Warning: Dumpfile wallet format &quot;%s&quot; does not match command line specified format &quot;%s&quot;.</translation>
     </message>
@@ -7189,11 +7204,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Cannot write to data directory &apos;%s&apos;; check permissions.</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Change index out of range</source>
-        <translation>Change index out of range</translation>
-    </message>
-    <message>
         <location line="+3"/>
         <source>Copyright (C)</source>
         <translation>Copyright (C)</translation>
@@ -7239,12 +7249,12 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Error reading next record from wallet database</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Error upgrading chainstate database</source>
         <translation>Error upgrading chainstate database</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+60"/>
         <source>Loading P2P addresses…</source>
         <translation>Loading P2P addresses…</translation>
     </message>
@@ -7264,7 +7274,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Loading wallet…</translation>
     </message>
     <message>
-        <location line="-49"/>
+        <location line="-50"/>
         <source>Failed to clear fulfilled requests cache at %s</source>
         <translation>Failed to clear fulfilled requests cache at %s</translation>
     </message>
@@ -7389,12 +7399,22 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Last queue was created too recently.</translation>
     </message>
     <message>
-        <location line="-292"/>
+        <location line="-297"/>
         <source>%s corrupt. Try using the wallet tool dash-wallet to salvage or restoring a backup.</source>
         <translation>%s corrupt. Try using the wallet tool dash-wallet to salvage or restoring a backup.</translation>
     </message>
     <message>
-        <location line="+293"/>
+        <location line="+6"/>
+        <source>%s request to listen on port %u. This port is considered &quot;bad&quot; and thus it is unlikely that any Dash Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation>%s request to listen on port %u. This port is considered &quot;bad&quot; and thus it is unlikely that any Dash Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
+        <translation>Cannot provide specific connections and have addrman find outgoing connections at the same time.</translation>
+    </message>
+    <message>
+        <location line="+265"/>
         <source>Last successful action was too recent.</source>
         <translation>Last successful action was too recent.</translation>
     </message>
@@ -7424,7 +7444,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Transaction amount too small</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Transaction created successfully.</source>
         <translation>Transaction created successfully.</translation>
     </message>
@@ -7474,7 +7494,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Unknown state: id = %u</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Unsupported logging category %s=%s.</source>
         <translation>Unsupported logging category %s=%s.</translation>
     </message>
@@ -7529,7 +7549,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Your entries added successfully.</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="-584"/>
+        <location filename="../bitcoin.cpp" line="-583"/>
         <source>Settings file could not be read</source>
         <translation>Settings file could not be read</translation>
     </message>
