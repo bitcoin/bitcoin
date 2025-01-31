@@ -12,32 +12,34 @@ extern "C" {
 
 AES256Encrypt::AES256Encrypt(const unsigned char key[32])
 {
-    AES256_init(&ctx, key);
+    ctx = allocator.allocate(1);
+    AES256_init(ctx, key);
 }
 
 AES256Encrypt::~AES256Encrypt()
 {
-    memset(&ctx, 0, sizeof(ctx));
+    allocator.deallocate(ctx, 1);
 }
 
 void AES256Encrypt::Encrypt(unsigned char ciphertext[16], const unsigned char plaintext[16]) const
 {
-    AES256_encrypt(&ctx, 1, ciphertext, plaintext);
+    AES256_encrypt(ctx, 1, ciphertext, plaintext);
 }
 
 AES256Decrypt::AES256Decrypt(const unsigned char key[32])
 {
-    AES256_init(&ctx, key);
+    ctx = allocator.allocate(1);
+    AES256_init(ctx, key);
 }
 
 AES256Decrypt::~AES256Decrypt()
 {
-    memset(&ctx, 0, sizeof(ctx));
+    allocator.deallocate(ctx, 1);
 }
 
 void AES256Decrypt::Decrypt(unsigned char plaintext[16], const unsigned char ciphertext[16]) const
 {
-    AES256_decrypt(&ctx, 1, plaintext, ciphertext);
+    AES256_decrypt(ctx, 1, plaintext, ciphertext);
 }
 
 
