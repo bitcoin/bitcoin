@@ -315,6 +315,7 @@ profiledir_for_host() {
     echo "${PROFILES_BASE}/${1}${2:+-${2}}"
 }
 
+CONFIG_FLAGS="${CONFIG_FLAGS:--DREDUCE_EXPORTS=ON -DBUILD_BENCH=OFF -DBUILD_GUI_TESTS=OFF -DBUILD_FUZZ_BINARY=OFF}"
 
 #########
 # BUILD #
@@ -362,6 +363,7 @@ INFO: Building ${VERSION:?not set} for platform triple ${HOST:?not set}:
       ...outputting in: '$(outdir_for_host "$HOST")'
           ...bind-mounted in container to: '$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST")'
       DEP_OPTS: ${DEP_OPTS}
+      CONFIG_FLAGS: ${CONFIG_FLAGS}
       ADDITIONAL FLAGS (if set)
           ADDITIONAL_GUIX_COMMON_FLAGS: ${ADDITIONAL_GUIX_COMMON_FLAGS}
           ADDITIONAL_GUIX_ENVIRONMENT_FLAGS: ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS}
@@ -464,6 +466,7 @@ EOF
                                         OUTDIR="$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST")" \
                                         DIST_ARCHIVE_BASE=/outdir-base/dist-archive \
                                         DEP_OPTS="$DEP_OPTS" \
+                                        CONFIG_FLAGS="$CONFIG_FLAGS" \
                                       bash -c "cd /bitcoin && bash contrib/guix/libexec/build.sh"
     )
 
