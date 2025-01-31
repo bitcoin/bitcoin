@@ -49,9 +49,10 @@ public:
     int Encrypt(const unsigned char* data, int size, unsigned char* out) const;
 
 private:
+    secure_allocator<unsigned char> allocator;
     const AES256Encrypt enc;
     const bool pad;
-    unsigned char iv[AES_BLOCKSIZE];
+    unsigned char *iv;
 };
 
 class AES256CBCDecrypt
@@ -62,9 +63,10 @@ public:
     int Decrypt(const unsigned char* data, int size, unsigned char* out) const;
 
 private:
+    secure_allocator<unsigned char> allocator;
     const AES256Decrypt dec;
     const bool pad;
-    unsigned char iv[AES_BLOCKSIZE];
+    unsigned char *iv;
 };
 
 #endif // BITCOIN_CRYPTO_AES_H
