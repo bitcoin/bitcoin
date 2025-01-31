@@ -4126,6 +4126,20 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
         }
     }
 
+    // Fix for the Murch-Zawy attack. See https://delvingbitcoin.org/t/zawy-s-alternating-timestamp-attack/1062 .
+    // TL;DR: the duration of a retarget period must not be negative or the difficulty adjustment limit may be exploited to unduly
+    // reduce difficulty similarly to the timewarp vulnerability. Along with the timewarp fix, this effectively makes retarget periods
+    // monotonic (modulo the timewarp fix grace period).
+    const bool is_last_block{nHeight % dai == dai - 1};
+    if (is_last_block && DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_CONSENSUSCLEANUP)) {
+        int first_height{nHeight - dai + 1};
+        const CBlockIndex* first_block{Assert(pindexPrev->GetAncestor(first_height))};
+        if (block.GetBlockTime() < first_block->GetBlockTime()) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-negative-interval",
+                                 "the last block’s timestamp in the difficulty adjustment interval is earlier than the first block’s");
+        }
+    }
+
     // Check timestamp
     if (block.Time() > NodeClock::now() + std::chrono::seconds{MAX_FUTURE_BLOCK_TIME}) {
         return state.Invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "time-too-new", "block timestamp too far in the future");
