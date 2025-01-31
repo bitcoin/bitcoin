@@ -934,6 +934,18 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
  [ AC_MSG_RESULT([no])]
 )
 
+AC_MSG_CHECKING([for dllexport attribute])
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+  __declspec(dllexport) int foo(void);
+  int main(){}
+  ])],
+  [
+    AC_DEFINE([HAVE_DLLEXPORT_ATTRIBUTE], [1], [Define if the dllexport attribute is supported.])
+    AC_MSG_RESULT([yes])
+  ],
+  [AC_MSG_RESULT([no])]
+)
+
 AC_MSG_CHECKING(for macOS iopolicy functions)
 AC_COMPILE_IFELSE([
   AC_LANG_PROGRAM([[
