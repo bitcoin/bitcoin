@@ -615,14 +615,6 @@
         <translation>顯示有關%1 的相關信息</translation>
     </message>
     <message>
-        <source>Load Partially Signed Dash Transaction</source>
-        <translation>加載部分簽名的達世幣交易</translation>
-    </message>
-    <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation>從剪貼簿加載部分簽名的比特幣交易</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>開啟偵錯和診斷控制台</translation>
     </message>
@@ -1330,10 +1322,6 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>使用自定的資料目錄:</translation>
-    </message>
-    <message>
-        <source>%1 GB of free space available</source>
-        <translation>還有 %1 GB 可用空間</translation>
     </message>
     <message>
         <source>(of %1 GB needed)</source>
@@ -3769,10 +3757,6 @@ For more information on using this console, type %6.
         <translation>建立未簽名的(&amp;E)</translation>
     </message>
     <message>
-        <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation>創建部分簽名的比特幣交易 (PSBT) 以用於例如離線 %1 錢包，或 PSBT 相容的硬體錢包。</translation>
-    </message>
-    <message>
         <source> from wallet '%1'</source>
         <translation>來自錢包“%1”</translation>
     </message>
@@ -4853,10 +4837,6 @@ Go to File &gt; Open Wallet to load a wallet.
 <context>
     <name>dash-core</name>
     <message>
-        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation>錯誤: 聽候外來連線失敗(回傳錯誤 %s)</translation>
-    </message>
-    <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
         <translation>費用估算失敗。 後備費用已禁用。 請等待幾個區塊或啟用-fallbackfee。</translation>
     </message>
@@ -4935,10 +4915,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee設置得非常高! 這樣多的費用將在一筆交易中支付。</translation>
-    </message>
-    <message>
-        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
-        <translation>無法提供特定的連接，並且讓addrman同時找到傳出的連接。</translation>
     </message>
     <message>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
@@ -5185,10 +5161,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>加載 %s 時出錯: 私鑰只能在創建期間禁用</translation>
     </message>
     <message>
-        <source>Error upgrading evo database</source>
-        <translation>升級evo數據庫時出錯</translation>
-    </message>
-    <message>
         <source>Error: Couldn't create cursor into database</source>
         <translation>錯誤：無法在資料庫中建立遊標</translation>
     </message>
@@ -5219,10 +5191,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Exceeded max tries.</source>
         <translation>超過最大嘗試的次數。</translation>
-    </message>
-    <message>
-        <source>Failed to commit EvoDB</source>
-        <translation>提交EvoDB失敗</translation>
     </message>
     <message>
         <source>Failed to create backup %s!</source>
@@ -5299,10 +5267,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>No matching denominations found for mixing.</source>
         <translation>沒有找到匹配的金額用作資金混合。</translation>
-    </message>
-    <message>
-        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
-        <translation>未指定代理伺服器。使用-proxy=&lt;ip&gt; 或 -proxy=&lt;ip:port&gt;.</translation>
     </message>
     <message>
         <source>Not compatible with existing transactions.</source>
@@ -5569,10 +5533,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>修剪模式與 -reindex-chainstate 不相容。請改用 full -reindex。</translation>
     </message>
     <message>
-        <source>The -txindex upgrade started by a previous version can not be completed. Restart with the previous version or run a full -reindex.</source>
-        <translation>由先前版本啟動的-txindex升級無法完成。使用先前的版本重新啟動或運行完整的-reindex。</translation>
-    </message>
-    <message>
         <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
         <translation>區塊索引資料庫包含遺留的“txindex”。若要清除已佔用的磁碟空間，請執行 full -reindex，否則忽略此錯誤。該錯誤訊息將不會再次顯示。</translation>
     </message>
@@ -5647,10 +5607,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Cannot write to data directory '%s'; check permissions.</source>
         <translation>無法寫入數據到目錄 '%s'; 請檢查相關權限。</translation>
-    </message>
-    <message>
-        <source>Change index out of range</source>
-        <translation>找零的索引值超出範圍</translation>
     </message>
     <message>
         <source>Copyright (C)</source>

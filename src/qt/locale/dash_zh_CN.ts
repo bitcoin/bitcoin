@@ -615,14 +615,6 @@
         <translation>显示有关%1的相关信息</translation>
     </message>
     <message>
-        <source>Load Partially Signed Dash Transaction</source>
-        <translation>读取部分签名的 Dash 交易</translation>
-    </message>
-    <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation>从剪切板读取部分签名的 Bitcoin 交易</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>打开调试和诊断控制台</translation>
     </message>
@@ -1330,10 +1322,6 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>使用自定义的数据目录：</translation>
-    </message>
-    <message>
-        <source>%1 GB of free space available</source>
-        <translation>%1GB的可用空间</translation>
     </message>
     <message>
         <source>(of %1 GB needed)</source>
@@ -3769,10 +3757,6 @@ For more information on using this console, type %6.
         <translation>创&amp;建未签名的</translation>
     </message>
     <message>
-        <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation>如使用一个离线的 %1 钱包, 或一个PSBT兼容的硬件钱包来创建一个部分签名的比特币交易 (PSBT).</translation>
-    </message>
-    <message>
         <source> from wallet '%1'</source>
         <translation>来自钱包 '%1'</translation>
     </message>
@@ -4853,10 +4837,6 @@ Go to File &gt; Open Wallet to load a wallet.
 <context>
     <name>dash-core</name>
     <message>
-        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation>错误：监听外来连接失败(监听回馈错误 %s)</translation>
-    </message>
-    <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
         <translation>费用估算失败. 备用费用已禁用. 请等待几个区块或启用-fallbackfee。</translation>
     </message>
@@ -4935,10 +4915,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee 设定了很高的金额！这是您一次交易就有可能付出的手续费。</translation>
-    </message>
-    <message>
-        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
-        <translation>无法提供特定的连接, 并同时让addrman找到传出的连接.</translation>
     </message>
     <message>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
@@ -5185,10 +5161,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>加载 %s时出错: 私钥只能在创建期间禁用</translation>
     </message>
     <message>
-        <source>Error upgrading evo database</source>
-        <translation>升级evo数据库出错</translation>
-    </message>
-    <message>
         <source>Error: Couldn't create cursor into database</source>
         <translation>错误: 无法在数据库中创建光标</translation>
     </message>
@@ -5219,10 +5191,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Exceeded max tries.</source>
         <translation>超过最大尝试次数.</translation>
-    </message>
-    <message>
-        <source>Failed to commit EvoDB</source>
-        <translation>无法提交EvoDB</translation>
     </message>
     <message>
         <source>Failed to create backup %s!</source>
@@ -5299,10 +5267,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>No matching denominations found for mixing.</source>
         <translation>没有找到匹配的金额用作资金混合。</translation>
-    </message>
-    <message>
-        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
-        <translation>未指定代理服务器. 使用  -proxy=&lt;ip&gt; 或 -proxy=&lt;ip:port&gt;.</translation>
     </message>
     <message>
         <source>Not compatible with existing transactions.</source>
@@ -5509,6 +5473,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>错误: 转储文件格式记录不正确. 得到 "%s", 预期 "format".</translation>
     </message>
     <message>
+        <source>Error: Dumpfile identifier record is incorrect. Got "%s", expected "%s".</source>
+        <translation>错误: 转储文件识别符记录不正确. 得到 "%s", 预期 "%s".</translation>
+    </message>
+    <message>
         <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
         <translation>错误: 转储文件版本不受支持. 此 bitcoin-wallet 的版本仅支持版本 1 的转储文件. 获得的转储文件版本为 %s.</translation>
     </message>
@@ -5563,10 +5531,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead.</source>
         <translation>修剪模式与 -reindex-chainstate 不兼容. 使用完整的 -reindex.</translation>
-    </message>
-    <message>
-        <source>The -txindex upgrade started by a previous version can not be completed. Restart with the previous version or run a full -reindex.</source>
-        <translation>由先前版本开启的 -txindex 升级无法完成. 请使用先前版本重新启动或执行完整的 -reindex.</translation>
     </message>
     <message>
         <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
@@ -5643,10 +5607,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Cannot write to data directory '%s'; check permissions.</source>
         <translation>无法写入数据目录 '%s'; 请检查权限.</translation>
-    </message>
-    <message>
-        <source>Change index out of range</source>
-        <translation>修改索引超过范围</translation>
     </message>
     <message>
         <source>Copyright (C)</source>
