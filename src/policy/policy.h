@@ -143,7 +143,7 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFee);
 
 bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFee);
 
-bool IsStandard(const CScript& scriptPubKey, const kernel::MemPoolOptions& opts, TxoutType& whichType);
+bool IsStandard(const CScript& scriptPubKey, const std::optional<unsigned>& max_datacarrier_bytes, TxoutType& whichType);
 
 /** Get the vout index numbers of all dust outputs */
 std::vector<uint32_t> GetDust(const CTransaction& tx, CFeeRate dust_relay_rate);
