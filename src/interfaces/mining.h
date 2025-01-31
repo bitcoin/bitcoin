@@ -64,6 +64,9 @@ public:
      *                      for the next block should rise (default infinite).
      *
      * @returns a new BlockTemplate or nothing if the timeout occurs.
+     *
+     * On testnet this will additionally return a template with difficulty 1 if
+     * the tip is more than 20 minutes old.
      */
     virtual std::unique_ptr<BlockTemplate> waitNext(const node::BlockWaitOptions options = {}) = 0;
 };
