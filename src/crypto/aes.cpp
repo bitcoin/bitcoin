@@ -123,6 +123,7 @@ static int CBCDecrypt(const T& dec, const unsigned char iv[AES_BLOCKSIZE], const
 AES256CBCEncrypt::AES256CBCEncrypt(const unsigned char key[AES256_KEYSIZE], const unsigned char ivIn[AES_BLOCKSIZE], bool padIn)
     : enc(key), pad(padIn)
 {
+    iv = allocator.allocate(AES_BLOCKSIZE);
     memcpy(iv, ivIn, AES_BLOCKSIZE);
 }
 
@@ -133,12 +134,13 @@ int AES256CBCEncrypt::Encrypt(const unsigned char* data, int size, unsigned char
 
 AES256CBCEncrypt::~AES256CBCEncrypt()
 {
-    memset(iv, 0, sizeof(iv));
+    allocator.deallocate(iv, AES_BLOCKSIZE);
 }
 
 AES256CBCDecrypt::AES256CBCDecrypt(const unsigned char key[AES256_KEYSIZE], const unsigned char ivIn[AES_BLOCKSIZE], bool padIn)
     : dec(key), pad(padIn)
 {
+    iv = allocator.allocate(AES_BLOCKSIZE);
     memcpy(iv, ivIn, AES_BLOCKSIZE);
 }
 
@@ -150,5 +152,5 @@ int AES256CBCDecrypt::Decrypt(const unsigned char* data, int size, unsigned char
 
 AES256CBCDecrypt::~AES256CBCDecrypt()
 {
-    memset(iv, 0, sizeof(iv));
+    allocator.deallocate(iv, AES_BLOCKSIZE);
 }
