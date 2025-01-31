@@ -1,0 +1,100 @@
+Taken from https://github.com/qt/qtbase/commit/8c8b9a4173f4add522ec13de85107deba7c82da0.
+Unclean cherry-pick with the restoration of Q_DECL_CONSTEXPR.
+Can be dropped with Qt 6.0.
+
+    Normalize rounding
+    
+    Change the rounding of negative half values to match standard C++
+    round, this will also allow future optimizations.
+    
+    Change-Id: I8f8c71bed1f05891e82ea787c6bc284297de9c5c
+    Reviewed-by: Thiago Macieira <thiago.macieira@intel.com>
+
+diff --git a/src/corelib/global/qglobal.cpp b/src/corelib/global/qglobal.cpp
+index 5ad82c259de..b64f772fe3f 100644
+--- a/qtbase/src/corelib/global/qglobal.cpp
++++ b/qtbase/src/corelib/global/qglobal.cpp
+@@ -994,7 +994,7 @@ Q_STATIC_ASSERT((std::is_same<qsizetype, qptrdiff>::value));
+ 
+     Rounds \a d to the nearest integer.
+ 
+-    Rounds half up (e.g. 0.5 -> 1, -0.5 -> 0).
++    Rounds half away from zero (e.g. 0.5 -> 1, -0.5 -> -1).
+ 
+     Example:
+ 
+@@ -1006,7 +1006,7 @@ Q_STATIC_ASSERT((std::is_same<qsizetype, qptrdiff>::value));
+ 
+     Rounds \a d to the nearest integer.
+ 
+-    Rounds half up (e.g. 0.5f -> 1, -0.5f -> 0).
++    Rounds half away from zero (e.g. 0.5f -> 1, -0.5f -> -1).
+ 
+     Example:
+ 
+@@ -1018,7 +1018,7 @@ Q_STATIC_ASSERT((std::is_same<qsizetype, qptrdiff>::value));
+ 
+     Rounds \a d to the nearest 64-bit integer.
+ 
+-    Rounds half up (e.g. 0.5 -> 1, -0.5 -> 0).
++    Rounds half away from zero (e.g. 0.5 -> 1, -0.5 -> -1).
+ 
+     Example:
+ 
+@@ -1030,7 +1030,7 @@ Q_STATIC_ASSERT((std::is_same<qsizetype, qptrdiff>::value));
+ 
+     Rounds \a d to the nearest 64-bit integer.
+ 
+-    Rounds half up (e.g. 0.5f -> 1, -0.5f -> 0).
++    Rounds half away from zero (e.g. 0.5f -> 1, -0.5f -> -1).
+ 
+     Example:
+ 
+diff --git a/src/corelib/global/qglobal.h b/src/corelib/global/qglobal.h
+index ff7167d9cc9..44b71760d25 100644
+--- a/qtbase/src/corelib/global/qglobal.h
++++ b/qtbase/src/corelib/global/qglobal.h
+@@ -660,14 +660,14 @@ template <typename T>
+ Q_DECL_CONSTEXPR inline T qAbs(const T &t) { return t >= 0 ? t : -t; }
+ 
+ Q_DECL_CONSTEXPR inline int qRound(double d)
+-{ return d >= 0.0 ? int(d + 0.5) : int(d - double(int(d-1)) + 0.5) + int(d-1); }
++{ return d >= 0.0 ? int(d + 0.5) : int(d - 0.5); }
+ Q_DECL_CONSTEXPR inline int qRound(float d)
+-{ return d >= 0.0f ? int(d + 0.5f) : int(d - float(int(d-1)) + 0.5f) + int(d-1); }
++{ return d >= 0.0f ? int(d + 0.5f) : int(d - 0.5f); }
+ 
+ Q_DECL_CONSTEXPR inline qint64 qRound64(double d)
+-{ return d >= 0.0 ? qint64(d + 0.5) : qint64(d - double(qint64(d-1)) + 0.5) + qint64(d-1); }
++{ return d >= 0.0 ? qint64(d + 0.5) : qint64(d - 0.5); }
+ Q_DECL_CONSTEXPR inline qint64 qRound64(float d)
+-{ return d >= 0.0f ? qint64(d + 0.5f) : qint64(d - float(qint64(d-1)) + 0.5f) + qint64(d-1); }
++{ return d >= 0.0f ? qint64(d + 0.5f) : qint64(d - 0.5f); }
+ 
+ template <typename T>
+ constexpr inline const T &qMin(const T &a, const T &b) { return (a < b) ? a : b; }
+diff --git a/tests/auto/corelib/tools/qpointf/tst_qpointf.cpp b/tests/auto/corelib/tools/qpointf/tst_qpointf.cpp
+index e78a8e30823..ef08352dfc8 100644
+--- a/qtbase/tests/auto/corelib/tools/qpointf/tst_qpointf.cpp
++++ b/qtbase/tests/auto/corelib/tools/qpointf/tst_qpointf.cpp
+@@ -381,7 +381,7 @@ void tst_QPointF::toPoint_data()
+ 
+     QTest::newRow("(0.0, 0.0) ==> (0, 0)") << QPointF(0, 0) << QPoint(0, 0);
+     QTest::newRow("(0.5, 0.5) ==> (1, 1)") << QPointF(0.5, 0.5) << QPoint(1, 1);
+-    QTest::newRow("(-0.5, -0.5) ==> (0, 0)") << QPointF(-0.5, -0.5) << QPoint(0, 0);
++    QTest::newRow("(-0.5, -0.5) ==> (-1, -1)") << QPointF(-0.5, -0.5) << QPoint(-1, -1);
+ }
+ 
+ void tst_QPointF::toPoint()
+diff --git a/tests/auto/widgets/graphicsview/qgraphicsview/tst_qgraphicsview.cpp b/tests/auto/widgets/graphicsview/qgraphicsview/tst_qgraphicsview.cpp
+index f1efeebd91e..83154aa8b74 100644
+--- a/qtbase/tests/auto/widgets/graphicsview/qgraphicsview/tst_qgraphicsview.cpp
++++ b/qtbase/tests/auto/widgets/graphicsview/qgraphicsview/tst_qgraphicsview.cpp
+@@ -4893,6 +4893,7 @@ public:
+     {
+         setFlag(QGraphicsItem::ItemIsFocusable, true);
+         setFlag(QGraphicsItem::ItemAcceptsInputMethod, true);
++        setPen(Qt::NoPen); // Avoid adding a half pixel border to the rect.
+     }
+ 
+     QVariant inputMethodQuery(Qt::InputMethodQuery) const
