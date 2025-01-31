@@ -28,16 +28,25 @@
 #include <utility>
 
 namespace node {
+
+int64_t GetMinimumTime(const CBlockIndex* pindexPrev, const int64_t difficulty_adjustment_interval)
+{
+    int64_t min_time{pindexPrev->GetMedianTimePast() + 1};
+    // Height of block to be mined.
+    const int height{pindexPrev->nHeight + 1};
+    // Account for BIP94 timewarp rule on all networks. This makes future
+    // activation safer.
+    if (height % difficulty_adjustment_interval == 0) {
+        min_time = std::max<int64_t>(min_time, pindexPrev->GetBlockTime() - MAX_TIMEWARP);
+    }
+    return min_time;
+}
+
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
     int64_t nOldTime = pblock->nTime;
-    int64_t nNewTime{std::max<int64_t>(pindexPrev->GetMedianTimePast() + 1, TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()))};
-
-    // Height of block to be mined.
-    const int height{pindexPrev->nHeight + 1};
-    if (height % consensusParams.DifficultyAdjustmentInterval() == 0) {
-        nNewTime = std::max<int64_t>(nNewTime, pindexPrev->GetBlockTime() - MAX_TIMEWARP);
-    }
+    int64_t nNewTime{std::max<int64_t>(GetMinimumTime(pindexPrev, consensusParams.DifficultyAdjustmentInterval()),
+                                       TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()))};
 
     if (nOldTime < nNewTime) {
         pblock->nTime = nNewTime;
