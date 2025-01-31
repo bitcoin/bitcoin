@@ -314,10 +314,13 @@ mkdir -p "$DISTSRC"
         find . -name "lib*.la" -delete
         find . -name "lib*.a" -delete
 
+        # Prune pkg-config files
+        rm -rf "${DISTNAME}/lib/pkgconfig"
+
         case "$HOST" in
             *darwin*) ;;
             *)
-                # Split binaries from their debug symbols
+                # Split binaries and libraries from their debug symbols
                 {
                     find "${DISTNAME}/bin" -type f -executable -print0
                 } | xargs -0 -P"$JOBS" -I{} "${DISTSRC}/contrib/devtools/split-debug.sh" {} {} {}.dbg
