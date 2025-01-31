@@ -18,6 +18,8 @@
 #build tests
 test/lint/test_runner/target/
 
+libbitcoinconsensus.pc
+
 /guix-build-*
 
 /ci/scratch/

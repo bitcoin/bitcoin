@@ -143,6 +143,7 @@ target_raw_data_sources(test_bitcoin NAMESPACE test::data
 target_link_libraries(test_bitcoin
   core_interface
   test_util
+  $<TARGET_NAME_IF_EXISTS:bitcoinconsensus>
   bitcoin_cli
   bitcoin_node
   bitcoin_consensus
@@ -208,4 +209,5 @@ endfunction()
 
 add_all_test_targets()
 
+make_libbitcoinconsensus_dll_available(test_bitcoin)
 install_binary_component(test_bitcoin)

@@ -93,6 +93,7 @@ include(CMakeDependentOption)
 option(BUILD_DAEMON "Build bitcoind executable." ON)
 option(BUILD_GUI "Build bitcoin-qt executable." OFF)
 option(BUILD_CLI "Build bitcoin-cli executable." ON)
+option(BUILD_BITCOINCONSENSUS_LIB "Build libbitcoinconsensus library." ON)
 
 option(BUILD_TESTS "Build test_bitcoin executable." ON)
 option(BUILD_TX "Build bitcoin-tx executable." ${BUILD_TESTS})
@@ -218,6 +219,7 @@ if(BUILD_FOR_FUZZING)
   message(WARNING "BUILD_FOR_FUZZING=ON will disable all other targets and force BUILD_FUZZ_BINARY=ON.")
   set(BUILD_DAEMON OFF)
   set(BUILD_CLI OFF)
+  set(BUILD_BITCOINCONSENSUS_LIB OFF)
   set(BUILD_TX OFF)
   set(BUILD_UTIL OFF)
   set(BUILD_UTIL_CHAINSTATE OFF)
@@ -236,8 +238,16 @@ if(BUILD_FOR_FUZZING)
   )
 endif()
 
+# The external_lib_interface interface library aims to encapsulate build flags, which
+# are specific to non-internal libraries.
+# It is intended to be a usage requirement for non-internal library
+# targets.
+add_library(external_lib_interface INTERFACE)
+
 include(TryAppendCXXFlags)
 include(TryAppendLinkerFlag)
+
+try_append_linker_flag("-Wl,--no-undefined" TARGET external_lib_interface)
 
 # Redefine/adjust per-configuration flags.
 target_compile_definitions(core_interface_debug INTERFACE
@@ -561,6 +571,10 @@ if(WERROR)
   unset(werror_flag)
 endif()
 
+if(BUILD_BITCOINCONSENSUS_LIB)
+  set(HAVE_CONSENSUS_LIB TRUE)
+endif()
+
 # Prefer Unix-style package components over frameworks on macOS.
 # This improves compatibility with Python version managers.
 set(Python3_FIND_FRAMEWORK LAST CACHE STRING "")
@@ -644,6 +658,7 @@ else()
 endif()
 message("  bitcoin-gui (GUI, multiprocess) ..... ${bitcoin_gui_status}")
 message("  bitcoin-cli ......................... ${BUILD_CLI}")
+message("  libbitcoinconsensus ................. ${BUILD_BITCOINCONSENSUS_LIB}")
 message("  bitcoin-tx .......................... ${BUILD_TX}")
 message("  bitcoin-util ........................ ${BUILD_UTIL}")
 message("  bitcoin-wallet ...................... ${BUILD_WALLET_TOOL}")

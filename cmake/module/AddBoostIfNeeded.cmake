@@ -3,6 +3,25 @@
 # file COPYING or https://opensource.org/license/mit/.
 
 function(add_boost_if_needed)
+  if(BUILD_DAEMON)
+  elseif(BUILD_CLI)
+  # BUILD_BITCOINCONSENSUS_LIB does NOT require boost
+  elseif(BUILD_TX)
+  elseif(BUILD_UTIL)
+  elseif(BUILD_UTIL_CHAINSTATE)
+  elseif(BUILD_KERNEL_LIB)
+  elseif(BUILD_WALLET_TOOL)
+  elseif(BUILD_GUI)
+  elseif(BUILD_TESTS)
+  elseif(BUILD_GUI_TESTS)
+  elseif(BUILD_BENCH)
+  elseif(BUILD_FUZZ_BINARY)
+  else()
+    # No targets that require boost; but we still define them, so make a dummy "library"
+    add_library(Boost::headers INTERFACE IMPORTED)
+    return()
+  endif()
+
   #[=[
   TODO: Not all targets, which will be added in the future, require
         Boost. Therefore, a proper check will be appropriate here.
