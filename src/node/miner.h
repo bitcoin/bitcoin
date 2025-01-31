@@ -6,6 +6,7 @@
 #ifndef BITCOIN_NODE_MINER_H
 #define BITCOIN_NODE_MINER_H
 
+#include <consensus/amount.h>
 #include <node/types.h>
 #include <policy/policy.h>
 #include <primitives/block.h>

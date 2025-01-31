@@ -84,7 +84,7 @@ static BlockAssembler::Options ClampOptions(BlockAssembler::Options options)
 
 BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options)
     : chainparams{chainstate.m_chainman.GetParams()},
-      m_mempool{options.use_mempool ? mempool : nullptr},
+      m_mempool{mempool},
       m_chainstate{chainstate},
       m_options{ClampOptions(options)}
 {
@@ -144,8 +144,14 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
 
     int nPackagesSelected = 0;
     int nDescendantsUpdated = 0;
-    if (m_mempool) {
+    if (m_options.use_mempool && m_mempool) {
         addPackageTxs(nPackagesSelected, nDescendantsUpdated);
+    } else if (m_options.txs.size() > 0) {
+        LOCK(m_mempool->cs);
+        auto txs = m_mempool->GetIterVec(m_options.txs);
+        for (auto iter = txs.begin(); iter != txs.end(); iter++) {
+            AddToBlock(*iter);
+        }
     }
 
     const auto time_1{SteadyClock::now()};

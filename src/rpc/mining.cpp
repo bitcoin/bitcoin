@@ -374,16 +374,18 @@ static RPCHelpMan generateblock()
     {
         LOCK(chainman.GetMutex());
         {
-            std::unique_ptr<BlockTemplate> block_template{miner.createNewBlock({.use_mempool = false, .coinbase_output_script = coinbase_output_script})};
+            // Add transactions
+            std::vector<uint256> txIds;
+            std::transform(txs.begin(), txs.end(), std::back_inserter(txIds),
+                        [](const CTransactionRef& txid) { return txid.get()->GetHash().ToUint256(); });
+            std::unique_ptr<BlockTemplate> block_template{miner.createNewBlock({.use_mempool = false, .coinbase_output_script = coinbase_output_script, .txs = txIds})};
             CHECK_NONFATAL(block_template);
 
             block = block_template->getBlock();
         }
 
-        CHECK_NONFATAL(block.vtx.size() == 1);
+        CHECK_NONFATAL(block.vtx.size() == txs.size()+1);
 
-        // Add transactions
-        block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
         RegenerateCommitments(block, chainman);
 
         BlockValidationState state;

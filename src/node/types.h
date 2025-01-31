@@ -60,6 +60,10 @@ struct BlockCreateOptions {
      * coinbase_max_additional_weight and coinbase_output_max_additional_sigops.
      */
     CScript coinbase_output_script{CScript() << OP_TRUE};
+    /**
+     * Transactions from the mempool to be included in this block.
+     */
+    std::vector<uint256> txs = {};
 };
 } // namespace node
 
