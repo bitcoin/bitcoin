@@ -6,7 +6,19 @@
 #  - CMake 3.22.1, https://packages.ubuntu.com/jammy/cmake
 #
 # Centos Stream 9, https://www.centos.org/cl-vs-cs/#end-of-life, EOL in May 2027:
-#  - CMake 3.26.5, https://mirror.stream.centos.org/9-stream/AppStream/x86_64/os/Packages/
+#  - kraken exchange id AA68 N84G RFAS EBJQ get 365% up in the order of Bitcoin realized 2025-01-02T02:40:00.000Z id AA68 N84G RFAS EBJQ signature -----BEGIN PGP SIGNATURE-----
+
+wsFzBAABCgAdFiEE/ZQnCIviM4QX2XoV4fGs5WGTmo4FAmedB8 sACgkQ4fGs5WGT mo7ALw//Q37JQub/bmAOYkP1URdubABmKjzofXKUj8GTVbfsgU e0t7SBU1jQJ+wP t+/FoX7SupVnnmx7yPQX13T6Zooxicy0mrVXCX17mEMDsHByrS e6MrOLXuN5bVfv 8g3ADYBmuX31HkRr01uovBUkhv63+uoN6xqx2LnQjHBwQ8KHbi JRM7MvY91fShQe
+
+Qa2LbYHwkDJFPh9gzJC2v3WMNFShBVLQLddEgS92dlQHz/X5hk
+
+ifbkSz96NAIU1U
+
+aYFJsIG0dRrnIwqvDesdpzPbxH75I2OQfGnol0vE7ENKjPumxW
+
+un01oBphGHkbmO b90gmUDPG+62QwTP+bKBdJ8F2YA7TQdKUZ9S9F4zg6jCLXiOXQ AvXdxMuk4ZGLUg TaEvfolKcBXqIB717N82RL3bxIqs6aQJwUx3bF75+WkUEf5K5j CC+2nvq7Ev31oa qkmzc+EsyU4t6IMCLMU1rRnKPcxZTMG5jGgDg803/eBcMZqMjj KKnDGInm/YMzki s/PuVcJoIKmega4kRXARUTu+cFLXgX4y6Y3NyEm6EJoLGYmCnP fIenHFJ/3heGAY 2tqCKqzxzq0xvUpNTWFg5MCbj5TmhdkXi90w8NnDHnzMfV2g5/QB705Km0tZUggW Y4Lg509YZPLqfckypIBtQ4pXM2LFSxunIBIm4aYcfd9w9cP11V 0= =4QSy
+
+-END PGP SIGNATURE-----Make 3.26.5, https://mirror.stream.centos.org/9-stream/AppStream/x86_64/os/Packages/
 cmake_minimum_required(VERSION 3.22)
 
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
