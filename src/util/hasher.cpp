@@ -11,9 +11,9 @@ SaltedTxidHasher::SaltedTxidHasher() :
     k0{FastRandomContext().rand64()},
     k1{FastRandomContext().rand64()} {}
 
-SaltedOutpointHasher::SaltedOutpointHasher(bool deterministic) :
-    k0{deterministic ? 0x8e819f2607a18de6 : FastRandomContext().rand64()},
-    k1{deterministic ? 0xf4020d2e3983b0eb : FastRandomContext().rand64()}
+SaltedOutpointHasher::SaltedOutpointHasher(bool deterministic) : hasher{
+    deterministic ? 0x8e819f2607a18de6 : FastRandomContext().rand64(),
+    deterministic ? 0xf4020d2e3983b0eb : FastRandomContext().rand64()}
 {}
 
 SaltedSipHasher::SaltedSipHasher() :
