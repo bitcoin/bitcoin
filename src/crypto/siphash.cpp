@@ -137,17 +137,12 @@ uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val)
     return v0 ^ v1 ^ v2 ^ v3;
 }
 
-uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint32_t extra)
+/** Specialized implementation for efficiency */
+uint64_t PresaltedSipHasher::operator()(const uint256& val, uint32_t extra) const noexcept
 {
-    /* Specialized implementation for efficiency */
+    uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
     uint64_t d = val.GetUint64(0);
-
-    // TODO moved in followup commit
-    uint64_t v0 = CSipHasher::C0 ^ k0;
-    uint64_t v1 = CSipHasher::C1 ^ k1;
-    uint64_t v2 = CSipHasher::C2 ^ k0;
-    uint64_t v3 = CSipHasher::C3 ^ k1 ^ d;
-
+    v3 ^= d;
     SIPROUND;
     SIPROUND;
     v0 ^= d;

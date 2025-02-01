@@ -119,7 +119,7 @@ FUZZ_TARGET(integer, .init = initialize_integer)
     (void)MillisToTimeval(i64);
     (void)SighashToStr(uch);
     (void)SipHashUint256(u64, u64, u256);
-    (void)SipHashUint256Extra(u64, u64, u256, u32);
+    (void)PresaltedSipHasher(u64, u64)(u256, u32);
     (void)ToLower(ch);
     (void)ToUpper(ch);
     {

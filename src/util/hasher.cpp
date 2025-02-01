@@ -19,14 +19,15 @@ SaltedWtxidHasher::SaltedWtxidHasher() :
     k0{FastRandomContext().rand64()},
     k1{FastRandomContext().rand64()} {}
 
-SaltedOutpointHasher::SaltedOutpointHasher(bool deterministic) :
-    k0{deterministic ? 0x8e819f2607a18de6 : FastRandomContext().rand64()},
-    k1{deterministic ? 0xf4020d2e3983b0eb : FastRandomContext().rand64()}
+SaltedOutpointHasher::SaltedOutpointHasher(bool deterministic) : m_hasher{
+    deterministic ? 0x8e819f2607a18de6 : FastRandomContext().rand64(),
+    deterministic ? 0xf4020d2e3983b0eb : FastRandomContext().rand64()}
 {}
 
 SaltedSipHasher::SaltedSipHasher() :
     m_k0{FastRandomContext().rand64()},
-    m_k1{FastRandomContext().rand64()} {}
+    m_k1{FastRandomContext().rand64()}
+{}
 
 size_t SaltedSipHasher::operator()(const std::span<const unsigned char>& script) const
 {
