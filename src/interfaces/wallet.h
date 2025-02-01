@@ -223,9 +223,6 @@ public:
     //! Get anonymizable balance.
     virtual CAmount getAnonymizableBalance(bool fSkipDenominated, bool fSkipUnconfirmed) = 0;
 
-    //! Get anonymized balance.
-    virtual CAmount getAnonymizedBalance() = 0;
-
     //! Get denominated balance.
     virtual CAmount getDenominatedBalance(bool unconfirmed) = 0;
 
