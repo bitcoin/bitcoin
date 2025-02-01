@@ -48,6 +48,20 @@ public:
  *      .Finalize()
  */
 uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val);
-uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint32_t extra);
+
+class PresaltedSipHasher
+{
+    uint64_t v[4];
+
+public:
+    explicit PresaltedSipHasher(uint64_t k0, uint64_t k1) noexcept {
+        v[0] = CSipHasher::C0 ^ k0;
+        v[1] = CSipHasher::C1 ^ k1;
+        v[2] = CSipHasher::C2 ^ k0;
+        v[3] = CSipHasher::C3 ^ k1;
+    }
+
+    uint64_t operator()(const uint256& val, uint32_t extra) const noexcept;
+};
 
 #endif // BITCOIN_CRYPTO_SIPHASH_H
