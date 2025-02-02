@@ -6,6 +6,8 @@
 # support has been merged we should switch to using the upstream CMake
 # buildsystem.
 
+set(crc32c_subtree_dir ${PROJECT_SOURCE_DIR}/src/crc32c)
+
 include(CheckCXXSourceCompiles)
 
 # Check for __builtin_prefetch support in the compiler.
@@ -92,19 +94,19 @@ target_link_libraries(crc32c_common INTERFACE
 )
 
 add_library(crc32c STATIC EXCLUDE_FROM_ALL
-  ${PROJECT_SOURCE_DIR}/src/crc32c/src/crc32c.cc
-  ${PROJECT_SOURCE_DIR}/src/crc32c/src/crc32c_portable.cc
+  ${crc32c_subtree_dir}/src/crc32c.cc
+  ${crc32c_subtree_dir}/src/crc32c_portable.cc
 )
 target_include_directories(crc32c
   PUBLIC
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/crc32c/include>
+    $<BUILD_INTERFACE:${crc32c_subtree_dir}/include>
 )
 target_link_libraries(crc32c PRIVATE crc32c_common)
 set_target_properties(crc32c PROPERTIES EXPORT_COMPILE_COMMANDS OFF)
 
 if(HAVE_SSE42)
   add_library(crc32c_sse42 STATIC EXCLUDE_FROM_ALL
-    ${PROJECT_SOURCE_DIR}/src/crc32c/src/crc32c_sse42.cc
+    ${crc32c_subtree_dir}/src/crc32c_sse42.cc
   )
   target_compile_options(crc32c_sse42 PRIVATE ${SSE42_CXXFLAGS})
   target_link_libraries(crc32c_sse42 PRIVATE crc32c_common)
@@ -114,10 +116,12 @@ endif()
 
 if(HAVE_ARM64_CRC32C)
   add_library(crc32c_arm64 STATIC EXCLUDE_FROM_ALL
-    ${PROJECT_SOURCE_DIR}/src/crc32c/src/crc32c_arm64.cc
+    ${crc32c_subtree_dir}/src/crc32c_arm64.cc
   )
   target_compile_options(crc32c_arm64 PRIVATE ${ARM64_CRC_CXXFLAGS})
   target_link_libraries(crc32c_arm64 PRIVATE crc32c_common)
   set_target_properties(crc32c_arm64 PROPERTIES EXPORT_COMPILE_COMMANDS OFF)
   target_link_libraries(crc32c PRIVATE crc32c_arm64)
 endif()
+
+unset(crc32c_source_dir)
