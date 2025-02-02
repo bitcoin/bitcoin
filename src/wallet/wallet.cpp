@@ -2027,9 +2027,9 @@ CAmount CWalletTx::GetAnonymizedCredit(const CCoinControl& coinControl) const
     return nCredit;
 }
 
-CWalletTx::BalanceAnonymized CWalletTx::GetAnonymizedBalance() const
+CWalletTx::CoinJoinCredits CWalletTx::GetAvailableCoinJoinCredits() const
 {
-    CWalletTx::BalanceAnonymized ret{0, false};
+    CWalletTx::CoinJoinCredits ret{0, false};
     if (pwallet == nullptr)
         return ret;
 
@@ -2066,16 +2066,16 @@ CWalletTx::BalanceAnonymized CWalletTx::GetAnonymizedBalance() const
                 throw std::runtime_error(std::string(__func__) + ": value out of range");
         }
 
-        ret.m_denom_credit += credit;
-        if (!MoneyRange(ret.m_denom_credit))
+        ret.m_denominated += credit;
+        if (!MoneyRange(ret.m_denominated))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     }
 
     m_amounts[ANON_CREDIT].Set(ISMINE_SPENDABLE, ret.m_anonymized);
     if (ret.is_unconfirmed) {
-        m_amounts[DENOM_UCREDIT].Set(ISMINE_SPENDABLE, ret.m_denom_credit);
+        m_amounts[DENOM_UCREDIT].Set(ISMINE_SPENDABLE, ret.m_denominated);
     } else {
-        m_amounts[DENOM_CREDIT].Set(ISMINE_SPENDABLE, ret.m_denom_credit);
+        m_amounts[DENOM_CREDIT].Set(ISMINE_SPENDABLE, ret.m_denominated);
     }
     return ret;
 }

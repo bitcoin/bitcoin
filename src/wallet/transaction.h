@@ -289,10 +289,10 @@ public:
     CAmount GetImmatureWatchOnlyCredit(const bool fUseCache = true) const;
     CAmount GetChange() const;
 
-    struct BalanceAnonymized
+    struct CoinJoinCredits
     {
         CAmount m_anonymized{0};
-        CAmount m_denom_credit{0};
+        CAmount m_denominated{0};
         bool is_unconfirmed{false};
     };
 
@@ -301,7 +301,7 @@ public:
     // annotation "NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid
     // having to resolve the issue of member access into incomplete type CWallet.
     CAmount GetAnonymizedCredit(const CCoinControl& coinControl) const NO_THREAD_SAFETY_ANALYSIS;
-    BalanceAnonymized GetAnonymizedBalance() const NO_THREAD_SAFETY_ANALYSIS;
+    CoinJoinCredits GetAvailableCoinJoinCredits() const NO_THREAD_SAFETY_ANALYSIS;
 
     /** Get the marginal bytes if spending the specified output from this transaction */
     int GetSpendSize(unsigned int out, bool use_max_sig = false) const
