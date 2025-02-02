@@ -15,7 +15,15 @@ endif()
 unset(upstream_cmakelists_content)
 unset(upstream_cmakelists_hash)
 
+# Checks that are used exclusively in the crc32c subtree code
+# are performed in this script below. Additionally, we ensure
+# that shared checks are performed before this script is included.
+if(NOT DEFINED HAVE_STRONG_GETAUXVAL)
+  message(FATAL_ERROR "HAVE_STRONG_GETAUXVAL is not defined.")
+endif()
+
 include(CheckCXXSourceCompiles)
+include(CheckSourceCompilesAndLinks)
 
 # Check for __builtin_prefetch support in the compiler.
 check_cxx_source_compiles("
