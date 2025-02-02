@@ -117,4 +117,75 @@ BOOST_AUTO_TEST_CASE(num_chain_tx_max)
     BOOST_CHECK_EQUAL(block_index.m_chain_tx_count, std::numeric_limits<uint64_t>::max());
 }
 
+/** Turn the lowest '1' bit in the binary representation of a number into a '0'. */
+int static inline InvertLowestOne(int n) { return n & (n - 1); }
+
+/** Compute what height to jump back to with the CBlockIndex::pskip pointer. */
+int static inline GetSkipHeight(int height) {
+    if (height < 2)
+        return 0;
+
+    // Determine which height to jump back to. Any number strictly lower than height is acceptable,
+    // but the following expression seems to perform well in simulations (max 110 steps to go back
+    // up to 2**18 blocks).
+    return (height & 1) ? InvertLowestOne(InvertLowestOne(height - 1)) + 1 : InvertLowestOne(height);
+}
+
+int static inline CountStepsOld(int start_height, int target_height) {
+    if (target_height > start_height || target_height < 0) {
+        return 0;
+    }
+
+    int count = 0;
+    int heightWalk = start_height;
+    while (heightWalk > target_height) {
+        int heightSkip = GetSkipHeight(heightWalk);
+        int heightSkipPrev = GetSkipHeight(heightWalk - 1);
+        if ((heightSkip == target_height ||
+             (heightSkip > target_height && !(heightSkipPrev < heightSkip - 2 &&
+                                       heightSkipPrev >= target_height)))) {
+            // Only follow pskip if pprev->pskip isn't better than pskip->pprev.
+            heightWalk = heightSkip;
+        } else {
+            heightWalk--;
+        }
+
+        count++;
+    }
+    return count;
+}
+
+int static inline CountStepsNew(int start_height, int target_height) {
+    if (target_height > start_height || target_height < 0) {
+        return 0;
+    }
+
+    // Traverse back until we find the desired pindex.
+    int count = 0;
+    while (start_height != target_height) {
+        auto skip_height = GetSkipHeight(start_height);
+        // Prefer the ancestor if there is one we can take.
+        if (skip_height >= target_height) {
+            start_height = skip_height;
+        } else {
+            // We couldn't take the ancestor skip so traverse back to the parent.
+            start_height--;
+        }
+        count++;
+    }
+
+    return count;
+}
+
+BOOST_AUTO_TEST_CASE(test_test)
+{
+    auto max_height = 1 << 25;
+    for (auto i = 0; i < max_height; i++) {
+        auto x = CountStepsOld(max_height, i);
+        auto y = CountStepsNew(max_height, i);
+        BOOST_CHECK_EQUAL(x, y);
+    }
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
