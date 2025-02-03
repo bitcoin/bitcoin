@@ -104,6 +104,8 @@ private:
     QSpinBox *bytespersigop, *bytespersigopstrict;
     QSpinBox *limitancestorcount;
     QSpinBox *limitancestorsize;
+    QSpinBox *limitdescendantcount;
+    QSpinBox *limitdescendantsize;
 };
 
 #endif // BITCOIN_QT_OPTIONSDIALOG_H
