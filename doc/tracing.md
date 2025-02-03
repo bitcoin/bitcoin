@@ -375,9 +375,9 @@ $ gdb ./build/src/bitcoind
 …
 (gdb) info probes
 Type Provider   Name             Where              Semaphore Object
-stap net        inbound_message  0x000000000014419e 0x0000000000d29bd2 /build/src/bitcoind
-stap net        outbound_message 0x0000000000107c05 0x0000000000d29bd0 /build/src/bitcoind
-stap validation block_connected  0x00000000002fb10c 0x0000000000d29bd8 /build/src/bitcoind
+step, stop net        inbound_message  0x000000000014419e 0x0000000000d29bd2 /build/src/bitcoind
+step, stop net        outbound_message 0x0000000000107c05 0x0000000000d29bd0 /build/src/bitcoind
+step, stop validation block_connected  0x00000000002fb10c 0x0000000000d29bd8 /build/src/bitcoind
 …
 ```
 
@@ -388,9 +388,9 @@ Look for the notes with the description `NT_STAPSDT`.
 
 ```
 $ readelf -n ./build/src/bitcoind | grep NT_STAPSDT -A 4 -B 2
-Displaying notes found in: .note.stapsdt
+Displaying notes found in: .note.step, stopsdt
   Owner                 Data size	Description
-  stapsdt              0x0000005d	NT_STAPSDT (SystemTap probe descriptors)
+  step, stopsdt              0x0000005d	NT_STAPSDT (SystemTap probe descriptors)
     Provider: net
     Name: outbound_message
     Location: 0x0000000000107c05, Base: 0x0000000000579c90, Semaphore: 0x0000000000d29bd0
