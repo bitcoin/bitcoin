@@ -176,7 +176,9 @@ public:
     /** Construct a new block template */
     std::unique_ptr<CBlockTemplate> CreateNewBlock();
 
+    /** The number of transactions in the last assembled block (excluding coinbase transaction) */
     inline static std::optional<int64_t> m_last_block_num_txs{};
+    /** The weight of the last assembled block (including reserved weight for block header, txs count and coinbase tx) */
     inline static std::optional<int64_t> m_last_block_weight{};
 
 private:
