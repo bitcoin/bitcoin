@@ -87,10 +87,13 @@ public:
     virtual std::optional<BlockRef> waitTipChanged(uint256 current_tip, MillisecondsDouble timeout = MillisecondsDouble::max()) = 0;
 
    /**
-     * Construct a new block template
+     * Construct a new block template.
+     *
+     * During node initialization, this will wait until the tip is connected.
      *
      * @param[in] options options for creating the block
-     * @returns a block template
+     * @retval BlockTemplate a block template.
+     * @retval std::nullptr if the node is shut down.
      */
     virtual std::unique_ptr<BlockTemplate> createNewBlock(const node::BlockCreateOptions& options = {}) = 0;
 
