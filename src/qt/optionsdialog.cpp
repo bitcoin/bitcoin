@@ -49,7 +49,12 @@
 
 void OptionsDialog::FixTabOrder(QWidget * const o)
 {
-    setTabOrder(prevwidget, o);
+    BitcoinAmountField * const af = qobject_cast<BitcoinAmountField *>(o);
+    if (af) {
+        af->setupTabChain(prevwidget);
+    } else {
+        setTabOrder(prevwidget, o);
+    }
     prevwidget = o;
 }
 
@@ -235,6 +240,10 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     maxmempool->setMinimum(nMempoolSizeMinMB);
     maxmempool->setMaximum(std::numeric_limits<int>::max());
     CreateOptionUI(verticalLayout_Mempool, maxmempool, tr("Keep the transaction memory pool below %s MB"));
+
+    incrementalrelayfee = new BitcoinAmountField(tabMempool);
+    connect(incrementalrelayfee, SIGNAL(valueChanged()), this, SLOT(incrementalrelayfee_changed()));
+    CreateOptionUI(verticalLayout_Mempool, incrementalrelayfee, tr("Require transaction fees to be at least %s per kvB higher than transactions they are replacing."));
 
     mempoolexpiry = new QSpinBox(tabMempool);
     mempoolexpiry->setMinimum(1);
@@ -583,6 +592,7 @@ void OptionsDialog::setMapper()
 
     mapper->addMapping(maxorphantx, OptionsModel::maxorphantx);
     mapper->addMapping(maxmempool, OptionsModel::maxmempool);
+    mapper->addMapping(incrementalrelayfee, OptionsModel::incrementalrelayfee);
     mapper->addMapping(mempoolexpiry, OptionsModel::mempoolexpiry);
 
     mapper->addMapping(rejectunknownscripts, OptionsModel::rejectunknownscripts);
@@ -635,6 +645,13 @@ void OptionsDialog::checkLineEdit()
 void OptionsDialog::setOkButtonState(bool fState)
 {
     ui->okButton->setEnabled(fState);
+}
+
+void OptionsDialog::incrementalrelayfee_changed()
+{
+    if (incrementalrelayfee->value() > minrelaytxfee->value()) {
+        minrelaytxfee->setValue(incrementalrelayfee->value());
+    }
 }
 
 void OptionsDialog::blockmaxsize_changed(int i)

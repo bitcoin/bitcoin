@@ -649,6 +649,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return qlonglong(gArgs.GetIntArg("-maxorphantx", DEFAULT_MAX_ORPHAN_TRANSACTIONS));
     case maxmempool:
         return qlonglong(node().mempool().m_opts.max_size_bytes / 1'000'000);
+    case incrementalrelayfee:
+        return qlonglong(node().mempool().m_opts.incremental_relay_feerate.GetFeePerK());
     case mempoolexpiry:
         return qlonglong(std::chrono::duration_cast<std::chrono::hours>(node().mempool().m_opts.expiry).count());
     case rejectunknownscripts:
@@ -1053,6 +1055,13 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         }
         break;
     }
+    case incrementalrelayfee:
+        if (changed()) {
+            CAmount nNv = value.toLongLong();
+            gArgs.ModifyRWConfigFile("incrementalrelayfee", FormatMoney(nNv));
+            node().mempool().m_opts.incremental_relay_feerate = CFeeRate(nNv);
+        }
+        break;
     case mempoolexpiry:
     {
         if (changed()) {
