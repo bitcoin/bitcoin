@@ -5625,10 +5625,9 @@ double ChainstateManager::GuessVerificationProgress(const CBlockIndex* pindex) c
         return 0.0;
     }
 
-    int64_t end_of_chain_timestamp = pindex->GetBlockTime();
-
+    int64_t end_of_chain_timestamp = TicksSinceEpoch<std::chrono::seconds>(NodeClock::time_point{std::chrono::seconds{pindex->GetBlockTime()}});
     if (m_best_header && m_best_header->nChainWork > pindex->nChainWork) {
-        int64_t header_age = time(nullptr) - m_best_header->GetBlockTime();
+        int64_t header_age = TicksSinceEpoch<std::chrono::seconds>(Now<NodeSeconds>()) - m_best_header->GetBlockTime();
         if (header_age < 24 * 60 * 60) {
             end_of_chain_timestamp = std::max(end_of_chain_timestamp, m_best_header->GetBlockTime());
         }
