@@ -654,6 +654,10 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return qlonglong(node().mempool().m_opts.limits.ancestor_count);
     case limitancestorsize:
         return qlonglong(node().mempool().m_opts.limits.ancestor_size_vbytes / 1'000);
+    case limitdescendantcount:
+        return qlonglong(node().mempool().m_opts.limits.descendant_count);
+    case limitdescendantsize:
+        return qlonglong(node().mempool().m_opts.limits.descendant_size_vbytes / 1'000);
     default:
         return QVariant();
     }
@@ -1063,6 +1067,24 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             node().mempool().m_opts.limits.ancestor_size_vbytes = nNv * 1'000;
             gArgs.ForceSetArg("-limitancestorsize", strNv);
             gArgs.ModifyRWConfigFile("limitancestorsize", strNv);
+        }
+        break;
+    case limitdescendantcount:
+        if (changed()) {
+            long long nNv = value.toLongLong();
+            std::string strNv = value.toString().toStdString();
+            node().mempool().m_opts.limits.descendant_count = nNv;
+            gArgs.ForceSetArg("-limitdescendantcount", strNv);
+            gArgs.ModifyRWConfigFile("limitdescendantcount", strNv);
+        }
+        break;
+    case limitdescendantsize:
+        if (changed()) {
+            long long nNv = value.toLongLong();
+            std::string strNv = value.toString().toStdString();
+            node().mempool().m_opts.limits.descendant_size_vbytes = nNv * 1'000;
+            gArgs.ForceSetArg("-limitdescendantsize", strNv);
+            gArgs.ModifyRWConfigFile("limitdescendantsize", strNv);
         }
         break;
     default:
