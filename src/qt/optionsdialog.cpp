@@ -259,6 +259,12 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     limitdescendantsize->setMaximum(std::numeric_limits<int>::max());
     CreateOptionUI(verticalLayout_Spamfiltering, limitdescendantsize, tr("Ignore transactions if any ancestor would have more than %s kilobytes of unconfirmed descendants."));
 
+    rejectbaremultisig = new QCheckBox(groupBox_Spamfiltering);
+    rejectbaremultisig->setText(tr("Ignore bare/exposed \"multisig\" scripts"));
+    rejectbaremultisig->setToolTip(tr("Spam is sometimes disguised to appear as if it is an old-style N-of-M multi-party transaction, where most of the keys are really bogus. At the same time, legitimate multi-party transactions typically have always used P2SH format (which is not filtered by this option), which is more secure."));
+    verticalLayout_Spamfiltering->addWidget(rejectbaremultisig);
+    FixTabOrder(rejectbaremultisig);
+
     verticalLayout_Mempool->addWidget(groupBox_Spamfiltering);
 
     verticalLayout_Mempool->addItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding));
@@ -524,6 +530,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(limitancestorsize, OptionsModel::limitancestorsize);
     mapper->addMapping(limitdescendantcount, OptionsModel::limitdescendantcount);
     mapper->addMapping(limitdescendantsize, OptionsModel::limitdescendantsize);
+    mapper->addMapping(rejectbaremultisig, OptionsModel::rejectbaremultisig);
 
     /* Window */
 #ifndef Q_OS_MACOS
