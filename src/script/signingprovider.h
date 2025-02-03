@@ -14,6 +14,10 @@
 #include <script/script.h>
 #include <sync.h>
 
+static const bool DEFAULT_WALLET_IMPLICIT_SEGWIT = false;
+
+extern bool g_implicit_segwit;
+
 struct ShortestVectorFirstComparator
 {
     bool operator()(const std::vector<unsigned char>& a, const std::vector<unsigned char>& b) const
