@@ -5613,12 +5613,8 @@ bool Chainstate::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
     return ret;
 }
 
-//! Guess how far we are in the verification process at the given block index and the best headers chain
-//! require cs_main if pindex has not been validated yet (because m_chain_tx_count might be unset)
 double ChainstateManager::GuessVerificationProgress(const CBlockIndex* pindex) const
 {
-    const ChainTxData& data{GetParams().TxData()};
-    LOCK(::cs_main);
     if (pindex == nullptr) {
         return 0.0;
     }
@@ -5639,7 +5635,7 @@ double ChainstateManager::GuessVerificationProgress(const CBlockIndex* pindex) c
     }
 
     double fTxTotal;
-
+    const ChainTxData& data{GetParams().TxData()};
     if (pindex->m_chain_tx_count <= data.tx_count) {
         fTxTotal = data.tx_count + (end_of_chain_timestamp - data.nTime) * data.dTxRate;
     } else {
