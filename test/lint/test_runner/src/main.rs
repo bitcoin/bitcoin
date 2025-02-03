@@ -178,8 +178,8 @@ fn check_output(cmd: &mut std::process::Command) -> Result<String, LintError> {
         .to_string())
 }
 
-/// Return the git root as utf8, or panic
-fn get_git_root() -> PathBuf {
+/// Return the git toplevel directory as utf8, or panic
+fn get_git_toplevel() -> PathBuf {
     PathBuf::from(check_output(git().args(["rev-parse", "--show-toplevel"])).unwrap())
 }
 
@@ -691,7 +691,7 @@ Markdown link errors found:
 
 fn run_all_python_linters() -> LintResult {
     let mut good = true;
-    let lint_dir = get_git_root().join("test/lint");
+    let lint_dir = get_git_toplevel().join("test/lint");
     for entry in fs::read_dir(lint_dir).unwrap() {
         let entry = entry.unwrap();
         let entry_fn = entry.file_name().into_string().unwrap();
@@ -723,7 +723,7 @@ fn main() -> ExitCode {
         get_linter_list()
     };
 
-    let git_root = get_git_root();
+    let git_toplevel = get_git_toplevel();
     let commit_range = commit_range();
     let commit_log = check_output(git().args(["log", "--no-merges", "--oneline", &commit_range]))
         .expect("check_output failed");
@@ -731,8 +731,8 @@ fn main() -> ExitCode {
 
     let mut test_failed = false;
     for linter in linters_to_run {
-        // chdir to root before each lint test
-        env::set_current_dir(&git_root).unwrap();
+        // chdir to git toplevel before each lint test
+        env::set_current_dir(&git_toplevel).unwrap();
         if let Err(err) = (linter.lint_fn)() {
             println!(
                 "^^^\n{err}\n^---- ⚠️ Failure generated from lint check '{}' ({})!\n\n",
