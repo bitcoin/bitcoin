@@ -268,6 +268,9 @@ class BlockchainTest(BitcoinTestFramework):
         # calling with an explicit hash works
         self.check_signalling_deploymentinfo_result(self.nodes[0].getdeploymentinfo(gbci207["bestblockhash"]), gbci207["blocks"], gbci207["bestblockhash"], "started")
 
+        # restart clean with default activation heights
+        self.restart_node(0)
+
     def _test_y2106(self):
         self.log.info("Check that block timestamps work until year 2106")
         self.generate(self.nodes[0], 8)[-1]
