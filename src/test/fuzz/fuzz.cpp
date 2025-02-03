@@ -79,7 +79,7 @@ void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target,
 static std::string_view g_fuzz_target;
 static const TypeTestOneInput* g_test_one_input{nullptr};
 
-inline void test_one_input(FuzzBufferType buffer)
+static void test_one_input(FuzzBufferType buffer)
 {
     CheckGlobals check{};
     (*Assert(g_test_one_input))(buffer);
@@ -108,12 +108,12 @@ void ResetCoverageCounters() {}
 #endif
 
 
-void initialize()
+static void initialize()
 {
     // By default, make the RNG deterministic with a fixed seed. This will affect all
     // randomness during the fuzz test, except:
     // - GetStrongRandBytes(), which is used for the creation of private key material.
-    // - Creating a BasicTestingSetup or derived class will switch to a random seed.
+    // - Randomness obtained before this call in g_rng_temp_path_init
     SeedRandomStateForTest(SeedRand::ZEROS);
 
     // Set time to the genesis block timestamp for deterministic initialization.

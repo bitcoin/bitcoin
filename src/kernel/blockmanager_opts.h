@@ -5,6 +5,7 @@
 #ifndef BITCOIN_KERNEL_BLOCKMANAGER_OPTS_H
 #define BITCOIN_KERNEL_BLOCKMANAGER_OPTS_H
 
+#include <dbwrapper.h>
 #include <kernel/notifications_interface.h>
 #include <util/fs.h>
 
@@ -27,6 +28,7 @@ struct BlockManagerOpts {
     bool fast_prune{false};
     const fs::path blocks_dir;
     Notifications& notifications;
+    DBParams block_tree_db_params;
 };
 
 } // namespace kernel

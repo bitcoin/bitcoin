@@ -312,15 +312,7 @@ public:
     bool ToPrivateString(const SigningProvider& arg, std::string& ret) const override
     {
         CKey key;
-        if (m_xonly) {
-            for (const auto& keyid : XOnlyPubKey(m_pubkey).GetKeyIDs()) {
-                arg.GetKey(keyid, key);
-                if (key.IsValid()) break;
-            }
-        } else {
-            arg.GetKey(m_pubkey.GetID(), key);
-        }
-        if (!key.IsValid()) return false;
+        if (!GetPrivKey(/*pos=*/0, arg, key)) return false;
         ret = EncodeSecret(key);
         return true;
     }
@@ -331,7 +323,8 @@ public:
     }
     bool GetPrivKey(int pos, const SigningProvider& arg, CKey& key) const override
     {
-        return arg.GetKey(m_pubkey.GetID(), key);
+        return m_xonly ? arg.GetKeyByXOnly(XOnlyPubKey(m_pubkey), key) :
+                         arg.GetKey(m_pubkey.GetID(), key);
     }
     std::optional<CPubKey> GetRootPubKey() const override
     {
@@ -1360,7 +1353,7 @@ public:
         for (const auto& arg : m_pubkey_args) {
             providers.push_back(arg->Clone());
         }
-        return std::make_unique<MiniscriptDescriptor>(std::move(providers), miniscript::MakeNodeRef<uint32_t>(*m_node));
+        return std::make_unique<MiniscriptDescriptor>(std::move(providers), m_node->Clone());
     }
 };
 
@@ -1716,7 +1709,7 @@ struct KeyParser {
         if (miniscript::IsTapscript(m_script_ctx) && end - begin == 32) {
             XOnlyPubKey pubkey;
             std::copy(begin, end, pubkey.begin());
-            if (auto pubkey_provider = InferPubkey(pubkey.GetEvenCorrespondingCPubKey(), ParseContext(), *m_in)) {
+            if (auto pubkey_provider = InferXOnlyPubkey(pubkey, ParseContext(), *m_in)) {
                 m_keys.emplace_back();
                 m_keys.back().push_back(std::move(pubkey_provider));
                 return key;
@@ -2150,7 +2143,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
                 for (auto& pub : parser.m_keys) {
                     pubs.emplace_back(std::move(pub.at(i)));
                 }
-                ret.emplace_back(std::make_unique<MiniscriptDescriptor>(std::move(pubs), node));
+                ret.emplace_back(std::make_unique<MiniscriptDescriptor>(std::move(pubs), node->Clone()));
             }
             return ret;
         }

@@ -171,8 +171,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         parser = argparse.ArgumentParser(usage="%(prog)s [options]")
         parser.add_argument("--nocleanup", dest="nocleanup", default=False, action="store_true",
                             help="Leave bitcoinds and test.* datadir on exit or error")
-        parser.add_argument("--noshutdown", dest="noshutdown", default=False, action="store_true",
-                            help="Don't stop bitcoinds after the test execution")
         parser.add_argument("--cachedir", dest="cachedir", default=os.path.abspath(os.path.dirname(test_file) + "/../cache"),
                             help="Directory for caching pregenerated datadirs (default: %(default)s)")
         parser.add_argument("--tmpdir", dest="tmpdir", help="Root directory for datadirs (must not exist)")
@@ -325,18 +323,15 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         self.log.debug('Closing down network thread')
         self.network_thread.close()
-        if not self.options.noshutdown:
+        if self.success == TestStatus.FAILED:
+            self.log.info("Not stopping nodes as test failed. The dangling processes will be cleaned up later.")
+        else:
             self.log.info("Stopping nodes")
             if self.nodes:
                 self.stop_nodes()
-        else:
-            for node in self.nodes:
-                node.cleanup_on_exit = False
-            self.log.info("Note: bitcoinds were not stopped and may still be running")
 
         should_clean_up = (
             not self.options.nocleanup and
-            not self.options.noshutdown and
             self.success != TestStatus.FAILED and
             not self.options.perf
         )
@@ -584,15 +579,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if extra_args is None:
             extra_args = [None] * self.num_nodes
         assert_equal(len(extra_args), self.num_nodes)
-        try:
-            for i, node in enumerate(self.nodes):
-                node.start(extra_args[i], *args, **kwargs)
-            for node in self.nodes:
-                node.wait_for_rpc_connection()
-        except Exception:
-            # If one node failed to start, stop the others
-            self.stop_nodes()
-            raise
+        for i, node in enumerate(self.nodes):
+            node.start(extra_args[i], *args, **kwargs)
+        for node in self.nodes:
+            node.wait_for_rpc_connection()
 
         if self.options.coveragedir is not None:
             for node in self.nodes:
@@ -725,22 +715,22 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         pass
 
     def generate(self, generator, *args, sync_fun=None, **kwargs):
-        blocks = generator.generate(*args, invalid_call=False, **kwargs)
+        blocks = generator.generate(*args, called_by_framework=True, **kwargs)
         sync_fun() if sync_fun else self.sync_all()
         return blocks
 
     def generateblock(self, generator, *args, sync_fun=None, **kwargs):
-        blocks = generator.generateblock(*args, invalid_call=False, **kwargs)
+        blocks = generator.generateblock(*args, called_by_framework=True, **kwargs)
         sync_fun() if sync_fun else self.sync_all()
         return blocks
 
     def generatetoaddress(self, generator, *args, sync_fun=None, **kwargs):
-        blocks = generator.generatetoaddress(*args, invalid_call=False, **kwargs)
+        blocks = generator.generatetoaddress(*args, called_by_framework=True, **kwargs)
         sync_fun() if sync_fun else self.sync_all()
         return blocks
 
     def generatetodescriptor(self, generator, *args, sync_fun=None, **kwargs):
-        blocks = generator.generatetodescriptor(*args, invalid_call=False, **kwargs)
+        blocks = generator.generatetodescriptor(*args, called_by_framework=True, **kwargs)
         sync_fun() if sync_fun else self.sync_all()
         return blocks
 

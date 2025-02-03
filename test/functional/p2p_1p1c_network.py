@@ -144,13 +144,18 @@ class PackageRelayTest(BitcoinTestFramework):
             for tx in transactions_to_presend[i]:
                 peer.send_and_ping(msg_tx(tx))
 
+        # Disconnect python peers to clear outstanding orphan requests with them, avoiding timeouts.
+        # We are only interested in the syncing behavior between real nodes.
+        for i in range(self.num_nodes):
+            self.nodes[i].disconnect_p2ps()
+
         self.log.info("Submit full packages to node0")
         for package_hex in packages_to_submit:
             submitpackage_result = self.nodes[0].submitpackage(package_hex)
             assert_equal(submitpackage_result["package_msg"], "success")
 
         self.log.info("Wait for mempools to sync")
-        self.sync_mempools(timeout=20)
+        self.sync_mempools()
 
 
 if __name__ == '__main__':

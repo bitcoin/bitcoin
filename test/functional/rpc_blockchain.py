@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test RPCs related to blockchainstate.
@@ -30,9 +30,13 @@ import textwrap
 from test_framework.blocktools import (
     MAX_FUTURE_BLOCK_TIME,
     TIME_GENESIS_BLOCK,
+    REGTEST_N_BITS,
+    REGTEST_TARGET,
     create_block,
     create_coinbase,
     create_tx_with_script,
+    nbits_str,
+    target_str,
 )
 from test_framework.messages import (
     CBlockHeader,
@@ -129,6 +133,7 @@ class BlockchainTest(BitcoinTestFramework):
 
         keys = [
             'bestblockhash',
+            'bits',
             'blocks',
             'chain',
             'chainwork',
@@ -138,6 +143,7 @@ class BlockchainTest(BitcoinTestFramework):
             'mediantime',
             'pruned',
             'size_on_disk',
+            'target',
             'time',
             'verificationprogress',
             'warnings',
@@ -193,6 +199,9 @@ class BlockchainTest(BitcoinTestFramework):
         assert res['automatic_pruning']
         assert_equal(res['prune_target_size'], 576716800)
         assert_greater_than(res['size_on_disk'], 0)
+
+        assert_equal(res['bits'], nbits_str(REGTEST_N_BITS))
+        assert_equal(res['target'], target_str(REGTEST_TARGET))
 
     def check_signalling_deploymentinfo_result(self, gdi_result, height, blockhash, status_next):
         assert height >= 144 and height <= 287
@@ -412,7 +421,8 @@ class BlockchainTest(BitcoinTestFramework):
         assert_is_hash_string(header['hash'])
         assert_is_hash_string(header['previousblockhash'])
         assert_is_hash_string(header['merkleroot'])
-        assert_is_hash_string(header['bits'], length=None)
+        assert_equal(header['bits'], nbits_str(REGTEST_N_BITS))
+        assert_equal(header['target'], target_str(REGTEST_TARGET))
         assert isinstance(header['time'], int)
         assert_equal(header['mediantime'], TIME_RANGE_MTP)
         assert isinstance(header['nonce'], int)
@@ -539,6 +549,7 @@ class BlockchainTest(BitcoinTestFramework):
         # The chain has probably already been restored by the time reconsiderblock returns,
         # but poll anyway.
         self.wait_until(lambda: node.waitfornewblock(timeout=100)['hash'] == current_hash)
+        assert_raises_rpc_error(-1, "Negative timeout", node.waitfornewblock, -1)
 
     def _test_waitforblockheight(self):
         self.log.info("Test waitforblockheight")

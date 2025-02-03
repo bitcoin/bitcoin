@@ -168,7 +168,7 @@ def main(pid):
     bpf["outbound_messages"].open_perf_buffer(handle_outbound)
 
     print("Logging raw P2P messages.")
-    print("Messages larger that about 32kb will be cut off!")
+    print("Messages larger than about 32kb will be cut off!")
     print("Some messages might be lost!")
     while True:
         try:

@@ -47,12 +47,29 @@ or using a regex filter to only run certain benchmarks.
 
 Notes
 ---------------------
-More benchmarks are needed for, in no particular order:
-- Script Validation
-- Coins database
-- Memory pool
-- Cuckoo Cache
-- P2P throughput
+
+Benchmarks help with monitoring for performance regressions and can act as a
+scope for future performance improvements. They should cover components that
+impact performance critical functions of the system. Functions are performance
+critical if their performance impacts users and the cost associated with a
+degradation in performance is high. A non-exhaustive list:
+
+- Initial block download (Cost: slow IBD results in full node operation being
+  less accessible)
+- Block template creation (Cost: slow block template creation may result in
+  lower fee revenue for miners)
+- Block propagation (Cost: slow block propagation may increase the rate of
+  orphaned blocks and mining centralization)
+
+A change aiming to improve the performance may be rejected when a clear
+end-to-end performance improvement cannot be demonstrated. The change might
+also be rejected if the code bloat or review/maintenance burden is too high to
+justify the improvement.
+
+Benchmarks are ill-suited for testing denial-of-service issues as they are
+restricted to the same input set (introducing bias). [Fuzz
+tests](/doc/fuzzing.md) are better suited for this purpose, as they are
+specifically aimed at exploring the possible input space.
 
 Going Further
 --------------------
