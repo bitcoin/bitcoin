@@ -4,6 +4,7 @@ $(package)_download_path=https://github.com/libevent/libevent/releases/download/
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
 $(package)_sha256_hash=92e6de1be9ec176428fd2367677e61ceffc2ee1cb119035037a27d346b0403bb
 $(package)_patches=cmake_fixups.patch
+$(package)_patches += netbsd_fixup.patch
 $(package)_build_subdir=build
 
 # When building for Windows, we set _WIN32_WINNT to target the same Windows
@@ -23,7 +24,8 @@ define $(package)_set_vars
 endef
 
 define $(package)_preprocess_cmds
-  patch -p1 < $($(package)_patch_dir)/cmake_fixups.patch
+  patch -p1 < $($(package)_patch_dir)/cmake_fixups.patch && \
+  patch -p1 < $($(package)_patch_dir)/netbsd_fixup.patch
 endef
 
 define $(package)_config_cmds
