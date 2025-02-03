@@ -595,6 +595,12 @@ class SegWitTest(BitcoinTestFramework):
                 assert_equal(self.nodes[1].gettransaction(txid, True)["txid"], txid)
                 assert_equal(self.nodes[1].listtransactions("*", 1, 0, True)[0]["txid"], txid)
 
+        # Make sure that ConnectBlock() fails to connect block 165 if it considers Segwit as inactive.
+        self.restart_node(0, extra_args=["-testactivationheight=segwit@166"])
+        assert not self.nodes[0].verifychain(4, 0)
+        self.nodes[0].assert_debug_log(["ConnectBlock: Consensus::ContextualCheckBlock: unexpected-witness"])
+
+
     def mine_and_test_listunspent(self, script_list, ismine):
         utxo = find_spendable_utxo(self.nodes[0], 50)
         tx = CTransaction()
