@@ -68,6 +68,7 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
 static BlockAssembler::Options ClampOptions(BlockAssembler::Options options)
 {
     Assert(options.block_reserved_weight <= MAX_BLOCK_WEIGHT);
+    Assert(options.block_reserved_weight >= MINIMUM_BLOCK_RESERVED_WEIGHT);
     Assert(options.coinbase_output_max_additional_sigops <= MAX_BLOCK_SIGOPS_COST);
     // Limit weight to between block_reserved_weight and MAX_BLOCK_WEIGHT for sanity:
     // block_reserved_weight can safely exceed -blockmaxweight, but the rest of the block template will be empty.
@@ -91,6 +92,7 @@ void ApplyArgsManOptions(const ArgsManager& args, BlockAssembler::Options& optio
         if (const auto parsed{ParseMoney(*blockmintxfee)}) options.blockMinFeeRate = CFeeRate{*parsed};
     }
     options.print_modified_fee = args.GetBoolArg("-printpriority", options.print_modified_fee);
+    options.block_reserved_weight = args.GetIntArg("-blockreservedweight", options.block_reserved_weight);
 }
 
 void BlockAssembler::resetBlock()
