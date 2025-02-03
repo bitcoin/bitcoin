@@ -654,6 +654,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return nBytesPerSigOpStrict;
     case limitancestorcount:
         return qlonglong(node().mempool().m_opts.limits.ancestor_count);
+    case limitancestorsize:
+        return qlonglong(node().mempool().m_opts.limits.ancestor_size_vbytes / 1'000);
     default:
         return QVariant();
     }
@@ -1058,6 +1060,15 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             node().mempool().m_opts.limits.ancestor_count = nNv;
             gArgs.ForceSetArg("-limitancestorcount", strNv);
             gArgs.ModifyRWConfigFile("limitancestorcount", strNv);
+        }
+        break;
+    case limitancestorsize:
+        if (changed()) {
+            long long nNv = value.toLongLong();
+            std::string strNv = value.toString().toStdString();
+            node().mempool().m_opts.limits.ancestor_size_vbytes = nNv * 1'000;
+            gArgs.ForceSetArg("-limitancestorsize", strNv);
+            gArgs.ModifyRWConfigFile("limitancestorsize", strNv);
         }
         break;
     default:

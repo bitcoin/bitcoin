@@ -244,6 +244,11 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     limitancestorcount->setMaximum(std::numeric_limits<int>::max());
     CreateOptionUI(verticalLayout_Spamfiltering, limitancestorcount, tr("Ignore transactions with %s or more unconfirmed ancestors."));
 
+    limitancestorsize = new QSpinBox(groupBox_Spamfiltering);
+    limitancestorsize->setMinimum(1);
+    limitancestorsize->setMaximum(std::numeric_limits<int>::max());
+    CreateOptionUI(verticalLayout_Spamfiltering, limitancestorsize, tr("Ignore transactions whose size with all unconfirmed ancestors exceeds %s kilobytes."));
+
     verticalLayout_Mempool->addWidget(groupBox_Spamfiltering);
 
     verticalLayout_Mempool->addItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding));
@@ -506,6 +511,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(bytespersigop, OptionsModel::bytespersigop);
     mapper->addMapping(bytespersigopstrict, OptionsModel::bytespersigopstrict);
     mapper->addMapping(limitancestorcount, OptionsModel::limitancestorcount);
+    mapper->addMapping(limitancestorsize, OptionsModel::limitancestorsize);
 
     /* Window */
 #ifndef Q_OS_MACOS
