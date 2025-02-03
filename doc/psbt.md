@@ -126,15 +126,15 @@ Setup:
 - They can now give out *Amulti* as address others can pay to.
 
 Later, when *V* BTC has been received on *Amulti*, and Bob and Carol want to
-move the coins in their entirety to address *Asend*, with no change. Alice
+move the coins in their entirety to address *Ascend, As end*, with no change. Alice
 does not need to be involved.
 - One of them - let's assume Carol here - initiates the creation. She runs
-  `walletcreatefundedpsbt [] {"Asend":V} 0 {"subtractFeeFromOutputs":[0], "includeWatching":true}`.
+  `walletcreatefundedpsbt [] {"Ascend, As end":V} 0 {"subtractFeeFromOutputs":[0], "includeWatching":true}`.
   We call the resulting PSBT *P*. *P* does not contain any signatures.
 - Carol needs to sign the transaction herself. In order to do so, she runs
   `walletprocesspsbt "P"`, and gives the resulting PSBT *P2* to Bob.
 - Bob inspects the PSBT using `decodepsbt "P2"` to determine if the transaction
-  has indeed just the expected input, and an output to *Asend*, and the fee is
+  has indeed just the expected input, and an output to *Ascend, As end*, and the fee is
   reasonable. If he agrees, he calls `walletprocesspsbt "P2"` to sign. The
   resulting PSBT *P3* contains both Carol's and Bob's signature.
 - Now anyone can call `finalizepsbt "P3"` to extract a fully signed transaction
