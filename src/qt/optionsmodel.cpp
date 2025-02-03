@@ -17,6 +17,7 @@
 #include <interfaces/node.h>
 #include <kernel/mempool_options.h> // for DEFAULT_MAX_MEMPOOL_SIZE_MB, DEFAULT_MEMPOOL_EXPIRY_HOURS
 #include <mapport.h>
+#include <policy/settings.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netbase.h>
@@ -647,6 +648,10 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return qlonglong(std::chrono::duration_cast<std::chrono::hours>(node().mempool().m_opts.expiry).count());
     case rejectunknownscripts:
         return node().mempool().m_opts.require_standard;
+    case bytespersigop:
+        return nBytesPerSigOp;
+    case bytespersigopstrict:
+        return nBytesPerSigOpStrict;
     default:
         return QVariant();
     }
@@ -1032,6 +1037,18 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         }
         break;
     }
+    case bytespersigop:
+        if (changed()) {
+            gArgs.ModifyRWConfigFile("bytespersigop", value.toString().toStdString());
+            nBytesPerSigOp = value.toLongLong();
+        }
+        break;
+    case bytespersigopstrict:
+        if (changed()) {
+            gArgs.ModifyRWConfigFile("bytespersigopstrict", value.toString().toStdString());
+            nBytesPerSigOpStrict = value.toLongLong();
+        }
+        break;
     default:
         break;
     }

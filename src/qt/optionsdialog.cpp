@@ -229,6 +229,16 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     verticalLayout_Spamfiltering->addWidget(rejectunknownscripts);
     FixTabOrder(rejectunknownscripts);
 
+    bytespersigop = new QSpinBox(groupBox_Spamfiltering);
+    bytespersigop->setMinimum(1);
+    bytespersigop->setMaximum(std::numeric_limits<int>::max());
+    CreateOptionUI(verticalLayout_Spamfiltering, bytespersigop, tr("Treat each consensus-counted sigop as at least %s bytes."));
+
+    bytespersigopstrict = new QSpinBox(groupBox_Spamfiltering);
+    bytespersigopstrict->setMinimum(1);
+    bytespersigopstrict->setMaximum(std::numeric_limits<int>::max());
+    CreateOptionUI(verticalLayout_Spamfiltering, bytespersigopstrict, tr("Ignore transactions with fewer than %s bytes per potentially-executed sigop."));
+
     verticalLayout_Mempool->addWidget(groupBox_Spamfiltering);
 
     verticalLayout_Mempool->addItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding));
@@ -488,6 +498,8 @@ void OptionsDialog::setMapper()
     mapper->addMapping(mempoolexpiry, OptionsModel::mempoolexpiry);
 
     mapper->addMapping(rejectunknownscripts, OptionsModel::rejectunknownscripts);
+    mapper->addMapping(bytespersigop, OptionsModel::bytespersigop);
+    mapper->addMapping(bytespersigopstrict, OptionsModel::bytespersigopstrict);
 
     /* Window */
 #ifndef Q_OS_MACOS
