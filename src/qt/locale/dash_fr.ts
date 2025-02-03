@@ -615,14 +615,6 @@
         <translation>Afficher les informations sur %1</translation>
     </message>
     <message>
-        <source>Load Partially Signed Dash Transaction</source>
-        <translation>Charger transaction Dash partiellement signée</translation>
-    </message>
-    <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation>Charger transaction Bitcoin partiellement signée depuis le presse-papiers</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>Ouvrir la console de débogage et de diagnostic</translation>
     </message>
@@ -1332,10 +1324,6 @@
         <translation>Utiliser un répertoire de données personnalisé :</translation>
     </message>
     <message>
-        <source>%1 GB of free space available</source>
-        <translation>%1 Go d'espace disponible</translation>
-    </message>
-    <message>
         <source>(of %1 GB needed)</source>
         <translation>(de %1 Go nécessaire)</translation>
     </message>
@@ -2030,7 +2018,7 @@ https://explore.transifex.com/dash/dash/</translation>
     </message>
     <message>
         <source>Balances</source>
-        <translation>soldes</translation>
+        <translation>Soldes</translation>
     </message>
     <message>
         <source>Unconfirmed transactions to watch-only addresses</source>
@@ -3769,10 +3757,6 @@ Pour plus d'informations sur l'utilisation de cette console, tapez %6.
         <translation>Créer non-signée</translation>
     </message>
     <message>
-        <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation>Créer une transaction Bitcoin partiellement signée (PSBT) pour utilisation avec (par exemple) un portefeuille %1 hors ligne, ou un portefeuille matériel compatible PSBT.</translation>
-    </message>
-    <message>
         <source> from wallet '%1'</source>
         <translation>depuis le portefeuille '%1'</translation>
     </message>
@@ -4853,10 +4837,6 @@ Allez à Fichier &gt; Ouvrir le portefeuille pour charger un portefeuille.
 <context>
     <name>dash-core</name>
     <message>
-        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation>Erreur : l'écoute des connexions entrantes a échoué (erreur retournée : %s)</translation>
-    </message>
-    <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
         <translation>Échec de l'estimation des frais. Les frais de secours sont désactivés. Laissez passer quelques blocs ou activez -fallbackfee.</translation>
     </message>
@@ -4935,10 +4915,6 @@ Allez à Fichier &gt; Ouvrir le portefeuille pour charger un portefeuille.
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee est réglée sur un montant très élevé ! Ces frais aussi élevés peuvent être payés sur une transaction unique.</translation>
-    </message>
-    <message>
-        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
-        <translation>Impossible de fournir des connexions spécifiques tout en cherchant des connexions sortantes avec addrman.</translation>
     </message>
     <message>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
@@ -5185,10 +5161,6 @@ Allez à Fichier &gt; Ouvrir le portefeuille pour charger un portefeuille.
         <translation>Erreur en chargeant %s : les clés privées ne peuvent être désactivées que pendant la création</translation>
     </message>
     <message>
-        <source>Error upgrading evo database</source>
-        <translation>Erreur en mettant à jour la base de données evo</translation>
-    </message>
-    <message>
         <source>Error: Couldn't create cursor into database</source>
         <translation>Erreur : impossible de créer de curseur dans la base de données</translation>
     </message>
@@ -5219,10 +5191,6 @@ Allez à Fichier &gt; Ouvrir le portefeuille pour charger un portefeuille.
     <message>
         <source>Exceeded max tries.</source>
         <translation>Le nombre maximal d'essais est dépassé.</translation>
-    </message>
-    <message>
-        <source>Failed to commit EvoDB</source>
-        <translation>Impossible d'atteindre EvoDB</translation>
     </message>
     <message>
         <source>Failed to create backup %s!</source>
@@ -5299,10 +5267,6 @@ Allez à Fichier &gt; Ouvrir le portefeuille pour charger un portefeuille.
     <message>
         <source>No matching denominations found for mixing.</source>
         <translation>Pas de coupures équivalentes trouvées pour le mélange.</translation>
-    </message>
-    <message>
-        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
-        <translation>Aucun serveur proxy spécifié. Utilisez -proxy=&lt;ip&gt; ou -proxy=&lt;ip:port&gt;.</translation>
     </message>
     <message>
         <source>Not compatible with existing transactions.</source>
@@ -5569,10 +5533,6 @@ Allez à Fichier &gt; Ouvrir le portefeuille pour charger un portefeuille.
         <translation>Le mode prune est incompatible avec -reindex-chainstate. Utilisez à la place -reindex.</translation>
     </message>
     <message>
-        <source>The -txindex upgrade started by a previous version can not be completed. Restart with the previous version or run a full -reindex.</source>
-        <translation>La mise à jour -txindex démarrée par une version précédente ne peut être achevée. Redémarrez sur une version antérieure, ou bien lancez un -reindex intégral.</translation>
-    </message>
-    <message>
         <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
         <translation>La base de données d'index de blocs comporte un ancien 'txindex'. Pour vider l'espace-disque occupé, lancez un -reindex intégral, ou bien ignorez cette erreur. Ce message d'erreur ne sera plus affiché.</translation>
     </message>
@@ -5647,10 +5607,6 @@ Allez à Fichier &gt; Ouvrir le portefeuille pour charger un portefeuille.
     <message>
         <source>Cannot write to data directory '%s'; check permissions.</source>
         <translation>Impossible d'écrire dans le répertoire de données '%s' ; vérifiez les droits.</translation>
-    </message>
-    <message>
-        <source>Change index out of range</source>
-        <translation>L’index de changement est hors échelle</translation>
     </message>
     <message>
         <source>Copyright (C)</source>

@@ -615,14 +615,6 @@
         <translation>Показать информацию о %1</translation>
     </message>
     <message>
-        <source>Load Partially Signed Dash Transaction</source>
-        <translation>Загрузить частично подписанную транзакцию Dash</translation>
-    </message>
-    <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation>Загрузить частично подписанную транзакцию Dash из буфера обмена</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>Открыть консоль отладки и диагностики</translation>
     </message>
@@ -694,6 +686,14 @@
     <message>
         <source>Close Wallet…</source>
         <translation>Закрыть кошелёк…</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Blockchain Transaction</source>
+        <translation>Загрузить частично подписанную блокчейн транзакцию</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Blockchain Transaction from clipboard</source>
+        <translation>Загрузить частично подписанную блокчейн транзакцию из буфера обмена</translation>
     </message>
     <message>
         <source>Create Wallet…</source>
@@ -1332,8 +1332,8 @@
         <translation>Использовать другой каталог данных:</translation>
     </message>
     <message>
-        <source>%1 GB of free space available</source>
-        <translation>доступно %1 ГБ свободного места</translation>
+        <source>%1 GB of space available</source>
+        <translation>доступно %1 ГБ</translation>
     </message>
     <message>
         <source>(of %1 GB needed)</source>
@@ -2254,6 +2254,10 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>Failed to sign transaction: %1</source>
         <translation>Ошибка подписи транзакции: %1</translation>
+    </message>
+    <message>
+        <source>Cannot sign inputs while wallet is locked.</source>
+        <translation>Не возможно подписать входы пока кошелек заблокирован.</translation>
     </message>
     <message>
         <source>Could not sign any more inputs.</source>
@@ -3769,10 +3773,6 @@ For more information on using this console, type %6.
         <translation>Создать неподписанную</translation>
     </message>
     <message>
-        <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation>Создает частично подписанную транзакцию Bitcoin (PSBT) для использования, например, с автономным кошельком %1 или аппаратным кошельком, совместимым с PSBT.</translation>
-    </message>
-    <message>
         <source> from wallet '%1'</source>
         <translation>из кошелька '%1'</translation>
     </message>
@@ -3855,6 +3855,10 @@ For more information on using this console, type %6.
     <message>
         <source>Send</source>
         <translation>Отправить</translation>
+    </message>
+    <message>
+        <source>Creates a Partially Signed Blockchain Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>Создает частично подписанную блокчейн транзакцию (PSBT) для использования, например, с автономным кошельком %1 или аппаратным кошельком, совместимым с PSBT.</translation>
     </message>
     <message>
         <source>To review recipient list click "Show Details…"</source>
@@ -4853,10 +4857,6 @@ Go to File &gt; Open Wallet to load a wallet.
 <context>
     <name>dash-core</name>
     <message>
-        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation>Ошибка: не удалось начать прослушивание входящих подключений (прослушивание вернуло ошибку %s)</translation>
-    </message>
-    <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
         <translation>Расчет комиссии невозможен. Комиссия по умолчанию не установлена. подождите пару блоков либо укажите -fallbackfee.</translation>
     </message>
@@ -4937,10 +4937,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>установлено очень большое значение -maxtxfee! Комиссия такого размера может быть уплачена при проведении отдельной транзакции.</translation>
     </message>
     <message>
-        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
-        <translation>Одновременное указание конкретных соединений и использование addrman для поиска исходящих соединений не допускается.</translation>
-    </message>
-    <message>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
         <translation>Найдены неподтверждённые номиналы, процесс продолжится после их подтверждения.</translation>
     </message>
@@ -4957,6 +4953,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>SQLiteDatabase: Неизвестная версия %d схемы кошелька sqlite. Поддерживается только версия %d</translation>
     </message>
     <message>
+        <source>The -txindex upgrade started by a previous version cannot be completed. Restart with the previous version or run a full -reindex.</source>
+        <translation>Обновление -txindex, начатое предыдущей версией, не может быть завершено. Перезапустите с предыдущей версией или выполните полный -reindex.</translation>
+    </message>
+    <message>
         <source>Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
         <translation>Индексирование транзакций нельзя отключить в режиме проверки данных управления. Либо запустите кошелек с опцией -disablegovernance, либо включите индексирование транзакций.</translation>
     </message>
@@ -4967,6 +4967,18 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Entry exceeds maximum size.</source>
         <translation>Запись превышает максимально допустимый размер.</translation>
+    </message>
+    <message>
+        <source>Error upgrading Evo database</source>
+        <translation>Ошибка обновления базы данных Evo</translation>
+    </message>
+    <message>
+        <source>Error upgrading evo database for EHF</source>
+        <translation>Ошибка обновления базы данных Evo в части EHF</translation>
+    </message>
+    <message>
+        <source>Failed to commit Evo database</source>
+        <translation>Ошибка записи в базу данных Evo</translation>
     </message>
     <message>
         <source>Found enough users, signing ( waiting %s )</source>
@@ -5003,6 +5015,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Invalid minimum number of spork signers specified with -minsporkkeys</source>
         <translation>Некорректное минимальное количество подписантов спорков, указанное в -minsporkkeys</translation>
+    </message>
+    <message>
+        <source>Listening for incoming connections failed (listen returned error %s)</source>
+        <translation>Не удалось начать прослушивание входящих подключений (прослушивание вернуло ошибку %s)</translation>
     </message>
     <message>
         <source>Lock is already in place.</source>
@@ -5059,6 +5075,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Synchronizing governance objects…</source>
         <translation>Синхронизация объектов управления…</translation>
+    </message>
+    <message>
+        <source>Transaction change output index out of range</source>
+        <translation>Индекс выхода для сдачи вне допустимых рамок</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
@@ -5185,10 +5205,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Ошибка загрузки %s: Закрытые ключи могут быть отключены только при создании кошелька</translation>
     </message>
     <message>
-        <source>Error upgrading evo database</source>
-        <translation>Ошибка обновления базы данных evo</translation>
-    </message>
-    <message>
         <source>Error: Couldn't create cursor into database</source>
         <translation>Ошибка: Не удалось создать cursor в базе данных</translation>
     </message>
@@ -5219,10 +5235,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Exceeded max tries.</source>
         <translation>Превышено максимальное количество попыток.</translation>
-    </message>
-    <message>
-        <source>Failed to commit EvoDB</source>
-        <translation>Ошибка записи EvoDB</translation>
     </message>
     <message>
         <source>Failed to create backup %s!</source>
@@ -5299,10 +5311,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>No matching denominations found for mixing.</source>
         <translation>Отсутствуют совпадающие для перемешивания номиналы.</translation>
-    </message>
-    <message>
-        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
-        <translation>Прокси не указан. Используйте -proxy=&lt;ip&gt; или -proxy=&lt;ip:port&gt;.</translation>
     </message>
     <message>
         <source>Not compatible with existing transactions.</source>
@@ -5569,10 +5577,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Режим prune несовместим с параметром -reindex-chainstate. Используйте полный параметр -reindex вместо этого.</translation>
     </message>
     <message>
-        <source>The -txindex upgrade started by a previous version can not be completed. Restart with the previous version or run a full -reindex.</source>
-        <translation>Обновление -txindex, начатое предыдущей версией, не может быть завершено. Перезапустите с предыдущей версией или выполните полный -reindex.</translation>
-    </message>
-    <message>
         <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
         <translation>База данных индекса блоков содержит устаревший 'txindex'. Чтобы освободить занятое дисковое пространство, выполните полный -reindex, в противном случае игнорируйте эту ошибку. Это сообщение об ошибке больше не будет отображаться.</translation>
     </message>
@@ -5647,10 +5651,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Cannot write to data directory '%s'; check permissions.</source>
         <translation>Не удалось осуществить запись в каталог данных '%s'; проверьте доступ.</translation>
-    </message>
-    <message>
-        <source>Change index out of range</source>
-        <translation>Индекс выхода для сдачи вне допустимых рамок</translation>
     </message>
     <message>
         <source>Copyright (C)</source>
@@ -5811,6 +5811,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>%s corrupt. Try using the wallet tool dash-wallet to salvage or restoring a backup.</source>
         <translation>%s поврежден. Попробуете воспользоваться утилитой dash-wallet для восстановления.</translation>
+    </message>
+    <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
+        <translation>Одновременное указание конкретных соединений и использование addrman для поиска исходящих соединений не допускается.</translation>
     </message>
     <message>
         <source>Last successful action was too recent.</source>

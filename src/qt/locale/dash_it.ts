@@ -615,14 +615,6 @@
         <translation>Mostra informazioni %1</translation>
     </message>
     <message>
-        <source>Load Partially Signed Dash Transaction</source>
-        <translation>Carica transazione Dash parzialmente firmata</translation>
-    </message>
-    <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation>Carica la transazione Bitcoin parzialmente firmata dagli appunti</translation>
-    </message>
-    <message>
         <source>Open debugging and diagnostic console</source>
         <translation>Aprire la console di debug e diagnostica</translation>
     </message>
@@ -1330,10 +1322,6 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>Usa una cartella dati personalizzata:</translation>
-    </message>
-    <message>
-        <source>%1 GB of free space available</source>
-        <translation>%1 GB di spazio libero disponibile</translation>
     </message>
     <message>
         <source>(of %1 GB needed)</source>
@@ -3769,10 +3757,6 @@ Per ulteriori informazioni sull'utilizzo di questa console, digitare %6.
         <translation>Cr&amp;eate Non firmato</translation>
     </message>
     <message>
-        <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation>Crea una Transazione Bitcoin con Firma Parziale (PSBT) da utilizzare ad es. con un portafoglio %1 offline o con un portafoglio hardware compatibile con PSBT.</translation>
-    </message>
-    <message>
         <source> from wallet '%1'</source>
         <translation>Dal wallet '%1'</translation>
     </message>
@@ -4853,10 +4837,6 @@ Vai su File &gt; Apri Wallet per caricare un Wallet.
 <context>
     <name>dash-core</name>
     <message>
-        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation>Errore: Ascolto per le connessioni in entrata non riuscito (ascoltare errore restituito %s)</translation>
-    </message>
-    <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
         <translation>Stima della tariffa non riuscita. La commissione di riserva è disabilitata. Attendi qualche blocco o abilita -fallbackfee.</translation>
     </message>
@@ -4935,10 +4915,6 @@ Vai su File &gt; Apri Wallet per caricare un Wallet.
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee è impostato a molto alto! Commissioni così alte possono venir pagate anche su una singola transazione.</translation>
-    </message>
-    <message>
-        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
-        <translation>Non è possibile fornire connessioni specifiche e allo stesso tempo fare in modo che addrman trovi le connessioni in uscita.</translation>
     </message>
     <message>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
@@ -5185,10 +5161,6 @@ Vai su File &gt; Apri Wallet per caricare un Wallet.
         <translation>Errore durante il caricamento di %s: le chiavi private possono essere disabilitate solo durante la creazione</translation>
     </message>
     <message>
-        <source>Error upgrading evo database</source>
-        <translation>Errore durante l'aggiornamento del database evo</translation>
-    </message>
-    <message>
         <source>Error: Couldn't create cursor into database</source>
         <translation>Errore: impossibile creare il cursore nel database</translation>
     </message>
@@ -5219,10 +5191,6 @@ Vai su File &gt; Apri Wallet per caricare un Wallet.
     <message>
         <source>Exceeded max tries.</source>
         <translation>Numero massimo di tentativi superato.</translation>
-    </message>
-    <message>
-        <source>Failed to commit EvoDB</source>
-        <translation>Impossibile eseguire il commit di EvoDB</translation>
     </message>
     <message>
         <source>Failed to create backup %s!</source>
@@ -5299,10 +5267,6 @@ Vai su File &gt; Apri Wallet per caricare un Wallet.
     <message>
         <source>No matching denominations found for mixing.</source>
         <translation>Nessuna denominazione corrispondente trovata per il mixing.</translation>
-    </message>
-    <message>
-        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
-        <translation>Nessun server proxy specificato. Utilizzare -proxy=&lt;ip&gt; o -proxy=&lt;ip:port&gt;.</translation>
     </message>
     <message>
         <source>Not compatible with existing transactions.</source>
@@ -5569,10 +5533,6 @@ Vai su File &gt; Apri Wallet per caricare un Wallet.
         <translation>La modalità Prune è incompatibile con -reindex-chainstate. Utilizzare invece full -reindex.</translation>
     </message>
     <message>
-        <source>The -txindex upgrade started by a previous version can not be completed. Restart with the previous version or run a full -reindex.</source>
-        <translation>L'aggiornamento -txindex avviato da una versione precedente non può essere completato. Riavvia con la versione precedente o esegui un -reindex completo.</translation>
-    </message>
-    <message>
         <source>The block index db contains a legacy 'txindex'. To clear the occupied disk space, run a full -reindex, otherwise ignore this error. This error message will not be displayed again.</source>
         <translation>Il database dell'indice del blocco contiene un "txindex" legacy. Per liberare lo spazio su disco occupato, esegui un -reindex completo, altrimenti ignora questo errore. Questo messaggio di errore non verrà più visualizzato.</translation>
     </message>
@@ -5647,10 +5607,6 @@ Vai su File &gt; Apri Wallet per caricare un Wallet.
     <message>
         <source>Cannot write to data directory '%s'; check permissions.</source>
         <translation>Impossibile scrivere nella directory dei dati '%s'; controlla i permessi.</translation>
-    </message>
-    <message>
-        <source>Change index out of range</source>
-        <translation>Cambio indice fuori paramentro</translation>
     </message>
     <message>
         <source>Copyright (C)</source>
