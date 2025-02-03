@@ -85,6 +85,7 @@ public:
         maxmempool,
         mempoolexpiry,
         rejectunknownscripts,   // bool
+        minrelaytxfee,
         bytespersigop,
         bytespersigopstrict,
         limitancestorcount,
