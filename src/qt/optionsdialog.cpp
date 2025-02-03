@@ -223,7 +223,11 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     groupBox_Spamfiltering->setTitle(tr("Spam filtering"));
     QVBoxLayout * const verticalLayout_Spamfiltering = new QVBoxLayout(groupBox_Spamfiltering);
 
-    // TODO
+    rejectunknownscripts = new QCheckBox(groupBox_Spamfiltering);
+    rejectunknownscripts->setText(tr("Ignore unrecognised receiver scripts"));
+    rejectunknownscripts->setToolTip(tr("With this option enabled, unrecognised receiver (\"pubkey\") scripts will be ignored. Unrecognisable scripts could be used to bypass further spam filters. If your software is outdated, they may also be used to trick you into thinking you were sent bitcoins that will never confirm."));
+    verticalLayout_Spamfiltering->addWidget(rejectunknownscripts);
+    FixTabOrder(rejectunknownscripts);
 
     verticalLayout_Mempool->addWidget(groupBox_Spamfiltering);
 
@@ -482,6 +486,8 @@ void OptionsDialog::setMapper()
     mapper->addMapping(maxorphantx, OptionsModel::maxorphantx);
     mapper->addMapping(maxmempool, OptionsModel::maxmempool);
     mapper->addMapping(mempoolexpiry, OptionsModel::mempoolexpiry);
+
+    mapper->addMapping(rejectunknownscripts, OptionsModel::rejectunknownscripts);
 
     /* Window */
 #ifndef Q_OS_MACOS

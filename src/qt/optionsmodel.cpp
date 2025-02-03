@@ -645,6 +645,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return qlonglong(node().mempool().m_opts.max_size_bytes / 1'000'000);
     case mempoolexpiry:
         return qlonglong(std::chrono::duration_cast<std::chrono::hours>(node().mempool().m_opts.expiry).count());
+    case rejectunknownscripts:
+        return node().mempool().m_opts.require_standard;
     default:
         return QVariant();
     }
@@ -1017,6 +1019,16 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
                 auto& active_chainstate = node_ctx->chainman->ActiveChainstate();
                 LimitMempoolSize(*node_ctx->mempool, active_chainstate.CoinsTip());
             }
+        }
+        break;
+    }
+    case rejectunknownscripts:
+    {
+        if (changed()) {
+            const bool fNewValue = value.toBool();
+            node().mempool().m_opts.require_standard = fNewValue;
+            // This option is inverted in the config:
+            gArgs.ModifyRWConfigFile("acceptnonstdtxn", strprintf("%d", ! fNewValue));
         }
         break;
     }

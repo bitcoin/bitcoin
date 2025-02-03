@@ -14,6 +14,7 @@ class QValidatedLineEdit;
 
 QT_BEGIN_NAMESPACE
 class QBoxLayout;
+class QCheckBox;
 class QDataWidgetMapper;
 class QEvent;
 class QSpinBox;
@@ -98,6 +99,8 @@ private:
     QSpinBox *maxorphantx;
     QSpinBox *maxmempool;
     QSpinBox *mempoolexpiry;
+
+    QCheckBox *rejectunknownscripts;
 };
 
 #endif // BITCOIN_QT_OPTIONSDIALOG_H

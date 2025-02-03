@@ -84,6 +84,7 @@ public:
         maxorphantx,
         maxmempool,
         mempoolexpiry,
+        rejectunknownscripts,   // bool
         OptionIDRowCount,
     };
 
