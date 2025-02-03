@@ -662,6 +662,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return qlonglong(node().mempool().m_opts.limits.descendant_size_vbytes / 1'000);
     case rejectbaremultisig:
         return !node().mempool().m_opts.permit_bare_multisig;
+    case datacarriersize:
+        return qlonglong(node().mempool().m_opts.max_datacarrier_bytes.value_or(0));
     default:
         return QVariant();
     }
@@ -1101,6 +1103,22 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             const bool fNewValue = ! value.toBool();
             node().mempool().m_opts.permit_bare_multisig = fNewValue;
             gArgs.ModifyRWConfigFile("permitbaremultisig", strprintf("%d", fNewValue));
+        }
+        break;
+    case datacarriersize:
+        if (changed()) {
+            const int nNewSize = value.toInt();
+            const bool fNewEn = (nNewSize > 0);
+            if (fNewEn) {
+                if (!node().mempool().m_opts.max_datacarrier_bytes.has_value()) {
+                    gArgs.ModifyRWConfigFile("datacarrier", strprintf("%d", fNewEn));
+                }
+                gArgs.ModifyRWConfigFile("datacarriersize", value.toString().toStdString());
+                node().mempool().m_opts.max_datacarrier_bytes = nNewSize;
+            } else {
+                gArgs.ModifyRWConfigFile("datacarrier", "0");
+                node().mempool().m_opts.max_datacarrier_bytes = std::nullopt;
+            }
         }
         break;
     default:
