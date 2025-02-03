@@ -125,21 +125,51 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   # When detecting podman-docker, `--external` should be added.
   docker image prune --force --filter "label=$CI_IMAGE_LABEL"
 
+  # Compile the docker run arguments into an array
+  docker_args=(
+    --cap-add LINUX_IMMUTABLE
+  )
+  # Filter these optional vars out, which, if empty are passed through the bash
+  # array incorrectly as empty strings
+  if [[ -n "$CI_CONTAINER_CAP" ]]; then
+    read -ra cap_args <<< "$CI_CONTAINER_CAP"
+    docker_args+=("${cap_args[@]}")
+  fi
+  if [[ -n "$CI_BUILD_MOUNT" ]]; then
+    read -ra build_args <<< "$CI_BUILD_MOUNT"
+    docker_args+=("${build_args[@]}")
+  fi
+  # Main args
+  docker_args+=(
+    --rm
+    --interactive
+    --detach
+    --tty
+    --mount "type=bind,src=$BASE_READ_ONLY_DIR,dst=$BASE_READ_ONLY_DIR,readonly"
+    --mount "${CI_CCACHE_MOUNT}"
+    --mount "${CI_DEPENDS_MOUNT}"
+    --mount "${CI_DEPENDS_SOURCES_MOUNT}"
+    --mount "${CI_PREVIOUS_RELEASES_MOUNT}"
+  )
+  # Add worktree root mount, if needed
+  GIT_DIR=$(git rev-parse --git-dir)
+  if [[ "$GIT_DIR" == *".git/worktrees/"* ]]; then
+    WORKTREE_ROOT=$(echo "$GIT_DIR" | sed 's/\.git\/worktrees\/.*/\.git/')
+    docker_args+=(--mount "type=bind,src=$WORKTREE_ROOT,dst=$WORKTREE_ROOT,readonly")
+  fi
   # Append $USER to /tmp/env to support multi-user systems and $CONTAINER_NAME
   # to allow support starting multiple runs simultaneously by the same user.
-  # shellcheck disable=SC2086
-  CI_CONTAINER_ID=$(docker run --cap-add LINUX_IMMUTABLE $CI_CONTAINER_CAP --rm --interactive --detach --tty \
-                  --mount "type=bind,src=$BASE_READ_ONLY_DIR,dst=$BASE_READ_ONLY_DIR,readonly" \
-                  --mount "${CI_CCACHE_MOUNT}" \
-                  --mount "${CI_DEPENDS_MOUNT}" \
-                  --mount "${CI_DEPENDS_SOURCES_MOUNT}" \
-                  --mount "${CI_PREVIOUS_RELEASES_MOUNT}" \
-                  ${CI_BUILD_MOUNT} \
-                  --env-file /tmp/env-$USER-$CONTAINER_NAME \
-                  --name "$CONTAINER_NAME" \
-                  --network ci-ip6net \
-                  --platform="${CI_IMAGE_PLATFORM}" \
-                  "$CONTAINER_NAME")
+  docker_args+=(
+    --env-file "/tmp/env-$USER-$CONTAINER_NAME"
+    --name "$CONTAINER_NAME"
+    --network ci-ip6net
+    --platform="${CI_IMAGE_PLATFORM}"
+  )
+
+  docker_args+=("$CONTAINER_NAME")
+  # Execute command
+  CI_CONTAINER_ID=$(docker run "${docker_args[@]}")
+
   export CI_CONTAINER_ID
   export CI_EXEC_CMD_PREFIX="docker exec ${CI_CONTAINER_ID}"
 else
