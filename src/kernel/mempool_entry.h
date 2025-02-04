@@ -138,6 +138,7 @@ public:
     {
         return GetVirtualTransactionSize(nTxWeight, sigOpCost, ::nBytesPerSigOp);
     }
+    int32_t GetAdjustedWeight() const { return GetSigOpsAdjustedWeight(nTxWeight, sigOpCost, ::nBytesPerSigOp); }
     int32_t GetTxWeight() const { return nTxWeight; }
     std::chrono::seconds GetTime() const { return std::chrono::seconds{nTime}; }
     unsigned int GetHeight() const { return entryHeight; }
