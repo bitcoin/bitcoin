@@ -675,6 +675,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return qlonglong(node().mempool().m_opts.limits.descendant_count);
     case limitdescendantsize:
         return qlonglong(node().mempool().m_opts.limits.descendant_size_vbytes / 1'000);
+    case rejectbarepubkey:
+        return !node().mempool().m_opts.permit_bare_pubkey;
     case rejectbaremultisig:
         return !node().mempool().m_opts.permit_bare_multisig;
     case maxscriptsize:
@@ -1173,6 +1175,14 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             node().mempool().m_opts.limits.descendant_size_vbytes = nNv * 1'000;
             gArgs.ForceSetArg("-limitdescendantsize", strNv);
             gArgs.ModifyRWConfigFile("limitdescendantsize", strNv);
+        }
+        break;
+    case rejectbarepubkey:
+        if (changed()) {
+            // The config and internal option is inverted
+            const bool nv = ! value.toBool();
+            node().mempool().m_opts.permit_bare_pubkey = nv;
+            node().updateRwSetting("permitbaremultisig", nv);
         }
         break;
     case rejectbaremultisig:

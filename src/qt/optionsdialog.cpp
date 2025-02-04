@@ -301,6 +301,12 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     limitdescendantsize->setMaximum(std::numeric_limits<int>::max());
     CreateOptionUI(verticalLayout_Spamfiltering, limitdescendantsize, tr("Ignore transactions if any ancestor would have more than %s kilobytes of unconfirmed descendants."));
 
+    rejectbarepubkey = new QCheckBox(groupBox_Spamfiltering);
+    rejectbarepubkey->setText(tr("Ignore bare/exposed public keys (pay-to-IP)"));
+    rejectbarepubkey->setToolTip(tr("Spam is sometimes disguised to appear as if it is a deprecated pay-to-IP (bare pubkey) transaction, where the \"key\" is actually arbitrary data (not a real key) instead. Support for pay-to-IP was only ever supported by Satoshi's early Bitcoin wallet, which has been abandoned since 2011."));
+    verticalLayout_Spamfiltering->addWidget(rejectbarepubkey);
+    FixTabOrder(rejectbarepubkey);
+
     rejectbaremultisig = new QCheckBox(groupBox_Spamfiltering);
     rejectbaremultisig->setText(tr("Ignore bare/exposed \"multisig\" scripts"));
     rejectbaremultisig->setToolTip(tr("Spam is sometimes disguised to appear as if it is an old-style N-of-M multi-party transaction, where most of the keys are really bogus. At the same time, legitimate multi-party transactions typically have always used P2SH format (which is not filtered by this option), which is more secure."));
@@ -640,6 +646,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(limitancestorsize, OptionsModel::limitancestorsize);
     mapper->addMapping(limitdescendantcount, OptionsModel::limitdescendantcount);
     mapper->addMapping(limitdescendantsize, OptionsModel::limitdescendantsize);
+    mapper->addMapping(rejectbarepubkey, OptionsModel::rejectbarepubkey);
     mapper->addMapping(rejectbaremultisig, OptionsModel::rejectbaremultisig);
     mapper->addMapping(maxscriptsize, OptionsModel::maxscriptsize);
     mapper->addMapping(datacarriercost, OptionsModel::datacarriercost);

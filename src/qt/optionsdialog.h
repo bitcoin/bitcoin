@@ -120,6 +120,7 @@ private:
     QSpinBox *limitancestorsize;
     QSpinBox *limitdescendantcount;
     QSpinBox *limitdescendantsize;
+    QCheckBox *rejectbarepubkey;
     QCheckBox *rejectbaremultisig;
     QSpinBox *maxscriptsize;
     QSpinBox *datacarriersize;
