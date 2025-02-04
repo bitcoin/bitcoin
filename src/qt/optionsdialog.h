@@ -17,6 +17,7 @@ QT_BEGIN_NAMESPACE
 class QBoxLayout;
 class QCheckBox;
 class QDataWidgetMapper;
+class QDoubleSpinBox;
 class QSpinBox;
 class QString;
 class QValueComboBox;
@@ -115,6 +116,7 @@ private:
     QSpinBox *limitdescendantsize;
     QCheckBox *rejectbaremultisig;
     QSpinBox *datacarriersize;
+    QDoubleSpinBox *datacarriercost;
     BitcoinAmountField *dustrelayfee;
 
     BitcoinAmountField *blockmintxfee;

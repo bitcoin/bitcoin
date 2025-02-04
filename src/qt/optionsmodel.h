@@ -96,6 +96,7 @@ public:
         limitdescendantcount,
         limitdescendantsize,
         rejectbaremultisig,     // bool
+        datacarriercost,        // double
         datacarriersize,
         dustrelayfee,
         blockmintxfee,
