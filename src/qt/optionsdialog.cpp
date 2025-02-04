@@ -307,6 +307,12 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     verticalLayout_Spamfiltering->addWidget(rejectbaremultisig);
     FixTabOrder(rejectbaremultisig);
 
+    maxscriptsize = new QSpinBox(groupBox_Spamfiltering);
+    maxscriptsize->setMinimum(0);
+    maxscriptsize->setMaximum(std::numeric_limits<int>::max());
+    maxscriptsize->setToolTip(tr("There may be rare smart contracts that require a large amount of code, but more often a larger code segment is actually just spam finding new ways to try to evade filtering. 1650 bytes is sometimes considered the high end of what might be normal, usually for N-of-20 multisig."));
+    CreateOptionUI(verticalLayout_Spamfiltering, maxscriptsize, tr("Ignore transactions with smart contract code larger than %s bytes."));
+
     datacarriersize = new QSpinBox(groupBox_Spamfiltering);
     datacarriersize->setMinimum(0);
     datacarriersize->setMaximum(std::numeric_limits<int>::max());
@@ -635,6 +641,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(limitdescendantcount, OptionsModel::limitdescendantcount);
     mapper->addMapping(limitdescendantsize, OptionsModel::limitdescendantsize);
     mapper->addMapping(rejectbaremultisig, OptionsModel::rejectbaremultisig);
+    mapper->addMapping(maxscriptsize, OptionsModel::maxscriptsize);
     mapper->addMapping(datacarriercost, OptionsModel::datacarriercost);
     mapper->addMapping(datacarriersize, OptionsModel::datacarriersize);
     mapper->addMapping(dustrelayfee, OptionsModel::dustrelayfee);
