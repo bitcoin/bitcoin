@@ -218,5 +218,5 @@ void AddToMempool(CTxMemPool& tx_pool, const CTxMemPoolEntry& entry)
     changeset->StageAddition(entry.GetSharedTx(), entry.GetFee(),
             entry.GetTime().count(), entry.GetHeight(), entry.GetSequence(),
             entry.GetSpendsCoinbase(), entry.GetSigOpCost(), entry.GetLockPoints());
-    changeset->Apply();
+    if (changeset->CheckMemPoolPolicyLimits()) changeset->Apply();
 }
