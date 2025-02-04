@@ -329,6 +329,7 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, const bool avoid_reuse
 {
     Balance ret;
     isminefilter reuse_filter = avoid_reuse ? ISMINE_NO : ISMINE_USED;
+    const bool cj_enabled = CCoinJoinClientOptions::IsEnabled();
     {
         LOCK(cs_wallet);
         std::set<uint256> trusted_parents;
@@ -349,7 +350,7 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, const bool avoid_reuse
             }
             ret.m_mine_immature += wtx.GetImmatureCredit();
             ret.m_watchonly_immature += wtx.GetImmatureWatchOnlyCredit();
-            if (CCoinJoinClientOptions::IsEnabled()) {
+            if (cj_enabled) {
                 const auto balance_anonymized = wtx.GetAnonymizedBalance();
                 ret.m_anonymized += balance_anonymized.m_anonymized;
                 if (balance_anonymized.is_unconfirmed) {
