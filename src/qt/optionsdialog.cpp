@@ -22,11 +22,13 @@
 #include <netbase.h>
 #include <node/caches.h>
 #include <node/chainstatemanager_args.h>
+#include <node/mempool_args.h> // for ParseDustDynamicOpt
 #include <outputtype.h>
 #include <primitives/transaction.h> // for WITNESS_SCALE_FACTOR
 #include <txmempool.h> // for maxmempoolMinimum
 #include <util/strencodings.h>
 #include <chrono>
+#include <utility>
 
 #include <QApplication>
 #include <QBoxLayout>
@@ -41,6 +43,7 @@
 #include <QLabel>
 #include <QLocale>
 #include <QMessageBox>
+#include <QRadioButton>
 #include <QSpacerItem>
 #include <QString>
 #include <QStringList>
@@ -67,13 +70,15 @@ void OptionsDialog::CreateOptionUI(QBoxLayout * const layout, QWidget * const o,
 
     if (!horizontalLayout) horizontalLayout = new QHBoxLayout();
 
-    QLabel * const labelBefore = new QLabel(parent);
-    labelBefore->setText(text_parts[0]);
-    labelBefore->setTextFormat(Qt::PlainText);
-    labelBefore->setBuddy(o);
-    labelBefore->setToolTip(o->toolTip());
+    if (!text_parts[0].isEmpty()) {
+        QLabel * const labelBefore = new QLabel(parent);
+        labelBefore->setText(text_parts[0]);
+        labelBefore->setTextFormat(Qt::PlainText);
+        labelBefore->setBuddy(o);
+        labelBefore->setToolTip(o->toolTip());
+        horizontalLayout->addWidget(labelBefore);
+    }
 
-    horizontalLayout->addWidget(labelBefore);
     horizontalLayout->addWidget(o);
 
     QLabel * const labelAfter = new QLabel(parent);
@@ -340,7 +345,67 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     });
 
     dustrelayfee = new BitcoinAmountField(groupBox_Spamfiltering);
-    CreateOptionUI(verticalLayout_Spamfiltering, dustrelayfee, tr("Ignore transactions with values that would cost more to spend at a fee rate of %s per kvB."));
+    CreateOptionUI(verticalLayout_Spamfiltering, dustrelayfee, tr("Ignore transactions with values that would cost more to spend at a fee rate of %s per kvB (\"dust\")."));
+
+
+    auto hlayout = new QHBoxLayout();
+    dustdynamic_enable = new QCheckBox(groupBox_Spamfiltering);
+    dustdynamic_enable->setText(tr("Automatically adjust the dust limit upward to"));
+    hlayout->addWidget(dustdynamic_enable);
+    dustdynamic_multiplier = new QDoubleSpinBox(groupBox_Spamfiltering);
+    dustdynamic_multiplier->setDecimals(3);
+    dustdynamic_multiplier->setStepType(QAbstractSpinBox::DefaultStepType);
+    dustdynamic_multiplier->setSingleStep(1);
+    dustdynamic_multiplier->setMinimum(0.001);
+    dustdynamic_multiplier->setMaximum(65);
+    dustdynamic_multiplier->setValue(DEFAULT_DUST_RELAY_MULTIPLIER / 1000.0);
+    CreateOptionUI(verticalLayout_Spamfiltering, dustdynamic_multiplier, tr("%s times:"), hlayout);
+
+    QStyleOptionButton styleoptbtn;
+    const auto checkbox_indent = dustdynamic_enable->style()->subElementRect(QStyle::SE_CheckBoxIndicator, &styleoptbtn, dustdynamic_enable).width();
+
+    hlayout = new QHBoxLayout();
+    hlayout->addSpacing(checkbox_indent);
+    dustdynamic_target = new QRadioButton(groupBox_Spamfiltering);
+    hlayout->addWidget(dustdynamic_target);
+    dustdynamic_target_blocks = new QSpinBox(groupBox_Spamfiltering);
+    dustdynamic_target_blocks->setMinimum(2);
+    dustdynamic_target_blocks->setMaximum(1008);  // FIXME: Get this from the fee estimator
+    dustdynamic_target_blocks->setValue(1008);
+    CreateOptionUI(verticalLayout_Spamfiltering, dustdynamic_target_blocks, tr("fee estimate for %s blocks."), hlayout);
+    // FIXME: Make it possible to click labels to select + focus spinbox
+
+    hlayout = new QHBoxLayout();
+    hlayout->addSpacing(checkbox_indent);
+    dustdynamic_mempool = new QRadioButton(groupBox_Spamfiltering);
+    hlayout->addWidget(dustdynamic_mempool);
+    dustdynamic_mempool_kvB = new QSpinBox(groupBox_Spamfiltering);
+    dustdynamic_mempool_kvB->setMinimum(1);
+    dustdynamic_mempool_kvB->setMaximum(std::numeric_limits<int32_t>::max());
+    dustdynamic_mempool_kvB->setValue(3024000);
+    CreateOptionUI(verticalLayout_Spamfiltering, dustdynamic_mempool_kvB, tr("the lowest fee of the best known %s kvB of unconfirmed transactions."), hlayout);
+
+    connect(dustdynamic_enable, &QAbstractButton::toggled, [this](const bool state){
+        dustdynamic_multiplier->setEnabled(state);
+        dustdynamic_target->setEnabled(state);
+        dustdynamic_mempool->setEnabled(state);
+        if (state) {
+            if (!dustdynamic_mempool->isChecked()) dustdynamic_target->setChecked(true);
+            dustdynamic_target_blocks->setEnabled(dustdynamic_target->isChecked());
+            dustdynamic_mempool_kvB->setEnabled(dustdynamic_mempool->isChecked());
+        } else {
+            dustdynamic_target_blocks->setEnabled(false);
+            dustdynamic_mempool_kvB->setEnabled(false);
+        }
+    });
+    dustdynamic_enable->toggled(dustdynamic_enable->isChecked());
+    connect(dustdynamic_target, &QAbstractButton::toggled, [this](const bool state){
+        dustdynamic_target_blocks->setEnabled(state);
+    });
+    connect(dustdynamic_mempool, &QAbstractButton::toggled, [this](const bool state){
+        dustdynamic_mempool_kvB->setEnabled(state);
+    });
+
 
     verticalLayout_Mempool->addWidget(groupBox_Spamfiltering);
 
@@ -653,6 +718,24 @@ void OptionsDialog::setMapper()
     mapper->addMapping(datacarriersize, OptionsModel::datacarriersize);
     mapper->addMapping(dustrelayfee, OptionsModel::dustrelayfee);
 
+    QVariant current_dustdynamic = model->data(model->index(OptionsModel::dustdynamic, 0), Qt::EditRole);
+    const util::Result<std::pair<int32_t, int>> parsed_dustdynamic = ParseDustDynamicOpt(current_dustdynamic.toString().toStdString(), std::numeric_limits<unsigned int>::max());
+    if (parsed_dustdynamic) {
+        if (parsed_dustdynamic->first == 0) {
+            dustdynamic_enable->setChecked(false);
+        } else {
+            dustdynamic_multiplier->setValue(parsed_dustdynamic->second / 1000.0);
+            if (parsed_dustdynamic->first < 0) {
+                dustdynamic_target->setChecked(true);
+                dustdynamic_target_blocks->setValue(-parsed_dustdynamic->first);
+            } else {
+                dustdynamic_mempool->setChecked(true);
+                dustdynamic_mempool_kvB->setValue(parsed_dustdynamic->first);
+            }
+            dustdynamic_enable->setChecked(true);
+        }
+    }
+
     /* Mining tab */
 
     mapper->addMapping(blockmintxfee, OptionsModel::blockmintxfee);
@@ -827,6 +910,16 @@ void OptionsDialog::on_okButton_clicked()
     }
 
     model->setData(model->index(OptionsModel::mempoolreplacement, 0), mempoolreplacement->itemData(mempoolreplacement->currentIndex()));
+
+    if (dustdynamic_enable->isChecked()) {
+        if (dustdynamic_target->isChecked()) {
+            model->setData(model->index(OptionsModel::dustdynamic, 0), QStringLiteral("%2*target:%1").arg(dustdynamic_target_blocks->value()).arg(dustdynamic_multiplier->value()));
+        } else if (dustdynamic_mempool->isChecked()) {
+            model->setData(model->index(OptionsModel::dustdynamic, 0), QStringLiteral("%2*mempool:%1").arg(dustdynamic_mempool_kvB->value()).arg(dustdynamic_multiplier->value()));
+        }
+    } else {
+        model->setData(model->index(OptionsModel::dustdynamic, 0), "off");
+    }
 
     mapper->submit();
     accept();

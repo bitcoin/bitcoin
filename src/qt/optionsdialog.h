@@ -20,6 +20,7 @@ class QDataWidgetMapper;
 class QDoubleSpinBox;
 class QEvent;
 class QLayout;
+class QRadioButton;
 class QSpinBox;
 class QString;
 class QValueComboBox;
@@ -127,6 +128,12 @@ private:
     QSpinBox *datacarriersize;
     QDoubleSpinBox *datacarriercost;
     BitcoinAmountField *dustrelayfee;
+    QCheckBox *dustdynamic_enable;
+    QDoubleSpinBox *dustdynamic_multiplier;
+    QRadioButton *dustdynamic_target;
+    QSpinBox *dustdynamic_target_blocks;
+    QRadioButton *dustdynamic_mempool;
+    QSpinBox *dustdynamic_mempool_kvB;
 
     BitcoinAmountField *blockmintxfee;
     QSpinBox *blockmaxsize, *blockprioritysize, *blockmaxweight;
