@@ -161,7 +161,7 @@ public:
     /** Improve the linearization of this Cluster. */
     void Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept;
     /** For every chunk in the cluster, append its FeeFrac to ret. */
-    void AppendChunkFeerates(std::vector<FeePerWeight>& ret) const noexcept;
+    void AppendChunkFeerates(std::vector<FeeFrac>& ret) const noexcept;
     /** Add a TrimTxData entry for every transaction in the Cluster to ret. Implicit dependencies
      *  between consecutive transactions in the linearization are added to deps. Return the
      *  Cluster's combined transaction size. */
@@ -503,7 +503,7 @@ public:
     bool IsOversized(bool main_only = false) noexcept final;
     std::strong_ordering CompareMainOrder(const Ref& a, const Ref& b) noexcept final;
     GraphIndex CountDistinctClusters(std::span<const Ref* const> refs, bool main_only = false) noexcept final;
-    std::pair<std::vector<FeePerWeight>, std::vector<FeePerWeight>> GetMainStagingDiagrams() noexcept final;
+    std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> GetMainStagingDiagrams() noexcept final;
     std::vector<Ref*> Trim() noexcept final;
 
     std::unique_ptr<BlockBuilder> GetBlockBuilder() noexcept final;
@@ -804,12 +804,10 @@ void Cluster::LevelDown(TxGraphImpl& graph) noexcept
     Updated(graph);
 }
 
-void Cluster::AppendChunkFeerates(std::vector<FeePerWeight>& ret) const noexcept
+void Cluster::AppendChunkFeerates(std::vector<FeeFrac>& ret) const noexcept
 {
     auto chunk_feerates = ChunkLinearization(m_depgraph, m_linearization);
-    for (const auto& feerate : chunk_feerates) {
-        ret.push_back(FeePerWeight::FromFeeFrac(feerate));
-    }
+    ret.insert(ret.begin(), chunk_feerates.begin(), chunk_feerates.end());
 }
 
 uint64_t Cluster::AppendTrimData(std::vector<TrimTxData>& ret, std::vector<std::pair<GraphIndex, GraphIndex>>& deps) const noexcept
@@ -2029,7 +2027,7 @@ TxGraph::GraphIndex TxGraphImpl::CountDistinctClusters(std::span<const Ref* cons
     return ret;
 }
 
-std::pair<std::vector<FeePerWeight>, std::vector<FeePerWeight>> TxGraphImpl::GetMainStagingDiagrams() noexcept
+std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> TxGraphImpl::GetMainStagingDiagrams() noexcept
 {
     Assume(m_clustersets.size() >= 2);
     ApplyDependencies();
@@ -2040,7 +2038,7 @@ std::pair<std::vector<FeePerWeight>, std::vector<FeePerWeight>> TxGraphImpl::Get
     // For all Clusters in main which conflict with Clusters in staging (i.e., all that are removed
     // by, or replaced in, staging), gather their chunk feerates.
     auto main_clusters = GetConflicts();
-    std::vector<FeePerWeight> main_feerates, staging_feerates;
+    std::vector<FeeFrac> main_feerates, staging_feerates;
     for (Cluster* cluster : main_clusters) {
         cluster->AppendChunkFeerates(main_feerates);
     }
