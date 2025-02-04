@@ -688,6 +688,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return double(::g_weight_per_data_byte) / WITNESS_SCALE_FACTOR;
     case datacarriersize:
         return qlonglong(node().mempool().m_opts.max_datacarrier_bytes.value_or(0));
+    case rejectnonstddatacarrier:
+        return !node().mempool().m_opts.accept_non_std_datacarrier;
     case dustrelayfee:
         return qlonglong(node().mempool().m_opts.dust_relay_feerate_floor.GetFeePerK());
     case dustdynamic:
@@ -1226,6 +1228,14 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
                 gArgs.ModifyRWConfigFile("datacarrier", "0");
                 node().mempool().m_opts.max_datacarrier_bytes = std::nullopt;
             }
+        }
+        break;
+    case rejectnonstddatacarrier:
+        if (changed()) {
+            // This option is inverted
+            const bool new_value = ! value.toBool();
+            node().updateRwSetting("acceptnonstddatacarrier" + suffix, new_value);
+            node().mempool().m_opts.accept_non_std_datacarrier = new_value;
         }
         break;
     case dustrelayfee:

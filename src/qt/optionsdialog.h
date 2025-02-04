@@ -127,6 +127,7 @@ private:
     QSpinBox *maxscriptsize;
     QSpinBox *datacarriersize;
     QDoubleSpinBox *datacarriercost;
+    QCheckBox *rejectnonstddatacarrier;
     BitcoinAmountField *dustrelayfee;
     QCheckBox *dustdynamic_enable;
     QDoubleSpinBox *dustdynamic_multiplier;

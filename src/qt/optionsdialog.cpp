@@ -344,6 +344,12 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
         if (w != wf) datacarriercost->setValue(wf / 4);
     });
 
+    rejectnonstddatacarrier = new QCheckBox(groupBox_Spamfiltering);
+    rejectnonstddatacarrier->setText(tr("Ignore data embedded with non-standard formats"));
+    rejectnonstddatacarrier->setToolTip(tr("Some attempts to spam Bitcoin intentionally use non-standard formats in an attempt to bypass the datacarrier limits. Without this option, %1 will attempt to detect these and enforce the intended limits. By enabling this option, your node will ignore these transactions entirely (when detected) even if they fall within the configured limits otherwise."));
+    verticalLayout_Spamfiltering->addWidget(rejectnonstddatacarrier);
+    FixTabOrder(rejectnonstddatacarrier);
+
     dustrelayfee = new BitcoinAmountField(groupBox_Spamfiltering);
     CreateOptionUI(verticalLayout_Spamfiltering, dustrelayfee, tr("Ignore transactions with values that would cost more to spend at a fee rate of %s per kvB (\"dust\")."));
 
@@ -716,6 +722,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(maxscriptsize, OptionsModel::maxscriptsize);
     mapper->addMapping(datacarriercost, OptionsModel::datacarriercost);
     mapper->addMapping(datacarriersize, OptionsModel::datacarriersize);
+    mapper->addMapping(rejectnonstddatacarrier, OptionsModel::rejectnonstddatacarrier);
     mapper->addMapping(dustrelayfee, OptionsModel::dustrelayfee);
 
     QVariant current_dustdynamic = model->data(model->index(OptionsModel::dustdynamic, 0), Qt::EditRole);
