@@ -101,6 +101,7 @@ public:
         datacarriercost,        // double
         datacarriersize,
         dustrelayfee,
+        dustdynamic,            // QString
         blockmintxfee,
         blockmaxsize,
         blockprioritysize,

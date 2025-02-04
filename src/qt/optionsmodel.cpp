@@ -23,6 +23,7 @@
 #include <netbase.h>
 #include <node/chainstatemanager_args.h>
 #include <node/context.h>
+#include <node/mempool_args.h> // for ParseDustDynamicOpt
 #include <outputtype.h>
 #include <policy/settings.h>
 #include <txdb.h> // for -dbcache defaults
@@ -38,6 +39,7 @@
 #include <chrono>
 #include <string>
 #include <unordered_set>
+#include <utility>
 
 #include <QDebug>
 #include <QLatin1Char>
@@ -77,6 +79,7 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::peerbloomfilters: return "peerbloomfilters";
     case OptionsModel::peerblockfilters: return "peerblockfilters";
     case OptionsModel::datacarriercost: return "datacarriercost";
+    case OptionsModel::dustdynamic: return "dustdynamic";
     default: throw std::logic_error(strprintf("GUI option %i has no corresponding node setting.", option));
     }
 }
@@ -685,6 +688,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return qlonglong(node().mempool().m_opts.max_datacarrier_bytes.value_or(0));
     case dustrelayfee:
         return qlonglong(node().mempool().m_opts.dust_relay_feerate_floor.GetFeePerK());
+    case dustdynamic:
+        return QString::fromStdString(SettingToString(setting(), DEFAULT_DUST_DYNAMIC));
     case blockmintxfee:
         if (gArgs.IsArgSet("-blockmintxfee")) {
             return qlonglong(ParseMoney(gArgs.GetArg("-blockmintxfee", "")).value_or(0));
@@ -1228,6 +1233,17 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             } else {
                 node().mempool().UpdateDynamicDustFeerate();
             }
+        }
+        break;
+    case dustdynamic:
+        if (changed()) {
+            const std::string newvalue_str = value.toString().toStdString();
+            const util::Result<std::pair<int32_t, int>> parsed = ParseDustDynamicOpt(newvalue_str, 1008 /* FIXME: get from estimator */);
+            assert(parsed);  // FIXME: what to do if it fails to parse?
+            // FIXME: save -prev-<type> for each type
+            update(newvalue_str);
+            node().mempool().m_opts.dust_relay_target = parsed->first;
+            node().mempool().m_opts.dust_relay_multiplier = parsed->second;
         }
         break;
     case blockmintxfee:
