@@ -32,6 +32,7 @@
 #include <QBoxLayout>
 #include <QDataWidgetMapper>
 #include <QDir>
+#include <QDoubleSpinBox>
 #include <QFontDialog>
 #include <QGroupBox>
 #include <QHBoxLayout>
@@ -311,6 +312,20 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     datacarriersize->setMaximum(std::numeric_limits<int>::max());
     datacarriersize->setToolTip(tr("While Bitcoin itself does not support attaching arbitrary data to transactions, despite that various methods for disguising it have been devised over the years. Since it is sometimes impractical to detect small spam disguised as ordinary transactions, it is sometimes considered beneficial to tolerate certain kinds of less harmful data attachments."));
     CreateOptionUI(verticalLayout_Spamfiltering, datacarriersize, tr("Ignore transactions with additional data larger than %s bytes."));
+
+    datacarriercost = new QDoubleSpinBox(groupBox_Spamfiltering);
+    datacarriercost->setDecimals(2);
+    datacarriercost->setStepType(QAbstractSpinBox::DefaultStepType);
+    datacarriercost->setSingleStep(0.25);
+    datacarriercost->setMinimum(0.25);
+    datacarriercost->setMaximum(MAX_BLOCK_SERIALIZED_SIZE);
+    datacarriercost->setToolTip(tr("As an alternative to, or in addition to, limiting the size of disguised data, you can also configure how it is accounted for in comparison to legitimate transaction data. For example, 1 vbyte per actual byte would count it as equivalent to ordinary transaction data; 0.25 vB/B would allow it to benefit from the so-called \"segwit discount\"; or 2 vB/B would establish a bias toward legitimate transactions."));
+    CreateOptionUI(verticalLayout_Spamfiltering, datacarriercost, tr("Weigh embedded data as %s virtual bytes per actual byte."));
+    connect(datacarriercost, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [&](double d){
+        const double w = d * 4;
+        const double wf = floor(w);
+        if (w != wf) datacarriercost->setValue(wf / 4);
+    });
 
     dustrelayfee = new BitcoinAmountField(groupBox_Spamfiltering);
     CreateOptionUI(verticalLayout_Spamfiltering, dustrelayfee, tr("Ignore transactions with values that would cost more to spend at a fee rate of %s per kvB."));
@@ -620,6 +635,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(limitdescendantcount, OptionsModel::limitdescendantcount);
     mapper->addMapping(limitdescendantsize, OptionsModel::limitdescendantsize);
     mapper->addMapping(rejectbaremultisig, OptionsModel::rejectbaremultisig);
+    mapper->addMapping(datacarriercost, OptionsModel::datacarriercost);
     mapper->addMapping(datacarriersize, OptionsModel::datacarriersize);
     mapper->addMapping(dustrelayfee, OptionsModel::dustrelayfee);
 

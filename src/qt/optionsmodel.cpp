@@ -13,6 +13,7 @@
 
 #include <chainparams.h>
 #include <common/args.h>
+#include <consensus/consensus.h>
 #include <index/blockfilterindex.h>
 #include <interfaces/node.h>
 #include <kernel/mempool_options.h> // for DEFAULT_MAX_MEMPOOL_SIZE_MB, DEFAULT_MEMPOOL_EXPIRY_HOURS
@@ -76,6 +77,7 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::maxuploadtarget: return "maxuploadtarget";
     case OptionsModel::peerbloomfilters: return "peerbloomfilters";
     case OptionsModel::peerblockfilters: return "peerblockfilters";
+    case OptionsModel::datacarriercost: return "datacarriercost";
     default: throw std::logic_error(strprintf("GUI option %i has no corresponding node setting.", option));
     }
 }
@@ -675,6 +677,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return qlonglong(node().mempool().m_opts.limits.descendant_size_vbytes / 1'000);
     case rejectbaremultisig:
         return !node().mempool().m_opts.permit_bare_multisig;
+    case datacarriercost:
+        return double(::g_weight_per_data_byte) / WITNESS_SCALE_FACTOR;
     case datacarriersize:
         return qlonglong(node().mempool().m_opts.max_datacarrier_bytes.value_or(0));
     case dustrelayfee:
@@ -1175,6 +1179,13 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             const bool fNewValue = ! value.toBool();
             node().mempool().m_opts.permit_bare_multisig = fNewValue;
             gArgs.ModifyRWConfigFile("permitbaremultisig", strprintf("%d", fNewValue));
+        }
+        break;
+    case datacarriercost:
+        if (changed()) {
+            const double nNewSize = value.toDouble();
+            update(nNewSize);
+            ::g_weight_per_data_byte = nNewSize * WITNESS_SCALE_FACTOR;
         }
         break;
     case datacarriersize:
