@@ -152,7 +152,7 @@ void TxOrphanage::LimitOrphans(unsigned int max_orphans, FastRandomContext& rng)
     if (nEvicted > 0) LogDebug(BCLog::TXPACKAGES, "orphanage overflow, removed %u tx\n", nEvicted);
 }
 
-void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx)
+void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng)
 {
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
         const auto it_by_prev = m_outpoint_to_orphan_it.find(COutPoint(tx.GetHash(), i));
@@ -160,15 +160,21 @@ void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx)
             for (const auto& elem : it_by_prev->second) {
                 // Belt and suspenders, each orphan should always have at least 1 announcer.
                 if (!Assume(!elem->second.announcers.empty())) continue;
-                for (const auto announcer: elem->second.announcers) {
-                    // Get this source peer's work set, emplacing an empty set if it didn't exist
-                    // (note: if this peer wasn't still connected, we would have removed the orphan tx already)
-                    std::set<Wtxid>& orphan_work_set = m_peer_work_set.try_emplace(announcer).first->second;
-                    // Add this tx to the work set
-                    orphan_work_set.insert(elem->first);
-                    LogDebug(BCLog::TXPACKAGES, "added %s (wtxid=%s) to peer %d workset\n",
-                             tx.GetHash().ToString(), tx.GetWitnessHash().ToString(), announcer);
-                }
+
+                // Select a random peer to assign orphan processing, reducing wasted work if the orphan is still missing
+                // inputs. However, we don't want to create an issue in which the assigned peer can purposefully stop us
+                // from processing the orphan by disconnecting.
+                auto announcer_iter = std::begin(elem->second.announcers);
+                std::advance(announcer_iter, rng.randrange(elem->second.announcers.size()));
+                auto announcer = *(announcer_iter);
+
+                // Get this source peer's work set, emplacing an empty set if it didn't exist
+                // (note: if this peer wasn't still connected, we would have removed the orphan tx already)
+                std::set<Wtxid>& orphan_work_set = m_peer_work_set.try_emplace(announcer).first->second;
+                // Add this tx to the work set
+                orphan_work_set.insert(elem->first);
+                LogDebug(BCLog::TXPACKAGES, "added %s (wtxid=%s) to peer %d workset\n",
+                         tx.GetHash().ToString(), tx.GetWitnessHash().ToString(), announcer);
             }
         }
     }

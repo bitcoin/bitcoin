@@ -33,7 +33,7 @@ void initialize_orphanage()
 FUZZ_TARGET(txorphan, .init = initialize_orphanage)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    FastRandomContext limit_orphans_rng{/*fDeterministic=*/true};
+    FastRandomContext orphanage_rng{/*fDeterministic=*/true};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 
     TxOrphanage orphanage;
@@ -79,7 +79,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
         // previous loop and potentially the parent of this tx.
         if (ptx_potential_parent) {
             // Set up future GetTxToReconsider call.
-            orphanage.AddChildrenToWorkSet(*ptx_potential_parent);
+            orphanage.AddChildrenToWorkSet(*ptx_potential_parent, orphanage_rng);
 
             // Check that all txns returned from GetChildrenFrom* are indeed a direct child of this tx.
             NodeId peer_id = fuzzed_data_provider.ConsumeIntegral<NodeId>();
@@ -154,7 +154,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                     // test mocktime and expiry
                     SetMockTime(ConsumeTime(fuzzed_data_provider));
                     auto limit = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
-                    orphanage.LimitOrphans(limit, limit_orphans_rng);
+                    orphanage.LimitOrphans(limit, orphanage_rng);
                     Assert(orphanage.Size() <= limit);
                 });
 
