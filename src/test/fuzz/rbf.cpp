@@ -75,14 +75,14 @@ FUZZ_TARGET(rbf, .init = initialize_rbf)
         }
         LOCK2(cs_main, pool.cs);
         if (!pool.GetIter(another_tx.GetHash())) {
-            AddToMempool(pool, ConsumeTxMemPoolEntry(fuzzed_data_provider, another_tx));
+            TryAddToMempool(pool, ConsumeTxMemPoolEntry(fuzzed_data_provider, another_tx));
         }
     }
     const CTransaction tx{*mtx};
     if (fuzzed_data_provider.ConsumeBool()) {
         LOCK2(cs_main, pool.cs);
         if (!pool.GetIter(tx.GetHash())) {
-            AddToMempool(pool, ConsumeTxMemPoolEntry(fuzzed_data_provider, tx));
+            TryAddToMempool(pool, ConsumeTxMemPoolEntry(fuzzed_data_provider, tx));
         }
     }
     {
@@ -143,7 +143,7 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
             break;
         }
         assert(!pool.GetIter(parent_entry.GetTx().GetHash()));
-        AddToMempool(pool, parent_entry);
+        TryAddToMempool(pool, parent_entry);
 
         // It's possible that adding this to the mempool failed due to cluster
         // size limits; if so bail out.
@@ -162,7 +162,7 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
             break;
         }
         if (!pool.GetIter(child_entry.GetTx().GetHash())) {
-            AddToMempool(pool, child_entry);
+            TryAddToMempool(pool, child_entry);
             // Adding this transaction to the mempool may fail due to cluster
             // size limits; if so bail out.
             if(!pool.GetIter(child_entry.GetTx().GetHash())) {
