@@ -100,6 +100,7 @@ public:
         maxscriptsize,
         datacarriercost,        // double
         datacarriersize,
+        rejectnonstddatacarrier,  // bool
         dustrelayfee,
         dustdynamic,            // QString
         blockmintxfee,
