@@ -115,6 +115,7 @@ private:
     QSpinBox *limitdescendantcount;
     QSpinBox *limitdescendantsize;
     QCheckBox *rejectbaremultisig;
+    QSpinBox *maxscriptsize;
     QSpinBox *datacarriersize;
     QDoubleSpinBox *datacarriercost;
     BitcoinAmountField *dustrelayfee;
