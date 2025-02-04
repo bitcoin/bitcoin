@@ -260,6 +260,12 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     verticalLayout_Spamfiltering->addWidget(rejectunknownscripts);
     FixTabOrder(rejectunknownscripts);
 
+    rejectspkreuse = new QCheckBox(groupBox_Spamfiltering);
+    rejectspkreuse->setText(tr("Disallow most address reuse"));
+    rejectspkreuse->setToolTip(tr("With this option enabled, your memory pool will only allow each unique payment destination to be used once, effectively deprioritising address reuse. Address reuse is not technically supported, and harms the privacy of all Bitcoin users. It also has limited real-world utility, and has been known to be common with spam."));
+    verticalLayout_Spamfiltering->addWidget(rejectspkreuse);
+    FixTabOrder(rejectspkreuse);
+
     minrelaytxfee = new BitcoinAmountField(groupBox_Spamfiltering);
     CreateOptionUI(verticalLayout_Spamfiltering, minrelaytxfee, tr("Ignore transactions offering miners less than %s per kvB in transaction fees."));
 
@@ -507,6 +513,8 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->connectSocksTor, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     connect(ui->peerbloomfilters, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     connect(ui->peerblockfilters, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
+    /* Mempool */
+    connect(rejectspkreuse, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     /* Display */
     connect(ui->lang, qOverload<>(&QValueComboBox::valueChanged), [this]{ showRestartWarning(); });
     connect(ui->thirdPartyTxUrls, &QLineEdit::textChanged, [this]{ showRestartWarning(); });
@@ -602,6 +610,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(mempoolexpiry, OptionsModel::mempoolexpiry);
 
     mapper->addMapping(rejectunknownscripts, OptionsModel::rejectunknownscripts);
+    mapper->addMapping(rejectspkreuse, OptionsModel::rejectspkreuse);
     mapper->addMapping(minrelaytxfee, OptionsModel::minrelaytxfee);
     mapper->addMapping(bytespersigop, OptionsModel::bytespersigop);
     mapper->addMapping(bytespersigopstrict, OptionsModel::bytespersigopstrict);
