@@ -76,7 +76,19 @@ struct FeeFrac
         return (quot_high << 32) + quot_low;
     }
 
+    /** Compute a.fee*b.size - b.fee*size (which equals the difference between the feerates,
+     *  multiplied by both sizes. Fallback version that is always available. */
+    static inline std::pair<int64_t, uint32_t> ScaledDifferenceFallback(const FeeFrac& a, const FeeFrac& b) noexcept
+    {
+        auto mul_a = MulFallback(a.fee, b.size);
+        auto mul_b = MulFallback(b.fee, a.size);
+        return {mul_a.first - mul_b.first - (mul_b.second > mul_a.second), mul_a.second - mul_b.second};
+    }
+
 #ifdef __SIZEOF_INT128__
+    using MulType = __int128;
+    static constexpr auto MUL_ZERO = __int128{0};
+
     /** Helper function for 32*64 signed multiplication, returning an unspecified but totally
      *  ordered type. This is a version relying on __int128. */
     static inline __int128 Mul(int64_t a, int32_t b) noexcept
@@ -98,9 +110,21 @@ struct FeeFrac
         // Correct result if the / operator above rounded in the wrong direction.
         return quot + ((mod > 0) - (mod && round_down));
     }
+
+    /** Compute a.fee*b.size - b.fee*size (which equals the difference between the feerates,
+     *  multiplied by both sizes. Optimized version for systems with __int128. */
+    static inline __int128 ScaledDifference(const FeeFrac& a, const FeeFrac& b) noexcept
+    {
+        return Mul(a.fee, b.size) - Mul(b.fee, a.size);
+    }
 #else
+    // If __int128 is not available, re-export the fallback versions using pair<int64_t, uint32_t>
+    // as production variants.
+    using MulType = std::pair<int64_t, uint32_t>;
+    static constexpr auto MUL_ZERO = MulType{0, 0};
     static constexpr auto Mul = MulFallback;
     static constexpr auto Div = DivFallback;
+    static constexpr auto ScaledDifference = ScaledDifferenceFallback;
 #endif
 
     int64_t fee;
@@ -215,7 +239,6 @@ struct FeeFrac
         }
     }
 
-public:
     /** Compute the fee for a given size `at_size` using this object's feerate, rounding down. */
     int64_t EvaluateFeeDown(int32_t at_size) const noexcept { return EvaluateFee<true>(at_size); }
     /** Compute the fee for a given size `at_size` using this object's feerate, rounding up. */
