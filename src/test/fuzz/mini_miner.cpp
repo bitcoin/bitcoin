@@ -129,6 +129,8 @@ FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
     // Make a copy to preserve determinism.
     std::deque<COutPoint> available_coins = g_available_coins;
     std::vector<CTransactionRef> transactions;
+    // The maximum block template size we expect to produce
+    const auto block_adjusted_max_weight = MAX_BLOCK_WEIGHT - MINIMUM_BLOCK_RESERVED_WEIGHT;
 
     LOCK2(::cs_main, pool.cs);
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100)
@@ -158,7 +160,6 @@ FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
             }
         }
 
-        const auto block_adjusted_max_weight = MAX_BLOCK_WEIGHT - DEFAULT_BLOCK_RESERVED_WEIGHT;
         // Stop if pool reaches block_adjusted_max_weight because BlockAssembler will stop when the
         // block template reaches that, but the MiniMiner will keep going.
         if ((pool.GetTotalTxSize() + GetVirtualTransactionSize(*tx)) * 4 >= block_adjusted_max_weight) break;
@@ -184,6 +185,11 @@ FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
     node::BlockAssembler::Options miner_options;
     miner_options.blockMinFeeRate = target_feerate;
     miner_options.nBlockMaxWeight = MAX_BLOCK_WEIGHT;
+    // Only setting reserved weight when necessary based on the template size
+    const auto reserved_weight = MAX_BLOCK_WEIGHT - pool.GetTotalTxSize() * 4;
+    if (reserved_weight < DEFAULT_BLOCK_RESERVED_WEIGHT) {
+        miner_options.block_reserved_weight = reserved_weight - 1;
+    }
     miner_options.test_block_validity = false;
     miner_options.coinbase_output_script = CScript() << OP_0;
 
