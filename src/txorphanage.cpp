@@ -43,6 +43,7 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
         m_outpoint_to_orphan_it[txin.prevout].insert(ret.first);
     }
     m_total_orphan_usage += sz;
+    m_total_announcements += 1;
     auto& peer_info = m_peer_orphanage_info.try_emplace(peer).first->second;
     peer_info.m_total_usage += sz;
 
@@ -60,6 +61,7 @@ bool TxOrphanage::AddAnnouncer(const Wtxid& wtxid, NodeId peer)
         if (ret.second) {
             auto& peer_info = m_peer_orphanage_info.try_emplace(peer).first->second;
             peer_info.m_total_usage += it->second.GetUsage();
+            m_total_announcements += 1;
             LogDebug(BCLog::TXPACKAGES, "added peer=%d as announcer of orphan tx %s\n", peer, wtxid.ToString());
             return true;
         }
@@ -84,6 +86,7 @@ int TxOrphanage::EraseTx(const Wtxid& wtxid)
 
     const auto tx_size{it->second.GetUsage()};
     m_total_orphan_usage -= tx_size;
+    m_total_announcements -= it->second.announcers.size();
     // Decrement each announcer's m_total_usage
     for (const auto& peer : it->second.announcers) {
         auto peer_it = m_peer_orphanage_info.find(peer);
@@ -126,6 +129,7 @@ void TxOrphanage::EraseForPeer(NodeId peer)
         auto orphan_it = orphan.announcers.find(peer);
         if (orphan_it != orphan.announcers.end()) {
             orphan.announcers.erase(peer);
+            m_total_announcements -= 1;
 
             // No remaining announcers: clean up entry
             if (orphan.announcers.empty()) {

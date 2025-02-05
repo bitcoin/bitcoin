@@ -113,6 +113,10 @@ protected:
     /** Total usage (weight) of all entries in m_orphans. */
     unsigned int m_total_orphan_usage{0};
 
+    /** Total number of <peer, tx> pairs. Can be larger than m_orphans.size() because multiple peers
+     * may have announced the same orphan. */
+    unsigned int m_total_announcements{0};
+
     /** Map from wtxid to orphan transaction record. Limited by
      *  -maxorphantx/DEFAULT_MAX_ORPHAN_TRANSACTIONS */
     std::map<Wtxid, OrphanTx> m_orphans;
