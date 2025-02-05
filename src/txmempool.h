@@ -431,7 +431,7 @@ private:
                                                               ) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 public:
-    indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);
+    indirectmap<COutPoint, txiter> mapNextTx GUARDED_BY(cs);
     std::map<uint256, CAmount> mapDeltas GUARDED_BY(cs);
 
     using Options = kernel::MemPoolOptions;
