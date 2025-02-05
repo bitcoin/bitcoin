@@ -58,13 +58,12 @@ std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> CTxMemPool::GetChildren(const C
 {
     LOCK(cs);
     std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> ret;
-    setEntries children;
+    WITH_FRESH_EPOCH(m_epoch);
     auto iter = mapNextTx.lower_bound(COutPoint(entry.GetTx().GetHash(), 0));
     for (; iter != mapNextTx.end() && iter->first->hash == entry.GetTx().GetHash(); ++iter) {
-        children.insert(iter->second);
-    }
-    for (const auto& child : children) {
-        ret.emplace_back(*child);
+        if (!visited(iter->second)) {
+            ret.emplace_back(*(iter->second));
+        }
     }
     return ret;
 }
