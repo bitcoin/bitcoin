@@ -39,6 +39,7 @@ RUN set -ex; \
     autotools-dev \
     automake \
     autoconf \
+    bear \
     bison \
     build-essential \
     bsdmainutils \
@@ -88,7 +89,7 @@ RUN set -ex; \
     rm -rf /var/lib/apt/lists/*; \
     echo "Setting defaults..."; \
     lldbUpdAltArgs="update-alternatives --install /usr/bin/llvm-config llvm-config /usr/bin/llvm-config-${LLVM_VERSION} 100"; \
-    for binName in clang clang++ clang-format clang-tidy clangd dsymutil lld lldb lldb-server llvm-ar llvm-cov llvm-nm llvm-objdump llvm-ranlib llvm-strip; do \
+    for binName in clang clang++ clang-apply-replacements clang-format clang-tidy clangd dsymutil lld lldb lldb-server llvm-ar llvm-cov llvm-nm llvm-objdump llvm-ranlib llvm-strip run-clang-tidy; do \
         lldbUpdAltArgs="${lldbUpdAltArgs} --slave /usr/bin/${binName} ${binName} /usr/bin/${binName}-${LLVM_VERSION}"; \
     done; \
     for binName in ld64.lld ld.lld lld-link wasm-ld; do \

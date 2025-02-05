@@ -51,13 +51,24 @@ make distdir VERSION=$BUILD_TARGET
 cd dashcore-$BUILD_TARGET
 bash -c "./configure $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG" || ( cat config.log && false)
 
-make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
+if [ "${RUN_TIDY}" = "true" ]; then
+  MAYBE_BEAR="bear"
+  MAYBE_TOKEN="--"
+fi
+
+bash -c "${MAYBE_BEAR} ${MAYBE_TOKEN} make ${MAKEJOBS} ${GOAL}" || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
 
 ccache --version | head -n 1 && ccache --show-stats
 
 if [ -n "$USE_VALGRIND" ]; then
     echo "valgrind in USE!"
     ${BASE_ROOT_DIR}/ci/test/wrap-valgrind.sh
+fi
+
+if [ "${RUN_TIDY}" = "true" ]; then
+  cd src
+  run-clang-tidy "${MAKEJOBS}"
+  cd ..
 fi
 
 if [ "$RUN_SECURITY_TESTS" = "true" ]; then
