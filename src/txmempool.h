@@ -350,6 +350,7 @@ public:
      */
     void check(const CCoinsViewCache& active_coins_tip, int64_t spendheight) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    void removeRecursive(txiter to_remove, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeRecursive(const CTransaction& tx, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** After reorg, filter the entries that would no longer be valid in the next block, and update
      * the entries' cached LockPoints if needed.  The mempool does not have any knowledge of
