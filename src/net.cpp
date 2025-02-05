@@ -2336,7 +2336,7 @@ void CConnman::CalculateNumConnectionsChangedStats()
     }
     mapRecvBytesMsgStats[NET_MESSAGE_TYPE_OTHER] = 0;
     mapSentBytesMsgStats[NET_MESSAGE_TYPE_OTHER] = 0;
-    const NodesSnapshot snap{*this, /* filter = */ CConnman::FullyConnectedOnly};
+    const NodesSnapshot snap{*this, /* cond = */ CConnman::FullyConnectedOnly};
     for (auto pnode : snap.Nodes()) {
         WITH_LOCK(pnode->cs_vRecv, pnode->UpdateRecvMapWithStats(mapRecvBytesMsgStats));
         WITH_LOCK(pnode->cs_vSend, pnode->UpdateSentMapWithStats(mapSentBytesMsgStats));
@@ -2705,7 +2705,7 @@ void CConnman::SocketHandler(CMasternodeSync& mn_sync)
     }();
 
     {
-        const NodesSnapshot snap{*this, /* filter = */ CConnman::AllNodes, /* shuffle = */ false};
+        const NodesSnapshot snap{*this, /* cond = */ CConnman::AllNodes, /* shuffle = */ false};
 
         // Check for the readiness of the already connected sockets and the
         // listening sockets in one call ("readiness" as in poll(2) or
@@ -3977,7 +3977,7 @@ void CConnman::ThreadMessageHandler()
         // Randomize the order in which we process messages from/to our peers.
         // This prevents attacks in which an attacker exploits having multiple
         // consecutive connections in the m_nodes list.
-        const NodesSnapshot snap{*this, /* filter = */ CConnman::AllNodes, /* shuffle = */ true};
+        const NodesSnapshot snap{*this, /* cond = */ CConnman::AllNodes, /* shuffle = */ true};
 
         for (CNode* pnode : snap.Nodes()) {
             if (pnode->fDisconnect)

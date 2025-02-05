@@ -1113,7 +1113,7 @@ bool CSigSharesManager::SendMessages(CConnman& connman)
         return session->sendSessionId;
     };
 
-    const CConnman::NodesSnapshot snap{connman, /* filter = */ CConnman::FullyConnectedOnly};
+    const CConnman::NodesSnapshot snap{connman, /* cond = */ CConnman::FullyConnectedOnly};
     {
         LOCK(cs);
         CollectSigSharesToRequest(sigSharesToRequest);
