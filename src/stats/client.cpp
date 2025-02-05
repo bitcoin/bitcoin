@@ -33,21 +33,6 @@ std::unique_ptr<StatsdClient> g_stats_client;
 
 std::unique_ptr<StatsdClient> InitStatsClient(const ArgsManager& args)
 {
-    auto is_enabled = args.GetBoolArg("-statsenabled", /*fDefault=*/false);
-    auto host = args.GetArg("-statshost", /*fDefault=*/DEFAULT_STATSD_HOST);
-
-    if (is_enabled && host.empty()) {
-        // Stats are enabled but host has not been specified, then use
-        // default legacy host. This is to preserve old behavior.
-        host = "127.0.0.1";
-    } else if (!host.empty()) {
-        // Host is specified but stats are not explcitly enabled. Assume
-        // that if a host has been specified, we want stats enabled. This
-        // is new behaviour and will substitute old behaviour in a future
-        // release.
-        is_enabled = true;
-    }
-
     auto sanitize_string = [](std::string& string) {
         // Remove key delimiters from the front and back as they're added back
         if (!string.empty()) {
@@ -82,23 +67,18 @@ std::unique_ptr<StatsdClient> InitStatsClient(const ArgsManager& args)
         sanitize_string(suffix);
     }
 
-    return std::make_unique<StatsdClient>(
-        host,
-        args.GetArg("-statsport", DEFAULT_STATSD_PORT),
-        args.GetArg("-statsbatchsize", DEFAULT_STATSD_BATCH_SIZE),
-        args.GetArg("-statsduration", DEFAULT_STATSD_DURATION),
-        prefix,
-        suffix,
-        is_enabled
-    );
+    return std::make_unique<StatsdClient>(args.GetArg("-statshost", DEFAULT_STATSD_HOST),
+                                          args.GetArg("-statsport", DEFAULT_STATSD_PORT),
+                                          args.GetArg("-statsbatchsize", DEFAULT_STATSD_BATCH_SIZE),
+                                          args.GetArg("-statsduration", DEFAULT_STATSD_DURATION), prefix, suffix);
 }
 
 StatsdClient::StatsdClient(const std::string& host, uint16_t port, uint64_t batch_size, uint64_t interval_ms,
-                           const std::string& prefix, const std::string& suffix, bool enabled) :
+                           const std::string& prefix, const std::string& suffix) :
     m_prefix{prefix},
     m_suffix{[suffix]() { return !suffix.empty() ? STATSD_NS_DELIMITER + suffix : suffix; }()}
 {
-    if (!enabled) {
+    if (host.empty()) {
         LogPrintf("Transmitting stats are disabled, will not init StatsdClient\n");
         return;
     }
