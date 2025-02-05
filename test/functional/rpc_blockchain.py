@@ -535,6 +535,7 @@ class BlockchainTest(BitcoinTestFramework):
 
         self.log.debug("waitforblock should return the same block after its timeout")
         assert_equal(node.waitforblock(blockhash=current_hash, timeout=1)['hash'], rollback_header['previousblockhash'])
+        assert_raises_rpc_error(-1, "Negative timeout", node.waitforblock, current_hash, -1)
 
         node.reconsiderblock(rollback_hash)
         # The chain has probably already been restored by the time reconsiderblock returns,
@@ -589,6 +590,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_waitforheight(current_height - 1)
         assert_waitforheight(current_height)
         assert_waitforheight(current_height + 1)
+        assert_raises_rpc_error(-1, "Negative timeout", node.waitforblockheight, current_height, -1)
 
     def _test_getblock(self):
         node = self.nodes[0]
