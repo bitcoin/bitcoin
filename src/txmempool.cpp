@@ -377,8 +377,8 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
             const CTransaction &txConflict = it->second->GetTx();
             if (Assume(txConflict.GetHash() != tx.GetHash()))
             {
+                removeRecursive(it->second, MemPoolRemovalReason::CONFLICT);
                 ClearPrioritisation(txConflict.GetHash());
-                removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
             }
         }
     }
