@@ -139,10 +139,12 @@ public:
 
     // Functions that implement the Cluster-specific side of public TxGraph functions.
 
-    /** Get a vector of Refs for the ancestors of a given Cluster element. */
-    std::vector<TxGraph::Ref*> GetAncestorRefs(const TxGraphImpl& graph, DepGraphIndex idx) noexcept;
-    /** Get a vector of Refs for the descendants of a given Cluster element. */
-    std::vector<TxGraph::Ref*> GetDescendantRefs(const TxGraphImpl& graph, DepGraphIndex idx) noexcept;
+    /** Process elements from the front of args that apply to this cluster, and append Refs for the
+     *  union of their ancestors to output. */
+    void GetAncestorRefs(const TxGraphImpl& graph, std::span<std::pair<Cluster*, DepGraphIndex>>& args, std::vector<TxGraph::Ref*>& output) noexcept;
+    /** Process elements from the front of args that apply to this cluster, and append Refs for the
+     *  union of their descendants to output. */
+    void GetDescendantRefs(const TxGraphImpl& graph, std::span<std::pair<Cluster*, DepGraphIndex>>& args, std::vector<TxGraph::Ref*>& output) noexcept;
     /** Get a vector of Refs for all elements of this Cluster, in linearization order. */
     std::vector<TxGraph::Ref*> GetClusterRefs(const TxGraphImpl& graph) noexcept;
     /** Get the individual transaction feerate of a Cluster element. */
@@ -1469,30 +1471,42 @@ bool TxGraphImpl::Exists(const Ref& arg, bool main_only) noexcept
     return cluster != nullptr;
 }
 
-std::vector<TxGraph::Ref*> Cluster::GetAncestorRefs(const TxGraphImpl& graph, DepGraphIndex idx) noexcept
+void Cluster::GetAncestorRefs(const TxGraphImpl& graph, std::span<std::pair<Cluster*, DepGraphIndex>>& args, std::vector<TxGraph::Ref*>& output) noexcept
 {
-    std::vector<TxGraph::Ref*> ret;
-    ret.reserve(m_depgraph.Ancestors(idx).Count());
+    /** The union of all ancestors to be returned. */
+    SetType ancestors_union;
+    // Process elements from the front of args, as long as they apply.
+    while (!args.empty()) {
+        if (args.front().first != this) break;
+        ancestors_union |= m_depgraph.Ancestors(args.front().second);
+        args = args.subspan(1);
+    }
+    Assume(ancestors_union.Any());
     // Translate all ancestors (in arbitrary order) to Refs (if they have any), and return them.
-    for (auto idx : m_depgraph.Ancestors(idx)) {
+    for (auto idx : ancestors_union) {
         const auto& entry = graph.m_entries[m_mapping[idx]];
         Assume(entry.m_ref != nullptr);
-        ret.push_back(entry.m_ref);
+        output.push_back(entry.m_ref);
     }
-    return ret;
 }
 
-std::vector<TxGraph::Ref*> Cluster::GetDescendantRefs(const TxGraphImpl& graph, DepGraphIndex idx) noexcept
+void Cluster::GetDescendantRefs(const TxGraphImpl& graph, std::span<std::pair<Cluster*, DepGraphIndex>>& args, std::vector<TxGraph::Ref*>& output) noexcept
 {
-    std::vector<TxGraph::Ref*> ret;
-    ret.reserve(m_depgraph.Descendants(idx).Count());
+    /** The union of all descendants to be returned. */
+    SetType descendants_union;
+    // Process elements from the front of args, as long as they apply.
+    while (!args.empty()) {
+        if (args.front().first != this) break;
+        descendants_union |= m_depgraph.Descendants(args.front().second);
+        args = args.subspan(1);
+    }
+    Assume(descendants_union.Any());
     // Translate all descendants (in arbitrary order) to Refs (if they have any), and return them.
-    for (auto idx : m_depgraph.Descendants(idx)) {
+    for (auto idx : descendants_union) {
         const auto& entry = graph.m_entries[m_mapping[idx]];
         Assume(entry.m_ref != nullptr);
-        ret.push_back(entry.m_ref);
+        output.push_back(entry.m_ref);
     }
-    return ret;
 }
 
 std::vector<TxGraph::Ref*> Cluster::GetClusterRefs(const TxGraphImpl& graph) noexcept
@@ -1539,7 +1553,11 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetAncestors(const Ref& arg, bool main_o
     auto cluster = FindCluster(GetRefIndex(arg), level);
     if (cluster == nullptr) return {};
     // Dispatch to the Cluster.
-    return cluster->GetAncestorRefs(*this, m_entries[GetRefIndex(arg)].m_locator[cluster->m_level].index);
+    std::pair<Cluster*, DepGraphIndex> match = {cluster, m_entries[GetRefIndex(arg)].m_locator[cluster->m_level].index};
+    auto matches = std::span(&match, 1);
+    std::vector<TxGraph::Ref*> ret;
+    cluster->GetAncestorRefs(*this, matches, ret);
+    return ret;
 }
 
 std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendants(const Ref& arg, bool main_only) noexcept
@@ -1556,7 +1574,11 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendants(const Ref& arg, bool main
     auto cluster = FindCluster(GetRefIndex(arg), level);
     if (cluster == nullptr) return {};
     // Dispatch to the Cluster.
-    return cluster->GetDescendantRefs(*this, m_entries[GetRefIndex(arg)].m_locator[cluster->m_level].index);
+    std::pair<Cluster*, DepGraphIndex> match = {cluster, m_entries[GetRefIndex(arg)].m_locator[cluster->m_level].index};
+    auto matches = std::span(&match, 1);
+    std::vector<TxGraph::Ref*> ret;
+    cluster->GetDescendantRefs(*this, matches, ret);
+    return ret;
 }
 
 std::vector<TxGraph::Ref*> TxGraphImpl::GetCluster(const Ref& arg, bool main_only) noexcept
