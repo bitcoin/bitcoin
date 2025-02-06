@@ -2537,25 +2537,27 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, const bool avoid_reuse
     {
         LOCK(cs_wallet);
         std::set<uint256> trusted_parents;
-        for (auto pcoin : GetSpendableTXs()) {
-            const bool is_trusted{IsTrusted(*pcoin, trusted_parents)};
-            const int tx_depth{pcoin->GetDepthInMainChain()};
-            const CAmount tx_credit_mine{pcoin->GetAvailableCredit(/* fUseCache */ true, ISMINE_SPENDABLE | reuse_filter)};
-            const CAmount tx_credit_watchonly{pcoin->GetAvailableCredit(/* fUseCache */ true, ISMINE_WATCH_ONLY | reuse_filter)};
-            if (is_trusted && ((tx_depth >= min_depth) || (fAddLocked && pcoin->IsLockedByInstantSend()))) {
+        for (const auto* pcoin : GetSpendableTXs()) {
+            const auto& wtx{*pcoin};
+
+            const bool is_trusted{IsTrusted(wtx, trusted_parents)};
+            const int tx_depth{wtx.GetDepthInMainChain()};
+            const CAmount tx_credit_mine{wtx.GetAvailableCredit(/* fUseCache */ true, ISMINE_SPENDABLE | reuse_filter)};
+            const CAmount tx_credit_watchonly{wtx.GetAvailableCredit(/* fUseCache */ true, ISMINE_WATCH_ONLY | reuse_filter)};
+            if (is_trusted && ((tx_depth >= min_depth) || (fAddLocked && wtx.IsLockedByInstantSend()))) {
                 ret.m_mine_trusted += tx_credit_mine;
                 ret.m_watchonly_trusted += tx_credit_watchonly;
             }
-            if (!is_trusted && tx_depth == 0 && pcoin->InMempool()) {
+            if (!is_trusted && tx_depth == 0 && wtx.InMempool()) {
                 ret.m_mine_untrusted_pending += tx_credit_mine;
                 ret.m_watchonly_untrusted_pending += tx_credit_watchonly;
             }
-            ret.m_mine_immature += pcoin->GetImmatureCredit();
-            ret.m_watchonly_immature += pcoin->GetImmatureWatchOnlyCredit();
+            ret.m_mine_immature += wtx.GetImmatureCredit();
+            ret.m_watchonly_immature += wtx.GetImmatureWatchOnlyCredit();
             if (CCoinJoinClientOptions::IsEnabled()) {
-                ret.m_anonymized += pcoin->GetAnonymizedCredit(coinControl);
-                ret.m_denominated_trusted += pcoin->GetDenominatedCredit(false);
-                ret.m_denominated_untrusted_pending += pcoin->GetDenominatedCredit(true);
+                ret.m_anonymized += wtx.GetAnonymizedCredit(coinControl);
+                ret.m_denominated_trusted += wtx.GetDenominatedCredit(false);
+                ret.m_denominated_untrusted_pending += wtx.GetDenominatedCredit(true);
             }
         }
     }
@@ -2661,23 +2663,25 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, const CCoinControl* c
     const bool only_safe = {coinControl ? !coinControl->m_include_unsafe_inputs : true};
 
     std::set<uint256> trusted_parents;
-    for (auto pcoin : GetSpendableTXs()) {
-        const uint256& wtxid = pcoin->GetHash();
+    for (const auto* pcoin : GetSpendableTXs()) {
+        const auto& wtx{*pcoin};
 
-        if (!chain().checkFinalTx(*pcoin->tx))
+        const uint256& wtxid = wtx.GetHash();
+
+        if (!chain().checkFinalTx(*wtx.tx))
             continue;
 
-        if (pcoin->IsImmatureCoinBase())
+        if (wtx.IsImmatureCoinBase())
             continue;
 
-        int nDepth = pcoin->GetDepthInMainChain();
+        int nDepth = wtx.GetDepthInMainChain();
 
         // We should not consider coins which aren't at least in our mempool
         // It's possible for these to be conflicted via ancestors which we may never be able to detect
-        if (nDepth == 0 && !pcoin->InMempool())
+        if (nDepth == 0 && !wtx.InMempool())
             continue;
 
-        bool safeTx = IsTrusted(*pcoin, trusted_parents);
+        bool safeTx = IsTrusted(wtx, trusted_parents);
 
         if (only_safe && !safeTx) {
             continue;
@@ -2687,31 +2691,31 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, const CCoinControl* c
             continue;
         }
 
-        for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
+        for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
             bool found = false;
             switch (nCoinType) {
                 case CoinType::ONLY_FULLY_MIXED: {
-                    found = CoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue) &&
+                    found = CoinJoin::IsDenominatedAmount(wtx.tx->vout[i].nValue) &&
                             IsFullyMixed(COutPoint(wtxid, i));
                     break;
                 }
                 case CoinType::ONLY_READY_TO_MIX: {
-                    found = CoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue) &&
+                    found = CoinJoin::IsDenominatedAmount(wtx.tx->vout[i].nValue) &&
                             !IsFullyMixed(COutPoint(wtxid, i));
                     break;
                 }
                 case CoinType::ONLY_NONDENOMINATED: {
                     // NOTE: do not use collateral amounts
-                    found = !CoinJoin::IsCollateralAmount(pcoin->tx->vout[i].nValue) &&
-                            !CoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue);
+                    found = !CoinJoin::IsCollateralAmount(wtx.tx->vout[i].nValue) &&
+                            !CoinJoin::IsDenominatedAmount(wtx.tx->vout[i].nValue);
                     break;
                 }
                 case CoinType::ONLY_MASTERNODE_COLLATERAL: {
-                    found = dmn_types::IsCollateralAmount(pcoin->tx->vout[i].nValue);
+                    found = dmn_types::IsCollateralAmount(wtx.tx->vout[i].nValue);
                     break;
                 }
                 case CoinType::ONLY_COINJOIN_COLLATERAL: {
-                    found = CoinJoin::IsCollateralAmount(pcoin->tx->vout[i].nValue);
+                    found = CoinJoin::IsCollateralAmount(wtx.tx->vout[i].nValue);
                     break;
                 }
                 case CoinType::ALL_COINS: {
@@ -2726,7 +2730,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, const CCoinControl* c
                 continue;
             }
 
-            if (pcoin->tx->vout[i].nValue < nMinimumAmount || pcoin->tx->vout[i].nValue > nMaximumAmount)
+            if (wtx.tx->vout[i].nValue < nMinimumAmount || wtx.tx->vout[i].nValue > nMaximumAmount)
                 continue;
 
             if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(wtxid, i)))
@@ -2738,7 +2742,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, const CCoinControl* c
             if (IsSpent(wtxid, i))
                 continue;
 
-            isminetype mine = IsMine(pcoin->tx->vout[i]);
+            isminetype mine = IsMine(wtx.tx->vout[i]);
 
             if (mine == ISMINE_NO) {
                 continue;
@@ -2748,16 +2752,16 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, const CCoinControl* c
                 continue;
             }
 
-            std::unique_ptr<SigningProvider> provider = GetSolvingProvider(pcoin->tx->vout[i].scriptPubKey);
+            std::unique_ptr<SigningProvider> provider = GetSolvingProvider(wtx.tx->vout[i].scriptPubKey);
 
-            bool solvable = provider ? IsSolvable(*provider, pcoin->tx->vout[i].scriptPubKey) : false;
+            bool solvable = provider ? IsSolvable(*provider, wtx.tx->vout[i].scriptPubKey) : false;
             bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
 
-            vCoins.push_back(COutput(pcoin, i, nDepth, spendable, solvable, safeTx, (coinControl && coinControl->fAllowWatchOnly)));
+            vCoins.push_back(COutput(&wtx, i, nDepth, spendable, solvable, safeTx, (coinControl && coinControl->fAllowWatchOnly)));
 
             // Checks the sum amount of all UTXO's.
             if (nMinimumSumAmount != MAX_MONEY) {
-                nTotal += pcoin->tx->vout[i].nValue;
+                nTotal += wtx.tx->vout[i].nValue;
 
                 if (nTotal >= nMinimumSumAmount) {
                     return;
@@ -2947,9 +2951,9 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         std::map<uint256, CWalletTx>::const_iterator it = mapWallet.find(outpoint.hash);
         if (it != mapWallet.end())
         {
-            const CWalletTx* pcoin = &it->second;
+            const CWalletTx& wtx = it->second;
             // Clearly invalid input, fail
-            if (pcoin->tx->vout.size() <= outpoint.n) {
+            if (wtx.tx->vout.size() <= outpoint.n) {
                 return false;
             }
             if (nCoinType == CoinType::ONLY_FULLY_MIXED) {
@@ -2958,7 +2962,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
                 if (!IsFullyMixed(outpoint)) continue;
             }
             // Just to calculate the marginal byte size
-            CInputCoin coin(pcoin->tx, outpoint.n, pcoin->GetSpendSize(outpoint.n, false));
+            CInputCoin coin(wtx.tx, outpoint.n, wtx.GetSpendSize(outpoint.n, false));
             nValueFromPresetInputs += coin.txout.nValue;
             if (coin.m_input_bytes <= 0) {
                 return false; // Not solvable, can't estimate size for fee
@@ -4251,27 +4255,27 @@ std::map<CTxDestination, CAmount> CWallet::GetAddressBalances() const
         std::set<uint256> trusted_parents;
         for (const auto& walletEntry : mapWallet)
         {
-            const CWalletTx *pcoin = &walletEntry.second;
+            const CWalletTx& wtx = walletEntry.second;
 
-            if (!IsTrusted(*pcoin, trusted_parents))
+            if (!IsTrusted(wtx, trusted_parents))
                 continue;
 
-            if (pcoin->IsImmatureCoinBase())
+            if (wtx.IsImmatureCoinBase())
                 continue;
 
-            int nDepth = pcoin->GetDepthInMainChain();
-            if ((nDepth < (pcoin->IsFromMe(ISMINE_ALL) ? 0 : 1)) && !pcoin->IsLockedByInstantSend())
+            int nDepth = wtx.GetDepthInMainChain();
+            if ((nDepth < (wtx.IsFromMe(ISMINE_ALL) ? 0 : 1)) && !wtx.IsLockedByInstantSend())
                 continue;
 
-            for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++)
+            for (unsigned int i = 0; i < wtx.tx->vout.size(); i++)
             {
                 CTxDestination addr;
-                if (!IsMine(pcoin->tx->vout[i]))
+                if (!IsMine(wtx.tx->vout[i]))
                     continue;
-                if(!ExtractDestination(pcoin->tx->vout[i].scriptPubKey, addr))
+                if(!ExtractDestination(wtx.tx->vout[i].scriptPubKey, addr))
                     continue;
 
-                CAmount n = IsSpent(walletEntry.first, i) ? 0 : pcoin->tx->vout[i].nValue;
+                CAmount n = IsSpent(walletEntry.first, i) ? 0 : wtx.tx->vout[i].nValue;
 
                 balances[addr] += n;
             }
@@ -4289,13 +4293,13 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings() const
 
     for (const auto& walletEntry : mapWallet)
     {
-        const CWalletTx *pcoin = &walletEntry.second;
+        const CWalletTx& wtx = walletEntry.second;
 
-        if (pcoin->tx->vin.size() > 0)
+        if (wtx.tx->vin.size() > 0)
         {
             bool any_mine = false;
             // group all input addresses with each other
-            for (const CTxIn& txin : pcoin->tx->vin)
+            for (const CTxIn& txin : wtx.tx->vin)
             {
                 CTxDestination address;
                 if(!IsMine(txin)) /* If this input isn't mine, ignore it */
@@ -4309,7 +4313,7 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings() const
             // group change with input addresses
             if (any_mine)
             {
-               for (const CTxOut& txout : pcoin->tx->vout)
+               for (const CTxOut& txout : wtx.tx->vout)
                    if (IsChange(txout))
                    {
                        CTxDestination txoutAddr;
@@ -4326,7 +4330,7 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings() const
         }
 
         // group lone addrs by themselves
-        for (const auto& txout : pcoin->tx->vout)
+        for (const auto& txout : wtx.tx->vout)
             if (IsMine(txout))
             {
                 CTxDestination address;
