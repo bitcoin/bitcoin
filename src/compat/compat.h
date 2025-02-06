@@ -22,19 +22,18 @@
 #include <ws2tcpip.h>
 #include <cstdint>
 #else
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <ifaddrs.h>
-#include <limits.h>
-#include <netdb.h>
-#include <unistd.h>
+#include <arpa/inet.h>   // IWYU pragma: export
+#include <fcntl.h>       // IWYU pragma: export
+#include <ifaddrs.h>     // IWYU pragma: export
+#include <net/if.h>      // IWYU pragma: export
+#include <netdb.h>       // IWYU pragma: export
+#include <netinet/in.h>  // IWYU pragma: export
+#include <netinet/tcp.h> // IWYU pragma: export
+#include <sys/mman.h>    // IWYU pragma: export
+#include <sys/select.h>  // IWYU pragma: export
+#include <sys/socket.h>  // IWYU pragma: export
+#include <sys/types.h>   // IWYU pragma: export
+#include <unistd.h>      // IWYU pragma: export
 #endif
 
 // We map Linux / BSD error functions and codes, to the equivalent
