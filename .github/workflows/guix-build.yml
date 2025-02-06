@@ -72,6 +72,10 @@ jobs:
 
     timeout-minutes: 480
     steps:
+      - name: Disable apparmor user namespace restrictions
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
