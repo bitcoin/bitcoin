@@ -549,7 +549,6 @@ public:
 
     WalletContext& m_context;
     std::shared_ptr<CWallet> m_wallet;
-    std::unique_ptr<interfaces::CoinJoin::Client> m_coinjoin_client;
 };
 
 class WalletLoaderImpl : public WalletLoader
