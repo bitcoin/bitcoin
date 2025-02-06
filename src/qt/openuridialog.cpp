@@ -9,16 +9,19 @@
 #include <qt/guiutil.h>
 #include <qt/sendcoinsrecipient.h>
 
+#include <QAbstractButton>
+#include <QLineEdit>
 #include <QUrl>
 
-OpenURIDialog::OpenURIDialog(QWidget *parent) :
-    QDialog(parent, GUIUtil::dialog_flags),
-    ui(new Ui::OpenURIDialog)
+OpenURIDialog::OpenURIDialog(QWidget* parent) : QDialog(parent, GUIUtil::dialog_flags),
+                                                ui(new Ui::OpenURIDialog)
 {
     ui->setupUi(this);
+    GUIUtil::setIcon(ui->pasteButton, "editpaste");
+    QObject::connect(ui->pasteButton, &QAbstractButton::clicked, ui->uriEdit, &QLineEdit::paste);
+
     GUIUtil::updateFonts();
     GUIUtil::disableMacFocusRect(this);
-
     GUIUtil::handleCloseWindowShortcut(this);
 }
 
@@ -35,11 +38,19 @@ QString OpenURIDialog::getURI()
 void OpenURIDialog::accept()
 {
     SendCoinsRecipient rcp;
-    if(GUIUtil::parseBitcoinURI(getURI(), &rcp))
-    {
+    if (GUIUtil::parseBitcoinURI(getURI(), &rcp)) {
         /* Only accept value URIs */
         QDialog::accept();
     } else {
         ui->uriEdit->setValid(false);
+    }
+}
+
+void OpenURIDialog::changeEvent(QEvent* e)
+{
+    QDialog::changeEvent(e);
+    if (e->type() == QEvent::StyleChange) {
+        // Adjust button icon colors on theme changes
+        GUIUtil::setIcon(ui->pasteButton, "editpaste");
     }
 }

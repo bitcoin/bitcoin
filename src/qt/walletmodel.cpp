@@ -356,6 +356,11 @@ WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
 {
     if(!m_wallet->isCrypted())
     {
+        // A previous bug allowed for watchonly wallets to be encrypted (encryption keys set, but nothing is actually encrypted).
+        // To avoid misrepresenting the encryption status of such wallets, we only return NoKeys for watchonly wallets that are unencrypted.
+        if (m_wallet->privateKeysDisabled()) {
+            return NoKeys;
+        }
         return Unencrypted;
     }
     else if(m_wallet->isLocked(true))
@@ -436,7 +441,7 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel,
     QString strPurpose = QString::fromStdString(purpose);
 
     qDebug() << "NotifyAddressBookChanged: " + strAddress + " " + strLabel + " isMine=" + QString::number(isMine) + " purpose=" + strPurpose + " status=" + QString::number(status);
-    bool invoked = QMetaObject::invokeMethod(walletmodel, "updateAddressBook", Qt::QueuedConnection,
+    bool invoked = QMetaObject::invokeMethod(walletmodel, "updateAddressBook",
                               Q_ARG(QString, strAddress),
                               Q_ARG(QString, strLabel),
                               Q_ARG(bool, isMine),

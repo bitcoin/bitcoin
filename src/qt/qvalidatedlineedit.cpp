@@ -14,6 +14,12 @@ QValidatedLineEdit::QValidatedLineEdit(QWidget *parent) :
     connect(this, &QValidatedLineEdit::textChanged, this, &QValidatedLineEdit::markValid);
 }
 
+void QValidatedLineEdit::setText(const QString& text)
+{
+    QLineEdit::setText(text);
+    checkValidity();
+}
+
 void QValidatedLineEdit::setValid(bool _valid)
 {
     if(_valid == this->valid)
@@ -27,7 +33,7 @@ void QValidatedLineEdit::setValid(bool _valid)
     }
     else
     {
-        setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_INVALID));
+        setStyleSheet("QValidatedLineEdit { " + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_INVALID) + " }");
     }
     this->valid = _valid;
 }
@@ -105,6 +111,7 @@ void QValidatedLineEdit::checkValidity()
 void QValidatedLineEdit::setCheckValidator(const QValidator *v)
 {
     checkValidator = v;
+    checkValidity();
 }
 
 bool QValidatedLineEdit::isValid()

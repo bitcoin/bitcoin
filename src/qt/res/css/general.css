@@ -1259,6 +1259,13 @@ QDialog#OpenURIDialog {
 QDialog#OpenURIDialog QLabel#label { /* URI Label */
 }
 
+QDialog#OpenURIDialog .QToolButton { /* General Settings for Pay To Icons */
+    background-color: #00000000;
+    margin-left: 5px;
+    margin-right: 5px;
+    border: 0;
+}
+
 /******************************************************
 OptionsDialog
 ******************************************************/

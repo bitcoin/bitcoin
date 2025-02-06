@@ -175,7 +175,9 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
         frameBlocksLayout->addWidget(unitDisplayControl);
         frameBlocksLayout->addStretch();
         frameBlocksLayout->addWidget(labelWalletHDStatusIcon);
+        labelWalletHDStatusIcon->hide();
         frameBlocksLayout->addWidget(labelWalletEncryptionIcon);
+        labelWalletEncryptionIcon->hide();
     }
     frameBlocksLayout->addWidget(labelProxyIcon);
     frameBlocksLayout->addStretch();
@@ -410,7 +412,7 @@ void BitcoinGUI::createActions()
     verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Dash addresses"));
     m_load_psbt_action = new QAction(tr("&Load PSBT from file…"), this);
     m_load_psbt_action->setStatusTip(tr("Load Partially Signed Blockchain Transaction"));
-    m_load_psbt_clipboard_action = new QAction(tr("Load PSBT from clipboard…"), this);
+    m_load_psbt_clipboard_action = new QAction(tr("Load PSBT from &clipboard…"), this);
     m_load_psbt_clipboard_action->setStatusTip(tr("Load Partially Signed Blockchain Transaction from clipboard"));
 
     openInfoAction = new QAction(tr("&Information"), this);
@@ -423,7 +425,7 @@ void BitcoinGUI::createActions()
     openPeersAction->setStatusTip(tr("Show peers info"));
     openRepairAction = new QAction(tr("Wallet &Repair"), this);
     openRepairAction->setStatusTip(tr("Show wallet repair options"));
-    openConfEditorAction = new QAction(tr("Open Wallet &Configuration File"), this);
+    openConfEditorAction = new QAction(tr("Open &wallet configuration file"), this);
     openConfEditorAction->setStatusTip(tr("Open configuration file"));
     // override TextHeuristicRole set by default which confuses this action with application settings
     openConfEditorAction->setMenuRole(QAction::NoRole);
@@ -610,7 +612,7 @@ void BitcoinGUI::createMenuBar()
 
     QMenu* window_menu = appMenuBar->addMenu(tr("&Window"));
 
-    QAction* minimize_action = window_menu->addAction(tr("Minimize"));
+    QAction* minimize_action = window_menu->addAction(tr("&Minimize"));
     minimize_action->setShortcut(QKeySequence(tr("Ctrl+M")));
     connect(minimize_action, &QAction::triggered, [] {
         QApplication::activeWindow()->showMinimized();
@@ -915,8 +917,8 @@ void BitcoinGUI::addWallet(WalletModel* walletModel)
 {
     if (!walletFrame) return;
 
-    WalletView* wallet_view = new WalletView(walletFrame);
-    if (!walletFrame->addWallet(walletModel, wallet_view)) return;
+    WalletView* wallet_view = new WalletView(walletModel, walletFrame);
+    if (!walletFrame->addView(wallet_view)) return;
 
     rpcConsole->addWallet(walletModel);
     if (m_wallet_selector->count() == 0) {
@@ -1874,6 +1876,12 @@ void BitcoinGUI::setEncryptionStatus(int status)
 {
     switch(status)
     {
+    case WalletModel::NoKeys:
+        labelWalletEncryptionIcon->hide();
+        encryptWalletAction->setChecked(false);
+        changePassphraseAction->setEnabled(false);
+        encryptWalletAction->setEnabled(false);
+        break;
     case WalletModel::Unencrypted:
         labelWalletEncryptionIcon->show();
         labelWalletEncryptionIcon->setPixmap(GUIUtil::getIcon("lock_open", GUIUtil::ThemedColor::RED).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
