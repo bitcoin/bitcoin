@@ -3826,8 +3826,9 @@ void Chainstate::SetBlockFailureFlags(CBlockIndex* invalid_block)
     AssertLockHeld(cs_main);
 
     for (auto& [_, block_index] : m_blockman.m_block_index) {
-        if (block_index.GetAncestor(invalid_block->nHeight) == invalid_block && !(block_index.nStatus & BLOCK_FAILED_MASK)) {
-            block_index.nStatus |= BLOCK_FAILED_CHILD;
+        if (invalid_block != &block_index && block_index.GetAncestor(invalid_block->nHeight) == invalid_block) {
+            block_index.nStatus = (block_index.nStatus & ~BLOCK_FAILED_VALID) | BLOCK_FAILED_CHILD;
+            m_blockman.m_dirty_blockindex.insert(&block_index);
         }
     }
 }
