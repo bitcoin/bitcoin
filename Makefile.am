@@ -311,6 +311,8 @@ EXTRA_DIST += \
     test/util/data/txreplacesingleinput.hex \
     test/util/rpcauth-test.py
 
+EXTRA_DIST += src/qt/res/rendered_icons/bitcoin_testnet.ico
+
 CLEANFILES = $(OSX_ZIP) $(BITCOIN_WIN_INSTALLER)
 
 DISTCHECK_CONFIGURE_FLAGS = --enable-man
