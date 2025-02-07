@@ -466,7 +466,8 @@ inspecting signatures in Mach-O binaries.")
               (sha256
                (base32
                 "017qdpr5id7ddb4lpkzj2li1abvw916m3fc6n7nw28z4h5qbv2n0"))
-              (patches (search-our-patches "glibc-guix-prefix.patch"))))
+              (patches (search-our-patches "glibc-guix-prefix.patch"
+                                           "glibc-riscv-jumptarget.patch"))))
     (arguments
       (substitute-keyword-arguments (package-arguments glibc)
         ((#:configure-flags flags)
