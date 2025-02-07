@@ -182,6 +182,7 @@ task:
   persistent_worker:
     labels:
       type: medium
+  timeout_in: 240m  # larger timeout, due to the high CPU demand
   env:
     FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
 
