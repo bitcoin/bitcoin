@@ -109,7 +109,7 @@ while [[ ${TEST_RUN_ID} -lt ${N_TEST_RUNS} ]]; do
         echo "Error: Stale *.gcda files found. Exiting."
         exit 1
     fi
-    TEST_OUTPUT_TEMPFILE=$(mktemp)
+    TEST_OUTPUT_TEMPFILE="$BUILDDIR/deterministic_coverage_test_output.tmp"
     if ! BOOST_TEST_RUN_FILTERS="${BOOST_TEST_RUN_FILTERS}" ${TEST_BITCOIN_BINARY} > "${TEST_OUTPUT_TEMPFILE}" 2>&1; then
         cat "${TEST_OUTPUT_TEMPFILE}"
         rm "${TEST_OUTPUT_TEMPFILE}"
@@ -120,7 +120,7 @@ while [[ ${TEST_RUN_ID} -lt ${N_TEST_RUNS} ]]; do
         echo "Error: Running the test suite did not create any *.gcda files. The gcda files are generated when the instrumented test programs are executed. Run \"cmake -B build -DCMAKE_BUILD_TYPE=Coverage\" and re-compile."
         exit 1
     fi
-    GCOVR_TEMPFILE=$(mktemp)
+    GCOVR_TEMPFILE="$BUILDDIR/deterministic_coverage_gcovr_output.tmp"
     if ! gcovr --gcov-executable "${GCOV_EXECUTABLE}" -r "$TOPDIR/src/" "$BUILDDIR/src/" > "${GCOVR_TEMPFILE}"; then
         echo "Error: gcovr failed. Output written to ${GCOVR_TEMPFILE}. Exiting."
         exit 1
