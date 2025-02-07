@@ -25,7 +25,8 @@
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <validation.h>
-#include <wallet/rpcwallet.h>
+#include <wallet/rpc/util.h>
+
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
 #endif // ENABLE_WALLET
@@ -519,7 +520,7 @@ static RPCHelpMan gobject_vote_many()
         RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -572,7 +573,7 @@ static RPCHelpMan gobject_vote_alias()
         RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);

@@ -7,6 +7,7 @@
 
 #include <consensus/amount.h>
 #include <core_io.h>
+#include <fs.h>
 #include <streams.h>
 #include <sync.h>
 #include <validation.h>
@@ -55,6 +56,11 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
  * Helper to create UTXO snapshots given a chainstate and a file handle.
  * @return a UniValue map containing metadata about the snapshot.
  */
-UniValue CreateUTXOSnapshot(NodeContext& node, CChainState& chainstate, CAutoFile& afile);
+UniValue CreateUTXOSnapshot(
+    NodeContext& node,
+    CChainState& chainstate,
+    CAutoFile& afile,
+    const fs::path& path,
+    const fs::path& tmppath);
 
 #endif // BITCOIN_RPC_BLOCKCHAIN_H

@@ -30,6 +30,7 @@
 #include <util/moneystr.h>
 #include <util/translation.h>
 #include <validation.h>
+#include <wallet/rpc/util.h>
 
 #ifdef ENABLE_WALLET
 #include <wallet/coincontrol.h>
@@ -855,7 +856,7 @@ static RPCHelpMan protx_register_submit()
 
     CChainstateHelper& chain_helper = *CHECK_NONFATAL(node.chain_helper);
 
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
 
     EnsureWalletIsUnlocked(*wallet);

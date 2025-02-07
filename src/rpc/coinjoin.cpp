@@ -12,12 +12,12 @@
 #include <util/check.h>
 #include <rpc/util.h>
 #include <util/strencodings.h>
+#include <wallet/rpc/util.h>
 
 #ifdef ENABLE_WALLET
 #include <coinjoin/client.h>
 #include <coinjoin/options.h>
 #include <interfaces/coinjoin.h>
-#include <wallet/rpcwallet.h>
 #endif // ENABLE_WALLET
 
 #include <univalue.h>
@@ -73,7 +73,7 @@ static RPCHelpMan coinjoin_reset()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -107,7 +107,7 @@ static RPCHelpMan coinjoin_start()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -152,7 +152,7 @@ static RPCHelpMan coinjoin_stop()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -441,7 +441,7 @@ static RPCHelpMan getcoinjoininfo()
 
     obj.pushKV("queue_size", node.cj_ctx->queueman->GetQueueSize());
 
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) {
         return obj;
     }

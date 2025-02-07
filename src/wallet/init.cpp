@@ -146,7 +146,7 @@ bool WalletInit::ParameterInteraction() const
         return InitError(Untranslated("-zapwallettxes has been removed. If you are attempting to remove a stuck transaction from your wallet, please use abandontransaction instead."));
     }
 
-    int rescan_mode = gArgs.GetArg("-rescan", 0);
+    int rescan_mode = gArgs.GetIntArg("-rescan", 0);
     if (rescan_mode < 0 || rescan_mode > 2) {
         LogPrintf("%s: Warning: incorrect -rescan mode, falling back to default value.\n", __func__);
         InitWarning(_("Incorrect -rescan mode, falling back to default value"));
@@ -169,11 +169,11 @@ bool WalletInit::ParameterInteraction() const
         gArgs.ForceRemoveArg("mnemonicpassphrase");
     }
 
-    if (gArgs.GetArg("-coinjoindenomshardcap", DEFAULT_COINJOIN_DENOMS_HARDCAP) < gArgs.GetArg("-coinjoindenomsgoal", DEFAULT_COINJOIN_DENOMS_GOAL)) {
+    if (gArgs.GetIntArg("-coinjoindenomshardcap", DEFAULT_COINJOIN_DENOMS_HARDCAP) < gArgs.GetIntArg("-coinjoindenomsgoal", DEFAULT_COINJOIN_DENOMS_GOAL)) {
         return InitError(strprintf(_("%s can't be lower than %s"), "-coinjoindenomshardcap", "-coinjoindenomsgoal"));
     }
 
-    if (CMnemonic::Generate(gArgs.GetArg("-mnemonicbits", CHDChain::DEFAULT_MNEMONIC_BITS)) == SecureString()) {
+    if (CMnemonic::Generate(gArgs.GetIntArg("-mnemonicbits", CHDChain::DEFAULT_MNEMONIC_BITS)) == SecureString()) {
         return InitError(strprintf(_("Invalid '%s'. Allowed values: 128, 160, 192, 224, 256."), "-mnemonicbits"));
     }
 

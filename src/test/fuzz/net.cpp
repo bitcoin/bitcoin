@@ -27,7 +27,7 @@ const BasicTestingSetup* g_setup;
 
 int32_t GetCheckRatio()
 {
-    return std::clamp<int32_t>(g_setup->m_node.args->GetArg("-checkaddrman", 0), 0, 1000000);
+    return std::clamp<int32_t>(g_setup->m_node.args->GetIntArg("-checkaddrman", 0), 0, 1000000);
 }
 } // namespace
 

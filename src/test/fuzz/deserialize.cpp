@@ -202,7 +202,7 @@ FUZZ_TARGET_DESERIALIZE(addrman_deserialize, {
     NetGroupManager netgroupman{std::vector<bool>()};
     AddrMan am(netgroupman,
                /*deterministic=*/false,
-               g_setup->m_node.args->GetArg("-checkaddrman", 0));
+               g_setup->m_node.args->GetIntArg("-checkaddrman", 0));
     DeserializeFromFuzzingInput(buffer, am);
 })
 FUZZ_TARGET_DESERIALIZE(blockheader_deserialize, {

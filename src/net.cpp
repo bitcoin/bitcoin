@@ -187,7 +187,7 @@ uint16_t GetListenPort()
     }
 
     // Otherwise, if -port= is provided, use that. Otherwise use the default port.
-    return static_cast<uint16_t>(gArgs.GetArg("-port", Params().GetDefaultPort()));
+    return static_cast<uint16_t>(gArgs.GetIntArg("-port", Params().GetDefaultPort()));
 }
 
 // find 'best' local address for a particular peer
