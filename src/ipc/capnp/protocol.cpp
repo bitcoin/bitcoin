@@ -41,61 +41,65 @@ class CapnpProtocol : public Protocol
 public:
     ~CapnpProtocol() noexcept(true)
     {
-        if (m_loop) {
-            std::unique_lock<std::mutex> lock(m_loop->m_mutex);
-            m_loop->removeClient(lock);
+        {
+            LOCK(m_loop_mutex);
+            if (m_loop) {
+                std::unique_lock<std::mutex> lock(m_loop->m_mutex);
+                m_loop->removeClient(lock);
+            }
         }
         if (m_loop_thread.joinable()) m_loop_thread.join();
-        assert(!m_loop);
+        assert(WITH_LOCK(m_loop_mutex, return !m_loop));
     };
-    std::unique_ptr<interfaces::Init> connect(int fd, const char* exe_name) override
+    std::unique_ptr<interfaces::Init> connect(int fd, const char* exe_name) override EXCLUSIVE_LOCKS_REQUIRED(!m_loop_mutex)
     {
         startLoop(exe_name);
-        return mp::ConnectStream<messages::Init>(*m_loop, fd);
+        return mp::ConnectStream<messages::Init>(WITH_LOCK(m_loop_mutex, return *m_loop), fd);
     }
-    void listen(int listen_fd, const char* exe_name, interfaces::Init& init) override
+    void listen(int listen_fd, const char* exe_name, interfaces::Init& init) override EXCLUSIVE_LOCKS_REQUIRED(!m_loop_mutex)
     {
         startLoop(exe_name);
         if (::listen(listen_fd, /*backlog=*/5) != 0) {
             throw std::system_error(errno, std::system_category());
         }
-        mp::ListenConnections<messages::Init>(*m_loop, listen_fd, init);
+        mp::ListenConnections<messages::Init>(WITH_LOCK(m_loop_mutex, return *m_loop), listen_fd, init);
     }
-    void serve(int fd, const char* exe_name, interfaces::Init& init, const std::function<void()>& ready_fn = {}) override
+    void serve(int fd, const char* exe_name, interfaces::Init& init, const std::function<void()>& ready_fn = {}) override EXCLUSIVE_LOCKS_REQUIRED(!m_loop_mutex)
     {
-        assert(!m_loop);
+        assert(WITH_LOCK(m_loop_mutex, return !m_loop));
         mp::g_thread_context.thread_name = mp::ThreadName(exe_name);
-        m_loop.emplace(exe_name, &IpcLogFn, &m_context);
+        auto& loop{WITH_LOCK(m_loop_mutex, m_loop.emplace(exe_name, &IpcLogFn, &m_context); return *m_loop)};
         if (ready_fn) ready_fn();
-        mp::ServeStream<messages::Init>(*m_loop, fd, init);
-        m_loop->loop();
-        m_loop.reset();
+        mp::ServeStream<messages::Init>(loop, fd, init);
+        loop.loop();
+        WITH_LOCK(m_loop_mutex, m_loop.reset());
     }
     void addCleanup(std::type_index type, void* iface, std::function<void()> cleanup) override
     {
         mp::ProxyTypeRegister::types().at(type)(iface).cleanup_fns.emplace_back(std::move(cleanup));
     }
     Context& context() override { return m_context; }
-    void startLoop(const char* exe_name)
+    void startLoop(const char* exe_name) EXCLUSIVE_LOCKS_REQUIRED(!m_loop_mutex)
     {
-        if (m_loop) return;
+        if (WITH_LOCK(m_loop_mutex, return m_loop.has_value())) return;
         std::promise<void> promise;
         m_loop_thread = std::thread([&] {
             util::ThreadRename("capnp-loop");
-            m_loop.emplace(exe_name, &IpcLogFn, &m_context);
+            auto& loop{WITH_LOCK(m_loop_mutex, m_loop.emplace(exe_name, &IpcLogFn, &m_context); return *m_loop)};
             {
-                std::unique_lock<std::mutex> lock(m_loop->m_mutex);
-                m_loop->addClient(lock);
+                std::unique_lock<std::mutex> lock(loop.m_mutex);
+                loop.addClient(lock);
             }
             promise.set_value();
-            m_loop->loop();
-            m_loop.reset();
+            loop.loop();
+            WITH_LOCK(m_loop_mutex, m_loop.reset());
         });
         promise.get_future().wait();
     }
     Context m_context;
     std::thread m_loop_thread;
-    std::optional<mp::EventLoop> m_loop;
+    Mutex m_loop_mutex;
+    std::optional<mp::EventLoop> m_loop GUARDED_BY(m_loop_mutex);
 };
 } // namespace
 
