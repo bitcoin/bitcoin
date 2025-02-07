@@ -7,8 +7,11 @@ Some notes on how to build Bitcoin Core in Unix.
 To Build
 ---------------------
 
+If you are building from git directly, you need to run `./autogen.sh` before
+the first time you build. This is not required if you downloaded the source
+code from the website.
+
 ```bash
-./autogen.sh
 ./configure
 make # use "-j N" for N parallel jobs
 make install # optional
@@ -87,6 +90,10 @@ Additionally, to support Wayland protocol for modern desktop environments:
 
     sudo apt install qtwayland5
 
+If you are building directly from git (instead of the official source code release), you will also need:
+
+    sudo apt install librsvg2-bin imagemagick
+
 libqrencode (optional) can be installed with:
 
     sudo apt-get install libqrencode-dev
@@ -143,6 +150,10 @@ To build with Qt 5 you need the following:
 Additionally, to support Wayland protocol for modern desktop environments:
 
     sudo dnf install qt5-qtwayland
+
+If you are building directly from git (instead of the official source code release), you will also need:
+
+    sudo dnf install librsvg2-tools ImageMagick
 
 libqrencode (optional) can be installed with:
 
@@ -202,8 +213,8 @@ Setup and Build Example: Arch Linux
 -----------------------------------
 This example lists the steps necessary to setup and build a command line only distribution of the latest changes on Arch Linux:
 
-    pacman --sync --needed autoconf automake boost gcc git libevent libtool make pkgconf python sqlite
-    git clone https://github.com/bitcoin/bitcoin.git
+    pacman --sync --needed autoconf automake boost gcc git libevent libtool make pkgconf python sqlite librsvg imagemagick
+    git clone https://github.com/bitcoinknots/bitcoin.git
     cd bitcoin/
     ./autogen.sh
     ./configure
