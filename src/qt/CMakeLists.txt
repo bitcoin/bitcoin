@@ -241,6 +241,8 @@ if(WIN32)
   set_target_properties(bitcoin-qt PROPERTIES WIN32_EXECUTABLE TRUE)
 endif()
 
+install_manpage(bitcoin-qt COMPONENT GUI)
+
 if(WITH_MULTIPROCESS)
   add_executable(bitcoin-gui
     main.cpp

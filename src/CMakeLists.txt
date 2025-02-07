@@ -172,6 +172,15 @@ target_link_libraries(bitcoin_common
 
 
 set(installable_targets)
+macro(install_manpage target)
+  if(INSTALL_MAN)
+    install(FILES ${PROJECT_SOURCE_DIR}/doc/man/${target}.1
+      DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
+      ${ARGN}
+    )
+  endif()
+endmacro()
+
 if(ENABLE_WALLET)
   add_subdirectory(wallet)
 
@@ -190,6 +199,7 @@ if(ENABLE_WALLET)
       Boost::headers
     )
     list(APPEND installable_targets bitcoin-wallet)
+    install_manpage(bitcoin-wallet)
   endif()
 endif()
 
@@ -319,6 +329,7 @@ if(BUILD_DAEMON)
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
   )
   list(APPEND installable_targets bitcoind)
+  install_manpage(bitcoind)
 endif()
 if(WITH_MULTIPROCESS)
   add_executable(bitcoin-node
@@ -375,6 +386,7 @@ if(BUILD_CLI)
     libevent::extra
   )
   list(APPEND installable_targets bitcoin-cli)
+  install_manpage(bitcoin-cli)
 endif()
 
 
@@ -388,6 +400,7 @@ if(BUILD_TX)
     univalue
   )
   list(APPEND installable_targets bitcoin-tx)
+  install_manpage(bitcoin-tx)
 endif()
 
 
@@ -400,6 +413,7 @@ if(BUILD_UTIL)
     bitcoin_util
   )
   list(APPEND installable_targets bitcoin-util)
+  install_manpage(bitcoin-util)
 endif()
 
 
@@ -451,11 +465,3 @@ install(TARGETS ${installable_targets}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 unset(installable_targets)
-
-if(INSTALL_MAN)
-  # TODO: these stubs are no longer needed. man pages should be generated at install time.
-  install(DIRECTORY ../doc/man/
-    DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
-    FILES_MATCHING PATTERN *.1
-  )
-endif()
