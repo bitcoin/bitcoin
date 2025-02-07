@@ -90,9 +90,6 @@ else
   AX_CXX_COMPILE_STDCXX([20], [noext], [mandatory])
 fi
 
-dnl check if additional link flags are required for std::filesystem
-CHECK_FILESYSTEM
-
 dnl Unless the user specified OBJCXX, force it to be the same as CXX. This ensures
 dnl that we get the same -std flags for both.
 m4_ifdef([AC_PROG_OBJCXX],[
@@ -481,10 +478,7 @@ if test "x$enable_werror" = "xyes"; then
 
   AX_CHECK_COMPILE_FLAG([-Werror=conditional-uninitialized],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=conditional-uninitialized"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Werror=sign-compare],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=sign-compare"],,[[$CXXFLAG_WERROR]])
-  dnl -Wsuggest-override is broken with GCC before 9.2
-  dnl https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78010
-  AX_CHECK_COMPILE_FLAG([-Werror=suggest-override],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=suggest-override"],,[[$CXXFLAG_WERROR]],
-                        [AC_LANG_SOURCE([[struct A { virtual void f(); }; struct B : A { void f() final; };]])])
+  AX_CHECK_COMPILE_FLAG([-Wsuggest-override], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wsuggest-override"], [], [$CXXFLAG_WERROR])
   AX_CHECK_COMPILE_FLAG([-Werror=unreachable-code-loop-increment],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=unreachable-code-loop-increment"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Werror=mismatched-tags], [ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=mismatched-tags"], [], [$CXXFLAG_WERROR])
   AX_CHECK_COMPILE_FLAG([-Werror=implicit-fallthrough], [ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=implicit-fallthrough"], [], [$CXXFLAG_WERROR])
@@ -1363,22 +1357,6 @@ if test "x$enable_fuzz" = "xyes"; then
   enable_fuzz_binary=yes
 
   AX_CHECK_PREPROC_FLAG([-DABORT_ON_FAILED_ASSUME],[[DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DABORT_ON_FAILED_ASSUME"]],,[[$CXXFLAG_WERROR]])
-
-  AC_MSG_CHECKING([whether main function is needed for fuzz binary])
-  AX_CHECK_LINK_FLAG(
-    [[-fsanitize=$use_sanitizers]],
-    [AC_MSG_RESULT([no])],
-    [AC_MSG_RESULT([yes])
-     CORE_CPPFLAGS="$CORE_CPPFLAGS -DPROVIDE_FUZZ_MAIN_FUNCTION"],
-    [],
-    [AC_LANG_PROGRAM([[
-      #include <cstdint>
-      #include <cstddef>
-      extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) { return 0; }
-      /* comment to remove the main function ...
-     ]],[[
-      */ int not_main() {
-     ]])])
 else
     BITCOIN_QT_INIT
 
@@ -1392,8 +1370,23 @@ else
       QT_DBUS_INCLUDES=SUPPRESS_WARNINGS($QT_DBUS_INCLUDES)
       QT_TEST_INCLUDES=SUPPRESS_WARNINGS($QT_TEST_INCLUDES)
     fi
+fi
 
-    CORE_CPPFLAGS="$CORE_CPPFLAGS -DPROVIDE_FUZZ_MAIN_FUNCTION"
+if test x$enable_fuzz_binary = xyes; then
+  AC_MSG_CHECKING([whether main function is needed for fuzz binary])
+  AX_CHECK_LINK_FLAG(
+    [],
+    [AC_MSG_RESULT([no])],
+    [AC_MSG_RESULT([yes]); CORE_CPPFLAGS="$CORE_CPPFLAGS -DPROVIDE_FUZZ_MAIN_FUNCTION"],
+    [$SANITIZER_LDFLAGS],
+    [AC_LANG_PROGRAM([[
+      #include <cstdint>
+      #include <cstddef>
+      extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) { return 0; }
+      /* comment to remove the main function ...
+     ]],[[
+      */ int not_main() {
+     ]])])
 fi
 
 if test x$enable_wallet != xno; then
@@ -1815,10 +1808,6 @@ AC_MSG_RESULT($dsymutil_needs_flat)
 
 if test x$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononononono; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
-fi
-
-if test x$enable_fuzz_binary = xyes; then
-  CHECK_RUNTIME_LIB
 fi
 
 AM_CONDITIONAL([TARGET_DARWIN], [test x$TARGET_OS = xdarwin])

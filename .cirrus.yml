@@ -78,10 +78,10 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_win64.sh"
 
 task:
-  name: '32-bit + dash [gui] [CentOS 8]'
+  name: '32-bit + dash [gui] [CentOS 9]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: centos:8
+    image: centos:9
   env:
     PACKAGE_MANAGER_INSTALL: "yum install -y"
     FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
