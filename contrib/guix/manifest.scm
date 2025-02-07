@@ -555,8 +555,8 @@ inspecting signatures in Mach-O binaries.")
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            (list zip
-                 (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
-                 nsis-x86_64
+                 (let ((toolchain (specification->package "gcc-toolchain@14")))
+                   (package-with-c-toolchain nsis-x86_64 `(("toolchain" ,toolchain))))
                  nss-certs
                  osslsigncode))
           ((string-contains target "-linux-")
