@@ -90,14 +90,22 @@ target_link_libraries(bitcoinkernel
     Boost::headers
 )
 
-# libbitcoinkernel requires default symbol visibility, explicitly
-# specify that here so that things still work even when user
-# configures with -DREDUCE_EXPORTS=ON
-#
-# Note this is a quick hack that will be removed as we
-# incrementally define what to export from the library.
+target_compile_definitions(bitcoinkernel
+  PUBLIC
+    $<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:BITCOINKERNEL_STATIC>
+)
+
 set_target_properties(bitcoinkernel PROPERTIES
+  # libbitcoinkernel requires default symbol visibility, explicitly
+  # specify that here so that things still work even when user
+  # configures with -DREDUCE_EXPORTS=ON
+  #
+  # Note this is a quick hack that will be removed as we
+  # incrementally define what to export from the library.
   CXX_VISIBILITY_PRESET default
+  # Temporarily enable WINDOWS_EXPORT_ALL_SYMBOLS until a dedicated
+  # header with __declspec(dllexport) directives is available.
+  WINDOWS_EXPORT_ALL_SYMBOLS TRUE
 )
 
 # When building the static library, install all static libraries the

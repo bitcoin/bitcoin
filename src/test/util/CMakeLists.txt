@@ -19,7 +19,10 @@ add_library(test_util STATIC EXCLUDE_FROM_ALL
   validation.cpp
   $<$<BOOL:${ENABLE_WALLET}>:${PROJECT_SOURCE_DIR}/src/wallet/test/util.cpp>
 )
-
+target_compile_definitions(test_util
+  PUBLIC
+    BITCOIN_BUILD_INTERNAL
+)
 target_link_libraries(test_util
   PRIVATE
     core_interface
