@@ -36,6 +36,7 @@
 #include <util/translation.h>
 #include <validation.h>
 
+#include <cstddef>
 #include <map>
 #include <ranges>
 #include <unordered_map>
@@ -1169,7 +1170,19 @@ BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
       m_opts{std::move(opts)},
       m_block_file_seq{FlatFileSeq{m_opts.blocks_dir, "blk", m_opts.fast_prune ? 0x4000 /* 16kB */ : BLOCKFILE_CHUNK_SIZE}},
       m_undo_file_seq{FlatFileSeq{m_opts.blocks_dir, "rev", UNDOFILE_CHUNK_SIZE}},
-      m_interrupt{interrupt} {}
+      m_interrupt{interrupt}
+{
+    m_block_tree_db = std::make_unique<BlockTreeDB>(m_opts.block_tree_db_params);
+
+    if (m_opts.block_tree_db_params.wipe_data) {
+        m_block_tree_db->WriteReindexing(true);
+        m_blockfiles_indexed = false;
+        // If we're reindexing in prune mode, wipe away unusable block files and all undo data files
+        if (m_prune_mode) {
+            CleanupBlockRevFiles();
+        }
+    }
+}
 
 class ImportingNow
 {

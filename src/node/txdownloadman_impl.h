@@ -194,11 +194,11 @@ protected:
     /** Helper for getting deduplicated vector of Txids in vin. */
     std::vector<Txid> GetUniqueParents(const CTransaction& tx);
 
-    /** Determine candidacy (and delay) for potential orphan resolution candidate.
-     * @returns delay for orphan resolution if this peer is a good candidate for orphan resolution,
-     * std::nullopt if this peer cannot be added because it has reached download/orphanage limits.
+    /** If this peer is an orphan resolution candidate for this transaction, treat the unique_parents as announced by
+     * this peer; add them as new invs to m_txrequest.
+     * @returns whether this transaction was a valid orphan resolution candidate.
      * */
-    std::optional<std::chrono::seconds> OrphanResolutionCandidate(NodeId nodeid, const Wtxid& orphan_wtxid, size_t num_parents);
+    bool MaybeAddOrphanResolutionCandidate(const std::vector<Txid>& unique_parents, const Wtxid& wtxid, NodeId nodeid, std::chrono::microseconds now);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_IMPL_H

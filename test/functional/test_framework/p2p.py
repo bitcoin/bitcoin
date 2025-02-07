@@ -928,8 +928,8 @@ class P2PDataStore(P2PInterface):
 
 class P2PTxInvStore(P2PInterface):
     """A P2PInterface which stores a count of how many times each txid has been announced."""
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.tx_invs_received = defaultdict(int)
 
     def on_inv(self, message):

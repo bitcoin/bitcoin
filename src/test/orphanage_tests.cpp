@@ -532,18 +532,26 @@ BOOST_AUTO_TEST_CASE(peer_worksets)
             BOOST_CHECK(orphanage.HaveTxFromPeer(orphan_wtxid, node));
         }
 
-        // Parent accepted: add child to all 3 worksets.
-        orphanage.AddChildrenToWorkSet(*tx_missing_parent);
-        BOOST_CHECK_EQUAL(orphanage.GetTxToReconsider(node0), tx_orphan);
-        BOOST_CHECK_EQUAL(orphanage.GetTxToReconsider(node1), tx_orphan);
-        // Don't call GetTxToReconsider(node2) yet because it mutates the workset.
+        // Parent accepted: child is added to 1 of 3 worksets.
+        orphanage.AddChildrenToWorkSet(*tx_missing_parent, det_rand);
+        int node0_reconsider = orphanage.HaveTxToReconsider(node0);
+        int node1_reconsider = orphanage.HaveTxToReconsider(node1);
+        int node2_reconsider = orphanage.HaveTxToReconsider(node2);
+        BOOST_CHECK_EQUAL(node0_reconsider + node1_reconsider + node2_reconsider, 1);
+
+        NodeId assigned_peer;
+        if (node0_reconsider) {
+            assigned_peer = node0;
+        } else if (node1_reconsider) {
+            assigned_peer = node1;
+        } else {
+            BOOST_CHECK(node2_reconsider);
+            assigned_peer = node2;
+        }
 
         // EraseForPeer also removes that tx from the workset.
-        orphanage.EraseForPeer(node0);
+        orphanage.EraseForPeer(assigned_peer);
         BOOST_CHECK_EQUAL(orphanage.GetTxToReconsider(node0), nullptr);
-
-        // However, the other peers' worksets are not touched.
-        BOOST_CHECK_EQUAL(orphanage.GetTxToReconsider(node2), tx_orphan);
 
         // Delete this tx, clearing the orphanage.
         BOOST_CHECK_EQUAL(orphanage.EraseTx(orphan_wtxid), 1);

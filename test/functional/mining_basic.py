@@ -153,6 +153,8 @@ class MiningTest(BitcoinTestFramework):
         # The template will have an adjusted timestamp, which we then modify
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
         assert_greater_than_or_equal(tmpl['curtime'], t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP)
+        # mintime and curtime should match
+        assert_equal(tmpl['mintime'], tmpl['curtime'])
 
         block = CBlock()
         block.nVersion = tmpl["version"]
