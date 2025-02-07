@@ -14,7 +14,12 @@ set -ex
 GIT_ARCHIVE="$1"
 DISTNAME="$2"
 
-git archive --prefix="${DISTNAME}/" HEAD | tar -xp
+git archive --prefix="${DISTNAME}/" HEAD | tar -xp --exclude '*minisketch*'
+
+# Generate correct build info file from git, before we lose git
+GIT_BUILD_INFO="$(share/genbuild.sh /dev/stdout)"
+sed 's/\/\/ No build information available/'"${GIT_BUILD_INFO}"'/' -i "${DISTNAME}/share/genbuild.sh"
+
 cd "${DISTNAME}"
 
 ./autogen.sh
