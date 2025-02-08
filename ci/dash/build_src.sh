@@ -66,8 +66,9 @@ if [ -n "$USE_VALGRIND" ]; then
 fi
 
 if [ "${RUN_TIDY}" = "true" ]; then
+  set -eo pipefail
   cd src
-  run-clang-tidy "${MAKEJOBS}"
+  ( run-clang-tidy -quiet "${MAKEJOBS}" ) | grep -C5 "error"
   cd ..
   iwyu_tool.py \
     "src/compat" \
