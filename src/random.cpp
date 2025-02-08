@@ -192,11 +192,27 @@ uint64_t GetRdSeed() noexcept
 #elif defined(__aarch64__) && defined(HWCAP2_RNG)
 
 bool g_rndr_supported = false;
+bool g_rndrrs_supported = false;
+
+bool VerifyRNDRRS()
+{
+    uint8_t ok;
+    uint64_t test;
+    int max_retries = 10;
+    do {
+        __asm__ volatile("mrs %0, s3_3_c2_c4_1; cset %w1, ne;"
+                         : "=r"(test), "=r"(ok)::"cc");
+        if (ok) return true;
+        __asm__ volatile("yield");
+    } while (--max_retries > 0);
+    return false;
+}
 
 void InitHardwareRand()
 {
     if (getauxval(AT_HWCAP2) & HWCAP2_RNG) {
         g_rndr_supported = true;
+        g_rndrrs_supported = VerifyRNDRRS();
     }
 }
 
@@ -204,8 +220,10 @@ void ReportHardwareRand()
 {
     // This must be done in a separate function, as InitHardwareRand() may be indirectly called
     // from global constructors, before logging is initialized.
-    if (g_rndr_supported) {
+    if (g_rndr_supported && g_rndrrs_supported) {
         LogPrintf("Using RNDR and RNDRRS as additional entropy sources\n");
+    } else if (g_rndr_supported) {
+        LogPrintf("Using RNDR as an additional entropy source\n");
     }
 }
 
@@ -295,7 +313,7 @@ void SeedHardwareSlow(CSHA512& hasher) noexcept {
         return;
     }
 #elif defined(__aarch64__) && defined(HWCAP2_RNG)
-    if (g_rndr_supported) {
+    if (g_rndrrs_supported) {
         for (int i = 0; i < 4; ++i) {
             uint64_t out = GetRNDRRS();
             hasher.Write((const unsigned char*)&out, sizeof(out));
