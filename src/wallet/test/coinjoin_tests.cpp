@@ -132,6 +132,7 @@ public:
     CTransactionBuilderTestSetup() :
         wallet{std::make_unique<CWallet>(m_node.chain.get(), m_node.coinjoin_loader.get(), "", CreateMockWalletDatabase())}
     {
+        context.args = &gArgs;
         context.chain = m_node.chain.get();
         context.coinjoin_loader = m_node.coinjoin_loader.get();
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));

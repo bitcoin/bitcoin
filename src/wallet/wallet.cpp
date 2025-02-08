@@ -273,6 +273,8 @@ std::shared_ptr<CWallet> LoadWallet(WalletContext& context, const std::string& n
 
 std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
+    ArgsManager& args = *Assert(context.args);
+
     uint64_t wallet_creation_flags = options.create_flags;
     const SecureString& passphrase = options.create_passphrase;
 
@@ -309,7 +311,7 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
         status = DatabaseStatus::FAILED_CREATE;
         return nullptr;
     }
-    if (gArgs.GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET)) {
+    if (args.GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET)) {
         wallet->WalletLogPrintf("Set HD by default\n");
         wallet->SetMinVersion(FEATURE_HD);
     }
@@ -3254,6 +3256,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
 {
     interfaces::Chain* chain = context.chain;
     interfaces::CoinJoin::Loader* coinjoin_loader = context.coinjoin_loader;
+    ArgsManager& args = *Assert(context.args);
     const std::string& walletFile = database->Filename();
 
     const auto start{SteadyClock::now()};
@@ -3309,14 +3312,14 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
 
         if (!(wallet_creation_flags & (WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET))) {
             // Create new HD chain
-            if (gArgs.GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !walletInstance->IsHDEnabled()) {
-                std::string strSeed = gArgs.GetArg("-hdseed", "not hex");
+            if (args.GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !walletInstance->IsHDEnabled()) {
+                std::string strSeed = args.GetArg("-hdseed", "not hex");
 
                 // ensure this wallet.dat can only be opened by clients supporting HD
                 walletInstance->WalletLogPrintf("Upgrading wallet to HD\n");
                 walletInstance->SetMinVersion(FEATURE_HD);
 
-                if (gArgs.IsArgSet("-hdseed") && IsHex(strSeed)) {
+                if (args.IsArgSet("-hdseed") && IsHex(strSeed)) {
                     CHDChain newHdChain;
                     std::vector<unsigned char> vchSeed = ParseHex(strSeed);
                     if (!newHdChain.SetSeed(SecureVector(vchSeed.begin(), vchSeed.end()), true)) {
@@ -3333,12 +3336,12 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
                     // add default account
                     newHdChain.AddAccount();
                 } else {
-                    if (gArgs.IsArgSet("-hdseed") && !IsHex(strSeed)) {
+                    if (args.IsArgSet("-hdseed") && !IsHex(strSeed)) {
                         error = strprintf(_("%s -- Incorrect seed, it should be a hex string"), __func__);
                         return nullptr;
                     }
-                    SecureString secureMnemonic = gArgs.GetArg("-mnemonic", "").c_str();
-                    SecureString secureMnemonicPassphrase = gArgs.GetArg("-mnemonicpassphrase", "").c_str();
+                    SecureString secureMnemonic = args.GetArg("-mnemonic", "").c_str();
+                    SecureString secureMnemonicPassphrase = args.GetArg("-mnemonicpassphrase", "").c_str();
                     LOCK(walletInstance->cs_wallet);
                     if (auto spk_man = walletInstance->GetLegacyScriptPubKeyMan()) {
                         spk_man->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase);
@@ -3346,9 +3349,9 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
                 }
 
                 // clean up
-                gArgs.ForceRemoveArg("hdseed");
-                gArgs.ForceRemoveArg("mnemonic");
-                gArgs.ForceRemoveArg("mnemonicpassphrase");
+                args.ForceRemoveArg("hdseed");
+                args.ForceRemoveArg("mnemonic");
+                args.ForceRemoveArg("mnemonicpassphrase");
             } // Otherwise, do not create a new HD chain
 
             LOCK(walletInstance->cs_wallet);
@@ -3389,8 +3392,8 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
             }
         }
     }
-    else if (gArgs.IsArgSet("-usehd")) {
-        bool useHD = gArgs.GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET);
+    else if (args.IsArgSet("-usehd")) {
+        bool useHD = args.GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET);
         if (walletInstance->IsHDEnabled() && !useHD) {
             error = strprintf(_("Error loading %s: You can't disable HD on an already existing HD wallet"), walletInstance->GetName());
             return nullptr;
@@ -3406,10 +3409,10 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         SetMiscWarning(_("Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!"));
     }
 
-    if (gArgs.IsArgSet("-mintxfee")) {
-        std::optional<CAmount> min_tx_fee = ParseMoney(gArgs.GetArg("-mintxfee", ""));
+    if (args.IsArgSet("-mintxfee")) {
+        std::optional<CAmount> min_tx_fee = ParseMoney(args.GetArg("-mintxfee", ""));
         if (!min_tx_fee || min_tx_fee.value() == 0) {
-            error = AmountErrMsg("mintxfee", gArgs.GetArg("-mintxfee", ""));
+            error = AmountErrMsg("mintxfee", args.GetArg("-mintxfee", ""));
             return nullptr;
         } else if (min_tx_fee.value() > HIGH_TX_FEE_PER_KB) {
             warnings.push_back(AmountHighWarn("-mintxfee") + Untranslated(" ") +
@@ -3419,8 +3422,8 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         walletInstance->m_min_fee = CFeeRate{min_tx_fee.value()};
     }
 
-    if (gArgs.IsArgSet("-maxapsfee")) {
-        const std::string max_aps_fee{gArgs.GetArg("-maxapsfee", "")};
+    if (args.IsArgSet("-maxapsfee")) {
+        const std::string max_aps_fee{args.GetArg("-maxapsfee", "")};
         if (max_aps_fee == "-1") {
             walletInstance->m_max_aps_fee = -1;
         } else if (std::optional<CAmount> max_fee = ParseMoney(max_aps_fee)) {
@@ -3435,10 +3438,10 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         }
     }
 
-    if (gArgs.IsArgSet("-fallbackfee")) {
-        std::optional<CAmount> fallback_fee = ParseMoney(gArgs.GetArg("-fallbackfee", ""));
+    if (args.IsArgSet("-fallbackfee")) {
+        std::optional<CAmount> fallback_fee = ParseMoney(args.GetArg("-fallbackfee", ""));
         if (!fallback_fee) {
-            error = strprintf(_("Invalid amount for -fallbackfee=<amount>: '%s'"), gArgs.GetArg("-fallbackfee", ""));
+            error = strprintf(_("Invalid amount for -fallbackfee=<amount>: '%s'"), args.GetArg("-fallbackfee", ""));
             return nullptr;
         } else if (fallback_fee.value() > HIGH_TX_FEE_PER_KB) {
             warnings.push_back(AmountHighWarn("-fallbackfee") + Untranslated(" ") +
@@ -3449,10 +3452,10 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
     // Disable fallback fee in case value was set to 0, enable if non-null value
     walletInstance->m_allow_fallback_fee = walletInstance->m_fallback_fee.GetFeePerK() != 0;
 
-    if (gArgs.IsArgSet("-discardfee")) {
-        std::optional<CAmount> discard_fee = ParseMoney(gArgs.GetArg("-discardfee", ""));
+    if (args.IsArgSet("-discardfee")) {
+        std::optional<CAmount> discard_fee = ParseMoney(args.GetArg("-discardfee", ""));
         if (!discard_fee) {
-            error = strprintf(_("Invalid amount for -discardfee=<amount>: '%s'"), gArgs.GetArg("-discardfee", ""));
+            error = strprintf(_("Invalid amount for -discardfee=<amount>: '%s'"), args.GetArg("-discardfee", ""));
             return nullptr;
         } else if (discard_fee.value() > HIGH_TX_FEE_PER_KB) {
             warnings.push_back(AmountHighWarn("-discardfee") + Untranslated(" ") +
@@ -3461,10 +3464,10 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         walletInstance->m_discard_rate = CFeeRate{discard_fee.value()};
     }
 
-    if (gArgs.IsArgSet("-paytxfee")) {
-        std::optional<CAmount> pay_tx_fee = ParseMoney(gArgs.GetArg("-paytxfee", ""));
+    if (args.IsArgSet("-paytxfee")) {
+        std::optional<CAmount> pay_tx_fee = ParseMoney(args.GetArg("-paytxfee", ""));
         if (!pay_tx_fee) {
-            error = AmountErrMsg("paytxfee", gArgs.GetArg("-paytxfee", ""));
+            error = AmountErrMsg("paytxfee", args.GetArg("-paytxfee", ""));
             return nullptr;
         } else if (pay_tx_fee.value() > HIGH_TX_FEE_PER_KB) {
             warnings.push_back(AmountHighWarn("-paytxfee") + Untranslated(" ") +
@@ -3473,22 +3476,22 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         walletInstance->m_pay_tx_fee = CFeeRate{pay_tx_fee.value(), 1000};
         if (chain && walletInstance->m_pay_tx_fee < chain->relayMinFee()) {
             error = strprintf(_("Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
-                gArgs.GetArg("-paytxfee", ""), chain->relayMinFee().ToString());
+                args.GetArg("-paytxfee", ""), chain->relayMinFee().ToString());
             return nullptr;
         }
     }
 
-    if (gArgs.IsArgSet("-maxtxfee")) {
-        std::optional<CAmount> max_fee = ParseMoney(gArgs.GetArg("-maxtxfee", ""));
+    if (args.IsArgSet("-maxtxfee")) {
+        std::optional<CAmount> max_fee = ParseMoney(args.GetArg("-maxtxfee", ""));
         if (!max_fee) {
-            error = AmountErrMsg("maxtxfee", gArgs.GetArg("-maxtxfee", ""));
+            error = AmountErrMsg("maxtxfee", args.GetArg("-maxtxfee", ""));
             return nullptr;
         } else if (max_fee.value() > HIGH_MAX_TX_FEE) {
             warnings.push_back(_("-maxtxfee is set very high! Fees this large could be paid on a single transaction."));
         }
         if (chain && CFeeRate{max_fee.value(), 1000} < chain->relayMinFee()) {
             error = strprintf(_("Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)"),
-                gArgs.GetArg("-maxtxfee", ""), chain->relayMinFee().ToString());
+                args.GetArg("-maxtxfee", ""), chain->relayMinFee().ToString());
             return nullptr;
         }
 
@@ -3499,8 +3502,8 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         warnings.push_back(AmountHighWarn("-minrelaytxfee") + Untranslated(" ") +
                     _("The wallet will avoid paying less than the minimum relay fee."));
 
-    walletInstance->m_confirm_target = gArgs.GetIntArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
-    walletInstance->m_spend_zero_conf_change = gArgs.GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
+    walletInstance->m_confirm_target = args.GetIntArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
+    walletInstance->m_spend_zero_conf_change = args.GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
 
     walletInstance->WalletLogPrintf("Wallet completed loading in %15dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
 
@@ -3525,7 +3528,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
 
     {
         LOCK(walletInstance->cs_wallet);
-        walletInstance->SetBroadcastTransactions(gArgs.GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
+        walletInstance->SetBroadcastTransactions(args.GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
         walletInstance->WalletLogPrintf("setExternalKeyPool.size() = %u\n",   walletInstance->KeypoolCountExternalKeys());
         walletInstance->WalletLogPrintf("GetKeyPoolSize() = %u\n",   walletInstance->GetKeyPoolSize());
         walletInstance->WalletLogPrintf("mapWallet.size() = %u\n",            walletInstance->mapWallet.size());

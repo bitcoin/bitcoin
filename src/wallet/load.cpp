@@ -11,6 +11,7 @@
 #include <net.h>
 #include <interfaces/chain.h>
 #include <scheduler.h>
+#include <util/check.h>
 #include <util/string.h>
 #include <util/system.h>
 #include <util/translation.h>
@@ -25,8 +26,10 @@
 bool VerifyWallets(WalletContext& context)
 {
     interfaces::Chain& chain = *context.chain;
-    if (gArgs.IsArgSet("-walletdir")) {
-        const fs::path wallet_dir{gArgs.GetPathArg("-walletdir")};
+    ArgsManager& args = *Assert(context.args);
+
+    if (args.IsArgSet("-walletdir")) {
+        const fs::path wallet_dir{args.GetPathArg("-walletdir")};
         std::error_code error;
         // The canonical path cleans the path, preventing >1 Berkeley environment instances for the same directory
         // It also lets the fs::exists and fs::is_directory checks below pass on windows, since they return false
@@ -43,7 +46,7 @@ bool VerifyWallets(WalletContext& context)
             chain.initError(strprintf(_("Specified -walletdir \"%s\" is a relative path"), fs::PathToString(wallet_dir)));
             return false;
         }
-        gArgs.ForceSetArg("-walletdir", fs::PathToString(canonical_wallet_dir));
+        args.ForceSetArg("-walletdir", fs::PathToString(canonical_wallet_dir));
     }
 
     LogPrintf("Using wallet directory %s\n", fs::PathToString(GetWalletDir()));
@@ -52,7 +55,7 @@ bool VerifyWallets(WalletContext& context)
 
     // For backwards compatibility if an unnamed top level wallet exists in the
     // wallets directory, include it in the default list of wallets to load.
-    if (!gArgs.IsArgSet("wallet")) {
+    if (!args.IsArgSet("wallet")) {
         DatabaseOptions options;
         DatabaseStatus status;
         bilingual_str error_string;

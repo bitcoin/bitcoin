@@ -222,6 +222,7 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
         wallet->SetupLegacyScriptPubKeyMan();
         WITH_LOCK(wallet->cs_wallet, wallet->SetLastBlockProcessed(newTip->nHeight, newTip->GetBlockHash()));
         WalletContext context;
+        context.args = &gArgs;
         AddWallet(context, wallet);
         UniValue keys;
         keys.setArray();
@@ -282,6 +283,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
     // Import key into wallet and call dumpwallet to create backup file.
     {
         WalletContext context;
+        context.args = &gArgs;
         const std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(m_node.chain.get(), m_node.coinjoin_loader.get(), "", CreateDummyWalletDatabase());
         {
             auto spk_man = wallet->GetOrCreateLegacyScriptPubKeyMan();
@@ -309,6 +311,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
         wallet->SetupLegacyScriptPubKeyMan();
 
         WalletContext context;
+        context.args = &gArgs;
         JSONRPCRequest request;
         request.context = context;
         request.params.setArray();
@@ -705,6 +708,7 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
     gArgs.ForceSetArg("-unsafesqlitesync", "1");
     // Create new wallet with known key and unload it.
     WalletContext context;
+    context.args = &gArgs;
     context.chain = m_node.chain.get();
     context.coinjoin_loader = m_node.coinjoin_loader.get();
     auto wallet = TestLoadWallet(context);
@@ -796,6 +800,7 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
 BOOST_FIXTURE_TEST_CASE(CreateWalletWithoutChain, BasicTestingSetup)
 {
     WalletContext context;
+    context.args = &gArgs;
     context.coinjoin_loader = nullptr; // TODO: FIX FIX FIX
     auto wallet = TestLoadWallet(context);
     BOOST_CHECK(wallet);
@@ -806,6 +811,7 @@ BOOST_FIXTURE_TEST_CASE(ZapSelectTx, TestChain100Setup)
 {
     gArgs.ForceSetArg("-unsafesqlitesync", "1");
     WalletContext context;
+    context.args = &gArgs;
     context.chain = m_node.chain.get();
     context.coinjoin_loader = m_node.coinjoin_loader.get();
     auto wallet = TestLoadWallet(context);
@@ -847,6 +853,7 @@ constexpr CAmount fallbackFee = 1000;
 BOOST_FIXTURE_TEST_CASE(rpc_getaddressinfo, TestChain100Setup)
 {
     WalletContext context;
+    context.args = &gArgs;
     context.chain = m_node.chain.get();
     context.coinjoin_loader = m_node.coinjoin_loader.get();
     const std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(m_node.chain.get(), m_node.coinjoin_loader.get(), "", CreateMockWalletDatabase());
@@ -948,6 +955,7 @@ public:
     CreateTransactionTestSetup()
         : wallet{std::make_unique<CWallet>(m_node.chain.get(), m_node.coinjoin_loader.get(), "", CreateMockWalletDatabase())}
     {
+        context.args = &gArgs;
         context.chain = m_node.chain.get();
         context.coinjoin_loader = m_node.coinjoin_loader.get();
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
