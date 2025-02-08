@@ -19,8 +19,17 @@ if(CMAKE_GENERATOR MATCHES "Make|Ninja")
       )
       set(WITH_CCACHE ON)
     elseif(WITH_CCACHE)
-      list(APPEND CMAKE_C_COMPILER_LAUNCHER ${CCACHE_EXECUTABLE})
-      list(APPEND CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_EXECUTABLE})
+      foreach(lang IN ITEMS C CXX OBJCXX)
+        if(DEFINED CMAKE_${lang}_COMPILER_LAUNCHER)
+          list(APPEND configure_warnings
+            "CMAKE_${lang}_COMPILER_LAUNCHER is already set. Skipping built-in ccache support for ${lang}."
+          )
+        else()
+          # Use `cmake -E env` as a cross-platform way to set the CCACHE_NOHASHDIR environment variable,
+          # increasing ccache hit rate e.g. in case of multiple build directories or git worktrees.
+          set(CMAKE_${lang}_COMPILER_LAUNCHER ${CMAKE_COMMAND} -E env CCACHE_NOHASHDIR=1 ${CCACHE_EXECUTABLE})
+        endif()
+      endforeach()
     endif()
   else()
     set(WITH_CCACHE OFF)
