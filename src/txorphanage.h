@@ -95,12 +95,12 @@ public:
 
     /** Get the total usage (weight) of all orphans. If an orphan has multiple announcers, its usage is
      * only counted once within this total. */
-    unsigned int TotalOrphanUsage() const { return m_total_orphan_usage; }
+    int64_t TotalOrphanUsage() const { return m_total_orphan_usage; }
 
     /** Total usage (weight) of orphans for which this peer is an announcer. If an orphan has multiple
      * announcers, its weight will be accounted for in each PeerOrphanInfo, so the total of all
      * peers' UsageByPeer() may be larger than TotalOrphanBytes(). */
-    unsigned int UsageByPeer(NodeId peer) const {
+    int64_t UsageByPeer(NodeId peer) const {
         auto peer_it = m_peer_orphanage_info.find(peer);
         return peer_it == m_peer_orphanage_info.end() ? 0 : peer_it->second.m_total_usage;
     }
@@ -115,7 +115,7 @@ protected:
     };
 
     /** Total usage (weight) of all entries in m_orphans. */
-    unsigned int m_total_orphan_usage{0};
+    int64_t m_total_orphan_usage{0};
 
     /** Total number of <peer, tx> pairs. Can be larger than m_orphans.size() because multiple peers
      * may have announced the same orphan. */
@@ -137,7 +137,7 @@ protected:
          * PeerOrphanInfo, so the total of all peers' m_total_usage may be larger than
          * m_total_orphan_size. If a peer is removed as an announcer, even if the orphan still
          * remains in the orphanage, this number will be decremented. */
-        unsigned int m_total_usage{0};
+        int64_t m_total_usage{0};
     };
     std::map<NodeId, PeerOrphanInfo> m_peer_orphanage_info;
 
