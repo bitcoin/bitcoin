@@ -10,12 +10,6 @@ ENV APT_ARGS="-y --no-install-recommends --no-upgrade"
 # Install common packages
 RUN set -ex; \
     apt-get update && \
-    if [ "$(dpkg --print-architecture)" = "amd64" ]; then \
-        dpkg --add-architecture i386 && \
-        apt-get update && \
-        apt-get install $APT_ARGS \
-        wine32; \
-    fi; \
     apt-get install $APT_ARGS \
     autotools-dev \
     automake \
