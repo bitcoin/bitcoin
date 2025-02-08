@@ -30,6 +30,7 @@ def main():
         "-DCMAKE_C_COMPILER=clang",
         "-DCMAKE_CXX_COMPILER=clang++",
         "-DWERROR=ON",
+        "-DWCONFIGURE_ERROR=ON",
         "-DWITH_ZMQ=ON",
         "-DBUILD_GUI=ON",
         "-DBUILD_BENCH=ON",
