@@ -40,7 +40,7 @@ void initialize_net()
 // From src/test/fuzz/addrman.cpp
 extern NetGroupManager ConsumeNetGroupManager(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
-FUZZ_TARGET_INIT(net, initialize_net)
+FUZZ_TARGET(net, .init = initialize_net)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 

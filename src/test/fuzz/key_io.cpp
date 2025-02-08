@@ -19,7 +19,7 @@ void initialize_key_io()
     SelectParams(CBaseChainParams::MAIN);
 }
 
-FUZZ_TARGET_INIT(key_io, initialize_key_io)
+FUZZ_TARGET(key_io, .init = initialize_key_io)
 {
     const std::string random_string(buffer.begin(), buffer.end());
 

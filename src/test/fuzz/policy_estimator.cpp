@@ -20,7 +20,7 @@ void initialize_policy_estimator()
     static const auto testing_setup = MakeNoLogFileContext<>();
 }
 
-FUZZ_TARGET_INIT(policy_estimator, initialize_policy_estimator)
+FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     CBlockPolicyEstimator block_policy_estimator;

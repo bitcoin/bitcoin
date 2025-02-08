@@ -27,7 +27,7 @@ std::string GetArgumentName(const std::string& name)
     return name.substr(0, idx);
 }
 
-FUZZ_TARGET_INIT(system, initialize_system)
+FUZZ_TARGET(system, .init = initialize_system)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     ArgsManager args_manager{};

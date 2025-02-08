@@ -22,7 +22,7 @@ void initialize_message()
     SelectParams(CBaseChainParams::REGTEST);
 }
 
-FUZZ_TARGET_INIT(message, initialize_message)
+FUZZ_TARGET(message, .init = initialize_message)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const std::string random_message = fuzzed_data_provider.ConsumeRandomLengthString(1024);
