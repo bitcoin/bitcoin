@@ -40,8 +40,6 @@ extern RPCHelpMan getrawchangeaddress();
 extern RPCHelpMan getaddressinfo();
 extern RPCHelpMan addmultisigaddress();
 
-extern RecursiveMutex cs_wallets;
-
 // Ensure that fee levels defined in the wallet are at least as high
 // as the default levels for node policy.
 static_assert(DEFAULT_TRANSACTION_MINFEE >= DEFAULT_MIN_RELAY_TX_FEE, "wallet minimum fee is smaller than default relay fee");
@@ -605,12 +603,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
 
 BOOST_FIXTURE_TEST_CASE(wallet_disableprivkeys, TestChain100Setup)
 {
-    NodeContext node;
-    node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
-    node.mempool = std::make_unique<CTxMemPool>(node.fee_estimator.get());
-    auto chain = interfaces::MakeChain(node);
-    const std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(chain.get(), m_node.coinjoin_loader.get(), "", CreateDummyWalletDatabase());
-    wallet->SetupLegacyScriptPubKeyMan();
+    const std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(m_node.chain.get(), m_node.coinjoin_loader.get(), "", CreateDummyWalletDatabase());    wallet->SetupLegacyScriptPubKeyMan();
     wallet->SetMinVersion(FEATURE_LATEST);
     wallet->SetWalletFlag(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
     BOOST_CHECK(!wallet->TopUpKeyPool(1000));
@@ -637,19 +630,15 @@ static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
     // Create outer P2SH script for the output
     CScript script_pubkey = GetScriptForRawPubKey(pubkey);
 
-    NodeContext node;
-    node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
-    node.mempool = std::make_unique<CTxMemPool>(node.fee_estimator.get());
-    auto chain = interfaces::MakeChain(node);
-    CWallet wallet(chain.get(), /*coinjoin_loader=*/ nullptr, "", CreateDummyWalletDatabase());
-    AddKey(wallet, key);
-    auto spk_man = wallet.GetLegacyScriptPubKeyMan();
-    spk_man->AddCScript(inner_script);
+    // Add inner-script to key store and key to watchonly
+    FillableSigningProvider keystore;
+    keystore.AddCScript(inner_script);
+    keystore.AddKeyPubKey(key, pubkey);
 
     // Fill in dummy signatures for fee calculation.
     SignatureData sig_data;
 
-    if (!ProduceSignature(*spk_man, use_max_sig ? DUMMY_MAXIMUM_SIGNATURE_CREATOR : DUMMY_SIGNATURE_CREATOR, script_pubkey, sig_data)) {
+    if (!ProduceSignature(keystore, use_max_sig ? DUMMY_MAXIMUM_SIGNATURE_CREATOR : DUMMY_SIGNATURE_CREATOR, script_pubkey, sig_data)) {
         // We're hand-feeding it correct arguments; shouldn't happen
         assert(false);
     }
@@ -805,7 +794,6 @@ BOOST_FIXTURE_TEST_CASE(CreateWalletWithoutChain, BasicTestingSetup)
 BOOST_FIXTURE_TEST_CASE(ZapSelectTx, TestChain100Setup)
 {
     gArgs.ForceSetArg("-unsafesqlitesync", "1");
-    auto chain = interfaces::MakeChain(m_node);
     auto wallet = TestLoadWallet(m_node.chain.get(), m_node.coinjoin_loader.get());
     CKey key;
     key.MakeNewKey(true);
