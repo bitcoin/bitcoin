@@ -8,7 +8,7 @@
 #include <tinyformat.h>
 
 #include <cstdio>
-#include <filesystem>
+#include <filesystem> // IWYU pragma: export
 #include <iomanip>
 #include <ios>
 #include <ostream>
