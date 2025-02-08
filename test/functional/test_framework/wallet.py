@@ -121,6 +121,9 @@ class MiniWallet:
         """Pad a transaction with extra outputs until it reaches a target vsize.
         returns the tx
         """
+        if target_vsize < tx.get_vsize():
+            raise RuntimeError(f"target_vsize {target_vsize} is less than transaction virtual size {tx.get_vsize()}")
+
         tx.vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN])))
         # determine number of needed padding bytes
         dummy_vbytes = target_vsize - tx.get_vsize()
@@ -212,7 +215,7 @@ class MiniWallet:
         self.rescan_utxos()
         return blocks
 
-    def get_scriptPubKey(self):
+    def get_output_script(self):
         return self._scriptPubKey
 
     def get_descriptor(self):
@@ -378,7 +381,8 @@ class MiniWallet:
         if target_vsize and not fee:  # respect fee_rate if target vsize is passed
             fee = get_fee(target_vsize, fee_rate)
         send_value = utxo_to_spend["value"] - (fee or (fee_rate * vsize / 1000))
-
+        if send_value <= 0:
+            raise RuntimeError(f"UTXO value {utxo_to_spend['value']} is too small to cover fees {(fee or (fee_rate * vsize / 1000))}")
         # create tx
         tx = self.create_self_transfer_multi(
             utxos_to_spend=[utxo_to_spend],

@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +11,7 @@
 #include <cassert>
 #include <cmath>
 #include <limits>
+#include <optional>
 
 FUZZ_TARGET(float)
 {
@@ -18,7 +19,7 @@ FUZZ_TARGET(float)
 
     {
         const double d{[&] {
-            double tmp;
+            std::optional<double> tmp;
             CallOneOf(
                 fuzzed_data_provider,
                 // an actual number
@@ -42,7 +43,7 @@ FUZZ_TARGET(float)
                       }); },
                 // Anything from raw memory (also checks that DecodeDouble doesn't crash on any input)
                 [&] { tmp = DecodeDouble(fuzzed_data_provider.ConsumeIntegral<uint64_t>()); });
-            return tmp;
+            return *tmp;
         }()};
         (void)memusage::DynamicUsage(d);
 

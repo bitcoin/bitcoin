@@ -51,6 +51,7 @@ void initialize_package_rbf()
 
 FUZZ_TARGET(rbf, .init = initialize_rbf)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
     std::optional<CMutableTransaction> mtx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
@@ -92,6 +93,7 @@ FUZZ_TARGET(rbf, .init = initialize_rbf)
 
 FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 

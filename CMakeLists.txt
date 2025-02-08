@@ -22,7 +22,7 @@ set(CLIENT_VERSION_MINOR 99)
 set(CLIENT_VERSION_BUILD 0)
 set(CLIENT_VERSION_RC 0)
 set(CLIENT_VERSION_IS_RELEASE "false")
-set(COPYRIGHT_YEAR "2024")
+set(COPYRIGHT_YEAR "2025")
 
 # During the enabling of the CXX and CXXOBJ languages, we modify
 # CMake's compiler/linker invocation strings by appending the content
@@ -143,8 +143,8 @@ cmake_dependent_option(WITH_DBUS "Enable DBus support." ON "CMAKE_SYSTEM_NAME ST
 
 option(WITH_MULTIPROCESS "Build multiprocess bitcoin-node and bitcoin-gui executables in addition to monolithic bitcoind and bitcoin-qt executables. Requires libmultiprocess library. Experimental." OFF)
 if(WITH_MULTIPROCESS)
-  find_package(Libmultiprocess COMPONENTS Lib)
-  find_package(LibmultiprocessNative COMPONENTS Bin
+  find_package(Libmultiprocess REQUIRED COMPONENTS Lib)
+  find_package(LibmultiprocessNative REQUIRED COMPONENTS Bin
     NAMES Libmultiprocess
   )
 endif()
@@ -298,6 +298,15 @@ if(WIN32)
     try_append_linker_flag("-Wl,--major-subsystem-version,6" TARGET core_interface)
     try_append_linker_flag("-Wl,--minor-subsystem-version,2" TARGET core_interface)
   endif()
+
+  # Workaround producing large object files, which cannot be handled by the assembler.
+  # More likely to happen with no, or lower levels of optimisation.
+  # See discussion in https://github.com/bitcoin/bitcoin/issues/28109.
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    try_append_cxx_flags("/bigobj" TARGET core_interface_debug SKIP_LINK)
+  else()
+    try_append_cxx_flags("-Wa,-mbig-obj" TARGET core_interface_debug SKIP_LINK)
+  endif()
 endif()
 
 # Use 64-bit off_t on 32-bit Linux.
@@ -388,6 +397,7 @@ target_link_libraries(core_interface INTERFACE warn_interface)
 if(MSVC)
   try_append_cxx_flags("/W3" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("/wd4018" TARGET warn_interface SKIP_LINK)
+  try_append_cxx_flags("/wd4146" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("/wd4244" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("/wd4267" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("/wd4715" TARGET warn_interface SKIP_LINK)
@@ -571,8 +581,13 @@ endif()
 # Relevant discussions:
 # - https://github.com/hebasto/bitcoin/pull/236#issuecomment-2183120953
 # - https://github.com/bitcoin/bitcoin/pull/30312#issuecomment-2191235833
-set(CMAKE_SKIP_BUILD_RPATH TRUE)
-set(CMAKE_SKIP_INSTALL_RPATH TRUE)
+# NetBSD always requires runtime paths to be set for executables.
+if(CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+else()
+  set(CMAKE_SKIP_BUILD_RPATH TRUE)
+  set(CMAKE_SKIP_INSTALL_RPATH TRUE)
+endif()
 add_subdirectory(test)
 add_subdirectory(doc)
 

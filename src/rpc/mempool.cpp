@@ -146,7 +146,8 @@ static RPCHelpMan testmempoolaccept()
                             {RPCResult{RPCResult::Type::STR_HEX, "", "transaction wtxid in hex"},
                         }},
                     }},
-                    {RPCResult::Type::STR, "reject-reason", /*optional=*/true, "Rejection string (only present when 'allowed' is false)"},
+                    {RPCResult::Type::STR, "reject-reason", /*optional=*/true, "Rejection reason (only present when 'allowed' is false)"},
+                    {RPCResult::Type::STR, "reject-details", /*optional=*/true, "Rejection details (only present when 'allowed' is false and rejection details exist)"},
                 }},
             }
         },
@@ -245,6 +246,7 @@ static RPCHelpMan testmempoolaccept()
                         result_inner.pushKV("reject-reason", "missing-inputs");
                     } else {
                         result_inner.pushKV("reject-reason", state.GetRejectReason());
+                        result_inner.pushKV("reject-details", state.ToString());
                     }
                 }
                 rpc_result.push_back(std::move(result_inner));
@@ -843,7 +845,9 @@ static UniValue OrphanToJSON(const TxOrphanage::OrphanTxBase& orphan)
     o.pushKV("entry", int64_t{TicksSinceEpoch<std::chrono::seconds>(orphan.nTimeExpire - ORPHAN_TX_EXPIRE_TIME)});
     o.pushKV("expiration", int64_t{TicksSinceEpoch<std::chrono::seconds>(orphan.nTimeExpire)});
     UniValue from(UniValue::VARR);
-    from.push_back(orphan.fromPeer); // only one fromPeer for now
+    for (const auto fromPeer: orphan.announcers) {
+        from.push_back(fromPeer);
+    }
     o.pushKV("from", from);
     return o;
 }

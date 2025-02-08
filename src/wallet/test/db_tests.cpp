@@ -34,9 +34,9 @@ inline std::ostream& operator<<(std::ostream& os, const std::pair<const Serializ
 
 namespace wallet {
 
-static Span<const std::byte> StringBytes(std::string_view str)
+inline std::span<const std::byte> StringBytes(std::string_view str)
 {
-    return AsBytes<const char>({str.data(), str.size()});
+    return std::as_bytes(std::span{str});
 }
 
 static SerializeData StringData(std::string_view str)
@@ -62,6 +62,7 @@ static void CheckPrefix(DatabaseBatch& batch, Span<const std::byte> prefix, Mock
 
 BOOST_FIXTURE_TEST_SUITE(db_tests, BasicTestingSetup)
 
+#ifdef USE_BDB
 static std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& path, fs::path& database_filename)
 {
     fs::path data_file = BDBDataFile(path);
@@ -124,6 +125,7 @@ BOOST_AUTO_TEST_CASE(getwalletenv_g_dbenvs_free_instance)
     BOOST_CHECK(env_1_a != env_1_b);
     BOOST_CHECK(env_2_a == env_2_b);
 }
+#endif
 
 static std::vector<std::unique_ptr<WalletDatabase>> TestDatabases(const fs::path& path_root)
 {

@@ -121,6 +121,10 @@ void IpcPipeTest()
     BOOST_CHECK_EQUAL(bs3.GetRejectReason(), bs4.GetRejectReason());
     BOOST_CHECK_EQUAL(bs3.GetDebugMessage(), bs4.GetDebugMessage());
 
+    auto script1{CScript() << OP_11};
+    auto script2{foo->passScript(script1)};
+    BOOST_CHECK_EQUAL(HexStr(script1), HexStr(script2));
+
     // Test cleanup: disconnect pipe and join thread
     disconnect_client();
     thread.join();

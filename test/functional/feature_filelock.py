@@ -27,13 +27,19 @@ class FilelockTest(BitcoinTestFramework):
 
     def run_test(self):
         datadir = self.nodes[0].chain_path
+        blocksdir = self.nodes[0].blocks_path
         self.log.info(f"Using datadir {datadir}")
+        self.log.info(f"Using blocksdir {blocksdir}")
 
         self.log.info("Check that we can't start a second bitcoind instance using the same datadir")
-        expected_msg = f"Error: Cannot obtain a lock on data directory {datadir}. {self.config['environment']['CLIENT_NAME']} is probably already running."
+        expected_msg = f"Error: Cannot obtain a lock on directory {datadir}. {self.config['environment']['CLIENT_NAME']} is probably already running."
         self.nodes[1].assert_start_raises_init_error(extra_args=[f'-datadir={self.nodes[0].datadir_path}', '-noserver'], expected_msg=expected_msg)
 
-        self.log.info("Check that cookie and PID file are not deleted when attempting to start a second bitcoind using the same datadir")
+        self.log.info("Check that we can't start a second bitcoind instance using the same blocksdir")
+        expected_msg = f"Error: Cannot obtain a lock on directory {blocksdir}. {self.config['environment']['CLIENT_NAME']} is probably already running."
+        self.nodes[1].assert_start_raises_init_error(extra_args=[f'-blocksdir={self.nodes[0].datadir_path}', '-noserver'], expected_msg=expected_msg)
+
+        self.log.info("Check that cookie and PID file are not deleted when attempting to start a second bitcoind using the same datadir/blocksdir")
         cookie_file = datadir / ".cookie"
         assert cookie_file.exists()  # should not be deleted during the second bitcoind instance shutdown
         pid_file = datadir / BITCOIN_PID_FILENAME_DEFAULT

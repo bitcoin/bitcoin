@@ -280,7 +280,7 @@ std::shared_ptr<CWallet> LoadWalletInternal(WalletContext& context, const std::s
             return nullptr;
         }
 
-        context.chain->initMessage(_("Loading wallet…").translated);
+        context.chain->initMessage(_("Loading wallet…"));
         std::shared_ptr<CWallet> wallet = CWallet::Create(context, name, std::move(database), options.create_flags, error, warnings);
         if (!wallet) {
             error = Untranslated("Wallet loading failed.") + Untranslated(" ") + error;
@@ -430,7 +430,7 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
     }
 
     // Make the wallet
-    context.chain->initMessage(_("Loading wallet…").translated);
+    context.chain->initMessage(_("Loading wallet…"));
     std::shared_ptr<CWallet> wallet = CWallet::Create(context, name, std::move(database), wallet_creation_flags, error, warnings);
     if (!wallet) {
         error = Untranslated("Wallet creation failed.") + Untranslated(" ") + error;
@@ -490,7 +490,9 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
     return wallet;
 }
 
-std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
+// Re-creates wallet from the backup file by renaming and moving it into the wallet's directory.
+// If 'load_after_restore=true', the wallet object will be fully initialized and appended to the context.
+std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings, bool load_after_restore)
 {
     DatabaseOptions options;
     ReadDatabaseArgs(*context.args, options);
@@ -515,13 +517,17 @@ std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& b
 
         fs::copy_file(backup_file, wallet_file, fs::copy_options::none);
 
-        wallet = LoadWallet(context, wallet_name, load_on_start, options, status, error, warnings);
+        if (load_after_restore) {
+            wallet = LoadWallet(context, wallet_name, load_on_start, options, status, error, warnings);
+        }
     } catch (const std::exception& e) {
         assert(!wallet);
         if (!error.empty()) error += Untranslated("\n");
         error += Untranslated(strprintf("Unexpected exception: %s", e.what()));
     }
-    if (!wallet) {
+
+    // Remove created wallet path only when loading fails
+    if (load_after_restore && !wallet) {
         fs::remove_all(wallet_path);
     }
 
@@ -1897,7 +1903,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                     fast_rescan_filter ? "fast variant using block filters" : "slow variant inspecting all blocks");
 
     fAbortRescan = false;
-    ShowProgress(strprintf("%s %s", GetDisplayName(), _("Rescanning…").translated), 0); // show rescan progress in GUI as dialog or on splashscreen, if rescan required on startup (e.g. due to corruption)
+    ShowProgress(strprintf("%s %s", GetDisplayName(), _("Rescanning…")), 0); // show rescan progress in GUI as dialog or on splashscreen, if rescan required on startup (e.g. due to corruption)
     uint256 tip_hash = WITH_LOCK(cs_wallet, return GetLastBlockHash());
     uint256 end_hash = tip_hash;
     if (max_height) chain().findAncestorByHeight(tip_hash, *max_height, FoundBlock().hash(end_hash));
@@ -1912,7 +1918,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
             m_scanning_progress = 0;
         }
         if (block_height % 100 == 0 && progress_end - progress_begin > 0.0) {
-            ShowProgress(strprintf("%s %s", GetDisplayName(), _("Rescanning…").translated), std::max(1, std::min(99, (int)(m_scanning_progress * 100))));
+            ShowProgress(strprintf("%s %s", GetDisplayName(), _("Rescanning…")), std::max(1, std::min(99, (int)(m_scanning_progress * 100))));
         }
 
         bool next_interval = reserver.now() >= current_time + INTERVAL_TIME;
@@ -2009,7 +2015,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
         WalletLogPrintf("Scanning current mempool transactions.\n");
         WITH_LOCK(cs_wallet, chain().requestMempoolTransactions(*this));
     }
-    ShowProgress(strprintf("%s %s", GetDisplayName(), _("Rescanning…").translated), 100); // hide progress dialog in GUI
+    ShowProgress(strprintf("%s %s", GetDisplayName(), _("Rescanning…")), 100); // hide progress dialog in GUI
     if (block_height && fAbortRescan) {
         WalletLogPrintf("Rescan aborted at block %d. Progress=%f\n", block_height, progress_current);
         result.status = ScanResult::USER_ABORT;
@@ -3347,7 +3353,7 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
             }
         }
 
-        chain.initMessage(_("Rescanning…").translated);
+        chain.initMessage(_("Rescanning…"));
         walletInstance->WalletLogPrintf("Rescanning last %i blocks (from block %i)...\n", *tip_height - rescan_height, rescan_height);
 
         {
@@ -3704,6 +3710,14 @@ bool CWallet::WithEncryptionKey(std::function<bool (const CKeyingMaterial&)> cb)
 bool CWallet::HasEncryptionKeys() const
 {
     return !mapMasterKeys.empty();
+}
+
+bool CWallet::HaveCryptedKeys() const
+{
+    for (const auto& spkm : GetAllScriptPubKeyMans()) {
+        if (spkm->HaveCryptedKeys()) return true;
+    }
+    return false;
 }
 
 void CWallet::ConnectScriptPubKeyManNotifiers()
@@ -4384,9 +4398,8 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
 
 util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& wallet_name, const SecureString& passphrase, WalletContext& context)
 {
-    MigrationResult res;
-    bilingual_str error;
     std::vector<bilingual_str> warnings;
+    bilingual_str error;
 
     // If the wallet is still loaded, unload it so that nothing else tries to use it while we're changing it
     bool was_loaded = false;
@@ -4438,10 +4451,23 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         return util::Error{Untranslated("Wallet loading failed.") + Untranslated(" ") + error};
     }
 
+    return MigrateLegacyToDescriptor(std::move(local_wallet), passphrase, context, was_loaded);
+}
+
+util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet> local_wallet, const SecureString& passphrase, WalletContext& context, bool was_loaded)
+{
+    MigrationResult res;
+    bilingual_str error;
+    std::vector<bilingual_str> warnings;
+
+    DatabaseOptions options;
+    options.require_existing = true;
+    DatabaseStatus status;
+
+    const std::string wallet_name = local_wallet->GetName();
+
     // Helper to reload as normal for some of our exit scenarios
     const auto& reload_wallet = [&](std::shared_ptr<CWallet>& to_reload) {
-        // Reset options.require_format as wallets of any format may be reloaded.
-        options.require_format = std::nullopt;
         assert(to_reload.use_count() == 1);
         std::string name = to_reload->GetName();
         to_reload.reset();
@@ -4527,7 +4553,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
     }
     if (!success) {
         // Migration failed, cleanup
-        // Copy the backup to the actual wallet dir
+        // Before deleting the wallet's directory, copy the backup file to the top-level wallets dir
         fs::path temp_backup_location = fsbridge::AbsPathJoin(GetWalletDir(), backup_filename);
         fs::copy_file(backup_path, temp_backup_location, fs::copy_options::none);
 
@@ -4564,16 +4590,23 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         }
 
         // Restore the backup
-        DatabaseStatus status;
-        std::vector<bilingual_str> warnings;
-        if (!RestoreWallet(context, temp_backup_location, wallet_name, /*load_on_start=*/std::nullopt, status, error, warnings)) {
-            error += _("\nUnable to restore backup of wallet.");
+        // Convert the backup file to the wallet db file by renaming it and moving it into the wallet's directory.
+        // Reload it into memory if the wallet was previously loaded.
+        bilingual_str restore_error;
+        const auto& ptr_wallet = RestoreWallet(context, temp_backup_location, wallet_name, /*load_on_start=*/std::nullopt, status, restore_error, warnings, /*load_after_restore=*/was_loaded);
+        if (!restore_error.empty()) {
+            error += restore_error + _("\nUnable to restore backup of wallet.");
             return util::Error{error};
         }
 
-        // Move the backup to the wallet dir
+        // The wallet directory has been restored, but just in case, copy the previously created backup to the wallet dir
         fs::copy_file(temp_backup_location, backup_path, fs::copy_options::none);
         fs::remove(temp_backup_location);
+
+        // Verify that there is no dangling wallet: when the wallet wasn't loaded before, expect null.
+        // This check is performed after restoration to avoid an early error before saving the backup.
+        bool wallet_reloaded = ptr_wallet != nullptr;
+        assert(was_loaded == wallet_reloaded);
 
         return util::Error{error};
     }

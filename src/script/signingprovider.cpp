@@ -62,6 +62,11 @@ bool FlatSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info)
     if (ret) info = std::move(out.second);
     return ret;
 }
+bool FlatSigningProvider::HaveKey(const CKeyID &keyid) const
+{
+    CKey key;
+    return LookupHelper(keys, keyid, key);
+}
 bool FlatSigningProvider::GetKey(const CKeyID& keyid, CKey& key) const { return LookupHelper(keys, keyid, key); }
 bool FlatSigningProvider::GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const
 {

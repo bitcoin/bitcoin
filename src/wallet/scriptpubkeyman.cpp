@@ -525,6 +525,12 @@ bool LegacyScriptPubKeyMan::HavePrivateKeys() const
     return !mapKeys.empty() || !mapCryptedKeys.empty();
 }
 
+bool LegacyScriptPubKeyMan::HaveCryptedKeys() const
+{
+    LOCK(cs_KeyStore);
+    return !mapCryptedKeys.empty();
+}
+
 void LegacyScriptPubKeyMan::RewriteDB()
 {
     LOCK(cs_KeyStore);
@@ -1799,7 +1805,7 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
                 keyid_it++;
                 continue;
             }
-            if (m_hd_chain.seed_id == meta.hd_seed_id || m_inactive_hd_chains.count(meta.hd_seed_id) > 0) {
+            if (!meta.hd_seed_id.IsNull() && (m_hd_chain.seed_id == meta.hd_seed_id || m_inactive_hd_chains.count(meta.hd_seed_id) > 0)) {
                 keyid_it = keyids.erase(keyid_it);
                 continue;
             }
@@ -2411,6 +2417,12 @@ bool DescriptorScriptPubKeyMan::HavePrivateKeys() const
     return m_map_keys.size() > 0 || m_map_crypted_keys.size() > 0;
 }
 
+bool DescriptorScriptPubKeyMan::HaveCryptedKeys() const
+{
+    LOCK(cs_desc_man);
+    return !m_map_crypted_keys.empty();
+}
+
 std::optional<int64_t> DescriptorScriptPubKeyMan::GetOldestKeyPoolTime() const
 {
     // This is only used for getwalletinfo output and isn't relevant to descriptor wallets.
@@ -2456,7 +2468,11 @@ std::unique_ptr<FlatSigningProvider> DescriptorScriptPubKeyMan::GetSigningProvid
     int32_t index = it->second;
 
     // Always try to get the signing provider with private keys. This function should only be called during signing anyways
-    return GetSigningProvider(index, true);
+    std::unique_ptr<FlatSigningProvider> out = GetSigningProvider(index, true);
+    if (!out->HaveKey(pubkey.GetID())) {
+        return nullptr;
+    }
+    return out;
 }
 
 std::unique_ptr<FlatSigningProvider> DescriptorScriptPubKeyMan::GetSigningProvider(int32_t index, bool include_private) const

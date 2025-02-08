@@ -13,6 +13,7 @@
 #include <test/util/setup_common.h>
 #include <uint256.h>
 #include <util/bitdeque.h>
+#include <util/byte_units.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/moneystr.h>
@@ -1875,6 +1876,102 @@ BOOST_AUTO_TEST_CASE(clearshrink_test)
         BOOST_CHECK_EQUAL(v.size(), 0);
         // std::deque has no capacity() we can observe.
     }
+}
+
+template <typename T>
+void TestCheckedLeftShift()
+{
+    constexpr auto MAX{std::numeric_limits<T>::max()};
+
+    // Basic operations
+    BOOST_CHECK_EQUAL(CheckedLeftShift<T>(0, 1), 0);
+    BOOST_CHECK_EQUAL(CheckedLeftShift<T>(0, 127), 0);
+    BOOST_CHECK_EQUAL(CheckedLeftShift<T>(1, 1), 2);
+    BOOST_CHECK_EQUAL(CheckedLeftShift<T>(2, 2), 8);
+    BOOST_CHECK_EQUAL(CheckedLeftShift<T>(MAX >> 1, 1), MAX - 1);
+
+    // Max left shift
+    BOOST_CHECK_EQUAL(CheckedLeftShift<T>(1, std::numeric_limits<T>::digits - 1), MAX / 2 + 1);
+
+    // Overflow cases
+    BOOST_CHECK(!CheckedLeftShift<T>((MAX >> 1) + 1, 1));
+    BOOST_CHECK(!CheckedLeftShift<T>(MAX, 1));
+    BOOST_CHECK(!CheckedLeftShift<T>(1, std::numeric_limits<T>::digits));
+    BOOST_CHECK(!CheckedLeftShift<T>(1, std::numeric_limits<T>::digits + 1));
+
+    if constexpr (std::is_signed_v<T>) {
+        constexpr auto MIN{std::numeric_limits<T>::min()};
+        // Negative input
+        BOOST_CHECK_EQUAL(CheckedLeftShift<T>(-1, 1), -2);
+        BOOST_CHECK_EQUAL(CheckedLeftShift<T>((MIN >> 2), 1), MIN / 2);
+        BOOST_CHECK_EQUAL(CheckedLeftShift<T>((MIN >> 1) + 1, 1), MIN + 2);
+        BOOST_CHECK_EQUAL(CheckedLeftShift<T>(MIN >> 1, 1), MIN);
+        // Overflow negative
+        BOOST_CHECK(!CheckedLeftShift<T>((MIN >> 1) - 1, 1));
+        BOOST_CHECK(!CheckedLeftShift<T>(MIN >> 1, 2));
+        BOOST_CHECK(!CheckedLeftShift<T>(-1, 100));
+    }
+}
+
+template <typename T>
+void TestSaturatingLeftShift()
+{
+    constexpr auto MAX{std::numeric_limits<T>::max()};
+
+    // Basic operations
+    BOOST_CHECK_EQUAL(SaturatingLeftShift<T>(0, 1), 0);
+    BOOST_CHECK_EQUAL(SaturatingLeftShift<T>(0, 127), 0);
+    BOOST_CHECK_EQUAL(SaturatingLeftShift<T>(1, 1), 2);
+    BOOST_CHECK_EQUAL(SaturatingLeftShift<T>(2, 2), 8);
+    BOOST_CHECK_EQUAL(SaturatingLeftShift<T>(MAX >> 1, 1), MAX - 1);
+
+    // Max left shift
+    BOOST_CHECK_EQUAL(SaturatingLeftShift<T>(1, std::numeric_limits<T>::digits - 1), MAX / 2 + 1);
+
+    // Saturation cases
+    BOOST_CHECK_EQUAL(SaturatingLeftShift<T>((MAX >> 1) + 1, 1), MAX);
+    BOOST_CHECK_EQUAL(SaturatingLeftShift<T>(MAX, 1), MAX);
+    BOOST_CHECK_EQUAL(SaturatingLeftShift<T>(1, std::numeric_limits<T>::digits), MAX);
+    BOOST_CHECK_EQUAL(SaturatingLeftShift<T>(1, std::numeric_limits<T>::digits + 1), MAX);
+
+    if constexpr (std::is_signed_v<T>) {
+        constexpr auto MIN{std::numeric_limits<T>::min()};
+        // Negative input
+        BOOST_CHECK_EQUAL(SaturatingLeftShift<T>(-1, 1), -2);
+        BOOST_CHECK_EQUAL(SaturatingLeftShift<T>((MIN >> 2), 1), MIN / 2);
+        BOOST_CHECK_EQUAL(SaturatingLeftShift<T>((MIN >> 1) + 1, 1), MIN + 2);
+        BOOST_CHECK_EQUAL(SaturatingLeftShift<T>(MIN >> 1, 1), MIN);
+        // Saturation negative
+        BOOST_CHECK_EQUAL(SaturatingLeftShift<T>((MIN >> 1) - 1, 1), MIN);
+        BOOST_CHECK_EQUAL(SaturatingLeftShift<T>(MIN >> 1, 2), MIN);
+        BOOST_CHECK_EQUAL(SaturatingLeftShift<T>(-1, 100), MIN);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(checked_left_shift_test)
+{
+    TestCheckedLeftShift<uint8_t>();
+    TestCheckedLeftShift<int8_t>();
+    TestCheckedLeftShift<size_t>();
+    TestCheckedLeftShift<uint64_t>();
+    TestCheckedLeftShift<int64_t>();
+}
+
+BOOST_AUTO_TEST_CASE(saturating_left_shift_test)
+{
+    TestSaturatingLeftShift<uint8_t>();
+    TestSaturatingLeftShift<int8_t>();
+    TestSaturatingLeftShift<size_t>();
+    TestSaturatingLeftShift<uint64_t>();
+    TestSaturatingLeftShift<int64_t>();
+}
+
+BOOST_AUTO_TEST_CASE(mib_string_literal_test)
+{
+    BOOST_CHECK_EQUAL(0_MiB, 0);
+    BOOST_CHECK_EQUAL(1_MiB, 1024 * 1024);
+    const auto max_mib{std::numeric_limits<size_t>::max() >> 20};
+    BOOST_CHECK_EXCEPTION(operator""_MiB(static_cast<unsigned long long>(max_mib) + 1), std::overflow_error, HasReason("MiB value too large for size_t byte conversion"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

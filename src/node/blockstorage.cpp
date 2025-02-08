@@ -36,6 +36,7 @@
 #include <util/translation.h>
 #include <validation.h>
 
+#include <cstddef>
 #include <map>
 #include <ranges>
 #include <unordered_map>
@@ -669,41 +670,14 @@ CBlockFileInfo* BlockManager::GetBlockFileInfo(size_t n)
     return &m_blockfile_info.at(n);
 }
 
-bool BlockManager::UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos, const uint256& hashBlock) const
-{
-    // Open history file to append
-    AutoFile fileout{OpenUndoFile(pos)};
-    if (fileout.IsNull()) {
-        LogError("%s: OpenUndoFile failed\n", __func__);
-        return false;
-    }
-
-    // Write index header
-    unsigned int nSize = GetSerializeSize(blockundo);
-    fileout << GetParams().MessageStart() << nSize;
-
-    // Write undo data
-    long fileOutPos = fileout.tell();
-    pos.nPos = (unsigned int)fileOutPos;
-    fileout << blockundo;
-
-    // calculate & write checksum
-    HashWriter hasher{};
-    hasher << hashBlock;
-    hasher << blockundo;
-    fileout << hasher.GetHash();
-
-    return true;
-}
-
-bool BlockManager::UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex& index) const
+bool BlockManager::ReadBlockUndo(CBlockUndo& blockundo, const CBlockIndex& index) const
 {
     const FlatFilePos pos{WITH_LOCK(::cs_main, return index.GetUndoPos())};
 
     // Open history file to read
     AutoFile filein{OpenUndoFile(pos, true)};
     if (filein.IsNull()) {
-        LogError("%s: OpenUndoFile failed for %s\n", __func__, pos.ToString());
+        LogError("OpenUndoFile failed for %s", pos.ToString());
         return false;
     }
 
@@ -963,28 +937,7 @@ bool BlockManager::FindUndoPos(BlockValidationState& state, int nFile, FlatFileP
     return true;
 }
 
-bool BlockManager::WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const
-{
-    // Open history file to append
-    AutoFile fileout{OpenBlockFile(pos)};
-    if (fileout.IsNull()) {
-        LogError("%s: OpenBlockFile failed\n", __func__);
-        return false;
-    }
-
-    // Write index header
-    unsigned int nSize = GetSerializeSize(TX_WITH_WITNESS(block));
-    fileout << GetParams().MessageStart() << nSize;
-
-    // Write block
-    long fileOutPos = fileout.tell();
-    pos.nPos = (unsigned int)fileOutPos;
-    fileout << TX_WITH_WITNESS(block);
-
-    return true;
-}
-
-bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
+bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
 {
     AssertLockHeld(::cs_main);
     const BlockfileType type = BlockfileTypeForHeight(block.nHeight);
@@ -992,33 +945,50 @@ bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValid
 
     // Write undo information to disk
     if (block.GetUndoPos().IsNull()) {
-        FlatFilePos _pos;
-        if (!FindUndoPos(state, block.nFile, _pos, ::GetSerializeSize(blockundo) + 40)) {
-            LogError("%s: FindUndoPos failed\n", __func__);
+        FlatFilePos pos;
+        const unsigned int blockundo_size{static_cast<unsigned int>(GetSerializeSize(blockundo))};
+        if (!FindUndoPos(state, block.nFile, pos, blockundo_size + UNDO_DATA_DISK_OVERHEAD)) {
+            LogError("FindUndoPos failed");
             return false;
         }
-        if (!UndoWriteToDisk(blockundo, _pos, block.pprev->GetBlockHash())) {
+        // Open history file to append
+        AutoFile fileout{OpenUndoFile(pos)};
+        if (fileout.IsNull()) {
+            LogError("OpenUndoFile failed");
             return FatalError(m_opts.notifications, state, _("Failed to write undo data."));
         }
+
+        // Write index header
+        fileout << GetParams().MessageStart() << blockundo_size;
+        // Write undo data
+        pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
+        fileout << blockundo;
+
+        // Calculate & write checksum
+        HashWriter hasher{};
+        hasher << block.pprev->GetBlockHash();
+        hasher << blockundo;
+        fileout << hasher.GetHash();
+
         // rev files are written in block height order, whereas blk files are written as blocks come in (often out of order)
         // we want to flush the rev (undo) file once we've written the last block, which is indicated by the last height
         // in the block file info as below; note that this does not catch the case where the undo writes are keeping up
         // with the block writes (usually when a synced up node is getting newly mined blocks) -- this case is caught in
         // the FindNextBlockPos function
-        if (_pos.nFile < cursor.file_num && static_cast<uint32_t>(block.nHeight) == m_blockfile_info[_pos.nFile].nHeightLast) {
+        if (pos.nFile < cursor.file_num && static_cast<uint32_t>(block.nHeight) == m_blockfile_info[pos.nFile].nHeightLast) {
             // Do not propagate the return code, a failed flush here should not
             // be an indication for a failed write. If it were propagated here,
             // the caller would assume the undo data not to be written, when in
             // fact it is. Note though, that a failed flush might leave the data
             // file untrimmed.
-            if (!FlushUndoFile(_pos.nFile, true)) {
-                LogPrintLevel(BCLog::BLOCKSTORAGE, BCLog::Level::Warning, "Failed to flush undo file %05i\n", _pos.nFile);
+            if (!FlushUndoFile(pos.nFile, true)) {
+                LogPrintLevel(BCLog::BLOCKSTORAGE, BCLog::Level::Warning, "Failed to flush undo file %05i\n", pos.nFile);
             }
-        } else if (_pos.nFile == cursor.file_num && block.nHeight > cursor.undo_height) {
+        } else if (pos.nFile == cursor.file_num && block.nHeight > cursor.undo_height) {
             cursor.undo_height = block.nHeight;
         }
         // update nUndoPos in block index
-        block.nUndoPos = _pos.nPos;
+        block.nUndoPos = pos.nPos;
         block.nStatus |= BLOCK_HAVE_UNDO;
         m_dirty_blockindex.insert(&block);
     }
@@ -1026,7 +996,7 @@ bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValid
     return true;
 }
 
-bool BlockManager::ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos) const
+bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos) const
 {
     block.SetNull();
 
@@ -1060,11 +1030,11 @@ bool BlockManager::ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos) cons
     return true;
 }
 
-bool BlockManager::ReadBlockFromDisk(CBlock& block, const CBlockIndex& index) const
+bool BlockManager::ReadBlock(CBlock& block, const CBlockIndex& index) const
 {
     const FlatFilePos block_pos{WITH_LOCK(cs_main, return index.GetBlockPos())};
 
-    if (!ReadBlockFromDisk(block, block_pos)) {
+    if (!ReadBlock(block, block_pos)) {
         return false;
     }
     if (block.GetHash() != index.GetBlockHash()) {
@@ -1074,7 +1044,7 @@ bool BlockManager::ReadBlockFromDisk(CBlock& block, const CBlockIndex& index) co
     return true;
 }
 
-bool BlockManager::ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos) const
+bool BlockManager::ReadRawBlock(std::vector<uint8_t>& block, const FlatFilePos& pos) const
 {
     FlatFilePos hpos = pos;
     // If nPos is less than 8 the pos is null and we don't have the block data
@@ -1119,22 +1089,27 @@ bool BlockManager::ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatF
     return true;
 }
 
-FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight)
+FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
 {
-    unsigned int nBlockSize = ::GetSerializeSize(TX_WITH_WITNESS(block));
-    // Account for the 4 magic message start bytes + the 4 length bytes (8 bytes total,
-    // defined as BLOCK_SERIALIZATION_HEADER_SIZE)
-    nBlockSize += static_cast<unsigned int>(BLOCK_SERIALIZATION_HEADER_SIZE);
-    FlatFilePos blockPos{FindNextBlockPos(nBlockSize, nHeight, block.GetBlockTime())};
-    if (blockPos.IsNull()) {
-        LogError("%s: FindNextBlockPos failed\n", __func__);
+    const unsigned int block_size{static_cast<unsigned int>(GetSerializeSize(TX_WITH_WITNESS(block)))};
+    FlatFilePos pos{FindNextBlockPos(block_size + BLOCK_SERIALIZATION_HEADER_SIZE, nHeight, block.GetBlockTime())};
+    if (pos.IsNull()) {
+        LogError("FindNextBlockPos failed");
         return FlatFilePos();
     }
-    if (!WriteBlockToDisk(block, blockPos)) {
+    AutoFile fileout{OpenBlockFile(pos)};
+    if (fileout.IsNull()) {
+        LogError("OpenBlockFile failed");
         m_opts.notifications.fatalError(_("Failed to write block."));
         return FlatFilePos();
     }
-    return blockPos;
+
+    // Write index header
+    fileout << GetParams().MessageStart() << block_size;
+    // Write block
+    pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
+    fileout << TX_WITH_WITNESS(block);
+    return pos;
 }
 
 static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
@@ -1143,7 +1118,19 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
     // size of the XOR-key file.
     std::array<std::byte, 8> xor_key{};
 
-    if (opts.use_xor && fs::is_empty(opts.blocks_dir)) {
+    // Consider this to be the first run if the blocksdir contains only hidden
+    // files (those which start with a .). Checking for a fully-empty dir would
+    // be too aggressive as a .lock file may have already been written.
+    bool first_run = true;
+    for (const auto& entry : fs::directory_iterator(opts.blocks_dir)) {
+        const std::string path = fs::PathToString(entry.path().filename());
+        if (!entry.is_regular_file() || !path.starts_with('.')) {
+            first_run = false;
+            break;
+        }
+    }
+
+    if (opts.use_xor && first_run) {
         // Only use random fresh key when the boolean option is set and on the
         // very first start of the program.
         FastRandomContext{}.fillrand(xor_key);
@@ -1183,7 +1170,19 @@ BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
       m_opts{std::move(opts)},
       m_block_file_seq{FlatFileSeq{m_opts.blocks_dir, "blk", m_opts.fast_prune ? 0x4000 /* 16kB */ : BLOCKFILE_CHUNK_SIZE}},
       m_undo_file_seq{FlatFileSeq{m_opts.blocks_dir, "rev", UNDOFILE_CHUNK_SIZE}},
-      m_interrupt{interrupt} {}
+      m_interrupt{interrupt}
+{
+    m_block_tree_db = std::make_unique<BlockTreeDB>(m_opts.block_tree_db_params);
+
+    if (m_opts.block_tree_db_params.wipe_data) {
+        m_block_tree_db->WriteReindexing(true);
+        m_blockfiles_indexed = false;
+        // If we're reindexing in prune mode, wipe away unusable block files and all undo data files
+        if (m_prune_mode) {
+            CleanupBlockRevFiles();
+        }
+    }
+}
 
 class ImportingNow
 {

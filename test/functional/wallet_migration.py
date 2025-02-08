@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Migrating a wallet from legacy to descriptor."""
@@ -463,7 +463,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         addr_info = wallet.getaddressinfo(addr)
         desc = descsum_create("pk(" + addr_info["pubkey"] + ")")
 
-        self.master_node.generatetodescriptor(1, desc, invalid_call=False)
+        self.generatetodescriptor(self.master_node, 1, desc)
 
         bals = wallet.getbalances()
 
@@ -896,9 +896,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         shutil.copytree(self.old_node.wallets_path / "failed", self.master_node.wallets_path / "failed")
         assert_raises_rpc_error(-4, "Failed to create database", self.master_node.migratewallet, "failed")
 
-        assert "failed" in self.master_node.listwallets()
-        assert "failed_watchonly" not in self.master_node.listwallets()
-        assert "failed_solvables" not in self.master_node.listwallets()
+        assert all(wallet not in self.master_node.listwallets() for wallet in ["failed", "failed_watchonly", "failed_solvables"])
 
         assert not (self.master_node.wallets_path / "failed_watchonly").exists()
         # Since the file in failed_solvables is one that we put there, migration shouldn't touch it
@@ -911,6 +909,22 @@ class WalletMigrationTest(BitcoinTestFramework):
             data = f.read(16)
             _, _, magic = struct.unpack("QII", data)
             assert_equal(magic, BTREE_MAGIC)
+
+        ####################################################
+        # Perform the same test with a loaded legacy wallet.
+        # The wallet should remain loaded after the failure.
+        #
+        # This applies only when BDB is enabled, as the user
+        # cannot interact with the legacy wallet database
+        # without BDB support.
+        if self.is_bdb_compiled() is not None:
+            # Advance time to generate a different backup name
+            self.master_node.setmocktime(self.master_node.getblockheader(self.master_node.getbestblockhash())['time'] + 100)
+            assert "failed" not in self.master_node.listwallets()
+            self.master_node.loadwallet("failed")
+            assert_raises_rpc_error(-4, "Failed to create database", self.master_node.migratewallet, "failed")
+            wallets = self.master_node.listwallets()
+            assert "failed" in wallets and all(wallet not in wallets for wallet in ["failed_watchonly", "failed_solvables"])
 
     def test_blank(self):
         self.log.info("Test that a blank wallet is migrated")
@@ -1032,15 +1046,11 @@ class WalletMigrationTest(BitcoinTestFramework):
         # There should be descriptors containing the imported key for: pk(), pkh(), sh(wpkh()), wpkh()
         key_origin = hash160(pubkey)[:4].hex()
         pubkey_hex = pubkey.hex()
-        pk_desc = descsum_create(f'pk([{key_origin}]{pubkey_hex})')
-        pkh_desc = descsum_create(f'pkh([{key_origin}]{pubkey_hex})')
-        sh_wpkh_desc = descsum_create(f'sh(wpkh([{key_origin}]{pubkey_hex}))')
-        wpkh_desc = descsum_create(f'wpkh([{key_origin}]{pubkey_hex})')
-        expected_descs = [pk_desc, pkh_desc, sh_wpkh_desc, wpkh_desc]
+        combo_desc = descsum_create(f"combo([{key_origin}]{pubkey_hex})")
 
         # Verify all expected descriptors were migrated
         migrated_desc = [item['desc'] for item in wallet.listdescriptors()['descriptors'] if pubkey.hex() in item['desc']]
-        assert_equal(expected_descs, migrated_desc)
+        assert_equal([combo_desc], migrated_desc)
         wallet.unloadwallet()
 
         ######################################################

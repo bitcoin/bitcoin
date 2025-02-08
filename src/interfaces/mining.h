@@ -55,7 +55,7 @@ public:
      *
      * @returns if the block was processed, independent of block validity
      */
-    virtual bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CMutableTransaction coinbase) = 0;
+    virtual bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) = 0;
 };
 
 //! Interface giving clients (RPC, Stratum v2 Template Provider in the future)
@@ -75,8 +75,8 @@ public:
     virtual std::optional<BlockRef> getTip() = 0;
 
     /**
-     * Waits for the connected tip to change. If the tip was not connected on
-     * startup, this will wait.
+     * Waits for the connected tip to change. During node initialization, this will
+     * wait until the tip is connected.
      *
      * @param[in] current_tip block hash of the current chain tip. Function waits
      *                        for the chain tip to differ from this.
@@ -88,36 +88,10 @@ public:
    /**
      * Construct a new block template
      *
-     * @param[in] script_pub_key the coinbase output
      * @param[in] options options for creating the block
      * @returns a block template
      */
-    virtual std::unique_ptr<BlockTemplate> createNewBlock(const CScript& script_pub_key, const node::BlockCreateOptions& options = {}) = 0;
-
-    /**
-     * Processes new block. A valid new block is automatically relayed to peers.
-     *
-     * @param[in]   block The block we want to process.
-     * @param[out]  new_block A boolean which is set to indicate if the block was first received via this call
-     * @returns     If the block was processed, independently of block validity
-     */
-    virtual bool processNewBlock(const std::shared_ptr<const CBlock>& block, bool* new_block) = 0;
-
-    //! Return the number of transaction updates in the mempool,
-    //! used to decide whether to make a new block template.
-    virtual unsigned int getTransactionsUpdated() = 0;
-
-    /**
-     * Check a block is completely valid from start to finish.
-     * Only works on top of our current best block.
-     * Does not check proof-of-work.
-     *
-     * @param[in] block the block to validate
-     * @param[in] check_merkle_root call CheckMerkleRoot()
-     * @param[out] state details of why a block failed to validate
-     * @returns false if it does not build on the current tip, or any of the checks fail
-     */
-    virtual bool testBlockValidity(const CBlock& block, bool check_merkle_root, BlockValidationState& state) = 0;
+    virtual std::unique_ptr<BlockTemplate> createNewBlock(const node::BlockCreateOptions& options = {}) = 0;
 
     //! Get internal node context. Useful for RPC and testing,
     //! but not accessible across processes.

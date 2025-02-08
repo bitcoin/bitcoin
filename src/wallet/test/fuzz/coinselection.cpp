@@ -218,6 +218,7 @@ FUZZ_TARGET(coin_grinder_is_optimal)
 
 FUZZ_TARGET(coinselection)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     std::vector<COutput> utxo_pool;
 

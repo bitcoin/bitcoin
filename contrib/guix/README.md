@@ -247,7 +247,7 @@ details.
 * _**SDK_PATH**_
 
   Set the path where _extracted_ SDKs can be found. This is passed through to
-  the depends tree. Note that this is should be set to the _parent_ directory of
+  the depends tree. Note that this should be set to the _parent_ directory of
   the actual SDK (e.g. `SDK_PATH=$HOME/Downloads/macOS-SDKs` instead of
   `$HOME/Downloads/macOS-SDKs/Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers`).
 

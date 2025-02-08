@@ -10,6 +10,7 @@
 #include <policy/policy.h>
 #include <primitives/block.h>
 #include <txmempool.h>
+#include <util/feefrac.h>
 
 #include <memory>
 #include <optional>
@@ -39,6 +40,9 @@ struct CBlockTemplate
     std::vector<CAmount> vTxFees;
     std::vector<int64_t> vTxSigOpsCost;
     std::vector<unsigned char> vchCoinbaseCommitment;
+    /* A vector of package fee rates, ordered by the sequence in which
+     * packages are selected for inclusion in the block template.*/
+    std::vector<FeeFrac> m_package_feerates;
 };
 
 // Container for tracking updates to ancestor feerate as we include (parent)
@@ -169,8 +173,8 @@ public:
 
     explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options);
 
-    /** Construct a new block template with coinbase to scriptPubKeyIn */
-    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);
+    /** Construct a new block template */
+    std::unique_ptr<CBlockTemplate> CreateNewBlock();
 
     inline static std::optional<int64_t> m_last_block_num_txs{};
     inline static std::optional<int64_t> m_last_block_weight{};
@@ -206,6 +210,13 @@ private:
     /** Sort the package in an order that is valid to appear in a block */
     void SortForBlock(const CTxMemPool::setEntries& package, std::vector<CTxMemPool::txiter>& sortedEntries);
 };
+
+/**
+ * Get the minimum time a miner should use in the next block. This always
+ * accounts for the BIP94 timewarp rule, so does not necessarily reflect the
+ * consensus limit.
+ */
+int64_t GetMinimumTime(const CBlockIndex* pindexPrev, const int64_t difficulty_adjustment_interval);
 
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
 

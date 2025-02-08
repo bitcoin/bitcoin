@@ -33,7 +33,7 @@ void initialize_orphanage()
 FUZZ_TARGET(txorphan, .init = initialize_orphanage)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    FastRandomContext limit_orphans_rng{/*fDeterministic=*/true};
+    FastRandomContext orphanage_rng{/*fDeterministic=*/true};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 
     TxOrphanage orphanage;
@@ -79,7 +79,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
         // previous loop and potentially the parent of this tx.
         if (ptx_potential_parent) {
             // Set up future GetTxToReconsider call.
-            orphanage.AddChildrenToWorkSet(*ptx_potential_parent);
+            orphanage.AddChildrenToWorkSet(*ptx_potential_parent, orphanage_rng);
 
             // Check that all txns returned from GetChildrenFrom* are indeed a direct child of this tx.
             NodeId peer_id = fuzzed_data_provider.ConsumeIntegral<NodeId>();
@@ -87,12 +87,6 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                 assert(std::any_of(child->vin.cbegin(), child->vin.cend(), [&](const auto& input) {
                     return input.prevout.hash == ptx_potential_parent->GetHash();
                 }));
-            }
-            for (const auto& [child, peer] : orphanage.GetChildrenFromDifferentPeer(ptx_potential_parent, peer_id)) {
-                assert(std::any_of(child->vin.cbegin(), child->vin.cend(), [&](const auto& input) {
-                    return input.prevout.hash == ptx_potential_parent->GetHash();
-                }));
-                assert(peer != peer_id);
             }
         }
 
@@ -130,6 +124,18 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                 },
                 [&] {
                     bool have_tx = orphanage.HaveTx(tx->GetWitnessHash());
+                    bool have_tx_and_peer = orphanage.HaveTxFromPeer(tx->GetWitnessHash(), peer_id);
+                    // AddAnnouncer should return false if tx doesn't exist or we already HaveTxFromPeer.
+                    {
+                        bool added_announcer = orphanage.AddAnnouncer(tx->GetWitnessHash(), peer_id);
+                        // have_tx == false -> added_announcer == false
+                        Assert(have_tx || !added_announcer);
+                        // have_tx_and_peer == true -> added_announcer == false
+                        Assert(!have_tx_and_peer || !added_announcer);
+                    }
+                },
+                [&] {
+                    bool have_tx = orphanage.HaveTx(tx->GetWitnessHash());
                     // EraseTx should return 0 if m_orphans doesn't have the tx
                     {
                         Assert(have_tx == orphanage.EraseTx(tx->GetWitnessHash()));
@@ -142,12 +148,13 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                 },
                 [&] {
                     orphanage.EraseForPeer(peer_id);
+                    Assert(!orphanage.HaveTxFromPeer(tx->GetWitnessHash(), peer_id));
                 },
                 [&] {
                     // test mocktime and expiry
                     SetMockTime(ConsumeTime(fuzzed_data_provider));
                     auto limit = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
-                    orphanage.LimitOrphans(limit, limit_orphans_rng);
+                    orphanage.LimitOrphans(limit, orphanage_rng);
                     Assert(orphanage.Size() <= limit);
                 });
 
@@ -157,5 +164,8 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
             ptx_potential_parent = tx;
         }
 
+        const bool have_tx{orphanage.HaveTx(tx->GetWitnessHash())};
+        const bool get_tx_nonnull{orphanage.GetTx(tx->GetWitnessHash()) != nullptr};
+        Assert(have_tx == get_tx_nonnull);
     }
 }

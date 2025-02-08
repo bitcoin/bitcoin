@@ -47,7 +47,7 @@ The paths are automatically configured and no other options are needed.
 
 Skip the following packages if you don't intend to use the GUI and will build with [`NO_QT=1`](#dependency-options):
 
-    apt install bison g++ pkg-config python3 xz-utils
+    apt install bison g++ pkgconf python3 xz-utils
 
 #### For macOS cross compilation
 

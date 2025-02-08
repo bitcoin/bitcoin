@@ -6,6 +6,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util/net.h>
+#include <test/util/random.h>
 
 #include <cassert>
 #include <cstdint>
@@ -13,6 +14,7 @@
 
 FUZZ_TARGET(netaddress)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     const CNetAddr net_addr = ConsumeNetAddr(fuzzed_data_provider);

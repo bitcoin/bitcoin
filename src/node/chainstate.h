@@ -14,18 +14,15 @@
 
 class CTxMemPool;
 
-namespace node {
-
+namespace kernel {
 struct CacheSizes;
+} // namespace kernel
+
+namespace node {
 
 struct ChainstateLoadOptions {
     CTxMemPool* mempool{nullptr};
-    bool block_tree_db_in_memory{false};
     bool coins_db_in_memory{false};
-    // Whether to wipe the block tree database when loading it. If set, this
-    // will also set a reindexing flag so any existing block data files will be
-    // scanned and added to the database.
-    bool wipe_block_tree_db{false};
     // Whether to wipe the chainstate database when loading it. If set, this
     // will cause the chainstate database to be rebuilt starting from genesis.
     bool wipe_chainstate_db{false};
@@ -69,7 +66,7 @@ using ChainstateLoadResult = std::tuple<ChainstateLoadStatus, bilingual_str>;
  *
  *  LoadChainstate returns a (status code, error string) tuple.
  */
-ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSizes& cache_sizes,
+ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const kernel::CacheSizes& cache_sizes,
                                     const ChainstateLoadOptions& options);
 ChainstateLoadResult VerifyLoadedChainstate(ChainstateManager& chainman, const ChainstateLoadOptions& options);
 } // namespace node

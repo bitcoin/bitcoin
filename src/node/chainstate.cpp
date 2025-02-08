@@ -8,9 +8,9 @@
 #include <chain.h>
 #include <coins.h>
 #include <consensus/params.h>
+#include <kernel/caches.h>
 #include <logging.h>
 #include <node/blockstorage.h>
-#include <node/caches.h>
 #include <sync.h>
 #include <threadsafety.h>
 #include <tinyformat.h>
@@ -23,45 +23,18 @@
 #include <validation.h>
 
 #include <algorithm>
-#include <atomic>
 #include <cassert>
-#include <limits>
-#include <memory>
 #include <vector>
+
+using kernel::CacheSizes;
 
 namespace node {
 // Complete initialization of chainstates after the initial call has been made
 // to ChainstateManager::InitializeChainstate().
 static ChainstateLoadResult CompleteChainstateInitialization(
     ChainstateManager& chainman,
-    const CacheSizes& cache_sizes,
     const ChainstateLoadOptions& options) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
-    auto& pblocktree{chainman.m_blockman.m_block_tree_db};
-    // new BlockTreeDB tries to delete the existing file, which
-    // fails if it's still open from the previous loop. Close it first:
-    pblocktree.reset();
-    try {
-        pblocktree = std::make_unique<BlockTreeDB>(DBParams{
-            .path = chainman.m_options.datadir / "blocks" / "index",
-            .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
-            .memory_only = options.block_tree_db_in_memory,
-            .wipe_data = options.wipe_block_tree_db,
-            .options = chainman.m_options.block_tree_db});
-    } catch (dbwrapper_error& err) {
-        LogError("%s\n", err.what());
-        return {ChainstateLoadStatus::FAILURE, _("Error opening block database")};
-    }
-
-    if (options.wipe_block_tree_db) {
-        pblocktree->WriteReindexing(true);
-        chainman.m_blockman.m_blockfiles_indexed = false;
-        //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
-        if (options.prune) {
-            chainman.m_blockman.CleanupBlockRevFiles();
-        }
-    }
-
     if (chainman.m_interrupt) return {ChainstateLoadStatus::INTERRUPTED, {}};
 
     // LoadBlockIndex will load m_have_pruned if we've ever removed a
@@ -153,14 +126,12 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         }
     }
 
-    if (!options.wipe_block_tree_db) {
-        auto chainstates{chainman.GetAll()};
-        if (std::any_of(chainstates.begin(), chainstates.end(),
-                        [](const Chainstate* cs) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return cs->NeedsRedownload(); })) {
-            return {ChainstateLoadStatus::FAILURE, strprintf(_("Witness data for blocks after height %d requires validation. Please restart with -reindex."),
-                                                             chainman.GetConsensus().SegwitHeight)};
-        };
-    }
+    auto chainstates{chainman.GetAll()};
+    if (std::any_of(chainstates.begin(), chainstates.end(),
+                    [](const Chainstate* cs) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return cs->NeedsRedownload(); })) {
+        return {ChainstateLoadStatus::FAILURE, strprintf(_("Witness data for blocks after height %d requires validation. Please restart with -reindex."),
+                                                         chainman.GetConsensus().SegwitHeight)};
+    };
 
     // Now that chainstates are loaded and we're able to flush to
     // disk, rebalance the coins caches to desired levels based
@@ -206,7 +177,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
         }
     }
 
-    auto [init_status, init_error] = CompleteChainstateInitialization(chainman, cache_sizes, options);
+    auto [init_status, init_error] = CompleteChainstateInitialization(chainman, options);
     if (init_status != ChainstateLoadStatus::SUCCESS) {
         return {init_status, init_error};
     }
@@ -242,7 +213,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
         // for the fully validated chainstate.
         chainman.ActiveChainstate().ClearBlockIndexCandidates();
 
-        auto [init_status, init_error] = CompleteChainstateInitialization(chainman, cache_sizes, options);
+        auto [init_status, init_error] = CompleteChainstateInitialization(chainman, options);
         if (init_status != ChainstateLoadStatus::SUCCESS) {
             return {init_status, init_error};
         }

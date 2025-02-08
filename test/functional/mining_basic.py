@@ -16,6 +16,10 @@ from test_framework.blocktools import (
     get_witness_script,
     NORMAL_GBT_REQUEST_PARAMS,
     TIME_GENESIS_BLOCK,
+    REGTEST_N_BITS,
+    REGTEST_TARGET,
+    nbits_str,
+    target_str,
 )
 from test_framework.messages import (
     BLOCK_HEADER_SIZE,
@@ -149,6 +153,8 @@ class MiningTest(BitcoinTestFramework):
         # The template will have an adjusted timestamp, which we then modify
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
         assert_greater_than_or_equal(tmpl['curtime'], t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP)
+        # mintime and curtime should match
+        assert_equal(tmpl['mintime'], tmpl['curtime'])
 
         block = CBlock()
         block.nVersion = tmpl["version"]
@@ -206,7 +212,15 @@ class MiningTest(BitcoinTestFramework):
         assert_equal(mining_info['chain'], self.chain)
         assert 'currentblocktx' not in mining_info
         assert 'currentblockweight' not in mining_info
+        assert_equal(mining_info['bits'], nbits_str(REGTEST_N_BITS))
+        assert_equal(mining_info['target'], target_str(REGTEST_TARGET))
         assert_equal(mining_info['difficulty'], Decimal('4.656542373906925E-10'))
+        assert_equal(mining_info['next'], {
+            'height': 201,
+            'target': target_str(REGTEST_TARGET),
+            'bits': nbits_str(REGTEST_N_BITS),
+            'difficulty': Decimal('4.656542373906925E-10')
+        })
         assert_equal(mining_info['networkhashps'], Decimal('0.003333333333333334'))
         assert_equal(mining_info['pooledtx'], 0)
 

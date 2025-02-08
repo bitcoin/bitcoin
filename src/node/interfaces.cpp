@@ -46,6 +46,7 @@
 #include <policy/settings.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <rpc/blockchain.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <support/allocators/secure.h>
@@ -116,7 +117,7 @@ public:
         m_context->ecc_context = std::make_unique<ECC_Context>();
         if (!AppInitSanityChecks(*m_context->kernel)) return false;
 
-        if (!AppInitLockDataDirectory()) return false;
+        if (!AppInitLockDirectories()) return false;
         if (!AppInitInterfaces(*m_context)) return false;
 
         return true;
@@ -324,7 +325,7 @@ public:
     }
     double getVerificationProgress() override
     {
-        return GuessVerificationProgress(chainman().GetParams().TxData(), WITH_LOCK(::cs_main, return chainman().ActiveChain().Tip()));
+        return chainman().GuessVerificationProgress(WITH_LOCK(chainman().GetMutex(), return chainman().ActiveChain().Tip()));
     }
     bool isInitialBlockDownload() override
     {
@@ -406,9 +407,9 @@ public:
     }
     std::unique_ptr<Handler> handleNotifyBlockTip(NotifyBlockTipFn fn) override
     {
-        return MakeSignalHandler(::uiInterface.NotifyBlockTip_connect([fn](SynchronizationState sync_state, const CBlockIndex* block) {
+        return MakeSignalHandler(::uiInterface.NotifyBlockTip_connect([fn, this](SynchronizationState sync_state, const CBlockIndex* block) {
             fn(sync_state, BlockTip{block->nHeight, block->GetBlockTime(), block->GetBlockHash()},
-                GuessVerificationProgress(Params().TxData(), block));
+               chainman().GuessVerificationProgress(block));
         }));
     }
     std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) override
@@ -442,7 +443,7 @@ bool FillBlock(const CBlockIndex* index, const FoundBlock& block, UniqueLock<Rec
     if (block.m_next_block) FillBlock(active[index->nHeight] == index ? active[index->nHeight + 1] : nullptr, *block.m_next_block, lock, active, blockman);
     if (block.m_data) {
         REVERSE_LOCK(lock);
-        if (!blockman.ReadBlockFromDisk(*block.m_data, *index)) block.m_data->SetNull();
+        if (!blockman.ReadBlock(*block.m_data, *index)) block.m_data->SetNull();
     }
     block.found = true;
     return true;
@@ -639,8 +640,8 @@ public:
     void findCoins(std::map<COutPoint, Coin>& coins) override { return FindCoins(m_node, coins); }
     double guessVerificationProgress(const uint256& block_hash) override
     {
-        LOCK(::cs_main);
-        return GuessVerificationProgress(chainman().GetParams().TxData(), chainman().m_blockman.LookupBlockIndex(block_hash));
+        LOCK(chainman().GetMutex());
+        return chainman().GuessVerificationProgress(chainman().m_blockman.LookupBlockIndex(block_hash));
     }
     bool hasBlocks(const uint256& block_hash, int min_height, std::optional<int> max_height) override
     {
@@ -769,6 +770,11 @@ public:
     {
         LOCK(::cs_main);
         return chainman().m_blockman.m_have_pruned;
+    }
+    std::optional<int> getPruneHeight() override
+    {
+        LOCK(chainman().GetMutex());
+        return GetPruneHeight(chainman().m_blockman, chainman().ActiveChain());
     }
     bool isReadyToBroadcast() override { return !chainman().m_blockman.LoadingBlocks() && !isInitialBlockDownload(); }
     bool isInitialBlockDownload() override
@@ -913,19 +919,17 @@ public:
 
     std::vector<uint256> getCoinbaseMerklePath() override
     {
-        return BlockMerkleBranch(m_block_template->block);
+        return TransactionMerklePath(m_block_template->block, 0);
     }
 
-    bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CMutableTransaction coinbase) override
+    bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) override
     {
         CBlock block{m_block_template->block};
 
-        auto cb = MakeTransactionRef(std::move(coinbase));
-
         if (block.vtx.size() == 0) {
-            block.vtx.push_back(cb);
+            block.vtx.push_back(coinbase);
         } else {
-            block.vtx[0] = cb;
+            block.vtx[0] = coinbase;
         }
 
         block.nVersion = version;
@@ -973,7 +977,9 @@ public:
         {
             WAIT_LOCK(notifications().m_tip_block_mutex, lock);
             notifications().m_tip_block_cv.wait_for(lock, timeout, [&]() EXCLUSIVE_LOCKS_REQUIRED(notifications().m_tip_block_mutex) {
-                return (notifications().m_tip_block != current_tip && notifications().m_tip_block != uint256::ZERO) || chainman().m_interrupt;
+                // We need to wait for m_tip_block to be set AND for the value
+                // to differ from the current_tip value.
+                return (notifications().TipBlock() && notifications().TipBlock() != current_tip) || chainman().m_interrupt;
             });
         }
         // Must release m_tip_block_mutex before locking cs_main, to avoid deadlocks.
@@ -981,34 +987,11 @@ public:
         return BlockRef{chainman().ActiveChain().Tip()->GetBlockHash(), chainman().ActiveChain().Tip()->nHeight};
     }
 
-    bool processNewBlock(const std::shared_ptr<const CBlock>& block, bool* new_block) override
-    {
-        return chainman().ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/new_block);
-    }
-
-    unsigned int getTransactionsUpdated() override
-    {
-        return context()->mempool->GetTransactionsUpdated();
-    }
-
-    bool testBlockValidity(const CBlock& block, bool check_merkle_root, BlockValidationState& state) override
-    {
-        LOCK(cs_main);
-        CBlockIndex* tip{chainman().ActiveChain().Tip()};
-        // Fail if the tip updated before the lock was taken
-        if (block.hashPrevBlock != tip->GetBlockHash()) {
-            state.Error("Block does not connect to current chain tip.");
-            return false;
-        }
-
-        return TestBlockValidity(state, chainman().GetParams(), chainman().ActiveChainstate(), block, tip, /*fCheckPOW=*/false, check_merkle_root);
-    }
-
-    std::unique_ptr<BlockTemplate> createNewBlock(const CScript& script_pub_key, const BlockCreateOptions& options) override
+    std::unique_ptr<BlockTemplate> createNewBlock(const BlockCreateOptions& options) override
     {
         BlockAssembler::Options assemble_options{options};
         ApplyArgsManOptions(*Assert(m_node.args), assemble_options);
-        return std::make_unique<BlockTemplateImpl>(BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options}.CreateNewBlock(script_pub_key), m_node);
+        return std::make_unique<BlockTemplateImpl>(BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options}.CreateNewBlock(), m_node);
     }
 
     NodeContext* context() override { return &m_node; }

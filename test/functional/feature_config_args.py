@@ -11,6 +11,7 @@ import re
 import tempfile
 import time
 
+from test_framework.netutil import UNREACHABLE_PROXY_ARG
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import ErrorMatch
 from test_framework import util
@@ -227,8 +228,8 @@ class ConfArgsTest(BitcoinTestFramework):
                 )
 
     def test_log_buffer(self):
-        with self.nodes[0].assert_debug_log(expected_msgs=['Warning: parsed potentially confusing double-negative -connect=0\n']):
-            self.start_node(0, extra_args=['-noconnect=0'])
+        with self.nodes[0].assert_debug_log(expected_msgs=['Warning: parsed potentially confusing double-negative -listen=0\n']):
+            self.start_node(0, extra_args=['-nolisten=0'])
         self.stop_node(0)
 
     def test_args_log(self):
@@ -259,6 +260,7 @@ class ConfArgsTest(BitcoinTestFramework):
                 '-rpcpassword=',
                 '-rpcuser=secret-rpcuser',
                 '-torpassword=secret-torpassword',
+                UNREACHABLE_PROXY_ARG,
             ])
         self.stop_node(0)
 
@@ -307,7 +309,7 @@ class ConfArgsTest(BitcoinTestFramework):
                 ],
                 timeout=10,
         ):
-            self.start_node(0, extra_args=['-dnsseed=1', '-fixedseeds=1', f'-mocktime={start}'])
+            self.start_node(0, extra_args=['-dnsseed=1', '-fixedseeds=1', f'-mocktime={start}', UNREACHABLE_PROXY_ARG])
 
         # Only regtest has no fixed seeds. To avoid connections to random
         # nodes, regtest is the only network where it is safe to enable
@@ -355,7 +357,7 @@ class ConfArgsTest(BitcoinTestFramework):
                 ],
                 timeout=10,
         ):
-            self.start_node(0, extra_args=['-dnsseed=0', '-fixedseeds=1', '-addnode=fakenodeaddr', f'-mocktime={start}'])
+            self.start_node(0, extra_args=['-dnsseed=0', '-fixedseeds=1', '-addnode=fakenodeaddr', f'-mocktime={start}', UNREACHABLE_PROXY_ARG])
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Adding fixed seeds as 60 seconds have passed and addrman is empty",
         ]):
@@ -371,18 +373,18 @@ class ConfArgsTest(BitcoinTestFramework):
         # When -connect is supplied, expanding addrman via getaddr calls to ADDR_FETCH(-seednode)
         # nodes is irrelevant and -seednode is ignored.
         with self.nodes[0].assert_debug_log(expected_msgs=seednode_ignored):
-            self.start_node(0, extra_args=['-connect=fakeaddress1', '-seednode=fakeaddress2'])
+            self.start_node(0, extra_args=['-connect=fakeaddress1', '-seednode=fakeaddress2', UNREACHABLE_PROXY_ARG])
 
         # With -proxy, an ADDR_FETCH connection is made to a peer that the dns seed resolves to.
         # ADDR_FETCH connections are not used when -connect is used.
         with self.nodes[0].assert_debug_log(expected_msgs=dnsseed_ignored):
-            self.restart_node(0, extra_args=['-connect=fakeaddress1', '-dnsseed=1', '-proxy=1.2.3.4'])
+            self.restart_node(0, extra_args=['-connect=fakeaddress1', '-dnsseed=1', UNREACHABLE_PROXY_ARG])
 
         # If the user did not disable -dnsseed, but it was soft-disabled because they provided -connect,
         # they shouldn't see a warning about -dnsseed being ignored.
         with self.nodes[0].assert_debug_log(expected_msgs=addcon_thread_started,
                 unexpected_msgs=dnsseed_ignored):
-            self.restart_node(0, extra_args=['-connect=fakeaddress1', '-proxy=1.2.3.4'])
+            self.restart_node(0, extra_args=['-connect=fakeaddress1', UNREACHABLE_PROXY_ARG])
 
         # We have to supply expected_msgs as it's a required argument
         # The expected_msg must be something we are confident will be logged after the unexpected_msg

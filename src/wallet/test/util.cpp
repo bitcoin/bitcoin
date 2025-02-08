@@ -192,4 +192,24 @@ MockableDatabase& GetMockableDatabase(CWallet& wallet)
 {
     return dynamic_cast<MockableDatabase&>(wallet.GetDatabase());
 }
+
+wallet::ScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std::string& desc_str, const bool success)
+{
+    keystore.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+
+    FlatSigningProvider keys;
+    std::string error;
+    auto parsed_descs = Parse(desc_str, keys, error, false);
+    Assert(success == (!parsed_descs.empty()));
+    if (!success) return nullptr;
+    auto& desc = parsed_descs.at(0);
+
+    const int64_t range_start = 0, range_end = 1, next_index = 0, timestamp = 1;
+
+    WalletDescriptor w_desc(std::move(desc), timestamp, range_start, range_end, next_index);
+
+    LOCK(keystore.cs_wallet);
+
+    return Assert(keystore.AddWalletDescriptor(w_desc, keys,/*label=*/"", /*internal=*/false));
+};
 } // namespace wallet

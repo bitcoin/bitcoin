@@ -2051,6 +2051,9 @@ class SegWitTest(BitcoinTestFramework):
             self.wtx_node.last_message.pop("getdata", None)
         test_transaction_acceptance(self.nodes[0], self.wtx_node, tx2, with_witness=True, accepted=False)
 
+        # Disconnect tx_node to avoid the possibility of it being selected for orphan resolution.
+        self.tx_node.peer_disconnect()
+
         # Expect a request for parent (tx) by txid despite use of WTX peer
         self.wtx_node.wait_for_getdata([tx.sha256], timeout=60)
         with p2p_lock:
