@@ -156,7 +156,6 @@ RUN apt-get update && apt-get install $APT_ARGS \
     g++-mingw-w64-x86-64 \
     jq \
     libz-dev \
-    libncurses5 \
     nsis \
     python3-zmq \
     parallel \
