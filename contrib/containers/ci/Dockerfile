@@ -7,14 +7,13 @@ ENV DEBIAN_FRONTEND="noninteractive" TZ="Europe/London"
 # (zlib1g-dev is needed for the Qt host binary builds, but should not be used by target binaries)
 ENV APT_ARGS="-y --no-install-recommends --no-upgrade"
 
-# Install packages for i386 on amd64 hosts, then install common packages
+# Install common packages
 RUN set -ex; \
     apt-get update && \
     if [ "$(dpkg --print-architecture)" = "amd64" ]; then \
         dpkg --add-architecture i386 && \
         apt-get update && \
         apt-get install $APT_ARGS \
-        g++-multilib \
         wine32; \
     fi; \
     apt-get install $APT_ARGS \
@@ -164,12 +163,6 @@ RUN apt-get update && apt-get install $APT_ARGS \
     wine64 \
     zip \
     && rm -rf /var/lib/apt/lists/*
-
-# This is a hack. It is needed because gcc-multilib and g++-multilib are conflicting with g++-arm-linux-gnueabihf. This is
-# due to gcc-multilib installing the following symbolic link, which is needed for -m32 support. However, this causes
-# arm builds to also have the asm folder implicitly in the include search path. This is kind of ok, because the asm folder
-# for arm has precedence.
-RUN ln -s x86_64-linux-gnu/asm /usr/include/asm
 
 # Make sure std::thread and friends is available
 RUN \
