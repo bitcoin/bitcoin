@@ -72,7 +72,12 @@ if [ "${RUN_TIDY}" = "true" ]; then
   iwyu_tool.py \
     "src/compat" \
     "src/init" \
-    -p . "${MAKEJOBS}" -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_ROOT_DIR}/contrib/devtools/iwyu/bitcoin.core.imp"
+    -p . "${MAKEJOBS}" \
+    -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_ROOT_DIR}/contrib/devtools/iwyu/bitcoin.core.imp" \
+    |& tee "/tmp/iwyu_ci.out"
+  cd src
+  fix_includes.py --nosafe_headers < /tmp/iwyu_ci.out
+  git --no-pager diff
 fi
 
 if [ "$RUN_SECURITY_TESTS" = "true" ]; then
