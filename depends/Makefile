@@ -46,7 +46,7 @@ LTO ?=
 FALLBACK_DOWNLOAD_PATH ?= http://dash-depends-sources.s3-website-us-west-2.amazonaws.com
 
 C_STANDARD ?= c11
-CXX_STANDARD ?= c++17
+CXX_STANDARD ?= c++20
 
 BUILD = $(shell ./config.guess)
 HOST ?= $(BUILD)
