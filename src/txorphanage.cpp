@@ -327,10 +327,10 @@ void TxOrphanage::SanityCheck() const
     // Check that cached m_total_announcements is correct
     unsigned int counted_total_announcements{0};
     // Check that m_total_orphan_usage is correct
-    unsigned int counted_total_usage{0};
+    int64_t counted_total_usage{0};
 
     // Check that cached PeerOrphanInfo::m_total_size is correct
-    std::map<NodeId, unsigned int> counted_size_per_peer;
+    std::map<NodeId, int64_t> counted_size_per_peer;
 
     for (const auto& [wtxid, orphan] : m_orphans) {
         counted_total_announcements += orphan.announcers.size();
