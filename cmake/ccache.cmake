@@ -2,7 +2,9 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
-if(NOT MSVC)
+# The <LANG>_COMPILER_LAUNCHER target property, used to integrate
+# ccache, is supported only by the Makefile and Ninja generators.
+if(CMAKE_GENERATOR MATCHES "Make|Ninja")
   find_program(CCACHE_EXECUTABLE ccache)
   if(CCACHE_EXECUTABLE)
     execute_process(
@@ -23,6 +25,8 @@ if(NOT MSVC)
   else()
     set(WITH_CCACHE OFF)
   endif()
+else()
+  set(WITH_CCACHE "Built-in ccache support for the '${CMAKE_GENERATOR}' generator is not available.")
 endif()
 
 mark_as_advanced(CCACHE_EXECUTABLE)
