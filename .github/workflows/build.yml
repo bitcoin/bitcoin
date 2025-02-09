@@ -75,15 +75,6 @@ jobs:
       container-path: ${{ needs.container.outputs.path }}
       depends-key: ${{ needs.depends-linux64.outputs.key }}
 
-  src-linux64_cxx20:
-    name: linux64_cxx20-build
-    uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-linux64]
-    with:
-      build-target: linux64_cxx20
-      container-path: ${{ needs.container.outputs.path }}
-      depends-key: ${{ needs.depends-linux64.outputs.key }}
-
   src-linux64_fuzz:
     name: linux64_fuzz-build
     uses: ./.github/workflows/build-src.yml
