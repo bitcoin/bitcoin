@@ -41,10 +41,7 @@ class CapnpProtocol : public Protocol
 public:
     ~CapnpProtocol() noexcept(true)
     {
-        if (m_loop) {
-            std::unique_lock<std::mutex> lock(m_loop->m_mutex);
-            m_loop->removeClient(lock);
-        }
+        m_loop_ref.reset();
         if (m_loop_thread.joinable()) m_loop_thread.join();
         assert(!m_loop);
     };
@@ -83,10 +80,7 @@ public:
         m_loop_thread = std::thread([&] {
             util::ThreadRename("capnp-loop");
             m_loop.emplace(exe_name, &IpcLogFn, &m_context);
-            {
-                std::unique_lock<std::mutex> lock(m_loop->m_mutex);
-                m_loop->addClient(lock);
-            }
+            m_loop_ref.emplace(*m_loop);
             promise.set_value();
             m_loop->loop();
             m_loop.reset();
@@ -95,7 +89,12 @@ public:
     }
     Context m_context;
     std::thread m_loop_thread;
+    //! EventLoop object which manages I/O events for all connections.
     std::optional<mp::EventLoop> m_loop;
+    //! Reference to the same EventLoop. Increments the loop’s refcount on
+    //! creation, decrements on destruction. The loop thread exits when the
+    //! refcount reaches 0. Other IPC objects also hold their own EventLoopRef.
+    std::optional<mp::EventLoopRef> m_loop_ref;
 };
 } // namespace
 
