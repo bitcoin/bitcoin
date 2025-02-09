@@ -162,9 +162,10 @@ uint256 MessageHash(const std::string& message, MessageSignatureFormat format)
     switch (format) {
     case MessageSignatureFormat::LEGACY:
         {
-            HashWriter hasher{};
-            hasher << MESSAGE_MAGIC << message;
-            return hasher.GetHash();
+    HashWriter hasher{};
+    hasher << MESSAGE_MAGIC << message;
+
+    return hasher.GetHash();
         }
 
     case MessageSignatureFormat::SIMPLE:
