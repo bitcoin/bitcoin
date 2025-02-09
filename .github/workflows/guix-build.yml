@@ -11,7 +11,7 @@ on:
 
 jobs:
   build-image:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     outputs:
       image-tag: ${{ steps.prepare.outputs.image-tag }}
       repo-name: ${{ steps.prepare.outputs.repo-name }}
@@ -64,7 +64,7 @@ jobs:
   build:
     needs: build-image
     # runs-on: [ "self-hosted", "linux", "x64", "ubuntu-core" ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
 #    if: ${{ contains(github.event.pull_request.labels.*.name, 'guix-build') }}
     strategy:
       matrix:
