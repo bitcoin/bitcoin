@@ -21,6 +21,8 @@ from test_framework.wallet import MiniWallet
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 
 MAX_REPLACEMENT_LIMIT = 100
+MAX_CLUSTER_LIMIT = 64
+
 class ReplaceByFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
@@ -216,7 +218,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
                     yield x
 
         fee = int(0.00001 * COIN)
-        n = MAX_REPLACEMENT_LIMIT
+        n = MAX_CLUSTER_LIMIT
         tree_txs = list(branch(tx0_outpoint, initial_nValue, n, fee=fee))
         assert_equal(len(tree_txs), n)
 
