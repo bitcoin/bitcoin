@@ -271,12 +271,12 @@ static bool isGroupISLocked(const OutputGroup& group, interfaces::Chain& chain)
     });
 }
 
-std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outputs, bool separate_coins, const CFeeRate& effective_feerate, const CFeeRate& long_term_feerate, const CoinEligibilityFilter& filter, bool positive_only) const
+std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outputs, const CoinSelectionParams& coin_sel_params, const CoinEligibilityFilter& filter, bool positive_only) const
 {
     std::vector<OutputGroup> groups_out;
 
-    if (separate_coins) {
-        // Single coin means no grouping. Each COutput gets its own OutputGroup.
+    if (!coin_sel_params.m_avoid_partial_spends) {
+        // Allowing partial spends  means no grouping. Each COutput gets its own OutputGroup.
         for (const COutput& output : outputs) {
             // Skip outputs we cannot spend
             if (!output.fSpendable) continue;
@@ -286,11 +286,11 @@ std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outpu
             CInputCoin input_coin = output.GetInputCoin();
 
             // Make an OutputGroup containing just this output
-            OutputGroup group{effective_feerate, long_term_feerate};
+            OutputGroup group{coin_sel_params};
             group.Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, positive_only);
 
             // Check the OutputGroup's eligibility. Only add the eligible ones.
-            if (positive_only && group.effective_value <= 0) continue;
+            if (positive_only && group.GetSelectionAmount() <= 0) continue;
             bool isISLocked = isGroupISLocked(group, chain());
             if (group.m_outputs.size() > 0 && group.EligibleForSpending(filter, isISLocked)) groups_out.push_back(group);
         }
@@ -317,7 +317,7 @@ std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outpu
 
         if (groups.size() == 0) {
             // No OutputGroups for this scriptPubKey yet, add one
-            groups.emplace_back(effective_feerate, long_term_feerate);
+            groups.emplace_back(coin_sel_params);
         }
 
         // Get the last OutputGroup in the vector so that we can add the CInputCoin to it
@@ -328,7 +328,7 @@ std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outpu
         // to avoid surprising users with very high fees.
         if (group->m_outputs.size() >= OUTPUT_GROUP_MAX_ENTRIES) {
             // The last output group is full, add a new group to the vector and use that group for the insertion
-            groups.emplace_back(effective_feerate, long_term_feerate);
+            groups.emplace_back(coin_sel_params);
             group = &groups.back();
         }
 
@@ -350,7 +350,7 @@ std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outpu
             }
 
             // Check the OutputGroup's eligibility. Only add the eligible ones.
-            if (positive_only && group.effective_value <= 0) continue;
+            if (positive_only && group.GetSelectionAmount() <= 0) continue;
             bool isISLocked = isGroupISLocked(group, chain());
             if (group.m_outputs.size() > 0 && group.EligibleForSpending(filter, isISLocked)) groups_out.push_back(group);
         }
@@ -360,44 +360,30 @@ std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outpu
 }
 
 bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<COutput> coins,
-                                 std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params, bool& bnb_used, CoinType nCoinType) const
+                                 std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params, CoinType nCoinType) const
 {
     setCoinsRet.clear();
     nValueRet = 0;
 
-    // Calculate the fees for things that aren't inputs, excluding the change output
-    const CAmount not_input_fees = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.tx_noinputs_size);
-
-    // Get the feerate for effective value.
-    // When subtracting the fee from the outputs, we want the effective feerate to be 0
-    CFeeRate effective_feerate{0};
-    if (!coin_selection_params.m_subtract_fee_outputs) {
-        effective_feerate = coin_selection_params.m_effective_feerate;
+    // Note that unlike KnapsackSolver, we do not include the fee for creating a change output as BnB will not create a change output.
+    std::vector<OutputGroup> positive_groups = GroupOutputs(coins, coin_selection_params, eligibility_filter, true /* positive_only */);
+    if (SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change, setCoinsRet, nValueRet)) {
+        return true;
     }
-
-    if (coin_selection_params.use_bnb) {
-        std::vector<OutputGroup> positive_groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, effective_feerate, coin_selection_params.m_long_term_feerate, eligibility_filter, true /* positive_only */);
-        bnb_used = true;
-        return SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change, setCoinsRet, nValueRet, not_input_fees);
-    } else {
-        // The knapsack solver has some legacy behavior where it will spend dust outputs. We retain this behavior, so don't filter for positive only here.
-        // The knapsack solver currently does not use effective values, so we give GroupOutputs feerates of 0 so it sets the effective values to be the same as the real value.
-        std::vector<OutputGroup> groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, CFeeRate(0), CFeeRate(0), eligibility_filter, false /* positive_only */);
-        bnb_used = false;
-        return KnapsackSolver(nTargetValue, groups, setCoinsRet, nValueRet, nCoinType == CoinType::ONLY_FULLY_MIXED, m_default_max_tx_fee);
-    }
+    // The knapsack solver has some legacy behavior where it will spend dust outputs. We retain this behavior, so don't filter for positive only here.
+    std::vector<OutputGroup> all_groups = GroupOutputs(coins, coin_selection_params, eligibility_filter, false /* positive_only */);
+    // While nTargetValue includes the transaction fees for non-input things, it does not include the fee for creating a change output.
+    // So we need to include that for KnapsackSolver as well, as we are expecting to create a change output.
+    return KnapsackSolver(nTargetValue + coin_selection_params.m_change_fee, all_groups, setCoinsRet, nValueRet, nCoinType == CoinType::ONLY_FULLY_MIXED, m_default_max_tx_fee);
 }
 
-bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params, bool& bnb_used) const
+bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params) const
 {
     // Note: this function should never be used for "always free" tx types like dstx
 
     std::vector<COutput> vCoins(vAvailableCoins);
     CoinType nCoinType = coin_control.nCoinType;
     CAmount value_to_select = nTargetValue;
-
-    // Default to bnb was not used. If we use it, we set it later
-    bnb_used = false;
 
     // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
     if (coin_control.HasSelected() && !coin_control.fAllowOtherInputs)
@@ -447,10 +433,10 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
                 return false; // Not solvable, can't estimate size for fee
             }
             coin.effective_value = coin.txout.nValue - coin_selection_params.m_effective_feerate.GetFee(coin.m_input_bytes);
-            if (coin_selection_params.use_bnb) {
-                value_to_select -= coin.effective_value;
-            } else {
+            if (coin_selection_params.m_subtract_fee_outputs) {
                 value_to_select -= coin.txout.nValue;
+            } else {
+                value_to_select -= coin.effective_value;
             }
             setPresetCoins.insert(coin);
         } else {
@@ -491,26 +477,26 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
 
         // If possible, fund the transaction with confirmed UTXOs only. Prefer at least six
         // confirmations on outputs received from other wallets and only spend confirmed change.
-        if (SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(1, 6, 0), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used, nCoinType)) return true;
-        if (SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(1, 1, 0), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used, nCoinType)) return true;
+        if (SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(1, 6, 0), vCoins, setCoinsRet, nValueRet, coin_selection_params, nCoinType)) return true;
+        if (SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(1, 1, 0), vCoins, setCoinsRet, nValueRet, coin_selection_params, nCoinType)) return true;
 
         // Fall back to using zero confirmation change (but with as few ancestors in the mempool as
         // possible) if we cannot fund the transaction otherwise.
         if (m_spend_zero_conf_change) {
-            if (SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, 2), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used, nCoinType)) return true;
+            if (SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, 2), vCoins, setCoinsRet, nValueRet, coin_selection_params, nCoinType)) return true;
             if (SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, std::min((size_t)4, max_ancestors/3), std::min((size_t)4, max_descendants/3)),
-                                   vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used, nCoinType)) {
+                                   vCoins, setCoinsRet, nValueRet, coin_selection_params, nCoinType)) {
                 return true;
             }
             if (SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, max_ancestors/2, max_descendants/2),
-                                   vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used, nCoinType)) {
+                                   vCoins, setCoinsRet, nValueRet, coin_selection_params, nCoinType)) {
                 return true;
             }
             // If partial groups are allowed, relax the requirement of spending OutputGroups (groups
             // of UTXOs sent to the same address, which are obviously controlled by a single wallet)
             // in their entirety.
             if (SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, max_ancestors-1, max_descendants-1, true /* include_partial_groups */),
-                                   vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used, nCoinType)) {
+                                   vCoins, setCoinsRet, nValueRet, coin_selection_params, nCoinType)) {
                 return true;
             }
             // Try with unsafe inputs if they are allowed. This may spend unconfirmed outputs
@@ -518,7 +504,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             if (coin_control.m_include_unsafe_inputs
                 && SelectCoinsMinConf(value_to_select,
                     CoinEligibilityFilter(0 /* conf_mine */, 0 /* conf_theirs */, max_ancestors-1, max_descendants-1, true /* include_partial_groups */),
-                    vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used, nCoinType)) {
+                    vCoins, setCoinsRet, nValueRet, coin_selection_params, nCoinType)) {
                 return true;
             }
             // Try with unlimited ancestors/descendants. The transaction will still need to meet
@@ -526,7 +512,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             // OutputGroups use heuristics that may overestimate ancestor/descendant counts.
             if (!fRejectLongChains && SelectCoinsMinConf(value_to_select,
                                       CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max(), true /* include_partial_groups */),
-                                      vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used, nCoinType)) {
+                                      vCoins, setCoinsRet, nValueRet, coin_selection_params, nCoinType)) {
                 return true;
             }
         }
@@ -616,8 +602,7 @@ bool CWallet::CreateTransactionInternal(
 {
     CAmount nValue = 0;
     ReserveDestination reservedest(this);
-    int nChangePosRequest = nChangePosInOut;
-    const bool sort_bip69{nChangePosRequest == -1};
+    const bool sort_bip69{nChangePosInOut == -1};
     unsigned int nSubtractFeeFromAmount = 0;
     for (const auto& recipient : vecSend)
     {
@@ -721,189 +706,167 @@ bool CWallet::CreateTransactionInternal(
             coin_selection_params.m_change_fee = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.change_output_size);
             coin_selection_params.m_cost_of_change = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size) + coin_selection_params.m_change_fee;
 
-            nFeeRet = 0;
-            CAmount nValueIn = 0;
-
-            // BnB selector is the only selector used when this is true.
-            coin_selection_params.use_bnb = false; // Dash: never use BnB
             coin_selection_params.m_subtract_fee_outputs = nSubtractFeeFromAmount != 0; // If we are doing subtract fee from recipient, don't use effective values
 
-            // Start with no fee and loop until there is enough fee, try it 500 times.
-            int nMaxTries = 500;
-            while (--nMaxTries > 0)
+            // vouts to the payees
+            if (!coin_selection_params.m_subtract_fee_outputs) {
+                coin_selection_params.tx_noinputs_size = 9; // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count
+                coin_selection_params.tx_noinputs_size += GetSizeOfCompactSize(vecSend.size()); // bytes for output count
+            }
+            for (const auto& recipient : vecSend)
             {
-                nChangePosInOut = nChangePosRequest;
-                txNew.vin.clear();
-                txNew.vout.clear();
+                CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
 
-                CAmount nValueToSelect = nValue;
-                if (nSubtractFeeFromAmount == 0)
-                    nValueToSelect += nFeeRet;
-
-                // vouts to the payees
+                // Include the fee cost for outputs.
                 if (!coin_selection_params.m_subtract_fee_outputs) {
-                    coin_selection_params.tx_noinputs_size = 9; // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count
-                    coin_selection_params.tx_noinputs_size += GetSizeOfCompactSize(vecSend.size()); // bytes for output count
+                    coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout, PROTOCOL_VERSION);
                 }
-                for (const auto& recipient : vecSend)
+
+                if (IsDust(txout, chain().relayDustFee()))
                 {
-                    CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
-
-                    // Include the fee cost for outputs.
-                    if (!coin_selection_params.m_subtract_fee_outputs) {
-                        coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout, PROTOCOL_VERSION);
-                    }
-
-                    if (IsDust(txout, chain().relayDustFee()))
-                    {
-                        error = _("Transaction amount too small");
-                        return false;
-                    }
-                    txNew.vout.push_back(txout);
-                }
-
-                // Choose coins to use
-                bool bnb_used = false;
-                nValueIn = 0;
-                setCoins.clear();
-                if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coin_control, coin_selection_params, bnb_used)) {
-                    if (coin_control.nCoinType == CoinType::ONLY_NONDENOMINATED) {
-                        error = _("Unable to locate enough non-denominated funds for this transaction.");
-                    } else if (coin_control.nCoinType == CoinType::ONLY_FULLY_MIXED) {
-                        error = _("Unable to locate enough mixed funds for this transaction.");
-                        error = error + Untranslated(" ") + strprintf(_("%s uses exact denominated amounts to send funds, you might simply need to mix some more coins."), gCoinJoinName);
-                    } else {
-                        error = _("Insufficient funds.");
-                    }
+                    error = _("Transaction amount too small");
                     return false;
                 }
-
-                // Always make a change output
-                // We will reduce the fee from this change output later, and remove the output if it is too small.
-                const CAmount change_and_fee = nValueIn - nValue;
-                assert(change_and_fee >= 0);
-                CTxOut newTxOut(change_and_fee, scriptChange);
-
-                if (nChangePosInOut == -1)
-                {
-                    // Insert change txn at random position:
-                    nChangePosInOut = GetRandInt(txNew.vout.size()+1);
-                }
-                else if ((unsigned int)nChangePosInOut > txNew.vout.size())
-                {
-                    error = _("Transaction change output index out of range");
-                    return false;
-                }
-
-                assert(nChangePosInOut != -1);
-                auto change_position = txNew.vout.insert(txNew.vout.begin() + nChangePosInOut, newTxOut);
-
-                // We're making a copy of vecSend because it's const, sortedVecSend should be used
-                // in place of vecSend in all subsequent usage.
-                std::vector<CRecipient> sortedVecSend{vecSend};
-                if (sort_bip69) {
-                    std::sort(txNew.vout.begin(), txNew.vout.end(), CompareOutputBIP69());
-                    // The output reduction loop uses vecSend to map to txNew.vout, we need to
-                    // shuffle them both to ensure this mapping remains consistent
-                    std::sort(sortedVecSend.begin(), sortedVecSend.end(),
-                              [](const CRecipient& a, const CRecipient& b) {
-                                    return a.nAmount < b.nAmount || (a.nAmount == b.nAmount && a.scriptPubKey < b.scriptPubKey);
-                              });
-
-                    // If there was a change output added before, we must update its position now
-                    if (const auto it = std::find(txNew.vout.begin(), txNew.vout.end(), newTxOut); it != txNew.vout.end()) {
-                        change_position = it;
-                        nChangePosInOut = std::distance(txNew.vout.begin(), change_position);
-                    }
-                };
-
-                // Dummy fill vin for maximum size estimation
-                //
-                for (const auto& coin : setCoins) {
-                    txNew.vin.push_back(CTxIn(coin.outpoint, CScript()));
-                }
-
-                // Calculate the transaction fee
-                nBytes = CalculateMaximumSignedTxSize(CTransaction(txNew), this, coin_control.fAllowWatchOnly);
-                if (nBytes < 0) {
-                    error = _("Signing transaction failed");
-                    return false;
-                }
-
-                if (nExtraPayloadSize != 0) {
-                    // account for extra payload in fee calculation
-                    nBytes += GetSizeOfCompactSize(nExtraPayloadSize) + nExtraPayloadSize;
-                }
-
-                nFeeRet = coin_selection_params.m_effective_feerate.GetFee(nBytes);
-
-                CAmount fee_needed = nFeeRet;
-                if (nSubtractFeeFromAmount == 0) {
-                    change_position->nValue -= fee_needed;
-                }
-
-                // We want to drop the change to fees if:
-                // 1. The change output would be dust
-                // 2. The change is within the (almost) exact match window, i.e. it is less than or equal to the cost of the change output (cost_of_change)
-                // 3. We are working with fully mixed CoinJoin denominations
-                CAmount change_amount = change_position->nValue;
-                if (IsDust(*change_position, coin_selection_params.m_discard_feerate) || change_amount <= coin_selection_params.m_cost_of_change || coin_control.nCoinType == CoinType::ONLY_FULLY_MIXED)
-                {
-                    nChangePosInOut = -1;
-                    change_amount = 0;
-                    txNew.vout.erase(change_position);
-
-                    nBytes = CalculateMaximumSignedTxSize(CTransaction(txNew), this, coin_control.fAllowWatchOnly);
-                    fee_needed = coin_selection_params.m_effective_feerate.GetFee(nBytes);
-                }
-
-                // If the fee is covered, there's no need to loop or subtract from recipients
-                if (fee_needed <= change_and_fee - change_amount) {
-                    nFeeRet = change_and_fee - change_amount;
-                    break;
-                }
-
-                // Reduce output values for subtractFeeFromAmount
-                if (nSubtractFeeFromAmount != 0) {
-                    CAmount to_reduce = fee_needed + change_amount - change_and_fee;
-                    int i = 0;
-                    bool fFirst = true;
-                    for (const auto& recipient : sortedVecSend)
-                    {
-                        if (i == nChangePosInOut) {
-                            ++i;
-                        }
-                        CTxOut& txout = txNew.vout[i];
-
-                        if (recipient.fSubtractFeeFromAmount)
-                        {
-                            txout.nValue -= to_reduce / nSubtractFeeFromAmount; // Subtract fee equally from each selected recipient
-
-                            if (fFirst) // first receiver pays the remainder not divisible by output count
-                            {
-                                fFirst = false;
-                                txout.nValue -= to_reduce % nSubtractFeeFromAmount;
-                            }
-                            // Error if this output is reduced to be below dust
-                            if (IsDust(txout, chain().relayDustFee())) {
-                                if (txout.nValue < 0) {
-                                    error = _("The transaction amount is too small to pay the fee");
-                                } else {
-                                    error = _("The transaction amount is too small to send after the fee has been deducted");
-                                }
-                                return false;
-                            }
-                        }
-                        ++i;
-                    }
-                    nFeeRet = fee_needed;
-                    break; // The fee has been deducted from the recipients, nothing left to do here
-                }
+                txNew.vout.push_back(txout);
             }
 
-            if (nMaxTries == 0) {
-                error = _("Exceeded max tries.");
+            // Include the fees for things that aren't inputs, excluding the change output
+            const CAmount not_input_fees = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.tx_noinputs_size);
+            CAmount nValueToSelect = nValue + not_input_fees;
+
+            // Choose coins to use
+            CAmount inputs_sum = 0;
+            setCoins.clear();
+            if (!SelectCoins(vAvailableCoins, /* nTargetValue */ nValueToSelect, setCoins, inputs_sum, coin_control, coin_selection_params)) {
+                if (coin_control.nCoinType == CoinType::ONLY_NONDENOMINATED) {
+                    error = _("Unable to locate enough non-denominated funds for this transaction.");
+                } else if (coin_control.nCoinType == CoinType::ONLY_FULLY_MIXED) {
+                    error = _("Unable to locate enough mixed funds for this transaction.");
+                    error = error + Untranslated(" ") + strprintf(_("%s uses exact denominated amounts to send funds, you might simply need to mix some more coins."), gCoinJoinName);
+                } else {
+                    error = _("Insufficient funds.");
+                }
                 return false;
+            }
+
+            // Always make a change output
+            // We will reduce the fee from this change output later, and remove the output if it is too small.
+            const CAmount change_and_fee = inputs_sum - nValue;
+            assert(change_and_fee >= 0);
+            CTxOut newTxOut(change_and_fee, scriptChange);
+
+            if (nChangePosInOut == -1)
+            {
+                // Insert change txn at random position:
+                nChangePosInOut = GetRandInt(txNew.vout.size()+1);
+            }
+            else if ((unsigned int)nChangePosInOut > txNew.vout.size())
+            {
+                error = _("Transaction change output index out of range");
+                return false;
+            }
+
+            assert(nChangePosInOut != -1);
+            auto change_position = txNew.vout.insert(txNew.vout.begin() + nChangePosInOut, newTxOut);
+
+            // We're making a copy of vecSend because it's const, sortedVecSend should be used
+            // in place of vecSend in all subsequent usage.
+            std::vector<CRecipient> sortedVecSend{vecSend};
+            if (sort_bip69) {
+                std::sort(txNew.vout.begin(), txNew.vout.end(), CompareOutputBIP69());
+                // The output reduction loop uses vecSend to map to txNew.vout, we need to
+                // shuffle them both to ensure this mapping remains consistent
+                std::sort(sortedVecSend.begin(), sortedVecSend.end(),
+                          [](const CRecipient& a, const CRecipient& b) {
+                                return a.nAmount < b.nAmount || (a.nAmount == b.nAmount && a.scriptPubKey < b.scriptPubKey);
+                          });
+
+                // If there was a change output added before, we must update its position now
+                if (const auto it = std::find(txNew.vout.begin(), txNew.vout.end(), newTxOut); it != txNew.vout.end()) {
+                    change_position = it;
+                    nChangePosInOut = std::distance(txNew.vout.begin(), change_position);
+                }
+            };
+
+            // Dummy fill vin for maximum size estimation
+            //
+            for (const auto& coin : setCoins) {
+                txNew.vin.push_back(CTxIn(coin.outpoint, CScript()));
+            }
+
+            // Calculate the transaction fee
+            nBytes = CalculateMaximumSignedTxSize(CTransaction(txNew), this, coin_control.fAllowWatchOnly);
+            if (nBytes < 0) {
+                error = _("Signing transaction failed");
+                return false;
+            }
+
+            if (nExtraPayloadSize != 0) {
+                // account for extra payload in fee calculation
+                nBytes += GetSizeOfCompactSize(nExtraPayloadSize) + nExtraPayloadSize;
+            }
+
+            nFeeRet = coin_selection_params.m_effective_feerate.GetFee(nBytes);
+
+            CAmount fee_needed = nFeeRet;
+            if (nSubtractFeeFromAmount == 0) {
+                change_position->nValue -= fee_needed;
+            }
+
+            // We want to drop the change to fees if:
+            // 1. The change output would be dust
+            // 2. The change is within the (almost) exact match window, i.e. it is less than or equal to the cost of the change output (cost_of_change)
+            // 3. We are working with fully mixed CoinJoin denominations
+            CAmount change_amount = change_position->nValue;
+            if (IsDust(*change_position, coin_selection_params.m_discard_feerate) || change_amount <= coin_selection_params.m_cost_of_change || coin_control.nCoinType == CoinType::ONLY_FULLY_MIXED)
+            {
+                nChangePosInOut = -1;
+                change_amount = 0;
+                txNew.vout.erase(change_position);
+
+                nBytes = CalculateMaximumSignedTxSize(CTransaction(txNew), this, coin_control.fAllowWatchOnly);
+                fee_needed = coin_selection_params.m_effective_feerate.GetFee(nBytes);
+            }
+
+            // Update nFeeRet in case fee_needed changed due to dropping the change output
+            if (fee_needed <= change_and_fee - change_amount) {
+                nFeeRet = change_and_fee - change_amount;
+            }
+
+            // Reduce output values for subtractFeeFromAmount
+            if (nSubtractFeeFromAmount != 0) {
+                CAmount to_reduce = fee_needed + change_amount - change_and_fee;
+                int i = 0;
+                bool fFirst = true;
+                for (const auto& recipient : sortedVecSend)
+                {
+                    if (i == nChangePosInOut) {
+                        ++i;
+                    }
+                    CTxOut& txout = txNew.vout[i];
+
+                    if (recipient.fSubtractFeeFromAmount)
+                    {
+                        txout.nValue -= to_reduce / nSubtractFeeFromAmount; // Subtract fee equally from each selected recipient
+
+                        if (fFirst) // first receiver pays the remainder not divisible by output count
+                        {
+                            fFirst = false;
+                            txout.nValue -= to_reduce % nSubtractFeeFromAmount;
+                        }
+                        // Error if this output is reduced to be below dust
+                        if (IsDust(txout, chain().relayDustFee())) {
+                            if (txout.nValue < 0) {
+                                error = _("The transaction amount is too small to pay the fee");
+                            } else {
+                                error = _("The transaction amount is too small to send after the fee has been deducted");
+                            }
+                            return false;
+                        }
+                    }
+                    ++i;
+                }
+                nFeeRet = fee_needed;
             }
 
             // Give up if change keypool ran out and change is required
