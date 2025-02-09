@@ -65,15 +65,11 @@ RUN groupadd --system guixbuild && \
               "guixbuilder${i}" ;                \
     done
 
-# Create unprivileged user
+# Setup unprivileged user and grant it passwordless sudo
 ARG USER_ID=1000 \
-    GROUP_ID=1000 \
-    USERNAME=ubuntu
-RUN groupadd -g ${GROUP_ID} ${USERNAME} && \
-    useradd -u ${USER_ID} -g ${USERNAME} -s /bin/bash -m -d /home/${USERNAME} ${USERNAME}
-
-# Grant it passwordless admin permissions
-RUN usermod -aG sudo ${USERNAME} && \
+    GROUP_ID=1000
+RUN groupmod -g ${GROUP_ID} ubuntu; \
+    usermod -u ${USER_ID} -aG sudo ubuntu; \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # Copy required files to container
@@ -85,16 +81,16 @@ COPY --from=docker_root ./scripts/setup-sdk    /usr/local/bin/setup-sdk
 
 # Create directories for mounting to save/restore cache and grant necessary permissions
 RUN mkdir -p \
-        /home/${USERNAME}/.cache \
+        /home/ubuntu/.cache \
         /src/dash/depends/{built,sources,work}; \
     chown -R ${USER_ID}:${GROUP_ID} \
-        /home/${USERNAME}/.cache \
+        /home/ubuntu/.cache \
         /src;
 
 WORKDIR "/src/dash"
 
 # Switch to unprivileged context
-USER ${USERNAME}
+USER ubuntu
 
 # Set entrypoint to copied file
 ENTRYPOINT ["/usr/local/bin/entrypoint"]

@@ -138,12 +138,12 @@ RUN set -ex; \
     mkdir -p /opt/shellcheck && tar -xf /tmp/shellcheck.tar.xz -C /opt/shellcheck --strip-components=1 && rm /tmp/shellcheck.tar.xz
 ENV PATH="/opt/shellcheck:${PATH}"
 
-# Add user with specified (or default) user/group ids and setup configuration files
-ARG USER_ID=1000
-ARG GROUP_ID=1000
+# Setup unprivileged user and configuration files
+ARG USER_ID=1000 \
+    GROUP_ID=1000
 RUN set -ex; \
-    groupadd -g ${GROUP_ID} dash; \
-    useradd -u ${USER_ID} -g dash -s /bin/bash -m -d /home/dash dash; \
+    groupmod -g ${GROUP_ID} -n dash ubuntu; \
+    usermod -u ${USER_ID} -md /home/dash -l dash ubuntu; \
     mkdir -p /home/dash/.config/gdb; \
     echo "add-auto-load-safe-path /usr/lib/llvm-${LLVM_VERSION}/lib" | tee /home/dash/.config/gdb/gdbinit; \
     chown ${USER_ID}:${GROUP_ID} -R /home/dash
