@@ -17,62 +17,119 @@ jobs:
     name: Build container
     uses: ./.github/workflows/build-container.yml
 
-  build-depends:
-    name: Build depends
+  depends-arm-linux:
+    name: arm-linux-gnueabihf
     uses: ./.github/workflows/build-depends.yml
     needs: [container]
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-        - build-target: arm-linux
-          host: arm-linux-gnueabihf
-        - build-target: linux64
-          host: x86_64-pc-linux-gnu
-        - build-target: win64
-          host: x86_64-w64-mingw32
     with:
-      build-target:  ${{ matrix.build-target }}
+      build-target: arm-linux
       container-path: ${{ needs.container.outputs.path }}
-      host: ${{ matrix.host }}
+      host: arm-linux-gnueabihf
 
-  build-src:
-    name: Build source
-    uses: ./.github/workflows/build-src.yml
-    needs: [container, build-depends]
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - build-target: arm-linux
-            depends-target: arm-linux
-            host: arm-linux-gnueabihf
-          - build-target: linux64
-            depends-target: linux64
-            host: x86_64-pc-linux-gnu
-          - build-target: linux64_cxx20
-            depends-target: linux64
-            host: x86_64-pc-linux-gnu
-          - build-target: linux64_fuzz
-            depends-target: linux64
-            host: x86_64-pc-linux-gnu
-          - build-target: linux64_nowallet
-            depends-target: linux64
-            host: x86_64-pc-linux-gnu
-          - build-target: linux64_sqlite
-            depends-target: linux64
-            host: x86_64-pc-linux-gnu
-          - build-target: linux64_tsan
-            depends-target: linux64
-            host: x86_64-pc-linux-gnu
-          - build-target: linux64_ubsan
-            depends-target: linux64
-            host: x86_64-pc-linux-gnu
-          - build-target: win64
-            depends-target: win64
-            host: x86_64-w64-mingw32
+  depends-linux64:
+    name: x86_64-pc-linux-gnu
+    uses: ./.github/workflows/build-depends.yml
+    needs: [container]
     with:
-      build-target:  ${{ matrix.build-target }}
+      build-target: linux64
       container-path: ${{ needs.container.outputs.path }}
-      depends-target:  ${{ matrix.build-target }}
-      host: ${{ matrix.host }}
+      host: x86_64-pc-linux-gnu
+
+  depends-win64:
+    name: x86_64-w64-mingw32
+    uses: ./.github/workflows/build-depends.yml
+    needs: [container]
+    with:
+      build-target: win64
+      container-path: ${{ needs.container.outputs.path }}
+      host: x86_64-w64-mingw32
+
+  src-arm-linux:
+    name: arm-linux-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-arm-linux]
+    with:
+      build-target: arm-linux
+      container-path: ${{ needs.container.outputs.path }}
+      depends-target: arm-linux
+      host: arm-linux-gnueabihf
+
+  src-linux64:
+    name: linux64-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-linux64]
+    with:
+      build-target: linux64
+      container-path: ${{ needs.container.outputs.path }}
+      depends-target: linux64
+      host: x86_64-pc-linux-gnu
+
+  src-linux64_cxx20:
+    name: linux64_cxx20-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-linux64]
+    with:
+      build-target: linux64_cxx20
+      container-path: ${{ needs.container.outputs.path }}
+      depends-target: linux64
+      host: x86_64-pc-linux-gnu
+
+  src-linux64_fuzz:
+    name: linux64_fuzz-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-linux64]
+    with:
+      build-target: linux64_fuzz
+      container-path: ${{ needs.container.outputs.path }}
+      depends-target: linux64
+      host: x86_64-pc-linux-gnu
+
+  src-linux64_nowallet:
+    name: linux64_nowallet-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-linux64]
+    with:
+      build-target: linux64_nowallet
+      container-path: ${{ needs.container.outputs.path }}
+      depends-target: linux64
+      host: x86_64-pc-linux-gnu
+
+  src-linux64_sqlite:
+    name: linux64_sqlite-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-linux64]
+    with:
+      build-target: linux64_sqlite
+      container-path: ${{ needs.container.outputs.path }}
+      depends-target: linux64
+      host: x86_64-pc-linux-gnu
+
+  src-linux64_tsan:
+    name: linux64_tsan-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-linux64]
+    with:
+      build-target: linux64_tsan
+      container-path: ${{ needs.container.outputs.path }}
+      depends-target: linux64
+      host: x86_64-pc-linux-gnu
+
+  src-linux64_ubsan:
+    name: linux64_ubsan-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-linux64]
+    with:
+      build-target: linux64_ubsan
+      container-path: ${{ needs.container.outputs.path }}
+      depends-target: linux64
+      host: x86_64-pc-linux-gnu
+
+  src-win64:
+    name: win64-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-win64]
+    with:
+      build-target: win64
+      container-path: ${{ needs.container.outputs.path }}
+      depends-target: win64
+      host: x86_64-w64-mingw32
