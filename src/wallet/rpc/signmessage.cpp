@@ -50,13 +50,8 @@ RPCHelpMan signmessage()
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
             }
 
-            const PKHash* pkhash = std::get_if<PKHash>(&dest);
-            if (!pkhash) {
-                throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
-            }
-
             std::string signature;
-            SigningResult err = pwallet->SignMessage(strMessage, *pkhash, signature);
+            SigningResult err = pwallet->SignMessage(MessageSignatureFormat::SIMPLE, strMessage, dest, signature);
             if (err == SigningResult::SIGNING_FAILED) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, SigningResultString(err));
             } else if (err != SigningResult::OK) {
