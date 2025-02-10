@@ -76,7 +76,7 @@ void BanMan::ClearBanned()
         m_banned.clear();
         m_is_dirty = true;
     }
-    DumpBanlist(); //store banlist to disk
+    DumpBanlist(); // store banlist to disk
     if (m_client_interface) m_client_interface->BannedListChanged();
 }
 
@@ -149,7 +149,7 @@ void BanMan::Ban(const CSubNet& sub_net, int64_t ban_time_offset, bool since_uni
     }
     if (m_client_interface) m_client_interface->BannedListChanged();
 
-    //store banlist to disk immediately
+    // store banlist to disk immediately
     DumpBanlist();
 }
 
@@ -167,7 +167,7 @@ bool BanMan::Unban(const CSubNet& sub_net)
         m_is_dirty = true;
     }
     if (m_client_interface) m_client_interface->BannedListChanged();
-    DumpBanlist(); //store banlist to disk immediately
+    DumpBanlist(); // store banlist to disk immediately
     return true;
 }
 
@@ -176,7 +176,7 @@ void BanMan::GetBanned(banmap_t& banmap)
     LOCK(m_banned_mutex);
     // Sweep the banlist so expired bans are not returned
     SweepBanned();
-    banmap = m_banned; //create a thread safe copy
+    banmap = m_banned; // create a thread safe copy
 }
 
 void BanMan::SweepBanned()
