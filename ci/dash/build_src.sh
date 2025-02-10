@@ -73,6 +73,8 @@ if [ "${RUN_TIDY}" = "true" ]; then
   iwyu_tool.py \
     "src/compat" \
     "src/init" \
+    "src/rpc/fees.cpp" \
+    "src/rpc/signmessage.cpp" \
     -p . "${MAKEJOBS}" \
     -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_ROOT_DIR}/contrib/devtools/iwyu/bitcoin.core.imp" \
     |& tee "/tmp/iwyu_ci.out"

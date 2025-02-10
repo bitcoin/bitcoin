@@ -21,7 +21,11 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <list>
 #include <string>
+#include <vector>
+
+struct NodeContext;
 
 static RPCHelpMan estimatesmartfee()
 {
