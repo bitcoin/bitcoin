@@ -99,8 +99,10 @@ class LoggingTest(BitcoinTestFramework):
             match=ErrorMatch.PARTIAL_REGEX,
         )
 
-        self.log.info("Test that -nodebug clears previously specified debug options")
+        self.log.info("Test that -nodebug,-debug=0,-debug=none clear previously specified debug options")
         disable_debug_options = [
+            '-debug=0',
+            '-debug=none',
             '-nodebug'
         ]
 
