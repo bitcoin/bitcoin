@@ -184,7 +184,7 @@ x86_64-w64-mingw32:
   variables:
     BUILD_TARGET: win64
 
-x86_64-pc-linux-gnu_debug:
+x86_64-pc-linux-gnu:
   extends: .build-depends-template
   variables:
     BUILD_TARGET: linux64
@@ -231,7 +231,7 @@ win64-build:
 linux64-build:
   extends: .build-template
   needs:
-    - x86_64-pc-linux-gnu_debug
+    - x86_64-pc-linux-gnu
   variables:
     BUILD_TARGET: linux64
 
@@ -240,7 +240,7 @@ linux64_cxx20-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-pc-linux-gnu_debug
+    - x86_64-pc-linux-gnu
   variables:
     BUILD_TARGET: linux64_cxx20
 
@@ -249,7 +249,7 @@ linux64_sqlite-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-pc-linux-gnu_debug
+    - x86_64-pc-linux-gnu
   variables:
     BUILD_TARGET: linux64_sqlite
 
@@ -258,7 +258,7 @@ linux64_fuzz-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-pc-linux-gnu_debug
+    - x86_64-pc-linux-gnu
   variables:
     BUILD_TARGET: linux64_fuzz
 
@@ -267,7 +267,7 @@ linux64_fuzz-build:
 #    - .build-template
 #    - .skip-in-fast-mode-template
 #  needs:
-#    - x86_64-pc-linux-gnu_debug
+#    - x86_64-pc-linux-gnu
 #  variables:
 #    BUILD_TARGET: linux64_asan
 
@@ -285,7 +285,7 @@ linux64_ubsan-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-pc-linux-gnu_debug
+    - x86_64-pc-linux-gnu
   variables:
     BUILD_TARGET: linux64_ubsan
 
@@ -312,7 +312,7 @@ linux64_multiprocess-build:
 #    - .build-template
 #    - .skip-in-fast-mode-template
 #  needs:
-#    - x86_64-pc-linux-gnu_debug
+#    - x86_64-pc-linux-gnu
 #  variables:
 #    BUILD_TARGET: linux64_valgrind
 
