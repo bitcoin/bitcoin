@@ -351,12 +351,12 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, const bool avoid_reuse
             ret.m_mine_immature += wtx.GetImmatureCredit();
             ret.m_watchonly_immature += wtx.GetImmatureWatchOnlyCredit();
             if (cj_enabled) {
-                const auto balance_anonymized = wtx.GetAnonymizedBalance();
+                const auto balance_anonymized = wtx.GetAvailableCoinJoinCredits();
                 ret.m_anonymized += balance_anonymized.m_anonymized;
                 if (balance_anonymized.is_unconfirmed) {
-                    ret.m_denominated_untrusted_pending += balance_anonymized.m_denom_credit;
+                    ret.m_denominated_untrusted_pending += balance_anonymized.m_denominated;
                 } else {
-                    ret.m_denominated_trusted += balance_anonymized.m_denom_credit;
+                    ret.m_denominated_trusted += balance_anonymized.m_denominated;
                 }
             }
         }
