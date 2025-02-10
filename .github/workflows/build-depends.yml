@@ -11,19 +11,17 @@ on:
         description: "Path to built container at registry"
         required: true
         type: string
-      host:
-        description: "Target triplet"
-        required: true
-        type: string
     outputs:
       key:
         description: "Key needed for restoring depends cache"
-        value: ${{ jobs.build-depends.restore.outputs.cache-primary-key }}
+        value: ${{ jobs.build-depends.outputs.key }}
 
 jobs:
   build-depends:
     name: Build depends
     runs-on: ubuntu-22.04
+    outputs:
+      key:  ${{ steps.restore.outputs.cache-primary-key }}
     container:
       image: ${{ inputs.container-path }}
       options: --user root
@@ -32,6 +30,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Initial setup
+        id: setup
+        run: |
+          BUILD_TARGET="${{ inputs.build-target }}"
+          source ./ci/dash/matrix.sh
+          echo "HOST=${HOST}" >> $GITHUB_OUTPUT
+        shell: bash
 
       - name: Cache depends sources
         uses: actions/cache@v4
@@ -49,14 +55,14 @@ jobs:
         with:
           path: |
             depends/built
-            depends/${{ inputs.host }}
+            depends/${{ steps.setup.outputs.HOST }}
           key: ${{ runner.os }}-depends-${{ inputs.build-target }}-${{ hashFiles('depends/packages/*') }}
           restore-keys: |
             ${{ runner.os }}-depends-${{ inputs.build-target }}-${{ hashFiles('depends/packages/*') }}
             ${{ runner.os }}-depends-${{ inputs.build-target }}
 
       - name: Build depends
-        run: env HOST=${{ inputs.host }} make -j$(nproc) -C depends
+        run: env HOST=${{ steps.setup.outputs.HOST }} make -j$(nproc) -C depends
 
       - name: Save depends cache
         uses: actions/cache/save@v4
@@ -64,5 +70,5 @@ jobs:
         with:
           path: |
             depends/built
-            depends/${{ inputs.host }}
+            depends/${{ steps.setup.outputs.HOST }}
           key: ${{ steps.restore.outputs.cache-primary-key }}

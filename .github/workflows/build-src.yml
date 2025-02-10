@@ -15,10 +15,6 @@ on:
         description: "Key needed to access cached depends"
         required: true
         type: string
-      host:
-        description: "Target triplet"
-        required: true
-        type: string
 
 jobs:
   build-src:
@@ -34,19 +30,28 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
+      - name: Initial setup
+        id: setup
+        run: |
+          git config --global --add advice.detachedHead false
+          git config --global --add safe.directory "$PWD"
+          GIT_HEAD="$(git rev-parse HEAD)"
+          git checkout develop
+          git checkout "${GIT_HEAD}"
+          BUILD_TARGET="${{ inputs.build-target }}"
+          source ./ci/dash/matrix.sh
+          echo "HOST=${HOST}" >> $GITHUB_OUTPUT
+          echo "PR_BASE_SHA=${{ github.event.pull_request.base.sha || '' }}" >> $GITHUB_OUTPUT
+        shell: bash
+
       - name: Restore depends cache
         uses: actions/cache/restore@v4
         with:
           path: |
             depends/built
-            depends/${{ inputs.host }}
+            depends/${{ steps.setup.outputs.HOST }}
           key: ${{ inputs.depends-key }}
           fail-on-cache-miss: true
-
-      - name: Determine PR Base SHA
-        id: vars
-        run: |
-          echo "PR_BASE_SHA=${{ github.event.pull_request.base.sha || '' }}" >> $GITHUB_OUTPUT
 
       - name: Manage ccache
         uses: actions/cache@v4
@@ -56,16 +61,11 @@ jobs:
           key: ${{ runner.os }}-${{ inputs.build-target }}-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-${{ inputs.build-target }}-${{ github.sha }}
-            ${{ runner.os }}-${{ inputs.build-target }}-${{ steps.vars.outputs.PR_BASE_SHA }}
+            ${{ runner.os }}-${{ inputs.build-target }}-${{ steps.setup.outputs.HOST }}
             ${{ runner.os }}-${{ inputs.build-target }}
 
       - name: Build source and run unit tests
         run: |
-          git config --global --add advice.detachedHead false
-          git config --global --add safe.directory "$PWD"
-          GIT_HEAD="$(git rev-parse HEAD)"
-          git checkout develop
-          git checkout ${GIT_HEAD}
           CCACHE_SIZE="400M"
           CACHE_DIR="/cache"
           mkdir /output
