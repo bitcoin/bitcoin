@@ -26,7 +26,7 @@ jobs:
       container-path: ${{ needs.container.outputs.path }}
 
   depends-linux64:
-    name: x86_64-pc-linux-gnu
+    name: x86_64-pc-linux-gnu_debug
     uses: ./.github/workflows/build-depends.yml
     needs: [container]
     with:

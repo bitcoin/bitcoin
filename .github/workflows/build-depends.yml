@@ -36,7 +36,12 @@ jobs:
         run: |
           BUILD_TARGET="${{ inputs.build-target }}"
           source ./ci/dash/matrix.sh
-          echo "HOST=${HOST}" >> $GITHUB_OUTPUT
+          echo "DEP_OPTS=${DEP_OPTS}" >> "${GITHUB_OUTPUT}"
+          echo "HOST=${HOST}" >> "${GITHUB_OUTPUT}"
+          DEP_HASH="$(echo -n "${BUILD_TARGET}" "${DEP_OPTS}" "${HOST}" | sha256sum | head -c 64)"
+          echo "\"${BUILD_TARGET}\" has HOST=\"${HOST}\" and DEP_OPTS=\"${DEP_OPTS}\" with hash \"${DEP_HASH}\""
+          echo "DEP_HASH=${DEP_HASH}" >> "${GITHUB_OUTPUT}"
+
         shell: bash
 
       - name: Cache depends sources
@@ -56,13 +61,13 @@ jobs:
           path: |
             depends/built
             depends/${{ steps.setup.outputs.HOST }}
-          key: ${{ runner.os }}-depends-${{ inputs.build-target }}-${{ hashFiles('depends/packages/*') }}
+          key: ${{ runner.os }}-depends-${{ inputs.build-target }}-${{ steps.setup.outputs.DEP_HASH }}-${{ hashFiles('depends/packages/*') }}
           restore-keys: |
             ${{ runner.os }}-depends-${{ inputs.build-target }}-${{ hashFiles('depends/packages/*') }}
             ${{ runner.os }}-depends-${{ inputs.build-target }}
 
       - name: Build depends
-        run: env HOST=${{ steps.setup.outputs.HOST }} make -j$(nproc) -C depends
+        run: env ${{ steps.setup.outputs.DEP_OPTS }} HOST=${{ steps.setup.outputs.HOST }} make -j$(nproc) -C depends
 
       - name: Save depends cache
         uses: actions/cache/save@v4
