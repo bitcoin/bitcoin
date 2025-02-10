@@ -365,21 +365,6 @@ static RPCHelpMan coinjoinsalt_set()
 }
 #endif // ENABLE_WALLET
 
-// TODO: remove it completely
-static RPCHelpMan getpoolinfo()
-{
-    return RPCHelpMan{"getpoolinfo",
-                "DEPRECATED. Please use getcoinjoininfo instead.\n",
-                {},
-                RPCResults{},
-                RPCExamples{""},
-                [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-        throw JSONRPCError(RPC_METHOD_DEPRECATED, "Please use getcoinjoininfo instead");
-},
-    };
-}
-
 static RPCHelpMan getcoinjoininfo()
 {
             return RPCHelpMan{"getcoinjoininfo",
@@ -480,8 +465,6 @@ static const CRPCCommand commands[] =
     { "dash",                &coinjoinsalt_generate,  },
     { "dash",                &coinjoinsalt_get,       },
     { "dash",                &coinjoinsalt_set,       },
-
-    { "hidden",              &getpoolinfo,            },
 #endif // ENABLE_WALLET
 };
 // clang-format on
