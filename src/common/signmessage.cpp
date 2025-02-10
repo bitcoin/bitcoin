@@ -120,7 +120,7 @@ MessageVerificationResult MessageVerify(
 
     uint8_t sigtype{(*signature_bytes)[0]};
     if (sigtype < 27 || sigtype > 42) {
-        return MessageVerifyBIP322(destination, *signature_bytes, message, MessageVerificationResult::ERR_PUBKEY_NOT_RECOVERED);
+        return MessageVerifyBIP322(destination, *signature_bytes, message, MessageVerificationResult::ERR_MALFORMED_SIGNATURE);
     }
     sigtype = (sigtype - 27) >> 2;
     if (sigtype == 3) {
