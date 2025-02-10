@@ -18,51 +18,23 @@ jobs:
     uses: ./.github/workflows/build-container.yml
 
   build-depends:
-    name: Build Dependencies
-    needs: container
-    runs-on: ubuntu-22.04
+    name: Build depends
+    uses: ./.github/workflows/build-depends.yml
+    needs: [container]
     strategy:
       fail-fast: false
       matrix:
         include:
-        - build_target: arm-linux
+        - build-target: arm-linux
           host: arm-linux-gnueabihf
-        - build_target: linux64
+        - build-target: linux64
           host: x86_64-pc-linux-gnu
-        - build_target: win64
+        - build-target: win64
           host: x86_64-w64-mingw32
-
-    container:
-      image: ${{ needs.container.outputs.path }}
-      options: --user root
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Cache depends sources
-        uses: actions/cache@v4
-        with:
-          path: |
-            depends/sources
-          key: depends-sources-${{ hashFiles('depends/packages/*') }}
-          restore-keys: |
-            depends-sources-
-
-      - name: Cache depends
-        uses: actions/cache@v4
-        with:
-          path: |
-            depends/built
-            depends/${{ matrix.host }}
-          key: ${{ runner.os }}-depends-${{ matrix.build_target }}-${{ hashFiles('depends/packages/*') }}
-          restore-keys: |
-            ${{ runner.os }}-depends-${{ matrix.build_target }}-${{ hashFiles('depends/packages/*') }}
-            ${{ runner.os }}-depends-${{ matrix.build_target }}
-
-      - name: Build depends
-        run: make -j$(nproc) -C depends HOST=${{ matrix.host }}
+    with:
+      build-target:  ${{ matrix.build-target }}
+      container-path: ${{ needs.container.outputs.path }}
+      host: ${{ matrix.host }}
 
   build:
     name: Build
