@@ -112,71 +112,6 @@ static RPCHelpMan masternode_count()
     };
 }
 
-static UniValue GetNextMasternodeForPayment(const CChain& active_chain, CDeterministicMNManager& dmnman, int heightShift)
-{
-    const CBlockIndex *tip = WITH_LOCK(::cs_main, return active_chain.Tip());
-    auto mnList = dmnman.GetListForBlock(tip);
-    auto payees = mnList.GetProjectedMNPayees(tip, heightShift);
-    if (payees.empty())
-        return "unknown";
-    auto payee = payees.back();
-    CScript payeeScript = payee->pdmnState->scriptPayout;
-
-    CTxDestination payeeDest;
-    ExtractDestination(payeeScript, payeeDest);
-
-    UniValue obj(UniValue::VOBJ);
-
-    obj.pushKV("height",        mnList.GetHeight() + heightShift);
-    obj.pushKV("IP:port",       payee->pdmnState->addr.ToStringAddrPort());
-    obj.pushKV("proTxHash",     payee->proTxHash.ToString());
-    obj.pushKV("outpoint",      payee->collateralOutpoint.ToStringShort());
-    obj.pushKV("payee",         IsValidDestination(payeeDest) ? EncodeDestination(payeeDest) : "UNKNOWN");
-    return obj;
-}
-
-// TODO: drop it
-static RPCHelpMan masternode_winner()
-{
-    return RPCHelpMan{"masternode winner",
-        "Print info on next masternode winner to vote for\n",
-        {},
-        RPCResults{},
-        RPCExamples{""},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    if (!IsDeprecatedRPCEnabled("masternode_winner")) {
-        throw std::runtime_error("DEPRECATED: set -deprecatedrpc=masternode_winner to enable it");
-    }
-
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
-    const ChainstateManager& chainman = EnsureChainman(node);
-    return GetNextMasternodeForPayment(chainman.ActiveChain(), *CHECK_NONFATAL(node.dmnman), 10);
-},
-    };
-}
-
-// TODO: drop it
-static RPCHelpMan masternode_current()
-{
-    return RPCHelpMan{"masternode current",
-        "Print info on current masternode winner to be paid the next block (calculated locally)\n",
-        {},
-        RPCResults{},
-        RPCExamples{""},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    if (!IsDeprecatedRPCEnabled("masternode_current")) {
-        throw std::runtime_error("DEPRECATED: set -deprecatedrpc=masternode_current to enable it");
-    }
-
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
-    const ChainstateManager& chainman = EnsureChainman(node);
-    return GetNextMasternodeForPayment(chainman.ActiveChain(), *CHECK_NONFATAL(node.dmnman), 1);
-},
-    };
-}
-
 #ifdef ENABLE_WALLET
 static RPCHelpMan masternode_outputs()
 {
@@ -753,8 +688,6 @@ static const CRPCCommand commands[] =
     { "dash",               &masternode_status,        },
     { "dash",               &masternode_payments,      },
     { "dash",               &masternode_winners,       },
-    { "hidden",             &masternode_current,       },
-    { "hidden",             &masternode_winner,        },
 };
 // clang-format on
     for (const auto& command : commands) {
