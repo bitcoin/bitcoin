@@ -103,9 +103,6 @@ class MultiWalletTest(BitcoinTestFramework):
 
         os.symlink('..', wallet_dir('recursive_dir_symlink'))
 
-        os.mkdir(wallet_dir('self_walletdat_symlink'))
-        os.symlink('wallet.dat', wallet_dir('self_walletdat_symlink/wallet.dat'))
-
         # rename wallet.dat to make sure plain wallet file paths (as opposed to
         # directory paths) can be loaded
         # create another dummy wallet for use in testing backups later
@@ -144,14 +141,30 @@ class MultiWalletTest(BitcoinTestFramework):
         for wallet_name in to_load:
             self.nodes[0].loadwallet(wallet_name)
 
-        os.mkdir(wallet_dir('no_access'))
-        os.chmod(wallet_dir('no_access'), 0)
-        try:
-            with self.nodes[0].assert_debug_log(expected_msgs=["Error while scanning wallet dir"]):
-                walletlist = self.nodes[0].listwalletdir()['wallets']
-        finally:
-            # Need to ensure access is restored for cleanup
-            os.chmod(wallet_dir('no_access'), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+        # Tests for possible scanning errors:
+        # 0. Baseline, no errors.
+        with self.nodes[0].assert_debug_log(expected_msgs=[], unexpected_msgs=["Error while scanning wallet dir"]):
+            walletlist = self.nodes[0].listwalletdir()['wallets']
+        assert_equal(sorted(map(lambda w: w['name'], walletlist)), sorted(in_wallet_dir))
+        # 1. "Permission denied" error.
+        if platform.system() != 'Windows':
+            if os.geteuid() == 0:
+                self.log.warning('Skipping "permission denied"-test requiring non-root user.')
+            else:
+                os.mkdir(wallet_dir('no_access'))
+                os.chmod(wallet_dir('no_access'), 0)
+                try:
+                    with self.nodes[0].assert_debug_log(expected_msgs=["Error while scanning wallet dir"]):
+                        walletlist = self.nodes[0].listwalletdir()['wallets']
+                finally:
+                    # Need to ensure access is restored for cleanup
+                    os.chmod(wallet_dir('no_access'), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+                assert_equal(sorted(map(lambda w: w['name'], walletlist)), sorted(in_wallet_dir))
+        # 2. "Too many levels of symbolic links" error.
+        os.mkdir(wallet_dir('self_walletdat_symlink'))
+        os.symlink('wallet.dat', wallet_dir('self_walletdat_symlink/wallet.dat'))
+        with self.nodes[0].assert_debug_log(expected_msgs=["Error while scanning wallet dir"]):
+            walletlist = self.nodes[0].listwalletdir()['wallets']
         assert_equal(sorted(map(lambda w: w['name'], walletlist)), sorted(in_wallet_dir))
 
         assert_equal(set(node.listwallets()), set(wallet_names))
