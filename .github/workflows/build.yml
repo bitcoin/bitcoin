@@ -13,51 +13,13 @@ env:
   FAST_MODE: false
 
 jobs:
-  build-image:
-    name: Build Image
-    runs-on: ubuntu-22.04
-    outputs:
-      image-tag: ${{ steps.prepare.outputs.image-tag }}
-      repo-name: ${{ steps.prepare.outputs.repo-name }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Prepare
-        id: prepare
-        run: |
-          BRANCH_NAME=$(echo "${GITHUB_REF##*/}" | tr '[:upper:]' '[:lower:]')
-          REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "image-tag=${BRANCH_NAME}" >> $GITHUB_OUTPUT
-          echo "repo-name=${REPO_NAME}" >> $GITHUB_OUTPUT
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./contrib/containers/ci
-          file: ./contrib/containers/ci/Dockerfile
-          push: true
-          tags: |
-            ghcr.io/${{ steps.prepare.outputs.repo-name }}/dashcore-ci-runner:${{ steps.prepare.outputs.image-tag }}
-            ghcr.io/${{ steps.prepare.outputs.repo-name }}/dashcore-ci-runner:latest
-          cache-from: type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo-name }}/dashcore-ci-runner:latest
-          cache-to: type=inline
+  container:
+    name: Build container
+    uses: ./.github/workflows/build-container.yml
 
   build-depends:
     name: Build Dependencies
-    needs: build-image
+    needs: container
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
@@ -71,7 +33,7 @@ jobs:
           host: x86_64-w64-mingw32
 
     container:
-      image: ghcr.io/${{ needs.build-image.outputs.repo-name }}/dashcore-ci-runner:${{ needs.build-image.outputs.image-tag }}
+      image: ${{ needs.container.outputs.path }}
       options: --user root
     steps:
       - name: Checkout code
@@ -104,7 +66,7 @@ jobs:
 
   build:
     name: Build
-    needs: [build-image, build-depends]
+    needs: [container, build-depends]
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
@@ -138,7 +100,7 @@ jobs:
             host: x86_64-w64-mingw32
             depends_on: win64
     container:
-      image: ghcr.io/${{ needs.build-image.outputs.repo-name }}/dashcore-ci-runner:${{ needs.build-image.outputs.image-tag }}
+      image: ${{ needs.container.outputs.path }}
       options: --user root
     steps:
       - name: Checkout code
