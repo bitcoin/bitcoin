@@ -208,29 +208,15 @@ void SignVerifyMessageDialog::on_verifyMessageButton_VM_clicked()
 
     switch (result) {
     case MessageVerificationResult::OK:
+    case MessageVerificationResult::OK_TIMELOCKED:
         ui->statusLabel_VM->setText(
             QString("<nobr>") + tr("Message verified.") + QString("</nobr>")
         );
         return;
-    case MessageVerificationResult::OK_TIMELOCKED:
-        ui->statusLabel_VM->setText(
-            QString("<nobr>") + tr("Message verified, but includes timelocks.") + QString("</nobr>")
-        );
-        return;
     case MessageVerificationResult::INCONCLUSIVE:
-        ui->statusLabel_VM->setText(
-            QString("<nobr>") + tr("Inconclusive.") + QString("</nobr>")
-        );
-        return;
-    case MessageVerificationResult::ERR_INVALID:
-        ui->statusLabel_VM->setText(
-            tr("Some check failed.")
-        );
-        return;
     case MessageVerificationResult::ERR_POF:
-        // TODO: support proof of funds verifications
         ui->statusLabel_VM->setText(
-            QString("</nobr>") + tr("Proof of funds verification unavailable right now.") + QString("</nobr>")
+            QString("<nobr>") + tr("This version of %1 is unable to check this signature.").arg(CLIENT_NAME) + QString("</nobr>")
         );
         return;
     case MessageVerificationResult::ERR_INVALID_ADDRESS:
@@ -240,12 +226,6 @@ void SignVerifyMessageDialog::on_verifyMessageButton_VM_clicked()
         );
         return;
     case MessageVerificationResult::ERR_ADDRESS_NO_KEY:
-        ui->addressIn_VM->setValid(false);
-        ui->statusLabel_VM->setText(
-            tr("The entered address does not refer to a key.") + QString(" ") +
-            tr("Please check the address and try again.")
-        );
-        return;
     case MessageVerificationResult::ERR_MALFORMED_SIGNATURE:
         ui->signatureIn_VM->setValid(false);
         ui->statusLabel_VM->setText(
@@ -260,6 +240,7 @@ void SignVerifyMessageDialog::on_verifyMessageButton_VM_clicked()
             tr("Please check the signature and try again.")
         );
         return;
+    case MessageVerificationResult::ERR_INVALID:
     case MessageVerificationResult::ERR_NOT_SIGNED:
         ui->statusLabel_VM->setText(
             QString("<nobr>") + tr("Message verification failed.") + QString("</nobr>")
