@@ -134,9 +134,6 @@ static const uint64_t SELECT_TIMEOUT_MILLISECONDS = 500;
 
 const std::string NET_MESSAGE_TYPE_OTHER = "*other*";
 
-constexpr const CConnman::CFullyConnectedOnly CConnman::FullyConnectedOnly;
-constexpr const CConnman::CAllNodes CConnman::AllNodes;
-
 static const uint64_t RANDOMIZER_ID_NETGROUP = 0x6c0edd8036ef4036ULL; // SHA256("netgroup")[0:8]
 static const uint64_t RANDOMIZER_ID_LOCALHOSTNONCE = 0xd93e69e2bbfa5735ULL; // SHA256("localhostnonce")[0:8]
 static const uint64_t RANDOMIZER_ID_ADDRCACHE = 0x1cf2e4ddd306dda9ULL; // SHA256("addrcache")[0:8]

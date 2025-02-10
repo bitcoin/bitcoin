@@ -33,10 +33,6 @@
 #include <iomanip>
 #include <optional>
 
-namespace llmq {
-extern const std::string CLSIG_REQUESTID_PREFIX;
-}
-
 static RPCHelpMan quorum_list()
 {
     return RPCHelpMan{"quorum list",

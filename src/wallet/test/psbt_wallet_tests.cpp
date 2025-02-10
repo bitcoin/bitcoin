@@ -10,8 +10,6 @@
 #include <boost/test/unit_test.hpp>
 #include <wallet/test/wallet_test_fixture.h>
 
-extern bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath);
-
 BOOST_FIXTURE_TEST_SUITE(psbt_wallet_tests, WalletTestingSetup)
 
 BOOST_AUTO_TEST_CASE(psbt_updater_test)
