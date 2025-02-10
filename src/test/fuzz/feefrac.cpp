@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <arith_uint256.h>
+#include <policy/feerate.h>
 #include <util/feefrac.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -217,5 +218,16 @@ FUZZ_TARGET(feefrac_mul_div)
             FeeFrac{mul64, div}.EvaluateFeeDown(mul32) :
             FeeFrac{mul64, div}.EvaluateFeeUp(mul32);
         assert(res == res_fee);
+
+        // Compare approximately with CFeeRate.
+        if (mul64 <= std::numeric_limits<int64_t>::max() / 1000 &&
+            mul64 >= std::numeric_limits<int64_t>::min() / 1000 &&
+            quot_abs <= arith_uint256{std::numeric_limits<int64_t>::max() / 1000}) {
+            CFeeRate feerate(mul64, (uint32_t)div);
+            CAmount feerate_fee{feerate.GetFee(mul32)};
+            auto allowed_gap = static_cast<int64_t>(mul32 / 1000 + 3 + round_down);
+            assert(feerate_fee - res_fee >= -allowed_gap);
+            assert(feerate_fee - res_fee <= allowed_gap);
+        }
     }
 }
