@@ -123,11 +123,11 @@ jobs:
   src-linux64_tsan:
     name: linux64_tsan-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-linux64]
+    needs: [container, depends-linux64_multiprocess]
     with:
       build-target: linux64_tsan
       container-path: ${{ needs.container.outputs.path }}
-      depends-key: ${{ needs.depends-linux64.outputs.key }}
+      depends-key: ${{ needs.depends-linux64_multiprocess.outputs.key }}
 
   src-linux64_ubsan:
     name: linux64_ubsan-build

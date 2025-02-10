@@ -276,7 +276,7 @@ linux64_tsan-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-pc-linux-gnu_debug
+    - x86_64-pc-linux-gnu_multiprocess
   variables:
     BUILD_TARGET: linux64_tsan
 
