@@ -161,11 +161,16 @@ class MultiWalletTest(BitcoinTestFramework):
                     os.chmod(wallet_dir('no_access'), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
                 assert_equal(sorted(map(lambda w: w['name'], walletlist)), sorted(in_wallet_dir))
         # 2. "Too many levels of symbolic links" error.
-        os.mkdir(wallet_dir('self_walletdat_symlink'))
-        os.symlink('wallet.dat', wallet_dir('self_walletdat_symlink/wallet.dat'))
-        with self.nodes[0].assert_debug_log(expected_msgs=["Error while scanning wallet dir"]):
-            walletlist = self.nodes[0].listwalletdir()['wallets']
-        assert_equal(sorted(map(lambda w: w['name'], walletlist)), sorted(in_wallet_dir))
+        # This test cannot be conducted robustly on Windows
+        # because it depends on the build toolchain:
+        # - A cross-compiled bitcoind.exe parses self_walletdat_symlink without errors.
+        # - A natively compiled bitcoind.exe logs the "Error scanning" message.
+        if platform.system() != 'Windows':
+            os.mkdir(wallet_dir('self_walletdat_symlink'))
+            os.symlink('wallet.dat', wallet_dir('self_walletdat_symlink/wallet.dat'))
+            with self.nodes[0].assert_debug_log(expected_msgs=["Error while scanning wallet dir"]):
+                walletlist = self.nodes[0].listwalletdir()['wallets']
+            assert_equal(sorted(map(lambda w: w['name'], walletlist)), sorted(in_wallet_dir))
 
         assert_equal(set(node.listwallets()), set(wallet_names))
 
