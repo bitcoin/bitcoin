@@ -5,6 +5,7 @@
 #ifndef BITCOIN_TXORPHANAGE_H
 #define BITCOIN_TXORPHANAGE_H
 
+#include <consensus/validation.h>
 #include <net.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -83,21 +84,62 @@ public:
         /** Peers added with AddTx or AddAnnouncer. */
         std::set<NodeId> announcers;
         NodeSeconds nTimeExpire;
+
+        /** Get the weight of this transaction, an approximation of its memory usage. */
+        unsigned int GetUsage() const {
+            return GetTransactionWeight(*tx);
+        }
     };
 
     std::vector<OrphanTxBase> GetOrphanTransactions() const;
+
+    /** Get the total usage (weight) of all orphans. If an orphan has multiple announcers, its usage is
+     * only counted once within this total. */
+    unsigned int TotalOrphanUsage() const { return m_total_orphan_usage; }
+
+    /** Total usage (weight) of orphans for which this peer is an announcer. If an orphan has multiple
+     * announcers, its weight will be accounted for in each PeerOrphanInfo, so the total of all
+     * peers' UsageByPeer() may be larger than TotalOrphanBytes(). */
+    unsigned int UsageByPeer(NodeId peer) const {
+        auto peer_it = m_peer_orphanage_info.find(peer);
+        return peer_it == m_peer_orphanage_info.end() ? 0 : peer_it->second.m_total_usage;
+    }
+
+    /** Check consistency between PeerOrphanInfo and m_orphans. Recalculate counters and ensure they
+     * match what is cached. */
+    void SanityCheck() const;
 
 protected:
     struct OrphanTx : public OrphanTxBase {
         size_t list_pos;
     };
 
+    /** Total usage (weight) of all entries in m_orphans. */
+    unsigned int m_total_orphan_usage{0};
+
+    /** Total number of <peer, tx> pairs. Can be larger than m_orphans.size() because multiple peers
+     * may have announced the same orphan. */
+    unsigned int m_total_announcements{0};
+
     /** Map from wtxid to orphan transaction record. Limited by
      *  -maxorphantx/DEFAULT_MAX_ORPHAN_TRANSACTIONS */
     std::map<Wtxid, OrphanTx> m_orphans;
 
-    /** Which peer provided the orphans that need to be reconsidered */
-    std::map<NodeId, std::set<Wtxid>> m_peer_work_set;
+    struct PeerOrphanInfo {
+        /** List of transactions that should be reconsidered: added to in AddChildrenToWorkSet,
+         * removed from one-by-one with each call to GetTxToReconsider. The wtxids may refer to
+         * transactions that are no longer present in orphanage; these are lazily removed in
+         * GetTxToReconsider. */
+        std::set<Wtxid> m_work_set;
+
+        /** Total weight of orphans for which this peer is an announcer.
+         * If orphans are provided by different peers, its weight will be accounted for in each
+         * PeerOrphanInfo, so the total of all peers' m_total_usage may be larger than
+         * m_total_orphan_size. If a peer is removed as an announcer, even if the orphan still
+         * remains in the orphanage, this number will be decremented. */
+        unsigned int m_total_usage{0};
+    };
+    std::map<NodeId, PeerOrphanInfo> m_peer_orphanage_info;
 
     using OrphanMap = decltype(m_orphans);
 

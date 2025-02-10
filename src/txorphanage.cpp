@@ -42,6 +42,10 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
     for (const CTxIn& txin : tx->vin) {
         m_outpoint_to_orphan_it[txin.prevout].insert(ret.first);
     }
+    m_total_orphan_usage += sz;
+    m_total_announcements += 1;
+    auto& peer_info = m_peer_orphanage_info.try_emplace(peer).first->second;
+    peer_info.m_total_usage += sz;
 
     LogDebug(BCLog::TXPACKAGES, "stored orphan tx %s (wtxid=%s), weight: %u (mapsz %u outsz %u)\n", hash.ToString(), wtxid.ToString(), sz,
              m_orphans.size(), m_outpoint_to_orphan_it.size());
@@ -55,6 +59,9 @@ bool TxOrphanage::AddAnnouncer(const Wtxid& wtxid, NodeId peer)
         Assume(!it->second.announcers.empty());
         const auto ret = it->second.announcers.insert(peer);
         if (ret.second) {
+            auto& peer_info = m_peer_orphanage_info.try_emplace(peer).first->second;
+            peer_info.m_total_usage += it->second.GetUsage();
+            m_total_announcements += 1;
             LogDebug(BCLog::TXPACKAGES, "added peer=%d as announcer of orphan tx %s\n", peer, wtxid.ToString());
             return true;
         }
@@ -75,6 +82,17 @@ int TxOrphanage::EraseTx(const Wtxid& wtxid)
         itPrev->second.erase(it);
         if (itPrev->second.empty())
             m_outpoint_to_orphan_it.erase(itPrev);
+    }
+
+    const auto tx_size{it->second.GetUsage()};
+    m_total_orphan_usage -= tx_size;
+    m_total_announcements -= it->second.announcers.size();
+    // Decrement each announcer's m_total_usage
+    for (const auto& peer : it->second.announcers) {
+        auto peer_it = m_peer_orphanage_info.find(peer);
+        if (Assume(peer_it != m_peer_orphanage_info.end())) {
+            peer_it->second.m_total_usage -= tx_size;
+        }
     }
 
     size_t old_pos = it->second.list_pos;
@@ -99,7 +117,8 @@ int TxOrphanage::EraseTx(const Wtxid& wtxid)
 
 void TxOrphanage::EraseForPeer(NodeId peer)
 {
-    m_peer_work_set.erase(peer);
+    // Zeroes out this peer's m_total_usage.
+    m_peer_orphanage_info.erase(peer);
 
     int nErased = 0;
     std::map<Wtxid, OrphanTx>::iterator iter = m_orphans.begin();
@@ -110,6 +129,7 @@ void TxOrphanage::EraseForPeer(NodeId peer)
         auto orphan_it = orphan.announcers.find(peer);
         if (orphan_it != orphan.announcers.end()) {
             orphan.announcers.erase(peer);
+            m_total_announcements -= 1;
 
             // No remaining announcers: clean up entry
             if (orphan.announcers.empty()) {
@@ -170,7 +190,7 @@ void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext
 
                 // Get this source peer's work set, emplacing an empty set if it didn't exist
                 // (note: if this peer wasn't still connected, we would have removed the orphan tx already)
-                std::set<Wtxid>& orphan_work_set = m_peer_work_set.try_emplace(announcer).first->second;
+                std::set<Wtxid>& orphan_work_set = m_peer_orphanage_info.try_emplace(announcer).first->second.m_work_set;
                 // Add this tx to the work set
                 orphan_work_set.insert(elem->first);
                 LogDebug(BCLog::TXPACKAGES, "added %s (wtxid=%s) to peer %d workset\n",
@@ -199,17 +219,17 @@ bool TxOrphanage::HaveTxFromPeer(const Wtxid& wtxid, NodeId peer) const
 
 CTransactionRef TxOrphanage::GetTxToReconsider(NodeId peer)
 {
-    auto work_set_it = m_peer_work_set.find(peer);
-    if (work_set_it != m_peer_work_set.end()) {
-        auto& work_set = work_set_it->second;
-        while (!work_set.empty()) {
-            Wtxid wtxid = *work_set.begin();
-            work_set.erase(work_set.begin());
+    auto peer_it = m_peer_orphanage_info.find(peer);
+    if (peer_it == m_peer_orphanage_info.end()) return nullptr;
 
-            const auto orphan_it = m_orphans.find(wtxid);
-            if (orphan_it != m_orphans.end()) {
-                return orphan_it->second.tx;
-            }
+    auto& work_set = peer_it->second.m_work_set;
+    while (!work_set.empty()) {
+        Wtxid wtxid = *work_set.begin();
+        work_set.erase(work_set.begin());
+
+        const auto orphan_it = m_orphans.find(wtxid);
+        if (orphan_it != m_orphans.end()) {
+            return orphan_it->second.tx;
         }
     }
     return nullptr;
@@ -217,12 +237,11 @@ CTransactionRef TxOrphanage::GetTxToReconsider(NodeId peer)
 
 bool TxOrphanage::HaveTxToReconsider(NodeId peer)
 {
-    auto work_set_it = m_peer_work_set.find(peer);
-    if (work_set_it != m_peer_work_set.end()) {
-        auto& work_set = work_set_it->second;
-        return !work_set.empty();
-    }
-    return false;
+    auto peer_it = m_peer_orphanage_info.find(peer);
+    if (peer_it == m_peer_orphanage_info.end()) return false;
+
+    auto& work_set = peer_it->second.m_work_set;
+    return !work_set.empty();
 }
 
 void TxOrphanage::EraseForBlock(const CBlock& block)
@@ -301,4 +320,44 @@ std::vector<TxOrphanage::OrphanTxBase> TxOrphanage::GetOrphanTransactions() cons
         ret.push_back({o.second.tx, o.second.announcers, o.second.nTimeExpire});
     }
     return ret;
+}
+
+void TxOrphanage::SanityCheck() const
+{
+    // Check that cached m_total_announcements is correct
+    unsigned int counted_total_announcements{0};
+    // Check that m_total_orphan_usage is correct
+    unsigned int counted_total_usage{0};
+
+    // Check that cached PeerOrphanInfo::m_total_size is correct
+    std::map<NodeId, unsigned int> counted_size_per_peer;
+
+    for (const auto& [wtxid, orphan] : m_orphans) {
+        counted_total_announcements += orphan.announcers.size();
+        counted_total_usage += orphan.GetUsage();
+
+        Assume(!orphan.announcers.empty());
+        for (const auto& peer : orphan.announcers) {
+            auto& count_peer_entry = counted_size_per_peer.try_emplace(peer).first->second;
+            count_peer_entry += orphan.GetUsage();
+        }
+    }
+
+    Assume(m_total_announcements >= m_orphans.size());
+    Assume(counted_total_announcements == m_total_announcements);
+    Assume(counted_total_usage == m_total_orphan_usage);
+
+    // There must be an entry in m_peer_orphanage_info for each peer
+    // However, there may be m_peer_orphanage_info entries corresponding to peers for whom we
+    // previously had orphans but no longer do.
+    Assume(counted_size_per_peer.size() <= m_peer_orphanage_info.size());
+
+    for (const auto& [peerid, info] : m_peer_orphanage_info) {
+        auto it_counted = counted_size_per_peer.find(peerid);
+        if (it_counted == counted_size_per_peer.end()) {
+            Assume(info.m_total_usage == 0);
+        } else {
+            Assume(it_counted->second == info.m_total_usage);
+        }
+    }
 }
