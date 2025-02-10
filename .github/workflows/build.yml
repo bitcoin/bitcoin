@@ -33,6 +33,22 @@ jobs:
       build-target: linux64
       container-path: ${{ needs.container.outputs.path }}
 
+  depends-linux64_multiprocess:
+    name: x86_64-pc-linux-gnu_multiprocess
+    uses: ./.github/workflows/build-depends.yml
+    needs: [container]
+    with:
+      build-target: linux64_multiprocess
+      container-path: ${{ needs.container.outputs.path }}
+
+  depends-linux64_nowallet:
+    name: x86_64-pc-linux-gnu_nowallet
+    uses: ./.github/workflows/build-depends.yml
+    needs: [container]
+    with:
+      build-target: linux64_nowallet
+      container-path: ${{ needs.container.outputs.path }}
+
   depends-win64:
     name: x86_64-w64-mingw32
     uses: ./.github/workflows/build-depends.yml
@@ -77,14 +93,23 @@ jobs:
       container-path: ${{ needs.container.outputs.path }}
       depends-key: ${{ needs.depends-linux64.outputs.key }}
 
+  src-linux64_multiprocess:
+    name: linux64_multiprocess-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-linux64_multiprocess]
+    with:
+      build-target: linux64_multiprocess
+      container-path: ${{ needs.container.outputs.path }}
+      depends-key: ${{ needs.depends-linux64_multiprocess.outputs.key }}
+
   src-linux64_nowallet:
     name: linux64_nowallet-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-linux64]
+    needs: [container, depends-linux64_nowallet]
     with:
       build-target: linux64_nowallet
       container-path: ${{ needs.container.outputs.path }}
-      depends-key: ${{ needs.depends-linux64.outputs.key }}
+      depends-key: ${{ needs.depends-linux64_nowallet.outputs.key }}
 
   src-linux64_sqlite:
     name: linux64_sqlite-build
