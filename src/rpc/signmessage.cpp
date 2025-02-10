@@ -50,15 +50,13 @@ static RPCHelpMan verifymessage()
             case MessageVerificationResult::ERR_MALFORMED_SIGNATURE:
                 throw JSONRPCError(RPC_TYPE_ERROR, "Malformed base64 encoding");
             case MessageVerificationResult::ERR_POF:
-                throw JSONRPCError(RPC_TYPE_ERROR, "BIP-322 Proof of funds is not yet supported"); // TODO: get access to UTXO set / mempool to handle this, then remove this error code?
             case MessageVerificationResult::INCONCLUSIVE:
-                return false; // TODO: switch to a string based result? mix bool and strings?
+                throw JSONRPCError(RPC_TYPE_ERROR, "This signature is not yet supported");
             case MessageVerificationResult::ERR_INVALID:
             case MessageVerificationResult::ERR_PUBKEY_NOT_RECOVERED:
             case MessageVerificationResult::ERR_NOT_SIGNED:
                 return false;
             case MessageVerificationResult::OK_TIMELOCKED:
-                // TODO: switch to string based result? mix bool and strings?
             case MessageVerificationResult::OK:
                 return true;
             }
