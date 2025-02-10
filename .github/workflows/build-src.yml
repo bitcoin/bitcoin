@@ -1,0 +1,83 @@
+name: Build source
+
+on:
+  workflow_call:
+    inputs:
+      build-target:
+        description: "Target name as defined by inputs.sh"
+        required: true
+        type: string
+      container-path:
+        description: "Path to built container at registry"
+        required: true
+        type: string
+      depends-target:
+        description: "Target name of depends as defined by inputs.sh"
+        required: true
+        type: string
+      host:
+        description: "Target triplet"
+        required: true
+        type: string
+
+jobs:
+  build-src:
+    name: Build source
+    runs-on: ubuntu-22.04
+    container:
+      image: ${{ inputs.container-path }}
+      options: --user root
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Restore depends cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            depends/built
+            depends/${{ inputs.host }}
+          key: ${{ runner.os }}-depends-${{ inputs.depends-target }}-${{ hashFiles('depends/packages/*') }}
+
+      - name: Determine PR Base SHA
+        id: vars
+        run: |
+          echo "PR_BASE_SHA=${{ github.event.pull_request.base.sha || '' }}" >> $GITHUB_OUTPUT
+
+      - name: Manage ccache
+        uses: actions/cache@v4
+        with:
+          path: |
+            /cache
+          key: ${{ runner.os }}-${{ inputs.build-target }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-${{ inputs.build-target }}-${{ github.sha }}
+            ${{ runner.os }}-${{ inputs.build-target }}-${{ steps.vars.outputs.PR_BASE_SHA }}
+            ${{ runner.os }}-${{ inputs.build-target }}
+
+      - name: Build source and run unit tests
+        run: |
+          git config --global --add advice.detachedHead false
+          git config --global --add safe.directory "$PWD"
+          GIT_HEAD="$(git rev-parse HEAD)"
+          git checkout develop
+          git checkout ${GIT_HEAD}
+          CCACHE_SIZE="400M"
+          CACHE_DIR="/cache"
+          mkdir /output
+          BASE_OUTDIR="/output"
+          BUILD_TARGET="${{ inputs.build-target }}"
+          source ./ci/dash/matrix.sh
+          ./ci/dash/build_src.sh
+          ./ci/dash/test_unittests.sh
+        shell: bash
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ inputs.build-target }}
+          path: |
+            /output
