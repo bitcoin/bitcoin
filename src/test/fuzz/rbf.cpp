@@ -75,14 +75,14 @@ FUZZ_TARGET(rbf, .init = initialize_rbf)
         }
         LOCK2(cs_main, pool.cs);
         if (!pool.GetIter(another_tx.GetHash())) {
-            AddToMempool(pool, ConsumeTxMemPoolEntry(fuzzed_data_provider, another_tx));
+            TryAddToMempool(pool, ConsumeTxMemPoolEntry(fuzzed_data_provider, another_tx));
         }
     }
     const CTransaction tx{*mtx};
     if (fuzzed_data_provider.ConsumeBool()) {
         LOCK2(cs_main, pool.cs);
         if (!pool.GetIter(tx.GetHash())) {
-            AddToMempool(pool, ConsumeTxMemPoolEntry(fuzzed_data_provider, tx));
+            TryAddToMempool(pool, ConsumeTxMemPoolEntry(fuzzed_data_provider, tx));
         }
     }
     {
@@ -121,12 +121,12 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
     replacement_tx->vin[0].prevout = g_outpoints[iter++];
     CTransaction replacement_tx_final{*replacement_tx};
     auto replacement_entry = ConsumeTxMemPoolEntry(fuzzed_data_provider, replacement_tx_final);
-    int32_t replacement_vsize = replacement_entry.GetTxSize();
-    int64_t running_vsize_total{replacement_vsize};
+    int32_t replacement_weight = replacement_entry.GetAdjustedWeight();
+    int64_t running_vsize_total{replacement_entry.GetTxSize()};
 
     LOCK2(cs_main, pool.cs);
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), NUM_ITERS)
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), NUM_ITERS-1)
     {
         // Make sure txns only have one input, and that a unique input is given to avoid circular references
         CMutableTransaction parent;
@@ -144,10 +144,16 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
             break;
         }
         assert(!pool.GetIter(parent_entry.GetTx().GetHash()));
-        AddToMempool(pool, parent_entry);
-        if (fuzzed_data_provider.ConsumeBool()) {
-            child.vin[0].prevout = COutPoint{mempool_txs.back().GetHash(), 0};
+        TryAddToMempool(pool, parent_entry);
+
+        // It's possible that adding this to the mempool failed due to cluster
+        // size limits; if so bail out.
+        if(!pool.GetIter(parent_entry.GetTx().GetHash())) {
+            mempool_txs.pop_back();
+            continue;
         }
+
+        child.vin[0].prevout = COutPoint{mempool_txs.back().GetHash(), 0};
         mempool_txs.emplace_back(child);
         const auto child_entry = ConsumeTxMemPoolEntry(fuzzed_data_provider, mempool_txs.back());
         running_vsize_total += child_entry.GetTxSize();
@@ -157,7 +163,13 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
             break;
         }
         if (!pool.GetIter(child_entry.GetTx().GetHash())) {
-            AddToMempool(pool, child_entry);
+            TryAddToMempool(pool, child_entry);
+            // Adding this transaction to the mempool may fail due to cluster
+            // size limits; if so bail out.
+            if(!pool.GetIter(child_entry.GetTx().GetHash())) {
+                mempool_txs.pop_back();
+                continue;
+            }
         }
 
         if (fuzzed_data_provider.ConsumeBool()) {
@@ -168,7 +180,7 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
     // Pick some transactions at random to be the direct conflicts
     CTxMemPool::setEntries direct_conflicts;
     for (auto& tx : mempool_txs) {
-        if (fuzzed_data_provider.ConsumeBool()) {
+        if (fuzzed_data_provider.ConsumeBool() && pool.GetIter(tx.GetHash())) {
             direct_conflicts.insert(*pool.GetIter(tx.GetHash()));
         }
     }
@@ -209,11 +221,11 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
         FeeFrac replaced;
         for (auto txiter : all_conflicts) {
             replaced.fee += txiter->GetModifiedFee();
-            replaced.size += txiter->GetTxSize();
+            replaced.size += txiter->GetAdjustedWeight();
         }
         // The total fee & size of the new diagram minus replaced fee & size should be the total
         // fee & size of the old diagram minus replacement fee & size.
-        assert((first_sum - replaced) == (second_sum - FeeFrac{replacement_fees, replacement_vsize}));
+        assert((first_sum - replaced) == (second_sum - FeeFrac{replacement_fees, replacement_weight}));
     }
 
     // If internals report error, wrapper should too
