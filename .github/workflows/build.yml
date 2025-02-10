@@ -67,6 +67,8 @@ jobs:
           host: arm-linux-gnueabihf
         - build_target: linux64
           host: x86_64-pc-linux-gnu
+        - build_target: win64
+          host: x86_64-w64-mingw32
 
     container:
       image: ghcr.io/${{ needs.build-image.outputs.repo-name }}/dashcore-ci-runner:${{ needs.build-image.outputs.image-tag }}
@@ -132,6 +134,9 @@ jobs:
           - build_target: linux64_ubsan
             host: x86_64-pc-linux-gnu
             depends_on: linux64
+          - build_target: win64
+            host: x86_64-w64-mingw32
+            depends_on: win64
     container:
       image: ghcr.io/${{ needs.build-image.outputs.repo-name }}/dashcore-ci-runner:${{ needs.build-image.outputs.image-tag }}
       options: --user root
