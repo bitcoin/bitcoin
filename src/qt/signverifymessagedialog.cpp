@@ -124,7 +124,7 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
     if (!pkhash) {
         ui->addressIn_SM->setValid(false);
         ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel_SM->setText(tr("The entered address does not refer to a legacy (P2PKH) key. Message signing for SegWit and other non-P2PKH address types is not supported in this version of %1. Please check the address and try again.").arg(CLIENT_NAME));
+        ui->statusLabel_SM->setText(tr("The entered address does not refer to a key.") + QString(" ") + tr("Please check the address and try again."));
         return;
     }
 
@@ -222,7 +222,10 @@ void SignVerifyMessageDialog::on_verifyMessageButton_VM_clicked()
         return;
     case MessageVerificationResult::ERR_ADDRESS_NO_KEY:
         ui->addressIn_VM->setValid(false);
-        ui->statusLabel_VM->setText(tr("The entered address does not refer to a legacy (P2PKH) key. Message signing for SegWit and other non-P2PKH address types is not supported in this version of %1. Please check the address and try again.").arg(CLIENT_NAME));
+        ui->statusLabel_VM->setText(
+            tr("The entered address does not refer to a key.") + QString(" ") +
+            tr("Please check the address and try again.")
+        );
         return;
     case MessageVerificationResult::ERR_MALFORMED_SIGNATURE:
         ui->signatureIn_VM->setValid(false);
