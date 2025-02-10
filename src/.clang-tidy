@@ -1,2 +1,2 @@
-Checks:          '-*,bugprone-argument-comment'
-WarningsAsErrors: bugprone-argument-comment
+Checks:          '-*,bugprone-argument-comment,modernize-use-nullptr'
+WarningsAsErrors: 'bugprone-argument-comment,modernize-use-nullptr'
