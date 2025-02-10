@@ -2029,7 +2029,7 @@ CAmount CWalletTx::GetAnonymizedCredit(const CCoinControl& coinControl) const
 
 CWalletTx::CoinJoinCredits CWalletTx::GetAvailableCoinJoinCredits() const
 {
-    CWalletTx::CoinJoinCredits ret{0, false};
+    CWalletTx::CoinJoinCredits ret;
     if (pwallet == nullptr)
         return ret;
 

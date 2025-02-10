@@ -300,7 +300,9 @@ public:
     // annotation "EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The
     // annotation "NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid
     // having to resolve the issue of member access into incomplete type CWallet.
+    /* Requires cs_wallet lock. */
     CAmount GetAnonymizedCredit(const CCoinControl& coinControl) const NO_THREAD_SAFETY_ANALYSIS;
+    /* Requires cs_wallet lock. */
     CoinJoinCredits GetAvailableCoinJoinCredits() const NO_THREAD_SAFETY_ANALYSIS;
 
     /** Get the marginal bytes if spending the specified output from this transaction */
