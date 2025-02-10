@@ -58,9 +58,6 @@ enum class MessageVerificationResult {
     // BIP-322 extensions
     //
 
-    //! The message has set timelocks but is otherwise valid (BIP-322)
-    OK_TIMELOCKED,
-
     //! The validator was unable to check the scripts (BIP-322)
     INCONCLUSIVE,
 

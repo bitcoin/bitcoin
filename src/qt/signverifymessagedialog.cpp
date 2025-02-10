@@ -208,7 +208,6 @@ void SignVerifyMessageDialog::on_verifyMessageButton_VM_clicked()
 
     switch (result) {
     case MessageVerificationResult::OK:
-    case MessageVerificationResult::OK_TIMELOCKED:
         ui->statusLabel_VM->setText(
             QString("<nobr>") + tr("Message verified.") + QString("</nobr>")
         );
