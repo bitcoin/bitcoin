@@ -11,8 +11,8 @@ on:
         description: "Path to built container at registry"
         required: true
         type: string
-      depends-target:
-        description: "Target name of depends as defined by inputs.sh"
+      depends-key:
+        description: "Key needed to access cached depends"
         required: true
         type: string
       host:
@@ -40,7 +40,8 @@ jobs:
           path: |
             depends/built
             depends/${{ inputs.host }}
-          key: ${{ runner.os }}-depends-${{ inputs.depends-target }}-${{ hashFiles('depends/packages/*') }}
+          key: ${{ inputs.depends-key }}
+          fail-on-cache-miss: true
 
       - name: Determine PR Base SHA
         id: vars

@@ -51,7 +51,7 @@ jobs:
     with:
       build-target: arm-linux
       container-path: ${{ needs.container.outputs.path }}
-      depends-target: arm-linux
+      depends-key: ${{ needs.depends-arm-linux.outputs.key }}
       host: arm-linux-gnueabihf
 
   src-linux64:
@@ -61,7 +61,7 @@ jobs:
     with:
       build-target: linux64
       container-path: ${{ needs.container.outputs.path }}
-      depends-target: linux64
+      depends-key: ${{ needs.depends-linux64.outputs.key }}
       host: x86_64-pc-linux-gnu
 
   src-linux64_cxx20:
@@ -71,7 +71,7 @@ jobs:
     with:
       build-target: linux64_cxx20
       container-path: ${{ needs.container.outputs.path }}
-      depends-target: linux64
+      depends-key: ${{ needs.depends-linux64.outputs.key }}
       host: x86_64-pc-linux-gnu
 
   src-linux64_fuzz:
@@ -81,7 +81,7 @@ jobs:
     with:
       build-target: linux64_fuzz
       container-path: ${{ needs.container.outputs.path }}
-      depends-target: linux64
+      depends-key: ${{ needs.depends-linux64.outputs.key }}
       host: x86_64-pc-linux-gnu
 
   src-linux64_nowallet:
@@ -91,7 +91,7 @@ jobs:
     with:
       build-target: linux64_nowallet
       container-path: ${{ needs.container.outputs.path }}
-      depends-target: linux64
+      depends-key: ${{ needs.depends-linux64.outputs.key }}
       host: x86_64-pc-linux-gnu
 
   src-linux64_sqlite:
@@ -101,7 +101,7 @@ jobs:
     with:
       build-target: linux64_sqlite
       container-path: ${{ needs.container.outputs.path }}
-      depends-target: linux64
+      depends-key: ${{ needs.depends-linux64.outputs.key }}
       host: x86_64-pc-linux-gnu
 
   src-linux64_tsan:
@@ -111,7 +111,7 @@ jobs:
     with:
       build-target: linux64_tsan
       container-path: ${{ needs.container.outputs.path }}
-      depends-target: linux64
+      depends-key: ${{ needs.depends-linux64.outputs.key }}
       host: x86_64-pc-linux-gnu
 
   src-linux64_ubsan:
@@ -121,7 +121,7 @@ jobs:
     with:
       build-target: linux64_ubsan
       container-path: ${{ needs.container.outputs.path }}
-      depends-target: linux64
+      depends-key: ${{ needs.depends-linux64.outputs.key }}
       host: x86_64-pc-linux-gnu
 
   src-win64:
@@ -131,5 +131,5 @@ jobs:
     with:
       build-target: win64
       container-path: ${{ needs.container.outputs.path }}
-      depends-target: win64
+      depends-key: ${{ needs.depends-win64.outputs.key }}
       host: x86_64-w64-mingw32

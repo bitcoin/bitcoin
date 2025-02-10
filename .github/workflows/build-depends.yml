@@ -15,6 +15,10 @@ on:
         description: "Target triplet"
         required: true
         type: string
+    outputs:
+      key:
+        description: "Key needed for restoring depends cache"
+        value: ${{ jobs.build-depends.restore.outputs.cache-primary-key }}
 
 jobs:
   build-depends:
@@ -39,8 +43,9 @@ jobs:
             depends-sources-${{ hashFiles('depends/packages/*') }}
             depends-sources-
 
-      - name: Cache depends
-        uses: actions/cache@v4
+      - name: Restore cached depends
+        uses: actions/cache/restore@v4
+        id: restore
         with:
           path: |
             depends/built
@@ -52,3 +57,12 @@ jobs:
 
       - name: Build depends
         run: env HOST=${{ inputs.host }} make -j$(nproc) -C depends
+
+      - name: Save depends cache
+        uses: actions/cache/save@v4
+        if: steps.restore.outputs.cache-hit != 'true'
+        with:
+          path: |
+            depends/built
+            depends/${{ inputs.host }}
+          key: ${{ steps.restore.outputs.cache-primary-key }}
