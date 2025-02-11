@@ -68,7 +68,8 @@ MessageVerificationResult MessageVerifyBIP322(
 
     PrecomputedTransactionData txdata;
     txdata.Init(to_sign, {to_spend.vout[0]});
-    TransactionSignatureChecker sigcheck(&to_sign, /* nInIn= */ 0, /* amountIn= */ to_spend.vout[0].nValue, txdata, MissingDataBehavior::ASSERT_FAIL, true);
+    TransactionSignatureChecker sigcheck(&to_sign, /* nInIn= */ 0, /* amountIn= */ to_spend.vout[0].nValue, txdata, MissingDataBehavior::ASSERT_FAIL);
+    sigcheck.m_require_sighash_all = true;
 
     if (!VerifyScript(scriptSig, to_spend.vout[0].scriptPubKey, &witness, BIP322_REQUIRED_FLAGS, sigcheck)) {
         return MessageVerificationResult::ERR_INVALID;
