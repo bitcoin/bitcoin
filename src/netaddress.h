@@ -539,7 +539,14 @@ public:
     explicit CService(const struct sockaddr_in& addr);
     uint16_t GetPort() const;
     bool GetSockAddr(struct sockaddr* paddr, socklen_t* addrlen) const;
-    bool SetSockAddr(const struct sockaddr* paddr);
+    /**
+     * Set CService from a network sockaddr.
+     * @param[in] paddr Pointer to sockaddr structure
+     * @param[in] addrlen Length of sockaddr structure in bytes. This will be checked to exactly match the length of
+     * a socket address of the provided family, unless std::nullopt is passed
+     * @returns true on success
+     */
+    bool SetSockAddr(const struct sockaddr* paddr, socklen_t addrlen);
     /**
      * Get the address family
      * @returns AF_UNSPEC if unspecified

@@ -235,9 +235,9 @@ std::optional<std::vector<uint8_t>> PCPSendRecv(Sock &sock, const std::string &p
         }
 
         // Wait for response(s) until we get a valid response, a network error, or time out.
-        auto cur_time = time_point_cast<milliseconds>(steady_clock::now());
+        auto cur_time = time_point_cast<milliseconds>(MockableSteadyClock::now());
         auto deadline = cur_time + timeout_per_try;
-        while ((cur_time = time_point_cast<milliseconds>(steady_clock::now())) < deadline) {
+        while ((cur_time = time_point_cast<milliseconds>(MockableSteadyClock::now())) < deadline) {
             Sock::Event occurred = 0;
             if (!sock.Wait(deadline - cur_time, Sock::RECV, &occurred)) {
                 LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "%s: Could not wait on socket: %s\n", protocol, NetworkErrorString(WSAGetLastError()));
@@ -426,7 +426,7 @@ std::variant<MappingResult, MappingError> PCPRequestPortMap(const PCPMappingNonc
         return MappingError::NETWORK_ERROR;
     }
     CService internal;
-    if (!internal.SetSockAddr((struct sockaddr*)&internal_addr)) return MappingError::NETWORK_ERROR;
+    if (!internal.SetSockAddr((struct sockaddr*)&internal_addr, internal_addrlen)) return MappingError::NETWORK_ERROR;
     LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "pcp: Internal address after connect: %s\n", internal.ToStringAddr());
 
     // Build request packet. Make sure the packet is zeroed so that reserved fields are zero

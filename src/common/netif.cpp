@@ -169,16 +169,9 @@ std::optional<CNetAddr> QueryDefaultGatewayImpl(sa_family_t family)
 
 std::optional<CNetAddr> FromSockAddr(const struct sockaddr* addr)
 {
-    // Check valid length. Note that sa_len is not part of POSIX, and exists on MacOS and some BSDs only, so we can't
-    // do this check in SetSockAddr.
-    if (!(addr->sa_family == AF_INET && addr->sa_len == sizeof(struct sockaddr_in)) &&
-        !(addr->sa_family == AF_INET6 && addr->sa_len == sizeof(struct sockaddr_in6))) {
-        return std::nullopt;
-    }
-
     // Fill in a CService from the sockaddr, then drop the port part.
     CService service;
-    if (service.SetSockAddr(addr)) {
+    if (service.SetSockAddr(addr, addr->sa_len)) {
         return (CNetAddr)service;
     }
     return std::nullopt;
