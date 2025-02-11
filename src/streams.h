@@ -516,6 +516,9 @@ private:
 
         size_t buffer_offset{static_cast<size_t>(m_read_pos % vchBuf.size())};
         size_t buffer_available{static_cast<size_t>(vchBuf.size() - buffer_offset)};
+        if (nSrcPos < m_read_pos) {
+            throw std::ios_base::failure("Invalid stream position");
+        }
         size_t bytes_until_source_pos{static_cast<size_t>(nSrcPos - m_read_pos)};
         size_t advance{std::min({length, buffer_available, bytes_until_source_pos})};
         m_read_pos += advance;
