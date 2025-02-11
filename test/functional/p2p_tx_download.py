@@ -274,6 +274,7 @@ class TxDownloadTest(BitcoinTestFramework):
         pref_peer = self.nodes[0].add_outbound_p2p_connection(
            TestP2PConn(), wait_for_verack=True, p2p_idx=1, connection_type="outbound-full-relay")
         pref_peer.send_message(msg_inv([CInv(t=MSG_WTX, h=0xff00ff00)]))
+        pref_peer.sync_with_ping()
 
         assert_equal(len(self.nodes[0].getpeerinfo()), NUM_INBOUND + 2)
 
