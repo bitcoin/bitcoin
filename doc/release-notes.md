@@ -1,9 +1,7 @@
-# Dash Core version v22.0.0
+# Dash Core version v22.1.0
 
-This is a new major version release, bringing new features, various bugfixes
-and other improvements.
-
-This release is **mandatory** for all nodes, as it includes a hard fork.
+This is a new minor version release, bringing new features, and various bugfixes.
+This release is **optional** for all nodes, although recommended.
 
 Please report bugs using the issue tracker at GitHub:
 
@@ -28,193 +26,65 @@ likely require a reindex.
 
 # Release Notes
 
-## Notable Changes
+Build Changes
+-------------
 
-- **Asset Unlock Transactions (Platform Transfer)**
-    - Introduces a new fork, `withdrawals`, that changes consensus rules.
-    - **Validation Logic Update:**
-        - Allows using all **24 active quorums** and the most recent inactive quorum.
-        - Previous versions may refuse withdrawals with `bad-assetunlock-not-active-quorum` even if the quorum is active.
-    - **Withdrawal Limits Increased:**
-        - Flat **2000 Dash** per **576 latest blocks**. The previous limit was 1000 Dash.
-- **Increased Minimum Protocol Version**
-    - The minimum protocol version has been increased to **70216**.
-    - Masternode minimum protocol version has increased to **70235**.
+The macOS distribution is no longer packaged in a disk image (DMG) and
+is now packaged in a ZIP archive. The macOS distribution is once again notarized.
 
-## P2P and Network Changes
+BIP324 / v2 P2P Protocol
+------------------------
 
-- **Improved Onion Connectivity**
-    - Nodes with onion connectivity will attempt to maintain at least **two outbound onion connections** and will protect these connections from eviction.
-    - **Benefit:** Ensures nodes capable of accessing the onion network maintain a few onion connections, allowing network messages to propagate even if non-onion IPv4 traffic is blocked.
-    - **Security Enhancement:** Enables P2P encryption for these peers.
+Version 2 of the Dash P2P protocol / BIP324, which enables encryption of the P2P protocol,
+has been enabled by default in this version. This was initially introduced in Dash Core
+v22.0.0 as an experimental feature and has now been enabled by default. This change is
+backward compatible, and connections to peers which do not support the v2 protocol will
+revert to using the v1 protocol.
 
-- **DSQ Message Broadcast Update**
-    - Starting in protocol version **70234**, DSQ messages are broadcast using the inventory system instead of relaying to all connected peers.
-    - **Benefit:** Reduces bandwidth needs for all nodes, especially noticeable on highly connected masternodes.
+Network Changes
+---------------
+System ports, or ports that are lower than 1024 are now considered to be "bad" ports.
+As a result, other peers will avoid connecting to nodes that are listening on these ports.
+This change is to prevent potential DDoS attacks against services running on these ports.
+A number of other ports commonly used for authenticated services are also considered "bad" ports.
+You can view [the list of bad ports here](https://github.com/dashpay/dash/blob/v22.1.x/doc/p2p-bad-ports.md).
 
-- **Compressed Block Headers Request Limit**
-    - Starting in protocol version **70235**, the maximum number of compressed block headers that can be requested at once has been increased from **2000** to **8000**.
-    - **Applies to:** Compressed block headers only.
-    - **Benefit:** Potential for improved header sync performance.
+Tests
+-----
 
-- **Multi-Network Connectivity Enhancement**
-    - Nodes with multiple reachable networks will actively try to maintain at least one outbound connection to each network.
-    - **Benefits:**
-        - Improves resistance to eclipse attacks.
-        - Enhances network-level resistance to partition attacks.
-    - **User Impact:** Users no longer need to perform active measures to ensure connections to multiple enabled networks.
-
-- **BIP324 Encrypted Communication (Experimental)**
-    - Dash Core now experimentally implements [BIP324](https://github.com/bitcoin/bips/blob/master/bip-0324.mediawiki), introducing encrypted communication for P2P network traffic.
-    - **Opt-In Adoption**
-        - **Enable Encryption:** Users can opt-in to use BIP324 by adding `v2transport=1` to their Dash Core configuration.
-        - **Default Behavior:** Encryption is **disabled by default** as this is currently experimental.
-    - **Benefits**
-        - **Enhanced Privacy:** Encrypts P2P messages for v2 connections, reducing the risk of traffic analysis and eavesdropping.
-        - **Improved Security:** Protects against certain types of network attacks by ensuring that communication between nodes is confidential and tamper-proof.
-    - **Limitations and Considerations**
-        - **Compatibility:** Encrypted connections may only be established between nodes that have BIP324 enabled. Nodes without encryption support will continue to communicate over unencrypted channels.
-    - **Status and Future Plans**
-        - **Experimental Phase:** This feature is currently in an experimental phase. Users are encouraged to test and provide feedback to ensure stability.
-        - **Future Development:** BIP324 will likely be enabled by default in the next minor version, v22.1.0.
-
-## Compatibility
-
-- **Dark Mode Appearance**
-    - Dash Core changes appearance when macOS "dark mode" is activated.
-
-- **glibc Requirement**
-    - The minimum required glibc to run Dash Core is now **2.31**. This means that **RHEL 8** and **Ubuntu 18.04 (Bionic)** are no longer supported.
-
-- **FreeBSD Improvements**
-    - Fixed issues with building Dash Core on FreeBSD.
+- Command line arguments `-dip8params` and `-bip147height` are removed in favor of `-testactivationheight`. (dash#6325)
+- Several hard forks now activate earlier on regtest.
 
 ## New RPCs
 
-- **`coinjoinsalt`**
-    - Allows manipulation of a CoinJoin salt stored in a wallet.
-        - `coinjoinsalt get`: Fetches an existing salt.
-        - `coinjoinsalt set`: Allows setting a custom salt.
-        - `coinjoinsalt generate`: Sets a random hash as the new salt.
+- **`getislocks`**
+    - Retrieves the InstantSend lock data for the given transaction IDs (txids).
+      Returns the lock information in both a human-friendly JSON format and a binary hex-encoded zmq-compatible format.
 
-## Updated RPCs
+Updated RPCs
+------------
 
-- **`getpeerinfo` Changes**
-    - `getpeerinfo` no longer returns the following fields: `addnode` and `whitelisted`, which were previously deprecated in v21.
-        - Instead of `addnode`, the `connection_type` field returns `manual`.
-        - Instead of `whitelisted`, the `permissions` field indicates if the peer has special privileges.
+- The top-level fee fields `fee`, `modifiedfee`, `ancestorfees` and `descendantfees`
+  returned by RPCs `getmempoolentry`,`getrawmempool(verbose=true)`,
+  `getmempoolancestors(verbose=true)` and `getmempooldescendants(verbose=true)`
+  are deprecated and will be removed in the next major version (use
+  `-deprecated=fees` if needed in this version). The same fee fields can be accessed
+  through the `fees` object in the result. WARNING: deprecated
+  fields `ancestorfees` and `descendantfees` are denominated in duffs, whereas all
+  fields in the `fees` object are denominated in DASH.
+- A new `hex` field has been added to the `getbestchainlock` RPC, which returns the ChainLock information in zmq-compatible, hex-encoded binary format.
+- `lockunspent` now optionally takes a third parameter, `persistent`, which
+  causes the lock to be written persistently to the wallet database. This
+  allows UTXOs to remain locked even after node restarts or crashes.
 
-- **`getblockfrompeer` Parameter Renaming**
-    - The named argument `block_hash` has been renamed to `blockhash` to align with the rest of the codebase.
-    - **Breaking Change:** If using named parameters, make sure to update them accordingly.
+GUI changes
+-----------
 
-- **`coinjoin stop` Error Handling**
-    - `coinjoin stop` will now return an error if there is no CoinJoin mixing session to stop.
+- UTXOs locked via the GUI are now stored persistently in the
+  wallet database and are not lost on node shutdown or crash.
+- Improved GUI responsiveness for large wallets. (dash#6457)
 
-- **`getcoinjoininfo` Adjustments**
-    - `getcoinjoininfo` will no longer report `keys_left` and will not incorrectly warn about keypool depletion with descriptor wallets.
-
-- **`creditOutputs` Format Change**
-    - `creditOutputs` entries in various RPCs that output transactions as JSON are now shown as objects instead of strings.
-
-- **`quorum dkgsimerror` Argument Update**
-    - `quorum dkgsimerror` will no longer accept a decimal value between 0 and 1 for the `rate` argument.
-    - It will now expect an integer between **0** to **100**.
-
-- **Deprecated `protx *_hpmn` RPC Endpoints**
-    - Deprecated `protx *_hpmn` RPC entry points have been dropped in favor of `protx *_evo`.
-    - **Removed Endpoints:**
-        - `protx register_fund_hpmn`
-        - `protx register_hpmn`
-        - `protx register_prepare_hpmn`
-        - `protx update_service_hpmn`
-
-- **`governance` Descriptor Wallet Support**
-    - The `governance votemany` and `governance votealias` RPC commands now support descriptor-based wallets.
-
-- **`createwallet` Behavior for Descriptor Wallets**
-    - When creating descriptor wallets, `createwallet` now requires explicitly setting `load_on_startup`.
-
-## Command-line Options
-
-### Changes in Existing Command-line Options
-
-- **`-walletnotify=<cmd>` Enhancements**
-    - Introduces new format options `%h` and `%b`.
-        - `%b`: Replaced by the hash of the block including the transaction (set to `'unconfirmed'` if the transaction is not included).
-        - `%h`: Replaced by the block height (**-1** if not included).
-
-- **`-maxuploadtarget` Format Update**
-    - Now allows human-readable byte units `[k|K|m|M|g|G|t|T]`.
-        - **Example:** `-maxuploadtarget=500g`.
-        - **Constraints:** No whitespace, `+`, `-`, or fractions allowed.
-        - **Default:** `M` if no suffix is provided.
-
-## Devnet Breaking Changes
-
-- **Hardfork Activation Changes**
-    - `BRR` (`realloc`), `DIP0020`, `DIP0024`, `V19`, `V20`, and `MN_RR` hardforks are now activated at **block 2** instead of block **300** on devnets.
-    - **Implications:**
-        - Breaking change.
-        - Inability to sync on devnets created with earlier Dash Core versions and vice versa.
-
-- **LLMQ Type Enhancement**
-    - **LLMQ_50_60** is enabled for **Devnet** networks.
-    - Necessary for testing on a large Devnet.
-
-## Tests
-
-- **Regtest Network Softfork Activation Heights**
-    - For the `regtest` network, the activation heights of several softforks have been set to **block height 1**.
-    - **Customization:** Can be changed using the runtime setting `-testactivationheight=name@height`.
-    - *(dash#6214)*
-
-## Statistics
-
-### New Features
-
-- **Statsd Client Enhancements**
-    - Supports queueing and batching messages.
-        - **Benefits:**
-            - Reduces the number of packets.
-            - Lowers the rate at which messages are sent to the Statsd daemon.
-
-- **Batch Configuration Options**
-    - **Maximum Batch Size:**
-        - Adjustable using `-statsbatchsize` (in bytes).
-        - **Default:** **1KiB**.
-    - **Batch Send Frequency:**
-        - Adjustable using `-statsduration` (in milliseconds).
-        - **Default:** **1 second**.
-        - **Note:** `-statsduration` does not affect `-statsperiod`, which dictates how frequently some stats are *collected*.
-
-### Deprecations
-
-- **Deprecation of `-platform-user`**
-    - `-platform-user` is deprecated in favor of the whitelist feature.
-    - In releases **22.x** of Dash Core, it has been renamed to `-deprecated-platform-user`.
-    - It will be removed in version **23.x**.
-
-- **`-statsenabled` Deprecation**
-    - Now implied by the presence of `-statshost`.
-    - It will be removed in version **23.x**.
-
-- **`-statshostname` Replacement**
-    - Deprecated and replaced with `-statssuffix` for better representation of the argument's purpose.
-    - **Behavior:** Behave identically to each other.
-    - It will be removed in version **23.x**.
-
-- **`-statsns` Replacement**
-    - Deprecated and replaced with `-statsprefix` for better representation of the argument's purpose.
-    - **Behavior:** `-statsprefix` enforces the usage of a delimiter between the prefix and key.
-    - It will be removed in version **23.x**.
-
-## GUI Changes
-
-- **RPC Server Functionality Option**
-    - A new option has been added to the "Main" tab in "Options" that allows users to enable RPC server functionality.
-
-# v22.0.0 Change log
+# v22.1.0 Change log
 
 See detailed [set of changes][set-of-changes].
 
@@ -222,10 +92,8 @@ See detailed [set of changes][set-of-changes].
 
 Thanks to everyone who directly contributed to this release:
 
-- AJ ONeal
 - Kittywhiskers Van Gogh
 - Konstantin Akimov
-- Odysseas Gabrielides
 - PastaPastaPasta
 - UdjinM6
 - Vijaydasmp
@@ -237,6 +105,7 @@ debug the release candidates.
 
 These releases are considered obsolete. Old release notes can be found here:
 
+- [v22.0.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-22.0.0.md) released Dec/12/2024
 - [v21.1.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-21.1.1.md) released Oct/22/2024
 - [v21.1.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-21.1.0.md) released Aug/8/2024
 - [v21.0.2](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-21.0.2.md) released Aug/1/2024
@@ -290,4 +159,4 @@ These releases are considered obsolete. Old release notes can be found here:
 - [v0.10.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.10.0.md) released Sep/25/2014
 - [v0.9.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.9.0.md) released Mar/13/2014
 
-[set-of-changes]: https://github.com/dashpay/dash/compare/v21.1.1...dashpay:v22.0.0
+[set-of-changes]: https://github.com/dashpay/dash/compare/v22.0.0...dashpay:v22.1.0
