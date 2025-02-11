@@ -40,7 +40,8 @@ net_tracepoints_program = """
     MAX_MSG_TYPE_LENGTH,
     MAX_MSG_DATA_LENGTH
 ) + """
-#define MIN(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a < _b ? _a : _b; })
+// A min() macro. Prefixed with _TRACEPOINT_TEST to avoid collision with other MIN macros.
+#define _TRACEPOINT_TEST_MIN(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a < _b ? _a : _b; })
 
 struct p2p_message
 {
@@ -60,7 +61,7 @@ int trace_inbound_message(struct pt_regs *ctx) {
     bpf_usdt_readarg_p(3, ctx, &msg.peer_conn_type, MAX_PEER_CONN_TYPE_LENGTH);
     bpf_usdt_readarg_p(4, ctx, &msg.msg_type, MAX_MSG_TYPE_LENGTH);
     bpf_usdt_readarg(5, ctx, &msg.msg_size);
-    bpf_usdt_readarg_p(6, ctx, &msg.msg, MIN(msg.msg_size, MAX_MSG_DATA_LENGTH));
+    bpf_usdt_readarg_p(6, ctx, &msg.msg, _TRACEPOINT_TEST_MIN(msg.msg_size, MAX_MSG_DATA_LENGTH));
     inbound_messages.perf_submit(ctx, &msg, sizeof(msg));
     return 0;
 }
@@ -73,7 +74,7 @@ int trace_outbound_message(struct pt_regs *ctx) {
     bpf_usdt_readarg_p(3, ctx, &msg.peer_conn_type, MAX_PEER_CONN_TYPE_LENGTH);
     bpf_usdt_readarg_p(4, ctx, &msg.msg_type, MAX_MSG_TYPE_LENGTH);
     bpf_usdt_readarg(5, ctx, &msg.msg_size);
-    bpf_usdt_readarg_p(6, ctx, &msg.msg, MIN(msg.msg_size, MAX_MSG_DATA_LENGTH));
+    bpf_usdt_readarg_p(6, ctx, &msg.msg, _TRACEPOINT_TEST_MIN(msg.msg_size, MAX_MSG_DATA_LENGTH));
     outbound_messages.perf_submit(ctx, &msg, sizeof(msg));
     return 0;
 };
