@@ -404,7 +404,7 @@ void OverviewPage::updateCoinJoinProgress()
     if(nMaxToAnonymize == 0) return;
 
     if (m_privacy) {
-        strAmountAndRounds = "#### DASH / ## Rounds";
+        strAmountAndRounds = "#### " + BitcoinUnits::name(nDisplayUnit) + " / " + tr("%n Rounds", "", 0);
         ui->labelAmountRounds->setToolTip("");
     } else if (nMaxToAnonymize >= clientModel->coinJoinOptions().getAmount() * COIN) {
         ui->labelAmountRounds->setToolTip(tr("Found enough compatible inputs to mix %1")
