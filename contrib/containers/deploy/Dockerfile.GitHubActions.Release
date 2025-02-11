@@ -1,4 +1,4 @@
-FROM ubuntu:jammy
+FROM ubuntu:noble
 LABEL maintainer="Dash Developers <dev@dash.org>"
 LABEL description="Dockerised DashCore"
 

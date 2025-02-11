@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.3
 
-FROM --platform=$BUILDPLATFORM ubuntu:jammy as builder
+FROM --platform=$BUILDPLATFORM ubuntu:noble as builder
 RUN apt-get update && \
     apt-get -y install --no-install-recommends \
     automake \
@@ -42,7 +42,7 @@ RUN mkdir built-target && \
   "linux/amd64") cp depends/x86_64-pc-linux-gnu/bin/dash* /home/dash/built-target ;; \
 esac
 
-FROM ubuntu:jammy
+FROM ubuntu:noble
 LABEL maintainer="Dash Developers <dev@dash.org>"
 LABEL description="Dockerised DashCore"
 

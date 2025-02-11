@@ -1,4 +1,4 @@
-FROM ubuntu:jammy
+FROM ubuntu:noble
 
 # Needed to prevent tzdata hanging while expecting user input
 ENV DEBIAN_FRONTEND="noninteractive" TZ="Europe/London"

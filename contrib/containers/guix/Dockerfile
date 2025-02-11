@@ -2,7 +2,7 @@
 #       to use 'docker compose run guix_ubuntu' to drop into an
 #       interactive shell
 
-FROM ubuntu:jammy
+FROM ubuntu:noble
 
 SHELL ["/bin/bash", "-c"]
 

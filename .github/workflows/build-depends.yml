@@ -19,7 +19,7 @@ on:
 jobs:
   build-depends:
     name: Build depends
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     outputs:
       key:  ${{ steps.restore.outputs.cache-primary-key }}
     container:

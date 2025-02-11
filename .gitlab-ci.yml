@@ -1,4 +1,4 @@
-image: "ubuntu:jammy"
+image: "ubuntu:noble"
 
 variables:
   DOCKER_DRIVER: overlay2
