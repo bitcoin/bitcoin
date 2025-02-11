@@ -320,7 +320,7 @@ if(BUILD_DAEMON)
   )
   list(APPEND installable_targets bitcoind)
 endif()
-if(WITH_MULTIPROCESS)
+if(WITH_MULTIPROCESS AND BUILD_DAEMON)
   add_executable(bitcoin-node
     bitcoind.cpp
     init/bitcoin-node.cpp
@@ -332,8 +332,9 @@ if(WITH_MULTIPROCESS)
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
   )
   list(APPEND installable_targets bitcoin-node)
+endif()
 
-  if(BUILD_TESTS)
+if(WITH_MULTIPROCESS AND BUILD_TESTS)
     # bitcoin_ipc_test library target is defined here in src/CMakeLists.txt
     # instead of src/test/CMakeLists.txt so capnp files in src/test/ are able to
     # reference capnp files in src/ipc/capnp/ by relative path. The Cap'n Proto
@@ -347,7 +348,6 @@ if(WITH_MULTIPROCESS)
       test/ipc_test.capnp
     )
     add_dependencies(bitcoin_ipc_test bitcoin_ipc_headers)
-  endif()
 endif()
 
 
