@@ -123,7 +123,7 @@ RUN curl https://pyenv.run | bash \
     && pyenv install $PYTHON_VERSION \
     && pyenv global $PYTHON_VERSION \
     && pyenv rehash
-RUN pip3 install \
+RUN pip3 install --no-cache-dir \
     codespell==1.17.1 \
     flake8==3.8.3 \
     jinja2 \
