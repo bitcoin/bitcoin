@@ -1,4 +1,29 @@
+# cppcheck builder
+FROM debian:bookworm-slim AS cppcheck-builder
+ARG CPPCHECK_VERSION=2.13.0
+RUN set -ex; \
+    apt-get update && apt-get install -y --no-install-recommends \
+        curl \
+        ca-certificates \
+        cmake \
+        make \
+        g++ \
+    && rm -rf /var/lib/apt/lists/*; \
+    echo "Downloading Cppcheck version: ${CPPCHECK_VERSION}"; \
+    curl -fL "https://github.com/danmar/cppcheck/archive/${CPPCHECK_VERSION}.tar.gz" -o /tmp/cppcheck.tar.gz; \
+    mkdir -p /src/cppcheck && tar -xzf /tmp/cppcheck.tar.gz -C /src/cppcheck --strip-components=1; \
+    rm /tmp/cppcheck.tar.gz; \
+    cd /src/cppcheck; \
+    mkdir build && cd build && cmake .. && cmake --build . -j"$(nproc)"; \
+    strip bin/cppcheck
+
+# Final Image
 FROM ubuntu:noble
+COPY --from=cppcheck-builder /src/cppcheck/build/bin/cppcheck /usr/local/bin/cppcheck
+COPY --from=cppcheck-builder /src/cppcheck/cfg /usr/local/share/Cppcheck/cfg
+
+# Set Path
+ENV PATH="/usr/local/bin:${PATH}"
 
 # Needed to prevent tzdata hanging while expecting user input
 ENV DEBIAN_FRONTEND="noninteractive" TZ="Europe/London"
@@ -114,16 +139,6 @@ RUN set -ex; \
     git clone --depth 1 --no-tags --branch=${DASH_HASH_VERSION} https://github.com/dashpay/dash_hash; \
     cd dash_hash && pip3 install -r requirements.txt .; \
     cd .. && rm -rf dash_hash
-
-ARG CPPCHECK_VERSION=2.13.0
-RUN set -ex; \
-    curl -fL "https://github.com/danmar/cppcheck/archive/${CPPCHECK_VERSION}.tar.gz" -o /tmp/cppcheck.tar.gz; \
-    mkdir -p /opt/cppcheck && tar -xzf /tmp/cppcheck.tar.gz -C /opt/cppcheck --strip-components=1 && rm /tmp/cppcheck.tar.gz; \
-    cd /opt/cppcheck; \
-    mkdir build && cd build && cmake .. && cmake --build . -j "$(( $(nproc) - 1 ))"; \
-    mkdir /usr/local/share/Cppcheck && ln -s /opt/cppcheck/cfg/ /usr/local/share/Cppcheck/cfg; \
-    rm -rf /tmp/cppcheck.tar.gz
-ENV PATH="/opt/cppcheck/build/bin:${PATH}"
 
 ARG SHELLCHECK_VERSION=v0.7.1
 RUN set -ex; \
