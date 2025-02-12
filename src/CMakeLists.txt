@@ -171,7 +171,6 @@ target_link_libraries(bitcoin_common
 )
 
 
-set(installable_targets)
 if(ENABLE_WALLET)
   add_subdirectory(wallet)
 
@@ -189,7 +188,11 @@ if(ENABLE_WALLET)
       bitcoin_util
       Boost::headers
     )
-    list(APPEND installable_targets bitcoin-wallet)
+    install(TARGETS bitcoin-wallet
+      RUNTIME
+      DESTINATION ${CMAKE_INSTALL_BINDIR}
+      COMPONENT BitcoinWallet
+    )
   endif()
 endif()
 
@@ -318,7 +321,11 @@ if(BUILD_DAEMON)
     bitcoin_node
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
   )
-  list(APPEND installable_targets bitcoind)
+  install(TARGETS bitcoind
+    RUNTIME
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    COMPONENT BitcoinD
+  )
 endif()
 if(WITH_MULTIPROCESS AND BUILD_DAEMON)
   add_executable(bitcoin-node
@@ -331,7 +338,11 @@ if(WITH_MULTIPROCESS AND BUILD_DAEMON)
     bitcoin_ipc
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
   )
-  list(APPEND installable_targets bitcoin-node)
+  install(TARGETS bitcoin-node
+    RUNTIME
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    COMPONENT BitcoinNode
+  )
 endif()
 
 if(WITH_MULTIPROCESS AND BUILD_TESTS)
@@ -374,7 +385,11 @@ if(BUILD_CLI)
     libevent::core
     libevent::extra
   )
-  list(APPEND installable_targets bitcoin-cli)
+  install(TARGETS bitcoin-cli
+    RUNTIME
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    COMPONENT BitcoinCli
+  )
 endif()
 
 
@@ -387,7 +402,11 @@ if(BUILD_TX)
     bitcoin_util
     univalue
   )
-  list(APPEND installable_targets bitcoin-tx)
+  install(TARGETS bitcoin-tx
+    RUNTIME
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    COMPONENT BitcoinTx
+  )
 endif()
 
 
@@ -399,7 +418,11 @@ if(BUILD_UTIL)
     bitcoin_common
     bitcoin_util
   )
-  list(APPEND installable_targets bitcoin-util)
+  install(TARGETS bitcoin-util
+    RUNTIME
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    COMPONENT BitcoinUtil
+  )
 endif()
 
 
@@ -446,11 +469,6 @@ if(BUILD_FUZZ_BINARY)
   add_subdirectory(test/fuzz)
 endif()
 
-
-install(TARGETS ${installable_targets}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
-unset(installable_targets)
 
 if(INSTALL_MAN)
   # TODO: these stubs are no longer needed. man pages should be generated at install time.
