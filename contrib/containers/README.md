@@ -11,7 +11,7 @@ leverages Docker [BuildKit](https://docs.docker.com/develop/develop-images/build
 the amount of repetitive code.
 
 As BuildKit is opt-in within many currently supported versions of Docker (as of this writing), you need to
-set the following environment variables before continuing. While not needed after the initial `docker-compose build`
+set the following environment variables before continuing. While not needed after the initial `docker compose build`
 (barring updates to the `Dockerfile`), we recommend placing this in your `~/.bash_profile`/`~/.zshrc` or equivalent
 
 ```bash
@@ -25,6 +25,6 @@ to run terminal commands from inside the terminal and build Dash Core.
 
 ```bash
 cd contrib/containers/develop
-docker-compose build
-docker-compose run container
+docker compose build
+docker compose run container
 ```
