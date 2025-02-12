@@ -194,6 +194,7 @@ BITCOIN_TESTS += \
   wallet/test/bip39_tests.cpp \
   wallet/test/coinjoin_tests.cpp \
   wallet/test/psbt_wallet_tests.cpp \
+  wallet/test/spend_tests.cpp \
   wallet/test/wallet_tests.cpp \
   wallet/test/walletdb_tests.cpp \
   wallet/test/wallet_crypto_tests.cpp \

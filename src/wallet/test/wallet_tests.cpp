@@ -1353,7 +1353,6 @@ static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
     return ::GetSerializeSize(tx_in, PROTOCOL_VERSION);
 }
 
-static constexpr size_t DUMMY_NESTED_P2PKH_INPUT_SIZE = 113;
 BOOST_FIXTURE_TEST_CASE(dummy_input_size_test, TestChain100Setup)
 {
     BOOST_CHECK_EQUAL(CalculateNestedKeyhashInputSize(false), DUMMY_NESTED_P2PKH_INPUT_SIZE);
