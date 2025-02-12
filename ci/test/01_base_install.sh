@@ -43,27 +43,37 @@ elif [ "$CI_OS_NAME" != "macos" ]; then
   ${CI_RETRY_EXE} bash -c "apt-get install --no-install-recommends --no-upgrade -y $PACKAGES $CI_BASE_PACKAGES"
 fi
 
+if [ -n "${APT_LLVM_V}" ]; then
+  update-alternatives --install /usr/bin/clang++ clang++ "/usr/bin/clang++-${APT_LLVM_V}" 100
+  update-alternatives --install /usr/bin/clang clang "/usr/bin/clang-${APT_LLVM_V}" 100
+  update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer "/usr/bin/llvm-symbolizer-${APT_LLVM_V}" 100
+fi
+
 if [ -n "$PIP_PACKAGES" ]; then
   # shellcheck disable=SC2086
   ${CI_RETRY_EXE} pip3 install --user $PIP_PACKAGES
 fi
 
 if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
-  ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-20.1.0" /msan/llvm-project
+  if [ -n "${APT_LLVM_V}" ]; then
+    ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-$( clang --version | sed --silent 's@.*clang version \([0-9.]*\).*@\1@p' )" /msan/llvm-project
+  else
+    ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-20.1.8" /msan/llvm-project
 
-  cmake -G Ninja -B /msan/clang_build/ \
-    -DLLVM_ENABLE_PROJECTS="clang" \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DLLVM_TARGETS_TO_BUILD=Native \
-    -DLLVM_ENABLE_RUNTIMES="compiler-rt;libcxx;libcxxabi;libunwind" \
-    -S /msan/llvm-project/llvm
+    cmake -G Ninja -B /msan/clang_build/ \
+      -DLLVM_ENABLE_PROJECTS="clang" \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DLLVM_TARGETS_TO_BUILD=Native \
+      -DLLVM_ENABLE_RUNTIMES="compiler-rt;libcxx;libcxxabi;libunwind" \
+      -S /msan/llvm-project/llvm
 
-  ninja -C /msan/clang_build/ "$MAKEJOBS"
-  ninja -C /msan/clang_build/ install-runtimes
+    ninja -C /msan/clang_build/ "$MAKEJOBS"
+    ninja -C /msan/clang_build/ install-runtimes
 
-  update-alternatives --install /usr/bin/clang++ clang++ /msan/clang_build/bin/clang++ 100
-  update-alternatives --install /usr/bin/clang clang /msan/clang_build/bin/clang 100
-  update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /msan/clang_build/bin/llvm-symbolizer 100
+    update-alternatives --install /usr/bin/clang++ clang++ /msan/clang_build/bin/clang++ 100
+    update-alternatives --install /usr/bin/clang clang /msan/clang_build/bin/clang 100
+    update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /msan/clang_build/bin/llvm-symbolizer 100
+  fi
 
   cmake -G Ninja -B /msan/cxx_build/ \
     -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" \
