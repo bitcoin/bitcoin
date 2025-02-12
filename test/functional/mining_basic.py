@@ -196,26 +196,45 @@ class MiningTest(BitcoinTestFramework):
         self.log.info("Mine until the last block of the retarget period")
         blockchain_info = self.nodes[0].getblockchaininfo()
         n = DIFFICULTY_ADJUSTMENT_INTERVAL - blockchain_info['blocks'] % DIFFICULTY_ADJUSTMENT_INTERVAL - 2
-        t = blockchain_info['time']
+        wall_time = blockchain_info['time']
 
         for _ in range(n):
-            t += 600
-            self.nodes[0].setmocktime(t)
+            wall_time += 600
+            node.setmocktime(wall_time)
             self.generate(self.wallet, 1, sync_fun=self.no_op)
 
-        self.log.info("Create block two hours in the future")
-        self.nodes[0].setmocktime(t + MAX_FUTURE_BLOCK_TIME)
+        self.log.info("Create block MAX_TIMEWARP < t <= MAX_FUTURE_BLOCK_TIME in the future")
+        # A timestamp that's more than MAX_TIMEWARP seconds in the future can
+        # happen by accident, due to a combination of pool software that doesn't
+        # use "curtime" AND has a faulty clock.
+        #
+        # But it could also be intentional, at the end of a retarget period, in
+        # order to make the next block miner violate the time-timewarp-attack rule.
+        # For this attack to succeed the victim miner needs to ignore both our
+        # "curtime" and "mintime" values AND use wall clock time. This is true even
+        # if the victim miner implements the MTP rule.
+        #
+        # The attack is illustrated below.
+        #
+        # The attacker produces a block with a timestamp in the future:
+        future = wall_time + 1000
+        # This is an arbitrary time, far enough in the future that it triggers the
+        # timewarp rule, but not so far in the future that it won't get relayed.
+        assert_greater_than(future, wall_time + MAX_TIMEWARP)
+        assert_greater_than_or_equal(wall_time + MAX_FUTURE_BLOCK_TIME, future)
+        node.setmocktime(future)
         self.generate(self.wallet, 1, sync_fun=self.no_op)
-        assert_equal(node.getblock(node.getbestblockhash())['time'], t + MAX_FUTURE_BLOCK_TIME)
+        assert_equal(node.getblock(node.getbestblockhash())['time'], future)
 
         self.log.info("First block template of retarget period can't use wall clock time")
-        self.nodes[0].setmocktime(t)
-        # The template will have an adjusted timestamp, which we then modify
+        node.setmocktime(wall_time)
+        # The template will have an adjusted timestamp.
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
-        assert_greater_than_or_equal(tmpl['curtime'], t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP)
+        assert_equal(tmpl['curtime'], future - MAX_TIMEWARP)
         # mintime and curtime should match
         assert_equal(tmpl['mintime'], tmpl['curtime'])
 
+        # Check that the adjusted timestamp results in a valid block
         block = CBlock()
         block.nVersion = tmpl["version"]
         block.hashPrevBlock = int(tmpl["previousblockhash"], 16)
@@ -231,19 +250,29 @@ class MiningTest(BitcoinTestFramework):
             'rules': ['segwit'],
         }), None)
 
+        # Use wall clock instead of the adjusted timestamp. This could happen
+        # by accident if pool software ignores mintime and curtime.
         bad_block = copy.deepcopy(block)
-        bad_block.nTime = t
+        bad_block.nTime = wall_time
+        bad_block.solve()
+        assert_raises_rpc_error(-25, 'time-timewarp-attack', lambda: node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex()))
+
+        # It can also happen if the pool implements its own logic to adjust its
+        # timestamp to MTP + 1, but doesn't take the new timewarp rule into
+        # account (and ignores mintime).
+        mtp = node.getblock(node.getbestblockhash())["mediantime"]
+        bad_block.nTime = mtp + 1
         bad_block.solve()
         assert_raises_rpc_error(-25, 'time-timewarp-attack', lambda: node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex()))
 
         self.log.info("Test timewarp protection boundary")
-        bad_block.nTime = t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP - 1
+        bad_block.nTime = future - MAX_TIMEWARP - 1
         bad_block.solve()
         assert_raises_rpc_error(-25, 'time-timewarp-attack', lambda: node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex()))
 
-        bad_block.nTime = t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP
-        bad_block.solve()
-        node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex())
+        block.nTime = future - MAX_TIMEWARP
+        block.solve()
+        node.submitheader(hexdata=CBlockHeader(block).serialize().hex())
 
     def test_pruning(self):
         self.log.info("Test that submitblock stores previously pruned block")
