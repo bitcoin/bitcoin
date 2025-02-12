@@ -590,9 +590,7 @@ set(Python3_FIND_FRAMEWORK LAST CACHE STRING "")
 set(Python3_FIND_UNVERSIONED_NAMES FIRST CACHE STRING "")
 mark_as_advanced(Python3_FIND_FRAMEWORK Python3_FIND_UNVERSIONED_NAMES)
 find_package(Python3 3.10 COMPONENTS Interpreter)
-if(Python3_EXECUTABLE)
-  set(PYTHON_COMMAND ${Python3_EXECUTABLE})
-else()
+if(NOT TARGET Python3::Interpreter)
   list(APPEND configure_warnings
     "Minimum required Python not found. Rpcauth tests are disabled."
   )
