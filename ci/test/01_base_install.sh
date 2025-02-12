@@ -49,28 +49,14 @@ if [ -n "$PIP_PACKAGES" ]; then
 fi
 
 if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
-  ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-20.1.0-rc1" /msan/llvm-project
-
-  cmake -G Ninja -B /msan/clang_build/ \
-    -DLLVM_ENABLE_PROJECTS="clang" \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DLLVM_TARGETS_TO_BUILD=Native \
-    -DLLVM_ENABLE_RUNTIMES="compiler-rt;libcxx;libcxxabi;libunwind" \
-    -S /msan/llvm-project/llvm
-
-  ninja -C /msan/clang_build/ "$MAKEJOBS"
-  ninja -C /msan/clang_build/ install-runtimes
-
-  update-alternatives --install /usr/bin/clang++ clang++ /msan/clang_build/bin/clang++ 100
-  update-alternatives --install /usr/bin/clang clang /msan/clang_build/bin/clang 100
-  update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /msan/clang_build/bin/llvm-symbolizer 100
+  ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-${APT_LLVM_V}.1.0-rc2" /msan/llvm-project
 
   cmake -G Ninja -B /msan/cxx_build/ \
     -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" \
     -DCMAKE_BUILD_TYPE=Release \
     -DLLVM_USE_SANITIZER=MemoryWithOrigins \
-    -DCMAKE_C_COMPILER=clang \
-    -DCMAKE_CXX_COMPILER=clang++ \
+    -DCMAKE_C_COMPILER=clang-"${APT_LLVM_V}" \
+    -DCMAKE_CXX_COMPILER=clang++-"${APT_LLVM_V}" \
     -DLLVM_TARGETS_TO_BUILD=Native \
     -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF \
     -DLIBCXXABI_USE_LLVM_UNWINDER=OFF \
