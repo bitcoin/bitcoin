@@ -69,6 +69,10 @@ if [ "${RUN_TIDY}" = "true" ]; then
   cd src
   run-clang-tidy "${MAKEJOBS}"
   cd ..
+  iwyu_tool.py \
+    "src/compat" \
+    "src/init" \
+    -p . "${MAKEJOBS}" -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_ROOT_DIR}/contrib/devtools/iwyu/bitcoin.core.imp"
 fi
 
 if [ "$RUN_SECURITY_TESTS" = "true" ]; then
