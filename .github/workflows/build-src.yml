@@ -65,7 +65,7 @@ jobs:
             ${{ runner.os }}-${{ inputs.build-target }}-${{ steps.setup.outputs.HOST }}
             ${{ runner.os }}-${{ inputs.build-target }}
 
-      - name: Build source and run unit tests
+      - name: Build source
         run: |
           CCACHE_SIZE="400M"
           CACHE_DIR="/cache"
@@ -74,6 +74,13 @@ jobs:
           BUILD_TARGET="${{ inputs.build-target }}"
           source ./ci/dash/matrix.sh
           ./ci/dash/build_src.sh
+        shell: bash
+
+      - name: Run unit tests
+        run: |
+          BASE_OUTDIR="/output"
+          BUILD_TARGET="${{ inputs.build-target }}"
+          source ./ci/dash/matrix.sh
           ./ci/dash/test_unittests.sh
         shell: bash
 
