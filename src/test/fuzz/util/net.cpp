@@ -358,8 +358,10 @@ int FuzzedSock::GetSockName(sockaddr* name, socklen_t* name_len) const
         return -1;
     }
     assert(name_len);
-    *name_len = m_fuzzed_data_provider.ConsumeData(name, *name_len);
-    if (*name_len < (int)sizeof(sockaddr)) return -1;
+    const auto bytes{ConsumeRandomLengthByteVector(m_fuzzed_data_provider, *name_len)};
+    if (bytes.size() < (int)sizeof(sockaddr)) return -1;
+    std::memcpy(name, bytes.data(), bytes.size());
+    *name_len = bytes.size();
     return 0;
 }
 
