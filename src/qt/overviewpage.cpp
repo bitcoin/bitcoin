@@ -299,6 +299,8 @@ void OverviewPage::setClientModel(ClientModel *model)
         // Show warning, for example if this is a prerelease version
         connect(model, &ClientModel::alertsChanged, this, &OverviewPage::updateAlerts);
         updateAlerts(model->getStatusBarWarnings());
+        // explicitly update CoinJoin frame and transaction list to reflect actual settings
+        updateAdvancedCJUI(model->getOptionsModel()->getShowAdvancedCJUI());
     }
 }
 
@@ -321,9 +323,6 @@ void OverviewPage::setWalletModel(WalletModel *model)
         connect(model, &WalletModel::notifyWatchonlyChanged, [this](bool showWatchOnly) {
             updateWatchOnlyLabels(showWatchOnly && !walletModel->wallet().privateKeysDisabled());
         });
-
-        // explicitly update PS frame and transaction list to reflect actual settings
-        updateAdvancedCJUI(model->getOptionsModel()->getShowAdvancedCJUI());
 
         connect(model->getOptionsModel(), &OptionsModel::coinJoinRoundsChanged, this, &OverviewPage::updateCoinJoinProgress);
         connect(model->getOptionsModel(), &OptionsModel::coinJoinAmountChanged, this, &OverviewPage::updateCoinJoinProgress);
