@@ -1,6 +1,6 @@
 # syntax = edrevo/dockerfile-plus
 
-FROM ubuntu:jammy
+FROM ubuntu:noble
 
 INCLUDE+ ci/Dockerfile
 

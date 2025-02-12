@@ -25,6 +25,7 @@ $(package)_patches += memory_resource.patch
 $(package)_patches += clang_18_libpng.patch
 $(package)_patches += utc_from_string_no_optimize.patch
 $(package)_patches += windows_lto.patch
+$(package)_patches += zlib-timebits64.patch
 
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
 $(package)_qttranslations_sha256_hash=5b94d1a11b566908622fcca2f8b799744d2f8a68da20be4caa5953ed63b10489
@@ -257,6 +258,7 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/fast_fixed_dtoa_no_optimize.patch && \
   patch -p1 -i $($(package)_patch_dir)/guix_cross_lib_path.patch && \
   patch -p1 -i $($(package)_patch_dir)/windows_lto.patch && \
+  patch -p1 -i $($(package)_patch_dir)/zlib-timebits64.patch && \
   mkdir -p qtbase/mkspecs/macx-clang-linux &&\
   cp -f qtbase/mkspecs/macx-clang/qplatformdefs.h qtbase/mkspecs/macx-clang-linux/ &&\
   cp -f $($(package)_patch_dir)/mac-qmake.conf qtbase/mkspecs/macx-clang-linux/qmake.conf && \

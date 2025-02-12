@@ -1,4 +1,4 @@
-FROM ubuntu:jammy
+FROM ubuntu:noble
 
 # Needed to prevent tzdata hanging while expecting user input
 ENV DEBIAN_FRONTEND="noninteractive" TZ="Europe/London"
@@ -7,16 +7,9 @@ ENV DEBIAN_FRONTEND="noninteractive" TZ="Europe/London"
 # (zlib1g-dev is needed for the Qt host binary builds, but should not be used by target binaries)
 ENV APT_ARGS="-y --no-install-recommends --no-upgrade"
 
-# Install packages for i386 on amd64 hosts, then install common packages
+# Install common packages
 RUN set -ex; \
     apt-get update && \
-    if [ "$(dpkg --print-architecture)" = "amd64" ]; then \
-        dpkg --add-architecture i386 && \
-        apt-get update && \
-        apt-get install $APT_ARGS \
-        g++-multilib \
-        wine32; \
-    fi; \
     apt-get install $APT_ARGS \
     autotools-dev \
     automake \
@@ -138,12 +131,12 @@ RUN set -ex; \
     mkdir -p /opt/shellcheck && tar -xf /tmp/shellcheck.tar.xz -C /opt/shellcheck --strip-components=1 && rm /tmp/shellcheck.tar.xz
 ENV PATH="/opt/shellcheck:${PATH}"
 
-# Add user with specified (or default) user/group ids and setup configuration files
-ARG USER_ID=1000
-ARG GROUP_ID=1000
+# Setup unprivileged user and configuration files
+ARG USER_ID=1000 \
+    GROUP_ID=1000
 RUN set -ex; \
-    groupadd -g ${GROUP_ID} dash; \
-    useradd -u ${USER_ID} -g dash -s /bin/bash -m -d /home/dash dash; \
+    groupmod -g ${GROUP_ID} -n dash ubuntu; \
+    usermod -u ${USER_ID} -md /home/dash -l dash ubuntu; \
     mkdir -p /home/dash/.config/gdb; \
     echo "add-auto-load-safe-path /usr/lib/llvm-${LLVM_VERSION}/lib" | tee /home/dash/.config/gdb/gdbinit; \
     chown ${USER_ID}:${GROUP_ID} -R /home/dash
@@ -156,7 +149,6 @@ RUN apt-get update && apt-get install $APT_ARGS \
     g++-mingw-w64-x86-64 \
     jq \
     libz-dev \
-    libncurses5 \
     nsis \
     python3-zmq \
     parallel \
@@ -165,12 +157,6 @@ RUN apt-get update && apt-get install $APT_ARGS \
     wine64 \
     zip \
     && rm -rf /var/lib/apt/lists/*
-
-# This is a hack. It is needed because gcc-multilib and g++-multilib are conflicting with g++-arm-linux-gnueabihf. This is
-# due to gcc-multilib installing the following symbolic link, which is needed for -m32 support. However, this causes
-# arm builds to also have the asm folder implicitly in the include search path. This is kind of ok, because the asm folder
-# for arm has precedence.
-RUN ln -s x86_64-linux-gnu/asm /usr/include/asm
 
 # Make sure std::thread and friends is available
 RUN \

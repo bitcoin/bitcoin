@@ -100,3 +100,8 @@ shift-base:streams.h
 shift-base:test/fuzz/crypto_diff_fuzz_chacha20.cpp
 shift-base:util/bip32.cpp
 vptr:bls/bls.h
+
+# -fsanitize=float-cast-overflow suppressions
+# ===============================
+# See QTBUG-133261
+float-cast-overflow:qRound
