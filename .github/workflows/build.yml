@@ -13,184 +13,136 @@ env:
   FAST_MODE: false
 
 jobs:
-  build-image:
-    name: Build Image
-    runs-on: ubuntu-22.04
-    outputs:
-      image-tag: ${{ steps.prepare.outputs.image-tag }}
-      repo-name: ${{ steps.prepare.outputs.repo-name }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
+  container:
+    name: Build container
+    uses: ./.github/workflows/build-container.yml
 
-      - name: Prepare
-        id: prepare
-        run: |
-          BRANCH_NAME=$(echo "${GITHUB_REF##*/}" | tr '[:upper:]' '[:lower:]')
-          REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "image-tag=${BRANCH_NAME}" >> $GITHUB_OUTPUT
-          echo "repo-name=${REPO_NAME}" >> $GITHUB_OUTPUT
+  depends-arm-linux:
+    name: arm-linux-gnueabihf
+    uses: ./.github/workflows/build-depends.yml
+    needs: [container]
+    with:
+      build-target: arm-linux
+      container-path: ${{ needs.container.outputs.path }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+  depends-linux64:
+    name: x86_64-pc-linux-gnu
+    uses: ./.github/workflows/build-depends.yml
+    needs: [container]
+    with:
+      build-target: linux64
+      container-path: ${{ needs.container.outputs.path }}
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  depends-linux64_multiprocess:
+    name: x86_64-pc-linux-gnu_multiprocess
+    uses: ./.github/workflows/build-depends.yml
+    needs: [container]
+    with:
+      build-target: linux64_multiprocess
+      container-path: ${{ needs.container.outputs.path }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./contrib/containers/ci
-          file: ./contrib/containers/ci/Dockerfile
-          push: true
-          tags: |
-            ghcr.io/${{ steps.prepare.outputs.repo-name }}/dashcore-ci-runner:${{ steps.prepare.outputs.image-tag }}
-            ghcr.io/${{ steps.prepare.outputs.repo-name }}/dashcore-ci-runner:latest
-          cache-from: type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo-name }}/dashcore-ci-runner:latest
-          cache-to: type=inline
+  depends-linux64_nowallet:
+    name: x86_64-pc-linux-gnu_nowallet
+    uses: ./.github/workflows/build-depends.yml
+    needs: [container]
+    with:
+      build-target: linux64_nowallet
+      container-path: ${{ needs.container.outputs.path }}
 
-  build-depends:
-    name: Build Dependencies
-    needs: build-image
-    runs-on: ubuntu-22.04
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-        - build_target: arm-linux
-          host: arm-linux-gnueabihf
-        - build_target: linux64
-          host: x86_64-pc-linux-gnu
-        - build_target: win64
-          host: x86_64-w64-mingw32
+  depends-win64:
+    name: x86_64-w64-mingw32
+    uses: ./.github/workflows/build-depends.yml
+    needs: [container]
+    with:
+      build-target: win64
+      container-path: ${{ needs.container.outputs.path }}
 
-    container:
-      image: ghcr.io/${{ needs.build-image.outputs.repo-name }}/dashcore-ci-runner:${{ needs.build-image.outputs.image-tag }}
-      options: --user root
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
+  src-arm-linux:
+    name: arm-linux-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-arm-linux]
+    with:
+      build-target: arm-linux
+      container-path: ${{ needs.container.outputs.path }}
+      depends-key: ${{ needs.depends-arm-linux.outputs.key }}
 
-      - name: Cache depends sources
-        uses: actions/cache@v4
-        with:
-          path: |
-            depends/sources
-          key: depends-sources-${{ hashFiles('depends/packages/*') }}
-          restore-keys: |
-            depends-sources-
+  src-linux64:
+    name: linux64-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-linux64]
+    with:
+      build-target: linux64
+      container-path: ${{ needs.container.outputs.path }}
+      depends-key: ${{ needs.depends-linux64.outputs.key }}
 
-      - name: Cache depends
-        uses: actions/cache@v4
-        with:
-          path: |
-            depends/built
-            depends/${{ matrix.host }}
-          key: ${{ runner.os }}-depends-${{ matrix.build_target }}-${{ hashFiles('depends/packages/*') }}
-          restore-keys: |
-            ${{ runner.os }}-depends-${{ matrix.build_target }}-${{ hashFiles('depends/packages/*') }}
-            ${{ runner.os }}-depends-${{ matrix.build_target }}
+  src-linux64_cxx20:
+    name: linux64_cxx20-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-linux64]
+    with:
+      build-target: linux64_cxx20
+      container-path: ${{ needs.container.outputs.path }}
+      depends-key: ${{ needs.depends-linux64.outputs.key }}
 
-      - name: Build depends
-        run: make -j$(nproc) -C depends HOST=${{ matrix.host }}
+  src-linux64_fuzz:
+    name: linux64_fuzz-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-linux64]
+    with:
+      build-target: linux64_fuzz
+      container-path: ${{ needs.container.outputs.path }}
+      depends-key: ${{ needs.depends-linux64.outputs.key }}
 
-  build:
-    name: Build
-    needs: [build-image, build-depends]
-    runs-on: ubuntu-22.04
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - build_target: arm-linux
-            host: arm-linux-gnueabihf
-            depends_on: arm-linux
-          - build_target: linux64
-            host: x86_64-pc-linux-gnu
-            depends_on: linux64
-          - build_target: linux64_cxx20
-            host: x86_64-pc-linux-gnu
-            depends_on: linux64
-          - build_target: linux64_fuzz
-            host: x86_64-pc-linux-gnu
-            depends_on: linux64
-          - build_target: linux64_nowallet
-            host: x86_64-pc-linux-gnu
-            depends_on: linux64
-          - build_target: linux64_sqlite
-            host: x86_64-pc-linux-gnu
-            depends_on: linux64
-          - build_target: linux64_tsan
-            host: x86_64-pc-linux-gnu
-            depends_on: linux64
-          - build_target: linux64_ubsan
-            host: x86_64-pc-linux-gnu
-            depends_on: linux64
-          - build_target: win64
-            host: x86_64-w64-mingw32
-            depends_on: win64
-    container:
-      image: ghcr.io/${{ needs.build-image.outputs.repo-name }}/dashcore-ci-runner:${{ needs.build-image.outputs.image-tag }}
-      options: --user root
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
+  src-linux64_multiprocess:
+    name: linux64_multiprocess-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-linux64_multiprocess]
+    with:
+      build-target: linux64_multiprocess
+      container-path: ${{ needs.container.outputs.path }}
+      depends-key: ${{ needs.depends-linux64_multiprocess.outputs.key }}
 
-      - name: Restore depends cache
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            depends/built
-            depends/${{ matrix.host }}
-          key: ${{ runner.os }}-depends-${{ matrix.depends_on }}-${{ hashFiles('depends/packages/*') }}
+  src-linux64_nowallet:
+    name: linux64_nowallet-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-linux64_nowallet]
+    with:
+      build-target: linux64_nowallet
+      container-path: ${{ needs.container.outputs.path }}
+      depends-key: ${{ needs.depends-linux64_nowallet.outputs.key }}
 
-      - name: Determine PR Base SHA
-        id: vars
-        run: |
-          echo "PR_BASE_SHA=${{ github.event.pull_request.base.sha || '' }}" >> $GITHUB_OUTPUT
+  src-linux64_sqlite:
+    name: linux64_sqlite-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-linux64]
+    with:
+      build-target: linux64_sqlite
+      container-path: ${{ needs.container.outputs.path }}
+      depends-key: ${{ needs.depends-linux64.outputs.key }}
 
-      - name: CCache
-        uses: actions/cache@v4
-        with:
-          path: |
-            /cache
-          key: ${{ runner.os }}-${{ matrix.build_target }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.build_target }}-${{ github.sha }}
-            ${{ runner.os }}-${{ matrix.build_target }}-${{ steps.vars.outputs.PR_BASE_SHA }}
-            ${{ runner.os }}-${{ matrix.build_target }}
+  src-linux64_tsan:
+    name: linux64_tsan-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-linux64_multiprocess]
+    with:
+      build-target: linux64_tsan
+      container-path: ${{ needs.container.outputs.path }}
+      depends-key: ${{ needs.depends-linux64_multiprocess.outputs.key }}
 
-      - name: Build source and run tests
-        run: |
-          git config --global --add advice.detachedHead false
-          git config --global --add safe.directory "$PWD"
-          GIT_HEAD="$(git rev-parse HEAD)"
-          git checkout develop
-          git checkout ${GIT_HEAD}
-          CCACHE_SIZE="400M"
-          CACHE_DIR="/cache"
-          mkdir /output
-          BASE_OUTDIR="/output"
-          BUILD_TARGET="${{ matrix.build_target }}"
-          source ./ci/dash/matrix.sh
-          ./ci/dash/build_src.sh
-          ./ci/dash/test_unittests.sh
-        shell: bash
+  src-linux64_ubsan:
+    name: linux64_ubsan-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-linux64]
+    with:
+      build-target: linux64_ubsan
+      container-path: ${{ needs.container.outputs.path }}
+      depends-key: ${{ needs.depends-linux64.outputs.key }}
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts-${{ matrix.build_target }}
-          path: |
-            /output
+  src-win64:
+    name: win64-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-win64]
+    with:
+      build-target: win64
+      container-path: ${{ needs.container.outputs.path }}
+      depends-key: ${{ needs.depends-win64.outputs.key }}

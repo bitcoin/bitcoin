@@ -7,6 +7,7 @@
 export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_native_nowallet
+export HOST=x86_64-pc-linux-gnu
 export PACKAGES="python3-zmq"
 export DEP_OPTS="NO_WALLET=1"
 export GOAL="install"

@@ -1,0 +1,79 @@
+name: Build depends
+
+on:
+  workflow_call:
+    inputs:
+      build-target:
+        description: "Target name as defined by matrix.sh"
+        required: true
+        type: string
+      container-path:
+        description: "Path to built container at registry"
+        required: true
+        type: string
+    outputs:
+      key:
+        description: "Key needed for restoring depends cache"
+        value: ${{ jobs.build-depends.outputs.key }}
+
+jobs:
+  build-depends:
+    name: Build depends
+    runs-on: ubuntu-22.04
+    outputs:
+      key:  ${{ steps.restore.outputs.cache-primary-key }}
+    container:
+      image: ${{ inputs.container-path }}
+      options: --user root
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Initial setup
+        id: setup
+        run: |
+          BUILD_TARGET="${{ inputs.build-target }}"
+          source ./ci/dash/matrix.sh
+          echo "DEP_OPTS=${DEP_OPTS}" >> "${GITHUB_OUTPUT}"
+          echo "HOST=${HOST}" >> "${GITHUB_OUTPUT}"
+          DEP_HASH="$(echo -n "${BUILD_TARGET}" "${DEP_OPTS}" "${HOST}" | sha256sum | head -c 64)"
+          echo "\"${BUILD_TARGET}\" has HOST=\"${HOST}\" and DEP_OPTS=\"${DEP_OPTS}\" with hash \"${DEP_HASH}\""
+          echo "DEP_HASH=${DEP_HASH}" >> "${GITHUB_OUTPUT}"
+
+        shell: bash
+
+      - name: Cache depends sources
+        uses: actions/cache@v4
+        with:
+          path: |
+            depends/sources
+          key: depends-sources-${{ hashFiles('depends/packages/*') }}
+          restore-keys: |
+            depends-sources-${{ hashFiles('depends/packages/*') }}
+            depends-sources-
+
+      - name: Restore cached depends
+        uses: actions/cache/restore@v4
+        id: restore
+        with:
+          path: |
+            depends/built
+            depends/${{ steps.setup.outputs.HOST }}
+          key: ${{ runner.os }}-depends-${{ inputs.build-target }}-${{ steps.setup.outputs.DEP_HASH }}-${{ hashFiles('depends/packages/*') }}
+          restore-keys: |
+            ${{ runner.os }}-depends-${{ inputs.build-target }}-${{ hashFiles('depends/packages/*') }}
+            ${{ runner.os }}-depends-${{ inputs.build-target }}
+
+      - name: Build depends
+        run: env ${{ steps.setup.outputs.DEP_OPTS }} HOST=${{ steps.setup.outputs.HOST }} make -j$(nproc) -C depends
+
+      - name: Save depends cache
+        uses: actions/cache/save@v4
+        if: steps.restore.outputs.cache-hit != 'true'
+        with:
+          path: |
+            depends/built
+            depends/${{ steps.setup.outputs.HOST }}
+          key: ${{ steps.restore.outputs.cache-primary-key }}

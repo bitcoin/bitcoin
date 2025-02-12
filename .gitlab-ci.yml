@@ -43,7 +43,10 @@ builder-image:
   image: $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG
   before_script:
     - |
-      echo HOST=${HOST}
+      echo BUILD_TARGET="${BUILD_TARGET}"
+      source ./ci/dash/matrix.sh
+      echo HOST="${HOST}"
+      echo DEP_OPTS="${DEP_OPTS}"
       if [[ "${HOST}" == "x86_64-apple-darwin" ]]; then
         ./contrib/containers/guix/scripts/setup-sdk
       fi
@@ -73,6 +76,8 @@ builder-image:
     - export CACHE_DIR=$CI_PROJECT_DIR/cache
     - echo BUILD_TARGET=$BUILD_TARGET
     - source ./ci/dash/matrix.sh
+    - echo HOST=${HOST}
+    - echo DEP_OPTS=${DEP_OPTS}
 
     # Setup some environment variables
     - |
@@ -170,43 +175,40 @@ builder-image:
 arm-linux-gnueabihf:
   extends: .build-depends-template
   variables:
-    HOST: arm-linux-gnueabihf
+    BUILD_TARGET: arm-linux
 
 x86_64-w64-mingw32:
   extends:
     - .build-depends-template
     - .skip-in-fast-mode-template
   variables:
-    HOST: x86_64-w64-mingw32
+    BUILD_TARGET: win64
 
-x86_64-pc-linux-gnu_debug:
+x86_64-pc-linux-gnu:
   extends: .build-depends-template
   variables:
-    HOST: x86_64-pc-linux-gnu
-    DEP_OPTS: "DEBUG=1"
+    BUILD_TARGET: linux64
 
 x86_64-pc-linux-gnu_nowallet:
   extends:
     - .build-depends-template
     - .skip-in-fast-mode-template
   variables:
-    HOST: x86_64-pc-linux-gnu
-    DEP_OPTS: "NO_WALLET=1"
+    BUILD_TARGET: linux64_nowallet
 
 x86_64-pc-linux-gnu_multiprocess:
   extends:
     - .build-depends-template
     - .skip-in-fast-mode-template
   variables:
-    HOST: x86_64-pc-linux-gnu
-    DEP_OPTS: "DEBUG=1 MULTIPROCESS=1"
+    BUILD_TARGET: linux64_multiprocess
 
 x86_64-apple-darwin:
   extends:
     - .build-depends-template
     - .skip-in-fast-mode-template
   variables:
-    HOST: x86_64-apple-darwin
+    BUILD_TARGET: mac
 
 ###
 
@@ -229,7 +231,7 @@ win64-build:
 linux64-build:
   extends: .build-template
   needs:
-    - x86_64-pc-linux-gnu_debug
+    - x86_64-pc-linux-gnu
   variables:
     BUILD_TARGET: linux64
 
@@ -238,7 +240,7 @@ linux64_cxx20-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-pc-linux-gnu_debug
+    - x86_64-pc-linux-gnu
   variables:
     BUILD_TARGET: linux64_cxx20
 
@@ -247,7 +249,7 @@ linux64_sqlite-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-pc-linux-gnu_debug
+    - x86_64-pc-linux-gnu
   variables:
     BUILD_TARGET: linux64_sqlite
 
@@ -256,7 +258,7 @@ linux64_fuzz-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-pc-linux-gnu_debug
+    - x86_64-pc-linux-gnu
   variables:
     BUILD_TARGET: linux64_fuzz
 
@@ -265,7 +267,7 @@ linux64_fuzz-build:
 #    - .build-template
 #    - .skip-in-fast-mode-template
 #  needs:
-#    - x86_64-pc-linux-gnu_debug
+#    - x86_64-pc-linux-gnu
 #  variables:
 #    BUILD_TARGET: linux64_asan
 
@@ -274,7 +276,7 @@ linux64_tsan-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-pc-linux-gnu_debug
+    - x86_64-pc-linux-gnu_multiprocess
   variables:
     BUILD_TARGET: linux64_tsan
 
@@ -283,7 +285,7 @@ linux64_ubsan-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-pc-linux-gnu_debug
+    - x86_64-pc-linux-gnu
   variables:
     BUILD_TARGET: linux64_ubsan
 
@@ -310,7 +312,7 @@ linux64_multiprocess-build:
 #    - .build-template
 #    - .skip-in-fast-mode-template
 #  needs:
-#    - x86_64-pc-linux-gnu_debug
+#    - x86_64-pc-linux-gnu
 #  variables:
 #    BUILD_TARGET: linux64_valgrind
 
