@@ -51,7 +51,8 @@ LockResult LockDirectory(const fs::path& directory, const fs::path& lockfile_nam
 
     // If a lock for this directory already exists in the map, don't try to re-lock it
     if (dir_locks.count(fs::PathToString(pathLockFile))) {
-        return LockResult::Success;
+        LogError("Error while attempting to lock directory %s: Lock already taken", fs::PathToString(directory));
+        return LockResult::ErrorLock;
     }
 
     // Create empty lock file if it doesn't exist.

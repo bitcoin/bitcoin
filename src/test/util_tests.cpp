@@ -1029,13 +1029,13 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
     BOOST_CHECK_EQUAL(util::LockDirectory(dirname, lockname), util::LockResult::Success);
 
     // Another lock on the directory from the same thread should succeed
-    BOOST_CHECK_EQUAL(util::LockDirectory(dirname, lockname), util::LockResult::Success);
+    BOOST_CHECK_EQUAL(util::LockDirectory(dirname, lockname), util::LockResult::ErrorLock);
 
     // Another lock on the directory from a different thread within the same process should succeed
     util::LockResult threadresult;
     std::thread thr([&] { threadresult = util::LockDirectory(dirname, lockname); });
     thr.join();
-    BOOST_CHECK_EQUAL(threadresult, util::LockResult::Success);
+    BOOST_CHECK_EQUAL(threadresult, util::LockResult::ErrorLock);
 #ifndef WIN32
     // Try to acquire lock in child process while we're holding it, this should fail.
     BOOST_CHECK_EQUAL(write(fd[1], &LockCommand, 1), 1);
