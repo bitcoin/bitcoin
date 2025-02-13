@@ -8,7 +8,6 @@ import contextlib
 import decimal
 import errno
 from enum import Enum
-import http.client
 import json
 import logging
 import os
@@ -307,10 +306,11 @@ class TestNode():
                     # overhead is trivial, and the added guarantees are worth
                     # the minimal performance cost.
                 self.log.debug("RPC successfully started")
+                # Set rpc_connected even if we are in use_cli mode so that we know we can call self.stop() if needed.
+                self.rpc_connected = True
                 if self.use_cli:
                     return
                 self.rpc = rpc
-                self.rpc_connected = True
                 self.url = self.rpc.rpc_url
                 return
             except JSONRPCException as e:
@@ -400,14 +400,14 @@ class TestNode():
         if not self.running:
             return
         self.log.debug("Stopping node")
-        try:
+        if self.rpc_connected:
             # Do not use wait argument when testing older nodes, e.g. in wallet_backwards_compatibility.py
             if self.version_is_at_least(180000):
                 self.stop(wait=wait)
             else:
                 self.stop()
-        except http.client.CannotSendRequest:
-            self.log.exception("Unable to stop node.")
+        else:
+            raise RuntimeError(self._node_msg(f"Cannot call stop-RPC as we don't have an RPC connection to process {self.process.pid}, wait_for_rpc_connection() failed or was never called."))
 
         # If there are any running perf processes, stop them.
         for profile_name in tuple(self.perf_subprocesses.keys()):
