@@ -60,11 +60,6 @@ template<typename Stream> inline void ser_writedata16(Stream &s, uint16_t obj)
     obj = htole16_internal(obj);
     s.write(std::as_bytes(std::span{&obj, 1}));
 }
-template<typename Stream> inline void ser_writedata16be(Stream &s, uint16_t obj)
-{
-    obj = htobe16_internal(obj);
-    s.write(std::as_bytes(std::span{&obj, 1}));
-}
 template<typename Stream> inline void ser_writedata32(Stream &s, uint32_t obj)
 {
     obj = htole32_internal(obj);
@@ -91,12 +86,6 @@ template<typename Stream> inline uint16_t ser_readdata16(Stream &s)
     uint16_t obj;
     s.read(std::as_writable_bytes(std::span{&obj, 1}));
     return le16toh_internal(obj);
-}
-template<typename Stream> inline uint16_t ser_readdata16be(Stream &s)
-{
-    uint16_t obj;
-    s.read(std::as_writable_bytes(std::span{&obj, 1}));
-    return be16toh_internal(obj);
 }
 template<typename Stream> inline uint32_t ser_readdata32(Stream &s)
 {
