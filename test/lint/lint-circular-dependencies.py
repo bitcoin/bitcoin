@@ -89,7 +89,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "qt/guiutil -> qt/optionsdialog -> qt/guiutil",
     "qt/guiutil -> qt/optionsdialog -> qt/optionsmodel -> qt/guiutil",
     "qt/guiutil -> qt/qvalidatedlineedit -> qt/guiutil",
-    "rpc/blockchain -> rpc/server -> rpc/blockchain"
 )
 
 CODE_DIR = "src"
