@@ -5,19 +5,22 @@
 cmake_path(GET RAW_SOURCE_PATH STEM raw_source_basename)
 
 file(READ ${RAW_SOURCE_PATH} hex_content HEX)
-string(REGEX REPLACE "................" "\\0\n" formatted_bytes "${hex_content}")
-string(REGEX REPLACE "[^\n][^\n]" "std::byte{0x\\0}," formatted_bytes "${formatted_bytes}")
+string(STRIP "${hex_content}" hex_content)
 
 set(header_content
-"#include <cstddef>
+"#include <util/strencodings.h>
+
+#include <cstddef>
 #include <span>
 
-namespace ${RAW_NAMESPACE} {
-inline constexpr std::byte detail_${raw_source_basename}_raw[] {
-${formatted_bytes}
-};
+using namespace util::hex_literals;
 
-inline constexpr std::span ${raw_source_basename}{detail_${raw_source_basename}_raw};
-}
+namespace ${RAW_NAMESPACE} {
+
+inline constexpr auto ${raw_source_basename} = \"${hex_content}\"_hex;
+inline constexpr std::span<const std::byte> ${raw_source_basename}_span{${raw_source_basename}};
+
+} // namespace ${RAW_NAMESPACE}
 ")
+
 file(WRITE ${HEADER_PATH} "${header_content}")
