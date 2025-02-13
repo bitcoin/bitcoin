@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
+          fetch-depth: 50
 
       - name: Initial setup
         id: setup
@@ -36,6 +36,7 @@ jobs:
           git config --global --add advice.detachedHead false
           git config --global --add safe.directory "$PWD"
           GIT_HEAD="$(git rev-parse HEAD)"
+          git fetch origin develop:develop
           git checkout develop
           git checkout "${GIT_HEAD}"
           BUILD_TARGET="${{ inputs.build-target }}"
