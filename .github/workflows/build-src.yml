@@ -36,7 +36,7 @@ jobs:
           git config --global --add advice.detachedHead false
           git config --global --add safe.directory "$PWD"
           GIT_HEAD="$(git rev-parse HEAD)"
-          git fetch origin develop:develop
+          git fetch -fu origin develop:develop
           git checkout develop
           git checkout "${GIT_HEAD}"
           BUILD_TARGET="${{ inputs.build-target }}"
