@@ -91,7 +91,7 @@ def check_all_filenames(files) -> int:
     for filename in filenames:
         if not filename_regex.match(filename):
             print(
-                f"""File {repr(filename)} does not not match the allowed filename regexp ('{ALLOWED_FILENAME_REGEXP}')."""
+                f"""File {repr(filename)} does not match the allowed filename regexp ('{ALLOWED_FILENAME_REGEXP}')."""
             )
             failed_tests += 1
     return failed_tests
