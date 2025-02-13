@@ -53,7 +53,7 @@ constexpr deserialize_type deserialize {};
  */
 template<typename Stream> inline void ser_writedata8(Stream &s, uint8_t obj)
 {
-    s.write(AsBytes(Span{&obj, 1}));
+    s.write(std::byte{obj});
 }
 template<typename Stream> inline void ser_writedata16(Stream &s, uint16_t obj)
 {
@@ -1067,6 +1067,10 @@ public:
     {
         this->nSize += src.size();
     }
+    void write(std::byte)
+    {
+        this->nSize += 1;
+    }
 
     /** Pretend _nSize bytes are written, without specifying them. */
     void seek(size_t _nSize)
@@ -1131,6 +1135,7 @@ public:
     template <typename U> ParamsStream& operator<<(const U& obj) { ::Serialize(*this, obj); return *this; }
     template <typename U> ParamsStream& operator>>(U&& obj) { ::Unserialize(*this, obj); return *this; }
     void write(Span<const std::byte> src) { GetStream().write(src); }
+    void write(std::byte src) { GetStream().write(src); }
     void read(Span<std::byte> dst) { GetStream().read(dst); }
     void ignore(size_t num) { GetStream().ignore(num); }
     bool eof() const { return GetStream().eof(); }
