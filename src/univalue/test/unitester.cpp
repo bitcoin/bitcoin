@@ -97,7 +97,7 @@ static void runtest(std::string filename, const std::string& jdata)
 }
 
 #define TEST_FILE(name) {#name, json_tests::name}
-inline constexpr std::array tests{std::to_array<std::tuple<std::string_view, std::string_view>>({
+inline std::array tests{std::to_array<std::tuple<std::string_view, std::string_view>>({
     TEST_FILE(fail1),
     TEST_FILE(fail10),
     TEST_FILE(fail11),
