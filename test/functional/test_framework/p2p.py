@@ -382,7 +382,13 @@ class P2PConnection(asyncio.Protocol):
         """Send a P2P message over the socket.
 
         This method takes a P2P payload, builds the P2P header and adds
-        the message to the send buffer to be sent over the socket."""
+        the message to the send buffer to be sent over the socket.
+
+        When a message does not lead to a disconnect, send_and_ping is usually
+        preferred to send a message. This can help to reduce intermittent test
+        failures due to a missing sync. Also, it includes a call to
+        sync_with_ping, allowing for concise test code.
+        """
         with self._send_lock:
             tmsg = self.build_message(message, is_decoy)
             self._log_message("send", message)
