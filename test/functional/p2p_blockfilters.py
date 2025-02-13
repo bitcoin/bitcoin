@@ -212,7 +212,7 @@ class CompactFiltersTest(BitcoinTestFramework):
         for request in requests:
             peer_1 = self.nodes[1].add_p2p_connection(P2PInterface())
             with self.nodes[1].assert_debug_log(expected_msgs=["requested unsupported block filter type"]):
-                peer_1.send_message(request)
+                peer_1.send_without_ping(request)
                 peer_1.wait_for_disconnect()
 
         self.log.info("Check that invalid requests result in disconnection.")
@@ -259,7 +259,7 @@ class CompactFiltersTest(BitcoinTestFramework):
         for request, expected_log_msg in requests:
             peer_0 = self.nodes[0].add_p2p_connection(P2PInterface())
             with self.nodes[0].assert_debug_log(expected_msgs=[expected_log_msg]):
-                peer_0.send_message(request)
+                peer_0.send_without_ping(request)
                 peer_0.wait_for_disconnect()
 
         self.log.info("Test -peerblockfilters without -blockfilterindex raises an error")
