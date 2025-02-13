@@ -9,6 +9,7 @@ default_host_RANLIB = $(host_toolchain)ranlib
 default_host_STRIP = $(host_toolchain)strip
 default_host_NM = $(host_toolchain)nm
 default_host_OBJCOPY = $(host_toolchain)objcopy
+default_host_OBJDUMP = $(host_toolchain)objdump
 
 define add_host_tool_func
 ifneq ($(filter $(origin $1),undefined default),)
