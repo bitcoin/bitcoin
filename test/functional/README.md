@@ -183,7 +183,7 @@ way is the use the `profile_with_perf` context manager, e.g.
 with node.profile_with_perf("send-big-msgs"):
     # Perform activity on the node you're interested in profiling, e.g.:
     for _ in range(10000):
-        node.p2ps[0].send_message(some_large_message)
+        node.p2ps[0].send_without_ping(some_large_message)
 ```
 
 To see useful textual output, run

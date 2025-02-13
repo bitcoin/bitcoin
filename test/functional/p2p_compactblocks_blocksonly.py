@@ -112,7 +112,7 @@ class P2PCompactBlocksBlocksOnly(BitcoinTestFramework):
                 return False
             return p2p_conn_blocksonly.last_message['cmpctblock'].header_and_shortids.header.rehash() == block.sha256
 
-        p2p_conn_blocksonly.send_message(msg_getdata([CInv(MSG_CMPCT_BLOCK, block0.sha256)]))
+        p2p_conn_blocksonly.send_without_ping(msg_getdata([CInv(MSG_CMPCT_BLOCK, block0.sha256)]))
         p2p_conn_blocksonly.wait_until(lambda: test_for_cmpctblock(block0))
 
         # Request BIP152 high bandwidth mode from the -blocksonly node.
