@@ -33,12 +33,8 @@ jobs:
       - name: Initial setup
         id: setup
         run: |
-          git config --global --add advice.detachedHead false
           git config --global --add safe.directory "$PWD"
-          GIT_HEAD="$(git rev-parse HEAD)"
           git fetch -fu origin develop:develop
-          git checkout develop
-          git checkout "${GIT_HEAD}"
           BUILD_TARGET="${{ inputs.build-target }}"
           source ./ci/dash/matrix.sh
           echo "HOST=${HOST}" >> $GITHUB_OUTPUT
