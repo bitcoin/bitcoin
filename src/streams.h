@@ -83,6 +83,16 @@ public:
         }
         nPos += src.size();
     }
+    void write(std::byte val)
+    {
+        assert(nPos <= vchData.size());
+        if (nPos < vchData.size()) {
+            vchData[nPos] = static_cast<unsigned char>(val);
+        } else {
+            vchData.push_back(static_cast<unsigned char>(val));
+        }
+        nPos += 1;
+    }
     template <typename T>
     VectorWriter& operator<<(const T& obj)
     {
@@ -253,6 +263,11 @@ public:
     {
         // Write to the end of the buffer
         vch.insert(vch.end(), src.begin(), src.end());
+    }
+    void write(value_type val)
+    {
+        // Push single value to the end of the buffer
+        vch.push_back(val);
     }
 
     template<typename T>
@@ -452,6 +467,7 @@ public:
     void read(Span<std::byte> dst);
     void ignore(size_t nSize);
     void write(Span<const std::byte> src);
+    void write(std::byte src);
 
     template <typename T>
     AutoFile& operator<<(const T& obj)

@@ -101,7 +101,24 @@ void AutoFile::write(Span<const std::byte> src)
         }
     }
 }
-
+void AutoFile::write(std::byte val)
+{
+    if (!m_file) throw std::ios_base::failure("AutoFile::write: file handle is nullptr");
+    if (m_xor.empty()) {
+        if (fwrite(&val, 1, 1, m_file) != 1) {
+            throw std::ios_base::failure("AutoFile::write: write failed");
+        }
+        if (m_position.has_value()) *m_position += 1;
+    } else {
+        if (!m_position.has_value()) throw std::ios_base::failure("AutoFile::write: position unknown");
+        auto src{Span{&val, 1}};
+        util::Xor(src, m_xor, *m_position);
+        if (fwrite(src.data(), 1, 1, m_file) != 1) {
+            throw std::ios_base::failure{"XorFile::write: failed"};
+        }
+        *m_position += 1;
+    }
+}
 bool AutoFile::Commit()
 {
     return ::FileCommit(m_file);
