@@ -25,10 +25,10 @@ using util::SplitString;
 
 void ReadSigNetArgs(const ArgsManager& args, CChainParams::SigNetOptions& options)
 {
-    if (args.IsArgSet("-signetseednode")) {
+    if (!args.GetArgs("-signetseednode").empty()) {
         options.seeds.emplace(args.GetArgs("-signetseednode"));
     }
-    if (args.IsArgSet("-signetchallenge")) {
+    if (!args.GetArgs("-signetchallenge").empty()) {
         const auto signet_challenge = args.GetArgs("-signetchallenge");
         if (signet_challenge.size() != 1) {
             throw std::runtime_error("-signetchallenge cannot be multiple values.");
@@ -65,8 +65,6 @@ void ReadRegTestArgs(const ArgsManager& args, CChainParams::RegTestOptions& opti
             throw std::runtime_error(strprintf("Invalid name (%s) for -testactivationheight=name@height.", arg));
         }
     }
-
-    if (!args.IsArgSet("-vbparams")) return;
 
     for (const std::string& strDeployment : args.GetArgs("-vbparams")) {
         std::vector<std::string> vDeploymentParams = SplitString(strDeployment, ':');

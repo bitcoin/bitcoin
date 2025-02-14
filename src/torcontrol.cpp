@@ -403,7 +403,7 @@ void TorController::get_socks_cb(TorControlConnection& _conn, const TorControlRe
     const auto onlynets = gArgs.GetArgs("-onlynet");
 
     const bool onion_allowed_by_onlynet{
-        !gArgs.IsArgSet("-onlynet") ||
+        onlynets.empty() ||
         std::any_of(onlynets.begin(), onlynets.end(), [](const auto& n) {
             return ParseNetwork(n) == NET_ONION;
         })};

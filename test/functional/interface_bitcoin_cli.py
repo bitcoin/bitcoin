@@ -279,6 +279,10 @@ class TestBitcoinCli(BitcoinTestFramework):
             assert_equal(cli_get_info['Wallet'], wallets[1])
             assert_equal(Decimal(cli_get_info['Balance']), amounts[1])
 
+            self.log.info("Test -getinfo -norpcwallet returns the same as -getinfo")
+            # Previously there was a bug where -norpcwallet was treated like -rpcwallet=0
+            assert_equal(self.nodes[0].cli('-getinfo', "-norpcwallet").send_cli(), cli_get_info_string)
+
             self.log.info("Test -getinfo with -rpcwallet=remaining-non-default-wallet returns only its balance")
             cli_get_info_string = self.nodes[0].cli('-getinfo', rpcwallet2).send_cli()
             cli_get_info = cli_get_info_string_to_dict(cli_get_info_string)
