@@ -51,7 +51,6 @@ jobs:
             depends/sources
           key: depends-sources-${{ hashFiles('depends/packages/*') }}
           restore-keys: |
-            depends-sources-${{ hashFiles('depends/packages/*') }}
             depends-sources-
 
       - name: Restore cached depends
