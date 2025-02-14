@@ -11,6 +11,7 @@
 #include <sync.h>
 #include <util/fs.h>
 #include <util/syserror.h>
+#include <util/translation.h>
 
 #include <cerrno>
 #include <fstream>
@@ -83,6 +84,50 @@ void ReleaseDirectoryLocks()
 {
     LOCK(cs_dir_locks);
     dir_locks.clear();
+}
+
+DirectoryLock::DirectoryLock(fs::path dir_path, std::string name)
+    : m_path{dir_path},
+      m_name{name}
+{
+    // Ensures only a single lock is taken on the provided directory.
+    switch (util::LockDirectory(m_path, ".lock", false)) {
+    case util::LockResult::ErrorWrite:
+        throw std::runtime_error(strprintf(_("Cannot write to %s directory '%s'; check permissions."), m_name, fs::PathToString(m_path)).original);
+    case util::LockResult::ErrorLock:
+        throw std::runtime_error(strprintf(_("Cannot obtain a lock on %s directory %s. %s is probably already running."), m_name, fs::PathToString(m_path), CLIENT_NAME).original);
+    case util::LockResult::Success:
+        return;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+
+DirectoryLock::DirectoryLock(DirectoryLock&& other) noexcept
+    : m_path{std::move(other.m_path)},
+      m_name{std::move(other.m_name)}
+{
+    other.m_path.clear();
+    other.m_name.clear();
+}
+
+DirectoryLock& DirectoryLock::operator=(DirectoryLock&& other) noexcept
+{
+    if (this != &other) {
+        if (!m_path.empty()) {
+            UnlockDirectory(m_path, ".lock");
+        }
+        m_path = std::move(other.m_path);
+        other.m_path.clear();
+        m_name = std::move(other.m_name);
+        other.m_name.clear();
+    }
+    return *this;
+}
+
+
+DirectoryLock::~DirectoryLock()
+{
+    if (!m_path.empty()) UnlockDirectory(m_path, ".lock");
 }
 
 bool CheckDiskSpace(const fs::path& dir, uint64_t additional_bytes)
