@@ -2247,7 +2247,9 @@ void CConnman::DisconnectNodes()
                         .grant = std::move(pnode->grantOutbound),
                         .destination = pnode->m_dest,
                         .conn_type = pnode->m_conn_type,
-                        .use_v2transport = false});
+                        .use_v2transport = false,
+                        .masternode_connection = pnode->m_masternode_connection,
+                        .masternode_probe_connection = pnode->m_masternode_probe_connection});
                     LogPrint(BCLog::NET, "retrying with v1 transport protocol for peer=%d\n", pnode->GetId());
                 }
 
@@ -5171,7 +5173,9 @@ void CConnman::PerformReconnections()
                               std::move(item.grant),
                               item.destination.empty() ? nullptr : item.destination.c_str(),
                               item.conn_type,
-                              item.use_v2transport);
+                              item.use_v2transport,
+                              item.masternode_connection ? MasternodeConn::IsConnection : MasternodeConn::IsNotConnection,
+                              item.masternode_probe_connection ? MasternodeProbeConn::IsConnection : MasternodeProbeConn::IsNotConnection);
     }
 }
 

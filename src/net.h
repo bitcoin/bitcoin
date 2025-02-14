@@ -1981,6 +1981,8 @@ private:
         std::string destination;
         ConnectionType conn_type;
         bool use_v2transport;
+        bool masternode_connection;
+        bool masternode_probe_connection;
     };
 
     /**
