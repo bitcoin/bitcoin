@@ -45,6 +45,23 @@ enum class LockResult {
 [[nodiscard]] LockResult LockDirectory(const fs::path& directory, const fs::path& lockfile_name, bool probe_only = false);
 } // namespace util
 void UnlockDirectory(const fs::path& directory, const fs::path& lockfile_name);
+
+class DirectoryLock
+{
+    fs::path m_path;
+    std::string m_name;
+
+public:
+    explicit DirectoryLock(fs::path dir_path, std::string name);
+    ~DirectoryLock();
+
+    DirectoryLock(const DirectoryLock&) = delete;
+    DirectoryLock& operator=(const DirectoryLock&) = delete;
+
+    DirectoryLock(DirectoryLock&& other) noexcept;
+    DirectoryLock& operator=(DirectoryLock&& other) noexcept;
+};
+
 bool CheckDiskSpace(const fs::path& dir, uint64_t additional_bytes = 0);
 
 /** Get the size of a file by scanning it.
