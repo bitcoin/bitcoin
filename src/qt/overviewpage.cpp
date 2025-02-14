@@ -208,6 +208,7 @@ void OverviewPage::setPrivacy(bool privacy)
     m_privacy = privacy;
     if (m_balances.balance != -1) {
         setBalance(m_balances);
+        coinJoinStatus(true);
     }
 
     ui->listTransactions->setVisible(!m_privacy);
@@ -402,7 +403,10 @@ void OverviewPage::updateCoinJoinProgress()
 
     if(nMaxToAnonymize == 0) return;
 
-    if (nMaxToAnonymize >= clientModel->coinJoinOptions().getAmount() * COIN) {
+    if (m_privacy) {
+        strAmountAndRounds = "#### " + BitcoinUnits::name(nDisplayUnit) + " / " + tr("%n Rounds", "", 0);
+        ui->labelAmountRounds->setToolTip("");
+    } else if (nMaxToAnonymize >= clientModel->coinJoinOptions().getAmount() * COIN) {
         ui->labelAmountRounds->setToolTip(tr("Found enough compatible inputs to mix %1")
                                           .arg(strCoinJoinAmount));
         strCoinJoinAmount = strCoinJoinAmount.remove(strCoinJoinAmount.indexOf("."), BitcoinUnits::decimals(nDisplayUnit) + 1);
@@ -660,7 +664,7 @@ void OverviewPage::coinJoinStatus(bool fForce)
 
     setWidgetsVisible(true);
 
-    ui->labelSubmittedDenom->setText(QString(walletModel->coinJoin()->getSessionDenoms().c_str()));
+    ui->labelSubmittedDenom->setText(m_privacy ? "####" : QString(walletModel->coinJoin()->getSessionDenoms().c_str()));
 }
 
 void OverviewPage::toggleCoinJoin(){
