@@ -49,6 +49,14 @@ jobs:
       build-target: linux64_nowallet
       container-path: ${{ needs.container.outputs.path }}
 
+  depends-mac:
+    name: x86_64-apple-darwin
+    uses: ./.github/workflows/build-depends.yml
+    needs: [container]
+    with:
+      build-target: mac
+      container-path: ${{ needs.container.outputs.path }}
+
   depends-win64:
     name: x86_64-w64-mingw32
     uses: ./.github/workflows/build-depends.yml
@@ -128,6 +136,15 @@ jobs:
       build-target: linux64_ubsan
       container-path: ${{ needs.container.outputs.path }}
       depends-key: ${{ needs.depends-linux64.outputs.key }}
+
+  src-mac:
+    name: mac-build
+    uses: ./.github/workflows/build-src.yml
+    needs: [container, depends-mac]
+    with:
+      build-target: mac
+      container-path: ${{ needs.container.outputs.path }}
+      depends-key: ${{ needs.depends-mac.outputs.key }}
 
   src-win64:
     name: win64-build
