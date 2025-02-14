@@ -426,13 +426,12 @@ void OverviewPage::updateCoinJoinProgress()
 
     if (!fShowAdvancedCJUI) return;
 
-    CAmount nDenominatedConfirmedBalance;
-    CAmount nDenominatedUnconfirmedBalance;
+    const interfaces::WalletBalances balances = walletModel->wallet().getBalances();
+    CAmount nDenominatedConfirmedBalance = balances.denominated_trusted;
+    CAmount nDenominatedUnconfirmedBalance = balances.denominated_untrusted_pending;
     CAmount nNormalizedAnonymizedBalance;
     float nAverageAnonymizedRounds;
 
-    nDenominatedConfirmedBalance = walletModel->wallet().getDenominatedBalance(false);
-    nDenominatedUnconfirmedBalance = walletModel->wallet().getDenominatedBalance(true);
     nNormalizedAnonymizedBalance = walletModel->wallet().getNormalizedAnonymizedBalance();
     nAverageAnonymizedRounds = walletModel->wallet().getAverageAnonymizedRounds();
 
