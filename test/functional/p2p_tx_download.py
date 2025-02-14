@@ -24,6 +24,10 @@ from test_framework.messages import (
 from test_framework.p2p import (
     P2PInterface,
     p2p_lock,
+    NONPREF_PEER_TX_DELAY,
+    GETDATA_TX_INTERVAL,
+    TXID_RELAY_DELAY,
+    OVERLOADED_PEER_TX_DELAY
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -43,18 +47,13 @@ class TestP2PConn(P2PInterface):
                 self.tx_getdata_count += 1
 
 
-# Constants from net_processing
-GETDATA_TX_INTERVAL = 60  # seconds
-NONPREF_PEER_TX_DELAY = 2 # seconds
-INBOUND_PEER_TX_DELAY = NONPREF_PEER_TX_DELAY # inbound is non-preferred
-TXID_RELAY_DELAY = 2 # seconds
-OVERLOADED_PEER_DELAY = 2 # seconds
-MAX_GETDATA_IN_FLIGHT = 100
+# Constants from txdownloadman
+MAX_PEER_TX_REQUEST_IN_FLIGHT = 100
 MAX_PEER_TX_ANNOUNCEMENTS = 5000
 
 # Python test constants
 NUM_INBOUND = 10
-MAX_GETDATA_INBOUND_WAIT = GETDATA_TX_INTERVAL + INBOUND_PEER_TX_DELAY + TXID_RELAY_DELAY
+MAX_GETDATA_INBOUND_WAIT = GETDATA_TX_INTERVAL + NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY
 
 class ConnectionType(Enum):
     """ Different connection types
@@ -125,7 +124,7 @@ class TxDownloadTest(BitcoinTestFramework):
         # * the first time it is re-requested from the outbound peer, plus
         # * 2 seconds to avoid races
         assert self.nodes[1].getpeerinfo()[0]['inbound'] == False
-        timeout = 2 + INBOUND_PEER_TX_DELAY + GETDATA_TX_INTERVAL
+        timeout = 2 + NONPREF_PEER_TX_DELAY + GETDATA_TX_INTERVAL
         self.log.info("Tx should be received at node 1 after {} seconds".format(timeout))
         self.nodes[0].bumpmocktime(timeout)
         self.sync_mempools()
@@ -133,8 +132,8 @@ class TxDownloadTest(BitcoinTestFramework):
         self.nodes[0].setmocktime(0)
 
     def test_in_flight_max(self):
-        self.log.info("Test that we don't load peers with more than {} transaction requests immediately".format(MAX_GETDATA_IN_FLIGHT))
-        txids = [i for i in range(MAX_GETDATA_IN_FLIGHT + 2)]
+        self.log.info("Test that we don't load peers with more than {} transaction requests immediately".format(MAX_PEER_TX_REQUEST_IN_FLIGHT))
+        txids = [i for i in range(MAX_PEER_TX_REQUEST_IN_FLIGHT + 2)]
 
         p = self.nodes[0].p2ps[0]
 
@@ -143,22 +142,22 @@ class TxDownloadTest(BitcoinTestFramework):
 
         mock_time = int(time.time() + 1)
         self.nodes[0].setmocktime(mock_time)
-        for i in range(MAX_GETDATA_IN_FLIGHT):
+        for i in range(MAX_PEER_TX_REQUEST_IN_FLIGHT):
             p.send_message(msg_inv([CInv(t=MSG_WTX, h=txids[i])]))
         p.sync_with_ping()
-        mock_time += INBOUND_PEER_TX_DELAY
+        mock_time += NONPREF_PEER_TX_DELAY
         self.nodes[0].setmocktime(mock_time)
-        p.wait_until(lambda: p.tx_getdata_count >= MAX_GETDATA_IN_FLIGHT)
-        for i in range(MAX_GETDATA_IN_FLIGHT, len(txids)):
+        p.wait_until(lambda: p.tx_getdata_count >= MAX_PEER_TX_REQUEST_IN_FLIGHT)
+        for i in range(MAX_PEER_TX_REQUEST_IN_FLIGHT, len(txids)):
             p.send_message(msg_inv([CInv(t=MSG_WTX, h=txids[i])]))
         p.sync_with_ping()
-        self.log.info("No more than {} requests should be seen within {} seconds after announcement".format(MAX_GETDATA_IN_FLIGHT, INBOUND_PEER_TX_DELAY + OVERLOADED_PEER_DELAY - 1))
-        self.nodes[0].setmocktime(mock_time + INBOUND_PEER_TX_DELAY + OVERLOADED_PEER_DELAY - 1)
+        self.log.info("No more than {} requests should be seen within {} seconds after announcement".format(MAX_PEER_TX_REQUEST_IN_FLIGHT, NONPREF_PEER_TX_DELAY + OVERLOADED_PEER_TX_DELAY - 1))
+        self.nodes[0].setmocktime(mock_time + NONPREF_PEER_TX_DELAY + OVERLOADED_PEER_TX_DELAY - 1)
         p.sync_with_ping()
         with p2p_lock:
-            assert_equal(p.tx_getdata_count, MAX_GETDATA_IN_FLIGHT)
-        self.log.info("If we wait {} seconds after announcement, we should eventually get more requests".format(INBOUND_PEER_TX_DELAY + OVERLOADED_PEER_DELAY))
-        self.nodes[0].setmocktime(mock_time + INBOUND_PEER_TX_DELAY + OVERLOADED_PEER_DELAY)
+            assert_equal(p.tx_getdata_count, MAX_PEER_TX_REQUEST_IN_FLIGHT)
+        self.log.info("If we wait {} seconds after announcement, we should eventually get more requests".format(NONPREF_PEER_TX_DELAY + OVERLOADED_PEER_TX_DELAY))
+        self.nodes[0].setmocktime(mock_time + NONPREF_PEER_TX_DELAY + OVERLOADED_PEER_TX_DELAY)
         p.wait_until(lambda: p.tx_getdata_count == len(txids))
 
     def test_expiry_fallback(self):
