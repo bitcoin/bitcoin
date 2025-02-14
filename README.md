@@ -3,8 +3,8 @@ Bitcoin Core integration/staging tree
 
 https://bitcoincore.org
 
-For an immediately usable, binary version of the Bitcoin Core software, see
-https://bitcoincore.org/en/download/.
+For an immediately usable binary version of the Bitcoin Core software, 
+visit [Bitcoin Core Downloads](https://bitcoincore.org/en/download/).
 
 What is Bitcoin Core?
 ---------------------
@@ -13,12 +13,12 @@ Bitcoin Core connects to the Bitcoin peer-to-peer network to download and fully
 validate blocks and transactions. It also includes a wallet and graphical user
 interface, which can be optionally built.
 
-Further information about Bitcoin Core is available in the [doc folder](/doc).
+For more information about Bitcoin Core, refer to the [doc folder](/doc).
 
 License
 -------
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+Bitcoin Core is released under the MIT License. See [COPYING](COPYING) for more
 information or see https://opensource.org/licenses/MIT.
 
 Development Process
