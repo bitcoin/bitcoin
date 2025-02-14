@@ -126,7 +126,7 @@ uint64_t GetRdRand() noexcept
 {
     // RdRand may very rarely fail. Invoke it up to 10 times in a loop to reduce this risk.
 #ifdef __i386__
-    uint8_t ok;
+    uint8_t ok = 0;
     // Initialize to 0 to silence a compiler warning that r1 or r2 may be used
     // uninitialized. Even if rdrand fails (!ok) it will set the output to 0,
     // but there is no way that the compiler could know that.
@@ -141,7 +141,7 @@ uint64_t GetRdRand() noexcept
     }
     return (((uint64_t)r2) << 32) | r1;
 #elif defined(__x86_64__) || defined(__amd64__)
-    uint8_t ok;
+    uint8_t ok = 0;
     uint64_t r1 = 0; // See above why we initialize to 0.
     for (int i = 0; i < 10; ++i) {
         __asm__ volatile (".byte 0x48, 0x0f, 0xc7, 0xf0; setc %1" : "=a"(r1), "=q"(ok) :: "cc"); // rdrand %rax
@@ -162,7 +162,7 @@ uint64_t GetRdSeed() noexcept
     // RdSeed may fail when the HW RNG is overloaded. Loop indefinitely until enough entropy is gathered,
     // but pause after every failure.
 #ifdef __i386__
-    uint8_t ok;
+    uint8_t ok = 0;
     uint32_t r1, r2;
     do {
         __asm__ volatile (".byte 0x0f, 0xc7, 0xf8; setc %1" : "=a"(r1), "=q"(ok) :: "cc"); // rdseed %eax
@@ -215,7 +215,7 @@ void ReportHardwareRand()
  */
 uint64_t GetRNDR() noexcept
 {
-    uint8_t ok;
+    uint8_t ok = 0;
     uint64_t r1;
     do {
         // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/RNDR--Random-Number
@@ -233,7 +233,7 @@ uint64_t GetRNDR() noexcept
  */
 uint64_t GetRNDRRS() noexcept
 {
-    uint8_t ok;
+    uint8_t ok = 0;
     uint64_t r1;
     do {
         // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/RNDRRS--Reseeded-Random-Number
