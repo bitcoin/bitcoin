@@ -14,3 +14,4 @@ export OSX_SDK=""
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
 export RUN_FUZZ_TESTS=true
+export GOAL="all"
