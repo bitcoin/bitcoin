@@ -7,9 +7,29 @@
 export LC_ALL=C
 
 ${CI_RETRY_EXE} apt-get update
-${CI_RETRY_EXE} apt-get install -y clang-format-9 python3-pip curl git gawk jq
-update-alternatives --install /usr/bin/clang-format      clang-format      "$(which clang-format-9     )" 100
-update-alternatives --install /usr/bin/clang-format-diff clang-format-diff "$(which clang-format-diff-9)" 100
+# Lint dependencies:
+# - curl/xz-utils (to install shellcheck)
+# - git (used in many lint scripts)
+# - gpg (used by verify-commits)
+${CI_RETRY_EXE} apt-get install -y curl xz-utils git gpg
+
+PYTHON_PATH=/tmp/python
+if [ ! -d "${PYTHON_PATH}/bin" ]; then
+  (
+    git clone https://github.com/pyenv/pyenv.git
+    cd pyenv/plugins/python-build || exit 1
+    ./install.sh
+  )
+  # For dependencies see https://github.com/pyenv/pyenv/wiki#suggested-build-environment
+  ${CI_RETRY_EXE} apt-get install -y build-essential libssl-dev zlib1g-dev \
+    libbz2-dev libreadline-dev libsqlite3-dev curl llvm \
+    libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev \
+    clang
+  env CC=clang python-build "$(cat "${BASE_ROOT_DIR}/.python-version")" "${PYTHON_PATH}"
+fi
+export PATH="${PYTHON_PATH}/bin:${PATH}"
+command -v python3
+python3 --version
 
 ${CI_RETRY_EXE} pip3 install codespell==2.0.0
 ${CI_RETRY_EXE} pip3 install flake8==3.8.3
