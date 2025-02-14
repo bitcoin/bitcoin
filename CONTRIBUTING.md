@@ -7,10 +7,10 @@ and patches. This document explains the practical process and guidelines for
 contributing.
 
 First, in terms of structure, there is no particular concept of "Bitcoin Core
-developers" in the sense of privileged people. Open source often naturally
-revolves around a meritocracy where contributors earn trust from the developer
-community over time. Nevertheless, some hierarchy is necessary for practical
-purposes. As such, there are repository maintainers who are responsible for
+developers" in the sense of privileged people.In open source projects, contributors
+gradually earn trust from the developer community, forming a natural meritocracy. 
+Nevertheless, some hierarchy is necessary for practical purposes.
+As such, there are repository maintainers who are responsible for
 merging pull requests, the [release cycle](/doc/release-process.md), and
 moderation.
 
