@@ -48,6 +48,16 @@ static const unsigned int MAX_VECTOR_ALLOCATE = 5000000;
 struct deserialize_type {};
 constexpr deserialize_type deserialize {};
 
+class SizeComputer;
+
+//! Check if type contains a stream by seeing if it has a GetStream() method.
+template<typename T>
+concept ContainsStream = requires(T t) { t.GetStream(); };
+
+template<typename T>
+concept ContainsSizeComputer = ContainsStream<T> &&
+    std::is_same_v<std::remove_reference_t<decltype(std::declval<T>().GetStream())>, SizeComputer>;
+
 /*
  * Lowest-level serialization and conversion.
  */
@@ -106,8 +116,6 @@ template<typename Stream> inline uint64_t ser_readdata64(Stream &s)
     return le64toh_internal(obj);
 }
 
-
-class SizeComputer;
 
 /**
  * Convert any argument to a reference to X, maintaining constness.
@@ -248,7 +256,9 @@ concept ByteOrIntegral = std::is_same_v<T, std::byte> ||
 template <typename Stream, CharNotInt8 V> void Serialize(Stream&, V) = delete; // char serialization forbidden. Use uint8_t or int8_t
 template <typename Stream, ByteOrIntegral T> void Serialize(Stream& s, T a)
 {
-    if constexpr (sizeof(T) == 1) {
+    if constexpr (ContainsSizeComputer<Stream>) {
+        s.GetStream().seek(sizeof(T));
+    } else if constexpr (sizeof(T) == 1) {
         ser_writedata8(s, static_cast<uint8_t>(a));   // (u)int8_t or std::byte or bool
     } else if constexpr (sizeof(T) == 2) {
         ser_writedata16(s, static_cast<uint16_t>(a)); // (u)int16_t
@@ -300,12 +310,14 @@ constexpr inline unsigned int GetSizeOfCompactSize(uint64_t nSize)
     else                         return sizeof(unsigned char) + sizeof(uint64_t);
 }
 
-inline void WriteCompactSize(SizeComputer& os, uint64_t nSize);
-
 template<typename Stream>
 void WriteCompactSize(Stream& os, uint64_t nSize)
 {
-    if (nSize < 253)
+    if constexpr (ContainsSizeComputer<Stream>)
+    {
+        os.GetStream().seek(GetSizeOfCompactSize(nSize));
+    }
+    else if (nSize < 253)
     {
         ser_writedata8(os, nSize);
     }
@@ -412,7 +424,7 @@ struct CheckVarIntMode {
 };
 
 template<VarIntMode Mode, typename I>
-inline unsigned int GetSizeOfVarInt(I n)
+constexpr unsigned int GetSizeOfVarInt(I n)
 {
     CheckVarIntMode<Mode, I>();
     int nRet = 0;
@@ -425,25 +437,26 @@ inline unsigned int GetSizeOfVarInt(I n)
     return nRet;
 }
 
-template<typename I>
-inline void WriteVarInt(SizeComputer& os, I n);
-
 template<typename Stream, VarIntMode Mode, typename I>
 void WriteVarInt(Stream& os, I n)
 {
-    CheckVarIntMode<Mode, I>();
-    unsigned char tmp[(sizeof(n)*8+6)/7];
-    int len=0;
-    while(true) {
-        tmp[len] = (n & 0x7F) | (len ? 0x80 : 0x00);
-        if (n <= 0x7F)
-            break;
-        n = (n >> 7) - 1;
-        len++;
+    if constexpr (ContainsSizeComputer<Stream>) {
+        os.GetStream().seek(GetSizeOfVarInt<Mode, I>(n));
+    } else {
+        CheckVarIntMode<Mode, I>();
+        unsigned char tmp[(sizeof(n)*8+6)/7];
+        int len=0;
+        while(true) {
+            tmp[len] = (n & 0x7F) | (len ? 0x80 : 0x00);
+            if (n <= 0x7F)
+                break;
+            n = (n >> 7) - 1;
+            len++;
+        }
+        do {
+            ser_writedata8(os, tmp[len]);
+        } while(len--);
     }
-    do {
-        ser_writedata8(os, tmp[len]);
-    } while(len--);
 }
 
 template<typename Stream, VarIntMode Mode, typename I>
@@ -532,7 +545,9 @@ struct CustomUintFormatter
     template <typename Stream, typename I> void Ser(Stream& s, I v)
     {
         if (v < 0 || v > MAX) throw std::ios_base::failure("CustomUintFormatter value out of range");
-        if (BigEndian) {
+        if constexpr (ContainsSizeComputer<Stream>) {
+            s.GetStream().seek(Bytes);
+        } else if (BigEndian) {
             uint64_t raw = htobe64_internal(v);
             s.write(AsBytes(Span{&raw, 1}).last(Bytes));
         } else {
@@ -1063,6 +1078,9 @@ protected:
 public:
     SizeComputer() = default;
 
+    SizeComputer& GetStream() { return *this; }
+    const SizeComputer& GetStream() const { return *this; };
+
     void write(Span<const std::byte> src)
     {
         this->nSize += src.size();
@@ -1090,26 +1108,11 @@ public:
     }
 };
 
-template<typename I>
-inline void WriteVarInt(SizeComputer &s, I n)
-{
-    s.seek(GetSizeOfVarInt<I>(n));
-}
-
-inline void WriteCompactSize(SizeComputer &s, uint64_t nSize)
-{
-    s.seek(GetSizeOfCompactSize(nSize));
-}
-
 template <typename T>
 size_t GetSerializeSize(const T& t)
 {
     return (SizeComputer() << t).size();
 }
-
-//! Check if type contains a stream by seeing if has a GetStream() method.
-template<typename T>
-concept ContainsStream = requires(T t) { t.GetStream(); };
 
 /** Wrapper that overrides the GetParams() function of a stream. */
 template <typename SubStream, typename Params>
