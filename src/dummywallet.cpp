@@ -38,6 +38,7 @@ void DummyWalletInit::AddWalletOptions(ArgsManager& argsman) const
 {
     argsman.AddHiddenArgs({
         "-avoidpartialspends",
+        "-consolidatefeerate=<amt>",
         "-createwalletbackups=<n>",
         "-disablewallet",
         "-instantsendnotify=<cmd>",
