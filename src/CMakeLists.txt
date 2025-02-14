@@ -145,7 +145,6 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   pow.cpp
   protocol.cpp
   psbt.cpp
-  rpc/external_signer.cpp
   rpc/rawtransaction_util.cpp
   rpc/request.cpp
   rpc/util.cpp
@@ -264,6 +263,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   policy/truc_policy.cpp
   rest.cpp
   rpc/blockchain.cpp
+  rpc/external_signer.cpp
   rpc/fees.cpp
   rpc/mempool.cpp
   rpc/mining.cpp
