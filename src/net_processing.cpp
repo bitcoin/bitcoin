@@ -35,7 +35,7 @@
 #include <index/txindex.h>
 #include <txmempool.h>
 #include <txorphanage.h>
-#include <util/check.h> // For NDEBUG compile time check
+#include <util/check.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <util/trace.h>

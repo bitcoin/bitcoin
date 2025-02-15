@@ -28,7 +28,7 @@ void initialize_p2p_transport_serialization()
     std::sort(g_all_messages.begin(), g_all_messages.end());
 }
 
-FUZZ_TARGET_INIT(p2p_transport_serialization, initialize_p2p_transport_serialization)
+FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serialization)
 {
     // Construct transports for both sides, with dummy NodeIds.
     V1Transport recv_transport{NodeId{0}, SER_NETWORK, INIT_PROTO_VERSION};
@@ -370,7 +370,7 @@ std::unique_ptr<Transport> MakeV2Transport(NodeId nodeid, bool initiator, RNG& r
 
 } // namespace
 
-FUZZ_TARGET_INIT(p2p_transport_bidirectional, initialize_p2p_transport_serialization)
+FUZZ_TARGET(p2p_transport_bidirectional, .init = initialize_p2p_transport_serialization)
 {
     // Test with two V1 transports talking to each other.
     FuzzedDataProvider provider{buffer.data(), buffer.size()};
@@ -381,7 +381,7 @@ FUZZ_TARGET_INIT(p2p_transport_bidirectional, initialize_p2p_transport_serializa
     SimulationTest(*t1, *t2, rng, provider);
 }
 
-FUZZ_TARGET_INIT(p2p_transport_bidirectional_v2, initialize_p2p_transport_serialization)
+FUZZ_TARGET(p2p_transport_bidirectional_v2, .init = initialize_p2p_transport_serialization)
 {
     // Test with two V2 transports talking to each other.
     FuzzedDataProvider provider{buffer.data(), buffer.size()};
@@ -392,7 +392,7 @@ FUZZ_TARGET_INIT(p2p_transport_bidirectional_v2, initialize_p2p_transport_serial
     SimulationTest(*t1, *t2, rng, provider);
 }
 
-FUZZ_TARGET_INIT(p2p_transport_bidirectional_v1v2, initialize_p2p_transport_serialization)
+FUZZ_TARGET(p2p_transport_bidirectional_v1v2, .init = initialize_p2p_transport_serialization)
 {
     // Test with a V1 initiator talking to a V2 responder.
     FuzzedDataProvider provider{buffer.data(), buffer.size()};

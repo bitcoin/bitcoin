@@ -111,7 +111,7 @@ void initialize_versionbits()
 
 constexpr uint32_t MAX_START_TIME = 4102444800; // 2100-01-01
 
-FUZZ_TARGET_INIT(versionbits, initialize_versionbits)
+FUZZ_TARGET(versionbits, .init = initialize_versionbits)
 {
     const CChainParams& params = *g_params;
     const int64_t interval = params.GetConsensus().nPowTargetSpacing;

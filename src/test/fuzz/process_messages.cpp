@@ -33,7 +33,7 @@ void initialize_process_messages()
     SyncWithValidationInterfaceQueue();
 }
 
-FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
+FUZZ_TARGET(process_messages, .init = initialize_process_messages)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 

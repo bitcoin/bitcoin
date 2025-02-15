@@ -235,15 +235,6 @@ linux64-build:
   variables:
     BUILD_TARGET: linux64
 
-linux64_cxx20-build:
-  extends:
-    - .build-template
-    - .skip-in-fast-mode-template
-  needs:
-    - x86_64-pc-linux-gnu
-  variables:
-    BUILD_TARGET: linux64_cxx20
-
 linux64_sqlite-build:
   extends:
     - .build-template

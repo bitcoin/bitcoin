@@ -19,7 +19,7 @@ void initialize_bip324()
     SelectParams(CBaseChainParams::MAIN);
 }
 
-FUZZ_TARGET_INIT(bip324_cipher_roundtrip, initialize_bip324)
+FUZZ_TARGET(bip324_cipher_roundtrip, .init = initialize_bip324)
 {
     // Test that BIP324Cipher's encryption and decryption agree.
 
