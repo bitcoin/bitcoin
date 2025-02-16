@@ -566,7 +566,8 @@ public:
         }
 
         // Generate report header.
-        std::string result{strprintf("%s client %s%s - server %i%s\n\n", CLIENT_NAME, FormatFullVersion(), ChainToString(), networkinfo["protocolversion"].getInt<int>(), networkinfo["subversion"].get_str())};
+        const std::string services{DetailsRequested() ? strprintf(" - services %s", FormatServices(networkinfo["localservicesnames"])) : ""};
+        std::string result{strprintf("%s client %s%s - server %i%s%s\n\n", CLIENT_NAME, FormatFullVersion(), ChainToString(), networkinfo["protocolversion"].getInt<int>(), networkinfo["subversion"].get_str(), services)};
 
         // Report detailed peer connections list sorted by direction and minimum ping time.
         if (DetailsRequested() && !m_peers.empty()) {
@@ -648,7 +649,9 @@ public:
         }
 
         // Report local services, addresses, ports, and scores.
-        result += strprintf("\n\nLocal services: %s", ServicesList(networkinfo["localservicesnames"]));
+        if (!DetailsRequested()) {
+            result += strprintf("\n\nLocal services: %s", ServicesList(networkinfo["localservicesnames"]));
+        }
         result += "\n\nLocal addresses";
         const std::vector<UniValue>& local_addrs{networkinfo["localaddresses"].getValues()};
         if (local_addrs.empty()) {
