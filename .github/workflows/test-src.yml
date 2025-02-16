@@ -38,6 +38,14 @@ jobs:
         with:
           name: ${{ inputs.bundle-key }}
 
+      - name: Manage releases cache
+        uses: actions/cache@v4
+        if: inputs.build-target == 'linux64'
+        with:
+          path: |
+            releases
+          key: releases-${{ hashFiles('ci/test/00_setup_env_native_qt5.sh', 'test/get_previous_releases.py') }}
+
       - name: Run functional tests
         id: test
         run: |
