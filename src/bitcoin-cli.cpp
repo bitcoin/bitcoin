@@ -404,7 +404,7 @@ private:
         return UNKNOWN_NETWORK;
     }
     uint8_t m_details_level{0}; //!< Optional user-supplied arg to set dashboard details level
-    bool DetailsRequested() const { return m_details_level > 0 && m_details_level < 5; }
+    bool DetailsRequested() const { return m_details_level; }
     bool IsAddressSelected() const { return m_details_level == 2 || m_details_level == 4; }
     bool IsVersionSelected() const { return m_details_level == 3 || m_details_level == 4; }
     bool m_outbound_only_selected{false};
