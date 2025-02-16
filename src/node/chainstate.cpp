@@ -187,9 +187,6 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
         }
     }
 
-    if (!dmnman->MigrateDBIfNeeded() || !dmnman->MigrateDBIfNeeded2()) {
-        return ChainstateLoadingError::ERROR_UPGRADING_EVO_DB;
-    }
     if (!mnhf_manager->ForceSignalDBUpdate()) {
         return ChainstateLoadingError::ERROR_UPGRADING_SIGNALS_DB;
     }
