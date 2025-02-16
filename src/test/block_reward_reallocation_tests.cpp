@@ -101,7 +101,7 @@ static void SignTransaction(const CTxMemPool& mempool, CMutableTransaction& tx, 
 
     for (auto [i, input] : enumerate(tx.vin)) {
         uint256 hashBlock;
-        CTransactionRef txFrom = GetTransaction(/* block_index */ nullptr, &mempool, input.prevout.hash, Params().GetConsensus(), hashBlock);
+        CTransactionRef txFrom = GetTransaction(/*block_index=*/nullptr, &mempool, input.prevout.hash, Params().GetConsensus(), hashBlock);
         BOOST_REQUIRE(txFrom);
         BOOST_REQUIRE(SignSignature(tempKeystore, *txFrom, tx, i, SIGHASH_ALL));
     }

@@ -400,7 +400,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     peerLogic->InitializeNode(*nodes[2], NODE_NETWORK);
     nodes[2]->fSuccessfullyConnected = true;
     connman->AddTestNode(*nodes[2]);
-    peerLogic->Misbehaving(nodes[2]->GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ "");
+    peerLogic->Misbehaving(nodes[2]->GetId(), DISCOURAGEMENT_THRESHOLD, /*message=*/"");
     BOOST_CHECK(peerLogic->SendMessages(nodes[2]));
     BOOST_CHECK(banman->IsDiscouraged(addr[0]));
     BOOST_CHECK(banman->IsDiscouraged(addr[1]));

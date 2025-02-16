@@ -389,15 +389,15 @@ TestChainSetup::TestChainSetup(int num_blocks, const std::vector<const char*>& e
 
     CCheckpointData checkpoints{
         {
-            /* TestChainDATSetup */
+            /*TestChainDATSetup=*/
             {   98, uint256S("0x150e127929d578d8129b77a6cb7e2e343a1379aa3feaaa9cce59e0a645756a81") },
-            /* TestChain100Setup */
+            /*TestChain100Setup=*/
             {  100, uint256S("0x6ffb83129c19ebdf1ae3771be6a67fe34b35f4c956326b9ba152fac1649f65ae") },
-            /* TestChainDIP3BeforeActivationSetup */
+            /*TestChainDIP3BeforeActivationSetup=*/
             {  430, uint256S("0x0bcefaa33fec56cd84d05d0e76cd6a78badcc20f627d91903646de6a07930a14") },
-            /* TestChainBRRBeforeActivationSetup */
+            /*TestChainBRRBeforeActivationSetup=*/
             {  497, uint256S("0x0857a9b5db51835b1c828f019f4c664b5fe6c28ac44a6d868436930f832d31e5") },
-            /* TestChainV19BeforeActivationSetup */
+            /*TestChainV19BeforeActivationSetup=*/
             {  494, uint256S("0x44ee5c8a5e5cbd4437d63c54ddc1d40329be811b25c492fa901e11cdf408f905") },
         }
     };

@@ -48,7 +48,7 @@ CreateAndActivateUTXOSnapshot(NodeContext& node, const fs::path root, F malleati
 
     malleation(auto_infile, metadata);
 
-    return node.chainman->ActivateSnapshot(auto_infile, metadata, /*in_memory*/ true);
+    return node.chainman->ActivateSnapshot(auto_infile, metadata, /*in_memory=*/true);
 }
 
 

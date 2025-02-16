@@ -89,15 +89,15 @@ FUZZ_TARGET(connman, .init = initialize_connman)
             },
             [&] {
                 (void)connman.GetAddresses(
-                    /* max_addresses */ fuzzed_data_provider.ConsumeIntegral<size_t>(),
-                    /* max_pct */ fuzzed_data_provider.ConsumeIntegral<size_t>(),
-                    /* network */ std::nullopt);
+                    /*max_addresses=*/fuzzed_data_provider.ConsumeIntegral<size_t>(),
+                    /*max_pct=*/fuzzed_data_provider.ConsumeIntegral<size_t>(),
+                    /*network=*/std::nullopt);
             },
             [&] {
                 (void)connman.GetAddresses(
-                    /* requestor */ random_node,
-                    /* max_addresses */ fuzzed_data_provider.ConsumeIntegral<size_t>(),
-                    /* max_pct */ fuzzed_data_provider.ConsumeIntegral<size_t>());
+                    /*requestor=*/random_node,
+                    /*max_addresses=*/fuzzed_data_provider.ConsumeIntegral<size_t>(),
+                    /*max_pct=*/fuzzed_data_provider.ConsumeIntegral<size_t>());
             },
             [&] {
                 (void)connman.GetDeterministicRandomizer(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
