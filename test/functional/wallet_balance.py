@@ -261,7 +261,6 @@ class WalletTest(BitcoinTestFramework):
 
         # Now confirm tx_replace
         block_reorg = self.generatetoaddress(self.nodes[1], 1, ADDRESS_WATCHONLY)[0]
-        self.sync_all()
         assert_equal(self.nodes[0].getbalance(minconf=0), total_amount)
 
         self.log.info('Put txs back into mempool of node 1 (not node 0)')

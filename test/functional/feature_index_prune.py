@@ -48,7 +48,6 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
         for _ in range(n):
             self.generate(self.nodes[0], 250)
         self.generate(self.nodes[0], blocks % 250)
-        self.sync_blocks()
 
     def restart_without_indices(self):
         for i in range(3):
@@ -152,7 +151,6 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log(['basic block filter index prune lock moved back to 2480']):
             self.nodes[3].invalidateblock(self.nodes[0].getblockhash(2480))
             self.generate(self.nodes[3], 30)
-            self.sync_blocks()
 
         for idx in range(self.num_nodes):
             self.nodes[idx].stop_node(expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE if idx != 3 else "")

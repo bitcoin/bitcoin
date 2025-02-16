@@ -86,8 +86,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self.wallet.send_self_transfer(from_node=node)
         self.generate(node, 1)
 
-        self.sync_blocks(timeout=120)
-
         self.log.info("Test that gettxoutsetinfo() output is consistent with or without coinstatsindex option")
         res0 = node.gettxoutsetinfo('none')
 

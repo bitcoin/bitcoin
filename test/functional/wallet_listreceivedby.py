@@ -27,7 +27,6 @@ class ReceivedByTest(BitcoinTestFramework):
     def run_test(self):
         # Generate block to get out of IBD
         self.generate(self.nodes[0], 1)
-        self.sync_blocks()
 
         # save the number of coinbase reward addresses so far
         num_cb_reward_addresses = len(self.nodes[1].listreceivedbyaddress(minconf=0, include_empty=True, include_watchonly=True))
