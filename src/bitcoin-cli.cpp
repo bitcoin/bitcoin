@@ -130,14 +130,10 @@ static void libevent_log_cb(int severity, const char *msg)
 // Exception thrown on connection error.  This error is used to determine
 // when to wait if -rpcwait is given.
 //
-class CConnectionFailed : public std::runtime_error
-{
-public:
-
+struct CConnectionFailed : std::runtime_error {
     explicit inline CConnectionFailed(const std::string& msg) :
         std::runtime_error(msg)
     {}
-
 };
 
 //
@@ -267,21 +263,17 @@ static int8_t NetworkStringToId(const std::string& str)
     return UNKNOWN_NETWORK;
 }
 
-/** Class that handles the conversion from a command-line to a JSON-RPC request,
+/** Handle the conversion from a command-line to a JSON-RPC request,
  * as well as converting back to a JSON object that can be shown as result.
  */
-class BaseRequestHandler
-{
-public:
+struct BaseRequestHandler {
     virtual ~BaseRequestHandler() = default;
     virtual UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) = 0;
     virtual UniValue ProcessReply(const UniValue &batch_in) = 0;
 };
 
 /** Process addrinfo requests */
-class AddrinfoRequestHandler : public BaseRequestHandler
-{
-public:
+struct AddrinfoRequestHandler : BaseRequestHandler {
     UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
     {
         if (!args.empty()) {
@@ -320,9 +312,7 @@ public:
 };
 
 /** Process getinfo requests */
-class GetinfoRequestHandler: public BaseRequestHandler
-{
-public:
+struct GetinfoRequestHandler : BaseRequestHandler {
     const int ID_NETWORKINFO = 0;
     const int ID_BLOCKCHAININFO = 1;
     const int ID_WALLETINFO = 2;
@@ -767,8 +757,7 @@ protected:
 };
 
 /** Process default single requests */
-class DefaultRequestHandler: public BaseRequestHandler {
-public:
+struct DefaultRequestHandler : BaseRequestHandler {
     UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
     {
         UniValue params;
