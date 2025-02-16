@@ -4,7 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the getblocklocations rpc call."""
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (assert_equal, assert_raises_rpc_error)
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+    util_xor,
+)
 from test_framework.messages import ser_vector
 
 
@@ -12,11 +16,6 @@ class GetblocklocationsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [
-            [
-                "-blocksxor=0",
-            ],
-        ]
 
     def run_test(self):
         """Test a trivial usage of the getblocklocations RPC command."""
@@ -50,20 +49,22 @@ class GetblocklocationsTest(BitcoinTestFramework):
             if last_locations: assert_equal(last_locations, locations)
             last_locations = locations
 
+        xor_key = node.read_xor_key()
+
         # Read blocks' data from the file system
         blocks_dir = node.chain_path / 'blocks'
         with (blocks_dir / 'blk00000.dat').open('rb') as blkfile:
             for block_hash in block_hashes:
                 location = block_locations[block_hash]
                 block_bytes = bytes.fromhex(node.getblock(block_hash, 0))
-                assert_file_contains(blkfile, location['data'], block_bytes)
+                assert_file_contains(blkfile, location['data'], block_bytes, xor_key)
 
 
         empty_undo = ser_vector([])  # empty blocks = no transactions to undo
         with (blocks_dir / 'rev00000.dat').open('rb') as revfile:
             for block_hash in block_hashes[:-1]:  # skip genesis block (has no undo)
                 location = block_locations[block_hash]
-                assert_file_contains(revfile, location['undo'], empty_undo)
+                assert_file_contains(revfile, location['undo'], empty_undo, xor_key)
 
         # Fail getting unknown block
         unknown_block_hash = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
@@ -75,9 +76,11 @@ class GetblocklocationsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, 'Block locations are not available in prune mode', node.getblocklocations, tip, 3)
 
 
-def assert_file_contains(fileobj, offset, data):
+def assert_file_contains(fileobj, offset, data, xor_key):
     fileobj.seek(offset)
-    assert_equal(fileobj.read(len(data)), data)
+    read_data = fileobj.read(len(data))
+    read_data = util_xor(read_data, xor_key, offset=offset)
+    assert_equal(read_data, data)
 
 if __name__ == '__main__':
     GetblocklocationsTest(__file__).main()
