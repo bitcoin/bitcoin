@@ -314,6 +314,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
             if not found_unconfirmed:
                 break
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.sync_blocks()
 
 if __name__ == '__main__':
     LLMQCoinbaseCommitmentsTest().main()
