@@ -27,11 +27,11 @@ class WalletTest(BitcoinTestFramework):
         self.num_nodes = 4
         if self.options.descriptors:
             self.extra_args = [[
-                "-acceptnonstdtxn=1"
+                "-acceptnonstdtxn=1", "-whitelist=noban@127.0.0.1"
             ] for i in range(self.num_nodes)]
         else:
             self.extra_args = [[
-                "-acceptnonstdtxn=1",
+                "-acceptnonstdtxn=1", "-whitelist=noban@127.0.0.1",
                 '-usehd={:d}'.format(i%2==0)
             ] for i in range(self.num_nodes)]
         self.setup_clean_chain = True

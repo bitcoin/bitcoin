@@ -38,7 +38,7 @@ static void WalletCreate(CWallet* wallet_instance, uint64_t wallet_creation_flag
     } else {
         wallet_instance->SetMinVersion(FEATURE_COMPRPUBKEY);
     }
-    wallet_instance->SetWalletFlag(wallet_creation_flags);
+    wallet_instance->InitWalletFlags(wallet_creation_flags);
 
     if (!wallet_instance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
         // TODO: use here SetupGeneration instead, such as: spk_man->SetupGeneration(false);
