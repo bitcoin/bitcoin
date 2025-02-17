@@ -1255,14 +1255,8 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
             // Distracting clones:
             for (int j = 0; j < 100; ++j) {
                 add_coin(available_coins, wallet, CAmount(8 * COIN), CFeeRate(5000), 144, false, 0, true, 1000);
-            }
-            for (int j = 0; j < 100; ++j) {
                 add_coin(available_coins, wallet, CAmount(7 * COIN), CFeeRate(5000), 144, false, 0, true, 800);
-            }
-            for (int j = 0; j < 100; ++j) {
                 add_coin(available_coins, wallet, CAmount(6 * COIN), CFeeRate(5000), 144, false, 0, true, 600);
-            }
-            for (int j = 0; j < 100; ++j) {
                 add_coin(available_coins, wallet, CAmount(5 * COIN), CFeeRate(5000), 144, false, 0, true, 400);
             }
             return available_coins;
