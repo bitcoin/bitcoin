@@ -1,8 +1,8 @@
 # Dependencies
 
 These are the dependencies used by Bitcoin Core.
-You can find installation instructions in the `build-*.md` file for your platform.
-"Version Used" refers to the release binaries.
+You can find installation instructions in the `build-*.md` file for your platform, or self-compile
+them using [depends](/depends/README.md). "Version Used" refers to the release binaries.
 
 ## Compiler
 
