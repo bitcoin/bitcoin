@@ -123,23 +123,27 @@ if(NOT BUILD_SHARED_LIBS)
   set(all_kernel_static_link_libs "")
   get_target_static_link_libs(bitcoinkernel all_kernel_static_link_libs)
 
-  install(TARGETS ${all_kernel_static_link_libs} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT bitcoinkernel)
+  install(TARGETS ${all_kernel_static_link_libs} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libbitcoinkernel)
   list(TRANSFORM all_kernel_static_link_libs PREPEND "-l")
   # LIBS_PRIVATE is substituted in the pkg-config file.
   list(JOIN all_kernel_static_link_libs " " LIBS_PRIVATE)
 endif()
 
 configure_file(${PROJECT_SOURCE_DIR}/libbitcoinkernel.pc.in ${PROJECT_BINARY_DIR}/libbitcoinkernel.pc @ONLY)
-install(FILES ${PROJECT_BINARY_DIR}/libbitcoinkernel.pc DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" COMPONENT bitcoinkernel)
+install(FILES ${PROJECT_BINARY_DIR}/libbitcoinkernel.pc DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" COMPONENT libbitcoinkernel)
+
+# Add a convenience libbitcoinkernel target as a synonym for bitcoinkernel.
+add_custom_target(libbitcoinkernel)
+add_dependencies(libbitcoinkernel bitcoinkernel)
 
 install(TARGETS bitcoinkernel
   RUNTIME
     DESTINATION ${CMAKE_INSTALL_BINDIR}
-    COMPONENT bitcoinkernel
+    COMPONENT libbitcoinkernel
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    COMPONENT bitcoinkernel
+    COMPONENT libbitcoinkernel
   ARCHIVE
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    COMPONENT bitcoinkernel
+    COMPONENT libbitcoinkernel
 )
