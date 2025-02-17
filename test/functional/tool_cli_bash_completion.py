@@ -137,7 +137,7 @@ class CliCompletionTest(BitcoinTestFramework):
                 default=False,
                 action='store_true',
                 help='Force the test to overwrite the file pointer to by the --completion'
-                    'to the newly generated completion file',
+                     'to the newly generated completion file',
         )
     def parse_single_helper(self, option):
         """ Complete the arguments of option via the RPC format command. """
