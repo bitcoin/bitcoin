@@ -4,8 +4,6 @@
 
 include_guard(GLOBAL)
 
-include(TryAppendCXXFlags)
-
 macro(normalize_string string)
   string(REGEX REPLACE " +" " " ${string} "${${string}}")
   string(STRIP "${${string}}" ${string})
@@ -119,14 +117,8 @@ endfunction()
 
 set_default_config(RelWithDebInfo)
 
-# Redefine/adjust per-configuration flags.
-target_compile_definitions(core_interface_debug INTERFACE
-  DEBUG
-  DEBUG_LOCKORDER
-  DEBUG_LOCKCONTENTION
-  RPC_DOC_CHECK
-  ABORT_ON_FAILED_ASSUME
-)
+include(TryAppendCXXFlags)
+
 # We leave assertions on.
 if(MSVC)
   remove_cxx_flag_from_all_configs(/DNDEBUG)

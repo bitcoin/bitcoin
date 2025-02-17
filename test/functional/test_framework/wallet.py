@@ -215,7 +215,7 @@ class MiniWallet:
         self.rescan_utxos()
         return blocks
 
-    def get_scriptPubKey(self):
+    def get_output_script(self):
         return self._scriptPubKey
 
     def get_descriptor(self):

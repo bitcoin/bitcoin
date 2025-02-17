@@ -12,7 +12,7 @@ endif()
 
 # COV_TOOL is used to replace a placeholder.
 configure_file(
-  cmake/cov_tool_wrapper.sh.in ${CMAKE_CURRENT_LIST_DIR}/cov_tool_wrapper.sh
+  ${CMAKE_CURRENT_LIST_DIR}/cov_tool_wrapper.sh.in ${CMAKE_CURRENT_LIST_DIR}/cov_tool_wrapper.sh
   FILE_PERMISSIONS OWNER_READ OWNER_EXECUTE
                    GROUP_READ GROUP_EXECUTE
                    WORLD_READ

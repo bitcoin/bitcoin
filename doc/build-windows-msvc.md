@@ -59,6 +59,17 @@ ctest --test-dir build --build-config Release  # Use "-j N" for N parallel tests
 cmake --install build --config Release         # Optional.
 ```
 
+If building with `BUILD_GUI=ON`, vcpkg installation during the build
+configuration step might fail because of extremely long paths required during
+vcpkg installation if your vcpkg instance is installed in the default Visual
+Studio directory. This can be avoided without modifying your vcpkg root
+directory by changing vcpkg's intermediate build directory with the
+`--x-buildtrees-root` argument to something shorter, for example:
+
+```powershell
+cmake -B build --preset vs2022-static -DVCPKG_INSTALL_OPTIONS="--x-buildtrees-root=C:\vcpkg"
+```
+
 ### 5. Building with Dynamic Linking without GUI
 
 ```

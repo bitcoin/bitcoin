@@ -2,7 +2,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
-include(GNUInstallDirs)
 include(AddWindowsResources)
 
 configure_file(${PROJECT_SOURCE_DIR}/cmake/bitcoin-build-config.h.in bitcoin-build-config.h USE_SOURCE_PERMISSIONS @ONLY)
@@ -146,7 +145,6 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   pow.cpp
   protocol.cpp
   psbt.cpp
-  rpc/external_signer.cpp
   rpc/rawtransaction_util.cpp
   rpc/request.cpp
   rpc/util.cpp
@@ -170,8 +168,8 @@ target_link_libraries(bitcoin_common
     $<$<PLATFORM_ID:Windows>:ws2_32>
 )
 
+include(InstallBinaryComponent)
 
-set(installable_targets)
 if(ENABLE_WALLET)
   add_subdirectory(wallet)
 
@@ -189,7 +187,7 @@ if(ENABLE_WALLET)
       bitcoin_util
       Boost::headers
     )
-    list(APPEND installable_targets bitcoin-wallet)
+    install_binary_component(bitcoin-wallet HAS_MANPAGE)
   endif()
 endif()
 
@@ -265,6 +263,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   policy/truc_policy.cpp
   rest.cpp
   rpc/blockchain.cpp
+  rpc/external_signer.cpp
   rpc/fees.cpp
   rpc/mempool.cpp
   rpc/mining.cpp
@@ -318,9 +317,9 @@ if(BUILD_DAEMON)
     bitcoin_node
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
   )
-  list(APPEND installable_targets bitcoind)
+  install_binary_component(bitcoind HAS_MANPAGE)
 endif()
-if(WITH_MULTIPROCESS)
+if(WITH_MULTIPROCESS AND BUILD_DAEMON)
   add_executable(bitcoin-node
     bitcoind.cpp
     init/bitcoin-node.cpp
@@ -331,9 +330,10 @@ if(WITH_MULTIPROCESS)
     bitcoin_ipc
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
   )
-  list(APPEND installable_targets bitcoin-node)
+  install_binary_component(bitcoin-node)
+endif()
 
-  if(BUILD_TESTS)
+if(WITH_MULTIPROCESS AND BUILD_TESTS)
     # bitcoin_ipc_test library target is defined here in src/CMakeLists.txt
     # instead of src/test/CMakeLists.txt so capnp files in src/test/ are able to
     # reference capnp files in src/ipc/capnp/ by relative path. The Cap'n Proto
@@ -347,7 +347,6 @@ if(WITH_MULTIPROCESS)
       test/ipc_test.capnp
     )
     add_dependencies(bitcoin_ipc_test bitcoin_ipc_headers)
-  endif()
 endif()
 
 
@@ -374,7 +373,7 @@ if(BUILD_CLI)
     libevent::core
     libevent::extra
   )
-  list(APPEND installable_targets bitcoin-cli)
+  install_binary_component(bitcoin-cli HAS_MANPAGE)
 endif()
 
 
@@ -387,7 +386,7 @@ if(BUILD_TX)
     bitcoin_util
     univalue
   )
-  list(APPEND installable_targets bitcoin-tx)
+  install_binary_component(bitcoin-tx HAS_MANPAGE)
 endif()
 
 
@@ -399,7 +398,7 @@ if(BUILD_UTIL)
     bitcoin_common
     bitcoin_util
   )
-  list(APPEND installable_targets bitcoin-util)
+  install_binary_component(bitcoin-util HAS_MANPAGE)
 endif()
 
 
@@ -444,18 +443,4 @@ endif()
 
 if(BUILD_FUZZ_BINARY)
   add_subdirectory(test/fuzz)
-endif()
-
-
-install(TARGETS ${installable_targets}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
-unset(installable_targets)
-
-if(INSTALL_MAN)
-  # TODO: these stubs are no longer needed. man pages should be generated at install time.
-  install(DIRECTORY ../doc/man/
-    DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
-    FILES_MATCHING PATTERN *.1
-  )
 endif()

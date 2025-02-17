@@ -41,9 +41,12 @@ def get_socket_inodes(pid):
     base = '/proc/%i/fd' % pid
     inodes = []
     for item in os.listdir(base):
-        target = os.readlink(os.path.join(base, item))
-        if target.startswith('socket:'):
-            inodes.append(int(target[8:-1]))
+        try:
+            target = os.readlink(os.path.join(base, item))
+            if target.startswith('socket:'):
+                inodes.append(int(target[8:-1]))
+        except FileNotFoundError:
+            pass
     return inodes
 
 def _remove_empty(array):

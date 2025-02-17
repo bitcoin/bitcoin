@@ -44,7 +44,7 @@ class FeatureFrameworkMiniWalletTest(BitcoinTestFramework):
             tag = ''.join(random.choice(string.ascii_letters) for _ in range(20))
             self.log.debug(f"-> ({i}) tag name: {tag}")
             tagged_wallet = MiniWallet(node, tag_name=tag)
-            untagged_wallet.send_to(from_node=node, scriptPubKey=tagged_wallet.get_scriptPubKey(), amount=100000)
+            untagged_wallet.send_to(from_node=node, scriptPubKey=tagged_wallet.get_output_script(), amount=100000)
             tagged_wallet.rescan_utxos()
             tagged_wallet.send_self_transfer(from_node=node)
         self.generate(node, 1)  # clear mempool

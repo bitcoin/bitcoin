@@ -81,6 +81,4 @@ add_test(NAME bench_sanity_check_high_priority
   COMMAND bench_bitcoin -sanity-check -priority-level=high
 )
 
-install(TARGETS bench_bitcoin
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+install_binary_component(bench_bitcoin)

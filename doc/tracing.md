@@ -55,6 +55,9 @@ The currently available tracepoints are listed here.
 
 ### Context `net`
 
+[^address-length]: An Onion v3 address with a `:` and a five digit port has 68
+  chars. However, addresses of peers added with host names might be longer.
+
 #### Tracepoint `net:inbound_message`
 
 Is called when a message is received from a peer over the P2P network. Passes
@@ -62,7 +65,7 @@ information about our peer, the connection and the message as arguments.
 
 Arguments passed:
 1. Peer ID as `int64`
-2. Peer Address and Port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (max. length 68 characters)
+2. Peer Address and Port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (normally up to 68 characters[^address-length])
 3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
 4. Message Type (inv, ping, getdata, addrv2, ...) as `pointer to C-style String` (max. length 20 characters)
 5. Message Size in bytes as `uint64`
@@ -81,7 +84,7 @@ information about our peer, the connection and the message as arguments.
 
 Arguments passed:
 1. Peer ID as `int64`
-2. Peer Address and Port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (max. length 68 characters)
+2. Peer Address and Port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (normally up to 68 characters[^address-length])
 3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
 4. Message Type (inv, ping, getdata, addrv2, ...) as `pointer to C-style String` (max. length 20 characters)
 5. Message Size in bytes as `uint64`
@@ -92,6 +95,62 @@ limitations in the eBPF kernel VM it might not be possible to pass the message
 to user-space in full. Messages longer than a 32kb might be cut off. This can
 be detected in tracing scripts by comparing the message size to the length of
 the passed message.
+
+#### Tracepoint `net:inbound_connection`
+
+Is called when a new inbound connection is opened to us. Passes information about
+the peer and the number of inbound connections including the newly opened connection.
+
+Arguments passed:
+1. Peer ID as `int64`
+2. Peer address and port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (normally up to 68 characters[^address-length])
+3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
+4. Network the peer connects from as `uint32` (1 = IPv4, 2 = IPv6, 3 = Onion, 4 = I2P, 5 = CJDNS). See `Network` enum in `netaddress.h`.
+5. Number of existing inbound connections as `uint64` including the newly opened inbound connection.
+
+#### Tracepoint `net:outbound_connection`
+
+Is called when a new outbound connection is opened by us. Passes information about
+the peer and the number of outbound connections including the newly opened connection.
+
+Arguments passed:
+1. Peer ID as `int64`
+2. Peer address and port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (normally up to 68 characters[^address-length])
+3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
+4. Network of the peer as `uint32` (1 = IPv4, 2 = IPv6, 3 = Onion, 4 = I2P, 5 = CJDNS). See `Network` enum in `netaddress.h`.
+5. Number of existing outbound connections as `uint64` including the newly opened outbound connection.
+
+#### Tracepoint `net:evicted_inbound_connection`
+
+Is called when a inbound connection is evicted by us. Passes information about the evicted peer and the time at connection establishment.
+
+Arguments passed:
+1. Peer ID as `int64`
+2. Peer address and port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (normally up to 68 characters[^address-length])
+3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
+4. Network the peer connects from as `uint32` (1 = IPv4, 2 = IPv6, 3 = Onion, 4 = I2P, 5 = CJDNS). See `Network` enum in `netaddress.h`.
+5. Connection established UNIX epoch timestamp in seconds as `uint64`.
+
+#### Tracepoint `net:misbehaving_connection`
+
+Is called when a connection is misbehaving. Passes the peer id and a
+reason for the peers misbehavior.
+
+Arguments passed:
+1. Peer ID as `int64`.
+2. Reason why the peer is misbehaving as `pointer to C-style String` (max. length 128 characters).
+
+#### Tracepoint `net:closed_connection`
+
+Is called when a connection is closed. Passes information about the closed peer
+and the time at connection establishment.
+
+Arguments passed:
+1. Peer ID as `int64`
+2. Peer address and port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (normally up to 68 characters[^address-length])
+3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
+4. Network the peer connects from as `uint32` (1 = IPv4, 2 = IPv6, 3 = Onion, 4 = I2P, 5 = CJDNS). See `Network` enum in `netaddress.h`.
+5. Connection established UNIX epoch timestamp in seconds as `uint64`.
 
 ### Context `validation`
 

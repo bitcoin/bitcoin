@@ -4,6 +4,7 @@ $(package)_download_path=https://github.com/libevent/libevent/releases/download/
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
 $(package)_sha256_hash=92e6de1be9ec176428fd2367677e61ceffc2ee1cb119035037a27d346b0403bb
 $(package)_patches=cmake_fixups.patch
+$(package)_patches += netbsd_fixup.patch
 $(package)_build_subdir=build
 
 # When building for Windows, we set _WIN32_WINNT to target the same Windows
@@ -13,7 +14,7 @@ define $(package)_set_vars
   $(package)_config_opts=-DCMAKE_BUILD_TYPE=None -DEVENT__DISABLE_BENCHMARK=ON -DEVENT__DISABLE_OPENSSL=ON
   $(package)_config_opts+=-DEVENT__DISABLE_SAMPLES=ON -DEVENT__DISABLE_REGRESS=ON
   $(package)_config_opts+=-DEVENT__DISABLE_TESTS=ON -DEVENT__LIBRARY_TYPE=STATIC
-  $(package)_cflags += -ffile-prefix-map=$($(package)_extract_dir)=/usr
+  $(package)_cflags += -fdebug-prefix-map=$($(package)_extract_dir)=/usr -fmacro-prefix-map=$($(package)_extract_dir)=/usr
   $(package)_cppflags += -D_GNU_SOURCE
   $(package)_cppflags_mingw32=-D_WIN32_WINNT=0x0A00
 
@@ -23,7 +24,8 @@ define $(package)_set_vars
 endef
 
 define $(package)_preprocess_cmds
-  patch -p1 < $($(package)_patch_dir)/cmake_fixups.patch
+  patch -p1 < $($(package)_patch_dir)/cmake_fixups.patch && \
+  patch -p1 < $($(package)_patch_dir)/netbsd_fixup.patch
 endef
 
 define $(package)_config_cmds

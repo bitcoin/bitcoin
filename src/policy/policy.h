@@ -20,7 +20,14 @@ class CFeeRate;
 class CScript;
 
 /** Default for -blockmaxweight, which controls the range of block weights the mining code will create **/
-static constexpr unsigned int DEFAULT_BLOCK_MAX_WEIGHT{MAX_BLOCK_WEIGHT - 4000};
+static constexpr unsigned int DEFAULT_BLOCK_MAX_WEIGHT{MAX_BLOCK_WEIGHT};
+/** Default for -blockreservedweight **/
+static constexpr unsigned int DEFAULT_BLOCK_RESERVED_WEIGHT{8000};
+/** This accounts for the block header, var_int encoding of the transaction count and a minimally viable
+ * coinbase transaction. It adds an additional safety margin, because even with a thorough understanding
+ * of block serialization, it's easy to make a costly mistake when trying to squeeze every last byte.
+ * Setting a lower value is prevented at startup. */
+static constexpr unsigned int MINIMUM_BLOCK_RESERVED_WEIGHT{2000};
 /** Default for -blockmintxfee, which sets the minimum feerate for a transaction in blocks created by mining code **/
 static constexpr unsigned int DEFAULT_BLOCK_MIN_TX_FEE{1000};
 /** The maximum weight for transactions we're willing to relay/mine */

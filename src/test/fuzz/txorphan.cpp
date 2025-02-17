@@ -33,7 +33,7 @@ void initialize_orphanage()
 FUZZ_TARGET(txorphan, .init = initialize_orphanage)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    FastRandomContext limit_orphans_rng{/*fDeterministic=*/true};
+    FastRandomContext orphanage_rng{/*fDeterministic=*/true};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 
     TxOrphanage orphanage;
@@ -75,11 +75,13 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
             return new_tx;
         }();
 
+        const auto wtxid{tx->GetWitnessHash()};
+
         // Trigger orphanage functions that are called using parents. ptx_potential_parent is a tx we constructed in a
         // previous loop and potentially the parent of this tx.
         if (ptx_potential_parent) {
             // Set up future GetTxToReconsider call.
-            orphanage.AddChildrenToWorkSet(*ptx_potential_parent);
+            orphanage.AddChildrenToWorkSet(*ptx_potential_parent, orphanage_rng);
 
             // Check that all txns returned from GetChildrenFrom* are indeed a direct child of this tx.
             NodeId peer_id = fuzzed_data_provider.ConsumeIntegral<NodeId>();
@@ -94,6 +96,9 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
         LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10 * DEFAULT_MAX_ORPHAN_TRANSACTIONS)
         {
             NodeId peer_id = fuzzed_data_provider.ConsumeIntegral<NodeId>();
+            const auto total_bytes_start{orphanage.TotalOrphanUsage()};
+            const auto total_peer_bytes_start{orphanage.UsageByPeer(peer_id)};
+            const auto tx_weight{GetTransactionWeight(*tx)};
 
             CallOneOf(
                 fuzzed_data_provider,
@@ -113,12 +118,29 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                         bool add_tx = orphanage.AddTx(tx, peer_id);
                         // have_tx == true -> add_tx == false
                         Assert(!have_tx || !add_tx);
+
+                        if (add_tx) {
+                            Assert(orphanage.UsageByPeer(peer_id) == tx_weight + total_peer_bytes_start);
+                            Assert(orphanage.TotalOrphanUsage() == tx_weight + total_bytes_start);
+                            Assert(tx_weight <= MAX_STANDARD_TX_WEIGHT);
+                        } else {
+                            // Peer may have been added as an announcer.
+                            if (orphanage.UsageByPeer(peer_id) == tx_weight + total_peer_bytes_start) {
+                                Assert(orphanage.HaveTxFromPeer(wtxid, peer_id));
+                            } else {
+                                // Otherwise, there must not be any change to the peer byte count.
+                                Assert(orphanage.UsageByPeer(peer_id) == total_peer_bytes_start);
+                            }
+
+                            // Regardless, total bytes should not have changed.
+                            Assert(orphanage.TotalOrphanUsage() == total_bytes_start);
+                        }
                     }
                     have_tx = orphanage.HaveTx(tx->GetWitnessHash());
                     {
                         bool add_tx = orphanage.AddTx(tx, peer_id);
                         // if have_tx is still false, it must be too big
-                        Assert(!have_tx == (GetTransactionWeight(*tx) > MAX_STANDARD_TX_WEIGHT));
+                        Assert(!have_tx == (tx_weight > MAX_STANDARD_TX_WEIGHT));
                         Assert(!have_tx || !add_tx);
                     }
                 },
@@ -132,33 +154,57 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                         Assert(have_tx || !added_announcer);
                         // have_tx_and_peer == true -> added_announcer == false
                         Assert(!have_tx_and_peer || !added_announcer);
+
+                        // Total bytes should not have changed. If peer was added as announcer, byte
+                        // accounting must have been updated.
+                        Assert(orphanage.TotalOrphanUsage() == total_bytes_start);
+                        if (added_announcer) {
+                            Assert(orphanage.UsageByPeer(peer_id) == tx_weight + total_peer_bytes_start);
+                        } else {
+                            Assert(orphanage.UsageByPeer(peer_id) == total_peer_bytes_start);
+                        }
                     }
                 },
                 [&] {
                     bool have_tx = orphanage.HaveTx(tx->GetWitnessHash());
+                    bool have_tx_and_peer{orphanage.HaveTxFromPeer(wtxid, peer_id)};
                     // EraseTx should return 0 if m_orphans doesn't have the tx
                     {
+                        auto bytes_from_peer_before{orphanage.UsageByPeer(peer_id)};
                         Assert(have_tx == orphanage.EraseTx(tx->GetWitnessHash()));
+                        if (have_tx) {
+                            Assert(orphanage.TotalOrphanUsage() == total_bytes_start - tx_weight);
+                            if (have_tx_and_peer) {
+                                Assert(orphanage.UsageByPeer(peer_id) == bytes_from_peer_before - tx_weight);
+                            } else {
+                                Assert(orphanage.UsageByPeer(peer_id) == bytes_from_peer_before);
+                            }
+                        } else {
+                            Assert(orphanage.TotalOrphanUsage() == total_bytes_start);
+                        }
                     }
                     have_tx = orphanage.HaveTx(tx->GetWitnessHash());
+                    have_tx_and_peer = orphanage.HaveTxFromPeer(wtxid, peer_id);
                     // have_tx should be false and EraseTx should fail
                     {
-                        Assert(!have_tx && !orphanage.EraseTx(tx->GetWitnessHash()));
+                        Assert(!have_tx && !have_tx_and_peer && !orphanage.EraseTx(wtxid));
                     }
                 },
                 [&] {
                     orphanage.EraseForPeer(peer_id);
                     Assert(!orphanage.HaveTxFromPeer(tx->GetWitnessHash(), peer_id));
+                    Assert(orphanage.UsageByPeer(peer_id) == 0);
                 },
                 [&] {
                     // test mocktime and expiry
                     SetMockTime(ConsumeTime(fuzzed_data_provider));
                     auto limit = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
-                    orphanage.LimitOrphans(limit, limit_orphans_rng);
+                    orphanage.LimitOrphans(limit, orphanage_rng);
                     Assert(orphanage.Size() <= limit);
                 });
 
         }
+
         // Set tx as potential parent to be used for future GetChildren() calls.
         if (!ptx_potential_parent || fuzzed_data_provider.ConsumeBool()) {
             ptx_potential_parent = tx;
@@ -168,4 +214,5 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
         const bool get_tx_nonnull{orphanage.GetTx(tx->GetWitnessHash()) != nullptr};
         Assert(have_tx == get_tx_nonnull);
     }
+    orphanage.SanityCheck();
 }

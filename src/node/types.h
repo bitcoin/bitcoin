@@ -14,6 +14,7 @@
 #define BITCOIN_NODE_TYPES_H
 
 #include <cstddef>
+#include <policy/policy.h>
 #include <script/script.h>
 
 namespace node {
@@ -34,11 +35,10 @@ struct BlockCreateOptions {
      */
     bool use_mempool{true};
     /**
-     * The maximum additional weight which the pool will add to the coinbase
-     * scriptSig, witness and outputs. This must include any additional
-     * weight needed for larger CompactSize encoded lengths.
+     * The default reserved weight for the fixed-size block header,
+     * transaction count and coinbase transaction.
      */
-    size_t coinbase_max_additional_weight{4000};
+    size_t block_reserved_weight{DEFAULT_BLOCK_RESERVED_WEIGHT};
     /**
      * The maximum additional sigops which the pool will add in coinbase
      * transaction outputs.
