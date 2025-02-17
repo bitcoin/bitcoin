@@ -139,7 +139,7 @@ void CMasternodeSync::ProcessTick(const PeerManager& peerman, const CGovernanceM
     }
 
     nTimeLastProcess = GetTime();
-    const CConnman::NodesSnapshot snap{connman, /* filter = */ CConnman::FullyConnectedOnly};
+    const CConnman::NodesSnapshot snap{connman, /* cond = */ CConnman::FullyConnectedOnly};
 
     // gradually request the rest of the votes after sync finished
     if(IsSynced()) {

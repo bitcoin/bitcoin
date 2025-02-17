@@ -9,16 +9,20 @@
 #include <bls/bls.h>
 #include <clientversion.h>
 #include <crypto/sha256.h>
+#include <fs.h>
 #include <key.h>
 #include <logging.h>
 #include <node/interface_ui.h>
 #include <random.h>
+#include <tinyformat.h>
 #include <util/string.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
 
-#include <memory>
+#include <algorithm>
+#include <string>
+#include <vector>
 
 namespace init {
 void SetGlobals()
