@@ -58,11 +58,11 @@ jobs:
         with:
           path: |
             /cache
-          key: ${{ runner.os }}-${{ inputs.build-target }}-${{ github.sha }}
+          key: ccache-${{ hashFiles('contrib/containers/ci/Dockerfile', 'depends/packages/*') }}-${{ inputs.build-target }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-${{ inputs.build-target }}-${{ github.sha }}
-            ${{ runner.os }}-${{ inputs.build-target }}-${{ steps.setup.outputs.HOST }}
-            ${{ runner.os }}-${{ inputs.build-target }}
+            ccache-${{ hashFiles('contrib/containers/ci/Dockerfile', 'depends/packages/*') }}-${{ inputs.build-target }}-${{ github.sha }}
+            ccache-${{ hashFiles('contrib/containers/ci/Dockerfile', 'depends/packages/*') }}-${{ inputs.build-target }}-${{ steps.setup.outputs.HOST }}
+            ccache-${{ hashFiles('contrib/containers/ci/Dockerfile', 'depends/packages/*') }}-${{ inputs.build-target }}
 
       - name: Build source and run unit tests
         run: |
