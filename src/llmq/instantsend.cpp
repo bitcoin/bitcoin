@@ -122,7 +122,7 @@ void CInstantSendDb::RemoveInstantSendLock(CDBBatch& batch, const uint256& hash,
 
 static std::tuple<std::string, uint32_t, uint256> BuildInversedISLockKey(std::string_view k, int nHeight, const uint256& islockHash)
 {
-    return std::make_tuple(std::string{k}, htobe32(std::numeric_limits<uint32_t>::max() - nHeight), islockHash);
+    return std::make_tuple(std::string{k}, htobe32_internal(std::numeric_limits<uint32_t>::max() - nHeight), islockHash);
 }
 
 void CInstantSendDb::WriteInstantSendLockMined(const uint256& hash, int nHeight)
@@ -175,7 +175,7 @@ std::unordered_map<uint256, CInstantSendLockPtr, StaticSaltedHasher> CInstantSen
         if (!it->GetKey(curKey) || std::get<0>(curKey) != DB_MINED_BY_HEIGHT_AND_HASH) {
             break;
         }
-        uint32_t nHeight = std::numeric_limits<uint32_t>::max() - be32toh(std::get<1>(curKey));
+        uint32_t nHeight = std::numeric_limits<uint32_t>::max() - be32toh_internal(std::get<1>(curKey));
         if (nHeight > uint32_t(nUntilHeight)) {
             break;
         }
@@ -219,7 +219,7 @@ void CInstantSendDb::RemoveArchivedInstantSendLocks(int nUntilHeight)
         if (!it->GetKey(curKey) || std::get<0>(curKey) != DB_ARCHIVED_BY_HEIGHT_AND_HASH) {
             break;
         }
-        uint32_t nHeight = std::numeric_limits<uint32_t>::max() - be32toh(std::get<1>(curKey));
+        uint32_t nHeight = std::numeric_limits<uint32_t>::max() - be32toh_internal(std::get<1>(curKey));
         if (nHeight > uint32_t(nUntilHeight)) {
             break;
         }
