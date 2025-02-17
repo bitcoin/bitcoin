@@ -1842,8 +1842,7 @@ class DashTestFramework(BitcoinTestFramework):
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
         if skip_count != 0:
             self.bump_mocktime(1)
-            self.generate(self.nodes[0], skip_count, sync_fun=self.no_op)
-        self.sync_blocks(nodes)
+            self.generate(self.nodes[0], skip_count, sync_fun=lambda: self.sync_blocks(nodes))
 
         q = self.nodes[0].getbestblockhash()
         self.log.info("Expected quorum_hash:"+str(q))
