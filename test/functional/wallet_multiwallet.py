@@ -415,7 +415,7 @@ class MultiWalletTest(BitcoinTestFramework):
         wallet = os.path.join(self.options.tmpdir, 'my_wallet')
         self.nodes[0].createwallet(wallet)
         if self.options.descriptors:
-            exp_stderr = "SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another dashd?"
+            exp_stderr = "Unable to obtain an exclusive lock"
         else:
             exp_stderr = "Error initializing wallet database environment"
         assert_raises_rpc_error(-4, exp_stderr, self.nodes[1].loadwallet, wallet)
