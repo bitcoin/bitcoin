@@ -1,4 +1,4 @@
-FROM phusion/baseimage:noble-1.0.0
+FROM phusion/baseimage:jammy-1.0.4
 LABEL maintainer="Dash Developers <dev@dash.org>"
 LABEL description="Dockerised DashCore, built from CI"
 
