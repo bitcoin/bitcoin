@@ -319,7 +319,9 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
     }
     baseBlockIndexes.push_back(pWorkBlockHIndex);
 
-    if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, baseBlockIndexes.back()->GetBlockHash(), tipBlockIndex->GetBlockHash(), response.mnListDiffTip, errorRet)) {
+    if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
+                                   GetLastBaseBlockHash(baseBlockIndexes, tipBlockIndex),
+                                   tipBlockIndex->GetBlockHash(), response.mnListDiffTip, errorRet)) {
         return false;
     }
 
