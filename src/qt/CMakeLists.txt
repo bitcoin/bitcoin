@@ -288,7 +288,13 @@ function(get_translatable_sources var)
           get_target_property(target_source_dir ${target} SOURCE_DIR)
           cmake_path(APPEND target_source_dir ${source} OUTPUT_VARIABLE source)
         endif()
-        list(APPEND result ${source})
+        get_property(is_generated
+          SOURCE  ${source} TARGET_DIRECTORY ${target}
+          PROPERTY GENERATED
+        )
+        if(NOT is_generated)
+          list(APPEND result ${source})
+        endif()
       endforeach()
     endif()
   endforeach()
