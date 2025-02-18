@@ -145,14 +145,9 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
         return false;
     }
 
-    const CBlockIndex* pWorkBlockIndex = hBlockIndex->GetAncestor(hBlockIndex->nHeight - workDiff);
-    if (!pWorkBlockIndex) {
+    const CBlockIndex* pWorkBlockHIndex = hBlockIndex->GetAncestor(hBlockIndex->nHeight - workDiff);
+    if (!pWorkBlockHIndex) {
         errorRet = strprintf("Can not find work block H");
-        return false;
-    }
-
-    //Build MN list Diff always with highest baseblock
-    if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockIndex), pWorkBlockIndex->GetBlockHash(), response.mnListDiffH, errorRet)) {
         return false;
     }
 
@@ -318,7 +313,12 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
         return false;
     }
     baseBlockIndexes.push_back(pWorkBlockHMinusCIndex);
-    
+
+    if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHIndex), pWorkBlockHIndex->GetBlockHash(), response.mnListDiffH, errorRet)) {
+        return false;
+    }
+    baseBlockIndexes.push_back(pWorkBlockHIndex);
+
     if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, baseBlockIndexes.back()->GetBlockHash(), tipBlockIndex->GetBlockHash(), response.mnListDiffTip, errorRet)) {
         return false;
     }
