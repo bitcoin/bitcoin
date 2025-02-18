@@ -25,6 +25,27 @@ before running the tool:
 RUST_BACKTRACE=1 cargo run --manifest-path ./contrib/devtools/deterministic-fuzz-coverage/Cargo.toml -- $PWD/build_dir $PWD/qa-assets/fuzz_corpora fuzz_target_name
 ```
 
+deterministic-unittest-coverage
+===========================
+
+A tool to check for non-determinism in unit-test coverage. To get the help, run:
+
+```
+RUST_BACKTRACE=1 cargo run --manifest-path ./contrib/devtools/deterministic-unittest-coverage/Cargo.toml -- --help
+```
+
+To execute the tool, compilation has to be done with the build options:
+
+```
+-DCMAKE_C_COMPILER='clang' -DCMAKE_CXX_COMPILER='clang++' -DCMAKE_CXX_FLAGS='-fprofile-instr-generate -fcoverage-mapping'
+```
+
+Both llvm-profdata and llvm-cov must be installed.
+
+```
+RUST_BACKTRACE=1 cargo run --manifest-path ./contrib/devtools/deterministic-unittest-coverage/Cargo.toml -- $PWD/build_dir <boost unittest filter>
+```
+
 clang-format-diff.py
 ===================
 
