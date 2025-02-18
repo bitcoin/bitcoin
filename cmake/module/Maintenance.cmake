@@ -35,15 +35,11 @@ function(add_maintenance_targets)
     VERBATIM
   )
 
-  if(ENABLE_HARDENING)
-    add_custom_target(check-security
-      COMMAND ${CMAKE_COMMAND} -E echo "Checking binary security..."
-      COMMAND ${PYTHON_COMMAND} ${PROJECT_SOURCE_DIR}/contrib/devtools/security-check.py ${executables}
-      VERBATIM
-    )
-  else()
-    add_custom_target(check-security)
-  endif()
+  add_custom_target(check-security
+    COMMAND ${CMAKE_COMMAND} -E echo "Checking binary security..."
+    COMMAND ${PYTHON_COMMAND} ${PROJECT_SOURCE_DIR}/contrib/devtools/security-check.py ${executables}
+    VERBATIM
+  )
 endfunction()
 
 function(add_windows_deploy_target)
