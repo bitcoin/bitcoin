@@ -3,9 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <clientversion.h>
-#include <common/signmessage.h> // For MessageSign(), MessageVerify(), MESSAGE_MAGIC
-#include <hash.h> // For Hash()
-#include <key.h>  // For CKey
+#include <common/signmessage.h>
+#include <hash.h>
+#include <key.h>
 #include <script/parsing.h>
 #include <span.h>
 #include <sync.h>
@@ -26,12 +26,13 @@
 
 #include <array>
 #include <cmath>
+#include <cstdint>
+#include <cstring>
 #include <fstream>
 #include <limits>
 #include <map>
 #include <optional>
-#include <stdint.h>
-#include <string.h>
+#include <string>
 #include <thread>
 #include <univalue.h>
 #include <utility>
