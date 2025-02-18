@@ -188,7 +188,7 @@ In a different terminal, starting Bitcoin Core in SigNet mode and with
 re-indexing enabled.
 
 ```
-$ ./build/src/bitcoind -signet -reindex
+$ ./build/bin/bitcoind -signet -reindex
 ```
 
 This produces the following output.
