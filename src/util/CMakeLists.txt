@@ -42,6 +42,7 @@ set_target_properties(bitcoin_util PROPERTIES OPTIMIZE_DEPENDENCIES OFF)
 target_link_libraries(bitcoin_util
   PRIVATE
     core_interface
+    coverage_interface
     bitcoin_clientversion
     bitcoin_crypto
     $<$<PLATFORM_ID:Windows>:ws2_32>
