@@ -1059,7 +1059,7 @@ static void ParseGetInfoResult(UniValue& result)
     }
 #endif
 
-    if (gArgs.IsArgSet("-color")) {
+    {
         const std::string color{gArgs.GetArg("-color", DEFAULT_COLOR_SETTING)};
         if (color == "always") {
             should_colorize = true;
