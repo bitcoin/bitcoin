@@ -296,22 +296,30 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
         response.mnListDiffList.push_back(mnhneeded);
     }
 
-    if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHMinus3CIndex), pWorkBlockHMinus3CIndex->GetBlockHash(), response.mnListDiffAtHMinus3C, errorRet)) {
+    if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
+                                   GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHMinus3CIndex),
+                                   pWorkBlockHMinus3CIndex->GetBlockHash(), response.mnListDiffAtHMinus3C, errorRet)) {
         return false;
     }
     baseBlockIndexes.push_back(pWorkBlockHMinus3CIndex);
 
-    if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHMinus2CIndex), pWorkBlockHMinus2CIndex->GetBlockHash(), response.mnListDiffAtHMinus2C, errorRet)) {
+    if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
+                                   GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHMinus2CIndex),
+                                   pWorkBlockHMinus2CIndex->GetBlockHash(), response.mnListDiffAtHMinus2C, errorRet)) {
         return false;
     }
     baseBlockIndexes.push_back(pWorkBlockHMinus2CIndex);
 
-    if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHMinusCIndex), pWorkBlockHMinusCIndex->GetBlockHash(), response.mnListDiffAtHMinusC, errorRet)) {
+    if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
+                                   GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHMinusCIndex),
+                                   pWorkBlockHMinusCIndex->GetBlockHash(), response.mnListDiffAtHMinusC, errorRet)) {
         return false;
     }
     baseBlockIndexes.push_back(pWorkBlockHMinusCIndex);
 
-    if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHIndex), pWorkBlockHIndex->GetBlockHash(), response.mnListDiffH, errorRet)) {
+    if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
+                                   GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHIndex),
+                                   pWorkBlockHIndex->GetBlockHash(), response.mnListDiffH, errorRet)) {
         return false;
     }
     baseBlockIndexes.push_back(pWorkBlockHIndex);
