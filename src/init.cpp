@@ -1038,9 +1038,9 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     // Sanity check argument for min fee for including tx in block
     // TODO: Harmonize which arguments need sanity checking and where that happens
-    if (args.IsArgSet("-blockmintxfee")) {
-        if (!ParseMoney(args.GetArg("-blockmintxfee", ""))) {
-            return InitError(AmountErrMsg("blockmintxfee", args.GetArg("-blockmintxfee", "")));
+    if (const auto arg{args.GetArg("-blockmintxfee")}) {
+        if (!ParseMoney(*arg)) {
+            return InitError(AmountErrMsg("blockmintxfee", *arg));
         }
     }
 
@@ -1183,11 +1183,10 @@ bool CheckHostPortOptions(const ArgsManager& args) {
         "-port",
         "-rpcport",
     }) {
-        if (args.IsArgSet(port_option)) {
-            const std::string port = args.GetArg(port_option, "");
+        if (const auto port{args.GetArg(port_option)}) {
             uint16_t n;
-            if (!ParseUInt16(port, &n) || n == 0) {
-                return InitError(InvalidPortErrMsg(port_option, port));
+            if (!ParseUInt16(*port, &n) || n == 0) {
+                return InitError(InvalidPortErrMsg(port_option, *port));
             }
         }
     }
