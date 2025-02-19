@@ -1072,6 +1072,8 @@ public:
 
     BlockRef waitTipChanged(uint256 current_tip, MillisecondsDouble timeout) override
     {
+        Assume(timeout >= 0ms); // No internal callers should use a negative timeout
+        if (timeout < 0ms) timeout = 0ms;
         if (timeout > std::chrono::years{100}) timeout = std::chrono::years{100}; // Upper bound to avoid UB in std::chrono
         {
             WAIT_LOCK(notifications().m_tip_block_mutex, lock);
