@@ -37,12 +37,12 @@ enum class ConnectionDirection {
     Both = (In | Out),
 };
 static inline ConnectionDirection& operator|=(ConnectionDirection& a, ConnectionDirection b) {
-    using underlying = typename std::underlying_type<ConnectionDirection>::type;
+    using underlying = std::underlying_type_t<ConnectionDirection>;
     a = ConnectionDirection(underlying(a) | underlying(b));
     return a;
 }
 static inline bool operator&(ConnectionDirection a, ConnectionDirection b) {
-    using underlying = typename std::underlying_type<ConnectionDirection>::type;
+    using underlying = std::underlying_type_t<ConnectionDirection>;
     return (underlying(a) & underlying(b));
 }
 

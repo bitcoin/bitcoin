@@ -134,7 +134,7 @@ template <typename WeakEnumType, size_t size>
 {
     return fuzzed_data_provider.ConsumeBool() ?
                fuzzed_data_provider.PickValueInArray<WeakEnumType>(all_types) :
-               WeakEnumType(fuzzed_data_provider.ConsumeIntegral<typename std::underlying_type<WeakEnumType>::type>());
+               WeakEnumType(fuzzed_data_provider.ConsumeIntegral<std::underlying_type_t<WeakEnumType>>());
 }
 
 [[nodiscard]] inline opcodetype ConsumeOpcodeType(FuzzedDataProvider& fuzzed_data_provider) noexcept

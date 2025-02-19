@@ -48,7 +48,7 @@ enum isminetype : unsigned int {
     ISMINE_ENUM_ELEMENTS,
 };
 /** used for bitflags of isminetype */
-using isminefilter = std::underlying_type<isminetype>::type;
+using isminefilter = std::underlying_type_t<isminetype>;
 
 /**
  * Address purpose field that has been been stored with wallet sending and

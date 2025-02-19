@@ -154,7 +154,7 @@ const Out& AsBase(const In& x)
 }
 
 #define READWRITE(...) (ser_action.SerReadWriteMany(s, __VA_ARGS__))
-#define SER_READ(obj, code) ser_action.SerRead(s, obj, [&](Stream& s, typename std::remove_const<Type>::type& obj) { code; })
+#define SER_READ(obj, code) ser_action.SerRead(s, obj, [&](Stream& s, std::remove_const_t<Type>& obj) { code; })
 #define SER_WRITE(obj, code) ser_action.SerWrite(s, obj, [&](Stream& s, const Type& obj) { code; })
 
 /**
@@ -507,12 +507,12 @@ struct VarIntFormatter
 {
     template<typename Stream, typename I> void Ser(Stream &s, I v)
     {
-        WriteVarInt<Stream,Mode,typename std::remove_cv<I>::type>(s, v);
+        WriteVarInt<Stream,Mode,std::remove_cv_t<I>>(s, v);
     }
 
     template<typename Stream, typename I> void Unser(Stream& s, I& v)
     {
-        v = ReadVarInt<Stream,Mode,typename std::remove_cv<I>::type>(s);
+        v = ReadVarInt<Stream,Mode,std::remove_cv_t<I>>(s);
     }
 };
 
