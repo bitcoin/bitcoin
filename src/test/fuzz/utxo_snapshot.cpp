@@ -101,7 +101,7 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
             std::vector<uint8_t> file_data{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
             outfile << Span{file_data};
         } else {
-            int height{0};
+            int height{1};
             for (const auto& block : *g_chain) {
                 auto coinbase{block->vtx.at(0)};
                 outfile << coinbase->GetHash();
