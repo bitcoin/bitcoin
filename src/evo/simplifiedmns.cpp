@@ -280,7 +280,7 @@ UniValue CSimplifiedMNListDiff::ToJson(bool extended) const
     obj.pushKV("newQuorums", newQuorumsArr);
 
     // Do not assert special tx type here since this can be called prior to DIP0003 activation
-    if (const auto opt_cbTxPayload = GetTxPayload<CCbTx>(*cbTx, false)) {
+    if (const auto opt_cbTxPayload = GetTxPayload<CCbTx>(*cbTx, /*assert_type=*/false)) {
         obj.pushKV("merkleRootMNList", opt_cbTxPayload->merkleRootMNList.ToString());
         if (opt_cbTxPayload->nVersion >= CCbTx::Version::MERKLE_ROOT_QUORUMS) {
             obj.pushKV("merkleRootQuorums", opt_cbTxPayload->merkleRootQuorums.ToString());
