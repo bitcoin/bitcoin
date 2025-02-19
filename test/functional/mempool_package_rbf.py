@@ -111,7 +111,7 @@ class PackageRBFTest(BitcoinTestFramework):
 
         # Test run rejected because conflicts are not allowed in subpackage evaluation
         testres = node.testmempoolaccept(package_hex2)
-        assert_equal(testres[0]["reject-reason"], "bip125-replacement-disallowed")
+        assert_equal(testres[0]["reject_reason"], "bip125-replacement-disallowed")
 
         # But accepted during normal submission
         submitres = node.submitpackage(package_hex2)

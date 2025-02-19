@@ -275,7 +275,7 @@ class MempoolTRUC(BitcoinTestFramework):
         tx_v3_child = self.wallet.create_self_transfer(utxo_to_spend=tx_v3_parent["new_utxo"], version=3)
         tx_v3_grandchild = self.wallet.create_self_transfer(utxo_to_spend=tx_v3_child["new_utxo"], version=3)
         result = node.testmempoolaccept([tx_v3_parent["hex"], tx_v3_child["hex"], tx_v3_grandchild["hex"]])
-        assert all([txresult["package-error"] == f"TRUC-violation, tx {tx_v3_grandchild['txid']} (wtxid={tx_v3_grandchild['wtxid']}) would have too many ancestors" for txresult in result])
+        assert all([txresult["package_error"] == f"TRUC-violation, tx {tx_v3_grandchild['txid']} (wtxid={tx_v3_grandchild['wtxid']}) would have too many ancestors" for txresult in result])
 
     @cleanup(extra_args=None)
     def test_truc_ancestors_package_and_mempool(self):
@@ -357,11 +357,11 @@ class MempoolTRUC(BitcoinTestFramework):
         # Fails with another non-related transaction via testmempoolaccept
         tx_unrelated = self.wallet.create_self_transfer(version=3)
         result_test_unrelated = node.testmempoolaccept([tx_sibling_1["hex"], tx_unrelated["hex"]])
-        assert_equal(result_test_unrelated[0]["reject-reason"], "TRUC-violation")
+        assert_equal(result_test_unrelated[0]["reject_reason"], "TRUC-violation")
 
         # Fails in a package via testmempoolaccept
         result_test_1p1c = node.testmempoolaccept([tx_sibling_1["hex"], tx_has_mempool_uncle["hex"]])
-        assert_equal(result_test_1p1c[0]["reject-reason"], "TRUC-violation")
+        assert_equal(result_test_1p1c[0]["reject_reason"], "TRUC-violation")
 
         # Allowed when tx is submitted in a package and evaluated individually.
         # Note that the child failed since it would be the 3rd generation.
@@ -421,11 +421,11 @@ class MempoolTRUC(BitcoinTestFramework):
 
         test_accept_v3_from_v2 = node.testmempoolaccept([tx_v2["hex"], tx_v3_from_v2["hex"]])
         expected_error_v3_from_v2 = f"TRUC-violation, version=3 tx {tx_v3_from_v2['txid']} (wtxid={tx_v3_from_v2['wtxid']}) cannot spend from non-version=3 tx {tx_v2['txid']} (wtxid={tx_v2['wtxid']})"
-        assert all([result["package-error"] == expected_error_v3_from_v2 for result in test_accept_v3_from_v2])
+        assert all([result["package_error"] == expected_error_v3_from_v2 for result in test_accept_v3_from_v2])
 
         test_accept_v2_from_v3 = node.testmempoolaccept([tx_v3["hex"], tx_v2_from_v3["hex"]])
         expected_error_v2_from_v3 = f"TRUC-violation, non-version=3 tx {tx_v2_from_v3['txid']} (wtxid={tx_v2_from_v3['wtxid']}) cannot spend from version=3 tx {tx_v3['txid']} (wtxid={tx_v3['wtxid']})"
-        assert all([result["package-error"] == expected_error_v2_from_v3 for result in test_accept_v2_from_v3])
+        assert all([result["package_error"] == expected_error_v2_from_v3 for result in test_accept_v2_from_v3])
 
         test_accept_pairs = node.testmempoolaccept([tx_v2["hex"], tx_v3["hex"], tx_v2_from_v2["hex"], tx_v3_from_v3["hex"]])
         assert all([result["allowed"] for result in test_accept_pairs])
@@ -437,7 +437,7 @@ class MempoolTRUC(BitcoinTestFramework):
         tx_v3_child_2 = self.wallet.create_self_transfer(utxo_to_spend=tx_v3_parent["new_utxos"][1], version=3)
         test_accept_2children = node.testmempoolaccept([tx_v3_parent["hex"], tx_v3_child_1["hex"], tx_v3_child_2["hex"]])
         expected_error_2children = f"TRUC-violation, tx {tx_v3_parent['txid']} (wtxid={tx_v3_parent['wtxid']}) would exceed descendant count limit"
-        assert all([result["package-error"] == expected_error_2children for result in test_accept_2children])
+        assert all([result["package_error"] == expected_error_2children for result in test_accept_2children])
 
         # Extra TRUC transaction does not get incorrectly marked as extra descendant
         test_accept_1child_with_exra = node.testmempoolaccept([tx_v3_parent["hex"], tx_v3_child_1["hex"], tx_v3_independent["hex"]])
@@ -446,11 +446,11 @@ class MempoolTRUC(BitcoinTestFramework):
         # Extra TRUC transaction does not make us ignore the extra descendant
         test_accept_2children_with_exra = node.testmempoolaccept([tx_v3_parent["hex"], tx_v3_child_1["hex"], tx_v3_child_2["hex"], tx_v3_independent["hex"]])
         expected_error_extra = f"TRUC-violation, tx {tx_v3_parent['txid']} (wtxid={tx_v3_parent['wtxid']}) would exceed descendant count limit"
-        assert all([result["package-error"] == expected_error_extra for result in test_accept_2children_with_exra])
+        assert all([result["package_error"] == expected_error_extra for result in test_accept_2children_with_exra])
         # Same result if the parent is already in mempool
         node.sendrawtransaction(tx_v3_parent["hex"])
         test_accept_2children_with_in_mempool_parent = node.testmempoolaccept([tx_v3_child_1["hex"], tx_v3_child_2["hex"]])
-        assert all([result["package-error"] == expected_error_extra for result in test_accept_2children_with_in_mempool_parent])
+        assert all([result["package_error"] == expected_error_extra for result in test_accept_2children_with_in_mempool_parent])
 
     @cleanup(extra_args=None)
     def test_reorg_2child_rbf(self):

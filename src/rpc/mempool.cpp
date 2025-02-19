@@ -134,20 +134,20 @@ static RPCHelpMan testmempoolaccept()
                 {
                     {RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
                     {RPCResult::Type::STR_HEX, "wtxid", "The transaction witness hash in hex"},
-                    {RPCResult::Type::STR, "package-error", /*optional=*/true, "Package validation error, if any (only possible if rawtxs had more than 1 transaction)."},
+                    {RPCResult::Type::STR, "package_error", /*optional=*/true, "Package validation error, if any (only possible if rawtxs had more than 1 transaction)."},
                     {RPCResult::Type::BOOL, "allowed", /*optional=*/true, "Whether this tx would be accepted to the mempool and pass client-specified maxfeerate. "
                                                        "If not present, the tx was not fully validated due to a failure in another tx in the list."},
                     {RPCResult::Type::NUM, "vsize", /*optional=*/true, "Virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted (only present when 'allowed' is true)"},
                     {RPCResult::Type::OBJ, "fees", /*optional=*/true, "Transaction fees (only present if 'allowed' is true)",
                     {
                         {RPCResult::Type::STR_AMOUNT, "base", "transaction fee in " + CURRENCY_UNIT},
-                        {RPCResult::Type::STR_AMOUNT, "effective-feerate", /*optional=*/false, "the effective feerate in " + CURRENCY_UNIT + " per KvB. May differ from the base feerate if, for example, there are modified fees from prioritisetransaction or a package feerate was used."},
-                        {RPCResult::Type::ARR, "effective-includes", /*optional=*/false, "transactions whose fees and vsizes are included in effective-feerate.",
+                        {RPCResult::Type::STR_AMOUNT, "effective_feerate", /*optional=*/false, "the effective feerate in " + CURRENCY_UNIT + " per KvB. May differ from the base feerate if, for example, there are modified fees from prioritisetransaction or a package feerate was used."},
+                        {RPCResult::Type::ARR, "effective_includes", /*optional=*/false, "transactions whose fees and vsizes are included in effective_feerate.",
                             {RPCResult{RPCResult::Type::STR_HEX, "", "transaction wtxid in hex"},
                         }},
                     }},
-                    {RPCResult::Type::STR, "reject-reason", /*optional=*/true, "Rejection reason (only present when 'allowed' is false)"},
-                    {RPCResult::Type::STR, "reject-details", /*optional=*/true, "Rejection details (only present when 'allowed' is false and rejection details exist)"},
+                    {RPCResult::Type::STR, "reject_reason", /*optional=*/true, "Rejection reason (only present when 'allowed' is false)"},
+                    {RPCResult::Type::STR, "reject_details", /*optional=*/true, "Rejection details (only present when 'allowed' is false and rejection details exist)"},
                 }},
             }
         },
@@ -204,7 +204,7 @@ static RPCHelpMan testmempoolaccept()
                 result_inner.pushKV("txid", tx->GetHash().GetHex());
                 result_inner.pushKV("wtxid", tx->GetWitnessHash().GetHex());
                 if (package_result.m_state.GetResult() == PackageValidationResult::PCKG_POLICY) {
-                    result_inner.pushKV("package-error", package_result.m_state.ToString());
+                    result_inner.pushKV("package_error", package_result.m_state.ToString());
                 }
                 auto it = package_result.m_tx_results.find(tx->GetWitnessHash());
                 if (exit_early || it == package_result.m_tx_results.end()) {
@@ -222,7 +222,7 @@ static RPCHelpMan testmempoolaccept()
                     const CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
                     if (max_raw_tx_fee && fee > max_raw_tx_fee) {
                         result_inner.pushKV("allowed", false);
-                        result_inner.pushKV("reject-reason", "max-fee-exceeded");
+                        result_inner.pushKV("reject_reason", "max-fee-exceeded");
                         exit_early = true;
                     } else {
                         // Only return the fee and vsize if the transaction would pass ATMP.
@@ -231,22 +231,22 @@ static RPCHelpMan testmempoolaccept()
                         result_inner.pushKV("vsize", virtual_size);
                         UniValue fees(UniValue::VOBJ);
                         fees.pushKV("base", ValueFromAmount(fee));
-                        fees.pushKV("effective-feerate", ValueFromAmount(tx_result.m_effective_feerate.value().GetFeePerK()));
+                        fees.pushKV("effective_feerate", ValueFromAmount(tx_result.m_effective_feerate.value().GetFeePerK()));
                         UniValue effective_includes_res(UniValue::VARR);
                         for (const auto& wtxid : tx_result.m_wtxids_fee_calculations.value()) {
                             effective_includes_res.push_back(wtxid.ToString());
                         }
-                        fees.pushKV("effective-includes", std::move(effective_includes_res));
+                        fees.pushKV("effective_includes", std::move(effective_includes_res));
                         result_inner.pushKV("fees", std::move(fees));
                     }
                 } else {
                     result_inner.pushKV("allowed", false);
                     const TxValidationState state = tx_result.m_state;
                     if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
-                        result_inner.pushKV("reject-reason", "missing-inputs");
+                        result_inner.pushKV("reject_reason", "missing-inputs");
                     } else {
-                        result_inner.pushKV("reject-reason", state.GetRejectReason());
-                        result_inner.pushKV("reject-details", state.ToString());
+                        result_inner.pushKV("reject_reason", state.GetRejectReason());
+                        result_inner.pushKV("reject_details", state.ToString());
                     }
                 }
                 rpc_result.push_back(std::move(result_inner));

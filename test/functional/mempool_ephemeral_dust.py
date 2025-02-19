@@ -88,7 +88,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         # Test doesn't work because lack of package feerates
         test_res = self.nodes[0].testmempoolaccept([dusty_tx["hex"], sweep_tx["hex"]])
         assert not test_res[0]["allowed"]
-        assert_equal(test_res[0]["reject-reason"], "min relay fee not met")
+        assert_equal(test_res[0]["reject_reason"], "min relay fee not met")
 
         # And doesn't work on its own
         assert_raises_rpc_error(-26, "min relay fee not met", self.nodes[0].sendrawtransaction, dusty_tx["hex"])
@@ -97,7 +97,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         self.nodes[0].prioritisetransaction(txid=dusty_tx["txid"], dummy=0, fee_delta=COIN)
         test_res = self.nodes[0].testmempoolaccept([dusty_tx["hex"]])
         assert not test_res[0]["allowed"]
-        assert_equal(test_res[0]["reject-reason"], "dust")
+        assert_equal(test_res[0]["reject_reason"], "dust")
         # Reset priority
         self.nodes[0].prioritisetransaction(txid=dusty_tx["txid"], dummy=0, fee_delta=-COIN)
         assert_equal(self.nodes[0].getprioritisedtransactions(), {})
@@ -166,7 +166,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         # It's rejected submitted alone
         test_res = self.nodes[0].testmempoolaccept([dusty_tx["hex"]])
         assert not test_res[0]["allowed"]
-        assert_equal(test_res[0]["reject-reason"], "dust")
+        assert_equal(test_res[0]["reject_reason"], "dust")
 
         # Or as a package
         res = self.nodes[0].submitpackage([dusty_tx["hex"], sweep_tx["hex"]])

@@ -406,7 +406,7 @@ class WalletSendTest(BitcoinTestFramework):
         # hex = res["hex"]
         # res = self.nodes[0].testmempoolaccept([hex])
         # assert not res[0]["allowed"]
-        # assert_equal(res[0]["reject-reason"], "...") # low fee
+        # assert_equal(res[0]["reject_reason"], "...") # low fee
         # assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.000001"))
 
         self.log.info("If inputs are specified, do not automatically add more...")
@@ -447,7 +447,7 @@ class WalletSendTest(BitcoinTestFramework):
         hex = self.nodes[0].gettransaction(res["txid"])["hex"]
         res = self.nodes[0].testmempoolaccept([hex])
         assert not res[0]["allowed"]
-        assert_equal(res[0]["reject-reason"], "non-final")
+        assert_equal(res[0]["reject_reason"], "non-final")
         # It shouldn't be confirmed in the next block
         self.generate(self.nodes[0], 1)
         assert_equal(self.nodes[0].gettransaction(txid)["confirmations"], 0)

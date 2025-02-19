@@ -115,8 +115,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         reject_reason = "insufficient fee"
         reject_details = f"{reject_reason}, rejecting replacement {tx.hash}; new feerate 0.00300000 BTC/kvB <= old feerate 0.00300000 BTC/kvB"
         res = self.nodes[0].testmempoolaccept(rawtxs=[tx_hex])[0]
-        assert_equal(res["reject-reason"], reject_reason)
-        assert_equal(res["reject-details"], reject_details)
+        assert_equal(res["reject_reason"], reject_reason)
+        assert_equal(res["reject_details"], reject_details)
         assert_raises_rpc_error(-26, f"{reject_details}", self.nodes[0].sendrawtransaction, tx_hex, 0)
 
 
@@ -165,8 +165,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         reject_reason = "insufficient fee"
         reject_details = f"{reject_reason}, rejecting replacement {dbl_tx.hash}, less fees than conflicting txs; 3.00 < 4.00"
         res = self.nodes[0].testmempoolaccept(rawtxs=[dbl_tx_hex])[0]
-        assert_equal(res["reject-reason"], reject_reason)
-        assert_equal(res["reject-details"], reject_details)
+        assert_equal(res["reject_reason"], reject_reason)
+        assert_equal(res["reject_details"], reject_details)
         assert_raises_rpc_error(-26, f"{reject_details}", self.nodes[0].sendrawtransaction, dbl_tx_hex, 0)
 
 
@@ -308,8 +308,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         reject_reason = "bad-txns-spends-conflicting-tx"
         reject_details = f"{reject_reason}, {tx2.hash} spends conflicting transaction {tx1a['tx'].hash}"
         res = self.nodes[0].testmempoolaccept(rawtxs=[tx2_hex])[0]
-        assert_equal(res["reject-reason"], reject_reason)
-        assert_equal(res["reject-details"], reject_details)
+        assert_equal(res["reject_reason"], reject_reason)
+        assert_equal(res["reject_details"], reject_details)
         assert_raises_rpc_error(-26, f"{reject_details}", self.nodes[0].sendrawtransaction, tx2_hex, 0)
 
 
@@ -353,8 +353,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         reject_reason = "replacement-adds-unconfirmed"
         reject_details = f"{reject_reason}, replacement {tx2.hash} adds unconfirmed input, idx 1"
         res = self.nodes[0].testmempoolaccept(rawtxs=[tx2_hex])[0]
-        assert_equal(res["reject-reason"], reject_reason)
-        assert_equal(res["reject-details"], reject_details)
+        assert_equal(res["reject_reason"], reject_reason)
+        assert_equal(res["reject_details"], reject_details)
         assert_raises_rpc_error(-26, f"{reject_details}", self.nodes[0].sendrawtransaction, tx2_hex, 0)
 
 
@@ -401,8 +401,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         reject_reason = "too many potential replacements"
         reject_details = f"{reject_reason}, rejecting replacement {double_tx.hash}; too many potential replacements ({MAX_REPLACEMENT_LIMIT + 1} > {MAX_REPLACEMENT_LIMIT})"
         res = self.nodes[0].testmempoolaccept(rawtxs=[double_tx_hex])[0]
-        assert_equal(res["reject-reason"], reject_reason)
-        assert_equal(res["reject-details"], reject_details)
+        assert_equal(res["reject_reason"], reject_reason)
+        assert_equal(res["reject_details"], reject_details)
         assert_raises_rpc_error(-26, f"{reject_details}", self.nodes[0].sendrawtransaction, double_tx_hex, 0)
 
 

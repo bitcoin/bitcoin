@@ -166,7 +166,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         # here, it would get further in validation and give too-long-mempool-chain error instead.
         packet_test = self.nodes[0].testmempoolaccept([tx_parent.serialize().hex(), tx_child.serialize().hex()])
         expected_package_error = f"package-mempool-limits, package size {2*max_multisig_vsize} exceeds ancestor size limit [limit: 101000]"
-        assert_equal([x["package-error"] for x in packet_test], [expected_package_error] * 2)
+        assert_equal([x["package_error"] for x in packet_test], [expected_package_error] * 2)
 
         # When we actually try to submit, the parent makes it into the mempool, but the child would exceed ancestor vsize limits
         res = self.nodes[0].submitpackage([tx_parent.serialize().hex(), tx_child.serialize().hex()])

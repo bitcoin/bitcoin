@@ -170,8 +170,8 @@ class BIP65Test(BitcoinTestFramework):
                     'txid': spendtx_txid,
                     'wtxid': spendtx_wtxid,
                     'allowed': False,
-                    'reject-reason': expected_cltv_reject_reason,
-                    'reject-details': expected_cltv_reject_reason + f", input 0 of {spendtx_txid} (wtxid {spendtx_wtxid}), spending {coin_txid}:{coin_vout}"
+                    'reject_reason': expected_cltv_reject_reason,
+                    'reject_details': expected_cltv_reject_reason + f", input 0 of {spendtx_txid} (wtxid {spendtx_wtxid}), spending {coin_txid}:{coin_vout}"
                 }],
                 self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0),
             )

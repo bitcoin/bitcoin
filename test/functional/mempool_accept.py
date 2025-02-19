@@ -65,10 +65,10 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             # Skip these checks for now
             r.pop('wtxid')
             if "fees" in r:
-                r["fees"].pop("effective-feerate")
-                r["fees"].pop("effective-includes")
-            if "reject-details" in r:
-                r.pop("reject-details")
+                r["fees"].pop("effective_feerate")
+                r["fees"].pop("effective_includes")
+            if "reject_details" in r:
+                r.pop("reject_details")
         assert_equal(result_expected, result_test)
         assert_equal(self.nodes[0].getmempoolinfo()['size'], self.mempool_size)  # Must not change mempool state
 
@@ -110,7 +110,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         ))
         # ... 0.99 passes
         self.check_mempool_result(
-            result_expected=[{'txid': txid_in_block, 'allowed': False, 'reject-reason': 'txn-already-known'}],
+            result_expected=[{'txid': txid_in_block, 'allowed': False, 'reject_reason': 'txn-already-known'}],
             rawtxs=[raw_tx_in_block],
             maxfeerate=0.99,
         )
@@ -149,7 +149,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         node.sendrawtransaction(hexstring=raw_tx_0)
         self.mempool_size += 1
         self.check_mempool_result(
-            result_expected=[{'txid': txid_0, 'allowed': False, 'reject-reason': 'txn-already-in-mempool'}],
+            result_expected=[{'txid': txid_0, 'allowed': False, 'reject_reason': 'txn-already-in-mempool'}],
             rawtxs=[raw_tx_0],
         )
 
@@ -168,7 +168,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx = tx_from_hex(raw_tx_0)
         tx.vin[0].prevout = COutPoint(hash=int('ff' * 32, 16), n=14)
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'missing-inputs'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'missing-inputs'}],
             rawtxs=[tx.serialize().hex()],
         )
 
@@ -190,11 +190,11 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.mempool_size = 0
         # Now see if we can add the coins back to the utxo set by sending the exact txs again
         self.check_mempool_result(
-            result_expected=[{'txid': txid_0, 'allowed': False, 'reject-reason': 'missing-inputs'}],
+            result_expected=[{'txid': txid_0, 'allowed': False, 'reject_reason': 'missing-inputs'}],
             rawtxs=[raw_tx_0],
         )
         self.check_mempool_result(
-            result_expected=[{'txid': txid_1, 'allowed': False, 'reject-reason': 'missing-inputs'}],
+            result_expected=[{'txid': txid_1, 'allowed': False, 'reject_reason': 'missing-inputs'}],
             rawtxs=[raw_tx_1],
         )
 
@@ -214,7 +214,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx = tx_from_hex(raw_tx_reference)
         tx.vout = []
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bad-txns-vout-empty'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'bad-txns-vout-empty'}],
             rawtxs=[tx.serialize().hex()],
         )
 
@@ -222,7 +222,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx = tx_from_hex(raw_tx_reference)
         tx.vin = [tx.vin[0]] * math.ceil((MAX_BLOCK_WEIGHT // WITNESS_SCALE_FACTOR) / len(tx.vin[0].serialize()))
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bad-txns-oversize'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'bad-txns-oversize'}],
             rawtxs=[tx.serialize().hex()],
         )
 
@@ -230,7 +230,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx = tx_from_hex(raw_tx_reference)
         tx.vout[0].nValue *= -1
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bad-txns-vout-negative'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'bad-txns-vout-negative'}],
             rawtxs=[tx.serialize().hex()],
         )
 
@@ -239,7 +239,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx = tx_from_hex(raw_tx_reference)
         tx.vout[0].nValue = MAX_MONEY + 1
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bad-txns-vout-toolarge'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'bad-txns-vout-toolarge'}],
             rawtxs=[tx.serialize().hex()],
         )
 
@@ -248,7 +248,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.vout = [tx.vout[0]] * 2
         tx.vout[0].nValue = MAX_MONEY
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bad-txns-txouttotal-toolarge'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'bad-txns-txouttotal-toolarge'}],
             rawtxs=[tx.serialize().hex()],
         )
 
@@ -256,7 +256,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx = tx_from_hex(raw_tx_reference)
         tx.vin = [tx.vin[0]] * 2
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bad-txns-inputs-duplicate'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'bad-txns-inputs-duplicate'}],
             rawtxs=[tx.serialize().hex()],
         )
 
@@ -264,7 +264,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx = tx_from_hex(raw_tx_reference)
         tx.vin.append(CTxIn(COutPoint(hash=0, n=0xffffffff)))
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bad-txns-prevout-null'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'bad-txns-prevout-null'}],
             rawtxs=[tx.serialize().hex()],
         )
 
@@ -273,7 +273,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         raw_tx_coinbase_spent = node.getrawtransaction(txid=node.decoderawtransaction(hexstring=raw_tx_in_block)['vin'][0]['txid'])
         tx = tx_from_hex(raw_tx_coinbase_spent)
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'coinbase'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'coinbase'}],
             rawtxs=[tx.serialize().hex()],
         )
 
@@ -281,32 +281,32 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx = tx_from_hex(raw_tx_reference)
         tx.version = 4  # A version currently non-standard
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'version'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'version'}],
             rawtxs=[tx.serialize().hex()],
         )
         tx = tx_from_hex(raw_tx_reference)
         tx.vout[0].scriptPubKey = CScript([OP_0])  # Some non-standard script
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'scriptpubkey'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'scriptpubkey'}],
             rawtxs=[tx.serialize().hex()],
         )
         tx = tx_from_hex(raw_tx_reference)
         _, pubkey = generate_keypair()
         tx.vout[0].scriptPubKey = keys_to_multisig_script([pubkey] * 3, k=2)  # Some bare multisig script (2-of-3)
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'bare-multisig'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'bare-multisig'}],
             rawtxs=[tx.serialize().hex()],
         )
         tx = tx_from_hex(raw_tx_reference)
         tx.vin[0].scriptSig = CScript([OP_HASH160])  # Some not-pushonly scriptSig
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'scriptsig-not-pushonly'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'scriptsig-not-pushonly'}],
             rawtxs=[tx.serialize().hex()],
         )
         tx = tx_from_hex(raw_tx_reference)
         tx.vin[0].scriptSig = CScript([b'a' * 1648]) # Some too large scriptSig (>1650 bytes)
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'scriptsig-size'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'scriptsig-size'}],
             rawtxs=[tx.serialize().hex()],
         )
         tx = tx_from_hex(raw_tx_reference)
@@ -314,21 +314,21 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         num_scripts = 100000 // len(output_p2sh_burn.serialize())  # Use enough outputs to make the tx too large for our policy
         tx.vout = [output_p2sh_burn] * num_scripts
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'tx-size'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'tx-size'}],
             rawtxs=[tx.serialize().hex()],
         )
         tx = tx_from_hex(raw_tx_reference)
         tx.vout[0] = output_p2sh_burn
         tx.vout[0].nValue -= 1  # Make output smaller, such that it is dust for our policy
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'dust'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'dust'}],
             rawtxs=[tx.serialize().hex()],
         )
         tx = tx_from_hex(raw_tx_reference)
         tx.vout[0].scriptPubKey = CScript([OP_RETURN, b'\xff'])
         tx.vout = [tx.vout[0]] * 2
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'multi-op-return'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'multi-op-return'}],
             rawtxs=[tx.serialize().hex()],
         )
 
@@ -337,7 +337,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.vin[0].nSequence -= 1  # Should be non-max, so locktime is not ignored
         tx.nLockTime = node.getblockcount() + 1
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'non-final'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'non-final'}],
             rawtxs=[tx.serialize().hex()],
         )
 
@@ -345,7 +345,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx = tx_from_hex(raw_tx_reference)
         tx.vin[0].nSequence = 2  # We could include it in the second block mined from now, but not the very next one
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'non-BIP68-final'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'non-BIP68-final'}],
             rawtxs=[tx.serialize().hex()],
             maxfeerate=0,
         )
@@ -366,7 +366,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         assert_greater_than(len(tx.serialize()), 64)
 
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'tx-size-small'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject_reason': 'tx-size-small'}],
             rawtxs=[tx.serialize().hex()],
             maxfeerate=0,
         )
@@ -394,7 +394,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         anchor_nonempty_wit_spend.rehash()
 
         self.check_mempool_result(
-            result_expected=[{'txid': anchor_nonempty_wit_spend.rehash(), 'allowed': False, 'reject-reason': 'bad-witness-nonstandard'}],
+            result_expected=[{'txid': anchor_nonempty_wit_spend.rehash(), 'allowed': False, 'reject_reason': 'bad-witness-nonstandard'}],
             rawtxs=[anchor_nonempty_wit_spend.serialize().hex()],
             maxfeerate=0,
         )
@@ -432,7 +432,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         nested_anchor_spend.rehash()
 
         self.check_mempool_result(
-            result_expected=[{'txid': nested_anchor_spend.rehash(), 'allowed': False, 'reject-reason': 'non-mandatory-script-verify-flag (Witness version reserved for soft-fork upgrades)'}],
+            result_expected=[{'txid': nested_anchor_spend.rehash(), 'allowed': False, 'reject_reason': 'non-mandatory-script-verify-flag (Witness version reserved for soft-fork upgrades)'}],
             rawtxs=[nested_anchor_spend.serialize().hex()],
             maxfeerate=0,
         )

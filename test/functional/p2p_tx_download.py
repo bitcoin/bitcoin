@@ -335,7 +335,7 @@ class TxDownloadTest(BitcoinTestFramework):
         mempoolminfee = node.getmempoolinfo()['mempoolminfee']
         peer = node.add_p2p_connection(TestP2PConn())
         low_fee_tx = self.wallet.create_self_transfer(fee_rate=Decimal("0.9")*mempoolminfee)
-        assert_equal(node.testmempoolaccept([low_fee_tx['hex']])[0]["reject-reason"], "mempool min fee not met")
+        assert_equal(node.testmempoolaccept([low_fee_tx['hex']])[0]["reject_reason"], "mempool min fee not met")
         peer.send_and_ping(msg_tx(low_fee_tx['tx']))
         peer.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=int(low_fee_tx['wtxid'], 16))]))
         node.setmocktime(int(time.time()))

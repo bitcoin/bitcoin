@@ -58,7 +58,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         replaceable_tx = self.wallet.create_self_transfer_multi(utxos_to_spend=[chain[0]])
         txns = [replaceable_tx["tx"], self.wallet.create_self_transfer_multi(utxos_to_spend=replaceable_tx["new_utxos"])["tx"]]
         txns_hex = [tx.serialize().hex() for tx in txns]
-        assert_equal(self.nodes[0].testmempoolaccept(txns_hex)[0]["reject-reason"], "too-long-mempool-chain")
+        assert_equal(self.nodes[0].testmempoolaccept(txns_hex)[0]["reject_reason"], "too-long-mempool-chain")
         pkg_result = self.nodes[0].submitpackage(txns_hex)
         assert "too-long-mempool-chain" in pkg_result["tx_results"][txns[0].getwtxid()]["error"]
         assert_equal(pkg_result["tx_results"][txns[1].getwtxid()]["error"], "bad-txns-inputs-missingorspent")
