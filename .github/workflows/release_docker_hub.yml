@@ -5,17 +5,12 @@ on:
     types: [published]
 
 jobs:
-  release:
-    name: Release to Docker Hub
+  release-amd64:
+    name: Release to Docker Hub (amd64)
     runs-on: ubuntu-22.04
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
-      with:
-        image: tonistiigi/binfmt:qemu-v7.0.0-28
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
@@ -60,8 +55,8 @@ jobs:
         flavor: |
           suffix=${{ steps.suffix.outputs.result }},onlatest=true
 
-    - name: Build and push
-      id: docker_build
+    - name: Build and push (amd64)
+      id: docker_build_amd64
       uses: docker/build-push-action@v3
       with:
         context: ./contrib/containers/deploy
@@ -76,7 +71,44 @@ jobs:
           GITHUB_REPOSITORY=${{ github.repository }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        platforms: linux/amd64,linux/arm64
+        platforms: linux/amd64
 
     - name: Image digest
-      run: echo ${{ steps.docker_build.outputs.digest }}
+      run: echo ${{ steps.docker_build_amd64.outputs.digest }}
+
+  release-arm64:
+    name: Release to Docker Hub (arm64)
+    runs-on: ubuntu-22.04-arm
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and push (arm64)
+      id: docker_build_arm64
+      uses: docker/build-push-action@v3
+      with:
+        context: ./contrib/containers/deploy
+        file: ./contrib/containers/deploy/Dockerfile.GitHubActions.Release
+        push: true
+        provenance: mode=max
+        sbom: true
+        tags: ${{ steps.docker_meta.outputs.tags }}
+        labels: ${{ steps.docker_meta.outputs.labels }}
+        build-args: |
+          TAG=${{ steps.get_tag.outputs.build_tag }}
+          GITHUB_REPOSITORY=${{ github.repository }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/arm64
+
+    - name: Image digest
+      run: echo ${{ steps.docker_build_arm64.outputs.digest }}
