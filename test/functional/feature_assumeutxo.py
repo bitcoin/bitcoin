@@ -139,7 +139,14 @@ class AssumeutxoTest(BitcoinTestFramework):
             [b"\x81", 34, "3da966ba9826fb6d2604260e01607b55ba44e1a5de298606b08704bc62570ea8", None],  # wrong coin code VARINT
             [b"\x80", 34, "091e893b3ccb4334378709578025356c8bcb0a623f37c7c4e493133c988648e5", None],  # another wrong coin code
             [b"\x84\x58", 34, None, "Bad snapshot data after deserializing 0 coins"],  # wrong coin case with height 364 and coinbase 0
-            [b"\xCA\xD2\x8F\x5A", 39, None, "Bad snapshot data after deserializing 0 coins - bad tx out value"],  # Amount exceeds MAX_MONEY
+            [
+                # VARINT(Compressed(MAX_MONEY + 1)) + VARINT(0)
+                b"\xa0\xc8\xad\xb1\xd1\x83\xff\x01" + b"\x00",
+                # txid + coins per txid + vout + coin height
+                32 + 1 + 1 + 2,
+                None,
+                "Bad snapshot data after deserializing 0 coins - bad tx out value"
+            ],  # Amount exceeds MAX_MONEY
         ]
 
         for content, offset, wrong_hash, custom_message in cases:
