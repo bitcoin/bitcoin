@@ -277,8 +277,8 @@ template <typename T> T FuzzedDataProvider::ConsumeProbability() {
   // Use different integral types for different floating point types in order
   // to provide better density of the resulting values.
   using IntegralType =
-      typename std::conditional<(sizeof(T) <= sizeof(uint32_t)), uint32_t,
-                                uint64_t>::type;
+      typename std::conditional_t<(sizeof(T) <= sizeof(uint32_t)), uint32_t,
+                                  uint64_t>;
 
   T result = static_cast<T>(ConsumeIntegral<IntegralType>());
   result /= static_cast<T>(std::numeric_limits<IntegralType>::max());

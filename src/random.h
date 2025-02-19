@@ -334,7 +334,7 @@ public:
 
     /** Generate a uniform random duration in the range [0..max). Precondition: max.count() > 0 */
     template <StdChronoDuration Dur>
-    Dur randrange(typename std::common_type_t<Dur> range) noexcept
+    Dur randrange(std::common_type_t<Dur> range) noexcept
     // Having the compiler infer the template argument from the function argument
     // is dangerous, because the desired return value generally has a different
     // type than the function argument. So std::common_type is used to force the

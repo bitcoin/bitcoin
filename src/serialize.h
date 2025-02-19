@@ -220,13 +220,13 @@ const Out& AsBase(const In& x)
     template <typename Stream>                                                                      \
     void Serialize(Stream& s) const                                                                 \
     {                                                                                               \
-        static_assert(std::is_same_v<const cls&, decltype(*this)>, "Serialize type mismatch"); \
+        static_assert(std::is_same_v<const cls&, decltype(*this)>, "Serialize type mismatch");      \
         Ser(s, *this);                                                                              \
     }                                                                                               \
     template <typename Stream>                                                                      \
     void Unserialize(Stream& s)                                                                     \
     {                                                                                               \
-        static_assert(std::is_same_v<cls&, decltype(*this)>, "Unserialize type mismatch");     \
+        static_assert(std::is_same_v<cls&, decltype(*this)>, "Unserialize type mismatch");          \
         Unser(s, *this);                                                                            \
     }
 
@@ -507,12 +507,12 @@ struct VarIntFormatter
 {
     template<typename Stream, typename I> void Ser(Stream &s, I v)
     {
-        WriteVarInt<Stream,Mode,std::remove_cv_t<I>>(s, v);
+        WriteVarInt<Stream,Mode, std::remove_cv_t<I>>(s, v);
     }
 
     template<typename Stream, typename I> void Unser(Stream& s, I& v)
     {
-        v = ReadVarInt<Stream,Mode,std::remove_cv_t<I>>(s);
+        v = ReadVarInt<Stream,Mode, std::remove_cv_t<I>>(s);
     }
 };
 
@@ -545,7 +545,7 @@ struct CustomUintFormatter
 
     template <typename Stream, typename I> void Unser(Stream& s, I& v)
     {
-        using U = typename std::conditional<std::is_enum_v<I>, std::underlying_type<I>, std::common_type<I>>::type::type;
+        using U = typename std::conditional_t<std::is_enum_v<I>, std::underlying_type<I>, std::common_type<I>>::type;
         static_assert(std::numeric_limits<U>::max() >= MAX && std::numeric_limits<U>::min() <= 0, "Assigned type too small");
         uint64_t raw = 0;
         if (BigEndian) {
