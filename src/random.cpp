@@ -194,6 +194,21 @@ uint64_t GetRdSeed() noexcept
 bool g_rndr_supported = false;
 bool g_rndrrs_supported = false;
 
+/** Verify if RNDRRS is supported and functional.
+ * Return true if it works within the retry limit.
+ */
+bool VerifyRNDRRS() noexcept
+{
+    uint64_t test;
+    for (int retry = 0; retry < 10; ++retry) {
+        if (GetRNDRRSInternal(test)) {
+            return true;
+        }
+        __asm__ volatile("yield");
+    }
+    return false;
+}
+
 void InitHardwareRand()
 {
     if (getauxval(AT_HWCAP2) & HWCAP2_RNG) {
@@ -251,21 +266,6 @@ uint64_t GetRNDRRS() noexcept
         __asm__ volatile("yield");
     }
     return r1;
-}
-
-/** Verify if RNDRRS is supported and functional.
- * Return true if it works within the retry limit.
- */
-bool VerifyRNDRRS() noexcept
-{
-    uint64_t test;
-    for (int retry = 0; retry < 10; ++retry) {
-        if (GetRNDRRSInternal(test)) {
-            return true;
-        }
-        __asm__ volatile("yield");
-    }
-    return false;
 }
 
 #else
