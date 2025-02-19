@@ -192,13 +192,11 @@ uint64_t GetRdSeed() noexcept
 #elif defined(__aarch64__) && defined(HWCAP2_RNG)
 
 bool g_rndr_supported = false;
-bool g_rndrrs_supported = false;
 
 void InitHardwareRand()
 {
     if (getauxval(AT_HWCAP2) & HWCAP2_RNG) {
         g_rndr_supported = true;
-        g_rndrrs_supported = VerifyRNDRRS();
     }
 }
 
@@ -206,10 +204,8 @@ void ReportHardwareRand()
 {
     // This must be done in a separate function, as InitHardwareRand() may be indirectly called
     // from global constructors, before logging is initialized.
-    if (g_rndr_supported && g_rndrrs_supported) {
+    if (g_rndr_supported) {
         LogPrintf("Using RNDR and RNDRRS as additional entropy sources\n");
-    } else if (g_rndr_supported) {
-        LogPrintf("Using RNDR as an additional entropy source\n");
     }
 }
 
@@ -231,41 +227,22 @@ uint64_t GetRNDR() noexcept
     return r1;
 }
 
-// Helper function to retrieve random value using RNDRRS
-bool GetRNDRRSInternal(uint64_t &r1) noexcept
-{
-    uint8_t ok = 0;
-    __asm__ volatile("mrs %0, s3_3_c2_c4_1; cset %w1, ne;"
-                     : "=r"(r1), "=r"(ok)::"cc");
-    return ok != 0;
-}
-
-
-/** Read 64 bits of entropy using RNDRRS.
+/** Read 64 bits of entropy using rndrrs.
+ *
  * Must only be called when RNDRRS is supported.
  */
 uint64_t GetRNDRRS() noexcept
 {
+    uint8_t ok = 0;
     uint64_t r1;
-    while (!GetRNDRRSInternal(r1)) {
+    do {
+        // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/RNDRRS--Reseeded-Random-Number
+        __asm__ volatile("mrs %0, s3_3_c2_c4_1; cset %w1, ne;"
+                         : "=r"(r1), "=r"(ok)::"cc");
+        if (ok) break;
         __asm__ volatile("yield");
-    }
+    } while (true);
     return r1;
-}
-
-/** Verify if RNDRRS is supported and functional.
- * Return true if it works within the retry limit.
- */
-bool VerifyRNDRRS() noexcept
-{
-    uint64_t test;
-    for (int retry = 0; retry < 10; ++retry) {
-        if (GetRNDRRSInternal(test)) {
-            return true;
-        }
-        __asm__ volatile("yield");
-    }
-    return false;
 }
 
 #else
@@ -318,7 +295,7 @@ void SeedHardwareSlow(CSHA512& hasher) noexcept {
         return;
     }
 #elif defined(__aarch64__) && defined(HWCAP2_RNG)
-    if (g_rndrrs_supported) {
+    if (g_rndr_supported) {
         for (int i = 0; i < 4; ++i) {
             uint64_t out = GetRNDRRS();
             hasher.Write((const unsigned char*)&out, sizeof(out));
