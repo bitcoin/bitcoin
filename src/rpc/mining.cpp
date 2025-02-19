@@ -46,6 +46,7 @@
 #include <memory>
 #include <stdint.h>
 
+using interfaces::BlockRef;
 using interfaces::BlockTemplate;
 using interfaces::Mining;
 using node::BlockAssembler;
@@ -801,7 +802,10 @@ static RPCHelpMan getblocktemplate()
         {
             MillisecondsDouble checktxtime{std::chrono::minutes(1)};
             while (tip == hashWatchedChain && IsRPCRunning()) {
-                tip = miner.waitTipChanged(hashWatchedChain, checktxtime).hash;
+                std::optional<BlockRef> maybe_tip{miner.waitTipChanged(hashWatchedChain, checktxtime)};
+                // Node is shutting down
+                if (!maybe_tip) break;
+                tip = maybe_tip->hash;
                 // Timeout: Check transactions for update
                 // without holding the mempool lock to avoid deadlocks
                 if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLastLP)
