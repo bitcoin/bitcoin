@@ -287,9 +287,7 @@ static RPCHelpMan waitfornewblock()
     Mining& miner = EnsureMining(node);
 
     auto block{CHECK_NONFATAL(miner.getTip()).value()};
-    if (IsRPCRunning()) {
-        block = timeout ? miner.waitTipChanged(block.hash, std::chrono::milliseconds(timeout)) : miner.waitTipChanged(block.hash);
-    }
+    block = timeout ? miner.waitTipChanged(block.hash, std::chrono::milliseconds(timeout)) : miner.waitTipChanged(block.hash);
 
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("hash", block.hash.GetHex());
@@ -334,7 +332,7 @@ static RPCHelpMan waitforblock()
 
     auto block{CHECK_NONFATAL(miner.getTip()).value()};
     const auto deadline{std::chrono::steady_clock::now() + 1ms * timeout};
-    while (IsRPCRunning() && block.hash != hash) {
+    while (block.hash != hash) {
         if (timeout) {
             auto now{std::chrono::steady_clock::now()};
             if (now >= deadline) break;
@@ -390,7 +388,7 @@ static RPCHelpMan waitforblockheight()
     auto block{CHECK_NONFATAL(miner.getTip()).value()};
     const auto deadline{std::chrono::steady_clock::now() + 1ms * timeout};
 
-    while (IsRPCRunning() && block.height < height) {
+    while (block.height < height) {
         if (timeout) {
             auto now{std::chrono::steady_clock::now()};
             if (now >= deadline) break;
