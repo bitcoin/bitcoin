@@ -369,7 +369,7 @@ class MempoolTRUC(BitcoinTestFramework):
         self.check_mempool([tx_mempool_parent["txid"], tx_sibling_1["txid"]])
         expected_error_gen3 = f"TRUC-violation, tx {tx_has_mempool_uncle['txid']} (wtxid={tx_has_mempool_uncle['wtxid']}) would have too many ancestors"
 
-        assert_equal(result_package_indiv["tx-results"][tx_has_mempool_uncle['wtxid']]['error'], expected_error_gen3)
+        assert_equal(result_package_indiv["tx_results"][tx_has_mempool_uncle['wtxid']]['error'], expected_error_gen3)
 
         # Allowed when tx is submitted in a package with in-mempool parent (which is deduplicated).
         node.submitpackage([tx_mempool_parent["hex"], tx_sibling_2["hex"]])
@@ -380,7 +380,7 @@ class MempoolTRUC(BitcoinTestFramework):
         self.check_mempool([tx_mempool_parent["txid"], tx_sibling_2["txid"]])
         expected_error_cpfp = f"TRUC-violation, tx {tx_mempool_parent['txid']} (wtxid={tx_mempool_parent['wtxid']}) would exceed descendant count limit"
 
-        assert_equal(result_package_cpfp["tx-results"][tx_sibling_3['wtxid']]['error'], expected_error_cpfp)
+        assert_equal(result_package_cpfp["tx_results"][tx_sibling_3['wtxid']]['error'], expected_error_cpfp)
 
 
     @cleanup(extra_args=["-datacarriersize=1000"])

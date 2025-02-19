@@ -115,7 +115,7 @@ class PackageRBFTest(BitcoinTestFramework):
 
         # But accepted during normal submission
         submitres = node.submitpackage(package_hex2)
-        assert_equal(set(submitres["replaced-transactions"]), set([tx.rehash() for tx in package_txns1]))
+        assert_equal(set(submitres["replaced_transactions"]), set([tx.rehash() for tx in package_txns1]))
         self.assert_mempool_contents(expected=package_txns2)
 
         # Make sure 2nd node gets a basic package RBF over p2p
@@ -136,7 +136,7 @@ class PackageRBFTest(BitcoinTestFramework):
         package_hex, package_txns = self.create_simple_package(singleton_coin, DEFAULT_FEE, singleton_tx["fee"] * 2)
 
         submitres = node.submitpackage(package_hex)
-        assert_equal(submitres["replaced-transactions"], [singleton_tx["tx"].rehash()])
+        assert_equal(submitres["replaced_transactions"], [singleton_tx["tx"].rehash()])
         self.assert_mempool_contents(expected=package_txns)
 
         self.generate(node, 1)
@@ -541,7 +541,7 @@ class PackageRBFTest(BitcoinTestFramework):
 
         submitres2 = node.submitpackage(package_hex2)
         assert_equal(submitres2["package_msg"], "success")
-        assert_equal(set(submitres2["replaced-transactions"]), set([parent1["txid"], child1["txid"]]))
+        assert_equal(set(submitres2["replaced_transactions"]), set([parent1["txid"], child1["txid"]]))
         self.assert_mempool_contents([parent2["tx"], child2["tx"]])
 
         self.generate(node, 1)

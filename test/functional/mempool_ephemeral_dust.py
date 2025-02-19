@@ -148,14 +148,14 @@ class EphemeralDustTest(BitcoinTestFramework):
         # When base fee is non-0, we report dust like usual
         res = self.nodes[0].submitpackage([dusty_tx["hex"], sweep_tx["hex"]])
         assert_equal(res["package_msg"], "transaction failed")
-        assert_equal(res["tx-results"][dusty_tx["wtxid"]]["error"], "dust, tx with dust output must be 0-fee")
+        assert_equal(res["tx_results"][dusty_tx["wtxid"]]["error"], "dust, tx with dust output must be 0-fee")
 
         # Priority is ignored: rejected even if modified fee is 0
         self.nodes[0].prioritisetransaction(txid=dusty_tx["txid"], dummy=0, fee_delta=-sats_fee)
         self.nodes[1].prioritisetransaction(txid=dusty_tx["txid"], dummy=0, fee_delta=-sats_fee)
         res = self.nodes[0].submitpackage([dusty_tx["hex"], sweep_tx["hex"]])
         assert_equal(res["package_msg"], "transaction failed")
-        assert_equal(res["tx-results"][dusty_tx["wtxid"]]["error"], "dust, tx with dust output must be 0-fee")
+        assert_equal(res["tx_results"][dusty_tx["wtxid"]]["error"], "dust, tx with dust output must be 0-fee")
 
         # Will not be accepted if base fee is 0 with modified fee of non-0
         dusty_tx, sweep_tx = self.create_ephemeral_dust_package(tx_version=3)
@@ -171,7 +171,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         # Or as a package
         res = self.nodes[0].submitpackage([dusty_tx["hex"], sweep_tx["hex"]])
         assert_equal(res["package_msg"], "transaction failed")
-        assert_equal(res["tx-results"][dusty_tx["wtxid"]]["error"], "dust, tx with dust output must be 0-fee")
+        assert_equal(res["tx_results"][dusty_tx["wtxid"]]["error"], "dust, tx with dust output must be 0-fee")
 
         assert_mempool_contents(self, self.nodes[0], expected=[])
 
@@ -183,7 +183,7 @@ class EphemeralDustTest(BitcoinTestFramework):
 
         res = self.nodes[0].submitpackage([dusty_tx["hex"], sweep_tx["hex"]])
         assert_equal(res["package_msg"], "transaction failed")
-        assert_equal(res["tx-results"][dusty_tx["wtxid"]]["error"], "dust")
+        assert_equal(res["tx_results"][dusty_tx["wtxid"]]["error"], "dust")
         assert_equal(self.nodes[0].getrawmempool(), [])
 
     def test_nonzero_dust(self):
@@ -215,7 +215,7 @@ class EphemeralDustTest(BitcoinTestFramework):
 
         res = self.nodes[0].submitpackage([dusty_tx["hex"], sweep_tx["hex"]])
         assert_equal(res["package_msg"], "transaction failed")
-        assert_equal(res["tx-results"][dusty_tx["wtxid"]]["error"], "min relay fee not met, 0 < 147")
+        assert_equal(res["tx_results"][dusty_tx["wtxid"]]["error"], "min relay fee not met, 0 < 147")
 
         assert_equal(self.nodes[0].getrawmempool(), [])
 
@@ -233,7 +233,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         unspent_sweep_tx = self.wallet.create_self_transfer_multi(fee_per_output=2000, utxos_to_spend=[dusty_tx["new_utxos"][0]], version=3)
         assert_greater_than(unspent_sweep_tx["fee"], sweep_tx["fee"])
         res = self.nodes[0].submitpackage([dusty_tx["hex"], unspent_sweep_tx["hex"]])
-        assert_equal(res["tx-results"][unspent_sweep_tx["wtxid"]]["error"], f"missing-ephemeral-spends, tx {unspent_sweep_tx['txid']} did not spend parent's ephemeral dust")
+        assert_equal(res["tx_results"][unspent_sweep_tx["wtxid"]]["error"], f"missing-ephemeral-spends, tx {unspent_sweep_tx['txid']} did not spend parent's ephemeral dust")
         assert_raises_rpc_error(-26, f"missing-ephemeral-spends, tx {unspent_sweep_tx['txid']} did not spend parent's ephemeral dust", self.nodes[0].sendrawtransaction, unspent_sweep_tx["hex"])
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"], sweep_tx["tx"]])
 
@@ -405,7 +405,7 @@ class EphemeralDustTest(BitcoinTestFramework):
 
         res = self.nodes[0].submitpackage([dusty_tx["hex"] for dusty_tx in dusty_txs] + [insufficient_sweep_tx["hex"]])
         assert_equal(res['package_msg'], "transaction failed")
-        assert_equal(res['tx-results'][insufficient_sweep_tx['wtxid']]['error'], f"missing-ephemeral-spends, tx {insufficient_sweep_tx['txid']} did not spend parent's ephemeral dust")
+        assert_equal(res['tx_results'][insufficient_sweep_tx['wtxid']]['error'], f"missing-ephemeral-spends, tx {insufficient_sweep_tx['txid']} did not spend parent's ephemeral dust")
         # Everything got in except for insufficient spend
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"] for dusty_tx in dusty_txs])
 
@@ -418,7 +418,7 @@ class EphemeralDustTest(BitcoinTestFramework):
 
         res = self.nodes[0].submitpackage([dusty_tx["hex"] for dusty_tx in dusty_txs] + [insufficient_sweep_tx["hex"]])
         assert_equal(res['package_msg'], "transaction failed")
-        assert_equal(res['tx-results'][insufficient_sweep_tx["wtxid"]]["error"], f"missing-ephemeral-spends, tx {insufficient_sweep_tx['txid']} did not spend parent's ephemeral dust")
+        assert_equal(res['tx_results'][insufficient_sweep_tx["wtxid"]]["error"], f"missing-ephemeral-spends, tx {insufficient_sweep_tx['txid']} did not spend parent's ephemeral dust")
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"] for dusty_tx in dusty_txs] + [sweep_all_but_one_tx["tx"]])
 
         # Cycle out the partial sweep to avoid triggering package RBF behavior which limits package to no in-mempool ancestors

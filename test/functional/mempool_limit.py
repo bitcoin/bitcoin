@@ -83,7 +83,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         )
         res = node.submitpackage([tx_B["hex"], tx_C["hex"]])
         assert_equal(res["package_msg"], "transaction failed")
-        assert "too-long-mempool-chain" in res["tx-results"][tx_C["wtxid"]]["error"]
+        assert "too-long-mempool-chain" in res["tx_results"][tx_C["wtxid"]]["error"]
 
     def test_mid_package_eviction_success(self):
         node = self.nodes[0]
@@ -155,9 +155,9 @@ class MempoolLimitTest(BitcoinTestFramework):
         # be included. If trimming of a parent were to happen,
         # package evaluation would happen to reintrodce the evicted
         # parent.
-        assert_equal(len(package_res["tx-results"]), len(big_parent_wtxids) + 1)
+        assert_equal(len(package_res["tx_results"]), len(big_parent_wtxids) + 1)
         for wtxid in big_parent_wtxids + [child["wtxid"]]:
-            assert_equal(len(package_res["tx-results"][wtxid]["fees"]["effective-includes"]), 1)
+            assert_equal(len(package_res["tx_results"][wtxid]["fees"]["effective_includes"]), 1)
 
         # Maximum size must never be exceeded.
         assert_greater_than(node.getmempoolinfo()["maxmempool"], node.getmempoolinfo()["bytes"])
@@ -328,7 +328,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         # Package should be submitted, temporarily exceeding maxmempool, and then evicted.
         res = node.submitpackage(package_hex)
         assert_equal(res["package_msg"], "transaction failed")
-        assert len([tx_res for _, tx_res in res["tx-results"].items() if "error" in tx_res and tx_res["error"] == "bad-txns-inputs-missingorspent"])
+        assert len([tx_res for _, tx_res in res["tx_results"].items() if "error" in tx_res and tx_res["error"] == "bad-txns-inputs-missingorspent"])
 
         # Maximum size must never be exceeded.
         assert_greater_than(node.getmempoolinfo()["maxmempool"], node.getmempoolinfo()["bytes"])
@@ -378,23 +378,23 @@ class MempoolLimitTest(BitcoinTestFramework):
         submitpackage_result = node.submitpackage([tx["hex"] for tx in package_txns])
         assert_equal(submitpackage_result["package_msg"], "success")
 
-        rich_parent_result = submitpackage_result["tx-results"][tx_rich["wtxid"]]
-        poor_parent_result = submitpackage_result["tx-results"][tx_poor["wtxid"]]
-        child_result = submitpackage_result["tx-results"][tx_child["tx"].getwtxid()]
+        rich_parent_result = submitpackage_result["tx_results"][tx_rich["wtxid"]]
+        poor_parent_result = submitpackage_result["tx_results"][tx_poor["wtxid"]]
+        child_result = submitpackage_result["tx_results"][tx_child["tx"].getwtxid()]
         assert_fee_amount(poor_parent_result["fees"]["base"], tx_poor["tx"].get_vsize(), relayfee)
         assert_equal(rich_parent_result["fees"]["base"], 0)
         assert_equal(child_result["fees"]["base"], DEFAULT_FEE)
         # The "rich" parent does not require CPFP so its effective feerate is just its individual feerate.
-        assert_fee_amount(DEFAULT_FEE, tx_rich["tx"].get_vsize(), rich_parent_result["fees"]["effective-feerate"])
-        assert_equal(rich_parent_result["fees"]["effective-includes"], [tx_rich["wtxid"]])
+        assert_fee_amount(DEFAULT_FEE, tx_rich["tx"].get_vsize(), rich_parent_result["fees"]["effective_feerate"])
+        assert_equal(rich_parent_result["fees"]["effective_includes"], [tx_rich["wtxid"]])
         # The "poor" parent and child's effective feerates are the same, composed of their total
         # fees divided by their combined vsize.
         package_fees = poor_parent_result["fees"]["base"] + child_result["fees"]["base"]
         package_vsize = tx_poor["tx"].get_vsize() + tx_child["tx"].get_vsize()
-        assert_fee_amount(package_fees, package_vsize, poor_parent_result["fees"]["effective-feerate"])
-        assert_fee_amount(package_fees, package_vsize, child_result["fees"]["effective-feerate"])
-        assert_equal([tx_poor["wtxid"], tx_child["tx"].getwtxid()], poor_parent_result["fees"]["effective-includes"])
-        assert_equal([tx_poor["wtxid"], tx_child["tx"].getwtxid()], child_result["fees"]["effective-includes"])
+        assert_fee_amount(package_fees, package_vsize, poor_parent_result["fees"]["effective_feerate"])
+        assert_fee_amount(package_fees, package_vsize, child_result["fees"]["effective_feerate"])
+        assert_equal([tx_poor["wtxid"], tx_child["tx"].getwtxid()], poor_parent_result["fees"]["effective_includes"])
+        assert_equal([tx_poor["wtxid"], tx_child["tx"].getwtxid()], child_result["fees"]["effective_includes"])
 
         # The node will broadcast each transaction, still abiding by its peer's fee filter
         peer.wait_for_broadcast([tx["tx"].getwtxid() for tx in package_txns])
@@ -427,7 +427,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         assert_greater_than(package_fee / package_vsize, mempoolmin_feerate / 1000)
         res = node.submitpackage([tx_parent_just_below["hex"], tx_child_just_above["hex"]])
         for wtxid in [tx_parent_just_below["wtxid"], tx_child_just_above["wtxid"]]:
-            assert_equal(res["tx-results"][wtxid]["error"], "mempool full")
+            assert_equal(res["tx_results"][wtxid]["error"], "mempool full")
 
         self.log.info('Test passing a value below the minimum (5 MB) to -maxmempool throws an error')
         self.stop_node(0)

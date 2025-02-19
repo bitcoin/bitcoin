@@ -262,18 +262,18 @@ class RPCPackagesTest(BitcoinTestFramework):
         ])
 
         submitres = node.submitpackage([tx1["hex"], tx2["hex"], tx_child["hex"]])
-        assert_equal(submitres, {'package_msg': 'conflict-in-package', 'tx-results': {}, 'replaced-transactions': []})
+        assert_equal(submitres, {'package_msg': 'conflict-in-package', 'tx_results': {}, 'replaced_transactions': []})
 
         # Submit tx1 to mempool, then try the same package again
         node.sendrawtransaction(tx1["hex"])
 
         submitres = node.submitpackage([tx1["hex"], tx2["hex"], tx_child["hex"]])
-        assert_equal(submitres, {'package_msg': 'conflict-in-package', 'tx-results': {}, 'replaced-transactions': []})
+        assert_equal(submitres, {'package_msg': 'conflict-in-package', 'tx_results': {}, 'replaced_transactions': []})
         assert tx_child["txid"] not in node.getrawmempool()
 
         # ... and without the in-mempool ancestor tx1 included in the call
         submitres = node.submitpackage([tx2["hex"], tx_child["hex"]])
-        assert_equal(submitres, {'package_msg': 'package-not-child-with-unconfirmed-parents', 'tx-results': {}, 'replaced-transactions': []})
+        assert_equal(submitres, {'package_msg': 'package-not-child-with-unconfirmed-parents', 'tx_results': {}, 'replaced_transactions': []})
 
         # Regardless of error type, the child can never enter the mempool
         assert tx_child["txid"] not in node.getrawmempool()
@@ -321,7 +321,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         """
         for testres_tx in testmempoolaccept_result:
             # Grab this result from the submitpackage_result
-            submitres_tx = submitpackage_result["tx-results"][testres_tx["wtxid"]]
+            submitres_tx = submitpackage_result["tx_results"][testres_tx["wtxid"]]
             assert_equal(submitres_tx["txid"], testres_tx["txid"])
             # No "allowed" if the tx was already in the mempool
             if "allowed" in testres_tx and testres_tx["allowed"]:
@@ -353,16 +353,16 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert_equal(submitpackage_result["package_msg"], "success")
         for package_txn in package_txns:
             tx = package_txn["tx"]
-            assert tx.getwtxid() in submitpackage_result["tx-results"]
+            assert tx.getwtxid() in submitpackage_result["tx_results"]
             wtxid = tx.getwtxid()
-            assert wtxid in submitpackage_result["tx-results"]
-            tx_result = submitpackage_result["tx-results"][wtxid]
+            assert wtxid in submitpackage_result["tx_results"]
+            tx_result = submitpackage_result["tx_results"][wtxid]
             assert_equal(tx_result["txid"], tx.rehash())
             assert_equal(tx_result["vsize"], tx.get_vsize())
             assert_equal(tx_result["fees"]["base"], DEFAULT_FEE)
             if wtxid not in presubmitted_wtxids:
-                assert_fee_amount(DEFAULT_FEE, tx.get_vsize(), tx_result["fees"]["effective-feerate"])
-                assert_equal(tx_result["fees"]["effective-includes"], [wtxid])
+                assert_fee_amount(DEFAULT_FEE, tx.get_vsize(), tx_result["fees"]["effective_feerate"])
+                assert_equal(tx_result["fees"]["effective_includes"], [wtxid])
 
         # submitpackage result should be consistent with testmempoolaccept and getmempoolentry
         self.assert_equal_package_results(node, testmempoolaccept_result, submitpackage_result)
@@ -411,9 +411,9 @@ class RPCPackagesTest(BitcoinTestFramework):
         res = node.submitpackage(hex_partial_acceptance)
         assert_equal(res["package_msg"], "transaction failed")
         first_wtxid = txs[0]["tx"].getwtxid()
-        assert "error" not in res["tx-results"][first_wtxid]
+        assert "error" not in res["tx_results"][first_wtxid]
         sec_wtxid = bad_child.getwtxid()
-        assert_equal(res["tx-results"][sec_wtxid]["error"], "version")
+        assert_equal(res["tx_results"][sec_wtxid]["error"], "version")
         peer.wait_for_broadcast([first_wtxid])
 
     def test_maxfeerate_submitpackage(self):
@@ -430,8 +430,8 @@ class RPCPackagesTest(BitcoinTestFramework):
 
         # First tx failed in single transaction evaluation, so package message is generic
         assert_equal(pkg_result["package_msg"], "transaction failed")
-        assert_equal(pkg_result["tx-results"][chained_txns[0]["wtxid"]]["error"], "max feerate exceeded")
-        assert_equal(pkg_result["tx-results"][chained_txns[1]["wtxid"]]["error"], "bad-txns-inputs-missingorspent")
+        assert_equal(pkg_result["tx_results"][chained_txns[0]["wtxid"]]["error"], "max feerate exceeded")
+        assert_equal(pkg_result["tx_results"][chained_txns[1]["wtxid"]]["error"], "bad-txns-inputs-missingorspent")
         assert_equal(node.getrawmempool(), [])
 
         # Make chain of two transactions where parent doesn't make minfee threshold
@@ -462,8 +462,8 @@ class RPCPackagesTest(BitcoinTestFramework):
         # Child is connected even though parent is invalid and still reports fee exceeded
         # this implies sub-package evaluation of both entries together.
         assert_equal(pkg_result["package_msg"], "transaction failed")
-        assert "mempool min fee not met" in pkg_result["tx-results"][parent["wtxid"]]["error"]
-        assert_equal(pkg_result["tx-results"][child["wtxid"]]["error"], "max feerate exceeded")
+        assert "mempool min fee not met" in pkg_result["tx_results"][parent["wtxid"]]["error"]
+        assert_equal(pkg_result["tx_results"][child["wtxid"]]["error"], "max feerate exceeded")
         assert parent["txid"] not in node.getrawmempool()
         assert child["txid"] not in node.getrawmempool()
 
@@ -496,8 +496,8 @@ class RPCPackagesTest(BitcoinTestFramework):
 
         # Relax the restrictions for both and send it; parent gets through as own subpackage
         pkg_result = node.submitpackage(chained_burn_hex, maxfeerate=minrate_btc_kvb_burn, maxburnamount=chained_txns_burn[1]["new_utxo"]["value"])
-        assert "error" not in pkg_result["tx-results"][chained_txns_burn[0]["wtxid"]]
-        assert_equal(pkg_result["tx-results"][tx.getwtxid()]["error"], "scriptpubkey")
+        assert "error" not in pkg_result["tx_results"][chained_txns_burn[0]["wtxid"]]
+        assert_equal(pkg_result["tx_results"][tx.getwtxid()]["error"], "scriptpubkey")
         assert_equal(node.getrawmempool(), [chained_txns_burn[0]["txid"]])
 
 if __name__ == "__main__":
