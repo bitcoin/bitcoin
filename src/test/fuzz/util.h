@@ -207,7 +207,7 @@ template <typename WeakEnumType, size_t size>
 template <typename T>
 [[nodiscard]] bool MultiplicationOverflow(const T i, const T j) noexcept
 {
-    static_assert(std::is_integral<T>::value, "Integral required.");
+    static_assert(std::is_integral_v<T>, "Integral required.");
     if (std::numeric_limits<T>::is_signed) {
         if (i > 0) {
             if (j > 0) {
