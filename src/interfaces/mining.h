@@ -76,14 +76,15 @@ public:
 
     /**
      * Waits for the connected tip to change. During node initialization, this will
-     * wait until the tip is connected.
+     * wait until the tip is connected (regardless of `timeout`).
      *
      * @param[in] current_tip block hash of the current chain tip. Function waits
      *                        for the chain tip to differ from this.
      * @param[in] timeout     how long to wait for a new tip
-     * @returns               Hash and height of the current chain tip after this call.
+     * @retval BlockRef hash and height of the current chain tip after this call.
+     * @retval std::nullopt if the node is shut down.
      */
-    virtual BlockRef waitTipChanged(uint256 current_tip, MillisecondsDouble timeout = MillisecondsDouble::max()) = 0;
+    virtual std::optional<BlockRef> waitTipChanged(uint256 current_tip, MillisecondsDouble timeout = MillisecondsDouble::max()) = 0;
 
    /**
      * Construct a new block template
