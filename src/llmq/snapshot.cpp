@@ -324,8 +324,7 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
     }
     baseBlockIndexes.push_back(pWorkBlockHIndex);
 
-    if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
-                                   GetLastBaseBlockHash(baseBlockIndexes, tipBlockIndex),
+    if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, GetLastBaseBlockHash(baseBlockIndexes, tipBlockIndex),
                                    tipBlockIndex->GetBlockHash(), response.mnListDiffTip, errorRet)) {
         return false;
     }
@@ -336,9 +335,8 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
 uint256 GetLastBaseBlockHash(Span<const CBlockIndex*> baseBlockIndexes, const CBlockIndex* blockIndex)
 {
     uint256 hash;
-    std::sort(baseBlockIndexes.begin(), baseBlockIndexes.end(), [](const CBlockIndex* a, const CBlockIndex* b) {
-        return a->nHeight < b->nHeight;
-    });
+    std::sort(baseBlockIndexes.begin(), baseBlockIndexes.end(),
+              [](const CBlockIndex* a, const CBlockIndex* b) { return a->nHeight < b->nHeight; });
     for (const auto baseBlock : baseBlockIndexes) {
         if (baseBlock->nHeight >= blockIndex->nHeight)
             break;
