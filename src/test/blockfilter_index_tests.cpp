@@ -81,7 +81,9 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
     }
     {
         CMutableTransaction tx_coinbase{*block.vtx.at(0)};
+        tx_coinbase.nLockTime = static_cast<uint32_t>(prev->nHeight);
         tx_coinbase.vin.at(0).scriptSig = CScript{} << prev->nHeight + 1;
+        tx_coinbase.vin.at(0).nSequence = CTxIn::MAX_SEQUENCE_NONFINAL;
         block.vtx.at(0) = MakeTransactionRef(std::move(tx_coinbase));
         block.hashMerkleRoot = BlockMerkleRoot(block);
     }
