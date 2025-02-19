@@ -6,7 +6,7 @@
 
 export LC_ALL=C.UTF-8
 
-export CI_IMAGE_NAME_TAG="docker.io/ubuntu:24.04"
+export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:24.04"
 export CONTAINER_NAME=ci_native_fuzz_valgrind
 export PACKAGES="clang-16 llvm-16 libclang-rt-16-dev libevent-dev libboost-dev libsqlite3-dev valgrind"
 export NO_DEPENDS=1

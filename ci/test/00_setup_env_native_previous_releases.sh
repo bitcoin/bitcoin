@@ -7,7 +7,7 @@
 export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_native_previous_releases
-export CI_IMAGE_NAME_TAG="docker.io/ubuntu:22.04"
+export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:22.04"
 # Use minimum supported python3.10 and gcc-11, see doc/dependencies.md
 export PACKAGES="gcc-11 g++-11 python3-zmq"
 export DEP_OPTS="DEBUG=1 CC=gcc-11 CXX=g++-11"
