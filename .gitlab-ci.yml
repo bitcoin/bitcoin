@@ -2,8 +2,12 @@ image: "ubuntu:noble"
 
 variables:
   DOCKER_DRIVER: overlay2
-  FAST_MODE: "false" # when "true", only run linter on arm and unit/functional tests on linux64, skip everything else
   CI_FAILFAST_TEST_LEAVE_DANGLING: "1"  # Gitlab CI does not care about dangling process and setting this variable avoids killing the CI script itself on error
+  # BUILD_TARGETS: '/arm-linux|linux64|linux64_fuzz|linux64_multiprocess|linux64_nowallet|linux64_sqlite|linux64_tsan|linux64_ubsan|mac|win64/'
+  # Set BUILD_TARGETS variable in Gitlab CI/CD settings using the template above exculding the build targets you don't need.
+  # For example, the old FAST_MODE would be '/arm-linux|linux64/'.
+  # If BUILD_TARGETS is not set or it's an empty string then no filtering is applied.
+  # NOTE: "Value" MUST be wrapped in '' i.e. it should be '/reg_exp/' ('' included) and not /reg_exp/ (no '').
 
 workflow:
   rules:
@@ -37,13 +41,16 @@ builder-image:
 .build-depends-template:
   stage: build-depends
   rules:
-    - when: on_success
+    - if: '$BUILD_TARGETS == null || $BUILD_TARGETS == "" || $BUILD_TARGET =~ $BUILD_TARGETS'
+      when: on_success
+    - when: never
   needs:
     - builder-image
   image: $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG
   before_script:
     - |
       echo BUILD_TARGET="${BUILD_TARGET}"
+      echo BUILD_TARGETS="${BUILD_TARGETS}"
       source ./ci/dash/matrix.sh
       echo HOST="${HOST}"
       echo DEP_OPTS="${DEP_OPTS}"
@@ -71,10 +78,13 @@ builder-image:
 .base-template:
   image: $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG
   rules:
-    - when: on_success
+    - if: '$BUILD_TARGETS == null || $BUILD_TARGETS == "" || $BUILD_TARGET =~ $BUILD_TARGETS'
+      when: on_success
+    - when: never
   before_script:
     - export CACHE_DIR=$CI_PROJECT_DIR/cache
     - echo BUILD_TARGET=$BUILD_TARGET
+    - echo BUILD_TARGETS=$BUILD_TARGETS
     - source ./ci/dash/matrix.sh
     - echo HOST=${HOST}
     - echo DEP_OPTS=${DEP_OPTS}
@@ -164,12 +174,6 @@ builder-image:
       - testlogs
     expire_in: 3 days
 
-.skip-in-fast-mode-template:
-  rules:
-    - if: '$FAST_MODE == "true"'
-      when: never
-    - when: on_success
-
 ###
 
 arm-linux-gnueabihf:
@@ -180,7 +184,6 @@ arm-linux-gnueabihf:
 x86_64-w64-mingw32:
   extends:
     - .build-depends-template
-    - .skip-in-fast-mode-template
   variables:
     BUILD_TARGET: win64
 
@@ -192,21 +195,18 @@ x86_64-pc-linux-gnu:
 x86_64-pc-linux-gnu_nowallet:
   extends:
     - .build-depends-template
-    - .skip-in-fast-mode-template
   variables:
     BUILD_TARGET: linux64_nowallet
 
 x86_64-pc-linux-gnu_multiprocess:
   extends:
     - .build-depends-template
-    - .skip-in-fast-mode-template
   variables:
     BUILD_TARGET: linux64_multiprocess
 
 x86_64-apple-darwin:
   extends:
     - .build-depends-template
-    - .skip-in-fast-mode-template
   variables:
     BUILD_TARGET: mac
 
@@ -222,7 +222,6 @@ arm-linux-build:
 win64-build:
   extends:
     - .build-template
-    - .skip-in-fast-mode-template
   needs:
     - x86_64-w64-mingw32
   variables:
@@ -238,7 +237,6 @@ linux64-build:
 linux64_sqlite-build:
   extends:
     - .build-template
-    - .skip-in-fast-mode-template
   needs:
     - x86_64-pc-linux-gnu
   variables:
@@ -247,7 +245,6 @@ linux64_sqlite-build:
 linux64_fuzz-build:
   extends:
     - .build-template
-    - .skip-in-fast-mode-template
   needs:
     - x86_64-pc-linux-gnu
   variables:
@@ -256,7 +253,6 @@ linux64_fuzz-build:
 #linux64_asan-build:
 #  extends:
 #    - .build-template
-#    - .skip-in-fast-mode-template
 #  needs:
 #    - x86_64-pc-linux-gnu
 #  variables:
@@ -265,7 +261,6 @@ linux64_fuzz-build:
 linux64_tsan-build:
   extends:
     - .build-template
-    - .skip-in-fast-mode-template
   needs:
     - x86_64-pc-linux-gnu_multiprocess
   variables:
@@ -274,7 +269,6 @@ linux64_tsan-build:
 linux64_ubsan-build:
   extends:
     - .build-template
-    - .skip-in-fast-mode-template
   needs:
     - x86_64-pc-linux-gnu
   variables:
@@ -283,7 +277,6 @@ linux64_ubsan-build:
 linux64_nowallet-build:
   extends:
     - .build-template
-    - .skip-in-fast-mode-template
   needs:
     - x86_64-pc-linux-gnu_nowallet
   variables:
@@ -292,7 +285,6 @@ linux64_nowallet-build:
 linux64_multiprocess-build:
   extends:
     - .build-template
-    - .skip-in-fast-mode-template
   needs:
     - x86_64-pc-linux-gnu_multiprocess
   variables:
@@ -301,7 +293,6 @@ linux64_multiprocess-build:
 #linux64_valgrind-build:
 #  extends:
 #    - .build-template
-#    - .skip-in-fast-mode-template
 #  needs:
 #    - x86_64-pc-linux-gnu
 #  variables:
@@ -310,7 +301,6 @@ linux64_multiprocess-build:
 mac-build:
   extends:
     - .build-template
-    - .skip-in-fast-mode-template
   needs:
     - x86_64-apple-darwin
   variables:
@@ -328,7 +318,6 @@ linux64-test:
 linux64_sqlite-test:
   extends:
     - .test-template
-    - .skip-in-fast-mode-template
   needs:
     - linux64_sqlite-build
   variables:
@@ -337,7 +326,6 @@ linux64_sqlite-test:
 #linux64_asan-test:
 #  extends:
 #    - .test-template
-#    - .skip-in-fast-mode-template
 #  needs:
 #    - linux64_asan-build
 #  variables:
@@ -346,7 +334,6 @@ linux64_sqlite-test:
 linux64_tsan-test:
   extends:
     - .test-template
-    - .skip-in-fast-mode-template
   needs:
     - linux64_tsan-build
   variables:
@@ -355,7 +342,6 @@ linux64_tsan-test:
 linux64_ubsan-test:
   extends:
     - .test-template
-    - .skip-in-fast-mode-template
   needs:
     - linux64_ubsan-build
   variables:
@@ -364,7 +350,6 @@ linux64_ubsan-test:
 linux64_multiprocess-test:
   extends:
     - .test-template
-    - .skip-in-fast-mode-template
   needs:
     - linux64_multiprocess-build
   variables:
@@ -373,7 +358,6 @@ linux64_multiprocess-test:
 linux64_nowallet-test:
   extends:
     - .test-template
-    - .skip-in-fast-mode-template
   needs:
     - linux64_nowallet-build
   variables:
@@ -382,7 +366,6 @@ linux64_nowallet-test:
 #linux64_valgrind-test:
 #  extends:
 #    - .test-template
-#    - .skip-in-fast-mode-template
 #  needs:
 #    - linux64_valgrind-build
 #  variables:
