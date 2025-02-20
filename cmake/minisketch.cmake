@@ -2,7 +2,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
-include(CheckSourceCompilesAndLinks)
+include(CheckSourceCompilesWithFlags)
 
 # Check for clmul instructions support.
 if(MSVC)

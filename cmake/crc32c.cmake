@@ -7,7 +7,7 @@
 # buildsystem.
 
 include(CheckCXXSourceCompiles)
-include(CheckSourceCompilesAndLinks)
+include(CheckSourceCompilesWithFlags)
 
 # Check for __builtin_prefetch support in the compiler.
 check_cxx_source_compiles("

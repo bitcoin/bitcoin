@@ -160,7 +160,7 @@ check_cxx_source_compiles("
 )
 
 if(NOT MSVC)
-  include(CheckSourceCompilesAndLinks)
+  include(CheckSourceCompilesWithFlags)
 
   # Check for SSE4.1 intrinsics.
   set(SSE41_CXXFLAGS -msse4.1)
