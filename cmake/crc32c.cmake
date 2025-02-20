@@ -7,6 +7,7 @@
 # buildsystem.
 
 include(CheckCXXSourceCompiles)
+include(CheckSourceCompilesWithFlags)
 
 # Check for __builtin_prefetch support in the compiler.
 check_cxx_source_compiles("
@@ -42,7 +43,7 @@ if(MSVC)
 else()
   set(SSE42_CXXFLAGS -msse4.2)
 endif()
-check_cxx_source_compiles_with_flags("${SSE42_CXXFLAGS}" "
+check_cxx_source_compiles_with_flags("
   #include <cstdint>
   #if defined(_MSC_VER)
   #include <intrin.h>
@@ -58,11 +59,12 @@ check_cxx_source_compiles_with_flags("${SSE42_CXXFLAGS}" "
     return l;
   }
   " HAVE_SSE42
+  CXXFLAGS ${SSE42_CXXFLAGS}
 )
 
 # Check for ARMv8 w/ CRC and CRYPTO extensions support in the compiler.
 set(ARM64_CRC_CXXFLAGS -march=armv8-a+crc+crypto)
-check_cxx_source_compiles_with_flags("${ARM64_CRC_CXXFLAGS}" "
+check_cxx_source_compiles_with_flags("
   #include <arm_acle.h>
   #include <arm_neon.h>
 
@@ -76,6 +78,7 @@ check_cxx_source_compiles_with_flags("${ARM64_CRC_CXXFLAGS}" "
     return 0;
   }
   " HAVE_ARM64_CRC32C
+  CXXFLAGS ${ARM64_CRC_CXXFLAGS}
 )
 
 add_library(crc32c STATIC EXCLUDE_FROM_ALL
