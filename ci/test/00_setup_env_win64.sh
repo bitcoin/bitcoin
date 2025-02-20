@@ -7,7 +7,7 @@
 export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_win64
-export CI_IMAGE_NAME_TAG="docker.io/ubuntu:noble"  # Check that g++-mingw-w64-x86-64-posix (version 13.2, similar to guix) can cross-compile
+export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:noble"  # Check that g++-mingw-w64-x86-64-posix (version 13.2, similar to guix) can cross-compile
 export CI_IMAGE_PLATFORM="linux/amd64"
 export HOST=x86_64-w64-mingw32
 export DPKG_ADD_ARCH="i386"
