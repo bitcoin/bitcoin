@@ -47,6 +47,8 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
 
     CTransactionRef ptx_potential_parent = nullptr;
 
+    std::vector<CTransactionRef> tx_history;
+
     LIMITED_WHILE(outpoints.size() < 200'000 && fuzzed_data_provider.ConsumeBool(), 10 * DEFAULT_MAX_ORPHAN_TRANSACTIONS)
     {
         // construct transaction
@@ -74,6 +76,8 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
             }
             return new_tx;
         }();
+
+        tx_history.push_back(tx);
 
         const auto wtxid{tx->GetWitnessHash()};
 
@@ -194,6 +198,20 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                     orphanage.EraseForPeer(peer_id);
                     Assert(!orphanage.HaveTxFromPeer(tx->GetWitnessHash(), peer_id));
                     Assert(orphanage.UsageByPeer(peer_id) == 0);
+                },
+                [&] {
+                    // Make a block out of txs and then EraseForBlock
+                    CBlock block;
+                    int num_txs = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, 1000);
+                    for (int i{0}; i < num_txs; ++i) {
+                        auto& tx_to_remove = PickValue(fuzzed_data_provider, tx_history);
+                        block.vtx.push_back(tx_to_remove);
+                    }
+                    orphanage.EraseForBlock(block);
+                    for (const auto& tx_removed : block.vtx) {
+                        Assert(!orphanage.HaveTx(tx_removed->GetWitnessHash()));
+                        Assert(!orphanage.HaveTxFromPeer(tx_removed->GetWitnessHash(), peer_id));
+                    }
                 },
                 [&] {
                     // test mocktime and expiry
