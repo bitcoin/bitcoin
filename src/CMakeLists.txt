@@ -13,7 +13,7 @@ add_custom_target(generate_build_info
   COMMENT "Generating bitcoin-build-info.h"
   VERBATIM
 )
-add_library(bitcoin_clientversion OBJECT EXCLUDE_FROM_ALL
+add_library(bitcoin_clientversion STATIC EXCLUDE_FROM_ALL
   clientversion.cpp
 )
 target_link_libraries(bitcoin_clientversion
