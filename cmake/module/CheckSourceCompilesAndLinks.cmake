@@ -3,8 +3,6 @@
 # file COPYING or https://opensource.org/license/mit/.
 
 include_guard(GLOBAL)
-include(CheckCXXSourceCompiles)
-include(CMakePushCheckState)
 
 #[=[
 Check once if C++ source code can be compiled.
@@ -34,10 +32,3 @@ function(check_cxx_source_compiles_with_flags source result_var)
   check_cxx_source_compiles("${source}" ${result_var})
   set(${result_var} ${${result_var}} PARENT_SCOPE)
 endfunction()
-
-macro(check_cxx_source_links_with_libs libs source)
-  cmake_push_check_state(RESET)
-  set(CMAKE_REQUIRED_LIBRARIES "${libs}")
-  check_cxx_source_compiles("${source}" ${ARGN})
-  cmake_pop_check_state()
-endmacro()
