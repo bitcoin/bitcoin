@@ -353,6 +353,13 @@ public:
      */
     unsigned int GetTotalSize() const;
 
+    /**
+     * Get the transaction weight in weight units as defined in BIP141.
+     * @return Transaction weight in weight units.
+     */
+    size_t GetTotalWeight() const;
+
+
     bool IsCoinBase() const
     {
         return (vin.size() == 1 && vin[0].prevout.IsNull());

@@ -112,6 +112,13 @@ unsigned int CTransaction::GetTotalSize() const
     return ::GetSerializeSize(TX_WITH_WITNESS(*this));
 }
 
+size_t CTransaction::GetTotalWeight() const
+{
+    size_t base_size = ::GetSerializeSize(TX_NO_WITNESS(*this));
+    size_t total_size = GetTotalSize();
+    return size_t((3 * base_size) + total_size);
+}
+
 std::string CTransaction::ToString() const
 {
     std::string str;
