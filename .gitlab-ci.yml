@@ -84,7 +84,7 @@ builder-image:
   before_script:
     - export CACHE_DIR=$CI_PROJECT_DIR/cache
     - echo BUILD_TARGET=$BUILD_TARGET
-    - echo BUILD_TARGETS=$BUILD_TARGETS
+    - echo BUILD_TARGETS="${BUILD_TARGETS}"
     - source ./ci/dash/matrix.sh
     - echo HOST=${HOST}
     - echo DEP_OPTS=${DEP_OPTS}
