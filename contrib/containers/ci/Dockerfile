@@ -171,6 +171,8 @@ RUN set -ex; \
 RUN apt-get update && apt-get install $APT_ARGS \
     bc \
     gawk \
+    g++-11 \
+    g++-14 \
     g++-arm-linux-gnueabihf \
     g++-mingw-w64-x86-64 \
     jq \
