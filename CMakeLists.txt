@@ -386,6 +386,7 @@ endif()
 target_link_options(sanitize_interface INTERFACE ${SANITIZER_LDFLAGS})
 
 if(BUILD_FUZZ_BINARY)
+  target_link_libraries(core_interface INTERFACE ${FUZZ_LIBS})
   include(CheckSourceCompilesWithFlags)
   check_cxx_source_compiles_with_flags("
       #include <cstdint>
@@ -394,6 +395,7 @@ if(BUILD_FUZZ_BINARY)
       // No main() function.
     " FUZZ_BINARY_LINKS_WITHOUT_MAIN_FUNCTION
     LDFLAGS ${SANITIZER_LDFLAGS}
+    LINK_LIBRARIES ${FUZZ_LIBS}
   )
 endif()
 
