@@ -118,7 +118,8 @@ def FlagsForClangComplete(file_path, build_root):
   clang_complete_path = FindNearest('.clang_complete', file_path, build_root)
   if clang_complete_path is None:
     return None
-  clang_complete_flags = open(clang_complete_path, 'r').read().splitlines()
+  with open(clang_complete_path, 'r') as file:
+      clang_complete_flags = file.read().splitlines()
   return clang_complete_flags
 
 
