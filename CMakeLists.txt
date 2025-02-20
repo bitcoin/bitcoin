@@ -387,7 +387,7 @@ target_link_options(sanitize_interface INTERFACE ${SANITIZER_LDFLAGS})
 
 if(BUILD_FUZZ_BINARY)
   include(CheckSourceCompilesAndLinks)
-  check_cxx_source_links_with_flags("${SANITIZER_LDFLAGS}" "
+  check_cxx_source_compiles_with_flags("${SANITIZER_LDFLAGS}" "
       #include <cstdint>
       #include <cstddef>
       extern \"C\" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) { return 0; }
