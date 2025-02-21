@@ -93,6 +93,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "scanblocks", 5, "options" },
     { "scanblocks", 5, "filter_false_positives" },
     { "scantxoutset", 1, "scanobjects" },
+    { "dumptxoutset", 1, "format" },
+    { "dumptxoutset", 2, "show_header" },
     { "addmultisigaddress", 0, "nrequired" },
     { "addmultisigaddress", 1, "keys" },
     { "createmultisig", 0, "nrequired" },
