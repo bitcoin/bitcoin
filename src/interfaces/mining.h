@@ -34,9 +34,12 @@ public:
     virtual ~BlockTemplate() = default;
 
     virtual CBlockHeader getBlockHeader() = 0;
+    // Block contains a dummy coinbase transaction that should not be used.
     virtual CBlock getBlock() = 0;
 
+    // Fees per transaction, not including coinbase transaction.
     virtual std::vector<CAmount> getTxFees() = 0;
+    // Sigop cost per transaction, not including coinbase transaction.
     virtual std::vector<int64_t> getTxSigops() = 0;
 
     virtual CTransactionRef getCoinbaseTx() = 0;
