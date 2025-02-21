@@ -84,7 +84,7 @@ constexpr uint8_t NATPMP_RESULT_UNSUPP_VERSION = 1;
 constexpr uint8_t NATPMP_RESULT_NO_RESOURCES = 4;
 
 //! Mapping of NATPMP result code to string (RFC6886 3.5). Result codes <=2 match PCP.
-const std::map<uint8_t, std::string> NATPMP_RESULT_STR{
+const std::map<uint16_t, std::string> NATPMP_RESULT_STR{
     {0,  "SUCCESS"},
     {1,  "UNSUPP_VERSION"},
     {2,  "NOT_AUTHORIZED"},
@@ -165,7 +165,7 @@ const std::map<uint8_t, std::string> PCP_RESULT_STR{
 };
 
 //! Return human-readable string from NATPMP result code.
-std::string NATPMPResultString(uint8_t result_code)
+std::string NATPMPResultString(uint16_t result_code)
 {
     auto result_i = NATPMP_RESULT_STR.find(result_code);
     return strprintf("%s (code %d)", result_i == NATPMP_RESULT_STR.end() ? "(unknown)" : result_i->second,  result_code);
@@ -512,7 +512,7 @@ std::variant<MappingResult, MappingError> PCPRequestPortMap(const PCPMappingNonc
     return MappingResult(PCP_VERSION, CService(internal, port), CService(external_addr, external_port), lifetime_ret);
 }
 
-std::string MappingResult::ToString()
+std::string MappingResult::ToString() const
 {
     Assume(version == NATPMP_VERSION || version == PCP_VERSION);
     return strprintf("%s:%s -> %s (for %ds)",
