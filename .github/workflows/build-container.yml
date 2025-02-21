@@ -48,7 +48,11 @@ jobs:
           file: ./contrib/containers/ci/Dockerfile
           push: true
           tags: |
+            ghcr.io/${{ steps.prepare.outputs.repo }}/dashcore-ci-runner:${{ hashFiles('./contrib/containers/ci/Dockerfile') }}
             ghcr.io/${{ steps.prepare.outputs.repo }}/dashcore-ci-runner:${{ steps.prepare.outputs.tag }}
             ghcr.io/${{ steps.prepare.outputs.repo }}/dashcore-ci-runner:latest
-          cache-from: type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo }}/dashcore-ci-runner:latest
+          cache-from: |
+            type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo }}/dashcore-ci-runner:${{ hashFiles('./contrib/containers/ci/Dockerfile') }}
+            type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo }}/dashcore-ci-runner:${{ steps.prepare.outputs.tag }}
+            type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo }}/dashcore-ci-runner:latest
           cache-to: type=inline
