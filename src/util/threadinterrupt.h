@@ -27,11 +27,27 @@ class CThreadInterrupt
 {
 public:
     using Clock = std::chrono::steady_clock;
+
     CThreadInterrupt();
-    explicit operator bool() const;
-    void operator()() EXCLUSIVE_LOCKS_REQUIRED(!mut);
-    void reset();
-    bool sleep_for(Clock::duration rel_time) EXCLUSIVE_LOCKS_REQUIRED(!mut);
+
+    virtual ~CThreadInterrupt() = default;
+
+    /// Return true if `operator()()` has been called.
+    virtual bool interrupted() const;
+
+    /// An alias for `interrupted()`.
+    virtual explicit operator bool() const;
+
+    /// Interrupt any sleeps. After this `interrupted()` will return `true`.
+    virtual void operator()() EXCLUSIVE_LOCKS_REQUIRED(!mut);
+
+    /// Reset to an non-interrupted state.
+    virtual void reset();
+
+    /// Sleep for the given duration.
+    /// @retval true The time passed.
+    /// @retval false The sleep was interrupted.
+    virtual bool sleep_for(Clock::duration rel_time) EXCLUSIVE_LOCKS_REQUIRED(!mut);
 
 private:
     std::condition_variable cond;
