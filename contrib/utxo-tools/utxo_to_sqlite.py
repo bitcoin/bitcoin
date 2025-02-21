@@ -126,7 +126,7 @@ def main():
     con = sqlite3.connect(args.outfile)
     con.execute("CREATE TABLE utxos(txid TEXT, vout INT, value INT, coinbase INT, height INT, scriptpubkey TEXT)")
 
-    # read metadata (magic bytes, version, network magic, block height, block hash, UTXO count)
+    # read metadata (magic bytes, version, network magic, block hash, UTXO count)
     f = open(args.infile, 'rb')
     magic_bytes = f.read(5)
     version = int.from_bytes(f.read(2), 'little')
