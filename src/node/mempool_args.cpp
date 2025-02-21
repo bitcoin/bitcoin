@@ -93,9 +93,6 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
     mempool_opts.datacarrier_fullcount = argsman.GetBoolArg("-datacarrierfullcount", DEFAULT_DATACARRIER_FULLCOUNT);
 
     mempool_opts.require_standard = !argsman.GetBoolArg("-acceptnonstdtxn", DEFAULT_ACCEPT_NON_STD_TXN);
-    if (!chainparams.IsTestChain() && !mempool_opts.require_standard) {
-        return util::Error{strprintf(Untranslated("acceptnonstdtxn is not currently supported for %s chain"), chainparams.GetChainTypeString())};
-    }
 
     if (argsman.IsArgSet("-mempoolreplacement") || argsman.IsArgSet("-mempoolfullrbf")) {
         // Generally, mempoolreplacement overrides mempoolfullrbf, but the latter is used to infer intent in some cases
