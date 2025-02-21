@@ -15,9 +15,6 @@ from test_framework.util import (
 BLOCK_TIME = 60 * 10
 
 class WalletReindexTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
@@ -57,18 +54,13 @@ class WalletReindexTest(BitcoinTestFramework):
 
         # Depending on the wallet type, the birth time changes.
         wallet_birthtime = wallet_watch_only.getwalletinfo()['birthtime']
-        if self.options.descriptors:
-            # As blocks were generated every 10 min, the chain MTP timestamp is node_time - 60 min.
-            assert_equal(self.node_time - BLOCK_TIME * 6, wallet_birthtime)
-        else:
-            # No way of importing scripts/addresses with a custom time on a legacy wallet.
-            # It's always set to the beginning of time.
-            assert_equal(wallet_birthtime, 1)
+        # As blocks were generated every 10 min, the chain MTP timestamp is node_time - 60 min.
+        assert_equal(self.node_time - BLOCK_TIME * 6, wallet_birthtime)
 
         # Rescan the wallet to detect the missing transaction
         wallet_watch_only.rescanblockchain()
         assert_equal(wallet_watch_only.gettransaction(tx_id)['confirmations'], 50)
-        assert_equal(wallet_watch_only.getbalances()['mine' if self.options.descriptors else 'watchonly']['trusted'], 2)
+        assert_equal(wallet_watch_only.getbalances()['mine']['trusted'], 2)
 
         # Reindex and wait for it to finish
         with node.assert_debug_log(expected_msgs=["initload thread exit"]):
@@ -81,12 +73,8 @@ class WalletReindexTest(BitcoinTestFramework):
         assert_equal(tx_info['confirmations'], 50)
 
         # Depending on the wallet type, the birth time changes.
-        if self.options.descriptors:
-            # For descriptors, verify the wallet updated the birth time to the transaction time
-            assert_equal(tx_info['time'], wallet_watch_only.getwalletinfo()['birthtime'])
-        else:
-            # For legacy, as the birth time was set to the beginning of time, verify it did not change
-            assert_equal(wallet_birthtime, 1)
+        # For descriptors, verify the wallet updated the birth time to the transaction time
+        assert_equal(tx_info['time'], wallet_watch_only.getwalletinfo()['birthtime'])
 
         wallet_watch_only.unloadwallet()
 
