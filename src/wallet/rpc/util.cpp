@@ -136,7 +136,7 @@ void PushParentDescriptors(const CWallet& wallet, const CScript& script_pubkey, 
     entry.pushKV("parent_descs", std::move(parent_descs));
 }
 
-void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& status, bilingual_str& error)
+void HandleWalletError(const std::shared_ptr<CWallet>& wallet, DatabaseStatus& status, bilingual_str& error)
 {
     if (!wallet) {
         // Map bad format to not found, since bad format is returned when the

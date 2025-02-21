@@ -1775,7 +1775,7 @@ void CWallet::InitWalletFlags(uint64_t flags)
     if (!LoadWalletFlags(flags)) assert(false);
 }
 
-bool CWallet::ImportScripts(const std::set<CScript> scripts, int64_t timestamp)
+bool CWallet::ImportScripts(const std::set<CScript>& scripts, int64_t timestamp)
 {
     auto spk_man = GetLegacyScriptPubKeyMan();
     if (!spk_man) {
@@ -2580,7 +2580,7 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
     return res;
 }
 
-util::Result<CTxDestination> CWallet::GetNewDestination(const OutputType type, const std::string label)
+util::Result<CTxDestination> CWallet::GetNewDestination(const OutputType type, const std::string& label)
 {
     LOCK(cs_wallet);
     auto spk_man = GetScriptPubKeyMan(type, /*internal=*/false);
