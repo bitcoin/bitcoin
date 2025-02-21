@@ -100,6 +100,7 @@ public:
     CCoinsMap& map() const { return cacheCoins; }
     CoinsCachePair& sentinel() const { return m_sentinel; }
     size_t& usage() const { return cachedCoinsUsage; }
+    size_t& GetDirtyCount() const { return m_dirty_count; }
 };
 
 } // namespace
@@ -652,7 +653,8 @@ static void WriteCoinsViewEntry(CCoinsView& view, const MaybeCoin& cache_coin)
     CCoinsMapMemoryResource resource;
     CCoinsMap map{0, CCoinsMap::hasher{}, CCoinsMap::key_equal{}, &resource};
     auto usage{cache_coin ? InsertCoinsMapEntry(map, sentinel, *cache_coin) : 0};
-    auto cursor{CoinsViewCacheCursor(usage, sentinel, map, /*will_erase=*/true)};
+    size_t dirty = cache_coin ? cache_coin->IsDirty() : 0;
+    auto cursor{CoinsViewCacheCursor(usage, dirty, sentinel, map, /*will_erase=*/true)};
     BOOST_CHECK(view.BatchWrite(cursor, {}));
 }
 
@@ -663,7 +665,10 @@ public:
     {
         auto base_cache_coin{base_value == ABSENT ? MISSING : CoinEntry{base_value, CoinEntry::State::DIRTY}};
         WriteCoinsViewEntry(base, base_cache_coin);
-        if (cache_coin) cache.usage() += InsertCoinsMapEntry(cache.map(), cache.sentinel(), *cache_coin);
+        if (cache_coin) {
+            cache.usage() += InsertCoinsMapEntry(cache.map(), cache.sentinel(), *cache_coin);
+            cache.GetDirtyCount() += cache_coin->IsDirty();
+        }
     }
 
     CCoinsView root;
