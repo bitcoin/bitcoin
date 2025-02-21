@@ -31,7 +31,7 @@ static TransactionError HandleATMPError(const TxValidationState& state, std::str
     }
 }
 
-TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback)
+TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const std::variant<CAmount, CFeeRate>& max_tx_fee, bool relay, bool wait_callback, const ignore_rejects_type& ignore_rejects)
 {
     // BroadcastTransaction can be called by RPC or by the wallet.
     // chainman, mempool and peerman are initialized before the RPC server and wallet are started
@@ -69,18 +69,30 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
             wtxid = mempool_tx->GetWitnessHash();
         } else {
             // Transaction is not already in the mempool.
-            if (max_tx_fee > 0) {
+            bool max_tx_fee_set{(std::holds_alternative<CAmount>(max_tx_fee) ? std::get<CAmount>(max_tx_fee) : std::get<CFeeRate>(max_tx_fee).GetFeePerK()) > 0};
+            if (ignore_rejects.count("absurdly-high-fee") || ignore_rejects.count("max-fee-exceeded")) {
+                max_tx_fee_set = false;
+            }
+            if (max_tx_fee_set) {
                 // First, call ATMP with test_accept and check the fee. If ATMP
                 // fails here, return error immediately.
-                const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*test_accept=*/ true);
+                const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*test_accept=*/ true, ignore_rejects);
                 if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
                     return HandleATMPError(result.m_state, err_string);
-                } else if (result.m_base_fees.value() > max_tx_fee) {
-                    return TransactionError::MAX_FEE_EXCEEDED;
+                } else {
+                    CAmount max_tx_fee_abs;
+                    if (std::holds_alternative<CFeeRate>(max_tx_fee)) {
+                        max_tx_fee_abs = std::get<CFeeRate>(max_tx_fee).GetFee(*Assert(result.m_vsize));
+                    } else {
+                        max_tx_fee_abs = std::get<CAmount>(max_tx_fee);
+                    }
+                    if (result.m_base_fees.value() > max_tx_fee_abs) {
+                        return TransactionError::MAX_FEE_EXCEEDED;
+                    }
                 }
             }
             // Try to submit the transaction to the mempool.
-            const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*test_accept=*/ false);
+            const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*test_accept=*/ false, ignore_rejects);
             if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
                 return HandleATMPError(result.m_state, err_string);
             }
