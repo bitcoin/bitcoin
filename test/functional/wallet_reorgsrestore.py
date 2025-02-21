@@ -19,6 +19,7 @@ import shutil
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
         assert_equal,
+        assert_greater_than,
         assert_raises_rpc_error
 )
 
@@ -90,6 +91,48 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         # Verify the coinbase descendant was also marked as abandoned
         assert_equal(wallet0.gettransaction(descendant_tx_id)['details'][0]['abandoned'], True)
 
+    def test_reorg_handling_during_unclean_shutdown(self):
+        self.log.info("Test that wallet doesn't crash due to a duplicate block disconnection event after an unclean shutdown")
+        node = self.nodes[0]
+        # Receive coinbase reward on a new wallet
+        node.createwallet(wallet_name="reorg_crash", load_on_startup=True)
+        wallet = node.get_wallet_rpc("reorg_crash")
+        self.generatetoaddress(node, 1, wallet.getnewaddress(), sync_fun=self.no_op)
+
+        # Restart to ensure node and wallet are flushed
+        self.restart_node(0)
+        wallet = node.get_wallet_rpc("reorg_crash")
+        assert_greater_than(wallet.getwalletinfo()['immature_balance'], 0)
+
+        # Disconnect tip and sync wallet state
+        tip = wallet.getbestblockhash()
+        wallet.invalidateblock(tip)
+        wallet.syncwithvalidationinterfacequeue()
+
+        # Tip was disconnected, ensure coinbase has been abandoned
+        assert_equal(wallet.getwalletinfo()['immature_balance'], 0)
+        coinbase_tx_id = wallet.getblock(tip, verbose=1)["tx"][0]
+        assert_equal(wallet.gettransaction(coinbase_tx_id)['details'][0]['abandoned'], True)
+
+        # Abort process abruptly to mimic an unclean shutdown (no flush)
+        # The best block locator changes might not have been persisted
+        node.process.kill()
+
+        # Start wallet again. Ensure the tx is still abandoned and the wallet has no balance
+        self.start_node(0)
+        wallet = node.get_wallet_rpc("reorg_crash")
+        assert_equal(wallet.getbestblockhash(), tip)
+        assert_equal(wallet.getwalletinfo()['immature_balance'], 0)
+
+        # If the unclean shutdown succeeded, the chainstate wasn't persisted after the tip invalidation.
+        # So we need to invalidate it again (this is a no-op if the invalidation was persisted).
+        wallet.invalidateblock(tip)
+        assert(node.getbestblockhash() != tip)
+
+        # Now verify the wallet status:
+        # Ensure abandoned state persists after restart
+        assert_equal(wallet.gettransaction(coinbase_tx_id)['details'][0]['abandoned'], True)
+        assert_equal(wallet.getwalletinfo()['immature_balance'], 0)
 
     def run_test(self):
         # Send a tx from which to conflict outputs later
@@ -162,6 +205,9 @@ class ReorgsRestoreTest(BitcoinTestFramework):
 
         # Verify we mark coinbase txs, and their descendants, as abandoned during startup
         self.test_coinbase_automatic_abandon_during_startup()
+
+        # Verify reorg behavior during an unclean shutdown
+        self.test_reorg_handling_during_unclean_shutdown()
 
 
 if __name__ == '__main__':
