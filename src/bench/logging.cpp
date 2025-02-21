@@ -60,6 +60,7 @@ static void LogWithoutWriteToFile(benchmark::Bench& bench)
 }
 
 namespace BCLog {
+    bool IsSuspicious(const char ch) noexcept;
     std::string LogEscapeMessage(std::string_view str);
 }
 
@@ -73,7 +74,7 @@ static void LogEscapeMessageNormal(benchmark::Bench& bench) {
 
     bench.batch(normal_logs.size()).run([&] {
         for (const auto& msg : normal_logs) {
-            const auto& res{BCLog::LogEscapeMessage(msg)};
+            const auto& res{std::ranges::none_of(msg, BCLog::IsSuspicious) ? msg : BCLog::LogEscapeMessage(msg)};
             ankerl::nanobench::doNotOptimizeAway(res);
         }
     });
@@ -90,7 +91,7 @@ static void LogEscapeMessageSuspicious(benchmark::Bench& bench) {
 
    bench.batch(suspicious_logs.size()).run([&] {
         for (const auto& msg : suspicious_logs) {
-            const auto& res{BCLog::LogEscapeMessage(msg)};
+            const auto& res{std::ranges::none_of(msg, BCLog::IsSuspicious) ? msg : BCLog::LogEscapeMessage(msg)};
             ankerl::nanobench::doNotOptimizeAway(res);
         }
     });
