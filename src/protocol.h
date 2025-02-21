@@ -321,9 +321,8 @@ enum ServiceFlags : uint64_t {
     // NODE_COMPACT_FILTERS means the node will service basic block filter requests.
     // See BIP157 and BIP158 for details on how this is implemented.
     NODE_COMPACT_FILTERS = (1 << 6),
-    // NODE_NETWORK_LIMITED means the same as NODE_NETWORK with the limitation of only
-    // serving the last 288 (2 day) blocks
-    // See BIP159 for details on how this is implemented.
+    // NODE_NETWORK_LIMITED indicates that the node can serve at least the last
+    // 288 blocks (~2 days). See BIP159 for details on how this is implemented.
     NODE_NETWORK_LIMITED = (1 << 10),
 
     // NODE_P2P_V2 means the node supports BIP324 transport
