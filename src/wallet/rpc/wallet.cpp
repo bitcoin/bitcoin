@@ -1163,7 +1163,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &sendtoaddress},
         {"wallet", &sethdseed},
         {"wallet", &setlabel},
-        {"wallet", &settxfee},
+        {"hidden", &settxfee},
         {"wallet", &setwalletflag},
         {"wallet", &signmessage},
         {"wallet", &signrawtransactionwithwallet},
