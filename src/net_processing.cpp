@@ -1072,7 +1072,7 @@ private:
     void AddAddressKnown(Peer& peer, const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
     void PushAddress(Peer& peer, const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
-    void LogBlockHeader(const CBlockIndex& index);
+    void LogBlockHeader(const CBlockIndex& index, const CNode& peer);
 };
 
 const CNodeState* PeerManagerImpl::State(NodeId pnode) const
@@ -2984,7 +2984,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     assert(pindexLast);
 
     if (processed && received_new_header) {
-        LogBlockHeader(*pindexLast);
+        LogBlockHeader(*pindexLast, pfrom);
     }
 
     // Consider fetching more headers if we are not using our headers-sync mechanism.
@@ -3414,7 +3414,7 @@ void PeerManagerImpl::ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const Bl
     return;
 }
 
-void PeerManagerImpl::LogBlockHeader(const CBlockIndex& index) {
+void PeerManagerImpl::LogBlockHeader(const CBlockIndex& index, const CNode& peer) {
     // To prevent log spam, this function should only be called after it was determined that a
     // header is both new and valid.
     //
@@ -3426,9 +3426,11 @@ void PeerManagerImpl::LogBlockHeader(const CBlockIndex& index) {
     // Having this log by default when not in IBD ensures broad availability of
     // this data in case investigation is merited.
     const auto msg = strprintf(
-        "Saw new header hash=%s height=%d",
+        "Saw new header hash=%s height=%d peer=%d%s",
         index.GetBlockHash().ToString(),
-        index.nHeight
+        index.nHeight,
+        peer.GetId(),
+        peer.LogIP(fLogIPs)
     );
     if (m_chainman.IsInitialBlockDownload()) {
         LogDebug(BCLog::VALIDATION, "%s", msg);
