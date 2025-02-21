@@ -114,7 +114,7 @@ public:
         try {
             for (const auto& wtx : wallet.getWalletTxs()) {
                 if (TransactionRecord::showTransaction()) {
-                    cachedWallet.append(TransactionRecord::decomposeTransaction(wallet, wtx));
+                    cachedWallet.append(TransactionRecord::decomposeTransaction(parent->walletModel->node(), wallet, wtx));
                 }
             }
         } catch(const std::exception& e) {
@@ -174,7 +174,7 @@ public:
                 }
                 // Added -- insert at the right position
                 QList<TransactionRecord> toInsert =
-                        TransactionRecord::decomposeTransaction(wallet, wtx);
+                        TransactionRecord::decomposeTransaction(parent->walletModel->node(), wallet, wtx);
                 if(!toInsert.isEmpty()) /* only if something to insert */
                 {
                     parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex+toInsert.size()-1);

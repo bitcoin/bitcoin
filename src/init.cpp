@@ -29,6 +29,7 @@
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
 #include <index/txindex.h>
+#include <interfaces/init.h>
 #include <interfaces/node.h>
 #include <mapport.h>
 #include <node/miner.h>
@@ -1431,7 +1432,7 @@ bool AppInitLockDataDirectory()
 
 bool AppInitInterfaces(NodeContext& node)
 {
-    node.chain = interfaces::MakeChain(node);
+    node.chain = node.init->makeChain();
     return true;
 }
 

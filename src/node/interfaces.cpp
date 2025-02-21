@@ -305,7 +305,7 @@ public:
     MasternodeSyncImpl m_masternodeSync;
     CoinJoinOptionsImpl m_coinjoin;
 
-    explicit NodeImpl(NodeContext* context) { setContext(context); }
+    explicit NodeImpl(NodeContext& context) { setContext(&context); }
     void initLogging() override { InitLogging(*Assert(m_context->args)); }
     void initParameterInteraction() override { InitParameterInteraction(*Assert(m_context->args)); }
     bilingual_str getWarnings() override { return GetWarnings(true); }
@@ -1026,6 +1026,6 @@ public:
 } // namespace node
 
 namespace interfaces {
-std::unique_ptr<Node> MakeNode(NodeContext* context) { return std::make_unique<node::NodeImpl>(context); }
+std::unique_ptr<Node> MakeNode(NodeContext& context) { return std::make_unique<node::NodeImpl>(context); }
 std::unique_ptr<Chain> MakeChain(NodeContext& node) { return std::make_unique<node::ChainImpl>(node); }
 } // namespace interfaces

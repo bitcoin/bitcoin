@@ -129,7 +129,7 @@ public:
     /** Decompose CWallet transaction to model transaction records.
      */
     static bool showTransaction();
-    static QList<TransactionRecord> decomposeTransaction(interfaces::Wallet& wallet, const interfaces::WalletTx& wtx);
+    static QList<TransactionRecord> decomposeTransaction(interfaces::Node& node, interfaces::Wallet& wallet, const interfaces::WalletTx& wtx);
 
     /** @name Immutable transaction attributes
       @{*/
