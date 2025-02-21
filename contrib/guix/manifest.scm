@@ -453,7 +453,7 @@ inspecting signatures in Mach-O binaries.")
 (define-public glibc-2.31
   (let ((commit "7b27c450c34563a28e634cccb399cd415e71ebfe"))
   (package
-    (inherit glibc) ;; 2.35
+    (inherit glibc) ;; 2.39
     (version "2.31")
     (source (origin
               (method git-fetch)
@@ -464,7 +464,8 @@ inspecting signatures in Mach-O binaries.")
               (sha256
                (base32
                 "017qdpr5id7ddb4lpkzj2li1abvw916m3fc6n7nw28z4h5qbv2n0"))
-              (patches (search-our-patches "glibc-guix-prefix.patch"))))
+              (patches (search-our-patches "glibc-guix-prefix.patch"
+                                           "glibc-riscv-jumptarget.patch"))))
     (arguments
       (substitute-keyword-arguments (package-arguments glibc)
         ((#:configure-flags flags)
@@ -521,6 +522,37 @@ inspecting signatures in Mach-O binaries.")
     (description "Just sponge")
     (license license:gpl2+)))
 
+(define-public glibc-2.40
+  (let ((commit "e899ca3651f8c5e01bf3420cfb34aad97d093f74"))
+  (package
+    (inherit glibc) ;; 2.35
+    (version "2.40")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://sourceware.org/git/glibc.git")
+                    (commit commit)))
+              (file-name (git-file-name "glibc" commit))
+              (sha256
+               (base32
+                "0r34cgz171x10nhkiw7llfqnhz5jihhh7d6gay6bjz7208yjjvx7"))
+              (patches (search-our-patches "glibc-2.40-guix-prefix.patch"))))
+    (arguments
+      (substitute-keyword-arguments (package-arguments glibc)
+        ((#:configure-flags flags)
+          `(append ,flags
+            ;; https://www.gnu.org/software/libc/manual/html_node/Configuring-and-compiling.html
+            (list "--enable-stack-protector=all",
+                  "--enable-bind-now",
+                  "--enable-fortify-source",
+                  "--enable-cet=yes",
+                  "--enable-nscd=no",
+                  "--enable-static-nss=yes",
+                  "--disable-timezone-tools",
+                  "--disable-profile",
+                  "--disable-werror",
+                  building-on))))))))
+
 (packages->manifest
  (append
   (list ;; The Basics
@@ -558,6 +590,10 @@ inspecting signatures in Mach-O binaries.")
                  nsis-x86_64
                  nss-certs
                  osslsigncode))
+          ((string-contains target "x86_64-linux-")
+           (list (list gcc-toolchain-12 "static")
+                 (make-bitcoin-cross-toolchain target
+                                               #:base-libc glibc-2.40)))
           ((string-contains target "-linux-")
            (list bison
                  pkg-config
