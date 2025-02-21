@@ -3546,6 +3546,9 @@ void PeerManagerImpl::ProcessMessage(
         vRecv >> addrMe;
         if (!pfrom.IsInboundConn())
         {
+            // Overwrites potentially existing services. In contrast to this,
+            // unvalidated services received via gossip relay in ADDR/ADDRV2
+            // messages are only ever added but cannot replace existing ones.
             m_addrman.SetServices(pfrom.addr, nServices);
         }
         if (pfrom.ExpectServicesFromConn() && !HasAllDesirableServiceFlags(nServices))
