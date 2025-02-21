@@ -44,6 +44,15 @@ jobs:
           echo "PR_BASE_SHA=${{ github.event.pull_request.base.sha || '' }}" >> $GITHUB_OUTPUT
         shell: bash
 
+      - name: Restore SDKs cache
+        uses: actions/cache/restore@v4
+        if: inputs.build-target == 'mac'
+        with:
+          path: |
+            depends/SDKs
+          key: depends-sdks-${{ hashFiles('depends/hosts/darwin.mk') }}
+          fail-on-cache-miss: true
+
       - name: Restore depends cache
         uses: actions/cache/restore@v4
         with:
@@ -58,11 +67,9 @@ jobs:
         with:
           path: |
             /cache
-          key: ${{ runner.os }}-${{ inputs.build-target }}-${{ github.sha }}
+          key: ccache-${{ hashFiles('contrib/containers/ci/Dockerfile', 'depends/packages/*') }}-${{ inputs.build-target }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-${{ inputs.build-target }}-${{ github.sha }}
-            ${{ runner.os }}-${{ inputs.build-target }}-${{ steps.setup.outputs.HOST }}
-            ${{ runner.os }}-${{ inputs.build-target }}
+            ccache-${{ hashFiles('contrib/containers/ci/Dockerfile', 'depends/packages/*') }}-${{ inputs.build-target }}-
 
       - name: Build source and run unit tests
         run: |

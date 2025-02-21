@@ -51,8 +51,17 @@ jobs:
             depends/sources
           key: depends-sources-${{ hashFiles('depends/packages/*') }}
           restore-keys: |
-            depends-sources-${{ hashFiles('depends/packages/*') }}
             depends-sources-
+
+      - name: Cache SDKs
+        uses: actions/cache@v4
+        if: inputs.build-target == 'mac'
+        with:
+          path: |
+            depends/SDKs
+          key: depends-sdks-${{ hashFiles('depends/hosts/darwin.mk') }}
+          restore-keys: |
+            depends-sdks-
 
       - name: Restore cached depends
         uses: actions/cache/restore@v4
@@ -61,13 +70,18 @@ jobs:
           path: |
             depends/built
             depends/${{ steps.setup.outputs.HOST }}
-          key: ${{ runner.os }}-depends-${{ inputs.build-target }}-${{ steps.setup.outputs.DEP_HASH }}-${{ hashFiles('depends/packages/*') }}
+          key: depends-${{ hashFiles('contrib/containers/ci/Dockerfile') }}-${{ inputs.build-target }}-${{ steps.setup.outputs.DEP_HASH }}-${{ hashFiles('depends/packages/*') }}
           restore-keys: |
-            ${{ runner.os }}-depends-${{ inputs.build-target }}-${{ hashFiles('depends/packages/*') }}
-            ${{ runner.os }}-depends-${{ inputs.build-target }}
+            depends-${{ hashFiles('contrib/containers/ci/Dockerfile') }}-${{ inputs.build-target }}-${{ steps.setup.outputs.DEP_HASH }}-
+            depends-${{ hashFiles('contrib/containers/ci/Dockerfile') }}-${{ inputs.build-target }}-
 
       - name: Build depends
-        run: env ${{ steps.setup.outputs.DEP_OPTS }} HOST=${{ steps.setup.outputs.HOST }} make -j$(nproc) -C depends
+        run: |
+          export HOST="${{ steps.setup.outputs.HOST  }}"
+          if [ "${HOST}" = "x86_64-apple-darwin" ]; then
+            ./contrib/containers/guix/scripts/setup-sdk
+          fi
+          env ${{ steps.setup.outputs.DEP_OPTS }} make -j$(nproc) -C depends
 
       - name: Save depends cache
         uses: actions/cache/save@v4
