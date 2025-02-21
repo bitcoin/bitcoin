@@ -62,7 +62,7 @@ static const std::string STRING_WITH_EMBEDDED_NULL_CHAR{"1"s "\0" "1"s};
 
 /* defined in logging.cpp */
 namespace BCLog {
-    std::string LogEscapeMessage(std::string_view str);
+    std::string LogEscapeMessage(const std::string& str);
 }
 
 BOOST_FIXTURE_TEST_SUITE(util_tests, BasicTestingSetup)

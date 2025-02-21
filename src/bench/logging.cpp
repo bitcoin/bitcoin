@@ -60,7 +60,7 @@ static void LogWithoutWriteToFile(benchmark::Bench& bench)
 }
 
 namespace BCLog {
-    std::string LogEscapeMessage(std::string_view str);
+    std::string LogEscapeMessage(const std::string& str);
 }
 
 static void LogEscapeMessageNormal(benchmark::Bench& bench) {
