@@ -1,0 +1,131 @@
+// Copyright (c) 2024 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#ifndef BITCOIN_COMMON_SETTING_H
+#define BITCOIN_COMMON_SETTING_H
+
+#include <common/args.h>
+
+#include <univalue.h>
+
+namespace common {
+//! State representing a setting that is unset
+struct Unset {};
+//! State representing a setting that is enabled without a value ("-setting")
+struct Enabled {};
+//! State representing a setting that is disabled ("-nosetting")
+struct Disabled {};
+
+struct SettingOptions {
+    bool legacy{false};
+    bool debug_only{false};
+    bool network_only{false};
+    bool sensitive{false};
+    bool disallow_negation{false};
+    bool disallow_elision{false};
+};
+
+template<size_t N, typename T=char[N]>
+struct StringLiteral {
+    constexpr StringLiteral(const char (&str)[N]) {
+        std::copy_n(str, N, value);
+    }
+    constexpr StringLiteral(std::nullptr_t) {
+    }
+    T value{};
+};
+
+StringLiteral(std::nullptr_t) -> StringLiteral<1, std::nullptr_t>;
+} // namespace common
+
+#include <common/setting_internal.h>
+
+namespace common {
+//! Setting template class used to declare name, type, and behavior of command
+//! line and configuration settings.
+//!
+//! The template takes 4 parameters meant to be specified by users, followed by
+//! additional parameters that are used internally.
+//!
+//! @tparam summary string like "-fastprune" or "-blocksdir=<dir>" with the
+//!     name of the setting and optional argument information
+//!
+//! @tparam T type of the setting. Accepts simple types like bool, int, and
+//!     std::string, or and composite types like std::optional<std::string> or
+//!     std::vector<int>.
+//!
+//! @tparam options SettingOptions instance specifying additional options to
+//!        apply to this setting.
+//!
+//! @tparam help optional help string describing purpose and behavior of the
+//!     setting. It can be a formatted string accepting printf-style % arguments,
+//!     which can be formatted at runtime using HelpFn/HelpArgs or
+//!     DefaultFn/DefaultArgs features (described below).
+//!
+//! Setting template class definiting-time Setting types which are
+//! used to register and retrieve settings.
+template<StringLiteral summary, typename T, SettingOptions options = SettingOptions{}, StringLiteral help = nullptr, auto help_fn = nullptr, auto default_fn = nullptr, auto get_fn = nullptr, OptionsCategory category = OptionsCategory::OPTIONS>
+struct Setting {
+    using value_t = internal::RemoveOptional<T>::type;
+    using Impl = internal::SettingImpl<summary, T, options, help, help_fn, default_fn, get_fn, category>;
+
+    template<typename... Args>
+    static void Register(ArgsManager& manager, Args&&... args)
+    {
+        Impl::Register(manager, std::forward<Args>(args)...);
+    }
+
+    static T Get(const ArgsManager& manager)
+    {
+        return Impl::Get(manager);
+    }
+
+    static value_t Get(const ArgsManager& manager, const value_t& default_value)
+    {
+        return Impl::template Get<value_t>(manager, [&] { return default_value; });
+    }
+
+    static SettingsValue Value(const ArgsManager& manager)
+    {
+        return Impl::template Get<SettingsValue>(manager, nullptr);
+    }
+
+    //! HelpFn accessor specifying a lambda or callback function that can format the
+    //! help string. The function should take the format string as an argument,
+    //! plus any optional register_options passed to the Register method, and
+    //! return a formatted std::string.
+    template<auto _help_fn>
+    using HelpFn = Setting<summary, T, options, help, _help_fn, default_fn, get_fn, category>;
+    //! HelpArgs accessor which is a simpler alternative to HelpFn and can be
+    //! used with the format string does not require any runtime values. It
+    //! accept a list of constexpr values, and calls tinyformat to format the
+    //! help string with those values.
+    template<auto... args>
+    using HelpArgs = HelpFn<internal::HelpFormat<args...>{}>;
+    template<auto _default>
+    //! Default accessor which sets a default value for the Setting. The
+    //! specified value will be returned by Setting::Get calls if the setting
+    //! was not specified in the command line, config file, or settings.json
+    //! file. The specified value will also be substituted in the help string if
+    //! HelpArgs or HelpFn are not specified.
+    using Default = Setting<summary, T, options, help, help_fn, internal::Constant<_default>{}, get_fn, category>;
+    template<auto _default_fn>
+    //! DefaultFn accessor which sets a default value for the Setting. This
+    //! provides the same functionality as the Default<> accessor described
+    //! above, accept it accepts a lambda expression instead of a constexpr
+    //! value so the value does not have to be known at compile time.
+    using DefaultFn = Setting<summary, T, options, help, help_fn, _default_fn, get_fn, category>;
+    template<auto _get_fn>
+    //! GetFn accesor to override default Setting::Get behavior. Should not be
+    //! needed for most settings.
+    using GetFn = Setting<summary, T, options, help, help_fn, default_fn, _get_fn, category>;
+    template<OptionsCategory _category>
+    //! Category accessor overriding default setting OptionsCategory.
+    using Category = Setting<summary, T, options, help, help_fn, default_fn, get_fn, _category>;
+    //! Hidden accessor for conveniently specifying OptionsCategory::HIDDEN.
+    using Hidden = Category<OptionsCategory::HIDDEN>;
+};
+} // namespace common
+
+#endif // BITCOIN_COMMON_SETTING_H
