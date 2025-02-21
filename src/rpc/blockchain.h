@@ -5,8 +5,10 @@
 #ifndef BITCOIN_RPC_BLOCKCHAIN_H
 #define BITCOIN_RPC_BLOCKCHAIN_H
 
+#include <coins.h>
 #include <consensus/amount.h>
 #include <core_io.h>
+#include <span.h>
 #include <streams.h>
 #include <sync.h>
 #include <util/fs.h>
@@ -26,6 +28,7 @@ struct NodeContext;
 } // namespace node
 
 static constexpr int NUM_GETBLOCKSTATS_PERCENTILES = 5;
+using coinascii_cb_t = std::function<std::string(const COutPoint&, const Coin&)>;
 
 /**
  * Get the difficulty of the net wrt to the given block index.
@@ -52,6 +55,10 @@ void CalculatePercentilesByWeight(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES],
  * @return a UniValue map containing metadata about the snapshot.
  */
 UniValue CreateUTXOSnapshot(
+    const bool is_human_readable,
+    const bool show_header,
+    const Span<const std::byte>& separator,
+    const std::vector<std::pair<std::string, coinascii_cb_t>>& requested,
     node::NodeContext& node,
     Chainstate& chainstate,
     AutoFile& afile,
