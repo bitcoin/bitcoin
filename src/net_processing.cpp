@@ -1072,7 +1072,7 @@ private:
     void AddAddressKnown(Peer& peer, const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
     void PushAddress(Peer& peer, const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
-    void LogBlockHeader(const CBlockIndex& index, const CNode& peer);
+    void LogBlockHeader(const CBlockIndex& index, const CNode& peer, bool via_compact_block);
 };
 
 const CNodeState* PeerManagerImpl::State(NodeId pnode) const
@@ -2984,7 +2984,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     assert(pindexLast);
 
     if (processed && received_new_header) {
-        LogBlockHeader(*pindexLast, pfrom);
+        LogBlockHeader(*pindexLast, pfrom, /*via_compact_block=*/false);
     }
 
     // Consider fetching more headers if we are not using our headers-sync mechanism.
@@ -3414,7 +3414,7 @@ void PeerManagerImpl::ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const Bl
     return;
 }
 
-void PeerManagerImpl::LogBlockHeader(const CBlockIndex& index, const CNode& peer) {
+void PeerManagerImpl::LogBlockHeader(const CBlockIndex& index, const CNode& peer, bool via_compact_block) {
     // To prevent log spam, this function should only be called after it was determined that a
     // header is both new and valid.
     //
@@ -3426,7 +3426,8 @@ void PeerManagerImpl::LogBlockHeader(const CBlockIndex& index, const CNode& peer
     // Having this log by default when not in IBD ensures broad availability of
     // this data in case investigation is merited.
     const auto msg = strprintf(
-        "Saw new header hash=%s height=%d peer=%d%s",
+        "Saw new %sheader hash=%s height=%d peer=%d%s",
+        via_compact_block ? "cmpctblock " : "",
         index.GetBlockHash().ToString(),
         index.nHeight,
         peer.GetId(),
@@ -4387,9 +4388,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             }
         }
 
+        // If AcceptBlockHeader returned true, it set pindex
+        Assert(pindex);
         if (received_new_header) {
-            LogInfo("Saw new cmpctblock header hash=%s peer=%d\n",
-                blockhash.ToString(), pfrom.GetId());
+            LogBlockHeader(*pindex, pfrom, /*via_compact_block=*/true);
         }
 
         bool fProcessBLOCKTXN = false;
@@ -4405,8 +4407,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         {
         LOCK(cs_main);
-        // If AcceptBlockHeader returned true, it set pindex
-        assert(pindex);
         UpdateBlockAvailability(pfrom.GetId(), pindex->GetBlockHash());
 
         CNodeState *nodestate = State(pfrom.GetId());
