@@ -2,8 +2,10 @@
 # Copyright (c) 2019-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+import pathlib
 
 from test_framework.test_framework import BitcoinTestFramework
+
 
 class TestShell:
     """Wrapper Class for BitcoinTestFramework.
@@ -67,7 +69,13 @@ class TestShell:
         # This implementation enforces singleton pattern, and will return the
         # previously initialized instance if available
         if not TestShell.instance:
-            TestShell.instance = TestShell.__TestShell()
+            # BitcoinTestFramework instances are supposed to be constructed with the path
+            # of the calling test in order to find shared data like configuration and the
+            # cache. Since TestShell is meant for interactive use, there is no concrete
+            # test; passing a dummy name is fine though, as only the containing directory
+            # is relevant for successful initialization.
+            tests_directory = pathlib.Path(__file__).resolve().parent.parent
+            TestShell.instance = TestShell.__TestShell(tests_directory / "testshell_dummy.py")
             TestShell.instance.running = False
         return TestShell.instance
 

@@ -1,5 +1,12 @@
 <TS version="2.1" language="th">
 <context>
+    <name>AskPassphraseDialog</name>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">ย้อนกลับ</translation>
+    </message>
+    </context>
+<context>
     <name>QObject</name>
     <message>
         <source>%1 didn't yet exit safely…</source>
