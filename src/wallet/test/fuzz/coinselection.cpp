@@ -275,6 +275,7 @@ FUZZ_TARGET(coinselection)
         assert(result_srd->GetSelectedValue() >= target);
         assert(result_srd->GetChange(CHANGE_LOWER, coin_params.m_change_fee) > 0); // Demonstrate that SRD creates change of at least CHANGE_LOWER
         assert(result_srd->GetWeight() <= max_selection_weight);
+        result_srd->SetBumpFeeDiscount(ConsumeMoney(fuzzed_data_provider));
         result_srd->RecalculateWaste(coin_params.min_viable_change, coin_params.m_cost_of_change, coin_params.m_change_fee);
         (void)result_srd->GetShuffledInputVector();
         (void)result_srd->GetInputSet();
@@ -285,6 +286,7 @@ FUZZ_TARGET(coinselection)
     if (result_knapsack) {
         assert(result_knapsack->GetSelectedValue() >= target);
         assert(result_knapsack->GetWeight() <= max_selection_weight);
+        result_knapsack->SetBumpFeeDiscount(ConsumeMoney(fuzzed_data_provider));
         result_knapsack->RecalculateWaste(coin_params.min_viable_change, coin_params.m_cost_of_change, coin_params.m_change_fee);
         (void)result_knapsack->GetShuffledInputVector();
         (void)result_knapsack->GetInputSet();
