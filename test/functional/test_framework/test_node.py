@@ -364,6 +364,14 @@ class TestNode():
         assert not invalid_call
         return self.__getattr__('generatetodescriptor')(*args, **kwargs)
 
+    def getprioritisedtransactions(self, *args, **kwargs):
+        res = self.__getattr__('getprioritisedtransactions')(*args, **kwargs)
+        assert not (args or kwargs)
+        for res_val in res.values():
+            if res_val['priority_delta'] == 0:
+                del res_val['priority_delta']
+        return res
+
     def setmocktime(self, timestamp):
         """Wrapper for setmocktime RPC, sets self.mocktime"""
         if timestamp == 0:

@@ -38,6 +38,7 @@ struct CBlockTemplate
     CBlock block;
     std::vector<CAmount> vTxFees;
     std::vector<int64_t> vTxSigOpsCost;
+    std::vector<double> vTxPriorities;
     std::vector<unsigned char> vchCoinbaseCommitment;
 };
 
@@ -142,12 +143,15 @@ private:
     // The constructed block template
     std::unique_ptr<CBlockTemplate> pblocktemplate;
 
+    bool fNeedSizeAccounting;
+
     // Information on the current status of the block
     uint64_t nBlockWeight;
+    uint64_t nBlockSize;
     uint64_t nBlockTx;
     uint64_t nBlockSigOpsCost;
     CAmount nFees;
-    std::unordered_set<Txid, SaltedTxidHasher> inBlock;
+    CTxMemPool::setEntries inBlock;
 
     // Chain context for the block
     int nHeight;
@@ -157,10 +161,15 @@ private:
     const CTxMemPool* const m_mempool;
     Chainstate& m_chainstate;
 
+    // Variables used for addPriorityTxs
+    int lastFewTxs;
+    bool blockFinished;
+
 public:
     struct Options : BlockCreateOptions {
         // Configuration parameters for the block size
         size_t nBlockMaxWeight{DEFAULT_BLOCK_MAX_WEIGHT};
+        size_t nBlockMaxSize{DEFAULT_BLOCK_MAX_SIZE};
         CFeeRate blockMinFeeRate{DEFAULT_BLOCK_MIN_TX_FEE};
         // Whether to call TestBlockValidity() at the end of CreateNewBlock().
         bool test_block_validity{true};
@@ -174,6 +183,7 @@ public:
 
     inline static std::optional<int64_t> m_last_block_num_txs{};
     inline static std::optional<int64_t> m_last_block_weight{};
+    inline static std::optional<int64_t> m_last_block_size{};
 
 private:
     const Options m_options;
@@ -182,13 +192,21 @@ private:
     /** Clear the block's state and prepare for assembling a new block */
     void resetBlock();
     /** Add a tx to the block */
-    void AddToBlock(CTxMemPool::txiter iter);
+    void AddToBlock(const CTxMemPool& mempool, CTxMemPool::txiter iter) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs);
 
     // Methods for how to add transactions to a block.
+    /** Add transactions based on tx "priority" */
+    void addPriorityTxs(const CTxMemPool& mempool, int &nPackagesSelected) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs);
     /** Add transactions based on feerate including unconfirmed ancestors
       * Increments nPackagesSelected / nDescendantsUpdated with corresponding
       * statistics from the package selection (for logging statistics). */
     void addPackageTxs(const CTxMemPool& mempool, int& nPackagesSelected, int& nDescendantsUpdated) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs);
+
+    // helper function for addPriorityTxs
+    /** Test if tx will still "fit" in the block */
+    bool TestForBlock(CTxMemPool::txiter iter);
+    /** Test if tx still has unconfirmed parents not yet in block */
+    bool isStillDependent(const CTxMemPool& mempool, CTxMemPool::txiter iter) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs);
 
     // helper functions for addPackageTxs()
     /** Remove confirmed (inBlock) entries from given set */

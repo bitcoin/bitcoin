@@ -18,6 +18,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/util/transaction_utils.h>
 #include <test/util/setup_common.h>
 #include <tinyformat.h>
 #include <uint256.h>
