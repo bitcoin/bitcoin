@@ -18,6 +18,7 @@
 #include <walletinitinterface.h>
 
 #include <algorithm>
+#include <fstream>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -314,9 +315,10 @@ static bool InitRPCAuthentication()
         LogPrintf("Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.\n");
         strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
     }
-    if (gArgs.GetArg("-rpcauth", "") != "") {
+    if (!(gArgs.IsArgNegated("-rpcauth") || (gArgs.GetArgs("-rpcauth").empty() && gArgs.GetArgs("-rpcauthfile").empty()))) {
         LogPrintf("Using rpcauth authentication.\n");
         for (const std::string& rpcauth : gArgs.GetArgs("-rpcauth")) {
+            if (rpcauth.empty()) continue;
             std::vector<std::string> fields{SplitString(rpcauth, ':')};
             const std::vector<std::string> salt_hmac{SplitString(fields.back(), '$')};
             if (fields.size() == 2 && salt_hmac.size() == 2) {
@@ -326,6 +328,21 @@ static bool InitRPCAuthentication()
             } else {
                 LogPrintf("Invalid -rpcauth argument.\n");
                 return false;
+            }
+        }
+        for (const std::string& path : gArgs.GetArgs("-rpcauthfile")) {
+            std::ifstream file;
+            file.open(path);
+            if (!file.is_open()) continue;
+            std::string rpcauth;
+            while (std::getline(file, rpcauth)) {
+                std::vector<std::string> fields{SplitString(rpcauth, ':')};
+                const std::vector<std::string> salt_hmac{SplitString(fields.back(), '$')};
+                if (fields.size() == 2 && salt_hmac.size() == 2) {
+                    fields.pop_back();
+                    fields.insert(fields.end(), salt_hmac.begin(), salt_hmac.end());
+                    g_rpcauth.push_back(fields);
+                }
             }
         }
     }
