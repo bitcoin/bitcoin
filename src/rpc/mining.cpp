@@ -386,9 +386,9 @@ static RPCHelpMan generateblock()
         block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
         RegenerateCommitments(block, chainman);
 
-        BlockValidationState state;
-        if (!TestBlockValidity(state, chainman.GetParams(), chainman.ActiveChainstate(), block, chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock), /*fCheckPOW=*/false, /*fCheckMerkleRoot=*/false)) {
-            throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("TestBlockValidity failed: %s", state.ToString()));
+        std::string reason;
+        if (!miner.checkBlock(block, {.check_merkle_root = false, .check_pow = false}, reason)) {
+            throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("TestBlockValidity failed: %s", reason));
         }
     }
 
@@ -740,13 +740,9 @@ static RPCHelpMan getblocktemplate()
                 return "duplicate-inconclusive";
             }
 
-            // TestBlockValidity only supports blocks built on the current Tip
-            if (block.hashPrevBlock != tip) {
-                return "inconclusive-not-best-prevblk";
-            }
-            BlockValidationState state;
-            TestBlockValidity(state, chainman.GetParams(), chainman.ActiveChainstate(), block, chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock), /*fCheckPOW=*/false, /*fCheckMerkleRoot=*/true);
-            return BIP22ValidationResult(state);
+            std::string reason;
+            bool res{miner.checkBlock(block, {.check_pow = false}, reason)};
+            return res ? UniValue::VNULL : UniValue{reason};
         }
 
         const UniValue& aClientRules = oparam.find_value("rules");
@@ -1119,6 +1115,63 @@ static RPCHelpMan submitheader()
     };
 }
 
+static RPCHelpMan checkblock()
+{
+    return RPCHelpMan{"checkblock",
+        "\nChecks a new block without submitting to the network.\n",
+        {
+            {"hexdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hex-encoded block data to submit"},
+            {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
+                {
+                    {"check_pow", RPCArg::Type::BOOL, RPCArg::Default{true}, "verify the proof-of-work. The nBits value is still checked."},
+                    {"target", RPCArg::Type::STR_HEX, RPCArg::DefaultHint{"consensus target"}, "Check against a higher target. The nBits value is checked against the original target."},
+                },
+            }
+        },
+        {
+            RPCResult{"If the block passed all checks", RPCResult::Type::NONE, "", ""},
+            RPCResult{"Otherwise", RPCResult::Type::STR, "", "According to BIP22"},
+        },
+        RPCExamples{
+              HelpExampleCli("checkblock", "\"mydata\"")
+            + HelpExampleRpc("checkblock", "\"mydata\"")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    CBlock block;
+    if (!DecodeHexBlk(block, request.params[0].get_str())) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
+    }
+
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    Mining& miner = EnsureMining(node);
+
+    bool check_pow{true};
+    uint256 target{uint256::ZERO};
+
+    if (!request.params[1].isNull()) {
+        UniValue options = request.params[1];
+        RPCTypeCheckObj(options,
+            {
+                {"check_pow", UniValueType(UniValue::VBOOL)},
+                {"target", UniValueType(UniValue::VSTR)},
+            }, /*fAllowNull=*/true, /*fStrict=*/true
+        );
+        if (options.exists("check_pow")) {
+            check_pow = options["check_pow"].get_bool();
+        }
+        if (options.exists("target")) {
+            target = ParseHashV(options["target"], "target");
+        }
+    }
+
+    std::string reason;
+    bool res = miner.checkBlock(block, {.check_pow = check_pow, .target = target}, reason);
+    return res ? UniValue::VNULL : UniValue{reason};
+},
+    };
+}
+
 void RegisterMiningRPCCommands(CRPCTable& t)
 {
     static const CRPCCommand commands[]{
@@ -1129,6 +1182,7 @@ void RegisterMiningRPCCommands(CRPCTable& t)
         {"mining", &getblocktemplate},
         {"mining", &submitblock},
         {"mining", &submitheader},
+        {"mining", &checkblock},
 
         {"hidden", &generatetoaddress},
         {"hidden", &generatetodescriptor},
