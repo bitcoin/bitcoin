@@ -216,14 +216,22 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     BOOST_CHECK(PaysMoreThanConflicts(set_34_cpfp, CFeeRate(entry4_high->GetModifiedFee(), entry4_high->GetTxSize()), unused_txid).has_value());
 
     // Tests for EntriesAndTxidsDisjoint
-    BOOST_CHECK(EntriesAndTxidsDisjoint(empty_set, {tx1->GetHash()}, unused_txid) == std::nullopt);
-    BOOST_CHECK(EntriesAndTxidsDisjoint(set_12_normal, {tx3->GetHash()}, unused_txid) == std::nullopt);
-    BOOST_CHECK(EntriesAndTxidsDisjoint({entry2_normal}, {tx2->GetHash()}, unused_txid).has_value());
-    BOOST_CHECK(EntriesAndTxidsDisjoint(set_12_normal, {tx1->GetHash()}, unused_txid).has_value());
-    BOOST_CHECK(EntriesAndTxidsDisjoint(set_12_normal, {tx2->GetHash()}, unused_txid).has_value());
+    bool violates_policy{false};
+    BOOST_CHECK(EntriesAndTxidsDisjoint(empty_set, {{tx1->GetHash(), true}}, unused_txid, &violates_policy) == std::nullopt);
+    BOOST_CHECK(!violates_policy);
+    BOOST_CHECK(EntriesAndTxidsDisjoint(set_12_normal, {{tx3->GetHash(), true}}, unused_txid, &violates_policy) == std::nullopt);
+    BOOST_CHECK(!violates_policy);
+    BOOST_CHECK(EntriesAndTxidsDisjoint({entry2_normal}, {{tx2->GetHash(), true}}, unused_txid, &violates_policy).has_value());
+    BOOST_CHECK(!violates_policy);
+    BOOST_CHECK(EntriesAndTxidsDisjoint(set_12_normal, {{tx1->GetHash(), true}}, unused_txid, &violates_policy).has_value());
+    BOOST_CHECK(!violates_policy);
+    BOOST_CHECK(EntriesAndTxidsDisjoint(set_12_normal, {{tx2->GetHash(), true}}, unused_txid, &violates_policy).has_value());
+    BOOST_CHECK(!violates_policy);
     // EntriesAndTxidsDisjoint does not calculate descendants of iters_conflicting; it uses whatever
     // the caller passed in. As such, no error is returned even though entry2_normal is a descendant of tx1.
-    BOOST_CHECK(EntriesAndTxidsDisjoint({entry2_normal}, {tx1->GetHash()}, unused_txid) == std::nullopt);
+    BOOST_CHECK(EntriesAndTxidsDisjoint({entry2_normal}, {{tx1->GetHash(), true}}, unused_txid, &violates_policy) == std::nullopt);
+    BOOST_CHECK(!violates_policy);
+    // TODO: Add tests for policy-only conflicts
 
     // Tests for PaysForRBF
     const CFeeRate incremental_relay_feerate{DEFAULT_INCREMENTAL_RELAY_FEE};
