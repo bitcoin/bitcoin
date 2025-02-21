@@ -79,11 +79,12 @@ def read_logs(tmp_dir):
     Delegates to generator function get_log_events() to provide individual log events
     for each of the input log files."""
 
-    # Find out what the folder is called that holds the debug.log file
-    glob = pathlib.Path(tmp_dir).glob('node0/**/debug.log')
-    path = next(glob, None)
-    if path:
-        assert next(glob, None) is None #  more than one debug.log, should never happen
+    # Find out what the folder is called that holds node 0's debug.log file
+    debug_logs = list(pathlib.Path(tmp_dir).glob('node0/**/debug.log'))
+    if len(debug_logs) > 0:
+        assert len(debug_logs) < 2, 'Max one debug.log is supported, ' \
+            'found several:\n\t' + '\n\t'.join([str(f) for f in debug_logs])
+        path = debug_logs[0]
         chain = re.search(r'node0/(.+?)/debug\.log$', path.as_posix()).group(1)  # extract the chain name
     else:
         chain = 'regtest'  # fallback to regtest (should only happen when none exists)
