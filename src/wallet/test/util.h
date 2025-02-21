@@ -123,6 +123,7 @@ public:
     void ReloadDbEnv() override {}
 
     std::string Filename() override { return "mockable"; }
+    std::vector<fs::path> Files() override { return {}; }
     std::string Format() override { return "mock"; }
     std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override { return std::make_unique<MockableBatch>(m_records, m_pass); }
 };
