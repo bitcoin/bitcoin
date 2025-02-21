@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -38,13 +38,13 @@ public:
     ChaCha20Aligned() noexcept = delete;
 
     /** Initialize a cipher with specified 32-byte key. */
-    ChaCha20Aligned(Span<const std::byte> key) noexcept;
+    ChaCha20Aligned(std::span<const std::byte> key) noexcept;
 
     /** Destructor to clean up private memory. */
     ~ChaCha20Aligned();
 
     /** Set 32-byte key, and seek to nonce 0 and block position 0. */
-    void SetKey(Span<const std::byte> key) noexcept;
+    void SetKey(std::span<const std::byte> key) noexcept;
 
     /** Type for 96-bit nonces used by the Set function below.
      *
@@ -64,13 +64,13 @@ public:
     void Seek(Nonce96 nonce, uint32_t block_counter) noexcept;
 
     /** outputs the keystream into out, whose length must be a multiple of BLOCKLEN. */
-    void Keystream(Span<std::byte> out) noexcept;
+    void Keystream(std::span<std::byte> out) noexcept;
 
     /** en/deciphers the message <input> and write the result into <output>
      *
      * The size of input and output must be equal, and be a multiple of BLOCKLEN.
      */
-    void Crypt(Span<const std::byte> input, Span<std::byte> output) noexcept;
+    void Crypt(std::span<const std::byte> input, std::span<std::byte> output) noexcept;
 };
 
 /** Unrestricted ChaCha20 cipher. */
@@ -89,13 +89,13 @@ public:
     ChaCha20() noexcept = delete;
 
     /** Initialize a cipher with specified 32-byte key. */
-    ChaCha20(Span<const std::byte> key) noexcept : m_aligned(key) {}
+    ChaCha20(std::span<const std::byte> key) noexcept : m_aligned(key) {}
 
     /** Destructor to clean up private memory. */
     ~ChaCha20();
 
     /** Set 32-byte key, and seek to nonce 0 and block position 0. */
-    void SetKey(Span<const std::byte> key) noexcept;
+    void SetKey(std::span<const std::byte> key) noexcept;
 
     /** 96-bit nonce type. */
     using Nonce96 = ChaCha20Aligned::Nonce96;
@@ -111,10 +111,10 @@ public:
      *
      * The size of in_bytes and out_bytes must be equal.
      */
-    void Crypt(Span<const std::byte> in_bytes, Span<std::byte> out_bytes) noexcept;
+    void Crypt(std::span<const std::byte> in_bytes, std::span<std::byte> out_bytes) noexcept;
 
     /** outputs the keystream to out. */
-    void Keystream(Span<std::byte> out) noexcept;
+    void Keystream(std::span<std::byte> out) noexcept;
 };
 
 /** Forward-secure ChaCha20
@@ -150,10 +150,10 @@ public:
     FSChaCha20& operator=(FSChaCha20&&) = delete;
 
     /** Construct an FSChaCha20 cipher that rekeys every rekey_interval Crypt() calls. */
-    FSChaCha20(Span<const std::byte> key, uint32_t rekey_interval) noexcept;
+    FSChaCha20(std::span<const std::byte> key, uint32_t rekey_interval) noexcept;
 
     /** Encrypt or decrypt a chunk. */
-    void Crypt(Span<const std::byte> input, Span<std::byte> output) noexcept;
+    void Crypt(std::span<const std::byte> input, std::span<std::byte> output) noexcept;
 };
 
 #endif // BITCOIN_CRYPTO_CHACHA20_H
