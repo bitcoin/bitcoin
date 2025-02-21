@@ -9,9 +9,8 @@
 #include <prevector.h>
 #include <support/allocators/pool.h>
 
-#include <stdlib.h>
-
 #include <cassert>
+#include <cstdlib>
 #include <map>
 #include <memory>
 #include <set>

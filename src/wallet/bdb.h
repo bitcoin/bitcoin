@@ -168,6 +168,7 @@ public:
 /** RAII class that provides access to a Berkeley database */
 class BerkeleyBatch : public DatabaseBatch
 {
+public:
     /** RAII class that automatically cleanses its data on destruction */
     class SafeDbt final
     {

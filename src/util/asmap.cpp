@@ -5,11 +5,11 @@
 #include <util/asmap.h>
 
 #include <clientversion.h>
-#include <crypto/common.h>
 #include <fs.h>
 #include <logging.h>
 #include <streams.h>
 
+#include <bit>
 #include <cassert>
 #include <map>
 #include <vector>
@@ -108,7 +108,7 @@ uint32_t Interpret(const std::vector<bool> &asmap, const std::vector<bool> &ip)
         } else if (opcode == Instruction::MATCH) {
             match = DecodeMatch(pos, endpos);
             if (match == INVALID) break; // Match bits straddle EOF
-            matchlen = CountBits(match) - 1;
+            matchlen = std::bit_width(match) - 1;
             if (bits < matchlen) break; // Not enough input bits
             for (uint32_t bit = 0; bit < matchlen; bit++) {
                 if ((ip[ip.size() - bits]) != ((match >> (matchlen - 1 - bit)) & 1)) {
@@ -172,7 +172,7 @@ bool SanityCheckASMap(const std::vector<bool>& asmap, int bits)
         } else if (opcode == Instruction::MATCH) {
             uint32_t match = DecodeMatch(pos, endpos);
             if (match == INVALID) return false; // Match bits straddle EOF
-            int matchlen = CountBits(match) - 1;
+            int matchlen = std::bit_width(match) - 1;
             if (prevopcode != Instruction::MATCH) had_incomplete_match = false;
             if (matchlen < 8 && had_incomplete_match) return false; // Within a sequence of matches only at most one should be incomplete
             had_incomplete_match = (matchlen < 8);

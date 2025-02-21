@@ -19,8 +19,8 @@
 #include <util/threadnames.h>
 #include <util/translation.h>
 
+#include <cstdio>
 #include <deque>
-#include <stdio.h>
 #include <string>
 
 #include <sys/types.h>

@@ -19,7 +19,7 @@
 
 #include <array>
 #include <cmath>
-#include <stdlib.h>
+#include <cstdlib>
 #include <thread>
 
 #ifdef WIN32

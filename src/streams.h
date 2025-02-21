@@ -13,11 +13,11 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <cstdio>
 #include <ios>
 #include <limits>
 #include <optional>
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 #include <string>
 #include <utility>

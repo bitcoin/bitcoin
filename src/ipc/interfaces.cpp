@@ -12,11 +12,11 @@
 #include <tinyformat.h>
 #include <util/system.h>
 
+#include <cstdio>
+#include <cstdlib>
 #include <functional>
 #include <memory>
 #include <stdexcept>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <string>
 #include <unistd.h>
