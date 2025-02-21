@@ -15,7 +15,7 @@ import re
 
 FOLDER_GREP = 'src'
 FOLDER_TEST = 'src/test/'
-REGEX_ARG = r'\b(?:GetArg|GetArgs|GetBoolArg|GetIntArg|GetPathArg|IsArgSet|get_net)\("(-[^"]+)"'
+REGEX_ARG = r'\b(?:GetArg|GetArgs|GetBoolArg|GetIntArg|GetFixedPointArg|GetPathArg|IsArgSet|get_net)\("(-[^"]+)"'
 REGEX_DOC = r'AddArg\("(-[^"=]+?)(?:=|")'
 CMD_ROOT_DIR = '$(git rev-parse --show-toplevel)/{}'.format(FOLDER_GREP)
 CMD_GREP_ARGS = r"git grep --perl-regexp '{}' -- {} ':(exclude){}'".format(REGEX_ARG, CMD_ROOT_DIR, FOLDER_TEST)

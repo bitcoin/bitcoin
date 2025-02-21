@@ -85,6 +85,9 @@ private:
 
     friend class WalletControllerActivity;
     friend class MigrateWalletActivity;
+
+    //! Starts the wallet closure procedure
+    void removeWallet(WalletModel* wallet_model);
 };
 
 class WalletControllerActivity : public QObject
