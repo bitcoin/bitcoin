@@ -3,8 +3,9 @@ Reduce Traffic
 
 Some node operators need to deal with bandwidth caps imposed by their ISPs.
 
-By default, Bitcoin Core allows up to 125 connections to different peers, 11 of
-which are outbound. You can therefore, have at most 114 inbound connections.
+By default, Bitcoin Core allows up to 200 connections to different peers, 11 of
+which are outbound. You can therefore, have at most 189 inbound connections, half of
+which can only be taken up by low-traffic block-relay-only peers.
 Of the 11 outbound peers, there can be 8 full-relay connections, 2
 block-relay-only ones and occasionally 1 short-lived feeler or an extra block-relay-only connection.
 
