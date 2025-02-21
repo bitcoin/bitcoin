@@ -84,6 +84,14 @@ endif()
 #=============================
 include(CMakeDependentOption)
 # When adding a new option, end the <help_text> with a full stop for consistency.
+set(configure_warnings)
+option(WCONFIGURE_ERROR "Treat build configuration warnings as errors." OFF)
+if(WCONFIGURE_ERROR)
+  set(configure_warning_message_type FATAL_ERROR)
+else()
+  set(configure_warning_message_type WARNING)
+endif()
+
 option(BUILD_DAEMON "Build bitcoind executable." ON)
 option(BUILD_GUI "Build bitcoin-qt executable." OFF)
 option(BUILD_CLI "Build bitcoin-cli executable." ON)
@@ -116,8 +124,8 @@ if(WITH_BDB)
                     "BDB (legacy) wallets opened by this build will not be portable!"
     )
     if(WARN_INCOMPATIBLE_BDB)
-      message(WARNING "If this is intended, pass \"-DWARN_INCOMPATIBLE_BDB=OFF\".\n"
-                      "Passing \"-DWITH_BDB=OFF\" will suppress this warning."
+      list(APPEND configure_warnings
+        "Incompatible Berkeley DB found. If this is intended, pass \"-DWARN_INCOMPATIBLE_BDB=OFF\".\nPassing \"-DWITH_BDB=OFF\" will suppress this warning."
       )
     endif()
   endif()
@@ -191,8 +199,6 @@ set(APPEND_LDFLAGS "" CACHE STRING "Linker flags that are appended to the comman
 string(APPEND CMAKE_CXX_COMPILE_OBJECT " ${APPEND_CPPFLAGS} ${APPEND_CXXFLAGS}")
 string(APPEND CMAKE_CXX_CREATE_SHARED_LIBRARY " ${APPEND_LDFLAGS}")
 string(APPEND CMAKE_CXX_LINK_EXECUTABLE " ${APPEND_LDFLAGS}")
-
-set(configure_warnings)
 
 include(CheckLinkerSupportsPIE)
 check_linker_supports_pie(configure_warnings)
@@ -674,14 +680,18 @@ include(FlagsSummary)
 flags_summary()
 message("Attempt to harden executables ......... ${ENABLE_HARDENING}")
 message("Treat compiler warnings as errors ..... ${WERROR}")
+message("Treat build configuration warnings as errors ..... ${WCONFIGURE_ERROR}")
 message("Use ccache for compiling .............. ${WITH_CCACHE}")
 message("\n")
 if(configure_warnings)
-    message("  ******\n")
-    foreach(warning IN LISTS configure_warnings)
-      message(WARNING "${warning}")
-    endforeach()
-    message("  ******\n")
+  message("  ******\n")
+  foreach(warning IN LISTS configure_warnings)
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.26)
+      message(CONFIGURE_LOG "${warning}") # Log to the cmake-configure-log file before a potentially fatal message.
+    endif()
+    message(${configure_warning_message_type} "${warning}")
+  endforeach()
+  message("  ******\n")
 endif()
 
 # We want all build properties to be encapsulated properly.
