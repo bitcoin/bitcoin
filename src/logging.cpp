@@ -315,6 +315,11 @@ std::string BCLog::Logger::LogTimestampStr(SystemClock::time_point now, std::chr
 }
 
 namespace BCLog {
+    bool IsSuspicious(const char ch) noexcept
+    {
+        const auto uch{static_cast<uint8_t>(ch)};
+        return (uch < ' ' && uch != '\n') || uch == '\x7f';
+    }
     /** Belts and suspenders: make sure outgoing log messages don't contain
      * potentially suspicious characters, such as terminal control codes.
      *
@@ -322,14 +327,15 @@ namespace BCLog {
      * It escapes instead of removes them to still allow for troubleshooting
      * issues where they accidentally end up in strings.
      */
-    std::string LogEscapeMessage(std::string_view str) {
+    std::string LogEscapeMessage(std::string_view str)
+    {
         std::string ret;
-        for (char ch_in : str) {
-            uint8_t ch = (uint8_t)ch_in;
-            if ((ch >= 32 || ch == '\n') && ch != '\x7f') {
-                ret += ch_in;
-            } else {
+        ret.reserve(3 + str.size()); // Assume at least one suspicious character
+        for (auto ch : str) {
+            if (IsSuspicious(ch)) {
                 ret += strprintf("\\x%02x", ch);
+            } else {
+                ret += ch;
             }
         }
         return ret;
@@ -392,7 +398,7 @@ void BCLog::Logger::LogPrintStr(std::string_view str, std::string_view logging_f
 
 void BCLog::Logger::LogPrintStr_(std::string_view str, std::string_view logging_function, std::string_view source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
 {
-    std::string str_prefixed = LogEscapeMessage(str);
+    std::string str_prefixed{std::ranges::none_of(str, IsSuspicious) ? str : LogEscapeMessage(str)};
 
     if (m_buffering) {
         {
