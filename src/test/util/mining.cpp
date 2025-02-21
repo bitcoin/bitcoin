@@ -92,6 +92,11 @@ COutPoint MineBlock(const NodeContext& node, std::shared_ptr<CBlock>& block)
         assert(block->nNonce);
     }
 
+    return ConnectBlock(node, block);
+}
+
+COutPoint ConnectBlock(const NodeContext& node, const std::shared_ptr<CBlock>& block)
+{
     auto& chainman{*Assert(node.chainman)};
     const auto old_height = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveHeight());
     bool new_block;
