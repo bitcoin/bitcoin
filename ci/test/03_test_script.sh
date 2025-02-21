@@ -164,16 +164,18 @@ if [ "${RUN_TIDY}" = "true" ]; then
   cmake --build /tidy-build --target bitcoin-tidy-tests "$MAKEJOBS"
 
   set -eo pipefail
+  # Filter out:
+  # * qt qrc and moc generated files
+  jq 'map(select(.file | test("src/qt/.*_autogen/.*\\.cpp$") | not))' "${BASE_BUILD_DIR}/compile_commands.json" > tmp.json
+  mv tmp.json "${BASE_BUILD_DIR}/compile_commands.json"
+
   cd "${BASE_BUILD_DIR}/src/"
   if ! ( run-clang-tidy-"${TIDY_LLVM_V}" -quiet -load="/tidy-build/libbitcoin-tidy.so" "${MAKEJOBS}" | tee tmp.tidy-out.txt ); then
     grep -C5 "error: " tmp.tidy-out.txt
     echo "^^^ ⚠️ Failure generated from clang-tidy"
     false
   fi
-  # Filter out:
-  # * qt qrc and moc generated files
-  jq 'map(select(.file | test("src/qt/qrc_.*\\.cpp$|/moc_.*\\.cpp$") | not))' "${BASE_BUILD_DIR}/compile_commands.json" > tmp.json
-  mv tmp.json "${BASE_BUILD_DIR}/compile_commands.json"
+
   cd "${BASE_ROOT_DIR}"
   python3 "/include-what-you-use/iwyu_tool.py" \
            -p "${BASE_BUILD_DIR}" "${MAKEJOBS}" \
