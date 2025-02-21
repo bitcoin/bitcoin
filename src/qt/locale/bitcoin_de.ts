@@ -615,11 +615,15 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
         <source>Processing blocks on disk…</source>
         <translation type="unfinished">Verarbeite Blöcke auf Datenträger...</translation>
     </message>
+    <message>
+        <source>Connecting to peers…</source>
+        <translation type="unfinished">Verbindung zu Peers wird hergestellt…</translation>
+    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform>Processed %n block(s) of transaction history.</numerusform>
-            <numerusform>Processed %n block(s) of transaction history.</numerusform>
+            <numerusform>%n Block der Transaktionshistorie prozessiert.</numerusform>
+            <numerusform>%n Block/Blöcke der Transaktionshistorie prozessiert.</numerusform>
         </translation>
     </message>
     <message>
@@ -710,7 +714,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     <message>
         <source>Show Peers tab</source>
         <extracomment>A context menu item. The "Peers tab" is an element of the "Node window".</extracomment>
-        <translation type="unfinished">Gegenstellen Reiter anzeigen</translation>
+        <translation type="unfinished">Reiter mit Peers anzeigen</translation>
     </message>
     <message>
         <source>Disable network activity</source>
@@ -1420,7 +1424,7 @@ Während des Migrationsprozesses wird vor der Migration ein Backup der Wallet er
     </message>
     <message>
         <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
-        <translation type="unfinished">%1 synchronisiert gerade. Es lädt Header und Blöcke von Gegenstellen und validiert sie bis zum Erreichen der Spitze der Blockchain.</translation>
+        <translation type="unfinished">%1 synchronisiert gerade. Es lädt Header und Blöcke von Peers und validiert sie bis zum Erreichen der Spitze der Blockchain.</translation>
     </message>
     <message>
         <source>Unknown. Syncing Headers (%1, %2%)…</source>
@@ -1639,7 +1643,7 @@ Während des Migrationsprozesses wird vor der Migration ein Backup der Wallet er
     </message>
     <message>
         <source>Used for reaching peers via:</source>
-        <translation type="unfinished">Benutzt um Gegenstellen zu erreichen über:</translation>
+        <translation type="unfinished">Benutzt um Peers zu erreichen über:</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1703,7 +1707,7 @@ Während des Migrationsprozesses wird vor der Migration ein Backup der Wallet er
     </message>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
-        <translation type="unfinished">Nutze separaten SOCKS&amp;5-Proxy um Gegenstellen über Tor-Onion-Dienste zu erreichen:</translation>
+        <translation type="unfinished">Nutze separaten SOCKS&amp;5-Proxy um Peers über Tor-Onion-Dienste zu erreichen:</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
@@ -2042,11 +2046,6 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
         <translation type="unfinished">User-Agent</translation>
     </message>
     <message>
-        <source>Peer</source>
-        <extracomment>Title of Peers Table column which contains a unique number used to identify a connection.</extracomment>
-        <translation type="unfinished">Gegenstelle</translation>
-    </message>
-    <message>
         <source>Age</source>
         <extracomment>Title of Peers Table column which indicates the duration (length of time) since the peer connection started.</extracomment>
         <translation type="unfinished">Alter</translation>
@@ -2171,6 +2170,14 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
         <translation type="unfinished">Anzahl der Verbindungen</translation>
     </message>
     <message>
+        <source>Local Addresses</source>
+        <translation type="unfinished">Lokale Adressen</translation>
+    </message>
+    <message>
+        <source>Network addresses that your Bitcoin node is currently using to communicate with other nodes.</source>
+        <translation type="unfinished">Netzwerk-Adressen, die dein Bitcoin-Node aktuell verwendet, um mit anderen Nodes zu kommunizieren.</translation>
+    </message>
+    <message>
         <source>Block chain</source>
         <translation type="unfinished">Blockchain</translation>
     </message>
@@ -2203,16 +2210,20 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
         <translation type="unfinished">Gesendet</translation>
     </message>
     <message>
-        <source>&amp;Peers</source>
-        <translation type="unfinished">&amp;Gegenstellen</translation>
-    </message>
-    <message>
         <source>Banned peers</source>
-        <translation type="unfinished">Gesperrte Gegenstellen</translation>
+        <translation type="unfinished">Gesperrte Peers</translation>
     </message>
     <message>
         <source>Select a peer to view detailed information.</source>
-        <translation type="unfinished">Gegenstelle auswählen, um detaillierte Informationen zu erhalten.</translation>
+        <translation type="unfinished">Peers auswählen, um detaillierte Informationen zu erhalten.</translation>
+    </message>
+    <message>
+        <source>Hide Peers Detail</source>
+        <translation type="unfinished">Reiter mit Peers verstecken</translation>
+    </message>
+    <message>
+        <source>Ctrl+X</source>
+        <translation type="unfinished">Strg+X</translation>
     </message>
     <message>
         <source>The transport layer version: %1</source>
@@ -2220,7 +2231,7 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     </message>
     <message>
         <source>Whether we relay transactions to this peer.</source>
-        <translation type="unfinished">Ob wir Adressen an diese Gegenstelle weiterleiten.</translation>
+        <translation type="unfinished">Ob wir Adressen an diesen Peer weiterleiten.</translation>
     </message>
     <message>
         <source>Transaction Relay</source>
@@ -2244,7 +2255,7 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     </message>
     <message>
         <source>The mapped Autonomous System used for diversifying peer selection.</source>
-        <translation type="unfinished">Das zugeordnete autonome System zur Diversifizierung der Gegenstellen-Auswahl.</translation>
+        <translation type="unfinished">Das zugeordnete autonome System zur Diversifizierung der Peer-Auswahl.</translation>
     </message>
     <message>
         <source>Mapped AS</source>
@@ -2253,7 +2264,7 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     <message>
         <source>Whether we relay addresses to this peer.</source>
         <extracomment>Tooltip text for the Address Relay field in the peer details area, which displays whether we relay addresses to this peer (Yes/No).</extracomment>
-        <translation type="unfinished">Ob wir Adressen an diese Gegenstelle weiterleiten.</translation>
+        <translation type="unfinished">Ob wir Adressen an diesen Peer weiterleiten.</translation>
     </message>
     <message>
         <source>Address Relay</source>
@@ -2263,12 +2274,12 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     <message>
         <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
         <extracomment>Tooltip text for the Addresses Processed field in the peer details area, which displays the total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</extracomment>
-        <translation type="unfinished">Die Gesamtzahl der von dieser Gegenstelle empfangenen Adressen, die aufgrund von Ratenbegrenzung verworfen (nicht verarbeitet) wurden.</translation>
+        <translation type="unfinished">Die Gesamtzahl der von diesem Peer empfangenen Adressen, die aufgrund von Ratenbegrenzung verworfen (nicht verarbeitet) wurden.</translation>
     </message>
     <message>
         <source>The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</source>
         <extracomment>Tooltip text for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
-        <translation type="unfinished">Die Gesamtzahl der von dieser Gegenstelle empfangenen Adressen, die aufgrund von Ratenbegrenzung verworfen (nicht verarbeitet) wurden.</translation>
+        <translation type="unfinished">Die Gesamtzahl der von diesem Peer empfangenen Adressen, die aufgrund von Ratenbegrenzung verworfen (nicht verarbeitet) wurden.</translation>
     </message>
     <message>
         <source>Addresses Processed</source>
@@ -2306,7 +2317,7 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     </message>
     <message>
         <source>The direction and type of peer connection: %1</source>
-        <translation type="unfinished">Die Richtung und der Typ der Gegenstellen-Verbindung: %1</translation>
+        <translation type="unfinished">Die Richtung und der Typ der Peer-Verbindung: %1</translation>
     </message>
     <message>
         <source>Direction/Type</source>
@@ -2318,7 +2329,7 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     </message>
     <message>
         <source>The network protocol this peer is connected through: IPv4, IPv6, Onion, I2P, or CJDNS.</source>
-        <translation type="unfinished">Das Netzwerkprotokoll, über das diese Gegenstelle verbunden ist, ist: IPv4, IPv6, Onion, I2P oder CJDNS.</translation>
+        <translation type="unfinished">Das Netzwerkprotokoll, über das dieser Peer verbunden ist, ist: IPv4, IPv6, Onion, I2P oder CJDNS.</translation>
     </message>
     <message>
         <source>Services</source>
@@ -2338,7 +2349,7 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     </message>
     <message>
         <source>Elapsed time since a novel block passing initial validity checks was received from this peer.</source>
-        <translation type="unfinished">Abgelaufene Zeit seitdem ein neuer Block mit erfolgreichen initialen Gültigkeitsprüfungen von dieser Gegenstelle empfangen wurde.</translation>
+        <translation type="unfinished">Verstrichene Zeit, seit ein neuer Block, der initiale Validierungsprüfungen bestanden hat, von diesem Peer empfangen wurde.</translation>
     </message>
     <message>
         <source>Last Block</source>
@@ -2347,7 +2358,7 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     <message>
         <source>Elapsed time since a novel transaction accepted into our mempool was received from this peer.</source>
         <extracomment>Tooltip text for the Last Transaction field in the peer details area.</extracomment>
-        <translation type="unfinished">Abgelaufene Zeit seit eine neue Transaktion, die in unseren Speicherpool hineingelassen wurde, von dieser Gegenstelle empfangen wurde.</translation>
+        <translation type="unfinished">Verstrichene Zeit, seit eine neue Transaktion, die in unseren Mempool aufgenommen wurde, von diesem Peer empfangen wurde.</translation>
     </message>
     <message>
         <source>Last Send</source>
@@ -2416,7 +2427,7 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     <message>
         <source>Inbound: initiated by peer</source>
         <extracomment>Explanatory text for an inbound peer connection.</extracomment>
-        <translation type="unfinished">Eingehend: wurde von Gegenstelle initiiert</translation>
+        <translation type="unfinished">Eingehend: wurde vom Peer initiiert</translation>
     </message>
     <message>
         <source>Outbound Full Relay: default</source>
@@ -2446,7 +2457,7 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     <message>
         <source>detecting: peer could be v1 or v2</source>
         <extracomment>Explanatory text for "detecting" transport type.</extracomment>
-        <translation type="unfinished">Erkennen: Peer könnte v1 oder v2 sein</translation>
+        <translation type="unfinished">Erkenne: Peer könnte v1 oder v2 sein</translation>
     </message>
     <message>
         <source>v1: unencrypted, plaintext transport protocol</source>
@@ -2460,11 +2471,11 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     </message>
     <message>
         <source>we selected the peer for high bandwidth relay</source>
-        <translation type="unfinished">Wir haben die Gegenstelle zum Weiterleiten mit hoher Bandbreite ausgewählt</translation>
+        <translation type="unfinished">Wir haben den Peer zum Weiterleiten mit hoher Bandbreite ausgewählt</translation>
     </message>
     <message>
         <source>the peer selected us for high bandwidth relay</source>
-        <translation type="unfinished">Die Gegenstelle hat uns zum Weiterleiten mit hoher Bandbreite ausgewählt</translation>
+        <translation type="unfinished">Der Peer hat uns zum Weiterleiten mit hoher Bandbreite ausgewählt</translation>
     </message>
     <message>
         <source>no high bandwidth relay selected</source>
@@ -2584,7 +2595,7 @@ Für weitere Informationen über diese Konsole, tippe %6.
     </message>
     <message>
         <source>(peer: %1)</source>
-        <translation type="unfinished">(Gegenstelle: %1)</translation>
+        <translation type="unfinished">(Peer: %1)</translation>
     </message>
     <message>
         <source>via %1</source>
@@ -3996,7 +4007,7 @@ Gehen Sie zu Datei &gt; Wallet Öffnen, um eine Wallet zu laden.
     </message>
     <message>
         <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
-        <translation type="unfinished">%s Aufforderung, auf Port %u zu lauschen. Dieser Port wird als "schlecht" eingeschätzt und es ist daher unwahrscheinlich, dass sich Bitcoin Core Gegenstellen mit ihm verbinden. Siehe doc/p2p-bad-ports.md für Details und eine vollständige Liste.</translation>
+        <translation type="unfinished">%s Aufforderung, auf Port %u zu lauschen. Dieser Port wird als "schlecht" eingeschätzt und es ist daher unwahrscheinlich, dass sich Peers mit ihm verbinden. Siehe doc/p2p-bad-ports.md für Details und eine vollständige Liste.</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet from version %i to version %i. Wallet version unchanged.</source>
@@ -4161,7 +4172,7 @@ Bitte nutzen Sie entweder "bdb" oder "sqlite".</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">Warnung: Wir scheinen nicht vollständig mit unseren Gegenstellen übereinzustimmen! Sie oder die anderen Knoten müssen unter Umständen Ihre Client-Software aktualisieren.</translation>
+        <translation type="unfinished">Warnung: Wir scheinen nicht vollständig mit unseren Peers übereinzustimmen! Sie oder die anderen Knoten müssen unter Umständen Ihre Client-Software aktualisieren.</translation>
     </message>
     <message>
         <source>Witness data for blocks after height %d requires validation. Please restart with -reindex.</source>

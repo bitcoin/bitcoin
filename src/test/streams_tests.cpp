@@ -37,6 +37,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
 #endif
         AutoFile xor_file{raw_file(mode), xor_pat};
         xor_file << test1 << test2;
+        BOOST_REQUIRE_EQUAL(xor_file.fclose(), 0);
     }
     {
         // Read raw from disk
@@ -261,7 +262,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     for (uint8_t j = 0; j < 40; ++j) {
         file << j;
     }
-    std::rewind(file.Get());
+    file.seek(0, SEEK_SET);
 
     // The buffer size (second arg) must be greater than the rewind
     // amount (third arg).
@@ -377,8 +378,8 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     // by the rewind window (relative to our farthest read position, 40).
     BOOST_CHECK(bf.GetPos() <= 30U);
 
-    // We can explicitly close the file, or the destructor will do it.
-    file.fclose();
+    // Explicitly close the file and check that the close succeeds.
+    BOOST_REQUIRE_EQUAL(file.fclose(), 0);
 
     fs::remove(streams_test_filename);
 }
@@ -391,7 +392,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_skip)
     for (uint8_t j = 0; j < 40; ++j) {
         file << j;
     }
-    std::rewind(file.Get());
+    file.seek(0, SEEK_SET);
 
     // The buffer is 25 bytes, allow rewinding 10 bytes.
     BufferedFile bf{file, 25, 10};
@@ -428,7 +429,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_skip)
     bf.SkipTo(13);
     BOOST_CHECK_EQUAL(bf.GetPos(), 13U);
 
-    file.fclose();
+    BOOST_REQUIRE_EQUAL(file.fclose(), 0);
     fs::remove(streams_test_filename);
 }
 
@@ -444,7 +445,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
         for (uint8_t i = 0; i < fileSize; ++i) {
             file << i;
         }
-        std::rewind(file.Get());
+        file.seek(0, SEEK_SET);
 
         size_t bufSize = InsecureRandRange(300) + 1;
         size_t rewindSize = InsecureRandRange(bufSize);
@@ -549,6 +550,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
             if (maxPos < currentPos)
                 maxPos = currentPos;
         }
+        BOOST_REQUIRE_EQUAL(file.fclose(), 0);
     }
     fs::remove(streams_test_filename);
 }

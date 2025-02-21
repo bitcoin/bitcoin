@@ -56,12 +56,16 @@ FUZZ_TARGET(autofile)
                 WriteToStream(fuzzed_data_provider, auto_file);
             });
     }
-    (void)auto_file.Get();
     (void)auto_file.IsNull();
     if (fuzzed_data_provider.ConsumeBool()) {
         FILE* f = auto_file.release();
         if (f != nullptr) {
             fclose(f);
         }
+    } else {
+        // FuzzedFileProvider::close() is expected to fail sometimes. Don't let
+        // the destructor of AutoFile be upset by a failing fclose(). Close it
+        // explicitly (and ignore any errors) so that the destructor is a noop.
+        (void)auto_file.fclose();
     }
 }

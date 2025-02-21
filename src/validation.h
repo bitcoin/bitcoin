@@ -343,6 +343,8 @@ std::optional<LockPoints> CalculateLockPointsAtTip(
 bool CheckSequenceLocksAtTip(CBlockIndex* tip,
                              const LockPoints& lock_points);
 
+void LimitMempoolSize(CTxMemPool&, CCoinsViewCache&);
+
 /**
  * Closure representing one script verification
  * Note that this stores references to the spending transaction
@@ -991,7 +993,7 @@ public:
 
     //! Function to restart active indexes; set dynamically to avoid a circular
     //! dependency on `base/index.cpp`.
-    std::function<void()> restart_indexes = std::function<void()>();
+    std::function<void()> snapshot_download_completed = std::function<void()>();
 
     const CChainParams& GetParams() const { return m_options.chainparams; }
     const Consensus::Params& GetConsensus() const { return m_options.chainparams.GetConsensus(); }

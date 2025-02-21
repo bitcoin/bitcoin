@@ -19,7 +19,7 @@ static void FindByte(benchmark::Bench& bench)
     uint8_t data[file_size] = {0};
     data[file_size-1] = 1;
     file << data;
-    std::rewind(file.Get());
+    file.seek(0, SEEK_SET);
     BufferedFile bf{file, /*nBufSize=*/file_size + 1, /*nRewindIn=*/file_size};
 
     bench.run([&] {
