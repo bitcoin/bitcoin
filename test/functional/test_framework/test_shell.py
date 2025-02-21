@@ -61,7 +61,8 @@ class TestShell:
                 print("Shutdown TestShell before resetting!")
             else:
                 self.num_nodes = None
-                super().__init__()
+                dummy_testshell_file = pathlib.Path(__file__).absolute().parent.parent / "testshell_dummy.py"
+                super().__init__(dummy_testshell_file)
 
     instance = None
 
@@ -74,8 +75,8 @@ class TestShell:
             # cache. Since TestShell is meant for interactive use, there is no concrete
             # test; passing a dummy name is fine though, as only the containing directory
             # is relevant for successful initialization.
-            tests_directory = pathlib.Path(__file__).resolve().parent.parent
-            TestShell.instance = TestShell.__TestShell(tests_directory / "testshell_dummy.py")
+            dummy_testshell_file = pathlib.Path(__file__).absolute().parent.parent / "testshell_dummy.py"
+            TestShell.instance = TestShell.__TestShell(dummy_testshell_file)
             TestShell.instance.running = False
         return TestShell.instance
 
