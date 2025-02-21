@@ -2,10 +2,6 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation type="unfinished">cd vcpkg/buildtrees/libvpx/srccd *./configuresed -i 's/CFLAGS+=-I/CFLAGS+=-fPIC -I/g' Makefilesed -i 's/CXXFLAGS+=-I/CXXFLAGS+=-fPIC -I/g' Makefilemakecp libvpx.a $HOME/vcpkg/installed/x64-linux/lib/cd</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
         <translation type="unfinished">Crea un novo enderezo</translation>
     </message>
@@ -92,6 +88,14 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
         <translation type="unfinished">Houbo un erro tentando gardar a lista de enderezos en %1. Por favor proba de novo.</translation>
+    </message>
+    <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">Enviando enderezos - %1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">Recibindo enderezos - %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>

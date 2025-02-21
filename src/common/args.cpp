@@ -503,6 +503,25 @@ int64_t SettingToInt(const common::SettingsValue& value, int64_t nDefault)
     return SettingToInt(value).value_or(nDefault);
 }
 
+std::optional<int64_t> ArgsManager::GetFixedPointArg(const std::string& arg, int decimals) const
+{
+    const common::SettingsValue value = GetSetting(arg);
+    return SettingToFixedPoint(value, decimals);
+}
+
+std::optional<int64_t> SettingToFixedPoint(const common::SettingsValue& value, int decimals)
+{
+    if (value.isNull()) return std::nullopt;
+    if (value.isFalse()) return 0;
+    if (value.isTrue()) return 1;
+    if (!value.isNum()) value.get_str();  // throws an exception if type is wrong
+    int64_t v;
+    if (!ParseFixedPoint(value.getValStr(), decimals, &v)) {
+        throw std::runtime_error(strprintf("Parse error ('%s')", value.getValStr()));
+    }
+    return v;
+}
+
 bool ArgsManager::GetBoolArg(const std::string& strArg, bool fDefault) const
 {
     return GetBoolArg(strArg).value_or(fDefault);

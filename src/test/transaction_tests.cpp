@@ -12,6 +12,7 @@
 #include <consensus/tx_check.h>
 #include <consensus/validation.h>
 #include <core_io.h>
+#include <kernel/mempool_options.h>
 #include <key.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
@@ -44,8 +45,7 @@ using util::ToString;
 
 typedef std::vector<unsigned char> valtype;
 
-static CFeeRate g_dust{DUST_RELAY_TX_FEE};
-static bool g_bare_multi{DEFAULT_PERMIT_BAREMULTISIG};
+static kernel::MemPoolOptions g_mempool_opts;
 
 static std::map<std::string, unsigned int> mapFlagNames = {
     {std::string("P2SH"), (unsigned int)SCRIPT_VERIFY_P2SH},
@@ -798,19 +798,19 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     constexpr auto CheckIsStandard = [](const auto& t) {
         std::string reason;
-        BOOST_CHECK(IsStandardTx(CTransaction{t}, MAX_OP_RETURN_RELAY, g_bare_multi, g_dust, reason));
+        BOOST_CHECK(IsStandardTx(CTransaction{t}, g_mempool_opts, reason));
         BOOST_CHECK(reason.empty());
     };
     constexpr auto CheckIsNotStandard = [](const auto& t, const std::string& reason_in) {
         std::string reason;
-        BOOST_CHECK(!IsStandardTx(CTransaction{t}, MAX_OP_RETURN_RELAY, g_bare_multi, g_dust, reason));
+        BOOST_CHECK(!IsStandardTx(CTransaction{t}, g_mempool_opts, reason));
         BOOST_CHECK_EQUAL(reason_in, reason);
     };
 
     CheckIsStandard(t);
 
     // Check dust with default relay fee:
-    CAmount nDustThreshold = 182 * g_dust.GetFeePerK() / 1000;
+    CAmount nDustThreshold = 182 * g_mempool_opts.dust_relay_feerate.GetFeePerK() / 1000;
     BOOST_CHECK_EQUAL(nDustThreshold, 546);
     // dust:
     t.vout[0].nValue = nDustThreshold - 1;
@@ -838,17 +838,28 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     // Check dust with odd relay fee to verify rounding:
     // nDustThreshold = 182 * 3702 / 1000
-    g_dust = CFeeRate(3702);
+    g_mempool_opts.dust_relay_feerate = CFeeRate(3702);
     // dust:
     t.vout[0].nValue = 674 - 1;
     CheckIsNotStandard(t, "dust");
     // not dust:
     t.vout[0].nValue = 674;
     CheckIsStandard(t);
-    g_dust = CFeeRate{DUST_RELAY_TX_FEE};
+    g_mempool_opts.dust_relay_feerate = CFeeRate{DUST_RELAY_TX_FEE};
 
     t.vout[0].scriptPubKey = CScript() << OP_1;
     CheckIsNotStandard(t, "scriptpubkey");
+
+    // Test rejecttokens
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN << OP_13 << OP_FALSE;
+    g_mempool_opts.reject_tokens = false;
+    CheckIsStandard(t);
+    g_mempool_opts.reject_tokens = true;
+    CheckIsNotStandard(t, "tokens-runes");
+    // At least one data push is needed after OP_13 to match
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN << OP_13;
+    CheckIsStandard(t);
+    g_mempool_opts.reject_tokens = false;
 
     // MAX_OP_RETURN_RELAY-byte TxoutType::NULL_DATA (standard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
@@ -958,15 +969,15 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     CheckIsNotStandard(t, "tx-size");
 
     // Check bare multisig (standard if policy flag g_bare_multi is set)
-    g_bare_multi = true;
+    g_mempool_opts.permit_bare_multisig = true;
     t.vout[0].scriptPubKey = GetScriptForMultisig(1, {key.GetPubKey()}); // simple 1-of-1
     t.vin.resize(1);
     t.vin[0].scriptSig = CScript() << std::vector<unsigned char>(65, 0);
     CheckIsStandard(t);
 
-    g_bare_multi = false;
+    g_mempool_opts.permit_bare_multisig = false;
     CheckIsNotStandard(t, "bare-multisig");
-    g_bare_multi = DEFAULT_PERMIT_BAREMULTISIG;
+    g_mempool_opts.permit_bare_multisig = DEFAULT_PERMIT_BAREMULTISIG;
 
     // Check compressed P2PK outputs dust threshold (must have leading 02 or 03)
     t.vout[0].scriptPubKey = CScript() << std::vector<unsigned char>(33, 0x02) << OP_CHECKSIG;
