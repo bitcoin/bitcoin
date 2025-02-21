@@ -310,6 +310,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>unknown</source>
         <translation type="unfinished">неизвестно</translation>
     </message>
+    <message>
+        <source>Default system font "%1"</source>
+        <translation type="unfinished">Системный шрифт по умолчанию "%1"</translation>
+    </message>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
@@ -1526,6 +1530,10 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">Сворачивать вместо выхода из приложения при закрытии окна. Если данный параметр включён, приложение закроется только после нажатия "Выход" в меню.</translation>
     </message>
     <message>
+        <source>Font in the Overview tab: </source>
+        <translation type="unfinished">Шрифт на вкладке «Обзор»:</translation>
+    </message>
+    <message>
         <source>Options set in this dialog are overridden by the command line:</source>
         <translation type="unfinished">Параметры командной строки, которые переопределили параметры из этого окна:</translation>
     </message>
@@ -1951,6 +1959,17 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
 </context>
 <context>
+    <name>SignVerifyMessageDialog</name>
+    <message>
+        <source>You can sign messages/agreements with your legacy (P2PKH) addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation type="unfinished">Вы можете подписывать сообщения/соглашения своими устаревшими (P2PKH) адресами, чтобы доказать, что вы можете получать биткоины на них. Будьте осторожны и не подписывайте непонятные или случайные сообщения, так как мошенники могут таким образом пытаться присвоить вашу личность. Подписывайте только такие сообщения, с которыми вы согласны вплоть до мелочей.</translation>
+    </message>
+    <message>
+        <source>The entered address does not refer to a legacy (P2PKH) key. Message signing for SegWit and other non-P2PKH address types is not supported in this version of %1. Please check the address and try again.</source>
+        <translation type="unfinished">Введенный адрес не относится к устаревшему (P2PKH) ключу. Подписывание сообщений для SegWit и других не--P2PKH типов адресов не поддерживается в этой версии %1. Пожалуйста, проверьте адрес и попробуйте ещё раз.</translation>
+    </message>
+    </context>
+<context>
     <name>TransactionDesc</name>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
@@ -1959,6 +1978,10 @@ The migration process will create a backup of the wallet before migrating. This 
             <numerusform>matures in %n more block(s)</numerusform>
             <numerusform>matures in %n more block(s)</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>%1 (Certificate was not verified)</source>
+        <translation type="unfinished">%1 (Сертификат не был подтверждён)</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -2633,6 +2656,22 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Error: Unable to read all records in the database</source>
         <translation type="unfinished">Ошибка: не удалось прочитать все записи из базе данных</translation>
+    </message>
+    <message>
+        <source>Failed to disconnect block.</source>
+        <translation type="unfinished">Не удалось отключить блок</translation>
+    </message>
+    <message>
+        <source>Failed to read block.</source>
+        <translation type="unfinished">Не удалось прочитать блок</translation>
+    </message>
+    <message>
+        <source>Failed to write block.</source>
+        <translation type="unfinished">Не удалось записать блок</translation>
+    </message>
+    <message>
+        <source>Wallet file creation failed: %s</source>
+        <translation type="unfinished">Не удалось создать кошелёк 1%s</translation>
     </message>
     </context>
 </TS>
