@@ -199,7 +199,17 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         assert_equal(rawtx3["complete"], False)
         assert_raises_rpc_error(-22, "TX decode failed", node2.combinerawtransaction, [rawtx2['hex'], rawtx3['hex'] + "00"])
         assert_raises_rpc_error(-22, "Missing transactions", node2.combinerawtransaction, [])
+        assert_raises_rpc_error(-22, "Missing transactions", node2.combinerawtransaction, [rawtx2['hex']])
         combined_rawtx = node2.combinerawtransaction([rawtx2["hex"], rawtx3["hex"]])
+
+        # transactions are not related
+        UNRELATED_TXID = "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000"
+        unrelatedTx = self.nodes[2].createrawtransaction(inputs=[{'txid': UNRELATED_TXID, 'vout': 9}], outputs=[{out_addr: 99}])
+        assert_raises_rpc_error(-8, "Transaction 1 not compatible (different transactions)", self.nodes[0].combinerawtransaction, [rawtx2['hex'], unrelatedTx])
+
+        # Accept duplicate transactions in combinerawtransaction
+        dupeMergedTx = self.nodes[0].combinerawtransaction([rawtx2['hex'], rawtx2['hex']])
+        assert_equal(rawtx2['hex'], dupeMergedTx)
 
         tx = node0.sendrawtransaction(combined_rawtx, 0)
         blk = self.generate(node0, 1)[0]
