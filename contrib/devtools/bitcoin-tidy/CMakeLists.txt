@@ -58,7 +58,7 @@ else()
 endif()
 
 # Create a dummy library that runs clang-tidy tests as a side-effect of building
-add_library(bitcoin-tidy-tests OBJECT EXCLUDE_FROM_ALL example_logprintf.cpp example_nontrivial-threadlocal.cpp)
+add_library(bitcoin-tidy-tests OBJECT EXCLUDE_FROM_ALL example_nontrivial-threadlocal.cpp)
 add_dependencies(bitcoin-tidy-tests bitcoin-tidy)
 
 set_target_properties(bitcoin-tidy-tests PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
