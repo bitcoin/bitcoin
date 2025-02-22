@@ -10,8 +10,12 @@ env:
   CCACHE_DIR: "/tmp/ccache_dir"
 
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
-base_template: &BASE_TEMPLATE
+filter_template: &FILTER_TEMPLATE
   skip: $CIRRUS_REPO_FULL_NAME == "bitcoin-core/gui" && $CIRRUS_PR == ""  # No need to run on the read-only mirror, unless it is a PR. https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
+  stateful: false  # https://cirrus-ci.org/guide/writing-tasks/#stateful-tasks
+
+base_template: &BASE_TEMPLATE
+  << : *FILTER_TEMPLATE
   merge_base_script:
     # Unconditionally install git (used in fingerprint_script) and set the
     # default git author name (used in verify-commits.py)
@@ -21,7 +25,6 @@ base_template: &BASE_TEMPLATE
     - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
     - git fetch $CIRRUS_REPO_CLONE_URL $CIRRUS_BASE_BRANCH
     - git merge FETCH_HEAD  # Merge base to detect silent merge conflicts
-  stateful: false  # https://cirrus-ci.org/guide/writing-tasks/#stateful-tasks
 
 global_task_template: &GLOBAL_TASK_TEMPLATE
   << : *BASE_TEMPLATE
@@ -47,7 +50,6 @@ compute_credits_template: &CREDITS_TEMPLATE
   # Only use credits for pull requests to the main repo
   use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'dashpay/dash' && $CIRRUS_PR != ""
 
-
 task:
   name: 'lint [bookworm]'
   << : *BASE_TEMPLATE
@@ -62,12 +64,11 @@ task:
     fingerprint_script: cat .python-version /etc/os-release
   lint_script:
     - ./ci/lint_run_all.sh
-
 task:
-  name: 'ARM [unit tests, no functional tests] [buster]'
+  name: 'ARM [unit tests, no functional tests] [bullseye]'
   << : *GLOBAL_TASK_TEMPLATE
   arm_container:
-    image: debian:buster
+    image: debian:bullseye
     cpu: 2
     memory: 8G
   env:

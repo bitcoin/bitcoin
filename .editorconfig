@@ -13,7 +13,7 @@ trim_trailing_whitespace = true
 [*.{h,cpp,py,sh}]
 indent_size = 4
 
-# .cirrus.yml, .appveyor.yml, .fuzzbuzz.yml, etc.
+# .cirrus.yml, .fuzzbuzz.yml, etc.
 [*.yml]
 indent_size = 2
 

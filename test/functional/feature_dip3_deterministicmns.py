@@ -177,8 +177,8 @@ class DIP3Test(BitcoinTestFramework):
                 block = self.nodes[0].getblock(self.nodes[0].getbestblockhash())
                 cbtx = self.nodes[0].getrawtransaction(block['tx'][0], 1)
                 for out in cbtx['vout']:
-                    if 'addresses' in out['scriptPubKey']:
-                        if expected_payee in out['scriptPubKey']['addresses'] and out['valueSat'] == expected_amount:
+                    if 'address' in out['scriptPubKey']:
+                        if expected_payee in out['scriptPubKey']['address'] and out['valueSat'] == expected_amount:
                             found_multisig_payee = True
         assert found_multisig_payee
 
