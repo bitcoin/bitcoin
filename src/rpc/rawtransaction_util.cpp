@@ -143,7 +143,7 @@ void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in)
     }
 }
 
-CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf)
+CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf, const UniValue& version)
 {
     CMutableTransaction rawTx;
 
@@ -154,6 +154,13 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
         rawTx.nLockTime = nLockTime;
     }
 
+    if (!version.isNull()) {
+        int64_t nVersion = version.getInt<int64_t>();
+        if (nVersion < TX_MIN_STANDARD_VERSION || nVersion > TX_MAX_STANDARD_VERSION)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, version out of range(1~3)");
+        rawTx.version = nVersion;
+    }
+
     AddInputs(rawTx, inputs_in, rbf);
     AddOutputs(rawTx, outputs_in);
 
@@ -162,6 +169,11 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
     }
 
     return rawTx;
+}
+
+CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf)
+{
+    return ConstructTransaction(inputs_in, outputs_in, locktime, rbf, UniValue(2));
 }
 
 /** Pushes a JSON object for script verification or signing errors to vErrorsRet. */
