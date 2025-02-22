@@ -553,11 +553,11 @@ public:
 class WalletLoaderImpl : public WalletLoader
 {
 public:
-    WalletLoaderImpl(Chain& chain, ArgsManager& args, const std::unique_ptr<interfaces::CoinJoin::Loader>& coinjoin_loader) :
-        m_context(coinjoin_loader)
+    WalletLoaderImpl(Chain& chain, ArgsManager& args, interfaces::CoinJoin::Loader& coinjoin_loader)
     {
         m_context.chain = &chain;
         m_context.args = &args;
+        m_context.coinjoin_loader = &coinjoin_loader;
     }
     ~WalletLoaderImpl() override { UnloadWallets(); }
 
@@ -574,7 +574,7 @@ public:
         }
     }
     bool verify() override { return VerifyWallets(*m_context.chain); }
-    bool load() override { assert(m_context.m_coinjoin_loader); return LoadWallets(*m_context.chain, *m_context.m_coinjoin_loader); }
+    bool load() override { return LoadWallets(*m_context.chain, *m_context.coinjoin_loader); }
     void start(CScheduler& scheduler) override { return StartWallets(scheduler, *Assert(m_context.args)); }
     void flush() override { return FlushWallets(); }
     void stop() override { return StopWallets(); }
@@ -589,22 +589,19 @@ public:
         options.require_create = true;
         options.create_flags = wallet_creation_flags;
         options.create_passphrase = passphrase;
-        assert(m_context.m_coinjoin_loader);
-        return MakeWallet(CreateWallet(*m_context.chain, *m_context.m_coinjoin_loader, name, true /* load_on_start */, options, status, error, warnings));
+        return MakeWallet(CreateWallet(*m_context.chain, *m_context.coinjoin_loader, name, true /* load_on_start */, options, status, error, warnings));
     }
     std::unique_ptr<Wallet> loadWallet(const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
     {
         DatabaseOptions options;
         DatabaseStatus status;
         options.require_existing = true;
-        assert(m_context.m_coinjoin_loader);
-        return MakeWallet(LoadWallet(*m_context.chain, *m_context.m_coinjoin_loader, name, true /* load_on_start */, options, status, error, warnings));
+        return MakeWallet(LoadWallet(*m_context.chain, *m_context.coinjoin_loader, name, true /* load_on_start */, options, status, error, warnings));
     }
     std::unique_ptr<Wallet> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
     {
         DatabaseStatus status;
-        assert(m_context.m_coinjoin_loader);
-        return MakeWallet(RestoreWallet(*m_context.chain, *m_context.m_coinjoin_loader, backup_file, wallet_name, /*load_on_start=*/true, status, error, warnings));
+        return MakeWallet(RestoreWallet(*m_context.chain, *m_context.coinjoin_loader, backup_file, wallet_name, /*load_on_start=*/true, status, error, warnings));
     }
     std::string getWalletDir() override
     {
@@ -641,7 +638,7 @@ public:
 
 namespace interfaces {
 std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return wallet ? std::make_unique<wallet::WalletImpl>(wallet) : nullptr; }
-std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args, const std::unique_ptr<interfaces::CoinJoin::Loader>& coinjoin_loader) {
+std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args, interfaces::CoinJoin::Loader& coinjoin_loader) {
     return std::make_unique<wallet::WalletLoaderImpl>(chain, args, coinjoin_loader);
 }
 } // namespace interfaces

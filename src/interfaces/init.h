@@ -33,7 +33,7 @@ public:
     virtual std::unique_ptr<Node> makeNode();
     virtual std::unique_ptr<Chain> makeChain();
     virtual std::unique_ptr<CoinJoin::Loader> makeCoinJoinLoader();
-    virtual std::unique_ptr<interfaces::WalletLoader> makeWalletLoader(interfaces::Chain&, const std::unique_ptr<CoinJoin::Loader>&);
+    virtual std::unique_ptr<interfaces::WalletLoader> makeWalletLoader(interfaces::Chain&, CoinJoin::Loader&);
     virtual std::unique_ptr<Echo> makeEcho();
     virtual Ipc* ipc();
 };

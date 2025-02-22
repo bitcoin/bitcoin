@@ -4,7 +4,5 @@
 
 #include <wallet/context.h>
 
-WalletContext::WalletContext(const std::unique_ptr<interfaces::CoinJoin::Loader>& coinjoin_loader) :
-    m_coinjoin_loader(coinjoin_loader)
-{}
+WalletContext::WalletContext() {}
 WalletContext::~WalletContext() {}

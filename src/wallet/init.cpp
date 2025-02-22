@@ -190,7 +190,7 @@ void WalletInit::Construct(NodeContext& node) const
         return;
     }
     node.coinjoin_loader = node.init->makeCoinJoinLoader();
-    auto wallet_loader = node.init->makeWalletLoader(*node.chain, node.coinjoin_loader);
+    auto wallet_loader = node.init->makeWalletLoader(*node.chain, *node.coinjoin_loader);
     node.wallet_loader = wallet_loader.get();
     node.chain_clients.emplace_back(std::move(wallet_loader));
 }
