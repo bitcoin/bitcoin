@@ -14,10 +14,12 @@
 #define BITCOIN_NODE_TYPES_H
 
 #include <consensus/amount.h>
-#include <cstddef>
+#include <policy/feerate.h>
 #include <policy/policy.h>
 #include <script/script.h>
 #include <util/time.h>
+
+#include <cstddef>
 
 namespace node {
 enum class TransactionError {
@@ -30,6 +32,8 @@ enum class TransactionError {
     MAX_BURN_EXCEEDED,
     INVALID_PACKAGE,
 };
+
+static const bool DEFAULT_PRINT_MODIFIED_FEE = false;
 
 struct BlockCreateOptions {
     /**
@@ -62,6 +66,13 @@ struct BlockCreateOptions {
      * coinbase_max_additional_weight and coinbase_output_max_additional_sigops.
      */
     CScript coinbase_output_script{CScript() << OP_TRUE};
+
+    // Configuration parameters for the block size
+    size_t nBlockMaxWeight{DEFAULT_BLOCK_MAX_WEIGHT};
+    CFeeRate blockMinFeeRate{DEFAULT_BLOCK_MIN_TX_FEE};
+    // Whether to call TestBlockValidity() at the end of CreateNewBlock().
+    bool test_block_validity{true};
+    bool print_modified_fee{DEFAULT_PRINT_MODIFIED_FEE};
 };
 
 struct BlockWaitOptions {
