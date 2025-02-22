@@ -484,6 +484,8 @@ $ ./build/test/functional/test_runner.py --valgrind
 
 ### Compiling for test coverage
 
+#### Using LCOV
+
 LCOV can be used to generate a test coverage report based upon `ctest`
 execution. LCOV must be installed on your system (e.g. the `lcov` package
 on Debian/Ubuntu).
@@ -512,6 +514,47 @@ To enable test parallelism:
 ```
 cmake -DJOBS=$(nproc) -P build/Coverage.cmake
 ```
+
+#### Using LLVM/Clang tooling
+
+Default LLVM/Clang tooling can be used to generate coverage report for unit tests.
+
+Configure the build with the following flags:
+
+```shell
+cmake -B build -DCMAKE_C_COMPILER="clang" \
+   -DCMAKE_CXX_COMPILER="clang++" \
+   -DCMAKE_C_FLAGS="-fprofile-instr-generate -fcoverage-mapping" \
+   -DCMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping"
+
+cmake --build build # Use "-j N" here for N parallel jobs.
+```
+
+Generating the raw profile data based on `ctest` execution:
+
+```shell
+cd build
+export LLVM_PROFILE_FILE="default_%p.profraw"
+ctest # Use "-j N" here for N parallel jobs.
+
+# merge all the raw profile data into a single file
+find . -name "default_*.profraw" | xargs llvm-profdata merge -sparse -o coverage.profdata
+```
+
+Generating the coverage report:
+
+```shell
+llvm-cov show ./src/test/test_bitcoin \
+    --instr-profile=coverage.profdata \
+    --format=html \
+    --show-instantiation-summary \
+    --show-line-counts-or-regions \
+    --show-expansions \
+    --output-dir=coverage_report \
+    --project-title="Bitcoin Core Coverage Report"
+```
+
+The coverage report will be generated in the `coverage_report` directory inside the `build` directory.
 
 ### Performance profiling with perf
 
