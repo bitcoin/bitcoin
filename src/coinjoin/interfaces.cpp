@@ -4,7 +4,10 @@
 
 #include <interfaces/coinjoin.h>
 
+#include <coinjoin/context.h>
 #include <coinjoin/client.h>
+#include <node/context.h>
+#include <util/check.h>
 #include <wallet/wallet.h>
 
 #include <univalue.h>
@@ -71,31 +74,39 @@ public:
 
 class CoinJoinLoaderImpl : public interfaces::CoinJoin::Loader
 {
-    CoinJoinWalletManager& m_walletman;
+private:
+    CoinJoinWalletManager& walletman()
+    {
+        return *Assert(Assert(m_node.cj_ctx)->walletman);
+    }
 
 public:
-    explicit CoinJoinLoaderImpl(CoinJoinWalletManager& walletman)
-        : m_walletman(walletman) {}
+    explicit CoinJoinLoaderImpl(NodeContext& node) : m_node(node) {}
 
-    void AddWallet(const std::shared_ptr<CWallet>& wallet) override { m_walletman.Add(wallet); }
+    void AddWallet(const std::shared_ptr<CWallet>& wallet) override
+    {
+        walletman().Add(wallet);
+    }
     void RemoveWallet(const std::string& name) override
     {
-        m_walletman.Remove(name);
+        walletman().Remove(name);
     }
     void FlushWallet(const std::string& name) override
     {
-        m_walletman.Flush(name);
+        walletman().Flush(name);
     }
     std::unique_ptr<interfaces::CoinJoin::Client> GetClient(const std::string& name) override
     {
-        auto clientman = m_walletman.Get(name);
+        auto clientman = walletman().Get(name);
         return clientman ? std::make_unique<CoinJoinClientImpl>(*clientman) : nullptr;
     }
+
+    NodeContext& m_node;
 };
 
 } // namespace
 } // namespace coinjoin
 
 namespace interfaces {
-std::unique_ptr<CoinJoin::Loader> MakeCoinJoinLoader(CoinJoinWalletManager& walletman) { return std::make_unique<coinjoin::CoinJoinLoaderImpl>(walletman); }
+std::unique_ptr<CoinJoin::Loader> MakeCoinJoinLoader(NodeContext& node) { return std::make_unique<coinjoin::CoinJoinLoaderImpl>(node); }
 } // namespace interfaces

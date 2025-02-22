@@ -9,8 +9,8 @@
 #include <string>
 #include <vector>
 
-class CoinJoinWalletManager;
 class CWallet;
+struct NodeContext;
 
 class UniValue;
 
@@ -46,7 +46,7 @@ public:
 };
 } // namespace CoinJoin
 
-std::unique_ptr<CoinJoin::Loader> MakeCoinJoinLoader(CoinJoinWalletManager& walletman);
+std::unique_ptr<CoinJoin::Loader> MakeCoinJoinLoader(NodeContext& node);
 
 } // namespace interfaces
 

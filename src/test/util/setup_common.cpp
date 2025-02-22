@@ -124,7 +124,7 @@ void DashPostChainstateSetup(NodeContext& node)
                                               /*mn_activeman=*/nullptr, *node.mn_sync, *node.llmq_ctx->isman, node.peerman,
                                               /*relay_txes=*/true);
 #ifdef ENABLE_WALLET
-    node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);
+    node.coinjoin_loader = interfaces::MakeCoinJoinLoader(node);
 #endif // ENABLE_WALLET
 }
 
