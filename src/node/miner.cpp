@@ -65,7 +65,7 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
     block.hashMerkleRoot = BlockMerkleRoot(block);
 }
 
-static BlockAssembler::Options ClampOptions(BlockAssembler::Options options)
+static BlockCreateOptions ClampOptions(BlockCreateOptions options)
 {
     Assert(options.coinbase_max_additional_size <= MAX_BLOCK_SERIALIZED_SIZE - 1000);
     Assert(options.coinbase_max_additional_weight <= DEFAULT_BLOCK_MAX_WEIGHT);
