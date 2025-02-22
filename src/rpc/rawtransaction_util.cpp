@@ -18,6 +18,7 @@
 #include <tinyformat.h>
 #include <univalue.h>
 #include <util/rbf.h>
+#include <util/string.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 
@@ -143,7 +144,7 @@ void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in)
     }
 }
 
-CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf)
+CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf, const UniValue& version)
 {
     CMutableTransaction rawTx;
 
@@ -152,6 +153,15 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
         if (nLockTime < 0 || nLockTime > LOCKTIME_MAX)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, locktime out of range");
         rawTx.nLockTime = nLockTime;
+    }
+
+    if (!version.isNull()) {
+        uint32_t nVersion = version.getInt<uint32_t>();
+        if (nVersion < TX_MIN_STANDARD_VERSION || nVersion > TX_MAX_STANDARD_VERSION) {
+            // throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, version out of range(") + util::ToString(TX_MIN_STANDARD_VERSION) + "~" + util::ToString(TX_MAX_STANDARD_VERSION) + ")");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, version out of range(%s~%s)", util::ToString(TX_MIN_STANDARD_VERSION), util::ToString(TX_MAX_STANDARD_VERSION)));
+        }
+        rawTx.version = nVersion;
     }
 
     AddInputs(rawTx, inputs_in, rbf);
