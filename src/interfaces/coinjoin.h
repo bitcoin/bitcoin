@@ -7,9 +7,12 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 class CoinJoinWalletManager;
 class CWallet;
+
+class UniValue;
 
 namespace interfaces {
 namespace CoinJoin {
@@ -21,6 +24,8 @@ public:
     virtual void resetCachedBlocks() = 0;
     virtual void resetPool() = 0;
     virtual int getCachedBlocks() = 0;
+    virtual void getJsonInfo(UniValue& obj) = 0;
+    virtual std::vector<std::string> getSessionStatuses() = 0;
     virtual std::string getSessionDenoms() = 0;
     virtual void setCachedBlocks(int nCachedBlocks) = 0;
     virtual void disableAutobackups() = 0;
@@ -38,7 +43,6 @@ public:
     virtual void RemoveWallet(const std::string&) = 0;
     virtual void FlushWallet(const std::string&) = 0;
     virtual std::unique_ptr<CoinJoin::Client> GetClient(const std::string&) = 0;
-    virtual CoinJoinWalletManager& walletman() = 0;
 };
 } // namespace CoinJoin
 

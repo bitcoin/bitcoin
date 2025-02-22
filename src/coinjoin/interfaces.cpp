@@ -7,6 +7,8 @@
 #include <coinjoin/client.h>
 #include <wallet/wallet.h>
 
+#include <univalue.h>
+
 #include <memory>
 #include <string>
 
@@ -37,9 +39,17 @@ public:
     {
         return m_clientman.nCachedNumBlocks;
     }
+    void getJsonInfo(UniValue& obj) override
+    {
+        return m_clientman.GetJsonInfo(obj);
+    }
     std::string getSessionDenoms() override
     {
         return m_clientman.GetSessionDenoms();
+    }
+    std::vector<std::string> getSessionStatuses() override
+    {
+        return m_clientman.GetStatuses();
     }
     void setCachedBlocks(int nCachedBlocks) override
     {
@@ -80,10 +90,6 @@ public:
     {
         auto clientman = m_walletman.Get(name);
         return clientman ? std::make_unique<CoinJoinClientImpl>(*clientman) : nullptr;
-    }
-    CoinJoinWalletManager& walletman() override
-    {
-        return m_walletman;
     }
 };
 
