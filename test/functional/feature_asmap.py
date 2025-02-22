@@ -151,7 +151,7 @@ class AsmapTest(BitcoinTestFramework):
         self.test_default_asmap_with_missing_file()
         self.test_empty_asmap()
         self.test_asmap_health_check()
-
+        self.add_nodes()
 
 if __name__ == '__main__':
     AsmapTest(__file__).main()
