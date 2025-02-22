@@ -259,7 +259,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, "createrawtransaction", self.nodes[0].createrawtransaction, [])
 
         # Test `createrawtransaction` invalid extra parameters
-        assert_raises_rpc_error(-1, "createrawtransaction", self.nodes[0].createrawtransaction, [], {}, 0, False, 'foo')
+        assert_raises_rpc_error(-1, "createrawtransaction", self.nodes[0].createrawtransaction, [], {}, 0, False, 2, 'foo')
+
+        # Test `createrawtransaction` invalid version parameters
+        assert_raises_rpc_error(-8, "Invalid parameter, version out of range(0~3)", self.nodes[0].createrawtransaction, [], {}, 0, False, -1)
+        assert_raises_rpc_error(-8, "Invalid parameter, version out of range(0~3)", self.nodes[0].createrawtransaction, [], {}, 0, False, 4)
 
         # Test `createrawtransaction` invalid `inputs`
         assert_raises_rpc_error(-3, "JSON value of type string is not of expected type array", self.nodes[0].createrawtransaction, 'foo', {})
