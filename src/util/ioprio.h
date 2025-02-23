@@ -11,7 +11,7 @@
 
 #include <logging.h>
 
-#if defined(HAVE_IOPRIO_SYSCALL) || defined(HAVE_IOPOLICY)
+#if HAVE_IOPRIO_SYSCALL || HAVE_IOPOLICY
 int ioprio_get();
 int ioprio_set(int ioprio);
 int ioprio_set_idle();

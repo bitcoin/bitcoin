@@ -943,7 +943,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
  [ AC_MSG_RESULT([no])]
 )
 
-AC_MSG_CHECKING(for iopolicy functions)
+AC_MSG_CHECKING(for macOS iopolicy functions)
 AC_COMPILE_IFELSE([
   AC_LANG_PROGRAM([[
     #include <sys/resource.h>
@@ -952,16 +952,16 @@ AC_COMPILE_IFELSE([
     setiopolicy_np(IOPOL_TYPE_DISK, IOPOL_SCOPE_THREAD, x);
   ]])
 ],[
-  have_iopolicy=yes
-  AC_DEFINE(HAVE_IOPOLICY,1,[Define this symbol if you have iopolicy functions])
+  AC_MSG_RESULT([yes])
+  HAVE_IOPOLICY=1
 ],[
-  have_iopolicy=no
+  AC_MSG_RESULT([no])
+  HAVE_IOPOLICY=0
 ])
-AC_MSG_RESULT($have_iopolicy)
-AM_CONDITIONAL([HAVE_IOPOLICY], [test "$have_iopolicy" = "yes"])
+AC_DEFINE_UNQUOTED([HAVE_IOPOLICY], [$HAVE_IOPOLICY], [Define to 1 if macOS iopolicy functions are usable.])
 
-if test x$have_iopolicy = xno; then
-  AC_MSG_CHECKING(for ioprio syscalls)
+if test x$HAVE_IOPOLICY = x0; then
+  AC_MSG_CHECKING(for Linux ioprio syscalls)
   AC_COMPILE_IFELSE([
     AC_LANG_PROGRAM([[
       #define _GNU_SOURCE
@@ -972,16 +972,16 @@ if test x$have_iopolicy = xno; then
       syscall(SYS_ioprio_set, 1, 0, x);
     ]])
   ],[
-    have_ioprio_syscall=yes
-    AC_DEFINE(HAVE_IOPRIO_SYSCALL,1,[Define this symbol if you have ioprio syscalls])
+    AC_MSG_RESULT([yes])
+    HAVE_IOPRIO_SYSCALL=1
   ],[
-    have_ioprio_syscall=no
+    AC_MSG_RESULT([no])
+    HAVE_IOPRIO_SYSCALL=0
   ])
-  AC_MSG_RESULT($have_ioprio_syscall)
 else
-  have_ioprio_syscall=no
+  HAVE_IOPRIO_SYSCALL=0
 fi
-AM_CONDITIONAL([HAVE_IOPRIO_SYSCALL], [test "$have_ioprio_syscall" = "yes"])
+AC_DEFINE_UNQUOTED([HAVE_IOPRIO_SYSCALL], [$HAVE_IOPRIO_SYSCALL], [Define to 1 if Linux ioprio syscalls are usable.])
 
 dnl Check for different ways of gathering OS randomness
 AC_MSG_CHECKING([for Linux getrandom function])

@@ -8,7 +8,7 @@
 
 #include <util/ioprio.h>
 
-#ifdef HAVE_IOPRIO_SYSCALL
+#if HAVE_IOPRIO_SYSCALL
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
