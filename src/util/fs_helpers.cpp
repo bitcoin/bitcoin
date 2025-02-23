@@ -234,7 +234,8 @@ void AllocateFileRange(FILE* file, unsigned int offset, unsigned int length)
 }
 
 FILE* AdviseSequential(FILE *file) {
-#if _POSIX_C_SOURCE >= 200112L
+#ifdef _POSIX_C_SOURCE
+# if _POSIX_C_SOURCE >= 200112L
     // Since this whole thing is advisory anyway, we can ignore any errors
     // encountered up to and including the posix_fadvise call. However, we must
     // rewind the file to the appropriate position if we've changed the seek
@@ -252,12 +253,14 @@ FILE* AdviseSequential(FILE *file) {
     }
     posix_fadvise(fd, start, 0, POSIX_FADV_WILLNEED);
     posix_fadvise(fd, start, 0, POSIX_FADV_SEQUENTIAL);
+# endif
 #endif
     return file;
 }
 
 int CloseAndUncache(FILE *file) {
-#if _POSIX_C_SOURCE >= 200112L
+#ifdef _POSIX_C_SOURCE
+# if _POSIX_C_SOURCE >= 200112L
     // Ignore any errors up to and including the posix_fadvise call since it's
     // advisory.
     if (file != nullptr) {
@@ -269,6 +272,7 @@ int CloseAndUncache(FILE *file) {
             }
         }
     }
+# endif
 #endif
     return std::fclose(file);
 }
