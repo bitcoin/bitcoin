@@ -9,6 +9,7 @@
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
 #include <node/context.h>
+#include <util/check.h>
 #include <util/system.h>
 
 #include <memory>
@@ -31,7 +32,7 @@ public:
     std::unique_ptr<interfaces::Chain> makeChain() override { return interfaces::MakeChain(m_node); }
     std::unique_ptr<interfaces::WalletLoader> makeWalletLoader(interfaces::Chain& chain, const std::unique_ptr<interfaces::CoinJoin::Loader>& loader) override
     {
-        return MakeWalletLoader(chain, loader, *Assert(m_node.args));
+        return MakeWalletLoader(chain, *Assert(m_node.args), loader);
     }
     std::unique_ptr<interfaces::Echo> makeEcho() override { return interfaces::MakeEcho(); }
     interfaces::Ipc* ipc() override { return m_ipc.get(); }

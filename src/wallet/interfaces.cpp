@@ -553,7 +553,7 @@ public:
 class WalletLoaderImpl : public WalletLoader
 {
 public:
-    WalletLoaderImpl(Chain& chain, const std::unique_ptr<interfaces::CoinJoin::Loader>& coinjoin_loader, ArgsManager& args) :
+    WalletLoaderImpl(Chain& chain, ArgsManager& args, const std::unique_ptr<interfaces::CoinJoin::Loader>& coinjoin_loader) :
         m_context(coinjoin_loader)
     {
         m_context.chain = &chain;
@@ -641,7 +641,7 @@ public:
 
 namespace interfaces {
 std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return wallet ? std::make_unique<wallet::WalletImpl>(wallet) : nullptr; }
-std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, const std::unique_ptr<interfaces::CoinJoin::Loader>& coinjoin_loader, ArgsManager& args) {
-    return std::make_unique<wallet::WalletLoaderImpl>(chain, coinjoin_loader, args);
+std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args, const std::unique_ptr<interfaces::CoinJoin::Loader>& coinjoin_loader) {
+    return std::make_unique<wallet::WalletLoaderImpl>(chain, args, coinjoin_loader);
 }
 } // namespace interfaces
