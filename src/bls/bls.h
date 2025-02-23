@@ -509,8 +509,8 @@ public:
     bool operator==(const CBLSLazyWrapper& r) const
     {
         // If neither bufValid or objInitialized are set, then the object is the default object.
-        const bool is_default{bufValid || objInitialized};
-        const bool r_is_default{r.bufValid || r.objInitialized};
+        const bool is_default{!bufValid && !objInitialized};
+        const bool r_is_default{!r.bufValid && !r.objInitialized};
         // If both are default; they are equal.
         if (is_default && r_is_default) return true;
         // If one is default and the other isn't, we are not equal

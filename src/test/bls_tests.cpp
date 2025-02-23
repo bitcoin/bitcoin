@@ -472,4 +472,140 @@ BOOST_AUTO_TEST_CASE(bls_threshold_signature_tests)
     FuncThresholdSignature(false);
 }
 
+// A dummy BLS object that satisfies the minimal interface expected by CBLSLazyWrapper.
+class DummyBLS {
+public:
+    // Define a fixed serialization size (for testing purposes).
+    static const size_t SerSize = 4;
+    std::array<uint8_t, SerSize> data{};
+
+    DummyBLS() {
+        data.fill(0);
+    }
+
+    // A dummy validity check: valid if any byte is non-zero.
+    bool IsValid() const {
+        return std::any_of(data.begin(), data.end(), [](uint8_t c){ return c != 0; });
+    }
+
+    // Convert to bytes; ignore the legacy flag for simplicity.
+    std::array<uint8_t, SerSize> ToBytes(bool /*legacy*/) const {
+        return data;
+    }
+
+    // Set from bytes; again, ignore the legacy flag.
+    void SetBytes(const std::array<uint8_t, SerSize>& bytes, bool /*legacy*/) {
+        data = bytes;
+    }
+
+    // A dummy malleability check: simply compares the stored data to the given bytes.
+    bool CheckMalleable(const std::array<uint8_t, SerSize>& bytes, bool /*legacy*/) const {
+        return data == bytes;
+    }
+
+    // Reset the object to an "empty" state.
+    void Reset() {
+        data.fill(0);
+    }
+
+    // Produce a string representation.
+    std::string ToString(bool /*legacy*/) const {
+        std::ostringstream oss;
+        for (auto b : data) {
+            oss << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(b);
+        }
+        return oss.str();
+    }
+
+    // Equality operator.
+    bool operator==(const DummyBLS& other) const {
+        return data == other.data;
+    }
+};
+
+// Define a type alias for our lazy wrapper instantiated with DummyBLS.
+using LazyDummyBLS = CBLSLazyWrapper<DummyBLS>;
+
+// Test 1: Two default (unset) wrappers should compare equal.
+BOOST_AUTO_TEST_CASE(test_default_equality)
+{
+    LazyDummyBLS lazy1;
+    LazyDummyBLS lazy2;
+    // Neither instance has been set, so they represent the default/null object.
+    BOOST_CHECK(lazy1 == lazy2);
+}
+
+// Test 2: A default wrapper and one initialized with a nonzero DummyBLS should compare unequal.
+BOOST_AUTO_TEST_CASE(test_non_default_vs_default)
+{
+    LazyDummyBLS lazy_default;
+    LazyDummyBLS lazy_set;
+    DummyBLS obj;
+    obj.data = {1, 2, 3, 4};  // nonzero data makes the object valid
+    lazy_set.Set(obj, false);
+    BOOST_CHECK(!(lazy_default == lazy_set));
+    BOOST_CHECK(lazy_default != lazy_set);
+}
+
+// Test 2: A default wrapper and one initialized with a nonzero DummyBLS should compare unequal.
+BOOST_AUTO_TEST_CASE(test_non_default_vs_different)
+{
+    LazyDummyBLS lazy_a;
+    LazyDummyBLS lazy_b;
+    DummyBLS obj;
+    obj.data = {1, 2, 3, 4};  // nonzero data makes the object valid
+    lazy_a.Set(obj, false);
+    obj.data = {4, 3, 2, 1};  // nonzero data makes the object valid
+    lazy_b.Set(obj, false);
+    BOOST_CHECK(lazy_a != lazy_b);
+}
+
+// Test 3: Two wrappers set with the same underlying DummyBLS value compare equal.
+BOOST_AUTO_TEST_CASE(test_equality_same_value)
+{
+    LazyDummyBLS lazy1;
+    LazyDummyBLS lazy2;
+    BOOST_CHECK(lazy1 == lazy2);
+    DummyBLS obj;
+    obj.data = {5, 6, 7, 8};
+    lazy1.Set(obj, false);
+    BOOST_CHECK(lazy1 != lazy2);
+    lazy2.Set(obj, false);
+    BOOST_CHECK(lazy1 == lazy2);
+}
+
+// Test 4: Serialization and unserialization preserve the wrapped value.
+BOOST_AUTO_TEST_CASE(test_serialization_unserialization)
+{
+    LazyDummyBLS lazy1;
+    DummyBLS obj;
+    obj.data = {9, 10, 11, 12};
+    // Set with a specific legacy flag (true in this case)
+    lazy1.Set(obj, true);
+
+    // Serialize the lazy object into a data stream.
+    CDataStream ds(SER_DISK, CLIENT_VERSION);
+    lazy1.Serialize(ds, true);
+
+    // Create a new instance and unserialize the data into it.
+    LazyDummyBLS lazy2;
+    lazy2.Unserialize(ds, true);
+    BOOST_CHECK(lazy1 == lazy2);
+    BOOST_CHECK(lazy2.Get() == obj);
+}
+
+// Test 5: Two wrappers wrapping the same object should have the same hash.
+BOOST_AUTO_TEST_CASE(test_get_hash_consistency)
+{
+    LazyDummyBLS lazy1;
+    LazyDummyBLS lazy2;
+    DummyBLS obj;
+    obj.data = {13, 14, 15, 16};
+    lazy1.Set(obj, false);
+    lazy2.Set(obj, false);
+    uint256 hash1 = lazy1.GetHash();
+    uint256 hash2 = lazy2.GetHash();
+    BOOST_CHECK(hash1 == hash2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
