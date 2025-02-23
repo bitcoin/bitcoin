@@ -118,24 +118,6 @@ void DashChainstateSetupClose(NodeContext& node)
                              Assert(node.mempool.get()));
 }
 
-void DashPostChainstateSetup(NodeContext& node)
-{
-    node.cj_ctx = std::make_unique<CJContext>(*node.chainman, *node.connman, *node.dmnman, *node.mn_metaman, *node.mempool,
-                                              /*mn_activeman=*/nullptr, *node.mn_sync, *node.llmq_ctx->isman, node.peerman,
-                                              /*relay_txes=*/true);
-#ifdef ENABLE_WALLET
-    node.coinjoin_loader = interfaces::MakeCoinJoinLoader(node);
-#endif // ENABLE_WALLET
-}
-
-void DashPostChainstateSetupClose(NodeContext& node)
-{
-#ifdef ENABLE_WALLET
-    node.coinjoin_loader.reset();
-#endif // ENABLE_WALLET
-    node.cj_ctx.reset();
-}
-
 BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
     : m_path_root{fs::temp_directory_path() / "test_common_" PACKAGE_NAME / g_insecure_rand_ctx_temp_path.rand256().ToString()},
       m_args{}
@@ -330,7 +312,12 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         m_node.connman->Init(options);
     }
 
-    DashPostChainstateSetup(m_node);
+    m_node.cj_ctx = std::make_unique<CJContext>(*m_node.chainman, *m_node.connman, *m_node.dmnman, *m_node.mn_metaman, *m_node.mempool,
+                                                /*mn_activeman=*/nullptr, *m_node.mn_sync, *m_node.llmq_ctx->isman, m_node.peerman,
+                                                /*relay_txes=*/true);
+#ifdef ENABLE_WALLET
+    m_node.coinjoin_loader = interfaces::MakeCoinJoinLoader(m_node);
+#endif // ENABLE_WALLET
 
     BlockValidationState state;
     if (!m_node.chainman->ActiveChainstate().ActivateBestChain(state)) {
@@ -340,7 +327,10 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
 TestingSetup::~TestingSetup()
 {
-    DashPostChainstateSetupClose(m_node);
+#ifdef ENABLE_WALLET
+    m_node.coinjoin_loader.reset();
+#endif // ENABLE_WALLET
+    m_node.cj_ctx.reset();
 
     // Interrupt() and PrepareShutdown() routines
     if (m_node.llmq_ctx) {

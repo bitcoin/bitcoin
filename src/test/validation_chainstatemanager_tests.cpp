@@ -50,7 +50,6 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
     WITH_LOCK(::cs_main, c1.InitCoinsCache(1 << 23));
 
     DashChainstateSetup(manager, m_node, /*fReset=*/false, /*fReindexChainState=*/false, consensus_params);
-    DashPostChainstateSetup(m_node);
 
     BOOST_CHECK(!manager.IsSnapshotActive());
     BOOST_CHECK(WITH_LOCK(::cs_main, return !manager.IsSnapshotValidated()));
@@ -68,7 +67,6 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
 
     BOOST_CHECK(!manager.SnapshotBlockhash().has_value());
 
-    DashPostChainstateSetupClose(m_node);
     if (m_node.llmq_ctx) {
         m_node.llmq_ctx->Interrupt();
         m_node.llmq_ctx->Stop();
@@ -85,7 +83,6 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
     chainstates.push_back(&c2);
 
     DashChainstateSetup(manager, m_node, /*fReset=*/false, /*fReindexChainState=*/false, consensus_params);
-    DashPostChainstateSetup(m_node);
 
     BOOST_CHECK_EQUAL(manager.SnapshotBlockhash().value(), snapshot_blockhash);
 
@@ -120,7 +117,6 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
     // Let scheduler events finish running to avoid accessing memory that is going to be unloaded
     SyncWithValidationInterfaceQueue();
 
-    DashPostChainstateSetupClose(m_node);
     if (m_node.llmq_ctx) {
         m_node.llmq_ctx->Interrupt();
         m_node.llmq_ctx->Stop();
