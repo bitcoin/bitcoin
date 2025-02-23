@@ -4,11 +4,13 @@
 
 #include <interfaces/coinjoin.h>
 
-#include <coinjoin/context.h>
 #include <coinjoin/client.h>
+#include <coinjoin/context.h>
+#include <coinjoin/options.h>
 #include <node/context.h>
 #include <util/check.h>
 #include <wallet/wallet.h>
+#include <walletinitinterface.h>
 
 #include <univalue.h>
 
@@ -81,15 +83,22 @@ private:
     }
 
 public:
-    explicit CoinJoinLoaderImpl(NodeContext& node) : m_node(node) {}
+    explicit CoinJoinLoaderImpl(NodeContext& node) :
+        m_node(node)
+    {
+        // Enablement will be re-evaluated when a wallet is added or removed
+        CCoinJoinClientOptions::SetEnabled(false);
+    }
 
     void AddWallet(const std::shared_ptr<CWallet>& wallet) override
     {
         walletman().Add(wallet);
+        g_wallet_init_interface.InitCoinJoinSettings(walletman());
     }
     void RemoveWallet(const std::string& name) override
     {
         walletman().Remove(name);
+        g_wallet_init_interface.InitCoinJoinSettings(walletman());
     }
     void FlushWallet(const std::string& name) override
     {
