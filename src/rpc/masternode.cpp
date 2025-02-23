@@ -671,6 +671,20 @@ static RPCHelpMan masternodelist_composite()
     return masternodelist_helper(true);
 }
 
+#ifdef ENABLE_WALLET
+Span<const CRPCCommand> GetWalletMasternodeRPCCommands()
+{
+// clang-format off
+static const CRPCCommand commands[] =
+{ //  category              actor (function)
+  //  --------------------- -----------------------
+    { "dash",               &masternode_outputs,       },
+};
+// clang-format on
+    return commands;
+}
+#endif // ENABLE_WALLET
+
 void RegisterMasternodeRPCCommands(CRPCTable &t)
 {
 // clang-format off
@@ -682,9 +696,6 @@ static const CRPCCommand commands[] =
     { "dash",               &masternodelist,           },
     { "dash",               &masternode_connect,       },
     { "dash",               &masternode_count,         },
-#ifdef ENABLE_WALLET
-    { "dash",               &masternode_outputs,       },
-#endif // ENABLE_WALLET
     { "dash",               &masternode_status,        },
     { "dash",               &masternode_payments,      },
     { "dash",               &masternode_winners,       },

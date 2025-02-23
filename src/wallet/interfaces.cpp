@@ -553,19 +553,10 @@ public:
 
 class WalletLoaderImpl : public WalletLoader
 {
-public:
-    WalletLoaderImpl(Chain& chain, ArgsManager& args, interfaces::CoinJoin::Loader& coinjoin_loader)
+private:
+    void RegisterRPCs(const Span<const CRPCCommand>& commands)
     {
-        m_context.chain = &chain;
-        m_context.args = &args;
-        m_context.coinjoin_loader = &coinjoin_loader;
-    }
-    ~WalletLoaderImpl() override { UnloadWallets(); }
-
-    //! ChainClient methods
-    void registerRpcs() override
-    {
-        for (const CRPCCommand& command : GetWalletRPCCommands()) {
+        for (const CRPCCommand& command : commands) {
             m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
                 JSONRPCRequest wallet_request = request;
                 wallet_request.context = m_context;
@@ -573,6 +564,23 @@ public:
             }, command.argNames, command.unique_id);
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
+    }
+
+public:
+    WalletLoaderImpl(Chain& chain, ArgsManager& args, NodeContext& node_context,
+                     interfaces::CoinJoin::Loader& coinjoin_loader)
+    {
+        m_context.chain = &chain;
+        m_context.args = &args;
+        m_context.node_context = &node_context;
+        m_context.coinjoin_loader = &coinjoin_loader;
+    }
+    ~WalletLoaderImpl() override { UnloadWallets(); }
+
+    //! ChainClient methods
+    void registerRpcs() override
+    {
+        RegisterRPCs(GetWalletRPCCommands());
     }
     bool verify() override { return VerifyWallets(m_context); }
     bool load() override { return LoadWallets(m_context); }
@@ -582,6 +590,10 @@ public:
     void setMockTime(int64_t time) override { return SetMockTime(time); }
 
     //! WalletLoader methods
+    void registerOtherRpcs(const Span<const CRPCCommand>& commands) override
+    {
+        return RegisterRPCs(commands);
+    }
     std::unique_ptr<Wallet> createWallet(const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings) override
     {
         std::shared_ptr<CWallet> wallet;
@@ -640,7 +652,9 @@ public:
 
 namespace interfaces {
 std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return wallet ? std::make_unique<wallet::WalletImpl>(wallet) : nullptr; }
-std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args, interfaces::CoinJoin::Loader& coinjoin_loader) {
-    return std::make_unique<wallet::WalletLoaderImpl>(chain, args, coinjoin_loader);
+std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args, NodeContext& node_context,
+                                               interfaces::CoinJoin::Loader& coinjoin_loader)
+{
+    return std::make_unique<wallet::WalletLoaderImpl>(chain, args, node_context, coinjoin_loader);
 }
 } // namespace interfaces

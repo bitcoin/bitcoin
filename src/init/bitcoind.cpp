@@ -32,7 +32,7 @@ public:
     }
     std::unique_ptr<interfaces::WalletLoader> makeWalletLoader(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader) override
     {
-        return MakeWalletLoader(chain, *Assert(m_node.args), coinjoin_loader);
+        return MakeWalletLoader(chain, *Assert(m_node.args), m_node, coinjoin_loader);
     }
     std::unique_ptr<interfaces::Echo> makeEcho() override { return interfaces::MakeEcho(); }
     NodeContext& m_node;

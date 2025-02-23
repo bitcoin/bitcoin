@@ -91,7 +91,8 @@ std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet)
     throw std::logic_error("Wallet function called in non-wallet build.");
 }
 
-std::unique_ptr<WalletClient> MakeWalletLoader(Chain& chain, ArgsManager& args, interfaces::CoinJoin::Loader& coinjoin_loader)
+std::unique_ptr<WalletClient> MakeWalletLoader(Chain& chain, ArgsManager& args, NodeContext& node_context,
+                                               interfaces::CoinJoin::Loader& coinjoin_loader)
 {
     throw std::logic_error("Wallet function called in non-wallet build.");
 }

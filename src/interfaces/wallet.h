@@ -28,17 +28,21 @@
 class CCoinControl;
 class CFeeRate;
 class CKey;
+class CRPCCommand;
 class CWallet;
 class UniValue;
 enum class FeeReason;
 enum class TransactionError;
 enum isminetype : unsigned int;
-struct bilingual_str;
 struct CRecipient;
+struct NodeContext;
 struct PartiallySignedTransaction;
 struct WalletContext;
 struct bilingual_str;
 using isminefilter = std::underlying_type<isminetype>::type;
+
+template <typename T>
+class Span;
 
 namespace interfaces {
 
@@ -335,8 +339,11 @@ public:
 class WalletLoader : public ChainClient
 {
 public:
-    //! Create new wallet.
-    virtual std::unique_ptr<Wallet> createWallet(const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
+   //! Register non-core wallet RPCs
+   virtual void registerOtherRpcs(const Span<const CRPCCommand>& commands) = 0;
+
+   //! Create new wallet.
+   virtual std::unique_ptr<Wallet> createWallet(const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
 
    //! Load existing wallet.
    virtual std::unique_ptr<Wallet> loadWallet(const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
@@ -450,7 +457,8 @@ std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet);
 
 //! Return implementation of ChainClient interface for a wallet loader. This
 //! function will be undefined in builds where ENABLE_WALLET is false.
-std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args, CoinJoin::Loader& coinjoin_loader);
+std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args, NodeContext& node_context,
+                                               CoinJoin::Loader& coinjoin_loader);
 
 } // namespace interfaces
 

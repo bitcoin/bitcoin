@@ -31,6 +31,7 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <wallet/rpc/util.h>
+#include <walletinitinterface.h>
 
 #ifdef ENABLE_WALLET
 #include <wallet/coincontrol.h>
@@ -1777,17 +1778,15 @@ static RPCHelpMan bls_help()
     };
 }
 
-void RegisterEvoRPCCommands(CRPCTable &tableRPC)
+#ifdef ENABLE_WALLET
+Span<const CRPCCommand> GetWalletEvoRPCCommands()
 {
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              actor (function)
   //  --------------------- -----------------------
-    { "evo",                &bls_help,                         },
-    { "evo",                &bls_generate,                     },
-    { "evo",                &bls_fromsecret,                   },
-    { "evo",                &protx_help,                       },
-#ifdef ENABLE_WALLET
+    { "evo",                &protx_list,                       },
+    { "evo",                &protx_info,                       },
     { "evo",                &protx_register,                   },
     { "evo",                &protx_register_evo,               },
     { "evo",                &protx_register_legacy,            },
@@ -1803,14 +1802,47 @@ static const CRPCCommand commands[] =
     { "evo",                &protx_update_registrar,           },
     { "evo",                &protx_update_registrar_legacy,    },
     { "evo",                &protx_revoke,                     },
-#endif
-    { "evo",                &protx_list,                       },
-    { "evo",                &protx_info,                       },
+};
+// clang-format on
+    return commands;
+}
+#endif // ENABLE_WALLET
+
+void RegisterEvoRPCCommands(CRPCTable& tableRPC)
+{
+// clang-format off
+static const CRPCCommand commands[] =
+{ //  category              actor (function)
+  //  --------------------- -----------------------
+    { "evo",                &bls_help,                         },
+    { "evo",                &bls_generate,                     },
+    { "evo",                &bls_fromsecret,                   },
+    { "evo",                &protx_help,                       },
     { "evo",                &protx_diff,                       },
     { "evo",                &protx_listdiff,                   },
+};
+static const CRPCCommand commands_wallet[] =
+{
+    { "evo",                &protx_list,                       },
+    { "evo",                &protx_info,                       },
 };
 // clang-format on
     for (const auto& command : commands) {
         tableRPC.appendCommand(command.name, &command);
+    }
+    // If we aren't compiling with wallet support, we still need to register RPCs that are
+    // capable of working without wallet support. We have to do this even if wallet support
+    // is compiled in but is disabled at runtime because runtime disablement prohibits
+    // registering wallet RPCs. We still want the reduced functionality RPC to be registered.
+    // TODO: Spin off these hybrid RPCs into dedicated wallet-only and/or wallet-free RPCs
+    //       and get rid of this workaround.
+    if (!g_wallet_init_interface.HasWalletSupport()
+#ifdef ENABLE_WALLET
+        || gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)
+#endif // ENABLE_WALLET
+    ) {
+        for (const auto& command : commands_wallet) {
+            tableRPC.appendCommand(command.name, &command);
+        }
     }
 }

@@ -31,6 +31,7 @@
 #include <index/txindex.h>
 #include <interfaces/init.h>
 #include <interfaces/node.h>
+#include <interfaces/wallet.h>
 #include <mapport.h>
 #include <node/miner.h>
 #include <net.h>
@@ -1516,6 +1517,23 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     for (const auto& client : node.chain_clients) {
         client->registerRpcs();
     }
+#ifdef ENABLE_WALLET
+    // Register non-core wallet-only RPC commands. These are commands that
+    // aren't a part of the wallet library but heavily rely on wallet logic.
+    // TODO: Move them to chain client interfaces so they can be called
+    //       with registerRpcs()
+    if (!args.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
+        for (const auto& commands : {
+            GetWalletCoinJoinRPCCommands(),
+            GetWalletEvoRPCCommands(),
+            GetWalletGovernanceRPCCommands(),
+            GetWalletMasternodeRPCCommands(),
+        }) {
+            node.wallet_loader->registerOtherRpcs(commands);
+        }
+    }
+#endif // ENABLE_WALLET
+
 #if ENABLE_ZMQ
     RegisterZMQRPCCommands(tableRPC);
 #endif

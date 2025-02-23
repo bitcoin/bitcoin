@@ -13,15 +13,29 @@
 #include <util/system.h>
 #include <validation.h>
 
+#ifdef ENABLE_WALLET
+#include <wallet/context.h>
+#endif // ENABLE_WALLET
+
 #include <any>
 
 NodeContext& EnsureAnyNodeContext(const CoreContext& context)
 {
     auto* const node_context = GetContext<NodeContext>(context);
-    if (!node_context) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Node context not found");
+    if (node_context) {
+        return *node_context;
     }
-    return *node_context;
+#ifdef ENABLE_WALLET
+    // We're now going to try our luck with WalletContext on the off chance
+    // we're being called by a wallet RPC that's trying to access NodeContext
+    // See comment on WalletContext::node_context for more information.
+    // TODO: Find a solution that removes the need for this workaround
+    auto* const wallet_context = GetContext<WalletContext>(context);
+    if (wallet_context && wallet_context->node_context) {
+        return *wallet_context->node_context;
+    }
+#endif // ENABLE_WALLET
+    throw JSONRPCError(RPC_INTERNAL_ERROR, "Node context not found");
 }
 
 CTxMemPool& EnsureMemPool(const NodeContext& node)

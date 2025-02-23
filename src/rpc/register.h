@@ -7,7 +7,11 @@
 
 /** These are in one header file to avoid creating tons of single-function
  * headers for everything under src/rpc/ */
+class CRPCCommand;
 class CRPCTable;
+
+template <typename T>
+class Span;
 
 void RegisterBlockchainRPCCommands(CRPCTable &tableRPC);
 void RegisterFeeRPCCommands(CRPCTable&);
@@ -23,6 +27,14 @@ void RegisterCoinJoinRPCCommands(CRPCTable &tableRPC);
 void RegisterGovernanceRPCCommands(CRPCTable &tableRPC);
 void RegisterEvoRPCCommands(CRPCTable &tableRPC);
 void RegisterQuorumsRPCCommands(CRPCTable &tableRPC);
+
+#ifdef ENABLE_WALLET
+// Dash-specific wallet-only RPC commands
+Span<const CRPCCommand> GetWalletCoinJoinRPCCommands();
+Span<const CRPCCommand> GetWalletEvoRPCCommands();
+Span<const CRPCCommand> GetWalletGovernanceRPCCommands();
+Span<const CRPCCommand> GetWalletMasternodeRPCCommands();
+#endif // ENABLE_WALLET
 
 static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
 {
