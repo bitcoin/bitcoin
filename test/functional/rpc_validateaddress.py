@@ -12,7 +12,7 @@ INVALID_DATA = [
     # BIP 173
     (
         "tc1qw508d6qejxtdg4y5r3zarvary0c5xw7kg3g4ty",
-        "Invalid or unsupported prefix for Segwit (Bech32) address (expected bc, got tc)",  # Invalid hrp
+        "Invalid or unsupported prefix for Segwit (Bech32) Bitcoin address (expected bc, got tc)",  # Invalid hrp
         [],
     ),
     ("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t5", "Bech32(m) address decoded with error: Invalid Bech32 checksum", [41]),
@@ -33,7 +33,7 @@ INVALID_DATA = [
     ),
     (
         "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
-        "Invalid Bech32 v0 address program size (16 bytes), per BIP141",
+        "Invalid SegWit v0 address program size (16 bytes), per BIP141",
         [],
     ),
     (
@@ -60,7 +60,7 @@ INVALID_DATA = [
     # BIP 350
     (
         "tc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq5zuyut",
-        "Invalid or unsupported prefix for Segwit (Bech32) address (expected bc, got tc)",  # Invalid human-readable part
+        "Invalid or unsupported prefix for Segwit (Bech32) Bitcoin address (expected bc, got tc)",  # Invalid human-readable part
         [],
     ),
     (
@@ -96,7 +96,7 @@ INVALID_DATA = [
     ),
     (
         "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
-        "Invalid Bech32 v0 address program size (16 bytes), per BIP141",
+        "Invalid SegWit v0 address program size (16 bytes), per BIP141",
         [],
     ),
     (

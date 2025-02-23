@@ -64,12 +64,12 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
 
     def test_validateaddress(self):
         # Invalid Bech32
-        self.check_invalid(BECH32_INVALID_SIZE, "Invalid Bech32 address program size (41 bytes)")
-        self.check_invalid(BECH32_INVALID_PREFIX, 'Invalid or unsupported prefix for Segwit (Bech32) address (expected bcrt, got bc)')
+        self.check_invalid(BECH32_INVALID_SIZE, 'Invalid Bech32 address program size (41 bytes)')
+        self.check_invalid(BECH32_INVALID_PREFIX, 'Invalid or unsupported prefix for Segwit (Bech32) regtest address (expected bcrt, got bc)')
         self.check_invalid(BECH32_INVALID_BECH32, 'Version 1+ witness address must use Bech32m checksum')
         self.check_invalid(BECH32_INVALID_BECH32M, 'Version 0 witness address must use Bech32 checksum')
         self.check_invalid(BECH32_INVALID_VERSION, 'Invalid Bech32 address witness version')
-        self.check_invalid(BECH32_INVALID_V0_SIZE, "Invalid Bech32 v0 address program size (21 bytes), per BIP141")
+        self.check_invalid(BECH32_INVALID_V0_SIZE, 'Invalid SegWit v0 address program size (21 bytes), per BIP141')
         self.check_invalid(BECH32_TOO_LONG, 'Bech32(m) address decoded with error: Bech32 string too long', list(range(90, 108)))
         self.check_invalid(BECH32_ONE_ERROR, 'Bech32(m) address decoded with error: Invalid Bech32 checksum', [9])
         self.check_invalid(BECH32_TWO_ERRORS, 'Bech32(m) address decoded with error: Invalid Bech32 checksum', [22, 43])
@@ -107,10 +107,10 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
     def test_getaddressinfo(self):
         node = self.nodes[0]
 
-        assert_raises_rpc_error(-5, "Invalid Bech32 address program size (41 bytes)", node.getaddressinfo, BECH32_INVALID_SIZE)
-        assert_raises_rpc_error(-5, "Invalid or unsupported prefix for Segwit (Bech32) address (expected bcrt, got bc)", node.getaddressinfo, BECH32_INVALID_PREFIX)
-        assert_raises_rpc_error(-5, "Invalid Base58 regtest address. Expected prefix 2, m, or n", node.getaddressinfo, BASE58_INVALID_PREFIX)
-        assert_raises_rpc_error(-5, "Bech32(m) address decoded with error: Invalid separator position", node.getaddressinfo, INVALID_ADDRESS)
+        assert_raises_rpc_error(-5, 'Invalid Bech32 address program size (41 bytes)', node.getaddressinfo, BECH32_INVALID_SIZE)
+        assert_raises_rpc_error(-5, 'Invalid or unsupported prefix for Segwit (Bech32) regtest address (expected bcrt, got bc)', node.getaddressinfo, BECH32_INVALID_PREFIX)
+        assert_raises_rpc_error(-5, 'Invalid Base58 regtest address. Expected prefix 2, m, or n', node.getaddressinfo, BASE58_INVALID_PREFIX)
+        assert_raises_rpc_error(-5, 'Bech32(m) address decoded with error: Invalid separator position', node.getaddressinfo, INVALID_ADDRESS)
         assert "isscript" not in node.getaddressinfo(BECH32_VALID_UNKNOWN_WITNESS)
 
     def run_test(self):
