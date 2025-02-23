@@ -31,12 +31,12 @@ bool LoadWallets(WalletContext& context);
 void StartWallets(WalletContext& context, CScheduler& scheduler);
 
 //! Flush all wallets in preparation for shutdown.
-void FlushWallets();
+void FlushWallets(WalletContext& context);
 
 //! Stop all wallets. Wallets will be flushed first.
-void StopWallets();
+void StopWallets(WalletContext& context);
 
 //! Close all wallets.
-void UnloadWallets();
+void UnloadWallets(WalletContext& context);
 
 #endif // BITCOIN_WALLET_LOAD_H

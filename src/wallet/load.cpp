@@ -125,7 +125,7 @@ bool LoadWallets(WalletContext& context)
                 chain.initError(error_string);
                 return false;
             }
-            AddWallet(pwallet);
+            AddWallet(context, pwallet);
         }
         return true;
     } catch (const std::runtime_error& e) {
@@ -136,20 +136,20 @@ bool LoadWallets(WalletContext& context)
 
 void StartWallets(WalletContext& context, CScheduler& scheduler)
 {
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
         pwallet->postInitProcess();
     }
 
     // Schedule periodic wallet flushes and tx rebroadcasts
     if (context.args->GetBoolArg("-flushwallet", DEFAULT_FLUSHWALLET)) {
-        scheduler.scheduleEvery(MaybeCompactWalletDB, std::chrono::milliseconds{500});
+        scheduler.scheduleEvery([&context] { MaybeCompactWalletDB(context); }, std::chrono::milliseconds{500});
     }
-    scheduler.scheduleEvery(MaybeResendWalletTxs, std::chrono::milliseconds{1000});
+    scheduler.scheduleEvery([&context] { MaybeResendWalletTxs(context); }, std::chrono::milliseconds{1000});
 }
 
-void FlushWallets()
+void FlushWallets(WalletContext& context)
 {
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
         if (CCoinJoinClientOptions::IsEnabled()) {
             // Stop CoinJoin, release keys
             pwallet->coinjoin_loader().FlushWallet(pwallet->GetName());
@@ -158,21 +158,21 @@ void FlushWallets()
     }
 }
 
-void StopWallets()
+void StopWallets(WalletContext& context)
 {
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
         pwallet->Close();
     }
 }
 
-void UnloadWallets()
+void UnloadWallets(WalletContext& context)
 {
-    auto wallets = GetWallets();
+    auto wallets = GetWallets(context);
     while (!wallets.empty()) {
         auto wallet = wallets.back();
         wallets.pop_back();
         std::vector<bilingual_str> warnings;
-        RemoveWallet(wallet, std::nullopt, warnings);
+        RemoveWallet(context, wallet, /*load_on_start=*/std::nullopt, warnings);
         UnloadWallet(std::move(wallet));
     }
 }

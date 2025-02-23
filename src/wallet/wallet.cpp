@@ -64,10 +64,6 @@ const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS{
     },
 };
 
-RecursiveMutex cs_wallets;
-static std::vector<std::shared_ptr<CWallet>> vpwallets GUARDED_BY(cs_wallets);
-static std::list<LoadWalletFn> g_load_wallet_fns GUARDED_BY(cs_wallets);
-
 bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name)
 {
     util::SettingsValue setting_value = chain.getRwSetting("wallet");
@@ -114,14 +110,14 @@ static void RefreshMempoolStatus(CWalletTx& tx, interfaces::Chain& chain)
     tx.fInMempool = chain.isInMempool(tx.GetHash());
 }
 
-bool AddWallet(const std::shared_ptr<CWallet>& wallet)
+bool AddWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet)
 {
     {
-        LOCK(cs_wallets);
+        LOCK(context.wallets_mutex);
         assert(wallet);
-        std::vector<std::shared_ptr<CWallet>>::const_iterator i = std::find(vpwallets.begin(), vpwallets.end(), wallet);
-        if (i != vpwallets.end()) return false;
-        vpwallets.push_back(wallet);
+        std::vector<std::shared_ptr<CWallet>>::const_iterator i = std::find(context.wallets.begin(), context.wallets.end(), wallet);
+        if (i != context.wallets.end()) return false;
+        context.wallets.push_back(wallet);
     }
     wallet->ConnectScriptPubKeyManNotifiers();
     wallet->AutoLockMasternodeCollaterals();
@@ -130,7 +126,7 @@ bool AddWallet(const std::shared_ptr<CWallet>& wallet)
     return true;
 }
 
-bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, std::optional<bool> load_on_start, std::vector<bilingual_str>& warnings)
+bool RemoveWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet, std::optional<bool> load_on_start, std::vector<bilingual_str>& warnings)
 {
     assert(wallet);
 
@@ -140,10 +136,10 @@ bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, std::optional<bool> lo
     // Unregister with the validation interface which also drops shared pointers.
     wallet->m_chain_notifications_handler.reset();
     {
-        LOCK(cs_wallets);
-        std::vector<std::shared_ptr<CWallet>>::iterator i = std::find(vpwallets.begin(), vpwallets.end(), wallet);
-        if (i == vpwallets.end()) return false;
-        vpwallets.erase(i);
+        LOCK(context.wallets_mutex);
+        std::vector<std::shared_ptr<CWallet>>::iterator i = std::find(context.wallets.begin(), context.wallets.end(), wallet);
+        if (i == context.wallets.end()) return false;
+        context.wallets.erase(i);
     }
 
     wallet->coinjoin_loader().RemoveWallet(name);
@@ -154,32 +150,32 @@ bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, std::optional<bool> lo
     return true;
 }
 
-bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, std::optional<bool> load_on_start)
+bool RemoveWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet, std::optional<bool> load_on_start)
 {
     std::vector<bilingual_str> warnings;
-    return RemoveWallet(wallet, load_on_start, warnings);
+    return RemoveWallet(context, wallet, load_on_start, warnings);
 }
 
-std::vector<std::shared_ptr<CWallet>> GetWallets()
+std::vector<std::shared_ptr<CWallet>> GetWallets(WalletContext& context)
 {
-    LOCK(cs_wallets);
-    return vpwallets;
+    LOCK(context.wallets_mutex);
+    return context.wallets;
 }
 
-std::shared_ptr<CWallet> GetWallet(const std::string& name)
+std::shared_ptr<CWallet> GetWallet(WalletContext& context, const std::string& name)
 {
-    LOCK(cs_wallets);
-    for (const std::shared_ptr<CWallet>& wallet : vpwallets) {
+    LOCK(context.wallets_mutex);
+    for (const std::shared_ptr<CWallet>& wallet : context.wallets) {
         if (wallet->GetName() == name) return wallet;
     }
     return nullptr;
 }
 
-std::unique_ptr<interfaces::Handler> HandleLoadWallet(LoadWalletFn load_wallet)
+std::unique_ptr<interfaces::Handler> HandleLoadWallet(WalletContext& context, LoadWalletFn load_wallet)
 {
-    LOCK(cs_wallets);
-    auto it = g_load_wallet_fns.emplace(g_load_wallet_fns.end(), std::move(load_wallet));
-    return interfaces::MakeHandler([it] { LOCK(cs_wallets); g_load_wallet_fns.erase(it); });
+    LOCK(context.wallets_mutex);
+    auto it = context.wallet_load_fns.emplace(context.wallet_load_fns.end(), std::move(load_wallet));
+    return interfaces::MakeHandler([&context, it] { LOCK(context.wallets_mutex); context.wallet_load_fns.erase(it); });
 }
 
 static Mutex g_loading_wallet_mutex;
@@ -247,7 +243,7 @@ std::shared_ptr<CWallet> LoadWalletInternal(WalletContext& context, const std::s
             status = DatabaseStatus::FAILED_LOAD;
             return nullptr;
         }
-        AddWallet(wallet);
+        AddWallet(context, wallet);
         wallet->postInitProcess();
 
         // Write the wallet setting
@@ -359,7 +355,7 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
             wallet->Lock();
         }
     }
-    AddWallet(wallet);
+    AddWallet(context, wallet);
     wallet->postInitProcess();
 
     // Write the wallet settings
@@ -2130,9 +2126,9 @@ void CWallet::ResendWalletTransactions()
 
 /** @} */ // end of mapWallet
 
-void MaybeResendWalletTxs()
+void MaybeResendWalletTxs(WalletContext& context)
 {
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
         pwallet->ResendWalletTransactions();
     }
 }
@@ -3520,9 +3516,9 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
     }
 
     {
-        LOCK(cs_wallets);
-        for (auto& load_wallet : g_load_wallet_fns) {
-            load_wallet(interfaces::MakeWallet(walletInstance));
+        LOCK(context.wallets_mutex);
+        for (auto& load_wallet : context.wallet_load_fns) {
+            load_wallet(interfaces::MakeWallet(context, walletInstance));
         }
     }
 

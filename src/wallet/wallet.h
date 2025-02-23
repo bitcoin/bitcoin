@@ -60,15 +60,15 @@ using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wall
 //  by the shared pointer deleter.
 void UnloadWallet(std::shared_ptr<CWallet>&& wallet);
 
-bool AddWallet(const std::shared_ptr<CWallet>& wallet);
-bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, std::optional<bool> load_on_start, std::vector<bilingual_str>& warnings);
-bool RemoveWallet(const std::shared_ptr<CWallet>& wallet, std::optional<bool> load_on_start);
-std::vector<std::shared_ptr<CWallet>> GetWallets();
-std::shared_ptr<CWallet> GetWallet(const std::string& name);
+bool AddWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet);
+bool RemoveWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet, std::optional<bool> load_on_start, std::vector<bilingual_str>& warnings);
+bool RemoveWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet, std::optional<bool> load_on_start);
+std::vector<std::shared_ptr<CWallet>> GetWallets(WalletContext& context);
+std::shared_ptr<CWallet> GetWallet(WalletContext& context, const std::string& name);
 std::shared_ptr<CWallet> LoadWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings);
 std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings);
 std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings);
-std::unique_ptr<interfaces::Handler> HandleLoadWallet(LoadWalletFn load_wallet);
+std::unique_ptr<interfaces::Handler> HandleLoadWallet(WalletContext& context, LoadWalletFn load_wallet);
 std::unique_ptr<WalletDatabase> MakeWalletDatabase(const std::string& name, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
 
 //! -paytxfee default
@@ -1081,7 +1081,7 @@ public:
  * Called periodically by the schedule thread. Prompts individual wallets to resend
  * their transactions. Actual rebroadcast schedule is managed by the wallets themselves.
  */
-void MaybeResendWalletTxs();
+void MaybeResendWalletTxs(WalletContext& context);
 
 /** RAII object to check and reserve a wallet rescan */
 class WalletRescanReserver
