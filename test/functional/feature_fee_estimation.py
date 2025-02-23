@@ -156,6 +156,9 @@ def check_fee_estimates_btw_modes(node, expected_conservative, expected_economic
     assert_equal(fee_est_conservative, expected_conservative)
     assert_equal(fee_est_economical, expected_economical)
     assert_equal(fee_est_default, expected_economical)
+    assert_equal(fee_est_conservative, rest_getfee(node.url, 'conservative', 1)['feerate'])
+    assert_equal(fee_est_economical, rest_getfee(node.url, 'economical', 1)['feerate'])
+    assert_equal(fee_est_default, rest_getfee(node.url, 'unset', 1)['feerate'])
 
 
 class EstimateFeeTest(BitcoinTestFramework):
@@ -164,7 +167,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         # whitelist peers to speed up tx relay / mempool sync
         self.noban_tx_relay = True
         self.extra_args = [
-            [],
+            ['-rest'],
             ["-blockmaxweight=68000", "-rest"],
             ["-blockmaxweight=32000"],
         ]
