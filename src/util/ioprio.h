@@ -54,7 +54,7 @@ public:
 #define IOPRIO_IDLER(lowprio)  (void)lowprio;
 #endif
 
-#ifdef HAVE_WINDOWS_IOPRIO
+#if HAVE_WINDOWS_IOPRIO
 bool ioprio_set_file_idle(FILE *);
 #else
 #define ioprio_set_file_idle(f)  ((void)false)

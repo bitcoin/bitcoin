@@ -57,7 +57,7 @@ int ioprio_set_idle() {
 #endif
 
 
-#ifdef HAVE_WINDOWS_IOPRIO
+#if HAVE_WINDOWS_IOPRIO
 
 #ifdef _WIN32_WINNT
 #undef _WIN32_WINNT

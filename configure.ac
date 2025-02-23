@@ -1000,13 +1000,13 @@ AC_COMPILE_IFELSE([
     SetFileInformationByHandle(hFile, FileIoPriorityHintInfo, &priorityHint, sizeof(priorityHint));
   ]])
 ],[
-  have_windows_ioprio=yes
-  AC_DEFINE(HAVE_WINDOWS_IOPRIO,1,[Define this symbol if you have Windows I/O priority functions])
+  AC_MSG_RESULT([yes])
+  HAVE_WINDOWS_IOPRIO=1
 ],[
-  have_windows_ioprio=no
+  AC_MSG_RESULT([no])
+  HAVE_WINDOWS_IOPRIO=0
 ])
-AC_MSG_RESULT($have_windows_ioprio)
-AM_CONDITIONAL([HAVE_WINDOWS_IOPRIO], [test "$have_windows_ioprio" = "yes"])
+AC_DEFINE_UNQUOTED([HAVE_WINDOWS_IOPRIO], [$HAVE_WINDOWS_IOPRIO], [Define to 1 if Windows file IO functions are usable.])
 
 dnl Check for different ways of gathering OS randomness
 AC_MSG_CHECKING([for Linux getrandom function])
