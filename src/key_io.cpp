@@ -83,14 +83,22 @@ public:
 
 CTxDestination DecodeDestination(const std::string& str, const CChainParams& params, std::string& error_str, std::vector<int>* error_locations)
 {
-    std::vector<unsigned char> data;
-    uint160 hash;
     error_str = "";
 
-    // Note this will be false if it is a valid Bech32 address for a different network
-    bool is_bech32 = (ToLower(str.substr(0, params.Bech32HRP().size())) == params.Bech32HRP());
+    static const uint8_t MAX_BASE58_CHARS = 100;
+    static const uint8_t MAX_BASE58_CHECK_CHARS = 21;
 
-    if (!is_bech32 && DecodeBase58Check(str, data, 21)) {
+    std::vector<unsigned char> data, bech32_data;
+
+    auto [bech32_encoding, bech32_hrp, bech32_chars] = bech32::Decode(str);
+    auto [bech32_error, bech32_error_loc] = bech32::LocateErrors(str);
+    bool is_bech32 = bech32_encoding != bech32::Encoding::INVALID;
+
+    auto check_base58 = [&]() { return DecodeBase58Check(str, data, MAX_BASE58_CHECK_CHARS); };
+    
+
+    if (!is_bech32 && check_base58()) {
+        uint160 hash;
         // base58-encoded Bitcoin addresses.
         // Public-key-hash-addresses have version 0 (or 111 testnet).
         // The data vector contains RIPEMD160(SHA256(pubkey)), where pubkey is the serialized public key.
@@ -114,16 +122,41 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
                 std::equal(pubkey_prefix.begin(), pubkey_prefix.end(), data.begin()))) {
             error_str = "Invalid length for Base58 address (P2PKH or P2SH)";
         } else {
-            error_str = "Invalid or unsupported Base58-encoded address.";
+            std::vector<std::string_view> encoded_prefixes;
+            const std::vector<std::string_view>& pubkey_prefixes = params.Base58EncodedPrefix(CChainParams::PUBKEY_ADDRESS);
+            const std::vector<std::string_view>& script_prefixes = params.Base58EncodedPrefix(CChainParams::SCRIPT_ADDRESS);   
+            encoded_prefixes.insert(encoded_prefixes.end(), script_prefixes.begin(), script_prefixes.end());
+            encoded_prefixes.insert(encoded_prefixes.end(), pubkey_prefixes.begin(), pubkey_prefixes.end());
+
+            std::string base58_address_prefixes;
+            for (size_t i = 0; i < encoded_prefixes.size(); ++i) {
+                if (i > 0) {
+                    base58_address_prefixes += (i == encoded_prefixes.size() - 1) ? ", or " : ", ";
+                }
+                base58_address_prefixes += std::string(encoded_prefixes[i]);
+            }
+            error_str = strprintf("Invalid Base58 %s address. Expected prefix %s", params.GetChainTypeDisplayString(), base58_address_prefixes);
         }
         return CNoDestination();
     } else if (!is_bech32) {
+        bool is_base58 = DecodeBase58(str, data, MAX_BASE58_CHARS);
         // Try Base58 decoding without the checksum, using a much larger max length
-        if (!DecodeBase58(str, data, 100)) {
-            error_str = "Invalid or unsupported Segwit (Bech32) or Base58 encoding.";
+        if (!is_base58) {
+            // If bech32 decoding failed due to invalid base32 chars, address format is ambiguous; otherwise, report bech32 error
+            bool is_validBech32Chars = (bech32_error != "Invalid Base 32 character");
+            error_str = is_validBech32Chars ? "Bech32(m) address decoded with error: " + bech32_error : "Address is not valid Base58 or Bech32";
         } else {
+            if (bech32_error == "Invalid character or mixed case") {
+                error_str = "Invalid checksum or length of Base58 address (P2PKH or P2SH)";
+            }
+            // This covers the case where an address is encoded as valid base58 and invalid bech32(m) due to a non base32 error
             error_str = "Invalid checksum or length of Base58 address (P2PKH or P2SH)";
         }
+
+        if (error_locations) {
+            *error_locations = std::move(bech32_error_loc);
+        }
+
         return CNoDestination();
     }
 
@@ -136,7 +169,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
         }
         // Bech32 decoding
         if (dec.hrp != params.Bech32HRP()) {
-            error_str = strprintf("Invalid or unsupported prefix for Segwit (Bech32) address (expected %s, got %s).", params.Bech32HRP(), dec.hrp);
+            error_str = strprintf("Invalid or unsupported prefix for Segwit (Bech32) address (expected %s, got %s)", params.Bech32HRP(), dec.hrp);
             return CNoDestination();
         }
         int version = dec.data[0]; // The first 5 bit symbol is the witness version (0-16)
