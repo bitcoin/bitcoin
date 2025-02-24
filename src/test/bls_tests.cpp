@@ -473,43 +473,36 @@ BOOST_AUTO_TEST_CASE(bls_threshold_signature_tests)
 }
 
 // A dummy BLS object that satisfies the minimal interface expected by CBLSLazyWrapper.
-class DummyBLS {
+class DummyBLS
+{
 public:
     // Define a fixed serialization size (for testing purposes).
     static const size_t SerSize = 4;
     std::array<uint8_t, SerSize> data{};
 
-    DummyBLS() {
-        data.fill(0);
-    }
+    DummyBLS() { data.fill(0); }
 
     // A dummy validity check: valid if any byte is non-zero.
-    bool IsValid() const {
-        return std::any_of(data.begin(), data.end(), [](uint8_t c){ return c != 0; });
+    bool IsValid() const
+    {
+        return std::any_of(data.begin(), data.end(), [](uint8_t c) { return c != 0; });
     }
 
     // Convert to bytes; ignore the legacy flag for simplicity.
-    std::array<uint8_t, SerSize> ToBytes(bool /*legacy*/) const {
-        return data;
-    }
+    std::array<uint8_t, SerSize> ToBytes(bool /*legacy*/) const { return data; }
 
     // Set from bytes; again, ignore the legacy flag.
-    void SetBytes(const std::array<uint8_t, SerSize>& bytes, bool /*legacy*/) {
-        data = bytes;
-    }
+    void SetBytes(const std::array<uint8_t, SerSize>& bytes, bool /*legacy*/) { data = bytes; }
 
     // A dummy malleability check: simply compares the stored data to the given bytes.
-    bool CheckMalleable(const std::array<uint8_t, SerSize>& bytes, bool /*legacy*/) const {
-        return data == bytes;
-    }
+    bool CheckMalleable(const std::array<uint8_t, SerSize>& bytes, bool /*legacy*/) const { return data == bytes; }
 
     // Reset the object to an "empty" state.
-    void Reset() {
-        data.fill(0);
-    }
+    void Reset() { data.fill(0); }
 
     // Produce a string representation.
-    std::string ToString(bool /*legacy*/) const {
+    std::string ToString(bool /*legacy*/) const
+    {
         std::ostringstream oss;
         for (auto b : data) {
             oss << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(b);
@@ -518,9 +511,7 @@ public:
     }
 
     // Equality operator.
-    bool operator==(const DummyBLS& other) const {
-        return data == other.data;
-    }
+    bool operator==(const DummyBLS& other) const { return data == other.data; }
 };
 
 // Define a type alias for our lazy wrapper instantiated with DummyBLS.
@@ -541,7 +532,7 @@ BOOST_AUTO_TEST_CASE(test_non_default_vs_default)
     LazyDummyBLS lazy_default;
     LazyDummyBLS lazy_set;
     DummyBLS obj;
-    obj.data = {1, 2, 3, 4};  // nonzero data makes the object valid
+    obj.data = {1, 2, 3, 4}; // nonzero data makes the object valid
     lazy_set.Set(obj, false);
     BOOST_CHECK(!(lazy_default == lazy_set));
     BOOST_CHECK(lazy_default != lazy_set);
@@ -553,9 +544,9 @@ BOOST_AUTO_TEST_CASE(test_non_default_vs_different)
     LazyDummyBLS lazy_a;
     LazyDummyBLS lazy_b;
     DummyBLS obj;
-    obj.data = {1, 2, 3, 4};  // nonzero data makes the object valid
+    obj.data = {1, 2, 3, 4}; // nonzero data makes the object valid
     lazy_a.Set(obj, false);
-    obj.data = {4, 3, 2, 1};  // nonzero data makes the object valid
+    obj.data = {2, 2, 3, 4}; // nonzero data makes the object valid
     lazy_b.Set(obj, false);
     BOOST_CHECK(lazy_a != lazy_b);
 }
