@@ -39,6 +39,7 @@ DIST_CONTRIB = \
 	       $(top_srcdir)/test/sanitizer_suppressions/lsan \
 	       $(top_srcdir)/test/sanitizer_suppressions/tsan \
 	       $(top_srcdir)/test/sanitizer_suppressions/ubsan \
+	       $(top_srcdir)/contrib/completions \
 	       $(top_srcdir)/contrib/linearize/linearize-data.py \
 	       $(top_srcdir)/contrib/linearize/linearize-hashes.py \
 	       $(top_srcdir)/contrib/signet/miner
