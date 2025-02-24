@@ -8,6 +8,7 @@
 #include <random.h>
 #include <streams.h>
 #include <util/irange.h>
+#include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -501,14 +502,7 @@ public:
     void Reset() { data.fill(0); }
 
     // Produce a string representation.
-    std::string ToString(bool /*legacy*/) const
-    {
-        std::ostringstream oss;
-        for (auto b : data) {
-            oss << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(b);
-        }
-        return oss.str();
-    }
+    std::string ToString(bool /*legacy*/) const { return HexStr(data); }
 
     // Equality operator.
     bool operator==(const DummyBLS& other) const { return data == other.data; }
@@ -532,7 +526,7 @@ BOOST_AUTO_TEST_CASE(test_non_default_vs_default)
     LazyDummyBLS lazy_default;
     LazyDummyBLS lazy_set;
     DummyBLS obj;
-    obj.data = {1, 2, 3, 4}; // nonzero data makes the object valid
+    obj.data = {1, 0, 0, 0}; // nonzero data makes the object valid
     lazy_set.Set(obj, false);
     BOOST_CHECK(!(lazy_default == lazy_set));
     BOOST_CHECK(lazy_default != lazy_set);
