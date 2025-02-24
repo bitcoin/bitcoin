@@ -28,16 +28,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
+          fetch-depth: 50
 
       - name: Initial setup
         id: setup
         run: |
-          git config --global --add advice.detachedHead false
           git config --global --add safe.directory "$PWD"
-          GIT_HEAD="$(git rev-parse HEAD)"
-          git checkout develop
-          git checkout "${GIT_HEAD}"
+          git fetch -fu origin develop:develop
           BUILD_TARGET="${{ inputs.build-target }}"
           source ./ci/dash/matrix.sh
           echo "HOST=${HOST}" >> $GITHUB_OUTPUT
@@ -71,7 +68,7 @@ jobs:
           restore-keys: |
             ccache-${{ hashFiles('contrib/containers/ci/Dockerfile', 'depends/packages/*') }}-${{ inputs.build-target }}-
 
-      - name: Build source and run unit tests
+      - name: Build source
         run: |
           CCACHE_SIZE="400M"
           CACHE_DIR="/cache"
@@ -80,6 +77,15 @@ jobs:
           BUILD_TARGET="${{ inputs.build-target }}"
           source ./ci/dash/matrix.sh
           ./ci/dash/build_src.sh
+          ccache -X 9
+          ccache -c
+        shell: bash
+
+      - name: Run unit tests
+        run: |
+          BASE_OUTDIR="/output"
+          BUILD_TARGET="${{ inputs.build-target }}"
+          source ./ci/dash/matrix.sh
           ./ci/dash/test_unittests.sh
         shell: bash
 
