@@ -14,6 +14,7 @@ class Chain;
 class Handler;
 class Wallet;
 class WalletClient;
+class WalletLoader;
 namespace CoinJoin {
 class Loader;
 } // namespcae CoinJoin
@@ -28,8 +29,8 @@ public:
     void Construct(NodeContext& node) const override {LogPrintf("No wallet support compiled in!\n");}
 
     // Dash Specific WalletInitInterface InitCoinJoinSettings
-    void AutoLockMasternodeCollaterals() const override {}
-    void InitCoinJoinSettings(interfaces::CoinJoin::Loader& coinjoin_loader) const override {}
+    void AutoLockMasternodeCollaterals(interfaces::WalletLoader& wallet_loader) const override {}
+    void InitCoinJoinSettings(interfaces::CoinJoin::Loader& coinjoin_loader, interfaces::WalletLoader& wallet_loader) const override {}
     bool InitAutoBackup() const override {return true;}
 };
 

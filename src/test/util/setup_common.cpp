@@ -63,6 +63,7 @@
 
 #ifdef ENABLE_WALLET
 #include <interfaces/coinjoin.h>
+#include <interfaces/wallet.h>
 #endif // ENABLE_WALLET
 
 #include <stdexcept>
@@ -315,8 +316,16 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     m_node.cj_ctx = std::make_unique<CJContext>(*m_node.chainman, *m_node.connman, *m_node.dmnman, *m_node.mn_metaman, *m_node.mempool,
                                                 /*mn_activeman=*/nullptr, *m_node.mn_sync, *m_node.llmq_ctx->isman, m_node.peerman,
                                                 /*relay_txes=*/true);
+
 #ifdef ENABLE_WALLET
+    // WalletInit::Construct()-like logic needed for wallet tests that run on
+    // TestingSetup and its children (e.g. TestChain100Setup) instead of
+    // WalletTestingSetup
     m_node.coinjoin_loader = interfaces::MakeCoinJoinLoader(m_node);
+
+    auto wallet_loader = interfaces::MakeWalletLoader(*m_node.chain, *m_node.args, *m_node.coinjoin_loader);
+    m_node.wallet_loader = wallet_loader.get();
+    m_node.chain_clients.emplace_back(std::move(wallet_loader));
 #endif // ENABLE_WALLET
 
     BlockValidationState state;
@@ -328,6 +337,11 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 TestingSetup::~TestingSetup()
 {
 #ifdef ENABLE_WALLET
+    for (auto& client : m_node.chain_clients) {
+        client.reset();
+    }
+    m_node.wallet_loader = nullptr;
+
     m_node.coinjoin_loader.reset();
 #endif // ENABLE_WALLET
     m_node.cj_ctx.reset();

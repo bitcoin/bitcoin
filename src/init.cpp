@@ -2202,6 +2202,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     chainman.m_load_block = std::thread(&util::TraceThread, "loadblk", [=, &args, &chainman, &node] {
         ThreadImport(chainman, *node.dmnman, *g_ds_notification_interface, vImportFiles, node.mn_activeman.get(), args);
     });
+#ifdef ENABLE_WALLET
+    if (!args.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
+        g_wallet_init_interface.AutoLockMasternodeCollaterals(*node.wallet_loader);
+    }
+#endif // ENABLE_WALLET
 
     // Wait for genesis block to be processed
     {

@@ -8,6 +8,7 @@
 class ArgsManager;
 struct NodeContext;
 namespace interfaces {
+class WalletLoader;
 namespace CoinJoin {
 class Loader;
 } // namespace CoinJoin
@@ -25,8 +26,8 @@ public:
     virtual void Construct(NodeContext& node) const = 0;
 
     // Dash Specific WalletInitInterface
-    virtual void AutoLockMasternodeCollaterals() const = 0;
-    virtual void InitCoinJoinSettings(interfaces::CoinJoin::Loader& coinjoin_loader) const = 0;
+    virtual void AutoLockMasternodeCollaterals(interfaces::WalletLoader& wallet_loader) const = 0;
+    virtual void InitCoinJoinSettings(interfaces::CoinJoin::Loader& coinjoin_loader, interfaces::WalletLoader& wallet_loader) const = 0;
     virtual bool InitAutoBackup() const = 0;
 
     virtual ~WalletInitInterface() {}

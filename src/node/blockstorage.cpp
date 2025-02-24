@@ -926,7 +926,5 @@ void ThreadImport(ChainstateManager& chainman, CDeterministicMNManager& dmnman, 
         mn_activeman->Init(chainman.ActiveTip());
     }
 
-    g_wallet_init_interface.AutoLockMasternodeCollaterals();
-
     chainman.ActiveChainstate().LoadMempool(args);
 }
