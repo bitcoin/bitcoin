@@ -327,7 +327,7 @@ public:
     bool IsMixing() const;
     void ResetPool() EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);
 
-    bilingual_str GetStatuses() EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);
+    std::vector<std::string> GetStatuses() const EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);
     std::string GetSessionDenoms() EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);
 
     bool GetMixingMasternodesInfo(std::vector<CDeterministicMNCPtr>& vecDmnsRet) const EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);

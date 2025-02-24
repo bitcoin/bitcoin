@@ -350,17 +350,18 @@ bilingual_str CCoinJoinClientSession::GetStatus(bool fWaitForBlock) const
     }
 }
 
-bilingual_str CCoinJoinClientManager::GetStatuses()
+std::vector<std::string> CCoinJoinClientManager::GetStatuses() const
 {
-    bilingual_str strStatus;
-    bool fWaitForBlock = WaitForAnotherBlock();
-
     AssertLockNotHeld(cs_deqsessions);
+
+    bool fWaitForBlock{WaitForAnotherBlock()};
+    std::vector<std::string> ret;
+
     LOCK(cs_deqsessions);
     for (const auto& session : deqSessions) {
-        strStatus = strStatus + session.GetStatus(fWaitForBlock) + Untranslated("; ");
+        ret.push_back(session.GetStatus(fWaitForBlock).original);
     }
-    return strStatus;
+    return ret;
 }
 
 std::string CCoinJoinClientManager::GetSessionDenoms()

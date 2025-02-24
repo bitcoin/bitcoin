@@ -45,6 +45,7 @@ static RPCHelpMan coinjoin()
     return RPCHelpMan{"coinjoin",
         "\nAvailable commands:\n"
         "  start       - Start mixing\n"
+        "  status      - Get mixing status\n"
         "  stop        - Stop mixing\n"
         "  reset       - Reset mixing",
         {
@@ -129,11 +130,46 @@ static RPCHelpMan coinjoin_start()
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Mixing has been started already.");
     }
 
-    ChainstateManager& chainman = EnsureChainman(node);
-    CTxMemPool& mempool = EnsureMemPool(node);
-    CConnman& connman = EnsureConnman(node);
-    bool result = cj_clientman->DoAutomaticDenominating(chainman, connman, mempool);
-    return "Mixing " + (result ? "started successfully" : ("start failed: " + cj_clientman->GetStatuses().original + ", will retry"));
+    return "Mixing requested";
+},
+    };
+}
+
+static RPCHelpMan coinjoin_status()
+{
+    return RPCHelpMan{"coinjoin status",
+        "\nGet status on CoinJoin mixing sessions\n",
+        {},
+        RPCResult{
+            RPCResult::Type::ARR, "", "",
+            {{RPCResult::Type::STR, "", "Status of mixing session"}}},
+        RPCExamples{
+            HelpExampleCli("coinjoin status", "")
+          + HelpExampleRpc("coinjoin status", "")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+
+    if (node.mn_activeman) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
+    }
+
+    ValidateCoinJoinArguments();
+
+    auto cj_clientman = CHECK_NONFATAL(node.coinjoin_loader)->walletman().Get(wallet->GetName());
+    if (!CHECK_NONFATAL(cj_clientman)->IsMixing()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "No ongoing mix session");
+    }
+
+    UniValue ret(UniValue::VARR);
+    for (auto str_status : cj_clientman->GetStatuses()) {
+        ret.push_back(str_status);
+    }
+    return ret;
 },
     };
 }
@@ -460,6 +496,7 @@ static const CRPCCommand commands[] =
     { "dash",                &coinjoin,               },
     { "dash",                &coinjoin_reset,         },
     { "dash",                &coinjoin_start,         },
+    { "dash",                &coinjoin_status,        },
     { "dash",                &coinjoin_stop,          },
     { "dash",                &coinjoinsalt,           },
     { "dash",                &coinjoinsalt_generate,  },
