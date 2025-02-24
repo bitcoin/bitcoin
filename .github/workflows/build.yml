@@ -154,3 +154,57 @@ jobs:
       build-target: win64
       container-path: ${{ needs.container.outputs.path }}
       depends-key: ${{ needs.depends-win64.outputs.key }}
+
+  test-linux64:
+    name: linux64-test
+    uses: ./.github/workflows/test-src.yml
+    needs: [container, depends-linux64, src-linux64]
+    with:
+      bundle-key: ${{ needs.src-linux64.outputs.key }}
+      build-target: linux64
+      container-path: ${{ needs.container.outputs.path }}
+
+  test-linux64_multiprocess:
+    name: linux64_multiprocess-test
+    uses: ./.github/workflows/test-src.yml
+    needs: [container, depends-linux64_multiprocess, src-linux64_multiprocess]
+    with:
+      bundle-key: ${{ needs.src-linux64_multiprocess.outputs.key }}
+      build-target: linux64_multiprocess
+      container-path: ${{ needs.container.outputs.path }}
+
+  test-linux64_nowallet:
+    name: linux64_nowallet-test
+    uses: ./.github/workflows/test-src.yml
+    needs: [container, depends-linux64_nowallet, src-linux64_nowallet]
+    with:
+      bundle-key: ${{ needs.src-linux64_nowallet.outputs.key }}
+      build-target: linux64_nowallet
+      container-path: ${{ needs.container.outputs.path }}
+
+  test-linux64_sqlite:
+    name: linux64_sqlite-test
+    uses: ./.github/workflows/test-src.yml
+    needs: [container, depends-linux64, src-linux64_sqlite]
+    with:
+      bundle-key: ${{ needs.src-linux64_sqlite.outputs.key }}
+      build-target: linux64_sqlite
+      container-path: ${{ needs.container.outputs.path }}
+
+  test-linux64_tsan:
+    name: linux64_tsan-test
+    uses: ./.github/workflows/test-src.yml
+    needs: [container, depends-linux64_multiprocess, src-linux64_tsan]
+    with:
+      bundle-key: ${{ needs.src-linux64_tsan.outputs.key }}
+      build-target: linux64_tsan
+      container-path: ${{ needs.container.outputs.path }}
+
+  test-linux64_ubsan:
+    name: linux64_ubsan-test
+    uses: ./.github/workflows/test-src.yml
+    needs: [container, depends-linux64, src-linux64_ubsan]
+    with:
+      bundle-key: ${{ needs.src-linux64_ubsan.outputs.key }}
+      build-target: linux64_ubsan
+      container-path: ${{ needs.container.outputs.path }}
