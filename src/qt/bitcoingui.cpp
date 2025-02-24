@@ -240,7 +240,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
     bool fDebugCustomStyleSheets = gArgs.GetBoolArg("-debug-ui", false) && GUIUtil::isStyleSheetDirectoryCustom();
     if (fDebugCustomStyleSheets) {
         timerCustomCss = new QTimer(this);
-        QObject::connect(timerCustomCss, &QTimer::timeout, [=]() {
+        QObject::connect(timerCustomCss, &QTimer::timeout, [this]() {
             if (!m_node.shutdownRequested()) {
                 GUIUtil::loadStyleSheet();
             }
@@ -291,7 +291,7 @@ void BitcoinGUI::startSpinner()
     };
 
     timerSpinner = new QTimer(this);
-    QObject::connect(timerSpinner, &QTimer::timeout, [=]() {
+    QObject::connect(timerSpinner, &QTimer::timeout, [this, getNextFrame]() {
         if (timerSpinner == nullptr) {
             return;
         }
@@ -319,7 +319,7 @@ void BitcoinGUI::startConnectingAnimation()
     }
 
     timerConnecting = new QTimer(this);
-    QObject::connect(timerConnecting, &QTimer::timeout, [=]() {
+    QObject::connect(timerConnecting, &QTimer::timeout, [this]() {
 
         if (timerConnecting == nullptr) {
             return;
@@ -1353,7 +1353,7 @@ void BitcoinGUI::openOptionsDialogWithTab(OptionsDialog::Tab tab)
     connect(dlg, &OptionsDialog::quitOnReset, this, &BitcoinGUI::quitRequested);
     dlg->setCurrentTab(tab);
     dlg->setModel(clientModel->getOptionsModel());
-    connect(dlg, &OptionsDialog::appearanceChanged, [=]() {
+    connect(dlg, &OptionsDialog::appearanceChanged, [this]() {
         updateWidth();
     });
     GUIUtil::ShowModalDialogAndDeleteOnClose(dlg);
