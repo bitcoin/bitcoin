@@ -66,6 +66,7 @@ BlockAssembler MinerTestingSetup::AssemblerForTest(CTxMemPool& tx_mempool)
     BlockAssembler::Options options;
 
     options.nBlockMaxWeight = MAX_BLOCK_WEIGHT;
+    options.nBlockMaxSize = MAX_BLOCK_SERIALIZED_SIZE;
     options.blockMinFeeRate = blockMinFeeRate;
     return BlockAssembler{m_node.chainman->ActiveChainstate(), &tx_mempool, options};
 }

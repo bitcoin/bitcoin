@@ -31,7 +31,6 @@ class ChainstateManager;
 namespace Consensus { struct Params; };
 
 namespace node {
-static const bool DEFAULT_PRINT_MODIFIED_FEE = false;
 
 struct CBlockTemplate
 {
@@ -142,8 +141,11 @@ private:
     // The constructed block template
     std::unique_ptr<CBlockTemplate> pblocktemplate;
 
+    bool fNeedSizeAccounting;
+
     // Information on the current status of the block
     uint64_t nBlockWeight;
+    uint64_t nBlockSize;
     uint64_t nBlockTx;
     uint64_t nBlockSigOpsCost;
     CAmount nFees;
@@ -158,14 +160,7 @@ private:
     Chainstate& m_chainstate;
 
 public:
-    struct Options : BlockCreateOptions {
-        // Configuration parameters for the block size
-        size_t nBlockMaxWeight{DEFAULT_BLOCK_MAX_WEIGHT};
-        CFeeRate blockMinFeeRate{DEFAULT_BLOCK_MIN_TX_FEE};
-        // Whether to call TestBlockValidity() at the end of CreateNewBlock().
-        bool test_block_validity{true};
-        bool print_modified_fee{DEFAULT_PRINT_MODIFIED_FEE};
-    };
+    using Options = BlockCreateOptions;
 
     explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options);
 
@@ -174,6 +169,7 @@ public:
 
     inline static std::optional<int64_t> m_last_block_num_txs{};
     inline static std::optional<int64_t> m_last_block_weight{};
+    inline static std::optional<int64_t> m_last_block_size{};
 
 private:
     const Options m_options;

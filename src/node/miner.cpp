@@ -65,10 +65,17 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
     block.hashMerkleRoot = BlockMerkleRoot(block);
 }
 
-static BlockAssembler::Options ClampOptions(BlockAssembler::Options options)
+BlockCreateOptions BlockCreateOptions::Clamped() const
 {
-    Assert(options.coinbase_max_additional_weight <= DEFAULT_BLOCK_MAX_WEIGHT);
-    Assert(options.coinbase_output_max_additional_sigops <= MAX_BLOCK_SIGOPS_COST);
+    BlockAssembler::Options options = *this;
+    constexpr size_t theoretical_min_gentx_sz = 1+4+1+36+1+1+4+1+4;
+    constexpr size_t theoretical_min_gentx_weight = theoretical_min_gentx_sz * WITNESS_SCALE_FACTOR;
+    CHECK_NONFATAL(options.coinbase_max_additional_size <= MAX_BLOCK_SERIALIZED_SIZE - 1000);
+    CHECK_NONFATAL(options.coinbase_max_additional_weight <= DEFAULT_BLOCK_MAX_WEIGHT);
+    CHECK_NONFATAL(options.coinbase_max_additional_weight >= theoretical_min_gentx_weight);
+    CHECK_NONFATAL(options.coinbase_output_max_additional_sigops <= MAX_BLOCK_SIGOPS_COST);
+    // Limit size to between coinbase_max_additional_size and MAX_BLOCK_SERIALIZED_SIZE-1K for sanity:
+    options.nBlockMaxSize = std::clamp<size_t>(options.nBlockMaxSize, options.coinbase_max_additional_size, MAX_BLOCK_SERIALIZED_SIZE - 1000);
     // Limit weight to between coinbase_max_additional_weight and DEFAULT_BLOCK_MAX_WEIGHT for sanity:
     // Coinbase (reserved) outputs can safely exceed -blockmaxweight, but the rest of the block template will be empty.
     options.nBlockMaxWeight = std::clamp<size_t>(options.nBlockMaxWeight, options.coinbase_max_additional_weight, DEFAULT_BLOCK_MAX_WEIGHT);
@@ -79,14 +86,30 @@ BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool
     : chainparams{chainstate.m_chainman.GetParams()},
       m_mempool{options.use_mempool ? mempool : nullptr},
       m_chainstate{chainstate},
-      m_options{ClampOptions(options)}
+      m_options{options.Clamped()}
 {
+    // Whether we need to account for byte usage (in addition to weight usage)
+    fNeedSizeAccounting = (options.nBlockMaxSize < MAX_BLOCK_SERIALIZED_SIZE - 1000);
 }
 
 void ApplyArgsManOptions(const ArgsManager& args, BlockAssembler::Options& options)
 {
     // Block resource limits
-    options.nBlockMaxWeight = args.GetIntArg("-blockmaxweight", options.nBlockMaxWeight);
+    // If neither -blockmaxsize or -blockmaxweight is given, limit to DEFAULT_BLOCK_MAX_*
+    // If only one is given, only restrict the specified resource.
+    // If both are given, restrict both.
+    bool fWeightSet = false;
+    if (args.IsArgSet("-blockmaxweight")) {
+        options.nBlockMaxWeight = args.GetIntArg("-blockmaxweight", DEFAULT_BLOCK_MAX_WEIGHT);
+        options.nBlockMaxSize = MAX_BLOCK_SERIALIZED_SIZE;
+        fWeightSet = true;
+    }
+    if (args.IsArgSet("-blockmaxsize")) {
+        options.nBlockMaxSize = args.GetIntArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
+        if (!fWeightSet) {
+            options.nBlockMaxWeight = options.nBlockMaxSize * WITNESS_SCALE_FACTOR;
+        }
+    }
     if (const auto blockmintxfee{args.GetArg("-blockmintxfee")}) {
         if (const auto parsed{ParseMoney(*blockmintxfee)}) options.blockMinFeeRate = CFeeRate{*parsed};
     }
@@ -98,6 +121,7 @@ void BlockAssembler::resetBlock()
     inBlock.clear();
 
     // Reserve space for coinbase tx
+    nBlockSize = m_options.coinbase_max_additional_size;
     nBlockWeight = m_options.coinbase_max_additional_weight;
     nBlockSigOpsCost = m_options.coinbase_output_max_additional_sigops;
 
@@ -150,6 +174,11 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     m_last_block_num_txs = nBlockTx;
     m_last_block_weight = nBlockWeight;
+    if (fNeedSizeAccounting) {
+        m_last_block_size = nBlockSize;
+    } else {
+        m_last_block_size = std::nullopt;
+    }
 
     // Create coinbase transaction.
     CMutableTransaction coinbaseTx;
@@ -163,7 +192,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vchCoinbaseCommitment = m_chainstate.m_chainman.GenerateCoinbaseCommitment(*pblock, pindexPrev);
     pblocktemplate->vTxFees[0] = -nFees;
 
-    LogPrintf("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
+    uint64_t nSerializeSize = GetSerializeSize(TX_WITH_WITNESS(*pblock));
+    LogPrintf("CreateNewBlock(): total size: %u block weight: %u txs: %u fees: %ld sigops %d\n", nSerializeSize, GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
 
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
@@ -213,11 +243,20 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost
 
 // Perform transaction-level checks before adding to block:
 // - transaction finality (locktime)
+// - serialized size (in case -blockmaxsize is in use)
 bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package) const
 {
+    uint64_t nPotentialBlockSize = nBlockSize; // only used with fNeedSizeAccounting
     for (CTxMemPool::txiter it : package) {
         if (!IsFinalTx(it->GetTx(), nHeight, m_lock_time_cutoff)) {
             return false;
+        }
+        if (fNeedSizeAccounting) {
+            uint64_t nTxSize = ::GetSerializeSize(TX_WITH_WITNESS(it->GetTx()));
+            if (nPotentialBlockSize + nTxSize >= m_options.nBlockMaxSize) {
+                return false;
+            }
+            nPotentialBlockSize += nTxSize;
         }
     }
     return true;
@@ -228,6 +267,9 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
     pblocktemplate->block.vtx.emplace_back(iter->GetSharedTx());
     pblocktemplate->vTxFees.push_back(iter->GetFee());
     pblocktemplate->vTxSigOpsCost.push_back(iter->GetSigOpCost());
+    if (fNeedSizeAccounting) {
+        nBlockSize += ::GetSerializeSize(TX_WITH_WITNESS(iter->GetTx()));
+    }
     nBlockWeight += iter->GetTxWeight();
     ++nBlockTx;
     nBlockSigOpsCost += iter->GetSigOpCost();
@@ -407,6 +449,15 @@ void BlockAssembler::addPackageTxs(const CTxMemPool& mempool, int& nPackagesSele
             if (fUsingModified) {
                 mapModifiedTx.get<ancestor_score>().erase(modit);
                 failedTx.insert(iter->GetSharedTx()->GetHash());
+            }
+
+            if (fNeedSizeAccounting) {
+                ++nConsecutiveFailed;
+
+                if (nConsecutiveFailed > MAX_CONSECUTIVE_FAILURES && nBlockSize > m_options.nBlockMaxSize - m_options.coinbase_max_additional_size) {
+                    // Give up if we're close to full and haven't succeeded in a while
+                    break;
+                }
             }
             continue;
         }
