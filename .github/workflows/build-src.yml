@@ -15,11 +15,17 @@ on:
         description: "Key needed to access cached depends"
         required: true
         type: string
+    outputs:
+      key:
+        description: "Key needed for restoring artifacts bundle"
+        value: ${{ jobs.build-src.outputs.key }}
 
 jobs:
   build-src:
     name: Build source
     runs-on: ubuntu-24.04
+    outputs:
+      key:  ${{ steps.bundle.outputs.key }}
     container:
       image: ${{ inputs.container-path }}
       options: --user root
@@ -89,9 +95,20 @@ jobs:
           ./ci/dash/test_unittests.sh
         shell: bash
 
-      - name: Upload build artifacts
+      - name: Bundle artifacts
+        id: bundle
+        run: |
+          export BUILD_TARGET="${{ inputs.build-target }}"
+          export BUNDLE_KEY="build-${BUILD_TARGET}-$(git rev-parse --short=8 HEAD)"
+          ./ci/dash/bundle-artifacts.sh create
+          echo "key=${BUNDLE_KEY}" >> "${GITHUB_OUTPUT}"
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts-${{ inputs.build-target }}
+          name: ${{ steps.bundle.outputs.key }}
           path: |
-            /output
+            ${{ steps.bundle.outputs.key }}.tar.zst
+          compression-level: 0
+          overwrite: true
+          retention-days: 3
