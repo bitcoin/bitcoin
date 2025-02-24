@@ -39,6 +39,7 @@ jobs:
           name: ${{ inputs.bundle-key }}
 
       - name: Run functional tests
+        id: test
         run: |
           git config --global --add safe.directory "$PWD"
           export BUILD_TARGET="${{ inputs.build-target }}"
@@ -48,3 +49,27 @@ jobs:
           source ./ci/dash/matrix.sh
           ./ci/dash/test_integrationtests.sh ${INTEGRATION_TESTS_ARGS}
         shell: bash
+
+      - name: Bundle test logs
+        id: bundle
+        if: success() || (failure() && steps.test.outcome == 'failure')
+        run: |
+          export BUILD_TARGET="${{ inputs.build-target }}"
+          echo "short-sha=$(git rev-parse --short=8 HEAD)" >> "${GITHUB_OUTPUT}"
+          ( [ -d "testlogs" ] && echo "upload-logs=true" >> "${GITHUB_OUTPUT}" && ./ci/dash/bundle-logs.sh ) \
+                              || echo "upload-logs=false" >> "${GITHUB_OUTPUT}"
+        shell: bash
+
+      - name: Upload test logs
+        uses: actions/upload-artifact@v4
+        if: |
+          success() || (failure() && steps.test.outcome == 'failure')
+          && steps.bundle.outputs.upload-logs == 'true'
+        with:
+          name: test_logs-${{ inputs.build-target }}-${{ steps.bundle.outputs.short-sha }}
+          path: |
+            test_logs-${{ inputs.build-target }}.tar.zst
+            test_logs-${{ inputs.build-target }}.tar.zst.sha256
+          compression-level: 0
+          overwrite: true
+          retention-days: 1
