@@ -29,7 +29,7 @@ public:
 
     // Dash Specific WalletInitInterface InitCoinJoinSettings
     void AutoLockMasternodeCollaterals() const override {}
-    void InitCoinJoinSettings(const CoinJoinWalletManager& cjwalletman) const override {}
+    void InitCoinJoinSettings(interfaces::CoinJoin::Loader& coinjoin_loader) const override {}
     bool InitAutoBackup() const override {return true;}
 };
 

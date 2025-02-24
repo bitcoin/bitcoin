@@ -93,12 +93,12 @@ public:
     void AddWallet(const std::shared_ptr<CWallet>& wallet) override
     {
         walletman().Add(wallet);
-        g_wallet_init_interface.InitCoinJoinSettings(walletman());
+        g_wallet_init_interface.InitCoinJoinSettings(*this);
     }
     void RemoveWallet(const std::string& name) override
     {
         walletman().Remove(name);
-        g_wallet_init_interface.InitCoinJoinSettings(walletman());
+        g_wallet_init_interface.InitCoinJoinSettings(*this);
     }
     void FlushWallet(const std::string& name) override
     {

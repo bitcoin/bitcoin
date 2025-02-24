@@ -48,7 +48,7 @@ public:
 
     // Dash Specific Wallet Init
     void AutoLockMasternodeCollaterals() const override;
-    void InitCoinJoinSettings(const CoinJoinWalletManager& cjwalletman) const override;
+    void InitCoinJoinSettings(interfaces::CoinJoin::Loader& coinjoin_loader) const override;
     bool InitAutoBackup() const override;
 };
 
@@ -204,7 +204,7 @@ void WalletInit::AutoLockMasternodeCollaterals() const
     }
 }
 
-void WalletInit::InitCoinJoinSettings(const CoinJoinWalletManager& cjwalletman) const
+void WalletInit::InitCoinJoinSettings(interfaces::CoinJoin::Loader& coinjoin_loader) const
 {
     CCoinJoinClientOptions::SetEnabled(!GetWallets().empty() ? gArgs.GetBoolArg("-enablecoinjoin", true) : false);
     if (!CCoinJoinClientOptions::IsEnabled()) {
@@ -212,12 +212,14 @@ void WalletInit::InitCoinJoinSettings(const CoinJoinWalletManager& cjwalletman) 
     }
     bool fAutoStart = gArgs.GetBoolArg("-coinjoinautostart", DEFAULT_COINJOIN_AUTOSTART);
     for (auto& pwallet : GetWallets()) {
-        auto manager = cjwalletman.Get(pwallet->GetName());
+        auto manager = coinjoin_loader.GetClient(pwallet->GetName());
         assert(manager != nullptr);
         if (pwallet->IsLocked()) {
-            manager->StopMixing();
+            manager->stopMixing();
+            LogPrintf("CoinJoin: Mixing stopped for locked wallet \"%s\"\n", pwallet->GetName());
         } else if (fAutoStart) {
-            manager->StartMixing();
+            manager->startMixing();
+            LogPrintf("CoinJoin: Automatic mixing started for wallet \"%s\"\n", pwallet->GetName());
         }
     }
     LogPrintf("CoinJoin: autostart=%d, multisession=%d," /* Continued */
