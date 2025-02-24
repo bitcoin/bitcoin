@@ -3,9 +3,9 @@ image: "ubuntu:noble"
 variables:
   DOCKER_DRIVER: overlay2
   CI_FAILFAST_TEST_LEAVE_DANGLING: "1"  # Gitlab CI does not care about dangling process and setting this variable avoids killing the CI script itself on error
-  # BUILD_TARGETS: '/arm-linux|linux64|linux64_fuzz|linux64_multiprocess|linux64_nowallet|linux64_sqlite|linux64_tsan|linux64_ubsan|mac|win64/'
+  # BUILD_TARGETS: '/^(arm-linux|linux64|linux64_fuzz|linux64_multiprocess|linux64_nowallet|linux64_sqlite|linux64_tsan|linux64_ubsan|mac|win64)$/'
   # Set BUILD_TARGETS variable in Gitlab CI/CD settings using the template above excluding the build targets you don't need.
-  # For example, the old FAST_MODE would be '/arm-linux|linux64/'.
+  # For example, the old FAST_MODE would be '/^(arm-linux|linux64)$/'.
   # If BUILD_TARGETS is not set or it's an empty string then no filtering is applied.
   # NOTE: "Value" MUST be wrapped in '' i.e. it should be '/reg_exp/' ('' included) and not /reg_exp/ (no '').
 
