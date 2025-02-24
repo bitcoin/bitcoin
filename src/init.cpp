@@ -2028,10 +2028,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                               node.mn_activeman.get(), *node.mn_sync, *node.llmq_ctx->isman, node.peerman,
                                               !ignores_incoming_txs);
 
-#ifdef ENABLE_WALLET
-    node.coinjoin_loader = interfaces::MakeCoinJoinLoader(node);
-#endif // ENABLE_WALLET
-
     // ********************************************************* Step 7d: Setup other Dash services
 
     bool fLoadCacheFiles = !(fReindex || fReindexChainState) && (chainman.ActiveChain().Tip() != nullptr);

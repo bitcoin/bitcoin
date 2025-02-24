@@ -80,6 +80,11 @@ const WalletInitInterface& g_wallet_init_interface = DummyWalletInit();
 
 namespace interfaces {
 
+std::unique_ptr<CoinJoin::Loader> MakeCoinJoinLoader(NodeContext& node)
+{
+    throw std::logic_error("Wallet function called in non-wallet build.");
+}
+
 std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet)
 {
     throw std::logic_error("Wallet function called in non-wallet build.");

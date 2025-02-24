@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <interfaces/chain.h>
+#include <interfaces/coinjoin.h>
 #include <interfaces/echo.h>
 #include <interfaces/init.h>
 #include <interfaces/node.h>
@@ -25,6 +26,10 @@ public:
     }
     std::unique_ptr<interfaces::Node> makeNode() override { return interfaces::MakeNode(m_node); }
     std::unique_ptr<interfaces::Chain> makeChain() override { return interfaces::MakeChain(m_node); }
+    std::unique_ptr<interfaces::CoinJoin::Loader> makeCoinJoinLoader() override
+    {
+        return interfaces::MakeCoinJoinLoader(m_node);
+    }
     std::unique_ptr<interfaces::WalletLoader> makeWalletLoader(interfaces::Chain& chain, const std::unique_ptr<interfaces::CoinJoin::Loader>& loader) override
     {
         return MakeWalletLoader(chain, *Assert(m_node.args), loader);

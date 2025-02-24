@@ -8,6 +8,7 @@
 #include <test/util/setup_common.h>
 
 #include <interfaces/chain.h>
+#include <interfaces/coinjoin.h>
 #include <interfaces/wallet.h>
 #include <node/context.h>
 #include <util/check.h>
@@ -21,6 +22,7 @@ struct WalletTestingSetup : public TestingSetup {
     explicit WalletTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~WalletTestingSetup();
 
+    std::unique_ptr<interfaces::CoinJoin::Loader> m_coinjoin_loader;
     std::unique_ptr<interfaces::WalletLoader> m_wallet_loader;
     CWallet m_wallet;
     std::unique_ptr<interfaces::Handler> m_chain_notifications_handler;
