@@ -66,6 +66,8 @@ class CoinJoinTest(BitcoinTestFramework):
         assert_equal(cj_info['running'], True)
         # Repeated start should yield error
         assert_raises_rpc_error(-32603, 'Mixing has been started already.', node.coinjoin, 'start')
+        # Requesting status shouldn't complain
+        node.coinjoin('status')
 
         # Stop mix session and ensure it's reported
         node.coinjoin('stop')
@@ -74,6 +76,8 @@ class CoinJoinTest(BitcoinTestFramework):
         assert_equal(cj_info['running'], False)
         # Repeated stop should yield error
         assert_raises_rpc_error(-32603, 'No mix session to stop', node.coinjoin, 'stop')
+        # Requesting status should tell us off
+        assert_raises_rpc_error(-32603, 'No ongoing mix session', node.coinjoin, 'status')
 
         # Reset mix session
         assert_equal(node.coinjoin('reset'), "Mixing was reset")

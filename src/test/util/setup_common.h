@@ -91,10 +91,6 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          const Consensus::Params& consensus_params);
 void DashChainstateSetupClose(NodeContext& node);
 
-/** Initialize Dash-specific components after chainstate initialization */
-void DashPostChainstateSetup(NodeContext& node);
-void DashPostChainstateSetupClose(NodeContext& node);
-
 /** Basic testing setup.
  * This just configures logging, data dir and chain parameters.
  */

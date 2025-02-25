@@ -86,6 +86,9 @@ public:
     //! Abort a rescan.
     virtual void abortRescan() = 0;
 
+    //! Lock masternode collaterals
+    virtual void autoLockMasternodeCollaterals() = 0;
+
     //! Back up wallet.
     virtual bool backupWallet(const std::string& filename) = 0;
 
@@ -444,7 +447,7 @@ std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet);
 
 //! Return implementation of ChainClient interface for a wallet loader. This
 //! function will be undefined in builds where ENABLE_WALLET is false.
-std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, const std::unique_ptr<CoinJoin::Loader>& coinjoin_loader, ArgsManager& args);
+std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args, CoinJoin::Loader& coinjoin_loader);
 
 } // namespace interfaces
 

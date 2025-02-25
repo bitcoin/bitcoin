@@ -350,17 +350,18 @@ bilingual_str CCoinJoinClientSession::GetStatus(bool fWaitForBlock) const
     }
 }
 
-bilingual_str CCoinJoinClientManager::GetStatuses()
+std::vector<std::string> CCoinJoinClientManager::GetStatuses() const
 {
-    bilingual_str strStatus;
-    bool fWaitForBlock = WaitForAnotherBlock();
-
     AssertLockNotHeld(cs_deqsessions);
+
+    bool fWaitForBlock{WaitForAnotherBlock()};
+    std::vector<std::string> ret;
+
     LOCK(cs_deqsessions);
     for (const auto& session : deqSessions) {
-        strStatus = strStatus + session.GetStatus(fWaitForBlock) + Untranslated("; ");
+        ret.push_back(session.GetStatus(fWaitForBlock).original);
     }
-    return strStatus;
+    return ret;
 }
 
 std::string CCoinJoinClientManager::GetSessionDenoms()
@@ -1914,14 +1915,11 @@ void CCoinJoinClientManager::GetJsonInfo(UniValue& obj) const
 
 void CoinJoinWalletManager::Add(const std::shared_ptr<CWallet>& wallet)
 {
-    {
-        LOCK(cs_wallet_manager_map);
-        m_wallet_manager_map.try_emplace(wallet->GetName(),
-                                         std::make_unique<CCoinJoinClientManager>(wallet, *this, m_dmnman, m_mn_metaman,
-                                                                                  m_mn_sync, m_isman, m_queueman,
-                                                                                  m_is_masternode));
-    }
-    g_wallet_init_interface.InitCoinJoinSettings(*this);
+    LOCK(cs_wallet_manager_map);
+    m_wallet_manager_map.try_emplace(wallet->GetName(),
+                                     std::make_unique<CCoinJoinClientManager>(wallet, *this, m_dmnman, m_mn_metaman,
+                                                                              m_mn_sync, m_isman, m_queueman,
+                                                                              m_is_masternode));
 }
 
 void CoinJoinWalletManager::DoMaintenance(CConnman& connman)
@@ -1933,11 +1931,8 @@ void CoinJoinWalletManager::DoMaintenance(CConnman& connman)
 }
 
 void CoinJoinWalletManager::Remove(const std::string& name) {
-    {
-        LOCK(cs_wallet_manager_map);
-        m_wallet_manager_map.erase(name);
-    }
-    g_wallet_init_interface.InitCoinJoinSettings(*this);
+    LOCK(cs_wallet_manager_map);
+    m_wallet_manager_map.erase(name);
 }
 
 void CoinJoinWalletManager::Flush(const std::string& name)
