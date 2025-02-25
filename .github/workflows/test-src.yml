@@ -1,0 +1,49 @@
+name: Test source
+
+on:
+  workflow_call:
+    inputs:
+      bundle-key:
+        description: "Key needed to access bundle of artifacts"
+        required: true
+        type: string
+      build-target:
+        description: "Target name as defined by inputs.sh"
+        required: true
+        type: string
+      container-path:
+        description: "Path to built container at registry"
+        required: true
+        type: string
+
+env:
+  INTEGRATION_TESTS_ARGS: "--extended --exclude feature_pruning,feature_dbcrash"
+
+jobs:
+  test-src:
+    name: Test source
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ inputs.container-path }}
+      options: --user root
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.bundle-key }}
+
+      - name: Run functional tests
+        run: |
+          git config --global --add safe.directory "$PWD"
+          export BUILD_TARGET="${{ inputs.build-target }}"
+          export BUNDLE_KEY="${{ inputs.bundle-key }}"
+          ./ci/dash/bundle-artifacts.sh extract
+          source ./ci/dash/matrix.sh
+          ./ci/dash/test_integrationtests.sh ${INTEGRATION_TESTS_ARGS}
+        shell: bash
