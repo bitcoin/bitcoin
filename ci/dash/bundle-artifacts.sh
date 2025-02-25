@@ -40,13 +40,8 @@ if [ "${VERB}" = "create" ]; then
   EXCLUSIONS=(
     "*.a"
     "*.o"
-    "build-ci/dashcore-${BUILD_TARGET}/src/bench/bench_dash"
-    "build-ci/dashcore-${BUILD_TARGET}/src/bench/bench_dash.exe"
-    "build-ci/dashcore-${BUILD_TARGET}/src/qt/test/test_dash-qt"
-    "build-ci/dashcore-${BUILD_TARGET}/src/qt/test/test_dash-qt.exe"
-    "build-ci/dashcore-${BUILD_TARGET}/src/test/test_dash"
-    "build-ci/dashcore-${BUILD_TARGET}/src/test/test_dash.exe"
-    "build-ci/dashcore-${BUILD_TARGET}/src/test/fuzz/fuzz"
+    ".deps"
+    ".libs"
   )
   EXCLUSIONS_ARG=""
   for excl in "${EXCLUSIONS[@]}"

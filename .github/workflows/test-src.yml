@@ -44,6 +44,7 @@ jobs:
           export BUILD_TARGET="${{ inputs.build-target }}"
           export BUNDLE_KEY="${{ inputs.bundle-key }}"
           ./ci/dash/bundle-artifacts.sh extract
+          ./ci/dash/slim-workspace.sh
           source ./ci/dash/matrix.sh
           ./ci/dash/test_integrationtests.sh ${INTEGRATION_TESTS_ARGS}
         shell: bash
