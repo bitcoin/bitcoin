@@ -194,7 +194,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     appearanceLayout->addWidget(appearance);
     ui->widgetAppearance->setLayout(appearanceLayout);
 
-    connect(appearance, &AppearanceWidget::appearanceChanged, [=](){
+    connect(appearance, &AppearanceWidget::appearanceChanged, [this](){
         updateWidth();
         Q_EMIT appearanceChanged();
     });
@@ -277,13 +277,13 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->lang, qOverload<>(&QValueComboBox::valueChanged), [this]{ showRestartWarning(); });
     connect(ui->thirdPartyTxUrls, &QLineEdit::textChanged, [this]{ showRestartWarning(); });
 
-    connect(ui->coinJoinEnabled, &QCheckBox::clicked, [=](bool fChecked) {
+    connect(ui->coinJoinEnabled, &QCheckBox::clicked, [this](bool fChecked) {
 #ifdef ENABLE_WALLET
         model->node().coinJoinOptions().setEnabled(fChecked);
 #endif
         updateCoinJoinVisibility();
-        if (_model != nullptr) {
-            _model->emitCoinJoinEnabledChanged();
+        if (this->model != nullptr) {
+            this->model->emitCoinJoinEnabledChanged();
         }
         updateWidth();
     });
@@ -293,7 +293,7 @@ void OptionsDialog::setModel(OptionsModel *_model)
     // Store the current CoinJoin enabled state to recover it if it gets changed but the dialog gets not accepted but declined.
 #ifdef ENABLE_WALLET
     fCoinJoinEnabledPrev = model->node().coinJoinOptions().isEnabled();
-    connect(this, &OptionsDialog::rejected, [=]() {
+    connect(this, &OptionsDialog::rejected, [this]() {
         if (fCoinJoinEnabledPrev != model->node().coinJoinOptions().isEnabled()) {
             ui->coinJoinEnabled->click();
         }

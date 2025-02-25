@@ -46,11 +46,11 @@ AppearanceWidget::AppearanceWidget(QWidget* parent) :
     connect(ui->fontWeightNormalSlider, &QSlider::valueChanged, [this](auto nValue) { updateFontWeightNormal(nValue); });
     connect(ui->fontWeightBoldSlider, &QSlider::valueChanged, [this](auto nValue) { updateFontWeightBold(nValue); });
 
-    connect(ui->theme, &QComboBox::currentTextChanged, [=]() { Q_EMIT appearanceChanged(); });
-    connect(ui->fontFamily, &QComboBox::currentTextChanged, [=]() { Q_EMIT appearanceChanged(); });
-    connect(ui->fontScaleSlider, &QSlider::sliderReleased, [=]() { Q_EMIT appearanceChanged(); });
-    connect(ui->fontWeightNormalSlider, &QSlider::sliderReleased, [=]() { Q_EMIT appearanceChanged(); });
-    connect(ui->fontWeightBoldSlider, &QSlider::sliderReleased, [=]() { Q_EMIT appearanceChanged(); });
+    connect(ui->theme, &QComboBox::currentTextChanged, [this]() { Q_EMIT appearanceChanged(); });
+    connect(ui->fontFamily, &QComboBox::currentTextChanged, [this]() { Q_EMIT appearanceChanged(); });
+    connect(ui->fontScaleSlider, &QSlider::sliderReleased, [this]() { Q_EMIT appearanceChanged(); });
+    connect(ui->fontWeightNormalSlider, &QSlider::sliderReleased, [this]() { Q_EMIT appearanceChanged(); });
+    connect(ui->fontWeightBoldSlider, &QSlider::sliderReleased, [this]() { Q_EMIT appearanceChanged(); });
 }
 
 AppearanceWidget::~AppearanceWidget()
