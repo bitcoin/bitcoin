@@ -69,12 +69,16 @@ extern "C" {
   #include <io.h>
   #include <cwchar>
 
-  #define close _close
-  #define open _open
-  #define fileno _fileno
+  #define subprocess_close _close
+  #define subprocess_open _open
+  #define subprocess_fileno _fileno
 #else
   #include <sys/wait.h>
   #include <unistd.h>
+
+  #define subprocess_close close
+  #define subprocess_open open
+  #define subprocess_fileno fileno
 #endif
   #include <csignal>
   #include <fcntl.h>
@@ -411,7 +415,7 @@ namespace util
 #ifdef __USING_WINDOWS__
     return (int)fread(buf, 1, read_upto, fp);
 #else
-    int fd = fileno(fp);
+    int fd = subprocess_fileno(fp);
     int rbytes = 0;
     int eintr_cnter = 0;
 
@@ -573,10 +577,10 @@ struct input
   explicit input(int fd): rd_ch_(fd) {}
 
   // FILE pointer.
-  explicit input (FILE* fp):input(fileno(fp)) { assert(fp); }
+  explicit input (FILE* fp):input(subprocess_fileno(fp)) { assert(fp); }
 
   explicit input(const char* filename) {
-    int fd = open(filename, O_RDONLY);
+    int fd = subprocess_open(filename, O_RDONLY);
     if (fd == -1) throw OSError("File not found: ", errno);
     rd_ch_ = fd;
   }
@@ -606,10 +610,10 @@ struct output
 {
   explicit output(int fd): wr_ch_(fd) {}
 
-  explicit output (FILE* fp):output(fileno(fp)) { assert(fp); }
+  explicit output (FILE* fp):output(subprocess_fileno(fp)) { assert(fp); }
 
   explicit output(const char* filename) {
-    int fd = open(filename, O_APPEND | O_CREAT | O_RDWR, 0640);
+    int fd = subprocess_open(filename, O_APPEND | O_CREAT | O_RDWR, 0640);
     if (fd == -1) throw OSError("File not found: ", errno);
     wr_ch_ = fd;
   }
@@ -637,10 +641,10 @@ struct error
 {
   explicit error(int fd): wr_ch_(fd) {}
 
-  explicit error(FILE* fp):error(fileno(fp)) { assert(fp); }
+  explicit error(FILE* fp):error(subprocess_fileno(fp)) { assert(fp); }
 
   explicit error(const char* filename) {
-    int fd = open(filename, O_APPEND | O_CREAT | O_RDWR, 0640);
+    int fd = subprocess_open(filename, O_APPEND | O_CREAT | O_RDWR, 0640);
     if (fd == -1) throw OSError("File not found: ", errno);
     wr_ch_ = fd;
   }
@@ -803,28 +807,28 @@ public:
   void cleanup_fds()
   {
     if (write_to_child_ != -1 && read_from_parent_ != -1) {
-      close(write_to_child_);
+      subprocess_close(write_to_child_);
     }
     if (write_to_parent_ != -1 && read_from_child_ != -1) {
-      close(read_from_child_);
+      subprocess_close(read_from_child_);
     }
     if (err_write_ != -1 && err_read_ != -1) {
-      close(err_read_);
+      subprocess_close(err_read_);
     }
   }
 
   void close_parent_fds()
   {
-    if (write_to_child_ != -1)  close(write_to_child_);
-    if (read_from_child_ != -1) close(read_from_child_);
-    if (err_read_ != -1)        close(err_read_);
+    if (write_to_child_ != -1)  subprocess_close(write_to_child_);
+    if (read_from_child_ != -1) subprocess_close(read_from_child_);
+    if (err_read_ != -1)        subprocess_close(err_read_);
   }
 
   void close_child_fds()
   {
-    if (write_to_parent_ != -1)  close(write_to_parent_);
-    if (read_from_parent_ != -1) close(read_from_parent_);
-    if (err_write_ != -1)        close(err_write_);
+    if (write_to_parent_ != -1)  subprocess_close(write_to_parent_);
+    if (read_from_parent_ != -1) subprocess_close(read_from_parent_);
+    if (err_write_ != -1)        subprocess_close(err_write_);
   }
 
   FILE* input()  { return input_.get(); }
@@ -1156,8 +1160,8 @@ inline void Popen::execute_process() noexcept(false)
   child_pid_ = fork();
 
   if (child_pid_ < 0) {
-    close(err_rd_pipe);
-    close(err_wr_pipe);
+    subprocess_close(err_rd_pipe);
+    subprocess_close(err_wr_pipe);
     throw OSError("fork failed", errno);
   }
 
@@ -1167,14 +1171,14 @@ inline void Popen::execute_process() noexcept(false)
     stream_.close_parent_fds();
 
     //Close the read end of the error pipe
-    close(err_rd_pipe);
+    subprocess_close(err_rd_pipe);
 
     detail::Child chld(this, err_wr_pipe);
     chld.execute_child();
   }
   else
   {
-    close (err_wr_pipe);// close child side of pipe, else get stuck in read below
+    subprocess_close(err_wr_pipe);// close child side of pipe, else get stuck in read below
 
     stream_.close_child_fds();
 
@@ -1185,7 +1189,7 @@ inline void Popen::execute_process() noexcept(false)
                                   fdopen(err_rd_pipe, "r"),
                                   err_buf,
                                   SP_MAX_ERR_BUF_SIZ);
-      close(err_rd_pipe);
+      subprocess_close(err_rd_pipe);
 
       if (read_bytes || strlen(err_buf)) {
         // Call waitpid to reap the child process
@@ -1271,13 +1275,13 @@ namespace detail {
 
       // Close the duped descriptors
       if (stream.read_from_parent_ != -1 && stream.read_from_parent_ > 2)
-        close(stream.read_from_parent_);
+        subprocess_close(stream.read_from_parent_);
 
       if (stream.write_to_parent_ != -1 && stream.write_to_parent_ > 2)
-        close(stream.write_to_parent_);
+        subprocess_close(stream.write_to_parent_);
 
       if (stream.err_write_ != -1 && stream.err_write_ > 2)
-        close(stream.err_write_);
+        subprocess_close(stream.err_write_);
 
       // Replace the current image with the executable
       sys_ret = execvp(parent_->exe_name_.c_str(), parent_->cargv_.data());
