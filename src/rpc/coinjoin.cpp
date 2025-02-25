@@ -2,17 +2,18 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <node/context.h>
-#include <validation.h>
 #include <coinjoin/context.h>
 #include <coinjoin/server.h>
+#include <node/context.h>
 #include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
-#include <util/check.h>
 #include <rpc/util.h>
+#include <util/check.h>
 #include <util/strencodings.h>
+#include <validation.h>
 #include <wallet/rpc/util.h>
+#include <walletinitinterface.h>
 
 #ifdef ENABLE_WALLET
 #include <coinjoin/client.h>
@@ -485,14 +486,13 @@ static RPCHelpMan getcoinjoininfo()
     };
 }
 
-void RegisterCoinJoinRPCCommands(CRPCTable &t)
+#ifdef ENABLE_WALLET
+Span<const CRPCCommand> GetWalletCoinJoinRPCCommands()
 {
 // clang-format off
 static const CRPCCommand commands[] =
-{ //  category               actor (function)
-  //  ---------------------  -----------------------
-    { "dash",                &getcoinjoininfo,        },
-#ifdef ENABLE_WALLET
+{ //  category              actor (function)
+  //  --------------------- -----------------------
     { "dash",                &coinjoin,               },
     { "dash",                &coinjoin_reset,         },
     { "dash",                &coinjoin_start,         },
@@ -502,10 +502,35 @@ static const CRPCCommand commands[] =
     { "dash",                &coinjoinsalt_generate,  },
     { "dash",                &coinjoinsalt_get,       },
     { "dash",                &coinjoinsalt_set,       },
-#endif // ENABLE_WALLET
+    { "dash",                &getcoinjoininfo,        },
 };
 // clang-format on
-    for (const auto& command : commands) {
-        t.appendCommand(command.name, &command);
+    return commands;
+}
+#endif // ENABLE_WALLET
+
+void RegisterCoinJoinRPCCommands(CRPCTable& t)
+{
+// clang-format off
+static const CRPCCommand commands_wallet[] =
+{ //  category               actor (function)
+  //  ---------------------  -----------------------
+    { "dash",                &getcoinjoininfo,        },
+};
+// clang-format on
+    // If we aren't compiling with wallet support, we still need to register RPCs that are
+    // capable of working without wallet support. We have to do this even if wallet support
+    // is compiled in but is disabled at runtime because runtime disablement prohibits
+    // registering wallet RPCs. We still want the reduced functionality RPC to be registered.
+    // TODO: Spin off these hybrid RPCs into dedicated wallet-only and/or wallet-free RPCs
+    //       and get rid of this workaround.
+    if (!g_wallet_init_interface.HasWalletSupport()
+#ifdef ENABLE_WALLET
+        || gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)
+#endif // ENABLE_WALLET
+    ) {
+        for (const auto& command : commands_wallet) {
+            tableRPC.appendCommand(command.name, &command);
+        }
     }
 }

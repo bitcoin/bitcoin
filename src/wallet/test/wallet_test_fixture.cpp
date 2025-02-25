@@ -9,7 +9,7 @@
 WalletTestingSetup::WalletTestingSetup(const std::string& chainName)
     : TestingSetup(chainName),
       m_coinjoin_loader{interfaces::MakeCoinJoinLoader(m_node)},
-      m_wallet_loader{interfaces::MakeWalletLoader(*m_node.chain, *Assert(m_node.args), *Assert(m_coinjoin_loader))},
+      m_wallet_loader{interfaces::MakeWalletLoader(*m_node.chain, *Assert(m_node.args), m_node, *Assert(m_coinjoin_loader))},
       m_wallet(m_node.chain.get(), m_coinjoin_loader.get(), "", CreateMockWalletDatabase())
 {
     m_wallet.LoadWallet();

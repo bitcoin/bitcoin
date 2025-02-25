@@ -1071,6 +1071,23 @@ static RPCHelpMan getsuperblockbudget()
     };
 }
 
+#ifdef ENABLE_WALLET
+Span<const CRPCCommand> GetWalletGovernanceRPCCommands()
+{
+// clang-format off
+static const CRPCCommand commands[] =
+{ //  category              actor (function)
+  //  --------------------- -----------------------
+    { "dash",               &gobject_prepare,           },
+    { "dash",               &gobject_list_prepared,     },
+    { "dash",               &gobject_vote_many,         },
+    { "dash",               &gobject_vote_alias,        },
+};
+// clang-format on
+    return commands;
+}
+#endif // ENABLE_WALLET
+
 void RegisterGovernanceRPCCommands(CRPCTable &t)
 {
 // clang-format off
@@ -1084,12 +1101,6 @@ static const CRPCCommand commands[] =
     { "dash",               &gobject_count,             },
     { "dash",               &gobject_deserialize,       },
     { "dash",               &gobject_check,             },
-#ifdef ENABLE_WALLET
-    { "dash",               &gobject_prepare,           },
-    { "dash",               &gobject_list_prepared,     },
-    { "dash",               &gobject_vote_many,         },
-    { "dash",               &gobject_vote_alias,        },
-#endif
     { "dash",               &gobject_submit,            },
     { "dash",               &gobject_list,              },
     { "dash",               &gobject_diff,              },

@@ -15,7 +15,7 @@
 InitWalletDirTestingSetup::InitWalletDirTestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)
 {
     m_coinjoin_loader = interfaces::MakeCoinJoinLoader(m_node);
-    m_wallet_loader = MakeWalletLoader(*m_node.chain, *Assert(m_node.args), *Assert(m_coinjoin_loader));
+    m_wallet_loader = MakeWalletLoader(*m_node.chain, *Assert(m_node.args), m_node, *Assert(m_coinjoin_loader));
 
     std::string sep;
     sep += fs::path::preferred_separator;

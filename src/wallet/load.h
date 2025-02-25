@@ -12,6 +12,7 @@
 class ArgsManager;
 class CConnman;
 class CScheduler;
+struct WalletContext;
 
 namespace interfaces {
 class Chain;
@@ -21,21 +22,21 @@ class Loader;
 } // namespace interfaces
 
 //! Responsible for reading and validating the -wallet arguments and verifying the wallet database.
-bool VerifyWallets(interfaces::Chain& chain);
+bool VerifyWallets(WalletContext& context);
 
 //! Load wallet databases.
-bool LoadWallets(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader);
+bool LoadWallets(WalletContext& context);
 
 //! Complete startup of wallets.
-void StartWallets(CScheduler& scheduler, const ArgsManager& args);
+void StartWallets(WalletContext& context, CScheduler& scheduler);
 
 //! Flush all wallets in preparation for shutdown.
-void FlushWallets();
+void FlushWallets(WalletContext& context);
 
 //! Stop all wallets. Wallets will be flushed first.
-void StopWallets();
+void StopWallets(WalletContext& context);
 
 //! Close all wallets.
-void UnloadWallets();
+void UnloadWallets(WalletContext& context);
 
 #endif // BITCOIN_WALLET_LOAD_H
