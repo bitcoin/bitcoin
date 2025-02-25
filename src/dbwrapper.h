@@ -11,6 +11,7 @@
 #include <streams.h>
 #include <util/check.h>
 #include <util/fs.h>
+#include <util/result.h>
 
 #include <cstddef>
 #include <exception>
@@ -20,7 +21,7 @@
 #include <string>
 #include <vector>
 
-bool dbwrapper_SanityCheck();
+util::Result<void> dbwrapper_SanityCheck();
 
 static const size_t DBWRAPPER_PREALLOC_KEY_SIZE = 64;
 static const size_t DBWRAPPER_PREALLOC_VALUE_SIZE = 1024;

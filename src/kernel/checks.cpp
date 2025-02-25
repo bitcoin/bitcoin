@@ -15,8 +15,8 @@ namespace kernel {
 
 util::Result<void> SanityChecks(const Context&)
 {
-    if (!dbwrapper_SanityCheck()) {
-        return util::Error{Untranslated("Database sanity check failure. Aborting.")};
+    if (auto result{dbwrapper_SanityCheck()}; !result) {
+        return util::Error{util::ErrorString(result) + Untranslated("\nDatabase sanity check failure. Aborting.")};
     }
 
     if (!Random_SanityCheck()) {
