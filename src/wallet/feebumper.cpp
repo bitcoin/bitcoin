@@ -40,11 +40,6 @@ static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWallet
         return feebumper::Result::WALLET_ERROR;
     }
 
-    if (!SignalsOptInRBF(*wtx.tx)) {
-        errors.emplace_back(Untranslated("Transaction is not BIP 125 replaceable"));
-        return feebumper::Result::WALLET_ERROR;
-    }
-
     if (wtx.mapValue.count("replaced_by_txid")) {
         errors.push_back(Untranslated(strprintf("Cannot bump transaction %s which was already bumped by transaction %s", wtx.GetHash().ToString(), wtx.mapValue.at("replaced_by_txid"))));
         return feebumper::Result::WALLET_ERROR;
