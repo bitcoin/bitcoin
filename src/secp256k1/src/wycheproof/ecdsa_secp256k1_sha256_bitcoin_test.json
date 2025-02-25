@@ -10,7 +10,7 @@
   "notes" : {
     "ArithmeticError" : {
       "bugType" : "EDGE_CASE",
-      "description" : "Some implementations of ECDSA have arithmetic errors that occur when intermediate results have extreme values. This test vector has been constructed to test such occurences.",
+      "description" : "Some implementations of ECDSA have arithmetic errors that occur when intermediate results have extreme values. This test vector has been constructed to test such occurrences.",
       "cves" : [
         "CVE-2017-18146"
       ]
