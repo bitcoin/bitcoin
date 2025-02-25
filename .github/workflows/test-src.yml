@@ -1,0 +1,83 @@
+name: Test source
+
+on:
+  workflow_call:
+    inputs:
+      bundle-key:
+        description: "Key needed to access bundle of artifacts"
+        required: true
+        type: string
+      build-target:
+        description: "Target name as defined by inputs.sh"
+        required: true
+        type: string
+      container-path:
+        description: "Path to built container at registry"
+        required: true
+        type: string
+
+env:
+  INTEGRATION_TESTS_ARGS: "--extended --exclude feature_pruning,feature_dbcrash"
+
+jobs:
+  test-src:
+    name: Test source
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ inputs.container-path }}
+      options: --user root
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.bundle-key }}
+
+      - name: Manage releases cache
+        uses: actions/cache@v4
+        if: inputs.build-target == 'linux64'
+        with:
+          path: |
+            releases
+          key: releases-${{ hashFiles('ci/test/00_setup_env_native_qt5.sh', 'test/get_previous_releases.py') }}
+
+      - name: Run functional tests
+        id: test
+        run: |
+          git config --global --add safe.directory "$PWD"
+          export BUILD_TARGET="${{ inputs.build-target }}"
+          export BUNDLE_KEY="${{ inputs.bundle-key }}"
+          ./ci/dash/bundle-artifacts.sh extract
+          ./ci/dash/slim-workspace.sh
+          source ./ci/dash/matrix.sh
+          ./ci/dash/test_integrationtests.sh ${INTEGRATION_TESTS_ARGS}
+        shell: bash
+
+      - name: Bundle test logs
+        id: bundle
+        if: success() || (failure() && steps.test.outcome == 'failure')
+        run: |
+          export BUILD_TARGET="${{ inputs.build-target }}"
+          echo "short-sha=$(git rev-parse --short=8 HEAD)" >> "${GITHUB_OUTPUT}"
+          ( [ -d "testlogs" ] && echo "upload-logs=true" >> "${GITHUB_OUTPUT}" && ./ci/dash/bundle-logs.sh ) \
+                              || echo "upload-logs=false" >> "${GITHUB_OUTPUT}"
+        shell: bash
+
+      - name: Upload test logs
+        uses: actions/upload-artifact@v4
+        if: |
+          success() || (failure() && steps.test.outcome == 'failure')
+          && steps.bundle.outputs.upload-logs == 'true'
+        with:
+          name: test_logs-${{ inputs.build-target }}-${{ steps.bundle.outputs.short-sha }}
+          path: |
+            test_logs-${{ inputs.build-target }}.tar.zst
+            test_logs-${{ inputs.build-target }}.tar.zst.sha256
+          compression-level: 0
+          overwrite: true
+          retention-days: 1

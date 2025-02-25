@@ -184,6 +184,7 @@ RUN apt-get update && apt-get install $APT_ARGS \
     wine-stable \
     wine64 \
     zip \
+    zstd \
     && rm -rf /var/lib/apt/lists/*
 
 # Make sure std::thread and friends is available
