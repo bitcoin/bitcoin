@@ -6,7 +6,7 @@
 
 export LC_ALL=C.UTF-8
 
-export CI_IMAGE_NAME_TAG="docker.io/ubuntu:24.04"
+export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:24.04"
 
 # Only install BCC tracing packages in CI. Container has to match the host for BCC to work.
 if [[ "${INSTALL_BCC_TRACING_TOOLS}" == "true" ]]; then

@@ -19,6 +19,7 @@ import shutil
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
         assert_equal,
+        assert_raises_rpc_error
 )
 
 class ReorgsRestoreTest(BitcoinTestFramework):
@@ -30,6 +31,65 @@ class ReorgsRestoreTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+
+    def test_coinbase_automatic_abandon_during_startup(self):
+        ##########################################################################################################
+        # Verify the wallet marks coinbase transactions, and their descendants, as abandoned during startup when #
+        # the block is no longer part of the best chain.                                                         #
+        ##########################################################################################################
+        self.log.info("Test automatic coinbase abandonment during startup")
+        # Test setup: Sync nodes for the coming test, ensuring both are at the same block, then disconnect them to
+        # generate two competing chains. After disconnection, verify no other peer connection exists.
+        self.connect_nodes(1, 0)
+        self.sync_blocks(self.nodes[:2])
+        self.disconnect_nodes(1, 0)
+        assert all(len(node.getpeerinfo()) == 0 for node in self.nodes[:2])
+
+        # Create a new block in node0, coinbase going to wallet0
+        self.nodes[0].createwallet(wallet_name="w0", load_on_startup=True)
+        wallet0 = self.nodes[0].get_wallet_rpc("w0")
+        self.generatetoaddress(self.nodes[0], 1, wallet0.getnewaddress(), sync_fun=self.no_op)
+        node0_coinbase_tx_hash = wallet0.getblock(wallet0.getbestblockhash(), verbose=1)['tx'][0]
+
+        # Mine 100 blocks on top to mature the coinbase and create a descendant
+        self.generate(self.nodes[0], 101, sync_fun=self.no_op)
+        # Make descendant, send-to-self
+        descendant_tx_id = wallet0.sendtoaddress(wallet0.getnewaddress(), 1)
+
+        # Verify balance
+        wallet0.syncwithvalidationinterfacequeue()
+        assert(wallet0.getbalances()['mine']['trusted'] > 0)
+
+        # Now create a fork in node1. This will be used to replace node0's chain later.
+        self.nodes[1].createwallet(wallet_name="w1", load_on_startup=True)
+        wallet1 = self.nodes[1].get_wallet_rpc("w1")
+        self.generatetoaddress(self.nodes[1], 1, wallet1.getnewaddress(), sync_fun=self.no_op)
+        wallet1.syncwithvalidationinterfacequeue()
+
+        # Verify both nodes are on a different chain
+        block0_best_hash, block1_best_hash = wallet0.getbestblockhash(), wallet1.getbestblockhash()
+        assert(block0_best_hash != block1_best_hash)
+
+        # Stop both nodes and replace node0 chain entirely for the node1 chain
+        self.stop_nodes()
+        for path in ["chainstate", "blocks"]:
+            shutil.rmtree(self.nodes[0].chain_path / path)
+            shutil.copytree(self.nodes[1].chain_path / path, self.nodes[0].chain_path / path)
+
+        # Start node0 and verify that now it has node1 chain and no info about its previous best block
+        self.start_node(0)
+        wallet0 = self.nodes[0].get_wallet_rpc("w0")
+        assert_equal(wallet0.getbestblockhash(), block1_best_hash)
+        assert_raises_rpc_error(-5, "Block not found", wallet0.getblock, block0_best_hash)
+
+        # Verify the coinbase tx was marked as abandoned and balance correctly computed
+        tx_info = wallet0.gettransaction(node0_coinbase_tx_hash)['details'][0]
+        assert_equal(tx_info['abandoned'], True)
+        assert_equal(tx_info['category'], 'orphan')
+        assert(wallet0.getbalances()['mine']['trusted'] == 0)
+        # Verify the coinbase descendant was also marked as abandoned
+        assert_equal(wallet0.gettransaction(descendant_tx_id)['details'][0]['abandoned'], True)
+
 
     def run_test(self):
         # Send a tx from which to conflict outputs later
@@ -99,6 +159,10 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         # Check that conflicted tx is confirmed again with blockhash different than previously conflicting tx
         assert_equal(conflicted_after_reorg["confirmations"], 1)
         assert conflicting["blockhash"] != conflicted_after_reorg["blockhash"]
+
+        # Verify we mark coinbase txs, and their descendants, as abandoned during startup
+        self.test_coinbase_automatic_abandon_during_startup()
+
 
 if __name__ == '__main__':
     ReorgsRestoreTest(__file__).main()

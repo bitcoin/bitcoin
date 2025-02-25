@@ -102,6 +102,10 @@ set_target_properties(bitcoinkernel PROPERTIES
   CXX_VISIBILITY_PRESET default
 )
 
+# Add a convenience libbitcoinkernel target as a synonym for bitcoinkernel.
+add_custom_target(libbitcoinkernel)
+add_dependencies(libbitcoinkernel bitcoinkernel)
+
 # When building the static library, install all static libraries the
 # bitcoinkernel depends on.
 if(NOT BUILD_SHARED_LIBS)
@@ -110,6 +114,7 @@ if(NOT BUILD_SHARED_LIBS)
     get_target_property(linked_libraries ${target} LINK_LIBRARIES)
     foreach(dep ${linked_libraries})
       if(TARGET ${dep})
+        add_dependencies(libbitcoinkernel ${dep})
         get_target_property(dep_type ${dep} TYPE)
         if(dep_type STREQUAL "STATIC_LIBRARY")
           list(APPEND ${libs_out} ${dep})
@@ -131,10 +136,6 @@ endif()
 
 configure_file(${PROJECT_SOURCE_DIR}/libbitcoinkernel.pc.in ${PROJECT_BINARY_DIR}/libbitcoinkernel.pc @ONLY)
 install(FILES ${PROJECT_BINARY_DIR}/libbitcoinkernel.pc DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" COMPONENT libbitcoinkernel)
-
-# Add a convenience libbitcoinkernel target as a synonym for bitcoinkernel.
-add_custom_target(libbitcoinkernel)
-add_dependencies(libbitcoinkernel bitcoinkernel)
 
 install(TARGETS bitcoinkernel
   RUNTIME

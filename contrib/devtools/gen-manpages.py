@@ -40,7 +40,7 @@ if not topdir:
     topdir = r.stdout.rstrip()
 
 # Get input and output directories.
-builddir = os.getenv('BUILDDIR', topdir)
+builddir = os.getenv('BUILDDIR', os.path.join(topdir, 'build'))
 mandir = os.getenv('MANDIR', os.path.join(topdir, 'doc/man'))
 
 # Verify that all the required binaries are usable, and extract copyright

@@ -771,7 +771,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
         node.bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
         peer1.wait_for_getdata([int(parent_missing["txid"], 16)])
 
-        # Replace parent_peekaboo_AB so that is is a newly missing parent.
+        # Replace parent_peekaboo_AB so that is a newly missing parent.
         # Then, replace the replacement so that it can be resubmitted.
         node.sendrawtransaction(tx_replacer_BC["hex"])
         assert tx_replacer_BC["txid"] in node.getrawmempool()

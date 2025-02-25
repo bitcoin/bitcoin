@@ -2,6 +2,26 @@ Contents
 ========
 This directory contains tools for developers working on this repository.
 
+deterministic-fuzz-coverage
+===========================
+
+A tool to check for non-determinism in fuzz coverage. To get the help, run:
+
+```
+RUST_BACKTRACE=1 cargo run --manifest-path ./contrib/devtools/deterministic-fuzz-coverage/Cargo.toml -- --help
+```
+
+To execute the tool, compilation has to be done with the build options
+`-DCMAKE_C_COMPILER='clang' -DCMAKE_CXX_COMPILER='clang++'
+-DBUILD_FOR_FUZZING=ON -DCMAKE_CXX_FLAGS='-fPIC -fprofile-instr-generate
+-fcoverage-mapping'`. Both llvm-profdata and llvm-cov must be installed. Also,
+the qa-assets repository must have been cloned. Finally, a fuzz target has to
+be picked before running the tool:
+
+```
+RUST_BACKTRACE=1 cargo run --manifest-path ./contrib/devtools/deterministic-fuzz-coverage/Cargo.toml -- $PWD/build_dir $PWD/qa-assets/corpora-dir fuzz_target_name
+```
+
 clang-format-diff.py
 ===================
 
@@ -82,12 +102,12 @@ gen-manpages.py
 A small script to automatically create manpages in ../../doc/man by running the release binaries with the -help option.
 This requires help2man which can be found at: https://www.gnu.org/software/help2man/
 
-With in-tree builds this tool can be run from any directory within the
-repository. To use this tool with out-of-tree builds set `BUILDDIR`. For
-example:
+This script assumes a build directory named `build` as suggested by example build documentation.
+To use it with a different build directory, set `BUILDDIR`.
+For example:
 
 ```bash
-BUILDDIR=$PWD/build contrib/devtools/gen-manpages.py
+BUILDDIR=$PWD/my-build-dir contrib/devtools/gen-manpages.py
 ```
 
 headerssync-params.py
@@ -107,12 +127,12 @@ Generates a bitcoin.conf file in `share/examples/` by parsing the output from `b
 release process to include a bitcoin.conf with the release binaries and can also be run by users to generate a file locally.
 When generating a file as part of the release process, make sure to commit the changes after running the script.
 
-With in-tree builds this tool can be run from any directory within the
-repository. To use this tool with out-of-tree builds set `BUILDDIR`. For
-example:
+This script assumes a build directory named `build` as suggested by example build documentation.
+To use it with a different build directory, set `BUILDDIR`.
+For example:
 
 ```bash
-BUILDDIR=$PWD/build contrib/devtools/gen-bitcoin-conf.sh
+BUILDDIR=$PWD/my-build-dir contrib/devtools/gen-bitcoin-conf.sh
 ```
 
 security-check.py
