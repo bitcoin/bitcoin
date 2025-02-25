@@ -20,6 +20,7 @@ from test_framework.blocktools import (
 )
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
+    MAX_SEQUENCE_NONFINAL,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -374,7 +375,7 @@ def test_segwit_bumpfee_succeeds(self, rbf_node, dest_address):
 def test_nonrbf_bumpfee_fails(self, peer_node, dest_address):
     self.log.info('Test that we cannot replace a non RBF transaction')
     not_rbfid = peer_node.sendtoaddress(dest_address, Decimal("0.00090000"))
-    assert_raises_rpc_error(-4, "Transaction is not BIP 125 replaceable", peer_node.bumpfee, not_rbfid)
+    peer_node.bumpfee(not_rbfid)
     self.clear_mempool()
 
 
@@ -677,11 +678,20 @@ def test_rebumping(self, rbf_node, dest_address):
 
 
 def test_rebumping_not_replaceable(self, rbf_node, dest_address):
-    self.log.info('Test that re-bumping non-replaceable fails')
+    self.log.info("Test that re-bumping non-replaceable passes")
     rbfid = spend_one_input(rbf_node, dest_address)
+
+    def check_sequence(tx, seq_in):
+        tx = rbf_node.getrawtransaction(tx["txid"])
+        tx = rbf_node.decoderawtransaction(tx)
+        seq = [i["sequence"] for i in tx["vin"]]
+        assert_equal(seq, [seq_in])
+
     bumped = rbf_node.bumpfee(rbfid, fee_rate=ECONOMICAL, replaceable=False)
-    assert_raises_rpc_error(-4, "Transaction is not BIP 125 replaceable", rbf_node.bumpfee, bumped["txid"],
-                            {"fee_rate": NORMAL})
+    check_sequence(bumped, MAX_SEQUENCE_NONFINAL)
+    bumped = rbf_node.bumpfee(bumped["txid"], {"fee_rate": NORMAL})
+    check_sequence(bumped, MAX_BIP125_RBF_SEQUENCE)
+
     self.clear_mempool()
 
 
