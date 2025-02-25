@@ -24,13 +24,16 @@ user inputs. Such environments include the Python3 command line interpreter or
 
 ## 2. Importing `TestShell` from the Bitcoin Core repository
 
-We can import the `TestShell` by adding the path of the Bitcoin Core
+We can import the `TestShell` by adding the path of the configured Bitcoin Core
 `test_framework` module to the beginning of the PATH variable, and then
-importing the `TestShell` class from the `test_shell` sub-package.
+importing the `TestShell` class from the `test_shell` sub-package. Since
+the build system creates a copy of the `test_framework` module into a new `build/`
+directory along with the required configuration file, the path to the build copy
+must be used.
 
 ```
 >>> import sys
->>> sys.path.insert(0, "/path/to/bitcoin/test/functional")
+>>> sys.path.insert(0, "/path/to/bitcoin/build/test/functional")
 >>> from test_framework.test_shell import TestShell
 ```
 
@@ -155,7 +158,7 @@ To prevent the logs from being removed after a shutdown, simply set the
 The following utility consolidates logs from the bitcoind nodes and the
 underlying `BitcoinTestFramework`:
 
-* `/path/to/bitcoin/test/functional/combine_logs.py
+* `/path/to/bitcoin/build/test/functional/combine_logs.py
   '/path/to/bitcoin_func_test_XXXXXXX'`
 
 ## 6. Custom `TestShell` parameters
@@ -170,9 +173,9 @@ can be called after the TestShell is shut down.
 | Test parameter key | Default Value | Description |
 |---|---|---|
 | `bind_to_localhost_only` | `True` | Binds bitcoind P2P services to `127.0.0.1` if set to `True`.|
-| `cachedir` | `"/path/to/bitcoin/test/cache"` | Sets the bitcoind datadir directory. |
+| `cachedir` | `"/path/to/bitcoin/build/test/cache"` | Sets the bitcoind datadir directory. |
 | `chain`  | `"regtest"` | Sets the chain-type for the underlying test bitcoind processes. |
-| `configfile` | `"/path/to/bitcoin/test/config.ini"` | Sets the location of the test framework config file. |
+| `configfile` | `"/path/to/bitcoin/build/test/config.ini"` | Sets the location of the test framework config file. |
 | `coveragedir` | `None` | Records bitcoind RPC test coverage into this directory if set. |
 | `loglevel` | `INFO` | Logs events at this level and higher. Can be set to `DEBUG`, `INFO`, `WARNING`, `ERROR` or `CRITICAL`. |
 | `nocleanup` | `False` | Cleans up temporary test directory if set to `True` during `shutdown`. |
