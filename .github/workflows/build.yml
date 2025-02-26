@@ -158,7 +158,7 @@ jobs:
   test-linux64:
     name: linux64-test
     uses: ./.github/workflows/test-src.yml
-    needs: [container, depends-linux64, src-linux64]
+    needs: [container, src-linux64]
     with:
       bundle-key: ${{ needs.src-linux64.outputs.key }}
       build-target: linux64
@@ -167,7 +167,7 @@ jobs:
   test-linux64_nowallet:
     name: linux64_nowallet-test
     uses: ./.github/workflows/test-src.yml
-    needs: [container, depends-linux64_nowallet, src-linux64_nowallet]
+    needs: [container, src-linux64_nowallet]
     with:
       bundle-key: ${{ needs.src-linux64_nowallet.outputs.key }}
       build-target: linux64_nowallet
@@ -176,7 +176,7 @@ jobs:
   test-linux64_sqlite:
     name: linux64_sqlite-test
     uses: ./.github/workflows/test-src.yml
-    needs: [container, depends-linux64, src-linux64_sqlite]
+    needs: [container, src-linux64_sqlite]
     with:
       bundle-key: ${{ needs.src-linux64_sqlite.outputs.key }}
       build-target: linux64_sqlite
@@ -185,7 +185,7 @@ jobs:
   test-linux64_ubsan:
     name: linux64_ubsan-test
     uses: ./.github/workflows/test-src.yml
-    needs: [container, depends-linux64, src-linux64_ubsan]
+    needs: [container, src-linux64_ubsan]
     with:
       bundle-key: ${{ needs.src-linux64_ubsan.outputs.key }}
       build-target: linux64_ubsan
