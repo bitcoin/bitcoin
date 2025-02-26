@@ -383,7 +383,8 @@ bool CWallet::AttemptSelection(const CAmount& nTargetValue, const CoinEligibilit
     CAmount target_with_change = nTargetValue;
     // While nTargetValue includes the transaction fees for non-input things, it does not include the fee for creating a change output.
     // So we need to include that for KnapsackSolver as well, as we are expecting to create a change output.
-    if (!coin_selection_params.m_subtract_fee_outputs) {
+    // There is also no change output when spending fully mixed coins.
+    if (!coin_selection_params.m_subtract_fee_outputs && nCoinType != CoinType::ONLY_FULLY_MIXED) {
         target_with_change += coin_selection_params.m_change_fee;
     }
     std::set<CInputCoin> knapsack_coins;
