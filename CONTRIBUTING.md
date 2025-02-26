@@ -1,7 +1,7 @@
-Contributing to Bitcoin Core
+Contributing to Phiahcoin Core
 ============================
 
-The Bitcoin Core project operates an open contributor model where anyone is
+The phiahcoin Core project operates an open contributor model where anyone is
 welcome to contribute towards development in the form of peer review, testing
 and patches. This document explains the practical process and guidelines for
 contributing.
@@ -30,13 +30,13 @@ Bitcoin Core and how to run the unit tests, functional tests, and fuzz tests.
 
 There are many open issues of varying difficulty waiting to be fixed.
 If you're looking for somewhere to start contributing, check out the
-[good first issue](https://github.com/bitcoin/bitcoin/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
+[good first issue](https://github.com/phiahcoin/bitcoin/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
 list or changes that are
-[up for grabs](https://github.com/bitcoin/bitcoin/issues?utf8=%E2%9C%93&q=label%3A%22Up+for+grabs%22).
+[up for grabs](https://github.com/phiahcoin/bitcoin/issues?utf8=%E2%9C%93&q=label%3A%22Up+for+grabs%22).
 Some of them might no longer be applicable. So if you are interested, but
 unsure, you might want to leave a comment on the issue first.
 
-You may also participate in the [Bitcoin Core PR Review Club](https://bitcoincore.reviews/).
+You may also participate in the [Phiahcoin Core PR Review Club](https://phiahcoincore.reviews/).
 
 ### Good First Issue Label
 
@@ -54,12 +54,12 @@ and is also an effective way to request assistance if and when you need it.
 Communication Channels
 ----------------------
 
-Most communication about Bitcoin Core development happens on IRC, in the
+Most communication about phiahcoin Core development happens on IRC, in the
 `#bitcoin-core-dev` channel on Libera Chat. The easiest way to participate on IRC is
-with the web client, [web.libera.chat](https://web.libera.chat/#bitcoin-core-dev). Chat
+with the web client, [web.libera.chat](https://web.libera.chat/#phiahcoin-core-dev). Chat
 history logs can be found
-on [https://www.erisian.com.au/bitcoin-core-dev/](https://www.erisian.com.au/bitcoin-core-dev/)
-and [https://gnusha.org/bitcoin-core-dev/](https://gnusha.org/bitcoin-core-dev/).
+on [https://www.erisian.com.au/phiahcoin-core-dev/](https://www.erisian.com.au/phiahcoin-core-dev/)
+and [https://gnusha.org/phiahcoin-core-dev/](https://gnusha.org/phiahcoin-core-dev/).
 
 Discussion about codebase improvements happens in GitHub issues and pull
 requests.
@@ -84,8 +84,8 @@ To contribute a patch, the workflow is as follows:
   1. Create topic branch
   1. Commit patches
 
-For GUI-related issues or pull requests, the https://github.com/bitcoin-core/gui repository should be used.
-For all other issues and pull requests, the https://github.com/bitcoin/bitcoin node repository should be used.
+For GUI-related issues or pull requests, the https://github.com/phiahcoin-core/gui repository should be used.
+For all other issues and pull requests, the https://github.com/bitcoin/phiahcoin node repository should be used.
 
 The master branch for all monotree repositories is identical.
 
@@ -176,7 +176,7 @@ subsequent comment to the PR.
 ### Translation changes
 
 Note that translations should not be submitted as pull requests. Please see
-[Translation Process](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md)
+[Translation Process](https://github.com/phiahcoin/phiahcoin/blob/master/doc/translation_process.md)
 for more information on helping with translations.
 
 ### Work in Progress Changes and Requests for Comments
