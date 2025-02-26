@@ -9,7 +9,7 @@ https://phiahcoincore.org/en/download/.
 What is Phiahcoin Core?
 ---------------------
 
-Phiahcoin Core connects to the Bitcoin peer-to-peer network to download and fully
+Phiahcoin Core connects to the Phiahcoin peer-to-peer network to download and fully
 validate blocks and transactions. It also includes a wallet and graphical user
 interface, which can be optionally built.
 
@@ -25,7 +25,7 @@ Development Process
 -------------------
 
 The `master` branch is regularly built (see `doc/build-*.md` for instructions) and tested, but it is not guaranteed to be
-completely stable. [Tags](https://github.com/phiahcoin/phlahcoin/tags) are created
+completely stable. [Tags](https://github.com/phiahcoin/phiahcoin/tags) are created
 regularly from release branches to indicate new official, stable release versions of phiahcoin Core.
 
 The https://github.com/phiahcoin-core/gui repository is used exclusively for the
@@ -70,7 +70,7 @@ Translations
 ------------
 
 Changes to translations as well as new translations can be submitted to
-[Phiahcoin Core's Transifex page](https://www.transifex.com/phiahcoin/bitcoin/).
+[Phiahcoin Core's Transifex page](https://www.transifex.com/phiahcoin/phiahcoin/).
 
 Translations are periodically pulled from Transifex and merged into the git repository. See the
 [translation process](doc/translation_process.md) for details on how this works.
