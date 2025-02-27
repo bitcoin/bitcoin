@@ -6,24 +6,43 @@ FROM ./ci-slim.Dockerfile
 # just started configuring this image, give us root access
 USER root
 
-# Install common packages
+# Install packages
 RUN set -ex; \
-    apt-get update && \
-    apt-get install $APT_ARGS \
-    autotools-dev \
-    automake \
+    apt-get update && apt-get install ${APT_ARGS} \
     autoconf \
+    automake \
+    autotools-dev \
+    bc \
     bear \
     bison \
     bsdmainutils \
     ccache \
     cmake \
+    g++-11 \
+    g++-14 \
+    g++-arm-linux-gnueabihf \
+    g++-mingw-w64-x86-64 \
+    gawk \
     gettext \
+    jq \
     libtool \
-    unzip \
+    libz-dev \
     m4 \
+    nsis \
+    parallel \
     pkg-config \
+    python3-zmq \
+    unzip \
+    valgrind \
+    wine-stable \
+    wine64 \
+    zip \
     && rm -rf /var/lib/apt/lists/*
+
+# Make sure std::thread and friends are available
+RUN update-alternatives --set x86_64-w64-mingw32-gcc  /usr/bin/x86_64-w64-mingw32-gcc-posix; \
+    update-alternatives --set x86_64-w64-mingw32-g++  /usr/bin/x86_64-w64-mingw32-g++-posix; \
+    exit 0
 
 # Install Clang + LLVM and set it as default
 RUN set -ex; \
@@ -58,31 +77,6 @@ RUN set -ex; \
     cmake -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-${LLVM_VERSION} ..; \
     make install -j "$(( $(nproc) - 1 ))"; \
     cd /opt && rm -rf /opt/iwyu;
-
-# Packages needed for all target builds
-RUN apt-get update && apt-get install $APT_ARGS \
-    bc \
-    gawk \
-    g++-11 \
-    g++-14 \
-    g++-arm-linux-gnueabihf \
-    g++-mingw-w64-x86-64 \
-    jq \
-    libz-dev \
-    nsis \
-    python3-zmq \
-    parallel \
-    valgrind \
-    wine-stable \
-    wine64 \
-    zip \
-    && rm -rf /var/lib/apt/lists/*
-
-# Make sure std::thread and friends is available
-RUN \
-  update-alternatives --set x86_64-w64-mingw32-gcc  /usr/bin/x86_64-w64-mingw32-gcc-posix; \
-  update-alternatives --set x86_64-w64-mingw32-g++  /usr/bin/x86_64-w64-mingw32-g++-posix; \
-  exit 0
 
 RUN \
   mkdir -p /cache/ccache && \
