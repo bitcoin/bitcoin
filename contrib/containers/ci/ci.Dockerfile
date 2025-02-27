@@ -49,26 +49,23 @@ RUN set -ex; \
     g++ \
     gettext \
     git \
-    gnupg \
     libtool \
-    lsb-release \
-    software-properties-common \
     unzip \
-    wget \
     m4 \
     pkg-config \
     zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Clang+LLVM and set it as default
-# We don't need all packages but the default set doesn't include some
-# packages we want so we will need to install some of them manually.
 ARG LLVM_VERSION=18
 RUN set -ex; \
     echo "Installing LLVM and Clang ${LLVM_VERSION}..."; \
-    curl -sL https://apt.llvm.org/llvm.sh | bash -s -- "${LLVM_VERSION}"; \
-    echo "Installing additional packages..."; \
-    apt-get update && apt-get install $APT_ARGS \
+    . /etc/os-release; \
+    curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key > /etc/apt/trusted.gpg.d/apt.llvm.org.asc; \
+    echo "deb [signed-by=/etc/apt/trusted.gpg.d/apt.llvm.org.asc] http://apt.llvm.org/${UBUNTU_CODENAME}/  llvm-toolchain-${UBUNTU_CODENAME}-${LLVM_VERSION} main" > /etc/apt/sources.list.d/llvm.list; \
+    apt-get update && apt-get install ${APT_ARGS} \
+    "clang-${LLVM_VERSION}" \
+    "clangd-${LLVM_VERSION}" \
     "clang-format-${LLVM_VERSION}" \
     "clang-tidy-${LLVM_VERSION}" \
     "libc++-${LLVM_VERSION}-dev" \
@@ -76,6 +73,7 @@ RUN set -ex; \
     "libclang-${LLVM_VERSION}-dev" \
     "libclang-rt-${LLVM_VERSION}-dev" \
     "lld-${LLVM_VERSION}" \
+    "lldb-${LLVM_VERSION}" \
     "llvm-${LLVM_VERSION}-dev"; \
     rm -rf /var/lib/apt/lists/*; \
     echo "Setting defaults..."; \
