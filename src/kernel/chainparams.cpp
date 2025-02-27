@@ -117,7 +117,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1628640000; // August 11th, 2021
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 709632; // Approximately November 12th, 2021
 
-        consensus.nMinimumChainWork = uint256{"000000000000000000000000000000000000000000000000000c350d350d3500"};
+        consensus.nMinimumChainWork = uint256{"00000000000000000000000000000000000000000000000292fadadddf9722f9"};
         consensus.defaultAssumeValid = uint256{"00000000a2082b4d76a7f6fe38b47dc1cc31dcce61f4242a3a14a46ceea28d3f"}; // 856760
 
         /**
