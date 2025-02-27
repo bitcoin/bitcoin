@@ -8,12 +8,23 @@ INCLUDE+ ci/Dockerfile
 # just started configuring this image, give us root access
 USER root
 
-# Make development environment more standalone
-RUN apt-get update && \
-    apt-get install $APT_ARGS \
+# Make development environment more standalone, allow running Dash Qt
+RUN set -ex; \
+    apt-get update && apt-get install ${APT_ARGS} \
     apt-cacher-ng \
     gdb \
     gpg \
+    libxcb-icccm4 \
+    libxcb-image0 \
+    libxcb-keysyms1 \
+    libxcb-randr0 \
+    libxcb-render-util0 \
+    libxcb-shape0 \
+    libxcb-sync1 \
+    libxcb-xfixes0 \
+    libxcb-xinerama0 \
+    libxcb-xkb1 \
+    libxkbcommon-x11-0 \
     lsb-release \
     nano \
     openssh-client \
