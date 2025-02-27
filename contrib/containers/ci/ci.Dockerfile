@@ -24,16 +24,10 @@ RUN set -ex; \
     g++-mingw-w64-x86-64 \
     gawk \
     gettext \
-    jq \
     libtool \
-    libz-dev \
     m4 \
-    nsis \
     parallel \
     pkg-config \
-    python3-zmq \
-    unzip \
-    valgrind \
     wine-stable \
     wine64 \
     zip \
