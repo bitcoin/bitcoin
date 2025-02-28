@@ -129,17 +129,18 @@ class P2PEvict(BitcoinTestFramework):
         node.add_p2p_connection(P2PInterface())
 
         # Create a peer that expects to be rejected
+        # FIXME: "multiprocess, i686, DEBUG" CI task has a reliable timeout issue for v2transport
         class RejectedPeer(P2PInterface):
             def connection_lost(self, exc):
                 return
 
         self.log.debug("Generic inbound gets rejected when full")
         with node.assert_debug_log(["failed to find an eviction candidate - connection dropped (full)"]):
-            node.add_p2p_connection(RejectedPeer(), wait_for_verack=False)
+            node.add_p2p_connection(RejectedPeer(), wait_for_verack=False, supports_v2_p2p=False)
 
         self.log.debug("Default whitebind inbound gets rejected, even when full")
         with node.assert_debug_log(["failed to find an eviction candidate - connection dropped (full)"]):
-            node.add_p2p_connection(RejectedPeer(), wait_for_verack=False, dstport=30201)
+            node.add_p2p_connection(RejectedPeer(), wait_for_verack=False, supports_v2_p2p=False, dstport=30201)
 
         self.log.debug("ForceInbound whitebind inbound gets connected, even when full")
         allowed_peer = node.add_p2p_connection(P2PInterface(), dstport=30202)
@@ -148,11 +149,11 @@ class P2PEvict(BitcoinTestFramework):
 
         self.log.debug("Generic inbound gets rejected when whitebind peer is filling inbound slot")
         with node.assert_debug_log(["failed to find an eviction candidate - connection dropped (full)"]):
-            node.add_p2p_connection(RejectedPeer(), wait_for_verack=False)
+            node.add_p2p_connection(RejectedPeer(), supports_v2_p2p=False, wait_for_verack=False)
 
         self.log.debug("ForceInbound whitebind inbound gets rejected when another whitebind peer is filling inbound slot")
         with node.assert_debug_log(["failed to find an eviction candidate - connection dropped (full)"]):
-            node.add_p2p_connection(RejectedPeer(), dstport=30202, wait_for_verack=False)
+            node.add_p2p_connection(RejectedPeer(), supports_v2_p2p=False, dstport=30202, wait_for_verack=False)
 
         assert_equal(len(node.getpeerinfo()), 1)
         assert allowed_peer.is_connected
