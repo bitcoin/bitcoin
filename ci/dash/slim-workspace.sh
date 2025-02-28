@@ -32,7 +32,7 @@ TARGETS=(
   "build-ci/dashcore-${BUILD_TARGET}/src/qt/qrc_dash_locale.cpp"
 )
 
-# Delete directories we don't need
+# Delete what we don't need
 for target in "${TARGETS[@]}"
 do
   if [[ -d "${target}" ]] || [[ -f "${target}" ]]; then

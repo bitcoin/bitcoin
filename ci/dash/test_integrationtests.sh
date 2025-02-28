@@ -66,7 +66,7 @@ if [ "$BASEDIR" != "" ]; then
     for f in $LOGFILES; do
       d2="testlogs/$d/$(dirname "$f")"
       mkdir -p "$d2"
-      cp "testdatadirs/$BASEDIR/$d/$f" "$d2/"
+      mv "testdatadirs/$BASEDIR/$d/$f" "$d2/"
     done
   done
 fi
