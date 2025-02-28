@@ -1,8 +1,6 @@
-# syntax = edrevo/dockerfile-plus
+# syntax = devthefuture/dockerfile-x
 
-FROM ubuntu:noble
-
-INCLUDE+ ci/Dockerfile
+FROM ./ci/ci.Dockerfile
 
 # The inherited Dockerfile switches to non-privileged context and we've
 # just started configuring this image, give us root access
