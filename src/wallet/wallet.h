@@ -687,7 +687,7 @@ public:
      * @param[in] finalize whether to create the final scriptSig
      * return error
      */
-    [[nodiscard]] TransactionError FillPSBT(PartiallySignedTransaction& psbtx,
+    TransactionError FillPSBT(PartiallySignedTransaction& psbtx,
                   bool& complete,
                   int sighash_type = 1 /* SIGHASH_ALL */,
                   bool sign = true,
