@@ -41,7 +41,10 @@ RUN set -ex; \
 #
 RUN groupadd docker && \
     usermod -aG sudo dash && \
-    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers; \
+    mkdir -p /home/dash/.config/gdb; \
+    echo "add-auto-load-safe-path /usr/lib/llvm-${LLVM_VERSION}/lib" | tee /home/dash/.config/gdb/gdbinit; \
+    chown ${USER_ID}:${GROUP_ID} -R /home/dash
 
 # Disable noninteractive mode
 ENV DEBIAN_FRONTEND="dialog"
