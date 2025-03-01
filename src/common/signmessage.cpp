@@ -7,6 +7,7 @@
 #include <hash.h>
 #include <key.h>
 #include <key_io.h>
+#include <outputtype.h>
 #include <pubkey.h>
 #include <uint256.h>
 #include <util/strencodings.h>
@@ -33,7 +34,14 @@ MessageVerificationResult MessageVerify(
         return MessageVerificationResult::ERR_INVALID_ADDRESS;
     }
 
-    if (std::get_if<PKHash>(&destination) == nullptr) {
+    OutputType signed_for_outputtype;
+    if (std::holds_alternative<PKHash>(destination)) {
+        signed_for_outputtype = OutputType::LEGACY;
+    } else if (std::holds_alternative<ScriptHash>(destination)) {
+        signed_for_outputtype = OutputType::P2SH_SEGWIT;
+    } else if (std::holds_alternative<WitnessV0KeyHash>(destination)) {
+        signed_for_outputtype = OutputType::BECH32;
+    } else {
         return MessageVerificationResult::ERR_ADDRESS_NO_KEY;
     }
 
@@ -42,12 +50,27 @@ MessageVerificationResult MessageVerify(
         return MessageVerificationResult::ERR_MALFORMED_SIGNATURE;
     }
 
+    uint8_t sigtype{(*signature_bytes)[0]};
+    if (sigtype < 27 || sigtype > 42) {
+        return MessageVerificationResult::ERR_PUBKEY_NOT_RECOVERED;
+    }
+    sigtype = (sigtype - 27) >> 2;
+    if (sigtype == 3) {
+        (*signature_bytes)[0] -= 8;
+        signed_for_outputtype = OutputType::BECH32;
+    } else if (sigtype == 2) {
+        (*signature_bytes)[0] -= 4;
+        signed_for_outputtype = OutputType::P2SH_SEGWIT;
+    }
+
     CPubKey pubkey;
     if (!pubkey.RecoverCompact(MessageHash(message), *signature_bytes)) {
         return MessageVerificationResult::ERR_PUBKEY_NOT_RECOVERED;
     }
 
-    if (!(PKHash(pubkey) == *std::get_if<PKHash>(&destination))) {
+    CTxDestination recovered_dest = GetDestinationForKey(pubkey, signed_for_outputtype);
+
+    if (!(recovered_dest == destination)) {
         return MessageVerificationResult::ERR_NOT_SIGNED;
     }
 
