@@ -1015,9 +1015,11 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
     const std::string headers{res.StringifyHeaders()};
     const auto headers_bytes{std::as_bytes(std::span(headers.begin(), headers.end()))};
 
+    bool send_buffer_was_empty{false};
     // Fill the send buffer with the complete serialized response headers + body
     {
         LOCK(m_client->m_send_mutex);
+        send_buffer_was_empty = m_client->m_send_buffer.empty();
         m_client->m_send_buffer.insert(m_client->m_send_buffer.end(), headers_bytes.begin(), headers_bytes.end());
 
         // We've been using std::span up until now but it is finally time to copy
@@ -1026,10 +1028,6 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
         m_client->m_send_buffer.insert(m_client->m_send_buffer.end(), reply_body.begin(), reply_body.end());
     }
 
-    // Inform HTTPServer I/O loop that there is data that is ready to be sent to
-    // this client in the next loop iteration.
-    m_client->m_send_ready = true;
-
     LogDebug(
         BCLog::HTTP,
         "HTTPResponse (status code: %d size: %lld) added to send buffer for client %s (id=%lld)\n",
@@ -1037,6 +1035,18 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
         headers_bytes.size() + reply_body.size(),
         m_client->m_origin,
         m_client->m_id);
+
+    // If the send buffer was empty before we wrote this reply, we can try an
+    // optimistic send akin to CConnman::PushMessage() in which we
+    // push the data directly out the socket to client right now, instead
+    // of waiting for the next iteration of the I/O loop.
+    if (send_buffer_was_empty) {
+        m_client->MaybeSendBytesFromBuffer();
+    } else {
+        // Inform HTTPServer I/O that data is ready to be sent to this client
+        // in the next loop iteration.
+        m_client->m_send_ready = true;
+    }
 }
 
 util::Result<void> HTTPServer::BindAndStartListening(const CService& to)
@@ -1489,6 +1499,10 @@ bool HTTPClient::MaybeSendBytesFromBuffer()
                 // Do not attempt to read from this client.
                 return false;
             }
+        } else {
+            // The send buffer isn't flushed yet, try to push more on the next loop.
+            m_send_ready = true;
+            m_prevent_disconnect = true;
         }
     }
 
