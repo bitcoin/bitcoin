@@ -117,7 +117,6 @@ class AddressInputTypeGrouping(BitcoinTestFramework):
         self.extra_args = [
             [
                 "-addresstype=bech32",
-                "-txindex",
             ],
             [
                 "-addresstype=p2sh-segwit",
