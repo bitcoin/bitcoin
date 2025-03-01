@@ -313,16 +313,18 @@ public:
     std::atomic_bool m_send_ready{false};
 
     // Set to true when we receive request data and set to false once m_send_buffer is cleared.
-    // Checked during DisconnectClients(). All of these operations take place in the Sockman I/O loop.
+    // Checked during DisconnectClients(). All of these operations take place in the Sockman I/O loop,
+    // however it may get set my a worker thread during an "optimistic send".
     // If set, then the client will not be disconnected even if `m_disconnect` is true.
-    bool m_prevent_disconnect{false};
+    std::atomic_bool m_prevent_disconnect{false};
 
     // Client request to keep the connection open after all requests have been responded to.
     // Set by (potentially multiple) worker threads and checked in the Sockman I/O loop.
     std::atomic_bool m_keep_alive{false};
 
-    // Flag this client for disconnection on next loop
-    bool m_disconnect{false};
+    // Flag this client for disconnection on next loop.
+    // Checked at the end of every Sockman I/O loop, may be set a worker thread.
+    std::atomic_bool m_disconnect{false};
 
     explicit HTTPClient(NodeId node_id, CService addr) : m_node_id(node_id), m_addr(addr)
     {
