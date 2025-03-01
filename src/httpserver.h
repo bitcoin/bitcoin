@@ -544,9 +544,10 @@ public:
     std::shared_ptr<Sock> m_sock GUARDED_BY(m_sock_mutex);
 
     //! Set to true when we receive request data and set to false once m_send_buffer is cleared.
-    //! Checked during DisconnectClients(). All of these operations take place in the HTTPServer I/O loop.
+    //! Checked during DisconnectClients() in the HTTPServer I/O loop,
+    //! however it may get set by a worker thread during an "optimistic send".
     //! If set, then the client will not be disconnected even if `m_disconnect` is true.
-    bool m_prevent_disconnect{false};
+    std::atomic_bool m_prevent_disconnect{false};
 
     //! Client has requested to keep the connection open after all requests have been responded to.
     //! Set by (potentially multiple) worker threads and checked in the HTTPServer I/O loop.
