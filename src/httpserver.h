@@ -551,9 +551,10 @@ public:
     //! Initialized to true while server waits for first request from client.
     //! Set to false after data is written to m_send_buffer and then that buffer is flushed to client.
     //! Reset to true when we receive new request data from client.
-    //! Checked during DisconnectClients(). All of these operations take place in the HTTPServer I/O loop.
+    //! Checked during DisconnectClients() and set by read/write operations
+    //! called in either the HTTPServer I/O loop or by a worker thread during an "optimistic send".
     //! `m_connection_busy=true` can be overridden by `m_disconnect=true` (we disconnect).
-    bool m_connection_busy{true};
+    std::atomic_bool m_connection_busy{true};
 
     //! Client has requested to keep the connection open after all requests have been responded to.
     //! Set by (potentially multiple) worker threads and checked in the HTTPServer I/O loop.
