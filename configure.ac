@@ -986,18 +986,23 @@ AC_DEFINE_UNQUOTED([HAVE_IOPRIO_SYSCALL], [$HAVE_IOPRIO_SYSCALL], [Define to 1 i
 AC_MSG_CHECKING(for Windows file I/O priority functions)
 AC_COMPILE_IFELSE([
   AC_LANG_PROGRAM([[
-    #define _WIN32_WINNT 0x0600
+    #define _WIN32_WINNT 0x0601
     #include <windows.h>
     #include <io.h>
+    #include <stddef.h>
+    #include <stdint.h>
     #include <stdio.h>
   ]],[[
-    static const FILE_IO_PRIORITY_HINT_INFO priorityHint = {
+    FILE_IO_PRIORITY_HINT_INFO priorityHint = {
         .PriorityHint = IoPriorityHintLow,
     };
     FILE * const F = fopen("test", "r");
-    HANDLE hFile = _get_osfhandle(_fileno(F));
+    intptr_t osfhandle = _get_osfhandle(_fileno(F));
+    if (osfhandle == (intptr_t)INVALID_HANDLE_VALUE) osfhandle = 0;
+    HANDLE hFile = (HANDLE)osfhandle;
 
-    SetFileInformationByHandle(hFile, FileIoPriorityHintInfo, &priorityHint, sizeof(priorityHint));
+    bool rv = SetFileInformationByHandle(hFile, FileIoPriorityHintInfo, &priorityHint, sizeof(priorityHint));
+    return rv;
   ]])
 ],[
   AC_MSG_RESULT([yes])
