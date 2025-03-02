@@ -11,11 +11,13 @@
 #include <primitives/transaction.h>
 #include <script/script_error.h> // IWYU pragma: export
 #include <span.h>
+#include <sync.h>
 #include <uint256.h>
 
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <unordered_map>
 #include <vector>
 
 class CPubKey;
@@ -223,6 +225,49 @@ struct ScriptExecutionData
     std::optional<uint256> m_output_hash;
 };
 
+/** The state of the script interpreter that persists across inputs of a single transaction.
+ *
+ * As access happens across different worker threads, it is crucial that access to this struct
+ * is properly synchronized. Code accessing its members must hold the m_mutex lock. */
+struct TransactionExecutionData {
+    const CTransaction* m_tx;
+    Mutex m_mutex;
+
+    // members related to the validation state of this transaction
+    // that need to persist across inputs will be added here,
+    // protected by m_mutex.
+
+    TransactionExecutionData(const CTransaction* tx)
+        : m_tx(tx)
+    {
+        assert(tx != nullptr); // Ensure the transaction pointer is valid
+    }
+};
+
+/** Creates and stores TransactionExecutionData instances for each transaction. */
+class TransactionExecutionDataStore {
+private:
+    Mutex m_mutex;
+    std::unordered_map<const CTransaction*, std::unique_ptr<TransactionExecutionData>> m_store GUARDED_BY(m_mutex);
+
+public:
+    TransactionExecutionDataStore() = default;
+
+    // Retrieves the TransactionExecutionData for the given transaction.
+    // If it does not exist, it creates a new instance.
+    TransactionExecutionData* getOrCreate(const CTransaction* tx) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex) {
+        LOCK(m_mutex);
+        auto it = m_store.find(tx);
+        if (it != m_store.end()) {
+            return it->second.get();
+        }
+        auto newData = std::make_unique<TransactionExecutionData>(tx);
+        TransactionExecutionData* newDataPtr = newData.get();
+        m_store[tx] = std::move(newData);
+        return newDataPtr;
+    }
+};
+
 /** Signature hash sizes */
 static constexpr size_t WITNESS_V0_SCRIPTHASH_SIZE = 32;
 static constexpr size_t WITNESS_V0_KEYHASH_SIZE = 20;
@@ -343,9 +388,9 @@ uint256 ComputeTapbranchHash(std::span<const unsigned char> a, std::span<const u
  *  Requires control block to have valid length (33 + k*32, with k in {0,1,..,128}). */
 uint256 ComputeTaprootMerkleRoot(std::span<const unsigned char> control, const uint256& tapleaf_hash);
 
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* error = nullptr);
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = nullptr);
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror = nullptr);
+bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* error = nullptr, TransactionExecutionData* tx_exec_data = nullptr);
+bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = nullptr, TransactionExecutionData* tx_exec_data = nullptr);
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror = nullptr, TransactionExecutionData* tx_exec_data = nullptr);
 
 size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags);
 
