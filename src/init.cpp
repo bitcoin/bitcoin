@@ -91,6 +91,7 @@
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/options.h>
 #include <llmq/signing.h>
+#include <llmq/instantsend.h>
 #include <masternode/meta.h>
 #include <masternode/node.h>
 #include <masternode/sync.h>
