@@ -2230,11 +2230,8 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                 // splitting the network between upgraded and
                 // non-upgraded nodes by banning CONSENSUS-failing
                 // data providers.
-                // TODO: Should we make a clone of *tx_exec_data before the first check above, or is it fine
-                //       to pass nullptr?
-                //       We cannot reuse tx_exec_data, as it might be modified
                 CScriptCheck check2(txdata.m_spent_outputs[i], tx, validation_cache.m_signature_cache, i,
-                        flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheSigStore, &txdata, nullptr);
+                        flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheSigStore, &txdata, tx_exec_data);
                 auto mandatory_result = check2();
                 if (!mandatory_result.has_value()) {
                     return state.Invalid(TxValidationResult::TX_NOT_STANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(result->first)), result->second);

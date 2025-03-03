@@ -282,6 +282,12 @@ public:
     /** Construct a Taproot tweaked output point with this point as internal key. */
     std::optional<std::pair<XOnlyPubKey, bool>> CreateTapTweak(const uint256* merkle_root) const;
 
+    /** Verify that this key is obtained from the x-only pubkey `naked` after applying in sequence:
+     * - the tweak with `data` (this tweak is skipped if `data` is empty);
+     * - the taptweak with `merkle_root` (unless it's null).
+     */
+    bool CheckDoubleTweak(const XOnlyPubKey& naked_key, const std::vector<unsigned char>& data, const uint256* merkle_root) const;
+
     /** Returns a list of CKeyIDs for the CPubKeys that could have been used to create this XOnlyPubKey.
      * This is needed for key lookups since keys are indexed by CKeyID.
      */

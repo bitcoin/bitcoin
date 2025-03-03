@@ -111,6 +111,14 @@ std::string ScriptErrorString(const ScriptError serror)
             return "OP_CHECKMULTISIG(VERIFY) is not available in tapscript";
         case SCRIPT_ERR_TAPSCRIPT_MINIMALIF:
             return "OP_IF/NOTIF argument must be minimal in tapscript";
+        case SCRIPT_ERR_CHECKCONTRACTVERIFY_WRONG_ARGS:
+            return "Invalid arguments for OP_CHECKCONTRACTVERIFY";
+        case SCRIPT_ERR_CHECKCONTRACTVERIFY_OUT_OF_BOUNDS:
+            return "Index of input/output out of bounds in OP_CHECKCONTRACTVERIFY";
+        case SCRIPT_ERR_CHECKCONTRACTVERIFY_MISMATCH:
+            return "Mismatching contract data or program";
+        case SCRIPT_ERR_CHECKCONTRACTVERIFY_WRONG_AMOUNT:
+            return "Incorrect amount for OP_CHECKCONTRACTVERIFY";
         case SCRIPT_ERR_OP_CODESEPARATOR:
             return "Using OP_CODESEPARATOR in non-witness script";
         case SCRIPT_ERR_SIG_FINDANDDELETE:

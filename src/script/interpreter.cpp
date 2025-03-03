@@ -14,6 +14,15 @@
 
 typedef std::vector<unsigned char> valtype;
 
+//! Flag to mark an OP_CHECKCONTRACVERIFY as referring to an input.
+const int CCV_MODE_CHECK_INPUT = -1;
+//! Flag to specify that an OP_CHECKCONTRACVERIFY which refers to an output, with the default amount logic.
+const int CCV_MODE_CHECK_OUTPUT = 0;
+//! Flag to specify that an OP_CHECKCONTRACVERIFY which refers to an output does not check the output amount.
+const int CCV_MODE_CHECK_OUTPUT_IGNORE_AMOUNT = 1;
+//! Flag to specify that an OP_CHECKCONTRACVERIFY referring to an output deducts the amount of its output from the current input amount for future calls.
+const int CCV_MODE_CHECK_OUTPUT_DEDUCT_AMOUNT = 2;
+
 namespace {
 
 inline bool set_success(ScriptError* ret)
@@ -1101,6 +1110,51 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                 }
                 break;
 
+                case OP_CHECKCONTRACTVERIFY:
+                {
+                    // OP_CHECKCONTRACTVERIFY is only available in Tapscript
+                    if (sigversion == SigVersion::BASE || sigversion == SigVersion::WITNESS_V0) return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+
+                    // we expect at least the flag to be on the stack
+                    if (stack.empty())
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+
+                    // initially, read only a single parameter at the top of stack
+                    int flags = CScriptNum(stacktop(-1), fRequireMinimal).getint();
+                    if (flags < -1 || flags > CCV_MODE_CHECK_OUTPUT_DEDUCT_AMOUNT) {
+                        // undefined values of the flags; keep OP_SUCCESS behavior
+                        // in order to enable future upgrades via soft-fork
+                        stack = { {1} };
+                        return set_success(serror);
+                    }
+
+                    // all currently defined versions require exactly 5 stack elements
+
+                    // (data index pk taptree flags -- )
+                    if (stack.size() < 5)
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+
+                    valtype& data = stacktop(-5);
+                    int index = CScriptNum(stacktop(-4), fRequireMinimal).getint();
+                    valtype& pk = stacktop(-3);
+                    valtype& taptree = stacktop(-2);
+
+                    if (!pk.empty() && pk != std::vector<unsigned char>{0x81} && pk.size() != 32) {
+                        return set_error(serror, SCRIPT_ERR_CHECKCONTRACTVERIFY_WRONG_ARGS);
+                    }
+
+                    if (!checker.CheckContract(flags, index, pk, data, taptree, execdata, serror, tx_exec_data)) {
+                        return false; // serror is set
+                    }
+
+                    popstack(stack);
+                    popstack(stack);
+                    popstack(stack);
+                    popstack(stack);
+                    popstack(stack);
+                }
+                break;
+
                 case OP_CHECKMULTISIG:
                 case OP_CHECKMULTISIGVERIFY:
                 {
@@ -1781,6 +1835,116 @@ bool GenericTransactionSignatureChecker<T>::CheckSequence(const CScriptNum& nSeq
     return true;
 }
 
+template <class T>
+bool GenericTransactionSignatureChecker<T>::CheckContract(int mode, int index, const std::vector<unsigned char>& pubkey, const std::vector<unsigned char>& data, const std::vector<unsigned char>& taptree, ScriptExecutionData& ScriptExecutionData, ScriptError* serror, TransactionExecutionData* tx_exec_data) const
+{
+    assert(ScriptExecutionData.m_internal_key.has_value());
+    assert(ScriptExecutionData.m_taproot_merkle_root.has_value());
+    assert(tx_exec_data != nullptr);
+
+    if (!(txdata->m_bip341_taproot_ready && txdata->m_spent_outputs_ready)) {
+        return HandleMissingData(m_mdb);
+    }
+
+    bool use_current_taptree = taptree.size() == 1 && taptree.data()[0] == 0x81;
+    bool use_current_pubkey = pubkey.size() == 1 && pubkey.data()[0] == 0x81;
+
+    uint256 merkle_tree;
+    const uint256 *merkle_tree_ptr = nullptr;
+    if (taptree.empty()) {
+        // no taptweak, leave nullptr
+    } else if (use_current_taptree) {
+        merkle_tree_ptr = &ScriptExecutionData.m_taproot_merkle_root.value();
+    } else if (taptree.size() == 32) {
+        merkle_tree = uint256(taptree);
+        merkle_tree_ptr = &merkle_tree;
+    } else {
+        return set_error(serror, SCRIPT_ERR_CHECKCONTRACTVERIFY_WRONG_ARGS);
+    }
+
+    XOnlyPubKey initialXOnlyKey;
+    if (use_current_pubkey) {
+        initialXOnlyKey = ScriptExecutionData.m_internal_key.value();
+    } else if (pubkey.empty()) {
+        initialXOnlyKey = XOnlyPubKey::NUMS_H;
+    } else {
+        initialXOnlyKey = XOnlyPubKey{std::span<const unsigned char>{pubkey.data(), pubkey.data() + 32}};
+    }
+
+    if (index == -1) {
+        index = nIn;
+    }
+
+    auto indexLimit = (mode == CCV_MODE_CHECK_INPUT ? txTo->vin.size() : txTo->vout.size());
+    if (index < 0 || index >= static_cast<int>(indexLimit)) {
+        return set_error(serror, SCRIPT_ERR_CHECKCONTRACTVERIFY_OUT_OF_BOUNDS);
+    }
+
+    CScript scriptPubKey = (mode == CCV_MODE_CHECK_INPUT) ? txdata->m_spent_outputs[index].scriptPubKey : txTo->vout.at(index).scriptPubKey;
+
+    if (scriptPubKey.size() != 1 + 1 + 32 || scriptPubKey[0] != OP_1 || scriptPubKey[1] != 32) {
+        return set_error(serror, SCRIPT_ERR_CHECKCONTRACTVERIFY_WRONG_ARGS);
+    }
+
+    const XOnlyPubKey finalXOnlyKey{std::span<const unsigned char>{scriptPubKey.data() + 2, scriptPubKey.data() + 34}};
+
+    if (!finalXOnlyKey.CheckDoubleTweak(initialXOnlyKey, data, merkle_tree_ptr)) {
+        return set_error(serror, SCRIPT_ERR_CHECKCONTRACTVERIFY_MISMATCH);
+    }
+
+
+    if (!ScriptExecutionData.m_ccv_amount_init) {
+        ScriptExecutionData.m_ccv_amount = amount;
+        ScriptExecutionData.m_ccv_amount_init = true;
+    }
+
+    {
+        LOCK(tx_exec_data->m_mutex);
+        if (tx_exec_data->m_error.has_value()) {
+            // an error related to tx_exec_data already occurred while validating the transaction
+            return set_error(serror, tx_exec_data->m_error.value());
+        }
+
+        switch (mode) {
+            case CCV_MODE_CHECK_OUTPUT:
+                if (tx_exec_data->m_ccv_output_checked_deduct[index]) {
+                    tx_exec_data->m_error = SCRIPT_ERR_CHECKCONTRACTVERIFY_WRONG_AMOUNT;
+                    return set_error(serror, SCRIPT_ERR_CHECKCONTRACTVERIFY_WRONG_AMOUNT);
+                }
+                tx_exec_data->m_ccv_output_checked_default[index] = true;
+
+                tx_exec_data->m_ccv_output_min_amount[index] += ScriptExecutionData.m_ccv_amount;
+                ScriptExecutionData.m_ccv_amount = 0;
+                if (txTo->vout[index].nValue < tx_exec_data->m_ccv_output_min_amount[index]) {
+                    tx_exec_data->m_error = SCRIPT_ERR_CHECKCONTRACTVERIFY_WRONG_AMOUNT;
+                    return set_error(serror, SCRIPT_ERR_CHECKCONTRACTVERIFY_WRONG_AMOUNT);
+                }
+                break;
+            case CCV_MODE_CHECK_OUTPUT_IGNORE_AMOUNT:
+                // amount checking is disabled
+                break;
+            case CCV_MODE_CHECK_OUTPUT_DEDUCT_AMOUNT:
+                if (tx_exec_data->m_ccv_output_checked_default[index] || tx_exec_data->m_ccv_output_checked_deduct[index]) {
+                    tx_exec_data->m_error = SCRIPT_ERR_CHECKCONTRACTVERIFY_WRONG_AMOUNT;
+                    return set_error(serror, SCRIPT_ERR_CHECKCONTRACTVERIFY_WRONG_AMOUNT);
+                }
+                tx_exec_data->m_ccv_output_checked_deduct[index] = true;
+                // subtract amount from input
+                if (txTo->vout[index].nValue > ScriptExecutionData.m_ccv_amount) {
+                    tx_exec_data->m_error = SCRIPT_ERR_CHECKCONTRACTVERIFY_WRONG_AMOUNT;
+                    return set_error(serror, SCRIPT_ERR_CHECKCONTRACTVERIFY_WRONG_AMOUNT);
+                }
+                ScriptExecutionData.m_ccv_amount -= txTo->vout[index].nValue;
+
+                break;
+            default:
+                break;
+        }
+    }
+
+    return true;
+}
+
 // explicit instantiation
 template class GenericTransactionSignatureChecker<CTransaction>;
 template class GenericTransactionSignatureChecker<CMutableTransaction>;
@@ -1788,6 +1952,8 @@ template class GenericTransactionSignatureChecker<CMutableTransaction>;
 static bool ExecuteWitnessScript(const std::span<const valtype>& stack_span, const CScript& exec_script, unsigned int flags, SigVersion sigversion, const BaseSignatureChecker& checker, ScriptExecutionData& execdata, TransactionExecutionData* tx_exec_data, ScriptError* serror)
 {
     std::vector<valtype> stack{stack_span.begin(), stack_span.end()};
+
+    const bool is_checkcontractverify_active = (flags & SCRIPT_VERIFY_CHECKCONTRACTVERIFY);
 
     if (sigversion == SigVersion::TAPSCRIPT) {
         // OP_SUCCESSx processing overrides everything, including stack element size limits
@@ -1799,7 +1965,9 @@ static bool ExecuteWitnessScript(const std::span<const valtype>& stack_span, con
                 return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
             }
             // New opcodes will be listed here. May use a different sigversion to modify existing opcodes.
-            if (IsOpSuccess(opcode)) {
+            if (is_checkcontractverify_active && opcode == OP_CHECKCONTRACTVERIFY) {
+                continue;
+            } else if (IsOpSuccess(opcode)) {
                 if (flags & SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS) {
                     return set_error(serror, SCRIPT_ERR_DISCOURAGE_OP_SUCCESS);
                 }
@@ -1856,18 +2024,19 @@ uint256 ComputeTaprootMerkleRoot(std::span<const unsigned char> control, const u
     return k;
 }
 
-static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, const std::vector<unsigned char>& program, const uint256& tapleaf_hash)
+static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, const std::vector<unsigned char>& program, const uint256& tapleaf_hash, std::optional<XOnlyPubKey>& internal_key, std::optional<uint256>& merkle_root)
 {
     assert(control.size() >= TAPROOT_CONTROL_BASE_SIZE);
     assert(program.size() >= uint256::size());
     //! The internal pubkey (x-only, so no Y coordinate parity).
     const XOnlyPubKey p{std::span{control}.subspan(1, TAPROOT_CONTROL_BASE_SIZE - 1)};
+    internal_key = p;
     //! The output pubkey (taken from the scriptPubKey).
     const XOnlyPubKey q{program};
     // Compute the Merkle root from the leaf and the provided path.
-    const uint256 merkle_root = ComputeTaprootMerkleRoot(control, tapleaf_hash);
+    merkle_root = ComputeTaprootMerkleRoot(control, tapleaf_hash);
     // Verify that the output pubkey matches the tweaked internal pubkey, after correcting for parity.
-    return q.CheckTapTweak(p, merkle_root, control[0] & 1);
+    return q.CheckTapTweak(p, merkle_root.value(), control[0] & 1);
 }
 
 static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, const std::vector<unsigned char>& program, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror, bool is_p2sh, TransactionExecutionData* tx_exec_data = nullptr)
@@ -1927,7 +2096,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
                 return set_error(serror, SCRIPT_ERR_TAPROOT_WRONG_CONTROL_SIZE);
             }
             execdata.m_tapleaf_hash = ComputeTapleafHash(control[0] & TAPROOT_LEAF_MASK, script);
-            if (!VerifyTaprootCommitment(control, program, execdata.m_tapleaf_hash)) {
+            if (!VerifyTaprootCommitment(control, program, execdata.m_tapleaf_hash, execdata.m_internal_key, execdata.m_taproot_merkle_root)) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
             }
             execdata.m_tapleaf_hash_init = true;
