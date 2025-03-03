@@ -73,9 +73,6 @@ cat >> "${EXAMPLE_CONF_FILE}" << 'EOF'
 # Options for mainnet
 [main]
 
-# Options for testnet3
-[test]
-
 # Options for testnet4
 [testnet4]
 
