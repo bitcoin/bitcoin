@@ -385,6 +385,17 @@ BOOST_AUTO_TEST_CASE(http_client_server_tests)
         }
         BOOST_CHECK_EQUAL(actual, expected);
 
+        // Wait up to one minute for connection to be closed
+        attempts = 6000;
+        while (attempts > 0)
+        {
+            if (server.m_no_clients) break;
+
+            std::this_thread::sleep_for(10ms);
+            --attempts;
+        }
+        BOOST_REQUIRE(server.m_no_clients);
+
         // Close server
         server.interruptNet();
         // Wait for I/O loop to finish, after all sockets are closed
