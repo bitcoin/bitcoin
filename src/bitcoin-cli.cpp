@@ -428,8 +428,6 @@ private:
         switch (gArgs.GetChainType()) {
         case ChainType::TESTNET4:
             return " testnet4";
-        case ChainType::TESTNET:
-            return " testnet";
         case ChainType::SIGNET:
             return " signet";
         case ChainType::REGTEST:
