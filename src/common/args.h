@@ -88,6 +88,7 @@ struct SectionInfo {
 
 std::string SettingToString(const common::SettingsValue&, const std::string&);
 std::optional<std::string> SettingToString(const common::SettingsValue&);
+std::optional<fs::path> SettingToPath(const common::SettingsValue&);
 
 int64_t SettingToInt(const common::SettingsValue&, int64_t);
 std::optional<int64_t> SettingToInt(const common::SettingsValue&);

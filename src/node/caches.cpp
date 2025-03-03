@@ -6,6 +6,7 @@
 
 #include <common/args.h>
 #include <index/txindex.h>
+#include <init_settings.h>
 #include <kernel/caches.h>
 #include <logging.h>
 #include <util/byte_units.h>
@@ -25,14 +26,14 @@ CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes)
 {
     // Convert -dbcache from MiB units to bytes. The total cache is floored by MIN_DB_CACHE and capped by max size_t value.
     size_t total_cache{DEFAULT_DB_CACHE};
-    if (std::optional<int64_t> db_cache = args.GetIntArg("-dbcache")) {
+    if (std::optional<int64_t> db_cache = DbCacheSetting::Get(args)) {
         if (*db_cache < 0) db_cache = 0;
         uint64_t db_cache_bytes = SaturatingLeftShift<uint64_t>(*db_cache, 20);
         total_cache = std::max<size_t>(MIN_DB_CACHE, std::min<uint64_t>(db_cache_bytes, std::numeric_limits<size_t>::max()));
     }
 
     IndexCacheSizes index_sizes;
-    index_sizes.tx_index = std::min(total_cache / 8, args.GetBoolArg("-txindex", DEFAULT_TXINDEX) ? MAX_TX_INDEX_CACHE : 0);
+    index_sizes.tx_index = std::min(total_cache / 8, TxIndexSetting::Get(args) ? MAX_TX_INDEX_CACHE : 0);
     total_cache -= index_sizes.tx_index;
     if (n_indexes > 0) {
         size_t max_cache = std::min(total_cache / 8, MAX_FILTER_INDEX_CACHE);
