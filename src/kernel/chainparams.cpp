@@ -195,10 +195,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 000000000000000000011c5890365bdbe5d25b97ce0057589acaef4f1a57263f
-            .nTime    = 1723649144,
-            .tx_count = 1059312821,
-            .dTxRate  = 6.721086701157182,
+            // Data from RPC: getchaintxstats 4096 00000000000000000001b658dd1120e82e66d2790811f89ede9742ada3ed6d77
+            .nTime    = 1741017141,
+            .tx_count = 1161875261,
+            .dTxRate  = 4.620728156243148,
         };
     }
 };
@@ -296,10 +296,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 000000000000000465b1a66c9f386308e8c75acef9201f3f577811da09fc90ad
-            .nTime    = 1723613341,
-            .tx_count = 187917082,
-            .dTxRate  = 3.265051477698455,
+            // Data from RPC: getchaintxstats 4096 00000000000003fc7967410ba2d0a8a8d50daedc318d43e8baf1a9782c236a57
+            .nTime    = 1741042082,
+            .tx_count = 475477615,
+            .dTxRate  = 17.15933950357594,
         };
     }
 };
@@ -395,10 +395,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 000000005be348057db991fa5d89fe7c4695b667cfb311391a8db374b6f681fd
-            .nTime    = 1723651702,
-            .tx_count = 757229,
-            .dTxRate  = 0.01570402633472492,
+            // Data from RPC: getchaintxstats 4096 0000000000003ed4f08dbdf6f7d6b271a6bcffce25675cb40aa9fa43179a89f3
+            .nTime    = 1741070246,
+            .tx_count = 7653966,
+            .dTxRate  = 1.239174414591965,
         };
     }
 };
@@ -427,10 +427,10 @@ public:
             m_assumed_blockchain_size = 9;
             m_assumed_chain_state_size = 1;
             chainTxData = ChainTxData{
-                // Data from RPC: getchaintxstats 4096 0000014aad1d58dddcb964dd749b073374c6306e716b22f573a2efe68d414539
-                .nTime    = 1723655233,
-                .tx_count = 5507045,
-                .dTxRate  = 0.06271073277261494,
+                // Data from RPC: getchaintxstats 4096 000000895a110f46e59eb82bbc5bfb67fa314656009c295509c21b4999f5180a
+                .nTime    = 1741019645,
+                .tx_count = 16540736,
+                .dTxRate  = 1.064918879911595,
             };
         } else {
             bin = *options.challenge;
