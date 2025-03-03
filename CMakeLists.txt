@@ -28,7 +28,7 @@ set(CLIENT_VERSION_MINOR 99)
 set(CLIENT_VERSION_BUILD 0)
 set(CLIENT_VERSION_RC 0)
 set(CLIENT_VERSION_IS_RELEASE "false")
-set(COPYRIGHT_YEAR "2025")
+string(TIMESTAMP COPYRIGHT_YEAR "%Y" UTC)
 
 # During the enabling of the CXX and CXXOBJ languages, we modify
 # CMake's compiler/linker invocation strings by appending the content
