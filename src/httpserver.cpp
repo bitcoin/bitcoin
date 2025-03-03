@@ -967,6 +967,8 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
         res.m_keep_alive = false;
     }
 
+    m_client->m_keep_alive = res.m_keep_alive;
+
     // Serialize the response headers
     const std::string headers{res.StringifyHeaders()};
     const auto headers_bytes{std::as_bytes(std::span{headers})};
@@ -1092,18 +1094,6 @@ void HTTPServer::JoinSocketsThreads()
     }
 }
 
-bool HTTPServer::CloseConnection(const HTTPClient& http_client)
-{
-    size_t erased = std::erase_if(m_connected,
-                                  [&](auto& client){ return client->m_id == http_client.m_id; });
-    if (erased > 0) {
-         // Report back to the main thread
-         m_connected_size.fetch_sub(erased, std::memory_order_relaxed);
-         return true;
-    }
-    return false;
-}
-
 std::unique_ptr<Sock> HTTPServer::AcceptConnection(const Sock& listen_sock, CService& addr)
 {
     // Make sure we only operate on our own listening sockets
@@ -1207,7 +1197,7 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
                         client->m_origin,
                         client->m_id,
                         NetworkErrorString(err));
-                    // TODO: Disconnect
+                    client->m_disconnect = true;
                 }
             } else if (nrecv == 0) {
                 LogDebug(
@@ -1215,8 +1205,11 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
                     "Received EOF from %s (id=%lld)",
                     client->m_origin,
                     client->m_id);
-                // TODO: Disconnect
+                client->m_disconnect = true;
             } else {
+                // Prevent disconnect until all requests are completely handled.
+                client->m_connection_busy = true;
+
                 // Copy data from socket buffer to client receive buffer
                 client->m_recv_buffer.insert(
                     client->m_recv_buffer.end(),
@@ -1290,6 +1283,9 @@ void HTTPServer::ThreadSocketHandler()
 
         // Accept new connections from listening sockets.
         SocketHandlerListening(io_readiness.events_per_sock);
+
+        // Disconnect any clients that have been flagged.
+        DisconnectClients();
     }
 }
 
@@ -1311,8 +1307,8 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPClien
                 e.what());
 
             // We failed to read a complete request from the buffer
-            // TODO: respond with HTTP_BAD_REQUEST and disconnect
-
+            req->WriteReply(HTTP_BAD_REQUEST);
+            client->m_disconnect = true;
             break;
         }
 
@@ -1327,6 +1323,46 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPClien
 
         // handle request
         m_request_dispatcher(std::move(req));
+    }
+}
+
+void HTTPServer::DisconnectClients()
+{
+    size_t erased = std::erase_if(m_connected,
+                                  [&](auto& client) {
+                                        // Disconnect this client due to error or end of communication.
+                                        // May drop unsent data if we are closing due to error.
+                                        if (client->m_disconnect) {
+                                            ;
+                                        } else {
+                                            // Disconnect this client because the server is shutting
+                                            // down and we need to disconnect all clients...
+                                            if (m_disconnect_all_clients) {
+                                                // ...unless we still have data for this client.
+                                                if (client->m_connection_busy) {
+                                                    // There is still data for this healthy-connected client.
+                                                    // Continue the I/O loop until all data is sent or an error is encountered.
+                                                    return false;
+                                                } else {
+                                                    // This is a healthy persistent connection (e.g. keep-alive)
+                                                    // but it's time to say goodbye.
+                                                    ;
+                                                }
+                                            } else {
+                                                // No reason to disconnect.
+                                                return false;
+                                            }
+                                        }
+                                        // No reason NOT to disconnect, log and remove.
+                                        LogDebug(BCLog::HTTP,
+                                                 "Disconnecting HTTP client %s (id=%d)",
+                                                 client->m_origin,
+                                                 client->m_id);
+                                        return true;
+                                    });
+    if (erased > 0) {
+        // Report back to the main thread
+        m_connected_size.fetch_sub(erased, std::memory_order_relaxed);
     }
 }
 
@@ -1386,7 +1422,9 @@ bool HTTPClient::MaybeSendBytesFromBuffer()
                     m_origin,
                     m_id,
                     NetworkErrorString(err));
-                // TODO: disconnect
+                m_send_ready = false;
+                m_disconnect = true;
+
                 // Do not attempt to read from this client.
                 return false;
             }
@@ -1403,6 +1441,21 @@ bool HTTPClient::MaybeSendBytesFromBuffer()
             bytes_sent,
             m_origin,
             m_id);
+
+        // This check is inside the if(!empty) block meaning "there was data but now its gone".
+        // We shouldn't even be calling MaybeSendBytesFromBuffer() when the send buffer is empty,
+        // but for belt-and-suspenders, we don't want to modify the disconnect flags if MaybeSendBytesFromBuffer() was a no-op.
+        if (m_send_buffer.empty()) {
+            m_send_ready = false;
+            m_connection_busy = false;
+
+            // Our work is done here
+            if (!m_keep_alive) {
+                m_disconnect = true;
+                // Do not attempt to read from this client.
+                return false;
+            }
+        }
     }
 
     return true;

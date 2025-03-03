@@ -319,7 +319,7 @@ public:
     virtual ~HTTPServer()
     {
         Assume(!m_thread_socket_handler.joinable()); // Missing call to JoinSocketsThreads()
-        Assume(m_connected.empty()); // Missing call to CloseConnection()
+        Assume(m_connected.empty()); // Missing call to DisconnectClients(), or disconnect flags not set
         Assume(m_listen.empty()); // Missing call to StopListening()
     }
 
@@ -360,15 +360,6 @@ public:
      */
     void InterruptNet() { m_interrupt_net(); }
 
-    /**
-     * Destroy a given connection by closing its socket and release resources occupied by it.
-     * This is a temporary method that will be removed in a future commit when it is
-     * replaced by DisconnectClients() and run automatically in the I/O thread.
-     * @param[in] http_client Connection to destroy.
-     * @return Whether the connection existed and its socket was closed by this call.
-     */
-    bool CloseConnection(const HTTPClient& http_client);
-
 private:
     /**
      * List of listening sockets.
@@ -387,6 +378,13 @@ private:
      * and send replies.
      */
     std::vector<std::shared_ptr<HTTPClient>> m_connected;
+
+    /**
+     * Flag used during shutdown.
+     * Overrides HTTPClient flags m_keep_alive and m_connection_busy.
+     * Set by main thread and read by the I/O thread.
+     */
+    std::atomic_bool m_disconnect_all_clients{false};
 
     /**
      * The number of connected sockets.
@@ -489,6 +487,14 @@ private:
      * @param[in] client The HTTPClient to read requests from
      */
     void MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPClient>& client) const;
+
+    /**
+     * Close underlying socket connections for flagged clients
+     * by removing their shared pointer from m_connected. If an HTTPClient
+     * is busy in a worker thread, its connection will be closed once that
+     * job is done and the HTTPRequest is out of scope.
+     */
+    void DisconnectClients();
 };
 
 class HTTPClient
@@ -541,6 +547,25 @@ public:
      * @see https://github.com/bitcoin/bitcoin/issues/21744 for details.
      */
     std::shared_ptr<Sock> m_sock GUARDED_BY(m_sock_mutex);
+
+    //! Initialized to true while server waits for first request from client.
+    //! Set to false after data is written to m_send_buffer and then that buffer is flushed to client.
+    //! Reset to true when we receive new request data from client.
+    //! Checked during DisconnectClients(). All of these operations take place in the HTTPServer I/O loop.
+    //! `m_connection_busy=true` can be overridden by `m_disconnect=true` (we disconnect).
+    bool m_connection_busy{true};
+
+    //! Client has requested to keep the connection open after all requests have been responded to.
+    //! Set by (potentially multiple) worker threads and checked in the HTTPServer I/O loop.
+    //! `m_keep_alive=true` can be overriden `by HTTPServer.m_disconnect_all_clients` (we disconnect).
+    std::atomic_bool m_keep_alive{false};
+
+    //! Flag this client for disconnection on next loop.
+    //! Either we have encountered a permanent error, or both sides of the socket are done
+    //! with the connection, e.g. our reply to a "Connection: close" request has been sent.
+    //! Might be set in a worker thread or in the I/O thread. When set to `true` we disconnect,
+    //! possibly overriding all other disconnect flags.
+    std::atomic_bool m_disconnect{false};
 
     explicit HTTPClient(HTTPServer::Id id, const CService& addr, std::unique_ptr<Sock> socket)
         : m_id(id), m_addr(addr), m_origin(addr.ToStringAddrPort()), m_sock{std::move(socket)} {};
