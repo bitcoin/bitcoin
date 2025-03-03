@@ -986,8 +986,7 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
     bool needs_body{status != HTTP_NO_CONTENT && (status < 100 || status >= 200)};
     bool needs_content_length{false};
 
-    // Keep track of this, will be used in a future commit to disconnect some clients
-    [[maybe_unused]] bool keep_alive{false};
+    bool keep_alive{false};
 
     // See libevent evhttp_make_header_response()
     // Expected response headers depend on protocol version
@@ -1034,6 +1033,8 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
         res.m_headers.Write("Connection", "close");
         keep_alive = false;
     }
+
+    m_client->m_keep_alive = keep_alive;
 
     // Serialize the response headers
     const std::string headers{res.StringifyHeaders()};
@@ -1158,18 +1159,6 @@ void HTTPServer::JoinSocketsThreads()
     }
 }
 
-bool HTTPServer::CloseConnection(const HTTPRemoteClient& http_client)
-{
-    size_t erased = std::erase_if(m_connected,
-                                  [&](auto& client){ return client->m_id == http_client.m_id; });
-    if (erased > 0) {
-         // Report back to the main thread
-         m_connected_size.fetch_sub(erased, std::memory_order_relaxed);
-         return true;
-    }
-    return false;
-}
-
 std::unique_ptr<Sock> HTTPServer::AcceptConnection(const Sock& listen_sock, CService& addr)
 {
     // Make sure we only operate on our own listening sockets
@@ -1276,7 +1265,7 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
                         client->m_origin,
                         client->m_id,
                         NetworkErrorString(err));
-                    // TODO: Disconnect
+                    client->m_disconnect = true;
                 }
             } else if (nrecv == 0) {
                 LogDebug(
@@ -1284,8 +1273,11 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
                     "Received EOF from %s (id=%llu)",
                     client->m_origin,
                     client->m_id);
-                // TODO: Disconnect
+                client->m_disconnect = true;
             } else {
+                // Prevent disconnect until all requests are completely handled.
+                client->m_connection_busy = true;
+
                 // Copy data from socket buffer to client receive buffer
                 client->m_recv_buffer.insert(
                     client->m_recv_buffer.end(),
@@ -1359,6 +1351,9 @@ void HTTPServer::ThreadSocketHandler()
 
         // Accept new connections from listening sockets.
         SocketHandlerListening(io_readiness.events_per_sock);
+
+        // Disconnect any clients that have been flagged.
+        DisconnectClients();
     }
 }
 
@@ -1371,6 +1366,17 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
         try {
             // Stop reading if we need more data from the client to parse a complete request
             if (!client->ReadRequest(*req)) break;
+        } catch (const ContentTooLargeError& e) {
+            LogDebug(
+                BCLog::HTTP,
+                "HTTP request body too large from client %s (id=%llu): %s",
+                client->m_origin,
+                client->m_id,
+                e.what());
+
+            req->WriteReply(HTTP_CONTENT_TOO_LARGE);
+            client->m_disconnect = true;
+            return;
         } catch (const std::runtime_error& e) {
             LogDebug(
                 BCLog::HTTP,
@@ -1380,8 +1386,8 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
                 e.what());
 
             // We failed to read a complete request from the buffer
-            // TODO: respond with HTTP_BAD_REQUEST and disconnect
-
+            req->WriteReply(HTTP_BAD_REQUEST);
+            client->m_disconnect = true;
             return;
         }
 
@@ -1396,6 +1402,46 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
 
         // handle request
         m_request_dispatcher(std::move(req));
+    }
+}
+
+void HTTPServer::DisconnectClients()
+{
+    size_t erased = std::erase_if(m_connected,
+                                  [&](auto& client) {
+                                        // Disconnect this client due to error or end of communication.
+                                        // May drop unsent data if we are closing due to error.
+                                        if (client->m_disconnect) {
+                                            ;
+                                        } else {
+                                            // Disconnect this client because the server is shutting
+                                            // down and we need to disconnect all clients...
+                                            if (m_disconnect_all_clients) {
+                                                // ...unless we still have data for this client.
+                                                if (client->m_connection_busy) {
+                                                    // There is still data for this healthy-connected client.
+                                                    // Continue the I/O loop until all data is sent or an error is encountered.
+                                                    return false;
+                                                } else {
+                                                    // This is a healthy persistent connection (e.g. keep-alive)
+                                                    // but it's time to say goodbye.
+                                                    ;
+                                                }
+                                            } else {
+                                                // No reason to disconnect.
+                                                return false;
+                                            }
+                                        }
+                                        // No reason NOT to disconnect, log and remove.
+                                        LogDebug(BCLog::HTTP,
+                                                 "Disconnecting HTTP client %s (id=%llu)",
+                                                 client->m_origin,
+                                                 client->m_id);
+                                        return true;
+                                    });
+    if (erased > 0) {
+        // Report back to the main thread
+        m_connected_size.fetch_sub(erased, std::memory_order_relaxed);
     }
 }
 
@@ -1447,6 +1493,7 @@ bool HTTPRemoteClient::MaybeSendBytesFromBuffer()
             if (!IOErrorIsPermanent(err)) {
                 // The error can be safely ignored, try the send again on the next I/O loop.
                 m_send_ready = true;
+                m_connection_busy = true;
                 return true;
             } else {
                 // Unrecoverable error, log and disconnect client.
@@ -1456,7 +1503,9 @@ bool HTTPRemoteClient::MaybeSendBytesFromBuffer()
                     m_origin,
                     m_id,
                     NetworkErrorString(err));
-                // TODO: disconnect
+                m_send_ready = false;
+                m_disconnect = true;
+
                 // Do not attempt to read from this client.
                 return false;
             }
@@ -1479,9 +1528,14 @@ bool HTTPRemoteClient::MaybeSendBytesFromBuffer()
         // on an already-empty m_send_buffer because the connection might have just been opened.
         if (m_send_buffer.empty()) {
             m_send_ready = false;
-        } else {
-            // The send buffer isn't flushed yet, try to push more on the next loop.
-            m_send_ready = true;
+            m_connection_busy = false;
+
+            // Our work is done here
+            if (!m_keep_alive) {
+                m_disconnect = true;
+                // Do not attempt to read from this client.
+                return false;
+            }
         }
     }
 
