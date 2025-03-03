@@ -999,6 +999,8 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
         res.m_keep_alive = false;
     }
 
+    m_client->m_keep_alive = res.m_keep_alive;
+
     // Serialize the response headers
     const std::string headers{res.StringifyHeaders()};
     const auto headers_bytes{std::as_bytes(std::span(headers.begin(), headers.end()))};
@@ -1062,7 +1064,9 @@ bool HTTPClient::SendBytesFromBuffer()
                 m_origin,
                 m_node_id,
                 err);
-            // TODO: disconnect
+            m_send_ready = false;
+            m_prevent_disconnect = false;
+            m_disconnect = true;
             return false;
         }
 
@@ -1075,9 +1079,45 @@ bool HTTPClient::SendBytesFromBuffer()
             bytes_sent,
             m_origin,
             m_node_id);
+
+        // This check is inside the if(!empty) block meaning "there was data but now its gone".
+        // We shouldn't even be calling SendBytesFromBuffer() when the send buffer is empty,
+        // but for belt-and-suspenders, we don't want to modify the disconnect flags if SendBytesFromBuffer() was a no-op.
+        if (m_send_buffer.empty()) {
+            m_send_ready = false;
+            m_prevent_disconnect = false;
+
+            // Our work is done here
+            if (!m_keep_alive) {
+                m_disconnect = true;
+                return false;
+            }
+        }
     }
 
     return true;
+}
+
+void HTTPServer::CloseConnectionInternal(std::shared_ptr<HTTPClient>& client)
+{
+    if (CloseConnection(client->m_node_id)) {
+        LogDebug(BCLog::HTTP, "Disconnected HTTP client %s (id=%d)\n", client->m_origin, client->m_node_id);
+    } else {
+        LogDebug(BCLog::HTTP, "Failed to disconnect non-existent HTTP client %s (id=%d)\n", client->m_origin, client->m_node_id);
+    }
+}
+
+void HTTPServer::DisconnectClients()
+{
+    for (auto it = m_connected_clients.begin(); it != m_connected_clients.end();) {
+        if ((it->second->m_disconnect || m_disconnect_all_clients) && !it->second->m_prevent_disconnect) {
+            CloseConnectionInternal(it->second);
+            it = m_connected_clients.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    m_no_clients = m_connected_clients.size() == 0;
 }
 
 bool HTTPServer::EventNewConnectionAccepted(NodeId node_id,
@@ -1118,6 +1158,9 @@ void HTTPServer::EventGotData(NodeId node_id, std::span<const uint8_t> data)
         return;
     }
 
+    // Prevent disconnect until all requests are completely handled.
+    client->m_prevent_disconnect = true;
+
     // Copy data from socket buffer to client receive buffer
     client->m_recv_buffer.insert(
         client->m_recv_buffer.end(),
@@ -1141,8 +1184,8 @@ void HTTPServer::EventGotData(NodeId node_id, std::span<const uint8_t> data)
                 e.what());
 
             // We failed to read a complete request from the buffer
-            // TODO: respond with HTTP_BAD_REQUEST and disconnect
-
+            req->WriteReply(HTTP_BAD_REQUEST);
+            client->m_disconnect = true;
             break;
         }
 
@@ -1158,6 +1201,33 @@ void HTTPServer::EventGotData(NodeId node_id, std::span<const uint8_t> data)
         // handle request
         m_request_dispatcher(std::move(req));
     }
+}
+
+void HTTPServer::EventGotEOF(NodeId node_id)
+{
+    // Get the HTTPClient
+    auto client{GetClientById(node_id)};
+    if (client == nullptr) {
+        return;
+    }
+
+    client->m_disconnect = true;
+}
+
+void HTTPServer::EventGotPermanentReadError(NodeId node_id, const std::string& errmsg)
+{
+    // Get the HTTPClient
+    auto client{GetClientById(node_id)};
+    if (client == nullptr) {
+        return;
+    }
+
+    client->m_disconnect = true;
+}
+
+void HTTPServer::EventIOLoopCompletedForAll()
+{
+    DisconnectClients();
 }
 
 bool HTTPServer::ShouldTryToSend(NodeId node_id) const
