@@ -468,27 +468,18 @@ class ConfArgsTest(BitcoinTestFramework):
             self.nodes[0].assert_start_raises_init_error(expected_msg=f'Error: acceptstalefeeestimates is not supported on {chain} chain.')
         util.write_config(conf_file, n=0, chain="regtest")  # Reset to regtest
 
-    def test_testnet3_deprecation_msg(self):
-        self.log.info("Test testnet3 deprecation warning")
-        t3_warning_log = "Warning: Support for testnet3 is deprecated and will be removed in an upcoming release. Consider switching to testnet4."
+    def test_testnet3_removed_msg(self):
+        self.log.info("Test testnet3 dropped error")
 
-        self.log.debug("Testnet3 node will log the deprecation warning")
-        self.nodes[0].chain = 'testnet3'
-        # Ensure a log file exists as TestNode.assert_debug_log() expects it.
-        self.nodes[0].debug_log_path.parent.mkdir()
-        self.nodes[0].debug_log_path.touch()
-        util.write_config(self.nodes[0].datadir_path / "bitcoin.conf", n=0, chain="testnet3")
-
+        # Starting node with -testnet3 will fail
+        self.nodes[0].chain = "testnet"
         self.nodes[0].replace_in_config([('regtest=', 'testnet='), ('[regtest]', '[test]')])
-        with self.nodes[0].assert_debug_log([t3_warning_log]):
-            self.start_node(0)
-        self.stop_node(0)
+        self.nodes[0].assert_start_raises_init_error(extra_args=['-testnet3'], expected_msg="Error: Testnet3 was dropped in version 30.0. Consider using '-testnet4' instead.")
 
-        self.log.debug("Testnet4 node will not log the deprecation warning")
+        # Testnet4 node will not fail to start
         self.nodes[0].chain = 'testnet4'
         self.nodes[0].replace_in_config([('testnet=', 'testnet4='), ('[test]', '[testnet4]')])
-        with self.nodes[0].assert_debug_log([], unexpected_msgs=[t3_warning_log]):
-            self.start_node(0)
+        self.start_node(0)
         self.stop_node(0)
 
         self.log.debug("Reset to regtest")
@@ -510,7 +501,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.test_ignored_conf()
         self.test_ignored_default_conf()
         self.test_acceptstalefeeestimates_arg_support()
-        self.test_testnet3_deprecation_msg()
+        self.test_testnet3_removed_msg()
 
         # Remove the -datadir argument so it doesn't override the config file
         self.nodes[0].args = [arg for arg in self.nodes[0].args if not arg.startswith("-datadir")]
