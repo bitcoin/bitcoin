@@ -1016,6 +1016,10 @@ FUZZ_TARGET(clusterlin_simple_linearize)
                 auto perm_chunking = ChunkLinearization(depgraph, perm_linearization);
                 auto cmp = CompareChunks(simple_chunking, perm_chunking);
                 assert(cmp >= 0);
+                // If perm_chunking is diagram-optimal, it cannot have more chunks than
+                // simple_chunking (as simple_chunking claims to be optimal, which implies minimal
+                // chunks.
+                if (cmp == 0) assert(simple_chunking.size() >= perm_chunking.size());
             } else {
                 // Otherwise, fast forward to the last permutation with the same non-topological
                 // prefix.
@@ -1110,6 +1114,9 @@ FUZZ_TARGET(clusterlin_linearize)
         // If SimpleLinearize finds the optimal result too, they must be equal (if not,
         // SimpleLinearize is broken).
         if (simple_optimal) assert(cmp == 0);
+        // If simple_chunking is diagram-optimal, it cannot have more chunks than chunking (as
+        // chunking is claimed to be optimal, which implies minimal chunks).
+        if (cmp == 0) assert(chunking.size() >= simple_chunking.size());
 
         // Compare with a linearization read from the fuzz input.
         auto read = ReadLinearization(depgraph, reader);
