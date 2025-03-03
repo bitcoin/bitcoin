@@ -426,9 +426,15 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
     BOOST_CHECK(actual.find("Content-Type: text/html; charset=ISO-8859-1\r\n") != std::string::npos);
     BOOST_CHECK(actual.find("Date: Wed, 11 Dec 2024 00:47:09 GMT\r\n") != std::string::npos);
 
-    // Close connection
-    BOOST_REQUIRE(server.CloseConnection(client));
-    // Close server
+    // Wait up to one minute for connection to be automatically closed, because
+    // keep-alive was not set by the client and we are done responding to their request.
+    attempts = 6000;
+    while (server.GetConnectionsCount() != 0) {
+        std::this_thread::sleep_for(10ms);
+        BOOST_REQUIRE(--attempts > 0);
+    }
+
+    // Stop the I/O loop and shutdown
     server.InterruptNet();
     // Wait for I/O loop to finish, after all connected sockets are closed
     server.JoinSocketsThreads();
