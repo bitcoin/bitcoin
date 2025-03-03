@@ -403,7 +403,11 @@ void TorController::get_socks_cb(TorControlConnection& _conn, const TorControlRe
 
     Assume(resolved.IsValid());
     LogDebug(BCLog::TOR, "Configuring onion proxy for %s\n", resolved.ToStringAddrPort());
-    Proxy addrOnion = Proxy(resolved, true);
+
+    // With m_randomize_credentials = true, generates unique SOCKS credentials per proxy connection (e.g., Tor).
+    // Prevents connection correlation and enhances privacy by forcing different Tor circuits.
+    // Requires Tor's IsolateSOCKSAuth (default enabled) for effective isolation (see IsolateSOCKSAuth section in https://2019.www.torproject.org/docs/tor-manual.html.en).
+    Proxy addrOnion = Proxy(resolved, /*_randomize_credentials=*/ true);
     SetProxy(NET_ONION, addrOnion);
 
     const auto onlynets = gArgs.GetArgs("-onlynet");
