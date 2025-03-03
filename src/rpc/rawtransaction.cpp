@@ -387,6 +387,7 @@ static RPCHelpMan getislocks()
                             },
                         },
                     }},
+                    {RPCResult::Type::STR_HEX, "id", "Request ID"},
                     {RPCResult::Type::STR_HEX, "cycleHash", "The Cycle Hash"},
                     {RPCResult::Type::STR_HEX, "signature", "The InstantSend's BLS signature"},
                     {RPCResult::Type::STR_HEX, "hex", "The serialized, hex-encoded data for 'txid'"},
@@ -424,6 +425,7 @@ static RPCHelpMan getislocks()
                 inputs.push_back(outpoint);
             }
             objIS.pushKV("inputs", inputs);
+            objIS.pushKV("id", islock->GetRequestId().ToString());
             objIS.pushKV("cycleHash", islock->cycleHash.ToString());
             objIS.pushKV("signature", islock->sig.ToString());
             {
