@@ -306,6 +306,17 @@ public:
     // Checked in the Sockman I/O loop to avoid locking m_send_mutex if there's nothing to send.
     std::atomic_bool m_send_ready{false};
 
+    // Set to true when we receive request data and set to false once m_send_buffer is cleared.
+    // Checked during DisconnectClients(). All of these operations take place in the Sockman I/O loop.
+    bool m_prevent_disconnect{false};
+
+    // Client request to keep connection open after all requests have been responded to.
+    // Set by (potentially multiple) worker threads and checked in the Sockman I/O loop.
+    std::atomic_bool m_keep_alive{false};
+
+    // Flag this client for disconnection on next loop
+    bool m_disconnect{false};
+
     explicit HTTPClient(NodeId node_id, CService addr) : m_node_id(node_id), m_addr(addr)
     {
         m_origin = addr.ToStringAddrPort();
@@ -326,6 +337,9 @@ public:
 
 class HTTPServer : public SockMan
 {
+private:
+    void CloseConnectionInternal(std::shared_ptr<HTTPClient>& client);
+
 public:
     explicit HTTPServer(std::function<void(std::unique_ptr<HTTPRequest>)> func) : m_request_dispatcher(func) {};
 
@@ -339,6 +353,13 @@ public:
     std::function<void(std::unique_ptr<HTTPRequest>)> m_request_dispatcher;
 
     std::shared_ptr<HTTPClient> GetClientById(NodeId node_id) const;
+
+    // Close underlying connections where flagged
+    void DisconnectClients();
+
+    // Flag used during shutdown to bypass keep-alive flag.
+    // Set by main thread and read by Sockman I/O thread
+    std::atomic_bool m_disconnect_all_clients{false};
 
     /**
      * Be notified when a new connection has been accepted.
@@ -374,14 +395,22 @@ public:
      * makes sense at the application level.
      * @param[in] node_id Node whose socket got EOF.
      */
-    virtual void EventGotEOF(NodeId node_id) override {};
+    virtual void EventGotEOF(NodeId node_id) override;
 
     /**
      * Called when we get an irrecoverable error trying to read from a socket.
      * @param[in] node_id Node whose socket got an error.
      * @param[in] errmsg Message describing the error.
      */
-    virtual void EventGotPermanentReadError(NodeId node_id, const std::string& errmsg) override {};
+    virtual void EventGotPermanentReadError(NodeId node_id, const std::string& errmsg) override;
+
+    /**
+     * SockMan has completed send+recv for all nodes.
+     * Can be used to execute periodic tasks for all nodes, like disconnecting
+     * nodes due to higher level logic.
+     * The implementation in SockMan does nothing.
+     */
+    virtual void EventIOLoopCompletedForAll() override;
 
     /**
      * Can be used to temporarily pause sends on a connection.
