@@ -216,7 +216,7 @@ def main():
     random.shuffle(ips)
     print('Done.', file=sys.stderr)
 
-    print('\x1b[7m  IPv4   IPv6  Onion  I2P    CJDNS Pass                                               \x1b[0m', file=sys.stderr)
+    print('\x1b[7m  IPv4   IPv6  Onion    I2P  CJDNS Pass                                               \x1b[0m', file=sys.stderr)
     print(f'{ip_stats(ips):s} Initial', file=sys.stderr)
     # Skip entries with invalid address.
     ips = [ip for ip in ips if ip is not None]
