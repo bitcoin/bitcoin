@@ -16,6 +16,7 @@ enum HTTPStatusCode : int
     HTTP_FORBIDDEN             = 403,
     HTTP_NOT_FOUND             = 404,
     HTTP_BAD_METHOD            = 405,
+    HTTP_CONTENT_TOO_LARGE     = 413,
     HTTP_INTERNAL_SERVER_ERROR = 500,
     HTTP_SERVICE_UNAVAILABLE   = 503,
 };
@@ -32,6 +33,7 @@ inline std::string_view HTTPStatusReasonString(HTTPStatusCode code)
     case HTTP_FORBIDDEN: return "Forbidden";
     case HTTP_NOT_FOUND: return "Not Found";
     case HTTP_BAD_METHOD: return "Method Not Allowed";
+    case HTTP_CONTENT_TOO_LARGE: return "Content too large";
     case HTTP_INTERNAL_SERVER_ERROR: return "Internal Server Error";
     case HTTP_SERVICE_UNAVAILABLE: return "Service Unavailable";
     }
