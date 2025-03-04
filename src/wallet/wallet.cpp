@@ -3181,6 +3181,8 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
     }
 
     if (args.IsArgSet("-paytxfee")) {
+        warnings.push_back(_("-paytxfee is deprecated and will be fully removed in v31.0."));
+
         std::optional<CAmount> pay_tx_fee = ParseMoney(args.GetArg("-paytxfee", ""));
         if (!pay_tx_fee) {
             error = AmountErrMsg("paytxfee", args.GetArg("-paytxfee", ""));
