@@ -48,20 +48,20 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
 
     // incremental relay fee sets the minimum feerate increase necessary for replacement in the mempool
     // and the amount the mempool min fee increases above the feerate of txs evicted due to mempool limiting.
-    if (argsman.IsArgSet("-incrementalrelayfee")) {
-        if (std::optional<CAmount> inc_relay_fee = ParseMoney(argsman.GetArg("-incrementalrelayfee", ""))) {
+    if (const auto arg{argsman.GetArg("-incrementalrelayfee")}) {
+        if (std::optional<CAmount> inc_relay_fee = ParseMoney(*arg)) {
             mempool_opts.incremental_relay_feerate = CFeeRate{inc_relay_fee.value()};
         } else {
-            return util::Error{AmountErrMsg("incrementalrelayfee", argsman.GetArg("-incrementalrelayfee", ""))};
+            return util::Error{AmountErrMsg("incrementalrelayfee", *arg)};
         }
     }
 
-    if (argsman.IsArgSet("-minrelaytxfee")) {
-        if (std::optional<CAmount> min_relay_feerate = ParseMoney(argsman.GetArg("-minrelaytxfee", ""))) {
+    if (const auto arg{argsman.GetArg("-minrelaytxfee")}) {
+        if (std::optional<CAmount> min_relay_feerate = ParseMoney(*arg)) {
             // High fee check is done afterward in CWallet::Create()
             mempool_opts.min_relay_feerate = CFeeRate{min_relay_feerate.value()};
         } else {
-            return util::Error{AmountErrMsg("minrelaytxfee", argsman.GetArg("-minrelaytxfee", ""))};
+            return util::Error{AmountErrMsg("minrelaytxfee", *arg)};
         }
     } else if (mempool_opts.incremental_relay_feerate > mempool_opts.min_relay_feerate) {
         // Allow only setting incremental fee to control both
@@ -71,11 +71,11 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
 
     // Feerate used to define dust.  Shouldn't be changed lightly as old
     // implementations may inadvertently create non-standard transactions
-    if (argsman.IsArgSet("-dustrelayfee")) {
-        if (std::optional<CAmount> parsed = ParseMoney(argsman.GetArg("-dustrelayfee", ""))) {
+    if (const auto arg{argsman.GetArg("-dustrelayfee")}) {
+        if (std::optional<CAmount> parsed = ParseMoney(*arg)) {
             mempool_opts.dust_relay_feerate = CFeeRate{parsed.value()};
         } else {
-            return util::Error{AmountErrMsg("dustrelayfee", argsman.GetArg("-dustrelayfee", ""))};
+            return util::Error{AmountErrMsg("dustrelayfee", *arg)};
         }
     }
 
