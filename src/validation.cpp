@@ -31,6 +31,8 @@
 #include <logging.h>
 #include <logging/timer.h>
 #include <node/blockstorage.h>
+#include <node/mini_miner.h>
+#include <node/types.h>
 #include <node/utxo_snapshot.h>
 #include <policy/ephemeral_policy.h>
 #include <policy/policy.h>
@@ -3235,7 +3237,12 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
              Ticks<MillisecondsDouble>(m_chainman.time_chainstate) / m_chainman.num_blocks_total);
     // Remove conflicting transactions from the mempool.;
     if (m_mempool) {
-        m_mempool->removeForBlock(blockConnecting.vtx, pindexNew->nHeight);
+        if (!m_chainman.IsInitialBlockDownload()) {
+            auto expected_block = GenerateNewBlock(m_chainman.ActiveChainstate(), m_mempool);
+            m_mempool->removeForBlock(blockConnecting.vtx, expected_block->block.vtx, pindexNew->nHeight);
+        } else {
+            m_mempool->removeForBlock(blockConnecting.vtx, {}, pindexNew->nHeight);
+        }
         disconnectpool.removeForBlock(blockConnecting.vtx);
     }
     // Update m_chain & related variables.

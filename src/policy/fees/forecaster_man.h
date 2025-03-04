@@ -5,6 +5,7 @@
 #ifndef BITCOIN_POLICY_FEES_FORECASTER_MAN_H
 #define BITCOIN_POLICY_FEES_FORECASTER_MAN_H
 
+#include <primitives/transaction.h>
 #include <sync.h>
 #include <threadsafety.h>
 
@@ -63,7 +64,8 @@ private:
 
 protected:
     //! Handles transactions removed from the mempool due to a new block.
-    void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight) override
+    void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block,
+                                            const std::vector<CTransactionRef>& /*unused*/, unsigned int nBlockHeight) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     //! Handles newly connected blocks.

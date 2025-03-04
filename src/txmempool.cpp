@@ -664,7 +664,8 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
 /**
  * Called when a block is connected. Removes from mempool.
  */
-void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight)
+void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx,
+                                const std::vector<CTransactionRef>& expected_block_txs, unsigned int nBlockHeight)
 {
     AssertLockHeld(cs);
     Assume(!m_have_changeset);
@@ -683,7 +684,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
         ClearPrioritisation(tx->GetHash());
     }
     if (m_opts.signals) {
-        m_opts.signals->MempoolTransactionsRemovedForBlock(txs_removed_for_block, nBlockHeight);
+        m_opts.signals->MempoolTransactionsRemovedForBlock(txs_removed_for_block, expected_block_txs, nBlockHeight);
     }
     lastRollingFeeUpdate = GetTime();
     blockSinceLastRollingFeeBump = true;

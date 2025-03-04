@@ -588,7 +588,8 @@ void CBlockPolicyEstimator::TransactionRemovedFromMempool(const CTransactionRef&
     removeTx(tx->GetHash());
 }
 
-void CBlockPolicyEstimator::MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight)
+void CBlockPolicyEstimator::MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block,
+                                                               const std::vector<CTransactionRef>& /*unused*/, unsigned int nBlockHeight)
 {
     processBlock(txs_removed_for_block, nBlockHeight);
 }

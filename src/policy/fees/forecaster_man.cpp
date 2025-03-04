@@ -108,7 +108,8 @@ bool FeeRateForecasterManager::IsMempoolHealthy() const
 }
 
 // Updates mempool data for removed transactions during block connection
-void FeeRateForecasterManager::MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight)
+void FeeRateForecasterManager::MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block,
+                                                                  const std::vector<CTransactionRef>& /*unused*/, unsigned int nBlockHeight)
 {
     LOCK(cs);
     size_t removed_weight = std::accumulate(txs_removed_for_block.begin(), txs_removed_for_block.end(), 0u,

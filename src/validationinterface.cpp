@@ -217,10 +217,11 @@ void ValidationSignals::BlockConnected(ChainstateRole role, const std::shared_pt
                           pindex->nHeight);
 }
 
-void ValidationSignals::MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight)
+void ValidationSignals::MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block,
+                                                           const std::vector<CTransactionRef>& expected_block_txs, unsigned int nBlockHeight)
 {
-    auto event = [txs_removed_for_block, nBlockHeight, this] {
-        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.MempoolTransactionsRemovedForBlock(txs_removed_for_block, nBlockHeight); });
+    auto event = [txs_removed_for_block, expected_block_txs, nBlockHeight, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.MempoolTransactionsRemovedForBlock(txs_removed_for_block, expected_block_txs, nBlockHeight); });
     };
     ENQUEUE_AND_LOG_EVENT(event, "%s: block height=%s txs removed=%s", __func__,
                           nBlockHeight,
