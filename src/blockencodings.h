@@ -114,7 +114,7 @@ public:
     /**
      * @param[in]  nonce  This should be randomly generated, and is used for the siphash secret key
      */
-    CBlockHeaderAndShortTxIDs(const CBlock& block, const uint64_t nonce);
+    CBlockHeaderAndShortTxIDs(const CBlock& block, uint64_t nonce);
 
     uint64_t GetShortID(const Wtxid& wtxid) const;
 

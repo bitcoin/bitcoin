@@ -14,7 +14,7 @@
 /**
  * Convert a span of bytes to a lower-case hexadecimal string.
  */
-std::string HexStr(const Span<const uint8_t> s);
+std::string HexStr(Span<const uint8_t> s);
 inline std::string HexStr(const Span<const char> s) { return HexStr(MakeUCharSpan(s)); }
 inline std::string HexStr(const Span<const std::byte> s) { return HexStr(MakeUCharSpan(s)); }
 
