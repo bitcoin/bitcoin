@@ -5082,10 +5082,15 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
 
         m_connman.ForEachNode([&](CNode* pnode) {
             if (!pnode->IsBlockOnlyConn() || pnode->fDisconnect) return;
-            if (pnode->GetId() > youngest_peer.first) {
-                next_youngest_peer = youngest_peer;
-                youngest_peer.first = pnode->GetId();
-                youngest_peer.second = pnode->m_last_block_time;
+            if (pnode->GetId() > next_youngest_peer.first) {
+                if (pnode->GetId() > youngest_peer.first) {
+                    next_youngest_peer = youngest_peer;
+                    youngest_peer.first = pnode->GetId();
+                    youngest_peer.second = pnode->m_last_block_time;
+                } else {
+                    next_youngest_peer.first = pnode->GetId();
+                    next_youngest_peer.second = pnode->m_last_block_time;
+                }
             }
         });
         NodeId to_disconnect = youngest_peer.first;
