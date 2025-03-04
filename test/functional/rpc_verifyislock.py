@@ -5,7 +5,7 @@
 
 from test_framework.messages import CTransaction, from_hex, hash256, ser_compact_size, ser_string
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_raises_rpc_error, satoshi_round
+from test_framework.util import assert_equal, assert_raises_rpc_error, satoshi_round
 
 '''
 rpc_verifyislock.py
@@ -41,6 +41,8 @@ class RPCVerifyISLockTest(DashTestFramework):
         self.wait_for_instantlock(txid, node)
 
         request_id = self.get_request_id(self.nodes[0].getrawtransaction(txid))
+        request_id_rpc = self.nodes[0].getislocks([txid])[0]["id"]
+        assert_equal(request_id, request_id_rpc)
         self.wait_until(lambda: node.quorum("hasrecsig", 103, request_id, txid))
 
         rec_sig = node.quorum("getrecsig", 103, request_id, txid)['sig']
