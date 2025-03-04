@@ -123,6 +123,32 @@ BOOST_AUTO_TEST_CASE(findCommonAncestor)
     BOOST_CHECK(!chain->findCommonAncestor({}, orig_tip->GetBlockHash(), {}, {}, FoundBlock().hash(orig_hash)));
     BOOST_CHECK_EQUAL(active_hash, active.Tip()->GetBlockHash());
     BOOST_CHECK_EQUAL(orig_hash, orig_tip->GetBlockHash());
+
+    // Check BlockStatus when doing InvalidateBlock()
+    BlockValidationState state;
+    orig_tip = active.Tip();
+    int height_to_invalidate = orig_tip->nHeight - 10;
+    auto* tip_to_invalidate = active[height_to_invalidate];
+    m_node.chainman->ActiveChainstate().InvalidateBlock(state, tip_to_invalidate);
+
+    // tip_to_invalidate just got invalidated, so it's BLOCK_FAILED_VALID
+    WITH_LOCK(::cs_main, assert(tip_to_invalidate->nStatus & BLOCK_FAILED_VALID));
+    WITH_LOCK(::cs_main, assert((tip_to_invalidate->nStatus & BLOCK_FAILED_CHILD) == 0));
+
+    // check all ancestors of block are BLOCK_VALID_TREE
+    auto pindex = tip_to_invalidate->pprev;
+    while (pindex) {
+        WITH_LOCK(::cs_main, assert(pindex->nStatus & BLOCK_HAVE_DATA));
+        pindex = pindex->pprev;
+    }
+
+    // check all descendants of block are BLOCK_FAILED_CHILD
+    pindex = orig_tip;
+    while (pindex && pindex != tip_to_invalidate) {
+        WITH_LOCK(::cs_main, assert((pindex->nStatus & BLOCK_FAILED_VALID) == 0));
+        WITH_LOCK(::cs_main, assert(pindex->nStatus & BLOCK_FAILED_CHILD));
+        pindex = pindex->pprev;
+    }
 }
 
 BOOST_AUTO_TEST_CASE(hasBlocks)
