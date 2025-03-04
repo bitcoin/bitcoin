@@ -8,6 +8,7 @@ import time
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
     assert_raises_rpc_error,
 )
@@ -56,7 +57,7 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                     assert hd_master_addr_old == addr
                 elif keytype == "hdseed=1":
                     # ensure we have generated a new hd master key
-                    assert hd_master_addr_old != addr
+                    assert_not_equal(hd_master_addr_old, addr)
                     hd_master_addr_ret = addr
                 elif keytype == "script=1":
                     # scripts don't have keypaths

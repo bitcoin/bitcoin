@@ -6,6 +6,7 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
 )
 
@@ -55,7 +56,7 @@ class PreciousTest(BitcoinTestFramework):
         self.log.info("Mine competing blocks E-F-G on Node 1")
         hashG = self.generate(self.nodes[1], 3, sync_fun=self.no_op)[-1]
         assert_equal(self.nodes[1].getblockcount(), 5)
-        assert hashC != hashG
+        assert_not_equal(hashC, hashG)
         self.log.info("Connect nodes and check no reorg occurs")
         # Submit competing blocks via RPC so any reorg should occur before we proceed (no way to wait on inaction for p2p sync)
         node_sync_via_rpc(self.nodes[0:2])
