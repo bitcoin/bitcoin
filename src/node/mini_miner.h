@@ -6,6 +6,7 @@
 #define BITCOIN_NODE_MINI_MINER_H
 
 #include <consensus/amount.h>
+#include <node/types.h>
 #include <primitives/transaction.h>
 #include <uint256.h>
 
@@ -16,6 +17,7 @@
 #include <stdint.h>
 #include <vector>
 
+class Chainstate;
 class CFeeRate;
 class CTxMemPool;
 
@@ -168,5 +170,8 @@ public:
     std::map<Txid, uint32_t> Linearize();
 };
 } // namespace node
+
+std::unique_ptr<node::CBlockTemplate> GenerateNewBlock(Chainstate& chainstate, const CTxMemPool* mempool);
+
 
 #endif // BITCOIN_NODE_MINI_MINER_H

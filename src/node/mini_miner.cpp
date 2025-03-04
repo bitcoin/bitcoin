@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <node/miner.h>
 #include <node/mini_miner.h>
 
 #include <boost/multi_index/detail/hash_index_iterator.hpp>
@@ -431,3 +432,11 @@ std::optional<CAmount> MiniMiner::CalculateTotalBumpFees(const CFeeRate& target_
     return target_feerate.GetFee(ancestor_package_size) - ancestor_package_fee;
 }
 } // namespace node
+
+std::unique_ptr<node::CBlockTemplate> GenerateNewBlock(Chainstate& chainstate, const CTxMemPool* mempool)
+{
+    node::BlockAssembler::Options options;
+    options.test_block_validity = false;
+    node::BlockAssembler assembler(chainstate, mempool, options);
+    return assembler.CreateNewBlock();
+}

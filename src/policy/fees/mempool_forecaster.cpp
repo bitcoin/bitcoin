@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <logging.h>
-#include <node/miner.h>
+#include <node/mini_miner.h>
 #include <policy/fees/forecaster.h>
 #include <policy/fees/forecaster_util.h>
 #include <policy/fees/mempool_forecaster.h>
@@ -38,11 +38,7 @@ ForecastResult MemPoolForecaster::EstimateFee(ConfirmationTarget& target)
         return ForecastResult(response);
     }
 
-    node::BlockAssembler::Options options;
-    options.test_block_validity = false;
-    node::BlockAssembler assembler(*m_chainstate, m_mempool, options);
-
-    const auto pblocktemplate = assembler.CreateNewBlock();
+    const auto pblocktemplate = GenerateNewBlock(*m_chainstate, m_mempool);
     const auto& m_package_feerates = pblocktemplate->m_package_feerates;
     if (m_package_feerates.empty()) {
         return ForecastResult(response, "No enough transactions in the mempool to provide a fee rate forecast");
