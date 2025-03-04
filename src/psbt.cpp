@@ -425,6 +425,26 @@ PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransact
         return PSBTError::SIGHASH_MISMATCH;
     }
 
+    // Check all existing signatures use the sighash type
+    if (sighash == SIGHASH_DEFAULT) {
+        if (!input.m_tap_key_sig.empty() && input.m_tap_key_sig.size() != 64) {
+            return PSBTError::SIGHASH_MISMATCH;
+        }
+        for (const auto& [_, sig] : input.m_tap_script_sigs) {
+            if (sig.size() != 64) return PSBTError::SIGHASH_MISMATCH;
+        }
+    } else {
+        if (!input.m_tap_key_sig.empty() && (input.m_tap_key_sig.size() != 65 || input.m_tap_key_sig.back() != *sighash)) {
+            return PSBTError::SIGHASH_MISMATCH;
+        }
+        for (const auto& [_, sig] : input.m_tap_script_sigs) {
+            if (sig.size() != 65 || sig.back() != *sighash) return PSBTError::SIGHASH_MISMATCH;
+        }
+        for (const auto& [_, sig] : input.partial_sigs) {
+            if (sig.second.back() != *sighash) return PSBTError::SIGHASH_MISMATCH;
+        }
+    }
+
     sigdata.witness = false;
     bool sig_complete;
     if (txdata == nullptr) {
