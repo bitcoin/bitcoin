@@ -39,7 +39,9 @@ struct connected_block
 BPF_PERF_OUTPUT(block_connected);
 int trace_block_connected(struct pt_regs *ctx) {
     struct connected_block block = {};
-    bpf_usdt_readarg_p(1, ctx, &block.hash, 32);
+    void *phash = NULL;
+    bpf_usdt_readarg(1, ctx, &phash);
+    bpf_probe_read_user(&block.hash, sizeof(block.hash), phash);
     bpf_usdt_readarg(2, ctx, &block.height);
     bpf_usdt_readarg(3, ctx, &block.transactions);
     bpf_usdt_readarg(4, ctx, &block.inputs);
