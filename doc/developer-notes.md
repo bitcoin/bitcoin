@@ -484,6 +484,8 @@ $ ./build/test/functional/test_runner.py --valgrind
 
 ### Compiling for test coverage
 
+#### Using LCOV
+
 LCOV can be used to generate a test coverage report based upon `ctest`
 execution. LCOV must be installed on your system (e.g. the `lcov` package
 on Debian/Ubuntu).
@@ -512,6 +514,49 @@ To enable test parallelism:
 ```
 cmake -DJOBS=$(nproc) -P build/Coverage.cmake
 ```
+
+#### Using LLVM/Clang toolchain
+
+The following generates a coverage report for unit tests.
+
+Configure the build with the following flags:
+
+```shell
+# MacOS may require -DCMAKE_CXX_COMPILER="$(brew --prefix llvm)/bin/clang++" and -DCMAKE_C_COMPILER="$(brew --prefix llvm)/bin/clang"
+cmake -B build -DCMAKE_C_COMPILER="clang" \
+   -DCMAKE_CXX_COMPILER="clang++" \
+   -DCMAKE_C_FLAGS="-fprofile-instr-generate -fcoverage-mapping" \
+   -DCMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping"
+cmake --build build # Use "-j N" here for N parallel jobs.
+```
+
+Generating the raw profile data based on `ctest` execution:
+
+```shell
+LLVM_PROFILE_FILE="default_%p.profraw" ctest --test-dir build # Use "-j N" here for N parallel jobs.
+
+# merge all the raw profile data into a single file
+find build -name "default_*.profraw" | xargs llvm-profdata merge -sparse -o build/coverage.profdata
+# Note: The "counter mismatch" warning can be safely ignored, though it can be resolved by updating to Clang 19.
+# The warning occurs due to version mismatches but doesn't affect the coverage report generation.
+```
+
+Generating the coverage report:
+
+```shell
+llvm-cov show build/src/test/test_bitcoin \
+    --instr-profile=build/coverage.profdata \
+    --format=html \
+    --show-instantiation-summary \
+    --show-line-counts-or-regions \
+    --show-expansions \
+    --output-dir=build/coverage_report \
+    --project-title="Bitcoin Core Coverage Report"
+# Note: The "functions have mismatched data" warning can be safely ignored, the coverage report will still be generated correctly despite this warning.
+# This warning occurs due to profdata mismatch created during the merge process for shared libraries.
+```
+
+The generated coverage report can be accessed at `build/coverage_report/index.html`.
 
 ### Performance profiling with perf
 
