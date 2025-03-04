@@ -82,4 +82,4 @@ add_test(NAME bench_sanity_check_high_priority
   COMMAND bench_bitcoin -sanity-check -priority-level=high
 )
 
-install_binary_component(bench_bitcoin)
+install_binary_component(bench_bitcoin INTERNAL)
