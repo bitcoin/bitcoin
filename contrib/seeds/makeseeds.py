@@ -43,12 +43,12 @@ PATTERN_AGENT = re.compile(
     r"0.20.(0|1|2|99)|"
     r"0.21.(0|1|2|99)|"
     r"22.(0|1|99).0|"
-    r"23.(0|1|99).0|"
+    r"23.(0|1|2|99).0|"
     r"24.(0|1|2|99).(0|1)|"
     r"25.(0|1|2|99).0|"
-    r"26.(0|1|99).0|"
-    r"27.(0|1|99).0|"
-    r"28.(0|99).0|"
+    r"26.(0|1|2|99).0|"
+    r"27.(0|1|2|99).0|"
+    r"28.(0|1|99).0"
     r")")
 
 def parseline(line: str) -> Union[dict, None]:
@@ -216,7 +216,7 @@ def main():
     random.shuffle(ips)
     print('Done.', file=sys.stderr)
 
-    print('\x1b[7m  IPv4   IPv6  Onion  I2P    CJDNS Pass                                               \x1b[0m', file=sys.stderr)
+    print('\x1b[7m  IPv4   IPv6  Onion    I2P  CJDNS Pass                                               \x1b[0m', file=sys.stderr)
     print(f'{ip_stats(ips):s} Initial', file=sys.stderr)
     # Skip entries with invalid address.
     ips = [ip for ip in ips if ip is not None]
