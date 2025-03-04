@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -73,8 +73,8 @@ std::vector<Byte> ParseHex(std::string_view hex_str)
  * number of hex digits.*/
 bool IsHex(std::string_view str);
 std::optional<std::vector<unsigned char>> DecodeBase64(std::string_view str);
-std::string EncodeBase64(Span<const unsigned char> input);
-inline std::string EncodeBase64(Span<const std::byte> input) { return EncodeBase64(MakeUCharSpan(input)); }
+std::string EncodeBase64(std::span<const unsigned char> input);
+inline std::string EncodeBase64(std::span<const std::byte> input) { return EncodeBase64(MakeUCharSpan(input)); }
 inline std::string EncodeBase64(std::string_view str) { return EncodeBase64(MakeUCharSpan(str)); }
 std::optional<std::vector<unsigned char>> DecodeBase32(std::string_view str);
 
@@ -83,7 +83,7 @@ std::optional<std::vector<unsigned char>> DecodeBase32(std::string_view str);
  * If `pad` is true, then the output will be padded with '=' so that its length
  * is a multiple of 8.
  */
-std::string EncodeBase32(Span<const unsigned char> input, bool pad = true);
+std::string EncodeBase32(std::span<const unsigned char> input, bool pad = true);
 
 /**
  * Base32 encode.

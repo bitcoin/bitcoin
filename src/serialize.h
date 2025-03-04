@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -53,67 +53,67 @@ constexpr deserialize_type deserialize {};
  */
 template<typename Stream> inline void ser_writedata8(Stream &s, uint8_t obj)
 {
-    s.write(AsBytes(Span{&obj, 1}));
+    s.write(std::as_bytes(std::span{&obj, 1}));
 }
 template<typename Stream> inline void ser_writedata16(Stream &s, uint16_t obj)
 {
     obj = htole16_internal(obj);
-    s.write(AsBytes(Span{&obj, 1}));
+    s.write(std::as_bytes(std::span{&obj, 1}));
 }
 template<typename Stream> inline void ser_writedata16be(Stream &s, uint16_t obj)
 {
     obj = htobe16_internal(obj);
-    s.write(AsBytes(Span{&obj, 1}));
+    s.write(std::as_bytes(std::span{&obj, 1}));
 }
 template<typename Stream> inline void ser_writedata32(Stream &s, uint32_t obj)
 {
     obj = htole32_internal(obj);
-    s.write(AsBytes(Span{&obj, 1}));
+    s.write(std::as_bytes(std::span{&obj, 1}));
 }
 template<typename Stream> inline void ser_writedata32be(Stream &s, uint32_t obj)
 {
     obj = htobe32_internal(obj);
-    s.write(AsBytes(Span{&obj, 1}));
+    s.write(std::as_bytes(std::span{&obj, 1}));
 }
 template<typename Stream> inline void ser_writedata64(Stream &s, uint64_t obj)
 {
     obj = htole64_internal(obj);
-    s.write(AsBytes(Span{&obj, 1}));
+    s.write(std::as_bytes(std::span{&obj, 1}));
 }
 template<typename Stream> inline uint8_t ser_readdata8(Stream &s)
 {
     uint8_t obj;
-    s.read(AsWritableBytes(Span{&obj, 1}));
+    s.read(std::as_writable_bytes(std::span{&obj, 1}));
     return obj;
 }
 template<typename Stream> inline uint16_t ser_readdata16(Stream &s)
 {
     uint16_t obj;
-    s.read(AsWritableBytes(Span{&obj, 1}));
+    s.read(std::as_writable_bytes(std::span{&obj, 1}));
     return le16toh_internal(obj);
 }
 template<typename Stream> inline uint16_t ser_readdata16be(Stream &s)
 {
     uint16_t obj;
-    s.read(AsWritableBytes(Span{&obj, 1}));
+    s.read(std::as_writable_bytes(std::span{&obj, 1}));
     return be16toh_internal(obj);
 }
 template<typename Stream> inline uint32_t ser_readdata32(Stream &s)
 {
     uint32_t obj;
-    s.read(AsWritableBytes(Span{&obj, 1}));
+    s.read(std::as_writable_bytes(std::span{&obj, 1}));
     return le32toh_internal(obj);
 }
 template<typename Stream> inline uint32_t ser_readdata32be(Stream &s)
 {
     uint32_t obj;
-    s.read(AsWritableBytes(Span{&obj, 1}));
+    s.read(std::as_writable_bytes(std::span{&obj, 1}));
     return be32toh_internal(obj);
 }
 template<typename Stream> inline uint64_t ser_readdata64(Stream &s)
 {
     uint64_t obj;
-    s.read(AsWritableBytes(Span{&obj, 1}));
+    s.read(std::as_writable_bytes(std::span{&obj, 1}));
     return le64toh_internal(obj);
 }
 
@@ -242,7 +242,7 @@ const Out& AsBase(const In& x)
     FORMATTER_METHODS(cls, obj)
 
 // Templates for serializing to anything that looks like a stream,
-// i.e. anything that supports .read(Span<std::byte>) and .write(Span<const std::byte>)
+// i.e. anything that supports .read(std::span<std::byte>) and .write(std::span<const std::byte>)
 //
 // clang-format off
 
@@ -265,7 +265,7 @@ template<typename Stream> inline void Serialize(Stream& s, uint64_t a) { ser_wri
 template <typename Stream, BasicByte B, int N> void Serialize(Stream& s, const B (&a)[N]) { s.write(MakeByteSpan(a)); }
 template <typename Stream, BasicByte B, std::size_t N> void Serialize(Stream& s, const std::array<B, N>& a) { s.write(MakeByteSpan(a)); }
 template <typename Stream, BasicByte B, std::size_t N> void Serialize(Stream& s, std::span<B, N> span) { s.write(std::as_bytes(span)); }
-template <typename Stream, BasicByte B> void Serialize(Stream& s, Span<B> span) { s.write(AsBytes(span)); }
+template <typename Stream, BasicByte B> void Serialize(Stream& s, std::span<B> span) { s.write(std::as_bytes(span)); }
 
 template <typename Stream, CharNotInt8 V> void Unserialize(Stream&, V) = delete; // char serialization forbidden. Use uint8_t or int8_t
 template <typename Stream> void Unserialize(Stream& s, std::byte& a) { a = std::byte{ser_readdata8(s)}; }
@@ -280,7 +280,7 @@ template<typename Stream> inline void Unserialize(Stream& s, uint64_t& a) { a = 
 template <typename Stream, BasicByte B, int N> void Unserialize(Stream& s, B (&a)[N]) { s.read(MakeWritableByteSpan(a)); }
 template <typename Stream, BasicByte B, std::size_t N> void Unserialize(Stream& s, std::array<B, N>& a) { s.read(MakeWritableByteSpan(a)); }
 template <typename Stream, BasicByte B, std::size_t N> void Unserialize(Stream& s, std::span<B, N> span) { s.read(std::as_writable_bytes(span)); }
-template <typename Stream, BasicByte B> void Unserialize(Stream& s, Span<B> span) { s.read(AsWritableBytes(span)); }
+template <typename Stream, BasicByte B> void Unserialize(Stream& s, std::span<B> span) { s.read(std::as_writable_bytes(span)); }
 
 template <typename Stream> inline void Serialize(Stream& s, bool a) { uint8_t f = a; ser_writedata8(s, f); }
 template <typename Stream> inline void Unserialize(Stream& s, bool& a) { uint8_t f = ser_readdata8(s); a = f; }
@@ -536,10 +536,10 @@ struct CustomUintFormatter
         if (v < 0 || v > MAX) throw std::ios_base::failure("CustomUintFormatter value out of range");
         if (BigEndian) {
             uint64_t raw = htobe64_internal(v);
-            s.write(AsBytes(Span{&raw, 1}).last(Bytes));
+            s.write(std::as_bytes(std::span{&raw, 1}).last(Bytes));
         } else {
             uint64_t raw = htole64_internal(v);
-            s.write(AsBytes(Span{&raw, 1}).first(Bytes));
+            s.write(std::as_bytes(std::span{&raw, 1}).first(Bytes));
         }
     }
 
@@ -549,10 +549,10 @@ struct CustomUintFormatter
         static_assert(std::numeric_limits<U>::max() >= MAX && std::numeric_limits<U>::min() <= 0, "Assigned type too small");
         uint64_t raw = 0;
         if (BigEndian) {
-            s.read(AsWritableBytes(Span{&raw, 1}).last(Bytes));
+            s.read(std::as_writable_bytes(std::span{&raw, 1}).last(Bytes));
             v = static_cast<I>(be64toh_internal(raw));
         } else {
-            s.read(AsWritableBytes(Span{&raw, 1}).first(Bytes));
+            s.read(std::as_writable_bytes(std::span{&raw, 1}).first(Bytes));
             v = static_cast<I>(le64toh_internal(raw));
         }
     }
@@ -829,7 +829,7 @@ void Unserialize(Stream& is, prevector<N, T>& v)
         while (i < nSize) {
             unsigned int blk = std::min(nSize - i, (unsigned int)(1 + 4999999 / sizeof(T)));
             v.resize_uninitialized(i + blk);
-            is.read(AsWritableBytes(Span{&v[i], blk}));
+            is.read(std::as_writable_bytes(std::span{&v[i], blk}));
             i += blk;
         }
     } else {
@@ -872,7 +872,7 @@ void Unserialize(Stream& is, std::vector<T, A>& v)
         while (i < nSize) {
             unsigned int blk = std::min(nSize - i, (unsigned int)(1 + 4999999 / sizeof(T)));
             v.resize(i + blk);
-            is.read(AsWritableBytes(Span{&v[i], blk}));
+            is.read(std::as_writable_bytes(std::span{&v[i], blk}));
             i += blk;
         }
     } else {
@@ -1065,7 +1065,7 @@ protected:
 public:
     SizeComputer() = default;
 
-    void write(Span<const std::byte> src)
+    void write(std::span<const std::byte> src)
     {
         this->nSize += src.size();
     }
@@ -1132,8 +1132,8 @@ public:
 
     template <typename U> ParamsStream& operator<<(const U& obj) { ::Serialize(*this, obj); return *this; }
     template <typename U> ParamsStream& operator>>(U&& obj) { ::Unserialize(*this, obj); return *this; }
-    void write(Span<const std::byte> src) { GetStream().write(src); }
-    void read(Span<std::byte> dst) { GetStream().read(dst); }
+    void write(std::span<const std::byte> src) { GetStream().write(src); }
+    void read(std::span<std::byte> dst) { GetStream().read(dst); }
     void ignore(size_t num) { GetStream().ignore(num); }
     bool eof() const { return GetStream().eof(); }
     size_t size() const { return GetStream().size(); }

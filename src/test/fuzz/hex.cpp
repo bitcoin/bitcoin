@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2021 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,7 +23,7 @@ FUZZ_TARGET(hex)
     const std::string random_hex_string(buffer.begin(), buffer.end());
     const std::vector<unsigned char> data = ParseHex(random_hex_string);
     const std::vector<std::byte> bytes{ParseHex<std::byte>(random_hex_string)};
-    assert(std::ranges::equal(AsBytes(Span{data}), bytes));
+    assert(std::ranges::equal(std::as_bytes(std::span{data}), bytes));
     const std::string hex_data = HexStr(data);
     if (IsHex(random_hex_string)) {
         assert(ToLower(random_hex_string) == hex_data);
