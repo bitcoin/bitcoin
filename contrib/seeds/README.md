@@ -8,6 +8,8 @@ and remove old versions as necessary (at a minimum when SeedsServiceFlags()
 changes its default return value, as those are the services which seeds are added
 to addrman with).
 
+Update `MIN_BLOCKS` in  `makeseeds.py` and the `-m`/`--minblocks` arguments below, as needed.
+
 The seeds compiled into the release are created from sipa's, achow101's and luke-jr's
 DNS seed, virtu's crawler, and asmap community AS map data. Run the following commands
 from the `/contrib/seeds` directory:
