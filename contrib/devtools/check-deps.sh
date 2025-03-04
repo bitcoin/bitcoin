@@ -44,12 +44,6 @@ declare -A SUPPRESS
 # init.cpp file currently calls Berkeley DB sanity check function on startup, so
 # there is an undocumented dependency of the node library on the wallet library.
 SUPPRESS["init.cpp.o bdb.cpp.o _ZN6wallet27BerkeleyDatabaseSanityCheckEv"]=1
-# init/common.cpp file calls InitError and InitWarning from interface_ui which
-# is currently part of the node library. interface_ui should just be part of the
-# common library instead, and is moved in
-# https://github.com/bitcoin/bitcoin/issues/10102
-SUPPRESS["common.cpp.o interface_ui.cpp.o _Z11InitWarningRK13bilingual_str"]=1
-SUPPRESS["common.cpp.o interface_ui.cpp.o _Z9InitErrorRK13bilingual_str"]=1
 
 usage() {
    echo "Usage: $(basename "${BASH_SOURCE[0]}") [BUILD_DIR]"

@@ -11,6 +11,7 @@ import argparse
 BINARIES = [
 'src/bitcoind',
 'src/bitcoin-cli',
+'src/bitcoin-mine',
 'src/bitcoin-tx',
 'src/bitcoin-wallet',
 'src/bitcoin-util',
