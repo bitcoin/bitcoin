@@ -7,28 +7,18 @@ include(AddWindowsResources)
 configure_file(${PROJECT_SOURCE_DIR}/cmake/bitcoin-build-config.h.in bitcoin-build-config.h USE_SOURCE_PERMISSIONS @ONLY)
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_custom_target(generate_build_info
-  BYPRODUCTS ${PROJECT_BINARY_DIR}/src/bitcoin-build-info.h
-  COMMAND ${CMAKE_COMMAND} -DBUILD_INFO_HEADER_PATH=${PROJECT_BINARY_DIR}/src/bitcoin-build-info.h -DSOURCE_DIR=${PROJECT_SOURCE_DIR} -P ${PROJECT_SOURCE_DIR}/cmake/script/GenerateBuildInfo.cmake
-  COMMENT "Generating bitcoin-build-info.h"
-  VERBATIM
-)
-add_library(bitcoin_clientversion STATIC EXCLUDE_FROM_ALL
-  clientversion.cpp
-)
-target_link_libraries(bitcoin_clientversion
-  PRIVATE
-    core_interface
-)
-add_dependencies(bitcoin_clientversion generate_build_info)
-
-add_subdirectory(crypto)
+#=============================
+# Subprojects
+#=============================
+# Subprojects include subdirectories that do or could have tests
+# and/or benchmark binaries, such as all subtrees and univalue.
+# These need to be included before CMAKE_*_OUTPUT_DIRECTORY variables
+# are set, so output locations of subproject tests and libraries are
+# not overridden.
+include(../cmake/crc32c.cmake)
+include(../cmake/leveldb.cmake)
+include(../cmake/minisketch.cmake)
 add_subdirectory(univalue)
-add_subdirectory(util)
-if(WITH_MULTIPROCESS)
-  add_subdirectory(ipc)
-endif()
-
 #=============================
 # secp256k1 subtree
 #=============================
@@ -77,6 +67,38 @@ set_target_properties(secp256k1 PROPERTIES
   EXCLUDE_FROM_ALL TRUE
 )
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Set top-level target output locations.
+if(NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+endif()
+if(NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+endif()
+if(NOT CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+endif()
+
+add_custom_target(generate_build_info
+  BYPRODUCTS ${PROJECT_BINARY_DIR}/src/bitcoin-build-info.h
+  COMMAND ${CMAKE_COMMAND} -DBUILD_INFO_HEADER_PATH=${PROJECT_BINARY_DIR}/src/bitcoin-build-info.h -DSOURCE_DIR=${PROJECT_SOURCE_DIR} -P ${PROJECT_SOURCE_DIR}/cmake/script/GenerateBuildInfo.cmake
+  COMMENT "Generating bitcoin-build-info.h"
+  VERBATIM
+)
+add_library(bitcoin_clientversion STATIC EXCLUDE_FROM_ALL
+  clientversion.cpp
+)
+target_link_libraries(bitcoin_clientversion
+  PRIVATE
+    core_interface
+)
+add_dependencies(bitcoin_clientversion generate_build_info)
+
+add_subdirectory(crypto)
+add_subdirectory(util)
+if(WITH_MULTIPROCESS)
+  add_subdirectory(ipc)
+endif()
 
 add_library(bitcoin_consensus STATIC EXCLUDE_FROM_ALL
   arith_uint256.cpp
