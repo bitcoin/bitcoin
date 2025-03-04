@@ -131,14 +131,32 @@ FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
     std::vector<CTransactionRef> transactions;
     // The maximum block template size we expect to produce
     const auto block_adjusted_max_weight = MAX_BLOCK_WEIGHT - MINIMUM_BLOCK_RESERVED_WEIGHT;
+    // When this is set to true we try to fill up the rest of the block with
+    // a lot of small transactions so we can actually get close to actual
+    // maximum block size
+    std::optional<bool> min_size_tx{std::nullopt};
+    // This decides if we target a larger, potentially full block or a smaller
+    // block that will complete the test much faster
+    bool use_limited_loop = fuzzed_data_provider.ConsumeBool();
+    auto should_continue = [&]() -> bool {
+        if (use_limited_loop) {
+            return fuzzed_data_provider.ConsumeBool();
+        }
+        return true;
+    };
 
     LOCK2(::cs_main, pool.cs);
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100)
+    // Limited to 500 because of ClusterMempool DoS protection
+    LIMITED_WHILE(should_continue(), 500)
     {
         CMutableTransaction mtx = CMutableTransaction();
         assert(!available_coins.empty());
-        const size_t num_inputs = std::min(size_t{2}, available_coins.size());
-        const size_t num_outputs = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(2, 5);
+        size_t num_inputs = std::min(size_t{2}, available_coins.size());
+        size_t num_outputs = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(50, 500);
+        if (min_size_tx.has_value() && min_size_tx.value()) {
+            num_inputs = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, 5);
+            num_outputs = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, 5);
+        }
         for (size_t n{0}; n < num_inputs; ++n) {
             auto prevout = available_coins.at(0);
             mtx.vin.emplace_back(prevout, CScript());
@@ -162,7 +180,15 @@ FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
 
         // Stop if pool reaches block_adjusted_max_weight because BlockAssembler will stop when the
         // block template reaches that, but the MiniMiner will keep going.
-        if ((pool.GetTotalTxSize() + GetVirtualTransactionSize(*tx)) * 4 >= block_adjusted_max_weight) break;
+        if ((pool.GetTotalTxSize() + GetVirtualTransactionSize(*tx)) * 4 >= block_adjusted_max_weight) {
+            // Either stop here or fill up the rest of the block with very small
+            // transactions and break when the block is close to the possible max
+            if (!min_size_tx.has_value()) {
+                min_size_tx = fuzzed_data_provider.ConsumeBool();
+                if (!min_size_tx.value()) break;
+            }
+            break;
+        }
         TestMemPoolEntryHelper entry;
         const CAmount fee{ConsumeMoney(fuzzed_data_provider, /*max=*/MAX_MONEY/100000)};
         assert(MoneyRange(fee));
