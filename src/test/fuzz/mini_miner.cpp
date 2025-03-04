@@ -133,12 +133,12 @@ FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
     const auto block_adjusted_max_weight = MAX_BLOCK_WEIGHT - MINIMUM_BLOCK_RESERVED_WEIGHT;
 
     LOCK2(::cs_main, pool.cs);
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100)
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 500)
     {
         CMutableTransaction mtx = CMutableTransaction();
         assert(!available_coins.empty());
         const size_t num_inputs = std::min(size_t{2}, available_coins.size());
-        const size_t num_outputs = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(2, 5);
+        const size_t num_outputs = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(2, 50);
         for (size_t n{0}; n < num_inputs; ++n) {
             auto prevout = available_coins.at(0);
             mtx.vin.emplace_back(prevout, CScript());
