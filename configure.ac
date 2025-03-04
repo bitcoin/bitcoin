@@ -739,6 +739,13 @@ case $host in
            dnl which may not exist in the path. Stripping the .a is not
            dnl necessary, so just disable it.
            old_striplib=
+
+           dnl libtool assumes "GNU strip" accepts --strip-unneeded, but at
+           dnl least recent versions of LLVM do not yet claim to be compatible
+           dnl with "GNU strip". For now, we just disable stripping shared
+           dnl libraries too, but it would be better to actually test the strip
+           dnl program (FIXME).
+           striplib=
            ;;
        esac
      fi
