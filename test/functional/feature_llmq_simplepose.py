@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2024 The Dash Core developers
+# Copyright (c) 2015-2025 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -109,8 +109,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
         if skip_count != 0:
             self.bump_mocktime(skip_count, nodes=nodes)
-            self.generate(self.nodes[0], skip_count, sync_fun=self.no_op)
-        self.sync_blocks(nodes)
+            self.generate(self.nodes[0], skip_count, sync_fun=lambda: self.sync_blocks(nodes))
 
         q = self.nodes[0].getbestblockhash()
         self.log.info("Expected quorum_hash: "+str(q))

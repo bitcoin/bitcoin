@@ -510,7 +510,6 @@ class WalletTest(BitcoinTestFramework):
             txid = self.nodes[2].sendtoaddress(address=address, amount=amount, fee_rate=str(fee_rate_sat_vb))
             tx_size = self.get_vsize(self.nodes[2].gettransaction(txid)['hex'])
             self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_all(self.nodes[0:3]))
-            self.sync_all(self.nodes[0:3])
             postbalance = self.nodes[2].getbalance()
             fee = prebalance - postbalance - amount
             # TODO: remove workaround after bitcoin/bitcoin#22949 done

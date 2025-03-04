@@ -27,12 +27,10 @@ class OrphanedBlockRewardTest(BitcoinTestFramework):
         # it later.
         self.sync_blocks()
         blk = self.generate(self.nodes[1], 1)[0]
-        self.sync_blocks()
 
         # Let the block reward mature and send coins including both
         # the existing balance and the block reward.
         self.generate(self.nodes[0], 150)
-        self.sync_blocks()
         assert_equal(self.nodes[1].getbalance(), Decimal("474.28571429"))
         txid = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 30)
 
@@ -40,7 +38,6 @@ class OrphanedBlockRewardTest(BitcoinTestFramework):
         # from the wallet can still be spent.
         self.nodes[0].invalidateblock(blk)
         self.generate(self.nodes[0], 152)
-        self.sync_blocks()
         # Without the following abandontransaction call, the coins are
         # not considered available yet.
         assert_equal(self.nodes[1].getbalances()["mine"], {

@@ -65,8 +65,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
     def run_test(self):
         self.generatetoaddress(self.nodes[0], 101, self.nodes[0].getnewaddress())
 
-        self.sync_blocks()
-
         # Sanity check the test framework:
         res = self.nodes[self.num_nodes - 1].getblockchaininfo()
         assert_equal(res['blocks'], 101)
@@ -93,7 +91,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.nodes[0].sendtoaddress(address, 1)
         self.sync_mempools()
         self.generate(self.nodes[0], 1)
-        self.sync_blocks()
 
         # w1_v19: regular wallet, created with v0.19
         node_v19.rpc.createwallet(wallet_name="w1_v19")

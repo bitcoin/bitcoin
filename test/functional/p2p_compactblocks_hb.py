@@ -31,7 +31,6 @@ class CompactBlocksConnectionTest(BitcoinTestFramework):
         """Relay a new block through peer peer, and return HB status between 1 and [2,3,4,5]."""
         self.connect_nodes(peer, 0)
         self.generate(self.nodes[0], 1)
-        self.sync_blocks()
         self.disconnect_nodes(peer, 0)
 
         def status_to():
@@ -50,7 +49,6 @@ class CompactBlocksConnectionTest(BitcoinTestFramework):
         for i in range(1, 6):
             self.connect_nodes(i, 0)
         self.generate(self.nodes[0], 2)
-        self.sync_blocks()
         for i in range(1, 6):
             self.disconnect_nodes(i, 0)
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2024 The Dash Core developers
+# Copyright (c) 2015-2025 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -84,7 +84,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
         h_100_1 = QuorumId(100, int(h_1, 16))
 
         self.log.info("Mine single block, wait for chainlock")
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 1)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
         b_h_1 = self.nodes[0].getbestblockhash()
@@ -115,7 +115,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
         assert_equal(projected_activation_height, softfork_info['height'])
 
         # v20 is active for the next block, not for the tip
-        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 1)
 
         self.log.info("Wait for chainlock")
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
@@ -196,7 +196,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
         self.sync_blocks(nodes)
         quorum_list = self.nodes[0].quorum("list", llmq_type)
         quorum_blockhash = self.nodes[0].getbestblockhash()
-        fallback_blockhash = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
+        fallback_blockhash = self.generate(self.nodes[0], 1)[0]
         self.log.info("h("+str(self.nodes[0].getblockcount())+") quorum_list:"+str(quorum_list))
 
         assert_greater_than_or_equal(len(intersection(quorum_members_0_0, quorum_members_1_0)), 3)
@@ -388,8 +388,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
         skip_count = cycle_length - (cur_block % cycle_length)
         if skip_count != 0:
             self.bump_mocktime(1)
-            self.generate(self.nodes[0], skip_count, sync_fun=self.no_op)
-        self.sync_blocks(nodes)
+            self.generate(self.nodes[0], skip_count, sync_fun=lambda: self.sync_blocks(nodes))
         self.log.info('Moved from block %d to %d' % (cur_block, self.nodes[0].getblockcount()))
 
 
