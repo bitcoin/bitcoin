@@ -582,7 +582,9 @@ if(DEFINED ENV{LDFLAGS})
 endif()
 
 if(BUILD_TESTS)
+  find_package(GTest REQUIRED)
   enable_testing()
+  include(GoogleTest)
 endif()
 
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.29)

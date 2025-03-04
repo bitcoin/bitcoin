@@ -2,6 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <gtest/gtest.h>
+// WARNING: Google Mock implements an Assert macro, creating a name conflict with the Bitcoin Assert macro
+#include <gmock/gmock.h>
+
 #include <common/args.h>
 #include <sync.h>
 #include <test/util/logging.h>
@@ -18,13 +22,11 @@
 #include <cstring>
 #include <vector>
 
-#include <boost/test/unit_test.hpp>
-
 using util::ToString;
 
-BOOST_FIXTURE_TEST_SUITE(argsman_tests, BasicTestingSetup)
+class ArgsmanTestsBasicSetup : public BasicTestingSetup, public testing::Test {};
 
-BOOST_AUTO_TEST_CASE(util_datadir)
+TEST_F(ArgsmanTestsBasicSetup, UtilDatadir)
 {
     // Use local args variable instead of m_args to avoid making assumptions about test setup
     ArgsManager args;
@@ -34,19 +36,19 @@ BOOST_AUTO_TEST_CASE(util_datadir)
 
     args.ForceSetArg("-datadir", fs::PathToString(dd_norm) + "/");
     args.ClearPathCache();
-    BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirBase());
+    EXPECT_EQ(dd_norm, args.GetDataDirBase());
 
     args.ForceSetArg("-datadir", fs::PathToString(dd_norm) + "/.");
     args.ClearPathCache();
-    BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirBase());
+    EXPECT_EQ(dd_norm, args.GetDataDirBase());
 
     args.ForceSetArg("-datadir", fs::PathToString(dd_norm) + "/./");
     args.ClearPathCache();
-    BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirBase());
+    EXPECT_EQ(dd_norm, args.GetDataDirBase());
 
     args.ForceSetArg("-datadir", fs::PathToString(dd_norm) + "/.//");
     args.ClearPathCache();
-    BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirBase());
+    EXPECT_EQ(dd_norm, args.GetDataDirBase());
 }
 
 struct TestArgsManager : public ArgsManager
@@ -61,7 +63,7 @@ struct TestArgsManager : public ArgsManager
             m_config_sections.clear();
         }
         std::string error;
-        BOOST_REQUIRE(ReadConfigStream(streamConfig, "", error));
+        ASSERT_TRUE(ReadConfigStream(streamConfig, "", error));
     }
     void SetNetworkOnlyArg(const std::string arg)
     {
@@ -83,7 +85,7 @@ struct TestArgsManager : public ArgsManager
 };
 
 //! Test GetSetting and GetArg type coercion, negation, and default value handling.
-class CheckValueTest : public TestChain100Setup
+class ArgsmanTestsCheckValueTest : public TestChain100Setup, public testing::Test
 {
 public:
     struct Expect {
@@ -116,59 +118,59 @@ public:
         std::string error;
         bool success = test.ParseParameters(arg ? 2 : 1, argv, error);
 
-        BOOST_CHECK_EQUAL(test.GetSetting("-value").write(), expect.setting.write());
+        EXPECT_EQ(test.GetSetting("-value").write(), expect.setting.write());
         auto settings_list = test.GetSettingsList("-value");
         if (expect.setting.isNull() || expect.setting.isFalse()) {
-            BOOST_CHECK_EQUAL(settings_list.size(), 0U);
+            EXPECT_EQ(settings_list.size(), 0U);
         } else {
-            BOOST_CHECK_EQUAL(settings_list.size(), 1U);
-            BOOST_CHECK_EQUAL(settings_list[0].write(), expect.setting.write());
+            EXPECT_EQ(settings_list.size(), 1U);
+            EXPECT_EQ(settings_list[0].write(), expect.setting.write());
         }
 
         if (expect.error) {
-            BOOST_CHECK(!success);
-            BOOST_CHECK_NE(error.find(expect.error), std::string::npos);
+            EXPECT_FALSE(success);
+            EXPECT_NE(error.find(expect.error), std::string::npos);
         } else {
-            BOOST_CHECK(success);
-            BOOST_CHECK_EQUAL(error, "");
+            EXPECT_TRUE(success);
+            EXPECT_EQ(error, "");
         }
 
         if (expect.default_string) {
-            BOOST_CHECK_EQUAL(test.GetArg("-value", "zzzzz"), "zzzzz");
+            EXPECT_EQ(test.GetArg("-value", "zzzzz"), "zzzzz");
         } else if (expect.string_value) {
-            BOOST_CHECK_EQUAL(test.GetArg("-value", "zzzzz"), expect.string_value);
+            EXPECT_EQ(test.GetArg("-value", "zzzzz"), expect.string_value);
         } else {
-            BOOST_CHECK(!success);
+            EXPECT_FALSE(success);
         }
 
         if (expect.default_int) {
-            BOOST_CHECK_EQUAL(test.GetIntArg("-value", 99999), 99999);
+            EXPECT_EQ(test.GetIntArg("-value", 99999), 99999);
         } else if (expect.int_value) {
-            BOOST_CHECK_EQUAL(test.GetIntArg("-value", 99999), *expect.int_value);
+            EXPECT_EQ(test.GetIntArg("-value", 99999), *expect.int_value);
         } else {
-            BOOST_CHECK(!success);
+            EXPECT_FALSE(success);
         }
 
         if (expect.default_bool) {
-            BOOST_CHECK_EQUAL(test.GetBoolArg("-value", false), false);
-            BOOST_CHECK_EQUAL(test.GetBoolArg("-value", true), true);
+            EXPECT_EQ(test.GetBoolArg("-value", false), false);
+            EXPECT_EQ(test.GetBoolArg("-value", true), true);
         } else if (expect.bool_value) {
-            BOOST_CHECK_EQUAL(test.GetBoolArg("-value", false), *expect.bool_value);
-            BOOST_CHECK_EQUAL(test.GetBoolArg("-value", true), *expect.bool_value);
+            EXPECT_EQ(test.GetBoolArg("-value", false), *expect.bool_value);
+            EXPECT_EQ(test.GetBoolArg("-value", true), *expect.bool_value);
         } else {
-            BOOST_CHECK(!success);
+            EXPECT_FALSE(success);
         }
 
         if (expect.list_value) {
             auto l = test.GetArgs("-value");
-            BOOST_CHECK_EQUAL_COLLECTIONS(l.begin(), l.end(), expect.list_value->begin(), expect.list_value->end());
+            ASSERT_THAT(l, ::testing::ContainerEq(expect.list_value.value()));
         } else {
-            BOOST_CHECK(!success);
+            EXPECT_FALSE(success);
         }
     }
 };
 
-BOOST_FIXTURE_TEST_CASE(util_CheckValue, CheckValueTest)
+TEST_F(ArgsmanTestsCheckValueTest, CheckValueTest)
 {
     using M = ArgsManager;
 
@@ -187,7 +189,7 @@ BOOST_FIXTURE_TEST_CASE(util_CheckValue, CheckValueTest)
     CheckValue(M::ALLOW_ANY, "-value=abc", Expect{"abc"}.String("abc").Int(0).Bool(false).List({"abc"}));
 }
 
-struct NoIncludeConfTest {
+struct ArgsmanTestsNoIncludeConf : public testing::Test {
     std::string Parse(const char* arg)
     {
         TestArgsManager test;
@@ -199,14 +201,14 @@ struct NoIncludeConfTest {
     }
 };
 
-BOOST_FIXTURE_TEST_CASE(util_NoIncludeConf, NoIncludeConfTest)
+TEST_F(ArgsmanTestsNoIncludeConf, NoIncludeConf)
 {
-    BOOST_CHECK_EQUAL(Parse("-noincludeconf"), "");
-    BOOST_CHECK_EQUAL(Parse("-includeconf"), "-includeconf cannot be used from commandline; -includeconf=\"\"");
-    BOOST_CHECK_EQUAL(Parse("-includeconf=file"), "-includeconf cannot be used from commandline; -includeconf=\"file\"");
+    EXPECT_EQ(Parse("-noincludeconf"), "");
+    EXPECT_EQ(Parse("-includeconf"), "-includeconf cannot be used from commandline; -includeconf=\"\"");
+    EXPECT_EQ(Parse("-includeconf=file"), "-includeconf cannot be used from commandline; -includeconf=\"file\"");
 }
 
-BOOST_AUTO_TEST_CASE(util_ParseParameters)
+TEST(ArgsmanTests, UtilParseParameters)
 {
     TestArgsManager testArgs;
     const auto a = std::make_pair("-a", ArgsManager::ALLOW_ANY);
@@ -219,49 +221,49 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
     std::string error;
     LOCK(testArgs.cs_args);
     testArgs.SetupArgs({a, b, ccc, d});
-    BOOST_CHECK(testArgs.ParseParameters(0, argv_test, error));
-    BOOST_CHECK(testArgs.m_settings.command_line_options.empty() && testArgs.m_settings.ro_config.empty());
+    EXPECT_TRUE(testArgs.ParseParameters(0, argv_test, error));
+    EXPECT_TRUE(testArgs.m_settings.command_line_options.empty() && testArgs.m_settings.ro_config.empty());
 
-    BOOST_CHECK(testArgs.ParseParameters(1, argv_test, error));
-    BOOST_CHECK(testArgs.m_settings.command_line_options.empty() && testArgs.m_settings.ro_config.empty());
+    EXPECT_TRUE(testArgs.ParseParameters(1, argv_test, error));
+    EXPECT_TRUE(testArgs.m_settings.command_line_options.empty() && testArgs.m_settings.ro_config.empty());
 
-    BOOST_CHECK(testArgs.ParseParameters(7, argv_test, error));
+    EXPECT_TRUE(testArgs.ParseParameters(7, argv_test, error));
     // expectation: -ignored is ignored (program name argument),
     // -a, -b and -ccc end up in map, -d ignored because it is after
     // a non-option argument (non-GNU option parsing)
-    BOOST_CHECK(testArgs.m_settings.command_line_options.size() == 3 && testArgs.m_settings.ro_config.empty());
-    BOOST_CHECK(testArgs.IsArgSet("-a") && testArgs.IsArgSet("-b") && testArgs.IsArgSet("-ccc")
+    EXPECT_TRUE(testArgs.m_settings.command_line_options.size() == 3 && testArgs.m_settings.ro_config.empty());
+    EXPECT_TRUE(testArgs.IsArgSet("-a") && testArgs.IsArgSet("-b") && testArgs.IsArgSet("-ccc")
                 && !testArgs.IsArgSet("f") && !testArgs.IsArgSet("-d"));
-    BOOST_CHECK(testArgs.m_settings.command_line_options.count("a") && testArgs.m_settings.command_line_options.count("b") && testArgs.m_settings.command_line_options.count("ccc")
+    EXPECT_TRUE(testArgs.m_settings.command_line_options.count("a") && testArgs.m_settings.command_line_options.count("b") && testArgs.m_settings.command_line_options.count("ccc")
                 && !testArgs.m_settings.command_line_options.count("f") && !testArgs.m_settings.command_line_options.count("d"));
 
-    BOOST_CHECK(testArgs.m_settings.command_line_options["a"].size() == 1);
-    BOOST_CHECK(testArgs.m_settings.command_line_options["a"].front().get_str() == "");
-    BOOST_CHECK(testArgs.m_settings.command_line_options["ccc"].size() == 2);
-    BOOST_CHECK(testArgs.m_settings.command_line_options["ccc"].front().get_str() == "argument");
-    BOOST_CHECK(testArgs.m_settings.command_line_options["ccc"].back().get_str() == "multiple");
-    BOOST_CHECK(testArgs.GetArgs("-ccc").size() == 2);
+    EXPECT_TRUE(testArgs.m_settings.command_line_options["a"].size() == 1);
+    EXPECT_TRUE(testArgs.m_settings.command_line_options["a"].front().get_str() == "");
+    EXPECT_TRUE(testArgs.m_settings.command_line_options["ccc"].size() == 2);
+    EXPECT_TRUE(testArgs.m_settings.command_line_options["ccc"].front().get_str() == "argument");
+    EXPECT_TRUE(testArgs.m_settings.command_line_options["ccc"].back().get_str() == "multiple");
+    EXPECT_TRUE(testArgs.GetArgs("-ccc").size() == 2);
 }
 
-BOOST_AUTO_TEST_CASE(util_ParseInvalidParameters)
+TEST(ArgsmanTests, UtilParseInvalidParameters)
 {
     TestArgsManager test;
     test.SetupArgs({{"-registered", ArgsManager::ALLOW_ANY}});
 
     const char* argv[] = {"ignored", "-registered"};
     std::string error;
-    BOOST_CHECK(test.ParseParameters(2, argv, error));
-    BOOST_CHECK_EQUAL(error, "");
+    EXPECT_TRUE(test.ParseParameters(2, argv, error));
+    EXPECT_EQ(error, "");
 
     argv[1] = "-unregistered";
-    BOOST_CHECK(!test.ParseParameters(2, argv, error));
-    BOOST_CHECK_EQUAL(error, "Invalid parameter -unregistered");
+    EXPECT_FALSE(test.ParseParameters(2, argv, error));
+    EXPECT_EQ(error, "Invalid parameter -unregistered");
 
     // Make sure registered parameters prefixed with a chain type trigger errors.
     // (Previously, they were accepted and ignored.)
     argv[1] = "-test.registered";
-    BOOST_CHECK(!test.ParseParameters(2, argv, error));
-    BOOST_CHECK_EQUAL(error, "Invalid parameter -test.registered");
+    EXPECT_FALSE(test.ParseParameters(2, argv, error));
+    EXPECT_EQ(error, "Invalid parameter -test.registered");
 }
 
 static void TestParse(const std::string& str, bool expected_bool, int64_t expected_int)
@@ -271,15 +273,15 @@ static void TestParse(const std::string& str, bool expected_bool, int64_t expect
     std::string arg = "-value=" + str;
     const char* argv[] = {"ignored", arg.c_str()};
     std::string error;
-    BOOST_CHECK(test.ParseParameters(2, argv, error));
-    BOOST_CHECK_EQUAL(test.GetBoolArg("-value", false), expected_bool);
-    BOOST_CHECK_EQUAL(test.GetBoolArg("-value", true), expected_bool);
-    BOOST_CHECK_EQUAL(test.GetIntArg("-value", 99998), expected_int);
-    BOOST_CHECK_EQUAL(test.GetIntArg("-value", 99999), expected_int);
+    EXPECT_TRUE(test.ParseParameters(2, argv, error));
+    EXPECT_EQ(test.GetBoolArg("-value", false), expected_bool);
+    EXPECT_EQ(test.GetBoolArg("-value", true), expected_bool);
+    EXPECT_EQ(test.GetIntArg("-value", 99998), expected_int);
+    EXPECT_EQ(test.GetIntArg("-value", 99999), expected_int);
 }
 
 // Test bool and int parsing.
-BOOST_AUTO_TEST_CASE(util_ArgParsing)
+TEST(ArgsmanTests, UtilArgParsing)
 {
     // Some of these cases could be ambiguous or surprising to users, and might
     // be worth triggering errors or warnings in the future. But for now basic
@@ -318,7 +320,7 @@ BOOST_AUTO_TEST_CASE(util_ArgParsing)
     TestParse("no", false, 0);
 }
 
-BOOST_AUTO_TEST_CASE(util_GetBoolArg)
+TEST(ArgsmanTests, UtilGetBoolArg)
 {
     TestArgsManager testArgs;
     const auto a = std::make_pair("-a", ArgsManager::ALLOW_ANY);
@@ -333,33 +335,33 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArg)
     std::string error;
     LOCK(testArgs.cs_args);
     testArgs.SetupArgs({a, b, c, d, e, f});
-    BOOST_CHECK(testArgs.ParseParameters(7, argv_test, error));
+    EXPECT_TRUE(testArgs.ParseParameters(7, argv_test, error));
 
     // Each letter should be set.
     for (const char opt : "abcdef")
-        BOOST_CHECK(testArgs.IsArgSet({'-', opt}) || !opt);
+        EXPECT_TRUE(testArgs.IsArgSet({'-', opt}) || !opt);
 
     // Nothing else should be in the map
-    BOOST_CHECK(testArgs.m_settings.command_line_options.size() == 6 &&
+    EXPECT_TRUE(testArgs.m_settings.command_line_options.size() == 6 &&
                 testArgs.m_settings.ro_config.empty());
 
     // The -no prefix should get stripped on the way in.
-    BOOST_CHECK(!testArgs.IsArgSet("-nob"));
+    EXPECT_TRUE(!testArgs.IsArgSet("-nob"));
 
     // The -b option is flagged as negated, and nothing else is
-    BOOST_CHECK(testArgs.IsArgNegated("-b"));
-    BOOST_CHECK(!testArgs.IsArgNegated("-a"));
+    EXPECT_TRUE(testArgs.IsArgNegated("-b"));
+    EXPECT_TRUE(!testArgs.IsArgNegated("-a"));
 
     // Check expected values.
-    BOOST_CHECK(testArgs.GetBoolArg("-a", false) == true);
-    BOOST_CHECK(testArgs.GetBoolArg("-b", true) == false);
-    BOOST_CHECK(testArgs.GetBoolArg("-c", true) == false);
-    BOOST_CHECK(testArgs.GetBoolArg("-d", false) == true);
-    BOOST_CHECK(testArgs.GetBoolArg("-e", true) == false);
-    BOOST_CHECK(testArgs.GetBoolArg("-f", true) == false);
+    EXPECT_TRUE(testArgs.GetBoolArg("-a", false) == true);
+    EXPECT_TRUE(testArgs.GetBoolArg("-b", true) == false);
+    EXPECT_TRUE(testArgs.GetBoolArg("-c", true) == false);
+    EXPECT_TRUE(testArgs.GetBoolArg("-d", false) == true);
+    EXPECT_TRUE(testArgs.GetBoolArg("-e", true) == false);
+    EXPECT_TRUE(testArgs.GetBoolArg("-f", true) == false);
 }
 
-BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
+TEST(ArgsmanTests, UtilGetBoolArgEdgeCases)
 {
     // Test some awful edge cases that hopefully no user will ever exercise.
     TestArgsManager testArgs;
@@ -370,49 +372,49 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     const char *argv_test[] = {"ignored", "-nofoo", "-foo", "-nobar=0"};
     testArgs.SetupArgs({foo, bar});
     std::string error;
-    BOOST_CHECK(testArgs.ParseParameters(4, argv_test, error));
+    EXPECT_TRUE(testArgs.ParseParameters(4, argv_test, error));
 
     // This was passed twice, second one overrides the negative setting.
-    BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
-    BOOST_CHECK(testArgs.GetArg("-foo", "xxx") == "");
+    EXPECT_TRUE(!testArgs.IsArgNegated("-foo"));
+    EXPECT_TRUE(testArgs.GetArg("-foo", "xxx") == "");
 
     // A double negative is a positive, and not marked as negated.
-    BOOST_CHECK(!testArgs.IsArgNegated("-bar"));
-    BOOST_CHECK(testArgs.GetArg("-bar", "xxx") == "1");
+    EXPECT_TRUE(!testArgs.IsArgNegated("-bar"));
+    EXPECT_TRUE(testArgs.GetArg("-bar", "xxx") == "1");
 
     // Config test
     const char *conf_test = "nofoo=1\nfoo=1\nnobar=0\n";
-    BOOST_CHECK(testArgs.ParseParameters(1, argv_test, error));
+    EXPECT_TRUE(testArgs.ParseParameters(1, argv_test, error));
     testArgs.ReadConfigString(conf_test);
 
     // This was passed twice, second one overrides the negative setting,
     // and the value.
-    BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
-    BOOST_CHECK(testArgs.GetArg("-foo", "xxx") == "1");
+    EXPECT_TRUE(!testArgs.IsArgNegated("-foo"));
+    EXPECT_TRUE(testArgs.GetArg("-foo", "xxx") == "1");
 
     // A double negative is a positive, and does not count as negated.
-    BOOST_CHECK(!testArgs.IsArgNegated("-bar"));
-    BOOST_CHECK(testArgs.GetArg("-bar", "xxx") == "1");
+    EXPECT_TRUE(!testArgs.IsArgNegated("-bar"));
+    EXPECT_TRUE(testArgs.GetArg("-bar", "xxx") == "1");
 
     // Combined test
     const char *combo_test_args[] = {"ignored", "-nofoo", "-bar"};
     const char *combo_test_conf = "foo=1\nnobar=1\n";
-    BOOST_CHECK(testArgs.ParseParameters(3, combo_test_args, error));
+    EXPECT_TRUE(testArgs.ParseParameters(3, combo_test_args, error));
     testArgs.ReadConfigString(combo_test_conf);
 
     // Command line overrides, but doesn't erase old setting
-    BOOST_CHECK(testArgs.IsArgNegated("-foo"));
-    BOOST_CHECK(testArgs.GetArg("-foo", "xxx") == "0");
-    BOOST_CHECK(testArgs.GetArgs("-foo").size() == 0);
+    EXPECT_TRUE(testArgs.IsArgNegated("-foo"));
+    EXPECT_TRUE(testArgs.GetArg("-foo", "xxx") == "0");
+    EXPECT_TRUE(testArgs.GetArgs("-foo").size() == 0);
 
     // Command line overrides, but doesn't erase old setting
-    BOOST_CHECK(!testArgs.IsArgNegated("-bar"));
-    BOOST_CHECK(testArgs.GetArg("-bar", "xxx") == "");
-    BOOST_CHECK(testArgs.GetArgs("-bar").size() == 1
+    EXPECT_TRUE(!testArgs.IsArgNegated("-bar"));
+    EXPECT_TRUE(testArgs.GetArg("-bar", "xxx") == "");
+    EXPECT_TRUE(testArgs.GetArgs("-bar").size() == 1
                 && testArgs.GetArgs("-bar").front() == "");
 }
 
-BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
+TEST(ArgsmanTests, UtilReadConfigStream)
 {
     const char *str_config =
        "a=\n"
@@ -454,128 +456,128 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     // expectation: a, b, ccc, d, fff, ggg, h, i end up in map
     // so do sec1.ccc, sec1.d, sec1.h, sec2.ccc, sec2.iii
 
-    BOOST_CHECK(test_args.m_settings.command_line_options.empty());
-    BOOST_CHECK(test_args.m_settings.ro_config.size() == 3);
-    BOOST_CHECK(test_args.m_settings.ro_config[""].size() == 8);
-    BOOST_CHECK(test_args.m_settings.ro_config["sec1"].size() == 3);
-    BOOST_CHECK(test_args.m_settings.ro_config["sec2"].size() == 2);
+    EXPECT_TRUE(test_args.m_settings.command_line_options.empty());
+    EXPECT_TRUE(test_args.m_settings.ro_config.size() == 3);
+    EXPECT_TRUE(test_args.m_settings.ro_config[""].size() == 8);
+    EXPECT_TRUE(test_args.m_settings.ro_config["sec1"].size() == 3);
+    EXPECT_TRUE(test_args.m_settings.ro_config["sec2"].size() == 2);
 
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("a"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("b"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("ccc"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("d"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("fff"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("ggg"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("h"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("i"));
-    BOOST_CHECK(test_args.m_settings.ro_config["sec1"].count("ccc"));
-    BOOST_CHECK(test_args.m_settings.ro_config["sec1"].count("h"));
-    BOOST_CHECK(test_args.m_settings.ro_config["sec2"].count("ccc"));
-    BOOST_CHECK(test_args.m_settings.ro_config["sec2"].count("iii"));
+    EXPECT_TRUE(test_args.m_settings.ro_config[""].count("a"));
+    EXPECT_TRUE(test_args.m_settings.ro_config[""].count("b"));
+    EXPECT_TRUE(test_args.m_settings.ro_config[""].count("ccc"));
+    EXPECT_TRUE(test_args.m_settings.ro_config[""].count("d"));
+    EXPECT_TRUE(test_args.m_settings.ro_config[""].count("fff"));
+    EXPECT_TRUE(test_args.m_settings.ro_config[""].count("ggg"));
+    EXPECT_TRUE(test_args.m_settings.ro_config[""].count("h"));
+    EXPECT_TRUE(test_args.m_settings.ro_config[""].count("i"));
+    EXPECT_TRUE(test_args.m_settings.ro_config["sec1"].count("ccc"));
+    EXPECT_TRUE(test_args.m_settings.ro_config["sec1"].count("h"));
+    EXPECT_TRUE(test_args.m_settings.ro_config["sec2"].count("ccc"));
+    EXPECT_TRUE(test_args.m_settings.ro_config["sec2"].count("iii"));
 
-    BOOST_CHECK(test_args.IsArgSet("-a"));
-    BOOST_CHECK(test_args.IsArgSet("-b"));
-    BOOST_CHECK(test_args.IsArgSet("-ccc"));
-    BOOST_CHECK(test_args.IsArgSet("-d"));
-    BOOST_CHECK(test_args.IsArgSet("-fff"));
-    BOOST_CHECK(test_args.IsArgSet("-ggg"));
-    BOOST_CHECK(test_args.IsArgSet("-h"));
-    BOOST_CHECK(test_args.IsArgSet("-i"));
-    BOOST_CHECK(!test_args.IsArgSet("-zzz"));
-    BOOST_CHECK(!test_args.IsArgSet("-iii"));
+    EXPECT_TRUE(test_args.IsArgSet("-a"));
+    EXPECT_TRUE(test_args.IsArgSet("-b"));
+    EXPECT_TRUE(test_args.IsArgSet("-ccc"));
+    EXPECT_TRUE(test_args.IsArgSet("-d"));
+    EXPECT_TRUE(test_args.IsArgSet("-fff"));
+    EXPECT_TRUE(test_args.IsArgSet("-ggg"));
+    EXPECT_TRUE(test_args.IsArgSet("-h"));
+    EXPECT_TRUE(test_args.IsArgSet("-i"));
+    EXPECT_TRUE(!test_args.IsArgSet("-zzz"));
+    EXPECT_TRUE(!test_args.IsArgSet("-iii"));
 
-    BOOST_CHECK_EQUAL(test_args.GetArg("-a", "xxx"), "");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-b", "xxx"), "1");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-ccc", "xxx"), "argument");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-d", "xxx"), "e");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-fff", "xxx"), "0");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-ggg", "xxx"), "1");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-h", "xxx"), "0");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-i", "xxx"), "1");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-zzz", "xxx"), "xxx");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-iii", "xxx"), "xxx");
+    EXPECT_EQ(test_args.GetArg("-a", "xxx"), "");
+    EXPECT_EQ(test_args.GetArg("-b", "xxx"), "1");
+    EXPECT_EQ(test_args.GetArg("-ccc", "xxx"), "argument");
+    EXPECT_EQ(test_args.GetArg("-d", "xxx"), "e");
+    EXPECT_EQ(test_args.GetArg("-fff", "xxx"), "0");
+    EXPECT_EQ(test_args.GetArg("-ggg", "xxx"), "1");
+    EXPECT_EQ(test_args.GetArg("-h", "xxx"), "0");
+    EXPECT_EQ(test_args.GetArg("-i", "xxx"), "1");
+    EXPECT_EQ(test_args.GetArg("-zzz", "xxx"), "xxx");
+    EXPECT_EQ(test_args.GetArg("-iii", "xxx"), "xxx");
 
     for (const bool def : {false, true}) {
-        BOOST_CHECK(test_args.GetBoolArg("-a", def));
-        BOOST_CHECK(test_args.GetBoolArg("-b", def));
-        BOOST_CHECK(!test_args.GetBoolArg("-ccc", def));
-        BOOST_CHECK(!test_args.GetBoolArg("-d", def));
-        BOOST_CHECK(!test_args.GetBoolArg("-fff", def));
-        BOOST_CHECK(test_args.GetBoolArg("-ggg", def));
-        BOOST_CHECK(!test_args.GetBoolArg("-h", def));
-        BOOST_CHECK(test_args.GetBoolArg("-i", def));
-        BOOST_CHECK(test_args.GetBoolArg("-zzz", def) == def);
-        BOOST_CHECK(test_args.GetBoolArg("-iii", def) == def);
+        EXPECT_TRUE(test_args.GetBoolArg("-a", def));
+        EXPECT_TRUE(test_args.GetBoolArg("-b", def));
+        EXPECT_TRUE(!test_args.GetBoolArg("-ccc", def));
+        EXPECT_TRUE(!test_args.GetBoolArg("-d", def));
+        EXPECT_TRUE(!test_args.GetBoolArg("-fff", def));
+        EXPECT_TRUE(test_args.GetBoolArg("-ggg", def));
+        EXPECT_TRUE(!test_args.GetBoolArg("-h", def));
+        EXPECT_TRUE(test_args.GetBoolArg("-i", def));
+        EXPECT_TRUE(test_args.GetBoolArg("-zzz", def) == def);
+        EXPECT_TRUE(test_args.GetBoolArg("-iii", def) == def);
     }
 
-    BOOST_CHECK(test_args.GetArgs("-a").size() == 1
+    EXPECT_TRUE(test_args.GetArgs("-a").size() == 1
                 && test_args.GetArgs("-a").front() == "");
-    BOOST_CHECK(test_args.GetArgs("-b").size() == 1
+    EXPECT_TRUE(test_args.GetArgs("-b").size() == 1
                 && test_args.GetArgs("-b").front() == "1");
-    BOOST_CHECK(test_args.GetArgs("-ccc").size() == 2
+    EXPECT_TRUE(test_args.GetArgs("-ccc").size() == 2
                 && test_args.GetArgs("-ccc").front() == "argument"
                 && test_args.GetArgs("-ccc").back() == "multiple");
-    BOOST_CHECK(test_args.GetArgs("-fff").size() == 0);
-    BOOST_CHECK(test_args.GetArgs("-nofff").size() == 0);
-    BOOST_CHECK(test_args.GetArgs("-ggg").size() == 1
+    EXPECT_TRUE(test_args.GetArgs("-fff").size() == 0);
+    EXPECT_TRUE(test_args.GetArgs("-nofff").size() == 0);
+    EXPECT_TRUE(test_args.GetArgs("-ggg").size() == 1
                 && test_args.GetArgs("-ggg").front() == "1");
-    BOOST_CHECK(test_args.GetArgs("-noggg").size() == 0);
-    BOOST_CHECK(test_args.GetArgs("-h").size() == 0);
-    BOOST_CHECK(test_args.GetArgs("-noh").size() == 0);
-    BOOST_CHECK(test_args.GetArgs("-i").size() == 1
+    EXPECT_TRUE(test_args.GetArgs("-noggg").size() == 0);
+    EXPECT_TRUE(test_args.GetArgs("-h").size() == 0);
+    EXPECT_TRUE(test_args.GetArgs("-noh").size() == 0);
+    EXPECT_TRUE(test_args.GetArgs("-i").size() == 1
                 && test_args.GetArgs("-i").front() == "1");
-    BOOST_CHECK(test_args.GetArgs("-noi").size() == 0);
-    BOOST_CHECK(test_args.GetArgs("-zzz").size() == 0);
+    EXPECT_TRUE(test_args.GetArgs("-noi").size() == 0);
+    EXPECT_TRUE(test_args.GetArgs("-zzz").size() == 0);
 
-    BOOST_CHECK(!test_args.IsArgNegated("-a"));
-    BOOST_CHECK(!test_args.IsArgNegated("-b"));
-    BOOST_CHECK(!test_args.IsArgNegated("-ccc"));
-    BOOST_CHECK(!test_args.IsArgNegated("-d"));
-    BOOST_CHECK(test_args.IsArgNegated("-fff"));
-    BOOST_CHECK(!test_args.IsArgNegated("-ggg"));
-    BOOST_CHECK(test_args.IsArgNegated("-h")); // last setting takes precedence
-    BOOST_CHECK(!test_args.IsArgNegated("-i")); // last setting takes precedence
-    BOOST_CHECK(!test_args.IsArgNegated("-zzz"));
+    EXPECT_TRUE(!test_args.IsArgNegated("-a"));
+    EXPECT_TRUE(!test_args.IsArgNegated("-b"));
+    EXPECT_TRUE(!test_args.IsArgNegated("-ccc"));
+    EXPECT_TRUE(!test_args.IsArgNegated("-d"));
+    EXPECT_TRUE(test_args.IsArgNegated("-fff"));
+    EXPECT_TRUE(!test_args.IsArgNegated("-ggg"));
+    EXPECT_TRUE(test_args.IsArgNegated("-h")); // last setting takes precedence
+    EXPECT_TRUE(!test_args.IsArgNegated("-i")); // last setting takes precedence
+    EXPECT_TRUE(!test_args.IsArgNegated("-zzz"));
 
     // Test sections work
     test_args.SelectConfigNetwork("sec1");
 
     // same as original
-    BOOST_CHECK_EQUAL(test_args.GetArg("-a", "xxx"), "");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-b", "xxx"), "1");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-fff", "xxx"), "0");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-ggg", "xxx"), "1");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-zzz", "xxx"), "xxx");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-iii", "xxx"), "xxx");
+    EXPECT_EQ(test_args.GetArg("-a", "xxx"), "");
+    EXPECT_EQ(test_args.GetArg("-b", "xxx"), "1");
+    EXPECT_EQ(test_args.GetArg("-fff", "xxx"), "0");
+    EXPECT_EQ(test_args.GetArg("-ggg", "xxx"), "1");
+    EXPECT_EQ(test_args.GetArg("-zzz", "xxx"), "xxx");
+    EXPECT_EQ(test_args.GetArg("-iii", "xxx"), "xxx");
     // d is overridden
-    BOOST_CHECK(test_args.GetArg("-d", "xxx") == "eee");
+    EXPECT_TRUE(test_args.GetArg("-d", "xxx") == "eee");
     // section-specific setting
-    BOOST_CHECK(test_args.GetArg("-h", "xxx") == "1");
+    EXPECT_TRUE(test_args.GetArg("-h", "xxx") == "1");
     // section takes priority for multiple values
-    BOOST_CHECK(test_args.GetArg("-ccc", "xxx") == "extend1");
+    EXPECT_TRUE(test_args.GetArg("-ccc", "xxx") == "extend1");
     // check multiple values works
     const std::vector<std::string> sec1_ccc_expected = {"extend1","extend2","argument","multiple"};
     const auto& sec1_ccc_res = test_args.GetArgs("-ccc");
-    BOOST_CHECK_EQUAL_COLLECTIONS(sec1_ccc_res.begin(), sec1_ccc_res.end(), sec1_ccc_expected.begin(), sec1_ccc_expected.end());
+    EXPECT_THAT(sec1_ccc_res, ::testing::ContainerEq(sec1_ccc_expected));
 
     test_args.SelectConfigNetwork("sec2");
 
     // same as original
-    BOOST_CHECK(test_args.GetArg("-a", "xxx") == "");
-    BOOST_CHECK(test_args.GetArg("-b", "xxx") == "1");
-    BOOST_CHECK(test_args.GetArg("-d", "xxx") == "e");
-    BOOST_CHECK(test_args.GetArg("-fff", "xxx") == "0");
-    BOOST_CHECK(test_args.GetArg("-ggg", "xxx") == "1");
-    BOOST_CHECK(test_args.GetArg("-zzz", "xxx") == "xxx");
-    BOOST_CHECK(test_args.GetArg("-h", "xxx") == "0");
+    EXPECT_TRUE(test_args.GetArg("-a", "xxx") == "");
+    EXPECT_TRUE(test_args.GetArg("-b", "xxx") == "1");
+    EXPECT_TRUE(test_args.GetArg("-d", "xxx") == "e");
+    EXPECT_TRUE(test_args.GetArg("-fff", "xxx") == "0");
+    EXPECT_TRUE(test_args.GetArg("-ggg", "xxx") == "1");
+    EXPECT_TRUE(test_args.GetArg("-zzz", "xxx") == "xxx");
+    EXPECT_TRUE(test_args.GetArg("-h", "xxx") == "0");
     // section-specific setting
-    BOOST_CHECK(test_args.GetArg("-iii", "xxx") == "2");
+    EXPECT_TRUE(test_args.GetArg("-iii", "xxx") == "2");
     // section takes priority for multiple values
-    BOOST_CHECK(test_args.GetArg("-ccc", "xxx") == "extend3");
+    EXPECT_TRUE(test_args.GetArg("-ccc", "xxx") == "extend3");
     // check multiple values works
     const std::vector<std::string> sec2_ccc_expected = {"extend3","argument","multiple"};
     const auto& sec2_ccc_res = test_args.GetArgs("-ccc");
-    BOOST_CHECK_EQUAL_COLLECTIONS(sec2_ccc_res.begin(), sec2_ccc_res.end(), sec2_ccc_expected.begin(), sec2_ccc_expected.end());
+    EXPECT_THAT(sec2_ccc_res, ::testing::ContainerEq(sec2_ccc_expected));
 
     // Test section only options
 
@@ -584,24 +586,24 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     test_args.SetNetworkOnlyArg("-h");
 
     test_args.SelectConfigNetwork(ChainTypeToString(ChainType::MAIN));
-    BOOST_CHECK(test_args.GetArg("-d", "xxx") == "e");
-    BOOST_CHECK(test_args.GetArgs("-ccc").size() == 2);
-    BOOST_CHECK(test_args.GetArg("-h", "xxx") == "0");
+    EXPECT_TRUE(test_args.GetArg("-d", "xxx") == "e");
+    EXPECT_TRUE(test_args.GetArgs("-ccc").size() == 2);
+    EXPECT_TRUE(test_args.GetArg("-h", "xxx") == "0");
 
     test_args.SelectConfigNetwork("sec1");
-    BOOST_CHECK(test_args.GetArg("-d", "xxx") == "eee");
-    BOOST_CHECK(test_args.GetArgs("-d").size() == 1);
-    BOOST_CHECK(test_args.GetArgs("-ccc").size() == 2);
-    BOOST_CHECK(test_args.GetArg("-h", "xxx") == "1");
+    EXPECT_TRUE(test_args.GetArg("-d", "xxx") == "eee");
+    EXPECT_TRUE(test_args.GetArgs("-d").size() == 1);
+    EXPECT_TRUE(test_args.GetArgs("-ccc").size() == 2);
+    EXPECT_TRUE(test_args.GetArg("-h", "xxx") == "1");
 
     test_args.SelectConfigNetwork("sec2");
-    BOOST_CHECK(test_args.GetArg("-d", "xxx") == "xxx");
-    BOOST_CHECK(test_args.GetArgs("-d").size() == 0);
-    BOOST_CHECK(test_args.GetArgs("-ccc").size() == 1);
-    BOOST_CHECK(test_args.GetArg("-h", "xxx") == "0");
+    EXPECT_TRUE(test_args.GetArg("-d", "xxx") == "xxx");
+    EXPECT_TRUE(test_args.GetArgs("-d").size() == 0);
+    EXPECT_TRUE(test_args.GetArgs("-ccc").size() == 1);
+    EXPECT_TRUE(test_args.GetArg("-h", "xxx") == "0");
 }
 
-BOOST_AUTO_TEST_CASE(util_GetArg)
+TEST(ArgsmanTests, UtilGetArg)
 {
     TestArgsManager testArgs;
     LOCK(testArgs.cs_args);
@@ -624,23 +626,23 @@ BOOST_AUTO_TEST_CASE(util_GetArg)
     testArgs.m_settings.command_line_options["pritest4"] = {"a","b"};
     testArgs.m_settings.ro_config[""]["pritest4"] = {"c","d"};
 
-    BOOST_CHECK_EQUAL(testArgs.GetArg("strtest1", "default"), "string...");
-    BOOST_CHECK_EQUAL(testArgs.GetArg("strtest2", "default"), "default");
-    BOOST_CHECK_EQUAL(testArgs.GetIntArg("inttest1", -1), 12345);
-    BOOST_CHECK_EQUAL(testArgs.GetIntArg("inttest2", -1), 81985529216486895LL);
-    BOOST_CHECK_EQUAL(testArgs.GetIntArg("inttest3", -1), -1);
-    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest1", false), true);
-    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest2", false), false);
-    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest3", false), false);
-    BOOST_CHECK_EQUAL(testArgs.GetBoolArg("booltest4", false), true);
+    EXPECT_EQ(testArgs.GetArg("strtest1", "default"), "string...");
+    EXPECT_EQ(testArgs.GetArg("strtest2", "default"), "default");
+    EXPECT_EQ(testArgs.GetIntArg("inttest1", -1), 12345);
+    EXPECT_EQ(testArgs.GetIntArg("inttest2", -1), 81985529216486895LL);
+    EXPECT_EQ(testArgs.GetIntArg("inttest3", -1), -1);
+    EXPECT_EQ(testArgs.GetBoolArg("booltest1", false), true);
+    EXPECT_EQ(testArgs.GetBoolArg("booltest2", false), false);
+    EXPECT_EQ(testArgs.GetBoolArg("booltest3", false), false);
+    EXPECT_EQ(testArgs.GetBoolArg("booltest4", false), true);
 
-    BOOST_CHECK_EQUAL(testArgs.GetArg("pritest1", "default"), "b");
-    BOOST_CHECK_EQUAL(testArgs.GetArg("pritest2", "default"), "a");
-    BOOST_CHECK_EQUAL(testArgs.GetArg("pritest3", "default"), "a");
-    BOOST_CHECK_EQUAL(testArgs.GetArg("pritest4", "default"), "b");
+    EXPECT_EQ(testArgs.GetArg("pritest1", "default"), "b");
+    EXPECT_EQ(testArgs.GetArg("pritest2", "default"), "a");
+    EXPECT_EQ(testArgs.GetArg("pritest3", "default"), "a");
+    EXPECT_EQ(testArgs.GetArg("pritest4", "default"), "b");
 }
 
-BOOST_AUTO_TEST_CASE(util_GetChainTypeString)
+TEST(ArgsmanTests, UtilGetChainTypeString)
 {
     TestArgsManager test_args;
     const auto testnet = std::make_pair("-testnet", ArgsManager::ALLOW_ANY);
@@ -659,70 +661,70 @@ BOOST_AUTO_TEST_CASE(util_GetChainTypeString)
     const char* testnetconf = "testnet=1\nregtest=0\n[test]\nregtest=1";
     std::string error;
 
-    BOOST_CHECK(test_args.ParseParameters(0, argv_testnet, error));
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "main");
+    EXPECT_TRUE(test_args.ParseParameters(0, argv_testnet, error));
+    EXPECT_EQ(test_args.GetChainTypeString(), "main");
 
-    BOOST_CHECK(test_args.ParseParameters(2, argv_testnet, error));
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    EXPECT_TRUE(test_args.ParseParameters(2, argv_testnet, error));
+    EXPECT_EQ(test_args.GetChainTypeString(), "test");
 
-    BOOST_CHECK(test_args.ParseParameters(0, argv_testnet4, error));
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "main");
+    EXPECT_TRUE(test_args.ParseParameters(0, argv_testnet4, error));
+    EXPECT_EQ(test_args.GetChainTypeString(), "main");
 
-    BOOST_CHECK(test_args.ParseParameters(2, argv_testnet4, error));
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "testnet4");
+    EXPECT_TRUE(test_args.ParseParameters(2, argv_testnet4, error));
+    EXPECT_EQ(test_args.GetChainTypeString(), "testnet4");
 
-    BOOST_CHECK(test_args.ParseParameters(2, argv_regtest, error));
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "regtest");
+    EXPECT_TRUE(test_args.ParseParameters(2, argv_regtest, error));
+    EXPECT_EQ(test_args.GetChainTypeString(), "regtest");
 
-    BOOST_CHECK(test_args.ParseParameters(3, argv_test_no_reg, error));
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    EXPECT_TRUE(test_args.ParseParameters(3, argv_test_no_reg, error));
+    EXPECT_EQ(test_args.GetChainTypeString(), "test");
 
-    BOOST_CHECK(test_args.ParseParameters(3, argv_both, error));
-    BOOST_CHECK_THROW(test_args.GetChainTypeString(), std::runtime_error);
+    EXPECT_TRUE(test_args.ParseParameters(3, argv_both, error));
+    EXPECT_THROW(test_args.GetChainTypeString(), std::runtime_error);
 
-    BOOST_CHECK(test_args.ParseParameters(0, argv_testnet, error));
+    EXPECT_TRUE(test_args.ParseParameters(0, argv_testnet, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    EXPECT_EQ(test_args.GetChainTypeString(), "test");
 
-    BOOST_CHECK(test_args.ParseParameters(2, argv_testnet, error));
+    EXPECT_TRUE(test_args.ParseParameters(2, argv_testnet, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    EXPECT_EQ(test_args.GetChainTypeString(), "test");
 
-    BOOST_CHECK(test_args.ParseParameters(2, argv_regtest, error));
+    EXPECT_TRUE(test_args.ParseParameters(2, argv_regtest, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_THROW(test_args.GetChainTypeString(), std::runtime_error);
+    EXPECT_THROW(test_args.GetChainTypeString(), std::runtime_error);
 
-    BOOST_CHECK(test_args.ParseParameters(3, argv_test_no_reg, error));
+    EXPECT_TRUE(test_args.ParseParameters(3, argv_test_no_reg, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    EXPECT_EQ(test_args.GetChainTypeString(), "test");
 
-    BOOST_CHECK(test_args.ParseParameters(3, argv_both, error));
+    EXPECT_TRUE(test_args.ParseParameters(3, argv_both, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_THROW(test_args.GetChainTypeString(), std::runtime_error);
+    EXPECT_THROW(test_args.GetChainTypeString(), std::runtime_error);
 
     // check setting the network to test (and thus making
     // [test] regtest=1 potentially relevant) doesn't break things
     test_args.SelectConfigNetwork("test");
 
-    BOOST_CHECK(test_args.ParseParameters(0, argv_testnet, error));
+    EXPECT_TRUE(test_args.ParseParameters(0, argv_testnet, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    EXPECT_EQ(test_args.GetChainTypeString(), "test");
 
-    BOOST_CHECK(test_args.ParseParameters(2, argv_testnet, error));
+    EXPECT_TRUE(test_args.ParseParameters(2, argv_testnet, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    EXPECT_EQ(test_args.GetChainTypeString(), "test");
 
-    BOOST_CHECK(test_args.ParseParameters(2, argv_regtest, error));
+    EXPECT_TRUE(test_args.ParseParameters(2, argv_regtest, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_THROW(test_args.GetChainTypeString(), std::runtime_error);
+    EXPECT_THROW(test_args.GetChainTypeString(), std::runtime_error);
 
-    BOOST_CHECK(test_args.ParseParameters(2, argv_test_no_reg, error));
+    EXPECT_TRUE(test_args.ParseParameters(2, argv_test_no_reg, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    EXPECT_EQ(test_args.GetChainTypeString(), "test");
 
-    BOOST_CHECK(test_args.ParseParameters(3, argv_both, error));
+    EXPECT_TRUE(test_args.ParseParameters(3, argv_both, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_THROW(test_args.GetChainTypeString(), std::runtime_error);
+    EXPECT_THROW(test_args.GetChainTypeString(), std::runtime_error);
 }
 
 // Test different ways settings can be merged, and verify results. This test can
@@ -747,7 +749,7 @@ BOOST_AUTO_TEST_CASE(util_GetChainTypeString)
 //   outside a network section, and non-network specific settings like "-server"
 //   that aren't sensitive to the network.
 //
-struct ArgsMergeTestingSetup : public BasicTestingSetup {
+struct ArgsmanTestsMerge : public BasicTestingSetup, public testing::Test {
     //! Max number of actions to sequence together. Can decrease this when
     //! debugging to make test results easier to understand.
     static constexpr int MAX_ACTIONS = 3;
@@ -808,7 +810,7 @@ struct ArgsMergeTestingSetup : public BasicTestingSetup {
 // test parses and merges settings, representing the results as strings that get
 // compared against an expected hash. To debug, the result strings can be dumped
 // to a file (see comments below).
-BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
+TEST_F(ArgsmanTestsMerge, UtilArgsMerge)
 {
     CHash256 out_sha;
     FILE* out_file = nullptr;
@@ -840,8 +842,8 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
             argv.push_back(arg.c_str());
         }
         std::string error;
-        BOOST_CHECK(parser.ParseParameters(argv.size(), argv.data(), error));
-        BOOST_CHECK_EQUAL(error, "");
+        EXPECT_TRUE(parser.ParseParameters(argv.size(), argv.data(), error));
+        EXPECT_EQ(error, "");
 
         std::string conf;
         for (auto& conf_val : GetValues(conf_actions, section, name, "c")) {
@@ -851,8 +853,8 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
             conf += "\n";
         }
         std::istringstream conf_stream(conf);
-        BOOST_CHECK(parser.ReadConfigStream(conf_stream, "filepath", error));
-        BOOST_CHECK_EQUAL(error, "");
+        EXPECT_TRUE(parser.ReadConfigStream(conf_stream, "filepath", error));
+        EXPECT_EQ(error, "");
 
         if (soft_set) {
             desc += " soft";
@@ -870,13 +872,13 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
 
         if (!parser.IsArgSet(key)) {
             desc += "unset";
-            BOOST_CHECK(!parser.IsArgNegated(key));
-            BOOST_CHECK_EQUAL(parser.GetArg(key, "default"), "default");
-            BOOST_CHECK(parser.GetArgs(key).empty());
+            EXPECT_TRUE(!parser.IsArgNegated(key));
+            EXPECT_EQ(parser.GetArg(key, "default"), "default");
+            EXPECT_TRUE(parser.GetArgs(key).empty());
         } else if (parser.IsArgNegated(key)) {
             desc += "negated";
-            BOOST_CHECK_EQUAL(parser.GetArg(key, "default"), "0");
-            BOOST_CHECK(parser.GetArgs(key).empty());
+            EXPECT_EQ(parser.GetArg(key, "default"), "0");
+            EXPECT_TRUE(parser.GetArgs(key).empty());
         } else {
             desc += parser.GetArg(key, "default");
             desc += " |";
@@ -899,7 +901,7 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
 
         out_sha.Write(MakeUCharSpan(desc));
         if (out_file) {
-            BOOST_REQUIRE(fwrite(desc.data(), 1, desc.size(), out_file) == desc.size());
+            ASSERT_TRUE(fwrite(desc.data(), 1, desc.size(), out_file) == desc.size());
         }
     });
 
@@ -921,11 +923,11 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
     // Results file is formatted like:
     //
     //   <input> || <IsArgSet/IsArgNegated/GetArg output> | <GetArgs output> | <GetUnsuitable output>
-    BOOST_CHECK_EQUAL(out_sha_hex, "f1ee5ab094cc43d16a6086fa7f2c10389e0f99902616b31bbf29189972ad1473");
+    EXPECT_EQ(out_sha_hex, "f1ee5ab094cc43d16a6086fa7f2c10389e0f99902616b31bbf29189972ad1473");
 }
 
 // Similar test as above, but for ArgsManager::GetChainTypeString function.
-struct ChainMergeTestingSetup : public BasicTestingSetup {
+struct ArgsmanTestsChainMerge : public BasicTestingSetup, public testing::Test {
     static constexpr int MAX_ACTIONS = 2;
 
     enum Action { NONE, ENABLE_TEST, DISABLE_TEST, NEGATE_TEST, ENABLE_REG, DISABLE_REG, NEGATE_REG };
@@ -943,7 +945,7 @@ struct ChainMergeTestingSetup : public BasicTestingSetup {
     }
 };
 
-BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
+TEST_F(ArgsmanTestsChainMerge, UtilChainMerge)
 {
     CHash256 out_sha;
     FILE* out_file = nullptr;
@@ -975,8 +977,8 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
             desc += argv.back();
         }
         std::string error;
-        BOOST_CHECK(parser.ParseParameters(argv.size(), argv.data(), error));
-        BOOST_CHECK_EQUAL(error, "");
+        EXPECT_TRUE(parser.ParseParameters(argv.size(), argv.data(), error));
+        EXPECT_EQ(error, "");
 
         std::string conf;
         for (Action action : conf_actions) {
@@ -988,8 +990,8 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
             conf += "\n";
         }
         std::istringstream conf_stream(conf);
-        BOOST_CHECK(parser.ReadConfigStream(conf_stream, "filepath", error));
-        BOOST_CHECK_EQUAL(error, "");
+        EXPECT_TRUE(parser.ReadConfigStream(conf_stream, "filepath", error));
+        EXPECT_EQ(error, "");
 
         desc += " || ";
         try {
@@ -1002,7 +1004,7 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
 
         out_sha.Write(MakeUCharSpan(desc));
         if (out_file) {
-            BOOST_REQUIRE(fwrite(desc.data(), 1, desc.size(), out_file) == desc.size());
+            ASSERT_TRUE(fwrite(desc.data(), 1, desc.size(), out_file) == desc.size());
         }
     });
 
@@ -1024,10 +1026,10 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
     // Results file is formatted like:
     //
     //   <input> || <output>
-    BOOST_CHECK_EQUAL(out_sha_hex, "9e60306e1363528bbc19a47f22bcede88e5d6815212f18ec8e6cdc4638dddab4");
+    EXPECT_EQ(out_sha_hex, "9e60306e1363528bbc19a47f22bcede88e5d6815212f18ec8e6cdc4638dddab4");
 }
 
-BOOST_AUTO_TEST_CASE(util_ReadWriteSettings)
+TEST_F(ArgsmanTestsBasicSetup, UtilReadWriteSettings)
 {
     // Test writing setting.
     TestArgsManager args1;
@@ -1039,7 +1041,7 @@ BOOST_AUTO_TEST_CASE(util_ReadWriteSettings)
     TestArgsManager args2;
     args2.ForceSetArg("-datadir", fs::PathToString(m_path_root));
     args2.ReadSettingsFile();
-    args2.LockSettings([&](common::Settings& settings) { BOOST_CHECK_EQUAL(settings.rw_settings["name"].get_str(), "value"); });
+    args2.LockSettings([&](common::Settings& settings) { EXPECT_EQ(settings.rw_settings["name"].get_str(), "value"); });
 
     // Test error logging, and remove previously written setting.
     {
@@ -1050,5 +1052,3 @@ BOOST_AUTO_TEST_CASE(util_ReadWriteSettings)
         fs::remove(args1.GetDataDirBase() / "settings.json");
     }
 }
-
-BOOST_AUTO_TEST_SUITE_END()

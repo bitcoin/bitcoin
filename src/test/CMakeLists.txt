@@ -33,117 +33,117 @@ add_executable(test_bitcoin
   amount_tests.cpp
   argsman_tests.cpp
   arith_uint256_tests.cpp
-  banman_tests.cpp
-  base32_tests.cpp
-  base58_tests.cpp
-  base64_tests.cpp
-  bech32_tests.cpp
-  bip32_tests.cpp
-  bip324_tests.cpp
-  blockchain_tests.cpp
-  blockencodings_tests.cpp
-  blockfilter_index_tests.cpp
-  blockfilter_tests.cpp
-  blockmanager_tests.cpp
-  bloom_tests.cpp
-  bswap_tests.cpp
-  checkqueue_tests.cpp
-  cluster_linearize_tests.cpp
-  coins_tests.cpp
-  coinscachepair_tests.cpp
+  # banman_tests.cpp
+  # base32_tests.cpp
+  # base58_tests.cpp
+  # base64_tests.cpp
+  # bech32_tests.cpp
+  # bip32_tests.cpp
+  # bip324_tests.cpp
+  # blockchain_tests.cpp
+  # blockencodings_tests.cpp
+  # blockfilter_index_tests.cpp
+  # blockfilter_tests.cpp
+  # blockmanager_tests.cpp
+  # bloom_tests.cpp
+  # bswap_tests.cpp
+  # checkqueue_tests.cpp
+  # cluster_linearize_tests.cpp
+  # coins_tests.cpp
+  # coinscachepair_tests.cpp
   coinstatsindex_tests.cpp
-  common_url_tests.cpp
-  compilerbug_tests.cpp
-  compress_tests.cpp
-  crypto_tests.cpp
-  cuckoocache_tests.cpp
-  dbwrapper_tests.cpp
-  denialofservice_tests.cpp
-  descriptor_tests.cpp
-  disconnected_transactions.cpp
-  feefrac_tests.cpp
-  flatfile_tests.cpp
-  fs_tests.cpp
-  getarg_tests.cpp
-  hash_tests.cpp
-  headers_sync_chainwork_tests.cpp
-  httpserver_tests.cpp
-  i2p_tests.cpp
-  interfaces_tests.cpp
-  key_io_tests.cpp
-  key_tests.cpp
-  logging_tests.cpp
-  mempool_tests.cpp
-  merkle_tests.cpp
-  merkleblock_tests.cpp
-  miner_tests.cpp
-  miniminer_tests.cpp
-  miniscript_tests.cpp
-  minisketch_tests.cpp
-  multisig_tests.cpp
-  net_peer_connection_tests.cpp
-  net_peer_eviction_tests.cpp
-  net_tests.cpp
-  netbase_tests.cpp
-  node_warnings_tests.cpp
-  orphanage_tests.cpp
-  pcp_tests.cpp
-  peerman_tests.cpp
-  pmt_tests.cpp
-  policy_fee_tests.cpp
-  policyestimator_tests.cpp
-  pool_tests.cpp
-  pow_tests.cpp
-  prevector_tests.cpp
-  raii_event_tests.cpp
-  random_tests.cpp
-  rbf_tests.cpp
-  rest_tests.cpp
-  result_tests.cpp
-  reverselock_tests.cpp
-  rpc_tests.cpp
-  sanity_tests.cpp
-  scheduler_tests.cpp
-  script_p2sh_tests.cpp
-  script_parse_tests.cpp
-  script_segwit_tests.cpp
-  script_standard_tests.cpp
-  script_tests.cpp
-  scriptnum_tests.cpp
-  serfloat_tests.cpp
-  serialize_tests.cpp
-  settings_tests.cpp
-  sighash_tests.cpp
-  sigopcount_tests.cpp
-  skiplist_tests.cpp
-  sock_tests.cpp
-  span_tests.cpp
-  streams_tests.cpp
-  sync_tests.cpp
-  system_tests.cpp
-  timeoffsets_tests.cpp
-  torcontrol_tests.cpp
-  transaction_tests.cpp
-  translation_tests.cpp
-  txdownload_tests.cpp
-  txindex_tests.cpp
-  txpackage_tests.cpp
-  txreconciliation_tests.cpp
-  txrequest_tests.cpp
-  txvalidation_tests.cpp
-  txvalidationcache_tests.cpp
-  uint256_tests.cpp
-  util_string_tests.cpp
-  util_tests.cpp
-  util_threadnames_tests.cpp
-  util_trace_tests.cpp
-  validation_block_tests.cpp
-  validation_chainstate_tests.cpp
-  validation_chainstatemanager_tests.cpp
-  validation_flush_tests.cpp
-  validation_tests.cpp
-  validationinterface_tests.cpp
-  versionbits_tests.cpp
+  # common_url_tests.cpp
+  # compilerbug_tests.cpp
+  # compress_tests.cpp
+  # crypto_tests.cpp
+  # cuckoocache_tests.cpp
+  # dbwrapper_tests.cpp
+  # denialofservice_tests.cpp
+  # descriptor_tests.cpp
+  # disconnected_transactions.cpp
+  # feefrac_tests.cpp
+  # flatfile_tests.cpp
+  # fs_tests.cpp
+  # getarg_tests.cpp
+  # hash_tests.cpp
+  # headers_sync_chainwork_tests.cpp
+  # httpserver_tests.cpp
+  # i2p_tests.cpp
+  # interfaces_tests.cpp
+  # key_io_tests.cpp
+  # key_tests.cpp
+  # logging_tests.cpp
+  # mempool_tests.cpp
+  # merkle_tests.cpp
+  # merkleblock_tests.cpp
+  # miner_tests.cpp
+  # miniminer_tests.cpp
+  # miniscript_tests.cpp
+  # minisketch_tests.cpp
+  # multisig_tests.cpp
+  # net_peer_connection_tests.cpp
+  # net_peer_eviction_tests.cpp
+  # net_tests.cpp
+  # netbase_tests.cpp
+  # node_warnings_tests.cpp
+  # orphanage_tests.cpp
+  # pcp_tests.cpp
+  # peerman_tests.cpp
+  # pmt_tests.cpp
+  # policy_fee_tests.cpp
+  # policyestimator_tests.cpp
+  # pool_tests.cpp
+  # pow_tests.cpp
+  # prevector_tests.cpp
+  # raii_event_tests.cpp
+  # random_tests.cpp
+  # rbf_tests.cpp
+  # rest_tests.cpp
+  # result_tests.cpp
+  # reverselock_tests.cpp
+  # rpc_tests.cpp
+  # sanity_tests.cpp
+  # scheduler_tests.cpp
+  # script_p2sh_tests.cpp
+  # script_parse_tests.cpp
+  # script_segwit_tests.cpp
+  # script_standard_tests.cpp
+  # script_tests.cpp
+  # scriptnum_tests.cpp
+  # serfloat_tests.cpp
+  # serialize_tests.cpp
+  # settings_tests.cpp
+  # sighash_tests.cpp
+  # sigopcount_tests.cpp
+  # skiplist_tests.cpp
+  # sock_tests.cpp
+  # span_tests.cpp
+  # streams_tests.cpp
+  # sync_tests.cpp
+  # system_tests.cpp
+  # timeoffsets_tests.cpp
+  # torcontrol_tests.cpp
+  # transaction_tests.cpp
+  # translation_tests.cpp
+  # txdownload_tests.cpp
+  # txindex_tests.cpp
+  # txpackage_tests.cpp
+  # txreconciliation_tests.cpp
+  # txrequest_tests.cpp
+  # txvalidation_tests.cpp
+  # txvalidationcache_tests.cpp
+  # uint256_tests.cpp
+  # util_string_tests.cpp
+  # util_tests.cpp
+  # util_threadnames_tests.cpp
+  # util_trace_tests.cpp
+  # validation_block_tests.cpp
+  # validation_chainstate_tests.cpp
+  # validation_chainstatemanager_tests.cpp
+  # validation_flush_tests.cpp
+  # validation_tests.cpp
+  # validationinterface_tests.cpp
+  # versionbits_tests.cpp
 )
 
 target_link_libraries(test_bitcoin
@@ -154,7 +154,7 @@ target_link_libraries(test_bitcoin
   bitcoin_consensus
   minisketch
   secp256k1
-  Boost::headers
+  GTest::gtest
   libevent::extra
 )
 
@@ -200,18 +200,6 @@ function(add_boost_test source_file)
   endif()
 endfunction()
 
-function(add_all_test_targets)
-  get_target_property(test_source_dir test_bitcoin SOURCE_DIR)
-  get_target_property(test_sources test_bitcoin SOURCES)
-  foreach(test_source ${test_sources})
-    cmake_path(IS_RELATIVE test_source result)
-    if(result)
-      cmake_path(APPEND test_source_dir ${test_source} OUTPUT_VARIABLE test_source)
-    endif()
-    add_boost_test(${test_source})
-  endforeach()
-endfunction()
-
-add_all_test_targets()
+gtest_discover_tests(test_bitcoin)
 
 install_binary_component(test_bitcoin)

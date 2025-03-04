@@ -22,16 +22,15 @@ and tests weren't explicitly disabled.
 The unit tests can be run with `ctest --test-dir build`, which includes unit
 tests from subtrees.
 
-Run `test_bitcoin --list_content` for the full list of tests.
+Run `test_bitcoin --gtest_list_tests` for the full list of tests.
 
 To run the unit tests manually, launch `build/src/test/test_bitcoin`. To recompile
 after a test file was modified, run `cmake --build build` and then run the test again. If you
 modify a non-test file, use `cmake --build build --target test_bitcoin` to recompile only what's needed
 to run the unit tests.
 
-To add more unit tests, add `BOOST_AUTO_TEST_CASE` functions to the existing
-.cpp files in the `test/` directory or add new .cpp files that
-implement new `BOOST_AUTO_TEST_SUITE` sections.
+To add more unit tests, add `TEST` or `TEST_F` functions to the existing
+.cpp files in the `test/` directory or add new .cpp files.
 
 To run the GUI unit tests manually, launch `build/src/qt/test/test_bitcoin-qt`
 
@@ -47,10 +46,10 @@ framework. To see the list of arguments that may be passed, run:
 test_bitcoin --help
 ```
 
-For example, to run only the tests in the `getarg_tests` file, with full logging:
+For example, to run only the tests in the `addrman_tests` file:
 
 ```bash
-build/src/test/test_bitcoin --log_level=all --run_test=getarg_tests
+build/src/test/test_bitcoin --gtest_filter=AddrmanTests*
 ```
 
 or

@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <gtest/gtest.h>
+
 #include <arith_uint256.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
-
-#include <boost/test/unit_test.hpp>
 
 #include <cmath>
 #include <cstdint>
@@ -15,8 +15,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-BOOST_AUTO_TEST_SUITE(arith_uint256_tests)
 
 /// Convert vector to arith_uint256, via uint256 blob
 static inline arith_uint256 arith_uint256V(const std::vector<unsigned char>& vch)
@@ -63,61 +61,61 @@ static std::string ArrayToString(const unsigned char A[], unsigned int width)
     return Stream.str();
 }
 
-BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
+TEST(ArithUint256Tests, Basics) // constructors, equality, inequality
 {
-    BOOST_CHECK(1 == 0+1);
+    EXPECT_TRUE(1 == 0+1);
     // constructor arith_uint256(vector<char>):
-    BOOST_CHECK(R1L.ToString() == ArrayToString(R1Array,32));
-    BOOST_CHECK(R2L.ToString() == ArrayToString(R2Array,32));
-    BOOST_CHECK(ZeroL.ToString() == ArrayToString(ZeroArray,32));
-    BOOST_CHECK(OneL.ToString() == ArrayToString(OneArray,32));
-    BOOST_CHECK(MaxL.ToString() == ArrayToString(MaxArray,32));
-    BOOST_CHECK(OneL.ToString() != ArrayToString(ZeroArray,32));
+    EXPECT_TRUE(R1L.ToString() == ArrayToString(R1Array,32));
+    EXPECT_TRUE(R2L.ToString() == ArrayToString(R2Array,32));
+    EXPECT_TRUE(ZeroL.ToString() == ArrayToString(ZeroArray,32));
+    EXPECT_TRUE(OneL.ToString() == ArrayToString(OneArray,32));
+    EXPECT_TRUE(MaxL.ToString() == ArrayToString(MaxArray,32));
+    EXPECT_TRUE(OneL.ToString() != ArrayToString(ZeroArray,32));
 
     // == and !=
-    BOOST_CHECK(R1L != R2L);
-    BOOST_CHECK(ZeroL != OneL);
-    BOOST_CHECK(OneL != ZeroL);
-    BOOST_CHECK(MaxL != ZeroL);
-    BOOST_CHECK(~MaxL == ZeroL);
-    BOOST_CHECK( ((R1L ^ R2L) ^ R1L) == R2L);
+    EXPECT_TRUE(R1L != R2L);
+    EXPECT_TRUE(ZeroL != OneL);
+    EXPECT_TRUE(OneL != ZeroL);
+    EXPECT_TRUE(MaxL != ZeroL);
+    EXPECT_TRUE(~MaxL == ZeroL);
+    EXPECT_TRUE( ((R1L ^ R2L) ^ R1L) == R2L);
 
     uint64_t Tmp64 = 0xc4dab720d9c7acaaULL;
     for (unsigned int i = 0; i < 256; ++i)
     {
-        BOOST_CHECK(ZeroL != (OneL << i));
-        BOOST_CHECK((OneL << i) != ZeroL);
-        BOOST_CHECK(R1L != (R1L ^ (OneL << i)));
-        BOOST_CHECK(((arith_uint256(Tmp64) ^ (OneL << i) ) != Tmp64 ));
+        EXPECT_TRUE(ZeroL != (OneL << i));
+        EXPECT_TRUE((OneL << i) != ZeroL);
+        EXPECT_TRUE(R1L != (R1L ^ (OneL << i)));
+        EXPECT_TRUE(((arith_uint256(Tmp64) ^ (OneL << i) ) != Tmp64 ));
     }
-    BOOST_CHECK(ZeroL == (OneL << 256));
+    EXPECT_TRUE(ZeroL == (OneL << 256));
 
     // Construct from hex string
-    BOOST_CHECK_EQUAL(UintToArith256(uint256::FromHex(R1L.ToString()).value()), R1L);
-    BOOST_CHECK_EQUAL(UintToArith256(uint256::FromHex(R2L.ToString()).value()), R2L);
-    BOOST_CHECK_EQUAL(UintToArith256(uint256::FromHex(ZeroL.ToString()).value()), ZeroL);
-    BOOST_CHECK_EQUAL(UintToArith256(uint256::FromHex(OneL.ToString()).value()), OneL);
-    BOOST_CHECK_EQUAL(UintToArith256(uint256::FromHex(MaxL.ToString()).value()), MaxL);
-    BOOST_CHECK_EQUAL(UintToArith256(uint256::FromHex(R1ArrayHex).value()), R1L);
+    EXPECT_EQ(UintToArith256(uint256::FromHex(R1L.ToString()).value()), R1L);
+    EXPECT_EQ(UintToArith256(uint256::FromHex(R2L.ToString()).value()), R2L);
+    EXPECT_EQ(UintToArith256(uint256::FromHex(ZeroL.ToString()).value()), ZeroL);
+    EXPECT_EQ(UintToArith256(uint256::FromHex(OneL.ToString()).value()), OneL);
+    EXPECT_EQ(UintToArith256(uint256::FromHex(MaxL.ToString()).value()), MaxL);
+    EXPECT_EQ(UintToArith256(uint256::FromHex(R1ArrayHex).value()), R1L);
 
     // Copy constructor
-    BOOST_CHECK(arith_uint256(R1L) == R1L);
-    BOOST_CHECK((arith_uint256(R1L^R2L)^R2L) == R1L);
-    BOOST_CHECK(arith_uint256(ZeroL) == ZeroL);
-    BOOST_CHECK(arith_uint256(OneL) == OneL);
+    EXPECT_TRUE(arith_uint256(R1L) == R1L);
+    EXPECT_TRUE((arith_uint256(R1L^R2L)^R2L) == R1L);
+    EXPECT_TRUE(arith_uint256(ZeroL) == ZeroL);
+    EXPECT_TRUE(arith_uint256(OneL) == OneL);
 
     // uint64_t constructor
-    BOOST_CHECK_EQUAL(R1L & arith_uint256{0xffffffffffffffff}, arith_uint256{R1LLow64});
-    BOOST_CHECK_EQUAL(ZeroL, arith_uint256{0});
-    BOOST_CHECK_EQUAL(OneL, arith_uint256{1});
-    BOOST_CHECK_EQUAL(arith_uint256{0xffffffffffffffff}, arith_uint256{0xffffffffffffffffULL});
+    EXPECT_EQ(R1L & arith_uint256{0xffffffffffffffff}, arith_uint256{R1LLow64});
+    EXPECT_EQ(ZeroL, arith_uint256{0});
+    EXPECT_EQ(OneL, arith_uint256{1});
+    EXPECT_EQ(arith_uint256{0xffffffffffffffff}, arith_uint256{0xffffffffffffffffULL});
 
     // Assignment (from base_uint)
-    arith_uint256 tmpL = ~ZeroL; BOOST_CHECK(tmpL == ~ZeroL);
-    tmpL = ~OneL; BOOST_CHECK(tmpL == ~OneL);
-    tmpL = ~R1L; BOOST_CHECK(tmpL == ~R1L);
-    tmpL = ~R2L; BOOST_CHECK(tmpL == ~R2L);
-    tmpL = ~MaxL; BOOST_CHECK(tmpL == ~MaxL);
+    arith_uint256 tmpL = ~ZeroL; EXPECT_TRUE(tmpL == ~ZeroL);
+    tmpL = ~OneL; EXPECT_TRUE(tmpL == ~OneL);
+    tmpL = ~R1L; EXPECT_TRUE(tmpL == ~R1L);
+    tmpL = ~R2L; EXPECT_TRUE(tmpL == ~R2L);
+    tmpL = ~MaxL; EXPECT_TRUE(tmpL == ~MaxL);
 }
 
 static void shiftArrayRight(unsigned char* to, const unsigned char* from, unsigned int arrayLength, unsigned int bitsToShift)
@@ -151,61 +149,62 @@ static void shiftArrayLeft(unsigned char* to, const unsigned char* from, unsigne
     }
 }
 
-BOOST_AUTO_TEST_CASE( shifts ) { // "<<"  ">>"  "<<="  ">>="
+TEST(ArithUint256Tests, Shifts) // "<<", ">>", "<<=", ">>="
+{
     unsigned char TmpArray[32];
     arith_uint256 TmpL;
     for (unsigned int i = 0; i < 256; ++i)
     {
         shiftArrayLeft(TmpArray, OneArray, 32, i);
-        BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (OneL << i));
+        EXPECT_TRUE(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (OneL << i));
         TmpL = OneL; TmpL <<= i;
-        BOOST_CHECK(TmpL == (OneL << i));
-        BOOST_CHECK((HalfL >> (255-i)) == (OneL << i));
+        EXPECT_TRUE(TmpL == (OneL << i));
+        EXPECT_TRUE((HalfL >> (255-i)) == (OneL << i));
         TmpL = HalfL; TmpL >>= (255-i);
-        BOOST_CHECK(TmpL == (OneL << i));
+        EXPECT_TRUE(TmpL == (OneL << i));
 
         shiftArrayLeft(TmpArray, R1Array, 32, i);
-        BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (R1L << i));
+        EXPECT_TRUE(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (R1L << i));
         TmpL = R1L; TmpL <<= i;
-        BOOST_CHECK(TmpL == (R1L << i));
+        EXPECT_TRUE(TmpL == (R1L << i));
 
         shiftArrayRight(TmpArray, R1Array, 32, i);
-        BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (R1L >> i));
+        EXPECT_TRUE(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (R1L >> i));
         TmpL = R1L; TmpL >>= i;
-        BOOST_CHECK(TmpL == (R1L >> i));
+        EXPECT_TRUE(TmpL == (R1L >> i));
 
         shiftArrayLeft(TmpArray, MaxArray, 32, i);
-        BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (MaxL << i));
+        EXPECT_TRUE(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (MaxL << i));
         TmpL = MaxL; TmpL <<= i;
-        BOOST_CHECK(TmpL == (MaxL << i));
+        EXPECT_TRUE(TmpL == (MaxL << i));
 
         shiftArrayRight(TmpArray, MaxArray, 32, i);
-        BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (MaxL >> i));
+        EXPECT_TRUE(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (MaxL >> i));
         TmpL = MaxL; TmpL >>= i;
-        BOOST_CHECK(TmpL == (MaxL >> i));
+        EXPECT_TRUE(TmpL == (MaxL >> i));
     }
     arith_uint256 c1L = arith_uint256(0x0123456789abcdefULL);
     arith_uint256 c2L = c1L << 128;
     for (unsigned int i = 0; i < 128; ++i) {
-        BOOST_CHECK((c1L << i) == (c2L >> (128-i)));
+        EXPECT_TRUE((c1L << i) == (c2L >> (128-i)));
     }
     for (unsigned int i = 128; i < 256; ++i) {
-        BOOST_CHECK((c1L << i) == (c2L << (i-128)));
+        EXPECT_TRUE((c1L << i) == (c2L << (i-128)));
     }
 }
 
-BOOST_AUTO_TEST_CASE( unaryOperators ) // !    ~    -
+TEST(ArithToUint256Tests, UnaryOperators)
 {
-    BOOST_CHECK(~ZeroL == MaxL);
+    EXPECT_TRUE(~ZeroL == MaxL);
 
     unsigned char TmpArray[32];
     for (unsigned int i = 0; i < 32; ++i) { TmpArray[i] = uint8_t(~R1Array[i]); }
-    BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (~R1L));
+    EXPECT_TRUE(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (~R1L));
 
-    BOOST_CHECK(-ZeroL == ZeroL);
-    BOOST_CHECK(-R1L == (~R1L)+1);
+    EXPECT_TRUE(-ZeroL == ZeroL);
+    EXPECT_TRUE(-R1L == (~R1L)+1);
     for (unsigned int i = 0; i < 256; ++i)
-        BOOST_CHECK(-(OneL<<i) == (MaxL << i));
+        EXPECT_TRUE(-(OneL<<i) == (MaxL << i));
 }
 
 
@@ -213,12 +212,12 @@ BOOST_AUTO_TEST_CASE( unaryOperators ) // !    ~    -
 // element of Aarray and Barray, and then converting the result into an arith_uint256.
 #define CHECKBITWISEOPERATOR(_A_,_B_,_OP_)                              \
     for (unsigned int i = 0; i < 32; ++i) { TmpArray[i] = uint8_t(_A_##Array[i] _OP_ _B_##Array[i]); } \
-    BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (_A_##L _OP_ _B_##L));
+    EXPECT_TRUE(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (_A_##L _OP_ _B_##L));
 
 #define CHECKASSIGNMENTOPERATOR(_A_,_B_,_OP_)                           \
-    TmpL = _A_##L; TmpL _OP_##= _B_##L; BOOST_CHECK(TmpL == (_A_##L _OP_ _B_##L));
+    TmpL = _A_##L; TmpL _OP_##= _B_##L; EXPECT_TRUE(TmpL == (_A_##L _OP_ _B_##L));
 
-BOOST_AUTO_TEST_CASE( bitwiseOperators )
+TEST(ArithUint256Tests, BitwiseOperators)
 {
     unsigned char TmpArray[32];
 
@@ -256,302 +255,299 @@ BOOST_AUTO_TEST_CASE( bitwiseOperators )
     CHECKASSIGNMENTOPERATOR(Max,R1,&)
 
     uint64_t Tmp64 = 0xe1db685c9a0b47a2ULL;
-    TmpL = R1L; TmpL |= Tmp64;  BOOST_CHECK(TmpL == (R1L | arith_uint256(Tmp64)));
-    TmpL = R1L; TmpL |= 0; BOOST_CHECK(TmpL == R1L);
-    TmpL ^= 0; BOOST_CHECK(TmpL == R1L);
-    TmpL ^= Tmp64;  BOOST_CHECK(TmpL == (R1L ^ arith_uint256(Tmp64)));
+    TmpL = R1L; TmpL |= Tmp64;  EXPECT_TRUE(TmpL == (R1L | arith_uint256(Tmp64)));
+    TmpL = R1L; TmpL |= 0; EXPECT_TRUE(TmpL == R1L);
+    TmpL ^= 0; EXPECT_TRUE(TmpL == R1L);
+    TmpL ^= Tmp64;  EXPECT_TRUE(TmpL == (R1L ^ arith_uint256(Tmp64)));
 }
 
-BOOST_AUTO_TEST_CASE( comparison ) // <= >= < >
+TEST(ArithUint256Tests, Comparison) // <= >= < >
 {
     arith_uint256 TmpL;
     for (unsigned int i = 0; i < 256; ++i) {
         TmpL= OneL<< i;
-        BOOST_CHECK( TmpL >= ZeroL && TmpL > ZeroL && ZeroL < TmpL && ZeroL <= TmpL);
-        BOOST_CHECK( TmpL >= 0 && TmpL > 0 && 0 < TmpL && 0 <= TmpL);
+        EXPECT_TRUE( TmpL >= ZeroL && TmpL > ZeroL && ZeroL < TmpL && ZeroL <= TmpL);
+        EXPECT_TRUE( TmpL >= 0 && TmpL > 0 && 0 < TmpL && 0 <= TmpL);
         TmpL |= R1L;
-        BOOST_CHECK( TmpL >= R1L ); BOOST_CHECK( (TmpL == R1L) != (TmpL > R1L)); BOOST_CHECK( (TmpL == R1L) || !( TmpL <= R1L));
-        BOOST_CHECK( R1L <= TmpL ); BOOST_CHECK( (R1L == TmpL) != (R1L < TmpL)); BOOST_CHECK( (TmpL == R1L) || !( R1L >= TmpL));
-        BOOST_CHECK(! (TmpL < R1L)); BOOST_CHECK(! (R1L > TmpL));
+        EXPECT_TRUE( TmpL >= R1L ); EXPECT_TRUE( (TmpL == R1L) != (TmpL > R1L)); EXPECT_TRUE( (TmpL == R1L) || !( TmpL <= R1L));
+        EXPECT_TRUE( R1L <= TmpL ); EXPECT_TRUE( (R1L == TmpL) != (R1L < TmpL)); EXPECT_TRUE( (TmpL == R1L) || !( R1L >= TmpL));
+        EXPECT_TRUE(! (TmpL < R1L)); EXPECT_TRUE(! (R1L > TmpL));
     }
 
-    BOOST_CHECK_LT(ZeroL,
-                   OneL);
+    EXPECT_LT(ZeroL, OneL);
 }
 
-BOOST_AUTO_TEST_CASE( plusMinus )
+TEST(ArithUint256Tests, PlusMinus)
 {
     arith_uint256 TmpL = 0;
-    BOOST_CHECK_EQUAL(R1L + R2L, UintToArith256(uint256{"549fb09fea236a1ea3e31d4d58f1b1369288d204211ca751527cfc175767850c"}));
+    EXPECT_EQ(R1L + R2L, UintToArith256(uint256{"549fb09fea236a1ea3e31d4d58f1b1369288d204211ca751527cfc175767850c"}));
     TmpL += R1L;
-    BOOST_CHECK(TmpL == R1L);
+    EXPECT_TRUE(TmpL == R1L);
     TmpL += R2L;
-    BOOST_CHECK(TmpL == R1L + R2L);
-    BOOST_CHECK(OneL+MaxL == ZeroL);
-    BOOST_CHECK(MaxL+OneL == ZeroL);
+    EXPECT_TRUE(TmpL == R1L + R2L);
+    EXPECT_TRUE(OneL+MaxL == ZeroL);
+    EXPECT_TRUE(MaxL+OneL == ZeroL);
     for (unsigned int i = 1; i < 256; ++i) {
-        BOOST_CHECK( (MaxL >> i) + OneL == (HalfL >> (i-1)) );
-        BOOST_CHECK( OneL + (MaxL >> i) == (HalfL >> (i-1)) );
+        EXPECT_TRUE( (MaxL >> i) + OneL == (HalfL >> (i-1)) );
+        EXPECT_TRUE( OneL + (MaxL >> i) == (HalfL >> (i-1)) );
         TmpL = (MaxL>>i); TmpL += OneL;
-        BOOST_CHECK( TmpL == (HalfL >> (i-1)) );
+        EXPECT_TRUE( TmpL == (HalfL >> (i-1)) );
         TmpL = (MaxL>>i); TmpL += 1;
-        BOOST_CHECK( TmpL == (HalfL >> (i-1)) );
+        EXPECT_TRUE( TmpL == (HalfL >> (i-1)) );
         TmpL = (MaxL>>i);
-        BOOST_CHECK( TmpL++ == (MaxL>>i) );
-        BOOST_CHECK( TmpL == (HalfL >> (i-1)));
+        EXPECT_TRUE( TmpL++ == (MaxL>>i) );
+        EXPECT_TRUE( TmpL == (HalfL >> (i-1)));
     }
-    BOOST_CHECK(arith_uint256(0xbedc77e27940a7ULL) + 0xee8d836fce66fbULL == arith_uint256(0xbedc77e27940a7ULL + 0xee8d836fce66fbULL));
+    EXPECT_TRUE(arith_uint256(0xbedc77e27940a7ULL) + 0xee8d836fce66fbULL == arith_uint256(0xbedc77e27940a7ULL + 0xee8d836fce66fbULL));
     TmpL = arith_uint256(0xbedc77e27940a7ULL); TmpL += 0xee8d836fce66fbULL;
-    BOOST_CHECK(TmpL == arith_uint256(0xbedc77e27940a7ULL+0xee8d836fce66fbULL));
-    TmpL -= 0xee8d836fce66fbULL;  BOOST_CHECK(TmpL == 0xbedc77e27940a7ULL);
+    EXPECT_TRUE(TmpL == arith_uint256(0xbedc77e27940a7ULL+0xee8d836fce66fbULL));
+    TmpL -= 0xee8d836fce66fbULL;  EXPECT_TRUE(TmpL == 0xbedc77e27940a7ULL);
     TmpL = R1L;
-    BOOST_CHECK(++TmpL == R1L+1);
+    EXPECT_TRUE(++TmpL == R1L+1);
 
-    BOOST_CHECK(R1L -(-R2L) == R1L+R2L);
-    BOOST_CHECK(R1L -(-OneL) == R1L+OneL);
-    BOOST_CHECK(R1L - OneL == R1L+(-OneL));
+    EXPECT_TRUE(R1L -(-R2L) == R1L+R2L);
+    EXPECT_TRUE(R1L -(-OneL) == R1L+OneL);
+    EXPECT_TRUE(R1L - OneL == R1L+(-OneL));
     for (unsigned int i = 1; i < 256; ++i) {
-        BOOST_CHECK((MaxL>>i) - (-OneL)  == (HalfL >> (i-1)));
-        BOOST_CHECK((HalfL >> (i-1)) - OneL == (MaxL>>i));
+        EXPECT_TRUE((MaxL>>i) - (-OneL)  == (HalfL >> (i-1)));
+        EXPECT_TRUE((HalfL >> (i-1)) - OneL == (MaxL>>i));
         TmpL = (HalfL >> (i-1));
-        BOOST_CHECK(TmpL-- == (HalfL >> (i-1)));
-        BOOST_CHECK(TmpL == (MaxL >> i));
+        EXPECT_TRUE(TmpL-- == (HalfL >> (i-1)));
+        EXPECT_TRUE(TmpL == (MaxL >> i));
         TmpL = (HalfL >> (i-1));
-        BOOST_CHECK(--TmpL == (MaxL >> i));
+        EXPECT_TRUE(--TmpL == (MaxL >> i));
     }
     TmpL = R1L;
-    BOOST_CHECK(--TmpL == R1L-1);
+    EXPECT_TRUE(--TmpL == R1L-1);
 }
 
-BOOST_AUTO_TEST_CASE( multiply )
+TEST(ArithUint256Tests, Multiply)
 {
-    BOOST_CHECK((R1L * R1L).ToString() == "62a38c0486f01e45879d7910a7761bf30d5237e9873f9bff3642a732c4d84f10");
-    BOOST_CHECK((R1L * R2L).ToString() == "de37805e9986996cfba76ff6ba51c008df851987d9dd323f0e5de07760529c40");
-    BOOST_CHECK((R1L * ZeroL) == ZeroL);
-    BOOST_CHECK((R1L * OneL) == R1L);
-    BOOST_CHECK((R1L * MaxL) == -R1L);
-    BOOST_CHECK((R2L * R1L) == (R1L * R2L));
-    BOOST_CHECK((R2L * R2L).ToString() == "ac8c010096767d3cae5005dec28bb2b45a1d85ab7996ccd3e102a650f74ff100");
-    BOOST_CHECK((R2L * ZeroL) == ZeroL);
-    BOOST_CHECK((R2L * OneL) == R2L);
-    BOOST_CHECK((R2L * MaxL) == -R2L);
+    EXPECT_TRUE((R1L * R1L).ToString() == "62a38c0486f01e45879d7910a7761bf30d5237e9873f9bff3642a732c4d84f10");
+    EXPECT_TRUE((R1L * R2L).ToString() == "de37805e9986996cfba76ff6ba51c008df851987d9dd323f0e5de07760529c40");
+    EXPECT_TRUE((R1L * ZeroL) == ZeroL);
+    EXPECT_TRUE((R1L * OneL) == R1L);
+    EXPECT_TRUE((R1L * MaxL) == -R1L);
+    EXPECT_TRUE((R2L * R1L) == (R1L * R2L));
+    EXPECT_TRUE((R2L * R2L).ToString() == "ac8c010096767d3cae5005dec28bb2b45a1d85ab7996ccd3e102a650f74ff100");
+    EXPECT_TRUE((R2L * ZeroL) == ZeroL);
+    EXPECT_TRUE((R2L * OneL) == R2L);
+    EXPECT_TRUE((R2L * MaxL) == -R2L);
 
-    BOOST_CHECK(MaxL * MaxL == OneL);
+    EXPECT_TRUE(MaxL * MaxL == OneL);
 
-    BOOST_CHECK((R1L * 0) == 0);
-    BOOST_CHECK((R1L * 1) == R1L);
-    BOOST_CHECK((R1L * 3).ToString() == "7759b1c0ed14047f961ad09b20ff83687876a0181a367b813634046f91def7d4");
-    BOOST_CHECK((R2L * 0x87654321UL).ToString() == "23f7816e30c4ae2017257b7a0fa64d60402f5234d46e746b61c960d09a26d070");
+    EXPECT_TRUE((R1L * 0) == 0);
+    EXPECT_TRUE((R1L * 1) == R1L);
+    EXPECT_TRUE((R1L * 3).ToString() == "7759b1c0ed14047f961ad09b20ff83687876a0181a367b813634046f91def7d4");
+    EXPECT_TRUE((R2L * 0x87654321UL).ToString() == "23f7816e30c4ae2017257b7a0fa64d60402f5234d46e746b61c960d09a26d070");
 }
 
-BOOST_AUTO_TEST_CASE( divide )
+TEST(ArithUint256Tests, Divide)
 {
     arith_uint256 D1L{UintToArith256(uint256{"00000000000000000000000000000000000000000000000ad7133ac1977fa2b7"})};
     arith_uint256 D2L{UintToArith256(uint256{"0000000000000000000000000000000000000000000000000000000ecd751716"})};
-    BOOST_CHECK((R1L / D1L).ToString() == "00000000000000000b8ac01106981635d9ed112290f8895545a7654dde28fb3a");
-    BOOST_CHECK((R1L / D2L).ToString() == "000000000873ce8efec5b67150bad3aa8c5fcb70e947586153bf2cec7c37c57a");
-    BOOST_CHECK(R1L / OneL == R1L);
-    BOOST_CHECK(R1L / MaxL == ZeroL);
-    BOOST_CHECK(MaxL / R1L == 2);
-    BOOST_CHECK_THROW(R1L / ZeroL, uint_error);
-    BOOST_CHECK((R2L / D1L).ToString() == "000000000000000013e1665895a1cc981de6d93670105a6b3ec3b73141b3a3c5");
-    BOOST_CHECK((R2L / D2L).ToString() == "000000000e8f0abe753bb0afe2e9437ee85d280be60882cf0bd1aaf7fa3cc2c4");
-    BOOST_CHECK(R2L / OneL == R2L);
-    BOOST_CHECK(R2L / MaxL == ZeroL);
-    BOOST_CHECK(MaxL / R2L == 1);
-    BOOST_CHECK_THROW(R2L / ZeroL, uint_error);
+    EXPECT_TRUE((R1L / D1L).ToString() == "00000000000000000b8ac01106981635d9ed112290f8895545a7654dde28fb3a");
+    EXPECT_TRUE((R1L / D2L).ToString() == "000000000873ce8efec5b67150bad3aa8c5fcb70e947586153bf2cec7c37c57a");
+    EXPECT_TRUE(R1L / OneL == R1L);
+    EXPECT_TRUE(R1L / MaxL == ZeroL);
+    EXPECT_TRUE(MaxL / R1L == 2);
+    EXPECT_THROW(R1L / ZeroL, uint_error);
+    EXPECT_TRUE((R2L / D1L).ToString() == "000000000000000013e1665895a1cc981de6d93670105a6b3ec3b73141b3a3c5");
+    EXPECT_TRUE((R2L / D2L).ToString() == "000000000e8f0abe753bb0afe2e9437ee85d280be60882cf0bd1aaf7fa3cc2c4");
+    EXPECT_TRUE(R2L / OneL == R2L);
+    EXPECT_TRUE(R2L / MaxL == ZeroL);
+    EXPECT_TRUE(MaxL / R2L == 1);
+    EXPECT_THROW(R2L / ZeroL, uint_error);
 }
-
 
 static bool almostEqual(double d1, double d2)
 {
     return fabs(d1-d2) <= 4*fabs(d1)*std::numeric_limits<double>::epsilon();
 }
 
-BOOST_AUTO_TEST_CASE(methods) // GetHex operator= size() GetLow64 GetSerializeSize, Serialize, Unserialize
+TEST(ArithUint256Tests, Methods) // GetHex operator= size() GetLow64 GetSerializeSize, Serialize, Unserialize
 {
-    BOOST_CHECK(R1L.GetHex() == R1L.ToString());
-    BOOST_CHECK(R2L.GetHex() == R2L.ToString());
-    BOOST_CHECK(OneL.GetHex() == OneL.ToString());
-    BOOST_CHECK(MaxL.GetHex() == MaxL.ToString());
+    EXPECT_TRUE(R1L.GetHex() == R1L.ToString());
+    EXPECT_TRUE(R2L.GetHex() == R2L.ToString());
+    EXPECT_TRUE(OneL.GetHex() == OneL.ToString());
+    EXPECT_TRUE(MaxL.GetHex() == MaxL.ToString());
     arith_uint256 TmpL(R1L);
-    BOOST_CHECK(TmpL == R1L);
+    EXPECT_TRUE(TmpL == R1L);
     TmpL = R2L;
-    BOOST_CHECK(TmpL == R2L);
+    EXPECT_TRUE(TmpL == R2L);
     TmpL = ZeroL;
-    BOOST_CHECK(TmpL == 0);
+    EXPECT_TRUE(TmpL == 0);
     TmpL = HalfL;
-    BOOST_CHECK(TmpL == HalfL);
+    EXPECT_TRUE(TmpL == HalfL);
 
     TmpL = R1L;
-    BOOST_CHECK(R1L.size() == 32);
-    BOOST_CHECK(R2L.size() == 32);
-    BOOST_CHECK(ZeroL.size() == 32);
-    BOOST_CHECK(MaxL.size() == 32);
-    BOOST_CHECK(R1L.GetLow64()  == R1LLow64);
-    BOOST_CHECK(HalfL.GetLow64() ==0x0000000000000000ULL);
-    BOOST_CHECK(OneL.GetLow64() ==0x0000000000000001ULL);
+    EXPECT_TRUE(R1L.size() == 32);
+    EXPECT_TRUE(R2L.size() == 32);
+    EXPECT_TRUE(ZeroL.size() == 32);
+    EXPECT_TRUE(MaxL.size() == 32);
+    EXPECT_TRUE(R1L.GetLow64()  == R1LLow64);
+    EXPECT_TRUE(HalfL.GetLow64() ==0x0000000000000000ULL);
+    EXPECT_TRUE(OneL.GetLow64() ==0x0000000000000001ULL);
 
     for (unsigned int i = 0; i < 255; ++i)
     {
-        BOOST_CHECK((OneL << i).getdouble() == ldexp(1.0,i));
+        EXPECT_TRUE((OneL << i).getdouble() == ldexp(1.0,i));
     }
-    BOOST_CHECK(ZeroL.getdouble() == 0.0);
+    EXPECT_TRUE(ZeroL.getdouble() == 0.0);
     for (int i = 256; i > 53; --i)
-        BOOST_CHECK(almostEqual((R1L>>(256-i)).getdouble(), ldexp(R1Ldouble,i)));
+        EXPECT_TRUE(almostEqual((R1L>>(256-i)).getdouble(), ldexp(R1Ldouble,i)));
     uint64_t R1L64part = (R1L>>192).GetLow64();
     for (int i = 53; i > 0; --i) // doubles can store all integers in {0,...,2^54-1} exactly
     {
-        BOOST_CHECK((R1L>>(256-i)).getdouble() == (double)(R1L64part >> (64-i)));
+        EXPECT_TRUE((R1L>>(256-i)).getdouble() == (double)(R1L64part >> (64-i)));
     }
 }
 
-BOOST_AUTO_TEST_CASE(bignum_SetCompact)
+TEST(ArithUint256Tests, BignumSetCompact)
 {
     arith_uint256 num;
     bool fNegative;
     bool fOverflow;
     num.SetCompact(0, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
-    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
-    BOOST_CHECK_EQUAL(fNegative, false);
-    BOOST_CHECK_EQUAL(fOverflow, false);
+    EXPECT_EQ(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    EXPECT_EQ(num.GetCompact(), 0U);
+    EXPECT_EQ(fNegative, false);
+    EXPECT_EQ(fOverflow, false);
 
     num.SetCompact(0x00123456, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
-    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
-    BOOST_CHECK_EQUAL(fNegative, false);
-    BOOST_CHECK_EQUAL(fOverflow, false);
+    EXPECT_EQ(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    EXPECT_EQ(num.GetCompact(), 0U);
+    EXPECT_EQ(fNegative, false);
+    EXPECT_EQ(fOverflow, false);
 
     num.SetCompact(0x01003456, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
-    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
-    BOOST_CHECK_EQUAL(fNegative, false);
-    BOOST_CHECK_EQUAL(fOverflow, false);
+    EXPECT_EQ(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    EXPECT_EQ(num.GetCompact(), 0U);
+    EXPECT_EQ(fNegative, false);
+    EXPECT_EQ(fOverflow, false);
 
     num.SetCompact(0x02000056, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
-    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
-    BOOST_CHECK_EQUAL(fNegative, false);
-    BOOST_CHECK_EQUAL(fOverflow, false);
+    EXPECT_EQ(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    EXPECT_EQ(num.GetCompact(), 0U);
+    EXPECT_EQ(fNegative, false);
+    EXPECT_EQ(fOverflow, false);
 
     num.SetCompact(0x03000000, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
-    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
-    BOOST_CHECK_EQUAL(fNegative, false);
-    BOOST_CHECK_EQUAL(fOverflow, false);
+    EXPECT_EQ(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    EXPECT_EQ(num.GetCompact(), 0U);
+    EXPECT_EQ(fNegative, false);
+    EXPECT_EQ(fOverflow, false);
 
     num.SetCompact(0x04000000, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
-    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
-    BOOST_CHECK_EQUAL(fNegative, false);
-    BOOST_CHECK_EQUAL(fOverflow, false);
+    EXPECT_EQ(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    EXPECT_EQ(num.GetCompact(), 0U);
+    EXPECT_EQ(fNegative, false);
+    EXPECT_EQ(fOverflow, false);
 
     num.SetCompact(0x00923456, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
-    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
-    BOOST_CHECK_EQUAL(fNegative, false);
-    BOOST_CHECK_EQUAL(fOverflow, false);
+    EXPECT_EQ(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    EXPECT_EQ(num.GetCompact(), 0U);
+    EXPECT_EQ(fNegative, false);
+    EXPECT_EQ(fOverflow, false);
 
     num.SetCompact(0x01803456, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
-    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
-    BOOST_CHECK_EQUAL(fNegative, false);
-    BOOST_CHECK_EQUAL(fOverflow, false);
+    EXPECT_EQ(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    EXPECT_EQ(num.GetCompact(), 0U);
+    EXPECT_EQ(fNegative, false);
+    EXPECT_EQ(fOverflow, false);
 
     num.SetCompact(0x02800056, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
-    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
-    BOOST_CHECK_EQUAL(fNegative, false);
-    BOOST_CHECK_EQUAL(fOverflow, false);
+    EXPECT_EQ(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    EXPECT_EQ(num.GetCompact(), 0U);
+    EXPECT_EQ(fNegative, false);
+    EXPECT_EQ(fOverflow, false);
 
     num.SetCompact(0x03800000, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
-    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
-    BOOST_CHECK_EQUAL(fNegative, false);
-    BOOST_CHECK_EQUAL(fOverflow, false);
+    EXPECT_EQ(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    EXPECT_EQ(num.GetCompact(), 0U);
+    EXPECT_EQ(fNegative, false);
+    EXPECT_EQ(fOverflow, false);
 
     num.SetCompact(0x04800000, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
-    BOOST_CHECK_EQUAL(num.GetCompact(), 0U);
-    BOOST_CHECK_EQUAL(fNegative, false);
-    BOOST_CHECK_EQUAL(fOverflow, false);
+    EXPECT_EQ(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000000");
+    EXPECT_EQ(num.GetCompact(), 0U);
+    EXPECT_EQ(fNegative, false);
+    EXPECT_EQ(fOverflow, false);
 
     num.SetCompact(0x01123456, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000012");
-    BOOST_CHECK_EQUAL(num.GetCompact(), 0x01120000U);
-    BOOST_CHECK_EQUAL(fNegative, false);
-    BOOST_CHECK_EQUAL(fOverflow, false);
+    EXPECT_EQ(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000000012");
+    EXPECT_EQ(num.GetCompact(), 0x01120000U);
+    EXPECT_EQ(fNegative, false);
+    EXPECT_EQ(fOverflow, false);
 
     // Make sure that we don't generate compacts with the 0x00800000 bit set
     num = 0x80;
-    BOOST_CHECK_EQUAL(num.GetCompact(), 0x02008000U);
+    EXPECT_EQ(num.GetCompact(), 0x02008000U);
 
     num.SetCompact(0x01fedcba, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(num.GetHex(), "000000000000000000000000000000000000000000000000000000000000007e");
-    BOOST_CHECK_EQUAL(num.GetCompact(true), 0x01fe0000U);
-    BOOST_CHECK_EQUAL(fNegative, true);
-    BOOST_CHECK_EQUAL(fOverflow, false);
+    EXPECT_EQ(num.GetHex(), "000000000000000000000000000000000000000000000000000000000000007e");
+    EXPECT_EQ(num.GetCompact(true), 0x01fe0000U);
+    EXPECT_EQ(fNegative, true);
+    EXPECT_EQ(fOverflow, false);
 
     num.SetCompact(0x02123456, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000001234");
-    BOOST_CHECK_EQUAL(num.GetCompact(), 0x02123400U);
-    BOOST_CHECK_EQUAL(fNegative, false);
-    BOOST_CHECK_EQUAL(fOverflow, false);
+    EXPECT_EQ(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000001234");
+    EXPECT_EQ(num.GetCompact(), 0x02123400U);
+    EXPECT_EQ(fNegative, false);
+    EXPECT_EQ(fOverflow, false);
 
     num.SetCompact(0x03123456, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000123456");
-    BOOST_CHECK_EQUAL(num.GetCompact(), 0x03123456U);
-    BOOST_CHECK_EQUAL(fNegative, false);
-    BOOST_CHECK_EQUAL(fOverflow, false);
+    EXPECT_EQ(num.GetHex(), "0000000000000000000000000000000000000000000000000000000000123456");
+    EXPECT_EQ(num.GetCompact(), 0x03123456U);
+    EXPECT_EQ(fNegative, false);
+    EXPECT_EQ(fOverflow, false);
 
     num.SetCompact(0x04123456, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000012345600");
-    BOOST_CHECK_EQUAL(num.GetCompact(), 0x04123456U);
-    BOOST_CHECK_EQUAL(fNegative, false);
-    BOOST_CHECK_EQUAL(fOverflow, false);
+    EXPECT_EQ(num.GetHex(), "0000000000000000000000000000000000000000000000000000000012345600");
+    EXPECT_EQ(num.GetCompact(), 0x04123456U);
+    EXPECT_EQ(fNegative, false);
+    EXPECT_EQ(fOverflow, false);
 
     num.SetCompact(0x04923456, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000012345600");
-    BOOST_CHECK_EQUAL(num.GetCompact(true), 0x04923456U);
-    BOOST_CHECK_EQUAL(fNegative, true);
-    BOOST_CHECK_EQUAL(fOverflow, false);
+    EXPECT_EQ(num.GetHex(), "0000000000000000000000000000000000000000000000000000000012345600");
+    EXPECT_EQ(num.GetCompact(true), 0x04923456U);
+    EXPECT_EQ(fNegative, true);
+    EXPECT_EQ(fOverflow, false);
 
     num.SetCompact(0x05009234, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(num.GetHex(), "0000000000000000000000000000000000000000000000000000000092340000");
-    BOOST_CHECK_EQUAL(num.GetCompact(), 0x05009234U);
-    BOOST_CHECK_EQUAL(fNegative, false);
-    BOOST_CHECK_EQUAL(fOverflow, false);
+    EXPECT_EQ(num.GetHex(), "0000000000000000000000000000000000000000000000000000000092340000");
+    EXPECT_EQ(num.GetCompact(), 0x05009234U);
+    EXPECT_EQ(fNegative, false);
+    EXPECT_EQ(fOverflow, false);
 
     num.SetCompact(0x20123456, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(num.GetHex(), "1234560000000000000000000000000000000000000000000000000000000000");
-    BOOST_CHECK_EQUAL(num.GetCompact(), 0x20123456U);
-    BOOST_CHECK_EQUAL(fNegative, false);
-    BOOST_CHECK_EQUAL(fOverflow, false);
+    EXPECT_EQ(num.GetHex(), "1234560000000000000000000000000000000000000000000000000000000000");
+    EXPECT_EQ(num.GetCompact(), 0x20123456U);
+    EXPECT_EQ(fNegative, false);
+    EXPECT_EQ(fOverflow, false);
 
     num.SetCompact(0xff123456, &fNegative, &fOverflow);
-    BOOST_CHECK_EQUAL(fNegative, false);
-    BOOST_CHECK_EQUAL(fOverflow, true);
+    EXPECT_EQ(fNegative, false);
+    EXPECT_EQ(fOverflow, true);
 }
 
-
-BOOST_AUTO_TEST_CASE( getmaxcoverage ) // some more tests just to get 100% coverage
+TEST(ArithUint256Tests, GetMaxCoverage) // some more tests just to get 100% coverage
 {
     // ~R1L give a base_uint<256>
-    BOOST_CHECK((~~R1L >> 10) == (R1L >> 10));
-    BOOST_CHECK((~~R1L << 10) == (R1L << 10));
-    BOOST_CHECK(!(~~R1L < R1L));
-    BOOST_CHECK(~~R1L <= R1L);
-    BOOST_CHECK(!(~~R1L > R1L));
-    BOOST_CHECK(~~R1L >= R1L);
-    BOOST_CHECK(!(R1L < ~~R1L));
-    BOOST_CHECK(R1L <= ~~R1L);
-    BOOST_CHECK(!(R1L > ~~R1L));
-    BOOST_CHECK(R1L >= ~~R1L);
+    EXPECT_TRUE((~~R1L >> 10) == (R1L >> 10));
+    EXPECT_TRUE((~~R1L << 10) == (R1L << 10));
+    EXPECT_TRUE(!(~~R1L < R1L));
+    EXPECT_TRUE(~~R1L <= R1L);
+    EXPECT_TRUE(!(~~R1L > R1L));
+    EXPECT_TRUE(~~R1L >= R1L);
+    EXPECT_TRUE(!(R1L < ~~R1L));
+    EXPECT_TRUE(R1L <= ~~R1L);
+    EXPECT_TRUE(!(R1L > ~~R1L));
+    EXPECT_TRUE(R1L >= ~~R1L);
 
-    BOOST_CHECK(~~R1L + R2L == R1L + ~~R2L);
-    BOOST_CHECK(~~R1L - R2L == R1L - ~~R2L);
-    BOOST_CHECK(~R1L != R1L); BOOST_CHECK(R1L != ~R1L);
+    EXPECT_TRUE(~~R1L + R2L == R1L + ~~R2L);
+    EXPECT_TRUE(~~R1L - R2L == R1L - ~~R2L);
+    EXPECT_TRUE(~R1L != R1L); EXPECT_TRUE(R1L != ~R1L);
     unsigned char TmpArray[32];
     CHECKBITWISEOPERATOR(~R1,R2,|)
     CHECKBITWISEOPERATOR(~R1,R2,^)
@@ -561,24 +557,24 @@ BOOST_AUTO_TEST_CASE( getmaxcoverage ) // some more tests just to get 100% cover
     CHECKBITWISEOPERATOR(R1,~R2,&)
 }
 
-BOOST_AUTO_TEST_CASE(conversion)
+TEST(ArithUint256Tests, Conversion)
 {
     for (const arith_uint256& arith : {ZeroL, OneL, R1L, R2L}) {
         const auto u256{uint256::FromHex(arith.GetHex()).value()};
-        BOOST_CHECK_EQUAL(UintToArith256(ArithToUint256(arith)), arith);
-        BOOST_CHECK_EQUAL(UintToArith256(u256), arith);
-        BOOST_CHECK_EQUAL(u256, ArithToUint256(arith));
-        BOOST_CHECK_EQUAL(ArithToUint256(arith).GetHex(), UintToArith256(u256).GetHex());
+        EXPECT_EQ(UintToArith256(ArithToUint256(arith)), arith);
+        EXPECT_EQ(UintToArith256(u256), arith);
+        EXPECT_EQ(u256, ArithToUint256(arith));
+        EXPECT_EQ(ArithToUint256(arith).GetHex(), UintToArith256(u256).GetHex());
     }
 
     for (uint8_t num : {0, 1, 0xff}) {
-        BOOST_CHECK_EQUAL(UintToArith256(uint256{num}), arith_uint256{num});
-        BOOST_CHECK_EQUAL(uint256{num}, ArithToUint256(arith_uint256{num}));
-        BOOST_CHECK_EQUAL(UintToArith256(uint256{num}), num);
+        EXPECT_EQ(UintToArith256(uint256{num}), arith_uint256{num});
+        EXPECT_EQ(uint256{num}, ArithToUint256(arith_uint256{num}));
+        EXPECT_EQ(UintToArith256(uint256{num}), num);
     }
 }
 
-BOOST_AUTO_TEST_CASE(operator_with_self)
+TEST(ArithUint256Tests, GeneratorWithSelf)
 {
     /* Clang 16 and earlier detects v -= v and v /= v as self-assignments
        to 0 and 1 respectively.
@@ -596,16 +592,14 @@ BOOST_AUTO_TEST_CASE(operator_with_self)
 #endif
     arith_uint256 v{2};
     v *= v;
-    BOOST_CHECK_EQUAL(v, arith_uint256{4});
+    EXPECT_EQ(v, arith_uint256{4});
     v /= v;
-    BOOST_CHECK_EQUAL(v, arith_uint256{1});
+    EXPECT_EQ(v, arith_uint256{1});
     v += v;
-    BOOST_CHECK_EQUAL(v, arith_uint256{2});
+    EXPECT_EQ(v, arith_uint256{2});
     v -= v;
-    BOOST_CHECK_EQUAL(v, arith_uint256{0});
+    EXPECT_EQ(v, arith_uint256{0});
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif
 }
-
-BOOST_AUTO_TEST_SUITE_END()

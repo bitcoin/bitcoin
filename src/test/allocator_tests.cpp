@@ -11,11 +11,9 @@
 #include <utility>
 #include <vector>
 
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 
-BOOST_AUTO_TEST_SUITE(allocator_tests)
-
-BOOST_AUTO_TEST_CASE(arena_tests)
+TEST(AllocatorTests, ArenaTests)
 {
     // Fake memory base address for testing
     // without actually using memory.
@@ -26,18 +24,18 @@ BOOST_AUTO_TEST_CASE(arena_tests)
 #ifdef ARENA_DEBUG
     b.walk();
 #endif
-    BOOST_CHECK(chunk != nullptr);
-    BOOST_CHECK(b.stats().used == 1008); // Aligned to 16
-    BOOST_CHECK(b.stats().total == synth_size); // Nothing has disappeared?
+    ASSERT_TRUE(chunk != nullptr);
+    ASSERT_TRUE(b.stats().used == 1008); // Aligned to 16
+    ASSERT_TRUE(b.stats().total == synth_size); // Nothing has disappeared?
     b.free(chunk);
 #ifdef ARENA_DEBUG
     b.walk();
 #endif
-    BOOST_CHECK(b.stats().used == 0);
-    BOOST_CHECK(b.stats().free == synth_size);
+    ASSERT_TRUE(b.stats().used == 0);
+    ASSERT_TRUE(b.stats().free == synth_size);
     try { // Test exception on double-free
         b.free(chunk);
-        BOOST_CHECK(0);
+        ASSERT_TRUE(0);
     } catch(std::runtime_error &)
     {
     }
@@ -45,8 +43,8 @@ BOOST_AUTO_TEST_CASE(arena_tests)
     void *a0 = b.alloc(128);
     void *a1 = b.alloc(256);
     void *a2 = b.alloc(512);
-    BOOST_CHECK(b.stats().used == 896);
-    BOOST_CHECK(b.stats().total == synth_size);
+    ASSERT_TRUE(b.stats().used == 896);
+    ASSERT_TRUE(b.stats().total == synth_size);
 #ifdef ARENA_DEBUG
     b.walk();
 #endif
@@ -54,25 +52,25 @@ BOOST_AUTO_TEST_CASE(arena_tests)
 #ifdef ARENA_DEBUG
     b.walk();
 #endif
-    BOOST_CHECK(b.stats().used == 768);
+    ASSERT_TRUE(b.stats().used == 768);
     b.free(a1);
-    BOOST_CHECK(b.stats().used == 512);
+    ASSERT_TRUE(b.stats().used == 512);
     void *a3 = b.alloc(128);
 #ifdef ARENA_DEBUG
     b.walk();
 #endif
-    BOOST_CHECK(b.stats().used == 640);
+    ASSERT_TRUE(b.stats().used == 640);
     b.free(a2);
-    BOOST_CHECK(b.stats().used == 128);
+    ASSERT_TRUE(b.stats().used == 128);
     b.free(a3);
-    BOOST_CHECK(b.stats().used == 0);
-    BOOST_CHECK_EQUAL(b.stats().chunks_used, 0U);
-    BOOST_CHECK(b.stats().total == synth_size);
-    BOOST_CHECK(b.stats().free == synth_size);
-    BOOST_CHECK_EQUAL(b.stats().chunks_free, 1U);
+    ASSERT_TRUE(b.stats().used == 0);
+    ASSERT_EQ(b.stats().chunks_used, 0U);
+    ASSERT_TRUE(b.stats().total == synth_size);
+    ASSERT_TRUE(b.stats().free == synth_size);
+    ASSERT_EQ(b.stats().chunks_free, 1U);
 
     std::vector<void*> addr;
-    BOOST_CHECK(b.alloc(0) == nullptr); // allocating 0 always returns nullptr
+    ASSERT_TRUE(b.alloc(0) == nullptr); // allocating 0 always returns nullptr
 #ifdef ARENA_DEBUG
     b.walk();
 #endif
@@ -80,14 +78,14 @@ BOOST_AUTO_TEST_CASE(arena_tests)
     addr.reserve(2048);
     for (int x=0; x<1024; ++x)
         addr.push_back(b.alloc(1024));
-    BOOST_CHECK(b.stats().free == 0);
-    BOOST_CHECK(b.alloc(1024) == nullptr); // memory is full, this must return nullptr
-    BOOST_CHECK(b.alloc(0) == nullptr);
+    ASSERT_TRUE(b.stats().free == 0);
+    ASSERT_TRUE(b.alloc(1024) == nullptr); // memory is full, this must return nullptr
+    ASSERT_TRUE(b.alloc(0) == nullptr);
     for (int x=0; x<1024; ++x)
         b.free(addr[x]);
     addr.clear();
-    BOOST_CHECK(b.stats().total == synth_size);
-    BOOST_CHECK(b.stats().free == synth_size);
+    ASSERT_TRUE(b.stats().total == synth_size);
+    ASSERT_TRUE(b.stats().free == synth_size);
 
     // Now in the other direction...
     for (int x=0; x<1024; ++x)
@@ -127,8 +125,8 @@ BOOST_AUTO_TEST_CASE(arena_tests)
         b.free(ptr);
     addr.clear();
 
-    BOOST_CHECK(b.stats().total == synth_size);
-    BOOST_CHECK(b.stats().free == synth_size);
+    ASSERT_TRUE(b.stats().total == synth_size);
+    ASSERT_TRUE(b.stats().free == synth_size);
 }
 
 /** Mock LockedPageAllocator for testing */
@@ -163,40 +161,40 @@ private:
     int lockedcount;
 };
 
-BOOST_AUTO_TEST_CASE(lockedpool_tests_mock)
+TEST(AllocatorTests, LockedpoolTestsMock)
 {
     // Test over three virtual arenas, of which one will succeed being locked
     std::unique_ptr<LockedPageAllocator> x = std::make_unique<TestLockedPageAllocator>(3, 1);
     LockedPool pool(std::move(x));
-    BOOST_CHECK(pool.stats().total == 0);
-    BOOST_CHECK(pool.stats().locked == 0);
+    ASSERT_TRUE(pool.stats().total == 0);
+    ASSERT_TRUE(pool.stats().locked == 0);
 
     // Ensure unreasonable requests are refused without allocating anything
     void *invalid_toosmall = pool.alloc(0);
-    BOOST_CHECK(invalid_toosmall == nullptr);
-    BOOST_CHECK(pool.stats().used == 0);
-    BOOST_CHECK(pool.stats().free == 0);
+    ASSERT_TRUE(invalid_toosmall == nullptr);
+    ASSERT_TRUE(pool.stats().used == 0);
+    ASSERT_TRUE(pool.stats().free == 0);
     void *invalid_toobig = pool.alloc(LockedPool::ARENA_SIZE+1);
-    BOOST_CHECK(invalid_toobig == nullptr);
-    BOOST_CHECK(pool.stats().used == 0);
-    BOOST_CHECK(pool.stats().free == 0);
+    ASSERT_TRUE(invalid_toobig == nullptr);
+    ASSERT_TRUE(pool.stats().used == 0);
+    ASSERT_TRUE(pool.stats().free == 0);
 
     void *a0 = pool.alloc(LockedPool::ARENA_SIZE / 2);
-    BOOST_CHECK(a0);
-    BOOST_CHECK(pool.stats().locked == LockedPool::ARENA_SIZE);
+    ASSERT_TRUE(a0);
+    ASSERT_TRUE(pool.stats().locked == LockedPool::ARENA_SIZE);
     void *a1 = pool.alloc(LockedPool::ARENA_SIZE / 2);
-    BOOST_CHECK(a1);
+    ASSERT_TRUE(a1);
     void *a2 = pool.alloc(LockedPool::ARENA_SIZE / 2);
-    BOOST_CHECK(a2);
+    ASSERT_TRUE(a2);
     void *a3 = pool.alloc(LockedPool::ARENA_SIZE / 2);
-    BOOST_CHECK(a3);
+    ASSERT_TRUE(a3);
     void *a4 = pool.alloc(LockedPool::ARENA_SIZE / 2);
-    BOOST_CHECK(a4);
+    ASSERT_TRUE(a4);
     void *a5 = pool.alloc(LockedPool::ARENA_SIZE / 2);
-    BOOST_CHECK(a5);
+    ASSERT_TRUE(a5);
     // We've passed a count of three arenas, so this allocation should fail
     void *a6 = pool.alloc(16);
-    BOOST_CHECK(!a6);
+    ASSERT_FALSE(a6);
 
     pool.free(a0);
     pool.free(a2);
@@ -204,36 +202,34 @@ BOOST_AUTO_TEST_CASE(lockedpool_tests_mock)
     pool.free(a1);
     pool.free(a3);
     pool.free(a5);
-    BOOST_CHECK(pool.stats().total == 3*LockedPool::ARENA_SIZE);
-    BOOST_CHECK(pool.stats().locked == LockedPool::ARENA_SIZE);
-    BOOST_CHECK(pool.stats().used == 0);
+    ASSERT_TRUE(pool.stats().total == 3*LockedPool::ARENA_SIZE);
+    ASSERT_TRUE(pool.stats().locked == LockedPool::ARENA_SIZE);
+    ASSERT_EQ(pool.stats().used, 0);
 }
 
 // These tests used the live LockedPoolManager object, this is also used
 // by other tests so the conditions are somewhat less controllable and thus the
 // tests are somewhat more error-prone.
-BOOST_AUTO_TEST_CASE(lockedpool_tests_live)
+TEST(AllocatorTests, LockedpoolTestsLive)
 {
     LockedPoolManager &pool = LockedPoolManager::Instance();
     LockedPool::Stats initial = pool.stats();
 
     void *a0 = pool.alloc(16);
-    BOOST_CHECK(a0);
+    ASSERT_TRUE(a0);
     // Test reading and writing the allocated memory
     *((uint32_t*)a0) = 0x1234;
-    BOOST_CHECK(*((uint32_t*)a0) == 0x1234);
+    ASSERT_TRUE(*((uint32_t*)a0) == 0x1234);
 
     pool.free(a0);
     try { // Test exception on double-free
         pool.free(a0);
-        BOOST_CHECK(0);
+        ASSERT_TRUE(0);
     } catch(std::runtime_error &)
     {
     }
     // If more than one new arena was allocated for the above tests, something is wrong
-    BOOST_CHECK(pool.stats().total <= (initial.total + LockedPool::ARENA_SIZE));
+    ASSERT_TRUE(pool.stats().total <= (initial.total + LockedPool::ARENA_SIZE));
     // Usage must be back to where it started
-    BOOST_CHECK(pool.stats().used == initial.used);
+    ASSERT_TRUE(pool.stats().used == initial.used);
 }
-
-BOOST_AUTO_TEST_SUITE_END()

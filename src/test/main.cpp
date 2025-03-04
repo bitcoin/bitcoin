@@ -7,18 +7,20 @@
  */
 #define BOOST_TEST_MODULE Bitcoin Core Test Suite
 
-#include <boost/test/included/unit_test.hpp>
+#include <gtest/gtest.h>
 
 #include <test/util/setup_common.h>
 
 #include <functional>
 #include <iostream>
 
+std::vector<const char*> COMMAND_LINE_ARGUMENTS;
+
 /** Redirect debug log to unit_test.log files */
 const std::function<void(const std::string&)> G_TEST_LOG_FUN = [](const std::string& s) {
     static const bool should_log{std::any_of(
-        &boost::unit_test::framework::master_test_suite().argv[1],
-        &boost::unit_test::framework::master_test_suite().argv[boost::unit_test::framework::master_test_suite().argc],
+        &COMMAND_LINE_ARGUMENTS[1],
+        &COMMAND_LINE_ARGUMENTS.back(),
         [](const char* arg) {
             return std::string{"DEBUG_LOG_OUT"} == arg;
         })};
@@ -33,16 +35,22 @@ const std::function<void(const std::string&)> G_TEST_LOG_FUN = [](const std::str
  * which would return `["-checkaddrman=1", "-printtoconsole=1"]`.
  */
 const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS = []() {
-    std::vector<const char*> args;
-    for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i) {
-        args.push_back(boost::unit_test::framework::master_test_suite().argv[i]);
-    }
-    return args;
+    return COMMAND_LINE_ARGUMENTS;
 };
 
 /**
  * Retrieve the boost unit test name.
  */
 const std::function<std::string()> G_TEST_GET_FULL_NAME = []() {
-    return boost::unit_test::framework::current_test_case().full_name();
+    const testing::TestInfo* test_info = testing::UnitTest::GetInstance()->current_test_info();
+    return std::string(test_info->name()) + "_" + test_info->test_suite_name();
 };
+
+int main(int argc, char* argv[])
+{
+    testing::InitGoogleTest(&argc, argv);
+    for (int i = 1; i < argc; ++i) {
+        COMMAND_LINE_ARGUMENTS.push_back(argv[i]);
+    }
+    return RUN_ALL_TESTS();
+}

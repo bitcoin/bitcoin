@@ -11,14 +11,14 @@
 #include <test/util/validation.h>
 #include <validation.h>
 
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 
-BOOST_AUTO_TEST_SUITE(coinstatsindex_tests)
+class CoinstatsindexTests : public TestChain100Setup, public testing::Test {};
 
-BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
+TEST_F(CoinstatsindexTests, InitialSync)
 {
     CoinStatsIndex coin_stats_index{interfaces::MakeChain(m_node), 1 << 20, true};
-    BOOST_REQUIRE(coin_stats_index.Init());
+    ASSERT_TRUE(coin_stats_index.Init());
 
     const CBlockIndex* block_index;
     {
@@ -27,13 +27,13 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
     }
 
     // CoinStatsIndex should not be found before it is started.
-    BOOST_CHECK(!coin_stats_index.LookUpStats(*block_index));
+    EXPECT_EQ(coin_stats_index.LookUpStats(*block_index), std::nullopt);
 
     // BlockUntilSyncedToCurrentChain should return false before CoinStatsIndex
     // is started.
-    BOOST_CHECK(!coin_stats_index.BlockUntilSyncedToCurrentChain());
+    EXPECT_FALSE(coin_stats_index.BlockUntilSyncedToCurrentChain());
 
-    BOOST_REQUIRE(coin_stats_index.StartBackgroundSync());
+    EXPECT_TRUE(coin_stats_index.StartBackgroundSync());
 
     IndexWaitSynced(coin_stats_index, *Assert(m_node.shutdown_signal));
 
@@ -43,26 +43,26 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
         LOCK(cs_main);
         genesis_block_index = m_node.chainman->ActiveChain().Genesis();
     }
-    BOOST_CHECK(coin_stats_index.LookUpStats(*genesis_block_index));
+    EXPECT_NE(coin_stats_index.LookUpStats(*genesis_block_index), std::nullopt);
 
     // Check that CoinStatsIndex updates with new blocks.
-    BOOST_CHECK(coin_stats_index.LookUpStats(*block_index));
+    EXPECT_NE(coin_stats_index.LookUpStats(*block_index), std::nullopt);
 
     const CScript script_pub_key{CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG};
     std::vector<CMutableTransaction> noTxns;
     CreateAndProcessBlock(noTxns, script_pub_key);
 
     // Let the CoinStatsIndex to catch up again.
-    BOOST_CHECK(coin_stats_index.BlockUntilSyncedToCurrentChain());
+    EXPECT_TRUE(coin_stats_index.BlockUntilSyncedToCurrentChain());
 
     const CBlockIndex* new_block_index;
     {
         LOCK(cs_main);
         new_block_index = m_node.chainman->ActiveChain().Tip();
     }
-    BOOST_CHECK(coin_stats_index.LookUpStats(*new_block_index));
+    EXPECT_NE(coin_stats_index.LookUpStats(*new_block_index), std::nullopt);
 
-    BOOST_CHECK(block_index != new_block_index);
+    EXPECT_NE(block_index, new_block_index);
 
     // It is not safe to stop and destroy the index until it finishes handling
     // the last BlockConnected notification. The BlockUntilSyncedToCurrentChain()
@@ -78,14 +78,14 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
 
 // Test shutdown between BlockConnected and ChainStateFlushed notifications,
 // make sure index is not corrupted and is able to reload.
-BOOST_FIXTURE_TEST_CASE(coinstatsindex_unclean_shutdown, TestChain100Setup)
+TEST_F(CoinstatsindexTests, UncleanShutdown)
 {
     Chainstate& chainstate = Assert(m_node.chainman)->ActiveChainstate();
     const CChainParams& params = Params();
     {
         CoinStatsIndex index{interfaces::MakeChain(m_node), 1 << 20};
-        BOOST_REQUIRE(index.Init());
-        BOOST_REQUIRE(index.StartBackgroundSync());
+        ASSERT_TRUE(index.Init());
+        ASSERT_TRUE(index.StartBackgroundSync());
         IndexWaitSynced(index, *Assert(m_node.shutdown_signal));
         std::shared_ptr<const CBlock> new_block;
         CBlockIndex* new_block_index = nullptr;
@@ -97,10 +97,10 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_unclean_shutdown, TestChain100Setup)
 
             LOCK(cs_main);
             BlockValidationState state;
-            BOOST_CHECK(CheckBlock(block, state, params.GetConsensus()));
-            BOOST_CHECK(m_node.chainman->AcceptBlock(new_block, state, &new_block_index, true, nullptr, nullptr, true));
+            EXPECT_TRUE(CheckBlock(block, state, params.GetConsensus()));
+            EXPECT_TRUE(m_node.chainman->AcceptBlock(new_block, state, &new_block_index, true, nullptr, nullptr, true));
             CCoinsViewCache view(&chainstate.CoinsTip());
-            BOOST_CHECK(chainstate.ConnectBlock(block, state, new_block_index, view));
+            EXPECT_TRUE(chainstate.ConnectBlock(block, state, new_block_index, view));
         }
         // Send block connected notification, then stop the index without
         // sending a chainstate flushed notification. Prior to #24138, this
@@ -111,11 +111,9 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_unclean_shutdown, TestChain100Setup)
 
     {
         CoinStatsIndex index{interfaces::MakeChain(m_node), 1 << 20};
-        BOOST_REQUIRE(index.Init());
+        EXPECT_TRUE(index.Init());
         // Make sure the index can be loaded.
-        BOOST_REQUIRE(index.StartBackgroundSync());
+        ASSERT_TRUE(index.StartBackgroundSync());
         index.Stop();
     }
 }
-
-BOOST_AUTO_TEST_SUITE_END()
