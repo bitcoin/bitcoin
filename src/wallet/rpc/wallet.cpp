@@ -577,6 +577,7 @@ static RPCHelpMan sethdseed()
 
     spk_man.SetHDSeed(master_pub_key);
     if (flush_key_pool) spk_man.NewKeyPool();
+    pwallet->RefreshAllTXOs();
 
     return UniValue::VNULL;
 },
