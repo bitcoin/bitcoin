@@ -4732,7 +4732,6 @@ bool Chainstate::LoadChainTip()
         // Ignoring return value for now.
         (void)m_chainman.GetNotifications().blockTip(GetSynchronizationState(/*init=*/true, m_chainman.m_blockman.m_blockfiles_indexed), *pindex);
     }
-
     return true;
 }
 
@@ -5613,11 +5612,8 @@ bool Chainstate::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
     return ret;
 }
 
-//! Guess how far we are in the verification process at the given block index
-//! require cs_main if pindex has not been validated yet (because m_chain_tx_count might be unset)
 double ChainstateManager::GuessVerificationProgress(const CBlockIndex* pindex) const
 {
-    const ChainTxData& data{GetParams().TxData()};
     if (pindex == nullptr) {
         return 0.0;
     }
@@ -5627,16 +5623,21 @@ double ChainstateManager::GuessVerificationProgress(const CBlockIndex* pindex) c
         return 0.0;
     }
 
-    int64_t nNow = time(nullptr);
-
-    double fTxTotal;
-
-    if (pindex->m_chain_tx_count <= data.tx_count) {
-        fTxTotal = data.tx_count + (nNow - data.nTime) * data.dTxRate;
-    } else {
-        fTxTotal = pindex->m_chain_tx_count + (nNow - pindex->GetBlockTime()) * data.dTxRate;
+    int64_t end_of_chain_timestamp = TicksSinceEpoch<std::chrono::seconds>(NodeClock::time_point{std::chrono::seconds{pindex->GetBlockTime()}});
+    if (m_best_header && m_best_header->nChainWork > pindex->nChainWork) {
+        int64_t header_age = TicksSinceEpoch<std::chrono::seconds>(Now<NodeSeconds>()) - m_best_header->GetBlockTime();
+        if (header_age < 24 * 60 * 60) {
+            end_of_chain_timestamp = std::max(end_of_chain_timestamp, m_best_header->GetBlockTime());
+        }
     }
 
+    double fTxTotal;
+    const ChainTxData& data{GetParams().TxData()};
+    if (pindex->m_chain_tx_count <= data.tx_count) {
+        fTxTotal = data.tx_count + (end_of_chain_timestamp - data.nTime) * data.dTxRate;
+    } else {
+        fTxTotal = pindex->m_chain_tx_count + (end_of_chain_timestamp - pindex->GetBlockTime()) * data.dTxRate;
+    }
     return std::min<double>(pindex->m_chain_tx_count / fTxTotal, 1.0);
 }
 
