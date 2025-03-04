@@ -37,6 +37,7 @@
 #include <scheduler.h>
 #include <script/sigcache.h>
 #include <streams.h>
+#include <test/util/coverage.h>
 #include <test/util/net.h>
 #include <test/util/random.h>
 #include <test/util/txmempool.h>
@@ -80,6 +81,7 @@ static const bool g_rng_temp_path_init{[] {
     Assert(!g_used_g_prng);
     (void)g_rng_temp_path.rand64();
     g_used_g_prng = false;
+    ResetCoverageCounters(); // The seed strengthen in SeedStartup is not deterministic, so exclude it from coverage counts
     return true;
 }()};
 
