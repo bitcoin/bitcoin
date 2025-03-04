@@ -14,7 +14,12 @@
 #define BITCOIN_NODE_TYPES_H
 
 #include <cstddef>
+#include <vector>
+
+#include <consensus/amount.h>
+#include <primitives/block.h>
 #include <script/script.h>
+#include <util/feefrac.h>
 
 namespace node {
 enum class TransactionError {
@@ -61,6 +66,17 @@ struct BlockCreateOptions {
      */
     CScript coinbase_output_script{CScript() << OP_TRUE};
 };
+
+struct CBlockTemplate {
+    CBlock block;
+    std::vector<CAmount> vTxFees;
+    std::vector<int64_t> vTxSigOpsCost;
+    std::vector<unsigned char> vchCoinbaseCommitment;
+    /* A vector of package fee rates, ordered by the sequence in which
+     * packages are selected for inclusion in the block template.*/
+    std::vector<FeeFrac> m_package_feerates;
+};
+
 } // namespace node
 
 #endif // BITCOIN_NODE_TYPES_H

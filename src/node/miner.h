@@ -34,17 +34,6 @@ namespace Consensus { struct Params; };
 namespace node {
 static const bool DEFAULT_PRINT_MODIFIED_FEE = false;
 
-struct CBlockTemplate
-{
-    CBlock block;
-    std::vector<CAmount> vTxFees;
-    std::vector<int64_t> vTxSigOpsCost;
-    std::vector<unsigned char> vchCoinbaseCommitment;
-    /* A vector of package fee rates, ordered by the sequence in which
-     * packages are selected for inclusion in the block template.*/
-    std::vector<FeeFrac> m_package_feerates;
-};
-
 // Container for tracking updates to ancestor feerate as we include (parent)
 // transactions in a block
 struct CTxMemPoolModifiedEntry {
