@@ -354,28 +354,26 @@ void BitcoinGUI::stopConnectingAnimation()
 
 void BitcoinGUI::createActions()
 {
-    sendCoinsMenuAction = new QAction(tr("&Send"), this);
-    sendCoinsMenuAction->setStatusTip(tr("Send coins to a Dash address"));
-    sendCoinsMenuAction->setToolTip(sendCoinsMenuAction->statusTip());
-
+    sendCoinsAction = new QAction(tr("&Send"), this);
+    sendCoinsAction->setStatusTip(tr("Send coins to a Dash address"));
     QString strCoinJoinName = QString::fromStdString(gCoinJoinName);
-    coinJoinCoinsMenuAction = new QAction(QString("&%1").arg(strCoinJoinName), this);
-    coinJoinCoinsMenuAction->setStatusTip(tr("Send %1 funds to a Dash address").arg(strCoinJoinName));
-    coinJoinCoinsMenuAction->setToolTip(coinJoinCoinsMenuAction->statusTip());
+    coinJoinCoinsAction = new QAction(QString("&%1").arg(strCoinJoinName), this);
+    coinJoinCoinsAction->setStatusTip(tr("Send %1 funds to a Dash address").arg(strCoinJoinName));
+    coinJoinCoinsAction->setToolTip(coinJoinCoinsAction->statusTip());
 
-    receiveCoinsMenuAction = new QAction(tr("&Receive"), this);
-    receiveCoinsMenuAction->setStatusTip(tr("Request payments (generates QR codes and dash: URIs)"));
-    receiveCoinsMenuAction->setToolTip(receiveCoinsMenuAction->statusTip());
+    receiveCoinsAction = new QAction(tr("&Receive"), this);
+    receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and dash: URIs)"));
+    receiveCoinsAction->setToolTip(receiveCoinsAction->statusTip());
 
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
-    connect(sendCoinsMenuAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
-    connect(coinJoinCoinsMenuAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
-    connect(receiveCoinsMenuAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
-    connect(sendCoinsMenuAction, &QAction::triggered, [this]{ gotoSendCoinsPage(); });
-    connect(coinJoinCoinsMenuAction, &QAction::triggered, [this]{ gotoCoinJoinCoinsPage(); });
-    connect(receiveCoinsMenuAction, &QAction::triggered, this, &BitcoinGUI::gotoReceiveCoinsPage);
+    connect(sendCoinsAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
+    connect(sendCoinsAction, &QAction::triggered, [this]{ gotoSendCoinsPage(); });
+    connect(coinJoinCoinsAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
+    connect(coinJoinCoinsAction, &QAction::triggered, [this]{ gotoCoinJoinCoinsPage(); });
+    connect(receiveCoinsAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
+    connect(receiveCoinsAction, &QAction::triggered, this, &BitcoinGUI::gotoReceiveCoinsPage);
 #endif
 
     quitAction = new QAction(tr("E&xit"), this);
@@ -393,8 +391,6 @@ void BitcoinGUI::createActions()
     optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(PACKAGE_NAME));
     optionsAction->setMenuRole(QAction::PreferencesRole);
     optionsAction->setEnabled(false);
-    toggleHideAction = new QAction(tr("&Show / Hide"), this);
-    toggleHideAction->setStatusTip(tr("Show or hide the main Window"));
 
     encryptWalletAction = new QAction(tr("&Encrypt Wallet…"), this);
     encryptWalletAction->setStatusTip(tr("Encrypt the private keys that belong to your wallet"));
@@ -478,7 +474,6 @@ void BitcoinGUI::createActions()
     connect(aboutAction, &QAction::triggered, this, &BitcoinGUI::aboutClicked);
     connect(aboutQtAction, &QAction::triggered, qApp, QApplication::aboutQt);
     connect(optionsAction, &QAction::triggered, this, &BitcoinGUI::optionsClicked);
-    connect(toggleHideAction, &QAction::triggered, this, &BitcoinGUI::toggleHidden);
     connect(showHelpMessageAction, &QAction::triggered, this, &BitcoinGUI::showHelpMessageClicked);
     connect(showCoinJoinHelpAction, &QAction::triggered, this, &BitcoinGUI::showCoinJoinHelpClicked);
 
@@ -684,13 +679,13 @@ void BitcoinGUI::createToolBars()
         tabGroup->addButton(overviewButton);
 
         sendCoinsButton = new QToolButton(this);
-        sendCoinsButton->setText(sendCoinsMenuAction->text());
-        sendCoinsButton->setStatusTip(sendCoinsMenuAction->statusTip());
+        sendCoinsButton->setText(sendCoinsAction->text());
+        sendCoinsButton->setStatusTip(sendCoinsAction->statusTip());
         tabGroup->addButton(sendCoinsButton);
 
         receiveCoinsButton = new QToolButton(this);
-        receiveCoinsButton->setText(receiveCoinsMenuAction->text());
-        receiveCoinsButton->setStatusTip(receiveCoinsMenuAction->statusTip());
+        receiveCoinsButton->setText(receiveCoinsAction->text());
+        receiveCoinsButton->setStatusTip(receiveCoinsAction->statusTip());
         tabGroup->addButton(receiveCoinsButton);
 
         historyButton = new QToolButton(this);
@@ -699,8 +694,8 @@ void BitcoinGUI::createToolBars()
         tabGroup->addButton(historyButton);
 
         coinJoinCoinsButton = new QToolButton(this);
-        coinJoinCoinsButton->setText(coinJoinCoinsMenuAction->text());
-        coinJoinCoinsButton->setStatusTip(coinJoinCoinsMenuAction->statusTip());
+        coinJoinCoinsButton->setText(coinJoinCoinsAction->text());
+        coinJoinCoinsButton->setStatusTip(coinJoinCoinsAction->statusTip());
         tabGroup->addButton(coinJoinCoinsButton);
 
         QSettings settings;
@@ -796,17 +791,24 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
 #ifndef Q_OS_MAC
             // Show main window on tray icon click
             // Note: ignore this on Mac - this is not the way tray should work there
-            connect(trayIcon, &QSystemTrayIcon::activated, this, &BitcoinGUI::trayIconActivated);
+            connect(trayIcon, &QSystemTrayIcon::activated, [this](QSystemTrayIcon::ActivationReason reason) {
+                if (reason == QSystemTrayIcon::Trigger) {
+                    // Click on system tray icon triggers show/hide of the main window
+                    toggleHidden();
+                }
+            });
 #else
             // Note: on macOS, the Dock icon is also used to provide menu functionality
             // similar to one for tray icon
-            MacDockIconHandler *dockIconHandler = MacDockIconHandler::instance();
-            connect(dockIconHandler, &MacDockIconHandler::dockIconClicked, this, &BitcoinGUI::macosDockIconActivated);
-
             dockIconMenu = new QMenu(this);
             dockIconMenu->setAsDockMenu();
-
             createIconMenu(dockIconMenu);
+
+            MacDockIconHandler *dockIconHandler = MacDockIconHandler::instance();
+            connect(dockIconHandler, &MacDockIconHandler::dockIconClicked, [this] {
+                showNormalIfMinimized();
+                activateWindow();
+            });
 #endif
         }
 
@@ -856,8 +858,6 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
             connect(optionsModel, &OptionsModel::coinJoinEnabledChanged, this, &BitcoinGUI::updateCoinJoinVisibility);
         }
     } else {
-        // Disable possibility to show main window via action
-        toggleHideAction->setEnabled(false);
         if(trayIconMenu)
         {
             // Disable context menu on tray icon
@@ -997,13 +997,13 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     }
 #endif // ENABLE_WALLET
 
-    sendCoinsMenuAction->setEnabled(enabled);
+    sendCoinsAction->setEnabled(enabled);
 #ifdef ENABLE_WALLET
-    coinJoinCoinsMenuAction->setEnabled(enabled && clientModel->coinJoinOptions().isEnabled());
+    coinJoinCoinsAction->setEnabled(enabled && clientModel->coinJoinOptions().isEnabled());
 #else
-    coinJoinCoinsMenuAction->setEnabled(enabled);
+    coinJoinCoinsAction->setEnabled(enabled);
 #endif // ENABLE_WALLET
-    receiveCoinsMenuAction->setEnabled(enabled);
+    receiveCoinsAction->setEnabled(enabled);
 
     encryptWalletAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
@@ -1033,55 +1033,84 @@ void BitcoinGUI::createTrayIcon()
 void BitcoinGUI::createIconMenu(QMenu *pmenu)
 {
     // Configuration of the tray icon (or dock icon) icon menu
+    QAction* show_hide_action{nullptr};
 #ifndef Q_OS_MAC
     // Note: On macOS, the Dock icon is used to provide the tray's functionality.
-    trayIconMenu->addAction(toggleHideAction);
-    trayIconMenu->addSeparator();
-#endif
-    if (enableWallet) {
-        pmenu->addAction(sendCoinsMenuAction);
-        pmenu->addAction(coinJoinCoinsMenuAction);
-        pmenu->addAction(receiveCoinsMenuAction);
-        pmenu->addSeparator();
-        pmenu->addAction(signMessageAction);
-        pmenu->addAction(verifyMessageAction);
-        pmenu->addSeparator();
-    }
-    pmenu->addAction(optionsAction);
-    pmenu->addAction(openInfoAction);
-    pmenu->addAction(openRPCConsoleAction);
-    pmenu->addAction(openGraphAction);
-    pmenu->addAction(openPeersAction);
-    if (enableWallet) {
-        pmenu->addAction(openRepairAction);
-    }
+    show_hide_action = pmenu->addAction(QString(), this, &BitcoinGUI::toggleHidden);
     pmenu->addSeparator();
-    pmenu->addAction(openConfEditorAction);
-    if (enableWallet) {
-        pmenu->addAction(showBackupsAction);
-    }
-#ifndef Q_OS_MAC // This is built-in on macOS
-    pmenu->addSeparator();
-    pmenu->addAction(quitAction);
-#endif
-}
+#endif // Q_OS_MAC
 
-#ifndef Q_OS_MAC
-void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
-{
-    if(reason == QSystemTrayIcon::Trigger)
-    {
-        // Click on system tray icon triggers show/hide of the main window
-        toggleHidden();
+    QAction* send_action{nullptr};
+    QAction* cj_send_action{nullptr};
+    QAction* receive_action{nullptr};
+    QAction* sign_action{nullptr};
+    QAction* verify_action{nullptr};
+    if (enableWallet) {
+        send_action = pmenu->addAction(sendCoinsAction->text(), sendCoinsAction, &QAction::trigger);
+        cj_send_action = pmenu->addAction(coinJoinCoinsAction->text(), coinJoinCoinsAction, &QAction::trigger);
+        receive_action = pmenu->addAction(receiveCoinsAction->text(), receiveCoinsAction, &QAction::trigger);
+        pmenu->addSeparator();
+        sign_action = pmenu->addAction(signMessageAction->text(), signMessageAction, &QAction::trigger);
+        verify_action = pmenu->addAction(verifyMessageAction->text(), verifyMessageAction, &QAction::trigger);
+        pmenu->addSeparator();
     }
+    QAction* options_action = pmenu->addAction(optionsAction->text(), optionsAction, &QAction::trigger);
+    options_action->setMenuRole(QAction::PreferencesRole);
+    QAction* info_action = pmenu->addAction(openInfoAction->text(), openInfoAction, &QAction::trigger);
+    QAction* node_window_action = pmenu->addAction(openRPCConsoleAction->text(), openRPCConsoleAction, &QAction::trigger);
+    QAction* graph_action = pmenu->addAction(openGraphAction->text(), openGraphAction, &QAction::trigger);
+    QAction* peer_action = pmenu->addAction(openPeersAction->text(), openPeersAction, &QAction::trigger);
+    QAction* repair_action{nullptr};
+    if (enableWallet) {
+        repair_action = pmenu->addAction(openRepairAction->text(), openRepairAction, &QAction::trigger);
+    }
+    pmenu->addSeparator();
+    QAction* conf_action = pmenu->addAction(openConfEditorAction->text(), openConfEditorAction, &QAction::trigger);
+    QAction* backups_action{nullptr};
+    if (enableWallet) {
+        backups_action = pmenu->addAction(showBackupsAction->text(), showBackupsAction, &QAction::trigger);
+    }
+    QAction* quit_action{nullptr};
+#ifndef Q_OS_MAC
+    // Note: On macOS, the Dock icon's menu already has Quit action.
+    pmenu->addSeparator();
+    quit_action = pmenu->addAction(quitAction->text(), quitAction, &QAction::trigger);
+#endif // Q_OS_MAC
+
+    connect(
+        // Using QSystemTrayIcon::Context is not reliable.
+        // See https://bugreports.qt.io/browse/QTBUG-91697
+        pmenu, &QMenu::aboutToShow,
+        [this, show_hide_action, send_action, cj_send_action, receive_action, sign_action, verify_action, options_action, node_window_action, quit_action, repair_action, backups_action, info_action, graph_action, peer_action, conf_action] {
+            if (show_hide_action) show_hide_action->setText(
+                (!isHidden() && !isMinimized() && !GUIUtil::isObscured(this)) ?
+                    tr("&Hide") :
+                    tr("S&how"));
+            if (QApplication::activeModalWidget()) {
+                for (QAction* a : trayIconMenu.get()->actions()) {
+                    a->setEnabled(false);
+                }
+            } else {
+                if (show_hide_action) show_hide_action->setEnabled(true);
+                if (enableWallet) {
+                    send_action->setEnabled(sendCoinsAction->isEnabled());
+                    cj_send_action->setEnabled(coinJoinCoinsAction->isEnabled());
+                    receive_action->setEnabled(receiveCoinsAction->isEnabled());
+                    sign_action->setEnabled(signMessageAction->isEnabled());
+                    verify_action->setEnabled(verifyMessageAction->isEnabled());
+                    repair_action->setEnabled(openRepairAction->isEnabled());
+                    backups_action->setEnabled(showBackupsAction->isEnabled());
+                }
+                options_action->setEnabled(optionsAction->isEnabled());
+                info_action->setEnabled(openInfoAction->isEnabled());
+                node_window_action->setEnabled(openRPCConsoleAction->isEnabled());
+                graph_action->setEnabled(openGraphAction->isEnabled());
+                peer_action->setEnabled(openPeersAction->isEnabled());
+                conf_action->setEnabled(openConfEditorAction->isEnabled());
+                if (quit_action) quit_action->setEnabled(true);
+            }
+        });
 }
-#else
-void BitcoinGUI::macosDockIconActivated()
-{
-    showNormalIfMinimized();
-    activateWindow();
-}
-#endif
 
 void BitcoinGUI::optionsClicked()
 {
@@ -1094,7 +1123,7 @@ void BitcoinGUI::aboutClicked()
         return;
 
     auto dlg = new HelpMessageDialog(this, HelpMessageDialog::about);
-    GUIUtil::ShowModalDialogAndDeleteOnClose(dlg);
+    GUIUtil::ShowModalDialogAsynchronously(dlg);
 }
 
 void BitcoinGUI::showDebugWindow()
@@ -1356,7 +1385,7 @@ void BitcoinGUI::openOptionsDialogWithTab(OptionsDialog::Tab tab)
     connect(dlg, &OptionsDialog::appearanceChanged, [this]() {
         updateWidth();
     });
-    GUIUtil::ShowModalDialogAndDeleteOnClose(dlg);
+    GUIUtil::ShowModalDialogAsynchronously(dlg);
 
     updateCoinJoinVisibility();
 }
@@ -1391,7 +1420,7 @@ void BitcoinGUI::updateCoinJoinVisibility()
         coinJoinCoinsButton->setVisible(fEnabled);
         GUIUtil::updateButtonGroupShortcuts(tabGroup);
     }
-    coinJoinCoinsMenuAction->setVisible(fEnabled);
+    coinJoinCoinsAction->setVisible(fEnabled);
     showCoinJoinHelpAction->setVisible(fEnabled);
     updateWidth();
 }
