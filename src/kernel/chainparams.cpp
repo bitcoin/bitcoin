@@ -167,24 +167,6 @@ public:
         fDefaultConsistencyChecks = false;
         m_is_mockable_chain = false;
 
-        checkpointData = {
-            {
-                { 11111, uint256{"0000000069e244f73d78e8fd29ba2fd2ed618bd6fa2ee92559f542fdb26e7c1d"}},
-                { 33333, uint256{"000000002dd5588a74784eaa7ab0507a18ad16a236e7b1ce69f00d7ddfb5d0a6"}},
-                { 74000, uint256{"0000000000573993a3c9e41ce34471c079dcf5f52a0e824a81e7f953b8661a20"}},
-                {105000, uint256{"00000000000291ce28027faea320c8d2b054b2e0fe44a773f3eefb151d6bdc97"}},
-                {134444, uint256{"00000000000005b12ffd4cd315cd34ffd4a594f430ac814c91184a0d42d2b0fe"}},
-                {168000, uint256{"000000000000099e61ea72015e79632f216fe6cb33d7899acb35b75c8303b763"}},
-                {193000, uint256{"000000000000059f452a5f7340de6682a977387c17010ff6e6c3bd83ca8b1317"}},
-                {210000, uint256{"000000000000048b95347e83192f69cf0366076336c639f9b7228e9ba171342e"}},
-                {216116, uint256{"00000000000001b4f4b433e81ee46494af945cf96014816a4e2370f11b23df4e"}},
-                {225430, uint256{"00000000000001c108384350f74090433e7fcf79a606b8e797f065b130575932"}},
-                {250000, uint256{"000000000000003887df1f29024b06fc2200b55f8af8f35453d7be294df2d214"}},
-                {279000, uint256{"0000000000000001ae8c72a0b0c301f67e3afca10e819efa9041e458e9bd7e40"}},
-                {295000, uint256{"00000000000000004d9b4ef50f0f9d686fd69db2e03af35a100370c64632a983"}},
-            }
-        };
-
         m_assumeutxo_data = {
             {
                 .height = 840'000,
@@ -199,107 +181,6 @@ public:
             .nTime    = 1723649144,
             .tx_count = 1059312821,
             .dTxRate  = 6.721086701157182,
-        };
-    }
-};
-
-/**
- * Testnet (v3): public test network which is reset from time to time.
- */
-class CTestNetParams : public CChainParams {
-public:
-    CTestNetParams() {
-        m_chain_type = ChainType::TESTNET;
-        consensus.signet_blocks = false;
-        consensus.signet_challenge.clear();
-        consensus.nSubsidyHalvingInterval = 210000;
-        consensus.script_flag_exceptions.emplace( // BIP16 exception
-            uint256{"00000000dd30457c001f4095d208cc1296b0eed002427aa599874af7a432b105"}, SCRIPT_VERIFY_NONE);
-        consensus.BIP34Height = 21111;
-        consensus.BIP34Hash = uint256{"0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8"};
-        consensus.BIP65Height = 581885; // 00000000007f6655f22f98e72ed80d8b06dc761d5da09df0fa1dc4be4f861eb6
-        consensus.BIP66Height = 330776; // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
-        consensus.CSVHeight = 770112; // 00000000025e930139bac5c6c31a403776da130831ab85be56578f3fa75369bb
-        consensus.SegwitHeight = 834624; // 00000000002b980fcd729daaa248fd9316a5200e9b367f4ff2c42453e84201ca
-        consensus.MinBIP9WarningHeight = 836640; // segwit activation height + miner confirmation window
-        consensus.powLimit = uint256{"00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
-        consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-        consensus.nPowTargetSpacing = 10 * 60;
-        consensus.fPowAllowMinDifficultyBlocks = true;
-        consensus.enforce_BIP94 = false;
-        consensus.fPowNoRetargeting = false;
-        consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
-        consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].min_activation_height = 0; // No activation delay
-
-        // Deployment of Taproot (BIPs 340-342)
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartTime = 1619222400; // April 24th, 2021
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1628640000; // August 11th, 2021
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
-
-        consensus.nMinimumChainWork = uint256{"000000000000000000000000000000000000000000000f209695166be8b61fa9"};
-        consensus.defaultAssumeValid = uint256{"000000000000000465b1a66c9f386308e8c75acef9201f3f577811da09fc90ad"}; // 2873500
-
-        pchMessageStart[0] = 0x0b;
-        pchMessageStart[1] = 0x11;
-        pchMessageStart[2] = 0x09;
-        pchMessageStart[3] = 0x07;
-        nDefaultPort = 18333;
-        nPruneAfterHeight = 1000;
-        m_assumed_blockchain_size = 93;
-        m_assumed_chain_state_size = 19;
-
-        genesis = CreateGenesisBlock(1296688602, 414098458, 0x1d00ffff, 1, 50 * COIN);
-        consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256{"000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943"});
-        assert(genesis.hashMerkleRoot == uint256{"4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"});
-
-        vFixedSeeds.clear();
-        vSeeds.clear();
-        // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("testnet-seed.bitcoin.jonasschnelli.ch.");
-        vSeeds.emplace_back("seed.tbtc.petertodd.net.");
-        vSeeds.emplace_back("seed.testnet.bitcoin.sprovoost.nl.");
-        vSeeds.emplace_back("testnet-seed.bluematt.me."); // Just a static list of stable node(s), only supports x9
-        vSeeds.emplace_back("seed.testnet.achownodes.xyz."); // Ava Chow, only supports x1, x5, x9, x49, x809, x849, xd, x400, x404, x408, x448, xc08, xc48, x40c
-
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
-        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
-        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
-        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
-
-        bech32_hrp = "tb";
-
-        vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_test), std::end(chainparams_seed_test));
-
-        fDefaultConsistencyChecks = false;
-        m_is_mockable_chain = false;
-
-        checkpointData = {
-            {
-                {546, uint256{"000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70"}},
-            }
-        };
-
-        m_assumeutxo_data = {
-            {
-                .height = 2'500'000,
-                .hash_serialized = AssumeutxoHash{uint256{"f841584909f68e47897952345234e37fcd9128cd818f41ee6c3ca68db8071be7"}},
-                .m_chain_tx_count = 66484552,
-                .blockhash = consteval_ctor(uint256{"0000000000000093bcb68c03a9a168ae252572d348a2eaeba2cdf9231d73206f"}),
-            }
-        };
-
-        chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 000000000000000465b1a66c9f386308e8c75acef9201f3f577811da09fc90ad
-            .nTime    = 1723613341,
-            .tx_count = 187917082,
-            .dTxRate  = 3.265051477698455,
         };
     }
 };
@@ -383,12 +264,6 @@ public:
 
         fDefaultConsistencyChecks = false;
         m_is_mockable_chain = false;
-
-        checkpointData = {
-            {
-                {},
-            }
-        };
 
         m_assumeutxo_data = {
             {}
@@ -607,12 +482,6 @@ public:
         fDefaultConsistencyChecks = true;
         m_is_mockable_chain = true;
 
-        checkpointData = {
-            {
-                {0, uint256{"0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"}},
-            }
-        };
-
         m_assumeutxo_data = {
             {   // For use by unit tests
                 .height = 110,
@@ -667,11 +536,6 @@ std::unique_ptr<const CChainParams> CChainParams::Main()
     return std::make_unique<const CMainParams>();
 }
 
-std::unique_ptr<const CChainParams> CChainParams::TestNet()
-{
-    return std::make_unique<const CTestNetParams>();
-}
-
 std::unique_ptr<const CChainParams> CChainParams::TestNet4()
 {
     return std::make_unique<const CTestNet4Params>();
@@ -691,15 +555,12 @@ std::vector<int> CChainParams::GetAvailableSnapshotHeights() const
 std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
 {
     const auto mainnet_msg = CChainParams::Main()->MessageStart();
-    const auto testnet_msg = CChainParams::TestNet()->MessageStart();
     const auto testnet4_msg = CChainParams::TestNet4()->MessageStart();
     const auto regtest_msg = CChainParams::RegTest({})->MessageStart();
     const auto signet_msg = CChainParams::SigNet({})->MessageStart();
 
     if (std::ranges::equal(message, mainnet_msg)) {
         return ChainType::MAIN;
-    } else if (std::ranges::equal(message, testnet_msg)) {
-        return ChainType::TESTNET;
     } else if (std::ranges::equal(message, testnet4_msg)) {
         return ChainType::TESTNET4;
     } else if (std::ranges::equal(message, regtest_msg)) {

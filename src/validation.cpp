@@ -2589,10 +2589,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     // coinbase. The two historical BIP30 violations often provide a confusing
     // edge case when manipulating the UTXO and it would be simpler not to have
     // another edge case to deal with.
-
-    // testnet3 has no blocks before the BIP34 height with indicated heights
-    // post BIP34 before approximately height 486,000,000. After block
-    // 1,983,702 testnet3 starts doing unnecessary BIP30 checking again.
     assert(pindex->pprev);
     CBlockIndex* pindexBIP34height = pindex->pprev->GetAncestor(params.GetConsensus().BIP34Height);
     //Only continue to enforce if we're below BIP34 activation height or the block hash at that height doesn't correspond.
@@ -4213,18 +4209,6 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     const Consensus::Params& consensusParams = chainman.GetConsensus();
     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", "incorrect proof of work");
-
-    // Check against checkpoints
-    if (chainman.m_options.checkpoints_enabled) {
-        // Don't accept any forks from the main chain prior to last checkpoint.
-        // GetLastCheckpoint finds the last checkpoint in MapCheckpoints that's in our
-        // BlockIndex().
-        const CBlockIndex* pcheckpoint = blockman.GetLastCheckpoint(chainman.GetParams().Checkpoints());
-        if (pcheckpoint && nHeight < pcheckpoint->nHeight) {
-            LogPrintf("ERROR: %s: forked chain older than last checkpoint (height %d)\n", __func__, nHeight);
-            return state.Invalid(BlockValidationResult::BLOCK_CHECKPOINT, "bad-fork-prior-to-checkpoint");
-        }
-    }
 
     // Check timestamp against prev
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())

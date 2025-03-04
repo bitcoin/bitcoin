@@ -92,7 +92,7 @@ enum BlockStatus : uint32_t {
     //! Reserved (was BLOCK_VALID_HEADER).
     BLOCK_VALID_RESERVED     =    1,
 
-    //! All parent headers found, difficulty matches, timestamp >= median previous, checkpoint. Implies all parents
+    //! All parent headers found, difficulty matches, timestamp >= median previous. Implies all parents
     //! are also at least TREE.
     BLOCK_VALID_TREE         =    2,
 
