@@ -1,0 +1,16 @@
+// Copyright (c) 2019 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#ifndef MP_CONFIG_H
+#define MP_CONFIG_H
+
+#cmakedefine CMAKE_INSTALL_PREFIX "@CMAKE_INSTALL_PREFIX@"
+#cmakedefine capnp_PREFIX "@capnp_PREFIX@"
+#cmakedefine HAVE_KJ_FILESYSTEM
+
+#cmakedefine HAVE_PTHREAD_GETNAME_NP @HAVE_PTHREAD_GETNAME_NP@
+#cmakedefine HAVE_PTHREAD_THREADID_NP @HAVE_PTHREAD_THREADID_NP@
+#cmakedefine HAVE_PTHREAD_GETTHREADID_NP @HAVE_PTHREAD_GETTHREADID_NP@
+
+#endif // MP_CONFIG_H
