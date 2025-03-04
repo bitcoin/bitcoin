@@ -16,6 +16,8 @@
 
 - [Legacy subdirectories and files](#legacy-subdirectories-and-files)
 
+- [Filesystem recommendations](#filesystem-recommendations)
+
 - [Notes](#notes)
 
 ## Data directory location
@@ -122,6 +124,12 @@ Path           | Description | Repository notes
 `blk000?.dat`  | Block data (custom format, 2 GiB per file); replaced by `blocks/blkNNNNN.dat`<sup>[\[2\]](#note2)</sup> in 0.8.0 | [PR #1677](https://github.com/bitcoin/bitcoin/pull/1677)
 `addr.dat`     | Peer IP address BDB database; replaced by `peers.dat` in [0.7.0](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.7.0.md) | [PR #1198](https://github.com/bitcoin/bitcoin/pull/1198), [`928d3a01`](https://github.com/bitcoin/bitcoin/commit/928d3a011cc66c7f907c4d053f674ea77dc611cc)
 `onion_private_key` | Cached Tor onion service private key for `-listenonion` option. Was used for Tor v2 services; replaced by `onion_v3_private_key` in [0.21.0](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.21.0.md) | [PR #19954](https://github.com/bitcoin/bitcoin/pull/19954)
+
+## Filesystem recommendations
+
+When choosing a filesystem for the data directory (`datadir`) or blocks directory (`blocksdir`), some filesystems should be avoided:
+
+- **macOS**: The exFAT filesystem should not be used. There have been multiple reports of database and other corruption when using exFAT on macOS for Bitcoin Core. This appears to be due to filesystem-level issues with exFAT on the macOS operating system. See [Issue #31454](https://github.com/bitcoin/bitcoin/issues/31454) for more details.
 
 ## Notes
 
