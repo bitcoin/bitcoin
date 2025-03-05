@@ -1144,7 +1144,7 @@
                 <height>426</height>
                </rect>
               </property>
-              <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,1">
+              <layout class="QGridLayout" name="peerDetailsGrid" columnstretch="0,1">
                <item row="0" column="0">
                 <widget class="QLabel" name="label_30">
                  <property name="text">
