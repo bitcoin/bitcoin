@@ -67,6 +67,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getbalance", 3, "avoid_reuse" },
     { "getblockfrompeer", 1, "peer_id" },
     { "getblockhash", 0, "height" },
+    { "maxmempool", 0, "megabytes" },
     { "waitforblockheight", 0, "height" },
     { "waitforblockheight", 1, "timeout" },
     { "waitforblock", 1, "timeout" },
