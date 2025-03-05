@@ -6,11 +6,14 @@
 #ifndef BITCOIN_STREAMS_H
 #define BITCOIN_STREAMS_H
 
+#include <logging.h>
 #include <serialize.h>
 #include <span.h>
 #include <support/allocators/zeroafterfree.h>
+#include <util/check.h>
 #include <util/fs_helpers.h>
 #include <util/overflow.h>
+#include <util/syserror.h>
 
 #include <algorithm>
 #include <assert.h>
@@ -392,11 +395,26 @@ protected:
     std::FILE* m_file;
     std::vector<std::byte> m_xor;
     std::optional<int64_t> m_position;
+    bool m_was_written{false};
 
 public:
     explicit AutoFile(std::FILE* file, std::vector<std::byte> data_xor={});
 
-    ~AutoFile() { fclose(); }
+    ~AutoFile()
+    {
+        if (m_was_written) {
+            // Callers that wrote to the file must have closed it explicitly
+            // with the fclose() method and checked that the close succeeded.
+            // This is because here from the destructor we have no way to signal
+            // error due to close which, after write, could mean the file is
+            // corrupted and must be handled properly at the call site.
+            Assume(IsNull());
+        }
+
+        if (fclose() != 0) {
+            LogPrintLevel(BCLog::ALL, BCLog::Level::Error, "Failed to close file: %s\n", SysErrorString(errno));
+        }
+    }
 
     // Disallow copies
     AutoFile(const AutoFile&) = delete;

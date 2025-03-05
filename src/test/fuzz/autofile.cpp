@@ -62,5 +62,10 @@ FUZZ_TARGET(autofile)
         if (f != nullptr) {
             fclose(f);
         }
+    } else {
+        // FuzzedFileProvider::close() is expected to fail sometimes. Don't let
+        // the destructor of AutoFile be upset by a failing fclose(). Close it
+        // explicitly (and ignore any errors) so that the destructor is a noop.
+        (void)auto_file.fclose();
     }
 }

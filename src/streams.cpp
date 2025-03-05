@@ -99,6 +99,7 @@ void AutoFile::write(Span<const std::byte> src)
             *m_position += buf_now.size();
         }
     }
+    m_was_written = true;
 }
 
 bool AutoFile::Commit()
