@@ -1232,6 +1232,9 @@ Current subtrees include:
 - src/minisketch
   - Upstream at https://github.com/sipa/minisketch ; maintained by Core contributors.
 
+- src/ipc/libmultiprocess
+  - Upstream at https://github.com/chaincodelabs/libmultiprocess ; maintained by Core contributors.
+
 Upgrading LevelDB
 ---------------------
 
