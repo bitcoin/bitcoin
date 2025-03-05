@@ -1230,7 +1230,7 @@ Current subtrees include:
   - Upstream at https://github.com/bitcoin-core/ctaes ; maintained by Core contributors.
 
 - src/minisketch
-  - Upstream at https://github.com/sipa/minisketch ; maintained by Core contributors.
+  - Upstream at https://github.com/bitcoin-core/minisketch ; maintained by Core contributors.
 
 Upgrading LevelDB
 ---------------------
