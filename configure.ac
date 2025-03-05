@@ -483,6 +483,12 @@ CXXFLAGS="$SSE41_CXXFLAGS $CXXFLAGS"
 AC_MSG_CHECKING([for SSE4.1 intrinsics])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <immintrin.h>
+
+    #if defined(__clang__)
+    #pragma clang attribute push(__attribute__((__target__("sse4.1"))), apply_to = function)
+    #elif defined(__GNUC__)
+    #pragma GCC target ("sse4.1")
+    #endif
   ]],[[
     __m128i a = _mm_set1_epi32(0);
     __m128i b = _mm_set1_epi32(1);
@@ -500,6 +506,12 @@ AC_MSG_CHECKING([for AVX2 intrinsics])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <stdint.h>
     #include <immintrin.h>
+
+    #if defined(__clang__)
+    #pragma clang attribute push(__attribute__((__target__("avx,avx2"))), apply_to = function)
+    #elif defined(__GNUC__)
+    #pragma GCC target ("avx,avx2")
+    #endif
   ]],[[
     __m256i l = _mm256_set1_epi32(0);
     return _mm256_extract_epi32(l, 7);
@@ -515,6 +527,12 @@ AC_MSG_CHECKING([for x86 SHA-NI intrinsics])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <stdint.h>
     #include <immintrin.h>
+
+    #if defined(__clang__)
+    #pragma clang attribute push(__attribute__((__target__("sse4,sse4.1,sha"))), apply_to = function)
+    #elif defined(__GNUC__)
+    #pragma GCC target ("sse4,sse4.1,sha")
+    #endif
   ]],[[
     __m128i i = _mm_set1_epi32(0);
     __m128i j = _mm_set1_epi32(1);
