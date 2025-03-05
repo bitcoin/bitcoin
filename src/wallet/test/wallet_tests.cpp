@@ -239,6 +239,7 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
         keys.push_back(std::move(key));
         JSONRPCRequest request;
         request.context = &context;
+        request.m_wallet_restriction = "";
         request.params.setArray();
         request.params.push_back(std::move(keys));
 
@@ -294,6 +295,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
         }
         JSONRPCRequest request;
         request.context = &context;
+        request.m_wallet_restriction = "";
         request.params.setArray();
         request.params.push_back(backup_file);
 
@@ -312,6 +314,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
         context.args = &m_args;
         JSONRPCRequest request;
         request.context = &context;
+        request.m_wallet_restriction = "";
         request.params.setArray();
         request.params.push_back(backup_file);
         AddWallet(context, wallet);
