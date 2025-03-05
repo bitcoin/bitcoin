@@ -390,7 +390,7 @@ CBlock TestChain100Setup::CreateBlock(
     Chainstate& chainstate)
 {
     BlockAssembler::Options options;
-    CBlock block = BlockAssembler{chainstate, nullptr, options}.CreateNewBlock(scriptPubKey)->block;
+    CBlock block = BlockAssembler{chainstate, nullptr, options, m_node}.CreateNewBlock(scriptPubKey)->block;
 
     Assert(block.vtx.size() == 1);
     for (const CMutableTransaction& tx : txns) {

@@ -7,6 +7,7 @@
 #include <qt/bitcoingui.h>
 
 #include <qt/bitcoinunits.h>
+#include <qt/blockview.h>
 #include <qt/clientmodel.h>
 #include <qt/createwalletdialog.h>
 #include <qt/guiconstants.h>
@@ -602,6 +603,14 @@ void BitcoinGUI::createMenuBar()
     window_menu->addSeparator();
     window_menu->addAction(m_show_netwatch_action);
     window_menu->addAction(showMempoolStatsAction);
+
+    auto show_blockview_action = new QAction(tr("Block &Visualizer"), this);
+    window_menu->addAction(show_blockview_action);
+    connect(show_blockview_action, &QAction::triggered, [this] {
+        auto blockview = new GuiBlockView(platformStyle, m_network_style);
+        blockview->setClientModel(clientModel);
+        GUIUtil::bringToFront(blockview);
+    });
 
     window_menu->addSeparator();
     for (RPCConsole::TabTypes tab_type : rpcConsole->tabs()) {

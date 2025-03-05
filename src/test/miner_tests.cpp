@@ -68,7 +68,7 @@ BlockAssembler MinerTestingSetup::AssemblerForTest(CTxMemPool& tx_mempool)
     options.nBlockMaxWeight = MAX_BLOCK_WEIGHT;
     options.nBlockMaxSize = MAX_BLOCK_SERIALIZED_SIZE;
     options.blockMinFeeRate = blockMinFeeRate;
-    return BlockAssembler{m_node.chainman->ActiveChainstate(), &tx_mempool, options};
+    return BlockAssembler{m_node.chainman->ActiveChainstate(), &tx_mempool, options, m_node};
 }
 
 constexpr static struct {
@@ -137,7 +137,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     Txid hashHighFeeTx = tx.GetHash();
     tx_mempool.addUnchecked(entry.Fee(50000).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx));
 
-    std::unique_ptr<CBlockTemplate> pblocktemplate = AssemblerForTest(tx_mempool).CreateNewBlock(scriptPubKey);
+    auto pblocktemplate = AssemblerForTest(tx_mempool).CreateNewBlock(scriptPubKey);
     BOOST_REQUIRE_EQUAL(pblocktemplate->block.vtx.size(), 4U);
     BOOST_CHECK(pblocktemplate->block.vtx[1]->GetHash() == hashParentTx);
     BOOST_CHECK(pblocktemplate->block.vtx[2]->GetHash() == hashHighFeeTx);
@@ -609,7 +609,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 {
     // Note that by default, these tests run with size accounting enabled.
     CScript scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
-    std::unique_ptr<CBlockTemplate> pblocktemplate;
+    std::shared_ptr<CBlockTemplate> pblocktemplate;
 
     CTxMemPool& tx_mempool{*m_node.mempool};
     // Simple block creation, nothing special yet:

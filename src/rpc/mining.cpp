@@ -162,7 +162,7 @@ static UniValue generateBlocks(ChainstateManager& chainman, Mining& miner, const
 {
     UniValue blockHashes(UniValue::VARR);
     while (nGenerate > 0 && !chainman.m_interrupt) {
-        std::unique_ptr<CBlockTemplate> pblocktemplate(miner.createNewBlock(coinbase_script));
+        auto pblocktemplate = miner.createNewBlock(coinbase_script);
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
 
@@ -373,7 +373,7 @@ static RPCHelpMan generateblock()
     {
         LOCK(chainman.GetMutex());
         {
-            std::unique_ptr<CBlockTemplate> blocktemplate{miner.createNewBlock(coinbase_script, {.use_mempool = false})};
+            auto blocktemplate = miner.createNewBlock(coinbase_script, {.use_mempool = false});
             if (!blocktemplate) {
                 throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
             }
@@ -865,7 +865,7 @@ static RPCHelpMan getblocktemplate()
     // Update block
     static CBlockIndex* pindexPrev;
     static int64_t time_start;
-    static std::unique_ptr<CBlockTemplate> pblocktemplate;
+    static std::shared_ptr<CBlockTemplate> pblocktemplate;
     if (!pindexPrev || pindexPrev->GetBlockHash() != tip ||
         bypass_cache ||
         (miner.getTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - time_start > 5))
