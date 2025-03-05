@@ -38,7 +38,7 @@ FUZZ_TARGET(message, .init = initialize_message)
         }
     }
     {
-        (void)MessageHash(random_message);
+        (void)MessageHash(random_message, MessageSignatureFormat::LEGACY);
         (void)MessageVerify(fuzzed_data_provider.ConsumeRandomLengthString(1024), fuzzed_data_provider.ConsumeRandomLengthString(1024), random_message);
         (void)SigningResultString(fuzzed_data_provider.PickValueInArray({SigningResult::OK, SigningResult::PRIVATE_KEY_NOT_AVAILABLE, SigningResult::SIGNING_FAILED}));
     }

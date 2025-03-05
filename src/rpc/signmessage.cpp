@@ -49,6 +49,10 @@ static RPCHelpMan verifymessage()
                 throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
             case MessageVerificationResult::ERR_MALFORMED_SIGNATURE:
                 throw JSONRPCError(RPC_TYPE_ERROR, "Malformed base64 encoding");
+            case MessageVerificationResult::ERR_POF:
+            case MessageVerificationResult::INCONCLUSIVE:
+                throw JSONRPCError(RPC_TYPE_ERROR, "This signature is not yet supported");
+            case MessageVerificationResult::ERR_INVALID:
             case MessageVerificationResult::ERR_PUBKEY_NOT_RECOVERED:
             case MessageVerificationResult::ERR_NOT_SIGNED:
                 return false;
