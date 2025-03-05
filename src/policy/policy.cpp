@@ -11,6 +11,7 @@
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
+#include <kernel/mempool_options.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
@@ -110,7 +111,7 @@ static inline bool MaybeReject_(std::string& out_reason, const std::string& reas
     }  \
 } while(0)
 
-bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_datacarrier_bytes, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& out_reason, const ignore_rejects_type& ignore_rejects)
+bool IsStandardTx(const CTransaction& tx, const kernel::MemPoolOptions& opts, std::string& out_reason, const ignore_rejects_type& ignore_rejects)
 {
     const std::string reason_prefix;
 
@@ -148,7 +149,7 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
     unsigned int nDataOut = 0;
     TxoutType whichType;
     for (const CTxOut& txout : tx.vout) {
-        if (!::IsStandard(txout.scriptPubKey, max_datacarrier_bytes, whichType)) {
+        if (!::IsStandard(txout.scriptPubKey, opts.max_datacarrier_bytes, whichType)) {
             if (whichType == TxoutType::WITNESS_UNKNOWN) {
                 MaybeReject("scriptpubkey-unknown-witnessversion");
             } else {
@@ -160,10 +161,10 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
             nDataOut++;
             continue;
         }
-        else if ((whichType == TxoutType::MULTISIG) && (!permit_bare_multisig)) {
+        else if ((whichType == TxoutType::MULTISIG) && (!opts.permit_bare_multisig)) {
             MaybeReject("bare-multisig");
         }
-        if (IsDust(txout, dust_relay_fee)) {
+        if (IsDust(txout, opts.dust_relay_feerate)) {
             MaybeReject("dust");
         }
     }
