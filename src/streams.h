@@ -474,6 +474,7 @@ public:
     }
 
     bool Commit();
+    void SetIdlePriority();
     bool IsError();
     bool Truncate(unsigned size);
     void AdviseSequential()

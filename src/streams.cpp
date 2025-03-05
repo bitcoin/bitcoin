@@ -5,6 +5,7 @@
 #include <span.h>
 #include <streams.h>
 #include <util/fs_helpers.h>
+#include <util/ioprio.h>
 
 #include <array>
 
@@ -105,6 +106,11 @@ void AutoFile::write(Span<const std::byte> src)
 bool AutoFile::Commit()
 {
     return ::FileCommit(m_file);
+}
+
+void AutoFile::SetIdlePriority()
+{
+    ioprio_set_file_idle(m_file);
 }
 
 bool AutoFile::IsError()
