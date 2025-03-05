@@ -105,9 +105,9 @@ void KeccakF(uint64_t (&st)[25])
 
 SHA3_256& SHA3_256::Write(Span<const unsigned char> data)
 {
-    if (m_bufsize && m_bufsize + data.size() >= sizeof(m_buffer)) {
+    if (m_bufsize && data.size() >= sizeof(m_buffer) - m_bufsize) {
         // Fill the buffer and process it.
-        std::copy(data.begin(), data.begin() + sizeof(m_buffer) - m_bufsize, m_buffer + m_bufsize);
+        std::copy(data.begin(), data.begin() + (sizeof(m_buffer) - m_bufsize), m_buffer + m_bufsize);
         data = data.subspan(sizeof(m_buffer) - m_bufsize);
         m_state[m_pos++] ^= ReadLE64(m_buffer);
         m_bufsize = 0;
