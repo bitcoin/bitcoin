@@ -153,13 +153,16 @@ You may also need to take care of giving the correct path for `clang` and
 `clang++`, like `CC=/path/to/clang CXX=/path/to/clang++` if the non-systems
 `clang` does not come first in your path.
 
-Full configuration step that was tested on macOS with `brew` installed `llvm`:
+Using `lld` is required due to issues with Apple's `ld` and `LLVM`.
+
+Full configuration step for macOS:
 
 ```sh
+$ brew install llvm lld
 $ cmake --preset=libfuzzer \
    -DCMAKE_C_COMPILER="$(brew --prefix llvm)/bin/clang" \
    -DCMAKE_CXX_COMPILER="$(brew --prefix llvm)/bin/clang++" \
-   -DAPPEND_LDFLAGS=-Wl,-no_warn_duplicate_libraries
+   -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld"
 ```
 
 Read the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html) for more information. This [libFuzzer tutorial](https://github.com/google/fuzzing/blob/master/tutorial/libFuzzerTutorial.md) might also be of interest.
