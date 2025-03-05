@@ -33,6 +33,12 @@ struct BlockCreateOptions {
      */
     bool use_mempool{true};
     /**
+     * The maximum additional size which the miner will add to the coinbase
+     * scriptSig, witness and outputs. This must include any additional
+     * size needed for larger CompactSize encoded lengths.
+     */
+    size_t coinbase_max_additional_size{1000};
+    /**
      * The maximum additional weight which the pool will add to the coinbase
      * scriptSig, witness and outputs. This must include any additional
      * weight needed for larger CompactSize encoded lengths.
