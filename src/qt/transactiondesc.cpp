@@ -58,7 +58,7 @@ QString TransactionDesc::FormatTxStatus(const interfaces::WalletTxStatus& status
             s += QLatin1String(", ") + tr("abandoned");
         }
         return s;
-    } else if (depth < 6) {
+    } else if (depth < TransactionRecord::RecommendedNumConfirmations || status.is_assumed) {
         /*: Text explaining the current status of a transaction, shown in the
             status field of the details window for this transaction. This
             status represents a transaction confirmed in at least one block,

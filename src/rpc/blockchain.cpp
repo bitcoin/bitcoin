@@ -1085,6 +1085,7 @@ static RPCHelpMan gettxout()
             RPCResult{"Otherwise", RPCResult::Type::OBJ, "", "", {
                 {RPCResult::Type::STR_HEX, "bestblock", "The hash of the block at the tip of the chain"},
                 {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
+                {RPCResult::Type::NUM, "confirmations_assumed", /*optional=*/true, "The number of unverified confirmations (eg, in an assumed-valid UTXO set)"},
                 {RPCResult::Type::STR_AMOUNT, "value", "The transaction value in " + CURRENCY_UNIT},
                 {RPCResult::Type::OBJ, "scriptPubKey", "", {
                     {RPCResult::Type::STR, "asm", "Disassembly of the output script"},
@@ -1140,7 +1141,13 @@ static RPCHelpMan gettxout()
     if (coin.nHeight == MEMPOOL_HEIGHT) {
         ret.pushKV("confirmations", 0);
     } else {
+        const auto assumed_base_height = chainman.GetSnapshotBaseHeight();
+        if (assumed_base_height && coin.nHeight < *assumed_base_height) {
+            ret.pushKV("confirmations", 0);
+            ret.pushKV("confirmations_assumed", (int64_t)(pindex->nHeight - coin.nHeight + 1));
+        } else {
         ret.pushKV("confirmations", (int64_t)(pindex->nHeight - coin.nHeight + 1));
+        }
     }
     ret.pushKV("value", ValueFromAmount(coin.out.nValue));
     UniValue o(UniValue::VOBJ);
