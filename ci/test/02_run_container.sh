@@ -48,7 +48,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
 
   # shellcheck disable=SC2086
   DOCKER_BUILDKIT=1 docker build \
-      --file "${BASE_READ_ONLY_DIR}/ci/test_imagefile" \
+      --file "${BASE_READ_ONLY_DIR}/ci/test.Dockerfile" \
       --build-arg "CI_IMAGE_NAME_TAG=${CI_IMAGE_NAME_TAG}" \
       --build-arg "FILE_ENV=${FILE_ENV}" \
       $MAYBE_CPUSET \
