@@ -180,6 +180,7 @@ private:
     bool m_is_executing{false};
     QByteArray m_peer_widget_header_state;
     QByteArray m_banlist_widget_header_state;
+    bool m_alternating_row_colors{false};
 
     /** Update UI with latest network info from model. */
     void updateNetworkState();
