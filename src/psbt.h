@@ -520,6 +520,11 @@ struct PSBTInput
                     std::vector<unsigned char> sig;
                     s >> sig;
 
+                    // Check that the signature is validly encoded
+                    if (sig.empty() || !CheckSignatureEncoding(sig, SCRIPT_VERIFY_DERSIG | SCRIPT_VERIFY_STRICTENC, nullptr)) {
+                        throw std::ios_base::failure("Signature is not a valid encoding");
+                    }
+
                     // Add to list
                     partial_sigs.emplace(pubkey.GetID(), SigPair(pubkey, std::move(sig)));
                     break;
