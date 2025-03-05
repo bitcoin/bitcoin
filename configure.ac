@@ -216,6 +216,11 @@ AC_ARG_ENABLE([reduce-exports],
   [use_reduce_exports=$enableval],
   [use_reduce_exports=no])
 
+AC_ARG_WITH([append-cxxflags],
+  [AS_HELP_STRING([--with-append-cxxflags],
+  [append given cxxflags without checking them (default is empty string)])],
+  [append_cxxflags=$withval])
+
 AC_ARG_ENABLE([ccache],
   [AS_HELP_STRING([--disable-ccache],
   [do not use ccache for building (default is to use if found)])],
@@ -1409,6 +1414,8 @@ if test "$use_reduce_exports" = "yes"; then
   AX_CHECK_LINK_FLAG([-Wl,--exclude-libs,ALL], [RELDFLAGS="-Wl,--exclude-libs,ALL"], [], [$LDFLAG_WERROR])
   AX_CHECK_LINK_FLAG([-Wl,-no_exported_symbols], [LIBTOOL_APP_LDFLAGS="$LIBTOOL_APP_LDFLAGS -Wl,-no_exported_symbols"], [], [$LDFLAG_WERROR])
 fi
+
+CXXFLAGS="$CXXFLAGS $append_cxxflags"
 
 if test "$use_tests" = "yes"; then
 
