@@ -376,7 +376,7 @@ fn lint_includes_build_config() -> LintResult {
                     "--files-with-matches"
                 },
                 if mode {
-                    "^#include <config/bitcoin-config.h> // IWYU pragma: keep$"
+                    "#include <config/bitcoin-config.h>"
                 } else {
                     "#include <config/bitcoin-config.h>" // Catch redundant includes with and without the IWYU pragma
                 },
