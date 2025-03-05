@@ -285,6 +285,7 @@ BITCOIN_CORE_H = \
   script/signingprovider.h \
   script/solver.h \
   signet.h \
+  stats/stats.h \
   streams.h \
   support/allocators/pool.h \
   support/allocators/secure.h \
@@ -474,6 +475,8 @@ libbitcoin_node_a_SOURCES = \
   rpc/txoutproof.cpp \
   script/sigcache.cpp \
   signet.cpp \
+  stats/rpc_stats.cpp \
+  stats/stats.cpp \
   torcontrol.cpp \
   txdb.cpp \
   txmempool.cpp \
