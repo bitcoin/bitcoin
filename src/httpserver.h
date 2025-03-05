@@ -14,8 +14,8 @@ namespace util {
 class SignalInterrupt;
 } // namespace util
 
-static const int DEFAULT_HTTP_THREADS=4;
-static const int DEFAULT_HTTP_WORKQUEUE=16;
+static const int DEFAULT_HTTP_THREADS{16};
+static const int DEFAULT_HTTP_WORKQUEUE{64};
 static const int DEFAULT_HTTP_SERVER_TIMEOUT=30;
 
 struct evhttp_request;
