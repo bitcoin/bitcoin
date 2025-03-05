@@ -3776,7 +3776,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         if (!vRecv.empty()) {
             std::string strSubVer;
             vRecv >> LIMITED_STRING(strSubVer, MAX_SUBVERSION_LENGTH);
-            cleanSubVer = SanitizeString(strSubVer);
+            cleanSubVer = SanitizeString(strSubVer, SAFE_CHARS_PRINTABLE);
         }
         if (!vRecv.empty()) {
             vRecv >> starting_height;
@@ -3917,7 +3917,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         const auto mapped_as{m_connman.GetMappedAS(pfrom.addr)};
         LogPrint(BCLog::NET, "receive version message: %s: version %d, blocks=%d, us=%s, txrelay=%d, peer=%d%s%s\n",
-                  cleanSubVer, pfrom.nVersion,
+                  SanitizeString(cleanSubVer, SAFE_CHARS_DEFAULT, true), pfrom.nVersion,
                   peer->m_starting_height, addrMe.ToStringAddrPort(), fRelay, pfrom.GetId(),
                   remoteAddr, (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
 
