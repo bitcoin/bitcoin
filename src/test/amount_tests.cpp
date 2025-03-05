@@ -139,4 +139,12 @@ BOOST_AUTO_TEST_CASE(ToStringTest)
     BOOST_CHECK_EQUAL(feeRate.ToString(FeeEstimateMode::SAT_VB), "0.001 sat/vB");
 }
 
+BOOST_AUTO_TEST_CASE(SatsToStringTest)
+{
+    BOOST_CHECK_EQUAL(CFeeRate(1).SatsToString(), "0.001");
+    BOOST_CHECK_EQUAL(CFeeRate(70).SatsToString(), "0.070");
+    BOOST_CHECK_EQUAL(CFeeRate(3141).SatsToString(), "3.141");
+    BOOST_CHECK_EQUAL(CFeeRate(10002).SatsToString(), "10.002");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
