@@ -1,8 +1,8 @@
 blank_issues_enabled: true
 contact_links:
-  - name: Bitcoin Core Security Policy
-    url: https://github.com/bitcoin/bitcoin/blob/master/SECURITY.md
+  - name: Bitcoin Knots Security Policy
+    url: https://bitcoinknots.org/contact/
     about: View security policy
-  - name: Bitcoin Core Developers
-    url: https://bitcoincore.org
-    about: Bitcoin Core homepage
+  - name: Bitcoin Knots Website
+    url: https://bitcoinknots.org
+    about: User-oriented information
