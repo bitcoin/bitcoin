@@ -40,13 +40,14 @@ public:
     virtual std::optional<uint256> getTipHash() = 0;
 
    /**
-     * Construct a new block template
+     * Construct a new block template. For the createNewBlock variant, subclass options (if any) are silently lost and overridden by any config args. For createNewBlock2, the options are assumed to be complete.
      *
      * @param[in] script_pub_key the coinbase output
      * @param[in] options options for creating the block
      * @returns a block template
      */
     virtual std::unique_ptr<node::CBlockTemplate> createNewBlock(const CScript& script_pub_key, const node::BlockCreateOptions& options={}) = 0;
+    virtual std::unique_ptr<node::CBlockTemplate> createNewBlock2(const CScript& script_pub_key, const node::BlockCreateOptions& assemble_options) = 0;
 
     /**
      * Processes new block. A valid new block is automatically relayed to peers.

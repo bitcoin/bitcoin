@@ -34,6 +34,7 @@
 #include <script/signingprovider.h>
 #include <txmempool.h>
 #include <univalue.h>
+#include <util/check.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -580,6 +581,8 @@ static std::string gbt_vb_name(const Consensus::DeploymentPos pos) {
     return s;
 }
 
+static UniValue TemplateToJSON(const Consensus::Params&, const ChainstateManager&, const CBlockTemplate*, const CBlockIndex*, const std::set<std::string>& setClientRules, unsigned int nTransactionsUpdatedLast);
+
 static RPCHelpMan getblocktemplate()
 {
     return RPCHelpMan{"getblocktemplate",
@@ -594,9 +597,14 @@ static RPCHelpMan getblocktemplate()
             {"template_request", RPCArg::Type::OBJ, RPCArg::Optional::NO, "Format of the template",
             {
                 {"mode", RPCArg::Type::STR, /* treat as named arg */ RPCArg::Optional::OMITTED, "This must be set to \"template\", \"proposal\" (see BIP 23), or omitted"},
+                {"blockmaxsize", RPCArg::Type::NUM, RPCArg::DefaultHint{"set by -blockmaxsize"}, "limit returned block to specified size (disables template cache)"},
+                {"blockmaxweight", RPCArg::Type::NUM, RPCArg::DefaultHint{"set by -blockmaxweight"}, "limit returned block to specified weight (disables template cache)"},
+                {"blockreservedsigops", RPCArg::Type::NUM, RPCArg::Default{node::BlockCreateOptions{}.coinbase_output_max_additional_sigops}, "reserve specified number of sigops in returned block for generation transaction (disables template cache)"},
+                {"blockreservedsize", RPCArg::Type::NUM, RPCArg::Default{node::BlockCreateOptions{}.coinbase_max_additional_size}, "reserve specified size in returned block for generation transaction (disables template cache)"},
+                {"blockreservedweight", RPCArg::Type::NUM, RPCArg::Default{node::BlockCreateOptions{}.coinbase_max_additional_weight}, "reserve specified weight in returned block for generation transaction (disables template cache)"},
                 {"capabilities", RPCArg::Type::ARR, /* treat as named arg */ RPCArg::Optional::OMITTED, "A list of strings",
                 {
-                    {"str", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "client side supported feature, 'longpoll', 'coinbasevalue', 'proposal', 'serverlist', 'workid'"},
+                    {"str", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "client side supported feature, 'longpoll', 'coinbasevalue', 'proposal', 'skip_validity_test', 'serverlist', 'workid'"},
                 }},
                 {"rules", RPCArg::Type::ARR, RPCArg::Optional::NO, "A list of strings",
                 {
@@ -604,6 +612,7 @@ static RPCHelpMan getblocktemplate()
                     {"str", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "other client side supported softfork deployment"},
                 }},
                 {"longpollid", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "delay processing request until the result would vary significantly from the \"longpollid\" of a prior template"},
+                {"minfeerate", RPCArg::Type::NUM, RPCArg::DefaultHint{"set by -blockmintxfee"}, "only include transactions with a minimum sats/vbyte (disables template cache)"},
                 {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "proposed block data to check, encoded in hexadecimal; valid only for mode=\"proposal\""},
             },
             },
@@ -680,6 +689,14 @@ static RPCHelpMan getblocktemplate()
     LOCK(cs_main);
     uint256 tip{CHECK_NONFATAL(miner.getTipHash()).value()};
 
+    BlockAssembler::Options options;
+    {
+        const ArgsManager& args{EnsureAnyArgsman(request.context)};
+        ApplyArgsManOptions(args, options);
+    }
+    const BlockAssembler::Options options_def{options.Clamped()};
+    bool bypass_cache{false};
+
     std::string strMode = "template";
     UniValue lpval = NullUniValue;
     std::set<std::string> setClientRules;
@@ -731,6 +748,39 @@ static RPCHelpMan getblocktemplate()
             for (unsigned int i = 0; i < aClientRules.size(); ++i) {
                 const UniValue& v = aClientRules[i];
                 setClientRules.insert(v.get_str());
+            }
+        }
+
+        if (!oparam["blockmaxsize"].isNull()) {
+            options.nBlockMaxSize = oparam["blockmaxsize"].getInt<size_t>();
+        }
+        if (!oparam["blockmaxweight"].isNull()) {
+            options.nBlockMaxWeight = oparam["blockmaxweight"].getInt<size_t>();
+        }
+        if (!oparam["blockreservedsize"].isNull()) {
+            options.coinbase_max_additional_size = oparam["blockreservedsize"].getInt<size_t>();
+        }
+        if (!oparam["blockreservedweight"].isNull()) {
+            options.coinbase_max_additional_weight = oparam["blockreservedweight"].getInt<size_t>();
+        }
+        if (!oparam["blockreservedsigops"].isNull()) {
+            options.coinbase_output_max_additional_sigops = oparam["blockreservedsigops"].getInt<size_t>();
+        }
+        if (!oparam["minfeerate"].isNull()) {
+            options.blockMinFeeRate = CFeeRate{AmountFromValue(oparam["minfeerate"]), COIN /* sat/vB */};
+        }
+        options = options.Clamped();
+        bypass_cache |= !(options == options_def);
+
+        // NOTE: Intentionally not setting bypass_cache for skip_validity_test since _using_ the cache is fine
+        const UniValue& client_caps = oparam.find_value("capabilities");
+        if (client_caps.isArray()) {
+            for (unsigned int i = 0; i < client_caps.size(); ++i) {
+                const UniValue& v = client_caps[i];
+                if (!v.isStr()) continue;
+                if (v.get_str() == "skip_validity_test") {
+                    options.test_block_validity = false;
+                }
             }
         }
     }
@@ -817,8 +867,20 @@ static RPCHelpMan getblocktemplate()
     static int64_t time_start;
     static std::unique_ptr<CBlockTemplate> pblocktemplate;
     if (!pindexPrev || pindexPrev->GetBlockHash() != tip ||
+        bypass_cache ||
         (miner.getTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - time_start > 5))
     {
+        if (bypass_cache || !options.test_block_validity) {
+            // Create one-off template unrelated to cache
+            const auto tx_update_counter = miner.getTransactionsUpdated();
+            CBlockIndex* const local_pindexPrev = chainman.m_blockman.LookupBlockIndex(tip);
+            const CScript dummy_script{CScript() << OP_TRUE};
+            auto tmpl = miner.createNewBlock2(dummy_script, options);
+            if (!tmpl) throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
+            return TemplateToJSON(consensusParams, chainman, &*tmpl, local_pindexPrev, setClientRules, tx_update_counter);
+        }
+        CHECK_NONFATAL(options == options_def);
+
         // Clear pindexPrev so future calls make a new block, despite any failures from here on
         pindexPrev = nullptr;
 
@@ -843,6 +905,14 @@ static RPCHelpMan getblocktemplate()
     // Update nTime
     UpdateTime(pblock, consensusParams, pindexPrev);
     pblock->nNonce = 0;
+
+    return TemplateToJSON(consensusParams, chainman, &*pblocktemplate, pindexPrev, setClientRules, nTransactionsUpdatedLast);
+},
+    };
+}
+
+static UniValue TemplateToJSON(const Consensus::Params& consensusParams, const ChainstateManager& chainman, const CBlockTemplate* const pblocktemplate, const CBlockIndex* const pindexPrev, const std::set<std::string>& setClientRules, const unsigned int nTransactionsUpdatedLast) {
+    const CBlock* const pblock = &pblocktemplate->block;
 
     // NOTE: If at some point we support pre-segwit miners post-segwit-activation, this needs to take segwit support into consideration
     const bool fPreSegWit = !DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_SEGWIT);
@@ -911,6 +981,7 @@ static RPCHelpMan getblocktemplate()
         aRules.push_back("!signet");
     }
 
+    auto block_version = pblock->nVersion;
     UniValue vbavailable(UniValue::VOBJ);
     for (int j = 0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
         Consensus::DeploymentPos pos = Consensus::DeploymentPos(j);
@@ -922,7 +993,7 @@ static RPCHelpMan getblocktemplate()
                 break;
             case ThresholdState::LOCKED_IN:
                 // Ensure bit is set in block version
-                pblock->nVersion |= chainman.m_versionbitscache.Mask(consensusParams, pos);
+                block_version |= chainman.m_versionbitscache.Mask(consensusParams, pos);
                 [[fallthrough]];
             case ThresholdState::STARTED:
             {
@@ -931,7 +1002,7 @@ static RPCHelpMan getblocktemplate()
                 if (setClientRules.find(vbinfo.name) == setClientRules.end()) {
                     if (!vbinfo.gbt_force) {
                         // If the client doesn't support this, don't indicate it in the [default] version
-                        pblock->nVersion &= ~chainman.m_versionbitscache.Mask(consensusParams, pos);
+                        block_version &= ~chainman.m_versionbitscache.Mask(consensusParams, pos);
                     }
                 }
                 break;
@@ -951,7 +1022,7 @@ static RPCHelpMan getblocktemplate()
             }
         }
     }
-    result.pushKV("version", pblock->nVersion);
+    result.pushKV("version", block_version);
     result.pushKV("rules", std::move(aRules));
     result.pushKV("vbavailable", std::move(vbavailable));
     result.pushKV("vbrequired", int(0));
@@ -960,7 +1031,7 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("transactions", std::move(transactions));
     result.pushKV("coinbaseaux", std::move(aux));
     result.pushKV("coinbasevalue", (int64_t)pblock->vtx[0]->vout[0].nValue);
-    result.pushKV("longpollid", tip.GetHex() + ToString(nTransactionsUpdatedLast));
+    result.pushKV("longpollid", pindexPrev->GetBlockHash().GetHex() + ToString(nTransactionsUpdatedLast));
     result.pushKV("target", hashTarget.GetHex());
     result.pushKV("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1);
     result.pushKV("mutable", std::move(aMutable));
@@ -991,8 +1062,6 @@ static RPCHelpMan getblocktemplate()
     }
 
     return result;
-},
-    };
 }
 
 class submitblock_StateCatcher final : public CValidationInterface

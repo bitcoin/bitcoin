@@ -31,7 +31,6 @@ class ChainstateManager;
 namespace Consensus { struct Params; };
 
 namespace node {
-static const bool DEFAULT_PRINT_MODIFIED_FEE = false;
 
 struct CBlockTemplate
 {
@@ -166,15 +165,7 @@ private:
     bool blockFinished;
 
 public:
-    struct Options : BlockCreateOptions {
-        // Configuration parameters for the block size
-        size_t nBlockMaxWeight{DEFAULT_BLOCK_MAX_WEIGHT};
-        size_t nBlockMaxSize{DEFAULT_BLOCK_MAX_SIZE};
-        CFeeRate blockMinFeeRate{DEFAULT_BLOCK_MIN_TX_FEE};
-        // Whether to call TestBlockValidity() at the end of CreateNewBlock().
-        bool test_block_validity{true};
-        bool print_modified_fee{DEFAULT_PRINT_MODIFIED_FEE};
-    };
+    using Options = BlockCreateOptions;
 
     explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options);
 

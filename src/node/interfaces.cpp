@@ -939,6 +939,11 @@ public:
     {
         BlockAssembler::Options assemble_options{options};
         ApplyArgsManOptions(*Assert(m_node.args), assemble_options);
+        return createNewBlock2(script_pub_key, assemble_options);
+    }
+
+    std::unique_ptr<CBlockTemplate> createNewBlock2(const CScript& script_pub_key, const BlockCreateOptions& assemble_options) override
+    {
         return BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options}.CreateNewBlock(script_pub_key);
     }
 

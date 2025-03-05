@@ -65,11 +65,15 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
     block.hashMerkleRoot = BlockMerkleRoot(block);
 }
 
-static BlockAssembler::Options ClampOptions(BlockAssembler::Options options)
+BlockCreateOptions BlockCreateOptions::Clamped() const
 {
-    Assert(options.coinbase_max_additional_size <= MAX_BLOCK_SERIALIZED_SIZE - 1000);
-    Assert(options.coinbase_max_additional_weight <= DEFAULT_BLOCK_MAX_WEIGHT);
-    Assert(options.coinbase_output_max_additional_sigops <= MAX_BLOCK_SIGOPS_COST);
+    BlockAssembler::Options options = *this;
+    constexpr size_t theoretical_min_gentx_sz = 1+4+1+36+1+1+4+1+4;
+    constexpr size_t theoretical_min_gentx_weight = theoretical_min_gentx_sz * WITNESS_SCALE_FACTOR;
+    CHECK_NONFATAL(options.coinbase_max_additional_size <= MAX_BLOCK_SERIALIZED_SIZE - 1000);
+    CHECK_NONFATAL(options.coinbase_max_additional_weight <= DEFAULT_BLOCK_MAX_WEIGHT);
+    CHECK_NONFATAL(options.coinbase_max_additional_weight >= theoretical_min_gentx_weight);
+    CHECK_NONFATAL(options.coinbase_output_max_additional_sigops <= MAX_BLOCK_SIGOPS_COST);
     // Limit size to between coinbase_max_additional_size and MAX_BLOCK_SERIALIZED_SIZE-1K for sanity:
     options.nBlockMaxSize = std::clamp<size_t>(options.nBlockMaxSize, options.coinbase_max_additional_size, MAX_BLOCK_SERIALIZED_SIZE - 1000);
     // Limit weight to between coinbase_max_additional_weight and DEFAULT_BLOCK_MAX_WEIGHT for sanity:
@@ -82,7 +86,7 @@ BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool
     : chainparams{chainstate.m_chainman.GetParams()},
       m_mempool{options.use_mempool ? mempool : nullptr},
       m_chainstate{chainstate},
-      m_options{ClampOptions(options)}
+      m_options{options.Clamped()}
 {
     // Whether we need to account for byte usage (in addition to weight usage)
     fNeedSizeAccounting = (options.nBlockMaxSize < MAX_BLOCK_SERIALIZED_SIZE - 1000);
