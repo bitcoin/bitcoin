@@ -83,7 +83,7 @@ void PSBTOperationsDialog::signTransaction()
 
     WalletModel::UnlockContext ctx(m_wallet_model->requestUnlock());
 
-    const auto err{m_wallet_model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/true, /*bip32derivs=*/true, &n_signed, m_transaction_data, complete)};
+    const auto err{m_wallet_model->wallet().fillPSBT(SIGHASH_DEFAULT, /*sign=*/true, /*bip32derivs=*/true, &n_signed, m_transaction_data, complete)};
 
     if (err) {
         showStatus(tr("Failed to sign transaction: %1")
