@@ -10,6 +10,7 @@
 #include <optional>
 #include <vector>
 
+class ChainstateManager;
 class CTxMemPool;
 class UniValue;
 
@@ -28,7 +29,7 @@ static const MempoolHistogramFeeRates MempoolInfoToJSON_const_histogram_floors{
 UniValue MempoolInfoToJSON(const CTxMemPool& pool, const std::optional<MempoolHistogramFeeRates>& histogram_floors);
 
 /** Mempool to JSON */
-UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose = false, bool include_mempool_sequence = false);
+UniValue MempoolToJSON(ChainstateManager& chainman, const CTxMemPool& pool, bool verbose = false, bool include_mempool_sequence = false);
 
 /** Mempool Txs to JSON */
 UniValue MempoolTxsToJSON(const CTxMemPool& pool, bool verbose = false, uint64_t sequence_start = 0);

@@ -253,6 +253,7 @@ BITCOIN_CORE_H = \
   node/warnings.h \
   noui.h \
   outputtype.h \
+  policy/coin_age_priority.h \
   policy/feerate.h \
   policy/fees.h \
   policy/fees_args.h \
@@ -457,6 +458,7 @@ libbitcoin_node_a_SOURCES = \
   node/utxo_snapshot.cpp \
   node/warnings.cpp \
   noui.cpp \
+  policy/coin_age_priority.cpp \
   policy/fees.cpp \
   policy/fees_args.cpp \
   policy/packages.cpp \

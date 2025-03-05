@@ -22,6 +22,7 @@ struct ImportMempoolOptions {
     bool use_current_time{false};
     bool apply_fee_delta_priority{true};
     bool apply_unbroadcast_set{true};
+    bool load_knots_data{false};
 };
 /** Import the file and attempt to add its contents to the mempool. */
 bool LoadMempool(CTxMemPool& pool, const fs::path& load_path,
