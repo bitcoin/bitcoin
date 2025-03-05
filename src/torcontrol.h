@@ -8,6 +8,10 @@
 #ifndef BITCOIN_TORCONTROL_H
 #define BITCOIN_TORCONTROL_H
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
 #include <netaddress.h>
 #include <util/fs.h>
 
@@ -19,8 +23,13 @@
 #include <string>
 #include <vector>
 
+namespace subprocess {
+class Popen;
+}
+
 constexpr int DEFAULT_TOR_CONTROL_PORT = 9051;
 extern const std::string DEFAULT_TOR_CONTROL;
+extern const std::string DEFAULT_TOR_EXECUTE;
 static const bool DEFAULT_LISTEN_ONION = true;
 
 void StartTorControl(CService onion_service_target);
@@ -53,6 +62,7 @@ class TorControlConnection
 public:
     typedef std::function<void(TorControlConnection&)> ConnectionCB;
     typedef std::function<void(TorControlConnection &,const TorControlReply &)> ReplyHandlerCB;
+    static void IgnoreReplyHandler(TorControlConnection &, const TorControlReply &);
 
     /** Create a new TorControlConnection.
      */
@@ -77,7 +87,7 @@ public:
      * A trailing CRLF is automatically added.
      * Return true on success.
      */
-    bool Command(const std::string &cmd, const ReplyHandlerCB& reply_handler);
+    bool Command(const std::string &cmd, const ReplyHandlerCB& reply_handler = IgnoreReplyHandler);
 
 private:
     /** Callback when ready for use */
@@ -106,7 +116,7 @@ private:
 class TorController
 {
 public:
-    TorController(struct event_base* base, const std::string& tor_control_center, const CService& target);
+    TorController(struct event_base* base, const std::string& tor_control_center, const CService& target, const std::string& execute);
     TorController() : conn{nullptr} {
         // Used for testing only.
     }
@@ -119,13 +129,19 @@ public:
     void Reconnect();
 private:
     struct event_base* base;
-    const std::string m_tor_control_center;
+    const std::string m_connect_tor_control_center;
+    std::string m_current_tor_control_center;
     TorControlConnection conn;
     std::string private_key;
     std::string service_id;
+    bool m_try_exec{true};
     bool reconnect;
     struct event *reconnect_ev = nullptr;
     float reconnect_timeout;
+    std::string m_execute{DEFAULT_TOR_EXECUTE};
+#ifdef ENABLE_TOR_SUBPROCESS
+    subprocess::Popen *m_process{nullptr};
+#endif
     CService service;
     const CService m_target;
     /** Cookie for SAFECOOKIE auth */
@@ -151,6 +167,8 @@ public:
 
     /** Callback for reconnect timer */
     static void reconnect_cb(evutil_socket_t fd, short what, void *arg);
+
+    std::string LaunchTor();
 };
 
 #endif // BITCOIN_TORCONTROL_H
