@@ -61,6 +61,24 @@ class WalletTest(BitcoinTestFramework):
     def get_vsize(self, txn):
         return self.nodes[0].decoderawtransaction(txn)['vsize']
 
+    def test_legacy_importaddress(self):
+        if self.options.descriptors:
+            return
+
+        addr = self.nodes[1].getnewaddress()
+        self.nodes[1].sendtoaddress(addr, 10)
+        self.sync_mempools(self.nodes[0:2])
+
+        self.log.info("Test 'importaddress' on a blank, private keys disabled, wallet with no descriptors support")
+        self.nodes[0].createwallet(wallet_name="watch-only-legacy", disable_private_keys=False, descriptors=False, blank=True)
+        wallet_watch_only = self.nodes[0].get_wallet_rpc("watch-only-legacy")
+        wallet_watch_only.importaddress(addr)
+        assert_equal(wallet_watch_only.getaddressinfo(addr)['ismine'], False)
+        assert_equal(wallet_watch_only.getaddressinfo(addr)['iswatchonly'], True)
+        assert_equal(wallet_watch_only.getaddressinfo(addr)['solvable'], False)
+        assert_equal(wallet_watch_only.getbalances()["watchonly"]['untrusted_pending'], 10)
+        self.nodes[0].unloadwallet("watch-only-legacy")
+
     def run_test(self):
 
         # Check that there's no UTXO on none of the nodes
@@ -557,6 +575,9 @@ class WalletTest(BitcoinTestFramework):
             assert_array_result(self.nodes[1].listunspent(),
                                 {"address": address_to_import},
                                 {"spendable": True})
+
+        # Test importaddress on a blank, private keys disabled, legacy wallet with no descriptors support
+        self.test_legacy_importaddress()
 
         # Mine a block from node0 to an address from node1
         coinbase_addr = self.nodes[1].getnewaddress()

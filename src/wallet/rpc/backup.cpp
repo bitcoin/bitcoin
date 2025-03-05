@@ -216,6 +216,8 @@ RPCHelpMan importprivkey()
     };
 }
 
+UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+
 RPCHelpMan importaddress()
 {
     return RPCHelpMan{"importaddress",
@@ -229,7 +231,7 @@ RPCHelpMan importaddress()
             "\nNote: If you import a non-standard raw script in hex form, outputs sending to it will be treated\n"
             "as change, and not show up in many RPCs.\n"
             "Note: Use \"getwalletinfo\" to query the scanning progress.\n"
-            "Note: This command is only compatible with legacy wallets. Use \"importdescriptors\" for descriptor wallets.\n",
+            "Note: For descriptor wallets, this command will create new descriptor/s, and only works if the wallet has private keys disabled.\n",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The Bitcoin address (or hex-encoded script)"},
                     {"label", RPCArg::Type::STR, RPCArg::Default{""}, "An optional label"},
@@ -250,7 +252,18 @@ RPCHelpMan importaddress()
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
 
+    // Use legacy spkm only if the wallet does not support descriptors.
+    bool use_legacy = !pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS);
+    if (use_legacy) {
+        // In case the wallet is blank
     EnsureLegacyScriptPubKeyMan(*pwallet, true);
+    } else {
+        // We don't allow mixing watch-only descriptors with spendable ones.
+        if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import address in wallet with private keys enabled. "
+                                                 "Create wallet with no private keys to watch specific addresses/scripts");
+        }
+    }
 
     const std::string strLabel{LabelFromValue(request.params[1])};
 
@@ -276,23 +289,41 @@ RPCHelpMan importaddress()
     if (!request.params[3].isNull())
         fP2SH = request.params[3].get_bool();
 
+    // Import descriptor helper function
+    const auto& import_descriptor = [pwallet](const std::string& desc, const std::string label) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+        UniValue data(UniValue::VType::VOBJ);
+        data.pushKV("desc", AddChecksum(desc));
+        if (!label.empty()) data.pushKV("label", label);
+        const UniValue& ret = ProcessDescriptorImport(*pwallet, data, /*timestamp=*/1);
+        if (ret.exists("error")) throw ret["error"];
+    };
+
     {
         LOCK(pwallet->cs_wallet);
 
-        CTxDestination dest = DecodeDestination(request.params[0].get_str());
+        const std::string& address = request.params[0].get_str();
+        CTxDestination dest = DecodeDestination(address);
         if (IsValidDestination(dest)) {
             if (fP2SH) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Cannot use the p2sh flag with an address - use a script instead");
             }
             if (OutputTypeFromDestination(dest) == OutputType::BECH32M) {
+                if (use_legacy)
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Bech32m addresses cannot be imported into legacy wallets");
             }
 
             pwallet->MarkDirty();
 
+            if (use_legacy) {
             pwallet->ImportScriptPubKeys(strLabel, {GetScriptForDestination(dest)}, /*have_solving_data=*/false, /*apply_label=*/true, /*timestamp=*/1);
+            } else {
+                import_descriptor("addr(" + address + ")", strLabel);
+            }
         } else if (IsHex(request.params[0].get_str())) {
-            std::vector<unsigned char> data(ParseHex(request.params[0].get_str()));
+            const std::string& hex = request.params[0].get_str();
+
+            if (use_legacy) {
+                std::vector<unsigned char> data(ParseHex(hex));
             CScript redeem_script(data.begin(), data.end());
 
             std::set<CScript> scripts = {redeem_script};
@@ -303,6 +334,14 @@ RPCHelpMan importaddress()
             }
 
             pwallet->ImportScriptPubKeys(strLabel, scripts, /*have_solving_data=*/false, /*apply_label=*/true, /*timestamp=*/1);
+            } else {
+                // P2SH Not allowed. Can't detect inner P2SH function from a raw hex.
+                if (fP2SH) throw JSONRPCError(RPC_WALLET_ERROR, "P2SH import feature disabled for descriptors' wallet. "
+                                                                "Use 'importdescriptors' to specify inner P2SH function");
+
+                // Import descriptors
+                import_descriptor("raw(" + hex + ")", strLabel);
+            }
         } else {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script");
         }
