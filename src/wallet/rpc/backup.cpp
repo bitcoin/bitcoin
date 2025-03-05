@@ -882,7 +882,13 @@ RPCHelpMan dumpwallet()
             } else {
                 file << "change=1";
             }
-            file << strprintf(" # addr=%s%s\n", strAddr, (metadata.has_key_origin ? " hdkeypath="+WriteHDKeypath(metadata.key_origin.path, /*apostrophe=*/true) : ""));
+            if (metadata.has_key_origin) {
+                file << " hdkeypath=" + WriteHDKeypath(metadata.key_origin.path, /*apostrophe=*/true);
+                if (!(metadata.hd_seed_id.IsNull() || (metadata.hdKeypath == "s" && metadata.hd_seed_id == keyid))) {
+                    file << " hdseedid=" + metadata.hd_seed_id.GetHex();
+                }
+            }
+            file << strprintf(" # addr=%s\n", strAddr);
         }
     }
     file << "\n";
