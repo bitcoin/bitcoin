@@ -139,6 +139,7 @@ BITCOIN_CORE_H = \
   checkqueue.h \
   clientversion.h \
   cluster_linearize.h \
+  codex32.h \
   coins.h \
   common/args.h \
   common/bloom.h \
@@ -682,6 +683,7 @@ libbitcoin_common_a_SOURCES = \
   bech32.cpp \
   chainparamsbase.cpp \
   chainparams.cpp \
+  codex32.cpp \
   coins.cpp \
   common/args.cpp \
   common/bloom.cpp \
