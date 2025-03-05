@@ -7,6 +7,7 @@
 
 #include <config/bitcoin-config.h> // IWYU pragma: keep
 
+#include <interfaces/chain.h>
 #include <interfaces/node.h>
 #include <qt/initexecutor.h>
 

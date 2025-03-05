@@ -9,6 +9,8 @@
 #include <QMutex>
 #include <QThread>
 
+#include <memory>
+
 static const bool DEFAULT_CHOOSE_DATADIR = false;
 
 class FreespaceChecker;
@@ -37,6 +39,7 @@ public:
     QString getDataDirectory();
     void setDataDirectory(const QString &dataDir);
     int64_t getPruneMiB() const;
+    QString getAssumeValid() const;
 
     /**
      * Determine data directory. Let the user choose if the current one doesn't exist.
@@ -48,7 +51,7 @@ public:
      * @note do NOT call global gArgs.GetDataDirNet() before calling this function, this
      * will cause the wrong path to be cached.
      */
-    static bool showIfNeeded(bool& did_show_intro, int64_t& prune_MiB);
+    static bool showIfNeeded(std::unique_ptr<Intro>& intro);
 
 Q_SIGNALS:
     void requestCheck();
