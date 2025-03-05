@@ -54,7 +54,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, Dersig100Setup)
         spends[i].vin[0].prevout.n = 0;
         spends[i].vout.resize(1);
         spends[i].vout[0].nValue = 11*CENT;
-        spends[i].vout[0].scriptPubKey = scriptPubKey;
+        spends[i].vout[0].scriptPubKey = GetScriptForDestination(PKHash(coinbaseKey.GetPubKey()));
 
         // Sign:
         std::vector<unsigned char> vchSig;

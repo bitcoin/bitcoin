@@ -6,15 +6,41 @@
 #define BITCOIN_QT_OPTIONSDIALOG_H
 
 #include <QDialog>
+#include <QScrollArea>
 #include <QValidator>
 
+class BitcoinAmountField;
 class ClientModel;
 class OptionsModel;
 class QValidatedLineEdit;
 
 QT_BEGIN_NAMESPACE
+class QBoxLayout;
+class QCheckBox;
 class QDataWidgetMapper;
+class QDoubleSpinBox;
+class QBoxLayout;
+class QRadioButton;
+class QSpinBox;
+class QString;
+class QValueComboBox;
+class QWidget;
 QT_END_NAMESPACE
+
+struct CreateOptionUIOpts;
+
+/** QScrollArea, but returning reasonable size hints.
+ */
+class ModScrollArea : public QScrollArea {
+    Q_OBJECT
+
+public:
+    ModScrollArea();
+    static ModScrollArea *fromWidget(QWidget *parent, QWidget *o);
+
+    QSize minimumSizeHint() const override;
+    QSize sizeHint() const override;
+};
 
 namespace Ui {
 class OptionsDialog;
@@ -69,6 +95,11 @@ private Q_SLOTS:
     void updateDefaultProxyNets();
     void checkLineEdit();
 
+    void incrementalrelayfee_changed();
+    void blockmaxsize_changed(int);
+    void blockmaxsize_increase(int);
+    void blockmaxweight_changed(int);
+
 Q_SIGNALS:
     void proxyIpChecks(QValidatedLineEdit *pUiProxyIp, uint16_t nProxyPort);
     void quitOnReset();
@@ -78,6 +109,50 @@ private:
     ClientModel* m_client_model{nullptr};
     OptionsModel* model{nullptr};
     QDataWidgetMapper* mapper{nullptr};
+
+    QWidget *prevwidget{nullptr};
+    void FixTabOrder(QWidget *);
+    void CreateOptionUI(QBoxLayout *, const QString& text, const std::vector<QWidget *>&, const CreateOptionUIOpts&);
+    void CreateOptionUI(QBoxLayout *, const QString& text, const std::vector<QWidget *>&);
+    void CreateOptionUI(QBoxLayout *, QWidget *, const QString& text, QBoxLayout *horizontalLayout = nullptr);
+
+    QCheckBox *walletrbf;
+
+    QSpinBox *blockreconstructionextratxn;
+
+    QValueComboBox *mempoolreplacement;
+    QValueComboBox *mempooltruc;
+    QSpinBox *maxorphantx;
+    BitcoinAmountField *incrementalrelayfee;
+    QSpinBox *maxmempool;
+    QSpinBox *mempoolexpiry;
+
+    QCheckBox *rejectunknownscripts;
+    QCheckBox *rejectparasites;
+    QCheckBox *rejecttokens;
+    QCheckBox *rejectspkreuse;
+    BitcoinAmountField *minrelaytxfee;
+    QSpinBox *bytespersigop, *bytespersigopstrict;
+    QSpinBox *limitancestorcount;
+    QSpinBox *limitancestorsize;
+    QSpinBox *limitdescendantcount;
+    QSpinBox *limitdescendantsize;
+    QCheckBox *rejectbarepubkey;
+    QCheckBox *rejectbaremultisig;
+    QSpinBox *maxscriptsize;
+    QSpinBox *datacarriersize;
+    QDoubleSpinBox *datacarriercost;
+    QCheckBox *rejectnonstddatacarrier;
+    BitcoinAmountField *dustrelayfee;
+    QCheckBox *dustdynamic_enable;
+    QDoubleSpinBox *dustdynamic_multiplier;
+    QRadioButton *dustdynamic_target;
+    QSpinBox *dustdynamic_target_blocks;
+    QRadioButton *dustdynamic_mempool;
+    QSpinBox *dustdynamic_mempool_kvB;
+
+    BitcoinAmountField *blockmintxfee;
+    QSpinBox *blockmaxsize, *blockprioritysize, *blockmaxweight;
 };
 
 #endif // BITCOIN_QT_OPTIONSDIALOG_H

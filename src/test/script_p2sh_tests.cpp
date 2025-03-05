@@ -22,6 +22,7 @@
 static bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, std::string& reason)
 {
     const kernel::MemPoolOptions opts{
+        .permit_bare_pubkey = true,
         .permit_bare_multisig = permit_bare_multisig,
     };
     return IsStandardTx(tx, opts, reason);
@@ -30,6 +31,7 @@ static bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, std:
 static bool IsStandardTx(const CTransaction& tx, std::string& reason)
 {
     kernel::MemPoolOptions opts{
+        .permit_bare_pubkey = true,
         .permit_bare_multisig = true,
     };
     if (!IsStandardTx(tx, opts, reason)) return false;
