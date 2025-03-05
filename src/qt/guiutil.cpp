@@ -1212,6 +1212,9 @@ void ShowModalDialogAsynchronously(QDialog* dialog, const Qt::WindowModality mod
 
 QString WalletDisplayName(const QString& name)
 {
+    if (name.endsWith(".dat")) {
+        return name.chopped(4);
+    }
     return name.isEmpty() ? "[" + QObject::tr("default wallet") + "]" : name;
 }
 
