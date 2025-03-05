@@ -17,13 +17,14 @@
              (gnu packages moreutils)
              (gnu packages pkg-config)
              ((gnu packages python) #:select (python-minimal))
-             ((gnu packages python-build) #:select (python-tomli))
+             ((gnu packages python-build) #:select (python-tomli python-poetry-core))
              ((gnu packages python-crypto) #:select (python-asn1crypto))
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
              (guix build-system cmake)
              (guix build-system gnu)
              (guix build-system python)
+             (guix build-system pyproject)
              (guix build-system trivial)
              (guix download)
              (guix gexp)
@@ -393,10 +394,10 @@ specific moment in time, whitelisting and revocation checks.")
       (license license:expat))))
 
 (define-public python-signapple
-  (let ((commit "62155712e7417aba07565c9780a80e452823ae6a"))
+  (let ((commit "85bfcecc33d2773bc09bc318cec0614af2c8e287"))
     (package
       (name "python-signapple")
-      (version (git-version "0.1" "1" commit))
+      (version (git-version "0.2.0" "1" commit))
       (source
        (origin
          (method git-fetch)
@@ -406,13 +407,14 @@ specific moment in time, whitelisting and revocation checks.")
          (file-name (git-file-name name commit))
          (sha256
           (base32
-           "1nm6rm4h4m7kbq729si4cm8rzild62mk4ni8xr5zja7l33fhv3gb"))))
-      (build-system python-build-system)
+           "17yqjll8nw83q6dhgqhkl7w502z5vy9sln8m6mlx0f1c10isg8yg"))))
+      (build-system pyproject-build-system)
       (propagated-inputs
         (list python-asn1crypto
               python-oscrypto
               python-certvalidator
               python-elfesteem))
+      (native-inputs (list python-poetry-core))
       ;; There are no tests, but attempting to run python setup.py test leads to
       ;; problems, just disable the test
       (arguments '(#:tests? #f))
