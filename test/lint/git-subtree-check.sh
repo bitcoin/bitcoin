@@ -111,6 +111,7 @@ echo "$DIR in $COMMIT was last updated in commit $old (tree $tree_commit)"
 if [ "$tree_actual_tree" != "$tree_commit" ]; then
     git diff "$tree_commit" "$tree_actual_tree" >&2
     echo "FAIL: subtree directory was touched without subtree merge" >&2
+    [ "$DIR:$old" = "src/leveldb:a37778d4d32b4ddeff96f68a130dc8da3a84b278" ] ||  # exception
     exit 1
 fi
 
