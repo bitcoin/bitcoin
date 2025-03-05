@@ -135,10 +135,21 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         # We need to generate more blocks to be able to prune
         self.generate(self.nodes[0], 400, sync_fun=self.no_op)
         self.sync_blocks([self.nodes[0], pruned_node])
-        pruneheight = pruned_node.pruneblockchain(300)
-        assert_equal(pruneheight, 248)
+
+        # The goal now will be to mimic the automatic pruning process and verify what happens when we fetch an historic
+        # block at any point of time.
+        #
+        # Starting with three blocks files. The pruning process will prune them one by one. And, at the second pruning
+        # event, the test will fetch the past block. Which will be stored at the latest block file. Which can only be
+        # pruned when the latest block file is full (in this case, the third one), and a new one is created.
+
+        # First prune event, prune first block file
+        highest_pruned_block_num = pruned_node.getblockfileinfo(0)["highest_block"]
+        pruneheight = pruned_node.pruneblockchain(highest_pruned_block_num + 1)
+        assert_equal(pruneheight, highest_pruned_block_num)
         # Ensure the block is actually pruned
-        pruned_block = self.nodes[0].getblockhash(2)
+        fetch_block_num = 2
+        pruned_block = self.nodes[0].getblockhash(fetch_block_num)
         assert_raises_rpc_error(-1, "Block not available (pruned data)", pruned_node.getblock, pruned_block)
 
         self.log.info("Fetch pruned block")
@@ -149,18 +160,29 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         self.wait_until(lambda: self.check_for_block(node=2, hash=pruned_block), timeout=1)
         assert_equal(result, {})
 
+        # Validate that the re-fetched block was stored at the last, current, block file
+        assert_equal(fetch_block_num, pruned_node.getblockfileinfo(2)["lowest_block"])
+
         self.log.info("Fetched block persists after next pruning event")
         self.generate(self.nodes[0], 250, sync_fun=self.no_op)
         self.sync_blocks([self.nodes[0], pruned_node])
-        pruneheight += 251
-        assert_equal(pruned_node.pruneblockchain(700), pruneheight)
+
+        # Second prune event, prune second block file
+        highest_pruned_block_num = pruned_node.getblockfileinfo(1)["highest_block"]
+        pruneheight = pruned_node.pruneblockchain(highest_pruned_block_num + 1)
+        assert_equal(pruneheight, highest_pruned_block_num)
+        # As the re-fetched block is in the third file, and we just pruned the second one, 'getblock' must work.
         assert_equal(pruned_node.getblock(pruned_block)["hash"], "36c56c5b5ebbaf90d76b0d1a074dcb32d42abab75b7ec6fa0ffd9b4fbce8f0f7")
 
-        self.log.info("Fetched block can be pruned again when prune height exceeds the height of the tip at the time when the block was fetched")
+        self.log.info("Re-fetched block can be pruned again when a new block file is created")
         self.generate(self.nodes[0], 250, sync_fun=self.no_op)
         self.sync_blocks([self.nodes[0], pruned_node])
-        pruneheight += 250
-        assert_equal(pruned_node.pruneblockchain(1000), pruneheight)
+
+        # Third prune event, prune third block file
+        highest_pruned_block_num = pruned_node.getblockfileinfo(2)["highest_block"]
+        pruneheight = pruned_node.pruneblockchain(highest_pruned_block_num + 1)
+        assert_equal(pruneheight, highest_pruned_block_num)
+        # and check that the re-fetched block file is now pruned
         assert_raises_rpc_error(-1, "Block not available (pruned data)", pruned_node.getblock, pruned_block)
 
 
