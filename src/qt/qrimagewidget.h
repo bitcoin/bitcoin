@@ -5,6 +5,8 @@
 #ifndef BITCOIN_QT_QRIMAGEWIDGET_H
 #define BITCOIN_QT_QRIMAGEWIDGET_H
 
+#include <qt/optionsmodel.h>
+
 #include <QImage>
 #include <QLabel>
 
@@ -29,7 +31,8 @@ class QRImageWidget : public QLabel
 
 public:
     explicit QRImageWidget(QWidget *parent = nullptr);
-    bool setQR(const QString& data, const QString& text = "");
+    bool setQR(const QString& data);
+    bool setQR(const QString& data, const QString& text, const OptionsModel::FontChoice& fontchoice);
     QImage exportImage();
 
 public Q_SLOTS:
