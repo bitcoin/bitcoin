@@ -33,7 +33,7 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
     int64_t nOldTime = pblock->nTime;
     int64_t nNewTime{std::max<int64_t>(pindexPrev->GetMedianTimePast() + 1, TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()))};
 
-    if (consensusParams.enforce_BIP94) {
+    {
         // Height of block to be mined.
         const int height{pindexPrev->nHeight + 1};
         if (height % consensusParams.DifficultyAdjustmentInterval() == 0) {
