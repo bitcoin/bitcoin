@@ -34,6 +34,7 @@ EditAddressDialog::EditAddressDialog(Mode _mode, QWidget* parent)
         break;
     case EditSendingAddress:
         setWindowTitle(tr("Edit sending address"));
+        ui->addressEdit->setEnabled(false);
         break;
     }
 
