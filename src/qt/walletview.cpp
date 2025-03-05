@@ -210,19 +210,36 @@ void WalletView::encryptWallet()
 
 void WalletView::backupWallet()
 {
+    QString filetype_str;
+    //: Name of the wallet data file format.
+    QString supported_formats = tr("Wallet Data") + QLatin1String(" (*.dat)");
+    if (walletModel->wallet().canBackupToDbDump()) {
+        //: Name of the wallet data file format.
+        supported_formats += QLatin1String(";;") + tr("Wallet Database Dump File") + QLatin1String(" (*.walletdbdump)");
+    }
     QString filename = GUIUtil::getSaveFileName(this,
         tr("Backup Wallet"), QString(),
-        //: Name of the wallet data file format.
-        tr("Wallet Data") + QLatin1String(" (*.dat)"), nullptr);
+        supported_formats,
+        &filetype_str);
 
     if (filename.isEmpty())
         return;
 
-    if (!walletModel->wallet().backupWallet(filename.toLocal8Bit().data())) {
-        Q_EMIT message(tr("Backup Failed"), tr("There was an error trying to save the wallet data to %1.").arg(filename),
-            CClientUIInterface::MSG_ERROR);
+    WalletBackupFormat filetype;
+    if (filetype_str == "walletdbdump") {
+        filetype = WalletBackupFormat::DbDump;
+    } else {
+        filetype = WalletBackupFormat::Raw;
+    }
+
+    bilingual_str error;
+    if (!walletModel->wallet().backupWallet(filename.toLocal8Bit().data(), filetype, error)) {
+        if (error.empty()) {
+            Q_EMIT message(tr("Backup Failed"), tr("There was an error trying to save the wallet data to %1.").arg(filename), CClientUIInterface::MSG_ERROR);
+        } else {
+            Q_EMIT message(tr("Backup Failed"), tr("There was an error trying to save the wallet data to %1: %2").arg(filename).arg(QString::fromStdString(error.translated)), CClientUIInterface::MSG_ERROR);
         }
-    else {
+    } else {
         Q_EMIT message(tr("Backup Successful"), tr("The wallet data was successfully saved to %1.").arg(filename),
             CClientUIInterface::MSG_INFORMATION);
     }
