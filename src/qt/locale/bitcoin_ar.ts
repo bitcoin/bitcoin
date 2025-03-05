@@ -2,12 +2,31 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Enter address or label to search</source>
-        <translation type="unfinished">أدخل عنوانا أو مذكرة للبحث</translation>
+        <source>Right-click to edit address or label</source>
+        <translation type="unfinished"> انقر بزر الماوس الأيمن لتعديل العنوان أو التسمية</translation>
     </message>
     <message>
-        <source>&amp;Export</source>
-        <translation type="unfinished">و إستخرج</translation>
+        <source>Create a new address</source>
+        <translation type="unfinished"> إنشاء عنوان جديد</translation>
+    </message>
+    <message>
+        <source>&amp;New</source>
+        <translation type="unfinished"> &amp;جديد</translation>
+    </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation type="unfinished"> احذف العنوان المحدد حاليًا من القائمة</translation>
+    </message>
+    <message>
+        <source>Enter address or label to search</source>
+        <translation type="unfinished"> أدخل العنوان أو التسمية للبحث</translation>
+    </message>
+    </context>
+<context>
+    <name>AskPassphraseDialog</name>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">رجوع</translation>
     </message>
     </context>
 <context>
@@ -86,10 +105,6 @@
     <message>
         <source>None</source>
         <translation type="unfinished">لا شيء</translation>
-    </message>
-    <message>
-        <source>N/A</source>
-        <translation type="unfinished">غير معروف</translation>
     </message>
     <message>
         <source>%1 ms</source>
@@ -377,7 +392,7 @@
             <numerusform>Processed %n block(s) of transaction history.</numerusform>
             <numerusform>Processed %n block(s) of transaction history.</numerusform>
             <numerusform>Processed %n block(s) of transaction history.</numerusform>
-            <numerusform>‫تمت معالجة %n طوابق من العمليات التاريخية.‬</numerusform>
+            <numerusform>Processed %n block(s) of transaction history.</numerusform>
         </translation>
     </message>
     <message>
@@ -804,83 +819,6 @@
         <translation type="unfinished">‫العودة الى هذا الاعداد تتطلب إعادة تنزيل الطوابق المتتالية بالكامل.‬</translation>
     </message>
     <message>
-        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
-        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
-        <translation type="unfinished">‫الحد الأعلى لحجم قاعدة البيانات المؤقتة (الكاش). رفع حد الكاش يزيد من سرعة المزامنة. هذا الخيار مفيد أثناء المزامنة وقد لا يفيد بعد اكتمال المزامنة في معظم الحالات. تخفيض حجم الكاش يقلل من استهلاك الذاكرة. ذاكرة تجمع الذاكرة (mempool) الغير مستخدمة مضمنة في هذا الكاش.‬</translation>
-    </message>
-    <message>
-        <source>MiB</source>
-        <translation type="unfinished">‫ميجابايت‬</translation>
-    </message>
-    <message>
-        <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation type="unfinished">‫(0 = تلقائي, &lt;0 = لترك أنوية حرة بقدر الرقم السالب)‬</translation>
-    </message>
-    <message>
-        <source>Enable R&amp;PC server</source>
-        <extracomment>An Options window setting to enable the RPC server.</extracomment>
-        <translation type="unfinished">‫تفعيل خادم نداء &amp;الاجراء البعيد (RPC)‬</translation>
-    </message>
-    <message>
-        <source>W&amp;allet</source>
-        <translation type="unfinished">‫م&amp;حفظة‬</translation>
-    </message>
-    <message>
-        <source>Whether to set subtract fee from amount as default or not.</source>
-        <extracomment>Tooltip text for Options window setting that sets subtracting the fee from a sending amount as default.</extracomment>
-        <translation type="unfinished">‫تعيين خيار خصم الرسوم من القيمة كخيار افتراضي أم لا.‬</translation>
-    </message>
-    <message>
-        <source>Subtract &amp;fee from amount by default</source>
-        <extracomment>An Options window setting to set subtracting the fee from a sending amount as default.</extracomment>
-        <translation type="unfinished">‫اخصم &amp;الرسوم من القيمة بشكل افتراضي‬</translation>
-    </message>
-    <message>
-        <source>Expert</source>
-        <translation type="unfinished">‫خبير‬</translation>
-    </message>
-    <message>
-        <source>Enable coin &amp;control features</source>
-        <translation type="unfinished">‫تفعيل ميزة &amp;التحكم بوحدات البتكوين‬</translation>
-    </message>
-    <message>
-        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation type="unfinished">‫اذا قمت بتعطيل خيار الانفاق من الفكة الغير مؤكدة، لن يكون بمقدورك التحكم بتلك الفكة حتى تنْفُذ العملية وتحصل على تأكيد واحد على الأقل. هذا أيضا يؤثر على كيفية حساب رصيدك.‬</translation>
-    </message>
-    <message>
-        <source>&amp;Spend unconfirmed change</source>
-        <translation type="unfinished">‫&amp;دفع الفكة غير المؤكدة‬</translation>
-    </message>
-    <message>
-        <source>Enable &amp;PSBT controls</source>
-        <extracomment>An options window setting to enable PSBT controls.</extracomment>
-        <translation type="unfinished">‫تفعيل التحكم ب &amp;المعاملات الموقعة جزئيا‬</translation>
-    </message>
-    <message>
-        <source>External Signer (e.g. hardware wallet)</source>
-        <translation type="unfinished">‫جهاز التوقيع الخارجي (مثل المحفظة الخارجية)‬</translation>
-    </message>
-    <message>
-        <source>&amp;External signer script path</source>
-        <translation type="unfinished">&amp; مسار البرنامج النصي للموقّع الخارجي</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">‫فتح منفذ عميل البتكوين تلقائيا على الموجه. يعمل فقط عندما يكون الموجه الخاص بك يدعم UPnP ومفعل ايضا.‬</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">‫ربط المنفذ باستخدام &amp;UPnP‬</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation type="unfinished">‫افتح منفذ عميل بتكوين تلقائيًا على جهاز التوجيه. يعمل هذا فقط عندما يدعم جهاز التوجيه الخاص بك NAT-PMP ويتم تمكينه. يمكن أن يكون المنفذ الخارجي عشوائيًا.‬</translation>
-    </message>
-    <message>
-        <source>Map port using NA&amp;T-PMP</source>
-        <translation type="unfinished">منفذ الخريطة باستخدام NAT-PMP</translation>
-    </message>
-    <message>
         <source>Accept connections from outside.</source>
         <translation type="unfinished">قبول الاتصالات من الخارج.</translation>
     </message>
@@ -1030,10 +968,6 @@
         <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
         <extracomment>Explanatory text about the priority order of instructions considered by client. The order from high to low being: command-line, configuration file, GUI settings.</extracomment>
         <translation type="unfinished">‫يتم استخدام ملف الإعداد لتحديد خيارات المستخدم المتقدمة التي تتجاوز إعدادات واجهة المستخدم الرسومية. بالإضافة إلى ذلك ، ستتجاوز خيارات سطر الأوامر ملف الإعداد هذا.‬</translation>
-    </message>
-    <message>
-        <source>Continue</source>
-        <translation type="unfinished">‫استمرار‬</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -1308,11 +1242,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
 <context>
     <name>PeerTableModel</name>
     <message>
-        <source>User Agent</source>
-        <extracomment>Title of Peers Table column which contains the peer's User Agent string.</extracomment>
-        <translation type="unfinished">وكيل المستخدم</translation>
-    </message>
-    <message>
         <source>Ping</source>
         <extracomment>Title of Peers Table column which indicates the current latency of the connection with the peer.</extracomment>
         <translation type="unfinished">رنين</translation>
@@ -1338,16 +1267,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">تم الإرسال</translation>
     </message>
     <message>
-        <source>Received</source>
-        <extracomment>Title of Peers Table column which indicates the total amount of network information we have received from the peer.</extracomment>
-        <translation type="unfinished">‫مستلم‬</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">العنوان</translation>
-    </message>
-    <message>
         <source>Type</source>
         <extracomment>Title of Peers Table column which describes the type of peer connection. The "type" describes why the connection exists.</extracomment>
         <translation type="unfinished">النوع</translation>
@@ -1371,12 +1290,35 @@ If you are receiving this error you should request the merchant provide a BIP21 
 <context>
     <name>RPCConsole</name>
     <message>
+        <source>Local Addresses</source>
+        <translation type="unfinished">العناوين المحلية</translation>
+    </message>
+    <message>
+        <source>Network addresses that your Bitcoin node is currently using to communicate with other nodes.</source>
+        <translation type="unfinished">عناوين الشبكة التي تستخدمها عقدةالبتكوين الخاصة بك حاليًا للتواصل مع العقد الأخرى.</translation>
+    </message>
+    <message>
         <source>Sent</source>
         <translation type="unfinished">تم الإرسال</translation>
     </message>
     <message>
+        <source>Hide Peers Detail</source>
+        <translation type="unfinished">إخفاء تفاصيل الأقران</translation>
+    </message>
+    <message>
         <source>Node window</source>
         <translation type="unfinished">‫نافذة النود‬</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished">لا شيء</translation>
+    </message>
+    </context>
+<context>
+    <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">‫نسخ &amp;القيمة‬</translation>
     </message>
     </context>
 <context>
@@ -1396,8 +1338,16 @@ If you are receiving this error you should request the merchant provide a BIP21 
 <context>
     <name>SendCoinsDialog</name>
     <message>
+        <source>Change:</source>
+        <translation type="unfinished">تعديل:</translation>
+    </message>
+    <message>
         <source>Copy quantity</source>
         <translation type="unfinished">نسخ الكمية </translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation type="unfinished">‫نسخ القيمة‬</translation>
     </message>
     <message>
         <source>Copy after fee</source>
@@ -1412,6 +1362,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">‫أنشئ معاملة بتكوين موقعة جزئيا (PSBT) للاستعمال مع محفظة %1 غير متصلة بالشبكة مثلا، أو محفظة خارجية متوافقة مع الـ(PSBT).‬</translation>
     </message>
     <message>
+        <source>Save Transaction Data</source>
+        <translation type="unfinished">حفظ بيانات العملية</translation>
+    </message>
+    <message>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
         <translation type="unfinished">معاملة موقعة جزئيًا (ثنائي)</translation>
@@ -1419,6 +1373,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>or</source>
         <translation type="unfinished">أو</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation type="unfinished">القيمة الإجمالية</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -1438,6 +1396,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
 </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>own address</source>
+        <translation type="unfinished">عنوانه</translation>
+    </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
@@ -1471,6 +1433,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">‫نسخ &amp;القيمة‬</translation>
+    </message>
     <message>
         <source>Type</source>
         <translation type="unfinished">النوع</translation>
@@ -1510,8 +1476,8 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">أكثر من عنوان مربوط بالonion مقدم. استخدام %s من أجل خدمة تور (Tor) المنشأة تلقائيا.</translation>
     </message>
     <message>
-        <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation type="unfinished">لايمكن الكتابة على دليل البيانات '%s'؛ تحقق من السماحيات.</translation>
+        <source>Maximum transaction weight is too low, can not accommodate change output</source>
+        <translation type="unfinished">الحد الأقصى لوزن المعاملة منخفض جدًا، ولا يمكنه استيعاب مخرجات التغيير</translation>
     </message>
     </context>
 </TS>

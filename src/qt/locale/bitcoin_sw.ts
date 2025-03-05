@@ -3,11 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Bonyeza kulia ili kuhariri anwani au lebo</translation>
+        <translation type="unfinished">Bofya-kulia ili kuhariri anwani au lebo</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Fungua anuani mpya</translation>
+        <translation type="unfinished">Tengeneza anwani mpya</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Nakili anwani iliyochaguliwa sasa kwenye ubao wa kunakili wa mfumo</translation>
+        <translation type="unfinished">Nakili anwani iliyochaguliwa kwa sasa kwenye ubao wa kunakili wa mfumo</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -94,34 +94,42 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
         <translation type="unfinished">Kulikuwa na kosa jaribu kuokoa orodha ya anwani kwa %1. Tafadhali jaribu tena.</translation>
     </message>
     <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">Kutuma anwani - %1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">Kupokea anwani - %1</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Utoaji Haujafanikiwa</translation>
+        <translation type="unfinished">Kuuza Nje Kushindwa</translation>
     </message>
 </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Chapa</translation>
+        <translation type="unfinished">Lebo</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">Anuani</translation>
+        <translation type="unfinished">Anwani</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(hamna chapa)</translation>
+        <translation type="unfinished">(hakuna lebo)</translation>
     </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation type="unfinished">Kisanduku Kidadisi cha Nenosiri </translation>
+        <translation type="unfinished">Mazungumzo Ya Maneno Ya Siri</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation type="unfinished">Ingiza nenosiri</translation>
+        <translation type="unfinished">Ingiza passphrase</translation>
     </message>
     <message>
         <source>New passphrase</source>
@@ -985,7 +993,7 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     <message>
         <source>Address</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">Anuani</translation>
+        <translation type="unfinished">Anwani</translation>
     </message>
     </context>
 <context>
@@ -1146,11 +1154,11 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">Anuani</translation>
+        <translation type="unfinished">Anwani</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Utoaji Haujafanikiwa</translation>
+        <translation type="unfinished">Kuuza Nje Kushindwa</translation>
     </message>
     <message>
         <source>Exporting Successful</source>

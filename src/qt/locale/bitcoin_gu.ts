@@ -1648,11 +1648,6 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">આ સેટિંગને પાછું ફેરવવા માટે સમગ્ર બ્લોકચેનને ફરીથી ડાઉનલોડ કરવાની જરૂર છે.</translation>
     </message>
     <message>
-        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
-        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
-        <translation type="unfinished">મહત્તમ ડેટાબેઝ કેશ કદ. એક મોટી કેશ ઝડપી સમન્વયનમાં યોગદાન આપી શકે છે, જે પછી મોટાભાગના ઉપયોગના કેસોમાં લાભ ઓછો ઉચ્ચારવામાં આવે છે. કેશનું કદ ઘટાડવાથી મેમરીનો વપરાશ ઘટશે. આ કેશ માટે નહિ વપરાયેલ મેમ્પૂલ મેમરી શેર કરવામાં આવી છે.</translation>
-    </message>
-    <message>
         <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
         <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
         <translation type="unfinished">સ્ક્રિપ્ટ ચકાસણી થ્રેડોની સંખ્યા સેટ કરો. નકારાત્મક મૂલ્યો કોરોની સંખ્યાને અનુરૂપ છે જે તમે સિસ્ટમને મફતમાં છોડવા માંગો છો.</translation>
@@ -1718,22 +1713,6 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>&amp;External signer script path</source>
         <translation type="unfinished">&amp;બાહ્ય સહી કરનાર સ્ક્રિપ્ટ પાથ</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">રાઉટર પર બિટકોઇન ક્લાયંટ પોર્ટને આપમેળે ખોલો. આ ત્યારે જ કામ કરે છે જ્યારે તમારું રાઉટર UPnP ને સપોર્ટ કરતું હોય અને તે સક્ષમ હોય.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">&amp;UPnP નો ઉપયોગ કરીને નકશો પોર્ટ</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation type="unfinished">રાઉટર પર બિટકોઇન ક્લાયંટ પોર્ટને આપમેળે ખોલો. આ ત્યારે જ કામ કરે છે જ્યારે તમારું રાઉટર NAT-PMP ને સપોર્ટ કરે અને તે સક્ષમ હોય. બાહ્ય પોર્ટ રેન્ડમ હોઈ શકે છે.</translation>
-    </message>
-    <message>
-        <source>Map port using NA&amp;T-PMP</source>
-        <translation type="unfinished">NA&amp;T-PMP નો ઉપયોગ કરીને નકશો પોર્ટ</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>

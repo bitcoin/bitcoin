@@ -1227,18 +1227,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Ako onemogućite trošenje nepotvrđene promjene, promjena iz transakcije neće se moći koristiti dok ta transakcija nema barem jednu potvrdu. Ovo također utječe na način izračunavanja vašeg stanja.</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Automatski otvorite port Bitcoin klijenta na ruteru. Ovo radi samo kada vaš ruter podržava UPnP i ako je omogućen.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">Map port koristi &amp;UPnP</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation type="unfinished">Automatski otvorite port Bitcoin klijenta na ruteru. Ovo radi samo kada vaš ruter podržava NAT-PMP i ako je omogućen. Vanjski port može biti nasumičan.</translation>
-    </message>
-    <message>
         <source>Accept connections from outside.</source>
         <translation type="unfinished">Prihvatite veze izvana.</translation>
     </message>

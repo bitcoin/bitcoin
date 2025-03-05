@@ -896,11 +896,6 @@
         <translation type="unfinished">&amp;Mạng</translation>
     </message>
     <message>
-        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
-        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
-        <translation type="unfinished">Kích thước bộ đệm cơ sở dữ liệu tối đa. Bộ nhớ đệm lớn hơn có thể góp phần đồng bộ hóa nhanh hơn, sau đó lợi ích ít rõ rệt hơn đối với hầu hết các trường hợp sử dụng. Giảm kích thước bộ nhớ cache sẽ làm giảm mức sử dụng bộ nhớ. Bộ nhớ mempool không sử dụng được chia sẻ cho bộ nhớ cache này.</translation>
-    </message>
-    <message>
         <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
         <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
         <translation type="unfinished">Đặt số lượng chuỗi xác minh tập lệnh. Giá trị âm tương ứng với số lõi bạn muốn để lại miễn phí cho hệ thống.</translation>
@@ -1274,10 +1269,6 @@
     <message>
         <source>Cannot set -forcednsseed to true when setting -dnsseed to false.</source>
         <translation type="unfinished">Không thể đặt -forcednsseed thành true khi đặt -dnsseed thành false.</translation>
-    </message>
-    <message>
-        <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation type="unfinished">Không thể ghi vào thư mục dữ liệu  '%s'; kiểm tra lại quyền.</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>

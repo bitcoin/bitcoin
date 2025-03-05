@@ -1199,14 +1199,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Panlabas na ♦signer script♦ na daanan</translation>
     </message>
     <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">♦Port♦ ng mapa gamit ang &amp;♦UPnP♦</translation>
-    </message>
-    <message>
-        <source>Map port using NA&amp;T-PMP</source>
-        <translation type="unfinished">♦Port♦ ng mapa gamit ang NA&amp;T-PMP</translation>
-    </message>
-    <message>
         <source>Allow incomin&amp;g connections</source>
         <translation type="unfinished">Pahintulutan ang paparating na mga &amp;koneksyon</translation>
     </message>

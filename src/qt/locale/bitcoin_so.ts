@@ -89,6 +89,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Waxaa jiray qalad isku dayaya in uu badbaadiyo liiska cinwaanka si. %1Iskuday mar kale.</translation>
     </message>
     <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">Cinwaanada diraya%1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">Cinwaanada aan Helayaa - %1</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">Dhoofinta Fashilmeen</translation>
     </message>
@@ -199,6 +207,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Jeebka passphrase ayaa si guul leh loo bedelay.</translation>
     </message>
     <message>
+        <source>Passphrase change failed</source>
+        <translation type="unfinished">Isbeddelka erayga sirta ah wuu fashilmay</translation>
+    </message>
+    <message>
         <source>Warning: The Caps Lock key is on!</source>
         <translation type="unfinished">Digniin: Furaha Lock Caps waa on!</translation>
     </message>
@@ -245,6 +257,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
         <translation type="unfinished">Waxaa dhacday qalad dilaa ah. Hubi in file settings waa writable, ama isku day inaad la -nosettings socda.</translation>
     </message>
+    <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">Khalad: %1</translation>
+    </message>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
@@ -290,6 +306,30 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>&amp;Overview</source>
+        <translation type="unfinished">&amp;Dulmar</translation>
+    </message>
+    <message>
+        <source>Show general overview of wallet</source>
+        <translation type="unfinished">Muuji dulmar guud oo ku saabsan walletka</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation type="unfinished">&amp;Transaction-yada</translation>
+    </message>
+    <message>
+        <source>Browse transaction history</source>
+        <translation type="unfinished">Baadh taariikhda transaction-yada</translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation type="unfinished">ka bax</translation>
+    </message>
+    <message>
+        <source>Quit application</source>
+        <translation type="unfinished">Ka bax barnaamijka</translation>
+    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
@@ -304,6 +344,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
             <numerusform />
         </translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">Khalad: %1</translation>
     </message>
     </context>
 <context>
