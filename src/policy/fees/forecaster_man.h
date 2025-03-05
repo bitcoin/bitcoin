@@ -9,8 +9,10 @@
 #include <sync.h>
 #include <threadsafety.h>
 
+#include <map>
 #include <memory>
 #include <optional>
+#include <set>
 #include <unordered_map>
 #include <vector>
 
@@ -56,6 +58,20 @@ private:
     //! Tracks the statistics of previously mined blocks.
     std::vector<BlockData> prev_mined_blocks GUARDED_BY(cs);
 
+    //! Map to track transaction mining count (fast lookup).
+    std::map<Txid, size_t> tx_mine_count;
+
+    //! Custom comparator: Sorts by count (descending).
+    struct CompareTx {
+        bool operator()(const std::pair<size_t, Txid>& a, const std::pair<size_t, Txid>& b) const
+        {
+            return a.first > b.first;
+        }
+    };
+
+    //! Ordered set of transactions sorted by count.
+    std::multiset<std::pair<size_t, Txid>, CompareTx> sorted_txs;
+
     //! Checks if recent mined blocks indicate a healthy mempool state.
     bool IsMempoolHealthy() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
@@ -64,8 +80,7 @@ private:
 
 protected:
     //! Handles transactions removed from the mempool due to a new block.
-    void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block,
-                                            const std::vector<CTransactionRef>& /*unused*/, unsigned int nBlockHeight) override
+    void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, const std::vector<CTransactionRef>& expected_block_txs, unsigned int nBlockHeight) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     //! Handles newly connected blocks.

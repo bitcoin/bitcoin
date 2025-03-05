@@ -107,21 +107,6 @@ bool FeeRateForecasterManager::IsMempoolHealthy() const
     return true;
 }
 
-// Updates mempool data for removed transactions during block connection
-void FeeRateForecasterManager::MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block,
-                                                                  const std::vector<CTransactionRef>& /*unused*/, unsigned int nBlockHeight)
-{
-    LOCK(cs);
-    size_t removed_weight = std::accumulate(txs_removed_for_block.begin(), txs_removed_for_block.end(), 0u,
-                                            [](size_t acc, const auto& tx) { return acc + tx.info.m_tx->GetTotalWeight(); });
-
-    // TODO: Store all block health data and then use only the latest NUMBER_OF_BLOCKS for mempool health assessment
-    if (prev_mined_blocks.size() == NUMBER_OF_BLOCKS) {
-        prev_mined_blocks.erase(prev_mined_blocks.begin());
-    }
-    prev_mined_blocks.emplace_back(nBlockHeight, static_cast<double>(removed_weight));
-}
-
 // Calculates total block weight excluding the coinbase transaction
 size_t FeeRateForecasterManager::CalculateBlockWeight(const std::vector<CTransactionRef>& txs) const
 {
@@ -155,7 +140,7 @@ std::vector<std::string> FeeRateForecasterManager::GetPreviouslyMinedBlockDataSt
 {
     LOCK(cs);
     std::vector<std::string> block_data_strings;
-    block_data_strings.reserve(prev_mined_blocks.size() + 1);
+    block_data_strings.reserve(prev_mined_blocks.size() + sorted_txs.size() + 2);
     block_data_strings.emplace_back(strprintf("Tracked %d most-recent blocks.", prev_mined_blocks.size()));
 
     for (const auto& block : prev_mined_blocks) {
@@ -169,7 +154,64 @@ std::vector<std::string> FeeRateForecasterManager::GetPreviouslyMinedBlockDataSt
         }
         block_data_strings.emplace_back(block_str);
     }
+
+    block_data_strings.emplace_back(strprintf("We suspect %d txs are been filtered by miners", sorted_txs.size()));
+    for (auto& tx : sorted_txs) {
+        block_data_strings.emplace_back(strprintf("%s; count %d", tx.second.ToString(), tx.first));
+    }
     return block_data_strings;
+}
+
+// Updates mempool data for removed transactions during block connection
+void FeeRateForecasterManager::MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block,
+                                                                  const std::vector<CTransactionRef>& expected_block_txs, unsigned int nBlockHeight)
+{
+    LOCK(cs);
+    // Track removed transaction IDs and compute their total virtual weight.
+    std::set<Txid> removed_transactions;
+    size_t removed_weight = 0;
+
+    for (const auto& tx : txs_removed_for_block) {
+        removed_weight += tx.info.m_virtual_transaction_size * WITNESS_SCALE_FACTOR;
+        const Txid& txid = tx.info.m_tx->GetHash();
+        removed_transactions.insert(txid);
+
+        // Remove from tracking structures if we were tracking it
+        auto it = tx_mine_count.find(txid);
+        if (it != tx_mine_count.end()) {
+            sorted_txs.erase({it->second, txid});
+            tx_mine_count.erase(it);
+        }
+    }
+
+    // TODO: Store all block health data and then use only the latest NUMBER_OF_BLOCKS for mempool health assessment
+    if (prev_mined_blocks.size() == NUMBER_OF_BLOCKS) {
+        prev_mined_blocks.erase(prev_mined_blocks.begin());
+    }
+    prev_mined_blocks.emplace_back(nBlockHeight, static_cast<double>(removed_weight));
+
+    // Process transactions that should have been mined but weren't
+    if (!expected_block_txs.empty()) {
+        for (auto it = expected_block_txs.begin() + 1; it != expected_block_txs.end(); ++it) { // Skip coinbase
+            const Txid& txid = (*it)->GetHash();
+
+            // Skip transactions that were already removed
+            if (removed_transactions.count(txid)) continue;
+
+            // Remove old count entry from `sorted_txs` before updating count
+            auto existing = tx_mine_count.find(txid);
+            if (existing != tx_mine_count.end()) {
+                sorted_txs.erase({existing->second, txid});
+                existing->second++; // Increment count
+            } else {
+                tx_mine_count[txid] = 1;
+            }
+
+            // Insert updated count entry into `sorted_txs`
+            sorted_txs.insert({tx_mine_count[txid], txid});
+            LogDebug(BCLog::ESTIMATEFEE, "%s expected in block \n", txid.ToString());
+        }
+    }
 }
 
 FeeRateForecasterManager::~FeeRateForecasterManager() = default;
