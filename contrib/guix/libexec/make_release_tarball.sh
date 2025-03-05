@@ -24,6 +24,7 @@ cd "${DISTNAME}"
 
 ./autogen.sh
 ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking
+make src_files
 make distclean
 
 cd ..

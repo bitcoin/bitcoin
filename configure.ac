@@ -663,6 +663,17 @@ AC_ARG_WITH([daemon],
   [build_bitcoind=$withval],
   [build_bitcoind=yes])
 
+can_render_icons=yes
+AC_PATH_PROGS([RSVG_CONVERT],[rsvg-convert rsvg],no)
+AC_PATH_PROGS([IMAGEMAGICK_CONVERT],[magick convert],no)
+AC_PATH_PROGS([PNG2ICNS],[png2icns],no)
+
+if test x$RSVG_CONVERT = xno; then
+  can_render_icons='rsvg-convert'
+elif test x$IMAGEMAGICK_CONVERT = xno; then
+  can_render_icons='ImageMagick'
+fi
+
 case $host in
   *mingw*)
      TARGET_OS=windows
@@ -718,8 +729,15 @@ case $host in
      dnl Avoid the use of aligned vector instructions when building for Windows.
      dnl See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=54412.
      AX_CHECK_COMPILE_FLAG([-Wa,-muse-unaligned-vector-move], [CORE_CXXFLAGS="$CORE_CXXFLAGS -Wa,-muse-unaligned-vector-move"], [], [$CXXFLAG_WERROR])
+
+     AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg],rsvg-convert)
+     AC_PATH_PROGS([IMAGEMAGICK_CONVERT], [magick convert],convert)
      ;;
   *darwin*)
+     if test x$PNG2ICNS = xno; then
+       can_render_icons='png2icns'
+     fi
+
      TARGET_OS=darwin
      if  test $cross_compiling != "yes"; then
        BUILD_OS=darwin
@@ -1392,6 +1410,13 @@ else
     QT_INCLUDES=SUPPRESS_WARNINGS($QT_INCLUDES)
     QT_DBUS_INCLUDES=SUPPRESS_WARNINGS($QT_DBUS_INCLUDES)
     QT_TEST_INCLUDES=SUPPRESS_WARNINGS($QT_TEST_INCLUDES)
+  fi
+fi
+
+AM_CONDITIONAL([CAN_RENDER_ICONS], [test "$can_render_icons" = "yes"])
+if test "$can_render_icons" != "yes"; then
+  if test "$bitcoin_enable_qt" != "no" && test ! -f "${srcdir}/src/qt/res/rendered_icons/bitcoin.ico"; then
+    AC_MSG_ERROR([Couldn't find ${can_render_icons} (required to build GUI from git)])
   fi
 fi
 
