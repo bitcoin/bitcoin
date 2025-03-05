@@ -1085,10 +1085,9 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     return true;
 }
 
-static bool LockDataDirectory(bool probeOnly)
+static bool LockDirectory(const fs::path& datadir, bool probeOnly)
 {
     // Make sure only a single Bitcoin process is using the data directory.
-    const fs::path& datadir = gArgs.GetDataDirNet();
     switch (util::LockDirectory(datadir, ".lock", probeOnly)) {
     case util::LockResult::ErrorWrite:
         return InitError(strprintf(_("Cannot write to data directory '%s'; check permissions."), fs::PathToString(datadir)));
@@ -1097,6 +1096,11 @@ static bool LockDataDirectory(bool probeOnly)
     case util::LockResult::Success: return true;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
+}
+static bool LockDataDirectory(bool probeOnly)
+{
+    return LockDirectory(gArgs.GetDataDirNet(), probeOnly) && \
+           LockDirectory(gArgs.GetBlocksDirPath(), probeOnly);
 }
 
 bool AppInitSanityChecks(const kernel::Context& kernel)
