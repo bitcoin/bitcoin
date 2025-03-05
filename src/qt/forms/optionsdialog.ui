@@ -875,6 +875,16 @@
         </layout>
        </item>
        <item>
+        <widget class="QCheckBox" name="displayAddresses">
+         <property name="toolTip">
+          <string>Whether to show Bitcoin addresses in the transaction list or not.</string>
+         </property>
+         <property name="text">
+          <string>&amp;Display addresses in transaction list</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <layout class="QHBoxLayout" name="horizontalLayout_3_Display">
          <item>
           <widget class="QLabel" name="thirdPartyTxUrlsLabel">

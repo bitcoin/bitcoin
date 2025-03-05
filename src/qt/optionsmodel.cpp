@@ -263,6 +263,10 @@ bool OptionsModel::Init(bilingual_str& error)
         settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(m_display_bitcoin_unit));
     }
 
+    if (!settings.contains("bDisplayAddresses"))
+        settings.setValue("bDisplayAddresses", false);
+    bDisplayAddresses = settings.value("bDisplayAddresses", false).toBool();
+
     if (!settings.contains("strThirdPartyTxUrls"))
         settings.setValue("strThirdPartyTxUrls", "");
     strThirdPartyTxUrls = settings.value("strThirdPartyTxUrls", "").toString();
@@ -580,6 +584,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
 #endif
     case DisplayUnit:
         return QVariant::fromValue(m_display_bitcoin_unit);
+    case DisplayAddresses:
+        return bDisplayAddresses;
     case ThirdPartyTxUrls:
         return strThirdPartyTxUrls;
     case Language:
@@ -790,6 +796,10 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
 #endif
     case DisplayUnit:
         setDisplayUnit(value);
+        break;
+    case DisplayAddresses:
+        bDisplayAddresses = value.toBool();
+        settings.setValue("bDisplayAddresses", bDisplayAddresses);
         break;
     case ThirdPartyTxUrls:
         if (strThirdPartyTxUrls != value.toString()) {
