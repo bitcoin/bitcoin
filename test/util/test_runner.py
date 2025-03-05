@@ -16,6 +16,7 @@ import json
 import logging
 import os
 import pprint
+import re
 import subprocess
 import sys
 
@@ -34,14 +35,14 @@ def main():
     if verbose:
         level = logging.DEBUG
     else:
-        level = logging.ERROR
+        level = logging.WARNING
     formatter = '%(asctime)s - %(levelname)s - %(message)s'
     # Add the format/level to the logger
     logging.basicConfig(format=formatter, level=level)
 
-    bctester(os.path.join(env_conf["SRCDIR"], "test", "util", "data"), "bitcoin-util-test.json", env_conf)
+    bctester(os.path.join(env_conf["SRCDIR"], "test", "util", "data"), "bitcoin-util-test.json", env_conf, config['components'])
 
-def bctester(testDir, input_basename, buildenv):
+def bctester(testDir, input_basename, buildenv, component_conf):
     """ Loads and parses the input file, runs all tests and reports results"""
     input_filename = os.path.join(testDir, input_basename)
     with open(input_filename, encoding="utf8") as f:
@@ -49,8 +50,17 @@ def bctester(testDir, input_basename, buildenv):
     input_data = json.loads(raw_data)
 
     failed_testcases = []
+    skipped_testcases = []
+    skipped_testcase_deps = set()
 
     for testObj in input_data:
+        m = re.match(r'^\.\/bitcoin-(\w+)$', testObj['exec'])
+        if not component_conf.getboolean(f'ENABLE_UTIL_{m.group(1).upper()}'):
+            logging.info("SKIPPED: " + testObj["description"])
+            skipped_testcases.append(testObj['description'])
+            skipped_testcase_deps.add(testObj['exec'])
+            continue
+
         try:
             bctest(testDir, testObj, buildenv)
             logging.info("PASSED: " + testObj["description"])
@@ -64,6 +74,8 @@ def bctester(testDir, input_basename, buildenv):
         logging.error(error_message)
         sys.exit(1)
     else:
+        if skipped_testcases:
+            logging.warning(f'{len(skipped_testcases)} tests skipped because {skipped_testcase_deps} is not built')
         sys.exit(0)
 
 def bctest(testDir, testObj, buildenv):
