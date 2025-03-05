@@ -41,10 +41,15 @@ enum class NetPermissionFlags : uint32_t {
     // unlimited amounts of addrs.
     Addr = (1U << 7),
 
+    // Can query compact filters even if -peerblockfilters is false
+    BlockFilters = (1U << 8),
+    // Used to avoid an error when All is used to set BlockFilters
+    BlockFilters_Explicit = BlockFilters | (1U << 9),
+
     // True if the user did not specifically set fine-grained permissions with
     // the -whitebind or -whitelist configuration options.
     Implicit = (1U << 31),
-    All = BloomFilter | ForceRelay | Relay | NoBan | Mempool | Download | Addr,
+    All = BloomFilter | ForceRelay | Relay | NoBan | Mempool | Download | Addr | BlockFilters,
 };
 static inline constexpr NetPermissionFlags operator|(NetPermissionFlags a, NetPermissionFlags b)
 {
