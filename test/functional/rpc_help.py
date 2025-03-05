@@ -65,7 +65,7 @@ class HelpRpcTest(BitcoinTestFramework):
 
         mapping_server = self.nodes[0].help("dump_all_command_conversions")
         # Filter all RPCs whether they need conversion
-        mapping_server_conversion = [tuple(m[:3]) for m in mapping_server if not m[3]]
+        mapping_server_conversion = set(tuple(m[:3]) for m in mapping_server if not m[3])
 
         # Only check if all RPC methods have been compiled (i.e. wallet is enabled)
         if self.is_wallet_compiled() and sorted(mapping_client) != sorted(mapping_server_conversion):
