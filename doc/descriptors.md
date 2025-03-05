@@ -23,6 +23,9 @@ Supporting RPCs are:
 - `listdescriptors` outputs descriptors imported into a descriptor wallet (since v22).
 - `scanblocks` takes as input descriptors to scan for in blocks and returns the
    relevant blockhashes (since v25).
+- `getdescriptoractivity` takes as input descriptors and blockhashes (as output
+  by `scanblocks`) and returns rich event data related to spends or receives associated
+  with the given descriptors.
 
 This document describes the language. For the specifics on usage, see the RPC
 documentation for the functions mentioned above.
