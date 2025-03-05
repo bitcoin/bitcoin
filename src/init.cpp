@@ -337,8 +337,10 @@ void Shutdown(NodeContext& node)
     }
 
     // Drop transactions we were still watching, record fee estimations.
+    // Unregister forecaster manager from validation interface.
     if (node.forecasterman) {
         node.forecasterman->GetBlockPolicyEstimator()->Flush();
+        if (node.validation_signals) node.validation_signals->UnregisterValidationInterface(node.forecasterman.get());
     }
 
     // FlushStateToDisk generates a ChainStateFlushed callback, which we should avoid missing
@@ -1819,12 +1821,13 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         auto mempool_forecaster = std::make_shared<MemPoolForecaster>(node.mempool.get(), &(chainman.ActiveChainstate()));
         node.forecasterman->RegisterForecaster(mempool_forecaster);
         auto block_policy_estimator = std::make_shared<CBlockPolicyEstimator>(FeeestPath(args), read_stale_estimates);
-        validation_signals.RegisterSharedValidationInterface(block_policy_estimator);
         // Flush block policy estimates to disk periodically
         scheduler.scheduleEvery([block_policy_estimator] { block_policy_estimator->FlushFeeEstimates(); }, FEE_FLUSH_INTERVAL);
 
         // Register block policy estimator to forecaster manager
         node.forecasterman->RegisterForecaster(block_policy_estimator);
+
+        validation_signals.RegisterValidationInterface(node.forecasterman.get());
     }
 
     assert(!node.peerman);

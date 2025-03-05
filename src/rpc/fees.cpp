@@ -42,7 +42,8 @@ static RPCHelpMan estimatesmartfee()
             {"conf_target", RPCArg::Type::NUM, RPCArg::Optional::NO, "Confirmation target in blocks (1 - 1008)"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"economical"}, "The fee estimate mode.\n"
               + FeeModesDetail(std::string("default mode will be used"))},
-            {"block_policy_only", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to use block policy estimator only.\n"}
+            {"block_policy_only", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to use block policy estimator only.\n"},
+            {"verbosity", RPCArg::Type::NUM, RPCArg::Default{1}, "1 will return the feerate, forecaster, errors and blocks, 2 will stats."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -58,6 +59,9 @@ static RPCHelpMan estimatesmartfee()
                 "fee estimation is able to return based on how long it has been running.\n"
                 "An error is returned if not enough transactions and blocks\n"
                 "have been observed to make an estimate for any number of blocks."},
+                {RPCResult::Type::ARR, "stats", /*optional=*/true, strprintf("%d most-recent blocks stats (if there are any) indicating mempool health, only returned when verbose is > 1", NUMBER_OF_BLOCKS),
+                {{RPCResult::Type::STR, "", "stat"},
+            }},
         }},
         RPCExamples{
             HelpExampleCli("estimatesmartfee", "6") +
@@ -116,6 +120,14 @@ static RPCHelpMan estimatesmartfee()
                 errors.push_back(err);
             }
             result.pushKV("errors", std::move(errors));
+            int verbosity{ParseVerbosity(request.params[3], /*default_verbosity=*/1, /*allow_bool=*/true)};
+            if (verbosity > 1) {
+                UniValue stats(UniValue::VARR);
+                std::vector<std::string> verbose_stats = forecaster_man.GetPreviouslyMinedBlockDataStr();
+                for (auto& stat : verbose_stats)
+                    stats.push_back(stat);
+                result.pushKV("stats", stats);
+            }
             return result;
         },
     };
