@@ -20,6 +20,7 @@ class CBlockIndex;
 class OptionsModel;
 class PeerTableModel;
 class PeerTableSortProxy;
+class PlatformStyle;
 enum class SynchronizationState;
 struct LocalServiceInfo;
 
@@ -58,7 +59,7 @@ class ClientModel : public QObject
     Q_OBJECT
 
 public:
-    explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, QObject *parent = nullptr);
+    explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, const PlatformStyle&, QObject *parent = nullptr);
     ~ClientModel();
 
     void stop();
