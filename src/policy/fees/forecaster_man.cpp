@@ -13,11 +13,13 @@
 
 void FeeRateForecasterManager::RegisterForecaster(std::shared_ptr<Forecaster> forecaster)
 {
+    LOCK(cs);
     forecasters.emplace(forecaster->GetForecastType(), forecaster);
 }
 
 CBlockPolicyEstimator* FeeRateForecasterManager::GetBlockPolicyEstimator()
 {
+    LOCK(cs);
     Assume(forecasters.contains(ForecastType::BLOCK_POLICY));
     Forecaster* block_policy_estimator = forecasters.find(ForecastType::BLOCK_POLICY)->second.get();
     return dynamic_cast<CBlockPolicyEstimator*>(block_policy_estimator);
@@ -25,6 +27,7 @@ CBlockPolicyEstimator* FeeRateForecasterManager::GetBlockPolicyEstimator()
 
 std::pair<std::optional<ForecastResult>, std::vector<std::string>> FeeRateForecasterManager::GetFeeEstimateFromForecasters(ConfirmationTarget& target)
 {
+    LOCK(cs);
     std::vector<std::string> err_messages;
     ForecastResult selected_forecast;
 

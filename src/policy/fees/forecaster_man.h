@@ -5,6 +5,9 @@
 #ifndef BITCOIN_POLICY_FEES_FORECASTER_MAN_H
 #define BITCOIN_POLICY_FEES_FORECASTER_MAN_H
 
+#include <sync.h>
+#include <threadsafety.h>
+
 #include <memory>
 #include <optional>
 #include <unordered_map>
@@ -27,7 +30,9 @@ class FeeRateForecasterManager
 {
 private:
     //! Map of all registered forecasters to their shared pointers.
-    std::unordered_map<ForecastType, std::shared_ptr<Forecaster>> forecasters;
+    std::unordered_map<ForecastType, std::shared_ptr<Forecaster>> forecasters GUARDED_BY(cs);
+
+    mutable Mutex cs;
 
 public:
     /**
@@ -35,12 +40,12 @@ public:
      *
      * @param[in] forecaster shared pointer to a Forecaster instance.
      */
-    void RegisterForecaster(std::shared_ptr<Forecaster> forecaster);
+    void RegisterForecaster(std::shared_ptr<Forecaster> forecaster) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     /*
      * Return the pointer to block policy estimator.
      */
-    CBlockPolicyEstimator* GetBlockPolicyEstimator();
+    CBlockPolicyEstimator* GetBlockPolicyEstimator() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     /**
      * Get a fee rate estimate from all registered forecasters for a given confirmation target.
@@ -51,7 +56,7 @@ public:
      * @param[in] target The target within which the transaction should be confirmed.
      * @return A pair consisting of the forecast result and a vector of forecaster names.
      */
-    std::pair<std::optional<ForecastResult>, std::vector<std::string>> GetFeeEstimateFromForecasters(ConfirmationTarget& target);
+    std::pair<std::optional<ForecastResult>, std::vector<std::string>> GetFeeEstimateFromForecasters(ConfirmationTarget& target) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
 
 #endif // BITCOIN_POLICY_FEES_FORECASTER_MAN_H
