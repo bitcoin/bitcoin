@@ -10,6 +10,7 @@
 
 #include <atomic>
 #include <memory>
+#include <stats/stats.h>
 #include <sync.h>
 #include <uint256.h>
 
@@ -100,9 +101,12 @@ public:
     Mutex m_cached_tip_mutex;
     uint256 m_cached_tip_blocks GUARDED_BY(m_cached_tip_mutex){};
 
+    mempoolSamples_t getMempoolStatsInRange(QDateTime &from, QDateTime &to);
+
 private:
     interfaces::Node& m_node;
     std::vector<std::unique_ptr<interfaces::Handler>> m_event_handlers;
+    boost::signals2::scoped_connection m_connection_mempool_stats_did_change;
     OptionsModel *optionsModel;
     PeerTableModel* peerTableModel{nullptr};
     PeerTableSortProxy* m_peer_table_sort_proxy{nullptr};
@@ -128,6 +132,12 @@ Q_SIGNALS:
 
     // Show progress dialog e.g. for verifychain
     void showProgress(const QString &title, int nProgress);
+
+    void mempoolStatsDidUpdate();
+
+public Q_SLOTS:
+    /* stats stack */
+    void updateMempoolStats();
 };
 
 #endif // BITCOIN_QT_CLIENTMODEL_H
