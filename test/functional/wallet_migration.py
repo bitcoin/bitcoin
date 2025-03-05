@@ -918,6 +918,22 @@ class WalletMigrationTest(BitcoinTestFramework):
             _, _, magic = struct.unpack("QII", data)
             assert_equal(magic, BTREE_MAGIC)
 
+        ####################################################
+        # Perform the same test with a loaded legacy wallet.
+        # The wallet should remain loaded after the failure.
+        #
+        # This applies only when BDB is enabled, as the user
+        # cannot interact with the legacy wallet database
+        # without BDB support.
+        if self.is_bdb_compiled() is not None:
+            # Advance time to generate a different backup name
+            self.master_node.setmocktime(self.master_node.getblockheader(self.master_node.getbestblockhash())['time'] + 100)
+            assert "failed" not in self.master_node.listwallets()
+            self.master_node.loadwallet("failed")
+            assert_raises_rpc_error(-4, "Failed to create database", self.master_node.migratewallet, "failed")
+            wallets = self.master_node.listwallets()
+            assert "failed" in wallets and all(wallet not in wallets for wallet in ["failed_watchonly", "failed_solvables"])
+
     def test_blank(self):
         self.log.info("Test that a blank wallet is migrated")
         wallet = self.create_legacy_wallet("blank", blank=True)
