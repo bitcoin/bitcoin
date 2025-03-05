@@ -620,17 +620,8 @@ AC_ARG_ENABLE([util-util],
   [build_bitcoin_util=$enableval],
   [build_bitcoin_util=$build_bitcoin_utils])
 
-AC_ARG_ENABLE([experimental-util-chainstate],
-  [AS_HELP_STRING([--enable-experimental-util-chainstate],
-  [build experimental bitcoin-chainstate executable (default=no)])],
-  [build_bitcoin_chainstate=$enableval],
-  [build_bitcoin_chainstate=no])
-
-AC_ARG_WITH([experimental-kernel-lib],
-  [AS_HELP_STRING([--with-experimental-kernel-lib],
-  [build experimental bitcoinkernel library (default is to build if we're building the experimental build-chainstate executable)])],
-  [build_experimental_kernel_lib=$withval],
-  [build_experimental_kernel_lib=auto])
+build_bitcoin_chainstate=no
+build_experimental_kernel_lib=no
 
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
