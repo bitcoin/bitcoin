@@ -339,4 +339,12 @@ BOOST_AUTO_TEST_CASE(FromHex_vs_uint256)
     BOOST_CHECK_EQUAL(consteval_uint, runtime_uint);
 }
 
+BOOST_AUTO_TEST_CASE(_uint256_user_defined_literal)
+{
+    constexpr auto expected{uint256{"000000000000000000010b17283c3c400507969a9c2afd1dcf2082ec5cca2880"}};
+    constexpr auto actual{          "000000000000000000010b17283c3c400507969a9c2afd1dcf2082ec5cca2880"_uint256};
+    BOOST_CHECK_EQUAL(actual.ToString(), expected.ToString());
+    BOOST_CHECK_EQUAL(actual, expected);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

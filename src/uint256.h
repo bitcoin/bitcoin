@@ -20,6 +20,8 @@
 #include <string>
 #include <string_view>
 
+using namespace util::hex_literals;
+
 /** Template base class for fixed-sized opaque blobs. */
 template<unsigned int BITS>
 class base_blob
@@ -209,5 +211,13 @@ public:
     static const uint256 ZERO;
     static const uint256 ONE;
 };
+
+template <util::detail::Hex<65> str>
+constexpr auto operator""_uint256()
+{
+    auto res{operator""_hex_u8<str>()};
+    std::ranges::reverse(res);
+    return uint256{res};
+}
 
 #endif // BITCOIN_UINT256_H
