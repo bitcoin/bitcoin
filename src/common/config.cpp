@@ -4,6 +4,7 @@
 
 #include <common/args.h>
 
+#include <chainparamsbase.h>
 #include <common/settings.h>
 #include <logging.h>
 #include <sync.h>
@@ -90,7 +91,7 @@ bool IsConfSupported(KeyInfo& key, std::string& error) {
     return true;
 }
 
-bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys)
+bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys, std::map<std::string, std::vector<common::SettingsValue>>* settings_target)
 {
     LOCK(cs_args);
     std::vector<std::pair<std::string, std::string>> options;
@@ -106,6 +107,9 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
             if (!value) {
                 return false;
             }
+            if (settings_target) {
+                (*settings_target)[key.name].push_back(*value);
+            } else
             m_settings.ro_config[key.section][key.name].push_back(*value);
         } else {
             if (ignore_invalid_keys) {
@@ -124,6 +128,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
     {
         LOCK(cs_args);
         m_settings.ro_config.clear();
+        m_settings.rw_config.clear();
         m_config_sections.clear();
         m_config_path = AbsPathForConfigVal(*this, GetPathArg("-conf", BITCOIN_CONF_FILENAME), /*net_specific=*/false);
     }
@@ -214,12 +219,31 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
         }
     }
 
+    // Check for chain settings (BaseParams() calls are only valid after this clause)
+    try {
+        SelectBaseParams(gArgs.GetChainType());
+    } catch (const std::exception& e) {
+        error = e.what();
+        return false;
+    }
+
     // If datadir is changed in .conf file:
     ClearPathCache();
     if (!CheckDataDirOption(*this)) {
         error = strprintf("specified data directory \"%s\" does not exist.", GetArg("-datadir", ""));
         return false;
     }
+
+    LOCK(cs_args);
+    m_rwconf_path = AbsPathForConfigVal(*this, GetPathArg("-confrw", BITCOIN_RW_CONF_FILENAME));
+    const auto rwconf_path{GetRWConfigFilePath()};
+    std::ifstream rwconf_stream(rwconf_path);
+    if (rwconf_stream.good()) {
+        if (!ReadConfigStream(rwconf_stream, fs::PathToString(rwconf_path), error, ignore_invalid_keys, &m_settings.rw_config)) {
+            return false;
+        }
+    }
+
     return true;
 }
 
