@@ -84,6 +84,14 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         presegwit_peer_id = peers[1]["id"]
         assert_raises_rpc_error(-1, "Pre-SegWit peer", self.nodes[0].getblockfrompeer, short_tip, presegwit_peer_id)
 
+        self.log.info("Fetching from same peer twice generates error")
+        self.nodes[0].add_p2p_connection(P2PInterface())
+        peers = self.nodes[0].getpeerinfo()
+        assert_equal(len(peers), 3)
+        slow_peer_id = peers[2]["id"]
+        assert_equal(self.nodes[0].getblockfrompeer(short_tip, slow_peer_id), {})
+        assert_raises_rpc_error(-1, "Already requested from this peer", self.nodes[0].getblockfrompeer, short_tip, slow_peer_id)
+
         self.log.info("Successful fetch")
         result = self.nodes[0].getblockfrompeer(short_tip, peer_0_peer_1_id)
         self.wait_until(lambda: self.check_for_block(node=0, hash=short_tip), timeout=1)
@@ -91,6 +99,9 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
 
         self.log.info("Don't fetch blocks we already have")
         assert_raises_rpc_error(-1, "Block already downloaded", self.nodes[0].getblockfrompeer, short_tip, peer_0_peer_1_id)
+
+        self.log.info("Non-existent peer generates error, even if we already have the block")
+        assert_raises_rpc_error(-1, "Block already downloaded", self.nodes[0].getblockfrompeer, short_tip, peer_0_peer_1_id + 1)
 
         self.log.info("Don't fetch blocks while the node has not synced past it yet")
         # For this test we need node 1 in prune mode and as a side effect this also disconnects
