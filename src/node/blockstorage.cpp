@@ -1049,7 +1049,7 @@ bool BlockManager::ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, cons
         return false;
     }
 
-    filein.SetIdlePriority();
+    if (lowprio) filein.SetIdlePriority();
 
     // Read block
     try {
@@ -1108,6 +1108,8 @@ bool BlockManager::ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatF
         LogError("%s: OpenBlockFile failed for %s\n", __func__, pos.ToString());
         return false;
     }
+
+    if (lowprio) filein.SetIdlePriority();
 
     try {
         MessageStartChars blk_start;
