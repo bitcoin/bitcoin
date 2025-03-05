@@ -947,13 +947,15 @@ void CBlockPolicyEstimator::Flush() {
     FlushFeeEstimates();
 }
 
-void CBlockPolicyEstimator::FlushFeeEstimates()
+bool CBlockPolicyEstimator::FlushFeeEstimates() const
 {
     AutoFile est_file{fsbridge::fopen(m_estimation_filepath, "wb")};
     if (est_file.IsNull() || !Write(est_file) || est_file.fclose() != 0) {
         LogPrintf("Failed to write fee estimates to %s. Continue anyway.\n", fs::PathToString(m_estimation_filepath));
+        return false;
     } else {
         LogPrintf("Flushed fee estimates to %s.\n", fs::PathToString(m_estimation_filepath.filename()));
+        return true;
     }
 }
 
