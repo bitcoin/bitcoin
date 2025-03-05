@@ -39,6 +39,15 @@ void ReadSigNetArgs(const ArgsManager& args, CChainParams::SigNetOptions& option
         }
         options.challenge.emplace(*val);
     }
+    if (const auto signetblocktime{args.GetIntArg("-signetblocktime")}) {
+        if (!args.IsArgSet("-signetchallenge")) {
+            throw std::runtime_error("-signetblocktime cannot be set without -signetchallenge");
+        }
+        if (*signetblocktime <= 0) {
+            throw std::runtime_error("-signetblocktime must be greater than 0");
+        }
+        options.pow_target_spacing = *signetblocktime;
+    }
 }
 
 void ReadRegTestArgs(const ArgsManager& args, CChainParams::RegTestOptions& options)
