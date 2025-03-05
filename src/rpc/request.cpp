@@ -218,18 +218,8 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
     m_json_version = JSONRPCVersion::V1_LEGACY;
     const UniValue& jsonrpc_version = request.find_value("jsonrpc");
     if (!jsonrpc_version.isNull()) {
-        if (!jsonrpc_version.isStr()) {
-            throw JSONRPCError(RPC_INVALID_REQUEST, "jsonrpc field must be a string");
-        }
-        // The "jsonrpc" key was added in the 2.0 spec, but some older documentation
-        // incorrectly included {"jsonrpc":"1.0"} in a request object, so we
-        // maintain that for backwards compatibility.
-        if (jsonrpc_version.get_str() == "1.0") {
-            m_json_version = JSONRPCVersion::V1_LEGACY;
-        } else if (jsonrpc_version.get_str() == "2.0") {
+        if (jsonrpc_version.isStr() && jsonrpc_version.get_str() == "2.0") {
             m_json_version = JSONRPCVersion::V2;
-        } else {
-            throw JSONRPCError(RPC_INVALID_REQUEST, "JSON-RPC version not supported");
         }
     }
 
