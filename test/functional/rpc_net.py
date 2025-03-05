@@ -63,6 +63,9 @@ class NetTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [["-minrelaytxfee=0.00001000"], ["-minrelaytxfee=0.00000500"]]
+        # Specify a non-working proxy to make sure no actual connections to public IPs are attempted
+        for args in self.extra_args:
+            args.append("-proxy=127.0.0.1:1")
         self.supports_cli = False
 
     def run_test(self):
