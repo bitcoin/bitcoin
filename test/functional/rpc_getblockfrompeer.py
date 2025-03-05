@@ -103,7 +103,7 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         self.log.info("Non-existent peer generates error, even if we already have the block")
         assert_raises_rpc_error(-1, "Block already downloaded", self.nodes[0].getblockfrompeer, short_tip, peer_0_peer_1_id + 1)
 
-        self.log.info("Don't fetch blocks while the node has not synced past it yet")
+        self.log.info("Do fetch blocks even if the node has not synced past it yet")
         # For this test we need node 1 in prune mode and as a side effect this also disconnects
         # the nodes which is also necessary for the rest of the test.
         self.restart_node(1, ["-prune=550"])
@@ -119,13 +119,13 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         node1_interface.send_and_ping(msg_headers([block]))
 
         # Get the peer id of the P2PInterface from the pruning node
+        node1_interface = self.nodes[1].add_p2p_connection(P2PInterface())
         node1_peers = self.nodes[1].getpeerinfo()
-        assert_equal(len(node1_peers), 1)
-        node1_interface_id = node1_peers[0]["id"]
+        assert_equal(len(node1_peers), 2)
+        node1_interface_id = node1_peers[1]["id"]
 
-        # Trying to fetch this block from the P2PInterface should not be possible
-        error_msg = "In prune mode, only blocks that the node has already synced previously can be fetched from a peer"
-        assert_raises_rpc_error(-1, error_msg, self.nodes[1].getblockfrompeer, blockhash, node1_interface_id)
+        # Trying to fetch this block from the P2PInterface should be possible
+        assert_equal(self.nodes[1].getblockfrompeer(blockhash, node1_interface_id), {})
 
         self.log.info("Connect pruned node")
         self.connect_nodes(0, 2)
