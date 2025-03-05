@@ -13,11 +13,13 @@
 
 void FeeRateForecasterManager::RegisterForecaster(std::shared_ptr<Forecaster> forecaster)
 {
+    LOCK(cs);
     forecasters.emplace(forecaster->GetForecastType(), forecaster);
 }
 
 CBlockPolicyEstimator* FeeRateForecasterManager::GetBlockPolicyEstimator()
 {
+    LOCK(cs);
     Assert(forecasters.contains(ForecastType::BLOCK_POLICY));
     Forecaster* block_policy_estimator = forecasters.find(ForecastType::BLOCK_POLICY)->second.get();
     return dynamic_cast<CBlockPolicyEstimator*>(block_policy_estimator);
@@ -26,6 +28,7 @@ CBlockPolicyEstimator* FeeRateForecasterManager::GetBlockPolicyEstimator()
 std::pair<ForecastResult, std::vector<std::string>> FeeRateForecasterManager::ForecastFeeRateFromForecasters(
     int target, bool conservative) const
 {
+    LOCK(cs);
     std::vector<std::string> err_messages;
     ForecastResult feerate_forecast;
 
@@ -66,6 +69,7 @@ std::pair<ForecastResult, std::vector<std::string>> FeeRateForecasterManager::Fo
 
 unsigned int FeeRateForecasterManager::MaximumTarget() const
 {
+    LOCK(cs);
     unsigned int maximum_target{0};
     for (const auto& forecaster : forecasters) {
         maximum_target = std::max(maximum_target, forecaster.second->MaximumTarget());
