@@ -3152,11 +3152,13 @@ static RPCHelpMan dumptxoutset()
 
     const ArgsManager& args{EnsureAnyArgsman(request.context)};
     const fs::path path = fsbridge::AbsPathJoin(args.GetDataDirNet(), fs::u8path(request.params[0].get_str()));
+    const auto path_info{fs::status(path)};
     // Write to a temporary path and then move into `path` on completion
     // to avoid confusion due to an interruption.
-    const fs::path temppath = fsbridge::AbsPathJoin(args.GetDataDirNet(), fs::u8path(request.params[0].get_str() + ".incomplete"));
+    const fs::path temppath = fs::is_fifo(path_info) ? path : // If a named pipe is passed, write directly to it
+        fsbridge::AbsPathJoin(args.GetDataDirNet(), fs::u8path(request.params[0].get_str() + ".incomplete"));
 
-    if (fs::exists(path)) {
+    if (fs::exists(path_info) && !fs::is_fifo(path_info)) {
         throw JSONRPCError(
             RPC_INVALID_PARAMETER,
             path.utf8string() + " already exists. If you are sure this is what you want, "
@@ -3176,7 +3178,7 @@ static RPCHelpMan dumptxoutset()
         is_human_readable,
         show_header, separator, requested,
         node, node.chainman->ActiveChainstate(), afile, path, temppath);
-    fs::rename(temppath, path);
+    if (!fs::is_fifo(path_info)) fs::rename(temppath, path);
 
     result.pushKV("path", path.utf8string());
     return result;
