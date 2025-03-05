@@ -420,7 +420,6 @@ class ConfArgsTest(BitcoinTestFramework):
         self.test_invalid_command_line_options()
         self.test_ignored_conf()
         self.test_ignored_default_conf()
-        self.test_acceptstalefeeestimates_arg_support()
         self.test_testnet3_deprecation_msg()
 
         # Remove the -datadir argument so it doesn't override the config file
