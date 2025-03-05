@@ -363,7 +363,7 @@ class P2PConnection(asyncio.Protocol):
                 self.on_message(t)
         except Exception as e:
             if not self.reconnect:
-                logger.exception('Error reading message:', repr(e))
+                logger.exception(f"Error reading message: {repr(e)}")
             raise
 
     def on_message(self, message):
