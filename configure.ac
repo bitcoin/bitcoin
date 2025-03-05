@@ -1386,7 +1386,7 @@ fi
 case $host in
   dnl Re-enable it after enabling Windows support in cpp-subprocess.
   *mingw*)
-    use_external_signer="no"
+    true
   ;;
 esac
 if test "$use_external_signer" = "yes"; then

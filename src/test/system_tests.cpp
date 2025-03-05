@@ -32,7 +32,11 @@ BOOST_AUTO_TEST_CASE(run_command)
         BOOST_CHECK(result.isNull());
     }
     {
+#ifdef WIN32
+        const UniValue result = RunCommandParseJSON("cmd.exe /c echo {\"success\": true}");
+#else
         const UniValue result = RunCommandParseJSON("echo {\"success\": true}");
+#endif
         BOOST_CHECK(result.isObject());
         const UniValue& success = result.find_value("success");
         BOOST_CHECK(!success.isNull());
@@ -40,12 +44,20 @@ BOOST_AUTO_TEST_CASE(run_command)
     }
     {
         // An invalid command is handled by cpp-subprocess
+#ifdef WIN32
+        const std::string expected{"CreateProcess failed: "};
+#else
         const std::string expected{"execve failed: "};
+#endif
         BOOST_CHECK_EXCEPTION(RunCommandParseJSON("invalid_command"), subprocess::CalledProcessError, HasReason(expected));
     }
     {
         // Return non-zero exit code, no output to stderr
+#ifdef WIN32
+        const std::string command{"cmd.exe /c exit 1"};
+#else
         const std::string command{"false"};
+#endif
         BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, [&](const std::runtime_error& e) {
             const std::string what{e.what()};
             BOOST_CHECK(what.find(strprintf("RunCommandParseJSON error: process(%s) returned 1: \n", command)) != std::string::npos);
@@ -54,7 +66,11 @@ BOOST_AUTO_TEST_CASE(run_command)
     }
     {
         // Return non-zero exit code, with error message for stderr
+#ifdef WIN32
+        const std::string command{"cmd.exe /c \"echo err 1>&2 && exit 1\""};
+#else
         const std::string command{"sh -c 'echo err 1>&2 && false'"};
+#endif
         const std::string expected{"err"};
         BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, [&](const std::runtime_error& e) {
             const std::string what(e.what());
@@ -65,9 +81,14 @@ BOOST_AUTO_TEST_CASE(run_command)
     }
     {
         // Unable to parse JSON
+#ifdef WIN32
+        const std::string command{"cmd.exe /c echo {"};
+#else
         const std::string command{"echo {"};
+#endif
         BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, HasReason("Unable to parse JSON: {"));
     }
+#ifndef WIN32
     // Test std::in
     {
         const UniValue result = RunCommandParseJSON("cat", "{\"success\": true}");
@@ -76,6 +97,7 @@ BOOST_AUTO_TEST_CASE(run_command)
         BOOST_CHECK(!success.isNull());
         BOOST_CHECK_EQUAL(success.get_bool(), true);
     }
+#endif
 }
 #endif // ENABLE_EXTERNAL_SIGNER
 

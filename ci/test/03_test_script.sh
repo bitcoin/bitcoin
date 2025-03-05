@@ -110,7 +110,7 @@ fi
 ccache --zero-stats
 PRINT_CCACHE_STATISTICS="ccache --version | head -n 1 && ccache --show-stats"
 
-BITCOIN_CONFIG_ALL="${BITCOIN_CONFIG_ALL} --enable-external-signer --prefix=$BASE_OUTDIR"
+BITCOIN_CONFIG_ALL="${BITCOIN_CONFIG_ALL} --prefix=$BASE_OUTDIR"
 
 if [ -n "$CONFIG_SHELL" ]; then
   "$CONFIG_SHELL" -c "./autogen.sh"
