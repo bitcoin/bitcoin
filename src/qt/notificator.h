@@ -9,6 +9,9 @@
 
 #include <QIcon>
 #include <QObject>
+#include <QThread>
+
+#include <atomic>
 
 QT_BEGIN_NAMESPACE
 class QSystemTrayIcon;
@@ -17,6 +20,23 @@ class QSystemTrayIcon;
 class QDBusInterface;
 #endif
 QT_END_NAMESPACE
+
+class Notificator;
+
+#ifdef USE_DBUS
+class DBusInitThread : public QThread
+{
+    Q_OBJECT
+
+    Notificator& m_notificator;
+
+public:
+    DBusInitThread(Notificator& notificator) : m_notificator(notificator) {};
+
+protected:
+    void run() override;
+};
+#endif
 
 /** Cross-platform desktop notification client. */
 class Notificator: public QObject
@@ -59,11 +79,15 @@ private:
         UserNotificationCenter      /**< Use the 10.8+ User Notification Center (Mac only) */
     };
     QString programName;
-    Mode mode{None};
+    std::atomic<Mode> mode{None};
     QSystemTrayIcon *trayIcon;
 #ifdef USE_DBUS
+    QThread *m_dbus_init_thread{nullptr};
+protected:
     QDBusInterface* interface{nullptr};
+    friend class DBusInitThread;
 
+private:
     void notifyDBus(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout);
 #endif
     void notifySystray(Class cls, const QString &title, const QString &text, int millisTimeout);
