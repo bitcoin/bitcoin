@@ -1258,6 +1258,8 @@ public:
     void AddLocalServices(ServiceFlags services) { nLocalServices = ServiceFlags(nLocalServices | services); };
     void RemoveLocalServices(ServiceFlags services) { nLocalServices = ServiceFlags(nLocalServices & ~services); }
 
+    //! set the max outbound target in bytes
+    void SetMaxOutboundTarget(uint64_t limit) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
     uint64_t GetMaxOutboundTarget() const EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
     std::chrono::seconds GetMaxOutboundTimeframe() const;
 
