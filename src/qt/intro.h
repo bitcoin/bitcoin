@@ -55,6 +55,7 @@ Q_SIGNALS:
 
 public Q_SLOTS:
     void setStatus(int status, const QString &message, quint64 bytesAvailable);
+    void accept() override;
 
 private Q_SLOTS:
     void on_dataDirectory_textChanged(const QString &arg1);
@@ -69,6 +70,7 @@ private:
     QMutex mutex;
     bool signalled{false};
     QString pathToCheck;
+    QString m_warning_msg;
     const int64_t m_blockchain_size_gb;
     const int64_t m_chain_state_size_gb;
     //! Total required space (in GB) depending on user choice (prune or not prune).
