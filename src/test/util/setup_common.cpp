@@ -566,7 +566,7 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
                                                          /*time=*/0, /*entry_height=*/ height, /*entry_sequence=*/0,
                                                          /*entry_tx_inputs_coin_age=*/coin_age,
                                                          in_chain_input_value,
-                                                         /*spends_coinbase=*/false, /*sigops_cost=*/4, lp));
+                                                         /*spends_coinbase=*/false, /*extra_weight=*/0, /*sigops_cost=*/4, lp));
         }
         --num_transactions;
     }
@@ -598,7 +598,7 @@ void TestChain100Setup::MockMempoolMinFee(const CFeeRate& target_feerate)
                                                  /*time=*/0, /*entry_height=*/1, /*entry_sequence=*/0,
                                                  /*entry_tx_inputs_coin_age=*/0.0,
                                                  /*in_chain_input_value=*/0,
-                                                 /*spends_coinbase=*/true, /*sigops_cost=*/1, lp));
+                                                 /*spends_coinbase=*/true, /*extra_weight=*/0, /*sigops_cost=*/1, lp));
     m_node.mempool->TrimToSize(0);
     assert(m_node.mempool->GetMinFee() == target_feerate);
 }
