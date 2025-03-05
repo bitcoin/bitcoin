@@ -1203,6 +1203,32 @@ if test "$enable_fuzz_binary" = "yes"; then
      ]])])
 fi
 
+dnl Check for libsecp256k1, only if explicitly requested
+AC_ARG_WITH([system-libsecp256k1],
+  [AS_HELP_STRING([--with-system-libsecp256k1],
+  [Build with system libsecp256k1 (default is no; DANGEROUS; NOT SUPPORTED)])],
+  [system_libsecp256k1=$withval],
+  [system_libsecp256k1=no]
+)
+if test x$system_libsecp256k1 != xno; then
+  PKG_CHECK_MODULES([libsecp256k1],[libsecp256k1],,[true])
+  TEMP_CFLAGS="$CFLAGS"
+  TEMP_LIBS="$LIBS"
+  CFLAGS="$libsecp256k1_CFLAGS $CFLAGS"
+  LIBS="$libsecp256k1_LIBS $LIBS"
+  AC_CHECK_FUNCS([secp256k1_selftest],[],[
+    AC_MSG_ERROR([libsecp256k1 is too old or broken (must be at least v0.2.0 or newer)])
+  ])
+  CFLAGS="$TEMP_CFLAGS"
+  LIBS="$TEMP_LIBS"
+else
+  libsecp256k1_CFLAGS='-I$(srcdir)/secp256k1/include'
+  libsecp256k1_LIBS='secp256k1/libsecp256k1.la'
+fi
+AM_CONDITIONAL([EMBEDDED_LIBSECP256K1],[test x$system_libsecp256k1 = xno])
+AC_SUBST(libsecp256k1_CFLAGS)
+AC_SUBST(libsecp256k1_LIBS)
+
 if test "$enable_wallet" != "no"; then
     dnl Check for libdb_cxx only if wallet enabled
     if test "$use_bdb" != "no"; then
@@ -1755,8 +1781,10 @@ CPPFLAGS="$CPPFLAGS_TEMP"
 if test -n "$use_sanitizers"; then
   export SECP_CFLAGS="$SECP_CFLAGS $SANITIZER_CFLAGS"
 fi
+if test x$system_libsecp256k1 = xno; then
 ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --disable-module-ecdh"
 AC_CONFIG_SUBDIRS([src/secp256k1])
+fi
 
 AC_OUTPUT
 
