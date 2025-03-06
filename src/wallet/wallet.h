@@ -977,6 +977,8 @@ public:
     }
     /** Set last block processed height, and write to database */
     void SetLastBlockProcessed(int block_height, uint256 block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    /** Write the current best block to database */
+    void WriteBestBlock() const;
 
     //! Connect the signals from ScriptPubKeyMans to the signals in CWallet
     void ConnectScriptPubKeyManNotifiers();
