@@ -164,6 +164,7 @@ bool RemoveWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet
 
     interfaces::Chain& chain = wallet->chain();
     std::string name = wallet->GetName();
+    wallet->WriteBestBlock();
 
     // Unregister with the validation interface which also drops shared pointers.
     wallet->m_chain_notifications_handler.reset();
@@ -4711,5 +4712,14 @@ std::optional<CKey> CWallet::GetKey(const CKeyID& keyid) const
         }
     }
     return std::nullopt;
+}
+
+void CWallet::WriteBestBlock() const
+{
+    LOCK(cs_wallet);
+    if (!m_best_block.IsNull()) {
+        WalletBatch batch(GetDatabase());
+        batch.WriteBestBlock(m_best_block);
+    }
 }
 } // namespace wallet
