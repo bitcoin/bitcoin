@@ -52,7 +52,7 @@ path to `Xcode.app` (extracted in the previous stage) as the first argument.
 ```
 
 The generated archive should be: `Xcode-15.0-15A240d-extracted-SDK-with-libcxx-headers.tar.gz`.
-The `sha256sum` should be `250cc83511f8548c8a91012f143a17ad38910fc8f14b45f28240ec46df612697`.
+The `sha256sum` should be `2184c9699203ca32521899ca0deec831f2b6af214549c85bfad6ef8554d7778e`.
 
 ## Deterministic macOS App Notes
 
