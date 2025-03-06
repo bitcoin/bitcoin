@@ -81,7 +81,9 @@ def run():
             return tarinfo
         with cd(dir_to_add):
             # recursion already adds entries in sorted order
-            tarfp.add(".", recursive=True, filter=change_tarinfo_base)
+            tarfp.add("./usr/include", recursive=True, filter=change_tarinfo_base)
+            tarfp.add("./usr/lib", recursive=True, filter=change_tarinfo_base)
+            tarfp.add("./System/Library/Frameworks", recursive=True, filter=change_tarinfo_base)
 
     print("Creating output .tar.gz file...")
     with out_sdktgz_path.open("wb") as fp:
