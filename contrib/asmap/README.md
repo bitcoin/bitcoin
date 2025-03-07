@@ -9,4 +9,5 @@ Example usage:
 python3 asmap-tool.py encode /path/to/input.file /path/to/output.file
 python3 asmap-tool.py decode /path/to/input.file /path/to/output.file
 python3 asmap-tool.py diff /path/to/first.file /path/to/second.file
+python3 asmap-tool.py diff-addrs /path/to/first.file /path/to/second.file addrs.file
 ```
