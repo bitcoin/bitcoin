@@ -95,6 +95,8 @@ Qt, libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the G
 brew install qt@5
 ```
 
+Note: Building may fail if Qt 6 is installed (`qt` or `qt@6`)
+
 Note: Building with Qt binaries downloaded from the Qt website is not officially supported.
 See the notes in [#7714](https://github.com/bitcoin/bitcoin/issues/7714).
 
