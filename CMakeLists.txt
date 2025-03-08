@@ -134,6 +134,7 @@ option(ENABLE_HARDENING "Attempt to harden the resulting executables." ON)
 option(REDUCE_EXPORTS "Attempt to reduce exported symbols in the resulting executables." OFF)
 option(WERROR "Treat compiler warnings as errors." OFF)
 option(WITH_CCACHE "Attempt to use ccache for compiling." ON)
+option(WAIT_FOR_DEBUGGER "Support for waiting during startup for debugger to be attached." OFF)
 
 option(WITH_ZMQ "Enable ZMQ notifications." OFF)
 if(WITH_ZMQ)
@@ -247,6 +248,10 @@ target_compile_definitions(core_interface_debug INTERFACE
   RPC_DOC_CHECK
   ABORT_ON_FAILED_ASSUME
 )
+
+if(WAIT_FOR_DEBUGGER)
+  add_compile_definitions(WAIT_FOR_DEBUGGER=1)
+endif()
 
 if(WIN32)
   #[=[
