@@ -33,7 +33,7 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
     CWallet& wallet = *g_wallet_ptr;
     {
         LOCK(wallet.cs_wallet);
-        wallet.SetLastBlockProcessed(chainstate->m_chain.Height(), chainstate->m_chain.Tip()->GetBlockHash());
+        wallet.SetBestBlock(chainstate->m_chain.Height(), chainstate->m_chain.Tip()->GetBlockHash());
     }
 
     if (fuzzed_data_provider.ConsumeBool()) {
