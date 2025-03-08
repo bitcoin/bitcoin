@@ -639,16 +639,37 @@ static RPCHelpMan combinerawtransaction()
 {
 
     UniValue txs = request.params[0].get_array();
+
+    // Can't merge < 2 items
+    if (txs.size() < 2) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Missing transactions");
+    }
+
     std::vector<CMutableTransaction> txVariants(txs.size());
 
-    for (unsigned int idx = 0; idx < txs.size(); idx++) {
+    for (unsigned int idx{0}; idx < txs.size(); ++idx) {
         if (!DecodeHexTx(txVariants[idx], txs[idx].get_str())) {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed for tx %d. Make sure the tx has at least one input.", idx));
         }
     }
 
-    if (txVariants.empty()) {
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Missing transactions");
+    { // Test Tx relation for mergeability. This involves converting each tx to PSBT format (stripping sigscripts/witnesses) and ensuring txid is consistent.
+        std::vector<CMutableTransaction> txVariantsCopy(txVariants);
+        Txid txid{};
+        for (unsigned int k{0}; k < txVariantsCopy.size(); ++k) {
+            // Remove all scriptSigs and scriptWitnesses from inputs
+            for (CTxIn& input : txVariantsCopy[k].vin) {
+                input.scriptSig.clear();
+                input.scriptWitness.SetNull();
+            }
+            if (k == 0) {
+                txid = txVariantsCopy[k].GetHash();
+            } else {
+                if (txid != txVariantsCopy[k].GetHash()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Transaction %d not compatible (different transactions)", k));
+                }
+            }
+        }
     }
 
     // mergedTx will end up with all the signatures; it
@@ -678,7 +699,7 @@ static RPCHelpMan combinerawtransaction()
     // transaction to avoid rehashing.
     const CTransaction txConst(mergedTx);
     // Sign what we can:
-    for (unsigned int i = 0; i < mergedTx.vin.size(); i++) {
+    for (unsigned int i{0}; i < mergedTx.vin.size(); ++i) {
         CTxIn& txin = mergedTx.vin[i];
         const Coin& coin = view.AccessCoin(txin.prevout);
         if (coin.IsSpent()) {
