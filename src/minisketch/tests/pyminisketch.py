@@ -285,7 +285,7 @@ def poly_find_roots(poly, gf):
         # Try consecutive randomization factors randv, until one is found that factors poly.
         while True:
             # Compute the trace of (randv*x) mod poly. This is a polynomial that maps half of the
-            # domain to 0, and the other half to 1. Which half that is is controlled by randv.
+            # domain to 0, and the other half to 1. Which half that is controlled by randv.
             # By taking it modulo poly, we only add a multiple of poly. Thus the result has at least
             # the shared roots of the trace polynomial and poly still, but may have others.
             trace = poly_tracemod(poly, randv, gf)
