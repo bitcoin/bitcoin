@@ -147,6 +147,11 @@ BOOST_FIXTURE_TEST_CASE(invalidate_block, TestChain100Setup)
         WITH_LOCK(::cs_main, assert(pindex->nStatus & BLOCK_FAILED_CHILD));
         pindex = pindex->pprev;
     }
+
+    // don't mark already invalidated block (orig_tip is BLOCK_FAILED_CHILD) with BLOCK_FAILED_VALID again
+    m_node.chainman->ActiveChainstate().InvalidateBlock(state, orig_tip);
+    WITH_LOCK(::cs_main, assert(orig_tip->nStatus & BLOCK_FAILED_CHILD));
+    WITH_LOCK(::cs_main, assert((orig_tip->nStatus & BLOCK_FAILED_VALID) == 0));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
