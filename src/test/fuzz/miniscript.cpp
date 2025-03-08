@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -129,7 +129,7 @@ struct ParserContext {
         auto it = TEST_DATA.dummy_key_idx_map.find(key);
         if (it == TEST_DATA.dummy_key_idx_map.end()) return {};
         uint8_t idx = it->second;
-        return HexStr(Span{&idx, 1});
+        return HexStr(std::span{&idx, 1});
     }
 
     std::vector<unsigned char> ToPKBytes(const Key& key) const {
@@ -290,7 +290,7 @@ const struct CheckerContext: BaseSignatureChecker {
         if (it == TEST_DATA.dummy_sigs.end()) return false;
         return it->second.first == sig;
     }
-    bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion,
+    bool CheckSchnorrSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey, SigVersion,
                                ScriptExecutionData&, ScriptError*) const override {
         XOnlyPubKey pk{pubkey};
         auto it = TEST_DATA.schnorr_sigs.find(pk);

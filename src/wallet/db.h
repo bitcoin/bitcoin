@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,10 +22,10 @@ struct bilingual_str;
 namespace wallet {
 // BytePrefix compares equality with other byte spans that begin with the same prefix.
 struct BytePrefix {
-    Span<const std::byte> prefix;
+    std::span<const std::byte> prefix;
 };
-bool operator<(BytePrefix a, Span<const std::byte> b);
-bool operator<(Span<const std::byte> a, BytePrefix b);
+bool operator<(BytePrefix a, std::span<const std::byte> b);
+bool operator<(std::span<const std::byte> a, BytePrefix b);
 
 class DatabaseCursor
 {
@@ -115,10 +115,10 @@ public:
 
         return HasKey(std::move(ssKey));
     }
-    virtual bool ErasePrefix(Span<const std::byte> prefix) = 0;
+    virtual bool ErasePrefix(std::span<const std::byte> prefix) = 0;
 
     virtual std::unique_ptr<DatabaseCursor> GetNewCursor() = 0;
-    virtual std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(Span<const std::byte> prefix) = 0;
+    virtual std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(std::span<const std::byte> prefix) = 0;
     virtual bool TxnBegin() = 0;
     virtual bool TxnCommit() = 0;
     virtual bool TxnAbort() = 0;

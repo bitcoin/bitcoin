@@ -75,7 +75,7 @@ public:
      *
      * @param depgraph   The original DepGraph that is being remapped.
      *
-     * @param mapping    A Span such that mapping[i] gives the position in the new DepGraph
+     * @param mapping    A span such that mapping[i] gives the position in the new DepGraph
      *                   for position i in the old depgraph. Its size must be equal to
      *                   depgraph.PositionRange(). The value of mapping[i] is ignored if
      *                   position i is a hole in depgraph (i.e., if !depgraph.Positions()[i]).
@@ -86,7 +86,7 @@ public:
      *
      * Complexity: O(N^2) where N=depgraph.TxCount().
      */
-    DepGraph(const DepGraph<SetType>& depgraph, Span<const ClusterIndex> mapping, ClusterIndex pos_range) noexcept : entries(pos_range)
+    DepGraph(const DepGraph<SetType>& depgraph, std::span<const ClusterIndex> mapping, ClusterIndex pos_range) noexcept : entries(pos_range)
     {
         Assume(mapping.size() == depgraph.PositionRange());
         Assume((pos_range == 0) == (depgraph.TxCount() == 0));
@@ -371,7 +371,7 @@ struct SetInfo
 
 /** Compute the feerates of the chunks of linearization. */
 template<typename SetType>
-std::vector<FeeFrac> ChunkLinearization(const DepGraph<SetType>& depgraph, Span<const ClusterIndex> linearization) noexcept
+std::vector<FeeFrac> ChunkLinearization(const DepGraph<SetType>& depgraph, std::span<const ClusterIndex> linearization) noexcept
 {
     std::vector<FeeFrac> ret;
     for (ClusterIndex i : linearization) {
@@ -396,7 +396,7 @@ class LinearizationChunking
     const DepGraph<SetType>& m_depgraph;
 
     /** The linearization we started from, possibly with removed prefix stripped. */
-    Span<const ClusterIndex> m_linearization;
+    std::span<const ClusterIndex> m_linearization;
 
     /** Chunk sets and their feerates, of what remains of the linearization. */
     std::vector<SetInfo<SetType>> m_chunks;
@@ -437,7 +437,7 @@ class LinearizationChunking
 
 public:
     /** Initialize a LinearizationSubset object for a given length of linearization. */
-    explicit LinearizationChunking(const DepGraph<SetType>& depgraph LIFETIMEBOUND, Span<const ClusterIndex> lin LIFETIMEBOUND) noexcept :
+    explicit LinearizationChunking(const DepGraph<SetType>& depgraph LIFETIMEBOUND, std::span<const ClusterIndex> lin LIFETIMEBOUND) noexcept :
         m_depgraph(depgraph), m_linearization(lin)
     {
         // Mark everything in lin as todo still.
@@ -1016,7 +1016,7 @@ public:
  * Complexity: possibly O(N * min(max_iterations + N, sqrt(2^N))) where N=depgraph.TxCount().
  */
 template<typename SetType>
-std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations, uint64_t rng_seed, Span<const ClusterIndex> old_linearization = {}) noexcept
+std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations, uint64_t rng_seed, std::span<const ClusterIndex> old_linearization = {}) noexcept
 {
     Assume(old_linearization.empty() || old_linearization.size() == depgraph.TxCount());
     if (depgraph.TxCount() == 0) return {{}, true};
@@ -1110,7 +1110,7 @@ std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& de
  *   postlinearize" process.
  */
 template<typename SetType>
-void PostLinearize(const DepGraph<SetType>& depgraph, Span<ClusterIndex> linearization)
+void PostLinearize(const DepGraph<SetType>& depgraph, std::span<ClusterIndex> linearization)
 {
     // This algorithm performs a number of passes (currently 2); the even ones operate from back to
     // front, the odd ones from front to back. Each results in an equal-or-better linearization
@@ -1299,7 +1299,7 @@ void PostLinearize(const DepGraph<SetType>& depgraph, Span<ClusterIndex> lineari
  * Complexity: O(N^2) where N=depgraph.TxCount(); O(N) if both inputs are identical.
  */
 template<typename SetType>
-std::vector<ClusterIndex> MergeLinearizations(const DepGraph<SetType>& depgraph, Span<const ClusterIndex> lin1, Span<const ClusterIndex> lin2)
+std::vector<ClusterIndex> MergeLinearizations(const DepGraph<SetType>& depgraph, std::span<const ClusterIndex> lin1, std::span<const ClusterIndex> lin2)
 {
     Assume(lin1.size() == depgraph.TxCount());
     Assume(lin2.size() == depgraph.TxCount());

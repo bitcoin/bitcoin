@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -94,7 +94,7 @@ CTxDestination getNewDestination(CWallet& w, OutputType output_type)
     return *Assert(w.GetNewDestination(output_type, ""));
 }
 
-MockableCursor::MockableCursor(const MockableData& records, bool pass, Span<const std::byte> prefix)
+MockableCursor::MockableCursor(const MockableData& records, bool pass, std::span<const std::byte> prefix)
 {
     m_pass = pass;
     std::tie(m_cursor, m_cursor_end) = records.equal_range(BytePrefix{prefix});
@@ -166,7 +166,7 @@ bool MockableBatch::HasKey(DataStream&& key)
     return m_records.count(key_data) > 0;
 }
 
-bool MockableBatch::ErasePrefix(Span<const std::byte> prefix)
+bool MockableBatch::ErasePrefix(std::span<const std::byte> prefix)
 {
     if (!m_pass) {
         return false;

@@ -37,7 +37,7 @@ public:
     /* constructor for constants between 1 and 255 */
     constexpr explicit base_blob(uint8_t v) : m_data{v} {}
 
-    constexpr explicit base_blob(Span<const unsigned char> vch)
+    constexpr explicit base_blob(std::span<const unsigned char> vch)
     {
         assert(vch.size() == WIDTH);
         std::copy(vch.begin(), vch.end(), m_data.begin());
@@ -125,7 +125,7 @@ public:
     template<typename Stream>
     void Serialize(Stream& s) const
     {
-        s << Span(m_data);
+        s << std::span(m_data);
     }
 
     template<typename Stream>
@@ -190,7 +190,7 @@ class uint160 : public base_blob<160> {
 public:
     static std::optional<uint160> FromHex(std::string_view str) { return detail::FromHex<uint160>(str); }
     constexpr uint160() = default;
-    constexpr explicit uint160(Span<const unsigned char> vch) : base_blob<160>(vch) {}
+    constexpr explicit uint160(std::span<const unsigned char> vch) : base_blob<160>(vch) {}
 };
 
 /** 256-bit opaque blob.
@@ -205,7 +205,7 @@ public:
     constexpr uint256() = default;
     consteval explicit uint256(std::string_view hex_str) : base_blob<256>(hex_str) {}
     constexpr explicit uint256(uint8_t v) : base_blob<256>(v) {}
-    constexpr explicit uint256(Span<const unsigned char> vch) : base_blob<256>(vch) {}
+    constexpr explicit uint256(std::span<const unsigned char> vch) : base_blob<256>(vch) {}
     static const uint256 ZERO;
     static const uint256 ONE;
 };
