@@ -1168,7 +1168,7 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
 
     {
         // ###############################################################################################################
-        // 3) Test selection when some coins surpass the max allowed weight while others not. --> must find a good solution
+        // 3) Test that the lowest-weight solution is found when some combinations would exceed the allowed weight
         // ################################################################################################################
         CAmount target = 25.33L * COIN;
         int max_selection_weight = 10'000; // WU
@@ -1182,7 +1182,14 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
             }
             return available_coins;
         });
-        BOOST_CHECK(res);
+        SelectionResult expected_result(CAmount(0), SelectionAlgorithm::CG);
+        for (int i = 0; i < 10; ++i) {
+            add_coin(2 * COIN, i, expected_result);
+        }
+        for (int j = 0; j < 17; ++j) {
+            add_coin(0.33 * COIN, j + 10, expected_result);
+        }
+        BOOST_CHECK(EquivalentResult(expected_result, *res));
         // Demonstrate how following improvements reduce iteration count and catch any regressions in the future.
         size_t expected_attempts = 37;
         BOOST_CHECK_MESSAGE(res->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, res->GetSelectionsEvaluated()));
