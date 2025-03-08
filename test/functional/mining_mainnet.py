@@ -52,8 +52,6 @@ class MiningMainnetTest(BitcoinTestFramework):
             help='Block data file (default: %(default)s)',
         )
 
-        self.add_wallet_options(parser)
-
     def mine(self, height, prev_hash, blocks, node, fees=0):
         self.log.debug(f"height={height}")
         block = CBlock()

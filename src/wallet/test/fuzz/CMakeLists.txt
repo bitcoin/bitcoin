@@ -8,8 +8,8 @@ target_sources(fuzz
     coinselection.cpp
     crypter.cpp
     fees.cpp
-    $<$<BOOL:${USE_SQLITE}>:${CMAKE_CURRENT_LIST_DIR}/notifications.cpp>
-    $<$<BOOL:${USE_SQLITE}>:${CMAKE_CURRENT_LIST_DIR}/scriptpubkeyman.cpp>
+    notifications.cpp
+    scriptpubkeyman.cpp
     spend.cpp
     wallet_bdb_parser.cpp
 )

@@ -479,15 +479,6 @@ RPCHelpMan getbalances()
         }
         balances.pushKV("mine", std::move(balances_mine));
     }
-    auto spk_man = wallet.GetLegacyScriptPubKeyMan();
-    if (spk_man && spk_man->HaveWatchOnly()) {
-        UniValue balances_watchonly{UniValue::VOBJ};
-        balances_watchonly.pushKV("trusted", ValueFromAmount(bal.m_watchonly_trusted));
-        balances_watchonly.pushKV("untrusted_pending", ValueFromAmount(bal.m_watchonly_untrusted_pending));
-        balances_watchonly.pushKV("immature", ValueFromAmount(bal.m_watchonly_immature));
-        balances.pushKV("watchonly", std::move(balances_watchonly));
-    }
-
     AppendLastProcessedBlock(balances, wallet);
     return balances;
 },
