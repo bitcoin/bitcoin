@@ -325,7 +325,8 @@ public:
     }
     double getVerificationProgress() override
     {
-        return chainman().GuessVerificationProgress(WITH_LOCK(chainman().GetMutex(), return chainman().ActiveChain().Tip()));
+        LOCK(chainman().GetMutex());
+        return chainman().GuessVerificationProgress(chainman().ActiveChain().Tip());
     }
     bool isInitialBlockDownload() override
     {
@@ -409,7 +410,7 @@ public:
     {
         return MakeSignalHandler(::uiInterface.NotifyBlockTip_connect([fn, this](SynchronizationState sync_state, const CBlockIndex* block) {
             fn(sync_state, BlockTip{block->nHeight, block->GetBlockTime(), block->GetBlockHash()},
-               chainman().GuessVerificationProgress(block));
+                WITH_LOCK(chainman().GetMutex(), return chainman().GuessVerificationProgress(block)));
         }));
     }
     std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) override
