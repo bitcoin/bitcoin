@@ -11,7 +11,7 @@
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">নতুন</translation>
+        <translation type="unfinished">&amp;নতুন</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -19,15 +19,15 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">এবং কপি করুন</translation>
+        <translation type="unfinished">&amp;কপি করুন</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">বন্ধ করুন</translation>
+        <translation type="unfinished">&amp;বন্ধ করুন</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">বাছাইকৃত ঠিকানাটি লিস্ট থেকে মুছুন</translation>
+        <translation type="unfinished">বাছাইকৃত ঠিকানাটি লিস্ট থেকে &amp;মুছুন</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -50,14 +50,47 @@
         <translation type="unfinished">কয়েন গ্রহণ করার ঠিকানা বাছাই করুন।</translation>
     </message>
     <message>
+        <source>C&amp;hoose</source>
+        <translation type="unfinished">&amp;বাছাই</translation>
+    </message>
+    <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">পেমেন্ট পাওয়ার জন্য এটি আপনার বিটকয়েন ঠিকানা। নতুন ঠিকানা তৈরী করতে "নতুন গ্রহণের ঠিকানা তৈরী করুন" বোতাম ব্যবহার করুন। সাইন ইন করা শুধুমাত্র "উত্তরাধিকার" ঠিকানার মাধ্যমেই সম্ভব।</translation>
     </message>
     <message>
+        <source>&amp;Copy Address</source>
+        <translation type="unfinished">ঠিকানা &amp;কপি</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation type="unfinished">কপি &amp;লেবেল</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation type="unfinished">&amp;সম্পাদনা</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation type="unfinished">ঠিকানার তালিকা এক্সপোর্ট করুন</translation>
+    </message>
+    <message>
         <source>Comma separated file</source>
         <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
         <translation type="unfinished">কমা দিয়ে আলাদা করা ফাইল</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
+        <translation type="unfinished">ঠিকানা তালিকাটি %1 এ সংরক্ষণ করার চেষ্টা করার সময় একটি ত্রুটি ঘটেছে। অনুগ্রহপূর্বক আবার চেষ্টা করুন.</translation>
+    </message>
+    <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">ঠিকানাগুলো পাঠানো হচ্ছে -%1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">ঠিকানাগুলো গ্রহণ করা হচ্ছে %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -68,7 +101,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation type="unfinished">টিকেট</translation>
+        <translation type="unfinished">লেবেল</translation>
     </message>
     <message>
         <source>Address</source>
@@ -82,8 +115,40 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
+        <source>Unlock wallet</source>
+        <translation type="unfinished">ওয়ালেট আনলক</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation type="unfinished">ওয়ালেট এনক্রিপ্টেড</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">এগিয়ে যান</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">পিছনে যান</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation type="unfinished">ওয়ালেট এনক্রিপ্ট করা হবে</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation type="unfinished">ওয়ালেট এনক্রিপশন ব্যর্থ</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation type="unfinished">ওয়ালেট আনলক ব্যর্থ</translation>
+    </message>
+    <message>
         <source>The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
         <translation type="unfinished">ওয়ালেট ডিক্রিপশনের জন্য প্রবেশ করা পাসফ্রেজটি ভুল। এটিতে একটি শূন্য অক্ষর রয়েছে (যেমন - একটি শূন্য বাইট)। যদি পাসফ্রেজটি 25.0 এর আগে এই সফ্টওয়্যারটির একটি সংস্করণের সাথে সেট করা থাকে, অনুগ্রহ করে শুধুমাত্র প্রথম শূন্য অক্ষর পর্যন্ত — কিন্তু অন্তর্ভুক্ত নয় — পর্যন্ত অক্ষর দিয়ে আবার চেষ্টা করুন। এটি সফল হলে, ভবিষ্যতে এই সমস্যাটি এড়াতে অনুগ্রহ করে একটি নতুন পাসফ্রেজ সেট করুন৷</translation>
+    </message>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished">ওয়ালেট পাসফ্রেজ পরিবর্তন সফল হয়েছে</translation>
     </message>
     <message>
         <source>Passphrase change failed</source>
@@ -284,6 +349,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ক্লিপবোর্ড থেকে আংশিক স্বাক্ষরিত বিটকয়েন লেনদেন লোড করুন</translation>
     </message>
     <message>
+        <source>Restore Wallet…</source>
+        <extracomment>Name of the menu item that restores wallet from a backup file.</extracomment>
+        <translation type="unfinished">ওয়ালেট পুনরুদ্ধার করুন</translation>
+    </message>
+    <message>
         <source>Close all wallets</source>
         <translation type="unfinished">সব ওয়ালেটগুলি  বন্ধ করুন</translation>
     </message>
@@ -294,6 +364,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Mask the values in the Overview tab</source>
         <translation type="unfinished">ওভারভিউ ট্যাবে মানগুলি আড়াল করুন</translation>
+    </message>
+    <message>
+        <source>&amp;Hide</source>
+        <translation type="unfinished">&amp;লুকান</translation>
+    </message>
+    <message>
+        <source>S&amp;how</source>
+        <translation type="unfinished">S&amp;কিভাবে</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -317,6 +395,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Enable network activity</source>
         <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
         <translation type="unfinished">নেটওয়ার্ক কার্যকলাপ চালু করুন</translation>
+    </message>
+    <message>
+        <source>Pre-syncing Headers (%1%)…</source>
+        <translation type="unfinished">শিরোনাম সিঙ্ক করা হচ্ছে (%1%)...</translation>
+    </message>
+    <message>
+        <source>Error creating wallet</source>
+        <translation type="unfinished">ওয়ালেট তৈরিতে ত্রুটি৷</translation>
+    </message>
+    <message>
+        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
+        <translation type="unfinished">নতুন ওয়ালেট তৈরি করা যায় না, সফ্টওয়্যারটি স্কলাইট সমর্থন ছাড়াই সংকলিত হয়েছিল (ডেসক্রিপ্টর ওয়ালেটের জন্য প্রয়োজনীয়)</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -380,6 +470,61 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Copy transaction &amp;ID and output index</source>
         <translation type="unfinished">লেনদেন আইডি এবং আউটপুট সূচক কপি করুন</translation>
     </message>
+    <message>
+        <source>L&amp;ock unspent</source>
+        <translation type="unfinished">L&amp;ock অব্যয়</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock unspent</source>
+        <translation type="unfinished">&amp;অব্যয়িত খোলা</translation>
+    </message>
+    </context>
+<context>
+    <name>CreateWalletActivity</name>
+    <message>
+        <source>Can't list signers</source>
+        <translation type="unfinished">স্বাক্ষরকারীদের তালিকা করা যাবে না</translation>
+    </message>
+    <message>
+        <source>Too many external signers found</source>
+        <translation type="unfinished">অনেকগুলি বহিরাগত স্বাক্ষরকারী পাওয়া গেছে৷</translation>
+    </message>
+</context>
+<context>
+    <name>LoadWalletsActivity</name>
+    <message>
+        <source>Load Wallets</source>
+        <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
+        <translation type="unfinished">ওয়ালেট লোড করুন</translation>
+    </message>
+    <message>
+        <source>Loading wallets…</source>
+        <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
+        <translation type="unfinished">ওয়ালেট লোড হচ্ছে...</translation>
+    </message>
+</context>
+<context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Migrate wallet</source>
+        <translation type="unfinished">মাইচগ্রেট ওয়ালেট </translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to migrate the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation type="unfinished">আপনি কি ওয়ালেট1 %1 1 স্থানান্তর করার বিষয়ে নিশ্চিত?</translation>
+    </message>
+    <message>
+        <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
+If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
+If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
+
+The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
+        <translation type="unfinished">ওয়ালেট স্থানান্তরিত করা এই ওয়ালেটটিকে এক বা একাধিক বর্ণনাকারী ওয়ালেটে রূপান্তর করবে৷ একটি নতুন ওয়ালেট ব্যাকআপ তৈরি করতে হবে।
+যদি এই ওয়ালেটটিতে কোনো ওয়াচঅনলি স্ক্রিপ্ট থাকে, তাহলে একটি নতুন ওয়ালেট তৈরি করা হবে যাতে সেই ওয়াচঅনলি স্ক্রিপ্টগুলি রয়েছে৷
+যদি এই ওয়ালেটে কোনো সমাধানযোগ্য কিন্তু দেখা না হওয়া স্ক্রিপ্ট থাকে, তাহলে একটি ভিন্ন এবং নতুন ওয়ালেট তৈরি করা হবে যাতে সেই স্ক্রিপ্টগুলি রয়েছে৷
+
+মাইগ্রেশন প্রক্রিয়া মাইগ্রেশন করার আগে ওয়ালেটের একটি ব্যাকআপ তৈরি করবে। এই ব্যাকআপ ফাইলটির নাম হবে -.legacy.bak এবং এই ওয়ালেটের জন্য ডিরেক্টরিতে পাওয়া যাবে। একটি ভুল মাইগ্রেশনের ক্ষেত্রে, "ওয়ালেট পুনরুদ্ধার করুন" কার্যকারিতা দিয়ে ব্যাকআপ পুনরুদ্ধার করা যেতে পারে।</translation>
+    </message>
     </context>
 <context>
     <name>WalletController</name>
@@ -402,6 +547,30 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Create Wallet</source>
+        <translation type="unfinished">ওয়ালেট তৈরী করুন...</translation>
+    </message>
+    <message>
+        <source>You are one step away from creating your new wallet!</source>
+        <translation type="unfinished">আপনি আপনার নতুন ওয়ালেট তৈরি থেকে এক ধাপ দূরে!</translation>
+    </message>
+    <message>
+        <source>Please provide a name and, if desired, enable any advanced options</source>
+        <translation type="unfinished">অনুগ্রহ করে একটি নাম প্রদান করুন এবং, যদি ইচ্ছা হয়, কোনো উন্নত বিকল্প সক্রিয় করুন৷</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation type="unfinished">ওয়ালেটের নাম</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation type="unfinished">ওয়ালেট</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation type="unfinished">ওয়ালেট এনক্রিপ্ট করুন। ওয়ালেটটি আপনার পছন্দের একটি পাসফ্রেজ দিয়ে এনক্রিপ্ট করা হবে।</translation>
+    </message>
     <message>
         <source>Advanced Options</source>
         <translation type="unfinished">উন্নত বিকল্প </translation>
@@ -440,6 +609,26 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>OptionsDialog</name>
+    <message>
+        <source>Whether to show PSBT controls.</source>
+        <extracomment>Tooltip text for options window setting that enables PSBT controls.</extracomment>
+        <translation type="unfinished">দেখাতে হবে কিনা PSBT কন্ট্রোল </translation>
+    </message>
+    <message>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation type="unfinished">বাহ্যিক স্বাক্ষরকারী (যেমন হার্ডওয়্যার ওয়ালেট)</translation>
+    </message>
+    <message>
+        <source>&amp;External signer script path</source>
+        <translation type="unfinished">&amp;বাহ্যিক স্বাক্ষরকারী স্ক্রিপ্ট পথ</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">এগিয়ে যান</translation>
+    </message>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>Address</source>
@@ -470,8 +659,46 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ঠিকানা কপি করুন</translation>
     </message>
     <message>
+        <source>&amp;Copy IP/Netmask</source>
+        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address, see: https://en.wikipedia.org/wiki/IP_address.</extracomment>
+        <translation type="unfinished">&amp;copy আইপি/নেটমাস্ক
+(IP/Netmask)</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished">কিছুই নেই</translation>
+    </message>
+    <message>
+        <source>Ctrl+I</source>
+        <translation type="unfinished">Ctrl+l</translation>
+    </message>
+    <message>
+        <source>Node window - [%1]</source>
+        <translation type="unfinished">নোড উইন্ডো - [%1]</translation>
+    </message>
+    <message>
         <source>via %1</source>
         <translation type="unfinished">এর মাধ্যমে %1</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation type="unfinished">হ্যাঁ </translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation type="unfinished">না </translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation type="unfinished">উদ্দেশ্যে</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation type="unfinished">থেকে</translation>
+    </message>
+    <message>
+        <source>Never</source>
+        <translation type="unfinished">কখনো না</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -493,12 +720,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;বার্তাঃ</translation>
     </message>
     <message>
-        <source>&amp;Copy address</source>
-        <translation type="unfinished">ঠিকানা কপি করুন</translation>
+        <source>Clear all fields of the form.</source>
+        <translation type="unfinished">সম্পূর্ণ ফর্মটি ক্লিয়ার করুন</translation>
     </message>
     <message>
-        <source>Copy &amp;label</source>
-        <translation type="unfinished">কপি লেবেল</translation>
+        <source>Clear</source>
+        <translation type="unfinished">ক্লিয়ার</translation>
+    </message>
+    <message>
+        <source>Show</source>
+        <translation type="unfinished">প্রদর্শন</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">ঠিকানা কপি করুন</translation>
     </message>
     <message>
         <source>Copy &amp;amount</source>

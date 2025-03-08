@@ -1256,14 +1256,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">დაუდასტურებელი ხურდის გამოყენების აკრძალვის შემდეგ მათი გამოყენება შეუძლებელი იქნება, სანამ ტრანსაქციას არ ექნება ერთი დასტური მაინც. ეს აისახება თქვენი ნაშთის დათვლაზეც.</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">როუტერში Bitcoin-კლიენტის პორტის ავტომატური გახსნა. მუშაობს, თუ თქვენს როუტერს ჩართული აქვს UPnP.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">პორტის გადამისამართება &amp;UPnP-ით</translation>
-    </message>
-    <message>
         <source>Proxy &amp;IP:</source>
         <translation type="unfinished">პროქსის &amp;IP:</translation>
     </message>
@@ -2848,10 +2840,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">დისკის სივრცე ძალიან დაბალია!</translation>
     </message>
     <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">გავუშვათ ბლოკთა ბაზის ხელახლა აგება ეხლა?</translation>
-    </message>
-    <message>
         <source>Done loading</source>
         <translation type="unfinished">ჩატვირთვა დასრულებულია</translation>
     </message>
@@ -2902,10 +2890,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>No addresses available</source>
         <translation type="unfinished">არცერთი მისამართი არ არსებობს</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">არ არის საკმარისი ფაილ-დესკრიპტორები.</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>

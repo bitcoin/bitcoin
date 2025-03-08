@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Click destro del mouse per modificare l'indirizzo oppure l'etichetta.</translation>
+        <translation type="unfinished">Click destro del mouse per modificare l'indirizzo oppure l'etichetta</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -267,7 +267,7 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
     </message>
     <message>
         <source>Runaway exception</source>
-        <translation type="unfinished">Eccezione runaway</translation>
+        <translation type="unfinished">Eccezione incontrollata</translation>
     </message>
     <message>
         <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
@@ -300,7 +300,7 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely…</source>
-        <translation type="unfinished">%1 non si è ancora chiuso...</translation>
+        <translation type="unfinished">%1 non è ancora uscito in sicurezza…</translation>
     </message>
     <message>
         <source>unknown</source>
@@ -1557,6 +1557,11 @@ Il processo di migrazione creerà un backup del portafoglio prima della migrazio
         <translation type="unfinished">L'abilitazione del pruning riduce notevolmente lo spazio su disco necessario per archiviare le transazioni. Tutti i blocchi sono ancora completamente convalidati. Il ripristino di questa impostazione richiede un nuovo scaricamento dell'intera blockchain.</translation>
     </message>
     <message>
+        <source>Maximum database cache size. Make sure you have enough RAM. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
+        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
+        <translation type="unfinished">Dimensione massima della cache del database. Assicurati di avere abbastanza RAM. Una cache più grande può contribuire a una sincronizzazione più rapida, dopodiché il vantaggio è meno pronunciato per la maggior parte dei casi d'uso. Ridurre la dimensione della cache ridurrà l'utilizzo della memoria. La memoria mempool inutilizzata è condivisa per questa cache.</translation>
+    </message>
+    <message>
         <source>Size of &amp;database cache</source>
         <translation type="unfinished">Dimensione della cache del &amp;database.</translation>
     </message>
@@ -1567,6 +1572,14 @@ Il processo di migrazione creerà un backup del portafoglio prima della migrazio
     <message>
         <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
         <translation type="unfinished">Percorso completo di uno script compatibile con %1 (ad esempio, C:\Downloads\hwi.exe o /Users/you/Downloads/hwi.py). Attenzione: il malware può rubare le vostre monete!</translation>
+    </message>
+    <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished">Apri automaticamente la porta del client Bitcoin sul router. Funziona solo quando il router supporta PCP o NAT-PMP ed è abilitato. La porta esterna potrebbe essere casuale.</translation>
+    </message>
+    <message>
+        <source>Map port using PCP or NA&amp;T-PMP</source>
+        <translation type="unfinished">Mappa la porta usando PCP o NA&amp;T-PMP</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1615,11 +1628,6 @@ Il processo di migrazione creerà un backup del portafoglio prima della migrazio
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain.</source>
         <translation type="unfinished">Per ripristinare questa impostazione è necessario rieseguire il download dell'intera blockchain.</translation>
-    </message>
-    <message>
-        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
-        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
-        <translation type="unfinished">Dimensione massima della cache del database. Una cache più grande può contribuire a una sincronizzazione più veloce, dopo di che il vantaggio è meno pronunciato per la maggior parte dei casi d'uso. Abbassando la dimensione della cache si riduce l'uso della memoria. La memoria inutilizzata della mempool viene sfruttata per questa cache.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
@@ -1687,22 +1695,6 @@ Il processo di migrazione creerà un backup del portafoglio prima della migrazio
     <message>
         <source>&amp;External signer script path</source>
         <translation type="unfinished">Percorso per lo script &amp;esterno di firma</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Apri automaticamente la porta del client Bitcoin sul router. Il protocollo UPnP deve essere supportato da parte del router ed attivo.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">Mappa le porte tramite &amp;UPnP</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation type="unfinished">Apri automaticamente la porta del client Bitcoin sul router. Funziona solo quando il router supporta NAT-PMP ed è abilitato. La porta esterna potrebbe essere casuale.</translation>
-    </message>
-    <message>
-        <source>Map port using NA&amp;T-PMP</source>
-        <translation type="unfinished">Mappa la porta usando NA&amp;T-PMP</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -2421,6 +2413,10 @@ Se ricevi questo errore, dovresti richiedere al commerciante di fornire un URI c
     <message>
         <source>Direction/Type</source>
         <translation type="unfinished">Direzione/Tipo</translation>
+    </message>
+    <message>
+        <source>The BIP324 session ID string in hex.</source>
+        <translation type="unfinished">La stringa dell' ID sessione BIP324 in esadecimale.</translation>
     </message>
     <message>
         <source>The network protocol this peer is connected through: IPv4, IPv6, Onion, I2P, or CJDNS.</source>
@@ -4057,10 +4053,6 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
         <translation type="unfinished">Impossibile effettuare il downgrade del portafoglio dalla versione %i alla %i. La versione del portafoglio è rimasta immutata.</translation>
     </message>
     <message>
-        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation type="unfinished">Non è possibile ottenere i dati sulla cartella %s. Probabilmente %s è già in esecuzione.</translation>
-    </message>
-    <message>
         <source>Cannot upgrade a non HD split wallet from version %i to version %i without upgrading to support pre-split keypool. Please use version %i or no version specified.</source>
         <translation type="unfinished">impossibile aggiornare un portafoglio non diviso e non HD dalla versione %i alla versione %i senza fare l'aggiornamento per supportare il pre-split keypool. Prego usare la versione %i senza specificare la versione</translation>
     </message>
@@ -4079,6 +4071,10 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
     <message>
         <source>Error reading %s! Transaction data may be missing or incorrect. Rescanning wallet.</source>
         <translation type="unfinished">Errore nella lettura di %s! I dati della transazione potrebbero essere mancanti o errati. Nuova scansione del portafoglio in corso.</translation>
+    </message>
+    <message>
+        <source>Error starting/committing db txn for wallet transactions removal process</source>
+        <translation type="unfinished">Errore durante l'avvio/completamento del db txn per il processo di rimozione delle transazioni del portafoglio</translation>
     </message>
     <message>
         <source>Error: Dumpfile format record is incorrect. Got "%s", expected "format".</source>
@@ -4109,6 +4105,10 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
         <translation type="unfinished">Peers.dat non valido o corrotto (%s). Se pensi che questo sia un bug, per favore segnalalo a %s. Come soluzione alternativa puoi disfarti del file (%s) (rinominadolo, spostandolo o cancellandolo) così che ne venga creato uno nuovo al prossimo avvio.</translation>
     </message>
     <message>
+        <source>Invalid value detected for '-wallet' or '-nowallet'. '-wallet' requires a string value, while '-nowallet' accepts only '1' to disable all wallets</source>
+        <translation type="unfinished">Rilevato valore non valido per '-wallet' o '-nowallet'. '-wallet' richiede un valore stringa, mentre '-nowallet' accetta solo '1' per disabilitare tutti i portafogli</translation>
+    </message>
+    <message>
         <source>More than one onion bind address is provided. Using %s for the automatically created Tor onion service.</source>
         <translation type="unfinished">Viene fornito più di un indirizzo di associazione onion. L'utilizzo di %s per il servizio Tor onion viene creato automaticamente.</translation>
     </message>
@@ -4123,6 +4123,10 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
     <message>
         <source>No wallet file format provided. To use createfromdump, -format=&lt;format&gt; must be provided.</source>
         <translation type="unfinished">Nessun formato assegnato al file del portafoglio. Per usare createfromdump, -format=&lt;format&gt; deve essere fornito.</translation>
+    </message>
+    <message>
+        <source>Option '-upnp' is set but UPnP support was dropped in version 29.0. Consider using '-natpmp' instead.</source>
+        <translation type="unfinished">L'opzione '-upnp' è impostata, ma il supporto UPnP è stato eliminato nella versione 29.0. Si consiglia di utilizzare invece '-natpmp'.</translation>
     </message>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
@@ -4233,6 +4237,10 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
         <translation type="unfinished">-maxmempool deve essere almeno %d MB</translation>
     </message>
     <message>
+        <source>Cannot obtain a lock on directory %s. %s is probably already running.</source>
+        <translation type="unfinished">Impossibile ottenere un blocco sulla directory %s. %s è probabilmente già in esecuzione.</translation>
+    </message>
+    <message>
         <source>Cannot resolve -%s address: '%s'</source>
         <translation type="unfinished">Impossobile risolvere l'indirizzo -%s: '%s'</translation>
     </message>
@@ -4243,10 +4251,6 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
     <message>
         <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
         <translation type="unfinished">Non e' possibile impostare -peerblockfilters senza -blockfilterindex.</translation>
-    </message>
-    <message>
-        <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation type="unfinished">Impossibile scrivere nella directory dei dati ' %s'; controlla le autorizzazioni.</translation>
     </message>
     <message>
         <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
@@ -4339,6 +4343,18 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
         <translation type="unfinished">Rinominazione di  '%s' -&gt; '%s' fallita. Impossibile ripulire la directory di background chainstate leveldb.</translation>
     </message>
     <message>
+        <source>Specified -blockmaxweight (%d) exceeds consensus maximum block weight (%d)</source>
+        <translation type="unfinished">Il valore -blockmaxweight (%d) specificato supera il peso massimo del blocco di consenso (%d)</translation>
+    </message>
+    <message>
+        <source>Specified -blockreservedweight (%d) exceeds consensus maximum block weight (%d)</source>
+        <translation type="unfinished">Il valore -blockreservedweight (%d) specificato supera il peso massimo del blocco di consenso (%d)</translation>
+    </message>
+    <message>
+        <source>Specified -blockreservedweight (%d) is lower than minimum safety value of (%d)</source>
+        <translation type="unfinished">Il valore specificato -blockreservedweight (%d) è inferiore al valore minimo di sicurezza di (%d)</translation>
+    </message>
+    <message>
         <source>The combination of the pre-selected inputs and the wallet automatic inputs selection exceeds the transaction maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs</source>
         <translation type="unfinished">La combinazione degli input preselezionati e della selezione automatica degli input del portafoglio supera il peso massimo della transazione. Prova ad inviare un importo inferiore o a consolidare manualmente gli UTXO del portafoglio.</translation>
     </message>
@@ -4417,6 +4433,10 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
         <translation type="unfinished">La verifica del blocco è stata interrotta</translation>
     </message>
     <message>
+        <source>Cannot write to directory '%s'; check permissions.</source>
+        <translation type="unfinished">Impossibile scrivere nella cartella '%s'; controlla le autorizzazioni.</translation>
+    </message>
+    <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
         <translation type="unfinished">La configurazione di %s si applica alla rete %s soltanto nella sezione [%s]</translation>
     </message>
@@ -4445,10 +4465,6 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
         <translation type="unfinished">Lo spazio su disco è insufficiente!</translation>
     </message>
     <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Vuoi ricostruire ora il database dei blocchi?</translation>
-    </message>
-    <message>
         <source>Done loading</source>
         <translation type="unfinished">Caricamento completato</translation>
     </message>
@@ -4459,10 +4475,6 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
     <message>
         <source>Elliptic curve cryptography sanity check failure. %s is shutting down.</source>
         <translation type="unfinished">Errore nel controllo di integrità della crittografia a curva ellittica. %s in spegnimento. </translation>
-    </message>
-    <message>
-        <source>Error committing db txn for wallet transactions removal</source>
-        <translation type="unfinished">Errore nel completamento della db txn per rimuovere transazioni dal wallet</translation>
     </message>
     <message>
         <source>Error creating %s</source>
@@ -4497,8 +4509,16 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
         <translation type="unfinished">Errore durante il caricamento del database blocchi</translation>
     </message>
     <message>
+        <source>Error loading databases</source>
+        <translation type="unfinished">Errore durante il caricamento dei database</translation>
+    </message>
+    <message>
         <source>Error opening block database</source>
         <translation type="unfinished">Errore durante l'apertura del database blocchi</translation>
+    </message>
+    <message>
+        <source>Error opening coins database</source>
+        <translation type="unfinished">Errore durante l'apertura del database delle monete</translation>
     </message>
     <message>
         <source>Error reading configuration file: %s</source>
@@ -4511,10 +4531,6 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
     <message>
         <source>Error reading next record from wallet database</source>
         <translation type="unfinished">Si è verificato un errore leggendo la voce successiva dal database del portafogli elettronico</translation>
-    </message>
-    <message>
-        <source>Error starting db txn for wallet transactions removal</source>
-        <translation type="unfinished">Errore nell'inizializzazione della db txn per rimuovere transazioni dal wallet</translation>
     </message>
     <message>
         <source>Error: Cannot extract destination from the generated scriptpubkey</source>
@@ -4589,6 +4605,10 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
         <translation type="unfinished">Errore: Impossibile rimuovere i dati della rubrica degli indirizzi in sola consultazione</translation>
     </message>
     <message>
+        <source>Error: Unable to write data to disk for wallet %s</source>
+        <translation type="unfinished">Errore: impossibile scrivere i dati sul disco per il portafoglio %s</translation>
+    </message>
+    <message>
         <source>Error: Unable to write record to new wallet</source>
         <translation type="unfinished">Errore: non è possibile scrivere la voce nel nuovo portafogli elettronico</translation>
     </message>
@@ -4599,10 +4619,6 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
     <message>
         <source>Error: Unable to write watchonly wallet best block locator record</source>
         <translation type="unfinished">Errore: Impossibile scrivere il localizzatore di sola lettura del miglior blocco del wallet</translation>
-    </message>
-    <message>
-        <source>Error: address book copy failed for wallet %s</source>
-        <translation type="unfinished">Errore: copia rubrica fallita per il wallet %s</translation>
     </message>
     <message>
         <source>Error: database transaction cannot be executed for wallet %s</source>
@@ -4770,10 +4786,6 @@ Errore nella scrittura dei dati di ripristino.</translation>
         <translation type="unfinished">Nessun indirizzo disponibile</translation>
     </message>
     <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">Non ci sono abbastanza descrittori di file disponibili.</translation>
-    </message>
-    <message>
         <source>Not found pre-selected input %s</source>
         <translation type="unfinished">Input pre-selezionato non trovato %s</translation>
     </message>
@@ -4893,6 +4905,10 @@ Errore di sistema in fase di salvataggio del blocco nel disco: %s</translation>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation type="unfinished">L'importo della transazione è troppo basso per pagare la commissione</translation>
+    </message>
+    <message>
+        <source>The transactions removal process can only be executed within a db txn</source>
+        <translation type="unfinished">Il processo di rimozione delle transazioni può essere eseguito solo all'interno di un db txn</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -5023,12 +5039,28 @@ Errore di sistema in fase di salvataggio del blocco nel disco: %s</translation>
         <translation type="unfinished">Categoria di registrazione non supportata %s=%s.</translation>
     </message>
     <message>
+        <source>Do you want to rebuild the databases now?</source>
+        <translation type="unfinished">Vuoi ricostruire i database ora?</translation>
+    </message>
+    <message>
         <source>Error: Could not add watchonly tx %s to watchonly wallet</source>
         <translation type="unfinished">Errore: Non è stato possibile aggiungere la transazione di sola lettura %s al wallet di sola lettura</translation>
     </message>
     <message>
         <source>Error: Could not delete watchonly transactions. </source>
         <translation type="unfinished">Errore: Non è stato possibile eliminare le transazioni di sola lettura</translation>
+    </message>
+    <message>
+        <source>Error: Wallet does not exist</source>
+        <translation type="unfinished">Errore: il Portafoglio non esiste</translation>
+    </message>
+    <message>
+        <source>Error: cannot remove legacy wallet records</source>
+        <translation type="unfinished">Errore: impossibile rimuovere i record del portafoglio legacy</translation>
+    </message>
+    <message>
+        <source>Not enough file descriptors available. %d available, %d required.</source>
+        <translation type="unfinished">Non sono disponibili sufficienti descrittori di file. %d disponibili, %d richiesti.</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>

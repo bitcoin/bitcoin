@@ -3,40 +3,39 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Right-click to edit address or label 
-Click-derecho para editar direccion o nivel</translation>
+        <translation type="unfinished">Haga clic derecho para editar la dirección o la etiqueta</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Crea una nueva dirección </translation>
+        <translation type="unfinished">Crear una nueva dirección</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;Nuevo</translation>
+        <translation type="unfinished">&amp; nuevo</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Copie la direccion seleccionada actualmente en el portapapeles del sistema</translation>
+        <translation type="unfinished">Copie la dirección actualmente seleccionada al portapapeles del sistema</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;copia</translation>
+        <translation type="unfinished">&amp;Copiar</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">Borre la direccion  seleccionada actualmente de la lista</translation>
+        <translation type="unfinished">Eliminar la dirección actualmente seleccionada de la lista</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">introduzca la dirección o etiqueta para buscar</translation>
+        <translation type="unfinished">Ingrese la dirección o etiqueta para buscar</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Exportar los datos de la pestaña actual a un archivo</translation>
+        <translation type="unfinished">Exportar datos de la seccion actual a un archivo</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;Exportar </translation>
+        <translation type="unfinished">&amp; Exportar</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -44,7 +43,7 @@ Click-derecho para editar direccion o nivel</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">Escoja la direccion a la que va enviar monedas tambien</translation>
+        <translation type="unfinished">Escoga direccion para enviar monedas a</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
@@ -557,6 +556,30 @@ la entrada solo es posible con las direcciones del tipo ‘legacy’</translatio
     </message>
     </context>
 <context>
+    <name>OptionsDialog</name>
+    <message>
+        <source>Maximum database cache size. Make sure you have enough RAM. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
+        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
+        <translation type="unfinished">Tamaño máximo de la caché de la base de datos. Una caché más grande puede contribuir a una sincronización más rápida, después de lo cual el beneficio es menos pronunciado para la mayoría de los casos de uso. Disminuir el tamaño de la caché reducirá el uso de la memoria. La memoria del mempool no utilizada se comparte para esta caché.</translation>
+    </message>
+    <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished">Abre el puerto del cliente de Bitcoin en el enrutador automáticamente. Esto solo funciona cuando el enrutador soporta NAT-PMP o PCP y está activo. El puerto externo podría ser elegido al azar.</translation>
+    </message>
+    <message>
+        <source>Map port using PCP or NA&amp;T-PMP</source>
+        <translation type="unfinished">Mapear el puerto usando NAT-PMP</translation>
+    </message>
+    </context>
+<context>
+    <name>PeerTableModel</name>
+    <message>
+        <source>Address</source>
+        <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
+        <translation type="unfinished">Dirección </translation>
+    </message>
+    </context>
+<context>
     <name>RPCConsole</name>
     <message>
         <source>Local Addresses</source>
@@ -576,6 +599,13 @@ la entrada solo es posible con las direcciones del tipo ‘legacy’</translatio
     </message>
     </context>
 <context>
+    <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Copiar &amp;importe</translation>
+    </message>
+    </context>
+<context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Label</source>
@@ -584,6 +614,10 @@ la entrada solo es posible con las direcciones del tipo ‘legacy’</translatio
     </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Change:</source>
+        <translation type="unfinished">Cambio:</translation>
+    </message>
     <message>
         <source>Copy quantity</source>
         <translation type="unfinished">Copiar cantidad</translation>
@@ -628,10 +662,6 @@ la entrada solo es posible con las direcciones del tipo ‘legacy’</translatio
             <numerusform>matures in %n more block(s)</numerusform>
         </translation>
     </message>
-    <message>
-        <source>Amount</source>
-        <translation type="unfinished">Importe</translation>
-    </message>
     </context>
 <context>
     <name>TransactionTableModel</name>
@@ -642,6 +672,10 @@ la entrada solo es posible con las direcciones del tipo ‘legacy’</translatio
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Copiar &amp;importe</translation>
+    </message>
     <message>
         <source>Comma separated file</source>
         <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
@@ -675,11 +709,11 @@ la entrada solo es posible con las direcciones del tipo ‘legacy’</translatio
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;Exportar </translation>
+        <translation type="unfinished">&amp; Exportar</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Exportar los datos de la pestaña actual a un archivo</translation>
+        <translation type="unfinished">Exportar datos de la seccion actual a un archivo</translation>
     </message>
     <message>
         <source>Wallet Data</source>
@@ -689,6 +723,22 @@ la entrada solo es posible con las direcciones del tipo ‘legacy’</translatio
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Error starting/committing db txn for wallet transactions removal process</source>
+        <translation type="unfinished">Error al iniciar/cometer el proceso de eliminación de base de datos de transacciones de monedero</translation>
+    </message>
+    <message>
+        <source>Invalid value detected for '-wallet' or '-nowallet'. '-wallet' requires a string value, while '-nowallet' accepts only '1' to disable all wallets</source>
+        <translation type="unfinished">Valor no válido detectado para '-wallet' o '-nowallet'. -wallet' requiere un valor de cadena, mientras que '-nowallet' sólo acepta '1' para desactivar todos los monederos.</translation>
+    </message>
+    <message>
+        <source>Option '-upnp' is set but UPnP support was dropped in version 29.0. Consider using '-natpmp' instead.</source>
+        <translation type="unfinished">La opción '-upnp' está activada, pero el soporte UPnP se eliminó en la versión 29.0. Considera usar '-natpmp' en su lugar.</translation>
+    </message>
+    <message>
+        <source>Cannot obtain a lock on directory %s. %s is probably already running.</source>
+        <translation type="unfinished">No se puede obtener un bloqueo en el directorio %s. %s probablemente ya se está ejecutando</translation>
+    </message>
     <message>
         <source>Failed to remove snapshot chainstate dir (%s). Manually remove it before restarting.
 </source>
@@ -736,12 +786,28 @@ la entrada solo es posible con las direcciones del tipo ‘legacy’</translatio
         <translation type="unfinished">No se han encontrado datos assumeutxo para el blockhash indicado "%s".</translation>
     </message>
     <message>
+        <source>Cannot write to directory '%s'; check permissions.</source>
+        <translation type="unfinished">No se puede escribir en el directorio '%s'; compruebe los permisos.</translation>
+    </message>
+    <message>
         <source>Corrupt block found indicating potential hardware failure.</source>
         <translation type="unfinished">Se ha encontrado un bloque corrupto que indica un posible fallo del hardware.</translation>
     </message>
     <message>
         <source>Elliptic curve cryptography sanity check failure. %s is shutting down.</source>
         <translation type="unfinished">Fallo en la prueba de cordura de la criptografía de curva elíptica. %s se apagará.</translation>
+    </message>
+    <message>
+        <source>Error loading databases</source>
+        <translation type="unfinished">Error cargando bases de datos</translation>
+    </message>
+    <message>
+        <source>Error opening coins database</source>
+        <translation type="unfinished">Error al abrir la base de datos de monedas</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write data to disk for wallet %s</source>
+        <translation type="unfinished">Error: No se pueden escribir datos en el disco para el monedero %s</translation>
     </message>
     <message>
         <source>Failed to connect best block (%s).</source>
@@ -804,12 +870,32 @@ la entrada solo es posible con las direcciones del tipo ‘legacy’</translatio
         <translation type="unfinished">Error del sistema al guardar el bloque en el disco: %s</translation>
     </message>
     <message>
+        <source>The transactions removal process can only be executed within a db txn</source>
+        <translation type="unfinished">El proceso de eliminación de transacciones sólo puede ejecutarse dentro de una base de datos de transacción</translation>
+    </message>
+    <message>
         <source>There is no ScriptPubKeyManager for this address</source>
         <translation type="unfinished">No hay ningún ScriptPubKeyManager para esta dirección.</translation>
     </message>
     <message>
         <source>Unrecognised option "%s" provided in -test=&lt;option&gt;.</source>
         <translation type="unfinished">Opción no reconocida "%s" proporcionada en -test=&lt;option&gt;.</translation>
+    </message>
+    <message>
+        <source>Do you want to rebuild the databases now?</source>
+        <translation type="unfinished">¿Quiere reconstruir la base de datos de bloques ahora?</translation>
+    </message>
+    <message>
+        <source>Error: Wallet does not exist</source>
+        <translation type="unfinished">Error: La cartera no existe</translation>
+    </message>
+    <message>
+        <source>Error: cannot remove legacy wallet records</source>
+        <translation type="unfinished">Error: no se pueden eliminar los registros de cartera heredados</translation>
+    </message>
+    <message>
+        <source>Not enough file descriptors available. %d available, %d required.</source>
+        <translation type="unfinished">No hay suficientes descriptores de archivo disponibles. %d disponibles, %d requeridos.</translation>
     </message>
     </context>
 </TS>

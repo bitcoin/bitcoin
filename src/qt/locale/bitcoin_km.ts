@@ -1375,11 +1375,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ជីហ្គាប៊ៃ </translation>
     </message>
     <message>
-        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
-        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
-        <translation type="unfinished">ទំហំឃ្លាំងទិន្នន័យអតិបរមា។ ឃ្លាំងសម្ងាត់ធំជាងអាចរួមចំណែកដល់ការធ្វើសមកាលកម្មលឿនជាងមុន បន្ទាប់ពីនោះអត្ថប្រយោជន៍គឺមិនសូវច្បាស់សម្រាប់ករណីប្រើប្រាស់ភាគច្រើន។ ការបន្ថយទំហំឃ្លាំងសម្ងាត់នឹងកាត់បន្ថយការប្រើប្រាស់អង្គចងចាំ។ អង្គចងចាំ mempool ដែលមិនប្រើត្រូវបានចែករំលែកសម្រាប់ឃ្លាំងសម្ងាត់នេះ។</translation>
-    </message>
-    <message>
         <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
         <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
         <translation type="unfinished">កំណត់ចំនួនខ្សែស្រឡាយផ្ទៀងផ្ទាត់script ។ តម្លៃអវិជ្ជមានត្រូវគ្នាទៅនឹងចំនួនស្នូលដែលអ្នកចង់ចាកចេញពីប្រព័ន្ធដោយឥតគិតថ្លៃ។</translation>
@@ -1429,10 +1424,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;External signer script path</source>
         <translation type="unfinished">(&amp;E)script អ្នកចុះហត្ថលេខាខាងក្រៅ</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation type="unfinished">បើកច្រកម៉ាស៊ីនភ្ញៀវ Bitcoin ដោយស្វ័យប្រវត្តិនៅលើរ៉ោតទ័រ។ វាដំណើរការតែនៅពេលដែលរ៉ោតទ័ររបស់អ្នកគាំទ្រ NAT-PMP ហើយវាត្រូវបានបើក។ ច្រកខាងក្រៅអាចជាចៃដន្យ។</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -3069,10 +3060,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>%s is set very high!</source>
         <translation type="unfinished">%s ត្រូវបានកំណត់យ៉ាងខ្ពស់</translation>
-    </message>
-    <message>
-        <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation type="unfinished">មិនអាចសរសេរទៅកាន់ កន្លែងផ្ទុកទិន្នន័យ​ '%s'; ពិនិត្យមើលការអនុញ្ញាត។</translation>
     </message>
     <message>
         <source>The inputs size exceeds the maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs</source>

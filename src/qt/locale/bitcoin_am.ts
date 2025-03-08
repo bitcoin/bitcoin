@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">አድራሻ ወይም መለያ ስም ለመቀየር ቀኙን ጠቅ ያድርጉ</translation>
+        <translation type="unfinished">አድራሻን ለማርተእ ወይም ለመሰየም በቀኝ ጠቅ ያድርጉ</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -47,7 +47,7 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">ገንዘብ/ኮይኖች የሚልኩበትን አድራሻ ይምረጡ</translation>
+        <translation type="unfinished">ገንዘብ/ኮይኖችን የሚልኩበትን አድራሻ ይምረጡ</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>

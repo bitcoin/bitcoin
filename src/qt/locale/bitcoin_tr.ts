@@ -1539,11 +1539,6 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">Bu ayarın geri alınması, tüm blok zincirinin yeniden indirilmesini gerektirir.</translation>
     </message>
     <message>
-        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
-        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
-        <translation type="unfinished">Maksimum veritabanı önbellek boyutu. Daha büyük bir önbellek daha hızlı eşitlemeye katkıda bulunabilir, bundan sonra çoğu kullanım durumu için fayda daha az belirgindir. Önbellek boyutunu düşürmek bellek kullanımını azaltır. Bu önbellek için kullanılmayan mempool belleği paylaşılır.</translation>
-    </message>
-    <message>
         <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
         <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
         <translation type="unfinished">Komut dosyası doğrulama iş parçacığı sayısını ayarlayın. Negatif değerler sisteme serbest bırakmak istediğiniz çekirdek sayısına karşılık gelir.</translation>
@@ -1601,14 +1596,6 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <source>Whether to show PSBT controls.</source>
         <extracomment>Tooltip text for options window setting that enables PSBT controls.</extracomment>
         <translation type="unfinished">PSBT kontrollerinin gösterilip gösterilmeyeceği.</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Yönlendiricide Bitcoin istemci portlarını otomatik olarak açar. Bu, sadece yönlendiricinizin UPnP desteği bulunuyorsa ve etkinse çalışabilir.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">Portları &amp;UPnP kullanarak haritala</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -2805,10 +2792,6 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">İşlem ücreti</translation>
     </message>
     <message>
-        <source>Total Amount</source>
-        <translation type="unfinished">Toplam Tutar</translation>
-    </message>
-    <message>
         <source>Unsigned Transaction</source>
         <comment>PSBT copied</comment>
         <extracomment>Caption of "PSBT has been copied" messagebox</extracomment>
@@ -3613,10 +3596,6 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">%s -assumeutxo anlık görüntü durumunu doğrulamada başarısız oldu. Bu, bir donanım sorunu, yazılımda bir hata veya geçersiz bir anlık görüntünün yüklenmesine izin veren kötü bir yazılım değişikliği olduğunu gösterir. Bu nedenle, düğüm kapanacak ve anlık görüntüye dayanan herhangi bir durumu kullanmayı bırakacak, zincir yüksekliğini %d'den %d'e sıfırlayacaktır. Bir sonraki yeniden başlatmada, düğüm herhangi bir anlık görüntü verisi kullanmadan %d'den senkronizasyona devam edecektir. Bu olayı %s'ye bildiriniz ve anlık görüntüyü nasıl elde ettiğinizi de ekleyiniz. Geçersiz anlık görüntü zincir durumu, bu hatanın nedenini teşhis etmekte yardımcı olabilir diye diskte bırakılacaktır.</translation>
     </message>
     <message>
-        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation type="unfinished">%s veri dizininde kilit elde edilemedi. %s muhtemelen hâlihazırda çalışmaktadır.</translation>
-    </message>
-    <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation type="unfinished">MIT yazılım lisansı altında dağıtılmıştır, beraberindeki %s ya da %s dosyasına bakınız.</translation>
     </message>
@@ -3725,10 +3704,6 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">-blockfilterindex olmadan -peerblockfilters ayarlanamıyor.</translation>
     </message>
     <message>
-        <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation type="unfinished">Veriler '%s' klasörüne yazılamıyor ; yetkilendirmeyi kontrol edin.</translation>
-    </message>
-    <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
         <translation type="unfinished">Belirli bağlantılar sağlayamaz ve aynı anda addrman'ın giden bağlantıları bulmasını sağlayamaz.</translation>
     </message>
@@ -3829,20 +3804,12 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
         <translation type="unfinished">Disk alanı çok düşük!</translation>
     </message>
     <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Blok veritabanını şimdi yeniden inşa etmek istiyor musunuz?</translation>
-    </message>
-    <message>
         <source>Done loading</source>
         <translation type="unfinished">Yükleme tamamlandı</translation>
     </message>
     <message>
         <source>Elliptic curve cryptography sanity check failure. %s is shutting down.</source>
         <translation type="unfinished">Eliptik eğri kriptografisi sistem sağlığı kontrolü başarısız oldu. %s kapatılıyor.</translation>
-    </message>
-    <message>
-        <source>Error committing db txn for wallet transactions removal</source>
-        <translation type="unfinished">Cüzdan verilerinizin silinirken hata. Veri tabanı bağlantı hatası.</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
@@ -3877,10 +3844,6 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
         <translation type="unfinished">Veritabanı okuma hatası, program kapatılıyor.</translation>
     </message>
     <message>
-        <source>Error starting db txn for wallet transactions removal</source>
-        <translation type="unfinished">Cüzdan verileriniz silinirken hata. Veri tabanı başlatılamadı</translation>
-    </message>
-    <message>
         <source>Error: Failed to create new watchonly wallet</source>
         <translation type="unfinished">Hata: Yeni  sadece izlenebilir (watchonly) cüzdanı oluşturulamadı</translation>
     </message>
@@ -3899,10 +3862,6 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
     <message>
         <source>Error: Unable to write watchonly wallet best block locator record</source>
         <translation type="unfinished">Hata: Yalnızca izlenen cüzdanın en iyi blok bulucu kaydını yazmak mümkün değil</translation>
-    </message>
-    <message>
-        <source>Error: address book copy failed for wallet %s</source>
-        <translation type="unfinished">Hata: %s Cüzdan için adres defteri kopyası oluşturulamadı</translation>
     </message>
     <message>
         <source>Error: database transaction cannot be executed for wallet %s</source>
@@ -4027,10 +3986,6 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
     <message>
         <source>No addresses available</source>
         <translation type="unfinished">Erişilebilir adres yok</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">Kafi derecede dosya tanımlayıcıları mevcut değil.</translation>
     </message>
     <message>
         <source>Only direction was set, no permissions: '%s'</source>
