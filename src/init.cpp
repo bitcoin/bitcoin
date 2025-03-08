@@ -386,7 +386,6 @@ void Shutdown(NodeContext& node)
         node.validation_signals->UnregisterAllValidationInterfaces();
     }
     node.mempool.reset();
-    node.forecasterman.reset();
     node.chainman.reset();
     node.validation_signals.reset();
     node.scheduler.reset();
@@ -1651,7 +1650,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (read_stale_estimates && (chainparams.GetChainType() != ChainType::REGTEST)) {
             return InitError(strprintf(_("acceptstalefeeestimates is not supported on %s chain."), chainparams.GetChainTypeString()));
         }
-        node.forecasterman = std::make_unique<FeeRateForecasterManager>();
+        node.forecasterman = std::make_shared<FeeRateForecasterManager>();
+        validation_signals.RegisterSharedValidationInterface(node.forecasterman);
         auto mempool_forecaster = std::make_shared<MemPoolForecaster>(node.mempool.get(), &(chainman.ActiveChainstate()));
         node.forecasterman->RegisterForecaster(mempool_forecaster);
         auto block_policy_estimator = std::make_shared<CBlockPolicyEstimator>(FeeestPath(args), read_stale_estimates);

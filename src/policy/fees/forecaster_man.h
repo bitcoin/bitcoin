@@ -11,22 +11,29 @@
 #include <memory>
 #include <optional>
 #include <unordered_map>
+#include <vector>
 
 class CBlockPolicyEstimator;
+class CValidationInterface;
 class Forecaster;
 class ForecastResult;
 
 struct ConfirmationTarget;
+struct RemovedMempoolTransactionInfo;
 
 enum class ForecastType;
 
-/** \class FeeRateForecasterManager
- * Module for managing and utilising multiple fee rate forecasters to provide a forecast for a target.
+// Constants for mempool sanity checks.
+constexpr size_t NUMBER_OF_BLOCKS = 6;
+constexpr double HEALTHY_BLOCK_PERCENTILE = 0.75;
+
+/**
+ * \class FeeRateForecasterManager
  *
- * The FeeRateForecasterManager class allows for the registration of multiple fee rate
- * forecasters.
+ * Manages multiple fee rate forecasters to estimate the safest and lowest possible
+ * transaction fees based on recent block and mempool conditions.
  */
-class FeeRateForecasterManager
+class FeeRateForecasterManager : public CValidationInterface
 {
 private:
     //! Map of all registered forecasters to their shared pointers.
@@ -34,27 +41,59 @@ private:
 
     mutable Mutex cs;
 
+    //! Structure to track the health of mined blocks.
+    struct BlockData {
+        size_t m_height;                      //!< Block height.
+        bool empty{false};                    //!< Whether the block is empty.
+        double m_removed_block_txs_weight;    //!< Removed transaction weight from the mempool.
+        std::optional<double> m_block_weight; //!< Weight of the block.
+
+        BlockData(size_t height, double removed_block_txs_weight)
+            : m_height(height), m_removed_block_txs_weight(removed_block_txs_weight) {}
+    };
+
+    //! Tracks the statistics of previously mined blocks.
+    std::vector<BlockData> prev_mined_blocks GUARDED_BY(cs);
+
+    //! Checks if recent mined blocks indicate a healthy mempool state.
+    bool IsMempoolHealthy() const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    //! Computes the total weight of transactions in a block.
+    size_t CalculateBlockWeight(const std::vector<CTransactionRef>& txs) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+protected:
+    //! Handles transactions removed from the mempool due to a new block.
+    void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight) override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+    //! Handles newly connected blocks.
+    void BlockConnected(ChainstateRole /*unused*/, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
 public:
-    /**
-     * Register a forecaster to provide fee rate estimates.
-     *
-     * @param[in] forecaster shared pointer to a Forecaster instance.
-     */
+    FeeRateForecasterManager() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    virtual ~FeeRateForecasterManager();
+
+    //! Registers a new fee forecaster.
     void RegisterForecaster(std::shared_ptr<Forecaster> forecaster) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    /*
-     * Return the pointer to block policy estimator.
-     */
+    //! Returns a pointer to the block policy estimator.
     CBlockPolicyEstimator* GetBlockPolicyEstimator() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
+    //! Provides access to historical block status.
+    const std::vector<BlockData>& GetPreviouslyMinedBlockData() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+    //! Retrieves block data as a human-readable string.
+    std::vector<std::string> GetPreviouslyMinedBlockDataStr() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
     /**
-     * Get a fee rate estimate from all registered forecasters for a given confirmation target.
+     * Estimates a fee rate using registered forecasters for a given confirmation target.
      *
-     * Polls all registered forecasters and selects the lowest fee rate
-     * estimate with acceptable confidence.
+     * Iterates through all registered forecasters and selects the lowest viable fee estimate
+     * with acceptable confidence.
      *
-     * @param[in] target The target within which the transaction should be confirmed.
-     * @return A pair consisting of the forecast result and a vector of forecaster names.
+     * @param[in] target The target confirmation window for the transaction.
+     * @return A pair containing the forecast result (if available) and any relevant error messages.
      */
     std::pair<std::optional<ForecastResult>, std::vector<std::string>> GetFeeEstimateFromForecasters(ConfirmationTarget& target) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };

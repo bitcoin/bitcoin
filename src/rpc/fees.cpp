@@ -105,6 +105,7 @@ static RPCHelpMan estimatefee()
         "in BIP 141 (witness data is discounted).\n",
         {
             {"conf_target", RPCArg::Type::NUM, RPCArg::Optional::NO, "Confirmation target in blocks"},
+            {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether the response should be verbose"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "", {
@@ -115,6 +116,9 @@ static RPCHelpMan estimatefee()
                                               {RPCResult::Type::ARR, "errors", /*optional=*/true, "Errors encountered during processing (if there are any)", {
                                                                                                                                                                  {RPCResult::Type::STR, "", "error"},
                                                                                                                                                              }},
+                                              {RPCResult::Type::ARR, "stats", /*optional=*/true, strprintf("%d most-recent blocks stats (if there are any), only returned when verbose is true", NUMBER_OF_BLOCKS), {
+                                                                                                                                                                                                                        {RPCResult::Type::STR, "", "error"},
+                                                                                                                                                                                                                    }},
                                           }},
         RPCExamples{HelpExampleCli("estimatefee", "2") + HelpExampleRpc("estimatefee", "2")},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
@@ -128,6 +132,7 @@ static RPCHelpMan estimatefee()
             }
             const NodeContext& node = EnsureAnyNodeContext(request.context);
             const CTxMemPool& mempool = EnsureMemPool(node);
+            CHECK_NONFATAL(mempool.m_opts.signals)->SyncWithValidationInterfaceQueue();
             FeeRateForecasterManager& forecasterman = EnsureAnyForecasterMan(request.context);
             ConfirmationTarget target = {/*value=*/static_cast<unsigned int>(targetBlocks), /*type*/ ConfirmationTargetType::BLOCKS};
             auto forecast_result = forecasterman.GetFeeEstimateFromForecasters(target);
@@ -143,6 +148,17 @@ static RPCHelpMan estimatefee()
 
             for (auto& err : forecast_result.second) {
                 errors.push_back(err);
+            }
+            bool verbose = false;
+            if (!request.params[1].isNull()) {
+                verbose = request.params[1].get_bool();
+            }
+            if (verbose) {
+                UniValue stats(UniValue::VARR);
+                std::vector<std::string> verbose_stats = forecasterman.GetPreviouslyMinedBlockDataStr();
+                for (auto& stat : verbose_stats)
+                    stats.push_back(stat);
+                result.pushKV("stats", stats);
             }
             result.pushKV("errors", errors);
             return result;
