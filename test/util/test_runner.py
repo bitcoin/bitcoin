@@ -164,6 +164,11 @@ def bctest(testDir, testObj, buildenv):
         if want_error not in res.stderr:
             logging.error(f"Error mismatch:\nExpected: {want_error}\nReceived: {res.stderr.rstrip()}\nres: {str(res)}")
             raise Exception
+    else:
+        # If no error is expected, stderr should be empty except for known cases
+        if res.stderr and not (testObj.get("exec") == "./bitcoin-tx" and "wine" in os.environ.get("WINEPREFIX", "")):
+            logging.error(f"Unexpected stderr output when no error expected:\n{res.stderr.rstrip()}\nres: {str(res)}")
+            raise Exception
 
 def parse_output(a, fmt):
     """Parse the output according to specified format.
