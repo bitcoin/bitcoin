@@ -63,6 +63,9 @@ static constexpr int64_t VALIDATION_WEIGHT_PER_SIGOP_PASSED{50};
 // How much weight budget is added to the witness size (Tapscript only, see BIP 342).
 static constexpr int64_t VALIDATION_WEIGHT_OFFSET{50};
 
+// Maximum transaction version
+static const int32_t TRANSACTION_VERSION_MAX = 3;
+
 template <typename T>
 std::vector<unsigned char> ToByteVector(const T& in)
 {
