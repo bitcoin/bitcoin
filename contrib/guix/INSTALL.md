@@ -456,7 +456,7 @@ Alternately, see `guix package --search-paths -p "$HOME/.guix-profile"'.
 
 However, this is somewhat tedious to do for both `guix pull` and `guix install`
 for each user on the system that wants to properly use `guix`. I recommend that
-you instead add an entry to `/etc/profile.d` instead. This is done by default
+you add an entry to `/etc/profile.d` instead. This is done by default
 when installing the Debian package later than 1.2.0-4 and when using the shell
 script installer.
 
