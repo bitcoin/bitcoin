@@ -4,10 +4,10 @@ Running locally
 ===============
 
 To run linters locally with the same versions as the CI environment, use the included
-Dockerfile:
+Dockerfile run via helper script to manage worktree workflows:
 
 ```sh
-DOCKER_BUILDKIT=1 docker build -t bitcoin-linter --file "./ci/lint_imagefile" ./ && docker run --rm -v $(pwd):/bitcoin -it bitcoin-linter
+./ci/lint_run_all.sh
 ```
 
 Building the container can be done every time, because it is fast when the
