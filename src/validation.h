@@ -383,15 +383,6 @@ public:
 /** Context-independent validity checks */
 bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
 
-/** Check a block is completely valid from start to finish (only works on top of our current best block) */
-bool TestBlockValidity(BlockValidationState& state,
-                       const CChainParams& chainparams,
-                       Chainstate& chainstate,
-                       const CBlock& block,
-                       CBlockIndex* pindexPrev,
-                       bool fCheckPOW = true,
-                       bool fCheckMerkleRoot = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
 /** Check with the proof of work on each blockheader matches the value in nBits */
 bool HasValidProofOfWork(const std::vector<CBlockHeader>& headers, const Consensus::Params& consensusParams);
 
@@ -1181,6 +1172,20 @@ public:
         AutoFile& file_in,
         FlatFilePos* dbp = nullptr,
         std::multimap<uint256, FlatFilePos>* blocks_with_unknown_parent = nullptr);
+
+    /**
+     * Verify a block, including transactions.
+     *
+     * @param[in]   block       The block we want to process. Must connect to the
+     *                          current tip.
+     * @param[out]  reason      rejection reason (BIP22)
+     * @param[in]   check_pow   perform proof-of-work check, nBits in the header
+     *                          is always checked
+     * @param[in]   check_merkle_root check the merkle root
+     *
+     * For signets the challenge verification is skipped when check_pow is false.
+     */
+    bool TestBlockValidity(const CBlock& block, std::string& reason, const bool check_pow = true, const bool check_merkle_root = true);
 
     /**
      * Process an incoming block. This only returns after the best known valid

@@ -18,6 +18,7 @@ interface Mining $Proxy.wrap("interfaces::Mining") {
     getTip @2 (context :Proxy.Context) -> (result: Common.BlockRef, hasResult: Bool);
     waitTipChanged @3 (context :Proxy.Context, currentTip: Data, timeout: Float64) -> (result: Common.BlockRef);
     createNewBlock @4 (options: BlockCreateOptions) -> (result: BlockTemplate);
+    checkBlock @5 (block: Data, options: BlockCheckOptions) -> (reason: Text, result: Bool);
 }
 
 interface BlockTemplate $Proxy.wrap("interfaces::BlockTemplate") {
@@ -39,12 +40,7 @@ struct BlockCreateOptions $Proxy.wrap("node::BlockCreateOptions") {
     coinbaseOutputMaxAdditionalSigops @2 :UInt64 $Proxy.name("coinbase_output_max_additional_sigops");
 }
 
-# Note: serialization of the BlockValidationState C++ type is somewhat fragile
-# and using the struct can be awkward. It would be good if testBlockValidity
-# method were changed to return validity information in a simpler format.
-struct BlockValidationState {
-    mode @0 :Int32;
-    result @1 :Int32;
-    rejectReason @2 :Text;
-    debugMessage @3 :Text;
+struct BlockCheckOptions $Proxy.wrap("node::BlockCheckOptions") {
+    checkMerkleRoot @0 :Bool $Proxy.name("check_merkle_root");
+    checkPow @1 :Bool $Proxy.name("check_pow");
 }
