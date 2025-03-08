@@ -5,7 +5,7 @@ BEGIN
   printf("Logging opened, closed, misbehaving, and evicted P2P connections\n")
 }
 
-usdt:./build/src/bitcoind:net:inbound_connection
+usdt:./build/bin/bitcoind:net:inbound_connection
 {
   $id = (int64) arg0;
   $addr = str(arg1);
@@ -15,7 +15,7 @@ usdt:./build/src/bitcoind:net:inbound_connection
   printf("INBOUND conn from %s: id=%ld, type=%s, network=%d, total=%d\n", $addr, $id, $conn_type, $network, $existing);
 }
 
-usdt:./build/src/bitcoind:net:outbound_connection
+usdt:./build/bin/bitcoind:net:outbound_connection
 {
   $id = (int64) arg0;
   $addr = str(arg1);
@@ -25,7 +25,7 @@ usdt:./build/src/bitcoind:net:outbound_connection
   printf("OUTBOUND conn to %s: id=%ld, type=%s, network=%d, total=%d\n", $addr, $id, $conn_type, $network, $existing);
 }
 
-usdt:./build/src/bitcoind:net:closed_connection
+usdt:./build/bin/bitcoind:net:closed_connection
 {
   $id = (int64) arg0;
   $addr = str(arg1);
@@ -34,7 +34,7 @@ usdt:./build/src/bitcoind:net:closed_connection
   printf("CLOSED conn to %s: id=%ld, type=%s, network=%d, established=%ld\n", $addr, $id, $conn_type, $network, arg4);
 }
 
-usdt:./build/src/bitcoind:net:evicted_inbound_connection
+usdt:./build/bin/bitcoind:net:evicted_inbound_connection
 {
   $id = (int64) arg0;
   $addr = str(arg1);
@@ -43,7 +43,7 @@ usdt:./build/src/bitcoind:net:evicted_inbound_connection
   printf("EVICTED conn to %s: id=%ld, type=%s, network=%d, established=%ld\n", $addr, $id, $conn_type, $network, arg4);
 }
 
-usdt:./build/src/bitcoind:net:misbehaving_connection
+usdt:./build/bin/bitcoind:net:misbehaving_connection
 {
   $id = (int64) arg0;
   $message = str(arg1);
