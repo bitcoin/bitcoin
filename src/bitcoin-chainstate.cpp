@@ -265,7 +265,7 @@ epilogue:
         LOCK(cs_main);
         for (Chainstate* chainstate : chainman.GetAll()) {
             if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
+                chainstate->ForceFlushStateToDisk(/*wipe_cache=*/true);
                 chainstate->ResetCoinsViews();
             }
         }
