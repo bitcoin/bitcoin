@@ -312,6 +312,7 @@ RPCHelpMan addmultisigaddress()
 
     // Store destination in the addressbook
     pwallet->SetAddressBook(dest, label, AddressPurpose::SEND);
+    pwallet->RefreshAllTXOs();
 
     // Make the descriptor
     std::unique_ptr<Descriptor> descriptor = InferDescriptor(GetScriptForDestination(dest), spk_man);
@@ -371,6 +372,7 @@ RPCHelpMan keypoolrefill()
     if (pwallet->GetKeyPoolSize() < kpSize) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error refreshing keypool.");
     }
+    pwallet->RefreshAllTXOs();
 
     return UniValue::VNULL;
 },
@@ -402,6 +404,7 @@ RPCHelpMan newkeypool()
 
     LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet, true);
     spk_man.NewKeyPool();
+    pwallet->RefreshAllTXOs();
 
     return UniValue::VNULL;
 },
