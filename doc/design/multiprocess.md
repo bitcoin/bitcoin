@@ -74,7 +74,7 @@ This section describes the major components of the Inter-Process Communication (
 - These Cap’n Proto files ([learn more about Cap'n Proto RPC](https://capnproto.org/rpc.html)) define the structure and format of messages that are exchanged over IPC. They serve as blueprints for generating C++ code that bridges the gap between high-level C++ interfaces and low-level socket communication.
 
 ### The `mpgen` Code Generation Tool
-- A central component of the IPC framework is the `mpgen` tool which is part the [`libmultiprocess` project](https://github.com/bitcoin-core/libmultiprocess). This tool takes the `.capnp` files as input and generates C++ code.
+- A central component of the IPC framework is the `mpgen` tool which is part of the [`libmultiprocess` project](https://github.com/bitcoin-core/libmultiprocess). This tool takes the `.capnp` files as input and generates C++ code.
 - The generated code handles IPC communication, translating interface calls into socket reads and writes.
 
 ### C++ Client Subclasses in Generated Code
