@@ -23,7 +23,7 @@ function(add_maintenance_targets)
     return()
   endif()
 
-  foreach(target IN ITEMS bitcoind bitcoin-qt bitcoin-cli bitcoin-tx bitcoin-util bitcoin-wallet test_bitcoin bench_bitcoin)
+  foreach(target IN ITEMS bitcoin bitcoind bitcoin-qt bitcoin-cli bitcoin-tx bitcoin-util bitcoin-wallet test_bitcoin bench_bitcoin)
     if(TARGET ${target})
       list(APPEND executables $<TARGET_FILE:${target}>)
     endif()
@@ -43,7 +43,7 @@ function(add_maintenance_targets)
 endfunction()
 
 function(add_windows_deploy_target)
-  if(MINGW AND TARGET bitcoin-qt AND TARGET bitcoind AND TARGET bitcoin-cli AND TARGET bitcoin-tx AND TARGET bitcoin-wallet AND TARGET bitcoin-util AND TARGET test_bitcoin)
+  if(MINGW AND TARGET bitcoin AND TARGET bitcoin-qt AND TARGET bitcoind AND TARGET bitcoin-cli AND TARGET bitcoin-tx AND TARGET bitcoin-wallet AND TARGET bitcoin-util AND TARGET test_bitcoin)
     # TODO: Consider replacing this code with the CPack NSIS Generator.
     #       See https://cmake.org/cmake/help/latest/cpack_gen/nsis.html
     include(GenerateSetupNsi)
@@ -51,6 +51,7 @@ function(add_windows_deploy_target)
     add_custom_command(
       OUTPUT ${PROJECT_BINARY_DIR}/bitcoin-win64-setup.exe
       COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/release
+      COMMAND ${CMAKE_STRIP} $<TARGET_FILE:bitcoin> -o ${PROJECT_BINARY_DIR}/release/$<TARGET_FILE_NAME:bitcoin>
       COMMAND ${CMAKE_STRIP} $<TARGET_FILE:bitcoin-qt> -o ${PROJECT_BINARY_DIR}/release/$<TARGET_FILE_NAME:bitcoin-qt>
       COMMAND ${CMAKE_STRIP} $<TARGET_FILE:bitcoind> -o ${PROJECT_BINARY_DIR}/release/$<TARGET_FILE_NAME:bitcoind>
       COMMAND ${CMAKE_STRIP} $<TARGET_FILE:bitcoin-cli> -o ${PROJECT_BINARY_DIR}/release/$<TARGET_FILE_NAME:bitcoin-cli>

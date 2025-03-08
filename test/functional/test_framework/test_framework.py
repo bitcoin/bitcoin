@@ -13,11 +13,13 @@ import platform
 import pdb
 import random
 import re
+import shlex
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
+import types
 
 from .address import create_deterministic_address_bcrt1_p2tr_op_true
 from .authproxy import JSONRPCException
@@ -54,6 +56,52 @@ class SkipTest(Exception):
 
     def __init__(self, message):
         self.message = message
+
+
+class Binaries:
+    """Helper class to provide information about bitcoin binaries
+
+    Attributes:
+        paths: Object returned from get_binary_paths() containing information
+            which binaries and command lines to use from environment variables and
+            the config file.
+        bin_dir: An optional string containing a directory path to look for
+            binaries, which takes precedence over the paths above, if specified.
+            This is used by tests calling binaries from previous releases.
+    """
+    def __init__(self, paths, bin_dir):
+        self.paths = paths
+        self.bin_dir = bin_dir
+
+    def daemon_argv(self):
+        "Return argv array that should be used to invoke bitcoind"
+        return self._argv("daemon", self.paths.bitcoind)
+
+    def rpc_argv(self):
+        "Return argv array that should be used to invoke bitcoin-cli"
+        # Add -nonamed because "bitcoin rpc" enables -named by default, but bitcoin-cli doesn't
+        return self._argv("rpc", self.paths.bitcoincli) + ["-nonamed"]
+
+    def util_argv(self):
+        "Return argv array that should be used to invoke bitcoin-util"
+        return self._argv("util", self.paths.bitcoinutil)
+
+    def wallet_argv(self):
+        "Return argv array that should be used to invoke bitcoin-wallet"
+        return self._argv("wallet", self.paths.bitcoinwallet)
+
+    def _argv(self, command, bin_path):
+        """Return argv array that should be used to invoke the command. It
+        either uses the bitcoin wrapper executable (if BITCOIN_CMD is set), or
+        the direct binary path (bitcoind, etc). When bin_dir is set (by tests
+        calling binaries from previous releases) it always uses the direct
+        path."""
+        if self.bin_dir is not None:
+            return [os.path.join(self.bin_dir, os.path.basename(bin_path))]
+        elif self.paths.bitcoin_cmd is not None:
+            return self.paths.bitcoin_cmd + [command]
+        else:
+            return [bin_path]
 
 
 class BitcoinTestMetaClass(type):
@@ -220,6 +268,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         config = configparser.ConfigParser()
         config.read_file(open(self.options.configfile))
         self.config = config
+        self.binary_paths = self.get_binary_paths()
         if self.options.v1transport:
             self.options.v2transport=False
 
@@ -243,9 +292,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         PortSeed.n = self.options.port_seed
 
-    def set_binary_paths(self):
-        """Update self.options with the paths of all binaries from environment variables or their default values"""
+    def get_binary_paths(self):
+        """Get paths of all binaries from environment variables or their default values"""
 
+        paths = types.SimpleNamespace()
         binaries = {
             "bitcoind": ("bitcoind", "BITCOIND"),
             "bitcoin-cli": ("bitcoincli", "BITCOINCLI"),
@@ -258,7 +308,14 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 "src",
                 binary + self.config["environment"]["EXEEXT"],
             )
-            setattr(self.options, attribute_name, os.getenv(env_variable_name, default=default_filename))
+            setattr(paths, attribute_name, os.getenv(env_variable_name, default=default_filename))
+        # BITCOIN_CMD environment variable can be specified to invoke bitcoin
+        # wrapper binary instead of other executables.
+        paths.bitcoin_cmd = shlex.split(os.getenv("BITCOIN_CMD", "")) or None
+        return paths
+
+    def get_binaries(self, bin_dir=None):
+        return Binaries(self.binary_paths, bin_dir)
 
     def setup(self):
         """Call this method to start up the test framework object with options set."""
@@ -268,8 +325,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.options.cachedir = os.path.abspath(self.options.cachedir)
 
         config = self.config
-
-        self.set_binary_paths()
 
         os.environ['PATH'] = os.pathsep.join([
             os.path.join(config['environment']['BUILDDIR'], 'src'),
@@ -477,14 +532,14 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             group.add_argument("--legacy-wallet", action='store_const', const=False, **kwargs,
                                help="Run test using legacy wallets", dest='descriptors')
 
-    def add_nodes(self, num_nodes: int, extra_args=None, *, rpchost=None, binary=None, binary_cli=None, versions=None):
+    def add_nodes(self, num_nodes: int, extra_args=None, *, rpchost=None, versions=None):
         """Instantiate TestNode objects.
 
         Should only be called once after the nodes have been specified in
         set_test_params()."""
-        def get_bin_from_version(version, bin_name, bin_default):
+        def bin_dir_from_version(version):
             if not version:
-                return bin_default
+                return None
             if version > 219999:
                 # Starting at client version 220000 the first two digits represent
                 # the major version, e.g. v22.0 instead of v0.22.0.
@@ -502,7 +557,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     ),
                 ),
                 'bin',
-                bin_name,
             )
 
         if self.bind_to_localhost_only:
@@ -517,13 +571,12 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 extra_args[i] = extra_args[i] + ["-whitelist=noban,in,out@127.0.0.1"]
         if versions is None:
             versions = [None] * num_nodes
-        if binary is None:
-            binary = [get_bin_from_version(v, 'bitcoind', self.options.bitcoind) for v in versions]
-        if binary_cli is None:
-            binary_cli = [get_bin_from_version(v, 'bitcoin-cli', self.options.bitcoincli) for v in versions]
+        bin_dirs = [bin_dir_from_version(v) for v in versions]
         # Fail test if any of the needed release binaries is missing
         bins_missing = False
-        for bin_path in binary + binary_cli:
+        for bin_path in (argv[0] for bin_dir in bin_dirs
+                                 for binaries in (self.get_binaries(bin_dir),)
+                                 for argv in (binaries.daemon_argv(), binaries.rpc_argv())):
             if shutil.which(bin_path) is None:
                 self.log.error(f"Binary not found: {bin_path}")
                 bins_missing = True
@@ -533,8 +586,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         assert_equal(len(extra_confs), num_nodes)
         assert_equal(len(extra_args), num_nodes)
         assert_equal(len(versions), num_nodes)
-        assert_equal(len(binary), num_nodes)
-        assert_equal(len(binary_cli), num_nodes)
+        assert_equal(len(bin_dirs), num_nodes)
         for i in range(num_nodes):
             args = list(extra_args[i])
             test_node_i = TestNode(
@@ -544,8 +596,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 rpchost=rpchost,
                 timewait=self.rpc_timeout,
                 timeout_factor=self.options.timeout_factor,
-                bitcoind=binary[i],
-                bitcoin_cli=binary_cli[i],
+                binaries=self.get_binaries(bin_dirs[i]),
                 version=versions[i],
                 coverage_dir=self.options.coveragedir,
                 cwd=self.options.tmpdir,
@@ -856,8 +907,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     rpchost=None,
                     timewait=self.rpc_timeout,
                     timeout_factor=self.options.timeout_factor,
-                    bitcoind=self.options.bitcoind,
-                    bitcoin_cli=self.options.bitcoincli,
+                    binaries=self.get_binaries(),
                     coverage_dir=None,
                     cwd=self.options.tmpdir,
                     descriptors=self.options.descriptors,
