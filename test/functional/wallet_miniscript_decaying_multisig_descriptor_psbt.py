@@ -18,9 +18,6 @@ from test_framework.util import (
 
 
 class WalletMiniscriptDecayingMultisigDescriptorPSBTTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser, legacy=False)
-
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
@@ -29,7 +26,6 @@ class WalletMiniscriptDecayingMultisigDescriptorPSBTTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
-        self.skip_if_no_sqlite()
 
     @staticmethod
     def _get_xpub(wallet, internal):
