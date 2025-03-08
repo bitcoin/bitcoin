@@ -132,12 +132,21 @@ public:
     std::string help(const std::string& name, const JSONRPCRequest& helpreq) const;
 
     /**
-     * Execute a method.
+     * Execute the request.strMethod.
      * @param request The JSONRPCRequest to execute
      * @returns Result of the call.
      * @throws an exception (UniValue) when an error happens.
      */
     UniValue execute(const JSONRPCRequest &request) const;
+
+    /**
+     * Execute a method.
+     * @param method The method to execute
+     * @param request The JSONRPCRequest to execute
+     * @returns Result of the call.
+     * @throws an exception (UniValue) when an error happens.
+     */
+    UniValue execute(const std::string method, const JSONRPCRequest &request) const;
 
     /**
     * Returns a list of registered commands
