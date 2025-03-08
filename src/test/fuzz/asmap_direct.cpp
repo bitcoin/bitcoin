@@ -31,19 +31,21 @@ FUZZ_TARGET(asmap_direct)
     if (buffer.size() - sep_pos - 1 > 128) return; // At most 128 bits in IP address
 
     // Checks on asmap
-    std::vector<bool> asmap(buffer.begin(), buffer.begin() + sep_pos);
-    if (SanityCheckASMap(asmap, buffer.size() - 1 - sep_pos)) {
+    std::vector<std::byte> asmap(reinterpret_cast<const std::byte*>(buffer.data()),
+                                 reinterpret_cast<const std::byte*>(buffer.data() + sep_pos));
+    if (SanityCheckASMap(std::span<const std::byte>(asmap), buffer.size() - 1 - sep_pos)) {
         // Verify that for valid asmaps, no prefix (except up to 7 zero padding bits) is valid.
-        std::vector<bool> asmap_prefix = asmap;
-        while (!asmap_prefix.empty() && asmap_prefix.size() + 7 > asmap.size() && asmap_prefix.back() == false) {
+        std::vector<std::byte> asmap_prefix = asmap;
+        while (!asmap_prefix.empty() && asmap_prefix.size() + 7 > asmap.size() && asmap_prefix.back() == std::byte{0}) {
             asmap_prefix.pop_back();
         }
         while (!asmap_prefix.empty()) {
             asmap_prefix.pop_back();
-            assert(!SanityCheckASMap(asmap_prefix, buffer.size() - 1 - sep_pos));
+            assert(!SanityCheckASMap(std::span<const std::byte>(asmap_prefix), buffer.size() - 1 - sep_pos));
         }
         // No address input should trigger assertions in interpreter
-        std::vector<bool> addr(buffer.begin() + sep_pos + 1, buffer.end());
-        (void)Interpret(asmap, addr);
+        std::vector<std::byte> addr(reinterpret_cast<const std::byte*>(buffer.data() + sep_pos + 1),
+                                    reinterpret_cast<const std::byte*>(buffer.data() + buffer.size()));
+        (void)Interpret(std::span<const std::byte>(asmap), std::span<const std::byte>(addr));
     }
 }
