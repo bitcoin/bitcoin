@@ -45,6 +45,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
+    sync_txindex,
 )
 from test_framework.wallet import MiniWallet
 from test_framework.wallet_util import generate_keypair
@@ -270,6 +271,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
 
         self.log.info('A coinbase transaction')
         # Pick the input of the first tx we created, so it has to be a coinbase tx
+        sync_txindex(self, node)
         raw_tx_coinbase_spent = node.getrawtransaction(txid=node.decoderawtransaction(hexstring=raw_tx_in_block)['vin'][0]['txid'])
         tx = tx_from_hex(raw_tx_coinbase_spent)
         self.check_mempool_result(

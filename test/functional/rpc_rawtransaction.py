@@ -34,6 +34,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
+    sync_txindex,
 )
 from test_framework.wallet import (
     getnewdestination,
@@ -70,7 +71,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.num_nodes = 3
         self.extra_args = [
             ["-txindex"],
-            ["-txindex"],
+            [],
             ["-fastprune", "-prune=1"],
         ]
         # whitelist peers to speed up tx relay / mempool sync
@@ -109,6 +110,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             self.log.info(f"Test getrawtransaction {'with' if n == 0 else 'without'} -txindex")
 
             if n == 0:
+                sync_txindex(self, self.nodes[n])
                 # With -txindex.
                 # 1. valid parameters - only supply txid
                 assert_equal(self.nodes[n].getrawtransaction(txId), tx['hex'])
