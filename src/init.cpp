@@ -1128,11 +1128,6 @@ static bool LockDirectory(const fs::path& dir, bool probeOnly)
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
-static bool LockDirectories(bool probeOnly)
-{
-    return LockDirectory(gArgs.GetDataDirNet(), probeOnly) && \
-           LockDirectory(gArgs.GetBlocksDirPath(), probeOnly);
-}
 
 bool AppInitSanityChecks(const kernel::Context& kernel)
 {
@@ -1150,7 +1145,8 @@ bool AppInitSanityChecks(const kernel::Context& kernel)
     // Probe the directory locks to give an early error message, if possible
     // We cannot hold the directory locks here, as the forking for daemon() hasn't yet happened,
     // and a fork will cause weird behavior to them.
-    return LockDirectories(true);
+    return LockDirectory(gArgs.GetDataDirNet(), /*probeOnly=*/true)
+        && LockDirectory(gArgs.GetBlocksDirPath(), /*probeOnly=*/true);
 }
 
 bool AppInitLockDirectories()
@@ -1158,11 +1154,7 @@ bool AppInitLockDirectories()
     // After daemonization get the directory locks again and hold on to them until exit
     // This creates a slight window for a race condition to happen, however this condition is harmless: it
     // will at most make us exit without printing a message to console.
-    if (!LockDirectories(false)) {
-        // Detailed error printed inside LockDirectory
-        return false;
-    }
-    return true;
+    return LockDirectory(gArgs.GetDataDirNet(), /*probeOnly=*/false);
 }
 
 bool AppInitInterfaces(NodeContext& node)
