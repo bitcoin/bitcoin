@@ -69,6 +69,14 @@ def summarise_dict_differences(thing1, thing2):
             d2[k] = thing2[k]
     return d1, d2
 
+
+def assert_true(condition: bool) -> None:
+    """Separate from the `assert` keyword in that it should not be optimized out
+    when environment var `PYTHONOPTIMIZE=1`, or Python is run with `-O`."""
+    if not condition:
+        raise AssertionError
+
+
 def assert_equal(thing1, thing2, *args):
     if thing1 != thing2 and not args and isinstance(thing1, dict) and isinstance(thing2, dict):
         d1,d2 = summarise_dict_differences(thing1, thing2)
