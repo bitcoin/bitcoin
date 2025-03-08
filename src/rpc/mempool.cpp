@@ -845,7 +845,7 @@ static UniValue OrphanToJSON(const TxOrphanage::OrphanTxBase& orphan)
     o.pushKV("entry", int64_t{TicksSinceEpoch<std::chrono::seconds>(orphan.nTimeExpire - ORPHAN_TX_EXPIRE_TIME)});
     o.pushKV("expiration", int64_t{TicksSinceEpoch<std::chrono::seconds>(orphan.nTimeExpire)});
     UniValue from(UniValue::VARR);
-    for (const auto fromPeer: orphan.announcers) {
+    for (const auto& [fromPeer, _] : orphan.announcers) {
         from.push_back(fromPeer);
     }
     o.pushKV("from", from);
