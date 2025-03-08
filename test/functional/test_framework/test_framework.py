@@ -229,14 +229,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # So set it to None to force -disablewallet, because the wallet is not needed.
             self.options.descriptors = None
         elif self.options.descriptors is None:
-            # Some wallet is either required or optionally used by the test.
-            # Prefer SQLite unless it isn't available
-            if self.is_sqlite_compiled():
+            if self.is_wallet_compiled():
                 self.options.descriptors = True
-            elif self.is_bdb_compiled():
-                self.options.descriptors = False
             else:
-                # If neither are compiled, tests requiring a wallet will be skipped and the value of self.options.descriptors won't matter
+                # Tests requiring a wallet will be skipped and the value of self.options.descriptors won't matter
                 # It still needs to exist and be None in order for tests to work however.
                 # So set it to None, which will also set -disablewallet.
                 self.options.descriptors = None
@@ -966,15 +962,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self._requires_wallet = True
         if not self.is_wallet_compiled():
             raise SkipTest("wallet has not been compiled.")
-        if self.options.descriptors:
-            self.skip_if_no_sqlite()
-        else:
+        if not self.options.descriptors:
             self.skip_if_no_bdb()
-
-    def skip_if_no_sqlite(self):
-        """Skip the running test if sqlite has not been compiled."""
-        if not self.is_sqlite_compiled():
-            raise SkipTest("sqlite has not been compiled.")
 
     def skip_if_no_bdb(self):
         """Skip the running test if BDB has not been compiled."""
@@ -1030,7 +1019,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Checks whether wallet support for the specified type
            (legacy or descriptor wallet) was compiled."""
         if self.options.descriptors:
-            return self.is_sqlite_compiled()
+            return self.is_wallet_compiled()
         else:
             return self.is_bdb_compiled()
 
@@ -1049,10 +1038,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_usdt_compiled(self):
         """Checks whether the USDT tracepoints were compiled."""
         return self.config["components"].getboolean("ENABLE_USDT_TRACEPOINTS")
-
-    def is_sqlite_compiled(self):
-        """Checks whether the wallet module was compiled with Sqlite support."""
-        return self.config["components"].getboolean("USE_SQLITE")
 
     def is_bdb_compiled(self):
         """Checks whether the wallet module was compiled with BDB support."""
