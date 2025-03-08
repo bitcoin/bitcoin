@@ -5,25 +5,25 @@
 use std::env;
 use std::fs::{read_dir, File};
 use std::path::Path;
-use std::process::{exit, Command, Stdio};
+use std::process::{exit, Command};
 use std::str;
 
 const LLVM_PROFDATA: &str = "llvm-profdata";
 const LLVM_COV: &str = "llvm-cov";
-const DIFF: &str = "diff";
+const GIT: &str = "git";
 
 fn exit_help(err: &str) -> ! {
     eprintln!("Error: {}", err);
     eprintln!();
-    eprintln!("Usage: program ./build_dir ./qa-assets-corpora-dir fuzz_target");
+    eprintln!("Usage: program ./build_dir ./qa-assets/fuzz_corpora fuzz_target_name");
     eprintln!();
     eprintln!("Refer to the devtools/README.md for more details.");
     exit(1)
 }
 
 fn sanity_check(corpora_dir: &Path, fuzz_exe: &Path) {
-    for tool in [LLVM_PROFDATA, LLVM_COV, DIFF] {
-        let output = Command::new(tool).arg("--version").output();
+    for tool in [LLVM_PROFDATA, LLVM_COV, GIT] {
+        let output = Command::new(tool).arg("--help").output();
         match output {
             Ok(output) if output.status.success() => {}
             _ => {
@@ -135,7 +135,7 @@ fn deterministic_coverage(
             .expect("merge failed")
             .success());
         let cov_file = File::create(&cov_txt_path).expect("Failed to create coverage txt file");
-        let passed = Command::new(LLVM_COV)
+        assert!(Command::new(LLVM_COV)
             .args([
                 "show",
                 "--show-line-counts-or-regions",
@@ -144,34 +144,31 @@ fn deterministic_coverage(
                 &format!("--instr-profile={}", profdata_file.display()),
             ])
             .arg(fuzz_exe)
-            .stdout(Stdio::from(cov_file))
+            .stdout(cov_file)
             .spawn()
             .expect("Failed to execute llvm-cov")
             .wait()
             .expect("Failed to execute llvm-cov")
-            .success();
-        if !passed {
-            panic!("Failed to execute llvm-profdata")
-        }
+            .success());
         cov_txt_path
     };
     let check_diff = |a: &Path, b: &Path, err: &str| {
-        let same = Command::new(DIFF)
-            .arg("--unified")
+        let same = Command::new(GIT)
+            .args(["--no-pager", "diff", "--no-index"])
             .arg(a)
             .arg(b)
             .status()
-            .expect("Failed to execute diff command")
+            .expect("Failed to execute git command")
             .success();
         if !same {
             eprintln!();
-            eprintln!("The coverage was not determinstic between runs.");
+            eprintln!("The coverage was not deterministic between runs.");
             eprintln!("{}", err);
             eprintln!("Exiting.");
             exit(1);
         }
     };
-    // First, check that each fuzz input is determinisic running by itself in a process.
+    // First, check that each fuzz input is deterministic running by itself in a process.
     //
     // This can catch issues and isolate where a single fuzz input triggers non-determinism, but
     // all other fuzz inputs are deterministic.
