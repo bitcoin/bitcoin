@@ -249,7 +249,7 @@ class PackageRelayTest(BitcoinTestFramework):
         assert tx_orphan_bad_wit.rehash() not in node_mempool
 
         # 5. Have the other peer send the tx too, so that tx_orphan_bad_wit package is attempted.
-        bad_orphan_sender.send_message(msg_tx(low_fee_parent["tx"]))
+        bad_orphan_sender.send_without_ping(msg_tx(low_fee_parent["tx"]))
         bad_orphan_sender.wait_for_disconnect()
 
         # The peer that didn't provide the orphan should not be disconnected.

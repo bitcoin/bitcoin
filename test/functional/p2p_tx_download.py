@@ -143,13 +143,13 @@ class TxDownloadTest(BitcoinTestFramework):
         mock_time = int(time.time() + 1)
         self.nodes[0].setmocktime(mock_time)
         for i in range(MAX_PEER_TX_REQUEST_IN_FLIGHT):
-            p.send_message(msg_inv([CInv(t=MSG_WTX, h=txids[i])]))
+            p.send_without_ping(msg_inv([CInv(t=MSG_WTX, h=txids[i])]))
         p.sync_with_ping()
         mock_time += NONPREF_PEER_TX_DELAY
         self.nodes[0].setmocktime(mock_time)
         p.wait_until(lambda: p.tx_getdata_count >= MAX_PEER_TX_REQUEST_IN_FLIGHT)
         for i in range(MAX_PEER_TX_REQUEST_IN_FLIGHT, len(txids)):
-            p.send_message(msg_inv([CInv(t=MSG_WTX, h=txids[i])]))
+            p.send_without_ping(msg_inv([CInv(t=MSG_WTX, h=txids[i])]))
         p.sync_with_ping()
         self.log.info("No more than {} requests should be seen within {} seconds after announcement".format(MAX_PEER_TX_REQUEST_IN_FLIGHT, NONPREF_PEER_TX_DELAY + OVERLOADED_PEER_TX_DELAY - 1))
         self.nodes[0].setmocktime(mock_time + NONPREF_PEER_TX_DELAY + OVERLOADED_PEER_TX_DELAY - 1)
@@ -166,7 +166,7 @@ class TxDownloadTest(BitcoinTestFramework):
         peer1 = self.nodes[0].add_p2p_connection(TestP2PConn())
         peer2 = self.nodes[0].add_p2p_connection(TestP2PConn())
         for p in [peer1, peer2]:
-            p.send_message(msg_inv([CInv(t=MSG_WTX, h=WTXID)]))
+            p.send_without_ping(msg_inv([CInv(t=MSG_WTX, h=WTXID)]))
         # One of the peers is asked for the tx
         peer2.wait_until(lambda: sum(p.tx_getdata_count for p in [peer1, peer2]) == 1)
         with p2p_lock:
@@ -182,7 +182,7 @@ class TxDownloadTest(BitcoinTestFramework):
         peer1 = self.nodes[0].add_p2p_connection(TestP2PConn())
         peer2 = self.nodes[0].add_p2p_connection(TestP2PConn())
         for p in [peer1, peer2]:
-            p.send_message(msg_inv([CInv(t=MSG_WTX, h=WTXID)]))
+            p.send_without_ping(msg_inv([CInv(t=MSG_WTX, h=WTXID)]))
         # One of the peers is asked for the tx
         peer2.wait_until(lambda: sum(p.tx_getdata_count for p in [peer1, peer2]) == 1)
         with p2p_lock:
@@ -198,7 +198,7 @@ class TxDownloadTest(BitcoinTestFramework):
         peer1 = self.nodes[0].add_p2p_connection(TestP2PConn())
         peer2 = self.nodes[0].add_p2p_connection(TestP2PConn())
         for p in [peer1, peer2]:
-            p.send_message(msg_inv([CInv(t=MSG_WTX, h=WTXID)]))
+            p.send_without_ping(msg_inv([CInv(t=MSG_WTX, h=WTXID)]))
         # One of the peers is asked for the tx
         peer2.wait_until(lambda: sum(p.tx_getdata_count for p in [peer1, peer2]) == 1)
         with p2p_lock:
@@ -229,8 +229,7 @@ class TxDownloadTest(BitcoinTestFramework):
         else:
             peer = self.nodes[0].add_p2p_connection(TestP2PConn())
 
-        peer.send_message(msg_inv([CInv(t=MSG_WTX, h=0xff00ff00)]))
-        peer.sync_with_ping()
+        peer.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=0xff00ff00)]))
         if connection_type != ConnectionType.INBOUND:
             peer.wait_until(lambda: peer.tx_getdata_count >= 1, timeout=1)
         else:
@@ -250,8 +249,7 @@ class TxDownloadTest(BitcoinTestFramework):
         # of which is preferred and one which is not
         unresponsive_peer = self.nodes[0].add_outbound_p2p_connection(
            TestP2PConn(), wait_for_verack=True, p2p_idx=0, connection_type="outbound-full-relay")
-        unresponsive_peer.send_message(msg_inv([CInv(t=MSG_WTX, h=0xff00ff00)]))
-        unresponsive_peer.sync_with_ping()
+        unresponsive_peer.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=0xff00ff00)]))
         unresponsive_peer.wait_until(lambda: unresponsive_peer.tx_getdata_count >= 1, timeout=1)
 
         # A bunch of incoming (non-preferred) connections that advertise the same tx
@@ -259,8 +257,7 @@ class TxDownloadTest(BitcoinTestFramework):
         NUM_INBOUND = 10
         for _ in range(NUM_INBOUND):
             non_pref_peers.append(self.nodes[0].add_p2p_connection(TestP2PConn()))
-            non_pref_peers[-1].send_message(msg_inv([CInv(t=MSG_WTX, h=0xff00ff00)]))
-            non_pref_peers[-1].sync_with_ping()
+            non_pref_peers[-1].send_and_ping(msg_inv([CInv(t=MSG_WTX, h=0xff00ff00)]))
 
         # Check that no request made due to in-flight
         self.nodes[0].bumpmocktime(NONPREF_PEER_TX_DELAY)
@@ -272,8 +269,7 @@ class TxDownloadTest(BitcoinTestFramework):
         # upon advertisement
         pref_peer = self.nodes[0].add_outbound_p2p_connection(
            TestP2PConn(), wait_for_verack=True, p2p_idx=1, connection_type="outbound-full-relay")
-        pref_peer.send_message(msg_inv([CInv(t=MSG_WTX, h=0xff00ff00)]))
-        pref_peer.sync_with_ping()
+        pref_peer.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=0xff00ff00)]))
 
         assert_equal(len(self.nodes[0].getpeerinfo()), NUM_INBOUND + 2)
 
@@ -302,8 +298,7 @@ class TxDownloadTest(BitcoinTestFramework):
             # Add a second wtxid-relay connection otherwise TXID_RELAY_DELAY is waived in
             # lack of wtxid-relay peers
             self.nodes[0].add_p2p_connection(TestP2PConn(wtxidrelay=True))
-        peer.send_message(msg_inv([CInv(t=MSG_TX, h=0xff11ff11)]))
-        peer.sync_with_ping()
+        peer.send_and_ping(msg_inv([CInv(t=MSG_TX, h=0xff11ff11)]))
         with p2p_lock:
             assert_equal(peer.tx_getdata_count, 0 if glob_wtxid else 1)
         self.nodes[0].setmocktime(mock_time + TXID_RELAY_DELAY)
@@ -313,19 +308,19 @@ class TxDownloadTest(BitcoinTestFramework):
         self.log.info('Test how large inv batches are handled with relay permission')
         self.restart_node(0, extra_args=['-whitelist=relay@127.0.0.1'])
         peer = self.nodes[0].add_p2p_connection(TestP2PConn())
-        peer.send_message(msg_inv([CInv(t=MSG_WTX, h=wtxid) for wtxid in range(MAX_PEER_TX_ANNOUNCEMENTS + 1)]))
+        peer.send_without_ping(msg_inv([CInv(t=MSG_WTX, h=wtxid) for wtxid in range(MAX_PEER_TX_ANNOUNCEMENTS + 1)]))
         peer.wait_until(lambda: peer.tx_getdata_count == MAX_PEER_TX_ANNOUNCEMENTS + 1)
 
         self.log.info('Test how large inv batches are handled without relay permission')
         self.restart_node(0)
         peer = self.nodes[0].add_p2p_connection(TestP2PConn())
-        peer.send_message(msg_inv([CInv(t=MSG_WTX, h=wtxid) for wtxid in range(MAX_PEER_TX_ANNOUNCEMENTS + 1)]))
+        peer.send_without_ping(msg_inv([CInv(t=MSG_WTX, h=wtxid) for wtxid in range(MAX_PEER_TX_ANNOUNCEMENTS + 1)]))
         peer.wait_until(lambda: peer.tx_getdata_count == MAX_PEER_TX_ANNOUNCEMENTS)
         peer.sync_with_ping()
 
     def test_spurious_notfound(self):
         self.log.info('Check that spurious notfound is ignored')
-        self.nodes[0].p2ps[0].send_message(msg_notfound(vec=[CInv(MSG_TX, 1)]))
+        self.nodes[0].p2ps[0].send_without_ping(msg_notfound(vec=[CInv(MSG_TX, 1)]))
 
     def test_rejects_filter_reset(self):
         self.log.info('Check that rejected tx is not requested again')
