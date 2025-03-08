@@ -853,7 +853,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         self.log.info("Test invalid fee rate settings")
         for param, value in {("fee_rate", 100000), ("feeRate", 1.000)}:
-            assert_raises_rpc_error(-4, "Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)",
+            assert_raises_rpc_error(-4, "Fee exceeds maximum configured by user (maxtxfee)",
                 node.fundrawtransaction, rawtx, add_inputs=True, **{param: value})
             assert_raises_rpc_error(-3, "Amount out of range",
                 node.fundrawtransaction, rawtx, add_inputs=True, **{param: -1})
