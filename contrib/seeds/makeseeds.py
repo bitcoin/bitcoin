@@ -26,29 +26,29 @@ MAX_SEEDS_PER_ASN = {
     'ipv6': 10,
 }
 
-MIN_BLOCKS = 840000
+MIN_BLOCKS = 868000
 
-PATTERN_IPV4 = re.compile(r"^((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})):(\d+)$")
-PATTERN_IPV6 = re.compile(r"^\[([0-9a-z:]+)\]:(\d+)$")
+PATTERN_IPV4 = re.compile(r"^(([0-2]?\d{1,2})\.([0-2]?\d{1,2})\.([0-2]?\d{1,2})\.([0-2]?\d{1,2})):(\d{1,5})$")
+PATTERN_IPV6 = re.compile(r"^\[([\da-f:]+)]:(\d{1,5})$", re.IGNORECASE)
 PATTERN_ONION = re.compile(r"^([a-z2-7]{56}\.onion):(\d+)$")
-PATTERN_I2P = re.compile(r"^([a-z2-7]{52}\.b32.i2p):(\d+)$")
+PATTERN_I2P = re.compile(r"^([a-z2-7]{52}\.b32\.i2p):(\d{1,5})$")
 PATTERN_AGENT = re.compile(
     r"^/Satoshi:("
-    r"0.14.(0|1|2|3|99)|"
-    r"0.15.(0|1|2|99)|"
-    r"0.16.(0|1|2|3|99)|"
-    r"0.17.(0|0.1|1|2|99)|"
-    r"0.18.(0|1|99)|"
-    r"0.19.(0|1|2|99)|"
-    r"0.20.(0|1|2|99)|"
-    r"0.21.(0|1|2|99)|"
-    r"22.(0|1|99).0|"
-    r"23.(0|1|99).0|"
-    r"24.(0|1|2|99).(0|1)|"
-    r"25.(0|1|2|99).0|"
-    r"26.(0|1|99).0|"
-    r"27.(0|1|99).0|"
-    r"28.(0|99).0|"
+    r"0\.14\.(0|1|2|3|99)"
+    r"|0\.15\.(0|1|2|99)"
+    r"|0\.16\.(0|1|2|3|99)"
+    r"|0\.17\.(0|0\.1|1|2|99)"
+    r"|0\.18\.(0|1|99)"
+    r"|0\.19\.(0|1|2|99)"
+    r"|0\.20\.(0|1|2|99)"
+    r"|0\.21\.(0|1|2|99)"
+    r"|22\.(0|1|99)\.0"
+    r"|23\.(0|1|2|99)\.0"
+    r"|24\.(0|1|2|99)\.(0|1)"
+    r"|25\.(0|1|2|99)\.0"
+    r"|26\.(0|1|2|99)\.0"
+    r"|27\.(0|1|2|99)\.0"
+    r"|28\.(0|1|99)\.0"
     r")")
 
 def parseline(line: str) -> Union[dict, None]:
@@ -216,7 +216,7 @@ def main():
     random.shuffle(ips)
     print('Done.', file=sys.stderr)
 
-    print('\x1b[7m  IPv4   IPv6  Onion  I2P    CJDNS Pass                                               \x1b[0m', file=sys.stderr)
+    print('\x1b[7m  IPv4   IPv6  Onion    I2P  CJDNS Pass                                               \x1b[0m', file=sys.stderr)
     print(f'{ip_stats(ips):s} Initial', file=sys.stderr)
     # Skip entries with invalid address.
     ips = [ip for ip in ips if ip is not None]
