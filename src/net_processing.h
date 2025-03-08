@@ -35,6 +35,8 @@ static const unsigned int MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK = 3;
 /** Number of headers sent in one getheaders result. We rely on the assumption that if a peer sends
  *  less than this number, we reached its tip. Changing this value is a protocol upgrade. */
 static const unsigned int MAX_HEADERS_RESULTS = 2000;
+/** Time between pings automatically sent out for latency probing and keepalive */
+static constexpr auto PING_INTERVAL{2min};
 
 struct CNodeStateStats {
     int nSyncHeight = -1;
