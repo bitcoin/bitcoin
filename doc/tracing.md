@@ -73,7 +73,7 @@ Arguments passed:
 
 Note: The message is passed to the tracepoint in full, however, due to space
 limitations in the eBPF kernel VM it might not be possible to pass the message
-to user-space in full. Messages longer than a 32kb might be cut off. This can
+to user-space in full. Messages longer than 32kb might be cut off. This can
 be detected in tracing scripts by comparing the message size to the length of
 the passed message.
 
@@ -92,7 +92,7 @@ Arguments passed:
 
 Note: The message is passed to the tracepoint in full, however, due to space
 limitations in the eBPF kernel VM it might not be possible to pass the message
-to user-space in full. Messages longer than a 32kb might be cut off. This can
+to user-space in full. Messages longer than 32kb might be cut off. This can
 be detected in tracing scripts by comparing the message size to the length of
 the passed message.
 
@@ -122,7 +122,7 @@ Arguments passed:
 
 #### Tracepoint `net:evicted_inbound_connection`
 
-Is called when a inbound connection is evicted by us. Passes information about the evicted peer and the time at connection establishment.
+Is called when an inbound connection is evicted by us. Passes information about the evicted peer and the time at connection establishment.
 
 Arguments passed:
 1. Peer ID as `int64`
