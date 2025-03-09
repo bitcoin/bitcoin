@@ -52,7 +52,7 @@ static void DeserializeBlock(benchmark::Bench& bench)
 {
     DataStream stream(benchmark::data::block413567);
     std::byte a{0};
-    stream.write({&a, 1}); // Prevent compaction
+    stream.write(std::span{&a, 1}); // Prevent compaction
 
     bench.unit("block").run([&] {
         CBlock block;
@@ -66,7 +66,7 @@ static void DeserializeAndCheckBlock(benchmark::Bench& bench)
 {
     DataStream stream(benchmark::data::block413567);
     std::byte a{0};
-    stream.write({&a, 1}); // Prevent compaction
+    stream.write(std::span{&a, 1}); // Prevent compaction
 
     ArgsManager bench_args;
     const auto chainParams = CreateChainParams(bench_args, ChainType::MAIN);

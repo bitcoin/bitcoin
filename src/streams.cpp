@@ -62,6 +62,12 @@ void AutoFile::read(std::span<std::byte> dst)
         throw std::ios_base::failure(feof() ? "AutoFile::read: end of file" : "AutoFile::read: fread failed");
     }
 }
+void AutoFile::read(std::span<std::byte, 1> dst)
+{
+    if (detail_fread(dst) != 1) {
+        throw std::ios_base::failure(feof() ? "AutoFile::read: end of file" : "AutoFile::read: fread failed");
+    }
+}
 
 void AutoFile::ignore(size_t nSize)
 {
@@ -93,6 +99,25 @@ void AutoFile::write(std::span<const std::byte> src)
             write_buffer(buf_now);
             src = src.subspan(buf_now.size());
         }
+    }
+}
+void AutoFile::write(std::span<const std::byte, 1> src)
+{
+    if (!m_file) throw std::ios_base::failure("AutoFile::write: file handle is nullptr");
+    if (!m_obfuscation) {
+        if (std::fwrite(src.data(), 1, 1, m_file) != 1) {
+            throw std::ios_base::failure("AutoFile::write: write failed");
+        }
+        if (m_position.has_value()) *m_position += 1;
+    } else {
+        if (!m_position.has_value()) throw std::ios_base::failure("AutoFile::write: position unknown");
+        std::byte temp_byte = src[0];
+        std::span val(&temp_byte, 1);
+        m_obfuscation(val, *m_position);
+        if (fwrite(val.data(), 1, 1, m_file) != 1) {
+            throw std::ios_base::failure{"XorFile::write: failed"};
+        }
+        *m_position += 1;
     }
 }
 
