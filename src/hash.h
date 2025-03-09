@@ -38,6 +38,10 @@ public:
         sha.Write(input.data(), input.size());
         return *this;
     }
+    CHash256& Write(std::span<const unsigned char, 1> input) {
+        sha.Write(input[0]);
+        return *this;
+    }
 
     CHash256& Reset() {
         sha.Reset();
@@ -61,6 +65,10 @@ public:
 
     CHash160& Write(std::span<const unsigned char> input) {
         sha.Write(input.data(), input.size());
+        return *this;
+    }
+    CHash160& Write(std::span<const unsigned char, 1> input) {
+        sha.Write(input[0]);
         return *this;
     }
 
@@ -106,6 +114,10 @@ public:
     void write(std::span<const std::byte> src)
     {
         ctx.Write(UCharCast(src.data()), src.size());
+    }
+    void write(std::span<const std::byte, 1> src)
+    {
+        ctx.Write(*UCharCast(&src[0]));
     }
 
     /** Compute the double-SHA256 hash of all data written to this object.
@@ -160,13 +172,18 @@ public:
         m_source.read(dst);
         this->write(dst);
     }
+    void read(std::span<std::byte, 1> dst)
+    {
+        m_source.read(dst);
+        this->write(std::span<const std::byte, 1>{dst});
+    }
 
     void ignore(size_t num_bytes)
     {
         std::byte data[1024];
         while (num_bytes > 0) {
             size_t now = std::min<size_t>(num_bytes, 1024);
-            read({data, now});
+            read(std::span{data, now});
             num_bytes -= now;
         }
     }
@@ -190,6 +207,11 @@ public:
     explicit HashedSourceWriter(Source& source LIFETIMEBOUND) : HashWriter{}, m_source{source} {}
 
     void write(std::span<const std::byte> src)
+    {
+        m_source.write(src);
+        HashWriter::write(src);
+    }
+    void write(std::span<const std::byte, 1> src)
     {
         m_source.write(src);
         HashWriter::write(src);

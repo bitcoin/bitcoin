@@ -1111,6 +1111,10 @@ public:
     {
         m_size += src.size();
     }
+    void write(std::span<const std::byte, 1>)
+    {
+        this->m_size += 1;
+    }
 
     /** Pretend this many bytes are written, without specifying them. */
     void seek(uint64_t num)
@@ -1161,7 +1165,9 @@ public:
     template <typename U> ParamsStream& operator<<(const U& obj) { ::Serialize(*this, obj); return *this; }
     template <typename U> ParamsStream& operator>>(U&& obj) { ::Unserialize(*this, obj); return *this; }
     void write(std::span<const std::byte> src) { GetStream().write(src); }
+    void write(std::span<const std::byte, 1> src) { GetStream().write(src); }
     void read(std::span<std::byte> dst) { GetStream().read(dst); }
+    void read(std::span<std::byte, 1> dst) { GetStream().read(dst); }
     void ignore(size_t num) { GetStream().ignore(num); }
     bool eof() const { return GetStream().eof(); }
     size_t size() const { return GetStream().size(); }
