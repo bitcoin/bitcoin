@@ -63,56 +63,56 @@ concept ContainsSizeComputer = ContainsStream<T> &&
  */
 template<typename Stream> void ser_writedata8(Stream &s, uint8_t obj)
 {
-    s.write(std::as_bytes(std::span{&obj, 1}));
+    s.write(std::as_bytes(std::span<uint8_t, 1>{&obj, 1}));
 }
 template<typename Stream> void ser_writedata16(Stream &s, uint16_t obj)
 {
     obj = htole16_internal(obj);
-    s.write(std::as_bytes(std::span{&obj, 1}));
+    s.write(std::as_bytes(std::span<uint16_t, 1>{&obj, 1}));
 }
 template<typename Stream> void ser_writedata32(Stream &s, uint32_t obj)
 {
     obj = htole32_internal(obj);
-    s.write(std::as_bytes(std::span{&obj, 1}));
+    s.write(std::as_bytes(std::span<uint32_t, 1>{&obj, 1}));
 }
 template<typename Stream> void ser_writedata32be(Stream &s, uint32_t obj)
 {
     obj = htobe32_internal(obj);
-    s.write(std::as_bytes(std::span{&obj, 1}));
+    s.write(std::as_bytes(std::span<uint32_t, 1>{&obj, 1}));
 }
 template<typename Stream> void ser_writedata64(Stream &s, uint64_t obj)
 {
     obj = htole64_internal(obj);
-    s.write(std::as_bytes(std::span{&obj, 1}));
+    s.write(std::as_bytes(std::span<uint64_t, 1>{&obj, 1}));
 }
 template<typename Stream> uint8_t ser_readdata8(Stream &s)
 {
     uint8_t obj;
-    s.read(std::as_writable_bytes(std::span{&obj, 1}));
+    s.read(std::as_writable_bytes(std::span<uint8_t, 1>{&obj, 1}));
     return obj;
 }
 template<typename Stream> uint16_t ser_readdata16(Stream &s)
 {
     uint16_t obj;
-    s.read(std::as_writable_bytes(std::span{&obj, 1}));
+    s.read(std::as_writable_bytes(std::span<uint16_t, 1>{&obj, 1}));
     return le16toh_internal(obj);
 }
 template<typename Stream> uint32_t ser_readdata32(Stream &s)
 {
     uint32_t obj;
-    s.read(std::as_writable_bytes(std::span{&obj, 1}));
+    s.read(std::as_writable_bytes(std::span<uint32_t, 1>{&obj, 1}));
     return le32toh_internal(obj);
 }
 template<typename Stream> uint32_t ser_readdata32be(Stream &s)
 {
     uint32_t obj;
-    s.read(std::as_writable_bytes(std::span{&obj, 1}));
+    s.read(std::as_writable_bytes(std::span<uint32_t, 1>{&obj, 1}));
     return be32toh_internal(obj);
 }
 template<typename Stream> uint64_t ser_readdata64(Stream &s)
 {
     uint64_t obj;
-    s.read(std::as_writable_bytes(std::span{&obj, 1}));
+    s.read(std::as_writable_bytes(std::span<uint64_t, 1>{&obj, 1}));
     return le64toh_internal(obj);
 }
 
@@ -319,7 +319,6 @@ template <typename Stream, ByteOrIntegral T> void Unserialize(Stream& s, T& a)
 template <typename Stream, BasicByte B, int N> void Unserialize(Stream& s, B (&a)[N]) { s.read(MakeWritableByteSpan(a)); }
 template <typename Stream, BasicByte B, std::size_t N> void Unserialize(Stream& s, std::array<B, N>& a) { s.read(MakeWritableByteSpan(a)); }
 template <typename Stream, BasicByte B, std::size_t N> void Unserialize(Stream& s, std::span<B, N> span) { s.read(std::as_writable_bytes(span)); }
-template <typename Stream, BasicByte B> void Unserialize(Stream& s, std::span<B> span) { s.read(std::as_writable_bytes(span)); }
 // clang-format on
 
 
@@ -577,10 +576,10 @@ struct CustomUintFormatter
             s.GetStream().seek(Bytes);
         } else if (BigEndian) {
             uint64_t raw = htobe64_internal(v);
-            s.write(std::as_bytes(std::span{&raw, 1}).last(Bytes));
+            s.write(std::as_bytes(std::span{&raw, 1}).template last<Bytes>());
         } else {
             uint64_t raw = htole64_internal(v);
-            s.write(std::as_bytes(std::span{&raw, 1}).first(Bytes));
+            s.write(std::as_bytes(std::span{&raw, 1}).template first<Bytes>());
         }
     }
 
@@ -590,10 +589,10 @@ struct CustomUintFormatter
         static_assert(std::numeric_limits<U>::max() >= MAX && std::numeric_limits<U>::min() <= 0, "Assigned type too small");
         uint64_t raw = 0;
         if (BigEndian) {
-            s.read(std::as_writable_bytes(std::span{&raw, 1}).last(Bytes));
+            s.read(std::as_writable_bytes(std::span{&raw, 1}).last<Bytes>());
             v = static_cast<I>(be64toh_internal(raw));
         } else {
-            s.read(std::as_writable_bytes(std::span{&raw, 1}).first(Bytes));
+            s.read(std::as_writable_bytes(std::span{&raw, 1}).first<Bytes>());
             v = static_cast<I>(le64toh_internal(raw));
         }
     }
@@ -1113,6 +1112,10 @@ public:
     {
         this->nSize += src.size();
     }
+    void write(std::span<const std::byte, 1>)
+    {
+        this->nSize += 1;
+    }
 
     /** Pretend _nSize bytes are written, without specifying them. */
     void seek(size_t _nSize)
@@ -1162,7 +1165,9 @@ public:
     template <typename U> ParamsStream& operator<<(const U& obj) { ::Serialize(*this, obj); return *this; }
     template <typename U> ParamsStream& operator>>(U&& obj) { ::Unserialize(*this, obj); return *this; }
     void write(std::span<const std::byte> src) { GetStream().write(src); }
+    void write(std::span<const std::byte, 1> src) { GetStream().write(src); }
     void read(std::span<std::byte> dst) { GetStream().read(dst); }
+    void read(std::span<std::byte, 1> dst) { GetStream().read(dst); }
     void ignore(size_t num) { GetStream().ignore(num); }
     bool eof() const { return GetStream().eof(); }
     size_t size() const { return GetStream().size(); }
