@@ -1193,9 +1193,7 @@ void CInstantSendManager::AddNonLockedTx(const CTransactionRef& tx, const CBlock
     if (ShouldReportISLockTiming()) {
         LOCK(cs_timingsTxSeen);
         // Only insert the time the first time we see the tx, as we sometimes try to resign
-        if (auto it = timingsTxSeen.find(tx->GetHash()); it == timingsTxSeen.end()) {
-            timingsTxSeen[tx->GetHash()] = GetTimeMillis();
-        }
+        timingsTxSeen.try_emplace(tx->GetHash(), GetTimeMillis());
     }
 
     LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, pindexMined=%s\n", __func__,
