@@ -154,7 +154,7 @@ struct MempoolAcceptResult {
     const std::optional<std::vector<Wtxid>> m_wtxids_fee_calculations;
 
     /** The wtxid of the transaction in the mempool which has the same txid but different witness. */
-    const std::optional<uint256> m_other_wtxid;
+    const std::optional<Wtxid> m_other_wtxid;
 
     static MempoolAcceptResult Failure(TxValidationState state) {
         return MempoolAcceptResult(state);
@@ -179,7 +179,7 @@ struct MempoolAcceptResult {
         return MempoolAcceptResult(vsize, fees);
     }
 
-    static MempoolAcceptResult MempoolTxDifferentWitness(const uint256& other_wtxid) {
+    static MempoolAcceptResult MempoolTxDifferentWitness(const Wtxid& other_wtxid) {
         return MempoolAcceptResult(other_wtxid);
     }
 
@@ -218,7 +218,7 @@ private:
         : m_result_type(ResultType::MEMPOOL_ENTRY), m_vsize{vsize}, m_base_fees(fees) {}
 
     /** Constructor for witness-swapped case. */
-    explicit MempoolAcceptResult(const uint256& other_wtxid)
+    explicit MempoolAcceptResult(const Wtxid& other_wtxid)
         : m_result_type(ResultType::DIFFERENT_WITNESS), m_other_wtxid(other_wtxid) {}
 };
 
@@ -234,18 +234,18 @@ struct PackageMempoolAcceptResult
     * present, it means validation was unfinished for that transaction. If there
     * was a package-wide error (see result in m_state), m_tx_results will be empty.
     */
-    std::map<uint256, MempoolAcceptResult> m_tx_results;
+    std::map<Wtxid, MempoolAcceptResult> m_tx_results;
 
     explicit PackageMempoolAcceptResult(PackageValidationState state,
-                                        std::map<uint256, MempoolAcceptResult>&& results)
+                                        std::map<Wtxid, MempoolAcceptResult>&& results)
         : m_state{state}, m_tx_results(std::move(results)) {}
 
     explicit PackageMempoolAcceptResult(PackageValidationState state, CFeeRate feerate,
-                                        std::map<uint256, MempoolAcceptResult>&& results)
+                                        std::map<Wtxid, MempoolAcceptResult>&& results)
         : m_state{state}, m_tx_results(std::move(results)) {}
 
     /** Constructor to create a PackageMempoolAcceptResult from a single MempoolAcceptResult */
-    explicit PackageMempoolAcceptResult(const uint256& wtxid, const MempoolAcceptResult& result)
+    explicit PackageMempoolAcceptResult(const Wtxid& wtxid, const MempoolAcceptResult& result)
         : m_tx_results{ {wtxid, result} } {}
 };
 

@@ -696,7 +696,7 @@ private:
     // cache - should only be called after successful validation of all transactions in the package.
     // Does not call LimitMempoolSize(), so mempool max_size_bytes may be temporarily exceeded.
     bool SubmitPackage(const ATMPArgs& args, std::vector<Workspace>& workspaces, PackageValidationState& package_state,
-                       std::map<uint256, MempoolAcceptResult>& results)
+                       std::map<Wtxid, MempoolAcceptResult>& results)
          EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     // Compare a package's feerate against minimum allowed.
@@ -1338,7 +1338,7 @@ void MemPoolAccept::FinalizeSubpackage(const ATMPArgs& args)
 
 bool MemPoolAccept::SubmitPackage(const ATMPArgs& args, std::vector<Workspace>& workspaces,
                                   PackageValidationState& package_state,
-                                  std::map<uint256, MempoolAcceptResult>& results)
+                                  std::map<Wtxid, MempoolAcceptResult>& results)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(m_pool.cs);
@@ -1512,7 +1512,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
     workspaces.reserve(txns.size());
     std::transform(txns.cbegin(), txns.cend(), std::back_inserter(workspaces),
                    [](const auto& tx) { return Workspace(tx); });
-    std::map<uint256, MempoolAcceptResult> results;
+    std::map<Wtxid, MempoolAcceptResult> results;
 
     LOCK(m_pool.cs);
 
@@ -1751,11 +1751,11 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
     LOCK(m_pool.cs);
     // Stores results from which we will create the returned PackageMempoolAcceptResult.
     // A result may be changed if a mempool transaction is evicted later due to LimitMempoolSize().
-    std::map<uint256, MempoolAcceptResult> results_final;
+    std::map<Wtxid, MempoolAcceptResult> results_final;
     // Results from individual validation which will be returned if no other result is available for
     // this transaction. "Nonfinal" because if a transaction fails by itself but succeeds later
     // (i.e. when evaluated with a fee-bumping child), the result in this map may be discarded.
-    std::map<uint256, MempoolAcceptResult> individual_results_nonfinal;
+    std::map<Wtxid, MempoolAcceptResult> individual_results_nonfinal;
     // Tracks whether we think package submission could result in successful entry to the mempool
     bool quit_early{false};
     std::vector<CTransactionRef> txns_package_eval;
