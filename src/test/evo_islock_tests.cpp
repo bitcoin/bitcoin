@@ -1,11 +1,11 @@
 // instantsend_tests.cpp
 #include <boost/test/unit_test.hpp>
-#include <llmq/instantsend.h>
 #include <hash.h>
-#include <uint256.h>
+#include <llmq/instantsend.h>
 #include <primitives/transaction.h>
 #include <streams.h>
 #include <string_view>
+#include <uint256.h>
 
 // For constructing dummy outpoints using uint256S.
 #include <util/strencodings.h>
@@ -22,43 +22,48 @@ uint256 CalculateRequestId(const std::vector<COutPoint>& inputs)
 
 BOOST_AUTO_TEST_CASE(getrequestid)
 {
-  // Create an empty InstantSendLock
-  llmq::CInstantSendLock islock;
+    // Create an empty InstantSendLock
+    llmq::CInstantSendLock islock;
 
-  // Compute expected hash for an empty inputs vector.
-  // Note: CInstantSendLock::GetRequestId() serializes the prefix "islock"
-  // followed by the 'inputs' vector.
-  {
+    // Compute expected hash for an empty inputs vector.
+    // Note: CInstantSendLock::GetRequestId() serializes the prefix "islock"
+    // followed by the 'inputs' vector.
+    {
+        const uint256 expected = CalculateRequestId(islock.inputs);
+
+        BOOST_CHECK(islock.GetRequestId() == expected);
+    }
+
+    // Now add two dummy inputs to the lock
+    islock.inputs.clear();
+    // Construct two dummy outpoints (using uint256S for a dummy hash)
+    COutPoint op1(uint256::ONE, 0);
+    COutPoint op2(uint256::TWO, 1);
+    islock.inputs.push_back(op1);
+    islock.inputs.push_back(op2);
+
     const uint256 expected = CalculateRequestId(islock.inputs);
 
     BOOST_CHECK(islock.GetRequestId() == expected);
-  }
-
-  // Now add two dummy inputs to the lock
-  islock.inputs.clear();
-  // Construct two dummy outpoints (using uint256S for a dummy hash)
-  COutPoint op1(uint256::ONE, 0);
-  COutPoint op2(uint256::TWO, 1);
-  islock.inputs.push_back(op1);
-  islock.inputs.push_back(op2);
-
-  const uint256 expected = CalculateRequestId(islock.inputs);
-
-  BOOST_CHECK(islock.GetRequestId() == expected);
 }
 
 BOOST_AUTO_TEST_CASE(deserialize_instantlock_from_realdata2)
 {
     // Expected values from the provided getislocks output:
-    const std::string_view expectedTxidStr       = "7b33968effa613e8ea9c1b5734c9bbbe467ff4650f8060caf8a5c213c6059d5b";
-    const std::string_view expectedCycleHashStr  = "000000000000000bbd0b1bb95540351e7ee99c5b08efde076b3d712a57ea74d6";
-    const std::string_view expectedSignature     = "997d0b36738a9eef46ceeb4405998ff7235317708f277402799ffe05258015cae9b6bae43683f992b2f50f70f8f0cb9c0f26af340b00903e93995c1345d1b2c5b697ebecdbe5811dd112e11889101dcb4553b2bc206ab304026b96c07dec4f24";
-    const std::string_view cycleHash             = "000000000000000bbd0b1bb95540351e7ee99c5b08efde076b3d712a57ea74d6";
-    const std::string quorumHash                 = "0000000000000019756ecc9c9c5f476d3f66876b1dcfa5dde1ea82f0d99334a2";
-    const std::string_view expectedSignHash      = "6a3c37bc610c4efd5babd8941068a8eca9e7bec942fe175b8ca9cae31b67e838";
+    const std::string_view expectedTxidStr = "7b33968effa613e8ea9c1b5734c9bbbe467ff4650f8060caf8a5c213c6059d5b";
+    const std::string_view expectedCycleHashStr = "000000000000000bbd0b1bb95540351e7ee99c5b08efde076b3d712a57ea74d6";
+    const std::string_view expectedSignature = "997d0b36738a9eef46ceeb4405998ff7235317708f277402799ffe05258015cae9b6bae"
+                                               "43683f992b2f50f70f8f0cb9c0f26af340b00903e93995c1345d1b2c5b697ebecdbe581"
+                                               "1dd112e11889101dcb4553b2bc206ab304026b96c07dec4f24";
+    const std::string_view cycleHash = "000000000000000bbd0b1bb95540351e7ee99c5b08efde076b3d712a57ea74d6";
+    const std::string quorumHash = "0000000000000019756ecc9c9c5f476d3f66876b1dcfa5dde1ea82f0d99334a2";
+    const std::string_view expectedSignHash = "6a3c37bc610c4efd5babd8941068a8eca9e7bec942fe175b8ca9cae31b67e838";
     // The serialized InstantSend lock from the "hex" field of getislocks:
     const std::string_view islockHex =
-        "0101497915895c30eebfad0c5fcfb9e0e72308c7e92cd3749be2fd49c8320c4c58b6010000005b9d05c613c2a5f8ca60800f65f47f46bebbc934571b9ceae813a6ff8e96337bd674ea572a713d6b07deef085b9ce97e1e354055b91b0bbd0b00000000000000997d0b36738a9eef46ceeb4405998ff7235317708f277402799ffe05258015cae9b6bae43683f992b2f50f70f8f0cb9c0f26af340b00903e93995c1345d1b2c5b697ebecdbe5811dd112e11889101dcb4553b2bc206ab304026b96c07dec4f24";
+        "0101497915895c30eebfad0c5fcfb9e0e72308c7e92cd3749be2fd49c8320c4c58b6010000005b9d05c613c2a5f8ca60800f65f47f46be"
+        "bbc934571b9ceae813a6ff8e96337bd674ea572a713d6b07deef085b9ce97e1e354055b91b0bbd0b00000000000000997d0b36738a9eef"
+        "46ceeb4405998ff7235317708f277402799ffe05258015cae9b6bae43683f992b2f50f70f8f0cb9c0f26af340b00903e93995c1345d1b2"
+        "c5b697ebecdbe5811dd112e11889101dcb4553b2bc206ab304026b96c07dec4f24";
 
     // This islock was created with non-legacy. Using legacy will result in the signature being all zeros.
     bls::bls_legacy_scheme.store(false);
@@ -70,9 +75,9 @@ BOOST_AUTO_TEST_CASE(deserialize_instantlock_from_realdata2)
     ss >> islock;
 
     // Verify the calculated signHash
-    auto signHash = llmq::BuildSignHash(Consensus::LLMQType::LLMQ_60_75, uint256S(quorumHash), islock.GetRequestId(), islock.txid);
-    BOOST_CHECK_EQUAL(signHash.ToString(),
-                      expectedSignHash);
+    auto signHash = llmq::BuildSignHash(Consensus::LLMQType::LLMQ_60_75, uint256S(quorumHash), islock.GetRequestId(),
+                                        islock.txid);
+    BOOST_CHECK_EQUAL(signHash.ToString(), expectedSignHash);
 
     // Verify the txid field.
     BOOST_CHECK_EQUAL(islock.txid.ToString(), expectedTxidStr);
