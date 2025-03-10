@@ -15,6 +15,7 @@
 #include <common/sockman.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <util/time.h>
 
 namespace util {
 class SignalInterrupt;
@@ -329,6 +330,9 @@ public:
     // Flag this client for disconnection on next loop
     bool m_disconnect{false};
 
+    // Timestamp of last receive activity, used for -rpcservertimeout
+    SteadySeconds m_idle_since;
+
     explicit HTTPClient(NodeId node_id, CService addr) : m_node_id(node_id), m_addr(addr)
     {
         m_origin = addr.ToStringAddrPort();
@@ -372,6 +376,9 @@ public:
     // Flag used during shutdown to bypass keep-alive flag.
     // Set by main thread and read by Sockman I/O thread
     std::atomic_bool m_disconnect_all_clients{false};
+
+    // Idle timeout after which clients are disconnected
+    std::chrono::seconds m_rpcservertimeout;
 
     /**
      * Be notified when a new connection has been accepted.
