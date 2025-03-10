@@ -55,3 +55,57 @@ std::string forecastTypeToString(ForecastType forecastType)
     // no default case, so the compiler can warn about missing cases
     assert(false);
 }
+
+std::vector<FeeFrac> FilterPackages(std::vector<FeeFrac>& package_feerates,
+                                    std::set<Txid>& transactions_to_ignore,
+                                    const std::vector<CTransactionRef>& block_txs)
+{
+    if (package_feerates.empty()) return {};
+    Assume(!block_txs.empty());
+
+    // Tracks which package should be removed
+    std::vector<bool> indexed_to_filter(package_feerates.size(), false);
+
+    size_t index = 0;                 // Current package index
+    size_t current_package_vsize = 0; // Tracks accumulated vsize in the current package
+    std::set<Txid> curr_package_txs;  // Stores transactions in the current package
+
+    // Identify packages that contain transactions marked for removal
+    for (const auto& tx : block_txs) {
+        size_t tx_vsize = tx->GetTotalWeight() / WITNESS_SCALE_FACTOR;
+
+        // Ensure `index` is within valid bounds before accessing `package_feerates`
+        Assume(index < package_feerates.size());
+
+        /* Move to the next package if:
+           - Adding this transaction would exceed the package's vsize
+            (Only when we've already added at least one transaction to the current package
+            This prevents unintended package shifts due to slight size discrepancies)
+        */
+        if (!curr_package_txs.empty() && (current_package_vsize + tx_vsize > static_cast<size_t>(package_feerates[index].size))) {
+            ++index; // Move to the next package
+            current_package_vsize = 0;
+            curr_package_txs.clear();
+        }
+
+        // Add the current transaction to the package
+        curr_package_txs.insert(tx->GetHash());
+        current_package_vsize += tx_vsize;
+
+        // Mark the package for removal if it contains a flagged transaction
+        if (transactions_to_ignore.count(tx->GetHash())) {
+            indexed_to_filter[index] = true;
+        }
+    }
+
+    // Build a new vector excluding flagged packages
+    std::vector<FeeFrac> filtered_packages;
+    filtered_packages.reserve(package_feerates.size());
+
+    for (size_t i = 0; i < package_feerates.size(); ++i) {
+        if (!indexed_to_filter[i]) {                          // Skip flagged packages
+            filtered_packages.push_back(package_feerates[i]); // Implicit move
+        }
+    }
+    return filtered_packages;
+}

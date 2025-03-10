@@ -39,12 +39,13 @@ ForecastResult MemPoolForecaster::EstimateFee(ConfirmationTarget& target)
     }
 
     const auto pblocktemplate = GenerateNewBlock(*m_chainstate, m_mempool);
-    const auto& m_package_feerates = pblocktemplate->m_package_feerates;
-    if (m_package_feerates.empty()) {
+    if (pblocktemplate->m_package_feerates.empty()) {
         return ForecastResult(response, "No enough transactions in the mempool to provide a fee rate forecast");
     }
 
-    const auto percentiles = CalculatePercentiles(m_package_feerates, DEFAULT_BLOCK_MAX_WEIGHT);
+    auto package_feerates = FilterPackages(pblocktemplate->m_package_feerates, target.transactions_to_ignore, pblocktemplate->block.vtx);
+    LogDebug(BCLog::ESTIMATEFEE, "txs to ignore %d new size after ignoring %d", target.transactions_to_ignore.size(), package_feerates.size());
+    const auto percentiles = CalculatePercentiles(package_feerates, DEFAULT_BLOCK_MAX_WEIGHT);
     if (percentiles.empty()) {
         return ForecastResult(response, "Forecaster unable to provide an estimate due to insufficient data");
     }

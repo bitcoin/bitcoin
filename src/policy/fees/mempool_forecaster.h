@@ -9,6 +9,7 @@
 #include <logging.h>
 #include <policy/fees/forecaster.h>
 #include <policy/fees/forecaster_util.h>
+#include <primitives/transaction.h>
 #include <sync.h>
 #include <util/time.h>
 

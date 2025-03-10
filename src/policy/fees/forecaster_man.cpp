@@ -53,7 +53,10 @@ std::pair<std::optional<ForecastResult>, std::vector<std::string>> FeeRateForeca
     }
 
     for (const auto& [type, forecaster] : forecasters) {
-        if (!mempool_healthy && type == ForecastType::MEMPOOL_FORECAST) continue;
+        if (type == ForecastType::MEMPOOL_FORECAST) {
+            if (!mempool_healthy) continue;
+            target.transactions_to_ignore = GetTransactionsToIgnore();
+        }
 
         auto forecast = forecaster->EstimateFee(target);
         if (forecast.GetError()) {
@@ -128,6 +131,19 @@ void FeeRateForecasterManager::BlockConnected(ChainstateRole /*unused*/, const s
     Assume(it != prev_mined_blocks.end());
     it->m_block_weight = static_cast<double>(CalculateBlockWeight(block->vtx));
     it->empty = it->m_block_weight.value() == 0.0;
+}
+
+std::set<Txid> FeeRateForecasterManager::GetTransactionsToIgnore()
+{
+    std::set<Txid> transactions_to_ignore;
+    // Iterate through sorted transactions (sorted by mining count in descending order)
+    for (auto tx = sorted_txs.begin(); tx != sorted_txs.end(); ++tx) {
+        // Stop once we reach transactions below the ignore threshold
+        if (tx->first < NUMBER_OF_BLOCKS) break;
+        // Add transactions that have been seen multiple times without mining
+        transactions_to_ignore.insert(tx->second);
+    }
+    return transactions_to_ignore;
 }
 
 const std::vector<FeeRateForecasterManager::BlockData>& FeeRateForecasterManager::GetPreviouslyMinedBlockData() const

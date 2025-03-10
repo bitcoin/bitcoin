@@ -5,9 +5,12 @@
 #ifndef BITCOIN_POLICY_FEES_FORECASTER_UTIL_H
 #define BITCOIN_POLICY_FEES_FORECASTER_UTIL_H
 
+#include <primitives/transaction.h>
 #include <util/feefrac.h>
+#include <util/transaction_identifier.h>
 
 #include <optional>
+#include <set>
 #include <string>
 
 /**
@@ -125,6 +128,7 @@ enum class ConfirmationTargetType {
 struct ConfirmationTarget {
     unsigned int value;
     ConfirmationTargetType type;
+    std::set<Txid> transactions_to_ignore{};
 };
 
 // Block percentiles fee rate (in sat/kvB).
@@ -157,5 +161,9 @@ struct Percentiles {
 Percentiles CalculatePercentiles(const std::vector<FeeFrac>& package_feerates, const int32_t total_weight);
 
 std::string forecastTypeToString(ForecastType forecastType);
+
+std::vector<FeeFrac> FilterPackages(std::vector<FeeFrac>& package_feerates,
+                                    std::set<Txid>& transactions_to_ignore,
+                                    const std::vector<CTransactionRef>& block_txs);
 
 #endif // BITCOIN_POLICY_FEES_FORECASTER_UTIL_H

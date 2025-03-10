@@ -56,14 +56,18 @@ BOOST_AUTO_TEST_CASE(MempoolEstimator)
 
     const CAmount low_fee{CENT / 3000};
     const CAmount med_fee{CENT / 100};
+    const CAmount sane_fee{CENT / 50};
     const CAmount high_fee{CENT / 10};
 
     conf_target.value = MEMPOOL_FORECAST_MAX_TARGET;
     // Test when there are not enough mempool transactions to get an accurate estimate
     {
+        std::vector<CTransactionRef> highfee_txs;
         // Add transactions with high_fee fee until mempool transactions weight is more than 25th percent of DEFAULT_BLOCK_MAX_WEIGHT
         while (static_cast<int>(m_node.mempool->GetTotalTxSize() * WITNESS_SCALE_FACTOR) <= static_cast<int>(0.25 * DEFAULT_BLOCK_MAX_WEIGHT)) {
-            AddToMempool(*m_node.mempool, entry.Fee(high_fee).FromTx(make_random_tx()));
+            CTransactionRef tx = make_random_tx();
+            highfee_txs.emplace_back(tx);
+            AddToMempool(*m_node.mempool, entry.Fee(high_fee).FromTx(tx));
         }
         const auto fee_estimate = mempool_fee_estimator->EstimateFee(conf_target);
         BOOST_CHECK(fee_estimate.Empty());
@@ -71,9 +75,9 @@ BOOST_AUTO_TEST_CASE(MempoolEstimator)
     }
 
     {
-        // Add transactions with med_fee fee until mempool transactions weight is more than 50th percent of DEFAULT_BLOCK_MAX_WEIGHT
+        // Add transactions with sane_fee fee until mempool transactions weight is more than 50th percent of DEFAULT_BLOCK_MAX_WEIGHT
         while (static_cast<int>(m_node.mempool->GetTotalTxSize() * WITNESS_SCALE_FACTOR) <= static_cast<int>(0.5 * DEFAULT_BLOCK_MAX_WEIGHT)) {
-            AddToMempool(*m_node.mempool, entry.Fee(med_fee).FromTx(make_random_tx()));
+            AddToMempool(*m_node.mempool, entry.Fee(sane_fee).FromTx(make_random_tx()));
         }
         const auto fee_estimate = mempool_fee_estimator->EstimateFee(conf_target);
         BOOST_CHECK(fee_estimate.Empty());
@@ -82,8 +86,14 @@ BOOST_AUTO_TEST_CASE(MempoolEstimator)
 
     // Mempool transactions are enough to provide feerate estimate
     {
-        // Add low_fee transactions until mempool transactions weight is more than 95th percent of DEFAULT_BLOCK_MAX_WEIGHT
+        // Add med_fee transactions until mempool transactions weight is more than 95th percent of DEFAULT_BLOCK_MAX_WEIGHT
         while (static_cast<int>(m_node.mempool->GetTotalTxSize() * WITNESS_SCALE_FACTOR) <= static_cast<int>(0.95 * DEFAULT_BLOCK_MAX_WEIGHT)) {
+            const auto txref = make_random_tx();
+            AddToMempool(*m_node.mempool, entry.Fee(med_fee).FromTx(make_random_tx()));
+        }
+
+        // Add low_fee transactions until mempool transactions weight is more than DEFAULT_BLOCK_MAX_WEIGHT
+        while (static_cast<int>(m_node.mempool->GetTotalTxSize() * WITNESS_SCALE_FACTOR) <= static_cast<int>(DEFAULT_BLOCK_MAX_WEIGHT * 2)) {
             const auto txref = make_random_tx();
             AddToMempool(*m_node.mempool, entry.Fee(low_fee).FromTx(make_random_tx()));
         }
@@ -91,8 +101,8 @@ BOOST_AUTO_TEST_CASE(MempoolEstimator)
         const auto fee_estimate = mempool_fee_estimator->EstimateFee(conf_target);
         BOOST_CHECK(!fee_estimate.Empty());
         const auto tx_vsize = entry.FromTx(make_random_tx()).GetTxSize();
-        BOOST_CHECK(fee_estimate.GetResponse().low_priority == FeeFrac(low_fee, tx_vsize));
-        BOOST_CHECK(fee_estimate.GetResponse().high_priority == FeeFrac(med_fee, tx_vsize));
+        BOOST_CHECK(fee_estimate.GetResponse().low_priority == FeeFrac(med_fee, tx_vsize));
+        BOOST_CHECK(fee_estimate.GetResponse().high_priority == FeeFrac(sane_fee, tx_vsize));
     }
 }
 

@@ -109,6 +109,8 @@ public:
     //! Retrieves block data as a human-readable string.
     std::vector<std::string> GetPreviouslyMinedBlockDataStr() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
+    std::set<Txid> GetTransactionsToIgnore();
+
     /**
      * Estimates a fee rate using registered forecasters for a given confirmation target.
      *

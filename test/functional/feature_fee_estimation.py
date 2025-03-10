@@ -150,7 +150,8 @@ def check_estimatefee_response(estimate, low_fee, high_fee, forecaster, errors=[
 
 def check_filtered_txs(stats, txs, count):
     for tx in txs:
-        stat = f"{tx["txid"]}; count {count}"
+        id = tx["txid"]
+        stat = f"{id}; count {count}"
         assert stat in stats
 
 
@@ -502,7 +503,8 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Error messages for various scenarios
         errors = {
-            "mempool_forecast": "Mempool Forecast: No enough transactions in the mempool to provide a fee rate forecast",
+            "mempool_insufficient_data": "Mempool Forecast: Forecaster unable to provide an estimate due to insufficient data",
+            "mempool_lack_transaction": "Mempool Forecast: No enough transactions in the mempool to provide a fee rate forecast",
             "block_policy": "Block Policy Estimator: Insufficient data or no feerate found",
             "generic": "Failed to get estimate from forecasters",
             "lack_of_data": "Insufficient data (6 blocks needs to be processed after restart)",
@@ -515,7 +517,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Test estimatefee after gathering sufficient block policy estimator data with empty mempool")
         high_feerate, tx_count = Decimal("0.00009"), 24
         self.setup_and_broadcast(high_feerate, blocks=6, txs=tx_count)
-        check_estimatefee_response(node0.estimatefee(1), high_feerate, high_feerate, "Block Policy Estimator", [errors["mempool_forecast"]])
+        check_estimatefee_response(node0.estimatefee(1), high_feerate, high_feerate, "Block Policy Estimator", [errors["mempool_lack_transaction"]])
 
         self.log.info("Test that estimate will be from mempool when it is lower than block policy")
         low_feerate = Decimal("0.00006")
@@ -529,7 +531,8 @@ class EstimateFeeTest(BitcoinTestFramework):
         check_estimatefee_response(node0.estimatefee(1), low_feerate, low_feerate, "Mempool Forecast")
 
         self.log.info("Test estimate refresh after cache expiration")
-        node0.setmocktime(int(time.time()) + (MEMPOOL_FORECASTER_CACHE_LIFE + 1))
+        new_time = int(time.time()) + (MEMPOOL_FORECASTER_CACHE_LIFE + 1)
+        node0.setmocktime(new_time)
         check_estimatefee_response(node0.estimatefee(1), med_feerate, med_feerate, "Mempool Forecast")
 
         self.log.info("Test that we track suspected filtered txs")
@@ -539,6 +542,13 @@ class EstimateFeeTest(BitcoinTestFramework):
             estimate = node0.estimatefee(1, True)
             check_estimatefee_response(estimate, med_feerate, med_feerate, "Mempool Forecast")
             check_filtered_txs(estimate['stats'], txs, i)
+
+        self.generate(node1, 1, sync_fun=self.no_op)
+        self.sync_blocks()
+        new_time = new_time + MEMPOOL_FORECASTER_CACHE_LIFE + 1
+        node0.setmocktime(new_time)
+        policy_estimate = node0.estimatefee(1)
+        check_estimatefee_response(policy_estimate, high_feerate, high_feerate, "Block Policy Estimator", [errors["mempool_insufficient_data"]])
 
         self.log.info("Test estimate on node1 which lacks node0's large transactions")
         check_estimatefee_response(node1.estimatefee(1), high_feerate, high_feerate, "Block Policy Estimator")
