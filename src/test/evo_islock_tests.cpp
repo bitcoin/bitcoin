@@ -12,6 +12,14 @@
 
 BOOST_AUTO_TEST_SUITE(instantsend_tests)
 
+uint256 CalculateRequestId(const std::vector<COutPoint>& inputs)
+{
+    CHashWriter hw(SER_GETHASH, 0);
+    hw << std::string_view("islock");
+    hw << inputs;
+    return hw.GetHash();
+}
+
 BOOST_AUTO_TEST_CASE(getrequestid)
 {
   // Create an empty InstantSendLock
@@ -21,10 +29,7 @@ BOOST_AUTO_TEST_CASE(getrequestid)
   // Note: CInstantSendLock::GetRequestId() serializes the prefix "islock"
   // followed by the 'inputs' vector.
   {
-    CHashWriter hw(SER_GETHASH, 0);
-    hw << std::string_view("islock");
-    hw << islock.inputs; // empty vector
-    const uint256 expected = hw.GetHash();
+    const uint256 expected = CalculateRequestId(islock.inputs);
 
     BOOST_CHECK(islock.GetRequestId() == expected);
   }
@@ -32,19 +37,14 @@ BOOST_AUTO_TEST_CASE(getrequestid)
   // Now add two dummy inputs to the lock
   islock.inputs.clear();
   // Construct two dummy outpoints (using uint256S for a dummy hash)
-  COutPoint op1(uint256S("0x0000000000000000000000000000000000000000000000000000000000000001"), 0);
-  COutPoint op2(uint256S("0x0000000000000000000000000000000000000000000000000000000000000002"), 1);
+  COutPoint op1(uint256::ONE, 0);
+  COutPoint op2(uint256::TWO, 1);
   islock.inputs.push_back(op1);
   islock.inputs.push_back(op2);
 
-  {
-    CHashWriter hw(SER_GETHASH, 0);
-    hw << std::string_view("islock");
-    hw << islock.inputs;
-    const uint256 expected = hw.GetHash();
+  const uint256 expected = CalculateRequestId(islock.inputs);
 
-    BOOST_CHECK(islock.GetRequestId() == expected);
-  }
+  BOOST_CHECK(islock.GetRequestId() == expected);
 }
 
 BOOST_AUTO_TEST_CASE(deserialize_instantlock_from_realdata2)
@@ -89,10 +89,7 @@ BOOST_AUTO_TEST_CASE(deserialize_instantlock_from_realdata2)
     BOOST_CHECK_EQUAL(input.n, expectedInputN);
 
     // Compute the expected request ID: it is the hash of the constant prefix "islock" followed by the inputs.
-    CHashWriter hw(SER_GETHASH, 0);
-    hw << std::string_view("islock");
-    hw << islock.inputs;
-    uint256 expectedRequestId = hw.GetHash();
+    uint256 expectedRequestId = CalculateRequestId(islock.inputs);
     BOOST_CHECK_EQUAL(islock.GetRequestId().ToString(), expectedRequestId.ToString());
 
     // Verify the signature field.
