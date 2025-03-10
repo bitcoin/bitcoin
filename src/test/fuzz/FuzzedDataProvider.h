@@ -314,7 +314,6 @@ T FuzzedDataProvider::PickValueInArray(const std::array<T, size> &array) {
 
 template <typename T>
 T FuzzedDataProvider::PickValueInArray(std::initializer_list<const T> list) {
-  // TODO(Dor1s): switch to static_assert once C++14 is allowed.
   if (!list.size())
     abort();
 
