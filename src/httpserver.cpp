@@ -24,6 +24,7 @@
 #include <util/thread.h>
 #include <util/threadnames.h>
 #include <util/threadpool.h>
+#include <util/time.h>
 #include <util/translation.h>
 
 #include <condition_variable>
@@ -1295,6 +1296,11 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
                     client->m_id);
                 client->m_disconnect = true;
             } else {
+                // Reset idle timeout
+                WITH_LOCK(
+                    client->m_idle_since_mutex,
+                    client->m_idle_since = Now<SteadySeconds>(););
+
                 // Prevent disconnect until all requests are completely handled.
                 client->m_connection_busy = true;
 
@@ -1431,12 +1437,30 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPClien
 
 void HTTPServer::DisconnectClients()
 {
+    const auto now{Now<SteadySeconds>()};
     size_t erased = std::erase_if(m_connected,
                                   [&](auto& client) {
-                                        // Disconnect this client due to error or end of communication.
+                                        // First check for idle timeout. We reset the timer when we send and receive data,
+                                        // but if the server is busy handling a request we should ignore the timeout until
+                                        // the reply is sent. If we did erase the shared_ptr<HTTPClient> reference in m_connected
+                                        // while the server is busy with a request, there would still be a reference in a worker
+                                        // thread keeping the socket open even after "disconnecting".
+                                        bool is_idle{false};
+                                        if (m_rpcservertimeout.count() > 0) {
+                                            is_idle = WITH_LOCK(
+                                                        client->m_idle_since_mutex,
+                                                        return (now - client->m_idle_since > m_rpcservertimeout) && !client->m_req_busy);
+                                        }
+
+                                        // Disconnect this client due to error, end of communication, or idle timeout.
                                         // May drop unsent data if we are closing due to error.
-                                        if (client->m_disconnect) {
-                                            ;
+                                        if (client->m_disconnect || is_idle) {
+                                            if (is_idle) {
+                                                LogDebug(BCLog::HTTP,
+                                                         "HTTP client idle timeout %s (id=%d)",
+                                                         client->m_origin,
+                                                         client->m_id);
+                                            }
                                         } else {
                                             // Disconnect this client because the server is shutting
                                             // down and we need to disconnect all clients...
@@ -1563,6 +1587,11 @@ bool HTTPClient::MaybeSendBytesFromBuffer()
             m_send_ready = true;
             m_connection_busy = true;
         }
+
+        // Finally, reset idle timeout
+        WITH_LOCK(
+            m_idle_since_mutex,
+            m_idle_since = Now<SteadySeconds>(););
     }
 
     return true;
@@ -1576,6 +1605,8 @@ bool InitHTTPServer()
 
     // Create HTTPServer, using a dummy request handler just for this commit
     g_http_server = std::make_unique<HTTPServer>([&](std::unique_ptr<HTTPRequest> req){});
+
+    g_http_server->SetServerTimeout(std::chrono::seconds(gArgs.GetIntArg("-rpcservertimeout", DEFAULT_HTTP_SERVER_TIMEOUT)));
 
     // Bind HTTP server to specified addresses
     std::vector<std::pair<std::string, uint16_t>> endpoints{GetBindAddresses()};
