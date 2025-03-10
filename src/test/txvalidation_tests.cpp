@@ -118,7 +118,7 @@ BOOST_FIXTURE_TEST_CASE(ephemeral_tests, RegTestingSetup)
     CTxMemPool::setEntries empty_ancestors;
 
     TxValidationState child_state;
-    Txid child_txid;
+    Wtxid child_wtxid;
 
     // Arbitrary non-0 feerate for these tests
     CFeeRate dustrelay(DUST_RELAY_TX_FEE);
@@ -133,143 +133,143 @@ BOOST_FIXTURE_TEST_CASE(ephemeral_tests, RegTestingSetup)
     // We first start with nothing "in the mempool", using package checks
 
     // Trivial single transaction with no dust
-    BOOST_CHECK(CheckEphemeralSpends({dust_spend}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK(CheckEphemeralSpends({dust_spend}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, Txid());
+    BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
 
     // Now with dust, ok because the tx has no dusty parents
-    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, Txid());
+    BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
 
     // Dust checks pass
-    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, dust_spend}, CFeeRate(0), pool, child_state, child_txid));
+    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, dust_spend}, CFeeRate(0), pool, child_state, child_wtxid));
     BOOST_CHECK(child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, Txid());
-    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, dust_spend}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
+    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, dust_spend}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, Txid());
+    BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
 
     auto dust_non_spend = make_tx({COutPoint{dust_txid, EPHEMERAL_DUST_INDEX - 1}}, /*version=*/2);
 
     // Child spending non-dust only from parent should be disallowed even if dust otherwise spent
-    const auto dust_non_spend_txid{dust_non_spend->GetHash()};
-    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, dust_non_spend, dust_spend}, dustrelay, pool, child_state, child_txid));
+    const auto dust_non_spend_wtxid{dust_non_spend->GetWitnessHash()};
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, dust_non_spend, dust_spend}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(!child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, dust_non_spend_txid);
+    BOOST_CHECK_EQUAL(child_wtxid, dust_non_spend_wtxid);
     child_state = TxValidationState();
-    child_txid = Txid();
+    child_wtxid = Wtxid();
 
-    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, dust_spend, dust_non_spend}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, dust_spend, dust_non_spend}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(!child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, dust_non_spend_txid);
+    BOOST_CHECK_EQUAL(child_wtxid, dust_non_spend_wtxid);
     child_state = TxValidationState();
-    child_txid = Txid();
+    child_wtxid = Wtxid();
 
-    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, dust_non_spend}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, dust_non_spend}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(!child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, dust_non_spend_txid);
+    BOOST_CHECK_EQUAL(child_wtxid, dust_non_spend_wtxid);
     child_state = TxValidationState();
-    child_txid = Txid();
+    child_wtxid = Wtxid();
 
     auto grandparent_tx_2 = make_ephemeral_tx(random_outpoints(1), /*version=*/2);
     const auto dust_txid_2 = grandparent_tx_2->GetHash();
 
     // Spend dust from one but not another is ok, as long as second grandparent has no child
-    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_spend}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_spend}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, Txid());
+    BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
 
     auto dust_non_spend_both_parents = make_tx({COutPoint{dust_txid, EPHEMERAL_DUST_INDEX}, COutPoint{dust_txid_2, EPHEMERAL_DUST_INDEX - 1}}, /*version=*/2);
     // But if we spend from the parent, it must spend dust
-    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_non_spend_both_parents}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK(!CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_non_spend_both_parents}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(!child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, dust_non_spend_both_parents->GetHash());
+    BOOST_CHECK_EQUAL(child_wtxid, dust_non_spend_both_parents->GetWitnessHash());
     child_state = TxValidationState();
-    child_txid = Txid();
+    child_wtxid = Wtxid();
 
     auto dust_spend_both_parents = make_tx({COutPoint{dust_txid, EPHEMERAL_DUST_INDEX}, COutPoint{dust_txid_2, EPHEMERAL_DUST_INDEX}}, /*version=*/2);
-    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_spend_both_parents}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_spend_both_parents}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, Txid());
+    BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
 
     // Spending other outputs is also correct, as long as the dusty one is spent
     const std::vector<COutPoint> all_outpoints{COutPoint(dust_txid, 0), COutPoint(dust_txid, 1), COutPoint(dust_txid, 2),
         COutPoint(dust_txid_2, 0), COutPoint(dust_txid_2, 1), COutPoint(dust_txid_2, 2)};
     auto dust_spend_all_outpoints = make_tx(all_outpoints, /*version=*/2);
-    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_spend_all_outpoints}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, dust_spend_all_outpoints}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, Txid());
+    BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
 
     // 2 grandparents with dust <- 1 dust-spending parent with dust <- child with no dust
     auto parent_with_dust = make_ephemeral_tx({COutPoint{dust_txid, EPHEMERAL_DUST_INDEX}, COutPoint{dust_txid_2, EPHEMERAL_DUST_INDEX}}, /*version=*/2);
     // Ok for parent to have dust
-    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, parent_with_dust}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, parent_with_dust}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, Txid());
+    BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
     auto child_no_dust = make_tx({COutPoint{parent_with_dust->GetHash(), EPHEMERAL_DUST_INDEX}}, /*version=*/2);
-    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, parent_with_dust, child_no_dust}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, parent_with_dust, child_no_dust}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, Txid());
+    BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
 
     // 2 grandparents with dust <- 1 dust-spending parent with dust <- child with dust
     auto child_with_dust = make_ephemeral_tx({COutPoint{parent_with_dust->GetHash(), EPHEMERAL_DUST_INDEX}}, /*version=*/2);
-    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, parent_with_dust, child_with_dust}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, grandparent_tx_2, parent_with_dust, child_with_dust}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, Txid());
+    BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
 
     // Tests with parents in mempool
 
     // Nothing in mempool, this should pass for any transaction
-    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, Txid());
+    BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
 
     // Add first grandparent to mempool and fetch entry
     AddToMempool(pool, entry.FromTx(grandparent_tx_1));
 
     // Ignores ancestors that aren't direct parents
-    BOOST_CHECK(CheckEphemeralSpends({child_no_dust}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK(CheckEphemeralSpends({child_no_dust}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, Txid());
+    BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
 
     // Valid spend of dust with grandparent in mempool
-    BOOST_CHECK(CheckEphemeralSpends({parent_with_dust}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK(CheckEphemeralSpends({parent_with_dust}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, Txid());
+    BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
 
     // Second grandparent in same package
-    BOOST_CHECK(CheckEphemeralSpends({parent_with_dust, grandparent_tx_2}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK(CheckEphemeralSpends({parent_with_dust, grandparent_tx_2}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, Txid());
+    BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
 
     // Order in package doesn't matter
-    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_2, parent_with_dust}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_2, parent_with_dust}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, Txid());
+    BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
 
     // Add second grandparent to mempool
     AddToMempool(pool, entry.FromTx(grandparent_tx_2));
 
     // Only spends single dust out of two direct parents
-    BOOST_CHECK(!CheckEphemeralSpends({dust_non_spend_both_parents}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK(!CheckEphemeralSpends({dust_non_spend_both_parents}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(!child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, dust_non_spend_both_parents->GetHash());
+    BOOST_CHECK_EQUAL(child_wtxid, dust_non_spend_both_parents->GetWitnessHash());
     child_state = TxValidationState();
-    child_txid = Txid();
+    child_wtxid = Wtxid();
 
     // Spends both parents' dust
-    BOOST_CHECK(CheckEphemeralSpends({parent_with_dust}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK(CheckEphemeralSpends({parent_with_dust}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, Txid());
+    BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
 
     // Now add dusty parent to mempool
     AddToMempool(pool, entry.FromTx(parent_with_dust));
 
     // Passes dust checks even with non-parent ancestors
-    BOOST_CHECK(CheckEphemeralSpends({child_no_dust}, dustrelay, pool, child_state, child_txid));
+    BOOST_CHECK(CheckEphemeralSpends({child_no_dust}, dustrelay, pool, child_state, child_wtxid));
     BOOST_CHECK(child_state.IsValid());
-    BOOST_CHECK_EQUAL(child_txid, Txid());
+    BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
 }
 
 BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
