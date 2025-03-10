@@ -23,6 +23,7 @@
 #include <util/strencodings.h>
 #include <util/thread.h>
 #include <util/threadnames.h>
+#include <util/time.h>
 #include <util/translation.h>
 
 #include <condition_variable>
@@ -1340,6 +1341,9 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
                     client->m_id);
                 client->m_disconnect = true;
             } else {
+                // Reset idle timeout
+                client->m_idle_since = Now<SteadySeconds>();
+
                 // Prevent disconnect until all requests are completely handled.
                 client->m_prevent_disconnect = true;
 
@@ -1476,14 +1480,17 @@ void HTTPServer::MaybeDispatchRequestsFromClient(std::shared_ptr<HTTPClient> cli
 
 void HTTPServer::DisconnectClients()
 {
+    const auto now{Now<SteadySeconds>()};
     size_t erased = std::erase_if(m_connected,
                                   [&](auto& client) {
                                         // Disconnect this client if it is flagged individually or if the
                                         // server is flagged to disconnect all...
-                                        if ((client->m_disconnect || m_disconnect_all_clients) &&
+                                        if (((client->m_disconnect || m_disconnect_all_clients) &&
                                             // ...but not if this client is specifically flagged to prevent disconnect!
                                             // It is probably still busy.
-                                            !client->m_prevent_disconnect) {
+                                            !client->m_prevent_disconnect) ||
+                                            // No matter what, always disconnect if client has timed out.
+                                            now - client->m_idle_since > m_rpcservertimeout) {
                                             LogDebug(BCLog::HTTP,
                                                      "Disconnected HTTP client %s (id=%d)\n",
                                                      client->m_origin,
@@ -1613,6 +1620,8 @@ bool InitHTTPServer()
 
     // Create HTTPServer, using a dummy request handler just for this commit
     g_http_server = std::make_unique<HTTPServer>([&](std::unique_ptr<HTTPRequest> req){});
+
+    g_http_server->SetServerTimeout(std::chrono::seconds(gArgs.GetIntArg("-rpcservertimeout", DEFAULT_HTTP_SERVER_TIMEOUT)));
 
     // Bind HTTP server to specified addresses
     std::vector<std::pair<std::string, uint16_t>> endpoints{GetBindAddresses()};
