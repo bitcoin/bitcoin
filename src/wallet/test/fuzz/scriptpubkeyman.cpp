@@ -80,7 +80,7 @@ static std::optional<std::pair<WalletDescriptor, FlatSigningProvider>> CreateWal
 static DescriptorScriptPubKeyMan* CreateDescriptor(WalletDescriptor& wallet_desc, FlatSigningProvider& keys, CWallet& keystore)
 {
     LOCK(keystore.cs_wallet);
-    keystore.AddWalletDescriptor(wallet_desc, keys, /*label=*/"", /*internal=*/false);
+    Assert(keystore.AddWalletDescriptor(wallet_desc, keys, /*label=*/"", /*internal=*/false));
     return keystore.GetDescriptorScriptPubKeyMan(wallet_desc);
 };
 
