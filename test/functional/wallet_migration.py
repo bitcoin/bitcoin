@@ -45,7 +45,9 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 2
         self.supports_cli = False
-        self.extra_args = [[], ["-deprecatedrpc=create_bdb"]]
+        # Disable the consensus cleanup for this test as it creates block with an old node, which
+        # does not set nLockTime in coinbase to block height - 1.
+        self.extra_args = [["-vbparams=consensuscleanup:0:0"], ["-deprecatedrpc=create_bdb"]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -259,7 +261,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.assert_list_txs_equal(remove_deprecated_keys(basic1_restored.listtransactions()), txs)
 
         # restart master node and verify that everything is still there
-        self.restart_node(0)
+        self.restart_node(0, extra_args=self.extra_args[0])
         self.connect_nodes(0, 1)
         default = self.master_node.get_wallet_rpc(self.default_wallet_name)
         self.master_node.loadwallet("basic1")
