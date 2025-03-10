@@ -78,6 +78,9 @@ private:
     //! Computes the total weight of transactions in a block.
     size_t CalculateBlockWeight(const std::vector<CTransactionRef>& txs) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
+    //! Remove a transaction from tracking stats.
+    void RemoveTransaction(const Txid& txid);
+
 protected:
     //! Handles transactions removed from the mempool due to a new block.
     void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, const std::vector<CTransactionRef>& expected_block_txs, unsigned int nBlockHeight) override
@@ -86,6 +89,9 @@ protected:
     //! Handles newly connected blocks.
     void BlockConnected(ChainstateRole /*unused*/, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+    //! Overrides interface method to handle transactions removed from the mempool.
+    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason /*unused*/, uint64_t /*unused*/) override;
 
 public:
     FeeRateForecasterManager() EXCLUSIVE_LOCKS_REQUIRED(!cs);

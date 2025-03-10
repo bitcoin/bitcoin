@@ -214,4 +214,20 @@ void FeeRateForecasterManager::MempoolTransactionsRemovedForBlock(const std::vec
     }
 }
 
+void FeeRateForecasterManager::RemoveTransaction(const Txid& txid)
+{
+    // Remove from tracking structures if we were tracking it
+    auto it = tx_mine_count.find(txid);
+    if (it != tx_mine_count.end()) {
+        sorted_txs.erase({it->second, txid});
+        tx_mine_count.erase(it);
+    }
+}
+
+void FeeRateForecasterManager::TransactionRemovedFromMempool(const CTransactionRef& tx,
+                                                             MemPoolRemovalReason /*unused*/, uint64_t /*unused*/)
+{
+    RemoveTransaction(tx->GetHash());
+}
+
 FeeRateForecasterManager::~FeeRateForecasterManager() = default;
