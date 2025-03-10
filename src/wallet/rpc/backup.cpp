@@ -1575,14 +1575,6 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
 
             WalletDescriptor w_desc(std::move(parsed_desc), timestamp, range_start, range_end, next_index);
 
-            // Check if the wallet already contains the descriptor
-            auto existing_spk_manager = wallet.GetDescriptorScriptPubKeyMan(w_desc);
-            if (existing_spk_manager) {
-                if (!existing_spk_manager->CanUpdateToWalletDescriptor(w_desc, error)) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, error);
-                }
-            }
-
             // Add descriptor to the wallet
             auto spk_manager = wallet.AddWalletDescriptor(w_desc, keys, label, desc_internal);
             if (spk_manager == nullptr) {
