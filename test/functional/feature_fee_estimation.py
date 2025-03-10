@@ -148,6 +148,12 @@ def check_estimatefee_response(estimate, low_fee, high_fee, forecaster, errors=[
     assert all(err in estimate["errors"] for err in errors)
 
 
+def check_filtered_txs(stats, txs, count):
+    for tx in txs:
+        stat = f"{tx["txid"]}; count {count}"
+        assert stat in stats
+
+
 class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
@@ -426,13 +432,15 @@ class EstimateFeeTest(BitcoinTestFramework):
 
 
     def send_transactions(self, utxos, fee_rate, target_vsize, node):
+        txs = []
         for utxo in utxos:
-            self.wallet.send_self_transfer(
+            txs.append(self.wallet.send_self_transfer(
                 from_node=node,
                 utxo_to_spend=utxo,
                 fee_rate=fee_rate,
                 target_vsize=target_vsize,
-            )
+            ))
+        return txs
 
     def connect_all_nodes(self):
         self.connect_nodes(0, 1)
@@ -517,12 +525,20 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         self.log.info("Test caching of recent estimates")
         med_feerate = Decimal("0.00008")
-        self.send_transactions(utxos, med_feerate, node0_target_vsize, node0)  # med-feerate RBF
+        txs = self.send_transactions(utxos, med_feerate, node0_target_vsize, node0)  # med-feerate RBF
         check_estimatefee_response(node0.estimatefee(1), low_feerate, low_feerate, "Mempool Forecast")
 
         self.log.info("Test estimate refresh after cache expiration")
         node0.setmocktime(int(time.time()) + (MEMPOOL_FORECASTER_CACHE_LIFE + 1))
-        check_estimatefee_response(node0.estimatefee(1, True), med_feerate, med_feerate, "Mempool Forecast")
+        check_estimatefee_response(node0.estimatefee(1), med_feerate, med_feerate, "Mempool Forecast")
+
+        self.log.info("Test that we track suspected filtered txs")
+        for i in range(1, 6):
+            self.generate(node1, 1, sync_fun=self.no_op)
+            self.sync_blocks()
+            estimate = node0.estimatefee(1, True)
+            check_estimatefee_response(estimate, med_feerate, med_feerate, "Mempool Forecast")
+            check_filtered_txs(estimate['stats'], txs, i)
 
         self.log.info("Test estimate on node1 which lacks node0's large transactions")
         check_estimatefee_response(node1.estimatefee(1), high_feerate, high_feerate, "Block Policy Estimator")
