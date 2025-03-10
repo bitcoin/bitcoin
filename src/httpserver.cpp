@@ -19,6 +19,7 @@
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/threadnames.h>
+#include <util/time.h>
 #include <util/translation.h>
 
 #include <condition_variable>
@@ -1209,8 +1210,11 @@ void HTTPServer::CloseConnectionInternal(const HTTPClient& client)
 
 void HTTPServer::DisconnectClients()
 {
+    const auto now{Now<SteadySeconds>()};
     for (auto it = m_connected_clients.begin(); it != m_connected_clients.end();) {
-        if ((it->second->m_disconnect || m_disconnect_all_clients) && !it->second->m_prevent_disconnect) {
+        bool timeout{now - it->second->m_idle_since > m_rpcservertimeout};
+        if (((it->second->m_disconnect || m_disconnect_all_clients) && !it->second->m_prevent_disconnect)
+            || timeout) {
             CloseConnectionInternal(*it->second);
             it = m_connected_clients.erase(it);
         } else {
@@ -1227,6 +1231,8 @@ bool HTTPServer::EventNewConnectionAccepted(NodeId node_id,
     auto client = std::make_shared<HTTPClient>(node_id, them);
     // Point back to the server
     client->m_server = this;
+    // Set timeout
+    client->m_idle_since = Now<SteadySeconds>();
     LogDebug(BCLog::HTTP, "HTTP Connection accepted from %s (id=%d)\n", client->m_origin, client->m_node_id);
     m_connected_clients.emplace(client->m_node_id, std::move(client));
     m_no_clients = false;
@@ -1257,6 +1263,9 @@ void HTTPServer::EventGotData(NodeId node_id, std::span<const uint8_t> data)
     if (client == nullptr) {
         return;
     }
+
+    // Reset idle timeout
+    client->m_idle_since = Now<SteadySeconds>();
 
     // Prevent disconnect until all requests are completely handled.
     client->m_prevent_disconnect = true;
@@ -1390,6 +1399,8 @@ bool InitHTTPServer(const util::SignalInterrupt& interrupt)
 
     // Create HTTPServer, using a dummy request handler just for this commit
     g_http_server = std::make_unique<HTTPServer>([&](std::unique_ptr<HTTPRequest> req){});
+
+    g_http_server->m_rpcservertimeout = std::chrono::seconds(gArgs.GetIntArg("-rpcservertimeout", DEFAULT_HTTP_SERVER_TIMEOUT));
 
     // Bind HTTP server to specified addresses
     std::vector<std::pair<std::string, uint16_t>> endpoints{GetBindAddresses()};
