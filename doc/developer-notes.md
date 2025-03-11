@@ -1156,7 +1156,7 @@ namespace {
   `#include "primitives/transactions.h"` quote syntax.
 
   - *Rationale*: Bracket syntax is less ambiguous because the preprocessor
-    searches a fixed list of include directories without taking location of the
+    searches a fixed list of included directories without taking location of the
     source file into account. This allows quoted includes to stand out more when
     the location of the source file actually is relevant.
 
