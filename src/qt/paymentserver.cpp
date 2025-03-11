@@ -212,6 +212,17 @@ void PaymentServer::handleURIOrFile(const QString& s)
                                "Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.\n"
                                "If you are receiving this error you should request the merchant provide a BIP21 compatible URI."),
                             CClientUIInterface::ICON_WARNING);
+
+                        // For unauthenticated payment requests with multiple addresses,
+                        // store the addresses in the addressList field instead of abusing the address field
+                        if (recipient.address.contains("<br />")) {
+                            recipient.addressList = recipient.address;
+                            // Keep only the first address in the address field
+                            int brPos = recipient.address.indexOf("<br />");
+                            if (brPos > 0) {
+                                recipient.address = recipient.address.left(brPos);
+                            }
+                        }
                     }
                     Q_EMIT message(tr("URI handling"), QString::fromStdString(error_msg),
                         CClientUIInterface::MSG_ERROR);
