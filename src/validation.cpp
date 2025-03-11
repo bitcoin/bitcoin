@@ -8,6 +8,7 @@
 #include <validation.h>
 
 #include <arith_uint256.h>
+#include <batchverify.h>
 #include <chain.h>
 #include <checkqueue.h>
 #include <clientversion.h>
@@ -2023,6 +2024,22 @@ std::optional<std::pair<ScriptError, std::string>> CScriptCheck::operator()() {
         return std::nullopt;
     } else {
         auto debug_str = strprintf("input %i of %s (wtxid %s), spending %s:%i", nIn, ptxTo->GetHash().ToString(), ptxTo->GetWitnessHash().ToString(), ptxTo->vin[nIn].prevout.hash.ToString(), ptxTo->vin[nIn].prevout.n);
+        return std::make_pair(error, std::move(debug_str));
+    }
+}
+
+BatchableResult BatchableScriptCheck::operator()() {
+    CollectingSignatureChecker checker(ptxTo, nIn, m_tx_out.nValue, cacheStore, *m_signature_cache, *txdata);
+    ScriptError error = SCRIPT_ERR_UNKNOWN_ERROR;
+    const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
+    const CScriptWitness *witness = &ptxTo->vin[nIn].scriptWitness;
+
+    if (VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, m_flags, checker, &error)) {
+        return checker.GetCollectedSignatures();
+    } else {
+        auto debug_str = strprintf("input %i of %s (wtxid %s), spending %s:%i",
+                                   nIn, ptxTo->GetHash().ToString(), ptxTo->GetWitnessHash().ToString(),
+                                   ptxTo->vin[nIn].prevout.hash.ToString(), ptxTo->vin[nIn].prevout.n);
         return std::make_pair(error, std::move(debug_str));
     }
 }
