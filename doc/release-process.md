@@ -47,7 +47,7 @@ Release Process
   - `m_assumeutxo_data` array should be appended to with the values returned by calling `bitcoin-cli -rpcclienttimeout=0 -named dumptxoutset utxo.dat rollback=<height or hash>`
     The same height considerations for `defaultAssumeValid` apply.
 * Consider updating the headers synchronization tuning parameters to account for the chainparams updates.
-  The optimal values change very slowly, so this isn't strictly necessary every release, but doing so doesn't hurt.
+  The optimal values change very slowly, so this isn't strictly necessary for every release, but doing so doesn't hurt.
   - Update configuration variables in [`contrib/devtools/headerssync-params.py`](/contrib/devtools/headerssync-params.py):
     - Set `TIME` to the software's expected supported lifetime -- after this time, its ability to defend against a high bandwidth timewarp attacker will begin to degrade.
     - Set `MINCHAINWORK_HEADERS` to the height used for the `nMinimumChainWork` calculation above.
