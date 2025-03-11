@@ -5,15 +5,22 @@
 #ifndef BITCOIN_CHECKQUEUE_H
 #define BITCOIN_CHECKQUEUE_H
 
+#include <batchverify.h>
 #include <logging.h>
 #include <sync.h>
 #include <tinyformat.h>
+#include <script/script_error.h>
 #include <util/threadnames.h>
 
 #include <algorithm>
 #include <iterator>
 #include <optional>
+#include <utility>
+#include <variant>
 #include <vector>
+
+using ScriptFailureResult = std::pair<ScriptError, std::string>;
+using BatchableResult = std::variant<std::vector<SchnorrSignatureToVerify>, ScriptFailureResult>;
 
 /**
  * Queue for verifications that have to be performed.
@@ -33,6 +40,14 @@ template <typename T, typename R = std::remove_cvref_t<decltype(std::declval<T>(
 class CCheckQueue
 {
 private:
+    template <typename U>
+    struct is_batchable_result : std::is_same<U, BatchableResult> {};
+
+    template <typename U>
+    inline static constexpr bool is_batchable_result_v = is_batchable_result<U>::value;
+
+    BatchSchnorrVerifier m_batch;
+
     //! Mutex to protect the inner state
     Mutex m_mutex;
 
@@ -97,6 +112,13 @@ private:
                 // logically, the do loop starts here
                 while (queue.empty() && !m_request_stop) {
                     if (fMaster && nTodo == 0) {
+                        // All checks are done; master performs batch verification
+                        if constexpr (std::is_same_v<R, ScriptFailureResult>) {
+                            if (!m_batch.Verify()) {
+                                m_result = ScriptFailureResult(SCRIPT_ERR_BATCH_VALIDATION_FAILED, "Schnorr batch validation failed");
+                            }
+                            m_batch.Reset();
+                        }
                         nTotal--;
                         std::optional<R> to_return = std::move(m_result);
                         // reset the status for new work later
@@ -128,8 +150,22 @@ private:
             // execute work
             if (do_work) {
                 for (T& check : vChecks) {
-                    local_result = check();
-                    if (local_result.has_value()) break;
+                    auto check_result = check();
+
+                    if constexpr (is_batchable_result_v<decltype(check_result)>) {
+                        if (std::holds_alternative<ScriptFailureResult>(check_result)) {
+                            local_result = std::get<ScriptFailureResult>(check_result);
+                            break;
+                        }
+                        // Check succeeded; add signatures to shared batch
+                        const auto& signatures = std::get<std::vector<SchnorrSignatureToVerify>>(check_result);
+                        for (const auto& sig : signatures) {
+                            m_batch.Add(sig.sig, sig.pubkey, sig.sighash);
+                        }
+                    } else {
+                        local_result = check_result;
+                        if (local_result.has_value()) break;
+                    }
                 }
             }
             vChecks.clear();
@@ -215,7 +251,7 @@ public:
     CCheckQueueControl() = delete;
     CCheckQueueControl(const CCheckQueueControl&) = delete;
     CCheckQueueControl& operator=(const CCheckQueueControl&) = delete;
-    explicit CCheckQueueControl(CCheckQueue<T> * const pqueueIn) : pqueue(pqueueIn), fDone(false)
+    explicit CCheckQueueControl(CCheckQueue<T, R> * const pqueueIn) : pqueue(pqueueIn), fDone(false)
     {
         // passed queue is supposed to be unused, or nullptr
         if (pqueue != nullptr) {
