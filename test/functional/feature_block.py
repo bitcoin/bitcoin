@@ -193,7 +193,7 @@ class FullBlockTest(BitcoinTestFramework):
             blockname = f"for_invalid.{TxTemplate.__name__}"
             self.next_block(blockname)
             badtx = template.get_tx()
-            if TxTemplate != invalid_txs.InputMissing:
+            if TxTemplate != invalid_txs.InputMissing and TxTemplate != invalid_txs.SizeExactly64:
                 self.sign_tx(badtx, attempt_spend_tx)
             badblock = self.update_block(blockname, [badtx])
             reject_reason = (template.block_reject_reason or template.reject_reason)
