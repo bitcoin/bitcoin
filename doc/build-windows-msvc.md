@@ -82,7 +82,7 @@ ctest --test-dir build --build-config Release  # Use "-j N" for N parallel tests
 
 ### 6. vcpkg Manifest Default Features
 
-One can skip vcpkg manifest default features to speedup the configuration step.
+One can skip vcpkg manifest default features to speed up the configuration step.
 For example, the following invocation will skip all features except for "wallet" and "tests" and their dependencies:
 ```
 cmake -B build --preset vs2022 -DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="wallet;tests" -DBUILD_GUI=OFF
