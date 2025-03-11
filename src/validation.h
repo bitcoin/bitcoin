@@ -1481,7 +1481,8 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        bool cacheSigStore,
                        bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
                        ValidationCache& validation_cache,
-                       std::vector<BatchableScriptCheck>* pvChecks = nullptr)
+                       std::vector<BatchableScriptCheck>* pvChecks = nullptr,
+                       BatchSchnorrVerifier* batch = nullptr)
                        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 #endif // BITCOIN_VALIDATION_H
