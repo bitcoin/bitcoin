@@ -2068,7 +2068,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        bool cacheSigStore,
                        bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
                        ValidationCache& validation_cache,
-                       std::vector<CScriptCheck>* pvChecks)
+                       std::vector<BatchableScriptCheck>* pvChecks)
 {
     if (tx.IsCoinBase()) return true;
 
@@ -2602,7 +2602,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     // doesn't invalidate pointers into the vector, and keep txsdata in scope
     // for as long as `control`.
     std::vector<PrecomputedTransactionData> txsdata(block.vtx.size());
-    std::optional<CCheckQueueControl<CScriptCheck>> control;
+    std::optional<CCheckQueueControl<BatchableScriptCheck, ScriptFailureResult>> control;
     if (auto& queue = m_chainman.GetCheckQueue(); queue.HasThreads() && fScriptChecks) control.emplace(queue);
 
     std::vector<int> prevheights;
@@ -2668,7 +2668,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
             // If CheckInputScripts is called with a pointer to a checks vector, the resulting checks are appended to it. In that case
             // they need to be added to control which runs them asynchronously. Otherwise, CheckInputScripts runs the checks before returning.
             if (control) {
-                std::vector<CScriptCheck> vChecks;
+                std::vector<BatchableScriptCheck> vChecks;
                 tx_ok = CheckInputScripts(tx, tx_state, view, flags, CheckInputScriptsFor::Block, fCacheResults, fCacheResults, txsdata[i], m_chainman.m_validation_cache, &vChecks);
                 if (tx_ok) control->Add(std::move(vChecks));
             } else {
