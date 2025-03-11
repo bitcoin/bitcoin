@@ -998,7 +998,7 @@ private:
     MockableSteadyClock::time_point m_last_presync_update GUARDED_BY(GetMutex()){};
 
     //! A queue for script verifications that have to be performed by worker threads.
-    CCheckQueue<CScriptCheck> m_script_check_queue;
+    CCheckQueue<BatchableScriptCheck, ScriptFailureResult> m_script_check_queue;
 
     //! Timers and counters used for benchmarking validation in both background
     //! and active chainstates.
@@ -1395,7 +1395,7 @@ public:
     //! or nullopt if the best header does not extend the tip.
     std::optional<int> BlocksAheadOfTip() const LOCKS_EXCLUDED(::cs_main);
 
-    CCheckQueue<CScriptCheck>& GetCheckQueue() { return m_script_check_queue; }
+    CCheckQueue<BatchableScriptCheck, ScriptFailureResult>& GetCheckQueue() { return m_script_check_queue; }
 
     ~ChainstateManager();
 
