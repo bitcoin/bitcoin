@@ -5,6 +5,8 @@
 #ifndef BITCOIN_CHECKQUEUE_H
 #define BITCOIN_CHECKQUEUE_H
 
+#include <batchverify.h>
+#include <script/script_error.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <util/log.h>
@@ -13,7 +15,12 @@
 #include <algorithm>
 #include <iterator>
 #include <optional>
+#include <utility>
+#include <variant>
 #include <vector>
+
+using ScriptFailureResult = std::pair<ScriptError, std::string>;
+using BatchableResult = std::variant<std::vector<SchnorrSignatureToVerify>, ScriptFailureResult>;
 
 /**
  * Queue for verifications that have to be performed.
@@ -33,6 +40,10 @@ template <typename T, typename R = std::remove_cvref_t<decltype(std::declval<T>(
 class CCheckQueue
 {
 private:
+    //! Whether T's checks defer their Schnorr signatures into a batch that has
+    //! to be verified before the queue's result is final.
+    static constexpr bool is_batched{std::is_same_v<decltype(std::declval<T>()()), BatchableResult>};
+
     //! Mutex to protect the inner state
     Mutex m_mutex;
 
@@ -54,6 +65,12 @@ private:
 
     //! The temporary evaluation result.
     std::optional<R> m_result GUARDED_BY(m_mutex);
+
+    //! All checks for the current block have been added.
+    bool m_complete GUARDED_BY(m_mutex){false};
+
+    //! Total number of threads that have verified their batch (including master).
+    int m_total_verified GUARDED_BY(m_mutex){0};
 
     /**
      * Number of verifications that haven't completed yet.
@@ -78,32 +95,76 @@ private:
         unsigned int nNow = 0;
         std::optional<R> local_result;
         bool do_work;
+        bool do_verify_batch{false};
+        std::optional<BatchSchnorrVerifier> batch;
+        if constexpr (is_batched) batch.emplace();
         do {
             {
                 WAIT_LOCK(m_mutex, lock);
                 // first do the clean-up of the previous loop run (allowing us to do it in the same critsect)
-                if (nNow) {
+                if (do_verify_batch) {
                     if (local_result.has_value() && !m_result.has_value()) {
                         std::swap(local_result, m_result);
                     }
-                    nTodo -= nNow;
-                    if (nTodo == 0 && !fMaster) {
-                        // We processed the last element; inform the master it can exit and return the result
-                        m_master_cv.notify_one();
-                    }
                 } else {
-                    // first iteration
-                    nTotal++;
+                    if (nNow) {
+                        if (local_result.has_value() && !m_result.has_value()) {
+                            std::swap(local_result, m_result);
+                        }
+                        nTodo -= nNow;
+                        if constexpr (is_batched) {
+                            if (nTodo == 0 && m_complete) {
+                                // All checks are done and no more will be added
+                                // Notify all threads to verify their batches
+                                m_worker_cv.notify_all();
+                                m_master_cv.notify_one();
+                            }
+                        } else {
+                            if (nTodo == 0 && !fMaster) {
+                                // We processed the last element; inform the master it can exit and return the result
+                                m_master_cv.notify_one();
+                            }
+                        }
+                    } else {
+                        // first iteration
+                        nTotal++;
+                    }
                 }
                 // logically, the do loop starts here
                 while (queue.empty() && !m_request_stop) {
-                    if (fMaster && nTodo == 0) {
-                        nTotal--;
-                        std::optional<R> to_return = std::move(m_result);
-                        // reset the status for new work later
-                        m_result = std::nullopt;
-                        // return the current status
-                        return to_return;
+                    if constexpr (is_batched) {
+                        if (m_complete && nTodo == 0) {
+                            if (m_total_verified != nTotal) {
+                                if (!do_verify_batch) {
+                                    do_verify_batch = true;
+                                    break;
+                                } else {
+                                    m_total_verified++;
+                                    do_verify_batch = false;
+
+                                    if (m_total_verified == nTotal && !fMaster) {
+                                        m_master_cv.notify_one();
+                                    }
+                                }
+                            }
+                            if (fMaster && m_total_verified == nTotal) {
+                                m_complete = false;
+                                m_total_verified = 0;
+                                nTotal--;
+                                std::optional<R> to_return = std::move(m_result);
+                                m_result = std::nullopt;
+                                return to_return;
+                            }
+                        }
+                    } else {
+                        if (fMaster && nTodo == 0) {
+                            nTotal--;
+                            std::optional<R> to_return = std::move(m_result);
+                            // reset the status for new work later
+                            m_result = std::nullopt;
+                            // return the current status
+                            return to_return;
+                        }
                     }
                     nIdle++;
                     cond.wait(lock); // wait
@@ -114,23 +175,54 @@ private:
                     return std::nullopt;
                 }
 
-                // Decide how many work units to process now.
-                // * Do not try to do everything at once, but aim for increasingly smaller batches so
-                //   all workers finish approximately simultaneously.
-                // * Try to account for idle jobs which will instantly start helping.
-                // * Don't do batches smaller than 1 (duh), or larger than nBatchSize.
-                nNow = std::max(1U, std::min(nBatchSize, (unsigned int)queue.size() / (nTotal + nIdle + 1)));
-                auto start_it = queue.end() - nNow;
-                vChecks.assign(std::make_move_iterator(start_it), std::make_move_iterator(queue.end()));
-                queue.erase(start_it, queue.end());
-                // Check whether we need to do work at all
-                do_work = !m_result.has_value();
+                if (!do_verify_batch) {
+                    // Decide how many work units to process now.
+                    // * Do not try to do everything at once, but aim for increasingly smaller batches so
+                    //   all workers finish approximately simultaneously.
+                    // * Try to account for idle jobs which will instantly start helping.
+                    // * Don't do batches smaller than 1 (duh), or larger than nBatchSize.
+                    nNow = std::max(1U, std::min(nBatchSize, (unsigned int)queue.size() / (nTotal + nIdle + 1)));
+                    auto start_it = queue.end() - nNow;
+                    vChecks.assign(std::make_move_iterator(start_it), std::make_move_iterator(queue.end()));
+                    queue.erase(start_it, queue.end());
+                    // Check whether we need to do work at all
+                    do_work = !m_result.has_value();
+                } else {
+                    nNow = 0;
+                    do_work = false;
+                }
+            }
+            // Verify Schnorr signatures in batch
+            if constexpr (is_batched) {
+                if (do_verify_batch) {
+                    if (!batch->Verify()) {
+                        local_result = ScriptFailureResult(SCRIPT_ERR_BATCH_VALIDATION_FAILED, "Schnorr batch validation failed");
+                    }
+                    batch->Reset();
+                }
             }
             // execute work
             if (do_work) {
                 for (T& check : vChecks) {
-                    local_result = check();
-                    if (local_result.has_value()) break;
+                    auto check_result = check();
+
+                    if constexpr (is_batched) {
+                        if (std::holds_alternative<ScriptFailureResult>(check_result)) {
+                            local_result = std::get<ScriptFailureResult>(check_result);
+                            break;
+                        }
+                        // Check succeeded; add the signatures to thread local batch
+                        const auto& signatures = std::get<std::vector<SchnorrSignatureToVerify>>(check_result);
+                        for (const auto& sig : signatures) {
+                            if (!batch->Add(sig.sig, sig.pubkey, sig.sighash)) {
+                                local_result = ScriptFailureResult(SCRIPT_ERR_BATCH_VALIDATION_FAILED, "Schnorr batch validation failed");
+                                break;
+                            }
+                        }
+                    } else {
+                        local_result = check_result;
+                        if (local_result.has_value()) break;
+                    }
                 }
             }
             vChecks.clear();
@@ -166,6 +258,10 @@ public:
     //! its error.
     std::optional<R> Complete() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        if constexpr (is_batched) {
+            WITH_LOCK(m_mutex, m_complete = true);
+            m_worker_cv.notify_all();
+        }
         return Loop(true /* master thread */);
     }
 
@@ -217,7 +313,7 @@ public:
     CCheckQueueControl() = delete;
     CCheckQueueControl(const CCheckQueueControl&) = delete;
     CCheckQueueControl& operator=(const CCheckQueueControl&) = delete;
-    explicit CCheckQueueControl(CCheckQueue<T>& queueIn) EXCLUSIVE_LOCK_FUNCTION(queueIn.m_control_mutex) : m_queue(queueIn), m_lock(LOCK_ARGS(queueIn.m_control_mutex)), fDone(false) {}
+    explicit CCheckQueueControl(CCheckQueue<T, R>& queueIn) EXCLUSIVE_LOCK_FUNCTION(queueIn.m_control_mutex) : m_queue(queueIn), m_lock(LOCK_ARGS(queueIn.m_control_mutex)), fDone(false) {}
 
     std::optional<R> Complete()
     {

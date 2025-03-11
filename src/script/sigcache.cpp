@@ -101,7 +101,6 @@ bool CollectingSignatureChecker::VerifySchnorrSignature(std::span<const unsigned
     Assume(sig.size() == 64);
     std::array<unsigned char, 64> sig64{};
     std::copy(sig.begin(), sig.end(), sig64.begin());
-    SchnorrSignatureToVerify to_verify{sig64, pubkey, sighash};
-    m_collected_signatures.push_back(to_verify);
+    m_collected_signatures.emplace_back(sig64, pubkey, sighash);
     return true;
 }
