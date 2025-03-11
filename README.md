@@ -1,3 +1,5 @@
+[![](https://github.com/bitcoin/bitcoin/actions/workflows/ci.yml/badge.svg)](https://github.com/bitcoin/bitcoin/actions/workflows/ci.yml)
+
 Bitcoin Core integration/staging tree
 =====================================
 
