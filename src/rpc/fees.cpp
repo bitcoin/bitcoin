@@ -7,7 +7,9 @@
 #include <core_io.h>
 #include <node/context.h>
 #include <policy/feerate.h>
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
+#include <policy/fees/forecaster_man.h>
+#include <policy/fees/forecaster_util.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <rpc/server.h>
@@ -59,12 +61,12 @@ static RPCHelpMan estimatesmartfee()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
-            CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
+            CBlockPolicyEstimator& block_policy_fee_estimator = *(EnsureAnyForecasterMan(request.context).GetBlockPolicyEstimator());
             const NodeContext& node = EnsureAnyNodeContext(request.context);
             const CTxMemPool& mempool = EnsureMemPool(node);
 
             CHECK_NONFATAL(mempool.m_opts.signals)->SyncWithValidationInterfaceQueue();
-            unsigned int max_target = fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
+            unsigned int max_target = block_policy_fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
             unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
             bool conservative = false;
             if (!request.params[1].isNull()) {
@@ -78,7 +80,7 @@ static RPCHelpMan estimatesmartfee()
             UniValue result(UniValue::VOBJ);
             UniValue errors(UniValue::VARR);
             FeeCalculation feeCalc;
-            CFeeRate feeRate{fee_estimator.estimateSmartFee(conf_target, &feeCalc, conservative)};
+            CFeeRate feeRate{block_policy_fee_estimator.estimateSmartFee(conf_target, &feeCalc, conservative)};
             if (feeRate != CFeeRate(0)) {
                 CFeeRate min_mempool_feerate{mempool.GetMinFee()};
                 CFeeRate min_relay_feerate{mempool.m_opts.min_relay_feerate};
@@ -89,6 +91,60 @@ static RPCHelpMan estimatesmartfee()
                 result.pushKV("errors", std::move(errors));
             }
             result.pushKV("blocks", feeCalc.returnedTarget);
+            return result;
+        },
+    };
+}
+
+static RPCHelpMan estimatefee()
+{
+    return RPCHelpMan{
+        "estimatefee",
+        "\nEstimates the approximate fee per kilobyte needed for a transaction to begin\n"
+        "confirmation within conf_target blocks if possible Uses virtual transaction size as defined\n"
+        "in BIP 141 (witness data is discounted).\n",
+        {
+            {"conf_target", RPCArg::Type::NUM, RPCArg::Optional::NO, "Confirmation target in blocks"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "", {
+                                              {RPCResult::Type::NUM, "minrelayfee", /*optional=*/true, "Minimum fee rate in " + CURRENCY_UNIT + "/kvB that a transaction has to pay to be relayed in the network"},
+                                              {RPCResult::Type::NUM, "low", /*optional=*/true, "fee rate estimate in " + CURRENCY_UNIT + "/kvB for economical users"},
+                                              {RPCResult::Type::NUM, "high", /*optional=*/true, "fee rate estimate in " + CURRENCY_UNIT + "/kvB for conservative users"},
+                                              {RPCResult::Type::STR, "forecaster", /*optional=*/true, "the forecaster that provide the fee rate estimate"},
+                                              {RPCResult::Type::ARR, "errors", /*optional=*/true, "Errors encountered during processing (if there are any)", {
+                                                                                                                                                                 {RPCResult::Type::STR, "", "error"},
+                                                                                                                                                             }},
+                                          }},
+        RPCExamples{HelpExampleCli("estimatefee", "2") + HelpExampleRpc("estimatefee", "2")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            const auto targetBlocks = request.params[0].getInt<int>();
+            UniValue result(UniValue::VOBJ);
+            UniValue errors(UniValue::VARR);
+            if (targetBlocks <= 0) {
+                errors.push_back("confirmation target must be greater than 0");
+                result.pushKV("errors", errors);
+                return result;
+            }
+            const NodeContext& node = EnsureAnyNodeContext(request.context);
+            const CTxMemPool& mempool = EnsureMemPool(node);
+            FeeRateForecasterManager& forecasterman = EnsureAnyForecasterMan(request.context);
+            ConfirmationTarget target = {/*value=*/static_cast<unsigned int>(targetBlocks), /*type*/ ConfirmationTargetType::BLOCKS};
+            auto forecast_result = forecasterman.GetFeeEstimateFromForecasters(target);
+            CFeeRate min_relay_feerate{mempool.m_opts.min_relay_feerate};
+            result.pushKV("minrelayfee", ValueFromAmount(min_relay_feerate.GetFeePerK()));
+            if (forecast_result.first && !forecast_result.first->Empty()) {
+                result.pushKV("low", ValueFromAmount(CFeeRate(forecast_result.first->GetResponse().low_priority.fee, forecast_result.first->GetResponse().low_priority.size).GetFeePerK()));
+                result.pushKV("high", ValueFromAmount(CFeeRate(forecast_result.first->GetResponse().high_priority.fee, forecast_result.first->GetResponse().high_priority.size).GetFeePerK()));
+                result.pushKV("forecaster", forecastTypeToString(forecast_result.first->GetResponse().forecaster));
+            } else {
+                errors.push_back("Failed to get estimate from forecasters");
+            }
+
+            for (auto& err : forecast_result.second) {
+                errors.push_back(err);
+            }
+            result.pushKV("errors", errors);
             return result;
         },
     };
@@ -150,11 +206,11 @@ static RPCHelpMan estimaterawfee()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
-            CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
+            CBlockPolicyEstimator& block_policy_fee_estimator = *(EnsureAnyForecasterMan(request.context).GetBlockPolicyEstimator());
             const NodeContext& node = EnsureAnyNodeContext(request.context);
 
             CHECK_NONFATAL(node.validation_signals)->SyncWithValidationInterfaceQueue();
-            unsigned int max_target = fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
+            unsigned int max_target = block_policy_fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
             unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
             double threshold = 0.95;
             if (!request.params[1].isNull()) {
@@ -171,9 +227,9 @@ static RPCHelpMan estimaterawfee()
                 EstimationResult buckets;
 
                 // Only output results for horizons which track the target
-                if (conf_target > fee_estimator.HighestTargetTracked(horizon)) continue;
+                if (conf_target > block_policy_fee_estimator.HighestTargetTracked(horizon)) continue;
 
-                feeRate = fee_estimator.estimateRawFee(conf_target, threshold, horizon, &buckets);
+                feeRate = block_policy_fee_estimator.estimateRawFee(conf_target, threshold, horizon, &buckets);
                 UniValue horizon_result(UniValue::VOBJ);
                 UniValue errors(UniValue::VARR);
                 UniValue passbucket(UniValue::VOBJ);
@@ -218,6 +274,7 @@ void RegisterFeeRPCCommands(CRPCTable& t)
 {
     static const CRPCCommand commands[]{
         {"util", &estimatesmartfee},
+        {"util", &estimatefee},
         {"hidden", &estimaterawfee},
     };
     for (const auto& c : commands) {
