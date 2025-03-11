@@ -6,6 +6,7 @@
 #ifndef BITCOIN_SCRIPT_SIGCACHE_H
 #define BITCOIN_SCRIPT_SIGCACHE_H
 
+#include <batchverify.h>
 #include <consensus/amount.h>
 #include <crypto/sha256.h>
 #include <cuckoocache.h>
@@ -70,7 +71,24 @@ public:
     CachingTransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, bool storeIn, SignatureCache& signature_cache, PrecomputedTransactionData& txdataIn) : TransactionSignatureChecker(txToIn, nInIn, amountIn, txdataIn, MissingDataBehavior::ASSERT_FAIL), store(storeIn), m_signature_cache(signature_cache)  {}
 
     bool VerifyECDSASignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const override;
+
     bool VerifySchnorrSignature(std::span<const unsigned char> sig, const XOnlyPubKey& pubkey, const uint256& sighash) const override;
+
+    bool GetStore() const { return store; }
+    SignatureCache& GetSigCache() const { return m_signature_cache; }
+};
+
+class CollectingSignatureChecker : public CachingTransactionSignatureChecker {
+private:
+    mutable std::vector<SchnorrSignatureToVerify> m_collected_signatures;
+
+public:
+    CollectingSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn,
+                               bool storeIn, SignatureCache& signature_cache, PrecomputedTransactionData& txdataIn);
+
+    bool VerifySchnorrSignature(std::span<const unsigned char> sig, const XOnlyPubKey& pubkey, const uint256& sighash) const override;
+
+    const std::vector<SchnorrSignatureToVerify>& GetCollectedSignatures() const { return m_collected_signatures; }
 };
 
 #endif // BITCOIN_SCRIPT_SIGCACHE_H
