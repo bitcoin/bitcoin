@@ -17,6 +17,7 @@ add_library(bitcoin_util STATIC EXCLUDE_FROM_ALL
   moneystr.cpp
   rbf.cpp
   readwritefile.cpp
+  result.cpp
   serfloat.cpp
   signalinterrupt.cpp
   sock.cpp
