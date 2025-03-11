@@ -41,6 +41,8 @@ UniValue CMasternodeMetaInfo::ToJson() const
     ret.pushKV("lastOutboundAttemptElapsed", now - lastOutboundAttempt.load());
     ret.pushKV("lastOutboundSuccess", lastOutboundSuccess.load());
     ret.pushKV("lastOutboundSuccessElapsed", now - lastOutboundSuccess.load());
+    ret.pushKV("platform_ban", m_platform_ban);
+    ret.pushKV("platform_ban_updated", m_platform_ban_height);
 
     return ret;
 }
@@ -125,8 +127,31 @@ std::vector<uint256> CMasternodeMetaMan::GetAndClearDirtyGovernanceObjectHashes(
     return vecTmp;
 }
 
+bool CMasternodeMetaMan::AlreadyHavePlatformBan(const uint256& inv_hash) const
+{
+    LOCK(cs);
+    return m_seen_platform_bans.contains(inv_hash);
+}
+
+std::optional<PlatformBanMessage> CMasternodeMetaMan::GetPlatformBan(const uint256& inv_hash) const
+{
+    LOCK(cs);
+    auto it = m_seen_platform_bans.find(inv_hash);
+    if (it == m_seen_platform_bans.end()) return std::nullopt;
+
+    return it->second;
+}
+
+void CMasternodeMetaMan::RememberPlatformBan(const uint256& inv_hash, PlatformBanMessage& msg)
+{
+    LOCK(cs);
+    m_seen_platform_bans.insert({inv_hash, msg});
+}
+
 std::string MasternodeMetaStore::ToString() const
 {
     LOCK(cs);
     return strprintf("Masternodes: meta infos object count: %d, nDsqCount: %d", metaInfos.size(), nDsqCount);
 }
+
+uint256 PlatformBanMessage::GetHash() const { return ::SerializeHash(*this); }

@@ -9,12 +9,13 @@
 #include <evo/providertx.h>
 #include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
-#include <index/txindex.h>
 
 #include <chainparams.h>
 #include <coins.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
+#include <index/txindex.h>
+#include <masternode/meta.h>
 #include <messagesigner.h>
 #include <node/blockstorage.h>
 #include <script/standard.h>
@@ -640,6 +641,23 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<co
 
         oldList = GetListForBlockInternal(pindex->pprev);
         diff = oldList.BuildDiff(newList);
+
+        // apply platform unban for platform revive too
+        for (int i = 1; i < (int)block.vtx.size(); i++) {
+            const CTransaction& tx = *block.vtx[i];
+            if (!tx.IsSpecialTxVersion() || tx.nType != TRANSACTION_PROVIDER_UPDATE_SERVICE) {
+                // only interested in revive transactions
+                continue;
+            }
+            const auto opt_proTx = GetTxPayload<CProUpServTx>(tx);
+            if (!opt_proTx) continue; // should not happen but does not matter
+
+            if (auto meta_info = m_mn_metaman.GetMetaInfo(opt_proTx->proTxHash, false);
+                !meta_info || !meta_info->SetPlatformBan(false, nHeight)) {
+                LogPrint(BCLog::LLMQ, "%s -- MN %s is failed to Platform revived at height %d\n", __func__,
+                         opt_proTx->proTxHash.ToString(), nHeight);
+            }
+        }
 
         m_evoDb.Write(std::make_pair(DB_LIST_DIFF, newList.GetBlockHash()), diff);
         if ((nHeight % DISK_SNAPSHOT_PERIOD) == 0 || pindex->pprev == m_initial_snapshot_index) {
