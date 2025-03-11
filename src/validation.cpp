@@ -806,9 +806,14 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD, reason);
     }
 
-    // Transactions smaller than 65 non-witness bytes are not relayed to mitigate CVE-2017-12842.
-    if (::GetSerializeSize(TX_NO_WITNESS(tx)) < MIN_STANDARD_TX_NONWITNESS_SIZE)
+    // To mitigate CVE-2017-12842, transactions smaller than 65 non-witness bytes are not relayed,
+    // and BIP 54 extends this protection at consensus by making the 64-byte case invalid.
+    const auto stripped_size{::GetSerializeSize(TX_NO_WITNESS(tx))};
+    if (stripped_size == INVALID_TX_NONWITNESS_SIZE) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "txn-size-64", "Transactions with a witness-stripped size of exactly 64 bytes are invalid.");
+    } else if (stripped_size < MIN_STANDARD_TX_NONWITNESS_SIZE) {
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "tx-size-small");
+    }
 
     // Only accept nLockTime-using transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
@@ -4049,7 +4054,7 @@ bool IsBlockMutated(const CBlock& block, bool check_witness_root)
         // Note: This is not a consensus change as this only applies to blocks that
         // don't have a coinbase transaction and would therefore already be invalid.
         return std::any_of(block.vtx.begin(), block.vtx.end(),
-                           [](auto& tx) { return GetSerializeSize(TX_NO_WITNESS(tx)) == 64; });
+                           [](auto& tx) { return GetSerializeSize(TX_NO_WITNESS(tx)) == INVALID_TX_NONWITNESS_SIZE; });
     } else {
         // Theoretically it is still possible for a block with a 64 byte
         // coinbase transaction to be mutated but we neglect that possibility
@@ -4170,8 +4175,12 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
                                       pindexPrev->GetMedianTimePast() :
                                       block.GetBlockTime()};
 
-    // Check that all transactions are finalized
+    // Check that no transaction is 64-byte and that all transactions are finalized.
+    const bool check_txs_size{DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_CONSENSUSCLEANUP)};
     for (const auto& tx : block.vtx) {
+        if (check_txs_size && GetSerializeSize(TX_NO_WITNESS(tx)) == INVALID_TX_NONWITNESS_SIZE) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-size", "block contains a 64 bytes transaction");
+        }
         if (!IsFinalTx(*tx, nHeight, nLockTimeCutoff)) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-nonfinal", "non-final transaction");
         }
