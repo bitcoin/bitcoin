@@ -61,5 +61,5 @@ The following discounts are given to account for the would-be-replaced transacti
 
 1. The descendant count limit is temporarily increased by 1.
 
-2. The descendant size limit temporarily is increased by the virtual size of the to-be-replaced
+2. The descendant size limit is temporarily increased by the virtual size of the to-be-replaced
    directly conflicting transaction.
