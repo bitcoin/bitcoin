@@ -94,7 +94,10 @@ bool CollectingSignatureChecker::VerifySchnorrSignature(std::span<const unsigned
     signature_cache.ComputeEntrySchnorr(entry, sighash, sig, pubkey);
     if (signature_cache.Get(entry, !GetStore())) return true;
 
-    SchnorrSignatureToVerify to_verify{std::vector<unsigned char>(sig.begin(), sig.end()), pubkey, sighash};
-    m_collected_signatures.push_back(to_verify);
+    m_collected_signatures.emplace_back(
+        std::vector<unsigned char>(sig.begin(), sig.end()),
+        pubkey,
+        sighash
+    );
     return true;
 }
