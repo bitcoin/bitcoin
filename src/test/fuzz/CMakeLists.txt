@@ -4,6 +4,14 @@
 
 add_subdirectory(util)
 
+# Visual Studio 2022 version 17.12 introduced a bug
+# that causes an internal compiler error.
+# See:
+#  - https://github.com/bitcoin/bitcoin/issues/31303
+#  - https://developercommunity.visualstudio.com/t/C1001:-Internal-compiler-error-with-st/10830350
+# Fixed in Visual Studio 2022 version 17.14.
+set(compiler_has_bug "$<AND:$<CXX_COMPILER_ID:MSVC>,$<VERSION_GREATER_EQUAL:$<CXX_COMPILER_VERSION>,19.42>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,19.44>>")
+
 add_executable(fuzz
   addition_overflow.cpp
   addrman.cpp
@@ -127,10 +135,7 @@ add_executable(fuzz
   txgraph.cpp
   txorphan.cpp
   txrequest.cpp
-  # Visual Studio 2022 version 17.12 introduced a bug
-  # that causes an internal compiler error.
-  # See: https://github.com/bitcoin/bitcoin/issues/31303
-  $<$<VERSION_LESS:${MSVC_VERSION},1942>:utxo_snapshot.cpp>
+  $<$<NOT:${compiler_has_bug}>:utxo_snapshot.cpp>
   utxo_total_supply.cpp
   validation_load_mempool.cpp
   vecdeque.cpp
