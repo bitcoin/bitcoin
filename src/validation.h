@@ -49,6 +49,7 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
 class Chainstate;
@@ -71,6 +72,9 @@ struct Params;
 namespace util {
 class SignalInterrupt;
 } // namespace util
+
+using ScriptFailureResult = std::pair<ScriptError, std::string>;
+using BatchableResult = std::variant<std::vector<SchnorrSignatureToVerify>, ScriptFailureResult>;
 
 /** Block files containing a block-height within MIN_BLOCKS_TO_KEEP of ActiveChain().Tip() will not be pruned. */
 static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
@@ -340,7 +344,7 @@ bool CheckSequenceLocksAtTip(CBlockIndex* tip,
  */
 class CScriptCheck
 {
-private:
+protected:
     CTxOut m_tx_out;
     const CTransaction *ptxTo;
     unsigned int nIn;
@@ -361,10 +365,24 @@ public:
     std::optional<std::pair<ScriptError, std::string>> operator()();
 };
 
+class BatchableScriptCheck : private CScriptCheck
+{
+public:
+    BatchableScriptCheck(CScriptCheck&& other) : CScriptCheck(std::move(other)) {}
+
+    BatchableResult operator()();
+};
+
 // CScriptCheck is used a lot in std::vector, make sure that's efficient
 static_assert(std::is_nothrow_move_assignable_v<CScriptCheck>);
 static_assert(std::is_nothrow_move_constructible_v<CScriptCheck>);
 static_assert(std::is_nothrow_destructible_v<CScriptCheck>);
+
+// BatchableScriptCheck is what the script check queue actually stores in its
+// std::vector, so it needs the same guarantees.
+static_assert(std::is_nothrow_move_assignable_v<BatchableScriptCheck>);
+static_assert(std::is_nothrow_move_constructible_v<BatchableScriptCheck>);
+static_assert(std::is_nothrow_destructible_v<BatchableScriptCheck>);
 
 /**
  * Convenience class for initializing and passing the script execution cache
