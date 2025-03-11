@@ -972,7 +972,7 @@ private:
     }
 
     //! A queue for script verifications that have to be performed by worker threads.
-    CCheckQueue<CScriptCheck> m_script_check_queue;
+    CCheckQueue<BatchableScriptCheck, ScriptFailureResult> m_script_check_queue;
 
     //! Timers and counters used for benchmarking validation in both background
     //! and active chainstates.
@@ -1330,7 +1330,7 @@ public:
     //! header in our block-index not known to be invalid, recalculate it.
     void RecalculateBestHeader() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    CCheckQueue<CScriptCheck>& GetCheckQueue() { return m_script_check_queue; }
+    CCheckQueue<BatchableScriptCheck, ScriptFailureResult>& GetCheckQueue() { return m_script_check_queue; }
 
     ~ChainstateManager();
 };
