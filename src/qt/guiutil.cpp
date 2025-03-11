@@ -174,26 +174,31 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
         if (i->first == "label")
         {
             rv.label = i->second;
-            fShouldReturnFalse = false;
         }
-        if (i->first == "message")
+        else if (i->first == "message")
         {
             rv.message = i->second;
-            fShouldReturnFalse = false;
         }
         else if (i->first == "amount")
         {
             if(!i->second.isEmpty())
             {
-                if (!BitcoinUnits::parse(BitcoinUnit::BTC, i->second, &rv.amount)) {
+                if(!BitcoinUnits::parse(BitcoinUnits::BTC, i->second, &rv.amount))
+                {
                     return false;
                 }
             }
-            fShouldReturnFalse = false;
         }
-
-        if (fShouldReturnFalse)
+        else if (i->first == "addresses")
+        {
+            // Handle multiple addresses for unauthenticated payment requests
+            // Store them in the new addressList field
+            rv.addressList = i->second;
+        }
+        else if (fShouldReturnFalse)
+        {
             return false;
+        }
     }
     if(out)
     {
