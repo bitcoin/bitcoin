@@ -58,7 +58,14 @@ void ReceiveRequestDialog::setInfo(const SendCoinsRecipient &_info)
 #endif
 
     ui->uri_content->setText("<a href=\"" + uri + "\">" + GUIUtil::HtmlEscape(uri) + "</a>");
-    ui->address_content->setText(info.address);
+
+    // Use addressList if available (for unauthenticated payment requests with multiple addresses)
+    // Otherwise use the single address
+    if (!info.addressList.isEmpty()) {
+        ui->address_content->setText(info.addressList);
+    } else {
+        ui->address_content->setText(info.address);
+    }
 
     if (!info.amount) {
         ui->amount_tag->hide();
@@ -90,7 +97,17 @@ void ReceiveRequestDialog::setInfo(const SendCoinsRecipient &_info)
     ui->btnVerify->setVisible(model->wallet().hasExternalSigner());
 
     connect(ui->btnVerify, &QPushButton::clicked, [this] {
-        model->displayAddress(info.address.toStdString());
+        // If we have a list of addresses, use the first one for verification
+        if (!info.addressList.isEmpty()) {
+            QString firstAddress = info.addressList;
+            int brPos = firstAddress.indexOf("<br />");
+            if (brPos > 0) {
+                firstAddress = firstAddress.left(brPos);
+            }
+            model->displayAddress(firstAddress.toStdString());
+        } else {
+            model->displayAddress(info.address.toStdString());
+        }
     });
 }
 
@@ -107,5 +124,9 @@ void ReceiveRequestDialog::on_btnCopyURI_clicked()
 
 void ReceiveRequestDialog::on_btnCopyAddress_clicked()
 {
-    GUIUtil::setClipboard(info.address);
+    if (!info.addressList.isEmpty()) {
+        GUIUtil::setClipboard(info.addressList);
+    } else {
+        GUIUtil::setClipboard(info.address);
+    }
 }
