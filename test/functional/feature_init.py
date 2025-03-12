@@ -4,10 +4,13 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests related to node initialization."""
 from pathlib import Path
+import os
 import platform
 import shutil
+import signal
+import subprocess
 
-from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import (
     BITCOIN_PID_FILENAME_DEFAULT,
     ErrorMatch,
@@ -33,20 +36,17 @@ class InitTest(BitcoinTestFramework):
         - test terminating initialization after seeing a certain log line.
         - test removing certain essential files to test startup error paths.
         """
-        # TODO: skip Windows for now since it isn't clear how to SIGTERM.
-        #
-        # Windows doesn't support `process.terminate()`.
-        # and other approaches (like below) don't work:
-        #
-        #   os.kill(node.process.pid, signal.CTRL_C_EVENT)
-        if platform.system() == 'Windows':
-            raise SkipTest("can't SIGTERM on Windows")
-
         self.stop_node(0)
         node = self.nodes[0]
 
         def sigterm_node():
-            node.process.terminate()
+            if platform.system() == 'Windows':
+                # Don't call Python's terminate() since it calls
+                # TerminateProcess(), which unlike SIGTERM doesn't allow
+                # bitcoind to perform any shutdown logic.
+                os.kill(node.process.pid, signal.CTRL_BREAK_EVENT)
+            else:
+                node.process.terminate()
             node.process.wait()
 
         def start_expecting_error(err_fragment):
@@ -86,10 +86,16 @@ class InitTest(BitcoinTestFramework):
         if self.is_wallet_compiled():
             lines_to_terminate_after.append(b'Verifying wallet')
 
+        args = ['-txindex=1', '-blockfilterindex=1', '-coinstatsindex=1']
         for terminate_line in lines_to_terminate_after:
             self.log.info(f"Starting node and will exit after line {terminate_line}")
             with node.busy_wait_for_debug_log([terminate_line]):
-                node.start(extra_args=['-txindex=1', '-blockfilterindex=1', '-coinstatsindex=1'])
+                if platform.system() == 'Windows':
+                    # CREATE_NEW_PROCESS_GROUP is required in order to be able
+                    # to terminate the child without terminating the test.
+                    node.start(extra_args=args, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+                else:
+                    node.start(extra_args=args)
             self.log.debug("Terminating node after terminate line was found")
             sigterm_node()
 
