@@ -3,7 +3,6 @@
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <bitcoin-build-config.h> // IWYU pragma: keep
 #include <random.h>
 #include <support/allocators/secure.h>
 #include <test/util/setup_common.h>
@@ -61,9 +60,7 @@ static void WalletCreate(benchmark::Bench& bench, bool encrypted)
 static void WalletCreatePlain(benchmark::Bench& bench) { WalletCreate(bench, /*encrypted=*/false); }
 static void WalletCreateEncrypted(benchmark::Bench& bench) { WalletCreate(bench, /*encrypted=*/true); }
 
-#ifdef USE_SQLITE
 BENCHMARK(WalletCreatePlain, benchmark::PriorityLevel::LOW);
 BENCHMARK(WalletCreateEncrypted, benchmark::PriorityLevel::LOW);
-#endif
 
 } // namespace wallet

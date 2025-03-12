@@ -367,8 +367,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.do_tool_createfromdump("load", "wallet.dump")
         if self.is_bdb_compiled():
             self.do_tool_createfromdump("load-bdb", "wallet.dump", "bdb")
-        if self.is_sqlite_compiled():
-            self.do_tool_createfromdump("load-sqlite", "wallet.dump", "sqlite")
+        self.do_tool_createfromdump("load-sqlite", "wallet.dump", "sqlite")
 
         self.log.info('Checking createfromdump handling of magic and versions')
         bad_ver_wallet_dump = self.nodes[0].datadir_path / "wallet-bad_ver1.dump"

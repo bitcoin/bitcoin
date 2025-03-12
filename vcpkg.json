@@ -11,6 +11,7 @@
     "qt5",
     "tests",
     "wallet",
+    "berkeleydb",
     "zeromq"
   ],
   "features": {
@@ -28,12 +29,6 @@
         "libqrencode"
       ]
     },
-    "sqlite": {
-      "description": "Enable SQLite wallet support",
-      "dependencies": [
-        "sqlite3"
-      ]
-    },
     "tests": {
       "description": "Build test_bitcoin.exe executable",
       "dependencies": [
@@ -41,9 +36,8 @@
       ]
     },
     "wallet": {
-      "description": "Enable wallet",
+      "description": "Enable wallet (SQLite)",
       "dependencies": [
-        "berkeleydb",
         "sqlite3"
       ]
     },

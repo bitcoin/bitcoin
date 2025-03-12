@@ -115,9 +115,8 @@ The following can be set when running make: `make FOO=bar`
 - `NO_QT`: Don't download/build/cache Qt and its dependencies
 - `NO_QR`: Don't download/build/cache packages needed for enabling qrencode
 - `NO_ZMQ`: Don't download/build/cache packages needed for enabling ZeroMQ
-- `NO_WALLET`: Don't download/build/cache libs needed to enable the wallet
+- `NO_WALLET`: Don't download/build/cache libs needed to enable the wallet (SQLite)
 - `NO_BDB`: Don't download/build/cache BerkeleyDB
-- `NO_SQLITE`: Don't download/build/cache SQLite
 - `NO_USDT`: Don't download/build/cache packages needed for enabling USDT tracepoints
 - `MULTIPROCESS`: Build libmultiprocess (experimental)
 - `DEBUG`: Disable some optimizations and enable more runtime checking

@@ -2,8 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
-
 #include <bench/bench.h>
 #include <kernel/chain.h>
 #include <interfaces/chain.h>
@@ -16,8 +14,6 @@
 #include <wallet/wallet.h>
 
 #include <optional>
-
-#if defined(USE_SQLITE) // only enable benchmark when sqlite is enabled
 
 namespace wallet{
 
@@ -75,5 +71,3 @@ static void WalletMigration(benchmark::Bench& bench)
 BENCHMARK(WalletMigration, benchmark::PriorityLevel::LOW);
 
 } // namespace wallet
-
-#endif // end USE_SQLITE && USE_BDB

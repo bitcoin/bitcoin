@@ -37,7 +37,6 @@ NO_LIBEVENT ?=
 NO_QT ?=
 NO_QR ?=
 NO_BDB ?=
-NO_SQLITE ?=
 NO_WALLET ?=
 NO_ZMQ ?=
 NO_USDT ?=
@@ -161,8 +160,7 @@ qrencode_packages_$(NO_QR) = $(qrencode_$(host_os)_packages)
 qt_packages_$(NO_QT) = $(qt_packages) $(qt_$(host_os)_packages) $(qt_$(host_arch)_$(host_os)_packages) $(qrencode_packages_)
 
 bdb_packages_$(NO_BDB) = $(bdb_packages)
-sqlite_packages_$(NO_SQLITE) = $(sqlite_packages)
-wallet_packages_$(NO_WALLET) = $(bdb_packages_) $(sqlite_packages_)
+wallet_packages_$(NO_WALLET) = $(bdb_packages_) $(sqlite_packages)
 
 zmq_packages_$(NO_ZMQ) = $(zmq_packages)
 multiprocess_packages_$(MULTIPROCESS) = $(multiprocess_packages)
@@ -234,7 +232,6 @@ $(host_prefix)/toolchain.cmake : toolchain.cmake.in $(host_prefix)/.stamp_$(fina
             -e 's|@zmq_packages@|$(zmq_packages_)|' \
             -e 's|@wallet_packages@|$(wallet_packages_)|' \
             -e 's|@bdb_packages@|$(bdb_packages_)|' \
-            -e 's|@sqlite_packages@|$(sqlite_packages_)|' \
             -e 's|@usdt_packages@|$(usdt_packages_)|' \
             -e 's|@no_harden@|$(NO_HARDEN)|' \
             -e 's|@multiprocess@|$(MULTIPROCESS)|' \
