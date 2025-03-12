@@ -260,6 +260,63 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(!req.LoadBody(reader));
     }
+    {
+        // Support "chunked" transfer. Chunk lengths are ascii-encoded hex integers
+        const std::string ok_chunked = "GET / HTTP/1.0\n"
+                                       "Transfer-Encoding: chunked\n"
+                                       "\n"
+                                       "10\n"
+                                       "{\"method\":\"getbl\n"
+                                       "a\n"
+                                       "ockcount\"}\n"
+                                       "0\n"
+                                       "\n";
+        HTTPRequest req;
+        std::vector<std::byte> buffer{StringToBuffer(ok_chunked)};
+        LineReader reader(buffer, MAX_HEADERS_SIZE);
+        BOOST_CHECK(req.LoadControlData(reader));
+        BOOST_CHECK(req.LoadHeaders(reader));
+        BOOST_CHECK(req.LoadBody(reader));
+        BOOST_CHECK_EQUAL(req.m_body, "{\"method\":\"getblockcount\"}");
+    }
+    {
+        // Invalid "chunked" transfer, using roman numerals instead of hex for chunk length
+        const std::string invalid_chunked = "GET / HTTP/1.0\n"
+                                            "Transfer-Encoding: chunked\n"
+                                            "\n"
+                                            "XVI\n"
+                                            "{\"method\":\"getbl\n"
+                                            "X\n"
+                                            "ockcount\"}\n"
+                                            "0\n"
+                                            "\n";
+        HTTPRequest req;
+        std::vector<std::byte> buffer{StringToBuffer(invalid_chunked)};
+        LineReader reader(buffer, MAX_HEADERS_SIZE);
+        BOOST_CHECK(req.LoadControlData(reader));
+        BOOST_CHECK(req.LoadHeaders(reader));
+        // "Cannot parse chunk length value"
+        BOOST_CHECK_THROW(req.LoadBody(reader), std::runtime_error);
+    }
+    {
+        // Invalid "chunked" transfer, missing chunk termination \n
+        const std::string invalid_chunked = "GET / HTTP/1.0\n"
+                                            "Transfer-Encoding: chunked\n"
+                                            "\n"
+                                            "10\n"
+                                            "{\"method\":\"getbl"
+                                            "a\n"
+                                            "ockcount\"}"
+                                            "0\n"
+                                            "\n";
+        HTTPRequest req;
+        std::vector<std::byte> buffer{StringToBuffer(invalid_chunked)};
+        LineReader reader(buffer, MAX_HEADERS_SIZE);
+        BOOST_CHECK(req.LoadControlData(reader));
+        BOOST_CHECK(req.LoadHeaders(reader));
+        // "Improperly terminated chunk"
+        BOOST_CHECK_THROW(req.LoadBody(reader), std::runtime_error);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(http_server_socket_tests)
