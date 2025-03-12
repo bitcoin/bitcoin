@@ -12,6 +12,29 @@ python3 asmap-tool.py diff /path/to/first.file /path/to/second.file
 python3 asmap-tool.py diff-addrs /path/to/first.file /path/to/second.file addrs.file
 ```
 
+### Encoding and Decoding
+
+ASmap file are somewhat large (~30M) in text form, and should be encoded
+to binary before being used with Bitcoin Core.
+
+The `encode` command takes an ASmap and an output file.
+
+The `--fill`/`-f` flag further reduces the size of the output file
+by assuming an AS assignment for an unmapped network if an adjacent network is assigned.
+This procedure is lossy, in the sense that we trade network-to-AS accuracy
+for a file size reduction. If many ranges in an ASmap are unmapped,
+this can potentially result in many arbitrary reassignments,
+defeating the purpose of providing an accurate ASmap.
+Another consequence is that the resulting encoded file cannot be
+subsequently used for diffs. Therefore only use `--fill` if
+you want to optimise space, you have a reasonably complete map,
+and do not intend to diff the file at a later time.
+
+The `decode` command takes an encoded ASmap and an output file.
+As with `encode`, the `--fill`/`-f` flag reduces the output file size
+by reassigning subnets. Conversely, the `--non-overlapping`/`-n` flag
+increases output size by outputting strictly non-overlapping network ranges.
+
 ### Comparing ASmaps
 
 AS control of IP networks changes frequently, therefore it can be useful to get
