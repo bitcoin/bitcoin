@@ -875,30 +875,96 @@ bool HTTPRequest::LoadHeaders(LineReader& reader)
 bool HTTPRequest::LoadBody(LineReader& reader)
 {
     // https://httpwg.org/specs/rfc9112.html#message.body
+    auto transfer_encoding_header = m_headers.FindFirst("Transfer-Encoding");
+    if (transfer_encoding_header && ToLower(transfer_encoding_header.value()) == "chunked") {
+        // Transfer-Encoding: https://datatracker.ietf.org/doc/html/rfc7230.html#section-3.3.1
+        // Chunked Transfer Coding: https://datatracker.ietf.org/doc/html/rfc7230.html#section-4.1
+        // see evhttp_handle_chunked_read() in libevent http.c
+        while (reader.Remaining() > 0) {
+            auto maybe_chunk_size = reader.ReadLine();
+            if (!maybe_chunk_size) return false;
 
-    // No Content-length or Transfer-Encoding header means no body, see libevent evhttp_get_body()
-    // TODO: we must also implement Transfer-Encoding for chunk-reading
-    auto content_length_values{m_headers.FindAll("Content-Length")};
-    if (content_length_values.empty()) return true;
+            // Allow (but ignore) Chunk Extensions
+            // See https://www.rfc-editor.org/rfc/rfc9112.html#name-chunk-extensions
+            std::string_view chunk_size_noext{maybe_chunk_size.value()};
+            const auto semicolon_pos = chunk_size_noext.find(';');
+            if (semicolon_pos != chunk_size_noext.npos) {
+                chunk_size_noext.remove_suffix(chunk_size_noext.size() - semicolon_pos);
+            }
 
-    // Duplicate Content-Length headers are allowed only if they all have the same value
-    // https://www.rfc-editor.org/rfc/rfc7230#section-3.3.3
-    const auto& first_content_length_value{content_length_values[0]};
-    for (size_t i = 1; i < content_length_values.size(); ++i) {
-        if (content_length_values[i] != first_content_length_value) throw std::runtime_error("Differing Content-Length values");
+            const auto chunk_size{ToIntegral<uint64_t>(util::TrimStringView(chunk_size_noext), /*base=*/16)};
+            if (!chunk_size) throw std::runtime_error("Cannot parse chunk length value");
+
+            if ((m_body.size() > MAX_BODY_SIZE) ||
+                (*chunk_size > MAX_BODY_SIZE - m_body.size()))
+                throw ContentTooLargeError("Chunk will exceed max body size");
+
+            // Last chunk has size 0
+            if (*chunk_size == 0) {
+                // Allow (but ignore) Chunked Trailer section, by
+                // reading CRLF-terminated lines until we read an empty line,
+                // which indicates the end of this request.
+                // See https://httpwg.org/specs/rfc9112.html#rfc.section.7.1.2
+                const size_t trailer_start{reader.Consumed()};
+                while (true) {
+                    auto maybe_trailer = reader.ReadLine();
+                    if (reader.Consumed() - trailer_start > MAX_HEADERS_SIZE) {
+                        throw std::runtime_error("HTTP chunked trailer exceeds size limit");
+                    }
+                    if (!maybe_trailer) return false;
+                    if (maybe_trailer->empty()) break;
+                }
+                // Complete request has been parsed, reader is now pointing
+                // to beginning of next request or end of the buffer.
+                return true;
+            }
+
+            // We are still expecting more data for this chunk
+            if (reader.Remaining() < *chunk_size) {
+                return false;
+            }
+
+            // Pack chunk onto body
+            m_body += reader.ReadLength(*chunk_size);
+
+            // Even though every chunk size is explicitly declared,
+            // they are still terminated by a CRLF we don't need,
+            // just consume it here.
+            auto crlf = reader.ReadLine();
+            if (!crlf) {
+                // CRLF not found before end of buffer: it has not been received by our socket yet.
+                return false;
+            }
+            // CRLF was found but there was unexpected data after the chunk_sized chunk
+            if (!crlf.value().empty()) throw std::runtime_error("Improperly terminated chunk");
+        }
+
+        // We read all the chunks but never got the last chunk, wait for client to send more
+        return false;
+    } else {
+        // No Content-length or Transfer-Encoding header means no body, see libevent evhttp_get_body()
+        auto content_length_values{m_headers.FindAll("Content-Length")};
+        if (content_length_values.empty()) return true;
+
+        // Duplicate Content-Length headers are allowed only if they all have the same value
+        // https://www.rfc-editor.org/rfc/rfc7230#section-3.3.3
+        const auto& first_content_length_value{content_length_values[0]};
+        for (size_t i = 1; i < content_length_values.size(); ++i) {
+            if (content_length_values[i] != first_content_length_value) throw std::runtime_error("Differing Content-Length values");
+        }
+
+        const auto content_length{ToIntegral<uint64_t>(first_content_length_value)};
+        if (!content_length) throw std::runtime_error("Cannot parse Content-Length value");
+
+        if (*content_length > MAX_BODY_SIZE) throw ContentTooLargeError("Max body size exceeded");
+
+        // Not enough data in buffer for expected body
+        if (reader.Remaining() < *content_length) return false;
+
+        m_body = reader.ReadLength(*content_length);
+
+        return true;
     }
-
-    const auto content_length{ToIntegral<uint64_t>(first_content_length_value)};
-    if (!content_length) throw std::runtime_error("Cannot parse Content-Length value");
-
-    if (*content_length > MAX_BODY_SIZE) throw ContentTooLargeError("Max body size exceeded");
-
-    // Not enough data in buffer for expected body
-    if (reader.Remaining() < *content_length) return false;
-
-    m_body = reader.ReadLength(*content_length);
-
-    return true;
 }
 
 util::Expected<void, std::string> HTTPServer::BindAndStartListening(const CService& to)
