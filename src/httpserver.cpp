@@ -839,23 +839,72 @@ bool HTTPRequest::LoadHeaders(LineReader& reader)
 bool HTTPRequest::LoadBody(LineReader& reader)
 {
     // https://httpwg.org/specs/rfc9112.html#message.body
+    auto transfer_encoding_header = m_headers.FindFirst("Transfer-Encoding");
+    if (transfer_encoding_header && ToLower(transfer_encoding_header.value()) == "chunked") {
+        // Transfer-Encoding: https://datatracker.ietf.org/doc/html/rfc7230.html#section-3.3.1
+        // Chunked Transfer Coding: https://datatracker.ietf.org/doc/html/rfc7230.html#section-4.1
+        // see evhttp_handle_chunked_read() in libevent http.c
+        while (reader.Remaining() > 0) {
+            auto maybe_chunk_size = reader.ReadLine();
+            if (!maybe_chunk_size) return false;
 
-    // No Content-length or Transfer-Encoding header means no body, see libevent evhttp_get_body()
-    // TODO: we must also implement Transfer-Encoding for chunk-reading
-    auto content_length_value{m_headers.FindFirst("Content-Length")};
-    if (!content_length_value) return true;
+            // Allow (but ignore) Chunk Extensions
+            // See https://www.rfc-editor.org/rfc/rfc9112.html#name-chunk-extensions
+            std::string_view chunk_size_noext{maybe_chunk_size.value()};
+            const auto semicolon_pos = chunk_size_noext.find(';');
+            if (semicolon_pos != chunk_size_noext.npos) {
+                chunk_size_noext.remove_suffix(chunk_size_noext.size() - semicolon_pos);
+            }
 
-    const auto content_length{ToIntegral<uint64_t>(content_length_value.value())};
-    if (!content_length) throw std::runtime_error("Cannot parse Content-Length value");
+            const auto chunk_size{ToIntegral<uint64_t>(util::TrimStringView(chunk_size_noext), /*base=*/16)};
+            if (!chunk_size) throw std::runtime_error("Cannot parse chunk length value");
 
-    // Not enough data in buffer for expected body
-    if (reader.Remaining() < *content_length) return false;
+            if (*chunk_size + m_body.size() > MAX_SIZE) throw std::runtime_error("Chunk will exceed max body size");
 
-    if (*content_length > MAX_SIZE) throw std::runtime_error("Max body size exceeded");
+            bool last_chunk{*chunk_size == 0};
+            if (!last_chunk) {
+                // We are still expecting more data for this chunk
+                if (reader.Remaining() < *chunk_size) {
+                    return false;
+                }
+                // Pack chunk onto body
+                m_body += reader.ReadLength(*chunk_size);
+            } else {
+                // Allow (but ignore) Chunked Trailer section, by
+                // reading CRLF-terminated lines until we read an empty line,
+                // which indicates the end of this request.
+                // See https://httpwg.org/specs/rfc9112.html#rfc.section.7.1.2
+                while (!reader.ReadLine().value().empty()) {}
+                // Complete request has been parsed, reader is now pointing
+                // to beginning of next request or end of the buffer.
+                return true;
+            }
 
-    m_body = reader.ReadLength(*content_length);
+            // Even though every chunk size is explicitly declared,
+            // they are still terminated by a CRLF we don't need.
+            auto crlf = reader.ReadLine();
+            if (!crlf || !crlf.value().empty()) throw std::runtime_error("Improperly terminated chunk");
+        }
 
-    return true;
+        // We read all the chunks but never got the last chunk, wait for client to send more
+        return false;
+    } else {
+        // No Content-length or Transfer-Encoding header means no body, see libevent evhttp_get_body()
+        auto content_length_value{m_headers.FindFirst("Content-Length")};
+        if (!content_length_value) return true;
+
+        const auto content_length{ToIntegral<uint64_t>(content_length_value.value())};
+        if (!content_length) throw std::runtime_error("Cannot parse Content-Length value");
+
+        // Not enough data in buffer for expected body
+        if (reader.Remaining() < *content_length) return false;
+
+        if (*content_length > MAX_SIZE) throw std::runtime_error("Max body size exceeded");
+
+        m_body = reader.ReadLength(*content_length);
+
+        return true;
+    }
 }
 
 util::Expected<void, std::string> HTTPServer::BindAndStartListening(const CService& to)
