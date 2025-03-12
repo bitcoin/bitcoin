@@ -347,13 +347,11 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         # Check that all prefilled_txn entries match what's in the block.
         for entry in header_and_shortids.prefilled_txn:
-            entry.tx.calc_sha256()
             # This checks the non-witness parts of the tx agree
-            assert_equal(entry.tx.sha256, block.vtx[entry.index].sha256)
+            assert_equal(entry.tx.rehash(), block.vtx[entry.index].rehash())
 
             # And this checks the witness
-            wtxid = entry.tx.calc_sha256(True)
-            assert_equal(wtxid, block.vtx[entry.index].calc_sha256(True))
+            assert_equal(entry.tx.getwtxid(), block.vtx[entry.index].getwtxid())
 
         # Check that the cmpctblock message announced all the transactions.
         assert_equal(len(header_and_shortids.prefilled_txn) + len(header_and_shortids.shortids), len(block.vtx))
@@ -590,10 +588,9 @@ class CompactBlocksTest(BitcoinTestFramework):
                 all_indices = msg.block_txn_request.to_absolute()
                 for index in all_indices:
                     tx = test_node.last_message["blocktxn"].block_transactions.transactions.pop(0)
-                    tx.calc_sha256()
-                    assert_equal(tx.sha256, block.vtx[index].sha256)
+                    assert_equal(tx.rehash(), block.vtx[index].rehash())
                     # Check that the witness matches
-                    assert_equal(tx.calc_sha256(True), block.vtx[index].calc_sha256(True))
+                    assert_equal(tx.getwtxid(), block.vtx[index].getwtxid())
                 test_node.last_message.pop("blocktxn", None)
             current_height -= 1
 
