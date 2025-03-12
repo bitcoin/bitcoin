@@ -14,6 +14,7 @@
 #define BITCOIN_NODE_TYPES_H
 
 #include <cstddef>
+#include <cstdint>
 #include <policy/policy.h>
 #include <script/script.h>
 
@@ -60,6 +61,20 @@ struct BlockCreateOptions {
      * coinbase_max_additional_weight and coinbase_output_max_additional_sigops.
      */
     CScript coinbase_output_script{CScript() << OP_TRUE};
+};
+
+/**
+ * Methods to broadcast a local transaction.
+ * Used to influence `BroadcastTransaction()` and its callers.
+ */
+enum TxBroadcastMethod : uint8_t {
+    /// Add the transaction to the mempool and broadcast to all peers for which tx relay is enabled.
+    ADD_TO_MEMPOOL_AND_BROADCAST_TO_ALL,
+    /// Add the transaction to the mempool, but don't broadcast to anybody.
+    ADD_TO_MEMPOOL_NO_BROADCAST,
+    /// Omit the mempool and directly send the transaction via a few dedicated connections to
+    /// peers on privacy networks.
+    NO_MEMPOOL_PRIVATE_BROADCAST,
 };
 } // namespace node
 
