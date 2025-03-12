@@ -105,6 +105,28 @@ class HTTPBasicsTest (BitcoinTestFramework):
         out1 = conn.getresponse()
         assert_equal(out1.status, http.client.BAD_REQUEST)
 
+        self.log.info("Check HTTP request encoded with chunked transfer")
+        headers_chunked = headers.copy()
+        headers_chunked.update({"Transfer-encoding": "chunked"})
+        body_chunked = [
+            b'{"method": "submitblock", "params": ["',
+            b'0A' * 1000000,
+            b'0B' * 1000000,
+            b'0C' * 1000000,
+            b'0D' * 1000000,
+            b'"]}'
+        ]
+        conn = http.client.HTTPConnection(urlNode2.hostname, urlNode2.port)
+        conn.connect()
+        conn.request(
+            method='POST',
+            url='/',
+            body=iter(body_chunked),
+            headers=headers_chunked,
+            encode_chunked=True)
+        out1 = conn.getresponse().read()
+        assert out1 == b'{"result":"high-hash","error":null}\n'
+
         self.log.info("Check -rpcservertimeout")
         # The test framework typically reuses a single persistent HTTP connection
         # for all RPCs to a TestNode. Because we are setting -rpcservertimeout
