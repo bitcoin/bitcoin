@@ -167,7 +167,7 @@ The order of the output is arbitrary and will differ on different runs of minisk
 
 ## Applications
 
-Communications efficient set reconciliation has been proposed to optimize Bitcoin transaction distribution<sup>[[8]](#myfootnote8)</sup>, which would allow Bitcoin nodes to have many more peers while reducing bandwidth usage. It could also be used for Bitcoin block distribution<sup>[[9]](#myfootnote9)</sup>, particularly for very low bandwidth links such as satellite.  A similar approach (CPISync) is used by PGP SKS keyservers to synchronize their databases efficiently. Secure sketches can also be used as helper data to reliably extract a consistent cryptographic key from fuzzy biometric data while leaking minimal information<sup>[[1]](#myfootnote1)</sup>. They can be combined with [dcnets](https://en.wikipedia.org/wiki/Dining_cryptographers_problem) to create cryptographic multiparty anonymous communication<sup>[[10]](#myfootnote10)</sup>. 
+Communications efficient set reconciliation has been proposed to optimize Bitcoin transaction distribution<sup>[[8]](#myfootnote8)</sup>, which would allow Bitcoin nodes to have many more peers while reducing bandwidth usage. It could also be used for Bitcoin block distribution<sup>[[9]](#myfootnote9)</sup>, particularly for very low bandwidth links such as satellite.  A similar approach (CPISync) is used by PGP SKS keyservers to synchronize their databases efficiently. Secure sketches can also be used as helper data to reliably extract a consistent cryptographic key from fuzzy biometric data while leaking minimal information<sup>[[1]](#myfootnote1)</sup>. They can be combined with [dcnets](https://en.wikipedia.org/wiki/Dining_cryptographers_problem) to create cryptographic multiparty anonymous communication<sup>[[10]](#myfootnote10)</sup>.
 
 ## Implementation notes
 
@@ -186,13 +186,27 @@ Specific algorithms and optimizations used:
 * A (possibly) novel optimization combines a test for unique roots with the Berlekamp trace algorithm.
 
 Some improvements that are still TODO:
-* Explicit formulas for the roots of polynomials of higher degree than 2
-* Subquadratic multiplication and modulus algorithms
-* The [Half-GCD algorithm](http://mathworld.wolfram.com/Half-GCD.html) for faster GCDs
-* An interface for incremental decoding: most of the computation in most failed decodes can be reused when attempting to decode a longer sketch of the same set
-* Platform specific optimizations for platforms other than x86
-* Avoid using slow uint64_t for calculations on 32-bit hosts
-* Optional IBLT / Hybrid and set entropy coder under the same interface
+* **Explicit formulas for the roots of polynomials of higher degree than 2**: Currently, the library uses explicit formulas for quadratic polynomials, but implementing formulas for cubic and quartic polynomials could significantly improve performance for certain use cases. This would accelerate decoding when the difference between sets contains 3-4 elements.
+
+* **Subquadratic multiplication and modulus algorithms**: Implementing algorithms like Karatsuba multiplication or FFT-based methods could improve performance for large field sizes. This would reduce the asymptotic complexity from O(n²) to O(n log n) for certain operations.
+
+* **The [Half-GCD algorithm](http://mathworld.wolfram.com/Half-GCD.html) for faster GCDs**: This would improve the performance of polynomial GCD calculations, which are used during the decoding process. The Half-GCD algorithm has better asymptotic complexity than the standard Euclidean algorithm.
+
+* **An interface for incremental decoding**: Most of the computation in failed decodes can be reused when attempting to decode a longer sketch of the same set. This would be particularly useful in protocols where the sketch size is adaptively increased until decoding succeeds.
+
+* **Platform specific optimizations for platforms other than x86**: The library currently has optimizations for x86 platforms with CLMUL instructions, but could benefit from optimizations for ARM (including NEON instructions), POWER, and other architectures.
+
+* **Avoid using slow uint64_t for calculations on 32-bit hosts**: On 32-bit platforms, 64-bit integer operations can be significantly slower. Implementing specialized code paths for 32-bit platforms would improve performance on these systems.
+
+* **Optional IBLT / Hybrid and set entropy coder under the same interface**: Implementing Invertible Bloom Lookup Tables (IBLT) or hybrid approaches could provide better performance for certain use cases, particularly when the difference size is large relative to the capacity.
+
+Implementation priorities:
+1. Platform-specific optimizations for ARM architectures (high priority for mobile/embedded use)
+2. Incremental decoding interface (high value for practical applications)
+3. Explicit formulas for higher degree polynomials (moderate complexity, good performance gain)
+4. Subquadratic algorithms and Half-GCD (more complex, but significant for large field sizes)
+5. 32-bit host optimizations (targeted improvement for specific platforms)
+6. IBLT/Hybrid approaches (more complex, requires interface design)
 
 ## References
 
