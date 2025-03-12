@@ -230,6 +230,14 @@ std::optional<T> ToIntegral(std::string_view str)
 [[nodiscard]] bool ParseUInt64(std::string_view str, uint64_t *out);
 
 /**
+ * Convert hexadecimal string to unsigned 64-bit integer, with 4-bit
+ * resolution (odd length strings are acceptable without leading "0")
+ * @returns true if the entire string could be parsed as valid integer,
+ *   false if not, or in case of overflow.
+ */
+[[nodiscard]] bool ParseUInt64Hex(std::string_view str, uint64_t *out);
+
+/**
  * Format a paragraph of text to a fixed width, adding spaces for
  * indentation to any added line.
  */

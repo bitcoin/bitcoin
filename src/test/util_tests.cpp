@@ -1045,6 +1045,26 @@ BOOST_AUTO_TEST_CASE(test_ParseUInt64)
     BOOST_CHECK(!ParseUInt64("-1234", &n));
 }
 
+BOOST_AUTO_TEST_CASE(test_ParseUInt64Hex)
+{
+    uint64_t n;
+    // Valid values
+    BOOST_CHECK(ParseUInt64Hex("1234", nullptr));
+    BOOST_CHECK(ParseUInt64Hex("1234", &n) && n == 4660);
+    BOOST_CHECK(ParseUInt64Hex("a", &n) && n == 10);
+    BOOST_CHECK(ParseUInt64Hex("0000000a", &n) && n == 10);
+    BOOST_CHECK(ParseUInt64Hex("100", &n) && n == 256);
+    BOOST_CHECK(ParseUInt64Hex("DEADbeef", &n) && n == 3735928559);
+    BOOST_CHECK(ParseUInt64Hex("FfFfFfFf", &n) && n == 4294967295);
+    // Invalid values
+    BOOST_CHECK(!ParseUInt64Hex("123456789", &n));
+    BOOST_CHECK(!ParseUInt64Hex("", &n));
+    BOOST_CHECK(!ParseUInt64Hex("-1", &n));
+    BOOST_CHECK(!ParseUInt64Hex("10 00", &n));
+    BOOST_CHECK(!ParseUInt64Hex("1 ", &n));
+    BOOST_CHECK(!ParseUInt64Hex("0xAB", &n));
+}
+
 BOOST_AUTO_TEST_CASE(test_FormatParagraph)
 {
     BOOST_CHECK_EQUAL(FormatParagraph("", 79, 0), "");
