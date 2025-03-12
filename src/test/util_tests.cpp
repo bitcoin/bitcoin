@@ -835,6 +835,39 @@ BOOST_AUTO_TEST_CASE(test_LocaleIndependentAtoi)
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint8_t>("256"), 255U);
 }
 
+BOOST_AUTO_TEST_CASE(test_ToIntegralHex)
+{
+    std::optional<uint64_t> n;
+    // Valid values
+    n = ToIntegral<uint64_t>("1234", 16);
+    BOOST_CHECK_EQUAL(*n, 0x1234);
+    n = ToIntegral<uint64_t>("a", 16);
+    BOOST_CHECK_EQUAL(*n, 0xA);
+    n = ToIntegral<uint64_t>("0000000a", 16);
+    BOOST_CHECK_EQUAL(*n, 0xA);
+    n = ToIntegral<uint64_t>("100", 16);
+    BOOST_CHECK_EQUAL(*n, 0x100);
+    n = ToIntegral<uint64_t>("DEADbeef", 16);
+    BOOST_CHECK_EQUAL(*n, 0xDEADbeef);
+    n = ToIntegral<uint64_t>("FfFfFfFf", 16);
+    BOOST_CHECK_EQUAL(*n, 0xFfFfFfFf);
+    n = ToIntegral<uint64_t>("123456789", 16);
+    BOOST_CHECK_EQUAL(*n, 0x123456789ULL);
+    n = ToIntegral<uint64_t>("0", 16);
+    BOOST_CHECK_EQUAL(*n, 0);
+    n = ToIntegral<uint64_t>("FfFfFfFfFfFfFfFf", 16);
+    BOOST_CHECK_EQUAL(*n, 0xFfFfFfFfFfFfFfFfULL);
+    n = ToIntegral<int64_t>("-1", 16);
+    BOOST_CHECK_EQUAL(*n, -1);
+    // Invalid values
+    BOOST_CHECK(!ToIntegral<uint64_t>("", 16));
+    BOOST_CHECK(!ToIntegral<uint64_t>("-1", 16));
+    BOOST_CHECK(!ToIntegral<uint64_t>("10 00", 16));
+    BOOST_CHECK(!ToIntegral<uint64_t>("1 ", 16));
+    BOOST_CHECK(!ToIntegral<uint64_t>("0xAB", 16));
+    BOOST_CHECK(!ToIntegral<uint64_t>("FfFfFfFfFfFfFfFf0", 16));
+}
+
 BOOST_AUTO_TEST_CASE(test_FormatParagraph)
 {
     BOOST_CHECK_EQUAL(FormatParagraph("", 79, 0), "");
