@@ -890,20 +890,54 @@ bool HTTPRequest::LoadBody(LineReader& reader)
 {
     // https://httpwg.org/specs/rfc9112.html#message.body
 
-    // No Content-length or Transfer-Encoding header means no body, see libevent evhttp_get_body()
-    // TODO: we must also implement Transfer-Encoding for chunk-reading
-    auto content_length_value{m_headers.Find("Content-Length")};
-    if (!content_length_value) return true;
+    auto transfer_encoding_header = m_headers.Find("Transfer-Encoding");
+    if (transfer_encoding_header && ToLower(transfer_encoding_header.value()) == "chunked") {
+        // Transfer-Encoding: https://datatracker.ietf.org/doc/html/rfc7230.html#section-3.3.1
+        // Chunked Transfer Coding: https://datatracker.ietf.org/doc/html/rfc7230.html#section-4.1
+        // see evhttp_handle_chunked_read() in libevent http.c
+        while (reader.Left() > 0) {
+            auto maybe_chunk_size = reader.ReadLine();
+            if (!maybe_chunk_size) return false;
+            uint64_t chunk_size;
 
-    uint64_t content_length;
-    if (!ParseUInt64(content_length_value.value(), &content_length)) throw std::runtime_error("Cannot parse Content-Length value");
+            if (!ParseUInt64Hex(maybe_chunk_size.value(), &chunk_size)) throw std::runtime_error("Invalid chunk size");
 
-    // Not enough data in buffer for expected body
-    if (reader.Left() < content_length) return false;
+            bool last_chunk{chunk_size == 0};
 
-    m_body = reader.ReadLength(content_length);
+            if (!last_chunk) {
+                // We are still expecting more data for this chunk
+                if (reader.Left() < chunk_size) {
+                    return false;
+                }
+                // Pack chunk onto body
+                m_body += reader.ReadLength(chunk_size);
+            }
 
-    return true;
+            // Even though every chunk size is explicitly declared,
+            // they are still terminated by a CRLF we don't need.
+            auto crlf = reader.ReadLine();
+            if (!crlf || crlf.value().size() != 0) throw std::runtime_error("Improperly terminated chunk");
+
+            if (last_chunk) return true;
+        }
+
+        // We read all the chunks but never got the last chunk, wait for client to send more
+        return false;
+    } else {
+        // No Content-length or Transfer-Encoding header means no body, see libevent evhttp_get_body()
+        auto content_length_value{m_headers.Find("Content-Length")};
+        if (!content_length_value) return true;
+
+        uint64_t content_length;
+        if (!ParseUInt64(content_length_value.value(), &content_length)) throw std::runtime_error("Cannot parse Content-Length value");
+
+        // Not enough data in buffer for expected body
+        if (reader.Left() < content_length) return false;
+
+        m_body = reader.ReadLength(content_length);
+
+        return true;
+    }
 }
 
 bool HTTPClient::ReadRequest(std::unique_ptr<HTTPRequest>& req)
