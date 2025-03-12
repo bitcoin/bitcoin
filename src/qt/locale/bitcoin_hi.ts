@@ -643,8 +643,22 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">वॉलेट माइग्रेट करें</translation>
     </message>
     <message>
+        <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
+If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
+If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
+
+The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
+        <translation type="unfinished">वॉलेट को माइग्रेट करने से यह एक या अधिक डिस्क्रिप्टर वॉलेट्स में बदल जाएगा। एक नया वॉलेट बैकअप बनाना आवश्यक होगा।
+यदि इस वॉलेट में कोई वॉच-ओनली स्क्रिप्ट्स हैं, तो एक नया वॉलेट बनाया जाएगा जिसमें वे वॉच-ओनली स्क्रिप्ट्स शामिल होंगी।यदि इस वॉलेट में कोई सॉल्वेबल लेकिन नॉन-वॉच्ड स्क्रिप्ट्स हैं, तो एक अलग और नया वॉलेट बनाया जाएगा जिसमें वे स्क्रिप्ट्स शामिल होंगी।
+माइग्रेशन प्रक्रिया वॉलेट का बैकअप बनाने के बाद ही पूरी होगी। यह बैकअप फाइल {1}-{2} . legacy.bak नाम से इस वॉलेट की डायरेक्टरी में मिलेगी। यदि माइग्रेशन में कोई गलती होती है, तो इस बैकअप को "Restore Wallet" फ़ंक्शन के जरिए पुनः बहाल किया जा सकता है।</translation>
+    </message>
+    <message>
         <source>Migrate Wallet</source>
         <translation type="unfinished">वॉलेट माइग्रेट करें</translation>
+    </message>
+    <message>
+        <source>Watchonly scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">केवल-दृष्टि स्क्रिप्ट्स को एक नए वॉलेट में माइग्रेट कर दिया गया है जिसका नाम '%1' है।</translation>
     </message>
     <message>
         <source>Migration failed</source>
