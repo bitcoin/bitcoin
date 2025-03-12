@@ -13,7 +13,27 @@ This way, keeping the code updated is very easy.
 All the changes you can check here:
 https://github.com/bitcoin/bitcoin/compare/master...soldate:niobiocoin:master
 
+**Ubuntu 22**
 =====================================
+
+sudo apt-get install build-essential cmake pkgconf python3 libevent-dev libboost-dev libsqlite3-dev libzmq3-dev systemtap-sdt-dev
+
+git clone https://github.com/soldate/niobiocoin.git
+
+cd niobiocoin
+
+cmake -B build
+
+cmake --build build
+
+**the executables will be at:** 
+
+./build/src/bitcoind
+
+./build/src/bitcoin-cli
+
+
+
 BELOW BITCOIN'S README
 =====================================
 
