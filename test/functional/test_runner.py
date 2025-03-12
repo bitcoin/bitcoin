@@ -898,8 +898,6 @@ class RPCCoverage():
         covered_cmds.add('voteraw')
         # TODO: implement functional tests for getmerkleblocks
         covered_cmds.add('getmerkleblocks')
-        # TODO: drop it with v23+: remove `debug` in favour of `logging`
-        covered_cmds.add('debug')
 
         if not os.path.isfile(coverage_ref_filename):
             raise RuntimeError("No coverage reference found")
