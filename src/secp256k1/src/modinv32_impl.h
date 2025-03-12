@@ -80,7 +80,7 @@ static void secp256k1_modinv32_normalize_30(secp256k1_modinv32_signed30 *r, int3
     /* In a first step, add the modulus if the input is negative, and then negate if requested.
      * This brings r from range (-2*modulus,modulus) to range (-modulus,modulus). As all input
      * limbs are in range (-2^30,2^30), this cannot overflow an int32_t. Note that the right
-     * shifts below are signed sign-extending shifts (see assumptions.h for tests that that is
+     * shifts below are signed sign-extending shifts (see assumptions.h for tests that is
      * indeed the behavior of the right shift operator). */
     cond_add = r8 >> 31;
     r0 += modinfo->modulus.v[0] & cond_add;

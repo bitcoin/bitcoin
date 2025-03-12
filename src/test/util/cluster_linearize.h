@@ -178,7 +178,7 @@ struct DepGraphFormatter
             auto add_holes = SetType::Fill(idx) - done - depgraph.Positions();
             if (add_holes.None()) {
                 // The new transaction is to be inserted N positions back from the end of the
-                // cluster. Emit N to indicate that that many insertion choices are skipped.
+                // cluster. Emit N to indicate that many insertion choices are skipped.
                 auto skips = (done - SetType::Fill(idx)).Count();
                 s << VARINT(diff + skips);
             } else {

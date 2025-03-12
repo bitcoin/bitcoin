@@ -104,7 +104,7 @@ static void secp256k1_modinv64_normalize_62(secp256k1_modinv64_signed62 *r, int6
     /* In a first step, add the modulus if the input is negative, and then negate if requested.
      * This brings r from range (-2*modulus,modulus) to range (-modulus,modulus). As all input
      * limbs are in range (-2^62,2^62), this cannot overflow an int64_t. Note that the right
-     * shifts below are signed sign-extending shifts (see assumptions.h for tests that that is
+     * shifts below are signed sign-extending shifts (see assumptions.h for tests that is
      * indeed the behavior of the right shift operator). */
     cond_add = r4 >> 63;
     r0 += modinfo->modulus.v[0] & cond_add;
