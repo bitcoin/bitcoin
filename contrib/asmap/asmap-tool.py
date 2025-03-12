@@ -91,7 +91,7 @@ def main():
 
     parser_encode = subparsers.add_parser("encode", help="convert asmap data to binary format")
     parser_encode.add_argument('-f', '--fill', dest="fill", default=False, action="store_true",
-                               help="permit reassigning undefined network ranges arbitrarily to reduce size")
+                               help="permit reassigning undefined network ranges arbitrarily to reduce size. The decoded version of a file created with this flag cannot be used for diffs.")
     parser_encode.add_argument('infile', nargs='?', type=argparse.FileType('rb'), default=sys.stdin.buffer,
                                help="input asmap file (text or binary); default is stdin")
     parser_encode.add_argument('outfile', nargs='?', type=argparse.FileType('wb'), default=sys.stdout.buffer,
@@ -99,7 +99,7 @@ def main():
 
     parser_decode = subparsers.add_parser("decode", help="convert asmap data to text format")
     parser_decode.add_argument('-f', '--fill', dest="fill", default=False, action="store_true",
-                               help="permit reassigning undefined network ranges arbitrarily to reduce length")
+                               help="permit reassigning undefined network ranges arbitrarily to reduce length. The resulting file cannot be used for diffs.")
     parser_decode.add_argument('-n', '--nonoverlapping', dest="overlapping", default=True, action="store_false",
                                help="output strictly non-overall ping network ranges (increases output size)")
     parser_decode.add_argument('infile', nargs='?', type=argparse.FileType('rb'), default=sys.stdin.buffer,
