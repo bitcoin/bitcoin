@@ -60,18 +60,15 @@ BOOST_AUTO_TEST_CASE(test_query_parameters_new_behavior)
     std::string uri {};
     // This is an invalid URI because it contains a % that is not followed by two hex digits
     uri = "/rest/endpoint/someresource.json?p1=v1&p2=v2%";
-    // Old behavior: URI with invalid characters (%) raises a runtime error regardless of which query parameter is queried
-    BOOST_CHECK_EXCEPTION(http_libevent::GetQueryParameterFromUri(uri.c_str(), "p1"), std::runtime_error, HasReason("URI parsing failed, it likely contained RFC 3986 invalid characters"));
+    // Old libevent behavior: URI with invalid characters (%) raised a runtime error regardless of which query parameter is queried
     // New behavior: Tolerate as much as we can even
     BOOST_CHECK_EQUAL(http_bitcoin::GetQueryParameterFromUri(uri.c_str(), "p1").value(), "v1");
     BOOST_CHECK_EQUAL(http_bitcoin::GetQueryParameterFromUri(uri.c_str(), "p2").value(), "v2%");
 
     // This is a valid URI because the %XX encoding is correct: `?p1=v1&p2=100%`
     uri = "/rest/endpoint/someresource.json%3Fp1%3Dv1%26p2%3D100%25";
-    // Old behavior: libevent does not decode the URI before parsing, so it does not detect or return the query
-    //               (libevent will parse the entire argument string as the uri path)
-    BOOST_CHECK(!http_libevent::GetQueryParameterFromUri(uri.c_str(), "p1").has_value());
-    BOOST_CHECK(!http_libevent::GetQueryParameterFromUri(uri.c_str(), "p2").has_value());
+    // Old behavior: libevent did not decode the URI before parsing, so it did not detect or return the query
+    //               (libevent would parse the entire argument string as the uri path)
     // New behavior: Decode before parsing the URI so reserved characters like ? & = are interpreted correctly
     BOOST_CHECK_EQUAL(http_bitcoin::GetQueryParameterFromUri(uri.c_str(), "p1").value(), "v1");
     BOOST_CHECK_EQUAL(http_bitcoin::GetQueryParameterFromUri(uri.c_str(), "p2").value(), "100%");
@@ -108,11 +105,6 @@ void test_query_parameters(func GetQueryParameterFromUri) {
     uri = "/rest/endpoint/someresource.json?p1=v1%20&p2=100%25";
     BOOST_CHECK_EQUAL(GetQueryParameterFromUri(uri.c_str(), "p1").value(), "v1 ");
     BOOST_CHECK_EQUAL(GetQueryParameterFromUri(uri.c_str(), "p2").value(), "100%");
-}
-
-BOOST_AUTO_TEST_CASE(test_query_parameters_libevent)
-{
-    test_query_parameters(http_libevent::GetQueryParameterFromUri);
 }
 
 BOOST_AUTO_TEST_CASE(test_query_parameters_bitcoin)
