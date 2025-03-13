@@ -455,6 +455,8 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         connect_to.push_back(addrConnect);
     }
 
+    AddI2PSessionsIfNeeded();
+
     // Connect
     std::unique_ptr<Sock> sock;
     Proxy proxy;
@@ -474,15 +476,17 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
                 if (m_i2p_sam_session) {
                     connected = m_i2p_sam_session->Connect(target_addr, conn, proxyConnectionFailed);
                 } else {
+                    // Use an existent transient session, if one was created earlier...
                     {
                         LOCK(m_unused_i2p_sessions_mutex);
-                        if (m_unused_i2p_sessions.empty()) {
-                            i2p_transient_session =
-                                std::make_unique<i2p::sam::Session>(proxy, &interruptNet);
-                        } else {
+                        if (!m_unused_i2p_sessions.empty()) {
                             i2p_transient_session.swap(m_unused_i2p_sessions.front());
                             m_unused_i2p_sessions.pop();
                         }
+                    }
+                    // ... or create a new one if m_unused_i2p_sessions was empty.
+                    if (!i2p_transient_session) {
+                        i2p_transient_session = std::make_unique<i2p::sam::Session>(proxy, &interruptNet);
                     }
                     connected = i2p_transient_session->Connect(target_addr, conn, proxyConnectionFailed);
                     if (!connected) {
@@ -3235,6 +3239,28 @@ uint16_t CConnman::GetDefaultPort(const std::string& addr) const
 {
     CNetAddr a;
     return a.SetSpecial(addr) ? GetDefaultPort(a.GetNetwork()) : m_params.GetDefaultPort();
+}
+
+void CConnman::AddI2PSessionsIfNeeded()
+{
+    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
+
+    Proxy i2p_proxy;
+
+    if (!g_reachable_nets.Contains(NET_I2P) || // Not using I2P at all.
+        m_i2p_sam_session || // Using a single persistent session, m_unused_i2p_sessions is not used.
+        WITH_LOCK(m_unused_i2p_sessions_mutex, return m_unused_i2p_sessions.size() >= MAX_UNUSED_I2P_SESSIONS_SIZE) || // Already have enough sessions.
+        !GetProxy(NET_I2P, i2p_proxy)) {
+        return;
+    }
+
+    // It is preferable to slightly exceed MAX_UNUSED_I2P_SESSIONS_SIZE compared to holding
+    // m_unused_i2p_sessions_mutex while creating the session which could take a few seconds.
+
+    auto new_session = std::make_unique<i2p::sam::Session>(i2p_proxy, &interruptNet);
+
+    LOCK(m_unused_i2p_sessions_mutex);
+    m_unused_i2p_sessions.emplace(std::move(new_session));
 }
 
 bool CConnman::Bind(const CService& addr_, unsigned int flags, NetPermissionFlags permissions)
