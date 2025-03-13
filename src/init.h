@@ -12,6 +12,12 @@
 static constexpr bool DEFAULT_DAEMON = false;
 //! Default value for -daemonwait option
 static constexpr bool DEFAULT_DAEMONWAIT = false;
+static constexpr bool DEFAULT_PROXYRANDOMIZE{true};
+static constexpr bool DEFAULT_REST_ENABLE{false};
+static constexpr bool DEFAULT_I2P_ACCEPT_INCOMING{true};
+static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
+static constexpr char DEFAULT_ASMAP_FILENAME[] = "ip_asn.map";
+static constexpr char BITCOIN_PID_FILENAME[] = "bitcoind.pid";
 
 class ArgsManager;
 namespace interfaces {
