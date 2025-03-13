@@ -580,7 +580,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
         coins.emplace_back(std::move(coin));
     }
 
-    SignatureCache signature_cache{DEFAULT_SIGNATURE_CACHE_BYTES};
+    SignatureCache signature_cache{m_logger, DEFAULT_SIGNATURE_CACHE_BYTES};
 
     for(uint32_t i = 0; i < mtx.vin.size(); i++) {
         std::vector<CScriptCheck> vChecks;
