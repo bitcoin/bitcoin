@@ -445,6 +445,10 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
         connect_to.push_back(addrConnect);
     }
 
+    // Pre-create an I2P transient session if needed and store it for later.
+    // This makes a time gap between session creation and usage.
+    SaveI2PTransientSession(GetI2PTransientSession());
+
     // Connect
     std::unique_ptr<Sock> sock;
     Proxy proxy;
@@ -468,26 +472,18 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                 bool connected{false};
 
                 // If an I2P SAM session already exists, normally we would re-use it. But in the case of
-                // private broadcast we force a new transient session. A Connect() using m_i2p_sam_session
-                // would use our permanent I2P address as a source address.
+                // private broadcast we use a transient session. A Connect() using m_i2p_sam_session
+                // would use our permanent I2P address as a source address, revealing it to the peer.
                 if (m_i2p_sam_session && conn_type != ConnectionType::PRIVATE_BROADCAST) {
                     connected = m_i2p_sam_session->Connect(target_addr, conn, proxyConnectionFailed);
                 } else {
-                    {
-                        LOCK(m_unused_i2p_transient_session_mutex);
-                        if (!m_unused_i2p_transient_session) {
-                            i2p_transient_session =
-                                std::make_unique<i2p::sam::Session>(proxy, m_interrupt_net);
-                        } else {
-                            i2p_transient_session.swap(m_unused_i2p_transient_session);
-                        }
+                    i2p_transient_session = GetI2PTransientSession();
+                    if (!i2p_transient_session) {
+                        return nullptr;
                     }
                     connected = i2p_transient_session->Connect(target_addr, conn, proxyConnectionFailed);
                     if (!connected) {
-                        LOCK(m_unused_i2p_transient_session_mutex);
-                        if (!m_unused_i2p_transient_session) {
-                            m_unused_i2p_transient_session.swap(i2p_transient_session);
-                        }
+                        SaveI2PTransientSession(std::move(i2p_transient_session));
                     }
                 }
 
@@ -3413,6 +3409,38 @@ uint16_t CConnman::GetDefaultPort(const std::string& addr) const
 {
     CNetAddr a;
     return a.SetSpecial(addr) ? GetDefaultPort(a.GetNetwork()) : m_params.GetDefaultPort();
+}
+
+std::unique_ptr<i2p::sam::Session> CConnman::GetI2PTransientSession()
+{
+    AssertLockNotHeld(m_unused_i2p_transient_session_mutex);
+
+    Proxy i2p_proxy;
+
+    if (!g_reachable_nets.Contains(NET_I2P) || // Not using I2P at all.
+        m_i2p_sam_session || // Using a single persistent session, transient sessions are not needed.
+        !GetProxy(NET_I2P, i2p_proxy)) {
+        return nullptr;
+    }
+
+    {
+        LOCK(m_unused_i2p_transient_session_mutex);
+        if (m_unused_i2p_transient_session) {
+            return std::move(m_unused_i2p_transient_session);
+        }
+    }
+
+    return std::make_unique<i2p::sam::Session>(i2p_proxy, m_interrupt_net);
+}
+
+void CConnman::SaveI2PTransientSession(std::unique_ptr<i2p::sam::Session>&& session)
+{
+    LOCK(m_unused_i2p_transient_session_mutex);
+    if (!m_unused_i2p_transient_session) {
+        m_unused_i2p_transient_session = std::move(session);
+    } else {
+        session.reset();
+    }
 }
 
 bool CConnman::Bind(const CService& addr_, unsigned int flags, NetPermissionFlags permissions)

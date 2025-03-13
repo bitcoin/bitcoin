@@ -1566,6 +1566,20 @@ private:
     uint16_t GetDefaultPort(Network net) const;
     uint16_t GetDefaultPort(const std::string& addr) const;
 
+    /**
+     * Create an I2P transient session or get the one from
+     * `m_unused_i2p_transient_session` if it is not empty.
+     * @return session or empty unique_ptr if transient sessions are not needed.
+     */
+    std::unique_ptr<i2p::sam::Session> GetI2PTransientSession()
+        EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_transient_session_mutex);
+
+    /**
+     * Store an I2P session in `m_unused_i2p_transient_session` if it is empty.
+     */
+    void SaveI2PTransientSession(std::unique_ptr<i2p::sam::Session>&& session)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_transient_session_mutex);
+
     // Network usage totals
     mutable Mutex m_total_bytes_sent_mutex;
     std::atomic<uint64_t> nTotalBytesRecv{0};
