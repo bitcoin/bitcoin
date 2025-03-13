@@ -119,16 +119,22 @@ function(add_macos_deploy_target)
         DEPENDS ${PROJECT_BINARY_DIR}/dist/${macos_app}/Contents/MacOS/Bitcoin-Qt
       )
 
-      find_program(ZIP_COMMAND zip REQUIRED)
-      add_custom_command(
-        OUTPUT ${PROJECT_BINARY_DIR}/dist/${osx_volname}.zip
-        WORKING_DIRECTORY dist
-        COMMAND ${PROJECT_SOURCE_DIR}/cmake/script/macos_zip.sh ${ZIP_COMMAND} ${osx_volname}.zip
-        VERBATIM
-      )
-      add_custom_target(deploy
-        DEPENDS ${PROJECT_BINARY_DIR}/dist/${osx_volname}.zip
-      )
+      find_program(ZIP_EXECUTABLE zip)
+      if(NOT ZIP_EXECUTABLE)
+        add_custom_target(deploy
+          COMMAND ${CMAKE_COMMAND} -E echo "Error: ZIP not found"
+        )
+      else()
+        add_custom_command(
+          OUTPUT ${PROJECT_BINARY_DIR}/dist/${osx_volname}.zip
+          WORKING_DIRECTORY dist
+          COMMAND ${PROJECT_SOURCE_DIR}/cmake/script/macos_zip.sh ${ZIP_EXECUTABLE} ${osx_volname}.zip
+          VERBATIM
+        )
+        add_custom_target(deploy
+          DEPENDS ${PROJECT_BINARY_DIR}/dist/${osx_volname}.zip
+        )
+      endif()
     endif()
     add_dependencies(deploydir bitcoin-qt)
     add_dependencies(deploy deploydir)
