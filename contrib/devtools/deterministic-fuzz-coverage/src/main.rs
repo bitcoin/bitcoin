@@ -68,7 +68,7 @@ fn main() {
 
     let build_dir = Path::new(build_dir);
     let corpora_dir = Path::new(corpora_dir);
-    let fuzz_exe = build_dir.join("src/test/fuzz/fuzz");
+    let fuzz_exe = build_dir.join("bin/fuzz");
 
     sanity_check(corpora_dir, &fuzz_exe);
 
