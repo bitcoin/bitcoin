@@ -5803,7 +5803,8 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             return true;
         }
         // In case there is a block that has been in flight from this peer for block_interval * (1 + 0.5 * N)
-        // (with N the number of peers from which we're downloading validated blocks), disconnect due to timeout.
+        // (with N the number of peers from which we're downloading validated blocks), disconnect due to timeout
+        // unless it is an addnode peer.
         // We compensate for other peers to prevent killing off peers due to our own downstream link
         // being saturated. We only count validated in-flight blocks so peers can't advertise non-existing block hashes
         // to unreasonably increase our timeout.
@@ -5811,8 +5812,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             QueuedBlock &queuedBlock = state.vBlocksInFlight.front();
             int nOtherPeersWithValidatedDownloads = m_peers_downloading_from - 1;
             if (current_time > state.m_downloading_since + std::chrono::seconds{consensusParams.nPowTargetSpacing} * (BLOCK_DOWNLOAD_TIMEOUT_BASE + BLOCK_DOWNLOAD_TIMEOUT_PER_PEER * nOtherPeersWithValidatedDownloads)) {
-                LogInfo("Timeout downloading block %s, %s\n", queuedBlock.pindex->GetBlockHash().ToString(), pto->DisconnectMsg(fLogIPs));
-                pto->fDisconnect = true;
+                if (pto->IsManualConn()) {
+                    LogInfo("Timeout downloading block %s from addnode peer, not %s\n", queuedBlock.pindex->GetBlockHash().ToString(), pto->DisconnectMsg(fLogIPs));
+                } else {
+                    LogInfo("Timeout downloading block %s, %s\n", queuedBlock.pindex->GetBlockHash().ToString(), pto->DisconnectMsg(fLogIPs));
+                    pto->fDisconnect = true;
+                }
                 return true;
             }
         }
