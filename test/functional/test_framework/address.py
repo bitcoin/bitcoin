@@ -189,9 +189,9 @@ def address_to_scriptpubkey(address):
     if version is not None:
         return program_to_witness_script(version, payload) # testnet segwit scriptpubkey
     payload, version = base58_to_byte(address)
-    if version == 111:  # testnet pubkey hash
+    if version == 111 or version == 0:  # testnet or mainnet pubkey hash
         return keyhash_to_p2pkh_script(payload)
-    elif version == 196:  # testnet script hash
+    elif version == 196 or version == 5:  # testnet or mainnet script hash
         return scripthash_to_p2sh_script(payload)
     # TODO: also support other address formats
     else:
@@ -230,3 +230,14 @@ class TestFrameworkScript(unittest.TestCase):
         check_bech32_decode(bytes.fromhex('616211ab00dffe0adcb6ce258d6d3fd8cbd901e2'), 0)
         check_bech32_decode(bytes.fromhex('b6a7c98b482d7fb21c9fa8e65692a0890410ff22'), 0)
         check_bech32_decode(bytes.fromhex('f0c2109cb1008cfa7b5a09cc56f7267cd8e50929'), 0)
+
+    def test_address_to_scriptpubkey(self):
+        # Test mainnet P2PKH
+        addr = keyhash_to_p2pkh(bytes.fromhex('1f8ea1702a7bd4941bca0941b852c4bbfedb2e05'), main=True)
+        script = address_to_scriptpubkey(addr)
+        self.assertEqual(script, keyhash_to_p2pkh_script(bytes.fromhex('1f8ea1702a7bd4941bca0941b852c4bbfedb2e05')))
+
+        # Test mainnet P2SH
+        addr = scripthash_to_p2sh(bytes.fromhex('3a0b05f4d7f66c3ba7009f453530296c845cc9cf'), main=True)
+        script = address_to_scriptpubkey(addr)
+        self.assertEqual(script, scripthash_to_p2sh_script(bytes.fromhex('3a0b05f4d7f66c3ba7009f453530296c845cc9cf')))
