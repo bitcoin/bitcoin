@@ -22,6 +22,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     ensure_for,
+    assert_not_equal,
 )
 
 # 2 hashes required per regtest block (with no difficulty adjustment)
@@ -71,7 +72,7 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         ensure_for(duration=3, f=lambda: len(self.nodes[2].getchaintips()) == 1)
         assert_equal(self.nodes[2].getchaintips()[0]['height'], 0)
 
-        assert self.nodes[1].getbestblockhash() != self.nodes[0].getbestblockhash()
+        assert_not_equal(self.nodes[1].getbestblockhash(), self.nodes[0].getbestblockhash())
         assert_equal(self.nodes[2].getblockcount(), starting_blockcount)
 
         self.log.info("Check that getheaders requests to node2 are ignored")
