@@ -261,7 +261,9 @@ static RPCHelpMan logging()
 
     // Update libevent logging if BCLog::LIBEVENT has changed.
     if (changed_log_categories & BCLog::LIBEVENT) {
-        http_libevent::UpdateHTTPServerLogging(LogInstance().WillLogCategory(BCLog::LIBEVENT));
+        // Currently no modules in the codebase produce libevent log messages.
+        // To redirect libevent messages to our own logs see commit 8b2d6edaa9fbfb6344ca51edd0b3655b451cbcac
+        // in https://github.com/bitcoin/bitcoin/pull/6695
     }
 
     UniValue result(UniValue::VOBJ);
