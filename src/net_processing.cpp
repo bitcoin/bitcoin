@@ -5786,7 +5786,9 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
         // Detect whether we're stalling
         auto stalling_timeout = m_block_stalling_timeout.load();
-        if (state.m_stalling_since.count() && state.m_stalling_since < current_time - stalling_timeout) {
+        // Allow more time for addnode peers
+        const auto adjusted_timeout{pto->IsManualConn() ? BLOCK_STALLING_TIMEOUT_MAX : stalling_timeout};
+        if (state.m_stalling_since.count() && state.m_stalling_since < current_time - adjusted_timeout) {
             // Stalling only triggers when the block download window cannot move. During normal steady state,
             // the download window should be much larger than the to-be-downloaded set of blocks, so disconnection
             // should only happen during initial block download.
