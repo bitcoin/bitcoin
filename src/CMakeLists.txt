@@ -355,7 +355,7 @@ if(WITH_MULTIPROCESS AND BUILD_DAEMON)
   install_binary_component(bitcoin-node)
 endif()
 
-if(WITH_MULTIPROCESS AND BUILD_TESTS)
+if(WITH_MULTIPROCESS AND BUILD_TEST_BINARY)
     # bitcoin_ipc_test library target is defined here in src/CMakeLists.txt
     # instead of src/test/CMakeLists.txt so capnp files in src/test/ are able to
     # reference capnp files in src/ipc/capnp/ by relative path. The Cap'n Proto
@@ -459,7 +459,7 @@ if(BUILD_BENCH)
   add_subdirectory(bench)
 endif()
 
-if(BUILD_TESTS)
+if(BUILD_TEST_BINARY)
   add_subdirectory(test)
 endif()
 
