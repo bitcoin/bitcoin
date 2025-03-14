@@ -2785,7 +2785,7 @@ bool Chainstate::FlushStateToDisk(
                 m_blockman.FindFilesToPruneManual(
                     setFilesToPrune,
                     std::min(last_prune, nManualPruneHeight),
-                    *this, m_chainman);
+                    *this);
             } else {
                 LOG_TIME_MILLIS_WITH_CATEGORY("find files to prune", BCLog::BENCH);
 
@@ -6399,22 +6399,22 @@ bool ChainstateManager::ValidatedSnapshotCleanup(Chainstate& validated_cs, Chain
     return true;
 }
 
-std::pair<int, int> ChainstateManager::GetPruneRange(const Chainstate& chainstate, int last_height_can_prune)
+std::pair<int, int> Chainstate::GetPruneRange(int last_height_can_prune) const
 {
-    if (chainstate.m_chain.Height() <= 0) {
+    if (m_chain.Height() <= 0) {
         return {0, 0};
     }
     int prune_start{0};
 
-    if (chainstate.m_from_snapshot_blockhash && chainstate.m_assumeutxo != Assumeutxo::VALIDATED) {
+    if (m_from_snapshot_blockhash && m_assumeutxo != Assumeutxo::VALIDATED) {
         // Only prune blocks _after_ the snapshot if this is a snapshot chain
         // that has not been fully validated yet. The earlier blocks need to be
         // kept to validate the snapshot
-        prune_start = Assert(chainstate.SnapshotBase())->nHeight + 1;
+        prune_start = Assert(SnapshotBase())->nHeight + 1;
     }
 
     int max_prune = std::max<int>(
-        0, chainstate.m_chain.Height() - static_cast<int>(MIN_BLOCKS_TO_KEEP));
+        0, m_chain.Height() - static_cast<int>(MIN_BLOCKS_TO_KEEP));
 
     // last block to prune is the lesser of (caller-specified height, MIN_BLOCKS_TO_KEEP from the tip)
     //
