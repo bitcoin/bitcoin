@@ -11,6 +11,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_approx,
     assert_equal,
+    assert_true,
 )
 
 
@@ -68,7 +69,7 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
                     "timestamp": "now",
                 },
             ])
-            assert all(r["success"] for r in result)
+            assert_true(all(r["success"] for r in result))
             yield multisig
 
     def run_test(self):
@@ -95,9 +96,9 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
         self.log.info("Check that every participant's multisig generates the same addresses...")
         for _ in range(10):  # we check that the first 10 generated addresses are the same for all participant's multisigs
             receive_addresses = [multisig.getnewaddress() for multisig in participants["multisigs"]]
-            all(address == receive_addresses[0] for address in receive_addresses)
+            assert_true(all(address == receive_addresses[0] for address in receive_addresses))
             change_addresses = [multisig.getrawchangeaddress() for multisig in participants["multisigs"]]
-            all(address == change_addresses[0] for address in change_addresses)
+            assert_true(all(address == change_addresses[0] for address in change_addresses))
 
         self.log.info("Get a mature utxo to send to the multisig...")
         coordinator_wallet = participants["signers"][0]
