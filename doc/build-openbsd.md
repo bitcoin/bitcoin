@@ -44,7 +44,7 @@ from ports. However you can build it yourself, [using depends](/depends).
 Refer to [depends/README.md](/depends/README.md) for detailed instructions.
 
 ```bash
-gmake -C depends NO_BOOST=1 NO_LIBEVENT=1 NO_QT=1 NO_SQLITE=1 NO_ZMQ=1 NO_USDT=1
+gmake -C depends NO_BOOST=1 NO_LIBEVENT=1 NO_QT=1 NO_ZMQ=1 NO_USDT=1
 ...
 to: /path/to/bitcoin/depends/*-unknown-openbsd*
 ```
@@ -103,7 +103,7 @@ There are many ways to configure Bitcoin Core, here are a few common examples:
 This enables descriptor wallet support and the GUI, assuming SQLite and Qt 5 are installed.
 
 ```bash
-cmake -B build -DWITH_SQLITE=ON -DBUILD_GUI=ON
+cmake -B build -DBUILD_GUI=ON
 ```
 
 Run `cmake -B build -LH` to see the full list of available options.
