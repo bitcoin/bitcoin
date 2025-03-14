@@ -20,9 +20,6 @@ from test_framework.wallet_util import generate_keypair
 
 
 class ImportPrunedFundsTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
@@ -109,12 +106,8 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], False)
         address_info = wwatch.getaddressinfo(address2)
-        if self.options.descriptors:
-            assert_equal(address_info['iswatchonly'], False)
-            assert_equal(address_info['ismine'], True)
-        else:
-            assert_equal(address_info['iswatchonly'], True)
-            assert_equal(address_info['ismine'], False)
+        assert_equal(address_info['iswatchonly'], False)
+        assert_equal(address_info['ismine'], True)
         address_info = w1.getaddressinfo(address3)
         assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], True)
