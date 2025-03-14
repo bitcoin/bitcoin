@@ -19,6 +19,16 @@ static constexpr uint32_t TXRECONCILIATION_VERSION{1};
  */
 constexpr size_t MAX_RECONSET_SIZE = 3000;
 
+/**
+ * Announce transactions via full wtxid to a limited number of inbound and outbound peers.
+ * Justification for these values are provided here:
+ * TODO: ADD link to justification based on simulation results */
+constexpr double INBOUND_FANOUT_DESTINATIONS_FRACTION = 0.1;
+constexpr size_t OUTBOUND_FANOUT_THRESHOLD = 4;
+
+/** Interval for inbound peer fanout selection. The subset is rotated on a timer. */
+static constexpr auto INBOUND_FANOUT_ROTATION_INTERVAL{10min};
+
 enum class ReconciliationError
 {
     NOT_FOUND,
@@ -120,6 +130,14 @@ public:
     /** Whether a given inbound peer is currently flagged for fanout. */
     bool IsInboundFanoutTarget(NodeId peer_id);
 
+    /** Picks a different subset of inbound peers to fanout to. */
+    void RotateInboundFanoutTargets();
+
+    /** Get the next time the inbound peer subset should be rotated. */
+    std::chrono::microseconds GetNextInboundPeerRotationTime();
+
+    /** Update the next inbound peer rotation time. */
+    void SetNextInboundPeerRotationTime(std::chrono::microseconds next_time);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXRECONCILIATION_IMPL_H

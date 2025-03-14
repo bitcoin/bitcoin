@@ -9,6 +9,7 @@
 #include <common/system.h>
 #include <util/check.h>
 
+#include <cmath>
 #include <unordered_map>
 #include <variant>
 
@@ -32,8 +33,11 @@ private:
     /** Keeps track of how many of the registered peers are inbound. Updated on registering or forgetting peers. */
     size_t m_inbounds_count GUARDED_BY(m_txreconciliation_mutex){0};
 
-    /** Collection of inbound peers selected for fanout. */
+    /** Collection of inbound peers selected for fanout. Should get periodically rotated using RotateInboundFanoutTargets. */
     std::unordered_set<NodeId> m_inbound_fanout_targets GUARDED_BY(m_txreconciliation_mutex);
+
+    /** Next time m_inbound_fanout_targets need to be rotated. */
+    std::chrono::microseconds GUARDED_BY(m_txreconciliation_mutex) m_next_inbound_peer_rotation_time{0};
 
     TxReconciliationState* GetRegisteredPeerState(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(m_txreconciliation_mutex)
     {
@@ -94,6 +98,11 @@ public:
 
         if (is_peer_inbound && m_inbounds_count < std::numeric_limits<size_t>::max()) {
             ++m_inbounds_count;
+
+            // Scale up fanout targets as we get more connections. Targets will be rotated periodically via RotateInboundFanoutTargets
+            if (FastRandomContext().randrange(10) < INBOUND_FANOUT_DESTINATIONS_FRACTION * 10) {
+                m_inbound_fanout_targets.insert(peer_id);
+            }
         }
         return std::nullopt;
     }
@@ -177,6 +186,50 @@ public:
         LOCK(m_txreconciliation_mutex);
         return m_inbound_fanout_targets.contains(peer_id);
     }
+
+    std::chrono::microseconds GetNextInboundPeerRotationTime() EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+        return m_next_inbound_peer_rotation_time;
+    }
+
+    void SetNextInboundPeerRotationTime(std::chrono::microseconds next_time) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+        Assume(next_time >= m_next_inbound_peer_rotation_time);
+        m_next_inbound_peer_rotation_time = next_time;
+    }
+
+    void RotateInboundFanoutTargets() EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+
+        auto targets_size = std::floor(m_inbounds_count * INBOUND_FANOUT_DESTINATIONS_FRACTION);
+        if (targets_size == 0) {
+            return;
+        }
+
+        std::vector<NodeId> inbound_recon_peers;
+        inbound_recon_peers.reserve(m_inbounds_count);
+
+        // Collect all inbound reconciling peers ids in a vector and shuffle it
+        for (const auto& [peer_id, op_peer_state]: m_states) {
+            const auto peer_state = std::get_if<TxReconciliationState>(&op_peer_state);
+            if (peer_state && !peer_state->m_we_initiate) {
+                inbound_recon_peers.push_back(peer_id);
+            }
+        }
+        std::shuffle(inbound_recon_peers.begin(), inbound_recon_peers.end(), FastRandomContext());
+
+        // Pick the new selection of inbound fanout peers
+        Assume(inbound_recon_peers.size() > targets_size);
+        m_inbound_fanout_targets.clear();
+        m_inbound_fanout_targets.reserve(targets_size);
+        m_inbound_fanout_targets.insert(inbound_recon_peers.begin(), inbound_recon_peers.begin() + targets_size);
+    }
 };
 
 TxReconciliationTracker::TxReconciliationTracker(uint32_t recon_version) : m_impl{std::make_unique<TxReconciliationTrackerImpl>(recon_version)} {}
@@ -216,5 +269,20 @@ bool TxReconciliationTracker::TryRemovingFromSet(NodeId peer_id, const Wtxid& wt
 bool TxReconciliationTracker::IsInboundFanoutTarget(NodeId peer_id)
 {
     return m_impl->IsInboundFanoutTarget(peer_id);
+}
+
+std::chrono::microseconds TxReconciliationTracker::GetNextInboundPeerRotationTime()
+{
+    return m_impl->GetNextInboundPeerRotationTime();
+}
+
+void TxReconciliationTracker::SetNextInboundPeerRotationTime(std::chrono::microseconds next_time)
+{
+    return m_impl->SetNextInboundPeerRotationTime(next_time);
+}
+
+void TxReconciliationTracker::RotateInboundFanoutTargets()
+{
+    return m_impl->RotateInboundFanoutTargets();
 }
 } // namespace node

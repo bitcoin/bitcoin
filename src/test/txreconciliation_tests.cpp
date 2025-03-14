@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <cmath>
+
 #include <node/txreconciliation.h>
 #include <node/txreconciliation_impl.h>
 
@@ -164,6 +166,72 @@ BOOST_AUTO_TEST_CASE(TryRemovingFromSetTest)
     BOOST_REQUIRE(!tracker.AddToSet(peer_id0, wtxid).has_value());
     tracker.ForgetPeer(peer_id0);
     BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, wtxid));
+}
+
+BOOST_AUTO_TEST_CASE(GetSetNextInboundPeerRotationTimeTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    FastRandomContext frc{/*fDeterministic=*/true};
+
+     // The next time start unset (it's set via SetNextInboundPeerRotationTime after initializing the tracker)
+    auto next_time = tracker.GetNextInboundPeerRotationTime();
+    BOOST_REQUIRE(next_time == std::chrono::microseconds(0));
+
+    // Setting it to a specific value return the value
+    for (auto i=0; i<10; i++) {
+        next_time += std::chrono::microseconds{frc.rand32()};
+        tracker.SetNextInboundPeerRotationTime(next_time);
+        BOOST_REQUIRE(tracker.GetNextInboundPeerRotationTime() == next_time);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(RotateInboundFanoutTargetsTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    const int in_fanout_peers = 100;
+    const int in_fanout_target_count = std::floor(in_fanout_peers * INBOUND_FANOUT_DESTINATIONS_FRACTION);
+
+    // Add some inbound peers and check which of them are inbound targets
+    std::vector<int> fanout_targets;
+    for (auto i=0; i<in_fanout_peers; i++) {
+        tracker.PreRegisterPeer(i);
+        BOOST_REQUIRE(!tracker.RegisterPeer(i, /*is_peer_inbound*/true, TXRECONCILIATION_VERSION, 1).has_value());
+        fanout_targets.push_back(i);
+    }
+
+    // Rotate the targets and check they have indded changed.
+    std::vector<int> next_fanout_targets;
+    for (auto i=0; i<10; i++) {
+        tracker.RotateInboundFanoutTargets();
+
+        for (auto i=0; i<in_fanout_peers; i++) {
+            if (tracker.IsInboundFanoutTarget(i)) {
+                next_fanout_targets.push_back(i);
+            }
+        }
+        // Targets should be picked at random, and their size should be INBOUND_FANOUT_DESTINATIONS_FRACTION of our erlay inbounds
+        BOOST_REQUIRE(fanout_targets != next_fanout_targets);
+        BOOST_REQUIRE_EQUAL(next_fanout_targets.size(), in_fanout_target_count);
+        fanout_targets = next_fanout_targets;
+        next_fanout_targets.clear();
+    }
+
+    // If the number of inbounds goes down, so does the sizes of the inbound targets
+    const int reduced_fanout_peers = in_fanout_peers / 2;
+    const int reduced_in_fanout_target_count = std::floor(reduced_fanout_peers * INBOUND_FANOUT_DESTINATIONS_FRACTION);
+    BOOST_REQUIRE(in_fanout_target_count != reduced_in_fanout_target_count);
+    for (auto i=reduced_fanout_peers; i<in_fanout_peers; i++) {
+        tracker.ForgetPeer(i);
+    }
+
+    tracker.RotateInboundFanoutTargets();
+    for (auto i=0; i<reduced_fanout_peers; i++) {
+        if (tracker.IsInboundFanoutTarget(i)) {
+            next_fanout_targets.push_back(i);
+        }
+    }
+    BOOST_REQUIRE(fanout_targets != next_fanout_targets);
+    BOOST_REQUIRE_EQUAL(next_fanout_targets.size(), reduced_in_fanout_target_count);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
