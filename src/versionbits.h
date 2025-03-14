@@ -48,11 +48,17 @@ struct BIP9Stats {
 
 /** Detailed status of an enabled BIP9 deployment */
 struct BIP9Info {
+    /** Height at which current_state started */
     int since{0};
+    /** String representing the current state */
     std::string current_state{};
+    /** String representing the next block's state */
     std::string next_state{};
+    /** For states where signalling is applicable, information about the signalling */
     std::optional<BIP9Stats> stats;
+    /** Which blocks signalled; empty if signalling is not applicable */
     std::vector<bool> signalling_blocks;
+    /** Height at which the deployment is active, if known. May be in the future. */
     std::optional<int> active_since;
 };
 
