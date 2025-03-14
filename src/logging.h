@@ -71,6 +71,7 @@ namespace BCLog {
         TXRECONCILIATION = (CategoryMask{1} << 26),
         SCAN        = (CategoryMask{1} << 27),
         TXPACKAGES  = (CategoryMask{1} << 28),
+        KERNEL      = (CategoryMask{1} << 29),
         ALL         = ~NONE,
     };
     enum class Level {
@@ -165,6 +166,12 @@ namespace BCLog {
         {
             StdLockGuard scoped_lock(m_cs);
             m_print_callbacks.erase(it);
+        }
+
+        size_t NumConnections()
+        {
+            StdLockGuard scoped_lock(m_cs);
+            return m_print_callbacks.size();
         }
 
         /** Start logging (and flush all buffered messages) */

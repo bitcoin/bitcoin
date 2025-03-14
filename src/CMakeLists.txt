@@ -431,6 +431,9 @@ endif()
 
 if(BUILD_KERNEL_LIB)
   add_subdirectory(kernel)
+  if (BUILD_KERNEL_TEST)
+    add_subdirectory(test/kernel)
+  endif()
 endif()
 
 if(BUILD_UTIL_CHAINSTATE)
