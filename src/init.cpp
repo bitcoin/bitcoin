@@ -1928,6 +1928,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     const uint16_t default_bind_port_onion = default_bind_port + 1;
 
+    // If the user did not specify -bind= or -whitebind= then we bind
+    // on any address - 0.0.0.0 (IPv4) and :: (IPv6).
+    connOptions.bind_on_any = args.GetArgs("-bind").empty() && args.GetArgs("-whitebind").empty();
+
     const auto BadPortWarning = [](const char* prefix, uint16_t port) {
         return strprintf(_("%s request to listen on port %u. This port is considered \"bad\" and "
                            "thus it is unlikely that any peer will connect to it. See "
@@ -1942,6 +1946,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (index == std::string::npos) {
             bind_addr = Lookup(bind_arg, default_bind_port, /*fAllowLookup=*/false);
             if (bind_addr.has_value()) {
+                connOptions.bind_on_any |= bind_addr.value().IsBindAny();
                 connOptions.vBinds.push_back(bind_addr.value());
                 if (IsBadPort(bind_addr.value().GetPort())) {
                     InitWarning(BadPortWarning("-bind", bind_addr.value().GetPort()));
@@ -1954,6 +1959,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 const std::string truncated_bind_arg = bind_arg.substr(0, index);
                 bind_addr = Lookup(truncated_bind_arg, default_bind_port_onion, false);
                 if (bind_addr.has_value()) {
+                    connOptions.bind_on_any |= bind_addr.value().IsBindAny();
                     connOptions.onion_binds.push_back(bind_addr.value());
                     continue;
                 }
@@ -1968,10 +1974,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (!NetWhitebindPermissions::TryParse(strBind, whitebind, error)) return InitError(error);
         connOptions.vWhiteBinds.push_back(whitebind);
     }
-
-    // If the user did not specify -bind= or -whitebind= then we bind
-    // on any address - 0.0.0.0 (IPv4) and :: (IPv6).
-    connOptions.bind_on_any = args.GetArgs("-bind").empty() && args.GetArgs("-whitebind").empty();
 
     // Emit a warning if a bad port is given to -port= but only if -bind and -whitebind are not
     // given, because if they are, then -port= is ignored.
@@ -1989,7 +1991,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         onion_service_target = connOptions.vBinds.front();
     } else {
         onion_service_target = DefaultOnionServiceTarget(default_bind_port_onion);
-        connOptions.onion_binds.push_back(onion_service_target);
     }
 
     if (args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION)) {
