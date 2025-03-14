@@ -154,7 +154,7 @@ const Out& AsBase(const In& x)
 }
 
 #define READWRITE(...) (ser_action.SerReadWriteMany(s, __VA_ARGS__))
-#define SER_READ(obj, code) ser_action.SerRead(s, obj, [&](Stream& s, typename std::remove_const<Type>::type& obj) { code; })
+#define SER_READ(obj, code) ser_action.SerRead(s, obj, [&](Stream& s, std::remove_const_t<Type>& obj) { code; })
 #define SER_WRITE(obj, code) ser_action.SerWrite(s, obj, [&](Stream& s, const Type& obj) { code; })
 
 /**
@@ -220,13 +220,13 @@ const Out& AsBase(const In& x)
     template <typename Stream>                                                                      \
     void Serialize(Stream& s) const                                                                 \
     {                                                                                               \
-        static_assert(std::is_same<const cls&, decltype(*this)>::value, "Serialize type mismatch"); \
+        static_assert(std::is_same_v<const cls&, decltype(*this)>, "Serialize type mismatch");      \
         Ser(s, *this);                                                                              \
     }                                                                                               \
     template <typename Stream>                                                                      \
     void Unserialize(Stream& s)                                                                     \
     {                                                                                               \
-        static_assert(std::is_same<cls&, decltype(*this)>::value, "Unserialize type mismatch");     \
+        static_assert(std::is_same_v<cls&, decltype(*this)>, "Unserialize type mismatch");          \
         Unser(s, *this);                                                                            \
     }
 
@@ -408,8 +408,8 @@ template <VarIntMode Mode, typename I>
 struct CheckVarIntMode {
     constexpr CheckVarIntMode()
     {
-        static_assert(Mode != VarIntMode::DEFAULT || std::is_unsigned<I>::value, "Unsigned type required with mode DEFAULT.");
-        static_assert(Mode != VarIntMode::NONNEGATIVE_SIGNED || std::is_signed<I>::value, "Signed type required with mode NONNEGATIVE_SIGNED.");
+        static_assert(Mode != VarIntMode::DEFAULT || std::is_unsigned_v<I>, "Unsigned type required with mode DEFAULT.");
+        static_assert(Mode != VarIntMode::NONNEGATIVE_SIGNED || std::is_signed_v<I>, "Signed type required with mode NONNEGATIVE_SIGNED.");
     }
 };
 
@@ -474,7 +474,7 @@ I ReadVarInt(Stream& is)
 template<typename Formatter, typename T>
 class Wrapper
 {
-    static_assert(std::is_lvalue_reference<T>::value, "Wrapper needs an lvalue reference type T");
+    static_assert(std::is_lvalue_reference_v<T>, "Wrapper needs an lvalue reference type T");
 protected:
     T m_object;
 public:
@@ -507,12 +507,12 @@ struct VarIntFormatter
 {
     template<typename Stream, typename I> void Ser(Stream &s, I v)
     {
-        WriteVarInt<Stream,Mode,typename std::remove_cv<I>::type>(s, v);
+        WriteVarInt<Stream,Mode, std::remove_cv_t<I>>(s, v);
     }
 
     template<typename Stream, typename I> void Unser(Stream& s, I& v)
     {
-        v = ReadVarInt<Stream,Mode,typename std::remove_cv<I>::type>(s);
+        v = ReadVarInt<Stream,Mode, std::remove_cv_t<I>>(s);
     }
 };
 
@@ -545,7 +545,7 @@ struct CustomUintFormatter
 
     template <typename Stream, typename I> void Unser(Stream& s, I& v)
     {
-        using U = typename std::conditional<std::is_enum<I>::value, std::underlying_type<I>, std::common_type<I>>::type::type;
+        using U = typename std::conditional_t<std::is_enum_v<I>, std::underlying_type<I>, std::common_type<I>>::type;
         static_assert(std::numeric_limits<U>::max() >= MAX && std::numeric_limits<U>::min() <= 0, "Assigned type too small");
         uint64_t raw = 0;
         if (BigEndian) {
@@ -577,7 +577,7 @@ struct CompactSizeFormatter
     template<typename Stream, typename I>
     void Ser(Stream& s, I v)
     {
-        static_assert(std::is_unsigned<I>::value, "CompactSize only supported for unsigned integers");
+        static_assert(std::is_unsigned_v<I>, "CompactSize only supported for unsigned integers");
         static_assert(std::numeric_limits<I>::max() <= std::numeric_limits<uint64_t>::max(), "CompactSize only supports 64-bit integers and below");
 
         WriteCompactSize<Stream>(s, v);
