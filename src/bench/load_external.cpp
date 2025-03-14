@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
@@ -44,9 +44,8 @@ static void LoadExternalBlockFile(benchmark::Bench& bench)
     auto params{testing_setup->m_node.chainman->GetParams()};
     ss << params.MessageStart();
     ss << static_cast<uint32_t>(benchmark::data::block413567.size());
-    // We can't use the streaming serialization (ss << benchmark::data::block413567)
-    // because that first writes a compact size.
-    ss << Span{benchmark::data::block413567};
+    // Use span-serialization to avoid writing the size first.
+    ss << std::span{benchmark::data::block413567};
 
     // Create the test file.
     {

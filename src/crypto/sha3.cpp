@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -103,7 +103,7 @@ void KeccakF(uint64_t (&st)[25])
     }
 }
 
-SHA3_256& SHA3_256::Write(Span<const unsigned char> data)
+SHA3_256& SHA3_256::Write(std::span<const unsigned char> data)
 {
     if (m_bufsize && data.size() >= sizeof(m_buffer) - m_bufsize) {
         // Fill the buffer and process it.
@@ -133,7 +133,7 @@ SHA3_256& SHA3_256::Write(Span<const unsigned char> data)
     return *this;
 }
 
-SHA3_256& SHA3_256::Finalize(Span<unsigned char> output)
+SHA3_256& SHA3_256::Finalize(std::span<unsigned char> output)
 {
     assert(output.size() == OUTPUT_SIZE);
     std::fill(m_buffer + m_bufsize, m_buffer + sizeof(m_buffer), 0);

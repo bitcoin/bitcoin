@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -96,7 +96,7 @@ bool SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut)
     return valid;
 }
 
-std::string EncodeBase64(Span<const unsigned char> input)
+std::string EncodeBase64(std::span<const unsigned char> input)
 {
     static const char *pbase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -142,7 +142,7 @@ std::optional<std::vector<unsigned char>> DecodeBase64(std::string_view str)
     return ret;
 }
 
-std::string EncodeBase32(Span<const unsigned char> input, bool pad)
+std::string EncodeBase32(std::span<const unsigned char> input, bool pad)
 {
     static const char *pbase32 = "abcdefghijklmnopqrstuvwxyz234567";
 

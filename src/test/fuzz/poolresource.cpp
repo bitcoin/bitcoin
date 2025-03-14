@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -25,11 +25,11 @@ class PoolResourceFuzzer
     size_t m_total_allocated{};
 
     struct Entry {
-        Span<std::byte> span;
+        std::span<std::byte> span;
         size_t alignment;
         uint64_t seed;
 
-        Entry(Span<std::byte> s, size_t a, uint64_t se) : span(s), alignment(a), seed(se) {}
+        Entry(std::span<std::byte> s, size_t a, uint64_t se) : span(s), alignment(a), seed(se) {}
     };
 
     std::vector<Entry> m_entries;
@@ -48,7 +48,7 @@ public:
         assert((alignment & (alignment - 1)) == 0); // Alignment must be power of 2.
         assert((size & (alignment - 1)) == 0);      // Size must be a multiple of alignment.
 
-        auto span = Span(static_cast<std::byte*>(m_test_resource.Allocate(size, alignment)), size);
+        auto span = std::span(static_cast<std::byte*>(m_test_resource.Allocate(size, alignment)), size);
         m_total_allocated += size;
 
         auto ptr_val = reinterpret_cast<std::uintptr_t>(span.data());

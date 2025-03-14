@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -167,7 +167,7 @@ private:
 public:
     // Constructor for cursor for records matching the prefix
     // To match all records, an empty prefix may be provided.
-    explicit BerkeleyCursor(BerkeleyDatabase& database, const BerkeleyBatch& batch, Span<const std::byte> prefix = {});
+    explicit BerkeleyCursor(BerkeleyDatabase& database, const BerkeleyBatch& batch, std::span<const std::byte> prefix = {});
     ~BerkeleyCursor() override;
 
     Status Next(DataStream& key, DataStream& value) override;
@@ -182,7 +182,7 @@ private:
     bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) override;
     bool EraseKey(DataStream&& key) override;
     bool HasKey(DataStream&& key) override;
-    bool ErasePrefix(Span<const std::byte> prefix) override;
+    bool ErasePrefix(std::span<const std::byte> prefix) override;
 
 protected:
     Db* pdb{nullptr};
@@ -204,7 +204,7 @@ public:
     void Close() override;
 
     std::unique_ptr<DatabaseCursor> GetNewCursor() override;
-    std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(Span<const std::byte> prefix) override;
+    std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(std::span<const std::byte> prefix) override;
     bool TxnBegin() override;
     bool TxnCommit() override;
     bool TxnAbort() override;
