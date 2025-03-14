@@ -92,35 +92,45 @@ corresponds to the notification type. For instance, for the
 notification `-zmqpubhashtx` the topic is `hashtx` (no null
 terminator). These options can also be provided in bitcoin.conf.
 
-The topics are:
+All ZMQ messages are multipart messages that share the same structure with three parts:
 
-`sequence`: the body is structured as the following based on the type of message:
+    | topic | body | <uint32 sequence number in Little Endian> |
 
-    <32-byte hash>C :                 Blockhash connected
-    <32-byte hash>D :                 Blockhash disconnected
-    <32-byte hash>R<8-byte LE uint> : Transactionhash removed from mempool for non-block inclusion reason
-    <32-byte hash>A<8-byte LE uint> : Transactionhash added mempool
+where the last part is a sequence number (representing the message count to detect lost messages), distinct for each topic.
 
-Where the 8-byte uints correspond to the mempool sequence number.
+**_NOTE:_**  All 32-byte hashes are in _reversed byte order_ (i. e. with bytes produced by hashing function reversed), the same format as the RPC interface and block explorers use to display transaction and block hashes.
 
-`rawtx`: Notifies about all transactions, both when they are added to mempool or when a new block arrives. This means a transaction could be published multiple times. First, when it enters the mempool and then again in each block that includes it. The messages are ZMQ multipart messages with three parts. The first part is the topic (`rawtx`), the second part is the serialized transaction, and the last part is a sequence number (representing the message count to detect lost messages).
+The topics and bodies are:
 
-    | rawtx | <serialized transaction> | <uint32 sequence number in Little Endian>
+`sequence`: The message can have one of the following forms:
 
-`hashtx`: Notifies about all transactions, both when they are added to mempool or when a new block arrives. This means a transaction could be published multiple times. First, when it enters the mempool and then again in each block that includes it. The messages are ZMQ multipart messages with three parts. The first part is the topic (`hashtx`), the second part is the 32-byte transaction hash, and the last part is a sequence number (representing the message count to detect lost messages).
+    | sequence | <32-byte block hash, reversed>C                       | <uint32 sequence number in Little Endian> |
+    | sequence | <32-byte block hash, reversed>D                       | <uint32 sequence number in Little Endian> |
+    | sequence | <32-byte transaction hash, reversed>R<8-byte LE uint> | <uint32 sequence number in Little Endian> |
+    | sequence | <32-byte transaction hash, reversed>A<8-byte LE uint> | <uint32 sequence number in Little Endian> |
 
-    | hashtx | <32-byte transaction hash in Little Endian> | <uint32 sequence number in Little Endian>
+Where the 8-byte uints correspond to the mempool sequence number and the types of bodies are:
 
+   - `C` : block with this hash connected
+   - `D` : block with this hash disconnected
+   - `R` : transaction with this hash removed from mempool for non-block inclusion reason
+   - `A` : transaction with this hash added to mempool
 
-`rawblock`: Notifies when the chain tip is updated. When assumeutxo is in use, this notification will not be issued for historical blocks connected to the background validation chainstate. Messages are ZMQ multipart messages with three parts. The first part is the topic (`rawblock`), the second part is the serialized block, and the last part is a sequence number (representing the message count to detect lost messages).
+`rawtx`: Notifies about all transactions, both when they are added to mempool or when a new block arrives. This means a transaction could be published multiple times. First, when it enters the mempool and then again in each block that includes it. The body part of the message is the serialized transaction:
 
-    | rawblock | <serialized block> | <uint32 sequence number in Little Endian>
+    | rawtx | <serialized transaction> | <uint32 sequence number in Little Endian> |
 
-`hashblock`: Notifies when the chain tip is updated. When assumeutxo is in use, this notification will not be issued for historical blocks connected to the background validation chainstate. Messages are ZMQ multipart messages with three parts. The first part is the topic (`hashblock`), the second part is the 32-byte block hash, and the last part is a sequence number (representing the message count to detect lost messages).
+`hashtx`: Notifies about all transactions, both when they are added to mempool or when a new block arrives. This means a transaction could be published multiple times. First, when it enters the mempool and then again in each block that includes it. The body part of the mesage is the 32-byte transaction hash in reversed byte order:
 
-    | hashblock | <32-byte block hash in Little Endian> | <uint32 sequence number in Little Endian>
+    | hashtx | <32-byte transaction hash, reversed> | <uint32 sequence number in Little Endian> |
 
-**_NOTE:_**  Note that the 32-byte hashes are in Little Endian and not in the Big Endian format that the RPC interface and block explorers use to display transaction and block hashes.
+`rawblock`: Notifies when the chain tip is updated. When assumeutxo is in use, this notification will not be issued for historical blocks connected to the background validation chainstate. The body part of the message is the serialized block:
+
+    | rawblock | <serialized block> | <uint32 sequence number in Little Endian> |
+
+`hashblock`: Notifies when the chain tip is updated. When assumeutxo is in use, this notification will not be issued for historical blocks connected to the background validation chainstate. The body part of the message is the 32-byte block hash in reversed byte order:
+
+    | hashblock | <32-byte block hash, reversed> | <uint32 sequence number in Little Endian> |
 
 ZeroMQ endpoint specifiers for TCP (and others) are documented in the
 [ZeroMQ API](http://api.zeromq.org/4-0:_start).
