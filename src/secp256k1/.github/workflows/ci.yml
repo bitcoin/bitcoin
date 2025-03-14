@@ -746,6 +746,8 @@ jobs:
             cpp_flags: '/DSECP256K1_MSVC_MULH_TEST_OVERRIDE'
           - job_name: 'x86 (MSVC): Windows (VS 2022)'
             cmake_options: '-A Win32'
+          - job_name: 'x64 (MSVC): Windows (clang-cl)'
+            cmake_options: '-T ClangCL'
 
     steps:
       - name: Checkout

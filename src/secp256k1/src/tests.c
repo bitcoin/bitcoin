@@ -3821,14 +3821,38 @@ static void test_ge(void) {
 
     /* Test batch gej -> ge conversion without known z ratios. */
     {
+        secp256k1_ge *ge_set_all_var = (secp256k1_ge *)checked_malloc(&CTX->error_callback, (4 * runs + 1) * sizeof(secp256k1_ge));
         secp256k1_ge *ge_set_all = (secp256k1_ge *)checked_malloc(&CTX->error_callback, (4 * runs + 1) * sizeof(secp256k1_ge));
-        secp256k1_ge_set_all_gej_var(ge_set_all, gej, 4 * runs + 1);
+        secp256k1_ge_set_all_gej_var(&ge_set_all_var[0], &gej[0], 4 * runs + 1);
         for (i = 0; i < 4 * runs + 1; i++) {
             secp256k1_fe s;
             testutil_random_fe_non_zero(&s);
             secp256k1_gej_rescale(&gej[i], &s);
-            CHECK(secp256k1_gej_eq_ge_var(&gej[i], &ge_set_all[i]));
+            CHECK(secp256k1_gej_eq_ge_var(&gej[i], &ge_set_all_var[i]));
         }
+
+        /* Skip infinity at &gej[0]. */
+        secp256k1_ge_set_all_gej(&ge_set_all[1], &gej[1], 4 * runs);
+        for (i = 1; i < 4 * runs + 1; i++) {
+            secp256k1_fe s;
+            testutil_random_fe_non_zero(&s);
+            secp256k1_gej_rescale(&gej[i], &s);
+            CHECK(secp256k1_gej_eq_ge_var(&gej[i], &ge_set_all[i]));
+            CHECK(secp256k1_ge_eq_var(&ge_set_all_var[i], &ge_set_all[i]));
+        }
+
+        /* Test with an array of length 1. */
+        secp256k1_ge_set_all_gej_var(ge_set_all_var, &gej[1], 1);
+        secp256k1_ge_set_all_gej(ge_set_all, &gej[1], 1);
+        CHECK(secp256k1_gej_eq_ge_var(&gej[1], &ge_set_all_var[1]));
+        CHECK(secp256k1_gej_eq_ge_var(&gej[1], &ge_set_all[1]));
+        CHECK(secp256k1_ge_eq_var(&ge_set_all_var[1], &ge_set_all[1]));
+
+        /* Test with an array of length 0. */
+        secp256k1_ge_set_all_gej_var(NULL, NULL, 0);
+        secp256k1_ge_set_all_gej(NULL, NULL, 0);
+
+        free(ge_set_all_var);
         free(ge_set_all);
     }
 
@@ -7837,5 +7861,5 @@ int main(int argc, char **argv) {
     testrand_finish();
 
     printf("no problems found\n");
-    return 0;
+    return EXIT_SUCCESS;
 }
