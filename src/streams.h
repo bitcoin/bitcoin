@@ -23,6 +23,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <util/check.h>
 
 namespace util {
 inline void Xor(std::span<std::byte> write, std::span<const std::byte> key, size_t key_offset = 0)
@@ -463,6 +464,28 @@ public:
     AutoFile& operator>>(T&& obj)
     {
         ::Unserialize(*this, obj);
+        return *this;
+    }
+};
+
+class BufferedFileR
+{
+    DataStream m_buf;
+
+public:
+    explicit BufferedFileR(AutoFile& file, const uint32_t buffer_size)
+    {
+        m_buf.resize(buffer_size);
+        file.read(m_buf);
+        Assume(m_buf.size() == buffer_size);
+    }
+
+    void read(std::span<std::byte> dst) { m_buf.read(dst); }
+
+    template <typename T>
+    BufferedFileR& operator>>(T&& obj)
+    {
+        Unserialize(m_buf, obj);
         return *this;
     }
 };

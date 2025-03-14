@@ -567,4 +567,30 @@ BOOST_AUTO_TEST_CASE(streams_hashed)
     BOOST_CHECK_EQUAL(hash_writer.GetHash(), hash_verifier.GetHash());
 }
 
+BOOST_AUTO_TEST_CASE(streams_datastream_write_large)
+{
+    const uint32_t v1{m_rng.rand32()}, v2{m_rng.rand32()}, v3{m_rng.rand32()};
+    const fs::path tmp_path{m_args.GetDataDirBase() / "test_datastream_write_large.bin"};
+
+    // Write out the values to file
+    {
+        AutoFile file{fsbridge::fopen(tmp_path, "w+b")};
+        file << v1 << v2;
+        file.write(std::as_bytes(std::span{&v3, 1}));
+    }
+    // Read back and verify using BufferedFileR
+    {
+        AutoFile file{fsbridge::fopen(tmp_path, "rb")};
+        uint32_t _v1{0}, _v2{0}, _v3{0};
+        BufferedFileR f(file, sizeof(v1) + sizeof(v2) + sizeof(v3));
+        f >> _v1 >> _v2;
+        f.read(std::as_writable_bytes(std::span{&_v3, 1}));
+        BOOST_CHECK_EQUAL(_v1, v1);
+        BOOST_CHECK_EQUAL(_v2, v2);
+        BOOST_CHECK_EQUAL(_v3, v3);
+    }
+
+    fs::remove(tmp_path);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
