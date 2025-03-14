@@ -98,6 +98,9 @@ public:
      */
     uint64_t PreRegisterPeer(NodeId peer_id);
 
+    /** For testing purposes only. This SHOULD NEVER be used in production. */
+    void PreRegisterPeerWithSalt(NodeId peer_id, uint64_t local_salt);
+
     /**
      * Step 0. Once the peer agreed to reconcile txs with us, generate the state required to track
      * ongoing reconciliations. Must be called only after pre-registering.
