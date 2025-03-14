@@ -8,7 +8,7 @@ deterministic-fuzz-coverage
 A tool to check for non-determinism in fuzz coverage. To get the help, run:
 
 ```
-RUST_BACKTRACE=1 cargo run --manifest-path ./contrib/devtools/deterministic-fuzz-coverage/Cargo.toml -- --help
+cargo run --manifest-path ./contrib/devtools/deterministic-fuzz-coverage/Cargo.toml -- --help
 ```
 
 To execute the tool, compilation has to be done with the build options:
@@ -22,7 +22,7 @@ repository must have been cloned. Finally, a fuzz target has to be picked
 before running the tool:
 
 ```
-RUST_BACKTRACE=1 cargo run --manifest-path ./contrib/devtools/deterministic-fuzz-coverage/Cargo.toml -- $PWD/build_dir $PWD/qa-assets/fuzz_corpora fuzz_target_name
+cargo run --manifest-path ./contrib/devtools/deterministic-fuzz-coverage/Cargo.toml -- $PWD/build_dir $PWD/qa-assets/fuzz_corpora fuzz_target_name
 ```
 
 deterministic-unittest-coverage
@@ -31,7 +31,7 @@ deterministic-unittest-coverage
 A tool to check for non-determinism in unit-test coverage. To get the help, run:
 
 ```
-RUST_BACKTRACE=1 cargo run --manifest-path ./contrib/devtools/deterministic-unittest-coverage/Cargo.toml -- --help
+cargo run --manifest-path ./contrib/devtools/deterministic-unittest-coverage/Cargo.toml -- --help
 ```
 
 To execute the tool, compilation has to be done with the build options:
@@ -43,7 +43,7 @@ To execute the tool, compilation has to be done with the build options:
 Both llvm-profdata and llvm-cov must be installed.
 
 ```
-RUST_BACKTRACE=1 cargo run --manifest-path ./contrib/devtools/deterministic-unittest-coverage/Cargo.toml -- $PWD/build_dir <boost unittest filter>
+cargo run --manifest-path ./contrib/devtools/deterministic-unittest-coverage/Cargo.toml -- $PWD/build_dir <boost unittest filter>
 ```
 
 clang-format-diff.py
