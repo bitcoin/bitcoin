@@ -2156,7 +2156,7 @@ bool PeerManagerImpl::ShouldFanoutTo(const PeerRef peer, bool consider_fanout)
     // and the transaction was NOT received via set reconciliation. For the latter group, further filtering
     // will be applied at relay time.
     if (m_txreconciliation && m_txreconciliation->IsPeerRegistered(peer->m_id)) {
-        return (!peer->m_is_inbound && consider_fanout) || m_txreconciliation->IsInboundFanoutTarget(peer->m_id);
+        return peer->m_is_inbound ? m_txreconciliation->IsInboundFanoutTarget(peer->m_id) : consider_fanout;
     } else {
         // For non-Erlay peers we always fanout (same applies if we do not support Erlay)
         return true;
@@ -2166,9 +2166,8 @@ bool PeerManagerImpl::ShouldFanoutTo(const PeerRef peer, bool consider_fanout)
 void PeerManagerImpl::RelayTransaction(const uint256& txid, const uint256& wtxid)
 {
     LOCK(m_peer_mutex);
-    for(auto& it : m_peer_map) {
-        Peer& peer = *it.second;
-        auto tx_relay = peer.GetTxRelay();
+    for(auto& [peer_id, peer] : m_peer_map) {
+        auto tx_relay = peer->GetTxRelay();
         if (!tx_relay) continue;
 
         LOCK(tx_relay->m_tx_inventory_mutex);
@@ -2179,9 +2178,30 @@ void PeerManagerImpl::RelayTransaction(const uint256& txid, const uint256& wtxid
         // in the announcement.
         if (tx_relay->m_next_inv_send_time == 0s) continue;
 
-        const uint256& hash{peer.m_wtxid_relay ? wtxid : txid};
+        const uint256& hash{peer->m_wtxid_relay ? wtxid : txid};
         if (!tx_relay->m_tx_inventory_known_filter.contains(hash)) {
-            tx_relay->m_tx_inventory_to_send.insert(hash);
+            // FIXME: reconciled is hardcoded here, we need to get it either from the mempool here or pass it along
+            //        but it is needed for the decissionmaking.
+            //        It can also be defered to later, but I don't think there's any point. If the transaction was reconciled
+            //        and the peer is outbound, don't need to add it to m_tx_inventory_to_send at all
+            bool fanout = ShouldFanoutTo(peer, true);
+            // FIXME: This bit here and the corresponding one in SendMessage are basically identical.
+            //        Check if there is a way to make them into a private function We would have to pass a
+            //        lambda that does the "insert into a collection part", which is what's different from both
+            if (!fanout) {
+                Assume(m_txreconciliation);
+                const auto result = m_txreconciliation->AddToSet(peer_id, Wtxid::FromUint256(wtxid));
+                if  (!result.m_succeeded) {
+                    fanout = true;
+                    if (const auto collision = result.m_collision; collision.has_value()) {
+                        Assume(m_txreconciliation->TryRemovingFromSet(peer_id, collision.value()));
+                        tx_relay->m_tx_inventory_to_send.insert(collision.value().ToUint256());
+                    }
+                }
+            }
+            if (fanout) {
+                tx_relay->m_tx_inventory_to_send.insert(hash);
+            }
         }
     };
 }
@@ -5717,10 +5737,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             peer->m_blocks_for_inv_relay.clear();
         }
 
+        // Check whether periodic sends should happen
+        bool fSendTrickle = pto->HasPermission(NetPermissionFlags::NoBan);
         if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
+            std::vector<std::pair<uint256, uint16_t>> to_be_announced{};
+            {
                 LOCK(tx_relay->m_tx_inventory_mutex);
-                // Check whether periodic sends should happen
-                bool fSendTrickle = pto->HasPermission(NetPermissionFlags::NoBan);
                 if (tx_relay->m_next_inv_send_time < current_time) {
                     fSendTrickle = true;
                     if (pto->IsInboundConn()) {
@@ -5728,6 +5750,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     } else {
                         tx_relay->m_next_inv_send_time = current_time + m_rng.rand_exp_duration(OUTBOUND_INVENTORY_BROADCAST_INTERVAL);
                     }
+                }
+
+                // Rotate inbound fanout targets if the timer has gone off
+                if (m_txreconciliation && m_txreconciliation->GetNextInboundPeerRotationTime() < current_time) {
+                    m_txreconciliation->SetNextInboundPeerRotationTime(current_time + m_rng.rand_exp_duration(INBOUND_FANOUT_ROTATION_INTERVAL));
+                    m_txreconciliation->RotateInboundFanoutTargets();
                 }
 
                 // Time to send but the peer has requested we not relay transactions.
@@ -5794,7 +5822,6 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         std::set<uint256>::iterator it = vInvTx.back();
                         vInvTx.pop_back();
                         uint256 hash = *it;
-                        CInv inv(peer->m_wtxid_relay ? MSG_WTX : MSG_TX, hash);
                         // Remove it from the to-be-sent set
                         tx_relay->m_tx_inventory_to_send.erase(it);
                         // Check if not in the filter already
@@ -5802,7 +5829,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                             continue;
                         }
                         // Not in the mempool anymore? don't bother sending it.
-                        auto txinfo = m_mempool.info(ToGenTxid(inv));
+                        auto txinfo = m_mempool.info(GenTxid(peer->m_wtxid_relay ? GenTxid::Wtxid(hash) : GenTxid::Txid(hash)));
                         if (!txinfo.tx) {
                             continue;
                         }
@@ -5811,20 +5838,84 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                             continue;
                         }
                         if (tx_relay->m_bloom_filter && !tx_relay->m_bloom_filter->IsRelevantAndUpdate(*txinfo.tx)) continue;
-                        // Send
-                        vInv.push_back(inv);
+                        // Flag to be sent.
+                        // Initialize with the counter at 0. This in only relevant for Erlay nodes and will be updated in the
+                        // following context after releasing m_tx_inventory_mutex
+                        to_be_announced.emplace_back(hash, 0);
                         nRelayedTransactions++;
-                        if (vInv.size() == MAX_INV_SZ) {
-                            MakeAndPushMessage(*pto, NetMsgType::INV, vInv);
-                            vInv.clear();
-                        }
-                        tx_relay->m_tx_inventory_known_filter.insert(hash);
                     }
-
-                    // Ensure we'll respond to GETDATA requests for anything we've just announced
-                    LOCK(m_mempool.cs);
-                    tx_relay->m_last_inv_sequence = m_mempool.GetSequence();
                 }
+            } // Unlock the m_tx_inventory_mutex so we can count over m_peer_map
+
+            // Only care about fanout count if we support Erlay and the target peer is outbound
+            if (m_txreconciliation && !pto->IsInboundConn()) {
+                LOCK(m_peer_mutex);
+                for (auto& [hash, out_fanout_count] : to_be_announced) {
+                    for (const auto& [cur_peer_id, cur_peer] : m_peer_map) {
+                        // Filter out inbound peers, since they do not add to the count
+                        if (!cur_peer->m_is_inbound) {
+                            if (auto peer_tx_relay = cur_peer->GetTxRelay()) {
+                                LOCK(peer_tx_relay->m_tx_inventory_mutex);
+                                if (peer_tx_relay->m_tx_inventory_known_filter.contains(hash)) {
+                                    out_fanout_count+=1;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Re-lock
+            LOCK(tx_relay->m_tx_inventory_mutex);
+            for (auto& [hash, out_fanout_count] : to_be_announced) {
+                // Send
+                bool should_fanout = true;
+                // For non-Erlay and inbound peer simply fanout. Erlay-enabled inbounds have been assigned transaction to reconcile
+                // in RelayTransaction, so everything that was added to m_tx_inventory_to_send is to be fanout
+                if (!pto->IsInboundConn() && m_txreconciliation && m_txreconciliation->IsPeerRegistered(pto->GetId())) {
+                    // For Erlay-enabled outbound peers we fanout based on how we have heard about this transaction
+                    // and how many announcements of this transactions have we sent and receivedx
+                    // TODO: If we are the transaction source, we should reduce the threshold by 1, since this the only case
+                    // where we are not accounting for at least one reception
+                    should_fanout = out_fanout_count <= OUTBOUND_FANOUT_THRESHOLD;
+                }
+
+                CInv inv(peer->m_wtxid_relay ? MSG_WTX : MSG_TX, hash);
+                auto add_to_inv_vec = [&](const CInv inv) EXCLUSIVE_LOCKS_REQUIRED(tx_relay->m_tx_inventory_mutex) {
+                    vInv.push_back(inv);
+                    if (vInv.size() == MAX_INV_SZ) {
+                        MakeAndPushMessage(*pto, NetMsgType::INV, vInv);
+                        vInv.clear();
+                    }
+                    tx_relay->m_tx_inventory_known_filter.insert(inv.hash);
+                };
+
+                if (!should_fanout) {
+                    // Note we are not handling the case of ancestors being reconciled and descendants being fanout.
+                    // This can propagate descendants faster than ancestors, making them orphans. However, transactions
+                    // are picked for reconciliation if we consider they have been propagated enough, so in this case
+                    // odds are that the peer already knows about the parent (and it's queued to be announced or reconciled to us).
+                    Assume(m_txreconciliation);
+                    const auto result = m_txreconciliation->AddToSet(pto->GetId(), Wtxid::FromUint256(hash));
+                    if (!result.m_succeeded) {
+                        should_fanout = true;
+                        if (const auto collision = result.m_collision; collision.has_value()) {
+                            // In case of a collision, this loop will increase nRelayedTransactions twice
+                            Assume(m_txreconciliation->TryRemovingFromSet(pto->GetId(), collision.value()));
+                            add_to_inv_vec(CInv(MSG_WTX, collision.value()));
+                        }
+                    }
+                }
+                if (should_fanout) {
+                    add_to_inv_vec(inv);
+                }
+            }
+
+            if (fSendTrickle) {
+                // Ensure we'll respond to GETDATA requests for anything we've just announced
+                LOCK(m_mempool.cs);
+                tx_relay->m_last_inv_sequence = m_mempool.GetSequence();
+            }
         }
         if (!vInv.empty())
             MakeAndPushMessage(*pto, NetMsgType::INV, vInv);
