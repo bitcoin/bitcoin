@@ -129,14 +129,16 @@ FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
     // Make a copy to preserve determinism.
     std::deque<COutPoint> available_coins = g_available_coins;
     std::vector<CTransactionRef> transactions;
+    // The maximum block template size we expect to produce
+    const auto block_adjusted_max_weight = MAX_BLOCK_WEIGHT - MINIMUM_BLOCK_RESERVED_WEIGHT;
 
     LOCK2(::cs_main, pool.cs);
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100)
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 500)
     {
         CMutableTransaction mtx = CMutableTransaction();
         assert(!available_coins.empty());
         const size_t num_inputs = std::min(size_t{2}, available_coins.size());
-        const size_t num_outputs = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(2, 5);
+        const size_t num_outputs = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(2, 50);
         for (size_t n{0}; n < num_inputs; ++n) {
             auto prevout = available_coins.at(0);
             mtx.vin.emplace_back(prevout, CScript());
@@ -158,7 +160,6 @@ FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
             }
         }
 
-        const auto block_adjusted_max_weight = MAX_BLOCK_WEIGHT - DEFAULT_BLOCK_RESERVED_WEIGHT;
         // Stop if pool reaches block_adjusted_max_weight because BlockAssembler will stop when the
         // block template reaches that, but the MiniMiner will keep going.
         if (pool.GetTotalTxSize() + GetVirtualTransactionSize(*tx) >= block_adjusted_max_weight) break;
@@ -184,6 +185,11 @@ FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
     node::BlockAssembler::Options miner_options;
     miner_options.blockMinFeeRate = target_feerate;
     miner_options.nBlockMaxWeight = MAX_BLOCK_WEIGHT;
+    // Only setting reserved weight when necessary based on the template size
+    const auto reserved_weight = MAX_BLOCK_WEIGHT - pool.GetTotalTxSize();
+    if (reserved_weight < DEFAULT_BLOCK_RESERVED_WEIGHT) {
+        miner_options.block_reserved_weight = reserved_weight;
+    }
     miner_options.test_block_validity = false;
     miner_options.coinbase_output_script = CScript() << OP_0;
 
