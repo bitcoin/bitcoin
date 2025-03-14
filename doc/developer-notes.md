@@ -730,7 +730,7 @@ General Bitcoin Core
 
 - Make sure pull requests pass CI before merging.
 
-  - *Rationale*: Makes sure that they pass thorough testing, and that the tester will keep passing
+  - *Rationale*: Make sure that they pass thorough testing, and that the tester will keep passing
      on the master branch. Otherwise, all new pull requests will start failing the tests, resulting in
      confusion and mayhem.
 
@@ -1415,7 +1415,7 @@ A few guidelines for introducing and reviewing new RPC interfaces:
     convert a plaintext command line to JSON. If the types don't match, the method can be unusable
     from there.
 
-- A RPC method must either be a wallet method or a non-wallet method. Do not
+- An RPC method must either be a wallet method or a non-wallet method. Do not
   introduce new methods that differ in behavior based on the presence of a wallet.
 
   - *Rationale*: As well as complicating the implementation and interfering
@@ -1424,7 +1424,7 @@ A few guidelines for introducing and reviewing new RPC interfaces:
 
 - Try to make the RPC response a JSON object.
 
-  - *Rationale*: If a RPC response is not a JSON object, then it is harder to avoid API breakage if
+  - *Rationale*: If an RPC response is not a JSON object, then it is harder to avoid API breakage if
     new data in the response is needed.
 
 - Wallet RPCs call BlockUntilSyncedToCurrentChain to maintain consistency with
