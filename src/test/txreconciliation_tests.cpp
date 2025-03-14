@@ -107,8 +107,13 @@ BOOST_AUTO_TEST_CASE(AddToSetTest)
     BOOST_REQUIRE(!r.m_succeeded);
     BOOST_REQUIRE(!r.m_collision.has_value());
 
-    // As long as the peer is registered, adding a new wtxid to the set should work
+    // This holds even if the peer is just pre-registered
     tracker.PreRegisterPeer(peer_id0);
+    r = tracker.AddToSet(peer_id0, wtxid);
+    BOOST_REQUIRE(!r.m_succeeded);
+    BOOST_REQUIRE(!r.m_collision.has_value());
+
+    // As long as the peer is registered, adding a new wtxid to the set should work
     BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id0, true, TXRECONCILIATION_VERSION, 1), ReconciliationRegisterResult::SUCCESS);
     BOOST_REQUIRE(tracker.IsPeerRegistered(peer_id0));
 
@@ -128,16 +133,51 @@ BOOST_AUTO_TEST_CASE(AddToSetTest)
     BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id1, true, TXRECONCILIATION_VERSION, 1), ReconciliationRegisterResult::SUCCESS);
     BOOST_REQUIRE(tracker.IsPeerRegistered(peer_id1));
 
-    // As long as the peer is registered and the transaction is not in the set, adding it should succeed
-    for (size_t i = 0; i < MAX_RECONSET_SIZE; ++i)
-        r = tracker.AddToSet(peer_id1, Wtxid::FromUint256(frc.rand256()));
-        BOOST_REQUIRE(r.m_succeeded);
-        BOOST_REQUIRE(!r.m_collision.has_value());
+    // As long as the peer is registered, the transaction is not in the set, and there is no short id
+    // collision, adding should work
+    size_t added_txs = 0;
+    while (added_txs < MAX_RECONSET_SIZE) {
+        wtxid = Wtxid::FromUint256(frc.rand256());
 
-    // Trying to add the same item twice should fail
+        r = tracker.AddToSet(peer_id1, wtxid);
+        if (r.m_succeeded) {
+            BOOST_REQUIRE(!r.m_collision.has_value());
+            ++added_txs;
+        } else {
+            BOOST_REQUIRE(r.m_collision.has_value());
+        }
+    }
+
+    // Adding one more item will fail due to the set being full
     r = tracker.AddToSet(peer_id1, Wtxid::FromUint256(frc.rand256()));
     BOOST_REQUIRE(!r.m_succeeded);
     BOOST_REQUIRE(!r.m_collision.has_value());
+
+    // Trying to add the same item twice will just bypass
+    r = tracker.AddToSet(peer_id1, wtxid);
+    BOOST_REQUIRE(r.m_succeeded);
+    BOOST_REQUIRE(!r.m_collision.has_value());
+}
+
+BOOST_AUTO_TEST_CASE(AddToSetCollisionTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0;
+
+    // Precompute collision
+    Wtxid wtxid{Wtxid::FromUint256(uint256("c70d778bccef36a81aed8da0b819d2bd28bd8653e56a5d40903df1a0ade0b876"))};
+    Wtxid collision{Wtxid::FromUint256(uint256("ae52a6ecb8733fba1f7af6022a8b9dd327d7825054229fafcad7e03c38ae2a50"))};
+
+    // Register the peer with a predefined salt so we can force the collision
+    tracker.PreRegisterPeerWithSalt(peer_id0, 2);
+    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id0, true, TXRECONCILIATION_VERSION, 1), ReconciliationRegisterResult::SUCCESS);
+    BOOST_REQUIRE(tracker.IsPeerRegistered(peer_id0));
+
+    // Once the peer is registered, we can try to add both transactions and check
+    BOOST_REQUIRE(tracker.AddToSet(peer_id0, wtxid).m_succeeded);
+    auto r = tracker.AddToSet(peer_id0, collision);
+    BOOST_REQUIRE(!r.m_succeeded);
+    BOOST_REQUIRE_EQUAL(r.m_collision.value(), wtxid);
 }
 
 BOOST_AUTO_TEST_CASE(TryRemovingFromSetTest)
@@ -146,14 +186,15 @@ BOOST_AUTO_TEST_CASE(TryRemovingFromSetTest)
     NodeId peer_id0 = 0;
     FastRandomContext frc{/*fDeterministic=*/true};
 
-    Wtxid wtxid{Wtxid::FromUint256(frc.rand256())};
+    Wtxid wtxid{Wtxid::FromUint256(uint256("c70d778bccef36a81aed8da0b819d2bd28bd8653e56a5d40903df1a0ade0b876"))};
+    Wtxid collision{Wtxid::FromUint256(uint256("ae52a6ecb8733fba1f7af6022a8b9dd327d7825054229fafcad7e03c38ae2a50"))};
 
     // If the peer is not registered, removing will fail
     BOOST_REQUIRE(!tracker.IsPeerRegistered(peer_id0));
     BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, wtxid));
 
-    // This holds even if the peer is just pre-registered
-    tracker.PreRegisterPeer(peer_id0);
+    // This holds even if the peer is just pre-registered (register specific salt so we can also check collisions)
+    tracker.PreRegisterPeerWithSalt(peer_id0, 2);
     BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, wtxid));
 
     // If the peer is registered but the transaction is not part of the set, this will fail too
@@ -165,6 +206,11 @@ BOOST_AUTO_TEST_CASE(TryRemovingFromSetTest)
     BOOST_REQUIRE(tracker.TryRemovingFromSet(peer_id0, wtxid));
     // Removing twice won't work
     BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, wtxid));
+
+    // Adding a transaction but removing a collision won't work
+    BOOST_REQUIRE(tracker.AddToSet(peer_id0, wtxid).m_succeeded);
+    BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, collision));
+    BOOST_REQUIRE(tracker.TryRemovingFromSet(peer_id0, wtxid));
 
     // And removing after forgetting the peer won't work either
     BOOST_REQUIRE(tracker.AddToSet(peer_id0, wtxid).m_succeeded);
