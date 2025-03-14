@@ -128,7 +128,6 @@ if(WITH_BDB)
 endif()
 cmake_dependent_option(BUILD_WALLET_TOOL "Build bitcoin-wallet tool." ${BUILD_TESTS} "ENABLE_WALLET" OFF)
 
-option(ENABLE_HARDENING "Attempt to harden the resulting executables." ON)
 option(REDUCE_EXPORTS "Attempt to reduce exported symbols in the resulting executables." OFF)
 option(WERROR "Treat compiler warnings as errors." OFF)
 option(WITH_CCACHE "Attempt to use ccache for compiling." ON)
@@ -481,62 +480,60 @@ try_append_cxx_flags("-fmacro-prefix-map=A=B" TARGET core_interface SKIP_LINK
 # -fstack-reuse=none for all gcc builds. (Only gcc understands this flag).
 try_append_cxx_flags("-fstack-reuse=none" TARGET core_interface)
 
-if(ENABLE_HARDENING)
-  add_library(hardening_interface INTERFACE)
-  target_link_libraries(core_interface INTERFACE hardening_interface)
-  if(MSVC)
-    try_append_linker_flag("/DYNAMICBASE" TARGET hardening_interface)
-    try_append_linker_flag("/HIGHENTROPYVA" TARGET hardening_interface)
-    try_append_linker_flag("/NXCOMPAT" TARGET hardening_interface)
-  else()
+add_library(hardening_interface INTERFACE)
+target_link_libraries(core_interface INTERFACE hardening_interface)
+if(MSVC)
+  try_append_linker_flag("/DYNAMICBASE" TARGET hardening_interface)
+  try_append_linker_flag("/HIGHENTROPYVA" TARGET hardening_interface)
+  try_append_linker_flag("/NXCOMPAT" TARGET hardening_interface)
+else()
 
-    # _FORTIFY_SOURCE requires that there is some level of optimization,
-    # otherwise it does nothing and just creates a compiler warning.
-    try_append_cxx_flags("-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3"
-      RESULT_VAR cxx_supports_fortify_source
-      SOURCE "int main() {
-              # if !defined __OPTIMIZE__ || __OPTIMIZE__ <= 0
-                #error
-              #endif
-              }"
+  # _FORTIFY_SOURCE requires that there is some level of optimization,
+  # otherwise it does nothing and just creates a compiler warning.
+  try_append_cxx_flags("-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3"
+    RESULT_VAR cxx_supports_fortify_source
+    SOURCE "int main() {
+            # if !defined __OPTIMIZE__ || __OPTIMIZE__ <= 0
+              #error
+            #endif
+            }"
+  )
+  if(cxx_supports_fortify_source)
+    target_compile_options(hardening_interface INTERFACE
+      -U_FORTIFY_SOURCE
+      -D_FORTIFY_SOURCE=3
     )
-    if(cxx_supports_fortify_source)
-      target_compile_options(hardening_interface INTERFACE
-        -U_FORTIFY_SOURCE
-        -D_FORTIFY_SOURCE=3
-      )
-    endif()
-    unset(cxx_supports_fortify_source)
+  endif()
+  unset(cxx_supports_fortify_source)
 
-    try_append_cxx_flags("-Wstack-protector" TARGET hardening_interface SKIP_LINK)
-    try_append_cxx_flags("-fstack-protector-all" TARGET hardening_interface)
-    try_append_cxx_flags("-fcf-protection=full" TARGET hardening_interface)
+  try_append_cxx_flags("-Wstack-protector" TARGET hardening_interface SKIP_LINK)
+  try_append_cxx_flags("-fstack-protector-all" TARGET hardening_interface)
+  try_append_cxx_flags("-fcf-protection=full" TARGET hardening_interface)
 
-    if(MINGW)
-      # stack-clash-protection is a no-op for Windows.
-      # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90458 for more details.
-    else()
-      try_append_cxx_flags("-fstack-clash-protection" TARGET hardening_interface)
-    endif()
+  if(MINGW)
+    # stack-clash-protection is a no-op for Windows.
+    # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90458 for more details.
+  else()
+    try_append_cxx_flags("-fstack-clash-protection" TARGET hardening_interface)
+  endif()
 
-    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
-      if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-        try_append_cxx_flags("-mbranch-protection=bti" TARGET hardening_interface SKIP_LINK)
-      else()
-        try_append_cxx_flags("-mbranch-protection=standard" TARGET hardening_interface SKIP_LINK)
-      endif()
-    endif()
-
-    try_append_linker_flag("-Wl,--enable-reloc-section" TARGET hardening_interface)
-    try_append_linker_flag("-Wl,--dynamicbase" TARGET hardening_interface)
-    try_append_linker_flag("-Wl,--nxcompat" TARGET hardening_interface)
-    try_append_linker_flag("-Wl,--high-entropy-va" TARGET hardening_interface)
-    try_append_linker_flag("-Wl,-z,relro" TARGET hardening_interface)
-    try_append_linker_flag("-Wl,-z,now" TARGET hardening_interface)
-    try_append_linker_flag("-Wl,-z,separate-code" TARGET hardening_interface)
+  if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
     if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-      try_append_linker_flag("-Wl,-fixup_chains" TARGET hardening_interface)
+      try_append_cxx_flags("-mbranch-protection=bti" TARGET hardening_interface SKIP_LINK)
+    else()
+      try_append_cxx_flags("-mbranch-protection=standard" TARGET hardening_interface SKIP_LINK)
     endif()
+  endif()
+
+  try_append_linker_flag("-Wl,--enable-reloc-section" TARGET hardening_interface)
+  try_append_linker_flag("-Wl,--dynamicbase" TARGET hardening_interface)
+  try_append_linker_flag("-Wl,--nxcompat" TARGET hardening_interface)
+  try_append_linker_flag("-Wl,--high-entropy-va" TARGET hardening_interface)
+  try_append_linker_flag("-Wl,-z,relro" TARGET hardening_interface)
+  try_append_linker_flag("-Wl,-z,now" TARGET hardening_interface)
+  try_append_linker_flag("-Wl,-z,separate-code" TARGET hardening_interface)
+  if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    try_append_linker_flag("-Wl,-fixup_chains" TARGET hardening_interface)
   endif()
 endif()
 
@@ -672,7 +669,6 @@ message("Cross compiling ....................... ${cross_status}")
 message("C++ compiler .......................... ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}, ${CMAKE_CXX_COMPILER}")
 include(FlagsSummary)
 flags_summary()
-message("Attempt to harden executables ......... ${ENABLE_HARDENING}")
 message("Treat compiler warnings as errors ..... ${WERROR}")
 message("Use ccache for compiling .............. ${WITH_CCACHE}")
 message("\n")
