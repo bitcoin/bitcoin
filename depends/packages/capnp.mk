@@ -9,7 +9,7 @@ $(package)_sha256_hash=$(native_$(package)_sha256_hash)
 # setting in depends/config.site.in, which also hardcodes "lib".
 # Without this setting, cmake by default would use the OS library
 # directory, which might be "lib64" or something else, not "lib", on multiarch systems.
-define $(package)_set_vars :=
+define $(package)_set_vars
   $(package)_config_opts := -DBUILD_TESTING=OFF
   $(package)_config_opts += -DWITH_OPENSSL=OFF
   $(package)_config_opts += -DWITH_ZLIB=OFF
