@@ -657,7 +657,13 @@ CBlockFileInfo* BlockManager::GetBlockFileInfo(size_t n)
 
 bool BlockManager::ReadBlockUndo(CBlockUndo& blockundo, const CBlockIndex& index) const
 {
-    const FlatFilePos pos{WITH_LOCK(::cs_main, return index.GetUndoPos())};
+    FlatFilePos pos{WITH_LOCK(::cs_main, return index.GetUndoPos())};
+    if (pos.nPos < HEADER_BYTE_SIZE) {
+        LogError("%s: OpenUndoFile failed for %s while reading", __func__, pos.ToString());
+        return false;
+    }
+    uint32_t undo_size;
+    pos.nPos -= sizeof(undo_size);
 
     // Open history file to read
     AutoFile filein{OpenUndoFile(pos, true)};
@@ -668,7 +674,14 @@ bool BlockManager::ReadBlockUndo(CBlockUndo& blockundo, const CBlockIndex& index
 
     try {
         // Read block
-        HashVerifier verifier{filein}; // Use HashVerifier, as reserializing may lose data, c.f. commit d3424243
+        filein >> undo_size;
+        if (undo_size > MAX_SIZE) {
+            LogError("Refusing to read undo data of size: %d", undo_size);
+            return false;
+        }
+
+        BufferedFileR buff(filein, undo_size);
+        HashVerifier verifier{buff}; // Use HashVerifier, as reserializing may lose data, c.f. commit d3424243
 
         verifier << index.pprev->GetBlockHash();
         verifier >> blockundo;
@@ -982,9 +995,16 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
     return true;
 }
 
-bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos) const
+bool BlockManager::ReadBlock(CBlock& block, FlatFilePos pos) const
 {
     block.SetNull();
+
+    if (pos.nPos < HEADER_BYTE_SIZE) {
+        LogError("%s: OpenBlockFile failed for %s", __func__, pos.ToString());
+        return false;
+    }
+    uint32_t blk_size;
+    pos.nPos -= sizeof(blk_size);
 
     // Open history file to read
     AutoFile filein{OpenBlockFile(pos, true)};
@@ -995,7 +1015,13 @@ bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos) const
 
     try {
         // Read block
-        filein >> TX_WITH_WITNESS(block);
+        filein >> blk_size;
+        if (blk_size > MAX_SIZE) {
+            LogError("Refusing to read block of size: %d", blk_size);
+            return false;
+        }
+
+        BufferedFileR(filein, blk_size) >> TX_WITH_WITNESS(block);
     } catch (const std::exception& e) {
         LogError("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
         return false;
