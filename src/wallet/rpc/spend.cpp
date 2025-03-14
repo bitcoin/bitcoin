@@ -418,7 +418,7 @@ RPCHelpMan sendmany()
 RPCHelpMan settxfee()
 {
     return RPCHelpMan{"settxfee",
-                "\nSet the transaction fee rate in " + CURRENCY_UNIT + "/kvB for this wallet. Overrides the global -paytxfee command line parameter.\n"
+                "\n(DEPRECATED) Set the transaction fee rate in " + CURRENCY_UNIT + "/kvB for this wallet. Overrides the global -paytxfee command line parameter.\n"
                 "Can be deactivated by passing 0 as the fee. In that case automatic fee selection will be used by default.\n",
                 {
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The transaction fee rate in " + CURRENCY_UNIT + "/kvB"},
@@ -436,6 +436,11 @@ RPCHelpMan settxfee()
     if (!pwallet) return UniValue::VNULL;
 
     LOCK(pwallet->cs_wallet);
+
+    if (!pwallet->chain().rpcEnableDeprecated("settxfee")) {
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "settxfee is deprecated and will be fully removed in v31.0."
+        "\nTo use settxfee restart bitcoind with -deprecatedrpc=settxfee.");
+    }
 
     CAmount nAmount = AmountFromValue(request.params[0]);
     CFeeRate tx_fee_rate(nAmount, 1000);
