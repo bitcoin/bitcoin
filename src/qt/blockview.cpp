@@ -52,7 +52,8 @@ public:
     explicit BlockViewValidationInterface(GuiBlockView& bv) : m_bv(bv) {}
 
     void BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& block_cached, const CBlockIndex* pblockindex) override {
-        m_bv.updateBestBlock(pblockindex->nHeight);
+        static_assert(std::is_same<int, decltype(pblockindex->nHeight)>::value, "nHeight type assumption does not hold");
+        QMetaObject::invokeMethod(&m_bv, "updateBestBlock", Qt::QueuedConnection, Q_ARG(int, pblockindex->nHeight));
 
         if (!m_bv.m_follow_tip) return;
 

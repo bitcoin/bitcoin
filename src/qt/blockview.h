@@ -110,11 +110,12 @@ public:
     void setClientModel(ClientModel *model);
     ChainstateManager* getChainstateManager() const;
 
-    void updateBestBlock(int height);
-
     void clear();
     void setBlock(std::shared_ptr<const CBlock> block, CAmount block_subsidy);
     void setBlock(std::shared_ptr<const node::CBlockTemplate> blocktemplate);
+
+public Q_SLOTS:
+    void updateBestBlock(int height);
 };
 
 #endif // BITCOIN_QT_BLOCKVIEW_H
