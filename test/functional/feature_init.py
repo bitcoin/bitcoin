@@ -88,7 +88,7 @@ class InitTest(BitcoinTestFramework):
 
         args = ['-txindex=1', '-blockfilterindex=1', '-coinstatsindex=1']
         for terminate_line in lines_to_terminate_after:
-            self.log.info(f"Starting node and will exit after line {terminate_line}")
+            self.log.info(f"Starting node and will terminate after line {terminate_line}")
             with node.busy_wait_for_debug_log([terminate_line]):
                 if platform.system() == 'Windows':
                     # CREATE_NEW_PROCESS_GROUP is required in order to be able
@@ -108,12 +108,22 @@ class InitTest(BitcoinTestFramework):
             'blocks/index/*.ldb': 'Error opening block database.',
             'chainstate/*.ldb': 'Error opening coins database.',
             'blocks/blk*.dat': 'Error loading block database.',
+            'indexes/txindex/MANIFEST*': 'LevelDB error: Corruption: CURRENT points to a non-existent file',
+            # Removing these files does not result in a startup error:
+            # 'indexes/blockfilter/basic/*.dat', 'indexes/blockfilter/basic/db/*.*', 'indexes/coinstats/db/*.*',
+            # 'indexes/txindex/*.log', 'indexes/txindex/CURRENT', 'indexes/txindex/LOCK'
         }
 
         files_to_perturb = {
             'blocks/index/*.ldb': 'Error loading block database.',
             'chainstate/*.ldb': 'Error opening coins database.',
             'blocks/blk*.dat': 'Corrupted block database detected.',
+            'indexes/blockfilter/basic/db/*.*': 'LevelDB error: Corruption',
+            'indexes/coinstats/db/*.*': 'LevelDB error: Corruption',
+            'indexes/txindex/*.log': 'LevelDB error: Corruption',
+            'indexes/txindex/CURRENT': 'LevelDB error: Corruption',
+            # Perturbing these files does not result in a startup error:
+            # 'indexes/blockfilter/basic/*.dat', 'indexes/txindex/MANIFEST*', 'indexes/txindex/LOCK'
         }
 
         for file_patt, err_fragment in files_to_delete.items():
@@ -135,9 +145,10 @@ class InitTest(BitcoinTestFramework):
             self.stop_node(0)
 
         self.log.info("Test startup errors after perturbing certain essential files")
+        dirs = ["blocks", "chainstate", "indexes"]
         for file_patt, err_fragment in files_to_perturb.items():
-            shutil.copytree(node.chain_path / "blocks", node.chain_path / "blocks_bak")
-            shutil.copytree(node.chain_path / "chainstate", node.chain_path / "chainstate_bak")
+            for dir in dirs:
+                shutil.copytree(node.chain_path / dir, node.chain_path / f"{dir}_bak")
             target_files = list(node.chain_path.glob(file_patt))
 
             for target_file in target_files:
@@ -151,10 +162,9 @@ class InitTest(BitcoinTestFramework):
 
             start_expecting_error(err_fragment)
 
-            shutil.rmtree(node.chain_path / "blocks")
-            shutil.rmtree(node.chain_path / "chainstate")
-            shutil.move(node.chain_path / "blocks_bak", node.chain_path / "blocks")
-            shutil.move(node.chain_path / "chainstate_bak", node.chain_path / "chainstate")
+            for dir in dirs:
+                shutil.rmtree(node.chain_path / dir)
+                shutil.move(node.chain_path / f"{dir}_bak", node.chain_path / dir)
 
     def init_pid_test(self):
         BITCOIN_PID_FILENAME_CUSTOM = "my_fancy_bitcoin_pid_file.foobar"
