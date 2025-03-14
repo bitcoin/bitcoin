@@ -255,7 +255,8 @@ BOOST_AUTO_TEST_CASE(versionbits_test)
 }
 
 struct BlockVersionTest : BasicTestingSetup {
-/** Check that ComputeBlockVersion will set the appropriate bit correctly */
+/** Check that ComputeBlockVersion will set the appropriate bit correctly
+ * Also checks IsActiveAfter() behaviour */
 void check_computeblockversion(VersionBitsCache& versionbitscache, const Consensus::Params& params, Consensus::DeploymentPos dep)
 {
     // Clear the cache every time
@@ -279,6 +280,11 @@ void check_computeblockversion(VersionBitsCache& versionbitscache, const Consens
     if (nStartTime == Consensus::BIP9Deployment::ALWAYS_ACTIVE ||
         nStartTime == Consensus::BIP9Deployment::NEVER_ACTIVE)
     {
+        if (nStartTime == Consensus::BIP9Deployment::ALWAYS_ACTIVE) {
+            BOOST_CHECK(versionbitscache.IsActiveAfter(nullptr, params, dep));
+        } else {
+            BOOST_CHECK(!versionbitscache.IsActiveAfter(nullptr, params, dep));
+        }
         BOOST_CHECK_EQUAL(min_activation_height, 0);
         BOOST_CHECK_EQUAL(nTimeout, Consensus::BIP9Deployment::NO_TIMEOUT);
         return;
@@ -311,8 +317,10 @@ void check_computeblockversion(VersionBitsCache& versionbitscache, const Consens
         // end of the first period by mining blocks at nTime == 0
         lastBlock = firstChain.Mine(period - 1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
         BOOST_CHECK_EQUAL(versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
+        BOOST_CHECK(!versionbitscache.IsActiveAfter(lastBlock, params, dep));
         lastBlock = firstChain.Mine(period, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
         BOOST_CHECK((versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
+        BOOST_CHECK(!versionbitscache.IsActiveAfter(lastBlock, params, dep));
         // then we'll keep mining at nStartTime...
     } else {
         // use a time 1s earlier than start time to check we stay DEFINED
@@ -321,11 +329,13 @@ void check_computeblockversion(VersionBitsCache& versionbitscache, const Consens
         // Start generating blocks before nStartTime
         lastBlock = firstChain.Mine(period, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
         BOOST_CHECK_EQUAL(versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
+        BOOST_CHECK(!versionbitscache.IsActiveAfter(lastBlock, params, dep));
 
         // Mine more blocks (4 less than the adjustment period) at the old time, and check that CBV isn't setting the bit yet.
         for (uint32_t i = 1; i < period - 4; i++) {
             lastBlock = firstChain.Mine(period + i, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
             BOOST_CHECK_EQUAL(versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
+            BOOST_CHECK(!versionbitscache.IsActiveAfter(lastBlock, params, dep));
         }
         // Now mine 5 more blocks at the start time -- MTP should not have passed yet, so
         // CBV should still not yet set the bit.
@@ -333,6 +343,7 @@ void check_computeblockversion(VersionBitsCache& versionbitscache, const Consens
         for (uint32_t i = period - 4; i <= period; i++) {
             lastBlock = firstChain.Mine(period + i, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
             BOOST_CHECK_EQUAL(versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
+            BOOST_CHECK(!versionbitscache.IsActiveAfter(lastBlock, params, dep));
         }
         // Next we will advance to the next period and transition to STARTED,
     }
@@ -342,6 +353,7 @@ void check_computeblockversion(VersionBitsCache& versionbitscache, const Consens
     BOOST_CHECK((versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
     // and should also be using the VERSIONBITS_TOP_BITS.
     BOOST_CHECK_EQUAL(versionbitscache.ComputeBlockVersion(lastBlock, params) & VERSIONBITS_TOP_MASK, VERSIONBITS_TOP_BITS);
+    BOOST_CHECK(!versionbitscache.IsActiveAfter(lastBlock, params, dep));
 
     // Check that ComputeBlockVersion will set the bit until nTimeout
     nTime += 600;
@@ -352,6 +364,7 @@ void check_computeblockversion(VersionBitsCache& versionbitscache, const Consens
         lastBlock = firstChain.Mine(nHeight+1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
         BOOST_CHECK((versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
         BOOST_CHECK_EQUAL(versionbitscache.ComputeBlockVersion(lastBlock, params) & VERSIONBITS_TOP_MASK, VERSIONBITS_TOP_BITS);
+        BOOST_CHECK(!versionbitscache.IsActiveAfter(lastBlock, params, dep));
         blocksToMine--;
         nTime += 600;
         nHeight += 1;
@@ -366,6 +379,7 @@ void check_computeblockversion(VersionBitsCache& versionbitscache, const Consens
         while (nHeight % period != 0) {
             lastBlock = firstChain.Mine(nHeight+1, nTime - 1, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
             BOOST_CHECK((versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
+            BOOST_CHECK(!versionbitscache.IsActiveAfter(lastBlock, params, dep));
             nHeight += 1;
         }
 
@@ -374,11 +388,13 @@ void check_computeblockversion(VersionBitsCache& versionbitscache, const Consens
         for (uint32_t i = 0; i < period - 1; i++) {
             lastBlock = firstChain.Mine(nHeight+1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
             BOOST_CHECK((versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
+            BOOST_CHECK(!versionbitscache.IsActiveAfter(lastBlock, params, dep));
             nHeight += 1;
         }
         // The next block should trigger no longer setting the bit.
         lastBlock = firstChain.Mine(nHeight+1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
         BOOST_CHECK_EQUAL(versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
+        BOOST_CHECK(!versionbitscache.IsActiveAfter(lastBlock, params, dep));
     }
 
     // On a new chain:
@@ -390,29 +406,34 @@ void check_computeblockversion(VersionBitsCache& versionbitscache, const Consens
     // next period.
     lastBlock = secondChain.Mine(period, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
     BOOST_CHECK((versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
+    BOOST_CHECK(!versionbitscache.IsActiveAfter(lastBlock, params, dep));
 
     // Mine another period worth of blocks, signaling the new bit.
     lastBlock = secondChain.Mine(period * 2, nTime, VERSIONBITS_TOP_BITS | (1<<bit)).Tip();
     // After one period of setting the bit on each block, it should have locked in.
     // We keep setting the bit for one more period though, until activation.
     BOOST_CHECK((versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
+    BOOST_CHECK(!versionbitscache.IsActiveAfter(lastBlock, params, dep));
 
     // Now check that we keep mining the block until the end of this period, and
     // then stop at the beginning of the next period.
     lastBlock = secondChain.Mine((period * 3) - 1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
     BOOST_CHECK((versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
+    BOOST_CHECK(!versionbitscache.IsActiveAfter(lastBlock, params, dep));
     lastBlock = secondChain.Mine(period * 3, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
 
     if (lastBlock->nHeight + 1 < min_activation_height) {
         // check signalling continues while min_activation_height is not reached
         lastBlock = secondChain.Mine(min_activation_height - 1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
         BOOST_CHECK((versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
+        BOOST_CHECK(!versionbitscache.IsActiveAfter(lastBlock, params, dep));
         // then reach min_activation_height, which was already REQUIRE'd to start a new period
         lastBlock = secondChain.Mine(min_activation_height, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
     }
 
     // Check that we don't signal after activation
     BOOST_CHECK_EQUAL(versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
+    BOOST_CHECK(versionbitscache.IsActiveAfter(lastBlock, params, dep));
 }
 }; // struct BlockVersionTest
 
