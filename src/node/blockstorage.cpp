@@ -666,21 +666,23 @@ bool BlockManager::ReadBlockUndo(CBlockUndo& blockundo, const CBlockIndex& index
         return false;
     }
 
-    // Read block
-    uint256 hashChecksum;
-    HashVerifier verifier{filein}; // Use HashVerifier as reserializing may lose data, c.f. commit d342424301013ec47dc146a4beb49d5c9319d80a
     try {
+        // Read block
+        HashVerifier verifier{filein}; // Use HashVerifier, as reserializing may lose data, c.f. commit d3424243
+
         verifier << index.pprev->GetBlockHash();
         verifier >> blockundo;
+
+        uint256 hashChecksum;
         filein >> hashChecksum;
+
+        // Verify checksum
+        if (hashChecksum != verifier.GetHash()) {
+            LogError("%s: Checksum mismatch at %s\n", __func__, pos.ToString());
+            return false;
+        }
     } catch (const std::exception& e) {
         LogError("%s: Deserialize or I/O error - %s at %s\n", __func__, e.what(), pos.ToString());
-        return false;
-    }
-
-    // Verify checksum
-    if (hashChecksum != verifier.GetHash()) {
-        LogError("%s: Checksum mismatch at %s\n", __func__, pos.ToString());
         return false;
     }
 
@@ -945,15 +947,14 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
 
         // Write index header
         fileout << GetParams().MessageStart() << blockundo_size;
-        // Write undo data
         pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
-        fileout << blockundo;
-
-        // Calculate & write checksum
-        HashWriter hasher{};
-        hasher << block.pprev->GetBlockHash();
-        hasher << blockundo;
-        fileout << hasher.GetHash();
+        {
+            // Calculate checksum
+            HashWriter hasher{};
+            hasher << block.pprev->GetBlockHash() << blockundo;
+            // Write undo data & checksum
+            fileout << blockundo << hasher.GetHash();
+        }
 
         // rev files are written in block height order, whereas blk files are written as blocks come in (often out of order)
         // we want to flush the rev (undo) file once we've written the last block, which is indicated by the last height
@@ -992,8 +993,8 @@ bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos) const
         return false;
     }
 
-    // Read block
     try {
+        // Read block
         filein >> TX_WITH_WITNESS(block);
     } catch (const std::exception& e) {
         LogError("%s: Deserialize or I/O error - %s at %s\n", __func__, e.what(), pos.ToString());
@@ -1091,8 +1092,8 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
 
     // Write index header
     fileout << GetParams().MessageStart() << block_size;
-    // Write block
     pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
+    // Write block
     fileout << TX_WITH_WITNESS(block);
     return pos;
 }
