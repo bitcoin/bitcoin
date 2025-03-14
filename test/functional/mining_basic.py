@@ -40,7 +40,10 @@ from test_framework.util import (
     assert_raises_rpc_error,
     get_fee,
 )
-from test_framework.wallet import MiniWallet
+from test_framework.wallet import (
+    MiniWallet,
+    MiniWalletMode,
+)
 
 
 DIFFICULTY_ADJUSTMENT_INTERVAL = 144
@@ -92,6 +95,57 @@ class MiningTest(BitcoinTestFramework):
         assert_equal(VERSIONBITS_TOP_BITS + (1 << VERSIONBITS_DEPLOYMENT_TESTDUMMY_BIT), self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['version'])
         self.restart_node(0)
         self.connect_nodes(0, 1)
+
+    def test_fees_and_sigops(self):
+        self.log.info("Test fees and sigops in getblocktemplate result")
+        node = self.nodes[0]
+
+        # Generate a coinbases with p2pk transactions for its sigops.
+        wallet_sigops = MiniWallet(node, mode=MiniWalletMode.RAW_P2PK)
+        self.generate(wallet_sigops, 1, sync_fun=self.no_op)
+
+        # Mature with regular coinbases to prevent inteference with other tests
+        self.generate(self.wallet, 100, sync_fun=self.no_op)
+
+        # Generate three transactions that must be mined in sequence
+        #
+        #      tx_a (1 sat/vbyte)
+        #        |
+        #        |
+        #      tx_b (2 sat/vbyte)
+        #        |
+        #        |
+        #      tx_c (3 sat/vbyte)
+        #
+        tx_a = wallet_sigops.send_self_transfer(from_node=node,
+                                                fee_rate=Decimal("0.00001"))
+        tx_b = wallet_sigops.send_self_transfer(from_node=node,
+                                                fee_rate=Decimal("0.00002"),
+                                                utxo_to_spend=tx_a["new_utxo"])
+        tx_c = wallet_sigops.send_self_transfer(from_node=node,
+                                                fee_rate=Decimal("0.00003"),
+                                                utxo_to_spend=tx_b["new_utxo"])
+
+        # Generate transaction without sigops. It will go first because it pays
+        # higher fees (100 sat/vbyte) and descends from a different coinbase.
+        tx_d = self.wallet.send_self_transfer(from_node=node,
+                                              fee_rate=Decimal("0.00100"))
+
+        block_template_txs = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['transactions']
+
+        block_template_fees = [tx['fee'] for tx in block_template_txs]
+        assert_equal(block_template_fees, [
+            tx_d["fee"] * COIN,
+            tx_a["fee"] * COIN,
+            tx_b["fee"] * COIN,
+            tx_c["fee"] * COIN
+        ])
+
+        block_template_sigops = [tx['sigops'] for tx in block_template_txs]
+        assert_equal(block_template_sigops, [0, 4, 4, 4])
+
+        # Clear mempool
+        self.generate(self.wallet, 1, sync_fun=self.no_op)
 
     def test_blockmintxfee_parameter(self):
         self.log.info("Test -blockmintxfee setting")
@@ -533,6 +587,7 @@ class MiningTest(BitcoinTestFramework):
         node.submitheader(hexdata=CBlockHeader(bad_block_root).serialize().hex())
         assert_equal(node.submitblock(hexdata=block.serialize().hex()), 'duplicate')  # valid
 
+        self.test_fees_and_sigops()
         self.test_blockmintxfee_parameter()
         self.test_block_max_weight()
         self.test_timewarp()
