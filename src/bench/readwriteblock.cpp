@@ -27,7 +27,7 @@ static CBlock CreateTestBlock()
     return block;
 }
 
-static void SaveBlockBench(benchmark::Bench& bench)
+static void WriteBlockBench(benchmark::Bench& bench)
 {
     const auto testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN)};
     auto& blockman{testing_setup->m_node.chainman->m_blockman};
@@ -63,6 +63,6 @@ static void ReadRawBlockBench(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(SaveBlockBench, benchmark::PriorityLevel::HIGH);
+BENCHMARK(WriteBlockBench, benchmark::PriorityLevel::HIGH);
 BENCHMARK(ReadBlockBench, benchmark::PriorityLevel::HIGH);
 BENCHMARK(ReadRawBlockBench, benchmark::PriorityLevel::HIGH);
