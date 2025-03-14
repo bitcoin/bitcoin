@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -71,13 +71,13 @@ private:
     bool m_txn{false};
 
     void SetupSQLStatements();
-    bool ExecStatement(sqlite3_stmt* stmt, Span<const std::byte> blob);
+    bool ExecStatement(sqlite3_stmt* stmt, std::span<const std::byte> blob);
 
     bool ReadKey(DataStream&& key, DataStream& value) override;
     bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) override;
     bool EraseKey(DataStream&& key) override;
     bool HasKey(DataStream&& key) override;
-    bool ErasePrefix(Span<const std::byte> prefix) override;
+    bool ErasePrefix(std::span<const std::byte> prefix) override;
 
 public:
     explicit SQLiteBatch(SQLiteDatabase& database);
@@ -91,7 +91,7 @@ public:
     void Close() override;
 
     std::unique_ptr<DatabaseCursor> GetNewCursor() override;
-    std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(Span<const std::byte> prefix) override;
+    std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(std::span<const std::byte> prefix) override;
     bool TxnBegin() override;
     bool TxnCommit() override;
     bool TxnAbort() override;

@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -481,13 +481,13 @@ void CheckInferDescriptor(const std::string& script_hex, const std::string& expe
 
         if (!origin_str.empty()) {
             KeyOriginInfo info;
-            Span<const char> origin_sp{origin_str};
-            std::vector<Span<const char>> origin_split = Split(origin_sp, "/");
+            std::span<const char> origin_sp{origin_str};
+            std::vector<std::span<const char>> origin_split = Split(origin_sp, "/");
             std::string fpr_str(origin_split[0].begin(), origin_split[0].end());
             auto fpr_bytes = ParseHex(fpr_str);
             std::copy(fpr_bytes.begin(), fpr_bytes.end(), info.fingerprint);
             for (size_t i = 1; i < origin_split.size(); ++i) {
-                Span<const char> elem = origin_split[i];
+                std::span<const char> elem = origin_split[i];
                 bool hardened = false;
                 if (elem.size() > 0) {
                     const char last = elem[elem.size() - 1];

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
         // Read raw from disk
         AutoFile non_xor_file{raw_file("rb")};
         std::vector<std::byte> raw(7);
-        non_xor_file >> Span{raw};
+        non_xor_file >> std::span{raw};
         BOOST_CHECK_EQUAL(HexStr(raw), "fc01fd03fd04fa");
         // Check that no padding exists
         BOOST_CHECK_EXCEPTION(non_xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: end of file"});
