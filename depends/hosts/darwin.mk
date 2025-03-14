@@ -73,7 +73,7 @@ endif
 darwin_release_CFLAGS=-O2
 darwin_release_CXXFLAGS=$(darwin_release_CFLAGS)
 
-darwin_debug_CFLAGS=-O1 -g
+darwin_debug_CFLAGS=-O0 -g
 darwin_debug_CXXFLAGS=$(darwin_debug_CFLAGS)
 
 darwin_cmake_system_name=Darwin
