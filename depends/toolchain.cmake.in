@@ -146,12 +146,6 @@ else()
   set(WITH_USDT ON CACHE BOOL "")
 endif()
 
-if("@no_harden@")
-  set(ENABLE_HARDENING OFF CACHE BOOL "")
-else()
-  set(ENABLE_HARDENING ON CACHE BOOL "")
-endif()
-
 if("@multiprocess@" STREQUAL "1")
   set(WITH_MULTIPROCESS ON CACHE BOOL "")
   set(Libmultiprocess_ROOT "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "")
