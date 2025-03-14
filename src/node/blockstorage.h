@@ -75,10 +75,10 @@ static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
 static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 
 /** Size of header written by WriteBlock before a serialized CBlock (8 bytes) */
-static constexpr size_t BLOCK_SERIALIZATION_HEADER_SIZE{std::tuple_size_v<MessageStartChars> + sizeof(unsigned int)};
+static constexpr size_t HEADER_BYTE_SIZE{std::tuple_size_v<MessageStartChars> + sizeof(unsigned int)};
 
 /** Total overhead when writing undo data: header (8 bytes) plus checksum (32 bytes) */
-static constexpr size_t UNDO_DATA_DISK_OVERHEAD{BLOCK_SERIALIZATION_HEADER_SIZE + uint256::size()};
+static constexpr size_t UNDO_DATA_DISK_OVERHEAD{HEADER_BYTE_SIZE + uint256::size()};
 
 // Because validation code takes pointers to the map's CBlockIndex objects, if
 // we ever switch to another associative container, we need to either use a
@@ -164,7 +164,7 @@ private:
      * blockfile info, and checks if there is enough disk space to save the block.
      *
      * The nAddSize argument passed to this function should include not just the size of the serialized CBlock, but also the size of
-     * separator fields (BLOCK_SERIALIZATION_HEADER_SIZE).
+     * separator fields (HEADER_BYTE_SIZE).
      */
     [[nodiscard]] FlatFilePos FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime);
     [[nodiscard]] bool FlushChainstateBlockFile(int tip_height);
@@ -411,7 +411,7 @@ public:
     void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune) const;
 
     /** Functions for disk access for blocks */
-    bool ReadBlock(CBlock& block, const FlatFilePos& pos) const;
+    bool ReadBlock(CBlock& block, FlatFilePos pos) const;
     bool ReadBlock(CBlock& block, const CBlockIndex& index) const;
     bool ReadRawBlock(std::vector<uint8_t>& block, const FlatFilePos& pos) const;
 

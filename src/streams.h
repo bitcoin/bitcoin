@@ -23,6 +23,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <util/check.h>
 
 namespace util {
 inline void Xor(Span<std::byte> write, Span<const std::byte> key, size_t key_offset = 0)
@@ -162,6 +163,7 @@ public:
     typedef vector_type::reverse_iterator reverse_iterator;
 
     explicit DataStream() = default;
+    explicit DataStream(size_type n) { reserve(n); }
     explicit DataStream(Span<const uint8_t> sp) : DataStream{AsBytes(sp)} {}
     explicit DataStream(Span<const value_type> sp) : vch(sp.data(), sp.data() + sp.size()) {}
 
@@ -451,6 +453,7 @@ public:
     void read(Span<std::byte> dst);
     void ignore(size_t nSize);
     void write(Span<const std::byte> src);
+    void write_large(Span<std::byte> src);  // Note that src will be mutated
 
     template <typename T>
     AutoFile& operator<<(const T& obj)
@@ -463,6 +466,54 @@ public:
     AutoFile& operator>>(T&& obj)
     {
         ::Unserialize(*this, obj);
+        return *this;
+    }
+};
+
+class BufferedFileW
+{
+    AutoFile& m_file;
+    uint32_t m_buffer_size;
+    DataStream m_buf;
+
+public:
+    explicit BufferedFileW(AutoFile& file, const uint32_t buffer_size)
+        : m_file(file), m_buffer_size{buffer_size}, m_buf{buffer_size} {}
+
+    ~BufferedFileW()
+    {
+        Assert(m_buf.size() <= m_buffer_size);
+        m_file.write_large(m_buf);
+    }
+
+    void write(Span<const std::byte> src) { m_buf.write(src); }
+
+    template <typename T>
+    BufferedFileW& operator<<(const T& obj)
+    {
+        Serialize(m_buf, obj);
+        return *this;
+    }
+};
+
+class BufferedFileR
+{
+    DataStream m_buf;
+
+public:
+    explicit BufferedFileR(AutoFile& file, const uint32_t buffer_size)
+    {
+        m_buf.resize(buffer_size);
+        file.read(m_buf);
+        Assert(m_buf.size() == buffer_size);
+    }
+
+    void read(Span<std::byte> dst) { m_buf.read(dst); }
+
+    template <typename T>
+    BufferedFileR& operator>>(T&& obj)
+    {
+        Unserialize(m_buf, obj);
         return *this;
     }
 };

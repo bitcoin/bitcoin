@@ -102,6 +102,16 @@ void AutoFile::write(Span<const std::byte> src)
     }
 }
 
+void AutoFile::write_large(Span<std::byte> src)
+{
+    if (!m_file) throw std::ios_base::failure("AutoFile::write_large: file handle is nullptr");
+    util::Xor(src, m_xor, *m_position); // obfuscate in-place
+    if (std::fwrite(src.data(), 1, src.size(), m_file) != src.size()) {
+        throw std::ios_base::failure("AutoFile::write_large: write failed");
+    }
+    if (m_position) *m_position += src.size();
+}
+
 bool AutoFile::Commit()
 {
     return ::FileCommit(m_file);
