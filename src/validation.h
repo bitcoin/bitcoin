@@ -44,6 +44,7 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
 class Chainstate;
@@ -63,6 +64,9 @@ struct Params;
 namespace util {
 class SignalInterrupt;
 } // namespace util
+
+using ScriptFailureResult = std::pair<ScriptError, std::string>;
+using BatchableResult = std::variant<std::vector<SchnorrSignatureToVerify>, ScriptFailureResult>;
 
 /** Block files containing a block-height within MIN_BLOCKS_TO_KEEP of ActiveChain().Tip() will not be pruned. */
 static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
@@ -329,7 +333,7 @@ bool CheckSequenceLocksAtTip(CBlockIndex* tip,
  */
 class CScriptCheck
 {
-private:
+protected:
     CTxOut m_tx_out;
     const CTransaction *ptxTo;
     unsigned int nIn;
@@ -348,6 +352,14 @@ public:
     CScriptCheck& operator=(CScriptCheck&&) = default;
 
     std::optional<std::pair<ScriptError, std::string>> operator()();
+};
+
+class BatchableScriptCheck : CScriptCheck
+{
+public:
+    BatchableScriptCheck(CScriptCheck&& other) : CScriptCheck(std::move(other)) {}
+
+    BatchableResult operator()();
 };
 
 // CScriptCheck is used a lot in std::vector, make sure that's efficient
@@ -947,7 +959,7 @@ private:
     }
 
     //! A queue for script verifications that have to be performed by worker threads.
-    CCheckQueue<CScriptCheck> m_script_check_queue;
+    CCheckQueue<BatchableScriptCheck, ScriptFailureResult> m_script_check_queue;
 
     //! Timers and counters used for benchmarking validation in both background
     //! and active chainstates.
@@ -1322,7 +1334,7 @@ public:
     //! header in our block-index not known to be invalid, recalculate it.
     void RecalculateBestHeader() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    CCheckQueue<CScriptCheck>& GetCheckQueue() { return m_script_check_queue; }
+    CCheckQueue<BatchableScriptCheck, ScriptFailureResult>& GetCheckQueue() { return m_script_check_queue; }
 
     ~ChainstateManager();
 };
