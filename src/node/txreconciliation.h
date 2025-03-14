@@ -61,6 +61,12 @@ public:
      */
     uint32_t ComputeShortID(const Wtxid& wtxid) const;
 
+    /**
+     * Check whether a given wtxid has a short ID collision with an existing transaction in the peer's reconciliation state.
+     * If a collision is found, sets collision to the wtxid of the conflicting transaction.
+    */
+    bool HasCollision(const Wtxid& wtxid, Wtxid& collision, uint32_t &short_id);
+
 private:
     /** Hasher used to compute salted short IDs, which are necessary for transaction reconciliations. */
     PresaltedSipHasher m_hasher;
