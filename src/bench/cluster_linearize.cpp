@@ -23,10 +23,10 @@ namespace {
  *  remaining transaction, whose removal requires updating all remaining transactions' ancestor
  *  set feerates. */
 template<typename SetType>
-DepGraph<SetType> MakeLinearGraph(ClusterIndex ntx)
+DepGraph<SetType> MakeLinearGraph(DepGraphIndex ntx)
 {
     DepGraph<SetType> depgraph;
-    for (ClusterIndex i = 0; i < ntx; ++i) {
+    for (DepGraphIndex i = 0; i < ntx; ++i) {
         depgraph.AddTransaction({-int32_t(i), 1});
         if (i > 0) depgraph.AddDependencies(SetType::Singleton(i - 1), i);
     }
@@ -38,10 +38,10 @@ DepGraph<SetType> MakeLinearGraph(ClusterIndex ntx)
  *  rechunking is needed after every candidate (the last transaction gets picked every time).
  */
 template<typename SetType>
-DepGraph<SetType> MakeWideGraph(ClusterIndex ntx)
+DepGraph<SetType> MakeWideGraph(DepGraphIndex ntx)
 {
     DepGraph<SetType> depgraph;
-    for (ClusterIndex i = 0; i < ntx; ++i) {
+    for (DepGraphIndex i = 0; i < ntx; ++i) {
         depgraph.AddTransaction({int32_t(i) + 1, 1});
         if (i > 0) depgraph.AddDependencies(SetType::Singleton(0), i);
     }
@@ -51,10 +51,10 @@ DepGraph<SetType> MakeWideGraph(ClusterIndex ntx)
 // Construct a difficult graph. These need at least sqrt(2^(n-1)) iterations in the implemented
 // algorithm (purely empirically determined).
 template<typename SetType>
-DepGraph<SetType> MakeHardGraph(ClusterIndex ntx)
+DepGraph<SetType> MakeHardGraph(DepGraphIndex ntx)
 {
     DepGraph<SetType> depgraph;
-    for (ClusterIndex i = 0; i < ntx; ++i) {
+    for (DepGraphIndex i = 0; i < ntx; ++i) {
         if (ntx & 1) {
             // Odd cluster size.
             //
@@ -121,7 +121,7 @@ DepGraph<SetType> MakeHardGraph(ClusterIndex ntx)
  * iterations difference.
  */
 template<typename SetType>
-void BenchLinearizeWorstCase(ClusterIndex ntx, benchmark::Bench& bench, uint64_t iter_limit)
+void BenchLinearizeWorstCase(DepGraphIndex ntx, benchmark::Bench& bench, uint64_t iter_limit)
 {
     const auto depgraph = MakeHardGraph<SetType>(ntx);
     uint64_t rng_seed = 0;
@@ -147,12 +147,12 @@ void BenchLinearizeWorstCase(ClusterIndex ntx, benchmark::Bench& bench, uint64_t
  * cheap.
  */
 template<typename SetType>
-void BenchLinearizeNoItersWorstCaseAnc(ClusterIndex ntx, benchmark::Bench& bench)
+void BenchLinearizeNoItersWorstCaseAnc(DepGraphIndex ntx, benchmark::Bench& bench)
 {
     const auto depgraph = MakeLinearGraph<SetType>(ntx);
     uint64_t rng_seed = 0;
-    std::vector<ClusterIndex> old_lin(ntx);
-    for (ClusterIndex i = 0; i < ntx; ++i) old_lin[i] = i;
+    std::vector<DepGraphIndex> old_lin(ntx);
+    for (DepGraphIndex i = 0; i < ntx; ++i) old_lin[i] = i;
     bench.run([&] {
         Linearize(depgraph, /*max_iterations=*/0, rng_seed++, old_lin);
     });
@@ -167,41 +167,41 @@ void BenchLinearizeNoItersWorstCaseAnc(ClusterIndex ntx, benchmark::Bench& bench
  * AncestorCandidateFinder is cheap.
  */
 template<typename SetType>
-void BenchLinearizeNoItersWorstCaseLIMO(ClusterIndex ntx, benchmark::Bench& bench)
+void BenchLinearizeNoItersWorstCaseLIMO(DepGraphIndex ntx, benchmark::Bench& bench)
 {
     const auto depgraph = MakeWideGraph<SetType>(ntx);
     uint64_t rng_seed = 0;
-    std::vector<ClusterIndex> old_lin(ntx);
-    for (ClusterIndex i = 0; i < ntx; ++i) old_lin[i] = i;
+    std::vector<DepGraphIndex> old_lin(ntx);
+    for (DepGraphIndex i = 0; i < ntx; ++i) old_lin[i] = i;
     bench.run([&] {
         Linearize(depgraph, /*max_iterations=*/0, rng_seed++, old_lin);
     });
 }
 
 template<typename SetType>
-void BenchPostLinearizeWorstCase(ClusterIndex ntx, benchmark::Bench& bench)
+void BenchPostLinearizeWorstCase(DepGraphIndex ntx, benchmark::Bench& bench)
 {
     DepGraph<SetType> depgraph = MakeWideGraph<SetType>(ntx);
-    std::vector<ClusterIndex> lin(ntx);
+    std::vector<DepGraphIndex> lin(ntx);
     bench.run([&] {
-        for (ClusterIndex i = 0; i < ntx; ++i) lin[i] = i;
+        for (DepGraphIndex i = 0; i < ntx; ++i) lin[i] = i;
         PostLinearize(depgraph, lin);
     });
 }
 
 template<typename SetType>
-void BenchMergeLinearizationsWorstCase(ClusterIndex ntx, benchmark::Bench& bench)
+void BenchMergeLinearizationsWorstCase(DepGraphIndex ntx, benchmark::Bench& bench)
 {
     DepGraph<SetType> depgraph;
-    for (ClusterIndex i = 0; i < ntx; ++i) {
+    for (DepGraphIndex i = 0; i < ntx; ++i) {
         depgraph.AddTransaction({i, 1});
         if (i) depgraph.AddDependencies(SetType::Singleton(0), i);
     }
-    std::vector<ClusterIndex> lin1;
-    std::vector<ClusterIndex> lin2;
+    std::vector<DepGraphIndex> lin1;
+    std::vector<DepGraphIndex> lin2;
     lin1.push_back(0);
     lin2.push_back(0);
-    for (ClusterIndex i = 1; i < ntx; ++i) {
+    for (DepGraphIndex i = 1; i < ntx; ++i) {
         lin1.push_back(i);
         lin2.push_back(ntx - i);
     }
@@ -214,7 +214,7 @@ template<size_t N>
 void BenchLinearizeOptimally(benchmark::Bench& bench, const std::array<uint8_t, N>& serialized)
 {
     // Determine how many transactions the serialized cluster has.
-    ClusterIndex num_tx{0};
+    DepGraphIndex num_tx{0};
     {
         SpanReader reader{serialized};
         DepGraph<BitSet<128>> depgraph;

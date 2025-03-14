@@ -156,4 +156,26 @@ struct FeeFrac
  */
 std::partial_ordering CompareChunks(Span<const FeeFrac> chunks0, Span<const FeeFrac> chunks1);
 
+/** Tagged wrapper around FeeFrac to avoid unit confusion. */
+template<typename Tag>
+struct FeePerUnit : public FeeFrac
+{
+    // Inherit FeeFrac constructors.
+    using FeeFrac::FeeFrac;
+
+    /** Convert a FeeFrac to a FeePerUnit. */
+    static FeePerUnit FromFeeFrac(const FeeFrac& feefrac) noexcept
+    {
+        return {feefrac.fee, feefrac.size};
+    }
+};
+
+// FeePerUnit instance for satoshi / vbyte.
+struct VSizeTag {};
+using FeePerVSize = FeePerUnit<VSizeTag>;
+
+// FeePerUnit instance for satoshi / WU.
+struct WeightTag {};
+using FeePerWeight = FeePerUnit<WeightTag>;
+
 #endif // BITCOIN_UTIL_FEEFRAC_H
