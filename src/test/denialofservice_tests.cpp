@@ -55,7 +55,6 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
     NodeId id{0};
     CNode dummyNode1{id++,
-                     /*sock=*/nullptr,
                      addr1,
                      /*nKeyedNetGroupIn=*/0,
                      /*nLocalHostNonceIn=*/0,
@@ -121,7 +120,6 @@ void AddRandomOutboundPeer(NodeId& id, std::vector<CNode*>& vNodes, PeerManager&
     }
 
     vNodes.emplace_back(new CNode{id++,
-                                  /*sock=*/nullptr,
                                   addr,
                                   /*nKeyedNetGroupIn=*/0,
                                   /*nLocalHostNonceIn=*/0,
@@ -320,7 +318,6 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     banman->ClearBanned();
     NodeId id{0};
     nodes[0] = new CNode{id++,
-                         /*sock=*/nullptr,
                          addr[0],
                          /*nKeyedNetGroupIn=*/0,
                          /*nLocalHostNonceIn=*/0,
@@ -340,7 +337,6 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     BOOST_CHECK(!banman->IsDiscouraged(other_addr)); // Different address, not discouraged
 
     nodes[1] = new CNode{id++,
-                         /*sock=*/nullptr,
                          addr[1],
                          /*nKeyedNetGroupIn=*/1,
                          /*nLocalHostNonceIn=*/1,
@@ -370,7 +366,6 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     // Make sure non-IP peers are discouraged and disconnected properly.
 
     nodes[2] = new CNode{id++,
-                         /*sock=*/nullptr,
                          addr[2],
                          /*nKeyedNetGroupIn=*/1,
                          /*nLocalHostNonceIn=*/1,
@@ -412,7 +407,6 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     CAddress addr(ip(0xa0b0c001), NODE_NONE);
     NodeId id{0};
     CNode dummyNode{id++,
-                    /*sock=*/nullptr,
                     addr,
                     /*nKeyedNetGroupIn=*/4,
                     /*nLocalHostNonceIn=*/4,
