@@ -121,6 +121,11 @@ BOOST_FIXTURE_TEST_SUITE(txreconciliation_tests, BasicTestingSetup)
 
 constexpr uint64_t REMOTE_SALT = 0;
 
+// A pair of wtxids whose short ids collide on a link salted with (2, 1). Precomputed under
+// BIP-330's derivation, 1 + (s mod 0xFFFFFFFF); regenerate if that ever changes.
+const Wtxid COLLIDING_WTXID{Wtxid::FromUint256(uint256("fdfb332e93ecd3b28835f51f9d999278dba2c10fb45611229a17136a00a4d3c9"))};
+const Wtxid COLLIDING_WTXID_2{Wtxid::FromUint256(uint256("8f16f117d30b68c6fcdd1ee033d2b4f8aba719088e5aff78c8f9536aeb1388b4"))};
+
 BOOST_AUTO_TEST_CASE(RegisterPeerTest)
 {
     TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
@@ -236,14 +241,49 @@ BOOST_AUTO_TEST_CASE(AddToSetTest)
     BOOST_REQUIRE(!tracker.RegisterPeer(peer_id1, /*is_peer_inbound=*/true, TXRECONCILIATION_VERSION, REMOTE_SALT).has_value());
     BOOST_REQUIRE(tracker.IsPeerRegistered(peer_id1));
 
-    // As long as the peer is registered and the transaction is not in the set, adding it should succeed
-    for (size_t i = 0; i < MAX_RECONSET_SIZE; ++i)
-        BOOST_REQUIRE(!tracker.AddToSet(peer_id1, Wtxid::FromUint256(frc.rand256())).has_value());
+    // As long as the peer is registered, the transaction is not in the set, and there is no short id
+    // collision, adding should work
+    size_t added_txs = 0;
+    while (added_txs < MAX_RECONSET_SIZE) {
+        wtxid = Wtxid::FromUint256(frc.rand256());
+        auto r = tracker.AddToSet(peer_id1, wtxid);
+        if (!r.has_value()) {
+            ++added_txs;
+        } else {
+            BOOST_REQUIRE_EQUAL(r.value().m_error, ReconciliationError::SHORTID_COLLISION);
+            BOOST_REQUIRE(r.value().m_collision.has_value());
+        }
+    }
 
     // Adding one item over the limit should fail
     error = tracker.AddToSet(peer_id1, Wtxid::FromUint256(frc.rand256())).value();
     BOOST_REQUIRE_EQUAL(error.m_error, ReconciliationError::FULL_RECON_SET);
     BOOST_REQUIRE(!error.m_collision.has_value());
+
+    // Trying to add the same item twice will just bypass
+    BOOST_REQUIRE(!tracker.AddToSet(peer_id1, wtxid).has_value());
+}
+
+BOOST_AUTO_TEST_CASE(AddToSetCollisionTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0;
+    uint64_t precomputed_remote_salt = 1;
+
+    // Precompute collision
+    const Wtxid wtxid{COLLIDING_WTXID};
+    const Wtxid collision{COLLIDING_WTXID_2};
+
+    // Register the peer with a predefined salt so we can force the collision
+    tracker.PreRegisterPeerWithSalt(peer_id0, 2);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound=*/true, TXRECONCILIATION_VERSION, precomputed_remote_salt).has_value());
+    BOOST_REQUIRE(tracker.IsPeerRegistered(peer_id0));
+
+    // Once the peer is registered, we can try to add both transactions and check
+    BOOST_REQUIRE(!tracker.AddToSet(peer_id0, wtxid).has_value());
+    auto error = tracker.AddToSet(peer_id0, collision);
+    BOOST_REQUIRE_EQUAL(error.value().m_error, ReconciliationError::SHORTID_COLLISION);
+    BOOST_REQUIRE_EQUAL(error.value().GetCollision(), wtxid);
 }
 
 BOOST_AUTO_TEST_CASE(TryRemovingFromSetTest)
@@ -252,14 +292,15 @@ BOOST_AUTO_TEST_CASE(TryRemovingFromSetTest)
     NodeId peer_id0 = 0;
     FastRandomContext frc{/*fDeterministic=*/true};
 
-    Wtxid wtxid{Wtxid::FromUint256(frc.rand256())};
+    const Wtxid wtxid{COLLIDING_WTXID};
+    const Wtxid collision{COLLIDING_WTXID_2};
 
     // If the peer is not registered, removing will fail
     BOOST_REQUIRE(!tracker.IsPeerRegistered(peer_id0));
     BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, wtxid));
 
-    // This holds even if the peer is just pre-registered
-    tracker.PreRegisterPeer(peer_id0);
+    // This holds even if the peer is just pre-registered (register specific salt so we can also check collisions)
+    tracker.PreRegisterPeerWithSalt(peer_id0, 2);
     BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, wtxid));
 
     // If the peer is registered but the transaction is not part of the set, this will fail too
@@ -272,10 +313,28 @@ BOOST_AUTO_TEST_CASE(TryRemovingFromSetTest)
     // Removing twice won't work
     BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, wtxid));
 
+    // Adding a transaction but removing a collision won't work
+    BOOST_REQUIRE(!tracker.AddToSet(peer_id0, wtxid).has_value());
+    BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, collision));
+    BOOST_REQUIRE(tracker.TryRemovingFromSet(peer_id0, wtxid));
+
     // And removing after forgetting the peer won't work either
     BOOST_REQUIRE(!tracker.AddToSet(peer_id0, wtxid).has_value());
     BOOST_REQUIRE(tracker.ForgetPeer(peer_id0));
     BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, wtxid));
+
+    // Failing to remove must leave the short id mapping untouched. Dropping the entry of a
+    // transaction that is still in the set would make a later colliding transaction go undetected
+    NodeId peer_id1 = 1;
+    tracker.PreRegisterPeerWithSalt(peer_id1, 2);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id1, /*is_peer_inbound=*/true, TXRECONCILIATION_VERSION, /*remote_salt=*/1).has_value());
+    BOOST_REQUIRE(!tracker.AddToSet(peer_id1, wtxid).has_value());
+    // collision was never added, so there is nothing to remove.
+    BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id1, collision));
+    // wtxid is still in the set, so its short id is still mapped and the collision is caught.
+    auto collision_error = tracker.AddToSet(peer_id1, collision);
+    BOOST_REQUIRE_EQUAL(collision_error.value().m_error, ReconciliationError::SHORTID_COLLISION);
+    BOOST_REQUIRE_EQUAL(collision_error.value().GetCollision(), wtxid);
 }
 
 // Once a peer's reconciliation set is full, further transactions have to be fanned out instead.
