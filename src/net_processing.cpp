@@ -4179,6 +4179,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 }
                 const GenTxid gtxid = ToGenTxid(inv);
                 AddKnownTx(peer, inv.hash);
+                if (m_txreconciliation && gtxid.IsWtxid()) m_txreconciliation->TryRemovingFromSet(pfrom.GetId(), std::get<Wtxid>(gtxid));
 
                 if (!m_chainman.IsInitialBlockDownload()) {
                     const bool fAlreadyHave{m_txdownloadman.AddTxAnnouncement(pfrom.GetId(), gtxid, current_time)};
@@ -4497,6 +4498,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
 
         const uint256& hash = peer.m_wtxid_relay ? wtxid.ToUint256() : txid.ToUint256();
         AddKnownTx(peer, hash);
+        if (m_txreconciliation) m_txreconciliation->TryRemovingFromSet(pfrom.GetId(), wtxid);
 
         if (const auto num_broadcasted{m_tx_for_private_broadcast.Remove(ptx)}) {
             LogDebug(BCLog::PRIVBROADCAST, "Received our privately broadcast transaction (txid=%s) from the "
@@ -6173,14 +6175,36 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                             continue;
                         }
                         if (tx_relay->m_bloom_filter && !tx_relay->m_bloom_filter->IsRelevantAndUpdate(*txinfo.tx)) continue;
+
+                        auto add_to_inv_vec = [&](const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(tx_relay->m_tx_inventory_mutex) {
+                            vInv.push_back(inv);
+                            nRelayedTransactions++;
+                            if (vInv.size() == MAX_INV_SZ) {
+                                MakeAndPushMessage(node, NetMsgType::INV, vInv);
+                                vInv.clear();
+                            }
+                            tx_relay->m_tx_inventory_known_filter.insert(inv.hash);
+                        };
+
                         // Send
-                        vInv.push_back(inv);
-                        nRelayedTransactions++;
-                        if (vInv.size() == MAX_INV_SZ) {
-                            MakeAndPushMessage(node, NetMsgType::INV, vInv);
-                            vInv.clear();
+                        bool reconcile = m_txreconciliation && m_txreconciliation->IsPeerRegistered(node.GetId());
+                        if (reconcile) {
+                            Assume(inv.IsMsgWtx());
+                            // Try to add the transaction to the reconciliation set
+                            const auto error = m_txreconciliation->AddToSet(node.GetId(), Wtxid::FromUint256(inv.hash));
+                            if  (error.has_value()) {
+                                // If adding fails, fanout instead
+                                reconcile = false;
+                                if (error.value().m_error == node::ReconciliationError::SHORTID_COLLISION) {
+                                    // If adding fails due to a collision, fanout the colliding transaction too
+                                    Assume(m_txreconciliation->TryRemovingFromSet(node.GetId(), error.value().GetCollision()));
+                                    add_to_inv_vec(CInv(MSG_WTX, error.value().GetCollision().ToUint256()));
+                                }
+                            }
                         }
-                        tx_relay->m_tx_inventory_known_filter.insert(inv.hash);
+                        if (!reconcile) {
+                            add_to_inv_vec(inv);
+                        }
                     }
 
                     // Ensure we'll respond to GETDATA requests for anything we've just announced
