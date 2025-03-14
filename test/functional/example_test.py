@@ -184,7 +184,7 @@ class ExampleTest(BitcoinTestFramework):
             block.solve()
             block_message = msg_block(block)
             # Send message is used to send a P2P message to the node over our P2PInterface
-            peer_messaging.send_message(block_message)
+            peer_messaging.send_without_ping(block_message)
             self.tip = block.sha256
             blocks.append(self.tip)
             self.block_time += 1
@@ -209,7 +209,7 @@ class ExampleTest(BitcoinTestFramework):
         getdata_request = msg_getdata()
         for block in blocks:
             getdata_request.inv.append(CInv(MSG_BLOCK, block))
-        peer_receiving.send_message(getdata_request)
+        peer_receiving.send_without_ping(getdata_request)
 
         # wait_until() will loop until a predicate condition is met. Use it to test properties of the
         # P2PInterface objects.
