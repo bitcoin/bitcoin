@@ -949,7 +949,7 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
 
             // Write index header
             fileout << GetParams().MessageStart() << blockundo_size;
-            pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
+            pos.nPos += STORAGE_HEADER_BYTES;
             {
                 // Calculate checksum
                 HashWriter hasher{};
@@ -1087,7 +1087,7 @@ bool BlockManager::ReadRawBlock(std::vector<uint8_t>& block, const FlatFilePos& 
 FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
 {
     const unsigned int block_size{static_cast<unsigned int>(GetSerializeSize(TX_WITH_WITNESS(block)))};
-    FlatFilePos pos{FindNextBlockPos(block_size + BLOCK_SERIALIZATION_HEADER_SIZE, nHeight, block.GetBlockTime())};
+    FlatFilePos pos{FindNextBlockPos(block_size + STORAGE_HEADER_BYTES, nHeight, block.GetBlockTime())};
     if (pos.IsNull()) {
         LogError("FindNextBlockPos failed");
         return FlatFilePos();
@@ -1101,7 +1101,7 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
 
     // Write index header
     fileout << GetParams().MessageStart() << block_size;
-    pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
+    pos.nPos += STORAGE_HEADER_BYTES;
     // Write block
     fileout << TX_WITH_WITNESS(block);
     return pos;
