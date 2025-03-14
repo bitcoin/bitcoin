@@ -2,15 +2,120 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <net.h>
+#include <net_processing.h>
 #include <node/txreconciliation.h>
 #include <node/txreconciliation_impl.h>
+#include <protocol.h>
 
 #include <test/util/common.h>
+#include <test/util/logging.h>
+#include <test/util/net.h>
 #include <test/util/setup_common.h>
+#include <test/util/txmempool.h>
+#include <test/util/validation.h>
 
 #include <boost/test/unit_test.hpp>
 
 using namespace node;
+
+/** Testing setup with transaction reconciliation enabled, for the tests that drive
+ *  announcements through PeerManager rather than the tracker directly. */
+struct TxReconciliationRelaySetup : public TestingSetup {
+    TxReconciliationRelaySetup()
+        : TestingSetup{ChainType::REGTEST,
+                       TestOpts{.extra_args = {"-txreconciliation", "-txsendrate=1000"}}}
+    {
+        // We don't reconcile during IBD, so jump out of it to be able to test reconciliation.
+        static_cast<TestChainstateManager&>(*m_node.chainman).JumpOutOfIbd();
+    }
+
+    ~TxReconciliationRelaySetup()
+    {
+        // The connman owns the test nodes and deletes them here, so this has to run before
+        // the base fixture tears the connman down.
+        static_cast<ConnmanTestMsg&>(*m_node.connman).ClearTestNodes();
+    }
+
+    /** Connect an inbound peer and complete a reconciliation handshake with it. */
+    CNode& AddReconciliationPeer(NodeId id) EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex)
+    {
+        auto& connman = static_cast<ConnmanTestMsg&>(*m_node.connman);
+        auto* node = new CNode{id,
+                               /*sock=*/nullptr,
+                               CAddress{},
+                               /*nKeyedNetGroupIn=*/0,
+                               /*nLocalHostNonceIn=*/0,
+                               CAddress{},
+                               /*addrNameIn=*/"",
+                               ConnectionType::INBOUND,
+                               /*inbound_onion=*/false,
+                               /*network_key=*/0};
+        connman.AddTestNode(*node);
+
+        // Version exchange, but stop short of VERACK. The peer has to answer our SENDTXRCNCL
+        // before it, otherwise the node forgets the pre-registered state.
+        connman.Handshake(*node, /*successfully_connected=*/false,
+                          ServiceFlags(NODE_NETWORK | NODE_WITNESS),
+                          ServiceFlags(NODE_NETWORK | NODE_WITNESS),
+                          PROTOCOL_VERSION, /*relay_txs=*/true);
+
+        connman.ReceiveMsgFrom(*node, NetMsg::Make(NetMsgType::WTXIDRELAY));
+        connman.ReceiveMsgFrom(*node, NetMsg::Make(NetMsgType::SENDTXRCNCL,
+                                                   TXRECONCILIATION_VERSION, REMOTE_SALT_RELAY));
+        connman.ReceiveMsgFrom(*node, NetMsg::Make(NetMsgType::VERACK));
+        node->fPauseSend = false;
+        // Process all (three) messages, then send our own VERACK to complete the handshake.
+        for (int i = 0; i < 3; ++i) connman.ProcessMessagesOnce(*node);
+        BOOST_REQUIRE(node->fSuccessfullyConnected);
+        m_node.peerman->SendMessages(*node);
+        connman.FlushSendBuffer(*node);
+        return *node;
+    }
+
+    /** The message type the node has queued for this peer, empty if nothing is pending. */
+    std::string PendingMsgType(CNode& node)
+    {
+        LOCK(node.cs_vSend);
+        const auto& [to_send, _more, msg_type] = node.m_transport->GetBytesToSend(false);
+        return to_send.empty() ? "" : msg_type;
+    }
+
+    /** Add a random transaction straight to the mempool, no validation involved. */
+    CTransactionRef AddMempoolTx()
+    {
+        CMutableTransaction mtx;
+        mtx.vin.resize(1);
+        // A distinct input per transaction, otherwise they all conflict and only one is added.
+        mtx.vin[0].prevout = COutPoint{Txid::FromUint256(m_rng.rand256()), 0};
+        mtx.vout.resize(1);
+        mtx.vout[0].nValue = 1000;
+        const auto tx{MakeTransactionRef(mtx)};
+        TryAddToMempool(*m_node.mempool, TestMemPoolEntryHelper{}.FromTx(tx));
+        return tx;
+    }
+
+    /** Announce everything queued, draining the rate limiter by advancing the clock. */
+    void DrainAnnouncements(CNode& node, FakeNodeClock& clock) EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex)
+    {
+        // Announcements wait on a randomized trickle deadline, so step the clock until both the
+        // global backlog and the peer's queue drain. This should be drained well within 10 iterations.
+        // Giving it a 6x marging to prevent flakiness, since the trickle deadline is randomized.
+        CNodeStateStats stats;
+        PeerManagerInfo info;
+        for (int i = 0; i < 60; ++i) {
+            clock += 1s;
+            m_node.peerman->SendMessages(node);
+            BOOST_REQUIRE(m_node.peerman->GetNodeStateStats(node.GetId(), stats));
+            info = m_node.peerman->GetInfo();
+            if (stats.m_inv_to_send == 0 && info.inbound_bucket.backlog_count == 0) return;
+        }
+        BOOST_FAIL("announcements did not drain: inv_to_send=" << stats.m_inv_to_send
+                   << " backlog=" << info.inbound_bucket.backlog_count);
+    }
+
+    static constexpr uint64_t REMOTE_SALT_RELAY{1};
+};
 
 BOOST_FIXTURE_TEST_SUITE(txreconciliation_tests, BasicTestingSetup)
 
@@ -171,6 +276,37 @@ BOOST_AUTO_TEST_CASE(TryRemovingFromSetTest)
     BOOST_REQUIRE(!tracker.AddToSet(peer_id0, wtxid).has_value());
     BOOST_REQUIRE(tracker.ForgetPeer(peer_id0));
     BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, wtxid));
+}
+
+// Once a peer's reconciliation set is full, further transactions have to be fanned out instead.
+BOOST_FIXTURE_TEST_CASE(AnnounceTxsFullReconciliationSet, TxReconciliationRelaySetup)
+{
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+    FakeNodeClock clock{};
+    CNode& recon{AddReconciliationPeer(0)};
+    BOOST_REQUIRE(!recon.fDisconnect);
+    auto& connman = static_cast<ConnmanTestMsg&>(*m_node.connman);
+
+    {
+        ASSERT_DEBUG_LOG("to the reconciliation set");
+        for (uint32_t i = 0; i < MAX_RECONSET_SIZE; ++i) {
+            m_node.peerman->InitiateTxBroadcastToAll(AddMempoolTx()->GetWitnessHash());
+        }
+        DrainAnnouncements(recon, clock);
+        BOOST_REQUIRE(!recon.fDisconnect);
+    }
+
+    // All of them were reconciled, so nothing should have been announced.
+    connman.FlushSendBuffer(recon);
+    BOOST_CHECK_EQUAL(PendingMsgType(recon), "");
+
+    // The next one no longer fits in the set, so it must be fanned out.
+    {
+        ASSERT_DEBUG_LOG("Reconciliation set maximum size reached");
+        m_node.peerman->InitiateTxBroadcastToAll(AddMempoolTx()->GetWitnessHash());
+        DrainAnnouncements(recon, clock);
+    }
+    BOOST_CHECK_EQUAL(PendingMsgType(recon), "inv");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
