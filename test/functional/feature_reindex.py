@@ -11,12 +11,36 @@
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.messages import MAGIC_BYTES
+from test_framework.blocktools import (
+    COINBASE_MATURITY,
+    create_block,
+    create_coinbase,
+)
+from test_framework.messages import (
+    MAGIC_BYTES,
+    CBlockHeader,
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxOut,
+    msg_block,
+    msg_headers,
+)
+from test_framework.p2p import P2PInterface
+from test_framework.script import (
+    CScript,
+    OP_TRUE,
+)
 from test_framework.util import (
     assert_equal,
     util_xor,
 )
 
+class BaseNode(P2PInterface):
+    def send_header_for_blocks(self, new_blocks):
+        headers_message = msg_headers()
+        headers_message.headers = [CBlockHeader(b) for b in new_blocks]
+        self.send_message(headers_message)
 
 class ReindexTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -97,6 +121,77 @@ class ReindexTest(BitcoinTestFramework):
             node.wait_for_rpc_connection(wait_for_import=False)
         node.stop_node()
 
+    # Check that reindex uses -assumevalid
+    def assume_valid(self):
+        self.log.info("Testing reindex with -assumevalid")
+        self.start_node(0)
+        node = self.nodes[0]
+        self.generate(node, 1)
+        coinbase_to_spend = node.getblock(node.getbestblockhash())['tx'][0]
+        # Generate COINBASE_MATURITY blocks to make the coinbase spendable
+        self.generate(node, COINBASE_MATURITY)
+        tip = int(node.getbestblockhash(), 16)
+        block_info = node.getblock(node.getbestblockhash())
+        block_time = block_info['time'] + 1
+        height = block_info['height'] + 1
+        blocks = []
+
+        # Create a block with an invalid signature
+        tx = CTransaction()
+        tx.vin.append(CTxIn(COutPoint(int(coinbase_to_spend, 16), 0), scriptSig=b""))
+        tx.vout.append(CTxOut(49 * 10000, CScript([OP_TRUE])))
+        tx.calc_sha256()
+        invalid_block = create_block(tip, create_coinbase(height), block_time, txlist=[tx])
+        invalid_block.solve()
+        tip = invalid_block.sha256
+        blocks.append(invalid_block)
+
+        # Bury that block with roughly two weeks' worth of blocks (2100 blocks) and an extra 100 blocks
+        for _ in range(2200):
+            block_time += 1
+            height += 1
+            block = create_block(tip, create_coinbase(height), block_time)
+            block.solve()
+            blocks.append(block)
+            tip = block.sha256
+
+        # Start node0 with -assumevalid pointing to the block with invalid signature
+        node.stop_node()
+        self.start_node(0, extra_args=["-assumevalid=" + blocks[-1].hash])
+
+        # Send blocks to node0
+        p2p0 = node.add_p2p_connection(BaseNode())
+        p2p0.send_header_for_blocks(blocks[0:2000])
+        p2p0.send_header_for_blocks(blocks[2000:])
+        # Only send the first 2100 blocks so the assumevalid block is not saved to disk before we reindex
+        # This allows us to test that assumevalid is used in reindex even if the assumevalid block was not loaded during reindex
+        for block in blocks[:2101]:
+            p2p0.send_message(msg_block(block))
+        p2p0.sync_with_ping(timeout=960)
+
+        expected_height = height - 100
+        # node0 should sync to tip of the chain, ignoring the invalid signature
+        assert_equal(node.getblock(node.getbestblockhash())['height'], expected_height)
+
+        self.log.info("Testing reindex with assumevalid block in block index and minchainwork > best_header chainwork")
+        # Restart node0 but raise minimumchainwork to that of a chain 32256 blocks long
+        node.stop_node()
+        self.start_node(0, extra_args=["-reindex", "-assumevalid=" + blocks[2100].hash, "-minimumchainwork=00000000000000000000000000000000000000000000000000007e01acd42dd2"])
+
+        # node0 should sync to tip of the chain, ignoring the invalid signature
+        assert_equal(node.getblock(node.getbestblockhash())['height'], expected_height)
+        assert_equal(int(node.getbestblockhash(), 16), blocks[2100].sha256)
+
+        self.log.info("Testing reindex with assumevalid block not in block index")
+        node.stop_node()
+        self.start_node(0, extra_args=["-reindex", "-assumevalid=" + blocks[-1].hash])
+
+        # node0 should still sync to tip of the chain, ignoring the invalid signature
+        assert_equal(node.getblock(node.getbestblockhash())['height'], expected_height)
+        assert_equal(int(node.getbestblockhash(), 16), blocks[2100].sha256)
+
+        self.log.info("Success")
+
     def run_test(self):
         self.reindex(False)
         self.reindex(True)
@@ -105,6 +200,7 @@ class ReindexTest(BitcoinTestFramework):
 
         self.out_of_order()
         self.continue_reindex_after_shutdown()
+        self.assume_valid()
 
 
 if __name__ == '__main__':
