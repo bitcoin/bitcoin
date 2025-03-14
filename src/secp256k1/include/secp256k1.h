@@ -230,10 +230,10 @@ typedef int (*secp256k1_nonce_function)(
  *
  *  It is highly recommended to call secp256k1_selftest before using this context.
  */
-SECP256K1_API const secp256k1_context *secp256k1_context_static;
+SECP256K1_API const secp256k1_context * const secp256k1_context_static;
 
 /** Deprecated alias for secp256k1_context_static. */
-SECP256K1_API const secp256k1_context *secp256k1_context_no_precomp
+SECP256K1_API const secp256k1_context * const secp256k1_context_no_precomp
 SECP256K1_DEPRECATED("Use secp256k1_context_static instead");
 
 /** Perform basic self tests (to be used in conjunction with secp256k1_context_static)

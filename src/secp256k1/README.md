@@ -61,14 +61,50 @@ Implementation details
   * Optional runtime blinding which attempts to frustrate differential power analysis.
   * The precomputed tables add and eventually subtract points for which no known scalar (secret key) is known, preventing even an attacker with control over the secret key used to control the data internally.
 
+Obtaining and verifying
+-----------------------
+
+The git tag for each release (e.g. `v0.6.0`) is GPG-signed by one of the maintainers.
+For a fully verified build of this project, it is recommended to obtain this repository
+via git, obtain the GPG keys of the signing maintainer(s), and then verify the release
+tag's signature using git.
+
+This can be done with the following steps:
+
+1. Obtain the GPG keys listed in [SECURITY.md](./SECURITY.md).
+2. If possible, cross-reference these key IDs with another source controlled by its owner (e.g.
+   social media, personal website). This is to mitigate the unlikely case that incorrect 
+   content is being presented by this repository.
+3. Clone the repository: 
+    ```
+    git clone https://github.com/bitcoin-core/secp256k1
+    ```
+4. Check out the latest release tag, e.g. 
+    ```
+    git checkout v0.6.0
+    ```
+5. Use git to verify the GPG signature: 
+   ```
+   % git tag -v v0.6.0 | grep -C 3 'Good signature'
+
+   gpg: Signature made Mon 04 Nov 2024 12:14:44 PM EST
+   gpg:                using RSA key 4BBB845A6F5A65A69DFAEC234861DBF262123605
+   gpg: Good signature from "Jonas Nick <jonas@n-ck.net>" [unknown]
+   gpg:                 aka "Jonas Nick <jonasd.nick@gmail.com>" [unknown]
+   gpg: WARNING: This key is not certified with a trusted signature!
+   gpg:          There is no indication that the signature belongs to the owner.
+   Primary key fingerprint: 36C7 1A37 C9D9 88BD E825  08D9 B1A7 0E4F 8DCD 0366
+        Subkey fingerprint: 4BBB 845A 6F5A 65A6 9DFA  EC23 4861 DBF2 6212 3605
+   ```
+
 Building with Autotools
 -----------------------
 
-    $ ./autogen.sh
-    $ ./configure
-    $ make
-    $ make check  # run the test suite
-    $ sudo make install  # optional
+    $ ./autogen.sh       # Generate a ./configure script
+    $ ./configure        # Generate a build system
+    $ make               # Run the actual build process
+    $ make check         # Run the test suite
+    $ sudo make install  # Install the library into the system (optional)
 
 To compile optional modules (such as Schnorr signatures), you need to run `./configure` with additional flags (such as `--enable-module-schnorrsig`). Run `./configure --help` to see the full list of available flags.
 
@@ -79,24 +115,23 @@ To maintain a pristine source tree, CMake encourages to perform an out-of-source
 
 ### Building on POSIX systems
 
-    $ mkdir build && cd build
-    $ cmake ..
-    $ cmake --build .
-    $ ctest  # run the test suite
-    $ sudo cmake --install .  # optional
+    $ cmake -B build              # Generate a build system in subdirectory "build"
+    $ cmake --build build         # Run the actual build process
+    $ ctest --test-dir build      # Run the test suite
+    $ sudo cmake --install build  # Install the library into the system (optional)
 
-To compile optional modules (such as Schnorr signatures), you need to run `cmake` with additional flags (such as `-DSECP256K1_ENABLE_MODULE_SCHNORRSIG=ON`). Run `cmake .. -LH` to see the full list of available flags.
+To compile optional modules (such as Schnorr signatures), you need to run `cmake` with additional flags (such as `-DSECP256K1_ENABLE_MODULE_SCHNORRSIG=ON`). Run `cmake -B build -LH` or `ccmake -B build` to see the full list of available flags.
 
 ### Cross compiling
 
 To alleviate issues with cross compiling, preconfigured toolchain files are available in the `cmake` directory.
 For example, to cross compile for Windows:
 
-    $ cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake/x86_64-w64-mingw32.toolchain.cmake
+    $ cmake -B build -DCMAKE_TOOLCHAIN_FILE=cmake/x86_64-w64-mingw32.toolchain.cmake
 
 To cross compile for Android with [NDK](https://developer.android.com/ndk/guides/cmake) (using NDK's toolchain file, and assuming the `ANDROID_NDK_ROOT` environment variable has been set):
 
-    $ cmake .. -DCMAKE_TOOLCHAIN_FILE="${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake" -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=28
+    $ cmake -B build -DCMAKE_TOOLCHAIN_FILE="${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake" -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=28
 
 ### Building on Windows
 
@@ -106,7 +141,7 @@ The following example assumes using of Visual Studio 2022 and CMake v3.21+.
 
 In "Developer Command Prompt for VS 2022":
 
-    >cmake -G "Visual Studio 17 2022" -A x64 -S . -B build
+    >cmake -G "Visual Studio 17 2022" -A x64 -B build
     >cmake --build build --config RelWithDebInfo
 
 Usage examples

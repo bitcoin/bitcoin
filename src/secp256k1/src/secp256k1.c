@@ -71,8 +71,8 @@ static const secp256k1_context secp256k1_context_static_ = {
     { secp256k1_default_error_callback_fn, 0 },
     0
 };
-const secp256k1_context *secp256k1_context_static = &secp256k1_context_static_;
-const secp256k1_context *secp256k1_context_no_precomp = &secp256k1_context_static_;
+const secp256k1_context * const secp256k1_context_static = &secp256k1_context_static_;
+const secp256k1_context * const secp256k1_context_no_precomp = &secp256k1_context_static_;
 
 /* Helper function that determines if a context is proper, i.e., is not the static context or a copy thereof.
  *
@@ -280,7 +280,7 @@ int secp256k1_ec_pubkey_serialize(const secp256k1_context* ctx, unsigned char *o
     ARG_CHECK(pubkey != NULL);
     ARG_CHECK((flags & SECP256K1_FLAGS_TYPE_MASK) == SECP256K1_FLAGS_TYPE_COMPRESSION);
     if (secp256k1_pubkey_load(ctx, &Q, pubkey)) {
-        ret = secp256k1_eckey_pubkey_serialize(&Q, output, &len, flags & SECP256K1_FLAGS_BIT_COMPRESSION);
+        ret = secp256k1_eckey_pubkey_serialize(&Q, output, &len, !!(flags & SECP256K1_FLAGS_BIT_COMPRESSION));
         if (ret) {
             *outputlen = len;
         }
