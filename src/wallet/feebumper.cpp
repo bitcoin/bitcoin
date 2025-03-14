@@ -343,8 +343,8 @@ bool SignTransaction(CWallet& wallet, CMutableTransaction& mtx) {
         // First fill transaction with our data without signing,
         // so external signers are not asked to sign more than once.
         bool complete;
-        wallet.FillPSBT(psbtx, complete, SIGHASH_ALL, false /* sign */, true /* bip32derivs */);
-        auto err{wallet.FillPSBT(psbtx, complete, SIGHASH_ALL, true /* sign */, false  /* bip32derivs */)};
+        wallet.FillPSBT(psbtx, complete, std::nullopt, false /* sign */, true /* bip32derivs */);
+        auto err{wallet.FillPSBT(psbtx, complete, std::nullopt, true /* sign */, false  /* bip32derivs */)};
         if (err) return false;
         complete = FinalizeAndExtractPSBT(psbtx, mtx);
         return complete;
