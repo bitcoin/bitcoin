@@ -56,15 +56,20 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         if wallet is not None:
             wrpc = wallet
 
-        result = wrpc.importdescriptors([req])
-        observed_warnings = []
-        if 'warnings' in result[0]:
-            observed_warnings = result[0]['warnings']
-        assert_equal("\n".join(sorted(warnings)), "\n".join(sorted(observed_warnings)))
-        assert_equal(result[0]['success'], success)
-        if error_code is not None:
-            assert_equal(result[0]['error']['code'], error_code)
-            assert_equal(result[0]['error']['message'], error_message)
+        try:
+            result = wrpc.importdescriptors([req])
+        except JSONRPCException as e:
+            assert_equal(e.error["code"], error_code)
+            assert_equal(e.error['message'], error_message)
+        else:
+            observed_warnings = []
+            if 'warnings' in result[0]:
+                observed_warnings = result[0]['warnings']
+            assert_equal("\n".join(sorted(warnings)), "\n".join(sorted(observed_warnings)))
+            assert_equal(result[0]['success'], success)
+            if error_code is not None:
+                assert_equal(result[0]['error']['code'], error_code)
+                assert_equal(result[0]['error']['message'], error_message)
 
     def run_test(self):
         self.log.info('Setting up wallets')
@@ -273,11 +278,11 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
 
         self.test_importdesc({**range_request, "range": [5, 10]}, wallet=wpriv, success=False,
-                             error_code=-8, error_message='new range must include current range = [0,20]')
+                             error_code=-1, error_message='new range must include current range = [0,20]')
         self.test_importdesc({**range_request, "range": [0, 10]}, wallet=wpriv, success=False,
-                             error_code=-8, error_message='new range must include current range = [0,20]')
+                             error_code=-1, error_message='new range must include current range = [0,20]')
         self.test_importdesc({**range_request, "range": [5, 20]}, wallet=wpriv, success=False,
-                             error_code=-8, error_message='new range must include current range = [0,20]')
+                             error_code=-1, error_message='new range must include current range = [0,20]')
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
 
         self.log.info("Check we can change descriptor internal flag")

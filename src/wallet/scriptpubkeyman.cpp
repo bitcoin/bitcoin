@@ -2832,7 +2832,7 @@ void DescriptorScriptPubKeyMan::UpdateWalletDescriptor(WalletDescriptor& descrip
     LOCK(cs_desc_man);
     std::string error;
     if (!CanUpdateToWalletDescriptor(descriptor, error)) {
-        throw std::runtime_error(std::string(__func__) + ": " + error);
+        throw std::runtime_error(error);
     }
 
     m_map_pubkeys.clear();
