@@ -12,9 +12,11 @@
 #include <flatfile.h>
 #include <hash.h>
 #include <kernel/blockmanager_opts.h>
+#include <kernel/chain.h>
 #include <kernel/chainparams.h>
 #include <kernel/messagestartchars.h>
 #include <kernel/notifications_interface.h>
+#include <kernel/types.h>
 #include <logging.h>
 #include <pow.h>
 #include <primitives/block.h>
@@ -307,8 +309,9 @@ void BlockManager::FindFilesToPrune(
 {
     LOCK2(cs_main, cs_LastBlockFile);
     // Distribute our -prune budget over all chainstates.
+    const int num_chainstates{chainman.HistoricalChainstate() ? 2 : 1};
     const auto target = std::max(
-        MIN_DISK_SPACE_FOR_BLOCK_FILES, GetPruneTarget() / chainman.GetAll().size());
+        MIN_DISK_SPACE_FOR_BLOCK_FILES, GetPruneTarget() / num_chainstates);
     const uint64_t target_sync_height = chainman.m_best_header->nHeight;
 
     if (chain.m_chain.Height() < 0 || target == 0) {
@@ -1236,16 +1239,8 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
     }
 
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
-
-    // We can't hold cs_main during ActivateBestChain even though we're accessing
-    // the chainman unique_ptrs since ABC requires us not to be holding cs_main, so retrieve
-    // the relevant pointers before the ABC call.
-    for (Chainstate* chainstate : WITH_LOCK(::cs_main, return chainman.GetAll())) {
-        BlockValidationState state;
-        if (!chainstate->ActivateBestChain(state, nullptr)) {
-            chainman.GetNotifications().fatalError(strprintf(_("Failed to connect best block (%s)."), state.ToString()));
-            return;
-        }
+    if (auto result = chainman.ActivateBestChains(); !result) {
+        chainman.GetNotifications().fatalError(util::ErrorString(result));
     }
     // End scope of ImportingNow
 }
