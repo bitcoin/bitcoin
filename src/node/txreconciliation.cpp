@@ -128,18 +128,32 @@ private:
 public:
     explicit Impl(uint32_t recon_version) : m_recon_version(recon_version) {}
 
-    uint64_t PreRegisterPeer(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    uint64_t PreRegisterPeer(NodeId peer_id, uint64_t local_salt) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
         AssertLockNotHeld(m_txreconciliation_mutex);
         LOCK(m_txreconciliation_mutex);
 
         LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Pre-register peer=%d\n", peer_id);
-        const uint64_t local_salt{FastRandomContext().rand64()};
 
         // We do this exactly once per peer (which are unique by NodeId, see GetNewNodeId) so it's
         // safe to assume we don't have this record yet.
         Assume(m_states.emplace(peer_id, local_salt).second);
         return local_salt;
+    }
+
+    bool HasCollision(TxReconciliationState *peer_state, const Wtxid& wtxid, Wtxid& collision, uint32_t &short_id) EXCLUSIVE_LOCKS_REQUIRED(m_txreconciliation_mutex)
+    {
+        AssertLockHeld(m_txreconciliation_mutex);
+
+        short_id = peer_state->ComputeShortID(wtxid);
+        const auto iter = peer_state->m_short_id_mapping.find(short_id);
+
+        if (iter != peer_state->m_short_id_mapping.end()) {
+            collision = iter->second;
+            return true;
+        }
+
+        return false;
     }
 
     ReconciliationRegisterResult RegisterPeer(NodeId peer_id, bool is_peer_inbound, uint32_t peer_recon_version,
@@ -196,8 +210,20 @@ public:
         auto peer_state = GetRegisteredPeerState(peer_id);
         if (!peer_state) return AddToSetResult::Failed();
 
-        // TODO: We should compute the short_id here here first and see if there's any collision
-        // if so, return AddToSetResult::Collision(wtxid)
+        // Bypass if the wtxid is already in the set
+        if (peer_state->m_local_set.contains(wtxid)) {
+            LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "%s already in reconciliation set for peer=%d. Bypassing.\n",
+                          wtxid.ToString(), peer_id);
+            return AddToSetResult::Succeeded();
+        }
+
+        // Make sure there is no short id collision between the wtxid we are trying to add
+        // and any existing one in the reconciliation set
+        Wtxid collision;
+        uint32_t short_id;
+        if (HasCollision(peer_state, wtxid, collision, short_id)) {
+            return AddToSetResult::Collision(collision);
+        }
 
         // Transactions which don't make it to the set due to the limit are announced via fanout.
         if (peer_state->m_local_set.size() >= MAX_RECONSET_SIZE) {
@@ -205,10 +231,8 @@ public:
             return AddToSetResult::Failed();
         }
 
-        // The caller currently keeps track of the per-peer transaction announcements, so it
-        // should not attempt to add same tx to the set twice. However, if that happens, we will
-        // simply ignore it.
         if (peer_state->m_local_set.insert(wtxid).second) {
+            peer_state->m_short_id_mapping.emplace(short_id, wtxid);
             LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Added %s to the reconciliation set for peer=%d. "
                                                                         "Now the set contains %i transactions.\n",
                           wtxid.ToString(), peer_id, peer_state->m_local_set.size());
@@ -235,6 +259,7 @@ public:
 
         auto removed = peer_state->m_local_set.erase(wtxid) > 0;
         if (removed) {
+            peer_state->m_short_id_mapping.erase(peer_state->ComputeShortID(wtxid));
             LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Removed %s from the reconciliation set for peer=%d. "
                                                                         "Now the set contains %i transactions.\n",
                           wtxid.ToString(), peer_id, peer_state->m_local_set.size());
@@ -353,7 +378,13 @@ TxReconciliationTracker::~TxReconciliationTracker() = default;
 
 uint64_t TxReconciliationTracker::PreRegisterPeer(NodeId peer_id)
 {
-    return m_impl->PreRegisterPeer(peer_id);
+    const uint64_t local_salt{FastRandomContext().rand64()};
+    return m_impl->PreRegisterPeer(peer_id, local_salt);
+}
+
+void TxReconciliationTracker::PreRegisterPeerWithSalt(NodeId peer_id, uint64_t local_salt)
+{
+    m_impl->PreRegisterPeer(peer_id, local_salt);
 }
 
 ReconciliationRegisterResult TxReconciliationTracker::RegisterPeer(NodeId peer_id, bool is_peer_inbound,
