@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(deserialize_instantlock_from_realdata2)
     const std::string_view expectedSignatureStr =
         "997d0b36738a9eef46ceeb4405998ff7235317708f277402799ffe05258015cae9b6bae"
         "43683f992b2f50f70f8f0cb9c0f26af340b00903e93995c1345d1b2c5b697ebecdbe581"
-        "1dd112e11889101dcb4553b2bc206ab304026b96c07dec4f
+        "1dd112e11889101dcb4553b2bc206ab304026b96c07dec4f24";
     const std::string quorumHashStr = "0000000000000019756ecc9c9c5f476d3f66876b1dcfa5dde1ea82f0d99334a2";
     const std::string_view expectedSignHashStr = "6a3c37bc610c4efd5babd8941068a8eca9e7bec942fe175b8ca9cae31b67e838";
     // The serialized InstantSend lock from the "hex" field of getislocks:
