@@ -72,6 +72,7 @@ fn deterministic_coverage(build_dir: &Path, test_exe: &Path, filter: &str) -> Ap
     let profraw_file = build_dir.join("test_det_cov.profraw");
     let profdata_file = build_dir.join("test_det_cov.profdata");
     let run_single = |run_id: u8| -> Result<PathBuf, AppError> {
+        println!("Run with id {run_id}");
         let cov_txt_path = build_dir.join(format!("test_det_cov.show.{run_id}.txt"));
         if !Command::new(test_exe)
             .env("LLVM_PROFILE_FILE", &profraw_file)

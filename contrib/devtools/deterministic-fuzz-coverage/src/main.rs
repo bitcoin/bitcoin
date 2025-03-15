@@ -187,6 +187,7 @@ The coverage was not deterministic between runs.
     //
     // Also, This can catch issues where several fuzz inputs are non-deterministic, but the sum of
     // their overall coverage trace remains the same across runs and thus remains undetected.
+    println!("Check each fuzz input individually ...");
     for entry in entries {
         let entry = entry.path();
         if !entry.is_file() {
@@ -203,6 +204,7 @@ The coverage was not deterministic between runs.
     // Finally, check that running over all fuzz inputs in one process is deterministic as well.
     // This can catch issues where mutable global state is leaked from one fuzz input execution to
     // the next.
+    println!("Check all fuzz inputs in one go ...");
     {
         if !corpus_dir.is_dir() {
             Err(format!("{} should be a folder", corpus_dir.display()))?;
