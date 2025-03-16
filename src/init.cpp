@@ -1036,8 +1036,6 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         return InitError(Untranslated("peertimeout must be a positive integer."));
     }
 
-    // Sanity check argument for min fee for including tx in block
-    // TODO: Harmonize which arguments need sanity checking and where that happens
     if (const auto arg{args.GetArg("-blockmintxfee")}) {
         if (!ParseMoney(*arg)) {
             return InitError(AmountErrMsg("blockmintxfee", *arg));
