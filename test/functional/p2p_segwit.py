@@ -174,9 +174,9 @@ class TestP2PConn(P2PInterface):
             self.last_message.pop("getdata", None)
         if use_wtxid:
             wtxid = tx.calc_sha256(True)
-            self.send_message(msg_inv(inv=[CInv(MSG_WTX, wtxid)]))
+            self.send_without_ping(msg_inv(inv=[CInv(MSG_WTX, wtxid)]))
         else:
-            self.send_message(msg_inv(inv=[CInv(MSG_TX, tx.sha256)]))
+            self.send_without_ping(msg_inv(inv=[CInv(MSG_TX, tx.sha256)]))
 
         if success:
             if use_wtxid:
@@ -192,17 +192,17 @@ class TestP2PConn(P2PInterface):
         msg = msg_headers()
         msg.headers = [CBlockHeader(block)]
         if use_header:
-            self.send_message(msg)
+            self.send_without_ping(msg)
         else:
-            self.send_message(msg_inv(inv=[CInv(MSG_BLOCK, block.sha256)]))
+            self.send_without_ping(msg_inv(inv=[CInv(MSG_BLOCK, block.sha256)]))
             self.wait_for_getheaders(block_hash=block.hashPrevBlock, timeout=timeout)
-            self.send_message(msg)
+            self.send_without_ping(msg)
         self.wait_for_getdata([block.sha256], timeout=timeout)
 
     def request_block(self, blockhash, inv_type, timeout=60):
         with p2p_lock:
             self.last_message.pop("block", None)
-        self.send_message(msg_getdata(inv=[CInv(inv_type, blockhash)]))
+        self.send_without_ping(msg_getdata(inv=[CInv(inv_type, blockhash)]))
         self.wait_for_block(blockhash, timeout=timeout)
         return self.last_message["block"].block
 
@@ -373,7 +373,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Send an empty headers message, to clear out any prior getheaders
         # messages that our peer may be waiting for us on.
-        self.test_node.send_message(msg_headers())
+        self.test_node.send_without_ping(msg_headers())
 
         self.test_node.announce_block_and_wait_for_getdata(block1, use_header=False)
         assert self.test_node.last_message["getdata"].inv[0].type == blocktype
@@ -444,7 +444,7 @@ class SegWitTest(BitcoinTestFramework):
             # to announce this block.
             msg = msg_headers()
             msg.headers = [CBlockHeader(block4)]
-            self.old_node.send_message(msg)
+            self.old_node.send_without_ping(msg)
             self.old_node.announce_tx_and_wait_for_getdata(block4.vtx[0])
             assert block4.sha256 not in self.old_node.getdataset
 

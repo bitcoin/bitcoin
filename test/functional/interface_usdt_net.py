@@ -473,7 +473,7 @@ class NetTracepointTest(BitcoinTestFramework):
         for _ in range(EXPECTED_MISBEHAVING_CONNECTIONS):
             testnode = P2PInterface()
             self.nodes[0].add_p2p_connection(testnode)
-            testnode.send_message(msg)
+            testnode.send_without_ping(msg)
             bpf.perf_buffer_poll(timeout=500)
             testnode.peer_disconnect()
 

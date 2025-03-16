@@ -60,7 +60,7 @@ class MutatedBlocksTest(BitcoinTestFramework):
         # Announce the new block via a compact block through the honest relayer
         cmpctblock = HeaderAndShortIDs()
         cmpctblock.initialize_from_block(block, use_witness=True)
-        honest_relayer.send_message(msg_cmpctblock(cmpctblock.to_p2p()))
+        honest_relayer.send_without_ping(msg_cmpctblock(cmpctblock.to_p2p()))
 
         # Wait for a `getblocktxn` that attempts to fetch the self-transfer
         def self_transfer_requested():
@@ -80,7 +80,7 @@ class MutatedBlocksTest(BitcoinTestFramework):
         # Attempt to clear the honest relayer's download request by sending the
         # mutated block (as the attacker).
         with self.nodes[0].assert_debug_log(expected_msgs=["Block mutated: bad-txnmrklroot, hashMerkleRoot mismatch"]):
-            attacker.send_message(msg_block(mutated_block))
+            attacker.send_without_ping(msg_block(mutated_block))
         # Attacker should get disconnected for sending a mutated block
         attacker.wait_for_disconnect(timeout=5)
 
@@ -107,7 +107,7 @@ class MutatedBlocksTest(BitcoinTestFramework):
         # Check that non-connecting block causes disconnect
         assert_equal(len(self.nodes[0].getpeerinfo()), 2)
         with self.nodes[0].assert_debug_log(expected_msgs=["AcceptBlock FAILED (prev-blk-not-found)"]):
-            attacker.send_message(msg_block(block_missing_prev))
+            attacker.send_without_ping(msg_block(block_missing_prev))
         attacker.wait_for_disconnect(timeout=5)
 
 

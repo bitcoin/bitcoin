@@ -40,7 +40,7 @@ class P2PIgnoreInv(P2PInterface):
     def send_getdata_for_block(self, blockhash):
         getdata_request = msg_getdata()
         getdata_request.inv.append(CInv(MSG_BLOCK, int(blockhash, 16)))
-        self.send_message(getdata_request)
+        self.send_without_ping(getdata_request)
 
 class NodeNetworkLimitedTest(BitcoinTestFramework):
     def set_test_params(self):

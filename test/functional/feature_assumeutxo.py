@@ -309,7 +309,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         msg = msg_headers()
         for block_num in range(1, miner.getblockcount()+1):
             msg.headers.append(from_hex(CBlockHeader(), miner.getblockheader(miner.getblockhash(block_num), verbose=False)))
-        headers_provider_conn.send_message(msg)
+        headers_provider_conn.send_without_ping(msg)
 
         # Ensure headers arrived
         default_value = {'status': ''}  # No status
