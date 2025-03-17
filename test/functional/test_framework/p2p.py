@@ -99,8 +99,8 @@ logger = logging.getLogger("TestFramework.p2p")
 # The minimum P2P version that this test framework supports
 MIN_P2P_VERSION_SUPPORTED = 60001
 # The P2P version that this test framework implements and sends in its `version` message
-# Version 70237 switched cycleHash in isdlock message to using quorum's base block
-P2P_VERSION = 70237
+# Version 70238 introduced platform PoSe ban (dip-0031)
+P2P_VERSION = 70238
 # The services that this test framework offers in its `version` message
 P2P_SERVICES = NODE_NETWORK | NODE_HEADERS_COMPRESSED
 # The P2P user agent string that this test framework sends in its `version` message

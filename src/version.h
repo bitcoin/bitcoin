@@ -11,7 +11,7 @@
  */
 
 
-static const int PROTOCOL_VERSION = 70237;
+static const int PROTOCOL_VERSION = 70238;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
@@ -20,7 +20,7 @@ static const int INIT_PROTO_VERSION = 209;
 static const int MIN_PEER_PROTO_VERSION = 70216;
 
 //! minimum proto version of masternode to accept in DKGs
-static const int MIN_MASTERNODE_PROTO_VERSION = 70237;
+static const int MIN_MASTERNODE_PROTO_VERSION = 70238;
 
 //! protocol version is included in MNAUTH starting with this version
 static const int MNAUTH_NODE_VER_VERSION = 70218;
@@ -64,8 +64,12 @@ static const int INCREASE_MAX_HEADERS2_VERSION = 70235;
 //! Behavior of QRINFO is changed in this protocol version
 static const int EFFICIENT_QRINFO_VERSION = 70236;
 
+
 //! cycleHash in isdlock message switched to using quorum's base block in this version
 static const int ISDLOCK_CYCLEHASH_UPDATE_VERSION = 70237;
+
+//! Introduced new p2p message platform pose BAN
+static const int PLATFORM_BAN_VERSION = 70238;
 
 // Make sure that none of the values above collide with `ADDRV2_FORMAT`.
 
