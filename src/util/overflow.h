@@ -14,7 +14,7 @@
 template <class T>
 [[nodiscard]] bool AdditionOverflow(const T i, const T j) noexcept
 {
-    static_assert(std::is_integral<T>::value, "Integral required.");
+    static_assert(std::is_integral_v<T>, "Integral required.");
     if constexpr (std::numeric_limits<T>::is_signed) {
         return (i > 0 && j > std::numeric_limits<T>::max() - i) ||
                (i < 0 && j < std::numeric_limits<T>::min() - i);

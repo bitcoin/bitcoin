@@ -134,7 +134,7 @@ template <typename WeakEnumType, size_t size>
 {
     return fuzzed_data_provider.ConsumeBool() ?
                fuzzed_data_provider.PickValueInArray<WeakEnumType>(all_types) :
-               WeakEnumType(fuzzed_data_provider.ConsumeIntegral<typename std::underlying_type<WeakEnumType>::type>());
+               WeakEnumType(fuzzed_data_provider.ConsumeIntegral<std::underlying_type_t<WeakEnumType>>());
 }
 
 [[nodiscard]] inline opcodetype ConsumeOpcodeType(FuzzedDataProvider& fuzzed_data_provider) noexcept
@@ -207,7 +207,7 @@ template <typename WeakEnumType, size_t size>
 template <typename T>
 [[nodiscard]] bool MultiplicationOverflow(const T i, const T j) noexcept
 {
-    static_assert(std::is_integral<T>::value, "Integral required.");
+    static_assert(std::is_integral_v<T>, "Integral required.");
     if (std::numeric_limits<T>::is_signed) {
         if (i > 0) {
             if (j > 0) {

@@ -70,10 +70,10 @@ namespace {
  */
 template<typename T>
 CSHA512& operator<<(CSHA512& hasher, const T& data) {
-    static_assert(!std::is_same<typename std::decay<T>::type, char*>::value, "Calling operator<<(CSHA512, char*) is probably not what you want");
-    static_assert(!std::is_same<typename std::decay<T>::type, unsigned char*>::value, "Calling operator<<(CSHA512, unsigned char*) is probably not what you want");
-    static_assert(!std::is_same<typename std::decay<T>::type, const char*>::value, "Calling operator<<(CSHA512, const char*) is probably not what you want");
-    static_assert(!std::is_same<typename std::decay<T>::type, const unsigned char*>::value, "Calling operator<<(CSHA512, const unsigned char*) is probably not what you want");
+    static_assert(!std::is_same_v<std::decay_t<T>, char*>, "Calling operator<<(CSHA512, char*) is probably not what you want");
+    static_assert(!std::is_same_v<std::decay_t<T>, unsigned char*>, "Calling operator<<(CSHA512, unsigned char*) is probably not what you want");
+    static_assert(!std::is_same_v<std::decay_t<T>, const char*>, "Calling operator<<(CSHA512, const char*) is probably not what you want");
+    static_assert(!std::is_same_v<std::decay_t<T>, const unsigned char*>, "Calling operator<<(CSHA512, const unsigned char*) is probably not what you want");
     hasher.Write((const unsigned char*)&data, sizeof(data));
     return hasher;
 }
