@@ -146,8 +146,7 @@ Every single pull request submitted against the Bitcoin Core repo is automatical
 ## macOS hints for libFuzzer
 
 The default Clang/LLVM version supplied by Apple on macOS does not include
-fuzzing libraries, so macOS users will need to install a full version, for
-example using `brew install llvm`.
+fuzzing libraries, so macOS users will need to install a full version.
 
 You may also need to take care of giving the correct path for `clang` and
 `clang++`, like `CC=/path/to/clang CXX=/path/to/clang++` if the non-systems
@@ -155,14 +154,16 @@ You may also need to take care of giving the correct path for `clang` and
 
 Using `lld` is required due to issues with Apple's `ld` and `LLVM`.
 
-Full configuration step for macOS:
+Full fuzzing setup for macOS:
 
 ```sh
 $ brew install llvm lld
-$ cmake --preset=libfuzzer \
+$ cmake --preset=libfuzzer-nosan \
    -DCMAKE_C_COMPILER="$(brew --prefix llvm)/bin/clang" \
    -DCMAKE_CXX_COMPILER="$(brew --prefix llvm)/bin/clang++" \
    -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld"
+$ cmake --build build_fuzz_nosan
+$ FUZZ=process_message build_fuzz_nosan/bin/fuzz
 ```
 
 Read the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html) for more information. This [libFuzzer tutorial](https://github.com/google/fuzzing/blob/master/tutorial/libFuzzerTutorial.md) might also be of interest.
