@@ -684,7 +684,7 @@ class WalletTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         destination = self.nodes[1].getnewaddress()
         txid = self.nodes[0].sendtoaddress(destination, 0.123)
-        tx = self.nodes[0].decoderawtransaction(self.nodes[0].gettransaction(txid)['hex'])
+        tx = self.nodes[0].gettransaction(txid=txid, verbose=True)['decoded']
         output_addresses = [vout['scriptPubKey']['address'] for vout in tx["vout"]]
         assert len(output_addresses) > 1
         for address in output_addresses:

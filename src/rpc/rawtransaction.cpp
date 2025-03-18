@@ -96,7 +96,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, const  CTxMemPool
         txSpentInfoPtr = &txSpentInfo;
     }
 
-    TxToUniv(tx, uint256(), entry, true, 0, /* txundo = */ nullptr, txSpentInfoPtr);
+    TxToUniv(tx, uint256(), entry, true, 0, /* txundo = */ nullptr, TxVerbosity::SHOW_DETAILS, txSpentInfoPtr);
 
     bool chainLock = false;
     if (!hashBlock.IsNull()) {
