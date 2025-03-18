@@ -95,7 +95,8 @@ static RPCHelpMan ping()
 
 static RPCHelpMan getpeerinfo()
 {
-    return RPCHelpMan{"getpeerinfo",
+    return RPCHelpMan{
+        "getpeerinfo",
         "\nReturns data about each connected network node as a json array of objects.\n",
         {},
         RPCResult{
@@ -140,16 +141,16 @@ static RPCHelpMan getpeerinfo()
                     {RPCResult::Type::BOOL, "bip152_hb_from", "Whether peer selected us as (compact blocks) high-bandwidth peer"},
                     {RPCResult::Type::BOOL, "masternode", "Whether connection was due to masternode connection attempt"},
                     {RPCResult::Type::NUM, "banscore", "The ban score (DEPRECATED, returned only if config option -deprecatedrpc=banscore is passed)"},
-                    {RPCResult::Type::NUM, "startingheight", "The starting height (block) of the peer"},
-                    {RPCResult::Type::NUM, "synced_headers", "The last header we have in common with this peer"},
-                    {RPCResult::Type::NUM, "synced_blocks", "The last block we have in common with this peer"},
-                    {RPCResult::Type::ARR, "inflight", "",
+                    {RPCResult::Type::NUM, "startingheight", /*optional=*/true, "The starting height (block) of the peer"},
+                    {RPCResult::Type::NUM, "synced_headers", /*optional=*/true, "The last header we have in common with this peer"},
+                    {RPCResult::Type::NUM, "synced_blocks", /*optional=*/true, "The last block we have in common with this peer"},
+                    {RPCResult::Type::ARR, "inflight", /*optional=*/true, "",
                     {
                         {RPCResult::Type::NUM, "n", "The heights of blocks we're currently asking from this peer"},
                     }},
-                    {RPCResult::Type::BOOL, "addr_relay_enabled", "Whether we participate in address relay with this peer"},
-                    {RPCResult::Type::NUM, "addr_processed", "The total number of addresses processed, excluding those dropped due to rate limiting"},
-                    {RPCResult::Type::NUM, "addr_rate_limited", "The total number of addresses dropped due to rate limiting"},
+                    {RPCResult::Type::BOOL, "addr_relay_enabled", /*optional=*/true, "Whether we participate in address relay with this peer"},
+                    {RPCResult::Type::NUM, "addr_processed", /*optional=*/true, "The total number of addresses processed, excluding those dropped due to rate limiting"},
+                    {RPCResult::Type::NUM, "addr_rate_limited", /*optional=*/true, "The total number of addresses dropped due to rate limiting"},
                     {RPCResult::Type::ARR, "permissions", "Any special permissions that have been granted to this peer",
                     {
                         {RPCResult::Type::STR, "permission_type", Join(NET_PERMISSIONS_DOC, ",\n") + ".\n"},
@@ -167,15 +168,16 @@ static RPCHelpMan getpeerinfo()
                                                       "Only known message types can appear as keys in the object and all bytes received of unknown message types are listed under '"+NET_MESSAGE_TYPE_OTHER+"'."}
                     }},
                     {RPCResult::Type::STR, "connection_type", "Type of connection: \n" + Join(CONNECTION_TYPE_DOC, ",\n") + ".\n"
-                                                               "Please note this output is unlikely to be stable in upcoming releases as we iterate to\n"
-                                                               "best capture connection behaviors."},
+                                                              "Please note this output is unlikely to be stable in upcoming releases as we iterate to\n"
+                                                              "best capture connection behaviors."},
                     {RPCResult::Type::STR, "transport_protocol_type", "Type of transport protocol: \n" + Join(TRANSPORT_TYPE_DOC, ",\n") + ".\n"},
                     {RPCResult::Type::STR, "session_id", "The session ID for this connection, or \"\" if there is none (\"v2\" transport protocol only).\n"},
                 }},
-            }}},
+            }},
+        },
         RPCExamples{
             HelpExampleCli("getpeerinfo", "")
-    + HelpExampleRpc("getpeerinfo", "")
+            + HelpExampleRpc("getpeerinfo", "")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
