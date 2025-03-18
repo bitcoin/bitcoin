@@ -2,7 +2,7 @@
 
 env:
   PACKAGE_MANAGER_INSTALL: "apt-get update && apt-get install -y"
-  MAKEJOBS: "-j4"
+  MAKEJOBS: "-j10"
   DANGER_RUN_CI_ON_HOST: "1"  # Containers will be discarded after the run, so there is no risk that the ci scripts modify the system
   TEST_RUNNER_PORT_MIN: "14000"  # Must be larger than 12321, which is used for the http cache. See https://cirrus-ci.org/guide/writing-tasks/#http-cache
   CI_FAILFAST_TEST_LEAVE_DANGLING: "1"  # Cirrus CI does not care about dangling process and setting this variable avoids killing the CI script itself on error
@@ -33,6 +33,7 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
     # https://cirrus-ci.org/faq/#are-there-any-limits
     # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
     cpu: 2
+    greedy: true
     memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
   ccache_cache:
     folder: "/tmp/ccache_dir"
@@ -110,7 +111,6 @@ task:
     cpu: 6  # Increase CPU and Memory to avoid timeout
     memory: 24G
   env:
-    MAKEJOBS: "-j8"
     FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
 
 task:
@@ -120,6 +120,7 @@ task:
     image: ubuntu:jammy
   env:
     FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
+    MAKEJOBS: "-j4"  # Avoid excessive memory use due to MSan
 
 task:
   name: '[no depends, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer] [hirsute]'
@@ -128,6 +129,7 @@ task:
     image: ubuntu:hirsute
   env:
     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
+    MAKEJOBS: "-j4"  # Avoid excessive memory use
 
 task:
   name: '[no depends, sanitizers: fuzzer,address,undefined,integer] [jammy]'
@@ -137,7 +139,6 @@ task:
     cpu: 4  # Increase CPU and memory to avoid timeout
     memory: 16G
   env:
-    MAKEJOBS: "-j8"
     FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
 
 task:
@@ -148,7 +149,6 @@ task:
     cpu: 4
     memory: 16G  # The default memory is sometimes just a bit too small, so double everything
   env:
-    MAKEJOBS: "-j8"
     FILE_ENV: "./ci/test/00_setup_env_native_multiprocess.sh"
 
 task:
