@@ -85,7 +85,7 @@ KeyInfo InterpretKey(std::string key)
         result.section = key.substr(0, option_index);
         key.erase(0, option_index + 1);
     }
-    if (key.substr(0, 2) == "no") {
+    if (key.starts_with("no")) {
         key.erase(0, 2);
         result.negated = true;
     }

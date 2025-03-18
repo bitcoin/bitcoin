@@ -134,7 +134,7 @@ static bool multiUserAuthorized(std::string strUserPass)
 
 static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUsernameOut)
 {
-    if (strAuth.substr(0, 6) != "Basic ")
+    if (!strAuth.starts_with("Basic "))
         return false;
     std::string_view strUserPass64 = TrimStringView(std::string_view{strAuth}.substr(6));
     auto userpass_data = DecodeBase64(strUserPass64);

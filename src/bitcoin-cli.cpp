@@ -1220,7 +1220,7 @@ static int CommandLineRPC(int argc, char *argv[])
         if (gArgs.GetBoolArg("-stdinwalletpassphrase", false)) {
             NO_STDIN_ECHO();
             std::string walletPass;
-            if (args.size() < 1 || args[0].substr(0, 16) != "walletpassphrase") {
+            if (args.size() < 1 || !args[0].starts_with("walletpassphrase")) {
                 throw std::runtime_error("-stdinwalletpassphrase is only applicable for walletpassphrase(change)");
             }
             if (!StdinReady()) {
