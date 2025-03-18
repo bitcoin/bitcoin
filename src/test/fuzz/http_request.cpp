@@ -10,48 +10,35 @@
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 
-#include <event2/buffer.h>
-#include <event2/event.h>
-#include <event2/http.h>
-#include <event2/http_struct.h>
-
 #include <cassert>
 #include <cstdint>
 #include <string>
 #include <vector>
 
-extern "C" int evhttp_parse_firstline_(struct evhttp_request*, struct evbuffer*);
-extern "C" int evhttp_parse_headers_(struct evhttp_request*, struct evbuffer*);
 
 std::string_view RequestMethodString(HTTPRequestMethod m);
 
 FUZZ_TARGET(http_request)
 {
-    using http_libevent::HTTPRequest;
+    using http_bitcoin::HTTPRequest;
+    using http_bitcoin::MAX_HEADERS_SIZE;
+    using util::LineReader;
 
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    evhttp_request* evreq = evhttp_request_new(nullptr, nullptr);
-    assert(evreq != nullptr);
-    evreq->kind = EVHTTP_REQUEST;
-    evbuffer* evbuf = evbuffer_new();
-    assert(evbuf != nullptr);
     const std::vector<uint8_t> http_buffer = ConsumeRandomLengthByteVector(fuzzed_data_provider, 4096);
-    evbuffer_add(evbuf, http_buffer.data(), http_buffer.size());
-    // Avoid constructing requests that will be interpreted by libevent as PROXY requests to avoid triggering
-    // a nullptr dereference. The dereference (req->evcon->http_server) takes place in evhttp_parse_request_line
-    // and is a consequence of our hacky but necessary use of the internal function evhttp_parse_firstline_ in
-    // this fuzzing harness. The workaround is not aesthetically pleasing, but it successfully avoids the troublesome
-    // code path. " http:// HTTP/1.1\n" was a crashing input prior to this workaround.
-    const std::string http_buffer_str = ToLower(std::string{http_buffer.begin(), http_buffer.end()});
-    if (http_buffer_str.find(" http://") != std::string::npos || http_buffer_str.find(" https://") != std::string::npos ||
-        evhttp_parse_firstline_(evreq, evbuf) != 1 || evhttp_parse_headers_(evreq, evbuf) != 1) {
-        evbuffer_free(evbuf);
-        evhttp_request_free(evreq);
+    const std::vector<std::byte> http_bytes_buffer(reinterpret_cast<const std::byte*>(http_buffer.data()),
+                                                   reinterpret_cast<const std::byte*>(http_buffer.data()) + http_buffer.size());
+
+    HTTPRequest http_request;
+    LineReader reader(http_bytes_buffer, MAX_HEADERS_SIZE);
+    try {
+        if (!http_request.LoadControlData(reader)) return;
+        if (!http_request.LoadHeaders(reader)) return;
+        if (!http_request.LoadBody(reader)) return;
+    } catch (const std::runtime_error&) {
         return;
     }
 
-    util::SignalInterrupt interrupt;
-    HTTPRequest http_request{evreq, interrupt, true};
     const HTTPRequestMethod request_method = http_request.GetRequestMethod();
     (void)RequestMethodString(request_method);
     (void)http_request.GetURI();
@@ -62,9 +49,4 @@ FUZZ_TARGET(http_request)
     (void)http_request.GetHeader(header);
     const std::string body = http_request.ReadBody();
     assert(body.empty());
-    const CService service = http_request.GetPeer();
-    assert(service.ToStringAddrPort() == "[::]:0");
-
-    evbuffer_free(evbuf);
-    evhttp_request_free(evreq);
 }
