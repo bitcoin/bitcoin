@@ -264,9 +264,9 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
             },
             [&] {
                 (void)addr_man.GetAddr(
-                    /* max_addresses */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
-                    /* max_pct */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
-                    /* network */ std::nullopt);
+                    /*max_addresses=*/fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
+                    /*max_pct=*/fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
+                    /*network=*/std::nullopt);
             },
             [&] {
                 std::vector<CAddress> addresses;

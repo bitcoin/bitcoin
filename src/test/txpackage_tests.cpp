@@ -78,21 +78,21 @@ BOOST_FIXTURE_TEST_CASE(package_validation_tests, TestChain100NoDIP0001Setup)
     CKey parent_key;
     parent_key.MakeNewKey(true);
     CScript parent_locking_script = GetScriptForDestination(PKHash(parent_key.GetPubKey()));
-    auto mtx_parent = CreateValidMempoolTransaction(/* input_transaction */ m_coinbase_txns[0], /* vout */ 0,
-                                                    /* input_height */ 0, /* input_signing_key */ coinbaseKey,
-                                                    /* output_destination */ parent_locking_script,
-                                                    /* output_amount */ CAmount(49 * COIN), /* submit */ false);
+    auto mtx_parent = CreateValidMempoolTransaction(/*input_transaction=*/ m_coinbase_txns[0], /*input_vout=*/0,
+                                                    /*input_height=*/ 0, /*input_signing_key=*/coinbaseKey,
+                                                    /*output_destination=*/ parent_locking_script,
+                                                    /*output_amount=*/ CAmount(49 * COIN), /*submit=*/false);
     CTransactionRef tx_parent = MakeTransactionRef(mtx_parent);
 
     CKey child_key;
     child_key.MakeNewKey(true);
     CScript child_locking_script = GetScriptForDestination(PKHash(child_key.GetPubKey()));
-    auto mtx_child = CreateValidMempoolTransaction(/* input_transaction */ tx_parent, /* vout */ 0,
-                                                   /* input_height */ 101, /* input_signing_key */ parent_key,
-                                                   /* output_destination */ child_locking_script,
-                                                   /* output_amount */ CAmount(48 * COIN), /* submit */ false);
+    auto mtx_child = CreateValidMempoolTransaction(/*input_transaction=*/ tx_parent, /*input_vout=*/0,
+                                                   /*input_height=*/ 101, /*input_signing_key=*/parent_key,
+                                                   /*output_destination=*/child_locking_script,
+                                                   /*output_amount=*/ CAmount(48 * COIN), /*submit=*/false);
     CTransactionRef tx_child = MakeTransactionRef(mtx_child);
-    const auto result_parent_child = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, {tx_parent, tx_child}, /* test_accept */ true);
+    const auto result_parent_child = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, {tx_parent, tx_child}, /*test_accept=*/true);
     BOOST_CHECK_MESSAGE(result_parent_child.m_state.IsValid(),
                         "Package validation unexpectedly failed: " << result_parent_child.m_state.GetRejectReason());
     auto it_parent = result_parent_child.m_tx_results.find(tx_parent->GetHash());
@@ -107,7 +107,7 @@ BOOST_FIXTURE_TEST_CASE(package_validation_tests, TestChain100NoDIP0001Setup)
     // A single, giant transaction submitted through ProcessNewPackage fails on single tx policy.
     CTransactionRef giant_ptx = create_placeholder_tx(999, 999);
     BOOST_CHECK(GetVirtualTransactionSize(*giant_ptx) > MAX_PACKAGE_SIZE * 1000);
-    auto result_single_large = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, {giant_ptx}, /* test_accept */ true);
+    auto result_single_large = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, {giant_ptx}, /*test_accept=*/true);
     BOOST_CHECK(result_single_large.m_state.IsInvalid());
     BOOST_CHECK_EQUAL(result_single_large.m_state.GetResult(), PackageValidationResult::PCKG_TX);
     BOOST_CHECK_EQUAL(result_single_large.m_state.GetRejectReason(), "transaction failed");
@@ -132,11 +132,11 @@ BOOST_FIXTURE_TEST_CASE(noncontextual_package_tests, TestChain100NoDIP0001Setup)
     // Parent and Child Package
     {
         auto mtx_parent = CreateValidMempoolTransaction(m_coinbase_txns[0], 0, 0, coinbaseKey, spk,
-                                                        CAmount(49 * COIN), /* submit */ false);
+                                                        CAmount(49 * COIN), /*submit=*/false);
         CTransactionRef tx_parent = MakeTransactionRef(mtx_parent);
 
         auto mtx_child = CreateValidMempoolTransaction(tx_parent, 0, 101, placeholder_key, spk2,
-                                                       CAmount(48 * COIN), /* submit */ false);
+                                                       CAmount(48 * COIN), /*submit=*/false);
         CTransactionRef tx_child = MakeTransactionRef(mtx_child);
 
         PackageValidationState state;
@@ -222,14 +222,14 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100NoDIP0001Setup)
     // Unrelated transactions are not allowed in package submission.
     Package package_unrelated;
     for (size_t i{0}; i < 10; ++i) {
-        auto mtx = CreateValidMempoolTransaction(/* input_transaction */ m_coinbase_txns[i + 25], /* vout */ 0,
-                                                 /* input_height */ 0, /* input_signing_key */ coinbaseKey,
-                                                 /* output_destination */ parent_locking_script,
-                                                 /* output_amount */ CAmount(49 * COIN), /* submit */ false);
+        auto mtx = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[i + 25], /*input_vout=*/0,
+                                                 /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
+                                                 /*output_destination=*/parent_locking_script,
+                                                 /*output_amount=*/CAmount(49 * COIN), /*submit=*/false);
         package_unrelated.emplace_back(MakeTransactionRef(mtx));
     }
     auto result_unrelated_submit = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
-                                                     package_unrelated, /* test_accept */ false);
+                                                     package_unrelated, /*test_accept=*/false);
     BOOST_CHECK(result_unrelated_submit.m_state.IsInvalid());
     BOOST_CHECK_EQUAL(result_unrelated_submit.m_state.GetResult(), PackageValidationResult::PCKG_POLICY);
     BOOST_CHECK_EQUAL(result_unrelated_submit.m_state.GetRejectReason(), "package-not-child-with-parents");
@@ -238,10 +238,10 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100NoDIP0001Setup)
     // Parent and Child (and Grandchild) Package
     Package package_parent_child;
     Package package_3gen;
-    auto mtx_parent = CreateValidMempoolTransaction(/* input_transaction */ m_coinbase_txns[0], /* vout */ 0,
-                                                    /* input_height */ 0, /* input_signing_key */ coinbaseKey,
-                                                    /* output_destination */ parent_locking_script,
-                                                    /* output_amount */ CAmount(49 * COIN), /* submit */ false);
+    auto mtx_parent = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[0], /*input_vout=*/0,
+                                                    /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
+                                                    /*output_destination=*/parent_locking_script,
+                                                    /*output_amount=*/CAmount(49 * COIN), /*submit=*/false);
     CTransactionRef tx_parent = MakeTransactionRef(mtx_parent);
     package_parent_child.push_back(tx_parent);
     package_3gen.push_back(tx_parent);
@@ -249,10 +249,10 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100NoDIP0001Setup)
     CKey child_key;
     child_key.MakeNewKey(true);
     CScript child_locking_script = GetScriptForDestination(PKHash(child_key.GetPubKey()));
-    auto mtx_child = CreateValidMempoolTransaction(/* input_transaction */ tx_parent, /* vout */ 0,
-                                                   /* input_height */ 101, /* input_signing_key */ parent_key,
-                                                   /* output_destination */ child_locking_script,
-                                                   /* output_amount */ CAmount(48 * COIN), /* submit */ false);
+    auto mtx_child = CreateValidMempoolTransaction(/*input_transaction=*/tx_parent, /*input_vout=*/0,
+                                                   /*input_height=*/101, /*input_signing_key=*/parent_key,
+                                                   /*output_destination=*/child_locking_script,
+                                                   /*output_amount=*/CAmount(48 * COIN), /*submit=*/false);
     CTransactionRef tx_child = MakeTransactionRef(mtx_child);
     package_parent_child.push_back(tx_child);
     package_3gen.push_back(tx_child);
@@ -260,17 +260,17 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100NoDIP0001Setup)
     CKey grandchild_key;
     grandchild_key.MakeNewKey(true);
     CScript grandchild_locking_script = GetScriptForDestination(PKHash(grandchild_key.GetPubKey()));
-    auto mtx_grandchild = CreateValidMempoolTransaction(/* input_transaction */ tx_child, /* vout */ 0,
-                                                       /* input_height */ 101, /* input_signing_key */ child_key,
-                                                       /* output_destination */ grandchild_locking_script,
-                                                       /* output_amount */ CAmount(47 * COIN), /* submit */ false);
+    auto mtx_grandchild = CreateValidMempoolTransaction(/*input_transaction=*/tx_child, /*input_vout=*/0,
+                                                       /*input_height=*/101, /*input_signing_key=*/child_key,
+                                                       /*output_destination=*/grandchild_locking_script,
+                                                       /*output_amount=*/CAmount(47 * COIN), /*submit=*/false);
     CTransactionRef tx_grandchild = MakeTransactionRef(mtx_grandchild);
     package_3gen.push_back(tx_grandchild);
 
     // 3 Generations is not allowed.
     {
         auto result_3gen_submit = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
-                                                    package_3gen, /* test_accept */ false);
+                                                    package_3gen, /*test_accept=*/false);
         BOOST_CHECK(result_3gen_submit.m_state.IsInvalid());
         BOOST_CHECK_EQUAL(result_3gen_submit.m_state.GetResult(), PackageValidationResult::PCKG_POLICY);
         BOOST_CHECK_EQUAL(result_3gen_submit.m_state.GetRejectReason(), "package-not-child-with-parents");
@@ -284,7 +284,7 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100NoDIP0001Setup)
     package_missing_parent.push_back(MakeTransactionRef(mtx_child));
     {
         const auto result_missing_parent = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
-                                                             package_missing_parent, /* test_accept */ false);
+                                                             package_missing_parent, /*test_accept=*/false);
         BOOST_CHECK(result_missing_parent.m_state.IsInvalid());
         BOOST_CHECK_EQUAL(result_missing_parent.m_state.GetResult(), PackageValidationResult::PCKG_POLICY);
         BOOST_CHECK_EQUAL(result_missing_parent.m_state.GetRejectReason(), "package-not-child-with-unconfirmed-parents");
@@ -295,7 +295,7 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100NoDIP0001Setup)
     // Submit package with parent + child.
     {
         const auto submit_parent_child = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
-                                                           package_parent_child, /* test_accept */ false);
+                                                           package_parent_child, /*test_accept=*/false);
         expected_pool_size += 2;
         BOOST_CHECK_MESSAGE(submit_parent_child.m_state.IsValid(),
                             "Package validation unexpectedly failed: " << submit_parent_child.m_state.GetRejectReason());
@@ -314,7 +314,7 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100NoDIP0001Setup)
     // Already-in-mempool transactions should be detected and de-duplicated.
     {
         const auto submit_deduped = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
-                                                      package_parent_child, /* test_accept */ false);
+                                                      package_parent_child, /*test_accept=*/false);
         BOOST_CHECK_MESSAGE(submit_deduped.m_state.IsValid(),
                             "Package validation unexpectedly failed: " << submit_deduped.m_state.GetRejectReason());
         auto it_parent_deduped = submit_deduped.m_tx_results.find(tx_parent->GetHash());

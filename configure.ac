@@ -30,7 +30,7 @@ BITCOIN_MP_GUI_NAME=dash-gui
 
 dnl Unless the user specified ARFLAGS, force it to be cr
 dnl This is also the default as-of libtool 2.4.7
-AC_ARG_VAR(ARFLAGS, [Flags for the archiver, defaults to <cr> if not set])
+AC_ARG_VAR([ARFLAGS], [Flags for the archiver, defaults to <cr> if not set])
 if test "x${ARFLAGS+set}" != "xset"; then
   ARFLAGS="cr"
 fi
@@ -95,23 +95,23 @@ dnl Libtool init checks.
 LT_INIT([pic-only win32-dll])
 
 dnl Check/return PATH for base programs.
-AC_PATH_TOOL(AR, ar)
-AC_PATH_TOOL(RANLIB, ranlib)
-AC_PATH_TOOL(STRIP, strip)
-AC_PATH_TOOL(GCOV, gcov)
-AC_PATH_TOOL(LLVM_COV, llvm-cov)
-AC_PATH_PROG(LCOV, lcov)
+AC_PATH_TOOL([AR], [ar])
+AC_PATH_TOOL([RANLIB], [ranlib])
+AC_PATH_TOOL([STRIP], [strip])
+AC_PATH_TOOL([GCOV], [gcov])
+AC_PATH_TOOL([LLVM_COV], [llvm-cov])
+AC_PATH_PROG([LCOV], [lcov])
 dnl The minimum supported version is specified in .python-version and should be used if available, see doc/dependencies.md
 AC_PATH_PROGS([PYTHON], [python3.9 python3.10 python3.11 python3.12 python3 python])
-AC_PATH_PROG(GENHTML, genhtml)
+AC_PATH_PROG([GENHTML], [genhtml])
 AC_PATH_PROG([GIT], [git])
-AC_PATH_PROG(CCACHE,ccache)
-AC_PATH_PROG(XGETTEXT,xgettext)
-AC_PATH_PROG(HEXDUMP,hexdump)
-AC_PATH_TOOL(OBJCOPY, objcopy)
+AC_PATH_PROG([CCACHE], [ccache])
+AC_PATH_PROG([XGETTEXT], [xgettext])
+AC_PATH_PROG([HEXDUMP], [hexdump])
+AC_PATH_TOOL([OBJCOPY], [objcopy])
 AC_PATH_TOOL([OBJDUMP], [objdump])
-AC_PATH_TOOL(DSYMUTIL, dsymutil)
-AC_PATH_PROG(DOXYGEN, doxygen)
+AC_PATH_TOOL([DSYMUTIL], [dsymutil])
+AC_PATH_PROG([DOXYGEN], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
 AC_ARG_ENABLE([wallet],
@@ -241,7 +241,7 @@ AC_ARG_ENABLE([asm],
   [use_asm=yes])
 
 if test "x$use_asm" = xyes; then
-  AC_DEFINE(USE_ASM, 1, [Define this symbol to build in assembly routines])
+  AC_DEFINE([USE_ASM], [1], [Define this symbol to build in assembly routines])
 fi
 
 AC_ARG_ENABLE([zmq],
@@ -272,7 +272,7 @@ AC_ARG_ENABLE(man,
     [AS_HELP_STRING([--disable-man],
                     [do not install man pages (default is to install)])],,
     enable_man=yes)
-AM_CONDITIONAL(ENABLE_MAN, test "$enable_man" != no)
+AM_CONDITIONAL([ENABLE_MAN], [test "$enable_man" != no])
 
 dnl Enable debug
 AC_ARG_ENABLE([debug],
@@ -340,7 +340,7 @@ dnl Note that this is not necessarily a check to see if -Werror is supported, bu
 dnl a compile with -Werror can succeed. This is important because the compiler may already be
 dnl warning about something unrelated, for example about some path issue. If that is the case,
 dnl -Werror cannot be used because all of those warnings would be turned into errors.
-AX_CHECK_COMPILE_FLAG([-Werror],[CXXFLAG_WERROR="-Werror"],[CXXFLAG_WERROR=""])
+AX_CHECK_COMPILE_FLAG([-Werror], [CXXFLAG_WERROR="-Werror"], [CXXFLAG_WERROR=""])
 
 dnl Check for a flag to turn linker warnings into errors. When flags are passed to linkers via the
 dnl compiler driver using a -Wl,-foo flag, linker warnings may be swallowed rather than bubbling up.
@@ -349,10 +349,10 @@ dnl
 dnl LDFLAG_WERROR Should only be used when testing -Wl,*
 case $host in
  *darwin*)
-    AX_CHECK_LINK_FLAG([-Wl,-fatal_warnings],[LDFLAG_WERROR="-Wl,-fatal_warnings"],[LDFLAG_WERROR=""])
+    AX_CHECK_LINK_FLAG([-Wl,-fatal_warnings], [LDFLAG_WERROR="-Wl,-fatal_warnings"], [LDFLAG_WERROR=""])
     ;;
   *)
-    AX_CHECK_LINK_FLAG([-Wl,--fatal-warnings],[LDFLAG_WERROR="-Wl,--fatal-warnings"],[LDFLAG_WERROR=""])
+    AX_CHECK_LINK_FLAG([-Wl,--fatal-warnings], [LDFLAG_WERROR="-Wl,--fatal-warnings"], [LDFLAG_WERROR=""])
     ;;
 esac
 
@@ -365,20 +365,20 @@ if test "x$enable_debug" = xyes; then
   fi
 
   dnl Disable all optimizations
-  AX_CHECK_COMPILE_FLAG([-O0], [[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -O0"]],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-O0], [DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -O0"], [], [$CXXFLAG_WERROR])
 
   dnl Prefer -g3, fall back to -g if that is unavailable.
   AX_CHECK_COMPILE_FLAG(
     [-g3],
-    [[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -g3"]],
-    [AX_CHECK_COMPILE_FLAG([-g],[[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -g"]],,[[$CXXFLAG_WERROR]])],
-    [[$CXXFLAG_WERROR]])
+    [DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -g3"],
+    [AX_CHECK_COMPILE_FLAG([-g], [DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -g"], [], [$CXXFLAG_WERROR])],
+    [$CXXFLAG_WERROR])
 
-  AX_CHECK_PREPROC_FLAG([-DDEBUG_CORE],[[DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DDEBUG_CORE"]],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_PREPROC_FLAG([-DDEBUG_LOCKORDER],[[DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DDEBUG_LOCKORDER"]],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_PREPROC_FLAG([-DDEBUG_CORE], [DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DDEBUG_CORE"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_PREPROC_FLAG([-DDEBUG_LOCKORDER], [DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DDEBUG_LOCKORDER"], [], [$CXXFLAG_WERROR])
   AX_CHECK_PREPROC_FLAG([-DDEBUG_LOCKCONTENTION], [DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DDEBUG_LOCKCONTENTION"], [], [$CXXFLAG_WERROR])
-  AX_CHECK_PREPROC_FLAG([-DABORT_ON_FAILED_ASSUME],[[DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DABORT_ON_FAILED_ASSUME"]],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-ftrapv],[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -ftrapv"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_PREPROC_FLAG([-DABORT_ON_FAILED_ASSUME], [DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DABORT_ON_FAILED_ASSUME"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-ftrapv], [DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -ftrapv"], [], [$CXXFLAG_WERROR])
 else
     # We always enable at at least -g1 debug info to support proper stacktraces in crash infos
     # Stacktraces will be suboptimal due to optimization, but better than nothing. Also, -fno-omit-frame-pointer
@@ -423,8 +423,8 @@ if test x$use_sanitizers != x; then
   dnl -fsanitize=address,thread is used here, this check will fail. This will also
   dnl fail if a bad argument is passed, e.g. -fsanitize=undfeined
   AX_CHECK_COMPILE_FLAG(
-    [[-fsanitize=$use_sanitizers]],
-    [[SANITIZER_CXXFLAGS=-fsanitize=$use_sanitizers]],
+    [-fsanitize=$use_sanitizers],
+    [SANITIZER_CXXFLAGS="-fsanitize=$use_sanitizers"],
     [AC_MSG_ERROR([compiler did not accept requested flags])])
 
   dnl Some compilers (e.g. GCC) require additional libraries like libasan,
@@ -433,8 +433,8 @@ if test x$use_sanitizers != x; then
   dnl the sanitize flags are supported by the compiler but the actual sanitizer
   dnl libs are missing.
   AX_CHECK_LINK_FLAG(
-    [[-fsanitize=$use_sanitizers]],
-    [[SANITIZER_LDFLAGS=-fsanitize=$use_sanitizers]],
+    [-fsanitize=$use_sanitizers],
+    [SANITIZER_LDFLAGS="-fsanitize=$use_sanitizers"],
     [AC_MSG_ERROR([linker did not accept requested flags, you are missing required libraries])],
     [],
     [AC_LANG_PROGRAM([[
@@ -448,7 +448,7 @@ fi
 ERROR_CXXFLAGS=
 if test "x$enable_werror" = "xyes"; then
   if test "x$CXXFLAG_WERROR" = "x"; then
-    AC_MSG_ERROR("enable-werror set but -Werror is not usable")
+    AC_MSG_ERROR([enable-werror set but -Werror is not usable])
   fi
   ERROR_CXXFLAGS=$CXXFLAG_WERROR
 
@@ -469,47 +469,47 @@ if test "x$enable_werror" = "xyes"; then
 fi
 
 if test "x$CXXFLAGS_overridden" = "xno"; then
-  AX_CHECK_COMPILE_FLAG([-Wall],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wall"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wextra],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wextra"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wgnu],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wgnu"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wall], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wall"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Wextra], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wextra"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Wgnu], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wgnu"], [], [$CXXFLAG_WERROR])
   dnl some compilers will ignore -Wformat-security without -Wformat, so just combine the two here.
-  AX_CHECK_COMPILE_FLAG([-Wformat -Wformat-security],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wformat -Wformat-security"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wreorder],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wreorder"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wvla],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wvla"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wshadow-field],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wshadow-field"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wthread-safety],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wthread-safety"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wloop-analysis],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wloop-analysis"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wredundant-decls],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wredundant-decls"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wunused-member-function],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wunused-member-function"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wdate-time],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wdate-time"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wconditional-uninitialized],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wconditional-uninitialized"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wduplicated-branches],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wduplicated-branches"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wduplicated-cond],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wduplicated-cond"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wlogical-op],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wlogical-op"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Woverloaded-virtual],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Woverloaded-virtual"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wformat -Wformat-security], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wformat -Wformat-security"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Wreorder], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wreorder"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Wvla], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wvla"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Wshadow-field], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wshadow-field"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Wthread-safety], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wthread-safety"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Wloop-analysis], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wloop-analysis"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Wredundant-decls], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wredundant-decls"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Wunused-member-function], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wunused-member-function"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Wdate-time], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wdate-time"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Wconditional-uninitialized], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wconditional-uninitialized"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Wduplicated-branches], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wduplicated-branches"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Wduplicated-cond], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wduplicated-cond"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Wlogical-op], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wlogical-op"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Woverloaded-virtual], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Woverloaded-virtual"], [], [$CXXFLAG_WERROR])
   dnl -Wsuggest-override is broken with GCC before 9.2
   dnl https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78010
-  AX_CHECK_COMPILE_FLAG([-Wsuggest-override],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wsuggest-override"],,[[$CXXFLAG_WERROR]],
+  AX_CHECK_COMPILE_FLAG([-Wsuggest-override], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wsuggest-override"], [], [$CXXFLAG_WERROR],
                         [AC_LANG_SOURCE([[struct A { virtual void f(); }; struct B : A { void f() final; };]])])
-  AX_CHECK_COMPILE_FLAG([-Wunreachable-code-loop-increment],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wunreachable-code-loop-increment"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wunreachable-code-loop-increment], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wunreachable-code-loop-increment"], [], [$CXXFLAG_WERROR])
   AX_CHECK_COMPILE_FLAG([-Wimplicit-fallthrough], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wimplicit-fallthrough"], [], [$CXXFLAG_WERROR])
 
   if test x$suppress_external_warnings != xno ; then
-    AX_CHECK_COMPILE_FLAG([-Wdocumentation],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wdocumentation"],,[[$CXXFLAG_WERROR]])
+    AX_CHECK_COMPILE_FLAG([-Wdocumentation], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wdocumentation"], [], [$CXXFLAG_WERROR])
   fi
 
   dnl Some compilers (gcc) ignore unknown -Wno-* options, but warn about all
   dnl unknown options if any other warning is produced. Test the -Wfoo case, and
   dnl set the -Wno-foo case if it works.
-  AX_CHECK_COMPILE_FLAG([-Wunused-parameter],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-unused-parameter"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wself-assign],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-self-assign"],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-Wunused-parameter], [NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-unused-parameter"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Wself-assign], [NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-self-assign"], [], [$CXXFLAG_WERROR])
   if test x$suppress_external_warnings != xyes ; then
-    AX_CHECK_COMPILE_FLAG([-Wdeprecated-copy],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-deprecated-copy"],,[[$CXXFLAG_WERROR]])
+    AX_CHECK_COMPILE_FLAG([-Wdeprecated-copy], [NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-deprecated-copy"], [], [$CXXFLAG_WERROR])
   fi
 fi
 
 dnl Don't allow extended (non-ASCII) symbols in identifiers. This is easier for code review.
-AX_CHECK_COMPILE_FLAG([-fno-extended-identifiers],[[CORE_CXXFLAGS="$CORE_CXXFLAGS -fno-extended-identifiers"]],,[[$CXXFLAG_WERROR]])
+AX_CHECK_COMPILE_FLAG([-fno-extended-identifiers], [CORE_CXXFLAGS="$CORE_CXXFLAGS -fno-extended-identifiers"], [], [$CXXFLAG_WERROR])
 
 enable_arm_crc=no
 enable_arm_shani=no
@@ -525,10 +525,10 @@ dnl be compiled with them, rather that specific objects/libs may use them after 
 dnl compatibility.
 
 dnl x86
-AX_CHECK_COMPILE_FLAG([-msse4.2],[[SSE42_CXXFLAGS="-msse4.2"]],,[[$CXXFLAG_WERROR]])
-AX_CHECK_COMPILE_FLAG([-msse4.1],[[SSE41_CXXFLAGS="-msse4.1"]],,[[$CXXFLAG_WERROR]])
-AX_CHECK_COMPILE_FLAG([-mavx -mavx2],[[AVX2_CXXFLAGS="-mavx -mavx2"]],,[[$CXXFLAG_WERROR]])
-AX_CHECK_COMPILE_FLAG([-msse4 -msha],[[X86_SHANI_CXXFLAGS="-msse4 -msha"]],,[[$CXXFLAG_WERROR]])
+AX_CHECK_COMPILE_FLAG([-msse4.2], [SSE42_CXXFLAGS="-msse4.2"], [], [$CXXFLAG_WERROR])
+AX_CHECK_COMPILE_FLAG([-msse4.1], [SSE41_CXXFLAGS="-msse4.1"], [], [$CXXFLAG_WERROR])
+AX_CHECK_COMPILE_FLAG([-mavx -mavx2], [AVX2_CXXFLAGS="-mavx -mavx2"], [], [$CXXFLAG_WERROR])
+AX_CHECK_COMPILE_FLAG([-msse4 -msha], [X86_SHANI_CXXFLAGS="-msse4 -msha"], [], [$CXXFLAG_WERROR])
 
 enable_clmul=
 AX_CHECK_COMPILE_FLAG([-mpclmul], [enable_clmul=yes], [], [$CXXFLAG_WERROR], [AC_LANG_PROGRAM([
@@ -545,12 +545,12 @@ AX_CHECK_COMPILE_FLAG([-mpclmul], [enable_clmul=yes], [], [$CXXFLAG_WERROR], [AC
 
 if test x$enable_clmul = xyes; then
   CLMUL_CXXFLAGS="-mpclmul"
-  AC_DEFINE(HAVE_CLMUL, 1, [Define this symbol if clmul instructions can be used])
+  AC_DEFINE([HAVE_CLMUL], [1], [Define this symbol if clmul instructions can be used])
 fi
 
 TEMP_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$CXXFLAGS $SSE42_CXXFLAGS"
-AC_MSG_CHECKING(for SSE4.2 intrinsics)
+AC_MSG_CHECKING([for SSE4.2 intrinsics])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <stdint.h>
     #if defined(_MSC_VER)
@@ -565,14 +565,14 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     l = _mm_crc32_u64(l, 0);
     return l;
   ]])],
- [ AC_MSG_RESULT(yes); enable_sse42=yes],
- [ AC_MSG_RESULT(no)]
+ [ AC_MSG_RESULT([yes]); enable_sse42=yes],
+ [ AC_MSG_RESULT([no])]
 )
 CXXFLAGS="$TEMP_CXXFLAGS"
 
 TEMP_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$CXXFLAGS $SSE41_CXXFLAGS"
-AC_MSG_CHECKING(for SSE4.1 intrinsics)
+AC_MSG_CHECKING([for SSE4.1 intrinsics])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <stdint.h>
     #include <immintrin.h>
@@ -580,14 +580,14 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     __m128i l = _mm_set1_epi32(0);
     return _mm_extract_epi32(l, 3);
   ]])],
- [ AC_MSG_RESULT(yes); enable_sse41=yes; AC_DEFINE(ENABLE_SSE41, 1, [Define this symbol to build code that uses SSE4.1 intrinsics]) ],
- [ AC_MSG_RESULT(no)]
+ [ AC_MSG_RESULT([yes]); enable_sse41=yes; AC_DEFINE([ENABLE_SSE41], [1], [Define this symbol to build code that uses SSE4.1 intrinsics]) ],
+ [ AC_MSG_RESULT([no])]
 )
 CXXFLAGS="$TEMP_CXXFLAGS"
 
 TEMP_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$CXXFLAGS $AVX2_CXXFLAGS"
-AC_MSG_CHECKING(for AVX2 intrinsics)
+AC_MSG_CHECKING([for AVX2 intrinsics])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <stdint.h>
     #include <immintrin.h>
@@ -595,14 +595,14 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     __m256i l = _mm256_set1_epi32(0);
     return _mm256_extract_epi32(l, 7);
   ]])],
- [ AC_MSG_RESULT(yes); enable_avx2=yes; AC_DEFINE(ENABLE_AVX2, 1, [Define this symbol to build code that uses AVX2 intrinsics]) ],
- [ AC_MSG_RESULT(no)]
+ [ AC_MSG_RESULT([yes]); enable_avx2=yes; AC_DEFINE([ENABLE_AVX2], [1], [Define this symbol to build code that uses AVX2 intrinsics]) ],
+ [ AC_MSG_RESULT([no])]
 )
 CXXFLAGS="$TEMP_CXXFLAGS"
 
 TEMP_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$CXXFLAGS $X86_SHANI_CXXFLAGS"
-AC_MSG_CHECKING(for x86 SHA-NI intrinsics)
+AC_MSG_CHECKING([for x86 SHA-NI intrinsics])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <stdint.h>
     #include <immintrin.h>
@@ -612,18 +612,18 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     __m128i k = _mm_set1_epi32(2);
     return _mm_extract_epi32(_mm_sha256rnds2_epu32(i, i, k), 0);
   ]])],
- [ AC_MSG_RESULT(yes); enable_x86_shani=yes; AC_DEFINE(ENABLE_X86_SHANI, 1, [Define this symbol to build code that uses x86 SHA-NI intrinsics]) ],
- [ AC_MSG_RESULT(no)]
+ [ AC_MSG_RESULT([yes]); enable_x86_shani=yes; AC_DEFINE([ENABLE_X86_SHANI], [1], [Define this symbol to build code that uses x86 SHA-NI intrinsics]) ],
+ [ AC_MSG_RESULT([no])]
 )
 CXXFLAGS="$TEMP_CXXFLAGS"
 
 # ARM
-AX_CHECK_COMPILE_FLAG([-march=armv8-a+crc+crypto],[[ARM_CRC_CXXFLAGS="-march=armv8-a+crc+crypto"]],,[[$CXXFLAG_WERROR]])
+AX_CHECK_COMPILE_FLAG([-march=armv8-a+crc+crypto], [ARM_CRC_CXXFLAGS="-march=armv8-a+crc+crypto"], [], [$CXXFLAG_WERROR])
 AX_CHECK_COMPILE_FLAG([-march=armv8-a+crc+crypto], [ARM_SHANI_CXXFLAGS="-march=armv8-a+crc+crypto"], [], [$CXXFLAG_WERROR])
 
 TEMP_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$CXXFLAGS $ARM_CRC_CXXFLAGS"
-AC_MSG_CHECKING(for ARMv8 CRC32 intrinsics)
+AC_MSG_CHECKING([for ARMv8 CRC32 intrinsics])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <arm_acle.h>
     #include <arm_neon.h>
@@ -635,8 +635,8 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #error "crc32c library does not support hardware acceleration on 32-bit ARM"
 #endif
   ]])],
- [ AC_MSG_RESULT(yes); enable_arm_crc=yes; ],
- [ AC_MSG_RESULT(no)]
+ [ AC_MSG_RESULT([yes]); enable_arm_crc=yes; ],
+ [ AC_MSG_RESULT([no])]
 )
 CXXFLAGS="$TEMP_CXXFLAGS"
 
@@ -701,35 +701,35 @@ AC_ARG_WITH([daemon],
 case $host in
   *mingw*)
      TARGET_OS=windows
-     AC_CHECK_LIB([kernel32], [GetModuleFileNameA],, AC_MSG_ERROR(libkernel32 missing))
-     AC_CHECK_LIB([user32],   [main],, AC_MSG_ERROR(libuser32 missing))
-     AC_CHECK_LIB([gdi32],    [main],, AC_MSG_ERROR(libgdi32 missing))
-     AC_CHECK_LIB([comdlg32], [main],, AC_MSG_ERROR(libcomdlg32 missing))
-     AC_CHECK_LIB([winmm],    [main],, AC_MSG_ERROR(libwinmm missing))
-     AC_CHECK_LIB([shell32],  [SHGetSpecialFolderPathW],, AC_MSG_ERROR(libshell32 missing))
-     AC_CHECK_LIB([comctl32], [main],, AC_MSG_ERROR(libcomctl32 missing))
-     AC_CHECK_LIB([ole32],    [CoCreateInstance],, AC_MSG_ERROR(libole32 missing))
-     AC_CHECK_LIB([oleaut32], [main],, AC_MSG_ERROR(liboleaut32 missing))
-     AC_CHECK_LIB([uuid],     [main],, AC_MSG_ERROR(libuuid missing))
-     AC_CHECK_LIB([advapi32], [CryptAcquireContextW],, AC_MSG_ERROR(libadvapi32 missing))
-     AC_CHECK_LIB([ws2_32],   [WSAStartup],, AC_MSG_ERROR(libws2_32 missing))
-     AC_CHECK_LIB([shlwapi],  [PathRemoveFileSpecW],, AC_MSG_ERROR(libshlwapi missing))
-     AC_CHECK_LIB([iphlpapi], [GetAdaptersAddresses],, AC_MSG_ERROR(libiphlpapi missing))
-     AC_CHECK_LIB([psapi],    [GetProcessMemoryInfo],, [AC_MSG_ERROR([libpsapi missing])])
-     AC_CHECK_LIB([bcrypt],   [main],, [AC_MSG_ERROR([libbcrypt missing])])
+     AC_CHECK_LIB([kernel32], [GetModuleFileNameA],      [], [AC_MSG_ERROR([libkernel32 missing])])
+     AC_CHECK_LIB([user32],   [main],                    [], [AC_MSG_ERROR([libuser32 missing])])
+     AC_CHECK_LIB([gdi32],    [main],                    [], [AC_MSG_ERROR([libgdi32 missing])])
+     AC_CHECK_LIB([comdlg32], [main],                    [], [AC_MSG_ERROR([libcomdlg32 missing])])
+     AC_CHECK_LIB([winmm],    [main],                    [], [AC_MSG_ERROR([libwinmm missing])])
+     AC_CHECK_LIB([shell32],  [SHGetSpecialFolderPathW], [], [AC_MSG_ERROR([libshell32 missing])])
+     AC_CHECK_LIB([comctl32], [main],                    [], [AC_MSG_ERROR([libcomctl32 missing])])
+     AC_CHECK_LIB([ole32],    [CoCreateInstance],        [], [AC_MSG_ERROR([libole32 missing])])
+     AC_CHECK_LIB([oleaut32], [main],                    [], [AC_MSG_ERROR([liboleaut32 missing])])
+     AC_CHECK_LIB([uuid],     [main],                    [], [AC_MSG_ERROR([libuuid missing])])
+     AC_CHECK_LIB([advapi32], [CryptAcquireContextW],    [], [AC_MSG_ERROR([libadvapi32 missing])])
+     AC_CHECK_LIB([ws2_32],   [WSAStartup],              [], [AC_MSG_ERROR([libws2_32 missing])])
+     AC_CHECK_LIB([shlwapi],  [PathRemoveFileSpecW],     [], [AC_MSG_ERROR([libshlwapi missing])])
+     AC_CHECK_LIB([iphlpapi], [GetAdaptersAddresses],    [], [AC_MSG_ERROR([libiphlpapi missing])])
+     AC_CHECK_LIB([psapi],    [GetProcessMemoryInfo],    [], [AC_MSG_ERROR([libpsapi missing])])
+     AC_CHECK_LIB([bcrypt],   [main],                    [], [AC_MSG_ERROR([libbcrypt missing])])
 
      dnl -static is interpreted by libtool, where it has a different meaning.
      dnl In libtool-speak, it's -all-static.
-     AX_CHECK_LINK_FLAG([[-static]],[LIBTOOL_APP_LDFLAGS="$LIBTOOL_APP_LDFLAGS -all-static"])
+     AX_CHECK_LINK_FLAG([-static], [LIBTOOL_APP_LDFLAGS="$LIBTOOL_APP_LDFLAGS -all-static"])
 
-     AC_PATH_PROG([MAKENSIS], [makensis], none)
+     AC_PATH_PROG([MAKENSIS], [makensis], [none])
      if test x$MAKENSIS = xnone; then
-       AC_MSG_WARN("makensis not found. Cannot create installer.")
+       AC_MSG_WARN([makensis not found. Cannot create installer.])
      fi
 
-     AC_PATH_TOOL(WINDRES, windres, none)
+     AC_PATH_TOOL([WINDRES], [windres], [none])
      if test x$WINDRES = xnone; then
-       AC_MSG_ERROR("windres not found")
+       AC_MSG_ERROR([windres not found])
      fi
 
      CORE_CPPFLAGS="$CORE_CPPFLAGS -D_MT -DWIN32 -D_WINDOWS -D_WIN32_WINNT=0x0601 -D_WIN32_IE=0x0501 -DWIN32_LEAN_AND_MEAN"
@@ -746,16 +746,16 @@ case $host in
      postdeps_CXX=
 
      dnl We require Windows 7 (NT 6.1) or later
-     AX_CHECK_LINK_FLAG([[-Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1]],[CORE_LDFLAGS="$CORE_LDFLAGS -Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1"],,[[$LDFLAG_WERROR]])
+     AX_CHECK_LINK_FLAG([-Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1"], [], [$LDFLAG_WERROR])
      ;;
   *darwin*)
      TARGET_OS=darwin
      if  test x$cross_compiling != xyes; then
        BUILD_OS=darwin
 
-       AX_CHECK_LINK_FLAG([[-Wl,-headerpad_max_install_names]], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-headerpad_max_install_names"],, [[$LDFLAG_WERROR]])
+       AX_CHECK_LINK_FLAG([-Wl,-headerpad_max_install_names], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-headerpad_max_install_names"], [], [$LDFLAG_WERROR])
 
-       AC_CHECK_PROG([BREW],brew, brew)
+       AC_CHECK_PROG([BREW], [brew], [brew])
        if test x$BREW = xbrew; then
          dnl These Homebrew packages may be keg-only, meaning that they won't be found
          dnl in expected paths because they may conflict with system files. Ask
@@ -845,7 +845,7 @@ case $host in
         *armv7a*)
           ANDROID_ARCH=armeabi-v7a
           ;;
-        *) AC_MSG_ERROR("Could not determine Android arch") ;;
+        *) AC_MSG_ERROR(["Could not determine Android arch"]) ;;
       esac
      ;;
    *linux*)
@@ -859,13 +859,13 @@ fi
 
 if test x$use_lcov = xyes; then
   if test x$LCOV = x; then
-    AC_MSG_ERROR("lcov testing requested but lcov not found")
+    AC_MSG_ERROR([lcov testing requested but lcov not found])
   fi
   if test x$PYTHON = x; then
-    AC_MSG_ERROR("lcov testing requested but python not found")
+    AC_MSG_ERROR([lcov testing requested but python not found])
   fi
   if test x$GENHTML = x; then
-    AC_MSG_ERROR("lcov testing requested but genhtml not found")
+    AC_MSG_ERROR([lcov testing requested but genhtml not found])
   fi
 
   AC_MSG_CHECKING([whether compiler is Clang])
@@ -892,10 +892,10 @@ if test x$use_lcov = xyes; then
   AC_SUBST(COV_TOOL_WRAPPER, "cov_tool_wrapper.sh")
   LCOV="$LCOV --gcov-tool $(pwd)/$COV_TOOL_WRAPPER"
 
-  AX_CHECK_LINK_FLAG([[--coverage]], [CORE_LDFLAGS="$CORE_LDFLAGS --coverage"],
-    [AC_MSG_ERROR("lcov testing requested but --coverage linker flag does not work")])
+  AX_CHECK_LINK_FLAG([--coverage], [CORE_LDFLAGS="$CORE_LDFLAGS --coverage"],
+    [AC_MSG_ERROR([lcov testing requested but --coverage linker flag does not work])])
   AX_CHECK_COMPILE_FLAG([--coverage],[CORE_CXXFLAGS="$CORE_CXXFLAGS --coverage"],
-    [AC_MSG_ERROR("lcov testing requested but --coverage flag does not work")])
+    [AC_MSG_ERROR([lcov testing requested but --coverage flag does not work])])
   dnl If coverage is enabled, and the user hasn't overriden CXXFLAGS, clear
   dnl them, to prevent autoconfs "-g -O2" being added. Otherwise we'd end up
   dnl with "--coverage -Og -O0 -g -O2".
@@ -943,36 +943,36 @@ if test "x$enable_gprof" = xyes; then
     dnl -pie by default, in which case it needs to be turned off with -no-pie.
 
     if test x$use_hardening = xyes; then
-        AC_MSG_ERROR(gprof profiling is not compatible with hardening. Reconfigure with --disable-hardening or --disable-gprof)
+        AC_MSG_ERROR([gprof profiling is not compatible with hardening. Reconfigure with --disable-hardening or --disable-gprof])
     fi
     use_hardening=no
     AX_CHECK_COMPILE_FLAG([-pg],[GPROF_CXXFLAGS="-pg"],
-        [AC_MSG_ERROR(gprof profiling requested but not available)], [[$CXXFLAG_WERROR]])
+        [AC_MSG_ERROR([gprof profiling requested but not available])], [$CXXFLAG_WERROR])
 
-    AX_CHECK_LINK_FLAG([[-no-pie]], [GPROF_LDFLAGS="-no-pie"])
-    AX_CHECK_LINK_FLAG([[-pg]],[GPROF_LDFLAGS="$GPROF_LDFLAGS -pg"],
-        [AC_MSG_ERROR(gprof profiling requested but not available)], [[$GPROF_LDFLAGS]])
+    AX_CHECK_LINK_FLAG([-no-pie], [GPROF_LDFLAGS="-no-pie"])
+    AX_CHECK_LINK_FLAG([-pg], [GPROF_LDFLAGS="$GPROF_LDFLAGS -pg"],
+        [AC_MSG_ERROR([gprof profiling requested but not available])], [$GPROF_LDFLAGS])
 fi
 
 if test x$TARGET_OS != xwindows; then
   dnl All windows code is PIC, forcing it on just adds useless compile warnings
-  AX_CHECK_COMPILE_FLAG([-fPIC],[PIC_FLAGS="-fPIC"])
+  AX_CHECK_COMPILE_FLAG([-fPIC], [PIC_FLAGS="-fPIC"])
 fi
 
 dnl Currently all versions of gcc are subject to a class of bugs, see the
 dnl gccbug_90348 test case (only reproduces on GCC 11 and earlier) and the related bugs of
 dnl https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90348. To work around that, set
 dnl -fstack-reuse=none for all gcc builds. (Only gcc understands this flag)
-AX_CHECK_COMPILE_FLAG([-fstack-reuse=none],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-reuse=none"])
+AX_CHECK_COMPILE_FLAG([-fstack-reuse=none], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-reuse=none"])
 if test x$use_hardening != xno; then
   use_hardening=yes
-  AX_CHECK_COMPILE_FLAG([-Wstack-protector],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -Wstack-protector"])
-  AX_CHECK_COMPILE_FLAG([-fstack-protector-all],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-protector-all"])
+  AX_CHECK_COMPILE_FLAG([-Wstack-protector], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -Wstack-protector"])
+  AX_CHECK_COMPILE_FLAG([-fstack-protector-all], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-protector-all"])
 
   dnl -fcf-protection used with Clang 7 causes ld to emit warnings:
   dnl ld: error: ... <corrupt x86 feature size: 0x8>
   dnl Use CHECK_LINK_FLAG & --fatal-warnings to ensure we wont use the flag in this case.
-  AX_CHECK_LINK_FLAG([-fcf-protection=full],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fcf-protection=full"],, [[$LDFLAG_WERROR]])
+  AX_CHECK_LINK_FLAG([-fcf-protection=full], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fcf-protection=full"], [], [$LDFLAG_WERROR])
 
   case $host in
     *mingw*)
@@ -1003,18 +1003,18 @@ if test x$use_hardening != xno; then
     ])
   fi
 
-  AX_CHECK_LINK_FLAG([[-Wl,--enable-reloc-section]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--enable-reloc-section"],, [[$LDFLAG_WERROR]])
-  AX_CHECK_LINK_FLAG([[-Wl,--dynamicbase]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--dynamicbase"],, [[$LDFLAG_WERROR]])
-  AX_CHECK_LINK_FLAG([[-Wl,--nxcompat]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--nxcompat"],, [[$LDFLAG_WERROR]])
-  AX_CHECK_LINK_FLAG([[-Wl,--high-entropy-va]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--high-entropy-va"],, [[$LDFLAG_WERROR]])
-  AX_CHECK_LINK_FLAG([[-Wl,-z,relro]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,relro"],, [[$LDFLAG_WERROR]])
-  AX_CHECK_LINK_FLAG([[-Wl,-z,now]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,now"],, [[$LDFLAG_WERROR]])
-  AX_CHECK_LINK_FLAG([[-Wl,-z,separate-code]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,separate-code"],, [[$LDFLAG_WERROR]])
-  AX_CHECK_LINK_FLAG([[-fPIE -pie]], [PIE_FLAGS="-fPIE"; HARDENED_LDFLAGS="$HARDENED_LDFLAGS -pie"],, [[$CXXFLAG_WERROR]])
+  AX_CHECK_LINK_FLAG([-Wl,--enable-reloc-section], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--enable-reloc-section"], [], [$LDFLAG_WERROR])
+  AX_CHECK_LINK_FLAG([-Wl,--dynamicbase], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--dynamicbase"], [], [$LDFLAG_WERROR])
+  AX_CHECK_LINK_FLAG([-Wl,--nxcompat], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--nxcompat"], [], [$LDFLAG_WERROR])
+  AX_CHECK_LINK_FLAG([-Wl,--high-entropy-va], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--high-entropy-va"], [], [$LDFLAG_WERROR])
+  AX_CHECK_LINK_FLAG([-Wl,-z,relro], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,relro"], [], [$LDFLAG_WERROR])
+  AX_CHECK_LINK_FLAG([-Wl,-z,now], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,now"], [], [$LDFLAG_WERROR])
+  AX_CHECK_LINK_FLAG([-Wl,-z,separate-code], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,separate-code"], [], [$LDFLAG_WERROR])
+  AX_CHECK_LINK_FLAG([-fPIE -pie], [PIE_FLAGS="-fPIE"; HARDENED_LDFLAGS="$HARDENED_LDFLAGS -pie"], [], [$CXXFLAG_WERROR])
 
   case $host in
     *mingw*)
-       AC_CHECK_LIB([ssp],      [main],, AC_MSG_ERROR(libssp missing))
+       AC_CHECK_LIB([ssp], [main], [], [AC_MSG_ERROR([libssp missing])])
     ;;
   esac
 fi
@@ -1023,9 +1023,9 @@ dnl These flags are specific to ld64, and may cause issues with other linkers.
 dnl For example: GNU ld will interpret -dead_strip as -de and then try and use
 dnl "ad_strip" as the symbol for the entry point.
 if test x$TARGET_OS = xdarwin; then
-  AX_CHECK_LINK_FLAG([[-Wl,-dead_strip]], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-dead_strip"],, [[$LDFLAG_WERROR]])
-  AX_CHECK_LINK_FLAG([[-Wl,-dead_strip_dylibs]], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-dead_strip_dylibs"],, [[$LDFLAG_WERROR]])
-  AX_CHECK_LINK_FLAG([[-Wl,-fixup_chains]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-fixup_chains"], [], [[$LDFLAG_WERROR]])
+  AX_CHECK_LINK_FLAG([-Wl,-dead_strip], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-dead_strip"], [], [$LDFLAG_WERROR])
+  AX_CHECK_LINK_FLAG([-Wl,-dead_strip_dylibs], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-dead_strip_dylibs"], [], [$LDFLAG_WERROR])
+  AX_CHECK_LINK_FLAG([-Wl,-fixup_chains], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-fixup_chains"], [], [$LDFLAG_WERROR])
 fi
 
 AC_CHECK_HEADERS([sys/select.h sys/prctl.h sys/sysctl.h vm/vm_param.h sys/vmmeter.h sys/resources.h])
@@ -1044,23 +1044,23 @@ AC_CHECK_DECLS([pipe2])
 AC_CHECK_FUNCS([timingsafe_bcmp])
 
 dnl Check for mallopt(M_ARENA_MAX) (to set glibc arenas)
-AC_MSG_CHECKING(for mallopt M_ARENA_MAX)
+AC_MSG_CHECKING([for mallopt M_ARENA_MAX])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <malloc.h>]],
  [[ mallopt(M_ARENA_MAX, 1); ]])],
- [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_MALLOPT_ARENA_MAX, 1,[Define this symbol if you have mallopt with M_ARENA_MAX]) ],
- [ AC_MSG_RESULT(no)]
+ [ AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_MALLOPT_ARENA_MAX], [1], [Define this symbol if you have mallopt with M_ARENA_MAX]) ],
+ [ AC_MSG_RESULT([no])]
 )
 
 dnl Check for malloc_info (for memory statistics information in getmemoryinfo)
-AC_MSG_CHECKING(for getmemoryinfo)
+AC_MSG_CHECKING([for getmemoryinfo])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <malloc.h>]],
  [[ int f = malloc_info(0, NULL); ]])],
- [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_MALLOC_INFO, 1,[Define this symbol if you have malloc_info]) ],
- [ AC_MSG_RESULT(no)]
+ [ AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_MALLOC_INFO], [1], [Define this symbol if you have malloc_info]) ],
+ [ AC_MSG_RESULT([no])]
 )
 
 dnl Check for posix_fallocate
-AC_MSG_CHECKING(for posix_fallocate)
+AC_MSG_CHECKING([for posix_fallocate])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
                    // same as in src/util/system.cpp
                    #ifdef __linux__
@@ -1071,8 +1071,8 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
                    #endif // __linux__
                    #include <fcntl.h>]],
                    [[ int f = posix_fallocate(0, 0, 0); ]])],
- [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_POSIX_FALLOCATE, 1,[Define this symbol if you have posix_fallocate]) ],
- [ AC_MSG_RESULT(no)]
+ [ AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_POSIX_FALLOCATE], [1], [Define this symbol if you have posix_fallocate]) ],
+ [ AC_MSG_RESULT([no])]
 )
 
 AC_MSG_CHECKING([for default visibility attribute])
@@ -1081,11 +1081,11 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
   int main(){}
   ])],
   [
-    AC_DEFINE(HAVE_DEFAULT_VISIBILITY_ATTRIBUTE,1,[Define if the visibility attribute is supported.])
-    AC_MSG_RESULT(yes)
+    AC_DEFINE([HAVE_DEFAULT_VISIBILITY_ATTRIBUTE], [1], [Define if the visibility attribute is supported.])
+    AC_MSG_RESULT([yes])
   ],
   [
-    AC_MSG_RESULT(no)
+    AC_MSG_RESULT([no])
     if test x$use_reduce_exports = xyes; then
       AC_MSG_ERROR([Cannot find a working visibility attribute. Use --disable-reduce-exports.])
     fi
@@ -1098,10 +1098,10 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
   int main(){}
   ])],
   [
-    AC_DEFINE(HAVE_DLLEXPORT_ATTRIBUTE,1,[Define if the dllexport attribute is supported.])
-    AC_MSG_RESULT(yes)
+    AC_DEFINE([HAVE_DLLEXPORT_ATTRIBUTE], [1], [Define if the dllexport attribute is supported.])
+    AC_MSG_RESULT([yes])
   ],
-  [AC_MSG_RESULT(no)]
+  [AC_MSG_RESULT([no])]
 )
 
 if test "x$use_thread_local" = xyes || test "x$use_thread_local" = xauto; then
@@ -1123,21 +1123,21 @@ if test "x$use_thread_local" = xyes || test "x$use_thread_local" = xauto; then
           dnl mingw32's implementation of thread_local has also been shown to behave
           dnl erroneously under concurrent usage; see:
           dnl https://gist.github.com/jamesob/fe9a872051a88b2025b1aa37bfa98605
-          AC_MSG_RESULT(no)
+          AC_MSG_RESULT([no])
           ;;
         *freebsd*)
           dnl FreeBSD's implementation of thread_local is also buggy (per
           dnl https://groups.google.com/d/msg/bsdmailinglist/22ncTZAbDp4/Dii_pII5AwAJ)
-          AC_MSG_RESULT(no)
+          AC_MSG_RESULT([no])
           ;;
         *)
-          AC_DEFINE(HAVE_THREAD_LOCAL,1,[Define if thread_local is supported.])
-          AC_MSG_RESULT(yes)
+          AC_DEFINE([HAVE_THREAD_LOCAL], [1], [Define if thread_local is supported.])
+          AC_MSG_RESULT([yes])
           ;;
       esac
     ],
     [
-      AC_MSG_RESULT(no)
+      AC_MSG_RESULT([no])
     ]
   )
   LDFLAGS="$TEMP_LDFLAGS"
@@ -1145,50 +1145,50 @@ fi
 
 dnl check for gmtime_r(), fallback to gmtime_s() if that is unavailable
 dnl fail if neither are available.
-AC_MSG_CHECKING(for gmtime_r)
+AC_MSG_CHECKING([for gmtime_r])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <ctime>]],
   [[ gmtime_r((const time_t *) nullptr, (struct tm *) nullptr); ]])],
-  [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_GMTIME_R, 1, [Define this symbol if gmtime_r is available]) ],
-  [ AC_MSG_RESULT(no);
-    AC_MSG_CHECKING(for gmtime_s);
+  [ AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_GMTIME_R], [1], [Define this symbol if gmtime_r is available]) ],
+  [ AC_MSG_RESULT([no]);
+    AC_MSG_CHECKING([for gmtime_s]);
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <ctime>]],
        [[ gmtime_s((struct tm *) nullptr, (const time_t *) nullptr); ]])],
-       [ AC_MSG_RESULT(yes)],
-       [ AC_MSG_RESULT(no); AC_MSG_ERROR(Both gmtime_r and gmtime_s are unavailable) ]
+       [ AC_MSG_RESULT([yes])],
+       [ AC_MSG_RESULT([no]); AC_MSG_ERROR([Both gmtime_r and gmtime_s are unavailable]) ]
     )
   ]
 )
 
 dnl Check for different ways of gathering OS randomness
-AC_MSG_CHECKING(for Linux getrandom syscall)
+AC_MSG_CHECKING([for Linux getrandom syscall])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>
   #include <sys/syscall.h>
   #include <linux/random.h>]],
  [[ syscall(SYS_getrandom, nullptr, 32, 0); ]])],
- [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_SYS_GETRANDOM, 1,[Define this symbol if the Linux getrandom system call is available]) ],
- [ AC_MSG_RESULT(no)]
+ [ AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_SYS_GETRANDOM], [1], [Define this symbol if the Linux getrandom system call is available]) ],
+ [ AC_MSG_RESULT([no])]
 )
 
-AC_MSG_CHECKING(for getentropy via random.h)
+AC_MSG_CHECKING([for getentropy via random.h])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>
  #include <sys/random.h>]],
  [[ getentropy(nullptr, 32) ]])],
- [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_GETENTROPY_RAND, 1,[Define this symbol if the BSD getentropy system call is available with sys/random.h]) ],
- [ AC_MSG_RESULT(no)]
+ [ AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_GETENTROPY_RAND], [1], [Define this symbol if the BSD getentropy system call is available with sys/random.h]) ],
+ [ AC_MSG_RESULT([no])]
 )
 
-AC_MSG_CHECKING(for sysctl)
+AC_MSG_CHECKING([for sysctl])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
   #include <sys/sysctl.h>]],
  [[ #ifdef __linux__
     #error "Don't use sysctl on Linux, it's deprecated even when it works"
     #endif
     sysctl(nullptr, 2, nullptr, nullptr, nullptr, 0); ]])],
- [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_SYSCTL, 1,[Define this symbol if the BSD sysctl() is available]) ],
- [ AC_MSG_RESULT(no)]
+ [ AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_SYSCTL], [1], [Define this symbol if the BSD sysctl() is available]) ],
+ [ AC_MSG_RESULT([no])]
 )
 
-AC_MSG_CHECKING(for sysctl KERN_ARND)
+AC_MSG_CHECKING([for sysctl KERN_ARND])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
   #include <sys/sysctl.h>]],
  [[ #ifdef __linux__
@@ -1196,16 +1196,16 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
     #endif
     static int name[2] = {CTL_KERN, KERN_ARND};
     sysctl(name, 2, nullptr, nullptr, nullptr, 0); ]])],
- [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_SYSCTL_ARND, 1,[Define this symbol if the BSD sysctl(KERN_ARND) is available]) ],
- [ AC_MSG_RESULT(no)]
+ [ AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_SYSCTL_ARND], [1], [Define this symbol if the BSD sysctl(KERN_ARND) is available]) ],
+ [ AC_MSG_RESULT([no])]
 )
 
-AC_MSG_CHECKING(for if type char equals int8_t)
+AC_MSG_CHECKING([for if type char equals int8_t])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdint.h>
   #include <type_traits>]],
  [[ static_assert(std::is_same<int8_t, char>::value, ""); ]])],
- [ AC_MSG_RESULT(yes); AC_DEFINE(CHAR_EQUALS_INT8, 1,[Define this symbol if type char equals int8_t]) ],
- [ AC_MSG_RESULT(no)]
+ [ AC_MSG_RESULT([yes]); AC_DEFINE([CHAR_EQUALS_INT8], [1], [Define this symbol if type char equals int8_t]) ],
+ [ AC_MSG_RESULT([no])]
 )
 
 dnl ensure backtrace() is found, check -lexecinfo if necessary
@@ -1217,58 +1217,58 @@ if test x$TARGET_OS != xwindows; then
   fi
 fi
 
-AC_MSG_CHECKING(for fdatasync)
+AC_MSG_CHECKING([for fdatasync])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>]],
  [[ fdatasync(0); ]])],
- [ AC_MSG_RESULT(yes); HAVE_FDATASYNC=1 ],
- [ AC_MSG_RESULT(no); HAVE_FDATASYNC=0 ]
+ [ AC_MSG_RESULT([yes]); HAVE_FDATASYNC=1 ],
+ [ AC_MSG_RESULT([no]); HAVE_FDATASYNC=0 ]
 )
 AC_DEFINE_UNQUOTED([HAVE_FDATASYNC], [$HAVE_FDATASYNC], [Define to 1 if fdatasync is available.])
 
-AC_MSG_CHECKING(for F_FULLFSYNC)
+AC_MSG_CHECKING([for F_FULLFSYNC])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <fcntl.h>]],
  [[ fcntl(0, F_FULLFSYNC, 0); ]])],
- [ AC_MSG_RESULT(yes); HAVE_FULLFSYNC=1 ],
- [ AC_MSG_RESULT(no); HAVE_FULLFSYNC=0 ]
+ [ AC_MSG_RESULT([yes]); HAVE_FULLFSYNC=1 ],
+ [ AC_MSG_RESULT([no]); HAVE_FULLFSYNC=0 ]
 )
 
-AC_MSG_CHECKING(for O_CLOEXEC)
+AC_MSG_CHECKING([for O_CLOEXEC])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <fcntl.h>]],
  [[ open("", O_CLOEXEC); ]])],
- [ AC_MSG_RESULT(yes); HAVE_O_CLOEXEC=1 ],
- [ AC_MSG_RESULT(no); HAVE_O_CLOEXEC=0 ]
+ [ AC_MSG_RESULT([yes]); HAVE_O_CLOEXEC=1 ],
+ [ AC_MSG_RESULT([no]); HAVE_O_CLOEXEC=0 ]
 )
 AC_DEFINE_UNQUOTED([HAVE_O_CLOEXEC], [$HAVE_O_CLOEXEC], [Define to 1 if O_CLOEXEC flag is available.])
 
 dnl crc32c platform checks
-AC_MSG_CHECKING(for __builtin_prefetch)
+AC_MSG_CHECKING([for __builtin_prefetch])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
   char data = 0;
   const char* address = &data;
   __builtin_prefetch(address, 0, 0);
   ]])],
- [ AC_MSG_RESULT(yes); HAVE_BUILTIN_PREFETCH=1 ],
- [ AC_MSG_RESULT(no); HAVE_BUILTIN_PREFETCH=0 ]
+ [ AC_MSG_RESULT([yes]); HAVE_BUILTIN_PREFETCH=1 ],
+ [ AC_MSG_RESULT([no]); HAVE_BUILTIN_PREFETCH=0 ]
 )
 
-AC_MSG_CHECKING(for _mm_prefetch)
+AC_MSG_CHECKING([for _mm_prefetch])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <xmmintrin.h>]], [[
   char data = 0;
   const char* address = &data;
   _mm_prefetch(address, _MM_HINT_NTA);
   ]])],
- [ AC_MSG_RESULT(yes); HAVE_MM_PREFETCH=1 ],
- [ AC_MSG_RESULT(no); HAVE_MM_PREFETCH=0 ]
+ [ AC_MSG_RESULT([yes]); HAVE_MM_PREFETCH=1 ],
+ [ AC_MSG_RESULT([no]); HAVE_MM_PREFETCH=0 ]
 )
 
-AC_MSG_CHECKING(for strong getauxval support in the system headers)
+AC_MSG_CHECKING([for strong getauxval support in the system headers])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <sys/auxv.h>
   ]], [[
     getauxval(AT_HWCAP);
   ]])],
- [ AC_MSG_RESULT(yes); HAVE_STRONG_GETAUXVAL=1; AC_DEFINE(HAVE_STRONG_GETAUXVAL, 1, [Define this symbol to build code that uses getauxval)]) ],
- [ AC_MSG_RESULT(no); HAVE_STRONG_GETAUXVAL=0 ]
+ [ AC_MSG_RESULT([yes]); HAVE_STRONG_GETAUXVAL=1; AC_DEFINE([HAVE_STRONG_GETAUXVAL], [1], [Define this symbol to build code that uses getauxval)]) ],
+ [ AC_MSG_RESULT([no]); HAVE_STRONG_GETAUXVAL=0 ]
 )
 
 have_any_system=no
@@ -1278,8 +1278,8 @@ AC_LINK_IFELSE(
         [[ #include <cstdlib> ]],
         [[ int nErr = std::system(""); ]]
     )],
-    [ AC_MSG_RESULT(yes); have_any_system=yes],
-    [ AC_MSG_RESULT(no) ]
+    [ AC_MSG_RESULT([yes]); have_any_system=yes],
+    [ AC_MSG_RESULT([no]) ]
 )
 
 AC_MSG_CHECKING([for ::_wsystem])
@@ -1288,12 +1288,12 @@ AC_LINK_IFELSE(
         [[ #include <stdlib.h> ]],
         [[ int nErr = ::_wsystem(NULL); ]]
     )],
-    [ AC_MSG_RESULT(yes); have_any_system=yes],
-    [ AC_MSG_RESULT(no) ]
+    [ AC_MSG_RESULT([yes]); have_any_system=yes],
+    [ AC_MSG_RESULT([no]) ]
 )
 
 if test "x$have_any_system" != "xno"; then
-  AC_DEFINE(HAVE_SYSTEM, 1, Define to 1 if std::system or ::wsystem is available.)
+  AC_DEFINE([HAVE_SYSTEM], [1], [Define to 1 if std::system or ::wsystem is available.])
 fi
 
 dnl SUPPRESSED_CPPFLAGS=SUPPRESS_WARNINGS([$SOME_CPPFLAGS])
@@ -1310,7 +1310,7 @@ AC_DEFUN([SUPPRESS_WARNINGS],
 
 dnl enable-fuzz should disable all other targets
 if test "x$enable_fuzz" = "xyes"; then
-  AC_MSG_WARN(enable-fuzz will disable all other targets and force --enable-fuzz-binary=yes)
+  AC_MSG_WARN([enable-fuzz will disable all other targets and force --enable-fuzz-binary=yes])
   build_bitcoin_utils=no
   build_bitcoin_cli=no
   build_bitcoin_tx=no
@@ -1327,7 +1327,7 @@ if test "x$enable_fuzz" = "xyes"; then
   use_zmq=no
   enable_fuzz_binary=yes
 
-  AX_CHECK_PREPROC_FLAG([-DABORT_ON_FAILED_ASSUME],[[DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DABORT_ON_FAILED_ASSUME"]],,[[$CXXFLAG_WERROR]])
+  AX_CHECK_PREPROC_FLAG([-DABORT_ON_FAILED_ASSUME], [DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DABORT_ON_FAILED_ASSUME"], [], [$CXXFLAG_WERROR])
 else
     BITCOIN_QT_INIT
 
@@ -1407,8 +1407,8 @@ if test x$use_usdt != xno; then
        int a, b, c, d, e, f, g;
        DTRACE_PROBE7(context, event, a, b, c, d, e, f, g);]
     )],
-    [AC_MSG_RESULT(yes); AC_DEFINE([ENABLE_TRACING], [1], [Define to 1 to enable tracepoints for Userspace, Statically Defined Tracing])],
-    [AC_MSG_RESULT(no); use_usdt=no;]
+    [AC_MSG_RESULT([yes]); AC_DEFINE([ENABLE_TRACING], [1], [Define to 1 to enable tracepoints for Userspace, Statically Defined Tracing])],
+    [AC_MSG_RESULT([no]); use_usdt=no;]
   )
 fi
 AM_CONDITIONAL([ENABLE_USDT_TRACEPOINTS], [test "$use_usdt" = "yes"])
@@ -1433,9 +1433,9 @@ if test x$have_miniupnpc != xno; then
       #  error miniUPnPc API version is too old
       #endif
     ]])],[
-      AC_MSG_RESULT(yes)
+      AC_MSG_RESULT([yes])
     ],[
-    AC_MSG_RESULT(no)
+    AC_MSG_RESULT([no])
     AC_MSG_WARN([miniUPnPc API version < 10 is unsupported, disabling UPnP support.])
     have_miniupnpc=no
   ])
@@ -1490,16 +1490,16 @@ fi
 
 dnl Check for reduced exports
 if test x$use_reduce_exports = xyes; then
-    AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],[CORE_CXXFLAGS="$CORE_CXXFLAGS -fvisibility=hidden"],
-    [AC_MSG_ERROR([Cannot set hidden symbol visibility. Use --disable-reduce-exports.])],[[$CXXFLAG_WERROR]])
-    AX_CHECK_LINK_FLAG([[-Wl,--exclude-libs,ALL]],[RELDFLAGS="-Wl,--exclude-libs,ALL"],,[[$LDFLAG_WERROR]])
+    AX_CHECK_COMPILE_FLAG([-fvisibility=hidden], [CORE_CXXFLAGS="$CORE_CXXFLAGS -fvisibility=hidden"],
+    [AC_MSG_ERROR([Cannot set hidden symbol visibility. Use --disable-reduce-exports.])], [$CXXFLAG_WERROR])
+    AX_CHECK_LINK_FLAG([-Wl,--exclude-libs,ALL], [RELDFLAGS="-Wl,--exclude-libs,ALL"], [], [$LDFLAG_WERROR])
     AX_CHECK_LINK_FLAG([-Wl,-no_exported_symbols], [LIBTOOL_APP_LDFLAGS="$LIBTOOL_APP_LDFLAGS -Wl,-no_exported_symbols"], [], [$LDFLAG_WERROR])
 fi
 
 if test x$use_tests = xyes; then
 
   if test x$HEXDUMP = x; then
-    AC_MSG_ERROR(hexdump is required for tests)
+    AC_MSG_ERROR([hexdump is required for tests])
   fi
 fi
 
@@ -1592,7 +1592,7 @@ else
   build_multiprocess=no
 fi
 
-AM_CONDITIONAL([BUILD_MULTIPROCESS],[test "x$build_multiprocess" = xyes])
+AM_CONDITIONAL([BUILD_MULTIPROCESS], [test "x$build_multiprocess" = xyes])
 AM_CONDITIONAL([BUILD_BITCOIN_NODE], [test "x$build_multiprocess" = xyes])
 AM_CONDITIONAL([BUILD_BITCOIN_GUI], [test "x$build_multiprocess" = xyes])
 
@@ -1626,7 +1626,7 @@ AC_MSG_RESULT($build_bitcoin_wallet)
 AC_MSG_CHECKING([whether to build libraries])
 AM_CONDITIONAL([BUILD_BITCOIN_LIBS], [test x$build_bitcoin_libs = xyes])
 if test x$build_bitcoin_libs = xyes; then
-  AC_DEFINE(HAVE_CONSENSUS_LIB, 1, [Define this symbol if the consensus lib has been built])
+  AC_DEFINE([HAVE_CONSENSUS_LIB], [1], [Define this symbol if the consensus lib has been built])
   AC_CONFIG_FILES([libdashconsensus.pc:libdashconsensus.pc.in])
 fi
 AC_MSG_RESULT($build_bitcoin_libs)
@@ -1634,7 +1634,7 @@ AC_MSG_RESULT($build_bitcoin_libs)
 AC_LANG_POP
 
 if test "x$use_ccache" != "xno"; then
-  AC_MSG_CHECKING(if ccache should be used)
+  AC_MSG_CHECKING([if ccache should be used])
   if test x$CCACHE = x; then
     if test "x$use_ccache" = "xyes"; then
       AC_MSG_ERROR([ccache not found.]);
@@ -1648,39 +1648,39 @@ if test "x$use_ccache" != "xno"; then
   fi
   AC_MSG_RESULT($use_ccache)
   if test "x$use_ccache" = "xyes"; then
-    AX_CHECK_COMPILE_FLAG([-fdebug-prefix-map=A=B],[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -fdebug-prefix-map=\$(abs_top_srcdir)=."],,[[$CXXFLAG_WERROR]])
-    AX_CHECK_PREPROC_FLAG([-fmacro-prefix-map=A=B],[DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -fmacro-prefix-map=\$(abs_top_srcdir)=."],,[[$CXXFLAG_WERROR]])
+    AX_CHECK_COMPILE_FLAG([-fdebug-prefix-map=A=B], [DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -fdebug-prefix-map=\$(abs_top_srcdir)=."], [], [$CXXFLAG_WERROR])
+    AX_CHECK_PREPROC_FLAG([-fmacro-prefix-map=A=B], [DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -fmacro-prefix-map=\$(abs_top_srcdir)=."], [], [$CXXFLAG_WERROR])
   fi
 fi
 
 dnl enable wallet
 AC_MSG_CHECKING([if wallet should be enabled])
 if test x$enable_wallet != xno; then
-  AC_MSG_RESULT(yes)
+  AC_MSG_RESULT([yes])
   AC_DEFINE_UNQUOTED([ENABLE_WALLET],[1],[Define to 1 to enable wallet functions])
   enable_wallet=yes
 
 else
-  AC_MSG_RESULT(no)
+  AC_MSG_RESULT([no])
 fi
 
 dnl enable upnp support
 AC_MSG_CHECKING([whether to build with support for UPnP])
 if test x$have_miniupnpc = xno; then
   if test x$use_upnp = xyes; then
-     AC_MSG_ERROR("UPnP requested but cannot be built. Use --without-miniupnpc.")
+     AC_MSG_ERROR([UPnP requested but cannot be built. Use --without-miniupnpc])
   fi
-  AC_MSG_RESULT(no)
+  AC_MSG_RESULT([no])
   use_upnp=no
 else
   if test x$use_upnp != xno; then
-    AC_MSG_RESULT(yes)
+    AC_MSG_RESULT([yes])
     use_upnp=yes
     AC_DEFINE([USE_UPNP], [1], [Define to 1 if UPnP support should be compiled in.])    if test x$TARGET_OS = xwindows; then
       MINIUPNPC_CPPFLAGS="-DSTATICLIB -DMINIUPNP_STATICLIB"
     fi
   else
-    AC_MSG_RESULT(no)
+    AC_MSG_RESULT([no])
   fi
 fi
 
@@ -1711,9 +1711,9 @@ if test x$bitcoin_enable_qt != xno; then
   dnl enable dbus support
   AC_MSG_CHECKING([whether to build GUI with support for D-Bus])
   if test x$bitcoin_enable_qt_dbus != xno; then
-    AC_DEFINE([USE_DBUS],[1],[Define if dbus support should be compiled in])
+    AC_DEFINE([USE_DBUS], [1], [Define if dbus support should be compiled in])
   fi
-  AC_MSG_RESULT($bitcoin_enable_qt_dbus)
+  AC_MSG_RESULT([$bitcoin_enable_qt_dbus])
 
   dnl enable qr support
   AC_MSG_CHECKING([whether to build GUI with support for QR codes])
@@ -1724,14 +1724,14 @@ if test x$bitcoin_enable_qt != xno; then
     use_qr=no
   else
     if test x$use_qr != xno; then
-      AC_DEFINE([USE_QRCODE],[1],[Define if QR support should be compiled in])
+      AC_DEFINE([USE_QRCODE], [1], [Define if QR support should be compiled in])
       use_qr=yes
     fi
   fi
   AC_MSG_RESULT([$use_qr])
 
   if test x$XGETTEXT = x; then
-    AC_MSG_WARN("xgettext is required to update qt translations")
+    AC_MSG_WARN([xgettext is required to update qt translations])
   fi
 
   AC_MSG_CHECKING([whether to build test_dash-qt])
@@ -1785,42 +1785,42 @@ AM_CONDITIONAL([TARGET_DARWIN], [test x$TARGET_OS = xdarwin])
 AM_CONDITIONAL([BUILD_DARWIN], [test x$BUILD_OS = xdarwin])
 AM_CONDITIONAL([TARGET_LINUX], [test x$TARGET_OS = xlinux])
 AM_CONDITIONAL([TARGET_WINDOWS], [test x$TARGET_OS = xwindows])
-AM_CONDITIONAL([ENABLE_WALLET],[test x$enable_wallet = xyes])
+AM_CONDITIONAL([ENABLE_WALLET], [test x$enable_wallet = xyes])
 AM_CONDITIONAL([USE_SQLITE], [test "x$use_sqlite" = "xyes"])
 AM_CONDITIONAL([USE_BDB], [test "x$use_bdb" = "xyes"])
-AM_CONDITIONAL([ENABLE_TESTS],[test x$BUILD_TEST = xyes])
-AM_CONDITIONAL([ENABLE_FUZZ],[test x$enable_fuzz = xyes])
-AM_CONDITIONAL([ENABLE_FUZZ_BINARY],[test x$enable_fuzz_binary = xyes])
-AM_CONDITIONAL([ENABLE_QT],[test x$bitcoin_enable_qt = xyes])
-AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$BUILD_TEST_QT = xyes])
-AM_CONDITIONAL([ENABLE_BENCH],[test x$use_bench = xyes])
+AM_CONDITIONAL([ENABLE_TESTS], [test x$BUILD_TEST = xyes])
+AM_CONDITIONAL([ENABLE_FUZZ], [test x$enable_fuzz = xyes])
+AM_CONDITIONAL([ENABLE_FUZZ_BINARY], [test x$enable_fuzz_binary = xyes])
+AM_CONDITIONAL([ENABLE_QT], [test x$bitcoin_enable_qt = xyes])
+AM_CONDITIONAL([ENABLE_QT_TESTS], [test x$BUILD_TEST_QT = xyes])
+AM_CONDITIONAL([ENABLE_BENCH], [test x$use_bench = xyes])
 AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
-AM_CONDITIONAL([USE_LCOV],[test x$use_lcov = xyes])
-AM_CONDITIONAL([USE_LIBEVENT],[test x$use_libevent = xyes])
-AM_CONDITIONAL([HARDEN],[test x$use_hardening = xyes])
-AM_CONDITIONAL([ENABLE_SSE42],[test x$enable_sse42 = xyes])
-AM_CONDITIONAL([ENABLE_SSE41],[test x$enable_sse41 = xyes])
-AM_CONDITIONAL([ENABLE_AVX2],[test x$enable_avx2 = xyes])
-AM_CONDITIONAL([ENABLE_X86_SHANI],[test x$enable_x86_shani = xyes])
-AM_CONDITIONAL([ENABLE_ARM_CRC],[test x$enable_arm_crc = xyes])
+AM_CONDITIONAL([USE_LCOV], [test x$use_lcov = xyes])
+AM_CONDITIONAL([USE_LIBEVENT], [test x$use_libevent = xyes])
+AM_CONDITIONAL([HARDEN], [test x$use_hardening = xyes])
+AM_CONDITIONAL([ENABLE_SSE42], [test x$enable_sse42 = xyes])
+AM_CONDITIONAL([ENABLE_SSE41], [test x$enable_sse41 = xyes])
+AM_CONDITIONAL([ENABLE_AVX2], [test x$enable_avx2 = xyes])
+AM_CONDITIONAL([ENABLE_X86_SHANI], [test x$enable_x86_shani = xyes])
+AM_CONDITIONAL([ENABLE_ARM_CRC], [test x$enable_arm_crc = xyes])
 AM_CONDITIONAL([ENABLE_ARM_SHANI], [test "$enable_arm_shani" = "yes"])
-AM_CONDITIONAL([USE_ASM],[test x$use_asm = xyes])
-AM_CONDITIONAL([WORDS_BIGENDIAN],[test x$ac_cv_c_bigendian = xyes])
-AM_CONDITIONAL([USE_NATPMP],[test x$use_natpmp = xyes])
-AM_CONDITIONAL([USE_UPNP],[test x$use_upnp = xyes])
+AM_CONDITIONAL([USE_ASM], [test x$use_asm = xyes])
+AM_CONDITIONAL([WORDS_BIGENDIAN], [test x$ac_cv_c_bigendian = xyes])
+AM_CONDITIONAL([USE_NATPMP], [test x$use_natpmp = xyes])
+AM_CONDITIONAL([USE_UPNP], [test x$use_upnp = xyes])
 
 dnl for minisketch
-AM_CONDITIONAL([ENABLE_CLMUL],[test x$enable_clmul = xyes])
+AM_CONDITIONAL([ENABLE_CLMUL], [test x$enable_clmul = xyes])
 
-AC_DEFINE(CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MAJOR, [Major version])
-AC_DEFINE(CLIENT_VERSION_MINOR, _CLIENT_VERSION_MINOR, [Minor version])
-AC_DEFINE(CLIENT_VERSION_BUILD, _CLIENT_VERSION_BUILD, [Version Build])
-AC_DEFINE(CLIENT_VERSION_IS_RELEASE, _CLIENT_VERSION_IS_RELEASE, [Version is release])
-AC_DEFINE(COPYRIGHT_YEAR, _COPYRIGHT_YEAR, [Copyright year])
-AC_DEFINE(COPYRIGHT_HOLDERS, "_COPYRIGHT_HOLDERS", [Copyright holder(s) before %s replacement])
-AC_DEFINE(COPYRIGHT_HOLDERS_SUBSTITUTION, "_COPYRIGHT_HOLDERS_SUBSTITUTION", [Replacement for %s in copyright holders string])
+AC_DEFINE([CLIENT_VERSION_MAJOR], [_CLIENT_VERSION_MAJOR], [Major version])
+AC_DEFINE([CLIENT_VERSION_MINOR], [_CLIENT_VERSION_MINOR], [Minor version])
+AC_DEFINE([CLIENT_VERSION_BUILD], [_CLIENT_VERSION_BUILD], [Version Build])
+AC_DEFINE([CLIENT_VERSION_IS_RELEASE], [_CLIENT_VERSION_IS_RELEASE], [Version is release])
+AC_DEFINE([COPYRIGHT_YEAR], [_COPYRIGHT_YEAR], [Copyright year])
+AC_DEFINE([COPYRIGHT_HOLDERS], ["_COPYRIGHT_HOLDERS"], [Copyright holder(s) before %s replacement])
+AC_DEFINE([COPYRIGHT_HOLDERS_SUBSTITUTION], ["_COPYRIGHT_HOLDERS_SUBSTITUTION"], [Replacement for %s in copyright holders string])
 define(_COPYRIGHT_HOLDERS_FINAL, [patsubst(_COPYRIGHT_HOLDERS, [%s], [_COPYRIGHT_HOLDERS_SUBSTITUTION])])
-AC_DEFINE(COPYRIGHT_HOLDERS_FINAL, "_COPYRIGHT_HOLDERS_FINAL", [Copyright holder(s)])
+AC_DEFINE([COPYRIGHT_HOLDERS_FINAL], ["_COPYRIGHT_HOLDERS_FINAL"], [Copyright holder(s)])
 AC_SUBST(CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MAJOR)
 AC_SUBST(CLIENT_VERSION_MINOR, _CLIENT_VERSION_MINOR)
 AC_SUBST(CLIENT_VERSION_BUILD, _CLIENT_VERSION_BUILD)

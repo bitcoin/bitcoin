@@ -35,6 +35,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   echo "Creating $DOCKER_NAME_TAG container to run in"
   ${CI_RETRY_EXE} docker pull "$DOCKER_NAME_TAG"
 
+  # shellcheck disable=SC2086
   DOCKER_ID=$(docker run $DOCKER_ADMIN -idt \
                   --mount type=bind,src=$BASE_ROOT_DIR,dst=/ro_base,readonly \
                   --mount type=bind,src=$CCACHE_DIR,dst=$CCACHE_DIR \

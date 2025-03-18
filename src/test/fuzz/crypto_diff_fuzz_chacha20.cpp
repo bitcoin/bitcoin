@@ -100,7 +100,7 @@ void ECRYPT_keysetup(ECRYPT_ctx* x, const u8* k, u32 kbits, u32 ivbits)
     x->input[5] = U8TO32_LITTLE(k + 4);
     x->input[6] = U8TO32_LITTLE(k + 8);
     x->input[7] = U8TO32_LITTLE(k + 12);
-    if (kbits == 256) { /* recommended */
+    if (kbits == 256) { /*recommended=*/
         k += 16;
         constants = sigma;
     } else { /* kbits == 128 */

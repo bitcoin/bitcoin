@@ -2505,7 +2505,6 @@ static RPCHelpMan getwalletinfo()
     UniValue obj(UniValue::VOBJ);
 
     const auto bal = pwallet->GetBalance();
-    int64_t kp_oldest = pwallet->GetOldestKeyPoolTime();
     obj.pushKV("walletname", pwallet->GetName());
     obj.pushKV("walletversion", pwallet->GetVersion());
     obj.pushKV("format", pwallet->GetDatabase().Format());
@@ -2518,8 +2517,9 @@ static RPCHelpMan getwalletinfo()
     if (spk_man) {
         obj.pushKV("timefirstkey", spk_man->GetTimeFirstKey());
     }
-    if (kp_oldest > 0) {
-        obj.pushKV("keypoololdest", kp_oldest);
+    const auto kp_oldest = pwallet->GetOldestKeyPoolTime();
+    if (kp_oldest.has_value()) {
+        obj.pushKV("keypoololdest", kp_oldest.value());
     }
     size_t kpExternalSize = pwallet->KeypoolCountExternalKeys();
     obj.pushKV("keypoolsize",   (int64_t)kpExternalSize);

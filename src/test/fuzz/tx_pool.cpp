@@ -93,7 +93,7 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, con
     {
         BlockAssembler::Options options;
         options.nBlockMaxSize = fuzzed_data_provider.ConsumeIntegralInRange(0U, MaxBlockSize(true));
-        options.blockMinFeeRate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /* max */ COIN)};
+        options.blockMinFeeRate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
 
         auto assembler = BlockAssembler{chainstate, node, *static_cast<CTxMemPool*>(&tx_pool), chainstate.m_params, options};
         auto block_template = assembler.CreateNewBlock(CScript{} << OP_TRUE);
@@ -140,7 +140,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
     // The sum of the values of all spendable outpoints
     constexpr CAmount SUPPLY_TOTAL{COINBASE_MATURITY * 50 * COIN};
 
-    CTxMemPool tx_pool_{/* estimator */ nullptr, /* check_ratio */ 1};
+    CTxMemPool tx_pool_{/*estimator=*/nullptr, /*check_ratio=*/1};
     MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(&tx_pool_);
 
     chainstate.SetMempool(&tx_pool);
@@ -276,10 +276,10 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
             // Outpoints that no longer count toward the total supply
             std::set<COutPoint> consumed_supply;
             for (const auto& removed_tx : removed) {
-                insert_tx(/* created_by_tx */ {consumed_erased}, /* consumed_by_tx */ {outpoints_supply}, /* tx */ *removed_tx);
+                insert_tx(/*created_by_tx=*/{consumed_erased}, /*consumed_by_tx=*/{outpoints_supply}, /*tx=*/*removed_tx);
             }
             for (const auto& added_tx : added) {
-                insert_tx(/* created_by_tx */ {outpoints_supply, outpoints_rbf}, /* consumed_by_tx */ {consumed_supply}, /* tx */ *added_tx);
+                insert_tx(/*created_by_tx=*/{outpoints_supply, outpoints_rbf}, /*consumed_by_tx=*/{consumed_supply}, /*tx=*/*added_tx);
             }
             for (const auto& p : consumed_erased) {
                 Assert(outpoints_supply.erase(p) == 1);
@@ -312,7 +312,7 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
         txids.push_back(ConsumeUInt256(fuzzed_data_provider));
     }
 
-    CTxMemPool tx_pool_{/* estimator */ nullptr, /* check_ratio */ 1};
+    CTxMemPool tx_pool_{/*estimator=*/nullptr, /*check_ratio=*/1};
     MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(&tx_pool_);
 
     chainstate.SetMempool(&tx_pool);

@@ -90,7 +90,8 @@ static void SignTransaction(const CTxMemPool& mempool, CMutableTransaction& tx, 
 
     for (size_t i = 0; i < tx.vin.size(); i++) {
         uint256 hashBlock;
-        CTransactionRef txFrom = GetTransaction(/* block_index */ nullptr, &mempool, tx.vin[i].prevout.hash, Params().GetConsensus(), hashBlock);
+        CTransactionRef txFrom = GetTransaction(/*block_index=*/nullptr, &mempool, tx.vin[i].prevout.hash,
+                                                Params().GetConsensus(), hashBlock);
         BOOST_REQUIRE(txFrom);
         BOOST_REQUIRE(SignSignature(tempKeystore, *txFrom, tx, i, SIGHASH_ALL));
     }
@@ -227,7 +228,8 @@ static bool CheckTransactionSignature(const CTxMemPool& mempool, const CMutableT
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         const auto& txin = tx.vin[i];
         uint256 hashBlock;
-        CTransactionRef txFrom = GetTransaction(/* block_index */ nullptr, &mempool, txin.prevout.hash, Params().GetConsensus(), hashBlock);
+        CTransactionRef txFrom = GetTransaction(/*block_index=*/nullptr, &mempool, txin.prevout.hash,
+                                                Params().GetConsensus(), hashBlock);
         BOOST_REQUIRE(txFrom);
 
         CAmount amount = txFrom->vout[txin.prevout.n].nValue;
