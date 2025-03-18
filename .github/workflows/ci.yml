@@ -269,7 +269,7 @@ jobs:
           py -3 test/fuzz/test_runner.py --par $NUMBER_OF_PROCESSORS --loglevel DEBUG "${RUNNER_TEMP}/qa-assets/fuzz_corpora"
 
   windows-cross:
-    name: 'Linux->Windows cross, unit tests, no gui tests, no functional tests'
+    name: 'Linux->Windows cross, no tests'
     runs-on: ubuntu-latest
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
 
@@ -311,6 +311,69 @@ jobs:
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ github.job }}-ccache-${{ github.run_id }}
+
+      - name: Upload built executables
+        uses: actions/upload-artifact@v4
+        with:
+          name: x86_64-w64-mingw32-executables-${{ github.run_id }}
+          path: |
+            ${{ env.BASE_BUILD_DIR }}/bin/*.exe
+            ${{ env.BASE_BUILD_DIR }}/src/secp256k1/bin/*.exe
+            ${{ env.BASE_BUILD_DIR }}/src/univalue/*.exe
+            ${{ env.BASE_BUILD_DIR }}/test/config.ini
+
+  windows-native-test:
+    name: 'Windows, test cross-built'
+    runs-on: windows-2022
+    needs: windows-cross
+
+    env:
+      PYTHONUTF8: 1
+      TEST_RUNNER_TIMEOUT_FACTOR: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download built executables
+        uses: actions/download-artifact@v4
+        with:
+          name: x86_64-w64-mingw32-executables-${{ github.run_id }}
+
+      - name: Run bitcoind.exe
+        run: ./bin/bitcoind.exe -version
+
+      - name: Run unit tests
+        # Can't use ctest here like other jobs as we don't have a CMake build tree.
+        run: |
+          ./bin/test_bitcoin.exe -l test_suite
+          ./src/secp256k1/bin/exhaustive_tests.exe
+          ./src/secp256k1/bin/noverify_tests.exe
+          ./src/secp256k1/bin/tests.exe
+          ./src/univalue/object.exe
+          ./src/univalue/unitester.exe
+
+      - name: Run benchmarks
+        run: ./bin/bench_bitcoin.exe -sanity-check -priority-level=high
+
+      - name: Adjust paths in test/config.ini
+        shell: pwsh
+        run: |
+          (Get-Content "test/config.ini") -replace '(?<=^SRCDIR=).*', '${{ github.workspace }}' -replace '(?<=^BUILDDIR=).*', '${{ github.workspace }}' -replace '(?<=^RPCAUTH=).*', '${{ github.workspace }}/share/rpcauth/rpcauth.py' | Set-Content "test/config.ini"
+          Get-Content "test/config.ini"
+
+      - name: Run util tests
+        run: py -3 test/util/test_runner.py
+
+      - name: Run rpcauth test
+        run: py -3 test/util/rpcauth-test.py
+
+      - name: Run functional tests
+        env:
+          # TODO: Fix the excluded tests and re-enable them.
+          EXCLUDE: '--exclude wallet_migration.py,wallet_multiwallet.py'
+          TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
+        run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix="$RUNNER_TEMP" --combinedlogslen=99999999 --timeout-factor=$TEST_RUNNER_TIMEOUT_FACTOR $EXCLUDE $TEST_RUNNER_EXTRA
 
   asan-lsan-ubsan-integer-no-depends-usdt:
     name: 'ASan + LSan + UBSan + integer, no depends, USDT'
