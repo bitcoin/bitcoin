@@ -4,19 +4,18 @@
 
 #include <test/util/coverage.h>
 
-#if defined(__clang__) && defined(__linux__)
-extern "C" void __llvm_profile_reset_counters(void) __attribute__((weak));
-extern "C" void __gcov_reset(void) __attribute__((weak));
+#if defined(__clang__)
+extern "C" __attribute__((weak)) void __llvm_profile_reset_counters(void);
+extern "C" __attribute__((weak)) void __gcov_reset(void);
 
-void ResetCoverageCounters()
-{
-    if (__llvm_profile_reset_counters) {
-        __llvm_profile_reset_counters();
-    }
+// Fallback implementations
+extern "C" __attribute__((weak)) void __llvm_profile_reset_counters(void) {}
+extern "C" __attribute__((weak)) void __gcov_reset(void) {}
 
-    if (__gcov_reset) {
-        __gcov_reset();
-    }
+void ResetCoverageCounters() {
+    // These will call the real ones if available, or our dummies if not
+    __llvm_profile_reset_counters();
+    __gcov_reset();
 }
 #else
 void ResetCoverageCounters() {}
