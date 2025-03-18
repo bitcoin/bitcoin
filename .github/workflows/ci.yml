@@ -21,6 +21,12 @@ env:
   CI_FAILFAST_TEST_LEAVE_DANGLING: 1  # GHA does not care about dangling processes and setting this variable avoids killing the CI script itself on error
   MAKEJOBS: '-j10'
 
+defaults:
+  run:
+    # Enforce fail-fast behavior for all platforms.
+    # See: https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#exit-codes-and-error-action-preference
+    shell: bash
+
 jobs:
   test-each-commit:
     name: 'test each commit'
@@ -185,6 +191,7 @@ jobs:
           arch: x64
 
       - name: Get tool information
+        shell: pwsh
         run: |
           cmake -version | Tee-Object -FilePath "cmake_version"
           Write-Output "---"
@@ -192,12 +199,12 @@ jobs:
           $env:VCToolsVersion | Tee-Object -FilePath "toolset_version"
           py -3 --version
           Write-Host "PowerShell version $($PSVersionTable.PSVersion.ToString())"
+          bash --version
 
       - name: Using vcpkg with MSBuild
         run: |
-          Set-Location "$env:VCPKG_INSTALLATION_ROOT"
-          Add-Content -Path "triplets\x64-windows.cmake" -Value "set(VCPKG_BUILD_TYPE release)"
-          Add-Content -Path "triplets\x64-windows-static.cmake" -Value "set(VCPKG_BUILD_TYPE release)"
+          echo "set(VCPKG_BUILD_TYPE release)" >> "${VCPKG_INSTALLATION_ROOT}/triplets/x64-windows.cmake"
+          echo "set(VCPKG_BUILD_TYPE release)" >> "${VCPKG_INSTALLATION_ROOT}/triplets/x64-windows-static.cmake"
 
       - name: vcpkg tools cache
         uses: actions/cache@v4
@@ -214,7 +221,7 @@ jobs:
 
       - name: Generate build system
         run: |
-          cmake -B build --preset vs2022-static -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" ${{ matrix.generate-options }}
+          cmake -B build --preset vs2022-static -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" ${{ matrix.generate-options }}
 
       - name: Save vcpkg binary cache
         uses: actions/cache/save@v4
@@ -226,13 +233,13 @@ jobs:
       - name: Build
         working-directory: build
         run: |
-          cmake --build . -j $env:NUMBER_OF_PROCESSORS --config Release
+          cmake --build . -j $NUMBER_OF_PROCESSORS --config Release
 
       - name: Run test suite
         if: matrix.job-type == 'standard'
         working-directory: build
         run: |
-          ctest --output-on-failure --stop-on-failure -j $env:NUMBER_OF_PROCESSORS -C Release
+          ctest --output-on-failure --stop-on-failure -j $NUMBER_OF_PROCESSORS -C Release
 
       - name: Run functional tests
         if: matrix.job-type == 'standard'
@@ -243,15 +250,14 @@ jobs:
           BITCOINUTIL: '${{ github.workspace }}\build\bin\Release\bitcoin-util.exe'
           BITCOINWALLET: '${{ github.workspace }}\build\bin\Release\bitcoin-wallet.exe'
           TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
-        shell: cmd
-        run: py -3 test\functional\test_runner.py --jobs %NUMBER_OF_PROCESSORS% --ci --quiet --tmpdirprefix=%RUNNER_TEMP% --combinedlogslen=99999999 --timeout-factor=%TEST_RUNNER_TIMEOUT_FACTOR% %TEST_RUNNER_EXTRA%
+        run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix="${RUNNER_TEMP}" --combinedlogslen=99999999 --timeout-factor=${TEST_RUNNER_TIMEOUT_FACTOR} ${TEST_RUNNER_EXTRA}
 
       - name: Clone corpora
         if: matrix.job-type == 'fuzz'
         run: |
-          git clone --depth=1 https://github.com/bitcoin-core/qa-assets "$env:RUNNER_TEMP\qa-assets"
-          Set-Location "$env:RUNNER_TEMP\qa-assets"
-          Write-Host "Using qa-assets repo from commit ..."
+          git clone --depth=1 https://github.com/bitcoin-core/qa-assets "${RUNNER_TEMP}/qa-assets"
+          cd "${RUNNER_TEMP}/qa-assets"
+          echo "Using qa-assets repo from commit ..."
           git log -1
 
       - name: Run fuzz tests
@@ -259,9 +265,8 @@ jobs:
         working-directory: build
         env:
           BITCOINFUZZ: '${{ github.workspace }}\build\bin\Release\fuzz.exe'
-        shell: cmd
         run: |
-          py -3 test\fuzz\test_runner.py --par %NUMBER_OF_PROCESSORS% --loglevel DEBUG %RUNNER_TEMP%\qa-assets\fuzz_corpora
+          py -3 test/fuzz/test_runner.py --par $NUMBER_OF_PROCESSORS --loglevel DEBUG "${RUNNER_TEMP}/qa-assets/fuzz_corpora"
 
   asan-lsan-ubsan-integer-no-depends-usdt:
     name: 'ASan + LSan + UBSan + integer, no depends, USDT'
