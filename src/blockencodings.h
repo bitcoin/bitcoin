@@ -111,8 +111,10 @@ public:
 
     /**
      * @param[in]  nonce  This should be randomly generated, and is used for the siphash secret key
+     * @param[in]  prefill_candidates  A set of transaction candidate indexes that should be prefilled for compact block annoucements
+
      */
-    CBlockHeaderAndShortTxIDs(const CBlock& block, uint64_t nonce);
+    CBlockHeaderAndShortTxIDs(const CBlock& block, uint64_t nonce, const std::set<uint32_t>& prefill_candidates);
 
     uint64_t GetShortID(const Wtxid& wtxid) const;
 
