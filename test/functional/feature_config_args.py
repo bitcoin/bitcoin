@@ -463,7 +463,7 @@ class ConfArgsTest(BitcoinTestFramework):
     def test_acceptstalefeeestimates_arg_support(self):
         self.log.info("Test -acceptstalefeeestimates option support")
         conf_file = self.nodes[0].datadir_path / "bitcoin.conf"
-        for chain, chain_name in {("main", ""), ("test", "testnet3"), ("signet", "signet"), ("testnet4", "testnet4")}:
+        for chain, chain_name in {("main", ""), ("signet", "signet"), ("testnet4", "testnet4")}:
             util.write_config(conf_file, n=0, chain=chain_name, extra_config='acceptstalefeeestimates=1\n')
             self.nodes[0].assert_start_raises_init_error(expected_msg=f'Error: acceptstalefeeestimates is not supported on {chain} chain.')
         util.write_config(conf_file, n=0, chain="regtest")  # Reset to regtest
@@ -474,6 +474,11 @@ class ConfArgsTest(BitcoinTestFramework):
 
         self.log.debug("Testnet3 node will log the deprecation warning")
         self.nodes[0].chain = 'testnet3'
+        # Ensure a log file exists as TestNode.assert_debug_log() expects it.
+        self.nodes[0].debug_log_path.parent.mkdir()
+        self.nodes[0].debug_log_path.touch()
+        util.write_config(self.nodes[0].datadir_path / "bitcoin.conf", n=0, chain="testnet3")
+
         self.nodes[0].replace_in_config([('regtest=', 'testnet='), ('[regtest]', '[test]')])
         with self.nodes[0].assert_debug_log([t3_warning_log]):
             self.start_node(0)
