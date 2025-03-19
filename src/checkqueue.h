@@ -5,15 +5,22 @@
 #ifndef BITCOIN_CHECKQUEUE_H
 #define BITCOIN_CHECKQUEUE_H
 
+#include <batchverify.h>
 #include <logging.h>
 #include <sync.h>
 #include <tinyformat.h>
+#include <script/script_error.h>
 #include <util/threadnames.h>
 
 #include <algorithm>
 #include <iterator>
 #include <optional>
+#include <utility>
+#include <variant>
 #include <vector>
+
+using ScriptFailureResult = std::pair<ScriptError, std::string>;
+using BatchableResult = std::variant<std::vector<SchnorrSignatureToVerify>, ScriptFailureResult>;
 
 /**
  * Queue for verifications that have to be performed.
@@ -33,6 +40,24 @@ template <typename T, typename R = std::remove_cvref_t<decltype(std::declval<T>(
 class CCheckQueue
 {
 private:
+    template <typename U>
+    struct is_batchable_result : std::is_same<U, BatchableResult> {};
+
+    template <typename U>
+    inline static constexpr bool is_batchable_result_v = is_batchable_result<U>::value;
+
+    BatchSchnorrVerifier m_batch;
+
+    static constexpr size_t SIGNATURE_BUCKETS = 15; // Same as MAX_SCRIPTCHECK_THREADS
+    std::array<std::vector<SchnorrSignatureToVerify>, SIGNATURE_BUCKETS + 1 /* Add one for master thread */> m_signature_buckets;
+
+    void AddSignaturesToBucket(const std::vector<SchnorrSignatureToVerify>& signatures, size_t thread_idx) {
+        assert(thread_idx >= 0 && thread_idx < m_signature_buckets.size());
+
+        auto& bucket = m_signature_buckets[thread_idx];
+        bucket.insert(bucket.end(), signatures.begin(), signatures.end());
+    }
+
     //! Mutex to protect the inner state
     Mutex m_mutex;
 
@@ -69,7 +94,7 @@ private:
     bool m_request_stop GUARDED_BY(m_mutex){false};
 
     /** Internal function that does bulk of the verification work. If fMaster, return the final result. */
-    std::optional<R> Loop(bool fMaster) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    std::optional<R> Loop(bool fMaster, size_t thread_idx) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         std::condition_variable& cond = fMaster ? m_master_cv : m_worker_cv;
         std::vector<T> vChecks;
@@ -97,6 +122,19 @@ private:
                 // logically, the do loop starts here
                 while (queue.empty() && !m_request_stop) {
                     if (fMaster && nTodo == 0) {
+                        // All checks are done; master performs batch verification
+                        if constexpr (std::is_same_v<R, ScriptFailureResult>) {
+                            for (auto& bucket : m_signature_buckets) {
+                                for (const auto& sig : bucket) {
+                                    m_batch.Add(sig.sig, sig.pubkey, sig.sighash);
+                                }
+                                bucket.clear();
+                            }
+                            if (!m_batch.Verify()) {
+                                m_result = ScriptFailureResult(SCRIPT_ERR_BATCH_VALIDATION_FAILED, "Schnorr batch validation failed");
+                            }
+                            m_batch.Reset();
+                        }
                         nTotal--;
                         std::optional<R> to_return = std::move(m_result);
                         // reset the status for new work later
@@ -128,8 +166,20 @@ private:
             // execute work
             if (do_work) {
                 for (T& check : vChecks) {
-                    local_result = check();
-                    if (local_result.has_value()) break;
+                    auto check_result = check();
+
+                    if constexpr (is_batchable_result_v<decltype(check_result)>) {
+                        if (std::holds_alternative<ScriptFailureResult>(check_result)) {
+                            local_result = std::get<ScriptFailureResult>(check_result);
+                            break;
+                        }
+                        // Check succeeded; add signatures to shared batch
+                        const auto& signatures = std::get<std::vector<SchnorrSignatureToVerify>>(check_result);
+                        AddSignaturesToBucket(signatures, thread_idx);
+                    } else {
+                        local_result = check_result;
+                        if (local_result.has_value()) break;
+                    }
                 }
             }
             vChecks.clear();
@@ -149,7 +199,7 @@ public:
         for (int n = 0; n < worker_threads_num; ++n) {
             m_worker_threads.emplace_back([this, n]() {
                 util::ThreadRename(strprintf("scriptch.%i", n));
-                Loop(false /* worker thread */);
+                Loop(false /* worker thread */, n /* index */);
             });
         }
     }
@@ -165,7 +215,7 @@ public:
     //! its error.
     std::optional<R> Complete() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
-        return Loop(true /* master thread */);
+        return Loop(true /* master thread */, SIGNATURE_BUCKETS /* take the last bucket */);
     }
 
     //! Add a batch of checks to the queue
@@ -215,7 +265,7 @@ public:
     CCheckQueueControl() = delete;
     CCheckQueueControl(const CCheckQueueControl&) = delete;
     CCheckQueueControl& operator=(const CCheckQueueControl&) = delete;
-    explicit CCheckQueueControl(CCheckQueue<T> * const pqueueIn) : pqueue(pqueueIn), fDone(false)
+    explicit CCheckQueueControl(CCheckQueue<T, R> * const pqueueIn) : pqueue(pqueueIn), fDone(false)
     {
         // passed queue is supposed to be unused, or nullptr
         if (pqueue != nullptr) {
