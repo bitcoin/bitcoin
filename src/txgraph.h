@@ -29,6 +29,12 @@ static constexpr unsigned CLUSTER_COUNT_LIMIT{64};
  *
  * For more explanation, see https://delvingbitcoin.org/t/introduction-to-cluster-linearization/1032
  *
+ * This linearization is partitioned into chunks: groups of transactions that according to this
+ * order would be mined together. Each chunk consists of the highest-feerate prefix of what remains
+ * of the linearization after removing previous chunks. TxGraph guarantees that the maintained
+ * linearization always results in chunks consisting of transactions that are connected. A chunk's
+ * transactions always belong to the same cluster.
+ *
  * The interface is designed to accommodate an implementation that only stores the transitive
  * closure of dependencies, so if B spends C, it does not distinguish between "A spending B" and
  * "A spending both B and C".
@@ -82,6 +88,9 @@ public:
     /** Get the individual transaction feerate of transaction arg. Returns the empty FeePerWeight
      *  if arg does not exist. */
     virtual FeePerWeight GetIndividualFeerate(const Ref& arg) noexcept = 0;
+    /** Get the feerate of the chunk which transaction arg is in. Returns the empty FeePerWeight if
+     *  arg does not exist. */
+    virtual FeePerWeight GetChunkFeerate(const Ref& arg) noexcept = 0;
     /** Get pointers to all transactions in the cluster which arg is in. The transactions will be
      *  returned in graph order. Returns {} if arg does not exist in the graph. */
     virtual std::vector<Ref*> GetCluster(const Ref& arg) noexcept = 0;
