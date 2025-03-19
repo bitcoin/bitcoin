@@ -879,6 +879,11 @@ private:
         std::shared_future<CSerializedNetMsg> cmpctblock_msg_fut;
         uint256 hash;
         std::unique_ptr<const std::map<GenTxid, CTransactionRef>> txs;
+        /** A pair of block hash and prefill candidates for our compact block
+         * annoucements. If a transaction index is in the set, it indicates that
+         * the transaction is likely a good candidate to prefill in a
+         * compact block annoucements related to the block hash. */
+        std::pair<uint256, std::set<uint32_t>> prefill_candidates;
     } m_most_recent_pow_block GUARDED_BY(m_most_recent_block_mutex);
 
     // Data about the low-work headers synchronization, aggregated from all peers' HeadersSyncStates.
@@ -3588,6 +3593,14 @@ void PeerManagerImpl::ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const Bl
             }
         } else {
             // Block is okay for further processing
+            if (status == READ_STATUS_OK) {
+                // If CheckBlock succeeds, we can update our cache of the compact block prefill
+                // candidates: transactions we didn't have in our mempool, but which helped us
+                // to recontruct the block. Other nodes might need the same transactions and we
+                // will prefill our compact block announcements with them.
+                LOCK(m_most_recent_block_mutex);
+                m_most_recent_pow_block.prefill_candidates = std::make_pair(block_transactions.blockhash, partialBlock.PrefillCandidates());
+            }
             RemoveBlockRequest(block_transactions.blockhash, pfrom.GetId()); // it is now an empty pointer
             fBlockRead = true;
             // mapBlockSource is used for potentially punishing peers and

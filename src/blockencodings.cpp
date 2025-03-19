@@ -86,35 +86,39 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
     }
 
 
-    int32_t lastprefilledindex = -1;
-    for (size_t i = 0; i < cmpctblock.prefilledtxn.size(); i++) {
-        if (cmpctblock.prefilledtxn[i].tx->IsNull())
-            return READ_STATUS_INVALID;
+    {
+        int32_t lastprefilledindex = -1;
+        LOCK(pool->cs);
+        for (size_t i = 0; i < cmpctblock.prefilledtxn.size(); i++) {
+            if (cmpctblock.prefilledtxn[i].tx->IsNull())
+                return READ_STATUS_INVALID;
 
-        lastprefilledindex += cmpctblock.prefilledtxn[i].index + 1; //index is a uint16_t, so can't overflow here
-        if (lastprefilledindex > std::numeric_limits<uint16_t>::max())
-            return READ_STATUS_INVALID;
-        if ((uint32_t)lastprefilledindex > cmpctblock.shorttxids.size() + i) {
-            // If we are inserting a tx at an index greater than our full list of shorttxids
-            // plus the number of prefilled txn we've inserted, then we have txn for which we
-            // have neither a prefilled txn or a shorttxid!
-            return READ_STATUS_INVALID;
-        }
+            lastprefilledindex += cmpctblock.prefilledtxn[i].index + 1; //index is a uint16_t, so can't overflow here
+            if (lastprefilledindex > std::numeric_limits<uint16_t>::max())
+                return READ_STATUS_INVALID;
+            if ((uint32_t)lastprefilledindex > cmpctblock.shorttxids.size() + i) {
+                // If we are inserting a tx at an index greater than our full list of shorttxids
+                // plus the number of prefilled txn we've inserted, then we have txn for which we
+                // have neither a prefilled txn or a shorttxid!
+                return READ_STATUS_INVALID;
+            }
+            txn_available[lastprefilledindex] = cmpctblock.prefilledtxn[i].tx;
 
-        if (debug_log) {
-            size_t tx_size = cmpctblock.prefilledtxn[i].tx->ComputeTotalSize();
-            prefilled_size += tx_size;
-
+            size_t tx_size = debug_log ? cmpctblock.prefilledtxn[i].tx->ComputeTotalSize() : 0;
+            // Only consider prefilled transactions that were NOT in our mempool as candidates
+            // that WE want to prefill.
             auto tx_wtxid =  cmpctblock.prefilledtxn[i].tx->GetWitnessHash();
-            if (pool->exists(tx_wtxid)) {
-                redundant_prefilled_mp_count++;
-                redundant_prefilled_mp_size += tx_size;
-            } else if (std::binary_search(extra_wtxids.begin(), extra_wtxids.end(), tx_wtxid)) {
-                redundant_prefilled_ep_count++;
-                redundant_prefilled_ep_size += tx_size;
+            if (!pool->exists(tx_wtxid)) {
+                prefill_candidates.insert(lastprefilledindex);
+                if (std::binary_search(extra_wtxids.begin(), extra_wtxids.end(), tx_wtxid)) {
+                    redundant_prefilled_ep_count++;
+                    redundant_prefilled_ep_size += tx_size;
+                } else {
+                    redundant_prefilled_mp_count++;
+                    redundant_prefilled_mp_size += tx_size;
+                }
             }
         }
-        txn_available[lastprefilledindex] = cmpctblock.prefilledtxn[i].tx;
     }
 
     // Calculate map of txids -> positions and check mempool to see what we have (or don't)
@@ -182,6 +186,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
         if (idit != shorttxids.end()) {
             if (!have_txn[idit->second]) {
                 txn_available[idit->second] = extra_txn[i].second;
+                prefill_candidates.insert(idit->second);
                 have_txn[idit->second]  = true;
                 extra_count++;
                 if (debug_log) {
@@ -224,6 +229,11 @@ bool PartiallyDownloadedBlock::IsTxAvailable(size_t index) const
     return txn_available[index] != nullptr;
 }
 
+std::set<uint32_t> PartiallyDownloadedBlock::PrefillCandidates() const
+{
+    return prefill_candidates;
+}
+
 ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, bool segwit_active)
 {
     if (header.IsNull()) return READ_STATUS_INVALID;
@@ -237,6 +247,7 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
             if (tx_missing_offset >= vtx_missing.size()) {
                 return READ_STATUS_INVALID;
             }
+            prefill_candidates.insert(i);
             block.vtx[i] = vtx_missing[tx_missing_offset++];
         } else {
             block.vtx[i] = std::move(txn_available[i]);
