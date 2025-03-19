@@ -322,13 +322,20 @@ class TestNode():
                 suppressed_errors[f"JSONRPCException {e.error['code']}"] += 1
                 latest_error = repr(e)
             except OSError as e:
+                error_num = e.errno
+                if error_num is None:
+                    # Workaround issue observed on Windows, Python v3.13.1 where socket timeouts don't have errno set.
+                    if isinstance(e, TimeoutError):
+                        error_num = errno.ETIMEDOUT
+                    else:
+                        raise RuntimeError(f"Cannot infer errno when unset for {type(e).__name__}")
                 # Suppress similarly to the above JSONRPCException errors.
-                if e.errno not in [ errno.ECONNRESET,     # This might happen when the RPC server is in warmup,
-                                                          # but shut down before the call to getblockcount succeeds.
-                                    errno.ETIMEDOUT,      # Treat identical to ECONNRESET
-                                    errno.ECONNREFUSED ]: # Port not yet open?
+                if error_num not in [ errno.ECONNRESET,     # This might happen when the RPC server is in warmup,
+                                                            # but shut down before the call to getblockcount succeeds.
+                                      errno.ETIMEDOUT,      # Treat identical to ECONNRESET
+                                      errno.ECONNREFUSED ]: # Port not yet open?
                     raise  # unknown OS error
-                suppressed_errors[f"OSError {errno.errorcode[e.errno]}"] += 1
+                suppressed_errors[f"OSError {errno.errorcode[error_num]}"] += 1
                 latest_error = repr(e)
             except ValueError as e:
                 # Suppress if cookie file isn't generated yet and no rpcuser or rpcpassword; bitcoind may be starting.
