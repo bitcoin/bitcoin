@@ -1177,9 +1177,6 @@ def spenders_taproot_active():
         opcode = CScriptOp(opval)
         if is_op_success(opcode):
             continue
-        if opcode in OP_SUCCESS_OVERRIDES:
-            # TODO: remove this once CHECKSIGFROMSTACK gets a regtest deployment.
-            continue
         scripts = [
             ("normal", CScript([OP_RETURN, opcode] + [OP_NOP] * 75)),
             ("op_success", CScript([OP_RETURN, CScriptOp(0x50)]))
