@@ -169,6 +169,35 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
 }
 
 /**
+ * Check the total number of non-witness sigops across the whole transaction, as per BIP54.
+ */
+static bool CheckSigopsBIP54(const CTransaction& tx, const CCoinsViewCache& inputs)
+{
+    Assert(!tx.IsCoinBase());
+
+    unsigned int sigops{0};
+    for (const auto& txin: tx.vin) {
+        const auto& prev_txo{inputs.AccessCoin(txin.prevout).out};
+
+        // Unlike the existing block wide sigop limit which counts sigops present in the block
+        // itself (including the scriptPubKey which is not executed until spending later), BIP54
+        // counts sigops in the block where they are potentially executed (only).
+        // This means sigops in the spent scriptPubKey count toward the limit.
+        // `fAccurate` means correctly accounting sigops for CHECKMULTISIGs(VERIFY) with 16 pubkeys
+        // or fewer. This method of accounting was introduced by BIP16, and BIP54 reuses it.
+        // The GetSigOpCount call on the previous scriptPubKey counts both bare and P2SH sigops.
+        sigops += txin.scriptSig.GetSigOpCount(/*fAccurate=*/true);
+        sigops += prev_txo.scriptPubKey.GetSigOpCount(txin.scriptSig);
+
+        if (sigops > MAX_TX_LEGACY_SIGOPS) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
  * Check transaction inputs to mitigate two
  * potential denial-of-service attacks:
  *
@@ -185,11 +214,17 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
  *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
  *
  * Note that only the non-witness portion of the transaction is checked here.
+ *
+ * We also check the total number of non-witness sigops across the whole transaction, as per BIP54.
  */
 bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 {
     if (tx.IsCoinBase()) {
         return true; // Coinbases don't use vin normally
+    }
+
+    if (!CheckSigopsBIP54(tx, mapInputs)) {
+        return false;
     }
 
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
