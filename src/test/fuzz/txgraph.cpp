@@ -322,6 +322,19 @@ FUZZ_TARGET(txgraph)
                 }
                 break;
             } else if (command-- == 0) {
+                // GetChunkFeerate.
+                auto ref = pick_fn();
+                auto feerate = real->GetChunkFeerate(*ref);
+                auto simpos = sim.Find(ref);
+                if (simpos == SimTxGraph::MISSING) {
+                    assert(feerate.IsEmpty());
+                } else {
+                    // Just do some quick checks that the reported value is in range. A full
+                    // recomputation of expected chunk feerates is done at the end.
+                    assert(feerate.size >= sim.graph.FeeRate(simpos).size);
+                }
+                break;
+            } else if (command-- == 0) {
                 // GetAncestors/GetDescendants.
                 auto ref = pick_fn();
                 auto result_set = sim.MakeSet(alt ? real->GetDescendants(*ref) :
@@ -405,13 +418,21 @@ FUZZ_TARGET(txgraph)
                 simlin.push_back(simpos);
             }
             // Construct a chunking object for the simulated graph, using the reported cluster
-            // linearization as ordering.
+            // linearization as ordering, and compare it against the reported chunk feerates.
             cluster_linearize::LinearizationChunking simlinchunk(sim.graph, simlin);
+            DepGraphIndex idx{0};
             for (unsigned chunknum = 0; chunknum < simlinchunk.NumChunksLeft(); ++chunknum) {
                 auto chunk = simlinchunk.GetChunk(chunknum);
                 // Require that the chunks of cluster linearizations are connected (this must
                 // be the case as all linearizations inside are PostLinearized).
                 assert(sim.graph.IsConnected(chunk.transactions));
+                // Check the chunk feerates of all transactions in the cluster.
+                while (chunk.transactions.Any()) {
+                    assert(chunk.transactions[simlin[idx]]);
+                    chunk.transactions.Reset(simlin[idx]);
+                    assert(chunk.feerate == real->GetChunkFeerate(*cluster[idx]));
+                    ++idx;
+                }
             }
         }
     }

@@ -221,6 +221,8 @@ private:
         Ref* m_ref{nullptr};
         /** Which Cluster and position therein this Entry appears in. */
         Locator m_locator;
+        /** The chunk feerate of this transaction (if not missing). */
+        FeePerWeight m_chunk_feerate;
     };
 
     /** The set of all transactions. GraphIndex values index into this. */
@@ -301,6 +303,7 @@ public:
     void SetTransactionFee(const Ref&, int64_t fee) noexcept final;
 
     bool Exists(const Ref& arg) noexcept final;
+    FeePerWeight GetChunkFeerate(const Ref& arg) noexcept final;
     FeePerWeight GetIndividualFeerate(const Ref& arg) noexcept final;
     std::vector<Ref*> GetCluster(const Ref& arg) noexcept final;
     std::vector<Ref*> GetAncestors(const Ref& arg) noexcept final;
@@ -316,6 +319,24 @@ void Cluster::Updated(TxGraphImpl& graph) noexcept
     for (DepGraphIndex idx : m_linearization) {
         auto& entry = graph.m_entries[m_mapping[idx]];
         entry.m_locator.SetPresent(this, idx);
+    }
+
+    // Compute its chunking and store its information in the Entry's m_chunk_feerate.
+    LinearizationChunking chunking(m_depgraph, m_linearization);
+    LinearizationIndex lin_idx{0};
+    // Iterate over the chunks.
+    for (unsigned chunk_idx = 0; chunk_idx < chunking.NumChunksLeft(); ++chunk_idx) {
+        auto chunk = chunking.GetChunk(chunk_idx);
+        Assume(chunk.transactions.Any());
+        // Iterate over the transactions in the linearization, which must match those in chunk.
+        do {
+            DepGraphIndex idx = m_linearization[lin_idx++];
+            GraphIndex graph_idx = m_mapping[idx];
+            auto& entry = graph.m_entries[graph_idx];
+            entry.m_chunk_feerate = FeePerWeight::FromFeeFrac(chunk.feerate);
+            Assume(chunk.transactions[idx]);
+            chunk.transactions.Reset(idx);
+        } while(chunk.transactions.Any());
     }
 }
 
@@ -1108,6 +1129,23 @@ FeePerWeight TxGraphImpl::GetIndividualFeerate(const Ref& arg) noexcept
     return cluster->GetIndividualFeerate(m_entries[GetRefIndex(arg)].m_locator.index);
 }
 
+FeePerWeight TxGraphImpl::GetChunkFeerate(const Ref& arg) noexcept
+{
+    // Return the empty FeePerWeight if the passed Ref is empty.
+    if (GetRefGraph(arg) == nullptr) return {};
+    Assume(GetRefGraph(arg) == this);
+    // Apply all removals and dependencies, as the result might be inaccurate otherwise.
+    ApplyDependencies();
+    // Find the cluster the argument is in, and return the empty FeePerWeight if it isn't in any.
+    auto cluster = m_entries[GetRefIndex(arg)].m_locator.cluster;
+    if (cluster == nullptr) return {};
+    // Make sure the Cluster has an acceptable quality level, and then return the transaction's
+    // chunk feerate.
+    MakeAcceptable(*cluster);
+    const auto& entry = m_entries[GetRefIndex(arg)];
+    return entry.m_chunk_feerate;
+}
+
 void Cluster::SetFee(TxGraphImpl& graph, DepGraphIndex idx, int64_t fee) noexcept
 {
     // Make sure the specified DepGraphIndex exists in this Cluster.
@@ -1159,10 +1197,11 @@ void Cluster::SanityCheck(const TxGraphImpl& graph) const
         // Check that the Entry has a locator pointing back to this Cluster & position within it.
         assert(entry.m_locator.cluster == this);
         assert(entry.m_locator.index == lin_pos);
-        // Check linearization position.
+        // Check linearization position and chunk feerate.
         if (!linchunking.GetChunk(0).transactions[lin_pos]) {
             linchunking.MarkDone(linchunking.GetChunk(0).transactions);
         }
+        assert(entry.m_chunk_feerate == linchunking.GetChunk(0).feerate);
         // If this Cluster has an acceptable quality level, its chunks must be connected.
         if (IsAcceptable()) {
             assert(m_depgraph.IsConnected(linchunking.GetChunk(0).transactions));
