@@ -73,7 +73,8 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
 
     // Do a simple ShortTxIDs RT
     {
-        CBlockHeaderAndShortTxIDs shortIDs{block, rand_ctx.rand64()};
+        const std::set<uint32_t> prefill_candidates{};
+        const CBlockHeaderAndShortTxIDs shortIDs{block, rand_ctx.rand64(), prefill_candidates};
 
         DataStream stream{};
         stream << shortIDs;
@@ -130,8 +131,8 @@ public:
         stream << orig;
         stream >> *this;
     }
-    explicit TestHeaderAndShortIDs(const CBlock& block, FastRandomContext& ctx) :
-        TestHeaderAndShortIDs(CBlockHeaderAndShortTxIDs{block, ctx.rand64()}) {}
+    explicit TestHeaderAndShortIDs(const CBlock& block, FastRandomContext& ctx, std::set<uint32_t> prefill) :
+        TestHeaderAndShortIDs(CBlockHeaderAndShortTxIDs{block, ctx.rand64(), prefill}) {}
 
     uint64_t GetShortID(const Wtxid& txhash) const {
         DataStream stream{};
@@ -159,7 +160,7 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
 
     // Test with pre-forwarding tx 1, but not coinbase
     {
-        TestHeaderAndShortIDs shortIDs(block, rand_ctx);
+        TestHeaderAndShortIDs shortIDs(block, rand_ctx, {});
         shortIDs.prefilledtxn.resize(1);
         shortIDs.prefilledtxn[0] = {1, block.vtx[1]};
         shortIDs.shorttxids.resize(2);
@@ -230,7 +231,7 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
 
     // Test with pre-forwarding coinbase + tx 2 with tx 1 in mempool
     {
-        TestHeaderAndShortIDs shortIDs(block, rand_ctx);
+        TestHeaderAndShortIDs shortIDs(block, rand_ctx, {});
         shortIDs.prefilledtxn.resize(2);
         shortIDs.prefilledtxn[0] = {0, block.vtx[0]};
         shortIDs.prefilledtxn[1] = {1, block.vtx[2]}; // id == 1 as it is 1 after index 1
@@ -287,7 +288,8 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
 
     // Test simple header round-trip with only coinbase
     {
-        CBlockHeaderAndShortTxIDs shortIDs{block, rand_ctx.rand64()};
+        const std::set<uint32_t> prefill_candidates{};
+        const CBlockHeaderAndShortTxIDs shortIDs{block, rand_ctx.rand64(), prefill_candidates};
 
         DataStream stream{};
         stream << shortIDs;
@@ -333,7 +335,8 @@ BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
     BOOST_CHECK_EQUAL(pool.get(block.vtx[1]->GetHash()), nullptr);
 
     {
-        const CBlockHeaderAndShortTxIDs cmpctblock{block, rand_ctx.rand64()};
+        const std::set<uint32_t> prefill_candidates{};
+        const CBlockHeaderAndShortTxIDs cmpctblock{block, rand_ctx.rand64(), prefill_candidates};
         PartiallyDownloadedBlock partial_block(&pool);
         PartiallyDownloadedBlock partial_block_with_extra(&pool);
 

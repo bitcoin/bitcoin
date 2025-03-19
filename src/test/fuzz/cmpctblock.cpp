@@ -78,24 +78,19 @@ class FuzzedCBlockHeaderAndShortTxIDs : public CBlockHeaderAndShortTxIDs
     using CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs;
 
 public:
-    void AddPrefilledTx(PrefilledTransaction&& prefilledtx)
-    {
-        prefilledtxn.push_back(std::move(prefilledtx));
-    }
-
     void RemoveCoinbasePrefill()
     {
         prefilledtxn.erase(prefilledtxn.begin());
+        if (prefilledtxn.size() > 0) {
+            // Because the prefill indices are the distance from the last
+            // prefill, the front prefill index is now one greater.
+            prefilledtxn.front().index += 1;
+        }
     }
 
     void InsertCoinbaseShortTxID(uint64_t shorttxid)
     {
         shorttxids.insert(shorttxids.begin(), shorttxid);
-    }
-
-    void EraseShortTxIDs(size_t index)
-    {
-        shorttxids.erase(shorttxids.begin() + index);
     }
 
     size_t PrefilledTxCount() {
@@ -347,43 +342,27 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
                     info.push_back(block_info);
                 }
 
-                uint64_t nonce = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
-                FuzzedCBlockHeaderAndShortTxIDs cmpctblock(*cblock, nonce);
+                const size_t num_txs = cblock->vtx.size();
+                std::set<uint32_t> prefill_candidates{};
+                for (uint32_t i = 0; i < num_txs; i++) {
+                    if (fuzzed_data_provider.ConsumeBool()) {
+                        prefill_candidates.insert(i);
+                    }
+                }
 
+                uint64_t nonce = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
+                FuzzedCBlockHeaderAndShortTxIDs cmpctblock(*cblock, nonce, prefill_candidates);
                 if (fuzzed_data_provider.ConsumeBool()) {
                     CBlockHeaderAndShortTxIDs base_cmpctblock = cmpctblock;
                     net_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, base_cmpctblock);
                     return;
                 }
 
-                int prev_idx = 0;
-                size_t num_erased = 1;
-                size_t num_txs = cblock->vtx.size();
-
-                for (size_t i = 0; i < num_txs; ++i) {
-                    if (i == 0) {
-                        // Handle the coinbase specially. We either keep it prefilled or remove it.
-                        if (fuzzed_data_provider.ConsumeBool()) continue;
-
-                        // Remove the prefilled coinbase.
-                        num_erased = 0;
-                        uint64_t coinbase_shortid = cmpctblock.GetShortID(cblock->vtx[0]->GetWitnessHash());
-                        cmpctblock.RemoveCoinbasePrefill();
-                        cmpctblock.InsertCoinbaseShortTxID(coinbase_shortid);
-                        continue;
-                    }
-
-                    if (fuzzed_data_provider.ConsumeBool()) continue;
-
-                    uint16_t prefill_idx = num_erased == 0 ? i : i - prev_idx - 1;
-                    prev_idx = i;
-                    CTransactionRef txref = cblock->vtx[i];
-                    PrefilledTransaction prefilledtx = {/*index=*/prefill_idx, txref};
-                    cmpctblock.AddPrefilledTx(std::move(prefilledtx));
-
-                    // Remove from shorttxids since we've prefilled. Subtract however many txs have been prefilled.
-                    cmpctblock.EraseShortTxIDs(i - num_erased);
-                    ++num_erased;
+                if (fuzzed_data_provider.ConsumeBool()) {
+                    // Remove the prefilled coinbase.
+                    uint64_t coinbase_shortid = cmpctblock.GetShortID(cblock->vtx[0]->GetWitnessHash());
+                    cmpctblock.RemoveCoinbasePrefill();
+                    cmpctblock.InsertCoinbaseShortTxID(coinbase_shortid);
                 }
 
                 assert(cmpctblock.PrefilledTxCount() + cmpctblock.ShortTxIDCount() == num_txs);
