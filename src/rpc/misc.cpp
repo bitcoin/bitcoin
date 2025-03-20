@@ -55,7 +55,7 @@ static RPCHelpMan debug()
         "Note: Consider using 'logging' RPC which has more features.\n"
         " - For 'debug all': logging [\\\"all\\\"]\n"
         " - For 'debug none': logging []\n"
-        " - For 'debug X+Y': logging \"[\\\"X\\\", \\\"Y\\\"]\"",
+        " - For 'debug X+Y': logging '[\"X\", \"Y\"]'",
         {
             {"category", RPCArg::Type::STR, RPCArg::Optional::NO, "The name of the debug category to turn on."},
         },
@@ -1242,6 +1242,7 @@ static RPCHelpMan logging()
         },
         RPCExamples{
             HelpExampleCli("logging", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
+          + HelpExampleCli("logging", "'[\"dash\"]' '[\"llmq\",\"zmq\"]'")
     + HelpExampleRpc("logging", "[\"all\"], \"[libevent]\"")
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
