@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test sigop limit mempool policy (`-bytespersigop` parameter)"""
+from copy import deepcopy
 from decimal import Decimal
 from math import ceil
 
@@ -17,23 +18,30 @@ from test_framework.messages import (
 )
 from test_framework.script import (
     CScript,
+    OP_2DUP,
     OP_CHECKMULTISIG,
     OP_CHECKSIG,
+    OP_DROP,
     OP_ENDIF,
     OP_FALSE,
     OP_IF,
+    OP_NOT,
     OP_RETURN,
     OP_TRUE,
 )
 from test_framework.script_util import (
     keys_to_multisig_script,
     script_to_p2wsh_script,
+    script_to_p2sh_script,
+    MAX_STD_LEGACY_SIGOPS,
+    MAX_STD_P2SH_SIGOPS,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
+    assert_raises_rpc_error,
 )
 from test_framework.wallet import MiniWallet
 from test_framework.wallet_util import generate_keypair
@@ -174,6 +182,42 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         # Transactions are tiny in weight
         assert_greater_than(2000, tx_parent.get_weight() + tx_child.get_weight())
 
+    def test_legacy_sigops_stdness(self):
+        self.log.info("Test a transaction with too many legacy sigops in its inputs is non-standard.")
+
+        # Restart with the default settings
+        self.restart_node(0)
+
+        # Create a P2SH script with 15 sigops.
+        _, dummy_pubkey = generate_keypair()
+        packed_redeem_script = [dummy_pubkey]
+        for _ in range(MAX_STD_P2SH_SIGOPS - 1):
+            packed_redeem_script += [OP_2DUP, OP_CHECKSIG, OP_DROP]
+        packed_redeem_script = CScript(packed_redeem_script + [OP_CHECKSIG, OP_NOT])
+        packed_p2sh_script = script_to_p2sh_script(packed_redeem_script)
+
+        # Create enough outputs to reach the sigops limit when spending them all at once.
+        outpoints = []
+        for _ in range(int(MAX_STD_LEGACY_SIGOPS / MAX_STD_P2SH_SIGOPS) + 1):
+            res = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=packed_p2sh_script, amount=1_000)
+            txid = int.from_bytes(bytes.fromhex(res["txid"]), byteorder="big")
+            outpoints.append(COutPoint(txid, res["sent_vout"]))
+        self.generate(self.nodes[0], 1)
+
+        # Spending all these outputs at once accounts for 2505 legacy sigops and is non-standard.
+        nonstd_tx = CTransaction()
+        nonstd_tx.vin = [CTxIn(op, CScript([b"", packed_redeem_script])) for op in outpoints]
+        nonstd_tx.vout = [CTxOut(0, CScript([OP_RETURN, b""]))]
+        assert_raises_rpc_error(-26, "bad-txns-nonstandard-inputs", self.nodes[0].sendrawtransaction, nonstd_tx.serialize().hex())
+
+        # Spending one less accounts for 2490 legacy sigops and is standard.
+        std_tx = deepcopy(nonstd_tx)
+        std_tx.vin.pop()
+        self.nodes[0].sendrawtransaction(std_tx.serialize().hex())
+
+        # Make sure the original, non-standard, transaction can be mined.
+        self.generateblock(self.nodes[0], output="raw(42)", transactions=[nonstd_tx.serialize().hex()])
+
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
 
@@ -191,6 +235,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
             self.generate(self.wallet, 1)
 
         self.test_sigops_package()
+        self.test_legacy_sigops_stdness()
 
 
 if __name__ == '__main__':
