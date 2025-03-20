@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -65,12 +65,12 @@ struct ScriptCompression
     void Ser(Stream &s, const CScript& script) {
         CompressedScript compr;
         if (CompressScript(script, compr)) {
-            s << Span{compr};
+            s << std::span{compr};
             return;
         }
         unsigned int nSize = script.size() + nSpecialScripts;
         s << VARINT(nSize);
-        s << Span{script};
+        s << std::span{script};
     }
 
     template<typename Stream>
@@ -79,7 +79,7 @@ struct ScriptCompression
         s >> VARINT(nSize);
         if (nSize < nSpecialScripts) {
             CompressedScript vch(GetSpecialScriptSize(nSize), 0x00);
-            s >> Span{vch};
+            s >> std::span{vch};
             DecompressScript(script, nSize, vch);
             return;
         }
@@ -90,7 +90,7 @@ struct ScriptCompression
             s.ignore(nSize);
         } else {
             script.resize(nSize);
-            s >> Span{script};
+            s >> std::span{script};
         }
     }
 };

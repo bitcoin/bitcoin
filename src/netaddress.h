@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -103,7 +103,7 @@ static constexpr size_t ADDR_INTERNAL_SIZE = 10;
 /// SAM 3.1 and earlier do not support specifying ports and force the port to 0.
 static constexpr uint16_t I2P_SAM31_PORT{0};
 
-std::string OnionToString(Span<const uint8_t> addr);
+std::string OnionToString(std::span<const uint8_t> addr);
 
 /**
  * Network address.
@@ -139,7 +139,7 @@ public:
      * (e.g. IPv4) disguised as IPv6. This encoding is used in the legacy
      * `addr` encoding.
      */
-    void SetLegacyIPv6(Span<const uint8_t> ipv6);
+    void SetLegacyIPv6(std::span<const uint8_t> ipv6);
 
     bool SetInternal(const std::string& name);
 
@@ -437,7 +437,7 @@ private:
 
         if (SetNetFromBIP155Network(bip155_net, address_size)) {
             m_addr.resize(address_size);
-            s >> Span{m_addr};
+            s >> std::span{m_addr};
 
             if (m_net != NET_IPV6) {
                 return;

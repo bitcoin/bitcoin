@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -25,7 +25,7 @@ public:
 
     /** Construct an arith_uint6144 from any multiple of 4 bytes in LE notation,
      *  up to 768 bytes. */
-    arith_uint6144(Span<const uint8_t> bytes) : base_uint{}
+    arith_uint6144(std::span<const uint8_t> bytes) : base_uint{}
     {
         assert(bytes.size() % 4 == 0);
         assert(bytes.size() <= 768);
@@ -36,7 +36,7 @@ public:
 
     /** Serialize an arithm_uint6144 to any multiply of 4 bytes in LE notation,
      *  on the condition that the represented number fits. */
-    void Serialize(Span<uint8_t> bytes) {
+    void Serialize(std::span<uint8_t> bytes) {
         assert(bytes.size() % 4 == 0);
         assert(bytes.size() <= 768);
         for (unsigned i = 0; i * 4 < bytes.size(); ++i) {

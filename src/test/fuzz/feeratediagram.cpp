@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,7 +17,7 @@
 namespace {
 
 /** Takes the pre-computed and topologically-valid chunks and generates a fee diagram which starts at FeeFrac of (0, 0) */
-std::vector<FeeFrac> BuildDiagramFromChunks(const Span<const FeeFrac> chunks)
+std::vector<FeeFrac> BuildDiagramFromChunks(const std::span<const FeeFrac> chunks)
 {
     std::vector<FeeFrac> diagram;
     diagram.reserve(chunks.size() + 1);
@@ -34,7 +34,7 @@ std::vector<FeeFrac> BuildDiagramFromChunks(const Span<const FeeFrac> chunks)
  *
  * Fees in diagram cannot exceed 2^32, as the returned evaluation could overflow
  * the FeeFrac::fee field in the result. */
-FeeFrac EvaluateDiagram(int32_t size, Span<const FeeFrac> diagram)
+FeeFrac EvaluateDiagram(int32_t size, std::span<const FeeFrac> diagram)
 {
     assert(diagram.size() > 0);
     unsigned not_above = 0;
@@ -63,12 +63,12 @@ FeeFrac EvaluateDiagram(int32_t size, Span<const FeeFrac> diagram)
     return {point_a.fee * dir_coef.size + dir_coef.fee * (size - point_a.size), dir_coef.size};
 }
 
-std::weak_ordering CompareFeeFracWithDiagram(const FeeFrac& ff, Span<const FeeFrac> diagram)
+std::weak_ordering CompareFeeFracWithDiagram(const FeeFrac& ff, std::span<const FeeFrac> diagram)
 {
     return FeeRateCompare(FeeFrac{ff.fee, 1}, EvaluateDiagram(ff.size, diagram));
 }
 
-std::partial_ordering CompareDiagrams(Span<const FeeFrac> dia1, Span<const FeeFrac> dia2)
+std::partial_ordering CompareDiagrams(std::span<const FeeFrac> dia1, std::span<const FeeFrac> dia2)
 {
     bool all_ge = true;
     bool all_le = true;

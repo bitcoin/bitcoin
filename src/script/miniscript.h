@@ -531,7 +531,7 @@ struct Node {
     NodeRef<Key> Clone() const
     {
         // Use TreeEval() to avoid a stack-overflow due to recursion
-        auto upfn = [](const Node& node, Span<NodeRef<Key>> children) {
+        auto upfn = [](const Node& node, std::span<NodeRef<Key>> children) {
             std::vector<NodeRef<Key>> new_subs;
             for (auto child = children.begin(); child != children.end(); ++child) {
                 new_subs.emplace_back(std::move(*child));
@@ -592,8 +592,8 @@ private:
      *   node, its state, and an index of one of its children, computes the state of that
      *   child. It can modify the state. Children of a given node will have downfn()
      *   called in order.
-     * - upfn is a callable (State&&, const Node&, Span<Result>) -> std::optional<Result>,
-     *   which given a node, its state, and a Span of the results of its children,
+     * - upfn is a callable (State&&, const Node&, std::span<Result>) -> std::optional<Result>,
+     *   which given a node, its state, and a span of the results of its children,
      *   computes the result of the node. If std::nullopt is returned by upfn,
      *   TreeEvalMaybe() immediately returns std::nullopt.
      * The return value of TreeEvalMaybe is the result of the root node.
@@ -650,7 +650,7 @@ private:
             // Invoke upfn with the last node.subs.size() elements of results as input.
             assert(results.size() >= node.subs.size());
             std::optional<Result> result{upfn(std::move(stack.back().state), node,
-                Span<Result>{results}.last(node.subs.size()))};
+                std::span<Result>{results}.last(node.subs.size()))};
             // If evaluation returns std::nullopt, abort immediately.
             if (!result) return {};
             // Replace the last node.subs.size() elements of results with the new result.
@@ -664,14 +664,14 @@ private:
     }
 
     /** Like TreeEvalMaybe, but without downfn or State type.
-     * upfn takes (const Node&, Span<Result>) and returns std::optional<Result>. */
+     * upfn takes (const Node&, std::span<Result>) and returns std::optional<Result>. */
     template<typename Result, typename UpFn>
     std::optional<Result> TreeEvalMaybe(UpFn upfn) const
     {
         struct DummyState {};
         return TreeEvalMaybe<Result>(DummyState{},
             [](DummyState, const Node&, size_t) { return DummyState{}; },
-            [&upfn](DummyState, const Node& node, Span<Result> subs) {
+            [&upfn](DummyState, const Node& node, std::span<Result> subs) {
                 return upfn(node, subs);
             }
         );
@@ -685,7 +685,7 @@ private:
         // unconditionally dereference the result (it cannot be std::nullopt).
         return std::move(*TreeEvalMaybe<Result>(std::move(root_state),
             std::forward<DownFn>(downfn),
-            [&upfn](State&& state, const Node& node, Span<Result> subs) {
+            [&upfn](State&& state, const Node& node, std::span<Result> subs) {
                 Result res{upfn(std::move(state), node, subs)};
                 return std::optional<Result>(std::move(res));
             }
@@ -693,14 +693,14 @@ private:
     }
 
     /** Like TreeEval, but without downfn or State type.
-     *  upfn takes (const Node&, Span<Result>) and returns Result. */
+     *  upfn takes (const Node&, std::span<Result>) and returns Result. */
     template<typename Result, typename UpFn>
     Result TreeEval(UpFn upfn) const
     {
         struct DummyState {};
         return std::move(*TreeEvalMaybe<Result>(DummyState{},
             [](DummyState, const Node&, size_t) { return DummyState{}; },
-            [&upfn](DummyState, const Node& node, Span<Result> subs) {
+            [&upfn](DummyState, const Node& node, std::span<Result> subs) {
                 Result res{upfn(node, subs)};
                 return std::optional<Result>(std::move(res));
             }
@@ -764,7 +764,7 @@ public:
         // The upward function computes for a node, given its followed-by-OP_VERIFY status
         // and the CScripts of its child nodes, the CScript of the node.
         const bool is_tapscript{IsTapscript(m_script_ctx)};
-        auto upfn = [&ctx, is_tapscript](bool verify, const Node& node, Span<CScript> subs) -> CScript {
+        auto upfn = [&ctx, is_tapscript](bool verify, const Node& node, std::span<CScript> subs) -> CScript {
             switch (node.fragment) {
                 case Fragment::PK_K: return BuildScript(ctx.ToPKBytes(node.keys[0]));
                 case Fragment::PK_H: return BuildScript(OP_DUP, OP_HASH160, ctx.ToPKHBytes(node.keys[0]), OP_EQUALVERIFY);
@@ -842,7 +842,7 @@ public:
         // The upward function computes for a node, given whether its parent is a wrapper,
         // and the string representations of its child nodes, the string representation of the node.
         const bool is_tapscript{IsTapscript(m_script_ctx)};
-        auto upfn = [&ctx, is_tapscript](bool wrapped, const Node& node, Span<std::string> subs) -> std::optional<std::string> {
+        auto upfn = [&ctx, is_tapscript](bool wrapped, const Node& node, std::span<std::string> subs) -> std::optional<std::string> {
             std::string ret = wrapped ? ":" : "";
 
             switch (node.fragment) {
@@ -1189,7 +1189,7 @@ private:
 
         // Internal function which is invoked for every tree node, constructing satisfaction/dissatisfactions
         // given those of its subnodes.
-        auto helper = [&ctx](const Node& node, Span<InputResult> subres) -> InputResult {
+        auto helper = [&ctx](const Node& node, std::span<InputResult> subres) -> InputResult {
             switch (node.fragment) {
                 case Fragment::PK_K: {
                     std::vector<unsigned char> sig;
@@ -1385,7 +1385,7 @@ private:
             return {INVALID, INVALID};
         };
 
-        auto tester = [&helper](const Node& node, Span<InputResult> subres) -> InputResult {
+        auto tester = [&helper](const Node& node, std::span<InputResult> subres) -> InputResult {
             auto ret = helper(node, subres);
 
             // Do a consistency check between the satisfaction code and the type checker
@@ -1453,7 +1453,7 @@ public:
         using keyset = std::set<Key, Comp>;
         using state = std::optional<keyset>;
 
-        auto upfn = [&ctx](const Node& node, Span<state> subs) -> state {
+        auto upfn = [&ctx](const Node& node, std::span<state> subs) -> state {
             // If this node is already known to have duplicates, nothing left to do.
             if (node.has_duplicate_keys.has_value() && *node.has_duplicate_keys) return {};
 
@@ -1561,7 +1561,7 @@ public:
 
     //! Find an insane subnode which has no insane children. Nullptr if there is none.
     const Node* FindInsaneSub() const {
-        return TreeEval<const Node*>([](const Node& node, Span<const Node*> subs) -> const Node* {
+        return TreeEval<const Node*>([](const Node& node, std::span<const Node*> subs) -> const Node* {
             for (auto& sub: subs) if (sub) return sub;
             if (!node.IsSaneSubexpression()) return &node;
             return nullptr;
@@ -1574,7 +1574,7 @@ public:
     bool IsSatisfiable(F fn) const
     {
         // TreeEval() doesn't support bool as NodeType, so use int instead.
-        return TreeEval<int>([&fn](const Node& node, Span<int> subs) -> bool {
+        return TreeEval<int>([&fn](const Node& node, std::span<int> subs) -> bool {
             switch (node.fragment) {
                 case Fragment::JUST_0:
                     return false;
@@ -1744,11 +1744,11 @@ enum class ParseContext {
     CLOSE_BRACKET,
 };
 
-int FindNextChar(Span<const char> in, const char m);
+int FindNextChar(std::span<const char> in, const char m);
 
 /** Parse a key string ending at the end of the fragment's text representation. */
 template<typename Key, typename Ctx>
-std::optional<std::pair<Key, int>> ParseKeyEnd(Span<const char> in, const Ctx& ctx)
+std::optional<std::pair<Key, int>> ParseKeyEnd(std::span<const char> in, const Ctx& ctx)
 {
     int key_size = FindNextChar(in, ')');
     if (key_size < 1) return {};
@@ -1759,7 +1759,7 @@ std::optional<std::pair<Key, int>> ParseKeyEnd(Span<const char> in, const Ctx& c
 
 /** Parse a hex string ending at the end of the fragment's text representation. */
 template<typename Ctx>
-std::optional<std::pair<std::vector<unsigned char>, int>> ParseHexStrEnd(Span<const char> in, const size_t expected_size,
+std::optional<std::pair<std::vector<unsigned char>, int>> ParseHexStrEnd(std::span<const char> in, const size_t expected_size,
                                                                          const Ctx& ctx)
 {
     int hash_size = FindNextChar(in, ')');
@@ -1790,7 +1790,7 @@ void BuildBack(const MiniscriptContext script_ctx, Fragment nt, std::vector<Node
  * the `IsValidTopLevel()` and `IsSaneTopLevel()` to check for these properties on the node.
  */
 template<typename Key, typename Ctx>
-inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
+inline NodeRef<Key> Parse(std::span<const char> in, const Ctx& ctx)
 {
     using namespace script;
 
@@ -1814,7 +1814,7 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
     to_parse.emplace_back(ParseContext::WRAPPED_EXPR, -1, -1);
 
     // Parses a multi() or multi_a() from its string representation. Returns false on parsing error.
-    const auto parse_multi_exp = [&](Span<const char>& in, const bool is_multi_a) -> bool {
+    const auto parse_multi_exp = [&](std::span<const char>& in, const bool is_multi_a) -> bool {
         const auto max_keys{is_multi_a ? MAX_PUBKEYS_PER_MULTI_A : MAX_PUBKEYS_PER_MULTISIG};
         const auto required_ctx{is_multi_a ? MiniscriptContext::TAPSCRIPT : MiniscriptContext::P2WSH};
         if (ctx.MsContext() != required_ctx) return false;

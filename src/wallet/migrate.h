@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -80,7 +80,7 @@ private:
     BerkeleyROData::const_iterator m_cursor_end;
 
 public:
-    explicit BerkeleyROCursor(const BerkeleyRODatabase& database, Span<const std::byte> prefix = {});
+    explicit BerkeleyROCursor(const BerkeleyRODatabase& database, std::span<const std::byte> prefix = {});
     ~BerkeleyROCursor() = default;
 
     Status Next(DataStream& key, DataStream& value) override;
@@ -98,7 +98,7 @@ private:
     bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) override { return true; }
     bool EraseKey(DataStream&& key) override { return false; }
     bool HasKey(DataStream&& key) override;
-    bool ErasePrefix(Span<const std::byte> prefix) override { return false; }
+    bool ErasePrefix(std::span<const std::byte> prefix) override { return false; }
 
 public:
     explicit BerkeleyROBatch(const BerkeleyRODatabase& database) : m_database(database) {}
@@ -111,7 +111,7 @@ public:
     void Close() override {}
 
     std::unique_ptr<DatabaseCursor> GetNewCursor() override { return std::make_unique<BerkeleyROCursor>(m_database); }
-    std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(Span<const std::byte> prefix) override;
+    std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(std::span<const std::byte> prefix) override;
     bool TxnBegin() override { return false; }
     bool TxnCommit() override { return false; }
     bool TxnAbort() override { return false; }

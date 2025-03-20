@@ -154,6 +154,6 @@ struct FeeFrac
  * The caller must guarantee that the sum of the FeeFracs in either of the chunks' data set do not
  * overflow (so sum fees < 2^63, and sum sizes < 2^31).
  */
-std::partial_ordering CompareChunks(Span<const FeeFrac> chunks0, Span<const FeeFrac> chunks1);
+std::partial_ordering CompareChunks(std::span<const FeeFrac> chunks0, std::span<const FeeFrac> chunks1);
 
 #endif // BITCOIN_UTIL_FEEFRAC_H
