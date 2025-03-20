@@ -34,14 +34,13 @@ jobs:
         run: echo "FETCH_DEPTH=$((${{ github.event.pull_request.commits }} + 2))" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: ${{ env.FETCH_DEPTH }}
       - name: Determine commit range
         run: |
-          # Checkout HEAD~ and find the test base commit
-          # Checkout HEAD~ because it would be wasteful to rerun tests on the PR
+          # Checkout HEAD~~ and find the test base commit
+          # Checkout HEAD~~ because it would be wasteful to rerun tests on the PR
           # head commit that are already run by other jobs.
-          git checkout HEAD~
+          git checkout HEAD~~
           # Figure out test base commit by listing ancestors of HEAD, excluding
           # ancestors of the most recent merge commit, limiting the list to the
           # newest MAX_COUNT ancestors, ordering it from oldest to newest, and
