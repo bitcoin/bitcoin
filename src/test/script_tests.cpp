@@ -925,7 +925,12 @@ BOOST_AUTO_TEST_CASE(script_json_test)
         if (test.size() > 0 && test[pos].isArray()) {
             unsigned int i=0;
             for (i = 0; i < test[pos].size()-1; i++) {
-                witness.stack.push_back(ParseHex(test[pos][i].get_str()));
+                auto element = test[pos][i].get_str();
+                const auto witness_value{TryParseHex<unsigned char>(element)};
+                if (!witness_value.has_value()) {
+                    BOOST_ERROR("Bad witness in test: " << strTest << " witness is not hex: " << element);
+                }
+                witness.stack.push_back(witness_value.value());
             }
             nValue = AmountFromValue(test[pos][i]);
             pos++;
