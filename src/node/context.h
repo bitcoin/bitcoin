@@ -25,6 +25,7 @@ class ChainstateManager;
 class ECC_Context;
 class NetGroupManager;
 class PeerManager;
+class PokerWorker;
 namespace interfaces {
 class Chain;
 class ChainClient;
@@ -90,6 +91,9 @@ struct NodeContext {
     //! Manages all the node warnings
     std::unique_ptr<node::Warnings> warnings;
     std::thread background_init_thread;
+
+    //!  worker for poker processing
+    std::unique_ptr<PokerWorker> poker_worker{nullptr};
 
     //! Declare default constructor and destructor that are not inline, so code
     //! instantiating the NodeContext struct doesn't need to #include class

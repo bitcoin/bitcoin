@@ -56,6 +56,7 @@
 #include <node/mempool_persist_args.h>
 #include <node/miner.h>
 #include <node/peerman_args.h>
+#include <poker.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/fees_args.h>
@@ -294,6 +295,7 @@ void Shutdown(NodeContext& node)
     util::ThreadRename("shutoff");
     if (node.mempool) node.mempool->AddTransactionsUpdated(1);
 
+    if (node.poker_worker) node.poker_worker->Stop();
     StopHTTPRPC();
     StopREST();
     StopRPC();
@@ -302,6 +304,8 @@ void Shutdown(NodeContext& node)
         client->flush();
     }
     StopMapPort();
+
+    if (node.poker_worker) node.poker_worker->WaitShutdown();
 
     // Because these depend on each-other, we make sure that neither can be
     // using the other before destroying them.
@@ -355,6 +359,7 @@ void Shutdown(NodeContext& node)
     for (auto* index : node.indexes) index->Stop();
     if (g_txindex) g_txindex.reset();
     if (g_coin_stats_index) g_coin_stats_index.reset();
+    if (node.poker_worker) node.poker_worker.reset();
     DestroyAllBlockFilterIndexes();
     node.indexes.clear(); // all instances are nullptr now
 
@@ -484,6 +489,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
 #endif
     argsman.AddArg("-blockreconstructionextratxn=<n>", strprintf("Extra transactions to keep in memory for compact block reconstructions (default: %u)", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-blocksonly", strprintf("Whether to reject transactions from network peers. Disables automatic broadcast and rebroadcast of transactions, unless the source peer has the 'forcerelay' permission. RPC transactions are not affected. (default: %u)", DEFAULT_BLOCKSONLY), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-poker", strprintf("Run a poker client (default: %u)", false), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-coinstatsindex", strprintf("Maintain coinstats index used by the gettxoutsetinfo RPC (default: %u)", DEFAULT_COINSTATSINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-conf=<file>", strprintf("Specify path to read-only configuration file. Relative paths will be prefixed by datadir location (only useable from command line, not configuration file) (default: %s)", BITCOIN_CONF_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
@@ -1727,6 +1733,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     ChainstateManager& chainman = *Assert(node.chainman);
 
+    if (args.GetBoolArg("-poker", false)) {
+        try {
+            node.poker_worker = std::make_unique<PokerWorker>(node);
+        } catch (std::exception& e) {
+            return InitError(Untranslated(strprintf("Failed to construct PokerWorker: %s", e.what())));
+        }
+    }
+
     assert(!node.peerman);
     node.peerman = PeerManager::make(*node.connman, *node.addrman,
                                      node.banman.get(), chainman,
@@ -1753,6 +1767,13 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // Init indexes
     for (auto index : node.indexes) if (!index->Init()) return false;
+
+    if (node.poker_worker) {
+        if(!node.poker_worker->Init()) {
+            return InitError(Untranslated(strprintf("Failed to call PokerWorker::Init()")));
+        }
+        validation_signals.RegisterValidationInterface(node.poker_worker.get());
+    }
 
     // ********************************************************* Step 9: load wallet
     for (const auto& client : node.chain_clients) {

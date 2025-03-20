@@ -15,6 +15,7 @@
 #include <netgroup.h>
 #include <node/kernel_notifications.h>
 #include <node/warnings.h>
+#include <poker.h>
 #include <policy/fees.h>
 #include <scheduler.h>
 #include <txmempool.h>

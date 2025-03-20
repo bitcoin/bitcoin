@@ -162,6 +162,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   netaddress.cpp
   netbase.cpp
   outputtype.cpp
+  poker.cpp
   policy/feerate.cpp
   policy/policy.cpp
   pow.cpp
@@ -297,6 +298,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   rpc/server_util.cpp
   rpc/signmessage.cpp
   rpc/txoutproof.cpp
+  rpc/poker_rpc.cpp
   script/sigcache.cpp
   signet.cpp
   torcontrol.cpp
