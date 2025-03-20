@@ -47,6 +47,20 @@ template<typename X> static inline size_t DynamicUsage(const X * const &v) { ret
  */
 static constexpr size_t MallocUsage(size_t alloc)
 {
+    // XXX temporarily bring back old code
+#if 0
+    // Measured on libc6 2.19 on Linux.
+    if (alloc == 0) {
+        return 0;
+    } else if (sizeof(void*) == 8) {
+        return ((alloc + 31) >> 4) << 4;
+    } else if (sizeof(void*) == 4) {
+        return ((alloc + 15) >> 3) << 3;
+    } else {
+        assert(0);
+    }
+#endif
+
     // There are few if any actual zero-length allocations; when
     // DynamicUsage(std::vector<X>& v) calls this function, and v.capacity() == 0,
     // for example, there has not been a zero-byte allocation (which would require

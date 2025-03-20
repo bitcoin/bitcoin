@@ -157,6 +157,7 @@ BOOST_AUTO_TEST_CASE(random_allocations)
 BOOST_AUTO_TEST_CASE(memusage_test)
 {
     auto std_map = std::unordered_map<int64_t, int64_t>{};
+    //std_map.reserve(10000);
 
     using Map = std::unordered_map<int64_t,
                                    int64_t,
@@ -170,16 +171,52 @@ BOOST_AUTO_TEST_CASE(memusage_test)
 
     {
         auto resource_map = Map{0, std::hash<int64_t>{}, std::equal_to<int64_t>{}, &resource};
+        //resource_map.reserve(10000);
 
         // can't have the same resource usage
         BOOST_TEST(memusage::DynamicUsage(std_map) != memusage::DynamicUsage(resource_map));
 
+        std::cout << "memusage_test start\n";
         for (size_t i = 0; i < 10000; ++i) {
             std_map[i];
             resource_map[i];
         }
 
         // Eventually the resource_map should have a much lower memory usage because it has less malloc overhead
+        if (memusage::DynamicUsage(resource_map) > memusage::DynamicUsage(std_map) * 90 / 100) {
+            // test failure! temporary - get more information!
+            std::cout << "resource map" << '\n';
+            auto rdu = memusage::DynamicUsage(resource_map);
+            std::cout << rdu << '\n';
+            const auto& m = resource_map;
+            // copied from memusage.h: DynamicUsage() (last one in the file)
+            auto* pool_resource = m.get_allocator().resource();
+            size_t estimated_list_node_size = memusage::MallocUsage(sizeof(void*) * 3);
+            size_t usage_resource = estimated_list_node_size * pool_resource->NumAllocatedChunks();
+            size_t usage_chunks = memusage::MallocUsage(pool_resource->ChunkSizeBytes()) * pool_resource->NumAllocatedChunks();
+            auto total = usage_resource + usage_chunks + memusage::MallocUsage(sizeof(void*) * m.bucket_count());
+            std::cout << "sv " << sizeof(void*) << '\n';
+            std::cout << "el " << estimated_list_node_size << '\n';
+            std::cout << "nc " << pool_resource->NumAllocatedChunks() << '\n';
+            std::cout << "ur " << usage_resource << '\n';
+            std::cout << "cs " << pool_resource->ChunkSizeBytes() << '\n';
+            std::cout << "uc " << usage_chunks << '\n';
+            std::cout << "mc " << memusage::MallocUsage(pool_resource->ChunkSizeBytes()) << '\n';
+            std::cout << "bc " << m.bucket_count() << '\n';
+            for (auto [s, c] : pool_resource->GetAllocSizes()) {
+                std::cout << "as " << s << " " << c << '\n';
+            }
+            std::cout << "total " << total << '\n';
+
+            std::cout << "std::map" << '\n';
+            auto sdu = memusage::DynamicUsage(std_map);
+            std::cout << sdu << '\n';
+            std::cout << "so " << sizeof(memusage::unordered_node<std::pair<int64_t, int64_t>>) << '\n';
+            std::cout << "mu " << memusage::MallocUsage(sizeof(memusage::unordered_node<std::pair<int64_t, int64_t>>)) << '\n';
+            std::cout << "ms " << std_map.size() << '\n';
+            std::cout << "bc " << std_map.bucket_count() << '\n';
+            std::cout << "mb " << memusage::MallocUsage(sizeof(void*)*std_map.bucket_count()) << '\n';
+        }
         BOOST_TEST(memusage::DynamicUsage(resource_map) <= memusage::DynamicUsage(std_map) * 90 / 100);
 
         // Make sure the pool is actually used by the nodes
