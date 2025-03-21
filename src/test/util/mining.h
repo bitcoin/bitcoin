@@ -32,6 +32,11 @@ COutPoint MineBlock(const node::NodeContext&,
  **/
 COutPoint MineBlock(const node::NodeContext&, std::shared_ptr<CBlock>& block);
 
+/**
+ * Returns the generated coin (or Null if the block was invalid).
+ */
+COutPoint ProcessBlock(const node::NodeContext&, const std::shared_ptr<CBlock>& block);
+
 /** Prepare a block to be mined */
 std::shared_ptr<CBlock> PrepareBlock(const node::NodeContext&);
 std::shared_ptr<CBlock> PrepareBlock(const node::NodeContext& node,
