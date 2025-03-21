@@ -320,6 +320,9 @@ public:
         Assume(max_cluster_count <= MAX_CLUSTER_COUNT_LIMIT);
     }
 
+    /** Destructor. */
+    ~TxGraphImpl() noexcept;
+
     // Cannot move or copy (would invalidate TxGraphImpl* in Ref, MiningOrder, EvictionOrder).
     TxGraphImpl(const TxGraphImpl&) = delete;
     TxGraphImpl& operator=(const TxGraphImpl&) = delete;
@@ -807,6 +810,17 @@ void Cluster::ApplyDependencies(TxGraphImpl& graph, std::span<std::pair<GraphInd
 
     // Finally push the changes to graph.m_entries.
     Updated(graph);
+}
+
+TxGraphImpl::~TxGraphImpl() noexcept
+{
+    // If Refs outlive the TxGraphImpl they refer to, unlink them, so that their destructor does not
+    // try to reach into a non-existing TxGraphImpl anymore.
+    for (auto& entry : m_entries) {
+        if (entry.m_ref != nullptr) {
+            GetRefGraph(*entry.m_ref) = nullptr;
+        }
+    }
 }
 
 std::unique_ptr<Cluster> TxGraphImpl::ExtractCluster(int level, QualityLevel quality, ClusterSetIndex setindex) noexcept

@@ -587,4 +587,10 @@ FUZZ_TARGET(txgraph)
 
     // Sanity check again (because invoking inspectors may modify internal unobservable state).
     real->SanityCheck();
+
+    // Kill the TxGraph object.
+    real.reset();
+    // Kill the simulated graphs, with all remaining Refs in it. If any, this verifies that Refs
+    // can outlive the TxGraph that created them.
+    sims.clear();
 }
