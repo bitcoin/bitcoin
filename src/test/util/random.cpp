@@ -25,7 +25,7 @@ void SeedRandomStateForTest(SeedRand seedtype)
     // no longer truly random. It should be enough to get the seed once for the
     // process.
     static const auto g_ctx_seed = []() -> std::optional<uint256> {
-        if constexpr (G_FUZZING) return {};
+        if (EnableFuzzDeterminism()) return {};
         // If RANDOM_CTX_SEED is set, use that as seed.
         if (const char* num{std::getenv(RANDOM_CTX_SEED)}) {
             if (auto num_parsed{uint256::FromUserHex(num)}) {
@@ -40,7 +40,7 @@ void SeedRandomStateForTest(SeedRand seedtype)
     }();
 
     g_seeded_g_prng_zero = seedtype == SeedRand::ZEROS;
-    if constexpr (G_FUZZING) {
+    if (EnableFuzzDeterminism()) {
         Assert(g_seeded_g_prng_zero); // Only SeedRandomStateForTest(SeedRand::ZEROS) is allowed in fuzz tests
         Assert(!g_used_g_prng);       // The global PRNG must not have been used before SeedRandomStateForTest(SeedRand::ZEROS)
     }
