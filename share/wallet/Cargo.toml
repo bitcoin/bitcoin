@@ -1,0 +1,9 @@
+[package]
+name = "wallet"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bitcoin = "0.32.5"
+miniscript = "12.3.0"
+rust-bip39 = "1.0.0"
