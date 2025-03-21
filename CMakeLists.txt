@@ -533,7 +533,19 @@ if(ENABLE_HARDENING)
     try_append_linker_flag("-Wl,--high-entropy-va" TARGET hardening_interface)
     try_append_linker_flag("-Wl,-z,relro" TARGET hardening_interface)
     try_append_linker_flag("-Wl,-z,now" TARGET hardening_interface)
-    try_append_linker_flag("-Wl,-z,separate-code" TARGET hardening_interface)
+    # TODO: This can be dropped once Bitcoin Core no longer supports
+    #       NetBSD 10.0 or if upstream fix is backported.
+    # NetBSD's dynamic linker ld.elf_so < 11.0 supports exactly 2
+    # `PT_LOAD` segments and binaries linked with `-z separate-code`
+    # have 4 `PT_LOAD` segments.
+    # Relevant discussions:
+    # - https://github.com/bitcoin/bitcoin/pull/28724#issuecomment-2589347934
+    # - https://mail-index.netbsd.org/tech-userlevel/2023/01/05/msg013666.html
+    if(CMAKE_SYSTEM_NAME STREQUAL "NetBSD" AND CMAKE_SYSTEM_VERSION VERSION_LESS 11.0)
+      try_append_linker_flag("-Wl,-z,noseparate-code" TARGET hardening_interface)
+    else()
+      try_append_linker_flag("-Wl,-z,separate-code" TARGET hardening_interface)
+    endif()
     if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
       try_append_linker_flag("-Wl,-fixup_chains" TARGET hardening_interface)
     endif()
