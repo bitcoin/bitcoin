@@ -1102,8 +1102,8 @@ static bool CanServeBlocks(const Peer& peer)
     return peer.m_their_services & (NODE_NETWORK|NODE_NETWORK_LIMITED);
 }
 
-/** Whether this peer can only serve limited recent blocks (e.g. because
- *  it prunes old blocks) */
+/** Whether this is a BIP159 peer that can only serve limited recent blocks
+ *  (e.g. because it prunes old blocks) */
 static bool IsLimitedPeer(const Peer& peer)
 {
     return (!(peer.m_their_services & NODE_NETWORK) &&
@@ -1476,7 +1476,7 @@ void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, c
                 return;
             }
 
-            // Don't request blocks that go further than what limited peers can provide
+            // Don't request blocks beyond the minimum number that BIP159 limited peers must be able to provide.
             if (is_limited_peer && (state->pindexBestKnownBlock->nHeight - pindex->nHeight >= static_cast<int>(NODE_NETWORK_LIMITED_MIN_BLOCKS) - 2 /* two blocks buffer for possible races */)) {
                 continue;
             }
