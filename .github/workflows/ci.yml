@@ -21,6 +21,12 @@ env:
   CI_FAILFAST_TEST_LEAVE_DANGLING: 1  # GHA does not care about dangling processes and setting this variable avoids killing the CI script itself on error
   MAKEJOBS: '-j10'
 
+defaults:
+  run:
+    # Enforce fail-fast behavior for all platforms.
+    # See: https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#exit-codes-and-error-action-preference
+    shell: bash
+
 jobs:
   test-each-commit:
     name: 'test each commit'
@@ -150,7 +156,7 @@ jobs:
           # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
           key: ${{ github.job }}-${{ matrix.job-type }}-ccache-${{ github.run_id }}
 
-  win64-native:
+  windows-native:
     name: ${{ matrix.job-name }}
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks).
     # See: https://github.com/actions/runner-images#available-images.
@@ -169,10 +175,10 @@ jobs:
         include:
           - job-type: standard
             generate-options: '-DBUILD_GUI=ON -DWITH_BDB=ON -DWITH_ZMQ=ON -DBUILD_BENCH=ON -DWERROR=ON'
-            job-name: 'Win64 native, VS 2022'
+            job-name: 'Windows native, VS 2022'
           - job-type: fuzz
             generate-options: '-DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="wallet" -DBUILD_GUI=OFF -DBUILD_FOR_FUZZING=ON -DWERROR=ON'
-            job-name: 'Win64 native fuzz, VS 2022'
+            job-name: 'Windows native, fuzz, VS 2022'
 
     steps:
       - name: Checkout
@@ -185,6 +191,7 @@ jobs:
           arch: x64
 
       - name: Get tool information
+        shell: pwsh
         run: |
           cmake -version | Tee-Object -FilePath "cmake_version"
           Write-Output "---"
@@ -192,12 +199,12 @@ jobs:
           $env:VCToolsVersion | Tee-Object -FilePath "toolset_version"
           py -3 --version
           Write-Host "PowerShell version $($PSVersionTable.PSVersion.ToString())"
+          bash --version
 
       - name: Using vcpkg with MSBuild
         run: |
-          Set-Location "$env:VCPKG_INSTALLATION_ROOT"
-          Add-Content -Path "triplets\x64-windows.cmake" -Value "set(VCPKG_BUILD_TYPE release)"
-          Add-Content -Path "triplets\x64-windows-static.cmake" -Value "set(VCPKG_BUILD_TYPE release)"
+          echo "set(VCPKG_BUILD_TYPE release)" >> "${VCPKG_INSTALLATION_ROOT}/triplets/x64-windows.cmake"
+          echo "set(VCPKG_BUILD_TYPE release)" >> "${VCPKG_INSTALLATION_ROOT}/triplets/x64-windows-static.cmake"
 
       - name: vcpkg tools cache
         uses: actions/cache@v4
@@ -214,7 +221,7 @@ jobs:
 
       - name: Generate build system
         run: |
-          cmake -B build --preset vs2022-static -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" ${{ matrix.generate-options }}
+          cmake -B build --preset vs2022-static -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" ${{ matrix.generate-options }}
 
       - name: Save vcpkg binary cache
         uses: actions/cache/save@v4
@@ -226,13 +233,13 @@ jobs:
       - name: Build
         working-directory: build
         run: |
-          cmake --build . -j $env:NUMBER_OF_PROCESSORS --config Release
+          cmake --build . -j $NUMBER_OF_PROCESSORS --config Release
 
       - name: Run test suite
         if: matrix.job-type == 'standard'
         working-directory: build
         run: |
-          ctest --output-on-failure --stop-on-failure -j $env:NUMBER_OF_PROCESSORS -C Release
+          ctest --output-on-failure --stop-on-failure -j $NUMBER_OF_PROCESSORS -C Release
 
       - name: Run functional tests
         if: matrix.job-type == 'standard'
@@ -243,15 +250,14 @@ jobs:
           BITCOINUTIL: '${{ github.workspace }}\build\bin\Release\bitcoin-util.exe'
           BITCOINWALLET: '${{ github.workspace }}\build\bin\Release\bitcoin-wallet.exe'
           TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
-        shell: cmd
-        run: py -3 test\functional\test_runner.py --jobs %NUMBER_OF_PROCESSORS% --ci --quiet --tmpdirprefix=%RUNNER_TEMP% --combinedlogslen=99999999 --timeout-factor=%TEST_RUNNER_TIMEOUT_FACTOR% %TEST_RUNNER_EXTRA%
+        run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix="${RUNNER_TEMP}" --combinedlogslen=99999999 --timeout-factor=${TEST_RUNNER_TIMEOUT_FACTOR} ${TEST_RUNNER_EXTRA}
 
       - name: Clone corpora
         if: matrix.job-type == 'fuzz'
         run: |
-          git clone --depth=1 https://github.com/bitcoin-core/qa-assets "$env:RUNNER_TEMP\qa-assets"
-          Set-Location "$env:RUNNER_TEMP\qa-assets"
-          Write-Host "Using qa-assets repo from commit ..."
+          git clone --depth=1 https://github.com/bitcoin-core/qa-assets "${RUNNER_TEMP}/qa-assets"
+          cd "${RUNNER_TEMP}/qa-assets"
+          echo "Using qa-assets repo from commit ..."
           git log -1
 
       - name: Run fuzz tests
@@ -259,9 +265,115 @@ jobs:
         working-directory: build
         env:
           BITCOINFUZZ: '${{ github.workspace }}\build\bin\Release\fuzz.exe'
-        shell: cmd
         run: |
-          py -3 test\fuzz\test_runner.py --par %NUMBER_OF_PROCESSORS% --loglevel DEBUG %RUNNER_TEMP%\qa-assets\fuzz_corpora
+          py -3 test/fuzz/test_runner.py --par $NUMBER_OF_PROCESSORS --loglevel DEBUG "${RUNNER_TEMP}/qa-assets/fuzz_corpora"
+
+  windows-cross:
+    name: 'Linux->Windows cross, no tests'
+    runs-on: ubuntu-latest
+    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+
+    env:
+      FILE_ENV: './ci/test/00_setup_env_win64.sh'
+      DANGER_CI_ON_HOST_FOLDERS: 1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set CI directories
+        run: |
+          echo "CCACHE_DIR=${{ runner.temp }}/ccache_dir" >> "$GITHUB_ENV"
+          echo "BASE_ROOT_DIR=${{ runner.temp }}" >> "$GITHUB_ENV"
+          echo "DEPENDS_DIR=${{ runner.temp }}/depends" >> "$GITHUB_ENV"
+          echo "BASE_BUILD_DIR=${{ runner.temp }}/build" >> "$GITHUB_ENV"
+
+      - name: Depends cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.DEPENDS_DIR }}/built
+          key: ${{ github.job }}-depends-${{ hashFiles('depends/**', 'ci/test/00_setup_env_win64.sh') }}
+
+      - name: Restore Ccache cache
+        id: ccache-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-ccache-${{ github.run_id }}
+          restore-keys: ${{ github.job }}-ccache-
+
+      - name: CI script
+        run: ./ci/test_run_all.sh
+
+      - name: Save Ccache cache
+        uses: actions/cache/save@v4
+        if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-ccache-${{ github.run_id }}
+
+      - name: Upload built executables
+        uses: actions/upload-artifact@v4
+        with:
+          name: x86_64-w64-mingw32-executables-${{ github.run_id }}
+          path: |
+            ${{ env.BASE_BUILD_DIR }}/bin/*.exe
+            ${{ env.BASE_BUILD_DIR }}/src/secp256k1/bin/*.exe
+            ${{ env.BASE_BUILD_DIR }}/src/univalue/*.exe
+            ${{ env.BASE_BUILD_DIR }}/test/config.ini
+
+  windows-native-test:
+    name: 'Windows, test cross-built'
+    runs-on: windows-2022
+    needs: windows-cross
+
+    env:
+      PYTHONUTF8: 1
+      TEST_RUNNER_TIMEOUT_FACTOR: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download built executables
+        uses: actions/download-artifact@v4
+        with:
+          name: x86_64-w64-mingw32-executables-${{ github.run_id }}
+
+      - name: Run bitcoind.exe
+        run: ./bin/bitcoind.exe -version
+
+      - name: Run unit tests
+        # Can't use ctest here like other jobs as we don't have a CMake build tree.
+        run: |
+          ./bin/test_bitcoin.exe -l test_suite
+          ./src/secp256k1/bin/exhaustive_tests.exe
+          ./src/secp256k1/bin/noverify_tests.exe
+          ./src/secp256k1/bin/tests.exe
+          ./src/univalue/object.exe
+          ./src/univalue/unitester.exe
+
+      - name: Run benchmarks
+        run: ./bin/bench_bitcoin.exe -sanity-check -priority-level=high
+
+      - name: Adjust paths in test/config.ini
+        shell: pwsh
+        run: |
+          (Get-Content "test/config.ini") -replace '(?<=^SRCDIR=).*', '${{ github.workspace }}' -replace '(?<=^BUILDDIR=).*', '${{ github.workspace }}' -replace '(?<=^RPCAUTH=).*', '${{ github.workspace }}/share/rpcauth/rpcauth.py' | Set-Content "test/config.ini"
+          Get-Content "test/config.ini"
+
+      - name: Run util tests
+        run: py -3 test/util/test_runner.py
+
+      - name: Run rpcauth test
+        run: py -3 test/util/rpcauth-test.py
+
+      - name: Run functional tests
+        env:
+          # TODO: Fix the excluded tests and re-enable them.
+          EXCLUDE: '--exclude wallet_migration.py,wallet_multiwallet.py'
+          TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
+        run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix="$RUNNER_TEMP" --combinedlogslen=99999999 --timeout-factor=$TEST_RUNNER_TIMEOUT_FACTOR $EXCLUDE $TEST_RUNNER_EXTRA
 
   asan-lsan-ubsan-integer-no-depends-usdt:
     name: 'ASan + LSan + UBSan + integer, no depends, USDT'
