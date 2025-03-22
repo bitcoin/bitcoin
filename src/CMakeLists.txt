@@ -352,7 +352,7 @@ if(WITH_MULTIPROCESS AND BUILD_DAEMON)
     bitcoin_ipc
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
   )
-  install_binary_component(bitcoin-node)
+  install_binary_component(bitcoin-node INTERNAL)
 endif()
 
 if(WITH_MULTIPROCESS AND BUILD_TESTS)
@@ -451,6 +451,7 @@ if(BUILD_UTIL_CHAINSTATE)
       core_interface
       bitcoinkernel
   )
+  install_binary_component(bitcoin-chainstate INTERNAL)
 endif()
 
 
