@@ -137,7 +137,7 @@ static constexpr auto INBOUND_INVENTORY_BROADCAST_INTERVAL{5s};
 static constexpr auto OUTBOUND_INVENTORY_BROADCAST_INTERVAL{2s};
 /** Maximum rate of inventory items to send per second.
  *  Limits the impact of low-fee transaction floods. */
-static constexpr unsigned int INVENTORY_BROADCAST_PER_SECOND = 7;
+static constexpr unsigned int INVENTORY_BROADCAST_PER_SECOND{14};
 /** Target number of tx inventory items to send per transmission. */
 static constexpr unsigned int INVENTORY_BROADCAST_TARGET = INVENTORY_BROADCAST_PER_SECOND * count_seconds(INBOUND_INVENTORY_BROADCAST_INTERVAL);
 /** Maximum number of inventory items to send per transmission. */
