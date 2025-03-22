@@ -728,14 +728,21 @@ General Bitcoin Core
   - *Rationale*: RPC allows for better automatic testing. The test suite for
     the GUI is very limited.
 
-- Make sure pull requests pass CI before merging.
+- Make sure pull request has verified build and test compatibility across environments
 
-  - *Rationale*: Makes sure that they pass thorough testing, and that the tester will keep passing
-     on the master branch. Otherwise, all new pull requests will start failing the tests, resulting in
-     confusion and mayhem.
+  - *Rationale*: Ensure proposed changes maintain stability across all supported platforms
+  and configurations. This prevents regression issues that could affect downstream users and developers.
 
-  - *Explanation*: If the test suite is to be updated for a change, this has to
-    be done first.
+  - *Requirements*:
+    1. Must compile successfully under all supported build configurations
+    2. Must pass automated test suites (unit, functional, fuzz)
+    3. Must include new test coverage for added functionality
+
+  - *Implementation*:
+    - For modifying existing behavior, update affected test cases first
+    - For platform-specific changes, verify against multiple target environments
+    - For new features, create test cases covering success/failure scenarios, edge case validation,
+    and fuzz testing targets for security-critical components
 
 Logging
 -------
