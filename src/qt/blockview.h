@@ -71,6 +71,8 @@ private:
         qreal max_x{0};
         qreal min_y{0};
         bool instant;
+        size_t txs_count;
+        size_t txs_size{0};
     };
     std::map<Wtxid, SceneElement> m_elements GUARDED_BY(m_mutex);
     std::unique_ptr<BubbleGraph> m_bubblegraph GUARDED_BY(m_mutex);

@@ -355,8 +355,8 @@ void GuiBlockView::updateElements(bool instant)
         el.second.target_loc.setY(offscreen);
     }
     m_bubblegraph = std::make_unique<BubbleGraph>();
+    m_bubblegraph->txs_count = block.vtx.size() - 1;
     auto& bubbles = m_bubblegraph->bubbles;
-    size_t total_txs_size{0};
     qreal limit_halfwidth{std::sqrt(::GetSerializeSize(TX_WITH_WITNESS(block))) * EXPECTED_WHITESPACE_PERCENT / 2};
     for (size_t i = 1; i < block.vtx.size(); ++i) {
         auto& tx = *block.vtx[i];
@@ -364,7 +364,7 @@ void GuiBlockView::updateElements(bool instant)
         QPointF preferred_loc;
         double diameter;
         const auto tx_size = tx.GetTotalSize();
-        total_txs_size += tx_size;
+        m_bubblegraph->txs_size += tx_size;
         const bool fresh_bubble = !el.gi;
         if (fresh_bubble) {
             diameter = 2 * std::sqrt(tx_size / std::numbers::pi);
@@ -415,8 +415,6 @@ void GuiBlockView::updateElements(bool instant)
         bubbles.push_back(proposed);
         el.target_loc = proposed.pos;
     }
-    m_lbl_tx_count->setText(tr("%1 (%2)").arg(block.vtx.size() - 1).arg(tr("%1 kB").arg(total_txs_size / 1000.0, 0, 'f', 1)));
-    updateBlockFees(m_block_fees);
     m_bubblegraph->instant = instant;
     QMetaObject::invokeMethod(this, "updateSceneInit", Qt::QueuedConnection);
 }
@@ -425,6 +423,10 @@ void GuiBlockView::updateSceneInit()
 {
     LOCK(m_mutex);
     if (!m_bubblegraph) return;
+
+    m_lbl_tx_count->setText(tr("%1 (%2)").arg(m_bubblegraph->txs_count).arg(tr("%1 kB").arg(m_bubblegraph->txs_size / 1000.0, 0, 'f', 1)));
+    updateBlockFees(m_block_fees);
+
     for (auto& bubble : m_bubblegraph->bubbles) {
         auto& el = *bubble.el;
         if (!el.gi) {
