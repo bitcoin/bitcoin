@@ -11,8 +11,7 @@ set -e
 
 source ./ci/dash/matrix.sh
 
-unset CC; unset CXX
-unset DISPLAY
+unset CC CXX DISPLAY;
 
 if [ "$PULL_REQUEST" != "false" ]; then test/lint/commit-script-check.sh "$COMMIT_RANGE"; fi
 
@@ -51,6 +50,8 @@ make distdir VERSION="$BUILD_TARGET"
 cd "dashcore-$BUILD_TARGET"
 bash -c "./configure $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG" || ( cat config.log && false)
 
+# This step influences compilation and therefore will always be a part of the
+# compile step
 if [ "${RUN_TIDY}" = "true" ]; then
   MAYBE_BEAR="bear --config src/.bear-tidy-config"
   MAYBE_TOKEN="--"
@@ -65,22 +66,10 @@ if [ -n "$USE_VALGRIND" ]; then
     "${BASE_ROOT_DIR}/ci/test/wrap-valgrind.sh"
 fi
 
-if [ "${RUN_TIDY}" = "true" ]; then
-  set -eo pipefail
-  cd src
-  ( run-clang-tidy -quiet "${MAKEJOBS}" ) | grep -C5 "error"
-  cd ..
-  iwyu_tool.py \
-    "src/compat" \
-    "src/init" \
-    "src/rpc/fees.cpp" \
-    "src/rpc/signmessage.cpp" \
-    -p . "${MAKEJOBS}" \
-    -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_ROOT_DIR}/contrib/devtools/iwyu/bitcoin.core.imp" \
-    2>&1 | tee "/tmp/iwyu_ci.out"
-  cd src
-  fix_includes.py --nosafe_headers < /tmp/iwyu_ci.out
-  git --no-pager diff
+# GitHub Actions can segment a job into steps, linting is a separate step
+# so Actions runners will perform this step separately.
+if [ "${RUN_TIDY}" = "true" ] && [ "${GITHUB_ACTIONS}" != "true" ]; then
+  "${BASE_ROOT_DIR}/ci/dash/lint-tidy.sh"
 fi
 
 if [ "$RUN_SECURITY_TESTS" = "true" ]; then
