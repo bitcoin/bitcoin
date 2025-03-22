@@ -20,6 +20,7 @@ void initialize_crypter()
 
 FUZZ_TARGET(crypter, .init = initialize_crypter)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     bool good_data{true};
 
@@ -42,6 +43,11 @@ FUZZ_TARGET(crypter, .init = initialize_crypter)
                                    /*derivation_method=*/derivation_method);
     }
 
+    CKey random_ckey;
+    random_ckey.Set(random_key.begin(), random_key.end(), /*fCompressedIn=*/fuzzed_data_provider.ConsumeBool());
+    if (!random_ckey.IsValid()) return;
+    CPubKey pubkey{random_ckey.GetPubKey()};
+
     LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 100)
     {
         CallOneOf(
@@ -60,26 +66,21 @@ FUZZ_TARGET(crypter, .init = initialize_crypter)
                 (void)crypt.Decrypt(cipher_text_ed, plain_text_ed);
             },
             [&] {
-                const CKeyingMaterial master_key(random_key.begin(), random_key.end());
-                const uint256 iv = ConsumeUInt256(fuzzed_data_provider);
-                (void)EncryptSecret(master_key, plain_text_ed, iv, cipher_text_ed);
+                const CKeyingMaterial master_key(random_key.begin(), random_key.end());;
+                (void)EncryptSecret(master_key, plain_text_ed, pubkey.GetHash(), cipher_text_ed);
             },
             [&] {
-                const CKeyingMaterial master_key(random_key.begin(), random_key.end());
-                const uint256 iv = ConsumeUInt256(fuzzed_data_provider);
-                (void)DecryptSecret(master_key, cipher_text_ed, iv, plain_text_ed);
-            },
-            [&] {
-                std::optional<CPubKey> random_pub_key = ConsumeDeserializable<CPubKey>(fuzzed_data_provider);
+                std::optional<CPubKey> random_pub_key{ConsumeDeserializable<CPubKey>(fuzzed_data_provider)};
                 if (!random_pub_key) {
                     good_data = false;
                     return;
                 }
-                const CPubKey pub_key = *random_pub_key;
+                pubkey = *random_pub_key;
+            },
+            [&] {
                 const CKeyingMaterial master_key(random_key.begin(), random_key.end());
-                const std::vector<unsigned char> crypted_secret = ConsumeRandomLengthByteVector(fuzzed_data_provider, 64);
                 CKey key;
-                (void)DecryptKey(master_key, crypted_secret, pub_key, key);
+                (void)DecryptKey(master_key, cipher_text_ed, pubkey, key);
             });
     }
 }
