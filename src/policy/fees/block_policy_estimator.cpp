@@ -3,13 +3,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
 
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <kernel/mempool_entry.h>
 #include <logging.h>
 #include <policy/feerate.h>
+#include <policy/fees/forecaster_util.h>
 #include <primitives/transaction.h>
 #include <random.h>
 #include <serialize.h>
@@ -540,7 +541,7 @@ bool CBlockPolicyEstimator::_removeTx(const uint256& hash, bool inBlock)
 }
 
 CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath, const bool read_stale_estimates)
-    : m_estimation_filepath{estimation_filepath}
+    : Forecaster(ForecastType::BLOCK_POLICY), m_estimation_filepath{estimation_filepath}
 {
     static_assert(MIN_BUCKET_FEERATE > 0, "Min feerate must be nonzero");
     size_t bucketIndex = 0;
@@ -723,6 +724,29 @@ CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget) const
     return estimateRawFee(confTarget, DOUBLE_SUCCESS_PCT, FeeEstimateHorizon::MED_HALFLIFE);
 }
 
+ForecastResult CBlockPolicyEstimator::EstimateFee(ConfirmationTarget& target)
+{
+    ForecastResult::ForecastResponse response;
+    response.forecaster = ForecastType::BLOCK_POLICY;
+    if (target.type != ConfirmationTargetType::BLOCKS) {
+        return ForecastResult(response, "Incorrect Confirmation target, expecting blocks");
+    }
+    FeeCalculation feeCalcConservative;
+    CFeeRate feerate_conservative{estimateSmartFee(target.value, &feeCalcConservative, /**conservative**/ true)};
+    FeeCalculation feeCalcEconomical;
+    CFeeRate feerate_economical{estimateSmartFee(target.value, &feeCalcEconomical, /**conservative**/ false)};
+    response.current_block_height = feeCalcEconomical.bestheight;
+    if (feerate_conservative == CFeeRate(0) || feerate_economical == CFeeRate(0)) {
+        return ForecastResult(response, "Insufficient data or no feerate found");
+    }
+    // Note: size can be any positive non-zero integer; the evaluated fee/size will result in the same fee rate,
+    // and we only care that the fee rate remains consistent.
+    int32_t size = 1000;
+    response.low_priority = FeeFrac(feerate_economical.GetFee(size), size);
+    response.high_priority = FeeFrac(feerate_conservative.GetFee(size), size);
+    return ForecastResult(response);
+}
+
 CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThreshold, FeeEstimateHorizon horizon, EstimationResult* result) const
 {
     TxConfirmStats* stats = nullptr;
@@ -874,6 +898,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
     if (feeCalc) {
         feeCalc->desiredTarget = confTarget;
         feeCalc->returnedTarget = confTarget;
+        feeCalc->bestheight = nBestSeenHeight;
     }
 
     double median = -1;
