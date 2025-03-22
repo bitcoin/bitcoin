@@ -55,6 +55,13 @@ def assert_fee_amount(fee, tx_size, feerate_BTC_kvB):
         raise AssertionError("Fee of %s BTC too high! (Should be %s BTC)" % (str(fee), str(target_fee)))
 
 
+def assert_fee_enough(fee, tx_size, feerate_BTC_kvB):
+    """Assert the fee meets the feerate"""
+    target_fee = get_fee(tx_size, feerate_BTC_kvB)
+    if fee < target_fee:
+        raise AssertionError("Fee of %s BTC too low! (Should be at least %s BTC)" % (str(fee), str(target_fee)))
+
+
 def summarise_dict_differences(thing1, thing2):
     if not isinstance(thing1, dict) or not isinstance(thing2, dict):
         return thing1, thing2
@@ -68,6 +75,7 @@ def summarise_dict_differences(thing1, thing2):
         if k not in thing1:
             d2[k] = thing2[k]
     return d1, d2
+
 
 def assert_equal(thing1, thing2, *args):
     if thing1 != thing2 and not args and isinstance(thing1, dict) and isinstance(thing2, dict):
