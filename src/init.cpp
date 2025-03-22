@@ -1036,22 +1036,20 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         return InitError(Untranslated("peertimeout must be a positive integer."));
     }
 
-    // Sanity check argument for min fee for including tx in block
-    // TODO: Harmonize which arguments need sanity checking and where that happens
-    if (args.IsArgSet("-blockmintxfee")) {
-        if (!ParseMoney(args.GetArg("-blockmintxfee", ""))) {
-            return InitError(AmountErrMsg("blockmintxfee", args.GetArg("-blockmintxfee", "")));
+    if (const auto arg{args.GetArg("-blockmintxfee")}) {
+        if (!ParseMoney(*arg)) {
+            return InitError(AmountErrMsg("blockmintxfee", *arg));
         }
     }
 
-    if (args.IsArgSet("-blockmaxweight")) {
+    {
         const auto max_block_weight = args.GetIntArg("-blockmaxweight", DEFAULT_BLOCK_MAX_WEIGHT);
         if (max_block_weight > MAX_BLOCK_WEIGHT) {
             return InitError(strprintf(_("Specified -blockmaxweight (%d) exceeds consensus maximum block weight (%d)"), max_block_weight, MAX_BLOCK_WEIGHT));
         }
     }
 
-    if (args.IsArgSet("-blockreservedweight")) {
+    {
         const auto block_reserved_weight = args.GetIntArg("-blockreservedweight", DEFAULT_BLOCK_RESERVED_WEIGHT);
         if (block_reserved_weight > MAX_BLOCK_WEIGHT) {
             return InitError(strprintf(_("Specified -blockreservedweight (%d) exceeds consensus maximum block weight (%d)"), block_reserved_weight, MAX_BLOCK_WEIGHT));
@@ -1183,11 +1181,10 @@ bool CheckHostPortOptions(const ArgsManager& args) {
         "-port",
         "-rpcport",
     }) {
-        if (args.IsArgSet(port_option)) {
-            const std::string port = args.GetArg(port_option, "");
+        if (const auto port{args.GetArg(port_option)}) {
             uint16_t n;
-            if (!ParseUInt16(port, &n) || n == 0) {
-                return InitError(InvalidPortErrMsg(port_option, port));
+            if (!ParseUInt16(*port, &n) || n == 0) {
+                return InitError(InvalidPortErrMsg(port_option, *port));
             }
         }
     }
