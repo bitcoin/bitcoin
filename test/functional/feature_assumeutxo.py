@@ -27,6 +27,7 @@ from test_framework.messages import (
     tx_from_hex,
     ser_varint,
     MAX_MONEY,
+    ser_compact_size,
 )
 from test_framework.p2p import (
     P2PInterface,
@@ -139,7 +140,19 @@ class AssumeutxoTest(BitcoinTestFramework):
         cases = [
             # (content, offset, wrong_hash, custom_message)
             [b"\xff" * 32, 0, "7d52155c9a9fdc4525b637ef6170568e5dad6fabd0b1fdbb9432010b8453095b", None],  # wrong outpoint hash
-            [(2).to_bytes(1, "little"), 32, None, "Bad snapshot data after deserializing 1 coins."],  # wrong txid coins count
+            # Enter an invalid number of coins for the first txid: 2 instead of 1. The logic will
+            # deserialize the first coin successfully (we enter a 0 value coin at height 1) and then
+            # attempt to deserialize the remaining bytes as a coin, where it's in fact the next txid.
+            # To get the expected error we serialize the first bytes of the would-be next txid as a
+            # valid coin with an invalid height (here 300, when the snapshot base height is 299).
+            [
+                ser_compact_size(2)  # coins count
+                + ser_compact_size(0) + ser_varint(1) + ser_varint(compress_amount(0)) + ser_varint(0) + b"\x00"*20  # first coin, height 1
+                + ser_compact_size(0) + ser_varint(300 * 2) + ser_varint(compress_amount(0)) + ser_varint(0) + b"\x00"*20,  # second coin, height 300
+                32,  # skip the bytes of the first txid
+                None,
+                "Bad snapshot data after deserializing 1 coins."
+            ],  # wrong txid coins count
             [b"\xfd\xff\xff", 32, None, "Mismatch in coins count in snapshot metadata and actual snapshot data"],  # txid coins count exceeds coins left
             [b"\x01", 33, "9f4d897031ab8547665b4153317ae2fdbf0130c7840b66427ebc48b881cb80ad", None],  # wrong outpoint index
             [b"\x81", 34, "3da966ba9826fb6d2604260e01607b55ba44e1a5de298606b08704bc62570ea8", None],  # wrong coin code VARINT
