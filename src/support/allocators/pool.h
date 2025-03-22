@@ -13,6 +13,8 @@
 #include <new>
 #include <type_traits>
 #include <utility>
+#include <iostream>
+#include <map>
 
 /**
  * A memory resource similar to std::pmr::unsynchronized_pool_resource, but
@@ -170,6 +172,9 @@ class PoolResource final
     friend class PoolResourceTester;
 
 public:
+
+    std::map<size_t, int> m_allocsizes;
+
     /**
      * Construct a new PoolResource object which allocates the first chunk.
      * chunk_size_bytes will be rounded up to next multiple of ELEM_ALIGN_BYTES.
@@ -211,6 +216,7 @@ public:
      */
     void* Allocate(std::size_t bytes, std::size_t alignment)
     {
+        m_allocsizes[bytes]++;
         if (IsFreeListUsable(bytes, alignment)) {
             const std::size_t num_alignments = NumElemAlignBytes(bytes);
             if (nullptr != m_free_lists[num_alignments]) {
@@ -265,6 +271,10 @@ public:
     [[nodiscard]] size_t ChunkSizeBytes() const
     {
         return m_chunk_size_bytes;
+    }
+
+    const std::map<size_t, int>& GetAllocSizes() const {
+        return m_allocsizes;
     }
 };
 

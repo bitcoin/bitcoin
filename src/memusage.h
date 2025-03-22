@@ -24,9 +24,6 @@
 namespace memusage
 {
 
-/** Compute the total memory used by allocating alloc bytes. */
-static size_t MallocUsage(size_t alloc);
-
 /** Dynamic memory usage for built-in types is zero. */
 static inline size_t DynamicUsage(const int8_t& v) { return 0; }
 static inline size_t DynamicUsage(const uint8_t& v) { return 0; }
@@ -48,9 +45,10 @@ template<typename X> static inline size_t DynamicUsage(const X * const &v) { ret
  *  application data structures require more accurate inner accounting, they should
  *  iterate themselves, or use more efficient caching + updating on modification.
  */
-
-static inline size_t MallocUsage(size_t alloc)
+static constexpr size_t MallocUsage(size_t alloc)
 {
+    // XXX temporarily bring back old code
+#if 0
     // Measured on libc6 2.19 on Linux.
     if (alloc == 0) {
         return 0;
@@ -61,6 +59,28 @@ static inline size_t MallocUsage(size_t alloc)
     } else {
         assert(0);
     }
+#endif
+
+    // There are few if any actual zero-length allocations; when
+    // DynamicUsage(std::vector<X>& v) calls this function, and v.capacity() == 0,
+    // for example, there has not been a zero-byte allocation (which would require
+    // some physical space). std::vector has optimized this case. Experimental
+    // evidence indicates the same is true of other data structures -- there are
+    // no actual zero-length allocations observed, although of course this is
+    // library-dependent.
+    if (alloc == 0) return 0;
+
+#if defined(__arm__) || SIZE_MAX == UINT64_MAX
+    constexpr size_t min_alloc{9};
+#else
+    constexpr size_t min_alloc{0};
+#endif
+    constexpr size_t overhead{sizeof(size_t)};
+    constexpr size_t step{alignof(std::max_align_t)};
+    // step should be a nonzero power of 2 (exactly one bit set)
+    static_assert(step > 0 && (step & (step - 1)) == 0);
+
+    return (std::max(min_alloc, alloc) + overhead + (step - 1)) & ~(step - 1);
 }
 
 // STL data structures
