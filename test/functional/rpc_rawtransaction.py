@@ -94,6 +94,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         if self.is_specified_wallet_compiled() and not self.options.descriptors:
             self.import_deterministic_coinbase_privkeys()
             self.raw_multisig_transaction_legacy_tests()
+            self.raw_multisig_transaction_legacy_tests(3)
         self.getrawtransaction_verbosity_tests()
 
 
@@ -261,7 +262,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, "createrawtransaction", self.nodes[0].createrawtransaction, [])
 
         # Test `createrawtransaction` invalid extra parameters
-        assert_raises_rpc_error(-1, "createrawtransaction", self.nodes[0].createrawtransaction, [], {}, 0, False, 'foo')
+        assert_raises_rpc_error(-1, "createrawtransaction", self.nodes[0].createrawtransaction, [], {}, 0, False, 2, 'foo')
+
+        # Test `createrawtransaction` invalid version parameters
+        assert_raises_rpc_error(-8, "Invalid parameter, version out of range(1~3)", self.nodes[0].createrawtransaction, [], {}, 0, False, 0)
+        assert_raises_rpc_error(-8, "Invalid parameter, version out of range(1~3)", self.nodes[0].createrawtransaction, [], {}, 0, False, 4)
 
         # Test `createrawtransaction` invalid `inputs`
         assert_raises_rpc_error(-3, "JSON value of type string is not of expected type array", self.nodes[0].createrawtransaction, 'foo', {})
@@ -493,7 +498,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         decrawtx = self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['version'], 0xffffffff)
 
-    def raw_multisig_transaction_legacy_tests(self):
+    def raw_multisig_transaction_legacy_tests(self, version=2):
         self.log.info("Test raw multisig transactions (legacy)")
         # The traditional multisig workflow does not work with descriptor wallets so these are legacy only.
         # The multisig workflow with descriptor wallets uses PSBTs and is tested elsewhere, no need to do them here.
@@ -554,7 +559,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         bal = self.nodes[0].getbalance()
         inputs = [{"txid": txId, "vout": vout['n'], "scriptPubKey": vout['scriptPubKey']['hex'], "amount": vout['value']}]
         outputs = {self.nodes[0].getnewaddress(): 2.19}
-        rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
+        rawTx = self.nodes[2].createrawtransaction(inputs, outputs, version=version)
         rawTxPartialSigned = self.nodes[1].signrawtransactionwithwallet(rawTx, inputs)
         assert_equal(rawTxPartialSigned['complete'], False)  # node1 only has one key, can't comp. sign the tx
 
@@ -593,7 +598,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         bal = self.nodes[0].getbalance()
         inputs = [{"txid": txId, "vout": vout['n'], "scriptPubKey": vout['scriptPubKey']['hex'], "redeemScript": mSigObjValid['hex'], "amount": vout['value']}]
         outputs = {self.nodes[0].getnewaddress(): 2.19}
-        rawTx2 = self.nodes[2].createrawtransaction(inputs, outputs)
+        rawTx2 = self.nodes[2].createrawtransaction(inputs, outputs, version=version)
         rawTxPartialSigned1 = self.nodes[1].signrawtransactionwithwallet(rawTx2, inputs)
         self.log.debug(rawTxPartialSigned1)
         assert_equal(rawTxPartialSigned1['complete'], False)  # node1 only has one key, can't comp. sign the tx
