@@ -186,30 +186,34 @@ bool CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &ha
         if (!it->second.IsDirty()) {
             continue;
         }
-        CCoinsMap::iterator itUs = cacheCoins.find(it->first);
-        if (itUs == cacheCoins.end()) {
+        CCoinsMap::iterator itUs;
+        bool isInserted = false;
+        if (!(it->second.IsFresh() && it->second.coin.IsSpent())) {
+            std::tie(itUs, isInserted) = cacheCoins.try_emplace(it->first);
+        } else {
+            itUs = cacheCoins.find(it->first);
+        }
+
+        if (isInserted) {
             // The parent cache does not have an entry, while the child cache does.
             // We can ignore it if it's both spent and FRESH in the child
-            if (!(it->second.IsFresh() && it->second.coin.IsSpent())) {
-                // Create the coin in the parent cache, move the data up
-                // and mark it as dirty.
-                itUs = cacheCoins.try_emplace(it->first).first;
-                CCoinsCacheEntry& entry{itUs->second};
-                if (cursor.WillErase(*it)) {
-                    // Since this entry will be erased,
-                    // we can move the coin into us instead of copying it
-                    entry.coin = std::move(it->second.coin);
-                } else {
-                    entry.coin = it->second.coin;
-                }
-                cachedCoinsUsage += entry.coin.DynamicMemoryUsage();
-                CCoinsCacheEntry::SetDirty(*itUs, m_sentinel);
-                // We can mark it FRESH in the parent if it was FRESH in the child
-                // Otherwise it might have just been flushed from the parent's cache
-                // and already exist in the grandparent
-                if (it->second.IsFresh()) CCoinsCacheEntry::SetFresh(*itUs, m_sentinel);
+            // Create the coin in the parent cache, move the data up
+            // and mark it as dirty.
+            CCoinsCacheEntry& entry{itUs->second};
+            if (cursor.WillErase(*it)) {
+                // Since this entry will be erased,
+                // we can move the coin into us instead of copying it
+                entry.coin = std::move(it->second.coin);
+            } else {
+                entry.coin = it->second.coin;
             }
-        } else {
+            cachedCoinsUsage += entry.coin.DynamicMemoryUsage();
+            CCoinsCacheEntry::SetDirty(*itUs, m_sentinel);
+            // We can mark it FRESH in the parent if it was FRESH in the child
+            // Otherwise it might have just been flushed from the parent's cache
+            // and already exist in the grandparent
+            if (it->second.IsFresh()) CCoinsCacheEntry::SetFresh(*itUs, m_sentinel);
+        } else if (itUs != cacheCoins.end()) {
             // Found the entry in the parent cache
             if (it->second.IsFresh() && !itUs->second.coin.IsSpent()) {
                 // The coin was marked FRESH in the child cache, but the coin
