@@ -455,6 +455,28 @@ FUZZ_TARGET(txgraph)
                 assert(result_set == expect_set);
                 break;
             } else if (!sel_sim.IsOversized() && command-- == 0) {
+                // GetAncestorsUnion/GetDescendantsUnion.
+                std::vector<TxGraph::Ref*> refs;
+                // Gather a list of up to 15 Ref pointers.
+                auto count = provider.ConsumeIntegralInRange<size_t>(0, 15);
+                refs.resize(count);
+                for (size_t i = 0; i < count; ++i) {
+                    refs[i] = pick_fn();
+                }
+                // Their order should not matter, shuffle them.
+                std::shuffle(refs.begin(), refs.end(), rng);
+                // Invoke the real function, and convert to SimPos set.
+                auto result = alt ? real->GetDescendantsUnion(refs, use_main)
+                                  : real->GetAncestorsUnion(refs, use_main);
+                auto result_set = sel_sim.MakeSet(result);
+                assert(result.size() == result_set.Count());
+                // Compute the expected result.
+                SimTxGraph::SetType expect_set;
+                for (TxGraph::Ref* ref : refs) expect_set |= sel_sim.GetAncDesc(ref, alt);
+                // Compare.
+                assert(result_set == expect_set);
+                break;
+            } else if (!sel_sim.IsOversized() && command-- == 0) {
                 // GetCluster.
                 auto ref = pick_fn();
                 auto result = real->GetCluster(*ref, use_main);

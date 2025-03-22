@@ -453,6 +453,8 @@ public:
     std::vector<Ref*> GetCluster(const Ref& arg, bool main_only = false) noexcept final;
     std::vector<Ref*> GetAncestors(const Ref& arg, bool main_only = false) noexcept final;
     std::vector<Ref*> GetDescendants(const Ref& arg, bool main_only = false) noexcept final;
+    std::vector<Ref*> GetAncestorsUnion(std::span<const Ref* const> args, bool main_only = false) noexcept final;
+    std::vector<Ref*> GetDescendantsUnion(std::span<const Ref* const> args, bool main_only = false) noexcept final;
     GraphIndex GetTransactionCount(bool main_only = false) noexcept final;
     bool IsOversized(bool main_only = false) noexcept final;
     std::strong_ordering CompareMainOrder(const Ref& a, const Ref& b) noexcept final;
@@ -1578,6 +1580,70 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendants(const Ref& arg, bool main
     auto matches = std::span(&match, 1);
     std::vector<TxGraph::Ref*> ret;
     cluster->GetDescendantRefs(*this, matches, ret);
+    return ret;
+}
+
+std::vector<TxGraph::Ref*> TxGraphImpl::GetAncestorsUnion(std::span<const Ref* const> args, bool main_only) noexcept
+{
+    // Apply all dependencies, as the result might be incorrect otherwise.
+    size_t level = GetSpecifiedLevel(main_only);
+    ApplyDependencies(level);
+    // Ancestry cannot be known if unapplied dependencies remain.
+    Assume(GetClusterSet(level).m_deps_to_add.empty());
+
+    // Translate args to matches.
+    std::vector<std::pair<Cluster*, DepGraphIndex>> matches;
+    matches.reserve(args.size());
+    for (auto arg : args) {
+        // Skip empty Refs.
+        if (GetRefGraph(*arg) == nullptr) continue;
+        Assume(GetRefGraph(*arg) == this);
+        // Find the Cluster the argument is in, and skip if none is found.
+        auto cluster = FindCluster(GetRefIndex(*arg), level);
+        if (cluster == nullptr) continue;
+        // Append to matches.
+        matches.emplace_back(cluster, m_entries[GetRefIndex(*arg)].m_locator[cluster->m_level].index);
+    }
+    // Group by Cluster.
+    std::sort(matches.begin(), matches.end(), [](auto& a, auto& b) noexcept { return std::less{}(a.first, b.first); });
+    // Dispatch to the Clusters.
+    std::span match_span(matches);
+    std::vector<TxGraph::Ref*> ret;
+    while (!match_span.empty()) {
+        match_span.front().first->GetAncestorRefs(*this, match_span, ret);
+    }
+    return ret;
+}
+
+std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendantsUnion(std::span<const Ref* const> args, bool main_only) noexcept
+{
+    // Apply all dependencies, as the result might be incorrect otherwise.
+    size_t level = GetSpecifiedLevel(main_only);
+    ApplyDependencies(level);
+    // Ancestry cannot be known if unapplied dependencies remain.
+    Assume(GetClusterSet(level).m_deps_to_add.empty());
+
+    // Translate args to matches.
+    std::vector<std::pair<Cluster*, DepGraphIndex>> matches;
+    matches.reserve(args.size());
+    for (auto arg : args) {
+        // Skip empty Refs.
+        if (GetRefGraph(*arg) == nullptr) continue;
+        Assume(GetRefGraph(*arg) == this);
+        // Find the Cluster the argument is in, and skip if none is found.
+        auto cluster = FindCluster(GetRefIndex(*arg), level);
+        if (cluster == nullptr) continue;
+        // Append to matches.
+        matches.emplace_back(cluster, m_entries[GetRefIndex(*arg)].m_locator[cluster->m_level].index);
+    }
+    // Group by Cluster.
+    std::sort(matches.begin(), matches.end(), [](auto& a, auto& b) noexcept { return std::less{}(a.first, b.first); });
+    // Dispatch to the Clusters.
+    std::span match_span(matches);
+    std::vector<TxGraph::Ref*> ret;
+    while (!match_span.empty()) {
+        match_span.front().first->GetDescendantRefs(*this, match_span, ret);
+    }
     return ret;
 }
 
