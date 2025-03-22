@@ -184,12 +184,14 @@ class UpgradeWalletTest(BitcoinTestFramework):
 
         self.restart_node(0)
         copy_v16()
+        # this is necessary because the coin selection excluded coinbase outputs that would mature on the next block
+        coinbase_amt = 50
         wallet = node_master.get_wallet_rpc(self.default_wallet_name)
-        assert_equal(wallet.getbalance(), v16_3_balance)
+        assert_equal(wallet.getbalance() - coinbase_amt, v16_3_balance)
         self.log.info("Test upgradewallet without a version argument")
         self.test_upgradewallet(wallet, previous_version=159900, expected_version=169900)
         # wallet should still contain the same balance
-        assert_equal(wallet.getbalance(), v16_3_balance)
+        assert_equal(wallet.getbalance() - coinbase_amt, v16_3_balance)
 
         copy_non_hd()
         wallet = node_master.get_wallet_rpc(self.default_wallet_name)

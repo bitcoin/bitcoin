@@ -84,12 +84,12 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[0].listunspent(query_options={'include_immature_coinbase': True})), 1)
         assert_equal(len(self.nodes[0].listunspent(query_options={'include_immature_coinbase': False})), 0)
 
-        self.generatetoaddress(self.nodes[1], COINBASE_MATURITY + 1, ADDRESS_WATCHONLY)
+        self.generatetoaddress(self.nodes[1], COINBASE_MATURITY, ADDRESS_WATCHONLY)
 
         # Verify listunspent returns all immature coinbases if 'include_immature_coinbase' is set
         # For now, only the legacy wallet will see the coinbases going to the imported 'ADDRESS_WATCHONLY'
         assert_equal(len(self.nodes[0].listunspent(query_options={'include_immature_coinbase': False})), 1 if self.options.descriptors else 2)
-        assert_equal(len(self.nodes[0].listunspent(query_options={'include_immature_coinbase': True})), 1 if self.options.descriptors else COINBASE_MATURITY + 2)
+        assert_equal(len(self.nodes[0].listunspent(query_options={'include_immature_coinbase': True})), 1 if self.options.descriptors else COINBASE_MATURITY + 1)
 
         if not self.options.descriptors:
             # Tests legacy watchonly behavior which is not present (and does not need to be tested) in descriptor wallets
@@ -97,7 +97,7 @@ class WalletTest(BitcoinTestFramework):
             assert_equal(self.nodes[0].getwalletinfo()['balance'], 50)
             assert_equal(self.nodes[1].getbalances()['mine']['trusted'], 50)
 
-            assert_equal(self.nodes[0].getbalances()['watchonly']['immature'], 5000)
+            assert_equal(self.nodes[0].getbalances()['watchonly']['immature'], 4950)
             assert 'watchonly' not in self.nodes[1].getbalances()
 
             assert_equal(self.nodes[0].getbalance(), 50)
@@ -174,7 +174,7 @@ class WalletTest(BitcoinTestFramework):
             expected_balances_0 = {'mine':      {'immature':          Decimal('0E-8'),
                                                  'trusted':           Decimal('9.99'),  # change from node 0's send
                                                  'untrusted_pending': Decimal('60.0')},
-                                   'watchonly': {'immature':          Decimal('5000'),
+                                   'watchonly': {'immature':          Decimal('4950'),
                                                  'trusted':           Decimal('50.0'),
                                                  'untrusted_pending': Decimal('0E-8')}}
             expected_balances_1 = {'mine':      {'immature':          Decimal('0E-8'),

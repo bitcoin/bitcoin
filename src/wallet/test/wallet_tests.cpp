@@ -632,10 +632,10 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
     }
     BOOST_CHECK_EQUAL(list.size(), 1U);
     BOOST_CHECK_EQUAL(std::get<PKHash>(list.begin()->first).ToString(), coinbaseAddress);
-    BOOST_CHECK_EQUAL(list.begin()->second.size(), 1U);
+    BOOST_CHECK_EQUAL(list.begin()->second.size(), 2U);
 
-    // Check initial balance from one mature coinbase transaction.
-    BOOST_CHECK_EQUAL(50 * COIN, WITH_LOCK(wallet->cs_wallet, return AvailableCoins(*wallet).GetTotalAmount()));
+    // Check initial balance from one mature coinbase transaction and one immature coinbase transaction that will become mature on the next block
+    BOOST_CHECK_EQUAL(2 * 50 * COIN, WITH_LOCK(wallet->cs_wallet, return AvailableCoins(*wallet).GetTotalAmount()));
 
     // Add a transaction creating a change address, and confirm ListCoins still
     // returns the coin associated with the change address underneath the
@@ -648,12 +648,12 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
     }
     BOOST_CHECK_EQUAL(list.size(), 1U);
     BOOST_CHECK_EQUAL(std::get<PKHash>(list.begin()->first).ToString(), coinbaseAddress);
-    BOOST_CHECK_EQUAL(list.begin()->second.size(), 2U);
+    BOOST_CHECK_EQUAL(list.begin()->second.size(), 3U);
 
-    // Lock both coins. Confirm number of available coins drops to 0.
+    // Lock the three coins. Confirm number of available coins drops to 0.
     {
         LOCK(wallet->cs_wallet);
-        BOOST_CHECK_EQUAL(AvailableCoinsListUnspent(*wallet).Size(), 2U);
+        BOOST_CHECK_EQUAL(AvailableCoinsListUnspent(*wallet).Size(), 3U);
     }
     for (const auto& group : list) {
         for (const auto& coin : group.second) {
@@ -673,7 +673,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
     }
     BOOST_CHECK_EQUAL(list.size(), 1U);
     BOOST_CHECK_EQUAL(std::get<PKHash>(list.begin()->first).ToString(), coinbaseAddress);
-    BOOST_CHECK_EQUAL(list.begin()->second.size(), 2U);
+    BOOST_CHECK_EQUAL(list.begin()->second.size(), 3U);
 }
 
 void TestCoinsResult(ListCoinsTest& context, OutputType out_type, CAmount amount,
@@ -695,9 +695,9 @@ BOOST_FIXTURE_TEST_CASE(BasicOutputTypesTest, ListCoinsTest)
     std::map<OutputType, size_t> expected_coins_sizes;
     for (const auto& out_type : OUTPUT_TYPES) { expected_coins_sizes[out_type] = 0U; }
 
-    // Verify our wallet has one usable coinbase UTXO before starting
-    // This UTXO is a P2PK, so it should show up in the Other bucket
-    expected_coins_sizes[OutputType::UNKNOWN] = 1U;
+    // Verify our wallet has two selectable coinbase UTXOs before starting
+    // These UTXOs are P2PKs, so it should show up in the Other bucket
+    expected_coins_sizes[OutputType::UNKNOWN] = 2U;
     CoinsResult available_coins = WITH_LOCK(wallet->cs_wallet, return AvailableCoins(*wallet));
     BOOST_CHECK_EQUAL(available_coins.Size(), expected_coins_sizes[OutputType::UNKNOWN]);
     BOOST_CHECK_EQUAL(available_coins.coins[OutputType::UNKNOWN].size(), expected_coins_sizes[OutputType::UNKNOWN]);
@@ -705,7 +705,7 @@ BOOST_FIXTURE_TEST_CASE(BasicOutputTypesTest, ListCoinsTest)
     // We will create a self transfer for each of the OutputTypes and
     // verify it is put in the correct bucket after running GetAvailablecoins
     //
-    // For each OutputType, We expect 2 UTXOs in our wallet following the self transfer:
+    // For each OutputType, we expect 2 UTXOs in our wallet following the self transfer:
     //   1. One UTXO as the recipient
     //   2. One UTXO from the change, due to payment address matching logic
 
