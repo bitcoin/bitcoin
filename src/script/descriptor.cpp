@@ -1447,7 +1447,7 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
     for (size_t i = 1; i < split.size(); ++i) {
         const std::span<const char>& elem = split[i];
 
-        // Check if element contain multipath specifier
+        // Check if element contains multipath specifier
         if (!elem.empty() && elem.front() == '<' && elem.back() == '>') {
             if (!allow_multipath) {
                 error = strprintf("Key path value '%s' specifies multipath in a section where multipath is not allowed", std::string(elem.begin(), elem.end()));
