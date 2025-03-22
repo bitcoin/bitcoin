@@ -142,6 +142,14 @@ public:
      *  queried; otherwise the main graph is queried. The queried graph must not be oversized.
      *  Returns {} if arg does not exist in the graph. */
     virtual std::vector<Ref*> GetDescendants(const Ref& arg, bool main_only = false) noexcept = 0;
+    /** Like GetAncestors, but return the Refs for all transactions in the union of the provided
+     *  arguments' ancestors (each transaction is only reported once). Refs that do not exist in
+     *  the queried graph are ignored. */
+    virtual std::vector<Ref*> GetAncestorsUnion(std::span<const Ref* const> args, bool main_only = false) noexcept = 0;
+    /** Like GetDescendants, but return the Refs for all transactions in the union of the provided
+     *  arguments' descendants (each transaction is only reported once). Refs that do not exist in
+     *  the queried graph are ignored. */
+    virtual std::vector<Ref*> GetDescendantsUnion(std::span<const Ref* const> args, bool main_only = false) noexcept = 0;
     /** Get the total number of transactions in the graph. If main_only is false and a staging
      *  graph exists, it is queried; otherwise the main graph is queried. This is available even
      *  for oversized graphs. */
