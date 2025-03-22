@@ -108,8 +108,7 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CConnm
             m_walletman.ForAnyCJClientMan([this, &connman, &dmn](std::unique_ptr<CCoinJoinClientManager>& clientman) {
                 return clientman->TrySubmitDenominate(dmn->pdmnState->addr, connman);
             })) {
-            LogPrint(BCLog::COINJOIN, "DSQUEUE -- CoinJoin queue (%s) is ready on masternode %s\n", dsq.ToString(),
-                     dmn->pdmnState->addr.ToStringAddrPort());
+            LogPrint(BCLog::COINJOIN, "DSQUEUE -- CoinJoin queue is ready, masternode=%s, queue=%s\n", dmn->proTxHash.ToString(), dsq.ToString());
             return {};
         } else {
             int64_t nLastDsq = m_mn_metaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
@@ -125,8 +124,7 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CConnm
 
             m_mn_metaman.AllowMixing(dmn->proTxHash);
 
-            LogPrint(BCLog::COINJOIN, "DSQUEUE -- new CoinJoin queue (%s) from masternode %s\n", dsq.ToString(),
-                     dmn->pdmnState->addr.ToStringAddrPort());
+            LogPrint(BCLog::COINJOIN, "DSQUEUE -- new CoinJoin queue, masternode=%s, queue=%s\n", dmn->proTxHash.ToString(), dsq.ToString());
 
             m_walletman.ForAnyCJClientMan([&dsq](const std::unique_ptr<CCoinJoinClientManager>& clientman) {
                 return clientman->MarkAlreadyJoinedQueueAsTried(dsq);
@@ -1126,8 +1124,7 @@ bool CCoinJoinClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, 
 
         if (connman.IsMasternodeOrDisconnectRequested(dmn->pdmnState->addr)) {
             WalletCJLogPrint(m_wallet, /* Continued */
-                             "CCoinJoinClientSession::JoinExistingQueue -- skipping masternode connection, addr=%s\n",
-                             dmn->pdmnState->addr.ToStringAddrPort());
+                             "CCoinJoinClientSession::JoinExistingQueue -- skipping connection, masternode=%s\n", dmn->proTxHash.ToString());
             continue;
         }
 
@@ -1138,10 +1135,8 @@ bool CCoinJoinClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, 
         SetState(POOL_STATE_QUEUE);
         nTimeLastSuccessfulStep = GetTime();
         WalletCJLogPrint(m_wallet, /* Continued */
-                         "CCoinJoinClientSession::JoinExistingQueue -- pending connection (from queue): nSessionDenom: "
-                         "%d (%s), addr=%s\n",
-                         nSessionDenom, CoinJoin::DenominationToString(nSessionDenom),
-                         dmn->pdmnState->addr.ToStringAddrPort());
+                         "CCoinJoinClientSession::JoinExistingQueue -- pending connection, masternode=%s, nSessionDenom=%d (%s)\n",
+                         dmn->proTxHash.ToString(), nSessionDenom, CoinJoin::DenominationToString(nSessionDenom));
         strAutoDenomResult = _("Trying to connect…");
         return true;
     }
@@ -1192,23 +1187,22 @@ bool CCoinJoinClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, CCon
         int64_t nDsqThreshold = m_mn_metaman.GetDsqThreshold(dmn->proTxHash, nMnCount);
         if (nLastDsq != 0 && nDsqThreshold > m_mn_metaman.GetDsqCount()) {
             WalletCJLogPrint(m_wallet, /* Continued */
-                             "CCoinJoinClientSession::StartNewQueue -- Too early to mix on this masternode!" /* Continued */
-                             " masternode=%s  addr=%s  nLastDsq=%d  nDsqThreshold=%d  nDsqCount=%d\n",
-                             dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToStringAddrPort(), nLastDsq,
-                             nDsqThreshold, m_mn_metaman.GetDsqCount());
+                             "CCoinJoinClientSession::StartNewQueue -- too early to mix with node," /* Continued */
+                             " masternode=%s, nLastDsq=%d, nDsqThreshold=%d, nDsqCount=%d\n",
+                             dmn->proTxHash.ToString(), nLastDsq, nDsqThreshold, m_mn_metaman.GetDsqCount());
             nTries++;
             continue;
         }
 
         if (connman.IsMasternodeOrDisconnectRequested(dmn->pdmnState->addr)) {
-            WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::StartNewQueue -- skipping masternode connection, addr=%s\n",
-                             dmn->pdmnState->addr.ToStringAddrPort());
+            WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::StartNewQueue -- skipping connection, masternode=%s\n",
+                             dmn->proTxHash.ToString());
             nTries++;
             continue;
         }
 
-        WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::StartNewQueue -- attempt %d connection to Masternode %s\n",
-                         nTries, dmn->pdmnState->addr.ToStringAddrPort());
+        WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::StartNewQueue -- attempting connection, masternode=%s, tries=%s\n",
+                         dmn->proTxHash.ToString(), nTries);
 
         // try to get a single random denom out of setAmounts
         while (nSessionDenom == 0) {
@@ -1225,8 +1219,8 @@ bool CCoinJoinClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, CCon
         SetState(POOL_STATE_QUEUE);
         nTimeLastSuccessfulStep = GetTime();
         WalletCJLogPrint( /* Continued */
-            m_wallet, "CCoinJoinClientSession::StartNewQueue -- pending connection, nSessionDenom: %d (%s), addr=%s\n",
-            nSessionDenom, CoinJoin::DenominationToString(nSessionDenom), dmn->pdmnState->addr.ToStringAddrPort());
+            m_wallet, "CCoinJoinClientSession::StartNewQueue -- pending connection, masternode=%s, nSessionDenom=%d (%s)\n",
+            dmn->proTxHash.ToString(), nSessionDenom, CoinJoin::DenominationToString(nSessionDenom));
         strAutoDenomResult = _("Trying to connect…");
         return true;
     }
