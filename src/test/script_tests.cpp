@@ -916,16 +916,39 @@ BOOST_AUTO_TEST_CASE(script_json_test)
     // amount (nValue) to use in the crediting tx
     UniValue tests = read_json(json_tests::script_tests);
 
+    const KeyData keys;
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         const UniValue& test = tests[idx];
         std::string strTest = test.write();
         CScriptWitness witness;
+        TaprootBuilder taprootBuilder;
         CAmount nValue = 0;
         unsigned int pos = 0;
         if (test.size() > 0 && test[pos].isArray()) {
             unsigned int i=0;
             for (i = 0; i < test[pos].size()-1; i++) {
-                witness.stack.push_back(ParseHex(test[pos][i].get_str()));
+                auto element = test[pos][i].get_str();
+                // We use #SCRIPT# to flag a non-hex script that we can read using ParseScript
+                // Taproot script must be third from the last element in witness stack
+                std::string scriptFlag = std::string("#SCRIPT#");
+                if (element.starts_with(scriptFlag)) {
+                    CScript script = ParseScript(element.substr(scriptFlag.size()));
+                    witness.stack.push_back(ToByteVector(script));
+                } else if (strcmp(element.c_str(), "#CONTROLBLOCK#") == 0) {
+                    // Taproot script control block - second from the last element in witness stack
+                    // If #CONTROLBLOCK# we auto-generate the control block
+                    taprootBuilder.Add(/*depth=*/0, witness.stack.back(), TAPROOT_LEAF_TAPSCRIPT, /*track=*/true);
+                    taprootBuilder.Finalize(XOnlyPubKey(keys.key0.GetPubKey()));
+                    auto controlblocks = taprootBuilder.GetSpendData().scripts[{witness.stack.back(), TAPROOT_LEAF_TAPSCRIPT}];
+                    witness.stack.push_back(*(controlblocks.begin()));
+                } else {
+                    const auto witness_value{TryParseHex<unsigned char>(element)};
+                    if (!witness_value.has_value()) {
+                        BOOST_ERROR("Bad witness in test: " << strTest << " witness is not hex: " << element);
+                        assert(witness_value.has_value());
+                    }
+                    witness.stack.push_back(witness_value.value());
+                }
             }
             nValue = AmountFromValue(test[pos][i]);
             pos++;
@@ -940,7 +963,14 @@ BOOST_AUTO_TEST_CASE(script_json_test)
         std::string scriptSigString = test[pos++].get_str();
         CScript scriptSig = ParseScript(scriptSigString);
         std::string scriptPubKeyString = test[pos++].get_str();
-        CScript scriptPubKey = ParseScript(scriptPubKeyString);
+        CScript scriptPubKey;
+        // If requested, auto-generate the taproot output
+        if (strcmp(scriptPubKeyString.c_str(), "0x51 0x20 #TAPROOTOUTPUT#")== 0) {
+            BOOST_CHECK_MESSAGE(taprootBuilder.IsComplete(), "Failed to autogenerate Tapscript output key");
+            scriptPubKey = CScript() << OP_1 << ToByteVector(taprootBuilder.GetOutput());
+        } else {
+            scriptPubKey = ParseScript(scriptPubKeyString);
+        }
         unsigned int scriptflags = ParseScriptFlags(test[pos++].get_str());
         int scriptError = ParseScriptError(test[pos++].get_str());
 
