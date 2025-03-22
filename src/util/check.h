@@ -7,6 +7,7 @@
 
 #include <attributes.h>
 
+#include <atomic>
 #include <cassert> // IWYU pragma: export
 #include <stdexcept>
 #include <string>
@@ -20,6 +21,26 @@ constexpr bool G_FUZZING{
     false
 #endif
 };
+constexpr bool G_ABORT_ON_FAILED_ASSUME{
+#ifdef ABORT_ON_FAILED_ASSUME
+    true
+#else
+    false
+#endif
+};
+
+extern std::atomic<bool> g_enable_dynamic_fuzz_determinism;
+
+inline bool EnableFuzzDeterminism()
+{
+    if constexpr (G_FUZZING) {
+        return true;
+    } else if constexpr (!G_ABORT_ON_FAILED_ASSUME) {
+        return false;
+    } else {
+        return g_enable_dynamic_fuzz_determinism;
+    }
+}
 
 std::string StrFormatInternalBug(std::string_view msg, std::string_view file, int line, std::string_view func);
 
@@ -50,11 +71,7 @@ void assertion_fail(std::string_view file, int line, std::string_view func, std:
 template <bool IS_ASSERT, typename T>
 constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] const char* file, [[maybe_unused]] int line, [[maybe_unused]] const char* func, [[maybe_unused]] const char* assertion)
 {
-    if (IS_ASSERT || std::is_constant_evaluated() || G_FUZZING
-#ifdef ABORT_ON_FAILED_ASSUME
-        || true
-#endif
-    ) {
+    if (IS_ASSERT || std::is_constant_evaluated() || G_FUZZING || G_ABORT_ON_FAILED_ASSUME) {
         if (!val) {
             assertion_fail(file, line, func, assertion);
         }
