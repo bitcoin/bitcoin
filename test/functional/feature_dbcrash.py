@@ -184,7 +184,9 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
             assert_equal(nodei_utxo_hash, node3_utxo_hash)
 
     def generate_small_transactions(self, node, count, utxo_list):
-        FEE = 1000  # TODO: replace this with node relay fee based calculation
+        relay_fee_btc = float(node.rpc.getmempoolinfo()["minrelaytxfee"])
+        relay_fee_sat = int(relay_fee_btc * COIN)
+        FEE = relay_fee_sat
         num_transactions = 0
         random.shuffle(utxo_list)
         while len(utxo_list) >= 2 and num_transactions < count:
