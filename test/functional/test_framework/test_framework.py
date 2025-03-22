@@ -293,13 +293,16 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             "bitcoin-util": ("bitcoinutil", "BITCOINUTIL"),
             "bitcoin-wallet": ("bitcoinwallet", "BITCOINWALLET"),
         }
-        for binary, [attribute_name, env_variable_name] in binaries.items():
-            default_filename = os.path.join(
+        def binary_path(binary):
+            return os.path.join(
                 self.config["environment"]["BUILDDIR"],
                 "bin",
                 binary + self.config["environment"]["EXEEXT"],
             )
-            setattr(paths, attribute_name, os.getenv(env_variable_name, default=default_filename))
+        for binary, [attribute_name, env_variable_name] in binaries.items():
+            setattr(paths, attribute_name, os.getenv(env_variable_name) or binary_path(binary))
+        paths.bitcoin_mine = binary_path("bitcoin-mine")
+        paths.bitcoin_node = binary_path("bitcoin-node")
         return paths
 
     def get_binaries(self, bin_dir=None):
@@ -1027,6 +1030,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if not self.is_cli_compiled():
             raise SkipTest("bitcoin-cli has not been compiled.")
 
+    def skip_if_no_multiprocess(self):
+        """Skip the running test if multiprocess binaries are not compiled."""
+        if not self.is_multiprocess_compiled():
+            raise SkipTest("multiprocess binaries have not been compiled.")
+
     def skip_if_no_previous_releases(self):
         """Skip the running test if previous releases are not available."""
         if not self.has_previous_releases():
@@ -1084,6 +1092,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_bdb_compiled(self):
         """Checks whether the wallet module was compiled with BDB support."""
         return self.config["components"].getboolean("USE_BDB")
+
+    def is_multiprocess_compiled(self):
+        """Checks whether multiprocess binaries are compiled."""
+        return self.config["components"].getboolean("WITH_MULTIPROCESS")
 
     def has_blockfile(self, node, filenum: str):
         return (node.blocks_path/ f"blk{filenum}.dat").is_file()
