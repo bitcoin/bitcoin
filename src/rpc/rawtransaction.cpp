@@ -493,7 +493,7 @@ static RPCHelpMan decodescript()
             RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::STR, "asm", "Disassembly of the script"},
-                {RPCResult::Type::STR, "desc", "Inferred descriptor for the script"},
+                {RPCResult::Type::STR, "desc", /*optional=*/true, "Inferred top level descriptor for the script (if any)"},
                 {RPCResult::Type::STR, "type", "The output type (e.g. " + GetAllOutputTypes() + ")"},
                 {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
                 {RPCResult::Type::STR, "p2sh", /*optional=*/true,
@@ -505,7 +505,7 @@ static RPCHelpMan decodescript()
                      {RPCResult::Type::STR_HEX, "hex", "The raw output script bytes, hex-encoded"},
                      {RPCResult::Type::STR, "type", "The type of the output script (e.g. witness_v0_keyhash or witness_v0_scripthash)"},
                      {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
-                     {RPCResult::Type::STR, "desc", "Inferred descriptor for the script"},
+                     {RPCResult::Type::STR, "desc", /*optional=*/true, "Inferred descriptor for the script (if any)"},
                      {RPCResult::Type::STR, "p2sh-segwit", "address of the P2SH script wrapping this witness redeem script"},
                  }},
             },
@@ -529,9 +529,14 @@ static RPCHelpMan decodescript()
     std::vector<std::vector<unsigned char>> solutions_data;
     const TxoutType which_type{Solver(script, solutions_data)};
 
+    bool can_wrap_p2sh = true;
     const bool can_wrap{[&] {
         switch (which_type) {
-        case TxoutType::MULTISIG:
+        case TxoutType::MULTISIG: {
+            // Verify it doesn't exceed p2sh consensus limits
+            can_wrap_p2sh = script.size() <= MAX_SCRIPT_ELEMENT_SIZE;
+            break;
+        }
         case TxoutType::NONSTANDARD:
         case TxoutType::PUBKEY:
         case TxoutType::PUBKEYHASH:
@@ -561,7 +566,7 @@ static RPCHelpMan decodescript()
     }()};
 
     if (can_wrap) {
-        r.pushKV("p2sh", EncodeDestination(ScriptHash(script)));
+        if (can_wrap_p2sh) r.pushKV("p2sh", EncodeDestination(ScriptHash(script)));
         // P2SH and witness programs cannot be wrapped in P2WSH, if this script
         // is a witness program, don't return addresses for a segwit programs.
         const bool can_wrap_P2WSH{[&] {
@@ -822,7 +827,7 @@ const RPCResult decodepsbt_inputs{
                 {RPCResult::Type::OBJ, "scriptPubKey", "",
                 {
                     {RPCResult::Type::STR, "asm", "Disassembly of the output script"},
-                    {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
+                    {RPCResult::Type::STR, "desc", /*optional=*/true, "Inferred top level descriptor for the script (if any)"},
                     {RPCResult::Type::STR_HEX, "hex", "The raw output script bytes, hex-encoded"},
                     {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
                     {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
