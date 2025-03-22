@@ -8,7 +8,6 @@
 #include <scheduler.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
-#include <kernel/chain.h>
 #include <validationinterface.h>
 
 #include <atomic>

@@ -5,7 +5,7 @@
 #include <addresstype.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
-#include <kernel/chain.h>
+#include <kernel/types.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
@@ -44,6 +44,8 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+
+using kernel::ChainstateRole;
 
 namespace wallet {
 namespace {
@@ -134,8 +136,8 @@ FUZZ_TARGET(wallet_notifications, .init = initialize_setup)
                 // time to the maximum value. This ensures that the wallet's birth time is always
                 // earlier than this maximum time.
                 info.chain_time_max = std::numeric_limits<unsigned int>::max();
-                a.wallet->blockConnected(ChainstateRole::NORMAL, info);
-                b.wallet->blockConnected(ChainstateRole::NORMAL, info);
+                a.wallet->blockConnected(ChainstateRole{}, info);
+                b.wallet->blockConnected(ChainstateRole{}, info);
                 // Store the coins for the next block
                 Coins coins_new;
                 for (const auto& tx : block.vtx) {
