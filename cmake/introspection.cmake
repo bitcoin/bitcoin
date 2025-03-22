@@ -12,6 +12,8 @@ check_include_file_cxx(sys/resources.h HAVE_SYS_RESOURCES_H)
 check_include_file_cxx(sys/vmmeter.h HAVE_SYS_VMMETER_H)
 check_include_file_cxx(vm/vm_param.h HAVE_VM_VM_PARAM_H)
 
+check_cxx_symbol_exists(_LIBCPP_VERSION "version" HAVE_LIBCPP)
+
 check_cxx_symbol_exists(O_CLOEXEC "fcntl.h" HAVE_O_CLOEXEC)
 check_cxx_symbol_exists(fdatasync "unistd.h" HAVE_FDATASYNC)
 check_cxx_symbol_exists(fork "unistd.h" HAVE_DECL_FORK)
