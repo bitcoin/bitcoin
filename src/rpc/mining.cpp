@@ -893,7 +893,7 @@ static RPCHelpMan getblocktemplate()
         }
         entry.pushKV("depends", std::move(deps));
 
-        int index_in_template = i - 1;
+        int index_in_template = i - 2;
         entry.pushKV("fee", tx_fees.at(index_in_template));
         int64_t nTxSigOps{tx_sigops.at(index_in_template)};
         if (fPreSegWit) {
