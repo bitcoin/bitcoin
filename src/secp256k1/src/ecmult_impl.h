@@ -358,16 +358,27 @@ static void secp256k1_ecmult(secp256k1_gej *r, const secp256k1_gej *a, const sec
     secp256k1_ecmult_strauss_wnaf(&state, r, 1, a, na, ng);
 }
 
-static size_t secp256k1_strauss_scratch_size(size_t n_points) {
-    static const size_t point_size = (sizeof(secp256k1_ge) + sizeof(secp256k1_fe)) * ECMULT_TABLE_SIZE(WINDOW_A) + sizeof(struct secp256k1_strauss_point_state) + sizeof(secp256k1_gej) + sizeof(secp256k1_scalar);
-    return n_points*point_size;
+/** Allocate strauss state on the scratch space */
+static int secp256k1_strauss_scratch_alloc_state(const secp256k1_callback* error_callback, secp256k1_scratch *scratch, struct secp256k1_strauss_state *state, size_t n_points) {
+    const size_t scratch_checkpoint = secp256k1_scratch_checkpoint(error_callback, scratch);
+
+    /* We allocate three objects on the scratch space. If these allocations
+     * change, make sure to check if this affects STRAUSS_SCRATCH_OBJECTS
+     * constant and strauss_scratch_size. */
+    state->aux = (secp256k1_fe*)secp256k1_scratch_alloc(error_callback, scratch, n_points * ECMULT_TABLE_SIZE(WINDOW_A) * sizeof(secp256k1_fe));
+    state->pre_a = (secp256k1_ge*)secp256k1_scratch_alloc(error_callback, scratch, n_points * ECMULT_TABLE_SIZE(WINDOW_A) * sizeof(secp256k1_ge));
+    state->ps = (struct secp256k1_strauss_point_state*)secp256k1_scratch_alloc(error_callback, scratch, n_points * sizeof(struct secp256k1_strauss_point_state));
+
+    if (state->aux == NULL || state->pre_a == NULL || state->ps == NULL) {
+        secp256k1_scratch_apply_checkpoint(error_callback, scratch, scratch_checkpoint);
+        return 0;
+    }
+    return 1;
 }
 
-static int secp256k1_ecmult_strauss_batch(const secp256k1_callback* error_callback, secp256k1_scratch *scratch, secp256k1_gej *r, const secp256k1_scalar *inp_g_sc, secp256k1_ecmult_multi_callback cb, void *cbdata, size_t n_points, size_t cb_offset) {
-    secp256k1_gej* points;
-    secp256k1_scalar* scalars;
+/** Run ecmult_strauss_wnaf on the given points and scalars */
+static int secp256k1_ecmult_strauss_batch_internal(const secp256k1_callback* error_callback, secp256k1_scratch *scratch, secp256k1_gej *r, secp256k1_scalar *scalars, secp256k1_gej *points, const secp256k1_scalar *inp_g_sc, size_t n_points) {
     struct secp256k1_strauss_state state;
-    size_t i;
     const size_t scratch_checkpoint = secp256k1_scratch_checkpoint(error_callback, scratch);
 
     secp256k1_gej_set_infinity(r);
@@ -375,16 +386,30 @@ static int secp256k1_ecmult_strauss_batch(const secp256k1_callback* error_callba
         return 1;
     }
 
-    /* We allocate STRAUSS_SCRATCH_OBJECTS objects on the scratch space. If these
-     * allocations change, make sure to update the STRAUSS_SCRATCH_OBJECTS
-     * constant and strauss_scratch_size accordingly. */
+    if(!secp256k1_strauss_scratch_alloc_state(error_callback, scratch, &state, n_points)) {
+        return 0;
+    }
+
+    secp256k1_ecmult_strauss_wnaf(&state, r, n_points, points, scalars, inp_g_sc);
+    secp256k1_scratch_apply_checkpoint(error_callback, scratch, scratch_checkpoint);
+    return 1;
+}
+
+/** Run ecmult_strauss_wnaf on the given points and scalars. Returns 0 if the
+ *  scratch space is empty. `n_points` number of scalars and points are
+ *  extracted from `cbdata` using `cb` and stored on the scratch space.
+ */
+static int secp256k1_ecmult_strauss_batch(const secp256k1_callback* error_callback, secp256k1_scratch *scratch, secp256k1_gej *r, const secp256k1_scalar *inp_g_sc, secp256k1_ecmult_multi_callback cb, void *cbdata, size_t n_points, size_t cb_offset) {
+    secp256k1_gej* points;
+    secp256k1_scalar* scalars;
+    size_t i;
+    const size_t scratch_checkpoint = secp256k1_scratch_checkpoint(error_callback, scratch);
+    /* We allocate STRAUSS_SCRATCH_OBJECTS objects on the scratch space in
+     * total. If these allocations change, make sure to update the
+     * STRAUSS_SCRATCH_OBJECTS constant and strauss_scratch_size accordingly. */
     points = (secp256k1_gej*)secp256k1_scratch_alloc(error_callback, scratch, n_points * sizeof(secp256k1_gej));
     scalars = (secp256k1_scalar*)secp256k1_scratch_alloc(error_callback, scratch, n_points * sizeof(secp256k1_scalar));
-    state.aux = (secp256k1_fe*)secp256k1_scratch_alloc(error_callback, scratch, n_points * ECMULT_TABLE_SIZE(WINDOW_A) * sizeof(secp256k1_fe));
-    state.pre_a = (secp256k1_ge*)secp256k1_scratch_alloc(error_callback, scratch, n_points * ECMULT_TABLE_SIZE(WINDOW_A) * sizeof(secp256k1_ge));
-    state.ps = (struct secp256k1_strauss_point_state*)secp256k1_scratch_alloc(error_callback, scratch, n_points * sizeof(struct secp256k1_strauss_point_state));
-
-    if (points == NULL || scalars == NULL || state.aux == NULL || state.pre_a == NULL || state.ps == NULL) {
+    if (points == NULL || scalars == NULL) {
         secp256k1_scratch_apply_checkpoint(error_callback, scratch, scratch_checkpoint);
         return 0;
     }
@@ -397,18 +422,28 @@ static int secp256k1_ecmult_strauss_batch(const secp256k1_callback* error_callba
         }
         secp256k1_gej_set_ge(&points[i], &point);
     }
-    secp256k1_ecmult_strauss_wnaf(&state, r, n_points, points, scalars, inp_g_sc);
+
+    secp256k1_ecmult_strauss_batch_internal(error_callback, scratch, r, scalars, points, inp_g_sc, n_points);
     secp256k1_scratch_apply_checkpoint(error_callback, scratch, scratch_checkpoint);
     return 1;
+}
+
+/** Return the scratch size that is allocated by a call to strauss_batch
+ * (ignoring padding required for alignment). */
+static size_t secp256k1_strauss_scratch_size(size_t n_points) {
+    static const size_t point_size = (sizeof(secp256k1_ge) + sizeof(secp256k1_fe)) * ECMULT_TABLE_SIZE(WINDOW_A) + sizeof(struct secp256k1_strauss_point_state) + sizeof(secp256k1_gej) + sizeof(secp256k1_scalar);
+    return n_points*point_size;
+}
+
+/** Return the maximum number of points that can be provided to strauss_batch
+ *  with a given scratch space. */
+static size_t secp256k1_strauss_max_points(const secp256k1_callback* error_callback, secp256k1_scratch *scratch) {
+    return secp256k1_scratch_max_allocation(error_callback, scratch, STRAUSS_SCRATCH_OBJECTS) / secp256k1_strauss_scratch_size(1);
 }
 
 /* Wrapper for secp256k1_ecmult_multi_func interface */
 static int secp256k1_ecmult_strauss_batch_single(const secp256k1_callback* error_callback, secp256k1_scratch *scratch, secp256k1_gej *r, const secp256k1_scalar *inp_g_sc, secp256k1_ecmult_multi_callback cb, void *cbdata, size_t n) {
     return secp256k1_ecmult_strauss_batch(error_callback, scratch, r, inp_g_sc, cb, cbdata, n, 0);
-}
-
-static size_t secp256k1_strauss_max_points(const secp256k1_callback* error_callback, secp256k1_scratch *scratch) {
-    return secp256k1_scratch_max_allocation(error_callback, scratch, STRAUSS_SCRATCH_OBJECTS) / secp256k1_strauss_scratch_size(1);
 }
 
 /** Convert a number to WNAF notation.

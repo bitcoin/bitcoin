@@ -24,7 +24,7 @@ static int64_t gettime_i64(void) {
     struct timespec tv;
     if (!timespec_get(&tv, TIME_UTC)) {
         fputs("timespec_get failed!", stderr);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     return (int64_t)tv.tv_nsec / 1000 + (int64_t)tv.tv_sec * 1000000LL;
 #else
@@ -120,7 +120,7 @@ static void run_benchmark(char *name, void (*benchmark)(void*, int), void (*setu
         sum += total;
     }
     /* ',' is used as a column delimiter */
-    printf("%-30s, ", name);
+    printf("%-35s, ", name);
     print_number(min * FP_MULT / iter);
     printf("   , ");
     print_number(((sum * FP_MULT) / count) / iter);
@@ -181,7 +181,7 @@ static void print_output_table_header_row(void) {
     char* min_str = "    Min(us)    "; /* center alignment */
     char* avg_str = "    Avg(us)    ";
     char* max_str = "    Max(us)    ";
-    printf("%-30s,%-15s,%-15s,%-15s\n", bench_str, min_str, avg_str, max_str);
+    printf("%-35s,%-15s,%-15s,%-15s\n", bench_str, min_str, avg_str, max_str);
     printf("\n");
 }
 
