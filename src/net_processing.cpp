@@ -2425,6 +2425,9 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
         }
         // else: If the first item on the queue is an unknown type, we erase it
         // and continue processing the queue on the next call.
+        // NOTE: previously we wouldn't do so and the peer sending us a malformed GETDATA could
+        // result in never making progress and this thread using 100% allocated CPU. See
+        // https://bitcoincore.org/en/2024/07/03/disclose-getdata-cpu.
     }
 
     peer.m_getdata_requests.erase(peer.m_getdata_requests.begin(), it);
@@ -3068,6 +3071,8 @@ void PeerManagerImpl::ProcessPackageResult(const node::PackageToValidate& packag
     }
 }
 
+// NOTE: the orphan processing used to be uninterruptible and quadratic, which could allow a peer to stall the node for
+// hours with specially crafted transactions. See https://bitcoincore.org/en/2024/07/03/disclose-orphan-dos.
 bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
 {
     AssertLockHeld(g_msgproc_mutex);
