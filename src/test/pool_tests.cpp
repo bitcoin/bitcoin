@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(memusage_test)
 {
     auto std_map = std::unordered_map<int64_t, int64_t>{};
 
-    using Map = std::unordered_map<int64_t,
+    using Map = boost::unordered_node_map<int64_t,
                                    int64_t,
                                    std::hash<int64_t>,
                                    std::equal_to<int64_t>,

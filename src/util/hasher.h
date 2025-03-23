@@ -35,6 +35,10 @@ private:
     const uint64_t k0, k1;
 
 public:
+    // instructs Boost.Unordered to not use post-mixing. We can do this because the hash is of high quality.
+    // This should have a slight performance benefit.
+    using is_avalanching = std::true_type;
+
     SaltedOutpointHasher(bool deterministic = false);
 
     /**
