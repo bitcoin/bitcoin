@@ -1,4 +1,4 @@
-Name "@CLIENT_NAME@ (64-bit)"
+Name "@CLIENT_NAME@"
 
 RequestExecutionLevel highest
 SetCompressor /SOLID lzma
