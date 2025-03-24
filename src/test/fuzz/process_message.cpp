@@ -66,7 +66,9 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
     if (!LIMIT_TO_MESSAGE_TYPE.empty() && random_message_type != LIMIT_TO_MESSAGE_TYPE) {
         return;
     }
-    CNode& p2p_node = *ConsumeNodeAsUniquePtr(fuzzed_data_provider).release();
+    CNode& p2p_node = *ConsumeNodeAsUniquePtr(fuzzed_data_provider, std::nullopt, [](CNode& node) {
+                           g_setup->m_node.peerman->FinalizeNode(node);
+                       }).release();
 
     connman.AddTestNode(p2p_node);
     FillNode(fuzzed_data_provider, connman, p2p_node);
