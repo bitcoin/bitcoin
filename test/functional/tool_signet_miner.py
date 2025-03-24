@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test signet miner tool"""
 
+import json
 import os.path
 import shlex
 import subprocess
@@ -83,6 +84,38 @@ class SignetMinerTest(BitcoinTestFramework):
             ], check=True, stderr=subprocess.STDOUT)
         assert_equal(node.getblockcount(), n_blocks + 1)
 
+    # generate block using the signet miner tool genpsbt and solvepsbt commands
+    def mine_block_manual(self, node, *, sign):
+        n_blocks = node.getblockcount()
+        base_dir = self.config["environment"]["SRCDIR"]
+        signet_miner_path = os.path.join(base_dir, "contrib", "signet", "miner")
+        rpc_argv = node.binaries.rpc_argv() + [f"-datadir={node.cli.datadir}"]
+        util_argv = node.binaries.util_argv() + ["grind"]
+        base_cmd = [
+            sys.executable,
+            signet_miner_path,
+            f'--cli={shlex.join(rpc_argv)}',
+        ]
+
+        template = node.getblocktemplate(dict(rules=["signet","segwit"]))
+        genpsbt = subprocess.run(base_cmd + [
+                'genpsbt',
+                f'--address={node.getnewaddress()}',
+                '--poolnum=98',
+            ], check=True, input=json.dumps(template).encode('utf8'), capture_output=True)
+        psbt = genpsbt.stdout.decode('utf8').strip()
+        if sign:
+            self.log.debug("Sign the PSBT")
+            res = node.walletprocesspsbt(psbt=psbt, sign=True, sighashtype='ALL')
+            assert res['complete']
+            psbt = res['psbt']
+        solvepsbt = subprocess.run(base_cmd + [
+                'solvepsbt',
+                f'--grind-cmd={shlex.join(util_argv)}',
+            ], check=True, input=psbt.encode('utf8'), capture_output=True)
+        node.submitblock(solvepsbt.stdout.decode('utf8').strip())
+        assert_equal(node.getblockcount(), n_blocks + 1)
+
     def run_test(self):
         self.log.info("Signet node with single signature challenge")
         node = self.nodes[0]
@@ -90,6 +123,10 @@ class SignetMinerTest(BitcoinTestFramework):
         wallet_importprivkey(node, bytes_to_wif(CHALLENGE_PRIVATE_KEY), 0)
         self.mine_block(node)
         # MUST include signet commitment
+        assert get_signet_commitment(get_segwit_commitment(node))
+
+        self.log.info("Mine manually using genpsbt and solvepsbt")
+        self.mine_block_manual(node, sign=True)
         assert get_signet_commitment(get_segwit_commitment(node))
 
         node = self.nodes[1]
@@ -109,6 +146,9 @@ class SignetMinerTest(BitcoinTestFramework):
         self.mine_block(node)
         assert get_signet_commitment(get_segwit_commitment(node)) is None
 
+        self.log.info("Manual mining with a trivial challenge doesn't require a PSBT")
+        self.mine_block_manual(node, sign=False)
+        assert get_signet_commitment(get_segwit_commitment(node)) is None
 
 
 if __name__ == "__main__":
