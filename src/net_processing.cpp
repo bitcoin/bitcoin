@@ -638,16 +638,14 @@ private:
     bool ProcessOrphanTx(Peer& peer)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, !m_tx_download_mutex);
 
-    /** Whether we should fanout to a given peer or not. Always returns true for non-Erlay peers
-     * For Erlay-peers, if they are inbound, returns true as long as the peer has been selected for fanout.
-     * If they are outbound, returns true as long as the transaction was received via fanout (further filtering will be performed
-     * before sending out the next INV message to each peer).
+    /** Whether we should fanout to a given peer or not. Always returns true for non-Erlay peers and for Erlay
+     * outbound peers (further filtering will be performed for the latter before sending out the next INV message to each peer).
+     * For inbound Erlay-peers, returns true as long as the peer has been selected for fanout.
      * Returns false otherwise.
      *
-     * @param[in]   peer                The peer we are making the decision on
-     * @param[in]   consider_fanout     Whether to consider fanout or not (only applies if the peer is outbound)
+     * @param[in]   peer    The peer we are making the decision on
     */
-   bool ShouldFanoutTo(const PeerRef peer, bool consider_fanout) EXCLUSIVE_LOCKS_REQUIRED(m_peer_mutex);
+   bool ShouldFanoutTo(const PeerRef peer) EXCLUSIVE_LOCKS_REQUIRED(m_peer_mutex);
 
     /** Process a single headers message from a peer.
      *
@@ -2182,15 +2180,14 @@ std::pair<size_t, size_t> PeerManagerImpl::GetFanoutPeersCount()
     return std::pair(inbounds_fanout_tx_relay, outbounds_fanout_tx_relay);
 }
 
-bool PeerManagerImpl::ShouldFanoutTo(const PeerRef peer, bool consider_fanout)
+bool PeerManagerImpl::ShouldFanoutTo(const PeerRef peer)
 {
     // We consider Erlay peers for fanout if they are within our inbound fanout targets, or if they are outbounds
-    // and the transaction was NOT received via set reconciliation. For the latter group, further filtering
-    // will be applied at relay time.
-    if (m_txreconciliation && m_txreconciliation->IsPeerRegistered(peer->m_id)) {
-        return peer->m_is_inbound ? m_txreconciliation->IsInboundFanoutTarget(peer->m_id) : consider_fanout;
+    // For the latter group, further filtering will be applied at relay time.
+    // For non-Erlay peers we always fanout (same applies if we do not support Erlay)
+    if (peer->m_is_inbound && m_txreconciliation && m_txreconciliation->IsPeerRegistered(peer->m_id)) {
+        return m_txreconciliation->IsInboundFanoutTarget(peer->m_id);
     } else {
-        // For non-Erlay peers we always fanout (same applies if we do not support Erlay)
         return true;
     }
 }
@@ -2211,29 +2208,24 @@ void PeerManagerImpl::RelayTransaction(const Txid& txid, const Wtxid& wtxid)
         if (tx_relay->m_next_inv_send_time == 0s) continue;
 
         const auto gtxid{peer->m_wtxid_relay ? GenTxid{wtxid} : GenTxid{txid}};
-        if (!tx_relay->m_tx_inventory_known_filter.contains(gtxid.ToUint256())) {
-            // FIXME: reconciled is hardcoded here, we need to get it either from the mempool here or pass it along
-            //        but it is needed for the decissionmaking.
-            //        It can also be defered to later, but I don't think there's any point. If the transaction was reconciled
-            //        and the peer is outbound, don't need to add it to m_tx_inventory_to_send at all
-            bool fanout = ShouldFanoutTo(peer, true);
-            // FIXME: This bit here and the corresponding one in SendMessage are basically identical.
-            //        Check if there is a way to make them into a private function We would have to pass a
-            //        lambda that does the "insert into a collection part", which is what's different from both
-            if (!fanout) {
-                Assume(m_txreconciliation);
-                const auto result = m_txreconciliation->AddToSet(peer_id, wtxid);
-                if  (!result.m_succeeded) {
-                    fanout = true;
-                    if (const auto collision = result.m_collision; collision.has_value()) {
-                        Assume(m_txreconciliation->TryRemovingFromSet(peer_id, collision.value()));
-                        tx_relay->m_tx_inventory_to_send.insert(GenTxid{collision.value()});
-                    }
+        if (tx_relay->m_tx_inventory_known_filter.contains(gtxid.ToUint256())) continue;
+        // FIXME: This bit here and the corresponding one in SendMessage are basically identical.
+        //        Check if there is a way to make them into a private function We would have to pass a
+        //        lambda that does the "insert into a collection part", which is what's different from both
+        bool fanout = ShouldFanoutTo(peer);
+        if (!fanout) {
+            Assume(m_txreconciliation);
+            const auto result = m_txreconciliation->AddToSet(peer_id, wtxid);
+            if  (!result.m_succeeded) {
+                fanout = true;
+                if (const auto collision = result.m_collision; collision.has_value()) {
+                    Assume(m_txreconciliation->TryRemovingFromSet(peer_id, collision.value()));
+                    tx_relay->m_tx_inventory_to_send.insert(GenTxid{collision.value()});
                 }
             }
-            if (fanout) {
-                tx_relay->m_tx_inventory_to_send.insert(gtxid);
-            }
+        }
+        if (fanout) {
+            tx_relay->m_tx_inventory_to_send.insert(gtxid);
         }
     }
 }
@@ -5903,8 +5895,8 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 }
             } // Unlock the m_tx_inventory_mutex so we can count over m_peer_map
 
-            // Only care about fanout count if we support Erlay and the target peer is outbound
-            if (m_txreconciliation && !pto->IsInboundConn()) {
+            // Only care about fanout count for outbound Erlay nodes
+            if (!pto->IsInboundConn() && m_txreconciliation && m_txreconciliation->IsPeerRegistered(pto->GetId())) {
                 LOCK(m_peer_mutex);
                 for (auto& [hash, out_fanout_count] : to_be_announced) {
                     if(!hash.IsWtxid()) continue; // We do no reconcile by txid
@@ -5931,7 +5923,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 // in RelayTransaction, so everything that was added to m_tx_inventory_to_send is to be fanout
                 if (!pto->IsInboundConn() && m_txreconciliation && m_txreconciliation->IsPeerRegistered(pto->GetId())) {
                     // For Erlay-enabled outbound peers we fanout based on how we have heard about this transaction
-                    // and how many announcements of this transactions have we sent and receivedx
+                    // and how many announcements of this transactions have we sent and received.
                     // TODO: If we are the transaction source, we should reduce the threshold by 1, since this the only case
                     // where we are not accounting for at least one reception
                     should_fanout = out_fanout_count <= OUTBOUND_FANOUT_THRESHOLD;
