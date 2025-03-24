@@ -87,8 +87,7 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
         mempool_opts.max_datacarrier_bytes = std::nullopt;
     }
 
-    mempool_opts.require_standard = !argsman.GetBoolArg("-acceptnonstdtxn", DEFAULT_ACCEPT_NON_STD_TXN);
-    if (!chainparams.IsTestChain() && !mempool_opts.require_standard) {
+    mempool_opts.require_standard = !argsman.GetBoolArg("-acceptnonstdtxn", chainparams.GetChainType() == ChainType::TESTNET4 ? true : DEFAULT_ACCEPT_NON_STD_TXN); if (!chainparams.IsTestChain() && !mempool_opts.require_standard) {
         return util::Error{Untranslated(strprintf("acceptnonstdtxn is not currently supported for %s chain", chainparams.GetChainTypeString()))};
     }
 
