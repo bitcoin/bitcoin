@@ -507,7 +507,7 @@ public:
     PeerManagerInfo GetInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     std::pair<size_t, size_t> GetFanoutPeersCount() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void RelayTransaction(const uint256& txid, const uint256& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayTransaction(const uint256& txid, const uint256& wtxid, bool consider_fanout) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SetBestBlock(int height, std::chrono::seconds time) override
     {
         m_best_height = height;
@@ -585,13 +585,13 @@ private:
 
     /** Handle a transaction whose result was MempoolAcceptResult::ResultType::VALID.
      * Updates m_txrequest, m_orphanage, and vExtraTxnForCompact. Also queues the tx for relay. */
-    void ProcessValidTx(NodeId nodeid, const CTransactionRef& tx, const std::list<CTransactionRef>& replaced_transactions)
+    void ProcessValidTx(NodeId nodeid, const CTransactionRef& tx, const std::list<CTransactionRef>& replaced_transactions, bool consider_fanout)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, m_tx_download_mutex);
 
     /** Handle the results of package validation: calls ProcessValidTx and ProcessInvalidTx for
      * individual transactions, and caches rejection for the package as a group.
      */
-    void ProcessPackageResult(const node::PackageToValidate& package_to_validate, const PackageMempoolAcceptResult& package_result)
+    void ProcessPackageResult(const node::PackageToValidate& package_to_validate, const PackageMempoolAcceptResult& package_result, bool consider_fanout)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, m_tx_download_mutex);
 
     /**
@@ -1563,7 +1563,8 @@ void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
         CTransactionRef tx = m_mempool.get(txid);
 
         if (tx != nullptr) {
-            RelayTransaction(txid, tx->GetWitnessHash());
+            // Always consider fanout when relaying our own transactions
+            RelayTransaction(txid, tx->GetWitnessHash(), /*consider_fanout=*/true);
         } else {
             m_mempool.RemoveUnbroadcastTx(txid, true);
         }
@@ -2163,7 +2164,7 @@ bool PeerManagerImpl::ShouldFanoutTo(const PeerRef peer, bool consider_fanout)
     }
 }
 
-void PeerManagerImpl::RelayTransaction(const uint256& txid, const uint256& wtxid)
+void PeerManagerImpl::RelayTransaction(const uint256& txid, const uint256& wtxid, bool consider_fanout)
 {
     LOCK(m_peer_mutex);
     for(auto& [peer_id, peer] : m_peer_map) {
@@ -2180,11 +2181,7 @@ void PeerManagerImpl::RelayTransaction(const uint256& txid, const uint256& wtxid
 
         const uint256& hash{peer->m_wtxid_relay ? wtxid : txid};
         if (!tx_relay->m_tx_inventory_known_filter.contains(hash)) {
-            // FIXME: reconciled is hardcoded here, we need to get it either from the mempool here or pass it along
-            //        but it is needed for the decissionmaking.
-            //        It can also be defered to later, but I don't think there's any point. If the transaction was reconciled
-            //        and the peer is outbound, don't need to add it to m_tx_inventory_to_send at all
-            bool fanout = ShouldFanoutTo(peer, true);
+            bool fanout = ShouldFanoutTo(peer, consider_fanout);
             // FIXME: This bit here and the corresponding one in SendMessage are basically identical.
             //        Check if there is a way to make them into a private function We would have to pass a
             //        lambda that does the "insert into a collection part", which is what's different from both
@@ -3056,7 +3053,7 @@ std::optional<node::PackageToValidate> PeerManagerImpl::ProcessInvalidTx(NodeId 
     return package_to_validate;
 }
 
-void PeerManagerImpl::ProcessValidTx(NodeId nodeid, const CTransactionRef& tx, const std::list<CTransactionRef>& replaced_transactions)
+void PeerManagerImpl::ProcessValidTx(NodeId nodeid, const CTransactionRef& tx, const std::list<CTransactionRef>& replaced_transactions, bool consider_fanout)
 {
     AssertLockNotHeld(m_peer_mutex);
     AssertLockHeld(g_msgproc_mutex);
@@ -3070,14 +3067,14 @@ void PeerManagerImpl::ProcessValidTx(NodeId nodeid, const CTransactionRef& tx, c
              tx->GetWitnessHash().ToString(),
              m_mempool.size(), m_mempool.DynamicMemoryUsage() / 1000);
 
-    RelayTransaction(tx->GetHash(), tx->GetWitnessHash());
+    RelayTransaction(tx->GetHash(), tx->GetWitnessHash(), consider_fanout);
 
     for (const CTransactionRef& removedTx : replaced_transactions) {
         AddToCompactExtraTransactions(removedTx);
     }
 }
 
-void PeerManagerImpl::ProcessPackageResult(const node::PackageToValidate& package_to_validate, const PackageMempoolAcceptResult& package_result)
+void PeerManagerImpl::ProcessPackageResult(const node::PackageToValidate& package_to_validate, const PackageMempoolAcceptResult& package_result, bool consider_fanout)
 {
     AssertLockNotHeld(m_peer_mutex);
     AssertLockHeld(g_msgproc_mutex);
@@ -3107,7 +3104,7 @@ void PeerManagerImpl::ProcessPackageResult(const node::PackageToValidate& packag
             switch (tx_result.m_result_type) {
                 case MempoolAcceptResult::ResultType::VALID:
                 {
-                    ProcessValidTx(nodeid, tx, tx_result.m_replaced_transactions);
+                    ProcessValidTx(nodeid, tx, tx_result.m_replaced_transactions, consider_fanout);
                     break;
                 }
                 case MempoolAcceptResult::ResultType::INVALID:
@@ -3148,7 +3145,15 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
 
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
             LogDebug(BCLog::TXPACKAGES, "   accepted orphan tx %s (wtxid=%s)\n", orphanHash.ToString(), orphan_wtxid.ToString());
-            ProcessValidTx(peer.m_id, porphanTx, result.m_replaced_transactions);
+            // When processing orphans after getting a missing parent, we always consider faning the out.
+            // TODO: This is a weird case. ProcessOrphanTx is triggered by the reception of a missing parent, but we do not keep track of
+            // when the orphan was received, so it could be the case that we end up here when the orphan is still in its early propagation
+            // state, or far after. If we are late, relaying the transaction may not be worth it, our peers may already know (reconciling
+            // would even be worse than fanout, since it would simply add more roundtrips to the same outcome: annoincing a transaction that is
+            // already known).
+            // This should only happen if we connect to the network and receive a depending transaction late on its propagation.
+            // However, it may be worth considering how to deal with this case in a followup to reduce unnecesary traffic.
+            ProcessValidTx(peer.m_id, porphanTx, result.m_replaced_transactions, /*consider_fanout=*/true);
             return true;
         } else if (state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) {
             LogDebug(BCLog::TXPACKAGES, "   invalid orphan tx %s (wtxid=%s) from peer=%d. %s\n",
@@ -4292,6 +4297,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         LOCK2(cs_main, m_tx_download_mutex);
 
+        // TODO: Until the Erlay p2p flow is defined, all transactions are flagged for fanout
+        bool consider_fanout = true;
+
         const auto& [should_validate, package_to_validate] = m_txdownloadman.ReceivedTx(pfrom.GetId(), ptx);
         if (!should_validate) {
             if (pfrom.HasPermission(NetPermissionFlags::ForceRelay)) {
@@ -4304,7 +4312,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 } else {
                     LogPrintf("Force relaying tx %s (wtxid=%s) from peer=%d\n",
                               tx.GetHash().ToString(), tx.GetWitnessHash().ToString(), pfrom.GetId());
-                    RelayTransaction(tx.GetHash(), tx.GetWitnessHash());
+                    RelayTransaction(tx.GetHash(), tx.GetWitnessHash(), consider_fanout);
                 }
             }
 
@@ -4312,7 +4320,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 const auto package_result{ProcessNewPackage(m_chainman.ActiveChainstate(), m_mempool, package_to_validate->m_txns, /*test_accept=*/false, /*client_maxfeerate=*/std::nullopt)};
                 LogDebug(BCLog::TXPACKAGES, "package evaluation for %s: %s\n", package_to_validate->ToString(),
                          package_result.m_state.IsValid() ? "package accepted" : "package rejected");
-                ProcessPackageResult(package_to_validate.value(), package_result);
+                ProcessPackageResult(package_to_validate.value(), package_result, consider_fanout);
             }
             return;
         }
@@ -4324,7 +4332,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         const TxValidationState& state = result.m_state;
 
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
-            ProcessValidTx(pfrom.GetId(), ptx, result.m_replaced_transactions);
+            ProcessValidTx(pfrom.GetId(), ptx, result.m_replaced_transactions, consider_fanout);
             pfrom.m_last_tx_time = GetTime<std::chrono::seconds>();
         }
         if (state.IsInvalid()) {
@@ -4332,7 +4340,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 const auto package_result{ProcessNewPackage(m_chainman.ActiveChainstate(), m_mempool, package_to_validate->m_txns, /*test_accept=*/false, /*client_maxfeerate=*/std::nullopt)};
                 LogDebug(BCLog::TXPACKAGES, "package evaluation for %s: %s\n", package_to_validate->ToString(),
                          package_result.m_state.IsValid() ? "package accepted" : "package rejected");
-                ProcessPackageResult(package_to_validate.value(), package_result);
+                ProcessPackageResult(package_to_validate.value(), package_result, consider_fanout);
             }
         }
 
