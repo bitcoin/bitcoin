@@ -106,7 +106,7 @@ public:
     virtual PeerManagerInfo GetInfo() const = 0;
 
     /** Relay transaction to all peers. */
-    virtual void RelayTransaction(const uint256& txid, const uint256& wtxid) = 0;
+    virtual void RelayTransaction(const uint256& txid, const uint256& wtxid, bool consider_fanout) = 0;
 
     /** Get the amount of inbounds (first) and outbounds fanout peers (second). */
     virtual std::pair<size_t, size_t> GetFanoutPeersCount() = 0;
