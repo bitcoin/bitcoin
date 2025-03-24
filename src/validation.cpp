@@ -3851,7 +3851,7 @@ void Chainstate::ResetBlockFailureFlags(CBlockIndex *pindex) {
 
     // Remove the invalidity flag from this block and all its descendants and ancestors.
     for (auto& [_, block_index] : m_blockman.m_block_index) {
-        if (!block_index.IsValid() && (block_index.GetAncestor(nHeight) == pindex || pindex->GetAncestor(block_index.nHeight) == &block_index)) {
+        if ((block_index.nStatus & BLOCK_FAILED_MASK) && (block_index.GetAncestor(nHeight) == pindex || pindex->GetAncestor(block_index.nHeight) == &block_index)) {
             block_index.nStatus &= ~BLOCK_FAILED_MASK;
             m_blockman.m_dirty_blockindex.insert(&block_index);
             if (block_index.IsValid(BLOCK_VALID_TRANSACTIONS) && block_index.HaveNumChainTxs() && setBlockIndexCandidates.value_comp()(m_chain.Tip(), &block_index)) {
