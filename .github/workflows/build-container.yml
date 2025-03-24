@@ -2,10 +2,23 @@ name: Build container
 
 on:
   workflow_call:
+    inputs:
+      context:
+        description: "Path to use for build context"
+        required: true
+        type: string
+      file:
+        description: "Path to Dockerfile"
+        required: true
+        type: string
+      name:
+        description: "Container name"
+        required: true
+        type: string
     outputs:
       path:
         description: "Path to built container"
-        value: ghcr.io/${{ jobs.build.outputs.repo }}/dashcore-ci-runner:${{ jobs.build.outputs.tag }}
+        value: ghcr.io/${{ jobs.build.outputs.repo }}/${{ inputs.name }}:${{ jobs.build.outputs.tag }}
 
 env:
   DOCKER_DRIVER: overlay2
@@ -44,15 +57,15 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: ./contrib/containers/ci
-          file: ./contrib/containers/ci/Dockerfile
+          context: ${{ inputs.context }}
+          file: ${{ inputs.file }}
           push: true
           tags: |
-            ghcr.io/${{ steps.prepare.outputs.repo }}/dashcore-ci-runner:${{ hashFiles('./contrib/containers/ci/Dockerfile') }}
-            ghcr.io/${{ steps.prepare.outputs.repo }}/dashcore-ci-runner:${{ steps.prepare.outputs.tag }}
-            ghcr.io/${{ steps.prepare.outputs.repo }}/dashcore-ci-runner:latest
+            ghcr.io/${{ steps.prepare.outputs.repo }}/${{ inputs.name }}:${{ hashFiles(inputs.file) }}
+            ghcr.io/${{ steps.prepare.outputs.repo }}/${{ inputs.name }}:${{ steps.prepare.outputs.tag }}
+            ghcr.io/${{ steps.prepare.outputs.repo }}/${{ inputs.name }}:latest
           cache-from: |
-            type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo }}/dashcore-ci-runner:${{ hashFiles('./contrib/containers/ci/Dockerfile') }}
-            type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo }}/dashcore-ci-runner:${{ steps.prepare.outputs.tag }}
-            type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo }}/dashcore-ci-runner:latest
+            type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo }}/${{ inputs.name }}:${{ hashFiles(inputs.file) }}
+            type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo }}/${{ inputs.name }}:${{ steps.prepare.outputs.tag }}
+            type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo }}/${{ inputs.name }}:latest
           cache-to: type=inline

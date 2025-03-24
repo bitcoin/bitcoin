@@ -1,19 +1,28 @@
-# syntax = edrevo/dockerfile-plus
+# syntax = devthefuture/dockerfile-x
 
-FROM ubuntu:noble
-
-INCLUDE+ ci/Dockerfile
+FROM ./ci/ci.Dockerfile
 
 # The inherited Dockerfile switches to non-privileged context and we've
 # just started configuring this image, give us root access
 USER root
 
-# Make development environment more standalone
-RUN apt-get update && \
-    apt-get install $APT_ARGS \
+# Make development environment more standalone, allow running Dash Qt
+RUN set -ex; \
+    apt-get update && apt-get install ${APT_ARGS} \
     apt-cacher-ng \
     gdb \
     gpg \
+    libxcb-icccm4 \
+    libxcb-image0 \
+    libxcb-keysyms1 \
+    libxcb-randr0 \
+    libxcb-render-util0 \
+    libxcb-shape0 \
+    libxcb-sync1 \
+    libxcb-xfixes0 \
+    libxcb-xinerama0 \
+    libxcb-xkb1 \
+    libxkbcommon-x11-0 \
     lsb-release \
     nano \
     openssh-client \
@@ -32,7 +41,10 @@ RUN apt-get update && \
 #
 RUN groupadd docker && \
     usermod -aG sudo dash && \
-    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers; \
+    mkdir -p /home/dash/.config/gdb; \
+    echo "add-auto-load-safe-path /usr/lib/llvm-${LLVM_VERSION}/lib" | tee /home/dash/.config/gdb/gdbinit; \
+    chown ${USER_ID}:${GROUP_ID} -R /home/dash
 
 # Disable noninteractive mode
 ENV DEBIAN_FRONTEND="dialog"
