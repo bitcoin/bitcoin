@@ -26,7 +26,7 @@ def rpccall(node, user, method):
 
 
 def get_permissions(whitelist):
-    return [perm for perm in whitelist.replace(" ", "").split(",") if perm]
+    return [perm for perm in whitelist.split(",") if perm]
 
 
 class RPCWhitelistTest(BitcoinTestFramework):
@@ -56,7 +56,7 @@ class RPCWhitelistTest(BitcoinTestFramework):
             # Testing the same permission twice
             ["strangedude5", "d12c6e962d47a454f962eb41225e6ec8$2dd39635b155536d3c1a2e95d05feff87d5ba55f2d5ff975e6e997a836b717c9", ":getblockcount,getblockcount", "s7R4nG3R7H1nGZ"],
             # Test non-whitelisted user
-            ["strangedude6", "ab02e4fb22ef4ab004cca217a49ee8d2$90dd09b08edd12d552d9d8a5ada838dcef2ac587789fa7e9c47f5990e80cdf93", None, "password123"]
+            ["strangedude6", "67e5583538958883291f6917883eca64$8a866953ef9c5b7d078a62c64754a4eb74f47c2c17821eb4237021d7ef44f991", None, "N4SziYbHmhC1"]
         ]
         # These commands shouldn't be allowed for any user to test failures
         self.never_allowed = ["getnetworkinfo"]
@@ -74,7 +74,7 @@ class RPCWhitelistTest(BitcoinTestFramework):
 
         for user in self.users:
             for permission in self.never_allowed:
-                self.log.info("[" + user[0] + "]: Testing a non permitted permission (" + permission + ")")
+                self.log.info(f"[{user[0]}]: Testing a non permitted permission ({permission})")
                 assert_equal(403, rpccall(self.nodes[0], user, permission).status)
         # Now test the strange users
         for permission in self.never_allowed:
@@ -113,9 +113,9 @@ class RPCWhitelistTest(BitcoinTestFramework):
         for user in self.users:
             permissions = get_permissions(user[2])
             for permission in permissions:
-                self.log.info("[" + user[0] + "]: Testing whitelisted user permission (" + permission + ")")
+                self.log.info(f"[{user[0]}]: Testing whitelisted user permission ({permission})")
                 assert_equal(200, rpccall(self.nodes[0], user, permission).status)
-            self.log.info("[" + user[0] + "]: Testing non-permitted permission: getblockchaininfo")
+            self.log.info(f"[{user[0]}]: Testing non-permitted permission: getblockchaininfo")
             assert_equal(403, rpccall(self.nodes[0], user, "getblockchaininfo").status)
 
     def test_rpcwhitelistdefault_0_no_permissions(self):
@@ -126,7 +126,7 @@ class RPCWhitelistTest(BitcoinTestFramework):
         """
         unrestricted_user = self.strange_users[6]
         for permission in ["getbestblockhash", "getblockchaininfo"]:
-            self.log.info("[" + unrestricted_user[0] + "]: Testing unrestricted user permission (" + permission + ")")
+            self.log.info(f"[{unrestricted_user[0]}]: Testing unrestricted user permission ({permission})")
             assert_equal(200, rpccall(self.nodes[0], unrestricted_user, permission).status)
 
     def test_rpcwhitelistdefault_1_no_permissions(self):
@@ -137,7 +137,7 @@ class RPCWhitelistTest(BitcoinTestFramework):
         """
 
         for permission in ["getbestblockhash", "getblockchaininfo"]:
-            self.log.info("[" + self.strange_users[6][0] + "]: Testing rpcwhitelistdefault=1 no specified permission (" + permission + ")")
+            self.log.info(f"[{self.strange_users[6][0]}]: Testing rpcwhitelistdefault=1 no specified permission ({permission})")
             assert_equal(403, rpccall(self.nodes[0], self.strange_users[6], permission).status)
 
 
