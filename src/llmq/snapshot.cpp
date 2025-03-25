@@ -87,7 +87,7 @@ UniValue CQuorumRotationInfo::ToJson() const
 bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
                              const ChainstateManager& chainman, const CQuorumManager& qman,
                              const CQuorumBlockProcessor& qblockman, const CGetQuorumRotationInfo& request,
-                             CQuorumRotationInfo& response, std::string& errorRet)
+                             bool use_legacy_construction, CQuorumRotationInfo& response, std::string& errorRet)
 {
     AssertLockHeld(cs_main);
 
@@ -112,12 +112,23 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
             }
             baseBlockIndexes.push_back(blockIndex);
         }
+        if (use_legacy_construction) {
+            std::sort(baseBlockIndexes.begin(), baseBlockIndexes.end(), [](const CBlockIndex* a, const CBlockIndex* b) {
+                return a->nHeight < b->nHeight;
+            });
+        }
     }
 
     const CBlockIndex* tipBlockIndex = chainman.ActiveChain().Tip();
     if (!tipBlockIndex) {
         errorRet = strprintf("tip block not found");
         return false;
+    }
+    if (use_legacy_construction) {
+        //Build MN list Diff always with highest baseblock
+        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, baseBlockIndexes.back()->GetBlockHash(), tipBlockIndex->GetBlockHash(), response.mnListDiffTip, errorRet)) {
+            return false;
+        }
     }
 
     const CBlockIndex* blockIndex = chainman.m_blockman.LookupBlockIndex(request.blockRequestHash);
@@ -146,6 +157,13 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
     if (!pWorkBlockHIndex) {
         errorRet = strprintf("Can not find work block H");
         return false;
+    }
+
+    if (use_legacy_construction) {
+        //Build MN list Diff always with highest baseblock
+        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHIndex, use_legacy_construction), pWorkBlockHIndex->GetBlockHash(), response.mnListDiffH, errorRet)) {
+            return false;
+        }
     }
 
     const CBlockIndex* pBlockHMinusCIndex = tipBlockIndex->GetAncestor(hBlockIndex->nHeight - cycleLength);
@@ -190,6 +208,12 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
     const CBlockIndex* pWorkBlockHMinus4CIndex = pBlockHMinus4CIndex->GetAncestor(pBlockHMinus4CIndex->nHeight - workDiff);
     //Checked later if extraShare is on
 
+    if (use_legacy_construction) {
+        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHMinusCIndex, use_legacy_construction), pWorkBlockHMinusCIndex->GetBlockHash(), response.mnListDiffAtHMinusC, errorRet)) {
+            return false;
+        }
+    }
+
     auto snapshotHMinusC = qsnapman.GetSnapshotForBlock(llmqType, pBlockHMinusCIndex);
     if (!snapshotHMinusC.has_value()) {
         errorRet = strprintf("Can not find quorum snapshot at H-C");
@@ -198,12 +222,24 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
         response.quorumSnapshotAtHMinusC = std::move(snapshotHMinusC.value());
     }
 
+    if (use_legacy_construction) {
+        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHMinus2CIndex, use_legacy_construction), pWorkBlockHMinus2CIndex->GetBlockHash(), response.mnListDiffAtHMinus2C, errorRet)) {
+            return false;
+        }
+    }
+
     auto snapshotHMinus2C = qsnapman.GetSnapshotForBlock(llmqType, pBlockHMinus2CIndex);
     if (!snapshotHMinus2C.has_value()) {
         errorRet = strprintf("Can not find quorum snapshot at H-2C");
         return false;
     } else {
         response.quorumSnapshotAtHMinus2C = std::move(snapshotHMinus2C.value());
+    }
+
+    if (use_legacy_construction) {
+        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHMinus3CIndex, use_legacy_construction), pWorkBlockHMinus3CIndex->GetBlockHash(), response.mnListDiffAtHMinus3C, errorRet)) {
+            return false;
+        }
     }
 
     auto snapshotHMinus3C = qsnapman.GetSnapshotForBlock(llmqType, pBlockHMinus3CIndex);
@@ -231,11 +267,12 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
         }
 
         CSimplifiedMNListDiff mn4c;
-        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHMinus4CIndex), pWorkBlockHMinus4CIndex->GetBlockHash(), mn4c, errorRet)) {
+        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHMinus4CIndex, use_legacy_construction), pWorkBlockHMinus4CIndex->GetBlockHash(), mn4c, errorRet)) {
             return false;
         }
-        baseBlockIndexes.push_back(pWorkBlockHMinus4CIndex);
-
+        if (!use_legacy_construction) {
+            baseBlockIndexes.push_back(pWorkBlockHMinus4CIndex);
+        }
         response.mnListDiffAtHMinus4C = std::move(mn4c);
     } else {
         response.extraShare = false;
@@ -288,55 +325,59 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
         }
 
         CSimplifiedMNListDiff mnhneeded;
-        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, GetLastBaseBlockHash(baseBlockIndexes, pNeededWorkBlockIndex), pNeededWorkBlockIndex->GetBlockHash(), mnhneeded, errorRet)) {
+        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, GetLastBaseBlockHash(baseBlockIndexes, pNeededWorkBlockIndex, use_legacy_construction), pNeededWorkBlockIndex->GetBlockHash(), mnhneeded, errorRet)) {
             return false;
         }
-        baseBlockIndexes.push_back(pNeededWorkBlockIndex);
-
+        if (!use_legacy_construction) {
+            baseBlockIndexes.push_back(pNeededWorkBlockIndex);
+        }
         response.mnListDiffList.push_back(mnhneeded);
     }
 
-    if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
-                                   GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHMinus3CIndex),
-                                   pWorkBlockHMinus3CIndex->GetBlockHash(), response.mnListDiffAtHMinus3C, errorRet)) {
-        return false;
-    }
-    baseBlockIndexes.push_back(pWorkBlockHMinus3CIndex);
+    if (!use_legacy_construction) {
+        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
+                                       GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHMinus3CIndex, use_legacy_construction),
+                                       pWorkBlockHMinus3CIndex->GetBlockHash(), response.mnListDiffAtHMinus3C, errorRet)) {
+            return false;
+                                       }
+        baseBlockIndexes.push_back(pWorkBlockHMinus3CIndex);
 
-    if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
-                                   GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHMinus2CIndex),
-                                   pWorkBlockHMinus2CIndex->GetBlockHash(), response.mnListDiffAtHMinus2C, errorRet)) {
-        return false;
-    }
-    baseBlockIndexes.push_back(pWorkBlockHMinus2CIndex);
+        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
+                                       GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHMinus2CIndex, use_legacy_construction),
+                                       pWorkBlockHMinus2CIndex->GetBlockHash(), response.mnListDiffAtHMinus2C, errorRet)) {
+            return false;
+                                       }
+        baseBlockIndexes.push_back(pWorkBlockHMinus2CIndex);
 
-    if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
-                                   GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHMinusCIndex),
-                                   pWorkBlockHMinusCIndex->GetBlockHash(), response.mnListDiffAtHMinusC, errorRet)) {
-        return false;
-    }
-    baseBlockIndexes.push_back(pWorkBlockHMinusCIndex);
+        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
+                                       GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHMinusCIndex, use_legacy_construction),
+                                       pWorkBlockHMinusCIndex->GetBlockHash(), response.mnListDiffAtHMinusC, errorRet)) {
+            return false;
+                                       }
+        baseBlockIndexes.push_back(pWorkBlockHMinusCIndex);
 
-    if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
-                                   GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHIndex),
-                                   pWorkBlockHIndex->GetBlockHash(), response.mnListDiffH, errorRet)) {
-        return false;
-    }
-    baseBlockIndexes.push_back(pWorkBlockHIndex);
+        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman,
+                                       GetLastBaseBlockHash(baseBlockIndexes, pWorkBlockHIndex, use_legacy_construction),
+                                       pWorkBlockHIndex->GetBlockHash(), response.mnListDiffH, errorRet)) {
+            return false;
+                                       }
+        baseBlockIndexes.push_back(pWorkBlockHIndex);
 
-    if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, GetLastBaseBlockHash(baseBlockIndexes, tipBlockIndex),
-                                   tipBlockIndex->GetBlockHash(), response.mnListDiffTip, errorRet)) {
-        return false;
+        if (!BuildSimplifiedMNListDiff(dmnman, chainman, qblockman, qman, GetLastBaseBlockHash(baseBlockIndexes, tipBlockIndex, use_legacy_construction),
+                                       tipBlockIndex->GetBlockHash(), response.mnListDiffTip, errorRet)) {
+            return false;
+                                       }
     }
-
     return true;
 }
 
-uint256 GetLastBaseBlockHash(Span<const CBlockIndex*> baseBlockIndexes, const CBlockIndex* blockIndex)
+uint256 GetLastBaseBlockHash(Span<const CBlockIndex*> baseBlockIndexes, const CBlockIndex* blockIndex, bool use_legacy_construction)
 {
     uint256 hash;
-    std::sort(baseBlockIndexes.begin(), baseBlockIndexes.end(),
-              [](const CBlockIndex* a, const CBlockIndex* b) { return a->nHeight < b->nHeight; });
+    if (!use_legacy_construction) {
+        std::sort(baseBlockIndexes.begin(), baseBlockIndexes.end(),
+                  [](const CBlockIndex* a, const CBlockIndex* b) { return a->nHeight < b->nHeight; });
+    }
     for (const auto baseBlock : baseBlockIndexes) {
         if (baseBlock->nHeight >= blockIndex->nHeight)
             break;
