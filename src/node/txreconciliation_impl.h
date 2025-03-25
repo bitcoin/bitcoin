@@ -116,6 +116,10 @@ public:
      * the peer just announced the transaction to us. Returns whether the wtxid was removed.
      */
     bool TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid);
+
+    /** Whether a given inbound peer is currently flagged for fanout. */
+    bool IsInboundFanoutTarget(NodeId peer_id);
+
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXRECONCILIATION_IMPL_H

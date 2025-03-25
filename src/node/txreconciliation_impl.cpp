@@ -32,6 +32,9 @@ private:
     /** Keeps track of how many of the registered peers are inbound. Updated on registering or forgetting peers. */
     size_t m_inbounds_count GUARDED_BY(m_txreconciliation_mutex){0};
 
+    /** Collection of inbound peers selected for fanout. */
+    std::unordered_set<NodeId> m_inbound_fanout_targets GUARDED_BY(m_txreconciliation_mutex);
+
     TxReconciliationState* GetRegisteredPeerState(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(m_txreconciliation_mutex)
     {
         AssertLockHeld(m_txreconciliation_mutex);
@@ -167,6 +170,13 @@ public:
 
         return removed;
     }
+
+    bool IsInboundFanoutTarget(NodeId peer_id) const EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+        return m_inbound_fanout_targets.contains(peer_id);
+    }
 };
 
 TxReconciliationTracker::TxReconciliationTracker(uint32_t recon_version) : m_impl{std::make_unique<TxReconciliationTrackerImpl>(recon_version)} {}
@@ -201,5 +211,10 @@ std::optional<AddToSetError> TxReconciliationTracker::AddToSet(NodeId peer_id, c
 bool TxReconciliationTracker::TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid)
 {
     return m_impl->TryRemovingFromSet(peer_id, wtxid);
+}
+
+bool TxReconciliationTracker::IsInboundFanoutTarget(NodeId peer_id)
+{
+    return m_impl->IsInboundFanoutTarget(peer_id);
 }
 } // namespace node

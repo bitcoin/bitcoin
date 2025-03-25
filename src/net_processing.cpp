@@ -622,7 +622,7 @@ private:
     /**
      * Reconsider orphan transactions after a parent has been accepted to the mempool.
      *
-     * @peer[in]  peer     The peer whose orphan transactions we will reconsider. Generally only
+     * @param[in]  peer    The peer whose orphan transactions we will reconsider. Generally only
      *                     one orphan will be reconsidered on each call of this function. If an
      *                     accepted orphan has orphaned children, those will need to be
      *                     reconsidered, creating more work, possibly for other peers.
@@ -632,6 +632,15 @@ private:
      */
     bool ProcessOrphanTx(Peer& peer)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, !m_tx_download_mutex);
+
+    /** Checks if we should fanout to a given peer or not. Always returns true for non-Erlay peers and for Erlay
+     * outbound peers (further filtering will be performed for the latter before sending out the next INV message to each peer).
+     * For inbound Erlay-peers, returns true as long as the peer has been selected for fanout.
+     * Returns false otherwise.
+     *
+     * @param[in]   peer    The peer we are making the decision on
+    */
+   bool ShouldFanoutTo(const PeerRef peer) EXCLUSIVE_LOCKS_REQUIRED(m_peer_mutex);
 
     /** Process a single headers message from a peer.
      *
@@ -2138,6 +2147,18 @@ std::pair<size_t, size_t> PeerManagerImpl::GetFanoutPeersCount()
     }
 
     return std::pair(inbounds_fanout_tx_relay, outbounds_fanout_tx_relay);
+}
+
+bool PeerManagerImpl::ShouldFanoutTo(const PeerRef peer)
+{
+    // We consider Erlay peers for fanout if they are within our inbound fanout targets, or if they are outbounds
+    // For the latter group, further filtering will be applied at relay time.
+    // For non-Erlay peers we always fanout (same applies if we do not support Erlay)
+    if (peer->m_is_inbound && m_txreconciliation && m_txreconciliation->IsPeerRegistered(peer->m_id)) {
+        return m_txreconciliation->IsInboundFanoutTarget(peer->m_id);
+    } else {
+        return true;
+    }
 }
 
 void PeerManagerImpl::RelayTransaction(const Txid& txid, const Wtxid& wtxid)
