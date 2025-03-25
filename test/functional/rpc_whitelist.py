@@ -91,7 +91,7 @@ class RPCWhitelistTest(BitcoinTestFramework):
         assert_equal(200, rpccall(self.nodes[0], self.strange_users[4], "getblockcount").status)
 
         self.test_users_permissions()
-        self.test_rpcwhitelistdefault_0_no_permissions()
+        self.test_rpcwhitelistdefault_permissions(0, 200)
 
         # Replace file configurations
         self.nodes[0].replace_in_config([("rpcwhitelistdefault=0", "rpcwhitelistdefault=1")])
@@ -99,9 +99,8 @@ class RPCWhitelistTest(BitcoinTestFramework):
             f.write("rpcwhitelist=__cookie__:getblockcount,getblockchaininfo,getmempoolinfo,stop\n")
         self.restart_node(0)
 
-        # Test rpcwhitelistdefault=1
         self.test_users_permissions()
-        self.test_rpcwhitelistdefault_1_no_permissions()
+        self.test_rpcwhitelistdefault_permissions(1, 403)
 
     def test_users_permissions(self):
         """
@@ -118,27 +117,18 @@ class RPCWhitelistTest(BitcoinTestFramework):
             self.log.info(f"[{user[0]}]: Testing non-permitted permission: getblockchaininfo")
             assert_equal(403, rpccall(self.nodes[0], user, "getblockchaininfo").status)
 
-    def test_rpcwhitelistdefault_0_no_permissions(self):
+    def test_rpcwhitelistdefault_permissions(self, default_value, expected_status):
         """
-        * rpcwhitelistdefault=0
+        * rpcwhitelistdefault={default_value}
         * No Permissions defined
-        Expected result: * strangedude6 (not whitelisted) can access any method
+        Expected result: strangedude6 (not whitelisted) access is determined by default_value
+        When default_value=0: expects 200
+        When default_value=1: expects 403
         """
-        unrestricted_user = self.strange_users[6]
+        user = self.strange_users[6]  # strangedude6
         for permission in ["getbestblockhash", "getblockchaininfo"]:
-            self.log.info(f"[{unrestricted_user[0]}]: Testing unrestricted user permission ({permission})")
-            assert_equal(200, rpccall(self.nodes[0], unrestricted_user, permission).status)
-
-    def test_rpcwhitelistdefault_1_no_permissions(self):
-        """
-        * rpcwhitelistdefault=1
-        * No Permissions defined
-        Expected result: * strangedude6 (not whitelisted) can not access any method
-        """
-
-        for permission in ["getbestblockhash", "getblockchaininfo"]:
-            self.log.info(f"[{self.strange_users[6][0]}]: Testing rpcwhitelistdefault=1 no specified permission ({permission})")
-            assert_equal(403, rpccall(self.nodes[0], self.strange_users[6], permission).status)
+            self.log.info(f"[{user[0]}]: Testing rpcwhitelistdefault={default_value} no specified permission ({permission})")
+            assert_equal(expected_status, rpccall(self.nodes[0], user, permission).status)
 
 
 if __name__ == "__main__":
