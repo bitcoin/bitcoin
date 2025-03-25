@@ -102,6 +102,14 @@ class RPCWhitelistTest(BitcoinTestFramework):
         self.test_users_permissions()
         self.test_rpcwhitelistdefault_permissions(1, 403)
 
+        # Ensure that not specifying -rpcwhitelistdefault is the same as
+        # specifying -rpcwhitelistdefault=1. Only explicitly whitelisted users
+        # should be allowed.
+        self.nodes[0].replace_in_config([("rpcwhitelistdefault=1", "")])
+        self.restart_node(0)
+        self.test_users_permissions()
+        self.test_rpcwhitelistdefault_permissions(1, 403)
+
     def test_users_permissions(self):
         """
         * Permissions:
