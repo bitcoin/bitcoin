@@ -597,7 +597,7 @@ private:
     /**
      * Reconsider orphan transactions after a parent has been accepted to the mempool.
      *
-     * @peer[in]  peer     The peer whose orphan transactions we will reconsider. Generally only
+     * @param[in]  peer     The peer whose orphan transactions we will reconsider. Generally only
      *                     one orphan will be reconsidered on each call of this function. If an
      *                     accepted orphan has orphaned children, those will need to be
      *                     reconsidered, creating more work, possibly for other peers.
@@ -607,6 +607,17 @@ private:
      */
     bool ProcessOrphanTx(Peer& peer)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, !m_tx_download_mutex);
+
+    /** Whether we should fanout to a given peer or not. Always returns true for non-Erlay peers
+     * For Erlay-peers, if they are inbound, returns true as long as the peer has been selected for fanout.
+     * If they are outbound, returns true as long as the transaction was received via fanout (further filtering will be performed
+     * before sending out the next INV message to each peer).
+     * Returns false otherwise.
+     *
+     * @param[in]   peer                The peer we are making the decision on
+     * @param[in]   consider_fanout     Whether to consider fanout or not (only applies if the peer is outbound)
+    */
+   bool ShouldFanoutTo(const PeerRef peer, bool consider_fanout) EXCLUSIVE_LOCKS_REQUIRED(m_peer_mutex);
 
     /** Process a single headers message from a peer.
      *
@@ -2137,6 +2148,19 @@ std::pair<size_t, size_t> PeerManagerImpl::GetFanoutPeersCount()
     }
 
     return std::pair(inbounds_fanout_tx_relay, outbounds_fanout_tx_relay);
+}
+
+bool PeerManagerImpl::ShouldFanoutTo(const PeerRef peer, bool consider_fanout)
+{
+    // We consider Erlay peers for fanout if they are within our inbound fanout targets, or if they are outbounds
+    // and the transaction was NOT received via set reconciliation. For the latter group, further filtering
+    // will be applied at relay time.
+    if (m_txreconciliation && m_txreconciliation->IsPeerRegistered(peer->m_id)) {
+        return (!peer->m_is_inbound && consider_fanout) || m_txreconciliation->IsInboundFanoutTarget(peer->m_id);
+    } else {
+        // For non-Erlay peers we always fanout (same applies if we do not support Erlay)
+        return true;
+    }
 }
 
 void PeerManagerImpl::RelayTransaction(const uint256& txid, const uint256& wtxid)

@@ -122,6 +122,11 @@ public:
      * Check if a peer is registered to reconcile transactions with us.
      */
     bool IsPeerRegistered(NodeId peer_id) const;
+
+    /**
+     * Whether a given peer is currently flagged for fanout.
+    */
+    bool IsInboundFanoutTarget(NodeId peer_id);
 };
 
 #endif // BITCOIN_NODE_TXRECONCILIATION_H
