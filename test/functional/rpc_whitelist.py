@@ -102,6 +102,8 @@ class RPCWhitelistTest(BitcoinTestFramework):
         self.test_users_permissions()
         self.test_rpcwhitelistdefault_permissions(1, 403)
 
+        self.test_rpcwhitelistdefault_unset()
+
     def test_users_permissions(self):
         """
         * Permissions:
@@ -129,6 +131,26 @@ class RPCWhitelistTest(BitcoinTestFramework):
         for permission in ["getbestblockhash", "getblockchaininfo"]:
             self.log.info(f"[{user[0]}]: Testing rpcwhitelistdefault={default_value} no specified permission ({permission})")
             assert_equal(expected_status, rpccall(self.nodes[0], user, permission).status)
+
+    def test_rpcwhitelistdefault_unset(self):
+        """
+        * rpcwhitelistdefault is unset
+        Expected result:
+        - Whitelisted users can only access their whitelisted methods
+        - Non-whitelisted users cannot access any methods
+        """
+        self.nodes[0].replace_in_config([("rpcwhitelistdefault=1", "")])
+        self.restart_node(0)
+
+        # Test whitelisted user (strangedude4)
+        whitelisted_user = self.strange_users[4]
+        self.log.info(f"[{whitelisted_user[0]}]: Testing user with explicit whitelist when rpcwhitelistdefault=unset")
+        assert_equal(200, rpccall(self.nodes[0], whitelisted_user, 'getblockcount').status)
+        assert_equal(403, rpccall(self.nodes[0], whitelisted_user, 'getbestblockhash').status)
+        # Test non-whitelisted user (strangedude6)
+        non_whitelisted_user = self.strange_users[6]
+        self.log.info(f"[{non_whitelisted_user[0]}]: Testing rpcwhitelistdefault=unset no specified permission (getbestblockhash)")
+        assert_equal(403, rpccall(self.nodes[0], non_whitelisted_user, 'getbestblockhash').status)
 
 
 if __name__ == "__main__":
