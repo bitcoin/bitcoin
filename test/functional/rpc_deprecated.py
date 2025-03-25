@@ -15,10 +15,6 @@ class DeprecatedRpcTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.extra_args = [[]]
 
-
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def run_test(self):
         # This test should be used to verify the errors of the currently
         # deprecated RPC methods (without the -deprecatedrpc flag) until
@@ -30,9 +26,14 @@ class DeprecatedRpcTest(BitcoinTestFramework):
         # Please ensure that for all the RPC methods tested here, there is
         # at least one other functional test that still tests the RPCs
         # functionality using the respective -deprecatedrpc flag.
+        #
+        # Please uncomment the log below when no deprecated RPC methods are being tested
+        # self.log.info("Currently no tests for deprecated RPC methods")
 
-        self.log.info("Test settxfee RPC")
-        assert_raises_rpc_error(-32, 'settxfee is deprecated and will be fully removed in v31.0.', self.nodes[0].rpc.settxfee, 0.01)
+        if self.is_wallet_compiled():
+            self.log.info("Test settxfee RPC deprecation")
+            self.nodes[0].createwallet("settxfeerpc")
+            assert_raises_rpc_error(-32, 'settxfee is deprecated and will be fully removed in v31.0.', self.nodes[0].rpc.settxfee, 0.01)
 
 if __name__ == '__main__':
     DeprecatedRpcTest(__file__).main()
