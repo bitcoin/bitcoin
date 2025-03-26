@@ -122,6 +122,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
 
     // Depth First search loop for choosing the UTXOs
     for (size_t curr_try = 0, utxo_pool_index = 0; curr_try < TOTAL_TRIES; ++curr_try, ++utxo_pool_index) {
+        result.SetSelectionsEvaluated(curr_try);
         // Conditions for starting a backtrack
         bool backtrack = false;
         if (curr_value + curr_available_value < selection_target || // Cannot possibly reach target with the amount remaining in the curr_available_value.
