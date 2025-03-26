@@ -229,7 +229,7 @@ class InvalidOPIFConstruction(BadTxTemplate):
 
     def get_tx(self):
         return create_tx_with_script(
-            self.spend_tx, 0, script_sig=b'\x64' * 35,
+            self.spend_tx, 0, script_sig=b'\x68' * 35,
             amount=(self.spend_avail // 2))
 
 
