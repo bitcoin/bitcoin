@@ -529,7 +529,7 @@ bool BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_block
     }
     for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); it++) {
         FlatFilePos pos(*it, 0);
-        if (OpenBlockFile(pos, true).IsNull()) {
+        if (OpenBlockFile(pos, /*fReadOnly=*/true).IsNull()) {
             return false;
         }
     }
@@ -933,7 +933,7 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
     // Write undo information to disk
     if (block.GetUndoPos().IsNull()) {
         FlatFilePos pos;
-        const unsigned int blockundo_size{static_cast<unsigned int>(GetSerializeSize(blockundo))};
+        const auto blockundo_size{static_cast<uint32_t>(GetSerializeSize(blockundo))};
         if (!FindUndoPos(state, block.nFile, pos, blockundo_size + UNDO_DATA_DISK_OVERHEAD)) {
             LogError("FindUndoPos failed for %s while writing block undo", pos.ToString());
             return false;
@@ -996,7 +996,7 @@ bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos) const
     block.SetNull();
 
     // Open history file to read
-    AutoFile filein{OpenBlockFile(pos, true)};
+    AutoFile filein{OpenBlockFile(pos, /*fReadOnly=*/true)};
     if (filein.IsNull()) {
         LogError("OpenBlockFile failed for %s while reading block", pos.ToString());
         return false;
@@ -1041,15 +1041,14 @@ bool BlockManager::ReadBlock(CBlock& block, const CBlockIndex& index) const
 
 bool BlockManager::ReadRawBlock(std::vector<uint8_t>& block, const FlatFilePos& pos) const
 {
-    FlatFilePos hpos = pos;
-    // If nPos is less than 8 the pos is null and we don't have the block data
-    // Return early to prevent undefined behavior of unsigned int underflow
-    if (hpos.nPos < 8) {
-        LogError("Failed for %s while reading raw block", pos.ToString());
+    if (pos.nPos < STORAGE_HEADER_BYTES) {
+        // If nPos is less than STORAGE_HEADER_BYTES, we can't read the header that precedes the block data
+        // This would cause an unsigned integer underflow when trying to position the file cursor
+        // This can happen after pruning or default constructed positions
+        LogError("Failed for %s while reading raw block storage header", pos.ToString());
         return false;
     }
-    hpos.nPos -= 8; // Seek back 8 bytes for meta header
-    AutoFile filein{OpenBlockFile(hpos, true)};
+    AutoFile filein{OpenBlockFile({pos.nFile, pos.nPos - STORAGE_HEADER_BYTES}, /*fReadOnly=*/true)};
     if (filein.IsNull()) {
         LogError("OpenBlockFile failed for %s while reading raw block", pos.ToString());
         return false;
@@ -1091,7 +1090,7 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
         LogError("FindNextBlockPos failed for %s while writing block", pos.ToString());
         return FlatFilePos();
     }
-    AutoFile fileout{OpenBlockFile(pos)};
+    AutoFile fileout{OpenBlockFile(pos, /*fReadOnly=*/false)};
     if (fileout.IsNull()) {
         LogError("OpenBlockFile failed for %s while writing block", pos.ToString());
         m_opts.notifications.fatalError(_("Failed to write block."));
@@ -1210,7 +1209,7 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
             if (!fs::exists(chainman.m_blockman.GetBlockPosFilename(pos))) {
                 break; // No block files left to reindex
             }
-            AutoFile file{chainman.m_blockman.OpenBlockFile(pos, true)};
+            AutoFile file{chainman.m_blockman.OpenBlockFile(pos, /*fReadOnly=*/true)};
             if (file.IsNull()) {
                 break; // This error is logged in OpenBlockFile
             }

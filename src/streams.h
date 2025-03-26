@@ -523,7 +523,7 @@ private:
     }
 
 public:
-    BufferedFile(AutoFile& file, uint64_t nBufSize, uint64_t nRewindIn)
+    BufferedFile(AutoFile& file LIFETIMEBOUND, uint64_t nBufSize, uint64_t nRewindIn)
         : m_src{file}, nReadLimit{std::numeric_limits<uint64_t>::max()}, nRewind{nRewindIn}, vchBuf(nBufSize, std::byte{0})
     {
         if (nRewindIn >= nBufSize)
