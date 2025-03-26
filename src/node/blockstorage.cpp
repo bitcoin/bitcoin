@@ -940,11 +940,12 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
             return false;
         }
         // Open history file to append
-        AutoFile fileout{OpenUndoFile(pos)};
-        if (fileout.IsNull()) {
+        AutoFile file{OpenUndoFile(pos)};
+        if (file.IsNull()) {
             LogError("OpenUndoFile failed for %s while writing", pos.ToString());
             return FatalError(m_opts.notifications, state, _("Failed to write undo data."));
         }
+        BufferedWriter fileout{file};
 
         // Write index header
         fileout << GetParams().MessageStart() << blockundo_size;
@@ -1084,12 +1085,13 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
         LogError("FindNextBlockPos failed for %s while writing", pos.ToString());
         return FlatFilePos();
     }
-    AutoFile fileout{OpenBlockFile(pos)};
-    if (fileout.IsNull()) {
+    AutoFile file{OpenBlockFile(pos)};
+    if (file.IsNull()) {
         LogError("OpenBlockFile failed for %s while writing", pos.ToString());
         m_opts.notifications.fatalError(_("Failed to write block."));
         return FlatFilePos();
     }
+    BufferedWriter fileout{file};
 
     // Write index header
     fileout << GetParams().MessageStart() << block_size;

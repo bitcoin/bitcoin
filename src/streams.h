@@ -469,6 +469,8 @@ public:
 
     //! Read into a mutable buffer more flexibly than read(), returning the read byte count.
     size_t read_buffer(std::span<std::byte> dst);
+    //! Write a mutable buffer more efficiently than write(), obfuscating the buffer in-place.
+    void write_buffer(std::span<std::byte> src);
 };
 
 /** Wrapper around an AutoFile& that implements a ring buffer to
@@ -651,6 +653,50 @@ public:
     BufferedReader& operator>>(T&& obj)
     {
         Unserialize(*this, obj);
+        return *this;
+    }
+};
+
+template <typename S>
+class BufferedWriter
+{
+    S& m_stream;
+    DataStream m_buffer;
+    size_t m_pos;
+    size_t m_size;
+
+    void flush()
+    {
+        Assume(m_pos != 0);
+        m_stream.write_buffer(std::span{m_buffer}.first(m_pos));
+        m_pos = 0;
+        Assume(m_buffer.size() <= m_size);
+    }
+
+public:
+    explicit BufferedWriter(S& stream, size_t size = 1 << 16) : m_stream{stream}, m_pos{0}, m_size{size}
+    {
+        m_buffer.resize(size);
+    }
+
+    ~BufferedWriter() { flush(); }
+
+    void write(std::span<const std::byte> src)
+    {
+        while (src.size()) {
+            if (m_pos == m_buffer.size()) flush();
+
+            const size_t n{Assert(std::min(src.size(), m_buffer.size() - m_pos))};
+            std::copy_n(src.begin(), n, m_buffer.begin() + m_pos);
+            m_pos += n;
+            src = src.subspan(n);
+        }
+    }
+
+    template <typename T>
+    BufferedWriter& operator<<(const T& obj)
+    {
+        Serialize(*this, obj);
         return *this;
     }
 };
