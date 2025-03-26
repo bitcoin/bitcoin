@@ -49,7 +49,7 @@ P2P and network changes
 
 - Before this release, Bitcoin Core had a strong preference to try to connect only to peers that listen on port 8333. As a result of that, Bitcoin nodes listening on non-standard ports would likely not get any Bitcoin Core peers connecting to them. This preference has been removed. (#23542)
 
-- Full support has been added for the CJDNS network. See the new option `-cjdnsreachable` and [doc/cjdns.md](https://github.com/bitcoin/bitcoin/tree/23.x/doc/cjdns.md) (#23077)
+- Full support has been added for the CJDNS network. See the new option `-cjdnsreachable` and [doc/cjdns.md](https://github.com/bitcoin/bitcoin/blob/master/doc/cjdns.md) (#23077)
 
 Fee estimation changes
 ----------------------
