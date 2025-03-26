@@ -445,6 +445,9 @@ public:
     /** Wrapper around TruncateFile(). */
     bool Truncate(unsigned size);
 
+    //! Write a mutable buffer more efficiently than write(), obfuscating the buffer in-place.
+    void write_buffer(std::span<std::byte> src);
+
     //
     // Stream subset
     //
@@ -654,6 +657,47 @@ public:
     BufferedReader& operator>>(T&& obj)
     {
         Unserialize(*this, obj);
+        return *this;
+    }
+};
+
+/**
+ * Wrapper that buffers writes to an underlying stream.
+ * Requires underlying stream to support write_buffer() method
+ * for efficient buffer flushing and obfuscation.
+ */
+template <typename S>
+class BufferedWriter
+{
+    S& m_dst;
+    DataBuffer m_buf;
+    size_t m_buf_pos{0};
+
+public:
+    explicit BufferedWriter(S& stream LIFETIMEBOUND, size_t size = 1 << 16) : m_dst{stream}, m_buf(size) {}
+
+    ~BufferedWriter() { flush(); }
+
+    void flush()
+    {
+        if (m_buf_pos) m_dst.write_buffer(std::span{m_buf}.first(m_buf_pos));
+        m_buf_pos = 0;
+    }
+
+    void write(std::span<const std::byte> src)
+    {
+        while (const auto available{std::min(src.size(), m_buf.size() - m_buf_pos)}) {
+            std::copy_n(src.begin(), available, m_buf.begin() + m_buf_pos);
+            m_buf_pos += available;
+            if (m_buf_pos == m_buf.size()) flush();
+            src = src.subspan(available);
+        }
+    }
+
+    template <typename T>
+    BufferedWriter& operator<<(const T& obj)
+    {
+        Serialize(*this, obj);
         return *this;
     }
 };
