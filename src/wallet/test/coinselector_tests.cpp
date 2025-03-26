@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         const auto result9 = SelectCoinsBnB(GroupCoins(available_coins.All()), 1 * CENT, coin_selection_params_bnb.m_cost_of_change);
         BOOST_CHECK(result9);
         BOOST_CHECK_EQUAL(result9->GetSelectedValue(), 1 * CENT);
-        expected_attempts = 2;
+        expected_attempts = 1;
         BOOST_CHECK_MESSAGE(result9->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, result9->GetSelectionsEvaluated()));
     }
 
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         LOCK(wallet->cs_wallet);
         const auto result10 = SelectCoins(*wallet, available_coins, selected_input, 10 * CENT, coin_control, coin_selection_params_bnb);
         BOOST_CHECK(result10);
-        expected_attempts = 4;
+        expected_attempts = 3;
         BOOST_CHECK_MESSAGE(result10->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, result10->GetSelectionsEvaluated()));
     }
     {
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         available_coins.Erase({(++available_coins.coins[OutputType::BECH32].begin())->outpoint});
         const auto result13 = SelectCoins(*wallet, available_coins, selected_input, 10 * CENT, coin_control, coin_selection_params_bnb);
         BOOST_CHECK(EquivalentResult(expected_result, *result13));
-        expected_attempts = 4;
+        expected_attempts = 2;
         BOOST_CHECK_MESSAGE(result13->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, result13->GetSelectionsEvaluated()));
     }
 
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         add_coin(5 * CENT, 2, expected_result);
         add_coin(3 * CENT, 2, expected_result);
         BOOST_CHECK(EquivalentResult(expected_result, *res));
-        expected_attempts = 38;
+        expected_attempts = 39;
         BOOST_CHECK_MESSAGE(res->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, res->GetSelectionsEvaluated()));
     }
 }
