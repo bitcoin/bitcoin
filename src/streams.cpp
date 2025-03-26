@@ -64,6 +64,16 @@ void AutoFile::read(std::span<std::byte> dst)
     }
 }
 
+size_t AutoFile::read_buffer(std::span<std::byte> dst)
+{
+    const size_t size{detail_fread(dst)};
+    if (size != dst.size() && !feof()) { // buffer may not be filled completely
+        throw std::ios_base::failure("AutoFile::read_buffer: fread failed");
+    }
+    Assume(size <= dst.size());
+    return size;
+}
+
 void AutoFile::ignore(size_t nSize)
 {
     if (!m_file) throw std::ios_base::failure("AutoFile::ignore: file handle is nullptr");

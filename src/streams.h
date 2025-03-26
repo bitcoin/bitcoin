@@ -23,6 +23,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <util/check.h>
 
 namespace util {
 inline void Xor(std::span<std::byte> write, std::span<const std::byte> key, size_t key_offset = 0)
@@ -465,6 +466,9 @@ public:
         ::Unserialize(*this, obj);
         return *this;
     }
+
+    //! Read into a mutable buffer more flexibly than read(), returning the read byte count.
+    size_t read_buffer(std::span<std::byte> dst);
 };
 
 /** Wrapper around an AutoFile& that implements a ring buffer to
@@ -611,6 +615,43 @@ public:
             buf_offset += inc;
             if (buf_offset >= vchBuf.size()) buf_offset = 0;
         }
+    }
+};
+
+template <typename S>
+class BufferedReader
+{
+    S& m_stream;
+    DataStream m_buffer;
+    size_t m_pos;
+    size_t m_size;
+
+public:
+    explicit BufferedReader(S& stream, size_t size = 1 << 16) : m_stream{stream}, m_pos{size}, m_size{size}
+    {
+        m_buffer.resize(size);
+    }
+
+    void read(std::span<std::byte> dst)
+    {
+        while (dst.size()) {
+            if (m_pos == m_size) {
+                m_size = m_stream.read_buffer(m_buffer); // can shrink on eof
+                m_pos = 0;
+            }
+            if (!m_size) throw std::ios_base::failure("BufferedReader::read: end of file");
+            const size_t n{Assert(std::min(dst.size(), m_size - m_pos))};
+            std::copy_n(m_buffer.begin() + m_pos, n, dst.begin());
+            m_pos += n;
+            dst = dst.subspan(n);
+        }
+    }
+
+    template <typename T>
+    BufferedReader& operator>>(T&& obj)
+    {
+        Unserialize(*this, obj);
+        return *this;
     }
 };
 

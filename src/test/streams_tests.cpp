@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <flatfile.h>
 #include <streams.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
@@ -9,6 +10,7 @@
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
+#include <node/blockstorage.h>
 
 using namespace std::string_literals;
 
@@ -551,6 +553,44 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
         }
     }
     fs::remove(streams_test_filename);
+}
+
+BOOST_AUTO_TEST_CASE(buffered_reader_matches_autofile_random_content)
+{
+    const size_t file_size{m_rng.randrange<size_t>(1 << 17)};
+    const size_t max_read_length{m_rng.randrange<size_t>(1 << 7)};
+    const FlatFilePos pos{0, 0};
+
+    const FlatFileSeq test_file{m_args.GetDataDirBase(), "buffered_file_test_random", node::BLOCKFILE_CHUNK_SIZE};
+    const std::vector obfuscation{m_rng.randbytes<std::byte>(8)};
+    AutoFile{test_file.Open(pos, false), obfuscation}.write(m_rng.randbytes<std::byte>(file_size));
+
+    AutoFile direct_file{test_file.Open(pos, true), obfuscation};
+
+    AutoFile buffered_file{test_file.Open(pos, true), obfuscation};
+    BufferedReader buffered_reader{buffered_file, max_read_length};
+
+    for (size_t total_read{0}; total_read < file_size;) {
+        const size_t read{Assert(std::min(m_rng.randrange(max_read_length) + 1, file_size - total_read))};
+
+        std::vector<std::byte> direct_file_buffer{read};
+        direct_file.read(direct_file_buffer);
+
+        std::vector<std::byte> buffered_buffer{read};
+        buffered_reader.read(buffered_buffer);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(
+            direct_file_buffer.begin(), direct_file_buffer.end(),
+            buffered_buffer.begin(), buffered_buffer.end()
+        );
+
+        total_read += read;
+    }
+    std::vector<std::byte> excess{1};
+    BOOST_CHECK_EXCEPTION(direct_file.read(excess), std::ios_base::failure, HasReason{"end of file"});
+    BOOST_CHECK_EXCEPTION(buffered_reader.read(excess), std::ios_base::failure, HasReason{"end of file"});
+
+    try { fs::remove(test_file.FileName(pos)); } catch (...) {}
 }
 
 BOOST_AUTO_TEST_CASE(streams_hashed)
