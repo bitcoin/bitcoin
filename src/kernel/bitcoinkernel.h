@@ -48,6 +48,14 @@ extern "C" {
 /**
  * @page remarks Remarks
  *
+ * @section purpose Purpose
+ *
+ * This header currently exposes an API for interacting with parts of Bitcoin
+ * Core's consensus code. Users can validate blocks, iterate the block index,
+ * read block and undo data from disk, and validate scripts. The header is
+ * unversioned and not stable yet. Users should expect breaking changes. It is
+ * also not yet included in releases of Bitcoin Core.
+ *
  * @section context Context
  *
  * The library provides a built-in static constant kernel context. This static
