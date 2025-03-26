@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <flatfile.h>
+#include <node/blockstorage.h>
 #include <streams.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
@@ -551,6 +553,58 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
         }
     }
     fs::remove(streams_test_filename);
+}
+
+BOOST_AUTO_TEST_CASE(buffered_reader_matches_autofile_random_content)
+{
+    const size_t file_size{1 + m_rng.randrange<size_t>(1 << 17)};
+    const size_t buf_size{1 + m_rng.randrange(file_size)};
+    const FlatFilePos pos{0, 0};
+
+    const FlatFileSeq test_file{m_args.GetDataDirBase(), "buffered_file_test_random", node::BLOCKFILE_CHUNK_SIZE};
+    const std::vector obfuscation{m_rng.randbytes<std::byte>(8)};
+
+    // Write out the file with random content
+    {
+        AutoFile{test_file.Open(pos, /*read_only=*/false), obfuscation}.write(m_rng.randbytes<std::byte>(file_size));
+    }
+    BOOST_CHECK_EQUAL(fs::file_size(test_file.FileName(pos)), file_size);
+
+    {
+        AutoFile direct_file{test_file.Open(pos, /*read_only=*/true), obfuscation};
+
+        AutoFile buffered_file{test_file.Open(pos, /*read_only=*/true), obfuscation};
+        BufferedReader buffered_reader{std::move(buffered_file), buf_size};
+
+        for (size_t total_read{0}; total_read < file_size;) {
+            const size_t read{Assert(std::min(1 + m_rng.randrange(m_rng.randbool() ? buf_size : 2 * buf_size), file_size - total_read))};
+
+            DataBuffer direct_file_buffer{read};
+            direct_file.read(direct_file_buffer);
+
+            DataBuffer buffered_buffer{read};
+            buffered_reader.read(buffered_buffer);
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(
+                direct_file_buffer.begin(), direct_file_buffer.end(),
+                buffered_buffer.begin(), buffered_buffer.end()
+            );
+
+            total_read += read;
+        }
+
+        {
+            DataBuffer excess_byte{1};
+            BOOST_CHECK_EXCEPTION(direct_file.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
+        }
+
+        {
+            DataBuffer excess_byte{1};
+            BOOST_CHECK_EXCEPTION(buffered_reader.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
+        }
+    }
+
+    fs::remove(test_file.FileName(pos));
 }
 
 BOOST_AUTO_TEST_CASE(streams_hashed)
