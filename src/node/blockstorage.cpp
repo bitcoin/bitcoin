@@ -1035,11 +1035,11 @@ bool BlockManager::ReadRawBlock(std::vector<uint8_t>& block, const FlatFilePos& 
     FlatFilePos hpos = pos;
     // If nPos is less than 8 the pos is null and we don't have the block data
     // Return early to prevent undefined behavior of unsigned int underflow
-    if (hpos.nPos < 8) {
+    if (hpos.nPos < HEADER_BYTE_SIZE) {
         LogError("%s failed for %s", __func__, pos.ToString());
         return false;
     }
-    hpos.nPos -= 8; // Seek back 8 bytes for meta header
+    hpos.nPos -= HEADER_BYTE_SIZE;
     AutoFile filein{OpenBlockFile(hpos, true)};
     if (filein.IsNull()) {
         LogError("%s: OpenBlockFile failed for %s", __func__, pos.ToString());
