@@ -130,14 +130,14 @@ BOOST_AUTO_TEST_CASE(bnb_test)
     AddCoins(utxo_pool, {1 * CENT, 3 * CENT, 5 * CENT});
 
     // Simple success cases
-    TestBnBSuccess("Select smallest UTXO", utxo_pool, /*selection_target=*/1 * CENT, /*expected_input_amounts=*/{1 * CENT}, /*expected_attempts=*/6);
-    TestBnBSuccess("Select middle UTXO", utxo_pool, /*selection_target=*/3 * CENT, /*expected_input_amounts=*/{3 * CENT}, /*expected_attempts=*/4);
-    TestBnBSuccess("Select biggest UTXO", utxo_pool, /*selection_target=*/5 * CENT, /*expected_input_amounts=*/{5 * CENT}, /*expected_attempts=*/2);
-    TestBnBSuccess("Select two UTXOs", utxo_pool, /*selection_target=*/4 * CENT, /*expected_input_amounts=*/{1 * CENT, 3 * CENT}, /*expected_attempts=*/6);
-    TestBnBSuccess("Select all UTXOs", utxo_pool, /*selection_target=*/9 * CENT, /*expected_input_amounts=*/{1 * CENT, 3 * CENT, 5 * CENT}, /*expected_attempts=*/6);
+    TestBnBSuccess("Select smallest UTXO", utxo_pool, /*selection_target=*/1 * CENT, /*expected_input_amounts=*/{1 * CENT}, /*expected_attempts=*/3);
+    TestBnBSuccess("Select middle UTXO", utxo_pool, /*selection_target=*/3 * CENT, /*expected_input_amounts=*/{3 * CENT}, /*expected_attempts=*/3);
+    TestBnBSuccess("Select biggest UTXO", utxo_pool, /*selection_target=*/5 * CENT, /*expected_input_amounts=*/{5 * CENT}, /*expected_attempts=*/4);
+    TestBnBSuccess("Select two UTXOs", utxo_pool, /*selection_target=*/4 * CENT, /*expected_input_amounts=*/{1 * CENT, 3 * CENT}, /*expected_attempts=*/4);
+    TestBnBSuccess("Select all UTXOs", utxo_pool, /*selection_target=*/9 * CENT, /*expected_input_amounts=*/{1 * CENT, 3 * CENT, 5 * CENT}, /*expected_attempts=*/7);
 
     // BnB finds changeless solution while overshooting by up to cost_of_change
-    TestBnBSuccess("Select upper bound", utxo_pool, /*selection_target=*/4 * CENT - default_cs_params.m_cost_of_change, /*expected_input_amounts=*/{1 * CENT, 3 * CENT}, /*expected_attempts=*/6);
+    TestBnBSuccess("Select upper bound", utxo_pool, /*selection_target=*/4 * CENT - default_cs_params.m_cost_of_change, /*expected_input_amounts=*/{1 * CENT, 3 * CENT}, /*expected_attempts=*/4);
 
     // BnB fails to find changeless solution when overshooting by cost_of_change + 1 sat
     TestBnBFail("Overshoot upper bound", utxo_pool, /*selection_target=*/4 * CENT - default_cs_params.m_cost_of_change - 1);
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(bnb_test)
     std::vector<OutputGroup> clone_pool;
     AddCoins(clone_pool, {2 * CENT, 7 * CENT, 7 * CENT});
     AddDuplicateCoins(clone_pool, 50'000, 5 * CENT);
-    TestBnBSuccess("Skip equivalent input sets", clone_pool, /*selection_target=*/16 * CENT, /*expected_input_amounts=*/{2 * CENT, 7 * CENT, 7 * CENT}, /*expected_attempts=*/99'999);
+    TestBnBSuccess("Skip equivalent input sets", clone_pool, /*selection_target=*/16 * CENT, /*expected_input_amounts=*/{2 * CENT, 7 * CENT, 7 * CENT}, /*expected_attempts=*/100'000);
 
     /* Test BnB attempt limit (`TOTAL_TRIES`)
      *
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(bnb_test)
     }
     AddCoins(doppelganger_pool, doppelgangers);
     // Among up to 17 unique UTXOs of similar effective value we will find a solution composed of the eight smallest UTXOs
-    TestBnBSuccess("Combine smallest 8 of 17 unique UTXOs", doppelganger_pool, /*selection_target=*/8 * CENT, /*expected_input_amounts=*/expected_inputs, /*expected_attempts=*/87'514);
+    TestBnBSuccess("Combine smallest 8 of 17 unique UTXOs", doppelganger_pool, /*selection_target=*/8 * CENT, /*expected_input_amounts=*/expected_inputs, /*expected_attempts=*/65'535);
 
     // Starting with 18 unique UTXOs of similar effective value we will not find the solution due to exceeding the attempt limit
     AddCoins(doppelganger_pool, {1 * CENT + default_cs_params.m_cost_of_change + 17});
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(bnb_feerate_sensitivity_test)
     high_feerate_params.m_effective_feerate = CFeeRate{25'000};
     std::vector<OutputGroup> high_feerate_pool; // 25 sat/vB (greater than long_term_feerate of 10 sat/vB)
     AddCoins(high_feerate_pool, {2 * CENT, 3 * CENT, 5 * CENT, 10 * CENT}, high_feerate_params);
-    TestBnBSuccess("Select one input at high feerates", high_feerate_pool, /*selection_target=*/10 * CENT, /*expected_input_amounts=*/{10 * CENT}, /*expected_attempts=*/6, high_feerate_params);
+    TestBnBSuccess("Select one input at high feerates", high_feerate_pool, /*selection_target=*/10 * CENT, /*expected_input_amounts=*/{10 * CENT}, /*expected_attempts=*/8, high_feerate_params);
 
     // Add heavy inputs {6, 7} to existing {2, 3, 5, 10}
     low_feerate_pool.push_back(MakeCoin(6 * CENT, true, default_cs_params, /*custom_spending_vsize=*/500));
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(bnb_feerate_sensitivity_test)
 
     high_feerate_pool.push_back(MakeCoin(6 * CENT, true, high_feerate_params, /*custom_spending_vsize=*/500));
     high_feerate_pool.push_back(MakeCoin(7 * CENT, true, high_feerate_params, /*custom_spending_vsize=*/500));
-    TestBnBSuccess("Prefer two light inputs over two heavy inputs at high feerates", high_feerate_pool, /*selection_target=*/13 * CENT, /*expected_input_amounts=*/{3 * CENT, 10 * CENT}, /*expected_attempts=*/14, high_feerate_params);
+    TestBnBSuccess("Prefer two light inputs over two heavy inputs at high feerates", high_feerate_pool, /*selection_target=*/13 * CENT, /*expected_input_amounts=*/{3 * CENT, 10 * CENT}, /*expected_attempts=*/28, high_feerate_params);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
