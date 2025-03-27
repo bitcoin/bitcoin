@@ -1367,7 +1367,7 @@ void FixLinearization(const DepGraph<SetType>& depgraph, std::span<DepGraphIndex
         // in between forward.
         while (place_before.Any()) {
             // j cannot be 0 here; if it was, then there was necessarily nothing earlier which
-            // elem needs to be place before anymore, and place_before would be empty.
+            // elem needs to be placed before anymore, and place_before would be empty.
             Assume(j > 0);
             auto to_swap = linearization[len - 1 - (j - 1)];
             place_before.Reset(to_swap);

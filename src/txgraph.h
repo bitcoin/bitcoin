@@ -99,7 +99,7 @@ public:
     /** Create a staging graph (which cannot exist already). This acts as if a full copy of
      *  the transaction graph is made, upon which further modifications are made. This copy can
      *  be inspected, and then either discarded, or the main graph can be replaced by it by
-     *  commiting it. */
+     *  committing it. */
     virtual void StartStaging() noexcept = 0;
     /** Discard the existing active staging graph (which must exist). */
     virtual void AbortStaging() noexcept = 0;

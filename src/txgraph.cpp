@@ -335,7 +335,7 @@ public:
 
     // Simple helper functions.
 
-    /** Swap the Entrys referred to by a and b. */
+    /** Swap the Entry referred to by a and the one referred to by b. */
     void SwapIndexes(GraphIndex a, GraphIndex b) noexcept;
     /** If idx exists in the specified level ClusterSet (explicitly, or in the level below and not
     *   removed), return the Cluster it is in. Otherwise, return nullptr. */
@@ -408,8 +408,8 @@ public:
 
     // Functions related to various normalization/application steps.
     /** Get rid of unlinked Entry objects in m_entries, if possible (this changes the GraphIndex
-     *  values for remaining Entrys, so this only does something when no to-be-applied operations
-     *  or staged removals referring to GraphIndexes remain). */
+     *  values for remaining Entry objects, so this only does something when no to-be-applied
+     *  operations or staged removals referring to GraphIndexes remain). */
     void Compact() noexcept;
     /** If cluster is not in staging, copy it there, and return a pointer to it. This has no
     *   effect if only a main graph exists, but if staging exists this modifies the locators of its
@@ -505,7 +505,7 @@ void TxGraphImpl::ClearLocator(int level, GraphIndex idx) noexcept
 
 void Cluster::Updated(TxGraphImpl& graph) noexcept
 {
-    // Update all the Locators for this Cluster's Entrys.
+    // Update all the Locators for this Cluster's Entry objects.
     for (DepGraphIndex idx : m_linearization) {
         auto& entry = graph.m_entries[m_mapping[idx]];
         entry.m_locator[m_level].SetPresent(this, idx);
@@ -1937,7 +1937,7 @@ void Cluster::SanityCheck(const TxGraphImpl& graph, int level) const
             assert(m_depgraph.IsConnected(linchunking.GetChunk(0).transactions));
         }
     }
-    // Verify that each element of m_depgraph occured in m_linearization.
+    // Verify that each element of m_depgraph occurred in m_linearization.
     assert(m_done == m_depgraph.Positions());
 }
 
