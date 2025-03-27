@@ -1153,10 +1153,10 @@ static TxoutType GetTxoutType(const CScript& output_script)
 BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
 {
     BOOST_CHECK_EQUAL(sizeof(CompressedScript), 40);
-    BOOST_CHECK_EQUAL(sizeof(CScriptBase), 32);
+    BOOST_CHECK_EQUAL(sizeof(CScriptBase), 40);
     BOOST_CHECK_NE(sizeof(CScriptBase), sizeof(prevector<CScriptBase::STATIC_SIZE + 1, uint8_t>)); // CScriptBase size should be set to avoid wasting space in padding
-    BOOST_CHECK_EQUAL(sizeof(CScript), 32);
-    BOOST_CHECK_EQUAL(sizeof(CTxOut), 40);
+    BOOST_CHECK_EQUAL(sizeof(CScript), 40);
+    BOOST_CHECK_EQUAL(sizeof(CTxOut), 48);
 
     CKey dummy_key;
     dummy_key.MakeNewKey(/*fCompressed=*/true);
@@ -1190,25 +1190,25 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
         CHECK_SCRIPT_STATIC_SIZE(script, 25);
     }
 
-    // P2WSH needs extra allocation
+    // P2WSH has direct allocation
     {
         const auto script{GetScriptForDestination(WitnessV0ScriptHash{CScript{} << OP_TRUE})};
         BOOST_CHECK(script.IsPayToWitnessScriptHash());
-        CHECK_SCRIPT_DYNAMIC_SIZE(script, 34, 34);
+        CHECK_SCRIPT_STATIC_SIZE(script, 34);
     }
 
-    // P2TR needs extra allocation
+    // P2TR has direct allocation
     {
         const auto script{GetScriptForDestination(WitnessV1Taproot{XOnlyPubKey{dummy_pubkey}})};
         BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::WITNESS_V1_TAPROOT);
-        CHECK_SCRIPT_DYNAMIC_SIZE(script, 34, 34);
+        CHECK_SCRIPT_STATIC_SIZE(script, 34);
     }
 
-    // Compressed P2PK needs extra allocation
+    // Compressed P2PK has direct allocation
     {
         const auto script{GetScriptForRawPubKey(dummy_pubkey)};
         BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::PUBKEY);
-        CHECK_SCRIPT_DYNAMIC_SIZE(script, 35, 35);
+        CHECK_SCRIPT_STATIC_SIZE(script, 35);
     }
 
     // Uncompressed P2PK needs extra allocation

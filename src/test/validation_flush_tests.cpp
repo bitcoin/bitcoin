@@ -26,9 +26,8 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
     LOCK(::cs_main);
     auto& view = chainstate.CoinsTip();
 
-    // The number of bytes consumed by coin's heap data, i.e. CScript
-    // (prevector<28, unsigned char>) when assigned 56 bytes of data per above.
-    //
+    // The number of bytes consumed by coin's heap data, i.e.
+    // CScript (prevector<36, unsigned char>) when assigned 56 bytes of data per above.
     // See also: Coin::DynamicMemoryUsage().
     constexpr unsigned int COIN_SIZE = is_64_bit ? 80 : 64;
 
