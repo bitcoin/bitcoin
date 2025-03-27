@@ -54,25 +54,47 @@ struct {
  * set that can pay for the spending target and does not exceed the spending target by more than the
  * cost of creating and spending a change output. The algorithm uses a depth-first search on a binary
  * tree. In the binary tree, each node corresponds to the inclusion or the omission of a UTXO. UTXOs
- * are sorted by their effective values and the tree is explored deterministically per the inclusion
+ * are sorted by their effective values, tie-broken by their waste score, and the tree is explored deterministically per the inclusion
  * branch first. For each new input set candidate, the algorithm checks whether the selection is within the target range.
  * While the selection has not reached the target range, more UTXOs are included. When a selection's
- * value exceeds the target range, the complete subtree deriving from this selection can be omitted.
+ * value exceeds the target range, the complete subtree deriving from this selection prefix can be omitted.
  * At that point, the last included UTXO is deselected and the corresponding omission branch explored
  * instead starting by adding the subsequent UTXO. The search ends after the complete tree has been searched or after a limited number of tries.
  *
  * The search continues to search for better solutions after one solution has been found. The best
- * solution is chosen by minimizing the waste metric. The waste metric is defined as the cost to
+ * solution is chosen by minimal waste score. The waste metric is defined as the cost to
  * spend the current inputs at the given fee rate minus the long term expected cost to spend the
- * inputs, plus the amount by which the selection exceeds the spending target:
+ * inputs, plus the amount by which the selection exceeds the spending target (the "excess"):
  *
- * waste = selectionTotal - target + inputs × (currentFeeRate - longTermFeeRate)
+ *    excess = selected_amount - target
+ *    waste = inputs × (currentFeeRate - longTermFeeRate) + excess
  *
- * The algorithm uses two additional optimizations. A lookahead keeps track of the total value of
- * the unexplored UTXOs. A subtree is not explored if the lookahead indicates that the target range
- * cannot be reached. Further, it is unnecessary to test equivalent combinations. This allows us
- * to skip testing the inclusion of UTXOs that match the effective value and waste of an omitted
- * predecessor.
+ * Note that this means that at fee rates higher than longTermFeeRate additional inputs increase the
+ * waste score, while at fee rates lower than longTermFeeRate additional inputs decrease the waste
+ * score.
+ *
+ * The algorithm uses the following optimizations:
+ * 1. Lookahead: The lookahead stores the total remaining effective value of the undecided UTXOs for
+ *    every depth of the search tree. Whenever the currently selected amount plus the potential
+ *    amount from the lookahead falls short of the target, we can immediately stop searching the
+ *    subtree as no more input set candidates can be found in it.
+ * 2. Skip clones: When two UTXOs match in weight and effective value ("are clones"), naive
+ *    exploration would cause redundant work: e.g., given the UTXOs A, A', and B, where A and A' are
+ *    clones, naive exploration would combine (read underscore to as omission):
+ *    [{}, {A}, {A, A'}, {A, A', B}, {A, _, B}, {_, A'}, {_, A', B}, {_, _, B}].
+ *    In this case the input set candidates {A} and {A'} als well as {A, B} and {A', B} are
+ *    equivalent. It is sufficient to explore combinations that select either both UTXOs or the
+ *    first UTXO. Whenever the first UTXO is omitted, we can also skip the clone as we have already
+ *    explored a set of equivalent combination as the one we could generate with the second clone.
+ *    Concretely, we skip a UTXO when its predecessor is omitted and the UTXO matches the
+ *    the effective value and the waste of the predecessor.
+ * 3. Skip similar UTXOs that are more wasteful: This search algorithm operates on the list of UTXOs
+ *    sorted by effective value, tie-broken to prefer lower waste. This means that among two
+ *    subsequent UTXOs with the same effective value, the second UTXO’s waste score will either be
+ *    equal _or higher_ than the first UTXO’s. This allows us to apply the clone skipping idea more
+ *    broadly: any combination with the second UTXO is equivalent _or worse_ than what we already
+ *    combined with the first UTXO. We skip a UTXO if its predecessor is omitted and the predecessor
+ *    matches in effective value.
  *
  * The Branch and Bound algorithm is described in detail in Murch's Master Thesis:
  * https://murch.one/wp-content/uploads/2016/11/erhardt2016coinselection.pdf
@@ -218,12 +240,13 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
             deselect_last();
             should_shift  = false;
 
-            // After SHIFTing to an omission branch, the `next_utxo` might have the same value and same weight as the
-            // UTXO we just omitted (i.e. it is a "clone"). If so, selecting `next_utxo` would produce an equivalent
+            // After SHIFTing to an omission branch, the `next_utxo` might have the same effective value as the
+            // UTXO we just omitted. Since lower waste is our tiebreaker on UTXOs with equal effective value for sorting, if it
+            // ties on the effective value, it _must_ have the same waste (i.e. be a "clone" of the prior UTXO) or a
+            // higher waste.  If so, selecting `next_utxo` would produce an equivalent or worse
             // selection as one we previously evaluated. In that case, increment `next_utxo` until we find a UTXO with a
-            // differing amount or weight.
-            while (utxo_pool[next_utxo - 1].GetSelectionAmount() == utxo_pool[next_utxo].GetSelectionAmount()
-                    && utxo_pool[next_utxo - 1].m_weight == utxo_pool[next_utxo].m_weight) {
+            // differing amount.
+            while (utxo_pool[next_utxo - 1].GetSelectionAmount() == utxo_pool[next_utxo].GetSelectionAmount()) {
                 if (next_utxo >= utxo_pool.size() - 1) {
                     // Reached end of UTXO pool skipping clones: SHIFT instead
                     should_shift = true;
