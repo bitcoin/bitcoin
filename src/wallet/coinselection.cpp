@@ -137,6 +137,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
     };
 
     size_t curr_try = 0;
+    SelectionResult result(selection_target, SelectionAlgorithm::BNB);
     while (true) {
         bool should_shift{false}, should_cut{false};
         // Select `next_utxo`
@@ -172,6 +173,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
 
         if (curr_try >= TOTAL_TRIES) {
             // Solution is not guaranteed to be optimal if `curr_try` hit TOTAL_TRIES
+            result.SetAlgoCompleted(false);
             break;
         }
 
@@ -193,6 +195,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
             // Set `next_utxo` to one after last selected, then deselect last selected UTXO
             if (curr_selection.empty()) {
                 // Exhausted search space before running into attempt limit
+                result.SetAlgoCompleted(true);
                 break;
             }
             next_utxo = curr_selection.back() + 1;
@@ -201,7 +204,6 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
         }
     }
 
-    SelectionResult result(selection_target, SelectionAlgorithm::BNB);
     result.SetSelectionsEvaluated(curr_try);
 
     if (best_selection.empty()) {
