@@ -7,10 +7,9 @@ To quickly get started fuzzing Bitcoin Core using [libFuzzer](https://llvm.org/d
 ```sh
 $ git clone https://github.com/bitcoin/bitcoin
 $ cd bitcoin/
+# macOS users: make sure to read ["macOS hints for libFuzzer"](#macos-hints-for-libfuzzer)
 $ cmake --preset=libfuzzer
-# macOS users: If you have problem with this step then make sure to read "macOS hints for
-# libFuzzer" on https://github.com/bitcoin/bitcoin/blob/master/doc/fuzzing.md#macos-hints-for-libfuzzer
-$ cmake --build build_fuzz
+$ cmake --build build_fuzz -j$(nproc)
 $ FUZZ=process_message build_fuzz/bin/fuzz
 # abort fuzzing using ctrl-c
 ```
@@ -184,23 +183,62 @@ There are 3 ways fuzz tests can be built:
 ## macOS hints for libFuzzer
 
 The default Clang/LLVM version supplied by Apple on macOS does not include
-fuzzing libraries, so macOS users will need to install a full version, for
-example using `brew install llvm`.
+fuzzing libraries, so macOS users will need to install a full version.
 
-You may also need to take care of giving the correct path for `clang` and
-`clang++`, like `CC=/path/to/clang CXX=/path/to/clang++` if the non-systems
-`clang` does not come first in your path.
+You may also need to take care of giving the correct path for `clang` and `clang++`,
+like `CC=/path/to/clang CXX=/path/to/clang++` if the non-system `clang` does not come first in your path.
 
-Using `lld` is required due to issues with Apple's `ld` and `LLVM`.
+Using `lld` is required due to issues with Apple's `ld` and `llvm`.
+```bash
+brew install llvm lld
+```
 
-Full configuration step for macOS:
+Full fuzzing setup for macOS:
 
-```sh
-$ brew install llvm lld
-$ cmake --preset=libfuzzer \
-   -DCMAKE_C_COMPILER="$(brew --prefix llvm)/bin/clang" \
-   -DCMAKE_CXX_COMPILER="$(brew --prefix llvm)/bin/clang++" \
-   -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld"
+```bash
+cmake --preset=libfuzzer \
+  -DCMAKE_C_COMPILER="$(brew --prefix llvm)/bin/clang" \
+  -DCMAKE_CXX_COMPILER="$(brew --prefix llvm)/bin/clang++" \
+  -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld"
+cmake --build build_fuzz -j$(nproc)
+FUZZ=process_message build_fuzz/bin/fuzz
+```
+
+If you encounter `AddressSanitizer` errors (e.g., `container-overflow`) or linker failures on macOS,
+you can try [disabling strict `ASan` checks](https://github.com/google/sanitizers/wiki/AddressSanitizerContainerOverflow#false-positives) as a workaround:
+
+```bash
+ASAN_OPTIONS=detect_container_overflow=0 FUZZ=process_message build_fuzz/bin/fuzz
+```
+
+On Apple Silicon Macs, you may encounter header compatibility issues between Homebrew LLVM and system headers, typically showing errors like:
+```bash
+usr/include/malloc/_malloc_type.h:66:126: error: unknown type name 'size_t'; did you mean 'std::size_t'?
+```
+
+You can try explicitly setting the target architecture:
+
+```bash
+cmake --preset=libfuzzer \
+  -DCMAKE_C_COMPILER="$(brew --prefix llvm)/bin/clang" \
+  -DCMAKE_CXX_COMPILER="$(brew --prefix llvm)/bin/clang++" \
+  -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" \
+  -DCMAKE_OSX_SYSROOT="$(xcrun --show-sdk-path)" \
+  -DCMAKE_C_FLAGS="-target arm64-apple-macos11" \
+  -DCMAKE_CXX_FLAGS="-target arm64-apple-macos11"
+cmake --build build_fuzz -j$(nproc)
+FUZZ=process_message build_fuzz/bin/fuzz
+```
+
+If that still doesn't work, falling back to the `libfuzzer-nosan` preset may help:
+
+```bash
+cmake --preset=libfuzzer-nosan \
+  -DCMAKE_C_COMPILER="$(brew --prefix llvm)/bin/clang" \
+  -DCMAKE_CXX_COMPILER="$(brew --prefix llvm)/bin/clang++" \
+  -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld"
+cmake --build build_fuzz_nosan -j$(nproc)
+FUZZ=process_message build_fuzz_nosan/bin/fuzz
 ```
 
 Read the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html) for more information. This [libFuzzer tutorial](https://github.com/google/fuzzing/blob/master/tutorial/libFuzzerTutorial.md) might also be of interest.
@@ -222,7 +260,7 @@ $ cmake -B build_fuzz \
    -DCMAKE_C_COMPILER="$(pwd)/AFLplusplus/afl-clang-lto" \
    -DCMAKE_CXX_COMPILER="$(pwd)/AFLplusplus/afl-clang-lto++" \
    -DBUILD_FOR_FUZZING=ON
-$ cmake --build build_fuzz
+$ cmake --build build_fuzz -j$(nproc)
 # For macOS you may need to ignore x86 compilation checks when running "cmake --build". If so,
 # try compiling using: AFL_NO_X86=1 cmake --build build_fuzz
 $ mkdir -p inputs/ outputs/
@@ -252,7 +290,7 @@ $ cmake -B build_fuzz \
    -DCMAKE_CXX_COMPILER="$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang++" \
    -DBUILD_FOR_FUZZING=ON \
    -DSANITIZERS=address,undefined
-$ cmake --build build_fuzz
+$ cmake --build build_fuzz -j$(nproc)
 $ mkdir -p inputs/
 $ FUZZ=process_message ./honggfuzz/honggfuzz -i inputs/ -- build_fuzz/bin/fuzz
 ```
