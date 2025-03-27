@@ -132,6 +132,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
 
     size_t curr_try = 0;
     SelectionResult result(selection_target, SelectionAlgorithm::BNB);
+    bool is_feerate_high = utxo_pool.at(0).fee > utxo_pool.at(0).long_term_fee;
     while (true) {
         bool should_shift{false}, should_cut{false};
         // Select `next_utxo`
@@ -150,6 +151,13 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
             should_shift  = true;
         } else if (curr_amount > selection_target + cost_of_change) {
             // Overshot target range: SHIFT
+            should_shift = true;
+        } else if (is_feerate_high && curr_selection_waste > best_waste) {
+            // At high feerates adding more inputs will increase the waste score. If the current waste is already worse
+            // than the best selection’s while we have insufficient funds, it is impossible for this partial selection
+            // to beat the best selection by adding more inputs: SHIFT
+            // At low feerates, additional inputs lower the waste score, and using this would cause us to skip exploring
+            // combinations with more inputs of lower amounts.
             should_shift = true;
         } else if (curr_amount >= selection_target) {
             // Selection is within target window: potential solution
