@@ -374,6 +374,7 @@ if(SANITIZERS)
       int main() { return 0; }
     "
     RESULT_VAR linker_supports_sanitizers
+    NO_CACHE_IF_FAILED
   )
   if(NOT linker_supports_sanitizers)
     message(FATAL_ERROR "Linker did not accept requested flags, you are missing required libraries.")
