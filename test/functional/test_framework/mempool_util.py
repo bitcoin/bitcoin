@@ -110,6 +110,7 @@ def fill_mempool(test_framework, node, *, tx_sync_fun=None):
     test_framework.log.debug("Check that mempoolminfee is larger than minrelaytxfee")
     assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
     assert_greater_than(node.getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
+    test_framework.sync_mempools()
 
 def tx_in_orphanage(node, tx: CTransaction) -> bool:
     """Returns true if the transaction is in the orphanage."""
