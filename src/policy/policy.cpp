@@ -169,20 +169,18 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
 }
 
 /**
- * Check transaction inputs to mitigate two
- * potential denial-of-service attacks:
+ * Check transaction inputs.
  *
- * 1. scriptSigs with extra data stuffed into them,
- *    not consumed by scriptPubKey (or P2SH script)
- * 2. P2SH scripts with a crazy number of expensive
- *    CHECKSIG/CHECKMULTISIG operations
- *
- * Why bother? To avoid denial-of-service attacks; an attacker
- * can submit a standard HASH... OP_EQUAL transaction,
- * which will get accepted into blocks. The redemption
- * script can be anything; an attacker could use a very
- * expensive-to-check-upon-redemption script like:
- *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
+ * This does three things:
+ *  * Prevents mempool acceptance of spends of future
+ *    segwit versions we don't know how to validate
+ *  * Mitigates a potential denial-of-service attack with
+ *    P2SH scripts with a crazy number of expensive
+ *    CHECKSIG/CHECKMULTISIG operations.
+ *  * Prevents spends of unknown/irregular scriptPubKeys,
+ *    which mitigates potential denial-of-service attacks
+ *    involving expensive scripts and helps reserve them
+ *    as potential new upgrade hooks.
  *
  * Note that only the non-witness portion of the transaction is checked here.
  */
