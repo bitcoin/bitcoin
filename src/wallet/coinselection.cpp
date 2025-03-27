@@ -68,7 +68,7 @@ struct {
  *
  * waste = selectionTotal - target + inputs × (currentFeeRate - longTermFeeRate)
  *
- * The algorithm uses two additional optimizations. A lookahead (tk) keeps track of the total value of
+ * The algorithm uses two additional optimizations. A lookahead keeps track of the total value of
  * the unexplored UTXOs. A subtree is not explored if the lookahead indicates that the target range
  * cannot be reached. Further, it is unnecessary to test equivalent combinations (tk). This allows us
  * to skip testing the inclusion of UTXOs that match the effective value and waste of an omitted
@@ -93,12 +93,18 @@ static const size_t TOTAL_TRIES = 100000;
 util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change,
                                              int max_selection_weight)
 {
-    // Check that there are sufficient funds
+    std::sort(utxo_pool.begin(), utxo_pool.end(), descending);
+    // The sum of UTXO amounts after this UTXO index, e.g. lookahead[5] = Σ(UTXO[6+].amount)
+    std::vector<CAmount> lookahead(utxo_pool.size());
+
+    // Calculate lookahead values, and check that there are sufficient funds
     CAmount total_available = 0;
-    for (const OutputGroup& utxo : utxo_pool) {
-        // Assert UTXOs with non-positive effective value have been filtered
-        Assume(utxo.GetSelectionAmount() > 0);
-        total_available += utxo.GetSelectionAmount();
+    for (size_t i = 0; i < utxo_pool.size(); ++i) {
+        size_t index = utxo_pool.size() - 1 - i; // Loop over every element in reverse order
+        lookahead[index] = total_available;
+        // UTXOs with non-positive effective value must have been filtered
+        Assume(utxo_pool[index].GetSelectionAmount() > 0);
+        total_available += utxo_pool[index].GetSelectionAmount();
     }
 
     if (total_available < selection_target) {
@@ -106,7 +112,6 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
         return util::Error();
     }
 
-    std::sort(utxo_pool.begin(), utxo_pool.end(), descending);
 
     // The current selection and the best input set found so far, stored as the utxo_pool indices of the UTXOs forming them
     std::vector<size_t> curr_selection;
@@ -151,7 +156,10 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
         ++curr_try;
 
         // EVALUATE current selection: check for solutions and see whether we can CUT or SHIFT before EXPLORING further
-        if (curr_weight > max_selection_weight) {
+        if (curr_amount + lookahead[curr_selection.back()] < selection_target) {
+            // Insufficient funds with lookahead: CUT
+            should_cut = true;
+        } else if (curr_weight > max_selection_weight) {
             // max_weight exceeded: SHIFT
             max_tx_weight_exceeded = true;
             should_shift  = true;
