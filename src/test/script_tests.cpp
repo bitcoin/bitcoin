@@ -1160,10 +1160,10 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
 
 BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
 {
-    BOOST_CHECK_EQUAL(sizeof(prevector<PREVECTOR_SIZE, unsigned char>), 32);
-    BOOST_CHECK_EQUAL(sizeof(CScriptBase), 32);
-    BOOST_CHECK_EQUAL(sizeof(CScript), 32);
-    BOOST_CHECK_EQUAL(sizeof(CTxOut), 40);
+    BOOST_CHECK_EQUAL(sizeof(prevector<34, uint8_t>), sizeof(prevector<PREVECTOR_SIZE, uint8_t>));
+    BOOST_CHECK_EQUAL(sizeof(CScriptBase), 40);
+    BOOST_CHECK_EQUAL(sizeof(CScript), 40);
+    BOOST_CHECK_EQUAL(sizeof(CTxOut), 48);
 
     CKey dummyKey;
     dummyKey.MakeNewKey(true);
@@ -1206,31 +1206,31 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
         BOOST_CHECK_EQUAL(scriptP2PKH.allocated_memory(), 0);
     }
 
-    // P2WSH needs extra allocation
+    // P2WSH has direct allocation
     {
         const auto scriptP2WSH{GetScriptForDestination(WitnessV0ScriptHash{CScript{} << OP_TRUE})};
         BOOST_CHECK(scriptP2WSH.IsPayToWitnessScriptHash());
         BOOST_CHECK_EQUAL(scriptP2WSH.size(), 34);
-        BOOST_CHECK_EQUAL(scriptP2WSH.capacity(), 34);
-        BOOST_CHECK_EQUAL(scriptP2WSH.allocated_memory(), 34);
+        BOOST_CHECK_EQUAL(scriptP2WSH.capacity(), PREVECTOR_SIZE);
+        BOOST_CHECK_EQUAL(scriptP2WSH.allocated_memory(), 0);
     }
 
-    // P2TR needs extra allocation
+    // P2TR has direct allocation
     {
         const auto scriptTaproot{GetScriptForDestination(WitnessV1Taproot{XOnlyPubKey{CPubKey{dummyKey.GetPubKey()}}})};
         BOOST_CHECK_EQUAL(Solver(scriptTaproot, dummyVSolutions), TxoutType::WITNESS_V1_TAPROOT);
         BOOST_CHECK_EQUAL(scriptTaproot.size(), 34);
-        BOOST_CHECK_EQUAL(scriptTaproot.capacity(), 34);
-        BOOST_CHECK_EQUAL(scriptTaproot.allocated_memory(), 34);
+        BOOST_CHECK_EQUAL(scriptTaproot.capacity(), PREVECTOR_SIZE);
+        BOOST_CHECK_EQUAL(scriptTaproot.allocated_memory(), 0);
     }
 
-    // P2PK needs extra allocation
+    // P2PK has direct allocation
     {
         const auto scriptPubKey{GetScriptForRawPubKey(CPubKey{dummyKey.GetPubKey()})};
         BOOST_CHECK_EQUAL(Solver(scriptPubKey, dummyVSolutions), TxoutType::PUBKEY);
         BOOST_CHECK_EQUAL(scriptPubKey.size(), 35);
-        BOOST_CHECK_EQUAL(scriptPubKey.capacity(), 35);
-        BOOST_CHECK_EQUAL(scriptPubKey.allocated_memory(), 35);
+        BOOST_CHECK_EQUAL(scriptPubKey.capacity(), PREVECTOR_SIZE);
+        BOOST_CHECK_EQUAL(scriptPubKey.allocated_memory(), 0);
     }
 
     // MULTISIG needs extra allocation
