@@ -161,7 +161,7 @@ FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
         const auto block_adjusted_max_weight = MAX_BLOCK_WEIGHT - DEFAULT_BLOCK_RESERVED_WEIGHT;
         // Stop if pool reaches block_adjusted_max_weight because BlockAssembler will stop when the
         // block template reaches that, but the MiniMiner will keep going.
-        if (pool.GetTotalTxSize() + GetVirtualTransactionSize(*tx) >= block_adjusted_max_weight) break;
+        if ((pool.GetTotalTxSize() + GetVirtualTransactionSize(*tx)) * 4 >= block_adjusted_max_weight) break;
         TestMemPoolEntryHelper entry;
         const CAmount fee{ConsumeMoney(fuzzed_data_provider, /*max=*/MAX_MONEY/100000)};
         assert(MoneyRange(fee));
