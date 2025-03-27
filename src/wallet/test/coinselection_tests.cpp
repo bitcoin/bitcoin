@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(bnb_test)
         std::vector<OutputGroup> clone_pool;
         AddCoins(clone_pool, {2 * CENT, 7 * CENT, 7 * CENT}, cs_params);
         AddDuplicateCoins(clone_pool, 50'000, 5 * CENT, cs_params);
-        TestBnBSuccess("Skip equivalent input sets", clone_pool, /*selection_target=*/16 * CENT, /*expected_input_amounts=*/{2 * CENT, 7 * CENT, 7 * CENT}, /*expected_attempts=*/100'000, cs_params);
+        TestBnBSuccess("Skip equivalent input sets", clone_pool, /*selection_target=*/16 * CENT, /*expected_input_amounts=*/{2 * CENT, 7 * CENT, 7 * CENT}, /*expected_attempts=*/16, cs_params);
 
         /* Test BnB attempt limit (`TOTAL_TRIES`)
          *
