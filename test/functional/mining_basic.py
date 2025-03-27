@@ -30,7 +30,8 @@ from test_framework.messages import (
     MAX_BLOCK_WEIGHT,
     MINIMUM_BLOCK_RESERVED_WEIGHT,
     ser_uint256,
-    WITNESS_SCALE_FACTOR
+    WITNESS_SCALE_FACTOR,
+    MAX_SEQUENCE_NONFINAL,
 )
 from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
@@ -362,6 +363,12 @@ class MiningTest(BitcoinTestFramework):
             expected_msg=f"Error: Specified -blockmaxweight ({MAX_BLOCK_WEIGHT + 1}) exceeds consensus maximum block weight ({MAX_BLOCK_WEIGHT})",
         )
 
+    def test_height_in_locktime(self):
+        self.log.info("Sanity check generated blocks have their coinbase timelocked to their height.")
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        block = self.nodes[0].getblock(self.nodes[0].getbestblockhash())
+        assert_equal(block["tx"][0]["locktime"], block["height"] - 1)
+        assert_equal(block["tx"][0]["vin"][0]["sequence"], MAX_SEQUENCE_NONFINAL)
 
     def run_test(self):
         node = self.nodes[0]
