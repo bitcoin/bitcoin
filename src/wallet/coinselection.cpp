@@ -216,12 +216,13 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
             deselect_last();
             should_shift  = false;
 
-            // After SHIFTing to an omission branch, the `next_utxo` might have the same value and same weight as the
-            // UTXO we just omitted (i.e. it is a "clone"). If so, selecting `next_utxo` would produce an equivalent
+            // After SHIFTing to an omission branch, the `next_utxo` might have the same effective value as the
+            // UTXO we just omitted. Since lower waste is our tiebreaker on UTXOs with equal effective value for sorting, if it
+            // ties on the effective value, it _must_ have the same waste (i.e. be a "clone" of the prior UTXO) or a
+            // higher waste.  If so, selecting `next_utxo` would produce an equivalent or worse
             // selection as one we previously evaluated. In that case, increment `next_utxo` until we find a UTXO with a
-            // differing amount or weight.
-            while (utxo_pool[next_utxo - 1].GetSelectionAmount() == utxo_pool[next_utxo].GetSelectionAmount()
-                    && utxo_pool[next_utxo - 1].m_weight == utxo_pool[next_utxo].m_weight) {
+            // differing amount.
+            while (utxo_pool[next_utxo - 1].GetSelectionAmount() == utxo_pool[next_utxo].GetSelectionAmount()) {
                 if (next_utxo >= utxo_pool.size() - 1) {
                     // Reached end of UTXO pool skipping clones: SHIFT instead
                     should_shift = true;
