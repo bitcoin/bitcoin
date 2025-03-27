@@ -460,7 +460,10 @@ other input.
   safely continue even if the assumption is violated. In debug builds it
   behaves like `Assert`/`assert` to notify developers and testers about
   nonfatal errors. In production it doesn't warn or log anything, though the
-  expression is always evaluated.
+  expression is always evaluated. However, if the compiler can prove that
+  an expression inside `Assume` is side-effect-free, it may optimize the call away,
+  skipping its evaluation in production. This enables a lower-cost way of
+  making explicit statements about the code, aiding review.
    - For example it can be assumed that a variable is only initialized once,
      but a failed assumption does not result in a fatal bug. A failed
      assumption may or may not result in a slightly degraded user experience,
