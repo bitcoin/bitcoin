@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     BOOST_CHECK(EquivalentResult(expected_result, *result3));
     BOOST_CHECK_EQUAL(result3->GetSelectedValue(), 5 * CENT);
     // Demonstrate how following improvements reduce iteration count and catch any regressions in the future.
-    expected_attempts = 10;
+    expected_attempts = 8;
     BOOST_CHECK_MESSAGE(result3->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, result3->GetSelectionsEvaluated()));
     expected_result.Clear();
 
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     BOOST_CHECK(EquivalentResult(expected_result, *result5));
     BOOST_CHECK_EQUAL(result5->GetSelectedValue(), 10 * CENT);
     // Demonstrate how following improvements reduce iteration count and catch any regressions in the future.
-    expected_attempts = 26;
+    expected_attempts = 16;
     BOOST_CHECK_MESSAGE(result5->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, result5->GetSelectionsEvaluated()));
     expected_result.Clear();
 
@@ -284,12 +284,11 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     CAmount target = make_hard_case(17, utxo_pool);
     BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), target, 1)); // Should exhaust
     target = make_hard_case(14, utxo_pool);
-    BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), target, 1)); // TK: Will temporarily exhaust because we are still missing the optimizations
-    // const auto result7 = SelectCoinsBnB(GroupCoins(utxo_pool), target, 1); // Should not exhaust
-    // BOOST_CHECK(result7);
-    // // Demonstrate how following improvements reduce iteration count and catch any regressions in the future.
-    // expected_attempts = 81'914;
-    // BOOST_CHECK_MESSAGE(result7->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, result7->GetSelectionsEvaluated()));
+    const auto result7 = SelectCoinsBnB(GroupCoins(utxo_pool), target, 1); // Should not exhaust
+    BOOST_CHECK(result7);
+    // Demonstrate how following improvements reduce iteration count and catch any regressions in the future.
+    expected_attempts = 49'148;
+    BOOST_CHECK_MESSAGE(result7->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, result7->GetSelectionsEvaluated()));
 
     // Test same value early bailout optimization
     utxo_pool.clear();
@@ -491,7 +490,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         add_coin(3 * CENT, 2, expected_result);
         BOOST_CHECK(EquivalentResult(expected_result, *res));
         // Demonstrate how following improvements reduce iteration count and catch any regressions in the future.
-        expected_attempts = 39;
+        expected_attempts = 25;
         BOOST_CHECK_MESSAGE(res->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, res->GetSelectionsEvaluated()));
     }
 }
