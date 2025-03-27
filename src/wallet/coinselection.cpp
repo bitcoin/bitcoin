@@ -70,7 +70,7 @@ struct {
  *
  * The algorithm uses two additional optimizations. A lookahead keeps track of the total value of
  * the unexplored UTXOs. A subtree is not explored if the lookahead indicates that the target range
- * cannot be reached. Further, it is unnecessary to test equivalent combinations (tk). This allows us
+ * cannot be reached. Further, it is unnecessary to test equivalent combinations. This allows us
  * to skip testing the inclusion of UTXOs that match the effective value and waste of an omitted
  * predecessor.
  *
@@ -143,8 +143,9 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
 
     size_t curr_try = 0;
     SelectionResult result(selection_target, SelectionAlgorithm::BNB);
+    bool is_done = false;
     bool is_feerate_high = utxo_pool.at(0).fee > utxo_pool.at(0).long_term_fee;
-    while (true) {
+    while (!is_done) {
         bool should_shift{false}, should_cut{false};
         // Select `next_utxo`
         OutputGroup& utxo = utxo_pool[next_utxo];
@@ -203,16 +204,32 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
             should_shift  = true;
         }
 
-        if (should_shift) {
+        while (should_shift) {
             // Set `next_utxo` to one after last selected, then deselect last selected UTXO
             if (curr_selection.empty()) {
                 // Exhausted search space before running into attempt limit
+                is_done = true;
                 result.SetAlgoCompleted(true);
                 break;
             }
             next_utxo = curr_selection.back() + 1;
             deselect_last();
             should_shift  = false;
+
+            // After SHIFTing to an omission branch, the `next_utxo` might have the same value and same weight as the
+            // UTXO we just omitted (i.e. it is a "clone"). If so, selecting `next_utxo` would produce an equivalent
+            // selection as one we previously evaluated. In that case, increment `next_utxo` until we find a UTXO with a
+            // differing amount or weight.
+            while (utxo_pool[next_utxo - 1].GetSelectionAmount() == utxo_pool[next_utxo].GetSelectionAmount()
+                    && utxo_pool[next_utxo - 1].m_weight == utxo_pool[next_utxo].m_weight) {
+                if (next_utxo >= utxo_pool.size() - 1) {
+                    // Reached end of UTXO pool skipping clones: SHIFT instead
+                    should_shift = true;
+                    break;
+                }
+                // Skip clone: previous UTXO is equivalent and unselected
+                ++next_utxo;
+            }
         }
     }
 
