@@ -1321,9 +1321,9 @@ void TxGraphImpl::ApplyDependencies(int level) noexcept
     if (clusterset.m_group_data->m_group_oversized) return;
 
     // For each group of to-be-merged Clusters.
-    for (const auto& group_data : clusterset.m_group_data->m_groups) {
+    for (const auto& group_entry : clusterset.m_group_data->m_groups) {
         auto cluster_span = std::span{clusterset.m_group_data->m_group_clusters}
-                                .subspan(group_data.m_cluster_offset, group_data.m_cluster_count);
+                                .subspan(group_entry.m_cluster_offset, group_entry.m_cluster_count);
         // Pull in all the Clusters that contain dependencies.
         if (level == 1) {
             for (Cluster*& cluster : cluster_span) {
@@ -1335,7 +1335,7 @@ void TxGraphImpl::ApplyDependencies(int level) noexcept
         // Actually apply all to-be-added dependencies (all parents and children from this grouping
         // belong to the same Cluster at this point because of the merging above).
         auto deps_span = std::span{clusterset.m_deps_to_add}
-                             .subspan(group_data.m_deps_offset, group_data.m_deps_count);
+                             .subspan(group_entry.m_deps_offset, group_entry.m_deps_count);
         Assume(!deps_span.empty());
         const auto& loc = m_entries[deps_span[0].second].m_locator[level];
         Assume(loc.IsPresent());
