@@ -161,6 +161,8 @@ fn deterministic_coverage(
                 "--show-line-counts-or-regions",
                 "--show-branches=count",
                 "--show-expansions",
+                "--show-instantiation-summary",
+                "-Xdemangler=llvm-cxxfilt",
                 &format!("--instr-profile={}", profdata_file.display()),
             ])
             .arg(fuzz_exe)
