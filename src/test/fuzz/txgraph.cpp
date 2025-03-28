@@ -269,6 +269,24 @@ FUZZ_TARGET(txgraph)
     sims.reserve(2);
     sims.emplace_back(max_count);
 
+    /** Struct encapsulating information about a BlockBuilder that's currently live. */
+    struct BlockBuilderData
+    {
+        /** BlockBuilder object from real. */
+        std::unique_ptr<TxGraph::BlockBuilder> builder;
+        /** The set of transactions marked as included in *builder. */
+        SimTxGraph::SetType included;
+        /** The set of transactions marked as included or skipped in *builder. */
+        SimTxGraph::SetType done;
+        /** The last chunk feerate returned by *builder. IsEmpty() if none yet. */
+        FeePerWeight last_feerate;
+
+        BlockBuilderData(std::unique_ptr<TxGraph::BlockBuilder> builder_in) : builder(std::move(builder_in)) {}
+    };
+
+    /** Currently active block builders. */
+    std::vector<BlockBuilderData> block_builders;
+
     /** Function to pick any Ref (for either sim in sims: from sim.simmap or sim.removed, or the
      *  empty Ref). */
     auto pick_fn = [&]() noexcept -> TxGraph::Ref* {
@@ -342,12 +360,19 @@ FUZZ_TARGET(txgraph)
     LIMITED_WHILE(provider.remaining_bytes() > 0, 200) {
         // Read a one-byte command.
         int command = provider.ConsumeIntegral<uint8_t>();
+        int orig_command = command;
+
         // Treat the lowest bit of a command as a flag (which selects a variant of some of the
         // operations), and the second-lowest bit as a way of selecting main vs. staging, and leave
         // the rest of the bits in command.
         bool alt = command & 1;
         bool use_main = command & 2;
         command >>= 2;
+
+        /** Use the bottom 2 bits of command to select an entry in the block_builders vector (if
+         *  any). These use the same bits as alt/use_main, so don't use those in actions below
+         *  where builder_idx is used as well. */
+        int builder_idx = block_builders.empty() ? -1 : int((orig_command & 3) % block_builders.size());
 
         // Provide convenient aliases for the top simulated graph (main, or staging if it exists),
         // one for the simulated graph selected based on use_main (for operations that can operate
@@ -359,7 +384,7 @@ FUZZ_TARGET(txgraph)
         // Keep decrementing command for each applicable operation, until one is hit. Multiple
         // iterations may be necessary.
         while (true) {
-            if (top_sim.GetTransactionCount() < SimTxGraph::MAX_TRANSACTIONS && command-- == 0) {
+            if ((block_builders.empty() || sims.size() > 1) && top_sim.GetTransactionCount() < SimTxGraph::MAX_TRANSACTIONS && command-- == 0) {
                 // AddTransaction.
                 int64_t fee;
                 int32_t size;
@@ -381,7 +406,7 @@ FUZZ_TARGET(txgraph)
                 // Move it in place.
                 *ref_loc = std::move(ref);
                 break;
-            } else if (top_sim.GetTransactionCount() + top_sim.removed.size() > 1 && command-- == 0) {
+            } else if ((block_builders.empty() || sims.size() > 1) && top_sim.GetTransactionCount() + top_sim.removed.size() > 1 && command-- == 0) {
                 // AddDependency.
                 auto par = pick_fn();
                 auto chl = pick_fn();
@@ -395,7 +420,7 @@ FUZZ_TARGET(txgraph)
                 top_sim.AddDependency(par, chl);
                 real->AddDependency(*par, *chl);
                 break;
-            } else if (top_sim.removed.size() < 100 && command-- == 0) {
+            } else if ((block_builders.empty() || sims.size() > 1) && top_sim.removed.size() < 100 && command-- == 0) {
                 // RemoveTransaction. Either all its ancestors or all its descendants are also
                 // removed (if any), to make sure TxGraph's reordering of removals and dependencies
                 // has no effect.
@@ -425,7 +450,7 @@ FUZZ_TARGET(txgraph)
                 }
                 sel_sim.removed.pop_back();
                 break;
-            } else if (command-- == 0) {
+            } else if (block_builders.empty() && command-- == 0) {
                 // ~Ref (of any transaction).
                 std::vector<TxGraph::Ref*> to_destroy;
                 to_destroy.push_back(pick_fn());
@@ -447,7 +472,7 @@ FUZZ_TARGET(txgraph)
                     }
                 }
                 break;
-            } else if (command-- == 0) {
+            } else if (block_builders.empty() && command-- == 0) {
                 // SetTransactionFee.
                 int64_t fee;
                 if (alt) {
@@ -578,7 +603,7 @@ FUZZ_TARGET(txgraph)
                 sims.back().modified = SimTxGraph::SetType{};
                 real->StartStaging();
                 break;
-            } else if (sims.size() > 1 && command-- == 0) {
+            } else if (block_builders.empty() && sims.size() > 1 && command-- == 0) {
                 // CommitStaging.
                 real->CommitStaging();
                 sims.erase(sims.begin());
@@ -664,6 +689,65 @@ FUZZ_TARGET(txgraph)
                     assert(FeeRateCompare(real_staged_diagram[i], real_staged_diagram[i - 1]) <= 0);
                 }
                 break;
+            } else if (block_builders.size() < 4 && !main_sim.IsOversized() && command-- == 0) {
+                // GetBlockBuilder.
+                block_builders.emplace_back(real->GetBlockBuilder());
+                break;
+            } else if (!block_builders.empty() && command-- == 0) {
+                // ~BlockBuilder.
+                block_builders.erase(block_builders.begin() + builder_idx);
+                break;
+            } else if (!block_builders.empty() && command-- == 0) {
+                // BlockBuilder::GetCurrentChunk, followed by Include/Skip.
+                auto& builder_data = block_builders[builder_idx];
+                auto new_included = builder_data.included;
+                auto new_done = builder_data.done;
+                auto chunk = builder_data.builder->GetCurrentChunk();
+                if (chunk) {
+                    // Chunk feerates must be monotonously decreasing.
+                    if (!builder_data.last_feerate.IsEmpty()) {
+                        assert(!(chunk->second >> builder_data.last_feerate));
+                    }
+                    builder_data.last_feerate = chunk->second;
+                    // Verify the contents of GetCurrentChunk.
+                    FeePerWeight sum_feerate;
+                    for (TxGraph::Ref* ref : chunk->first) {
+                        // Each transaction in the chunk must exist in the main graph.
+                        auto simpos = main_sim.Find(ref);
+                        assert(simpos != SimTxGraph::MISSING);
+                        // Verify the claimed chunk feerate.
+                        sum_feerate += main_sim.graph.FeeRate(simpos);
+                        // Make sure no transaction is reported twice.
+                        assert(!new_done[simpos]);
+                        new_done.Set(simpos);
+                        // The concatenation of all included transactions must be topologically valid.
+                        new_included.Set(simpos);
+                        assert(main_sim.graph.Ancestors(simpos).IsSubsetOf(new_included));
+                    }
+                    assert(sum_feerate == chunk->second);
+                } else {
+                    // When we reach the end, if nothing was skipped, the entire graph should have
+                    // been reported.
+                    if (builder_data.done == builder_data.included) {
+                        assert(builder_data.done.Count() == main_sim.GetTransactionCount());
+                    }
+                }
+                // Possibly invoke GetCurrentChunk() again, which should give the same result.
+                if ((orig_command % 7) >= 5) {
+                    auto chunk2 = builder_data.builder->GetCurrentChunk();
+                    assert(chunk == chunk2);
+                }
+                // Skip or include.
+                if ((orig_command % 5) >= 3) {
+                    // Skip.
+                    builder_data.builder->Skip();
+                } else {
+                    // Include.
+                    builder_data.builder->Include();
+                    builder_data.included = new_included;
+                }
+                builder_data.done = new_done;
+                break;
             }
         }
     }
@@ -717,6 +801,28 @@ FUZZ_TARGET(txgraph)
                 assert(FeeRateCompare(after_feerate, pos_feerate) <= 0);
             }
         }
+
+        // The same order should be obtained through a BlockBuilder as implied by CompareMainOrder,
+        // if nothing is skipped.
+        auto builder = real->GetBlockBuilder();
+        std::vector<SimTxGraph::Pos> vec_builder;
+        while (auto chunk = builder->GetCurrentChunk()) {
+            FeePerWeight sum;
+            for (TxGraph::Ref* ref : chunk->first) {
+                // The reported chunk feerate must match the chunk feerate obtained by asking
+                // it for each of the chunk's transactions individually.
+                assert(real->GetMainChunkFeerate(*ref) == chunk->second);
+                // Verify the chunk feerate matches the sum of the reported individual feerates.
+                sum += real->GetIndividualFeerate(*ref);
+                // Chunks must contain transactions that exist in the graph.
+                auto simpos = sims[0].Find(ref);
+                assert(simpos != SimTxGraph::MISSING);
+                vec_builder.push_back(simpos);
+            }
+            assert(sum == chunk->second);
+            builder->Include();
+        }
+        assert(vec_builder == vec1);
 
         // Check that the implied ordering gives rise to a combined diagram that matches the
         // diagram constructed from the individual cluster linearization chunkings.
@@ -848,6 +954,8 @@ FUZZ_TARGET(txgraph)
     // Sanity check again (because invoking inspectors may modify internal unobservable state).
     real->SanityCheck();
 
+    // Kill the block builders.
+    block_builders.clear();
     // Kill the TxGraph object.
     real.reset();
     // Kill the simulated graphs, with all remaining Refs in it. If any, this verifies that Refs
