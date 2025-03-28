@@ -388,7 +388,7 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel,
     assert(invoked);
 }
 
-static void NotifyTransactionChanged(WalletModel *walletmodel, const uint256 &hash, ChangeType status)
+static void NotifyTransactionChanged(WalletModel *walletmodel, const Txid& hash, ChangeType status)
 {
     Q_UNUSED(hash);
     Q_UNUSED(status);
@@ -479,7 +479,7 @@ WalletModel::UnlockContext::~UnlockContext()
     }
 }
 
-bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
+bool WalletModel::bumpFee(Txid hash, Txid& new_hash)
 {
     CCoinControl coin_control;
     coin_control.m_signal_bip125_rbf = true;
@@ -561,11 +561,15 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
         return false;
     }
     // commit the bumped transaction
-    if(!m_wallet->commitBumpTransaction(hash, std::move(mtx), errors, new_hash)) {
+    // Temporary uint256 variable needed for commitBumpTransaction out parameter.
+    uint256 bumped_txid_result;
+    if(!m_wallet->commitBumpTransaction(hash, std::move(mtx), errors, bumped_txid_result)) {
         QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Could not commit transaction") + "<br />(" +
             QString::fromStdString(errors[0].translated)+")");
         return false;
     }
+    // Assign the received txid back to the new_hash.
+    new_hash = Txid::FromUint256(bumped_txid_result);
     return true;
 }
 
