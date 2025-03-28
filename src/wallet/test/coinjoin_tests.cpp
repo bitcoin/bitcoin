@@ -67,16 +67,16 @@ BOOST_AUTO_TEST_CASE(coinjoin_collateral_tests)
 BOOST_AUTO_TEST_CASE(coinjoin_pending_dsa_request_tests)
 {
     CPendingDsaRequest dsa_request;
-    BOOST_CHECK(dsa_request.GetAddr() == CService());
+    BOOST_CHECK(dsa_request.GetProTxHash() == uint256());
     BOOST_CHECK(dsa_request.GetDSA() == CCoinJoinAccept());
     BOOST_CHECK_EQUAL(dsa_request.IsExpired(), true);
     CPendingDsaRequest dsa_request_2;
     BOOST_CHECK(dsa_request == dsa_request_2);
     CCoinJoinAccept cja;
     cja.nDenom = 4;
-    CService cserv(CNetAddr(), 1111);
-    CPendingDsaRequest custom_request(cserv, cja);
-    BOOST_CHECK(custom_request.GetAddr() == cserv);
+    uint256 proTxHash{uint256::ONE};
+    CPendingDsaRequest custom_request(proTxHash, cja);
+    BOOST_CHECK(custom_request.GetProTxHash() == proTxHash);
     BOOST_CHECK(custom_request.GetDSA() == cja);
     BOOST_CHECK_EQUAL(custom_request.IsExpired(), false);
     SetMockTime(GetTime() + 15);

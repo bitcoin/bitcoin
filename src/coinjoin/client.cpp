@@ -106,7 +106,7 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CConnm
         // if the queue is ready, submit if we can
         if (dsq.fReady &&
             m_walletman.ForAnyCJClientMan([this, &connman, &dmn](std::unique_ptr<CCoinJoinClientManager>& clientman) {
-                return clientman->TrySubmitDenominate(dmn->pdmnState->addr, connman);
+                return clientman->TrySubmitDenominate(dmn->proTxHash, connman);
             })) {
             LogPrint(BCLog::COINJOIN, "DSQUEUE -- CoinJoin queue is ready, masternode=%s, queue=%s\n", dmn->proTxHash.ToString(), dsq.ToString());
             return {};
@@ -184,23 +184,15 @@ void CCoinJoinClientSession::ProcessMessage(CNode& peer, CChainState& active_cha
     if (!CCoinJoinClientOptions::IsEnabled()) return;
     if (!m_mn_sync.IsBlockchainSynced()) return;
 
-    if (msg_type == NetMsgType::DSSTATUSUPDATE) {
-        if (!mixingMasternode) return;
-        if (mixingMasternode->pdmnState->addr != peer.addr) {
-            return;
-        }
+    if (!mixingMasternode) return;
+    if (mixingMasternode->pdmnState->addr != peer.addr) return;
 
+    if (msg_type == NetMsgType::DSSTATUSUPDATE) {
         CCoinJoinStatusUpdate psssup;
         vRecv >> psssup;
 
         ProcessPoolStateUpdate(psssup);
-
     } else if (msg_type == NetMsgType::DSFINALTX) {
-        if (!mixingMasternode) return;
-        if (mixingMasternode->pdmnState->addr != peer.addr) {
-            return;
-        }
-
         int nMsgSessionID;
         vRecv >> nMsgSessionID;
         CTransaction txNew(deserialize, vRecv);
@@ -214,15 +206,7 @@ void CCoinJoinClientSession::ProcessMessage(CNode& peer, CChainState& active_cha
 
         // check to see if input is spent already? (and probably not confirmed)
         SignFinalTransaction(peer, active_chainstate, connman, mempool, txNew);
-
     } else if (msg_type == NetMsgType::DSCOMPLETE) {
-        if (!mixingMasternode) return;
-        if (mixingMasternode->pdmnState->addr != peer.addr) {
-            WalletCJLogPrint(m_wallet, "DSCOMPLETE -- message doesn't match current Masternode: infoMixingMasternode=%s  addr=%s\n",
-                             mixingMasternode->pdmnState->addr.ToStringAddrPort(), peer.addr.ToStringAddrPort());
-            return;
-        }
-
         int nMsgSessionID;
         PoolMessage nMsgMessageID;
         vRecv >> nMsgSessionID >> nMsgMessageID;
@@ -1130,7 +1114,7 @@ bool CCoinJoinClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, 
 
         nSessionDenom = dsq.nDenom;
         mixingMasternode = dmn;
-        pendingDsaRequest = CPendingDsaRequest(dmn->pdmnState->addr, CCoinJoinAccept(nSessionDenom, txMyCollateral));
+        pendingDsaRequest = CPendingDsaRequest(dmn->proTxHash, CCoinJoinAccept(nSessionDenom, txMyCollateral));
         connman.AddPendingMasternode(dmn->proTxHash);
         SetState(POOL_STATE_QUEUE);
         nTimeLastSuccessfulStep = GetTime();
@@ -1215,7 +1199,7 @@ bool CCoinJoinClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, CCon
 
         mixingMasternode = dmn;
         connman.AddPendingMasternode(dmn->proTxHash);
-        pendingDsaRequest = CPendingDsaRequest(dmn->pdmnState->addr, CCoinJoinAccept(nSessionDenom, txMyCollateral));
+        pendingDsaRequest = CPendingDsaRequest(dmn->proTxHash, CCoinJoinAccept(nSessionDenom, txMyCollateral));
         SetState(POOL_STATE_QUEUE);
         nTimeLastSuccessfulStep = GetTime();
         WalletCJLogPrint( /* Continued */
@@ -1232,7 +1216,17 @@ bool CCoinJoinClientSession::ProcessPendingDsaRequest(CConnman& connman)
 {
     if (!pendingDsaRequest) return false;
 
-    bool fDone = connman.ForNode(pendingDsaRequest.GetAddr(), [this, &connman](CNode* pnode) {
+    CService mn_addr;
+    if (auto dmn = m_dmnman.GetListAtChainTip().GetMN(pendingDsaRequest.GetProTxHash())) {
+        mn_addr = Assert(dmn->pdmnState)->addr;
+    } else {
+        WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::%s -- cannot find address to connect, masternode=%s\n", __func__,
+            pendingDsaRequest.GetProTxHash().ToString());
+        WITH_LOCK(cs_coinjoin, SetNull());
+        return false;
+    }
+
+    bool fDone = connman.ForNode(mn_addr, [this, &connman](CNode* pnode) {
         WalletCJLogPrint(m_wallet, "-- processing dsa queue for addr=%s\n", pnode->addr.ToStringAddrPort());
         nTimeLastSuccessfulStep = GetTime();
         CNetMsgMaker msgMaker(pnode->GetCommonVersion());
@@ -1243,8 +1237,8 @@ bool CCoinJoinClientSession::ProcessPendingDsaRequest(CConnman& connman)
     if (fDone) {
         pendingDsaRequest = CPendingDsaRequest();
     } else if (pendingDsaRequest.IsExpired()) {
-        WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::%s -- failed to connect to %s\n", __func__,
-                         pendingDsaRequest.GetAddr().ToStringAddrPort());
+        WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::%s -- failed to connect, masternode=%s\n", __func__,
+                         pendingDsaRequest.GetProTxHash().ToString());
         WITH_LOCK(cs_coinjoin, SetNull());
     }
 
@@ -1262,13 +1256,13 @@ void CCoinJoinClientManager::ProcessPendingDsaRequest(CConnman& connman)
     }
 }
 
-bool CCoinJoinClientManager::TrySubmitDenominate(const CService& mnAddr, CConnman& connman)
+bool CCoinJoinClientManager::TrySubmitDenominate(const uint256& proTxHash, CConnman& connman)
 {
     AssertLockNotHeld(cs_deqsessions);
     LOCK(cs_deqsessions);
     for (auto& session : deqSessions) {
         CDeterministicMNCPtr mnMixing;
-        if (session.GetMixingMasternodeInfo(mnMixing) && mnMixing->pdmnState->addr == mnAddr && session.GetState() == POOL_STATE_QUEUE) {
+        if (session.GetMixingMasternodeInfo(mnMixing) && mnMixing->proTxHash == proTxHash && session.GetState() == POOL_STATE_QUEUE) {
             session.SubmitDenominate(connman);
             return true;
         }
