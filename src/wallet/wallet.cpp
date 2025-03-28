@@ -1549,7 +1549,7 @@ void CWallet::blockDisconnected(const interfaces::BlockInfo& block)
     int disconnect_height = block.height;
 
     for (size_t index = 0; index < block.data->vtx.size(); index++) {
-        const CTransactionRef& ptx = Assert(block.data)->vtx[index];
+        const CTransactionRef& ptx = block.data->vtx[index];
         // Coinbase transactions are not only inactive but also abandoned,
         // meaning they should never be relayed standalone via the p2p protocol.
         SyncTransaction(ptx, TxStateInactive{/*abandoned=*/index == 0});
