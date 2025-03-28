@@ -157,11 +157,12 @@ if(ENABLE_WALLET)
   add_subdirectory(${PROJECT_SOURCE_DIR}/src/wallet/test wallet)
 endif()
 
-if(WITH_MULTIPROCESS)
+if(ENABLE_IPC)
   target_link_libraries(bitcoin_ipc_test
     PRIVATE
       core_interface
       univalue
+      Boost::headers
   )
 
   target_sources(test_bitcoin
