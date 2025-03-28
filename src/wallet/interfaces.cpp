@@ -533,7 +533,7 @@ public:
     std::unique_ptr<Handler> handleTransactionChanged(TransactionChangedFn fn) override
     {
         return MakeSignalHandler(m_wallet->NotifyTransactionChanged.connect(
-            [fn](const uint256& txid, ChangeType status) { fn(txid, status); }));
+            [fn](const uint256& txid, ChangeType status) { fn(Txid::FromUint256(txid), status); }));
     }
     std::unique_ptr<Handler> handleWatchOnlyChanged(WatchOnlyChangedFn fn) override
     {
