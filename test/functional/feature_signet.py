@@ -26,12 +26,14 @@ signet_blocks = [
 
 class SignetParams:
     def __init__(self, challenge=None):
+        # Prune to prevent disk space warning on CI systems with limited space,
+        # when using networks other than regtest.
         if challenge is None:
             self.challenge = SIGNET_DEFAULT_CHALLENGE
-            self.shared_args = []
+            self.shared_args = ["-prune=550"]
         else:
             self.challenge = challenge
-            self.shared_args = [f"-signetchallenge={challenge}"]
+            self.shared_args = ["-prune=550", f"-signetchallenge={challenge}"]
 
 class SignetBasicTest(BitcoinTestFramework):
     def set_test_params(self):
