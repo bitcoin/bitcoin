@@ -951,7 +951,7 @@ BOOST_FIXTURE_TEST_CASE(RemoveTxs, TestChain100Setup)
         BOOST_CHECK(wallet->HasWalletSpend(prev_tx));
         BOOST_CHECK_EQUAL(wallet->mapWallet.count(block_hash), 1u);
 
-        std::vector<uint256> vHashIn{ block_hash };
+        std::vector<Txid> vHashIn{ block_hash };
         BOOST_CHECK(wallet->RemoveTxs(vHashIn));
 
         BOOST_CHECK(!wallet->HasWalletSpend(prev_tx));
@@ -1001,7 +1001,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestingSetup)
     {
         // Verify balance update for the new tx and the old one
         LOCK(wallet.cs_wallet);
-        const CWalletTx* new_wtx = wallet.GetWalletTx(good_tx_id.ToUint256());
+        const CWalletTx* new_wtx = wallet.GetWalletTx(good_tx_id);
         BOOST_CHECK_EQUAL(CachedTxGetAvailableCredit(wallet, *new_wtx), 1 * COIN);
 
         // Now the old wtx
