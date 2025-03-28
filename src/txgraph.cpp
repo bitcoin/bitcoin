@@ -191,6 +191,7 @@ public:
 class TxGraphImpl final : public TxGraph
 {
     friend class Cluster;
+    friend class BlockBuilderImpl;
 private:
     /** Internal RNG. */
     FastRandomContext m_rng;
@@ -319,7 +320,7 @@ private:
     /** Index of ChunkData objects, indexing the last transaction in each chunk in the main
      *  graph. */
     ChunkIndex m_main_chunkindex;
-    /** Number of index-observing objects in existence. */
+    /** Number of index-observing objects in existence (BlockBuilderImpls). */
     size_t m_main_chunkindex_observers{0};
 
     /** A Locator that describes whether, where, and in which Cluster an Entry appears.
@@ -543,6 +544,8 @@ public:
     GraphIndex CountDistinctClusters(std::span<const Ref* const> refs, bool main_only = false) noexcept final;
     std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> GetMainStagingDiagrams() noexcept final;
 
+    std::unique_ptr<BlockBuilder> GetBlockBuilder() noexcept final;
+
     void SanityCheck() const final;
 };
 
@@ -561,6 +564,34 @@ const TxGraphImpl::ClusterSet& TxGraphImpl::GetClusterSet(int level) const noexc
     Assume(m_staging_clusterset.has_value());
     return *m_staging_clusterset;
 }
+
+/** Implementation of the TxGraph::BlockBuilder interface. */
+class BlockBuilderImpl final : public TxGraph::BlockBuilder
+{
+    /** Which TxGraphImpl this object is doing block building for. It will have its
+     *  m_main_chunkindex_observers incremented as long as this BlockBuilderImpl exists. */
+    TxGraphImpl* const m_graph;
+    /** Clusters which we're not including further transactions from. */
+    std::set<Cluster*> m_excluded_clusters;
+    /** Iterator to the current chunk in the chunk index. end() if nothing further remains. */
+    TxGraphImpl::ChunkIndex::const_iterator m_cur_iter;
+    /** Which cluster the current chunk belongs to, so we can exclude further transactions from it
+     *  when that chunk is skipped. */
+    Cluster* m_cur_cluster;
+
+    // Move m_cur_iter / m_cur_cluster to the next acceptable chunk.
+    void Next() noexcept;
+
+public:
+    /** Construct a new BlockBuilderImpl to build blocks for the provided graph. */
+    BlockBuilderImpl(TxGraphImpl& graph) noexcept;
+
+    // Implement the public interface.
+    ~BlockBuilderImpl() final;
+    std::optional<std::pair<std::vector<TxGraph::Ref*>, FeePerWeight>> GetCurrentChunk() noexcept final;
+    void Include() noexcept final;
+    void Skip() noexcept final;
+};
 
 void TxGraphImpl::ClearLocator(int level, GraphIndex idx) noexcept
 {
@@ -2264,6 +2295,88 @@ void TxGraphImpl::DoWork() noexcept
             MakeAllAcceptable(level);
         }
     }
+}
+
+void BlockBuilderImpl::Next() noexcept
+{
+    // Don't do anything if we're already done.
+    if (m_cur_iter == m_graph->m_main_chunkindex.end()) return;
+    while (true) {
+        // Advance the pointer, and stop if we reach the end.
+        ++m_cur_iter;
+        m_cur_cluster = nullptr;
+        if (m_cur_iter == m_graph->m_main_chunkindex.end()) break;
+        // Find the cluster pointed to by m_cur_iter.
+        const auto& chunk_data = *m_cur_iter;
+        const auto& chunk_end_entry = m_graph->m_entries[chunk_data.m_graph_index];
+        m_cur_cluster = chunk_end_entry.m_locator[0].cluster;
+        // If we previously skipped a chunk from this cluster we cannot include more from it.
+        if (!m_excluded_clusters.contains(m_cur_cluster)) break;
+    }
+}
+
+std::optional<std::pair<std::vector<TxGraph::Ref*>, FeePerWeight>> BlockBuilderImpl::GetCurrentChunk() noexcept
+{
+    std::optional<std::pair<std::vector<TxGraph::Ref*>, FeePerWeight>> ret;
+    // Populate the return value if we are not done.
+    if (m_cur_iter != m_graph->m_main_chunkindex.end()) {
+        ret.emplace();
+        const auto& chunk_data = *m_cur_iter;
+        const auto& chunk_end_entry = m_graph->m_entries[chunk_data.m_graph_index];
+        ret->first.resize(chunk_data.m_chunk_count);
+        auto start_pos = chunk_end_entry.m_main_lin_index + 1 - chunk_data.m_chunk_count;
+        Assume(m_cur_cluster);
+        m_cur_cluster->GetClusterRefs(*m_graph, ret->first, start_pos);
+        ret->second = chunk_end_entry.m_main_chunk_feerate;
+    }
+    return ret;
+}
+
+BlockBuilderImpl::BlockBuilderImpl(TxGraphImpl& graph) noexcept : m_graph(&graph)
+{
+    // Make sure all clusters in main are up to date, and acceptable.
+    m_graph->MakeAllAcceptable(0);
+    // There cannot remain any inapplicable dependencies (only possible if main is oversized).
+    Assume(m_graph->m_main_clusterset.m_deps_to_add.empty());
+    // Remember that this object is observing the graph's index, so that we can detect concurrent
+    // modifications.
+    ++m_graph->m_main_chunkindex_observers;
+    // Find the first chunk.
+    m_cur_iter = m_graph->m_main_chunkindex.begin();
+    m_cur_cluster = nullptr;
+    if (m_cur_iter != m_graph->m_main_chunkindex.end()) {
+        // Find the cluster pointed to by m_cur_iter.
+        const auto& chunk_data = *m_cur_iter;
+        const auto& chunk_end_entry = m_graph->m_entries[chunk_data.m_graph_index];
+        m_cur_cluster = chunk_end_entry.m_locator[0].cluster;
+    }
+}
+
+BlockBuilderImpl::~BlockBuilderImpl()
+{
+    Assume(m_graph->m_main_chunkindex_observers > 0);
+    // Permit modifications to the main graph again after destroying the BlockBuilderImpl.
+    --m_graph->m_main_chunkindex_observers;
+}
+
+void BlockBuilderImpl::Include() noexcept
+{
+    // The actual inclusion of the chunk is done by the calling code. All we have to do is switch
+    // to the next chunk.
+    Next();
+}
+
+void BlockBuilderImpl::Skip() noexcept
+{
+    // When skipping a chunk we need to not include anything more of the cluster, as that could make
+    // the result topologically invalid.
+    if (m_cur_cluster != nullptr) m_excluded_clusters.insert(m_cur_cluster);
+    Next();
+}
+
+std::unique_ptr<TxGraph::BlockBuilder> TxGraphImpl::GetBlockBuilder() noexcept
+{
+    return std::make_unique<BlockBuilderImpl>(*this);
 }
 
 } // namespace
