@@ -70,7 +70,7 @@ Result CommitTransaction(CWallet& wallet,
     const uint256& txid,
     CMutableTransaction&& mtx,
     std::vector<bilingual_str>& errors,
-    uint256& bumped_txid);
+    Txid& bumped_txid);
 
 struct SignatureWeights
 {
