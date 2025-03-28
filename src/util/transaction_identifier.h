@@ -65,6 +65,10 @@ public:
      * to using the Txid and Wtxid types. Until then it makes for a smoother
      * transition to allow this conversion. */
     operator const uint256&() const LIFETIMEBOUND { return m_wrapped; }
+
+    // TODO: This should never go into master. It's only used for intermediate
+    // commits so that each conceptual chunk can be built.
+    operator uint256&() LIFETIMEBOUND { return m_wrapped; }
 };
 
 /** Txid commits to all transaction fields except the witness. */

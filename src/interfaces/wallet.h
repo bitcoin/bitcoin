@@ -306,7 +306,7 @@ public:
     virtual std::unique_ptr<Handler> handleAddressBookChanged(AddressBookChangedFn fn) = 0;
 
     //! Register handler for transaction changed messages.
-    using TransactionChangedFn = std::function<void(const uint256& txid, ChangeType status)>;
+    using TransactionChangedFn = std::function<void(const Txid& txid, ChangeType status)>;
     virtual std::unique_ptr<Handler> handleTransactionChanged(TransactionChangedFn fn) = 0;
 
     //! Register handler for watchonly changed messages.
