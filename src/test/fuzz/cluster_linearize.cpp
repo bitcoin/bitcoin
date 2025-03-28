@@ -446,18 +446,35 @@ FUZZ_TARGET(clusterlin_components)
     // Construct a depgraph.
     SpanReader reader(buffer);
     DepGraph<TestBitSet> depgraph;
+    std::vector<DepGraphIndex> linearization;
     try {
         reader >> Using<DepGraphFormatter>(depgraph);
     } catch (const std::ios_base::failure&) {}
 
     TestBitSet todo = depgraph.Positions();
     while (todo.Any()) {
-        // Find a connected component inside todo.
-        auto component = depgraph.FindConnectedComponent(todo);
+        // Pick a transaction in todo, or nothing.
+        std::optional<DepGraphIndex> picked;
+        {
+            uint64_t picked_num{0};
+            try {
+                reader >> VARINT(picked_num);
+            } catch (const std::ios_base::failure&) {}
+            if (picked_num < todo.Size() && todo[picked_num]) {
+                picked = picked_num;
+            }
+        }
+
+        // Find a connected component inside todo, including picked if any.
+        auto component = picked ? depgraph.GetConnectedComponent(todo, *picked)
+                                : depgraph.FindConnectedComponent(todo);
 
         // The component must be a subset of todo and non-empty.
         assert(component.IsSubsetOf(todo));
         assert(component.Any());
+
+        // If picked was provided, the component must include it.
+        if (picked) assert(component[*picked]);
 
         // If todo is the entire graph, and the entire graph is connected, then the component must
         // be the entire graph.

@@ -250,10 +250,8 @@ public:
         return ret;
     }
 
-    /** Find some connected component within the subset "todo" of this graph.
-     *
-     * Specifically, this finds the connected component which contains the first transaction of
-     * todo (if any).
+    /** Get the connected component within the subset "todo" that contains tx (which must be in
+     *  todo).
      *
      * Two transactions are considered connected if they are both in `todo`, and one is an ancestor
      * of the other in the entire graph (so not just within `todo`), or transitively there is a
@@ -262,10 +260,11 @@ public:
      *
      * Complexity: O(ret.Count()).
      */
-    SetType FindConnectedComponent(const SetType& todo) const noexcept
+    SetType GetConnectedComponent(const SetType& todo, DepGraphIndex tx) const noexcept
     {
-        if (todo.None()) return todo;
-        auto to_add = SetType::Singleton(todo.First());
+        Assume(todo[tx]);
+        Assume(todo.IsSubsetOf(m_used));
+        auto to_add = SetType::Singleton(tx);
         SetType ret;
         do {
             SetType old = ret;
@@ -277,6 +276,19 @@ public:
             to_add = ret - old;
         } while (to_add.Any());
         return ret;
+    }
+
+    /** Find some connected component within the subset "todo" of this graph.
+     *
+     * Specifically, this finds the connected component which contains the first transaction of
+     * todo (if any).
+     *
+     * Complexity: O(ret.Count()).
+     */
+    SetType FindConnectedComponent(const SetType& todo) const noexcept
+    {
+        if (todo.None()) return todo;
+        return GetConnectedComponent(todo, todo.First());
     }
 
     /** Determine if a subset is connected.
@@ -1367,7 +1379,7 @@ void FixLinearization(const DepGraph<SetType>& depgraph, std::span<DepGraphIndex
         // in between forward.
         while (place_before.Any()) {
             // j cannot be 0 here; if it was, then there was necessarily nothing earlier which
-            // elem needs to be place before anymore, and place_before would be empty.
+            // elem needs to be placed before anymore, and place_before would be empty.
             Assume(j > 0);
             auto to_swap = linearization[len - 1 - (j - 1)];
             place_before.Reset(to_swap);
