@@ -151,8 +151,9 @@ public:
     /** Process elements from the front of args that apply to this cluster, and append Refs for the
      *  union of their descendants to output. */
     void GetDescendantRefs(const TxGraphImpl& graph, std::span<std::pair<Cluster*, DepGraphIndex>>& args, std::vector<TxGraph::Ref*>& output) noexcept;
-    /** Get a vector of Refs for all elements of this Cluster, in linearization order. */
-    std::vector<TxGraph::Ref*> GetClusterRefs(const TxGraphImpl& graph) noexcept;
+    /** Populate range with refs for the transactions in this Cluster's linearization, from
+     *  position start_pos until start_pos+range.size()-1, inclusive. */
+    void GetClusterRefs(TxGraphImpl& graph, std::span<TxGraph::Ref*> range, LinearizationIndex start_pos) noexcept;
     /** Get the individual transaction feerate of a Cluster element. */
     FeePerWeight GetIndividualFeerate(DepGraphIndex idx) noexcept;
     /** Modify the fee of a Cluster element. */
@@ -1632,17 +1633,16 @@ void Cluster::GetDescendantRefs(const TxGraphImpl& graph, std::span<std::pair<Cl
     }
 }
 
-std::vector<TxGraph::Ref*> Cluster::GetClusterRefs(const TxGraphImpl& graph) noexcept
+void Cluster::GetClusterRefs(TxGraphImpl& graph, std::span<TxGraph::Ref*> range, LinearizationIndex start_pos) noexcept
 {
-    std::vector<TxGraph::Ref*> ret;
-    ret.reserve(m_linearization.size());
-    // Translate all transactions in the Cluster (in linearization order) to Refs.
-    for (auto idx : m_linearization) {
-        const auto& entry = graph.m_entries[m_mapping[idx]];
+    // Translate the transactions in the Cluster (in linearization order, starting at start_pos in
+    // the linearization) to Refs, and fill them in range.
+    for (auto& ref : range) {
+        Assume(start_pos < m_linearization.size());
+        const auto& entry = graph.m_entries[m_mapping[m_linearization[start_pos++]]];
         Assume(entry.m_ref != nullptr);
-        ret.push_back(entry.m_ref);
+        ref = entry.m_ref;
     }
-    return ret;
 }
 
 FeePerWeight Cluster::GetIndividualFeerate(DepGraphIndex idx) noexcept
@@ -1786,7 +1786,9 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetCluster(const Ref& arg, bool main_onl
     if (cluster == nullptr) return {};
     // Make sure the Cluster has an acceptable quality level, and then dispatch to it.
     MakeAcceptable(*cluster);
-    return cluster->GetClusterRefs(*this);
+    std::vector<TxGraph::Ref*> ret(cluster->GetTxCount());
+    cluster->GetClusterRefs(*this, ret, 0);
+    return ret;
 }
 
 TxGraph::GraphIndex TxGraphImpl::GetTransactionCount(bool main_only) noexcept
