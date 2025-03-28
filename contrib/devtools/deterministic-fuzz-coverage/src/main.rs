@@ -2,11 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/license/mit/.
 
+use std::collections::VecDeque;
 use std::env;
-use std::fs::{read_dir, File};
+use std::fs::{read_dir, DirEntry, File};
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
 use std::str;
+use std::thread;
 
 /// A type for a complete and readable error message.
 type AppError = String;
@@ -16,12 +18,14 @@ const LLVM_PROFDATA: &str = "llvm-profdata";
 const LLVM_COV: &str = "llvm-cov";
 const GIT: &str = "git";
 
+const DEFAULT_PAR: usize = 1;
+
 fn exit_help(err: &str) -> AppError {
     format!(
         r#"
 Error: {err}
 
-Usage: program ./build_dir ./qa-assets/fuzz_corpora fuzz_target_name
+Usage: program ./build_dir ./qa-assets/fuzz_corpora fuzz_target_name [parallelism={DEFAULT_PAR}]
 
 Refer to the devtools/README.md for more details."#
     )
@@ -63,7 +67,14 @@ fn app() -> AppResult {
         // Require fuzz target for now. In the future it could be optional and the tool could
         // iterate over all compiled fuzz targets
         .ok_or(exit_help("Must set fuzz target"))?;
-    if args.get(4).is_some() {
+    let par = match args.get(4) {
+        Some(s) => s
+            .parse::<usize>()
+            .map_err(|e| exit_help(&format!("Could not parse parallelism as usize ({s}): {e}")))?,
+        None => DEFAULT_PAR,
+    }
+    .max(1);
+    if args.get(5).is_some() {
         Err(exit_help("Too many args"))?;
     }
 
@@ -73,7 +84,7 @@ fn app() -> AppResult {
 
     sanity_check(corpora_dir, &fuzz_exe)?;
 
-    deterministic_coverage(build_dir, corpora_dir, &fuzz_exe, fuzz_target)
+    deterministic_coverage(build_dir, corpora_dir, &fuzz_exe, fuzz_target, par)
 }
 
 fn using_libfuzzer(fuzz_exe: &Path) -> Result<bool, AppError> {
@@ -94,10 +105,9 @@ fn deterministic_coverage(
     corpora_dir: &Path,
     fuzz_exe: &Path,
     fuzz_target: &str,
+    par: usize,
 ) -> AppResult {
     let using_libfuzzer = using_libfuzzer(fuzz_exe)?;
-    let profraw_file = build_dir.join("fuzz_det_cov.profraw");
-    let profdata_file = build_dir.join("fuzz_det_cov.profdata");
     let corpus_dir = corpora_dir.join(fuzz_target);
     let mut entries = read_dir(&corpus_dir)
         .map_err(|err| {
@@ -110,8 +120,10 @@ fn deterministic_coverage(
         .map(|entry| entry.expect("IO error"))
         .collect::<Vec<_>>();
     entries.sort_by_key(|entry| entry.file_name());
-    let run_single = |run_id: u8, entry: &Path| -> Result<PathBuf, AppError> {
-        let cov_txt_path = build_dir.join(format!("fuzz_det_cov.show.{run_id}.txt"));
+    let run_single = |run_id: u8, entry: &Path, thread_id: usize| -> Result<PathBuf, AppError> {
+        let cov_txt_path = build_dir.join(format!("fuzz_det_cov.show.t{thread_id}.r{run_id}.txt"));
+        let profraw_file = build_dir.join(format!("fuzz_det_cov.t{thread_id}.r{run_id}.profraw"));
+        let profdata_file = build_dir.join(format!("fuzz_det_cov.t{thread_id}.r{run_id}.profdata"));
         if !{
             {
                 let mut cmd = Command::new(fuzz_exe);
@@ -187,20 +199,46 @@ The coverage was not deterministic between runs.
     //
     // Also, This can catch issues where several fuzz inputs are non-deterministic, but the sum of
     // their overall coverage trace remains the same across runs and thus remains undetected.
-    println!("Check each fuzz input individually ...");
-    for entry in entries {
+    println!(
+        "Check each fuzz input individually ... ({} inputs with parallelism {par})",
+        entries.len()
+    );
+    let check_individual = |entry: &DirEntry, thread_id: usize| -> AppResult {
         let entry = entry.path();
         if !entry.is_file() {
             Err(format!("{} should be a file", entry.display()))?;
         }
-        let cov_txt_base = run_single(0, &entry)?;
-        let cov_txt_repeat = run_single(1, &entry)?;
+        let cov_txt_base = run_single(0, &entry, thread_id)?;
+        let cov_txt_repeat = run_single(1, &entry, thread_id)?;
         check_diff(
             &cov_txt_base,
             &cov_txt_repeat,
             &format!("The fuzz target input was {}.", entry.display()),
         )?;
-    }
+        Ok(())
+    };
+    thread::scope(|s| -> AppResult {
+        let mut handles = VecDeque::with_capacity(par);
+        let mut res = Ok(());
+        for (i, entry) in entries.iter().enumerate() {
+            println!("[{}/{}]", i + 1, entries.len());
+            handles.push_back(s.spawn(move || check_individual(entry, i % par)));
+            while handles.len() >= par || i == (entries.len() - 1) || res.is_err() {
+                if let Some(th) = handles.pop_front() {
+                    let thread_result = match th.join() {
+                        Err(_e) => Err("A scoped thread panicked".to_string()),
+                        Ok(r) => r,
+                    };
+                    if thread_result.is_err() {
+                        res = thread_result;
+                    }
+                } else {
+                    return res;
+                }
+            }
+        }
+        res
+    })?;
     // Finally, check that running over all fuzz inputs in one process is deterministic as well.
     // This can catch issues where mutable global state is leaked from one fuzz input execution to
     // the next.
@@ -209,8 +247,8 @@ The coverage was not deterministic between runs.
         if !corpus_dir.is_dir() {
             Err(format!("{} should be a folder", corpus_dir.display()))?;
         }
-        let cov_txt_base = run_single(0, &corpus_dir)?;
-        let cov_txt_repeat = run_single(1, &corpus_dir)?;
+        let cov_txt_base = run_single(0, &corpus_dir, 0)?;
+        let cov_txt_repeat = run_single(1, &corpus_dir, 0)?;
         check_diff(
             &cov_txt_base,
             &cov_txt_repeat,
