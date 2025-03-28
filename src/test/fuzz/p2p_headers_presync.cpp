@@ -15,6 +15,7 @@
 #include <test/util/net.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <uint256.h>
 #include <validation.h>
 
@@ -158,6 +159,9 @@ FUZZ_TARGET(p2p_headers_presync, .init = initialize)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    // The steady clock is currently only used for logging, so a constant
+    // time-point seems acceptable for now.
+    ElapseSteady elapse_steady{};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 
     ChainstateManager& chainman = *g_testing_setup->m_node.chainman;
