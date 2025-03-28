@@ -1411,6 +1411,12 @@ void PeerManagerImpl::FindNextBlocksToDownload(const Peer& peer, unsigned int co
     if (state->pindexLastCommonBlock == state->pindexBestKnownBlock)
         return;
 
+    // If our tip has advanced beyond pindexLastCommonBlock, move it ahead to the tip. We don't need to download any blocks in between, and skipping ahead here
+    // allows us to determine nWindowEnd better.
+    if (m_chainman.ActiveHeight() > state->pindexLastCommonBlock->nHeight && state->pindexBestKnownBlock->GetAncestor(m_chainman.ActiveHeight()) == m_chainman.ActiveTip()) {
+        state->pindexLastCommonBlock = m_chainman.ActiveTip();
+    }
+
     const CBlockIndex *pindexWalk = state->pindexLastCommonBlock;
     // Never fetch further than the best block we know the peer has, or more than BLOCK_DOWNLOAD_WINDOW + 1 beyond the last
     // linked block we have in common with this peer. The +1 is so we can detect stalling, namely if we would be able to
