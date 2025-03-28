@@ -15,6 +15,7 @@
 #include <test/util/net.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <uint256.h>
 #include <validation.h>
 
@@ -155,6 +156,7 @@ FUZZ_TARGET(p2p_headers_presync, .init = initialize)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    ElapseSteady elapse_steady{};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 
     ChainstateManager& chainman = *g_testing_setup->m_node.chainman;
@@ -174,6 +176,9 @@ FUZZ_TARGET(p2p_headers_presync, .init = initialize)
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100)
     {
+        // The steady clock is currently only used for logging, so a hard-coded
+        // delay seems acceptable for now.
+        elapse_steady(128ms);
         auto finalized_block = [&]() {
             CBlock block = ConsumeBlock(fuzzed_data_provider, base.GetHash(), base.nBits);
             FinalizeHeader(block, chainman);
