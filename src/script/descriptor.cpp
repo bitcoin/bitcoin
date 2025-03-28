@@ -1440,8 +1440,11 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
 [[nodiscard]] bool ParseKeyPath(const std::vector<std::span<const char>>& split, std::vector<KeyPath>& out, bool& apostrophe, std::string& error, bool allow_multipath)
 {
     KeyPath path;
-    std::optional<size_t> multipath_segment_index;
-    std::vector<uint32_t> multipath_values;
+    struct MultipathSubstitutes {
+        size_t placeholder_index;
+        std::vector<uint32_t> values;
+    };
+    std::optional<MultipathSubstitutes> substitutes;
 
     for (size_t i = 1; i < split.size(); ++i) {
         const std::span<const char>& elem = split[i];
@@ -1452,7 +1455,7 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
                 error = strprintf("Key path value '%s' specifies multipath in a section where multipath is not allowed", std::string(elem.begin(), elem.end()));
                 return false;
             }
-            if (multipath_segment_index) {
+            if (substitutes) {
                 error = "Multiple multipath key path specifiers found";
                 return false;
             }
@@ -1464,6 +1467,7 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
                 return false;
             }
 
+            substitutes.emplace();
             std::unordered_set<uint32_t> seen_substitutes;
             for (const auto& num : nums) {
                 const auto& op_num = ParseKeyPathNum(num, apostrophe, error);
@@ -1473,11 +1477,11 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
                     error = strprintf("Duplicated key path value %u in multipath specifier", *op_num);
                     return false;
                 }
-                multipath_values.emplace_back(*op_num);
+                substitutes->values.emplace_back(*op_num);
             }
 
             path.emplace_back(); // Placeholder for multipath segment
-            multipath_segment_index = path.size()-1;
+            substitutes->placeholder_index = path.size() - 1;
         } else {
             const auto& op_num = ParseKeyPathNum(elem, apostrophe, error);
             if (!op_num) return false;
@@ -1485,13 +1489,13 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
         }
     }
 
-    if (!multipath_segment_index) {
+    if (!substitutes) {
         out.emplace_back(std::move(path));
     } else {
         // Replace the multipath placeholder with each value while generating paths
-        for (uint32_t substitute : multipath_values) {
+        for (uint32_t substitute : substitutes->values) {
             KeyPath branch_path = path;
-            branch_path[*multipath_segment_index] = substitute;
+            branch_path[substitutes->placeholder_index] = substitute;
             out.emplace_back(std::move(branch_path));
         }
     }
