@@ -12,6 +12,7 @@
 #include <pubkey.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
+#include <rpc/schema.h>
 #include <script/script.h>
 #include <script/sign.h>
 #include <uint256.h>
@@ -503,6 +504,7 @@ private:
     R ArgValue(size_t i) const;
     //! Return positional index of a parameter using its name as key.
     size_t GetParamIndex(std::string_view key) const;
+    friend Schema;
 };
 
 /**
