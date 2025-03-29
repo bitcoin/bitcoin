@@ -648,22 +648,17 @@ BOOST_AUTO_TEST_CASE(util_GetChainTypeString)
     const auto regtest = std::make_pair("-regtest", ArgsManager::ALLOW_ANY);
     test_args.SetupArgs({testnet, testnet4, regtest});
 
-    const char* argv_testnet[] = {"cmd", "-testnet"};
     const char* argv_testnet4[] = {"cmd", "-testnet4"};
     const char* argv_regtest[] = {"cmd", "-regtest"};
-    const char* argv_test_no_reg[] = {"cmd", "-testnet", "-noregtest"};
-    const char* argv_both[] = {"cmd", "-testnet", "-regtest"};
+    const char* argv_test_no_reg[] = {"cmd", "-testnet4", "-noregtest"};
+    const char* argv_both[] = {"cmd", "-testnet4", "-regtest"};
 
-    // equivalent to "-testnet"
-    // regtest in testnet section is ignored
-    const char* testnetconf = "testnet=1\nregtest=0\n[test]\nregtest=1";
+    // regtest in test network section is ignored
+    const char* testnetconf = "testnet4=1\nregtest=0\n[testnet4]\nregtest=1";
     std::string error;
 
-    BOOST_CHECK(test_args.ParseParameters(0, argv_testnet, error));
+    BOOST_CHECK(test_args.ParseParameters(0, argv_testnet4, error));
     BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "main");
-
-    BOOST_CHECK(test_args.ParseParameters(2, argv_testnet, error));
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
 
     BOOST_CHECK(test_args.ParseParameters(0, argv_testnet4, error));
     BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "main");
@@ -675,18 +670,18 @@ BOOST_AUTO_TEST_CASE(util_GetChainTypeString)
     BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "regtest");
 
     BOOST_CHECK(test_args.ParseParameters(3, argv_test_no_reg, error));
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "testnet4");
 
     BOOST_CHECK(test_args.ParseParameters(3, argv_both, error));
     BOOST_CHECK_THROW(test_args.GetChainTypeString(), std::runtime_error);
 
-    BOOST_CHECK(test_args.ParseParameters(0, argv_testnet, error));
+    BOOST_CHECK(test_args.ParseParameters(0, argv_testnet4, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "testnet4");
 
-    BOOST_CHECK(test_args.ParseParameters(2, argv_testnet, error));
+    BOOST_CHECK(test_args.ParseParameters(2, argv_testnet4, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "testnet4");
 
     BOOST_CHECK(test_args.ParseParameters(2, argv_regtest, error));
     test_args.ReadConfigString(testnetconf);
@@ -694,23 +689,23 @@ BOOST_AUTO_TEST_CASE(util_GetChainTypeString)
 
     BOOST_CHECK(test_args.ParseParameters(3, argv_test_no_reg, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "testnet4");
 
     BOOST_CHECK(test_args.ParseParameters(3, argv_both, error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_THROW(test_args.GetChainTypeString(), std::runtime_error);
 
-    // check setting the network to test (and thus making
-    // [test] regtest=1 potentially relevant) doesn't break things
-    test_args.SelectConfigNetwork("test");
+    // check setting the network to testnet4 (and thus making
+    // [testnet4] regtest=1 potentially relevant) doesn't break things
+    test_args.SelectConfigNetwork("testnet4");
 
-    BOOST_CHECK(test_args.ParseParameters(0, argv_testnet, error));
+    BOOST_CHECK(test_args.ParseParameters(0, argv_testnet4, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "testnet4");
 
-    BOOST_CHECK(test_args.ParseParameters(2, argv_testnet, error));
+    BOOST_CHECK(test_args.ParseParameters(2, argv_testnet4, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "testnet4");
 
     BOOST_CHECK(test_args.ParseParameters(2, argv_regtest, error));
     test_args.ReadConfigString(testnetconf);
@@ -718,7 +713,7 @@ BOOST_AUTO_TEST_CASE(util_GetChainTypeString)
 
     BOOST_CHECK(test_args.ParseParameters(2, argv_test_no_reg, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "testnet4");
 
     BOOST_CHECK(test_args.ParseParameters(3, argv_both, error));
     test_args.ReadConfigString(testnetconf);
@@ -739,7 +734,7 @@ BOOST_AUTO_TEST_CASE(util_GetChainTypeString)
 //
 // - Combining SoftSet and ForceSet calls.
 //
-// - Testing "main" and "test" network values to make sure settings from network
+// - Testing "main" and "testnet4" network values to make sure settings from network
 //   sections are applied and to check for mainnet-specific behaviors like
 //   inheriting settings from the default section.
 //
@@ -956,11 +951,11 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
         TestArgsManager parser;
         LOCK(parser.cs_args);
         parser.AddArg("-regtest", "regtest", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-        parser.AddArg("-testnet", "testnet", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+        parser.AddArg("-testnet4", "testnet4", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 
-        auto arg = [](Action action) { return action == ENABLE_TEST  ? "-testnet=1"   :
-                                              action == DISABLE_TEST ? "-testnet=0"   :
-                                              action == NEGATE_TEST  ? "-notestnet=1" :
+        auto arg = [](Action action) { return action == ENABLE_TEST  ? "-testnet4=1"   :
+                                              action == DISABLE_TEST ? "-testnet4=0"   :
+                                              action == NEGATE_TEST  ? "-notestnet4=1" :
                                               action == ENABLE_REG   ? "-regtest=1"   :
                                               action == DISABLE_REG  ? "-regtest=0"   :
                                               action == NEGATE_REG   ? "-noregtest=1" : nullptr; };
@@ -1024,7 +1019,7 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
     // Results file is formatted like:
     //
     //   <input> || <output>
-    BOOST_CHECK_EQUAL(out_sha_hex, "9e60306e1363528bbc19a47f22bcede88e5d6815212f18ec8e6cdc4638dddab4");
+    BOOST_CHECK_EQUAL(out_sha_hex, "c0e33aab0c74e040ddcee9edad59e8148d8e1cacb3cccd9ea1a1f485cb6bad21");
 }
 
 BOOST_AUTO_TEST_CASE(util_ReadWriteSettings)
