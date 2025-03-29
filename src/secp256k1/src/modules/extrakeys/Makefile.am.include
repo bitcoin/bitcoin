@@ -1,4 +1,11 @@
 include_HEADERS += include/secp256k1_extrakeys.h
+if ENABLE_MODULE_BATCH
+include_HEADERS += include/secp256k1_tweak_check_batch.h
+endif
 noinst_HEADERS += src/modules/extrakeys/tests_impl.h
 noinst_HEADERS += src/modules/extrakeys/tests_exhaustive_impl.h
 noinst_HEADERS += src/modules/extrakeys/main_impl.h
+if ENABLE_MODULE_BATCH
+noinst_HEADERS += src/modules/extrakeys/batch_add_impl.h
+noinst_HEADERS += src/modules/extrakeys/batch_add_tests_impl.h
+endif
