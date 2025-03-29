@@ -6,8 +6,10 @@
 #include <common/args.h>
 #include <common/init.h>
 #include <logging.h>
+#include <node/interface_ui.h>
 #include <tinyformat.h>
 #include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/translation.h>
 
 #include <algorithm>
@@ -61,7 +63,48 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
         if (!fs::exists(net_path)) {
             fs::create_directories(net_path / "wallets");
         }
+#ifdef __APPLE__
+        struct PathCheck {
+            fs::path path;
+            std::string_view description;
+        };
 
+        std::array<PathCheck, 2> paths{{
+            {args.GetDataDirNet(), "data directory"},
+            {args.GetBlocksDirPath(), "blocks directory"}
+        }};
+
+        std::vector<std::string> exfat_paths;
+        std::vector<std::string> error_paths;
+
+        for (const auto& check : paths) {
+            FSType fs_type = GetFilesystemType(check.path);
+            switch(fs_type) {
+                case FSType::EXFAT:
+                    exfat_paths.push_back(strprintf("%s (\"%s\")",
+                        check.description,
+                        fs::PathToString(check.path)));
+                    break;
+                case FSType::ERROR:
+                    error_paths.push_back(strprintf("%s (\"%s\")",
+                        check.description,
+                        fs::PathToString(check.path)));
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        if (!exfat_paths.empty()) {
+            InitWarning(strprintf(_("The following paths are on exFAT which is known to have intermittent corruption problems on MacOS: %s. "
+                "See https://github.com/bitcoin/bitcoin/blob/master/doc/files.md#filesystem-recommendations for more information."),
+                util::Join(exfat_paths, ", ")));
+        }
+
+        if (!error_paths.empty()) {
+            LogInfo("Failed to detect filesystem type for: %s\n", util::Join(error_paths, ", "));
+        }
+#endif
         // Show an error or warn/log if there is a bitcoin.conf file in the
         // datadir that is being ignored.
         const fs::path base_config_path = base_path / BITCOIN_CONF_FILENAME;
