@@ -288,11 +288,11 @@ For example, a descriptor of the form:
 
     multi(2,xpub.../<0;1;2>/0/*,xpub.../<2;3;4>/*)
 
-will expand to the two descriptors
+will expand to the 3 descriptors
 
-   multi(2,xpub.../0/0/*,xpub.../2/*)
-   multi(2,xpub.../1/0/*,xpub.../3/*)
-   multi(2,xpub.../2/0/*,xpub.../4*)
+    multi(2,xpub.../0/0/*,xpub.../2/*)
+    multi(2,xpub.../1/0/*,xpub.../3/*)
+    multi(2,xpub.../2/0/*,xpub.../4/*)
 
 When this tuple contains only two elements, wallet implementations can use the
 first descriptor for receiving addresses and the second descriptor for change addresses.
