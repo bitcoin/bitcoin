@@ -557,6 +557,12 @@ if(ENABLE_HARDENING)
     if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
       try_append_linker_flag("-Wl,-fixup_chains" TARGET hardening_interface)
     endif()
+
+    if(HAVE_LIBCPP)
+      # https://libcxx.llvm.org/Hardening.html
+      target_compile_definitions(hardening_interface INTERFACE
+        $<IF:$<CONFIG:Debug>,_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG,>)
+    endif()
   endif()
 endif()
 
