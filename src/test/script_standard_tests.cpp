@@ -4,6 +4,7 @@
 
 #include <test/data/bip341_wallet_vectors.json.h>
 
+#include <addresstype.h>
 #include <key.h>
 #include <key_io.h>
 #include <script/script.h>
@@ -130,9 +131,8 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
     BOOST_CHECK(solutions[1] == ToByteVector(uint256::ONE));
 
     // TxoutType::ANCHOR
-    std::vector<unsigned char> anchor_bytes{0x4e, 0x73};
     s.clear();
-    s << OP_1 << anchor_bytes;
+    s << OP_1 << ANCHOR_BYTES;
     BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::ANCHOR);
     BOOST_CHECK(solutions.empty());
 
@@ -197,14 +197,22 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
     s << OP_RETURN << std::vector<unsigned char>({75}) << OP_ADD;
     BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::NONSTANDARD);
 
-    // TxoutType::WITNESS_UNKNOWN with incorrect program size
+    // TxoutType::WITNESS_V0_{KEY,SCRIPT}HASH with incorrect program size (-> consensus-invalid, i.e. non-standard)
     s.clear();
     s << OP_0 << std::vector<unsigned char>(19, 0x01);
     BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::NONSTANDARD);
 
+    // TxoutType::WITNESS_V1_TAPROOT with incorrect program size (-> undefined, but still policy-valid)
+    s.clear();
+    s << OP_1 << std::vector<unsigned char>(31, 0x01);
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::WITNESS_UNKNOWN);
+    s.clear();
+    s << OP_1 << std::vector<unsigned char>(33, 0x01);
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::WITNESS_UNKNOWN);
+
     // TxoutType::ANCHOR but wrong witness version
     s.clear();
-    s << OP_2 << std::vector<unsigned char>{0x4e, 0x73};
+    s << OP_2 << ANCHOR_BYTES;
     BOOST_CHECK(!s.IsPayToAnchor());
     BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::WITNESS_UNKNOWN);
 
@@ -268,12 +276,32 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     BOOST_CHECK(ExtractDestination(s, address));
     BOOST_CHECK(std::get<WitnessV0ScriptHash>(address) == scripthash);
 
+    // TxoutType::WITNESS_V1_TAPROOT
+    s.clear();
+    auto xpk = XOnlyPubKey(pubkey);
+    s << OP_1 << ToByteVector(xpk);
+    BOOST_CHECK(ExtractDestination(s, address));
+    BOOST_CHECK(std::get<WitnessV1Taproot>(address) == WitnessV1Taproot(xpk));
+
+    // TxoutType::ANCHOR
+    s.clear();
+    s << OP_1 << ANCHOR_BYTES;
+    BOOST_CHECK(ExtractDestination(s, address));
+    BOOST_CHECK(std::get<PayToAnchor>(address) == PayToAnchor());
+
     // TxoutType::WITNESS_UNKNOWN with unknown version
+    // -> segwit version 1 with an undefined program size (33 bytes in this test case)
     s.clear();
     s << OP_1 << ToByteVector(pubkey);
     BOOST_CHECK(ExtractDestination(s, address));
-    WitnessUnknown unk{1, ToByteVector(pubkey)};
-    BOOST_CHECK(std::get<WitnessUnknown>(address) == unk);
+    WitnessUnknown unk_v1{1, ToByteVector(pubkey)};
+    BOOST_CHECK(std::get<WitnessUnknown>(address) == unk_v1);
+    s.clear();
+    // -> segwit versions 2+ are not specified yet
+    s << OP_2 << ToByteVector(xpk);
+    BOOST_CHECK(ExtractDestination(s, address));
+    WitnessUnknown unk_v2{2, ToByteVector(xpk)};
+    BOOST_CHECK(std::get<WitnessUnknown>(address) == unk_v2);
 }
 
 BOOST_AUTO_TEST_CASE(script_standard_GetScriptFor_)
@@ -340,6 +368,19 @@ BOOST_AUTO_TEST_CASE(script_standard_GetScriptFor_)
     expected.clear();
     expected << OP_0 << ToByteVector(scriptHash);
     result = GetScriptForDestination(WitnessV0ScriptHash(witnessScript));
+    BOOST_CHECK(result == expected);
+
+    // WitnessV1Taproot
+    auto xpk = XOnlyPubKey(pubkeys[0]);
+    expected.clear();
+    expected << OP_1 << ToByteVector(xpk);
+    result = GetScriptForDestination(WitnessV1Taproot(xpk));
+    BOOST_CHECK(result == expected);
+
+    // PayToAnchor
+    expected.clear();
+    expected << OP_1 << ANCHOR_BYTES;
+    result = GetScriptForDestination(PayToAnchor());
     BOOST_CHECK(result == expected);
 }
 
