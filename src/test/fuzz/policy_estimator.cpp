@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -33,6 +33,12 @@ FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
     bool good_data{true};
 
     CBlockPolicyEstimator block_policy_estimator{FeeestPath(*g_setup->m_node.args), DEFAULT_ACCEPT_STALE_FEE_ESTIMATES};
+
+    uint32_t current_height{0};
+    const auto advance_height{
+        [&] { current_height = fuzzed_data_provider.ConsumeIntegralInRange<decltype(current_height)>(current_height, 1 << 30); },
+    };
+    advance_height();
     LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 10'000)
     {
         CallOneOf(
@@ -44,7 +50,7 @@ FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
                     return;
                 }
                 const CTransaction tx{*mtx};
-                const CTxMemPoolEntry& entry = ConsumeTxMemPoolEntry(fuzzed_data_provider, tx);
+                const auto entry{ConsumeTxMemPoolEntry(fuzzed_data_provider, tx, current_height)};
                 const auto tx_submitted_in_package = fuzzed_data_provider.ConsumeBool();
                 const auto tx_has_mempool_parents = fuzzed_data_provider.ConsumeBool();
                 const auto tx_info = NewMempoolTransactionInfo(entry.GetSharedTx(), entry.GetFee(),
@@ -68,14 +74,15 @@ FUZZ_TARGET(policy_estimator, .init = initialize_policy_estimator)
                         break;
                     }
                     const CTransaction tx{*mtx};
-                    mempool_entries.emplace_back(CTxMemPoolEntry::ExplicitCopy, ConsumeTxMemPoolEntry(fuzzed_data_provider, tx));
+                    mempool_entries.emplace_back(CTxMemPoolEntry::ExplicitCopy, ConsumeTxMemPoolEntry(fuzzed_data_provider, tx, current_height));
                 }
                 std::vector<RemovedMempoolTransactionInfo> txs;
                 txs.reserve(mempool_entries.size());
                 for (const CTxMemPoolEntry& mempool_entry : mempool_entries) {
                     txs.emplace_back(mempool_entry);
                 }
-                block_policy_estimator.processBlock(txs, fuzzed_data_provider.ConsumeIntegral<unsigned int>());
+                advance_height();
+                block_policy_estimator.processBlock(txs, current_height);
             },
             [&] {
                 (void)block_policy_estimator.removeTx(ConsumeUInt256(fuzzed_data_provider));
