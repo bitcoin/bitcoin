@@ -44,9 +44,7 @@ std::string CDeterministicMN::ToString() const
 
 UniValue CDeterministicMN::ToJson() const
 {
-    UniValue obj;
-    obj.setObject();
-
+    UniValue obj(UniValue::VOBJ);
     obj.pushKV("type", std::string(GetMnType(nType).description));
     obj.pushKV("proTxHash", proTxHash.ToString());
     obj.pushKV("collateralHash", collateralOutpoint.hash.ToString());
