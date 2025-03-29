@@ -64,6 +64,16 @@ void AutoFile::read(std::span<std::byte> dst)
     }
 }
 
+size_t AutoFile::read_buffer(std::span<std::byte> dst)
+{
+    const size_t size{detail_fread(dst)};
+    if (size != dst.size() && !feof()) { // buffer may not be filled completely
+        throw std::ios_base::failure("AutoFile::read_buffer: fread failed");
+    }
+    Assume(size <= dst.size());
+    return size;
+}
+
 void AutoFile::ignore(size_t nSize)
 {
     if (!m_file) throw std::ios_base::failure("AutoFile::ignore: file handle is nullptr");
@@ -91,15 +101,21 @@ void AutoFile::write(std::span<const std::byte> src)
         std::array<std::byte, 4096> buf;
         while (src.size() > 0) {
             auto buf_now{std::span{buf}.first(std::min<size_t>(src.size(), buf.size()))};
-            std::copy(src.begin(), src.begin() + buf_now.size(), buf_now.begin());
-            util::Xor(buf_now, m_xor, *m_position);
-            if (std::fwrite(buf_now.data(), 1, buf_now.size(), m_file) != buf_now.size()) {
-                throw std::ios_base::failure{"XorFile::write: failed"};
-            }
+            std::copy_n(src.begin(), buf_now.size(), buf_now.begin());
+            write_buffer(buf_now);
             src = src.subspan(buf_now.size());
-            *m_position += buf_now.size();
         }
     }
+}
+
+void AutoFile::write_buffer(std::span<std::byte> src)
+{
+    if (!m_file) throw std::ios_base::failure("AutoFile::write_buffer: file handle is nullptr");
+    util::Xor(src, m_xor, *m_position); // obfuscate in-place
+    if (std::fwrite(src.data(), 1, src.size(), m_file) != src.size()) {
+        throw std::ios_base::failure("AutoFile::write_buffer: write failed");
+    }
+    if (m_position) *m_position += src.size();
 }
 
 bool AutoFile::Commit()
