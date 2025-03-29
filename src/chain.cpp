@@ -96,24 +96,20 @@ const CBlockIndex* CBlockIndex::GetAncestor(int height) const
         return nullptr;
     }
 
+    // Traverse back until we find the desired pindex.
     const CBlockIndex* pindexWalk = this;
-    int heightWalk = nHeight;
-    while (heightWalk > height) {
-        int heightSkip = GetSkipHeight(heightWalk);
-        int heightSkipPrev = GetSkipHeight(heightWalk - 1);
+    while (pindexWalk != nullptr && pindexWalk->nHeight != height) {
+        // Prefer the ancestor if there is one we can take.
         if (pindexWalk->pskip != nullptr &&
-            (heightSkip == height ||
-             (heightSkip > height && !(heightSkipPrev < heightSkip - 2 &&
-                                       heightSkipPrev >= height)))) {
-            // Only follow pskip if pprev->pskip isn't better than pskip->pprev.
+                GetSkipHeight(pindexWalk->nHeight) >= height) {
             pindexWalk = pindexWalk->pskip;
-            heightWalk = heightSkip;
         } else {
+            // We couldn't take the ancestor skip so traverse back to the parent.
             assert(pindexWalk->pprev);
             pindexWalk = pindexWalk->pprev;
-            heightWalk--;
         }
     }
+
     return pindexWalk;
 }
 
