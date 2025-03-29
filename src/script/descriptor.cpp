@@ -1442,7 +1442,6 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
     KeyPath path;
     std::optional<size_t> multipath_segment_index;
     std::vector<uint32_t> multipath_values;
-    std::unordered_set<uint32_t> seen_multipath;
 
     for (size_t i = 1; i < split.size(); ++i) {
         const std::span<const char>& elem = split[i];
@@ -1465,10 +1464,11 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
                 return false;
             }
 
+            std::unordered_set<uint32_t> seen_substitutes;
             for (const auto& num : nums) {
                 const auto& op_num = ParseKeyPathNum(num, apostrophe, error);
                 if (!op_num) return false;
-                auto [_, inserted] = seen_multipath.insert(*op_num);
+                auto [_, inserted] = seen_substitutes.insert(*op_num);
                 if (!inserted) {
                     error = strprintf("Duplicated key path value %u in multipath specifier", *op_num);
                     return false;
@@ -1489,9 +1489,9 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
         out.emplace_back(std::move(path));
     } else {
         // Replace the multipath placeholder with each value while generating paths
-        for (size_t i = 0; i < multipath_values.size(); i++) {
+        for (uint32_t substitute : multipath_values) {
             KeyPath branch_path = path;
-            branch_path[*multipath_segment_index] = multipath_values[i];
+            branch_path[*multipath_segment_index] = substitute;
             out.emplace_back(std::move(branch_path));
         }
     }
