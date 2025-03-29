@@ -36,6 +36,7 @@ from test_framework.messages import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
 )
 from test_framework.wallet import (
@@ -274,7 +275,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         self.log.info(f"Restarted nodes: {self.restart_counts}; crashes on restart: {self.crashed_on_restart}")
 
         # If no nodes were restarted, we didn't test anything.
-        assert self.restart_counts != [0, 0, 0]
+        assert_not_equal(self.restart_counts, [0, 0, 0])
 
         # Make sure we tested the case of crash-during-recovery.
         assert self.crashed_on_restart > 0
