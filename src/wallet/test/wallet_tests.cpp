@@ -69,7 +69,8 @@ static void AddKey(CWallet& wallet, const CKey& key)
     assert(descs.size() == 1);
     auto& desc = descs.at(0);
     WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1);
-    if (!wallet.AddWalletDescriptor(w_desc, provider, "", false)) assert(false);
+    auto spk_manager = *Assert(wallet.AddWalletDescriptor(w_desc, provider, "", false));
+    assert(spk_manager);
 }
 
 BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
