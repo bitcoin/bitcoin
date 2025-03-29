@@ -9,13 +9,16 @@
 #include <consensus/amount.h>
 #include <hash.h>
 #include <primitives/transaction.h>
+#include <pubkey.h>
 #include <script/script_error.h> // IWYU pragma: export
 #include <span.h>
+#include <sync.h>
 #include <uint256.h>
 
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <unordered_map>
 #include <vector>
 
 class CPubKey;
@@ -201,6 +204,10 @@ struct ScriptExecutionData
     bool m_tapleaf_hash_init = false;
     //! The tapleaf hash.
     uint256 m_tapleaf_hash;
+    //! The taproot internal key.
+    std::optional<XOnlyPubKey> m_internal_key = std::nullopt;
+    //! The merkle root of the taproot tree.
+    std::optional<uint256> m_taproot_merkle_root = std::nullopt;
 
     //! Whether m_codeseparator_pos is initialized.
     bool m_codeseparator_pos_init = false;
@@ -221,6 +228,73 @@ struct ScriptExecutionData
 
     //! The hash of the corresponding output
     std::optional<uint256> m_output_hash;
+
+    //! Whether m_ccv_amount is initialized.
+    bool m_ccv_amount_init = false;
+    //! Residual amount of the current input according to CHECKCONTRACTVERIFY semantics.
+    CAmount m_ccv_amount;
+};
+
+/** The state of the script interpreter that persists across inputs of a single transaction.
+ *
+ * As access happens across different worker threads, it is crucial that access to this struct
+ * is properly synchronized. Code accessing its members must hold the m_mutex lock.
+ * Currently only used for OP_CHECKCONTRACTVERIFY. */
+struct TransactionExecutionData {
+    const CTransaction* m_tx;
+    Mutex m_mutex;
+
+    // If an error occurs during the evaluation of a condition related to the access to this
+    // struct, it must be stored here.
+    // The caller _must_ check if this field has value immediately after acquiring the lock,
+    // and return the corresponding script error if it does.
+    // This makes sure that the checks are idempotent if repeated with the same instance
+    // of TransactionExecutionData. This is necessary because the checks might mutate the
+    // state of the struct, and the check might be repeated multiple times.
+    std::optional<ScriptError> m_error GUARDED_BY(m_mutex) = std::nullopt;
+
+    // For each output, the minimum amount of that output in order for the transaction
+    // to be considered valid. Accumulated during the evaluation of OP_CHECKCONTRACTVERIFY
+    // with the 'default' semantics.
+    std::vector<CAmount> m_ccv_output_min_amount GUARDED_BY(m_mutex);
+    // Set to true if this output has been checked with OP_CHECKCONTRACTVERIFY
+    // with the 'default' semantics.
+    std::vector<bool> m_ccv_output_checked_default GUARDED_BY(m_mutex);
+    // Set to true if this output has been checked with OP_CHECKCONTRACTVERIFY
+    // with the 'deduct' semantics.
+    std::vector<bool> m_ccv_output_checked_deduct GUARDED_BY(m_mutex);
+
+    TransactionExecutionData(const CTransaction* tx)
+    : m_ccv_output_min_amount(tx ? tx->vout.size() : 0, 0),
+      m_ccv_output_checked_default(tx ? tx->vout.size() : 0, false),
+      m_ccv_output_checked_deduct(tx ? tx->vout.size() : 0, false)
+    {
+        assert(tx != nullptr); // Ensure the transaction pointer is valid
+    }
+};
+
+/** Creates and stores TransactionExecutionData instances for each transaction. */
+class TransactionExecutionDataStore {
+private:
+    Mutex m_mutex;
+    std::unordered_map<const CTransaction*, std::unique_ptr<TransactionExecutionData>> m_store GUARDED_BY(m_mutex);
+
+public:
+    TransactionExecutionDataStore() = default;
+
+    // Retrieves the TransactionExecutionData for the given transaction.
+    // If it does not exist, it creates a new instance.
+    TransactionExecutionData* getOrCreate(const CTransaction* tx) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex) {
+        LOCK(m_mutex);
+        auto it = m_store.find(tx);
+        if (it != m_store.end()) {
+            return it->second.get();
+        }
+        auto newData = std::make_unique<TransactionExecutionData>(tx);
+        TransactionExecutionData* newDataPtr = newData.get();
+        m_store[tx] = std::move(newData);
+        return newDataPtr;
+    }
 };
 
 /** Signature hash sizes */
@@ -265,6 +339,11 @@ public:
          return false;
     }
 
+    virtual bool CheckContract(int mode, int index, const std::vector<unsigned char>& pubkey, const std::vector<unsigned char>& data, const std::vector<unsigned char>& taptree, ScriptExecutionData& ScriptExecutionData, ScriptError* serror, TransactionExecutionData* tx_exec_data) const
+    {
+        return false;
+    }
+
     virtual ~BaseSignatureChecker() = default;
 };
 
@@ -301,6 +380,7 @@ public:
     bool CheckSchnorrSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const override;
     bool CheckLockTime(const CScriptNum& nLockTime) const override;
     bool CheckSequence(const CScriptNum& nSequence) const override;
+    bool CheckContract(int mode, int index, const std::vector<unsigned char>& pubkey, const std::vector<unsigned char>& data, const std::vector<unsigned char>& taptree, ScriptExecutionData& ScriptExecutionData, ScriptError* serror, TransactionExecutionData* tx_exec_data) const override;
 };
 
 using TransactionSignatureChecker = GenericTransactionSignatureChecker<CTransaction>;
@@ -343,9 +423,9 @@ uint256 ComputeTapbranchHash(std::span<const unsigned char> a, std::span<const u
  *  Requires control block to have valid length (33 + k*32, with k in {0,1,..,128}). */
 uint256 ComputeTaprootMerkleRoot(std::span<const unsigned char> control, const uint256& tapleaf_hash);
 
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* error = nullptr);
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = nullptr);
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror = nullptr);
+bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* error = nullptr, TransactionExecutionData* tx_exec_data = nullptr);
+bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = nullptr, TransactionExecutionData* tx_exec_data = nullptr);
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror = nullptr, TransactionExecutionData* tx_exec_data = nullptr);
 
 size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags);
 
