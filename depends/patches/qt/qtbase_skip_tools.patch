@@ -1,0 +1,61 @@
+Skip building/installing unneeded tools:
+
+1. Wrapper CMake scripts.
+2. CI support files.
+3. tracepointgen and tracegen tools.
+4. Qt Look Ahead LR Parser Generator (qlalr).
+5. Qt Vulkan Header Generator (qvkgen).
+
+
+--- a/qtbase/cmake/QtBaseGlobalTargets.cmake
++++ b/qtbase/cmake/QtBaseGlobalTargets.cmake
+@@ -118,9 +118,6 @@ qt_generate_global_module_pri_file()
+ qt_generate_global_device_pri_file()
+ qt_generate_qmake_and_qtpaths_wrapper_for_target()
+ 
+-# Depends on the global features being evaluated.
+-qt_internal_create_wrapper_scripts()
+-
+ add_library(Qt::GlobalConfig ALIAS GlobalConfig)
+ 
+ add_library(GlobalConfigPrivate INTERFACE)
+
+--- a/qtbase/cmake/QtBaseGlobalTargets.cmake
++++ b/qtbase/cmake/QtBaseGlobalTargets.cmake
+@@ -349,12 +349,3 @@ elseif(WASM)
+     qt_install(PROGRAMS "${QT_BUILD_DIR}/${INSTALL_LIBEXECDIR}/qt-wasmtestrunner.py"
+         DESTINATION "${INSTALL_LIBEXECDIR}")
+ endif()
+-
+-# Install CI support files to libexec.
+-qt_path_join(__qt_libexec_install_dir "${QT_INSTALL_DIR}" "${INSTALL_LIBEXECDIR}")
+-qt_copy_or_install(FILES coin/instructions/qmake/ensure_pro_file.cmake
+-    DESTINATION "${__qt_libexec_install_dir}")
+-qt_copy_or_install(PROGRAMS "util/testrunner/qt-testrunner.py"
+-    DESTINATION "${__qt_libexec_install_dir}")
+-qt_copy_or_install(PROGRAMS "util/testrunner/sanitizer-testrunner.py"
+-    DESTINATION "${__qt_libexec_install_dir}")
+
+
+--- a/qtbase/src/CMakeLists.txt
++++ b/qtbase/src/CMakeLists.txt
+@@ -21,8 +21,6 @@ function(find_or_build_bootstrap_names)
+     endif()
+     add_subdirectory(tools/moc)
+     add_subdirectory(tools/rcc)
+-    add_subdirectory(tools/tracepointgen)
+-    add_subdirectory(tools/tracegen)
+     add_subdirectory(tools/cmake_automoc_parser)
+ endfunction()
+ 
+--- a/qtbase/src/tools/CMakeLists.txt
++++ b/qtbase/src/tools/CMakeLists.txt
+@@ -11,8 +11,6 @@ if (QT_FEATURE_dbus)
+     add_subdirectory(qdbuscpp2xml)
+     add_subdirectory(qdbusxml2cpp)
+ endif()
+-add_subdirectory(qlalr)
+-add_subdirectory(qvkgen)
+ if (QT_FEATURE_commandlineparser)
+     add_subdirectory(qtpaths)
+ endif()

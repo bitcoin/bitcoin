@@ -8,7 +8,7 @@
     "libevent"
   ],
   "default-features": [
-    "qt5",
+    "qt",
     "tests",
     "wallet",
     "berkeleydb",
@@ -21,11 +21,11 @@
         "berkeleydb"
       ]
     },
-    "qt5": {
-      "description": "Build GUI, Qt 5",
+    "qt": {
+      "description": "Build GUI, Qt 6",
       "dependencies": [
-        "qt5-base",
-        "qt5-tools",
+        "qtbase",
+        "qttools",
         "libqrencode"
       ]
     },

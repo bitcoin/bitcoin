@@ -62,13 +62,13 @@ sh/bash: export BDB_PREFIX=[path displayed above]
 ```
 
 #### GUI Dependencies
-###### Qt5
+###### Qt6
 
 Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
 the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
 
 ```bash
-pkg install qt5-buildtools qt5-core qt5-gui qt5-linguisttools qt5-testlib qt5-widgets
+pkg install qt6-buildtools qt6-core qt6-gui qt6-linguisttools qt6-testlib qt6-widgets
 ```
 
 ###### libqrencode
