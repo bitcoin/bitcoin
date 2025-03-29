@@ -4534,8 +4534,15 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
         // First change to using SQLite
         if (!local_wallet->MigrateToSQLite(error)) return util::Error{error};
 
+        bool empty_wallet{false};
+        {
+            // Keep the batch alive only for this call
+            const auto& db_batch = local_wallet->GetDatabase().MakeBatch();
+            empty_wallet = !HasLegacyRecords(local_wallet.get(), *db_batch);
+        }
+
         // Do the migration of keys and scripts for non-blank wallets, and cleanup if it fails
-        success = local_wallet->IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET);
+        success = empty_wallet;
         if (!success) {
             success = DoMigration(*local_wallet, context, error, res);
         } else {

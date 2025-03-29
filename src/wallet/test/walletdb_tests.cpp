@@ -48,10 +48,20 @@ BOOST_AUTO_TEST_CASE(walletdb_read_write_deadlock)
         LOCK(wallet->cs_wallet);
         auto legacy_spkm = wallet->GetOrCreateLegacyScriptPubKeyMan();
         BOOST_CHECK(legacy_spkm->SetupGeneration(true));
+        {
+            // Keep the batch alive only for this call
+            const auto& db_batch = wallet->GetDatabase().MakeBatch();
+            BOOST_CHECK(HasLegacyRecords(wallet.get(), *db_batch));
+        }
         wallet->Flush();
 
         // Now delete all records, which performs a read write operation.
         BOOST_CHECK(wallet->GetLegacyScriptPubKeyMan()->DeleteRecords());
+        {
+            // Keep the batch alive only for this call
+            const auto& db_batch = wallet->GetDatabase().MakeBatch();
+            BOOST_CHECK(!HasLegacyRecords(wallet.get(), *db_batch));
+        }
     }
 }
 
