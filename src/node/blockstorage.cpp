@@ -1149,6 +1149,13 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
     return std::vector<std::byte>{xor_key.begin(), xor_key.end()};
 }
 
+void BlockManager::CleanupForFuzzing()
+{
+    m_dirty_blockindex.clear();
+    m_dirty_fileinfo.clear();
+    m_blockfile_info.resize(1);
+}
+
 BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
     : m_prune_mode{opts.prune_target > 0},
       m_xor_key{InitBlocksdirXorKey(opts)},
