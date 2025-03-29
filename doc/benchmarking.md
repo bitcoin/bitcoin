@@ -1,16 +1,16 @@
 Benchmarking
 ============
 
-Bitcoin Core has an internal benchmarking framework, with benchmarks
-for cryptographic algorithms (e.g. SHA1, SHA256, SHA512, RIPEMD160, Poly1305, ChaCha20), rolling bloom filter, coins selection,
-thread queue, wallet balance.
+Bitcoin Core includes an internal benchmarking framework, providing benchmarks
+for cryptographic algorithms (e.g., SHA1, SHA256, SHA512, RIPEMD160, Poly1305, ChaCha20), rolling bloom filters, coin selection,
+thread queues, and wallet balances.
 
 Running
 ---------------------
 
-For benchmarking, you only need to compile `bench_bitcoin`.  The bench runner
-warns if you configure with `-DCMAKE_BUILD_TYPE=Debug`, but consider if building without
-it will impact the benchmark(s) you are interested in by unlatching log printers
+To run the benchmarks, you only need to compile `bench_bitcoin`. The benchmark runner
+issues a warning if you configure with `-DCMAKE_BUILD_TYPE=Debug`; however, consider whether building without
+it will impact the specific benchmark(s) you are interested in by disabling log printers
 and lock analysis.
 
     cmake -B build -DBUILD_BENCH=ON
@@ -66,8 +66,7 @@ end-to-end performance improvement cannot be demonstrated. The change might
 also be rejected if the code bloat or review/maintenance burden is too high to
 justify the improvement.
 
-Benchmarks are ill-suited for testing denial-of-service issues as they are
-restricted to the same input set (introducing bias). [Fuzz
+Benchmarks are not well-suited for testing denial-of-service issues, as they are restricted to a fixed input set (introducing bias). [Fuzz
 tests](/doc/fuzzing.md) are better suited for this purpose, as they are
 specifically aimed at exploring the possible input space.
 
