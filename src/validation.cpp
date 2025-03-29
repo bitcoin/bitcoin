@@ -3747,7 +3747,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
         m_blockman.m_dirty_blockindex.insert(invalid_walk_tip);
         setBlockIndexCandidates.erase(invalid_walk_tip);
         setBlockIndexCandidates.insert(invalid_walk_tip->pprev);
-        if (invalid_walk_tip->pprev == to_mark_failed && (to_mark_failed->nStatus & BLOCK_FAILED_VALID)) {
+        if (invalid_walk_tip == to_mark_failed->pprev && (to_mark_failed->nStatus & BLOCK_FAILED_VALID)) {
             // We only want to mark the last disconnected block as BLOCK_FAILED_VALID; its children
             // need to be BLOCK_FAILED_CHILD instead.
             to_mark_failed->nStatus = (to_mark_failed->nStatus ^ BLOCK_FAILED_VALID) | BLOCK_FAILED_CHILD;
@@ -3779,11 +3779,13 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
             return false;
         }
 
-        // Mark pindex (or the last disconnected block) as invalid, even when it never was in the main chain
-        to_mark_failed->nStatus |= BLOCK_FAILED_VALID;
-        m_blockman.m_dirty_blockindex.insert(to_mark_failed);
-        setBlockIndexCandidates.erase(to_mark_failed);
-        m_chainman.m_failed_blocks.insert(to_mark_failed);
+        // Mark pindex as invalid if it never was in the main chain
+        if (!pindex_was_in_chain && !(pindex->nStatus & BLOCK_FAILED_MASK)) {
+            pindex->nStatus |= BLOCK_FAILED_VALID;
+            m_blockman.m_dirty_blockindex.insert(pindex);
+            setBlockIndexCandidates.erase(pindex);
+            m_chainman.m_failed_blocks.insert(pindex);
+        }
 
         // If any new blocks somehow arrived while we were disconnecting
         // (above), then the pre-calculation of what should go into
@@ -3826,8 +3828,9 @@ void Chainstate::SetBlockFailureFlags(CBlockIndex* invalid_block)
     AssertLockHeld(cs_main);
 
     for (auto& [_, block_index] : m_blockman.m_block_index) {
-        if (block_index.GetAncestor(invalid_block->nHeight) == invalid_block && !(block_index.nStatus & BLOCK_FAILED_MASK)) {
-            block_index.nStatus |= BLOCK_FAILED_CHILD;
+        if (invalid_block != &block_index && block_index.GetAncestor(invalid_block->nHeight) == invalid_block) {
+            block_index.nStatus = (block_index.nStatus & ~BLOCK_FAILED_VALID) | BLOCK_FAILED_CHILD;
+            m_blockman.m_dirty_blockindex.insert(&block_index);
         }
     }
 }
