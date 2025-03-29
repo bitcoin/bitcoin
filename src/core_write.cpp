@@ -201,23 +201,31 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
             o.pushKV("hex", HexStr(txin.scriptSig));
             in.pushKV("scriptSig", std::move(o));
         }
-        if (!tx.vin[i].scriptWitness.IsNull()) {
+
+        if (!txin.scriptWitness.IsNull()) {
             UniValue txinwitness(UniValue::VARR);
             for (const auto& item : tx.vin[i].scriptWitness.stack) {
                 txinwitness.push_back(HexStr(item));
             }
             in.pushKV("txinwitness", std::move(txinwitness));
         }
+
         if (have_undo) {
             const Coin& prev_coin = txundo->vprevout[i];
             const CTxOut& prev_txout = prev_coin.out;
 
             amt_total_in += prev_txout.nValue;
 
+            std::pair<CScript, int> script = GetScriptForTransactionInput(prev_txout.scriptPubKey, txin);
+            UniValue redeemScript(UniValue::VOBJ);
+            ScriptToUniv(script.first, redeemScript, false, true);
+            if (script.second != -2) {
+                in.pushKV("redeemScript", std::move(redeemScript));
+            }
+
             if (verbosity == TxVerbosity::SHOW_DETAILS_AND_PREVOUT) {
                 UniValue o_script_pub_key(UniValue::VOBJ);
                 ScriptToUniv(prev_txout.scriptPubKey, /*out=*/o_script_pub_key, /*include_hex=*/true, /*include_address=*/true);
-
                 UniValue p(UniValue::VOBJ);
                 p.pushKV("generated", bool(prev_coin.fCoinBase));
                 p.pushKV("height", uint64_t(prev_coin.nHeight));
