@@ -29,8 +29,8 @@ namespace {
 class IpcImpl : public interfaces::Ipc
 {
 public:
-    IpcImpl(const char* exe_name, const char* process_argv0, interfaces::Init& init)
-        : m_exe_name(exe_name), m_process_argv0(process_argv0), m_init(init),
+    IpcImpl(const char* exe_name, const char* log_suffix, const char* process_argv0, interfaces::Init& init)
+        : m_exe_name(exe_name), m_log_suffix(log_suffix), m_process_argv0(process_argv0), m_init(init),
           m_protocol(ipc::capnp::MakeCapnpProtocol()), m_process(ipc::MakeProcess())
     {
     }
@@ -71,10 +71,13 @@ public:
                 fd = m_process->connect(gArgs.GetDataDirNet(), "bitcoin-node", address);
             } catch (const std::system_error& e) {
                 // If connection type is auto and socket path isn't accepting connections, or doesn't exist, catch the error and return null;
-                if (e.code() == std::errc::connection_refused || e.code() == std::errc::no_such_file_or_directory) {
+                if (e.code() == std::errc::connection_refused || e.code() == std::errc::no_such_file_or_directory || e.code() == std::errc::not_a_directory) {
                     return nullptr;
                 }
                 throw;
+            } catch (const std::invalid_argument&) {
+               // Catch 'Unix address path "..." exceeded maximum socket path length' error
+               return nullptr;
             }
         } else {
             fd = m_process->connect(gArgs.GetDataDirNet(), "bitcoin-node", address);
@@ -91,7 +94,9 @@ public:
         m_protocol->addCleanup(type, iface, std::move(cleanup));
     }
     Context& context() override { return m_protocol->context(); }
+    const char* logSuffix() override { return m_log_suffix; }
     const char* m_exe_name;
+    const char* m_log_suffix;
     const char* m_process_argv0;
     interfaces::Init& m_init;
     std::unique_ptr<Protocol> m_protocol;
@@ -101,8 +106,8 @@ public:
 } // namespace ipc
 
 namespace interfaces {
-std::unique_ptr<Ipc> MakeIpc(const char* exe_name, const char* process_argv0, Init& init)
+std::unique_ptr<Ipc> MakeIpc(const char* exe_name, const char* log_suffix, const char* process_argv0, Init& init)
 {
-    return std::make_unique<ipc::IpcImpl>(exe_name, process_argv0, init);
+    return std::make_unique<ipc::IpcImpl>(exe_name, log_suffix, process_argv0, init);
 }
 } // namespace interfaces
