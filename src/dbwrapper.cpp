@@ -28,9 +28,12 @@
 #include <leveldb/slice.h>
 #include <leveldb/status.h>
 #include <leveldb/write_batch.h>
+#include <map>
 #include <memory>
 #include <optional>
+#include <string>
 #include <utility>
+#include <vector>
 
 static auto CharCast(const std::byte* data) { return reinterpret_cast<const char*>(data); }
 
@@ -219,6 +222,46 @@ struct LevelDBContext {
     leveldb::DB* pdb;
 };
 
+static std::string GetChangedOptions(const LevelDBContext& context)
+{
+    std::map<std::string, std::string> current, defaults;
+    auto process_options{[&]<typename OPTION>(const OPTION& options, const OPTION& default_options, const std::string& prefix) {
+        auto add_options_to_map{[&](const OPTION& op, std::map<std::string, std::string>& map) {
+            auto ToString{[](const bool value) { return value ? "true" : "false"; }};
+            if constexpr (std::is_same_v<OPTION, leveldb::Options>) {
+                map[prefix + "create_if_missing"] = ToString(op.create_if_missing);
+                map[prefix + "error_if_exists"] = ToString(op.error_if_exists);
+                map[prefix + "paranoid_checks"] = ToString(op.paranoid_checks);
+                map[prefix + "write_buffer_size"] = util::ToString(op.write_buffer_size);
+                map[prefix + "max_open_files"] = util::ToString(op.max_open_files);
+                map[prefix + "block_size"] = util::ToString(op.block_size);
+                map[prefix + "max_file_size"] = util::ToString(op.max_file_size);
+                map[prefix + "compression"] = op.compression == leveldb::kNoCompression ? "NoCompression" : "SnappyCompression";
+            } else if constexpr (std::is_same_v<OPTION, leveldb::ReadOptions>) {
+                map[prefix + "verify_checksums"] = ToString(op.verify_checksums);
+                map[prefix + "fill_cache"] = ToString(op.fill_cache);
+            } else if constexpr (std::is_same_v<OPTION, leveldb::WriteOptions>) {
+                map[prefix + "sync"] = ToString(op.sync);
+            }
+        }};
+        add_options_to_map(options, current);
+        add_options_to_map(default_options, defaults);
+    }};
+
+    process_options(context.options, leveldb::Options(), "options.");
+    for (const auto& op : {&context.readoptions, &context.iteroptions}) process_options(*op, leveldb::ReadOptions(), "readoptions.");
+    for (const auto& op : {&context.writeoptions, &context.syncoptions}) process_options(*op, leveldb::WriteOptions(), "writeoptions.");
+
+    std::string result;
+    for (const auto& [key, current_value] : current) {
+        if (current_value != defaults[key]) {
+            if (result.size()) result += ", ";
+            result += key + "=" + current_value;
+        }
+    }
+    return result;
+}
+
 CDBWrapper::CDBWrapper(const DBParams& params)
     : m_db_context{std::make_unique<LevelDBContext>()}, m_name{fs::PathToString(params.path.stem())}, m_path{params.path}, m_is_memory{params.memory_only}
 {
@@ -247,7 +290,7 @@ CDBWrapper::CDBWrapper(const DBParams& params)
     // (see env_posix.cc and env_windows.cc).
     leveldb::Status status = leveldb::DB::Open(DBContext().options, fs::PathToString(params.path), &DBContext().pdb);
     HandleError(status);
-    LogPrintf("Opened LevelDB successfully\n");
+    LogInfo("Opened LevelDB successfully with options: %s", GetChangedOptions(DBContext()));
 
     if (params.options.force_compact) {
         LogPrintf("Starting database compaction of %s\n", fs::PathToString(params.path));
