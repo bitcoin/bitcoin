@@ -807,7 +807,7 @@ void CWallet::AddToSpends(const CWalletTx& wtx, WalletBatch* batch)
         AddToSpends(txin.prevout, wtx.GetHash(), batch);
 }
 
-bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
+bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase, std::optional<unsigned int> forceIterations)
 {
     if (IsCrypted())
         return false;
@@ -823,17 +823,25 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
     GetStrongRandBytes(kMasterKey.vchSalt);
 
     CCrypter crypter;
-    constexpr MillisecondsDouble target{100};
-    auto start{SteadyClock::now()};
-    crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.vchSalt, 25000, kMasterKey.nDerivationMethod);
-    kMasterKey.nDeriveIterations = static_cast<unsigned int>(25000 * target / (SteadyClock::now() - start));
 
-    start = SteadyClock::now();
-    crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.vchSalt, kMasterKey.nDeriveIterations, kMasterKey.nDerivationMethod);
-    kMasterKey.nDeriveIterations = (kMasterKey.nDeriveIterations + static_cast<unsigned int>(kMasterKey.nDeriveIterations * target / (SteadyClock::now() - start))) / 2;
+    // False by default, used by test or benchmarking code
+    if(forceIterations.has_value()) {
+        kMasterKey.nDeriveIterations = forceIterations.value();
+    }
+    // Try to find an nDeriveIterations that takes about 100ms
+    else {
+        constexpr MillisecondsDouble target{100};
+        auto start{SteadyClock::now()};
+        crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.vchSalt, 25000, kMasterKey.nDerivationMethod);
+        kMasterKey.nDeriveIterations = static_cast<unsigned int>(25000 * target / (SteadyClock::now() - start));
 
-    if (kMasterKey.nDeriveIterations < 25000)
-        kMasterKey.nDeriveIterations = 25000;
+        start = SteadyClock::now();
+        crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.vchSalt, kMasterKey.nDeriveIterations, kMasterKey.nDerivationMethod);
+        kMasterKey.nDeriveIterations = (kMasterKey.nDeriveIterations + static_cast<unsigned int>(kMasterKey.nDeriveIterations * target / (SteadyClock::now() - start))) / 2;
+
+        if (kMasterKey.nDeriveIterations < 25000)
+            kMasterKey.nDeriveIterations = 25000;
+    }
 
     WalletLogPrintf("Encrypting Wallet with an nDeriveIterations of %i\n", kMasterKey.nDeriveIterations);
 
