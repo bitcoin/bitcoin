@@ -794,7 +794,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
     assert(innerUsage == cachedInnerUsage);
 }
 
-bool CTxMemPool::CompareDepthAndScore(const uint256& hasha, const uint256& hashb, bool wtxid)
+bool CTxMemPool::CompareDepthAndScore(const GenTxidVariant& hasha, const GenTxidVariant& hashb) const
 {
     /* Return `true` if hasha should be considered sooner than hashb. Namely when:
      *   a is not in the mempool, but b is
@@ -802,9 +802,9 @@ bool CTxMemPool::CompareDepthAndScore(const uint256& hasha, const uint256& hashb
      *   both are in the mempool and a has a higher score than b
      */
     LOCK(cs);
-    auto j = wtxid ? GetIter(Wtxid::FromUint256(hashb)) : GetIter(Txid::FromUint256(hashb));
+    auto j{std::visit([&](const auto& id) EXCLUSIVE_LOCKS_REQUIRED(cs) { return GetIter(id); }, hashb)};
     if (!j.has_value()) return false;
-    auto i = wtxid ? GetIter(Wtxid::FromUint256(hasha)) : GetIter(Txid::FromUint256(hasha));
+    auto i{std::visit([&](const auto& id) EXCLUSIVE_LOCKS_REQUIRED(cs) { return GetIter(id); }, hasha)};
     if (!i.has_value()) return true;
     uint64_t counta = i.value()->GetCountWithAncestors();
     uint64_t countb = j.value()->GetCountWithAncestors();

@@ -19,9 +19,10 @@
 #include <primitives/transaction.h>
 #include <sync.h>
 #include <util/epochguard.h>
+#include <util/feefrac.h>
 #include <util/hasher.h>
 #include <util/result.h>
-#include <util/feefrac.h>
+#include <util/transaction_identifier.h>
 
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/identity.hpp>
@@ -466,7 +467,7 @@ public:
     void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb, bool wtxid=false);
+    bool CompareDepthAndScore(const GenTxidVariant& hasha, const GenTxidVariant& hashb) const;
     bool isSpent(const COutPoint& outpoint) const;
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
