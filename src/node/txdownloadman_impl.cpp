@@ -43,7 +43,7 @@ bool TxDownloadManager::AddTxAnnouncement(NodeId peer, const GenTxidVariant& gtx
 {
     return m_impl->AddTxAnnouncement(peer, gtxid, now);
 }
-std::vector<GenTxid> TxDownloadManager::GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time)
+std::vector<GenTxidVariant> TxDownloadManager::GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time)
 {
     return m_impl->GetRequestsToSend(nodeid, current_time);
 }
@@ -218,7 +218,7 @@ bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxidVariant&
     const bool overloaded = !info.m_relay_permissions && m_txrequest.CountInFlight(peer) >= MAX_PEER_TX_REQUEST_IN_FLIGHT;
     if (overloaded) delay += OVERLOADED_PEER_TX_DELAY;
 
-    m_txrequest.ReceivedInv(peer, GenTxid::FromVariant(gtxid), info.m_preferred, now + delay);
+    m_txrequest.ReceivedInv(peer, gtxid, info.m_preferred, now + delay);
 
     return false;
 }
@@ -255,31 +255,31 @@ bool TxDownloadManagerImpl::MaybeAddOrphanResolutionCandidate(const std::vector<
     // Treat finding orphan resolution candidate as equivalent to the peer announcing all missing parents.
     // In the future, orphan resolution may include more explicit steps
     for (const auto& parent_txid : unique_parents) {
-        m_txrequest.ReceivedInv(nodeid, GenTxid::Txid(parent_txid), info.m_preferred, now + delay);
+        m_txrequest.ReceivedInv(nodeid, parent_txid, info.m_preferred, now + delay);
     }
     LogDebug(BCLog::TXPACKAGES, "added peer=%d as a candidate for resolving orphan %s\n", nodeid, wtxid.ToString());
     return true;
 }
 
-std::vector<GenTxid> TxDownloadManagerImpl::GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time)
+std::vector<GenTxidVariant> TxDownloadManagerImpl::GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time)
 {
-    std::vector<GenTxid> requests;
-    std::vector<std::pair<NodeId, GenTxid>> expired;
+    std::vector<GenTxidVariant> requests;
+    std::vector<std::pair<NodeId, GenTxidVariant>> expired;
     auto requestable = m_txrequest.GetRequestable(nodeid, current_time, &expired);
-    for (const auto& entry : expired) {
-        LogDebug(BCLog::NET, "timeout of inflight %s %s from peer=%d\n", entry.second.IsWtxid() ? "wtx" : "tx",
-            entry.second.GetHash().ToString(), entry.first);
+    for (const auto& [expired_nodeid, gtxid] : expired) {
+        LogDebug(BCLog::NET, "timeout of inflight %s %s from peer=%d\n", gtxid.IsWtxid() ? "wtx" : "tx",
+                 gtxid.ToUint256().ToString(), expired_nodeid);
     }
-    for (const GenTxid& gtxid : requestable) {
-        if (!AlreadyHaveTx(gtxid.ToVariant(), /*include_reconsiderable=*/false)) {
+    for (const GenTxidVariant& gtxid : requestable) {
+        if (!AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) {
             LogDebug(BCLog::NET, "Requesting %s %s peer=%d\n", gtxid.IsWtxid() ? "wtx" : "tx",
-                gtxid.GetHash().ToString(), nodeid);
+                     gtxid.ToUint256().ToString(), nodeid);
             requests.emplace_back(gtxid);
-            m_txrequest.RequestedTx(nodeid, gtxid.GetHash(), current_time + GETDATA_TX_INTERVAL);
+            m_txrequest.RequestedTx(nodeid, gtxid.ToUint256(), current_time + GETDATA_TX_INTERVAL);
         } else {
             // We have already seen this transaction, no need to download. This is just a belt-and-suspenders, as
             // this should already be called whenever a transaction becomes AlreadyHaveTx().
-            m_txrequest.ForgetTxHash(gtxid.GetHash());
+            m_txrequest.ForgetTxHash(gtxid.ToUint256());
         }
     }
     return requests;

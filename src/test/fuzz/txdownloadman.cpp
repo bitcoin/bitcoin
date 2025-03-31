@@ -382,7 +382,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                 // TxDownloadManager should not be telling us to request things we already have.
                 // Exclude m_lazy_recent_rejects_reconsiderable because it may request low-feerate parent of orphan.
                 for (const auto& gtxid : getdata_requests) {
-                    Assert(!txdownload_impl.AlreadyHaveTx(gtxid.ToVariant(), /*include_reconsiderable=*/false));
+                    Assert(!txdownload_impl.AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false));
                 }
             },
             [&] {
