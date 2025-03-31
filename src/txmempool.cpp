@@ -890,19 +890,27 @@ CTransactionRef CTxMemPool::get(const uint256& hash) const
     return i->GetSharedTx();
 }
 
-TxMempoolInfo CTxMemPool::info(const GenTxid& gtxid) const
+TxMempoolInfo CTxMemPool::info(const GenTxidVariant& gtxid) const
 {
     LOCK(cs);
-    indexed_transaction_set::const_iterator i = (gtxid.IsWtxid() ? get_iter_from_wtxid(gtxid.GetHash()) : mapTx.find(gtxid.GetHash()));
+    indexed_transaction_set::const_iterator i = std::visit(util::Overloaded{
+        [this](const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(cs) { return get_iter_from_wtxid(wtxid); },
+        [this](const Txid& txid) EXCLUSIVE_LOCKS_REQUIRED(cs) { return mapTx.find(txid); }
+    }, gtxid);
+
     if (i == mapTx.end())
         return TxMempoolInfo();
     return GetInfo(i);
 }
 
-TxMempoolInfo CTxMemPool::info_for_relay(const GenTxid& gtxid, uint64_t last_sequence) const
+TxMempoolInfo CTxMemPool::info_for_relay(const GenTxidVariant& gtxid, uint64_t last_sequence) const
 {
     LOCK(cs);
-    indexed_transaction_set::const_iterator i = (gtxid.IsWtxid() ? get_iter_from_wtxid(gtxid.GetHash()) : mapTx.find(gtxid.GetHash()));
+    indexed_transaction_set::const_iterator i = std::visit(util::Overloaded{
+        [this](const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(cs) { return get_iter_from_wtxid(wtxid); },
+        [this](const Txid& txid) EXCLUSIVE_LOCKS_REQUIRED(cs) { return mapTx.find(txid); }
+    }, gtxid);
+
     if (i != mapTx.end() && i->GetSequence() < last_sequence) {
         return GetInfo(i);
     } else {
