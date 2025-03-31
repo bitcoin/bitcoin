@@ -120,12 +120,12 @@ fn deterministic_coverage(
         .map(|entry| entry.expect("IO error"))
         .collect::<Vec<_>>();
     entries.sort_by_key(|entry| entry.file_name());
-    let run_single = |run_id: u8, entry: &Path, thread_id: usize| -> Result<PathBuf, AppError> {
-        let cov_txt_path = build_dir.join(format!("fuzz_det_cov.show.t{thread_id}.r{run_id}.txt"));
-        let profraw_file = build_dir.join(format!("fuzz_det_cov.t{thread_id}.r{run_id}.profraw"));
-        let profdata_file = build_dir.join(format!("fuzz_det_cov.t{thread_id}.r{run_id}.profdata"));
-        if !{
-            {
+    let run_single = |run_id: char, entry: &Path, thread_id: usize| -> Result<PathBuf, AppError> {
+        let cov_txt_path = build_dir.join(format!("fuzz_det_cov.show.t{thread_id}.{run_id}.txt"));
+        let profraw_file = build_dir.join(format!("fuzz_det_cov.t{thread_id}.{run_id}.profraw"));
+        let profdata_file = build_dir.join(format!("fuzz_det_cov.t{thread_id}.{run_id}.profdata"));
+        {
+            let output = {
                 let mut cmd = Command::new(fuzz_exe);
                 if using_libfuzzer {
                     cmd.arg("-runs=1");
@@ -135,11 +135,15 @@ fn deterministic_coverage(
             .env("LLVM_PROFILE_FILE", &profraw_file)
             .env("FUZZ", fuzz_target)
             .arg(entry)
-            .status()
-            .map_err(|e| format!("fuzz failed with {e}"))?
-            .success()
-        } {
-            Err("fuzz failed".to_string())?;
+            .output()
+            .map_err(|e| format!("fuzz failed: {e}"))?;
+            if !output.status.success() {
+                Err(format!(
+                    "fuzz failed!\nstdout:\n{}\nstderr:\n{}\n",
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr)
+                ))?;
+            }
         }
         if !Command::new(LLVM_PROFDATA)
             .arg("merge")
@@ -210,8 +214,8 @@ The coverage was not deterministic between runs.
         if !entry.is_file() {
             Err(format!("{} should be a file", entry.display()))?;
         }
-        let cov_txt_base = run_single(0, &entry, thread_id)?;
-        let cov_txt_repeat = run_single(1, &entry, thread_id)?;
+        let cov_txt_base = run_single('a', &entry, thread_id)?;
+        let cov_txt_repeat = run_single('b', &entry, thread_id)?;
         check_diff(
             &cov_txt_base,
             &cov_txt_repeat,
@@ -249,15 +253,15 @@ The coverage was not deterministic between runs.
         if !corpus_dir.is_dir() {
             Err(format!("{} should be a folder", corpus_dir.display()))?;
         }
-        let cov_txt_base = run_single(0, &corpus_dir, 0)?;
-        let cov_txt_repeat = run_single(1, &corpus_dir, 0)?;
+        let cov_txt_base = run_single('a', &corpus_dir, 0)?;
+        let cov_txt_repeat = run_single('b', &corpus_dir, 0)?;
         check_diff(
             &cov_txt_base,
             &cov_txt_repeat,
             &format!("All fuzz inputs in {} were used.", corpus_dir.display()),
         )?;
     }
-    println!("Coverage test passed for {fuzz_target}.");
+    println!("✨ Coverage test passed for {fuzz_target}. ✨");
     Ok(())
 }
 
@@ -265,7 +269,7 @@ fn main() -> ExitCode {
     match app() {
         Ok(()) => ExitCode::SUCCESS,
         Err(err) => {
-            eprintln!("{}", err);
+            eprintln!("⚠️\n{}", err);
             ExitCode::FAILURE
         }
     }
