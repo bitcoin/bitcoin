@@ -2394,7 +2394,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
 CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer::TxRelay& tx_relay, const GenTxid& gtxid)
 {
     // If a tx was in the mempool prior to the last INV for this peer, permit the request.
-    auto txinfo = m_mempool.info_for_relay(gtxid, tx_relay.m_last_inv_sequence);
+    auto txinfo = m_mempool.info_for_relay(gtxid.ToVariant(), tx_relay.m_last_inv_sequence);
     if (txinfo.tx) {
         return std::move(txinfo.tx);
     }
@@ -5821,7 +5821,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                             continue;
                         }
                         // Not in the mempool anymore? don't bother sending it.
-                        auto txinfo = m_mempool.info(ToGenTxid(inv));
+                        auto txinfo = m_mempool.info(ToGenTxid(inv).ToVariant());
                         if (!txinfo.tx) {
                             continue;
                         }
