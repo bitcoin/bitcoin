@@ -44,7 +44,7 @@ bool TxDownloadManager::AddTxAnnouncement(NodeId peer, const GenTxidVariant& gtx
 {
     return m_impl->AddTxAnnouncement(peer, gtxid, now);
 }
-std::vector<GenTxid> TxDownloadManager::GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time)
+std::vector<GenTxidVariant> TxDownloadManager::GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time)
 {
     return m_impl->GetRequestsToSend(nodeid, current_time);
 }
@@ -105,8 +105,8 @@ void TxDownloadManagerImpl::BlockConnected(const std::shared_ptr<const CBlock>& 
         if (ptx->HasWitness()) {
             RecentConfirmedTransactionsFilter().insert(ptx->GetWitnessHash().ToUint256());
         }
-        m_txrequest.ForgetTxHash(ptx->GetHash());
-        m_txrequest.ForgetTxHash(ptx->GetWitnessHash());
+        m_txrequest.ForgetTxHash(ptx->GetHash().ToUint256());
+        m_txrequest.ForgetTxHash(ptx->GetWitnessHash().ToUint256());
     }
 }
 
@@ -225,7 +225,7 @@ bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxidVariant&
     const bool overloaded = !info.m_relay_permissions && m_txrequest.CountInFlight(peer) >= MAX_PEER_TX_REQUEST_IN_FLIGHT;
     if (overloaded) delay += OVERLOADED_PEER_TX_DELAY;
 
-    m_txrequest.ReceivedInv(peer, GenTxid::FromVariant(gtxid), info.m_preferred, now + delay);
+    m_txrequest.ReceivedInv(peer, gtxid, info.m_preferred, now + delay);
 
     return false;
 }
@@ -262,31 +262,31 @@ bool TxDownloadManagerImpl::MaybeAddOrphanResolutionCandidate(const std::vector<
     // Treat finding orphan resolution candidate as equivalent to the peer announcing all missing parents.
     // In the future, orphan resolution may include more explicit steps
     for (const auto& parent_txid : unique_parents) {
-        m_txrequest.ReceivedInv(nodeid, GenTxid::Txid(parent_txid), info.m_preferred, now + delay);
+        m_txrequest.ReceivedInv(nodeid, parent_txid, info.m_preferred, now + delay);
     }
     LogDebug(BCLog::TXPACKAGES, "added peer=%d as a candidate for resolving orphan %s\n", nodeid, wtxid.ToString());
     return true;
 }
 
-std::vector<GenTxid> TxDownloadManagerImpl::GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time)
+std::vector<GenTxidVariant> TxDownloadManagerImpl::GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time)
 {
-    std::vector<GenTxid> requests;
-    std::vector<std::pair<NodeId, GenTxid>> expired;
+    std::vector<GenTxidVariant> requests;
+    std::vector<std::pair<NodeId, GenTxidVariant>> expired;
     auto requestable = m_txrequest.GetRequestable(nodeid, current_time, &expired);
     for (const auto& entry : expired) {
         LogDebug(BCLog::NET, "timeout of inflight %s %s from peer=%d\n", entry.second.IsWtxid() ? "wtx" : "tx",
-            entry.second.GetHash().ToString(), entry.first);
+                 entry.second.ToUint256().ToString(), entry.first);
     }
-    for (const GenTxid& gtxid : requestable) {
-        if (!AlreadyHaveTx(gtxid.ToVariant(), /*include_reconsiderable=*/false)) {
+    for (const GenTxidVariant& gtxid : requestable) {
+        if (!AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) {
             LogDebug(BCLog::NET, "Requesting %s %s peer=%d\n", gtxid.IsWtxid() ? "wtx" : "tx",
-                gtxid.GetHash().ToString(), nodeid);
+                     gtxid.ToUint256().ToString(), nodeid);
             requests.emplace_back(gtxid);
-            m_txrequest.RequestedTx(nodeid, gtxid.GetHash(), current_time + GETDATA_TX_INTERVAL);
+            m_txrequest.RequestedTx(nodeid, gtxid.ToUint256(), current_time + GETDATA_TX_INTERVAL);
         } else {
             // We have already seen this transaction, no need to download. This is just a belt-and-suspenders, as
             // this should already be called whenever a transaction becomes AlreadyHaveTx().
-            m_txrequest.ForgetTxHash(gtxid.GetHash());
+            m_txrequest.ForgetTxHash(gtxid.ToUint256());
         }
     }
     return requests;
@@ -331,8 +331,8 @@ void TxDownloadManagerImpl::MempoolAcceptedTx(const CTransactionRef& tx)
 {
     // As this version of the transaction was acceptable, we can forget about any requests for it.
     // No-op if the tx is not in txrequest.
-    m_txrequest.ForgetTxHash(tx->GetHash());
-    m_txrequest.ForgetTxHash(tx->GetWitnessHash());
+    m_txrequest.ForgetTxHash(tx->GetHash().ToUint256());
+    m_txrequest.ForgetTxHash(tx->GetWitnessHash().ToUint256());
 
     m_orphanage.AddChildrenToWorkSet(*tx, m_opts.m_rng);
     // If it came from the orphanage, remove it. No-op if the tx is not in txorphanage.
@@ -413,8 +413,8 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
                 //
                 // Search by txid and, if the tx has a witness, wtxid
                 std::vector<NodeId> orphan_resolution_candidates{nodeid};
-                m_txrequest.GetCandidatePeers(ptx->GetHash(), orphan_resolution_candidates);
-                if (ptx->HasWitness()) m_txrequest.GetCandidatePeers(ptx->GetWitnessHash(), orphan_resolution_candidates);
+                m_txrequest.GetCandidatePeers(ptx->GetHash().ToUint256(), orphan_resolution_candidates);
+                if (ptx->HasWitness()) m_txrequest.GetCandidatePeers(ptx->GetWitnessHash().ToUint256(), orphan_resolution_candidates);
 
                 for (const auto& nodeid : orphan_resolution_candidates) {
                     if (MaybeAddOrphanResolutionCandidate(unique_parents, ptx->GetWitnessHash(), nodeid, now)) {
@@ -423,8 +423,8 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
                 }
 
                 // Once added to the orphan pool, a tx is considered AlreadyHave, and we shouldn't request it anymore.
-                m_txrequest.ForgetTxHash(tx.GetHash());
-                m_txrequest.ForgetTxHash(tx.GetWitnessHash());
+                m_txrequest.ForgetTxHash(tx.GetHash().ToUint256());
+                m_txrequest.ForgetTxHash(tx.GetWitnessHash().ToUint256());
 
                 // DoS prevention: do not allow m_orphanage to grow unbounded (see CVE-2012-3789)
                 // Note that, if the orphanage reaches capacity, it's possible that we immediately evict
@@ -443,8 +443,8 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
                 // from any of our non-wtxidrelay peers.
                 RecentRejectsFilter().insert(tx.GetHash().ToUint256());
                 RecentRejectsFilter().insert(tx.GetWitnessHash().ToUint256());
-                m_txrequest.ForgetTxHash(tx.GetHash());
-                m_txrequest.ForgetTxHash(tx.GetWitnessHash());
+                m_txrequest.ForgetTxHash(tx.GetHash().ToUint256());
+                m_txrequest.ForgetTxHash(tx.GetWitnessHash().ToUint256());
             }
         }
     } else if (state.GetResult() == TxValidationResult::TX_WITNESS_STRIPPED) {
@@ -479,7 +479,7 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
         } else {
             RecentRejectsFilter().insert(ptx->GetWitnessHash().ToUint256());
         }
-        m_txrequest.ForgetTxHash(ptx->GetWitnessHash());
+        m_txrequest.ForgetTxHash(ptx->GetWitnessHash().ToUint256());
         // If the transaction failed for TX_INPUTS_NOT_STANDARD,
         // then we know that the witness was irrelevant to the policy
         // failure, since this check depends only on the txid
@@ -492,7 +492,7 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
         // rolling bloom filter.
         if (state.GetResult() == TxValidationResult::TX_INPUTS_NOT_STANDARD && ptx->HasWitness()) {
             RecentRejectsFilter().insert(ptx->GetHash().ToUint256());
-            m_txrequest.ForgetTxHash(ptx->GetHash());
+            m_txrequest.ForgetTxHash(ptx->GetHash().ToUint256());
         }
     }
 
@@ -520,8 +520,8 @@ std::pair<bool, std::optional<PackageToValidate>> TxDownloadManagerImpl::Receive
     const Wtxid& wtxid = ptx->GetWitnessHash();
 
     // Mark that we have received a response
-    m_txrequest.ReceivedResponse(nodeid, txid);
-    if (ptx->HasWitness()) m_txrequest.ReceivedResponse(nodeid, wtxid);
+    m_txrequest.ReceivedResponse(nodeid, txid.ToUint256());
+    if (ptx->HasWitness()) m_txrequest.ReceivedResponse(nodeid, wtxid.ToUint256());
 
     // First check if we should drop this tx.
     // We do the AlreadyHaveTx() check using wtxid, rather than txid - in the
