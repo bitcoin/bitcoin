@@ -844,10 +844,6 @@ std::vector<CTxMemPool::indexed_transaction_set::const_iterator> CTxMemPool::Get
     return iters;
 }
 
-static TxMempoolInfo GetInfo(CTxMemPool::indexed_transaction_set::const_iterator it) {
-    return TxMempoolInfo{it->GetSharedTx(), it->GetTime(), it->GetFee(), it->GetTxSize(), it->GetModifiedFee() - it->GetFee()};
-}
-
 std::vector<CTxMemPoolEntryRef> CTxMemPool::entryAll() const
 {
     AssertLockHeld(cs);
@@ -888,24 +884,6 @@ CTransactionRef CTxMemPool::get(const uint256& hash) const
     if (i == mapTx.end())
         return nullptr;
     return i->GetSharedTx();
-}
-
-TxMempoolInfo CTxMemPool::info(const GenTxid& gtxid) const
-{
-    LOCK(cs);
-    auto i = (gtxid.IsWtxid() ? GetIter(Wtxid::FromUint256(gtxid.GetHash())) : GetIter(Txid::FromUint256(gtxid.GetHash())));
-    return i.has_value() ? GetInfo(*i) : TxMempoolInfo{};
-}
-
-TxMempoolInfo CTxMemPool::info_for_relay(const GenTxid& gtxid, uint64_t last_sequence) const
-{
-    LOCK(cs);
-    auto i = (gtxid.IsWtxid() ? GetIter(Wtxid::FromUint256(gtxid.GetHash())) : GetIter(Txid::FromUint256(gtxid.GetHash())));
-    if (i.has_value() && (*i)->GetSequence() < last_sequence) {
-        return GetInfo(*i);
-    } else {
-        return TxMempoolInfo();
-    }
 }
 
 void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta)
@@ -1022,7 +1000,7 @@ std::vector<CTxMemPool::txiter> CTxMemPool::GetIterVec(const std::vector<uint256
 bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
 {
     for (unsigned int i = 0; i < tx.vin.size(); i++)
-        if (exists(GenTxid::Txid(tx.vin[i].prevout.hash)))
+        if (exists(tx.vin[i].prevout.hash))
             return false;
     return true;
 }
@@ -1192,7 +1170,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
         if (pvNoSpendsRemaining) {
             for (const CTransaction& tx : txn) {
                 for (const CTxIn& txin : tx.vin) {
-                    if (exists(GenTxid::Txid(txin.prevout.hash))) continue;
+                    if (exists(txin.prevout.hash)) continue;
                     pvNoSpendsRemaining->push_back(txin.prevout);
                 }
             }
