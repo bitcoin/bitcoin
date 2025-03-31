@@ -437,6 +437,20 @@ public:
     const uint256& GetHash() const LIFETIMEBOUND { return m_hash; }
     friend bool operator==(const GenTxid& a, const GenTxid& b) { return a.m_is_wtxid == b.m_is_wtxid && a.m_hash == b.m_hash; }
     friend bool operator<(const GenTxid& a, const GenTxid& b) { return std::tie(a.m_is_wtxid, a.m_hash) < std::tie(b.m_is_wtxid, b.m_hash); }
+
+    GenTxidVariant ToVariant() const
+    {
+        return m_is_wtxid ?
+                   GenTxidVariant{Wtxid::FromUint256(m_hash)} :
+                   GenTxidVariant{Txid::FromUint256(m_hash)};
+    }
+
+    static GenTxid FromVariant(const GenTxidVariant& variant)
+    {
+        return GenTxid{
+            std::holds_alternative<::Wtxid>(variant),
+            variant.ToUint256()};
+    }
 };
 
 #endif // BITCOIN_PRIMITIVES_TRANSACTION_H
