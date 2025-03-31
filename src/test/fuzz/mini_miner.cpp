@@ -173,7 +173,7 @@ FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
         if (!pool.GetConflictTx(coin)) outpoints.push_back(coin);
     }
     for (const auto& tx : transactions) {
-        assert(pool.exists(GenTxid::Txid(tx->GetHash())));
+        assert(pool.exists(tx->GetHash()));
         for (uint32_t n{0}; n < tx->vout.size(); ++n) {
             COutPoint coin{tx->GetHash(), n};
             if (!pool.GetConflictTx(coin)) outpoints.push_back(coin);

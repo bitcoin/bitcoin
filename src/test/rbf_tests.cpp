@@ -293,7 +293,7 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     const auto spends_unconfirmed = make_tx({tx1}, {36 * CENT});
     for (const auto& input : spends_unconfirmed->vin) {
         // Spends unconfirmed inputs.
-        BOOST_CHECK(pool.exists(GenTxid::Txid(input.prevout.hash)));
+        BOOST_CHECK(pool.exists(input.prevout.hash));
     }
     BOOST_CHECK(HasNoNewUnconfirmed(/*tx=*/ *spends_unconfirmed.get(),
                                     /*pool=*/ pool,

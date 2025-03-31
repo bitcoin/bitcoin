@@ -947,7 +947,7 @@ private:
     std::atomic<std::chrono::seconds> m_last_tip_update{0s};
 
     /** Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed). */
-    CTransactionRef FindTxForGetData(const Peer::TxRelay& tx_relay, const GenTxid& gtxid)
+    CTransactionRef FindTxForGetData(const Peer::TxRelay& tx_relay, const CInv& inv)
         EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex, NetEventsInterface::g_msgproc_mutex);
 
     void ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic<bool>& interruptMsgProc)
@@ -2391,10 +2391,15 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
     }
 }
 
-CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer::TxRelay& tx_relay, const GenTxid& gtxid)
+CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer::TxRelay& tx_relay, const CInv& inv)
 {
+    auto gtxid{ToGenTxid(inv).ToVariant()};
     // If a tx was in the mempool prior to the last INV for this peer, permit the request.
-    auto txinfo = m_mempool.info_for_relay(gtxid, tx_relay.m_last_inv_sequence);
+    auto txinfo{std::visit(
+        [&](const auto& id) EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex) {
+            return m_mempool.info_for_relay(id, tx_relay.m_last_inv_sequence);
+        },
+        gtxid)};
     if (txinfo.tx) {
         return std::move(txinfo.tx);
     }
@@ -2403,7 +2408,7 @@ CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer::TxRelay& tx_relay,
     {
         LOCK(m_most_recent_block_mutex);
         if (m_most_recent_block_txs != nullptr) {
-            auto it = m_most_recent_block_txs->find(gtxid.GetHash());
+            auto it = m_most_recent_block_txs->find(gtxid.ToUint256());
             if (it != m_most_recent_block_txs->end()) return it->second;
         }
     }
@@ -2437,8 +2442,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
             continue;
         }
 
-        CTransactionRef tx = FindTxForGetData(*tx_relay, ToGenTxid(inv));
-        if (tx) {
+        if (auto tx{FindTxForGetData(*tx_relay, inv)}) {
             // WTX and WITNESS_TX imply we serialize with witness
             const auto maybe_with_witness = (inv.IsMsgTx() ? TX_NO_WITNESS : TX_WITH_WITNESS);
             MakeAndPushMessage(pfrom, NetMsgType::TX, maybe_with_witness(*tx));
@@ -4306,7 +4310,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // Always relay transactions received from peers with forcerelay
                 // permission, even if they were already in the mempool, allowing
                 // the node to function as a gateway for nodes hidden behind it.
-                if (!m_mempool.exists(GenTxid::Txid(tx.GetHash()))) {
+                if (!m_mempool.exists(tx.GetHash())) {
                     LogPrintf("Not relaying non-mempool transaction %s (wtxid=%s) from forcerelay peer=%d\n",
                               tx.GetHash().ToString(), tx.GetWitnessHash().ToString(), pfrom.GetId());
                 } else {
@@ -5820,7 +5824,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                             continue;
                         }
                         // Not in the mempool anymore? don't bother sending it.
-                        auto txinfo = m_mempool.info(ToGenTxid(inv));
+                        auto txinfo{std::visit([&](const auto& id) { return m_mempool.info(id); }, hash)};
                         if (!txinfo.tx) {
                             continue;
                         }

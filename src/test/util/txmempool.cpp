@@ -122,17 +122,17 @@ std::optional<std::string> CheckPackageMempoolAcceptResult(const Package& txns,
         if (mempool) {
             // The tx by txid should be in the mempool iff the result was not INVALID.
             const bool txid_in_mempool{atmp_result.m_result_type != MempoolAcceptResult::ResultType::INVALID};
-            if (mempool->exists(GenTxid::Txid(tx->GetHash())) != txid_in_mempool) {
+            if (mempool->exists(tx->GetHash()) != txid_in_mempool) {
                 return strprintf("tx %s should %sbe in mempool", wtxid.ToString(), txid_in_mempool ? "" : "not ");
             }
             // Additionally, if the result was DIFFERENT_WITNESS, we shouldn't be able to find the tx in mempool by wtxid.
             if (tx->HasWitness() && atmp_result.m_result_type == MempoolAcceptResult::ResultType::DIFFERENT_WITNESS) {
-                if (mempool->exists(GenTxid::Wtxid(wtxid))) {
+                if (mempool->exists(wtxid)) {
                     return strprintf("wtxid %s should not be in mempool", wtxid.ToString());
                 }
             }
             for (const auto& tx_ref : atmp_result.m_replaced_transactions) {
-                if (mempool->exists(GenTxid::Txid(tx_ref->GetHash()))) {
+                if (mempool->exists(tx_ref->GetHash())) {
                     return strprintf("tx %s should not be in mempool as it was replaced", tx_ref->GetWitnessHash().ToString());
                 }
             }
