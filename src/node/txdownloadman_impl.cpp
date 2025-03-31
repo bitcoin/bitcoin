@@ -148,7 +148,7 @@ bool TxDownloadManagerImpl::AlreadyHaveTx(const GenTxid& gtxid, bool include_rec
 
     if (RecentConfirmedTransactionsFilter().contains(hash)) return true;
 
-    return RecentRejectsFilter().contains(hash) || m_opts.m_mempool.exists(gtxid);
+    return RecentRejectsFilter().contains(hash) || std::visit([&](const auto& id) { return m_opts.m_mempool.exists(id); }, gtxid.ToVariant());
 }
 
 void TxDownloadManagerImpl::ConnectedPeer(NodeId nodeid, const TxDownloadConnectionInfo& info)
@@ -383,7 +383,7 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
                     fRejectedParents = true;
                     break;
                 } else if (RecentRejectsReconsiderableFilter().contains(parent_txid) &&
-                           !m_opts.m_mempool.exists(GenTxid::Txid(parent_txid))) {
+                           !m_opts.m_mempool.exists(Txid::FromUint256(parent_txid))) {
                     // More than 1 parent in m_lazy_recent_rejects_reconsiderable: 1p1c will not be
                     // sufficient to accept this package, so just give up here.
                     if (rejected_parent_reconsiderable.has_value()) {

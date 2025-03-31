@@ -645,13 +645,16 @@ public:
         return m_total_fee;
     }
 
-    bool exists(const GenTxid& gtxid) const
+    bool exists(const Txid& txid) const
     {
         LOCK(cs);
-        if (gtxid.IsWtxid()) {
-            return (mapTx.get<index_by_wtxid>().count(gtxid.GetHash()) != 0);
-        }
-        return (mapTx.count(gtxid.GetHash()) != 0);
+        return (mapTx.count(txid) != 0);
+    }
+
+    bool exists(const Wtxid& wtxid) const
+    {
+        LOCK(cs);
+        return (mapTx.get<index_by_wtxid>().count(wtxid) != 0);
     }
 
     const CTxMemPoolEntry* GetEntry(const Txid& txid) const LIFETIMEBOUND EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -662,10 +665,12 @@ public:
         AssertLockHeld(cs);
         return mapTx.project<0>(mapTx.get<index_by_wtxid>().find(wtxid));
     }
-    TxMempoolInfo info(const GenTxid& gtxid) const;
+    TxMempoolInfo info(const Txid& txid) const;
+    TxMempoolInfo info(const Wtxid& wtxid) const;
 
     /** Returns info for a transaction if its entry_sequence < last_sequence */
-    TxMempoolInfo info_for_relay(const GenTxid& gtxid, uint64_t last_sequence) const;
+    TxMempoolInfo info_for_relay(const Txid& txid, uint64_t last_sequence) const;
+    TxMempoolInfo info_for_relay(const Wtxid& wtxid, uint64_t last_sequence) const;
 
     std::vector<CTxMemPoolEntryRef> entryAll() const EXCLUSIVE_LOCKS_REQUIRED(cs);
     std::vector<TxMempoolInfo> infoAll() const;
@@ -678,7 +683,7 @@ public:
         LOCK(cs);
         // Sanity check the transaction is in the mempool & insert into
         // unbroadcast set.
-        if (exists(GenTxid::Txid(txid))) m_unbroadcast_txids.insert(txid);
+        if (exists(Txid::FromUint256(txid))) m_unbroadcast_txids.insert(txid);
     };
 
     /** Removes a transaction from the unbroadcast set */
