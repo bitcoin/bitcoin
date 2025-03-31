@@ -1595,6 +1595,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetAncestorsUnion(std::span<const Ref* c
     std::vector<std::pair<Cluster*, DepGraphIndex>> matches;
     matches.reserve(args.size());
     for (auto arg : args) {
+        Assume(arg);
         // Skip empty Refs.
         if (GetRefGraph(*arg) == nullptr) continue;
         Assume(GetRefGraph(*arg) == this);
@@ -1627,6 +1628,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendantsUnion(std::span<const Ref*
     std::vector<std::pair<Cluster*, DepGraphIndex>> matches;
     matches.reserve(args.size());
     for (auto arg : args) {
+        Assume(arg);
         // Skip empty Refs.
         if (GetRefGraph(*arg) == nullptr) continue;
         Assume(GetRefGraph(*arg) == this);
