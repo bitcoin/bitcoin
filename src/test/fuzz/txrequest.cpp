@@ -20,7 +20,7 @@ constexpr int MAX_TXHASHES = 16;
 constexpr int MAX_PEERS = 16;
 
 //! Randomly generated GenTxids used in this test (length is MAX_TXHASHES).
-uint256 TXHASHES[MAX_TXHASHES];
+GenTxidVariant TXHASHES[MAX_TXHASHES];
 
 //! Precomputed random durations (positive and negative, each ~exponentially distributed).
 std::chrono::microseconds DELAYS[256];
@@ -30,7 +30,13 @@ struct Initializer
     Initializer()
     {
         for (uint8_t txhash = 0; txhash < MAX_TXHASHES; txhash += 1) {
-            CSHA256().Write(&txhash, 1).Finalize(TXHASHES[txhash].begin());
+            uint256 hash;
+            CSHA256().Write(&txhash, 1).Finalize(hash.begin());
+            if (txhash % 2 == 0) {
+                TXHASHES[txhash] = Txid::FromUint256(hash);
+            } else {
+                TXHASHES[txhash] = Wtxid::FromUint256(hash);
+            }
         }
         int i = 0;
         // DELAYS[N] for N=0..15 is just N microseconds.
@@ -94,7 +100,6 @@ class Tester
         uint64_t m_sequence;
         State m_state{State::NOTHING};
         bool m_preferred;
-        bool m_is_wtxid;
         uint64_t m_priority; //!< Precomputed priority.
     };
 
@@ -186,7 +191,7 @@ public:
         m_tracker.ForgetTxHash(TXHASHES[txhash]);
     }
 
-    void ReceivedInv(int peer, int txhash, bool is_wtxid, bool preferred, std::chrono::microseconds reqtime)
+    void ReceivedInv(int peer, int txhash, bool preferred, std::chrono::microseconds reqtime)
     {
         // Apply to naive structure: if no announcement for txidnum/peer combination
         // already, create a new CANDIDATE; otherwise do nothing.
@@ -195,7 +200,6 @@ public:
             ann.m_preferred = preferred;
             ann.m_state = State::CANDIDATE;
             ann.m_time = reqtime;
-            ann.m_is_wtxid = is_wtxid;
             ann.m_sequence = m_current_sequence++;
             ann.m_priority = m_tracker.ComputePriority(TXHASHES[txhash], peer, ann.m_preferred);
 
@@ -204,7 +208,7 @@ public:
         }
 
         // Call TxRequestTracker's implementation.
-        m_tracker.ReceivedInv(peer, is_wtxid ? GenTxid::Wtxid(TXHASHES[txhash]) : GenTxid::Txid(TXHASHES[txhash]), preferred, reqtime);
+        m_tracker.ReceivedInv(peer, TXHASHES[txhash], preferred, reqtime);
     }
 
     void RequestedTx(int peer, int txhash, std::chrono::microseconds exptime)
@@ -246,13 +250,13 @@ public:
 
         //! list of (sequence number, txhash, is_wtxid) tuples.
         std::vector<std::tuple<uint64_t, int, bool>> result;
-        std::vector<std::pair<NodeId, GenTxid>> expected_expired;
+        std::vector<std::pair<NodeId, GenTxidVariant>> expected_expired;
         for (int txhash = 0; txhash < MAX_TXHASHES; ++txhash) {
             // Mark any expired REQUESTED announcements as COMPLETED.
             for (int peer2 = 0; peer2 < MAX_PEERS; ++peer2) {
                 Announcement& ann2 = m_announcements[txhash][peer2];
                 if (ann2.m_state == State::REQUESTED && ann2.m_time <= m_now) {
-                    expected_expired.emplace_back(peer2, ann2.m_is_wtxid ? GenTxid::Wtxid(TXHASHES[txhash]) : GenTxid::Txid(TXHASHES[txhash]));
+                    expected_expired.emplace_back(peer2, TXHASHES[txhash]);
                     ann2.m_state = State::COMPLETED;
                     break;
                 }
@@ -262,7 +266,7 @@ public:
             // CANDIDATEs for which this announcement has the highest priority get returned.
             const Announcement& ann = m_announcements[txhash][peer];
             if (ann.m_state == State::CANDIDATE && GetSelected(txhash) == peer) {
-                result.emplace_back(ann.m_sequence, txhash, ann.m_is_wtxid);
+                result.emplace_back(ann.m_sequence, txhash, std::holds_alternative<Wtxid>(TXHASHES[txhash]));
             }
         }
         // Sort the results by sequence number.
@@ -270,7 +274,7 @@ public:
         std::sort(expected_expired.begin(), expected_expired.end());
 
         // Compare with TxRequestTracker's implementation.
-        std::vector<std::pair<NodeId, GenTxid>> expired;
+        std::vector<std::pair<NodeId, GenTxidVariant>> expired;
         const auto actual = m_tracker.GetRequestable(peer, m_now, &expired);
         std::sort(expired.begin(), expired.end());
         assert(expired == expected_expired);
@@ -278,8 +282,8 @@ public:
         m_tracker.PostGetRequestableSanityCheck(m_now);
         assert(result.size() == actual.size());
         for (size_t pos = 0; pos < actual.size(); ++pos) {
-            assert(TXHASHES[std::get<1>(result[pos])] == actual[pos].GetHash());
-            assert(std::get<2>(result[pos]) == actual[pos].IsWtxid());
+            assert(TXHASHES[std::get<1>(result[pos])] == actual[pos]);
+            assert(std::get<2>(result[pos]) == std::holds_alternative<Wtxid>(actual[pos]));
         }
     }
 
@@ -357,16 +361,14 @@ FUZZ_TARGET(txrequest)
         case 6: // Same, but non-preferred.
             peer = it == buffer.end() ? 0 : *(it++) % MAX_PEERS;
             txidnum = it == buffer.end() ? 0 : *(it++);
-            tester.ReceivedInv(peer, txidnum % MAX_TXHASHES, (txidnum / MAX_TXHASHES) & 1, cmd & 1,
-                std::chrono::microseconds::min());
+            tester.ReceivedInv(peer, txidnum % MAX_TXHASHES, cmd & 1, std::chrono::microseconds::min());
             break;
         case 7: // Received delayed preferred inv
         case 8: // Same, but non-preferred.
             peer = it == buffer.end() ? 0 : *(it++) % MAX_PEERS;
             txidnum = it == buffer.end() ? 0 : *(it++);
             delaynum = it == buffer.end() ? 0 : *(it++);
-            tester.ReceivedInv(peer, txidnum % MAX_TXHASHES, (txidnum / MAX_TXHASHES) & 1, cmd & 1,
-                tester.Now() + DELAYS[delaynum]);
+            tester.ReceivedInv(peer, txidnum % MAX_TXHASHES, cmd & 1, tester.Now() + DELAYS[delaynum]);
             break;
         case 9: // Requested tx from peer
             peer = it == buffer.end() ? 0 : *(it++) % MAX_PEERS;
