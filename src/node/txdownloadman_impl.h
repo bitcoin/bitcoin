@@ -155,7 +155,7 @@ public:
      *  - m_recent_rejects_reconsiderable (if include_reconsiderable = true)
      *  - m_recent_confirmed_transactions
      *  */
-    bool AlreadyHaveTx(const GenTxid& gtxid, bool include_reconsiderable);
+    bool AlreadyHaveTx(const GenTxidVariant& gtxid, bool include_reconsiderable);
 
     void ConnectedPeer(NodeId nodeid, const TxDownloadConnectionInfo& info);
     void DisconnectedPeer(NodeId nodeid);
@@ -163,13 +163,13 @@ public:
     /** Consider adding this tx hash to txrequest. Should be called whenever a new inv has been received.
      * Also called internally when a transaction is missing parents so that we can request them.
      */
-    bool AddTxAnnouncement(NodeId peer, const GenTxid& gtxid, std::chrono::microseconds now);
+    bool AddTxAnnouncement(NodeId peer, const GenTxidVariant& gtxid, std::chrono::microseconds now);
 
     /** Get getdata requests to send. */
     std::vector<GenTxid> GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time);
 
     /** Marks a tx as ReceivedResponse in txrequest. */
-    void ReceivedNotFound(NodeId nodeid, const std::vector<uint256>& txhashes);
+    void ReceivedNotFound(NodeId nodeid, const std::vector<GenTxidVariant>& gtxids);
 
     /** Look for a child of this transaction in the orphanage to form a 1-parent-1-child package,
      * skipping any combinations that have already been tried. Return the resulting package along with

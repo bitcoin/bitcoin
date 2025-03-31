@@ -4015,7 +4015,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 AddKnownTx(*peer, inv.hash);
 
                 if (!m_chainman.IsInitialBlockDownload()) {
-                    const bool fAlreadyHave{m_txdownloadman.AddTxAnnouncement(pfrom.GetId(), gtxid, current_time)};
+                    const bool fAlreadyHave{m_txdownloadman.AddTxAnnouncement(pfrom.GetId(), gtxid.ToVariant(), current_time)};
                     LogDebug(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
                 }
             } else {
@@ -4942,11 +4942,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     if (msg_type == NetMsgType::NOTFOUND) {
         std::vector<CInv> vInv;
         vRecv >> vInv;
-        std::vector<uint256> tx_invs;
+        std::vector<GenTxidVariant> tx_invs;
         if (vInv.size() <= node::MAX_PEER_TX_ANNOUNCEMENTS + MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             for (CInv &inv : vInv) {
                 if (inv.IsGenTxMsg()) {
-                    tx_invs.emplace_back(inv.hash);
+                    tx_invs.emplace_back(ToGenTxid(inv).ToVariant());
                 }
             }
         }
