@@ -1017,7 +1017,7 @@ std::vector<CTxMemPool::txiter> CTxMemPool::GetIterVec(const std::vector<uint256
 bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
 {
     for (unsigned int i = 0; i < tx.vin.size(); i++)
-        if (exists(GenTxid::Txid(tx.vin[i].prevout.hash)))
+        if (exists(tx.vin[i].prevout.hash))
             return false;
     return true;
 }
@@ -1187,7 +1187,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
         if (pvNoSpendsRemaining) {
             for (const CTransaction& tx : txn) {
                 for (const CTxIn& txin : tx.vin) {
-                    if (exists(GenTxid::Txid(txin.prevout.hash))) continue;
+                    if (exists(txin.prevout.hash)) continue;
                     pvNoSpendsRemaining->push_back(txin.prevout);
                 }
             }
