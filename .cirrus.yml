@@ -125,15 +125,6 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_arm.sh"
 
 task:
-  name: 'Win64-cross'
-  << : *GLOBAL_TASK_TEMPLATE
-  persistent_worker:
-    labels:
-      type: small
-  env:
-    FILE_ENV: "./ci/test/00_setup_env_win64.sh"
-
-task:
   name: 'CentOS, depends, gui'
   << : *GLOBAL_TASK_TEMPLATE
   persistent_worker:
