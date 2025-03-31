@@ -1008,7 +1008,7 @@ void TxGraphImpl::Compact() noexcept
     // to rewrite them. It is easier to delay the compaction until they have been applied.
     if (!m_main_clusterset.m_deps_to_add.empty()) return;
     if (!m_main_clusterset.m_to_remove.empty()) return;
-    if (!m_main_clusterset.m_removed.empty()) return;
+    Assume(m_main_clusterset.m_removed.empty()); // non-staging m_removed is always empty
     if (m_staging_clusterset.has_value()) {
         if (!m_staging_clusterset->m_deps_to_add.empty()) return;
         if (!m_staging_clusterset->m_to_remove.empty()) return;
