@@ -407,7 +407,7 @@ void TorController::get_socks_cb(TorControlConnection& _conn, const TorControlRe
     // With m_randomize_credentials = true, generates unique SOCKS credentials per proxy connection (e.g., Tor).
     // Prevents connection correlation and enhances privacy by forcing different Tor circuits.
     // Requires Tor's IsolateSOCKSAuth (default enabled) for effective isolation (see IsolateSOCKSAuth section in https://2019.www.torproject.org/docs/tor-manual.html.en).
-    Proxy addrOnion = Proxy(resolved, /*_randomize_credentials=*/ true);
+    Proxy addrOnion = Proxy(resolved, /*tor_stream_isolation=*/ true);
     SetProxy(NET_ONION, addrOnion);
 
     const auto onlynets = gArgs.GetArgs("-onlynet");

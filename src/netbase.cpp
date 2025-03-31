@@ -738,7 +738,7 @@ std::unique_ptr<Sock> ConnectThroughProxy(const Proxy& proxy,
     }
 
     // do socks negotiation
-    if (proxy.m_randomize_credentials) {
+    if (proxy.m_tor_stream_isolation) {
         ProxyCredentials random_auth;
         static std::atomic_int counter(0);
         random_auth.username = random_auth.password = strprintf("%i", counter++);
