@@ -225,6 +225,8 @@ $ cmake -B build_fuzz \
 $ cmake --build build_fuzz
 # For macOS you may need to ignore x86 compilation checks when running "cmake --build". If so,
 # try compiling using: AFL_NO_X86=1 cmake --build build_fuzz
+# Also, it might be required to run "afl-system-config" to adjust the shared
+# memory parameters.
 $ mkdir -p inputs/ outputs/
 $ echo A > inputs/thin-air-input
 $ FUZZ=bech32 ./AFLplusplus/afl-fuzz -i inputs/ -o outputs/ -- build_fuzz/bin/fuzz
