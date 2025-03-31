@@ -1880,7 +1880,7 @@ TxGraph::GraphIndex TxGraphImpl::CountDistinctClusters(std::span<const Ref* cons
     std::vector<Cluster*> clusters;
     clusters.reserve(refs.size());
     for (const Ref* ref : refs) {
-        if (ref == nullptr) continue;
+        Assume(ref);
         if (GetRefGraph(*ref) == nullptr) continue;
         Assume(GetRefGraph(*ref) == this);
         auto cluster = FindCluster(GetRefIndex(*ref), level);

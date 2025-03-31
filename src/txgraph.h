@@ -159,8 +159,8 @@ public:
     virtual std::strong_ordering CompareMainOrder(const Ref& a, const Ref& b) noexcept = 0;
     /** Count the number of distinct clusters that the specified transactions belong to. If
      *  main_only is false and a staging graph exists, staging clusters are counted. Otherwise,
-     *  main clusters are counted. Refs that do not exist in the queried graph are ignored. The
-     *  queried graph must not be oversized. */
+     *  main clusters are counted. Refs that do not exist in the queried graph are ignored. Refs
+     *  can not be null. The queried graph must not be oversized. */
     virtual GraphIndex CountDistinctClusters(std::span<const Ref* const>, bool main_only = false) noexcept = 0;
 
     /** Perform an internal consistency check on this object. */
