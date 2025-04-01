@@ -10,6 +10,7 @@
 #include <node/context.h>
 #include <map>
 #include <string>
+
 #include <wallet/wallet.h>
 
 enum class Suit { Hearts, Diamonds, Spades, Clubs };
