@@ -206,11 +206,14 @@ struct SimTxGraph
                 ret.push_back(ptr);
             }
         }
-        // Deduplicate.
-        std::sort(ret.begin(), ret.end());
-        ret.erase(std::unique(ret.begin(), ret.end()), ret.end());
-        // Replace input.
-        arg = std::move(ret);
+        // Construct deduplicated version in input (do not use std::sort/std::unique for
+        // deduplication as it'd rely on non-deterministic pointer comparison).
+        arg.clear();
+        for (auto ptr : ret) {
+            if (std::find(arg.begin(), arg.end(), ptr) == arg.end()) {
+                arg.push_back(ptr);
+            }
+        }
     }
 };
 

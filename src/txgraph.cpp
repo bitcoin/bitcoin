@@ -70,12 +70,16 @@ class Cluster
     ClusterSetIndex m_setindex{ClusterSetIndex(-1)};
     /** Which level this Cluster is at in the graph (-1=not inserted, 0=main, 1=staging). */
     int m_level{-1};
+    /** Sequence number for this Cluster (for tie-breaking comparison between equal-chunk-feerate
+        transactions in distinct clusters). */
+    uint64_t m_sequence;
 
 public:
+    Cluster() noexcept = delete;
     /** Construct an empty Cluster. */
-    Cluster() noexcept = default;
+    explicit Cluster(uint64_t sequence) noexcept;
     /** Construct a singleton Cluster. */
-    explicit Cluster(TxGraphImpl& graph, const FeePerWeight& feerate, GraphIndex graph_index) noexcept;
+    explicit Cluster(uint64_t sequence, TxGraphImpl& graph, const FeePerWeight& feerate, GraphIndex graph_index) noexcept;
 
     // Cannot move or copy (would invalidate Cluster* in Locator and ClusterSet). */
     Cluster(const Cluster&) = delete;
@@ -156,6 +160,7 @@ public:
 
     void SanityCheck(const TxGraphImpl& graph, int level) const;
 };
+
 
 /** The transaction graph, including staged changes.
  *
@@ -244,6 +249,8 @@ private:
     ClusterSet m_main_clusterset;
     /** The staging ClusterSet, if any. */
     std::optional<ClusterSet> m_staging_clusterset;
+    /** Next sequence number to assign to created Clusters. */
+    uint64_t m_next_sequence_counter{0};
 
     /** A Locator that describes whether, where, and in which Cluster an Entry appears.
      *  Every Entry has MAX_LEVELS locators, as it may appear in one Cluster per level.
@@ -314,6 +321,18 @@ private:
 
     /** Set of Entries which have no linked Ref anymore. */
     std::vector<GraphIndex> m_unlinked;
+
+    /** Compare two Cluster* by their m_sequence value (while supporting nullptr). */
+    static std::strong_ordering CompareClusters(Cluster* a, Cluster* b) noexcept
+    {
+        // The nullptr pointer compares before everything else.
+        if (a == nullptr || b == nullptr) {
+            return (a != nullptr) <=> (b != nullptr);
+        }
+        // If neither pointer is nullptr, compare the Clusters' sequence numbers.
+        Assume(a == b || a->m_sequence != b->m_sequence);
+        return a->m_sequence <=> b->m_sequence;
+    }
 
 public:
     /** Construct a new TxGraphImpl with the specified maximum cluster count. */
@@ -569,7 +588,7 @@ std::vector<Cluster*> TxGraphImpl::GetConflicts() const noexcept
         }
     }
     // Deduplicate the result (the same Cluster may appear multiple times).
-    std::sort(ret.begin(), ret.end());
+    std::sort(ret.begin(), ret.end(), [](Cluster* a, Cluster* b) noexcept { return CompareClusters(a, b) < 0; });
     ret.erase(std::unique(ret.begin(), ret.end()), ret.end());
     return ret;
 }
@@ -577,7 +596,7 @@ std::vector<Cluster*> TxGraphImpl::GetConflicts() const noexcept
 Cluster* Cluster::CopyToStaging(TxGraphImpl& graph) const noexcept
 {
     // Construct an empty Cluster.
-    auto ret = std::make_unique<Cluster>();
+    auto ret = std::make_unique<Cluster>(graph.m_next_sequence_counter++);
     auto ptr = ret.get();
     // Copy depgraph, mapping, and linearization/
     ptr->m_depgraph = m_depgraph;
@@ -710,7 +729,7 @@ bool Cluster::Split(TxGraphImpl& graph) noexcept
         }
         first = false;
         // Construct a new Cluster to hold the found component.
-        auto new_cluster = std::make_unique<Cluster>();
+        auto new_cluster = std::make_unique<Cluster>(graph.m_next_sequence_counter++);
         new_clusters.push_back(new_cluster.get());
         // Remember that all the component's transactions go to this new Cluster. The positions
         // will be determined below, so use -1 for now.
@@ -956,9 +975,11 @@ void TxGraphImpl::ApplyRemovals(int up_to_level) noexcept
                 if (cluster != nullptr) PullIn(cluster);
             }
         }
-        // Group the set of to-be-removed entries by Cluster*.
+        // Group the set of to-be-removed entries by Cluster::m_sequence.
         std::sort(to_remove.begin(), to_remove.end(), [&](GraphIndex a, GraphIndex b) noexcept {
-            return std::less{}(m_entries[a].m_locator[level].cluster, m_entries[b].m_locator[level].cluster);
+            Cluster* cluster_a = m_entries[a].m_locator[level].cluster;
+            Cluster* cluster_b = m_entries[b].m_locator[level].cluster;
+            return CompareClusters(cluster_a, cluster_b) < 0;
         });
         // Process per Cluster.
         std::span to_remove_span{to_remove};
@@ -1103,16 +1124,16 @@ void TxGraphImpl::GroupClusters(int level) noexcept
     }
     // Sort and deduplicate an_clusters, so we end up with a sorted list of all involved Clusters
     // to which dependencies apply.
-    std::sort(an_clusters.begin(), an_clusters.end());
+    std::sort(an_clusters.begin(), an_clusters.end(), [](auto& a, auto& b) noexcept { return CompareClusters(a.first, b.first) < 0; });
     an_clusters.erase(std::unique(an_clusters.begin(), an_clusters.end()), an_clusters.end());
 
-    // Sort the dependencies by child Cluster.
+    // Sort the dependencies by child Cluster::m_sequence.
     std::sort(clusterset.m_deps_to_add.begin(), clusterset.m_deps_to_add.end(), [&](auto& a, auto& b) noexcept {
         auto [_a_par, a_chl] = a;
         auto [_b_par, b_chl] = b;
         auto a_chl_cluster = FindCluster(a_chl, level);
         auto b_chl_cluster = FindCluster(b_chl, level);
-        return std::less{}(a_chl_cluster, b_chl_cluster);
+        return CompareClusters(a_chl_cluster, b_chl_cluster) < 0;
     });
 
     // Run the union-find algorithm to to find partitions of the input Clusters which need to be
@@ -1132,13 +1153,13 @@ void TxGraphImpl::GroupClusters(int level) noexcept
              *  tree for this partition. */
             unsigned rank;
         };
-        /** Information about each input Cluster. Sorted by Cluster* pointer. */
+        /** Information about each input Cluster. Sorted by Cluster::m_sequence. */
         std::vector<PartitionData> partition_data;
 
         /** Given a Cluster, find its corresponding PartitionData. */
         auto locate_fn = [&](Cluster* arg) noexcept -> PartitionData* {
             auto it = std::lower_bound(partition_data.begin(), partition_data.end(), arg,
-                                       [](auto& a, Cluster* ptr) noexcept { return a.cluster < ptr; });
+                                       [](auto& a, Cluster* ptr) noexcept { return CompareClusters(a.cluster, ptr) < 0; });
             Assume(it != partition_data.end());
             Assume(it->cluster == arg);
             return &*it;
@@ -1219,7 +1240,7 @@ void TxGraphImpl::GroupClusters(int level) noexcept
             while (deps_it != clusterset.m_deps_to_add.end()) {
                 auto [par, chl] = *deps_it;
                 auto chl_cluster = FindCluster(chl, level);
-                if (std::greater{}(chl_cluster, data.cluster)) break;
+                if (CompareClusters(chl_cluster, data.cluster) > 0) break;
                 // Skip dependencies that apply to earlier Clusters (those necessary are for
                 // deleted transactions, as otherwise we'd have processed them already).
                 if (chl_cluster == data.cluster) {
@@ -1234,8 +1255,8 @@ void TxGraphImpl::GroupClusters(int level) noexcept
 
     // Sort both an_clusters and an_deps by representative of the partition they are in, grouping
     // all those applying to the same partition together.
-    std::sort(an_deps.begin(), an_deps.end(), [](auto& a, auto& b) noexcept { return a.second < b.second; });
-    std::sort(an_clusters.begin(), an_clusters.end(), [](auto& a, auto& b) noexcept { return a.second < b.second; });
+    std::sort(an_deps.begin(), an_deps.end(), [](auto& a, auto& b) noexcept { return CompareClusters(a.second, b.second) < 0; });
+    std::sort(an_clusters.begin(), an_clusters.end(), [](auto& a, auto& b) noexcept { return CompareClusters(a.second, b.second) < 0; });
 
     // Translate the resulting cluster groups to the m_group_data structure, and the dependencies
     // back to m_deps_to_add.
@@ -1390,7 +1411,10 @@ void TxGraphImpl::MakeAllAcceptable(int level) noexcept
     }
 }
 
-Cluster::Cluster(TxGraphImpl& graph, const FeePerWeight& feerate, GraphIndex graph_index) noexcept
+Cluster::Cluster(uint64_t sequence) noexcept : m_sequence{sequence} {}
+
+Cluster::Cluster(uint64_t sequence, TxGraphImpl& graph, const FeePerWeight& feerate, GraphIndex graph_index) noexcept :
+    m_sequence{sequence}
 {
     // Create a new transaction in the DepGraph, and remember its position in m_mapping.
     auto cluster_idx = m_depgraph.AddTransaction(feerate);
@@ -1410,7 +1434,7 @@ TxGraph::Ref TxGraphImpl::AddTransaction(const FeePerWeight& feerate) noexcept
     GetRefGraph(ret) = this;
     GetRefIndex(ret) = idx;
     // Construct a new singleton Cluster (which is necessarily optimally linearized).
-    auto cluster = std::make_unique<Cluster>(*this, feerate, idx);
+    auto cluster = std::make_unique<Cluster>(m_next_sequence_counter++, *this, feerate, idx);
     auto cluster_ptr = cluster.get();
     int level = GetTopLevel();
     auto& clusterset = GetClusterSet(level);
@@ -1606,7 +1630,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetAncestorsUnion(std::span<const Ref* c
         matches.emplace_back(cluster, m_entries[GetRefIndex(*arg)].m_locator[cluster->m_level].index);
     }
     // Group by Cluster.
-    std::sort(matches.begin(), matches.end(), [](auto& a, auto& b) noexcept { return std::less{}(a.first, b.first); });
+    std::sort(matches.begin(), matches.end(), [](auto& a, auto& b) noexcept { return CompareClusters(a.first, b.first) < 0; });
     // Dispatch to the Clusters.
     std::span match_span(matches);
     std::vector<TxGraph::Ref*> ret;
@@ -1639,7 +1663,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendantsUnion(std::span<const Ref*
         matches.emplace_back(cluster, m_entries[GetRefIndex(*arg)].m_locator[cluster->m_level].index);
     }
     // Group by Cluster.
-    std::sort(matches.begin(), matches.end(), [](auto& a, auto& b) noexcept { return std::less{}(a.first, b.first); });
+    std::sort(matches.begin(), matches.end(), [](auto& a, auto& b) noexcept { return CompareClusters(a.first, b.first) < 0; });
     // Dispatch to the Clusters.
     std::span match_span(matches);
     std::vector<TxGraph::Ref*> ret;
@@ -1867,7 +1891,9 @@ std::strong_ordering TxGraphImpl::CompareMainOrder(const Ref& a, const Ref& b) n
     if (feerate_cmp < 0) return std::strong_ordering::less;
     if (feerate_cmp > 0) return std::strong_ordering::greater;
     // Compare Cluster* as tie-break for equal chunk feerates.
-    if (locator_a.cluster != locator_b.cluster) return locator_a.cluster <=> locator_b.cluster;
+    if (locator_a.cluster != locator_b.cluster) {
+        return CompareClusters(locator_a.cluster, locator_b.cluster);
+    }
     // As final tie-break, compare position within cluster linearization.
     return entry_a.m_main_lin_index <=> entry_b.m_main_lin_index;
 }
@@ -1889,7 +1915,7 @@ TxGraph::GraphIndex TxGraphImpl::CountDistinctClusters(std::span<const Ref* cons
         if (cluster != nullptr) clusters.push_back(cluster);
     }
     // Count the number of distinct elements in clusters.
-    std::sort(clusters.begin(), clusters.end());
+    std::sort(clusters.begin(), clusters.end(), [](Cluster* a, Cluster* b) noexcept { return CompareClusters(a, b) < 0; });
     Cluster* last{nullptr};
     GraphIndex ret{0};
     for (Cluster* cluster : clusters) {
@@ -1951,6 +1977,8 @@ void TxGraphImpl::SanityCheck() const
     std::set<const Cluster*> expected_clusters[MAX_LEVELS];
     /** Which GraphIndexes ought to occur in ClusterSet::m_removed, based on m_entries. */
     std::set<GraphIndex> expected_removed[MAX_LEVELS];
+    /** Which Cluster::m_sequence values have been encountered. */
+    std::set<uint64_t> sequences;
     /** Whether compaction is possible in the current state. */
     bool compact_possible{true};
 
@@ -2004,6 +2032,10 @@ void TxGraphImpl::SanityCheck() const
             // ... for all clusters in them ...
             for (ClusterSetIndex setindex = 0; setindex < quality_clusters.size(); ++setindex) {
                 const auto& cluster = *quality_clusters[setindex];
+                // Check the sequence number.
+                assert(cluster.m_sequence < m_next_sequence_counter);
+                assert(sequences.count(cluster.m_sequence) == 0);
+                sequences.insert(cluster.m_sequence);
                 // Remember we saw this Cluster (only if it is non-empty; empty Clusters aren't
                 // expected to be referenced by the Entry vector).
                 if (cluster.GetTxCount() != 0) {
