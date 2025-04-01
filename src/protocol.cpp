@@ -118,7 +118,7 @@ std::vector<std::string> serviceFlagsToStr(uint64_t flags)
     return str_flags;
 }
 
-GenTxidVariant ToGenTxid(const CInv& inv)
+GenTxid ToGenTxid(const CInv& inv)
 {
     assert(inv.IsGenTxMsg());
     if (inv.IsMsgWtx()) {
