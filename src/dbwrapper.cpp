@@ -158,14 +158,18 @@ struct CDBBatch::WriteBatchImpl {
 
 CDBBatch::CDBBatch(const CDBWrapper& _parent)
     : parent{_parent},
-      m_impl_batch{std::make_unique<CDBBatch::WriteBatchImpl>()} {};
+      m_impl_batch{std::make_unique<CDBBatch::WriteBatchImpl>()}
+{
+    Clear();
+};
 
 CDBBatch::~CDBBatch() = default;
 
 void CDBBatch::Clear()
 {
     m_impl_batch->batch.Clear();
-    size_estimate = 0;
+    assert(m_impl_batch->batch.ApproximateSize() == kHeader);
+    size_estimate = kHeader; // TODO remove
 }
 
 void CDBBatch::WriteImpl(std::span<const std::byte> key, DataStream& ssValue)
