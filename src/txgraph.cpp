@@ -1103,38 +1103,37 @@ void TxGraphImpl::GroupClusters(int level) noexcept
     // with inefficient and/or oversized Clusters which just end up being split again anyway.
     SplitAll(level);
 
-    /** Annotated clusters: an entry for each Cluster, together with the representative for the
-     *  partition it is in if known, or with nullptr if not yet known. */
-    std::vector<std::pair<Cluster*, Cluster*>> an_clusters;
+    /** Annotated clusters: an entry for each Cluster, together with the sequence number for the
+     *  representative for the partition it is in (initially its own, later that of the
+     *  to-be-merged group). */
+    std::vector<std::pair<Cluster*, uint64_t>> an_clusters;
     /** Annotated dependencies: an entry for each m_deps_to_add entry (excluding ones that apply
-     *  to removed transactions), together with the representative root of the partition of
-     *  Clusters it applies to. */
-    std::vector<std::pair<std::pair<GraphIndex, GraphIndex>, Cluster*>> an_deps;
+     *  to removed transactions), together with the sequence number of the representative root of
+     *  Clusters it applies to (initially that of the child Cluster, later that of the
+     *  to-be-merged group). */
+    std::vector<std::pair<std::pair<GraphIndex, GraphIndex>, uint64_t>> an_deps;
 
-    // Construct a an_clusters entry for every parent and child in the to-be-applied dependencies.
+    // Construct a an_clusters entry for every parent and child in the to-be-applied dependencies,
+    // and an an_deps entry for each dependency to be applied.
+    an_deps.reserve(clusterset.m_deps_to_add.size());
     for (const auto& [par, chl] : clusterset.m_deps_to_add) {
         auto par_cluster = FindCluster(par, level);
         auto chl_cluster = FindCluster(chl, level);
         // Skip dependencies for which the parent or child transaction is removed.
         if (par_cluster == nullptr || chl_cluster == nullptr) continue;
-        an_clusters.emplace_back(par_cluster, nullptr);
+        an_clusters.emplace_back(par_cluster, par_cluster->m_sequence);
         // Do not include a duplicate when parent and child are identical, as it'll be removed
         // below anyway.
-        if (chl_cluster != par_cluster) an_clusters.emplace_back(chl_cluster, nullptr);
+        if (chl_cluster != par_cluster) an_clusters.emplace_back(chl_cluster, chl_cluster->m_sequence);
+        // Add entry to an_deps, using the child sequence number.
+        an_deps.emplace_back(std::pair{par, chl}, chl_cluster->m_sequence);
     }
     // Sort and deduplicate an_clusters, so we end up with a sorted list of all involved Clusters
     // to which dependencies apply.
-    std::sort(an_clusters.begin(), an_clusters.end(), [](auto& a, auto& b) noexcept { return CompareClusters(a.first, b.first) < 0; });
+    std::sort(an_clusters.begin(), an_clusters.end(), [](auto& a, auto& b) noexcept { return a.second < b.second; });
     an_clusters.erase(std::unique(an_clusters.begin(), an_clusters.end()), an_clusters.end());
-
-    // Sort the dependencies by child Cluster::m_sequence.
-    std::sort(clusterset.m_deps_to_add.begin(), clusterset.m_deps_to_add.end(), [&](auto& a, auto& b) noexcept {
-        auto [_a_par, a_chl] = a;
-        auto [_b_par, b_chl] = b;
-        auto a_chl_cluster = FindCluster(a_chl, level);
-        auto b_chl_cluster = FindCluster(b_chl, level);
-        return CompareClusters(a_chl_cluster, b_chl_cluster) < 0;
-    });
+    // Sort an_deps by applying the same order to the involved child cluster.
+    std::sort(an_deps.begin(), an_deps.end(), [&](auto& a, auto& b) noexcept { return a.second < b.second; });
 
     // Run the union-find algorithm to to find partitions of the input Clusters which need to be
     // grouped together. See https://en.wikipedia.org/wiki/Disjoint-set_data_structure.
@@ -1142,8 +1141,8 @@ void TxGraphImpl::GroupClusters(int level) noexcept
         /** Each PartitionData entry contains information about a single input Cluster. */
         struct PartitionData
         {
-            /** The cluster this holds information for. */
-            Cluster* cluster;
+            /** The sequence number of the cluster this holds information for. */
+            uint64_t sequence;
             /** All PartitionData entries belonging to the same partition are organized in a tree.
              *  Each element points to its parent, or to itself if it is the root. The root is then
              *  a representative for the entire tree, and can be found by walking upwards from any
@@ -1157,11 +1156,11 @@ void TxGraphImpl::GroupClusters(int level) noexcept
         std::vector<PartitionData> partition_data;
 
         /** Given a Cluster, find its corresponding PartitionData. */
-        auto locate_fn = [&](Cluster* arg) noexcept -> PartitionData* {
-            auto it = std::lower_bound(partition_data.begin(), partition_data.end(), arg,
-                                       [](auto& a, Cluster* ptr) noexcept { return CompareClusters(a.cluster, ptr) < 0; });
+        auto locate_fn = [&](uint64_t sequence) noexcept -> PartitionData* {
+            auto it = std::lower_bound(partition_data.begin(), partition_data.end(), sequence,
+                                       [](auto& a, uint64_t seq) noexcept { return a.sequence < seq; });
             Assume(it != partition_data.end());
-            Assume(it->cluster == arg);
+            Assume(it->sequence == sequence);
             return &*it;
         };
 
@@ -1196,67 +1195,59 @@ void TxGraphImpl::GroupClusters(int level) noexcept
         // Start by initializing every Cluster as its own singleton partition.
         partition_data.resize(an_clusters.size());
         for (size_t i = 0; i < an_clusters.size(); ++i) {
-            partition_data[i].cluster = an_clusters[i].first;
+            partition_data[i].sequence = an_clusters[i].first->m_sequence;
             partition_data[i].parent = &partition_data[i];
             partition_data[i].rank = 0;
         }
 
-        // Run through all parent/child pairs in m_deps_to_add, and union the
-        // the partitions their Clusters are in.
+        // Run through all parent/child pairs in an_deps, and union the partitions their Clusters
+        // are in.
         Cluster* last_chl_cluster{nullptr};
         PartitionData* last_partition{nullptr};
-        for (const auto& [par, chl] : clusterset.m_deps_to_add) {
+        for (const auto& [dep, _] : an_deps) {
+            auto [par, chl] = dep;
             auto par_cluster = FindCluster(par, level);
             auto chl_cluster = FindCluster(chl, level);
+            Assume(chl_cluster != nullptr && par_cluster != nullptr);
             // Nothing to do if parent and child are in the same Cluster.
             if (par_cluster == chl_cluster) continue;
-            // Nothing to do if either parent or child transaction is removed already.
-            if (par_cluster == nullptr || chl_cluster == nullptr) continue;
             Assume(par != chl);
             if (chl_cluster == last_chl_cluster) {
                 // If the child Clusters is the same as the previous iteration, union with the
-                // tree they were in, avoiding the need for another lookup. Note that m_deps_to_add
+                // tree they were in, avoiding the need for another lookup. Note that an_deps
                 // is sorted by child Cluster, so batches with the same child are expected.
-                last_partition = union_fn(locate_fn(par_cluster), last_partition);
+                last_partition = union_fn(locate_fn(par_cluster->m_sequence), last_partition);
             } else {
                 last_chl_cluster = chl_cluster;
-                last_partition = union_fn(locate_fn(par_cluster), locate_fn(chl_cluster));
+                last_partition = union_fn(locate_fn(par_cluster->m_sequence), locate_fn(chl_cluster->m_sequence));
             }
         }
 
-        // Populate the an_clusters and an_deps data structures with the list of input Clusters,
-        // and the input dependencies, annotated with the representative of the Cluster partition
-        // it applies to.
-        an_deps.reserve(clusterset.m_deps_to_add.size());
-        auto deps_it = clusterset.m_deps_to_add.begin();
+        // Update the sequence numbers in an_clusters and an_deps to be those of the partition
+        // representative.
+        auto deps_it = an_deps.begin();
         for (size_t i = 0; i < partition_data.size(); ++i) {
             auto& data = partition_data[i];
-            // Find the representative of the partition Cluster i is in, and store it with the
-            // Cluster.
-            auto rep = find_root_fn(&data)->cluster;
-            Assume(an_clusters[i].second == nullptr);
-            an_clusters[i].second = rep;
+            // Find the sequence of the representative of the partition Cluster i is in, and store
+            // it with the Cluster.
+            auto rep_seq = find_root_fn(&data)->sequence;
+            an_clusters[i].second = rep_seq;
             // Find all dependencies whose child Cluster is Cluster i, and annotate them with rep.
-            while (deps_it != clusterset.m_deps_to_add.end()) {
-                auto [par, chl] = *deps_it;
+            while (deps_it != an_deps.end()) {
+                auto [par, chl] = deps_it->first;
                 auto chl_cluster = FindCluster(chl, level);
-                if (CompareClusters(chl_cluster, data.cluster) > 0) break;
-                // Skip dependencies that apply to earlier Clusters (those necessary are for
-                // deleted transactions, as otherwise we'd have processed them already).
-                if (chl_cluster == data.cluster) {
-                    auto par_cluster = FindCluster(par, level);
-                    // Also filter out dependencies applying to a removed parent.
-                    if (par_cluster != nullptr) an_deps.emplace_back(*deps_it, rep);
-                }
+                Assume(chl_cluster != nullptr);
+                if (chl_cluster->m_sequence > data.sequence) break;
+                deps_it->second = rep_seq;
                 ++deps_it;
             }
         }
     }
 
-    // Sort both an_clusters and an_deps by representative of the partition they are in, grouping
-    // all those applying to the same partition together.
-    std::sort(an_deps.begin(), an_deps.end(), [](auto& a, auto& b) noexcept { return CompareClusters(a.second, b.second) < 0; });
-    std::sort(an_clusters.begin(), an_clusters.end(), [](auto& a, auto& b) noexcept { return CompareClusters(a.second, b.second) < 0; });
+    // Sort both an_clusters and an_deps by sequence number of the representative of the
+    // partition they are in, grouping all those applying to the same partition together.
+    std::sort(an_deps.begin(), an_deps.end(), [](auto& a, auto& b) noexcept { return a.second < b.second; });
+    std::sort(an_clusters.begin(), an_clusters.end(), [](auto& a, auto& b) noexcept { return a.second < b.second; });
 
     // Translate the resulting cluster groups to the m_group_data structure, and the dependencies
     // back to m_deps_to_add.
