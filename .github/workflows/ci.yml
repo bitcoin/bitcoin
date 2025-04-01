@@ -158,8 +158,6 @@ jobs:
 
   windows-native:
     name: ${{ matrix.job-name }}
-    # Use latest image, but hardcode version to avoid silent upgrades (and breaks).
-    # See: https://github.com/actions/runner-images#available-images.
     runs-on: windows-2022
 
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
