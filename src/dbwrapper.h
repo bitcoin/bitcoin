@@ -74,6 +74,8 @@ class CDBBatch
     friend class CDBWrapper;
 
 private:
+    static constexpr size_t kHeader{12}; // See: src/leveldb/db/write_batch.cc#L27
+
     const CDBWrapper &parent;
 
     struct WriteBatchImpl;
