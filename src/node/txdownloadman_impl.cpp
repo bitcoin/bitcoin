@@ -39,15 +39,15 @@ void TxDownloadManager::DisconnectedPeer(NodeId nodeid)
 {
     m_impl->DisconnectedPeer(nodeid);
 }
-bool TxDownloadManager::AddTxAnnouncement(NodeId peer, const GenTxidVariant& gtxid, std::chrono::microseconds now)
+bool TxDownloadManager::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid, std::chrono::microseconds now)
 {
     return m_impl->AddTxAnnouncement(peer, gtxid, now);
 }
-std::vector<GenTxidVariant> TxDownloadManager::GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time)
+std::vector<GenTxid> TxDownloadManager::GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time)
 {
     return m_impl->GetRequestsToSend(nodeid, current_time);
 }
-void TxDownloadManager::ReceivedNotFound(NodeId nodeid, const std::vector<GenTxidVariant>& txhashes)
+void TxDownloadManager::ReceivedNotFound(NodeId nodeid, const std::vector<GenTxid>& txhashes)
 {
     m_impl->ReceivedNotFound(nodeid, txhashes);
 }
@@ -122,7 +122,7 @@ void TxDownloadManagerImpl::BlockDisconnected()
     RecentConfirmedTransactionsFilter().reset();
 }
 
-bool TxDownloadManagerImpl::AlreadyHaveTx(const GenTxidVariant& gtxid, bool include_reconsiderable)
+bool TxDownloadManagerImpl::AlreadyHaveTx(const GenTxid& gtxid, bool include_reconsiderable)
 {
     bool in_orphanage = std::visit(util::Overloaded{
         // Normal query by wtxid.
@@ -173,7 +173,7 @@ void TxDownloadManagerImpl::DisconnectedPeer(NodeId nodeid)
 
 }
 
-bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxidVariant& gtxid, std::chrono::microseconds now)
+bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid, std::chrono::microseconds now)
 {
     // If this is an orphan we are trying to resolve, consider this peer as a orphan resolution candidate instead.
     // - is wtxid matching something in orphanage
@@ -267,16 +267,16 @@ bool TxDownloadManagerImpl::MaybeAddOrphanResolutionCandidate(const std::vector<
     return true;
 }
 
-std::vector<GenTxidVariant> TxDownloadManagerImpl::GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time)
+std::vector<GenTxid> TxDownloadManagerImpl::GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time)
 {
-    std::vector<GenTxidVariant> requests;
-    std::vector<std::pair<NodeId, GenTxidVariant>> expired;
+    std::vector<GenTxid> requests;
+    std::vector<std::pair<NodeId, GenTxid>> expired;
     auto requestable = m_txrequest.GetRequestable(nodeid, current_time, &expired);
     for (const auto& entry : expired) {
         LogDebug(BCLog::NET, "timeout of inflight %s %s from peer=%d\n", std::holds_alternative<Wtxid>(entry.second) ? "wtx" : "tx",
             entry.second.ToUint256().ToString(), entry.first);
     }
-    for (const GenTxidVariant& gtxid : requestable) {
+    for (const GenTxid& gtxid : requestable) {
         if (!AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) {
             LogDebug(BCLog::NET, "Requesting %s %s peer=%d\n", std::holds_alternative<Wtxid>(gtxid) ? "wtx" : "tx",
                 gtxid.ToUint256().ToString(), nodeid);
@@ -291,7 +291,7 @@ std::vector<GenTxidVariant> TxDownloadManagerImpl::GetRequestsToSend(NodeId node
     return requests;
 }
 
-void TxDownloadManagerImpl::ReceivedNotFound(NodeId nodeid, const std::vector<GenTxidVariant>& txhashes)
+void TxDownloadManagerImpl::ReceivedNotFound(NodeId nodeid, const std::vector<GenTxid>& txhashes)
 {
     for (const auto& txhash : txhashes) {
         // If we receive a NOTFOUND message for a tx we requested, mark the announcement for it as
