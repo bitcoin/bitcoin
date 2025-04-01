@@ -635,13 +635,26 @@ public:
     virtual bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, const StringType type, const DescriptorCache* cache = nullptr) const
     {
         size_t pos = 0;
+        bool has_any_priv = false;
         for (const auto& scriptarg : m_subdescriptor_args) {
             if (pos++) ret += ",";
             std::string tmp;
-            if (!scriptarg->ToStringHelper(arg, tmp, type, cache)) return false;
+            bool success = scriptarg->ToStringHelper(arg, tmp, type, cache);
+            if (type == StringType::PRIVATE) {
+                if (success) {
+                    has_any_priv = true;
+                } else {
+                    tmp = "";
+                    if (!scriptarg->ToStringHelper(arg, tmp, StringType::PUBLIC, cache)) {
+                        return false;
+                    }
+                }
+            } else if (!success) {
+                return false;
+            }
             ret += tmp;
         }
-        return true;
+        return (type == StringType::PRIVATE) ? has_any_priv : true;
     }
 
     // NOLINTNEXTLINE(misc-no-recursion)
@@ -650,6 +663,7 @@ public:
         std::string extra = ToStringExtra();
         size_t pos = extra.size() > 0 ? 1 : 0;
         std::string ret = m_name + "(" + extra;
+        bool has_any_priv = false;
         for (const auto& pubkey : m_pubkey_args) {
             if (pos++) ret += ",";
             std::string tmp;
@@ -658,7 +672,11 @@ public:
                     if (!pubkey->ToNormalizedString(*arg, tmp, cache)) return false;
                     break;
                 case StringType::PRIVATE:
-                    if (!pubkey->ToPrivateString(*arg, tmp)) return false;
+                    if (!pubkey->ToPrivateString(*arg, tmp)) {
+                         tmp = pubkey->ToString();
+                     } else {
+                         has_any_priv = true;
+                     }
                     break;
                 case StringType::PUBLIC:
                     tmp = pubkey->ToString();
@@ -670,7 +688,21 @@ public:
             ret += tmp;
         }
         std::string subscript;
-        if (!ToStringSubScriptHelper(arg, subscript, type, cache)) return false;
+        bool is_subscript_successful = ToStringSubScriptHelper(arg, subscript, type, cache);
+
+        if (type == StringType::PRIVATE) {
+            if (!has_any_priv) {
+                if (subscript.empty()) {
+                    return false;
+                }
+                if (!is_subscript_successful) {
+                    return false;
+                }
+            }
+        } else if (!is_subscript_successful) {
+            return false;
+        }
+
         if (pos && subscript.size()) ret += ',';
         out = std::move(ret) + std::move(subscript) + ")";
         return true;
@@ -1181,6 +1213,7 @@ protected:
     bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, const StringType type, const DescriptorCache* cache = nullptr) const override
     {
         if (m_depths.empty()) return true;
+        bool has_any_subscript_key = false;
         std::vector<bool> path;
         for (size_t pos = 0; pos < m_depths.size(); ++pos) {
             if (pos) ret += ',';
@@ -1189,7 +1222,19 @@ protected:
                 path.push_back(false);
             }
             std::string tmp;
-            if (!m_subdescriptor_args[pos]->ToStringHelper(arg, tmp, type, cache)) return false;
+            bool is_subdescriptor_successful = m_subdescriptor_args[pos]->ToStringHelper(arg, tmp, type, cache);
+            if (type == StringType::PRIVATE) {
+                if (is_subdescriptor_successful) {
+                    has_any_subscript_key = true;
+                } else {
+                    tmp = "";
+                    if (!m_subdescriptor_args[pos]->ToStringHelper(arg, tmp, StringType::PUBLIC, cache)) {
+                        return false;
+                    }
+                }
+            } else if (!is_subdescriptor_successful) {
+                return false;
+            }
             ret += tmp;
             while (!path.empty() && path.back()) {
                 if (path.size() > 1) ret += '}';
@@ -1197,7 +1242,7 @@ protected:
             }
             if (!path.empty()) path.back() = true;
         }
-        return true;
+        return (type == StringType::PRIVATE) ? has_any_subscript_key : true;
     }
 public:
     TRDescriptor(std::unique_ptr<PubkeyProvider> internal_key, std::vector<std::unique_ptr<DescriptorImpl>> descs, std::vector<int> depths) :
@@ -1290,7 +1335,9 @@ public:
     {
         std::string ret;
         if (m_private) {
-            if (!m_pubkeys[key]->ToPrivateString(*m_arg, ret)) return {};
+            if (!m_pubkeys[key]->ToPrivateString(*m_arg, ret)) {
+                ret = m_pubkeys[key]->ToString();
+            }
         } else {
             ret = m_pubkeys[key]->ToString();
         }
