@@ -85,8 +85,6 @@ private:
     DataStream ssKey{};
     DataStream ssValue{};
 
-    size_t size_estimate{0};
-
     void WriteImpl(std::span<const std::byte> key, DataStream& ssValue);
     void EraseImpl(std::span<const std::byte> key);
 
@@ -120,7 +118,6 @@ public:
     }
 
     size_t ApproximateSize() const;
-    size_t SizeEstimate() const { return size_estimate; } // TODO replace with ApproximateSize
 };
 
 class CDBIterator
