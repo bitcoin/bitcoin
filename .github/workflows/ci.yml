@@ -158,8 +158,6 @@ jobs:
 
   windows-native:
     name: ${{ matrix.job-name }}
-    # Use latest image, but hardcode version to avoid silent upgrades (and breaks).
-    # See: https://github.com/actions/runner-images#available-images.
     runs-on: windows-2022
 
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
@@ -205,6 +203,8 @@ jobs:
         run: |
           echo "set(VCPKG_BUILD_TYPE release)" >> "${VCPKG_INSTALLATION_ROOT}/triplets/x64-windows.cmake"
           echo "set(VCPKG_BUILD_TYPE release)" >> "${VCPKG_INSTALLATION_ROOT}/triplets/x64-windows-static.cmake"
+          # Workaround for libevent, which requires CMake 3.1 but is incompatible with CMake >= 4.0.
+          sed -i '1s/^/set(ENV{CMAKE_POLICY_VERSION_MINIMUM} 3.5)\n/' "${VCPKG_INSTALLATION_ROOT}/scripts/ports.cmake"
 
       - name: vcpkg tools cache
         uses: actions/cache@v4
