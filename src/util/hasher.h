@@ -11,8 +11,23 @@
 #include <span.h>
 #include <uint256.h>
 
+#include <concepts>
 #include <cstdint>
 #include <cstring>
+
+class SaltedUint256Hasher
+{
+private:
+    /** Salt */
+    const uint64_t k0, k1;
+
+public:
+    SaltedUint256Hasher();
+
+    size_t operator()(const uint256& hash) const {
+        return SipHashUint256(k0, k1, hash);
+    }
+};
 
 class SaltedTxidHasher
 {
@@ -23,8 +38,10 @@ private:
 public:
     SaltedTxidHasher();
 
-    size_t operator()(const uint256& txid) const {
-        return SipHashUint256(k0, k1, txid);
+    template <typename T>
+        requires std::same_as<T, Txid> || std::same_as<T, Wtxid>
+    size_t operator()(const T& txid) const {
+        return SipHashUint256(k0, k1, txid.ToUint256());
     }
 };
 
@@ -47,7 +64,7 @@ public:
      * @see https://gcc.gnu.org/onlinedocs/gcc-13.2.0/libstdc++/manual/manual/unordered_associative.html
      */
     size_t operator()(const COutPoint& id) const noexcept {
-        return SipHashUint256Extra(k0, k1, id.hash, id.n);
+        return SipHashUint256Extra(k0, k1, id.hash.ToUint256(), id.n);
     }
 };
 

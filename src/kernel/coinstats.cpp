@@ -98,7 +98,7 @@ static void ApplyHash(T& hash_obj, const Txid& hash, const std::map<uint32_t, Co
     }
 }
 
-static void ApplyStats(CCoinsStats& stats, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
+static void ApplyStats(CCoinsStats& stats, const std::map<uint32_t, Coin>& outputs)
 {
     assert(!outputs.empty());
     stats.nTransactions++;
@@ -126,7 +126,7 @@ static bool ComputeUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj, c
         Coin coin;
         if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
             if (!outputs.empty() && key.hash != prevkey) {
-                ApplyStats(stats, prevkey, outputs);
+                ApplyStats(stats, outputs);
                 ApplyHash(hash_obj, prevkey, outputs);
                 outputs.clear();
             }
@@ -140,7 +140,7 @@ static bool ComputeUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj, c
         pcursor->Next();
     }
     if (!outputs.empty()) {
-        ApplyStats(stats, prevkey, outputs);
+        ApplyStats(stats, outputs);
         ApplyHash(hash_obj, prevkey, outputs);
     }
 

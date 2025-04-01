@@ -44,11 +44,11 @@ CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std:
             vMatch.push_back(true);
         } else if (filter && filter->IsRelevantAndUpdate(*block.vtx[i])) {
             vMatch.push_back(true);
-            vMatchedTxn.emplace_back(i, hash);
+            vMatchedTxn.emplace_back(i, hash.ToUint256());
         } else {
             vMatch.push_back(false);
         }
-        vHashes.push_back(hash);
+        vHashes.push_back(hash.ToUint256());
     }
 
     txn = CPartialMerkleTree(vHashes, vMatch);

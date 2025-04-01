@@ -214,9 +214,9 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         // Block with a single coinbase tx is mutated if the merkle root is not
         // equal to the coinbase tx's hash.
         block.vtx.push_back(create_coinbase_tx());
-        BOOST_CHECK(block.vtx[0]->GetHash() != block.hashMerkleRoot);
+        BOOST_CHECK(block.vtx[0]->GetHash().ToUint256() != block.hashMerkleRoot);
         BOOST_CHECK(is_mutated(block, /*check_witness_root=*/false));
-        block.hashMerkleRoot = block.vtx[0]->GetHash();
+        block.hashMerkleRoot = block.vtx[0]->GetHash().ToUint256();
         BOOST_CHECK(is_not_mutated(block, /*check_witness_root=*/false));
 
         // Block with two transactions is mutated if the merkle root does not
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
             mtx.vout.resize(1);
             mtx.vout[0].scriptPubKey.resize(4);
             block.vtx.push_back(MakeTransactionRef(mtx));
-            block.hashMerkleRoot = block.vtx.back()->GetHash();
+            block.hashMerkleRoot = block.vtx.back()->GetHash().ToUint256();
             assert(block.vtx.back()->IsCoinBase());
             assert(GetSerializeSize(TX_NO_WITNESS(block.vtx.back())) == 64);
         }
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
             HashWriter hasher;
             hasher.write(tx1.GetHash());
             hasher.write(tx2.GetHash());
-            assert(hasher.GetHash() == tx3.GetHash());
+            assert(hasher.GetHash() == tx3.GetHash().ToUint256());
             // Verify that tx3 is 64 bytes in size (without witness).
             assert(GetSerializeSize(TX_NO_WITNESS(tx3)) == 64);
         }
