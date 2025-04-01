@@ -168,8 +168,6 @@ CDBBatch::~CDBBatch() = default;
 void CDBBatch::Clear()
 {
     m_impl_batch->batch.Clear();
-    assert(m_impl_batch->batch.ApproximateSize() == kHeader);
-    size_estimate = kHeader; // TODO remove
 }
 
 void CDBBatch::WriteImpl(std::span<const std::byte> key, DataStream& ssValue)
@@ -178,26 +176,12 @@ void CDBBatch::WriteImpl(std::span<const std::byte> key, DataStream& ssValue)
     ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
     leveldb::Slice slValue(CharCast(ssValue.data()), ssValue.size());
     m_impl_batch->batch.Put(slKey, slValue);
-    // LevelDB serializes writes as:
-    // - byte: header
-    // - varint: key length (1 byte up to 127B, 2 bytes up to 16383B, ...)
-    // - byte[]: key
-    // - varint: value length
-    // - byte[]: value
-    // The formula below assumes the key and value are both less than 16k.
-    size_estimate += 3 + (slKey.size() > 127) + slKey.size() + (slValue.size() > 127) + slValue.size();
 }
 
 void CDBBatch::EraseImpl(std::span<const std::byte> key)
 {
     leveldb::Slice slKey(CharCast(key.data()), key.size());
     m_impl_batch->batch.Delete(slKey);
-    // LevelDB serializes erases as:
-    // - byte: header
-    // - varint: key length
-    // - byte[]: key
-    // The formula below assumes the key is less than 16kB.
-    size_estimate += 2 + (slKey.size() > 127) + slKey.size();
 }
 
 size_t CDBBatch::ApproximateSize() const

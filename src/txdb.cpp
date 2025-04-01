@@ -113,39 +113,27 @@ bool CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashB
     // transition from old_tip to hashBlock.
     // A vector is used for future extensibility, as we may want to support
     // interrupting after partial writes from multiple independent reorgs.
-    assert(batch.ApproximateSize() == batch.SizeEstimate()); // TODO remove
     batch.Erase(DB_BEST_BLOCK);
-    assert(batch.ApproximateSize() == batch.SizeEstimate()); // TODO remove
     batch.Write(DB_HEAD_BLOCKS, Vector(hashBlock, old_tip));
-    assert(batch.ApproximateSize() == batch.SizeEstimate()); // TODO remove
 
     for (auto it{cursor.Begin()}; it != cursor.End();) {
         if (it->second.IsDirty()) {
             CoinEntry entry(&it->first);
             if (it->second.coin.IsSpent()) {
-                assert(batch.ApproximateSize() == batch.SizeEstimate()); // TODO remove
                 batch.Erase(entry);
-                assert(batch.ApproximateSize() == batch.SizeEstimate()); // TODO remove
             } else {
-                assert(batch.ApproximateSize() == batch.SizeEstimate()); // TODO remove
                 batch.Write(entry, it->second.coin);
-                assert(batch.ApproximateSize() == batch.SizeEstimate()); // TODO remove
             }
 
             changed++;
         }
         count++;
         it = cursor.NextAndMaybeErase(*it);
-        assert(batch.ApproximateSize() == batch.SizeEstimate()); // TODO remove
-        if (batch.SizeEstimate() > m_options.batch_write_bytes) {
-            LogDebug(BCLog::COINDB, "Writing partial batch of %.2f MiB\n", batch.SizeEstimate() * (1.0 / 1048576.0));
+        if (batch.ApproximateSize() > m_options.batch_write_bytes) {
+            LogDebug(BCLog::COINDB, "Writing partial batch of %.2f MiB\n", batch.ApproximateSize() * (1.0 / 1048576.0));
 
-            assert(batch.ApproximateSize() == batch.SizeEstimate()); // TODO remove
             m_db->WriteBatch(batch);
-            assert(batch.ApproximateSize() == batch.SizeEstimate()); // TODO remove
             batch.Clear();
-            assert(batch.ApproximateSize() == batch.SizeEstimate()); // TODO remove
-
             if (m_options.simulate_crash_ratio) {
                 static FastRandomContext rng;
                 if (rng.randrange(m_options.simulate_crash_ratio) == 0) {
@@ -157,15 +145,11 @@ bool CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashB
     }
 
     // In the last batch, mark the database as consistent with hashBlock again.
-    assert(batch.ApproximateSize() == batch.SizeEstimate()); // TODO remove
     batch.Erase(DB_HEAD_BLOCKS);
-    assert(batch.ApproximateSize() == batch.SizeEstimate()); // TODO remove
     batch.Write(DB_BEST_BLOCK, hashBlock);
-    assert(batch.ApproximateSize() == batch.SizeEstimate()); // TODO remove
 
-    LogDebug(BCLog::COINDB, "Writing final batch of %.2f MiB\n", batch.SizeEstimate() * (1.0 / 1048576.0));
+    LogDebug(BCLog::COINDB, "Writing final batch of %.2f MiB\n", batch.ApproximateSize() * (1.0 / 1048576.0));
     bool ret = m_db->WriteBatch(batch);
-    assert(batch.ApproximateSize() == batch.SizeEstimate()); // TODO remove
     LogDebug(BCLog::COINDB, "Committed %u changed transaction outputs (out of %u) to coin database...\n", (unsigned int)changed, (unsigned int)count);
     return ret;
 }
