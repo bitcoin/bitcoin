@@ -856,7 +856,7 @@ private:
     std::shared_ptr<const CBlock> m_most_recent_block GUARDED_BY(m_most_recent_block_mutex);
     std::shared_ptr<const CBlockHeaderAndShortTxIDs> m_most_recent_compact_block GUARDED_BY(m_most_recent_block_mutex);
     uint256 m_most_recent_block_hash GUARDED_BY(m_most_recent_block_mutex);
-    std::unique_ptr<const std::map<uint256, CTransactionRef>> m_most_recent_block_txs GUARDED_BY(m_most_recent_block_mutex);
+    std::unique_ptr<const std::map<GenTxidVariant, CTransactionRef>> m_most_recent_block_txs GUARDED_BY(m_most_recent_block_mutex);
 
     // Data about the low-work headers synchronization, aggregated from all peers' HeadersSyncStates.
     /** Mutex guarding the other m_headers_presync_* variables. */
@@ -2028,7 +2028,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
         std::async(std::launch::deferred, [&] { return NetMsg::Make(NetMsgType::CMPCTBLOCK, *pcmpctblock); })};
 
     {
-        auto most_recent_block_txs = std::make_unique<std::map<uint256, CTransactionRef>>();
+        auto most_recent_block_txs = std::make_unique<std::map<GenTxidVariant, CTransactionRef>>();
         for (const auto& tx : pblock->vtx) {
             most_recent_block_txs->emplace(tx->GetHash(), tx);
             most_recent_block_txs->emplace(tx->GetWitnessHash(), tx);
@@ -2405,7 +2405,7 @@ CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer::TxRelay& tx_relay,
     {
         LOCK(m_most_recent_block_mutex);
         if (m_most_recent_block_txs != nullptr) {
-            auto it = m_most_recent_block_txs->find(txid.ToUint256());
+            auto it = m_most_recent_block_txs->find(txid);
             if (it != m_most_recent_block_txs->end()) return it->second;
         }
     }
@@ -4011,11 +4011,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     pfrom.fDisconnect = true;
                     return;
                 }
-                const GenTxid gtxid = ToGenTxid(inv);
+                const GenTxidVariant gtxid = ToGenTxid(inv);
                 AddKnownTx(*peer, inv.hash);
 
                 if (!m_chainman.IsInitialBlockDownload()) {
-                    const bool fAlreadyHave{m_txdownloadman.AddTxAnnouncement(pfrom.GetId(), gtxid.ToVariant(), current_time)};
+                    const bool fAlreadyHave{m_txdownloadman.AddTxAnnouncement(pfrom.GetId(), gtxid, current_time)};
                     LogDebug(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
                 }
             } else {
@@ -4946,7 +4946,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         if (vInv.size() <= node::MAX_PEER_TX_ANNOUNCEMENTS + MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             for (CInv &inv : vInv) {
                 if (inv.IsGenTxMsg()) {
-                    tx_invs.emplace_back(ToGenTxid(inv).ToVariant());
+                    tx_invs.emplace_back(ToGenTxid(inv));
                 }
             }
         }
@@ -5775,7 +5775,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                                 txinfo.tx->GetWitnessHash().ToUint256() :
                                 txinfo.tx->GetHash().ToUint256(),
                         };
-                        tx_relay->m_tx_inventory_to_send.erase(ToGenTxid(inv).ToVariant());
+                        tx_relay->m_tx_inventory_to_send.erase(ToGenTxid(inv));
 
                         // Don't send transactions that peers will not put into their mempool
                         if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
