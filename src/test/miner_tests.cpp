@@ -596,7 +596,7 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
     tx.vin[0].scriptSig = CScript() << OP_1;
     tx.vout.resize(1);
     tx.vout[0].nValue = 5000000000LL; // 0 fee
-    uint256 hashFreePrioritisedTx = tx.GetHash();
+    Txid hashFreePrioritisedTx = tx.GetHash();
     AddToMempool(tx_mempool, entry.Fee(0).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
     tx_mempool.PrioritiseTransaction(hashFreePrioritisedTx, 5 * COIN);
 

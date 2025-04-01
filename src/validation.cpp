@@ -303,7 +303,7 @@ void Chainstate::MaybeUpdateMempoolForReorg(
 
     AssertLockHeld(cs_main);
     AssertLockHeld(m_mempool->cs);
-    std::vector<uint256> vHashUpdate;
+    std::vector<Txid> vHashUpdate;
     {
         // disconnectpool is ordered so that the front is the most recently-confirmed
         // transaction (the last tx of the block at the tip) in the disconnected chain.
