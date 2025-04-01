@@ -468,7 +468,7 @@ public:
     void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    bool CompareDepthAndScore(const GenTxidVariant& hasha, const GenTxidVariant& hashb);
+    bool CompareDepthAndScore(const GenTxid& hasha, const GenTxid& hashb);
     bool isSpent(const COutPoint& outpoint) const;
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
@@ -646,7 +646,7 @@ public:
         return m_total_fee;
     }
 
-    bool exists(const GenTxidVariant& gtxid) const
+    bool exists(const GenTxid& gtxid) const
     {
         LOCK(cs);
         return std::visit(util::Overloaded{
@@ -663,10 +663,10 @@ public:
         AssertLockHeld(cs);
         return mapTx.project<0>(mapTx.get<index_by_wtxid>().find(wtxid));
     }
-    TxMempoolInfo info(const GenTxidVariant& gtxid) const;
+    TxMempoolInfo info(const GenTxid& gtxid) const;
 
     /** Returns info for a transaction if its entry_sequence < last_sequence */
-    TxMempoolInfo info_for_relay(const GenTxidVariant& gtxid, uint64_t last_sequence) const;
+    TxMempoolInfo info_for_relay(const GenTxid& gtxid, uint64_t last_sequence) const;
 
     std::vector<CTxMemPoolEntryRef> entryAll() const EXCLUSIVE_LOCKS_REQUIRED(cs);
     std::vector<TxMempoolInfo> infoAll() const;

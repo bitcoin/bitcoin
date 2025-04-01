@@ -79,7 +79,7 @@ using Txid = transaction_identifier<false>;
 using Wtxid = transaction_identifier<true>;
 
 /** A generic txid reference (txid or wtxid). */
-class GenTxidVariant : public std::variant<Txid, Wtxid>
+class GenTxid : public std::variant<Txid, Wtxid>
 {
 public:
     using variant::variant;
@@ -88,12 +88,12 @@ public:
         return std::visit([](const auto& id) -> const uint256& { return id.ToUint256(); }, *this);
     }
 
-    friend bool operator==(const GenTxidVariant& a, const GenTxidVariant& b) {
+    friend bool operator==(const GenTxid& a, const GenTxid& b) {
         //return a.index() == b.index() && a.ToUint256() == b.ToUint256();
         return a.ToUint256() == b.ToUint256();
     }
 
-    friend bool operator<(const GenTxidVariant& a, const GenTxidVariant& b) {
+    friend bool operator<(const GenTxid& a, const GenTxid& b) {
         //return std::tuple(a.index(), a.ToUint256()) < std::tuple(b.index(), b.ToUint256());
         return a.ToUint256() < b.ToUint256();
     }
