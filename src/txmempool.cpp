@@ -794,7 +794,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
     assert(innerUsage == cachedInnerUsage);
 }
 
-bool CTxMemPool::CompareDepthAndScore(const GenTxidVariant& hasha, const GenTxidVariant& hashb)
+bool CTxMemPool::CompareDepthAndScore(const GenTxid& hasha, const GenTxid& hashb)
 {
     /* Return `true` if hasha should be considered sooner than hashb. Namely when:
      *   a is not in the mempool, but b is
@@ -898,7 +898,7 @@ CTransactionRef CTxMemPool::get(const uint256& hash) const
     return i->GetSharedTx();
 }
 
-TxMempoolInfo CTxMemPool::info(const GenTxidVariant& gtxid) const
+TxMempoolInfo CTxMemPool::info(const GenTxid& gtxid) const
 {
     LOCK(cs);
     indexed_transaction_set::const_iterator i = std::visit(util::Overloaded{
@@ -911,7 +911,7 @@ TxMempoolInfo CTxMemPool::info(const GenTxidVariant& gtxid) const
     return GetInfo(i);
 }
 
-TxMempoolInfo CTxMemPool::info_for_relay(const GenTxidVariant& gtxid, uint64_t last_sequence) const
+TxMempoolInfo CTxMemPool::info_for_relay(const GenTxid& gtxid, uint64_t last_sequence) const
 {
     LOCK(cs);
     indexed_transaction_set::const_iterator i = std::visit(util::Overloaded{

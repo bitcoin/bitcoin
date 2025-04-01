@@ -227,7 +227,7 @@ FUZZ_TARGET(txdownloadman, .init = initialize)
                 Assert(first_time_failure || !todo.m_should_add_extra_compact_tx);
             },
             [&] {
-                GenTxidVariant gtxid;
+                GenTxid gtxid;
                 if (fuzzed_data_provider.ConsumeBool()) {
                     rand_tx->GetHash();
                 } else {
@@ -376,7 +376,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                 if (!reject_contains_wtxid) Assert(todo.m_unique_parents.size() <= rand_tx->vin.size());
             },
             [&] {
-                GenTxidVariant gtxid;
+                GenTxid gtxid;
                 if (fuzzed_data_provider.ConsumeBool()) {
                     rand_tx->GetHash();
                 } else {
