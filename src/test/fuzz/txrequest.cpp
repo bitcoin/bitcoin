@@ -20,7 +20,7 @@ constexpr int MAX_TXHASHES = 16;
 constexpr int MAX_PEERS = 16;
 
 //! Randomly generated GenTxids used in this test (length is MAX_TXHASHES).
-GenTxidVariant TXHASHES[MAX_TXHASHES];
+GenTxid TXHASHES[MAX_TXHASHES];
 
 //! Precomputed random durations (positive and negative, each ~exponentially distributed).
 std::chrono::microseconds DELAYS[256];
@@ -250,7 +250,7 @@ public:
 
         //! list of (sequence number, txhash, is_wtxid) tuples.
         std::vector<std::tuple<uint64_t, int, bool>> result;
-        std::vector<std::pair<NodeId, GenTxidVariant>> expected_expired;
+        std::vector<std::pair<NodeId, GenTxid>> expected_expired;
         for (int txhash = 0; txhash < MAX_TXHASHES; ++txhash) {
             // Mark any expired REQUESTED announcements as COMPLETED.
             for (int peer2 = 0; peer2 < MAX_PEERS; ++peer2) {
@@ -274,7 +274,7 @@ public:
         std::sort(expected_expired.begin(), expected_expired.end());
 
         // Compare with TxRequestTracker's implementation.
-        std::vector<std::pair<NodeId, GenTxidVariant>> expired;
+        std::vector<std::pair<NodeId, GenTxid>> expired;
         const auto actual = m_tracker.GetRequestable(peer, m_now, &expired);
         std::sort(expired.begin(), expired.end());
         assert(expired == expected_expired);
