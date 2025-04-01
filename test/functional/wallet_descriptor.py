@@ -21,7 +21,6 @@ from test_framework.util import (
 )
 from test_framework.wallet_util import WalletUnlock
 
-
 class WalletDescriptorTest(BitcoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser, legacy=False)
@@ -70,6 +69,24 @@ class WalletDescriptorTest(BitcoinTestFramework):
 
         assert_equal(bestblock_rec[5:37][::-1].hex(), self.nodes[0].getbestblockhash())
         assert_equal(cache_records, 1000)
+
+    def test_tr_listing_with_partial_privkeys(self):
+        self.nodes[0].createwallet(wallet_name="tr_listing", blank=True)
+        wallet = self.nodes[0].get_wallet_rpc("tr_listing")
+
+        privkey = "cNKAo2ZRsaWKcP481cEfj3astPyBrfq56JBtLeRhHUvTSuk2z4MR"
+        pubkey = "03d1d1110030000000000120000000000000000000000000001370010912cd08cc"
+        taproot_spendingpath_keys = [
+            {"key": pubkey, "script": privkey, "case": "public & private"},
+            {"key": privkey, "script": pubkey, "case": "private & public"}
+        ]
+
+        for spendingpath in taproot_spendingpath_keys:
+            self.log.info(f'Test listing of a tr descriptor with {spendingpath["case"]} keys in keypath & scriptpath respectively')
+            desc = descsum_create(f'tr({spendingpath["key"]},pk({spendingpath["script"]}))')
+            res = wallet.importdescriptors([{"desc": desc, "timestamp": "now"}])
+            assert_equal(res[0]["success"], True)
+            assert next(it['desc'] for it in wallet.listdescriptors(private=True)['descriptors'] if it['desc'] == desc)
 
     def run_test(self):
         if self.is_bdb_compiled():
@@ -279,6 +296,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Unexpected legacy entry in descriptor wallet found.", self.nodes[0].loadwallet, "crashme")
 
         self.test_concurrent_writes()
+        self.test_tr_listing_with_partial_privkeys()
 
 
 if __name__ == '__main__':
