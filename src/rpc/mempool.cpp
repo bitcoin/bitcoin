@@ -461,12 +461,12 @@ static RPCHelpMan getmempoolancestors()
     if (!request.params[1].isNull())
         fVerbose = request.params[1].get_bool();
 
-    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    Txid hash = Txid::FromUint256(ParseHashV(request.params[0], "parameter 1"));
 
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
     LOCK(mempool.cs);
 
-    const auto entry{mempool.GetEntry(Txid::FromUint256(hash))};
+    const auto entry{mempool.GetEntry(hash)};
     if (entry == nullptr) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool");
     }
@@ -483,7 +483,7 @@ static RPCHelpMan getmempoolancestors()
         UniValue o(UniValue::VOBJ);
         for (CTxMemPool::txiter ancestorIt : ancestors) {
             const CTxMemPoolEntry &e = *ancestorIt;
-            const uint256& _hash = e.GetTx().GetHash();
+            const Txid& _hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
             entryToJSON(mempool, info, e);
             o.pushKV(_hash.ToString(), std::move(info));
@@ -523,7 +523,7 @@ static RPCHelpMan getmempooldescendants()
     if (!request.params[1].isNull())
         fVerbose = request.params[1].get_bool();
 
-    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    Txid hash = Txid::FromUint256(ParseHashV(request.params[0], "parameter 1"));
 
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
     LOCK(mempool.cs);
@@ -549,7 +549,7 @@ static RPCHelpMan getmempooldescendants()
         UniValue o(UniValue::VOBJ);
         for (CTxMemPool::txiter descendantIt : setDescendants) {
             const CTxMemPoolEntry &e = *descendantIt;
-            const uint256& _hash = e.GetTx().GetHash();
+            const Txid& _hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
             entryToJSON(mempool, info, e);
             o.pushKV(_hash.ToString(), std::move(info));
@@ -576,12 +576,12 @@ static RPCHelpMan getmempoolentry()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    Txid hash = Txid::FromUint256(ParseHashV(request.params[0], "parameter 1"));
 
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
     LOCK(mempool.cs);
 
-    const auto entry{mempool.GetEntry(Txid::FromUint256(hash))};
+    const auto entry{mempool.GetEntry(hash)};
     if (entry == nullptr) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool");
     }
@@ -1080,7 +1080,7 @@ static RPCHelpMan submitpackage()
             UniValue rpc_result{UniValue::VOBJ};
             rpc_result.pushKV("package_msg", package_msg);
             UniValue tx_result_map{UniValue::VOBJ};
-            std::set<uint256> replaced_txids;
+            std::set<Txid> replaced_txids;
             for (const auto& tx : txns) {
                 UniValue result_inner{UniValue::VOBJ};
                 result_inner.pushKV("txid", tx->GetHash().GetHex());
@@ -1124,7 +1124,7 @@ static RPCHelpMan submitpackage()
             }
             rpc_result.pushKV("tx-results", std::move(tx_result_map));
             UniValue replaced_list(UniValue::VARR);
-            for (const uint256& hash : replaced_txids) replaced_list.push_back(hash.ToString());
+            for (const Txid& hash : replaced_txids) replaced_list.push_back(hash.ToString());
             rpc_result.pushKV("replaced-transactions", std::move(replaced_list));
             return rpc_result;
         },
