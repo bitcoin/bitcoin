@@ -20,7 +20,7 @@ In configuration output, this function prints a string by the following pattern:
 function(try_append_linker_flag flag)
   cmake_parse_arguments(PARSE_ARGV 1
     TALF                              # prefix
-    ""                                # options
+    "NO_CACHE_IF_FAILED"              # options
     "TARGET;VAR;SOURCE;RESULT_VAR"    # one_value_keywords
     "IF_CHECK_PASSED"                 # multi_value_keywords
   )
@@ -67,6 +67,10 @@ function(try_append_linker_flag flag)
 
   if(DEFINED TALF_RESULT_VAR)
     set(${TALF_RESULT_VAR} "${${result}}" PARENT_SCOPE)
+  endif()
+
+  if(NOT ${result} AND TALF_NO_CACHE_IF_FAILED)
+    unset(${result} CACHE)
   endif()
 endfunction()
 
