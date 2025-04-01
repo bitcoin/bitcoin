@@ -118,15 +118,7 @@ std::vector<std::string> serviceFlagsToStr(uint64_t flags)
     return str_flags;
 }
 
-// TODO: Remove this function and rename the one below to ToGenTxid.
-// This is only here for intermediate commits.
-GenTxid ToGenTxid(const CInv& inv)
-{
-    assert(inv.IsGenTxMsg());
-    return inv.IsMsgWtx() ? GenTxid::Wtxid(inv.hash) : GenTxid::Txid(inv.hash);
-}
-
-GenTxidVariant ToGenTxidVariant(const CInv& inv)
+GenTxidVariant ToGenTxid(const CInv& inv)
 {
     assert(inv.IsGenTxMsg());
     if (inv.IsMsgWtx()) {
