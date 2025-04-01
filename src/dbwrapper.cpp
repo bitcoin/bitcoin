@@ -200,6 +200,11 @@ void CDBBatch::EraseImpl(std::span<const std::byte> key)
     size_estimate += 2 + (slKey.size() > 127) + slKey.size();
 }
 
+size_t CDBBatch::ApproximateSize() const
+{
+    return m_impl_batch->batch.ApproximateSize();
+}
+
 struct LevelDBContext {
     //! custom environment this database is using (may be nullptr in case of default environment)
     leveldb::Env* penv;

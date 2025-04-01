@@ -119,7 +119,8 @@ public:
         ssKey.clear();
     }
 
-    size_t SizeEstimate() const { return size_estimate; }
+    size_t ApproximateSize() const;
+    size_t SizeEstimate() const { return size_estimate; } // TODO replace with ApproximateSize
 };
 
 class CDBIterator
