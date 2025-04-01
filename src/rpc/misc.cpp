@@ -51,7 +51,11 @@ static RPCHelpMan debug()
         " - \"all\", \"1\" and \"\" activate all categories at once;\n"
         " - \"dash\" activates all Dash-specific categories at once;\n"
         " - \"none\" (or \"0\") deactivates all categories at once.\n"
-        "Note: If specified category doesn't match any of the above, no error is thrown.\n",
+        "Note: If specified category doesn't match any of the above, no error is thrown.\n"
+        "Note: Consider using 'logging' RPC which has more features.\n"
+        " - For 'debug all': logging [\\\"all\\\"]\n"
+        " - For 'debug none': logging []\n"
+        " - For 'debug X+Y': logging '[\"X\", \"Y\"]'",
         {
             {"category", RPCArg::Type::STR, RPCArg::Optional::NO, "The name of the debug category to turn on."},
         },
@@ -1239,6 +1243,7 @@ static RPCHelpMan logging()
         },
         RPCExamples{
             HelpExampleCli("logging", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
+          + HelpExampleCli("logging", "'[\"dash\"]' '[\"llmq\",\"zmq\"]'")
     + HelpExampleRpc("logging", "[\"all\"], \"[libevent]\"")
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
