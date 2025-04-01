@@ -287,7 +287,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
                                    tx->GetHash() :
                                    PickValue(fuzzed_data_provider, outpoints_rbf).hash;
             const auto delta = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-50 * COIN, +50 * COIN);
-            tx_pool.PrioritiseTransaction(txid.ToUint256(), delta);
+            tx_pool.PrioritiseTransaction(txid, delta);
         }
 
         // Remember all removed and added transactions
@@ -408,7 +408,7 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
                                    mut_tx.GetHash() :
                                    PickValue(fuzzed_data_provider, txids);
             const auto delta = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-50 * COIN, +50 * COIN);
-            tx_pool.PrioritiseTransaction(txid.ToUint256(), delta);
+            tx_pool.PrioritiseTransaction(txid, delta);
         }
 
         const auto tx = MakeTransactionRef(mut_tx);
