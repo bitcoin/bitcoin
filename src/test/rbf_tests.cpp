@@ -196,7 +196,7 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
                                        entry5_low, entry6_low_prioritised, entry7_high, entry8_high};
     CTxMemPool::setEntries empty_set;
 
-    const auto unused_txid{GetRandHash()};
+    const auto unused_txid = Txid::FromUint256(GetRandHash());
 
     // Tests for PaysMoreThanConflicts
     // These tests use feerate, not absolute fee.

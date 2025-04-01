@@ -1088,7 +1088,7 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
     AssertLockHeld(m_pool.cs);
 
     const CTransaction& tx = *ws.m_ptx;
-    const uint256& hash = ws.m_hash;
+    const Txid& hash = ws.m_hash;
     TxValidationState& state = ws.m_state;
 
     CFeeRate newFeeRate(ws.m_modified_fees, ws.m_vsize);
