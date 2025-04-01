@@ -373,18 +373,23 @@ bool CWallet::AttemptSelection(const CAmount& nTargetValue, const CoinEligibilit
     std::vector<OutputGroup> positive_groups = GroupOutputs(coins, coin_selection_params, eligibility_filter, true /* positive_only */);
     std::set<CInputCoin> bnb_coins;
     CAmount bnb_value;
-    if (SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change, bnb_coins, bnb_value)) {
+    if (false && SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change, bnb_coins, bnb_value)) {
         const auto waste = GetSelectionWaste(bnb_coins, /* cost of change */ CAmount(0), nTargetValue, !coin_selection_params.m_subtract_fee_outputs);
         results.emplace_back(std::make_tuple(waste, std::move(bnb_coins), bnb_value));
     }
 
     // The knapsack solver has some legacy behavior where it will spend dust outputs. We retain this behavior, so don't filter for positive only here.
     std::vector<OutputGroup> all_groups = GroupOutputs(coins, coin_selection_params, eligibility_filter, false /* positive_only */);
+    CAmount target_with_change = nTargetValue;
     // While nTargetValue includes the transaction fees for non-input things, it does not include the fee for creating a change output.
     // So we need to include that for KnapsackSolver as well, as we are expecting to create a change output.
+    // There is also no change output when spending fully mixed coins.
+    if (!coin_selection_params.m_subtract_fee_outputs && nCoinType != CoinType::ONLY_FULLY_MIXED) {
+        target_with_change += coin_selection_params.m_change_fee;
+    }
     std::set<CInputCoin> knapsack_coins;
     CAmount knapsack_value;
-    if (KnapsackSolver(nTargetValue + coin_selection_params.m_change_fee, all_groups, knapsack_coins, knapsack_value, nCoinType == CoinType::ONLY_FULLY_MIXED, m_default_max_tx_fee)) {
+    if (KnapsackSolver(target_with_change, all_groups, knapsack_coins, knapsack_value, nCoinType == CoinType::ONLY_FULLY_MIXED, m_default_max_tx_fee)) {
         const auto waste = GetSelectionWaste(knapsack_coins, coin_selection_params.m_cost_of_change, nTargetValue + coin_selection_params.m_change_fee, !coin_selection_params.m_subtract_fee_outputs);
         results.emplace_back(std::make_tuple(waste, std::move(knapsack_coins), knapsack_value));
     }
