@@ -2578,11 +2578,6 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     LogPrint(BCLog::BENCHMARK, "    - Callbacks: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime8 - nTime5), nTimeCallbacks * MICRO, nTimeCallbacks * MILLI / nBlocksTotal);
 
     ::g_stats_client->timing("ConnectBlock_ms", (nTime8 - nTimeStart) / 1000, 1.0f);
-    ::g_stats_client->gauge("blocks.tip.SizeBytes", ::GetSerializeSize(block, PROTOCOL_VERSION), 1.0f);
-    ::g_stats_client->gauge("blocks.tip.Height", m_chain.Height(), 1.0f);
-    ::g_stats_client->gauge("blocks.tip.Version", block.nVersion, 1.0f);
-    ::g_stats_client->gauge("blocks.tip.NumTransactions", block.vtx.size(), 1.0f);
-    ::g_stats_client->gauge("blocks.tip.SigOps", nSigOps, 1.0f);
 
     TRACE6(validation, block_connected,
         block_hash.data(),
@@ -2901,6 +2896,8 @@ bool CChainState::DisconnectTip(BlockValidationState& state, DisconnectedBlockTr
     AssertLockHeld(cs_main);
     if (m_mempool) AssertLockHeld(m_mempool->cs);
 
+    int64_t nTime1 = GetTimeMicros();
+
     CBlockIndex *pindexDelete = m_chain.Tip();
     assert(pindexDelete);
     // Read block from disk.
@@ -2959,6 +2956,19 @@ bool CChainState::DisconnectTip(BlockValidationState& state, DisconnectedBlockTr
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
     GetMainSignals().BlockDisconnected(pblock, pindexDelete);
+
+    int64_t nTime2 = GetTimeMicros();
+
+    unsigned int nSigOps = 0;
+    for (const auto& tx : block.vtx) {
+        nSigOps += GetLegacySigOpCount(*tx);
+    }
+    ::g_stats_client->timing("DisconnectTip_ms", (nTime2 - nTime1) / 1000, 1.0f);
+    ::g_stats_client->gauge("blocks.tip.SizeBytes", ::GetSerializeSize(block, PROTOCOL_VERSION), 1.0f);
+    ::g_stats_client->gauge("blocks.tip.Height", m_chain.Height(), 1.0f);
+    ::g_stats_client->gauge("blocks.tip.Version", block.nVersion, 1.0f);
+    ::g_stats_client->gauge("blocks.tip.NumTransactions", block.vtx.size(), 1.0f);
+    ::g_stats_client->gauge("blocks.tip.SigOps", nSigOps, 1.0f);
     return true;
 }
 
@@ -3077,7 +3087,16 @@ bool CChainState::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew
     LogPrint(BCLog::BENCHMARK, "  - Connect postprocess: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime6 - nTime5) * MILLI, nTimePostConnect * MICRO, nTimePostConnect * MILLI / nBlocksTotal);
     LogPrint(BCLog::BENCHMARK, "- Connect block: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime6 - nTime1) * MILLI, nTimeTotal * MICRO, nTimeTotal * MILLI / nBlocksTotal);
 
+    unsigned int nSigOps = 0;
+    for (const auto& tx : blockConnecting.vtx) {
+        nSigOps += GetLegacySigOpCount(*tx);
+    }
     ::g_stats_client->timing("ConnectTip_ms", (nTime6 - nTime1) / 1000, 1.0f);
+    ::g_stats_client->gauge("blocks.tip.SizeBytes", ::GetSerializeSize(blockConnecting, PROTOCOL_VERSION), 1.0f);
+    ::g_stats_client->gauge("blocks.tip.Height", m_chain.Height(), 1.0f);
+    ::g_stats_client->gauge("blocks.tip.Version", blockConnecting.nVersion, 1.0f);
+    ::g_stats_client->gauge("blocks.tip.NumTransactions", blockConnecting.vtx.size(), 1.0f);
+    ::g_stats_client->gauge("blocks.tip.SigOps", nSigOps, 1.0f);
 
     connectTrace.BlockConnected(pindexNew, std::move(pthisBlock));
     return true;

@@ -21,6 +21,7 @@
 #include <univalue.h>
 #include <messagesigner.h>
 #include <uint256.h>
+#include <stats/client.h>
 
 #include <optional>
 #include <memory>
@@ -648,6 +649,17 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<co
 
     if (diff.HasChanges()) {
         updatesRet = {newList, oldList, diff};
+    }
+
+    if (::g_stats_client->active()) {
+        ::g_stats_client->gauge("masternodes.count", newList.GetAllMNsCount());
+        ::g_stats_client->gauge("masternodes.weighted_count", newList.GetValidWeightedMNsCount());
+        ::g_stats_client->gauge("masternodes.enabled", newList.GetValidMNsCount());
+        ::g_stats_client->gauge("masternodes.weighted_enabled", newList.GetValidWeightedMNsCount());
+        ::g_stats_client->gauge("masternodes.evo.count", newList.GetAllEvoCount());
+        ::g_stats_client->gauge("masternodes.evo.enabled", newList.GetValidEvoCount());
+        ::g_stats_client->gauge("masternodes.mn.count", newList.GetAllMNsCount() - newList.GetAllEvoCount());
+        ::g_stats_client->gauge("masternodes.mn.enabled", newList.GetValidMNsCount() - newList.GetValidEvoCount());
     }
 
     if (nHeight == consensusParams.DIP0003EnforcementHeight) {
