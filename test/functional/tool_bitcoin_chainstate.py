@@ -44,6 +44,7 @@ class BitcoinChainstateTest(BitcoinTestFramework):
         self.add_block(datadir, block_one, "duplicate")
         self.add_block(datadir, "00", "Block decode failed")
         self.add_block(datadir, "", "Empty line found")
+        self.add_block(datadir, block_one[0] + "0" + block_one[2:], "invalid proof of work or time too old")
 
 if __name__ == "__main__":
     BitcoinChainstateTest(__file__).main()
