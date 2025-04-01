@@ -108,6 +108,11 @@ fn deterministic_coverage(
     par: usize,
 ) -> AppResult {
     let using_libfuzzer = using_libfuzzer(fuzz_exe)?;
+    if using_libfuzzer {
+        println!("Warning: The fuzz executable was compiled with libFuzzer as sanitizer.");
+        println!("This tool may be tripped by libFuzzer misbehavior.");
+        println!("It is recommended to compile without libFuzzer.");
+    }
     let corpus_dir = corpora_dir.join(fuzz_target);
     let mut entries = read_dir(&corpus_dir)
         .map_err(|err| {
