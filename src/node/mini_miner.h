@@ -83,12 +83,12 @@ class MiniMiner
 
     // Set once per lifetime, fill in during initialization.
     // txids of to-be-replaced transactions
-    std::set<uint256> m_to_be_replaced;
+    std::set<Txid> m_to_be_replaced;
 
     // If multiple argument outpoints correspond to the same transaction, cache them together in
     // a single entry indexed by txid. Then we can just work with txids since all outpoints from
     // the same tx will have the same bumpfee. Excludes non-mempool transactions.
-    std::map<uint256, std::vector<COutPoint>> m_requested_outpoints_by_txid;
+    std::map<Txid, std::vector<COutPoint>> m_requested_outpoints_by_txid;
 
     // Txid to a number representing the order in which this transaction was included (smaller
     // number = included earlier).  Transactions included in an ancestor set together have the same
@@ -98,21 +98,21 @@ class MiniMiner
     std::map<COutPoint, CAmount> m_bump_fees;
 
     // The constructed block template
-    std::set<uint256> m_in_block;
+    std::set<Txid> m_in_block;
 
     // Information on the current status of the block
     CAmount m_total_fees{0};
     int32_t m_total_vsize{0};
 
     /** Main data structure holding the entries, can be indexed by txid */
-    std::map<uint256, MiniMinerMempoolEntry> m_entries_by_txid;
+    std::map<Txid, MiniMinerMempoolEntry> m_entries_by_txid;
     using MockEntryMap = decltype(m_entries_by_txid);
 
     /** Vector of entries, can be sorted by ancestor feerate. */
     std::vector<MockEntryMap::iterator> m_entries;
 
     /** Map of txid to its descendants. Should be inclusive. */
-    std::map<uint256, std::vector<MockEntryMap::iterator>> m_descendant_set_by_txid;
+    std::map<Txid, std::vector<MockEntryMap::iterator>> m_descendant_set_by_txid;
 
     /** Consider this ancestor package "mined" so remove all these entries from our data structures. */
     void DeleteAncestorPackage(const std::set<MockEntryMap::iterator, IteratorComparator>& ancestors);
@@ -129,7 +129,7 @@ public:
     void BuildMockTemplate(std::optional<CFeeRate> target_feerate);
 
     /** Returns set of txids in the block template if one has been constructed. */
-    std::set<uint256> GetMockTemplateTxids() const { return m_in_block; }
+    std::set<Txid> GetMockTemplateTxids() const { return m_in_block; }
 
     /** Constructor that takes a list of outpoints that may or may not belong to transactions in the
      * mempool. Copies out information about the relevant transactions in the mempool into

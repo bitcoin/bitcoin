@@ -1017,7 +1017,7 @@ CTxMemPool::setEntries CTxMemPool::GetIterSet(const std::set<Txid>& hashes) cons
     return ret;
 }
 
-std::vector<CTxMemPool::txiter> CTxMemPool::GetIterVec(const std::vector<uint256>& txids) const
+std::vector<CTxMemPool::txiter> CTxMemPool::GetIterVec(const std::vector<Txid>& txids) const
 {
     AssertLockHeld(cs);
     std::vector<txiter> ret;
@@ -1261,7 +1261,7 @@ void CTxMemPool::SetLoadTried(bool load_tried)
     m_load_tried = load_tried;
 }
 
-std::vector<CTxMemPool::txiter> CTxMemPool::GatherClusters(const std::vector<uint256>& txids) const
+std::vector<CTxMemPool::txiter> CTxMemPool::GatherClusters(const std::vector<Txid>& txids) const
 {
     AssertLockHeld(cs);
     std::vector<txiter> clustered_txs{GetIterVec(txids)};
