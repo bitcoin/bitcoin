@@ -28,7 +28,7 @@ public:
     // Dash Specific WalletInitInterface
     virtual void AutoLockMasternodeCollaterals(interfaces::WalletLoader& wallet_loader) const = 0;
     virtual void InitCoinJoinSettings(interfaces::CoinJoin::Loader& coinjoin_loader, interfaces::WalletLoader& wallet_loader) const = 0;
-    virtual bool InitAutoBackup() const = 0;
+    virtual void InitAutoBackup() const = 0;
 
     virtual ~WalletInitInterface() {}
 };
