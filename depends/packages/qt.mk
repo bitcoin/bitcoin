@@ -1,9 +1,9 @@
 package=qt
-$(package)_version=6.7.3
-$(package)_download_path=https://download.qt.io/archive/qt/6.7/$($(package)_version)/submodules
-$(package)_suffix=everywhere-src-$($(package)_version).tar.xz
-$(package)_file_name=qtbase-$($(package)_suffix)
-$(package)_sha256_hash=8ccbb9ab055205ac76632c9eeddd1ed6fc66936fc56afc2ed0fd5d9e23da3097
+include packages/qt_details.mk
+$(package)_version=$(qt_details_version)
+$(package)_download_path=$(qt_details_download_path)
+$(package)_file_name=$(qt_details_qtbase_file_name)
+$(package)_sha256_hash=$(qt_details_qtbase_sha256_hash)
 $(package)_linux_dependencies=freetype fontconfig libxcb libxkbcommon libxcb_util libxcb_util_cursor libxcb_util_render libxcb_util_keysyms libxcb_util_image libxcb_util_wm
 $(package)_patches := dont_hardcode_pwd.patch
 $(package)_patches += qtbase-moc-ignore-gcc-macro.patch
@@ -15,26 +15,26 @@ $(package)_patches += qtbase_skip_tools.patch
 $(package)_patches += rcc_hardcode_timestamp.patch
 $(package)_patches += qttools_skip_dependencies.patch
 
-$(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
-$(package)_qttranslations_sha256_hash=dcc762acac043b9bb5e4d369b6d6f53e0ecfcf76a408fe0db5f7ef071c9d6dc8
+$(package)_qttranslations_file_name=$(qt_details_qttranslations_file_name)
+$(package)_qttranslations_sha256_hash=$(qt_details_qttranslations_sha256_hash)
 
-$(package)_qttools_file_name=qttools-$($(package)_suffix)
-$(package)_qttools_sha256_hash=f03bb7df619cd9ac9dba110e30b7bcab5dd88eb8bdc9cc752563b4367233203f
+$(package)_qttools_file_name=$(qt_details_qttools_file_name)
+$(package)_qttools_sha256_hash=$(qt_details_qttools_sha256_hash)
 
 $(package)_extra_sources := $($(package)_qttranslations_file_name)
 $(package)_extra_sources += $($(package)_qttools_file_name)
 
-$(package)_top_download_path=https://code.qt.io/cgit/qt/qt5.git/plain
-$(package)_top_cmakelists_file_name=CMakeLists.txt
-$(package)_top_cmakelists_download_file=$($(package)_top_cmakelists_file_name)?h=$($(package)_version)
-$(package)_top_cmakelists_sha256_hash=9fb720a633c0c0a21c31fe62a34bf617726fed72480d4064f29ca5d6973d513f
-$(package)_top_cmake_download_path=$($(package)_top_download_path)/cmake
-$(package)_top_cmake_ecmoptionaladdsubdirectory_file_name=ECMOptionalAddSubdirectory.cmake
-$(package)_top_cmake_ecmoptionaladdsubdirectory_download_file=$($(package)_top_cmake_ecmoptionaladdsubdirectory_file_name)?h=$($(package)_version)
-$(package)_top_cmake_ecmoptionaladdsubdirectory_sha256_hash=97ee8bbfcb0a4bdcc6c1af77e467a1da0c5b386c42be2aa97d840247af5f6f70
-$(package)_top_cmake_qttoplevelhelpers_file_name=QtTopLevelHelpers.cmake
-$(package)_top_cmake_qttoplevelhelpers_download_file=$($(package)_top_cmake_qttoplevelhelpers_file_name)?h=$($(package)_version)
-$(package)_top_cmake_qttoplevelhelpers_sha256_hash=5ac2a7159ee27b5b86d26ecff44922e7b8f319aa847b7b5766dc17932fd4a294
+$(package)_top_download_path=$(qt_details_top_download_path)
+$(package)_top_cmakelists_file_name=$(qt_details_top_cmakelists_file_name)
+$(package)_top_cmakelists_download_file=$(qt_details_top_cmakelists_download_file)
+$(package)_top_cmakelists_sha256_hash=$(qt_details_top_cmakelists_sha256_hash)
+$(package)_top_cmake_download_path=$(qt_details_top_cmake_download_path)
+$(package)_top_cmake_ecmoptionaladdsubdirectory_file_name=$(qt_details_top_cmake_ecmoptionaladdsubdirectory_file_name)
+$(package)_top_cmake_ecmoptionaladdsubdirectory_download_file=$(qt_details_top_cmake_ecmoptionaladdsubdirectory_download_file)
+$(package)_top_cmake_ecmoptionaladdsubdirectory_sha256_hash=$(qt_details_top_cmake_ecmoptionaladdsubdirectory_sha256_hash)
+$(package)_top_cmake_qttoplevelhelpers_file_name=$(qt_details_top_cmake_qttoplevelhelpers_file_name)
+$(package)_top_cmake_qttoplevelhelpers_download_file=$(qt_details_top_cmake_qttoplevelhelpers_download_file)
+$(package)_top_cmake_qttoplevelhelpers_sha256_hash=$(qt_details_top_cmake_qttoplevelhelpers_sha256_hash)
 
 $(package)_extra_sources += $($(package)_top_cmakelists_file_name)-$($(package)_version)
 $(package)_extra_sources += $($(package)_top_cmake_ecmoptionaladdsubdirectory_file_name)-$($(package)_version)
