@@ -198,7 +198,7 @@ FUZZ_TARGET(muhash)
             muhash3.Finalize(out2);
         },
         [&] {
-            // Test that dividing a MuHash by itself brings it back to it's initial state
+            // Test that dividing a MuHash by itself brings it back to its initial state
 
             // See note about clang + self-assignment in test/uint256_tests.cpp
             #if defined(__clang__)
@@ -216,7 +216,7 @@ FUZZ_TARGET(muhash)
             out2 = initial_state_hash;
         },
         [&] {
-            // Test that removing all added elements brings the object back to it's initial state
+            // Test that removing all added elements brings the object back to its initial state
             muhash.Remove(data);
             muhash.Remove(data2);
             muhash.Finalize(out);
