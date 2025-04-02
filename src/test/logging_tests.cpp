@@ -228,6 +228,43 @@ BOOST_FIXTURE_TEST_CASE(logging_macro_args, LogSetup)
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }
 
+//! Example of a custom log context that includes a counter value in logged
+//! messages. Custom log contexts allow different areas of the codebase to
+//! attach information to log messages (like request ids or filenames) while
+//! still using standard logging macros.
+struct CountingLogContext {
+    static constexpr bool log_context{true};
+    util::log::Category category{BCLog::VALIDATION};
+    util::log::Logger* logger{nullptr};
+    int counter{0};
+
+    template <typename... Args>
+    std::string Format(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+    {
+        return tfm::format("Custom #%d %s", ++counter, tfm::format(fmt, args...));
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(logging_CustomContext, LogSetup)
+{
+    LogInstance().EnableCategory(BCLog::LogFlags::ALL);
+    LogInstance().SetLogLevel(BCLog::Level::Debug);
+    CountingLogContext log;
+    LogTrace(log, "foo0: %s", "bar0"); // not logged
+    LogDebug(log, "foo1: %s", "bar1");
+    LogInfo(log, "foo2: %s", "bar2");
+    LogWarning(log, "foo3: %s", "bar3");
+    LogError(log, "foo4: %s", "bar4");
+    const auto log_lines{ReadDebugLogLines()};
+    constexpr auto expected{std::to_array({
+        "[validation] Custom #1 foo1: bar1",
+        "Custom #2 foo2: bar2",
+        "[warning] Custom #3 foo3: bar3",
+        "[error] Custom #4 foo4: bar4",
+    })};
+    BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
+}
+
 BOOST_AUTO_TEST_CASE(logging_timer)
 {
     auto micro_timer = BCLog::Timer<std::chrono::microseconds>("tests", "end_msg");
