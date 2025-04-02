@@ -16,17 +16,25 @@
 #include <set>
 
 namespace node {
-/** Expiration time for orphan transactions */
-static constexpr auto ORPHAN_TX_EXPIRE_TIME{20min};
-/** Minimum time between orphan transactions expire time checks */
-static constexpr auto ORPHAN_TX_EXPIRE_INTERVAL{5min};
+/** Default value for TxOrphanage::m_reserved_usage_per_peer. */
+static constexpr int64_t DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER{404'000};
+/** Default value for TxOrphanage::m_max_global_announcements. */
+static constexpr unsigned int DEFAULT_MAX_ORPHAN_ANNOUNCEMENTS{100};
+/** Minimum NodeId for lower_bound lookups (in practice, NodeIds start at 0). */
+static constexpr NodeId MIN_PEER{std::numeric_limits<NodeId>::min()};
 /** Default maximum number of orphan transactions kept in memory */
 static const uint32_t DEFAULT_MAX_ORPHAN_TRANSACTIONS{100};
 
 /** A class to track orphan transactions (failed on TX_MISSING_INPUTS)
- * Since we cannot distinguish orphans from bad transactions with
- * non-existent inputs, we heavily limit the number of orphans
- * we keep and the duration we keep them for.
+ * Since we cannot distinguish orphans from bad transactions with non-existent inputs, we heavily limit the amount of
+ * announcements (unique (NodeId, tx) pairs). We also try to prevent adversaries churning this data structure: when
+ * global limits are reached, we continuously evict the oldest announcement (sorting non-reconsiderable orphans before
+ * reconsiderable ones) from the most resource-intensive peer until we are back within limits.
+ * - Peers can exceed their individual limits (e.g. because they are very useful transaction relay peers) as long as the
+ *   global limits are not exceeded.
+ * - As long as the orphan has 1 announcer, it remains in the orphanage.
+ * - No peer can trigger the eviction of another peer's orphans.
+ * - Peers' orphans are effectively protected from eviction as long as they don't exceed their limits.
  * Not thread-safe. Requires external synchronization.
  */
 class TxOrphanage {
@@ -102,16 +110,43 @@ public:
 
     /** Total usage (weight) of orphans for which this peer is an announcer. If an orphan has multiple
      * announcers, its weight will be accounted for in each PeerOrphanInfo, so the total of all
-     * peers' UsageByPeer() may be larger than TotalOrphanBytes(). */
+     * peers' UsageByPeer() may be larger than TotalOrphanUsage(). */
     virtual int64_t UsageByPeer(NodeId peer) const = 0;
 
     /** Check consistency between PeerOrphanInfo and m_orphans. Recalculate counters and ensure they
      * match what is cached. */
     virtual void SanityCheck() const = 0;
+
+    /** Number of announcements. Ones for the same wtxid are not de-duplicated. */
+    virtual unsigned int CountAnnouncements() const = 0;
+
+    /** Number of unique orphans (by wtxid). */
+    virtual unsigned int CountUniqueOrphans() const = 0;
+
+    /** Number of orphans stored from this peer. */
+    virtual unsigned int AnnouncementsFromPeer(NodeId peer) const = 0;
+
+    /** Total usage of orphans from this peer */
+    virtual int64_t UsageFromPeer(NodeId peer) const = 0;
+
+    /** Get the maximum global announcements allowed */
+    virtual unsigned int MaxGlobalAnnouncements() const = 0;
+
+    /** Get the reserved usage per peer */
+    virtual unsigned int ReservedPeerUsage() const = 0;
+
+    /** Get the maximum announcements allowed per peer */
+    virtual unsigned int MaxPeerAnnouncements() const = 0;
+
+    /** Get the maximum global usage allowed */
+    virtual unsigned int MaxGlobalUsage() const = 0;
+
+    /** Check if the orphanage needs trimming */
+    virtual bool NeedsTrim() const = 0;
 };
 
 /** Create a new TxOrphanage instance */
 std::unique_ptr<TxOrphanage> MakeTxOrphanage() noexcept;
-
+std::unique_ptr<TxOrphanage> MakeTxOrphanage(unsigned int max_global_ann, int64_t reserved_peer_usage) noexcept;
 } // namespace node
 #endif // BITCOIN_NODE_TXORPHANAGE_H
