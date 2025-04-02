@@ -100,12 +100,27 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT CMAKE_HOST_APPLE)
   set(CMAKE_FRAMEWORK_PATH "@OSX_SDK@/System/Library/Frameworks")
 endif()
 
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  # Customize pkg-config behavior for finding dependencies
+  # of the xcb QPA platform plugin:
+  # 1. Restrict search paths to the depends.
+  # 2. Make output suitable for static linking.
+  cmake_path(APPEND CMAKE_CURRENT_LIST_DIR "lib" "pkgconfig" OUTPUT_VARIABLE pkg_config_path)
+  set(ENV{PKG_CONFIG_PATH} ${pkg_config_path})
+  set(ENV{PKG_CONFIG_LIBDIR} ${pkg_config_path})
+  unset(pkg_config_path)
+  set(PKG_CONFIG_ARGN --static)
+endif()
+
+
 # Set configuration options for the main build system.
 set(qt_packages @qt_packages@)
 if("${qt_packages}" STREQUAL "")
   set(BUILD_GUI OFF CACHE BOOL "")
 else()
   set(BUILD_GUI ON CACHE BOOL "")
+  set(Qt6_ROOT "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "")
 endif()
 
 set(qrencode_packages @qrencode_packages@)
