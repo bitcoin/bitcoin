@@ -362,11 +362,7 @@ namespace GUIUtil
     template <typename SeparatorType>
     QStringList SplitSkipEmptyParts(const QString& string, const SeparatorType& separator)
     {
-    #if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
         return string.split(separator, Qt::SkipEmptyParts);
-    #else
-        return string.split(separator, QString::SkipEmptyParts);
-    #endif
     }
 
 
