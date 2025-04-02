@@ -369,6 +369,7 @@ namespace BCLog {
     //! category, a reference to the logger object to output to, and a
     //! formatting hook.
     struct Context {
+        static constexpr bool log_context{true};
         Logger& logger;
         LogFlags category;
 
@@ -389,7 +390,9 @@ namespace BCLog {
 
 namespace detail {
 //! Internal helper to get log context object from the first macro argument.
-static inline const Context& GetContext(const Context& ctx LIFETIMEBOUND) { return ctx; }
+template <typename Context>
+requires (Context::log_context)
+static const Context& GetContext(const Context& ctx LIFETIMEBOUND) { return ctx; }
 static inline Context GetContext(LogFlags category) { return Context{LogInstance(), category}; }
 static inline Context GetContext(std::string_view fmt) { return Context{LogInstance()}; }
 
@@ -474,6 +477,11 @@ bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
 //!   const BCLog::Context m_log{LogInstance(), BCLog::TXRECONCILIATION};
 //!   ...
 //!   LogDebug(m_log, "Forget txreconciliation state of peer=%d\n", peer_id);
+//!
+//! Using context objects also provides the flexibility to add extra information
+//! and custom formatting to log messages, or to divert log messages to a local
+//! logger instead of the global logging instance, without needing to change
+//! existing log statements.
 //!
 //! If severity level is Info or higher, uses basic rate limiting to mitigate
 //! disk filling attacks. Users enabling logging at Debug and lower levels are
