@@ -162,16 +162,14 @@ FUZZ_TARGET(p2p_headers_presync, .init = initialize)
     // The steady clock is currently only used for logging, so a constant
     // time-point seems acceptable for now.
     ElapseSteady elapse_steady{};
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
 
     ChainstateManager& chainman = *g_testing_setup->m_node.chainman;
+    CBlockHeader base{chainman.GetParams().GenesisBlock()};
+    SetMockTime(base.nTime);
 
     LOCK(NetEventsInterface::g_msgproc_mutex);
 
     g_testing_setup->ResetAndInitialize();
-
-    CBlockHeader base{chainman.GetParams().GenesisBlock()};
-    SetMockTime(base.nTime);
 
     // The chain is just a single block, so this is equal to 1
     size_t original_index_size{WITH_LOCK(cs_main, return chainman.m_blockman.m_block_index.size())};
