@@ -24,7 +24,7 @@ The configuration file is a plain text file and consists of `option=value` entri
 
 In contrast to the command-line usage:
 - an option must be specified without leading `-`;
-- a value of the given option is mandatory; e.g., `testnet=1` (for chain selection options), `noconnect=1` (for negated options).
+- a value of the given option is mandatory; e.g., `signet=1` (for chain selection options), `noconnect=1` (for negated options).
 
 ### Blank lines
 
