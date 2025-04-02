@@ -29,15 +29,15 @@ from test_framework.util import (
 
 
 class P2PStaller(P2PDataStore):
-    def __init__(self, stall_block):
-        self.stall_block = stall_block
+    def __init__(self, stall_blocks):
+        self.stall_blocks = stall_blocks
         super().__init__()
 
     def on_getdata(self, message):
         for inv in message.inv:
             self.getdata_requests.append(inv.hash)
             if (inv.type & MSG_TYPE_MASK) == MSG_BLOCK:
-                if (inv.hash != self.stall_block):
+                if (inv.hash not in self.stall_blocks):
                     self.send_without_ping(msg_block(self.block_store[inv.hash]))
 
     def on_getheaders(self, message):
@@ -51,7 +51,7 @@ class P2PIBDStallingTest(BitcoinTestFramework):
 
     def run_test(self):
         NUM_BLOCKS = 1025
-        NUM_PEERS = 4
+        NUM_PEERS = 5
         node = self.nodes[0]
         tip = int(node.getbestblockhash(), 16)
         blocks = []
@@ -67,6 +67,7 @@ class P2PIBDStallingTest(BitcoinTestFramework):
             height += 1
             block_dict[blocks[-1].sha256] = blocks[-1]
         stall_block = blocks[0].sha256
+        second_stall = blocks[500].sha256  # another block we don't provide immediately
 
         headers_message = msg_headers()
         headers_message.headers = [CBlockHeader(b) for b in blocks[:NUM_BLOCKS-1]]
@@ -76,12 +77,12 @@ class P2PIBDStallingTest(BitcoinTestFramework):
         self.mocktime = int(time.time()) + 1
         node.setmocktime(self.mocktime)
         for id in range(NUM_PEERS):
-            peers.append(node.add_outbound_p2p_connection(P2PStaller(stall_block), p2p_idx=id, connection_type="outbound-full-relay"))
+            peers.append(node.add_outbound_p2p_connection(P2PStaller([stall_block, second_stall]), p2p_idx=id, connection_type="outbound-full-relay"))
             peers[-1].block_store = block_dict
             peers[-1].send_and_ping(headers_message)
 
-        # Wait until all blocks are received (except for stall_block), so that no other blocks are in flight.
-        self.wait_until(lambda: sum(len(peer['inflight']) for peer in node.getpeerinfo()) == 1)
+        # Wait until all blocks are received (except for the stall blocks), so that no other blocks are in flight.
+        self.wait_until(lambda: sum(len(peer['inflight']) for peer in node.getpeerinfo()) == 2)
 
         self.all_sync_send_with_ping(peers)
         # If there was a peer marked for stalling, it would get disconnected
@@ -133,14 +134,15 @@ class P2PIBDStallingTest(BitcoinTestFramework):
         self.wait_until(lambda: self.is_block_requested(peers, stall_block))
         self.all_sync_send_with_ping(peers)
 
-        self.log.info("Provide the withheld block and check that stalling timeout gets reduced back to 2 seconds")
-        with node.assert_debug_log(expected_msgs=['Decreased stalling timeout to 2 seconds']):
+        self.log.info("Provide the first withheld block and check that stalling timeout gets reduced back to 2 seconds")
+        with node.assert_debug_log(expected_msgs=['Decreased stalling timeout to 2 seconds'], unexpected_msgs=['Stall started']):
             for p in peers:
                 if p.is_connected and (stall_block in p.getdata_requests):
                     p.send_without_ping(msg_block(block_dict[stall_block]))
+            self.all_sync_send_with_ping(peers)
 
-        self.log.info("Check that all outstanding blocks get connected")
-        self.wait_until(lambda: node.getblockcount() == NUM_BLOCKS)
+        self.log.info("Check that all outstanding blocks up to the second stall block get connected")
+        self.wait_until(lambda: node.getblockcount() == 500)
 
 
     def all_sync_send_with_ping(self, peers):
