@@ -71,7 +71,7 @@ fn app() -> AppResult {
 fn deterministic_coverage(build_dir: &Path, test_exe: &Path, filter: &str) -> AppResult {
     let profraw_file = build_dir.join("test_det_cov.profraw");
     let profdata_file = build_dir.join("test_det_cov.profdata");
-    let run_single = |run_id: u8| -> Result<PathBuf, AppError> {
+    let run_single = |run_id: char| -> Result<PathBuf, AppError> {
         println!("Run with id {run_id}");
         let cov_txt_path = build_dir.join(format!("test_det_cov.show.{run_id}.txt"));
         if !Command::new(test_exe)
@@ -104,6 +104,8 @@ fn deterministic_coverage(build_dir: &Path, test_exe: &Path, filter: &str) -> Ap
                 "--show-line-counts-or-regions",
                 "--show-branches=count",
                 "--show-expansions",
+                "--show-instantiation-summary",
+                "-Xdemangler=llvm-cxxfilt",
                 &format!("--instr-profile={}", profdata_file.display()),
             ])
             .arg(test_exe)
@@ -129,10 +131,10 @@ fn deterministic_coverage(build_dir: &Path, test_exe: &Path, filter: &str) -> Ap
         }
         Ok(())
     };
-    let r0 = run_single(0)?;
-    let r1 = run_single(1)?;
+    let r0 = run_single('a')?;
+    let r1 = run_single('b')?;
     check_diff(&r0, &r1)?;
-    println!("The coverage was deterministic across two runs.");
+    println!("✨ The coverage was deterministic across two runs. ✨");
     Ok(())
 }
 
@@ -140,7 +142,7 @@ fn main() -> ExitCode {
     match app() {
         Ok(()) => ExitCode::SUCCESS,
         Err(err) => {
-            eprintln!("{}", err);
+            eprintln!("⚠️\n{}", err);
             ExitCode::FAILURE
         }
     }
