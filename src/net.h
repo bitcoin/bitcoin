@@ -220,6 +220,9 @@ public:
     TransportProtocolType m_transport_type;
     /** BIP324 session id string in hex, if any. */
     std::string m_session_id;
+    // Note: If you add fields to this class, you should also consider updating
+    // the CNode::CopyStats() method, the getpeerinfo RPC in rpc/net.cpp, and
+    // the NodeStats struct in ipc/capnp/node.capnp.
 };
 
 
