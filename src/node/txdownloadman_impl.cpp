@@ -426,8 +426,6 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
                 m_txrequest.ForgetTxHash(tx.GetWitnessHash());
 
                 // DoS prevention: do not allow m_orphanage to grow unbounded (see CVE-2012-3789)
-                // Note that, if the orphanage reaches capacity, it's possible that we immediately evict
-                // the transaction we just added.
                 m_orphanage->LimitOrphans(m_opts.m_rng);
             } else {
                 unique_parents.clear();
