@@ -837,34 +837,34 @@ QString formatBytesps(float val)
 {
     if (val < 10)
         //: "Bytes per second"
-        return QObject::tr("%1 B/s").arg(0.01 * int(val * 100));
+        return QObject::tr("%1 B/s").arg(0.01 * int(val * 100 + 0.5));
     if (val < 100)
         //: "Bytes per second"
-        return QObject::tr("%1 B/s").arg(0.1 * int(val * 10));
+        return QObject::tr("%1 B/s").arg(0.1 * int(val * 10 + 0.5));
     if (val < 1'000)
         //: "Bytes per second"
-        return QObject::tr("%1 B/s").arg((int)val);
+        return QObject::tr("%1 B/s").arg(int(val + 0.5));
     if (val < 10'000)
         //: "Kilobytes per second"
-        return QObject::tr("%1 kB/s").arg(0.01 * ((int)val / 10));
+        return QObject::tr("%1 kB/s").arg(0.01 * int(val / 10 + 0.5));
     if (val < 100'000)
         //: "Kilobytes per second"
-        return QObject::tr("%1 kB/s").arg(0.1 * ((int)val / 100));
+        return QObject::tr("%1 kB/s").arg(0.1 * int(val / 100 + 0.5));
     if (val < 1'000'000)
         //: "Kilobytes per second"
-        return QObject::tr("%1 kB/s").arg((int)val / 1'000);
+        return QObject::tr("%1 kB/s").arg(int(val / 1'000 + 0.5));
     if (val < 10'000'000)
         //: "Megabytes per second"
-        return QObject::tr("%1 MB/s").arg(0.01 * ((int)val / 10'000));
+        return QObject::tr("%1 MB/s").arg(0.01 * int(val / 10'000 + 0.5));
     if (val < 100'000'000)
         //: "Megabytes per second"
-        return QObject::tr("%1 MB/s").arg(0.1 * ((int)val / 100'000));
+        return QObject::tr("%1 MB/s").arg(0.1 * int(val / 100'000 + 0.5));
     if (val < 10'000'000'000)
         //: "Megabytes per second"
-        return QObject::tr("%1 MB/s").arg((long)val / 1'000'000);
+        return QObject::tr("%1 MB/s").arg(long(val / 1'000'000 + 0.5));
 
     //: "Gigabytes per second"
-    return QObject::tr("%1 GB/s").arg((long)val / 1'000'000'000);
+    return QObject::tr("%1 GB/s").arg(long(val / 1'000'000'000 + 0.5));
 }
 
 qreal calculateIdealFontSize(int width, const QString& text, QFont font, qreal minPointSize, qreal font_size) {
