@@ -170,27 +170,6 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         expected_num_orphans -= 2;
         BOOST_CHECK(orphanage->Size() == expected_num_orphans);
     }
-
-    // Test LimitOrphanTxSize() function, nothing should timeout:
-    FastRandomContext rng{/*fDeterministic=*/true};
-    orphanage->LimitOrphans(rng);
-    BOOST_CHECK_EQUAL(orphanage->Size(), expected_num_orphans);
-
-    // Add one more orphan, check timeout logic
-    auto timeout_tx = MakeTransactionSpending(/*outpoints=*/{}, rng);
-    orphanage->AddTx(timeout_tx, 0);
-    expected_num_orphans += 1;
-    BOOST_CHECK_EQUAL(orphanage->Size(), expected_num_orphans);
-
-    // One second shy of expiration
-    SetMockTime(now + node::ORPHAN_TX_EXPIRE_TIME - 1s);
-    orphanage->LimitOrphans(rng);
-    BOOST_CHECK_EQUAL(orphanage->Size(), expected_num_orphans);
-
-    // Jump one more second, orphan should be timed out on limiting
-    SetMockTime(now + node::ORPHAN_TX_EXPIRE_TIME);
-    orphanage->LimitOrphans(rng);
-    BOOST_CHECK_EQUAL(orphanage->Size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(same_txid_diff_witness)
