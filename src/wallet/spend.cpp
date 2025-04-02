@@ -1064,6 +1064,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         const CCoinControl& coin_control,
         bool sign) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
+    const auto& log{wallet.Log()};
     AssertLockHeld(wallet.cs_wallet);
 
     FastRandomContext rng_fast;
@@ -1433,8 +1434,8 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // accidental reuse.
     reservedest.KeepDestination();
 
-    wallet.WalletLogPrintf("Coin Selection: Algorithm:%s, Waste Metric Score:%d\n", GetAlgorithmName(result.GetAlgo()), result.GetWaste());
-    wallet.WalletLogPrintf("Fee Calculation: Fee:%d Bytes:%u, Source: %s\n",
+    LogInfo(log, "Coin Selection: Algorithm:%s, Waste Metric Score:%d\n", GetAlgorithmName(result.GetAlgo()), result.GetWaste());
+    LogInfo(log, "Fee Calculation: Fee:%d Bytes:%u, Source: %s\n",
                            current_fee, nBytes, StringForFeeReason(min_fee_rate.fee_reason));
     return CreatedTransactionResult(tx, current_fee, change_pos, min_fee_rate.fee_reason);
 }
@@ -1446,6 +1447,7 @@ util::Result<CreatedTransactionResult> CreateTransaction(
         const CCoinControl& coin_control,
         bool sign)
 {
+    const auto& log{wallet.Log()};
     if (vecSend.empty()) {
         return util::Error{_("Transaction must have at least one recipient")};
     }
@@ -1485,7 +1487,7 @@ util::Result<CreatedTransactionResult> CreateTransaction(
                txr_grouped.has_value() ? txr_grouped->fee : 0,
                txr_grouped.has_value() && txr_grouped->change_pos.has_value() ? int32_t(*txr_grouped->change_pos) : -1);
         if (txr_grouped) {
-            wallet.WalletLogPrintf("Fee non-grouped = %lld, grouped = %lld, using %s\n",
+            LogInfo(log, "Fee non-grouped = %lld, grouped = %lld, using %s\n",
                 txr_ungrouped.fee, txr_grouped->fee, use_aps ? "grouped" : "non-grouped");
             if (use_aps) return txr_grouped;
         }
