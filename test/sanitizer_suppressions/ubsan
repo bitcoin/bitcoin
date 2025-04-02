@@ -17,6 +17,7 @@ unsigned-integer-overflow:test/fuzz/crypto_diff_fuzz_chacha20.cpp
 implicit-integer-sign-change:*/include/boost/
 implicit-integer-sign-change:*/include/c++/
 implicit-integer-sign-change:*/new_allocator.h
+implicit-integer-sign-change:*/qarraydata.h
 implicit-integer-sign-change:crc32c/
 implicit-integer-sign-change:minisketch/
 implicit-integer-sign-change:secp256k1/
