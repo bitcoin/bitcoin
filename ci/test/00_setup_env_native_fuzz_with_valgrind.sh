@@ -8,7 +8,7 @@ export LC_ALL=C.UTF-8
 
 export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:24.04"
 export CONTAINER_NAME=ci_native_fuzz_valgrind
-export PACKAGES="clang-16 llvm-16 libclang-rt-16-dev libevent-dev libboost-dev libsqlite3-dev valgrind"
+export PACKAGES="clang-16 llvm-16 libclang-rt-16-dev libevent-dev libboost-dev libsqlite3-dev valgrind libcapnp-dev capnproto"
 export NO_DEPENDS=1
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
@@ -16,6 +16,7 @@ export RUN_FUZZ_TESTS=true
 export FUZZ_TESTS_CONFIG="--valgrind"
 export GOAL="all"
 export BITCOIN_CONFIG="\
+ -DENABLE_IPC=ON \
  -DBUILD_FOR_FUZZING=ON \
  -DSANITIZERS=fuzzer \
  -DCMAKE_C_COMPILER=clang-16 \
