@@ -31,6 +31,9 @@ public:
         PeerManager::Options peerman_opts;
         node::ApplyArgsManOptions(*m_node.args, peerman_opts);
         peerman_opts.max_headers_result = FUZZ_MAX_HEADERS_RESULTS;
+        // No txs are relayed. Disable irrelevant and possibly
+        // non-deterministic code paths.
+        peerman_opts.ignore_incoming_txs = true;
         m_node.peerman = PeerManager::make(*m_node.connman, *m_node.addrman,
                                            m_node.banman.get(), *m_node.chainman,
                                            *m_node.mempool, *m_node.warnings, peerman_opts);
