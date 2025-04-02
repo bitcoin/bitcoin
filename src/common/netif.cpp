@@ -97,6 +97,11 @@ std::optional<CNetAddr> QueryDefaultGatewayImpl(sa_family_t family)
         rtmsg* r = (rtmsg*)NLMSG_DATA(hdr);
         int remaining_len = RTM_PAYLOAD(hdr);
 
+        // Only consider default routes (destination prefix length of 0).
+        if (r->rtm_dst_len != 0) {
+            continue;
+        }
+
         // Iterate over the attributes.
         rtattr *rta_gateway = nullptr;
         int scope_id = 0;
