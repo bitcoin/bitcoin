@@ -80,10 +80,8 @@ class P2PIBDStallingTest(BitcoinTestFramework):
             peers[-1].block_store = block_dict
             peers[-1].send_and_ping(headers_message)
 
-        # Need to wait until 1023 blocks are received - the magic total bytes number is a workaround in lack of an rpc
-        # returning the number of downloaded (but not connected) blocks.
-        bytes_recv = 172761 if not self.options.v2transport else 169692
-        self.wait_until(lambda: self.total_bytes_recv_for_blocks() == bytes_recv)
+        # Wait until all blocks are received (except for stall_block), so that no other blocks are in flight.
+        self.wait_until(lambda: sum(len(peer['inflight']) for peer in node.getpeerinfo()) == 1)
 
         self.all_sync_send_with_ping(peers)
         # If there was a peer marked for stalling, it would get disconnected
@@ -144,12 +142,6 @@ class P2PIBDStallingTest(BitcoinTestFramework):
         self.log.info("Check that all outstanding blocks get connected")
         self.wait_until(lambda: node.getblockcount() == NUM_BLOCKS)
 
-    def total_bytes_recv_for_blocks(self):
-        total = 0
-        for info in self.nodes[0].getpeerinfo():
-            if ("block" in info["bytesrecv_per_msg"].keys()):
-                total += info["bytesrecv_per_msg"]["block"]
-        return total
 
     def all_sync_send_with_ping(self, peers):
         for p in peers:
