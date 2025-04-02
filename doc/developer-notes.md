@@ -380,10 +380,14 @@ For `gdb` create or append to [`.gdbinit` file](https://sourceware.org/gdb/curre
 set substitute-path ./src /path/to/project/root/src
 ```
 
-For `lldb` create or append to [`.lldbinit` file](https://lldb.llvm.org/man/lldb.html#configuration-files):
+For `lldb` create or append to [`~/.lldbinit` file](https://lldb.llvm.org/man/lldb.html#configuration-files):
 ```
-settings set target.source-map ./src /path/to/project/root/src
+settings set target.source-map /path/to/bitcoin/build/src /path/to/bitcoin/src
 ```
+
+Note that both target (`build/` or whatever directory you created with `cmake -B`)
+and replacement paths must be absolute. A `.lldbinit` file in the root of the
+working directory will be ignored without specific settings to include it.
 
 2. Add a symlink to the `./src` directory:
 ```
