@@ -17,7 +17,13 @@
 #include <string_view>
 #include <thread>
 
-void UninterruptibleSleep(const std::chrono::microseconds& n) { std::this_thread::sleep_for(n); }
+void UninterruptibleSleep(const std::chrono::microseconds& n)
+{
+    const auto end{SteadyClock::now() + n};
+    do {
+        std::this_thread::sleep_until(end);
+    } while (SteadyClock::now() < end);
+}
 
 static std::atomic<std::chrono::seconds> g_mock_time{}; //!< For testing
 std::atomic<bool> g_used_system_time{false};
