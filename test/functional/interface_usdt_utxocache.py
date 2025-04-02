@@ -317,7 +317,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
         self.log.info(
             f"check that we successfully traced {EXPECTED_HANDLE_ADD_SUCCESS} adds and {EXPECTED_HANDLE_SPENT_SUCCESS} spent")
 
-        # Check that all expected tracepoints are recieved, but not the order they were recieved in.
+        # Check that all expected tracepoints are received, but not the order they were received in.
         # Tracepoint ordering is not strictly guaranteed, so this comparison avoids intermittent failures in the test.
         def cache_event_to_key(event):
             return (
