@@ -1049,6 +1049,9 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
         // in the next loop iteration.
         m_client->m_send_ready = true;
     }
+
+    // Signal to the I/O loop that we are ready to handle the next request.
+    m_client->m_req_busy = false;
 }
 
 util::Result<void> HTTPServer::BindAndStartListening(const CService& to)
@@ -1268,10 +1271,13 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness)
                     client->m_recv_buffer.end(),
                     buf,
                     buf + nrecv);
-                // Process as much received data as we can
-                MaybeDispatchRequestsFromClient(client);
             }
         }
+        // Process as much received data as we can.
+        // This executes for every client whether or not reading or writing
+        // took place because it also (might) parse a request we have already
+        // received and pass it to a worker thread.
+        MaybeDispatchRequestsFromClient(client);
     }
 }
 
@@ -1374,8 +1380,20 @@ void HTTPServer::MaybeDispatchRequestsFromClient(std::shared_ptr<HTTPClient> cli
             client->m_origin,
             client->m_id);
 
-        // handle request
-        m_request_dispatcher(std::move(req));
+        // add request to client queue
+        client->m_req_queue.push_back(std::move(req));
+    }
+
+    // If we are already handling a request from
+    // this client, do nothing. We'll check again on the next I/O
+    // loop iteration.
+    if (client->m_req_busy) return;
+
+    // Otherwise, if there is a pending request in the queue, handle it.
+    if (!client->m_req_queue.empty()) {
+        client->m_req_busy = true;
+        m_request_dispatcher(std::move(client->m_req_queue.front()));
+        client->m_req_queue.pop_front();
     }
 }
 
