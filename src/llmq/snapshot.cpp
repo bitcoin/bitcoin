@@ -392,11 +392,12 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
 uint256 GetLastBaseBlockHash(Span<const CBlockIndex*> baseBlockIndexes, const CBlockIndex* blockIndex,
                              bool use_legacy_construction)
 {
-    uint256 hash;
     if (!use_legacy_construction) {
         std::sort(baseBlockIndexes.begin(), baseBlockIndexes.end(),
                   [](const CBlockIndex* a, const CBlockIndex* b) { return a->nHeight < b->nHeight; });
     }
+    // default to genesis block
+    uint256 hash{Params().GenesisBlock().GetHash()};
     for (const auto baseBlock : baseBlockIndexes) {
         if (baseBlock->nHeight >= blockIndex->nHeight)
             break;
