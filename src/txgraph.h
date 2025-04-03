@@ -144,11 +144,11 @@ public:
     virtual std::vector<Ref*> GetDescendants(const Ref& arg, bool main_only = false) noexcept = 0;
     /** Like GetAncestors, but return the Refs for all transactions in the union of the provided
      *  arguments' ancestors (each transaction is only reported once). Refs that do not exist in
-     *  the queried graph are ignored. */
+     *  the queried graph are ignored. Null refs are not allowed. */
     virtual std::vector<Ref*> GetAncestorsUnion(std::span<const Ref* const> args, bool main_only = false) noexcept = 0;
     /** Like GetDescendants, but return the Refs for all transactions in the union of the provided
      *  arguments' descendants (each transaction is only reported once). Refs that do not exist in
-     *  the queried graph are ignored. */
+     *  the queried graph are ignored. Null refs are not allowed. */
     virtual std::vector<Ref*> GetDescendantsUnion(std::span<const Ref* const> args, bool main_only = false) noexcept = 0;
     /** Get the total number of transactions in the graph. If main_only is false and a staging
      *  graph exists, it is queried; otherwise the main graph is queried. This is available even
@@ -159,8 +159,8 @@ public:
     virtual std::strong_ordering CompareMainOrder(const Ref& a, const Ref& b) noexcept = 0;
     /** Count the number of distinct clusters that the specified transactions belong to. If
      *  main_only is false and a staging graph exists, staging clusters are counted. Otherwise,
-     *  main clusters are counted. Refs that do not exist in the queried graph are ignored. The
-     *  queried graph must not be oversized. */
+     *  main clusters are counted. Refs that do not exist in the queried graph are ignored. Refs
+     *  can not be null. The queried graph must not be oversized. */
     virtual GraphIndex CountDistinctClusters(std::span<const Ref* const>, bool main_only = false) noexcept = 0;
 
     /** Perform an internal consistency check on this object. */

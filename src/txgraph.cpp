@@ -411,8 +411,8 @@ public:
      *  values for remaining Entry objects, so this only does something when no to-be-applied
      *  operations or staged removals referring to GraphIndexes remain). */
     void Compact() noexcept;
-    /** If cluster is not in staging, copy it there, and return a pointer to it. This has no
-    *   effect if only a main graph exists, but if staging exists this modifies the locators of its
+    /** If cluster is not in staging, copy it there, and return a pointer to it.
+    *   Staging must exist, and this modifies the locators of its
     *   transactions from inherited (P,M) to explicit (P,P). */
     Cluster* PullIn(Cluster* cluster) noexcept;
     /** Apply all removals queued up in m_to_remove to the relevant Clusters (which get a
@@ -928,7 +928,7 @@ Cluster* TxGraphImpl::FindCluster(GraphIndex idx, int level) const noexcept
 Cluster* TxGraphImpl::PullIn(Cluster* cluster) noexcept
 {
     int to_level = GetTopLevel();
-    if (to_level == 0) return cluster;
+    Assume(to_level == 1);
     int level = cluster->m_level;
     Assume(level <= to_level);
     // Copy the Cluster from main to staging, if it's not already there.
@@ -1008,7 +1008,7 @@ void TxGraphImpl::Compact() noexcept
     // to rewrite them. It is easier to delay the compaction until they have been applied.
     if (!m_main_clusterset.m_deps_to_add.empty()) return;
     if (!m_main_clusterset.m_to_remove.empty()) return;
-    if (!m_main_clusterset.m_removed.empty()) return;
+    Assume(m_main_clusterset.m_removed.empty()); // non-staging m_removed is always empty
     if (m_staging_clusterset.has_value()) {
         if (!m_staging_clusterset->m_deps_to_add.empty()) return;
         if (!m_staging_clusterset->m_to_remove.empty()) return;
@@ -1595,6 +1595,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetAncestorsUnion(std::span<const Ref* c
     std::vector<std::pair<Cluster*, DepGraphIndex>> matches;
     matches.reserve(args.size());
     for (auto arg : args) {
+        Assume(arg);
         // Skip empty Refs.
         if (GetRefGraph(*arg) == nullptr) continue;
         Assume(GetRefGraph(*arg) == this);
@@ -1627,6 +1628,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendantsUnion(std::span<const Ref*
     std::vector<std::pair<Cluster*, DepGraphIndex>> matches;
     matches.reserve(args.size());
     for (auto arg : args) {
+        Assume(arg);
         // Skip empty Refs.
         if (GetRefGraph(*arg) == nullptr) continue;
         Assume(GetRefGraph(*arg) == this);
@@ -1880,7 +1882,7 @@ TxGraph::GraphIndex TxGraphImpl::CountDistinctClusters(std::span<const Ref* cons
     std::vector<Cluster*> clusters;
     clusters.reserve(refs.size());
     for (const Ref* ref : refs) {
-        if (ref == nullptr) continue;
+        Assume(ref);
         if (GetRefGraph(*ref) == nullptr) continue;
         Assume(GetRefGraph(*ref) == this);
         auto cluster = FindCluster(GetRefIndex(*ref), level);
