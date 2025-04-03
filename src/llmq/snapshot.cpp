@@ -399,7 +399,7 @@ uint256 GetLastBaseBlockHash(Span<const CBlockIndex*> baseBlockIndexes, const CB
     // default to genesis block
     uint256 hash{Params().GenesisBlock().GetHash()};
     for (const auto baseBlock : baseBlockIndexes) {
-        if (baseBlock->nHeight >= blockIndex->nHeight)
+        if (baseBlock->nHeight > blockIndex->nHeight)
             break;
         hash = baseBlock->GetBlockHash();
     }
