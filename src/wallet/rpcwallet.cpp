@@ -540,12 +540,12 @@ static RPCHelpMan listaddressbalances()
 
 static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool by_label) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
-    std::set<CTxDestination> address_set;
+    std::vector<CTxDestination> address_vector;
 
     if (by_label) {
         // Get the set of addresses assigned to label
         std::string label = LabelFromValue(params[0]);
-        address_set = wallet.GetLabelAddresses(label);
+        address_vector = wallet.ListAddrBookAddresses(CWallet::AddrBookFilter{label});
     } else {
         // Get the address
         CTxDestination dest = DecodeDestination(params[0].get_str());
@@ -556,7 +556,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
         if (!wallet.IsMine(script_pub_key)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Address not found in wallet");
         }
-        address_set.insert(dest);
+        address_vector.emplace_back(dest);
     }
 
     // Minimum confirmations
@@ -590,7 +590,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
 
         for (const CTxOut& txout : wtx.tx->vout) {
             CTxDestination address;
-            if (ExtractDestination(txout.scriptPubKey, address) && wallet.IsMine(address) && address_set.count(address)) {
+            if (ExtractDestination(txout.scriptPubKey, address) && wallet.IsMine(address) && std::find(address_vector.begin(), address_vector.end(), address) != address_vector.end()) {
                 amount += txout.nValue;
             }
         }
@@ -971,14 +971,12 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
         filter |= ISMINE_WATCH_ONLY;
     }
 
-    bool has_filtered_address = false;
-    CTxDestination filtered_address = CNoDestination();
+    std::optional<CTxDestination> filtered_address{std::nullopt};
     if (!by_label && !params[4].isNull() && !params[4].get_str().empty()) {
         if (!IsValidDestinationString(params[4].get_str())) {
             throw JSONRPCError(RPC_WALLET_ERROR, "address_filter parameter was invalid");
         }
         filtered_address = DecodeDestination(params[4].get_str());
-        has_filtered_address = true;
     }
 
     // Excluding coinbase outputs is deprecated
@@ -1005,18 +1003,17 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
             continue;
         }
 
-        for (const CTxOut& txout : wtx.tx->vout)
-        {
+        for (const CTxOut& txout : wtx.tx->vout) {
             CTxDestination address;
             if (!ExtractDestination(txout.scriptPubKey, address))
                 continue;
 
-            if (has_filtered_address && !(filtered_address == address)) {
+            if (filtered_address && !(filtered_address == address)) {
                 continue;
             }
 
             isminefilter mine = wallet.IsMine(address);
-            if(!(mine & filter))
+            if (!(mine & filter))
                 continue;
 
             tallyitem& item = mapTally[address];
@@ -1032,74 +1029,58 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
     UniValue ret(UniValue::VARR);
     std::map<std::string, tallyitem> label_tally;
 
-    // Create m_address_book iterator
-    // If we aren't filtering, go from begin() to end()
-    auto start = wallet.m_address_book.begin();
-    auto end = wallet.m_address_book.end();
-    // If we are filtering, find() the applicable entry
-    if (has_filtered_address) {
-        start = wallet.m_address_book.find(filtered_address);
-        if (start != end) {
-            end = std::next(start);
-        }
-    }
-
-    for (auto item_it = start; item_it != end; ++item_it)
-    {
-        if (item_it->second.IsChange()) continue;
-        const CTxDestination& address = item_it->first;
-        const std::string& label = item_it->second.GetLabel();
+    const auto& func = [&](const CTxDestination& address, const std::string& label, const std::string& purpose, bool is_change) {
+        if (is_change) return; // no change addresses
         auto it = mapTally.find(address);
         if (it == mapTally.end() && !fIncludeEmpty)
-            continue;
+            return;
 
         isminefilter mine = wallet.IsMine(address);
-        if(!(mine & filter))
-            continue;
+        if (!(mine & filter))
+            return;
 
         CAmount nAmount = 0;
         int nConf = std::numeric_limits<int>::max();
         bool fIsWatchonly = false;
-        if (it != mapTally.end())
-        {
+        if (it != mapTally.end()) {
             nAmount = (*it).second.nAmount;
             nConf = (*it).second.nConf;
             fIsWatchonly = (*it).second.fIsWatchonly;
         }
 
-        if (by_label)
-        {
+        if (by_label) {
             tallyitem& _item = label_tally[label];
             _item.nAmount += nAmount;
             _item.nConf = std::min(_item.nConf, nConf);
             _item.fIsWatchonly = fIsWatchonly;
-        }
-        else
-        {
+        } else {
             UniValue obj(UniValue::VOBJ);
-            if(fIsWatchonly)
-                obj.pushKV("involvesWatchonly", true);
+            if(fIsWatchonly) obj.pushKV("involvesWatchonly", true);
             obj.pushKV("address",       EncodeDestination(address));
             obj.pushKV("amount",        ValueFromAmount(nAmount));
             obj.pushKV("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf));
             obj.pushKV("label", label);
             UniValue transactions(UniValue::VARR);
-            if (it != mapTally.end())
-            {
-                for (const uint256& _item : (*it).second.txids)
-                {
+            if (it != mapTally.end()) {
+                for (const uint256& _item : (*it).second.txids) {
                     transactions.push_back(_item.GetHex());
                 }
             }
             obj.pushKV("txids", transactions);
             ret.push_back(obj);
         }
+    };
+
+    if (filtered_address) {
+        const auto& entry = wallet.FindAddressBookEntry(*filtered_address, /*allow_change=*/false);
+        if (entry) func(*filtered_address, entry->GetLabel(), entry->purpose, /*is_change=*/false);
+    } else {
+        // No filtered addr, walk-through the addressbook entry
+        wallet.ForEachAddrBookEntry(func);
     }
 
-    if (by_label)
-    {
-        for (const auto& entry : label_tally)
-        {
+    if (by_label) {
+        for (const auto& entry : label_tally) {
             CAmount nAmount = entry.second.nAmount;
             int nConf = entry.second.nConf;
             UniValue obj(UniValue::VOBJ);
@@ -3849,17 +3830,6 @@ static UniValue DescribeWalletAddress(const CWallet& wallet, const CTxDestinatio
     return ret;
 }
 
-/** Convert CAddressBookData to JSON record.  */
-static UniValue AddressBookDataToJSON(const CAddressBookData& data, const bool verbose)
-{
-    UniValue ret(UniValue::VOBJ);
-    if (verbose) {
-        ret.pushKV("name", data.GetLabel());
-    }
-    ret.pushKV("purpose", data.purpose);
-    return ret;
-}
-
 RPCHelpMan getaddressinfo()
 {
     return RPCHelpMan{"getaddressinfo",
@@ -4030,10 +4000,10 @@ static RPCHelpMan getaddressesbylabel()
     // Find all addresses that have the given label
     UniValue ret(UniValue::VOBJ);
     std::set<std::string> addresses;
-    for (const std::pair<const CTxDestination, CAddressBookData>& item : pwallet->m_address_book) {
-        if (item.second.IsChange()) continue;
-        if (item.second.GetLabel() == label) {
-            std::string address = EncodeDestination(item.first);
+    pwallet->ForEachAddrBookEntry([&](const CTxDestination& _dest, const std::string& _label, const std::string& _purpose, bool _is_change) {
+        if (_is_change) return;
+        if (_label == label) {
+            std::string address = EncodeDestination(_dest);
             // CWallet::m_address_book is not expected to contain duplicate
             // address strings, but build a separate set as a precaution just in
             // case it does.
@@ -4043,9 +4013,11 @@ static RPCHelpMan getaddressesbylabel()
             // and since duplicate addresses are unexpected (checked with
             // std::set in O(log(N))), UniValue::__pushKV is used instead,
             // which currently is O(1).
-            ret.__pushKV(address, AddressBookDataToJSON(item.second, false));
+            UniValue value(UniValue::VOBJ);
+            value.pushKV("purpose", _purpose);
+            ret.__pushKV(address, value);
         }
-    }
+    });
 
     if (ret.empty()) {
         throw JSONRPCError(RPC_WALLET_INVALID_LABEL_NAME, std::string("No addresses with label " + label));
@@ -4092,13 +4064,7 @@ static RPCHelpMan listlabels()
     }
 
     // Add to a set to sort by label name, then insert into Univalue array
-    std::set<std::string> label_set;
-    for (const std::pair<const CTxDestination, CAddressBookData>& entry : pwallet->m_address_book) {
-        if (entry.second.IsChange()) continue;
-        if (purpose.empty() || entry.second.purpose == purpose) {
-            label_set.insert(entry.second.GetLabel());
-        }
-    }
+    std::set<std::string> label_set = pwallet->ListAddrBookLabels(purpose);
 
     UniValue ret(UniValue::VARR);
     for (const std::string& name : label_set) {

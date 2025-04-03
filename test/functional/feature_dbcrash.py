@@ -62,8 +62,8 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         self.node2_args = ["-dbcrashratio=24", "-dbcache=16"] + self.base_args
 
         # Node3 is a normal node with default args, will mine full blocks
-        # and non-standard txs (e.g. txs with "dust" outputs)
-        self.node3_args = ["-acceptnonstdtxn"]
+        # and txs with "dust" outputs
+        self.node3_args = ["-dustrelayfee=0"]
         self.extra_args = [self.node0_args, self.node1_args, self.node2_args, self.node3_args]
 
     def skip_test_if_missing_module(self):
@@ -217,7 +217,9 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
 
         # Start by creating a lot of utxos on node3
         initial_height = self.nodes[3].getblockcount()
-        utxo_list = create_confirmed_utxos(self, self.nodes[3].getnetworkinfo()['relayfee'], self.nodes[3], 5000, sync_fun=self.no_op)
+        utxo_list = []
+        for _ in range(5):
+            utxo_list.extend(create_confirmed_utxos(self, self.nodes[3].getnetworkinfo()['relayfee'], self.nodes[3], 1000, sync_fun=self.no_op))
         self.log.info(f"Prepped {len(utxo_list)} utxo entries")
 
         # Sync these blocks with the other nodes
