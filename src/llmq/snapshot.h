@@ -210,8 +210,10 @@ public:
 bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
                              const ChainstateManager& chainman, const CQuorumManager& qman,
                              const CQuorumBlockProcessor& qblockman, const CGetQuorumRotationInfo& request,
-                             CQuorumRotationInfo& response, std::string& errorRet) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-uint256 GetLastBaseBlockHash(Span<const CBlockIndex*> baseBlockIndexes, const CBlockIndex* blockIndex);
+                             bool use_legacy_construction, CQuorumRotationInfo& response, std::string& errorRet)
+    EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+uint256 GetLastBaseBlockHash(Span<const CBlockIndex*> baseBlockIndexes, const CBlockIndex* blockIndex,
+                             bool use_legacy_construction);
 
 class CQuorumSnapshotManager
 {

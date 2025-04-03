@@ -100,7 +100,7 @@ logger = logging.getLogger("TestFramework.p2p")
 MIN_P2P_VERSION_SUPPORTED = 60001
 # The P2P version that this test framework implements and sends in its `version` message
 # Version 70235 increased max header count for HEADERS2 message from 2000 to 8000
-P2P_VERSION = 70235
+P2P_VERSION = 70236
 # The services that this test framework offers in its `version` message
 P2P_SERVICES = NODE_NETWORK | NODE_HEADERS_COMPRESSED
 # The P2P user agent string that this test framework sends in its `version` message
