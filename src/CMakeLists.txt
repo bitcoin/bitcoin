@@ -22,6 +22,8 @@ endif()  # WITH_SYSTEM_LEVELDB
 
 include(../cmake/minisketch.cmake)
 add_subdirectory(univalue)
+
+if(NOT WITH_SYSTEM_LIBSECP256K1)
 #=============================
 # secp256k1 subtree
 #=============================
@@ -70,6 +72,7 @@ set_target_properties(secp256k1 PROPERTIES
   EXCLUDE_FROM_ALL TRUE
 )
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+endif()  # WITH_SYSTEM_LIBSECP256K1
 
 # Set top-level target output locations.
 if(NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
