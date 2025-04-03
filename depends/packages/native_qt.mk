@@ -152,5 +152,5 @@ endef
 
 define $(package)_postprocess_cmds
   rm -rf doc/ && \
-  mv -t .. translations/
+  mv translations/ ..
 endef
