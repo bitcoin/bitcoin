@@ -5,6 +5,7 @@
 #ifndef BITCOIN_HTTPSERVER_H
 #define BITCOIN_HTTPSERVER_H
 
+#include <deque>
 #include <functional>
 #include <map>
 #include <optional>
@@ -303,6 +304,15 @@ public:
     // and attempt to read HTTP requests from here.
     std::vector<std::byte> m_recv_buffer{};
 
+    // Requests from a client must be processed in the order in which
+    // they were received, blocking on a per-client basis. We won't
+    // process the next request in the queue if we are currently busy
+    // handling a previous request.
+    std::deque<std::unique_ptr<HTTPRequest>> m_req_queue;
+    // Set to true by the main thread when a request is popped off
+    // and passed to a worker, reset to false by the worker thread.
+    std::atomic_bool m_req_busy{false};
+
     // Response data destined for this client.
     // Written to directly by http worker threads, read and erased by Sockman I/O
     Mutex m_send_mutex;
@@ -412,6 +422,15 @@ public:
      * @param[in] errmsg Message describing the error.
      */
     virtual void EventGotPermanentReadError(NodeId node_id, const std::string& errmsg) override;
+
+    /**
+     * SockMan has completed the current send+recv iteration for a given connection.
+     * It will do another send+recv for this connection after processing all other connections.
+     * Can be used to execute periodic tasks for a given connection.
+     * The implementation in SockMan does nothing.
+     * @param[in] node_id Connection for which send+recv has been done.
+     */
+    virtual void EventIOLoopCompletedForOne(NodeId node_id) override;
 
     /**
      * SockMan has completed send+recv for all nodes.
