@@ -655,6 +655,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
 
     CProRegTx ptx;
     ptx.nType = mnType;
+    ptx.nVersion = CProRegTx::GetMaxVersion(/*is_basic_scheme_active=*/!use_legacy);
 
     if (action == ProTxRegisterAction::Fund) {
         CTxDestination collateralDest = DecodeDestination(request.params[paramIdx].get_str());
@@ -689,7 +690,6 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
 
     ptx.keyIDOwner = ParsePubKeyIDFromAddress(request.params[paramIdx + 1].get_str(), "owner address");
     ptx.pubKeyOperator.Set(ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address", use_legacy), use_legacy);
-    ptx.nVersion = CProRegTx::GetMaxVersion(/*is_basic_scheme_active=*/!use_legacy);
     CHECK_NONFATAL(ptx.pubKeyOperator.IsLegacy() == (ptx.nVersion == ProTxVersion::LegacyBLS));
 
     CKeyID keyIDVoting = ptx.keyIDOwner;
@@ -963,8 +963,18 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
     EnsureWalletIsUnlocked(*wallet);
 
     CProUpServTx ptx;
-    ptx.nType = mnType;
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
+    auto dmn = dmnman.GetListAtChainTip().GetMN(ptx.proTxHash);
+    if (!dmn) {
+        throw std::runtime_error(strprintf("masternode with proTxHash %s not found", ptx.proTxHash.ToString()));
+    }
+
+    ptx.nType = mnType;
+    if (dmn->nType != mnType) {
+        throw std::runtime_error(strprintf("masternode with proTxHash %s is not a %s", ptx.proTxHash.ToString(), GetMnType(mnType).description));
+    }
+
+    ptx.nVersion = dmn->pdmnState->nVersion;
 
     if (auto addr = Lookup(request.params[1].get_str().c_str(), Params().GetDefaultPort(), false); addr.has_value()) {
         ptx.addr = addr.value();
@@ -995,15 +1005,6 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
 
         paramIdx += 3;
     }
-
-    auto dmn = dmnman.GetListAtChainTip().GetMN(ptx.proTxHash);
-    if (!dmn) {
-        throw std::runtime_error(strprintf("masternode with proTxHash %s not found", ptx.proTxHash.ToString()));
-    }
-    if (dmn->nType != mnType) {
-        throw std::runtime_error(strprintf("masternode with proTxHash %s is not a %s", ptx.proTxHash.ToString(), GetMnType(mnType).description));
-    }
-    ptx.nVersion = dmn->pdmnState->nVersion;
 
     if (keyOperator.GetPublicKey() != dmn->pdmnState->pubKeyOperator.Get()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("the operator key does not belong to the registered public key"));
@@ -1094,12 +1095,14 @@ static RPCHelpMan protx_update_registrar_wrapper(const bool specific_legacy_bls_
     EnsureWalletIsUnlocked(*wallet);
 
     CProUpRegTx ptx;
-    ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
+    ptx.nVersion = CProUpRegTx::GetMaxVersion(/*is_basic_scheme_active=*/!use_legacy);
 
+    ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
     auto dmn = dmnman.GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
     }
+
     ptx.keyIDVoting = dmn->pdmnState->keyIDVoting;
     ptx.scriptPayout = dmn->pdmnState->scriptPayout;
 
@@ -1111,7 +1114,6 @@ static RPCHelpMan protx_update_registrar_wrapper(const bool specific_legacy_bls_
         ptx.pubKeyOperator = dmn->pdmnState->pubKeyOperator;
     }
 
-    ptx.nVersion = CProUpRegTx::GetMaxVersion(/*is_basic_scheme_active=*/!use_legacy);
     CHECK_NONFATAL(ptx.pubKeyOperator.IsLegacy() == (ptx.nVersion == ProTxVersion::LegacyBLS));
 
     if (request.params[2].get_str() != "") {
@@ -1205,7 +1207,12 @@ static RPCHelpMan protx_revoke()
     const bool isV19active{DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
     CProUpRevTx ptx;
     ptx.nVersion = CProUpRevTx::GetMaxVersion(/*is_basic_scheme_active=*/isV19active);
+
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
+    auto dmn = dmnman.GetListAtChainTip().GetMN(ptx.proTxHash);
+    if (!dmn) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
+    }
 
     CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[1].get_str(), "operatorKey");
 
@@ -1215,11 +1222,6 @@ static RPCHelpMan protx_revoke()
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("invalid reason %d, must be between 0 and %d", nReason, CProUpRevTx::REASON_LAST));
         }
         ptx.nReason = (uint16_t)nReason;
-    }
-
-    auto dmn = dmnman.GetListAtChainTip().GetMN(ptx.proTxHash);
-    if (!dmn) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
     }
 
     if (keyOperator.GetPublicKey() != dmn->pdmnState->pubKeyOperator.Get()) {
