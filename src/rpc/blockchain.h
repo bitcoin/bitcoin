@@ -9,15 +9,18 @@
 #include <core_io.h>
 #include <streams.h>
 #include <sync.h>
+#include <threadsafety.h>
 #include <util/fs.h>
 #include <validation.h>
 
 #include <any>
+#include <optional>
 #include <stdint.h>
 #include <vector>
 
 class CBlock;
 class CBlockIndex;
+class CChain;
 class Chainstate;
 class UniValue;
 namespace node {

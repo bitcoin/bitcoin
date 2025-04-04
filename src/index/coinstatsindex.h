@@ -59,6 +59,9 @@ public:
 
     // Look up stats for a specific block using CBlockIndex
     std::optional<kernel::CCoinsStats> LookUpStats(const CBlockIndex& block_index) const;
+
+    // Undo data is needed in order for the index to be able to sync
+    bool RequiresUndoData() const override {return true;}
 };
 
 /// The global UTXO set hash object.
