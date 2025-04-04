@@ -575,6 +575,54 @@ llvm-cov show \
 
 The generated coverage report can be accessed at `build/coverage_report/index.html`.
 
+#### Compiling for Fuzz Coverage
+
+```shell
+cmake -B build \
+   -DCMAKE_C_COMPILER="clang" \
+   -DCMAKE_CXX_COMPILER="clang++" \
+   -DCMAKE_C_FLAGS="-fprofile-instr-generate -fcoverage-mapping" \
+   -DCMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping" \
+   -DBUILD_FOR_FUZZING=ON
+cmake --build build # Use "-j N" here for N parallel jobs.
+```
+
+Run fuzz test with the fuzz target
+
+```shell
+mkdir -p build/raw_profile_data
+# Run fuzz test with the target
+LLVM_PROFILE_FILE="$(pwd)/build/raw_profile_data/txorphan.profraw" ./build/test/fuzz/test_runner.py ../qa-assets/fuzz_corpora txorphan
+llvm-profdata merge build/raw_profile_data/txorphan.profraw -o build/coverage.profdata
+```
+
+For multiple fuzz targets
+
+```shell
+# Run multiple fuzz targets
+LLVM_PROFILE_FILE="$(pwd)/build/raw_profile_data/%m_%p.profraw" ./build/test/fuzz/test_runner.py ../qa-assets/fuzz_corpora
+# Merge profiles from multiple targets
+llvm-profdata merge build/raw_profile_data/*.profraw -o build/coverage.profdata
+```
+
+Generate report:
+
+```shell
+llvm-cov show \
+    --object=build/bin/fuzz \
+    -Xdemangler=llvm-cxxfilt \
+    --instr-profile=build/coverage.profdata \
+    --ignore-filename-regex="src/crc32c/|src/leveldb/|src/minisketch/|src/secp256k1/|src/test/" \
+    --format=html \
+    --show-instantiation-summary \
+    --show-line-counts-or-regions \
+    --show-expansions \
+    --output-dir=build/coverage_report \
+    --project-title="Bitcoin Core Fuzz Coverage Report"
+```
+
+The generated coverage report can be accessed at `build/coverage_report/index.html`.
+
 ### Performance profiling with perf
 
 Profiling is a good way to get a precise idea of where time is being spent in
