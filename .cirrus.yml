@@ -197,3 +197,13 @@ task:
       type: small
   env:
     FILE_ENV: "./ci/test/00_setup_env_mac_cross.sh"
+
+task:
+  name: 'riscv32 bare metal, static libbitcoin_consensus'
+  << : *GLOBAL_TASK_TEMPLATE
+  persistent_worker:
+    labels:
+      type: small
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_riscv_bare_cross.sh"
+
