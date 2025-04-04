@@ -8,6 +8,7 @@
 #include <validation.h>
 
 #include <arith_uint256.h>
+#include <batchverify.h>
 #include <chain.h>
 #include <checkqueue.h>
 #include <clientversion.h>
@@ -75,6 +76,7 @@
 #include <string>
 #include <tuple>
 #include <utility>
+#include <variant>
 
 using kernel::CCoinsStats;
 using kernel::CoinStatsHashType;
@@ -140,7 +142,8 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        const CCoinsViewCache& inputs, unsigned int flags, bool cacheSigStore,
                        bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
                        ValidationCache& validation_cache,
-                       std::vector<CScriptCheck>* pvChecks = nullptr)
+                       std::vector<BatchableScriptCheck>* pvChecks = nullptr,
+                       BatchSchnorrVerifier* batch = nullptr)
                        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 bool CheckFinalTxAtTip(const CBlockIndex& active_chain_tip, const CTransaction& tx)
@@ -2125,6 +2128,22 @@ std::optional<std::pair<ScriptError, std::string>> CScriptCheck::operator()() {
     }
 }
 
+BatchableResult BatchableScriptCheck::operator()() {
+    CollectingSignatureChecker checker(ptxTo, nIn, m_tx_out.nValue, cacheStore, *m_signature_cache, *txdata);
+    ScriptError error = SCRIPT_ERR_UNKNOWN_ERROR;
+    const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
+    const CScriptWitness *witness = &ptxTo->vin[nIn].scriptWitness;
+
+    if (VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, nFlags, checker, &error)) {
+        return checker.GetCollectedSignatures();
+    } else {
+        auto debug_str = strprintf("input %i of %s (wtxid %s), spending %s:%i",
+                                   nIn, ptxTo->GetHash().ToString(), ptxTo->GetWitnessHash().ToString(),
+                                   ptxTo->vin[nIn].prevout.hash.ToString(), ptxTo->vin[nIn].prevout.n);
+        return std::make_pair(error, std::move(debug_str));
+    }
+}
+
 ValidationCache::ValidationCache(const size_t script_execution_cache_bytes, const size_t signature_cache_bytes)
     : m_signature_cache{signature_cache_bytes}
 {
@@ -2164,7 +2183,8 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        const CCoinsViewCache& inputs, unsigned int flags, bool cacheSigStore,
                        bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
                        ValidationCache& validation_cache,
-                       std::vector<CScriptCheck>* pvChecks)
+                       std::vector<BatchableScriptCheck>* pvChecks,
+                       BatchSchnorrVerifier* batch)
 {
     if (tx.IsCoinBase()) return true;
 
@@ -2210,7 +2230,20 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
         // Verify signature
         CScriptCheck check(txdata.m_spent_outputs[i], tx, validation_cache.m_signature_cache, i, flags, cacheSigStore, &txdata);
         if (pvChecks) {
-            pvChecks->emplace_back(std::move(check));
+            BatchableScriptCheck batchable_check(std::move(check));
+            pvChecks->emplace_back(std::move(batchable_check));
+        } else if (batch) {
+            BatchableScriptCheck batchable_check(std::move(check));
+            auto check_result = batchable_check();
+            if (std::holds_alternative<ScriptFailureResult>(check_result)) {
+                ScriptFailureResult error_result = std::get<ScriptFailureResult>(check_result);
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(error_result.first)), error_result.second);
+            } else {
+                const auto& signatures = std::get<std::vector<SchnorrSignatureToVerify>>(check_result);
+                for (const auto& sig : signatures) {
+                    batch->Add(sig.sig, sig.pubkey, sig.sighash);
+                }
+            }
         } else if (auto result = check(); result.has_value()) {
             if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
                 // Check whether the failure was caused by a
@@ -2243,7 +2276,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
         }
     }
 
-    if (cacheFullScriptStore && !pvChecks) {
+    if (cacheFullScriptStore && !pvChecks && !batch) {
         // We executed all of the provided scripts, and were told to
         // cache the result. Do so now.
         validation_cache.m_script_execution_cache.insert(hashCacheEntry);
@@ -2635,8 +2668,12 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     // in multiple threads). Preallocate the vector size so a new allocation
     // doesn't invalidate pointers into the vector, and keep txsdata in scope
     // for as long as `control`.
-    CCheckQueueControl<CScriptCheck> control(fScriptChecks && parallel_script_checks ? &m_chainman.GetCheckQueue() : nullptr);
+    CCheckQueueControl<BatchableScriptCheck, ScriptFailureResult> control(fScriptChecks && parallel_script_checks ? &m_chainman.GetCheckQueue() : nullptr);
     std::vector<PrecomputedTransactionData> txsdata(block.vtx.size());
+
+    // This batch object is only used for sequential checks, i.e. only
+    // a single thread is available.
+    BatchSchnorrVerifier batch{};
 
     std::vector<int> prevheights;
     CAmount nFees = 0;
@@ -2695,10 +2732,10 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
         if (!tx.IsCoinBase())
         {
-            std::vector<CScriptCheck> vChecks;
+            std::vector<BatchableScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
             TxValidationState tx_state;
-            if (fScriptChecks && !CheckInputScripts(tx, tx_state, view, flags, fCacheResults, fCacheResults, txsdata[i], m_chainman.m_validation_cache, parallel_script_checks ? &vChecks : nullptr)) {
+            if (fScriptChecks && !CheckInputScripts(tx, tx_state, view, flags, fCacheResults, fCacheResults, txsdata[i], m_chainman.m_validation_cache, parallel_script_checks ? &vChecks : nullptr, parallel_script_checks ? nullptr : &batch)) {
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                               tx_state.GetRejectReason(), tx_state.GetDebugMessage());
@@ -2713,6 +2750,11 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         }
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
     }
+
+    if (!batch.Verify()) {
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "block-batch-verify-failed");
+    }
+
     const auto time_3{SteadyClock::now()};
     m_chainman.time_connect += time_3 - time_2;
     LogDebug(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(),
@@ -2729,7 +2771,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     auto parallel_result = control.Complete();
     if (parallel_result.has_value() && state.IsValid()) {
-        state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(parallel_result->first)), parallel_result->second);
+        state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(parallel_result.value().first)), parallel_result.value().second);
     }
     if (!state.IsValid()) {
         LogInfo("Block validation error: %s", state.ToString());
