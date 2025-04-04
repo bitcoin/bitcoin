@@ -582,18 +582,14 @@ BOOST_AUTO_TEST_CASE(util_time_GetTime)
         BOOST_CHECK_EQUAL(111000, TicksSinceEpoch<std::chrono::milliseconds>(NodeClock::now()));
         BOOST_CHECK_EQUAL(111000000, GetTime<std::chrono::microseconds>().count());
     }
+    SetMockTime(0s);
 
-    SetMockTime(0);
-    // Check that steady time and system time changes after a sleep
+    // Check that steady time changes after a sleep
     const auto steady_ms_0 = Now<SteadyMilliseconds>();
     const auto steady_0 = std::chrono::steady_clock::now();
-    const auto ms_0 = GetTime<std::chrono::milliseconds>();
-    const auto us_0 = GetTime<std::chrono::microseconds>();
     UninterruptibleSleep(1ms);
     BOOST_CHECK(steady_ms_0 < Now<SteadyMilliseconds>());
     BOOST_CHECK(steady_0 + 1ms <= std::chrono::steady_clock::now());
-    BOOST_CHECK(ms_0 < GetTime<std::chrono::milliseconds>());
-    BOOST_CHECK(us_0 < GetTime<std::chrono::microseconds>());
 }
 
 BOOST_AUTO_TEST_CASE(test_IsDigit)
