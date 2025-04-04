@@ -73,6 +73,7 @@ Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
     File @abs_top_builddir@/release/@BITCOIN_GUI_NAME@@EXEEXT@
+    File @abs_top_builddir@/release/@BITCOIN_WRAPPER_NAME@@EXEEXT@
     File /oname=COPYING.txt @abs_top_srcdir@/COPYING
     File /oname=readme.txt @abs_top_srcdir@/doc/README_windows.txt
     File @abs_top_srcdir@/share/examples/bitcoin.conf
