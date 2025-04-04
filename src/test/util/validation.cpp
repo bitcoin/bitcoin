@@ -9,6 +9,8 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+using kernel::ChainstateRole;
+
 void TestChainstateManager::ResetIbd()
 {
     m_cached_finished_ibd = false;
@@ -23,7 +25,7 @@ void TestChainstateManager::JumpOutOfIbd()
 }
 
 void ValidationInterfaceTest::BlockConnected(
-        ChainstateRole role,
+        const ChainstateRole& role,
         CValidationInterface& obj,
         const std::shared_ptr<const CBlock>& block,
         const CBlockIndex* pindex)
