@@ -15,14 +15,15 @@
 #include <string>
 #include <vector>
 
-ExternalSigner::ExternalSigner(const std::string& command, const std::string chain, const std::string& fingerprint, const std::string name): m_command(command), m_chain(chain), m_fingerprint(fingerprint), m_name(name) {}
+ExternalSigner::ExternalSigner(std::string command, std::string chain, std::string fingerprint, std::string name)
+    : m_command{std::move(command)}, m_chain{std::move(chain)}, m_fingerprint{std::move(fingerprint)}, m_name{std::move(name)} {}
 
 std::string ExternalSigner::NetworkArg() const
 {
     return " --chain " + m_chain;
 }
 
-bool ExternalSigner::Enumerate(const std::string& command, std::vector<ExternalSigner>& signers, const std::string chain)
+bool ExternalSigner::Enumerate(const std::string& command, std::vector<ExternalSigner>& signers, const std::string& chain)
 {
     // Call <command> enumerate
     const UniValue result = RunCommandParseJSON(command + " enumerate");
