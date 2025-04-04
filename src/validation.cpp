@@ -2499,7 +2499,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         if (it != m_blockman.m_block_index.end()) {
             if (it->second.GetAncestor(pindex->nHeight) == pindex &&
                 m_chainman.m_best_header->GetAncestor(pindex->nHeight) == pindex &&
-                m_chainman.m_best_header->nChainWork >= m_chainman.MinimumChainWork()) {
+                (m_chainman.m_best_header->nChainWork >= m_chainman.MinimumChainWork() || m_chainman.m_blockman.IsReindexing())) {
                 // This block is a member of the assumed verified chain and an ancestor of the best header.
                 // Script verification is skipped when connecting blocks under the
                 // assumevalid block. Assuming the assumevalid block is valid this
@@ -2513,9 +2513,15 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
                 //  that are hardly doing any signature verification at all in testing without having to
                 //  artificially set the default assumed verified block further back.
                 // The test against the minimum chain work prevents the skipping when denied access to any chain at
-                //  least as good as the expected chain.
+                // least as good as the expected chain.
+                // During a reindex, skip the minimumchainwork check because the previous IBD run may have been interrupted
+                // before it could connect enough blocks to reach the minimumchainwork
                 fScriptChecks = (GetBlockProofEquivalentTime(*m_chainman.m_best_header, *pindex, *m_chainman.m_best_header, params.GetConsensus()) <= 60 * 60 * 24 * 7 * 2);
             }
+        } else if (m_chainman.m_blockman.IsReindexing()) {
+            // During a reindex, the assumed valid block may not be in the index
+            // if the previous IBD run was interrupted before it downloaded the assume valid block.
+            fScriptChecks = false;
         }
     }
 
