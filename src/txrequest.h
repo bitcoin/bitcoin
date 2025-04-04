@@ -146,7 +146,7 @@ public:
      * This should be called when a transaction is no longer needed. The caller should ensure that new announcements
      * for the same txhash will not trigger new ReceivedInv calls, at least in the short term after this call.
      */
-    void ForgetTxHash(const uint256& txhash);
+    void ForgetTxHash(const GenTxid& txhash);
 
     /** Find the txids to request now from peer.
      *
@@ -175,7 +175,7 @@ public:
      *    was made (GetRequestable will never advise doing so). In this case it is converted to COMPLETED, as we're
      *    no longer waiting for a response to it.
      */
-    void RequestedTx(NodeId peer, const uint256& txhash, std::chrono::microseconds expiry);
+    void RequestedTx(NodeId peer, const GenTxid& txhash, std::chrono::microseconds expiry);
 
     /** Converts a CANDIDATE or REQUESTED announcement to a COMPLETED one. If no such announcement exists for the
      *  provided peer and txhash, nothing happens.
@@ -183,7 +183,7 @@ public:
      * It should be called whenever a transaction or NOTFOUND was received from a peer. When the transaction is
      * not needed entirely anymore, ForgetTxhash should be called instead of, or in addition to, this call.
      */
-    void ReceivedResponse(NodeId peer, const uint256& txhash);
+    void ReceivedResponse(NodeId peer, const GenTxid& txhash);
 
     // The operations below inspect the data structure.
 
@@ -201,10 +201,10 @@ public:
 
     /** For some txhash (txid or wtxid), finds all peers with non-COMPLETED announcements and appends them to
      * result_peers. Does not try to ensure that result_peers contains no duplicates. */
-    void GetCandidatePeers(const uint256& txhash, std::vector<NodeId>& result_peers) const;
+    void GetCandidatePeers(const GenTxid& txhash, std::vector<NodeId>& result_peers) const;
 
     /** Access to the internal priority computation (testing only) */
-    uint64_t ComputePriority(const uint256& txhash, NodeId peer, bool preferred) const;
+    uint64_t ComputePriority(const GenTxid& txhash, NodeId peer, bool preferred) const;
 
     /** Run internal consistency check (testing only). */
     void SanityCheck() const;
