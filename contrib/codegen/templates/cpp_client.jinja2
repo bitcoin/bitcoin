@@ -1,0 +1,84 @@
+/**
+ * Auto-generated Bitcoin RPC client (C++)
+ */
+#ifndef BITCOIN_RPC_CLIENT_H
+#define BITCOIN_RPC_CLIENT_H
+
+#include <string>
+#include <stdexcept>
+#include <sstream>
+#include <vector>
+#include <curl/curl.h>
+#include <json/json.h>
+#include <iostream>
+
+class BitcoinRPCClient {
+public:
+    BitcoinRPCClient(const std::string &rpc_user, const std::string &rpc_password,
+                     const std::string &host = "127.0.0.1", int port = 8332)
+        : m_rpcUser(rpc_user), m_rpcPassword(rpc_password), m_host(host), m_port(port) {}
+
+    /**
+     * Send a JSON-RPC call to the Bitcoin node.
+     */
+    std::string call(const std::string &method, const std::string &params_json) {
+        CURL *curl = curl_easy_init();
+        if (!curl) {
+            throw std::runtime_error("Failed to initialize CURL");
+        }
+        std::stringstream url;
+        url << "http://" << m_host << ":" << m_port;
+
+        // Build JSON-RPC payload
+        Json::Value payload;
+        payload["method"] = method;
+        Json::Reader reader;
+        Json::Value params;
+        if (!reader.parse(params_json, params)) {
+            params = Json::Value(Json::arrayValue);
+        }
+        payload["params"] = params;
+        payload["id"] = 1;
+        Json::StreamWriterBuilder writer;
+        std::string payload_str = Json::writeString(writer, payload);
+
+        curl_easy_setopt(curl, CURLOPT_URL, url.str().c_str());
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload_str.c_str());
+        std::string auth = m_rpcUser + ":" + m_rpcPassword;
+        curl_easy_setopt(curl, CURLOPT_USERPWD, auth.c_str());
+        // NOTE: For demonstration purposes, we do not capture the response body.
+        curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+        return "{}"; // Dummy response for demonstration.
+    }
+
+    {%- for rpc_name, details in rpcs.items() %}
+    /**
+     * {{ details.description | replace("\n", "\n * ") }}
+     {%- if details.argument_names|length > 0 %}
+     * Arguments:
+     {%- for arg in details.argument_names %}
+     *   - {{ arg }}
+     {%- endfor %}
+     {%- endif %}
+     */
+    std::string {{ rpc_name }}({% if details.argument_names|length > 0 %}{% for arg in details.argument_names %}const std::string &{{ arg }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}) {
+        // Build JSON array of parameters
+        Json::Value params(Json::arrayValue);
+        {%- for arg in details.argument_names %}
+        params.append({{ arg }});
+        {%- endfor %}
+        Json::StreamWriterBuilder writer;
+        std::string params_json = Json::writeString(writer, params);
+        return call("{{ rpc_name }}", params_json);
+    }
+    {%- endfor %}
+
+private:
+    std::string m_rpcUser;
+    std::string m_rpcPassword;
+    std::string m_host;
+    int m_port;
+};
+
+#endif // BITCOIN_RPC_CLIENT_H

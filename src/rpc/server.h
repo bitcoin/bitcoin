@@ -164,6 +164,8 @@ public:
      */
     void appendCommand(const std::string& name, const CRPCCommand* pcmd);
     bool removeCommand(const std::string& name, const CRPCCommand* pcmd);
+
+    UniValue schema() const;
 };
 
 bool IsDeprecatedRPCEnabled(const std::string& method);
