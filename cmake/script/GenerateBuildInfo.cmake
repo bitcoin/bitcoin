@@ -28,9 +28,12 @@ else()
   set(WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
-set(GIT_TAG)
-set(GIT_COMMIT)
-if(NOT "$ENV{BITCOIN_GENBUILD_NO_GIT}" STREQUAL "1")
+set(IS_SOURCE_TARBALL FALSE)
+# git will put "set(IS_SOURCE_TARBALL TRUE)" on the next line inside archives. $Format:%nset(IS_SOURCE_TARBALL TRUE)$
+
+set(GIT_TAG "")
+set(GIT_COMMIT "")
+if(NOT IS_SOURCE_TARBALL AND PROJECT_IS_TOP_LEVEL)
   find_package(Git QUIET)
   if(Git_FOUND)
     execute_process(

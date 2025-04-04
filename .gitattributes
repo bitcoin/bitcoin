@@ -1,1 +1,2 @@
+cmake/script/GenerateBuildInfo.cmake export-subst
 src/clientversion.cpp export-subst
