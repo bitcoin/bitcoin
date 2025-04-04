@@ -73,7 +73,7 @@ def bctest(testDir, testObj, buildenv):
     are not as expected. Error is caught by bctester() and reported.
     """
     # Get the exec names and arguments
-    execprog = os.path.join(buildenv["BUILDDIR"], "bin", testObj["exec"] + buildenv["EXEEXT"])
+    execprog = os.path.join(buildenv["BUILDDIR"], "src", testObj["exec"] + buildenv["EXEEXT"])
     if testObj["exec"] == "./bitcoin-util":
         execprog = os.getenv("BITCOINUTIL", default=execprog)
     elif testObj["exec"] == "./bitcoin-tx":
@@ -156,13 +156,17 @@ def bctest(testDir, testObj, buildenv):
     if "error_txt" in testObj:
         want_error = testObj["error_txt"]
         # Compare error text
-        # TODO: ideally, we'd compare the strings exactly and also assert
         # That stderr is empty if no errors are expected. However, bitcoin-tx
         # emits DISPLAY errors when running as a windows application on
         # linux through wine. Just assert that the expected error text appears
         # somewhere in stderr.
         if want_error not in res.stderr:
             logging.error(f"Error mismatch:\nExpected: {want_error}\nReceived: {res.stderr.rstrip()}\nres: {str(res)}")
+            raise Exception
+    else:
+        # If no error is expected, stderr should be empty except for known cases
+        if res.stderr and not (testObj.get("exec") == "./bitcoin-tx" and "wine" in os.environ.get("WINEPREFIX", "")):
+            logging.error(f"Unexpected stderr output when no error expected:\n{res.stderr.rstrip()}\nres: {str(res)}")
             raise Exception
 
 def parse_output(a, fmt):
