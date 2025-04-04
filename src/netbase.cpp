@@ -266,17 +266,25 @@ enum SOCKS5Command: uint8_t {
     UDP_ASSOCIATE = 0x03
 };
 
-/** Values defined for REP in RFC1928 */
+/** Values defined for REP in RFC1928 and https://spec.torproject.org/socks-extensions.html */
 enum SOCKS5Reply: uint8_t {
-    SUCCEEDED = 0x00,        //!< Succeeded
-    GENFAILURE = 0x01,       //!< General failure
-    NOTALLOWED = 0x02,       //!< Connection not allowed by ruleset
-    NETUNREACHABLE = 0x03,   //!< Network unreachable
-    HOSTUNREACHABLE = 0x04,  //!< Network unreachable
-    CONNREFUSED = 0x05,      //!< Connection refused
-    TTLEXPIRED = 0x06,       //!< TTL expired
-    CMDUNSUPPORTED = 0x07,   //!< Command not supported
-    ATYPEUNSUPPORTED = 0x08, //!< Address type not supported
+    SUCCEEDED = 0x00,                  //!< RFC1928: Succeeded
+    GENFAILURE = 0x01,                 //!< RFC1928: General failure
+    NOTALLOWED = 0x02,                 //!< RFC1928: Connection not allowed by ruleset
+    NETUNREACHABLE = 0x03,             //!< RFC1928: Network unreachable
+    HOSTUNREACHABLE = 0x04,            //!< RFC1928: Network unreachable
+    CONNREFUSED = 0x05,                //!< RFC1928: Connection refused
+    TTLEXPIRED = 0x06,                 //!< RFC1928: TTL expired
+    CMDUNSUPPORTED = 0x07,             //!< RFC1928: Command not supported
+    ATYPEUNSUPPORTED = 0x08,           //!< RFC1928: Address type not supported
+    TOR_HS_DESC_NOT_FOUND = 0xf0,      //!< Tor: Onion service descriptor can not be found
+    TOR_HS_DESC_INVALID = 0xf1,        //!< Tor: Onion service descriptor is invalid
+    TOR_HS_INTRO_FAILED = 0xf2,        //!< Tor: Onion service introduction failed
+    TOR_HS_REND_FAILED = 0xf3,         //!< Tor: Onion service rendezvous failed
+    TOR_HS_MISSING_CLIENT_AUTH = 0xf4, //!< Tor: Onion service missing client authorization
+    TOR_HS_WRONG_CLIENT_AUTH = 0xf5,   //!< Tor: Onion service wrong client authorization
+    TOR_HS_BAD_ADDRESS = 0xf6,         //!< Tor: Onion service invalid address
+    TOR_HS_INTRO_TIMEOUT = 0xf7,       //!< Tor: Onion service introduction timed out
 };
 
 /** Values defined for ATYPE in RFC1928 */
@@ -364,8 +372,24 @@ static std::string Socks5ErrorString(uint8_t err)
             return "protocol error";
         case SOCKS5Reply::ATYPEUNSUPPORTED:
             return "address type not supported";
+        case SOCKS5Reply::TOR_HS_DESC_NOT_FOUND:
+            return "onion service descriptor can not be found";
+        case SOCKS5Reply::TOR_HS_DESC_INVALID:
+            return "onion service descriptor is invalid";
+        case SOCKS5Reply::TOR_HS_INTRO_FAILED:
+            return "onion service introduction failed";
+        case SOCKS5Reply::TOR_HS_REND_FAILED:
+            return "onion service rendezvous failed";
+        case SOCKS5Reply::TOR_HS_MISSING_CLIENT_AUTH:
+            return "onion service missing client authorization";
+        case SOCKS5Reply::TOR_HS_WRONG_CLIENT_AUTH:
+            return "onion service wrong client authorization";
+        case SOCKS5Reply::TOR_HS_BAD_ADDRESS:
+            return "onion service invalid address";
+        case SOCKS5Reply::TOR_HS_INTRO_TIMEOUT:
+            return "onion service introduction timed out";
         default:
-            return "unknown";
+            return strprintf("unknown (0x%02x)", err);
     }
 }
 
