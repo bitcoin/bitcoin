@@ -540,6 +540,35 @@ static LoadResult LoadRecords(CWallet* pwallet, DatabaseBatch& batch, const std:
     return LoadRecords(pwallet, batch, key, prefix, load_func);
 }
 
+bool HasLegacyRecords(CWallet& wallet)
+{
+    const auto& batch = wallet.GetDatabase().MakeBatch();
+    return HasLegacyRecords(wallet, *batch);
+}
+
+bool HasLegacyRecords(CWallet& wallet, DatabaseBatch& batch)
+{
+    for (const auto& type : DBKeys::LEGACY_TYPES) {
+        DataStream key;
+        DataStream value{};
+        DataStream prefix;
+
+        prefix << type;
+        std::unique_ptr<DatabaseCursor> cursor = batch.GetNewPrefixCursor(prefix);
+        if (!cursor) {
+            // Could only happen on a closed db, which means there is an error in the code flow.
+            wallet.WalletLogPrintf("Error getting database cursor for '%s' records", type);
+            throw std::runtime_error(strprintf("Error getting database cursor for '%s' records", type));
+        }
+
+        DatabaseCursor::Status status = cursor->Next(key, value);
+        if (status != DatabaseCursor::Status::DONE) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, int last_client) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     AssertLockHeld(pwallet->cs_wallet);
@@ -547,23 +576,9 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
 
     // Make sure descriptor wallets don't have any legacy records
     if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-        for (const auto& type : DBKeys::LEGACY_TYPES) {
-            DataStream key;
-            DataStream value{};
-
-            DataStream prefix;
-            prefix << type;
-            std::unique_ptr<DatabaseCursor> cursor = batch.GetNewPrefixCursor(prefix);
-            if (!cursor) {
-                pwallet->WalletLogPrintf("Error getting database cursor for '%s' records\n", type);
-                return DBErrors::CORRUPT;
-            }
-
-            DatabaseCursor::Status status = cursor->Next(key, value);
-            if (status != DatabaseCursor::Status::DONE) {
-                pwallet->WalletLogPrintf("Error: Unexpected legacy entry found in descriptor wallet %s. The wallet might have been tampered with or created with malicious intent.\n", pwallet->GetName());
-                return DBErrors::UNEXPECTED_LEGACY_ENTRY;
-            }
+        if (HasLegacyRecords(*pwallet, batch)) {
+            pwallet->WalletLogPrintf("Error: Unexpected legacy entry found in descriptor wallet %s. The wallet might have been tampered with or created with malicious intent.\n", pwallet->GetName());
+            return DBErrors::UNEXPECTED_LEGACY_ENTRY;
         }
 
         return DBErrors::LOAD_OK;

@@ -47,11 +47,14 @@ BOOST_AUTO_TEST_CASE(walletdb_read_write_deadlock)
         // Create legacy spkm
         LOCK(wallet->cs_wallet);
         auto legacy_spkm = wallet->GetOrCreateLegacyScriptPubKeyMan();
+        BOOST_CHECK(!HasLegacyRecords(*wallet));
         BOOST_CHECK(legacy_spkm->SetupGeneration(true));
+        BOOST_CHECK(HasLegacyRecords(*wallet));
         wallet->Flush();
 
         // Now delete all records, which performs a read write operation.
         BOOST_CHECK(wallet->GetLegacyScriptPubKeyMan()->DeleteRecords());
+        BOOST_CHECK(!HasLegacyRecords(*wallet));
     }
 }
 
