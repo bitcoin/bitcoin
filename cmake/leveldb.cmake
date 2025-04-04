@@ -76,6 +76,7 @@ target_include_directories(leveldb
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/leveldb>
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/leveldb/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/leveldb/helpers/memenv>
 )
 
 add_library(nowarn_leveldb_interface INTERFACE)
