@@ -230,6 +230,14 @@ std::optional<T> ToIntegral(std::string_view str)
 [[nodiscard]] bool ParseUInt64(std::string_view str, uint64_t *out);
 
 /**
+ * Convert hexadecimal string to unsigned 64-bit integer, with 4-bit
+ * resolution (odd length strings are acceptable without leading "0")
+ * @returns true if the entire string could be parsed as valid integer,
+ *   false if not, or in case of overflow.
+ */
+[[nodiscard]] bool ParseUInt64Hex(std::string_view str, uint64_t *out);
+
+/**
  * Format a paragraph of text to a fixed width, adding spaces for
  * indentation to any added line.
  */
@@ -367,6 +375,15 @@ std::string Capitalize(std::string str);
  */
 std::optional<uint64_t> ParseByteUnits(std::string_view str, ByteUnit default_multiplier);
 
+/**
+ * Returns a byte vector filled with data from a string. Used to test string-
+ * encoded data from a socket like HTTP headers.
+ *
+ * @param[in] str                  the string to convert into bytes
+ * @returns                        byte vector
+ */
+std::vector<std::byte> StringToBuffer(const std::string& str);
+
 namespace util {
 /** consteval version of HexDigit() without the lookup table. */
 consteval uint8_t ConstevalHexDigit(const char c)
@@ -394,6 +411,18 @@ struct Hex {
     }
 };
 } // namespace detail
+
+struct CaseInsensitiveComparator {
+    bool operator()(const std::string& s1, const std::string& s2) const
+    {
+        return std::lexicographical_compare(
+            s1.begin(), s1.end(),
+            s2.begin(), s2.end(),
+            [](char c1, char c2) {
+                return static_cast<uint8_t>(ToLower(c1)) < static_cast<uint8_t>(ToLower(c2));
+            });
+    }
+};
 
 /**
  * ""_hex is a compile-time user-defined literal returning a
