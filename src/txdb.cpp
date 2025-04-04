@@ -119,16 +119,19 @@ bool CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashB
     for (auto it{cursor.Begin()}; it != cursor.End();) {
         if (it->second.IsDirty()) {
             CoinEntry entry(&it->first);
-            if (it->second.coin.IsSpent())
+            if (it->second.coin.IsSpent()) {
                 batch.Erase(entry);
-            else
+            } else {
                 batch.Write(entry, it->second.coin);
+            }
+
             changed++;
         }
         count++;
         it = cursor.NextAndMaybeErase(*it);
-        if (batch.SizeEstimate() > m_options.batch_write_bytes) {
-            LogDebug(BCLog::COINDB, "Writing partial batch of %.2f MiB\n", batch.SizeEstimate() * (1.0 / 1048576.0));
+        if (batch.ApproximateSize() > m_options.batch_write_bytes) {
+            LogDebug(BCLog::COINDB, "Writing partial batch of %.2f MiB\n", batch.ApproximateSize() * (1.0 / 1048576.0));
+
             m_db->WriteBatch(batch);
             batch.Clear();
             if (m_options.simulate_crash_ratio) {
@@ -145,7 +148,7 @@ bool CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashB
     batch.Erase(DB_HEAD_BLOCKS);
     batch.Write(DB_BEST_BLOCK, hashBlock);
 
-    LogDebug(BCLog::COINDB, "Writing final batch of %.2f MiB\n", batch.SizeEstimate() * (1.0 / 1048576.0));
+    LogDebug(BCLog::COINDB, "Writing final batch of %.2f MiB\n", batch.ApproximateSize() * (1.0 / 1048576.0));
     bool ret = m_db->WriteBatch(batch);
     LogDebug(BCLog::COINDB, "Committed %u changed transaction outputs (out of %u) to coin database...\n", (unsigned int)changed, (unsigned int)count);
     return ret;

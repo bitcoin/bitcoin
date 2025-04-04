@@ -75,6 +75,8 @@ class CDBBatch
     friend class CDBWrapper;
 
 private:
+    static constexpr size_t kHeader{12}; // See: src/leveldb/db/write_batch.cc#L27
+
     const CDBWrapper &parent;
 
     struct WriteBatchImpl;
@@ -82,8 +84,6 @@ private:
 
     DataStream ssKey{};
     DataStream ssValue{};
-
-    size_t size_estimate{0};
 
     void WriteImpl(std::span<const std::byte> key, DataStream& ssValue);
     void EraseImpl(std::span<const std::byte> key);
@@ -117,7 +117,7 @@ public:
         ssKey.clear();
     }
 
-    size_t SizeEstimate() const { return size_estimate; }
+    size_t ApproximateSize() const;
 };
 
 class CDBIterator
