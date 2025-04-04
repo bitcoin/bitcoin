@@ -1578,14 +1578,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if (proxyArg != "" && proxyArg != "0") {
         Proxy addrProxy;
         if (IsUnixSocketPath(proxyArg)) {
-            addrProxy = Proxy(proxyArg, proxyRandomize);
+            addrProxy = Proxy(proxyArg, /*tor_stream_isolation=*/proxyRandomize);
         } else {
             const std::optional<CService> proxyAddr{Lookup(proxyArg, 9050, fNameLookup)};
             if (!proxyAddr.has_value()) {
                 return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
             }
 
-            addrProxy = Proxy(proxyAddr.value(), proxyRandomize);
+            addrProxy = Proxy(proxyAddr.value(), /*tor_stream_isolation=*/proxyRandomize);
         }
 
         if (!addrProxy.IsValid())
@@ -1614,14 +1614,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             }
         } else {
             if (IsUnixSocketPath(onionArg)) {
-                onion_proxy = Proxy(onionArg, proxyRandomize);
+                onion_proxy = Proxy(onionArg, /*tor_stream_isolation=*/proxyRandomize);
             } else {
                 const std::optional<CService> addr{Lookup(onionArg, 9050, fNameLookup)};
                 if (!addr.has_value() || !addr->IsValid()) {
                     return InitError(strprintf(_("Invalid -onion address or hostname: '%s'"), onionArg));
                 }
 
-                onion_proxy = Proxy(addr.value(), proxyRandomize);
+                onion_proxy = Proxy(addr.value(), /*tor_stream_isolation=*/proxyRandomize);
             }
         }
     }
