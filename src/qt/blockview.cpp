@@ -6,7 +6,9 @@
 
 #include <qt/blockview.h>
 
+#include <addresstype.h>
 #include <interfaces/node.h>
+#include <key_io.h>
 #include <logging.h>
 #include <node/context.h>
 #include <node/miner.h>
@@ -29,18 +31,64 @@
 #include <QGraphicsEllipseItem>
 #include <QGraphicsScene>
 #include <QGraphicsView>
+#include <QMouseEvent>
 #include <QHBoxLayout>
+#include <QToolTip>
+#include <QVariant>
 #include <QVBoxLayout>
+
+Q_DECLARE_METATYPE(CTransactionRef)
 
 static constexpr qreal TX_PADDING_NEXT{4};
 static constexpr qreal TX_PADDING_NEARBY{2};
 static constexpr qreal EXPECTED_WHITESPACE_PERCENT{1.5};
 static constexpr auto RADIAN_DIVISOR{8};
 
+void ScalingGraphicsView::mouseMoveEvent(QMouseEvent * const event)
+{
+    auto * const gi = itemAt(event->pos());
+    const auto tx = gi ? gi->data(0).value<CTransactionRef>() : CTransactionRef();
+    if (!tx) {
+        QToolTip::showText(event->globalPos(), QStringLiteral(""), nullptr, {}, 0);
+        return;
+    }
+
+    QString tx_info_str = "<qt>" + QString::fromStdString(tx->GetHash().ToString()) + "<br>";
+    tx_info_str += "<br>" + tr("Size: %1 bytes").arg(tx->GetTotalSize());
+    tx_info_str += "<br>Outputs:<div style=\"margin-left:4ex;margin-top:0;padding-top:0\">";
+
+    const auto unit = (m_bv && m_bv->m_client_model) ? m_bv->m_client_model->getOptionsModel()->getDisplayUnit() : BitcoinUnit::BTC;
+    int i = 0;
+    for (const auto& txout : tx->vout) {
+        ++i;
+        CTxDestination dest;
+        QString address;
+        if (ExtractDestination(txout.scriptPubKey, dest)) {
+            address = GUIUtil::HtmlEscape(EncodeDestination(dest));
+        } else {
+            address = tr("(unknown)");
+        }
+        auto amount_str = BitcoinUnits::formatWithUnit(unit, txout.nValue);
+        if (i > 1) tx_info_str += "<br>";
+        tx_info_str += tr("#%1: %2 to %3").arg(i).arg(amount_str).arg(address);
+    }
+    tx_info_str += "</div></qt>";
+    QToolTip::showText(event->globalPos(), tx_info_str, this, {}, std::numeric_limits<int>::max());
+}
+
 void ScalingGraphicsView::resizeEvent(QResizeEvent * const event)
 {
     fitInView(scene()->sceneRect(), Qt::KeepAspectRatio);
     QGraphicsView::resizeEvent(event);
+}
+
+bool ScalingGraphicsView::viewportEvent(QEvent * const event)
+{
+    if (event->type() == QEvent::ToolTip) {
+        // causes QGraphicsScene to destroy our tooltips, so block it here
+        return true;
+    }
+    return QGraphicsView::viewportEvent(event);
 }
 
 class BlockViewValidationInterface final : public CValidationInterface
@@ -186,6 +234,8 @@ GuiBlockView::GuiBlockView(const PlatformStyle *platformStyle, const NetworkStyl
     m_scene = new QGraphicsScene(this);
     m_scene->setSceneRect(0, 0, 1, 1);
     auto view = new ScalingGraphicsView(m_scene, this);
+    view->m_bv = this;
+    view->setMouseTracking(true);
     layout->addWidget(view);
     view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -372,7 +422,7 @@ void GuiBlockView::updateElements(bool instant)
             // preferred_loc = el.gi->pos();
             diameter = el.gi->boundingRect().height();
         }
-        Bubble proposed{ .pos = {}, .radius = diameter / 2, .el = &el, };
+        Bubble proposed{ .tx = block.vtx[i], .pos = {}, .radius = diameter / 2, .el = &el, };
         qreal x_extremity{proposed.radius};
         if (bubbles.empty()) {
             proposed.pos.setY(-proposed.radius);
@@ -433,6 +483,7 @@ void GuiBlockView::updateSceneInit()
             const auto diameter = bubble.radius * 2;
             auto gi = m_scene->addEllipse(0, 0, diameter, diameter, QPen(palette().window(), TX_PADDING_NEARBY));
             el.gi = gi;
+            gi->setData(0, QVariant::fromValue(std::move(bubble.tx)));
             gi->setBrush(QColor(Qt::blue));
             gi->setPos(bubble.pos.x() - bubble.radius, m_bubblegraph->instant ? (bubble.pos.y() - bubble.radius) : offscreen);
         }

@@ -6,6 +6,7 @@
 #define BITCOIN_QT_BLOCKVIEW_H
 
 #include <consensus/amount.h>
+#include <primitives/transaction.h>
 #include <sync.h>
 #include <threadsafety.h>
 #include <util/transaction_identifier.h>
@@ -33,6 +34,7 @@ namespace node { struct CBlockTemplate; }
 class ChainstateManager;
 class ClientModel;
 class CValidationInterface;
+class GuiBlockView;
 class NetworkStyle;
 class PlatformStyle;
 
@@ -43,7 +45,11 @@ class ScalingGraphicsView : public QGraphicsView
 public:
     using QGraphicsView::QGraphicsView;
 
+    void mouseMoveEvent(QMouseEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
+    bool viewportEvent(QEvent *event) override;
+
+    GuiBlockView *m_bv;
 };
 
 class BlockViewValidationInterface;
@@ -61,6 +67,7 @@ private:
         QPointF target_loc;
     };
     struct Bubble {
+        CTransactionRef tx;
         QPointF pos;
         double radius;
         SceneElement *el;
