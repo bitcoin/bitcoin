@@ -8,9 +8,11 @@ $(1)_ar=$$($$($(1)_type)_AR)
 $(1)_ranlib=$$($$($(1)_type)_RANLIB)
 $(1)_nm=$$($$($(1)_type)_NM)
 $(1)_cflags=$$($$($(1)_type)_CFLAGS) \
-            $$($$($(1)_type)_$$(release_type)_CFLAGS)
+            $$($$($(1)_type)_$$(release_type)_CFLAGS) \
+            -pipe -std=$(C_STANDARD)
 $(1)_cxxflags=$$($$($(1)_type)_CXXFLAGS) \
-              $$($$($(1)_type)_$$(release_type)_CXXFLAGS)
+              $$($$($(1)_type)_$$(release_type)_CXXFLAGS) \
+              -pipe -std=$(CXX_STANDARD)
 $(1)_ldflags=$$($$($(1)_type)_LDFLAGS) \
              $$($$($(1)_type)_$$(release_type)_LDFLAGS) \
              -L$$($($(1)_type)_prefix)/lib
