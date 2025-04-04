@@ -39,7 +39,7 @@ FUZZ_TARGET(crypter, .init = initialize_crypter)
         // Limiting the value of rounds since it is otherwise uselessly expensive and causes a timeout when fuzzing.
         crypt.SetKeyFromPassphrase(/*key_data=*/secure_string,
                                    /*salt=*/ConsumeFixedLengthByteVector(fuzzed_data_provider, WALLET_CRYPTO_SALT_SIZE),
-                                   /*rounds=*/fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, 25000),
+                                   /*rounds=*/fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, CMasterKey::DEFAULT_DERIVE_ITERATIONS),
                                    /*derivation_method=*/derivation_method);
     }
 
