@@ -650,6 +650,8 @@ public:
         std::string extra = ToStringExtra();
         size_t pos = extra.size() > 0 ? 1 : 0;
         std::string ret = m_name + "(" + extra;
+        bool is_taproot = m_name == "tr";
+        bool has_internal_key = true;
         for (const auto& pubkey : m_pubkey_args) {
             if (pos++) ret += ",";
             std::string tmp;
@@ -658,7 +660,15 @@ public:
                     if (!pubkey->ToNormalizedString(*arg, tmp, cache)) return false;
                     break;
                 case StringType::PRIVATE:
-                    if (!pubkey->ToPrivateString(*arg, tmp)) return false;
+                    if (!pubkey->ToPrivateString(*arg, tmp)) {
+                         if (!is_taproot) return false;
+                         // When parsing a taproot descriptor, we might not have the key material for the key
+                         // spending path but could have the material for any (or all) of the script spending paths.
+                         // If we don't have the private key for the key spending path, show the public key and expect
+                         // to have key material for atleast one of the script spending paths.
+                         tmp = pubkey->ToString();
+                         has_internal_key = false;
+                     }
                     break;
                 case StringType::PUBLIC:
                     tmp = pubkey->ToString();
@@ -670,7 +680,22 @@ public:
             ret += tmp;
         }
         std::string subscript;
-        if (!ToStringSubScriptHelper(arg, subscript, type, cache)) return false;
+        bool has_any_subscript_key = ToStringSubScriptHelper(arg, subscript, type, cache);
+
+        if (is_taproot && type == StringType::PRIVATE) {
+            if (!has_internal_key) {
+                if (subscript.empty()) {
+                    return false;
+                }
+                // Atleast one key should be present in any of the Taproot spending paths
+                if (!has_any_subscript_key) {
+                    return false;
+                }
+            }
+        } else if (!has_any_subscript_key) {
+            return false;
+        }
+
         if (pos && subscript.size()) ret += ',';
         out = std::move(ret) + std::move(subscript) + ")";
         return true;
@@ -1181,6 +1206,7 @@ protected:
     bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, const StringType type, const DescriptorCache* cache = nullptr) const override
     {
         if (m_depths.empty()) return true;
+        bool has_any_subscript_key = false;
         std::vector<bool> path;
         for (size_t pos = 0; pos < m_depths.size(); ++pos) {
             if (pos) ret += ',';
@@ -1189,7 +1215,21 @@ protected:
                 path.push_back(false);
             }
             std::string tmp;
-            if (!m_subdescriptor_args[pos]->ToStringHelper(arg, tmp, type, cache)) return false;
+            bool has_subdescriptor_string = m_subdescriptor_args[pos]->ToStringHelper(arg, tmp, type, cache);
+            if (type == StringType::PRIVATE) {
+                if (has_subdescriptor_string) {
+                    has_any_subscript_key = true;
+                } else {
+                    tmp = "";
+                    // Continue checking all other subscripts in case this one is not found
+                    // Default to public here hoping atleast any other subscript has the key
+                    if (!m_subdescriptor_args[pos]->ToStringHelper(arg, tmp, StringType::PUBLIC, cache)) {
+                        return false;
+                    }
+                }
+            } else if (!has_subdescriptor_string) {
+                return false;
+            }
             ret += tmp;
             while (!path.empty() && path.back()) {
                 if (path.size() > 1) ret += '}';
@@ -1197,7 +1237,7 @@ protected:
             }
             if (!path.empty()) path.back() = true;
         }
-        return true;
+        return (type == StringType::PRIVATE) ? has_any_subscript_key : true;
     }
 public:
     TRDescriptor(std::unique_ptr<PubkeyProvider> internal_key, std::vector<std::unique_ptr<DescriptorImpl>> descs, std::vector<int> depths) :
