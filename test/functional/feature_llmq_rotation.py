@@ -237,7 +237,6 @@ class LLMQQuorumRotationTest(DashTestFramework):
         hmc_base_blockhash = self.nodes[0].getblockhash(block_count - (block_count % 24) - 24 - 8)
         best_block_hash = self.nodes[0].getbestblockhash()
         rpc_qr_info = self.nodes[0].quorum("rotationinfo", best_block_hash, False, hmc_base_blockhash)
-        self.log.info(rpc_qr_info)
         assert_equal(rpc_qr_info["mnListDiffTip"]["blockHash"], best_block_hash)
         assert_equal(rpc_qr_info["mnListDiffTip"]["baseBlockHash"], rpc_qr_info["mnListDiffH"]["blockHash"])
         assert_equal(rpc_qr_info["mnListDiffH"]["baseBlockHash"], rpc_qr_info["mnListDiffAtHMinusC"]["blockHash"])
