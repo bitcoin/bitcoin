@@ -72,7 +72,7 @@ jobs:
           fi
           echo "TEST_BASE=$(git rev-list -n$((${{ env.MAX_COUNT }} + 1)) --reverse HEAD $EXCLUDE_MERGE_BASE_ANCESTORS | head -1)" >> "$GITHUB_ENV"
       - run: |
-          git fetch origin master
+          git fetch origin "${GITHUB_BASE_REF}"
           git config user.email "ci@example.com"
           git config user.name "CI"
       - run: |
@@ -81,7 +81,7 @@ jobs:
       - name: Compile and run tests
         run: |
           # Run tests on commits after the last merge commit and before the PR head commit
-          git rebase --exec "git merge --no-commit origin/master && ./.github/ci-test-each-commit-exec.sh && git reset --hard" ${{ env.TEST_BASE }}
+          git rebase --exec "git merge --no-commit origin/${GITHUB_BASE_REF} && ./.github/ci-test-each-commit-exec.sh && git reset --hard" ${{ env.TEST_BASE }}
 
   macos-native-arm64:
     name: ${{ matrix.job-name }}
