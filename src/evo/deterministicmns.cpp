@@ -470,10 +470,11 @@ void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTota
         throw(std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate collateralOutpoint=%s", __func__,
                 dmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort())));
     }
-    if (dmn->pdmnState->netInfo.m_addr != CService() && !AddUniqueProperty(*dmn, dmn->pdmnState->netInfo)) {
+    if (dmn->pdmnState->netInfo.GetPrimary() != CService() && !AddUniqueProperty(*dmn, dmn->pdmnState->netInfo)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
         throw(std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate address=%s", __func__,
-                                           dmn->proTxHash.ToString(), dmn->pdmnState->netInfo.m_addr.ToStringAddrPort())));
+                                           dmn->proTxHash.ToString(),
+                                           dmn->pdmnState->netInfo.GetPrimary().ToStringAddrPort())));
     }
     if (!AddUniqueProperty(*dmn, dmn->pdmnState->keyIDOwner)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
@@ -514,7 +515,8 @@ void CDeterministicMNList::UpdateMN(const CDeterministicMN& oldDmn, const std::s
     if (!UpdateUniqueProperty(*dmn, oldState->netInfo, pdmnState->netInfo)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
         throw(std::runtime_error(strprintf("%s: Can't update a masternode %s with a duplicate address=%s", __func__,
-                                           oldDmn.proTxHash.ToString(), pdmnState->netInfo.m_addr.ToStringAddrPort())));
+                                           oldDmn.proTxHash.ToString(),
+                                           pdmnState->netInfo.GetPrimary().ToStringAddrPort())));
     }
     if (!UpdateUniqueProperty(*dmn, oldState->keyIDOwner, pdmnState->keyIDOwner)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
@@ -571,10 +573,10 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
         throw(std::runtime_error(strprintf("%s: Can't delete a masternode %s with a collateralOutpoint=%s", __func__,
                 proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort())));
     }
-    if (dmn->pdmnState->netInfo.m_addr != CService() && !DeleteUniqueProperty(*dmn, dmn->pdmnState->netInfo)) {
+    if (dmn->pdmnState->netInfo.GetPrimary() != CService() && !DeleteUniqueProperty(*dmn, dmn->pdmnState->netInfo)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
         throw(std::runtime_error(strprintf("%s: Can't delete a masternode %s with a address=%s", __func__,
-                                           proTxHash.ToString(), dmn->pdmnState->netInfo.m_addr.ToStringAddrPort())));
+                                           proTxHash.ToString(), dmn->pdmnState->netInfo.GetPrimary().ToStringAddrPort())));
     }
     if (!DeleteUniqueProperty(*dmn, dmn->pdmnState->keyIDOwner)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
@@ -800,7 +802,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, gsl::no
 
             auto dmnState = std::make_shared<CDeterministicMNState>(proTx);
             dmnState->nRegisteredHeight = nHeight;
-            if (proTx.netInfo.m_addr == CService()) {
+            if (proTx.netInfo.GetPrimary() == CService()) {
                 // start in banned pdmnState as we need to wait for a ProUpServTx
                 dmnState->BanIfNotBanned(nHeight);
             }
@@ -1178,7 +1180,7 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
 template <typename ProTx>
 static bool CheckService(const ProTx& proTx, TxValidationState& state)
 {
-    const auto& addr{proTx.netInfo.m_addr};
+    const auto addr{proTx.netInfo.GetPrimary()};
     if (!addr.IsValid()) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-ipaddr");
     }
@@ -1235,8 +1237,8 @@ static bool CheckPlatformFields(const ProTx& proTx, TxValidationState& state)
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-platform-http-port");
     }
 
-    if (proTx.platformP2PPort == proTx.platformHTTPPort || proTx.platformP2PPort == proTx.netInfo.m_addr.GetPort() ||
-        proTx.platformHTTPPort == proTx.netInfo.m_addr.GetPort()) {
+    if (proTx.platformP2PPort == proTx.platformHTTPPort || proTx.platformP2PPort == proTx.netInfo.GetPrimary().GetPort() ||
+        proTx.platformHTTPPort == proTx.netInfo.GetPrimary().GetPort()) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-platform-dup-ports");
     }
 
@@ -1301,7 +1303,7 @@ bool CheckProRegTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl:
 
     // It's allowed to set addr to 0, which will put the MN into PoSe-banned state and require a ProUpServTx to be issues later
     // If any of both is set, it must be valid however
-    if (opt_ptx->netInfo.m_addr != CService() && !CheckService(*opt_ptx, state)) {
+    if (opt_ptx->netInfo.GetPrimary() != CService() && !CheckService(*opt_ptx, state)) {
         // pass the state returned by the function above
         return false;
     }

@@ -516,7 +516,7 @@ void FuncDIP3Protx(TestChainSetup& setup)
     nHeight++;
 
     auto dmn = dmnman.GetListAtChainTip().GetMN(dmnHashes[0]);
-    BOOST_REQUIRE(dmn != nullptr && dmn->pdmnState->netInfo.m_addr.GetPort() == 1000);
+    BOOST_REQUIRE(dmn != nullptr && dmn->pdmnState->netInfo.GetPrimary().GetPort() == 1000);
 
     // test ProUpRevTx
     tx = CreateProUpRevTx(chainman.ActiveChain(), *(setup.m_node.mempool), utxos, dmnHashes[0], operatorKeys[dmnHashes[0]], setup.coinbaseKey);
@@ -574,7 +574,7 @@ void FuncDIP3Protx(TestChainSetup& setup)
     nHeight++;
 
     dmn = dmnman.GetListAtChainTip().GetMN(dmnHashes[0]);
-    BOOST_REQUIRE(dmn != nullptr && dmn->pdmnState->netInfo.m_addr.GetPort() == 100);
+    BOOST_REQUIRE(dmn != nullptr && dmn->pdmnState->netInfo.GetPrimary().GetPort() == 100);
     BOOST_REQUIRE(dmn != nullptr && !dmn->pdmnState->IsBanned());
 
     // test that the revived MN gets payments again

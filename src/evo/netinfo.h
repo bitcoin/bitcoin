@@ -26,6 +26,8 @@ public:
     {
         READWRITE(obj.m_addr);
     }
+
+    const CService& GetPrimary() const { return m_addr; }
 };
 
 #endif // BITCOIN_EVO_NETINFO_H
