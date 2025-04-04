@@ -52,10 +52,10 @@ CBlock CreateTestBlock(
             inputs.emplace_back(tx_to_spend->GetHash(), j);
         }
 
-        const auto [taproot_tx, _]{test_setup.CreateValidTransaction(
+        const auto [tx, _]{test_setup.CreateValidTransaction(
             {tx_to_spend}, inputs, chainstate.m_chain.Height() + 1, keys, outputs, {}, {})};
-        txs.emplace_back(taproot_tx);
-        tx_to_spend = MakeTransactionRef(taproot_tx);
+        txs.emplace_back(tx);
+        tx_to_spend = MakeTransactionRef(tx);
     }
 
     // Coinbase output can use any output type as it is not spent and will not change the benchmark
@@ -107,16 +107,10 @@ void BenchmarkConnectBlock(benchmark::Bench& bench, std::vector<CKey>& keys, std
 static void ConnectBlockAllSchnorr(benchmark::Bench& bench)
 {
     const auto test_setup{MakeNoLogFileContext<TestChain100Setup>()};
-    auto [keys, outputs]{CreateKeysAndOutputs(test_setup->coinbaseKey, /*num_schnorr=*/4, /*num_ecdsa=*/0)};
+    auto [keys, outputs]{CreateKeysAndOutputs(test_setup->coinbaseKey, /*num_schnorr=*/5, /*num_ecdsa=*/0)};
     BenchmarkConnectBlock(bench, keys, outputs, *test_setup);
 }
 
-/**
- * This benchmark is expected to be slower than the AllSchnorr or Ecdsa benchmark
- * because it uses transactions with both Schnorr and Ecdsa signatures
- * which requires the transaction to be hashed multiple times for
- * the different signature algorithms
- */
 static void ConnectBlockMixedEcdsaSchnorr(benchmark::Bench& bench)
 {
     const auto test_setup{MakeNoLogFileContext<TestChain100Setup>()};
@@ -128,7 +122,7 @@ static void ConnectBlockMixedEcdsaSchnorr(benchmark::Bench& bench)
 static void ConnectBlockAllEcdsa(benchmark::Bench& bench)
 {
     const auto test_setup{MakeNoLogFileContext<TestChain100Setup>()};
-    auto [keys, outputs]{CreateKeysAndOutputs(test_setup->coinbaseKey, /*num_schnorr=*/0, /*num_ecdsa=*/4)};
+    auto [keys, outputs]{CreateKeysAndOutputs(test_setup->coinbaseKey, /*num_schnorr=*/0, /*num_ecdsa=*/5)};
     BenchmarkConnectBlock(bench, keys, outputs, *test_setup);
 }
 
