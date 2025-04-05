@@ -190,13 +190,8 @@ private:
     //! a key used for optional XOR-obfuscation of the database
     std::vector<unsigned char> m_obfuscation;
 
-    //! the key under which the obfuscation key is stored
-    static const std::string OBFUSCATION_KEY_KEY;
-
     //! the length of the obfuscate key in number of bytes
     static const unsigned int OBFUSCATION_SIZE_BYTES;
-
-    std::vector<unsigned char> CreateObfuscation() const;
 
     //! path to filesystem storage
     const fs::path m_path;
@@ -210,6 +205,11 @@ private:
     auto& DBContext() const LIFETIMEBOUND { return *Assert(m_db_context); }
 
 public:
+    // Prefixed with null character to avoid collisions with other keys
+    //
+    // We must use a string constructor which specifies length so that we copy past the null-terminator.
+    inline static const std::string OBFUSCATION_KEY_KEY{"\000obfuscate_key", 14};
+
     CDBWrapper(const DBParams& params);
     ~CDBWrapper();
 
