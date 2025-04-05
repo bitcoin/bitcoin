@@ -56,13 +56,13 @@ export BDB_PREFIX="[path displayed above]"
 ```
 
 #### GUI Dependencies
-###### Qt5
+###### Qt6
 
 Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
 the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
 
 ```bash
-pkg_add qtbase qttools
+pkg_add qt6-qtbase qt6-qttools
 ```
 
 ###### libqrencode
@@ -100,7 +100,7 @@ pkg_add python py3-zmq  # Select the newest version of the python package if nec
 There are many ways to configure Bitcoin Core, here are a few common examples:
 
 ##### Descriptor Wallet and GUI:
-This enables descriptor wallet support and the GUI, assuming SQLite and Qt 5 are installed.
+This enables descriptor wallet support and the GUI, assuming SQLite and Qt 6 are installed.
 
 ```bash
 cmake -B build -DBUILD_GUI=ON

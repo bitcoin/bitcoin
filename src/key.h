@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -170,7 +170,7 @@ public:
      *                              (this is used for key path spending, with specific
      *                              Merkle root of the script tree).
      */
-    bool SignSchnorr(const uint256& hash, Span<unsigned char> sig, const uint256* merkle_root, const uint256& aux) const;
+    bool SignSchnorr(const uint256& hash, std::span<unsigned char> sig, const uint256* merkle_root, const uint256& aux) const;
 
     //! Derive BIP32 child key.
     [[nodiscard]] bool Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;
@@ -192,7 +192,7 @@ public:
      *  resulting encoding will be indistinguishable from uniform to any adversary who does not
      *  know the private key (because the private key itself is always used as entropy as well).
      */
-    EllSwiftPubKey EllSwiftCreate(Span<const std::byte> entropy) const;
+    EllSwiftPubKey EllSwiftCreate(std::span<const std::byte> entropy) const;
 
     /** Compute a BIP324-style ECDH shared secret.
      *
@@ -250,7 +250,7 @@ struct CExtKey {
     void Decode(const unsigned char code[BIP32_EXTKEY_SIZE]);
     [[nodiscard]] bool Derive(CExtKey& out, unsigned int nChild) const;
     CExtPubKey Neuter() const;
-    void SetSeed(Span<const std::byte> seed);
+    void SetSeed(std::span<const std::byte> seed);
 };
 
 /** KeyPair
@@ -286,7 +286,7 @@ public:
     KeyPair(const KeyPair& other) { *this = other; }
 
     friend KeyPair CKey::ComputeKeyPair(const uint256* merkle_root) const;
-    [[nodiscard]] bool SignSchnorr(const uint256& hash, Span<unsigned char> sig, const uint256& aux) const;
+    [[nodiscard]] bool SignSchnorr(const uint256& hash, std::span<unsigned char> sig, const uint256& aux) const;
 
     //! Check whether this keypair is valid.
     bool IsValid() const { return !!m_keypair; }

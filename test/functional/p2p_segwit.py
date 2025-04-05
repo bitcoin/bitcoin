@@ -81,6 +81,7 @@ from test_framework.script_util import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
     assert_raises_rpc_error,
     ensure_for,
@@ -250,7 +251,7 @@ class SegWitTest(BitcoinTestFramework):
         # self.std_wtx_node is for testing node1 with wtxid relay
         self.std_wtx_node = self.nodes[1].add_p2p_connection(TestP2PConn(wtxidrelay=True), services=P2P_SERVICES)
 
-        assert self.test_node.nServices & NODE_WITNESS != 0
+        assert_not_equal(self.test_node.nServices & NODE_WITNESS, 0)
 
         # Keep a place to store utxo's that can be used in later tests
         self.utxo = []
@@ -336,8 +337,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Verify the hash with witness differs from the txid
         # (otherwise our testing framework must be broken!)
-        tx.rehash()
-        assert tx.sha256 != tx.calc_sha256(with_witness=True)
+        assert_not_equal(tx.rehash(), tx.getwtxid())
 
         # Construct a block that includes the transaction.
         block = self.build_next_block()
@@ -748,7 +748,7 @@ class SegWitTest(BitcoinTestFramework):
         block.solve()
 
         # Test the test -- witness serialization should be different
-        assert msg_block(block).serialize() != msg_no_witness_block(block).serialize()
+        assert_not_equal(msg_block(block).serialize(), msg_no_witness_block(block).serialize())
 
         # This empty block should be valid.
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
@@ -759,7 +759,7 @@ class SegWitTest(BitcoinTestFramework):
         block_2.solve()
 
         # The commitment should have changed!
-        assert block_2.vtx[0].vout[-1] != block.vtx[0].vout[-1]
+        assert_not_equal(block_2.vtx[0].vout[-1], block.vtx[0].vout[-1])
 
         # This should also be valid.
         test_witness_block(self.nodes[0], self.test_node, block_2, accepted=True)
@@ -840,7 +840,7 @@ class SegWitTest(BitcoinTestFramework):
         # TODO: repeat this test with a block that can be relayed
         assert_equal('bad-witness-nonce-size', self.nodes[0].submitblock(block.serialize().hex()))
 
-        assert self.nodes[0].getbestblockhash() != block.hash
+        assert_not_equal(self.nodes[0].getbestblockhash(), block.hash)
 
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack.pop()
         assert block.get_weight() < MAX_BLOCK_WEIGHT
@@ -949,7 +949,7 @@ class SegWitTest(BitcoinTestFramework):
         block.vtx[0].wit = CTxWitness()  # drop the nonce
         block.solve()
         assert_equal('bad-witness-merkle-match', self.nodes[0].submitblock(block.serialize().hex()))
-        assert self.nodes[0].getbestblockhash() != block.hash
+        assert_not_equal(self.nodes[0].getbestblockhash(), block.hash)
 
         # Now redo commitment with the standard nonce, but let bitcoind fill it in.
         add_witness_commitment(block, nonce=0)
@@ -972,7 +972,7 @@ class SegWitTest(BitcoinTestFramework):
 
         assert_equal('bad-txnmrklroot', self.nodes[0].submitblock(block_2.serialize().hex()))
         # Tip should not advance!
-        assert self.nodes[0].getbestblockhash() != block_2.hash
+        assert_not_equal(self.nodes[0].getbestblockhash(), block_2.hash)
 
     @subtest
     def test_extra_witness_data(self):
@@ -1293,14 +1293,14 @@ class SegWitTest(BitcoinTestFramework):
         # Test that getrawtransaction returns correct witness information
         # hash, size, vsize
         raw_tx = self.nodes[0].getrawtransaction(tx3.hash, 1)
-        assert_equal(int(raw_tx["hash"], 16), tx3.calc_sha256(True))
+        assert_equal(raw_tx["hash"], tx3.getwtxid())
         assert_equal(raw_tx["size"], len(tx3.serialize_with_witness()))
         vsize = tx3.get_vsize()
         assert_equal(raw_tx["vsize"], vsize)
         assert_equal(raw_tx["weight"], tx3.get_weight())
         assert_equal(len(raw_tx["vin"][0]["txinwitness"]), 1)
         assert_equal(raw_tx["vin"][0]["txinwitness"][0], witness_script.hex())
-        assert vsize != raw_tx["size"]
+        assert_not_equal(vsize, raw_tx["size"])
 
         # Cleanup: mine the transactions and update utxo for next test
         self.generate(self.nodes[0], 1)

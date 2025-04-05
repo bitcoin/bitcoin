@@ -11,7 +11,6 @@ import argparse
 import configparser
 import logging
 import os
-import platform
 import random
 import subprocess
 import sys
@@ -19,7 +18,7 @@ import sys
 
 def get_fuzz_env(*, target, source_dir):
     symbolizer = os.environ.get('LLVM_SYMBOLIZER_PATH', "/usr/bin/llvm-symbolizer")
-    fuzz_env = {
+    fuzz_env = os.environ | {
         'FUZZ': target,
         'UBSAN_OPTIONS':
         f'suppressions={source_dir}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1',
@@ -28,9 +27,6 @@ def get_fuzz_env(*, target, source_dir):
         'ASAN_SYMBOLIZER_PATH': symbolizer,
         'MSAN_SYMBOLIZER_PATH': symbolizer,
     }
-    if platform.system() == "Windows":
-        # On Windows, `env` option must include valid `SystemRoot`.
-        fuzz_env = {**fuzz_env, 'SystemRoot': os.environ.get('SystemRoot')}
     return fuzz_env
 
 

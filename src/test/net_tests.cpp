@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -861,7 +861,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     const auto CaptureMessageOrig = CaptureMessage;
     CaptureMessage = [&sent, &expected](const CAddress& addr,
                                         const std::string& msg_type,
-                                        Span<const unsigned char> data,
+                                        std::span<const unsigned char> data,
                                         bool is_incoming) -> void {
         if (!is_incoming && msg_type == "addr") {
             DataStream s{data};
@@ -1054,7 +1054,7 @@ public:
             bool progress{false};
             // Send bytes from m_to_send to the transport.
             if (!m_to_send.empty()) {
-                Span<const uint8_t> to_send = Span{m_to_send}.first(1 + m_rng.randrange(m_to_send.size()));
+                std::span<const uint8_t> to_send = std::span{m_to_send}.first(1 + m_rng.randrange(m_to_send.size()));
                 size_t old_len = to_send.size();
                 if (!m_transport.ReceivedBytes(to_send)) {
                     return std::nullopt; // transport error occurred
@@ -1099,7 +1099,7 @@ public:
     BIP324Cipher& GetCipher() { return m_cipher; }
 
     /** Schedule bytes to be sent to the transport. */
-    void Send(Span<const uint8_t> data)
+    void Send(std::span<const uint8_t> data)
     {
         m_to_send.insert(m_to_send.end(), data.begin(), data.end());
     }
@@ -1114,13 +1114,13 @@ public:
     }
 
     /** Schedule bytes to be sent to the transport. */
-    void Send(Span<const std::byte> data) { Send(MakeUCharSpan(data)); }
+    void Send(std::span<const std::byte> data) { Send(MakeUCharSpan(data)); }
 
     /** Schedule our ellswift key to be sent to the transport. */
     void SendKey() { Send(m_cipher.GetOurPubKey()); }
 
     /** Schedule specified garbage to be sent to the transport. */
-    void SendGarbage(Span<const uint8_t> garbage)
+    void SendGarbage(std::span<const uint8_t> garbage)
     {
         // Remember the specified garbage (so we can use it as AAD).
         m_sent_garbage.assign(garbage.begin(), garbage.end());
@@ -1167,7 +1167,7 @@ public:
 
     /** Schedule an encrypted packet with specified content/aad/ignore to be sent to transport
      *  (only after ReceiveKey). */
-    void SendPacket(Span<const uint8_t> content, Span<const uint8_t> aad = {}, bool ignore = false)
+    void SendPacket(std::span<const uint8_t> content, std::span<const uint8_t> aad = {}, bool ignore = false)
     {
         // Use cipher to construct ciphertext.
         std::vector<std::byte> ciphertext;
@@ -1189,9 +1189,9 @@ public:
     }
 
     /** Schedule version packet to be sent to the transport (only after ReceiveKey). */
-    void SendVersion(Span<const uint8_t> version_data = {}, bool vers_ignore = false)
+    void SendVersion(std::span<const uint8_t> version_data = {}, bool vers_ignore = false)
     {
-        Span<const std::uint8_t> aad;
+        std::span<const std::uint8_t> aad;
         // Set AAD to garbage only for first packet.
         if (!m_sent_aad) aad = m_sent_garbage;
         SendPacket(/*content=*/version_data, /*aad=*/aad, /*ignore=*/vers_ignore);
@@ -1201,7 +1201,7 @@ public:
     /** Expect a packet to have been received from transport, process it, and return its contents
      *  (only after ReceiveKey). Decoys are skipped. Optional associated authenticated data (AAD) is
      *  expected in the first received packet, no matter if that is a decoy or not. */
-    std::vector<uint8_t> ReceivePacket(Span<const std::byte> aad = {})
+    std::vector<uint8_t> ReceivePacket(std::span<const std::byte> aad = {})
     {
         std::vector<uint8_t> contents;
         // Loop as long as there are ignored packets that are to be skipped.
@@ -1209,7 +1209,7 @@ public:
             // When processing a packet, at least enough bytes for its length descriptor must be received.
             BOOST_REQUIRE(m_received.size() >= BIP324Cipher::LENGTH_LEN);
             // Decrypt the content length.
-            size_t size = m_cipher.DecryptLength(MakeByteSpan(Span{m_received}.first(BIP324Cipher::LENGTH_LEN)));
+            size_t size = m_cipher.DecryptLength(MakeByteSpan(std::span{m_received}.first(BIP324Cipher::LENGTH_LEN)));
             // Check that the full packet is in the receive buffer.
             BOOST_REQUIRE(m_received.size() >= size + BIP324Cipher::EXPANSION);
             // Decrypt the packet contents.
@@ -1217,7 +1217,7 @@ public:
             bool ignore{false};
             bool ret = m_cipher.Decrypt(
                 /*input=*/MakeByteSpan(
-                    Span{m_received}.first(size + BIP324Cipher::EXPANSION).subspan(BIP324Cipher::LENGTH_LEN)),
+                    std::span{m_received}.first(size + BIP324Cipher::EXPANSION).subspan(BIP324Cipher::LENGTH_LEN)),
                 /*aad=*/aad,
                 /*ignore=*/ignore,
                 /*contents=*/MakeWritableByteSpan(contents));
@@ -1240,7 +1240,7 @@ public:
         size_t garblen;
         for (garblen = 0; garblen <= V2Transport::MAX_GARBAGE_LEN; ++garblen) {
             BOOST_REQUIRE(m_received.size() >= garblen + BIP324Cipher::GARBAGE_TERMINATOR_LEN);
-            auto term_span = MakeByteSpan(Span{m_received}.subspan(garblen, BIP324Cipher::GARBAGE_TERMINATOR_LEN));
+            auto term_span = MakeByteSpan(std::span{m_received}.subspan(garblen, BIP324Cipher::GARBAGE_TERMINATOR_LEN));
             if (std::ranges::equal(term_span, m_cipher.GetReceiveGarbageTerminator())) break;
         }
         // Copy the garbage to a buffer.
@@ -1261,17 +1261,17 @@ public:
 
     /** Expect application packet to have been received, with specified short id and payload.
      *  (only after ReceiveKey). */
-    void ReceiveMessage(uint8_t short_id, Span<const uint8_t> payload)
+    void ReceiveMessage(uint8_t short_id, std::span<const uint8_t> payload)
     {
         auto ret = ReceivePacket();
         BOOST_CHECK(ret.size() == payload.size() + 1);
         BOOST_CHECK(ret[0] == short_id);
-        BOOST_CHECK(std::ranges::equal(Span{ret}.subspan(1), payload));
+        BOOST_CHECK(std::ranges::equal(std::span{ret}.subspan(1), payload));
     }
 
     /** Expect application packet to have been received, with specified 12-char message type and
      *  payload (only after ReceiveKey). */
-    void ReceiveMessage(const std::string& m_type, Span<const uint8_t> payload)
+    void ReceiveMessage(const std::string& m_type, std::span<const uint8_t> payload)
     {
         auto ret = ReceivePacket();
         BOOST_REQUIRE(ret.size() == payload.size() + 1 + CMessageHeader::MESSAGE_TYPE_SIZE);
@@ -1283,12 +1283,12 @@ public:
                 BOOST_CHECK(ret[1 + i] == 0);
             }
         }
-        BOOST_CHECK(std::ranges::equal(Span{ret}.subspan(1 + CMessageHeader::MESSAGE_TYPE_SIZE), payload));
+        BOOST_CHECK(std::ranges::equal(std::span{ret}.subspan(1 + CMessageHeader::MESSAGE_TYPE_SIZE), payload));
     }
 
     /** Schedule an encrypted packet with specified message type and payload to be sent to
      *  transport (only after ReceiveKey). */
-    void SendMessage(std::string mtype, Span<const uint8_t> payload)
+    void SendMessage(std::string mtype, std::span<const uint8_t> payload)
     {
         // Construct contents consisting of 0x00 + 12-byte message type + payload.
         std::vector<uint8_t> contents(1 + CMessageHeader::MESSAGE_TYPE_SIZE + payload.size());
@@ -1300,7 +1300,7 @@ public:
 
     /** Schedule an encrypted packet with specified short message id and payload to be sent to
      *  transport (only after ReceiveKey). */
-    void SendMessage(uint8_t short_id, Span<const uint8_t> payload)
+    void SendMessage(uint8_t short_id, std::span<const uint8_t> payload)
     {
         // Construct contents consisting of short_id + payload.
         std::vector<uint8_t> contents(1 + payload.size());

@@ -46,7 +46,7 @@ class MultiWalletTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 2
         self.rpc_timeout = 120
-        self.extra_args = [["-nowallet"], []]
+        self.extra_args = [["-nowallet", "-deprecatedrpc=settxfee"], []]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

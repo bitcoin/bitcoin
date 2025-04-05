@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -505,7 +505,7 @@ public:
             // Handle requests for deterministic randomness.
             if (!always_use_real_rng && m_deterministic_prng.has_value()) [[unlikely]] {
                 // Overwrite the beginning of buf, which will be used for output.
-                m_deterministic_prng->Keystream(AsWritableBytes(Span{buf, num}));
+                m_deterministic_prng->Keystream(std::as_writable_bytes(std::span{buf, num}));
                 // Do not require strong seeding for deterministic output.
                 ret = true;
             }
@@ -673,13 +673,13 @@ void MakeRandDeterministicDANGEROUS(const uint256& seed) noexcept
 }
 std::atomic<bool> g_used_g_prng{false}; // Only accessed from tests
 
-void GetRandBytes(Span<unsigned char> bytes) noexcept
+void GetRandBytes(std::span<unsigned char> bytes) noexcept
 {
     g_used_g_prng = true;
     ProcRand(bytes.data(), bytes.size(), RNGLevel::FAST, /*always_use_real_rng=*/false);
 }
 
-void GetStrongRandBytes(Span<unsigned char> bytes) noexcept
+void GetStrongRandBytes(std::span<unsigned char> bytes) noexcept
 {
     ProcRand(bytes.data(), bytes.size(), RNGLevel::SLOW, /*always_use_real_rng=*/true);
 }
@@ -698,7 +698,7 @@ void FastRandomContext::RandomSeed() noexcept
     requires_seed = false;
 }
 
-void FastRandomContext::fillrand(Span<std::byte> output) noexcept
+void FastRandomContext::fillrand(std::span<std::byte> output) noexcept
 {
     if (requires_seed) RandomSeed();
     rng.Keystream(output);

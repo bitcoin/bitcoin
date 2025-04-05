@@ -17,9 +17,7 @@ from .messages import (
     CTxOut,
     hash256,
     ser_string,
-    ser_uint256,
     sha256,
-    uint256_from_str,
 )
 
 from .crypto.ripemd160 import ripemd160
@@ -711,41 +709,42 @@ def sign_input_segwitv0(tx, input_index, input_scriptpubkey, input_amount, privk
 # Note that this corresponds to sigversion == 1 in EvalScript, which is used
 # for version 0 witnesses.
 def SegwitV0SignatureMsg(script, txTo, inIdx, hashtype, amount):
+    ZERO_HASH = bytes([0]*32)
 
-    hashPrevouts = 0
-    hashSequence = 0
-    hashOutputs = 0
+    hashPrevouts = ZERO_HASH
+    hashSequence = ZERO_HASH
+    hashOutputs = ZERO_HASH
 
     if not (hashtype & SIGHASH_ANYONECANPAY):
         serialize_prevouts = bytes()
         for i in txTo.vin:
             serialize_prevouts += i.prevout.serialize()
-        hashPrevouts = uint256_from_str(hash256(serialize_prevouts))
+        hashPrevouts = hash256(serialize_prevouts)
 
     if (not (hashtype & SIGHASH_ANYONECANPAY) and (hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
         serialize_sequence = bytes()
         for i in txTo.vin:
             serialize_sequence += i.nSequence.to_bytes(4, "little")
-        hashSequence = uint256_from_str(hash256(serialize_sequence))
+        hashSequence = hash256(serialize_sequence)
 
     if ((hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
         serialize_outputs = bytes()
         for o in txTo.vout:
             serialize_outputs += o.serialize()
-        hashOutputs = uint256_from_str(hash256(serialize_outputs))
+        hashOutputs = hash256(serialize_outputs)
     elif ((hashtype & 0x1f) == SIGHASH_SINGLE and inIdx < len(txTo.vout)):
         serialize_outputs = txTo.vout[inIdx].serialize()
-        hashOutputs = uint256_from_str(hash256(serialize_outputs))
+        hashOutputs = hash256(serialize_outputs)
 
     ss = bytes()
     ss += txTo.version.to_bytes(4, "little")
-    ss += ser_uint256(hashPrevouts)
-    ss += ser_uint256(hashSequence)
+    ss += hashPrevouts
+    ss += hashSequence
     ss += txTo.vin[inIdx].prevout.serialize()
     ss += ser_string(script)
     ss += amount.to_bytes(8, "little", signed=True)
     ss += txTo.vin[inIdx].nSequence.to_bytes(4, "little")
-    ss += ser_uint256(hashOutputs)
+    ss += hashOutputs
     ss += txTo.nLockTime.to_bytes(4, "little")
     ss += hashtype.to_bytes(4, "little")
     return ss

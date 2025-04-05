@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,7 +27,7 @@ public:
      */
     CSipHasher& Write(uint64_t data);
     /** Hash arbitrary bytes. */
-    CSipHasher& Write(Span<const unsigned char> data);
+    CSipHasher& Write(std::span<const unsigned char> data);
     /** Compute the 64-bit SipHash-2-4 of the data written so far. The object remains untouched. */
     uint64_t Finalize() const;
 };

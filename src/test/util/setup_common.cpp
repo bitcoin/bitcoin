@@ -49,6 +49,7 @@
 #include <util/rbf.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <util/task_runner.h>
 #include <util/thread.h>
 #include <util/threadnames.h>
 #include <util/time.h>
@@ -59,6 +60,7 @@
 #include <walletinitinterface.h>
 
 #include <algorithm>
+#include <future>
 #include <functional>
 #include <stdexcept>
 
@@ -220,12 +222,21 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
 {
     const CChainParams& chainparams = Params();
 
-    // We have to run a scheduler thread to prevent ActivateBestChain
+    // A task runner is required to prevent ActivateBestChain
     // from blocking due to queue overrun.
     if (opts.setup_validation_interface) {
         m_node.scheduler = std::make_unique<CScheduler>();
         m_node.scheduler->m_service_thread = std::thread(util::TraceThread, "scheduler", [&] { m_node.scheduler->serviceQueue(); });
-        m_node.validation_signals = std::make_unique<ValidationSignals>(std::make_unique<SerialTaskRunner>(*m_node.scheduler));
+        m_node.validation_signals =
+            // Use synchronous task runner while fuzzing to avoid non-determinism
+            G_FUZZING ? std::make_unique<ValidationSignals>(std::make_unique<util::ImmediateTaskRunner>()) :
+                        std::make_unique<ValidationSignals>(std::make_unique<SerialTaskRunner>(*m_node.scheduler));
+        {
+            // Ensure deterministic coverage by waiting for m_service_thread to be running
+            std::promise<void> promise;
+            m_node.scheduler->scheduleFromNow([&promise] { promise.set_value(); }, 0ms);
+            promise.get_future().wait();
+        }
     }
 
     bilingual_str error{};
@@ -243,7 +254,8 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
             .check_block_index = 1,
             .notifications = *m_node.notifications,
             .signals = m_node.validation_signals.get(),
-            .worker_threads_num = 2,
+            // Use no worker threads while fuzzing to avoid non-determinism
+            .worker_threads_num = G_FUZZING ? 0 : 2,
         };
         if (opts.min_validation_cache) {
             chainman_opts.script_execution_cache_bytes = 0;

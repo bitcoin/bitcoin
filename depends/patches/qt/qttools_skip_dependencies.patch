@@ -1,0 +1,36 @@
+QtTools: Skip unnecessary dependencies:
+
+1. The LLVM installatiion.
+2. Build only required tools.
+
+
+--- a/qttools/configure.cmake
++++ b/qttools/configure.cmake
+@@ -17,7 +17,7 @@
+ # Presumably because 6.0 ClangConfig.cmake files are not good enough?
+ # In any case explicitly request a minimum version of 8.x for now, otherwise
+ # building with CMake will fail at compilation time.
+-qt_find_package(WrapLibClang 8 PROVIDED_TARGETS WrapLibClang::WrapLibClang)
++#qt_find_package(WrapLibClang 8 PROVIDED_TARGETS WrapLibClang::WrapLibClang)
+ # special case end
+ 
+ if(TARGET WrapLibClang::WrapLibClang)
+
+--- a/qttools/src/linguist/CMakeLists.txt
++++ b/qttools/src/linguist/CMakeLists.txt
+@@ -9,15 +9,8 @@ if(NOT QT_FEATURE_linguist)
+     return()
+ endif()
+ add_subdirectory(lconvert)
+-add_subdirectory(lprodump)
+ add_subdirectory(lrelease)
+-add_subdirectory(lrelease-pro)
+ add_subdirectory(lupdate)
+-add_subdirectory(lupdate-pro)
+-if(QT_FEATURE_process AND QT_FEATURE_pushbutton AND QT_FEATURE_toolbutton
+-    AND QT_FEATURE_png AND QT_FEATURE_printsupport AND TARGET Qt::Widgets)
+-    add_subdirectory(linguist)
+-endif()
+ 
+ # Create a fake module that would emulate the Qt5::LinguistTools CMake Config package
+ qt_internal_add_module(Linguist

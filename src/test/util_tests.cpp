@@ -160,8 +160,8 @@ BOOST_AUTO_TEST_CASE(parse_hex)
     BOOST_CHECK_EQUAL_COLLECTIONS(hex_literal_span.begin(), hex_literal_span.end(), expected.begin(), expected.end());
 
     const std::vector<std::byte> hex_literal_vector{operator""_hex_v<util::detail::Hex(HEX_PARSE_INPUT)>()};
-    hex_literal_span = MakeUCharSpan(hex_literal_vector);
-    BOOST_CHECK_EQUAL_COLLECTIONS(hex_literal_span.begin(), hex_literal_span.end(), expected.begin(), expected.end());
+    auto hex_literal_vec_span = MakeUCharSpan(hex_literal_vector);
+    BOOST_CHECK_EQUAL_COLLECTIONS(hex_literal_vec_span.begin(), hex_literal_vec_span.end(), expected.begin(), expected.end());
 
     constexpr std::array<uint8_t, 65> hex_literal_array_uint8{operator""_hex_u8<util::detail::Hex(HEX_PARSE_INPUT)>()};
     BOOST_CHECK_EQUAL_COLLECTIONS(hex_literal_array_uint8.begin(), hex_literal_array_uint8.end(), expected.begin(), expected.end());
@@ -236,14 +236,14 @@ BOOST_AUTO_TEST_CASE(consteval_hex_digit)
 BOOST_AUTO_TEST_CASE(util_HexStr)
 {
     BOOST_CHECK_EQUAL(HexStr(HEX_PARSE_OUTPUT), HEX_PARSE_INPUT);
-    BOOST_CHECK_EQUAL(HexStr(Span{HEX_PARSE_OUTPUT}.last(0)), "");
-    BOOST_CHECK_EQUAL(HexStr(Span{HEX_PARSE_OUTPUT}.first(0)), "");
+    BOOST_CHECK_EQUAL(HexStr(std::span{HEX_PARSE_OUTPUT}.last(0)), "");
+    BOOST_CHECK_EQUAL(HexStr(std::span{HEX_PARSE_OUTPUT}.first(0)), "");
 
     {
         constexpr std::string_view out_exp{"04678afdb0"};
         constexpr std::span in_s{HEX_PARSE_OUTPUT, out_exp.size() / 2};
-        const Span<const uint8_t> in_u{MakeUCharSpan(in_s)};
-        const Span<const std::byte> in_b{MakeByteSpan(in_s)};
+        const std::span<const uint8_t> in_u{MakeUCharSpan(in_s)};
+        const std::span<const std::byte> in_b{MakeByteSpan(in_s)};
 
         BOOST_CHECK_EQUAL(HexStr(in_u), out_exp);
         BOOST_CHECK_EQUAL(HexStr(in_s), out_exp);
@@ -1335,7 +1335,7 @@ BOOST_AUTO_TEST_CASE(test_Capitalize)
     BOOST_CHECK_EQUAL(Capitalize("\x00\xfe\xff"), "\x00\xfe\xff");
 }
 
-static std::string SpanToStr(const Span<const char>& span)
+static std::string SpanToStr(const std::span<const char>& span)
 {
     return std::string(span.begin(), span.end());
 }
@@ -1344,7 +1344,7 @@ BOOST_AUTO_TEST_CASE(test_script_parsing)
 {
     using namespace script;
     std::string input;
-    Span<const char> sp;
+    std::span<const char> sp;
     bool success;
 
     // Const(...): parse a constant, update span to skip it if successful
@@ -1394,7 +1394,7 @@ BOOST_AUTO_TEST_CASE(test_script_parsing)
     BOOST_CHECK(!success);
 
     // Expr(...): return expression that span begins with, update span to skip it
-    Span<const char> result;
+    std::span<const char> result;
 
     input = "(n*(n-1))/2";
     sp = input;
@@ -1427,7 +1427,7 @@ BOOST_AUTO_TEST_CASE(test_script_parsing)
     BOOST_CHECK_EQUAL(SpanToStr(sp), ",xxx");
 
     // Split(...): split a string on every instance of sep, return vector
-    std::vector<Span<const char>> results;
+    std::vector<std::span<const char>> results;
 
     input = "xxx";
     results = Split(input, 'x');

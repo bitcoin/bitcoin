@@ -33,6 +33,7 @@ from .p2p import P2P_SERVICES, P2P_SUBVERSION
 from .util import (
     MAX_NODES,
     assert_equal,
+    assert_not_equal,
     append_config,
     delete_cookie_file,
     get_auth_cookie,
@@ -76,7 +77,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, datadir_path, *, chain, rpchost, timewait, timeout_factor, bitcoind, bitcoin_cli, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None, descriptors=False, v2transport=False):
+    def __init__(self, i, datadir_path, *, chain, rpchost, timewait, timeout_factor, binaries, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None, descriptors=False, v2transport=False):
         """
         Kwargs:
             start_perf (bool): If True, begin profiling the node with `perf` as soon as
@@ -92,7 +93,7 @@ class TestNode():
         self.chain = chain
         self.rpchost = rpchost
         self.rpc_timeout = timewait
-        self.binary = bitcoind
+        self.binaries = binaries
         self.coverage_dir = coverage_dir
         self.cwd = cwd
         self.descriptors = descriptors
@@ -109,8 +110,7 @@ class TestNode():
         # Configuration for logging is set as command-line args rather than in the bitcoin.conf file.
         # This means that starting a bitcoind using the temp dir to debug a failed test won't
         # spam debug.log.
-        self.args = [
-            self.binary,
+        self.args = self.binaries.daemon_argv() + [
             f"-datadir={self.datadir_path}",
             "-logtimemicros",
             "-debug",
@@ -149,7 +149,7 @@ class TestNode():
                 self.args.append("-v2transport=0")
         # if v2transport is requested via global flag but not supported for node version, ignore it
 
-        self.cli = TestNodeCLI(bitcoin_cli, self.datadir_path)
+        self.cli = TestNodeCLI(binaries, self.datadir_path)
         self.use_cli = use_cli
         self.start_perf = start_perf
 
@@ -669,7 +669,7 @@ class TestNode():
                 self.start(extra_args, stdout=log_stdout, stderr=log_stderr, *args, **kwargs)
                 ret = self.process.wait(timeout=self.rpc_timeout)
                 self.log.debug(self._node_msg(f'bitcoind exited with status {ret} during initialization'))
-                assert ret != 0  # Exit code must indicate failure
+                assert_not_equal(ret, 0) # Exit code must indicate failure
                 self.running = False
                 self.process = None
                 # Check stderr for expected message
@@ -827,7 +827,8 @@ class TestNode():
 
     def disconnect_p2ps(self):
         """Close all p2p connections to the node.
-        Use only after each p2p has sent a version message to ensure the wait works."""
+        The state of the peers (such as txrequests) may not be fully cleared
+        yet, even after this method returns."""
         for p in self.p2ps:
             p.peer_disconnect()
         del self.p2ps[:]
@@ -870,16 +871,16 @@ def arg_to_cli(arg):
 
 class TestNodeCLI():
     """Interface to bitcoin-cli for an individual node"""
-    def __init__(self, binary, datadir):
+    def __init__(self, binaries, datadir):
         self.options = []
-        self.binary = binary
+        self.binaries = binaries
         self.datadir = datadir
         self.input = None
         self.log = logging.getLogger('TestFramework.bitcoincli')
 
     def __call__(self, *options, input=None):
         # TestNodeCLI is callable with bitcoin-cli command-line options
-        cli = TestNodeCLI(self.binary, self.datadir)
+        cli = TestNodeCLI(self.binaries, self.datadir)
         cli.options = [str(o) for o in options]
         cli.input = input
         return cli
@@ -900,7 +901,7 @@ class TestNodeCLI():
         """Run bitcoin-cli command. Deserializes returned string as python object."""
         pos_args = [arg_to_cli(arg) for arg in args]
         named_args = [str(key) + "=" + arg_to_cli(value) for (key, value) in kwargs.items()]
-        p_args = [self.binary, f"-datadir={self.datadir}"] + self.options
+        p_args = self.binaries.rpc_argv() + [f"-datadir={self.datadir}"] + self.options
         if named_args:
             p_args += ["-named"]
         if clicommand is not None:
@@ -916,7 +917,7 @@ class TestNodeCLI():
                 code, message = match.groups()
                 raise JSONRPCException(dict(code=int(code), message=message))
             # Ignore cli_stdout, raise with cli_stderr
-            raise subprocess.CalledProcessError(returncode, self.binary, output=cli_stderr)
+            raise subprocess.CalledProcessError(returncode, p_args, output=cli_stderr)
         try:
             return json.loads(cli_stdout, parse_float=decimal.Decimal)
         except (json.JSONDecodeError, decimal.InvalidOperation):

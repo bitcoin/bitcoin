@@ -112,6 +112,7 @@ ELF_ALLOWED_LIBRARIES = {
 'libfontconfig.so.1', # font support
 'libfreetype.so.6', # font parsing
 'libdl.so.2', # programming interface to dynamic linker
+'libxcb-cursor.so.0',
 'libxcb-icccm.so.4',
 'libxcb-image.so.0',
 'libxcb-shm.so.0',
@@ -146,8 +147,9 @@ MACHO_ALLOWED_LIBRARIES = {
 'IOSurface', # cross process image/drawing buffers
 'libobjc.A.dylib', # Objective-C runtime library
 'Metal', # 3D graphics
-'Security', # access control and authentication
 'QuartzCore', # animation
+'Security', # access control and authentication
+'UniformTypeIdentifiers', # collection of types that map to MIME and file types
 }
 
 PE_ALLOWED_LIBRARIES = {
@@ -158,7 +160,17 @@ PE_ALLOWED_LIBRARIES = {
 'SHELL32.dll', # shell API
 'WS2_32.dll', # sockets
 # bitcoin-qt only
+'api-ms-win-core-synch-l1-2-0.dll', # Synchronization Primitives API
+'api-ms-win-core-winrt-l1-1-0.dll', # Windows Runtime API
+'api-ms-win-core-winrt-string-l1-1-0.dll', # WinRT String API
+'AUTHZ.dll', # Windows Authorization Framework
+'comdlg32.dll', # Common Dialog Box Library
+'d3d11.dll', # Direct3D 11 API
+'d3d12.dll', # Direct3D 12 API
+'d3d9.dll', # Direct3D 9 API
 'dwmapi.dll', # desktop window manager
+'DWrite.dll', # DirectX Typography Services
+'dxgi.dll', # DirectX Graphics Infrastructure
 'GDI32.dll', # graphics device interface
 'IMM32.dll', # input method editor
 'NETAPI32.dll', # network management
@@ -171,6 +183,8 @@ PE_ALLOWED_LIBRARIES = {
 'VERSION.dll', # version checking
 'WINMM.dll', # WinMM audio API
 'WTSAPI32.dll', # Remote Desktop
+'SETUPAPI.dll', # Windows Setup API
+'SHCORE.dll', # Stream Handler Core
 }
 
 def check_version(max_versions, version, arch) -> bool:

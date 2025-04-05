@@ -57,6 +57,7 @@ from test_framework.script import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
     softfork_active,
 )
@@ -347,13 +348,11 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         # Check that all prefilled_txn entries match what's in the block.
         for entry in header_and_shortids.prefilled_txn:
-            entry.tx.calc_sha256()
             # This checks the non-witness parts of the tx agree
-            assert_equal(entry.tx.sha256, block.vtx[entry.index].sha256)
+            assert_equal(entry.tx.rehash(), block.vtx[entry.index].rehash())
 
             # And this checks the witness
-            wtxid = entry.tx.calc_sha256(True)
-            assert_equal(wtxid, block.vtx[entry.index].calc_sha256(True))
+            assert_equal(entry.tx.getwtxid(), block.vtx[entry.index].getwtxid())
 
         # Check that the cmpctblock message announced all the transactions.
         assert_equal(len(header_and_shortids.prefilled_txn) + len(header_and_shortids.shortids), len(block.vtx))
@@ -590,10 +589,9 @@ class CompactBlocksTest(BitcoinTestFramework):
                 all_indices = msg.block_txn_request.to_absolute()
                 for index in all_indices:
                     tx = test_node.last_message["blocktxn"].block_transactions.transactions.pop(0)
-                    tx.calc_sha256()
-                    assert_equal(tx.sha256, block.vtx[index].sha256)
+                    assert_equal(tx.rehash(), block.vtx[index].rehash())
                     # Check that the witness matches
-                    assert_equal(tx.calc_sha256(True), block.vtx[index].calc_sha256(True))
+                    assert_equal(tx.getwtxid(), block.vtx[index].getwtxid())
                 test_node.last_message.pop("blocktxn", None)
             current_height -= 1
 
@@ -738,7 +736,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         test_node.send_and_ping(msg)
 
         # Check that the tip didn't advance
-        assert int(node.getbestblockhash(), 16) != block.sha256
+        assert_not_equal(int(node.getbestblockhash(), 16), block.sha256)
         test_node.sync_with_ping()
 
     # Helper for enabling cb announcements
@@ -791,7 +789,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         cmpct_block.use_witness = True
         delivery_peer.send_and_ping(msg_cmpctblock(cmpct_block.to_p2p()))
-        assert int(node.getbestblockhash(), 16) != block.sha256
+        assert_not_equal(int(node.getbestblockhash(), 16), block.sha256)
 
         msg = msg_no_witness_blocktxn()
         msg.block_transactions.blockhash = block.sha256
@@ -868,19 +866,19 @@ class CompactBlocksTest(BitcoinTestFramework):
             with p2p_lock:
                 # The second peer to announce should still get a getblocktxn
                 assert "getblocktxn" in delivery_peer.last_message
-            assert int(node.getbestblockhash(), 16) != block.sha256
+            assert_not_equal(int(node.getbestblockhash(), 16), block.sha256)
 
             inbound_peer.send_and_ping(msg_cmpctblock(cmpct_block.to_p2p()))
             with p2p_lock:
                 # The third inbound peer to announce should *not* get a getblocktxn
                 assert "getblocktxn" not in inbound_peer.last_message
-            assert int(node.getbestblockhash(), 16) != block.sha256
+            assert_not_equal(int(node.getbestblockhash(), 16), block.sha256)
 
             outbound_peer.send_and_ping(msg_cmpctblock(cmpct_block.to_p2p()))
             with p2p_lock:
                 # The third peer to announce should get a getblocktxn if outbound
                 assert "getblocktxn" in outbound_peer.last_message
-            assert int(node.getbestblockhash(), 16) != block.sha256
+            assert_not_equal(int(node.getbestblockhash(), 16), block.sha256)
 
             # Second peer completes the compact block first
             msg = msg_blocktxn()
