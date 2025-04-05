@@ -196,8 +196,6 @@ private:
     //! the length of the obfuscate key in number of bytes
     static const unsigned int OBFUSCATE_KEY_NUM_BYTES;
 
-    std::vector<unsigned char> CreateObfuscateKey() const;
-
     //! path to filesystem storage
     const fs::path m_path;
 
