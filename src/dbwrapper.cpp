@@ -249,24 +249,15 @@ CDBWrapper::CDBWrapper(const DBParams& params)
         LogPrintf("Finished database compaction of %s\n", fs::PathToString(params.path));
     }
 
-    // The base-case obfuscation key, which is a noop.
-    m_obfuscation = std::vector<unsigned char>(Obfuscation::KEY_SIZE, '\000');
-
-    bool key_exists = Read(OBFUSCATION_KEY_KEY, m_obfuscation);
-
-    if (!key_exists && params.obfuscate && IsEmpty()) {
-        // Initialize non-degenerate obfuscation if it won't upset
-        // existing, non-obfuscated data.
-        std::vector<unsigned char> new_key = CreateObfuscation();
-
-        // Write `new_key` so we don't obfuscate the key with itself
-        Write(OBFUSCATION_KEY_KEY, new_key);
-        m_obfuscation = new_key;
-
-        LogPrintf("Wrote new obfuscation key for %s: %s\n", fs::PathToString(params.path), HexStr(m_obfuscation));
+    m_obfuscation = std::vector<uint8_t>(Obfuscation::KEY_SIZE, '\000'); // Needed for unobfuscated Read()/Write() below
+    if (!Read(OBFUSCATION_KEY_KEY, m_obfuscation) && params.obfuscate && IsEmpty()) {
+        // Generate, write and read back the new obfuscation key, making sure we don't obfuscate the key itself
+        Write(OBFUSCATION_KEY_KEY, FastRandomContext{}.randbytes(Obfuscation::KEY_SIZE));
+        Read(OBFUSCATION_KEY_KEY, m_obfuscation);
+        LogInfo("Wrote new obfuscation key for %s: %s", fs::PathToString(params.path), HexStr(m_obfuscation));
     }
+    LogInfo("Using obfuscation key for %s: %s", fs::PathToString(params.path), HexStr(m_obfuscation));
 
-    LogPrintf("Using obfuscation key for %s: %s\n", fs::PathToString(params.path), HexStr(m_obfuscation));
 }
 
 CDBWrapper::~CDBWrapper()
@@ -309,23 +300,6 @@ size_t CDBWrapper::DynamicMemoryUsage() const
         return 0;
     }
     return parsed.value();
-}
-
-// Prefixed with null character to avoid collisions with other keys
-//
-// We must use a string constructor which specifies length so that we copy
-// past the null-terminator.
-const std::string CDBWrapper::OBFUSCATION_KEY_KEY("\000obfuscate_key", 14);
-
-/**
- * Returns a string (consisting of 8 random bytes) suitable for use as an
- * obfuscating XOR key.
- */
-std::vector<unsigned char> CDBWrapper::CreateObfuscation() const
-{
-    std::vector<uint8_t> ret(Obfuscation::KEY_SIZE);
-    GetRandBytes(ret);
-    return ret;
 }
 
 std::optional<std::string> CDBWrapper::ReadImpl(std::span<const std::byte> key) const

@@ -190,10 +190,8 @@ private:
     //! a key used for optional XOR-obfuscation of the database
     std::vector<unsigned char> m_obfuscation;
 
-    //! the key under which the obfuscation key is stored
-    static const std::string OBFUSCATION_KEY_KEY;
-
-    std::vector<unsigned char> CreateObfuscation() const;
+    //! obfuscation key storage key, null-prefixed to avoid collisions
+    inline static const std::string OBFUSCATION_KEY_KEY{"\000obfuscate_key", 14}; // explicit size to avoid truncation at leading \0
 
     //! path to filesystem storage
     const fs::path m_path;
