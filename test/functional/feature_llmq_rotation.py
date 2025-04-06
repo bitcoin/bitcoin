@@ -231,6 +231,22 @@ class LLMQQuorumRotationTest(DashTestFramework):
         self.wait_until(lambda: self.nodes[0].getbestblockhash() == new_quorum_blockhash)
         assert_equal(self.nodes[0].quorum("list", llmq_type), new_quorum_list)
 
+        self.log.info("Test 'quorum rotationinfo' RPC")
+        genesis_blockhash = self.nodes[0].getblockhash(0)
+        block_count = self.nodes[0].getblockcount()
+        hmc_base_blockhash = self.nodes[0].getblockhash(block_count - (block_count % 24) - 24 - 8)
+        best_block_hash = self.nodes[0].getbestblockhash()
+        rpc_qr_info = self.nodes[0].quorum("rotationinfo", best_block_hash, False, hmc_base_blockhash)
+        assert_equal(rpc_qr_info["mnListDiffTip"]["blockHash"], best_block_hash)
+        assert_equal(rpc_qr_info["mnListDiffTip"]["baseBlockHash"], rpc_qr_info["mnListDiffH"]["blockHash"])
+        assert_equal(rpc_qr_info["mnListDiffH"]["baseBlockHash"], rpc_qr_info["mnListDiffAtHMinusC"]["blockHash"])
+        assert_equal(rpc_qr_info["mnListDiffAtHMinusC"]["blockHash"], hmc_base_blockhash)
+        assert_equal(rpc_qr_info["mnListDiffAtHMinusC"]["baseBlockHash"], hmc_base_blockhash)
+        assert_equal(rpc_qr_info["mnListDiffAtHMinusC"]["newQuorums"], [])
+        assert_equal(rpc_qr_info["mnListDiffAtHMinusC"]["deletedQuorums"], [])
+        assert_equal(rpc_qr_info["mnListDiffAtHMinus2C"]["baseBlockHash"], rpc_qr_info["mnListDiffAtHMinus3C"]["blockHash"])
+        assert_equal(rpc_qr_info["mnListDiffAtHMinus3C"]["baseBlockHash"], genesis_blockhash)
+
     def test_getmnlistdiff_quorums(self, baseBlockHash, blockHash, baseQuorumList, expectedDeleted, expectedNew, testQuorumsCLSigs = True):
         d = self.test_getmnlistdiff_base(baseBlockHash, blockHash, testQuorumsCLSigs)
 
