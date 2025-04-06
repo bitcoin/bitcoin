@@ -689,7 +689,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
 
     ptx.keyIDOwner = ParsePubKeyIDFromAddress(request.params[paramIdx + 1].get_str(), "owner address");
     ptx.pubKeyOperator.Set(ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address", use_legacy), use_legacy);
-    ptx.nVersion = use_legacy ? ProTxVersion::LegacyBLS : ProTxVersion::BasicBLS;
+    ptx.nVersion = CProRegTx::GetMaxVersion(/*is_basic_scheme_active=*/!use_legacy);
     CHECK_NONFATAL(ptx.pubKeyOperator.IsLegacy() == (ptx.nVersion == ProTxVersion::LegacyBLS));
 
     CKeyID keyIDVoting = ptx.keyIDOwner;
@@ -1111,7 +1111,7 @@ static RPCHelpMan protx_update_registrar_wrapper(const bool specific_legacy_bls_
         ptx.pubKeyOperator = dmn->pdmnState->pubKeyOperator;
     }
 
-    ptx.nVersion = use_legacy ? ProTxVersion::LegacyBLS : ProTxVersion::BasicBLS;
+    ptx.nVersion = CProUpRegTx::GetMaxVersion(/*is_basic_scheme_active=*/!use_legacy);
     CHECK_NONFATAL(ptx.pubKeyOperator.IsLegacy() == (ptx.nVersion == ProTxVersion::LegacyBLS));
 
     if (request.params[2].get_str() != "") {
@@ -1204,7 +1204,7 @@ static RPCHelpMan protx_revoke()
 
     const bool isV19active{DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
     CProUpRevTx ptx;
-    ptx.nVersion = CProUpRevTx::GetVersion(isV19active);
+    ptx.nVersion = CProUpRevTx::GetMaxVersion(/*is_basic_scheme_active=*/isV19active);
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
 
     CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[1].get_str(), "operatorKey");

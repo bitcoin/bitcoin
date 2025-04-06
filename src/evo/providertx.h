@@ -31,7 +31,7 @@ class CProRegTx
 public:
     static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_REGISTER;
 
-    [[nodiscard]] static constexpr auto GetVersion(const bool is_basic_scheme_active) -> uint16_t
+    [[nodiscard]] static constexpr uint16_t GetMaxVersion(const bool is_basic_scheme_active)
     {
         return is_basic_scheme_active ? ProTxVersion::BasicBLS : ProTxVersion::LegacyBLS;
     }
@@ -57,7 +57,7 @@ public:
         READWRITE(
                 obj.nVersion
         );
-        if (obj.nVersion == 0 || obj.nVersion > ProTxVersion::BasicBLS) {
+        if (obj.nVersion == 0 || obj.nVersion > GetMaxVersion(/*is_basic_scheme_active=*/true)) {
             // unknown version, bail out early
             return;
         }
@@ -125,7 +125,7 @@ class CProUpServTx
 public:
     static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_UPDATE_SERVICE;
 
-    [[nodiscard]] static constexpr auto GetVersion(const bool is_basic_scheme_active) -> uint16_t
+    [[nodiscard]] static constexpr uint16_t GetMaxVersion(const bool is_basic_scheme_active)
     {
         return is_basic_scheme_active ? ProTxVersion::BasicBLS : ProTxVersion::LegacyBLS;
     }
@@ -146,7 +146,7 @@ public:
         READWRITE(
                 obj.nVersion
         );
-        if (obj.nVersion == 0 || obj.nVersion > ProTxVersion::BasicBLS) {
+        if (obj.nVersion == 0 || obj.nVersion > GetMaxVersion(/*is_basic_scheme_active=*/true)) {
             // unknown version, bail out early
             return;
         }
@@ -203,7 +203,7 @@ class CProUpRegTx
 public:
     static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_UPDATE_REGISTRAR;
 
-    [[nodiscard]] static constexpr auto GetVersion(const bool is_basic_scheme_active) -> uint16_t
+    [[nodiscard]] static constexpr uint16_t GetMaxVersion(const bool is_basic_scheme_active)
     {
         return is_basic_scheme_active ? ProTxVersion::BasicBLS : ProTxVersion::LegacyBLS;
     }
@@ -222,7 +222,7 @@ public:
         READWRITE(
                 obj.nVersion
         );
-        if (obj.nVersion == 0 || obj.nVersion > ProTxVersion::BasicBLS) {
+        if (obj.nVersion == 0 || obj.nVersion > GetMaxVersion(/*is_basic_scheme_active=*/true)) {
             // unknown version, bail out early
             return;
         }
@@ -266,7 +266,7 @@ class CProUpRevTx
 public:
     static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_UPDATE_REVOKE;
 
-    [[nodiscard]] static constexpr auto GetVersion(const bool is_basic_scheme_active) -> uint16_t
+    [[nodiscard]] static constexpr uint16_t GetMaxVersion(const bool is_basic_scheme_active)
     {
         return is_basic_scheme_active ? ProTxVersion::BasicBLS : ProTxVersion::LegacyBLS;
     }
@@ -291,7 +291,7 @@ public:
         READWRITE(
                 obj.nVersion
         );
-        if (obj.nVersion == 0 || obj.nVersion > ProTxVersion::BasicBLS) {
+        if (obj.nVersion == 0 || obj.nVersion > GetMaxVersion(/*is_basic_scheme_active=*/true)) {
             // unknown version, bail out early
             return;
         }
