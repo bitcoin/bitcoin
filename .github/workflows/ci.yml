@@ -72,14 +72,16 @@ jobs:
           fi
           echo "TEST_BASE=$(git rev-list -n$((${{ env.MAX_COUNT }} + 1)) --reverse HEAD $EXCLUDE_MERGE_BASE_ANCESTORS | head -1)" >> "$GITHUB_ENV"
       - run: |
-          git fetch origin master
+          git fetch origin "${GITHUB_BASE_REF}"
+          git config user.email "ci@example.com"
+          git config user.name "CI"
       - run: |
           sudo apt-get update
           sudo apt-get install clang ccache build-essential cmake ninja-build pkgconf python3-zmq libevent-dev libboost-dev libsqlite3-dev libdb++-dev systemtap-sdt-dev libzmq3-dev qt6-base-dev qt6-tools-dev qt6-l10n-tools libqrencode-dev -y
       - name: Compile and run tests
         run: |
           # Run tests on commits after the last merge commit and before the PR head commit
-          git rebase --exec "./.github/ci-test-each-commit-exec.sh" ${{ env.TEST_BASE }}
+          git rebase --exec "git merge --no-commit origin/${GITHUB_BASE_REF} && ./.github/ci-test-each-commit-exec.sh && git reset --hard" ${{ env.TEST_BASE }}
 
   macos-native-arm64:
     name: ${{ matrix.job-name }}
