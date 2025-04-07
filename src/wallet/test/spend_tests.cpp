@@ -21,6 +21,16 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
     CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     auto wallet = CreateSyncedWallet(*m_node.chain, WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain()), coinbaseKey);
 
+      std::vector<COutput> coins;
+    {
+        LOCK(wallet->cs_wallet);
+        std::map<CTxDestination, std::vector<COutput>> coins_map = ListCoins(*wallet);
+
+        for (const auto& [destination, outpoint] : coins_map) {
+            coins.insert(coins.end(), outpoint.begin(), outpoint.end());
+        }
+    }
+
     // Check that a subtract-from-recipient transaction slightly less than the
     // coinbase input amount does not create a change output (because it would
     // be uneconomical to add and spend the output), and make sure it pays the
