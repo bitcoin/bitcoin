@@ -5,7 +5,7 @@
 macro(fatal_error)
   message(FATAL_ERROR "\n"
     "Usage:\n"
-    "  cmake -D BUILD_INFO_HEADER_PATH=<path> [-D SOURCE_DIR=<path>] -P ${CMAKE_CURRENT_LIST_FILE}\n"
+    "  cmake -D BUILD_INFO_HEADER_PATH=<path> -D GIT_EXECUTABLE=<path> [-D SOURCE_DIR=<path>] -P ${CMAKE_CURRENT_LIST_FILE}\n"
     "All specified paths must be absolute ones.\n"
   )
 endmacro()
@@ -31,8 +31,7 @@ endif()
 set(GIT_TAG)
 set(GIT_COMMIT)
 if(NOT "$ENV{BITCOIN_GENBUILD_NO_GIT}" STREQUAL "1")
-  find_package(Git QUIET)
-  if(Git_FOUND)
+  if(GIT_EXECUTABLE)
     execute_process(
       COMMAND ${GIT_EXECUTABLE} rev-parse --is-inside-work-tree
       WORKING_DIRECTORY ${WORKING_DIR}
