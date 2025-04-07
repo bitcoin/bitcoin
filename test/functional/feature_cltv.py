@@ -7,6 +7,7 @@
 Test that the CHECKLOCKTIMEVERIFY soft-fork activates.
 """
 
+import time
 from test_framework.blocktools import (
     TIME_GENESIS_BLOCK,
     create_block,
@@ -25,7 +26,7 @@ from test_framework.script import (
     OP_DROP,
 )
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_not_equal
 from test_framework.wallet import (
     MiniWallet,
     MiniWalletMode,
@@ -70,12 +71,12 @@ def cltv_invalidate(tx, failure_reason):
 
 def cltv_validate(tx, height):
     # Modify the signature in vin 0 and nSequence/nLockTime of the tx to pass CLTV
-    scheme = [[CScriptNum(height), OP_CHECKLOCKTIMEVERIFY, OP_DROP], 0, height]
+    scheme = [[CScriptNum.encode(CScriptNum(height))[1:], OP_CHECKLOCKTIMEVERIFY, OP_DROP], 0, height]
 
     cltv_modify_tx(tx, prepend_scriptsig=scheme[0], nsequence=scheme[1], nlocktime=scheme[2])
 
 
-CLTV_HEIGHT = 111
+CLTV_HEIGHT = 112
 
 
 class BIP65Test(BitcoinTestFramework):
@@ -105,8 +106,9 @@ class BIP65Test(BitcoinTestFramework):
         self.test_cltv_info(is_active=False)
 
         self.log.info("Mining %d blocks", CLTV_HEIGHT - 2)
-        self.generate(wallet, 10)
-        self.generate(self.nodes[0], CLTV_HEIGHT - 2 - 10)
+        num_utxos = 12
+        self.generate(wallet, num_utxos)
+        self.generate(self.nodes[0], CLTV_HEIGHT - 2 - num_utxos)
         assert_equal(self.nodes[0].getblockcount(), CLTV_HEIGHT - 2)
 
         self.log.info("Test that invalid-according-to-CLTV transactions can still appear in a block")
@@ -198,6 +200,40 @@ class BIP65Test(BitcoinTestFramework):
         peer.send_and_ping(msg_block(block))
         self.test_cltv_info(is_active=True)  # Active as of current tip
         assert_equal(self.nodes[0].getbestblockhash(), block.hash_hex)
+
+        # test wall clock time
+        tip = block.hash_int
+
+        current_time = int(time.time())
+        locktime = current_time + (60 * 60) # 1 hour
+        spendtx = wallet.create_self_transfer()['tx']
+        self.log.info("Test that one block mined with correct wall clock time does not satisfy median-time-past")
+        cltv_validate(spendtx,locktime)
+        block2 = create_block(tip, height=CLTV_HEIGHT + 1, ntime=locktime, version=4)
+        block2.vtx.append(spendtx)
+        block2.hashMerkleRoot = block2.calc_merkle_root()
+        block2.solve()
+        peer.send_and_ping(msg_block(block2))
+        # expect failure as we haven't satisfied wall clock time yet
+        assert_not_equal(int(self.nodes[0].getbestblockhash(), 16), block2.hash_int)
+
+        self.log.info("Test 7 blocks mined with current wall clock time can satisfy the median-time-past")
+        num = 7
+        for i in range(num):
+            b = create_block(tip, height=CLTV_HEIGHT + i + 1, ntime=locktime + i, version=4)
+            b.solve()
+            peer.send_and_ping(msg_block(b))
+            tip = b.hash_int
+
+        # now our median-past-time should allow for a transaction with
+        # a locktime of +1 hour to be confirmed
+        cltv_validate(spendtx,locktime)
+        block2 = create_block(tip, height=CLTV_HEIGHT + num + 1, ntime=locktime + num, version=4)
+        block2.vtx.append(spendtx)
+        block2.hashMerkleRoot = block2.calc_merkle_root()
+        block2.solve()
+        peer.send_and_ping(msg_block(block2))
+        assert_equal(int(self.nodes[0].getbestblockhash(), 16), block2.hash_int)
 
 
 if __name__ == '__main__':
