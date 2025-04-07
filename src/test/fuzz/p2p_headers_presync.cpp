@@ -54,7 +54,7 @@ void HeadersSyncSetup::ResetAndInitialize()
     auto& connman = static_cast<ConnmanTestMsg&>(*m_node.connman);
     connman.StopNodes();
 
-    NodeId id{0};
+    static NodeId id{0};
     std::vector<ConnectionType> conn_types = {
         ConnectionType::OUTBOUND_FULL_RELAY,
         ConnectionType::BLOCK_RELAY,
