@@ -147,6 +147,5 @@ define $(package)_stage_cmds
 endef
 
 define $(package)_postprocess_cmds
-  rm -rf doc/ && \
-  mv -t .. translations/
+  rm -rf doc/
 endef

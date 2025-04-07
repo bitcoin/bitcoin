@@ -274,6 +274,13 @@ define $(package)_stage_cmds
   cmake --install . --prefix $($(package)_staging_prefix_dir)
 endef
 
+ifeq ($(host),$(build))
 define $(package)_postprocess_cmds
   rm -rf doc/
 endef
+else
+define $(package)_postprocess_cmds
+  rm -rf doc/ && \
+  cp -R $(build_prefix)/translations $($(package)_staging_prefix_dir)
+endef
+endif
