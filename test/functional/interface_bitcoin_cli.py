@@ -24,7 +24,7 @@ import time
 # after COINBASE_MATURITY - 1 blocks. Therefore, after mining 101 blocks we expect
 # node 0 to have a balance of (BLOCKS - COINBASE_MATURITY - 1) * 50 BTC/block.
 BLOCKS = COINBASE_MATURITY + 1
-BALANCE = (BLOCKS - 100) * 50
+BALANCE = (BLOCKS - 99) * 50
 
 JSON_PARSING_ERROR = 'error: Error parsing JSON: foo'
 BLOCKS_VALUE_OF_ZERO = 'error: the first argument (number of blocks to generate, default: 1) must be an integer value greater than zero'
