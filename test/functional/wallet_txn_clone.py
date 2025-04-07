@@ -50,10 +50,14 @@ class TxnMallTest(BitcoinTestFramework):
         else:
             output_type = "legacy"
 
-        # All nodes should start with 1,250 BTC:
+        # Node 0 starts with 1,300 BTC and the rest with 1,250 BTC
         starting_balance = 1250
+        starting_balance_node_0 = starting_balance + 50
         for i in range(3):
-            assert_equal(self.nodes[i].getbalance(), starting_balance)
+            if i == 0:
+                assert_equal(self.nodes[i].getbalance(), starting_balance_node_0)
+            else:
+                assert_equal(self.nodes[i].getbalance(), starting_balance)
 
         self.nodes[0].settxfee(.001)
 
@@ -67,7 +71,7 @@ class TxnMallTest(BitcoinTestFramework):
         node0_tx2 = self.nodes[0].gettransaction(node0_utxo2['txid'])
 
         assert_equal(self.nodes[0].getbalance(),
-                     starting_balance + node0_tx1["fee"] + node0_tx2["fee"])
+                     starting_balance_node_0 + node0_tx1["fee"] + node0_tx2["fee"])
 
         # Coins are sent to node1_address
         node1_address = self.nodes[1].getnewaddress()
@@ -103,7 +107,7 @@ class TxnMallTest(BitcoinTestFramework):
 
         # Node0's balance should be starting balance, plus 50BTC for another
         # matured block, minus tx1 and tx2 amounts, and minus transaction fees:
-        expected = starting_balance + node0_tx1["fee"] + node0_tx2["fee"]
+         expected = starting_balance_node_0 + node0_tx1["fee"] + node0_tx2["fee"]
         if self.options.mine_block:
             expected += 50
         expected += tx1["amount"] + tx1["fee"]
