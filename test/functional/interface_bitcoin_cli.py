@@ -20,9 +20,9 @@ from test_framework.util import (
 )
 import time
 
-# The block reward of coinbaseoutput.nValue (50) BTC/block matures after
-# COINBASE_MATURITY (100) blocks. Therefore, after mining 101 blocks we expect
-# node 0 to have a balance of (BLOCKS - COINBASE_MATURITY) * 50 BTC/block.
+# The block reward of coinbaseoutput.nValue (50) BTC/block becomes selectable
+# after COINBASE_MATURITY - 1 blocks. Therefore, after mining 101 blocks we expect
+# node 0 to have a balance of (BLOCKS - COINBASE_MATURITY - 1) * 50 BTC/block.
 BLOCKS = COINBASE_MATURITY + 1
 BALANCE = (BLOCKS - 100) * 50
 
