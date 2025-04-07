@@ -13,6 +13,8 @@
 #include <uint256.h>
 #include <undo.h>
 #include <util/strencodings.h>
+#include <test/util/coins.h>
+#include <random.h>
 
 #include <map>
 #include <string>
@@ -1072,6 +1074,80 @@ BOOST_AUTO_TEST_CASE(coins_resource_is_used)
     }
 
     PoolResourceTester::CheckAllDataAccountedFor(resource);
+}
+
+BOOST_AUTO_TEST_CASE(util_coins_tests)
+{
+    CCoinsView coinsDummy;
+    CCoinsViewCache coins(&coinsDummy);
+    
+    // Generate a random outpoint
+    COutPoint outpoint(GetRandHash(), 0);
+    
+    // Test adding a coin
+    BOOST_CHECK(TestAddCoin(coins, outpoint, 100 * COIN, 100, false, false));
+    
+    // Test that we can't overwrite without permission
+    BOOST_CHECK(TestAddCoin(coins, outpoint, 200 * COIN, 200, true, false));
+    
+    // Test that the coin wasn't changed by the failed overwrite
+    const Coin& unchanged_coin = coins.AccessCoin(outpoint);
+    BOOST_CHECK_EQUAL(unchanged_coin.out.nValue, 100 * COIN);
+    BOOST_CHECK_EQUAL(unchanged_coin.nHeight, 100);
+    BOOST_CHECK_EQUAL(unchanged_coin.fCoinBase, false);
+    
+    // Test that we can overwrite with permission
+    BOOST_CHECK(TestAddCoin(coins, outpoint, 200 * COIN, 200, true, true));
+    
+    // Test that the coin was overwritten
+    const Coin& changed_coin = coins.AccessCoin(outpoint);
+    BOOST_CHECK_EQUAL(changed_coin.out.nValue, 200 * COIN);
+    BOOST_CHECK_EQUAL(changed_coin.nHeight, 200);
+    BOOST_CHECK_EQUAL(changed_coin.fCoinBase, true);
+    
+    // Test spending the coin with moveout = nullptr
+    BOOST_CHECK(TestSpendCoin(coins, outpoint, nullptr));
+    
+    // Verify the coin is now spent
+    BOOST_CHECK(coins.AccessCoin(outpoint).IsSpent());
+    
+    // Test that spending a spent coin returns false
+    BOOST_CHECK(!TestSpendCoin(coins, outpoint, nullptr));
+    
+    // Create a new coin for testing moveout functionality
+    COutPoint outpoint2(GetRandHash(), 1);
+    BOOST_CHECK(TestAddCoin(coins, outpoint2, 300 * COIN, 300, false, false));
+    
+    // Test spending with moveout
+    Coin moved_coin;
+    BOOST_CHECK(TestSpendCoin(coins, outpoint2, &moved_coin));
+    
+    // Check that moveout has the correct values
+    BOOST_CHECK_EQUAL(moved_coin.out.nValue, 300 * COIN);
+    BOOST_CHECK_EQUAL(moved_coin.nHeight, 300);
+    BOOST_CHECK_EQUAL(moved_coin.fCoinBase, false);
+    
+    // Test spending a non-existent coin
+    COutPoint nonexistent_outpoint(GetRandHash(), 2);
+    BOOST_CHECK(!TestSpendCoin(coins, nonexistent_outpoint, nullptr));
+    
+    // Add and spend multiple coins
+    std::vector<COutPoint> outpoints;
+    for (int i = 0; i < 5; i++) {
+        COutPoint op(GetRandHash(), i);
+        outpoints.push_back(op);
+        BOOST_CHECK(TestAddCoin(coins, op, (i+1) * 100 * COIN, i+100, i % 2 == 0, false));
+    }
+    
+    // Spend the coins
+    for (const auto& op : outpoints) {
+        BOOST_CHECK(TestSpendCoin(coins, op, nullptr));
+    }
+    
+    // Verify all coins are spent
+    for (const auto& op : outpoints) {
+        BOOST_CHECK(coins.AccessCoin(op).IsSpent());
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
