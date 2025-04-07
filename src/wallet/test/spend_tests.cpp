@@ -36,11 +36,13 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
     // be uneconomical to add and spend the output), and make sure it pays the
     // leftover input amount which would have been change to the recipient
     // instead of the miner.
-    auto check_tx = [&wallet](CAmount leftover_input_amount) {
+    auto check_tx = [&wallet, &coins](CAmount leftover_input_amount) {
         CRecipient recipient{PubKeyDestination({}), 50 * COIN - leftover_input_amount, /*subtract_fee=*/true};
         CCoinControl coin_control;
         coin_control.m_feerate.emplace(10000);
         coin_control.fOverrideFeeRate = true;
+        // Select one of the two UTXOs from our wallet
+        coin_control.Select(coins[0].outpoint);
         // We need to use a change type with high cost of change so that the leftover amount will be dropped to fee instead of added as a change output
         coin_control.m_change_type = OutputType::LEGACY;
         auto res = CreateTransaction(*wallet, {recipient}, /*change_pos=*/std::nullopt, coin_control);
