@@ -1231,6 +1231,41 @@ def spenders_taproot_nonstandard():
 
     return spenders
 
+def sample_spenders():
+
+    # Create key(s) for output creation, as well as key and script-spends
+    secs = [generate_privkey() for _ in range(2)]
+    pubs = [compute_xonly_pubkey(sec)[0] for sec in secs]
+
+    # Create a list of scripts which will be built into a taptree
+    scripts = [
+        # leaf label, followed by CScript
+        ("encodeable_pushdata1", CScript([OP_DROP, OP_PUSHDATA1, b'aa' * 75])),
+        ("nonstd_encodeable_pushdata1", CScript([OP_PUSHDATA1, b'aa'])),
+        ("dummyleaf", CScript([])),
+    ]
+
+    # Build TaprootInfo using scripts and appropriate pubkey for output creation
+    tap = taproot_construct(pubs[0], scripts)
+
+    # Finally, add spender(s).
+    # Each spender embodies a test with an optional failure condition.
+    # These failure conditions allow for fine-grained success/failure
+    # conditions that are tested randomly.
+    spenders = []
+
+    # Named comment, using first leaf from scripts, with empty string as witness data, no optional fail condition
+    add_spender(spenders, comment="tutorial/pushdata1", tap=tap, leaf="encodeable_pushdata1", inputs=[b'\x00'], no_fail=True)
+
+    # Spender with alternative failure tapscript via over-riding "failure" dictionary, along with the failure's expected err_msg / ERR_*
+    add_spender(spenders, comment="tutorial/pushdata1redux", tap=tap, leaf="encodeable_pushdata1", inputs=[b'\x00'], failure={"leaf": "dummyleaf"}, **ERR_NO_SUCCESS)
+
+    # Spender that is non-standard but otherwise valid, with extraneous signature data from inner key for optional failure condition
+    add_spender(spenders, comment="tutorial/nonminpushdata1", tap=tap, leaf="nonstd_encodeable_pushdata1", key=secs[0], standard=False, failure={"inputs": [getter("sign")]}, **ERR_CLEANSTACK)
+
+    # New scripts=[] can be defined, and rinse-repeated as necessary until the spenders list is returned for execution
+    return spenders
+
 # Consensus validation flags to use in dumps for tests with "legacy/" or "inactive/" prefix.
 LEGACY_FLAGS = "P2SH,DERSIG,CHECKLOCKTIMEVERIFY,CHECKSEQUENCEVERIFY,WITNESS,NULLDUMMY"
 # Consensus validation flags to use in dumps for all other tests.
@@ -1757,12 +1792,20 @@ class TaprootTest(BitcoinTestFramework):
         self.gen_test_vectors()
 
         self.log.info("Post-activation tests...")
-        self.test_spenders(self.nodes[0], spenders_taproot_active(), input_counts=[1, 2, 2, 2, 2, 3])
+
+        # New sub-tests not checking standardness can be added to consensus_spenders
+        # to allow for increased coverage across input types.
+        # See sample_spenders for a minimal example
+        consensus_spenders = sample_spenders()
+        consensus_spenders += spenders_taproot_active()
+        self.test_spenders(self.nodes[0], consensus_spenders, input_counts=[1, 2, 2, 2, 2, 3])
+
         # Run each test twice; once in isolation, and once combined with others. Testing in isolation
         # means that the standardness is verified in every test (as combined transactions are only standard
         # when all their inputs are standard).
-        self.test_spenders(self.nodes[0], spenders_taproot_nonstandard(), input_counts=[1])
-        self.test_spenders(self.nodes[0], spenders_taproot_nonstandard(), input_counts=[2, 3])
+        nonstd_spenders = spenders_taproot_nonstandard()
+        self.test_spenders(self.nodes[0], nonstd_spenders, input_counts=[1])
+        self.test_spenders(self.nodes[0], nonstd_spenders, input_counts=[2, 3])
 
 
 if __name__ == '__main__':
