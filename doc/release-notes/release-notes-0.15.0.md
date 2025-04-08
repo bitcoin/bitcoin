@@ -363,7 +363,7 @@ Low-level RPC changes
 
 ### Block and transaction handling
 - #9801 `a8c5751` Removed redundant parameter from mempool.PrioritiseTransaction (gubatron)
-- #9819 `1efc99c` Remove harmless read of unusued priority estimates (morcos)
+- #9819 `1efc99c` Remove harmless read of unused priority estimates (morcos)
 - #9822 `b7547fa` Remove block file location upgrade code (benma)
 - #9602 `30ff3a2` Remove coin age priority and free transactions - implementation (morcos)
 - #9548 `47510ad` Remove min reasonable fee (morcos)
