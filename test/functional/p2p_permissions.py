@@ -86,7 +86,16 @@ class P2PPermissionsTests(BitcoinTestFramework):
         self.checkpermission(
             # all permission added
             ["-whitelist=all@127.0.0.1"],
-            ["forcerelay", "noban", "mempool", "bloomfilter", "relay", "download", "addr"])
+            [
+                "blockfilters",
+                "forcerelay",
+                "noban",
+                "mempool",
+                "bloomfilter",
+                "relay",
+                "download",
+                "addr",
+            ])
 
         for flag, permissions in [(["-whitelist=noban,out@127.0.0.1"], ["noban", "download"]), (["-whitelist=noban@127.0.0.1"], [])]:
             self.restart_node(0, flag)
