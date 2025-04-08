@@ -158,6 +158,7 @@ if(WITH_MULTIPROCESS)
   find_package(Libmultiprocess REQUIRED COMPONENTS Lib)
   find_package(LibmultiprocessNative REQUIRED COMPONENTS Bin
     NAMES Libmultiprocess
+    NO_CMAKE_FIND_ROOT_PATH
   )
 endif()
 

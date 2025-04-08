@@ -105,7 +105,7 @@ endif
 $(host_arch)_$(host_os)_prefix=$(BASEDIR)/$(host)
 $(host_arch)_$(host_os)_host=$(host)
 host_prefix=$($(host_arch)_$(host_os)_prefix)
-build_prefix=$(host_prefix)/native
+build_prefix=$(BASEDIR)/native
 build_host=$(build)
 
 all: install
@@ -187,11 +187,11 @@ include funcs.mk
 final_build_id_long+=$(shell $(build_SHA256SUM) toolchain.cmake.in)
 final_build_id+=$(shell echo -n "$(final_build_id_long)" | $(build_SHA256SUM) | cut -c-$(HASH_LENGTH))
 $(host_prefix)/.stamp_$(final_build_id): $(native_packages) $(packages)
-	rm -rf $(@D)
-	mkdir -p $(@D)
+	rm -rf native/ $(@D)
+	mkdir -p native/ $(@D)
 	echo copying packages: $^
 	echo to: $(@D)
-	cd $(@D); $(foreach package,$^, $(build_TAR) xf $($(package)_cached); )
+	cd $(@D); $(foreach package,$^, $(build_TAR) xf $($(package)_cached) -C $($($(package)_type)_prefix); )
 	echo To build Bitcoin Core with these packages, pass \'--toolchain $(@D)/toolchain.cmake\' to the first CMake invocation.
 	touch $@
 
@@ -239,7 +239,7 @@ $(host_prefix)/toolchain.cmake : toolchain.cmake.in $(host_prefix)/.stamp_$(fina
 	touch $@
 
 define check_or_remove_cached
-  mkdir -p $(BASE_CACHE)/$(host)/$(package) && cd $(BASE_CACHE)/$(host)/$(package); \
+  mkdir -p $(BASE_CACHE)/$($(package)_type)/$(package) && cd $(BASE_CACHE)/$($(package)_type)/$(package); \
   $(build_SHA256SUM) -c $($(package)_cached_checksum) >/dev/null 2>/dev/null || \
   ( rm -f $($(package)_cached_checksum); \
     if test -f "$($(package)_cached)"; then echo "Checksum mismatch for $(package). Forcing rebuild.."; rm -f $($(package)_cached_checksum) $($(package)_cached); fi )
@@ -262,7 +262,7 @@ $(host_prefix)/toolchain.cmake: check-packages
 check-packages: check-sources
 
 clean-all: clean
-	@rm -rf $(SOURCES_PATH) x86_64* i686* mips* arm* aarch64* powerpc* riscv32* riscv64* s390x*
+	@rm -rf $(SOURCES_PATH) native x86_64* amd64* i686* mips* arm* aarch64* powerpc* riscv32* riscv64* s390x*
 
 clean:
 	@rm -rf $(WORK_PATH) $(BASE_CACHE) $(BUILD) *.log
