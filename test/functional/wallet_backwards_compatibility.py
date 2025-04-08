@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2022 The Bitcoin Core developers
+# Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Backwards compatibility functional test
@@ -33,7 +33,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 11
+        self.num_nodes = 10
         # Add new version after each release:
         self.extra_args = [
             ["-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # Pre-release: use to mine blocks. noban for immediate tx relay
@@ -46,7 +46,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v0.20.1
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v0.19.1
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=127.0.0.1"], # v0.18.1
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=127.0.0.1"], # v0.17.2
         ]
         self.wallet_names = [self.default_wallet_name]
 
@@ -66,7 +65,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             200100,
             190100,
             180100,
-            170200,
         ])
 
         self.start_nodes()
@@ -97,7 +95,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # See #18075
         self.log.info("Testing 0.19 addmultisigaddress case (#18075)")
         node_master = self.nodes[1]
-        node_v19 = self.nodes[self.num_nodes - 4]
+        node_v19 = self.nodes[self.num_nodes - 3]
         node_v19.rpc.createwallet(wallet_name="w1_v19")
         wallet = node_v19.get_wallet_rpc("w1_v19")
         info = wallet.getwalletinfo()
@@ -131,17 +129,17 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
     def run_test(self):
         node_miner = self.nodes[0]
         node_master = self.nodes[1]
-        node_v21 = self.nodes[self.num_nodes - 5]
-        node_v17 = self.nodes[self.num_nodes - 1]
+        node_v21 = self.nodes[self.num_nodes - 4]
+        node_v18 = self.nodes[self.num_nodes - 1]
 
         legacy_nodes = self.nodes[2:] # Nodes that support legacy wallets
-        legacy_only_nodes = self.nodes[-4:] # Nodes that only support legacy wallets
-        descriptors_nodes = self.nodes[2:-4] # Nodes that support descriptor wallets
+        legacy_only_nodes = self.nodes[-3:] # Nodes that only support legacy wallets
+        descriptors_nodes = self.nodes[2:-3] # Nodes that support descriptor wallets
 
         self.generatetoaddress(node_miner, COINBASE_MATURITY + 1, node_miner.getnewaddress())
 
         # Sanity check the test framework:
-        res = node_v17.getblockchaininfo()
+        res = node_v18.getblockchaininfo()
         assert_equal(res['blocks'], COINBASE_MATURITY + 1)
 
         self.log.info("Test wallet backwards compatibility...")
@@ -201,11 +199,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             for wallet in os.listdir(node_master_wallets_dir):
                 dest = node.wallets_path / wallet
                 source = node_master_wallets_dir / wallet
-                if self.major_version_equals(node, 16):
-                    # 0.16 node expect the wallet to be in the wallet dir but as a plain file rather than in directories
-                    shutil.copyfile(source / "wallet.dat", dest)
-                else:
-                    shutil.copytree(source, dest)
+                shutil.copytree(source, dest)
 
         self.test_v19_addmultisigaddress()
 
@@ -215,9 +209,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         for node in descriptors_nodes if self.options.descriptors else legacy_nodes:
             self.log.info(f"- {node.version}")
             for wallet_name in ["w1", "w2", "w3"]:
-                if self.major_version_less_than(node, 18) and wallet_name == "w3":
-                    # Blank wallets were introduced in v0.18.0. We test the loading error below.
-                    continue
                 if self.major_version_less_than(node, 22) and wallet_name == "w1" and self.options.descriptors:
                     # Descriptor wallets created after 0.21 have taproot descriptors which 0.21 does not support, tested below
                     continue
@@ -261,29 +252,11 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         if self.options.descriptors:
             self.log.info("Test descriptor wallet incompatibility on:")
             for node in legacy_only_nodes:
-                # RPC loadwallet failure causes bitcoind to exit in <= 0.17, in addition to the RPC
-                # call failure, so the following test won't work:
-                # assert_raises_rpc_error(-4, "Wallet loading failed.", node_v17.loadwallet, 'w3')
-                if self.major_version_less_than(node, 18):
-                    continue
                 self.log.info(f"- {node.version}")
                 # Descriptor wallets appear to be corrupted wallets to old software
-                assert self.major_version_at_least(node, 18) and self.major_version_less_than(node, 21)
+                assert self.major_version_less_than(node, 21)
                 for wallet_name in ["w1", "w2", "w3"]:
                     assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node.loadwallet, wallet_name)
-
-        # Instead, we stop node and try to launch it with the wallet:
-        self.stop_node(node_v17.index)
-        if self.options.descriptors:
-            self.log.info("Test descriptor wallet incompatibility with 0.17")
-            # Descriptor wallets appear to be corrupted wallets to old software
-            node_v17.assert_start_raises_init_error(["-wallet=w1"], "Error: wallet.dat corrupt, salvage failed")
-            node_v17.assert_start_raises_init_error(["-wallet=w2"], "Error: wallet.dat corrupt, salvage failed")
-            node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: wallet.dat corrupt, salvage failed")
-        else:
-            self.log.info("Test blank wallet incompatibility with v17")
-            node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: Error loading w3: Wallet requires newer version of Bitcoin Core")
-        self.start_node(node_v17.index)
 
         # When descriptors are enabled, w1 cannot be opened by 0.21 since it contains a taproot descriptor
         if self.options.descriptors:
@@ -294,20 +267,13 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         for node in descriptors_nodes if self.options.descriptors else legacy_nodes:
             self.log.info(f"- {node.version}")
             wallet_name = f"up_{node.version}"
-            if self.major_version_less_than(node, 17):
-                # createwallet is only available in 0.17+
-                self.restart_node(node.index, extra_args=[f"-wallet={wallet_name}"])
-                wallet_prev = node.get_wallet_rpc(wallet_name)
-                address = wallet_prev.getnewaddress('', "bech32")
-                addr_info = wallet_prev.validateaddress(address)
+            if self.major_version_at_least(node, 21):
+                node.rpc.createwallet(wallet_name=wallet_name, descriptors=self.options.descriptors)
             else:
-                if self.major_version_at_least(node, 21):
-                    node.rpc.createwallet(wallet_name=wallet_name, descriptors=self.options.descriptors)
-                else:
-                    node.rpc.createwallet(wallet_name=wallet_name)
-                wallet_prev = node.get_wallet_rpc(wallet_name)
-                address = wallet_prev.getnewaddress('', "bech32")
-                addr_info = wallet_prev.getaddressinfo(address)
+                node.rpc.createwallet(wallet_name=wallet_name)
+            wallet_prev = node.get_wallet_rpc(wallet_name)
+            address = wallet_prev.getnewaddress('', "bech32")
+            addr_info = wallet_prev.getaddressinfo(address)
 
             hdkeypath = addr_info["hdkeypath"].replace("'", "h")
             pubkey = addr_info["pubkey"]
@@ -317,10 +283,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             wallet_prev.backupwallet(backup_path)
 
             # Remove the wallet from old node
-            if self.major_version_at_least(node, 17):
-                wallet_prev.unloadwallet()
-            else:
-                self.stop_node(node.index)
+            wallet_prev.unloadwallet()
 
             # Restore the wallet to master
             load_res = node_master.restorewallet(wallet_name, backup_path)
@@ -362,28 +325,17 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
             wallet.unloadwallet()
 
-            # Check that no automatic upgrade broke the downgrading the wallet
-            if self.major_version_less_than(node, 17):
-                # loadwallet is only available in 0.17+
-                shutil.copyfile(
-                    down_backup_path,
-                    node.wallets_path / down_wallet_name
-                )
-                self.start_node(node.index, extra_args=[f"-wallet={down_wallet_name}"])
-                wallet_res = node.get_wallet_rpc(down_wallet_name)
-                info = wallet_res.validateaddress(address)
-                assert_equal(info, addr_info)
-            else:
-                target_dir = node.wallets_path / down_wallet_name
-                os.makedirs(target_dir, exist_ok=True)
-                shutil.copyfile(
-                    down_backup_path,
-                    target_dir / "wallet.dat"
-                )
-                node.loadwallet(down_wallet_name)
-                wallet_res = node.get_wallet_rpc(down_wallet_name)
-                info = wallet_res.getaddressinfo(address)
-                assert_equal(info, addr_info)
+            # Check that no automatic upgrade broke downgrading the wallet
+            target_dir = node.wallets_path / down_wallet_name
+            os.makedirs(target_dir, exist_ok=True)
+            shutil.copyfile(
+                down_backup_path,
+                target_dir / "wallet.dat"
+            )
+            node.loadwallet(down_wallet_name)
+            wallet_res = node.get_wallet_rpc(down_wallet_name)
+            info = wallet_res.getaddressinfo(address)
+            assert_equal(info, addr_info)
 
 if __name__ == '__main__':
     BackwardsCompatibilityTest(__file__).main()
