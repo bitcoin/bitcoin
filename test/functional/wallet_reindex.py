@@ -8,6 +8,7 @@
 import time
 
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -52,7 +53,15 @@ class WalletReindexTest(BitcoinTestFramework):
         # For a descriptors wallet: Import address with timestamp=now.
         # For legacy wallet: There is no way of importing a script/address with a custom time. The wallet always imports it with birthtime=1.
         # In both cases, disable rescan to not detect the transaction.
-        wallet_watch_only.importaddress(wallet_addr, rescan=False)
+        if self.options.descriptors:
+            import_res = wallet_watch_only.importdescriptors([{
+                'desc': descsum_create('addr(' + wallet_addr + ')'),
+                'timestamp': 'now',
+            }])
+            assert len(import_res) == 1
+            assert import_res[0]['success']
+        else:
+            wallet_watch_only.importaddress(wallet_addr, rescan=False)
         assert_equal(len(wallet_watch_only.listtransactions()), 0)
 
         # Depending on the wallet type, the birth time changes.

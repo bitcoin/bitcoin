@@ -149,8 +149,6 @@ std::string DescriptorChecksum(const Span<const char>& span)
     return ret;
 }
 
-std::string AddChecksum(const std::string& str) { return str + "#" + DescriptorChecksum(str); }
-
 ////////////////////////////////////////////////////////////////////////////
 // Internal representation                                                //
 ////////////////////////////////////////////////////////////////////////////
@@ -2379,6 +2377,8 @@ std::string GetDescriptorChecksum(const std::string& descriptor)
     if (!CheckChecksum(sp, false, error, &ret)) return "";
     return ret;
 }
+
+std::string AddChecksum(const std::string& str) { return str + "#" + DescriptorChecksum(str); }
 
 std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const SigningProvider& provider)
 {
