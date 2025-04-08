@@ -42,11 +42,12 @@
 
 int main(int argc, char* argv[])
 {
+    BCLog::Logger logger;
     // We do not enable logging for this app, so explicitly disable it.
     // To enable logging instead, replace with:
-    //    LogInstance().m_print_to_console = true;
-    //    LogInstance().StartLogging();
-    LogInstance().DisableLogging();
+    //    logger.m_print_to_console = true;
+    //    logger.StartLogging();
+    logger.DisableLogging();
 
     // SETUP: Argument parsing and handling
     if (argc != 2) {
@@ -126,7 +127,7 @@ int main(int argc, char* argv[])
         },
     };
     util::SignalInterrupt interrupt;
-    ChainstateManager chainman{interrupt, chainman_opts, blockman_opts};
+    ChainstateManager chainman{logger, interrupt, chainman_opts, blockman_opts};
 
     node::ChainstateLoadOptions options;
     auto [status, error] = node::LoadChainstate(chainman, cache_sizes, options);

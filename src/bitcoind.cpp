@@ -14,6 +14,7 @@
 #include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/init.h>
+#include <logging.h>
 #include <kernel/context.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
@@ -258,6 +259,9 @@ MAIN_FUNCTION
     common::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();
 #endif
+
+    // Intentionally leaked! See BCLog::g_logger description for rationale.
+    new BCLog::Logger;
 
     NodeContext node;
     int exit_status;
