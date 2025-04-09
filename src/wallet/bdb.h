@@ -131,6 +131,16 @@ public:
 
     /** Return path to main database filename */
     std::string Filename() override { return fs::PathToString(env->Directory() / m_filename); }
+    /** Return paths to all database created files */
+    std::vector<fs::path> Files() override
+    {
+        std::vector<fs::path> files;
+        files.emplace_back(env->Directory() / m_filename);
+        files.emplace_back(env->Directory() / "database");
+        files.emplace_back(env->Directory() / "db.log");
+        files.emplace_back(env->Directory() / ".walletlock");
+        return files;
+    }
 
     std::string Format() override { return "bdb"; }
     /**
