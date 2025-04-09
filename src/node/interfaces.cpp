@@ -560,6 +560,24 @@ public:
         const CBlockIndex* block{chainman().ActiveChain()[height]};
         return block && ((block->nStatus & BLOCK_HAVE_DATA) != 0) && block->nTx > 0;
     }
+    bool pruneLockExists(const std::string& name) const override
+    {
+        LOCK(cs_main);
+        auto& blockman = m_node.chainman->m_blockman;
+        return blockman.PruneLockExists(name);
+    }
+    bool updatePruneLock(const std::string& name, const node::PruneLockInfo& lock_info, bool sync) override
+    {
+        LOCK(cs_main);
+        auto& blockman = m_node.chainman->m_blockman;
+        return blockman.UpdatePruneLock(name, lock_info, sync);
+    }
+    bool deletePruneLock(const std::string& name) override
+    {
+        LOCK(cs_main);
+        auto& blockman = m_node.chainman->m_blockman;
+        return blockman.DeletePruneLock(name);
+    }
     CBlockLocator getTipLocator() override
     {
         LOCK(::cs_main);
