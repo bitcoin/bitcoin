@@ -150,7 +150,12 @@ HeadersSyncSetup* g_testing_setup;
 
 void initialize()
 {
-    static auto setup = MakeNoLogFileContext<HeadersSyncSetup>(ChainType::MAIN);
+    static auto setup{
+        MakeNoLogFileContext<HeadersSyncSetup>(ChainType::MAIN,
+                                               {
+                                                   .setup_validation_interface = false,
+                                               }),
+    };
     g_testing_setup = setup.get();
 }
 } // namespace
@@ -236,6 +241,4 @@ FUZZ_TARGET(p2p_headers_presync, .init = initialize)
     // to meet the anti-DoS work threshold. So, if at any point the block index grew in size, then there's a bug
     // in the headers pre-sync logic.
     assert(WITH_LOCK(cs_main, return chainman.m_blockman.m_block_index.size()) == original_index_size);
-
-    g_testing_setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
 }
