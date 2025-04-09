@@ -59,7 +59,7 @@ if(HAVE_ARM_SHANI)
   )
 endif()
 
-if(HAVE_POWER8_VECTOR)
+if(ENABLE_POWER8)
   target_compile_definitions(bitcoin_crypto PRIVATE
     ENABLE_POWER8
     $<IF:$<STREQUAL:${CMAKE_CXX_BYTE_ORDER},BIG_ENDIAN>,WORDS_BIGENDIAN,>
