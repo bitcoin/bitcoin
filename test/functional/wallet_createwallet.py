@@ -162,18 +162,8 @@ class CreateWalletTest(BitcoinTestFramework):
         self.log.info('Using a passphrase with private keys disabled returns error')
         assert_raises_rpc_error(-4, 'Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.', self.nodes[0].createwallet, wallet_name='w9', disable_private_keys=True, passphrase='thisisapassphrase')
 
-        if self.is_bdb_compiled():
-            self.log.info("Test legacy wallet deprecation")
-            result = self.nodes[0].createwallet(wallet_name="legacy_w0", descriptors=False, passphrase=None)
-            assert_equal(result, {
-                "name": "legacy_w0",
-                "warnings": [LEGACY_WALLET_MSG],
-            })
-            result = self.nodes[0].createwallet(wallet_name="legacy_w1", descriptors=False, passphrase="")
-            assert_equal(result, {
-                "name": "legacy_w1",
-                "warnings": [EMPTY_PASSPHRASE_MSG, LEGACY_WALLET_MSG],
-            })
+        self.log.info("Test that legacy wallets cannot be created")
+        assert_raises_rpc_error(-4, 'descriptors argument must be set to "true"; it is no longer possible to create a legacy wallet.', self.nodes[0].createwallet, wallet_name="legacy", descriptors=False)
 
 
 if __name__ == '__main__':
