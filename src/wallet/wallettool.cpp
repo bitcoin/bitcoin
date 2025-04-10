@@ -131,7 +131,7 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
             return false;
         }
         if (args.GetBoolArg("-legacy", true)) {
-            tfm::format(std::cerr, "The -legacy option must be set to \"false\"");
+            tfm::format(std::cerr, "The -legacy option must be set to \"false\"\n");
             return false;
         }
     }
