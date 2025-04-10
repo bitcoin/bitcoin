@@ -51,6 +51,7 @@
 #include <evo/deterministicmns.h>
 #include <evo/evodb.h>
 #include <evo/mnhftx.h>
+#include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
 #include <flat-database.h>
 #include <governance/governance.h>
@@ -486,7 +487,11 @@ CBlock TestChainSetup::CreateBlock(
         auto cbTx = GetTxPayload<CCbTx>(*block.vtx[0]);
         Assert(cbTx.has_value());
         BlockValidationState state;
-        if (!CalcCbTxMerkleRootMNList(block, chainstate.m_chain.Tip(), cbTx->merkleRootMNList, state, *m_node.dmnman, *m_node.llmq_ctx->qsnapman, chainstate.CoinsTip())) {
+        CDeterministicMNList mn_list;
+        if (!m_node.dmnman->BuildNewListFromBlock(block, chainstate.m_chain.Tip(), state, chainstate.CoinsTip(), mn_list, *m_node.llmq_ctx->qsnapman, true)) {
+            Assert(false);
+        }
+        if (!CalcCbTxMerkleRootMNList(cbTx->merkleRootMNList, CSimplifiedMNList(mn_list), state)) {
             Assert(false);
         }
         if (!CalcCbTxMerkleRootQuorums(block, chainstate.m_chain.Tip(), *m_node.llmq_ctx->quorum_block_processor, cbTx->merkleRootQuorums, state)) {
