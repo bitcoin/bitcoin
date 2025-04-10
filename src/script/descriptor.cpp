@@ -396,16 +396,12 @@ public:
     size_t GetSize() const override { return 33; }
     bool GetPubKey(int pos, const SigningProvider& arg, CPubKey& key_out, KeyOriginInfo& final_info_out, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) const override
     {
-        // Info of parent of the to be derived pubkey
-        KeyOriginInfo parent_info;
+        KeyOriginInfo info;
         CKeyID keyid = m_root_extkey.pubkey.GetID();
-        std::copy(keyid.begin(), keyid.begin() + sizeof(parent_info.fingerprint), parent_info.fingerprint);
-        parent_info.path = m_path;
-
-        // Info of the derived key itself which is copied out upon successful completion
-        KeyOriginInfo final_info_out_tmp = parent_info;
-        if (m_derive == DeriveType::UNHARDENED) final_info_out_tmp.path.push_back((uint32_t)pos);
-        if (m_derive == DeriveType::HARDENED) final_info_out_tmp.path.push_back(((uint32_t)pos) | 0x80000000L);
+        std::copy(keyid.begin(), keyid.begin() + sizeof(info.fingerprint), info.fingerprint);
+        info.path = m_path;
+        if (m_derive == DeriveType::UNHARDENED) info.path.push_back((uint32_t)pos);
+        if (m_derive == DeriveType::HARDENED) info.path.push_back(((uint32_t)pos) | 0x80000000L);
 
         // Derive keys or fetch them from cache
         CExtPubKey final_extkey = m_root_extkey;
@@ -441,7 +437,7 @@ public:
         }
         if (!der) return false;
 
-        final_info_out = final_info_out_tmp;
+        final_info_out = info;
         key_out = final_extkey.pubkey;
 
         if (write_cache) {
