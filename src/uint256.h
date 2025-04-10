@@ -69,11 +69,11 @@ public:
 
     /** @name Hex representation
      *
-     * The hex representation used by GetHex(), ToString(), FromHex() and
-     * SetHexDeprecated() is unusual, since it shows bytes of the base_blob in
-     * reverse order. For example, a 4-byte blob {0x12, 0x34, 0x56, 0x78} is
-     * represented as "78563412" instead of the more typical "12345678"
-     * representation that would be shown in a hex editor or used by typical
+     * The hex representation used by GetHex(), ToString(), and FromHex()
+     * is unusual, since it shows bytes of the base_blob in reverse order.
+     * For example, a 4-byte blob {0x12, 0x34, 0x56, 0x78} is represented
+     * as "78563412" instead of the more typical "12345678" representation
+     * that would be shown in a hex editor or used by typical
      * byte-array / hex conversion functions like python's bytes.hex() and
      * bytes.fromhex().
      *
@@ -92,20 +92,6 @@ public:
      *
      * @{*/
     std::string GetHex() const;
-    /** Unlike FromHex this accepts any invalid input, thus it is fragile and deprecated!
-     *
-     * - Hex numbers that don't specify enough bytes to fill the internal array
-     *   will be treated as setting the beginning of it, which corresponds to
-     *   the least significant bytes when converted to base_uint.
-     *
-     * - Hex numbers specifying too many bytes will have the numerically most
-     *   significant bytes (the beginning of the string) narrowed away.
-     *
-     * - An odd count of hex digits will result in the high bits of the leftmost
-     *   byte being zero.
-     *   "0x123" => {0x23, 0x1, 0x0, ..., 0x0}
-     */
-    void SetHexDeprecated(std::string_view str);
     std::string ToString() const;
     /**@}*/
 
@@ -158,7 +144,16 @@ std::optional<uintN_t> FromHex(std::string_view str)
 {
     if (uintN_t::size() * 2 != str.size() || !IsHex(str)) return std::nullopt;
     uintN_t rv;
-    rv.SetHexDeprecated(str);
+    unsigned char* p1 = rv.begin();
+    unsigned char* pend = rv.end();
+    size_t digits = str.size();
+    while (digits > 0 && p1 < pend) {
+        *p1 = ::HexDigit(str[--digits]);
+        if (digits > 0) {
+            *p1 |= ((unsigned char)::HexDigit(str[--digits]) << 4);
+            p1++;
+        }
+    }
     return rv;
 }
 /**
