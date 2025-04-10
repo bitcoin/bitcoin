@@ -11,6 +11,7 @@
 import argparse
 import contextlib
 from fnmatch import fnmatch
+import hashlib
 import os
 from pathlib import Path
 import platform
@@ -19,7 +20,6 @@ import shutil
 import subprocess
 import sys
 import time
-import hashlib
 import urllib.request
 import zipfile
 
@@ -139,6 +139,7 @@ def pushd(new_dir) -> None:
 def download_from_url(url, archive):
     last_print_time = time.time()
     def progress_hook(count, block_size, total_size):
+        nonlocal last_print_time
         now = time.time()
         percent = min(100, (count * block_size * 100) / total_size)
         bar_length = 40
