@@ -15,6 +15,7 @@
 #include <util/sock.h>
 #include <util/time.h>
 
+#include <algorithm>
 #include <csignal>
 #include <cstdint>
 #include <cstdio>
@@ -26,6 +27,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <random>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -241,10 +243,15 @@ int main(int argc, char** argv)
     for (int i = 1; i < argc; ++i) {
         fs::path input_path(*(argv + i));
         if (fs::is_directory(input_path)) {
+            std::vector<fs::path> files;
             for (fs::directory_iterator it(input_path); it != fs::directory_iterator(); ++it) {
                 if (!fs::is_regular_file(it->path())) continue;
-                g_input_path = it->path();
-                Assert(read_file(it->path(), buffer));
+                files.emplace_back(it->path());
+            }
+            std::ranges::shuffle(files, std::mt19937{std::random_device{}()});
+            for (const auto& input_path : files) {
+                g_input_path = input_path;
+                Assert(read_file(input_path, buffer));
                 test_one_input(buffer);
                 ++tested;
                 buffer.clear();

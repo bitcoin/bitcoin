@@ -15,6 +15,7 @@ add_library(test_util STATIC EXCLUDE_FROM_ALL
   script.cpp
   setup_common.cpp
   str.cpp
+  time.cpp
   transaction_utils.cpp
   txmempool.cpp
   validation.cpp

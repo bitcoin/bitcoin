@@ -133,7 +133,7 @@ fn deterministic_coverage(
             let output = {
                 let mut cmd = Command::new(fuzz_exe);
                 if using_libfuzzer {
-                    cmd.arg("-runs=1");
+                    cmd.args(["-runs=1", "-shuffle=1", "-prefer_small=0"]);
                 }
                 cmd
             }
