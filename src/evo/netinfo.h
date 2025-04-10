@@ -225,6 +225,9 @@ private:
 class ExtNetInfo final : public NetInfoInterface
 {
 private:
+    /** Update if serialization or ruleset changed */
+    static constexpr uint8_t CURRENT_VERSION{1};
+
     /** Validate uniqueness requirements and add to object if passed */
     NetInfoStatus ProcessCandidate(const NetInfoEntry& candidate);
 
@@ -232,6 +235,7 @@ private:
     static NetInfoStatus ValidateService(const CService& service);
 
 private:
+    uint8_t m_version{CURRENT_VERSION};
     NetInfoList m_data{};
 
 public:
@@ -243,6 +247,10 @@ public:
 
     SERIALIZE_METHODS(ExtNetInfo, obj)
     {
+        READWRITE(obj.m_version);
+        if (obj.m_version == 0 || obj.m_version > CURRENT_VERSION) {
+            return; // Don't bother with unknown versions
+        }
         READWRITE(obj.m_data);
     }
 
@@ -250,7 +258,7 @@ public:
     NetInfoList GetEntries() const override;
 
     CService GetPrimary() const override;
-    bool IsEmpty() const override { return m_data.empty(); }
+    bool IsEmpty() const override { return m_version == CURRENT_VERSION && m_data.empty(); }
     bool CanStorePlatform() const override
     {
         // TODO: Store Platform fields, reporting as true as used to differentiate
@@ -261,7 +269,11 @@ public:
     UniValue ToJson() const override;
     std::string ToString() const override;
 
-    void Clear() override { m_data.clear(); }
+    void Clear() override
+    {
+        m_version = CURRENT_VERSION;
+        m_data.clear();
+    }
 
 private:
     // operator== and operator!= are defined by the parent which then leverage the child's IsEqual() override
@@ -270,7 +282,7 @@ private:
     {
         ASSERT_IF_DEBUG(typeid(*this) == typeid(rhs));
         const auto& rhs_obj{static_cast<const ExtNetInfo&>(rhs)};
-        return m_data == rhs_obj.m_data;
+        return m_version == rhs_obj.m_version && m_data == rhs_obj.m_data;
     }
 };
 
