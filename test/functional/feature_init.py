@@ -28,16 +28,18 @@ class InitTest(BitcoinTestFramework):
         self.add_wallet_options(parser)
 
     def set_test_params(self):
-        self.setup_clean_chain = False
-        self.num_nodes = 1
+        self.setup_clean_chain = True
+        self.num_nodes = 2
 
     def init_stress_test(self):
         """
         - test terminating initialization after seeing a certain log line.
         - test removing certain essential files to test startup error paths.
         """
-        self.stop_node(0)
+        self.start_node(0)
         node = self.nodes[0]
+        self.generate(node, 200, sync_fun=self.no_op)
+        self.stop_node(0)
 
         def sigterm_node():
             if platform.system() == 'Windows':
@@ -187,9 +189,19 @@ class InitTest(BitcoinTestFramework):
         self.stop_node(0)
         assert not custom_pidfile_absolute.exists()
 
+    def init_empty_test(self):
+        self.log.info("Test that stopping and restarting a node that has done nothing is not causing a failure")
+        options = [
+            [],
+            ["-txindex=1", "-blockfilterindex=1", "-coinstatsindex=1"],
+        ]
+        for option in options:
+            self.restart_node(1, option)
+
     def run_test(self):
         self.init_pid_test()
         self.init_stress_test()
+        self.init_empty_test()
 
 
 if __name__ == '__main__':
