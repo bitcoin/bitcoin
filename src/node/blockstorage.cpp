@@ -626,9 +626,9 @@ void BlockManager::CleanupBlockRevFiles() const
             path.length() == 12 &&
             path.substr(8,4) == ".dat")
         {
-            if (path.substr(0, 3) == "blk") {
+            if (path.starts_with("blk")) {
                 mapBlockFiles[path.substr(3, 5)] = it->path();
-            } else if (path.substr(0, 3) == "rev") {
+            } else if (path.starts_with("rev")) {
                 remove(it->path());
             }
         }
