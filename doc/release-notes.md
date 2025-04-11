@@ -132,10 +132,6 @@ replace-by-fee the standard behavior. (#30592)
 
 - The default for `-rpcthreads` has been changed from 4 to 16, and the default for `-rpcworkqueue` has been changed from 16 to 64. (#31215).
 
-### Wallet
-
-### GUI Changes
-
 ### Build System
 
 The build system has been migrated from Autotools to CMake:
