@@ -143,6 +143,11 @@ static RPCHelpMan getpeerinfo()
                     {RPCResult::Type::NUM_TIME, "last_block", "The " + UNIX_EPOCH_TIME + " of the last block received from this peer"},
                     {RPCResult::Type::NUM, "bytessent", "The total bytes sent"},
                     {RPCResult::Type::NUM, "bytesrecv", "The total bytes received"},
+                    {RPCResult::Type::NUM, "cpu_load", /*optional=*/true,
+                        "The CPU time (user + system) spent processing messages from this peer "
+                        "and crafting messages for it expressed in per milles (‰) of the "
+                        "duration of the connection. Will be omitted on platforms that do not "
+                        "support this or if still not measured."},
                     {RPCResult::Type::NUM_TIME, "conntime", "The " + UNIX_EPOCH_TIME + " of the connection"},
                     {RPCResult::Type::NUM, "timeoffset", "The time offset in seconds"},
                     {RPCResult::Type::NUM, "pingtime", /*optional=*/true, "The last ping time in milliseconds (ms), if any"},
@@ -205,6 +210,8 @@ static RPCHelpMan getpeerinfo()
 
     UniValue ret(UniValue::VARR);
 
+    const auto now{GetTime<std::chrono::seconds>()};
+
     for (const CNodeStats& stats : vstats) {
         UniValue obj(UniValue::VOBJ);
         CNodeStateStats statestats;
@@ -239,6 +246,9 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("last_block", count_seconds(stats.m_last_block_time));
         obj.pushKV("bytessent", stats.nSendBytes);
         obj.pushKV("bytesrecv", stats.nRecvBytes);
+        if (stats.m_cpu_time > 0s && now > stats.m_connected) {
+            obj.pushKV("cpu_load", /* ‰ */1000.0 * stats.m_cpu_time / (now - stats.m_connected));
+        }
         obj.pushKV("conntime", count_seconds(stats.m_connected));
         obj.pushKV("timeoffset", Ticks<std::chrono::seconds>(statestats.time_offset));
         if (stats.m_last_ping_time > 0us) {
