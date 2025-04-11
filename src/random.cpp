@@ -41,9 +41,6 @@
 #ifdef HAVE_SYSCTL_ARND
 #include <sys/sysctl.h>
 #endif
-#if defined(HAVE_STRONG_GETAUXVAL) && defined(__aarch64__)
-#include <sys/auxv.h>
-#endif
 
 namespace {
 
@@ -189,62 +186,6 @@ uint64_t GetRdSeed() noexcept
 #endif
 }
 
-#elif defined(__aarch64__) && defined(HWCAP2_RNG)
-
-bool g_rndr_supported = false;
-
-void InitHardwareRand()
-{
-    if (getauxval(AT_HWCAP2) & HWCAP2_RNG) {
-        g_rndr_supported = true;
-    }
-}
-
-void ReportHardwareRand()
-{
-    // This must be done in a separate function, as InitHardwareRand() may be indirectly called
-    // from global constructors, before logging is initialized.
-    if (g_rndr_supported) {
-        LogPrintf("Using RNDR and RNDRRS as additional entropy sources\n");
-    }
-}
-
-/** Read 64 bits of entropy using rndr.
- *
- * Must only be called when RNDR is supported.
- */
-uint64_t GetRNDR() noexcept
-{
-    uint8_t ok = 0;
-    uint64_t r1;
-    do {
-        // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/RNDR--Random-Number
-        __asm__ volatile("mrs %0, s3_3_c2_c4_0; cset %w1, ne;"
-                         : "=r"(r1), "=r"(ok)::"cc");
-        if (ok) break;
-        __asm__ volatile("yield");
-    } while (true);
-    return r1;
-}
-
-/** Read 64 bits of entropy using rndrrs.
- *
- * Must only be called when RNDRRS is supported.
- */
-uint64_t GetRNDRRS() noexcept
-{
-    uint8_t ok = 0;
-    uint64_t r1;
-    do {
-        // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/RNDRRS--Reseeded-Random-Number
-        __asm__ volatile("mrs %0, s3_3_c2_c4_1; cset %w1, ne;"
-                         : "=r"(r1), "=r"(ok)::"cc");
-        if (ok) break;
-        __asm__ volatile("yield");
-    } while (true);
-    return r1;
-}
-
 #else
 /* Access to other hardware random number generators could be added here later,
  * assuming it is sufficiently fast (in the order of a few hundred CPU cycles).
@@ -260,12 +201,6 @@ void SeedHardwareFast(CSHA512& hasher) noexcept {
 #if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
     if (g_rdrand_supported) {
         uint64_t out = GetRdRand();
-        hasher.Write((const unsigned char*)&out, sizeof(out));
-        return;
-    }
-#elif defined(__aarch64__) && defined(HWCAP2_RNG)
-    if (g_rndr_supported) {
-        uint64_t out = GetRNDR();
         hasher.Write((const unsigned char*)&out, sizeof(out));
         return;
     }
@@ -290,14 +225,6 @@ void SeedHardwareSlow(CSHA512& hasher) noexcept {
         for (int i = 0; i < 4; ++i) {
             uint64_t out = 0;
             for (int j = 0; j < 1024; ++j) out ^= GetRdRand();
-            hasher.Write((const unsigned char*)&out, sizeof(out));
-        }
-        return;
-    }
-#elif defined(__aarch64__) && defined(HWCAP2_RNG)
-    if (g_rndr_supported) {
-        for (int i = 0; i < 4; ++i) {
-            uint64_t out = GetRNDRRS();
             hasher.Write((const unsigned char*)&out, sizeof(out));
         }
         return;
