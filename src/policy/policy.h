@@ -32,8 +32,8 @@ static constexpr unsigned int MINIMUM_BLOCK_RESERVED_WEIGHT{2000};
 static constexpr unsigned int DEFAULT_BLOCK_MIN_TX_FEE{1000};
 /** The maximum weight for transactions we're willing to relay/mine */
 static constexpr int32_t MAX_STANDARD_TX_WEIGHT{400000};
-/** The minimum non-witness size for transactions we're willing to relay/mine: one larger than 64  */
-static constexpr unsigned int MIN_STANDARD_TX_NONWITNESS_SIZE{65};
+/** In addition to transactions that are too big, do not relay/mine ones that are 64 non-witness bytes exactly: CVE-2017-12842 */
+static constexpr unsigned int NONSTANDARD_TX_NONWITNESS_SIZE{64};
 /** Maximum number of signature check operations in an IsStandard() P2SH script */
 static constexpr unsigned int MAX_P2SH_SIGOPS{15};
 /** The maximum number of sigops we're willing to relay/mine in a single tx */
