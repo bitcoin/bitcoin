@@ -40,7 +40,10 @@ NO_BDB ?=
 NO_WALLET ?=
 NO_ZMQ ?=
 NO_USDT ?=
-MULTIPROCESS ?=
+# Default NO_IPC value is 1 on unsupported host platforms:
+# - Windows
+# - OpenBSD: https://github.com/capnproto/capnproto/pull/1907
+NO_IPC ?= $(if $(findstring mingw32,$(HOST))$(findstring openbsd,$(HOST)),1,)
 LTO ?=
 FALLBACK_DOWNLOAD_PATH ?= https://bitcoincore.org/depends-sources
 
@@ -163,7 +166,7 @@ bdb_packages_$(NO_BDB) = $(bdb_packages)
 wallet_packages_$(NO_WALLET) = $(bdb_packages_) $(sqlite_packages)
 
 zmq_packages_$(NO_ZMQ) = $(zmq_packages)
-multiprocess_packages_$(MULTIPROCESS) = $(multiprocess_packages)
+multiprocess_packages_$(NO_IPC) = $(multiprocess_packages)
 usdt_packages_$(NO_USDT) = $(usdt_$(host_os)_packages)
 
 packages += $($(host_arch)_$(host_os)_packages) $($(host_os)_packages) $(boost_packages_) $(libevent_packages_) $(qt_packages_) $(wallet_packages_) $(usdt_packages_)
@@ -173,7 +176,7 @@ ifneq ($(zmq_packages_),)
 packages += $(zmq_packages)
 endif
 
-ifeq ($(multiprocess_packages_),)
+ifneq ($(multiprocess_packages_),)
 packages += $(multiprocess_packages)
 native_packages += $(multiprocess_native_packages)
 endif
@@ -234,7 +237,7 @@ $(host_prefix)/toolchain.cmake : toolchain.cmake.in $(host_prefix)/.stamp_$(fina
             -e 's|@wallet_packages@|$(wallet_packages_)|' \
             -e 's|@bdb_packages@|$(bdb_packages_)|' \
             -e 's|@usdt_packages@|$(usdt_packages_)|' \
-            -e 's|@multiprocess@|$(MULTIPROCESS)|' \
+            -e 's|@multiprocess_packages@|$(multiprocess_packages_)|' \
             $< > $@
 	touch $@
 
