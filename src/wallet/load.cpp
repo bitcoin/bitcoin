@@ -173,7 +173,7 @@ void FlushWallets(WalletContext& context)
     }
 }
 
-void StopWallets(WalletContext& context)
+void CloseWallets(WalletContext& context)
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
         pwallet->Close();
