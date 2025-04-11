@@ -1335,6 +1335,9 @@ Current subtrees include:
 - src/minisketch
   - Upstream at https://github.com/bitcoin-core/minisketch ; maintained by Core contributors.
 
+- src/ipc/libmultiprocess
+  - Upstream at https://github.com/bitcoin-core/libmultiprocess ; maintained by Core contributors.
+
 Upgrading LevelDB
 ---------------------
 
