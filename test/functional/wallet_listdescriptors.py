@@ -32,6 +32,26 @@ class ListDescriptorsTest(BitcoinTestFramework):
     def init_wallet(self, *, node):
         return
 
+    def test_listdescriptors_with_partial_privkeys(self):
+        self.nodes[0].createwallet(wallet_name="partialkeys_descs", blank=True)
+        wallet = self.nodes[0].get_wallet_rpc("partialkeys_descs")
+
+        self.log.info("Test listdescriptors(private=true) with descriptors containing partial private keys")
+        descs = [
+            descsum_create("wsh(multi(2,tprv8ZgxMBicQKsPdzuc344mDaeUk5zseMcRK9Hst8xodskNu3YbQG5NxLa2X17PUU5yXQhptiBE7F5W5cgEmsfQg4Y21Y18w4DJhLxSb8CurDf,tpubD6NzVbkrYhZ4YiCvExLvH4yh1k3jFGf5irm6TsrArY8GYdEhYVdztQTBtTirmRc6XfSJpH9tayUdnngaJZKDaa2zbqEY29DfcGZW8iRVGUY))"),
+            descsum_create("wsh(thresh(2,pk(tprv8ZgxMBicQKsPdzuc344mDaeUk5zseMcRK9Hst8xodskNu3YbQG5NxLa2X17PUU5yXQhptiBE7F5W5cgEmsfQg4Y21Y18w4DJhLxSb8CurDf),s:pk(tpubD6NzVbkrYhZ4YiCvExLvH4yh1k3jFGf5irm6TsrArY8GYdEhYVdztQTBtTirmRc6XfSJpH9tayUdnngaJZKDaa2zbqEY29DfcGZW8iRVGUY),sln:older(2)))"),
+            descsum_create("tr(03d1d1110030000000000120000000000000000000000000001370010912cd08cc,pk(cNKAo2ZRsaWKcP481cEfj3astPyBrfq56JBtLeRhHUvTSuk2z4MR))"),
+            descsum_create("tr(cNKAo2ZRsaWKcP481cEfj3astPyBrfq56JBtLeRhHUvTSuk2z4MR,pk(03d1d1110030000000000120000000000000000000000000001370010912cd08cc))")
+        ]
+        importdescriptors_request = list(map(lambda desc: {"desc": desc, "timestamp": "now"}, descs))
+        res = wallet.importdescriptors(importdescriptors_request)
+        for imported_desc in res:
+            assert_equal(imported_desc["success"], True)
+        res = wallet.listdescriptors(private=True)
+        for listed_desc in res["descriptors"]:
+            # descriptors are not returned in the order they were present in the import request
+            assert_equal(listed_desc["desc"], next(desc for desc in descs if listed_desc["desc"] == desc))
+
     def run_test(self):
         node = self.nodes[0]
         assert_raises_rpc_error(-18, 'No wallet is loaded.', node.listdescriptors)
@@ -133,6 +153,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
             ]
         }
         assert_equal(expected, wallet.listdescriptors())
+        self.test_listdescriptors_with_partial_privkeys()
 
 
 if __name__ == '__main__':
