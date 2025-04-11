@@ -46,6 +46,7 @@
 #include <memory>
 #include <stdint.h>
 
+using interfaces::BlockRef;
 using interfaces::BlockTemplate;
 using interfaces::Mining;
 using node::BlockAssembler;
@@ -775,9 +776,22 @@ static RPCHelpMan getblocktemplate()
     static unsigned int nTransactionsUpdatedLast;
     const CTxMemPool& mempool = EnsureMemPool(node);
 
-    if (!lpval.isNull())
-    {
-        // Wait to respond until either the best block changes, OR a minute has passed and there are more transactions
+    // Long Polling (BIP22)
+    if (!lpval.isNull()) {
+        /**
+         * Wait to respond until either the best block changes, OR there are more
+         * transactions.
+         *
+         * The check for new transactions first happens after 1 minute and
+         * subsequently every 10 seconds. BIP22 does not require this particular interval.
+         * On mainnet the mempool changes frequently enough that in practice this RPC
+         * returns after 60 seconds, or sooner if the best block changes.
+         *
+         * getblocktemplate is unlikely to be called by bitcoin-cli, so
+         * -rpcclienttimeout is not a concern. BIP22 recommends a long request timeout.
+         *
+         * The longpollid is assumed to be a tip hash if it has the right format.
+         */
         uint256 hashWatchedChain;
         unsigned int nTransactionsUpdatedLastLP;
 
@@ -786,6 +800,8 @@ static RPCHelpMan getblocktemplate()
             // Format: <hashBestChain><nTransactionsUpdatedLast>
             const std::string& lpstr = lpval.get_str();
 
+            // Assume the longpollid is a block hash. If it's not then we return
+            // early below.
             hashWatchedChain = ParseHashV(lpstr.substr(0, 64), "longpollid");
             nTransactionsUpdatedLastLP = LocaleIndependentAtoi<int64_t>(lpstr.substr(64));
         }
@@ -800,12 +816,20 @@ static RPCHelpMan getblocktemplate()
         LEAVE_CRITICAL_SECTION(cs_main);
         {
             MillisecondsDouble checktxtime{std::chrono::minutes(1)};
-            while (tip == hashWatchedChain && IsRPCRunning()) {
-                tip = miner.waitTipChanged(hashWatchedChain, checktxtime).hash;
-                // Timeout: Check transactions for update
-                // without holding the mempool lock to avoid deadlocks
-                if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLastLP)
+            while (IsRPCRunning()) {
+                // If hashWatchedChain is not a real block hash, this will
+                // return immediately.
+                std::optional<BlockRef> maybe_tip{miner.waitTipChanged(hashWatchedChain, checktxtime)};
+                // Node is shutting down
+                if (!maybe_tip) break;
+                tip = maybe_tip->hash;
+                if (tip != hashWatchedChain) break;
+
+                // Check transactions for update without holding the mempool
+                // lock to avoid deadlocks.
+                if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLastLP) {
                     break;
+                }
                 checktxtime = std::chrono::seconds(10);
             }
         }
