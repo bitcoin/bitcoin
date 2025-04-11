@@ -18,9 +18,6 @@ from test_framework import util
 
 
 class ConfArgsTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
@@ -30,6 +27,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.supports_cli = False
         self.wallet_names = []
         self.disable_autoconnect = False
+        self.uses_wallet = None
 
     # Overridden to avoid attempt to sync not yet started nodes.
     def setup_network(self):

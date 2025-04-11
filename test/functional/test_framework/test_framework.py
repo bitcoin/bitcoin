@@ -151,7 +151,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.supports_cli = True
         self.bind_to_localhost_only = True
         self.parse_args(test_file)
-        self.default_wallet_name = "default_wallet" if self.options.descriptors else ""
+        self.default_wallet_name = "default_wallet"
         self.wallet_data_filename = "wallet.dat"
         # Optional list of wallet names that can be set in set_test_params to
         # create and import keys to. If unset, default is len(nodes) *
@@ -160,8 +160,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         # are not imported.
         self.wallet_names = None
         # By default the wallet is not required. Set to true by skip_if_no_wallet().
-        # When False, we ignore wallet_names regardless of what it is.
-        self._requires_wallet = False
+        # Can also be set to None to indicate that the wallet will be used if available.
+        # When False or None, we ignore wallet_names regardless of what it is.
+        self.uses_wallet = False
         # Disable ThreadOpenConnections by default, so that adding entries to
         # addrman will not result in automatic connections to them.
         self.disable_autoconnect = True
@@ -270,20 +271,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.binary_paths = self.get_binary_paths()
         if self.options.v1transport:
             self.options.v2transport=False
-
-        if "descriptors" not in self.options:
-            # Wallet is not required by the test at all and the value of self.options.descriptors won't matter.
-            # It still needs to exist and be None in order for tests to work however.
-            # So set it to None to force -disablewallet, because the wallet is not needed.
-            self.options.descriptors = None
-        elif self.options.descriptors is None:
-            if self.is_wallet_compiled():
-                self.options.descriptors = True
-            else:
-                # Tests requiring a wallet will be skipped and the value of self.options.descriptors won't matter
-                # It still needs to exist and be None in order for tests to work however.
-                # So set it to None, which will also set -disablewallet.
-                self.options.descriptors = None
 
         PortSeed.n = self.options.port_seed
 
@@ -472,7 +459,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Override this method to customize test node setup"""
         self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
-        if self._requires_wallet:
+        if self.uses_wallet:
             self.import_deterministic_coinbase_privkeys()
         if not self.setup_clean_chain:
             for n in self.nodes:
@@ -497,7 +484,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if wallet_name is not False:
             n = self.nodes[node]
             if wallet_name is not None:
-                n.createwallet(wallet_name=wallet_name, descriptors=self.options.descriptors, load_on_startup=True)
+                n.createwallet(wallet_name=wallet_name, load_on_startup=True)
             n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase', rescan=True)
 
     # Only enables wallet support when the module is available
@@ -509,21 +496,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         raise NotImplementedError
 
     # Public helper methods. These can be accessed by the subclass test scripts.
-
-    def add_wallet_options(self, parser, *, descriptors=True, legacy=True):
-        kwargs = {}
-        if descriptors + legacy == 1:
-            # If only one type can be chosen, set it as default
-            kwargs["default"] = descriptors
-        group = parser.add_mutually_exclusive_group(
-            # If only one type is allowed, require it to be set in test_runner.py
-            required=os.getenv("REQUIRE_WALLET_TYPE_SET") == "1" and "default" in kwargs)
-        if descriptors:
-            group.add_argument("--descriptors", action='store_const', const=True, **kwargs,
-                               help="Run test using a descriptor wallet", dest='descriptors')
-        if legacy:
-            group.add_argument("--legacy-wallet", action='store_const', const=False, **kwargs,
-                               help="Run test using legacy wallets", dest='descriptors')
 
     def add_nodes(self, num_nodes: int, extra_args=None, *, rpchost=None, versions=None):
         """Instantiate TestNode objects.
@@ -598,8 +570,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 use_cli=self.options.usecli,
                 start_perf=self.options.perf,
                 use_valgrind=self.options.valgrind,
-                descriptors=self.options.descriptors,
                 v2transport=self.options.v2transport,
+                uses_wallet=self.uses_wallet,
             )
             self.nodes.append(test_node_i)
             if not test_node_i.version_is_at_least(170000):
@@ -903,7 +875,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     binaries=self.get_binaries(),
                     coverage_dir=None,
                     cwd=self.options.tmpdir,
-                    descriptors=self.options.descriptors,
+                    uses_wallet=self.uses_wallet,
                 ))
             self.start_node(CACHE_NODE_ID)
             cache_node = self.nodes[CACHE_NODE_ID]
@@ -1006,11 +978,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     def skip_if_no_wallet(self):
         """Skip the running test if wallet has not been compiled."""
-        self._requires_wallet = True
+        self.uses_wallet = True
         if not self.is_wallet_compiled():
             raise SkipTest("wallet has not been compiled.")
-        if not self.options.descriptors:
-            self.skip_if_no_bdb()
 
     def skip_if_no_bdb(self):
         """Skip the running test if BDB has not been compiled."""
@@ -1066,14 +1036,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_wallet_compiled(self):
         """Checks whether the wallet module was compiled."""
         return self.config["components"].getboolean("ENABLE_WALLET")
-
-    def is_specified_wallet_compiled(self):
-        """Checks whether wallet support for the specified type
-           (legacy or descriptor wallet) was compiled."""
-        if self.options.descriptors:
-            return self.is_wallet_compiled()
-        else:
-            return self.is_bdb_compiled()
 
     def is_wallet_tool_compiled(self):
         """Checks whether bitcoin-wallet was compiled."""
