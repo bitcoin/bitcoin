@@ -74,9 +74,6 @@ private:
     /// with an empty datadir if, e.g., `-txindex=1` is specified.
     std::atomic<bool> m_synced{false};
 
-    /// The last block in the chain that the index is in sync with.
-    std::atomic<const CBlockIndex*> m_best_block_index{nullptr};
-
     std::thread m_thread_sync;
     CThreadInterrupt m_interrupt;
 
@@ -94,11 +91,14 @@ private:
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
 
     virtual bool AllowPrune() const = 0;
+    virtual uint32_t GetVersion() const = 0;
 
     template <typename... Args>
     void FatalErrorf(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args);
 
 protected:
+    /// The last block in the chain that the index is in sync with.
+    std::atomic<const CBlockIndex*> m_best_block_index{nullptr};
     std::unique_ptr<interfaces::Chain> m_chain;
     Chainstate* m_chainstate{nullptr};
     const std::string m_name;
