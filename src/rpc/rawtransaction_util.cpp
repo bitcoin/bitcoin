@@ -156,7 +156,7 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
 
     if (!version.isNull()) {
         uint32_t nVersion = version.getInt<uint32_t>();
-        if (nVersion < 1 || nVersion > TX_MAX_STANDARD_VERSION)
+        if (nVersion < TX_MIN_STANDARD_VERSION || nVersion > TX_MAX_STANDARD_VERSION)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, version out of range(1~3)");
         rawTx.version = nVersion;
     }
