@@ -893,7 +893,7 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         self.old_node.unloadwallet("failed")
         shutil.copytree(self.old_node.wallets_path / "failed", self.master_node.wallets_path / "failed")
-        assert_raises_rpc_error(-4, "Failed to create database", self.master_node.migratewallet, "failed")
+        assert_raises_rpc_error(-4, "Failed to create database", self.master_node.migratewallet, "failed", unwanted_message="Unable to restore backup of wallet")
 
         assert all(wallet not in self.master_node.listwallets() for wallet in ["failed", "failed_watchonly", "failed_solvables"])
 
@@ -921,7 +921,7 @@ class WalletMigrationTest(BitcoinTestFramework):
             self.master_node.setmocktime(self.master_node.getblockheader(self.master_node.getbestblockhash())['time'] + 100)
             assert "failed" not in self.master_node.listwallets()
             self.master_node.loadwallet("failed")
-            assert_raises_rpc_error(-4, "Failed to create database", self.master_node.migratewallet, "failed")
+            assert_raises_rpc_error(-4, "Failed to create database", self.master_node.migratewallet, "failed", unwanted_message="Unable to restore backup of wallet")
             wallets = self.master_node.listwallets()
             assert "failed" in wallets and all(wallet not in wallets for wallet in ["failed_watchonly", "failed_solvables"])
 
