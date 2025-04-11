@@ -43,6 +43,8 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
     BOOST_TEST(
         chainstate.GetCoinsCacheSizeState(MAX_COINS_CACHE_BYTES, /*max_mempool_size_bytes=*/ 0) != CoinsCacheSizeState::CRITICAL);
 
+    print_view_mem_usage(view);
+
     // If the initial memory allocations of cacheCoins don't match these common
     // cases, we can't really continue to make assertions about memory usage.
     // End the test early.
@@ -62,7 +64,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
         return;
     }
 
-    print_view_mem_usage(view);
+    throw "unused!";
     BOOST_CHECK_EQUAL(view.DynamicMemoryUsage(), is_64_bit ? 32U : 16U);
 
     // We should be able to add COINS_UNTIL_CRITICAL coins to the cache before going CRITICAL.
