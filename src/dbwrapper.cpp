@@ -46,8 +46,8 @@ static void HandleError(const leveldb::Status& status)
     if (status.ok())
         return;
     const std::string errmsg = "Fatal LevelDB error: " + status.ToString();
-    LogPrintf("%s\n", errmsg);
-    LogPrintf("You can use -debug=leveldb to get more complete diagnostic messages\n");
+    LogInfo("%s\n", errmsg);
+    LogInfo("You can use -debug=leveldb to get more complete diagnostic messages\n");
     throw dbwrapper_error(errmsg);
 }
 
@@ -227,12 +227,12 @@ CDBWrapper::CDBWrapper(const DBParams& params)
         DBContext().options.env = DBContext().penv;
     } else {
         if (params.wipe_data) {
-            LogPrintf("Wiping LevelDB in %s\n", fs::PathToString(params.path));
+            LogInfo("Wiping LevelDB in %s\n", fs::PathToString(params.path));
             leveldb::Status result = leveldb::DestroyDB(fs::PathToString(params.path), DBContext().options);
             HandleError(result);
         }
         TryCreateDirectories(params.path);
-        LogPrintf("Opening LevelDB in %s\n", fs::PathToString(params.path));
+        LogInfo("Opening LevelDB in %s\n", fs::PathToString(params.path));
     }
     // PathToString() return value is safe to pass to leveldb open function,
     // because on POSIX leveldb passes the byte string directly to ::open(), and
@@ -240,12 +240,12 @@ CDBWrapper::CDBWrapper(const DBParams& params)
     // (see env_posix.cc and env_windows.cc).
     leveldb::Status status = leveldb::DB::Open(DBContext().options, fs::PathToString(params.path), &DBContext().pdb);
     HandleError(status);
-    LogPrintf("Opened LevelDB successfully\n");
+    LogInfo("Opened LevelDB successfully\n");
 
     if (params.options.force_compact) {
-        LogPrintf("Starting database compaction of %s\n", fs::PathToString(params.path));
+        LogInfo("Starting database compaction of %s\n", fs::PathToString(params.path));
         DBContext().pdb->CompactRange(nullptr, nullptr);
-        LogPrintf("Finished database compaction of %s\n", fs::PathToString(params.path));
+        LogInfo("Finished database compaction of %s\n", fs::PathToString(params.path));
     }
 
     // The base-case obfuscation key, which is a noop.
@@ -262,10 +262,10 @@ CDBWrapper::CDBWrapper(const DBParams& params)
         Write(OBFUSCATE_KEY_KEY, new_key);
         obfuscate_key = new_key;
 
-        LogPrintf("Wrote new obfuscate key for %s: %s\n", fs::PathToString(params.path), HexStr(obfuscate_key));
+        LogInfo("Wrote new obfuscate key for %s: %s\n", fs::PathToString(params.path), HexStr(obfuscate_key));
     }
 
-    LogPrintf("Using obfuscation key for %s: %s\n", fs::PathToString(params.path), HexStr(obfuscate_key));
+    LogInfo("Using obfuscation key for %s: %s\n", fs::PathToString(params.path), HexStr(obfuscate_key));
 }
 
 CDBWrapper::~CDBWrapper()
@@ -337,7 +337,7 @@ std::optional<std::string> CDBWrapper::ReadImpl(std::span<const std::byte> key) 
     if (!status.ok()) {
         if (status.IsNotFound())
             return std::nullopt;
-        LogPrintf("LevelDB read failure: %s\n", status.ToString());
+        LogInfo("LevelDB read failure: %s\n", status.ToString());
         HandleError(status);
     }
     return strValue;
@@ -352,7 +352,7 @@ bool CDBWrapper::ExistsImpl(std::span<const std::byte> key) const
     if (!status.ok()) {
         if (status.IsNotFound())
             return false;
-        LogPrintf("LevelDB read failure: %s\n", status.ToString());
+        LogInfo("LevelDB read failure: %s\n", status.ToString());
         HandleError(status);
     }
     return true;
