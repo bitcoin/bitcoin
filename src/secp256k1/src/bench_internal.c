@@ -4,6 +4,7 @@
  * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
  ***********************************************************************/
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "secp256k1.c"
 #include "../include/secp256k1.h"
@@ -393,7 +394,7 @@ int main(int argc, char **argv) {
            || have_flag(argc, argv, "--help")
            || have_flag(argc, argv, "help")) {
             help(default_iters);
-            return 0;
+            return EXIT_SUCCESS;
         }
     }
 
@@ -432,5 +433,5 @@ int main(int argc, char **argv) {
 
     if (d || have_flag(argc, argv, "context")) run_benchmark("context_create", bench_context, bench_setup, NULL, &data, 10, iters);
 
-    return 0;
+    return EXIT_SUCCESS;
 }

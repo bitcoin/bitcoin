@@ -35,11 +35,13 @@ env:
   SCHNORRSIG: 'no'
   MUSIG: 'no'
   ELLSWIFT: 'no'
+  SILENTPAYMENTS: 'no'
   ### test options
   SECP256K1_TEST_ITERS: 64
   BENCH: 'yes'
   SECP256K1_BENCH_ITERS: 2
   CTIMETESTS: 'yes'
+  SYMBOL_CHECK: 'yes'
   # Compile and run the examples.
   EXAMPLES: 'yes'
 
@@ -73,18 +75,18 @@ jobs:
       matrix:
         configuration:
           - env_vars: { WIDEMUL: 'int64',  RECOVERY: 'yes' }
-          - env_vars: { WIDEMUL: 'int64',                   ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
+          - env_vars: { WIDEMUL: 'int64',                   ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes' }
           - env_vars: { WIDEMUL: 'int128' }
           - env_vars: { WIDEMUL: 'int128_struct',                                                             ELLSWIFT: 'yes' }
           - env_vars: { WIDEMUL: 'int128', RECOVERY: 'yes',              EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
-          - env_vars: { WIDEMUL: 'int128',                  ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes' }
+          - env_vars: { WIDEMUL: 'int128',                  ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', SILENTPAYMENTS: 'yes' }
           - env_vars: { WIDEMUL: 'int128', ASM: 'x86_64',                                                     ELLSWIFT: 'yes' }
           - env_vars: {                    RECOVERY: 'yes',              EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes' }
-          - env_vars: { CTIMETESTS: 'no',  RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', CPPFLAGS: '-DVERIFY' }
+          - env_vars: { CTIMETESTS: 'no',  RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', SILENTPAYMENTS: 'yes', CPPFLAGS: '-DVERIFY' }
           - env_vars: { BUILD: 'distcheck', WITH_VALGRIND: 'no', CTIMETESTS: 'no', BENCH: 'no' }
           - env_vars: { CPPFLAGS: '-DDETERMINISTIC' }
           - env_vars: { CFLAGS: '-O0', CTIMETESTS: 'no' }
-          - env_vars: { CFLAGS: '-O1',     RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
+          - env_vars: { CFLAGS: '-O1',     RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes' }
           - env_vars: { ECMULTGENKB: 2, ECMULTWINDOW: 2 }
           - env_vars: { ECMULTGENKB: 86, ECMULTWINDOW: 4 }
         cc:
@@ -107,23 +109,9 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
 
   i686_debian:
     name: "i686: Linux (Debian stable)"
@@ -145,6 +133,7 @@ jobs:
       SCHNORRSIG: 'yes'
       MUSIG: 'yes'
       ELLSWIFT: 'yes'
+      SILENTPAYMENTS: 'yes'
       CC: ${{ matrix.cc }}
 
     steps:
@@ -157,23 +146,9 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
 
   s390x_debian:
     name: "s390x (big-endian): Linux (Debian stable, QEMU)"
@@ -191,6 +166,7 @@ jobs:
       SCHNORRSIG: 'yes'
       MUSIG: 'yes'
       ELLSWIFT: 'yes'
+      SILENTPAYMENTS: 'yes'
       CTIMETESTS: 'no'
 
     steps:
@@ -203,23 +179,10 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
+
 
   arm32_debian:
     name: "ARM32: Linux (Debian stable, QEMU)"
@@ -244,6 +207,7 @@ jobs:
       SCHNORRSIG: 'yes'
       MUSIG: 'yes'
       ELLSWIFT: 'yes'
+      SILENTPAYMENTS: 'yes'
       CTIMETESTS: 'no'
 
     steps:
@@ -257,23 +221,9 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
 
   arm64_debian:
     name: "ARM64: Linux (Debian stable, QEMU)"
@@ -291,6 +241,7 @@ jobs:
       SCHNORRSIG: 'yes'
       MUSIG: 'yes'
       ELLSWIFT: 'yes'
+      SILENTPAYMENTS: 'yes'
       CTIMETESTS: 'no'
 
     strategy:
@@ -314,23 +265,9 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
 
   ppc64le_debian:
     name: "ppc64le: Linux (Debian stable, QEMU)"
@@ -348,6 +285,7 @@ jobs:
       SCHNORRSIG: 'yes'
       MUSIG: 'yes'
       ELLSWIFT: 'yes'
+      SILENTPAYMENTS: 'yes'
       CTIMETESTS: 'no'
 
     steps:
@@ -360,23 +298,10 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
+
 
   valgrind_debian:
     name: "Valgrind (memcheck)"
@@ -402,6 +327,7 @@ jobs:
       SCHNORRSIG: 'yes'
       MUSIG: 'yes'
       ELLSWIFT: 'yes'
+      SILENTPAYMENTS: 'yes'
       CTIMETESTS: 'no'
       SECP256K1_TEST_ITERS: 2
 
@@ -416,23 +342,9 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
 
   sanitizers_debian:
     name: "UBSan, ASan, LSan"
@@ -455,12 +367,14 @@ jobs:
       SCHNORRSIG: 'yes'
       MUSIG: 'yes'
       ELLSWIFT: 'yes'
+      SILENTPAYMENTS: 'yes'
       CTIMETESTS: 'no'
       CFLAGS: '-fsanitize=undefined,address -g'
       UBSAN_OPTIONS: 'print_stacktrace=1:halt_on_error=1'
       ASAN_OPTIONS: 'strict_string_checks=1:detect_stack_use_after_return=1:detect_leaks=1'
       LSAN_OPTIONS: 'use_unaligned=1'
       SECP256K1_TEST_ITERS: 32
+      SYMBOL_CHECK: 'no'
 
     steps:
       - name: Checkout
@@ -473,23 +387,9 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
 
   msan_debian:
     name: "MSan"
@@ -521,10 +421,12 @@ jobs:
       SCHNORRSIG: 'yes'
       MUSIG: 'yes'
       ELLSWIFT: 'yes'
+      SILENTPAYMENTS: 'yes'
       CC: 'clang'
       SECP256K1_TEST_ITERS: 32
       ASM: 'no'
       WITH_VALGRIND: 'no'
+      SYMBOL_CHECK: 'no'
 
     steps:
       - name: Checkout
@@ -537,23 +439,10 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
+
 
   mingw_debian:
     name: ${{ matrix.configuration.job_name }}
@@ -569,6 +458,7 @@ jobs:
       SCHNORRSIG: 'yes'
       MUSIG: 'yes'
       ELLSWIFT: 'yes'
+      SILENTPAYMENTS: 'yes'
       CTIMETESTS: 'no'
 
     strategy:
@@ -593,23 +483,9 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
 
   x86_64-macos-native:
     name: "x86_64: macOS Ventura, Valgrind"
@@ -620,19 +496,20 @@ jobs:
       CC: 'clang'
       HOMEBREW_NO_AUTO_UPDATE: 1
       HOMEBREW_NO_INSTALL_CLEANUP: 1
+      SYMBOL_CHECK: 'no'
 
     strategy:
       fail-fast: false
       matrix:
         env_vars:
-          - { WIDEMUL: 'int64',  RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int64',  RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes' }
           - { WIDEMUL: 'int128_struct', ECMULTGENKB: 2, ECMULTWINDOW: 4 }
-          - { WIDEMUL: 'int128',                  ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int128',                  ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes' }
           - { WIDEMUL: 'int128', RECOVERY: 'yes' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', CC: 'gcc' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes',            WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', CC: 'gcc', WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes', CC: 'gcc' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes',            WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes', CC: 'gcc', WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
           - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', CPPFLAGS: '-DVERIFY', CTIMETESTS: 'no' }
           - BUILD: 'distcheck'
 
@@ -652,23 +529,15 @@ jobs:
         env: ${{ matrix.env_vars }}
         run: ./ci/ci.sh
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Symbol check
+        run: |
+          python3 --version
+          python3 -m pip install lief
+          python3 ./tools/symbol-check.py .libs/libsecp256k1.dylib
+
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
 
   arm64-macos-native:
     name: "ARM64: macOS Sonoma"
@@ -681,6 +550,7 @@ jobs:
       HOMEBREW_NO_INSTALL_CLEANUP: 1
       WITH_VALGRIND: 'no'
       CTIMETESTS: 'no'
+      SYMBOL_CHECK: 'no'
 
     strategy:
       fail-fast: false
@@ -708,23 +578,20 @@ jobs:
         env: ${{ matrix.env_vars }}
         run: ./ci/ci.sh
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Symbol check
+        env:
+          VIRTUAL_ENV: '${{ github.workspace }}/venv'
+        run: |
+          python3 --version
+          python3 -m venv $VIRTUAL_ENV
+          export PATH="$VIRTUAL_ENV/bin:$PATH"
+          python3 -m pip install lief
+          python3 ./tools/symbol-check.py .libs/libsecp256k1.dylib
+
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
+
 
   win64-native:
     name: ${{ matrix.configuration.job_name }}
@@ -737,6 +604,7 @@ jobs:
         configuration:
           - job_name: 'x64 (MSVC): Windows (VS 2022, shared)'
             cmake_options: '-A x64 -DBUILD_SHARED_LIBS=ON'
+            symbol_check: 'true'
           - job_name: 'x64 (MSVC): Windows (VS 2022, static)'
             cmake_options: '-A x64 -DBUILD_SHARED_LIBS=OFF'
           - job_name: 'x64 (MSVC): Windows (VS 2022, int128_struct)'
@@ -746,6 +614,8 @@ jobs:
             cpp_flags: '/DSECP256K1_MSVC_MULH_TEST_OVERRIDE'
           - job_name: 'x86 (MSVC): Windows (VS 2022)'
             cmake_options: '-A Win32'
+          - job_name: 'x64 (MSVC): Windows (clang-cl)'
+            cmake_options: '-T ClangCL'
 
     steps:
       - name: Checkout
@@ -762,6 +632,13 @@ jobs:
         shell: bash
         run: |
           cd build/bin/RelWithDebInfo && file *tests.exe bench*.exe libsecp256k1-*.dll || true
+
+      - name: Symbol check
+        if: ${{ matrix.configuration.symbol_check }}
+        run: |
+          py -3 --version
+          py -3 -m pip install lief
+          py -3 .\tools\symbol-check.py build\bin\RelWithDebInfo\libsecp256k1-5.dll
 
       - name: Check
         run: |
@@ -802,6 +679,7 @@ jobs:
       SCHNORRSIG: 'yes'
       MUSIG: 'yes'
       ELLSWIFT: 'yes'
+      SILENTPAYMENTS: 'yes'
 
     steps:
       - name: Checkout
@@ -813,23 +691,9 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
 
   cxx_headers_debian:
     name: "C++ (public headers)"
