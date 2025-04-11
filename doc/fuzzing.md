@@ -136,6 +136,13 @@ Patience is useful; even with improved throughput, libFuzzer may need days and
 - run the fuzzer with the case number appended to the seed corpus path:
   `FUZZ=process_message build_fuzz/bin/fuzz
   qa-assets/fuzz_corpora/process_message/1bc91feec9fc00b107d97dc225a9f2cdaa078eb6`
+- If the file does not exist, make sure you are checking out the exact same commit id
+  for the qa-assets repo. If the file was found while running the fuzz engine in the CI,
+  you should be able to reproduce the crash locally  with the same (or a similar input)
+  within a few minutes. Alternatively, you can use the base64 encoded file from the CI log,
+  if it exists. e.g.
+  `echo "Nb6Fc/97AACAAAD/ewAAgAAAAIAAAACAAAAAoA==" |
+  base64 --decode > qa-assets/fuzz_corpora/process_message/1bc91feec9fc00b107d97dc225a9f2cdaa078eb6`
 
 ## Submit improved coverage
 
