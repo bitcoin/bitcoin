@@ -319,10 +319,10 @@ static RPCHelpMan getrawtransaction()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
 
-    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    Txid hash = Txid::FromUint256(ParseHashV(request.params[0], "parameter 1"));
     const CBlockIndex* blockindex = nullptr;
 
-    if (hash == chainman.GetParams().GenesisBlock().hashMerkleRoot) {
+    if (hash.ToUint256() == chainman.GetParams().GenesisBlock().hashMerkleRoot) {
         // Special exception for the genesis block coinbase transaction
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "The genesis block coinbase is not considered an ordinary transaction and cannot be retrieved");
     }
