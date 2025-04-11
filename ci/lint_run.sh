@@ -9,5 +9,4 @@ set -o errexit -o pipefail -o xtrace
 
 # Only used in .cirrus.yml. Refer to test/lint/README.md on how to run locally.
 export PATH="/python_build/bin:${PATH}"
-export LINT_RUNNER_PATH="/lint_test_runner"
 ./ci/lint/06_script.sh
