@@ -274,6 +274,20 @@ class NonStandardAndInvalid(BadTxTemplate):
             self.spend_tx, 0, script_sig=b'\x00' * 3 + b'\xab\x6a',
             amount=(self.spend_avail // 2))
 
+class IsCoinbase(BadTxTemplate):
+    reject_reason = "coinbase"
+    expect_disconnect = True
+    valid_in_block = False
+
+    def get_tx(self):
+        tx = CTransaction()
+        tx.vin.append(self.valid_txin)
+        tx.vin[0].prevout = COutPoint(hash=0, n=0xffffffff)
+        tx.vin[0].scriptSig = CScript([OP_0, b'\x00' * 2])
+        tx.vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_0])))
+        assert len(tx.vin) == 1
+        return tx
+
 # Disabled opcode tx templates (CVE-2010-5137)
 DisabledOpcodeTemplates = [getDisabledOpcodeTemplate(opcode) for opcode in [
     OP_CAT,
