@@ -81,6 +81,7 @@ from test_framework.script import (
     TaggedHash,
     TaprootSignatureMsg,
     is_op_success,
+    OP_SUCCESS_OVERRIDES,
     taproot_construct,
 )
 from test_framework.script_util import (
@@ -1142,6 +1143,8 @@ def spenders_taproot_active():
     for opval in range(76, 0x100):
         opcode = CScriptOp(opval)
         if not is_op_success(opcode):
+            continue
+        if opcode in OP_SUCCESS_OVERRIDES:
             continue
         scripts = [
             ("bare_success", CScript([opcode])),
