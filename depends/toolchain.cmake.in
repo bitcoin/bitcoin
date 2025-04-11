@@ -144,13 +144,6 @@ else()
   set(ENABLE_WALLET ON CACHE BOOL "")
 endif()
 
-set(bdb_packages @bdb_packages@)
-if("${wallet_packages}" STREQUAL "" OR "${bdb_packages}" STREQUAL "")
-  set(WITH_BDB OFF CACHE BOOL "")
-else()
-  set(WITH_BDB ON CACHE BOOL "")
-endif()
-
 set(usdt_packages @usdt_packages@)
 if("${usdt_packages}" STREQUAL "")
   set(WITH_USDT OFF CACHE BOOL "")
