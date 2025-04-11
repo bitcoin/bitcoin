@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <flatfile.h>
 #include <streams.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
@@ -9,10 +10,118 @@
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
+#include <node/blockstorage.h>
 
 using namespace std::string_literals;
+using namespace util::hex_literals;
 
 BOOST_FIXTURE_TEST_SUITE(streams_tests, BasicTestingSetup)
+
+// Test that obfuscation can be properly reversed even with random chunk sizes.
+BOOST_AUTO_TEST_CASE(xor_roundtrip_random_chunks)
+{
+    auto apply_random_xor_chunks{[&](std::span<std::byte> write, const Obfuscation& obfuscation) {
+        for (size_t offset{0}; offset < write.size();) {
+            const size_t chunk_size{1 + m_rng.randrange(write.size() - offset)};
+            obfuscation(write.subspan(offset, chunk_size), offset);
+            offset += chunk_size;
+        }
+    }};
+
+    for (size_t test{0}; test < 100; ++test) {
+        const size_t write_size{1 + m_rng.randrange(100U)};
+        const std::vector original{m_rng.randbytes<std::byte>(write_size)};
+        std::vector roundtrip{original};
+
+        const auto key_bytes{m_rng.randbytes<std::byte>(Obfuscation::SIZE_BYTES)};
+        const Obfuscation obfuscation{key_bytes};
+        apply_random_xor_chunks(roundtrip, obfuscation);
+
+        // Verify intermediate state is different from original (unless key is zero)
+        const bool all_zero = !obfuscation || (HexStr(key_bytes).find_first_not_of('0') >= write_size * 2);
+        BOOST_CHECK_EQUAL(original != roundtrip, !all_zero);
+
+        apply_random_xor_chunks(roundtrip, obfuscation);
+        BOOST_CHECK(original == roundtrip);
+    }
+}
+
+// Compares optimized obfuscation against a trivial byte-by-byte reference implementation
+// with random offsets to ensure proper handling of key wrapping.
+BOOST_AUTO_TEST_CASE(xor_bytes_reference)
+{
+    auto expected_xor{[](std::span<std::byte> write, const std::span<const std::byte> key, size_t key_offset) {
+        for (auto& b : write) {
+            b ^= key[key_offset++ % key.size()];
+        }
+    }};
+
+    for (size_t test{0}; test < 100; ++test) {
+        const size_t write_size{1 + m_rng.randrange(100U)};
+        const size_t key_offset{m_rng.randrange(3 * 8U)}; // Should wrap around
+
+        const auto key_bytes{m_rng.randbytes<std::byte>(Obfuscation::SIZE_BYTES)};
+        const Obfuscation obfuscation{key_bytes};
+        std::vector expected{m_rng.randbytes<std::byte>(write_size)};
+        std::vector actual{expected};
+
+        expected_xor(expected, key_bytes, key_offset);
+        obfuscation(actual, key_offset);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.begin(), actual.end());
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(obfuscation_constructors)
+{
+    constexpr uint64_t test_key = 0x0123456789ABCDEF;
+
+    // Direct uint64_t constructor
+    const Obfuscation obf1{test_key};
+    BOOST_CHECK_EQUAL(obf1.Key(), test_key);
+
+    // std::span constructor
+    std::array<std::byte, Obfuscation::SIZE_BYTES> key_bytes{};
+    std::memcpy(key_bytes.data(), &test_key, Obfuscation::SIZE_BYTES);
+    const Obfuscation obf2{std::span{key_bytes}};
+    BOOST_CHECK_EQUAL(obf2.Key(), test_key);
+
+    // std::vector<uint8_t> constructor
+    std::vector<uint8_t> uint8_key(Obfuscation::SIZE_BYTES);
+    std::memcpy(uint8_key.data(), &test_key, uint8_key.size());
+    const Obfuscation obf4{uint8_key};
+    BOOST_CHECK_EQUAL(obf4.Key(), test_key);
+
+    // std::vector<std::byte> constructor
+    std::vector<std::byte> byte_vector_key(Obfuscation::SIZE_BYTES);
+    std::memcpy(byte_vector_key.data(), &test_key, byte_vector_key.size());
+    const Obfuscation obf5{byte_vector_key};
+    BOOST_CHECK_EQUAL(obf5.Key(), test_key);
+}
+
+BOOST_AUTO_TEST_CASE(obfuscation_serialize)
+{
+    const Obfuscation original{0xDEADBEEF};
+
+    // Serialize
+    DataStream ds;
+    ds << original;
+
+    BOOST_CHECK_EQUAL(ds.size(), 1 + Obfuscation::SIZE_BYTES); // serialized as a vector
+
+    // Deserialize
+    Obfuscation recovered{0};
+    ds >> recovered;
+
+    BOOST_CHECK_EQUAL(recovered.Key(), original.Key());
+}
+
+BOOST_AUTO_TEST_CASE(obfuscation_empty)
+{
+    const Obfuscation null_obf{0};
+    BOOST_CHECK(!null_obf);
+}
 
 BOOST_AUTO_TEST_CASE(xor_file)
 {
@@ -20,10 +129,13 @@ BOOST_AUTO_TEST_CASE(xor_file)
     auto raw_file{[&](const auto& mode) { return fsbridge::fopen(xor_path, mode); }};
     const std::vector<uint8_t> test1{1, 2, 3};
     const std::vector<uint8_t> test2{4, 5};
-    const std::vector<std::byte> xor_pat{std::byte{0xff}, std::byte{0x00}};
+    auto key_bytes{"ff00ff00ff00ff00"_hex_v};
+    uint64_t xor_key;
+    std::memcpy(&xor_key, key_bytes.data(), sizeof(xor_key));
+
     {
         // Check errors for missing file
-        AutoFile xor_file{raw_file("rb"), xor_pat};
+        AutoFile xor_file{raw_file("rb"), key_bytes};
         BOOST_CHECK_EXCEPTION(xor_file << std::byte{}, std::ios_base::failure, HasReason{"AutoFile::write: file handle is nullpt"});
         BOOST_CHECK_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: file handle is nullpt"});
         BOOST_CHECK_EXCEPTION(xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: file handle is nullpt"});
@@ -35,7 +147,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
 #else
         const char* mode = "wbx";
 #endif
-        AutoFile xor_file{raw_file(mode), xor_pat};
+        AutoFile xor_file{raw_file(mode), xor_key};
         xor_file << test1 << test2;
     }
     {
@@ -48,7 +160,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
         BOOST_CHECK_EXCEPTION(non_xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: end of file"});
     }
     {
-        AutoFile xor_file{raw_file("rb"), xor_pat};
+        AutoFile xor_file{raw_file("rb"), xor_key};
         std::vector<std::byte> read1, read2;
         xor_file >> read1 >> read2;
         BOOST_CHECK_EQUAL(HexStr(read1), HexStr(test1));
@@ -57,7 +169,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
         BOOST_CHECK_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: end of file"});
     }
     {
-        AutoFile xor_file{raw_file("rb"), xor_pat};
+        AutoFile xor_file{raw_file("rb"), xor_key};
         std::vector<std::byte> read2;
         // Check that ignore works
         xor_file.ignore(4);
@@ -73,7 +185,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_writer)
 {
     unsigned char a(1);
     unsigned char b(2);
-    unsigned char bytes[] = { 3, 4, 5, 6 };
+    unsigned char bytes[] = {3, 4, 5, 6};
     std::vector<unsigned char> vch;
 
     // Each test runs twice. Serializing a second time at the same starting
@@ -225,29 +337,30 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     // Degenerate case
     {
         DataStream ds{in};
-        ds.Xor({0x00, 0x00});
+        Obfuscation{0}(ds);
         BOOST_CHECK_EQUAL(""s, ds.str());
     }
 
     in.push_back(std::byte{0x0f});
     in.push_back(std::byte{0xf0});
 
-    // Single character key
     {
+        const Obfuscation obfuscation{"ffffffffffffffff"_hex_v};
+
         DataStream ds{in};
-        ds.Xor({0xff});
+        obfuscation(ds);
         BOOST_CHECK_EQUAL("\xf0\x0f"s, ds.str());
     }
-
-    // Multi character key
 
     in.clear();
     in.push_back(std::byte{0xf0});
     in.push_back(std::byte{0x0f});
 
     {
+        const Obfuscation obfuscation{"ff0fff0fff0fff0f"_hex_v};
+
         DataStream ds{in};
-        ds.Xor({0xff, 0x0f});
+        obfuscation(ds);
         BOOST_CHECK_EQUAL("\x0f\x00"s, ds.str());
     }
 }
@@ -270,7 +383,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
         BOOST_CHECK(false);
     } catch (const std::exception& e) {
         BOOST_CHECK(strstr(e.what(),
-                        "Rewind limit must be less than buffer size") != nullptr);
+                           "Rewind limit must be less than buffer size") != nullptr);
     }
 
     // The buffer is 25 bytes, allow rewinding 10 bytes.
@@ -359,7 +472,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
         BOOST_CHECK(false);
     } catch (const std::exception& e) {
         BOOST_CHECK(strstr(e.what(),
-                        "BufferedFile::Fill: end of file") != nullptr);
+                           "BufferedFile::Fill: end of file") != nullptr);
     }
     // Attempting to read beyond the end sets the EOF indicator.
     BOOST_CHECK(bf.eof());
@@ -551,6 +664,146 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
         }
     }
     fs::remove(streams_test_filename);
+}
+
+BOOST_AUTO_TEST_CASE(buffered_reader_matches_autofile_random_content)
+{
+    const size_t file_size{1 + m_rng.randrange<size_t>(1 << 17)};
+    const size_t buf_size{1 + m_rng.randrange(file_size)};
+    const FlatFilePos pos{0, 0};
+
+    const FlatFileSeq test_file{m_args.GetDataDirBase(), "buffered_file_test_random", node::BLOCKFILE_CHUNK_SIZE};
+    const std::vector obfuscation{m_rng.randbytes<std::byte>(8)};
+
+    // Write out the file with random content
+    {
+        AutoFile{test_file.Open(pos, /*read_only=*/false), obfuscation}.write(m_rng.randbytes<std::byte>(file_size));
+    }
+    BOOST_CHECK_EQUAL(fs::file_size(test_file.FileName(pos)), file_size);
+
+    AutoFile direct_file{test_file.Open(pos, /*read_only=*/true), obfuscation};
+
+    AutoFile buffered_file{test_file.Open(pos, /*read_only=*/true), obfuscation};
+    BufferedReader buffered_reader{std::move(buffered_file), buf_size};
+
+    for (size_t total_read{0}; total_read < file_size;) {
+        const size_t read{Assert(std::min(1 + m_rng.randrange(m_rng.randbool() ? buf_size : 2 * buf_size), file_size - total_read))};
+
+        DataBuffer direct_file_buffer{read};
+        direct_file.read(direct_file_buffer);
+
+        DataBuffer buffered_buffer{read};
+        buffered_reader.read(buffered_buffer);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(
+            direct_file_buffer.begin(), direct_file_buffer.end(),
+            buffered_buffer.begin(), buffered_buffer.end()
+        );
+
+        total_read += read;
+    }
+
+    {
+        DataBuffer excess_byte{1};
+        BOOST_CHECK_EXCEPTION(direct_file.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
+    }
+
+    {
+        DataBuffer excess_byte{1};
+        BOOST_CHECK_EXCEPTION(buffered_reader.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
+    }
+
+    try { fs::remove(test_file.FileName(pos)); } catch (...) {}
+}
+
+BOOST_AUTO_TEST_CASE(buffered_writer_matches_autofile_random_content)
+{
+    const size_t file_size{1 + m_rng.randrange<size_t>(1 << 17)};
+    const size_t buf_size{1 + m_rng.randrange(file_size)};
+    const FlatFilePos pos{0, 0};
+
+    const FlatFileSeq test_buffered{m_args.GetDataDirBase(), "buffered_write_test", node::BLOCKFILE_CHUNK_SIZE};
+    const FlatFileSeq test_direct{m_args.GetDataDirBase(), "direct_write_test", node::BLOCKFILE_CHUNK_SIZE};
+    const std::vector obfuscation{m_rng.randbytes<std::byte>(8)};
+
+    {
+        DataBuffer test_data{m_rng.randbytes<std::byte>(file_size)};
+
+        AutoFile direct_file{test_direct.Open(pos, /*read_only=*/false), obfuscation};
+
+        AutoFile buffered_file{test_buffered.Open(pos, /*read_only=*/false), obfuscation};
+        BufferedWriter buffered{buffered_file, buf_size};
+
+        for (size_t total_written{0}; total_written < file_size;) {
+            const size_t write_size{Assert(std::min(1 + m_rng.randrange(m_rng.randbool() ? buf_size : 2 * buf_size), file_size - total_written))};
+
+            auto current_span = std::span{test_data}.subspan(total_written, write_size);
+            direct_file.write(current_span);
+            buffered.write(current_span);
+
+            total_written += write_size;
+        }
+        // Destructors of AutoFile and BufferedWriter will flush/close here
+    }
+
+    // Compare the resulting files
+    DataBuffer direct_result{file_size};
+    {
+        AutoFile verify_direct{test_direct.Open(pos, /*read_only=*/true), obfuscation};
+        verify_direct.read(direct_result);
+
+        DataBuffer excess_byte{1};
+        BOOST_CHECK_EXCEPTION(verify_direct.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
+    }
+
+    DataBuffer buffered_result{file_size};
+    {
+        AutoFile verify_buffered{test_buffered.Open(pos, /*read_only=*/true), obfuscation};
+        verify_buffered.read(buffered_result);
+
+        DataBuffer excess_byte{1};
+        BOOST_CHECK_EXCEPTION(verify_buffered.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
+    }
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        direct_result.begin(), direct_result.end(),
+        buffered_result.begin(), buffered_result.end()
+    );
+
+    try {
+        fs::remove(test_direct.FileName(pos));
+        fs::remove(test_buffered.FileName(pos));
+    } catch (...) {}
+}
+
+BOOST_AUTO_TEST_CASE(buffered_writer_reader)
+{
+    const uint32_t v1{m_rng.rand32()}, v2{m_rng.rand32()}, v3{m_rng.rand32()};
+    const fs::path test_file{m_args.GetDataDirBase() / "test_buffered_write_read.bin"};
+
+    // Write out the values through a precisely sized BufferedWriter
+    {
+        AutoFile file{fsbridge::fopen(test_file, "w+b")};
+        BufferedWriter f(file, sizeof(v1) + sizeof(v2) + sizeof(v3));
+        f << v1 << v2;
+        f.write(std::as_bytes(std::span{&v3, 1}));
+    }
+    // Read back and verify using BufferedReader
+    {
+        uint32_t _v1{0}, _v2{0}, _v3{0};
+        AutoFile file{fsbridge::fopen(test_file, "rb")};
+        BufferedReader f(std::move(file), sizeof(v1) + sizeof(v2) + sizeof(v3));
+        f >> _v1 >> _v2;
+        f.read(std::as_writable_bytes(std::span{&_v3, 1}));
+        BOOST_CHECK_EQUAL(_v1, v1);
+        BOOST_CHECK_EQUAL(_v2, v2);
+        BOOST_CHECK_EQUAL(_v3, v3);
+
+        DataBuffer excess_byte{1};
+        BOOST_CHECK_EXCEPTION(f.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
+    }
+
+    try { fs::remove(test_file); } catch (...) {}
 }
 
 BOOST_AUTO_TEST_CASE(streams_hashed)

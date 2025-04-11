@@ -20,7 +20,7 @@ FUZZ_TARGET(autofile)
     FuzzedFileProvider fuzzed_file_provider{fuzzed_data_provider};
     AutoFile auto_file{
         fuzzed_file_provider.open(),
-        ConsumeRandomLengthByteVector<std::byte>(fuzzed_data_provider),
+        fuzzed_data_provider.ConsumeIntegral<uint64_t>()
     };
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100)
     {
@@ -29,14 +29,14 @@ FUZZ_TARGET(autofile)
             [&] {
                 std::array<std::byte, 4096> arr{};
                 try {
-                    auto_file.read({arr.data(), fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096)});
+                    auto_file.read(std::span{arr.data(), fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096)});
                 } catch (const std::ios_base::failure&) {
                 }
             },
             [&] {
                 const std::array<std::byte, 4096> arr{};
                 try {
-                    auto_file.write({arr.data(), fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096)});
+                    auto_file.write(std::span{arr.data(), fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096)});
                 } catch (const std::ios_base::failure&) {
                 }
             },

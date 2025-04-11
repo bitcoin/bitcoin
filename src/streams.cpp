@@ -9,8 +9,7 @@
 
 #include <array>
 
-AutoFile::AutoFile(std::FILE* file, std::vector<std::byte> data_xor)
-    : m_file{file}, m_xor{std::move(data_xor)}
+AutoFile::AutoFile(std::FILE* file, const Obfuscation& obfuscation) : m_file{file}, m_obfuscation{obfuscation}
 {
     if (!IsNull()) {
         auto pos{std::ftell(m_file)};
@@ -21,12 +20,12 @@ AutoFile::AutoFile(std::FILE* file, std::vector<std::byte> data_xor)
 std::size_t AutoFile::detail_fread(std::span<std::byte> dst)
 {
     if (!m_file) throw std::ios_base::failure("AutoFile::read: file handle is nullptr");
-    size_t ret = std::fread(dst.data(), 1, dst.size(), m_file);
-    if (!m_xor.empty()) {
-        if (!m_position.has_value()) throw std::ios_base::failure("AutoFile::read: position unknown");
-        util::Xor(dst.subspan(0, ret), m_xor, *m_position);
+    const size_t ret = std::fread(dst.data(), 1, dst.size(), m_file);
+    if (m_obfuscation) {
+        if (!m_position) throw std::ios_base::failure("AutoFile::read: position unknown");
+        m_obfuscation(dst, *m_position);
     }
-    if (m_position.has_value()) *m_position += ret;
+    if (m_position) *m_position += ret;
     return ret;
 }
 
@@ -63,6 +62,12 @@ void AutoFile::read(std::span<std::byte> dst)
         throw std::ios_base::failure(feof() ? "AutoFile::read: end of file" : "AutoFile::read: fread failed");
     }
 }
+void AutoFile::read(std::span<std::byte, 1> dst)
+{
+    if (detail_fread(dst) != 1) {
+        throw std::ios_base::failure(feof() ? "AutoFile::read: end of file" : "AutoFile::read: fread failed");
+    }
+}
 
 void AutoFile::ignore(size_t nSize)
 {
@@ -81,25 +86,52 @@ void AutoFile::ignore(size_t nSize)
 void AutoFile::write(std::span<const std::byte> src)
 {
     if (!m_file) throw std::ios_base::failure("AutoFile::write: file handle is nullptr");
-    if (m_xor.empty()) {
+    if (!m_obfuscation) {
         if (std::fwrite(src.data(), 1, src.size(), m_file) != src.size()) {
             throw std::ios_base::failure("AutoFile::write: write failed");
         }
         if (m_position.has_value()) *m_position += src.size();
     } else {
-        if (!m_position.has_value()) throw std::ios_base::failure("AutoFile::write: position unknown");
         std::array<std::byte, 4096> buf;
         while (src.size() > 0) {
             auto buf_now{std::span{buf}.first(std::min<size_t>(src.size(), buf.size()))};
-            std::copy(src.begin(), src.begin() + buf_now.size(), buf_now.begin());
-            util::Xor(buf_now, m_xor, *m_position);
-            if (std::fwrite(buf_now.data(), 1, buf_now.size(), m_file) != buf_now.size()) {
-                throw std::ios_base::failure{"XorFile::write: failed"};
-            }
+            std::copy_n(src.begin(), buf_now.size(), buf_now.begin());
+            write_buffer(buf_now);
             src = src.subspan(buf_now.size());
-            *m_position += buf_now.size();
         }
     }
+}
+void AutoFile::write(std::span<const std::byte, 1> src)
+{
+    if (!m_file) throw std::ios_base::failure("AutoFile::write: file handle is nullptr");
+    if (!m_obfuscation) {
+        if (std::fwrite(src.data(), 1, 1, m_file) != 1) {
+            throw std::ios_base::failure("AutoFile::write: write failed");
+        }
+        if (m_position.has_value()) *m_position += 1;
+    } else {
+        if (!m_position.has_value()) throw std::ios_base::failure("AutoFile::write: position unknown");
+        std::byte temp_byte = src[0];
+        std::span val(&temp_byte, 1);
+        m_obfuscation(val, *m_position);
+        if (fwrite(val.data(), 1, 1, m_file) != 1) {
+            throw std::ios_base::failure{"XorFile::write: failed"};
+        }
+        *m_position += 1;
+    }
+}
+
+void AutoFile::write_buffer(std::span<std::byte> src)
+{
+    if (!m_file) throw std::ios_base::failure("AutoFile::write_buffer: file handle is nullptr");
+    if (m_obfuscation) {
+        if (!m_position) throw std::ios_base::failure("AutoFile::write_buffer: obfuscation position unknown");
+        m_obfuscation(src, *m_position); // obfuscate in-place
+    }
+    if (std::fwrite(src.data(), 1, src.size(), m_file) != src.size()) {
+        throw std::ios_base::failure("AutoFile::write_buffer: write failed");
+    }
+    if (m_position) *m_position += src.size();
 }
 
 bool AutoFile::Commit()

@@ -6,6 +6,7 @@
 #ifndef BITCOIN_STREAMS_H
 #define BITCOIN_STREAMS_H
 
+#include <obfuscation.h>
 #include <serialize.h>
 #include <span.h>
 #include <support/allocators/zeroafterfree.h>
@@ -21,29 +22,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <string>
-#include <utility>
 #include <vector>
-
-namespace util {
-inline void Xor(std::span<std::byte> write, std::span<const std::byte> key, size_t key_offset = 0)
-{
-    if (key.size() == 0) {
-        return;
-    }
-    key_offset %= key.size();
-
-    for (size_t i = 0, j = key_offset; i != write.size(); i++) {
-        write[i] ^= key[j++];
-
-        // This potentially acts on very many bytes of data, so it's
-        // important that we calculate `j`, i.e. the `key` index in this
-        // way instead of doing a %, which would effectively be a division
-        // for each byte Xor'd -- much slower than need be.
-        if (j == key.size())
-            j = 0;
-    }
-}
-} // namespace util
 
 /* Minimal stream for overwriting and/or appending to an existing byte vector
  *
@@ -82,6 +61,17 @@ public:
             vchData.insert(vchData.end(), UCharCast(src.data()) + nOverwrite, UCharCast(src.data() + src.size()));
         }
         nPos += src.size();
+    }
+    void write(std::span<const std::byte, 1> src)
+    {
+        assert(nPos <= vchData.size());
+        const auto byte{*UCharCast(&src[0])};
+        if (nPos < vchData.size()) {
+            vchData[nPos] = byte;
+        } else {
+            vchData.push_back(byte);
+        }
+        nPos += 1;
     }
     template <typename T>
     VectorWriter& operator<<(const T& obj)
@@ -162,6 +152,7 @@ public:
     typedef vector_type::reverse_iterator reverse_iterator;
 
     explicit DataStream() = default;
+    explicit DataStream(size_type n) { reserve(n); }
     explicit DataStream(std::span<const uint8_t> sp) : DataStream{std::as_bytes(sp)} {}
     explicit DataStream(std::span<const value_type> sp) : vch(sp.data(), sp.data() + sp.size()) {}
 
@@ -253,6 +244,10 @@ public:
         // Write to the end of the buffer
         vch.insert(vch.end(), src.begin(), src.end());
     }
+    void write(std::span<const value_type, 1> src)
+    {
+        vch.push_back(src[0]);
+    }
 
     template<typename T>
     DataStream& operator<<(const T& obj)
@@ -261,21 +256,16 @@ public:
         return (*this);
     }
 
-    template<typename T>
+    template <typename T>
     DataStream& operator>>(T&& obj)
     {
         ::Unserialize(*this, obj);
         return (*this);
     }
 
-    /**
-     * XOR the contents of this stream with a certain key.
-     *
-     * @param[in] key    The key used to XOR the data in this stream.
-     */
-    void Xor(const std::vector<unsigned char>& key)
+    void Obfuscate(const Obfuscation& obfuscation)
     {
-        util::Xor(MakeWritableByteSpan(*this), MakeByteSpan(key));
+        if (obfuscation) obfuscation(MakeWritableByteSpan(*this));
     }
 
     /** Compute total memory usage of this object (own memory + any dynamic memory). */
@@ -392,11 +382,11 @@ class AutoFile
 {
 protected:
     std::FILE* m_file;
-    std::vector<std::byte> m_xor;
+    Obfuscation m_obfuscation;
     std::optional<int64_t> m_position;
 
 public:
-    explicit AutoFile(std::FILE* file, std::vector<std::byte> data_xor={});
+    explicit AutoFile(std::FILE* file, const Obfuscation& obfuscation = 0);
 
     ~AutoFile() { fclose(); }
 
@@ -428,7 +418,7 @@ public:
     bool IsNull() const { return m_file == nullptr; }
 
     /** Continue with a different XOR key */
-    void SetXor(std::vector<std::byte> data_xor) { m_xor = data_xor; }
+    void SetObfuscation(const Obfuscation& obfuscation) { m_obfuscation = obfuscation; }
 
     /** Implementation detail, only used internally. */
     std::size_t detail_fread(std::span<std::byte> dst);
@@ -449,8 +439,10 @@ public:
     // Stream subset
     //
     void read(std::span<std::byte> dst);
+    void read(std::span<std::byte, 1> dst);
     void ignore(size_t nSize);
     void write(std::span<const std::byte> src);
+    void write(std::span<const std::byte, 1> src);
 
     template <typename T>
     AutoFile& operator<<(const T& obj)
@@ -465,7 +457,12 @@ public:
         ::Unserialize(*this, obj);
         return *this;
     }
+
+    //! Write a mutable buffer more efficiently than write(), obfuscating the buffer in-place.
+    void write_buffer(std::span<std::byte> src);
 };
+
+using DataBuffer = std::vector<std::byte>;
 
 /** Wrapper around an AutoFile& that implements a ring buffer to
  *  deserialize from. It guarantees the ability to rewind a given number of bytes.
@@ -481,7 +478,7 @@ private:
     uint64_t m_read_pos{0}; //!< how many bytes have been read from this
     uint64_t nReadLimit;  //!< up to which position we're allowed to read
     uint64_t nRewind;     //!< how many bytes we guarantee to rewind
-    std::vector<std::byte> vchBuf; //!< the buffer
+    DataBuffer vchBuf;
 
     //! read data from the source to fill the buffer
     bool Fill() {
@@ -611,6 +608,89 @@ public:
             buf_offset += inc;
             if (buf_offset >= vchBuf.size()) buf_offset = 0;
         }
+    }
+};
+
+/**
+ * Wrapper that buffers reads from an underlying stream.
+ * Requires underlying stream to support read() and detail_fread() calls
+ * to support fixed-size and variable-sized reads, respectively.
+ */
+template <typename S>
+class BufferedReader
+{
+    S& m_src;
+    DataBuffer m_buf;
+    size_t m_buf_pos;
+
+public:
+    //! Requires stream ownership to prevent leaving the stream at an unexpected position after buffered reads.
+    explicit BufferedReader(S&& stream, size_t size = 1 << 16)
+        requires std::is_rvalue_reference_v<S&&>
+        : m_src{stream}, m_buf(size), m_buf_pos{size} {}
+
+    void read(std::span<std::byte> dst)
+    {
+        if (const auto available{std::min(dst.size(), m_buf.size() - m_buf_pos)}) {
+            std::copy_n(m_buf.begin() + m_buf_pos, available, dst.begin());
+            m_buf_pos += available;
+            dst = dst.subspan(available);
+        }
+        if (dst.size()) {
+            assert(m_buf_pos == m_buf.size());
+            m_src.read(dst);
+
+            m_buf_pos = 0;
+            m_buf.resize(m_src.detail_fread(m_buf));
+        }
+    }
+
+    template <typename T>
+    BufferedReader& operator>>(T&& obj)
+    {
+        Unserialize(*this, obj);
+        return *this;
+    }
+};
+
+/**
+ * Wrapper that buffers writes to an underlying stream.
+ * Requires underlying stream to support write_buffer() method
+ * for efficient buffer flushing and obfuscation.
+ */
+template <typename S>
+class BufferedWriter
+{
+    S& m_dst;
+    DataBuffer m_buf;
+    size_t m_buf_pos{0};
+
+public:
+    explicit BufferedWriter(S& stream, size_t size = 1 << 16) : m_dst{stream}, m_buf(size) {}
+
+    ~BufferedWriter() { flush(); }
+
+    void flush()
+    {
+        if (m_buf_pos) m_dst.write_buffer(std::span{m_buf}.first(m_buf_pos));
+        m_buf_pos = 0;
+    }
+
+    void write(std::span<const std::byte> src)
+    {
+        while (const auto available{std::min(src.size(), m_buf.size() - m_buf_pos)}) {
+            std::copy_n(src.begin(), available, m_buf.begin() + m_buf_pos);
+            m_buf_pos += available;
+            if (m_buf_pos == m_buf.size()) flush();
+            src = src.subspan(available);
+        }
+    }
+
+    template <typename T>
+    BufferedWriter& operator<<(const T& obj)
+    {
+        Serialize(*this, obj);
+        return *this;
     }
 };
 
