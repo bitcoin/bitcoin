@@ -3911,9 +3911,11 @@ bool CWallet::IsLegacy() const
 
 DescriptorScriptPubKeyMan* CWallet::GetDescriptorScriptPubKeyMan(const WalletDescriptor& desc) const
 {
-    for (auto& spk_man_pair : m_spk_managers) {
+    auto spk_man_pair = m_spk_managers.find(desc.id);
+
+    if (spk_man_pair != m_spk_managers.end()) {
         // Try to downcast to DescriptorScriptPubKeyMan then check if the descriptors match
-        DescriptorScriptPubKeyMan* spk_manager = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man_pair.second.get());
+        DescriptorScriptPubKeyMan* spk_manager = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man_pair->second.get());
         if (spk_manager != nullptr && spk_manager->HasWalletDescriptor(desc)) {
             return spk_manager;
         }
@@ -3946,7 +3948,7 @@ std::optional<bool> CWallet::IsInternalScriptPubKeyMan(ScriptPubKeyMan* spk_man)
     return GetScriptPubKeyMan(*type, /* internal= */ true) == desc_spk_man;
 }
 
-ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const FlatSigningProvider& signing_provider, const std::string& label, bool internal)
+util::Result<ScriptPubKeyMan*> CWallet::AddWalletDescriptor(WalletDescriptor& desc, const FlatSigningProvider& signing_provider, const std::string& label, bool internal)
 {
     AssertLockHeld(cs_wallet);
 
@@ -3958,7 +3960,9 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
     auto spk_man = GetDescriptorScriptPubKeyMan(desc);
     if (spk_man) {
         WalletLogPrintf("Update existing descriptor: %s\n", desc.descriptor->ToString());
-        spk_man->UpdateWalletDescriptor(desc);
+        if (auto spkm_res = spk_man->UpdateWalletDescriptor(desc); !spkm_res) {
+            return util::Error{util::ErrorString(spkm_res)};
+        }
     } else {
         auto new_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc, m_keypool_size));
         spk_man = new_spk_man.get();
@@ -4356,7 +4360,9 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
 
                 // Add to the wallet
                 WalletDescriptor w_desc(std::move(descs.at(0)), creation_time, 0, 0, 0);
-                data->watchonly_wallet->AddWalletDescriptor(w_desc, keys, "", false);
+                if (auto spkm_res = data->watchonly_wallet->AddWalletDescriptor(w_desc, keys, "", false); !spkm_res) {
+                    throw std::runtime_error(util::ErrorString(spkm_res).original);
+                }
             }
 
             // Add the wallet to settings
@@ -4393,7 +4399,9 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
 
                 // Add to the wallet
                 WalletDescriptor w_desc(std::move(descs.at(0)), creation_time, 0, 0, 0);
-                data->solvable_wallet->AddWalletDescriptor(w_desc, keys, "", false);
+                if (auto spkm_res = data->solvable_wallet->AddWalletDescriptor(w_desc, keys, "", false); !spkm_res) {
+                    throw std::runtime_error(util::ErrorString(spkm_res).original);
+                }
             }
 
             // Add the wallet to settings
