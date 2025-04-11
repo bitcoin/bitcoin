@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <flatfile.h>
+#include <node/blockstorage.h>
 #include <streams.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
@@ -551,6 +553,146 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
         }
     }
     fs::remove(streams_test_filename);
+}
+
+BOOST_AUTO_TEST_CASE(buffered_reader_matches_autofile_random_content)
+{
+    const size_t file_size{1 + m_rng.randrange<size_t>(1 << 17)};
+    const size_t buf_size{1 + m_rng.randrange(file_size)};
+    const FlatFilePos pos{0, 0};
+
+    const FlatFileSeq test_file{m_args.GetDataDirBase(), "buffered_file_test_random", node::BLOCKFILE_CHUNK_SIZE};
+    const std::vector obfuscation{m_rng.randbytes<std::byte>(8)};
+
+    // Write out the file with random content
+    {
+        AutoFile{test_file.Open(pos, /*read_only=*/false), obfuscation}.write(m_rng.randbytes<std::byte>(file_size));
+    }
+    BOOST_CHECK_EQUAL(fs::file_size(test_file.FileName(pos)), file_size);
+
+    {
+        AutoFile direct_file{test_file.Open(pos, /*read_only=*/true), obfuscation};
+
+        AutoFile buffered_file{test_file.Open(pos, /*read_only=*/true), obfuscation};
+        BufferedReader buffered_reader{std::move(buffered_file), buf_size};
+
+        for (size_t total_read{0}; total_read < file_size;) {
+            const size_t read{Assert(std::min(1 + m_rng.randrange(m_rng.randbool() ? buf_size : 2 * buf_size), file_size - total_read))};
+
+            DataBuffer direct_file_buffer{read};
+            direct_file.read(direct_file_buffer);
+
+            DataBuffer buffered_buffer{read};
+            buffered_reader.read(buffered_buffer);
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(
+                direct_file_buffer.begin(), direct_file_buffer.end(),
+                buffered_buffer.begin(), buffered_buffer.end()
+            );
+
+            total_read += read;
+        }
+
+        {
+            DataBuffer excess_byte{1};
+            BOOST_CHECK_EXCEPTION(direct_file.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
+        }
+
+        {
+            DataBuffer excess_byte{1};
+            BOOST_CHECK_EXCEPTION(buffered_reader.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
+        }
+    }
+
+    fs::remove(test_file.FileName(pos));
+}
+
+BOOST_AUTO_TEST_CASE(buffered_writer_matches_autofile_random_content)
+{
+    const size_t file_size{1 + m_rng.randrange<size_t>(1 << 17)};
+    const size_t buf_size{1 + m_rng.randrange(file_size)};
+    const FlatFilePos pos{0, 0};
+
+    const FlatFileSeq test_buffered{m_args.GetDataDirBase(), "buffered_write_test", node::BLOCKFILE_CHUNK_SIZE};
+    const FlatFileSeq test_direct{m_args.GetDataDirBase(), "direct_write_test", node::BLOCKFILE_CHUNK_SIZE};
+    const std::vector obfuscation{m_rng.randbytes<std::byte>(8)};
+
+    {
+        DataBuffer test_data{m_rng.randbytes<std::byte>(file_size)};
+
+        AutoFile direct_file{test_direct.Open(pos, /*read_only=*/false), obfuscation};
+
+        AutoFile buffered_file{test_buffered.Open(pos, /*read_only=*/false), obfuscation};
+        BufferedWriter buffered{buffered_file, buf_size};
+
+        for (size_t total_written{0}; total_written < file_size;) {
+            const size_t write_size{Assert(std::min(1 + m_rng.randrange(m_rng.randbool() ? buf_size : 2 * buf_size), file_size - total_written))};
+
+            auto current_span = std::span{test_data}.subspan(total_written, write_size);
+            direct_file.write(current_span);
+            buffered.write(current_span);
+
+            total_written += write_size;
+        }
+        // Destructors of AutoFile and BufferedWriter will flush/close here
+    }
+
+    // Compare the resulting files
+    DataBuffer direct_result{file_size};
+    {
+        AutoFile verify_direct{test_direct.Open(pos, /*read_only=*/true), obfuscation};
+        verify_direct.read(direct_result);
+
+        DataBuffer excess_byte{1};
+        BOOST_CHECK_EXCEPTION(verify_direct.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
+    }
+
+    DataBuffer buffered_result{file_size};
+    {
+        AutoFile verify_buffered{test_buffered.Open(pos, /*read_only=*/true), obfuscation};
+        verify_buffered.read(buffered_result);
+
+        DataBuffer excess_byte{1};
+        BOOST_CHECK_EXCEPTION(verify_buffered.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
+    }
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        direct_result.begin(), direct_result.end(),
+        buffered_result.begin(), buffered_result.end()
+    );
+
+    fs::remove(test_direct.FileName(pos));
+    fs::remove(test_buffered.FileName(pos));
+}
+
+BOOST_AUTO_TEST_CASE(buffered_writer_reader)
+{
+    const uint32_t v1{m_rng.rand32()}, v2{m_rng.rand32()}, v3{m_rng.rand32()};
+    const fs::path test_file{m_args.GetDataDirBase() / "test_buffered_write_read.bin"};
+
+    // Write out the values through a precisely sized BufferedWriter
+    {
+        AutoFile file{fsbridge::fopen(test_file, "w+b")};
+        BufferedWriter f(file, sizeof(v1) + sizeof(v2) + sizeof(v3));
+        f << v1 << v2;
+        f.write(std::as_bytes(std::span{&v3, 1}));
+    }
+    // Read back and verify using BufferedReader
+    {
+        uint32_t _v1{0}, _v2{0}, _v3{0};
+        AutoFile file{fsbridge::fopen(test_file, "rb")};
+        BufferedReader f(std::move(file), sizeof(v1) + sizeof(v2) + sizeof(v3));
+        f >> _v1 >> _v2;
+        f.read(std::as_writable_bytes(std::span{&_v3, 1}));
+        BOOST_CHECK_EQUAL(_v1, v1);
+        BOOST_CHECK_EQUAL(_v2, v2);
+        BOOST_CHECK_EQUAL(_v3, v3);
+
+        DataBuffer excess_byte{1};
+        BOOST_CHECK_EXCEPTION(f.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
+    }
+
+    fs::remove(test_file);
 }
 
 BOOST_AUTO_TEST_CASE(streams_hashed)
