@@ -12,6 +12,7 @@
 #include <logging.h>
 #include <node/context.h>
 #include <node/kernel_notifications.h>
+#include <rpc/schema.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <sync.h>
@@ -124,6 +125,12 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
     return strRet;
 }
 
+UniValue CRPCTable::schema() const
+{
+    return CommandSchemas(this->mapCommands);
+}
+
+
 static RPCHelpMan help()
 {
     return RPCHelpMan{"help",
@@ -148,6 +155,22 @@ static RPCHelpMan help()
     }
 
     return tableRPC.help(strCommand, jsonRequest);
+},
+    };
+}
+
+static RPCHelpMan schema()
+{
+    return RPCHelpMan{"schema",
+                "\nReturn RPC command JSON Schema descriptions.\n",
+                {},
+                {
+                    RPCResult{RPCResult::Type::OBJ, "", "FOO"},
+                },
+                RPCExamples{""},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& jsonRequest) -> UniValue
+{
+    return tableRPC.schema();
 },
     };
 }
@@ -246,6 +269,7 @@ static const CRPCCommand vRPCCommands[]{
     /* Overall control/query calls */
     {"control", &getrpcinfo},
     {"control", &help},
+    {"control", &schema},
     {"control", &stop},
     {"control", &uptime},
 };
