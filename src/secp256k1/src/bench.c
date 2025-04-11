@@ -5,6 +5,7 @@
  ***********************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "../include/secp256k1.h"
@@ -15,16 +16,20 @@ static void help(int default_iters) {
     printf("Benchmarks the following algorithms:\n");
     printf("    - ECDSA signing/verification\n");
 
-#ifdef ENABLE_MODULE_ECDH
-    printf("    - ECDH key exchange (optional module)\n");
-#endif
-
 #ifdef ENABLE_MODULE_RECOVERY
     printf("    - Public key recovery (optional module)\n");
 #endif
 
+#ifdef ENABLE_MODULE_ECDH
+    printf("    - ECDH key exchange (optional module)\n");
+#endif
+
 #ifdef ENABLE_MODULE_SCHNORRSIG
     printf("    - Schnorr signatures (optional module)\n");
+#endif
+
+#ifdef ENABLE_MODULE_ELLSWIFT
+    printf("    - ElligatorSwift (optional module)\n");
 #endif
 
     printf("\n");
@@ -42,17 +47,27 @@ static void help(int default_iters) {
     printf("    ec_keygen         : EC public key generation\n");
 
 #ifdef ENABLE_MODULE_RECOVERY
-    printf("    ecdsa_recover     : ECDSA public key recovery algorithm\n");
+    printf("   ecdsa_recover            : ECDSA public key recovery algorithm\n");
 #endif
 
 #ifdef ENABLE_MODULE_ECDH
-    printf("    ecdh              : ECDH key exchange algorithm\n");
+    printf("   ecdh                     : ECDH key exchange algorithm\n");
 #endif
 
 #ifdef ENABLE_MODULE_SCHNORRSIG
-    printf("    schnorrsig        : all Schnorr signature algorithms (sign, verify)\n");
-    printf("    schnorrsig_sign   : Schnorr sigining algorithm\n");
-    printf("    schnorrsig_verify : Schnorr verification algorithm\n");
+    printf("   schnorrsig               : all Schnorr signature algorithms (sign, verify)\n");
+    printf("   schnorrsig_sign          : Schnorr sigining algorithm\n");
+    printf("   schnorrsig_verify        : Schnorr verification algorithm\n");
+# ifdef ENABLE_MODULE_BATCH
+    printf("   schnorrsig_batch_verify  : Batch verification of Schnorr signatures\n");
+# endif
+#endif
+
+#ifdef ENABLE_MODULE_EXTRAKEYS
+    printf("   tweak_add_check          : Checks if tweaked x-only pubkey is valid\n");
+# ifdef ENABLE_MODULE_BATCH
+    printf("   tweak_check_batch_verify : Batch verification of tweaked x-only pubkeys check\n");
+# endif
 #endif
 
 #ifdef ENABLE_MODULE_ELLSWIFT
@@ -157,6 +172,10 @@ static void bench_keygen_run(void *arg, int iters) {
 # include "modules/recovery/bench_impl.h"
 #endif
 
+#ifdef ENABLE_MODULE_EXTRAKEYS
+# include "modules/extrakeys/bench_impl.h"
+#endif
+
 #ifdef ENABLE_MODULE_SCHNORRSIG
 # include "modules/schnorrsig/bench_impl.h"
 #endif
@@ -179,7 +198,8 @@ int main(int argc, char** argv) {
     char* valid_args[] = {"ecdsa", "verify", "ecdsa_verify", "sign", "ecdsa_sign", "ecdh", "recover",
                          "ecdsa_recover", "schnorrsig", "schnorrsig_verify", "schnorrsig_sign", "ec",
                          "keygen", "ec_keygen", "ellswift", "encode", "ellswift_encode", "decode",
-                         "ellswift_decode", "ellswift_keygen", "ellswift_ecdh"};
+                         "ellswift_decode", "ellswift_keygen", "ellswift_ecdh",
+                         "batch_verify", "schnorrsig_batch_verify", "extrakeys", "tweak_add_check", "tweak_check_batch_verify"};
     size_t valid_args_size = sizeof(valid_args)/sizeof(valid_args[0]);
     int invalid_args = have_invalid_args(argc, argv, valid_args, valid_args_size);
 
@@ -188,11 +208,11 @@ int main(int argc, char** argv) {
            || have_flag(argc, argv, "--help")
            || have_flag(argc, argv, "help")) {
             help(default_iters);
-            return 0;
+            return EXIT_SUCCESS;
         } else if (invalid_args) {
             fprintf(stderr, "./bench: unrecognized argument.\n\n");
             help(default_iters);
-            return 1;
+            return EXIT_FAILURE;
         }
     }
 
@@ -201,7 +221,7 @@ int main(int argc, char** argv) {
     if (have_flag(argc, argv, "ecdh")) {
         fprintf(stderr, "./bench: ECDH module not enabled.\n");
         fprintf(stderr, "Use ./configure --enable-module-ecdh.\n\n");
-        return 1;
+        return EXIT_FAILURE;
     }
 #endif
 
@@ -209,12 +229,20 @@ int main(int argc, char** argv) {
     if (have_flag(argc, argv, "recover") || have_flag(argc, argv, "ecdsa_recover")) {
         fprintf(stderr, "./bench: Public key recovery module not enabled.\n");
         fprintf(stderr, "Use ./configure --enable-module-recovery.\n\n");
-        return 1;
+        return EXIT_FAILURE;
     }
 #endif
 
 #ifndef ENABLE_MODULE_SCHNORRSIG
     if (have_flag(argc, argv, "schnorrsig") || have_flag(argc, argv, "schnorrsig_sign") || have_flag(argc, argv, "schnorrsig_verify")) {
+        fprintf(stderr, "./bench: Schnorr signatures module not enabled.\n");
+        fprintf(stderr, "Use ./configure --enable-module-schnorrsig.\n\n");
+        return EXIT_FAILURE;
+    }
+#endif
+
+#ifndef ENABLE_MODULE_BATCH
+    if (have_flag(argc, argv, "batch_verify") || have_flag(argc, argv, "schnorrsig_batch_verify") || have_flag(argc, argv, "tweak_check_batch_verify")) {
         fprintf(stderr, "./bench: Schnorr signatures module not enabled.\n");
         fprintf(stderr, "Use ./configure --enable-module-schnorrsig.\n\n");
         return 1;
@@ -227,7 +255,7 @@ int main(int argc, char** argv) {
         have_flag(argc, argv, "ellswift_ecdh")) {
         fprintf(stderr, "./bench: ElligatorSwift module not enabled.\n");
         fprintf(stderr, "Use ./configure --enable-module-ellswift.\n\n");
-        return 1;
+        return EXIT_FAILURE;
     }
 #endif
 
@@ -265,6 +293,11 @@ int main(int argc, char** argv) {
     run_recovery_bench(iters, argc, argv);
 #endif
 
+#ifdef ENABLE_MODULE_EXTRAKEYS
+    /* Extrakeys benchmarks */
+    run_extrakeys_bench(iters, argc, argv);
+#endif
+
 #ifdef ENABLE_MODULE_SCHNORRSIG
     /* Schnorr signature benchmarks */
     run_schnorrsig_bench(iters, argc, argv);
@@ -275,5 +308,5 @@ int main(int argc, char** argv) {
     run_ellswift_bench(iters, argc, argv);
 #endif
 
-    return 0;
+    return EXIT_SUCCESS;
 }
