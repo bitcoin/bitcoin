@@ -1009,7 +1009,7 @@ private:
                     next_sats.push_back(sats[sats.size() - 1] + sub->ops.sat);
                     sats = std::move(next_sats);
                 }
-                assert(k <= sats.size());
+                assert(k < sats.size());
                 return {count, sats[k], sats[0]};
             }
         }
@@ -1177,7 +1177,7 @@ private:
                     next_sats.push_back(sats[sats.size() - 1] + sub->ws.sat);
                     sats = std::move(next_sats);
                 }
-                assert(k <= sats.size());
+                assert(k < sats.size());
                 return {sats[k], sats[0]};
             }
         }
@@ -1227,7 +1227,7 @@ private:
                     // satisfying 0 keys.
                     auto& nsat{sats[0]};
                     CHECK_NONFATAL(node.k != 0);
-                    assert(node.k <= sats.size());
+                    assert(node.k < sats.size());
                     return {std::move(nsat), std::move(sats[node.k])};
                 }
                 case Fragment::MULTI: {
@@ -1253,7 +1253,7 @@ private:
                     // The dissatisfaction consists of k+1 stack elements all equal to 0.
                     InputStack nsat = ZERO;
                     for (size_t i = 0; i < node.k; ++i) nsat = std::move(nsat) + ZERO;
-                    assert(node.k <= sats.size());
+                    assert(node.k < sats.size());
                     return {std::move(nsat), std::move(sats[node.k])};
                 }
                 case Fragment::THRESH: {
@@ -1288,7 +1288,7 @@ private:
                         // Include all dissatisfactions (even these non-canonical ones) in nsat.
                         if (i != node.k) nsat = std::move(nsat) | std::move(sats[i]);
                     }
-                    assert(node.k <= sats.size());
+                    assert(node.k < sats.size());
                     return {std::move(nsat), std::move(sats[node.k])};
                 }
                 case Fragment::OLDER: {
