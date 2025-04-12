@@ -112,7 +112,10 @@ class WalletMigrationTest(BitcoinTestFramework):
         if wallet_name == "":
             shutil.copyfile(self.old_node.wallets_path / "wallet.dat", self.master_node.wallets_path / "wallet.dat")
         else:
-            shutil.copytree(self.old_node.wallets_path / wallet_name, self.master_node.wallets_path / wallet_name)
+            src = os.path.abspath(self.old_node.wallets_path / wallet_name)
+            dst = os.path.abspath(self.master_node.wallets_path / wallet_name)
+            if src != dst :
+                shutil.copytree(self.old_node.wallets_path / wallet_name, self.master_node.wallets_path / wallet_name, dirs_exist_ok=True)
         # Check that the wallet shows up in listwalletdir with a warning about migration
         wallets = self.master_node.listwalletdir()
         for w in wallets["wallets"]:
@@ -559,6 +562,60 @@ class WalletMigrationTest(BitcoinTestFramework):
         wallet.gettransaction(txid)
 
         assert_equal(bals, wallet.getbalances())
+
+    def test_wallet_with_relative_path(self):
+        self.log.info("Test migration of a wallet that isn't loaded, specified by a relative path")
+
+        # Get the nearest common path of both nodes' wallet paths.
+        common_parent = os.path.commonpath([self.master_node.wallets_path, self.old_node.wallets_path])
+
+        # This test assumes that the relative path from each wallet directory to the common path is identical.
+        assert_equal(os.path.relpath(common_parent, start=self.master_node.wallets_path), os.path.relpath(common_parent, start=self.old_node.wallets_path))
+
+        wallet_name = "relative"
+        absolute_path = os.path.abspath(os.path.join(common_parent, wallet_name))
+        relative_name = os.path.relpath(absolute_path, start=self.master_node.wallets_path)
+
+        wallet = self.create_legacy_wallet(relative_name)
+        # listwalletdirs only returns wallets in the wallet directory
+        assert {"name": relative_name} not in wallet.listwalletdir()["wallets"]
+        assert relative_name in wallet.listwallets()
+
+        default = self.master_node.get_wallet_rpc(self.default_wallet_name)
+        addr = wallet.getnewaddress()
+        txid = default.sendtoaddress(addr, 1)
+        self.generate(self.master_node, 1)
+        bals = wallet.getbalances()
+
+        # migratewallet uses current time in naming the backup file, set a mock time
+        # to check that this works correctly.
+        curr_time = int(time.time())
+        self.master_node.setmocktime(curr_time)
+        migrate_res, wallet = self.migrate_and_get_rpc(relative_name)
+        self.master_node.setmocktime(0)
+
+        # Check that the wallet was migrated, knows the right txid, and has the right balance.
+        assert wallet.gettransaction(txid)
+        assert_equal(bals, wallet.getbalances())
+
+        # The migrated wallet should not be in the wallet dir, but should be in the list of wallets.
+        info = wallet.getwalletinfo()
+
+        walletdirlist = wallet.listwalletdir()
+        assert {"name": info["walletname"]} not in walletdirlist["wallets"]
+
+        walletlist = wallet.listwallets()
+        assert info["walletname"] in walletlist
+
+        # Check that old node can restore from the backup.
+        self.old_node.restorewallet("relative_restored", migrate_res['backup_path'])
+        wallet = self.old_node.get_wallet_rpc("relative_restored")
+        assert wallet.gettransaction(txid)
+        assert_equal(bals, wallet.getbalances())
+
+        info = wallet.getwalletinfo()
+        assert_equal(info["descriptors"], False)
+        assert_equal(info["format"], "bdb")
 
     def test_default_wallet(self):
         self.log.info("Test migration of the wallet named as the empty string")
@@ -1403,6 +1460,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_encrypted()
         self.test_nonexistent()
         self.test_unloaded_by_path()
+        self.test_wallet_with_relative_path()
         self.test_default_wallet()
         self.test_direct_file()
         self.test_addressbook()
