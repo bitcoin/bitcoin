@@ -48,6 +48,7 @@
 
 class Chainstate;
 class CTxMemPool;
+class CTxUndo;
 class ChainstateManager;
 struct ChainTxData;
 class DisconnectedBlockTransactions;
@@ -487,6 +488,17 @@ enum class CoinsCacheSizeState
     OK = 0
 };
 
+bool SpendBlock(
+        const uint256& block_hash,
+        const CBlockIndex* pindex,
+        const CChainParams& params,
+        const CBlock& blockConnecting,
+        CCoinsViewCache& view,
+        BlockValidationState& state,
+        CBlockUndo& blockundo);
+
+void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo& txundo, int nHeight);
+
 /**
  * Chainstate stores and provides an API to update our local knowledge of the
  * current best chain.
@@ -707,7 +719,7 @@ public:
     DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                      CCoinsViewCache& view, bool fJustCheck = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+                      const uint256& block_hash, const CBlockUndo& blockundo, bool fJustCheck = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     // Apply the effects of a block disconnection on the UTXO set.
     bool DisconnectTip(BlockValidationState& state, DisconnectedBlockTransactions* disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);

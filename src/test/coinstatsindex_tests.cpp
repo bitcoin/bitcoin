@@ -9,6 +9,7 @@
 #include <test/util/index.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
+#include <undo.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -100,7 +101,9 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_unclean_shutdown, TestChain100Setup)
             BOOST_CHECK(CheckBlock(block, state, params.GetConsensus()));
             BOOST_CHECK(m_node.chainman->AcceptBlock(new_block, state, &new_block_index, true, nullptr, nullptr, true));
             CCoinsViewCache view(&chainstate.CoinsTip());
-            BOOST_CHECK(chainstate.ConnectBlock(block, state, new_block_index, view));
+            CBlockUndo blockundo;
+            assert(SpendBlock(block.GetHash(), new_block_index, chainstate.m_chainman.GetParams(), block, view, state, blockundo));
+            BOOST_CHECK(chainstate.ConnectBlock(block, state, new_block_index, block.GetHash(), blockundo));
         }
         // Send block connected notification, then stop the index without
         // sending a chainstate flushed notification. Prior to #24138, this

@@ -302,6 +302,22 @@ bool CCoinsViewCache::HaveInputs(const CTransaction& tx) const
     return true;
 }
 
+std::optional<std::vector<Coin>> CCoinsViewCache::GetInputs(const CTransaction& tx) const
+{
+    if (tx.IsCoinBase()) {
+        return {};
+    }
+    std::vector<Coin> coins;
+    coins.reserve(tx.vin.size());
+    for (const auto& txin : tx.vin) {
+        const std::optional<Coin> coin = GetCoin(txin.prevout);
+        if (!coin) return std::nullopt;
+        Assume(!coin->IsSpent());
+        coins.emplace_back(*coin);
+    }
+    return coins;
+}
+
 void CCoinsViewCache::ReallocateCache()
 {
     // Cache should be empty when we're calling this.

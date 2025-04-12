@@ -255,7 +255,9 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                     // It is not allowed to call CheckTxInputs if CheckTransaction failed
                     return;
                 }
-                if (Consensus::CheckTxInputs(transaction, state, coins_view_cache, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, std::numeric_limits<int>::max()), tx_fee_out)) {
+                std::optional<std::vector<Coin>> coins{coins_view_cache.GetInputs(transaction)};
+                if (!coins) return;
+                if (Consensus::CheckTxInputs(transaction, state, *coins, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, std::numeric_limits<int>::max()), tx_fee_out)) {
                     assert(MoneyRange(tx_fee_out));
                 }
             },
@@ -266,7 +268,10 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                     // consensus/tx_verify.cpp:130: unsigned int GetP2SHSigOpCount(const CTransaction &, const CCoinsViewCache &): Assertion `!coin.IsSpent()' failed.
                     return;
                 }
-                (void)GetP2SHSigOpCount(transaction, coins_view_cache);
+
+                std::optional<std::vector<Coin>> coins{coins_view_cache.GetInputs(transaction)};
+                if (!coins) return;
+                (void)GetP2SHSigOpCount(transaction, *coins);
             },
             [&] {
                 const CTransaction transaction{random_mutable_transaction};
@@ -281,7 +286,9 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                     // script/interpreter.cpp:1705: size_t CountWitnessSigOps(const CScript &, const CScript &, const CScriptWitness *, unsigned int): Assertion `(flags & SCRIPT_VERIFY_P2SH) != 0' failed.
                     return;
                 }
-                (void)GetTransactionSigOpCost(transaction, coins_view_cache, flags);
+                std::optional<std::vector<Coin>> coins{coins_view_cache.GetInputs(transaction)};
+                if (!coins) return;
+                (void)GetTransactionSigOpCost(transaction, *coins, flags);
             },
             [&] {
                 (void)IsWitnessStandard(CTransaction{random_mutable_transaction}, coins_view_cache);
