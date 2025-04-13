@@ -1108,6 +1108,9 @@ void Cluster::ApplyDependencies(TxGraphImpl& graph, std::span<std::pair<GraphInd
     // linearization, and post-linearize it to fix up the worst problems with it.
     FixLinearization(m_depgraph, m_linearization);
     PostLinearize(m_depgraph, m_linearization);
+    if (IsAcceptable()) {
+        graph.SetClusterQuality(m_level, m_quality, m_setindex, QualityLevel::NEEDS_RELINEARIZE);
+    }
 
     // Finally push the changes to graph.m_entries.
     Updated(graph);
