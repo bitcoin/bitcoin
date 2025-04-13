@@ -287,6 +287,9 @@ endef
 define $(package)_stage_cmds
   cmake --install . --prefix $($(package)_staging_prefix_dir)
 endef
+ifeq ($(host_os),android)
+  $(package)_stage_cmds += && cp -r $($(package)_extract_dir)/qtbase/src/android/jar/src $($(package)_staging_prefix_dir)/src/android/java
+endif
 
 define $(package)_postprocess_cmds
   rm -rf doc/

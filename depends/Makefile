@@ -241,6 +241,8 @@ $(host_prefix)/toolchain.cmake : toolchain.cmake.in $(host_prefix)/.stamp_$(fina
             -e 's|@multiprocess@|$(MULTIPROCESS)|' \
             -e 's|@android_abi@|$(android_abi)|' \
             -e 's|@android_ndk@|$(ANDROID_NDK)|' \
+            -e 's|@android_toolchain_bin_dir@|$(android_toolchain_bin_dir)|' \
+            -e 's|@android_libcxx_shared_dir@|$(android_libcxx_shared_dir)|' \
             $< > $@
 	touch $@
 

@@ -8,6 +8,18 @@ if("@host_system_name@" STREQUAL "Android")
   set(ANDROID_ABI @android_abi@)
   set(ANDROID_PLATFORM android-@host_system_version@)
   include(@android_ndk@/build/cmake/android.toolchain.cmake)
+  # Qt's Java sources for Android Application Package (APK).
+  cmake_path(SET ANDROID_APK_SRC "${CMAKE_CURRENT_LIST_DIR}/src/android/java")
+  # The libc++_shared.so shared library, provided by the Android SDK,
+  # is required to build an Android Application Package (APK).
+  cmake_path(SET ANDROID_SHARED_CXX_LIB NORMALIZE "@android_toolchain_bin_dir@/../sysroot/usr/lib/@android_libcxx_shared_dir@/libc++_shared.so")
+  # Qt recommends using the same Gradle version that it comes with.
+  # Therefore, we use the Gradle wrapper provided by Qt to build
+  # an Android Application Package (APK).
+  # See:
+  # - https://doc.qt.io/qt-6/deployment-android.html
+  # - https://doc.qt.io/qt-6/qtcore-attribution-android-gradle-wrapper.html
+  cmake_path(SET GRADLEW_EXECUTABLE "${CMAKE_CURRENT_LIST_DIR}/src/3rdparty/gradle/gradlew")
 else()
   # If CMAKE_SYSTEM_NAME is set within a toolchain file, CMake will also
   # set CMAKE_CROSSCOMPILING to TRUE, even if CMAKE_SYSTEM_NAME matches

@@ -5,9 +5,11 @@ android_toolchain_bin_dir := $(ANDROID_NDK)/toolchains/llvm/prebuilt/$(build_os)
 ifeq ($(HOST),armv7a-linux-android)
 android_CXX := $(android_toolchain_bin_dir)/$(HOST)eabi$(ANDROID_API_LEVEL)-clang++
 android_CC  := $(android_toolchain_bin_dir)/$(HOST)eabi$(ANDROID_API_LEVEL)-clang
+android_libcxx_shared_dir := arm-linux-androideabi
 else
 android_CXX := $(android_toolchain_bin_dir)/$(HOST)$(ANDROID_API_LEVEL)-clang++
 android_CC  := $(android_toolchain_bin_dir)/$(HOST)$(ANDROID_API_LEVEL)-clang
+android_libcxx_shared_dir := $(host_arch)-linux-android
 endif
 
 android_CXXFLAGS := -std=$(CXX_STANDARD)

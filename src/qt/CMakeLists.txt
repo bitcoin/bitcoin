@@ -362,3 +362,7 @@ else()
     VERBATIM
   )
 endif()
+
+if(ANDROID)
+  add_subdirectory(android)
+endif()
