@@ -2,21 +2,42 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
-# This file is expected to be highly volatile and may still change substantially.
+if("@host_system_name@" STREQUAL "Android")
+  # For Android, we use the toolchain file provided by the Android SDK.
+  # See: https://developer.android.com/ndk/guides/cmake
+  set(ANDROID_ABI @android_abi@)
+  set(ANDROID_PLATFORM android-@host_system_version@)
+  include(@android_ndk@/build/cmake/android.toolchain.cmake)
+else()
+  # If CMAKE_SYSTEM_NAME is set within a toolchain file, CMake will also
+  # set CMAKE_CROSSCOMPILING to TRUE, even if CMAKE_SYSTEM_NAME matches
+  # CMAKE_HOST_SYSTEM_NAME. To avoid potential misconfiguration of CMake,
+  # it is best not to touch CMAKE_SYSTEM_NAME unless cross-compiling is
+  # intended.
+  if(@depends_crosscompiling@)
+    set(CMAKE_SYSTEM_NAME @host_system_name@)
+    set(CMAKE_SYSTEM_VERSION @host_system_version@)
+    set(CMAKE_SYSTEM_PROCESSOR @host_arch@)
 
-# If CMAKE_SYSTEM_NAME is set within a toolchain file, CMake will also
-# set CMAKE_CROSSCOMPILING to TRUE, even if CMAKE_SYSTEM_NAME matches
-# CMAKE_HOST_SYSTEM_NAME. To avoid potential misconfiguration of CMake,
-# it is best not to touch CMAKE_SYSTEM_NAME unless cross-compiling is
-# intended.
-if(@depends_crosscompiling@)
-  set(CMAKE_SYSTEM_NAME @host_system_name@)
-  set(CMAKE_SYSTEM_VERSION @host_system_version@)
-  set(CMAKE_SYSTEM_PROCESSOR @host_arch@)
+    set(CMAKE_C_COMPILER_TARGET @host@)
+    set(CMAKE_CXX_COMPILER_TARGET @host@)
+    set(CMAKE_OBJCXX_COMPILER_TARGET @host@)
+  endif()
 
-  set(CMAKE_C_COMPILER_TARGET @host@)
-  set(CMAKE_CXX_COMPILER_TARGET @host@)
-  set(CMAKE_OBJCXX_COMPILER_TARGET @host@)
+  if(NOT DEFINED CMAKE_C_COMPILER)
+    set(CMAKE_C_COMPILER @CC@)
+  endif()
+
+  if(NOT DEFINED CMAKE_CXX_COMPILER)
+    set(CMAKE_CXX_COMPILER @CXX@)
+    set(CMAKE_OBJCXX_COMPILER ${CMAKE_CXX_COMPILER})
+  endif()
+
+  set(CMAKE_AR "@AR@")
+  set(CMAKE_RANLIB "@RANLIB@")
+  set(CMAKE_STRIP "@STRIP@")
+  set(CMAKE_OBJCOPY "@OBJCOPY@")
+  set(CMAKE_OBJDUMP "@OBJDUMP@")
 endif()
 
 if(NOT DEFINED CMAKE_C_FLAGS_INIT)
@@ -27,10 +48,6 @@ if(NOT DEFINED CMAKE_C_FLAGS_RELWITHDEBINFO_INIT)
 endif()
 if(NOT DEFINED CMAKE_C_FLAGS_DEBUG_INIT)
   set(CMAKE_C_FLAGS_DEBUG_INIT "@CFLAGS_DEBUG@")
-endif()
-
-if(NOT DEFINED CMAKE_C_COMPILER)
-  set(CMAKE_C_COMPILER @CC@)
 endif()
 
 if(NOT DEFINED CMAKE_CXX_FLAGS_INIT)
@@ -44,11 +61,6 @@ endif()
 if(NOT DEFINED CMAKE_CXX_FLAGS_DEBUG_INIT)
   set(CMAKE_CXX_FLAGS_DEBUG_INIT "@CXXFLAGS_DEBUG@")
   set(CMAKE_OBJCXX_FLAGS_DEBUG_INIT "@CXXFLAGS_DEBUG@")
-endif()
-
-if(NOT DEFINED CMAKE_CXX_COMPILER)
-  set(CMAKE_CXX_COMPILER @CXX@)
-  set(CMAKE_OBJCXX_COMPILER ${CMAKE_CXX_COMPILER})
 endif()
 
 # The DEPENDS_COMPILE_DEFINITIONS* variables are to be treated as lists.
@@ -74,12 +86,6 @@ endif()
 if(NOT DEFINED CMAKE_SHARED_LINKER_FLAGS_DEBUG_INIT)
   set(CMAKE_SHARED_LINKER_FLAGS_DEBUG_INIT "@LDFLAGS_DEBUG@")
 endif()
-
-set(CMAKE_AR "@AR@")
-set(CMAKE_RANLIB "@RANLIB@")
-set(CMAKE_STRIP "@STRIP@")
-set(CMAKE_OBJCOPY "@OBJCOPY@")
-set(CMAKE_OBJDUMP "@OBJDUMP@")
 
 # Using our own built dependencies should not be
 # affected by a potentially random environment.

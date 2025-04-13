@@ -1,0 +1,157 @@
+Fix "duplicate symbol: JNI_OnLoad" linker error
+
+Qt does not officially support static linking on Android. See:
+ - https://bugreports.qt.io/browse/QTBUG-36097
+ - https://bugreports.qt.io/browse/QTBUG-102326
+
+Reverting upstream commit 175e3ac8fabc864ffcc23c7769eaf7f220bddf59
+avoids the linker error.
+
+Note: the revert is not clean and required minor adjustments.
+
+
+--- a/qtbase/src/corelib/CMakeLists.txt
++++ b/qtbase/src/corelib/CMakeLists.txt
+@@ -1016,6 +1016,7 @@ qt_internal_extend_target(Core CONDITION ANDROID
+         kernel/qjnienvironment.cpp kernel/qjnienvironment.h
+         kernel/qjniobject.cpp kernel/qjniobject.h
+         kernel/qjnihelpers.cpp kernel/qjnihelpers_p.h
++        kernel/qjnionload.cpp
+         platform/android/qandroidextras_p.h platform/android/qandroidextras.cpp
+         platform/android/qandroidnativeinterface.cpp
+     NO_UNITY_BUILD_SOURCES
+
+
+--- a/qtbase/src/corelib/kernel/qjnihelpers.cpp
++++ b/qtbase/src/corelib/kernel/qjnihelpers.cpp
+@@ -12,7 +12,6 @@
+ #include <QtCore/private/qcoreapplication_p.h>
+ #include <QtCore/private/qlocking_p.h>
+ 
+-#include <android/log.h>
+ #include <deque>
+ #include <memory>
+ 
+@@ -349,38 +348,3 @@ void QtAndroidPrivate::releaseAndroidDeadlockProtector()
+ }
+ 
+ QT_END_NAMESPACE
+-
+-JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
+-{
+-    Q_UNUSED(reserved);
+-
+-    static const char logTag[] = "QtCore";
+-    static bool initialized = false;
+-    if (initialized)
+-        return JNI_VERSION_1_6;
+-    initialized = true;
+-
+-    typedef union {
+-        JNIEnv *nenv;
+-        void *venv;
+-    } _JNIEnv;
+-
+-    __android_log_print(ANDROID_LOG_INFO, logTag, "Start");
+-
+-    _JNIEnv uenv;
+-    uenv.venv = nullptr;
+-
+-    if (vm->GetEnv(&uenv.venv, JNI_VERSION_1_6) != JNI_OK) {
+-        __android_log_print(ANDROID_LOG_FATAL, logTag, "GetEnv failed");
+-        return JNI_ERR;
+-    }
+-
+-    JNIEnv *env = uenv.nenv;
+-    const jint ret = QT_PREPEND_NAMESPACE(QtAndroidPrivate::initJNI(vm, env));
+-    if (ret != 0) {
+-        __android_log_print(ANDROID_LOG_FATAL, logTag, "initJNI failed");
+-        return ret;
+-    }
+-
+-    return JNI_VERSION_1_6;
+-}
+
+
+--- /dev/null
++++ b/qtbase/src/corelib/kernel/qjnionload.cpp
+@@ -0,0 +1,79 @@
++/****************************************************************************
++**
++** Copyright (C) 2021 The Qt Company Ltd.
++** Contact: https://www.qt.io/licensing/
++**
++** This file is part of the QtCore module of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and The Qt Company. For licensing terms
++** and conditions see https://www.qt.io/terms-conditions. For further
++** information use the contact form at https://www.qt.io/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 3 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL3 included in the
++** packaging of this file. Please review the following information to
++** ensure the GNU Lesser General Public License version 3 requirements
++** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
++**
++** GNU General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU
++** General Public License version 2.0 or (at your option) the GNU General
++** Public license version 3 or any later version approved by the KDE Free
++** Qt Foundation. The licenses are as published by the Free Software
++** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
++** included in the packaging of this file. Please review the following
++** information to ensure the GNU General Public License requirements will
++** be met: https://www.gnu.org/licenses/gpl-2.0.html and
++** https://www.gnu.org/licenses/gpl-3.0.html.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#include "qjnihelpers_p.h"
++
++#include <jni.h>
++#include <android/log.h>
++
++static const char logTag[] = "QtCore";
++
++Q_CORE_EXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
++{
++    Q_UNUSED(reserved);
++
++    static bool initialized = false;
++    if (initialized)
++        return JNI_VERSION_1_6;
++    initialized = true;
++
++    typedef union {
++        JNIEnv *nenv;
++        void *venv;
++    } _JNIEnv;
++
++    __android_log_print(ANDROID_LOG_INFO, logTag, "Start");
++
++    _JNIEnv uenv;
++    uenv.venv = nullptr;
++
++    if (vm->GetEnv(&uenv.venv, JNI_VERSION_1_6) != JNI_OK) {
++        __android_log_print(ANDROID_LOG_FATAL, logTag, "GetEnv failed");
++        return JNI_ERR;
++    }
++
++    JNIEnv *env = uenv.nenv;
++    const jint ret = QT_PREPEND_NAMESPACE(QtAndroidPrivate::initJNI(vm, env));
++    if (ret != 0) {
++        __android_log_print(ANDROID_LOG_FATAL, logTag, "initJNI failed");
++        return ret;
++    }
++
++    return JNI_VERSION_1_6;
++}

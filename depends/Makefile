@@ -97,6 +97,10 @@ host_os+=$(findstring netbsd,$(full_host_os))
 host_os+=$(findstring openbsd,$(full_host_os))
 host_os+=$(findstring mingw32,$(full_host_os))
 
+ifeq (android,$(findstring android,$(full_host_os)))
+host_os:=android
+endif
+
 host_os:=$(strip $(host_os))
 ifeq ($(host_os),)
 host_os=$(full_host_os)
@@ -235,6 +239,8 @@ $(host_prefix)/toolchain.cmake : toolchain.cmake.in $(host_prefix)/.stamp_$(fina
             -e 's|@bdb_packages@|$(bdb_packages_)|' \
             -e 's|@usdt_packages@|$(usdt_packages_)|' \
             -e 's|@multiprocess@|$(MULTIPROCESS)|' \
+            -e 's|@android_abi@|$(android_abi)|' \
+            -e 's|@android_ndk@|$(ANDROID_NDK)|' \
             $< > $@
 	touch $@
 
