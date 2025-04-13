@@ -58,6 +58,8 @@ struct SimTxGraph
     SetType modified;
     /** The configured maximum total size of transactions per cluster. */
     uint64_t max_cluster_size;
+    /** Whether the corresponding real graph is known to be optimally linearized. */
+    bool real_is_optimal{false};
 
     /** Construct a new SimTxGraph with the specified maximum cluster count and size. */
     explicit SimTxGraph(DepGraphIndex cluster_count, uint64_t cluster_size) :
@@ -139,6 +141,7 @@ struct SimTxGraph
     {
         assert(graph.TxCount() < MAX_TRANSACTIONS);
         auto simpos = graph.AddTransaction(feerate);
+        real_is_optimal = false;
         MakeModified(simpos);
         assert(graph.Positions()[simpos]);
         simmap[simpos] = std::make_shared<TxGraph::Ref>();
@@ -158,6 +161,7 @@ struct SimTxGraph
         if (chl_pos == MISSING) return;
         graph.AddDependencies(SetType::Singleton(par_pos), chl_pos);
         MakeModified(par_pos);
+        real_is_optimal = false;
         // This may invalidate our cached oversized value.
         if (oversized.has_value() && !*oversized) oversized = std::nullopt;
     }
@@ -168,6 +172,7 @@ struct SimTxGraph
         auto pos = Find(ref);
         if (pos == MISSING) return;
         // No need to invoke MakeModified, because this equally affects main and staging.
+        real_is_optimal = false;
         graph.FeeRate(pos).fee = fee;
     }
 
@@ -177,6 +182,7 @@ struct SimTxGraph
         auto pos = Find(ref);
         if (pos == MISSING) return;
         MakeModified(pos);
+        real_is_optimal = false;
         graph.RemoveTransactions(SetType::Singleton(pos));
         simrevmap.erase(simmap[pos].get());
         // Retain the TxGraph::Ref corresponding to this position, so the Ref destruction isn't
@@ -203,6 +209,7 @@ struct SimTxGraph
         } else {
             MakeModified(pos);
             graph.RemoveTransactions(SetType::Singleton(pos));
+            real_is_optimal = false;
             simrevmap.erase(simmap[pos].get());
             simmap[pos].reset();
             // This may invalidate our cached oversized value.
@@ -467,6 +474,7 @@ FUZZ_TARGET(txgraph)
                     if (top_sim.graph.Ancestors(pos_par)[pos_chl]) break;
                 }
                 top_sim.AddDependency(par, chl);
+                top_sim.real_is_optimal = false;
                 real->AddDependency(*par, *chl);
                 break;
             } else if ((block_builders.empty() || sims.size() > 1) && top_sim.removed.size() < 100 && command-- == 0) {
@@ -721,7 +729,18 @@ FUZZ_TARGET(txgraph)
                 break;
             } else if (command-- == 0) {
                 // DoWork.
-                real->DoWork();
+                uint64_t iters = provider.ConsumeIntegralInRange<uint64_t>(0, alt ? 10000 : 255);
+                if (real->DoWork(iters)) {
+                    for (unsigned level = 0; level < sims.size(); ++level) {
+                        // DoWork() will not optimize oversized levels.
+                        if (sims[level].IsOversized()) continue;
+                        // DoWork() will not touch the main level if a builder is present.
+                        if (level == 0 && !block_builders.empty()) continue;
+                        // If neither of the two above conditions holds, and DoWork() returned
+                        // then the level is optimal.
+                        sims[level].real_is_optimal = true;
+                    }
+                }
                 break;
             } else if (sims.size() == 2 && !sims[0].IsOversized() && !sims[1].IsOversized() && command-- == 0) {
                 // GetMainStagingDiagrams()
@@ -1004,6 +1023,16 @@ FUZZ_TARGET(txgraph)
             assert(!sims[0].graph.Ancestors(i).Overlaps(todo));
         }
         assert(todo.None());
+
+        // If the real graph claims to be optimal (the last DoWork() call returned true), verify
+        // that calling Linearize on it does not improve it further.
+        if (sims[0].real_is_optimal) {
+            auto real_diagram = ChunkLinearization(sims[0].graph, vec1);
+            auto [sim_lin, _optimal, _cost] = Linearize(sims[0].graph, 300000, rng.rand64(), vec1);
+            auto sim_diagram = ChunkLinearization(sims[0].graph, sim_lin);
+            auto cmp = CompareChunks(real_diagram, sim_diagram);
+            assert(cmp == 0);
+        }
 
         // For every transaction in the total ordering, find a random one before it and after it,
         // and compare their chunk feerates, which must be consistent with the ordering.

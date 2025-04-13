@@ -189,8 +189,9 @@ public:
     void Merge(TxGraphImpl& graph, Cluster& cluster) noexcept;
     /** Given a span of (parent, child) pairs that all belong to this Cluster, apply them. */
     void ApplyDependencies(TxGraphImpl& graph, std::span<std::pair<GraphIndex, GraphIndex>> to_apply) noexcept;
-    /** Improve the linearization of this Cluster. Returns how much work was performed. */
-    uint64_t Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept;
+    /** Improve the linearization of this Cluster. Returns how much work was performed and whether
+     *  the Cluster is now optimal. */
+    std::pair<uint64_t, bool> Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept;
     /** For every chunk in the cluster, append its FeeFrac to ret. */
     void AppendChunkFeerates(std::vector<FeeFrac>& ret) const noexcept;
     /** Add a TrimTxData entry (filling m_chunk_feerate, m_index, m_tx_size) for every
@@ -593,7 +594,7 @@ public:
     void AddDependency(const Ref& parent, const Ref& child) noexcept final;
     void SetTransactionFee(const Ref&, int64_t fee) noexcept final;
 
-    void DoWork() noexcept final;
+    bool DoWork(uint64_t iters) noexcept final;
 
     void StartStaging() noexcept final;
     void CommitStaging() noexcept final;
@@ -1654,12 +1655,12 @@ void TxGraphImpl::ApplyDependencies(int level) noexcept
     clusterset.m_group_data = GroupData{};
 }
 
-uint64_t Cluster::Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept
+std::pair<uint64_t, bool> Cluster::Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept
 {
     // We can only relinearize Clusters that do not need splitting.
     Assume(!NeedsSplitting());
     // No work is required for Clusters which are already optimally linearized.
-    if (IsOptimal()) return 0;
+    if (IsOptimal()) return {0, true};
     // Invoke the actual linearization algorithm (passing in the existing one).
     uint64_t rng_seed = graph.m_rng.rand64();
     auto [linearization, optimal, cost] = Linearize(m_depgraph, max_iters, rng_seed, m_linearization);
@@ -1673,7 +1674,7 @@ uint64_t Cluster::Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept
     graph.SetClusterQuality(m_level, m_quality, m_setindex, new_quality);
     // Update the Entry objects.
     Updated(graph);
-    return cost;
+    return {cost, optimal};
 }
 
 uint64_t TxGraphImpl::MakeAcceptable(Cluster& cluster) noexcept
@@ -1681,7 +1682,7 @@ uint64_t TxGraphImpl::MakeAcceptable(Cluster& cluster) noexcept
     uint64_t cost{0};
     // Relinearize the Cluster if needed.
     if (!cluster.NeedsSplitting() && !cluster.IsAcceptable() && !cluster.IsOversized()) {
-        cost += cluster.Relinearize(*this, m_acceptable_iters);
+        cost += cluster.Relinearize(*this, m_acceptable_iters).first;
     }
     return cost;
 }
@@ -2481,13 +2482,38 @@ void TxGraphImpl::SanityCheck() const
     assert(actual_chunkindex == expected_chunkindex);
 }
 
-void TxGraphImpl::DoWork() noexcept
+bool TxGraphImpl::DoWork(uint64_t iters) noexcept
 {
-    for (int level = 0; level <= GetTopLevel(); ++level) {
-        if (level > 0 || m_main_chunkindex_observers == 0) {
-            MakeAllAcceptable(level);
+    uint64_t iters_done{0};
+    // Relinearize everything to acceptable level first.
+    for (int level = GetTopLevel(); level >= 0; --level) {
+        if (level == 0 && m_main_chunkindex_observers != 0) continue;
+        ApplyDependencies(level);
+        auto& clusterset = GetClusterSet(level);
+        if (clusterset.m_oversized == true) continue;
+        auto& queue = clusterset.m_clusters[int(QualityLevel::NEEDS_RELINEARIZE)];
+        while (!queue.empty()) {
+            if (iters_done + m_acceptable_iters >= iters) return false;
+            iters_done += MakeAcceptable(*queue.back().get());
         }
     }
+    // If we have budget for more work left, get things optimal.
+    for (int level = GetTopLevel(); level >= 0; --level) {
+        if (level == 0 && m_main_chunkindex_observers != 0) continue;
+        auto& clusterset = GetClusterSet(level);
+        if (clusterset.m_oversized == true) continue;
+        auto& queue = clusterset.m_clusters[int(QualityLevel::ACCEPTABLE)];
+        while (!queue.empty()) {
+            // Randomize the order in which we process, so that if the first cluster somehow needs
+            // more work than what iters allows, we don't keep spending it on the same one.
+            auto pos = m_rng.randrange<size_t>(queue.size());
+            Assume(iters >= iters_done);
+            auto [cost, optimal] = queue[pos].get()->Relinearize(*this, iters - iters_done);
+            iters_done += cost;
+            if (!optimal) return false;
+        }
+    }
+    return true;
 }
 
 void BlockBuilderImpl::Next() noexcept
