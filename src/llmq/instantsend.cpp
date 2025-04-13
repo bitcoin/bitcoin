@@ -672,20 +672,25 @@ void CInstantSendManager::TrySignInstantSendLock(const CTransaction& tx)
         islock.inputs.emplace_back(in.prevout);
     }
 
-    {
-        const auto &llmq_params_opt = Params().GetLLMQ(llmqType);
-        assert(llmq_params_opt);
-        LOCK(cs_main);
-        const auto dkgInterval = llmq_params_opt->dkgInterval;
-        const auto quorumHeight = m_chainstate.m_chain.Height() - (m_chainstate.m_chain.Height() % dkgInterval);
-        islock.cycleHash = m_chainstate.m_chain[quorumHeight]->GetBlockHash();
-    }
-
     auto id = islock.GetRequestId();
 
     if (sigman.HasRecoveredSigForId(llmqType, id)) {
         return;
     }
+
+    const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
+    assert(llmq_params_opt);
+    const auto quorum = SelectQuorumForSigning(llmq_params_opt.value(), m_chainstate.m_chain, qman, id);
+
+    if (!quorum) {
+        LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- failed to select quorum. islock id=%s, txid=%s\n",
+                 __func__, id.ToString(), tx.GetHash().ToString());
+        return;
+    }
+
+    const int cycle_height = quorum->m_quorum_base_block_index->nHeight -
+                             quorum->m_quorum_base_block_index->nHeight % llmq_params_opt->dkgInterval;
+    islock.cycleHash = quorum->m_quorum_base_block_index->GetAncestor(cycle_height)->GetBlockHash();
 
     {
         LOCK(cs_creating);
@@ -696,7 +701,7 @@ void CInstantSendManager::TrySignInstantSendLock(const CTransaction& tx)
         txToCreatingInstantSendLocks.emplace(tx.GetHash(), &e.first->second);
     }
 
-    sigman.AsyncSignIfMember(llmqType, shareman, id, tx.GetHash());
+    sigman.AsyncSignIfMember(llmqType, shareman, id, tx.GetHash(), quorum->m_quorum_base_block_index->GetBlockHash());
 }
 
 void CInstantSendManager::HandleNewInstantSendLockRecoveredSig(const llmq::CRecoveredSig& recoveredSig)
