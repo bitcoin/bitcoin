@@ -13,6 +13,10 @@
 
 BOOST_AUTO_TEST_SUITE(txgraph_tests)
 
+/** The number used as acceptable_iters argument in these tests. High enough that everything
+ *  should be optimal, always. */
+static constexpr uint64_t NUM_ACCEPTABLE_ITERS = 100'000'000;
+
 BOOST_AUTO_TEST_CASE(txgraph_trim_zigzag)
 {
     // T     T     T     T     T     T     T     T     T     T     T     T     T     T (50 T's)
@@ -35,7 +39,7 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_zigzag)
     static constexpr int32_t MAX_CLUSTER_SIZE = 100'000 * 100;
 
     // Create a new graph for the test.
-    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE);
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, NUM_ACCEPTABLE_ITERS);
 
     // Add all transactions and store their Refs.
     std::vector<TxGraph::Ref> refs;
@@ -98,7 +102,7 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_flower)
     /** Set a very large cluster size limit so that only the count limit is triggered. */
     static constexpr int32_t MAX_CLUSTER_SIZE = 100'000 * 100;
 
-    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE);
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, NUM_ACCEPTABLE_ITERS);
 
     // Add all transactions and store their Refs.
     std::vector<TxGraph::Ref> refs;
@@ -184,7 +188,7 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_huge)
     std::vector<size_t> top_components;
 
     FastRandomContext rng;
-    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE);
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, NUM_ACCEPTABLE_ITERS);
 
     // Construct the top chains.
     for (int chain = 0; chain < NUM_TOP_CHAINS; ++chain) {
@@ -256,7 +260,7 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_big_singletons)
     static constexpr int NUM_TOTAL_TX = 100;
 
     // Create a new graph for the test.
-    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE);
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, NUM_ACCEPTABLE_ITERS);
 
     // Add all transactions and store their Refs.
     std::vector<TxGraph::Ref> refs;
