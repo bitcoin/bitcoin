@@ -229,8 +229,8 @@ void BenchLinearizeOptimally(benchmark::Bench& bench, const std::array<uint8_t, 
         reader >> Using<DepGraphFormatter>(depgraph);
         uint64_t rng_seed = 0;
         bench.run([&] {
-            auto res = Linearize(depgraph, /*max_iterations=*/10000000, rng_seed++);
-            assert(res.second);
+            auto [_lin, optimal, _cost] = Linearize(depgraph, /*max_iterations=*/10000000, rng_seed++);
+            assert(optimal);
         });
     };
 
