@@ -1030,19 +1030,20 @@ public:
  *                                linearize.
  * @param[in] old_linearization   An existing linearization for the cluster (which must be
  *                                topologically valid), or empty.
- * @return                        A pair of:
+ * @return                        A tuple of:
  *                                - The resulting linearization. It is guaranteed to be at least as
  *                                  good (in the feerate diagram sense) as old_linearization.
  *                                - A boolean indicating whether the result is guaranteed to be
  *                                  optimal.
+ *                                - How many optimization steps were actually performed.
  *
  * Complexity: possibly O(N * min(max_iterations + N, sqrt(2^N))) where N=depgraph.TxCount().
  */
 template<typename SetType>
-std::pair<std::vector<DepGraphIndex>, bool> Linearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations, uint64_t rng_seed, std::span<const DepGraphIndex> old_linearization = {}) noexcept
+std::tuple<std::vector<DepGraphIndex>, bool, uint64_t> Linearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations, uint64_t rng_seed, std::span<const DepGraphIndex> old_linearization = {}) noexcept
 {
     Assume(old_linearization.empty() || old_linearization.size() == depgraph.TxCount());
-    if (depgraph.TxCount() == 0) return {{}, true};
+    if (depgraph.TxCount() == 0) return {{}, true, 0};
 
     uint64_t iterations_left = max_iterations;
     std::vector<DepGraphIndex> linearization;
@@ -1113,7 +1114,7 @@ std::pair<std::vector<DepGraphIndex>, bool> Linearize(const DepGraph<SetType>& d
         }
     }
 
-    return {std::move(linearization), optimal};
+    return {std::move(linearization), optimal, max_iterations - iterations_left};
 }
 
 /** Improve a given linearization.

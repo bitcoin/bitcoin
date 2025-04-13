@@ -189,8 +189,8 @@ public:
     void Merge(TxGraphImpl& graph, Cluster& cluster) noexcept;
     /** Given a span of (parent, child) pairs that all belong to this Cluster, apply them. */
     void ApplyDependencies(TxGraphImpl& graph, std::span<std::pair<GraphIndex, GraphIndex>> to_apply) noexcept;
-    /** Improve the linearization of this Cluster. */
-    void Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept;
+    /** Improve the linearization of this Cluster. Returns how much work was performed. */
+    uint64_t Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept;
     /** For every chunk in the cluster, append its FeeFrac to ret. */
     void AppendChunkFeerates(std::vector<FeeFrac>& ret) const noexcept;
     /** Add a TrimTxData entry (filling m_chunk_feerate, m_index, m_tx_size) for every
@@ -1651,15 +1651,15 @@ void TxGraphImpl::ApplyDependencies(int level) noexcept
     clusterset.m_group_data = GroupData{};
 }
 
-void Cluster::Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept
+uint64_t Cluster::Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept
 {
     // We can only relinearize Clusters that do not need splitting.
     Assume(!NeedsSplitting());
     // No work is required for Clusters which are already optimally linearized.
-    if (IsOptimal()) return;
+    if (IsOptimal()) return 0;
     // Invoke the actual linearization algorithm (passing in the existing one).
     uint64_t rng_seed = graph.m_rng.rand64();
-    auto [linearization, optimal] = Linearize(m_depgraph, max_iters, rng_seed, m_linearization);
+    auto [linearization, optimal, cost] = Linearize(m_depgraph, max_iters, rng_seed, m_linearization);
     // Postlinearize if the result isn't optimal already. This guarantees (among other things)
     // that the chunks of the resulting linearization are all connected.
     if (!optimal) PostLinearize(m_depgraph, linearization);
@@ -1670,6 +1670,7 @@ void Cluster::Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept
     graph.SetClusterQuality(m_level, m_quality, m_setindex, new_quality);
     // Update the Entry objects.
     Updated(graph);
+    return cost;
 }
 
 void TxGraphImpl::MakeAcceptable(Cluster& cluster) noexcept
