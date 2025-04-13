@@ -309,9 +309,11 @@ FUZZ_TARGET(txgraph)
     auto max_cluster_count = provider.ConsumeIntegralInRange<DepGraphIndex>(1, MAX_CLUSTER_COUNT_LIMIT);
     /** The maximum total size of transactions in a (non-oversized) cluster. */
     auto max_cluster_size = provider.ConsumeIntegralInRange<uint64_t>(1, 0x3fffff * MAX_CLUSTER_COUNT_LIMIT);
+    /** The number of iterations to consider a cluster acceptably linearized. */
+    auto acceptable_iters = provider.ConsumeIntegralInRange<uint64_t>(0, 10000);
 
     // Construct a real graph, and a vector of simulated graphs (main, and possibly staging).
-    auto real = MakeTxGraph(max_cluster_count, max_cluster_size);
+    auto real = MakeTxGraph(max_cluster_count, max_cluster_size, acceptable_iters);
     std::vector<SimTxGraph> sims;
     sims.reserve(2);
     sims.emplace_back(max_cluster_count, max_cluster_size);

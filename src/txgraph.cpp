@@ -255,6 +255,8 @@ private:
     const DepGraphIndex m_max_cluster_count;
     /** This TxGraphImpl's maximum cluster size limit. */
     const uint64_t m_max_cluster_size;
+    /** The number of linearization improvements steps needed for it to be considered acceptable. */
+    const uint64_t m_acceptable_iters;
 
     /** Information about one group of Clusters to be merged. */
     struct GroupEntry
@@ -456,9 +458,10 @@ private:
 
 public:
     /** Construct a new TxGraphImpl with the specified limits. */
-    explicit TxGraphImpl(DepGraphIndex max_cluster_count, uint64_t max_cluster_size) noexcept :
+    explicit TxGraphImpl(DepGraphIndex max_cluster_count, uint64_t max_cluster_size, uint64_t acceptable_iters) noexcept :
         m_max_cluster_count(max_cluster_count),
         m_max_cluster_size(max_cluster_size),
+        m_acceptable_iters(acceptable_iters),
         m_main_chunkindex(ChunkOrder(this))
     {
         Assume(max_cluster_count >= 1);
@@ -1677,7 +1680,7 @@ uint64_t TxGraphImpl::MakeAcceptable(Cluster& cluster) noexcept
     uint64_t cost{0};
     // Relinearize the Cluster if needed.
     if (!cluster.NeedsSplitting() && !cluster.IsAcceptable() && !cluster.IsOversized()) {
-        cost += cluster.Relinearize(*this, 10000);
+        cost += cluster.Relinearize(*this, m_acceptable_iters);
     }
     return cost;
 }
@@ -2895,7 +2898,7 @@ TxGraph::Ref::Ref(Ref&& other) noexcept
     std::swap(m_index, other.m_index);
 }
 
-std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count, uint64_t max_cluster_size) noexcept
+std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count, uint64_t max_cluster_size, uint64_t acceptable_iters) noexcept
 {
-    return std::make_unique<TxGraphImpl>(max_cluster_count, max_cluster_size);
+    return std::make_unique<TxGraphImpl>(max_cluster_count, max_cluster_size, acceptable_iters);
 }
