@@ -247,7 +247,8 @@ public:
 
 /** Construct a new TxGraph with the specified limit on the number of transactions within a cluster,
  *  and on the sum of transaction sizes within a cluster. max_cluster_count cannot exceed
- *  MAX_CLUSTER_COUNT_LIMIT. */
-std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count, uint64_t max_cluster_size) noexcept;
+ *  MAX_CLUSTER_COUNT_LIMIT. acceptable_iters controls how many linearization optimization
+ *  steps will be performed per cluster before they are considered to be of acceptable quality. */
+std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count, uint64_t max_cluster_size, uint64_t acceptable_iters) noexcept;
 
 #endif // BITCOIN_TXGRAPH_H
