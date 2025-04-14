@@ -1019,7 +1019,8 @@ static RPCHelpMan addpeeraddress()
     bool success{false};
 
     if (net_addr.has_value()) {
-        CAddress address{{net_addr.value(), port}, ServiceFlags{NODE_NETWORK}};
+        CService service{net_addr.value(), port};
+        CAddress address{MaybeFlipIPv6toCJDNS(service), ServiceFlags{NODE_NETWORK}};
         address.nTime = Now<NodeSeconds>();
         // The source address is set equal to the address. This is equivalent to the peer
         // announcing itself.
