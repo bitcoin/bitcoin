@@ -8,6 +8,7 @@
 #include <common/system.h>
 
 #include <logging.h>
+#include <util/byte_units.h>
 #include <util/string.h>
 #include <util/time.h>
 
@@ -115,7 +116,7 @@ int64_t GetStartupTime()
     return nStartupTime;
 }
 
-size_t g_low_memory_threshold = 10 * 1024 * 1024 /* 10 MB */;
+size_t g_low_memory_threshold{64_MiB};
 
 bool SystemNeedsMemoryReleased()
 {
