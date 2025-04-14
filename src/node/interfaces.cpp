@@ -1070,6 +1070,61 @@ public:
         return BlockRef{tip->GetBlockHash(), tip->nHeight};
     }
 
+    // Helper inspired by getchaintips RPC
+    std::vector<uint256> GetAllForkBlocksAboveHeight(int height)
+    {
+        LOCK(::cs_main);
+        CChain& active_chain = chainman().ActiveChain();
+        std::vector<uint256> forks;
+
+        for (const auto& [_, block_index] : chainman().BlockIndex()) {
+            if (!active_chain.Contains(&block_index) && block_index.nHeight > height) {
+                forks.emplace_back(block_index.GetBlockHash());
+            }
+        }
+        return forks;
+    }
+
+    std::vector<uint256> rollbackTestnet4() override
+    {
+        LOCK(::cs_main);
+        if (chainman().IsInitialBlockDownload()) return {};
+        CBlockIndex* tip{chainman().ActiveChain().Tip()};
+        if (!tip) return {};
+
+        // Find all the min-difficulty blocks from the tip until the last
+        // actual difficulty block
+        std::vector<uint256> invalids;
+        while (tip->nBits == 0x1d00ffff) {
+            invalids.emplace_back(tip->GetBlockHash());
+            tip = tip->pprev;
+        }
+
+        // Get all the fork blocks and invalidate them first so we don't
+        // get another min-difficulty chain as the tip later
+        std::vector<uint256> forks = GetAllForkBlocksAboveHeight(tip->nHeight);
+        for (auto fork_block : forks) {
+            // No need to check nBits again, if it was a real difficulty
+            // block it would have been in the chain
+            InvalidateBlock(chainman(), fork_block);
+        }
+
+        for (auto invalid_block : invalids) {
+            InvalidateBlock(chainman(), invalid_block);
+        }
+
+        invalids.insert(invalids.end(), forks.begin(), forks.end());
+        return invalids;
+    }
+
+    void reconsiderTestnet4(std::vector<uint256> invalids) override
+    {
+        LOCK(::cs_main);
+        for (uint256 block_hash : invalids) {
+            ReconsiderBlock(chainman(), block_hash);
+        }
+    }
+
     BlockRef waitTipChanged(uint256 current_tip, MillisecondsDouble timeout) override
     {
         if (timeout > std::chrono::years{100}) timeout = std::chrono::years{100}; // Upper bound to avoid UB in std::chrono
