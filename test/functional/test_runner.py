@@ -154,6 +154,8 @@ BASE_SCRIPTS = [
     'feature_reindex_readonly.py',
     'wallet_labels.py',
     'p2p_compactblocks.py',
+    'p2p_txrecon_initiator.py',
+    'p2p_txrecon_responder.py',
     'p2p_compactblocks_blocksonly.py',
     'wallet_hd.py',
     'wallet_blank.py',
