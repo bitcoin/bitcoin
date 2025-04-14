@@ -23,10 +23,6 @@ std::string ShellEscape(const std::string& arg);
 void runCommand(const std::string& strCommand);
 #endif
 
-extern size_t g_low_memory_threshold;
-
-bool SystemNeedsMemoryReleased();
-
 /**
  * Return the number of cores available on the current system.
  * @note This does count virtual cores, such as those provided by HyperThreading.

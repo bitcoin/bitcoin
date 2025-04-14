@@ -78,6 +78,7 @@
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
+#include <util/mempressure.h>
 #include <util/moneystr.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
