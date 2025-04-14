@@ -10,6 +10,7 @@ import math
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.p2p import P2PInterface
+from test_framework.p2p_txrecon import wire_q
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
@@ -17,8 +18,6 @@ from test_framework.wallet import MiniWallet
 # From txreconciliation.cpp
 # Interval the node takes to reconcile with all peers. Each peer is reconciled every 1-nth
 RECON_REQUEST_INTERVAL = 30
-Q = 0.25
-Q_PRECISION = (2 << 14) - 1
 
 class ReqTxrcnclReceiver(P2PInterface):
     def __init__(self):
@@ -57,7 +56,7 @@ class ReqTxRcnclTest(BitcoinTestFramework):
 
         # No transaction were created, so we expect the set size to be 0, and Q to be default
         assert_equal(recon_peer0.reqtxrcncl_msg_received.set_size, 0)
-        assert_equal(recon_peer0.reqtxrcncl_msg_received.q, int(math.ceil(Q_PRECISION * Q)))
+        assert_equal(recon_peer0.reqtxrcncl_msg_received.q, wire_q())
 
         # Since recon_peer0 has not responded to the reconciliation request, the turn is passed to recon_peer1.
         # Had peer 0 finished the reconciliation process, it would have been peer's 0 turn again, given it was
