@@ -59,6 +59,7 @@ All three configurations assume several paths that might need to be adjusted.
     PID file:            /run/bitcoind/bitcoind.pid (OpenRC and systemd) or
                          /var/run/bitcoind/bitcoind.pid (Upstart)
     Lock file:           /var/lock/subsys/bitcoind (CentOS)
+    Debug log file:      /var/log/bitcoind/debug.log (OpenRC)
 
 The PID directory (if applicable) and data directory should both be owned by the
 bitcoin user and group. It is advised for security reasons to make the

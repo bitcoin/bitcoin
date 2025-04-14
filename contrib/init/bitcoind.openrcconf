@@ -12,6 +12,9 @@
 # Where to write bitcoind data (be mindful that the blockchain is large)
 #BITCOIND_DATADIR="/var/lib/bitcoind"
 
+# Location to write debug log
+#BITCOIND_LOGDIR="/var/log/bitcoind"
+
 # User and group to own bitcoind process
 #BITCOIND_USER="bitcoin"
 #BITCOIND_GROUP="bitcoin"
