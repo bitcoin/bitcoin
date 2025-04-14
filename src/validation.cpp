@@ -2921,30 +2921,32 @@ bool Chainstate::FlushStateToDisk(
             }
 
             if (!CoinsTip().GetBestBlock().IsNull()) {
-                if (coins_mem_usage >= WARN_FLUSH_COINS_SIZE) LogWarning("Flushing large (%d GiB) UTXO set to disk, it may take several minutes", coins_mem_usage >> 30);
-                LOG_TIME_MILLIS_WITH_CATEGORY(strprintf("write coins cache to disk (%d coins, %.2fKiB)",
-                    coins_count, coins_mem_usage >> 10), BCLog::BENCH);
 
-                // Typical Coin structures on disk are around 48 bytes in size.
-                // Pushing a new one to the database can cause it to be written
-                // twice (once in the log, and once in the tables). This is already
-                // an overestimation, as most will delete an existing entry or
-                // overwrite one. Still, use a conservative safety factor of 2.
-                if (!CheckDiskSpace(m_chainman.m_options.datadir, 48 * 2 * 2 * CoinsTip().GetCacheSize())) {
-                    return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
-                }
-                // Flush the chainstate (which may refer to block index entries).
-                const auto empty_cache{(mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical};
-                if (empty_cache ? !CoinsTip().Flush() : !CoinsTip().Sync()) {
-                    return FatalError(m_chainman.GetNotifications(), state, _("Failed to write to coin database."));
-                }
-                full_flush_completed = true;
-                TRACEPOINT(utxocache, flush,
+            if (coins_mem_usage >= WARN_FLUSH_COINS_SIZE) LogWarning("Flushing large (%d GiB) UTXO set to disk, it may take several minutes", coins_mem_usage >> 30);
+            LOG_TIME_MILLIS_WITH_CATEGORY(strprintf("write coins cache to disk (%d coins, %.2fKiB)",
+                coins_count, coins_mem_usage >> 10), BCLog::BENCH);
+
+            // Typical Coin structures on disk are around 48 bytes in size.
+            // Pushing a new one to the database can cause it to be written
+            // twice (once in the log, and once in the tables). This is already
+            // an overestimation, as most will delete an existing entry or
+            // overwrite one. Still, use a conservative safety factor of 2.
+            if (!CheckDiskSpace(m_chainman.m_options.datadir, 48 * 2 * 2 * CoinsTip().GetCacheSize())) {
+                return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
+            }
+            // Flush the chainstate (which may refer to block index entries).
+            const auto empty_cache{(mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical};
+            if (empty_cache ? !CoinsTip().Flush() : !CoinsTip().Sync()) {
+                return FatalError(m_chainman.GetNotifications(), state, _("Failed to write to coin database."));
+            }
+            full_flush_completed = true;
+            TRACEPOINT(utxocache, flush,
                     int64_t{Ticks<std::chrono::microseconds>(NodeClock::now() - nNow)},
-                    (uint32_t)mode,
-                    (uint64_t)coins_count,
-                    (uint64_t)coins_mem_usage,
-                    (bool)fFlushForPrune);
+                   (uint32_t)mode,
+                   (uint64_t)coins_count,
+                   (uint64_t)coins_mem_usage,
+                   (bool)fFlushForPrune);
+
             }
         }
 
