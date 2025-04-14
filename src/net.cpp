@@ -3956,6 +3956,13 @@ void CConnman::ThreadI2PAcceptIncoming(CMasternodeSync& mn_sync)
     bool advertising_listen_addr = false;
     i2p::Connection conn;
 
+    auto SleepOnFailure = [&]() {
+        interruptNet.sleep_for(err_wait);
+        if (err_wait < err_wait_cap) {
+            err_wait += 1s;
+        }
+    };
+
     while (!interruptNet) {
 
         if (!m_i2p_sam_session->Listen(conn)) {
@@ -3963,12 +3970,7 @@ void CConnman::ThreadI2PAcceptIncoming(CMasternodeSync& mn_sync)
                 RemoveLocal(conn.me);
                 advertising_listen_addr = false;
             }
-
-            interruptNet.sleep_for(err_wait);
-            if (err_wait < err_wait_cap) {
-                err_wait *= 2;
-            }
-
+            SleepOnFailure();
             continue;
         }
 
@@ -3978,11 +3980,14 @@ void CConnman::ThreadI2PAcceptIncoming(CMasternodeSync& mn_sync)
         }
 
         if (!m_i2p_sam_session->Accept(conn)) {
+            SleepOnFailure();
             continue;
         }
 
         CreateNodeFromAcceptedSocket(std::move(conn.sock), NetPermissionFlags::None,
                                      CAddress{conn.me, NODE_NONE}, CAddress{conn.peer, NODE_NONE}, mn_sync);
+
+        err_wait = err_wait_begin;
     }
 }
 
