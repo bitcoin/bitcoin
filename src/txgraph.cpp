@@ -978,10 +978,11 @@ bool Cluster::Split(TxGraphImpl& graph) noexcept
     // Iterate over the connected components of this Cluster's m_depgraph.
     while (todo.Any()) {
         auto component = m_depgraph.FindConnectedComponent(todo);
+        auto split_quality = component.Count() <= 2 ? QualityLevel::OPTIMAL : new_quality;
         if (first && component == todo) {
             // The existing Cluster is an entire component. Leave it be, but update its quality.
             Assume(todo == m_depgraph.Positions());
-            graph.SetClusterQuality(m_level, m_quality, m_setindex, new_quality);
+            graph.SetClusterQuality(m_level, m_quality, m_setindex, split_quality);
             // If this made the quality ACCEPTABLE or OPTIMAL, we need to compute and cache its
             // chunking.
             Updated(graph);
@@ -996,7 +997,7 @@ bool Cluster::Split(TxGraphImpl& graph) noexcept
         for (auto i : component) {
             remap[i] = {new_cluster.get(), DepGraphIndex(-1)};
         }
-        graph.InsertCluster(m_level, std::move(new_cluster), new_quality);
+        graph.InsertCluster(m_level, std::move(new_cluster), split_quality);
         todo -= component;
     }
     // Redistribute the transactions.
