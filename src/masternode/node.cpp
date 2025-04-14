@@ -264,7 +264,7 @@ bool CActiveMasternodeManager::IsValidNetAddr(const CService& addrIn)
     if (!addrIn.IsValid() || !addrIn.IsIPv4()) return false;
     // TODO: regtest is fine with any addresses for now,
     // should probably be a bit smarter if one day we start to implement tests for this
-    return !Params().RequireRoutableExternalIP() || (IsReachable(addrIn) && addrIn.IsRoutable());
+    return !Params().RequireRoutableExternalIP() || (g_reachable_nets.Contains(addrIn) && addrIn.IsRoutable());
 }
 
 template <template <typename> class EncryptedObj, typename Obj>
