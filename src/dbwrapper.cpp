@@ -167,8 +167,7 @@ CDBBatch::~CDBBatch() = default;
 void CDBBatch::Clear()
 {
     m_impl_batch->batch.Clear();
-    assert(m_impl_batch->batch.ApproximateSize() == kHeader);
-    size_estimate = kHeader; // TODO remove
+    size_estimate = kHeader;
 }
 
 void CDBBatch::WriteImpl(Span<const std::byte> key, DataStream& ssValue)
