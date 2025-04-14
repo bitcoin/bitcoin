@@ -8,6 +8,9 @@
 #include <qt/guiutil.h>
 
 #include <QMouseEvent>
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+#include <QtNumeric>
+#endif
 #include <QPainter>
 #include <QPainterPath>
 #include <QColor>
@@ -87,10 +90,17 @@ void TrafficGraphWidget::mouseMoveEvent(QMouseEvent *event)
     QWidget::mouseMoveEvent(event);
     static int last_x = -1;
     static int last_y = -1;
-    int x = event->x();
-    int y = event->y();
-    x_offset = event->globalX() - x;
-    y_offset = event->globalY() - y;
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    const QPointF event_local_pos = event->position();
+    const QPointF event_global_pos = event->globalPosition();
+#else
+    const QPointF event_local_pos = event->localPos();
+    const QPointF event_global_pos = event->screenPos();
+#endif
+    int x = qRound(event_local_pos.x());
+    int y = qRound(event_local_pos.y());
+    x_offset = qRound(event_global_pos.x()) - x;
+    y_offset = qRound(event_global_pos.y()) - y;
     if (last_x == x && last_y == y) return; // Do nothing if mouse hasn't moved
     int h = height() - YMARGIN * 2, w = width() - XMARGIN * 2;
     int i = (w + XMARGIN - x) * DESIRED_SAMPLES / w;
