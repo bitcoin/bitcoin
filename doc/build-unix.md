@@ -7,8 +7,15 @@ Some notes on how to build Bitcoin Core in Unix.
 To Build
 ---------------------
 
+### 1. Configuration
+
 ```bash
 cmake -B build
+```
+Run `cmake -B build -LH` to see the full list of available options.
+
+### 2. Compile
+```
 cmake --build build    # use "-j N" for N parallel jobs
 cmake --install build  # optional
 ```
