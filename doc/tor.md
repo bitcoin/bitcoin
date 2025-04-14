@@ -2,11 +2,7 @@
 
 It is possible to run Dash Core as a Tor onion service, and connect to such services.
 
-The following directions assume you have a Tor proxy running on port 9050. Many
-distributions default to having a SOCKS proxy listening on port 9050, but others
-may not. In particular, the Tor Browser Bundle defaults to listening on port 9150.
-See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.html.en#TBBSocksPort)
-for how to properly configure Tor.
+The following directions assume you have a Tor proxy running on port 9050. Many distributions default to having a SOCKS proxy listening on port 9050, but others may not. In particular, the Tor Browser Bundle defaults to listening on port 9150.
 
 ## Compatibility
 
@@ -30,8 +26,7 @@ CLI `-addrinfo` returns the number of addresses known to your node per
 network. This can be useful to see how many onion peers your node knows,
 e.g. for `-onlynet=onion`.
 
-To fetch a number of onion addresses that your node knows, for example seven
-addresses, use the `getnodeaddresses 7 onion` RPC.
+You can use the `getnodeaddresses` RPC to fetch a number of onion peers known to your node; run `dash-cli help getnodeaddresses` for details.
 
 ## 1. Run Dash Core behind a Tor proxy
 
