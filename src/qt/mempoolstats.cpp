@@ -159,8 +159,8 @@ void MempoolStats::drawChart()
     if (timeFilter == 0)
     {
         // disable filter if timeFilter == 0
-        toDateTime.setTime_t(0);
-        fromDateTime.setTime_t(0);
+        toDateTime.setSecsSinceEpoch(0);
+        fromDateTime.setSecsSinceEpoch(0);
     }
 
     mempoolSamples_t vSamples = clientModel->getMempoolStatsInRange(fromDateTime, toDateTime);
