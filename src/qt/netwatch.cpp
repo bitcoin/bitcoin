@@ -34,6 +34,7 @@
 #include <QHBoxLayout>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QScrollBar>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -515,11 +516,11 @@ QVariant NetWatchLogModel::headerData(int section, Qt::Orientation orientation, 
 NetWatchLogSearch::NetWatchLogSearch(const QString& query, BitcoinUnit display_unit) :
     m_query(query)
 {
-    const QRegExp reHex("^[\\da-f]+$", Qt::CaseInsensitive, QRegExp::RegExp2);
-    const QRegExp reType("^(T(xn?)?|B(lk?)?)$", Qt::CaseInsensitive, QRegExp::RegExp2);
+    const QRegularExpression reHex("^[\\da-f]+$", QRegularExpression::CaseInsensitiveOption);
+    const QRegularExpression reType("^(T(xn?)?|B(lk?)?)$", QRegularExpression::CaseInsensitiveOption);
 
-    m_check_type = m_query.length() < 4 && reType.exactMatch(m_query);
-    m_check_id = m_query.length() <= 64 && reHex.exactMatch(m_query);
+    m_check_type = m_query.length() < 4 && reType.match(m_query).hasMatch();
+    m_check_id = m_query.length() <= 64 && reHex.match(m_query).hasMatch();
     m_check_addr = m_query.length() <= LONGEST_BECH32_ADDRESS;
     CAmount val;
     m_check_value = BitcoinUnits::parse(display_unit, m_query, &val) && val >= 0 && val <= BitcoinUnits::maxMoney();
