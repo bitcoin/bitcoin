@@ -833,7 +833,10 @@ static RPCHelpMan quorum_rotationinfo()
         {
             {"blockRequestHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The blockHash of the request."},
             {"extraShare", RPCArg::Type::BOOL, RPCArg::Default{false}, "Extra share"},
-            {"baseBlockHash...", RPCArg::Type::STR_HEX, RPCArg::DefaultHint{"baseBlockHashes …"}, "The list of block hashes"},
+            {"baseBlockHashes", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "The list of block hashes",
+            {
+                {"baseBlockHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+            }},
         },
         RPCResults{},
         RPCExamples{""},
@@ -851,10 +854,18 @@ static RPCHelpMan quorum_rotationinfo()
     cmd.blockRequestHash = ParseHashV(request.params[0], "blockRequestHash");
     cmd.extraShare = request.params[1].isNull() ? false : ParseBoolV(request.params[1], "extraShare");
 
-    size_t idx = 2;
-    while (!request.params[idx].isNull()) {
-        cmd.baseBlockHashes.emplace_back(ParseHashV(request.params[idx], "baseBlockHash"));
-        ++idx;
+    if (!request.params[2].isNull()) {
+        UniValue hashes;
+        if (request.params[2].isStr() && hashes.read(request.params[2].get_str()) && hashes.isArray()) {
+            // pass
+        } else if (request.params[2].isArray()) {
+            hashes = request.params[2].get_array();
+        } else {
+            throw std::runtime_error(std::string("Error parsing JSON: ") + request.params[2].get_str());
+        }
+        for (const auto& hash : hashes.get_array().getValues()) {
+            cmd.baseBlockHashes.emplace_back(ParseHashV(hash, "baseBlockHash"));
+        }
     }
 
     LOCK(cs_main);
