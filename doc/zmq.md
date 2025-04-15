@@ -87,6 +87,8 @@ For instance:
                -zmqpubrawtx=ipc:///tmp/bitcoind.tx.raw \
                -zmqpubhashtxhwm=10000
 
+`bitcoin daemon` or `bitcoin gui` can also be substituted for `bitcoind`.
+
 Each PUB notification has a topic and body, where the header
 corresponds to the notification type. For instance, for the
 notification `-zmqpubhashtx` the topic is `hashtx` (no null
