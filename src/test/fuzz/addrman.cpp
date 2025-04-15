@@ -250,7 +250,7 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
         }
     }
     AddrManDeterministic& addr_man = *addr_man_ptr;
-    while (fuzzed_data_provider.ConsumeBool()) {
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
@@ -270,7 +270,7 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
             },
             [&] {
                 std::vector<CAddress> addresses;
-                while (fuzzed_data_provider.ConsumeBool()) {
+                LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
                     const std::optional<CAddress> opt_address = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
                     if (!opt_address) {
                         break;

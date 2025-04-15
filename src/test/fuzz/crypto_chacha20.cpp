@@ -20,7 +20,7 @@ FUZZ_TARGET(crypto_chacha20)
     const auto key = ConsumeFixedLengthByteVector<std::byte>(fuzzed_data_provider, ChaCha20::KEYLEN);
     ChaCha20 chacha20{key};
 
-    while (fuzzed_data_provider.ConsumeBool()) {
+    LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(),1000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
