@@ -204,17 +204,17 @@ enum SOCKS5Command: uint8_t {
     UDP_ASSOCIATE = 0x03
 };
 
-/** Values defined for REP in RFC1928 and https://spec.torproject.org/socks-extensions.html */
+/** Values defined for REP in RFC1928 */
 enum SOCKS5Reply: uint8_t {
-    SUCCEEDED = 0x00,                  //!< RFC1928: Succeeded
-    GENFAILURE = 0x01,                 //!< RFC1928: General failure
-    NOTALLOWED = 0x02,                 //!< RFC1928: Connection not allowed by ruleset
-    NETUNREACHABLE = 0x03,             //!< RFC1928: Network unreachable
-    HOSTUNREACHABLE = 0x04,            //!< RFC1928: Network unreachable
-    CONNREFUSED = 0x05,                //!< RFC1928: Connection refused
-    TTLEXPIRED = 0x06,                 //!< RFC1928: TTL expired
-    CMDUNSUPPORTED = 0x07,             //!< RFC1928: Command not supported
-    ATYPEUNSUPPORTED = 0x08,           //!< RFC1928: Address type not supported
+    SUCCEEDED = 0x00,        //!< Succeeded
+    GENFAILURE = 0x01,       //!< General failure
+    NOTALLOWED = 0x02,       //!< Connection not allowed by ruleset
+    NETUNREACHABLE = 0x03,   //!< Network unreachable
+    HOSTUNREACHABLE = 0x04,  //!< Network unreachable
+    CONNREFUSED = 0x05,      //!< Connection refused
+    TTLEXPIRED = 0x06,       //!< TTL expired
+    CMDUNSUPPORTED = 0x07,   //!< Command not supported
+    ATYPEUNSUPPORTED = 0x08, //!< Address type not supported
     TOR_HS_DESC_NOT_FOUND = 0xf0,      //!< Tor: Onion service descriptor can not be found
     TOR_HS_DESC_INVALID = 0xf1,        //!< Tor: Onion service descriptor is invalid
     TOR_HS_INTRO_FAILED = 0xf2,        //!< Tor: Onion service introduction failed
