@@ -1129,6 +1129,91 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_INVALID_STACK_OPERATION, ScriptErrorString(err));
 }
 
+BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
+{
+    BOOST_CHECK_EQUAL(sizeof(prevector<28, unsigned char>), 32);
+    BOOST_CHECK_EQUAL(sizeof(CScriptBase), 32);
+    BOOST_CHECK_EQUAL(sizeof(CScript), 32);
+    BOOST_CHECK_EQUAL(sizeof(CTxOut), 40);
+
+    CKey dummyKey;
+    dummyKey.MakeNewKey(true);
+
+    std::vector<std::vector<uint8_t>> dummyVSolutions;
+
+    // Small OP_RETURN is stack allocated
+    {
+        const auto scriptSmallOpReturn{CScript() << OP_RETURN << std::vector<uint8_t>(10, 0xaa)};
+        BOOST_CHECK_EQUAL(Solver(scriptSmallOpReturn, dummyVSolutions), TxoutType::NULL_DATA);
+        BOOST_CHECK_EQUAL(scriptSmallOpReturn.size(), 12);
+        BOOST_CHECK_EQUAL(scriptSmallOpReturn.capacity(), 28);
+        BOOST_CHECK_EQUAL(scriptSmallOpReturn.allocated_memory(), 0);
+    }
+
+    // P2WPKH is stack allocated
+    {
+        const auto scriptP2WPKH{GetScriptForDestination(WitnessV0KeyHash{PKHash{CKeyID{CPubKey{dummyKey.GetPubKey()}.GetID()}}})};
+        BOOST_CHECK_EQUAL(Solver(scriptP2WPKH, dummyVSolutions), TxoutType::WITNESS_V0_KEYHASH);
+        BOOST_CHECK_EQUAL(scriptP2WPKH.size(), 22);
+        BOOST_CHECK_EQUAL(scriptP2WPKH.capacity(), 28);
+        BOOST_CHECK_EQUAL(scriptP2WPKH.allocated_memory(), 0);
+    }
+
+    // P2SH is stack allocated
+    {
+        const auto scriptP2SH{GetScriptForDestination(ScriptHash{CScript{} << OP_TRUE})};
+        BOOST_CHECK(scriptP2SH.IsPayToScriptHash());
+        BOOST_CHECK_EQUAL(scriptP2SH.size(), 23);
+        BOOST_CHECK_EQUAL(scriptP2SH.capacity(), 28);
+        BOOST_CHECK_EQUAL(scriptP2SH.allocated_memory(), 0);
+    }
+
+    // P2PKH is stack allocated
+    {
+        const auto scriptP2PKH{GetScriptForDestination(PKHash{CKeyID{CPubKey{dummyKey.GetPubKey()}.GetID()}})};
+        BOOST_CHECK_EQUAL(Solver(scriptP2PKH, dummyVSolutions), TxoutType::PUBKEYHASH);
+        BOOST_CHECK_EQUAL(scriptP2PKH.size(), 25);
+        BOOST_CHECK_EQUAL(scriptP2PKH.capacity(), 28);
+        BOOST_CHECK_EQUAL(scriptP2PKH.allocated_memory(), 0);
+    }
+
+    // P2WSH is heap allocated
+    {
+        const auto scriptP2WSH{GetScriptForDestination(WitnessV0ScriptHash{CScript{} << OP_TRUE})};
+        BOOST_CHECK(scriptP2WSH.IsPayToWitnessScriptHash());
+        BOOST_CHECK_EQUAL(scriptP2WSH.size(), 34);
+        BOOST_CHECK_EQUAL(scriptP2WSH.capacity(), 34);
+        BOOST_CHECK_EQUAL(scriptP2WSH.allocated_memory(), 34);
+    }
+
+    // P2TR is heap allocated
+    {
+        const auto scriptTaproot{GetScriptForDestination(WitnessV1Taproot{XOnlyPubKey{CPubKey{dummyKey.GetPubKey()}}})};
+        BOOST_CHECK_EQUAL(Solver(scriptTaproot, dummyVSolutions), TxoutType::WITNESS_V1_TAPROOT);
+        BOOST_CHECK_EQUAL(scriptTaproot.size(), 34);
+        BOOST_CHECK_EQUAL(scriptTaproot.capacity(), 34);
+        BOOST_CHECK_EQUAL(scriptTaproot.allocated_memory(), 34);
+    }
+
+    // P2PK is heap allocated
+    {
+        const auto scriptPubKey{GetScriptForRawPubKey(CPubKey{dummyKey.GetPubKey()})};
+        BOOST_CHECK_EQUAL(Solver(scriptPubKey, dummyVSolutions), TxoutType::PUBKEY);
+        BOOST_CHECK_EQUAL(scriptPubKey.size(), 35);
+        BOOST_CHECK_EQUAL(scriptPubKey.capacity(), 35);
+        BOOST_CHECK_EQUAL(scriptPubKey.allocated_memory(), 35);
+    }
+
+    // MULTISIG is always heap allocated
+    {
+        const auto scriptMultisig{GetScriptForMultisig(1, std::vector{2, CPubKey{dummyKey.GetPubKey()}})};
+        BOOST_CHECK_EQUAL(Solver(scriptMultisig, dummyVSolutions), TxoutType::MULTISIG);
+        BOOST_CHECK_EQUAL(scriptMultisig.size(), 71);
+        BOOST_CHECK_EQUAL(scriptMultisig.capacity(), 103);
+        BOOST_CHECK_EQUAL(scriptMultisig.allocated_memory(), 103);
+    }
+}
+
 /* Wrapper around ProduceSignature to combine two scriptsigs */
 SignatureData CombineSignatures(const CTxOut& txout, const CMutableTransaction& tx, const SignatureData& scriptSig1, const SignatureData& scriptSig2)
 {
