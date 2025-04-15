@@ -125,7 +125,7 @@ class RPCGenerateTest(BitcoinTestFramework):
         )
 
         self.log.info("Test rpc generate raises with message to use cli option")
-        assert_raises_rpc_error(-32601, message, self.nodes[0].rpc.generate)
+        assert_raises_rpc_error(-32601, message, self.nodes[0]._rpc.generate)
 
         self.log.info("Test rpc generate help prints message to use cli option")
         assert_equal(message, self.nodes[0].help("generate"))

@@ -593,7 +593,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         node.wait_for_rpc_connection()
 
         if self.options.coveragedir is not None:
-            coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
+            coverage.write_all_rpc_commands(self.options.coveragedir, node._rpc)
 
     def start_nodes(self, extra_args=None, *args, **kwargs):
         """Start multiple bitcoinds"""
@@ -608,7 +608,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         if self.options.coveragedir is not None:
             for node in self.nodes:
-                coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
+                coverage.write_all_rpc_commands(self.options.coveragedir, node._rpc)
 
     def stop_node(self, i, expected_stderr='', wait=0):
         """Stop a bitcoind test node"""

@@ -297,14 +297,14 @@ class WalletMiniscriptTest(BitcoinTestFramework):
                 psbt.i[0].map[k] = bytes.fromhex(preimage)
             psbt = psbt.to_base64()
         res = self.ms_sig_wallet.walletprocesspsbt(psbt=psbt, finalize=False)
-        psbtin = self.nodes[0].rpc.decodepsbt(res["psbt"])["inputs"][0]
+        psbtin = self.nodes[0].decodepsbt(res["psbt"])["inputs"][0]
         sigs_field_name = "taproot_script_path_sigs" if is_taproot else "partial_signatures"
         assert len(psbtin[sigs_field_name]) == sigs_count
         res = self.ms_sig_wallet.finalizepsbt(res["psbt"])
         assert res["complete"] == (stack_size is not None)
 
         if stack_size is not None:
-            txin = self.nodes[0].rpc.decoderawtransaction(res["hex"])["vin"][0]
+            txin = self.nodes[0].decoderawtransaction(res["hex"])["vin"][0]
             assert len(txin["txinwitness"]) == stack_size, txin["txinwitness"]
             self.log.info("Broadcasting the transaction.")
             # If necessary, satisfy a relative timelock
