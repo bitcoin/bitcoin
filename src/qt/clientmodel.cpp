@@ -246,6 +246,11 @@ void ClientModel::TipChanged(SynchronizationState sync_state, interfaces::BlockT
     nLastUpdateNotification = now;
 }
 
+static void MempoolStatsDidChange(ClientModel *clientmodel)
+{
+    QMetaObject::invokeMethod(clientmodel, "updateMempoolStats", Qt::QueuedConnection);
+}
+
 void ClientModel::subscribeToCoreSignals()
 {
     m_event_handlers.emplace_back(m_node.handleShowProgress(
@@ -278,11 +283,15 @@ void ClientModel::subscribeToCoreSignals()
         [this](SynchronizationState sync_state, interfaces::BlockTip tip, bool presync) {
             TipChanged(sync_state, tip, /*verification_progress=*/0.0, presync ? SyncType::HEADER_PRESYNC : SyncType::HEADER_SYNC);
         }));
+
+    m_connection_mempool_stats_did_change = CStats::DefaultStats()->MempoolStatsDidChange.connect(std::bind(MempoolStatsDidChange, this));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
 {
     m_event_handlers.clear();
+
+    m_connection_mempool_stats_did_change.disconnect();
 }
 
 bool ClientModel::getProxyInfo(std::string& ip_port) const
@@ -293,4 +302,21 @@ bool ClientModel::getProxyInfo(std::string& ip_port) const
       return true;
     }
     return false;
+}
+
+mempoolSamples_t ClientModel::getMempoolStatsInRange(QDateTime &from, QDateTime &to)
+{
+    // get stats from the core stats model
+    uint64_t timeFrom = from.toSecsSinceEpoch();
+    uint64_t timeTo = to.toSecsSinceEpoch();
+
+    mempoolSamples_t samples = CStats::DefaultStats()->mempoolGetValuesInRange(timeFrom,timeTo);
+    from.setSecsSinceEpoch(timeFrom);
+    to.setSecsSinceEpoch(timeTo);
+    return samples;
+}
+
+void ClientModel::updateMempoolStats()
+{
+    Q_EMIT mempoolStatsDidUpdate();
 }
