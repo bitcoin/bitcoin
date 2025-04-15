@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Bitcoin Core developers
 // Copyright (c) 2014-2025 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -21,8 +21,8 @@
 #include <index/coinstatsindex.h>
 #include <index/txindex.h>
 #include <llmq/context.h>
-#include <node/blockstorage.h>
 #include <logging/timer.h>
+#include <node/blockstorage.h>
 #include <node/coinstats.h>
 #include <net.h>
 #include <net_processing.h>
