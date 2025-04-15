@@ -4,7 +4,6 @@
 
 #include <stats/stats.h>
 
-#include <common/args.h>
 #include <memusage.h>
 #include <util/time.h>
 
@@ -127,18 +126,4 @@ void CStats::setMaxMemoryUsageTarget(size_t maxMem)
 
     LOCK(cs_stats);
     maxStatsMemory = maxMem;
-}
-
-void CStats::AddStatsOptions()
-{
-    gArgs.AddArg("-statsenable", strprintf("Enable statistics (default: %u)", DEFAULT_STATISTICS_ENABLED), ArgsManager::ALLOW_ANY, OptionsCategory::STATS);
-    gArgs.AddArg("-statsmaxmemorytarget=<n>", strprintf("Set the memory limit target for statistics in bytes (default: %u)", DEFAULT_MAX_STATS_MEMORY), ArgsManager::ALLOW_ANY, OptionsCategory::STATS);
-}
-
-bool CStats::parameterInteraction()
-{
-    if (gArgs.GetBoolArg("-statsenable", DEFAULT_STATISTICS_ENABLED))
-        DefaultStats()->setMaxMemoryUsageTarget(gArgs.GetIntArg("-statsmaxmemorytarget", DEFAULT_MAX_STATS_MEMORY));
-
-    return true;
 }
