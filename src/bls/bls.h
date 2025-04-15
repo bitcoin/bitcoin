@@ -391,6 +391,7 @@ private:
     mutable std::mutex mutex;
 
     mutable std::array<uint8_t, BLSObject::SerSize> vecBytes;
+    // Indicates if the value contained in vecBytes is valid
     mutable bool bufValid{false};
     mutable bool bufLegacyScheme{true};
 
@@ -462,7 +463,7 @@ public:
     {
         std::unique_lock<std::mutex> l(mutex);
         s.read(AsWritableBytes(Span{vecBytes.data(), BLSObject::SerSize}));
-        bufValid = true;
+        bufValid = std::any_of(vecBytes.begin(), vecBytes.end(), [](uint8_t c) { return c != 0; });
         bufLegacyScheme = specificLegacyScheme;
         objInitialized = false;
         hash.SetNull();
@@ -507,6 +508,14 @@ public:
 
     bool operator==(const CBLSLazyWrapper& r) const
     {
+        // If neither bufValid or objInitialized are set, then the object is the default object.
+        const bool is_default{!bufValid && !objInitialized};
+        const bool r_is_default{!r.bufValid && !r.objInitialized};
+        // If both are default; they are equal.
+        if (is_default && r_is_default) return true;
+        // If one is default and the other isn't, we are not equal
+        if (is_default != r_is_default) return false;
+
         if (bufValid && r.bufValid && bufLegacyScheme == r.bufLegacyScheme) {
             return vecBytes == r.vecBytes;
         }

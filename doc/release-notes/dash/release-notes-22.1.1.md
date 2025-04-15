@@ -1,6 +1,6 @@
-# Dash Core version v22.1.2
+# Dash Core version v22.1.1
 
-This is a new minor version release, bringing various bugfixes and performance improvements.
+This is a new minor version release, bringing various bugfixes.
 This release is **optional** for all nodes, although recommended.
 
 Please report bugs using the issue tracker at GitHub:
@@ -26,39 +26,18 @@ likely require a reindex.
 
 # Release Notes
 
-Quorum Rotation Improvements
-----------------------------
-
-- Optimized `quorum rotationinfo` RPC and `GETQUORUMROTATIONINFO` P2P message by constructing diffs progressively from oldest to newest, reducing redundancy and improving efficiency (dash#6622).
-- Fixed incorrect `baseBlockHash` handling, eliminating unnecessary quorum changes in responses and improving result accuracy and compactness (dash#6625).
-
-Deployment and CI Fixes
+v2 P2P Downgrade Issues
 -----------------------
 
-- Pinned QEMU version to avoid segmentation faults during container builds (dash#6586).
+This version addressed a problem affecting certain Dash-specific connection types, including mixing and masternode probes, when
+downgrading from v2 to v1 connections. This resulted in increased connection count and load for masternodes. (dash#6574)
 
-Performance Improvements
-------------------------
+Minor QT Coinjoin Fixes
+-----------------------
 
-- Improved the performance of deterministic masternode list management, significantly speeding up RPC calls such as `protx diff` (dash#6581).
+- Avoid leaking CJ related balances in discrete mode (dash#6566)
 
-Coinjoin Tests Stability
-------------------------
-
-- Resolved potential deadlock in `coinjoin_tests.cpp` by ensuring wallet transaction scans occur outside critical wallet lock scope (dash#6593).
-
-Minor Build and Test Fixes
---------------------------
-
-- Fixed assertion edge case for coinbase transactions (cbtx) in simplified masternode list diff outputs, specifically affecting debug builds (dash#6585).
-- Updated copyright notices to 2025 in COPYING file and Debian packaging metadata (dash#6599).
-
-P2P Changes
------------
-
-- `cycleHash` field in `isdlock` message will now represent a DKG cycle starting block of the signing quorum instead of a DKG cycle starting block corresponding to the current chain height. While this is fully backwards compatible with older versions of Dash Core, other implementations might not be expecting this, so the P2P protocol version was bumped to 70237. (#6608)
-
-# v22.1.2 Change log
+# v22.1.1 Change log
 
 See detailed [set of changes][set-of-changes].
 
@@ -66,9 +45,6 @@ See detailed [set of changes][set-of-changes].
 
 Thanks to everyone who directly contributed to this release:
 
-- Kittywhiskers Van Gogh
-- Konstantin Akimov
-- Odysseas Gabrielides
 - PastaPastaPasta
 - UdjinM6
 
@@ -79,7 +55,6 @@ debug the release candidates.
 
 These releases are considered obsolete. Old release notes can be found here:
 
-- [v22.1.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-22.1.1.md) released Feb/17/2025
 - [v22.1.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-22.1.0.md) released Feb/10/2025
 - [v22.0.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-22.0.0.md) released Dec/12/2024
 - [v21.1.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-21.1.1.md) released Oct/22/2024
@@ -135,4 +110,4 @@ These releases are considered obsolete. Old release notes can be found here:
 - [v0.10.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.10.0.md) released Sep/25/2014
 - [v0.9.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.9.0.md) released Mar/13/2014
 
-[set-of-changes]: https://github.com/dashpay/dash/compare/v22.1.1...dashpay:v22.1.2
+[set-of-changes]: https://github.com/dashpay/dash/compare/v22.1.0...dashpay:v22.1.1
