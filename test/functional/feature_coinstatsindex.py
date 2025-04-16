@@ -41,7 +41,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.supports_cli = False
         self.extra_args = [
             [],
             ["-coinstatsindex"]
@@ -104,7 +103,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
             assert_equal(res0, res2)
 
             # Fetch old stats by hash
-            res3 = index_node.gettxoutsetinfo(hash_option, res0['bestblock'])
+            res3 = index_node.gettxoutsetinfo(hash_option, self.convert_to_json_for_cli(res0['bestblock']))
             del res3['block_info'], res3['total_unspendable_amount']
             res3.pop('muhash', None)
             assert_equal(res0, res3)
@@ -243,7 +242,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         assert_equal(res12, res10)
 
         self.log.info("Test obtaining info for a non-existent block hash")
-        assert_raises_rpc_error(-5, "Block not found", index_node.gettxoutsetinfo, hash_type="none", hash_or_height="ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", use_index=True)
+        assert_raises_rpc_error(-5, "Block not found", index_node.gettxoutsetinfo, hash_type="none", hash_or_height=self.convert_to_json_for_cli("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), use_index=True)
 
     def _test_use_index_option(self):
         self.log.info("Test use_index option for nodes running the index")
@@ -278,7 +277,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         assert_not_equal(res["muhash"], res_invalid["muhash"])
 
         # Test that requesting reorged out block by hash is still returning correct results
-        res_invalid2 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=reorg_block)
+        res_invalid2 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=self.convert_to_json_for_cli(reorg_block))
         assert_equal(res_invalid2["muhash"], res_invalid["muhash"])
         assert_not_equal(res["muhash"], res_invalid2["muhash"])
 
