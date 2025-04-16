@@ -81,6 +81,8 @@ using interfaces::MakeSignalHandler;
 using interfaces::Mining;
 using interfaces::Node;
 using interfaces::WalletLoader;
+using kernel::AbortFailure;
+using kernel::FlushResult;
 using node::BlockAssembler;
 using node::BlockWaitOptions;
 using util::Join;
@@ -944,7 +946,8 @@ public:
         block.hashMerkleRoot = BlockMerkleRoot(block);
 
         auto block_ptr = std::make_shared<const CBlock>(block);
-        return chainman().ProcessNewBlock(block_ptr, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/nullptr);
+        FlushResult<void, AbortFailure> process_result; // Ignore flush and fatal error information, only care whether block is accepted.
+        return chainman().ProcessNewBlock(block_ptr, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/nullptr, process_result);
     }
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override

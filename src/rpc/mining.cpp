@@ -49,6 +49,8 @@
 using interfaces::BlockRef;
 using interfaces::BlockTemplate;
 using interfaces::Mining;
+using kernel::AbortFailure;
+using kernel::FlushResult;
 using node::BlockAssembler;
 using node::GetMinimumTime;
 using node::NodeContext;
@@ -153,7 +155,8 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock&& block, uint64_t&
 
     if (!process_new_block) return true;
 
-    if (!chainman.ProcessNewBlock(block_out, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr)) {
+    FlushResult<void, AbortFailure> process_result; // Ignore flush and fatal error information, only care whether block is accepted.
+    if (!chainman.ProcessNewBlock(block_out, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr, process_result)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
     }
 
@@ -1091,7 +1094,8 @@ static RPCHelpMan submitblock()
     bool new_block;
     auto sc = std::make_shared<submitblock_StateCatcher>(block.GetHash());
     CHECK_NONFATAL(chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
-    bool accepted = chainman.ProcessNewBlock(blockptr, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
+    FlushResult<void, AbortFailure> process_result;
+    bool accepted = chainman.ProcessNewBlock(blockptr, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block, process_result);
     CHECK_NONFATAL(chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
     if (!new_block && accepted) {
         return "duplicate";

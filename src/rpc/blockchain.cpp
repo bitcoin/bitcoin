@@ -903,7 +903,7 @@ static RPCHelpMan pruneblockchain()
         height = chainHeight - MIN_BLOCKS_TO_KEEP;
     }
 
-    PruneBlockFilesManual(active_chainstate, height);
+    (void)PruneBlockFilesManual(active_chainstate, height);
     return GetPruneHeight(chainman.m_blockman, active_chain).value_or(-1);
 },
     };
@@ -1016,7 +1016,7 @@ static RPCHelpMan gettxoutsetinfo()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
     Chainstate& active_chainstate = chainman.ActiveChainstate();
-    active_chainstate.ForceFlushStateToDisk();
+    (void)active_chainstate.ForceFlushStateToDisk();
 
     CCoinsView* coins_view;
     BlockManager* blockman;
@@ -1210,8 +1210,9 @@ static RPCHelpMan verifychain()
     LOCK(cs_main);
 
     Chainstate& active_chainstate = chainman.ActiveChainstate();
-    return CVerifyDB(chainman.GetNotifications()).VerifyDB(
-               active_chainstate, chainman.GetParams().GetConsensus(), active_chainstate.CoinsTip(), check_level, check_depth) == VerifyDBResult::SUCCESS;
+    auto verify_result{CVerifyDB(chainman.GetNotifications()).VerifyDB(
+        active_chainstate, chainman.GetParams().GetConsensus(), active_chainstate.CoinsTip(), check_level, check_depth)};
+    return verify_result && std::holds_alternative<VerifySuccess>(*verify_result);
 },
     };
 }
@@ -1613,7 +1614,7 @@ static RPCHelpMan preciousblock()
     }
 
     BlockValidationState state;
-    chainman.ActiveChainstate().PreciousBlock(state, pblockindex);
+    (void)chainman.ActiveChainstate().PreciousBlock(state, pblockindex);
 
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
@@ -1634,10 +1635,10 @@ void InvalidateBlock(ChainstateManager& chainman, const uint256 block_hash) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
     }
-    chainman.ActiveChainstate().InvalidateBlock(state, pblockindex);
+    (void)chainman.ActiveChainstate().InvalidateBlock(state, pblockindex);
 
     if (state.IsValid()) {
-        chainman.ActiveChainstate().ActivateBestChain(state);
+        (void)chainman.ActiveChainstate().ActivateBestChain(state);
     }
 
     if (!state.IsValid()) {
@@ -1682,7 +1683,7 @@ void ReconsiderBlock(ChainstateManager& chainman, uint256 block_hash) {
     }
 
     BlockValidationState state;
-    chainman.ActiveChainstate().ActivateBestChain(state);
+    (void)chainman.ActiveChainstate().ActivateBestChain(state);
 
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
@@ -2335,7 +2336,7 @@ static RPCHelpMan scantxoutset()
             ChainstateManager& chainman = EnsureChainman(node);
             LOCK(cs_main);
             Chainstate& active_chainstate = chainman.ActiveChainstate();
-            active_chainstate.ForceFlushStateToDisk();
+            (void)active_chainstate.ForceFlushStateToDisk();
             pcursor = CHECK_NONFATAL(active_chainstate.CoinsDB().Cursor());
             tip = CHECK_NONFATAL(active_chainstate.m_chain.Tip());
         }
@@ -3139,7 +3140,7 @@ PrepareUTXOSnapshot(
         //
         AssertLockHeld(::cs_main);
 
-        chainstate.ForceFlushStateToDisk();
+        (void)chainstate.ForceFlushStateToDisk();
 
         maybe_stats = GetUTXOStats(&chainstate.CoinsDB(), chainstate.m_blockman, CoinStatsHashType::HASH_SERIALIZED, interruption_point);
         if (!maybe_stats) {
