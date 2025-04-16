@@ -391,12 +391,13 @@ private:
     mutable std::mutex mutex;
 
     mutable std::array<uint8_t, BLSObject::SerSize> vecBytes;
-    // Indicates if the value contained in vecBytes is valid
-    mutable bool bufValid{false};
-    mutable bool bufLegacyScheme{true};
 
     mutable BLSObject obj;
     mutable bool objInitialized{false};
+
+    // Indicates if the value contained in vecBytes is valid
+    mutable bool bufValid{false};
+    mutable bool bufLegacyScheme{true};
 
     mutable uint256 hash;
 
