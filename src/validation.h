@@ -514,6 +514,16 @@ constexpr int64_t LargeCoinsCacheThreshold(int64_t total_space) noexcept
                     total_space - MAX_BLOCK_COINSDB_USAGE_BYTES);
 }
 
+//! Chainstate assumeutxo validity.
+enum class Assumeutxo {
+    //! Every block in the chain has been validated.
+    VALIDATED,
+    //! Blocks after an assumeutxo snapshot have been validated but the snapshot itself has not been validated.
+    UNVALIDATED,
+    //! The assumeutxo snapshot failed validation.
+    INVALID,
+};
+
 /**
  * Chainstate stores and provides an API to update our local knowledge of the
  * current best chain.
@@ -544,19 +554,6 @@ protected:
 
     //! Manages the UTXO set, which is a reflection of the contents of `m_chain`.
     std::unique_ptr<CoinsViews> m_coins_views;
-
-    //! This toggle exists for use when doing background validation for UTXO
-    //! snapshots.
-    //!
-    //! In the expected case, it is set once the background validation chain reaches the
-    //! same height as the base of the snapshot and its UTXO set is found to hash to
-    //! the expected assumeutxo value. It signals that we should no longer connect
-    //! blocks to the background chainstate. When set on the background validation
-    //! chainstate, it signifies that we have fully validated the snapshot chainstate.
-    //!
-    //! In the unlikely case that the snapshot chainstate is found to be invalid, this
-    //! is set to true on the snapshot chainstate.
-    bool m_disabled GUARDED_BY(::cs_main) {false};
 
     //! Cached result of LookupBlockIndex(*m_from_snapshot_blockhash)
     mutable const CBlockIndex* m_cached_snapshot_base GUARDED_BY(::cs_main){nullptr};
@@ -616,6 +613,11 @@ public:
     //! @see CChain, CBlockIndex.
     CChain m_chain;
 
+    //! Assumeutxo state indicating whether all blocks in the chain were
+    //! validated, or if the chainstate is based on an assumeutxo snapshot and
+    //! the snapshot has not been validated.
+    Assumeutxo m_assumeutxo GUARDED_BY(::cs_main);
+
     /**
      * The blockhash which is the base of the snapshot this chainstate was created from.
      *
@@ -628,6 +630,10 @@ public:
     //! considers this a "historical" chainstate since it will only contain old
     //! blocks up to the target block, not newer blocks.
     std::optional<uint256> m_target_blockhash GUARDED_BY(::cs_main);
+
+    //! Hash of the UTXO set at the target block, computed when the chainstate
+    //! reaches the target block, and null before then.
+    std::optional<AssumeutxoHash> m_target_utxohash GUARDED_BY(::cs_main);
 
     /**
      * The base of the snapshot this chainstate was created from.
@@ -993,15 +999,6 @@ private:
     /** Most recent headers presync progress update, for rate-limiting. */
     MockableSteadyClock::time_point m_last_presync_update GUARDED_BY(GetMutex()){};
 
-    //! Return true if a chainstate is considered usable.
-    //!
-    //! This is false when a background validation chainstate has completed its
-    //! validation of an assumed-valid chainstate, or when a snapshot
-    //! chainstate has been found to be invalid.
-    bool IsUsable(const Chainstate* const cs) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
-        return cs && !cs->m_disabled;
-    }
-
     //! A queue for script verifications that have to be performed by worker threads.
     CCheckQueue<CScriptCheck> m_script_check_queue;
 
@@ -1150,7 +1147,7 @@ public:
     Chainstate* HistoricalChainstate() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex())
     {
         auto* cs{m_ibd_chainstate.get()};
-        return IsUsable(cs) && cs->m_target_blockhash ? cs : nullptr;
+        return cs && cs->m_target_blockhash && !cs->m_target_utxohash ? cs : nullptr;
     }
 
     //! The most-work chain.
@@ -1179,7 +1176,7 @@ public:
     //! Is there a snapshot in use and has it been fully validated?
     bool IsSnapshotValidated() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
-        return m_snapshot_chainstate && m_ibd_chainstate && m_ibd_chainstate->m_disabled;
+        return m_snapshot_chainstate && m_snapshot_chainstate->m_assumeutxo == Assumeutxo::VALIDATED;
     }
 
     /** Check whether we are doing an initial block download (synchronizing from disk or network) */

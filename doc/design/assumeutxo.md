@@ -97,14 +97,13 @@ sequentially.
 ### Background chainstate hits snapshot base block
 
 Once the tip of the background chainstate hits the base block of the snapshot
-chainstate, we stop use of the background chainstate by setting `m_disabled`, in
-`MaybeCompleteSnapshotValidation()`, which is checked in `ActivateBestChain()`). We hash the
+chainstate, we hash the
 background chainstate's UTXO set contents and ensure it matches the compiled value in
 `CMainParams::m_assumeutxo_data`.
 
 |    |    |
 | ---------- | ----------- |
-| number of chainstates | 2 (ibd has `m_disabled=true`) |
+| number of chainstates | 2 |
 | active chainstate | snapshot |
 
 The background chainstate data lingers on disk until the program is restarted.
