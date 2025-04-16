@@ -14,6 +14,7 @@ class FeatureFastpruneTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [["-fastprune"]]
+        self.supports_cli = False
 
     def run_test(self):
         self.log.info("ensure that large blocks don't crash or freeze in -fastprune")

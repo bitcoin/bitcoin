@@ -36,6 +36,7 @@ class PackageRBFTest(BitcoinTestFramework):
             "-datacarriersize=100000",
             "-maxmempool=5",
         ]] * self.num_nodes
+        self.supports_cli = False
 
     def assert_mempool_contents(self, expected=None):
         mempool_util.assert_mempool_contents(self, self.nodes[0], expected, sync=False)

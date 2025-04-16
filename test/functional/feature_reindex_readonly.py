@@ -17,6 +17,7 @@ class BlockstoreReindexTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [["-fastprune"]]
+        self.supports_cli = False
 
     def reindex_readonly(self):
         self.log.debug("Generate block big enough to start second block file")
