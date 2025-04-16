@@ -919,6 +919,8 @@ class TestNodeCLI():
             # Ignore cli_stdout, raise with cli_stderr
             raise subprocess.CalledProcessError(returncode, p_args, output=cli_stderr)
         try:
+            if not cli_stdout.strip():
+                return None
             return json.loads(cli_stdout, parse_float=decimal.Decimal)
         except (json.JSONDecodeError, decimal.InvalidOperation):
             return cli_stdout.rstrip("\n")
