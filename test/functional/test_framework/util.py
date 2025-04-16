@@ -603,3 +603,8 @@ def sync_txindex(test_framework, node):
     sync_start = int(time.time())
     test_framework.wait_until(lambda: node.getindexinfo("txindex")["txindex"]["synced"])
     test_framework.log.debug(f"Synced in {time.time() - sync_start} seconds")
+
+def convert_to_json_for_cli(cli, text):
+    if cli:
+        return json.dumps(text)
+    return text
