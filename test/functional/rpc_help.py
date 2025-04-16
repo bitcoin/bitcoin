@@ -48,7 +48,6 @@ class HelpRpcTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 1
-        self.supports_cli = False
 
     def run_test(self):
         self.test_client_conversion_table()
@@ -95,7 +94,8 @@ class HelpRpcTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, 'help', node.help, 'foo', 'bar')
 
         # invalid argument
-        assert_raises_rpc_error(-3, "JSON value of type number is not of expected type string", node.help, 0)
+        if not self.options.usecli:
+            assert_raises_rpc_error(-3, "JSON value of type number is not of expected type string", node.help, 0)
 
         # help of unknown command
         assert_equal(node.help('foo'), 'help: unknown command: foo')
