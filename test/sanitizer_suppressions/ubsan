@@ -60,11 +60,6 @@ shift-base:streams.h
 unsigned-integer-overflow:arith_uint256.h
 unsigned-integer-overflow:bitset_detail::PopCount
 unsigned-integer-overflow:CBloomFilter::Hash
-unsigned-integer-overflow:CCoinsViewCache::AddCoin
-unsigned-integer-overflow:CCoinsViewCache::BatchWrite
-unsigned-integer-overflow:CCoinsViewCache::DynamicMemoryUsage
-unsigned-integer-overflow:CCoinsViewCache::SpendCoin
-unsigned-integer-overflow:CCoinsViewCache::Uncache
 unsigned-integer-overflow:CompressAmount
 unsigned-integer-overflow:CRollingBloomFilter::insert
 unsigned-integer-overflow:crypto/
