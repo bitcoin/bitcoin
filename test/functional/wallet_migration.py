@@ -994,6 +994,53 @@ class WalletMigrationTest(BitcoinTestFramework):
             _, _, magic = struct.unpack("QII", data)
             assert_equal(magic, BTREE_MAGIC)
 
+    def test_failed_migration_cleanup_relative_path(self):
+        self.log.info("Test that a failed migration with a relative path is cleaned up")
+
+        # Get the nearest common path of both nodes' wallet paths.
+        common_parent = os.path.commonpath([self.master_node.wallets_path, self.old_node.wallets_path])
+
+        # This test assumes that the relative path from each wallet directory to the common path is identical.
+        assert_equal(os.path.relpath(common_parent, start=self.master_node.wallets_path), os.path.relpath(common_parent, start=self.old_node.wallets_path))
+
+        wallet_name = "relativefailure"
+        absolute_path = os.path.abspath(os.path.join(common_parent, wallet_name))
+        relative_name = os.path.relpath(absolute_path, start=self.master_node.wallets_path)
+
+        wallet = self.create_legacy_wallet(relative_name)
+
+        # Make a copy of the wallet with the solvables wallet name so that we are unable
+        # to create the solvables wallet when migrating, thus failing to migrate
+        wallet.unloadwallet()
+        solvables_path = os.path.join(common_parent, f"{wallet_name}_solvables")
+
+        shutil.copytree(self.old_node.wallets_path / relative_name, solvables_path)
+        original_shasum = sha256sum_file(os.path.join(solvables_path, "wallet.dat"))
+
+        self.old_node.loadwallet(relative_name)
+
+        # Add a multisig so that a solvables wallet is created
+        wallet.addmultisigaddress(2, [wallet.getnewaddress(), get_generate_key().pubkey])
+        wallet.importaddress(get_generate_key().p2pkh_addr)
+
+        self.old_node.unloadwallet(relative_name)
+        assert_raises_rpc_error(-4, "Failed to create database", self.master_node.migratewallet, relative_name)
+
+        assert all(wallet not in self.master_node.listwallets() for wallet in [f"{wallet_name}", f"{wallet_name}_watchonly", f"{wallet_name}_solvables"])
+
+        assert not (self.master_node.wallets_path / f"{wallet_name}_watchonly").exists()
+        # Since the file in failed_solvables is one that we put there, migration shouldn't touch it
+        assert os.path.exists(solvables_path)
+        new_shasum = sha256sum_file(os.path.join(solvables_path , "wallet.dat"))
+        assert_equal(original_shasum, new_shasum)
+
+        # Check the wallet we tried to migrate is still BDB
+        datfile = os.path.join(absolute_path, "wallet.dat")
+        with open(datfile, "rb") as f:
+            data = f.read(16)
+            _, _, magic = struct.unpack("QII", data)
+            assert_equal(magic, BTREE_MAGIC)
+
     def test_blank(self):
         self.log.info("Test that a blank wallet is migrated")
         wallet = self.create_legacy_wallet("blank", blank=True)
@@ -1468,6 +1515,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_conflict_txs()
         self.test_hybrid_pubkey()
         self.test_failed_migration_cleanup()
+        self.test_failed_migration_cleanup_relative_path()
         self.test_avoidreuse()
         self.test_preserve_tx_extra_info()
         self.test_blank()
