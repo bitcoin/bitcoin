@@ -49,6 +49,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # whitelist peers to speed up tx relay / mempool sync
         self.noban_tx_relay = True
         self.rpc_timeout = 90  # to prevent timeouts in `test_transaction_too_large`
+        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
