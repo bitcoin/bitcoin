@@ -881,7 +881,7 @@ def arg_to_cli(arg):
         return str(arg).lower()
     elif arg is None:
         return 'null'
-    elif isinstance(arg, dict) or isinstance(arg, list):
+    elif isinstance(arg, dict) or isinstance(arg, list) or isinstance(arg, tuple):
         return json.dumps(arg, default=serialization_fallback)
     else:
         return str(arg)
