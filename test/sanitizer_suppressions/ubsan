@@ -65,7 +65,6 @@ implicit-integer-sign-change:TxConfirmStats::removeTx
 implicit-integer-sign-change:prevector.h
 implicit-integer-sign-change:verify_flags
 implicit-integer-sign-change:EvalScript
-implicit-integer-sign-change:serialize.h
 implicit-signed-integer-truncation:crypto/
 implicit-unsigned-integer-truncation:crypto/
 shift-base:arith_uint256.cpp
