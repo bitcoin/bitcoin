@@ -32,6 +32,7 @@ static void WalletMigration(benchmark::Bench& bench)
     std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(test_setup->m_node.chain.get(), "", CreateMockableWalletDatabase());
     wallet->chainStateFlushed(ChainstateRole::NORMAL, CBlockLocator{});
     LegacyDataSPKM* legacy_spkm = wallet->GetOrCreateLegacyDataSPKM();
+    WalletBatch batch{wallet->GetDatabase()};
 
     // Add watch-only addresses
     std::vector<CScript> scripts_watch_only;
@@ -42,6 +43,7 @@ static void WalletMigration(benchmark::Bench& bench)
         const CScript& script = scripts_watch_only.emplace_back(GetScriptForDestination(dest));
         assert(legacy_spkm->LoadWatchOnly(script));
         assert(wallet->SetAddressBook(dest, strprintf("watch_%d", w), /*purpose=*/std::nullopt));
+        batch.WriteWatchOnly(script, CKeyMetadata());
     }
 
     // Generate transactions and local addresses
@@ -58,6 +60,7 @@ static void WalletMigration(benchmark::Bench& bench)
         mtx.vout.emplace_back(COIN, scripts_watch_only.at(j % NUM_WATCH_ONLY_ADDR));
         mtx.vin.resize(2);
         wallet->AddToWallet(MakeTransactionRef(mtx), TxStateInactive{}, /*update_wtx=*/nullptr, /*fFlushOnClose=*/false, /*rescanning_old_block=*/true);
+        batch.WriteKey(pubkey, key.GetPrivKey(), CKeyMetadata());
     }
 
     bench.epochs(/*numEpochs=*/1).run([&context, &wallet] {
