@@ -45,7 +45,6 @@ implicit-integer-sign-change:compressor.h
 implicit-integer-sign-change:crypto/
 implicit-integer-sign-change:EvalScript
 implicit-integer-sign-change:serialize.h
-implicit-integer-sign-change:SetStdinEcho
 implicit-integer-sign-change:TxConfirmStats::removeTx
 implicit-integer-sign-change:verify_flags
 implicit-signed-integer-truncation:crypto/
