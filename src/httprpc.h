@@ -7,6 +7,10 @@
 
 #include <any>
 
+class JSONRPCRequest;
+class UniValue;
+enum HTTPStatusCode : int;
+
 /** Start HTTP RPC subsystem.
  * Precondition; HTTP and RPC has been started.
  */
@@ -18,6 +22,9 @@ void InterruptHTTPRPC();
  * Precondition; HTTP and RPC has been stopped.
  */
 void StopHTTPRPC();
+
+/** Execute a single HTTP request, containing one or more JSONRPC requests. */
+UniValue ExecuteHTTPRPC(const UniValue& valRequest, JSONRPCRequest& jreq, HTTPStatusCode& status);
 
 /** Start HTTP REST subsystem.
  * Precondition; HTTP and RPC has been started.
