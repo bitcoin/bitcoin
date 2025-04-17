@@ -233,7 +233,6 @@ OP_CHECKSIG = CScriptOp(0xac)
 OP_CHECKSIGVERIFY = CScriptOp(0xad)
 OP_CHECKMULTISIG = CScriptOp(0xae)
 OP_CHECKMULTISIGVERIFY = CScriptOp(0xaf)
-OP_CHECKSIGFROMSTACK = CScriptOp(0xcc)
 
 # expansion
 OP_NOP1 = CScriptOp(0xb0)
@@ -249,6 +248,9 @@ OP_NOP10 = CScriptOp(0xb9)
 
 # BIP 342 opcodes (Tapscript)
 OP_CHECKSIGADD = CScriptOp(0xba)
+
+# BIP 348 (OP_SUCCESS204)
+OP_CHECKSIGFROMSTACK = CScriptOp(0xcc)
 
 OP_INVALIDOPCODE = CScriptOp(0xff)
 
@@ -850,7 +852,7 @@ def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index=0, *, scriptpa
     if scriptpath:
         ss += TaggedHash("TapLeaf", bytes([leaf_ver]) + ser_string(leaf_script))
         ss += bytes([0])
-        ss += codeseparator_pos.to_bytes(4, "little", signed=True)
+        ss += codeseparator_pos.to_bytes(4, "little", signed=False)
     assert len(ss) == 175 - (in_type == SIGHASH_ANYONECANPAY) * 49 - (out_type != SIGHASH_ALL and out_type != SIGHASH_SINGLE) * 32 + (annex is not None) * 32 + scriptpath * 37
     return ss
 
