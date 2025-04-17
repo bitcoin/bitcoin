@@ -7,7 +7,7 @@
 #define BITCOIN_RPC_PROTOCOL_H
 
 //! HTTP status codes
-enum HTTPStatusCode
+enum HTTPStatusCode : int
 {
     HTTP_OK                    = 200,
     HTTP_NO_CONTENT            = 204,
