@@ -56,6 +56,8 @@ add_subdirectory(crypto)
 add_subdirectory(util)
 if(ENABLE_IPC)
   add_subdirectory(ipc)
+else()
+  add_library(bitcoin_ipc STATIC EXCLUDE_FROM_ALL ipc/stub.cpp)
 endif()
 
 add_library(bitcoin_consensus STATIC EXCLUDE_FROM_ALL
@@ -339,13 +341,14 @@ target_link_libraries(bitcoin_cli
 
 # Bitcoin Core RPC client
 if(BUILD_CLI)
-  add_executable(bitcoin-cli bitcoin-cli.cpp)
+  add_executable(bitcoin-cli bitcoin-cli.cpp init/basic.cpp)
   add_windows_resources(bitcoin-cli bitcoin-cli-res.rc)
   add_windows_application_manifest(bitcoin-cli)
   target_link_libraries(bitcoin-cli
     core_interface
     bitcoin_cli
     bitcoin_common
+    bitcoin_ipc
     bitcoin_util
     libevent::core
     libevent::extra
