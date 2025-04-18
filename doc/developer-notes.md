@@ -728,15 +728,6 @@ General Bitcoin Core
   - *Rationale*: RPC allows for better automatic testing. The test suite for
     the GUI is very limited.
 
-- Make sure pull requests pass CI before merging.
-
-  - *Rationale*: Makes sure that they pass thorough testing, and that the tester will keep passing
-     on the master branch. Otherwise, all new pull requests will start failing the tests, resulting in
-     confusion and mayhem.
-
-  - *Explanation*: If the test suite is to be updated for a change, this has to
-    be done first.
-
 Logging
 -------
 
