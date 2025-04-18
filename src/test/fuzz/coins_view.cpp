@@ -309,7 +309,9 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
                     // script/interpreter.cpp:1705: size_t CountWitnessSigOps(const CScript &, const CScript &, const CScriptWitness &, unsigned int): Assertion `(flags & SCRIPT_VERIFY_P2SH) != 0' failed.
                     return;
                 }
-                (void)GetTransactionSigOpCost(transaction, coins_view_cache, flags);
+                (void)coins_view_cache.AccessCoins(transaction, [&transaction, &flags](auto&& coins) {
+                    return GetTransactionSigOpCost(transaction, coins, flags);
+                });
             },
             [&] {
                 (void)IsWitnessStandard(CTransaction{random_mutable_transaction}, coins_view_cache);
