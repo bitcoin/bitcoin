@@ -7,6 +7,7 @@
 
 #include <bls/bls.h>
 #include <evo/dmn_types.h>
+#include <evo/providertx.h>
 #include <merkleblock.h>
 #include <netaddress.h>
 #include <pubkey.h>
@@ -31,9 +32,6 @@ class CQuorumManager;
 class CSimplifiedMNListEntry
 {
 public:
-    static constexpr uint16_t LEGACY_BLS_VERSION = 1;
-    static constexpr uint16_t BASIC_BLS_VERSION = 2;
-
     uint256 proRegTxHash;
     uint256 confirmedHash;
     CService service;
@@ -44,7 +42,7 @@ public:
     uint160 platformNodeID{};
     CScript scriptPayout; // mem-only
     CScript scriptOperatorPayout; // mem-only
-    uint16_t nVersion{LEGACY_BLS_VERSION};
+    uint16_t nVersion{ProTxVersion::LegacyBLS};
     MnType nType{MnType::Regular};
 
     CSimplifiedMNListEntry() = default;
@@ -78,14 +76,14 @@ public:
                 obj.proRegTxHash,
                 obj.confirmedHash,
                 obj.service,
-                CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.pubKeyOperator), (obj.nVersion == LEGACY_BLS_VERSION)),
+                CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.pubKeyOperator), (obj.nVersion == ProTxVersion::LegacyBLS)),
                 obj.keyIDVoting,
                 obj.isValid
                 );
         if ((s.GetType() & SER_NETWORK) && s.GetVersion() < DMN_TYPE_PROTO_VERSION) {
             return;
         }
-        if (obj.nVersion == BASIC_BLS_VERSION) {
+        if (obj.nVersion >= ProTxVersion::BasicBLS) {
             READWRITE(obj.nType);
             if (obj.nType == MnType::Evo) {
                 READWRITE(obj.platformHTTPPort);

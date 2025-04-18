@@ -19,19 +19,24 @@
 
 class TxValidationState;
 
+namespace ProTxVersion {
+enum : uint16_t {
+    LegacyBLS = 1,
+    BasicBLS  = 2,
+};
+} // namespace ProTxVersion
+
 class CProRegTx
 {
 public:
     static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_REGISTER;
-    static constexpr uint16_t LEGACY_BLS_VERSION = 1;
-    static constexpr uint16_t BASIC_BLS_VERSION = 2;
 
     [[nodiscard]] static constexpr auto GetVersion(const bool is_basic_scheme_active) -> uint16_t
     {
-        return is_basic_scheme_active ? BASIC_BLS_VERSION : LEGACY_BLS_VERSION;
+        return is_basic_scheme_active ? ProTxVersion::BasicBLS : ProTxVersion::LegacyBLS;
     }
 
-    uint16_t nVersion{LEGACY_BLS_VERSION};                 // message version
+    uint16_t nVersion{ProTxVersion::LegacyBLS}; // message version
     MnType nType{MnType::Regular};
     uint16_t nMode{0};                                     // only 0 supported for now
     COutPoint collateralOutpoint{uint256(), (uint32_t)-1}; // if hash is null, we refer to a ProRegTx output
@@ -52,7 +57,7 @@ public:
         READWRITE(
                 obj.nVersion
         );
-        if (obj.nVersion == 0 || obj.nVersion > BASIC_BLS_VERSION) {
+        if (obj.nVersion == 0 || obj.nVersion > ProTxVersion::BasicBLS) {
             // unknown version, bail out early
             return;
         }
@@ -63,7 +68,7 @@ public:
                 obj.collateralOutpoint,
                 obj.addr,
                 obj.keyIDOwner,
-                CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.pubKeyOperator), (obj.nVersion == LEGACY_BLS_VERSION)),
+                CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.pubKeyOperator), (obj.nVersion == ProTxVersion::LegacyBLS)),
                 obj.keyIDVoting,
                 obj.nOperatorReward,
                 obj.scriptPayout,
@@ -119,15 +124,13 @@ class CProUpServTx
 {
 public:
     static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_UPDATE_SERVICE;
-    static constexpr uint16_t LEGACY_BLS_VERSION = 1;
-    static constexpr uint16_t BASIC_BLS_VERSION = 2;
 
     [[nodiscard]] static constexpr auto GetVersion(const bool is_basic_scheme_active) -> uint16_t
     {
-        return is_basic_scheme_active ? BASIC_BLS_VERSION : LEGACY_BLS_VERSION;
+        return is_basic_scheme_active ? ProTxVersion::BasicBLS : ProTxVersion::LegacyBLS;
     }
 
-    uint16_t nVersion{LEGACY_BLS_VERSION}; // message version
+    uint16_t nVersion{ProTxVersion::LegacyBLS}; // message version
     MnType nType{MnType::Regular};
     uint256 proTxHash;
     CService addr;
@@ -143,11 +146,11 @@ public:
         READWRITE(
                 obj.nVersion
         );
-        if (obj.nVersion == 0 || obj.nVersion > BASIC_BLS_VERSION) {
+        if (obj.nVersion == 0 || obj.nVersion > ProTxVersion::BasicBLS) {
             // unknown version, bail out early
             return;
         }
-        if (obj.nVersion == BASIC_BLS_VERSION) {
+        if (obj.nVersion >= ProTxVersion::BasicBLS) {
             READWRITE(
                 obj.nType);
         }
@@ -165,7 +168,7 @@ public:
         }
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(
-                    CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(obj.sig), (obj.nVersion == LEGACY_BLS_VERSION))
+                    CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(obj.sig), (obj.nVersion == ProTxVersion::LegacyBLS))
             );
         }
     }
@@ -199,15 +202,13 @@ class CProUpRegTx
 {
 public:
     static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_UPDATE_REGISTRAR;
-    static constexpr uint16_t LEGACY_BLS_VERSION = 1;
-    static constexpr uint16_t BASIC_BLS_VERSION = 2;
 
     [[nodiscard]] static constexpr auto GetVersion(const bool is_basic_scheme_active) -> uint16_t
     {
-        return is_basic_scheme_active ? BASIC_BLS_VERSION : LEGACY_BLS_VERSION;
+        return is_basic_scheme_active ? ProTxVersion::BasicBLS : ProTxVersion::LegacyBLS;
     }
 
-    uint16_t nVersion{LEGACY_BLS_VERSION}; // message version
+    uint16_t nVersion{ProTxVersion::LegacyBLS}; // message version
     uint256 proTxHash;
     uint16_t nMode{0}; // only 0 supported for now
     CBLSLazyPublicKey pubKeyOperator;
@@ -221,14 +222,14 @@ public:
         READWRITE(
                 obj.nVersion
         );
-        if (obj.nVersion == 0 || obj.nVersion > BASIC_BLS_VERSION) {
+        if (obj.nVersion == 0 || obj.nVersion > ProTxVersion::BasicBLS) {
             // unknown version, bail out early
             return;
         }
         READWRITE(
                 obj.proTxHash,
                 obj.nMode,
-                CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.pubKeyOperator), (obj.nVersion == LEGACY_BLS_VERSION)),
+                CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.pubKeyOperator), (obj.nVersion == ProTxVersion::LegacyBLS)),
                 obj.keyIDVoting,
                 obj.scriptPayout,
                 obj.inputsHash
@@ -264,12 +265,10 @@ class CProUpRevTx
 {
 public:
     static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_UPDATE_REVOKE;
-    static constexpr uint16_t LEGACY_BLS_VERSION = 1;
-    static constexpr uint16_t BASIC_BLS_VERSION = 2;
 
     [[nodiscard]] static constexpr auto GetVersion(const bool is_basic_scheme_active) -> uint16_t
     {
-        return is_basic_scheme_active ? BASIC_BLS_VERSION : LEGACY_BLS_VERSION;
+        return is_basic_scheme_active ? ProTxVersion::BasicBLS : ProTxVersion::LegacyBLS;
     }
 
     // these are just informational and do not have any effect on the revocation
@@ -281,7 +280,7 @@ public:
         REASON_LAST = REASON_CHANGE_OF_KEYS
     };
 
-    uint16_t nVersion{LEGACY_BLS_VERSION}; // message version
+    uint16_t nVersion{ProTxVersion::LegacyBLS}; // message version
     uint256 proTxHash;
     uint16_t nReason{REASON_NOT_SPECIFIED};
     uint256 inputsHash; // replay protection
@@ -292,7 +291,7 @@ public:
         READWRITE(
                 obj.nVersion
         );
-        if (obj.nVersion == 0 || obj.nVersion > BASIC_BLS_VERSION) {
+        if (obj.nVersion == 0 || obj.nVersion > ProTxVersion::BasicBLS) {
             // unknown version, bail out early
             return;
         }
@@ -303,7 +302,7 @@ public:
         );
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(
-                    CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(obj.sig), (obj.nVersion == LEGACY_BLS_VERSION))
+                    CBLSSignatureVersionWrapper(const_cast<CBLSSignature&>(obj.sig), (obj.nVersion == ProTxVersion::LegacyBLS))
             );
         }
     }

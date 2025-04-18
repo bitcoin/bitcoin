@@ -33,7 +33,7 @@ private:
     friend class CDeterministicMNStateDiff;
 
 public:
-    int nVersion{CProRegTx::LEGACY_BLS_VERSION};
+    int nVersion{ProTxVersion::LegacyBLS};
 
     int nRegisteredHeight{-1};
     int nLastPaidHeight{0};
@@ -94,7 +94,7 @@ public:
             obj.confirmedHash,
             obj.confirmedHashWithProRegTxHash,
             obj.keyIDOwner);
-        READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.pubKeyOperator), obj.nVersion == CProRegTx::LEGACY_BLS_VERSION));
+        READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.pubKeyOperator), obj.nVersion == ProTxVersion::LegacyBLS));
         READWRITE(
             obj.keyIDVoting,
             obj.addr,
@@ -107,7 +107,7 @@ public:
 
     void ResetOperatorFields()
     {
-        nVersion = CProRegTx::LEGACY_BLS_VERSION;
+        nVersion = ProTxVersion::LegacyBLS;
         pubKeyOperator = CBLSLazyPublicKey();
         addr = CService();
         scriptOperatorPayout = CScript();
@@ -219,14 +219,14 @@ public:
 #define DMN_STATE_DIFF_LINE(f) \
         if (strcmp(#f, "pubKeyOperator") == 0 && (obj.fields & Field_pubKeyOperator)) {\
             SER_READ(obj, read_pubkey = true); \
-            READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.state.pubKeyOperator), obj.state.nVersion == CProRegTx::LEGACY_BLS_VERSION)); \
+            READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.state.pubKeyOperator), obj.state.nVersion == ProTxVersion::LegacyBLS)); \
         } else if (obj.fields & Field_##f) READWRITE(obj.state.f);
 
         DMN_STATE_DIFF_ALL_FIELDS
 #undef DMN_STATE_DIFF_LINE
         if (read_pubkey) {
             SER_READ(obj, obj.fields |= Field_nVersion);
-            SER_READ(obj, obj.state.pubKeyOperator.SetLegacy(obj.state.nVersion == CProRegTx::LEGACY_BLS_VERSION));
+            SER_READ(obj, obj.state.pubKeyOperator.SetLegacy(obj.state.nVersion == ProTxVersion::LegacyBLS));
         }
     }
 
