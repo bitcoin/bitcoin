@@ -283,7 +283,12 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
                     // It is not allowed to call CheckTxInputs if CheckTransaction failed
                     return;
                 }
-                if (Consensus::CheckTxInputs(transaction, state, coins_view_cache, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, std::numeric_limits<int>::max()), tx_fee_out)) {
+                // are the actual inputs available?
+                if (!coins_view_cache.HaveInputs(transaction)) return;
+                auto check_tx_inputs_res = coins_view_cache.AccessCoins(transaction, [&transaction, &state, &coins_view_cache, &fuzzed_data_provider, &tx_fee_out](auto&& coins) {
+                    return Consensus::CheckTxInputs(transaction, state, coins_view_cache, std::span{coins}, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, std::numeric_limits<int>::max()), tx_fee_out);
+                });
+                if (check_tx_inputs_res) {
                     assert(MoneyRange(tx_fee_out));
                 }
             },

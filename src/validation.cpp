@@ -889,7 +889,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     }
 
     // The mempool holds txs for the next block, so pass height+1 to CheckTxInputs
-    if (!Consensus::CheckTxInputs(tx, state, m_view, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees)) {
+    auto check_tx_inputs_res = m_view.AccessCoins(tx, [&tx, &state, &ws, this](auto&& coins) {
+        return Consensus::CheckTxInputs(tx, state, m_view, std::span{coins}, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees);
+    });
+    if (!check_tx_inputs_res) {
         return false; // state filled in by CheckTxInputs
     }
 
@@ -2527,14 +2530,18 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     {
         if (!state.IsValid()) break;
         const CTransaction &tx = *(block.vtx[i]);
-
         nInputs += tx.vin.size();
 
         if (!tx.IsCoinBase())
         {
             CAmount txfee = 0;
             TxValidationState tx_state;
-            if (!Consensus::CheckTxInputs(tx, tx_state, view, pindex->nHeight, txfee)) {
+
+            auto check_tx_inputs_res = view.AccessCoins(tx, [&tx, &tx_state, &view, pindex, &txfee](auto&& coins) {
+                return Consensus::CheckTxInputs(tx, tx_state, view, coins, pindex->nHeight, txfee);
+            });
+
+            if (!check_tx_inputs_res) {
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                               tx_state.GetRejectReason(),
