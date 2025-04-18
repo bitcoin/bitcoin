@@ -20,43 +20,18 @@ import subprocess
 import sys
 
 class FeatureFrameworkStartupFailures(BitcoinTestFramework):
-    def add_options(self, parser):
-        # These are only set when re-executing into child processes.
-        parser.add_argument("--internal-rpc_timeout", dest="internal_rpc_timeout", help="ONLY TO BE USED WHEN TEST RELAUNCHES ITSELF")
-        parser.add_argument("--internal-extra_args", dest="internal_extra_args", help="ONLY TO BE USED WHEN TEST RELAUNCHES ITSELF")
-        parser.add_argument("--internal-start_stop", dest="internal_start_stop", help="ONLY TO BE USED WHEN TEST RELAUNCHES ITSELF")
-
     def set_test_params(self):
-        # If we are called with these arguments it means we are not in the
-        # parent process.
-        self.is_child = any(o is not None for o in [self.options.internal_rpc_timeout,
-                                                    self.options.internal_extra_args,
-                                                    self.options.internal_start_stop])
-        # The parent process doesn't need a node itself.
-        self.num_nodes = 1 if self.is_child else 0
-
-        if self.options.internal_rpc_timeout is not None:
-            self.rpc_timeout = self.options.internal_rpc_timeout
-        if self.options.internal_extra_args:
-            self.extra_args = [[self.options.internal_extra_args]]
+        self.num_nodes = 0  # Parent process doesn't need a node itself.
 
     def setup_network(self):
-        # Only proceed if num_nodes > 0 (child test processes),
-        # as 0 (parent) is not supported by BitcoinTestFramework.setup_network().
-        if self.num_nodes > 0:
-            if self.options.internal_start_stop:
-                self.add_nodes(self.num_nodes, self.extra_args)
-                self.nodes[0].start()
-                self.nodes[0].stop_node()
-                assert False, "stop_node() should raise an exception when we haven't called wait_for_rpc_connection()"
-            else:
-                BitcoinTestFramework.setup_network(self)
+        # BitcoinTestFramework.setup_network() does not support 0 nodes.
+        pass
 
-    # Launches a child test process running this same file, now with specific
-    # args, and verifies that we (only) raise the expected exception.
-    def _verify_startup_failure(self, args, expected_exception):
+    # Launches a child test process running this same file, but instantiating
+    # a child test, and verifies that we (only) raise the expected exception.
+    def _verify_startup_failure(self, test, expected_exception):
         try:
-            output = subprocess.run([sys.executable, __file__, f"--cachedir={self.options.cachedir}"] + args,
+            output = subprocess.run([sys.executable, __file__, f"--cachedir={self.options.cachedir}", f"--internal_test={test.__name__}"],
                                     encoding="utf-8",
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT,
@@ -81,38 +56,72 @@ class FeatureFrameworkStartupFailures(BitcoinTestFramework):
 
         assert not errors, f"Child test didn't contain (only) expected errors:\n{chr(10).join(errors)}\n<CHILD OUTPUT BEGIN>:\n{output}\n<CHILD OUTPUT END>\n"
 
-    def test_wrong_rpc_port(self):
+    def run_test(self):
         self.log.info("Verifying inability to connect to bitcoind's RPC interface due to wrong port results in one exception containing at least one OSError.")
         self._verify_startup_failure(
-            # Lower the timeout so we don't wait that long.
-            [f"--internal-rpc_timeout={int(max(3, self.options.timeout_factor))}",
-            # Override RPC port to something TestNode isn't expecting so that we
-            # are unable to establish an RPC connection.
-            f"--internal-extra_args=-rpcport={rpc_port(2)}"],
+            TestWrongRpcPortStartupFailure,
             r"AssertionError: \[node 0\] Unable to connect to bitcoind after \d+s \(ignored errors: {[^}]*'OSError \w+'?: \d+[^}]*}, latest error: \w+\([^)]+\)\)"
         )
 
-    def test_init_error(self):
         self.log.info("Verify startup failure due to invalid arg results in only one exception.")
         self._verify_startup_failure(
-            ["--internal-extra_args=-nonexistentarg"],
+            TestInitErrorStartupFailure,
             r"FailedToStartError: \[node 0\] bitcoind exited with status 1 during initialization\. Error: Error parsing command line arguments: Invalid parameter -nonexistentarg"
         )
 
-    def test_start_stop(self):
         self.log.info("Verify start() then stop_node() on a node without wait_for_rpc_connection() in between raises an assert.")
         self._verify_startup_failure(
-            ["--internal-start_stop=1"],
+            TestStartStopStartupFailure,
             r"AssertionError: \[node 0\] Should only call stop_node\(\) on a running node after wait_for_rpc_connection\(\) succeeded\. Did you forget to call the latter after start\(\)\? Not connected to process: \d+"
         )
 
-    def run_test(self):
-        assert not self.is_child, "Child test processes should fail at startup before even reaching run_test."
+class InternalTestMixin:
+    def add_options(self, parser):
+        # Just here to silence unrecognized argument error, we actually read the value in the if-main at the bottom.
+        parser.add_argument("--internal_test", dest="internal_never_read", help="ONLY TO BE USED WHEN TEST RELAUNCHES ITSELF")
 
-        self.test_wrong_rpc_port()
-        self.test_init_error()
-        self.test_start_stop()
+class TestWrongRpcPortStartupFailure(InternalTestMixin, BitcoinTestFramework):
+    def set_test_params(self):
+        self.num_nodes = 1
+        # Lower the timeout so we don't wait that long.
+        self.rpc_timeout = max(3, self.options.timeout_factor)
+        # Override RPC port to something TestNode isn't expecting so that we
+        # are unable to establish an RPC connection.
+        self.extra_args = [[f"-rpcport={rpc_port(2)}"]]
+
+    def run_test(self):
+        assert False, "Should have failed earlier during startup."
+
+class TestInitErrorStartupFailure(InternalTestMixin, BitcoinTestFramework):
+    def set_test_params(self):
+        self.num_nodes = 1
+        self.extra_args = [["-nonexistentarg"]]
+
+    def run_test(self):
+        assert False, "Should have failed earlier during startup."
+
+class TestStartStopStartupFailure(InternalTestMixin, BitcoinTestFramework):
+    def set_test_params(self):
+        self.num_nodes = 1
+
+    def setup_network(self):
+        self.add_nodes(self.num_nodes, self.extra_args)
+        self.nodes[0].start()
+        self.nodes[0].stop_node() # This should raise an exception
+        assert False, "stop_node() should raise an exception when we haven't called wait_for_rpc_connection()"
+
+    def run_test(self):
+        assert False, "Should have failed earlier during startup."
 
 
 if __name__ == '__main__':
-    FeatureFrameworkStartupFailures(__file__).main()
+    if not any('--internal_test=' in arg for arg in sys.argv):
+        FeatureFrameworkStartupFailures(__file__).main()
+    else:
+        for arg in sys.argv:
+            if arg[:16] == '--internal_test=':
+                class_name = arg[16:]
+                c = sys.modules[__name__].__dict__[class_name]
+                assert c, f"Unrecognized test: {class_name}"
+                c(__file__).main()
+                break
