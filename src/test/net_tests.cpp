@@ -702,6 +702,7 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
 
 BOOST_AUTO_TEST_CASE(LimitedAndReachable_Network)
 {
+    g_reachable_nets.Reset();
     BOOST_CHECK(g_reachable_nets.Contains(NET_IPV4));
     BOOST_CHECK(g_reachable_nets.Contains(NET_IPV6));
     BOOST_CHECK(g_reachable_nets.Contains(NET_ONION));
