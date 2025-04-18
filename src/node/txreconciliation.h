@@ -160,6 +160,13 @@ public:
     void SnapshotLocalSet();
 
     /**
+     * Be ready to respond to a extension request, to compute the extended sketch over
+     * the same initial set (without transactions received during the reconciliation).
+     * Allow to store new transactions separately in the original set.
+     */
+    void PrepareForExtensionRequest(uint16_t sketch_capacity);
+
+    /**
      * To be efficient in transmitting extended sketch, we store a snapshot of the sketch
      * received in the initial reconciliation step, so that only the necessary extension data
      * has to be transmitted.
