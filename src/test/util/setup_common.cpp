@@ -115,6 +115,14 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
     if (!EnableFuzzDeterminism()) {
         SeedRandomForTest(SeedRand::FIXED_SEED);
     }
+
+    // Reset globals
+    fDiscover = true;
+    fListen = true;
+    SetRPCWarmupStarting();
+    g_reachable_nets.Reset();
+    ClearLocal();
+
     m_node.shutdown_signal = &m_interrupt;
     m_node.shutdown_request = [this]{ return m_interrupt(); };
     m_node.args = &gArgs;
@@ -214,7 +222,10 @@ BasicTestingSetup::~BasicTestingSetup()
     } else {
         fs::remove_all(m_path_root);
     }
+    // Clear all arguments except for -datadir, which GUI tests currently rely
+    // on to be set even after the testing setup is destroyed.
     gArgs.ClearArgs();
+    gArgs.ForceSetArg("-datadir", fs::PathToString(m_path_root));
 }
 
 ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
