@@ -59,25 +59,15 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
                 if (random_coin.IsSpent()) {
                     return;
                 }
-                Coin coin = random_coin;
-                bool expected_code_path = false;
-                const bool possible_overwrite = fuzzed_data_provider.ConsumeBool();
+                COutPoint outpoint{random_out_point};
+                Coin coin{random_coin};
+                const bool possible_overwrite{fuzzed_data_provider.ConsumeBool()};
                 try {
-                    coins_view_cache.AddCoin(random_out_point, std::move(coin), possible_overwrite);
-                    expected_code_path = true;
+                    coins_view_cache.AddCoin(outpoint, std::move(coin), possible_overwrite);
                 } catch (const std::logic_error& e) {
-                    if (e.what() == std::string{"Attempted to overwrite an unspent coin (when possible_overwrite is false)"}) {
-                        assert(!possible_overwrite);
-                        expected_code_path = true;
-                        // AddCoin() decreases cachedCoinsUsage by the memory usage of the old coin at the beginning and
-                        // increases it by the value of the new coin at the end. If it throws in the process, the value
-                        // of cachedCoinsUsage would have been incorrectly decreased, leading to an underflow later on.
-                        // To avoid this, use Flush() to reset the value of cachedCoinsUsage in sync with the cacheCoins
-                        // mapping.
-                        (void)coins_view_cache.Flush();
-                    }
+                    assert(e.what() == std::string{"Attempted to overwrite an unspent coin (when possible_overwrite is false)"});
+                    assert(!possible_overwrite);
                 }
-                assert(expected_code_path);
             },
             [&] {
                 (void)coins_view_cache.Flush();
