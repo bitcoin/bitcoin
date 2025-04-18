@@ -277,7 +277,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
                 // are the actual inputs available?
                 if (!coins_view_cache.HaveInputs(transaction)) return;
                 auto coins{coins_view_cache.AccessCoins(transaction)};
-                if (Consensus::CheckTxInputs(transaction, state, coins_view_cache, std::span{coins}, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, std::numeric_limits<int>::max()), tx_fee_out)) {
+                if (Consensus::CheckTxInputs(transaction, state, std::span{coins}, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, std::numeric_limits<int>::max()), tx_fee_out)) {
                     assert(MoneyRange(tx_fee_out));
                 }
             },

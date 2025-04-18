@@ -892,9 +892,15 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-BIP68-final");
     }
 
+    // are the actual inputs available?
+    if (!m_view.HaveInputs(tx)) {
+        return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-txns-inputs-missingorspent",
+                             strprintf("%s: inputs missing/spent", __func__));
+    }
+
     // The mempool holds txs for the next block, so pass height+1 to CheckTxInputs
     auto coins{m_view.AccessCoins(tx)};
-    if (!Consensus::CheckTxInputs(tx, state, m_view, std::span{coins}, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees)) {
+    if (!Consensus::CheckTxInputs(tx, state, std::span{coins}, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees)) {
         return false; // state filled in by CheckTxInputs
     }
 
@@ -2288,18 +2294,14 @@ script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
     return flags;
 }
 
-
-/** Apply the effects of this block (with given index) on the UTXO set represented by coins.
- *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
- *  can fail if those validity checks fail (among other reasons). */
-bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                               CCoinsViewCache& view, bool fJustCheck)
+bool Chainstate::ConnectBlock(const CBlock& block, const CBlockUndo& blockundo, BlockValidationState& state,
+                              CBlockIndex* pindex, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
-
-    uint256 block_hash{block.GetHash()};
-    assert(*pindex->phashBlock == block_hash);
+    Assume(pindex->GetBlockHash() == block.GetHash());
+    auto block_hash{pindex->GetBlockHash()};
+    assert(block.vtx.size() == blockundo.vtxundo.size() + 1); // blockundo does not contain a CTxUndo for the coinbase
 
     const auto time_start{SteadyClock::now()};
     const CChainParams& params{m_chainman.GetParams()};
@@ -2412,8 +2414,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         m_last_script_check_reason_logged = script_check_reason;
     }
 
-    CBlockUndo blockundo;
-
     // Precomputed transaction data pointers must not be invalidated
     // until after `control` has run the script checks (potentially
     // in multiple threads). Preallocate the vector size so a new allocation
@@ -2428,7 +2428,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     CAmount nFees = 0;
     int nInputs = 0;
     int64_t nSigOpsCost = 0;
-    blockundo.vtxundo.reserve(block.vtx.size() - 1);
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         if (!state.IsValid()) break;
@@ -2437,11 +2436,11 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
         if (!tx.IsCoinBase())
         {
+            auto spent_coins = std::span<const Coin>{blockundo.vtxundo[i - 1].vprevout};
             CAmount txfee = 0;
             TxValidationState tx_state;
 
-            auto coins{view.AccessCoins(tx)};
-            if (!Consensus::CheckTxInputs(tx, tx_state, view, std::span{coins}, pindex->nHeight, txfee)) {
+            if (!Consensus::CheckTxInputs(tx, tx_state, spent_coins, pindex->nHeight, txfee)) {
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                               tx_state.GetRejectReason(),
@@ -2460,7 +2459,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
             // be in ConnectBlock because they require the UTXO set
             prevheights.resize(tx.vin.size());
             for (size_t j = 0; j < tx.vin.size(); j++) {
-                prevheights[j] = view.AccessCoin(tx.vin[j].prevout).nHeight;
+                prevheights[j] = spent_coins[j].nHeight;
             }
 
             if (!SequenceLocks(tx, nLockTimeFlags, prevheights, *pindex)) {
@@ -2474,13 +2473,14 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         // * legacy (always)
         // * p2sh (when P2SH enabled in flags and excludes coinbase)
         // * witness (when witness enabled in flags and excludes coinbase)
-        {
-            auto coins{view.AccessCoins(tx)};
-            nSigOpsCost += GetTransactionSigOpCost(tx, std::span{coins}, flags);
-            if (nSigOpsCost > MAX_BLOCK_SIGOPS_COST) {
-                state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-sigops", "too many sigops");
-                break;
-            }
+        if (!tx.IsCoinBase()) {
+            nSigOpsCost += GetTransactionSigOpCost(tx, std::span<const Coin>{blockundo.vtxundo[i - 1].vprevout}, flags);
+        } else {
+            nSigOpsCost += GetTransactionSigOpCost(tx, std::span<const Coin>{}, flags);
+        }
+        if (nSigOpsCost > MAX_BLOCK_SIGOPS_COST) {
+            state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-sigops", "too many sigops");
+            break;
         }
 
         if (!tx.IsCoinBase() && fScriptChecks)
@@ -2488,7 +2488,13 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
             bool tx_ok;
             TxValidationState tx_state;
-            std::vector<CTxOut> spent_outputs{view.GetUnspentOutputs(tx)};
+            const std::vector<Coin>& spent_coins = blockundo.vtxundo[i - 1].vprevout;
+            std::vector<CTxOut> spent_outputs;
+            spent_outputs.reserve(tx.vin.size());
+            for (const Coin& coin : spent_coins) {
+                spent_outputs.push_back(coin.out);
+            }
+
             // If CheckInputScripts is called with a pointer to a checks vector, the resulting checks are appended to it. In that case
             // they need to be added to control which runs them asynchronously. Otherwise, CheckInputScripts runs the checks before returning.
             if (control) {
@@ -2505,12 +2511,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
                 break;
             }
         }
-
-        CTxUndo undoDummy;
-        if (i > 0) {
-            blockundo.vtxundo.emplace_back();
-        }
-        UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
     }
     const auto time_3{SteadyClock::now()};
     m_chainman.time_connect += time_3 - time_2;
@@ -2796,7 +2796,8 @@ bool Chainstate::SpendBlock(
     const CBlock& block,
     const CBlockIndex* pindex,
     CCoinsViewCache& view,
-    BlockValidationState& state)
+    BlockValidationState& state,
+    CBlockUndo& blockundo)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
@@ -2902,14 +2903,39 @@ bool Chainstate::SpendBlock(
         }
     }
 
+    int nInputs = 0;
+
+    blockundo.vtxundo.reserve(block.vtx.size() - 1);
+    for (const CTransactionRef& tx : block.vtx) {
+        nInputs += tx->vin.size();
+        // are the actual inputs available?
+        if (!view.HaveInputs(*tx)) {
+            state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-inputs-missingorspent",
+                          strprintf("%s: inputs missing/spent in transaction %s", __func__, tx->GetHash().ToString()));
+            break;
+        }
+        if (!tx->IsCoinBase()) {
+            blockundo.vtxundo.emplace_back();
+        }
+        CTxUndo dummy;
+        UpdateCoins(*tx, view, tx->IsCoinBase() ? dummy : blockundo.vtxundo.back(), pindex->nHeight);
+    }
+
     const auto time_1{SteadyClock::now()};
     m_chainman.time_connect += time_1 - time_start;
-    LogDebug(BCLog::BENCH, "      - Spend Block processed %u transactions: %.2fms (%.3fms/tx) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(),
+    LogDebug(BCLog::BENCH, "      - Spend Block processed %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(),
              Ticks<MillisecondsDouble>(time_1 - time_start),
              block.vtx.size() == 0 ? 0 : Ticks<MillisecondsDouble>(time_1 - time_start) / block.vtx.size(),
+             nInputs <= 1 ? 0 : Ticks<MillisecondsDouble>(time_1 - time_start) / (nInputs - 1),
              Ticks<SecondsDouble>(m_chainman.time_connect),
              m_chainman.num_blocks_total == 0 ? 0 : Ticks<MillisecondsDouble>(m_chainman.time_connect) / m_chainman.num_blocks_total);
 
+    if (!state.IsValid()) {
+        LogInfo("Block validation error: %s", state.ToString());
+        return false;
+    }
+
+    assert(blockundo.vtxundo.size() == block.vtx.size() - 1);
     return true;
 }
 
@@ -3103,7 +3129,8 @@ bool Chainstate::ConnectTip(
     {
         CCoinsViewCache& view{*m_coins_views->m_connect_block_view};
         const auto reset_guard{view.CreateResetGuard()};
-        if (!SpendBlock(*block_to_connect, pindexNew, view, state)) {
+        CBlockUndo blockundo;
+        if (!SpendBlock(*block_to_connect, pindexNew, view, state, blockundo)) {
             assert(state.IsInvalid());
             if (m_chainman.m_options.signals) {
                 m_chainman.m_options.signals->BlockChecked(block_to_connect, state);
@@ -3112,7 +3139,7 @@ bool Chainstate::ConnectTip(
             LogError("%s: SpendBlock %s failed, %s\n", __func__, pindexNew->GetBlockHash().ToString(), state.ToString());
             return false;
         }
-        bool rv = ConnectBlock(*block_to_connect, state, pindexNew, view);
+        bool rv = ConnectBlock(*block_to_connect, blockundo, state, pindexNew);
         if (m_chainman.m_options.signals) {
             m_chainman.m_options.signals->BlockChecked(block_to_connect, state);
         }
@@ -4612,13 +4639,15 @@ BlockValidationState TestBlockValidity(
     index_dummy.phashBlock = &block_hash;
     CCoinsViewCache view_dummy(&chainstate.CoinsTip());
 
-    if (!chainstate.SpendBlock(block, &index_dummy, view_dummy, state)) {
+
+    CBlockUndo blockundo;
+    if (!chainstate.SpendBlock(block, &index_dummy, view_dummy, state, blockundo)) {
         if (state.IsValid()) NONFATAL_UNREACHABLE();
         return state;
     }
 
     // Set fJustCheck to true in order to update, and not clear, validation caches.
-    if (!chainstate.ConnectBlock(block, state, &index_dummy, view_dummy, true)) {
+    if (!chainstate.ConnectBlock(block, blockundo, state, &index_dummy, true)) {
         if (state.IsValid()) NONFATAL_UNREACHABLE();
         return state;
     }
@@ -4825,12 +4854,14 @@ VerifyDBResult CVerifyDB::VerifyDB(
                 LogError("Verification error: ReadBlock failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
                 return VerifyDBResult::CORRUPTED_BLOCK_DB;
             }
-            if (!chainstate.SpendBlock(block, pindex, coins, state)) {
+            CBlockUndo blockundo;
+            if (!chainstate.SpendBlock(block, pindex, coins, state, blockundo)) {
                 LogError("SpendBlock failed %s\n", state.ToString());
                 return VerifyDBResult::CORRUPTED_BLOCK_DB;
             }
-            if (!chainstate.ConnectBlock(block, state, pindex, coins)) {
-                LogError("Verification error: found unconnectable block at %d, hash=%s (%s)", pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
+
+            if (!chainstate.ConnectBlock(block, blockundo, state, pindex)) {
+                LogError("Verification error: found unconnectable block at %d, hash=%s (%s)\n", pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
                 return VerifyDBResult::CORRUPTED_BLOCK_DB;
             }
             coins.SetBestBlock(pindex->GetBlockHash());
