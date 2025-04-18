@@ -1052,7 +1052,8 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
     AddCoins(coins, CTransaction(tx_create), 0, false);
 
     // 2490 sigops is below the limit.
-    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(tx_max_sigops), coins), 2490);
+    auto count = coins.AccessCoins(CTransaction(tx_max_sigops), [&tx_max_sigops](auto&& coins) { return GetP2SHSigOpCount(CTransaction(tx_max_sigops), coins); });
+    BOOST_CHECK_EQUAL(count, 2490);
     BOOST_CHECK(::ValidateInputsStandardness(CTransaction(tx_max_sigops), coins).IsValid());
 
     // Adding one more input will bump this to 2505, hitting the limit.
@@ -1063,8 +1064,10 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
     }
     tx_max_sigops.vin.emplace_back(prev_txid, p2sh_inputs_count, CScript() << ToByteVector(max_sigops_redeem_script));
     AddCoins(coins, CTransaction(tx_create), 0, false);
+    count = coins.AccessCoins(CTransaction(tx_max_sigops), [&tx_max_sigops](auto&& coins) { return GetP2SHSigOpCount(CTransaction(tx_max_sigops), coins); });
+    BOOST_CHECK_EQUAL(count, 2505);
     BOOST_CHECK_GT((p2sh_inputs_count + 1) * MAX_P2SH_SIGOPS, MAX_TX_LEGACY_SIGOPS);
-    auto legacy_sigops_count = GetP2SHSigOpCount(CTransaction(tx_max_sigops), coins);
+    auto legacy_sigops_count = coins.AccessCoins(CTransaction(tx_max_sigops), [&tx_max_sigops](auto&& coins) { return GetP2SHSigOpCount(CTransaction(tx_max_sigops), coins); });
     BOOST_CHECK_EQUAL(legacy_sigops_count, 2505);
     std::string reject_reason("bad-txns-nonstandard-inputs");
     std::string sigop_limit_reject_debug_message("non-witness sigops exceed bip54 limit");
@@ -1074,7 +1077,6 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
         BOOST_CHECK_EQUAL(validation_state.GetRejectReason(), reject_reason);
         BOOST_CHECK_EQUAL(validation_state.GetDebugMessage(), sigop_limit_reject_debug_message);
     }
-
 
     // Now, check the limit can be reached with regular P2PK outputs too. Use a separate
     // preparation transaction, to demonstrate spending coins from a single tx is irrelevant.
