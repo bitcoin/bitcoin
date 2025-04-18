@@ -1146,8 +1146,8 @@ BOOST_AUTO_TEST_CASE(checktxinputs_invalid_transactions_test)
 
         TxValidationState state;
         CAmount txfee{0};
-        inputs.AccessCoins(CTransaction(mtx), [&mtx, &state, &inputs, spend_height, &txfee](auto&& coins) {
-            BOOST_CHECK(!Consensus::CheckTxInputs(CTransaction{mtx}, state, inputs, coins, spend_height, txfee));
+        inputs.AccessCoins(CTransaction(mtx), [&mtx, &state, spend_height, &txfee](auto&& coins) {
+            BOOST_CHECK(!Consensus::CheckTxInputs(CTransaction{mtx}, state, coins, spend_height, txfee));
         });
         BOOST_CHECK(state.IsInvalid());
         BOOST_CHECK_EQUAL(state.GetResult(), expected_result);

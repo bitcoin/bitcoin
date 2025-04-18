@@ -11,17 +11,18 @@
 #include <script/script.h>
 #include <sync.h>
 #include <test/util/chainstate.h>
-#include <test/util/common.h>
 #include <test/util/coins.h>
+#include <test/util/common.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
+#include <undo.h>
 #include <util/check.h>
 #include <validation.h>
 
-#include <vector>
-
 #include <boost/test/unit_test.hpp>
+
+#include <vector>
 
 BOOST_FIXTURE_TEST_SUITE(validation_chainstate_tests, ChainTestingSetup)
 
@@ -163,6 +164,32 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
     // validation chain.
     BOOST_CHECK(block_added);
     BOOST_CHECK_EQUAL(curr_tip, get_notify_tip());
+}
+
+BOOST_FIXTURE_TEST_CASE(spendblock_rejects_empty_block, TestChain100Setup)
+{
+    Chainstate& chainstate = Assert(m_node.chainman)->ActiveChainstate();
+
+    LOCK(cs_main);
+    CBlockIndex* tip = Assert(chainstate.m_chain.Tip());
+
+    CBlock block;
+    // CheckBlock() rejects empty blocks, ensure it gets run in SpendBlock
+    block.hashPrevBlock = tip->GetBlockHash();
+
+    CBlockIndex index_dummy{block};
+    const uint256 block_hash{block.GetHash()};
+    index_dummy.pprev = tip;
+    index_dummy.nHeight = tip->nHeight + 1;
+    index_dummy.phashBlock = &block_hash;
+
+    CCoinsViewCache view_dummy(&chainstate.CoinsTip());
+    BlockValidationState state;
+    CBlockUndo blockundo;
+
+    BOOST_CHECK(!chainstate.SpendBlock(block, &index_dummy, view_dummy, state, blockundo));
+    BOOST_CHECK(state.IsInvalid());
+    BOOST_CHECK_EQUAL(state.GetRejectReason(), "high-hash");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
