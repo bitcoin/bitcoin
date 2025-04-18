@@ -111,9 +111,11 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
 }
 
 void CCoinsViewCache::EmplaceCoinInternalDANGER(COutPoint&& outpoint, Coin&& coin) {
-    cachedCoinsUsage += coin.DynamicMemoryUsage();
     auto [it, inserted] = cacheCoins.try_emplace(std::move(outpoint), std::move(coin));
-    if (inserted) CCoinsCacheEntry::SetDirty(*it, m_sentinel);
+    if (inserted) {
+        CCoinsCacheEntry::SetDirty(*it, m_sentinel);
+        cachedCoinsUsage += it->second.coin.DynamicMemoryUsage();
+    }
 }
 
 void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check_for_overwrite) {
