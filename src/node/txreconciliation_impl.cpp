@@ -92,6 +92,14 @@ void TxReconciliationState::SnapshotLocalSet()
     m_short_id_mapping.clear();
 }
 
+void TxReconciliationState::PrepareForExtensionRequest(uint16_t sketch_capacity)
+{
+    Assume(!m_we_initiate);
+    // Remember the current capacity so we can double it if the Sketch decoding fails on the peer's end.
+    m_capacity_snapshot = sketch_capacity;
+    SnapshotLocalSet();
+}
+
 void TxReconciliationState::PrepareForExtensionResponse(const std::vector<uint8_t>& remote_sketch)
 {
     Assume(m_we_initiate);
@@ -547,6 +555,7 @@ public:
         }
 
         peer_state->m_phase = ReconciliationPhase::INIT_RESPONDED;
+        peer_state->PrepareForExtensionRequest(sketch_capacity);
 
         LogDebug(BCLog::TXRECONCILIATION, "Responding with a sketch to reconciliation initiated by peer=%d: sending sketch of capacity=%i.\n",
             peer_id, sketch_capacity);
