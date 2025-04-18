@@ -165,6 +165,16 @@ const Coin& CCoinsViewCache::AccessCoin(const COutPoint &outpoint) const {
     }
 }
 
+std::vector<std::reference_wrapper<const Coin>> CCoinsViewCache::AccessCoins(const CTransaction& tx) const
+{
+    std::vector<std::reference_wrapper<const Coin>> coins;
+    coins.reserve(tx.vin.size());
+    for (const CTxIn& input : tx.vin) {
+        coins.emplace_back(AccessCoin(input.prevout));
+    }
+    return coins;
+}
+
 bool CCoinsViewCache::HaveCoin(const COutPoint &outpoint) const {
     CCoinsMap::const_iterator it = FetchCoin(outpoint);
     return (it != cacheCoins.end() && !it->second.coin.IsSpent());
