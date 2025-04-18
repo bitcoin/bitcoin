@@ -6,6 +6,7 @@
 
 from decimal import Decimal
 import re
+import subprocess
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.netutil import test_ipv6_local
@@ -434,6 +435,16 @@ class TestBitcoinCli(BitcoinTestFramework):
 
         self.log.info("Test that only one of -addrinfo, -generate, -getinfo, -netinfo may be specified at a time")
         assert_raises_process_error(1, "Only one of -getinfo, -netinfo may be specified", self.nodes[0].cli('-getinfo', '-netinfo').send_cli)
+
+        if not self.is_ipc_compiled():
+            # This tests behavior when ENABLE_IPC is off. When it is on,
+            # behavior is checked by the interface_ipc_cli.py test.
+            self.log.info("Test bitcoin-cli -ipcconnect triggers error if not built with IPC support")
+            args = [self.binary_paths.bitcoincli, "-ipcconnect=unix", "-getinfo"]
+            result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            assert_equal(result.stdout, "error: bitcoin-cli was not built with IPC support\n")
+            assert_equal(result.stderr, None)
+            assert_equal(result.returncode, 1)
 
 
 if __name__ == '__main__':
