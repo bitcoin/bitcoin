@@ -452,6 +452,14 @@ class ToolWalletTest(BitcoinTestFramework):
         else:
             assert False, "Big transaction was not found in wallet dump"
 
+    def test_no_create_legacy(self):
+        self.log.info("Test that legacy wallets cannot be created")
+
+        self.assert_raises_tool_error("The -legacy option must be set to \"false\"", "-wallet=legacy", "-legacy", "create")
+        assert not (self.nodes[0].wallets_path / "legacy").exists()
+        self.assert_raises_tool_error("The -descriptors option must be set to \"true\"", "-wallet=legacy", "-descriptors=false", "create")
+        assert not (self.nodes[0].wallets_path / "legacy").exists()
+
     def run_test(self):
         self.wallet_path = self.nodes[0].wallets_path / self.default_wallet_name / self.wallet_data_filename
         self.test_invalid_tool_commands_and_args()
@@ -463,6 +471,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.test_dump_createfromdump()
         self.test_chainless_conflicts()
         self.test_dump_very_large_records()
+        self.test_no_create_legacy()
 
 
 if __name__ == '__main__':
