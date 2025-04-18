@@ -918,7 +918,7 @@ class TestNodeCLI():
     def send_cli(self, clicommand=None, *args, **kwargs):
         """Run bitcoin-cli command. Deserializes returned string as python object."""
         pos_args = [arg_to_cli(arg) for arg in args]
-        named_args = [str(key) + "=" + arg_to_cli(value) for (key, value) in kwargs.items()]
+        named_args = [key + "=" + arg_to_cli(value) for (key, value) in kwargs.items() if value is not None]
         p_args = self.binaries.rpc_argv() + [f"-datadir={self.datadir}"] + self.options
         if named_args:
             p_args += ["-named"]
