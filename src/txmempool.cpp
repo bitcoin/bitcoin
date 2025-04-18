@@ -535,7 +535,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
         CAmount txfee = 0;
         assert(!tx.IsCoinBase());
         mempoolDuplicate.AccessCoins(tx, [&](auto&& coins) {
-            assert(Consensus::CheckTxInputs(tx, dummy_state, mempoolDuplicate, std::span{coins}, spendheight, txfee));
+            assert(Consensus::CheckTxInputs(tx, dummy_state, std::span{coins}, spendheight, txfee));
         });
         for (const auto& input: tx.vin) mempoolDuplicate.SpendCoin(input.prevout);
         AddCoins(mempoolDuplicate, tx, std::numeric_limits<int>::max());

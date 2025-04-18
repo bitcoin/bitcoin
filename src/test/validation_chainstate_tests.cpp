@@ -19,9 +19,12 @@
 #include <test/util/chainstate.h>
 #include <test/util/coins.h>
 #include <test/util/common.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <undo.h>
+#include <util/byte_units.h>
 #include <util/check.h>
 #include <validation.h>
 
@@ -207,6 +210,36 @@ BOOST_FIXTURE_TEST_CASE(activate_best_chain_does_not_invalidate_mutated_spendblo
     BOOST_CHECK_EQUAL(state.GetResult(), BlockValidationResult::BLOCK_MUTATED);
     LOCK(cs_main);
     BOOST_CHECK(!(index_dummy.nStatus & BLOCK_FAILED_VALID));
+}
+
+BOOST_FIXTURE_TEST_CASE(spendblock_rejects_empty_block, TestChain100Setup)
+{
+    Chainstate& chainstate = Assert(m_node.chainman)->ActiveChainstate();
+
+    LOCK(cs_main);
+    CBlockIndex* tip = Assert(chainstate.m_chain.Tip());
+
+    CBlock block{CreateBlock({}, CScript{} << OP_TRUE)};
+    // CheckBlock() rejects empty blocks; keep the header otherwise valid so
+    // SpendBlock reaches the size check instead of failing earlier on PoW.
+    block.vtx.clear();
+    block.hashMerkleRoot = BlockMerkleRoot(block);
+    block.nNonce = 0;
+    while (!CheckProofOfWork(block.GetHash(), block.nBits, Params().GetConsensus())) ++block.nNonce;
+
+    CBlockIndex index_dummy{block};
+    const uint256 block_hash{block.GetHash()};
+    index_dummy.pprev = tip;
+    index_dummy.nHeight = tip->nHeight + 1;
+    index_dummy.phashBlock = &block_hash;
+
+    CCoinsViewCache view_dummy(&chainstate.CoinsTip());
+    BlockValidationState state;
+    CBlockUndo blockundo;
+
+    BOOST_CHECK(!chainstate.SpendBlock(block, &index_dummy, view_dummy, state, blockundo));
+    BOOST_CHECK(state.IsInvalid());
+    BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-blk-length");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

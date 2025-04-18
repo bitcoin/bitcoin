@@ -27,14 +27,14 @@ template <typename T>
 concept CoinRef = std::convertible_to<T, const Coin&>;
 
 /**
- * Check whether all inputs of this transaction are valid (no double spends and amounts)
+ * Check whether all inputs of this transaction are valid (amounts and maturity)
  * This does not modify the UTXO set. This does not check scripts and sigs.
  * @param[in] coins span of Coins containing previous transaction outputs in the order we're spending them
  * @param[out] txfee Set to the transaction fee if successful.
  * Preconditions: tx.IsCoinBase() is false.
  */
 template <Consensus::CoinRef T>
-[[nodiscard]] bool CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, std::span<T> coins, int nSpendHeight, CAmount& txfee);
+[[nodiscard]] bool CheckTxInputs(const CTransaction& tx, TxValidationState& state, std::span<T> coins, int nSpendHeight, CAmount& txfee);
 } // namespace Consensus
 
 /** Auxiliary functions for transaction validation (ideally should not be exposed) */
