@@ -178,7 +178,8 @@ template int64_t GetTransactionSigOpCost<const Coin>(
 template int64_t GetTransactionSigOpCost<std::reference_wrapper<const Coin>>(
     const CTransaction& tx, const std::span<std::reference_wrapper<const Coin>> coins, script_verify_flags flags);
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee)
+template <Consensus::CoinRef T>
+bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, const std::span<T> coins, int nSpendHeight, CAmount& txfee)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
@@ -187,15 +188,16 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
     }
 
     CAmount nValueIn = 0;
-    for (unsigned int i = 0; i < tx.vin.size(); ++i) {
-        const COutPoint &prevout = tx.vin[i].prevout;
-        const Coin& coin = inputs.AccessCoin(prevout);
+    Assert(coins.size() == tx.vin.size());
+    auto input_it = tx.vin.begin();
+    for (auto it = coins.begin(); it != coins.end(); ++it, ++input_it) {
+        const Coin& coin = *it;
         assert(!coin.IsSpent());
 
         // If prev is coinbase, check that it's matured
         if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
             return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
-                strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
+                strprintf("tried to spend coinbase at depth %d", static_cast<int>(nSpendHeight - coin.nHeight)));
         }
 
         // Check for negative or overflow input values
@@ -220,3 +222,9 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
     txfee = txfee_aux;
     return true;
 }
+
+template bool Consensus::CheckTxInputs<const Coin>(
+    const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, const std::span<const Coin> coins, int nSpendHeight, CAmount& txfee);
+
+template bool Consensus::CheckTxInputs<std::reference_wrapper<const Coin>>(
+    const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, const std::span<std::reference_wrapper<const Coin>> coins, int nSpendHeight, CAmount& txfee);
