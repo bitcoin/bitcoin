@@ -266,6 +266,12 @@ std::optional<CService> GetLocalAddrForPeer(CNode& node)
     return std::nullopt;
 }
 
+void ClearLocal()
+{
+    LOCK(g_maplocalhost_mutex);
+    return mapLocalHost.clear();
+}
+
 // learn a new local address
 bool AddLocal(const CService& addr_, int nScore)
 {
