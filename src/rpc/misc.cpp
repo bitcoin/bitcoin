@@ -818,18 +818,10 @@ static RPCHelpMan getaddressdeltas()
     {
         LOCK(::cs_main);
         for (const auto& address : addresses) {
-            if (start > 0 && end > 0) {
-                if (!GetAddressIndex(*chainman.m_blockman.m_block_tree_db, address.first, address.second,
-                                     addressIndex, start, end))
-                {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
-                }
-            } else {
-                if (!GetAddressIndex(*chainman.m_blockman.m_block_tree_db, address.first, address.second,
-                                     addressIndex))
-                {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
-                }
+            if (start <= 0 || end <= 0) { start = 0; end = 0; }
+            if (!GetAddressIndex(*chainman.m_blockman.m_block_tree_db, address.first, address.second,
+                                 addressIndex, start, end)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
             }
         }
     }
@@ -896,7 +888,8 @@ static RPCHelpMan getaddressbalance()
     {
         LOCK(::cs_main);
         for (const auto& address : addresses) {
-            if (!GetAddressIndex(*chainman.m_blockman.m_block_tree_db, address.first, address.second, addressIndex)) {
+            if (!GetAddressIndex(*chainman.m_blockman.m_block_tree_db, address.first, address.second, addressIndex,
+                                 /*start=*/0, /*end=*/0)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
             }
         }
@@ -977,16 +970,10 @@ static RPCHelpMan getaddresstxids()
     {
         LOCK(::cs_main);
         for (const auto& address : addresses) {
-            if (start > 0 && end > 0) {
-                if (!GetAddressIndex(*chainman.m_blockman.m_block_tree_db, address.first, address.second,
-                                     addressIndex, start, end)) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
-                }
-            } else {
-                if (!GetAddressIndex(*chainman.m_blockman.m_block_tree_db, address.first, address.second,
-                                     addressIndex)) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
-                }
+            if (start <= 0 || end <= 0) { start = 0; end = 0; }
+            if (!GetAddressIndex(*chainman.m_blockman.m_block_tree_db, address.first, address.second,
+                                 addressIndex, start, end)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
             }
         }
     }

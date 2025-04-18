@@ -519,18 +519,10 @@ public:
 private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
 
-
-    typedef std::map<CMempoolAddressDeltaKey, CMempoolAddressDelta, CMempoolAddressDeltaKeyCompare> addressDeltaMap;
-    addressDeltaMap mapAddress;
-
-    typedef std::map<uint256, std::vector<CMempoolAddressDeltaKey> > addressDeltaMapInserted;
-    addressDeltaMapInserted mapAddressInserted;
-
-    typedef std::map<CSpentIndexKey, CSpentIndexValue, CSpentIndexKeyCompare> mapSpentIndex;
-    mapSpentIndex mapSpent;
-
-    typedef std::map<uint256, std::vector<CSpentIndexKey> > mapSpentIndexInserted;
-    mapSpentIndexInserted mapSpentInserted;
+    std::map<CMempoolAddressDeltaKey, CMempoolAddressDelta, CMempoolAddressDeltaKeyCompare> mapAddress;
+    std::map<uint256, std::vector<CMempoolAddressDeltaKey>> mapAddressInserted;
+    std::map<CSpentIndexKey, CSpentIndexValue, CSpentIndexKeyCompare> mapSpent;
+    std::map<uint256, std::vector<CSpentIndexKey>> mapSpentInserted;
 
     std::multimap<uint256, uint256> mapProTxRefs; // proTxHash -> transaction (all TXs that refer to an existing proTx)
     std::map<CService, uint256> mapProTxAddresses;
@@ -618,11 +610,11 @@ public:
     void addAddressIndex(const CTxMemPoolEntry& entry, const CCoinsViewCache& view);
     bool getAddressIndex(const std::vector<CMempoolAddressDeltaKey>& addresses,
                          std::vector<CMempoolAddressDeltaEntry>& results) const;
-    bool removeAddressIndex(const uint256 txhash);
+    void removeAddressIndex(const uint256 txhash);
 
     void addSpentIndex(const CTxMemPoolEntry& entry, const CCoinsViewCache& view);
     bool getSpentIndex(const CSpentIndexKey& key, CSpentIndexValue& value) const;
-    bool removeSpentIndex(const uint256 txhash);
+    void removeSpentIndex(const uint256 txhash);
 
     void removeRecursive(const CTransaction& tx, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** After reorg, filter the entries that would no longer be valid in the next block, and update

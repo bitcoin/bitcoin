@@ -609,7 +609,7 @@ bool CTxMemPool::getAddressIndex(const std::vector<CMempoolAddressDeltaKey>& add
 {
     LOCK(cs);
     for (const auto& address : addresses) {
-        addressDeltaMap::const_iterator ait = mapAddress.lower_bound(address);
+        auto ait = mapAddress.lower_bound(address);
         while (ait != mapAddress.end() && (*ait).first.m_address_bytes == address.m_address_bytes
                && (*ait).first.m_address_type == address.m_address_type) {
             results.push_back(*ait);
@@ -619,20 +619,15 @@ bool CTxMemPool::getAddressIndex(const std::vector<CMempoolAddressDeltaKey>& add
     return true;
 }
 
-bool CTxMemPool::removeAddressIndex(const uint256 txhash)
+void CTxMemPool::removeAddressIndex(const uint256 txhash)
 {
     LOCK(cs);
-    addressDeltaMapInserted::iterator it = mapAddressInserted.find(txhash);
-
-    if (it != mapAddressInserted.end()) {
-        std::vector<CMempoolAddressDeltaKey> keys = (*it).second;
-        for (std::vector<CMempoolAddressDeltaKey>::iterator mit = keys.begin(); mit != keys.end(); mit++) {
-            mapAddress.erase(*mit);
+    if (auto it = mapAddressInserted.find(txhash); it != mapAddressInserted.end()) {
+        for (const auto& key : (*it).second) {
+            mapAddress.erase(key);
         }
         mapAddressInserted.erase(it);
     }
-
-    return true;
 }
 
 void CTxMemPool::addSpentIndex(const CTxMemPoolEntry& entry, const CCoinsViewCache& view)
@@ -668,29 +663,22 @@ void CTxMemPool::addSpentIndex(const CTxMemPoolEntry& entry, const CCoinsViewCac
 bool CTxMemPool::getSpentIndex(const CSpentIndexKey& key, CSpentIndexValue& value) const
 {
     LOCK(cs);
-    mapSpentIndex::const_iterator it = mapSpent.find(key);
-
-    if (it != mapSpent.end()) {
+    if (auto it = mapSpent.find(key); it != mapSpent.end()) {
         value = it->second;
         return true;
     }
     return false;
 }
 
-bool CTxMemPool::removeSpentIndex(const uint256 txhash)
+void CTxMemPool::removeSpentIndex(const uint256 txhash)
 {
     LOCK(cs);
-    mapSpentIndexInserted::iterator it = mapSpentInserted.find(txhash);
-
-    if (it != mapSpentInserted.end()) {
-        std::vector<CSpentIndexKey> keys = (*it).second;
-        for (std::vector<CSpentIndexKey>::iterator mit = keys.begin(); mit != keys.end(); mit++) {
-            mapSpent.erase(*mit);
+    if (auto it = mapSpentInserted.find(txhash); it != mapSpentInserted.end()) {
+        for (const auto& key : (*it).second) {
+            mapSpent.erase(key);
         }
         mapSpentInserted.erase(it);
     }
-
-    return true;
 }
 
 void CTxMemPool::addUncheckedProTx(indexed_transaction_set::iterator& newit, const CTransaction& tx)
