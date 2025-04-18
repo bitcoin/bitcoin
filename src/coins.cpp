@@ -76,9 +76,6 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
     bool inserted;
     std::tie(it, inserted) = cacheCoins.emplace(std::piecewise_construct, std::forward_as_tuple(outpoint), std::tuple<>());
     bool fresh = false;
-    if (!inserted) {
-        cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
-    }
     if (!possible_overwrite) {
         if (!it->second.coin.IsSpent()) {
             throw std::logic_error("Attempted to overwrite an unspent coin (when possible_overwrite is false)");
@@ -97,6 +94,9 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
         // If the coin doesn't exist in the current cache, or is spent but not
         // DIRTY, then it can be marked FRESH.
         fresh = !it->second.IsDirty();
+    }
+    if (!inserted) {
+        cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
     }
     it->second.coin = std::move(coin);
     CCoinsCacheEntry::SetDirty(*it, m_sentinel);
@@ -254,8 +254,8 @@ bool CCoinsViewCache::Flush() {
     if (fOk) {
         cacheCoins.clear();
         ReallocateCache();
+        cachedCoinsUsage = 0;
     }
-    cachedCoinsUsage = 0;
     return fOk;
 }
 
