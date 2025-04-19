@@ -27,22 +27,22 @@ template <typename T>
 static void PrevectorDestructor(benchmark::Bench& bench)
 {
     bench.batch(2).run([&] {
-        prevector<28, T> t0;
-        prevector<28, T> t1;
-        t0.resize(28);
-        t1.resize(29);
+        prevector<36, T> t0;
+        prevector<36, T> t1;
+        t0.resize(36);
+        t1.resize(37);
     });
 }
 
 template <typename T>
 static void PrevectorClear(benchmark::Bench& bench)
 {
-    prevector<28, T> t0;
-    prevector<28, T> t1;
+    prevector<36, T> t0;
+    prevector<36, T> t1;
     bench.batch(2).run([&] {
-        t0.resize(28);
+        t0.resize(36);
         t0.clear();
-        t1.resize(29);
+        t1.resize(37);
         t1.clear();
     });
 }
@@ -50,12 +50,12 @@ static void PrevectorClear(benchmark::Bench& bench)
 template <typename T>
 static void PrevectorResize(benchmark::Bench& bench)
 {
-    prevector<28, T> t0;
-    prevector<28, T> t1;
+    prevector<36, T> t0;
+    prevector<36, T> t1;
     bench.batch(4).run([&] {
-        t0.resize(28);
+        t0.resize(36);
         t0.resize(0);
-        t1.resize(29);
+        t1.resize(37);
         t1.resize(0);
     });
 }
@@ -64,8 +64,8 @@ template <typename T>
 static void PrevectorDeserialize(benchmark::Bench& bench)
 {
     DataStream s0{};
-    prevector<28, T> t0;
-    t0.resize(28);
+    prevector<36, T> t0;
+    t0.resize(36);
     for (auto x = 0; x < 900; ++x) {
         s0 << t0;
     }
@@ -74,7 +74,7 @@ static void PrevectorDeserialize(benchmark::Bench& bench)
         s0 << t0;
     }
     bench.batch(1000).run([&] {
-        prevector<28, T> t1;
+        prevector<36, T> t1;
         for (auto x = 0; x < 1000; ++x) {
             s0 >> t1;
         }
@@ -86,7 +86,7 @@ template <typename T>
 static void PrevectorFillVectorDirect(benchmark::Bench& bench)
 {
     bench.run([&] {
-        std::vector<prevector<28, T>> vec;
+        std::vector<prevector<36, T>> vec;
         vec.reserve(260);
         for (size_t i = 0; i < 260; ++i) {
             vec.emplace_back();
@@ -99,11 +99,11 @@ template <typename T>
 static void PrevectorFillVectorIndirect(benchmark::Bench& bench)
 {
     bench.run([&] {
-        std::vector<prevector<28, T>> vec;
+        std::vector<prevector<36, T>> vec;
         vec.reserve(260);
         for (size_t i = 0; i < 260; ++i) {
             // force allocation
-            vec.emplace_back(29, T{});
+            vec.emplace_back(37, T{});
         }
     });
 }

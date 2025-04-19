@@ -6,19 +6,27 @@
 #include <random.h>
 #include <span.h>
 #include <streams.h>
+#include <util/byte_units.h>
 
+#include <cmath>
 #include <cstddef>
+#include <map>
 #include <vector>
 
-static void Xor(benchmark::Bench& bench)
+static void XorObfuscationBench(benchmark::Bench& bench)
 {
-    FastRandomContext frc{/*fDeterministic=*/true};
-    auto data{frc.randbytes<std::byte>(1024)};
-    auto key{frc.randbytes<std::byte>(31)};
+    FastRandomContext rng{/*fDeterministic=*/true};
+    constexpr size_t bytes{10_MiB};
+    auto test_data{rng.randbytes<std::byte>(bytes)};
 
-    bench.batch(data.size()).unit("byte").run([&] {
-        util::Xor(data, key);
+    const Obfuscation obfuscation{rng.rand64()};
+    assert(obfuscation);
+
+    size_t offset{0};
+    bench.batch(bytes / 1_MiB).unit("MiB").run([&] {
+        obfuscation(test_data, offset++);
+        ankerl::nanobench::doNotOptimizeAway(test_data);
     });
 }
 
-BENCHMARK(Xor, benchmark::PriorityLevel::HIGH);
+BENCHMARK(XorObfuscationBench, benchmark::PriorityLevel::HIGH);
