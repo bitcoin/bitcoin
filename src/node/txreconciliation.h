@@ -10,15 +10,51 @@
 
 #include <memory>
 #include <tuple>
+#include <optional>
 
 /** Supported transaction reconciliation protocol version */
 static constexpr uint32_t TXRECONCILIATION_VERSION{1};
+
+/**
+ * Maximum number of wtxids stored in a peer local set, bounded to protect the memory use of
+ * reconciliation sets and short ids mappings, and CPU used for sketch computation.
+ */
+constexpr size_t MAX_RECONSET_SIZE = 3000;
+
+/**
+ * Announce transactions via full wtxid to a limited number of inbound and outbound peers.
+ * Justification for these values are provided here:
+ * TODO: ADD link to justification based on simulation results */
+constexpr double INBOUND_FANOUT_DESTINATIONS_FRACTION = 0.1;
+constexpr size_t OUTBOUND_FANOUT_THRESHOLD = 4;
+
+/**
+ * Interval for inbound peer fanout selection. The subset is rotated on a timer.
+ */
+static constexpr auto INBOUND_FANOUT_ROTATION_INTERVAL{10min};
 
 enum class ReconciliationRegisterResult {
     NOT_FOUND,
     SUCCESS,
     ALREADY_REGISTERED,
     PROTOCOL_VIOLATION,
+};
+
+/**
+ * Record whether or not a wtxid was successfully added to a reconciliation set.
+ * In case of failure, check whether this was due to a shortid collision and record
+ * the colliding wtxid.
+*/
+class AddToSetResult
+{
+    public:
+        bool m_succeeded;
+        std::optional<Wtxid> m_collision;
+
+        explicit AddToSetResult(bool added, std::optional<Wtxid> conflict);
+        static AddToSetResult Succeeded();
+        static AddToSetResult Failed();
+        static AddToSetResult Collision(Wtxid);
 };
 
 /**
@@ -68,11 +104,35 @@ public:
     uint64_t PreRegisterPeer(NodeId peer_id);
 
     /**
+     * For testing purposes only. This SHOULD NEVER be used in production.
+    */
+    void PreRegisterPeerWithSalt(NodeId peer_id, uint64_t local_salt);
+
+    /**
      * Step 0. Once the peer agreed to reconcile txs with us, generate the state required to track
      * ongoing reconciliations. Must be called only after pre-registering the peer and only once.
      */
     ReconciliationRegisterResult RegisterPeer(NodeId peer_id, bool is_peer_inbound,
                                               uint32_t peer_recon_version, uint64_t remote_salt);
+
+    /**
+     * Step 1. Add a to-be-announced transaction to the local reconciliation set of the target peer.
+     * Returns false if the set is at capacity, or if the set contains a colliding transaction (alongside
+     * the colliding wtxid). Returns true if the transaction is added to the set (or if it was already in it).
+     */
+    AddToSetResult AddToSet(NodeId peer_id, const Wtxid& wtxid);
+
+    /**
+     * Checks whether a transaction is part of the peer's reconciliation set.
+     */
+    bool IsTransactionInSet(NodeId peer_id, const Wtxid& wtxid);
+
+    /**
+     * Before Step 2, we might want to remove a wtxid from the reconciliation set, for example if
+     * the peer just announced the transaction to us.
+     * Returns whether the wtxid was removed.
+     */
+    bool TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid);
 
     /**
      * Attempts to forget txreconciliation-related state of the peer (if we previously stored any).
@@ -84,6 +144,26 @@ public:
      * Check if a peer is registered to reconcile transactions with us.
      */
     bool IsPeerRegistered(NodeId peer_id) const;
+
+    /**
+     * Whether a given peer is currently flagged for fanout.
+    */
+    bool IsInboundFanoutTarget(NodeId peer_id);
+
+    /**
+     * Get the next time the inbound peer subset should be rotated.
+     */
+    std::chrono::microseconds GetNextInboundPeerRotationTime();
+
+    /**
+     * Update the next inbound peer rotation time.
+     */
+    void SetNextInboundPeerRotationTime(std::chrono::microseconds next_time);
+
+   /**
+    * Picks a different subset of inbound peers to fanout to.
+    */
+   void RotateInboundFanoutTargets();
 };
 
 #endif // BITCOIN_NODE_TXRECONCILIATION_H
