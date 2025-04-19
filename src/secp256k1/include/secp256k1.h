@@ -230,10 +230,10 @@ typedef int (*secp256k1_nonce_function)(
  *
  *  It is highly recommended to call secp256k1_selftest before using this context.
  */
-SECP256K1_API const secp256k1_context *secp256k1_context_static;
+SECP256K1_API const secp256k1_context * const secp256k1_context_static;
 
 /** Deprecated alias for secp256k1_context_static. */
-SECP256K1_API const secp256k1_context *secp256k1_context_no_precomp
+SECP256K1_API const secp256k1_context * const secp256k1_context_no_precomp
 SECP256K1_DEPRECATED("Use secp256k1_context_static instead");
 
 /** Perform basic self tests (to be used in conjunction with secp256k1_context_static)
@@ -701,21 +701,13 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_negate(
     unsigned char *seckey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
 
-/** Same as secp256k1_ec_seckey_negate, but DEPRECATED. Will be removed in
- *  future versions. */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_negate(
-    const secp256k1_context *ctx,
-    unsigned char *seckey
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2)
-  SECP256K1_DEPRECATED("Use secp256k1_ec_seckey_negate instead");
-
 /** Negates a public key in place.
  *
  *  Returns: 1 always
  *  Args:   ctx:        pointer to a context object
  *  In/Out: pubkey:     pointer to the public key to be negated.
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_negate(
+SECP256K1_API int secp256k1_ec_pubkey_negate(
     const secp256k1_context *ctx,
     secp256k1_pubkey *pubkey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
@@ -740,15 +732,6 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_tweak_add(
     unsigned char *seckey,
     const unsigned char *tweak32
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
-
-/** Same as secp256k1_ec_seckey_tweak_add, but DEPRECATED. Will be removed in
- *  future versions. */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_add(
-    const secp256k1_context *ctx,
-    unsigned char *seckey,
-    const unsigned char *tweak32
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3)
-  SECP256K1_DEPRECATED("Use secp256k1_ec_seckey_tweak_add instead");
 
 /** Tweak a public key by adding tweak times the generator to it.
  *
@@ -787,15 +770,6 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_tweak_mul(
     unsigned char *seckey,
     const unsigned char *tweak32
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
-
-/** Same as secp256k1_ec_seckey_tweak_mul, but DEPRECATED. Will be removed in
- *  future versions. */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_mul(
-    const secp256k1_context *ctx,
-    unsigned char *seckey,
-    const unsigned char *tweak32
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3)
-  SECP256K1_DEPRECATED("Use secp256k1_ec_seckey_tweak_mul instead");
 
 /** Tweak a public key by multiplying it by a tweak value.
  *
@@ -883,7 +857,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_combine(
  *           msg: pointer to an array containing the message
  *        msglen: length of the message array
  */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_tagged_sha256(
+SECP256K1_API int secp256k1_tagged_sha256(
     const secp256k1_context *ctx,
     unsigned char *hash32,
     const unsigned char *tag,
