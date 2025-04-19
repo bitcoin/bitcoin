@@ -24,6 +24,7 @@
 #include <util/translation.h>
 #include <version.h>
 #include <wallet/coincontrol.h>
+#include <wallet/coinjoin.h>
 #include <wallet/fees.h>
 #include <walletinitinterface.h>
 

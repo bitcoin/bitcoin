@@ -313,18 +313,6 @@ bool CWalletTx::IsTrusted() const
     return pwallet->IsTrusted(*this, trusted_parents);
 }
 
-CAmount CWallet::GetBalanceAnonymized(const CCoinControl& coinControl) const
-{
-    if (!CCoinJoinClientOptions::IsEnabled()) return 0;
-
-    CAmount anonymized_amount{0};
-    LOCK(cs_wallet);
-    for (auto pcoin : GetSpendableTXs()) {
-        anonymized_amount += pcoin->GetAnonymizedCredit(coinControl);
-    }
-    return anonymized_amount;
-}
-
 CWallet::Balance CWallet::GetBalance(const int min_depth, const bool avoid_reuse, const bool fAddLocked) const
 {
     Balance ret;
