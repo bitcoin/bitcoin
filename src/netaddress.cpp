@@ -169,14 +169,39 @@ void CNetAddr::SetLegacyIPv6(std::span<const uint8_t> ipv6)
  * @returns Whether or not the operation was successful.
  * @see NET_INTERNAL, INTERNAL_IN_IPV6_PREFIX, CNetAddr::IsInternal(), CNetAddr::IsRFC4193()
  */
-bool CNetAddr::SetInternal(const std::string &name)
+
+/**
+ * Sets an internal network address based on a user-defined identifier.
+ *
+ * The given name is first normalized by trimming whitespace and converting
+ * all characters to lowercase, ensuring that equivalent names such as
+ * "Example", " example ", and "EXAMPLE" all produce the same internal address.
+ *
+ * The normalized name is then hashed using SHA-256, and the first N bytes
+ * (defined by ADDR_INTERNAL_SIZE) are used as the internal address payload.
+ *
+ * This approach ensures deterministic internal address generation,
+ * while avoiding accidental mismatches due to case or formatting variations.
+ *
+ * @param name Arbitrary identifier used to derive the internal address.
+ * @return true if the input is non-empty and the address is successfully set.
+ */
+bool CNetAddr::SetInternal(const std::string& name)
 {
     if (name.empty()) {
         return false;
     }
+
+    constexpr size_t HASH_SIZE = 32;
+    static_assert(ADDR_INTERNAL_SIZE <= HASH_SIZE, "ADDR_INTERNAL_SIZE is too big");
+
+    // Normalize: trim + lowercase (Bitcoin Core'un kendi string utils'i)
+    std::string normName = ToLower(TrimString(name));
+
+    unsigned char hash[HASH_SIZE] = {};
+    CSHA256().Write(reinterpret_cast<const unsigned char*>(normName.data()), normName.size()).Finalize(hash);
+
     m_net = NET_INTERNAL;
-    unsigned char hash[32] = {};
-    CSHA256().Write((const unsigned char*)name.data(), name.size()).Finalize(hash);
     m_addr.assign(hash, hash + ADDR_INTERNAL_SIZE);
     return true;
 }
