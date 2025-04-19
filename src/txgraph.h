@@ -3,9 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compare>
-#include <stdint.h>
 #include <memory>
+#include <optional>
+#include <stdint.h>
 #include <vector>
+#include <utility>
 
 #include <util/feefrac.h>
 
@@ -162,6 +164,39 @@ public:
      *  main clusters are counted. Refs that do not exist in the queried graph are ignored. Refs
      *  can not be null. The queried graph must not be oversized. */
     virtual GraphIndex CountDistinctClusters(std::span<const Ref* const>, bool main_only = false) noexcept = 0;
+    /** For both main and staging (which must both exist and not be oversized), return the combined
+     *  respective feerate diagrams, including chunks from all clusters, but excluding clusters
+     *  that appear identically in both. Use FeeFrac rather than FeePerWeight so CompareChunks is
+     *  usable without type-conversion. */
+    virtual std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> GetMainStagingDiagrams() noexcept = 0;
+
+    /** Interface returned by GetBlockBuilder. */
+    class BlockBuilder
+    {
+    protected:
+        /** Make constructor non-public (use TxGraph::GetBlockBuilder()). */
+        BlockBuilder() noexcept = default;
+    public:
+        /** Support safe inheritance. */
+        virtual ~BlockBuilder() = default;
+        /** Get the chunk that is currently suggested to be included, plus its feerate, if any. */
+        virtual std::optional<std::pair<std::vector<Ref*>, FeePerWeight>> GetCurrentChunk() noexcept = 0;
+        /** Mark the current chunk as included, and progress to the next one. */
+        virtual void Include() noexcept = 0;
+        /** Mark the current chunk as skipped, and progress to the next one. Further chunks from
+         *  the same cluster as the current one will not be reported anymore. */
+        virtual void Skip() noexcept = 0;
+    };
+
+    /** Construct a block builder, drawing chunks in order, from the main graph, which cannot be
+     *  oversized. While the returned object exists, no mutators on the main graph are allowed.
+     *  The BlockBuilder object must not outlive the TxGraph it was created with. */
+    virtual std::unique_ptr<BlockBuilder> GetBlockBuilder() noexcept = 0;
+    /** Get the last chunk in the main graph, i.e., the last chunk that would be returned by a
+     *  BlockBuilder created now, together with its feerate. The chunk is returned in
+     *  reverse-topological order, so every element is preceded by all its descendants. The main
+     *  graph must not be oversized. If the graph is empty, {{}, FeePerWeight{}} is returned. */
+    virtual std::pair<std::vector<Ref*>, FeePerWeight> GetWorstMainChunk() noexcept = 0;
 
     /** Perform an internal consistency check on this object. */
     virtual void SanityCheck() const = 0;
