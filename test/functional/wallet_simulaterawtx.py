@@ -40,7 +40,7 @@ class SimulateTxTest(BitcoinTestFramework):
         w1 = node.get_wallet_rpc('w1')
         w2 = node.get_wallet_rpc('w2')
 
-        self.generatetoaddress(node, COINBASE_MATURITY + 1, w0.getnewaddress())
+        self.generatetoaddress(node, COINBASE_MATURITY, w0.getnewaddress())
         assert_equal(w0.getbalance(), 50.0)
         assert_equal(w1.getbalance(), 0.0)
 
