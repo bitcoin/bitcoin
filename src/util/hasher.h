@@ -35,6 +35,10 @@ private:
     const uint64_t k0, k1;
 
 public:
+    // instructs Boost.Unordered to not use post-mixing. We can do this because the hash is of high quality.
+    // This should have a slight performance benefit.
+    using is_avalanching = std::true_type;
+
     SaltedOutpointHasher(bool deterministic = false);
 
     /**
@@ -47,7 +51,7 @@ public:
      * @see https://gcc.gnu.org/onlinedocs/gcc-13.2.0/libstdc++/manual/manual/unordered_associative.html
      */
     size_t operator()(const COutPoint& id) const noexcept {
-        return SipHashUint256Extra(k0, k1, id.hash, id.n);
+        return ModifiedRapidHash(k0, k1, id.hash, id.n);
     }
 };
 
