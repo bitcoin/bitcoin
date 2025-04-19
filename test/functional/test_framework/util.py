@@ -160,6 +160,9 @@ def try_rpc(code, message, fun, *args, **kwds):
 
     Test against error code and message if the rpc fails.
     Returns whether a JSONRPCException was raised."""
+
+    unwanted_message = kwds.pop('unwanted_message', None)
+
     try:
         fun(*args, **kwds)
     except JSONRPCException as e:
@@ -170,6 +173,10 @@ def try_rpc(code, message, fun, *args, **kwds):
             raise AssertionError(
                 "Expected substring not found in error message:\nsubstring: '{}'\nerror message: '{}'.".format(
                     message, e.error['message']))
+        if (unwanted_message is not None) and (unwanted_message in e.error['message']):
+            raise AssertionError(
+                "Unwanted message substring found in error message:\nUnwanted substring: '{}'\nerror message: '{}'.".format(
+                    unwanted_message, e.error['message']))
         return True
     except Exception as e:
         raise AssertionError("Unexpected exception raised: " + type(e).__name__)
