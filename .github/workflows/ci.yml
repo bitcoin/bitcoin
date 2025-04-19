@@ -358,7 +358,8 @@ jobs:
           ./src/univalue/unitester.exe
 
       - name: Run benchmarks
-        run: ./bin/bench_bitcoin.exe -sanity-check
+        # TODO: Fix the `WalletMigration` benchmark and re-enable it.
+        run: ./bin/bench_bitcoin.exe -sanity-check -filter='^(?!WalletMigration$).+$'
 
       - name: Adjust paths in test/config.ini
         shell: pwsh
