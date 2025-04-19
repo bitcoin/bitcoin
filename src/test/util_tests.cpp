@@ -385,6 +385,13 @@ BOOST_AUTO_TEST_CASE(util_FormatISO8601Date)
     BOOST_CHECK_EQUAL(FormatISO8601Date(1317425777), "2011-09-30");
 }
 
+BOOST_AUTO_TEST_CASE(util_FormatRFC7231DateTime)
+{
+    BOOST_CHECK_EQUAL(FormatRFC7231DateTime(253402214400), "Fri, 31 Dec 9999 00:00:00 GMT");
+    BOOST_CHECK_EQUAL(FormatRFC7231DateTime(1717429609), "Mon, 03 Jun 2024 15:46:49 GMT");
+    BOOST_CHECK_EQUAL(FormatRFC7231DateTime(0), "Thu, 01 Jan 1970 00:00:00 GMT");
+}
+
 BOOST_AUTO_TEST_CASE(util_FormatMoney)
 {
     BOOST_CHECK_EQUAL(FormatMoney(0), "0.00");
@@ -1039,6 +1046,26 @@ BOOST_AUTO_TEST_CASE(test_ParseUInt64)
     BOOST_CHECK(!ParseUInt64("-2147483648", &n));
     BOOST_CHECK(!ParseUInt64("-9223372036854775808", &n));
     BOOST_CHECK(!ParseUInt64("-1234", &n));
+}
+
+BOOST_AUTO_TEST_CASE(test_ParseUInt64Hex)
+{
+    uint64_t n;
+    // Valid values
+    BOOST_CHECK(ParseUInt64Hex("1234", nullptr));
+    BOOST_CHECK(ParseUInt64Hex("1234", &n) && n == 4660);
+    BOOST_CHECK(ParseUInt64Hex("a", &n) && n == 10);
+    BOOST_CHECK(ParseUInt64Hex("0000000a", &n) && n == 10);
+    BOOST_CHECK(ParseUInt64Hex("100", &n) && n == 256);
+    BOOST_CHECK(ParseUInt64Hex("DEADbeef", &n) && n == 3735928559);
+    BOOST_CHECK(ParseUInt64Hex("FfFfFfFf", &n) && n == 4294967295);
+    // Invalid values
+    BOOST_CHECK(!ParseUInt64Hex("123456789", &n));
+    BOOST_CHECK(!ParseUInt64Hex("", &n));
+    BOOST_CHECK(!ParseUInt64Hex("-1", &n));
+    BOOST_CHECK(!ParseUInt64Hex("10 00", &n));
+    BOOST_CHECK(!ParseUInt64Hex("1 ", &n));
+    BOOST_CHECK(!ParseUInt64Hex("0xAB", &n));
 }
 
 BOOST_AUTO_TEST_CASE(test_FormatParagraph)
