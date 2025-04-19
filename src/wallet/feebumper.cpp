@@ -151,7 +151,7 @@ static CFeeRate EstimateFeeRate(const CWallet& wallet, const CWalletTx& wtx, con
 
 namespace feebumper {
 
-bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid)
+bool TransactionCanBeBumped(const CWallet& wallet, const Txid& txid)
 {
     LOCK(wallet.cs_wallet);
     const CWalletTx* wtx = wallet.GetWalletTx(txid);
@@ -162,7 +162,7 @@ bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid)
     return res == feebumper::Result::OK;
 }
 
-Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCoinControl& coin_control, std::vector<bilingual_str>& errors,
+Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinControl& coin_control, std::vector<bilingual_str>& errors,
                                  CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine, const std::vector<CTxOut>& outputs, std::optional<uint32_t> original_change_index)
 {
     // For now, cannot specify both new outputs to use and an output index to send change
@@ -353,7 +353,7 @@ bool SignTransaction(CWallet& wallet, CMutableTransaction& mtx) {
     }
 }
 
-Result CommitTransaction(CWallet& wallet, const uint256& txid, CMutableTransaction&& mtx, std::vector<bilingual_str>& errors, uint256& bumped_txid)
+Result CommitTransaction(CWallet& wallet, const Txid& txid, CMutableTransaction&& mtx, std::vector<bilingual_str>& errors, Txid& bumped_txid)
 {
     LOCK(wallet.cs_wallet);
     if (!errors.empty()) {

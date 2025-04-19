@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_RECEIVE_H
 
 #include <consensus/amount.h>
+#include <util/transaction_identifier.h>
 #include <wallet/transaction.h>
 #include <wallet/types.h>
 #include <wallet/wallet.h>
@@ -45,7 +46,7 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
                         CAmount& nFee, const isminefilter& filter,
                         bool include_change);
 bool CachedTxIsFromMe(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter);
-bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<uint256>& trusted_parents) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx, std::set<Txid>& trusted_parents) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 bool CachedTxIsTrusted(const CWallet& wallet, const CWalletTx& wtx);
 
 struct Balance {
