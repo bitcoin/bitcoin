@@ -4499,10 +4499,13 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
         return util::Error{_("Error: This wallet is already a descriptor wallet")};
     }
 
-    // Make a backup of the DB
-    fs::path this_wallet_dir = fs::absolute(fs::PathFromString(local_wallet->GetDatabase().Filename())).parent_path();
-    fs::path backup_filename = fs::PathFromString(strprintf("%s_%d.legacy.bak", (wallet_name.empty() ? "default_wallet" : wallet_name), GetTime()));
-    fs::path backup_path = this_wallet_dir / backup_filename;
+    // Make a backup of the DB in the wallet's directory with a unique filename using the wallet
+    // name and current timestamp. If not the default wallet, the name of the folder containing
+    // wallet data is used as the wallet's name, since its full name may contain slashes.
+    fs::path legacy_wallet_dir = fs::absolute(fs::PathFromString(local_wallet->GetDatabase().Filename())).parent_path();
+    std::string legacy_wallet_dir_name = fs::PathToString(legacy_wallet_dir.filename());
+    fs::path backup_filename = fs::PathFromString(strprintf("%s_%d.legacy.bak", (wallet_name.empty() ? "default_wallet" : legacy_wallet_dir_name), GetTime()));
+    fs::path backup_path = legacy_wallet_dir / backup_filename;
     if (!local_wallet->BackupWallet(fs::PathToString(backup_path))) {
         if (was_loaded) {
             reload_wallet(local_wallet);
