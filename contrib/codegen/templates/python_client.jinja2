@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+"""
+Auto-generated Bitcoin RPC client (Python)
+"""
+
+import requests
+import json
+
+class BitcoinRPCClient:
+    def __init__(self, rpc_user, rpc_password, host="127.0.0.1", port=8332):
+        self.url = f"http://{host}:{port}"
+        self.auth = (rpc_user, rpc_password)
+
+    def call(self, method, params):
+        payload = {"method": method, "params": params, "id": 1}
+        headers = {"Content-Type": "application/json"}
+        response = requests.post(self.url, auth=self.auth, headers=headers, data=json.dumps(payload))
+        return response.json()
+
+    {% for rpc_name, details in rpcs.items() %}
+    def {{ rpc_name }}(self{% if details.argument_names|length > 0 %}, {% for arg in details.argument_names %}{{ arg }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}):
+        """
+        {{ details.description }}
+        {% if details.argument_names|length > 0 %}
+        Arguments:
+        {% for arg in details.argument_names %}
+            - {{ arg }}
+        {% endfor %}
+        {% endif %}
+        """
+        params = [{% for arg in details.argument_names %}{{ arg }}{% if not loop.last %}, {% endif %}{% endfor %}]
+        return self.call("{{ rpc_name }}", params)
+
+    {% endfor %}
+
+if __name__ == '__main__':
+    # Example usage:
+    client = BitcoinRPCClient("rpcuser", "rpcpassword")
+    result = client.getblockchaininfo()
+    print(result)
