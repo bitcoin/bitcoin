@@ -947,20 +947,30 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
                 LogError("OpenUndoFile failed for %s while writing block undo", pos.ToString());
                 return FatalError(m_opts.notifications, state, _("Failed to write undo data."));
             }
-            BufferedWriter fileout{file};
-
-            // Write index header
-            fileout << GetParams().MessageStart() << blockundo_size;
-            pos.nPos += STORAGE_HEADER_BYTES;
             {
-                // Calculate checksum
-                HashWriter hasher{};
-                hasher << block.pprev->GetBlockHash() << blockundo;
-                // Write undo data & checksum
-                fileout << blockundo << hasher.GetHash();
+                BufferedWriter fileout{file};
+
+                // Write index header
+                fileout << GetParams().MessageStart() << blockundo_size;
+                pos.nPos += STORAGE_HEADER_BYTES;
+                {
+                    // Calculate checksum
+                    HashWriter hasher{};
+                    hasher << block.pprev->GetBlockHash() << blockundo;
+                    // Write undo data & checksum
+                    fileout << blockundo << hasher.GetHash();
+                }
             }
 
-            fileout.flush(); // Make sure `AutoFile`/`BufferedWriter` go out of scope before we call `FlushUndoFile`
+            if (file.fclose() != 0) {
+                LogPrintLevel(BCLog::BLOCKSTORAGE,
+                              BCLog::Level::Error,
+                              "Failed to close block undo file %s: %s",
+                              pos.ToString(),
+                              SysErrorString(errno));
+                return FatalError(m_opts.notifications, state, _("Failed to close block undo file."));
+            }
+            // Make sure that the file is closed before we call `FlushUndoFile`.
         }
 
         // rev files are written in block height order, whereas blk files are written as blocks come in (often out of order)
@@ -1093,13 +1103,26 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
         m_opts.notifications.fatalError(_("Failed to write block."));
         return FlatFilePos();
     }
-    BufferedWriter fileout{file};
+    {
+        BufferedWriter fileout{file};
 
-    // Write index header
-    fileout << GetParams().MessageStart() << block_size;
-    pos.nPos += STORAGE_HEADER_BYTES;
-    // Write block
-    fileout << TX_WITH_WITNESS(block);
+        // Write index header
+        fileout << GetParams().MessageStart() << block_size;
+        pos.nPos += STORAGE_HEADER_BYTES;
+        // Write block
+        fileout << TX_WITH_WITNESS(block);
+    }
+
+    if (file.fclose() != 0) {
+        LogPrintLevel(BCLog::BLOCKSTORAGE,
+                      BCLog::Level::Error,
+                      "Failed to close block file %s: %s",
+                      pos.ToString(),
+                      SysErrorString(errno));
+        m_opts.notifications.fatalError(_("Failed to close file when writing block."));
+        return FlatFilePos();
+    }
+
     return pos;
 }
 
@@ -1142,6 +1165,11 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
 #endif
         )};
         xor_key_file << xor_key;
+        if (xor_key_file.fclose() != 0) {
+            throw std::runtime_error{strprintf("Error closing XOR key file %s: %s\n",
+                                               fs::PathToString(xor_key_path),
+                                               SysErrorString(errno))};
+        }
     }
     // If the user disabled the key, it must be zero.
     if (!opts.use_xor && xor_key != decltype(xor_key){}) {
