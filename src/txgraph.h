@@ -3,9 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compare>
-#include <stdint.h>
 #include <memory>
+#include <optional>
+#include <stdint.h>
 #include <vector>
+#include <utility>
 
 #include <util/feefrac.h>
 
@@ -61,10 +63,10 @@ public:
     /** Virtual destructor, so inheriting is safe. */
     virtual ~TxGraph() = default;
     /** Construct a new transaction with the specified feerate, and return a Ref to it.
-     *  If a staging graph exists, the new transaction is only created there. In all
-     *  further calls, only Refs created by AddTransaction() are allowed to be passed to this
-     *  TxGraph object (or empty Ref objects). Ref objects may outlive the TxGraph they were
-     *  created for. */
+     *  If a staging graph exists, the new transaction is only created there. In all further
+     *  calls, only Refs created by AddTransaction() are allowed to be passed to this TxGraph
+     *  object (or empty Ref objects). Ref objects may outlive the TxGraph they were created
+     *  for. */
     [[nodiscard]] virtual Ref AddTransaction(const FeePerWeight& feerate) noexcept = 0;
     /** Remove the specified transaction. If a staging graph exists, the removal only happens
      *  there. This is a no-op if the transaction was already removed.
@@ -92,9 +94,10 @@ public:
     virtual void SetTransactionFee(const Ref& arg, int64_t fee) noexcept = 0;
 
     /** TxGraph is internally lazy, and will not compute many things until they are needed.
-     *  Calling DoWork will compute everything now, so that future operations are fast. This can be
-     *  invoked while oversized. */
-    virtual void DoWork() noexcept = 0;
+     *  Calling DoWork will perform some work now (controlled by iters) so that future operations
+     *  are fast, if there is any. Returns whether all work is done. This can be invoked while
+     *  oversized. */
+    virtual bool DoWork(uint64_t iters) noexcept = 0;
 
     /** Create a staging graph (which cannot exist already). This acts as if a full copy of
      *  the transaction graph is made, upon which further modifications are made. This copy can
@@ -162,6 +165,44 @@ public:
      *  main clusters are counted. Refs that do not exist in the queried graph are ignored. Refs
      *  can not be null. The queried graph must not be oversized. */
     virtual GraphIndex CountDistinctClusters(std::span<const Ref* const>, bool main_only = false) noexcept = 0;
+    /** For both main and staging (which must both exist and not be oversized), return the combined
+     *  respective feerate diagrams, including chunks from all clusters, but excluding clusters
+     *  that appear identically in both. Use FeeFrac rather than FeePerWeight so CompareChunks is
+     *  usable without type-conversion. */
+    virtual std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> GetMainStagingDiagrams() noexcept = 0;
+    /** Remove transactions (including their own descendants) according to a fast but best-effort
+     *  strategy such that the TxGraph's cluster and size limits are respected. Applies to staging
+     *  if it exists, and to main otherwise. Returns the list of all removed transactions in
+     *  unspecified order. This has no effect unless the relevant graph is oversized. */
+    virtual std::vector<Ref*> Trim() noexcept = 0;
+
+    /** Interface returned by GetBlockBuilder. */
+    class BlockBuilder
+    {
+    protected:
+        /** Make constructor non-public (use TxGraph::GetBlockBuilder()). */
+        BlockBuilder() noexcept = default;
+    public:
+        /** Support safe inheritance. */
+        virtual ~BlockBuilder() = default;
+        /** Get the chunk that is currently suggested to be included, plus its feerate, if any. */
+        virtual std::optional<std::pair<std::vector<Ref*>, FeePerWeight>> GetCurrentChunk() noexcept = 0;
+        /** Mark the current chunk as included, and progress to the next one. */
+        virtual void Include() noexcept = 0;
+        /** Mark the current chunk as skipped, and progress to the next one. Further chunks from
+         *  the same cluster as the current one will not be reported anymore. */
+        virtual void Skip() noexcept = 0;
+    };
+
+    /** Construct a block builder, drawing chunks in order, from the main graph, which cannot be
+     *  oversized. While the returned object exists, no mutators on the main graph are allowed.
+     *  The BlockBuilder object must not outlive the TxGraph it was created with. */
+    virtual std::unique_ptr<BlockBuilder> GetBlockBuilder() noexcept = 0;
+    /** Get the last chunk in the main graph, i.e., the last chunk that would be returned by a
+     *  BlockBuilder created now, together with its feerate. The chunk is returned in
+     *  reverse-topological order, so every element is preceded by all its descendants. The main
+     *  graph must not be oversized. If the graph is empty, {{}, FeePerWeight{}} is returned. */
+    virtual std::pair<std::vector<Ref*>, FeePerWeight> GetWorstMainChunk() noexcept = 0;
 
     /** Perform an internal consistency check on this object. */
     virtual void SanityCheck() const = 0;
@@ -205,8 +246,10 @@ public:
     };
 };
 
-/** Construct a new TxGraph with the specified limit on transactions within a cluster. That
- *  number cannot exceed MAX_CLUSTER_COUNT_LIMIT. */
-std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count) noexcept;
+/** Construct a new TxGraph with the specified limit on transactions within a cluster, and the
+ *  specified limit on the sum of transaction sizes within a cluster. max_cluster_count cannot
+ *  exceed MAX_CLUSTER_COUNT_LIMIT. acceptable_iters controls how many linearization optimization
+ *  steps will be performed before it is considered to be of acceptable quality. */
+std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count, uint64_t max_cluster_size, uint64_t acceptable_iters) noexcept;
 
 #endif // BITCOIN_TXGRAPH_H
