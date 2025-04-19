@@ -46,10 +46,12 @@ class SlowP2PInterface(P2PInterface):
 class P2PEvict(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        # The choice of maxconnections=32 results in a maximum of 21 inbound connections
-        # (32 - 10 outbound - 1 feeler). 20 inbound peers are protected from eviction:
+        # The choice of maxconnections=53 results in a maximum of 21 tx-relaying inbound connections
+        # (53 - 10 outbound - 1 feeler) * 0.5 = 21. The other inbound slots are reserved for block-relay-only
+        # peers that don't play a role in this test.
+        # 20 inbound peers are protected from eviction:
         # 4 by netgroup, 4 that sent us blocks, 4 that sent us transactions and 8 via lowest ping time
-        self.extra_args = [['-maxconnections=32']]
+        self.extra_args = [['-maxconnections=53']]
 
     def run_test(self):
         protected_peers = set()  # peers that we expect to be protected from eviction
