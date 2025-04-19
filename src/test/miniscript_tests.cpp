@@ -292,31 +292,31 @@ public:
 };
 
 using Fragment = miniscript::Fragment;
-using NodeRef = miniscript::NodeRef<CPubKey>;
 using miniscript::operator""_mst;
 using Node = miniscript::Node<CPubKey>;
 
 /** Compute all challenges (pubkeys, hashes, timelocks) that occur in a given Miniscript. */
 // NOLINTNEXTLINE(misc-no-recursion)
-std::set<Challenge> FindChallenges(const NodeRef& ref) {
+std::set<Challenge> FindChallenges(const Node& node)
+{
     std::set<Challenge> chal;
-    for (const auto& key : ref->keys) {
+    for (const auto& key : node.keys) {
         chal.emplace(ChallengeType::PK, ChallengeNumber(key));
     }
-    if (ref->fragment == miniscript::Fragment::OLDER) {
-        chal.emplace(ChallengeType::OLDER, ref->k);
-    } else if (ref->fragment == miniscript::Fragment::AFTER) {
-        chal.emplace(ChallengeType::AFTER, ref->k);
-    } else if (ref->fragment == miniscript::Fragment::SHA256) {
-        chal.emplace(ChallengeType::SHA256, ChallengeNumber(ref->data));
-    } else if (ref->fragment == miniscript::Fragment::RIPEMD160) {
-        chal.emplace(ChallengeType::RIPEMD160, ChallengeNumber(ref->data));
-    } else if (ref->fragment == miniscript::Fragment::HASH256) {
-        chal.emplace(ChallengeType::HASH256, ChallengeNumber(ref->data));
-    } else if (ref->fragment == miniscript::Fragment::HASH160) {
-        chal.emplace(ChallengeType::HASH160, ChallengeNumber(ref->data));
+    if (node.fragment == miniscript::Fragment::OLDER) {
+        chal.emplace(ChallengeType::OLDER, node.k);
+    } else if (node.fragment == miniscript::Fragment::AFTER) {
+        chal.emplace(ChallengeType::AFTER, node.k);
+    } else if (node.fragment == miniscript::Fragment::SHA256) {
+        chal.emplace(ChallengeType::SHA256, ChallengeNumber(node.data));
+    } else if (node.fragment == miniscript::Fragment::RIPEMD160) {
+        chal.emplace(ChallengeType::RIPEMD160, ChallengeNumber(node.data));
+    } else if (node.fragment == miniscript::Fragment::HASH256) {
+        chal.emplace(ChallengeType::HASH256, ChallengeNumber(node.data));
+    } else if (node.fragment == miniscript::Fragment::HASH160) {
+        chal.emplace(ChallengeType::HASH160, ChallengeNumber(node.data));
     }
-    for (const auto& sub : ref->subs) {
+    for (const auto& sub : node.subs) {
         auto sub_chal = FindChallenges(sub);
         chal.insert(sub_chal.begin(), sub_chal.end());
     }
@@ -345,8 +345,9 @@ void SatisfactionToWitness(miniscript::MiniscriptContext ctx, CScriptWitness& wi
 
 struct MiniScriptTest : BasicTestingSetup {
 /** Run random satisfaction tests. */
-void TestSatisfy(const KeyConverter& converter, const std::string& testcase, const NodeRef& node) {
-    auto script = node->ToScript(converter);
+void TestSatisfy(const KeyConverter& converter, const std::string& testcase, const Node& node)
+{
+    auto script = node.ToScript(converter);
     auto challenges = FindChallenges(node); // Find all challenges in the generated miniscript.
     std::vector<Challenge> challist(challenges.begin(), challenges.end());
     for (int iter = 0; iter < 3; ++iter) {
@@ -364,12 +365,12 @@ void TestSatisfy(const KeyConverter& converter, const std::string& testcase, con
 
             // Run malleable satisfaction algorithm.
             CScriptWitness witness_mal;
-            const bool mal_success = node->Satisfy(satisfier, witness_mal.stack, false) == miniscript::Availability::YES;
+            const bool mal_success = node.Satisfy(satisfier, witness_mal.stack, false) == miniscript::Availability::YES;
             SatisfactionToWitness(converter.MsContext(), witness_mal, script, builder);
 
             // Run non-malleable satisfaction algorithm.
             CScriptWitness witness_nonmal;
-            const bool nonmal_success = node->Satisfy(satisfier, witness_nonmal.stack, true) == miniscript::Availability::YES;
+            const bool nonmal_success = node.Satisfy(satisfier, witness_nonmal.stack, true) == miniscript::Availability::YES;
             // Compute witness size (excluding script push, control block, and witness count encoding).
             const size_t wit_size = GetSerializeSize(witness_nonmal.stack) - GetSizeOfCompactSize(witness_nonmal.stack.size());
             SatisfactionToWitness(converter.MsContext(), witness_nonmal, script, builder);
@@ -378,23 +379,23 @@ void TestSatisfy(const KeyConverter& converter, const std::string& testcase, con
                 // Non-malleable satisfactions are bounded by the satisfaction size plus:
                 // - For P2WSH spends, the witness script
                 // - For Tapscript spends, both the witness script and the control block
-                const size_t max_stack_size{*node->GetStackSize() + 1 + miniscript::IsTapscript(converter.MsContext())};
+                const size_t max_stack_size{*node.GetStackSize() + 1 + miniscript::IsTapscript(converter.MsContext())};
                 BOOST_CHECK(witness_nonmal.stack.size() <= max_stack_size);
                 // If a non-malleable satisfaction exists, the malleable one must also exist, and be identical to it.
                 BOOST_CHECK(mal_success);
                 BOOST_CHECK(witness_nonmal.stack == witness_mal.stack);
-                assert(wit_size <= *node->GetWitnessSize());
+                assert(wit_size <= *node.GetWitnessSize());
 
                 // Test non-malleable satisfaction.
                 ScriptError serror;
                 bool res = VerifyScript(CScript(), script_pubkey, &witness_nonmal, STANDARD_SCRIPT_VERIFY_FLAGS, checker, &serror);
                 // Non-malleable satisfactions are guaranteed to be valid if ValidSatisfactions().
-                if (node->ValidSatisfactions()) BOOST_CHECK(res);
+                if (node.ValidSatisfactions()) BOOST_CHECK(res);
                 // More detailed: non-malleable satisfactions must be valid, or could fail with ops count error (if CheckOpsLimit failed),
                 // or with a stack size error (if CheckStackSize check fails).
                 BOOST_CHECK(res ||
-                            (!node->CheckOpsLimit() && serror == ScriptError::SCRIPT_ERR_OP_COUNT) ||
-                            (!node->CheckStackSize() && serror == ScriptError::SCRIPT_ERR_STACK_SIZE));
+                            (!node.CheckOpsLimit() && serror == ScriptError::SCRIPT_ERR_OP_COUNT) ||
+                            (!node.CheckStackSize() && serror == ScriptError::SCRIPT_ERR_STACK_SIZE));
             }
 
             if (mal_success && (!nonmal_success || witness_mal.stack != witness_nonmal.stack)) {
@@ -406,7 +407,7 @@ void TestSatisfy(const KeyConverter& converter, const std::string& testcase, con
                 BOOST_CHECK(res || serror == ScriptError::SCRIPT_ERR_OP_COUNT || serror == ScriptError::SCRIPT_ERR_STACK_SIZE);
             }
 
-            if (node->IsSane()) {
+            if (node.IsSane()) {
                 // For sane nodes, the two algorithms behave identically.
                 BOOST_CHECK_EQUAL(mal_success, nonmal_success);
             }
@@ -416,7 +417,7 @@ void TestSatisfy(const KeyConverter& converter, const std::string& testcase, con
             // For nonmalleable solutions this is only true if the added condition is PK;
             // for other conditions, adding one may make an valid satisfaction become malleable. If the script
             // is sane, this cannot happen however.
-            if (node->IsSane() || add < 0 || challist[add].first == ChallengeType::PK) {
+            if (node.IsSane() || add < 0 || challist[add].first == ChallengeType::PK) {
                 BOOST_CHECK(nonmal_success >= prev_nonmal_success);
             }
             // Remember results for the next added challenge.
@@ -424,11 +425,11 @@ void TestSatisfy(const KeyConverter& converter, const std::string& testcase, con
             prev_nonmal_success = nonmal_success;
         }
 
-        bool satisfiable = node->IsSatisfiable([](const Node&) { return true; });
+        bool satisfiable = node.IsSatisfiable([](const Node&) { return true; });
         // If the miniscript was satisfiable at all, a satisfaction must be found after all conditions are added.
         BOOST_CHECK_EQUAL(prev_mal_success, satisfiable);
         // If the miniscript is sane and satisfiable, a nonmalleable satisfaction must eventually be found.
-        if (node->IsSane()) BOOST_CHECK_EQUAL(prev_nonmal_success, satisfiable);
+        if (node.IsSane()) BOOST_CHECK_EQUAL(prev_nonmal_success, satisfiable);
     }
 }
 
@@ -471,7 +472,7 @@ void Test(const std::string& ms, const std::string& hexscript, int mode, const K
         if (stacklimit != -1) BOOST_CHECK_MESSAGE((int)*node->GetStackSize() == stacklimit, "Stack limit mismatch: " << ms << " (" << *node->GetStackSize() << " vs " << stacklimit << ")");
         if (max_wit_size) BOOST_CHECK_MESSAGE(*node->GetWitnessSize() == *max_wit_size, "Witness size limit mismatch: " << ms << " (" << *node->GetWitnessSize() << " vs " << *max_wit_size << ")");
         if (stack_exec) BOOST_CHECK_MESSAGE(*node->GetExecStackSize() == *stack_exec, "Stack execution limit mismatch: " << ms << " (" << *node->GetExecStackSize() << " vs " << *stack_exec << ")");
-        TestSatisfy(converter, ms, node);
+        TestSatisfy(converter, ms, *node);
     }
 }
 
@@ -599,11 +600,11 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     constexpr KeyConverter tap_converter{miniscript::MiniscriptContext::TAPSCRIPT};
     constexpr KeyConverter wsh_converter{miniscript::MiniscriptContext::P2WSH};
     const auto no_pubkey{"ac519c"_hex_u8};
-    BOOST_CHECK(miniscript::FromScript({no_pubkey.begin(), no_pubkey.end()}, tap_converter) == nullptr);
+    BOOST_CHECK(!miniscript::FromScript({no_pubkey.begin(), no_pubkey.end()}, tap_converter));
     const auto incomplete_multi_a{"ba20c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5ba519c"_hex_u8};
-    BOOST_CHECK(miniscript::FromScript({incomplete_multi_a.begin(), incomplete_multi_a.end()}, tap_converter) == nullptr);
+    BOOST_CHECK(!miniscript::FromScript({incomplete_multi_a.begin(), incomplete_multi_a.end()}, tap_converter));
     const auto incomplete_multi_a_2{"ac2079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac20c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5ba519c"_hex_u8};
-    BOOST_CHECK(miniscript::FromScript({incomplete_multi_a_2.begin(), incomplete_multi_a_2.end()}, tap_converter) == nullptr);
+    BOOST_CHECK(!miniscript::FromScript({incomplete_multi_a_2.begin(), incomplete_multi_a_2.end()}, tap_converter));
     // Can use multi_a under Tapscript but not P2WSH.
     Test("and_v(v:multi_a(2,03d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85a,025601570cb47f238d2b0286db4a990fa0f3ba28d1a319f5e7cf55c2a2444da7cc),after(1231488000))", "?", "20d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85aac205601570cb47f238d2b0286db4a990fa0f3ba28d1a319f5e7cf55c2a2444da7ccba529d0400046749b1", TESTMODE_VALID | TESTMODE_NONMAL | TESTMODE_NEEDSIG | TESTMODE_P2WSH_INVALID, 4, 2, {}, {}, 3);
     // Can use more than 20 keys in a multi_a.
@@ -649,13 +650,13 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     // A Script with a non minimal push is invalid
     constexpr auto nonminpush{"0000210232780000feff00ffffffffffff21ff005f00ae21ae00000000060602060406564c2102320000060900fe00005f00ae21ae00100000060606060606000000000000000000000000000000000000000000000000000000000000000000"_hex_u8};
     const CScript nonminpush_script(nonminpush.begin(), nonminpush.end());
-    BOOST_CHECK(miniscript::FromScript(nonminpush_script, wsh_converter) == nullptr);
-    BOOST_CHECK(miniscript::FromScript(nonminpush_script, tap_converter) == nullptr);
+    BOOST_CHECK(!miniscript::FromScript(nonminpush_script, wsh_converter));
+    BOOST_CHECK(!miniscript::FromScript(nonminpush_script, tap_converter));
     // A non-minimal VERIFY (<key> CHECKSIG VERIFY 1)
     constexpr auto nonminverify{"2103a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7ac6951"_hex_u8};
     const CScript nonminverify_script(nonminverify.begin(), nonminverify.end());
-    BOOST_CHECK(miniscript::FromScript(nonminverify_script, wsh_converter) == nullptr);
-    BOOST_CHECK(miniscript::FromScript(nonminverify_script, tap_converter) == nullptr);
+    BOOST_CHECK(!miniscript::FromScript(nonminverify_script, wsh_converter));
+    BOOST_CHECK(!miniscript::FromScript(nonminverify_script, tap_converter));
     // A threshold as large as the number of subs is valid.
     Test("thresh(2,c:pk_k(03d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65),altv:after(100))", "2103d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac6b6300670164b16951686c935287", "20d30199d74fb5a22d47b6e054e2f378cedacffcb89904a61d75d0dbd407143e65ac6b6300670164b16951686c935287", TESTMODE_VALID | TESTMODE_NEEDSIG | TESTMODE_NONMAL);
     // A threshold of 1 is valid.
