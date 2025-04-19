@@ -80,7 +80,11 @@ static void secp256k1_ge_set_gej(secp256k1_ge *r, secp256k1_gej *a);
 /** Set a group element equal to another which is given in jacobian coordinates. */
 static void secp256k1_ge_set_gej_var(secp256k1_ge *r, secp256k1_gej *a);
 
-/** Set a batch of group elements equal to the inputs given in jacobian coordinates */
+/** Set group elements r[0:len] (affine) equal to group elements a[0:len] (jacobian).
+ * None of the group elements in a[0:len] may be infinity. Constant time. */
+static void secp256k1_ge_set_all_gej(secp256k1_ge *r, const secp256k1_gej *a, size_t len);
+
+/** Set group elements r[0:len] (affine) equal to group elements a[0:len] (jacobian). */
 static void secp256k1_ge_set_all_gej_var(secp256k1_ge *r, const secp256k1_gej *a, size_t len);
 
 /** Bring a batch of inputs to the same global z "denominator", based on ratios between

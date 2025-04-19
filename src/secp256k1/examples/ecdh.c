@@ -8,6 +8,7 @@
  *************************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 
@@ -33,7 +34,7 @@ int main(void) {
     secp256k1_context* ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
     if (!fill_random(randomize, sizeof(randomize))) {
         printf("Failed to generate randomness\n");
-        return 1;
+        return EXIT_FAILURE;
     }
     /* Randomizing the context is recommended to protect against side-channel
      * leakage See `secp256k1_context_randomize` in secp256k1.h for more
@@ -44,14 +45,14 @@ int main(void) {
     /*** Key Generation ***/
     if (!fill_random(seckey1, sizeof(seckey1)) || !fill_random(seckey2, sizeof(seckey2))) {
         printf("Failed to generate randomness\n");
-        return 1;
+        return EXIT_FAILURE;
     }
     /* If the secret key is zero or out of range (greater than secp256k1's
     * order), we fail. Note that the probability of this occurring is negligible
     * with a properly functioning random number generator. */
     if (!secp256k1_ec_seckey_verify(ctx, seckey1) || !secp256k1_ec_seckey_verify(ctx, seckey2)) {
         printf("Generated secret key is invalid. This indicates an issue with the random number generator.\n");
-        return 1;
+        return EXIT_FAILURE;
     }
 
     /* Public key creation using a valid context with a verified secret key should never fail */
@@ -116,5 +117,5 @@ int main(void) {
     secure_erase(shared_secret1, sizeof(shared_secret1));
     secure_erase(shared_secret2, sizeof(shared_secret2));
 
-    return 0;
+    return EXIT_SUCCESS;
 }
