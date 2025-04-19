@@ -112,7 +112,7 @@ static void ExitFailure(std::string_view str_err)
 BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
     : m_args{}
 {
-    if constexpr (!G_FUZZING) {
+    if (!EnableFuzzDeterminism()) {
         SeedRandomForTest(SeedRand::FIXED_SEED);
     }
     m_node.shutdown_signal = &m_interrupt;
@@ -203,7 +203,7 @@ BasicTestingSetup::~BasicTestingSetup()
 {
     m_node.ecc_context.reset();
     m_node.kernel.reset();
-    if constexpr (!G_FUZZING) {
+    if (!EnableFuzzDeterminism()) {
         SetMockTime(0s); // Reset mocktime for following tests
     }
     LogInstance().DisconnectTestLogger();
@@ -229,8 +229,9 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
         m_node.scheduler->m_service_thread = std::thread(util::TraceThread, "scheduler", [&] { m_node.scheduler->serviceQueue(); });
         m_node.validation_signals =
             // Use synchronous task runner while fuzzing to avoid non-determinism
-            G_FUZZING ? std::make_unique<ValidationSignals>(std::make_unique<util::ImmediateTaskRunner>()) :
-                        std::make_unique<ValidationSignals>(std::make_unique<SerialTaskRunner>(*m_node.scheduler));
+            EnableFuzzDeterminism() ?
+                std::make_unique<ValidationSignals>(std::make_unique<util::ImmediateTaskRunner>()) :
+                std::make_unique<ValidationSignals>(std::make_unique<SerialTaskRunner>(*m_node.scheduler));
         {
             // Ensure deterministic coverage by waiting for m_service_thread to be running
             std::promise<void> promise;
