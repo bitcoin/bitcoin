@@ -628,3 +628,8 @@ std::ostream& operator<<(std::ostream& os, const uint256& num)
 {
     return os << num.ToString();
 }
+
+std::ostream& operator<<(std::ostream& os, const COutPoint& outpoint)
+{
+    return os << outpoint.hash << ", " << outpoint.n;
+}
