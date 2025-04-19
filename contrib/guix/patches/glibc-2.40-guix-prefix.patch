@@ -1,0 +1,47 @@
+Without ffile-prefix-map, the debug symbols will contain paths for the
+guix store which will include the hashes of each package. However, the
+hash for the same package will differ when on different architectures.
+In order to be reproducible regardless of the architecture used to build
+the package, map all guix store prefixes to something fixed, e.g. /usr.
+
+--- a/Makeconfig
++++ b/Makeconfig
+@@ -1074,6 +1074,10 @@ CPPFLAGS-.o = $(pic-default)
+ CFLAGS-.o = $(filter %frame-pointer,$(+cflags)) $(pie-default)
+ CFLAGS-.o += $(call elide-fortify-source,.o,$(routines_no_fortify))
+ CFLAGS-.o += $(call elide-fortify-source,_chk.o,$(routines_no_fortify))
++
++# Map Guix store paths to /usr
++CFLAGS-.o += `find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n " -ffile-prefix-map={}=/usr" \;`
++
+ libtype.o := lib%.a
+ object-suffixes += .o
+ ifeq (yes,$(build-shared))
+diff --git a/iconv/Makefile b/iconv/Makefile
+index afb3fb7bdb..5acee345e0 100644
+--- a/iconv/Makefile
++++ b/iconv/Makefile
+@@ -65,6 +65,9 @@ CFLAGS-gconv_cache.c += -DGCONV_DIR='"$(gconvdir)"'
+ CFLAGS-gconv_conf.c += -DGCONV_PATH='"$(gconvdir)"'
+ CFLAGS-iconvconfig.c += -DGCONV_PATH='"$(gconvdir)"' -DGCONV_DIR='"$(gconvdir)"'
+ 
++# Map Guix store paths to /usr
++CFLAGS-.c += `find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n " -ffile-prefix-map={}=/usr" \;`
++
+ # Set libof-* for each routine.
+ cpp-srcs-left := $(iconv_prog-modules) $(iconvconfig-modules)
+ lib := iconvprogs
+diff --git a/posix/Makefile b/posix/Makefile
+index 3d368b91f6..d79d8fb648 100644
+--- a/posix/Makefile
++++ b/posix/Makefile
+@@ -590,6 +590,9 @@ CFLAGS-execlp.os = -fomit-frame-pointer
+ CFLAGS-nanosleep.c += -fexceptions -fasynchronous-unwind-tables
+ CFLAGS-fork.c = $(libio-mtsafe) $(config-cflags-wno-ignored-attributes)
+ 
++# Map Guix store paths to /usr
++CFLAGS-.c += `find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n " -ffile-prefix-map={}=/usr" \;`
++
+ tstgetopt-ARGS = -a -b -cfoobar --required foobar --optional=bazbug \
+ 		--none random --col --color --colour
+ 
