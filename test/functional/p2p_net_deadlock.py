@@ -12,6 +12,7 @@ class NetDeadlockTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
+        self.supports_cli = False
 
     def run_test(self):
         node0 = self.nodes[0]

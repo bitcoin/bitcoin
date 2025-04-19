@@ -148,6 +148,7 @@ class EstimateFeeTest(BitcoinTestFramework):
             ["-blockmaxweight=68000"],
             ["-blockmaxweight=32000"],
         ]
+        self.supports_cli = False
 
     def setup_network(self):
         """
