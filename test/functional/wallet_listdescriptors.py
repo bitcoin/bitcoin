@@ -19,9 +19,6 @@ from test_framework.util import (
 
 
 class ListDescriptorsTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser, legacy=False)
-
     def set_test_params(self):
         self.num_nodes = 1
 
@@ -35,11 +32,6 @@ class ListDescriptorsTest(BitcoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
         assert_raises_rpc_error(-18, 'No wallet is loaded.', node.listdescriptors)
-
-        if self.is_bdb_compiled():
-            self.log.info('Test that the command is not available for legacy wallets.')
-            node.createwallet(wallet_name='w1', descriptors=False)
-            assert_raises_rpc_error(-4, 'listdescriptors is not available for non-descriptor wallets', node.listdescriptors)
 
         self.log.info('Test the command for empty descriptors wallet.')
         node.createwallet(wallet_name='w2', blank=True, descriptors=True)

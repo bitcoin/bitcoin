@@ -44,8 +44,3 @@ target_link_libraries(bitcoin_wallet
     Boost::headers
     $<TARGET_NAME_IF_EXISTS:USDT::headers>
 )
-
-if(USE_BDB)
-  target_sources(bitcoin_wallet PRIVATE bdb.cpp salvage.cpp)
-  target_link_libraries(bitcoin_wallet PUBLIC BerkeleyDB::BerkeleyDB)
-endif()
