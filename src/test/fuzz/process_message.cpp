@@ -68,7 +68,7 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
     }
     CNode& p2p_node = *ConsumeNodeAsUniquePtr(fuzzed_data_provider).release();
 
-    connman.AddTestNode(p2p_node);
+    connman.AddTestNode(p2p_node, std::make_unique<FuzzedSock>(fuzzed_data_provider));
     FillNode(fuzzed_data_provider, connman, p2p_node);
 
     const auto mock_time = ConsumeTime(fuzzed_data_provider);
