@@ -1059,3 +1059,28 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
 
     return true;
 }
+
+bool CWallet::GenBudgetSystemCollateralTx(CTransactionRef& tx, uint256 hash, CAmount amount, const COutPoint& outpoint)
+{
+    CScript scriptChange;
+    scriptChange << OP_RETURN << ToByteVector(hash);
+
+    CAmount nFeeRet = 0;
+    int nChangePosRet = -1;
+    bilingual_str error;
+    std::vector< CRecipient > vecSend;
+    vecSend.push_back((CRecipient){scriptChange, amount, false});
+
+    CCoinControl coinControl;
+    if (!outpoint.IsNull()) {
+        coinControl.Select(outpoint);
+    }
+    FeeCalculation fee_calc_out;
+    bool success = CreateTransaction(vecSend, tx, nFeeRet, nChangePosRet, error, coinControl, fee_calc_out);
+    if(!success){
+        WalletLogPrintf("CWallet::GenBudgetSystemCollateralTx -- Error: %s\n", error.original);
+        return false;
+    }
+
+    return true;
+}
