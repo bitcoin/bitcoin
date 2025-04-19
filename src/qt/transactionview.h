@@ -115,7 +115,7 @@ Q_SIGNALS:
     /**  Fired when a message should be reported to the user */
     void message(const QString &title, const QString &message, unsigned int style);
 
-    void bumpedFee(const uint256& txid);
+    void bumpedFee(const Txid& txid);
 
 public Q_SLOTS:
     void chooseDate(int idx);
@@ -126,7 +126,7 @@ public Q_SLOTS:
     void exportClicked();
     void closeOpenedDialogs();
     void focusTransaction(const QModelIndex&);
-    void focusTransaction(const uint256& txid);
+    void focusTransaction(const Txid& txid);
 };
 
 #endif // BITCOIN_QT_TRANSACTIONVIEW_H
