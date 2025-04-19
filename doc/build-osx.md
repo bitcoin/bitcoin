@@ -125,6 +125,19 @@ For more information on ZMQ, see: [zmq.md](zmq.md)
 
 ---
 
+### IPC Dependencies
+
+Compiling IPC-enabled binaries with `-DENABLE_IPC=ON` requires the following dependency.
+Skip if you do not need IPC functionality.
+
+```bash
+brew install capnp
+```
+
+For more information on IPC, see: [multiprocess.md](multiprocess.md).
+
+---
+
 #### Test Suite Dependencies
 
 There is an included test suite that is useful for testing code changes when developing.
