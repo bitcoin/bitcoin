@@ -12,3 +12,4 @@ export PACKAGES="python3-zmq"
 export DEP_OPTS="NO_WALLET=1 CC=gcc-14 CXX=g++-14"
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-reduce-exports --with-boost-process CC=gcc-14 CXX=g++-14"
+export NO_WERROR=1

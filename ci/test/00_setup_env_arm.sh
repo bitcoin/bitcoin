@@ -26,3 +26,4 @@ export GOAL="install"
 # -Wno-psabi is to disable ABI warnings: "note: parameter passing for argument of type ... changed in GCC 7.1"
 # This could be removed once the ABI change warning does not show up by default
 export BITCOIN_CONFIG="--enable-reduce-exports CXXFLAGS=-Wno-psabi --with-boost-process"
+export NO_WERROR=1
