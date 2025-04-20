@@ -952,6 +952,8 @@ struct tallyitem
 
 static UniValue ListReceived(const CWallet& wallet, const UniValue& params, const bool by_label, const bool include_immature_coinbase) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
+    AssertLockHeld(wallet.cs_wallet);
+
     // Minimum confirmations
     int nMinDepth = 1;
     if (!params[0].isNull())
@@ -1029,7 +1031,11 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
     UniValue ret(UniValue::VARR);
     std::map<std::string, tallyitem> label_tally;
 
-    const auto& func = [&](const CTxDestination& address, const std::string& label, const std::string& purpose, bool is_change) {
+    const auto& func = [&](const CTxDestination& address, const std::string& label, const std::string& purpose, bool is_change)
+        EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+    {
+        AssertLockHeld(wallet.cs_wallet);
+
         if (is_change) return; // no change addresses
         auto it = mapTally.find(address);
         if (it == mapTally.end() && !fIncludeEmpty)
