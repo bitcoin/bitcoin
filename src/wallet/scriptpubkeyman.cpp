@@ -1825,6 +1825,12 @@ isminetype DescriptorScriptPubKeyMan::IsMine(const CScript& script) const
     return ISMINE_NO;
 }
 
+isminetype DescriptorScriptPubKeyMan::IsMine(const CTxDestination& dest) const
+{
+    CScript script = GetScriptForDestination(dest);
+    return IsMine(script);
+}
+
 bool DescriptorScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys)
 {
     LOCK(cs_desc_man);

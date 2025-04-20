@@ -544,6 +544,7 @@ public:
 
     bool GetNewDestination(CTxDestination& dest, bilingual_str& error) override;
     isminetype IsMine(const CScript& script) const override;
+    isminetype IsMine(const CTxDestination& dest) const override;
 
     bool CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys = false) override;
     bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) override;
