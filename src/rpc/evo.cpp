@@ -180,6 +180,19 @@ static RPCArg GetRpcArg(const std::string& strParamName)
     return it->second;
 }
 
+static CBLSSecretKey ParseBLSSecretKey(const std::string& hexKey, const std::string& paramName)
+{
+    CBLSSecretKey secKey;
+
+    // Actually, bool flag for bls::PrivateKey has other meaning (modOrder)
+    if (!secKey.SetHexStr(hexKey, false)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid BLS secret key", paramName));
+    }
+    return secKey;
+}
+
+#ifdef ENABLE_WALLET
+
 static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
 {
     CTxDestination dest = DecodeDestination(strAddress);
@@ -199,23 +212,10 @@ static CBLSPublicKey ParseBLSPubKey(const std::string& hexKey, const std::string
     return pubKey;
 }
 
-static CBLSSecretKey ParseBLSSecretKey(const std::string& hexKey, const std::string& paramName)
-{
-    CBLSSecretKey secKey;
-
-    // Actually, bool flag for bls::PrivateKey has other meaning (modOrder)
-    if (!secKey.SetHexStr(hexKey, false)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid BLS secret key", paramName));
-    }
-    return secKey;
-}
-
 static bool ValidatePlatformPort(const int32_t port)
 {
     return port >= 1 && port <= std::numeric_limits<uint16_t>::max();
 }
-
-#ifdef ENABLE_WALLET
 
 template <typename SpecialTxPayload>
 static void FundSpecialTx(CWallet& wallet, CMutableTransaction& tx, const SpecialTxPayload& payload,
