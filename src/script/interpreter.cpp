@@ -1521,7 +1521,7 @@ template void PrecomputedTransactionData::Init(const CMutableTransaction& txTo, 
 template PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo);
 template PrecomputedTransactionData::PrecomputedTransactionData(const CMutableTransaction& txTo);
 
-static bool HandleMissingData(MissingDataBehavior mdb)
+[[maybe_unused]] static bool HandleMissingData(MissingDataBehavior mdb)
 {
     switch (mdb) {
     case MissingDataBehavior::ASSERT_FAIL:
