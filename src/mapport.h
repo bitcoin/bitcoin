@@ -5,11 +5,13 @@
 #ifndef BITCOIN_MAPPORT_H
 #define BITCOIN_MAPPORT_H
 
+static constexpr bool DEFAULT_UPNP = false;
+
 static constexpr bool DEFAULT_NATPMP = true;
 
 enum MapPortProtoFlag : unsigned int {
     NONE = 0x00,
-    // 0x01 was for UPnP, for which we dropped support.
+    UPNP = 0x01,
     PCP = 0x02,   // PCP with NAT-PMP fallback.
 };
 

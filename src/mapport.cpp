@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <bitcoin-build-config.h> // IWYU pragma: keep
+
 #include <mapport.h>
 
 #include <clientversion.h>
@@ -15,6 +17,15 @@
 #include <random.h>
 #include <util/thread.h>
 #include <util/threadinterrupt.h>
+
+#ifdef USE_UPNP
+#include <miniupnpc/miniupnpc.h>
+#include <miniupnpc/upnpcommands.h>
+#include <miniupnpc/upnperrors.h>
+// The minimum supported miniUPnPc API version is set to 17. This excludes
+// versions with known vulnerabilities.
+static_assert(MINIUPNPC_API_VERSION >= 17, "miniUPnPc API version >= 17 assumed");
+#endif // USE_UPNP
 
 #include <atomic>
 #include <cassert>
@@ -123,6 +134,78 @@ static bool ProcessPCP()
     return ret;
 }
 
+#ifdef USE_UPNP
+static bool ProcessUpnp()
+{
+    bool ret = false;
+    std::string port = strprintf("%u", GetListenPort());
+    const char * multicastif = nullptr;
+    const char * minissdpdpath = nullptr;
+    struct UPNPDev * devlist = nullptr;
+    char lanaddr[64];
+
+    int error = 0;
+    devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, 2, &error);
+
+    struct UPNPUrls urls;
+    struct IGDdatas data;
+    int r;
+#if MINIUPNPC_API_VERSION <= 17
+    r = UPNP_GetValidIGD(devlist, &urls, &data, lanaddr, sizeof(lanaddr));
+#else
+    r = UPNP_GetValidIGD(devlist, &urls, &data, lanaddr, sizeof(lanaddr), nullptr, 0);
+#endif
+    if (r == 1)
+    {
+        if (fDiscover) {
+            char externalIPAddress[40];
+            r = UPNP_GetExternalIPAddress(urls.controlURL, data.first.servicetype, externalIPAddress);
+            if (r != UPNPCOMMAND_SUCCESS) {
+                LogPrintf("UPnP: GetExternalIPAddress() returned %d\n", r);
+            } else {
+                if (externalIPAddress[0]) {
+                    std::optional<CNetAddr> resolved{LookupHost(externalIPAddress, false)};
+                    if (resolved.has_value()) {
+                        LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved->ToStringAddr());
+                        AddLocal(resolved.value(), LOCAL_MAPPED);
+                    }
+                } else {
+                    LogPrintf("UPnP: GetExternalIPAddress failed.\n");
+                }
+            }
+        }
+
+        std::string strDesc = CLIENT_NAME " " + FormatFullVersion();
+
+        do {
+            r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype, port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", nullptr, "0");
+
+            if (r != UPNPCOMMAND_SUCCESS) {
+                ret = false;
+                LogPrintf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n", port, port, lanaddr, r, strupnperror(r));
+                break;
+            } else {
+                ret = true;
+                LogPrintf("UPnP Port Mapping successful.\n");
+            }
+        } while (g_mapport_interrupt.sleep_for(PORT_MAPPING_REANNOUNCE_PERIOD));
+        g_mapport_interrupt.reset();
+
+        r = UPNP_DeletePortMapping(urls.controlURL, data.first.servicetype, port.c_str(), "TCP", nullptr);
+        LogPrintf("UPNP_DeletePortMapping() returned: %d\n", r);
+        freeUPNPDevlist(devlist); devlist = nullptr;
+        FreeUPNPUrls(&urls);
+    } else {
+        LogPrintf("No valid UPnP IGDs found\n");
+        freeUPNPDevlist(devlist); devlist = nullptr;
+        if (r != 0)
+            FreeUPNPUrls(&urls);
+    }
+
+    return ret;
+}
+#endif // USE_UPNP
+
 static void ThreadMapPort()
 {
     bool ok;
@@ -135,6 +218,15 @@ static void ThreadMapPort()
             ok = ProcessPCP();
             if (ok) continue;
         }
+
+#ifdef USE_UPNP
+        // Low priority protocol.
+        if (g_mapport_enabled_protos & MapPortProtoFlag::UPNP) {
+            g_mapport_current_proto = MapPortProtoFlag::UPNP;
+            ok = ProcessUpnp();
+            if (ok) continue;
+        }
+#endif // USE_UPNP
 
         g_mapport_current_proto = MapPortProtoFlag::NONE;
         if (g_mapport_enabled_protos == MapPortProtoFlag::NONE) {
@@ -176,7 +268,7 @@ static void DispatchMapPort()
 
     assert(g_mapport_thread.joinable());
     assert(!g_mapport_interrupt);
-    // Interrupt a protocol-specific loop in the ThreadPCP()
+    // Interrupt a protocol-specific loop in the ThreadUpnp() or in the ThreadPCP()
     // to force trying the next protocol in the ThreadMapPort() loop.
     g_mapport_interrupt();
 }
@@ -192,6 +284,7 @@ static void MapPortProtoSetEnabled(MapPortProtoFlag proto, bool enabled)
 
 void StartMapPort(bool use_upnp, bool use_pcp)
 {
+    MapPortProtoSetEnabled(MapPortProtoFlag::UPNP, use_upnp);
     MapPortProtoSetEnabled(MapPortProtoFlag::PCP, use_pcp);
     DispatchMapPort();
 }
