@@ -105,7 +105,7 @@ public:
      * completion the `peer` member will be set to the address of the incoming peer.
      * @return true on success
      */
-    bool Accept(Connection& conn);
+    bool Accept(Connection& conn) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
      * Connect to an I2P peer.
@@ -154,14 +154,6 @@ private:
          */
         std::string Get(const std::string& key) const;
     };
-
-    /**
-     * Log a message in the `BCLog::I2P` category.
-     * @param[in] fmt printf(3)-like format string.
-     * @param[in] args printf(3)-like arguments that correspond to `fmt`.
-     */
-    template <typename... Args>
-    void Log(const std::string& fmt, const Args&... args) const;
 
     /**
      * Send request and get a reply from the SAM proxy.

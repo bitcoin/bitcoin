@@ -79,8 +79,8 @@ one of the networks has issues.
 ## Persistent vs transient I2P addresses
 
 The first time Dash Core connects to the I2P router, it automatically
-generates a persistent I2P address and its corresponding private key by default
-or if `-i2pacceptincoming=1` is set.  The private key is saved in a file named
+generates a persistent I2P address and its corresponding private key by default,
+unless `-i2pacceptincoming=0` is set.  The private key is saved in a file named
 `i2p_private_key` in the Dash Core data directory.  The persistent I2P
 address is used for making outbound connections and accepting inbound
 connections.
@@ -109,8 +109,7 @@ incoming I2P connections (`-i2pacceptincoming`):
 To see which I2P peers your node is connected to, use `dash-cli -netinfo 4`
 or the `getpeerinfo` RPC (e.g. `dash-cli getpeerinfo`).
 
-To see which I2P addresses your node knows, use the `getnodeaddresses 0 i2p`
-RPC.
+You can use the `getnodeaddresses` RPC to fetch a number of I2P peers known to your node; run `dash-cli help getnodeaddresses` for details.
 
 ## Compatibility
 

@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include <string>
 #include <type_traits>
+#include <unordered_set>
 #include <vector>
 
 extern int nConnectTimeout;
@@ -67,6 +68,61 @@ struct ProxyCredentials
     std::string username;
     std::string password;
 };
+
+/**
+ * List of reachable networks. Everything is reachable by default.
+ */
+class ReachableNets {
+public:
+    void Add(Network net) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        AssertLockNotHeld(m_mutex);
+        LOCK(m_mutex);
+        m_reachable.insert(net);
+    }
+
+    void Remove(Network net) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        AssertLockNotHeld(m_mutex);
+        LOCK(m_mutex);
+        m_reachable.erase(net);
+    }
+
+    void RemoveAll() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        AssertLockNotHeld(m_mutex);
+        LOCK(m_mutex);
+        m_reachable.clear();
+    }
+
+    [[nodiscard]] bool Contains(Network net) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        AssertLockNotHeld(m_mutex);
+        LOCK(m_mutex);
+        return m_reachable.count(net) > 0;
+    }
+
+    [[nodiscard]] bool Contains(const CNetAddr& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        AssertLockNotHeld(m_mutex);
+        return Contains(addr.GetNetwork());
+    }
+
+private:
+    mutable Mutex m_mutex;
+
+    std::unordered_set<Network> m_reachable GUARDED_BY(m_mutex){
+        NET_UNROUTABLE,
+        NET_IPV4,
+        NET_IPV6,
+        NET_ONION,
+        NET_I2P,
+        NET_CJDNS,
+        NET_INTERNAL
+    };
+};
+
+extern ReachableNets g_reachable_nets;
 
 /**
  * Wrapper for getaddrinfo(3). Do not use directly: call Lookup/LookupHost/LookupNumeric/LookupSubNet.
@@ -257,5 +313,14 @@ static constexpr uint16_t PRIVILEGED_PORTS_THRESHOLD{1023};
  * @returns whether the port is bad
  */
 bool IsBadPort(uint16_t port);
+
+/**
+ * If an IPv6 address belongs to the address range used by the CJDNS network and
+ * the CJDNS network is reachable (-cjdnsreachable config is set), then change
+ * the type from NET_IPV6 to NET_CJDNS.
+ * @param[in] service Address to potentially convert.
+ * @return a copy of `service` either unmodified or changed to CJDNS.
+ */
+CService MaybeFlipIPv6toCJDNS(const CService& service);
 
 #endif // BITCOIN_NETBASE_H

@@ -599,8 +599,8 @@ static UniValue GetNetworksInfo()
         UniValue obj(UniValue::VOBJ);
         GetProxy(network, proxy);
         obj.pushKV("name", GetNetworkName(network));
-        obj.pushKV("limited", !IsReachable(network));
-        obj.pushKV("reachable", IsReachable(network));
+        obj.pushKV("limited", !g_reachable_nets.Contains(network));
+        obj.pushKV("reachable", g_reachable_nets.Contains(network));
         obj.pushKV("proxy", proxy.IsValid() ? proxy.proxy.ToStringAddrPort() : std::string());
         obj.pushKV("proxy_randomize_credentials", proxy.randomize_credentials);
         networks.push_back(obj);
@@ -755,7 +755,7 @@ static RPCHelpMan setban()
     if (!isSubnet) {
         const std::optional<CNetAddr> addr{LookupHost(request.params[0].get_str(), false)};
         if (addr.has_value()) {
-            netAddr = addr.value();
+            netAddr = static_cast<CNetAddr>(MaybeFlipIPv6toCJDNS(CService{addr.value(), /*port=*/0}));
         }
     }
     else
@@ -1019,7 +1019,8 @@ static RPCHelpMan addpeeraddress()
     bool success{false};
 
     if (net_addr.has_value()) {
-        CAddress address{{net_addr.value(), port}, ServiceFlags{NODE_NETWORK}};
+        CService service{net_addr.value(), port};
+        CAddress address{MaybeFlipIPv6toCJDNS(service), ServiceFlags{NODE_NETWORK}};
         address.nTime = Now<NodeSeconds>();
         // The source address is set equal to the address. This is equivalent to the peer
         // announcing itself.

@@ -239,10 +239,14 @@ bool CActiveMasternodeManager::GetLocalAddress(CService& addrRet)
     if (!fFoundLocal) {
         bool empty = true;
         // If we have some peers, let's try to find our local address from one of them
-        auto service = m_info.service;
         m_connman.ForEachNodeContinueIf(CConnman::AllNodes, [&](CNode* pnode) {
             empty = false;
-            if (pnode->addr.IsIPv4()) fFoundLocal = GetLocal(service, *pnode) && IsValidNetAddr(service);
+            if (pnode->addr.IsIPv4()) {
+                if (auto addr = ::GetLocalAddress(*pnode); IsValidNetAddr(addr)) {
+                    addrRet = addr;
+                    fFoundLocal = true;
+                }
+            }
             return !fFoundLocal;
         });
         // nothing and no live connections, can't do anything for now
@@ -257,10 +261,10 @@ bool CActiveMasternodeManager::GetLocalAddress(CService& addrRet)
 
 bool CActiveMasternodeManager::IsValidNetAddr(const CService& addrIn)
 {
+    if (!addrIn.IsValid() || !addrIn.IsIPv4()) return false;
     // TODO: regtest is fine with any addresses for now,
     // should probably be a bit smarter if one day we start to implement tests for this
-    return !Params().RequireRoutableExternalIP() ||
-           (addrIn.IsIPv4() && IsReachable(addrIn) && addrIn.IsRoutable());
+    return !Params().RequireRoutableExternalIP() || (g_reachable_nets.Contains(addrIn) && addrIn.IsRoutable());
 }
 
 template <template <typename> class EncryptedObj, typename Obj>
