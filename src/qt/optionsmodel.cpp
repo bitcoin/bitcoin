@@ -526,7 +526,7 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
     case MapPortNatpmp: // core option - can be changed on-the-fly
         if (changed()) {
             update(value.toBool());
-            node().mapPort(value.toBool());
+            node().mapPort(false, value.toBool());
         }
         break;
     case MinimizeOnClose:
