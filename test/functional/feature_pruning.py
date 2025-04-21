@@ -41,7 +41,7 @@ def mine_large_blocks(node, n):
     # Set the nTime if this is the first time this function has been called.
     # A static variable ensures that time is monotonicly increasing and is therefore
     # different for each block created => blockhash is unique.
-    if "nTimes" not in mine_large_blocks.__dict__:
+    if "nTime" not in mine_large_blocks.__dict__:
         mine_large_blocks.nTime = 0
 
     # Get the block parameters for the first block
