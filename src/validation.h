@@ -777,9 +777,32 @@ public:
     // Block (dis)connection on a given view:
     DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    /**
+     * Validates the block against the coins in the blockundo data, writes the
+     * undo data to disk, and raises the block validity in the block index.
+     *
+     * @param[in] block       The block to be validated
+     * @param[in] blockundo   Has to contain all coins spent by block. Written to disk on successful validation
+     * @param[out] state      This is set to an Error state if any error occurred while validating block
+     * @param[in, out] pindex Points to the block map entry associated with block. On successful validation, its nStatus block validity is raised.
+     * @param[in] fJustCheck  If set, no data is written to disk and pindex's validity is not raised
+     */
     bool ConnectBlock(const CBlock& block, const CBlockUndo& blockundo, BlockValidationState& state,
                       CBlockIndex* pindex, bool fJustCheck = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+    /**
+     * Spends the coins associated with a block. First checks that the block
+     * introduces no duplicate transactions (BIP30), then for each transaction in
+     * the block checks that the outputs it is spending exist, spends them, and
+     * populates the CBlockUndo data structure.
+     *
+     * @param[in] block      The block to be spent
+     * @param[in] pindex     Points to the block map entry associated with block
+     * @param[in, out] view  Its coins are spent and used to populate CBlockUndo during its execution
+     * @param[out] state     This may be set to an Error state if any error occurred processing them
+     * @param[out] blockundo Coins consumed by the block are added to it.
+     */
     bool SpendBlock(const CBlock& block, const CBlockIndex* pindex,
                     CCoinsViewCache& view, BlockValidationState& state, CBlockUndo& blockundo) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
