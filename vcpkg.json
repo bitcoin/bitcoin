@@ -8,6 +8,7 @@
     "libevent"
   ],
   "default-features": [
+    "miniupnpc",
     "qt5",
     "tests",
     "wallet",
@@ -18,6 +19,12 @@
       "description": "Enable Berkeley DB wallet support",
       "dependencies": [
         "berkeleydb"
+      ]
+    },
+    "miniupnpc": {
+      "description": "Enable UPnP",
+      "dependencies": [
+        "miniupnpc"
       ]
     },
     "qt5": {
