@@ -995,9 +995,9 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     const std::string incremental_fee{CFeeRate(DEFAULT_INCREMENTAL_RELAY_FEE).ToString(FeeEstimateMode::SAT_VB)};
 
     return RPCHelpMan{method_name,
-        "\nBumps the fee of an opt-in-RBF transaction T, replacing it with a new transaction B.\n"
+        "Bumps the fee of a transaction T, replacing it with a new transaction B.\n"
         + std::string(want_psbt ? "Returns a PSBT instead of creating and signing a new transaction.\n" : "") +
-        "An opt-in RBF transaction with the given txid must be in the wallet.\n"
+        "A transaction with the given txid must be in the wallet.\n"
         "The command will pay the additional fee by reducing change outputs or adding inputs when necessary.\n"
         "It may add a new change output if one does not already exist.\n"
         "All inputs in the original transaction will be included in the replacement transaction.\n"
@@ -1017,10 +1017,11 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
                              "\nSpecify a fee rate in " + CURRENCY_ATOM + "/vB instead of relying on the built-in fee estimator.\n"
                              "Must be at least " + incremental_fee + " higher than the current transaction fee rate.\n"
                              "WARNING: before version 0.21, fee_rate was in " + CURRENCY_UNIT + "/kvB. As of 0.21, fee_rate is in " + CURRENCY_ATOM + "/vB.\n"},
-                    {"replaceable", RPCArg::Type::BOOL, RPCArg::Default{true}, "Whether the new transaction should still be\n"
+                    {"replaceable", RPCArg::Type::BOOL, RPCArg::Default{true},
+                             "Whether the new transaction should be\n"
                              "marked bip-125 replaceable. If true, the sequence numbers in the transaction will\n"
-                             "be left unchanged from the original. If false, any input sequence numbers in the\n"
-                             "original transaction that were less than 0xfffffffe will be increased to 0xfffffffe\n"
+                             "be set to 0xfffffffd. If false, any input sequence numbers in the\n"
+                             "transaction will be set to 0xfffffffe\n"
                              "so the new transaction will not be explicitly bip-125 replaceable (though it may\n"
                              "still be replaceable in practice, for example if it has unconfirmed ancestors which\n"
                              "are replaceable).\n"},
