@@ -52,6 +52,7 @@ FUZZ_TARGET(utxo_total_supply)
         // Replace OP_FALSE with OP_TRUE
         {
             CMutableTransaction tx{*block->vtx.back()};
+            tx.nLockTime = 0; // Use the same nLockTime for all as we want to duplicate one of them.
             tx.vout.at(0).scriptPubKey = CScript{} << OP_TRUE;
             block->vtx.back() = MakeTransactionRef(tx);
         }
