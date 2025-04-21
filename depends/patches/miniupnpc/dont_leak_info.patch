@@ -1,0 +1,32 @@
+commit 51f6dd991c29af66fb4f64c6feb2787cce23a1a7
+Author: fanquake <fanquake@gmail.com>
+Date:   Mon Jan 8 11:21:40 2024 +0000
+
+    Don't leak OS and miniupnpc version info in User-Agent
+
+diff --git a/src/minisoap.c b/src/minisoap.c
+index 903ac5f..046e0ea 100644
+--- a/src/minisoap.c
++++ b/src/minisoap.c
+@@ -90,7 +90,7 @@ int soapPostSubmit(SOCKET fd,
+ 	headerssize = snprintf(headerbuf, sizeof(headerbuf),
+                        "POST %s HTTP/%s\r\n"
+ 	                   "Host: %s%s\r\n"
+-					   "User-Agent: " OS_STRING " " UPNP_VERSION_STRING " MiniUPnPc/" MINIUPNPC_VERSION_STRING "\r\n"
++					   "User-Agent: " UPNP_VERSION_STRING "\r\n"
+ 	                   "Content-Length: %d\r\n"
+ #if (UPNP_VERSION_MAJOR == 1) && (UPNP_VERSION_MINOR == 0)
+ 					   "Content-Type: text/xml\r\n"
+diff --git a/src/miniwget.c b/src/miniwget.c
+index e76a5e5..0cc36fe 100644
+--- a/src/miniwget.c
++++ b/src/miniwget.c
+@@ -444,7 +444,7 @@ miniwget3(const char * host,
+                  "GET %s HTTP/%s\r\n"
+ 			     "Host: %s:%d\r\n"
+ 				 "Connection: Close\r\n"
+-				 "User-Agent: " OS_STRING " " UPNP_VERSION_STRING " MiniUPnPc/" MINIUPNPC_VERSION_STRING "\r\n"
++				 "User-Agent: " UPNP_VERSION_STRING "\r\n"
+ 
+ 				 "\r\n",
+ 			   path, httpversion, host, port);
