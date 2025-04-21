@@ -1091,6 +1091,9 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
         std::tie(range_start, range_end) = ParseDescriptorRange(data["range"]);
     }
 
+    // Only single key descriptors are allowed to be imported to a legacy wallet's keypool
+    bool can_keypool = parsed_descs.at(0)->IsSingleKey();
+
     const UniValue& priv_keys = data.exists("keys") ? data["keys"].get_array() : UniValue();
 
     for (size_t j = 0; j < parsed_descs.size(); ++j) {
@@ -1107,8 +1110,10 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
             std::vector<CScript> scripts_temp;
             parsed_desc->Expand(i, keys, scripts_temp, out_keys);
             std::copy(scripts_temp.begin(), scripts_temp.end(), std::inserter(script_pub_keys, script_pub_keys.end()));
-            for (const auto& key_pair : out_keys.pubkeys) {
-                ordered_pubkeys.emplace_back(key_pair.first, desc_internal);
+            if (can_keypool) {
+                for (const auto& key_pair : out_keys.pubkeys) {
+                    ordered_pubkeys.emplace_back(key_pair.first, desc_internal);
+                }
             }
 
             for (const auto& x : out_keys.scripts) {
