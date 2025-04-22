@@ -198,12 +198,6 @@ private:
 
     std::vector<unsigned char> CreateObfuscateKey() const;
 
-    //! path to filesystem storage
-    const fs::path m_path;
-
-    //! whether or not the database resides in memory
-    bool m_is_memory;
-
     std::optional<std::string> ReadImpl(std::span<const std::byte> key) const;
     bool ExistsImpl(std::span<const std::byte> key) const;
     size_t EstimateSizeImpl(std::span<const std::byte> key1, std::span<const std::byte> key2) const;
@@ -242,14 +236,6 @@ public:
         CDBBatch batch(*this);
         batch.Write(key, value);
         return WriteBatch(batch, fSync);
-    }
-
-    //! @returns filesystem path to the on-disk data.
-    std::optional<fs::path> StoragePath() {
-        if (m_is_memory) {
-            return {};
-        }
-        return m_path;
     }
 
     template <typename K>
