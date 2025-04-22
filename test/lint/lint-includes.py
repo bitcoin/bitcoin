@@ -25,6 +25,8 @@ EXCLUDED_DIRS = ["src/leveldb/",
                  "src/crypto/x11/"]
 
 EXPECTED_BOOST_INCLUDES = ["boost/date_time/posix_time/posix_time.hpp",
+                           "boost/hana/for_each.hpp",
+                           "boost/hana/tuple.hpp",
                            "boost/multi_index/hashed_index.hpp",
                            "boost/multi_index/identity.hpp",
                            "boost/multi_index/indexed_by.hpp",
