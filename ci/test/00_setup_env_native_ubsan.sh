@@ -13,3 +13,4 @@ export DEP_OPTS="NO_UPNP=1 DEBUG=1"
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-zmq --enable-reduce-exports --enable-crash-hooks --with-sanitizers=undefined CC=clang-18 CXX=clang++-18"
 export PYZMQ=true
+export NO_WERROR=1

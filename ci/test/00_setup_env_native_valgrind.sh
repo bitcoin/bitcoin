@@ -11,4 +11,5 @@ export USE_VALGRIND=1
 export NO_DEPENDS=1
 export TEST_RUNNER_EXTRA="--exclude rpc_bind,feature_bind_extra --timeout-factor=4"  # Excluded for now, see https://github.com/bitcoin/bitcoin/issues/17765#issuecomment-602068547
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=no --enable-suppress-external-warnings CC=clang-18 CXX=clang++-18"  # TODO enable GUI
+export BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=no CC=clang-18 CXX=clang++-18"  # TODO enable GUI
+export NO_WERROR=1
