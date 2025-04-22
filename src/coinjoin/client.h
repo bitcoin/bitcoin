@@ -39,27 +39,27 @@ class CPendingDsaRequest
 private:
     static constexpr int TIMEOUT = 15;
 
-    CService addr;
+    uint256 proTxHash;
     CCoinJoinAccept dsa;
     int64_t nTimeCreated{0};
 
 public:
     CPendingDsaRequest() = default;
 
-    CPendingDsaRequest(CService addr_, CCoinJoinAccept dsa_) :
-        addr(std::move(addr_)),
+    CPendingDsaRequest(uint256 proTxHash_, CCoinJoinAccept dsa_) :
+        proTxHash(std::move(proTxHash_)),
         dsa(std::move(dsa_)),
         nTimeCreated(GetTime())
     {
     }
 
-    [[nodiscard]] CService GetAddr() const { return addr; }
+    [[nodiscard]] uint256 GetProTxHash() const { return proTxHash; }
     [[nodiscard]] CCoinJoinAccept GetDSA() const { return dsa; }
     [[nodiscard]] bool IsExpired() const { return GetTime() - nTimeCreated > TIMEOUT; }
 
     friend bool operator==(const CPendingDsaRequest& a, const CPendingDsaRequest& b)
     {
-        return a.addr == b.addr && a.dsa == b.dsa;
+        return a.proTxHash == b.proTxHash && a.dsa == b.dsa;
     }
     friend bool operator!=(const CPendingDsaRequest& a, const CPendingDsaRequest& b)
     {
@@ -336,7 +336,7 @@ public:
     bool DoAutomaticDenominating(ChainstateManager& chainman, CConnman& connman, const CTxMemPool& mempool,
                                  bool fDryRun = false) EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);
 
-    bool TrySubmitDenominate(const CService& mnAddr, CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);
+    bool TrySubmitDenominate(const uint256& proTxHash, CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);
     bool MarkAlreadyJoinedQueueAsTried(CCoinJoinQueue& dsq) const EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);
 
     void CheckTimeout() EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);

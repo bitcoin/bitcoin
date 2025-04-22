@@ -38,7 +38,7 @@ CSimplifiedMNListEntry::CSimplifiedMNListEntry(const CDeterministicMN& dmn) :
     platformNodeID(dmn.pdmnState->platformNodeID),
     scriptPayout(dmn.pdmnState->scriptPayout),
     scriptOperatorPayout(dmn.pdmnState->scriptOperatorPayout),
-    nVersion(dmn.pdmnState->nVersion == CProRegTx::LEGACY_BLS_VERSION ? LEGACY_BLS_VERSION : BASIC_BLS_VERSION),
+    nVersion(dmn.pdmnState->nVersion),
     nType(dmn.nType)
 {
 }

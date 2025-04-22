@@ -114,7 +114,7 @@ static CMutableTransaction CreateProRegTx(const CChain& active_chain, const CTxM
     operatorKeyRet.MakeNewKey();
 
     CProRegTx proTx;
-    proTx.nVersion = CProRegTx::GetVersion(!bls::bls_legacy_scheme);
+    proTx.nVersion = CProRegTx::GetMaxVersion(!bls::bls_legacy_scheme);
     proTx.collateralOutpoint.n = 0;
     proTx.addr = LookupNumeric("1.1.1.1", port);
     proTx.keyIDOwner = ownerKeyRet.GetPubKey().GetID();

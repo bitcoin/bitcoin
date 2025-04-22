@@ -14,10 +14,10 @@
 
 bool CProRegTx::IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const
 {
-    if (nVersion == 0 || nVersion > GetVersion(is_basic_scheme_active)) {
+    if (nVersion == 0 || nVersion > GetMaxVersion(is_basic_scheme_active)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version");
     }
-    if (nVersion != BASIC_BLS_VERSION && nType == MnType::Evo) {
+    if (nVersion < ProTxVersion::BasicBLS && nType == MnType::Evo) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-evo-version");
     }
     if (!IsValidMnType(nType)) {
@@ -30,7 +30,7 @@ bool CProRegTx::IsTriviallyValid(bool is_basic_scheme_active, TxValidationState&
     if (keyIDOwner.IsNull() || !pubKeyOperator.Get().IsValid() || keyIDVoting.IsNull()) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-key-null");
     }
-    if (pubKeyOperator.IsLegacy() != (nVersion == LEGACY_BLS_VERSION)) {
+    if (pubKeyOperator.IsLegacy() != (nVersion == ProTxVersion::LegacyBLS)) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-operator-pubkey");
     }
     if (!scriptPayout.IsPayToPublicKeyHash() && !scriptPayout.IsPayToScriptHash()) {
@@ -98,10 +98,10 @@ std::string CProRegTx::ToString() const
 
 bool CProUpServTx::IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const
 {
-    if (nVersion == 0 || nVersion > GetVersion(is_basic_scheme_active)) {
+    if (nVersion == 0 || nVersion > GetMaxVersion(is_basic_scheme_active)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version");
     }
-    if (nVersion != BASIC_BLS_VERSION && nType == MnType::Evo) {
+    if (nVersion < ProTxVersion::BasicBLS && nType == MnType::Evo) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-evo-version");
     }
 
@@ -124,7 +124,7 @@ std::string CProUpServTx::ToString() const
 
 bool CProUpRegTx::IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const
 {
-    if (nVersion == 0 || nVersion > GetVersion(is_basic_scheme_active)) {
+    if (nVersion == 0 || nVersion > GetMaxVersion(is_basic_scheme_active)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version");
     }
     if (nMode != 0) {
@@ -134,7 +134,7 @@ bool CProUpRegTx::IsTriviallyValid(bool is_basic_scheme_active, TxValidationStat
     if (!pubKeyOperator.Get().IsValid() || keyIDVoting.IsNull()) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-key-null");
     }
-    if (pubKeyOperator.IsLegacy() != (nVersion == LEGACY_BLS_VERSION)) {
+    if (pubKeyOperator.IsLegacy() != (nVersion == ProTxVersion::LegacyBLS)) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-operator-pubkey");
     }
     if (!scriptPayout.IsPayToPublicKeyHash() && !scriptPayout.IsPayToScriptHash()) {
@@ -157,7 +157,7 @@ std::string CProUpRegTx::ToString() const
 
 bool CProUpRevTx::IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const
 {
-    if (nVersion == 0 || nVersion > GetVersion(is_basic_scheme_active)) {
+    if (nVersion == 0 || nVersion > GetMaxVersion(is_basic_scheme_active)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version");
     }
 
