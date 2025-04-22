@@ -15,6 +15,9 @@
 #include <memory>
 #include <utility>
 
+#include <boost/hana/for_each.hpp>
+#include <boost/hana/tuple.hpp>
+
 class CProRegTx;
 class UniValue;
 
@@ -173,26 +176,38 @@ public:
         Field_nVersion = 0x40000,
     };
 
-#define DMN_STATE_DIFF_ALL_FIELDS                      \
-    DMN_STATE_DIFF_LINE(nRegisteredHeight)             \
-    DMN_STATE_DIFF_LINE(nLastPaidHeight)               \
-    DMN_STATE_DIFF_LINE(nPoSePenalty)                  \
-    DMN_STATE_DIFF_LINE(nPoSeRevivedHeight)            \
-    DMN_STATE_DIFF_LINE(nPoSeBanHeight)                \
-    DMN_STATE_DIFF_LINE(nRevocationReason)             \
-    DMN_STATE_DIFF_LINE(confirmedHash)                 \
-    DMN_STATE_DIFF_LINE(confirmedHashWithProRegTxHash) \
-    DMN_STATE_DIFF_LINE(keyIDOwner)                    \
-    DMN_STATE_DIFF_LINE(pubKeyOperator)                \
-    DMN_STATE_DIFF_LINE(keyIDVoting)                   \
-    DMN_STATE_DIFF_LINE(addr)                          \
-    DMN_STATE_DIFF_LINE(scriptPayout)                  \
-    DMN_STATE_DIFF_LINE(scriptOperatorPayout)          \
-    DMN_STATE_DIFF_LINE(nConsecutivePayments)          \
-    DMN_STATE_DIFF_LINE(platformNodeID)                \
-    DMN_STATE_DIFF_LINE(platformP2PPort)               \
-    DMN_STATE_DIFF_LINE(platformHTTPPort)              \
-    DMN_STATE_DIFF_LINE(nVersion)
+private:
+    template <auto CDeterministicMNState::*Field, uint32_t Mask>
+    struct Member
+    {
+        static constexpr uint32_t mask = Mask;
+        static auto& get(CDeterministicMNState& state) { return state.*Field; }
+        static const auto& get(const CDeterministicMNState& state) { return state.*Field; }
+    };
+
+#define DMN_STATE_MEMBER(name) Member<&CDeterministicMNState::name, Field_##name>{}
+    static constexpr auto members = boost::hana::make_tuple(
+        DMN_STATE_MEMBER(nRegisteredHeight),
+        DMN_STATE_MEMBER(nLastPaidHeight),
+        DMN_STATE_MEMBER(nPoSePenalty),
+        DMN_STATE_MEMBER(nPoSeRevivedHeight),
+        DMN_STATE_MEMBER(nPoSeBanHeight),
+        DMN_STATE_MEMBER(nRevocationReason),
+        DMN_STATE_MEMBER(confirmedHash),
+        DMN_STATE_MEMBER(confirmedHashWithProRegTxHash),
+        DMN_STATE_MEMBER(keyIDOwner),
+        DMN_STATE_MEMBER(pubKeyOperator),
+        DMN_STATE_MEMBER(keyIDVoting),
+        DMN_STATE_MEMBER(addr),
+        DMN_STATE_MEMBER(scriptPayout),
+        DMN_STATE_MEMBER(scriptOperatorPayout),
+        DMN_STATE_MEMBER(nConsecutivePayments),
+        DMN_STATE_MEMBER(platformNodeID),
+        DMN_STATE_MEMBER(platformP2PPort),
+        DMN_STATE_MEMBER(platformHTTPPort),
+        DMN_STATE_MEMBER(nVersion)
+    );
+#undef DMN_STATE_MEMBER
 
 public:
     uint32_t fields{0};
@@ -203,27 +218,41 @@ public:
     CDeterministicMNStateDiff() = default;
     CDeterministicMNStateDiff(const CDeterministicMNState& a, const CDeterministicMNState& b)
     {
-#define DMN_STATE_DIFF_LINE(f) if (a.f != b.f) { state.f = b.f; fields |= Field_##f; }
-        DMN_STATE_DIFF_ALL_FIELDS
-#undef DMN_STATE_DIFF_LINE
-        if (fields & Field_pubKeyOperator) { state.nVersion = b.nVersion; fields |= Field_nVersion; }
+        boost::hana::for_each(members, [&](auto&& member) {
+            if (member.get(a) != member.get(b)) {
+                member.get(state) = member.get(b);
+                fields |= member.mask;
+            }
+        });
+        if (fields & Field_pubKeyOperator) {
+            // pubKeyOperator needs nVersion
+            state.nVersion = b.nVersion;
+            fields |= Field_nVersion;
+        }
     }
 
     [[nodiscard]] UniValue ToJson(MnType nType) const;
 
     SERIALIZE_METHODS(CDeterministicMNStateDiff, obj)
     {
+        READWRITE(VARINT(obj.fields));
+
         // NOTE: reading pubKeyOperator requires nVersion
         bool read_pubkey{false};
-        READWRITE(VARINT(obj.fields));
-#define DMN_STATE_DIFF_LINE(f) \
-        if (strcmp(#f, "pubKeyOperator") == 0 && (obj.fields & Field_pubKeyOperator)) {\
-            SER_READ(obj, read_pubkey = true); \
-            READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.state.pubKeyOperator), obj.state.nVersion == ProTxVersion::LegacyBLS)); \
-        } else if (obj.fields & Field_##f) READWRITE(obj.state.f);
+        boost::hana::for_each(members, [&](auto&& member) {
+            using BaseType = std::decay_t<decltype(member)>;
+            if constexpr (BaseType::mask == Field_pubKeyOperator) {
+                if (obj.fields & member.mask) {
+                    SER_READ(obj, read_pubkey = true);
+                    READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.state.pubKeyOperator), obj.state.nVersion == ProTxVersion::LegacyBLS));
+                }
+            } else {
+                if (obj.fields & member.mask) {
+                    READWRITE(member.get(obj.state));
+                }
+            }
+        });
 
-        DMN_STATE_DIFF_ALL_FIELDS
-#undef DMN_STATE_DIFF_LINE
         if (read_pubkey) {
             SER_READ(obj, obj.fields |= Field_nVersion);
             SER_READ(obj, obj.state.pubKeyOperator.SetLegacy(obj.state.nVersion == ProTxVersion::LegacyBLS));
@@ -232,11 +261,12 @@ public:
 
     void ApplyToState(CDeterministicMNState& target) const
     {
-#define DMN_STATE_DIFF_LINE(f) if (fields & Field_##f) target.f = state.f;
-        DMN_STATE_DIFF_ALL_FIELDS
-#undef DMN_STATE_DIFF_LINE
+        boost::hana::for_each(members, [&](auto&& member) {
+            if (fields & member.mask) {
+                member.get(target) = member.get(state);
+            }
+        });
     }
 };
-
 
 #endif // BITCOIN_EVO_DMNSTATE_H
