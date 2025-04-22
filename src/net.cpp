@@ -332,17 +332,6 @@ bool IsLocal(const CService& addr)
     return mapLocalHost.count(addr) > 0;
 }
 
-CNode* CConnman::FindNode(const CNetAddr& ip)
-{
-    LOCK(m_nodes_mutex);
-    for (CNode* pnode : m_nodes) {
-      if (static_cast<CNetAddr>(pnode->addr) == ip) {
-            return pnode;
-        }
-    }
-    return nullptr;
-}
-
 CNode* CConnman::FindNode(const std::string& addrName)
 {
     LOCK(m_nodes_mutex);
@@ -365,9 +354,10 @@ CNode* CConnman::FindNode(const CService& addr)
     return nullptr;
 }
 
-bool CConnman::AlreadyConnectedToAddress(const CAddress& addr)
+bool CConnman::IsConnectedToAddr(const CNetAddr& addr) const
 {
-    return FindNode(static_cast<CNetAddr>(addr));
+    LOCK(m_nodes_mutex);
+    return std::ranges::any_of(m_nodes, [&addr](CNode* node) { return node->addr == addr; });
 }
 
 bool CConnman::CheckIncomingNonce(uint64_t nonce)
@@ -2791,7 +2781,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
                     // No tried table collisions. Select a new table address
                     // for our feeler.
                     std::tie(addr, addr_last_try) = addrman.Select(true, reachable_nets);
-                } else if (AlreadyConnectedToAddress(addr)) {
+                } else if (IsConnectedToAddr(addr)) {
                     // If test-before-evict logic would have us connect to a
                     // peer that we're already connected to, just mark that
                     // address as Good(). We won't be able to initiate the
@@ -3001,7 +2991,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     }
     if (!pszDest) {
         bool banned_or_discouraged = m_banman && (m_banman->IsDiscouraged(addrConnect) || m_banman->IsBanned(addrConnect));
-        if (IsLocal(addrConnect) || banned_or_discouraged || AlreadyConnectedToAddress(addrConnect)) {
+        if (IsLocal(addrConnect) || banned_or_discouraged || IsConnectedToAddr(addrConnect)) {
             return;
         }
     } else if (FindNode(std::string(pszDest)))
