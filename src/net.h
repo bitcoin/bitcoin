@@ -1352,8 +1352,23 @@ private:
 
     uint64_t CalculateKeyedNetGroup(const CNetAddr& ad) const;
 
-    CNode* FindNode(const std::string& addrName);
-    CNode* FindNode(const CService& addr);
+    /**
+     * Determine whether we're already connected to a given "address:port".
+     * Note that for inbound connections, the peer is likely using a random outbound
+     * port on their side, so this will likely not match any inbound connections.
+     * @param[in] addr_port String of the form "address:port", e.g. "1.2.3.4:8333".
+     * @return true if connected to addr_port.
+     */
+    bool IsConnectedToAddrPort(const std::string& addr_port) const;
+
+    /**
+     * Determine whether we're already connected to a given address:port.
+     * Note that for inbound connections, the peer is likely using a random outbound
+     * port on their side, so this will likely not match any inbound connections.
+     * @param[in] addr_port Address and port to check.
+     * @return true if connected to addr_port.
+     */
+    bool IsConnectedToAddrPort(const CService& addr_port) const;
 
     /**
      * Determine whether we're already connected to a given address.
