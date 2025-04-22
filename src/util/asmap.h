@@ -5,6 +5,7 @@
 #ifndef BITCOIN_UTIL_ASMAP_H
 #define BITCOIN_UTIL_ASMAP_H
 
+#include <uint256.h>
 #include <util/fs.h>
 
 #include <cstddef>
@@ -17,5 +18,7 @@ bool SanityCheckASMap(const std::vector<std::byte>& asmap, int bits);
 
 /** Read asmap from provided binary file */
 std::vector<std::byte> DecodeAsmap(fs::path path);
+/** Calculate the asmap version, a checksum identifying the asmap being used. */
+uint256 AsmapVersion(const std::vector<std::byte>& data);
 
 #endif // BITCOIN_UTIL_ASMAP_H
