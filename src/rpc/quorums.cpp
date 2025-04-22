@@ -175,8 +175,8 @@ static RPCHelpMan quorum_list_extended()
     };
 }
 
-static UniValue BuildQuorumInfo(const llmq::CQuorumBlockProcessor& quorum_block_processor, const llmq::CQuorumCPtr& quorum,
-                                bool includeMembers, bool includeSkShare, bool single_node_quorum = false)
+static UniValue BuildQuorumInfo(const llmq::CQuorumBlockProcessor& quorum_block_processor,
+                                const llmq::CQuorumCPtr& quorum, bool includeMembers, bool includeSkShare)
 {
     UniValue ret(UniValue::VOBJ);
 
@@ -207,7 +207,7 @@ static UniValue BuildQuorumInfo(const llmq::CQuorumBlockProcessor& quorum_block_
             mo.pushKV("pubKeyOperator", dmn->pdmnState->pubKeyOperator.ToString());
             mo.pushKV("valid", quorum->qc->validMembers[i]);
             if (quorum->qc->validMembers[i]) {
-                if (single_node_quorum) {
+                if (quorum->params.size == 1) {
                     mo.pushKV("pubKeyShare", dmn->pdmnState->pubKeyOperator.ToString());
                 } else {
                     CBLSPublicKey pubKey = quorum->GetPubKeyShare(i);
@@ -246,8 +246,7 @@ static RPCHelpMan quorum_info()
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
     const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(ParseInt32V(request.params[0], "llmqType"))};
-    auto llmq_opt = Params().GetLLMQ(llmqType);
-    if (!llmq_opt.has_value()) {
+    if (!Params().GetLLMQ(llmqType).has_value()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
 
@@ -262,7 +261,7 @@ static RPCHelpMan quorum_info()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
     }
 
-    return BuildQuorumInfo(*llmq_ctx.quorum_block_processor, quorum, true, includeSkShare, llmq_opt->size == 1);
+    return BuildQuorumInfo(*llmq_ctx.quorum_block_processor, quorum, true, includeSkShare);
 },
     };
 }
