@@ -1472,9 +1472,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     ApplyArgsManOptions(args, peerman_opts);
 
     {
-
-        // Read asmap file if configured
-        std::vector<std::byte> asmap;
+        // Read asmap file or embedded data if configured and initialize
+        // Netgroupman with or without it
+        assert(!node.netgroupman);
+        uint256 asmap_version;
         if (args.IsArgSet("-asmap") && !args.IsArgNegated("-asmap")) {
             fs::path asmap_path = args.GetPathArg("-asmap", DEFAULT_ASMAP_FILENAME);
             if (!asmap_path.is_absolute()) {
@@ -1484,20 +1485,18 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 InitError(strprintf(_("Could not find asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
                 return false;
             }
-            asmap = DecodeAsmap(asmap_path);
+            std::vector<std::byte> asmap{DecodeAsmap(asmap_path)};
             if (asmap.size() == 0) {
                 InitError(strprintf(_("Could not parse asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
                 return false;
             }
-            const uint256 asmap_version = AsmapVersion(asmap);;
+            node.netgroupman = std::make_unique<NetGroupManager>(NetGroupManager::WithLoadedAsmap(asmap));
+            asmap_version = AsmapVersion(asmap);
             LogPrintf("Using asmap version %s for IP bucketing\n", asmap_version.ToString());
         } else {
+            node.netgroupman = std::make_unique<NetGroupManager>(NetGroupManager::NoAsmap());
             LogPrintf("Using /16 prefix for IP bucketing\n");
         }
-
-        // Initialize netgroup manager
-        assert(!node.netgroupman);
-        node.netgroupman = std::make_unique<NetGroupManager>(std::move(asmap));
 
         // Initialize addrman
         assert(!node.addrman);

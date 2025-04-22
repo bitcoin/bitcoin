@@ -31,7 +31,7 @@ from test_framework.util import assert_equal
 
 DEFAULT_ASMAP_FILENAME = 'ip_asn.map' # defined in src/init.cpp
 ASMAP = 'src/test/data/asmap.raw' # path to unit test skeleton asmap
-VERSION = '6dfbc157b8a97b6e9fc7fc08d4e43d30247bbf62055eaa1098f46db9885855e3'
+VERSION = 'bafc9da308f45179443bd1d22325400ac9104f741522d003e3fac86700f68895'
 
 def expected_messages(filename):
     return [f'Opened asmap file "{filename}" (59 bytes) from disk',
