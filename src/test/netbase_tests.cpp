@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(subnet_test)
 
 BOOST_AUTO_TEST_CASE(netbase_getgroup)
 {
-    NetGroupManager netgroupman{std::vector<bool>()}; // use /16
+    NetGroupManager netgroupman{{}}; // use /16
     BOOST_CHECK(netgroupman.GetGroup(ResolveIP("127.0.0.1")) == std::vector<unsigned char>({0})); // Local -> !Routable()
     BOOST_CHECK(netgroupman.GetGroup(ResolveIP("257.0.0.1")) == std::vector<unsigned char>({0})); // !Valid -> !Routable()
     BOOST_CHECK(netgroupman.GetGroup(ResolveIP("10.0.0.1")) == std::vector<unsigned char>({0})); // RFC1918 -> !Routable()
@@ -630,17 +630,8 @@ BOOST_AUTO_TEST_CASE(asmap_test_vectors)
         "33e53662a7d72a29477b5beb35710591d3e23e5f0379baea62ffdee535bcdf879cbf69b88d7ea37c8015381cf"
         "63dc33d28f757a4a5e15d6a08"_hex};
 
-    // Convert to std::vector<bool> format that the ASMap interpreter uses.
-    std::vector<bool> asmap_bits;
-    asmap_bits.reserve(ASMAP_DATA.size() * 8);
-    for (auto byte : ASMAP_DATA) {
-        for (int bit = 0; bit < 8; ++bit) {
-            asmap_bits.push_back((std::to_integer<uint8_t>(byte) >> bit) & 1);
-        }
-    }
-
     // Construct NetGroupManager with this data.
-    NetGroupManager netgroup{std::move(asmap_bits)};
+    NetGroupManager netgroup{std::vector(ASMAP_DATA.begin(), ASMAP_DATA.end())};
     BOOST_CHECK(netgroup.UsingASMap());
 
     // Check some randomly-generated IPv6 addresses in it (biased towards the very beginning and

@@ -96,6 +96,7 @@
 #include <algorithm>
 #include <cerrno>
 #include <condition_variable>
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <fstream>
@@ -1561,7 +1562,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     {
 
         // Read asmap file if configured
-        std::vector<bool> asmap;
+        std::vector<std::byte> asmap;
         if (args.IsArgSet("-asmap") && !args.IsArgNegated("-asmap")) {
             fs::path asmap_path = args.GetPathArg("-asmap");
             if (asmap_path.empty()) {
