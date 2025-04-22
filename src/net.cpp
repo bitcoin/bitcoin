@@ -331,17 +331,6 @@ bool IsLocal(const CService& addr)
     return mapLocalHost.count(addr) > 0;
 }
 
-CNode* CConnman::FindNode(const CNetAddr& ip)
-{
-    LOCK(m_nodes_mutex);
-    for (CNode* pnode : m_nodes) {
-      if (static_cast<CNetAddr>(pnode->addr) == ip) {
-            return pnode;
-        }
-    }
-    return nullptr;
-}
-
 CNode* CConnman::FindNode(const std::string& addrName)
 {
     LOCK(m_nodes_mutex);
@@ -364,9 +353,10 @@ CNode* CConnman::FindNode(const CService& addr)
     return nullptr;
 }
 
-bool CConnman::AlreadyConnectedToAddress(const CAddress& addr)
+bool CConnman::AlreadyConnectedToAddress(const CNetAddr& addr) const
 {
-    return FindNode(static_cast<CNetAddr>(addr));
+    LOCK(m_nodes_mutex);
+    return std::ranges::any_of(m_nodes, [&addr](CNode* node) { return node->addr == addr; });
 }
 
 bool CConnman::CheckIncomingNonce(uint64_t nonce)

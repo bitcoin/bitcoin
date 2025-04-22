@@ -1365,15 +1365,13 @@ private:
 
     uint64_t CalculateKeyedNetGroup(const CNetAddr& ad) const;
 
-    CNode* FindNode(const CNetAddr& ip);
     CNode* FindNode(const std::string& addrName);
     CNode* FindNode(const CService& addr);
 
     /**
-     * Determine whether we're already connected to a given address, in order to
-     * avoid initiating duplicate connections.
+     * Determine whether we're already connected to a given address.
      */
-    bool AlreadyConnectedToAddress(const CAddress& addr);
+    bool AlreadyConnectedToAddress(const CNetAddr& addr) const;
 
     bool AttemptToEvictConnection();
     CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, ConnectionType conn_type, bool use_v2transport) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
