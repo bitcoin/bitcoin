@@ -20,8 +20,8 @@ public:
         : m_asmap{std::move(asmap)}
     {}
 
-    /** Get a checksum identifying the asmap being used. */
-    uint256 GetAsmapChecksum() const;
+    /** Get the asmap version, a checksum identifying the asmap being used. */
+    uint256 GetAsmapVersion() const;
 
     /**
      * Get the canonical identifier of the network group for address.
