@@ -26,6 +26,7 @@
 #include <wallet/coincontrol.h>
 #include <wallet/coinjoin.h>
 #include <wallet/fees.h>
+#include <wallet/receive.h>
 #include <walletinitinterface.h>
 
 #include <memory>
@@ -825,7 +826,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(ChainstateManager& chainman
             return false;
         }
 
-        const auto bal = m_wallet->GetBalance();
+        const auto bal = GetBalance(*m_wallet);
 
         // check if there is anything left to do
         CAmount nBalanceAnonymized = bal.m_anonymized;

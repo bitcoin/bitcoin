@@ -9,6 +9,9 @@
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
 
+/** Get the marginal bytes if spending the specified output from this transaction */
+int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out, bool use_max_sig = false);
+
 class COutput
 {
 public:
@@ -43,13 +46,13 @@ public:
      */
     bool fSafe;
 
-    COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn, bool use_max_sig_in = false)
+    COutput(const CWallet& wallet, const CWalletTx& wtx, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn, bool use_max_sig_in = false)
     {
-        tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn; nInputBytes = -1; use_max_sig = use_max_sig_in;
+        tx = &wtx; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn; nInputBytes = -1; use_max_sig = use_max_sig_in;
         // If known and signable by the given wallet, compute nInputBytes
         // Failure will keep this value -1
-        if (fSpendable && tx) {
-            nInputBytes = tx->GetSpendSize(i, use_max_sig);
+        if (fSpendable) {
+            nInputBytes = GetTxSpendSize(wallet, wtx, i, use_max_sig);
         }
     }
 
@@ -60,5 +63,8 @@ public:
         return CInputCoin(tx->tx, i, nInputBytes);
     }
 };
+
+// Get the marginal bytes of spending the specified output
+int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet, bool use_max_sig = false);
 
 #endif // BITCOIN_WALLET_SPEND_H

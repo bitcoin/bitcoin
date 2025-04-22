@@ -23,6 +23,11 @@ using interfaces::FoundBlock;
 
 static constexpr size_t OUTPUT_GROUP_MAX_ENTRIES{100};
 
+int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out, bool use_max_sig)
+{
+    return CalculateMaximumSignedInputSize(wtx.tx->vout[out], &wallet, use_max_sig);
+}
+
 std::string COutput::ToString() const
 {
     return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString(), i, nDepth, FormatMoney(tx->tx->vout[i].nValue));
@@ -87,17 +92,17 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, const CCoinControl* c
         if (!chain().checkFinalTx(*wtx.tx))
             continue;
 
-        if (wtx.IsImmatureCoinBase())
+        if (IsTxImmatureCoinBase(wtx))
             continue;
 
-        int nDepth = wtx.GetDepthInMainChain();
+        int nDepth = GetTxDepthInMainChain(wtx);
 
         // We should not consider coins which aren't at least in our mempool
         // It's possible for these to be conflicted via ancestors which we may never be able to detect
         if (nDepth == 0 && !wtx.InMempool())
             continue;
 
-        bool safeTx = IsTrusted(wtx, trusted_parents);
+        bool safeTx = CachedTxIsTrusted(*this, wtx, trusted_parents);
 
         if (only_safe && !safeTx) {
             continue;
@@ -173,7 +178,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, const CCoinControl* c
             bool solvable = provider ? IsSolvable(*provider, wtx.tx->vout[i].scriptPubKey) : false;
             bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
 
-            vCoins.push_back(COutput(&wtx, i, nDepth, spendable, solvable, safeTx, (coinControl && coinControl->fAllowWatchOnly)));
+            vCoins.push_back(COutput(*this, wtx, i, nDepth, spendable, solvable, safeTx, (coinControl && coinControl->fAllowWatchOnly)));
 
             // Checks the sum amount of all UTXO's.
             if (nMinimumSumAmount != MAX_MONEY) {
@@ -212,7 +217,7 @@ const CTxOut& CWallet::FindNonChangeParentOutput(const CTransaction& tx, int out
     AssertLockHeld(cs_wallet);
     const CTransaction* ptx = &tx;
     int n = output;
-    while (IsChange(ptx->vout[n]) && ptx->vin.size() > 0) {
+    while (OutputIsChange(*this, ptx->vout[n]) && ptx->vin.size() > 0) {
         const COutPoint& prevout = ptx->vin[0].prevout;
         auto it = mapWallet.find(prevout.hash);
         if (it == mapWallet.end() || it->second.tx->vout.size() <= prevout.n ||
@@ -248,14 +253,14 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins() const
     for (const COutPoint& output : setLockedCoins) {
         auto it = mapWallet.find(output.hash);
         if (it != mapWallet.end()) {
-            int depth = it->second.GetDepthInMainChain();
+            int depth = GetTxDepthInMainChain(it->second);
             if (depth >= 0 && output.n < it->second.tx->vout.size() &&
                 IsMine(it->second.tx->vout[output.n]) == is_mine_filter
             ) {
                 CTxDestination address;
                 if (ExtractDestination(FindNonChangeParentOutput(*it->second.tx, output.n).scriptPubKey, address)) {
                     result[address].emplace_back(
-                        &it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */);
+                        *this, it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */);
                 }
             }
         }
@@ -287,7 +292,7 @@ std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outpu
 
             // Make an OutputGroup containing just this output
             OutputGroup group{coin_sel_params};
-            group.Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, positive_only);
+            group.Insert(input_coin, output.nDepth, CachedTxIsFromMe(*this, *output.tx, ISMINE_ALL), ancestors, descendants, positive_only);
 
             // Check the OutputGroup's eligibility. Only add the eligible ones.
             if (positive_only && group.GetSelectionAmount() <= 0) continue;
@@ -333,7 +338,7 @@ std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outpu
         }
 
         // Add the input_coin to group
-        group->Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, positive_only);
+        group->Insert(input_coin, output.nDepth, CachedTxIsFromMe(*this, *output.tx, ISMINE_ALL), ancestors, descendants, positive_only);
     }
 
     // Now we go through the entire map and pull out the OutputGroups
@@ -460,7 +465,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
                 if (!IsFullyMixed(outpoint)) continue;
             }
             // Just to calculate the marginal byte size
-            CInputCoin coin(wtx.tx, outpoint.n, wtx.GetSpendSize(outpoint.n, false));
+            CInputCoin coin(wtx.tx, outpoint.n, GetTxSpendSize(*this, wtx, outpoint.n, false));
             nValueFromPresetInputs += coin.txout.nValue;
             if (coin.m_input_bytes <= 0) {
                 return false; // Not solvable, can't estimate size for fee

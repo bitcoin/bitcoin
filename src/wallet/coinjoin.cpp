@@ -9,6 +9,7 @@
 #include <coinjoin/common.h>
 #include <coinjoin/options.h>
 #include <evo/dmn_types.h>
+#include <wallet/receive.h>
 #include <wallet/wallet.h>
 #include <wallet/transaction.h>
 
@@ -155,9 +156,9 @@ std::vector<CompactTallyItem> CWallet::SelectCoinsGroupedByAddresses(bool fSkipD
 
         const CWalletTx& wtx = (*it).second;
 
-        if(wtx.IsCoinBase() && wtx.GetBlocksToMaturity() > 0) continue;
-        if(fSkipUnconfirmed && !wtx.IsTrusted()) continue;
-        if (wtx.GetDepthInMainChain() < 0) continue;
+        if (wtx.IsCoinBase() && GetTxBlocksToMaturity(wtx) > 0) continue;
+        if (fSkipUnconfirmed && !CachedTxIsTrusted(*this, wtx)) continue;
+        if (GetTxDepthInMainChain(wtx) < 0) continue;
 
         for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
             CTxDestination txdest;
@@ -247,7 +248,7 @@ int CWallet::CountInputsWithAmount(CAmount nInputAmount) const
         const auto it = mapWallet.find(outpoint.hash);
         if (it == mapWallet.end()) continue;
         if (it->second.tx->vout[outpoint.n].nValue != nInputAmount) continue;
-        if (it->second.GetDepthInMainChain() < 0) continue;
+        if (GetTxDepthInMainChain(it->second) < 0) continue;
 
         nTotal++;
     }
@@ -317,7 +318,7 @@ int CWallet::GetRealOutpointCoinJoinRounds(const COutPoint& outpoint, int nRound
     }
 
     // make sure we spent all of it with 0 fee, reset to 0 rounds otherwise
-    if (wtx->GetDebit(ISMINE_SPENDABLE) != wtx->GetCredit(ISMINE_SPENDABLE)) {
+    if (CachedTxGetDebit(*this, *wtx, ISMINE_SPENDABLE) != CachedTxGetCredit(*this, *wtx, ISMINE_SPENDABLE)) {
         *nRoundsRef = 0;
         WalletCJLogPrint(this, "%s UPDATED   %-70s %3d\n", __func__, outpoint.ToStringShort(), *nRoundsRef);
         return *nRoundsRef;
@@ -327,7 +328,7 @@ int CWallet::GetRealOutpointCoinJoinRounds(const COutPoint& outpoint, int nRound
     bool fDenomFound = false;
     // only denoms here so let's look up
     for (const auto& txinNext : wtx->tx->vin) {
-        if (IsMine(txinNext)) {
+        if (InputIsMine(*this, txinNext)) {
             int n = GetRealOutpointCoinJoinRounds(txinNext.prevout, nRounds + 1);
             // denom found, find the shortest chain or initially assign nShortest with the first found value
             if(n >= 0 && (n < nShortest || nShortest == -10)) {
@@ -481,7 +482,7 @@ CAmount CWallet::GetNormalizedAnonymizedBalance() const
 
         CAmount nValue = it->second.tx->vout[outpoint.n].nValue;
         if (!CoinJoin::IsDenominatedAmount(nValue)) continue;
-        if (it->second.GetDepthInMainChain() < 0) continue;
+        if (GetTxDepthInMainChain(it->second) < 0) continue;
 
         int nRounds = GetCappedOutpointCoinJoinRounds(outpoint);
         nTotal += nValue * nRounds / CCoinJoinClientOptions::GetRounds();
@@ -495,7 +496,7 @@ CAmount CachedTxGetAnonymizedCredit(const CWallet& wallet, const CWalletTx& wtx,
     AssertLockHeld(wallet.cs_wallet);
 
     // Exclude coinbase and conflicted txes
-    if (wtx.IsCoinBase() || wtx.GetDepthInMainChain() < 0)
+    if (wtx.IsCoinBase() || wallet.GetTxBlocksToMaturity(wtx) < 0)
         return 0;
 
     CAmount nCredit = 0;
@@ -512,7 +513,7 @@ CAmount CachedTxGetAnonymizedCredit(const CWallet& wallet, const CWalletTx& wtx,
         if (wallet.IsSpent(hashTx, i) || !CoinJoin::IsDenominatedAmount(txout.nValue)) continue;
 
         if (wallet.IsFullyMixed(outpoint)) {
-            nCredit += wallet.GetCredit(txout, ISMINE_SPENDABLE);
+            nCredit += OutputGetCredit(wallet, txout, ISMINE_SPENDABLE);
             if (!MoneyRange(nCredit))
                 throw std::runtime_error(std::string(__func__) + ": value out of range");
         }
@@ -528,13 +529,13 @@ CoinJoinCredits CachedTxGetAvailableCoinJoinCredits(const CWallet& wallet, const
     AssertLockHeld(wallet.cs_wallet);
 
     // Must wait until coinbase is safely deep enough in the chain before valuing it
-    if (wtx.IsCoinBase() && wtx.GetBlocksToMaturity() > 0)
+    if (wtx.IsCoinBase() && wallet.GetTxBlocksToMaturity(wtx) > 0)
         return ret;
 
-    int nDepth = wtx.GetDepthInMainChain();
+    int nDepth = wallet.GetTxBlocksToMaturity(wtx);
     if (nDepth < 0) return ret;
 
-    ret.is_unconfirmed = wtx.IsTrusted() && nDepth == 0;
+    ret.is_unconfirmed = CachedTxIsTrusted(wallet, wtx) && nDepth == 0;
 
     if (wtx.m_amounts[CWalletTx::ANON_CREDIT].m_cached[ISMINE_SPENDABLE]) {
         if (ret.is_unconfirmed && wtx.m_amounts[CWalletTx::DENOM_UCREDIT].m_cached[ISMINE_SPENDABLE]) {
@@ -550,7 +551,7 @@ CoinJoinCredits CachedTxGetAvailableCoinJoinCredits(const CWallet& wallet, const
         const COutPoint outpoint = COutPoint(hashTx, i);
 
         if (wallet.IsSpent(hashTx, i) || !CoinJoin::IsDenominatedAmount(txout.nValue)) continue;
-        const CAmount credit = wallet.GetCredit(txout, ISMINE_SPENDABLE);
+        const CAmount credit = OutputGetCredit(wallet, txout, ISMINE_SPENDABLE);
 
         if (wallet.IsFullyMixed(outpoint)) {
             ret.m_anonymized += credit;
