@@ -13,6 +13,7 @@
 #include <consensus/consensus.h>
 #include <key.h>
 #include <merkleblock.h>
+#include <pow.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <serialize.h>
@@ -20,6 +21,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <uint256.h>
+#include <validation.h>
 
 #include <algorithm>
 #include <array>
@@ -337,6 +339,13 @@ void ReadFromStream(FuzzedDataProvider& fuzzed_data_provider, Stream& stream) no
         } catch (const std::ios_base::failure&) {
             break;
         }
+    }
+}
+
+inline void FinalizeHeader(CBlockHeader& header, const ChainstateManager& chainman)
+{
+    while (!CheckProofOfWork(header.GetHash(), header.nBits, chainman.GetParams().GetConsensus())) {
+        ++(header.nNonce);
     }
 }
 
