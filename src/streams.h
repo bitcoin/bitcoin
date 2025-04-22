@@ -492,7 +492,7 @@ private:
     uint64_t m_read_pos{0}; //!< how many bytes have been read from this
     uint64_t nReadLimit;  //!< up to which position we're allowed to read
     uint64_t nRewind;     //!< how many bytes we guarantee to rewind
-    DataBuffer vchBuf;
+    std::vector<std::byte> vchBuf; //!< the buffer
 
     //! read data from the source to fill the buffer
     bool Fill() {

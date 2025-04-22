@@ -88,7 +88,7 @@ void AutoFile::write(Span<const std::byte> src)
         if (m_position.has_value()) *m_position += src.size();
     } else {
         std::array<std::byte, 4096> buf;
-        while (src.size()) {
+        while (src.size() > 0) {
             auto buf_now{Span{buf}.first(std::min<size_t>(src.size(), buf.size()))};
             std::copy_n(src.begin(), buf_now.size(), buf_now.begin());
             write_buffer(buf_now);
@@ -103,7 +103,7 @@ void AutoFile::write_buffer(std::span<std::byte> src)
     if (m_xor.size()) {
         if (!m_position) throw std::ios_base::failure("AutoFile::write_buffer: obfuscation position unknown");
         util::Xor(src, m_xor, *m_position); // obfuscate in-place
-    }
+        }
     if (std::fwrite(src.data(), 1, src.size(), m_file) != src.size()) {
         throw std::ios_base::failure("AutoFile::write_buffer: write failed");
     }
