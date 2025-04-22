@@ -1489,7 +1489,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 InitError(strprintf(_("Could not parse asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
                 return false;
             }
-            const uint256 asmap_version = (HashWriter{} << asmap).GetHash();
+            const uint256 asmap_version = AsmapVersion(asmap);;
             LogPrintf("Using asmap version %s for IP bucketing\n", asmap_version.ToString());
         } else {
             LogPrintf("Using /16 prefix for IP bucketing\n");
