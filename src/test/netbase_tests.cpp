@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(subnet_test)
 
 BOOST_AUTO_TEST_CASE(netbase_getgroup)
 {
-    NetGroupManager netgroupman{std::vector<bool>()}; // use /16
+    NetGroupManager netgroupman{{}}; // use /16
     BOOST_CHECK(netgroupman.GetGroup(ResolveIP("127.0.0.1")) == std::vector<unsigned char>({0})); // Local -> !Routable()
     BOOST_CHECK(netgroupman.GetGroup(ResolveIP("257.0.0.1")) == std::vector<unsigned char>({0})); // !Valid -> !Routable()
     BOOST_CHECK(netgroupman.GetGroup(ResolveIP("10.0.0.1")) == std::vector<unsigned char>({0})); // RFC1918 -> !Routable()
@@ -625,18 +625,10 @@ BOOST_AUTO_TEST_CASE(asmap_test_vectors)
         "1e3bbc17ba4d6f79ea3f031b876799ac268b1e0ea9babf0f9a8e5f6c55e363c6363df46afc696d7afceaf49b6"
         "e62df9e9dc27e70664cafe5c53df66dd0b8237678ada90e73f05ec60e6f6e96c3cbb1ea2f9dece115d5bdba10"
         "33e53662a7d72a29477b5beb35710591d3e23e5f0379baea62ffdee535bcdf879cbf69b88d7ea37c8015381cf"
-        "63dc33d28f757a4a5e15d6a08"_hex_v_u8;
-
-    // Convert to std::vector<bool> format that the ASMap interpreter uses.
-    std::vector<bool> asmap_bits;
-    for (auto byte : ASMAP_DATA) {
-        for (int bit = 0; bit < 8; ++bit) {
-            asmap_bits.push_back((byte >> bit) & 1);
-        }
-    }
+        "63dc33d28f757a4a5e15d6a08"_hex_v;
 
     // Construct NetGroupManager with this data.
-    NetGroupManager netgroup{std::move(asmap_bits)};
+    NetGroupManager netgroup{std::move(ASMAP_DATA)};
     BOOST_CHECK(netgroup.UsingASMap());
 
     // Check some randomly-generated IPv6 addresses in it (biased towards the very beginning and
