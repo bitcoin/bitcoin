@@ -5,9 +5,11 @@
 #include <util/asmap.h>
 
 #include <clientversion.h>
+#include <hash.h>
 #include <logging.h>
 #include <serialize.h>
 #include <streams.h>
+#include <uint256.h>
 #include <util/fs.h>
 
 #include <algorithm>
@@ -222,4 +224,13 @@ std::vector<std::byte> DecodeAsmap(fs::path path)
     }
 
     return buffer;
+}
+
+uint256 AsmapVersion(const std::vector<std::byte>& data)
+{
+    if (data.empty()) return {};
+
+    HashWriter asmap_hasher;
+    asmap_hasher << data;
+    return asmap_hasher.GetHash();
 }
