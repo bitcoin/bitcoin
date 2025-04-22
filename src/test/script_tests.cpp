@@ -282,19 +282,19 @@ public:
         return *this;
     }
 
-    TestBuilder& Push(const std::string& hex)
+    [[maybe_unused]] TestBuilder& Push(const std::string& hex)
     {
         DoPush(ParseHex(hex));
         return *this;
     }
 
-    TestBuilder& Push(const uint256& hash)
+    [[maybe_unused]] TestBuilder& Push(const uint256& hash)
     {
         DoPush(ToByteVector(hash));
         return *this;
     }
 
-    TestBuilder& Push(const CScript& script)
+    [[maybe_unused]] TestBuilder& Push(const CScript& script)
     {
          DoPush(std::vector<unsigned char>(script.begin(), script.end()));
         return *this;

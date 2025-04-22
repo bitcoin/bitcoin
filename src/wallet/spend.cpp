@@ -373,7 +373,8 @@ bool CWallet::AttemptSelection(const CAmount& nTargetValue, const CoinEligibilit
     std::vector<OutputGroup> positive_groups = GroupOutputs(coins, coin_selection_params, eligibility_filter, true /* positive_only */);
     std::set<CInputCoin> bnb_coins;
     CAmount bnb_value;
-    if (false && SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change, bnb_coins, bnb_value)) {
+    // Note: BnB is disabled because it is unaware of mixed coins
+    if (/* DISABLES CODE */ (false) && SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change, bnb_coins, bnb_value)) {
         const auto waste = GetSelectionWaste(bnb_coins, /* cost of change */ CAmount(0), nTargetValue, !coin_selection_params.m_subtract_fee_outputs);
         results.emplace_back(std::make_tuple(waste, std::move(bnb_coins), bnb_value));
     }

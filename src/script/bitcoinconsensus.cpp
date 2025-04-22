@@ -48,7 +48,7 @@ public:
         return *this;
     }
 
-    int GetVersion() const { return m_version; }
+    [[maybe_unused]] int GetVersion() const { return m_version; }
 private:
     const int m_version;
     const unsigned char* m_data;

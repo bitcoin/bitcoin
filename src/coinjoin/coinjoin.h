@@ -317,6 +317,7 @@ public:
     int nSessionDenom{0}; // Users must submit a denom matching this
 
     CCoinJoinBaseSession() = default;
+    virtual ~CCoinJoinBaseSession() = default;
 
     int GetState() const { return nState; }
     std::string GetStateString() const;

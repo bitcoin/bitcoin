@@ -15,4 +15,3 @@ export GOAL="install"
 export BITCOIN_CONFIG="--enable-zmq --with-sanitizers=thread CC=clang-18 CXX=clang++-18 CXXFLAGS='-g' --with-boost-process"
 export CPPFLAGS="-DARENA_DEBUG -DDEBUG_LOCKORDER -DDEBUG_LOCKCONTENTION"
 export PYZMQ=true
-export NO_WERROR=1

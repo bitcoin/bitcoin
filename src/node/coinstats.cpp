@@ -91,19 +91,6 @@ static void ApplyStats(CCoinsStats& stats, const uint256& hash, const std::map<u
     }
 }
 
-static void ApplyStats(CCoinsStats& stats, std::nullptr_t, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
-{
-    assert(!outputs.empty());
-    stats.nTransactions++;
-    for (const auto& output : outputs) {
-        stats.nTransactionOutputs++;
-        if (stats.total_amount.has_value()) {
-            stats.total_amount = CheckedAdd(*stats.total_amount, output.second.out.nValue);
-        }
-        stats.nBogoSize += GetBogoSize(output.second.out.scriptPubKey);
-    }
-}
-
 //! Calculate statistics about the unspent transaction output set
 template <typename T>
 static bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& stats, T hash_obj, const std::function<void()>& interruption_point, const CBlockIndex* pindex)

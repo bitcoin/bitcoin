@@ -75,7 +75,7 @@ private:
     CAmount platformReward{0};
 
     const CBlockIndex *pindexPrev{nullptr};
-    const Consensus::Params& params;
+
 public:
     explicit CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindexPrev,
                              const Consensus::Params& consensusParams,

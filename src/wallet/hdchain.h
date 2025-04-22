@@ -122,7 +122,7 @@ class CHDPubKey
 {
 private:
     static const int CURRENT_VERSION = 1;
-    int nVersion{CHDPubKey::CURRENT_VERSION};
+    [[maybe_unused]] int nVersion{CHDPubKey::CURRENT_VERSION};
 
 public:
     CExtPubKey extPubKey{};

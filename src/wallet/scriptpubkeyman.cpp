@@ -219,7 +219,7 @@ bool LegacyScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key
         if (keyFail) {
             return false;
         }
-        if (!keyPass && !accept_no_keys && (m_hd_chain.IsNull() || !m_hd_chain.IsNull() && !m_hd_chain.IsCrypted())) {
+        if (!keyPass && !accept_no_keys && (m_hd_chain.IsNull() || (!m_hd_chain.IsNull() && !m_hd_chain.IsCrypted()))) {
             return false;
         }
 

@@ -1187,32 +1187,6 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
 
 }
 
-[[nodiscard]] static bool EraseOldDBData(CDBWrapper& db, const std::vector<std::string>& db_key_prefixes)
-{
-    bool erased{false};
-    for(const auto& db_key_prefix : db_key_prefixes) {
-        CDBBatch batch{db};
-        std::unique_ptr<CDBIterator> it{db.NewIterator()};
-        std::pair firstKey{db_key_prefix, uint256()};
-        it->Seek(firstKey);
-        while (it->Valid()) {
-            decltype(firstKey) curKey;
-            if (!it->GetKey(curKey) || std::get<0>(curKey) != db_key_prefix) {
-                break;
-            }
-            batch.Erase(curKey);
-            erased = true;
-            it->Next();
-        }
-        if (erased) {
-            LogPrintf("CDeterministicMNManager::%s -- updating db...\n", __func__);
-            db.WriteBatch(batch);
-            LogPrintf("CDeterministicMNManager::%s -- done cleaning old data for %s\n", __func__, db_key_prefix);
-        }
-    }
-    return erased;
-}
-
 template <typename ProTx>
 static bool CheckService(const ProTx& proTx, TxValidationState& state)
 {

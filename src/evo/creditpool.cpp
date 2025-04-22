@@ -235,10 +235,10 @@ CCreditPoolManager::CCreditPoolManager(CEvoDB& _evoDb)
 {
 }
 
-CCreditPoolDiff::CCreditPoolDiff(CCreditPool starter, const CBlockIndex *pindexPrev, const Consensus::Params& consensusParams, const CAmount blockSubsidy) :
+CCreditPoolDiff::CCreditPoolDiff(CCreditPool starter, const CBlockIndex* pindexPrev,
+                                 const Consensus::Params& consensusParams, const CAmount blockSubsidy) :
     pool(std::move(starter)),
-    pindexPrev(pindexPrev),
-    params(consensusParams)
+    pindexPrev(pindexPrev)
 {
     assert(pindexPrev);
 

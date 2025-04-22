@@ -105,7 +105,7 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CConnm
 
         // if the queue is ready, submit if we can
         if (dsq.fReady &&
-            m_walletman.ForAnyCJClientMan([this, &connman, &dmn](std::unique_ptr<CCoinJoinClientManager>& clientman) {
+            m_walletman.ForAnyCJClientMan([&connman, &dmn](std::unique_ptr<CCoinJoinClientManager>& clientman) {
                 return clientman->TrySubmitDenominate(dmn->proTxHash, connman);
             })) {
             LogPrint(BCLog::COINJOIN, "DSQUEUE -- CoinJoin queue is ready, masternode=%s, queue=%s\n", dmn->proTxHash.ToString(), dsq.ToString());
@@ -161,14 +161,12 @@ void CCoinJoinClientManager::ProcessMessage(CNode& peer, CChainState& active_cha
     }
 }
 
-CCoinJoinClientSession::CCoinJoinClientSession(const std::shared_ptr<CWallet>& wallet, CoinJoinWalletManager& walletman,
-                                               CCoinJoinClientManager& clientman, CDeterministicMNManager& dmnman,
-                                               CMasternodeMetaMan& mn_metaman, const CMasternodeSync& mn_sync,
-                                               const llmq::CInstantSendManager& isman,
+CCoinJoinClientSession::CCoinJoinClientSession(const std::shared_ptr<CWallet>& wallet, CCoinJoinClientManager& clientman,
+                                               CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
+                                               const CMasternodeSync& mn_sync, const llmq::CInstantSendManager& isman,
                                                const std::unique_ptr<CCoinJoinClientQueueManager>& queueman,
                                                bool is_masternode) :
     m_wallet(wallet),
-    m_walletman(walletman),
     m_clientman(clientman),
     m_dmnman(dmnman),
     m_mn_metaman(mn_metaman),
@@ -998,8 +996,7 @@ bool CCoinJoinClientManager::DoAutomaticDenominating(ChainstateManager& chainman
     AssertLockNotHeld(cs_deqsessions);
     LOCK(cs_deqsessions);
     if (int(deqSessions.size()) < CCoinJoinClientOptions::GetSessions()) {
-        deqSessions.emplace_back(m_wallet, m_walletman, *this, m_dmnman, m_mn_metaman, m_mn_sync, m_isman, m_queueman,
-                                 m_is_masternode);
+        deqSessions.emplace_back(m_wallet, *this, m_dmnman, m_mn_metaman, m_mn_sync, m_isman, m_queueman, m_is_masternode);
     }
     for (auto& session : deqSessions) {
         if (!CheckAutomaticBackup()) return false;
@@ -1905,9 +1902,8 @@ void CoinJoinWalletManager::Add(const std::shared_ptr<CWallet>& wallet)
 {
     LOCK(cs_wallet_manager_map);
     m_wallet_manager_map.try_emplace(wallet->GetName(),
-                                     std::make_unique<CCoinJoinClientManager>(wallet, *this, m_dmnman, m_mn_metaman,
-                                                                              m_mn_sync, m_isman, m_queueman,
-                                                                              m_is_masternode));
+                                     std::make_unique<CCoinJoinClientManager>(wallet, m_dmnman, m_mn_metaman, m_mn_sync,
+                                                                              m_isman, m_queueman, m_is_masternode));
 }
 
 void CoinJoinWalletManager::DoMaintenance(CConnman& connman)

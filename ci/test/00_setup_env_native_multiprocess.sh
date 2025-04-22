@@ -17,4 +17,3 @@ export BITCOIN_CONFIG="--with-boost-process --enable-debug CC=clang-18 CXX=clang
 # Additional flags for RUN_TIDY
 export BITCOIN_CONFIG="${BITCOIN_CONFIG} --disable-hardening CFLAGS='-O0 -g0' CXXFLAGS='-O0 -g0 -Wno-error=documentation'"
 export BITCOIND=dash-node  # Used in functional tests
-export NO_WERROR=1
