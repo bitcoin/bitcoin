@@ -200,7 +200,7 @@ std::vector<bool> DecodeAsmap(fs::path path)
     FILE *filestr = fsbridge::fopen(path, "rb");
     AutoFile file{filestr};
     if (file.IsNull()) {
-        LogPrintf("Failed to open asmap file from disk\n");
+        LogWarning("Failed to open asmap file from disk");
         return bits;
     }
     file.seek(0, SEEK_END);
@@ -215,7 +215,7 @@ std::vector<bool> DecodeAsmap(fs::path path)
         }
     }
     if (!SanityCheckASMap(bits, 128)) {
-        LogPrintf("Sanity check of asmap file %s failed\n", fs::quoted(fs::PathToString(path)));
+        LogWarning("Sanity check of asmap file %s failed", fs::quoted(fs::PathToString(path)));
         return {};
     }
     return bits;
