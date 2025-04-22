@@ -11,6 +11,7 @@
 #include <messagesigner.h>
 #include <netbase.h>
 #include <node/miner.h>
+#include <node/transaction.h>
 #include <script/interpreter.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>

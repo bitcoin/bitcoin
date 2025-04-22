@@ -726,9 +726,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     if (auto conflictLockOpt = m_chain_helper.ConflictingISLockIfAny(tx); conflictLockOpt.has_value()) {
         auto& [_, conflict_txid] = conflictLockOpt.value();
-        uint256 hashBlock;
-        CTransactionRef txConflict = GetTransaction(/* block_index */ nullptr, &m_pool, conflict_txid, chainparams.GetConsensus(), hashBlock);
-        if (txConflict) {
+
+        if (auto [txConflict, _] = GetTransactionBlock(conflict_txid, &m_pool); txConflict) {
             GetMainSignals().NotifyInstantSendDoubleSpendAttempt(ptx, txConflict);
         }
         LogPrintf("ERROR: AcceptToMemoryPool : Transaction %s conflicts with locked TX %s\n", hash.ToString(), conflict_txid.ToString());

@@ -13,17 +13,18 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <dbwrapper.h>
+#include <evo/chainhelper.h>
 #include <index/txindex.h>
 #include <masternode/sync.h>
 #include <net_processing.h>
 #include <node/blockstorage.h>
 #include <spork.h>
+#include <stats/client.h>
 #include <txmempool.h>
 #include <util/irange.h>
 #include <util/ranges.h>
 #include <util/thread.h>
 #include <validation.h>
-#include <stats/client.h>
 
 #include <cxxtimer.hpp>
 
@@ -574,8 +575,7 @@ bool CInstantSendManager::CheckCanLock(const COutPoint& outpoint, bool printDebu
         return false;
     }
 
-    uint256 hashBlock;
-    CTransactionRef tx = GetTransaction(/* block_index */ nullptr, &mempool, outpoint.hash, params, hashBlock);
+    auto [tx, hashBlock] = GetTransactionBlock(outpoint.hash, &mempool);
     // this relies on enabled txindex and won't work if we ever try to remove the requirement for txindex for masternodes
     if (!tx) {
         if (printDebug) {
@@ -632,8 +632,7 @@ void CInstantSendManager::HandleNewInputLockRecoveredSig(const CRecoveredSig& re
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    uint256 hashBlock;
-    CTransactionRef tx = GetTransaction(/* block_index */ nullptr, &mempool, txid, Params().GetConsensus(), hashBlock);
+    auto [tx, hashBlock] = GetTransactionBlock(txid, &mempool);
     if (!tx) {
         return;
     }
@@ -1012,8 +1011,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, PeerManager& peerm
         return;
     }
 
-    uint256 hashBlock;
-    CTransactionRef tx = GetTransaction(/* block_index */ nullptr, &mempool, islock->txid, Params().GetConsensus(), hashBlock);
+    auto [tx, hashBlock] = GetTransactionBlock(islock->txid, &mempool);
     const CBlockIndex* pindexMined{nullptr};
     // we ignore failure here as we must be able to propagate the lock even if we don't have the TX locally
     if (tx && !hashBlock.IsNull()) {

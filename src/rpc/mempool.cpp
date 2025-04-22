@@ -14,6 +14,7 @@
 #include <rpc/util.h>
 #include <txmempool.h>
 #include <univalue.h>
+#include <validation.h>
 
 #include <llmq/context.h>
 #include <llmq/instantsend.h>

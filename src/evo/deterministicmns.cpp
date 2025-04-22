@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <evo/chainhelper.h>
 #include <evo/deterministicmns.h>
 #include <evo/dmn_types.h>
 #include <evo/dmnstate.h>
@@ -13,15 +14,15 @@
 
 #include <base58.h>
 #include <chainparams.h>
+#include <coins.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
-#include <script/standard.h>
-#include <validation.h>
-#include <validationinterface.h>
-#include <univalue.h>
 #include <messagesigner.h>
-#include <uint256.h>
+#include <script/standard.h>
 #include <stats/client.h>
+#include <uint256.h>
+#include <univalue.h>
+#include <validationinterface.h>
 
 #include <optional>
 #include <memory>
@@ -51,8 +52,7 @@ UniValue CDeterministicMN::ToJson() const
     obj.pushKV("collateralHash", collateralOutpoint.hash.ToString());
     obj.pushKV("collateralIndex", (int)collateralOutpoint.n);
 
-    uint256 tmpHashBlock;
-    CTransactionRef collateralTx = GetTransaction(/* block_index */ nullptr,  /* mempool */ nullptr, collateralOutpoint.hash, Params().GetConsensus(), tmpHashBlock);
+    auto [collateralTx, _] = GetTransactionBlock(collateralOutpoint.hash);
     if (collateralTx) {
         CTxDestination dest;
         if (ExtractDestination(collateralTx->vout[collateralOutpoint.n].scriptPubKey, dest)) {

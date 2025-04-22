@@ -10,13 +10,13 @@
 #include <fs.h>
 #include <streams.h>
 #include <sync.h>
-#include <validation.h>
 
 #include <stdint.h>
 #include <vector>
 
 extern RecursiveMutex cs_main;
 
+class BlockManager;
 class CBlock;
 class CBlockIndex;
 class CChainState;

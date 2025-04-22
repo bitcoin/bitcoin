@@ -7,6 +7,7 @@
 #include <bls/bls.h>
 #include <chainparams.h>
 #include <core_io.h>
+#include <evo/chainhelper.h>
 #include <evo/deterministicmns.h>
 #include <governance/governance.h>
 #include <governance/validators.h>
@@ -467,8 +468,7 @@ bool CGovernanceObject::IsCollateralValid(const ChainstateManager& chainman, std
     uint256 nExpectedHash = GetHash();
 
     // RETRIEVE TRANSACTION IN QUESTION
-    uint256 nBlockHash;
-    CTransactionRef txCollateral = GetTransaction(/* block_index */ nullptr, /* mempool */ nullptr, m_obj.collateralHash, Params().GetConsensus(), nBlockHash);
+    auto [txCollateral, nBlockHash] = GetTransactionBlock(m_obj.collateralHash);
     if (!txCollateral) {
         strError = strprintf("Can't find collateral tx %s", m_obj.collateralHash.ToString());
         LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);

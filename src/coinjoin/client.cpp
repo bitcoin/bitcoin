@@ -4,6 +4,7 @@
 
 #include <coinjoin/client.h>
 
+#include <chain.h>
 #include <chainparams.h>
 #include <coinjoin/options.h>
 #include <consensus/validation.h>
@@ -21,7 +22,6 @@
 #include <util/ranges.h>
 #include <util/system.h>
 #include <util/translation.h>
-#include <validation.h>
 #include <version.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>

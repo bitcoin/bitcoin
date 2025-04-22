@@ -7,7 +7,6 @@
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <script/sign.h>
-#include <validation.h>
 #include <wallet/fees.h>
 #include <wallet/wallet.h>
 #include <util/translation.h>

@@ -21,7 +21,6 @@
 #include <masternode/meta.h>
 #include <masternode/node.h>
 #include <netmessagemaker.h>
-#include <validation.h>
 #include <util/irange.h>
 #include <util/underlying.h>
 
