@@ -213,7 +213,7 @@ void DashChainstateSetup(ChainstateManager& chainman,
 {
     // Same logic as pblocktree
     dmnman.reset();
-    dmnman = std::make_unique<CDeterministicMNManager>(chainman.ActiveChainstate(), *evodb);
+    dmnman = std::make_unique<CDeterministicMNManager>(*evodb);
 
     cpoolman.reset();
     cpoolman = std::make_unique<CCreditPoolManager>(*evodb);

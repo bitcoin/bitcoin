@@ -139,7 +139,6 @@ class CCoinJoinClientSession : public CCoinJoinBaseSession
 {
 private:
     const std::shared_ptr<CWallet> m_wallet;
-    CoinJoinWalletManager& m_walletman;
     CCoinJoinClientManager& m_clientman;
     CDeterministicMNManager& m_dmnman;
     CMasternodeMetaMan& m_mn_metaman;
@@ -201,10 +200,9 @@ private:
     void SetNull() override EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
 public:
-    explicit CCoinJoinClientSession(const std::shared_ptr<CWallet>& wallet, CoinJoinWalletManager& walletman,
-                                    CCoinJoinClientManager& clientman, CDeterministicMNManager& dmnman,
-                                    CMasternodeMetaMan& mn_metaman, const CMasternodeSync& mn_sync,
-                                    const llmq::CInstantSendManager& isman,
+    explicit CCoinJoinClientSession(const std::shared_ptr<CWallet>& wallet, CCoinJoinClientManager& clientman,
+                                    CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
+                                    const CMasternodeSync& mn_sync, const llmq::CInstantSendManager& isman,
                                     const std::unique_ptr<CCoinJoinClientQueueManager>& queueman, bool is_masternode);
 
     void ProcessMessage(CNode& peer, CChainState& active_chainstate, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv);
@@ -266,7 +264,6 @@ class CCoinJoinClientManager
 {
 private:
     const std::shared_ptr<CWallet> m_wallet;
-    CoinJoinWalletManager& m_walletman;
     CDeterministicMNManager& m_dmnman;
     CMasternodeMetaMan& m_mn_metaman;
     const CMasternodeSync& m_mn_sync;
@@ -305,12 +302,11 @@ public:
     CCoinJoinClientManager(CCoinJoinClientManager const&) = delete;
     CCoinJoinClientManager& operator=(CCoinJoinClientManager const&) = delete;
 
-    explicit CCoinJoinClientManager(const std::shared_ptr<CWallet>& wallet, CoinJoinWalletManager& walletman,
-                                    CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
-                                    const CMasternodeSync& mn_sync, const llmq::CInstantSendManager& isman,
+    explicit CCoinJoinClientManager(const std::shared_ptr<CWallet>& wallet, CDeterministicMNManager& dmnman,
+                                    CMasternodeMetaMan& mn_metaman, const CMasternodeSync& mn_sync,
+                                    const llmq::CInstantSendManager& isman,
                                     const std::unique_ptr<CCoinJoinClientQueueManager>& queueman, bool is_masternode) :
         m_wallet(wallet),
-        m_walletman(walletman),
         m_dmnman(dmnman),
         m_mn_metaman(mn_metaman),
         m_mn_sync(mn_sync),

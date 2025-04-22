@@ -563,7 +563,6 @@ private:
     // Main thread has indicated we should perform cleanup up to this height
     std::atomic<int> to_cleanup {0};
 
-    CChainState& m_chainstate;
     CEvoDB& m_evoDb;
 
     std::unordered_map<uint256, CDeterministicMNList, StaticSaltedHasher> mnListsCache GUARDED_BY(cs);
@@ -572,8 +571,7 @@ private:
     const CBlockIndex* m_initial_snapshot_index GUARDED_BY(cs) {nullptr};
 
 public:
-    explicit CDeterministicMNManager(CChainState& chainstate, CEvoDB& evoDb) :
-        m_chainstate(chainstate),
+    explicit CDeterministicMNManager(CEvoDB& evoDb) :
         m_evoDb(evoDb)
     {
     }
