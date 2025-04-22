@@ -356,9 +356,6 @@ private:
     /** Internal database handle. */
     std::unique_ptr<WalletDatabase> const m_database;
 
-    // A helper function which loops through wallet UTXOs
-    std::unordered_set<const CWalletTx*, WalletTxHasher> GetSpendableTXs() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-
     /**
      * The following is used to keep track of how far behind the wallet is
      * from the chain sync, and to allow clients to block on us being caught up.
@@ -473,6 +470,9 @@ public:
     bool Lock(bool fForMixing = false);
 
     void UpdateProgress(const std::string& title, int nProgress) override;
+
+    /* A helper function which loops through wallet UTXOs */
+    std::unordered_set<const CWalletTx*, WalletTxHasher> GetSpendableTXs() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** Map from txid to CWalletTx for all transactions this wallet is
      * interested in, including received and sent transactions. */
@@ -666,7 +666,6 @@ public:
         CAmount m_denominated_untrusted_pending{0};
     };
     Balance GetBalance(const int min_depth = 0, const bool avoid_reuse = true, const bool fAddLocked = false) const;
-    CAmount GetBalanceAnonymized(const CCoinControl& coinControl) const;
 
     CAmount GetAnonymizableBalance(bool fSkipDenominated = false, bool fSkipUnconfirmed = true) const;
     float GetAverageAnonymizedRounds() const;

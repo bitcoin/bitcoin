@@ -21,6 +21,7 @@
 #include <util/translation.h>
 #include <util/ui_change_type.h>
 #include <validation.h>
+#include <wallet/coinjoin.h>
 #include <wallet/context.h>
 #include <wallet/fees.h>
 #include <wallet/ismine.h>
@@ -424,7 +425,7 @@ public:
     CAmount getAvailableBalance(const CCoinControl& coin_control) override
     {
         if (coin_control.IsUsingCoinJoin()) {
-            return m_wallet->GetBalanceAnonymized(coin_control);
+            return GetBalanceAnonymized(*m_wallet, coin_control);
         } else {
             return m_wallet->GetAvailableBalance(&coin_control);
         }
