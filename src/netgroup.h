@@ -8,6 +8,7 @@
 #include <netaddress.h>
 #include <uint256.h>
 
+#include <cstddef>
 #include <vector>
 
 /**
@@ -15,7 +16,7 @@
  */
 class NetGroupManager {
 public:
-    explicit NetGroupManager(std::vector<bool> asmap)
+    explicit NetGroupManager(std::vector<std::byte> asmap)
         : m_asmap{std::move(asmap)}
     {}
 
@@ -70,7 +71,7 @@ private:
      *
      * This is initialized in the constructor, const, and therefore is
      * thread-safe. */
-    const std::vector<bool> m_asmap;
+    const std::vector<std::byte> m_asmap;
 };
 
 #endif // BITCOIN_NETGROUP_H
