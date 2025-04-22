@@ -29,7 +29,7 @@ FUZZ_TARGET(asmap)
     if (buffer.size() < size_t(1 + asmap_size + addr_size)) return;
     std::vector<std::byte> asmap = ipv6 ? IPV6_PREFIX_ASMAP : IPV4_PREFIX_ASMAP;
     std::ranges::copy(std::as_bytes(buffer.subspan(1, asmap_size)), std::back_inserter(asmap));
-    if (!SanityCheckASMap(asmap, 128)) return;
+    if (!CheckStandardAsmap(asmap)) return;
 
     const uint8_t* addr_data = buffer.data() + 1 + asmap_size;
     CNetAddr net_addr;
@@ -42,6 +42,6 @@ FUZZ_TARGET(asmap)
         memcpy(&ipv4, addr_data, addr_size);
         net_addr.SetIP(CNetAddr{ipv4});
     }
-    NetGroupManager netgroupman{std::move(asmap)};
+    auto netgroupman{NetGroupManager::WithEmbeddedAsmap(asmap)};
     (void)netgroupman.GetMappedAS(net_addr);
 }

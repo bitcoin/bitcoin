@@ -48,7 +48,7 @@ FUZZ_TARGET(p2p_handshake, .init = ::initialize)
     chainman.ResetIbd();
 
     node::Warnings warnings{};
-    NetGroupManager netgroupman{{}};
+    auto netgroupman{NetGroupManager::NoAsmap()};
     AddrMan addrman{netgroupman, /*deterministic=*/true, /*consistency_check_ratio=*/0};
     auto peerman = PeerManager::make(connman, addrman,
                                      /*banman=*/nullptr, chainman,
