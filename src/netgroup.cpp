@@ -10,11 +10,9 @@
 
 #include <cstddef>
 
-uint256 NetGroupManager::GetAsmapChecksum() const
+uint256 NetGroupManager::GetAsmapVersion() const
 {
-    if (!m_asmap.size()) return {};
-
-    return (HashWriter{} << m_asmap).GetHash();
+    return AsmapVersion(m_asmap);
 }
 
 std::vector<unsigned char> NetGroupManager::GetGroup(const CNetAddr& address) const
