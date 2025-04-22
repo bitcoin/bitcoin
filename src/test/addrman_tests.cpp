@@ -24,7 +24,7 @@ using namespace std::literals;
 using node::NodeContext;
 using util::ToString;
 
-static NetGroupManager EMPTY_NETGROUPMAN{{}};
+static NetGroupManager EMPTY_NETGROUPMAN{NetGroupManager::NoAsmap()};
 static const bool DETERMINISTIC{true};
 
 static int32_t GetCheckRatio(const NodeContext& node_ctx)
@@ -584,8 +584,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket_legacy)
 // 101.8.0.0/16 AS8
 BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
 {
-    std::vector<std::byte> asmap(test::data::asmap.begin(), test::data::asmap.end());
-    NetGroupManager ngm_asmap{asmap};
+    NetGroupManager ngm_asmap{NetGroupManager::WithEmbeddedAsmap(test::data::asmap)};
 
     CAddress addr1 = CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.1.1.1", 9999), NODE_NONE);
@@ -638,8 +637,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
 
 BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
 {
-    std::vector<std::byte> asmap(test::data::asmap.begin(), test::data::asmap.end());
-    NetGroupManager ngm_asmap{asmap};
+    NetGroupManager ngm_asmap{NetGroupManager::WithEmbeddedAsmap(test::data::asmap)};
 
     CAddress addr1 = CAddress(ResolveService("250.1.2.1", 8333), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.1.2.1", 9999), NODE_NONE);
@@ -716,8 +714,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
 
 BOOST_AUTO_TEST_CASE(addrman_serialization)
 {
-    std::vector<std::byte> asmap1(test::data::asmap.begin(), test::data::asmap.end());
-    NetGroupManager netgroupman{asmap1};
+    NetGroupManager netgroupman{NetGroupManager::WithEmbeddedAsmap(test::data::asmap)};
 
     const auto ratio = GetCheckRatio(m_node);
     auto addrman_asmap1 = std::make_unique<AddrMan>(netgroupman, DETERMINISTIC, ratio);

@@ -17,6 +17,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdio>
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -34,7 +35,7 @@ inline bool GetBitBE(std::span<const std::byte> bytes, uint32_t bitpos) noexcept
     return (std::to_integer<uint8_t>(bytes[(bytes.size() * 8 - bitpos) / 8]) >> (7 - ((bytes.size() * 8 - bitpos) % 8))) & 1;
 }
 
-uint32_t DecodeBits(size_t& bitpos, const std::vector<std::byte>& data, uint8_t minval, const std::vector<uint8_t>& bit_sizes)
+uint32_t DecodeBits(size_t& bitpos, const std::span<const std::byte>& data, uint8_t minval, const std::span<const uint8_t> bit_sizes)
 {
     uint32_t val = minval;
     bool bit;
@@ -69,35 +70,33 @@ enum class Instruction : uint32_t
     DEFAULT = 3,
 };
 
-const std::vector<uint8_t> TYPE_BIT_SIZES{0, 0, 1};
-Instruction DecodeType(size_t& bitpos, const std::vector<std::byte>& data)
+constexpr uint8_t TYPE_BIT_SIZES[]{0, 0, 1};
+Instruction DecodeType(size_t& bitpos, const std::span<const std::byte>& data)
 {
     return Instruction(DecodeBits(bitpos, data, 0, TYPE_BIT_SIZES));
 }
 
-const std::vector<uint8_t> ASN_BIT_SIZES{15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
-uint32_t DecodeASN(size_t& bitpos, const std::vector<std::byte>& data)
+constexpr uint8_t ASN_BIT_SIZES[]{15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
+uint32_t DecodeASN(size_t& bitpos, const std::span<const std::byte>& data)
 {
     return DecodeBits(bitpos, data, 1, ASN_BIT_SIZES);
 }
 
-
-const std::vector<uint8_t> MATCH_BIT_SIZES{1, 2, 3, 4, 5, 6, 7, 8};
-uint32_t DecodeMatch(size_t& bitpos, const std::vector<std::byte>& data)
+constexpr uint8_t MATCH_BIT_SIZES[]{1, 2, 3, 4, 5, 6, 7, 8};
+uint32_t DecodeMatch(size_t& bitpos, const std::span<const std::byte>& data)
 {
     return DecodeBits(bitpos, data, 2, MATCH_BIT_SIZES);
 }
 
-
-const std::vector<uint8_t> JUMP_BIT_SIZES{5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30};
-uint32_t DecodeJump(size_t& bitpos, const std::vector<std::byte>& data)
+constexpr uint8_t JUMP_BIT_SIZES[]{5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30};
+uint32_t DecodeJump(size_t& bitpos, const std::span<const std::byte>& data)
 {
     return DecodeBits(bitpos, data, 17, JUMP_BIT_SIZES);
 }
 
 }
 
-uint32_t Interpret(const std::vector<std::byte>& asmap, const std::vector<std::byte>& ip)
+uint32_t Interpret(const std::span<const std::byte> asmap, const std::span<const std::byte> ip)
 {
     size_t pos{0};
     const size_t endpos{asmap.size() * 8};
@@ -142,7 +141,7 @@ uint32_t Interpret(const std::vector<std::byte>& asmap, const std::vector<std::b
     return 0; // 0 is not a valid ASN
 }
 
-bool SanityCheckASMap(const std::vector<std::byte>& asmap, int bits)
+bool SanityCheckASMap(const std::span<const std::byte> asmap, int bits)
 {
     size_t pos{0};
     const size_t endpos{asmap.size() * 8};
@@ -204,6 +203,15 @@ bool SanityCheckASMap(const std::vector<std::byte>& asmap, int bits)
     return false; // Reached EOF without RETURN instruction
 }
 
+bool CheckAsmap(const std::span<const std::byte> data)
+{
+    if (!SanityCheckASMap(data, 128)) {
+        LogWarning("Sanity check of asmap data failed\n");
+        return false;
+    }
+    return true;
+}
+
 std::vector<std::byte> DecodeAsmap(fs::path path)
 {
     FILE *filestr = fsbridge::fopen(path, "rb");
@@ -214,11 +222,10 @@ std::vector<std::byte> DecodeAsmap(fs::path path)
     }
     int64_t length{file.size()};
     LogInfo("Opened asmap file %s (%d bytes) from disk", fs::quoted(fs::PathToString(path)), length);
-
     std::vector<std::byte> buffer(length);
     file.read(buffer);
 
-    if (!SanityCheckASMap(buffer, 128)) {
+    if (!CheckAsmap(buffer)) {
         LogWarning("Sanity check of asmap file %s failed", fs::quoted(fs::PathToString(path)));
         return {};
     }
@@ -226,7 +233,7 @@ std::vector<std::byte> DecodeAsmap(fs::path path)
     return buffer;
 }
 
-uint256 AsmapVersion(const std::vector<std::byte>& data)
+uint256 AsmapVersion(const std::span<const std::byte> data)
 {
     if (data.empty()) return {};
 
