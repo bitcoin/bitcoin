@@ -10,15 +10,18 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <span>
 #include <vector>
 
-uint32_t Interpret(const std::vector<std::byte>& asmap, const std::vector<std::byte>& ip);
+uint32_t Interpret(std::span<const std::byte> asmap, std::span<const std::byte> ip);
 
-bool SanityCheckASMap(const std::vector<std::byte>& asmap, int bits);
+bool SanityCheckASMap(std::span<const std::byte> asmap, int bits);
+/** Check standard asmap data (128 bits for IPv6) */
+bool CheckStandardAsmap(std::span<const std::byte> data);
 
-/** Read asmap from provided binary file */
+/** Read and check asmap from provided binary file */
 std::vector<std::byte> DecodeAsmap(fs::path path);
 /** Calculate the asmap version, a checksum identifying the asmap being used. */
-uint256 AsmapVersion(const std::vector<std::byte>& data);
+uint256 AsmapVersion(std::span<const std::byte> data);
 
 #endif // BITCOIN_UTIL_ASMAP_H
