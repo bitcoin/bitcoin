@@ -16,9 +16,18 @@
  */
 class NetGroupManager {
 public:
-    explicit NetGroupManager(std::vector<std::byte> asmap)
-        : m_asmap{std::move(asmap)}
-    {}
+    static NetGroupManager WithEmbeddedAsmap(std::span<const std::byte> asmap) {
+        return NetGroupManager(asmap, {});
+    }
+
+    static NetGroupManager WithLoadedAsmap(std::vector<std::byte> loaded_asmap) {
+        std::span<const std::byte> asmap_span(loaded_asmap);
+        return NetGroupManager(asmap_span, std::move(loaded_asmap));
+    }
+
+    static NetGroupManager NoAsmap() {
+        return NetGroupManager({}, {});
+    }
 
     /** Get the asmap version, a checksum identifying the asmap being used. */
     uint256 GetAsmapVersion() const;
@@ -53,7 +62,10 @@ public:
     bool UsingASMap() const;
 
 private:
-    /** Compressed IP->ASN mapping, loaded from a file when a node starts.
+    /** Compressed IP->ASN mapping.
+     *
+     * Data may be loaded from a file when a node starts or embedded in the
+     * binary.
      *
      * This mapping is then used for bucketing nodes in Addrman and for
      * ensuring we connect to a diverse set of peers in Connman. The map is
@@ -70,8 +82,17 @@ private:
      * re-bucketed.
      *
      * This is initialized in the constructor, const, and therefore is
-     * thread-safe. */
-    const std::vector<std::byte> m_asmap;
+     * thread-safe. m_asmap can either point to m_loaded_asmap which holds
+     * data loaded from an external file at runtime or it can point to embedded
+     * asmap data.
+     */
+    const std::span<const std::byte>  m_asmap;
+    std::vector<std::byte> m_loaded_asmap;
+
+    explicit NetGroupManager(std::span<const std::byte> asmap, std::vector<std::byte> loaded_asmap)
+        : m_asmap(asmap.empty() ? std::span<const std::byte>() : asmap),
+          m_loaded_asmap(std::move(loaded_asmap))
+    {}
 };
 
 #endif // BITCOIN_NETGROUP_H

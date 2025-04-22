@@ -6,6 +6,7 @@
 
 #include <hash.h>
 #include <logging.h>
+#include <uint256.h>
 #include <util/asmap.h>
 
 #include <cstddef>
