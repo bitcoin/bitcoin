@@ -15,6 +15,7 @@
 #include <policy/settings.h>
 #include <validation.h>
 #include <wallet/context.h>
+#include <wallet/spend.h>
 #include <wallet/wallet.h>
 
 #include <boost/test/unit_test.hpp>
@@ -193,7 +194,7 @@ public:
         for (CAmount nAmount : vecAmounts) {
             CTransactionRef tx;
             FeeCalculation fee_calc_out;
-            BOOST_CHECK(wallet->CreateTransaction({{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, nFeeRet, nChangePosRet, strError, coinControl, fee_calc_out));
+            BOOST_CHECK(CreateTransaction(*wallet, {{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, nFeeRet, nChangePosRet, strError, coinControl, fee_calc_out));
             {
                 LOCK2(wallet->cs_wallet, cs_main);
                 wallet->CommitTransaction(tx, {}, {});

@@ -12,6 +12,7 @@
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/coinselection.h>
+#include <wallet/spend.h>
 #include <wallet/test/wallet_test_fixture.h>
 #include <wallet/wallet.h>
 
@@ -139,7 +140,7 @@ inline std::vector<OutputGroup>& KnapsackGroupOutputs(const std::vector<COutput>
                                               /* long_term_feerate= */ CFeeRate(0), /* discard_feerate= */ CFeeRate(0),
                                               /* tx_noinputs_size= */ 0, /* avoid_partial= */ false);
     static std::vector<OutputGroup> static_groups;
-    static_groups = wallet.GroupOutputs(coins, coin_selection_params, filter, /*positive_only=*/false);
+    static_groups = GroupOutputs(wallet, coins, coin_selection_params, filter, /*positive_only=*/false);
     return static_groups;
 }
 
@@ -320,7 +321,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         coin_control.fAllowOtherInputs = true;
         coin_control.Select(COutPoint(coins.at(0).tx->GetHash(), coins.at(0).i));
         coin_selection_params_bnb.m_effective_feerate = CFeeRate(0);
-        BOOST_CHECK(wallet->SelectCoins(coins, 10 * CENT, setCoinsRet, nValueRet, coin_control, coin_selection_params_bnb));
+        BOOST_CHECK(SelectCoins(*wallet, coins, 10 * CENT, setCoinsRet, nValueRet, coin_control, coin_selection_params_bnb));
     }
 }
 
@@ -669,7 +670,7 @@ BOOST_AUTO_TEST_CASE(SelectCoins_test)
         CoinSet out_set;
         CAmount out_value = 0;
         CCoinControl cc;
-        BOOST_CHECK(wallet->SelectCoins(coins, target, out_set, out_value, cc, cs_params));
+        BOOST_CHECK(SelectCoins(*wallet, coins, target, out_set, out_value, cc, cs_params));
         BOOST_CHECK_GE(out_value, target);
     }
 }

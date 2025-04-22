@@ -6,6 +6,7 @@
 #include <interfaces/chain.h>
 #include <node/context.h>
 #include <wallet/coinselection.h>
+#include <wallet/spend.h>
 #include <wallet/wallet.h>
 
 #include <set>
@@ -54,7 +55,7 @@ static void CoinSelection(benchmark::Bench& bench)
     bench.run([&] {
         std::set<CInputCoin> setCoinsRet;
         CAmount nValueRet;
-        bool success = wallet.AttemptSelection(1003 * COIN, filter_standard, coins, setCoinsRet, nValueRet, coin_selection_params);
+        bool success = AttemptSelection(wallet, 1003 * COIN, filter_standard, coins, setCoinsRet, nValueRet, coin_selection_params);
         assert(success);
         assert(nValueRet == 1003 * COIN);
         assert(setCoinsRet.size() == 2);

@@ -10,6 +10,7 @@
 #include <coinjoin/options.h>
 #include <evo/dmn_types.h>
 #include <wallet/receive.h>
+#include <wallet/spend.h>
 #include <wallet/wallet.h>
 #include <wallet/transaction.h>
 
@@ -61,7 +62,7 @@ bool CWallet::SelectTxDSInsByDenomination(int nDenom, CAmount nValueMax, std::ve
 
     CCoinControl coin_control;
     coin_control.nCoinType = CoinType::ONLY_READY_TO_MIX;
-    AvailableCoins(vCoins, &coin_control);
+    AvailableCoins(*this, vCoins, &coin_control);
     WalletCJLogPrint(this, "CWallet::%s -- vCoins.size(): %d\n", __func__, vCoins.size());
 
     Shuffle(vCoins.rbegin(), vCoins.rend(), FastRandomContext());
@@ -108,7 +109,7 @@ bool CWallet::SelectDenominatedAmounts(CAmount nValueMax, std::set<CAmount>& set
     std::vector<COutput> vCoins;
     CCoinControl coin_control;
     coin_control.nCoinType = CoinType::ONLY_READY_TO_MIX;
-    AvailableCoins(vCoins, &coin_control);
+    AvailableCoins(*this, vCoins, &coin_control);
     // larger denoms first
     std::sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
 
@@ -233,7 +234,7 @@ bool CWallet::HasCollateralInputs(bool fOnlyConfirmed) const
     CCoinControl coin_control;
     coin_control.m_include_unsafe_inputs = !fOnlyConfirmed;
     coin_control.nCoinType = CoinType::ONLY_COINJOIN_COLLATERAL;
-    AvailableCoins(vCoins, &coin_control);
+    AvailableCoins(*this, vCoins, &coin_control);
 
     return !vCoins.empty();
 }

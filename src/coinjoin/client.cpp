@@ -27,6 +27,7 @@
 #include <wallet/coinjoin.h>
 #include <wallet/fees.h>
 #include <wallet/receive.h>
+#include <wallet/spend.h>
 #include <walletinitinterface.h>
 
 #include <memory>
@@ -1553,7 +1554,7 @@ bool CCoinJoinClientSession::CreateCollateralTransaction(CMutableTransaction& tx
     CCoinControl coin_control;
     coin_control.nCoinType = CoinType::ONLY_COINJOIN_COLLATERAL;
 
-    m_wallet->AvailableCoins(vCoins, &coin_control);
+    AvailableCoins(*m_wallet, vCoins, &coin_control);
 
     if (vCoins.empty()) {
         strReason = strprintf("%s requires a collateral transaction and could not locate an acceptable input!", gCoinJoinName);

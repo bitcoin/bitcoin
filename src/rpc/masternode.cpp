@@ -27,6 +27,7 @@
 #include <wallet/rpc/util.h>
 
 #ifdef ENABLE_WALLET
+#include <wallet/spend.h>
 #include <wallet/wallet.h>
 #endif // ENABLE_WALLET
 
@@ -135,7 +136,7 @@ static RPCHelpMan masternode_outputs()
     coin_control.nCoinType = CoinType::ONLY_MASTERNODE_COLLATERAL;
     {
         LOCK(wallet->cs_wallet);
-        wallet->AvailableCoins(vPossibleCoins, &coin_control);
+        AvailableCoins(*wallet, vPossibleCoins, &coin_control);
     }
     UniValue outputsArr(UniValue::VARR);
     for (const auto& out : vPossibleCoins) {

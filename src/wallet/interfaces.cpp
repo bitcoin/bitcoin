@@ -28,6 +28,7 @@
 #include <wallet/load.h>
 #include <wallet/receive.h>
 #include <wallet/rpcwallet.h>
+#include <wallet/spend.h>
 #include <wallet/wallet.h>
 
 #include <memory>
@@ -280,7 +281,7 @@ public:
         ReserveDestination m_dest(m_wallet.get());
         CTransactionRef tx;
         FeeCalculation fee_calc_out;
-        if (!m_wallet->CreateTransaction(recipients, tx, fee, change_pos,
+        if (!CreateTransaction(*m_wallet, recipients, tx, fee, change_pos,
                 fail_reason, coin_control, fee_calc_out, sign)) {
             return {};
         }
@@ -428,7 +429,7 @@ public:
         if (coin_control.IsUsingCoinJoin()) {
             return GetBalanceAnonymized(*m_wallet, coin_control);
         } else {
-            return m_wallet->GetAvailableBalance(&coin_control);
+            return GetAvailableBalance(*m_wallet, &coin_control);
         }
     }
     isminetype txinIsMine(const CTxIn& txin) override
@@ -455,7 +456,7 @@ public:
     {
         LOCK(m_wallet->cs_wallet);
         CoinsList result;
-        for (const auto& entry : m_wallet->ListCoins()) {
+        for (const auto& entry : ListCoins(*m_wallet)) {
             auto& group = result[entry.first];
             for (const auto& coin : entry.second) {
                 group.emplace_back(COutPoint(coin.tx->GetHash(), coin.i),

@@ -17,8 +17,6 @@
 #include <list>
 #include <vector>
 
-class CCoinControl;
-
 typedef std::map<std::string, std::string> mapValue_t;
 
 
@@ -31,6 +29,7 @@ static inline void ReadOrderPos(int64_t& nOrderPos, mapValue_t& mapValue)
     }
     nOrderPos = LocaleIndependentAtoi<int64_t>(mapValue["n"]);
 }
+
 
 static inline void WriteOrderPos(const int64_t& nOrderPos, mapValue_t& mapValue)
 {

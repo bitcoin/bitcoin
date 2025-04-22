@@ -43,7 +43,6 @@
 #include <wallet/coinselection.h>
 #include <wallet/context.h>
 #include <wallet/fees.h>
-#include <wallet/receive.h>
 #include <warnings.h>
 
 #include <coinjoin/common.h>
