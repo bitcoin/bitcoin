@@ -8,6 +8,8 @@
 #include <logging.h>
 #include <util/asmap.h>
 
+#include <cstddef>
+
 uint256 NetGroupManager::GetAsmapChecksum() const
 {
     if (!m_asmap.size()) return {};
@@ -81,30 +83,25 @@ std::vector<unsigned char> NetGroupManager::GetGroup(const CNetAddr& address) co
 uint32_t NetGroupManager::GetMappedAS(const CNetAddr& address) const
 {
     uint32_t net_class = address.GetNetClass();
-    if (m_asmap.size() == 0 || (net_class != NET_IPV4 && net_class != NET_IPV6)) {
+    if (m_asmap.empty() || (net_class != NET_IPV4 && net_class != NET_IPV6)) {
         return 0; // Indicates not found, safe because AS0 is reserved per RFC7607.
     }
-    std::vector<bool> ip_bits(128);
+    std::vector<std::byte> ip_bits(16);
     if (address.HasLinkedIPv4()) {
         // For lookup, treat as if it was just an IPv4 address (IPV4_IN_IPV6_PREFIX + IPv4 bits)
         for (int8_t byte_i = 0; byte_i < 12; ++byte_i) {
-            for (uint8_t bit_i = 0; bit_i < 8; ++bit_i) {
-                ip_bits[byte_i * 8 + bit_i] = (IPV4_IN_IPV6_PREFIX[byte_i] >> (7 - bit_i)) & 1;
-            }
+            ip_bits[byte_i] = std::byte(IPV4_IN_IPV6_PREFIX[byte_i]);
         }
         uint32_t ipv4 = address.GetLinkedIPv4();
-        for (int i = 0; i < 32; ++i) {
-            ip_bits[96 + i] = (ipv4 >> (31 - i)) & 1;
+        for (int i = 0; i < 4; ++i) {
+            ip_bits[12 + i] = std::byte((ipv4 >> (24 - i * 8)) & 0xFF);
         }
     } else {
         // Use all 128 bits of the IPv6 address otherwise
         assert(address.IsIPv6());
         auto addr_bytes = address.GetAddrBytes();
         for (int8_t byte_i = 0; byte_i < 16; ++byte_i) {
-            uint8_t cur_byte = addr_bytes[byte_i];
-            for (uint8_t bit_i = 0; bit_i < 8; ++bit_i) {
-                ip_bits[byte_i * 8 + bit_i] = (cur_byte >> (7 - bit_i)) & 1;
-            }
+            ip_bits[byte_i] = std::byte(addr_bytes[byte_i]);
         }
     }
     uint32_t mapped_as = Interpret(m_asmap, ip_bits);
