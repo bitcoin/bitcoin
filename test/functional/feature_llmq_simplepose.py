@@ -29,10 +29,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
-        # check if mining quorums with all nodes being online succeeds without punishment/banning
-        self.test_no_banning()
-
-        # Now lets isolate MNs one by one and verify that punishment/banning happens
+        # Lets isolate MNs one by one and verify that punishment/banning happens
         self.test_banning(self.isolate_mn, 2)
 
         self.repair_masternodes(False)
@@ -42,9 +39,6 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.wait_for_sporks_same()
 
         self.reset_probe_timeouts()
-
-        # Make sure no banning happens with spork21 enabled
-        self.test_no_banning()
 
         # Lets restart masternodes with closed ports and verify that they get banned even though they are connected to other MNs (via outbound connections)
         self.test_banning(self.close_mn_port)
@@ -96,8 +90,6 @@ class LLMQSimplePoSeTest(DashTestFramework):
         for i in range(3):
             self.log.info(f"Testing no PoSe banning in normal conditions {i + 1}/3")
             self.mine_quorum(expected_connections=expected_connections)
-            for mn in self.mninfo:
-                assert not check_punished(self.nodes[0], mn) and not check_banned(self.nodes[0], mn)
 
     def mine_quorum_less_checks(self, expected_good_nodes, mninfos_online):
         # Unlike in mine_quorum we skip most of the checks and only care about
@@ -161,6 +153,11 @@ class LLMQSimplePoSeTest(DashTestFramework):
     def test_banning(self, invalidate_proc, expected_connections=None):
         mninfos_online = self.mninfo.copy()
         mninfos_valid = self.mninfo.copy()
+
+        for mn in mninfos_valid:
+            assert not check_punished(self.nodes[0], mn)
+            assert not check_banned(self.nodes[0], mn)
+
         expected_contributors = len(mninfos_online)
         for i in range(2):
             self.log.info(f"Testing PoSe banning due to {invalidate_proc.__name__} {i + 1}/2")

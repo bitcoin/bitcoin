@@ -26,6 +26,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import List
 from .address import ADDRESS_BCRT1_P2SH_OP_TRUE
 from .authproxy import JSONRPCException
+from test_framework.masternodes import check_banned, check_punished
 from test_framework.blocktools import TIME_GENESIS_BLOCK
 from . import coverage
 from .messages import (
@@ -1904,6 +1905,10 @@ class DashTestFramework(BitcoinTestFramework):
         self.generate(self.nodes[0], 8, sync_fun=lambda: self.sync_blocks(nodes))
 
         self.log.info("New quorum: height=%d, quorumHash=%s, quorumIndex=%d, minedBlock=%s" % (quorum_info["height"], new_quorum, quorum_info["quorumIndex"], quorum_info["minedBlock"]))
+
+        for mn in mninfos_valid:
+            assert not check_punished(self.nodes[0], mn)
+            assert not check_banned(self.nodes[0], mn)
 
         return new_quorum
 
