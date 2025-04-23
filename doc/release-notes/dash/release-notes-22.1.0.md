@@ -1,6 +1,6 @@
-# Dash Core version v22.1.2
+# Dash Core version v22.1.0
 
-This is a new minor version release, bringing various bugfixes and performance improvements.
+This is a new minor version release, bringing new features, and various bugfixes.
 This release is **optional** for all nodes, although recommended.
 
 Please report bugs using the issue tracker at GitHub:
@@ -26,39 +26,65 @@ likely require a reindex.
 
 # Release Notes
 
-Quorum Rotation Improvements
-----------------------------
+Build Changes
+-------------
 
-- Optimized `quorum rotationinfo` RPC and `GETQUORUMROTATIONINFO` P2P message by constructing diffs progressively from oldest to newest, reducing redundancy and improving efficiency (dash#6622).
-- Fixed incorrect `baseBlockHash` handling, eliminating unnecessary quorum changes in responses and improving result accuracy and compactness (dash#6625).
+The macOS distribution is no longer packaged in a disk image (DMG) and
+is now packaged in a ZIP archive. The macOS distribution is once again notarized.
 
-Deployment and CI Fixes
------------------------
-
-- Pinned QEMU version to avoid segmentation faults during container builds (dash#6586).
-
-Performance Improvements
+BIP324 / v2 P2P Protocol
 ------------------------
 
-- Improved the performance of deterministic masternode list management, significantly speeding up RPC calls such as `protx diff` (dash#6581).
+Version 2 of the Dash P2P protocol / BIP324, which enables encryption of the P2P protocol,
+has been enabled by default in this version. This was initially introduced in Dash Core
+v22.0.0 as an experimental feature and has now been enabled by default. This change is
+backward compatible, and connections to peers which do not support the v2 protocol will
+revert to using the v1 protocol.
 
-Coinjoin Tests Stability
-------------------------
+Network Changes
+---------------
+System ports, or ports that are lower than 1024 are now considered to be "bad" ports.
+As a result, other peers will avoid connecting to nodes that are listening on these ports.
+This change is to prevent potential DDoS attacks against services running on these ports.
+A number of other ports commonly used for authenticated services are also considered "bad" ports.
+You can view [the list of bad ports here](https://github.com/dashpay/dash/blob/v22.1.x/doc/p2p-bad-ports.md).
 
-- Resolved potential deadlock in `coinjoin_tests.cpp` by ensuring wallet transaction scans occur outside critical wallet lock scope (dash#6593).
+Tests
+-----
 
-Minor Build and Test Fixes
---------------------------
+- Command line arguments `-dip8params` and `-bip147height` are removed in favor of `-testactivationheight`. (dash#6325)
+- Several hard forks now activate earlier on regtest.
 
-- Fixed assertion edge case for coinbase transactions (cbtx) in simplified masternode list diff outputs, specifically affecting debug builds (dash#6585).
-- Updated copyright notices to 2025 in COPYING file and Debian packaging metadata (dash#6599).
+## New RPCs
 
-P2P Changes
+- **`getislocks`**
+    - Retrieves the InstantSend lock data for the given transaction IDs (txids).
+      Returns the lock information in both a human-friendly JSON format and a binary hex-encoded zmq-compatible format.
+
+Updated RPCs
+------------
+
+- The top-level fee fields `fee`, `modifiedfee`, `ancestorfees` and `descendantfees`
+  returned by RPCs `getmempoolentry`,`getrawmempool(verbose=true)`,
+  `getmempoolancestors(verbose=true)` and `getmempooldescendants(verbose=true)`
+  are deprecated and will be removed in the next major version (use
+  `-deprecated=fees` if needed in this version). The same fee fields can be accessed
+  through the `fees` object in the result. WARNING: deprecated
+  fields `ancestorfees` and `descendantfees` are denominated in duffs, whereas all
+  fields in the `fees` object are denominated in DASH.
+- A new `hex` field has been added to the `getbestchainlock` RPC, which returns the ChainLock information in zmq-compatible, hex-encoded binary format.
+- `lockunspent` now optionally takes a third parameter, `persistent`, which
+  causes the lock to be written persistently to the wallet database. This
+  allows UTXOs to remain locked even after node restarts or crashes.
+
+GUI changes
 -----------
 
-- `cycleHash` field in `isdlock` message will now represent a DKG cycle starting block of the signing quorum instead of a DKG cycle starting block corresponding to the current chain height. While this is fully backwards compatible with older versions of Dash Core, other implementations might not be expecting this, so the P2P protocol version was bumped to 70237. (#6608)
+- UTXOs locked via the GUI are now stored persistently in the
+  wallet database and are not lost on node shutdown or crash.
+- Improved GUI responsiveness for large wallets. (dash#6457)
 
-# v22.1.2 Change log
+# v22.1.0 Change log
 
 See detailed [set of changes][set-of-changes].
 
@@ -68,9 +94,9 @@ Thanks to everyone who directly contributed to this release:
 
 - Kittywhiskers Van Gogh
 - Konstantin Akimov
-- Odysseas Gabrielides
 - PastaPastaPasta
 - UdjinM6
+- Vijaydasmp
 
 As well as everyone that submitted issues, reviewed pull requests and helped
 debug the release candidates.
@@ -79,8 +105,6 @@ debug the release candidates.
 
 These releases are considered obsolete. Old release notes can be found here:
 
-- [v22.1.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-22.1.1.md) released Feb/17/2025
-- [v22.1.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-22.1.0.md) released Feb/10/2025
 - [v22.0.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-22.0.0.md) released Dec/12/2024
 - [v21.1.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-21.1.1.md) released Oct/22/2024
 - [v21.1.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-21.1.0.md) released Aug/8/2024
@@ -135,4 +159,4 @@ These releases are considered obsolete. Old release notes can be found here:
 - [v0.10.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.10.0.md) released Sep/25/2014
 - [v0.9.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.9.0.md) released Mar/13/2014
 
-[set-of-changes]: https://github.com/dashpay/dash/compare/v22.1.1...dashpay:v22.1.2
+[set-of-changes]: https://github.com/dashpay/dash/compare/v22.0.0...dashpay:v22.1.0
