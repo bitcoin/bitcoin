@@ -56,6 +56,12 @@ SQLite is required for the descriptor wallet:
 
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
+Cap'n Proto is required to build IPC-enabled binaries:
+
+    sudo apt-get install libcapnp-dev capnproto
+
+Compile  with `-DENABLE_IPC=OFF` if you do not need this functionality.
+
 ZMQ dependencies (provides ZMQ API):
 
     sudo apt-get install libzmq3-dev
@@ -63,11 +69,6 @@ ZMQ dependencies (provides ZMQ API):
 User-Space, Statically Defined Tracing (USDT) dependencies:
 
     sudo apt install systemtap-sdt-dev
-
-IPC-enabled binaries are compiled  with `-DENABLE_IPC=ON` and require the following dependencies.
-Skip if you do not need IPC functionality.
-
-    sudo apt-get install libcapnp-dev capnproto
 
 GUI dependencies:
 
@@ -107,6 +108,12 @@ SQLite is required for the descriptor wallet:
 
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
+Cap'n Proto is required to build IPC-enabled binaries:
+
+    sudo dnf install capnp
+
+Compile  with `-DENABLE_IPC=OFF` if you do not need this functionality.
+
 ZMQ dependencies (provides ZMQ API):
 
     sudo dnf install zeromq-devel
@@ -114,11 +121,6 @@ ZMQ dependencies (provides ZMQ API):
 User-Space, Statically Defined Tracing (USDT) dependencies:
 
     sudo dnf install systemtap-sdt-devel
-
-IPC-enabled binaries are compiled  with `-DENABLE_IPC=ON` and require the following dependency.
-Skip if you do not need IPC functionality.
-
-    sudo dnf install capnproto
 
 GUI dependencies:
 
