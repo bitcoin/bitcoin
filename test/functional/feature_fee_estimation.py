@@ -426,6 +426,12 @@ class EstimateFeeTest(BitcoinTestFramework):
         # Check the fee estimates for both modes after mining low fee transactions.
         check_fee_estimates_btw_modes(self.nodes[0], high_feerate, low_feerate)
 
+    def test_default_mode_with_rpcestimateconservativefees(self):
+        """Test that the default estimate_mode is conservative when -rpcestimateconservativefees is provided."""
+        self.restart_node(0, extra_args=["-rpcestimateconservativefees"])
+        fee_est_conservative = self.nodes[0].estimatesmartfee(1, estimate_mode="conservative")["feerate"]
+        fee_est_default = self.nodes[0].estimatesmartfee(1)["feerate"]
+        assert_equal(fee_est_default, fee_est_conservative)
 
     def run_test(self):
         self.log.info("This test is time consuming, please be patient")
@@ -472,6 +478,9 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.clear_estimates()
         self.log.info("Test estimatesmartfee modes")
         self.test_estimation_modes()
+
+        self.log.info("Testing default mode with -rpcestimateconservativefees flag")
+        self.test_default_mode_with_rpcestimateconservativefees()
 
         self.log.info("Testing that fee estimation is disabled in blocksonly.")
         self.restart_node(0, ["-blocksonly"])
