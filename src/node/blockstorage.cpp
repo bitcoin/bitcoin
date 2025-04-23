@@ -624,11 +624,11 @@ void BlockManager::CleanupBlockRevFiles() const
         const std::string path = fs::PathToString(it->path().filename());
         if (fs::is_regular_file(*it) &&
             path.length() == 12 &&
-            path.substr(8,4) == ".dat")
+            path.ends_with(".dat"))
         {
-            if (path.substr(0, 3) == "blk") {
+            if (path.starts_with("blk")) {
                 mapBlockFiles[path.substr(3, 5)] = it->path();
-            } else if (path.substr(0, 3) == "rev") {
+            } else if (path.starts_with("rev")) {
                 remove(it->path());
             }
         }
