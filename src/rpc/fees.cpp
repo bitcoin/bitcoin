@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/args.h>
 #include <common/messages.h>
 #include <core_io.h>
 #include <node/context.h>
