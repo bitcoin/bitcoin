@@ -12,9 +12,9 @@ Checks simple PoSe system based on LLMQ commitments
 
 import time
 
+from test_framework.masternodes import check_banned, check_punished
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_equal, force_finish_mnsync, p2p_port
-
 
 class LLMQSimplePoSeTest(DashTestFramework):
     def set_test_params(self):
@@ -97,7 +97,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
             self.log.info(f"Testing no PoSe banning in normal conditions {i + 1}/3")
             self.mine_quorum(expected_connections=expected_connections)
             for mn in self.mninfo:
-                assert not self.check_punished(mn) and not self.check_banned(mn)
+                assert not check_punished(self.nodes[0], mn) and not check_banned(self.nodes[0], mn)
 
     def mine_quorum_less_checks(self, expected_good_nodes, mninfos_online):
         # Unlike in mine_quorum we skip most of the checks and only care about
@@ -179,7 +179,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 self.reset_probe_timeouts()
                 self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_complaints, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
 
-                if not self.check_banned(mn):
+                if not check_banned(self.nodes[0], mn):
                     self.log.info("Instant ban still requires 2 missing DKG round. If it is not banned yet, mine 2nd one")
                     self.reset_probe_timeouts()
                     self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_complaints, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
@@ -192,7 +192,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                     self.reset_probe_timeouts()
                     self.mine_quorum_less_checks(expected_contributors - 1, mninfos_online)
 
-            assert self.check_banned(mn)
+            assert check_banned(self.nodes[0], mn)
 
             if not went_offline:
                 # we do not include PoSe banned mns in quorums, so the next one should have 1 contributor less
@@ -201,7 +201,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
     def repair_masternodes(self, restart):
         self.log.info("Repairing all banned and punished masternodes")
         for mn in self.mninfo:
-            if self.check_banned(mn) or self.check_punished(mn):
+            if check_banned(self.nodes[0], mn) or check_punished(self.nodes[0], mn):
                 addr = self.nodes[0].getnewaddress()
                 self.nodes[0].sendtoaddress(addr, 0.1)
                 self.nodes[0].protx('update_service', mn.proTxHash, '127.0.0.1:%d' % p2p_port(mn.node.index), mn.keyOperator, "", addr)
@@ -221,7 +221,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
         # Isolate and re-connect all MNs (otherwise there might be open connections with no MNAUTH for MNs which were banned before)
         for mn in self.mninfo:
-            assert not self.check_banned(mn)
+            assert not check_banned(self.nodes[0], mn)
             mn.node.setnetworkactive(False)
             self.wait_until(lambda: mn.node.getconnectioncount() == 0)
             mn.node.setnetworkactive(True)
@@ -234,17 +234,6 @@ class LLMQSimplePoSeTest(DashTestFramework):
         # Sleep a couple of seconds to let mn sync tick to happen
         time.sleep(2)
 
-    def check_punished(self, mn):
-        info = self.nodes[0].protx('info', mn.proTxHash)
-        if info['state']['PoSePenalty'] > 0:
-            return True
-        return False
-
-    def check_banned(self, mn):
-        info = self.nodes[0].protx('info', mn.proTxHash)
-        if info['state']['PoSeBanHeight'] != -1:
-            return True
-        return False
 
 if __name__ == '__main__':
     LLMQSimplePoSeTest().main()
