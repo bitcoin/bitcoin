@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/args.h>
 #include <common/messages.h>
 #include <core_io.h>
 #include <node/context.h>
@@ -30,7 +31,6 @@ using node::NodeContext;
 static RPCHelpMan estimatesmartfee()
 {
     RPCArg::Default default_estimate_mode = gArgs.GetBoolArg("-rpcestimateconservativefees") ? RPCArg::Default{"conservative"} : RPCArg::Default{"economical"};
-    
     return RPCHelpMan{"estimatesmartfee",
         "\nEstimates the approximate fee per kilobyte needed for a transaction to begin\n"
         "confirmation within conf_target blocks if possible and return the number of blocks\n"
