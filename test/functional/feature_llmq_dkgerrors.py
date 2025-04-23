@@ -24,20 +24,22 @@ class LLMQDKGErrors(DashTestFramework):
         qh = self.mine_quorum()
         self.assert_member_valid(qh, self.mninfo[0].proTxHash, True)
 
+        mninfos_valid = self.mninfo.copy()[1:]
+
         self.log.info("Lets omit the contribution")
         self.mninfo[0].node.quorum('dkgsimerror', 'contribution-omit', '100')
-        qh = self.mine_quorum(expected_contributions=2)
+        qh = self.mine_quorum(expected_contributions=2, mninfos_valid=mninfos_valid)
         self.assert_member_valid(qh, self.mninfo[0].proTxHash, False)
 
         self.log.info("Lets lie in the contribution but provide a correct justification")
         self.mninfo[0].node.quorum('dkgsimerror', 'contribution-omit', '0')
         self.mninfo[0].node.quorum('dkgsimerror', 'contribution-lie', '100')
-        qh = self.mine_quorum(expected_contributions=3, expected_complaints=2, expected_justifications=1)
+        qh = self.mine_quorum(expected_contributions=3, expected_complaints=2, expected_justifications=1, mninfos_valid=mninfos_valid)
         self.assert_member_valid(qh, self.mninfo[0].proTxHash, True)
 
         self.log.info("Lets lie in the contribution and then omit the justification")
         self.mninfo[0].node.quorum('dkgsimerror', 'justify-omit', '100')
-        qh = self.mine_quorum(expected_contributions=3, expected_complaints=2)
+        qh = self.mine_quorum(expected_contributions=3, expected_complaints=2, mninfos_valid=mninfos_valid)
         self.assert_member_valid(qh, self.mninfo[0].proTxHash, False)
 
         self.log.info("Heal some damage (don't get PoSe banned)")
@@ -46,26 +48,26 @@ class LLMQDKGErrors(DashTestFramework):
         self.log.info("Lets lie in the contribution and then also lie in the justification")
         self.mninfo[0].node.quorum('dkgsimerror', 'justify-omit', '0')
         self.mninfo[0].node.quorum('dkgsimerror', 'justify-lie', '100')
-        qh = self.mine_quorum(expected_contributions=3, expected_complaints=2, expected_justifications=1)
+        qh = self.mine_quorum(expected_contributions=3, expected_complaints=2, expected_justifications=1, mninfos_valid=mninfos_valid)
         self.assert_member_valid(qh, self.mninfo[0].proTxHash, False)
 
         self.log.info("Lets lie about another MN")
         self.mninfo[0].node.quorum('dkgsimerror', 'contribution-lie', '0')
         self.mninfo[0].node.quorum('dkgsimerror', 'justify-lie', '0')
         self.mninfo[0].node.quorum('dkgsimerror', 'complain-lie', '100')
-        qh = self.mine_quorum(expected_contributions=3, expected_complaints=1, expected_justifications=2)
+        qh = self.mine_quorum(expected_contributions=3, expected_complaints=1, expected_justifications=2, mninfos_valid=mninfos_valid)
         self.assert_member_valid(qh, self.mninfo[0].proTxHash, True)
 
         self.log.info("Lets omit 1 premature commitments")
         self.mninfo[0].node.quorum('dkgsimerror', 'complain-lie', '0')
         self.mninfo[0].node.quorum('dkgsimerror', 'commit-omit', '100')
-        qh = self.mine_quorum(expected_contributions=3, expected_complaints=0, expected_justifications=0, expected_commitments=2)
+        qh = self.mine_quorum(expected_contributions=3, expected_complaints=0, expected_justifications=0, expected_commitments=2, mninfos_valid=mninfos_valid)
         self.assert_member_valid(qh, self.mninfo[0].proTxHash, True)
 
         self.log.info("Lets lie in 1 premature commitments")
         self.mninfo[0].node.quorum('dkgsimerror', 'commit-omit', '0')
         self.mninfo[0].node.quorum('dkgsimerror', 'commit-lie', '100')
-        qh = self.mine_quorum(expected_contributions=3, expected_complaints=0, expected_justifications=0, expected_commitments=2)
+        qh = self.mine_quorum(expected_contributions=3, expected_complaints=0, expected_justifications=0, expected_commitments=2, mninfos_valid=mninfos_valid)
         self.assert_member_valid(qh, self.mninfo[0].proTxHash, True)
 
     def assert_member_valid(self, quorumHash, proTxHash, expectedValid):
