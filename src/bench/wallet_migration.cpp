@@ -32,6 +32,10 @@ static void WalletMigration(benchmark::Bench& bench)
     LegacyDataSPKM* legacy_spkm = wallet->GetOrCreateLegacyDataSPKM();
     WalletBatch batch{wallet->GetDatabase()};
 
+    // Write a best block record as migration expects one to exist
+    CBlockLocator loc;
+    batch.WriteBestBlock(loc);
+
     // Add watch-only addresses
     std::vector<CScript> scripts_watch_only;
     for (int w = 0; w < NUM_WATCH_ONLY_ADDR; ++w) {
