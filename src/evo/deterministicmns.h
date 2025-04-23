@@ -28,7 +28,6 @@
 
 class CBlock;
 class CBlockIndex;
-class CChainState;
 class CCoinsViewCache;
 class CEvoDB;
 class TxValidationState;
