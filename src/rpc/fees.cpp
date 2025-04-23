@@ -30,7 +30,8 @@ using node::NodeContext;
 
 static RPCHelpMan estimatesmartfee()
 {
-    RPCArg::Default default_estimate_mode = gArgs.GetBoolArg("-rpcestimateconservativefees") ? RPCArg::Default{"conservative"} : RPCArg::Default{"economical"};
+    const bool conservative_default = gArgs.GetBoolArg("-rpcestimateconservativefees", false);
+    RPCArg::Default default_estimate_mode = conservative_default ? RPCArg::Default{"conservative"} : RPCArg::Default{"economical"};
     return RPCHelpMan{"estimatesmartfee",
         "\nEstimates the approximate fee per kilobyte needed for a transaction to begin\n"
         "confirmation within conf_target blocks if possible and return the number of blocks\n"
@@ -68,7 +69,7 @@ static RPCHelpMan estimatesmartfee()
             CHECK_NONFATAL(mempool.m_opts.signals)->SyncWithValidationInterfaceQueue();
             unsigned int max_target = fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
             unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
-            bool conservative = false;
+            bool conservative = conservative_default;
             if (!request.params[1].isNull()) {
                 FeeEstimateMode fee_mode;
                 if (!FeeModeFromString(request.params[1].get_str(), fee_mode)) {
