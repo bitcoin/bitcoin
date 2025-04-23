@@ -253,6 +253,7 @@ class ConfArgsTest(BitcoinTestFramework):
                     'secret-torpassword',
                     'Command-line arg: rpcbind=****',
                     'Command-line arg: rpcallowip=****',
+                    'Command-line arg: rpcestimateconservativefees=****',
                 ]):
             self.start_node(0, extra_args=[
                 '-addnode=some.node',
@@ -264,6 +265,7 @@ class ConfArgsTest(BitcoinTestFramework):
                 '-rpcuser=secret-rpcuser',
                 '-torpassword=secret-torpassword',
                 UNREACHABLE_PROXY_ARG,
+                '-rpcestimateconservativefees=conservative',
             ])
         self.stop_node(0)
 
