@@ -23,7 +23,15 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.set_dash_llmq_test_params(5, 3)
         # rotating quorums add instability for this functional tests
 
+    def add_options(self, parser):
+        parser.add_argument("--disable-spork23", dest="disable_spork23", default=False, action="store_true",
+                            help="Test with spork21 enabled")
+
     def run_test(self):
+        if self.options.disable_spork23:
+            self.nodes[0].sporkupdate("SPORK_23_QUORUM_POSE", 4070908800)
+        else:
+            self.nodes[0].sporkupdate("SPORK_23_QUORUM_POSE", 0)
 
         self.deaf_mns = []
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
@@ -35,32 +43,26 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.repair_masternodes(False)
 
         self.nodes[0].sporkupdate("SPORK_21_QUORUM_ALL_CONNECTED", 0)
-        self.nodes[0].sporkupdate("SPORK_23_QUORUM_POSE", 0)
         self.wait_for_sporks_same()
 
         self.reset_probe_timeouts()
 
-        # Lets restart masternodes with closed ports and verify that they get banned even though they are connected to other MNs (via outbound connections)
-        self.test_banning(self.close_mn_port)
+        if not self.options.disable_spork23:
+            # Lets restart masternodes with closed ports and verify that they get banned even though they are connected to other MNs (via outbound connections)
+            self.test_banning(self.close_mn_port)
+        else:
+            # With PoSe off there should be no punishing for non-reachable nodes
+            self.test_no_banning(self.close_mn_port, 3)
+
+
         self.deaf_mns.clear()
-
         self.repair_masternodes(True)
-        self.reset_probe_timeouts()
 
-        self.test_banning(self.force_old_mn_proto, 3)
-
-        # With PoSe off there should be no punishing for non-reachable and outdated nodes
-        self.nodes[0].sporkupdate("SPORK_23_QUORUM_POSE", 4070908800)
-        self.wait_for_sporks_same()
-
-        self.repair_masternodes(True)
-        self.force_old_mn_proto(self.mninfo[0])
-        self.test_no_banning(3)
-
-        self.repair_masternodes(True)
-        self.close_mn_port(self.mninfo[0])
-        self.deaf_mns.clear()
-        self.test_no_banning(3)
+        if not self.options.disable_spork23:
+            self.test_banning(self.force_old_mn_proto, 3)
+        else:
+            # With PoSe off there should be no punishing for outdated nodes
+            self.test_no_banning(self.force_old_mn_proto, 3)
 
     def isolate_mn(self, mn):
         mn.node.setnetworkactive(False)
@@ -86,7 +88,8 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.reset_probe_timeouts()
         return False, True
 
-    def test_no_banning(self, expected_connections=None):
+    def test_no_banning(self, invalidate_proc, expected_connections=None):
+        invalidate_proc(self.mninfo[0])
         for i in range(3):
             self.log.info(f"Testing no PoSe banning in normal conditions {i + 1}/3")
             self.mine_quorum(expected_connections=expected_connections)
