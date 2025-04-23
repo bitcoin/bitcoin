@@ -6,12 +6,8 @@
 
 def check_punished(node, mn):
     info = node.protx('info', mn.proTxHash)
-    if info['state']['PoSePenalty'] > 0:
-        return True
-    return False
+    return info['state']['PoSePenalty'] > 0
 
 def check_banned(node, mn):
     info = node.protx('info', mn.proTxHash)
-    if info['state']['PoSeBanHeight'] != -1:
-        return True
-    return False
+    return info['state']['PoSeBanHeight'] != -1

@@ -18,14 +18,14 @@ from test_framework.util import assert_equal, force_finish_mnsync, p2p_port
 
 class LLMQSimplePoSeTest(DashTestFramework):
     def set_test_params(self):
-        self.extra_args = [[ f'-testactivationheight=dip0024@9999' ]] * 6
+        # rotating quorums add instability for this functional tests
+        self.extra_args = [[ '-testactivationheight=dip0024@9999' ]] * 6
         self.set_dash_test_params(6, 5)
         self.set_dash_llmq_test_params(5, 3)
-        # rotating quorums add instability for this functional tests
 
     def add_options(self, parser):
         parser.add_argument("--disable-spork23", dest="disable_spork23", default=False, action="store_true",
-                            help="Test with spork21 enabled")
+                            help="Test with spork23 disabled")
 
     def run_test(self):
         if self.options.disable_spork23:
