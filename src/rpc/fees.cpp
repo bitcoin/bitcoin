@@ -29,6 +29,8 @@ using node::NodeContext;
 
 static RPCHelpMan estimatesmartfee()
 {
+    RPCArg::Default default_estimate_mode = gArgs.GetBoolArg("-rpcestimateconservativefees") ? RPCArg::Default{"conservative"} : RPCArg::Default{"economical"};
+    
     return RPCHelpMan{"estimatesmartfee",
         "\nEstimates the approximate fee per kilobyte needed for a transaction to begin\n"
         "confirmation within conf_target blocks if possible and return the number of blocks\n"
@@ -36,7 +38,7 @@ static RPCHelpMan estimatesmartfee()
         "in BIP 141 (witness data is discounted).\n",
         {
             {"conf_target", RPCArg::Type::NUM, RPCArg::Optional::NO, "Confirmation target in blocks (1 - 1008)"},
-            {"estimate_mode", RPCArg::Type::STR, gArgs.GetBoolArg("-rpcestimateconservativefees") ? RPCArg::Default{"conservative"} : RPCArg::Default{"economical"}, "The fee estimate mode.\n"
+            {"estimate_mode", RPCArg::Type::STR, default_estimate_mode, "The fee estimate mode.\n"
               + FeeModesDetail(std::string("default mode will be used"))},
         },
         RPCResult{
