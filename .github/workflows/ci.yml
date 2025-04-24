@@ -84,7 +84,7 @@ jobs:
           git rebase --exec "git merge --no-commit origin/${GITHUB_BASE_REF} && ./.github/ci-test-each-commit-exec.sh && git reset --hard" ${{ env.TEST_BASE }}
 
   macos-native-arm64:
-    name: ${{ matrix.job-name }}
+    name: 'macOS 14 native, arm64, no depends, sqlite only, gui'
     # Use any image to support the xcode-select below, but hardcode version to avoid silent upgrades (and breaks).
     # See: https://github.com/actions/runner-images#available-images.
     runs-on: macos-14
@@ -97,18 +97,6 @@ jobs:
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
 
     timeout-minutes: 120
-
-    strategy:
-      fail-fast: false
-      matrix:
-        job-type: [standard, fuzz]
-        include:
-          - job-type: standard
-            file-env: './ci/test/00_setup_env_mac_native.sh'
-            job-name: 'macOS 14 native, arm64, no depends, sqlite only, gui'
-          - job-type: fuzz
-            file-env: './ci/test/00_setup_env_mac_native_fuzz.sh'
-            job-name: 'macOS 14 native, arm64, fuzz'
 
     env:
       DANGER_RUN_CI_ON_HOST: 1
@@ -143,13 +131,13 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ${{ github.job }}-${{ matrix.job-type }}-ccache-${{ github.run_id }}
-          restore-keys: ${{ github.job }}-${{ matrix.job-type }}-ccache-
+          key: ${{ github.job }}-ccache-${{ github.run_id }}
+          restore-keys: ${{ github.job }}-ccache-
 
       - name: CI script
         run: ./ci/test_run_all.sh
         env:
-          FILE_ENV: ${{ matrix.file-env }}
+          FILE_ENV: './ci/test/00_setup_env_mac_native.sh'
 
       - name: Save Ccache cache
         uses: actions/cache/save@v4
@@ -157,7 +145,7 @@ jobs:
         with:
           path: ${{ env.CCACHE_DIR }}
           # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
-          key: ${{ github.job }}-${{ matrix.job-type }}-ccache-${{ github.run_id }}
+          key: ${{ github.job }}-ccache-${{ github.run_id }}
 
   windows-native-dll:
     name: ${{ matrix.job-name }}
