@@ -33,6 +33,7 @@
 #include <fstream>
 #include <memory>
 
+#include <QDebug>
 #include <QFontMetrics>
 #include <QScrollBar>
 #include <QSettings>
@@ -464,7 +465,7 @@ bool SendCoinsDialog::signWithExternalSigner(PartiallySignedTransaction& psbtx, 
         return false;
     }
     if (err) {
-        tfm::format(std::cerr, "Failed to sign PSBT");
+        qWarning() << "Failed to sign PSBT";
         processSendCoinsReturn(WalletModel::TransactionCreationFailed);
         return false;
     }
