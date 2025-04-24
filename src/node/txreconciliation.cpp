@@ -700,6 +700,9 @@ public:
         Wtxid collision;
         uint32_t short_id;
         if (HasCollision(peer_state, wtxid, collision, short_id)) {
+
+            LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "%s has had a short id collision with %s for peer=%d. The transaction was not "
+                                                                        "added to the set\n", wtxid.ToString(), collision.ToString(), peer_id);
             return AddToSetResult::Collision(collision);
         }
 

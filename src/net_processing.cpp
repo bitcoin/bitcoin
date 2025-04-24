@@ -6032,6 +6032,10 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             for (auto& [hash, out_fanout_count] : to_be_announced) {
                 // Send
                 bool should_fanout = true;
+
+                // FIXME: Remove. A functional test about how many peers to fanout to has failed in CI and I'm currently clueless about why.
+                // Trying to get some context.
+                LogDebug(BCLog::NET, "%d outbound peers currently know about %s\n", out_fanout_count, hash.ToString());
                 // For non-Erlay and inbound peer simply fanout. Erlay-enabled inbounds have been assigned transaction to reconcile
                 // in RelayTransaction, so everything that was added to m_tx_inventory_to_send is to be fanout
                 if (!pto->IsInboundConn() && m_txreconciliation && m_txreconciliation->IsPeerRegistered(pto->GetId())) {
