@@ -17,6 +17,7 @@
 #include <cstdlib>
 #include <functional>
 #include <memory>
+#include <signal.h>
 #include <stdexcept>
 #include <string.h>
 #include <string>
@@ -26,6 +27,27 @@
 
 namespace ipc {
 namespace {
+#ifndef WIN32
+std::string g_ignore_ctrl_c;
+
+void HandleCtrlC(int)
+{
+    (void)write(STDOUT_FILENO, g_ignore_ctrl_c.data(), g_ignore_ctrl_c.size());
+}
+#endif
+
+void IgnoreCtrlC(std::string message)
+{
+#ifndef WIN32
+    g_ignore_ctrl_c = std::move(message);
+    struct sigaction sa{};
+    sa.sa_handler = HandleCtrlC;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART;
+    sigaction(SIGINT, &sa, nullptr);
+#endif
+}
+
 class IpcImpl : public interfaces::Ipc
 {
 public:
@@ -53,6 +75,7 @@ public:
         if (!m_process->checkSpawned(argc, argv, fd)) {
             return false;
         }
+        IgnoreCtrlC(strprintf("[%s] SIGINT received — waiting for parent to shut down.\n", m_exe_name));
         m_protocol->serve(fd, m_exe_name, m_init);
         exit_status = EXIT_SUCCESS;
         return true;
