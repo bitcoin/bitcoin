@@ -33,6 +33,7 @@
 #include <interfaces/ipc.h>
 #include <interfaces/mining.h>
 #include <interfaces/node.h>
+#include <ipc/exception.h>
 #include <kernel/caches.h>
 #include <kernel/context.h>
 #include <key.h>
@@ -298,6 +299,14 @@ void Shutdown(NodeContext& node)
     StopREST();
     StopRPC();
     StopHTTPServer();
+    for (auto& client : node.chain_clients) {
+        try {
+            client->stop();
+        } catch (const ipc::Exception& e) {
+            LogDebug(BCLog::IPC, "Chain client did not disconnect cleanly: %s", e.what());
+            client.reset();
+        }
+    }
     StopMapPort();
 
     // Because these depend on each-other, we make sure that neither can be
@@ -369,9 +378,6 @@ void Shutdown(NodeContext& node)
                 chainstate->ResetCoinsViews();
             }
         }
-    }
-    for (const auto& client : node.chain_clients) {
-        client->stop();
     }
 
     // If any -ipcbind clients are still connected, disconnect them now so they
