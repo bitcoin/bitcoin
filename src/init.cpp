@@ -374,6 +374,12 @@ void Shutdown(NodeContext& node)
         client->stop();
     }
 
+    // If any -ipcbind clients are still connected, disconnect them now so they
+    // do not block shutdown.
+    if (interfaces::Ipc* ipc = node.init->ipc()) {
+        ipc->disconnectIncoming();
+    }
+
 #ifdef ENABLE_ZMQ
     if (g_zmq_notification_interface) {
         if (node.validation_signals) node.validation_signals->UnregisterValidationInterface(g_zmq_notification_interface.get());
