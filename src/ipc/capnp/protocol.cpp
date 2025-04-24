@@ -65,8 +65,19 @@ public:
         m_loop.emplace(exe_name, &IpcLogFn, &m_context);
         if (ready_fn) ready_fn();
         mp::ServeStream<messages::Init>(*m_loop, fd, init);
+        m_parent_connection = &m_loop->m_incoming_connections.back();
         m_loop->loop();
         m_loop.reset();
+    }
+    void disconnectIncoming() override
+    {
+        if (!m_loop) return;
+        // Delete incoming connections, except the connection to a parent
+        // process (if there is one), since a parent process should be able to
+        // monitor and control this process, even during shutdown.
+        m_loop->sync([&] {
+            m_loop->m_incoming_connections.remove_if([this](mp::Connection& c) { return &c != m_parent_connection; });
+        });
     }
     void addCleanup(std::type_index type, void* iface, std::function<void()> cleanup) override
     {
@@ -89,6 +100,7 @@ public:
     }
     Context m_context;
     std::thread m_loop_thread;
+    mp::Connection* m_parent_connection{nullptr};
     std::optional<mp::EventLoop> m_loop;
     std::optional<mp::EventLoopRef> m_loop_ref;
 };

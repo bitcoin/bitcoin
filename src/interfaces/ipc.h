@@ -70,6 +70,9 @@ public:
     //! using provided callback. Throws an exception if there was an error.
     virtual void listenAddress(std::string& address) = 0;
 
+    //! Disconnect any incoming connections that are still connected.
+    virtual void disconnectIncoming() = 0;
+
     //! Add cleanup callback to remote interface that will run when the
     //! interface is deleted.
     template<typename Interface>
