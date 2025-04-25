@@ -478,9 +478,19 @@ if test "$enable_werror" = "yes"; then
     int main(void) { return 0; }
   ])])
 
-  dnl -Wstringop-overread and -Wstringop-overflow are broken in gcc
-  AX_CHECK_COMPILE_FLAG([-Wstringop-overread], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wno-stringop-overread"], [], [$CXXFLAG_WERROR])
-  AX_CHECK_COMPILE_FLAG([-Wstringop-overflow], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wno-stringop-overflow"], [], [$CXXFLAG_WERROR])
+  dnl -Wstringop-overread and -Wstringop-overflow are broken in GCC. Suppress warnings entirely to avoid noisy output.
+  AX_CHECK_COMPILE_FLAG([-Wstringop-overread], [NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-stringop-overread"], [], [$CXXFLAG_WERROR], [AC_LANG_SOURCE([
+    #if defined(__clang__) || defined(__INTEL_COMPILER) || !defined(__GNUC__)
+      #error Non-GCC compiler detected, not setting flag
+    #endif
+    int main(void) { return 0; }
+  ])])
+  AX_CHECK_COMPILE_FLAG([-Wstringop-overflow], [NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-stringop-overflow"], [], [$CXXFLAG_WERROR], [AC_LANG_SOURCE([
+    #if defined(__clang__) || defined(__INTEL_COMPILER) || !defined(__GNUC__)
+      #error Non-GCC compiler detected, not setting flag
+    #endif
+    int main(void) { return 0; }
+  ])])
 fi
 
 AX_CHECK_COMPILE_FLAG([-Wall], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wall"], [], [$CXXFLAG_WERROR])
