@@ -63,7 +63,7 @@ namespace dbwrapper_private {
  * Database obfuscation should be considered an implementation detail of the
  * specific database.
  */
-const std::vector<unsigned char>& GetObfuscateKey(const CDBWrapper &w);
+const std::vector<unsigned char>& GetObfuscation(const CDBWrapper &w);
 
 }; // namespace dbwrapper_private
 
@@ -168,7 +168,7 @@ public:
     template<typename V> bool GetValue(V& value) {
         try {
             DataStream ssValue{GetValueImpl()};
-            ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
+            ssValue.Xor(dbwrapper_private::GetObfuscation(parent));
             ssValue >> value;
         } catch (const std::exception&) {
             return false;
@@ -181,7 +181,7 @@ struct LevelDBContext;
 
 class CDBWrapper
 {
-    friend const std::vector<unsigned char>& dbwrapper_private::GetObfuscateKey(const CDBWrapper &w);
+    friend const std::vector<unsigned char>& dbwrapper_private::GetObfuscation(const CDBWrapper &w);
 private:
     //! holds all leveldb-specific fields of this class
     std::unique_ptr<LevelDBContext> m_db_context;
@@ -190,12 +190,12 @@ private:
     std::string m_name;
 
     //! a key used for optional XOR-obfuscation of the database
-    std::vector<unsigned char> obfuscate_key;
+    std::vector<unsigned char> m_obfuscation;
 
     //! the key under which the obfuscation key is stored
-    static const std::string OBFUSCATE_KEY_KEY;
+    static const std::string OBFUSCATION_KEY_KEY;
 
-    std::vector<unsigned char> CreateObfuscateKey() const;
+    std::vector<unsigned char> CreateObfuscation() const;
 
     //! path to filesystem storage
     const fs::path m_path;
@@ -227,7 +227,7 @@ public:
         }
         try {
             DataStream ssValue{MakeByteSpan(*strValue)};
-            ssValue.Xor(obfuscate_key);
+            ssValue.Xor(m_obfuscation);
             ssValue >> value;
         } catch (const std::exception&) {
             return false;

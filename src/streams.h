@@ -402,12 +402,12 @@ class AutoFile
 {
 protected:
     std::FILE* m_file;
-    std::vector<std::byte> m_xor;
+    std::vector<std::byte> m_obfuscation;
     std::optional<int64_t> m_position;
     bool m_was_written{false};
 
 public:
-    explicit AutoFile(std::FILE* file, std::vector<std::byte> data_xor={});
+    explicit AutoFile(std::FILE* file, std::vector<std::byte> obfuscation={});
 
     ~AutoFile()
     {
@@ -455,7 +455,7 @@ public:
     bool IsNull() const { return m_file == nullptr; }
 
     /** Continue with a different XOR key */
-    void SetXor(std::vector<std::byte> data_xor) { m_xor = data_xor; }
+    void SetObfuscation(std::vector<std::byte> obfuscation) { m_obfuscation = obfuscation; }
 
     /** Implementation detail, only used internally. */
     std::size_t detail_fread(Span<std::byte> dst);
