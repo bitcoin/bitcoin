@@ -271,7 +271,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
-        <translation type="unfinished">Дошло је до фаталне грешке. 1%1 даље не може безбедно да настави, те ће се угасити.</translation>
+        <translation type="unfinished">Дошло је до фаталне грешке. %1 даље не може безбедно да настави, те ће се угасити.</translation>
     </message>
     <message>
         <source>Internal error</source>
@@ -300,7 +300,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>%1 didn't yet exit safely…</source>
-        <translation type="unfinished">1%1 још увек није изашао безбедно…</translation>
+        <translation type="unfinished">%1 још увек није изашао безбедно…</translation>
     </message>
     <message>
         <source>unknown</source>

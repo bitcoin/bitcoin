@@ -94,6 +94,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">முகவரி பட்டியலை %1 க்கு சேமிக்க முயற்சிக்கும் ஒரு பிழை ஏற்பட்டது. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.</translation>
     </message>
     <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">வரவேற்கும் முகவரிகள் - %1</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">ஏக்ஸ்போர்ட் தோல்வியடைந்தது</translation>
     </message>
@@ -176,6 +180,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">பழைய கடவுச்சொல் மற்றும் புதிய கடுவுசொல்லை உள்ளிடுக.</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">தொடரவும்</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">பின் செல்</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">வாலட்டை குறியாக்கம் செய்தால் மட்டும் உங்கள் பிட்காயினை வைரஸிடம் இருந்து பாதுகாக்க இயலாது.</translation>
     </message>
@@ -220,6 +232,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Wallet குறியாக்கம் தோல்வியடைந்தது</translation>
     </message>
     <message>
+        <source>Passphrase change failed</source>
+        <translation type="unfinished">கடவுச்சொல் மாற்றம் தோல்வியடைந்தது</translation>
+    </message>
+    <message>
         <source>Warning: The Caps Lock key is on!</source>
         <translation type="unfinished">எச்சரிக்கை: Caps Lock விசை இயக்கத்தில் உள்ளது!</translation>
     </message>
@@ -247,7 +263,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
-        <translation type="unfinished">உள் பிழை ஏற்பட்டது. 1%1  தொடர முயற்சிக்கும். இது எதிர்பாராத பிழை, கீழே விவரிக்கப்பட்டுள்ளபடி புகாரளிக்கலாம்.</translation>
+        <translation type="unfinished">உள் பிழை ஏற்பட்டது. %1  தொடர முயற்சிக்கும். இது எதிர்பாராத பிழை, கீழே விவரிக்கப்பட்டுள்ளபடி புகாரளிக்கலாம்.</translation>
     </message>
 </context>
 <context>
@@ -447,6 +463,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;பேக்கப் வாலட்...</translation>
     </message>
     <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation type="unfinished">&amp;கடவுச்சொல்லை மாற்றுக…</translation>
+    </message>
+    <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
         <translation type="unfinished">உங்கள் பிட்டினின் முகவரியுடன் செய்திகளை உங்களிடம் வைத்திருப்பதை நிரூபிக்க</translation>
     </message>
@@ -583,6 +603,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">வாலட் எதுவும் இல்லை</translation>
     </message>
     <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
+        <translation type="unfinished">பணப்பையை மீட்டெடுக்க</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
         <translation type="unfinished">வாலட் பெயர்</translation>
@@ -603,6 +628,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%1 client</source>
         <translation type="unfinished">%1 கிளையன்</translation>
     </message>
+    <message>
+        <source>S&amp;how</source>
+        <translation type="unfinished">காண்பி</translation>
+    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
@@ -610,6 +639,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
             <numerusform />
         </translation>
+    </message>
+    <message>
+        <source>Enable network activity</source>
+        <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
+        <translation type="unfinished">இணைய செயல்பாட்டை இயக்கு</translation>
+    </message>
+    <message>
+        <source>Error creating wallet</source>
+        <translation type="unfinished">பணப்பை உருவாக்க பிழை ஏற்பட்டது</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -839,6 +877,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>RestoreWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">பணப்பையை மீட்டெடுக்க</translation>
+    </message>
+    </context>
+<context>
     <name>WalletController</name>
     <message>
         <source>Close wallet</source>
@@ -898,6 +944,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Make Blank Wallet</source>
         <translation type="unfinished">காலியான வாலட்டை உருவாக்கு</translation>
+    </message>
+    <message>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation type="unfinished">ஹார்ட்வேர் பணப்பை போன்ற வெளிப்புற கையொப்ப சாதனத்தை பயன்படுத்துங்கள். முதலில் பணப்பை விருப்பங்களில் வெளிப்புற கையொப்ப ஸ்கிரிப்டை உள்ளமைக்கவும்.</translation>
     </message>
     <message>
         <source>Create</source>
@@ -1102,6 +1152,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Number of blocks left</source>
         <translation type="unfinished">மீதமுள்ள தொகுதிகள் உள்ளன</translation>
+    </message>
+    <message>
+        <source>calculating…</source>
+        <translation type="unfinished">கணக்கிடுகிறது...</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1342,6 +1396,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
         <extracomment>Explanatory text about the priority order of instructions considered by client. The order from high to low being: command-line, configuration file, GUI settings.</extracomment>
         <translation type="unfinished">GUI அமைப்புகளை மேலெழுதக்கூடிய மேம்பட்ட பயனர் விருப்பங்களைக் குறிப்பிட கட்டமைப்பு கோப்பு பயன்படுத்தப்படுகிறது. கூடுதலாக, எந்த கட்டளை வரி விருப்பங்கள் இந்த கட்டமைப்பு கோப்பு புறக்கணிக்க வேண்டும்.</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">தொடரவும்</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -1692,6 +1750,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">இணைப்பு நேரம்</translation>
     </message>
     <message>
+        <source>Last Block</source>
+        <translation type="unfinished">கடைசி தொகுதி</translation>
+    </message>
+    <message>
         <source>Last Send</source>
         <translation type="unfinished">கடைசி அனுப்பவும்</translation>
     </message>
@@ -1810,6 +1872,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Ban for</source>
         <translation type="unfinished">தடை செய்</translation>
+    </message>
+    <message>
+        <source>Never</source>
+        <translation type="unfinished">ஒருபோதும் இல்லை</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -2899,6 +2965,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
         <translation type="unfinished">பிளாக்களை இயக்க முடியவில்லை. -reindex-chainstate ஐப் பயன்படுத்தி டேட்டாபேசை மீண்டும் உருவாக்க வேண்டும்.</translation>
+    </message>
+    <message>
+        <source>Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future.</source>
+        <translation type="unfinished">பணப்பை வெற்றிகரமாக உருவாக்கப்பட்டது. பாரம்பரிய பணப்பை வகை படிப்படியாக கைவிடப்படுகிறது, மேலும் எதிர்காலத்தில் அதை உருவாக்கவும் திறக்கவும் ஆதரவு நீக்கப்படும்.</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>

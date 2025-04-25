@@ -1361,6 +1361,17 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </message>
     </context>
 <context>
+    <name>WalletModel</name>
+    <message>
+        <source>Fee-bump PSBT copied to clipboard</source>
+        <translation type="unfinished">PSBT با هزینه اضافه شده، در بریده‌دان کپی شد</translation>
+    </message>
+    <message>
+        <source>Signer error</source>
+        <translation type="unfinished">خطای امضا کننده</translation>
+    </message>
+    </context>
+<context>
     <name>WalletView</name>
     <message>
         <source>Export the data in the current tab to a file</source>
