@@ -279,6 +279,8 @@ class DashGovernanceTest (DashTestFramework):
         self.log.info("Should see NO votes on both triggers now")
         self.wait_until(lambda: self.nodes[0].gobject("list", "valid", "triggers")[winning_trigger_hash]['NoCount'] == 1, timeout=5)
         self.wait_until(lambda: self.nodes[0].gobject("list", "valid", "triggers")[isolated_trigger_hash]['NoCount'] == self.mn_count - 1, timeout=5)
+        self.log.info("Should wait until all 24 votes are counted for success on next stages")
+        self.wait_until(lambda: self.nodes[1].gobject("count")["votes"] == 24, timeout=5)
 
         self.log.info("Remember vote count")
         before = self.nodes[1].gobject("count")["votes"]
