@@ -155,16 +155,9 @@ void CActiveMasternodeManager::InitInternal(const CBlockIndex* pindex)
 
     // Check socket connectivity
     LogPrintf("CActiveMasternodeManager::Init -- Checking inbound connection to '%s'\n", m_info.service.ToStringAddrPort());
-    std::unique_ptr<Sock> sock = CreateSock(m_info.service);
-    if (!sock) {
-        m_state = MasternodeState::SOME_ERROR;
-        m_error = "Could not create socket to connect to " + m_info.service.ToStringAddrPort();
-        LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", m_error);
-        return;
-    }
-    bool fConnected = ConnectSocketDirectly(m_info.service, *sock, nConnectTimeout, true) && sock->IsSelectable();
+    std::unique_ptr<Sock> sock{ConnectDirectly(m_info.service, /*manual_connection=*/true)};
+    bool fConnected{sock && sock->IsSelectable()};
     sock = std::make_unique<Sock>(INVALID_SOCKET);
-
     if (!fConnected && Params().RequireRoutableExternalIP()) {
         m_state = MasternodeState::SOME_ERROR;
         m_error = "Could not connect to " + m_info.service.ToStringAddrPort();

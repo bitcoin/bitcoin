@@ -114,20 +114,18 @@ static CNetAddr DestB64ToAddr(const std::string& dest)
 namespace sam {
 
 Session::Session(const fs::path& private_key_file,
-                 const CService& control_host,
+                 const Proxy& control_host,
                  CThreadInterrupt* interrupt)
     : m_private_key_file{private_key_file},
       m_control_host{control_host},
       m_interrupt{interrupt},
-      m_control_sock{std::make_unique<Sock>(INVALID_SOCKET)},
       m_transient{false}
 {
 }
 
-Session::Session(const CService& control_host, CThreadInterrupt* interrupt)
+Session::Session(const Proxy& control_host, CThreadInterrupt* interrupt)
     : m_control_host{control_host},
       m_interrupt{interrupt},
-      m_control_sock{std::make_unique<Sock>(INVALID_SOCKET)},
       m_transient{true}
 {
 }
@@ -326,14 +324,10 @@ Session::Reply Session::SendRequestAndGetReply(const Sock& sock,
 
 std::unique_ptr<Sock> Session::Hello() const
 {
-    auto sock = CreateSock(m_control_host);
+    auto sock = m_control_host.Connect();
 
     if (!sock) {
-        throw std::runtime_error("Cannot create socket");
-    }
-
-    if (!ConnectSocketDirectly(m_control_host, *sock, nConnectTimeout, true)) {
-        throw std::runtime_error(strprintf("Cannot connect to %s", m_control_host.ToStringAddrPort()));
+        throw std::runtime_error(strprintf("Cannot connect to %s", m_control_host.ToString()));
     }
 
     SendRequestAndGetReply(*sock, "HELLO VERSION MIN=3.1 MAX=3.1");
@@ -346,7 +340,7 @@ void Session::CheckControlSock()
     LOCK(m_mutex);
 
     std::string errmsg;
-    if (!m_control_sock->IsConnected(errmsg)) {
+    if (m_control_sock && !m_control_sock->IsConnected(errmsg)) {
         LogPrintLevel(BCLog::I2P, BCLog::Level::Debug, "Control socket error: %s\n", errmsg);
         Disconnect();
     }
@@ -384,10 +378,25 @@ Binary Session::MyDestination() const
     static constexpr size_t CERT_LEN_POS = 385;
 
     uint16_t cert_len;
+
+    if (m_private_key.size() < CERT_LEN_POS + sizeof(cert_len)) {
+        throw std::runtime_error(strprintf("The private key is too short (%d < %d)",
+                                           m_private_key.size(),
+                                           CERT_LEN_POS + sizeof(cert_len)));
+    }
+
     memcpy(&cert_len, &m_private_key.at(CERT_LEN_POS), sizeof(cert_len));
     cert_len = be16toh_internal(cert_len);
 
     const size_t dest_len = DEST_LEN_BASE + cert_len;
+
+    if (dest_len > m_private_key.size()) {
+        throw std::runtime_error(strprintf("Certificate length (%d) designates that the private key should "
+                                           "be %d bytes, but it is only %d bytes",
+                                           cert_len,
+                                           dest_len,
+                                           m_private_key.size()));
+    }
 
     return Binary{m_private_key.begin(), m_private_key.begin() + dest_len};
 }
@@ -395,14 +404,14 @@ Binary Session::MyDestination() const
 void Session::CreateIfNotCreatedAlready()
 {
     std::string errmsg;
-    if (m_control_sock->IsConnected(errmsg)) {
+    if (m_control_sock && m_control_sock->IsConnected(errmsg)) {
         return;
     }
 
     const auto session_type = m_transient ? "transient" : "persistent";
     const auto session_id = GetRandHash().GetHex().substr(0, 10); // full is overkill, too verbose in the logs
 
-    LogPrintLevel(BCLog::I2P, BCLog::Level::Debug, "Creating %s SAM session %s with %s\n", session_type, session_id, m_control_host.ToStringAddrPort());
+    LogPrintLevel(BCLog::I2P, BCLog::Level::Debug, "Creating %s SAM session %s with %s\n", session_type, session_id, m_control_host.ToString());
 
     auto sock = Hello();
 
@@ -468,14 +477,14 @@ std::unique_ptr<Sock> Session::StreamAccept()
 
 void Session::Disconnect()
 {
-    if (m_control_sock->Get() != INVALID_SOCKET) {
+    if (m_control_sock) {
         if (m_session_id.empty()) {
             LogPrintLevel(BCLog::I2P, BCLog::Level::Info, "Destroying incomplete SAM session\n");
         } else {
             LogPrintLevel(BCLog::I2P, BCLog::Level::Info, "Destroying SAM session %s\n", m_session_id);
         }
+        m_control_sock.reset();
     }
-    m_control_sock = std::make_unique<Sock>(INVALID_SOCKET);
     m_session_id.clear();
 }
 } // namespace sam

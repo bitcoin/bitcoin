@@ -8,6 +8,7 @@
 #include <compat/compat.h>
 #include <fs.h>
 #include <netaddress.h>
+#include <netbase.h>
 #include <sync.h>
 #include <threadinterrupt.h>
 #include <util/sock.h>
@@ -67,7 +68,7 @@ public:
      * `Session` object.
      */
     Session(const fs::path& private_key_file,
-            const CService& control_host,
+            const Proxy& control_host,
             CThreadInterrupt* interrupt);
 
     /**
@@ -81,7 +82,7 @@ public:
      * `CThreadInterrupt` object is saved, so it must not be destroyed earlier than this
      * `Session` object.
      */
-    Session(const CService& control_host, CThreadInterrupt* interrupt);
+    Session(const Proxy& control_host, CThreadInterrupt* interrupt);
 
     /**
      * Destroy the session, closing the internally used sockets. The sockets that have been
@@ -227,9 +228,9 @@ private:
     const fs::path m_private_key_file;
 
     /**
-     * The host and port of the SAM control service.
+     * The SAM control service proxy.
      */
-    const CService m_control_host;
+    const Proxy m_control_host;
 
     /**
      * Cease network activity when this is signaled.
@@ -253,6 +254,7 @@ private:
      * ("SESSION CREATE"). With the established session id we later open
      * other connections to the SAM service to accept incoming I2P
      * connections and make outgoing ones.
+     * If not connected then this unique_ptr will be empty.
      * See https://geti2p.net/en/docs/api/samv3
      */
     std::unique_ptr<Sock> m_control_sock GUARDED_BY(m_mutex);
