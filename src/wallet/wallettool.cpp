@@ -10,7 +10,6 @@
 #include <util/fs.h>
 #include <util/translation.h>
 #include <wallet/dump.h>
-#include <wallet/salvage.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
@@ -112,21 +111,29 @@ static void WalletShowInfo(CWallet* wallet_instance)
 
 bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
 {
-    if (args.IsArgSet("-format") && command != "createfromdump") {
-        tfm::format(std::cerr, "The -format option can only be used with the \"createfromdump\" command.\n");
-        return false;
-    }
     if (args.IsArgSet("-dumpfile") && command != "dump" && command != "createfromdump") {
         tfm::format(std::cerr, "The -dumpfile option can only be used with the \"dump\" and \"createfromdump\" commands.\n");
         return false;
     }
-    if (args.IsArgSet("-descriptors") && command != "create") {
-        tfm::format(std::cerr, "The -descriptors option can only be used with the 'create' command.\n");
-        return false;
+    if (args.IsArgSet("-descriptors")) {
+        if (command != "create") {
+            tfm::format(std::cerr, "The -descriptors option can only be used with the 'create' command.\n");
+            return false;
+        }
+        if (!args.GetBoolArg("-descriptors", true)) {
+            tfm::format(std::cerr, "The -descriptors option must be set to \"true\"\n");
+            return false;
+        }
     }
-    if (args.IsArgSet("-legacy") && command != "create") {
-        tfm::format(std::cerr, "The -legacy option can only be used with the 'create' command.\n");
-        return false;
+    if (args.IsArgSet("-legacy")) {
+        if (command != "create") {
+            tfm::format(std::cerr, "The -legacy option can only be used with the 'create' command.\n");
+            return false;
+        }
+        if (args.GetBoolArg("-legacy", true)) {
+            tfm::format(std::cerr, "The -legacy option must be set to \"false\"\n");
+            return false;
+        }
     }
     if (command == "create" && !args.IsArgSet("-wallet")) {
         tfm::format(std::cerr, "Wallet name must be provided when creating a new wallet.\n");
@@ -139,22 +146,8 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         DatabaseOptions options;
         ReadDatabaseArgs(args, options);
         options.require_create = true;
-        // If -legacy is set, use it. Otherwise default to false.
-        bool make_legacy = args.GetBoolArg("-legacy", false);
-        // If neither -legacy nor -descriptors is set, default to true. If -descriptors is set, use its value.
-        bool make_descriptors = (!args.IsArgSet("-descriptors") && !args.IsArgSet("-legacy")) || (args.IsArgSet("-descriptors") && args.GetBoolArg("-descriptors", true));
-        if (make_legacy && make_descriptors) {
-            tfm::format(std::cerr, "Only one of -legacy or -descriptors can be set to true, not both\n");
-            return false;
-        }
-        if (!make_legacy && !make_descriptors) {
-            tfm::format(std::cerr, "One of -legacy or -descriptors must be set to true (or omitted)\n");
-            return false;
-        }
-        if (make_descriptors) {
-            options.create_flags |= WALLET_FLAG_DESCRIPTORS;
-            options.require_format = DatabaseFormat::SQLITE;
-        }
+        options.create_flags |= WALLET_FLAG_DESCRIPTORS;
+        options.require_format = DatabaseFormat::SQLITE;
 
         const std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, options);
         if (wallet_instance) {
@@ -169,24 +162,6 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         if (!wallet_instance) return false;
         WalletShowInfo(wallet_instance.get());
         wallet_instance->Close();
-    } else if (command == "salvage") {
-#ifdef USE_BDB
-        bilingual_str error;
-        std::vector<bilingual_str> warnings;
-        bool ret = RecoverDatabaseFile(args, path, error, warnings);
-        if (!ret) {
-            for (const auto& warning : warnings) {
-                tfm::format(std::cerr, "%s\n", warning.original);
-            }
-            if (!error.empty()) {
-                tfm::format(std::cerr, "%s\n", error.original);
-            }
-        }
-        return ret;
-#else
-        tfm::format(std::cerr, "Salvage command is not available as BDB support is not compiled");
-        return false;
-#endif
     } else if (command == "dump") {
         DatabaseOptions options;
         ReadDatabaseArgs(args, options);

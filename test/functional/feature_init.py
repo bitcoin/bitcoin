@@ -24,12 +24,10 @@ class InitTest(BitcoinTestFramework):
     subsequent starts.
     """
 
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 1
+        self.uses_wallet = None
 
     def init_stress_test(self):
         """
