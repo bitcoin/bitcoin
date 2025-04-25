@@ -179,6 +179,7 @@ def main():
                 fuzz_bin=fuzz_bin,
                 corpus_dir=args.corpus_dir,
                 targets=test_list_selection,
+                using_libfuzzer=using_libfuzzer,
             )
 
         if args.m_dir:
@@ -189,6 +190,7 @@ def main():
                 src_dir=config['environment']['SRCDIR'],
                 fuzz_bin=fuzz_bin,
                 merge_dirs=[Path(m_dir) for m_dir in args.m_dir],
+                using_libfuzzer=using_libfuzzer,
             )
             return
 
@@ -240,20 +242,24 @@ def transform_rpc_target(targets, src_dir):
     return targets
 
 
-def generate_corpus(*, fuzz_pool, src_dir, fuzz_bin, corpus_dir, targets):
+def generate_corpus(*, fuzz_pool, src_dir, fuzz_bin, corpus_dir, targets, using_libfuzzer):
     """Generates new corpus.
 
     Run {targets} without input, and outputs the generated corpus to
     {corpus_dir}.
     """
+    num_targets_completed = 0
+    target_max_len = max(len(t) for t in targets)
+    num_of_targets = len(targets)
     logging.info("Generating corpus to {}".format(corpus_dir))
     targets = [(t, {}) for t in targets]  # expand to add dictionary for target-specific env variables
     targets = transform_process_message_target(targets, Path(src_dir))
     targets = transform_rpc_target(targets, Path(src_dir))
 
+
     def job(command, t, t_env):
         logging.debug(f"Running '{command}'")
-        logging.debug("Command '{}' output:\n'{}'\n".format(
+        output = "Command '{}' output:\n'{}'\n".format(
             command,
             subprocess.run(
                 command,
@@ -265,7 +271,9 @@ def generate_corpus(*, fuzz_pool, src_dir, fuzz_bin, corpus_dir, targets):
                 stderr=subprocess.PIPE,
                 text=True,
             ).stderr,
-        ))
+        )
+        logging.debug(output)
+        return t, output
 
     futures = []
     for target, t_env in targets:
@@ -283,12 +291,19 @@ def generate_corpus(*, fuzz_pool, src_dir, fuzz_bin, corpus_dir, targets):
         futures.append(fuzz_pool.submit(job, command, target, t_env))
 
     for future in as_completed(futures):
-        future.result()
+        target, output = future.result()
+        if using_libfuzzer:
+            done_stat = [l for l in output.splitlines() if "DONE" in l]
+            assert len(done_stat) == 1
+            num_targets_completed = log_fuzz_progress(num_targets_completed, num_of_targets, done_stat, target, target_max_len)
 
 
-def merge_inputs(*, fuzz_pool, corpus, test_list, src_dir, fuzz_bin, merge_dirs):
+
+def merge_inputs(*, fuzz_pool, corpus, test_list, src_dir, fuzz_bin, merge_dirs, using_libfuzzer):
     logging.info(f"Merge the inputs from the passed dir into the corpus_dir. Passed dirs {merge_dirs}")
     jobs = []
+    num_targets_completed = 0
+    target_max_len = max(len(t) for t in test_list)
     for t in test_list:
         args = [
             fuzz_bin,
@@ -321,15 +336,29 @@ def merge_inputs(*, fuzz_pool, corpus, test_list, src_dir, fuzz_bin, merge_dirs)
                 text=True,
             ).stderr
             logging.debug(output)
+            return t, output
 
         jobs.append(fuzz_pool.submit(job, t, args))
 
     for future in as_completed(jobs):
-        future.result()
+        target, output = future.result()
+        if using_libfuzzer:
+            done_stat = [l for l in output.splitlines() if "DONE" in l]
+            assert len(done_stat) == 1
+            num_targets_completed = log_fuzz_progress(num_targets_completed, len(test_list), done_stat, target, target_max_len)
+
+def log_fuzz_progress(num_targets_completed, num_of_targets, done_stat, target, target_str_max_length):
+    t = target.ljust(target_str_max_length + 5)
+    num_targets_completed = num_targets_completed + 1
+    p = f"({str(num_targets_completed)}/{num_of_targets})".ljust(len(str(num_of_targets)) * 2 + 3)
+    print(f"{p} {t}{done_stat[0]}")
+    return num_targets_completed
 
 
 def run_once(*, fuzz_pool, corpus, test_list, src_dir, fuzz_bin, using_libfuzzer, use_valgrind, empty_min_time):
     jobs = []
+    num_targets_completed = 0
+    target_max_len = max(len(t) for t in test_list)
     for t in test_list:
         corpus_path = corpus / t
         os.makedirs(corpus_path, exist_ok=True)
@@ -380,13 +409,13 @@ def run_once(*, fuzz_pool, corpus, test_list, src_dir, fuzz_bin, using_libfuzzer
             done_stat = [l for l in output.splitlines() if "DONE" in l]
             assert len(done_stat) == 1
             stats.append((target, done_stat[0]))
-
+            num_targets_completed = log_fuzz_progress(num_targets_completed, len(test_list), done_stat, target, target_max_len)
     if using_libfuzzer:
-        print("Summary:")
+        logging.debug("Summary:")
         max_len = max(len(t[0]) for t in stats)
         for t, s in sorted(stats):
             t = t.ljust(max_len + 1)
-            print(f"{t}{s}")
+            logging.debug(f"{t}{s}")
 
 
 def parse_test_list(*, fuzz_bin, source_dir):
