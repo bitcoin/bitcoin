@@ -173,10 +173,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
     pblock->nNonce         = 0;
 
-    BlockValidationState state;
-    if (m_options.test_block_validity && !TestBlockValidity(state, chainparams, m_chainstate, *pblock, pindexPrev,
-                                                            /*fCheckPOW=*/false, /*fCheckMerkleRoot=*/false)) {
-        throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, state.ToString()));
+    std::string reason;
+    std::string debug;
+    if (m_options.test_block_validity && !TestBlockValidity(m_chainstate, *pblock, /*check_pow=*/false, /*check_merkle_root=*/false, reason, debug)) {
+        throw std::runtime_error(strprintf("TestBlockValidity failed: %s - %s", reason, debug));
     }
     const auto time_2{SteadyClock::now()};
 
