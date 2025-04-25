@@ -91,31 +91,7 @@ public:
 
     std::string ToString() const;
 
-    [[nodiscard]] UniValue ToJson() const
-    {
-        UniValue obj;
-        obj.setObject();
-        obj.pushKV("version", nVersion);
-        obj.pushKV("type", ToUnderlying(nType));
-        obj.pushKV("collateralHash", collateralOutpoint.hash.ToString());
-        obj.pushKV("collateralIndex", (int)collateralOutpoint.n);
-        obj.pushKV("service", addr.ToStringAddrPort());
-        obj.pushKV("ownerAddress", EncodeDestination(PKHash(keyIDOwner)));
-        obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
-
-        if (CTxDestination dest; ExtractDestination(scriptPayout, dest)) {
-            obj.pushKV("payoutAddress", EncodeDestination(dest));
-        }
-        obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
-        obj.pushKV("operatorReward", (double)nOperatorReward / 100);
-        if (nType == MnType::Evo) {
-            obj.pushKV("platformNodeID", platformNodeID.ToString());
-            obj.pushKV("platformP2PPort", platformP2PPort);
-            obj.pushKV("platformHTTPPort", platformHTTPPort);
-        }
-        obj.pushKV("inputsHash", inputsHash.ToString());
-        return obj;
-    }
+    [[nodiscard]] UniValue ToJson() const;
 
     bool IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const;
 };
@@ -175,25 +151,7 @@ public:
 
     std::string ToString() const;
 
-    [[nodiscard]] UniValue ToJson() const
-    {
-        UniValue obj;
-        obj.setObject();
-        obj.pushKV("version", nVersion);
-        obj.pushKV("type", ToUnderlying(nType));
-        obj.pushKV("proTxHash", proTxHash.ToString());
-        obj.pushKV("service", addr.ToStringAddrPort());
-        if (CTxDestination dest; ExtractDestination(scriptOperatorPayout, dest)) {
-            obj.pushKV("operatorPayoutAddress", EncodeDestination(dest));
-        }
-        if (nType == MnType::Evo) {
-            obj.pushKV("platformNodeID", platformNodeID.ToString());
-            obj.pushKV("platformP2PPort", platformP2PPort);
-            obj.pushKV("platformHTTPPort", platformHTTPPort);
-        }
-        obj.pushKV("inputsHash", inputsHash.ToString());
-        return obj;
-    }
+    [[nodiscard]] UniValue ToJson() const;
 
     bool IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const;
 };
@@ -243,20 +201,7 @@ public:
 
     std::string ToString() const;
 
-    [[nodiscard]] UniValue ToJson() const
-    {
-        UniValue obj;
-        obj.setObject();
-        obj.pushKV("version", nVersion);
-        obj.pushKV("proTxHash", proTxHash.ToString());
-        obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
-        if (CTxDestination dest; ExtractDestination(scriptPayout, dest)) {
-            obj.pushKV("payoutAddress", EncodeDestination(dest));
-        }
-        obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
-        obj.pushKV("inputsHash", inputsHash.ToString());
-        return obj;
-    }
+    [[nodiscard]] UniValue ToJson() const;
 
     bool IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const;
 };
@@ -309,16 +254,7 @@ public:
 
     std::string ToString() const;
 
-    [[nodiscard]] UniValue ToJson() const
-    {
-        UniValue obj;
-        obj.setObject();
-        obj.pushKV("version", nVersion);
-        obj.pushKV("proTxHash", proTxHash.ToString());
-        obj.pushKV("reason", (int)nReason);
-        obj.pushKV("inputsHash", inputsHash.ToString());
-        return obj;
-    }
+    [[nodiscard]] UniValue ToJson() const;
 
     bool IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const;
 };

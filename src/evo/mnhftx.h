@@ -86,14 +86,7 @@ public:
 
     std::string ToString() const;
 
-    [[nodiscard]] UniValue ToJson() const
-    {
-        UniValue obj;
-        obj.setObject();
-        obj.pushKV("version", (int)nVersion);
-        obj.pushKV("signal", signal.ToJson());
-        return obj;
-    }
+    [[nodiscard]] UniValue ToJson() const;
 };
 
 class CMNHFManager : public AbstractEHFManager
