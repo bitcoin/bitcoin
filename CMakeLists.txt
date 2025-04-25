@@ -289,6 +289,11 @@ if(WIN32)
       /Zc:__cplusplus
       /sdl
     )
+    target_link_options(core_interface INTERFACE
+      # Increase stack size to accommodate the deep recursion
+      # in the FindChallenges() function used in miniscript_tests.
+      $<$<CONFIG:Debug>:/STACK:2097152>
+    )
     # Improve parallelism in MSBuild.
     # See: https://devblogs.microsoft.com/cppblog/improved-parallelism-in-msbuild/.
     list(APPEND CMAKE_VS_GLOBALS "UseMultiToolTask=true")
