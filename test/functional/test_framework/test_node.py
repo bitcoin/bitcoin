@@ -48,6 +48,8 @@ BITCOIND_PROC_WAIT_TIMEOUT = 60
 # The size of the blocks xor key
 # from InitBlocksdirXorKey::xor_key.size()
 NUM_XOR_BYTES = 8
+CLI_MAX_ARG_SIZE = 131071 # many systems have a 128kb limit per arg (MAX_ARG_STRLEN)
+
 # The null blocks key (all 0s)
 NULL_BLK_XOR_KEY = bytes([0] * NUM_XOR_BYTES)
 BITCOIN_PID_FILENAME_DEFAULT = "bitcoind.pid"
@@ -906,9 +908,22 @@ class TestNodeCLI():
         if clicommand is not None:
             p_args += [clicommand]
         p_args += pos_args + named_args
+        max_arg_size = max(len(arg) for arg in p_args)
+        rpcfile_path = None
+        if max_arg_size > CLI_MAX_ARG_SIZE:
+            self.log.debug(f"Cli: Command size {max_arg_size} too large, using temporary file")
+            rpc_args = [arg for arg in p_args[1:] if not arg.startswith('-')]
+            base_args = [arg for arg in p_args if arg.startswith('-')]
+            with tempfile.NamedTemporaryFile(mode='w', delete=False) as tf:
+                tf.write("\n".join(rpc_args))
+                rpcfile_path = tf.name
+            p_args =[p_args[0]] + base_args + [f"-usefile={rpcfile_path}"]
+
         self.log.debug("Running bitcoin-cli {}".format(p_args[2:]))
         process = subprocess.Popen(p_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         cli_stdout, cli_stderr = process.communicate(input=self.input)
+        if rpcfile_path:
+            os.remove(rpcfile_path)
         returncode = process.poll()
         if returncode:
             match = re.match(r'error code: ([-0-9]+)\nerror message:\n(.*)', cli_stderr)
