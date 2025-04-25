@@ -2712,6 +2712,9 @@ bool PeerManagerImpl::IsAncestorOfBestHeaderOrTip(const CBlockIndex* header)
 
 bool PeerManagerImpl::MaybeSendGetHeaders(CNode& pfrom, const CBlockLocator& locator, Peer& peer)
 {
+
+    if (m_opts.ignore_incoming_blocks) return false;
+    
     const auto current_time = NodeClock::now();
 
     // Only allow a new getheaders message to go out if we don't have a recent
@@ -3416,6 +3419,18 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     PeerRef peer = GetPeerRef(pfrom.GetId());
     if (peer == nullptr) return;
 
+    if (m_opts.ignore_incoming_blocks &&
+        (msg_type == NetMsgType::HEADERS      ||  // header announcements
+         msg_type == NetMsgType::CMPCTBLOCK   ||  // BIP-152 compact block
+         msg_type == NetMsgType::GETHEADERS   ||  // sync locator → headers
+         msg_type == NetMsgType::GETBLOCKS    ||  // legacy sync
+         msg_type == NetMsgType::GETBLOCKTXN  ||  // cmpctblock follow-up
+         msg_type == NetMsgType::BLOCKTXN     ||  // cmpctblock reply
+         msg_type == NetMsgType::BLOCK))          // full block
+    {
+        return;
+    }
+
     if (msg_type == NetMsgType::VERSION) {
         if (pfrom.nVersion != 0) {
             LogDebug(BCLog::NET, "redundant version message from peer=%d\n", pfrom.GetId());
@@ -3940,6 +3955,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         for (CInv& inv : vInv) {
             if (interruptMsgProc) return;
 
+            if (m_opts.ignore_incoming_blocks && (inv.IsMsgBlk() || inv.IsMsgCmpctBlk())) {
+                LogDebug(BCLog::NET, "ignoring block inv message from %s peer=%d\n", pfrom.ConnectionTypeAsString(), pfrom.GetId());
+                return;
+            }
             // Ignore INVs that don't match wtxidrelay setting.
             // Note that orphan parent fetching always uses MSG_TX GETDATAs regardless of the wtxidrelay setting.
             // This is fine as no INV messages are involved in that process.
@@ -5687,7 +5706,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         // Message: inventory
         //
         std::vector<CInv> vInv;
-        {
+        if (!m_opts.ignore_incoming_blocks){
             LOCK(peer->m_block_inv_mutex);
             vInv.reserve(std::max<size_t>(peer->m_blocks_for_inv_relay.size(), INVENTORY_BROADCAST_TARGET));
 
@@ -5885,37 +5904,39 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         // Message: getdata (blocks)
         //
         std::vector<CInv> vGetData;
-        if (CanServeBlocks(*peer) && ((sync_blocks_and_headers_from_peer && !IsLimitedPeer(*peer)) || !m_chainman.IsInitialBlockDownload()) && state.vBlocksInFlight.size() < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
-            std::vector<const CBlockIndex*> vToDownload;
-            NodeId staller = -1;
-            auto get_inflight_budget = [&state]() {
-                return std::max(0, MAX_BLOCKS_IN_TRANSIT_PER_PEER - static_cast<int>(state.vBlocksInFlight.size()));
-            };
-
-            // If a snapshot chainstate is in use, we want to find its next blocks
-            // before the background chainstate to prioritize getting to network tip.
-            FindNextBlocksToDownload(*peer, get_inflight_budget(), vToDownload, staller);
-            if (m_chainman.BackgroundSyncInProgress() && !IsLimitedPeer(*peer)) {
-                // If the background tip is not an ancestor of the snapshot block,
-                // we need to start requesting blocks from their last common ancestor.
-                const CBlockIndex *from_tip = LastCommonAncestor(m_chainman.GetBackgroundSyncTip(), m_chainman.GetSnapshotBaseBlock());
-                TryDownloadingHistoricalBlocks(
-                    *peer,
-                    get_inflight_budget(),
-                    vToDownload, from_tip,
-                    Assert(m_chainman.GetSnapshotBaseBlock()));
-            }
-            for (const CBlockIndex *pindex : vToDownload) {
-                uint32_t nFetchFlags = GetFetchFlags(*peer);
-                vGetData.emplace_back(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash());
-                BlockRequested(pto->GetId(), *pindex);
-                LogDebug(BCLog::NET, "Requesting block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
-                    pindex->nHeight, pto->GetId());
-            }
-            if (state.vBlocksInFlight.empty() && staller != -1) {
-                if (State(staller)->m_stalling_since == 0us) {
-                    State(staller)->m_stalling_since = current_time;
-                    LogDebug(BCLog::NET, "Stall started peer=%d\n", staller);
+        if (!m_opts.ignore_incoming_blocks) {
+            if (CanServeBlocks(*peer) && ((sync_blocks_and_headers_from_peer && !IsLimitedPeer(*peer)) || !m_chainman.IsInitialBlockDownload()) && state.vBlocksInFlight.size() < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+                std::vector<const CBlockIndex*> vToDownload;
+                NodeId staller = -1;
+                auto get_inflight_budget = [&state]() {
+                    return std::max(0, MAX_BLOCKS_IN_TRANSIT_PER_PEER - static_cast<int>(state.vBlocksInFlight.size()));
+                };
+                std::cout << "getdata blockhash" << std::endl;
+                // If a snapshot chainstate is in use, we want to find its next blocks
+                // before the background chainstate to prioritize getting to network tip.
+                FindNextBlocksToDownload(*peer, get_inflight_budget(), vToDownload, staller);
+                if (m_chainman.BackgroundSyncInProgress() && !IsLimitedPeer(*peer)) {
+                    // If the background tip is not an ancestor of the snapshot block,
+                    // we need to start requesting blocks from their last common ancestor.
+                    const CBlockIndex *from_tip = LastCommonAncestor(m_chainman.GetBackgroundSyncTip(), m_chainman.GetSnapshotBaseBlock());
+                    TryDownloadingHistoricalBlocks(
+                        *peer,
+                        get_inflight_budget(),
+                        vToDownload, from_tip,
+                        Assert(m_chainman.GetSnapshotBaseBlock()));
+                }
+                for (const CBlockIndex *pindex : vToDownload) {
+                    uint32_t nFetchFlags = GetFetchFlags(*peer);
+                    vGetData.emplace_back(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash());
+                    BlockRequested(pto->GetId(), *pindex);
+                    LogDebug(BCLog::NET, "Requesting block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
+                        pindex->nHeight, pto->GetId());
+                }
+                if (state.vBlocksInFlight.empty() && staller != -1) {
+                    if (State(staller)->m_stalling_since == 0us) {
+                        State(staller)->m_stalling_since = current_time;
+                        LogDebug(BCLog::NET, "Stall started peer=%d\n", staller);
+                    }
                 }
             }
         }

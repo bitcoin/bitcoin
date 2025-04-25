@@ -76,6 +76,8 @@ public:
     struct Options {
         //! Whether this node is running in -blocksonly mode
         bool ignore_incoming_txs{DEFAULT_BLOCKSONLY};
+        //! Whether this node is running in -txsonly mode
+        bool ignore_incoming_blocks{DEFAULT_TXSONLY};
         //! Whether transaction reconciliation protocol is enabled
         bool reconcile_txs{DEFAULT_TXRECONCILIATION_ENABLE};
         //! Maximum number of orphan transactions kept in memory

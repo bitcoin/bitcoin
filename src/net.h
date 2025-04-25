@@ -79,6 +79,8 @@ static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 static const std::string DEFAULT_MAX_UPLOAD_TARGET{"0M"};
 /** Default for blocks only*/
 static const bool DEFAULT_BLOCKSONLY = false;
+/** Default for txs only*/
+static const bool DEFAULT_TXSONLY = false;
 /** -peertimeout default */
 static const int64_t DEFAULT_PEER_CONNECT_TIMEOUT = 60;
 /** Number of file descriptors required for message capture **/
