@@ -47,10 +47,14 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.skip_if_no_previous_releases()
 
     def setup_nodes(self):
-        self.add_nodes(self.num_nodes, versions=[
-            None,
-            280000,
-        ])
+        self.add_nodes(
+            self.num_nodes,
+            extra_args=self.extra_args,
+            versions=[
+                None,
+                280000,
+            ],
+        )
         self.start_nodes()
         self.init_wallet(node=0)
 

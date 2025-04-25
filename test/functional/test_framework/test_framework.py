@@ -161,7 +161,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.wallet_names = None
         # By default the wallet is not required. Set to true by skip_if_no_wallet().
         # Can also be set to None to indicate that the wallet will be used if available.
-        # When False or None, we ignore wallet_names regardless of what it is.
+        # When False or None, we ignore wallet_names in setup_nodes().
         self.uses_wallet = False
         # Disable ThreadOpenConnections by default, so that adding entries to
         # addrman will not result in automatic connections to them.
@@ -486,10 +486,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             if wallet_name is not None:
                 n.createwallet(wallet_name=wallet_name, load_on_startup=True)
             n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase', rescan=True)
-
-    # Only enables wallet support when the module is available
-    def enable_wallet_if_possible(self):
-        self._requires_wallet = self.is_wallet_compiled()
 
     def run_test(self):
         """Tests must override this method to define test logic"""

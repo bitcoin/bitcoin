@@ -55,7 +55,6 @@ class BIP68Test(BitcoinTestFramework):
                 '-testactivationheight=csv@432',
             ],
         ]
-        self.uses_wallet = None
 
     def run_test(self):
         self.relayfee = self.nodes[0].getnetworkinfo()["relayfee"]

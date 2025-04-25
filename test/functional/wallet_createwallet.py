@@ -15,7 +15,6 @@ from test_framework.wallet_util import generate_keypair, WalletUnlock
 
 
 EMPTY_PASSPHRASE_MSG = "Empty string given as passphrase, wallet will not be encrypted."
-LEGACY_WALLET_MSG = "Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future."
 
 
 class CreateWalletTest(BitcoinTestFramework):
@@ -27,7 +26,6 @@ class CreateWalletTest(BitcoinTestFramework):
 
     def run_test(self):
         node = self.nodes[0]
-        self.generate(node, 1) # Leave IBD for sethdseed
 
         self.log.info("Run createwallet with invalid parameters.")
         # Run createwallet with invalid parameters. This must not prevent a new wallet with the same name from being created with the correct parameters.
