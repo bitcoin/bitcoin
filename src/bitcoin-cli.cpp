@@ -28,6 +28,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdio>
+#include <fstream>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -108,6 +109,7 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-stdin", "Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases). When combined with -stdinrpcpass, the first line from standard input is used for the RPC password.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-stdinrpcpass", "Read RPC password from standard input as a single line. When combined with -stdin, the first line from standard input is used for the RPC password. When combined with -stdinwalletpassphrase, -stdinrpcpass consumes the first line, and -stdinwalletpassphrase consumes the second.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-stdinwalletpassphrase", "Read wallet passphrase from standard input as a single line. When combined with -stdin, the first line from standard input is used for the wallet passphrase.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-usefile=<file>", "Specify path to file with the command and args. Use one command/arg per line. Can be used for commands that would otherwise be too long.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 }
 
 std::optional<std::string> RpcWalletName(const ArgsManager& args)
@@ -1191,6 +1193,34 @@ static void SetGenerateToAddressArgs(const std::string& address, std::vector<std
     args.emplace(args.begin() + 1, address);
 }
 
+
+bool LoadRPCCommandFromFile(const fs::path& path, std::string& method, std::vector<std::string>& args)
+{
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        tfm::format(std::cerr, "Failed to open file %s\n", fs::PathToString(path));
+        return false;
+    }
+
+    std::string line;
+    bool found_cmd{false};
+    while (std::getline(file, line)) {
+        if (line.empty()) continue;
+        if (!found_cmd) {
+            method = line;
+            found_cmd = true;
+        } else {
+            args.push_back(line);
+        }
+    }
+
+    if (!found_cmd) {
+        tfm::format(std::cerr, "No RPC command found in file %s\n", fs::PathToString(path));
+        return false;
+    }
+    return true;
+}
+
 static int CommandLineRPC(int argc, char *argv[])
 {
     std::string strPrint;
@@ -1269,11 +1299,18 @@ static int CommandLineRPC(int argc, char *argv[])
             rh.reset(new AddrinfoRequestHandler());
         } else {
             rh.reset(new DefaultRequestHandler());
-            if (args.size() < 1) {
-                throw std::runtime_error("too few parameters (need at least command)");
+            if (gArgs.IsArgSet("-usefile")) {
+                fs::path rpc_file_path = gArgs.GetPathArg("-usefile");
+                if (!LoadRPCCommandFromFile(rpc_file_path, method, args)) {
+                    throw std::runtime_error("Error parsing rpc command file");
+                };
+            } else {
+                if (args.size() < 1) {
+                    throw std::runtime_error("too few parameters (need at least command)");
+                }
+                method = args[0];
+                args.erase(args.begin()); // Remove trailing method name from arguments vector
             }
-            method = args[0];
-            args.erase(args.begin()); // Remove trailing method name from arguments vector
         }
         if (nRet == 0) {
             // Perform RPC call
