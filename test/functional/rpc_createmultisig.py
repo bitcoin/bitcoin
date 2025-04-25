@@ -51,6 +51,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
             for output_type in ["bech32", "p2sh-segwit", "legacy"]:
                 self.do_multisig(keys, sigs, output_type)
 
+        self.test_multisig_script_limit()
         self.test_mixing_uncompressed_and_compressed_keys(node0)
         self.test_sortedmulti_descriptors_bip67()
 
