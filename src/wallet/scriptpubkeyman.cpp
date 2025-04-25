@@ -28,7 +28,7 @@ using util::ToString;
 
 namespace wallet {
 
-typedef std::vector<unsigned char> valtype;
+using valtype = std::vector<unsigned char>;
 
 // Legacy wallet IsMine(). Used only in migration
 // DO NOT USE ANYTHING IN THIS NAMESPACE OUTSIDE OF MIGRATION

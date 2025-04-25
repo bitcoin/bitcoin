@@ -291,7 +291,7 @@ struct OutputGroupTypeMap
     size_t TypesCount() { return groups_by_type.size(); }
 };
 
-typedef std::map<CoinEligibilityFilter, OutputGroupTypeMap> FilteredOutputGroups;
+using FilteredOutputGroups = std::map<CoinEligibilityFilter, OutputGroupTypeMap>;
 
 /** Choose a random change target for each transaction to make it harder to fingerprint the Core
  * wallet based on the change output values of transactions it creates.

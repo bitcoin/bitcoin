@@ -337,7 +337,7 @@ private:
      * detect and report conflicts (double-spends or
      * mutated transactions where the mutant gets mined).
      */
-    typedef std::unordered_multimap<COutPoint, Txid, SaltedOutpointHasher> TxSpends;
+    using TxSpends = std::unordered_multimap<COutPoint, Txid, SaltedOutpointHasher>;
     TxSpends mapTxSpends GUARDED_BY(cs_wallet);
     void AddToSpends(const COutPoint& outpoint, const Txid& txid) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void AddToSpends(const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -468,7 +468,7 @@ public:
      */
     const std::string& GetName() const { return m_name; }
 
-    typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
+    using MasterKeyMap = std::map<unsigned int, CMasterKey>;
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID = 0;
 
@@ -496,7 +496,7 @@ public:
      * interested in, including received and sent transactions. */
     std::unordered_map<Txid, CWalletTx, SaltedTxidHasher> mapWallet GUARDED_BY(cs_wallet);
 
-    typedef std::multimap<int64_t, CWalletTx*> TxItems;
+    using TxItems = std::multimap<int64_t, CWalletTx*>;
     TxItems wtxOrdered;
 
     int64_t nOrderPosNext GUARDED_BY(cs_wallet) = 0;

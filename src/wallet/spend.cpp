@@ -605,7 +605,7 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
     // For each COutput, we check if the scriptPubKey is in the map, and if it is, the COutput is added
     // to the last OutputGroup in the vector for the scriptPubKey. When the last OutputGroup has
     // OUTPUT_GROUP_MAX_ENTRIES COutputs, a new OutputGroup is added to the end of the vector.
-    typedef std::map<std::pair<CScript, OutputType>, std::vector<OutputGroup>> ScriptPubKeyToOutgroup;
+    using ScriptPubKeyToOutgroup = std::map<std::pair<CScript, OutputType>, std::vector<OutputGroup>>;
     const auto& insert_output = [&](
             const std::shared_ptr<COutput>& output, OutputType type, size_t ancestors, size_t cluster_count,
             ScriptPubKeyToOutgroup& groups_map) {
