@@ -1564,8 +1564,35 @@ bool SignatureHashSchnorr(uint256& hash_out, ScriptExecutionData& execdata, cons
     return true;
 }
 
+int SigHashCache::CacheIndex(int32_t hash_type) const noexcept
+{
+    // Note that we do not distinguish between BASE and WITNESS_V0 to determine the cache index,
+    // because no input can simultaneously use both.
+    return 3 * !!(hash_type & SIGHASH_ANYONECANPAY) +
+           2 * ((hash_type & 0x1f) == SIGHASH_SINGLE) +
+           1 * ((hash_type & 0x1f) == SIGHASH_NONE);
+}
+
+bool SigHashCache::Load(int32_t hash_type, const CScript& script_code, HashWriter& writer) const noexcept
+{
+    auto& entry = m_cache_entries[CacheIndex(hash_type)];
+    if (entry.has_value()) {
+        if (script_code == entry->first) {
+            writer = HashWriter(entry->second);
+            return true;
+        }
+    }
+    return false;
+}
+
+void SigHashCache::Store(int32_t hash_type, const CScript& script_code, const HashWriter& writer) noexcept
+{
+    auto& entry = m_cache_entries[CacheIndex(hash_type)];
+    entry.emplace(script_code, writer);
+}
+
 template <class T>
-uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn, int32_t nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache)
+uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn, int32_t nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache, SigHashCache* sighash_cache)
 {
     assert(nIn < txTo.vin.size());
 
@@ -1580,6 +1607,13 @@ uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn
     }
 
     HashWriter ss{};
+
+    // Try to compute using cached SHA256 midstate.
+    if (sighash_cache && sighash_cache->Load(nHashType, scriptCode, ss)) {
+        // Add sighash type and hash.
+        ss << nHashType;
+        return ss.GetHash();
+    }
 
     if (sigversion == SigVersion::WITNESS_V0) {
         uint256 hashPrevouts;
@@ -1627,6 +1661,11 @@ uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn
         ss << txTmp;
     }
 
+    // If a cache object was provided, store the midstate there.
+    if (sighash_cache != nullptr) {
+        sighash_cache->Store(nHashType, scriptCode, ss);
+    }
+
     // Add sighash type and hash.
     ss << nHashType;
     return ss.GetHash();
@@ -1661,7 +1700,7 @@ bool GenericTransactionSignatureChecker<T>::CheckECDSASignature(const std::vecto
     // Witness sighashes need the amount.
     if (sigversion == SigVersion::WITNESS_V0 && amount < 0) return HandleMissingData(m_mdb);
 
-    uint256 sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, this->txdata);
+    uint256 sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, this->txdata, &m_sighash_cache);
 
     if (!VerifyECDSASignature(vchSig, pubkey, sighash))
         return false;
