@@ -468,6 +468,16 @@ if test "$enable_werror" = "yes"; then
     int main(void) { return 0; }
   ])])
 
+  dnl -Wattributes cause problems with some versions of GCC. Do not treat these warnings as errors.
+  AX_CHECK_COMPILE_FLAG([-Wattributes], [NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-error=attributes"], [], [$CXXFLAG_WERROR], [AC_LANG_SOURCE([
+    #if defined(__clang__) || defined(__INTEL_COMPILER) || !defined(__GNUC__)
+      #error Non-GCC compiler detected, not setting flag
+    #elif defined(__GNUC__) && __GNUC__ >= 14
+      #error GCC >=14 detected, not setting flag
+    #endif
+    int main(void) { return 0; }
+  ])])
+
   dnl -Wstringop-overread and -Wstringop-overflow are broken in gcc
   AX_CHECK_COMPILE_FLAG([-Wstringop-overread], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wno-stringop-overread"], [], [$CXXFLAG_WERROR])
   AX_CHECK_COMPILE_FLAG([-Wstringop-overflow], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wno-stringop-overflow"], [], [$CXXFLAG_WERROR])
