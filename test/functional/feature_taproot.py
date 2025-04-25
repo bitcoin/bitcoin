@@ -71,6 +71,7 @@ from test_framework.script import (
     OP_PUSHDATA1,
     OP_RETURN,
     OP_SWAP,
+    OP_TUCK,
     OP_VERIFY,
     SIGHASH_DEFAULT,
     SIGHASH_ALL,
@@ -172,9 +173,9 @@ def get(ctx, name):
         ctx[name] = expr
     return expr.value
 
-def getter(name):
+def getter(name, **kwargs):
     """Return a callable that evaluates name in its passed context."""
-    return lambda ctx: get(ctx, name)
+    return lambda ctx: get({**ctx, **kwargs}, name)
 
 def override(expr, **kwargs):
     """Return a callable that evaluates expr in a modified context."""
@@ -218,6 +219,20 @@ def default_controlblock(ctx):
     """Default expression for "controlblock": combine leafversion, negflag, pubkey_internal, merklebranch."""
     return bytes([get(ctx, "leafversion") + get(ctx, "negflag")]) + get(ctx, "pubkey_internal") + get(ctx, "merklebranch")
 
+def default_scriptcode_suffix(ctx):
+    """Default expression for "scriptcode_suffix", the actually used portion of the scriptcode."""
+    scriptcode = get(ctx, "scriptcode")
+    codesepnum = get(ctx, "codesepnum")
+    if codesepnum == -1:
+        return scriptcode
+    codeseps = 0
+    for (opcode, data, sop_idx) in scriptcode.raw_iter():
+        if opcode == OP_CODESEPARATOR:
+            if codeseps == codesepnum:
+                return CScript(scriptcode[sop_idx+1:])
+            codeseps += 1
+    assert False
+
 def default_sigmsg(ctx):
     """Default expression for "sigmsg": depending on mode, compute BIP341, BIP143, or legacy sigmsg."""
     tx = get(ctx, "tx")
@@ -237,12 +252,12 @@ def default_sigmsg(ctx):
             return TaprootSignatureMsg(tx, utxos, hashtype, idx, scriptpath=False, annex=annex)
     elif mode == "witv0":
         # BIP143 signature hash
-        scriptcode = get(ctx, "scriptcode")
+        scriptcode = get(ctx, "scriptcode_suffix")
         utxos = get(ctx, "utxos")
         return SegwitV0SignatureMsg(scriptcode, tx, idx, hashtype, utxos[idx].nValue)
     else:
         # Pre-segwit signature hash
-        scriptcode = get(ctx, "scriptcode")
+        scriptcode = get(ctx, "scriptcode_suffix")
         return LegacySignatureMsg(scriptcode, tx, idx, hashtype)[0]
 
 def default_sighash(ctx):
@@ -302,7 +317,12 @@ def default_hashtype_actual(ctx):
 
 def default_bytes_hashtype(ctx):
     """Default expression for "bytes_hashtype": bytes([hashtype_actual]) if not 0, b"" otherwise."""
-    return bytes([x for x in [get(ctx, "hashtype_actual")] if x != 0])
+    mode = get(ctx, "mode")
+    hashtype_actual = get(ctx, "hashtype_actual")
+    if mode != "taproot" or hashtype_actual != 0:
+        return bytes([hashtype_actual])
+    else:
+        return bytes()
 
 def default_sign(ctx):
     """Default expression for "sign": concatenation of signature and bytes_hashtype."""
@@ -380,6 +400,8 @@ DEFAULT_CONTEXT = {
     "key_tweaked": default_key_tweaked,
     # The tweak to use (None for script path spends, the actual tweak for key path spends).
     "tweak": default_tweak,
+    # The part of the scriptcode after the last executed OP_CODESEPARATOR.
+    "scriptcode_suffix": default_scriptcode_suffix,
     # The sigmsg value (preimage of sighash)
     "sigmsg": default_sigmsg,
     # The sighash value (32 bytes)
@@ -410,6 +432,8 @@ DEFAULT_CONTEXT = {
     "annex": None,
     # The codeseparator position (only when mode=="taproot").
     "codeseppos": -1,
+    # Which OP_CODESEPARATOR is the last executed one in the script (in legacy/P2SH/P2WSH).
+    "codesepnum": -1,
     # The redeemscript to add to the scriptSig (if P2SH; None implies not P2SH).
     "script_p2sh": None,
     # The script to add to the witness in (if P2WSH; None implies P2WPKH)
@@ -1210,6 +1234,70 @@ def spenders_taproot_active():
             for hashtype in VALID_SIGHASHES_ECDSA + [random.randrange(0x04, 0x80), random.randrange(0x84, 0x100)]:
                 standard = hashtype in VALID_SIGHASHES_ECDSA and (p2sh or witv0)
                 add_spender(spenders, "compat/nocsa", hashtype=hashtype, p2sh=p2sh, witv0=witv0, standard=standard, script=CScript([OP_IF, OP_11, pubkey1, OP_CHECKSIGADD, OP_12, OP_EQUAL, OP_ELSE, pubkey1, OP_CHECKSIG, OP_ENDIF]), key=eckey1, sigops_weight=4-3*witv0, inputs=[getter("sign"), b''], failure={"inputs": [getter("sign"), b'\x01']}, **ERR_BAD_OPCODE)
+
+    # == sighash caching tests ==
+
+    # Sighash caching in legacy.
+    for p2sh in [False, True]:
+        for witv0 in [False, True]:
+            eckey1, pubkey1 = generate_keypair(compressed=compressed)
+            for _ in range(10):
+                # Construct a script with 20 checksig operations (10 sighash types, each 2 times),
+                # randomly ordered and interleaved with 4 OP_CODESEPARATORS.
+                ops = [1, 2, 3, 0x21, 0x42, 0x63, 0x81, 0x83, 0xe1, 0xc2, -1, -1] * 2
+                # Make sure no OP_CODESEPARATOR appears last.
+                while True:
+                    random.shuffle(ops)
+                    if ops[-1] != -1:
+                        break
+                script = [pubkey1]
+                inputs = []
+                codeseps = -1
+                for pos, op in enumerate(ops):
+                    if op == -1:
+                        codeseps += 1
+                        script.append(OP_CODESEPARATOR)
+                    elif pos + 1 != len(ops):
+                        script += [OP_TUCK, OP_CHECKSIGVERIFY]
+                        inputs.append(getter("sign", codesepnum=codeseps, hashtype=op))
+                    else:
+                        script += [OP_CHECKSIG]
+                        inputs.append(getter("sign", codesepnum=codeseps, hashtype=op))
+                inputs.reverse()
+                script = CScript(script)
+                add_spender(spenders, "sighashcache/legacy", p2sh=p2sh, witv0=witv0, standard=False, script=script, inputs=inputs, key=eckey1, sigops_weight=12*8*(4-3*witv0), no_fail=True)
+
+    # Sighash caching in tapscript.
+    for _ in range(10):
+        # Construct a script with 700 checksig operations (7 sighash types, each 100 times),
+        # randomly ordered and interleaved with 100 OP_CODESEPARATORS.
+        ops = [0, 1, 2, 3, 0x81, 0x82, 0x83, -1] * 100
+        # Make sure no OP_CODESEPARATOR appears last.
+        while True:
+            random.shuffle(ops)
+            if ops[-1] != -1:
+                 break
+        script = [pubs[1]]
+        inputs = []
+        opcount = 1
+        codeseppos = -1
+        for pos, op in enumerate(ops):
+            if op == -1:
+                codeseppos = opcount
+                opcount += 1
+                script.append(OP_CODESEPARATOR)
+            elif pos + 1 != len(ops):
+                opcount += 2
+                script += [OP_TUCK, OP_CHECKSIGVERIFY]
+                inputs.append(getter("sign", codeseppos=codeseppos, hashtype=op))
+            else:
+                opcount += 1
+                script += [OP_CHECKSIG]
+                inputs.append(getter("sign", codeseppos=codeseppos, hashtype=op))
+        inputs.reverse()
+        script = CScript(script)
+        tap = taproot_construct(pubs[0], [("leaf", script)])
+        add_spender(spenders, "sighashcache/taproot", tap=tap, leaf="leaf", inputs=inputs, standard=True, key=secs[1], no_fail=True)
 
     return spenders
 
