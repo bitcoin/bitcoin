@@ -19,6 +19,10 @@ if(POLICY CMP0171)
   cmake_policy(SET CMP0171 NEW)
 endif()
 
+# When adjusting CMake flag variables, we must not override those explicitly
+# set by the user. These are a subset of the CACHE_VARIABLES property.
+get_directory_property(precious_variables CACHE_VARIABLES)
+
 #=============================
 # Project / Package metadata
 #=============================
