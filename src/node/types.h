@@ -38,7 +38,7 @@ struct BlockCreateOptions {
      * The default reserved size for the fixed-size block header,
      * transaction count and coinbase transaction.
      */
-    size_t block_reserved_size{1000};
+    size_t block_reserved_size{DEFAULT_BLOCK_RESERVED_SIZE};
     /**
      * The default reserved weight for the fixed-size block header,
      * transaction count and coinbase transaction.
