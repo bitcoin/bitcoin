@@ -111,7 +111,7 @@ void ApplyArgsManOptions(const ArgsManager& args, BlockAssembler::Options& optio
     if (args.IsArgSet("-blockmaxsize")) {
         options.nBlockMaxSize = args.GetIntArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
         if (!fWeightSet) {
-            options.nBlockMaxWeight = options.nBlockMaxSize * WITNESS_SCALE_FACTOR;
+            options.nBlockMaxWeight = MAX_BLOCK_WEIGHT;
         }
     }
     if (const auto blockmintxfee{args.GetArg("-blockmintxfee")}) {
