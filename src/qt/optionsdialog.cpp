@@ -103,7 +103,11 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     ui->pruneWarning->setStyleSheet("QLabel { color: red; }");
 
     ui->pruneSizeMiB->setEnabled(false);
-    connect(ui->prune, &QCheckBox::stateChanged, [this](int state){
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 7, 0))
+    connect(ui->prune, &QCheckBox::checkStateChanged, [this](const Qt::CheckState state){
+#else
+    connect(ui->prune, &QCheckBox::stateChanged, [this](const int state){
+#endif
         ui->pruneSizeMiB->setEnabled(state == Qt::Checked);
     });
 
