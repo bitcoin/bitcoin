@@ -157,20 +157,19 @@ class DeploymentInfo(object):
         self.qtPath = None
         self.pluginPath = None
         self.deployedFrameworks = []
-    
+
     def detectQtPath(self, frameworkDirectory: str):
         parentDir = os.path.dirname(frameworkDirectory)
-        if os.path.exists(os.path.join(parentDir, "translations")):
-            # Classic layout, e.g. "/usr/local/Trolltech/Qt-4.x.x"
+        if os.path.exists(os.path.join(parentDir, "share", "qt", "translations")):
             self.qtPath = parentDir
         else:
             self.qtPath = os.getenv("QTDIR", None)
 
         if self.qtPath is not None:
-            pluginPath = os.path.join(self.qtPath, "plugins")
+            pluginPath = os.path.join(self.qtPath, "share", "qt", "plugins")
             if os.path.exists(pluginPath):
                 self.pluginPath = pluginPath
-    
+
     def usesFramework(self, name: str) -> bool:
         for framework in self.deployedFrameworks:
             if framework.endswith(".framework"):
