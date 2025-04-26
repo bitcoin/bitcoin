@@ -74,12 +74,12 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
 
 static BlockAssembler::Options ClampOptions(BlockAssembler::Options options)
 {
-    Assert(options.block_reserved_size <= MAX_BLOCK_SERIALIZED_SIZE - 1000);
+    Assert(options.block_reserved_size <= MAX_BLOCK_SERIALIZED_SIZE);
     Assert(options.block_reserved_weight <= MAX_BLOCK_WEIGHT);
     Assert(options.block_reserved_weight >= MINIMUM_BLOCK_RESERVED_WEIGHT);
     Assert(options.coinbase_output_max_additional_sigops <= MAX_BLOCK_SIGOPS_COST);
     // Limit size to between block_reserved_size and MAX_BLOCK_SERIALIZED_SIZE-1K for sanity:
-    options.nBlockMaxSize = std::clamp<size_t>(options.nBlockMaxSize, options.block_reserved_size, MAX_BLOCK_SERIALIZED_SIZE - 1000);
+    options.nBlockMaxSize = std::clamp<size_t>(options.nBlockMaxSize, options.block_reserved_size, MAX_BLOCK_SERIALIZED_SIZE);
     // Limit weight to between block_reserved_weight and MAX_BLOCK_WEIGHT for sanity:
     // block_reserved_weight can safely exceed -blockmaxweight, but the rest of the block template will be empty.
     options.nBlockMaxWeight = std::clamp<size_t>(options.nBlockMaxWeight, options.block_reserved_weight, MAX_BLOCK_WEIGHT);
@@ -93,7 +93,7 @@ BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool
       m_options{ClampOptions(options)}
 {
     // Whether we need to account for byte usage (in addition to weight usage)
-    fNeedSizeAccounting = (options.nBlockMaxSize < MAX_BLOCK_SERIALIZED_SIZE - 1000);
+    fNeedSizeAccounting = (options.nBlockMaxSize < MAX_BLOCK_SERIALIZED_SIZE);
 }
 
 void ApplyArgsManOptions(const ArgsManager& args, BlockAssembler::Options& options)
