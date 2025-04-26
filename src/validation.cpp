@@ -932,7 +932,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     ws.m_vsize = ws.m_tx_handle->GetTxSize();
 
     // Enforces 0-fee for dust transactions, no incentive to be mined alone
-    if (m_pool.m_opts.require_standard) {
+    if (m_pool.m_opts.require_standard && !ignore_rejects.count("dust")) {
         if (!PreCheckEphemeralTx(*ptx, m_pool.m_opts.dust_relay_feerate, ws.m_base_fees, ws.m_modified_fees, state)) {
             return false; // state filled in by PreCheckEphemeralTx
         }
@@ -1628,7 +1628,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
     }
 
     // Now that we've bounded the resulting possible ancestry count, check package for dust spends
-    if (m_pool.m_opts.require_standard) {
+    if (m_pool.m_opts.require_standard && !(args.m_ignore_rejects.count("dust") || args.m_ignore_rejects.count("unspent-dust") || args.m_ignore_rejects.count("missing-ephemeral-spends"))) {
         TxValidationState child_state;
         Wtxid child_wtxid;
         if (!CheckEphemeralSpends(txns, m_pool.m_opts.dust_relay_feerate, m_pool, child_state, child_wtxid)) {
