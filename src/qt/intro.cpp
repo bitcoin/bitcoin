@@ -160,7 +160,11 @@ Intro::Intro(QWidget *parent, int64_t blockchain_size_gb, int64_t chain_state_si
     ui->lblPruneSuffix->setToolTip(ui->prune->toolTip());
     UpdatePruneLabels(ui->prune->checkState() == Qt::Checked);
 
-    connect(ui->prune, &QCheckBox::stateChanged, [this](int prune_state) {
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 7, 0))
+    connect(ui->prune, &QCheckBox::checkStateChanged, [this](const Qt::CheckState prune_state) {
+#else
+    connect(ui->prune, &QCheckBox::stateChanged, [this](const int prune_state) {
+#endif
         m_prune_checkbox_is_default = false;
         UpdatePruneLabels(prune_state == Qt::Checked);
         UpdateFreeSpaceLabel();
