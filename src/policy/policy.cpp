@@ -76,7 +76,7 @@ std::vector<uint32_t> GetDust(const CTransaction& tx, CFeeRate dust_relay_rate)
     return dust_outputs;
 }
 
-bool IsStandard(const CScript& scriptPubKey, const std::optional<unsigned>& max_datacarrier_bytes, TxoutType& whichType)
+bool IsStandard(const CScript& scriptPubKey, TxoutType& whichType)
 {
     std::vector<std::vector<unsigned char> > vSolutions;
     whichType = Solver(scriptPubKey, vSolutions);
@@ -91,16 +91,12 @@ bool IsStandard(const CScript& scriptPubKey, const std::optional<unsigned>& max_
             return false;
         if (m < 1 || m > n)
             return false;
-    } else if (whichType == TxoutType::NULL_DATA) {
-        if (!max_datacarrier_bytes || scriptPubKey.size() > *max_datacarrier_bytes) {
-            return false;
-        }
     }
 
     return true;
 }
 
-bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_datacarrier_bytes, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
+bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
 {
     if (tx.version > TX_MAX_STANDARD_VERSION || tx.version < 1) {
         reason = "version";
@@ -137,17 +133,14 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
         }
     }
 
-    unsigned int nDataOut = 0;
     TxoutType whichType;
     for (const CTxOut& txout : tx.vout) {
-        if (!::IsStandard(txout.scriptPubKey, max_datacarrier_bytes, whichType)) {
+        if (!::IsStandard(txout.scriptPubKey, whichType)) {
             reason = "scriptpubkey";
             return false;
         }
 
-        if (whichType == TxoutType::NULL_DATA)
-            nDataOut++;
-        else if ((whichType == TxoutType::MULTISIG) && (!permit_bare_multisig)) {
+        if ((whichType == TxoutType::MULTISIG) && (!permit_bare_multisig)) {
             reason = "bare-multisig";
             return false;
         }
@@ -156,12 +149,6 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
     // Only MAX_DUST_OUTPUTS_PER_TX dust is permitted(on otherwise valid ephemeral dust)
     if (GetDust(tx, dust_relay_fee).size() > MAX_DUST_OUTPUTS_PER_TX) {
         reason = "dust";
-        return false;
-    }
-
-    // only one OP_RETURN txout is permitted
-    if (nDataOut > 1) {
-        reason = "multi-op-return";
         return false;
     }
 

@@ -799,12 +799,12 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     constexpr auto CheckIsStandard = [](const auto& t) {
         std::string reason;
-        BOOST_CHECK(IsStandardTx(CTransaction{t}, MAX_OP_RETURN_RELAY, g_bare_multi, g_dust, reason));
+        BOOST_CHECK(IsStandardTx(CTransaction{t}, g_bare_multi, g_dust, reason));
         BOOST_CHECK(reason.empty());
     };
     constexpr auto CheckIsNotStandard = [](const auto& t, const std::string& reason_in) {
         std::string reason;
-        BOOST_CHECK(!IsStandardTx(CTransaction{t}, MAX_OP_RETURN_RELAY, g_bare_multi, g_dust, reason));
+        BOOST_CHECK(!IsStandardTx(CTransaction{t}, g_bare_multi, g_dust, reason));
         BOOST_CHECK_EQUAL(reason_in, reason);
     };
 
@@ -858,15 +858,10 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].scriptPubKey = CScript() << OP_1;
     CheckIsNotStandard(t, "scriptpubkey");
 
-    // MAX_OP_RETURN_RELAY-byte TxoutType::NULL_DATA (standard)
-    t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
-    BOOST_CHECK_EQUAL(MAX_OP_RETURN_RELAY, t.vout[0].scriptPubKey.size());
-    CheckIsStandard(t);
-
-    // MAX_OP_RETURN_RELAY+1-byte TxoutType::NULL_DATA (non-standard)
+    // TxoutType::NULL_DATA
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3800"_hex;
-    BOOST_CHECK_EQUAL(MAX_OP_RETURN_RELAY + 1, t.vout[0].scriptPubKey.size());
-    CheckIsNotStandard(t, "scriptpubkey");
+    BOOST_CHECK_EQUAL(84, t.vout[0].scriptPubKey.size());
+    CheckIsStandard(t);
 
     // Data payload can be encoded in any way...
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ""_hex;
@@ -888,21 +883,21 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
     CheckIsStandard(t);
 
-    // Only one TxoutType::NULL_DATA permitted in all cases
+    // Multiple TxoutType::NULL_DATA outputs are permitted
     t.vout.resize(2);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
     t.vout[0].nValue = 0;
     t.vout[1].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
     t.vout[1].nValue = 0;
-    CheckIsNotStandard(t, "multi-op-return");
+    CheckIsStandard(t);
 
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
     t.vout[1].scriptPubKey = CScript() << OP_RETURN;
-    CheckIsNotStandard(t, "multi-op-return");
+    CheckIsStandard(t);
 
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
     t.vout[1].scriptPubKey = CScript() << OP_RETURN;
-    CheckIsNotStandard(t, "multi-op-return");
+    CheckIsStandard(t);
 
     // Check large scriptSig (non-standard if size is >1650 bytes)
     t.vout.resize(1);

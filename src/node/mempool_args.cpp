@@ -81,12 +81,6 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
 
     mempool_opts.permit_bare_multisig = argsman.GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
 
-    if (argsman.GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER)) {
-        mempool_opts.max_datacarrier_bytes = argsman.GetIntArg("-datacarriersize", MAX_OP_RETURN_RELAY);
-    } else {
-        mempool_opts.max_datacarrier_bytes = std::nullopt;
-    }
-
     mempool_opts.require_standard = !argsman.GetBoolArg("-acceptnonstdtxn", DEFAULT_ACCEPT_NON_STD_TXN);
     if (!chainparams.IsTestChain() && !mempool_opts.require_standard) {
         return util::Error{Untranslated(strprintf("acceptnonstdtxn is not currently supported for %s chain", chainparams.GetChainTypeString()))};
