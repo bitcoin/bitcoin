@@ -7,6 +7,7 @@
 
 #include <consensus/amount.h>
 
+#include <QRegularExpression>
 #include <QStringList>
 
 #include <cassert>
@@ -188,7 +189,7 @@ QString BitcoinUnits::format(Unit unit, const CAmount& nIn, bool fPlus, Separato
     case Unit::TBC:
     {
         // Right-trim excess zeros after the decimal point
-        static const QRegExp tail_zeros("0+$");
+        static const QRegularExpression tail_zeros("0+$");
         remainder_str.remove(tail_zeros);
         TonalUtils::ConvertFromHex(quotient_str);
         TonalUtils::ConvertFromHex(remainder_str);

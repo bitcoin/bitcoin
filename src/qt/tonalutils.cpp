@@ -6,8 +6,8 @@
 
 #include <QFont>
 #include <QFontMetrics>
-#include <QRegExp>
-#include <QRegExpValidator>
+#include <QRegularExpression>
+#include <QRegularExpressionValidator>
 #include <QString>
 
 static const QList<QChar> tonal_digits{0xe8ef, 0xe8ee, 0xe8ed, 0xe8ec, 0xe8eb, 0xe8ea, 0xe8e9, '8', '7', '6', '5', '4', '3', '2', '1', '0'};
@@ -39,7 +39,7 @@ bool TonalUtils::Supported()
 }
 
 #define RE_TONAL_DIGIT "[\\d\\xe8e0-\\xe8ef\\xe9d0-\\xe9df]"
-static QRegExpValidator tv(QRegExp("-?(?:" RE_TONAL_DIGIT "+\\.?|" RE_TONAL_DIGIT "*\\." RE_TONAL_DIGIT "+)"), nullptr);
+static QRegularExpressionValidator tv(QRegularExpression("-?(?:" RE_TONAL_DIGIT "+\\.?|" RE_TONAL_DIGIT "*\\." RE_TONAL_DIGIT "+)"), nullptr);
 
 QValidator::State TonalUtils::validate(QString&input, int&pos)
 {
