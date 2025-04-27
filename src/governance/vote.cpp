@@ -15,7 +15,6 @@
 #include <timedata.h>
 #include <util/string.h>
 #include <util/system.h>
-#include <validation.h>
 
 #include <evo/deterministicmns.h>
 

@@ -139,8 +139,6 @@ void StartScriptCheckWorkerThreads(int threads_num);
 /** Stop all of the script checking worker threads */
 void StopScriptCheckWorkerThreads();
 
-CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock);
-
 double ConvertBitsToDouble(unsigned int nBits);
 /**
  * Due to difference in logic, the GetBlockSubsidy() has also different list of

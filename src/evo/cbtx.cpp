@@ -18,7 +18,6 @@
 #include <chainparams.h>
 #include <consensus/merkle.h>
 #include <deploymentstatus.h>
-#include <validation.h>
 
 
 bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state)

@@ -18,7 +18,6 @@
 #include <util/ranges.h>
 #include <util/time.h>
 #include <util/underlying.h>
-#include <validation.h>
 
 #include <atomic>
 #include <optional>

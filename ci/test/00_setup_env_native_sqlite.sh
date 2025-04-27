@@ -11,4 +11,3 @@ export PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools libdbus-1-dev libhar
 export DEP_OPTS="NO_BDB=1 NO_UPNP=1 DEBUG=1"
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-zmq --enable-reduce-exports --with-sqlite --without-bdb CC=gcc-11 CXX=g++-11"
-export NO_WERROR=1

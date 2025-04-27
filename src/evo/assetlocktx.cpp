@@ -14,9 +14,9 @@
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <logging.h>
+#include <node/blockstorage.h>
 #include <tinyformat.h>
 #include <util/ranges_set.h>
-#include <validation.h>
 
 #include <algorithm>
 

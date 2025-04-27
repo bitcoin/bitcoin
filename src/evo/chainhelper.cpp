@@ -6,9 +6,12 @@
 
 #include <consensus/params.h>
 #include <evo/specialtxman.h>
+#include <index/txindex.h>
 #include <llmq/chainlocks.h>
 #include <llmq/instantsend.h>
 #include <masternode/payments.h>
+#include <node/transaction.h>
+#include <txmempool.h>
 
 CChainstateHelper::CChainstateHelper(CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman,
                                      CMNHFManager& mnhfman, CGovernanceManager& govman, llmq::CInstantSendManager& isman,
@@ -58,3 +61,10 @@ bool CChainstateHelper::RemoveConflictingISLockByTx(const CTransaction& tx)
 }
 
 bool CChainstateHelper::ShouldInstantSendRejectConflicts() const { return isman.RejectConflictingBlocks(); }
+
+std::pair<CTransactionRef, uint256> GetTransactionBlock(const uint256& hash, const CTxMemPool* const mempool)
+{
+    uint256 hashBlock{};
+    if (!g_txindex && !mempool) return {nullptr, hashBlock}; // Fast-fail as we don't have any other way to search
+    return {GetTransaction(/*block_index=*/nullptr, mempool, hash, Params().GetConsensus(), hashBlock), hashBlock};
+}

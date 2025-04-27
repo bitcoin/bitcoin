@@ -10,6 +10,7 @@
 #include <deploymentstatus.h>
 #include <messagesigner.h>
 #include <netbase.h>
+#include <node/transaction.h>
 #include <policy/policy.h>
 #include <script/interpreter.h>
 #include <script/sign.h>

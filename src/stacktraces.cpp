@@ -146,6 +146,7 @@ static uint64_t GetBaseAddress()
     return 0;
 }
 
+#ifdef ENABLE_STACKTRACES
 // PC addresses returned by StackWalk64 are in the real mapped space, while libbacktrace expects them to be in the
 // default mapped space starting at 0x400000. This method converts the address.
 // TODO this is probably the same reason libbacktrace is not able to gather the stacktrace on Windows (returns pointers like 0x1 or 0xfffffff)
@@ -161,6 +162,7 @@ static uint64_t ConvertAddress(uint64_t addr)
     uint64_t offset = addr - hMod;
     return 0x400000 + offset;
 }
+#endif // ENABLE_STACKTRACES
 
 static __attribute__((noinline)) std::vector<uint64_t> GetStackFrames(size_t skip, size_t max_frames, const CONTEXT* pContext = nullptr)
 {

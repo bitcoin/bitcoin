@@ -166,15 +166,7 @@ public:
         READWRITE(obj.nVersion, obj.nHeight, obj.commitment);
     }
 
-    [[nodiscard]] UniValue ToJson() const
-    {
-        UniValue obj;
-        obj.setObject();
-        obj.pushKV("version", int{nVersion});
-        obj.pushKV("height", int(nHeight));
-        obj.pushKV("commitment", commitment.ToJson());
-        return obj;
-    }
+    [[nodiscard]] UniValue ToJson() const;
 };
 
 bool CheckLLMQCommitment(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,

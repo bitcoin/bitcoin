@@ -22,10 +22,6 @@ namespace llmq {
 class CQuorumManager;
 } // namespace llmq
 
-// Forward declaration from core_io to get rid of circular dependency
-UniValue ValueFromAmount(const CAmount amount);
-void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex, bool include_addresses);
-
 class CAssetLockPayload
 {
 public:
@@ -53,23 +49,7 @@ public:
 
     std::string ToString() const;
 
-    [[nodiscard]] UniValue ToJson() const
-    {
-        UniValue outputs(UniValue::VARR);
-        for (const CTxOut& credit_output : creditOutputs) {
-            UniValue out(UniValue::VOBJ);
-            out.pushKV("value", ValueFromAmount(credit_output.nValue));
-            out.pushKV("valueSat", credit_output.nValue);
-            UniValue spk(UniValue::VOBJ);
-            ScriptPubKeyToUniv(credit_output.scriptPubKey, spk, /* fIncludeHex = */ true, /* include_addresses = */ false);
-            out.pushKV("scriptPubKey", spk);
-            outputs.push_back(out);
-        }
-        UniValue obj(UniValue::VOBJ);
-        obj.pushKV("version", int(nVersion));
-        obj.pushKV("creditOutputs", outputs);
-        return obj;
-    }
+    [[nodiscard]] UniValue ToJson() const;
 
     // getters
     uint8_t getVersion() const
@@ -126,18 +106,7 @@ public:
 
     std::string ToString() const;
 
-    [[nodiscard]] UniValue ToJson() const
-    {
-        UniValue obj;
-        obj.setObject();
-        obj.pushKV("version", int(nVersion));
-        obj.pushKV("index", int(index));
-        obj.pushKV("fee", int(fee));
-        obj.pushKV("requestedHeight", int(requestedHeight));
-        obj.pushKV("quorumHash", quorumHash.ToString());
-        obj.pushKV("quorumSig", quorumSig.ToString());
-        return obj;
-    }
+    [[nodiscard]] UniValue ToJson() const;
 
     bool VerifySig(const llmq::CQuorumManager& qman, const uint256& msgHash, gsl::not_null<const CBlockIndex*> pindexTip, TxValidationState& state) const;
 

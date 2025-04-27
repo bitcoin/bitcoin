@@ -24,9 +24,6 @@ class CQuorumBlockProcessor;
 class CQuorumSnapshotManager;
 }// namespace llmq
 
-// Forward declaration from core_io to get rid of circular dependency
-UniValue ValueFromAmount(const CAmount amount);
-
 // coinbase transaction
 class CCbTx
 {
@@ -65,23 +62,7 @@ public:
 
     std::string ToString() const;
 
-    [[nodiscard]] UniValue ToJson() const
-    {
-        UniValue obj;
-        obj.setObject();
-        obj.pushKV("version", (int)nVersion);
-        obj.pushKV("height", nHeight);
-        obj.pushKV("merkleRootMNList", merkleRootMNList.ToString());
-        if (nVersion >= Version::MERKLE_ROOT_QUORUMS) {
-            obj.pushKV("merkleRootQuorums", merkleRootQuorums.ToString());
-            if (nVersion >= Version::CLSIG_AND_BALANCE) {
-                obj.pushKV("bestCLHeightDiff", static_cast<int>(bestCLHeightDiff));
-                obj.pushKV("bestCLSignature", bestCLSignature.ToString());
-                obj.pushKV("creditPoolBalance", ValueFromAmount(creditPoolBalance));
-            }
-        }
-        return obj;
-    }
+    [[nodiscard]] UniValue ToJson() const;
 };
 template<> struct is_serializable_enum<CCbTx::Version> : std::true_type {};
 

@@ -10,6 +10,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <evo/chainhelper.h>
 #include <masternode/sync.h>
 #include <node/blockstorage.h>
 #include <node/interface_ui.h>
@@ -635,8 +636,7 @@ void CChainLocksHandler::Cleanup()
         }
     }
     for (auto it = txFirstSeenTime.begin(); it != txFirstSeenTime.end(); ) {
-        uint256 hashBlock;
-        CTransactionRef tx = GetTransaction(/* block_index */ nullptr, &mempool, it->first, Params().GetConsensus(), hashBlock);
+        auto [tx, hashBlock] = GetTransactionBlock(it->first, &mempool);
         if (!tx) {
             // tx has vanished, probably due to conflicts
             it = txFirstSeenTime.erase(it);
