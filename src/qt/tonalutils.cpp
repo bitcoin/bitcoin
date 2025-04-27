@@ -48,36 +48,32 @@ QValidator::State TonalUtils::validate(QString&input, int&pos)
 
 void TonalUtils::ConvertFromHex(QString&str)
 {
-    for (int i = 0; i < str.size(); ++i)
-    {
+    for (int i = 0; i < str.size(); ++i) {
         ushort c = str[i].unicode();
-        if (c == '9')
+        if (c == '9') {
             str[i] = QChar(0xe8e9);
-        else
-        if (c >= 'A' && c <= 'F')
+        } else if (c >= 'A' && c <= 'F') {
             str[i] = QChar(c + (0xe8ea - 'A'));
-        else
-        if (c >= 'a' && c <= 'f')
+        } else if (c >= 'a' && c <= 'f') {
             str[i] = QChar(c + (0xe8ea - 'a'));
+        }
     }
 }
 
 void TonalUtils::ConvertToHex(QString&str)
 {
-    for (int i = 0; i < str.size(); ++i)
-    {
+    for (int i = 0; i < str.size(); ++i) {
         ushort c = str[i].unicode();
-        if (c == '9')
+        if (c == '9') {
             str[i] = 'a';
-        else
-        if (c >= 0xe8e0 && c <= 0xe8e9) {  // UCSUR 0-9
+        } else if (c >= 0xe8e0 && c <= 0xe8e9) {  // UCSUR 0-9
             str[i] = QChar(c - (0xe8e0 - '0'));
         } else if (c >= 0xe8ea && c <= 0xe8ef) {  // UCSUR a-f
             str[i] = QChar(c - (0xe8ea - 'a'));
         } else if (c >= 0xe9d0 && c <= 0xe9d9) {
             str[i] = QChar(c - (0xe9d0 - '0'));
-        } else
-        if (c >= 0xe9da && c <= 0xe9df)
+        } else if (c >= 0xe9da && c <= 0xe9df) {
             str[i] = QChar(c - 0xe999);
+        }
     }
 }
