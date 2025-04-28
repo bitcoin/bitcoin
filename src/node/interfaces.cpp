@@ -935,87 +935,8 @@ public:
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
     {
-        // Delay calculating the current template fees, just in case a new block
-        // comes in before the next tick.
-        CAmount current_fees = -1;
-
-        // Alternate waiting for a new tip and checking if fees have risen.
-        // The latter check is expensive so we only run it once per second.
-        auto now{NodeClock::now()};
-        const auto deadline = now + options.timeout;
-        const MillisecondsDouble tick{1000};
-        const bool allow_min_difficulty{chainman().GetParams().GetConsensus().fPowAllowMinDifficultyBlocks};
-
-        do {
-            bool tip_changed{false};
-            {
-                WAIT_LOCK(notifications().m_tip_block_mutex, lock);
-                // Note that wait_until() checks the predicate before waiting
-                notifications().m_tip_block_cv.wait_until(lock, std::min(now + tick, deadline), [&]() EXCLUSIVE_LOCKS_REQUIRED(notifications().m_tip_block_mutex) {
-                    AssertLockHeld(notifications().m_tip_block_mutex);
-                    const auto tip_block{notifications().TipBlock()};
-                    // We assume tip_block is set, because this is an instance
-                    // method on BlockTemplate and no template could have been
-                    // generated before a tip exists.
-                    tip_changed = Assume(tip_block) && tip_block != m_block_template->block.hashPrevBlock;
-                    return tip_changed || chainman().m_interrupt;
-                });
-            }
-
-            if (chainman().m_interrupt) return nullptr;
-            // At this point the tip changed, a full tick went by or we reached
-            // the deadline.
-
-            // Must release m_tip_block_mutex before locking cs_main, to avoid deadlocks.
-            LOCK(::cs_main);
-
-            // On test networks return a minimum difficulty block after 20 minutes
-            if (!tip_changed && allow_min_difficulty) {
-                const NodeClock::time_point tip_time{std::chrono::seconds{chainman().ActiveChain().Tip()->GetBlockTime()}};
-                if (now > tip_time + 20min) {
-                    tip_changed = true;
-                }
-            }
-
-            /**
-             * We determine if fees increased compared to the previous template by generating
-             * a fresh template. There may be more efficient ways to determine how much
-             * (approximate) fees for the next block increased, perhaps more so after
-             * Cluster Mempool.
-             *
-             * We'll also create a new template if the tip changed during this iteration.
-             */
-            if (options.fee_threshold < MAX_MONEY || tip_changed) {
-                auto tmpl{std::make_unique<BlockTemplateImpl>(m_assemble_options,
-                                                              BlockAssembler{
-                                                                  chainman().ActiveChainstate(),
-                                                                  context()->mempool.get(),
-                                                                  m_assemble_options}
-                                                                  .CreateNewBlock(),
-                                                              m_node)};
-
-                // If the tip changed, return the new template regardless of its fees.
-                if (tip_changed) return tmpl;
-
-                // Calculate the original template total fees if we haven't already
-                if (current_fees == -1) {
-                    current_fees = 0;
-                    for (CAmount fee : m_block_template->vTxFees) {
-                        current_fees += fee;
-                    }
-                }
-
-                CAmount new_fees = 0;
-                for (CAmount fee : tmpl->m_block_template->vTxFees) {
-                    new_fees += fee;
-                    Assume(options.fee_threshold != MAX_MONEY);
-                    if (new_fees >= current_fees + options.fee_threshold) return tmpl;
-                }
-            }
-
-            now = NodeClock::now();
-        } while (now < deadline);
-
+        auto new_template = WaitAndCreateNewBlock(chainman(), notifications(), m_node.mempool.get(), m_block_template, options, m_assemble_options);
+        if (new_template) return std::make_unique<BlockTemplateImpl>(m_assemble_options, std::move(new_template), m_node);
         return nullptr;
     }
 
@@ -1023,7 +944,6 @@ public:
 
     const std::unique_ptr<CBlockTemplate> m_block_template;
 
-    NodeContext* context() { return &m_node; }
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }
     KernelNotifications& notifications() { return *Assert(m_node.notifications); }
     NodeContext& m_node;
