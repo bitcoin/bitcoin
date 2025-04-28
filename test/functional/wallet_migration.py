@@ -8,6 +8,8 @@ import random
 import shutil
 import struct
 import time
+import platform
+import os
 
 from test_framework.address import (
     key_to_p2pkh,
@@ -104,10 +106,38 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(self.old_node.get_wallet_rpc(wallet_name).getwalletinfo()["descriptors"], False)
         # Now unload so we can copy it to the master node for the migration test
         self.old_node.unloadwallet(wallet_name)
+
+        # Handle different path behavior on Windows vs. other platforms
+        is_windows = platform.system() == 'Windows'
+
         if wallet_name == "":
-            shutil.copyfile(self.old_node.wallets_path / "wallet.dat", self.master_node.wallets_path / "wallet.dat")
+            src_path = self.old_node.wallets_path / "wallet.dat"
+            dst_path = self.master_node.wallets_path / "wallet.dat"
+            # On Windows, we need to close all open file handles before copying
+            if is_windows:
+                import gc
+                gc.collect()  # Try to release any file handles
+            shutil.copyfile(src_path, dst_path)
         else:
-            shutil.copytree(self.old_node.wallets_path / wallet_name, self.master_node.wallets_path / wallet_name)
+            src_path = self.old_node.wallets_path / wallet_name
+            dst_path = self.master_node.wallets_path / wallet_name
+            # On Windows, we need to close all open file handles before copying
+            if is_windows:
+                import gc
+                gc.collect()  # Try to release any file handles
+
+            # Create the directory first if it doesn't exist
+            os.makedirs(dst_path, exist_ok=True)
+
+            # Copy the files individually
+            for item in os.listdir(src_path):
+                s = os.path.join(src_path, item)
+                d = os.path.join(dst_path, item)
+                if os.path.isfile(s):
+                    shutil.copy2(s, d)
+                else:
+                    shutil.copytree(s, d, dirs_exist_ok=True)
+
         # Migrate, checking that rescan does not occur
         with self.master_node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Rescanning"]):
             migrate_info = self.master_node.migratewallet(wallet_name=wallet_name, **kwargs)
