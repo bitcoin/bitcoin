@@ -30,7 +30,7 @@ from test_framework.util import (
 class BackwardsCompatibilityTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 10
+        self.num_nodes = 8
         # Add new version after each release:
         self.extra_args = [
             ["-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # Pre-release: use to mine blocks. noban for immediate tx relay
@@ -41,8 +41,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v22.0
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v0.21.0
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v0.20.1
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v0.19.1
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=127.0.0.1"], # v0.18.1
         ]
         self.wallet_names = [self.default_wallet_name]
 
@@ -60,8 +58,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             220000,
             210000,
             200100,
-            190100,
-            180100,
         ])
 
         self.start_nodes()
@@ -88,18 +84,16 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
     def run_test(self):
         node_miner = self.nodes[0]
         node_master = self.nodes[1]
-        node_v21 = self.nodes[self.num_nodes - 4]
-        node_v18 = self.nodes[self.num_nodes - 1]
+        node_v21 = self.nodes[self.num_nodes - 2]
+        node_v20 = self.nodes[self.num_nodes - 1] # bdb only
 
         legacy_nodes = self.nodes[2:] # Nodes that support legacy wallets
-        legacy_only_nodes = self.nodes[-3:] # Nodes that only support legacy wallets
-        descriptors_nodes = self.nodes[2:-3] # Nodes that support descriptor wallets
+        descriptors_nodes = self.nodes[2:-1] # Nodes that support descriptor wallets
 
         self.generatetoaddress(node_miner, COINBASE_MATURITY + 1, node_miner.getnewaddress())
 
         # Sanity check the test framework:
-        res = node_v18.getblockchaininfo()
-        assert_equal(res['blocks'], COINBASE_MATURITY + 1)
+        assert_equal(node_v20.getblockchaininfo()["blocks"], COINBASE_MATURITY + 1)
 
         self.log.info("Test wallet backwards compatibility...")
         # Create a number of wallets and open them in older versions:
@@ -206,13 +200,11 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                         )
 
         # Check that descriptor wallets don't work on legacy only nodes
-        self.log.info("Test descriptor wallet incompatibility on:")
-        for node in legacy_only_nodes:
-            self.log.info(f"- {node.version}")
-            # Descriptor wallets appear to be corrupted wallets to old software
-            assert self.major_version_less_than(node, 21)
-            for wallet_name in ["w1", "w2", "w3"]:
-                assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node.loadwallet, wallet_name)
+        self.log.info("Test descriptor wallet incompatibility on v0.20")
+        # Descriptor wallets appear to be corrupted wallets to old software
+        assert self.major_version_equals(node_v20, 20)
+        for wallet_name in ["w1", "w2", "w3"]:
+            assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node_v20.loadwallet, wallet_name)
 
         # w1 cannot be opened by 0.21 since it contains a taproot descriptor
         self.log.info("Test that 0.21 cannot open wallet containing tr() descriptors")
