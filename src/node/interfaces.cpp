@@ -929,22 +929,8 @@ public:
 
     bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) override
     {
-        CBlock block{m_block_template->block};
-
-        if (block.vtx.size() == 0) {
-            block.vtx.push_back(coinbase);
-        } else {
-            block.vtx[0] = coinbase;
-        }
-
-        block.nVersion = version;
-        block.nTime = timestamp;
-        block.nNonce = nonce;
-
-        block.hashMerkleRoot = BlockMerkleRoot(block);
-
-        auto block_ptr = std::make_shared<const CBlock>(block);
-        return chainman().ProcessNewBlock(block_ptr, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/nullptr);
+        AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
+        return chainman().ProcessNewBlock(std::make_shared<const CBlock>(m_block_template->block), /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/nullptr);
     }
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override

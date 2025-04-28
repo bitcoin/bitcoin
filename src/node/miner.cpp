@@ -434,4 +434,17 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
         nDescendantsUpdated += UpdatePackagesForAdded(mempool, ancestors, mapModifiedTx);
     }
 }
+
+void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t version, uint32_t timestamp, uint32_t nonce)
+{
+    if (block.vtx.size() == 0) {
+        block.vtx.emplace_back(coinbase);
+    } else {
+        block.vtx[0] = coinbase;
+    }
+    block.nVersion = version;
+    block.nTime = timestamp;
+    block.nNonce = nonce;
+    block.hashMerkleRoot = BlockMerkleRoot(block);
+}
 } // namespace node
