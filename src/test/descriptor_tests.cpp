@@ -6,6 +6,7 @@
 #include <script/descriptor.h>
 #include <script/sign.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
@@ -496,8 +497,7 @@ void CheckInferDescriptor(const std::string& script_hex, const std::string& expe
                         hardened = true;
                     }
                 }
-                uint32_t p;
-                assert(ParseUInt32(std::string(elem.begin(), elem.end()), &p));
+                const uint32_t p{*Assert(ToIntegral<uint32_t>(std::string_view{elem.begin(), elem.end()}))};
                 info.path.push_back(p | (((uint32_t)hardened) << 31));
             }
 
