@@ -168,6 +168,7 @@ jobs:
     env:
       PYTHONUTF8: 1
       TEST_RUNNER_TIMEOUT_FACTOR: 40
+      DOWNLOAD_PREVIOUS_RELEASES: "true"
 
     strategy:
       fail-fast: false
@@ -334,6 +335,8 @@ jobs:
     env:
       PYTHONUTF8: 1
       TEST_RUNNER_TIMEOUT_FACTOR: 40
+      DOWNLOAD_PREVIOUS_RELEASES: "true"
+      PREVIOUS_RELEASES_DIR: ${{ github.workspace }}/releases
 
     steps:
       - name: Checkout
@@ -372,10 +375,24 @@ jobs:
       - name: Run rpcauth test
         run: py -3 test/util/rpcauth-test.py
 
+      - name: Download previous releases
+        if: env.DOWNLOAD_PREVIOUS_RELEASES == 'true'
+        shell: bash
+        run: |
+          mkdir -p ${{ env.PREVIOUS_RELEASES_DIR }}
+          python test/get_previous_releases.py -b -t "${{ env.PREVIOUS_RELEASES_DIR }}"
+
+      - name: Run wallet_migration.py test
+        if: env.DOWNLOAD_PREVIOUS_RELEASES == 'true'
+        env:
+          PYTHONIOENCODING: utf-8
+        run: py -3 test/functional/wallet_migration.py --previous-releases
+
       - name: Run functional tests
         env:
           # TODO: Fix the excluded test and re-enable it.
-          EXCLUDE: '--exclude wallet_multiwallet.py'
+          EXCLUDE: '--exclude wallet_multiwallet.py --exclude wallet_migration.py'
+          PYTHONIOENCODING: utf-8
           TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
         run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix="$RUNNER_TEMP" --combinedlogslen=99999999 --timeout-factor=$TEST_RUNNER_TIMEOUT_FACTOR $EXCLUDE $TEST_RUNNER_EXTRA
 
