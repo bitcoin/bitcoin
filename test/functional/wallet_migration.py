@@ -8,7 +8,6 @@ import random
 import shutil
 import struct
 import time
-import platform
 import os
 
 from test_framework.address import (
