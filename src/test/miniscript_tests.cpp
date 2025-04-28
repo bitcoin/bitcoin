@@ -297,12 +297,12 @@ using miniscript::operator""_mst;
 using Node = miniscript::Node<CPubKey>;
 
 /** Compute all challenges (pubkeys, hashes, timelocks) that occur in a given Miniscript. */
-std::set<Challenge> FindChallenges(const NodeRef& root)
+std::set<Challenge> FindChallenges(const Node* root)
 {
     std::set<Challenge> chal;
 
-    for (std::vector stack{root.get()}; !stack.empty();) {
-        const Node* ref{stack.back()};
+    for (std::vector stack{root}; !stack.empty();) {
+        const auto* ref{stack.back()};
         stack.pop_back();
 
         for (const auto& key : ref->keys) {
@@ -348,7 +348,7 @@ struct MiniScriptTest : BasicTestingSetup {
 /** Run random satisfaction tests. */
 void TestSatisfy(const KeyConverter& converter, const std::string& testcase, const NodeRef& node) {
     auto script = node->ToScript(converter);
-    const auto challenges{FindChallenges(node)}; // Find all challenges in the generated miniscript.
+    const auto challenges{FindChallenges(node.get())}; // Find all challenges in the generated miniscript.
     std::vector<Challenge> challist(challenges.begin(), challenges.end());
     for (int iter = 0; iter < 3; ++iter) {
         std::shuffle(challist.begin(), challist.end(), m_rng);
