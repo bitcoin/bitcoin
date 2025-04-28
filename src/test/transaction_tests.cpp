@@ -859,6 +859,9 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     CheckIsNotStandard(t, "scriptpubkey");
 
     // TxoutType::NULL_DATA
+    //
+    // Until v30 OP_RETURN was limited to 83 bytes (80 bytes of data, +1 for
+    // OP_RETURN, +2 for the pushdata opcodes). Here we test with 84 bytes.
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3800"_hex;
     BOOST_CHECK_EQUAL(84, t.vout[0].scriptPubKey.size());
     CheckIsStandard(t);
