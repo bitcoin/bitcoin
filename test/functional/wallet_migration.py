@@ -107,9 +107,6 @@ class WalletMigrationTest(BitcoinTestFramework):
         # Now unload so we can copy it to the master node for the migration test
         self.old_node.unloadwallet(wallet_name)
 
-        # Handle different path behavior on Windows vs. other platforms
-        is_windows = platform.system() == 'Windows'
-
         if wallet_name == "":
             src_path = self.old_node.wallets_path / "wallet.dat"
             dst_path = self.master_node.wallets_path / "wallet.dat"
