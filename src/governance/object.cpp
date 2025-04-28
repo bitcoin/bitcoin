@@ -66,18 +66,17 @@ bool CGovernanceObject::ProcessVote(CMasternodeMetaMan& mn_metaman, CGovernanceM
     // do not process already known valid votes twice
     if (fileVotes.HasVote(vote.GetHash())) {
         // nothing to do here, not an error
-        std::ostringstream ostr;
-        ostr << "CGovernanceObject::ProcessVote -- Already known valid vote";
-        LogPrint(BCLog::GOBJECT, "%s\n", ostr.str());
-        exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_NONE);
+        std::string msg{strprintf("CGovernanceObject::%s -- Already known valid vote", __func__)};
+        LogPrint(BCLog::GOBJECT, "%s\n", msg);
+        exception = CGovernanceException(msg, GOVERNANCE_EXCEPTION_NONE);
         return false;
     }
 
     auto dmn = tip_mn_list.GetMNByCollateral(vote.GetMasternodeOutpoint());
     if (!dmn) {
-        std::ostringstream ostr;
-        ostr << "CGovernanceObject::ProcessVote -- Masternode " << vote.GetMasternodeOutpoint().ToStringShort() << " not found";
-        exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_PERMANENT_ERROR, 20);
+        std::string msg{strprintf("CGovernanceObject::%s -- Masternode %s not found", __func__,
+            vote.GetMasternodeOutpoint().ToStringShort())};
+        exception = CGovernanceException(msg, GOVERNANCE_EXCEPTION_PERMANENT_ERROR, 20);
         return false;
     }
 
@@ -85,17 +84,16 @@ bool CGovernanceObject::ProcessVote(CMasternodeMetaMan& mn_metaman, CGovernanceM
     vote_rec_t& voteRecordRef = it->second;
     vote_signal_enum_t eSignal = vote.GetSignal();
     if (eSignal == VOTE_SIGNAL_NONE) {
-        std::ostringstream ostr;
-        ostr << "CGovernanceObject::ProcessVote -- Vote signal: none";
-        LogPrint(BCLog::GOBJECT, "%s\n", ostr.str());
-        exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
+        std::string msg{strprintf("CGovernanceObject::%s -- Vote signal: none", __func__)};
+        LogPrint(BCLog::GOBJECT, "%s\n", msg);
+        exception = CGovernanceException(msg, GOVERNANCE_EXCEPTION_WARNING);
         return false;
     }
     if (eSignal < VOTE_SIGNAL_NONE || eSignal >= VOTE_SIGNAL_UNKNOWN) {
-        std::ostringstream ostr;
-        ostr << "CGovernanceObject::ProcessVote -- Unsupported vote signal: " << CGovernanceVoting::ConvertSignalToString(vote.GetSignal());
-        LogPrintf("%s\n", ostr.str());
-        exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_PERMANENT_ERROR, 20);
+        std::string msg{strprintf("CGovernanceObject::%s -- Unsupported vote signal: %s", __func__,
+            CGovernanceVoting::ConvertSignalToString(vote.GetSignal()))};
+        LogPrintf("%s\n", msg);
+        exception = CGovernanceException(msg, GOVERNANCE_EXCEPTION_PERMANENT_ERROR, 20);
         return false;
     }
     auto it2 = voteRecordRef.mapInstances.emplace(vote_instance_m_t::value_type(int(eSignal), vote_instance_t())).first;
@@ -103,26 +101,24 @@ bool CGovernanceObject::ProcessVote(CMasternodeMetaMan& mn_metaman, CGovernanceM
 
     // Reject obsolete votes
     if (vote.GetTimestamp() < voteInstanceRef.nCreationTime) {
-        std::ostringstream ostr;
-        ostr << "CGovernanceObject::ProcessVote -- Obsolete vote";
-        LogPrint(BCLog::GOBJECT, "%s\n", ostr.str());
-        exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_NONE);
+        std::string msg{strprintf("CGovernanceObject::%s -- Obsolete vote", __func__)};
+        LogPrint(BCLog::GOBJECT, "%s\n", msg);
+        exception = CGovernanceException(msg, GOVERNANCE_EXCEPTION_NONE);
         return false;
     } else if (vote.GetTimestamp() == voteInstanceRef.nCreationTime) {
         // Someone is doing something fishy, there can be no two votes from the same masternode
         // with the same timestamp for the same object and signal and yet different hash/outcome.
-        std::ostringstream ostr;
-        ostr << "CGovernanceObject::ProcessVote -- Invalid vote, same timestamp for the different outcome";
+        std::string msg{strprintf("CGovernanceObject::%s -- Invalid vote, same timestamp for the different outcome", __func__)};
         if (vote.GetOutcome() < voteInstanceRef.eOutcome) {
             // This is an arbitrary comparison, we have to agree on some way
             // to pick the "winning" vote.
-            ostr << ", rejected";
-            LogPrint(BCLog::GOBJECT, "%s\n", ostr.str());
-            exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_NONE);
+            msg += ", rejected";
+            LogPrint(BCLog::GOBJECT, "%s\n", msg);
+            exception = CGovernanceException(msg, GOVERNANCE_EXCEPTION_NONE);
             return false;
         }
-        ostr << ", accepted";
-        LogPrint(BCLog::GOBJECT, "%s\n", ostr.str());
+        msg += ", accepted";
+        LogPrint(BCLog::GOBJECT, "%s\n", msg);
     }
 
     int64_t nNow = GetAdjustedTime();
@@ -130,13 +126,11 @@ bool CGovernanceObject::ProcessVote(CMasternodeMetaMan& mn_metaman, CGovernanceM
     if (govman.AreRateChecksEnabled()) {
         int64_t nTimeDelta = nNow - voteInstanceRef.nTime;
         if (nTimeDelta < GOVERNANCE_UPDATE_MIN) {
-            std::ostringstream ostr;
-            ostr << "CGovernanceObject::ProcessVote -- Masternode voting too often"
-                 << ", MN outpoint = " << vote.GetMasternodeOutpoint().ToStringShort()
-                 << ", governance object hash = " << GetHash().ToString()
-                 << ", time delta = " << nTimeDelta;
-            LogPrint(BCLog::GOBJECT, "%s\n", ostr.str());
-            exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_TEMPORARY_ERROR);
+            std::string msg{strprintf("CGovernanceObject::%s -- Masternode voting too often, MN outpoint = %s, "
+                                      "governance object hash = %s, time delta = %d",
+                __func__, vote.GetMasternodeOutpoint().ToStringShort(), GetHash().ToString(), nTimeDelta)};
+            LogPrint(BCLog::GOBJECT, "%s\n", msg);
+            exception = CGovernanceException(msg, GOVERNANCE_EXCEPTION_TEMPORARY_ERROR);
             return false;
         }
         nVoteTimeUpdate = nNow;
@@ -146,24 +140,21 @@ bool CGovernanceObject::ProcessVote(CMasternodeMetaMan& mn_metaman, CGovernanceM
 
     // Finally check that the vote is actually valid (done last because of cost of signature verification)
     if (!vote.IsValid(tip_mn_list, onlyVotingKeyAllowed)) {
-        std::ostringstream ostr;
-        ostr << "CGovernanceObject::ProcessVote -- Invalid vote"
-             << ", MN outpoint = " << vote.GetMasternodeOutpoint().ToStringShort()
-             << ", governance object hash = " << GetHash().ToString()
-             << ", vote hash = " << vote.GetHash().ToString();
-        LogPrintf("%s\n", ostr.str());
-        exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_PERMANENT_ERROR, 20);
+        std::string msg{strprintf("CGovernanceObject::%s -- Invalid vote, MN outpoint = %s, governance object hash = %s, "
+                                  "vote hash = %s",
+            __func__, vote.GetMasternodeOutpoint().ToStringShort(), GetHash().ToString(), vote.GetHash().ToString())};
+        LogPrintf("%s\n", msg);
+        exception = CGovernanceException(msg, GOVERNANCE_EXCEPTION_PERMANENT_ERROR, 20);
         govman.AddInvalidVote(vote);
         return false;
     }
 
     if (!mn_metaman.AddGovernanceVote(dmn->proTxHash, vote.GetParentHash())) {
-        std::ostringstream ostr;
-        ostr << "CGovernanceObject::ProcessVote -- Unable to add governance vote"
-             << ", MN outpoint = " << vote.GetMasternodeOutpoint().ToStringShort()
-             << ", governance object hash = " << GetHash().ToString();
-        LogPrint(BCLog::GOBJECT, "%s\n", ostr.str());
-        exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_PERMANENT_ERROR);
+        std::string msg{strprintf("CGovernanceObject::%s -- Unable to add governance vote, MN outpoint = %s, "
+                                  "governance object hash = %s",
+            __func__, vote.GetMasternodeOutpoint().ToStringShort(), GetHash().ToString())};
+        LogPrint(BCLog::GOBJECT, "%s\n", msg);
+        exception = CGovernanceException(msg, GOVERNANCE_EXCEPTION_PERMANENT_ERROR);
         return false;
     }
 
@@ -323,16 +314,11 @@ void CGovernanceObject::LoadData()
         m_obj.type = GovernanceObject(obj["type"].get_int());
     } catch (std::exception& e) {
         fUnparsable = true;
-        std::ostringstream ostr;
-        ostr << "CGovernanceObject::LoadData Error parsing JSON"
-             << ", e.what() = " << e.what();
-        LogPrintf("%s\n", ostr.str());
+        LogPrintf("%s\n", strprintf("CGovernanceObject::LoadData -- Error parsing JSON, e.what() = %s", e.what()));
         return;
     } catch (...) {
         fUnparsable = true;
-        std::ostringstream ostr;
-        ostr << "CGovernanceObject::LoadData Unknown Error parsing JSON";
-        LogPrintf("%s\n", ostr.str());
+        LogPrintf("%s\n", strprintf("CGovernanceObject::LoadData -- Unknown Error parsing JSON"));
         return;
     }
 }
