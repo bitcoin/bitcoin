@@ -87,7 +87,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # 0.21.x and 22.x would both produce bad derivation paths when topping up an inactive hd chain
         # Make sure that this is being automatically cleaned up by migration
         node_master = self.nodes[1]
-        node_v22 = self.nodes[self.num_nodes - 5]
+        node_v22 = self.nodes[self.num_nodes - 3]
         wallet_name = "bad_deriv_path"
         node_v22.createwallet(wallet_name=wallet_name, descriptors=False)
         bad_deriv_wallet = node_v22.get_wallet_rpc(wallet_name)
