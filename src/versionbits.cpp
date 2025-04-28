@@ -73,6 +73,9 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
     assert(cache.count(pindexPrev));
     ThresholdState state = cache[pindexPrev];
 
+    // we should avoid heavy calculation of nStartHeight below if there's nothing to compute
+    if (vToCompute.empty()) return state;
+
     int nStartHeight = calculateStartHeight(pindexPrev, state, nPeriod, cache);
 
     // Now walk forward and compute the state of descendants of pindexPrev
