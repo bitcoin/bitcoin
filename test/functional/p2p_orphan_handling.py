@@ -130,13 +130,16 @@ class OrphanHandlingTest(BitcoinTestFramework):
         child = self.wallet.create_self_transfer(utxo_to_spend=parent['new_utxo'])
         return child["tx"].getwtxid(), child["tx"], parent["tx"]
 
-    def relay_transaction(self, peer, tx):
+    def relay_transaction(self, peer, tx, with_ping=True):
         """Relay transaction using MSG_WTX"""
         wtxid = int(tx.getwtxid(), 16)
         peer.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=wtxid)]))
         self.nodes[0].bumpmocktime(TXREQUEST_TIME_SKIP)
         peer.wait_for_getdata([wtxid])
-        peer.send_and_ping(msg_tx(tx))
+        if with_ping:
+            peer.send_and_ping(msg_tx(tx))
+        else:
+            peer.send_without_ping(msg_tx(tx))
 
     def create_malleated_version(self, tx):
         """
@@ -250,9 +253,13 @@ class OrphanHandlingTest(BitcoinTestFramework):
         child_invalid_witness = self.wallet.create_self_transfer(utxo_to_spend=parent_normal["new_utxo"])
 
         # Relay the parent with witness stripped. It should not be accepted.
-        self.relay_transaction(peer1, parent1_witness_stripped)
+        self.relay_transaction(peer1, parent1_witness_stripped, with_ping=False)
         assert_equal(parent_normal["txid"], parent1_witness_stripped.rehash())
         assert parent1_witness_stripped.rehash() not in node.getrawmempool()
+
+        # Sending the transaction without witness is a consensus failure and will cause the peer to disconnect.
+        peer1.wait_for_disconnect()
+        peer1 = node.add_p2p_connection(PeerTxRelayer())
 
         # Relay the child. It should not be accepted because it has missing inputs.
         self.relay_transaction(peer2, child_invalid_witness["tx"])
