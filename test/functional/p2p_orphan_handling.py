@@ -257,16 +257,12 @@ class OrphanHandlingTest(BitcoinTestFramework):
         # Relay the child. It should not be accepted because it has missing inputs.
         self.relay_transaction(peer2, child_invalid_witness["tx"])
         assert child_invalid_witness["txid"] not in node.getrawmempool()
-        assert tx_in_orphanage(node, child_invalid_witness["tx"])
 
-        # The parent should be requested since the unstripped wtxid would differ. Delayed because
-        # it's by txid and this is not a preferred relay peer.
-        self.nodes[0].bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
-        peer2.wait_for_getdata([int(parent_normal["tx"].rehash(), 16)])
-
-        # parent_normal can be relayed again even though parent1_witness_stripped was rejected
+        # The parent will not be requested because its txid was added to the reject filter above (as
+        # the wtxid of its witness-stripped version). But it can still be relayed again if it's not
+        # stripped.
         self.relay_transaction(peer1, parent_normal["tx"])
-        assert_equal(set(node.getrawmempool()), set([parent_normal["txid"], child_invalid_witness["txid"]]))
+        assert_equal(set(node.getrawmempool()), set([parent_normal["txid"]]))
 
     @cleanup
     def test_orphan_multiple_parents(self):
