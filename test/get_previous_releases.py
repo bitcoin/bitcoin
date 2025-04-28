@@ -106,6 +106,12 @@ SHA256_SUMS = {
     "6ee1a520b638132a16725020146abea045db418ce91c02493f02f541cd53062a": {"tag": "v28.0", "tarball": "bitcoin-28.0-riscv64-linux-gnu.tar.gz"},
     "77e931bbaaf47771a10c376230bf53223f5380864bad3568efc7f4d02e40a0f7": {"tag": "v28.0", "tarball": "bitcoin-28.0-x86_64-apple-darwin.tar.gz"},
     "7fe294b02b25b51acb8e8e0a0eb5af6bbafa7cd0c5b0e5fcbb61263104a82fbc": {"tag": "v28.0", "tarball": "bitcoin-28.0-x86_64-linux-gnu.tar.gz"},
+
+    "bff531650dcf859c27d8428dc5f98f3f93d9b6d54e4c1401e0ea9651f1edd7a3": {"tag": "v22.0", "tarball": "bitcoin-22.0-win64.zip"},
+    "e16fdbdc4ee953969df1ce8f82380e9c61658b1a64801bd21e2e87063e93bc6a": {"tag": "v23.0", "tarball": "bitcoin-23.0-win64.zip"},
+    "97de6e2a4d91531c057537e83bb7e72b1cf9ab777601eb481f3f4a6d9e7b9c67": {"tag": "v24.0.1", "tarball": "bitcoin-24.0.1-win64.zip"},
+    "c0d22e9d37d0238215676af1c4e358c8af3a43fe7a25c57499b4c66ca80381da": {"tag": "v25.0", "tarball": "bitcoin-25.0-win64.zip"},
+    "f2974a7df505cff14ca92dd7a23ba7e47f1b97ae7e7a12a6fc2f5f5c0a66ca10": {"tag": "v28.0", "tarball": "bitcoin-28.0-win64.zip"},
 }
 
 
@@ -134,8 +140,13 @@ def download_binary(tag, args) -> int:
     platform = args.platform
     if tag < "v23" and platform in ["x86_64-apple-darwin", "arm64-apple-darwin"]:
         platform = "osx64"
+    if tag < "v23" and platform == "win64":
+        platform = "win64"  # Windows platform names have been consistent
     tarball = 'bitcoin-{tag}-{platform}.tar.gz'.format(
         tag=tag[1:], platform=platform)
+    if platform == "win64" and tag >= "v22.0":
+        tarball = 'bitcoin-{tag}-{platform}.zip'.format(
+            tag=tag[1:], platform=platform)
     tarballUrl = 'https://bitcoincore.org/{bin_path}/{tarball}'.format(
         bin_path=bin_path, tarball=tarball)
 
@@ -160,12 +171,25 @@ def download_binary(tag, args) -> int:
     print("Checksum matched")
 
     # Extract tarball
-    ret = subprocess.run(['tar', '-zxf', tarball, '-C', tag,
-                          '--strip-components=1',
-                          'bitcoin-{tag}'.format(tag=tag[1:])]).returncode
-    if ret != 0:
-        print(f"Failed to extract the {tag} tarball")
-        return ret
+    if platform == "win64" and tag >= "v22.0":
+        # Handle zip files for Windows
+        import zipfile
+        with zipfile.ZipFile(tarball, 'r') as zip_ref:
+            zip_ref.extractall(tag)
+        # Rename the directory to match expected structure
+        extracted_dir = Path(tag) / f"bitcoin-{tag[1:]}"
+        if extracted_dir.exists():
+            for item in extracted_dir.iterdir():
+                shutil.move(str(item), str(Path(tag) / item.name))
+            extracted_dir.rmdir()
+    else:
+        # Standard tar extraction
+        ret = subprocess.run(['tar', '-zxf', tarball, '-C', tag,
+                              '--strip-components=1',
+                              'bitcoin-{tag}'.format(tag=tag[1:])]).returncode
+        if ret != 0:
+            print(f"Failed to extract the {tag} tarball")
+            return ret
 
     Path(tarball).unlink()
 
@@ -258,6 +282,8 @@ def check_host(args) -> int:
             'x86_64-*-linux*': 'x86_64-linux-gnu',
             'x86_64-apple-darwin*': 'x86_64-apple-darwin',
             'aarch64-apple-darwin*': 'arm64-apple-darwin',
+            'x86_64-w64-mingw32': 'win64',
+            'x86_64-*-win*': 'win64',
         }
         args.platform = ''
         for pattern, target in platforms.items():
