@@ -113,18 +113,10 @@ class WalletMigrationTest(BitcoinTestFramework):
         if wallet_name == "":
             src_path = self.old_node.wallets_path / "wallet.dat"
             dst_path = self.master_node.wallets_path / "wallet.dat"
-            # On Windows, we need to close all open file handles before copying
-            if is_windows:
-                import gc
-                gc.collect()  # Try to release any file handles
             shutil.copyfile(src_path, dst_path)
         else:
             src_path = self.old_node.wallets_path / wallet_name
             dst_path = self.master_node.wallets_path / wallet_name
-            # On Windows, we need to close all open file handles before copying
-            if is_windows:
-                import gc
-                gc.collect()  # Try to release any file handles
 
             # Create the directory first if it doesn't exist
             os.makedirs(dst_path, exist_ok=True)
