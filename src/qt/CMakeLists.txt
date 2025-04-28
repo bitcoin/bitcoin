@@ -3,7 +3,7 @@
 # file COPYING or https://opensource.org/license/mit/.
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-  enable_language(OBJCXX)
+  bitcoincore_enable_language(OBJCXX)
   set(CMAKE_OBJCXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
   set(CMAKE_OBJCXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
   set(CMAKE_OBJCXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
