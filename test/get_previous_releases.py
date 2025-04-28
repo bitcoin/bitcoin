@@ -270,8 +270,12 @@ def build_release(tag, args) -> int:
 
 
 def check_host(args) -> int:
-    args.host = os.environ.get('HOST', subprocess.check_output(
-        './depends/config.guess').decode())
+    # On Windows, config.guess script doesn't work, so we set host manually
+    if sys.platform == 'win32':
+        args.host = 'x86_64-w64-mingw32'
+    else:
+        args.host = os.environ.get('HOST', subprocess.check_output(
+            './depends/config.guess').decode())
     if args.download_binary:
         platforms = {
             'aarch64-*-linux*': 'aarch64-linux-gnu',
