@@ -4,7 +4,6 @@
 
 #include <consensus/validation.h>
 #include <evo/cbtx.h>
-#include <evo/deterministicmns.h>
 #include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
 #include <llmq/blockprocessor.h>
@@ -60,9 +59,9 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidati
 }
 
 // This can only be done after the block has been fully processed, as otherwise we won't have the finished MN list
-bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CDeterministicMNManager& dmnman,
-                          llmq::CQuorumSnapshotManager& qsnapman, const llmq::CQuorumBlockProcessor& quorum_block_processor,
-                          BlockValidationState& state, const CCoinsViewCache& view)
+bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex,
+                          const llmq::CQuorumBlockProcessor& quorum_block_processor, CSimplifiedMNList&& sml,
+                          BlockValidationState& state)
 {
     if (block.vtx[0]->nType != TRANSACTION_COINBASE) {
         return true;
@@ -86,7 +85,7 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CDeter
         static int64_t nTimeMerkleQuorum = 0;
 
         uint256 calculatedMerkleRoot;
-        if (!CalcCbTxMerkleRootMNList(block, pindex->pprev, calculatedMerkleRoot, state, dmnman, qsnapman, view)) {
+        if (!CalcCbTxMerkleRootMNList(calculatedMerkleRoot, std::move(sml), state)) {
             // pass the state returned by the function above
             return false;
         }
@@ -115,30 +114,12 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CDeter
     return true;
 }
 
-bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet,
-                              BlockValidationState& state, CDeterministicMNManager& dmnman,
-                              llmq::CQuorumSnapshotManager& qsnapman, const CCoinsViewCache& view)
+bool CalcCbTxMerkleRootMNList(uint256& merkleRootRet, CSimplifiedMNList&& sml, BlockValidationState& state)
 {
     try {
-        static std::atomic<int64_t> nTimeDMN = 0;
-        static std::atomic<int64_t> nTimeSMNL = 0;
         static std::atomic<int64_t> nTimeMerkle = 0;
 
         int64_t nTime1 = GetTimeMicros();
-
-        CDeterministicMNList tmpMNList;
-        if (!dmnman.BuildNewListFromBlock(block, pindexPrev, state, view, tmpMNList, qsnapman, false)) {
-            // pass the state returned by the function above
-            return false;
-        }
-
-        int64_t nTime2 = GetTimeMicros(); nTimeDMN += nTime2 - nTime1;
-        LogPrint(BCLog::BENCHMARK, "            - BuildNewListFromBlock: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeDMN * 0.000001);
-
-        CSimplifiedMNList sml(tmpMNList);
-
-        int64_t nTime3 = GetTimeMicros(); nTimeSMNL += nTime3 - nTime2;
-        LogPrint(BCLog::BENCHMARK, "            - CSimplifiedMNList: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeSMNL * 0.000001);
 
         static Mutex cached_mutex;
         static CSimplifiedMNList smlCached GUARDED_BY(cached_mutex);
@@ -157,8 +138,10 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
         bool mutated = false;
         merkleRootRet = sml.CalcMerkleRoot(&mutated);
 
-        int64_t nTime4 = GetTimeMicros(); nTimeMerkle += nTime4 - nTime3;
-        LogPrint(BCLog::BENCHMARK, "            - CalcMerkleRoot: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeMerkle * 0.000001);
+        int64_t nTime2 = GetTimeMicros();
+        nTimeMerkle += nTime2 - nTime1;
+        LogPrint(BCLog::BENCHMARK, "            - CalcMerkleRoot: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1),
+                 nTimeMerkle * 0.000001);
 
         smlCached = std::move(sml);
         merkleRootCached = merkleRootRet;

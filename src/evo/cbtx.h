@@ -14,14 +14,12 @@
 class BlockValidationState;
 class CBlock;
 class CBlockIndex;
-class CCoinsViewCache;
-class CDeterministicMNManager;
 class TxValidationState;
+class CSimplifiedMNList;
 
 namespace llmq {
 class CChainLocksHandler;
 class CQuorumBlockProcessor;
-class CQuorumSnapshotManager;
 }// namespace llmq
 
 // coinbase transaction
@@ -68,12 +66,10 @@ template<> struct is_serializable_enum<CCbTx::Version> : std::true_type {};
 
 bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state);
 
-bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CDeterministicMNManager& dmnman,
-                          llmq::CQuorumSnapshotManager& qsnapman, const llmq::CQuorumBlockProcessor& quorum_block_processor,
-                          BlockValidationState& state, const CCoinsViewCache& view);
-bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet,
-                              BlockValidationState& state, CDeterministicMNManager& dmnman,
-                              llmq::CQuorumSnapshotManager& qsnapman, const CCoinsViewCache& view);
+bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex,
+                          const llmq::CQuorumBlockProcessor& quorum_block_processor, CSimplifiedMNList&& sml,
+                          BlockValidationState& state);
+bool CalcCbTxMerkleRootMNList(uint256& merkleRootRet, CSimplifiedMNList&& sml, BlockValidationState& state);
 bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPrev,
                                const llmq::CQuorumBlockProcessor& quorum_block_processor, uint256& merkleRootRet,
                                BlockValidationState& state);

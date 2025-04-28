@@ -28,6 +28,7 @@
 #include <evo/cbtx.h>
 #include <evo/chainhelper.h>
 #include <evo/creditpool.h>
+#include <evo/deterministicmns.h>
 #include <evo/mnhftx.h>
 #include <evo/simplifiedmns.h>
 #include <governance/governance.h>
@@ -224,7 +225,11 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         cbTx.nHeight = nHeight;
 
         BlockValidationState state;
-        if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state, m_dmnman, m_qsnapman, m_chainstate.CoinsTip())) {
+        CDeterministicMNList mn_list;
+        if (!m_dmnman.BuildNewListFromBlock(*pblock, pindexPrev, state, m_chainstate.CoinsTip(), mn_list, m_qsnapman, true)) {
+            throw std::runtime_error(strprintf("%s: BuildNewListFromBlock failed: %s", __func__, state.ToString()));
+        }
+        if (!CalcCbTxMerkleRootMNList(cbTx.merkleRootMNList, CSimplifiedMNList(mn_list), state)) {
             throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, state.ToString()));
         }
         if (fDIP0008Active_context) {
