@@ -931,9 +931,6 @@ class RPCOverloadWrapper():
     def __getattr__(self, name):
         return getattr(self.rpc, name)
 
-    def createwallet_passthrough(self, *args, **kwargs):
-        return self.__getattr__("createwallet")(*args, **kwargs)
-
     def importprivkey(self, privkey, label=None, rescan=None):
         wallet_info = self.getwalletinfo()
         if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
