@@ -140,8 +140,6 @@ def download_binary(tag, args) -> int:
     platform = args.platform
     if tag < "v23" and platform in ["x86_64-apple-darwin", "arm64-apple-darwin"]:
         platform = "osx64"
-    if tag < "v23" and platform == "win64":
-        platform = "win64"  # Windows platform names have been consistent
     tarball = 'bitcoin-{tag}-{platform}.tar.gz'.format(
         tag=tag[1:], platform=platform)
     if platform == "win64" and tag >= "v22.0":
