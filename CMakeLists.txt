@@ -66,25 +66,17 @@ set(COPYRIGHT_HOLDERS "The %s developers")
 set(COPYRIGHT_HOLDERS_FINAL "The ${CLIENT_NAME} developers")
 set(CLIENT_BUGREPORT "https://github.com/bitcoin/bitcoin/issues")
 
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/module)
+
 #=============================
 # Language setup
 #=============================
-if(CMAKE_VERSION VERSION_LESS 4.2 AND CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT CMAKE_HOST_APPLE)
-  # We do not use the install_name_tool when cross-compiling for macOS.
-  # However, CMake < 4.2 still searches for Apple's version of the tool,
-  # which causes an error during configuration.
-  # See:
-  # - https://gitlab.kitware.com/cmake/cmake/-/issues/27069
-  # - https://gitlab.kitware.com/cmake/cmake/-/merge_requests/10955
-  # So disable this tool check in further enable_language() commands.
-  set(CMAKE_INSTALL_NAME_TOOL "${CMAKE_COMMAND} -E true")
-endif()
-enable_language(CXX)
+include(EnableLanguage)
+bitcoincore_enable_language(CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/module)
 include(ProcessConfigurations)
 
 # Flatten static lib dependencies.
