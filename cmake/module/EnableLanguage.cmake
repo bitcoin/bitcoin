@@ -27,6 +27,22 @@ macro(bitcoincore_enable_language language)
       string(APPEND CMAKE_${language}_COMPILE_OBJECT " ${APPEND_CPPFLAGS} ${APPEND_CXXFLAGS}")
       string(APPEND CMAKE_${language}_CREATE_SHARED_LIBRARY " ${APPEND_LDFLAGS}")
       string(APPEND CMAKE_${language}_LINK_EXECUTABLE " ${APPEND_LDFLAGS}")
+
+      # CMake's `enable_language()` command internally checks
+      # whether the compiler is able to compile a simple test program.
+      # However, it does not take into consideration the contents
+      # of the user-defined `APPEND_*FLAGS` variables, because they
+      # modify CMake's compiler configuration variables, which in turn
+      # become available only after `enable_language()` is invoked.
+      # Therefore, we test the compiler again at this point.
+      include(CheckSourceCompiles)
+      check_source_compiles("${language}" "int main() { return 0; }" ${language}_COMPILER_WORKS)
+      if(NOT ${language}_COMPILER_WORKS)
+        unset(${language}_COMPILER_WORKS CACHE)
+        message(FATAL_ERROR "The ${language} compiler is not able to compile a simple test program.\n"
+          "Check that the \"APPEND_*FLAGS\" variables are set correctly.\n\n"
+        )
+      endif()
     endif()
     unset(_description)
   endif()
