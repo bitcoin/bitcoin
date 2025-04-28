@@ -931,7 +931,7 @@ class RPCOverloadWrapper():
     def __getattr__(self, name):
         return getattr(self.rpc, name)
 
-    def importprivkey(self, privkey, label=None, rescan=None):
+    def importprivkey(self, privkey, *, label=None, rescan=None):
         wallet_info = self.getwalletinfo()
         if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
             return self.__getattr__('importprivkey')(privkey, label, rescan)
@@ -939,13 +939,13 @@ class RPCOverloadWrapper():
         req = [{
             'desc': desc,
             'timestamp': 0 if rescan else 'now',
-            'label': label if label else ''
+            'label': label if label else '',
         }]
         import_res = self.importdescriptors(req)
         if not import_res[0]['success']:
             raise JSONRPCException(import_res[0]['error'])
 
-    def addmultisigaddress(self, nrequired, keys, label=None, address_type=None):
+    def addmultisigaddress(self, nrequired, keys, *, label=None, address_type=None):
         wallet_info = self.getwalletinfo()
         if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
             return self.__getattr__('addmultisigaddress')(nrequired, keys, label, address_type)
@@ -953,14 +953,14 @@ class RPCOverloadWrapper():
         req = [{
             'desc': cms['descriptor'],
             'timestamp': 0,
-            'label': label if label else ''
+            'label': label if label else '',
         }]
         import_res = self.importdescriptors(req)
         if not import_res[0]['success']:
             raise JSONRPCException(import_res[0]['error'])
         return cms
 
-    def importpubkey(self, pubkey, label=None, rescan=None):
+    def importpubkey(self, pubkey, *, label=None, rescan=None):
         wallet_info = self.getwalletinfo()
         if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
             return self.__getattr__('importpubkey')(pubkey, label, rescan)
@@ -968,13 +968,13 @@ class RPCOverloadWrapper():
         req = [{
             'desc': desc,
             'timestamp': 0 if rescan else 'now',
-            'label': label if label else ''
+            'label': label if label else '',
         }]
         import_res = self.importdescriptors(req)
         if not import_res[0]['success']:
             raise JSONRPCException(import_res[0]['error'])
 
-    def importaddress(self, address, label=None, rescan=None, p2sh=None):
+    def importaddress(self, address, *, label=None, rescan=None, p2sh=None):
         wallet_info = self.getwalletinfo()
         if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
             return self.__getattr__('importaddress')(address, label, rescan, p2sh)
@@ -988,13 +988,13 @@ class RPCOverloadWrapper():
         reqs = [{
             'desc': desc,
             'timestamp': 0 if rescan else 'now',
-            'label': label if label else ''
+            'label': label if label else '',
         }]
         if is_hex and p2sh:
             reqs.append({
                 'desc': descsum_create('p2sh(raw(' + address + '))'),
                 'timestamp': 0 if rescan else 'now',
-                'label': label if label else ''
+                'label': label if label else '',
             })
         import_res = self.importdescriptors(reqs)
         for res in import_res:
