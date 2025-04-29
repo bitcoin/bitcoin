@@ -24,45 +24,53 @@ SHA256_SUMS = {
     "d86fc90824a85c38b25c8488115178d5785dbc975f5ff674f9f5716bc8ad6e65": {"tag": "v0.14.3", "tarball": "bitcoin-0.14.3-arm-linux-gnueabihf.tar.gz"},
     "1b0a7408c050e3d09a8be8e21e183ef7ee570385dc41216698cc3ab392a484e7": {"tag": "v0.14.3", "tarball": "bitcoin-0.14.3-osx64.tar.gz"},
     "706e0472dbc933ed2757650d54cbcd780fd3829ebf8f609b32780c7eedebdbc9": {"tag": "v0.14.3", "tarball": "bitcoin-0.14.3-x86_64-linux-gnu.tar.gz"},
+    "11ba15c0e933f19c33cf6d111c7808346d8a0b80f64969b69de610883bacf880": {"tag": "v0.14.3", "tarball": "bitcoin-0.14.3-win64.zip"},
     #
     "d40f18b4e43c6e6370ef7db9131f584fbb137276ec2e3dba67a4b267f81cb644": {"tag": "v0.15.2", "tarball": "bitcoin-0.15.2-aarch64-linux-gnu.tar.gz"},
     "54fb877a148a6ad189a1e1ab1ff8b11181e58ff2aaf430da55b3fd46ae549a6b": {"tag": "v0.15.2", "tarball": "bitcoin-0.15.2-arm-linux-gnueabihf.tar.gz"},
     "87e9340ff3d382d543b2b69112376077f0c8b4f7450d372e83b68f5a1e22b2df": {"tag": "v0.15.2", "tarball": "bitcoin-0.15.2-osx64.tar.gz"},
     "566be44190fd76daa01f13d428939dadfb8e3daacefc8fa17f433cad28f73bd5": {"tag": "v0.15.2", "tarball": "bitcoin-0.15.2-x86_64-linux-gnu.tar.gz"},
+    "42c9f86e89e75f3c537ce5e7d9afab782048201afbf808c7e7d54db5474fec81": {"tag": "v0.15.2", "tarball": "bitcoin-0.15.2-win64.zip"},
     #
     "0768c6c15caffbaca6524824c9563b42c24f70633c681c2744649158aa3fd484": {"tag": "v0.16.3", "tarball": "bitcoin-0.16.3-aarch64-linux-gnu.tar.gz"},
     "fb2818069854a6ad20ea03b28b55dbd35d8b1f7d453e90b83eace5d0098a2a87": {"tag": "v0.16.3", "tarball": "bitcoin-0.16.3-arm-linux-gnueabihf.tar.gz"},
     "78c3bff3b619a19aed575961ea43cc9e142959218835cf51aede7f0b764fc25d": {"tag": "v0.16.3", "tarball": "bitcoin-0.16.3-osx64.tar.gz"},
     "5d422a9d544742bc0df12427383f9c2517433ce7b58cf672b9a9b17c2ef51e4f": {"tag": "v0.16.3", "tarball": "bitcoin-0.16.3-x86_64-linux-gnu.tar.gz"},
+    "691ba37858e6ec0bcd02abca271cfc6d81206305e259458c1a1e8e9d1ba1dd75": {"tag": "v0.16.3", "tarball": "bitcoin-0.16.3-win64.zip"},
     #
     "5a6b35d1a348a402f2d2d6ab5aed653a1a1f13bc63aaaf51605e3501b0733b7a": {"tag": "v0.17.2", "tarball": "bitcoin-0.17.2-aarch64-linux-gnu.tar.gz"},
     "d1913a5d19c8e8da4a67d1bd5205d03c8614dfd2e02bba2fe3087476643a729e": {"tag": "v0.17.2", "tarball": "bitcoin-0.17.2-arm-linux-gnueabihf.tar.gz"},
     "a783ba20706dbfd5b47fbedf42165fce70fbbc7d78003305d964f6b3da14887f": {"tag": "v0.17.2", "tarball": "bitcoin-0.17.2-osx64.tar.gz"},
     "943f9362b9f11130177839116f48f809d83478b4c28591d486ee9a7e35179da6": {"tag": "v0.17.2", "tarball": "bitcoin-0.17.2-x86_64-linux-gnu.tar.gz"},
+    "9385735a428c5d2d2ddbc569b6eac06baf93c39ed21d91722a337a6f7e645ca7": {"tag": "v0.17.2", "tarball": "bitcoin-0.17.2-win64.zip"},
     #
     "88f343af72803b851c7da13874cc5525026b0b55e63e1b5e1298390c4688adc6": {"tag": "v0.18.1", "tarball": "bitcoin-0.18.1-aarch64-linux-gnu.tar.gz"},
     "cc7d483e4b20c5dabd4dcaf304965214cf4934bcc029ca99cbc9af00d3771a1f": {"tag": "v0.18.1", "tarball": "bitcoin-0.18.1-arm-linux-gnueabihf.tar.gz"},
     "b7bbcee7a7540f711b171d6981f939ca8482005fde22689bc016596d80548bb1": {"tag": "v0.18.1", "tarball": "bitcoin-0.18.1-osx64.tar.gz"},
     "425ee5ec631ae8da71ebc1c3f5c0269c627cf459379b9b030f047107a28e3ef8": {"tag": "v0.18.1", "tarball": "bitcoin-0.18.1-riscv64-linux-gnu.tar.gz"},
     "600d1db5e751fa85903e935a01a74f5cc57e1e7473c15fd3e17ed21e202cfe5a": {"tag": "v0.18.1", "tarball": "bitcoin-0.18.1-x86_64-linux-gnu.tar.gz"},
+    "3bac0674c0786689167be2b9f35d2d6e91d5f44e43ee6c0a9113a19d999d4070": {"tag": "v0.18.1", "tarball": "bitcoin-0.18.1-win64.zip"},
     #
     "3a80431717842672df682bdb619e66523b59541483297772a7969413be3502ff": {"tag": "v0.19.1", "tarball": "bitcoin-0.19.1-aarch64-linux-gnu.tar.gz"},
     "657f28213823d240dd3324d14829702f9ad6f0710f8bdd1c379cb3c447197f48": {"tag": "v0.19.1", "tarball": "bitcoin-0.19.1-arm-linux-gnueabihf.tar.gz"},
     "1ae1b87de26487075cd2fd22e0d4ead87d969bd55c44f2f1d873ecdc6147ebb3": {"tag": "v0.19.1", "tarball": "bitcoin-0.19.1-osx64.tar.gz"},
     "aa7a9563b48aa79252c8e7b6a41c07a5441bd9f14c5e4562cc72720ea6cb0ee5": {"tag": "v0.19.1", "tarball": "bitcoin-0.19.1-riscv64-linux-gnu.tar.gz"},
     "5fcac9416e486d4960e1a946145566350ca670f9aaba99de6542080851122e4c": {"tag": "v0.19.1", "tarball": "bitcoin-0.19.1-x86_64-linux-gnu.tar.gz"},
+    "7706593de727d893e4b1bab084d6df61a6f8a37dcc9e0c2c6c83b02417b321ad": {"tag": "v0.19.1", "tarball": "bitcoin-0.19.1-win64.zip"},
     #
     "60c93e3462c303eb080be7cf623f1a7684b37fd47a018ad3848bc23e13c84e1c": {"tag": "v0.20.1", "tarball": "bitcoin-0.20.1-aarch64-linux-gnu.tar.gz"},
     "55b577e0fb306fb429d4be6c9316607753e8543e5946b542d75d876a2f08654c": {"tag": "v0.20.1", "tarball": "bitcoin-0.20.1-arm-linux-gnueabihf.tar.gz"},
     "b9024dde373ea7dad707363e07ec7e265383204127539ae0c234bff3a61da0d1": {"tag": "v0.20.1", "tarball": "bitcoin-0.20.1-osx64.tar.gz"},
     "fa71cb52ee5e0459cbf5248cdec72df27995840c796f58b304607a1ed4c165af": {"tag": "v0.20.1", "tarball": "bitcoin-0.20.1-riscv64-linux-gnu.tar.gz"},
     "376194f06596ecfa40331167c39bc70c355f960280bd2a645fdbf18f66527397": {"tag": "v0.20.1", "tarball": "bitcoin-0.20.1-x86_64-linux-gnu.tar.gz"},
+    "398d55c9d83a257a947f53ef7b1d83c4e9dae72f33c3cc6157dfa6f8ffd5a4e4": {"tag": "v0.20.1", "tarball": "bitcoin-0.20.1-win64.zip"},
 
     "43416854330914992bbba2d0e9adf2a6fff4130be9af8ae2ef1186e743d9a3fe": {"tag": "v0.21.0", "tarball": "bitcoin-0.21.0-aarch64-linux-gnu.tar.gz"},
     "f028af308eda45a3c4c90f9332f96b075bf21e3495c945ebce48597151808176": {"tag": "v0.21.0", "tarball": "bitcoin-0.21.0-arm-linux-gnueabihf.tar.gz"},
     "695fb624fa6423f5da4f443b60763dd1d77488bfe5ef63760904a7b54e91298d": {"tag": "v0.21.0", "tarball": "bitcoin-0.21.0-osx64.tar.gz"},
     "f8b2adfeae021a672effbc7bd40d5c48d6b94e53b2dd660f787340bf1a52e4e9": {"tag": "v0.21.0", "tarball": "bitcoin-0.21.0-riscv64-linux-gnu.tar.gz"},
     "da7766775e3f9c98d7a9145429f2be8297c2672fe5b118fd3dc2411fb48e0032": {"tag": "v0.21.0", "tarball": "bitcoin-0.21.0-x86_64-linux-gnu.tar.gz"},
+    "499c28df33a824cfd4a0d727a154b50862d4238e4ba5fd9ac094a6c995ed825e": {"tag": "v0.21.0", "tarball": "bitcoin-0.21.0-win64.zip"},
 
     "ac718fed08570a81b3587587872ad85a25173afa5f9fbbd0c03ba4d1714cfa3e": {"tag": "v22.0", "tarball": "bitcoin-22.0-aarch64-linux-gnu.tar.gz"},
     "b8713c6c5f03f5258b54e9f436e2ed6d85449aa24c2c9972f91963d413e86311": {"tag": "v22.0", "tarball": "bitcoin-22.0-arm-linux-gnueabihf.tar.gz"},
@@ -71,6 +79,7 @@ SHA256_SUMS = {
     "91b1e012975c5a363b5b5fcc81b5b7495e86ff703ec8262d4b9afcfec633c30d": {"tag": "v22.0", "tarball": "bitcoin-22.0-powerpc64le-linux-gnu.tar.gz"},
     "9cc3a62c469fe57e11485fdd32c916f10ce7a2899299855a2e479256ff49ff3c": {"tag": "v22.0", "tarball": "bitcoin-22.0-riscv64-linux-gnu.tar.gz"},
     "59ebd25dd82a51638b7a6bb914586201e67db67b919b2a1ff08925a7936d1b16": {"tag": "v22.0", "tarball": "bitcoin-22.0-x86_64-linux-gnu.tar.gz"},
+    "bff531650dcf859c27d8428dc5f98f3f93d9b6d54e4c1401e0ea9651f1edd7a3": {"tag": "v22.0", "tarball": "bitcoin-22.0-win64.zip"},
 
     "06f4c78271a77752ba5990d60d81b1751507f77efda1e5981b4e92fd4d9969fb": {"tag": "v23.0", "tarball": "bitcoin-23.0-aarch64-linux-gnu.tar.gz"},
     "952c574366aff76f6d6ad1c9ee45a361d64fa04155e973e926dfe7e26f9703a3": {"tag": "v23.0", "tarball": "bitcoin-23.0-arm-linux-gnueabihf.tar.gz"},
@@ -80,6 +89,7 @@ SHA256_SUMS = {
     "078f96b1e92895009c798ab827fb3fde5f6719eee886bd0c0e93acab18ea4865": {"tag": "v23.0", "tarball": "bitcoin-23.0-riscv64-linux-gnu.tar.gz"},
     "c816780583009a9dad426dc0c183c89be9da98906e1e2c7ebae91041c1aaaaf3": {"tag": "v23.0", "tarball": "bitcoin-23.0-x86_64-apple-darwin.tar.gz"},
     "2cca490c1f2842884a3c5b0606f179f9f937177da4eadd628e3f7fd7e25d26d0": {"tag": "v23.0", "tarball": "bitcoin-23.0-x86_64-linux-gnu.tar.gz"},
+    "e16fdbdc4ee953969df1ce8f82380e9c61658b1a64801bd21e2e87063e93bc6a": {"tag": "v23.0", "tarball": "bitcoin-23.0-win64.zip"},
 
     "0b48b9e69b30037b41a1e6b78fb7cbcc48c7ad627908c99686e81f3802454609": {"tag": "v24.0.1", "tarball": "bitcoin-24.0.1-aarch64-linux-gnu.tar.gz"},
     "37d7660f0277301744e96426bbb001d2206b8d4505385dfdeedf50c09aaaef60": {"tag": "v24.0.1", "tarball": "bitcoin-24.0.1-arm-linux-gnueabihf.tar.gz"},
@@ -89,6 +99,7 @@ SHA256_SUMS = {
     "6b163cef7de4beb07b8cb3347095e0d76a584019b1891135cd1268a1f05b9d88": {"tag": "v24.0.1", "tarball": "bitcoin-24.0.1-riscv64-linux-gnu.tar.gz"},
     "e2f751512f3c0f00eb68ba946d9c829e6cf99422a61e8f5e0a7c109c318674d0": {"tag": "v24.0.1", "tarball": "bitcoin-24.0.1-x86_64-apple-darwin.tar.gz"},
     "49df6e444515d457ea0b885d66f521f2a26ca92ccf73d5296082e633544253bf": {"tag": "v24.0.1", "tarball": "bitcoin-24.0.1-x86_64-linux-gnu.tar.gz"},
+    "97de6e2a4d91531c057537e83bb7e72b1cf9ab777601eb481f3f4a6d9e7b9c67": {"tag": "v24.0.1", "tarball": "bitcoin-24.0.1-win64.zip"},
 
     "3a7bdd959a0b426624f63f394f25e5b7769a5a2f96f8126dcc2ea53f3fa5212b": {"tag": "v25.0", "tarball": "bitcoin-25.0-aarch64-linux-gnu.tar.gz"},
     "e537c8630b05e63242d979c3004f851fd73c2a10b5b4fdbb161788427c7b3c0f": {"tag": "v25.0", "tarball": "bitcoin-25.0-arm-linux-gnueabihf.tar.gz"},
@@ -98,6 +109,7 @@ SHA256_SUMS = {
     "fe6e347a66043946920c72c9c4afca301968101e6b82fb90a63d7885ebcceb32": {"tag": "v25.0", "tarball": "bitcoin-25.0-riscv64-linux-gnu.tar.gz"},
     "5708fc639cdfc27347cccfd50db9b73b53647b36fb5f3a4a93537cbe8828c27f": {"tag": "v25.0", "tarball": "bitcoin-25.0-x86_64-apple-darwin.tar.gz"},
     "33930d432593e49d58a9bff4c30078823e9af5d98594d2935862788ce8a20aec": {"tag": "v25.0", "tarball": "bitcoin-25.0-x86_64-linux-gnu.tar.gz"},
+    "c0d22e9d37d0238215676af1c4e358c8af3a43fe7a25c57499b4c66ca80381da": {"tag": "v25.0", "tarball": "bitcoin-25.0-win64.zip"},
 
     "7fa582d99a25c354d23e371a5848bd9e6a79702870f9cbbf1292b86e647d0f4e": {"tag": "v28.0", "tarball": "bitcoin-28.0-aarch64-linux-gnu.tar.gz"},
     "e004b7910bedd6dd18b6c52b4eef398d55971da666487a82cd48708d2879727e": {"tag": "v28.0", "tarball": "bitcoin-28.0-arm-linux-gnueabihf.tar.gz"},
@@ -106,11 +118,6 @@ SHA256_SUMS = {
     "6ee1a520b638132a16725020146abea045db418ce91c02493f02f541cd53062a": {"tag": "v28.0", "tarball": "bitcoin-28.0-riscv64-linux-gnu.tar.gz"},
     "77e931bbaaf47771a10c376230bf53223f5380864bad3568efc7f4d02e40a0f7": {"tag": "v28.0", "tarball": "bitcoin-28.0-x86_64-apple-darwin.tar.gz"},
     "7fe294b02b25b51acb8e8e0a0eb5af6bbafa7cd0c5b0e5fcbb61263104a82fbc": {"tag": "v28.0", "tarball": "bitcoin-28.0-x86_64-linux-gnu.tar.gz"},
-
-    "bff531650dcf859c27d8428dc5f98f3f93d9b6d54e4c1401e0ea9651f1edd7a3": {"tag": "v22.0", "tarball": "bitcoin-22.0-win64.zip"},
-    "e16fdbdc4ee953969df1ce8f82380e9c61658b1a64801bd21e2e87063e93bc6a": {"tag": "v23.0", "tarball": "bitcoin-23.0-win64.zip"},
-    "97de6e2a4d91531c057537e83bb7e72b1cf9ab777601eb481f3f4a6d9e7b9c67": {"tag": "v24.0.1", "tarball": "bitcoin-24.0.1-win64.zip"},
-    "c0d22e9d37d0238215676af1c4e358c8af3a43fe7a25c57499b4c66ca80381da": {"tag": "v25.0", "tarball": "bitcoin-25.0-win64.zip"},
     "f2974a7df505cff14ca92dd7a23ba7e47f1b97ae7e7a12a6fc2f5f5c0a66ca10": {"tag": "v28.0", "tarball": "bitcoin-28.0-win64.zip"},
 }
 
@@ -142,7 +149,7 @@ def download_binary(tag, args) -> int:
         platform = "osx64"
     tarball = 'bitcoin-{tag}-{platform}.tar.gz'.format(
         tag=tag[1:], platform=platform)
-    if platform == "win64" and tag >= "v22.0":
+    if platform == "win64":
         tarball = 'bitcoin-{tag}-{platform}.zip'.format(
             tag=tag[1:], platform=platform)
     tarballUrl = 'https://bitcoincore.org/{bin_path}/{tarball}'.format(
@@ -169,7 +176,7 @@ def download_binary(tag, args) -> int:
     print("Checksum matched")
 
     # Extract tarball
-    if platform == "win64" and tag >= "v22.0":
+    if platform == "win64":
         # Handle zip files for Windows
         import zipfile
         with zipfile.ZipFile(tarball, 'r') as zip_ref:
