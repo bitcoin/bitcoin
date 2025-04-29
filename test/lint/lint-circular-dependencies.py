@@ -21,6 +21,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "qt/transactiontablemodel -> qt/walletmodel -> qt/transactiontablemodel",
     "wallet/wallet -> wallet/walletdb -> wallet/wallet",
     "kernel/coinstats -> validation -> kernel/coinstats",
+    "versionbits -> versionbits_impl -> versionbits",
 
     # Temporary, removed in followup https://github.com/bitcoin/bitcoin/pull/24230
     "index/base -> node/context -> net_processing -> index/blockfilterindex -> index/base",
