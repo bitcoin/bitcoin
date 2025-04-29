@@ -38,7 +38,7 @@ void initialize_wallet_bdb_parser()
     g_setup = testing_setup.get();
 }
 
-FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
+FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser) EXCLUSIVE_LOCKS_REQUIRED(!wallet::cs_db)
 {
     const auto wallet_path = g_setup->m_args.GetDataDirNet() / "fuzzed_wallet.dat";
 
