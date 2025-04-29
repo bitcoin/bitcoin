@@ -367,7 +367,7 @@ CNode* CConnman::FindNode(const CService& addr)
 
 bool CConnman::AlreadyConnectedToAddress(const CAddress& addr)
 {
-    return FindNode(static_cast<CNetAddr>(addr)) || FindNode(addr.ToStringAddrPort());
+    return FindNode(static_cast<CNetAddr>(addr));
 }
 
 bool CConnman::CheckIncomingNonce(uint64_t nonce)
