@@ -61,7 +61,6 @@ void CheckUniqueFileid(const BerkeleyEnvironment& env, const std::string& filena
     }
 }
 
-RecursiveMutex cs_db;
 std::map<std::string, std::weak_ptr<BerkeleyEnvironment>> g_dbenvs GUARDED_BY(cs_db); //!< Map from directory name to db environment.
 } // namespace
 
@@ -80,7 +79,7 @@ bool WalletDatabaseFileId::operator==(const WalletDatabaseFileId& rhs) const
  */
 std::shared_ptr<BerkeleyEnvironment> GetBerkeleyEnv(const fs::path& env_directory, bool use_shared_memory)
 {
-    LOCK(cs_db);
+    AssertLockHeld(cs_db);
     auto inserted = g_dbenvs.emplace(fs::PathToString(env_directory), std::weak_ptr<BerkeleyEnvironment>());
     if (inserted.second) {
         auto env = std::make_shared<BerkeleyEnvironment>(env_directory, use_shared_memory);
@@ -138,6 +137,7 @@ BerkeleyEnvironment::BerkeleyEnvironment(const fs::path& dir_path, bool use_shar
 
 BerkeleyEnvironment::~BerkeleyEnvironment()
 {
+    AssertLockNotHeld(cs_db);
     LOCK(cs_db);
     g_dbenvs.erase(strPath);
     Close();
@@ -351,6 +351,7 @@ void BerkeleyEnvironment::CheckpointLSN(const std::string& strFile)
 BerkeleyDatabase::~BerkeleyDatabase()
 {
     if (env) {
+        AssertLockNotHeld(cs_db);
         LOCK(cs_db);
         env->CloseDb(m_filename);
         assert(!m_db);
@@ -376,6 +377,7 @@ void BerkeleyDatabase::Open()
     unsigned int nFlags = DB_THREAD | DB_CREATE;
 
     {
+        AssertLockNotHeld(cs_db);
         LOCK(cs_db);
         bilingual_str open_err;
         if (!env->Open(open_err))
@@ -463,7 +465,7 @@ void BerkeleyBatch::Close()
 void BerkeleyEnvironment::CloseDb(const fs::path& filename)
 {
     {
-        LOCK(cs_db);
+        AssertLockHeld(cs_db);
         auto it = m_databases.find(filename);
         assert(it != m_databases.end());
         BerkeleyDatabase& database = it->second.get();
@@ -494,6 +496,7 @@ void BerkeleyEnvironment::ReloadDbEnv()
     }
     // Close the individual Db's
     for (const fs::path& filename : filenames) {
+        LOCK(cs_db);
         CloseDb(filename);
     }
     // Reset the environment
@@ -514,6 +517,7 @@ DbTxn* BerkeleyEnvironment::TxnBegin(int flags)
 
 bool BerkeleyDatabase::Rewrite(const char* pszSkip)
 {
+    AssertLockNotHeld(cs_db);
     while (true) {
         {
             LOCK(cs_db);
@@ -609,6 +613,7 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
     if (!fDbEnvInit)
         return;
     {
+        AssertLockNotHeld(cs_db);
         LOCK(cs_db);
         bool no_dbs_accessed = true;
         for (auto& db_it : m_databases) {
@@ -679,6 +684,7 @@ bool BerkeleyDatabase::Backup(const std::string& strDest) const
     while (true)
     {
         {
+            AssertLockNotHeld(cs_db);
             LOCK(cs_db);
             if (m_refcount <= 0)
             {
@@ -713,16 +719,19 @@ bool BerkeleyDatabase::Backup(const std::string& strDest) const
 
 void BerkeleyDatabase::Flush()
 {
+    AssertLockNotHeld(cs_db);
     env->Flush(false);
 }
 
 void BerkeleyDatabase::Close()
 {
+    AssertLockNotHeld(cs_db);
     env->Flush(true);
 }
 
 void BerkeleyDatabase::ReloadDbEnv()
 {
+    AssertLockNotHeld(cs_db);
     env->ReloadDbEnv();
 }
 
@@ -925,6 +934,7 @@ bool BerkeleyBatch::ErasePrefix(std::span<const std::byte> prefix)
 
 void BerkeleyDatabase::AddRef()
 {
+    AssertLockNotHeld(cs_db);
     LOCK(cs_db);
     if (m_refcount < 0) {
         m_refcount = 1;
@@ -935,6 +945,7 @@ void BerkeleyDatabase::AddRef()
 
 void BerkeleyDatabase::RemoveRef()
 {
+    AssertLockNotHeld(cs_db);
     LOCK(cs_db);
     m_refcount--;
     if (env) env->m_db_in_use.notify_all();
@@ -950,6 +961,7 @@ std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, con
     fs::path data_file = BDBDataFile(path);
     std::unique_ptr<BerkeleyDatabase> db;
     {
+        AssertLockNotHeld(cs_db);
         LOCK(cs_db); // Lock env.m_databases until insert in BerkeleyDatabase constructor
         fs::path data_filename = data_file.filename();
         std::shared_ptr<BerkeleyEnvironment> env = GetBerkeleyEnv(data_file.parent_path(), options.use_shared_memory);

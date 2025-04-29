@@ -10,6 +10,7 @@
 #include <common/system.h>
 #include <serialize.h>
 #include <streams.h>
+#include <sync.h>
 #include <util/fs.h>
 #include <wallet/db.h>
 
@@ -33,6 +34,10 @@ class Dbc;
 #define BDB_DB_FILE_ID_LEN 20 /* Unique file ID length. */
 
 namespace wallet {
+    
+    namespace {
+        RecursiveMutex cs_db;
+    }
 
 struct WalletDatabaseFileId {
     uint8_t value[BDB_DB_FILE_ID_LEN];
@@ -59,7 +64,7 @@ public:
 
     explicit BerkeleyEnvironment(const fs::path& env_directory, bool use_shared_memory);
     BerkeleyEnvironment();
-    ~BerkeleyEnvironment();
+    ~BerkeleyEnvironment() EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
     void Reset();
 
     bool IsMock() const { return fMockDb; }
@@ -68,17 +73,17 @@ public:
 
     bool Open(bilingual_str& error);
     void Close();
-    void Flush(bool fShutdown);
+    void Flush(bool fShutdown) EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
     void CheckpointLSN(const std::string& strFile);
 
-    void CloseDb(const fs::path& filename);
-    void ReloadDbEnv();
+    void CloseDb(const fs::path& filename) EXCLUSIVE_LOCKS_REQUIRED(cs_db);
+    void ReloadDbEnv() EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
 
     DbTxn* TxnBegin(int flags);
 };
 
 /** Get BerkeleyEnvironment given a directory path. */
-std::shared_ptr<BerkeleyEnvironment> GetBerkeleyEnv(const fs::path& env_directory, bool use_shared_memory);
+std::shared_ptr<BerkeleyEnvironment> GetBerkeleyEnv(const fs::path& env_directory, bool use_shared_memory) EXCLUSIVE_LOCKS_REQUIRED(cs_db);
 
 class BerkeleyBatch;
 
@@ -91,40 +96,40 @@ public:
     BerkeleyDatabase() = delete;
 
     /** Create DB handle to real database */
-    BerkeleyDatabase(std::shared_ptr<BerkeleyEnvironment> env, fs::path filename, const DatabaseOptions& options);
+    BerkeleyDatabase(std::shared_ptr<BerkeleyEnvironment> env, fs::path filename, const DatabaseOptions& options) EXCLUSIVE_LOCKS_REQUIRED(cs_db);
 
-    ~BerkeleyDatabase() override;
+    ~BerkeleyDatabase() override EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
 
     /** Open the database if it is not already opened. */
-    void Open() override;
+    void Open() override EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
 
     /** Rewrite the entire database on disk, with the exception of key pszSkip if non-zero
      */
-    bool Rewrite(const char* pszSkip=nullptr) override;
+    bool Rewrite(const char* pszSkip=nullptr) override EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
 
     /** Indicate that a new database user has begun using the database. */
-    void AddRef() override;
+    void AddRef() override EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
     /** Indicate that database user has stopped using the database and that it could be flushed or closed. */
-    void RemoveRef() override;
+    void RemoveRef() override EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
 
     /** Back up the entire database to a file.
      */
-    bool Backup(const std::string& strDest) const override;
+    bool Backup(const std::string& strDest) const override EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
 
     /** Make sure all changes are flushed to database file.
      */
-    void Flush() override;
+    void Flush() override EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
     /** Flush to the database file and close the database.
      *  Also close the environment if no other databases are open in it.
      */
-    void Close() override;
+    void Close() override EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
     /* flush the wallet passively (TRY_LOCK)
        ideal to be called periodically */
     bool PeriodicFlush() override;
 
     void IncrementUpdateCounter() override;
 
-    void ReloadDbEnv() override;
+    void ReloadDbEnv() override EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
 
     /** Verifies the environment and database file */
     bool Verify(bilingual_str& error);
@@ -219,7 +224,7 @@ std::string BerkeleyDatabaseVersion();
 bool BerkeleyDatabaseSanityCheck();
 
 //! Return object giving access to Berkeley database at specified path.
-std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
+std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error) EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_BDB_H

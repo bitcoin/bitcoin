@@ -38,6 +38,14 @@ void initialize_wallet_bdb_parser()
     g_setup = testing_setup.get();
 }
 
+std::unique_ptr<BerkeleyDatabase> CreateDatabase(const fs::path& wallet_path,
+    const DatabaseOptions& options,
+    DatabaseStatus& status,
+    bilingual_str& error) EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
+{
+return MakeBerkeleyDatabase(wallet_path, options, status, error);
+}
+
 FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
 {
     const auto wallet_path = g_setup->m_args.GetDataDirNet() / "fuzzed_wallet.dat";
@@ -61,7 +69,7 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
     bool bdb_ro_err = false;
     bool bdb_ro_strict_err = false;
 #endif
-    auto db{MakeBerkeleyRODatabase(wallet_path, options, status, error)};
+    auto db{CreateDatabase(wallet_path, options, status, error)};
     if (db) {
         assert(DumpWallet(g_setup->m_args, *db, error));
     } else {
