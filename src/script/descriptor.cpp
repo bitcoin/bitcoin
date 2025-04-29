@@ -1423,16 +1423,16 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
             apostrophe = last == '\'';
         }
     }
-    uint32_t p;
-    if (!ParseUInt32(std::string(elem.begin(), elem.end()), &p)) {
-        error = strprintf("Key path value '%s' is not a valid uint32", std::string(elem.begin(), elem.end()));
+    const auto p{ToIntegral<uint32_t>(std::string_view{elem.begin(), elem.end()})};
+    if (!p) {
+        error = strprintf("Key path value '%s' is not a valid uint32", std::string_view{elem.begin(), elem.end()});
         return std::nullopt;
-    } else if (p > 0x7FFFFFFFUL) {
-        error = strprintf("Key path value %u is out of range", p);
+    } else if (*p > 0x7FFFFFFFUL) {
+        error = strprintf("Key path value %u is out of range", *p);
         return std::nullopt;
     }
 
-    return std::make_optional<uint32_t>(p | (((uint32_t)hardened) << 31));
+    return std::make_optional<uint32_t>(*p | (((uint32_t)hardened) << 31));
 }
 
 /**
@@ -1821,7 +1821,9 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         auto threshold = Expr(expr);
         uint32_t thres;
         std::vector<std::vector<std::unique_ptr<PubkeyProvider>>> providers; // List of multipath expanded pubkeys
-        if (!ParseUInt32(std::string(threshold.begin(), threshold.end()), &thres)) {
+        if (const auto maybe_thres{ToIntegral<uint32_t>(std::string_view{threshold.begin(), threshold.end()})}) {
+            thres = *maybe_thres;
+        } else {
             error = strprintf("Multi threshold '%s' is not valid", std::string(threshold.begin(), threshold.end()));
             return {};
         }
