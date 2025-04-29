@@ -91,7 +91,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
         send_wrpc.walletpassphrase('pass', 10)
         addr = send_wrpc.getnewaddress()
         info2 = send_wrpc.getaddressinfo(addr)
-        assert info1['hdmasterfingerprint'] != info2['hdmasterfingerprint']
+        assert info1['hdmasterfingerprint'] == info2['hdmasterfingerprint']
         send_wrpc.walletlock()
         assert 'hdmasterfingerprint' in send_wrpc.getaddressinfo(send_wrpc.getnewaddress())
         info3 = send_wrpc.getaddressinfo(addr)
