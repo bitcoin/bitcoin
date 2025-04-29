@@ -149,7 +149,9 @@ QString BitcoinUnits::formatWithPrivacy(Unit unit, const CAmount& amount, Separa
     } else {
         value = format(unit, amount, false, separators, true);
     }
-    return value + QString(" ") + shortName(unit);
+    value += QString(" ") + shortName(unit);
+    value.replace(QChar(THIN_SP_CP), QString(THIN_SP_HTML));
+    return QString("<span style='white-space: nowrap;'>%1</span>").arg(value);
 }
 
 bool BitcoinUnits::parse(Unit unit, const QString& value, CAmount* val_out)
