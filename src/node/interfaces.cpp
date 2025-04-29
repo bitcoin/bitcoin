@@ -971,32 +971,7 @@ public:
 
     std::optional<BlockRef> waitTipChanged(uint256 current_tip, MillisecondsDouble timeout) override
     {
-        Assume(timeout >= 0ms); // No internal callers should use a negative timeout
-        if (timeout < 0ms) timeout = 0ms;
-        if (timeout > std::chrono::years{100}) timeout = std::chrono::years{100}; // Upper bound to avoid UB in std::chrono
-        auto deadline{std::chrono::steady_clock::now() + timeout};
-        {
-            WAIT_LOCK(notifications().m_tip_block_mutex, lock);
-            // For callers convenience, wait longer than the provided timeout
-            // during startup for the tip to be non-null. That way this function
-            // always returns valid tip information when possible and only
-            // returns null when shutting down, not when timing out.
-            notifications().m_tip_block_cv.wait(lock, [&]() EXCLUSIVE_LOCKS_REQUIRED(notifications().m_tip_block_mutex) {
-                return notifications().TipBlock() || chainman().m_interrupt;
-            });
-            if (chainman().m_interrupt) return {};
-            // At this point TipBlock is set, so continue to wait until it is
-            // different then `current_tip` provided by caller.
-            notifications().m_tip_block_cv.wait_until(lock, deadline, [&]() EXCLUSIVE_LOCKS_REQUIRED(notifications().m_tip_block_mutex) {
-                return Assume(notifications().TipBlock()) != current_tip || chainman().m_interrupt;
-            });
-        }
-
-        if (chainman().m_interrupt) return {};
-
-        // Must release m_tip_block_mutex before getTip() locks cs_main, to
-        // avoid deadlocks.
-        return getTip();
+        return WaitTipChanged(chainman(), notifications(), current_tip, timeout);
     }
 
     std::unique_ptr<BlockTemplate> createNewBlock(const BlockCreateOptions& options) override
