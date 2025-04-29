@@ -238,6 +238,10 @@ void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t 
 /* Return a new block template when fees rise to a certain threshold or after a new tip; return nullopt if timeout is reached. */
 std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainman, KernelNotifications& kernel_notifications, CTxMemPool* mempool, const uint256& prev_block_hash,
                                                       const std::vector<CAmount>& tx_fees, const BlockWaitOptions& options, const BlockAssembler::Options& assemble_options);
+
+/* Waits for the connected tip to change until timeout has elapsed. During node initialization, this will wait until the tip is connected (regardless of `timeout`).
+ * Returns the current tip hash, or nullopt if the node is shutting down. */
+std::optional<uint256> WaitTipChanged(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const uint256& current_tip, MillisecondsDouble& timeout);
 } // namespace node
 
 #endif // BITCOIN_NODE_MINER_H
