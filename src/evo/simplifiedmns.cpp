@@ -72,8 +72,7 @@ std::string CSimplifiedMNListEntry::ToString() const
 
 UniValue CSimplifiedMNListEntry::ToJson(bool extended) const
 {
-    UniValue obj;
-    obj.setObject();
+    UniValue obj(UniValue::VOBJ);
     obj.pushKV("nVersion", nVersion);
     obj.pushKV("nType", ToUnderlying(nType));
     obj.pushKV("proRegTxHash", proRegTxHash.ToString());
@@ -239,8 +238,7 @@ bool CSimplifiedMNListDiff::BuildQuorumChainlockInfo(const llmq::CQuorumManager&
 
 UniValue CSimplifiedMNListDiff::ToJson(bool extended) const
 {
-    UniValue obj;
-    obj.setObject();
+    UniValue obj(UniValue::VOBJ);
 
     obj.pushKV("nVersion", nVersion);
     obj.pushKV("baseBlockHash", baseBlockHash.ToString());

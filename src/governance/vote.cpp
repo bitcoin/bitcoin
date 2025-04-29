@@ -99,13 +99,10 @@ std::string CGovernanceVote::ToString(const CDeterministicMNList& tip_mn_list) c
 {
     auto dmn = tip_mn_list.GetMNByCollateral(masternodeOutpoint);
     int voteWeight = dmn != nullptr ? GetMnType(dmn->nType).voting_weight : 0;
-    std::ostringstream ostr;
-    ostr << masternodeOutpoint.ToStringShort() << ":"
-         << nTime << ":"
-         << CGovernanceVoting::ConvertOutcomeToString(GetOutcome()) << ":"
-         << CGovernanceVoting::ConvertSignalToString(GetSignal()) << ":"
-         << voteWeight;
-    return ostr.str();
+    return strprintf("%s:%d:%s:%s:%d",
+        masternodeOutpoint.ToStringShort(), nTime,
+        CGovernanceVoting::ConvertOutcomeToString(GetOutcome()), CGovernanceVoting::ConvertSignalToString(GetSignal()),
+        voteWeight);
 }
 
 void CGovernanceVote::Relay(PeerManager& peerman, const CMasternodeSync& mn_sync, const CDeterministicMNList& tip_mn_list) const

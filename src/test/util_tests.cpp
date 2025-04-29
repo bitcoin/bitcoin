@@ -1828,4 +1828,26 @@ BOOST_AUTO_TEST_CASE(clearshrink_test)
     }
 }
 
+BOOST_AUTO_TEST_CASE(padding_test)
+{
+    /* By default strings will be padded to the left */
+    BOOST_CHECK_EQUAL(PadString("example", 8), " example");
+
+    /* Check padding works on the correct side */
+    BOOST_CHECK_EQUAL(PadString("example", 8, /*left=*/true),  " example");
+    BOOST_CHECK_EQUAL(PadString("example", 8, /*left=*/false), "example ");
+
+    /* Padding lesser than the string size should return the string */
+    BOOST_CHECK_EQUAL(PadString("example", 6), "example");
+
+    /* Padding equal to the string size should return the string */
+    BOOST_CHECK_EQUAL(PadString("example", 7), "example");
+
+    /* Padding an empty string with zero length should return an empty string */
+    BOOST_CHECK(PadString("", 0).empty());
+
+    /* An empty string should be padded if non-zero length specified */
+    BOOST_CHECK_EQUAL(PadString("", 1), " ");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

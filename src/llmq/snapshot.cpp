@@ -23,8 +23,7 @@ static const std::string DB_QUORUM_SNAPSHOT = "llmq_S";
 
 UniValue CQuorumSnapshot::ToJson() const
 {
-    UniValue obj;
-    obj.setObject();
+    UniValue obj(UniValue::VOBJ);
     UniValue activeQ(UniValue::VARR);
     for (const bool h : activeQuorumMembers) {
         // cppcheck-suppress useStlAlgorithm
@@ -43,8 +42,7 @@ UniValue CQuorumSnapshot::ToJson() const
 
 UniValue CQuorumRotationInfo::ToJson() const
 {
-    UniValue obj;
-    obj.setObject();
+    UniValue obj(UniValue::VOBJ);
     obj.pushKV("extraShare", extraShare);
 
     obj.pushKV("quorumSnapshotAtHMinusC", quorumSnapshotAtHMinusC.ToJson());

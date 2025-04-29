@@ -57,6 +57,12 @@ void ReplaceAll(std::string& in_out, const std::string& search, const std::strin
     return std::string(RemovePrefixView(str, prefix));
 }
 
+[[nodiscard]] inline std::string PadString(std::string str, std::string::size_type size, bool left = true)
+{
+    if (size <= str.size()) return str;
+    return left ? std::string(size - str.size(), ' ').append(str) : str.append(std::string(size - str.size(), ' '));
+}
+
 /**
  * Join all container items. Typically used to concatenate strings but accepts
  * containers with elements of any type.

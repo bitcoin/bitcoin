@@ -87,9 +87,7 @@ void NetFulfilledRequestStore::Clear()
 
 std::string NetFulfilledRequestStore::ToString() const
 {
-    std::ostringstream info;
-    info << "Nodes with fulfilled requests: " << (int)mapFulfilledRequests.size();
-    return info.str();
+    return strprintf("Nodes with fulfilled requests: %d", mapFulfilledRequests.size());
 }
 
 void CNetFulfilledRequestManager::DoMaintenance()

@@ -37,8 +37,7 @@ std::string CDeterministicMNState::ToString() const
 
 UniValue CDeterministicMNState::ToJson(MnType nType) const
 {
-    UniValue obj;
-    obj.setObject();
+    UniValue obj(UniValue::VOBJ);
     obj.pushKV("version", nVersion);
     obj.pushKV("service", addr.ToStringAddrPort());
     obj.pushKV("registeredHeight", nRegisteredHeight);
@@ -69,8 +68,7 @@ UniValue CDeterministicMNState::ToJson(MnType nType) const
 
 UniValue CDeterministicMNStateDiff::ToJson(MnType nType) const
 {
-    UniValue obj;
-    obj.setObject();
+    UniValue obj(UniValue::VOBJ);
     if (fields & Field_nVersion) {
         obj.pushKV("version", state.nVersion);
     }

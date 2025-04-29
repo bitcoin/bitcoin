@@ -129,9 +129,6 @@ std::vector<uint256> CMasternodeMetaMan::GetAndClearDirtyGovernanceObjectHashes(
 
 std::string MasternodeMetaStore::ToString() const
 {
-    std::ostringstream info;
     LOCK(cs);
-    info << "Masternodes: meta infos object count: " << (int)metaInfos.size() <<
-         ", nDsqCount: " << (int)nDsqCount;
-    return info.str();
+    return strprintf("Masternodes: meta infos object count: %d, nDsqCount: %d", metaInfos.size(), nDsqCount);
 }
