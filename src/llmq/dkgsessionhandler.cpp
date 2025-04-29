@@ -549,6 +549,17 @@ void CDKGSessionHandler::HandleDKGRound(CConnman& connman, PeerManager& peerman)
         return changed;
     });
 
+    if (params.size == 1) {
+        auto finalCommitment = curSession->FinalizeSingleCommitment();
+        if (!finalCommitment.IsNull()) { // it can be null only if we are not member
+            if (auto inv_opt = quorumBlockProcessor.AddMineableCommitment(finalCommitment); inv_opt.has_value()) {
+                peerman.RelayInv(inv_opt.value());
+            }
+        }
+        WaitForNextPhase(QuorumPhase::Initialized, QuorumPhase::Contribute, curQuorumHash);
+        return;
+    }
+
     const auto tip_mn_list = m_dmnman.GetListAtChainTip();
     utils::EnsureQuorumConnections(params, connman, m_dmnman, m_sporkman, m_qsnapman, tip_mn_list, pQuorumBaseBlockIndex,
                                    curSession->myProTxHash, /* is_masternode = */ m_mn_activeman != nullptr);

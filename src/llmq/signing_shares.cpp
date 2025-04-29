@@ -778,6 +778,25 @@ void CSigSharesManager::TryRecoverSig(PeerManager& peerman, const CQuorumCPtr& q
             return;
         }
 
+        if (quorum->params.size == 1) {
+            if (sigSharesForSignHash->empty()) {
+                LogPrint(BCLog::LLMQ_SIGS, /* Continued */
+                         "CSigSharesManager::%s -- impossible to recover single-node signature - no shares yet. id=%s, "
+                         "msgHash=%s\n",
+                         __func__, id.ToString(), msgHash.ToString());
+                return;
+            }
+            const auto& sigShare = sigSharesForSignHash->begin()->second;
+            CBLSSignature recoveredSig = sigShare.sigShare.Get();
+            LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- recover single-node signature. id=%s, msgHash=%s\n",
+                     __func__, id.ToString(), msgHash.ToString());
+
+            auto rs = std::make_shared<CRecoveredSig>(quorum->params.type, quorum->qc->quorumHash, id, msgHash,
+                                                      recoveredSig);
+            sigman.ProcessRecoveredSig(rs, peerman);
+            return; // end of single-quorum processing
+        }
+
         sigSharesForRecovery.reserve((size_t) quorum->params.threshold);
         idsForRecovery.reserve((size_t) quorum->params.threshold);
         for (auto it = sigSharesForSignHash->begin(); it != sigSharesForSignHash->end() && sigSharesForRecovery.size() < size_t(quorum->params.threshold); ++it) {
@@ -1524,6 +1543,37 @@ std::optional<CSigShare> CSigSharesManager::CreateSigShare(const CQuorumCPtr& qu
         return std::nullopt;
     }
 
+    if (quorum->params.size == 1) {
+        int memberIdx = quorum->GetMemberIndex(activeMasterNodeProTxHash);
+        if (memberIdx == -1) {
+            // this should really not happen (IsValidMember gave true)
+            return std::nullopt;
+        }
+
+        CSigShare sigShare(quorum->params.type, quorum->qc->quorumHash, id, msgHash, uint16_t(memberIdx), {});
+        uint256 signHash = sigShare.buildSignHash();
+
+        // TODO: This one should be SIGN by QUORUM key, not by OPERATOR key
+        // see TODO in CDKGSession::FinalizeSingleCommitment for details
+        sigShare.sigShare.Set(m_mn_activeman->Sign(signHash, bls::bls_legacy_scheme.load()), bls::bls_legacy_scheme.load());
+
+        if (!sigShare.sigShare.Get().IsValid()) {
+            LogPrintf("CSigSharesManager::%s -- failed to sign sigShare. signHash=%s, id=%s, msgHash=%s, time=%s\n",
+                      __func__, signHash.ToString(), sigShare.getId().ToString(), sigShare.getMsgHash().ToString(),
+                      t.count());
+            return std::nullopt;
+        }
+
+        sigShare.UpdateKey();
+
+        LogPrint(BCLog::LLMQ_SIGS, /* Continued */
+                 "CSigSharesManager::%s -- created sigShare. signHash=%s, id=%s, msgHash=%s, llmqType=%d, quorum=%s, "
+                 "time=%s\n",
+                 __func__, signHash.ToString(), sigShare.getId().ToString(), sigShare.getMsgHash().ToString(),
+                 ToUnderlying(quorum->params.type), quorum->qc->quorumHash.ToString(), t.count());
+
+        return sigShare;
+    }
     const CBLSSecretKey& skShare = quorum->GetSkShare();
     if (!skShare.IsValid()) {
         LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- we don't have our skShare for quorum %s\n", __func__, quorum->qc->quorumHash.ToString());

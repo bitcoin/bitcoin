@@ -175,7 +175,8 @@ static RPCHelpMan quorum_list_extended()
     };
 }
 
-static UniValue BuildQuorumInfo(const llmq::CQuorumBlockProcessor& quorum_block_processor, const llmq::CQuorumCPtr& quorum, bool includeMembers, bool includeSkShare)
+static UniValue BuildQuorumInfo(const llmq::CQuorumBlockProcessor& quorum_block_processor,
+                                const llmq::CQuorumCPtr& quorum, bool includeMembers, bool includeSkShare)
 {
     UniValue ret(UniValue::VOBJ);
 
@@ -206,9 +207,13 @@ static UniValue BuildQuorumInfo(const llmq::CQuorumBlockProcessor& quorum_block_
             mo.pushKV("pubKeyOperator", dmn->pdmnState->pubKeyOperator.ToString());
             mo.pushKV("valid", quorum->qc->validMembers[i]);
             if (quorum->qc->validMembers[i]) {
-                CBLSPublicKey pubKey = quorum->GetPubKeyShare(i);
-                if (pubKey.IsValid()) {
-                    mo.pushKV("pubKeyShare", pubKey.ToString());
+                if (quorum->params.size == 1) {
+                    mo.pushKV("pubKeyShare", dmn->pdmnState->pubKeyOperator.ToString());
+                } else {
+                    CBLSPublicKey pubKey = quorum->GetPubKeyShare(i);
+                    if (pubKey.IsValid()) {
+                        mo.pushKV("pubKeyShare", pubKey.ToString());
+                    }
                 }
             }
             membersArr.push_back(mo);
