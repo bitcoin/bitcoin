@@ -252,7 +252,10 @@ RPCHelpMan encryptwallet()
         throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Failed to encrypt the wallet.");
     }
 
-    return "wallet encrypted; The keypool has been flushed and a new HD seed was generated (if you are using HD). You need to make a new backup or write down the new seed (mnemonic).";
+    if (pwallet->IsHDEnabled()) {
+        return "wallet encrypted; If you will forget passphrase you will lose access to your funds. Be sure that you have backup of your seed or mnemonic.";
+    }
+    return "wallet encrypted; The keypool has been flushed. You need to make a new backup.";
 },
     };
 }
