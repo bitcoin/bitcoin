@@ -250,9 +250,11 @@ std::string ThreadName(const char* exe_name);
 std::string LogEscape(const kj::StringTree& string, size_t max_size);
 
 using ProcessId = int;
+using SocketId = int;
+constexpr SocketId SocketError{-1};
 
 //! Callback type used by SpawnProcess below.
-using FdToArgsFn = std::function<std::vector<std::string>(int fd)>;
+using FdToArgsFn = std::function<std::vector<std::string>(SocketId fd)>;
 
 //! Spawn a new process that communicates with the current process over a socket
 //! pair. Returns pid through an output argument, and file descriptor for the
@@ -261,7 +263,7 @@ using FdToArgsFn = std::function<std::vector<std::string>(int fd)>;
 //! It must not rely on child pid/state, and must return the command line
 //! arguments that should be used to execute the process. Embed the remote file
 //! descriptor number in whatever format the child process expects.
-int SpawnProcess(ProcessId& pid, FdToArgsFn&& fd_to_args);
+SocketId SpawnProcess(ProcessId& pid, FdToArgsFn&& fd_to_args);
 
 //! Call execvp with vector args.
 //! Not safe to call in a post-fork child of a multi-threaded process.

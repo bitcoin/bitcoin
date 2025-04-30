@@ -44,7 +44,7 @@ int main(int argc, char** argv)
         std::cout << "Usage: mpprinter <fd>\n";
         return 1;
     }
-    int fd;
+    mp::SocketId fd;
     if (std::from_chars(argv[1], argv[1] + strlen(argv[1]), fd).ec != std::errc{}) {
         std::cerr << argv[1] << " is not a number or is larger than an int\n";
         return 1;
