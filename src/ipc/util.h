@@ -21,7 +21,6 @@ namespace mp {
 // v14. Having these allows Bitcoin Core changes to be decoupled from
 // libmultiprocess changes so they don't have to be reviewed in a single PR.
 class EventLoop;
-using ProcessId = int;
 using SocketId = int;
 constexpr SocketId SocketError{-1};
 

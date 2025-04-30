@@ -183,7 +183,7 @@ void ExecProcess(const std::vector<std::string>& args)
     }
 }
 
-int WaitProcess(int pid)
+int WaitProcess(ProcessId pid)
 {
     int status;
     if (::waitpid(pid, &status, /*options=*/0) != pid) {
