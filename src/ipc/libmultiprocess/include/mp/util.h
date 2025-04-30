@@ -12,6 +12,8 @@
 #include <cstring>
 #include <exception>
 #include <functional>
+#include <kj/async-io.h>
+#include <kj/memory.h>
 #include <kj/string-tree.h>
 #include <mutex>
 #include <string>
@@ -249,6 +251,8 @@ std::string ThreadName(const char* exe_name);
 //! Escape binary string for use in log so it doesn't trigger unicode decode
 //! errors in python unit tests.
 std::string LogEscape(const kj::StringTree& string, size_t max_size);
+
+using Stream = kj::Own<kj::AsyncIoStream>;
 
 using ProcessId = int;
 using SocketId = int;

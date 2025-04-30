@@ -53,7 +53,7 @@ int main(int argc, char** argv)
     mp::SocketId socket{mp::StartSpawned(argv[1])};
     mp::EventLoop loop("mpcalculator", LogPrint);
     std::unique_ptr<Init> init = std::make_unique<InitImpl>();
-    mp::ServeStream<InitInterface>(loop, socket, *init);
+    mp::ServeStream<InitInterface>(loop, mp::MakeStream(loop.m_io_context, socket), *init);
     loop.loop();
     return 0;
 }

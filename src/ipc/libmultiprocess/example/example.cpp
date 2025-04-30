@@ -32,7 +32,7 @@ static auto Spawn(mp::EventLoop& loop, const std::string& process_argv0, const s
         path.append(new_exe_name);
         return {path.string(), std::move(info)};
     });
-    return std::make_tuple(mp::ConnectStream<InitInterface>(loop, socket), pid);
+    return std::make_tuple(mp::ConnectStream<InitInterface>(loop, mp::MakeStream(loop.m_io_context, socket)), pid);
 }
 
 static void LogPrint(mp::LogMessage log_data)
