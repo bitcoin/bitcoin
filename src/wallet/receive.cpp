@@ -282,7 +282,7 @@ bool CWallet::IsTrusted(const CWalletTx& wtx, std::set<uint256>& trusted_parents
     int nDepth = wtx.GetDepthInMainChain();
     if (nDepth >= 1) return true;
     if (nDepth < 0) return false;
-    if (wtx.IsLockedByInstantSend()) return true;
+    if (IsTxLockedByInstantSend(wtx)) return true;
     // using wtx's cached debit
     if (!m_spend_zero_conf_change || !wtx.IsFromMe(ISMINE_ALL)) return false;
 
@@ -329,7 +329,7 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, const bool avoid_reuse
             const int tx_depth{wtx.GetDepthInMainChain()};
             const CAmount tx_credit_mine{wtx.GetAvailableCredit(/* fUseCache */ true, ISMINE_SPENDABLE | reuse_filter)};
             const CAmount tx_credit_watchonly{wtx.GetAvailableCredit(/* fUseCache */ true, ISMINE_WATCH_ONLY | reuse_filter)};
-            if (is_trusted && ((tx_depth >= min_depth) || (fAddLocked && wtx.IsLockedByInstantSend()))) {
+            if (is_trusted && ((tx_depth >= min_depth) || (fAddLocked && IsTxLockedByInstantSend(wtx)))) {
                 ret.m_mine_trusted += tx_credit_mine;
                 ret.m_watchonly_trusted += tx_credit_watchonly;
             }
@@ -371,7 +371,7 @@ std::map<CTxDestination, CAmount> CWallet::GetAddressBalances() const
                 continue;
 
             int nDepth = wtx.GetDepthInMainChain();
-            if ((nDepth < (wtx.IsFromMe(ISMINE_ALL) ? 0 : 1)) && !wtx.IsLockedByInstantSend())
+            if ((nDepth < (wtx.IsFromMe(ISMINE_ALL) ? 0 : 1)) && !IsTxLockedByInstantSend(wtx))
                 continue;
 
             for (unsigned int i = 0; i < wtx.tx->vout.size(); i++)

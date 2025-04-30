@@ -58,13 +58,17 @@ bool HaveKey(const SigningProvider& wallet, const CKey& key)
     return wallet.HaveKey(key.GetPubKey().GetID()) || wallet.HaveKey(key2.GetPubKey().GetID());
 }
 
-static void WalletTxToJSON(interfaces::Chain& chain, const CWalletTx& wtx, UniValue& entry)
+static void WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx, UniValue& entry)
+    EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
+    AssertLockHeld(wallet.cs_wallet);
+
+    interfaces::Chain& chain = wallet.chain();
     int confirms = wtx.GetDepthInMainChain();
     bool fLocked = chain.isInstantSendLockedTx(wtx.GetHash());
     bool chainlock = false;
     if (confirms > 0) {
-        chainlock = wtx.IsChainLocked();
+        chainlock = wallet.IsTxChainLocked(wtx);
     }
     entry.pushKV("confirmations", confirms);
     entry.pushKV("instantlock", fLocked || chainlock);
@@ -586,7 +590,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
             || !wallet.chain().checkFinalTx(*wtx.tx)) {
             continue;
         }
-        if (depth < min_depth && !(fAddLocked && wtx.IsLockedByInstantSend())) continue;
+        if (depth < min_depth && !(fAddLocked && wallet.IsTxLockedByInstantSend(wtx))) continue;
 
         for (const CTxOut& txout : wtx.tx->vout) {
             CTxDestination address;
@@ -993,7 +997,7 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
         const CWalletTx& wtx = pairWtx.second;
 
         int nDepth = wtx.GetDepthInMainChain();
-        if ((nDepth < nMinDepth) && !(fAddLocked && wtx.IsLockedByInstantSend()))
+        if ((nDepth < nMinDepth) && !(fAddLocked && wallet.IsTxLockedByInstantSend(wtx)))
             continue;
 
         // Coinbase with less than 1 confirmation is no longer in the main chain
@@ -1245,14 +1249,14 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
             entry.pushKV("vout", s.vout);
             entry.pushKV("fee", ValueFromAmount(-nFee));
             if (fLong)
-                WalletTxToJSON(wallet.chain(), wtx, entry);
+                WalletTxToJSON(wallet, wtx, entry);
             entry.pushKV("abandoned", wtx.isAbandoned());
             ret.push_back(entry);
         }
     }
 
     // Received
-    if (listReceived.size() > 0 && ((wtx.GetDepthInMainChain() >= nMinDepth) || wtx.IsLockedByInstantSend()))
+    if (listReceived.size() > 0 && ((wtx.GetDepthInMainChain() >= nMinDepth) || wallet.IsTxLockedByInstantSend(wtx)))
     {
         for (const COutputEntry& r : listReceived)
         {
@@ -1292,7 +1296,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
             }
             entry.pushKV("vout", r.vout);
             if (fLong)
-                WalletTxToJSON(wallet.chain(), wtx, entry);
+                WalletTxToJSON(wallet, wtx, entry);
             ret.push_back(entry);
         }
     }
@@ -1664,7 +1668,7 @@ static RPCHelpMan gettransaction()
     if (wtx.IsFromMe(filter))
         entry.pushKV("fee", ValueFromAmount(nFee));
 
-    WalletTxToJSON(pwallet->chain(), wtx, entry);
+    WalletTxToJSON(*pwallet, wtx, entry);
 
     UniValue details(UniValue::VARR);
     ListTransactions(*pwallet, wtx, 0, false, details, filter, nullptr /* filter_label */);
