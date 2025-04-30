@@ -8,10 +8,14 @@
 #include <tinyformat.h>
 #include <util/strencodings.h>
 
+#include <array>
 #include <cstdint>
 #include <functional>
+#include <kj/async-io.h>
+#include <kj/debug.h>
 #include <mp/util.h>
 #include <mp/version.h>
+#include <sys/socket.h>
 
 namespace mp {
 // Definitions that can be deleted when libmultiprocess subtree is updated to
@@ -21,6 +25,19 @@ namespace mp {
 using ProcessId = int;
 using SocketId = int;
 constexpr SocketId SocketError{-1};
+
+inline std::array<SocketId, 2> SocketPair()
+{
+    int pair[2];
+    KJ_SYSCALL(socketpair(AF_UNIX, SOCK_STREAM, 0, pair));
+    return {pair[0], pair[1]};
+}
+
+using Stream = SocketId;
+inline Stream MakeStream(kj::AsyncIoContext& io_context, SocketId socket)
+{
+    return socket;
+}
 
 using ConnectInfo = std::string;
 inline SocketId StartSpawned(const ConnectInfo& connect_info)

@@ -121,16 +121,20 @@ void IpcPipeTest()
 //! Test ipc::Protocol connect() and serve() methods connecting over a socketpair.
 void IpcSocketPairTest()
 {
-    mp::SocketId fds[2];
-    BOOST_CHECK_EQUAL(socketpair(AF_UNIX, SOCK_STREAM, 0, fds), 0);
     std::unique_ptr<interfaces::Init> init{std::make_unique<TestInit>()};
     std::unique_ptr<ipc::Protocol> protocol{ipc::capnp::MakeCapnpProtocol("IpcSocketPairTest")};
+    mp::Stream client_stream;
     std::promise<void> promise;
     std::thread thread([&]() {
-        protocol->serve(fds[0], *init, [&] { promise.set_value(); });
+        protocol->serve(*init, [&] {
+            auto pair{mp::SocketPair()};
+            client_stream = protocol->makeStream(pair[0]);
+            promise.set_value();
+            return protocol->makeStream(pair[1]);
+        });
     });
     promise.get_future().wait();
-    std::unique_ptr<interfaces::Init> remote_init{protocol->connect(fds[1])};
+    std::unique_ptr<interfaces::Init> remote_init{protocol->connect(std::move(client_stream))};
     std::unique_ptr<interfaces::Echo> remote_echo{remote_init->makeEcho()};
     BOOST_CHECK_EQUAL(remote_echo->echo("echo test"), "echo test");
     remote_echo.reset();
@@ -161,7 +165,7 @@ void IpcSocketTest(const fs::path& datadir)
         std::string address{connect_address};
         mp::SocketId connect_fd{process->connect(datadir, "test_bitcoin", address)};
         BOOST_CHECK_EQUAL(address, connect_address);
-        std::unique_ptr<interfaces::Init> remote_init{protocol->connect(connect_fd)};
+        std::unique_ptr<interfaces::Init> remote_init{protocol->connect(protocol->makeStream(connect_fd))};
         std::unique_ptr<interfaces::Echo> remote_echo{remote_init->makeEcho()};
         BOOST_CHECK_EQUAL(remote_echo->echo("echo test"), "echo test");
     }};

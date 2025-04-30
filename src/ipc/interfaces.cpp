@@ -61,7 +61,7 @@ public:
     {
         const auto [pid, socket] = m_process->spawn(new_exe_name, m_process_argv0);
         LogDebug(::BCLog::IPC, "Process %s pid %i launched\n", new_exe_name, pid);
-        auto init = m_protocol->connect(socket);
+        auto init = m_protocol->connect(m_protocol->makeStream(socket));
         Ipc::addCleanup(*init, [this, new_exe_name, pid] {
             int status = m_process->waitSpawned(pid);
             LogDebug(::BCLog::IPC, "Process %s pid %i exited with status %i\n", new_exe_name, pid, status);
@@ -76,7 +76,7 @@ public:
             return false;
         }
         IgnoreCtrlC(strprintf("[%s] SIGINT received — waiting for parent to shut down.\n", m_exe_name));
-        m_protocol->serve(socket, m_init);
+        m_protocol->serve(m_init, [&] { return m_protocol->makeStream(socket); } );
         exit_status = EXIT_SUCCESS;
         return true;
     }
@@ -105,7 +105,7 @@ public:
         } else {
             fd = m_process->connect(gArgs.GetDataDirNet(), "bitcoin-node", address);
         }
-        return m_protocol->connect(fd);
+        return m_protocol->connect(m_protocol->makeStream(fd));
     }
     void listenAddress(std::string& address) override
     {

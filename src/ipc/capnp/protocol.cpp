@@ -23,7 +23,6 @@
 #include <mutex>
 #include <optional>
 #include <string>
-#include <sys/socket.h>
 #include <system_error>
 #include <thread>
 
@@ -78,10 +77,10 @@ public:
         if (m_loop_thread.joinable()) m_loop_thread.join();
         assert(!m_loop);
     };
-    std::unique_ptr<interfaces::Init> connect(mp::SocketId socket) override
+    std::unique_ptr<interfaces::Init> connect(mp::Stream stream) override
     {
         startLoop();
-        return mp::ConnectStream<messages::Init>(*m_loop, socket);
+        return mp::ConnectStream<messages::Init>(*m_loop, std::move(stream));
     }
     void listen(mp::SocketId listen_fd, interfaces::Init& init) override
     {
@@ -91,7 +90,7 @@ public:
         }
         mp::ListenConnections<messages::Init>(*m_loop, listen_fd, init);
     }
-    void serve(mp::SocketId socket, interfaces::Init& init, const std::function<void()>& ready_fn = {}) override
+    void serve(interfaces::Init& init, const std::function<mp::Stream()>& make_stream) override
     {
         assert(!m_loop);
         mp::g_thread_context.thread_name = mp::ThreadName(m_exe_name);
@@ -100,8 +99,7 @@ public:
             .log_level = GetRequestedIPCLogLevel()
         };
         m_loop.emplace(m_exe_name, std::move(opts), &m_context);
-        if (ready_fn) ready_fn();
-        mp::ServeStream<messages::Init>(*m_loop, socket, init);
+        mp::ServeStream<messages::Init>(*m_loop, make_stream(), init);
         m_parent_connection = &m_loop->m_incoming_connections.back();
         m_loop->loop();
         m_loop.reset();
@@ -115,6 +113,11 @@ public:
         m_loop->sync([&] {
             m_loop->m_incoming_connections.remove_if([this](mp::Connection& c) { return &c != m_parent_connection; });
         });
+    }
+    mp::Stream makeStream(mp::SocketId socket) override
+    {
+        startLoop();
+        return mp::MakeStream(m_loop->m_io_context, socket);
     }
     void addCleanup(std::type_index type, void* iface, std::function<void()> cleanup) override
     {
