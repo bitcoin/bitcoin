@@ -30,8 +30,6 @@ QList<BitcoinUnit> BitcoinUnits::availableUnits()
     unitlist.append(Unit::SAT);
     if (TonalUtils::Supported())
     {
-        unitlist.append(Unit::bTBC);
-        unitlist.append(Unit::sTBC);
         unitlist.append(Unit::TBC);
     }
     return unitlist;
