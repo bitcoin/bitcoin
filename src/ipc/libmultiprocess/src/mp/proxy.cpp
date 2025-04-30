@@ -193,6 +193,40 @@ void Connection::removeSyncCleanup(CleanupIt it)
     m_sync_cleanup_fns.erase(it);
 }
 
+#ifdef WIN32
+//! Synchronous socket output stream. Cap'n Proto library only provides limited
+//! support for synchronous IO. It provides `FdOutputStream` which wraps unix
+//! file descriptors and calls write() internally, and `HandleOutStream` which
+//! wraps windows HANDLE values and calls WriteFile() internally. This class
+//! just provides analogous functionality wrapping SOCKET values and calls
+//! send() internally.
+class SocketOutputStream : public kj::OutputStream {
+public:
+  explicit SocketOutputStream(SOCKET socket) : m_socket(socket) {}
+
+  void write(const void* buffer, size_t size) override;
+
+private:
+  SOCKET m_socket;
+};
+
+static constexpr size_t WRITE_CLAMP_SIZE = 1u << 30;  // 1GB clamp for Windows, like FdOutputStream
+
+void SocketOutputStream::write(const void* buffer, size_t size) {
+  const char* pos = reinterpret_cast<const char*>(buffer);
+
+  while (size > 0) {
+    int n = send(m_socket, pos, static_cast<int>(kj::min(size, WRITE_CLAMP_SIZE)), 0);
+
+    KJ_WIN32(n != SOCKET_ERROR, "send() failed");
+    KJ_ASSERT(n > 0, "send() returned zero.");
+
+    pos += n;
+    size -= n;
+  }
+}
+#endif
+
 void EventLoop::addAsyncCleanup(std::function<void()> fn)
 {
     const Lock lock(m_mutex);
@@ -228,6 +262,10 @@ EventLoop::EventLoop(const char* exe_name, LogOptions log_opts, void* context)
     m_post_stream = kj::mv(pipe.ends[1]);
     KJ_IF_MAYBE(fd, m_post_stream->getFd()) {
         m_post_writer = kj::heap<kj::FdOutputStream>(*fd);
+#ifdef WIN32
+    } else KJ_IF_MAYBE(handle, m_post_stream->getWin32Handle()) {
+        m_post_writer = kj::heap<SocketOutputStream>(reinterpret_cast<SOCKET>(*handle));
+#endif
     } else {
         throw std::logic_error("Could not get file descriptor for new pipe.");
     }
