@@ -71,34 +71,35 @@ void IpcLogFn(mp::LogMessage message)
 class CapnpProtocol : public Protocol
 {
 public:
+    CapnpProtocol(const char* exe_name) : m_exe_name{exe_name} {}
     ~CapnpProtocol() noexcept(true)
     {
         m_loop_ref.reset();
         if (m_loop_thread.joinable()) m_loop_thread.join();
         assert(!m_loop);
     };
-    std::unique_ptr<interfaces::Init> connect(int fd, const char* exe_name) override
+    std::unique_ptr<interfaces::Init> connect(int fd) override
     {
-        startLoop(exe_name);
+        startLoop();
         return mp::ConnectStream<messages::Init>(*m_loop, fd);
     }
-    void listen(int listen_fd, const char* exe_name, interfaces::Init& init) override
+    void listen(int listen_fd, interfaces::Init& init) override
     {
-        startLoop(exe_name);
+        startLoop();
         if (::listen(listen_fd, /*backlog=*/5) != 0) {
             throw std::system_error(errno, std::system_category());
         }
         mp::ListenConnections<messages::Init>(*m_loop, listen_fd, init);
     }
-    void serve(int fd, const char* exe_name, interfaces::Init& init, const std::function<void()>& ready_fn = {}) override
+    void serve(int fd, interfaces::Init& init, const std::function<void()>& ready_fn = {}) override
     {
         assert(!m_loop);
-        mp::g_thread_context.thread_name = mp::ThreadName(exe_name);
+        mp::g_thread_context.thread_name = mp::ThreadName(m_exe_name);
         mp::LogOptions opts = {
             .log_fn = IpcLogFn,
             .log_level = GetRequestedIPCLogLevel()
         };
-        m_loop.emplace(exe_name, std::move(opts), &m_context);
+        m_loop.emplace(m_exe_name, std::move(opts), &m_context);
         if (ready_fn) ready_fn();
         mp::ServeStream<messages::Init>(*m_loop, fd, init);
         m_parent_connection = &m_loop->m_incoming_connections.back();
@@ -120,7 +121,7 @@ public:
         mp::ProxyTypeRegister::types().at(type)(iface).cleanup_fns.emplace_back(std::move(cleanup));
     }
     Context& context() override { return m_context; }
-    void startLoop(const char* exe_name)
+    void startLoop()
     {
         if (m_loop) return;
         std::promise<void> promise;
@@ -130,7 +131,7 @@ public:
                 .log_fn = IpcLogFn,
                 .log_level = GetRequestedIPCLogLevel()
             };
-            m_loop.emplace(exe_name, std::move(opts), &m_context);
+            m_loop.emplace(m_exe_name, std::move(opts), &m_context);
             m_loop_ref.emplace(*m_loop);
             promise.set_value();
             m_loop->loop();
@@ -138,6 +139,7 @@ public:
         });
         promise.get_future().wait();
     }
+    const char* m_exe_name;
     Context m_context;
     std::thread m_loop_thread;
     //! EventLoop object which manages I/O events for all connections.
@@ -151,6 +153,6 @@ public:
 };
 } // namespace
 
-std::unique_ptr<Protocol> MakeCapnpProtocol() { return std::make_unique<CapnpProtocol>(); }
+std::unique_ptr<Protocol> MakeCapnpProtocol(const char* exe_name) { return std::make_unique<CapnpProtocol>(exe_name); }
 } // namespace capnp
 } // namespace ipc

@@ -54,7 +54,7 @@ class IpcImpl : public interfaces::Ipc
 public:
     IpcImpl(const char* exe_name, const char* process_argv0, interfaces::Init& init)
         : m_exe_name(exe_name), m_process_argv0(process_argv0), m_init(init),
-          m_protocol(ipc::capnp::MakeCapnpProtocol()), m_process(ipc::MakeProcess())
+          m_protocol(ipc::capnp::MakeCapnpProtocol(exe_name)), m_process(ipc::MakeProcess())
     {
     }
     std::unique_ptr<interfaces::Init> spawnProcess(const char* new_exe_name) override
@@ -62,7 +62,7 @@ public:
         int pid;
         int fd = m_process->spawn(new_exe_name, m_process_argv0, pid);
         LogDebug(::BCLog::IPC, "Process %s pid %i launched\n", new_exe_name, pid);
-        auto init = m_protocol->connect(fd, m_exe_name);
+        auto init = m_protocol->connect(fd);
         Ipc::addCleanup(*init, [this, new_exe_name, pid] {
             int status = m_process->waitSpawned(pid);
             LogDebug(::BCLog::IPC, "Process %s pid %i exited with status %i\n", new_exe_name, pid, status);
@@ -77,7 +77,7 @@ public:
             return false;
         }
         IgnoreCtrlC(strprintf("[%s] SIGINT received — waiting for parent to shut down.\n", m_exe_name));
-        m_protocol->serve(fd, m_exe_name, m_init);
+        m_protocol->serve(fd, m_init);
         exit_status = EXIT_SUCCESS;
         return true;
     }
@@ -106,12 +106,12 @@ public:
         } else {
             fd = m_process->connect(gArgs.GetDataDirNet(), "bitcoin-node", address);
         }
-        return m_protocol->connect(fd, m_exe_name);
+        return m_protocol->connect(fd);
     }
     void listenAddress(std::string& address) override
     {
         int fd = m_process->bind(gArgs.GetDataDirNet(), m_exe_name, address);
-        m_protocol->listen(fd, m_exe_name, m_init);
+        m_protocol->listen(fd, m_init);
     }
     void disconnectIncoming() override
     {
