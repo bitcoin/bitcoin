@@ -52,7 +52,6 @@ class MaxUploadTest(BitcoinTestFramework):
         self.extra_args = [[
             f"-maxuploadtarget={UPLOAD_TARGET_MB}M",
         ]]
-        self.supports_cli = False
 
     def assert_uploadtarget_state(self, *, target_reached, serve_historical_blocks):
         """Verify the node's current upload target state via the `getnettotals` RPC call."""
