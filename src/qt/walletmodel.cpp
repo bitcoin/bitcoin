@@ -10,6 +10,7 @@
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 #include <qt/paymentserver.h>
+#include <qt/psbtoperationsdialog.h>
 #include <qt/recentrequeststablemodel.h>
 #include <qt/sendcoinsdialog.h>
 #include <qt/transactiontablemodel.h>
@@ -540,11 +541,9 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
             QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Can't draft transaction."));
             return false;
         }
-        // Serialize the PSBT
-        DataStream ssTx{};
-        ssTx << psbtx;
-        GUIUtil::setClipboard(EncodeBase64(ssTx.str()).c_str());
-        Q_EMIT message(tr("PSBT copied"), tr("Fee-bump PSBT copied to clipboard"), CClientUIInterface::MSG_INFORMATION | CClientUIInterface::MODAL);
+        auto dlg = new PSBTOperationsDialog(nullptr, this, m_client_model);
+        dlg->openWithPSBT(psbtx);
+        GUIUtil::ShowModalDialogAsynchronously(dlg, Qt::NonModal);
         return true;
     }
 
