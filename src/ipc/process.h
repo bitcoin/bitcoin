@@ -8,6 +8,7 @@
 #include <util/fs.h>
 
 #include <memory>
+#include <ipc/util.h>
 #include <string>
 
 namespace ipc {
@@ -25,10 +26,10 @@ public:
 
     //! Spawn process and return socket file descriptor for communicating with
     //! it.
-    virtual int spawn(const std::string& new_exe_name, const fs::path& argv0_path, int& pid) = 0;
+    virtual int spawn(const std::string& new_exe_name, const fs::path& argv0_path, mp::ProcessId& pid) = 0;
 
     //! Wait for spawned process to exit and return its exit code.
-    virtual int waitSpawned(int pid) = 0;
+    virtual int waitSpawned(mp::ProcessId pid) = 0;
 
     //! Parse command line and determine if current process is a spawned child
     //! process. If so, return true and a file descriptor for communicating

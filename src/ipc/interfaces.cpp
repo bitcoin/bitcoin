@@ -59,7 +59,7 @@ public:
     }
     std::unique_ptr<interfaces::Init> spawnProcess(const char* new_exe_name) override
     {
-        int pid;
+        mp::ProcessId pid;
         int fd = m_process->spawn(new_exe_name, m_process_argv0, pid);
         LogDebug(::BCLog::IPC, "Process %s pid %i launched\n", new_exe_name, pid);
         auto init = m_protocol->connect(fd);

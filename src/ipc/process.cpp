@@ -32,7 +32,7 @@ namespace {
 class ProcessImpl : public Process
 {
 public:
-    int spawn(const std::string& new_exe_name, const fs::path& argv0_path, int& pid) override
+    int spawn(const std::string& new_exe_name, const fs::path& argv0_path, mp::ProcessId& pid) override
     {
         return mp::SpawnProcess(pid, [&](int fd) {
             fs::path path = argv0_path;
@@ -41,7 +41,7 @@ public:
             return std::vector<std::string>{fs::PathToString(path), "-ipcfd", strprintf("%i", fd)};
         });
     }
-    int waitSpawned(int pid) override { return mp::WaitProcess(pid); }
+    int waitSpawned(mp::ProcessId pid) override { return mp::WaitProcess(pid); }
     bool checkSpawned(int argc, char* argv[], int& fd) override
     {
         // If this process was not started with a single -ipcfd argument, it is
