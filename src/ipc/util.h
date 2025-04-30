@@ -20,7 +20,6 @@ namespace mp {
 // Definitions that can be deleted when libmultiprocess subtree is updated to
 // v12. Having these allows Bitcoin Core changes to be decoupled from
 // libmultiprocess changes so they don't have to be reviewed in a single PR.
-using ProcessId = int;
 using SocketId = int;
 constexpr SocketId SocketError{-1};
 

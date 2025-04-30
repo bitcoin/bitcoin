@@ -249,6 +249,8 @@ std::string ThreadName(const char* exe_name);
 //! errors in python unit tests.
 std::string LogEscape(const kj::StringTree& string, size_t max_size);
 
+using ProcessId = int;
+
 //! Callback type used by SpawnProcess below.
 using FdToArgsFn = std::function<std::vector<std::string>(int fd)>;
 
@@ -259,7 +261,7 @@ using FdToArgsFn = std::function<std::vector<std::string>(int fd)>;
 //! It must not rely on child pid/state, and must return the command line
 //! arguments that should be used to execute the process. Embed the remote file
 //! descriptor number in whatever format the child process expects.
-int SpawnProcess(int& pid, FdToArgsFn&& fd_to_args);
+int SpawnProcess(ProcessId& pid, FdToArgsFn&& fd_to_args);
 
 //! Call execvp with vector args.
 //! Not safe to call in a post-fork child of a multi-threaded process.
@@ -267,7 +269,7 @@ int SpawnProcess(int& pid, FdToArgsFn&& fd_to_args);
 void ExecProcess(const std::vector<std::string>& args);
 
 //! Wait for a process to exit and return its exit code.
-int WaitProcess(int pid);
+int WaitProcess(ProcessId pid);
 
 inline char* CharCast(char* c) { return c; }
 inline char* CharCast(unsigned char* c) { return (char*)c; }
