@@ -24,6 +24,7 @@
 #include <kj/debug.h>
 #include <kj/exception.h>
 #include <kj/function.h>
+#include <kj/io.h>
 #include <kj/memory.h>
 #include <kj/string.h>
 #include <cstdint>
@@ -32,10 +33,8 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <sys/socket.h>
 #include <thread>
 #include <tuple>
-#include <unistd.h>
 #include <utility>
 #include <vector>
 
@@ -69,10 +68,20 @@ void EventLoopRef::reset(bool relock) MP_NO_TSA
         loop->m_num_refs -= 1;
         if (loop->done()) {
             loop->m_cv.notify_all();
-            int post_fd{loop->m_post_fd};
+            // Capture loop->m_post_writer pointer before releasing the lock.
+            // The pointer can't actually change before the write() call below,
+            // but copying it with the lock held instead of accessing it
+            // directly below prevents TSAN false positives because TSAN is
+            // unaware of socketpair write() synchronization and might falsely
+            // report the pointer being used in this thread and assigned in the
+            // other thread without synchronization between.
+            kj::OutputStream* post_writer{loop->m_post_writer.get()};
             loop_lock->unlock();
             char buffer = 0;
-            KJ_SYSCALL(write(post_fd, &buffer, 1)); // NOLINT(bugprone-suspicious-semicolon)
+            // It safe to access post_writer here because the loop can't
+            // exit until this write takes place. See "Intentionally do not
+            // break..."  comment in EventLoop::loop
+            post_writer->write(&buffer, 1);
             // By default, do not try to relock `loop_lock` after writing,
             // because the event loop could wake up and destroy itself and the
             // mutex might no longer exist.
@@ -206,10 +215,14 @@ EventLoop::EventLoop(const char* exe_name, LogOptions log_opts, void* context)
       m_log_opts(std::move(log_opts)),
       m_context(context)
 {
-    SocketId fds[2];
-    KJ_SYSCALL(socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
-    m_wait_fd = fds[0];
-    m_post_fd = fds[1];
+    auto pipe = m_io_context.provider->newTwoWayPipe();
+    m_wait_stream = kj::mv(pipe.ends[0]);
+    m_post_stream = kj::mv(pipe.ends[1]);
+    KJ_IF_MAYBE(fd, m_post_stream->getFd()) {
+        m_post_writer = kj::heap<kj::FdOutputStream>(*fd);
+    } else {
+        throw std::logic_error("Could not get file descriptor for new pipe.");
+    }
 }
 
 EventLoop::~EventLoop()
@@ -218,8 +231,8 @@ EventLoop::~EventLoop()
     const Lock lock(m_mutex);
     KJ_ASSERT(m_post_fn == nullptr);
     KJ_ASSERT(!m_async_fns);
-    KJ_ASSERT(m_wait_fd == SocketError);
-    KJ_ASSERT(m_post_fd == SocketError);
+    KJ_ASSERT(!m_wait_stream);
+    KJ_ASSERT(!m_post_stream);
     KJ_ASSERT(m_num_refs == 0);
 
     // Spin event loop. wait for any promises triggered by RPC shutdown.
@@ -239,9 +252,7 @@ void EventLoop::loop()
         m_async_fns.emplace();
     }
 
-    kj::Own<kj::AsyncIoStream> wait_stream{
-        m_io_context.lowLevelProvider->wrapSocketFd(m_wait_fd, kj::LowLevelAsyncIoProvider::TAKE_OWNERSHIP)};
-    int post_fd{m_post_fd};
+    kj::Own<kj::AsyncIoStream>& wait_stream{m_wait_stream};
     char buffer = 0;
     for (;;) {
         const size_t read_bytes = wait_stream->read(&buffer, 0, 1).wait(m_io_context.waitScope);
@@ -258,7 +269,7 @@ void EventLoop::loop()
             m_cv.notify_all();
         } else if (done()) {
             // Intentionally do not break if m_post_fn was set, even if done()
-            // would return true, to ensure that the EventLoopRef write(post_fd)
+            // would return true, to ensure that the post() m_post_writer->write()
             // call always succeeds and the loop does not exit between the time
             // that the done condition is set and the write call is made.
             break;
@@ -268,10 +279,10 @@ void EventLoop::loop()
     m_task_set.reset();
     MP_LOG(*this, Log::Info) << "EventLoop::loop bye.";
     wait_stream = nullptr;
-    KJ_SYSCALL(::close(post_fd));
     const Lock lock(m_mutex);
-    m_wait_fd = SocketError;
-    m_post_fd = SocketError;
+    m_post_writer = nullptr;
+    m_wait_stream = nullptr;
+    m_post_stream = nullptr;
     m_async_fns.reset();
     m_cv.notify_all();
 }
@@ -286,10 +297,9 @@ void EventLoop::post(kj::Function<void()> fn)
     EventLoopRef ref(*this, &lock);
     m_cv.wait(lock.m_lock, [this]() MP_REQUIRES(m_mutex) { return m_post_fn == nullptr; });
     m_post_fn = &fn;
-    int post_fd{m_post_fd};
     Unlock(lock, [&] {
         char buffer = 0;
-        KJ_SYSCALL(write(post_fd, &buffer, 1));
+        m_post_writer->write(&buffer, 1);
     });
     m_cv.wait(lock.m_lock, [this, &fn]() MP_REQUIRES(m_mutex) { return m_post_fn != &fn; });
 }

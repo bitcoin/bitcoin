@@ -18,6 +18,7 @@
 #include <cstdlib>
 #include <functional>
 #include <kj/function.h>
+#include <kj/io.h>
 #include <map>
 #include <memory>
 #include <optional>
@@ -311,11 +312,12 @@ public:
     //! Callback functions to run on async thread.
     std::optional<CleanupList> m_async_fns MP_GUARDED_BY(m_mutex);
 
-    //! Pipe read handle used to wake up the event loop thread.
-    SocketId m_wait_fd = SocketError;
+    //! Socket pair used to post and wait for wakeups to the event loop thread.
+    kj::Own<kj::AsyncIoStream> m_wait_stream;
+    kj::Own<kj::AsyncIoStream> m_post_stream;
 
-    //! Pipe write handle used to wake up the event loop thread.
-    SocketId m_post_fd = SocketError;
+    //! Synchronous writer used to write to m_post_stream.
+    kj::Own<kj::OutputStream> m_post_writer;
 
     //! Number of EventLoopRef instances referencing this event loop. This is a
     //! sum of the number of client and server objects (Connection, ProxyClient,
