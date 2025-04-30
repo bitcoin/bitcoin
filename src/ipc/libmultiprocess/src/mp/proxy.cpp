@@ -206,7 +206,7 @@ EventLoop::EventLoop(const char* exe_name, LogOptions log_opts, void* context)
       m_log_opts(std::move(log_opts)),
       m_context(context)
 {
-    int fds[2];
+    SocketId fds[2];
     KJ_SYSCALL(socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
     m_wait_fd = fds[0];
     m_post_fd = fds[1];
@@ -218,8 +218,8 @@ EventLoop::~EventLoop()
     const Lock lock(m_mutex);
     KJ_ASSERT(m_post_fn == nullptr);
     KJ_ASSERT(!m_async_fns);
-    KJ_ASSERT(m_wait_fd == -1);
-    KJ_ASSERT(m_post_fd == -1);
+    KJ_ASSERT(m_wait_fd == SocketError);
+    KJ_ASSERT(m_post_fd == SocketError);
     KJ_ASSERT(m_num_refs == 0);
 
     // Spin event loop. wait for any promises triggered by RPC shutdown.
@@ -270,8 +270,8 @@ void EventLoop::loop()
     wait_stream = nullptr;
     KJ_SYSCALL(::close(post_fd));
     const Lock lock(m_mutex);
-    m_wait_fd = -1;
-    m_post_fd = -1;
+    m_wait_fd = SocketError;
+    m_post_fd = SocketError;
     m_async_fns.reset();
     m_cv.notify_all();
 }

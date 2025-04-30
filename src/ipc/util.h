@@ -21,8 +21,6 @@ namespace mp {
 // v14. Having these allows Bitcoin Core changes to be decoupled from
 // libmultiprocess changes so they don't have to be reviewed in a single PR.
 class EventLoop;
-using SocketId = int;
-constexpr SocketId SocketError{-1};
 
 using Stream = SocketId;
 inline Stream MakeStream(EventLoop&, SocketId socket)

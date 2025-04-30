@@ -116,9 +116,9 @@ std::string LogEscape(const kj::StringTree& string, size_t max_size)
     return result;
 }
 
-int SpawnProcess(int& pid, FdToArgsFn&& fd_to_args)
+SocketId SpawnProcess(ProcessId& pid, FdToArgsFn&& fd_to_args)
 {
-    int fds[2];
+    SocketId fds[2];
     if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) != 0) {
         throw std::system_error(errno, std::system_category(), "socketpair");
     }

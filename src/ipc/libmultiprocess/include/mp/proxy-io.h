@@ -312,10 +312,10 @@ public:
     std::optional<CleanupList> m_async_fns MP_GUARDED_BY(m_mutex);
 
     //! Pipe read handle used to wake up the event loop thread.
-    int m_wait_fd = -1;
+    SocketId m_wait_fd = SocketError;
 
     //! Pipe write handle used to wake up the event loop thread.
-    int m_post_fd = -1;
+    SocketId m_post_fd = SocketError;
 
     //! Number of EventLoopRef instances referencing this event loop. This is a
     //! sum of the number of client and server objects (Connection, ProxyClient,
@@ -917,10 +917,10 @@ void ServeStream(EventLoop& loop, int fd, InitImpl& init)
         [] {});
 }
 
-//! Given listening socket file descriptor and an init object, handle incoming
+//! Given listening socket identifier and an init object, handle incoming
 //! connections and requests by calling methods on the Init object.
 template <typename InitInterface, typename InitImpl>
-void ListenConnections(EventLoop& loop, int fd, InitImpl& init, std::optional<size_t> max_connections = std::nullopt)
+void ListenConnections(EventLoop& loop, SocketId fd, InitImpl& init, std::optional<size_t> max_connections = std::nullopt)
 {
     loop.sync([&]() {
         auto listener{std::make_shared<Listener>(
