@@ -141,7 +141,6 @@ public:
     }
     const char* m_exe_name;
     Context m_context;
-    std::thread m_loop_thread;
     //! EventLoop object which manages I/O events for all connections.
     std::optional<mp::EventLoop> m_loop;
     //! Reference to the same EventLoop. Increments the loop’s refcount on
@@ -150,6 +149,7 @@ public:
     std::optional<mp::EventLoopRef> m_loop_ref;
     //! Connection to parent, if this is a child process spawned by a parent process.
     mp::Connection* m_parent_connection{nullptr};
+    std::thread m_loop_thread;
 };
 } // namespace
 
