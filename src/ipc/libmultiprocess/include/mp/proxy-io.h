@@ -308,11 +308,12 @@ public:
     //! Callback functions to run on async thread.
     std::optional<CleanupList> m_async_fns MP_GUARDED_BY(m_mutex);
 
-    //! Pipe read handle used to wake up the event loop thread.
-    int m_wait_fd = -1;
+    //! Socket pair used to post and wait for wakeups to the event loop thread.
+    kj::Own<kj::AsyncIoStream> m_wait_stream;
+    kj::Own<kj::AsyncIoStream> m_post_stream;
 
-    //! Pipe write handle used to wake up the event loop thread.
-    int m_post_fd = -1;
+    //! Synchronous writer used to write to m_post_stream.
+    kj::Own<kj::OutputStream> m_post_writer;
 
     //! Number of clients holding references to ProxyServerBase objects that
     //! reference this event loop.
