@@ -10,7 +10,7 @@
 namespace ipc {
 class Protocol;
 namespace capnp {
-std::unique_ptr<Protocol> MakeCapnpProtocol();
+std::unique_ptr<Protocol> MakeCapnpProtocol(const char* exe_name);
 } // namespace capnp
 } // namespace ipc
 
