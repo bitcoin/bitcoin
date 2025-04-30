@@ -30,12 +30,13 @@ BOOST_AUTO_TEST_CASE(parse_address_test)
         }
         BOOST_CHECK_EQUAL(address, expect_address);
     }};
-    check_address("unix", "unix:/var/empty/notexist/test_bitcoin.sock", "");
-    check_address("unix:", "unix:/var/empty/notexist/test_bitcoin.sock", "");
-    check_address("unix:path.sock", "unix:/var/empty/notexist/path.sock", "");
+    std::string prefix{fs::PathToString(datadir / "")};
+    check_address("unix", "unix:" + prefix + "test_bitcoin.sock", "");
+    check_address("unix:", "unix:" + prefix + "test_bitcoin.sock", "");
+    check_address("unix:path.sock", "unix:" + prefix + "path.sock", "");
     check_address("unix:0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.sock",
-                  "unix:/var/empty/notexist/0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.sock",
-                  "Unix address path \"/var/empty/notexist/0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.sock\" exceeded maximum socket path length");
+                  "unix:" + prefix + "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.sock",
+                  "Unix address path \"" + prefix + "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.sock\" exceeded maximum socket path length");
     check_address("invalid", "invalid", "Unrecognized address 'invalid'");
 }
 
