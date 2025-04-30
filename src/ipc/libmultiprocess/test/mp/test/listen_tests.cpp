@@ -108,7 +108,7 @@ public:
                   KJ_LOG(INFO, log.level, log.message);
                   if (log.level == mp::Log::Raise) throw std::runtime_error(log.message);
               });
-              client_promise.set_value(ConnectStream<messages::FooInterface>(loop, fd));
+              client_promise.set_value(ConnectStream<messages::FooInterface>(loop, MakeStream(loop, fd)));
               loop.loop();
           })
     {

@@ -42,6 +42,15 @@ namespace mp {
 
 thread_local ThreadContext g_thread_context; // NOLINT(bitcoin-nontrivial-threadlocal)
 
+Stream MakeStream(EventLoop&loop, SocketId socket)
+{
+    Stream stream;
+    loop.sync([&]() {
+        stream = loop.m_io_context.lowLevelProvider->wrapSocketFd(socket, kj::LowLevelAsyncIoProvider::TAKE_OWNERSHIP);
+    });
+    return stream;
+}
+
 void LoggingErrorHandler::taskFailed(kj::Exception&& exception)
 {
     KJ_LOG(ERROR, "Uncaught exception in daemonized task.", exception);
