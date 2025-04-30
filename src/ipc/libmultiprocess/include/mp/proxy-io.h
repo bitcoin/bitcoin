@@ -456,7 +456,7 @@ public:
     //! Capability::Client handles owned by ProxyClient objects), then schedules
     //! asynchronous cleanup functions to run in a worker thread (to run
     //! destructors of m_impl instances owned by ProxyServer objects).
-    ~Connection();
+    ~Connection() noexcept(false);
 
     //! Register synchronous cleanup function to run on event loop thread (with
     //! access to capnp thread local variables) when disconnect() is called.

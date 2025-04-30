@@ -101,7 +101,7 @@ void EventLoopRef::reset(bool relock) MP_NO_TSA
 
 ProxyContext::ProxyContext(Connection* connection) : connection(connection), loop{*connection->m_loop} {}
 
-Connection::~Connection()
+Connection::~Connection() noexcept(false)
 {
     // Connection destructor is always called on the event loop thread. If this
     // is a local disconnect, it will trigger I/O, so this needs to run on the
@@ -120,6 +120,31 @@ Connection::~Connection()
     // executing. In that case, Cap'n Proto will destroy the ProxyServer objects
     // after the calls finish.
     m_rpc_system.reset();
+
+    // shutdownWrite is needed on Windows so pending data in the m_stream socket
+    // will be sent instead of discarded when m_stream is destroyed. On unix,
+    // this doesn't seem to be needed because data is sent more reliably.
+    //
+    // Sending pending data is important if the connection is a socketpair
+    // because when one side of the socketpair is closed, the other side doesn't
+    // seem to receive any onDisconnect event. So it is important for the other
+    // side to instead receive Cap'n Proto "release" messages (see `struct
+    // Release` in capnp/rpc.capnp) from local Client objects being destroyed so
+    // the remote side can free resources and shut down cleanly. Without this,
+    // when one side of a socket pair is closed the other side may not receive
+    // these messages, preventing the remote side from freeing ProxyServer
+    // resources and shutting down cleanly.
+    try {
+        m_stream->shutdownWrite();
+    } catch (const kj::Exception& e) {
+        // Ignore ENOTCONN: on macOS/FreeBSD (unlike Linux), shutdown(SHUT_WR)
+        // returns ENOTCONN if the peer already closed the connection. This is
+        // expected when the destructor is triggered by a remote disconnect.
+        // Also ignore UNIMPLEMENTED: shutdownWrite() may not be supported on
+        // all stream types (e.g. streams that do not support half-close).
+        if (e.getType() != kj::Exception::Type::DISCONNECTED &&
+            e.getType() != kj::Exception::Type::UNIMPLEMENTED) throw;
+    }
 
     // ProxyClient cleanup handlers are in sync list, and ProxyServer cleanup
     // handlers are in the async list.
