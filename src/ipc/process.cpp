@@ -32,13 +32,13 @@ namespace {
 class ProcessImpl : public Process
 {
 public:
-    mp::SocketId spawn(const std::string& new_exe_name, const fs::path& argv0_path, mp::ProcessId& pid) override
+    std::tuple<mp::ProcessId, mp::SocketId> spawn(const std::string& new_exe_name, const fs::path& argv0_path) override
     {
-        return mp::SpawnProcess(pid, [&](int fd) {
+        return mp::SpawnProcess([&](mp::ConnectInfo info) {
             fs::path path = argv0_path;
             path.remove_filename();
             path /= fs::PathFromString(new_exe_name);
-            return std::vector<std::string>{fs::PathToString(path), "-ipcfd", strprintf("%i", fd)};
+            return std::vector<std::string>{fs::PathToString(path), "-ipcfd", std::move(info)};
         });
     }
     int waitSpawned(mp::ProcessId pid) override { return mp::WaitProcess(pid); }
@@ -56,11 +56,11 @@ public:
         // in combination with other arguments because the parent process
         // should be able to control the child process through the IPC protocol
         // without passing information out of band.
-        const auto maybe_fd{ToIntegral<int32_t>(argv[2])};
-        if (!maybe_fd) {
-            throw std::runtime_error(strprintf("Invalid -ipcfd number '%s'", argv[2]));
+        try {
+           socket = mp::StartSpawned(argv[2]);
+        } catch (const std::exception& e) {
+           throw std::runtime_error(strprintf("Invalid -ipcfd number '%s' (%s)", argv[2], e.what()));
         }
-        socket = *maybe_fd;
         return true;
     }
     mp::SocketId connect(const fs::path& data_dir,

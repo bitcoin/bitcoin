@@ -59,10 +59,9 @@ public:
     }
     std::unique_ptr<interfaces::Init> spawnProcess(const char* new_exe_name) override
     {
-        mp::ProcessId pid;
-        mp::SocketId fd = m_process->spawn(new_exe_name, m_process_argv0, pid);
+        const auto [pid, socket] = m_process->spawn(new_exe_name, m_process_argv0);
         LogDebug(::BCLog::IPC, "Process %s pid %i launched\n", new_exe_name, pid);
-        auto init = m_protocol->connect(fd);
+        auto init = m_protocol->connect(socket);
         Ipc::addCleanup(*init, [this, new_exe_name, pid] {
             int status = m_process->waitSpawned(pid);
             LogDebug(::BCLog::IPC, "Process %s pid %i exited with status %i\n", new_exe_name, pid, status);

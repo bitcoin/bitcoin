@@ -26,7 +26,7 @@ public:
 
     //! Spawn process and return socket file descriptor for communicating with
     //! it.
-    virtual mp::SocketId spawn(const std::string& new_exe_name, const fs::path& argv0_path, mp::ProcessId& pid) = 0;
+    virtual std::tuple<mp::ProcessId, mp::SocketId> spawn(const std::string& new_exe_name, const fs::path& argv0_path) = 0;
 
     //! Wait for spawned process to exit and return its exit code.
     virtual int waitSpawned(mp::ProcessId pid) = 0;
