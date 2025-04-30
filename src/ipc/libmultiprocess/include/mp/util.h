@@ -5,6 +5,7 @@
 #ifndef MP_UTIL_H
 #define MP_UTIL_H
 
+#include <array>
 #include <capnp/schema.h>
 #include <cassert>
 #include <cstddef>
@@ -269,6 +270,10 @@ std::tuple<ProcessId, SocketId> SpawnProcess(ConnectInfoToArgsFn&& connect_info_
 //! Initialize spawned child process using the ConnectInfo string passed to it,
 //! returning a socket id for communicating with the parent process.
 SocketId StartSpawned(const ConnectInfo& connect_info);
+
+//! Create a socket pair that can be used to communicate within a process or
+//! between parent and child processes.
+std::array<SocketId, 2> SocketPair();
 
 //! Start a process and return its process id. Caller should call WaitProcess
 //! on the returned id.
