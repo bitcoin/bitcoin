@@ -7,6 +7,7 @@
 
 #include <cerrno>
 #include <cstdio>
+#include <fcntl.h>
 #include <kj/common.h>
 #include <kj/debug.h>
 #include <kj/string-tree.h>
@@ -118,10 +119,7 @@ std::string LogEscape(const kj::StringTree& string, size_t max_size)
 
 std::tuple<ProcessId, SocketId> SpawnProcess(SpawnConnectInfoToArgsFn&& connect_info_to_args)
 {
-    SocketId fds[2];
-    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) != 0) {
-        throw std::system_error(errno, std::system_category(), "socketpair");
-    }
+    auto fds{SocketPair()};
 
     // Evaluate the callback and build the argv array before forking.
     //
@@ -131,6 +129,11 @@ std::tuple<ProcessId, SocketId> SpawnProcess(SpawnConnectInfoToArgsFn&& connect_
     // indefinitely. Precomputing arguments in the parent avoids this.
     const std::vector<std::string> args{connect_info_to_args(std::to_string(fds[0]))};
     const std::vector<char*> argv{MakeArgv(args)};
+
+    // Clear FD_CLOEXEC on fds[0] before forking so it survives exec in the child.
+    int fds0_flags;
+    KJ_SYSCALL(fds0_flags = fcntl(fds[0], F_GETFD));
+    KJ_SYSCALL(fcntl(fds[0], F_SETFD, fds0_flags & ~FD_CLOEXEC));
 
     ProcessId pid = fork();
     if (pid == -1) {
@@ -179,6 +182,15 @@ SocketId StartSpawned(const SpawnConnectInfo& connect_info)
         throw std::system_error(EINVAL, std::system_category(),
             std::string("StartSpawned: invalid connect_info '") + connect_info + "'");
     }
+}
+
+std::array<SocketId, 2> SocketPair()
+{
+    int pair[2];
+    KJ_SYSCALL(socketpair(AF_UNIX, SOCK_STREAM, 0, pair));
+    KJ_SYSCALL(fcntl(pair[0], F_SETFD, FD_CLOEXEC));
+    KJ_SYSCALL(fcntl(pair[1], F_SETFD, FD_CLOEXEC));
+    return {pair[0], pair[1]};
 }
 
 ProcessId StartProcess(const std::vector<std::string>& args)
