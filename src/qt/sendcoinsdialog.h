@@ -101,6 +101,7 @@ private Q_SLOTS:
     void removeEntry(SendCoinsEntry* entry);
     void useAvailableBalance(SendCoinsEntry* entry);
     void refreshBalance();
+    void updateFontForMoney();
     void coinControlFeatureChanged(bool);
     void coinControlButtonClicked();
     void coinControlChangeChecked(int);

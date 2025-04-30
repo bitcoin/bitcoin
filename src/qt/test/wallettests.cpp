@@ -170,7 +170,8 @@ void CompareBalance(WalletModel& walletModel, CAmount expected_balance, QLabel* 
     if (privacy) {
         balanceComparison = BitcoinUnits::formatWithPrivacy(unit, expected_balance, BitcoinUnits::SeparatorStyle::ALWAYS, false);
     } else {
-        balanceComparison = BitcoinUnits::formatHtmlWithUnit(unit, expected_balance, false, BitcoinUnits::SeparatorStyle::ALWAYS);
+        const QFont font_for_money = walletModel.getOptionsModel()->getFontForMoney();
+        balanceComparison = BitcoinUnits::formatHtmlWithUnit(font_for_money, unit, expected_balance, false, BitcoinUnits::SeparatorStyle::ALWAYS);
     }
     QCOMPARE(balance_label_to_check->text().trimmed(), balanceComparison);
 }

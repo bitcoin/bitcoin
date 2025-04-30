@@ -177,6 +177,7 @@ void PSBTOperationsDialog::updateTransactionDisplay() {
 
 QString PSBTOperationsDialog::renderTransaction(const PartiallySignedTransaction &psbtx)
 {
+    const QFont font_for_money = m_client_model->getOptionsModel()->getFontForMoney();
     QString tx_description;
     QLatin1String bullet_point(" * ");
     CAmount totalAmount = 0;
@@ -185,7 +186,7 @@ QString PSBTOperationsDialog::renderTransaction(const PartiallySignedTransaction
         ExtractDestination(out.scriptPubKey, address);
         totalAmount += out.nValue;
         tx_description.append(bullet_point).append(tr("Sends %1 to %2")
-            .arg(BitcoinUnits::formatHtmlWithUnit(BitcoinUnit::BTC, out.nValue))
+            .arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, BitcoinUnit::BTC, out.nValue))
             .arg(QString::fromStdString(EncodeDestination(address))));
         // Check if the address is one of ours
         if (m_wallet_model != nullptr && m_wallet_model->wallet().txoutIsMine(out)) tx_description.append(" (" + tr("own address") + ")");
@@ -199,7 +200,7 @@ QString PSBTOperationsDialog::renderTransaction(const PartiallySignedTransaction
         tx_description.append(tr("Unable to calculate transaction fee or total transaction amount."));
     } else {
         tx_description.append(tr("Pays transaction fee: "));
-        tx_description.append(BitcoinUnits::formatHtmlWithUnit(BitcoinUnit::BTC, *analysis.fee));
+        tx_description.append(BitcoinUnits::formatHtmlWithUnit(font_for_money, BitcoinUnit::BTC, *analysis.fee));
 
         // add total amount in all subdivision units
         tx_description.append("<hr />");
@@ -207,11 +208,11 @@ QString PSBTOperationsDialog::renderTransaction(const PartiallySignedTransaction
         for (const BitcoinUnits::Unit u : BitcoinUnits::availableUnits())
         {
             if(u != m_client_model->getOptionsModel()->getDisplayUnit()) {
-                alternativeUnits.append(BitcoinUnits::formatHtmlWithUnit(u, totalAmount));
+                alternativeUnits.append(BitcoinUnits::formatHtmlWithUnit(font_for_money, u, totalAmount));
             }
         }
         tx_description.append(QString("<b>%1</b>: <b>%2</b>").arg(tr("Total Amount"))
-            .arg(BitcoinUnits::formatHtmlWithUnit(m_client_model->getOptionsModel()->getDisplayUnit(), totalAmount)));
+            .arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, m_client_model->getOptionsModel()->getDisplayUnit(), totalAmount)));
         tx_description.append(QString("<br /><span style='font-size:10pt; font-weight:normal;'>(=%1)</span>")
             .arg(alternativeUnits.join(" " + tr("or") + " ")));
     }

@@ -122,7 +122,8 @@ CoinControlDialog::CoinControlDialog(CCoinControl& coin_control, WalletModel* _m
     {
         updateView();
         updateLabelLocked();
-        CoinControlDialog::updateLabels(m_coin_control, _model, this);
+        connect(_model->getOptionsModel(), &OptionsModel::fontForMoneyChanged, this, &CoinControlDialog::updateFontForMoney);
+        updateFontForMoney();
     }
 }
 
@@ -493,8 +494,12 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
 
     // actually update labels
     BitcoinUnit nDisplayUnit = BitcoinUnit::BTC;
+    QFont font_for_money;
     if (model && model->getOptionsModel())
+    {
         nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
+        font_for_money = model->getOptionsModel()->getFontForMoney();
+    }
 
     QLabel *l1 = dialog->findChild<QLabel *>("labelCoinControlQuantity");
     QLabel *l2 = dialog->findChild<QLabel *>("labelCoinControlAmount");
@@ -509,11 +514,11 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
 
     // stats
     l1->setText(QString::number(nQuantity));                                 // Quantity
-    l2->setText(BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, nAmount));        // Amount
-    l3->setText(BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, nPayFee));        // Fee
-    l4->setText(BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, nAfterFee));      // After Fee
+    l2->setText(BitcoinUnits::formatHtmlWithUnit(font_for_money, nDisplayUnit, nAmount));        // Amount
+    l3->setText(BitcoinUnits::formatHtmlWithUnit(font_for_money, nDisplayUnit, nPayFee));        // Fee
+    l4->setText(BitcoinUnits::formatHtmlWithUnit(font_for_money, nDisplayUnit, nAfterFee));      // After Fee
     l5->setText(((nBytes > 0) ? ASYMP_UTF8 : "") + QString::number(nBytes));        // Bytes
-    l8->setText(BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, nChange));        // Change
+    l8->setText(BitcoinUnits::formatHtmlWithUnit(font_for_money, nDisplayUnit, nChange));        // Change
     if (nPayFee > 0)
     {
         l3->setText(ASYMP_UTF8 + l3->text());
@@ -539,6 +544,18 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
     QLabel *label = dialog->findChild<QLabel *>("labelCoinControlInsuffFunds");
     if (label)
         label->setVisible(nChange < 0);
+}
+
+void CoinControlDialog::updateFontForMoney()
+{
+    if (!(model && model->getOptionsModel())) return;
+
+    updateLabels(m_coin_control, model, this);
+
+    const QFont font_for_money = model->getOptionsModel()->getFontForMoney();
+    for (QTreeWidgetItemIterator it(ui->treeWidget); *it; ++it) {
+        (*it)->setFont(COLUMN_AMOUNT, font_for_money);
+    }
 }
 
 void CoinControlDialog::changeEvent(QEvent* e)
@@ -675,6 +692,8 @@ void CoinControlDialog::updateView()
             if (ui->treeWidget->topLevelItem(i)->checkState(COLUMN_CHECKBOX) == Qt::PartiallyChecked)
                 ui->treeWidget->topLevelItem(i)->setExpanded(true);
     }
+
+    updateFontForMoney();
 
     // sort view
     sortView(sortColumn, sortOrder);
