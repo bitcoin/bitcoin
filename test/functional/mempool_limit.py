@@ -32,7 +32,6 @@ class MempoolLimitTest(BitcoinTestFramework):
             "-datacarriersize=100000",
             "-maxmempool=5",
         ]]
-        self.supports_cli = False
 
     def test_rbf_carveout_disallowed(self):
         node = self.nodes[0]
