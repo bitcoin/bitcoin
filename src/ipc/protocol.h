@@ -6,6 +6,7 @@
 #define BITCOIN_IPC_PROTOCOL_H
 
 #include <interfaces/init.h>
+#include <ipc/util.h>
 
 #include <functional>
 #include <memory>
@@ -32,12 +33,12 @@ public:
     //! up its own state (calling ProxyServer destructors, etc) on disconnect,
     //! and any client calls will just throw ipc::Exception errors after a
     //! disconnect.
-    virtual std::unique_ptr<interfaces::Init> connect(int fd) = 0;
+    virtual std::unique_ptr<interfaces::Init> connect(mp::SocketId fd) = 0;
 
     //! Listen for connections on provided socket descriptor, accept them, and
     //! handle requests on accepted connections. This method doesn't block, and
     //! performs I/O on a background thread.
-    virtual void listen(int listen_fd, interfaces::Init& init) = 0;
+    virtual void listen(mp::SocketId listen_fd, interfaces::Init& init) = 0;
 
     //! Handle requests on provided socket descriptor, forwarding them to the
     //! provided Init interface. Socket communication is handled on the
@@ -56,7 +57,7 @@ public:
     //! client connections from another thread as soon as the event loop is
     //! available, but should not be necessary in normal code which starts
     //! clients and servers independently.
-    virtual void serve(int fd, interfaces::Init& init, const std::function<void()>& ready_fn = {}) = 0;
+    virtual void serve(mp::SocketId fd, interfaces::Init& init, const std::function<void()>& ready_fn = {}) = 0;
 
     //! Disconnect any incoming connections that are still connected.
     virtual void disconnectIncoming() = 0;

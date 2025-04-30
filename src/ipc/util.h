@@ -15,6 +15,8 @@ namespace mp {
 // libmultiprocess changes so they don't have to be reviewed in a single PR.
 #if MP_MAJOR_VERSION < 12
 using ProcessId = int;
+using SocketId = int;
+constexpr SocketId SocketError{-1};
 #endif
 } // namespace mp
 

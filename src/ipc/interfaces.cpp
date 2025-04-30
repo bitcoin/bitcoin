@@ -60,7 +60,7 @@ public:
     std::unique_ptr<interfaces::Init> spawnProcess(const char* new_exe_name) override
     {
         mp::ProcessId pid;
-        int fd = m_process->spawn(new_exe_name, m_process_argv0, pid);
+        mp::SocketId fd = m_process->spawn(new_exe_name, m_process_argv0, pid);
         LogDebug(::BCLog::IPC, "Process %s pid %i launched\n", new_exe_name, pid);
         auto init = m_protocol->connect(fd);
         Ipc::addCleanup(*init, [this, new_exe_name, pid] {
@@ -72,19 +72,19 @@ public:
     bool startSpawnedProcess(int argc, char* argv[], int& exit_status) override
     {
         exit_status = EXIT_FAILURE;
-        int32_t fd = -1;
-        if (!m_process->checkSpawned(argc, argv, fd)) {
+        mp::SocketId socket{mp::SocketError};
+        if (!m_process->checkSpawned(argc, argv, socket)) {
             return false;
         }
         IgnoreCtrlC(strprintf("[%s] SIGINT received — waiting for parent to shut down.\n", m_exe_name));
-        m_protocol->serve(fd, m_init);
+        m_protocol->serve(socket, m_init);
         exit_status = EXIT_SUCCESS;
         return true;
     }
     std::unique_ptr<interfaces::Init> connectAddress(std::string& address) override
     {
         if (address.empty() || address == "0") return nullptr;
-        int fd;
+        mp::SocketId fd;
         if (address == "auto") {
             // Treat "auto" the same as "unix" except don't treat it an as error
             // if the connection is not accepted. Just return null so the caller
@@ -110,7 +110,7 @@ public:
     }
     void listenAddress(std::string& address) override
     {
-        int fd = m_process->bind(gArgs.GetDataDirNet(), m_exe_name, address);
+        mp::SocketId fd = m_process->bind(gArgs.GetDataDirNet(), m_exe_name, address);
         m_protocol->listen(fd, m_init);
     }
     void disconnectIncoming() override

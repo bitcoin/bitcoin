@@ -78,12 +78,12 @@ public:
         if (m_loop_thread.joinable()) m_loop_thread.join();
         assert(!m_loop);
     };
-    std::unique_ptr<interfaces::Init> connect(int fd) override
+    std::unique_ptr<interfaces::Init> connect(mp::SocketId socket) override
     {
         startLoop();
-        return mp::ConnectStream<messages::Init>(*m_loop, fd);
+        return mp::ConnectStream<messages::Init>(*m_loop, socket);
     }
-    void listen(int listen_fd, interfaces::Init& init) override
+    void listen(mp::SocketId listen_fd, interfaces::Init& init) override
     {
         startLoop();
         if (::listen(listen_fd, /*backlog=*/5) != 0) {
@@ -91,7 +91,7 @@ public:
         }
         mp::ListenConnections<messages::Init>(*m_loop, listen_fd, init);
     }
-    void serve(int fd, interfaces::Init& init, const std::function<void()>& ready_fn = {}) override
+    void serve(mp::SocketId socket, interfaces::Init& init, const std::function<void()>& ready_fn = {}) override
     {
         assert(!m_loop);
         mp::g_thread_context.thread_name = mp::ThreadName(m_exe_name);
@@ -101,7 +101,7 @@ public:
         };
         m_loop.emplace(m_exe_name, std::move(opts), &m_context);
         if (ready_fn) ready_fn();
-        mp::ServeStream<messages::Init>(*m_loop, fd, init);
+        mp::ServeStream<messages::Init>(*m_loop, socket, init);
         m_parent_connection = &m_loop->m_incoming_connections.back();
         m_loop->loop();
         m_loop.reset();
