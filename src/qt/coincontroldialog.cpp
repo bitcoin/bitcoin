@@ -122,6 +122,7 @@ CoinControlDialog::CoinControlDialog(CCoinControl& coin_control, WalletModel* _m
     {
         updateView();
         updateLabelLocked();
+        connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &CoinControlDialog::updateFontForMoney);
         connect(_model->getOptionsModel(), &OptionsModel::fontForMoneyChanged, this, &CoinControlDialog::updateFontForMoney);
         updateFontForMoney();
     }
@@ -498,7 +499,7 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
     if (model && model->getOptionsModel())
     {
         nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
-        font_for_money = model->getOptionsModel()->getFontForMoney();
+        font_for_money = model->getOptionsModel()->getFontForMoney(nDisplayUnit);
     }
 
     QLabel *l1 = dialog->findChild<QLabel *>("labelCoinControlQuantity");
@@ -552,7 +553,8 @@ void CoinControlDialog::updateFontForMoney()
 
     updateLabels(m_coin_control, model, this);
 
-    const QFont font_for_money = model->getOptionsModel()->getFontForMoney();
+    const BitcoinUnit display_unit = model->getOptionsModel()->getDisplayUnit();
+    const QFont font_for_money = model->getOptionsModel()->getFontForMoney(display_unit);
     for (QTreeWidgetItemIterator it(ui->treeWidget); *it; ++it) {
         (*it)->setFont(COLUMN_AMOUNT, font_for_money);
     }

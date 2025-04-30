@@ -80,8 +80,7 @@ void SendCoinsEntry::setModel(WalletModel *_model)
     if (_model && _model->getOptionsModel())
     {
         connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &SendCoinsEntry::updateDisplayUnit);
-        connect(_model->getOptionsModel(), &OptionsModel::fontForMoneyChanged, this, &SendCoinsEntry::updateFontForMoney);
-        updateFontForMoney();
+        connect(_model->getOptionsModel(), &OptionsModel::fontForMoneyChanged, this, &SendCoinsEntry::updateDisplayUnit);
     }
 
     clear();
@@ -223,14 +222,10 @@ void SendCoinsEntry::setFocus()
 void SendCoinsEntry::updateDisplayUnit()
 {
     if (model && model->getOptionsModel()) {
-        ui->payAmount->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
-    }
-}
-
-void SendCoinsEntry::updateFontForMoney()
-{
-    if (model && model->getOptionsModel()) {
-        ui->payAmount->setFontForMoney(model->getOptionsModel()->getFontForMoney());
+        const BitcoinUnit display_unit = model->getOptionsModel()->getDisplayUnit();
+        ui->payAmount->setDisplayUnit(display_unit);
+        const QFont font_for_money = model->getOptionsModel()->getFontForMoney(display_unit);
+        ui->payAmount->setFontForMoney(font_for_money);
     }
 }
 
