@@ -253,17 +253,22 @@ using ProcessId = int;
 using SocketId = int;
 constexpr SocketId SocketError{-1};
 
+//! Information about parent process passed to child process as a command-line
+//! argument. On unix this is the child socket fd number formatted as a string.
+using ConnectInfo = std::string;
+
 //! Callback type used by SpawnProcess below.
-using FdToArgsFn = std::function<std::vector<std::string>(SocketId fd)>;
+using ConnectInfoToArgsFn = std::function<std::vector<std::string>(const ConnectInfo&)>;
 
 //! Spawn a new process that communicates with the current process over a socket
-//! pair. Returns pid through an output argument, and file descriptor for the
-//! local side of the socket.
-//! The fd_to_args callback is invoked in the parent process before fork().
-//! It must not rely on child pid/state, and must return the command line
-//! arguments that should be used to execute the process. Embed the remote file
-//! descriptor number in whatever format the child process expects.
-SocketId SpawnProcess(ProcessId& pid, FdToArgsFn&& fd_to_args);
+//! pair. Calls connect_info_to_args callback with a connection string that
+//! needs to be passed to the child process, and executes the argv command line
+//! it returns. Returns child process id and socket id.
+std::tuple<ProcessId, SocketId> SpawnProcess(ConnectInfoToArgsFn&& connect_info_to_args);
+
+//! Initialize spawned child process using the ConnectInfo string passed to it,
+//! returning a socket id for communicating with the parent process.
+SocketId StartSpawned(const ConnectInfo& connect_info);
 
 //! Call execvp with vector args.
 //! Not safe to call in a post-fork child of a multi-threaded process.

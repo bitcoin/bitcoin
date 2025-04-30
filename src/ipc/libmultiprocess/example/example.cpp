@@ -19,20 +19,20 @@
 #include <string>
 #include <thread>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace fs = std::filesystem;
 
 static auto Spawn(mp::EventLoop& loop, const std::string& process_argv0, const std::string& new_exe_name)
 {
-    mp::ProcessId pid;
-    const mp::SocketId fd = mp::SpawnProcess(pid, [&](mp::SocketId fd) -> std::vector<std::string> {
+    const auto [pid, socket] = mp::SpawnProcess([&](mp::ConnectInfo info) -> std::vector<std::string> {
         fs::path path = process_argv0;
         path.remove_filename();
         path.append(new_exe_name);
-        return {path.string(), std::to_string(fd)};
+        return {path.string(), std::move(info)};
     });
-    return std::make_tuple(mp::ConnectStream<InitInterface>(loop, fd), pid);
+    return std::make_tuple(mp::ConnectStream<InitInterface>(loop, socket), pid);
 }
 
 static void LogPrint(mp::LogMessage log_data)

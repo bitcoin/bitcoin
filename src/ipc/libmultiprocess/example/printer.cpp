@@ -7,8 +7,7 @@
 #include <init.capnp.h>
 #include <init.capnp.proxy.h> // NOLINT(misc-include-cleaner) // IWYU pragma: keep
 
-#include <charconv>
-#include <cstring>
+#include <cstring> // IWYU pragma: keep
 #include <fstream>
 #include <iostream>
 #include <kj/async.h>
@@ -16,9 +15,10 @@
 #include <kj/memory.h>
 #include <memory>
 #include <mp/proxy-io.h>
+#include <mp/util.h>
 #include <stdexcept>
 #include <string>
-#include <system_error>
+#include <utility>
 
 class PrinterImpl : public Printer
 {
@@ -44,14 +44,10 @@ int main(int argc, char** argv)
         std::cout << "Usage: mpprinter <fd>\n";
         return 1;
     }
-    mp::SocketId fd;
-    if (std::from_chars(argv[1], argv[1] + strlen(argv[1]), fd).ec != std::errc{}) {
-        std::cerr << argv[1] << " is not a number or is larger than an int\n";
-        return 1;
-    }
+    mp::SocketId socket{mp::StartSpawned(argv[1])};
     mp::EventLoop loop("mpprinter", LogPrint);
     std::unique_ptr<Init> init = std::make_unique<InitImpl>();
-    mp::ServeStream<InitInterface>(loop, fd, *init);
+    mp::ServeStream<InitInterface>(loop, socket, *init);
     loop.loop();
     return 0;
 }

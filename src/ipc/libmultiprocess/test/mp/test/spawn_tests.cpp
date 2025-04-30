@@ -15,7 +15,9 @@
 #include <string>
 #include <sys/wait.h>
 #include <thread>
+#include <tuple>
 #include <unistd.h>
+#include <utility>
 #include <vector>
 
 namespace mp {
@@ -88,14 +90,13 @@ KJ_TEST("SpawnProcess does not run callback in child")
         control_cv.notify_one();
     });
 
-    ProcessId pid{-1};
-    const SocketId fd{SpawnProcess(pid, [&](SocketId child_fd) -> std::vector<std::string> {
+    const auto [pid, socket]{SpawnProcess([&](ConnectInfo connect_info) -> std::vector<std::string> {
         // If this callback runs in the post-fork child, target_mutex appears
         // locked forever (the owning thread does not exist), so this deadlocks.
         std::lock_guard<std::mutex> g(target_mutex);
-        return {"true", std::to_string(child_fd)};
+        return {"true", std::move(connect_info)};
     })};
-    ::close(fd);
+    ::close(socket);
 
     int status{0};
     // Give the child some time to exit. If it does not, terminate it and
