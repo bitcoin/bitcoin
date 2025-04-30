@@ -32,7 +32,7 @@ namespace {
 class ProcessImpl : public Process
 {
 public:
-    int spawn(const std::string& new_exe_name, const fs::path& argv0_path, mp::ProcessId& pid) override
+    mp::SocketId spawn(const std::string& new_exe_name, const fs::path& argv0_path, mp::ProcessId& pid) override
     {
         return mp::SpawnProcess(pid, [&](int fd) {
             fs::path path = argv0_path;
@@ -42,7 +42,7 @@ public:
         });
     }
     int waitSpawned(mp::ProcessId pid) override { return mp::WaitProcess(pid); }
-    bool checkSpawned(int argc, char* argv[], int& fd) override
+    bool checkSpawned(int argc, char* argv[], mp::SocketId& socket) override
     {
         // If this process was not started with a single -ipcfd argument, it is
         // not a process spawned by the spawn() call above, so return false and
@@ -60,13 +60,13 @@ public:
         if (!maybe_fd) {
             throw std::runtime_error(strprintf("Invalid -ipcfd number '%s'", argv[2]));
         }
-        fd = *maybe_fd;
+        socket = *maybe_fd;
         return true;
     }
-    int connect(const fs::path& data_dir,
+    mp::SocketId connect(const fs::path& data_dir,
                 const std::string& dest_exe_name,
                 std::string& address) override;
-    int bind(const fs::path& data_dir, const std::string& exe_name, std::string& address) override;
+    mp::SocketId bind(const fs::path& data_dir, const std::string& exe_name, std::string& address) override;
 };
 
 static bool ParseAddress(std::string& address,
@@ -98,7 +98,7 @@ static bool ParseAddress(std::string& address,
     return false;
 }
 
-int ProcessImpl::connect(const fs::path& data_dir,
+mp::SocketId ProcessImpl::connect(const fs::path& data_dir,
                          const std::string& dest_exe_name,
                          std::string& address)
 {
@@ -108,8 +108,8 @@ int ProcessImpl::connect(const fs::path& data_dir,
         throw std::invalid_argument(error);
     }
 
-    int fd;
-    if ((fd = ::socket(addr.sun_family, SOCK_STREAM, 0)) == -1) {
+    mp::SocketId fd;
+    if ((fd = ::socket(addr.sun_family, SOCK_STREAM, 0)) == mp::SocketError) {
         throw std::system_error(errno, std::system_category());
     }
     if (::connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == 0) {
@@ -122,7 +122,7 @@ int ProcessImpl::connect(const fs::path& data_dir,
     throw std::system_error(connect_error, std::system_category());
 }
 
-int ProcessImpl::bind(const fs::path& data_dir, const std::string& exe_name, std::string& address)
+mp::SocketId ProcessImpl::bind(const fs::path& data_dir, const std::string& exe_name, std::string& address)
 {
     struct sockaddr_un addr;
     std::string error;
@@ -138,8 +138,8 @@ int ProcessImpl::bind(const fs::path& data_dir, const std::string& exe_name, std
         }
     }
 
-    int fd;
-    if ((fd = ::socket(addr.sun_family, SOCK_STREAM, 0)) == -1) {
+    mp::SocketId fd;
+    if ((fd = ::socket(addr.sun_family, SOCK_STREAM, 0)) == mp::SocketError) {
         throw std::system_error(errno, std::system_category());
     }
 
