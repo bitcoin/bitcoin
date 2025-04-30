@@ -596,6 +596,7 @@ static UniValue BIP22ValidationResult(const BlockValidationState& state)
     return "valid?";
 }
 
+// Prefix rule name with ! if not optional, see BIP9
 static std::string gbt_rule_value(const std::string& name, bool gbt_optional_rule)
 {
     std::string s{name};
