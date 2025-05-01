@@ -69,7 +69,7 @@ void InitExecutor::restart(QStringList args)
                 CExplicitNetCleanup::callCleanup();
                 QProcess::startDetached(QApplication::applicationFilePath(), args);
                 qDebug() << "Restart initiated...";
-                QApplication::quit();
+                QCoreApplication::exit(0);;
             } catch (...) {
                 handleRunawayException(std::current_exception());
             }
