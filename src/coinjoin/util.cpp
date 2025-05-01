@@ -7,9 +7,10 @@
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <script/sign.h>
-#include <wallet/fees.h>
-#include <wallet/wallet.h>
 #include <util/translation.h>
+#include <wallet/fees.h>
+#include <wallet/spend.h>
+#include <wallet/wallet.h>
 
 #include <numeric>
 
@@ -274,7 +275,7 @@ bool CTransactionBuilder::Commit(bilingual_str& strResult)
     {
         LOCK2(m_wallet.cs_wallet, cs_main);
         FeeCalculation fee_calc_out;
-        if (!m_wallet.CreateTransaction(vecSend, tx, nFeeRet, nChangePosRet, strResult, coinControl, fee_calc_out)) {
+        if (!CreateTransaction(m_wallet, vecSend, tx, nFeeRet, nChangePosRet, strResult, coinControl, fee_calc_out)) {
             return false;
         }
     }

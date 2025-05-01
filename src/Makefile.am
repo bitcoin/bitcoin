@@ -392,6 +392,7 @@ BITCOIN_CORE_H = \
   wallet/bip39.h \
   wallet/bip39_english.h \
   wallet/coincontrol.h \
+  wallet/coinjoin.h \
   wallet/coinselection.h \
   wallet/context.h \
   wallet/crypter.h \
@@ -591,6 +592,7 @@ libbitcoin_wallet_a_SOURCES = \
   coinjoin/interfaces.cpp \
   coinjoin/util.cpp \
   wallet/bip39.cpp \
+  wallet/coinjoin.cpp \
   wallet/coincontrol.cpp \
   wallet/context.cpp \
   wallet/crypter.cpp \

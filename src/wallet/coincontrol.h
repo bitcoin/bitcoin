@@ -13,7 +13,7 @@
 
 #include <optional>
 
-enum class CoinType
+enum class CoinType : uint8_t
 {
     ALL_COINS,
     ONLY_FULLY_MIXED,

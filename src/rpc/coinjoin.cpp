@@ -12,6 +12,7 @@
 #include <util/check.h>
 #include <util/strencodings.h>
 #include <validation.h>
+#include <wallet/receive.h>
 #include <wallet/rpc/util.h>
 #include <walletinitinterface.h>
 
@@ -278,7 +279,7 @@ static RPCHelpMan coinjoinsalt_generate()
         }
     }
 
-    const auto wallet_balance{wallet->GetBalance()};
+    const auto wallet_balance{GetBalance(*wallet)};
     const bool has_balance{(wallet_balance.m_anonymized
                           + wallet_balance.m_denominated_trusted
                           + wallet_balance.m_denominated_untrusted_pending) > 0};
@@ -380,7 +381,7 @@ static RPCHelpMan coinjoinsalt_set()
         }
     }
 
-    const auto wallet_balance{wallet->GetBalance()};
+    const auto wallet_balance{GetBalance(*wallet)};
     const bool has_balance{(wallet_balance.m_anonymized
                           + wallet_balance.m_denominated_trusted
                           + wallet_balance.m_denominated_untrusted_pending) > 0};

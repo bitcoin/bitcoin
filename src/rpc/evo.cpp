@@ -36,6 +36,7 @@
 #ifdef ENABLE_WALLET
 #include <wallet/coincontrol.h>
 #include <wallet/rpcwallet.h>
+#include <wallet/spend.h>
 #include <wallet/wallet.h>
 #endif//ENABLE_WALLET
 
@@ -256,7 +257,7 @@ static void FundSpecialTx(CWallet& wallet, CMutableTransaction& tx, const Specia
     coinControl.fRequireAllInputs = false;
 
     std::vector<COutput> vecOutputs;
-    wallet.AvailableCoins(vecOutputs);
+    AvailableCoins(wallet, vecOutputs);
 
     for (const auto& out : vecOutputs) {
         CTxDestination txDest;
@@ -275,7 +276,8 @@ static void FundSpecialTx(CWallet& wallet, CMutableTransaction& tx, const Specia
     bilingual_str strFailReason;
 
     FeeCalculation fee_calc_out;
-    if (!wallet.CreateTransaction(vecSend, newTx, nFee, nChangePos, strFailReason, coinControl, fee_calc_out, false, tx.vExtraPayload.size())) {
+    if (!CreateTransaction(wallet, vecSend, newTx, nFee, nChangePos, strFailReason, coinControl, fee_calc_out, false,
+                           tx.vExtraPayload.size())) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason.original);
     }
 

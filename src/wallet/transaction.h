@@ -17,31 +17,7 @@
 #include <list>
 #include <vector>
 
-class CCoinControl;
-struct bilingual_str;
-struct COutputEntry;
-
 typedef std::map<std::string, std::string> mapValue_t;
-
-//Get the marginal bytes of spending the specified output
-int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet, bool use_max_sig = false);
-
-static inline void ReadOrderPos(int64_t& nOrderPos, mapValue_t& mapValue)
-{
-    if (!mapValue.count("n"))
-    {
-        nOrderPos = -1; // TODO: calculate elsewhere
-        return;
-    }
-    nOrderPos = LocaleIndependentAtoi<int64_t>(mapValue["n"]);
-}
-
-static inline void WriteOrderPos(const int64_t& nOrderPos, mapValue_t& mapValue)
-{
-    if (nOrderPos == -1)
-        return;
-    mapValue["n"] = ToString(nOrderPos);
-}
 
 /** Legacy class used for deserializing vtxPrev for backwards compatibility.
  * vtxPrev was removed in commit 93a18a3650292afbb441a47d1fa1b94aeb0164e3,
@@ -70,15 +46,10 @@ public:
 class CWalletTx
 {
 private:
-    const CWallet* const pwallet;
-
     /** Constant used in hashBlock to indicate tx has been abandoned, only used at
      * serialization/deserialization to avoid ambiguity with conflicted.
      */
     static constexpr const uint256& ABANDON_HASH = uint256::ONE;
-
-    mutable bool fIsChainlocked{false};
-    mutable bool fIsInstantSendLocked{false};
 
 public:
     /**
@@ -131,7 +102,6 @@ public:
 
     // memory only
     enum AmountType { DEBIT, CREDIT, IMMATURE_CREDIT, AVAILABLE_CREDIT, ANON_CREDIT, DENOM_UCREDIT, DENOM_CREDIT, AMOUNTTYPE_ENUM_ELEMENTS };
-    CAmount GetCachableAmount(AmountType type, const isminefilter& filter, bool recalculate = false) const;
     mutable CachableAmount m_amounts[AMOUNTTYPE_ENUM_ELEMENTS];
     /**
      * This flag is true if all m_amounts caches are empty. This is particularly
@@ -142,11 +112,12 @@ public:
     mutable bool m_is_cache_empty{true};
     mutable bool fChangeCached;
     mutable bool fInMempool;
+    mutable bool fIsChainlocked;
+    mutable bool fIsInstantSendLocked;
     mutable CAmount nChangeCached;
 
-    CWalletTx(const CWallet* wallet, CTransactionRef arg)
-        : pwallet(wallet),
-          tx(std::move(arg))
+    CWalletTx(CTransactionRef arg)
+        : tx(std::move(arg))
     {
         Init();
     }
@@ -161,6 +132,8 @@ public:
         fFromMe = false;
         fChangeCached = false;
         fInMempool = false;
+        fIsChainlocked = false;
+        fIsInstantSendLocked = false;
         nChangeCached = 0;
         nOrderPos = -1;
         m_confirm = Confirmation{};
@@ -205,7 +178,9 @@ public:
         mapValue_t mapValueCopy = mapValue;
 
         mapValueCopy["fromaccount"] = "";
-        WriteOrderPos(nOrderPos, mapValueCopy);
+        if (nOrderPos != -1) {
+            mapValueCopy["n"] = ToString(nOrderPos);
+        }
         if (nTimeSmart) {
             mapValueCopy["timesmart"] = strprintf("%u", nTimeSmart);
         }
@@ -245,7 +220,8 @@ public:
             setConfirmed();
         }
 
-        ReadOrderPos(nOrderPos, mapValue);
+        const auto it_op = mapValue.find("n");
+        nOrderPos = (it_op != mapValue.end()) ? LocaleIndependentAtoi<int64_t>(it_op->second) : -1;
         nTimeSmart = mapValue.count("timesmart") ? (unsigned int)LocaleIndependentAtoi<int64_t>(mapValue["timesmart"]) : 0;
 
         mapValue.erase("fromaccount");
@@ -273,97 +249,13 @@ public:
         m_is_cache_empty = true;
     }
 
-    const CWallet* GetWallet() const
-    {
-        return pwallet;
-    }
-
-    //! filter decides which addresses will count towards the debit
-    CAmount GetDebit(const isminefilter& filter) const;
-    CAmount GetCredit(const isminefilter& filter) const;
-    CAmount GetImmatureCredit(bool fUseCache = true) const;
-    // TODO: Remove "NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
-    // annotation "EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The
-    // annotation "NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid
-    // having to resolve the issue of member access into incomplete type CWallet.
-    CAmount GetAvailableCredit(bool fUseCache = true, const isminefilter& filter = ISMINE_SPENDABLE) const NO_THREAD_SAFETY_ANALYSIS;
-    CAmount GetImmatureWatchOnlyCredit(const bool fUseCache = true) const;
-    CAmount GetChange() const;
-
-    struct CoinJoinCredits
-    {
-        CAmount m_anonymized{0};
-        CAmount m_denominated{0};
-        bool is_unconfirmed{false};
-    };
-
-    // TODO: Remove "NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
-    // annotation "EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The
-    // annotation "NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid
-    // having to resolve the issue of member access into incomplete type CWallet.
-    /* Requires cs_wallet lock. */
-    CAmount GetAnonymizedCredit(const CCoinControl& coinControl) const NO_THREAD_SAFETY_ANALYSIS;
-    /* Requires cs_wallet lock. */
-    CoinJoinCredits GetAvailableCoinJoinCredits() const NO_THREAD_SAFETY_ANALYSIS;
-
-    /** Get the marginal bytes if spending the specified output from this transaction */
-    int GetSpendSize(unsigned int out, bool use_max_sig = false) const
-    {
-        return CalculateMaximumSignedInputSize(tx->vout[out], pwallet, use_max_sig);
-    }
-
-    void GetAmounts(std::list<COutputEntry>& listReceived,
-                    std::list<COutputEntry>& listSent, CAmount& nFee, const isminefilter& filter) const;
-
-    bool IsFromMe(const isminefilter& filter) const
-    {
-        return (GetDebit(filter) > 0);
-    }
-
     /** True if only scriptSigs are different */
     bool IsEquivalentTo(const CWalletTx& tx) const;
 
     bool InMempool() const;
-    bool IsTrusted() const;
 
     int64_t GetTxTime() const;
 
-    bool CanBeResent() const;
-
-    /** Pass this transaction to node for mempool insertion and relay to peers if flag set to true */
-    bool SubmitMemoryPoolAndRelay(bilingual_str& err_string, bool relay);
-
-    // TODO: Remove "NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
-    // annotation "EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The annotation
-    // "NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid having to
-    // resolve the issue of member access into incomplete type CWallet. Note
-    // that we still have the runtime check "AssertLockHeld(pwallet->cs_wallet)"
-    // in place.
-    std::set<uint256> GetConflicts() const NO_THREAD_SAFETY_ANALYSIS;
-
-    /**
-     * Return depth of transaction in blockchain:
-     * <0  : conflicts with a transaction this deep in the blockchain
-     *  0  : in memory pool, waiting to be included in a block
-     * >=1 : this many blocks deep in the main chain
-     */
-    // TODO: Remove "NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
-    // annotation "EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)". The annotation
-    // "NO_THREAD_SAFETY_ANALYSIS" was temporarily added to avoid having to
-    // resolve the issue of member access into incomplete type CWallet. Note
-    // that we still have the runtime check "AssertLockHeld(pwallet->cs_wallet)"
-    // in place.
-    int GetDepthInMainChain() const NO_THREAD_SAFETY_ANALYSIS;
-    bool IsInMainChain() const { return GetDepthInMainChain() > 0; }
-    bool IsLockedByInstantSend() const;
-    bool IsChainLocked() const NO_THREAD_SAFETY_ANALYSIS;
-
-    /**
-     * @return number of blocks to maturity for this transaction:
-     *  0 : is not a coinbase transaction, or is a mature coinbase transaction
-     * >0 : is a coinbase transaction which matures in this many blocks
-     */
-    int GetBlocksToMaturity() const;
     bool isAbandoned() const { return m_confirm.status == CWalletTx::ABANDONED; }
     void setAbandoned()
     {
@@ -381,7 +273,6 @@ public:
     const uint256& GetHash() const { return tx->GetHash(); }
     bool IsCoinBase() const { return tx->IsCoinBase(); }
     bool IsPlatformTransfer() const { return tx->IsPlatformTransfer(); }
-    bool IsImmatureCoinBase() const;
 
     // Disable copying of CWalletTx objects to prevent bugs where instances get
     // copied in and out of the mapWallet map, and fields are updated in the
