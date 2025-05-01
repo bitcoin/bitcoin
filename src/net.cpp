@@ -3931,10 +3931,9 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 
 bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
 {
-    LOCK(m_nodes_mutex);
-    for (auto&& pnode : m_nodes) {
-        if(pnode->GetId() == id) {
-            return NodeFullyConnected(*pnode) && func(pnode.get());
+    for (auto& node : WITH_LOCK(m_nodes_mutex, return m_nodes)) {
+        if (node->GetId() == id) {
+            return NodeFullyConnected(*node) && func(node.get());
         }
     }
     return false;
