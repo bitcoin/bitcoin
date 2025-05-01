@@ -346,10 +346,14 @@ namespace util
   void set_clo_on_exec(int fd, bool set = true)
   {
     int flags = fcntl(fd, F_GETFD, 0);
+    if (flags == -1) {
+        throw OSError("fcntl F_GETFD failed", errno);
+    }
     if (set) flags |= FD_CLOEXEC;
     else flags &= ~FD_CLOEXEC;
-    //TODO: should check for errors
-    fcntl(fd, F_SETFD, flags);
+    if (fcntl(fd, F_SETFD, flags) == -1) {
+        throw OSError("fcntl F_SETFD failed", errno);
+    }
   }
 
 
