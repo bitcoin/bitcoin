@@ -1,7 +1,12 @@
+# Ignore all files used by Visual Studio Code
+# and Visual Studio IDE.
+.vs*/**/*
+
 # Build subdirectories.
 /*build*
 !/build-aux
 !/build_msvc
+/out/**/*
 
 *.pyc
 
