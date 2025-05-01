@@ -1919,10 +1919,13 @@ void CConnman::DisconnectNodes()
 {
     AssertLockNotHeld(m_nodes_mutex);
     AssertLockNotHeld(m_reconnections_mutex);
+    AssertLockNotHeld(mutexMsgProc);
 
     // Use a temporary variable to accumulate desired reconnections, so we don't need
     // m_reconnections_mutex while holding m_nodes_mutex.
     decltype(m_reconnections) reconnections_to_add;
+
+    bool some_nodes_were_disconnected{false};
 
     {
         LOCK(m_nodes_mutex);
@@ -1968,10 +1971,16 @@ void CConnman::DisconnectNodes()
                 if (pnode->IsManualOrFullOutboundConn()) --m_network_conn_counts[pnode->addr.GetNetwork()];
 
                 WITH_LOCK(m_nodes_disconnected_mutex, m_nodes_disconnected.push_back(pnode));
+
+                some_nodes_were_disconnected = true;
             } else {
                 ++it;
             }
         }
+    }
+
+    if (some_nodes_were_disconnected) {
+        WakeMessageHandler();
     }
 
     {

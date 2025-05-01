@@ -1351,7 +1351,7 @@ private:
      */
     void FinalizeAndDeleteDisconnectedNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_disconnected_mutex);
 
-    void DisconnectNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex, !m_nodes_mutex, !m_nodes_disconnected_mutex);
+    void DisconnectNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex, !m_nodes_mutex, !m_nodes_disconnected_mutex, !mutexMsgProc);
     void NotifyNumConnectionsChanged();
     /** Return true if the peer is inactive and should be disconnected. */
     bool InactivityCheck(const CNode& node) const;
