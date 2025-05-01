@@ -25,6 +25,7 @@ add_executable(test_bitcoin
   blockmanager_tests.cpp
   bloom_tests.cpp
   bswap_tests.cpp
+  chainstate_write_tests.cpp
   checkqueue_tests.cpp
   cluster_linearize_tests.cpp
   coins_tests.cpp
