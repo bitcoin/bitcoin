@@ -1961,25 +1961,37 @@ void CConnman::DisconnectNodes()
 
                 // hold in disconnected pool until all refs are released
                 pnode->Release();
-                m_nodes_disconnected.push_back(pnode);
+                WITH_LOCK(m_nodes_disconnected_mutex, m_nodes_disconnected.push_back(pnode));
             } else {
                 ++it;
             }
         }
     }
+
+    // Finalize and delete disconnected nodes. First move them to nodes_to_finalize_and_delete
+    // under m_nodes_disconnected_mutex and then FinalizeNode() and delete after releasing the
+    // mutex.
+    decltype(m_nodes_disconnected) nodes_to_finalize_and_delete;
+
     {
-        // Delete disconnected nodes
+        LOCK(m_nodes_disconnected_mutex);
         for (auto it = m_nodes_disconnected.begin(); it != m_nodes_disconnected.end();) {
             auto pnode{*it};
             // Destroy the object only after other threads have stopped using it.
             if (pnode->GetRefCount() <= 0) {
                 it = m_nodes_disconnected.erase(it);
-                m_msgproc->FinalizeNode(*pnode);
+                nodes_to_finalize_and_delete.push_back(pnode);
             } else {
                 ++it;
             }
         }
     }
+
+    for (auto& node : nodes_to_finalize_and_delete) {
+        m_msgproc->FinalizeNode(*node);
+    }
+    nodes_to_finalize_and_delete.clear();
+
     {
         // Move entries from reconnections_to_add to m_reconnections.
         LOCK(m_reconnections_mutex);
@@ -3505,10 +3517,12 @@ void CConnman::StopNodes()
     }
     nodes.clear();
 
-    for (auto& pnode : m_nodes_disconnected) {
-        m_msgproc->FinalizeNode(*pnode);
+    decltype(m_nodes_disconnected) nodes_to_finalize_and_delete;
+    WITH_LOCK(m_nodes_disconnected_mutex, m_nodes_disconnected.swap(nodes_to_finalize_and_delete));
+    for (auto& node : nodes_to_finalize_and_delete) {
+        m_msgproc->FinalizeNode(*node);
     }
-    m_nodes_disconnected.clear();
+    nodes_to_finalize_and_delete.clear();
 
     vhListenSocket.clear();
     semOutbound.reset();
