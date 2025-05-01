@@ -770,7 +770,10 @@ class Communication
 public:
   Communication(Streams* stream): stream_(stream)
   {}
-  void operator=(const Communication&) = delete;
+  Communication(const Communication&) = delete;
+  Communication& operator=(const Communication&) = delete;
+  Communication(Communication&&) = default;
+  Communication& operator=(Communication&&) = default;
 public:
   int send(const char* msg, size_t length);
   int send(const std::vector<char>& msg);
@@ -807,7 +810,10 @@ class Streams
 {
 public:
   Streams():comm_(this) {}
-  void operator=(const Streams&) = delete;
+  Streams(const Streams&) = delete;
+  Streams& operator=(const Streams&) = delete;
+  Streams(Streams&&) = default;
+  Streams& operator=(Streams&&) = default;
 
 public:
   void setup_comm_channels();
