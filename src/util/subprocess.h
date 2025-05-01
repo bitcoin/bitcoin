@@ -1181,11 +1181,13 @@ inline void Popen::execute_process() noexcept(false)
     try {
       char err_buf[SP_MAX_ERR_BUF_SIZ] = {0,};
 
-      int read_bytes = util::read_atmost_n(
-                                  fdopen(err_rd_pipe, "r"),
-                                  err_buf,
-                                  SP_MAX_ERR_BUF_SIZ);
-      close(err_rd_pipe);
+      FILE* err_fp = fdopen(err_rd_pipe, "r");
+      if (!err_fp) {
+          close(err_rd_pipe);
+          throw OSError("fdopen failed", errno);
+      }
+      int read_bytes = util::read_atmost_n(err_fp, err_buf, SP_MAX_ERR_BUF_SIZ);
+      fclose(err_fp);
 
       if (read_bytes || strlen(err_buf)) {
         // Call waitpid to reap the child process
