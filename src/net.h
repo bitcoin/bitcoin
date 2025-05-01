@@ -732,7 +732,6 @@ public:
     // next time DisconnectNodes() runs
     std::atomic_bool fDisconnect{false};
     CountingSemaphoreGrant<> grantOutbound;
-    std::atomic<int> nRefCount{0};
 
     const uint64_t nKeyedNetGroup;
     std::atomic_bool fPauseRecv{false};
@@ -906,12 +905,6 @@ public:
         return nLocalHostNonce;
     }
 
-    int GetRefCount() const
-    {
-        assert(nRefCount >= 0);
-        return nRefCount;
-    }
-
     /**
      * Receive bytes from the buffer and deserialize them into messages.
      *
@@ -936,17 +929,6 @@ public:
     CService GetAddrLocal() const EXCLUSIVE_LOCKS_REQUIRED(!m_addr_local_mutex);
     //! May not be called more than once
     void SetAddrLocal(const CService& addrLocalIn) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_local_mutex);
-
-    CNode* AddRef()
-    {
-        nRefCount++;
-        return this;
-    }
-
-    void Release()
-    {
-        nRefCount--;
-    }
 
     void CloseSocketDisconnect() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex);
 
@@ -1379,7 +1361,7 @@ private:
      * @param[in] nodes Select from these nodes' sockets.
      * @return sockets to check for readiness
      */
-    Sock::EventsPerSock GenerateWaitSockets(const std::vector<std::shared_ptr<CNode>>& nodes);
+    Sock::EventsPerSock GenerateWaitSockets(std::span<std::shared_ptr<CNode>> nodes);
 
     /**
      * Check connected and listening sockets for IO readiness and process them accordingly.
@@ -1716,43 +1698,6 @@ private:
      * unexpectedly use too much memory.
      */
     static constexpr size_t MAX_UNUSED_I2P_SESSIONS_SIZE{10};
-
-    /**
-     * RAII helper to atomically create a copy of `m_nodes` and add a reference
-     * to each of the nodes. The nodes are released when this object is destroyed.
-     */
-    class NodesSnapshot
-    {
-    public:
-        explicit NodesSnapshot(const CConnman& connman, bool shuffle)
-        {
-            {
-                LOCK(connman.m_nodes_mutex);
-                m_nodes_copy = connman.m_nodes;
-                for (auto& node : m_nodes_copy) {
-                    node->AddRef();
-                }
-            }
-            if (shuffle) {
-                std::shuffle(m_nodes_copy.begin(), m_nodes_copy.end(), FastRandomContext{});
-            }
-        }
-
-        ~NodesSnapshot()
-        {
-            for (auto& node : m_nodes_copy) {
-                node->Release();
-            }
-        }
-
-        const std::vector<std::shared_ptr<CNode>>& Nodes() const
-        {
-            return m_nodes_copy;
-        }
-
-    private:
-        std::vector<std::shared_ptr<CNode>> m_nodes_copy;
-    };
 
     const CChainParams& m_params;
 
