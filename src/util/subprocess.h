@@ -1061,10 +1061,17 @@ inline int Popen::wait() noexcept(false)
 #ifdef __USING_WINDOWS__
   int ret = WaitForSingleObject(process_handle_, INFINITE);
 
+  // WaitForSingleObject with INFINITE should only return when process has signaled
+  if (ret != WAIT_OBJECT_0) {
+    throw OSError("Unexpected return code from WaitForSingleObject", 0);
+  }
+
   DWORD dretcode_;
 
   if (FALSE == GetExitCodeProcess(process_handle_, &dretcode_))
       throw OSError("Failed during call to GetExitCodeProcess", 0);
+
+  CloseHandle(process_handle_);
 
   return (int)dretcode_;
 #else
