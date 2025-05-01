@@ -1931,13 +1931,11 @@ void CConnman::DisconnectNodes()
         }
 
         // Disconnect unused nodes
-        auto nodes_copy = m_nodes;
-        for (auto& pnode : nodes_copy)
-        {
+        for (auto it = m_nodes.begin(); it != m_nodes.end();) {
+            auto pnode{*it};
             if (pnode->fDisconnect)
             {
-                // remove from m_nodes
-                m_nodes.erase(remove(m_nodes.begin(), m_nodes.end(), pnode), m_nodes.end());
+                it = m_nodes.erase(it);
 
                 // Add to reconnection list if appropriate. We don't reconnect right here, because
                 // the creation of a connection is a blocking operation (up to several seconds),
@@ -1964,17 +1962,21 @@ void CConnman::DisconnectNodes()
                 // hold in disconnected pool until all refs are released
                 pnode->Release();
                 m_nodes_disconnected.push_back(pnode);
+            } else {
+                ++it;
             }
         }
     }
     {
         // Delete disconnected nodes
-        auto nodes_disconnected_copy = m_nodes_disconnected;
-        for (auto& pnode : nodes_disconnected_copy) {
+        for (auto it = m_nodes_disconnected.begin(); it != m_nodes_disconnected.end();) {
+            auto pnode{*it};
             // Destroy the object only after other threads have stopped using it.
             if (pnode->GetRefCount() <= 0) {
-                m_nodes_disconnected.remove(pnode);
+                it = m_nodes_disconnected.erase(it);
                 m_msgproc->FinalizeNode(*pnode);
+            } else {
+                ++it;
             }
         }
     }
