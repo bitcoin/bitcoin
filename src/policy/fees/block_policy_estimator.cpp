@@ -798,7 +798,9 @@ unsigned int CBlockPolicyEstimator::HistoricalBlockSpan() const
 unsigned int CBlockPolicyEstimator::MaxUsableEstimate() const
 {
     // Block spans are divided by 2 to make sure there are enough potential failing data points for the estimate
-    return std::min(longStats->GetMaxConfirms(), std::max(BlockSpan(), HistoricalBlockSpan()) / 2);
+    auto max = std::min(longStats->GetMaxConfirms(), std::max(BlockSpan(), HistoricalBlockSpan()) / 2);
+    if (max > 1) return max;
+    return 0;
 }
 
 /** Return a fee estimate at the required successThreshold from the shortest
