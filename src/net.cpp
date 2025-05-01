@@ -1907,6 +1907,16 @@ bool CConnman::AddConnection(const std::string& address, ConnectionType conn_typ
     return true;
 }
 
+void CConnman::FinalizeAndDeleteDisconnectedNodes()
+{
+    // Move to a temporary to avoid FinalizeNode() while holding m_nodes_disconnected_mutex.
+    decltype(m_nodes_disconnected) nodes;
+    WITH_LOCK(m_nodes_disconnected_mutex, m_nodes_disconnected.swap(nodes));
+    for (auto& node : nodes) {
+        m_msgproc->FinalizeNode(*node);
+    }
+}
+
 void CConnman::DisconnectNodes()
 {
     AssertLockNotHeld(m_nodes_mutex);
@@ -1967,30 +1977,6 @@ void CConnman::DisconnectNodes()
             }
         }
     }
-
-    // Finalize and delete disconnected nodes. First move them to nodes_to_finalize_and_delete
-    // under m_nodes_disconnected_mutex and then FinalizeNode() and delete after releasing the
-    // mutex.
-    decltype(m_nodes_disconnected) nodes_to_finalize_and_delete;
-
-    {
-        LOCK(m_nodes_disconnected_mutex);
-        for (auto it = m_nodes_disconnected.begin(); it != m_nodes_disconnected.end();) {
-            auto pnode{*it};
-            // Destroy the object only after other threads have stopped using it.
-            if (pnode->GetRefCount() <= 0) {
-                it = m_nodes_disconnected.erase(it);
-                nodes_to_finalize_and_delete.push_back(pnode);
-            } else {
-                ++it;
-            }
-        }
-    }
-
-    for (auto& node : nodes_to_finalize_and_delete) {
-        m_msgproc->FinalizeNode(*node);
-    }
-    nodes_to_finalize_and_delete.clear();
 
     {
         // Move entries from reconnections_to_add to m_reconnections.
@@ -3069,6 +3055,8 @@ void CConnman::ThreadMessageHandler()
     {
         bool fMoreWork = false;
 
+        FinalizeAndDeleteDisconnectedNodes();
+
         {
             // Randomize the order in which we process messages from/to our peers.
             // This prevents attacks in which an attacker exploits having multiple
@@ -3508,21 +3496,18 @@ void CConnman::StopNodes()
     }
 
     // Delete peer connections.
-    std::vector<std::shared_ptr<CNode>> nodes;
-    WITH_LOCK(m_nodes_mutex, nodes.swap(m_nodes));
-    for (auto& pnode : nodes) {
-        LogDebug(BCLog::NET, "Stopping node, %s", pnode->DisconnectMsg(fLogIPs));
-        pnode->CloseSocketDisconnect();
-        m_msgproc->FinalizeNode(*pnode);
+    {
+        LOCK(m_nodes_mutex);
+        for (auto it = m_nodes.begin(); it != m_nodes.end();) {
+            auto node = *it;
+            it = m_nodes.erase(it);
+            LogDebug(BCLog::NET, "Stopping node, %s", node->DisconnectMsg(fLogIPs));
+            node->CloseSocketDisconnect();
+            WITH_LOCK(m_nodes_disconnected_mutex, m_nodes_disconnected.push_back(node));
+        }
     }
-    nodes.clear();
 
-    decltype(m_nodes_disconnected) nodes_to_finalize_and_delete;
-    WITH_LOCK(m_nodes_disconnected_mutex, m_nodes_disconnected.swap(nodes_to_finalize_and_delete));
-    for (auto& node : nodes_to_finalize_and_delete) {
-        m_msgproc->FinalizeNode(*node);
-    }
-    nodes_to_finalize_and_delete.clear();
+    FinalizeAndDeleteDisconnectedNodes();
 
     vhListenSocket.clear();
     semOutbound.reset();

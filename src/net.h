@@ -1344,7 +1344,7 @@ private:
     void AddAddrFetch(const std::string& strDest) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex);
     void ProcessAddrFetch() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_unused_i2p_sessions_mutex);
     void ThreadOpenConnections(std::vector<std::string> connect, std::span<const std::string> seed_nodes) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_reconnections_mutex);
-    void ThreadMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
+    void ThreadMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_disconnected_mutex, !mutexMsgProc);
     void ThreadI2PAcceptIncoming();
     void AcceptConnection(const ListenSocket& hListenSocket);
 
@@ -1360,6 +1360,14 @@ private:
                                       NetPermissionFlags permission_flags,
                                       const CService& addr_bind,
                                       const CService& addr);
+
+    /**
+     * Flush `m_nodes_disconnected`, for each entry in it:
+     * - remove it from the list
+     * - call `m_msgproc->FinalizeNode()`
+     * - delete it.
+     */
+    void FinalizeAndDeleteDisconnectedNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_disconnected_mutex);
 
     void DisconnectNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex, !m_nodes_mutex, !m_nodes_disconnected_mutex);
     void NotifyNumConnectionsChanged();
