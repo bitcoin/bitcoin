@@ -527,7 +527,7 @@ struct string_arg
 {
   string_arg(const char* arg): arg_value(arg) {}
   string_arg(std::string&& arg): arg_value(std::move(arg)) {}
-  string_arg(std::string arg): arg_value(std::move(arg)) {}
+  string_arg(const std::string& arg): arg_value(arg) {}
   std::string arg_value;
 };
 
