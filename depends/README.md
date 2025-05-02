@@ -35,7 +35,7 @@ To build dependencies for the current arch+OS:
 
 To build dependencies for the current arch+OS:
 
-    make
+    gmake
 
 ### NetBSD
 
