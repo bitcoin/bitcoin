@@ -1236,27 +1236,27 @@ std::unique_ptr<kernel::BlockTreeStore> BlockManager::CreateAndMigrateBlockTree(
     LOCK(::cs_main);
 
     using OpenMode = kernel::BlockTreeStore::OpenMode;
-    OpenMode open_mode = m_opts.block_tree_db_params.wipe_data ? OpenMode::WIPE : OpenMode::WRITE;
+    OpenMode open_mode = m_opts.wipe_block_tree_data ? OpenMode::WIPE : OpenMode::WRITE;
 
     // Check if there is a pre-existing leveldb blocktree db, if not short circuit the migration
-    if (!fs::exists(m_opts.block_tree_db_params.path / "CURRENT")) {
-        return std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_db_params.path, open_mode);
+    if (!fs::exists(m_opts.block_tree_dir / "CURRENT")) {
+        return std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_dir, open_mode);
     }
 
     auto cleanup_leveldb{[&]() {
-        if (!DestroyDB(fs::PathToString(m_opts.block_tree_db_params.path))) {
+        if (!DestroyDB(fs::PathToString(m_opts.block_tree_dir))) {
             throw kernel::BlockTreeStoreError(
-                strprintf("Failed to remove legacy leveldb block tree db at %s", fs::PathToString(m_opts.block_tree_db_params.path)));
+                strprintf("Failed to remove legacy leveldb block tree db at %s", fs::PathToString(m_opts.block_tree_dir)));
         }
-        if (fs::exists(m_opts.block_tree_db_params.path / "CURRENT")) {
+        if (fs::exists(m_opts.block_tree_dir / "CURRENT")) {
             throw kernel::BlockTreeStoreError(
-                strprintf("Legacy leveldb block tree db marker still exists at %s", fs::PathToString(m_opts.block_tree_db_params.path / "CURRENT")));
+                strprintf("Legacy leveldb block tree db marker still exists at %s", fs::PathToString(m_opts.block_tree_dir / "CURRENT")));
         }
     }};
 
     // Check if we need to wipe existing data, and if so short circuit the migration
-    if (m_opts.block_tree_db_params.wipe_data) {
-        auto block_tree_store{std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_db_params.path, open_mode)};
+    if (m_opts.wipe_block_tree_data) {
+        auto block_tree_store{std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_dir, open_mode)};
         LogInfo("Detected legacy leveldb block tree db - removing it");
         cleanup_leveldb();
         return block_tree_store;
@@ -1278,7 +1278,9 @@ std::unique_ptr<kernel::BlockTreeStore> BlockManager::CreateAndMigrateBlockTree(
             return pindex;
         }};
         try {
-            auto block_tree_db{std::make_unique<BlockTreeDB>(m_opts.block_tree_db_params)};
+            DBParams params{};
+            params.path = m_opts.block_tree_dir;
+            auto block_tree_db{std::make_unique<BlockTreeDB>(params)};
             LogInfo("   Reading data from existing leveldb block tree db...");
             if (!block_tree_db->ReadLastBlockFile(max_blockfile_num)) {
                 throw std::runtime_error("Failed to read last block file.");
@@ -1304,8 +1306,8 @@ std::unique_ptr<kernel::BlockTreeStore> BlockManager::CreateAndMigrateBlockTree(
 
     {
         // Cleanup a potentially previously failed migration by setting wipe_data
-        LogInfo("   Writing data back to a new block tree store, reindexing: %d, pruned: %d", reindexing, pruned_block_files);
-        auto block_tree_store{std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_db_params.path, OpenMode::WIPE)};
+        LogInfo("   Writing data back to a new block tree store, reindexing: %s, pruned: %s", reindexing, pruned_block_files);
+        auto block_tree_store{std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_dir, OpenMode::WIPE)};
         block_tree_store->WritePruned(pruned_block_files);
         block_tree_store->WriteReindexing(reindexing);
 
@@ -1324,7 +1326,7 @@ std::unique_ptr<kernel::BlockTreeStore> BlockManager::CreateAndMigrateBlockTree(
     }
 
     // Re-open to ensure that the migration was successful
-    auto block_tree_store{std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_db_params.path)};
+    auto block_tree_store{std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_dir)};
     cleanup_leveldb();
 
     LogInfo("   Successfully migrated the leveldb block tree db to new block tree store.");
@@ -1342,7 +1344,7 @@ BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
 {
     m_block_tree_db = CreateAndMigrateBlockTree();
 
-    if (m_opts.block_tree_db_params.wipe_data) {
+    if (m_opts.wipe_block_tree_data) {
         m_block_tree_db->WriteReindexing(true);
         m_blockfiles_indexed = false;
         // If we're reindexing in prune mode, wipe away unusable block files and all undo data files

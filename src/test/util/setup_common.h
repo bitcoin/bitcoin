@@ -46,7 +46,6 @@ void SetupCommonTestArgs(ArgsManager& argsman);
 struct TestOpts {
     std::vector<const char*> extra_args{};
     bool coins_db_in_memory{true};
-    bool block_tree_db_in_memory{true};
     bool setup_net{true};
     bool setup_validation_interface{true};
     bool min_validation_cache{false}; // Equivalent of -maxsigcachebytes=0
@@ -100,7 +99,6 @@ struct BasicTestingSetup {
 struct ChainTestingSetup : public BasicTestingSetup {
     kernel::CacheSizes m_kernel_cache_sizes{node::CalculateCacheSizes(m_args).kernel};
     bool m_coins_db_in_memory{true};
-    bool m_block_tree_db_in_memory{true};
     std::function<void()> m_make_chainman{};
 
     explicit ChainTestingSetup(ChainType chainType = ChainType::MAIN, TestOpts = {});
