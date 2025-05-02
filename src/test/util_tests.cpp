@@ -40,7 +40,6 @@
 #include <sys/types.h>
 
 #ifndef WIN32
-#include <signal.h>
 #include <sys/wait.h>
 #endif
 
@@ -1198,11 +1197,6 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
     fs::path dirname = m_args.GetDataDirBase() / "lock_dir";
     const fs::path lockname = ".lock";
 #ifndef WIN32
-    // Revert SIGCHLD to default, otherwise boost.test will catch and fail on
-    // it: there is BOOST_TEST_IGNORE_SIGCHLD but that only works when defined
-    // at build-time of the boost library
-    void (*old_handler)(int) = signal(SIGCHLD, SIG_DFL);
-
     // Fork another process for testing before creating the lock, so that we
     // won't fork while holding the lock (which might be undefined, and is not
     // relevant as test case as that is avoided with -daemonize).
@@ -1280,8 +1274,6 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
     BOOST_CHECK_EQUAL(processstatus, 0);
     BOOST_CHECK_EQUAL(util::LockDirectory(dirname, lockname, true), util::LockResult::Success);
 
-    // Restore SIGCHLD
-    signal(SIGCHLD, old_handler);
     BOOST_CHECK_EQUAL(close(fd[1]), 0); // Close our side of the socketpair
 #endif
     // Clean up
