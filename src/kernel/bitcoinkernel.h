@@ -1060,16 +1060,6 @@ BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_o
     int wipe_chainstate_db) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
- * @brief Sets block tree db in memory in the options.
- *
- * @param[in] chainstate_manager_options   Non-null, created by @ref btck_chainstate_manager_options_create.
- * @param[in] block_tree_db_in_memory      Set block tree db in memory.
- */
-BITCOINKERNEL_API void btck_chainstate_manager_options_update_block_tree_db_in_memory(
-    btck_ChainstateManagerOptions* chainstate_manager_options,
-    int block_tree_db_in_memory) BITCOINKERNEL_ARG_NONNULL(1);
-
-/**
  * @brief Sets chainstate db in memory in the options.
  *
  * @param[in] chainstate_manager_options Non-null, created by @ref btck_chainstate_manager_options_create.
