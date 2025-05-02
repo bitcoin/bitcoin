@@ -154,7 +154,7 @@ The 8-byte LE uints correspond to _mempool sequence number_ and the types of bod
 ### Implementing ZMQ client
 
 ZeroMQ endpoint specifiers for TCP (and others) are documented in the
-[ZeroMQ API](http://api.zeromq.org/4-0:_start).
+[ZeroMQ API](https://libzmq.readthedocs.io/en/zeromq4-x/).
 
 Client side, then, the ZeroMQ subscriber socket must have the
 ZMQ_SUBSCRIBE option set to one or either of these prefixes (for
