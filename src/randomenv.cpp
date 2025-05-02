@@ -43,13 +43,13 @@
 #endif
 #ifdef HAVE_SYSCTL
 #include <sys/sysctl.h>
-#ifdef HAVE_VM_VM_PARAM_H
+#if __has_include(<vm/vm_param.h>)
 #include <vm/vm_param.h>
 #endif
-#ifdef HAVE_SYS_RESOURCES_H
+#if __has_include(<sys/resources.h>)
 #include <sys/resources.h>
 #endif
-#ifdef HAVE_SYS_VMMETER_H
+#if __has_include(<sys/vmmeter.h>)
 #include <sys/vmmeter.h>
 #endif
 #endif
