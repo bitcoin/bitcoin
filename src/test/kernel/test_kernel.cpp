@@ -765,7 +765,6 @@ BOOST_AUTO_TEST_CASE(btck_chainman_tests)
 std::unique_ptr<ChainMan> create_chainman(TestDirectory& test_directory,
                                           bool reindex,
                                           bool wipe_chainstate,
-                                          bool block_tree_db_in_memory,
                                           bool chainstate_db_in_memory,
                                           Context& context)
 {
@@ -776,9 +775,6 @@ std::unique_ptr<ChainMan> create_chainman(TestDirectory& test_directory,
     }
     if (wipe_chainstate) {
         chainman_opts.SetWipeDbs(/*wipe_block_tree=*/false, /*wipe_chainstate=*/wipe_chainstate);
-    }
-    if (block_tree_db_in_memory) {
-        chainman_opts.UpdateBlockTreeDbInMemory(block_tree_db_in_memory);
     }
     if (chainstate_db_in_memory) {
         chainman_opts.UpdateChainstateDbInMemory(chainstate_db_in_memory);
@@ -794,7 +790,7 @@ void chainman_reindex_test(TestDirectory& test_directory)
     auto context{create_context(notifications, ChainType::MAINNET)};
     auto chainman{create_chainman(
         test_directory, /*reindex=*/true, /*wipe_chainstate=*/false,
-        /*block_tree_db_in_memory=*/false, /*chainstate_db_in_memory=*/false, context)};
+        /*chainstate_db_in_memory=*/false, context)};
 
     std::vector<std::string> import_files;
     BOOST_CHECK(chainman->ImportBlocks(import_files));
@@ -839,7 +835,7 @@ void chainman_reindex_chainstate_test(TestDirectory& test_directory)
     auto context{create_context(notifications, ChainType::MAINNET)};
     auto chainman{create_chainman(
         test_directory, /*reindex=*/false, /*wipe_chainstate=*/true,
-        /*block_tree_db_in_memory=*/false, /*chainstate_db_in_memory=*/false, context)};
+        /*chainstate_db_in_memory=*/false, context)};
 
     std::vector<std::string> import_files;
     import_files.push_back(PathToString(test_directory.m_directory / "blocks" / "blk00000.dat"));
@@ -853,7 +849,7 @@ void chainman_mainnet_validation_test(TestDirectory& test_directory)
     auto context{create_context(notifications, ChainType::MAINNET, validation_interface)};
     auto chainman{create_chainman(
         test_directory, /*reindex=*/false, /*wipe_chainstate=*/false,
-        /*block_tree_db_in_memory=*/false, /*chainstate_db_in_memory=*/false, context)};
+        /*chainstate_db_in_memory=*/false, context)};
 
     // mainnet block 1
     auto raw_block = hex_string_to_byte_vec("010000006fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000982051fd1e4ba744bbbe680e1fee14677ba1a3c3540bf7b1cdb606e857233e0e61bc6649ffff001d01e362990101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0704ffff001d0104ffffffff0100f2052a0100000043410496b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52da7589379515d4e0a604f8141781e62294721166bf621e73a82cbf2342c858eeac00000000");
@@ -942,7 +938,6 @@ BOOST_AUTO_TEST_CASE(btck_block_tree_entry_tests)
         test_directory,
         /*reindex=*/false,
         /*wipe_chainstate=*/false,
-        /*block_tree_db_in_memory=*/true,
         /*chainstate_db_in_memory=*/true,
         context)};
 
@@ -983,7 +978,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_in_memory_tests)
     auto context{create_context(notifications, ChainType::REGTEST)};
     auto chainman{create_chainman(
         in_memory_test_directory, /*reindex=*/false, /*wipe_chainstate=*/false,
-        /*block_tree_db_in_memory=*/true, /*chainstate_db_in_memory=*/true, context)};
+        /*chainstate_db_in_memory=*/true, context)};
 
     for (auto& raw_block : REGTEST_BLOCK_DATA) {
         Block block{hex_string_to_byte_vec(raw_block)};
@@ -1009,7 +1004,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     {
         auto chainman{create_chainman(
             test_directory, /*reindex=*/false, /*wipe_chainstate=*/false,
-            /*block_tree_db_in_memory=*/false, /*chainstate_db_in_memory=*/false, context)};
+            /*chainstate_db_in_memory=*/false, context)};
         for (const auto& data : REGTEST_BLOCK_DATA) {
             Block block{hex_string_to_byte_vec(data)};
             BlockHeader header = block.GetHeader();
@@ -1033,7 +1028,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     {
         auto chainman{create_chainman(
             test_directory, /*reindex=*/false, /*wipe_chainstate=*/false,
-            /*block_tree_db_in_memory=*/false, /*chainstate_db_in_memory=*/false, context)};
+            /*chainstate_db_in_memory=*/false, context)};
         for (size_t i{0}; i < mid; i++) {
             Block block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[i])};
             bool new_block{false};
@@ -1044,7 +1039,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
 
     auto chainman{create_chainman(
         test_directory, /*reindex=*/false, /*wipe_chainstate=*/false,
-        /*block_tree_db_in_memory=*/false, /*chainstate_db_in_memory=*/false, context)};
+        /*chainstate_db_in_memory=*/false, context)};
 
     for (size_t i{mid}; i < REGTEST_BLOCK_DATA.size(); i++) {
         Block block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[i])};
