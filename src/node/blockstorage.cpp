@@ -1232,13 +1232,13 @@ std::unique_ptr<kernel::BlockTreeStore> BlockManager::CreateAndMigrateBlockTree(
 {
     LOCK(::cs_main);
 
-    if (!fs::exists(m_opts.block_tree_db_params.path / "CURRENT")) {
-        return std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_db_params.path, m_opts.block_tree_db_params.wipe_data);
+    if (!fs::exists(m_opts.block_tree_dir / "CURRENT")) {
+        return std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_dir, m_opts.wipe_block_tree_data);
     }
 
-    if (m_opts.block_tree_db_params.wipe_data) {
-        auto block_tree_store{std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_db_params.path, m_opts.block_tree_db_params.wipe_data)};
-        DestroyDB(fs::PathToString(m_opts.block_tree_db_params.path));
+    if (m_opts.wipe_block_tree_data) {
+        auto block_tree_store{std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_dir, m_opts.wipe_block_tree_data)};
+        DestroyDB(fs::PathToString(m_opts.block_tree_dir));
         return block_tree_store;
     }
 
@@ -1250,7 +1250,9 @@ std::unique_ptr<kernel::BlockTreeStore> BlockManager::CreateAndMigrateBlockTree(
     {
         LogInfo("Migrating leveldb block tree db to new block tree store.");
         try {
-            auto block_tree_db{std::make_unique<BlockTreeDB>(m_opts.block_tree_db_params)};
+            DBParams params{};
+            params.path = m_opts.block_tree_dir;
+            auto block_tree_db{std::make_unique<BlockTreeDB>(params)};
             LogInfo("   Reading data from existing leveldb block tree db...");
             block_tree_db->ReadLastBlockFile(max_blockfile_num);
             files.reserve(max_blockfile_num + 1);
@@ -1268,17 +1270,17 @@ std::unique_ptr<kernel::BlockTreeStore> BlockManager::CreateAndMigrateBlockTree(
             block_tree_db->ReadFlag("prunedblockfiles", pruned_block_files);
         } catch (const std::exception&) {
             LogWarning("   Failed to read existing leveldb block tree data. Removing old db and creating new block tree store.");
-            auto block_tree_store{std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_db_params.path)};
+            auto block_tree_store{std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_dir)};
             block_tree_store->WriteReindexing(true);
-            DestroyDB(fs::PathToString(m_opts.block_tree_db_params.path));
+            DestroyDB(fs::PathToString(m_opts.block_tree_dir));
             return block_tree_store;
         }
     }
 
     {
         // Cleanup a potentially previously failed migration by setting wipe_data
-        LogInfo("   Writing data back to a new block tree store, reindexing: %d, pruned: %d", reindexing, pruned_block_files);
-        auto block_tree_store{std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_db_params.path, /*wipe_data=*/true)};
+        LogInfo("   Writing data back to a new block tree store, reindexing: %s, pruned: %s", reindexing, pruned_block_files);
+        auto block_tree_store{std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_dir, /*wipe_data=*/true)};
         block_tree_store->WritePruned(pruned_block_files);
         block_tree_store->WriteReindexing(reindexing);
 
@@ -1297,8 +1299,8 @@ std::unique_ptr<kernel::BlockTreeStore> BlockManager::CreateAndMigrateBlockTree(
     }
 
     // Re-open to ensure that the migration was successful
-    auto block_tree_store{std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_db_params.path)};
-    DestroyDB(fs::PathToString(m_opts.block_tree_db_params.path));
+    auto block_tree_store{std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_dir)};
+    DestroyDB(fs::PathToString(m_opts.block_tree_dir));
 
     LogInfo("   Successfully migrated the leveldb block tree db to new block tree store.");
     m_block_index.clear();
@@ -1316,7 +1318,7 @@ BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
 {
     m_block_tree_db = CreateAndMigrateBlockTree();
 
-    if (m_opts.block_tree_db_params.wipe_data) {
+    if (m_opts.wipe_block_tree_data) {
         m_block_tree_db->WriteReindexing(true);
         m_blockfiles_indexed = false;
         // If we're reindexing in prune mode, wipe away unusable block files and all undo data files
