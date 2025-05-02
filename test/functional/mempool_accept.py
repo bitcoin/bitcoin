@@ -365,6 +365,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.vout[0].scriptPubKey = CScript([OP_RETURN])
         data_len = int(MAX_STANDARD_TX_WEIGHT / 4) - tx.get_vsize() - 5 - 4  # -5 for PUSHDATA4 and -4 for script size
         tx.vout[0].scriptPubKey = CScript([OP_RETURN, b"\xff" * (data_len)])
+        assert_equal(tx.get_vsize(), int(MAX_STANDARD_TX_WEIGHT / 4))
         self.check_mempool_result(
             result_expected=[{"txid": tx.rehash(), "allowed": True, "vsize": tx.get_vsize(), "fees": {"base": Decimal("0.1") - Decimal("0.05")}}],
             rawtxs=[tx.serialize().hex()],
