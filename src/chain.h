@@ -114,6 +114,12 @@ public:
     //! Byte offset within rev?????.dat where this block's undo data is stored
     unsigned int nUndoPos GUARDED_BY(::cs_main){0};
 
+    //! Sentinel for an unset header pos
+    static constexpr int64_t UNSET_HEADER_POS{-1};
+
+    //! (memory only) Byte offset within headers.dat where this class' data is stored
+    int64_t header_pos GUARDED_BY(::cs_main){UNSET_HEADER_POS};
+
     //! (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
     arith_uint256 nChainWork{};
 
@@ -373,6 +379,25 @@ public:
 
     uint256 GetBlockHash() = delete;
     std::string ToString() = delete;
+};
+
+/** A wrapper for creating a constant-sized serialization without varint encoding */
+struct DiskBlockIndexWrapper : CDiskBlockIndex {
+    static constexpr size_t SERIALIZED_SIZE{104};
+
+    DiskBlockIndexWrapper() = default;
+
+    explicit DiskBlockIndexWrapper(const CDiskBlockIndex* pindex) : CDiskBlockIndex(*pindex)
+    {
+    }
+
+    SERIALIZE_METHODS(DiskBlockIndexWrapper, obj)
+    {
+        LOCK(::cs_main);
+        READWRITE(obj.nHeight, obj.nStatus, obj.nTx, obj.nFile, obj.nDataPos, obj.nUndoPos);
+        // block header
+        READWRITE(obj.nVersion, obj.hashPrev, obj.hashMerkleRoot, obj.nTime, obj.nBits, obj.nNonce);
+    }
 };
 
 /** An in-memory indexed chain of blocks. */
