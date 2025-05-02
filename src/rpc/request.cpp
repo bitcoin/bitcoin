@@ -23,8 +23,8 @@
  * but uses JSON-RPC 1.1/2.0 standards for parts of the 1.0 standard that were
  * unspecified (HTTP errors and contents of 'error').
  *
- * 1.0 spec: http://json-rpc.org/wiki/specification
- * 1.2 spec: http://jsonrpc.org/historical/json-rpc-over-http.html
+ * 1.0 spec: https://www.jsonrpc.org/specification_v1
+ * 1.2 spec: https://jsonrpc.org/historical/json-rpc-over-http.html
  *
  * If the server receives a request with the JSON-RPC 2.0 marker `{"jsonrpc": "2.0"}`
  * then Bitcoin will respond with a strictly specified response.
@@ -35,7 +35,7 @@
  *
  * 2.0 spec: https://www.jsonrpc.org/specification
  *
- * Also see http://www.simple-is-better.org/rpc/#differences-between-1-0-and-2-0
+ * Also see https://www.simple-is-better.org/rpc/#differences-between-1-0-and-2-0
  */
 
 UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id)
