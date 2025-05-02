@@ -906,6 +906,10 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         InitWarning(_("Option '-checkpoints' is set but checkpoints were removed. This option has no effect."));
     }
 
+    if (args.IsArgSet("-datacarriersize") || args.IsArgSet("-datacarrier")) {
+        InitWarning(_("Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated. They will be removed in a future version."));
+    }
+
     // Error if network-specific options (-addnode, -connect, etc) are
     // specified in default section of config file, but not overridden
     // on the command line or in this chain's section of the config file.
