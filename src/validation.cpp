@@ -94,8 +94,8 @@ static constexpr size_t WARN_FLUSH_COINS_SIZE = 1 << 30; // 1 GiB
  *  Randomize writing time inside the window to prevent a situation where the
  *  network over time settles into a few cohorts of synchronized writers.
 */
-static constexpr auto DATABASE_WRITE_INTERVAL_MIN{50min};
-static constexpr auto DATABASE_WRITE_INTERVAL_MAX{70min};
+static constexpr auto DB_WRITE_INTERVAL_MIN{50min};
+static constexpr auto DB_WRITE_INTERVAL_MAX{70min};
 /** Maximum age of our tip for us to be considered current for fee estimation */
 static constexpr std::chrono::hours MAX_FEE_ESTIMATION_TIP_AGE{3};
 const std::vector<std::string> CHECKLEVEL_DOC {
@@ -2923,8 +2923,8 @@ bool Chainstate::FlushStateToDisk(
         }
 
         if (should_write || m_next_write == NodeClock::time_point::max()) {
-            constexpr auto range{DATABASE_WRITE_INTERVAL_MAX - DATABASE_WRITE_INTERVAL_MIN};
-            m_next_write = FastRandomContext().rand_uniform_delay(NodeClock::now() + DATABASE_WRITE_INTERVAL_MIN, range);
+            m_next_write = NodeClock::now() +
+                           FastRandomContext().randrange<std::chrono::minutes>(DB_WRITE_INTERVAL_MIN, DB_WRITE_INTERVAL_MAX);
         }
     }
     if (full_flush_completed && m_chainman.m_options.signals) {

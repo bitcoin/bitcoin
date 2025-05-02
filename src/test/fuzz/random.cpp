@@ -67,6 +67,13 @@ FUZZ_TARGET(random)
     }
 
     {
+        const auto min{std::chrono::seconds{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 5'000)}};
+        const auto max{min + std::chrono::seconds{fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 5'000)}};
+        const auto v{fast_random_context.randrange<std::chrono::seconds>(min, max)};
+        assert(v >= min && v < max);
+    }
+
+    {
         const auto base{std::chrono::steady_clock::now()};
         const auto range{std::chrono::seconds{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 3'600)}};
         const auto tp{fast_random_context.rand_uniform_delay(base, range)};

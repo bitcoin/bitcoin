@@ -343,6 +343,14 @@ public:
         return Dur{Impl().randrange(range.count())};
     }
 
+    /** Generate a uniform random duration in the half‑open interval [min,max). */
+    template <StdChronoDuration Dur>
+    Dur randrange(std::common_type_t<Dur> min, std::common_type_t<Dur> max) noexcept
+    {
+        Assume(max > min);
+        return min + randrange<Dur>(max - min);
+    }
+
     /**
      * Return a duration sampled from an exponential distribution
      * (https://en.wikipedia.org/wiki/Exponential_distribution). Successive events
