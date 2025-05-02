@@ -567,9 +567,9 @@ BOOST_AUTO_TEST_CASE(strprintf_numbers)
 #undef B
 #undef E
 
-BOOST_AUTO_TEST_CASE(util_time_GetTime)
+BOOST_AUTO_TEST_CASE(util_mocktime)
 {
-    SetMockTime(111);
+    SetMockTime(111s);
     // Check that mock time does not change after a sleep
     for (const auto& num_sleep : {0ms, 1ms}) {
         UninterruptibleSleep(num_sleep);
@@ -583,13 +583,6 @@ BOOST_AUTO_TEST_CASE(util_time_GetTime)
         BOOST_CHECK_EQUAL(111000000, GetTime<std::chrono::microseconds>().count());
     }
     SetMockTime(0s);
-
-    // Check that steady time changes after a sleep
-    const auto steady_ms_0 = Now<SteadyMilliseconds>();
-    const auto steady_0 = std::chrono::steady_clock::now();
-    UninterruptibleSleep(1ms);
-    BOOST_CHECK(steady_ms_0 < Now<SteadyMilliseconds>());
-    BOOST_CHECK(steady_0 + 1ms <= std::chrono::steady_clock::now());
 }
 
 BOOST_AUTO_TEST_CASE(test_IsDigit)

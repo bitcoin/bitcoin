@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright 2014 BitPay Inc.
-# Copyright 2016-2017 The Bitcoin Core developers
+# Copyright 2016-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test framework for bitcoin utils.
@@ -155,15 +155,16 @@ def bctest(testDir, testObj, buildenv):
 
     if "error_txt" in testObj:
         want_error = testObj["error_txt"]
-        # Compare error text
-        # TODO: ideally, we'd compare the strings exactly and also assert
-        # That stderr is empty if no errors are expected. However, bitcoin-tx
-        # emits DISPLAY errors when running as a windows application on
-        # linux through wine. Just assert that the expected error text appears
-        # somewhere in stderr.
+        # A partial match instead of an exact match makes writing tests easier
+        # and should be sufficient.
         if want_error not in res.stderr:
             logging.error(f"Error mismatch:\nExpected: {want_error}\nReceived: {res.stderr.rstrip()}\nres: {str(res)}")
             raise Exception
+    else:
+        if res.stderr:
+            logging.error(f"Unexpected error received: {res.stderr.rstrip()}\nres: {str(res)}")
+            raise Exception
+
 
 def parse_output(a, fmt):
     """Parse the output according to specified format.

@@ -68,6 +68,11 @@ User-Space, Statically Defined Tracing (USDT) dependencies:
 
     sudo apt install systemtap-sdt-dev
 
+IPC-enabled binaries are compiled  with `-DENABLE_IPC=ON` and require the following dependencies.
+Skip if you do not need IPC functionality.
+
+    sudo apt-get install libcapnp-dev capnproto
+
 GUI dependencies:
 
 Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
@@ -117,6 +122,11 @@ ZMQ dependencies (provides ZMQ API):
 User-Space, Statically Defined Tracing (USDT) dependencies:
 
     sudo dnf install systemtap-sdt-devel
+
+IPC-enabled binaries are compiled  with `-DENABLE_IPC=ON` and require the following dependency.
+Skip if you do not need IPC functionality.
+
+    sudo dnf install capnproto
 
 GUI dependencies:
 

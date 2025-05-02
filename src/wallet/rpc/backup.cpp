@@ -559,7 +559,7 @@ RPCHelpMan importwallet()
                         fLabel = false;
                     if (vstr[nStr] == "reserve=1")
                         fLabel = false;
-                    if (vstr[nStr].substr(0,6) == "label=") {
+                    if (vstr[nStr].starts_with("label=")) {
                         strLabel = DecodeDumpString(vstr[nStr].substr(6));
                         fLabel = true;
                     }
@@ -1091,6 +1091,9 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
         std::tie(range_start, range_end) = ParseDescriptorRange(data["range"]);
     }
 
+    // Only single key descriptors are allowed to be imported to a legacy wallet's keypool
+    bool can_keypool = parsed_descs.at(0)->IsSingleKey();
+
     const UniValue& priv_keys = data.exists("keys") ? data["keys"].get_array() : UniValue();
 
     for (size_t j = 0; j < parsed_descs.size(); ++j) {
@@ -1107,8 +1110,10 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
             std::vector<CScript> scripts_temp;
             parsed_desc->Expand(i, keys, scripts_temp, out_keys);
             std::copy(scripts_temp.begin(), scripts_temp.end(), std::inserter(script_pub_keys, script_pub_keys.end()));
-            for (const auto& key_pair : out_keys.pubkeys) {
-                ordered_pubkeys.emplace_back(key_pair.first, desc_internal);
+            if (can_keypool) {
+                for (const auto& key_pair : out_keys.pubkeys) {
+                    ordered_pubkeys.emplace_back(key_pair.first, desc_internal);
+                }
             }
 
             for (const auto& x : out_keys.scripts) {
@@ -1575,16 +1580,15 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
 
             WalletDescriptor w_desc(std::move(parsed_desc), timestamp, range_start, range_end, next_index);
 
-            // Check if the wallet already contains the descriptor
-            auto existing_spk_manager = wallet.GetDescriptorScriptPubKeyMan(w_desc);
-            if (existing_spk_manager) {
-                if (!existing_spk_manager->CanUpdateToWalletDescriptor(w_desc, error)) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, error);
-                }
+            // Add descriptor to the wallet
+            auto spk_manager_res = wallet.AddWalletDescriptor(w_desc, keys, label, desc_internal);
+
+            if (!spk_manager_res) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, util::ErrorString(spk_manager_res).original);
             }
 
-            // Add descriptor to the wallet
-            auto spk_manager = wallet.AddWalletDescriptor(w_desc, keys, label, desc_internal);
+            auto spk_manager = spk_manager_res.value();
+
             if (spk_manager == nullptr) {
                 throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Could not add descriptor '%s'", descriptor));
             }

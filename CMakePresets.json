@@ -77,7 +77,6 @@
         "BUILD_UTIL_CHAINSTATE": "ON",
         "BUILD_WALLET_TOOL": "ON",
         "ENABLE_EXTERNAL_SIGNER": "ON",
-        "ENABLE_HARDENING": "ON",
         "ENABLE_WALLET": "ON",
         "WARN_INCOMPATIBLE_BDB": "OFF",
         "WITH_BDB": "ON",
