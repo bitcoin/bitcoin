@@ -2864,6 +2864,9 @@ bool Chainstate::FlushStateToDisk(
         const bool should_write{mode == FlushStateMode::ALWAYS || cache_large || cache_critical || periodic_write || flush_for_prune};
         // Write blocks, block index and best chain related state to disk.
         if (should_write) {
+            LogDebug(BCLog::COINDB, "FlushStateToDisk write: flush mode=%s, prune=%d, cache_large=%d, cache_critical=%d, periodic=%d",
+                FlushStateModeNames[size_t(mode)], flush_for_prune, cache_large, cache_critical, periodic_write);
+
             // Ensure we can write block index
             if (!CheckDiskSpace(m_blockman.m_opts.blocks_dir)) {
                 return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
