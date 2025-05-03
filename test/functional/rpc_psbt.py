@@ -129,11 +129,22 @@ class PSBTTest(BitcoinTestFramework):
         assert "non_witness_utxo" in mining_node.decodepsbt(psbt_new.to_base64())["inputs"][0]
 
         # Have the offline node sign the PSBT (which will remove the non-witness UTXO)
-        signed_psbt = offline_node.walletprocesspsbt(psbt_new.to_base64())
-        assert not "non_witness_utxo" in mining_node.decodepsbt(signed_psbt["psbt"])["inputs"][0]
+        walletprocesspsbt_signed = offline_node.walletprocesspsbt(psbt_new.to_base64())
+        assert not "non_witness_utxo" in mining_node.decodepsbt(walletprocesspsbt_signed["psbt"])["inputs"][0]
+
+        # Separately, sign the PSBT via descriptorprocesspsbt RPC using the `offline_node`'s
+        # private descriptor - this should also remove the non-witness UTXO manually added above.
+        descriptorprocesspsbt_signed = offline_node.descriptorprocesspsbt(psbt_new.to_base64(), offline_node.listdescriptors(True)["descriptors"])
+        assert not "non_witness_utxo" in mining_node.decodepsbt(descriptorprocesspsbt_signed["psbt"])["inputs"][0]
+
+        # Test broadcasting both the signed PSBTs separately because they both use the same
+        # input and thus, only one of them can be mined later.
+        for psbt in [walletprocesspsbt_signed, descriptorprocesspsbt_signed]:
+            test_result = mining_node.testmempoolaccept(rawtxs=[psbt["hex"]])
+            assert_equal(test_result[0]["allowed"], True)
 
         # Make sure we can mine the resulting transaction
-        txid = mining_node.sendrawtransaction(signed_psbt["hex"])
+        txid = mining_node.sendrawtransaction(walletprocesspsbt_signed["hex"])
         self.generate(mining_node, nblocks=1, sync_fun=lambda: self.sync_all([online_node, mining_node]))
         assert_equal(online_node.gettxout(txid,0)["confirmations"], 1)
 
