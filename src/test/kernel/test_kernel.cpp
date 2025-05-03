@@ -993,7 +993,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_in_memory_tests)
     }
 
     BOOST_CHECK(fs::exists(in_memory_test_directory.m_directory / "blocks"));
-    BOOST_CHECK(!fs::exists(in_memory_test_directory.m_directory / "blocks" / "index"));
+    BOOST_CHECK(fs::exists(in_memory_test_directory.m_directory / "blocks" / "index"));
     BOOST_CHECK(!fs::exists(in_memory_test_directory.m_directory / "chainstate"));
 
     BOOST_CHECK(context.interrupt());
