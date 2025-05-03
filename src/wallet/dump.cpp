@@ -199,7 +199,7 @@ bool CreateFromDump(const std::string& name, const fs::path& wallet_path, biling
 
     // dummy chain interface
     bool ret = true;
-    std::shared_ptr<CWallet> wallet(new CWallet(nullptr /* chain */, /*coinjoin_loader=*/ nullptr, name, std::move(database)), WalletToolReleaseWallet);
+    std::shared_ptr<CWallet> wallet(new CWallet(/*chain=*/nullptr, /*coinjoin_loader=*/nullptr, name, gArgs, std::move(database)), WalletToolReleaseWallet);
     {
         LOCK(wallet->cs_wallet);
         DBErrors load_wallet_ret = wallet->LoadWallet();

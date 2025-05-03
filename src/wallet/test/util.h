@@ -7,6 +7,7 @@
 
 #include <memory>
 
+class ArgsManager;
 class CChain;
 class CKey;
 class CWallet;
@@ -17,6 +18,6 @@ class Loader;
 } // namespace CoinJoin
 } // namespace interfaces
 
-std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, CChain& cchain, const CKey& key);
+std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, CChain& cchain, ArgsManager& args, const CKey& key);
 
 #endif // BITCOIN_WALLET_TEST_UTIL_H

@@ -110,7 +110,7 @@ void TestGUI(interfaces::Node& node)
     }
     node.setContext(&test.m_node);
     WalletContext& context = *node.walletLoader().context();
-    const std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), node.context()->coinjoin_loader.get(), "", CreateMockWalletDatabase());
+    const std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), node.context()->coinjoin_loader.get(), "", gArgs, CreateMockWalletDatabase());
     AddWallet(context, wallet);
     wallet->LoadWallet();
     wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
