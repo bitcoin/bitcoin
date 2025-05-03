@@ -61,3 +61,11 @@ NetInfoStatus MnNetInfo::AddEntry(const std::string& input)
     }
     return NetInfoStatus::BadInput;
 }
+
+std::string MnNetInfo::ToString() const
+{
+    // Extra padding to account for padding done by the calling function.
+    return strprintf("MnNetInfo()\n"
+                     "    CService(addr=%s, port=%u)\n",
+                     m_addr.ToStringAddr(), m_addr.GetPort());
+}
