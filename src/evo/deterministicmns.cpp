@@ -392,7 +392,8 @@ CDeterministicMNListDiff CDeterministicMNList::BuildDiff(const CDeterministicMNL
 {
     CDeterministicMNListDiff diffRet;
 
-    to.ForEachMNShared(false, [this, &diffRet](const CDeterministicMNCPtr& toPtr) {
+    for (const auto& p : to.mnMap) {
+        const auto& toPtr = p.second;
         auto fromPtr = GetMN(toPtr->proTxHash);
         if (fromPtr == nullptr) {
             diffRet.addedMNs.emplace_back(toPtr);
@@ -402,14 +403,15 @@ CDeterministicMNListDiff CDeterministicMNList::BuildDiff(const CDeterministicMNL
                 diffRet.updatedMNs.emplace(toPtr->GetInternalId(), std::move(stateDiff));
             }
         }
-    });
+    }
     if (mnMap.size() + diffRet.addedMNs.size() != to.mnMap.size()) {
-        ForEachMN(false, [&](auto& fromPtr) {
-            auto toPtr = to.GetMN(fromPtr.proTxHash);
+        for (auto& fromPtr : mnMap) {
+            const auto toPtr = to.GetMN(fromPtr.second->proTxHash);
             if (toPtr == nullptr) {
-                diffRet.removedMns.emplace(fromPtr.GetInternalId());
+                diffRet.removedMns.emplace(fromPtr.second->GetInternalId());
+                if (mnMap.size() + diffRet.addedMNs.size() - diffRet.removedMns.size() == to.mnMap.size()) break;
             }
-        });
+        };
     }
 
     // added MNs need to be sorted by internalId so that these are added in correct order when the diff is applied later
