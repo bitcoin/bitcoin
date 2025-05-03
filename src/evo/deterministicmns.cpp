@@ -403,12 +403,14 @@ CDeterministicMNListDiff CDeterministicMNList::BuildDiff(const CDeterministicMNL
             }
         }
     });
-    ForEachMN(false, [&](auto& fromPtr) {
-        auto toPtr = to.GetMN(fromPtr.proTxHash);
-        if (toPtr == nullptr) {
-            diffRet.removedMns.emplace(fromPtr.GetInternalId());
-        }
-    });
+    if (mnMap.size() + diffRet.addedMNs.size() != to.mnMap.size()) {
+        ForEachMN(false, [&](auto& fromPtr) {
+            auto toPtr = to.GetMN(fromPtr.proTxHash);
+            if (toPtr == nullptr) {
+                diffRet.removedMns.emplace(fromPtr.GetInternalId());
+            }
+        });
+    }
 
     // added MNs need to be sorted by internalId so that these are added in correct order when the diff is applied later
     // otherwise internalIds will not match with the original list
