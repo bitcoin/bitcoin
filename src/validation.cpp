@@ -3205,6 +3205,11 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
 
         if (nStopAtHeight && pindexNewTip && pindexNewTip->nHeight >= nStopAtHeight) StartShutdown();
 
+        // Write changes periodically to disk, after relay.
+        if (!FlushStateToDisk(state, FlushStateMode::PERIODIC)) {
+            return false;
+        }
+
         if (WITH_LOCK(::cs_main, return m_disabled)) {
             // Background chainstate has reached the snapshot base block, so exit.
             break;
@@ -3217,11 +3222,6 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
         if (ShutdownRequested()) break;
     } while (pindexNewTip != pindexMostWork);
     CheckBlockIndex();
-
-    // Write changes periodically to disk, after relay.
-    if (!FlushStateToDisk(state, FlushStateMode::PERIODIC)) {
-        return false;
-    }
 
     return true;
 }
