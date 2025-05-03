@@ -461,34 +461,30 @@ bool SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCo
     for (const COutPoint& outpoint : vPresetInputs)
     {
         std::map<uint256, CWalletTx>::const_iterator it = wallet.mapWallet.find(outpoint.hash);
-        if (it != wallet.mapWallet.end())
-        {
-            const CWalletTx& wtx = it->second;
-            // Clearly invalid input, fail
-            if (wtx.tx->vout.size() <= outpoint.n) {
-                return false;
-            }
-            if (nCoinType == CoinType::ONLY_FULLY_MIXED) {
-                // Make sure to include mixed preset inputs only,
-                // even if some non-mixed inputs were manually selected via CoinControl
-                if (!wallet.IsFullyMixed(outpoint)) continue;
-            }
-            // Just to calculate the marginal byte size
-            CInputCoin coin(wtx.tx, outpoint.n, GetTxSpendSize(wallet, wtx, outpoint.n, false));
-            nValueFromPresetInputs += coin.txout.nValue;
-            if (coin.m_input_bytes <= 0) {
-                return false; // Not solvable, can't estimate size for fee
-            }
-            coin.effective_value = coin.txout.nValue - coin_selection_params.m_effective_feerate.GetFee(coin.m_input_bytes);
-            if (coin_selection_params.m_subtract_fee_outputs) {
-                value_to_select -= coin.txout.nValue;
-            } else {
-                value_to_select -= coin.effective_value;
-            }
-            setPresetCoins.insert(coin);
-        } else {
-            return false; // TODO: Allow non-wallet inputs
+        if (it == wallet.mapWallet.end()) return false; // TODO: Allow non-wallet inputs
+        const CWalletTx& wtx = it->second;
+        // Clearly invalid input, fail
+        if (wtx.tx->vout.size() <= outpoint.n) {
+            return false;
         }
+        if (nCoinType == CoinType::ONLY_FULLY_MIXED) {
+            // Make sure to include mixed preset inputs only,
+            // even if some non-mixed inputs were manually selected via CoinControl
+            if (!wallet.IsFullyMixed(outpoint)) continue;
+        }
+        // Just to calculate the marginal byte size
+        CInputCoin coin(wtx.tx, outpoint.n, GetTxSpendSize(wallet, wtx, outpoint.n, false));
+        nValueFromPresetInputs += coin.txout.nValue;
+        if (coin.m_input_bytes <= 0) {
+            return false; // Not solvable, can't estimate size for fee
+        }
+        coin.effective_value = coin.txout.nValue - coin_selection_params.m_effective_feerate.GetFee(coin.m_input_bytes);
+        if (coin_selection_params.m_subtract_fee_outputs) {
+            value_to_select -= coin.txout.nValue;
+        } else {
+            value_to_select -= coin.effective_value;
+        }
+        setPresetCoins.insert(coin);
     }
 
     // remove preset inputs from vCoins so that Coin Selection doesn't pick them.
