@@ -221,10 +221,10 @@ void MasternodeList::updateDIP3List()
         }
         // populate list
         // Address, Protocol, Status, Active Seconds, Last Seen, Pub Key
-        auto addr_key = dmn.pdmnState->addr.GetKey();
+        auto addr_key = dmn.pdmnState->netInfo.m_addr.GetKey();
         QByteArray addr_ba(reinterpret_cast<const char*>(addr_key.data()), addr_key.size());
         QTableWidgetItem* addressItem = new CMasternodeListWidgetItem<QByteArray>(
-            QString::fromStdString(dmn.pdmnState->addr.ToStringAddrPort()), addr_ba);
+            QString::fromStdString(dmn.pdmnState->netInfo.m_addr.ToStringAddrPort()), addr_ba);
         QTableWidgetItem* typeItem = new QTableWidgetItem(QString::fromStdString(std::string(GetMnType(dmn.nType).description)));
         QTableWidgetItem* statusItem = new QTableWidgetItem(dmn.pdmnState->IsBanned() ? tr("POSE_BANNED") : tr("ENABLED"));
         QTableWidgetItem* PoSeScoreItem = new CMasternodeListWidgetItem<int>(QString::number(dmn.pdmnState->nPoSePenalty), dmn.pdmnState->nPoSePenalty);

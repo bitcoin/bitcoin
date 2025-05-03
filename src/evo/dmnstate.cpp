@@ -31,7 +31,7 @@ std::string CDeterministicMNState::ToString() const
                      "operatorPayoutAddress=%s)",
                      nVersion, nRegisteredHeight, nLastPaidHeight, nPoSePenalty, nPoSeRevivedHeight, nPoSeBanHeight,
                      nRevocationReason, EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(),
-                     EncodeDestination(PKHash(keyIDVoting)), addr.ToStringAddrPort(), payoutAddress,
+                     EncodeDestination(PKHash(keyIDVoting)), netInfo.m_addr.ToStringAddrPort(), payoutAddress,
                      operatorPayoutAddress);
 }
 
@@ -39,7 +39,7 @@ UniValue CDeterministicMNState::ToJson(MnType nType) const
 {
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("version", nVersion);
-    obj.pushKV("service", addr.ToStringAddrPort());
+    obj.pushKV("service", netInfo.m_addr.ToStringAddrPort());
     obj.pushKV("registeredHeight", nRegisteredHeight);
     obj.pushKV("lastPaidHeight", nLastPaidHeight);
     obj.pushKV("consecutivePayments", nConsecutivePayments);
@@ -72,8 +72,8 @@ UniValue CDeterministicMNStateDiff::ToJson(MnType nType) const
     if (fields & Field_nVersion) {
         obj.pushKV("version", state.nVersion);
     }
-    if (fields & Field_addr) {
-        obj.pushKV("service", state.addr.ToStringAddrPort());
+    if (fields & Field_netInfo) {
+        obj.pushKV("service", state.netInfo.m_addr.ToStringAddrPort());
     }
     if (fields & Field_nRegisteredHeight) {
         obj.pushKV("registeredHeight", state.nRegisteredHeight);

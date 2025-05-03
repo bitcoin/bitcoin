@@ -192,6 +192,7 @@ BITCOIN_CORE_H = \
   evo/evodb.h \
   evo/mnauth.h \
   evo/mnhftx.h \
+  evo/netinfo.h \
   evo/providertx.h \
   evo/simplifiedmns.h \
   evo/specialtx.h \

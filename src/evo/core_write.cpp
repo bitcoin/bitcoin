@@ -6,6 +6,7 @@
 #include <evo/assetlocktx.h>
 #include <evo/cbtx.h>
 #include <evo/mnhftx.h>
+#include <evo/netinfo.h>
 #include <evo/providertx.h>
 #include <llmq/commitment.h>
 
@@ -66,7 +67,7 @@
     ret.pushKV("type", ToUnderlying(nType));
     ret.pushKV("collateralHash", collateralOutpoint.hash.ToString());
     ret.pushKV("collateralIndex", (int)collateralOutpoint.n);
-    ret.pushKV("service", addr.ToStringAddrPort());
+    ret.pushKV("service", netInfo.m_addr.ToStringAddrPort());
     ret.pushKV("ownerAddress", EncodeDestination(PKHash(keyIDOwner)));
     ret.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
     if (CTxDestination dest; ExtractDestination(scriptPayout, dest)) {
@@ -113,7 +114,7 @@
     ret.pushKV("version", nVersion);
     ret.pushKV("type", ToUnderlying(nType));
     ret.pushKV("proTxHash", proTxHash.ToString());
-    ret.pushKV("service", addr.ToStringAddrPort());
+    ret.pushKV("service", netInfo.m_addr.ToStringAddrPort());
     if (CTxDestination dest; ExtractDestination(scriptOperatorPayout, dest)) {
         ret.pushKV("operatorPayoutAddress", EncodeDestination(dest));
     }

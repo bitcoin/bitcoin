@@ -54,7 +54,7 @@ public:
     CKeyID keyIDOwner;
     CBLSLazyPublicKey pubKeyOperator;
     CKeyID keyIDVoting;
-    CService addr;
+    MnNetInfo netInfo;
     CScript scriptPayout;
     CScript scriptOperatorPayout;
 
@@ -69,7 +69,7 @@ public:
         keyIDOwner(proTx.keyIDOwner),
         pubKeyOperator(proTx.pubKeyOperator),
         keyIDVoting(proTx.keyIDVoting),
-        addr(proTx.addr),
+        netInfo(proTx.netInfo),
         scriptPayout(proTx.scriptPayout),
         platformNodeID(proTx.platformNodeID),
         platformP2PPort(proTx.platformP2PPort),
@@ -100,7 +100,7 @@ public:
         READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.pubKeyOperator), obj.nVersion == ProTxVersion::LegacyBLS));
         READWRITE(
             obj.keyIDVoting,
-            obj.addr,
+            obj.netInfo,
             obj.scriptPayout,
             obj.scriptOperatorPayout,
             obj.platformNodeID,
@@ -112,7 +112,7 @@ public:
     {
         nVersion = ProTxVersion::LegacyBLS;
         pubKeyOperator = CBLSLazyPublicKey();
-        addr = CService();
+        netInfo.m_addr = CService();
         scriptOperatorPayout = CScript();
         nRevocationReason = CProUpRevTx::REASON_NOT_SPECIFIED;
         platformNodeID = uint160();
@@ -166,7 +166,7 @@ public:
         Field_keyIDOwner = 0x0100,
         Field_pubKeyOperator = 0x0200,
         Field_keyIDVoting = 0x0400,
-        Field_addr = 0x0800,
+        Field_netInfo = 0x0800,
         Field_scriptPayout = 0x1000,
         Field_scriptOperatorPayout = 0x2000,
         Field_nConsecutivePayments = 0x4000,
@@ -198,7 +198,7 @@ private:
         DMN_STATE_MEMBER(keyIDOwner),
         DMN_STATE_MEMBER(pubKeyOperator),
         DMN_STATE_MEMBER(keyIDVoting),
-        DMN_STATE_MEMBER(addr),
+        DMN_STATE_MEMBER(netInfo),
         DMN_STATE_MEMBER(scriptPayout),
         DMN_STATE_MEMBER(scriptOperatorPayout),
         DMN_STATE_MEMBER(nConsecutivePayments),

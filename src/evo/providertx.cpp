@@ -90,7 +90,7 @@ std::string CProRegTx::ToString() const
     return strprintf("CProRegTx(nVersion=%d, nType=%d, collateralOutpoint=%s, addr=%s, nOperatorReward=%f, "
                      "ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, scriptPayout=%s, platformNodeID=%s, "
                      "platformP2PPort=%d, platformHTTPPort=%d)",
-                     nVersion, ToUnderlying(nType), collateralOutpoint.ToStringShort(), addr.ToStringAddrPort(),
+                     nVersion, ToUnderlying(nType), collateralOutpoint.ToStringShort(), netInfo.m_addr.ToStringAddrPort(),
                      (double)nOperatorReward / 100, EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(),
                      EncodeDestination(PKHash(keyIDVoting)), payee, platformNodeID.ToString(), platformP2PPort,
                      platformHTTPPort);
@@ -118,7 +118,7 @@ std::string CProUpServTx::ToString() const
 
     return strprintf("CProUpServTx(nVersion=%d, nType=%d, proTxHash=%s, addr=%s, operatorPayoutAddress=%s, "
                      "platformNodeID=%s, platformP2PPort=%d, platformHTTPPort=%d)",
-                     nVersion, ToUnderlying(nType), proTxHash.ToString(), addr.ToStringAddrPort(), payee,
+                     nVersion, ToUnderlying(nType), proTxHash.ToString(), netInfo.m_addr.ToStringAddrPort(), payee,
                      platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
 }
 
