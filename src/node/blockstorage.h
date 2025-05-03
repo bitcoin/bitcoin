@@ -10,6 +10,7 @@
 #include <dbwrapper.h>
 #include <flatfile.h>
 #include <kernel/blockmanager_opts.h>
+#include <kernel/blocktreestorage.h>
 #include <kernel/chainparams.h>
 #include <kernel/cs_main.h>
 #include <kernel/messagestartchars.h>
@@ -297,6 +298,8 @@ private:
 
     BlockfileType BlockfileTypeForHeight(int height);
 
+    std::unique_ptr<kernel::BlockTreeStore> CreateAndMigrateBlockTree();
+
     const kernel::BlockManagerOpts m_opts;
 
     const FlatFileSeq m_block_file_seq;
@@ -352,7 +355,7 @@ public:
      */
     std::multimap<CBlockIndex*, CBlockIndex*> m_blocks_unlinked;
 
-    std::unique_ptr<BlockTreeDB> m_block_tree_db GUARDED_BY(::cs_main);
+    std::unique_ptr<kernel::BlockTreeStore> m_block_tree_db GUARDED_BY(::cs_main);
 
     void WriteBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool LoadBlockIndexDB(const std::optional<uint256>& snapshot_blockhash)
