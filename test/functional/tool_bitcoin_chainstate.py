@@ -52,7 +52,7 @@ class BitcoinChainstateTest(BitcoinTestFramework):
         self.log.info("Test kernel process refuses a datadir owned by a running node")
         proc = run_chainstate(self.nodes[0].chain_path)
         assert proc.returncode != 0
-        expected_message = "Failed to create chainstate manager: Fatal LevelDB error: IO error"
+        expected_message = "Failed to create chainstate manager: Another process is already writing to the block tree store in"
         assert expected_message in proc.stdout
 
         self.log.info("Test kernel process on an unrelated datadir is unaffected")

@@ -121,7 +121,12 @@ class InitTest(BitcoinTestFramework):
 
         deletion_rounds = [
             {
-                'filepath_glob': 'blocks/index/*.ldb',
+                'filepath_glob': 'blocks/index/headers.dat',
+                'error_message': 'Error opening block database.',
+                'startup_args': [],
+            },
+            {
+                'filepath_glob': 'blocks/index/blockfiles.dat',
                 'error_message': 'Error opening block database.',
                 'startup_args': [],
             },
@@ -152,8 +157,8 @@ class InitTest(BitcoinTestFramework):
 
         perturbation_rounds = [
             {
-                'filepath_glob': 'blocks/index/*.ldb',
-                'error_message': 'Error loading block database.',
+                'filepath_glob': 'blocks/index/headers.dat',
+                'error_message': 'Error loading database.',
                 'startup_args': [],
             },
             {
