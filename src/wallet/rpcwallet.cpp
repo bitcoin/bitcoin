@@ -588,8 +588,8 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
         int depth{wallet.GetTxDepthInMainChain(wtx)};
         if (// Coinbase with less than 1 confirmation is no longer in the main chain
             (wtx.IsCoinBase() && (depth < 1 || !include_coinbase))
-            || (wallet.IsTxImmatureCoinBase(wtx) && !include_immature_coinbase)
-            || !wallet.chain().checkFinalTx(*wtx.tx)) {
+            || (wallet.IsTxImmatureCoinBase(wtx) && !include_immature_coinbase))
+        {
             continue;
         }
         if (depth < min_depth && !(fAddLocked && wallet.IsTxLockedByInstantSend(wtx))) continue;
@@ -1004,8 +1004,8 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
 
         // Coinbase with less than 1 confirmation is no longer in the main chain
         if ((wtx.IsCoinBase() && (nDepth < 1 || !include_coinbase))
-            || (wallet.IsTxImmatureCoinBase(wtx) && !include_immature_coinbase)
-            || !wallet.chain().checkFinalTx(*wtx.tx)) {
+            || (wallet.IsTxImmatureCoinBase(wtx) && !include_immature_coinbase))
+        {
             continue;
         }
 

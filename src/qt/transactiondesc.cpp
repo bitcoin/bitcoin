@@ -18,7 +18,6 @@
 #include <key_io.h>
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
-#include <script/script.h>
 #include <util/system.h>
 #include <validation.h>
 #include <wallet/ismine.h>
@@ -30,14 +29,6 @@
 
 QString TransactionDesc::FormatTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, bool inMempool, int numBlocks)
 {
-    if (!status.is_final)
-    {
-        if (wtx.tx->nLockTime < LOCKTIME_THRESHOLD)
-            return tr("Open for %n more block(s)", "", wtx.tx->nLockTime - numBlocks);
-        else
-            return tr("Open until %1").arg(GUIUtil::dateTimeStr(wtx.tx->nLockTime));
-    }
-    else
     {
         int nDepth = status.depth_in_main_chain;
         if (nDepth < 0) return tr("conflicted");

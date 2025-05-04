@@ -771,11 +771,6 @@ public:
         }
         return std::nullopt;
     }
-    bool checkFinalTx(const CTransaction& tx) override
-    {
-        LOCK(cs_main);
-        return CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), tx);
-    }
     bool isInstantSendLockedTx(const uint256& hash) override
     {
         if (m_node.llmq_ctx == nullptr || m_node.llmq_ctx->isman == nullptr) return false;
