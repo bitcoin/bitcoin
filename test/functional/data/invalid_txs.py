@@ -98,7 +98,6 @@ class OutputMissing(BadTxTemplate):
     def get_tx(self):
         tx = CTransaction()
         tx.vin.append(self.valid_txin)
-        tx.calc_sha256()
         return tx
 
 
@@ -113,7 +112,6 @@ class InputMissing(BadTxTemplate):
     # rather than the input count check.
     def get_tx(self):
         tx = CTransaction()
-        tx.calc_sha256()
         return tx
 
 
@@ -130,7 +128,6 @@ class SizeTooSmall(BadTxTemplate):
         tx.vout.append(CTxOut(0, CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 2)))))
         assert len(tx.serialize_without_witness()) == 64
         assert MIN_STANDARD_TX_NONWITNESS_SIZE - 1 == 64
-        tx.calc_sha256()
         return tx
 
 
@@ -149,7 +146,6 @@ class BadInputOutpointIndex(BadTxTemplate):
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(self.spend_tx.sha256, bad_idx), b"", SEQUENCE_FINAL))
         tx.vout.append(CTxOut(0, basic_p2sh))
-        tx.calc_sha256()
         return tx
 
 
@@ -162,7 +158,6 @@ class DuplicateInput(BadTxTemplate):
         tx.vin.append(self.valid_txin)
         tx.vin.append(self.valid_txin)
         tx.vout.append(CTxOut(1, basic_p2sh))
-        tx.calc_sha256()
         return tx
 
 
@@ -175,7 +170,6 @@ class PrevoutNullInput(BadTxTemplate):
         tx.vin.append(self.valid_txin)
         tx.vin.append(CTxIn(COutPoint(hash=0, n=0xffffffff)))
         tx.vout.append(CTxOut(1, basic_p2sh))
-        tx.calc_sha256()
         return tx
 
 
@@ -190,7 +184,6 @@ class NonexistentInput(BadTxTemplate):
         tx.vin.append(CTxIn(COutPoint(self.spend_tx.sha256 + 1, 0), b"", SEQUENCE_FINAL))
         tx.vin.append(self.valid_txin)
         tx.vout.append(CTxOut(1, basic_p2sh))
-        tx.calc_sha256()
         return tx
 
 
@@ -226,7 +219,6 @@ class CreateSumTooLarge(BadTxTemplate):
     def get_tx(self):
         tx = create_tx_with_script(self.spend_tx, 0, amount=MAX_MONEY)
         tx.vout = [tx.vout[0]] * 2
-        tx.calc_sha256()
         return tx
 
 
@@ -274,7 +266,6 @@ def getDisabledOpcodeTemplate(opcode):
         vin.scriptSig = CScript([opcode])
         tx.vin.append(vin)
         tx.vout.append(CTxOut(1, basic_p2sh))
-        tx.calc_sha256()
         return tx
 
     return type('DisabledOpcode_' + str(opcode), (BadTxTemplate,), {

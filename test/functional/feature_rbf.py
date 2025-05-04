@@ -106,7 +106,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
         # Should fail because we haven't changed the fee
         tx.vout[0].scriptPubKey[-1] ^= 1
-        tx.rehash()
         tx_hex = tx.serialize().hex()
 
         # This will raise an exception due to insufficient fee

@@ -682,7 +682,6 @@ class CTransaction:
             return uint256_from_str(hash256(self.serialize_with_witness()))
 
     def is_valid(self):
-        self.calc_sha256()
         for tout in self.vout:
             if tout.nValue < 0 or tout.nValue > 21000000 * COIN:
                 return False
@@ -810,7 +809,6 @@ class CBlock(CBlockHeader):
     def calc_merkle_root(self):
         hashes = []
         for tx in self.vtx:
-            tx.calc_sha256()
             hashes.append(ser_uint256(tx.sha256))
         return self.get_merkle_root(hashes)
 

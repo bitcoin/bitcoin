@@ -110,7 +110,6 @@ class BIP68Test(BitcoinTestFramework):
         tx2.wit.vtxinwit = [CTxInWitness()]
         tx2.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
         tx2.vout = [CTxOut(int(value - self.relayfee * COIN), SCRIPT_W0_SH_OP_TRUE)]
-        tx2.rehash()
 
         assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.wallet.sendrawtransaction, from_node=self.nodes[0], tx_hex=tx2.serialize().hex())
 
@@ -220,7 +219,6 @@ class BIP68Test(BitcoinTestFramework):
         # Create a mempool tx.
         self.wallet.rescan_utxos()
         tx1 = self.wallet.send_self_transfer(from_node=self.nodes[0])["tx"]
-        tx1.rehash()
 
         # Anyone-can-spend mempool tx.
         # Sequence lock of 0 should pass.
@@ -230,7 +228,6 @@ class BIP68Test(BitcoinTestFramework):
         tx2.vout = [CTxOut(int(tx1.vout[0].nValue - self.relayfee * COIN), SCRIPT_W0_SH_OP_TRUE)]
         self.wallet.sign_tx(tx=tx2)
         tx2_raw = tx2.serialize().hex()
-        tx2.rehash()
 
         self.wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=tx2_raw)
 
@@ -248,7 +245,6 @@ class BIP68Test(BitcoinTestFramework):
             tx.wit.vtxinwit = [CTxInWitness()]
             tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
             tx.vout = [CTxOut(int(orig_tx.vout[0].nValue - relayfee * COIN), SCRIPT_W0_SH_OP_TRUE)]
-            tx.rehash()
 
             if (orig_tx.hash in node.getrawmempool()):
                 # sendrawtransaction should fail if the tx is in the mempool
@@ -353,7 +349,6 @@ class BIP68Test(BitcoinTestFramework):
         assert not softfork_active(self.nodes[0], 'csv')
 
         tx1 = self.wallet.send_self_transfer(from_node=self.nodes[0])["tx"]
-        tx1.rehash()
 
         # Make an anyone-can-spend transaction
         tx2 = CTransaction()
@@ -365,7 +360,6 @@ class BIP68Test(BitcoinTestFramework):
         self.wallet.sign_tx(tx=tx2)
         tx2_raw = tx2.serialize().hex()
         tx2 = tx_from_hex(tx2_raw)
-        tx2.rehash()
 
         self.wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=tx2_raw)
 
@@ -378,7 +372,6 @@ class BIP68Test(BitcoinTestFramework):
         tx3.wit.vtxinwit = [CTxInWitness()]
         tx3.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
         tx3.vout = [CTxOut(int(tx2.vout[0].nValue - self.relayfee * COIN), SCRIPT_W0_SH_OP_TRUE)]
-        tx3.rehash()
 
         assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.wallet.sendrawtransaction, from_node=self.nodes[0], tx_hex=tx3.serialize().hex())
 

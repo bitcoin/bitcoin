@@ -58,7 +58,6 @@ class MempoolWtxidTest(BitcoinTestFramework):
         parent = CTransaction()
         parent.vin.append(CTxIn(COutPoint(int(txid, 16), 0), b""))
         parent.vout.append(CTxOut(int(9.99998 * COIN), script_pubkey))
-        parent.rehash()
 
         privkeys = [node.get_deterministic_priv_key().key]
         raw_parent = node.signrawtransactionwithkey(hexstring=parent.serialize().hex(), privkeys=privkeys)['hex']

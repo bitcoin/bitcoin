@@ -435,7 +435,6 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         anchor_nonempty_wit_spend.vout.append(CTxOut(anchor_value - int(fee*COIN), script_to_p2wsh_script(CScript([OP_TRUE]))))
         anchor_nonempty_wit_spend.wit.vtxinwit.append(CTxInWitness())
         anchor_nonempty_wit_spend.wit.vtxinwit[0].scriptWitness.stack.append(b"f")
-        anchor_nonempty_wit_spend.rehash()
 
         self.check_mempool_result(
             result_expected=[{'txid': anchor_nonempty_wit_spend.rehash(), 'allowed': False, 'reject-reason': 'bad-witness-nonstandard'}],
@@ -466,14 +465,12 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.log.info('But cannot be spent if nested sh()')
         nested_anchor_tx = self.wallet.create_self_transfer(sequence=SEQUENCE_FINAL)['tx']
         nested_anchor_tx.vout[0].scriptPubKey = script_to_p2sh_script(PAY_TO_ANCHOR)
-        nested_anchor_tx.rehash()
         self.generateblock(node, self.wallet.get_address(), [nested_anchor_tx.serialize().hex()])
 
         nested_anchor_spend = CTransaction()
         nested_anchor_spend.vin.append(CTxIn(COutPoint(nested_anchor_tx.sha256, 0), b""))
         nested_anchor_spend.vin[0].scriptSig = CScript([bytes(PAY_TO_ANCHOR)])
         nested_anchor_spend.vout.append(CTxOut(nested_anchor_tx.vout[0].nValue - int(fee*COIN), script_to_p2wsh_script(CScript([OP_TRUE]))))
-        nested_anchor_spend.rehash()
 
         self.check_mempool_result(
             result_expected=[{'txid': nested_anchor_spend.rehash(), 'allowed': False, 'reject-reason': 'non-mandatory-script-verify-flag (Witness version reserved for soft-fork upgrades)'}],
@@ -488,12 +485,10 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx = tx_from_hex(raw_tx_reference)
         privkey, pubkey = generate_keypair()
         tx.vout[0].scriptPubKey = keys_to_multisig_script([pubkey] * 3, k=1)  # Some bare multisig script (1-of-3)
-        tx.rehash()
         self.generateblock(node, address, [tx.serialize().hex()])
         tx_spend = CTransaction()
         tx_spend.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
         tx_spend.vout.append(CTxOut(tx.vout[0].nValue - int(fee*COIN), script_to_p2wsh_script(CScript([OP_TRUE]))))
-        tx_spend.rehash()
         sign_input_legacy(tx_spend, 0, tx.vout[0].scriptPubKey, privkey, sighash_type=SIGHASH_ALL)
         tx_spend.vin[0].scriptSig = bytes(CScript([OP_0])) + tx_spend.vin[0].scriptSig
         self.check_mempool_result(

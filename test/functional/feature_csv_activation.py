@@ -112,7 +112,6 @@ class BIP68_112_113Test(BitcoinTestFramework):
         tx.version = txversion
         self.miniwallet.sign_tx(tx)
         tx.vin[0].scriptSig = CScript([-1, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
-        tx.rehash()
         return tx
 
     def create_bip112emptystack(self, input, txversion):
@@ -120,7 +119,6 @@ class BIP68_112_113Test(BitcoinTestFramework):
         tx.version = txversion
         self.miniwallet.sign_tx(tx)
         tx.vin[0].scriptSig = CScript([OP_CHECKSEQUENCEVERIFY] + list(CScript(tx.vin[0].scriptSig)))
-        tx.rehash()
         return tx
 
     def send_generic_input_tx(self, coinbases):
@@ -159,7 +157,6 @@ class BIP68_112_113Test(BitcoinTestFramework):
                 tx.vin[0].scriptSig = CScript([locktime, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
             else:
                 tx.vin[0].scriptSig = CScript([BASE_RELATIVE_LOCKTIME, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
-            tx.rehash()
             txs.append({'tx': tx, 'sdf': sdf, 'stf': stf})
         return txs
 

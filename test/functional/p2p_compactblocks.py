@@ -169,7 +169,6 @@ class CompactBlocksTest(BitcoinTestFramework):
         tx.vin.append(CTxIn(COutPoint(block.vtx[0].sha256, 0), b''))
         for _ in range(10):
             tx.vout.append(CTxOut(out_value, CScript([OP_TRUE])))
-        tx.rehash()
 
         block2 = self.build_block_on_tip(self.nodes[0])
         block2.vtx.append(tx)
@@ -309,8 +308,6 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         # Store the raw block in our internal format.
         block = from_hex(CBlock(), node.getblock("%064x" % block_hash, False))
-        for tx in block.vtx:
-            tx.calc_sha256()
         block.rehash()
 
         # Wait until the block was announced (via compact blocks)
@@ -423,7 +420,6 @@ class CompactBlocksTest(BitcoinTestFramework):
             tx = CTransaction()
             tx.vin.append(CTxIn(COutPoint(utxo[0], utxo[1]), b''))
             tx.vout.append(CTxOut(utxo[2] - 1000, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])))
-            tx.rehash()
             utxo = [tx.sha256, 0, tx.vout[0].nValue]
             block.vtx.append(tx)
 
@@ -583,7 +579,6 @@ class CompactBlocksTest(BitcoinTestFramework):
             test_node.send_without_ping(msg)
             test_node.wait_until(lambda: "blocktxn" in test_node.last_message, timeout=10)
 
-            [tx.calc_sha256() for tx in block.vtx]
             with p2p_lock:
                 assert_equal(test_node.last_message["blocktxn"].block_transactions.blockhash, int(block_hash, 16))
                 all_indices = msg.block_txn_request.to_absolute()
