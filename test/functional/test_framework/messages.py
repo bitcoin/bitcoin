@@ -658,7 +658,13 @@ class CTransaction:
         return self.serialize_with_witness()
 
     def getwtxid(self):
+        """Return wtxid (transaction hash with witness) as hex string."""
         return hash256(self.serialize())[::-1].hex()
+
+    @property
+    def wtxid_int(self):
+        """Return wtxid (transaction hash with witness) as integer."""
+        return uint256_from_str(hash256(self.serialize_with_witness()))
 
     @property
     def hash(self):
@@ -674,12 +680,6 @@ class CTransaction:
     # TODO: get rid of this method, replace call-sites by .hash access
     def rehash(self):
         return self.hash
-
-    # TODO: get rid of this method, replace call-sites by .wtxid_int access (not introduced yet)
-    def calc_sha256(self, with_witness=False):
-        if with_witness:
-            # Don't cache the result, just return it
-            return uint256_from_str(hash256(self.serialize_with_witness()))
 
     def is_valid(self):
         for tout in self.vout:
@@ -819,7 +819,7 @@ class CBlock(CBlockHeader):
 
         for tx in self.vtx[1:]:
             # Calculate the hashes with witness data
-            hashes.append(ser_uint256(tx.calc_sha256(True)))
+            hashes.append(ser_uint256(tx.wtxid_int))
 
         return self.get_merkle_root(hashes)
 
@@ -1003,7 +1003,7 @@ class HeaderAndShortIDs:
             if i not in prefill_list:
                 tx_hash = block.vtx[i].sha256
                 if use_witness:
-                    tx_hash = block.vtx[i].calc_sha256(with_witness=True)
+                    tx_hash = block.vtx[i].wtxid_int
                 self.shortids.append(calculate_shortid(k0, k1, tx_hash))
 
     def __repr__(self):

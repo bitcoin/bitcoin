@@ -107,7 +107,7 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
     block.vtx.append(coinbase)
     if txlist:
         for tx in txlist:
-            if not hasattr(tx, 'calc_sha256'):
+            if type(tx) is str:
                 tx = tx_from_hex(tx)
             block.vtx.append(tx)
     block.hashMerkleRoot = block.calc_merkle_root()
