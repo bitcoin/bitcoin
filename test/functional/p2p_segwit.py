@@ -336,7 +336,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Verify the hash with witness differs from the txid
         # (otherwise our testing framework must be broken!)
-        assert_not_equal(tx.rehash(), tx.getwtxid())
+        assert_not_equal(tx.hash, tx.getwtxid())
 
         # Construct a block that includes the transaction.
         block = self.build_next_block()

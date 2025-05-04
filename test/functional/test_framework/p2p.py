@@ -619,7 +619,7 @@ class P2PInterface(P2PConnection):
         def test_function():
             if not self.last_message.get('tx'):
                 return False
-            return self.last_message['tx'].tx.rehash() == txid
+            return self.last_message['tx'].tx.hash == txid
 
         self.wait_until(test_function, timeout=timeout)
 

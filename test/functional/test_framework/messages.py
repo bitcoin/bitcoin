@@ -674,11 +674,6 @@ class CTransaction:
         """Return txid (transaction hash without witness) as integer."""
         return uint256_from_str(hash256(self.serialize_without_witness()))
 
-    # Recalculate the txid (transaction hash without witness)
-    # TODO: get rid of this method, replace call-sites by .hash access
-    def rehash(self):
-        return self.hash
-
     def is_valid(self):
         for tout in self.vout:
             if tout.nValue < 0 or tout.nValue > 21000000 * COIN:

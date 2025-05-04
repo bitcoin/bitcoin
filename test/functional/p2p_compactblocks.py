@@ -346,7 +346,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         # Check that all prefilled_txn entries match what's in the block.
         for entry in header_and_shortids.prefilled_txn:
             # This checks the non-witness parts of the tx agree
-            assert_equal(entry.tx.rehash(), block.vtx[entry.index].rehash())
+            assert_equal(entry.tx.hash, block.vtx[entry.index].hash)
 
             # And this checks the witness
             assert_equal(entry.tx.getwtxid(), block.vtx[entry.index].getwtxid())
@@ -584,7 +584,7 @@ class CompactBlocksTest(BitcoinTestFramework):
                 all_indices = msg.block_txn_request.to_absolute()
                 for index in all_indices:
                     tx = test_node.last_message["blocktxn"].block_transactions.transactions.pop(0)
-                    assert_equal(tx.rehash(), block.vtx[index].rehash())
+                    assert_equal(tx.hash, block.vtx[index].hash)
                     # Check that the witness matches
                     assert_equal(tx.getwtxid(), block.vtx[index].getwtxid())
                 test_node.last_message.pop("blocktxn", None)
