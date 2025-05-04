@@ -174,7 +174,7 @@ class TestP2PConn(P2PInterface):
         with p2p_lock:
             self.last_message.pop("getdata", None)
         if use_wtxid:
-            wtxid = tx.calc_sha256(True)
+            wtxid = tx.wtxid_int
             self.send_without_ping(msg_inv(inv=[CInv(MSG_WTX, wtxid)]))
         else:
             self.send_without_ping(msg_inv(inv=[CInv(MSG_TX, tx.sha256)]))
@@ -1979,7 +1979,7 @@ class SegWitTest(BitcoinTestFramework):
         self.wtx_node.announce_tx_and_wait_for_getdata(tx2, use_wtxid=True)
         with p2p_lock:
             lgd = self.wtx_node.lastgetdata[:]
-        assert_equal(lgd, [CInv(MSG_WTX, tx2.calc_sha256(True))])
+        assert_equal(lgd, [CInv(MSG_WTX, tx2.wtxid_int)])
 
         # Announce Segwit transaction from non wtxidrelay peer
         # and wait for getdata

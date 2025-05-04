@@ -365,7 +365,7 @@ class CompactBlocksTest(BitcoinTestFramework):
                 # Already checked prefilled transactions above
                 header_and_shortids.prefilled_txn.pop(0)
             else:
-                tx_hash = block.vtx[index].calc_sha256(True)
+                tx_hash = block.vtx[index].wtxid_int
                 shortid = calculate_shortid(k0, k1, tx_hash)
                 assert_equal(shortid, header_and_shortids.shortids[0])
                 header_and_shortids.shortids.pop(0)
@@ -395,7 +395,7 @@ class CompactBlocksTest(BitcoinTestFramework):
             comp_block.header = CBlockHeader(block)
             comp_block.nonce = 0
             [k0, k1] = comp_block.get_siphash_keys()
-            coinbase_hash = block.vtx[0].calc_sha256(True)
+            coinbase_hash = block.vtx[0].wtxid_int
             comp_block.shortids = [calculate_shortid(k0, k1, coinbase_hash)]
             test_node.send_and_ping(msg_cmpctblock(comp_block.to_p2p()))
             assert_equal(int(node.getbestblockhash(), 16), block.hashPrevBlock)
