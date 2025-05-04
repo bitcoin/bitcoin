@@ -45,7 +45,6 @@ def invalidate_nulldummy_tx(tx):
     to be non-NULLDUMMY compliant by replacing the dummy with OP_TRUE"""
     assert_equal(tx.vin[0].scriptSig[0], OP_0)
     tx.vin[0].scriptSig = bytes([OP_TRUE]) + tx.vin[0].scriptSig[1:]
-    tx.rehash()
 
 
 class NULLDUMMYTest(BitcoinTestFramework):

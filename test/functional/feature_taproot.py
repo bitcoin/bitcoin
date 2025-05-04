@@ -1423,7 +1423,6 @@ class TaprootTest(BitcoinTestFramework):
             # Ask the wallet to sign
             fund_tx = tx_from_hex(node.signrawtransactionwithwallet(fund_tx.serialize().hex())["hex"])
             # Construct UTXOData entries
-            fund_tx.rehash()
             for i in range(count_this_tx):
                 utxodata = UTXOData(outpoint=COutPoint(fund_tx.sha256, i), output=fund_tx.vout[i], spender=spenders[done])
                 if utxodata.spender.need_vin_vout_mismatch:
@@ -1538,7 +1537,6 @@ class TaprootTest(BitcoinTestFramework):
                     and (all(utxo.spender.is_standard for utxo in input_utxos))  # All inputs must be standard
                     and tx.version >= 1  # The tx version must be standard
                     and tx.version <= 2)
-                tx.rehash()
                 msg = ','.join(utxo.spender.comment + ("*" if n == fail_input else "") for n, utxo in enumerate(input_utxos))
                 if is_standard_tx:
                     node.sendrawtransaction(tx.serialize().hex(), 0)
@@ -1568,7 +1566,6 @@ class TaprootTest(BitcoinTestFramework):
         coinbase.vin = [CTxIn(COutPoint(0, 0xffffffff), CScript([OP_1, OP_1]), SEQUENCE_FINAL)]
         coinbase.vout = [CTxOut(5000000000, CScript([OP_1]))]
         coinbase.nLockTime = 0
-        coinbase.rehash()
         assert coinbase.hash == "f60c73405d499a956d3162e3483c395526ef78286458a4cb17b125aa92e49b20"
         # Mine it
         block = create_block(hashprev=int(self.nodes[0].getbestblockhash(), 16), coinbase=coinbase)
@@ -1662,7 +1659,6 @@ class TaprootTest(BitcoinTestFramework):
             if i & 1:
                 tx.vout = list(reversed(tx.vout))
             tx.nLockTime = 0
-            tx.rehash()
             amount -= val
             lasttxid = tx.sha256
             txn.append(tx)

@@ -81,7 +81,6 @@ class BIP66Test(BitcoinTestFramework):
 
         spendtx = self.create_tx(self.coinbase_txids[0])
         unDERify(spendtx)
-        spendtx.rehash()
 
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
@@ -112,7 +111,6 @@ class BIP66Test(BitcoinTestFramework):
         coin_txid = self.coinbase_txids[1]
         spendtx = self.create_tx(coin_txid)
         unDERify(spendtx)
-        spendtx.rehash()
 
         # First we show that this tx is valid except for DERSIG by getting it
         # rejected from the mempool for exactly that reason.

@@ -43,7 +43,6 @@ def cltv_modify_tx(tx, prepend_scriptsig, nsequence=None, nlocktime=None):
         tx.nLockTime = nlocktime
 
     tx.vin[0].scriptSig = CScript(prepend_scriptsig + list(CScript(tx.vin[0].scriptSig)))
-    tx.rehash()
 
 
 def cltv_invalidate(tx, failure_reason):
