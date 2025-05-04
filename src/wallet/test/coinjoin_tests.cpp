@@ -200,16 +200,16 @@ public:
                 wallet->CommitTransaction(tx, {}, {});
             }
             AddTxToChain(tx->GetHash());
-            for (size_t n = 0; n < tx->vout.size(); ++n) {
+            for (uint32_t n = 0; n < tx->vout.size(); ++n) {
                 if (nChangePosRet != -1 && int(n) == nChangePosRet) {
                     // Skip the change output to only return the requested coins
                     continue;
                 }
-                tallyItem.vecInputCoins.emplace_back(tx, n);
+                tallyItem.outpoints.emplace_back(COutPoint{tx->GetHash(), n});
                 tallyItem.nAmount += tx->vout[n].nValue;
             }
         }
-        assert(tallyItem.vecInputCoins.size() == vecAmounts.size());
+        assert(tallyItem.outpoints.size() == vecAmounts.size());
         reserveDest.KeepDestination();
         return tallyItem;
     }

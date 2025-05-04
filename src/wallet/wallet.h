@@ -128,7 +128,7 @@ struct CompactTallyItem
 {
     CTxDestination txdest;
     CAmount nAmount{0};
-    std::vector<CInputCoin> vecInputCoins;
+    std::vector<COutPoint> outpoints;
     CompactTallyItem() = default;
 };
 

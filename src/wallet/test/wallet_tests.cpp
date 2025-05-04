@@ -1421,7 +1421,7 @@ BOOST_FIXTURE_TEST_CASE(select_coins_grouped_by_addresses, ListCoinsTestingSetup
                 /*nMaxOupointsPerAddress=*/100);
         BOOST_CHECK_EQUAL(vecTally.size(), 1);
         BOOST_CHECK_EQUAL(vecTally.at(0).nAmount, 500 * COIN);
-        BOOST_CHECK_EQUAL(vecTally.at(0).vecInputCoins.size(), 1);
+        BOOST_CHECK_EQUAL(vecTally.at(0).outpoints.size(), 1);
     }
 
     // Create two conflicting transactions, add one to the wallet and mine the other one.
@@ -1464,8 +1464,8 @@ BOOST_FIXTURE_TEST_CASE(select_coins_grouped_by_addresses, ListCoinsTestingSetup
             /*fSkipUnconfirmed=*/false,
             /*nMaxOupointsPerAddress=*/100);
     BOOST_CHECK_EQUAL(vecTally.size(), 2);
-    BOOST_CHECK_EQUAL(vecTally.at(0).vecInputCoins.size(), 1);
-    BOOST_CHECK_EQUAL(vecTally.at(1).vecInputCoins.size(), 1);
+    BOOST_CHECK_EQUAL(vecTally.at(0).outpoints.size(), 1);
+    BOOST_CHECK_EQUAL(vecTally.at(1).outpoints.size(), 1);
     BOOST_CHECK_EQUAL(vecTally.at(0).nAmount + vecTally.at(1).nAmount, (500 + 499) * COIN);
     BOOST_CHECK_EQUAL(GetAvailableBalance(*wallet), (500 + 499) * COIN);
 }
