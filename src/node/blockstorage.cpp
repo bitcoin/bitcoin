@@ -70,15 +70,6 @@ bool BlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo& info)
     return Read(std::make_pair(DB_BLOCK_FILES, nFile), info);
 }
 
-void BlockTreeDB::WriteReindexing(bool fReindexing)
-{
-    if (fReindexing) {
-        Write(DB_REINDEX_FLAG, uint8_t{'1'});
-    } else {
-        Erase(DB_REINDEX_FLAG);
-    }
-}
-
 void BlockTreeDB::ReadReindexing(bool& fReindexing)
 {
     fReindexing = Exists(DB_REINDEX_FLAG);
@@ -87,24 +78,6 @@ void BlockTreeDB::ReadReindexing(bool& fReindexing)
 bool BlockTreeDB::ReadLastBlockFile(int& nFile)
 {
     return Read(DB_LAST_BLOCK, nFile);
-}
-
-void BlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*>>& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo)
-{
-    CDBBatch batch(*this);
-    for (const auto& [file, info] : fileInfo) {
-        batch.Write(std::make_pair(DB_BLOCK_FILES, file), *info);
-    }
-    batch.Write(DB_LAST_BLOCK, nLastFile);
-    for (const CBlockIndex* bi : blockinfo) {
-        batch.Write(std::make_pair(DB_BLOCK_INDEX, bi->GetBlockHash()), CDiskBlockIndex{bi});
-    }
-    WriteBatch(batch, true);
-}
-
-void BlockTreeDB::WriteFlag(const std::string& name, bool fValue)
-{
-    Write(std::make_pair(DB_FLAG, name), fValue ? uint8_t{'1'} : uint8_t{'0'});
 }
 
 bool BlockTreeDB::ReadFlag(const std::string& name, bool& fValue)
@@ -556,14 +529,6 @@ bool BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_block
         (void)m_block_tree_db->ReadBlockFileInfo(nFile, m_blockfile_info[nFile]);
     }
     LogInfo("Loading block index db: last block file info: %s", m_blockfile_info[max_blockfile_num].ToString());
-    for (int nFile = max_blockfile_num + 1; true; nFile++) {
-        CBlockFileInfo info;
-        if (m_block_tree_db->ReadBlockFileInfo(nFile, info)) {
-            m_blockfile_info.push_back(info);
-        } else {
-            break;
-        }
-    }
 
     // Check presence of blk files
     LogInfo("Checking all blk files are present...");

@@ -75,32 +75,6 @@ static void BuildBlockIndex(node::BlockMap& block_map)
     prev = pindex;
 }
 
-static void WriteBlockIndexLevelDB(benchmark::Bench& bench)
-{
-    const auto setup{MakeNoLogFileContext<>(ChainType::MAIN)};
-    auto path = setup->m_path_root;
-    DBParams params{
-        .path = path,
-        .cache_bytes = 0,
-        .memory_only = false,
-        .wipe_data = true,
-        .obfuscate = false,
-    };
-    kernel::BlockTreeDB block_tree_db{params};
-    auto file_info = CreateUniqueFileInfo(0);
-    auto file_info_pointers = BuildFileInfo(file_info);
-    node::BlockMap block_map;
-    std::vector<const CBlockIndex*> blocks;
-    BuildBlockIndex(block_map);
-    for (auto& entry : block_map) {
-        blocks.push_back(&entry.second);
-    }
-
-    bench.run("leveldb", [&] {
-        block_tree_db.WriteBatchSync(file_info_pointers, 1, blocks);
-    });
-}
-
 static void WriteBlockIndexBlockTreeStore(benchmark::Bench& bench)
 {
     const auto setup{MakeNoLogFileContext<>(ChainType::MAIN)};
@@ -122,6 +96,4 @@ static void WriteBlockIndexBlockTreeStore(benchmark::Bench& bench)
     });
 }
 
-
-BENCHMARK(WriteBlockIndexLevelDB);
 BENCHMARK(WriteBlockIndexBlockTreeStore);
