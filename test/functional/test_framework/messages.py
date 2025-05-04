@@ -585,8 +585,7 @@ class CTxWitness:
 
 
 class CTransaction:
-    __slots__ = ("hash", "nLockTime", "version", "sha256", "vin", "vout",
-                 "wit")
+    __slots__ = ("nLockTime", "version", "vin", "vout", "wit")
 
     def __init__(self, tx=None):
         if tx is None:
@@ -595,15 +594,11 @@ class CTransaction:
             self.vout = []
             self.wit = CTxWitness()
             self.nLockTime = 0
-            self.sha256 = None
-            self.hash = None
         else:
             self.version = tx.version
             self.vin = copy.deepcopy(tx.vin)
             self.vout = copy.deepcopy(tx.vout)
             self.nLockTime = tx.nLockTime
-            self.sha256 = tx.sha256
-            self.hash = tx.hash
             self.wit = copy.deepcopy(tx.wit)
 
     def deserialize(self, f):
@@ -625,8 +620,6 @@ class CTransaction:
         else:
             self.wit = CTxWitness()
         self.nLockTime = int.from_bytes(f.read(4), "little")
-        self.sha256 = None
-        self.hash = None
 
     def serialize_without_witness(self):
         r = b""
@@ -667,22 +660,26 @@ class CTransaction:
     def getwtxid(self):
         return hash256(self.serialize())[::-1].hex()
 
+    @property
+    def hash(self):
+        """Return txid (transaction hash without witness) as hex string."""
+        return hash256(self.serialize_without_witness())[::-1].hex()
+
+    @property
+    def sha256(self):
+        """Return txid (transaction hash without witness) as integer."""
+        return uint256_from_str(hash256(self.serialize_without_witness()))
+
     # Recalculate the txid (transaction hash without witness)
+    # TODO: get rid of this method, replace call-sites by .hash access
     def rehash(self):
-        self.sha256 = None
-        self.calc_sha256()
         return self.hash
 
-    # We will only cache the serialization without witness in
-    # self.sha256 and self.hash -- those are expected to be the txid.
+    # TODO: get rid of this method, replace call-sites by .wtxid_int access (not introduced yet)
     def calc_sha256(self, with_witness=False):
         if with_witness:
             # Don't cache the result, just return it
             return uint256_from_str(hash256(self.serialize_with_witness()))
-
-        if self.sha256 is None:
-            self.sha256 = uint256_from_str(hash256(self.serialize_without_witness()))
-        self.hash = hash256(self.serialize_without_witness())[::-1].hex()
 
     def is_valid(self):
         self.calc_sha256()
