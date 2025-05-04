@@ -3275,7 +3275,7 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
     if (wallet_path.empty()) {
         // ... opened wallet
         LOCK(cs_wallet);
-        fs::path backupFile = backupsDir / (strWalletName + dateTimeStr);
+        fs::path backupFile = backupsDir / fs::u8path(strWalletName + dateTimeStr);
         backupFile.make_preferred();
         if (!BackupWallet(fs::PathToString(backupFile))) {
             warnings.push_back(strprintf(_("Failed to create backup %s!"), fs::PathToString(backupFile)));
@@ -3298,7 +3298,7 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
         fs::path strSourceFile = BDBDataFile(wallet_path);
         std::shared_ptr<BerkeleyEnvironment> env = GetBerkeleyEnv(strSourceFile.parent_path());
         fs::path sourceFile = env->Directory() / strSourceFile;
-        fs::path backupFile = backupsDir / (strWalletName + dateTimeStr);
+        fs::path backupFile = backupsDir / fs::u8path(strWalletName + dateTimeStr);
         sourceFile.make_preferred();
         backupFile.make_preferred();
         if (fs::exists(backupFile))
