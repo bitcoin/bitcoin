@@ -37,6 +37,18 @@ public:
         m_input_bytes = input_bytes;
     }
 
+    CInputCoin(const COutPoint& outpoint_in, const CTxOut& txout_in)
+    {
+        outpoint = outpoint_in;
+        txout = txout_in;
+        effective_value = txout.nValue;
+    }
+
+    CInputCoin(const COutPoint& outpoint_in, const CTxOut& txout_in, int input_bytes) : CInputCoin(outpoint_in, txout_in)
+    {
+        m_input_bytes = input_bytes;
+    }
+
     COutPoint outpoint;
     CTxOut txout;
     CAmount effective_value;
