@@ -352,6 +352,7 @@ BASE_SCRIPTS = [
     'feature_settings.py',
     'rpc_getdescriptorinfo.py',
     'rpc_mempool_info.py',
+    'rpc_clearmempool.py',
     'rpc_help.py',
     'p2p_handshake.py',
     'p2p_handshake.py --v2transport',

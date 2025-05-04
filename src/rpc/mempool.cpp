@@ -1123,6 +1123,52 @@ static RPCHelpMan submitpackage()
     };
 }
 
+static RPCHelpMan clearmempool()
+{
+    return RPCHelpMan{"clearmempool",
+        "\nClears the mempool of all transactions.\n"
+        "\nThis command is only available in regtest mode.\n",
+        {},
+        RPCResult{
+            RPCResult::Type::ARR, "", "Array of transaction IDs that were removed from the mempool",
+            {
+                {RPCResult::Type::STR_HEX, "", "The transaction id"},
+            }},
+        RPCExamples{
+            HelpExampleCli("clearmempool", "")
+            + HelpExampleRpc("clearmempool", "")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            if (Params().GetChainType() != ChainType::REGTEST) {
+                throw JSONRPCError(RPC_METHOD_NOT_FOUND, "clearmempool is only available in regtest mode");
+            }
+
+            NodeContext& node = EnsureAnyNodeContext(request.context);
+            CTxMemPool& mempool = EnsureMemPool(node);
+            LOCK(mempool.cs);
+            LOCK(::cs_main);
+
+            UniValue ret(UniValue::VARR);
+            
+            // First collect all transaction IDs and remove them one by one
+            // This ensures we properly handle transactions added during reorgs
+            std::vector<CTransactionRef> txs_to_remove;
+            for (const CTxMemPoolEntry& e : mempool.entryAll()) {
+                ret.push_back(e.GetTx().GetHash().ToString());
+                txs_to_remove.push_back(e.GetSharedTx());
+            }
+            
+            // Remove each transaction individually to ensure proper cleanup
+            for (const CTransactionRef& tx : txs_to_remove) {
+                mempool.removeRecursive(*tx, MemPoolRemovalReason::REORG);
+            }
+
+            return ret;
+        },
+    };
+}
+
 void RegisterMempoolRPCCommands(CRPCTable& t)
 {
     static const CRPCCommand commands[]{
@@ -1138,6 +1184,7 @@ void RegisterMempoolRPCCommands(CRPCTable& t)
         {"blockchain", &savemempool},
         {"hidden", &getorphantxs},
         {"rawtransactions", &submitpackage},
+        {"blockchain", &clearmempool},
     };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
