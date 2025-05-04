@@ -340,7 +340,7 @@ class MiniWallet:
         if target_vsize:
             self._bulk_tx(tx, target_vsize)
 
-        txid = tx.rehash()
+        txid = tx.txid_hex
         return {
             "new_utxos": [self._create_utxo(
                 txid=txid,

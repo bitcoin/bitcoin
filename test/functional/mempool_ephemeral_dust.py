@@ -38,7 +38,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         # Take value from first output
         result["tx"].vout[0].nValue -= output_value
         result["new_utxos"][0]["value"] = Decimal(result["tx"].vout[0].nValue) / COIN
-        new_txid = result["tx"].rehash()
+        new_txid = result["tx"].txid_hex
         result["txid"]  = new_txid
         result["wtxid"] = result["tx"].getwtxid()
         result["hex"] = result["tx"].serialize().hex()

@@ -667,7 +667,7 @@ class CTransaction:
         return uint256_from_str(hash256(self.serialize_with_witness()))
 
     @property
-    def hash(self):
+    def txid_hex(self):
         """Return txid (transaction hash without witness) as hex string."""
         return hash256(self.serialize_without_witness())[::-1].hex()
 
@@ -675,11 +675,6 @@ class CTransaction:
     def sha256(self):
         """Return txid (transaction hash without witness) as integer."""
         return uint256_from_str(hash256(self.serialize_without_witness()))
-
-    # Recalculate the txid (transaction hash without witness)
-    # TODO: get rid of this method, replace call-sites by .hash access
-    def rehash(self):
-        return self.hash
 
     def is_valid(self):
         for tout in self.vout:

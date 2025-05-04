@@ -245,7 +245,7 @@ class PackageRelayTest(BitcoinTestFramework):
         # 4. Transactions should not be in mempool.
         node_mempool = node.getrawmempool()
         assert low_fee_parent["txid"] not in node_mempool
-        assert tx_orphan_bad_wit.rehash() not in node_mempool
+        assert tx_orphan_bad_wit.txid_hex not in node_mempool
 
         # 5. Have the other peer send the tx too, so that tx_orphan_bad_wit package is attempted.
         bad_orphan_sender.send_without_ping(msg_tx(low_fee_parent["tx"]))
@@ -276,7 +276,7 @@ class PackageRelayTest(BitcoinTestFramework):
         package_sender.send_and_ping(msg_tx(high_fee_child["tx"]))
 
         # 2. Node requests the missing parent by txid.
-        parent_txid_int = int(tx_parent_bad_wit.rehash(), 16)
+        parent_txid_int = int(tx_parent_bad_wit.txid_hex, 16)
         package_sender.wait_for_getdata([parent_txid_int])
 
         # 3. A different node relays the parent. The parent is first evaluated by itself and
@@ -286,7 +286,7 @@ class PackageRelayTest(BitcoinTestFramework):
 
         # 4. Transactions should not be in mempool.
         node_mempool = node.getrawmempool()
-        assert tx_parent_bad_wit.rehash() not in node_mempool
+        assert tx_parent_bad_wit.txid_hex not in node_mempool
         assert high_fee_child["txid"] not in node_mempool
 
         self.log.info("Check that fake parent does not cause orphan to be deleted and real package can still be submitted")

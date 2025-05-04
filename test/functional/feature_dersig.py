@@ -114,7 +114,7 @@ class BIP66Test(BitcoinTestFramework):
 
         # First we show that this tx is valid except for DERSIG by getting it
         # rejected from the mempool for exactly that reason.
-        spendtx_txid = spendtx.hash
+        spendtx_txid = spendtx.txid_hex
         spendtx_wtxid = spendtx.getwtxid()
         assert_equal(
             [{

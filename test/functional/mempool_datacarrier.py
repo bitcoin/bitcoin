@@ -41,7 +41,7 @@ class DataCarrierTest(BitcoinTestFramework):
 
         if success:
             self.wallet.sendrawtransaction(from_node=node, tx_hex=tx_hex)
-            assert tx.rehash() in node.getrawmempool(True), f'{tx_hex} not in mempool'
+            assert tx.txid_hex in node.getrawmempool(True), f'{tx_hex} not in mempool'
         else:
             assert_raises_rpc_error(-26, "datacarrier", self.wallet.sendrawtransaction, from_node=node, tx_hex=tx_hex)
 

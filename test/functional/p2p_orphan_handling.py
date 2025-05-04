@@ -149,7 +149,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
         # classify it as a transaction in which the witness was missing rather than wrong.
         tx_bad_wit.wit.vtxinwit[0].scriptWitness.stack = [b'garbage']
 
-        assert_equal(tx["txid"], tx_bad_wit.rehash())
+        assert_equal(tx["txid"], tx_bad_wit.txid_hex)
         assert_not_equal(tx["wtxid"], tx_bad_wit.getwtxid())
 
         return tx_bad_wit
@@ -242,7 +242,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
         # The parent should be requested because even though the txid commits to the fee, it doesn't
         # commit to the feerate. Delayed because it's by txid and this is not a preferred relay peer.
         self.nodes[0].bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
-        peer2.wait_for_getdata([int(parent_low_fee["tx"].rehash(), 16)])
+        peer2.wait_for_getdata([int(parent_low_fee["tx"].txid_hex, 16)])
 
         self.log.info("Test orphan handling when a parent was previously downloaded with witness stripped")
         parent_normal = self.wallet.create_self_transfer()
@@ -251,8 +251,8 @@ class OrphanHandlingTest(BitcoinTestFramework):
 
         # Relay the parent with witness stripped. It should not be accepted.
         self.relay_transaction(peer1, parent1_witness_stripped)
-        assert_equal(parent_normal["txid"], parent1_witness_stripped.rehash())
-        assert parent1_witness_stripped.rehash() not in node.getrawmempool()
+        assert_equal(parent_normal["txid"], parent1_witness_stripped.txid_hex)
+        assert parent1_witness_stripped.txid_hex not in node.getrawmempool()
 
         # Relay the child. It should not be accepted because it has missing inputs.
         self.relay_transaction(peer2, child_invalid_witness["tx"])
@@ -262,7 +262,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
         # The parent should be requested since the unstripped wtxid would differ. Delayed because
         # it's by txid and this is not a preferred relay peer.
         self.nodes[0].bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
-        peer2.wait_for_getdata([int(parent_normal["tx"].rehash(), 16)])
+        peer2.wait_for_getdata([int(parent_normal["tx"].txid_hex, 16)])
 
         # parent_normal can be relayed again even though parent1_witness_stripped was rejected
         self.relay_transaction(peer1, parent_normal["tx"])
@@ -661,15 +661,15 @@ class OrphanHandlingTest(BitcoinTestFramework):
 
         # The outbound peer should be preferred for getting orphan parents
         self.nodes[0].bumpmocktime(TXID_RELAY_DELAY)
-        peer_outbound.wait_for_parent_requests([int(parent_tx.rehash(), 16)])
+        peer_outbound.wait_for_parent_requests([int(parent_tx.txid_hex, 16)])
 
         # There should be no request to the inbound peer
-        peer_inbound.assert_never_requested(int(parent_tx.rehash(), 16))
+        peer_inbound.assert_never_requested(int(parent_tx.txid_hex, 16))
 
         self.log.info("Test that, if the preferred peer doesn't respond, the node sends another request")
         self.nodes[0].bumpmocktime(GETDATA_TX_INTERVAL)
         peer_inbound.sync_with_ping()
-        peer_inbound.wait_for_parent_requests([int(parent_tx.rehash(), 16)])
+        peer_inbound.wait_for_parent_requests([int(parent_tx.txid_hex, 16)])
 
     @cleanup
     def test_announcers_before_and_after(self):
@@ -701,7 +701,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
 
         # Peer disconnects before responding to request
         self.nodes[0].bumpmocktime(TXID_RELAY_DELAY)
-        peer_early_disconnected.wait_for_parent_requests([int(parent_tx.rehash(), 16)])
+        peer_early_disconnected.wait_for_parent_requests([int(parent_tx.txid_hex, 16)])
         peer_early_disconnected.peer_disconnect()
 
         # The orphan should have 1 announcer left after the node finishes disconnecting peer_early_disconnected.
@@ -710,7 +710,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
         # The node should retry with the other peer that announced the orphan earlier.
         # This node's request was additionally delayed because it's an inbound peer.
         self.nodes[0].bumpmocktime(NONPREF_PEER_TX_DELAY)
-        peer_early_unresponsive.wait_for_parent_requests([int(parent_tx.rehash(), 16)])
+        peer_early_unresponsive.wait_for_parent_requests([int(parent_tx.txid_hex, 16)])
 
         self.log.info("Test that the node uses peers who announce the tx after realizing it's an orphan")
         peer_late_announcer.send_and_ping(msg_inv([orphan_inv]))
@@ -721,7 +721,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
         assert_equal(len(orphanage[0]["from"]), 2)
 
         self.nodes[0].bumpmocktime(GETDATA_TX_INTERVAL)
-        peer_late_announcer.wait_for_parent_requests([int(parent_tx.rehash(), 16)])
+        peer_late_announcer.wait_for_parent_requests([int(parent_tx.txid_hex, 16)])
 
     @cleanup
     def test_parents_change(self):

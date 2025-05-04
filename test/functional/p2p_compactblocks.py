@@ -346,7 +346,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         # Check that all prefilled_txn entries match what's in the block.
         for entry in header_and_shortids.prefilled_txn:
             # This checks the non-witness parts of the tx agree
-            assert_equal(entry.tx.rehash(), block.vtx[entry.index].rehash())
+            assert_equal(entry.tx.txid_hex, block.vtx[entry.index].txid_hex)
 
             # And this checks the witness
             assert_equal(entry.tx.getwtxid(), block.vtx[entry.index].getwtxid())
@@ -476,7 +476,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         block = self.build_block_with_transactions(node, utxo, 5)
         self.utxos.append([block.vtx[-1].sha256, 0, block.vtx[-1].vout[0].nValue])
         test_node.send_and_ping(msg_tx(block.vtx[1]))
-        assert block.vtx[1].hash in node.getrawmempool()
+        assert block.vtx[1].txid_hex in node.getrawmempool()
 
         # Prefill 4 out of the 6 transactions, and verify that only the one
         # that was not in the mempool is requested.
@@ -497,7 +497,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         # Make sure all transactions were accepted.
         mempool = node.getrawmempool()
         for tx in block.vtx[1:]:
-            assert tx.hash in mempool
+            assert tx.txid_hex in mempool
 
         # Clear out last request.
         with p2p_lock:
@@ -525,7 +525,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         # Make sure all transactions were accepted.
         mempool = node.getrawmempool()
         for tx in block.vtx[1:6]:
-            assert tx.hash in mempool
+            assert tx.txid_hex in mempool
 
         # Send compact block
         comp_block = HeaderAndShortIDs()
@@ -584,7 +584,7 @@ class CompactBlocksTest(BitcoinTestFramework):
                 all_indices = msg.block_txn_request.to_absolute()
                 for index in all_indices:
                     tx = test_node.last_message["blocktxn"].block_transactions.transactions.pop(0)
-                    assert_equal(tx.rehash(), block.vtx[index].rehash())
+                    assert_equal(tx.txid_hex, block.vtx[index].txid_hex)
                     # Check that the witness matches
                     assert_equal(tx.getwtxid(), block.vtx[index].getwtxid())
                 test_node.last_message.pop("blocktxn", None)
@@ -765,7 +765,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         delivery_peer.sync_with_ping()
         mempool = node.getrawmempool()
         for tx in block.vtx[1:]:
-            assert tx.hash in mempool
+            assert tx.txid_hex in mempool
 
         delivery_peer.send_and_ping(msg_cmpctblock(cmpct_block.to_p2p()))
         assert_equal(int(node.getbestblockhash(), 16), block.sha256)

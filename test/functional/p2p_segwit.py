@@ -132,7 +132,7 @@ def test_transaction_acceptance(node, p2p, tx, with_witness, accepted, reason=No
     reason = [reason] if reason else []
     with node.assert_debug_log(expected_msgs=reason):
         p2p.send_and_ping(msg_tx(tx) if with_witness else msg_no_witness_tx(tx))
-        assert_equal(tx.hash in node.getrawmempool(), accepted)
+        assert_equal(tx.txid_hex in node.getrawmempool(), accepted)
 
 
 def test_witness_block(node, p2p, block, accepted, with_witness=True, reason=None):
@@ -319,7 +319,7 @@ class SegWitTest(BitcoinTestFramework):
         assert_equal(msg_no_witness_tx(tx).serialize(), msg_tx(tx).serialize())
 
         self.test_node.send_and_ping(msg_tx(tx))  # make sure the block was processed
-        assert tx.hash in self.nodes[0].getrawmempool()
+        assert tx.txid_hex in self.nodes[0].getrawmempool()
         # Save this transaction for later
         self.utxo.append(UTXO(tx.sha256, 0, 49 * 100000000))
         self.generate(self.nodes[0], 1)
@@ -336,7 +336,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Verify the hash with witness differs from the txid
         # (otherwise our testing framework must be broken!)
-        assert_not_equal(tx.rehash(), tx.getwtxid())
+        assert_not_equal(tx.txid_hex, tx.getwtxid())
 
         # Construct a block that includes the transaction.
         block = self.build_next_block()
@@ -614,7 +614,7 @@ class SegWitTest(BitcoinTestFramework):
             testres3[0]["fees"].pop("effective-includes")
             assert_equal(testres3,
                 [{
-                    'txid': tx3.hash,
+                    'txid': tx3.txid_hex,
                     'wtxid': tx3.getwtxid(),
                     'allowed': True,
                     'vsize': tx3.get_vsize(),
@@ -632,7 +632,7 @@ class SegWitTest(BitcoinTestFramework):
             testres3_replaced[0]["fees"].pop("effective-includes")
             assert_equal(testres3_replaced,
                 [{
-                    'txid': tx3.hash,
+                    'txid': tx3.txid_hex,
                     'wtxid': tx3.getwtxid(),
                     'allowed': True,
                     'vsize': tx3.get_vsize(),
@@ -692,13 +692,13 @@ class SegWitTest(BitcoinTestFramework):
         # segwit activation.  Note that older bitcoind's that are not
         # segwit-aware would also reject this for failing CLEANSTACK.
         with self.nodes[0].assert_debug_log(
-                expected_msgs=[spend_tx.hash, 'was not accepted: mandatory-script-verify-flag-failed (Witness program was passed an empty witness)']):
+                expected_msgs=[spend_tx.txid_hex, 'was not accepted: mandatory-script-verify-flag-failed (Witness program was passed an empty witness)']):
             test_transaction_acceptance(self.nodes[0], self.test_node, spend_tx, with_witness=False, accepted=False)
 
         # Try to put the witness script in the scriptSig, should also fail.
         spend_tx.vin[0].scriptSig = CScript([p2wsh_pubkey, b'a'])
         with self.nodes[0].assert_debug_log(
-                expected_msgs=[spend_tx.hash, 'was not accepted: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)']):
+                expected_msgs=[spend_tx.txid_hex, 'was not accepted: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)']):
             test_transaction_acceptance(self.nodes[0], self.test_node, spend_tx, with_witness=False, accepted=False)
 
         # Now put the witness script in the witness, should succeed after
@@ -1257,7 +1257,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Test that getrawtransaction returns correct witness information
         # hash, size, vsize
-        raw_tx = self.nodes[0].getrawtransaction(tx3.hash, 1)
+        raw_tx = self.nodes[0].getrawtransaction(tx3.txid_hex, 1)
         assert_equal(raw_tx["hash"], tx3.getwtxid())
         assert_equal(raw_tx["size"], len(tx3.serialize_with_witness()))
         vsize = tx3.get_vsize()
@@ -2006,7 +2006,7 @@ class SegWitTest(BitcoinTestFramework):
         test_transaction_acceptance(self.nodes[0], self.wtx_node, tx, with_witness=False, accepted=True)
 
         # Check tx2 is there now
-        assert_equal(tx2.hash in self.nodes[0].getrawmempool(), True)
+        assert_equal(tx2.txid_hex in self.nodes[0].getrawmempool(), True)
 
 
 if __name__ == '__main__':

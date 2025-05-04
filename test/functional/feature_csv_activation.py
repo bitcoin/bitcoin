@@ -103,7 +103,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.supports_cli = False
 
     def create_self_transfer_from_utxo(self, input_tx):
-        utxo = self.miniwallet.get_utxo(txid=input_tx.rehash(), mark_as_spent=False)
+        utxo = self.miniwallet.get_utxo(txid=input_tx.txid_hex, mark_as_spent=False)
         tx = self.miniwallet.create_self_transfer(utxo_to_spend=utxo)['tx']
         return tx
 

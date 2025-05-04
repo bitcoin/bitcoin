@@ -129,7 +129,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         # Transactions that should end up in the mempool
         expected_mempool = {
-            t.hash
+            t.txid_hex
             for t in [
                 tx_withhold,  # The transaction that is the root for all orphans
                 tx_orphan_1,  # The orphan transaction that splits the coins
@@ -156,7 +156,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         rejected_parent = CTransaction()
         rejected_parent.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_2_invalid.sha256, 0)))
         rejected_parent.vout.append(CTxOut(nValue=11 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
-        with node.assert_debug_log(['not keeping orphan with rejected parents {}'.format(rejected_parent.hash)]):
+        with node.assert_debug_log(['not keeping orphan with rejected parents {}'.format(rejected_parent.txid_hex)]):
             node.p2ps[0].send_txs_and_test([rejected_parent], node, success=False)
 
         self.log.info('Test that a peer disconnection causes erase its transactions from the orphan pool')

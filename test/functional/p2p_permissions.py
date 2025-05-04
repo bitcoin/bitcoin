@@ -111,7 +111,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
 
         self.log.debug("Send a tx from the wallet initially")
         tx = self.wallet.create_self_transfer(sequence=SEQUENCE_FINAL)['tx']
-        txid = tx.rehash()
+        txid = tx.txid_hex
 
         self.log.debug("Wait until tx is in node[1]'s mempool")
         p2p_rebroadcast_wallet.send_txs_and_test([tx], self.nodes[1])
@@ -127,7 +127,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
         # add dust to cause policy rejection but no disconnection
         tx.vout.append(tx.vout[0])
         tx.vout[-1].nValue = 0
-        txid = tx.rehash()
+        txid = tx.txid_hex
         # Send the transaction twice. The first time, it'll be rejected by ATMP because it conflicts
         # with a mempool transaction. The second time, it'll be in the m_lazy_recent_rejects filter.
         p2p_rebroadcast_wallet.send_txs_and_test(
