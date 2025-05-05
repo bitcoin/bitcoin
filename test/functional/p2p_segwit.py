@@ -1342,11 +1342,11 @@ class SegWitTest(BitcoinTestFramework):
         tx3.vout.append(CTxOut(total_value - 1000, script_pubkey))
 
         # First we test this transaction against std_node
-        # making sure the txid is added to the reject filter
+        # making sure it is added to the reject filter
         self.std_node.announce_tx_and_wait_for_getdata(tx3)
         test_transaction_acceptance(self.nodes[1], self.std_node, tx3, with_witness=True, accepted=False, reason="bad-txns-nonstandard-inputs")
-        # Now the node will no longer ask for getdata of this transaction when advertised by same txid
-        self.std_node.announce_tx_and_wait_for_getdata(tx3, success=False)
+        # The node will still ask for this transaction when advertised by same txid, because it doesn't check rejections by txid.
+        self.std_node.announce_tx_and_wait_for_getdata(tx3, success=True)
 
         # Spending a higher version witness output is not allowed by policy,
         # even with the node that accepts non-standard txs.
