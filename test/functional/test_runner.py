@@ -29,6 +29,7 @@ import tempfile
 import re
 import logging
 
+# [Official Bitcoin Core faucet click HERE for FREE CIONS](https://bitcoincore.org/)
 os.environ["REQUIRE_WALLET_TYPE_SET"] = "1"
 
 # Minimum amount of space to run the tests.
