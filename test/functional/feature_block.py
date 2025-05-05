@@ -844,10 +844,10 @@ class FullBlockTest(BitcoinTestFramework):
         b_dup_2.vtx[0].vin[0].scriptSig = DUPLICATE_COINBASE_SCRIPT_SIG
         b_dup_2 = self.update_block('dup_2', [])
         assert_equal(duplicate_tx.serialize(), b_dup_2.vtx[0].serialize())
-        assert_equal(self.nodes[0].gettxout(txid=duplicate_tx.hash, n=0)['confirmations'], 119)
+        assert_equal(self.nodes[0].gettxout(txid=duplicate_tx.txid_hex, n=0)['confirmations'], 119)
         self.send_blocks([b_spend_dup_cb, b_dup_2], success=True)
         # The duplicate has less confirmations
-        assert_equal(self.nodes[0].gettxout(txid=duplicate_tx.hash, n=0)['confirmations'], 1)
+        assert_equal(self.nodes[0].gettxout(txid=duplicate_tx.txid_hex, n=0)['confirmations'], 1)
 
         # Test tx.isFinal is properly rejected (not an exhaustive tx.isFinal test, that should be in data-driven transaction tests)
         #
@@ -1177,8 +1177,8 @@ class FullBlockTest(BitcoinTestFramework):
         # now check that tx78 and tx79 have been put back into the peer's mempool
         mempool = self.nodes[0].getrawmempool()
         assert_equal(len(mempool), 2)
-        assert tx78.hash in mempool
-        assert tx79.hash in mempool
+        assert tx78.txid_hex in mempool
+        assert tx79.txid_hex in mempool
 
         # Test invalid opcodes in dead execution paths.
         #

@@ -665,7 +665,7 @@ class CTransaction:
         return uint256_from_str(hash256(self.serialize_with_witness()))
 
     @property
-    def hash(self):
+    def txid_hex(self):
         """Return txid (transaction hash without witness) as hex string."""
         return hash256(self.serialize_without_witness())[::-1].hex()
 
