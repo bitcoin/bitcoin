@@ -18,6 +18,7 @@
 #endif
 
 #include <cassert>
+#include <cerrno>
 #include <string>
 
 namespace fsbridge {
@@ -135,4 +136,4 @@ std::string get_filesystem_error_message(const fs::filesystem_error& e)
 #endif
 }
 
-} // fsbridge
+} // namespace fsbridge
