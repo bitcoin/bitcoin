@@ -46,16 +46,16 @@ static bool GetDataFromUnlockTx(const CTransaction& tx, CAmount& toUnlock, uint6
 }
 
 namespace {
-    struct CreditPoolDataPerBlock  {
-        CAmount credit_pool{0};
-        CAmount unlocked{0};
-        std::unordered_set<uint64_t> indexes;
-    };
+struct CreditPoolDataPerBlock {
+    CAmount credit_pool{0};
+    CAmount unlocked{0};
+    std::unordered_set<uint64_t> indexes;
+};
 } // anonymous namespace
 
 // it throws exception if anything went wrong
 static std::optional<CreditPoolDataPerBlock> GetCreditDataFromBlock(const gsl::not_null<const CBlockIndex*> block_index,
-                                                   const Consensus::Params& consensusParams)
+                                                                    const Consensus::Params& consensusParams)
 {
     // There's no CbTx before DIP0003 activation
     if (!DeploymentActiveAt(*block_index, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003)) {
@@ -65,7 +65,8 @@ static std::optional<CreditPoolDataPerBlock> GetCreditDataFromBlock(const gsl::n
     CreditPoolDataPerBlock blockData;
 
     static Mutex cache_mutex;
-    static unordered_lru_cache<uint256, CreditPoolDataPerBlock, StaticSaltedHasher> block_data_cache GUARDED_BY(cache_mutex) {576 * 2};
+    static unordered_lru_cache<uint256, CreditPoolDataPerBlock, StaticSaltedHasher> block_data_cache GUARDED_BY(
+        cache_mutex){576 * 2};
     {
         LOCK(cache_mutex);
         if (block_data_cache.get(block_index->GetBlockHash(), blockData)) {
@@ -173,10 +174,12 @@ CCreditPool CCreditPoolManager::ConstructCreditPool(const gsl::not_null<const CB
         throw std::runtime_error(strprintf("%s: failed-getcreditpool-index-duplicated", __func__));
     }
 
-    const CBlockIndex* distant_block_index{block_index->GetAncestor(block_index->nHeight - Params().CreditPoolPeriodBlocks())};
+    const CBlockIndex* distant_block_index{
+        block_index->GetAncestor(block_index->nHeight - Params().CreditPoolPeriodBlocks())};
     CAmount distantUnlocked{0};
     if (distant_block_index) {
-        if (std::optional<CreditPoolDataPerBlock> distant_block{GetCreditDataFromBlock(distant_block_index, consensusParams)}; distant_block) {
+        if (std::optional<CreditPoolDataPerBlock> distant_block{GetCreditDataFromBlock(distant_block_index, consensusParams)};
+            distant_block) {
             distantUnlocked = distant_block->unlocked;
         }
     }
@@ -198,8 +201,8 @@ CCreditPool CCreditPoolManager::ConstructCreditPool(const gsl::not_null<const CB
         LogPrint(BCLog::CREDITPOOL, /* Continued */
                  "CCreditPoolManager: asset unlock limits on height: %d locked: %d.%08d limit: %d.%08d "
                  "unlocked-in-window: %d.%08d\n",
-                 block_index->nHeight, blockData.credit_pool / COIN, blockData.credit_pool % COIN, currentLimit / COIN, currentLimit % COIN,
-                 latelyUnlocked / COIN, latelyUnlocked % COIN);
+                 block_index->nHeight, blockData.credit_pool / COIN, blockData.credit_pool % COIN, currentLimit / COIN,
+                 currentLimit % COIN, latelyUnlocked / COIN, latelyUnlocked % COIN);
     }
 
     if (currentLimit < 0) {
