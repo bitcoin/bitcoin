@@ -56,11 +56,21 @@ namespace {
 // it throws exception if anything went wrong
 static std::optional<CreditPoolDataPerBlock> GetCreditDataFromBlock(const gsl::not_null<const CBlockIndex*> block_index,
                                                    const Consensus::Params& consensusParams)
-
 {
     // There's no CbTx before DIP0003 activation
     if (!DeploymentActiveAt(*block_index, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003)) {
         return std::nullopt;
+    }
+
+    CreditPoolDataPerBlock blockData;
+
+    static Mutex cache_mutex;
+    static unordered_lru_cache<uint256, CreditPoolDataPerBlock, StaticSaltedHasher> block_data_cache GUARDED_BY(cache_mutex) {576 * 2};
+    {
+        LOCK(cache_mutex);
+        if (block_data_cache.get(block_index->GetBlockHash(), blockData)) {
+            return blockData;
+        }
     }
 
     CBlock block;
@@ -73,13 +83,10 @@ static std::optional<CreditPoolDataPerBlock> GetCreditDataFromBlock(const gsl::n
         return std::nullopt;
     }
 
-    CreditPoolDataPerBlock blockData;
 
-    const auto opt_cbTx = GetTxPayload<CCbTx>(block.vtx[0]->vExtraPayload);
-    if (!opt_cbTx) {
-        throw std::runtime_error(strprintf("%s: failed-getcreditpool-cbtx-payload", __func__));
+    if (const auto opt_cbTx = GetTxPayload<CCbTx>(block.vtx[0]->vExtraPayload); opt_cbTx) {
+        blockData.credit_pool = opt_cbTx->creditPoolBalance;
     }
-    blockData.credit_pool = opt_cbTx->creditPoolBalance;
     for (CTransactionRef tx : block.vtx) {
         if (!tx->IsSpecialTxVersion() || tx->nType != TRANSACTION_ASSET_UNLOCK) continue;
 
@@ -92,6 +99,9 @@ static std::optional<CreditPoolDataPerBlock> GetCreditDataFromBlock(const gsl::n
         blockData.unlocked += unlocked;
         blockData.indexes.insert(index);
     }
+
+    LOCK(cache_mutex);
+    block_data_cache.insert(block_index->GetBlockHash(), blockData);
     return blockData;
 }
 
