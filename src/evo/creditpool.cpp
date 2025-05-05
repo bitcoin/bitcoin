@@ -15,7 +15,6 @@
 #include <deploymentstatus.h>
 #include <logging.h>
 #include <node/blockstorage.h>
-#include <util/irange.h>
 #include <validation.h>
 
 #include <algorithm>
@@ -168,11 +167,7 @@ CCreditPool CCreditPoolManager::ConstructCreditPool(const gsl::not_null<const CB
         throw std::runtime_error(strprintf("%s: failed-getcreditpool-index-duplicated", __func__));
     }
 
-    const CBlockIndex* distant_block_index = block_index;
-    for ([[maybe_unused]] auto _ : irange::range(Params().CreditPoolPeriodBlocks())) {
-        distant_block_index = distant_block_index->pprev;
-        if (distant_block_index == nullptr) break;
-    }
+    const CBlockIndex* distant_block_index{block_index->GetAncestor(block_index->nHeight - Params().CreditPoolPeriodBlocks())};
     CAmount distantUnlocked{0};
     if (distant_block_index) {
         if (std::optional<CBlock> distant_block = GetBlockForCreditPool(distant_block_index, consensusParams); distant_block) {
