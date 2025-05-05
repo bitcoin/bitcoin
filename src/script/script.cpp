@@ -186,24 +186,35 @@ static constexpr std::pair<unsigned int, unsigned int> DecodePushData(
 
 unsigned int CScript::GetLegacySigOpCount(bool fAccurate) const
 {
-    unsigned int n = 0;
-    const_iterator pc = begin();
-    opcodetype lastOpcode = OP_INVALIDOPCODE;
-    while (pc < end())
-    {
-        opcodetype opcode;
-        if (!GetOp(pc, opcode))
-            break;
-        if (opcode == OP_CHECKSIG || opcode == OP_CHECKSIGVERIFY)
-            n++;
-        else if (opcode == OP_CHECKMULTISIG || opcode == OP_CHECKMULTISIGVERIFY)
-        {
-            if (fAccurate && lastOpcode >= OP_1 && lastOpcode <= OP_16)
-                n += DecodeOP_N(lastOpcode);
-            else
+    switch (size()) {
+    case 0: return 0;
+    case 4: if (IsPayToAnchor()) return 0; else break;
+    case 22: if (IsPayToWitnessPubKeyHash()) return 0; else break;
+    case 23: if (IsPayToScriptHash()) return 0; else break;
+    case 25: if (IsPayToPubKeyHash()) return 1; else break;
+    case 34: if (IsPayToTaproot() || IsPayToWitnessScriptHash()) return 0; else break;
+    case 35: if (IsCompressedPayToPubKey()) return 1; else break;
+    case 67: if (IsUncompressedPayToPubKey()) return 1; else break;
+    }
+
+    unsigned int n{0};
+    opcodetype prev{OP_INVALIDOPCODE};
+    for (const_iterator pc{begin()}, pc_end{end()}; pc < pc_end;) {
+        const auto opcode{static_cast<opcodetype>(*pc++)};
+        if (opcode <= OP_PUSHDATA4) {
+            auto [size_bytes, data_bytes]{DecodePushData(opcode, pc, pc_end - pc)};
+            if (data_bytes == DECODE_ERR) break;
+            pc += size_bytes + data_bytes;
+        } else if (opcode == OP_CHECKSIG || opcode == OP_CHECKSIGVERIFY) {
+            ++n;
+        } else if (opcode == OP_CHECKMULTISIG || opcode == OP_CHECKMULTISIGVERIFY) {
+            if (fAccurate && IsSmallInteger(prev)) {
+                n += DecodeOP_N(prev);
+            } else {
                 n += MAX_PUBKEYS_PER_MULTISIG;
+            }
         }
-        lastOpcode = opcode;
+        if (fAccurate) prev = opcode;
     }
     return n;
 }
