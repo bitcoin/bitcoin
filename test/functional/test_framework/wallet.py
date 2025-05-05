@@ -287,7 +287,7 @@ class MiniWallet:
         return {
             "sent_vout": 1,
             "txid": txid,
-            "wtxid": tx.getwtxid(),
+            "wtxid": tx.wtxid_hex,
             "hex": tx.serialize().hex(),
             "tx": tx,
         }
@@ -352,7 +352,7 @@ class MiniWallet:
             ) for i in range(len(tx.vout))],
             "fee": fee,
             "txid": txid,
-            "wtxid": tx.getwtxid(),
+            "wtxid": tx.wtxid_hex,
             "hex": tx.serialize().hex(),
             "tx": tx,
         }

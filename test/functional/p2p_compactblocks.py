@@ -349,7 +349,7 @@ class CompactBlocksTest(BitcoinTestFramework):
             assert_equal(entry.tx.txid_hex, block.vtx[entry.index].txid_hex)
 
             # And this checks the witness
-            assert_equal(entry.tx.getwtxid(), block.vtx[entry.index].getwtxid())
+            assert_equal(entry.tx.wtxid_hex, block.vtx[entry.index].wtxid_hex)
 
         # Check that the cmpctblock message announced all the transactions.
         assert_equal(len(header_and_shortids.prefilled_txn) + len(header_and_shortids.shortids), len(block.vtx))
@@ -586,7 +586,7 @@ class CompactBlocksTest(BitcoinTestFramework):
                     tx = test_node.last_message["blocktxn"].block_transactions.transactions.pop(0)
                     assert_equal(tx.txid_hex, block.vtx[index].txid_hex)
                     # Check that the witness matches
-                    assert_equal(tx.getwtxid(), block.vtx[index].getwtxid())
+                    assert_equal(tx.wtxid_hex, block.vtx[index].wtxid_hex)
                 test_node.last_message.pop("blocktxn", None)
             current_height -= 1
 
