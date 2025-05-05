@@ -187,7 +187,7 @@ def create_tx_with_script(prevtx, n, script_sig=b"", *, amount, output_script=No
         output_script = CScript()
     tx = CTransaction()
     assert n < len(prevtx.vout)
-    tx.vin.append(CTxIn(COutPoint(prevtx.sha256, n), script_sig, SEQUENCE_FINAL))
+    tx.vin.append(CTxIn(COutPoint(prevtx.txid_int, n), script_sig, SEQUENCE_FINAL))
     tx.vout.append(CTxOut(amount, output_script))
     return tx
 

@@ -468,7 +468,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.generateblock(node, self.wallet.get_address(), [nested_anchor_tx.serialize().hex()])
 
         nested_anchor_spend = CTransaction()
-        nested_anchor_spend.vin.append(CTxIn(COutPoint(nested_anchor_tx.sha256, 0), b""))
+        nested_anchor_spend.vin.append(CTxIn(COutPoint(nested_anchor_tx.txid_int, 0), b""))
         nested_anchor_spend.vin[0].scriptSig = CScript([bytes(PAY_TO_ANCHOR)])
         nested_anchor_spend.vout.append(CTxOut(nested_anchor_tx.vout[0].nValue - int(fee*COIN), script_to_p2wsh_script(CScript([OP_TRUE]))))
 
@@ -487,7 +487,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.vout[0].scriptPubKey = keys_to_multisig_script([pubkey] * 3, k=1)  # Some bare multisig script (1-of-3)
         self.generateblock(node, address, [tx.serialize().hex()])
         tx_spend = CTransaction()
-        tx_spend.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
+        tx_spend.vin.append(CTxIn(COutPoint(tx.txid_int, 0), b""))
         tx_spend.vout.append(CTxOut(tx.vout[0].nValue - int(fee*COIN), script_to_p2wsh_script(CScript([OP_TRUE]))))
         sign_input_legacy(tx_spend, 0, tx.vout[0].scriptPubKey, privkey, sighash_type=SIGHASH_ALL)
         tx_spend.vin[0].scriptSig = bytes(CScript([OP_0])) + tx_spend.vin[0].scriptSig

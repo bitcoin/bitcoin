@@ -672,7 +672,7 @@ class CTransaction:
         return hash256(self.serialize_without_witness())[::-1].hex()
 
     @property
-    def sha256(self):
+    def txid_int(self):
         """Return txid (transaction hash without witness) as integer."""
         return uint256_from_str(hash256(self.serialize_without_witness()))
 
@@ -804,7 +804,7 @@ class CBlock(CBlockHeader):
     def calc_merkle_root(self):
         hashes = []
         for tx in self.vtx:
-            hashes.append(ser_uint256(tx.sha256))
+            hashes.append(ser_uint256(tx.txid_int))
         return self.get_merkle_root(hashes)
 
     def calc_witness_merkle_root(self):
@@ -996,7 +996,7 @@ class HeaderAndShortIDs:
         [k0, k1] = self.get_siphash_keys()
         for i in range(len(block.vtx)):
             if i not in prefill_list:
-                tx_hash = block.vtx[i].sha256
+                tx_hash = block.vtx[i].txid_int
                 if use_witness:
                     tx_hash = block.vtx[i].wtxid_int
                 self.shortids.append(calculate_shortid(k0, k1, tx_hash))

@@ -40,7 +40,7 @@ def signet_txs(block, challenge):
     txs[0].vout[-1].scriptPubKey += CScriptOp.encode_op_pushdata(SIGNET_HEADER)
     hashes = []
     for tx in txs:
-        hashes.append(ser_uint256(tx.sha256))
+        hashes.append(ser_uint256(tx.txid_int))
     mroot = block.get_merkle_root(hashes)
 
     sd = b""
@@ -58,7 +58,7 @@ def signet_txs(block, challenge):
     spend = CTransaction()
     spend.version = 0
     spend.nLockTime = 0
-    spend.vin = [CTxIn(COutPoint(to_spend.sha256, 0), b"", 0)]
+    spend.vin = [CTxIn(COutPoint(to_spend.txid_int, 0), b"", 0)]
     spend.vout = [CTxOut(0, b"\x6a")]
 
     return spend, to_spend

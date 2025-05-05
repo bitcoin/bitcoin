@@ -911,7 +911,7 @@ class P2PDataStore(P2PInterface):
 
         with p2p_lock:
             for tx in txs:
-                self.tx_store[tx.sha256] = tx
+                self.tx_store[tx.txid_int] = tx
 
         reject_reason = [reject_reason] if reject_reason else []
         with node.assert_debug_log(expected_msgs=reject_reason):
