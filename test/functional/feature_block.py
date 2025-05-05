@@ -322,7 +322,7 @@ class FullBlockTest(BitcoinTestFramework):
         script_length = (MAX_BLOCK_WEIGHT - b23.get_weight() - 276) // 4
         script_output = CScript([b'\x00' * script_length])
         tx.vout.append(CTxOut(0, script_output))
-        tx.vin.append(CTxIn(COutPoint(b23.vtx[1].sha256, 0)))
+        tx.vin.append(CTxIn(COutPoint(b23.vtx[1].txid_int, 0)))
         b23 = self.update_block(23, [tx])
         # Make sure the math above worked out to produce a max-weighted block
         assert_equal(b23.get_weight(), MAX_BLOCK_WEIGHT)
@@ -522,19 +522,19 @@ class FullBlockTest(BitcoinTestFramework):
         numTxes = (MAX_BLOCK_SIGOPS - sigops) // b39_sigops_per_output
         assert_equal(numTxes <= b39_outputs, True)
 
-        lastOutpoint = COutPoint(b40.vtx[1].sha256, 0)
+        lastOutpoint = COutPoint(b40.vtx[1].txid_int, 0)
         new_txs = []
         for i in range(1, numTxes + 1):
             tx = CTransaction()
             tx.vout.append(CTxOut(1, CScript([OP_TRUE])))
             tx.vin.append(CTxIn(lastOutpoint, b''))
             # second input is corresponding P2SH output from b39
-            tx.vin.append(CTxIn(COutPoint(b39.vtx[i].sha256, 0), b''))
+            tx.vin.append(CTxIn(COutPoint(b39.vtx[i].txid_int, 0), b''))
             # Note: must pass the redeem_script (not p2sh_script) to the signature hash function
             tx.vin[1].scriptSig = CScript([redeem_script])
             sign_input_legacy(tx, 1, redeem_script, self.coinbase_key)
             new_txs.append(tx)
-            lastOutpoint = COutPoint(tx.sha256, 0)
+            lastOutpoint = COutPoint(tx.txid_int, 0)
 
         b40_sigops_to_fill = MAX_BLOCK_SIGOPS - (numTxes * b39_sigops_per_output + sigops) + 1
         tx = CTransaction()
@@ -790,7 +790,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.next_block(58, spend=out[17])
         tx = CTransaction()
         assert len(out[17].vout) < 42
-        tx.vin.append(CTxIn(COutPoint(out[17].sha256, 42), CScript([OP_TRUE]), SEQUENCE_FINAL))
+        tx.vin.append(CTxIn(COutPoint(out[17].txid_int, 42), CScript([OP_TRUE]), SEQUENCE_FINAL))
         tx.vout.append(CTxOut(0, b""))
         b58 = self.update_block(58, [tx])
         self.send_blocks([b58], success=False, reject_reason='bad-txns-inputs-missingorspent', reconnect=True)
@@ -835,7 +835,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip(57)
         self.next_block('spend_dup_cb')
         tx = CTransaction()
-        tx.vin.append(CTxIn(COutPoint(duplicate_tx.sha256, 0)))
+        tx.vin.append(CTxIn(COutPoint(duplicate_tx.txid_int, 0)))
         tx.vout.append(CTxOut(0, CScript([OP_TRUE])))
         self.sign_tx(tx, duplicate_tx)
         b_spend_dup_cb = self.update_block('spend_dup_cb', [tx])
@@ -859,7 +859,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.next_block(62)
         tx = CTransaction()
         tx.nLockTime = 0xffffffff  # this locktime is non-final
-        tx.vin.append(CTxIn(COutPoint(out[18].sha256, 0)))  # don't set nSequence
+        tx.vin.append(CTxIn(COutPoint(out[18].txid_int, 0)))  # don't set nSequence
         tx.vout.append(CTxOut(0, CScript([OP_TRUE])))
         assert_greater_than(SEQUENCE_FINAL, tx.vin[0].nSequence)
         b62 = self.update_block(62, [tx])
@@ -907,7 +907,7 @@ class FullBlockTest(BitcoinTestFramework):
         script_length = (MAX_BLOCK_WEIGHT - 4 * len(b64a.normal_serialize()) - 276) // 4
         script_output = CScript([b'\x00' * script_length])
         tx.vout.append(CTxOut(0, script_output))
-        tx.vin.append(CTxIn(COutPoint(b64a.vtx[1].sha256, 0)))
+        tx.vin.append(CTxIn(COutPoint(b64a.vtx[1].txid_int, 0)))
         b64a = self.update_block("64a", [tx])
         assert_equal(b64a.get_weight(), MAX_BLOCK_WEIGHT + 8 * 4)
         self.send_blocks([b64a], success=False, reject_reason='non-canonical ReadCompactSize()')
@@ -1260,7 +1260,7 @@ class FullBlockTest(BitcoinTestFramework):
             script_length = (MAX_BLOCK_WEIGHT - b.get_weight() - 276) // 4
             script_output = CScript([b'\x00' * script_length])
             tx.vout.append(CTxOut(0, script_output))
-            tx.vin.append(CTxIn(COutPoint(b.vtx[1].sha256, 0)))
+            tx.vin.append(CTxIn(COutPoint(b.vtx[1].txid_int, 0)))
             b = self.update_block(i, [tx])
             assert_equal(b.get_weight(), MAX_BLOCK_WEIGHT)
             blocks.append(b)
