@@ -454,7 +454,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         anchor_spend.vout.append(CTxOut(anchor_value - int(fee*COIN), script_to_p2wsh_script(CScript([OP_TRUE]))))
         anchor_spend.wit.vtxinwit.append(CTxInWitness())
         # It's "segwit" but txid == wtxid since there is no witness data
-        assert_equal(anchor_spend.txid_hex, anchor_spend.getwtxid())
+        assert_equal(anchor_spend.txid_hex, anchor_spend.wtxid_hex)
 
         self.check_mempool_result(
             result_expected=[{'txid': anchor_spend.txid_hex, 'allowed': True, 'vsize': anchor_spend.get_vsize(), 'fees': { 'base': Decimal('0.00000700')}}],

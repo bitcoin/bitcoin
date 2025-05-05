@@ -168,7 +168,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
 
         # When we actually try to submit, the parent makes it into the mempool, but the child would exceed ancestor vsize limits
         res = self.nodes[0].submitpackage([tx_parent.serialize().hex(), tx_child.serialize().hex()])
-        assert "too-long-mempool-chain" in res["tx-results"][tx_child.getwtxid()]["error"]
+        assert "too-long-mempool-chain" in res["tx-results"][tx_child.wtxid_hex]["error"]
         assert tx_parent.txid_hex in self.nodes[0].getrawmempool()
 
         # Transactions are tiny in weight

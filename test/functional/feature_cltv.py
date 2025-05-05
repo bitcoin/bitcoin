@@ -163,7 +163,7 @@ class BIP65Test(BitcoinTestFramework):
             # First we show that this tx is valid except for CLTV by getting it
             # rejected from the mempool for exactly that reason.
             spendtx_txid = spendtx.txid_hex
-            spendtx_wtxid = spendtx.getwtxid()
+            spendtx_wtxid = spendtx.wtxid_hex
             assert_equal(
                 [{
                     'txid': spendtx_txid,

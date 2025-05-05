@@ -83,7 +83,7 @@ class PackageRelayTest(BitcoinTestFramework):
         peer_sender = node.add_p2p_connection(P2PInterface())
 
         # 1. Child is received first (perhaps the low feerate parent didn't meet feefilter or the requests were sent to different nodes). It is missing an input.
-        high_child_wtxid_int = int(high_fee_child["tx"].getwtxid(), 16)
+        high_child_wtxid_int = int(high_fee_child["tx"].wtxid_hex, 16)
         peer_sender.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=high_child_wtxid_int)]))
         peer_sender.wait_for_getdata([high_child_wtxid_int])
         peer_sender.send_and_ping(msg_tx(high_fee_child["tx"]))
@@ -112,7 +112,7 @@ class PackageRelayTest(BitcoinTestFramework):
         peer_ignored = node.add_outbound_p2p_connection(P2PInterface(), p2p_idx=2, connection_type="outbound-full-relay")
 
         # 1. Parent is relayed first. It is too low feerate.
-        parent_wtxid_int = int(low_fee_parent["tx"].getwtxid(), 16)
+        parent_wtxid_int = int(low_fee_parent["tx"].wtxid_hex, 16)
         peer_sender.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=parent_wtxid_int)]))
         peer_sender.wait_for_getdata([parent_wtxid_int])
         peer_sender.send_and_ping(msg_tx(low_fee_parent["tx"]))
@@ -123,7 +123,7 @@ class PackageRelayTest(BitcoinTestFramework):
         assert "getdata" not in peer_ignored.last_message
 
         # 2. Child is relayed next. It is missing an input.
-        high_child_wtxid_int = int(high_fee_child["tx"].getwtxid(), 16)
+        high_child_wtxid_int = int(high_fee_child["tx"].wtxid_hex, 16)
         peer_sender.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=high_child_wtxid_int)]))
         peer_sender.wait_for_getdata([high_child_wtxid_int])
         peer_sender.send_and_ping(msg_tx(high_fee_child["tx"]))
@@ -156,7 +156,7 @@ class PackageRelayTest(BitcoinTestFramework):
         self.log.info("Check that tx caches low fee parent + low fee child package rejections")
 
         # 1. Send parent, rejected for being low feerate.
-        parent_wtxid_int = int(low_fee_parent["tx"].getwtxid(), 16)
+        parent_wtxid_int = int(low_fee_parent["tx"].wtxid_hex, 16)
         peer_sender.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=parent_wtxid_int)]))
         peer_sender.wait_for_getdata([parent_wtxid_int])
         peer_sender.send_and_ping(msg_tx(low_fee_parent["tx"]))
@@ -167,7 +167,7 @@ class PackageRelayTest(BitcoinTestFramework):
         assert "getdata" not in peer_ignored.last_message
 
         # 2. Send an (orphan) child that has a higher feerate, but not enough to bump the parent.
-        med_child_wtxid_int = int(med_fee_child["tx"].getwtxid(), 16)
+        med_child_wtxid_int = int(med_fee_child["tx"].wtxid_hex, 16)
         peer_sender.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=med_child_wtxid_int)]))
         peer_sender.wait_for_getdata([med_child_wtxid_int])
         peer_sender.send_and_ping(msg_tx(med_fee_child["tx"]))
@@ -193,7 +193,7 @@ class PackageRelayTest(BitcoinTestFramework):
         assert med_fee_child["txid"] not in node.getrawmempool()
 
         # 5. Send the high feerate (orphan) child
-        high_child_wtxid_int = int(high_fee_child["tx"].getwtxid(), 16)
+        high_child_wtxid_int = int(high_fee_child["tx"].wtxid_hex, 16)
         peer_sender.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=high_child_wtxid_int)]))
         peer_sender.wait_for_getdata([high_child_wtxid_int])
         peer_sender.send_and_ping(msg_tx(high_fee_child["tx"]))
@@ -229,7 +229,7 @@ class PackageRelayTest(BitcoinTestFramework):
         parent_sender = node.add_p2p_connection(P2PInterface())
 
         # 1. Child is received first. It is missing an input.
-        child_wtxid_int = int(tx_orphan_bad_wit.getwtxid(), 16)
+        child_wtxid_int = int(tx_orphan_bad_wit.wtxid_hex, 16)
         bad_orphan_sender.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=child_wtxid_int)]))
         bad_orphan_sender.wait_for_getdata([child_wtxid_int])
         bad_orphan_sender.send_and_ping(msg_tx(tx_orphan_bad_wit))
@@ -270,7 +270,7 @@ class PackageRelayTest(BitcoinTestFramework):
         fake_parent_sender = node.add_p2p_connection(P2PInterface())
 
         # 1. Child is received first. It is missing an input.
-        child_wtxid_int = int(high_fee_child["tx"].getwtxid(), 16)
+        child_wtxid_int = int(high_fee_child["tx"].wtxid_hex, 16)
         package_sender.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=child_wtxid_int)]))
         package_sender.wait_for_getdata([child_wtxid_int])
         package_sender.send_and_ping(msg_tx(high_fee_child["tx"]))
@@ -292,7 +292,7 @@ class PackageRelayTest(BitcoinTestFramework):
         self.log.info("Check that fake parent does not cause orphan to be deleted and real package can still be submitted")
         # 5. Child-sending should not have been punished and the orphan should remain in orphanage.
         # It can send the "real" parent transaction, and the package is accepted.
-        parent_wtxid_int = int(low_fee_parent["tx"].getwtxid(), 16)
+        parent_wtxid_int = int(low_fee_parent["tx"].wtxid_hex, 16)
         package_sender.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=parent_wtxid_int)]))
         package_sender.wait_for_getdata([parent_wtxid_int])
         package_sender.send_and_ping(msg_tx(low_fee_parent["tx"]))

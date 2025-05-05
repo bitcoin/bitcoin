@@ -657,7 +657,8 @@ class CTransaction:
     def serialize(self):
         return self.serialize_with_witness()
 
-    def getwtxid(self):
+    @property
+    def wtxid_hex(self):
         """Return wtxid (transaction hash with witness) as hex string."""
         return hash256(self.serialize())[::-1].hex()
 

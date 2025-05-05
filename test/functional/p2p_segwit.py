@@ -336,7 +336,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Verify the hash with witness differs from the txid
         # (otherwise our testing framework must be broken!)
-        assert_not_equal(tx.txid_hex, tx.getwtxid())
+        assert_not_equal(tx.txid_hex, tx.wtxid_hex)
 
         # Construct a block that includes the transaction.
         block = self.build_next_block()
@@ -615,7 +615,7 @@ class SegWitTest(BitcoinTestFramework):
             assert_equal(testres3,
                 [{
                     'txid': tx3.txid_hex,
-                    'wtxid': tx3.getwtxid(),
+                    'wtxid': tx3.wtxid_hex,
                     'allowed': True,
                     'vsize': tx3.get_vsize(),
                     'fees': {
@@ -633,7 +633,7 @@ class SegWitTest(BitcoinTestFramework):
             assert_equal(testres3_replaced,
                 [{
                     'txid': tx3.txid_hex,
-                    'wtxid': tx3.getwtxid(),
+                    'wtxid': tx3.wtxid_hex,
                     'allowed': True,
                     'vsize': tx3.get_vsize(),
                     'fees': {
@@ -1258,7 +1258,7 @@ class SegWitTest(BitcoinTestFramework):
         # Test that getrawtransaction returns correct witness information
         # hash, size, vsize
         raw_tx = self.nodes[0].getrawtransaction(tx3.txid_hex, 1)
-        assert_equal(raw_tx["hash"], tx3.getwtxid())
+        assert_equal(raw_tx["hash"], tx3.wtxid_hex)
         assert_equal(raw_tx["size"], len(tx3.serialize_with_witness()))
         vsize = tx3.get_vsize()
         assert_equal(raw_tx["vsize"], vsize)
