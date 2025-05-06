@@ -8,6 +8,14 @@ permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: |
+    ${{ github.workflow }}-${{
+      (github.event_name == 'pull_request_target' && github.event.pull_request.number) ||
+      (github.event_name == 'push' && github.ref)
+    }}
+  cancel-in-progress: true
+
 jobs:
   container:
     name: Build container
