@@ -336,7 +336,8 @@ RPCHelpMan addmultisigaddress()
 RPCHelpMan keypoolrefill()
 {
     return RPCHelpMan{"keypoolrefill",
-                "\nFills the keypool."+
+                "Refills each descriptor keypool in the wallet up to the specified number of new keys.\n"
+                "By default, descriptor wallets have 4 active ranged descriptors (\"legacy\", \"p2sh-segwit\", \"bech32\", and \"bech32m\"), each with " + util::ToString(DEFAULT_KEYPOOL_SIZE) + " entries.\n" +
         HELP_REQUIRING_PASSPHRASE,
                 {
                     {"newsize", RPCArg::Type::NUM, RPCArg::DefaultHint{strprintf("%u, or as set by -keypool", DEFAULT_KEYPOOL_SIZE)}, "The new keypool size"},
