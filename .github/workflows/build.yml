@@ -11,6 +11,7 @@ permissions:
 concurrency:
   group: |
     ${{ github.workflow }}-${{
+      (vars.ALLOW_CONCURRENCY != '' && github.sha) ||
       (github.event_name == 'pull_request_target' && github.event.pull_request.number) ||
       (github.event_name == 'push' && github.ref)
     }}
