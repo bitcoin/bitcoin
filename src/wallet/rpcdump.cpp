@@ -958,7 +958,7 @@ RPCHelpMan dumpwallet()
      * It may also avoid other security issues.
      */
     if (fs::exists(filepath)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.u8string() + " already exists. If you are sure this is what you want, move it out of the way first");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.utf8string() + " already exists. If you are sure this is what you want, move it out of the way first");
     }
 
     std::ofstream file;
@@ -1082,7 +1082,7 @@ RPCHelpMan dumpwallet()
 
     std::string strWarning = strprintf(_("%s file contains all private keys from this wallet. Do not share it with anyone!").translated, request.params[0].get_str());
     obj.pushKV("keys", int(vKeyBirth.size()));
-    obj.pushKV("filename", filepath.u8string());
+    obj.pushKV("filename", filepath.utf8string());
     obj.pushKV("warning", strWarning);
 
     return obj;

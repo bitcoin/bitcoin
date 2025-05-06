@@ -268,6 +268,8 @@ BOOST_AUTO_TEST_CASE(util_TrimString)
 
 BOOST_AUTO_TEST_CASE(util_FormatParseISO8601DateTime)
 {
+    BOOST_CHECK_EQUAL(FormatISO8601DateTime(971890963199), "32767-12-31T23:59:59Z");
+    BOOST_CHECK_EQUAL(FormatISO8601DateTime(971890876800), "32767-12-31T00:00:00Z");
     BOOST_CHECK_EQUAL(FormatISO8601DateTime(1317425777), "2011-09-30T23:36:17Z");
     BOOST_CHECK_EQUAL(FormatISO8601DateTime(0), "1970-01-01T00:00:00Z");
 
@@ -278,7 +280,10 @@ BOOST_AUTO_TEST_CASE(util_FormatParseISO8601DateTime)
 
 BOOST_AUTO_TEST_CASE(util_FormatISO8601Date)
 {
+    BOOST_CHECK_EQUAL(FormatISO8601Date(971890963199), "32767-12-31");
+    BOOST_CHECK_EQUAL(FormatISO8601Date(971890876800), "32767-12-31");
     BOOST_CHECK_EQUAL(FormatISO8601Date(1317425777), "2011-09-30");
+    BOOST_CHECK_EQUAL(FormatISO8601Date(0), "1970-01-01");
 }
 
 BOOST_AUTO_TEST_CASE(util_FormatISO8601Time)
@@ -1092,7 +1097,7 @@ BOOST_AUTO_TEST_CASE(test_ParseFixedPoint)
     BOOST_CHECK(!ParseFixedPoint("31.999999999999999999999", 3, &amount));
 }
 
-static void TestOtherThread(fs::path dirname, std::string lockname, bool *result)
+static void TestOtherThread(fs::path dirname, fs::path lockname, bool *result)
 {
     *result = LockDirectory(dirname, lockname);
 }
@@ -1102,7 +1107,7 @@ static constexpr char LockCommand = 'L';
 static constexpr char UnlockCommand = 'U';
 static constexpr char ExitCommand = 'X';
 
-[[noreturn]] static void TestOtherProcess(fs::path dirname, std::string lockname, int fd)
+[[noreturn]] static void TestOtherProcess(fs::path dirname, fs::path lockname, int fd)
 {
     char ch;
     while (true) {
@@ -1133,7 +1138,7 @@ static constexpr char ExitCommand = 'X';
 BOOST_AUTO_TEST_CASE(test_LockDirectory)
 {
     fs::path dirname = m_args.GetDataDirBase() / "lock_dir";
-    const std::string lockname = ".lock";
+    const fs::path lockname = ".lock";
 #ifndef WIN32
     // Revert SIGCHLD to default, otherwise boost.test will catch and fail on
     // it: there is BOOST_TEST_IGNORE_SIGCHLD but that only works when defined

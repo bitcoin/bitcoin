@@ -459,7 +459,7 @@ RPCHelpMan savemempool()
     }
 
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("filename", fs::path((args.GetDataDirNet() / "mempool.dat")).u8string());
+    ret.pushKV("filename", fs::path((args.GetDataDirNet() / "mempool.dat")).utf8string());
 
     return ret;
 },

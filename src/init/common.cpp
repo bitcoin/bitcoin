@@ -17,7 +17,6 @@
 #include <tinyformat.h>
 #include <util/string.h>
 #include <util/system.h>
-#include <util/time.h>
 #include <util/translation.h>
 
 #include <algorithm>
@@ -50,10 +49,6 @@ bool SanityChecks()
 
     if (!Random_SanityCheck()) {
         return InitError(Untranslated("OS cryptographic RNG sanity check failure. Aborting."));
-    }
-
-    if (!ChronoSanityCheck()) {
-        return InitError(Untranslated("Clock epoch mismatch. Aborting."));
     }
 
     return true;

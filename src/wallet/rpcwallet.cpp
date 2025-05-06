@@ -2604,7 +2604,7 @@ static RPCHelpMan listwalletdir()
     UniValue wallets(UniValue::VARR);
     for (const auto& path : ListDatabases(GetWalletDir())) {
         UniValue wallet(UniValue::VOBJ);
-        wallet.pushKV("name", path.u8string());
+        wallet.pushKV("name", path.utf8string());
         wallets.push_back(wallet);
     }
 

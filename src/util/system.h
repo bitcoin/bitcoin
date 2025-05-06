@@ -82,8 +82,8 @@ void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
  */
 [[nodiscard]] bool RenameOver(fs::path src, fs::path dest);
 
-bool LockDirectory(const fs::path& directory, const std::string lockfile_name, bool probe_only=false);
-void UnlockDirectory(const fs::path& directory, const std::string& lockfile_name);
+bool LockDirectory(const fs::path& directory, const fs::path& lockfile_name, bool probe_only=false);
+void UnlockDirectory(const fs::path& directory, const fs::path& lockfile_name);
 bool DirIsWritable(const fs::path& directory);
 bool CheckDiskSpace(const fs::path& dir, uint64_t additional_bytes = 0);
 
@@ -296,7 +296,7 @@ protected:
      *
      * @return Blocks path which is network specific
      */
-    const fs::path GetBlocksDirPath() const;
+    fs::path GetBlocksDirPath() const;
 
     /**
      * Get data directory path
@@ -304,7 +304,7 @@ protected:
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
      * @post Returned directory path is created unless it is empty
      */
-    const fs::path GetDataDirBase() const { return GetDataDir(false); }
+    fs::path GetDataDirBase() const { return GetDataDir(false); }
 
     /**
      * Get data directory path with appended network identifier
@@ -312,7 +312,7 @@ protected:
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
      * @post Returned directory path is created unless it is empty
      */
-    const fs::path GetDataDirNet() const { return GetDataDir(true); }
+    fs::path GetDataDirNet() const { return GetDataDir(true); }
 
     fs::path GetBackupsDirPath();
 
@@ -503,7 +503,7 @@ private:
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
      * @post Returned directory path is created unless it is empty
      */
-    const fs::path GetDataDir(bool net_specific) const;
+    fs::path GetDataDir(bool net_specific) const;
 
     // Helper function for LogArgs().
     void logArgsPrefix(

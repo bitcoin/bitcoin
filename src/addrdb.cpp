@@ -54,7 +54,7 @@ bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data
     std::string tmpfn = strprintf("%s.%04x", prefix, randv);
 
     // open temp output file, and associate with CAutoFile
-    fs::path pathTmp = gArgs.GetDataDirNet() / tmpfn;
+    fs::path pathTmp = gArgs.GetDataDirNet() / fs::u8path(tmpfn);
     FILE *file = fsbridge::fopen(pathTmp, "wb");
     CAutoFile fileout(file, SER_DISK, version);
     if (fileout.IsNull()) {

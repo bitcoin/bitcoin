@@ -2631,7 +2631,7 @@ static RPCHelpMan dumptxoutset()
     if (fs::exists(path)) {
         throw JSONRPCError(
             RPC_INVALID_PARAMETER,
-            path.u8string() + " already exists. If you are sure this is what you want, "
+            path.utf8string() + " already exists. If you are sure this is what you want, "
             "move it out of the way first");
     }
 
@@ -2642,7 +2642,7 @@ static RPCHelpMan dumptxoutset()
         node, node.chainman->ActiveChainstate(), afile, path, temppath);
     fs::rename(temppath, path);
 
-    result.pushKV("path", path.u8string());
+    result.pushKV("path", path.utf8string());
     return result;
 },
     };
@@ -2713,7 +2713,7 @@ UniValue CreateUTXOSnapshot(
     result.pushKV("coins_written", stats.coins_count);
     result.pushKV("base_hash", tip->GetBlockHash().ToString());
     result.pushKV("base_height", tip->nHeight);
-    result.pushKV("path", path.u8string());
+    result.pushKV("path", path.utf8string());
     result.pushKV("txoutset_hash", stats.hashSerialized.ToString());
     // Cast required because univalue doesn't have serialization specified for
     // `unsigned int`, nChainTx's type.

@@ -4,15 +4,15 @@
 
 #include <crypto/siphash.h>
 
-#define ROTL(x, b) (uint64_t)(((x) << (b)) | ((x) >> (64 - (b))))
+#include <bit>
 
 #define SIPROUND do { \
-    v0 += v1; v1 = ROTL(v1, 13); v1 ^= v0; \
-    v0 = ROTL(v0, 32); \
-    v2 += v3; v3 = ROTL(v3, 16); v3 ^= v2; \
-    v0 += v3; v3 = ROTL(v3, 21); v3 ^= v0; \
-    v2 += v1; v1 = ROTL(v1, 17); v1 ^= v2; \
-    v2 = ROTL(v2, 32); \
+    v0 += v1; v1 = std::rotl(v1, 13); v1 ^= v0; \
+    v0 = std::rotl(v0, 32); \
+    v2 += v3; v3 = std::rotl(v3, 16); v3 ^= v2; \
+    v0 += v3; v3 = std::rotl(v3, 21); v3 ^= v0; \
+    v2 += v1; v1 = std::rotl(v1, 17); v1 ^= v2; \
+    v2 = std::rotl(v2, 32); \
 } while (0)
 
 CSipHasher::CSipHasher(uint64_t k0, uint64_t k1)

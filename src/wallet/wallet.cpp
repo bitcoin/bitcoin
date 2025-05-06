@@ -22,7 +22,6 @@
 #include <policy/settings.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <reverse_iterator.h>
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/sign.h>
@@ -52,7 +51,8 @@
 #include <univalue.h>
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
+#include <ranges>
 
 using interfaces::FoundBlock;
 
@@ -3262,20 +3262,18 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
     }
 
     // Create backup of the ...
-    struct tm ts;
-    time_t time_val = GetTime();
-#ifdef HAVE_GMTIME_R
-    gmtime_r(&time_val, &ts);
-#else
-    gmtime_s(&ts, &time_val);
-#endif
-    std::string dateTimeStr = strprintf(".%04i-%02i-%02i-%02i-%02i",
-            ts.tm_year + 1900, ts.tm_mon + 1, ts.tm_mday, ts.tm_hour, ts.tm_min);
+    std::string dateTimeStr = [&]() {
+        const std::chrono::sys_seconds secs{GetTime<std::chrono::seconds>()};
+        const auto days{std::chrono::floor<std::chrono::days>(secs)};
+        const std::chrono::year_month_day ymd{days};
+        const std::chrono::hh_mm_ss hms{secs - days};
+        return strprintf(".%04i-%02u-%02u-%02i-%02i", signed{ymd.year()}, unsigned{ymd.month()}, unsigned{ymd.day()}, hms.hours().count(), hms.minutes().count());
+    }();
 
     if (wallet_path.empty()) {
         // ... opened wallet
         LOCK(cs_wallet);
-        fs::path backupFile = backupsDir / (strWalletName + dateTimeStr);
+        fs::path backupFile = backupsDir / fs::u8path(strWalletName + dateTimeStr);
         backupFile.make_preferred();
         if (!BackupWallet(fs::PathToString(backupFile))) {
             warnings.push_back(strprintf(_("Failed to create backup %s!"), fs::PathToString(backupFile)));
@@ -3298,7 +3296,7 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
         fs::path strSourceFile = BDBDataFile(wallet_path);
         std::shared_ptr<BerkeleyEnvironment> env = GetBerkeleyEnv(strSourceFile.parent_path());
         fs::path sourceFile = env->Directory() / strSourceFile;
-        fs::path backupFile = backupsDir / (strWalletName + dateTimeStr);
+        fs::path backupFile = backupsDir / fs::u8path(strWalletName + dateTimeStr);
         sourceFile.make_preferred();
         backupFile.make_preferred();
         if (fs::exists(backupFile))
@@ -3337,7 +3335,7 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
 
     // Loop backward through backup files and keep the N newest ones (1 <= N <= 10)
     int counter{0};
-    for (const auto& [entry_time, entry] : reverse_iterate(folder_set)) {
+    for (const auto& [entry_time, entry] : folder_set | std::views::reverse) {
         counter++;
         if (counter > nWalletBackups) {
             // More than nWalletBackups backups: delete oldest one(s)

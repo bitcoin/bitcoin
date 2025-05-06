@@ -733,7 +733,7 @@ fs::path static StartupShortcutPath()
         return GetSpecialFolderPath(CSIDL_STARTUP) / "Dash Core.lnk";
     if (chain == CBaseChainParams::TESTNET) // Remove this special case when CBaseChainParams::TESTNET = "testnet4"
         return GetSpecialFolderPath(CSIDL_STARTUP) / "Dash Core (testnet).lnk";
-    return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("Dash Core (%s).lnk", chain);
+    return GetSpecialFolderPath(CSIDL_STARTUP) / fs::u8path(strprintf("Dash Core (%s).lnk", chain));
 }
 
 bool GetStartOnSystemStartup()
@@ -814,7 +814,7 @@ fs::path static GetAutostartFilePath()
     std::string chain = gArgs.GetChainName();
     if (chain == CBaseChainParams::MAIN)
         return GetAutostartDir() / "dashcore.desktop";
-    return GetAutostartDir() / strprintf("dashcore-%s.desktop", chain);
+    return GetAutostartDir() / fs::u8path(strprintf("dashcore-%s.desktop", chain));
 }
 
 bool GetStartOnSystemStartup()
@@ -1666,7 +1666,7 @@ fs::path QStringToPath(const QString &path)
 
 QString PathToQString(const fs::path &path)
 {
-    return QString::fromStdString(path.u8string());
+    return QString::fromStdString(path.utf8string());
 }
 
 QString NetworkToQString(Network net)
@@ -1715,8 +1715,7 @@ QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction
 
 QString formatDurationStr(std::chrono::seconds dur)
 {
-    using days = std::chrono::duration<int, std::ratio<86400>>; // can remove this line after C++20
-    const auto d{std::chrono::duration_cast<days>(dur)};
+    const auto d{std::chrono::duration_cast<std::chrono::days>(dur)};
     const auto h{std::chrono::duration_cast<std::chrono::hours>(dur - d)};
     const auto m{std::chrono::duration_cast<std::chrono::minutes>(dur - d - h)};
     const auto s{std::chrono::duration_cast<std::chrono::seconds>(dur - d - h - m)};
