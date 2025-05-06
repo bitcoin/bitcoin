@@ -41,8 +41,11 @@ UniValue CMasternodeMetaInfo::ToJson() const
     ret.pushKV("lastOutboundAttemptElapsed", now - lastOutboundAttempt.load());
     ret.pushKV("lastOutboundSuccess", lastOutboundSuccess.load());
     ret.pushKV("lastOutboundSuccessElapsed", now - lastOutboundSuccess.load());
-    ret.pushKV("platform_ban", m_platform_ban);
-    ret.pushKV("platform_ban_updated", m_platform_ban_height);
+    {
+        LOCK(cs);
+        ret.pushKV("platform_ban", m_platform_ban);
+        ret.pushKV("platform_ban_updated", m_platform_ban_height);
+    }
 
     return ret;
 }
