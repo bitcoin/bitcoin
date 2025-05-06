@@ -15,7 +15,7 @@ concurrency:
       (github.event_name == 'pull_request_target' && github.event.pull_request.number) ||
       (github.event_name == 'push' && github.ref)
     }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
 
 jobs:
   container:
