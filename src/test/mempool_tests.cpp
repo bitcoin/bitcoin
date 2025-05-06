@@ -4,6 +4,7 @@
 
 #include <common/system.h>
 #include <policy/policy.h>
+#include <test/util/time.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
 #include <util/time.h>
@@ -251,28 +252,29 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     TryAddToMempool(pool, entry.Fee(900LL).FromTx(tx7));
 
     std::vector<CTransactionRef> vtx;
-    SetMockTime(42);
-    SetMockTime(42 + CTxMemPool::ROLLING_FEE_HALFLIFE);
+    ElapseTime elapse_time{42s};
+    constexpr std::chrono::seconds HALFLIFE{CTxMemPool::ROLLING_FEE_HALFLIFE};
+    elapse_time(HALFLIFE);
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), maxFeeRateRemoved.GetFeePerK() + DEFAULT_INCREMENTAL_RELAY_FEE);
     // ... we should keep the same min fee until we get a block
     pool.removeForBlock(vtx, 1);
-    SetMockTime(42 + 2*CTxMemPool::ROLLING_FEE_HALFLIFE);
+    elapse_time(HALFLIFE);
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + DEFAULT_INCREMENTAL_RELAY_FEE)/2.0));
     // ... then feerate should drop 1/2 each halflife
 
-    SetMockTime(42 + 2*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2);
+    elapse_time(HALFLIFE / 2);
     BOOST_CHECK_EQUAL(pool.GetMinFee(pool.DynamicMemoryUsage() * 5 / 2).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + DEFAULT_INCREMENTAL_RELAY_FEE)/4.0));
     // ... with a 1/2 halflife when mempool is < 1/2 its target size
 
-    SetMockTime(42 + 2*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2 + CTxMemPool::ROLLING_FEE_HALFLIFE/4);
+    elapse_time(HALFLIFE / 4);
     BOOST_CHECK_EQUAL(pool.GetMinFee(pool.DynamicMemoryUsage() * 9 / 2).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + DEFAULT_INCREMENTAL_RELAY_FEE)/8.0));
     // ... with a 1/4 halflife when mempool is < 1/4 its target size
 
-    SetMockTime(42 + 7*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2 + CTxMemPool::ROLLING_FEE_HALFLIFE/4);
+    elapse_time(5 * HALFLIFE);
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), DEFAULT_INCREMENTAL_RELAY_FEE);
     // ... but feerate should never drop below DEFAULT_INCREMENTAL_RELAY_FEE
 
-    SetMockTime(42 + 8*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2 + CTxMemPool::ROLLING_FEE_HALFLIFE/4);
+    elapse_time(HALFLIFE);
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), 0);
     // ... unless it has gone all the way to 0 (after getting past DEFAULT_INCREMENTAL_RELAY_FEE/2)
 }

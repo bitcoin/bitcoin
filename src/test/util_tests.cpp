@@ -11,6 +11,7 @@
 #include <sync.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <uint256.h>
 #include <util/bitdeque.h>
 #include <util/byte_units.h>
@@ -584,7 +585,7 @@ BOOST_AUTO_TEST_CASE(strprintf_numbers)
 
 BOOST_AUTO_TEST_CASE(util_mocktime)
 {
-    SetMockTime(111s);
+    ElapseTime elapse_time{111s};
     // Check that mock time does not change after a sleep
     for (const auto& num_sleep : {0ms, 1ms}) {
         UninterruptibleSleep(num_sleep);
@@ -597,7 +598,6 @@ BOOST_AUTO_TEST_CASE(util_mocktime)
         BOOST_CHECK_EQUAL(111000, TicksSinceEpoch<std::chrono::milliseconds>(NodeClock::now()));
         BOOST_CHECK_EQUAL(111000000, GetTime<std::chrono::microseconds>().count());
     }
-    SetMockTime(0s);
 }
 
 BOOST_AUTO_TEST_CASE(test_IsDigit)

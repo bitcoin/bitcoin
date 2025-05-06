@@ -8,8 +8,8 @@
 #include <streams.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <util/readwritefile.h>
-
 
 #include <boost/test/unit_test.hpp>
 
@@ -17,7 +17,7 @@ BOOST_FIXTURE_TEST_SUITE(banman_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(file)
 {
-    SetMockTime(777s);
+    ElapseTime elapse_time{777s};
     const fs::path banlist_path{m_args.GetDataDirBase() / "banlist_test"};
     {
         const std::string entries_write{
