@@ -20,6 +20,7 @@
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/wallet.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <tinyformat.h>
 #include <uint256.h>
 #include <util/check.h>
@@ -59,7 +60,7 @@ FUZZ_TARGET(wallet_notifications, .init = initialize_setup)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    ElapseTime elapse_time{ConsumeTime(fuzzed_data_provider)};
     // The total amount, to be distributed to the wallets a and b in txs
     // without fee. Thus, the balance of the wallets should always equal the
     // total amount.

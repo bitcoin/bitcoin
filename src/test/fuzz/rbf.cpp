@@ -11,6 +11,7 @@
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/mempool.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
 #include <util/check.h>
@@ -53,7 +54,7 @@ FUZZ_TARGET(rbf, .init = initialize_rbf)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    ElapseTime elapse_time{ConsumeTime(fuzzed_data_provider)};
     std::optional<CMutableTransaction> mtx = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
     if (!mtx) {
         return;
@@ -95,7 +96,7 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    ElapseTime elapse_time{ConsumeTime(fuzzed_data_provider)};
 
     // "Real" virtual size is not important for this test since ConsumeTxMemPoolEntry generates its own virtual size values
     // so we construct small transactions for performance reasons. Child simply needs an input for later to perhaps connect to parent.
