@@ -55,13 +55,8 @@
    */
 #cmakedefine01 HAVE_DECL_FORK
 
-/* Define to 1 if you have the declaration of `freeifaddrs', and to 0 if you
-   don't. */
-#cmakedefine01 HAVE_DECL_FREEIFADDRS
-
-/* Define to 1 if you have the declaration of `getifaddrs', and to 0 if you
-   don't. */
-#cmakedefine01 HAVE_DECL_GETIFADDRS
+/* Define to 1 if '*ifaddrs' are available. */
+#cmakedefine HAVE_IFADDRS 1
 
 /* Define to 1 if you have the declaration of `pipe2', and to 0 if you don't.
    */

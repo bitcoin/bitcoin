@@ -29,6 +29,11 @@
 #include <sys/sysctl.h>
 #endif
 
+#ifdef HAVE_IFADDRS
+#include <sys/types.h>
+#include <ifaddrs.h>
+#endif
+
 namespace {
 
 //! Return CNetAddr for the specified OS-level network address.
@@ -325,7 +330,7 @@ std::vector<CNetAddr> GetLocalAddresses()
             }
         }
     }
-#elif (HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS)
+#elif defined(HAVE_IFADDRS)
     struct ifaddrs* myaddrs;
     if (getifaddrs(&myaddrs) == 0) {
         for (struct ifaddrs* ifa = myaddrs; ifa != nullptr; ifa = ifa->ifa_next)
