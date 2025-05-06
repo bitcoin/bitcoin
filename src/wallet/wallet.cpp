@@ -538,9 +538,15 @@ static bool EncryptMasterKey(const SecureString& wallet_passphrase, const CKeyin
 
     // Get the weighted average of iterations we can do in 100ms over 2 runs.
     for (int i = 0; i <= 1; i++){
-        auto start_time{SteadyClock::now()};
+        auto start_time{NodeClock::now()};
         crypter.SetKeyFromPassphrase(wallet_passphrase, master_key.vchSalt, master_key.nDeriveIterations, master_key.nDerivationMethod);
-        auto elapsed_time{SteadyClock::now() - start_time};
+        auto elapsed_time{NodeClock::now() - start_time};
+
+        if (elapsed_time <= 0s) {
+            // We are probably in a test with a mocked clock.
+            master_key.nDeriveIterations = CMasterKey::DEFAULT_DERIVE_ITERATIONS;
+            break;
+        }
 
         // target_iterations : elapsed_iterations :: target_time : elapsed_time
         unsigned int target_iterations = master_key.nDeriveIterations * target_time / elapsed_time;
