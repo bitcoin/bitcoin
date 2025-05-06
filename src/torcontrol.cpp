@@ -71,7 +71,6 @@ static const float RECONNECT_TIMEOUT_MAX = 600.0;
  * this is belt-and-suspenders sanity limit to prevent memory exhaustion.
  */
 static const int MAX_LINE_LENGTH = 100000;
-static const uint16_t DEFAULT_TOR_SOCKS_PORT = 9050;
 
 /****** Low-level TorControlConnection ********/
 
