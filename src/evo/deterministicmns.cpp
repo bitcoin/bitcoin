@@ -667,7 +667,6 @@ bool CDeterministicMNManager::UndoBlock(gsl::not_null<const CBlockIndex*> pindex
     int nHeight = pindex->nHeight;
     uint256 blockHash = pindex->GetBlockHash();
 
-    CDeterministicMNList curList;
     CDeterministicMNList prevList;
     CDeterministicMNListDiff diff;
     {
@@ -676,16 +675,16 @@ bool CDeterministicMNManager::UndoBlock(gsl::not_null<const CBlockIndex*> pindex
 
         if (diff.HasChanges()) {
             // need to call this before erasing
-            curList = GetListForBlockInternal(pindex);
             prevList = GetListForBlockInternal(pindex->pprev);
         }
 
         mnListsCache.erase(blockHash);
         mnListDiffsCache.erase(blockHash);
     }
-
     if (diff.HasChanges()) {
-        auto inversedDiff = curList.BuildDiff(prevList);
+        CDeterministicMNList curList{prevList.ApplyDiff(pindex, diff)};
+
+        auto inversedDiff{curList.BuildDiff(prevList)};
         updatesRet = {curList, prevList, inversedDiff};
     }
 
