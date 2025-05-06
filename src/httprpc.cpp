@@ -99,14 +99,8 @@ static void JSONErrorReply(HTTPRequest* req, UniValue objError, const JSONRPCReq
 
 //This function checks username and password against -rpcauth
 //entries from config file.
-static bool CheckUserAuthorized(std::string_view user_pass)
+static bool CheckUserAuthorized(std::string_view user, std::string_view pass)
 {
-    if (user_pass.find(':') == std::string::npos) {
-        return false;
-    }
-    std::string_view user = user_pass.substr(0, user_pass.find(':'));
-    std::string_view pass = user_pass.substr(user_pass.find(':') + 1);
-
     for (const auto& fields : g_rpcauth) {
         if (!TimingResistantEqual(std::string_view(fields[0]), user)) {
             continue;
@@ -136,10 +130,14 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     if (!userpass_data) return false;
     strUserPass.assign(userpass_data->begin(), userpass_data->end());
 
-    if (strUserPass.find(':') != std::string::npos)
-        strAuthUsernameOut = strUserPass.substr(0, strUserPass.find(':'));
-
-    return CheckUserAuthorized(strUserPass);
+    size_t colon_pos = strUserPass.find(':');
+    if (colon_pos == std::string::npos) {
+        return false; // Invalid basic auth.
+    }
+    std::string user = strUserPass.substr(0, colon_pos);
+    std::string pass = strUserPass.substr(colon_pos + 1);
+    strAuthUsernameOut = user;
+    return CheckUserAuthorized(user, pass);
 }
 
 static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
