@@ -497,7 +497,7 @@ CAmount CachedTxGetAnonymizedCredit(const CWallet& wallet, const CWalletTx& wtx,
     AssertLockHeld(wallet.cs_wallet);
 
     // Exclude coinbase and conflicted txes
-    if (wtx.IsCoinBase() || wallet.GetTxBlocksToMaturity(wtx) < 0)
+    if (wtx.IsCoinBase() || wallet.GetTxDepthInMainChain(wtx) < 0)
         return 0;
 
     CAmount nCredit = 0;
@@ -533,7 +533,7 @@ CoinJoinCredits CachedTxGetAvailableCoinJoinCredits(const CWallet& wallet, const
     if (wtx.IsCoinBase() && wallet.GetTxBlocksToMaturity(wtx) > 0)
         return ret;
 
-    int nDepth = wallet.GetTxBlocksToMaturity(wtx);
+    int nDepth = wallet.GetTxDepthInMainChain(wtx);
     if (nDepth < 0) return ret;
 
     ret.is_unconfirmed = CachedTxIsTrusted(wallet, wtx) && nDepth == 0;
