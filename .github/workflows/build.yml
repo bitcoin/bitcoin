@@ -8,8 +8,14 @@ permissions:
   contents: read
   packages: write
 
-env:
-  DOCKER_DRIVER: overlay2
+concurrency:
+  group: |
+    ${{ github.workflow }}-${{
+      (vars.ALLOW_CONCURRENCY != '' && github.sha) ||
+      (github.event_name == 'pull_request_target' && github.event.pull_request.number) ||
+      (github.event_name == 'push' && github.ref)
+    }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
 
 jobs:
   container:

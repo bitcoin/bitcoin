@@ -20,9 +20,6 @@ on:
         description: "Path to built container"
         value: ghcr.io/${{ jobs.build.outputs.repo }}/${{ inputs.name }}:${{ jobs.build.outputs.tag }}
 
-env:
-  DOCKER_DRIVER: overlay2
-
 jobs:
   build:
     name: Build container
