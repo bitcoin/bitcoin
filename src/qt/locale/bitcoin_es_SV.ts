@@ -555,7 +555,7 @@ Solo es posible firmar con direcciones de tipo legacy.</translation>
     </message>
     <message>
         <source>Syncing Headers (%1%)…</source>
-        <translation type="unfinished">Sincronizando cabeceras (1%1%)</translation>
+        <translation type="unfinished">Sincronizando cabeceras (%1%)…</translation>
     </message>
     <message>
         <source>Synchronizing with network…</source>

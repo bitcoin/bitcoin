@@ -6,6 +6,10 @@
         <translation type="unfinished">Click derecho para editar la dirección o etiqueta</translation>
     </message>
     <message>
+        <source>Create a new address</source>
+        <translation type="unfinished">Crea una dirección nueva</translation>
+    </message>
+    <message>
         <source>&amp;New</source>
         <translation type="unfinished">&amp;Nuevo</translation>
     </message>
@@ -560,7 +564,7 @@ Usa el boton "Crear nueva direccion de recibimiento" en la pestaña de recibir p
     </message>
     <message>
         <source>Syncing Headers (%1%)…</source>
-        <translation type="unfinished">Sincronizando cabeceras (1%1%)</translation>
+        <translation type="unfinished">Sincronizando cabeceras (%1%)…</translation>
     </message>
     <message>
         <source>Synchronizing with network…</source>
