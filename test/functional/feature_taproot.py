@@ -409,7 +409,7 @@ DEFAULT_CONTEXT = {
     # The annex (only when mode=="taproot").
     "annex": None,
     # The codeseparator position (only when mode=="taproot").
-    "codeseppos": -1,
+    "codeseppos": 0xffffffff,
     # The redeemscript to add to the scriptSig (if P2SH; None implies not P2SH).
     "script_p2sh": None,
     # The script to add to the witness in (if P2WSH; None implies P2WPKH)
@@ -749,6 +749,8 @@ def spenders_taproot_active():
         tap = taproot_construct(pubs[0], scripts)
         add_spender(spenders, "sighash/pk_codesep", tap=tap, leaf="pk_codesep", key=secs[1], **common, **SINGLE_SIG, **SIGHASH_BITFLIP, **ERR_SIG_SCHNORR)
         add_spender(spenders, "sighash/codesep_pk", tap=tap, leaf="codesep_pk", key=secs[1], codeseppos=0, **common, **SINGLE_SIG, **SIGHASH_BITFLIP, **ERR_SIG_SCHNORR)
+        add_spender(spenders, "sighash/codesep_pk_wrongpos1", tap=tap, leaf="codesep_pk", key=secs[1], codeseppos=0, **common, **SINGLE_SIG, failure={"codeseppos": 1}, **ERR_SIG_SCHNORR)
+        add_spender(spenders, "sighash/codesep_pk_wrongpos2", tap=tap, leaf="codesep_pk", key=secs[1], codeseppos=0, **common, **SINGLE_SIG, failure={"codeseppos": 0xfffffffe}, **ERR_SIG_SCHNORR)
         add_spender(spenders, "sighash/branched_codesep/left", tap=tap, leaf="branched_codesep", key=secs[0], codeseppos=3, **common, inputs=[getter("sign"), b'\x01'], **SIGHASH_BITFLIP, **ERR_SIG_SCHNORR)
         add_spender(spenders, "sighash/branched_codesep/right", tap=tap, leaf="branched_codesep", key=secs[1], codeseppos=6, **common, inputs=[getter("sign"), b''], **SIGHASH_BITFLIP, **ERR_SIG_SCHNORR)
 
