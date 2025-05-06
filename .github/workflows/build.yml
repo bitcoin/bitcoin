@@ -8,9 +8,6 @@ permissions:
   contents: read
   packages: write
 
-env:
-  DOCKER_DRIVER: overlay2
-
 jobs:
   container:
     name: Build container
