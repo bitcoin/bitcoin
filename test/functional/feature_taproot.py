@@ -599,6 +599,7 @@ def byte_popper(expr):
 ERR_SIG_SIZE = {"err_msg": "Invalid Schnorr signature size"}
 ERR_SIG_HASHTYPE = {"err_msg": "Invalid Schnorr signature hash type"}
 ERR_SIG_SCHNORR = {"err_msg": "Invalid Schnorr signature"}
+ERR_SIG_SCHNORR_BATCH = {"err_msg": "Schnorr batch validation failed"}
 ERR_OP_RETURN = {"err_msg": "OP_RETURN was encountered"}
 ERR_CONTROLBLOCK_SIZE = {"err_msg": "Invalid Taproot control block size"}
 ERR_WITNESS_PROGRAM_MISMATCH = {"err_msg": "Witness program hash mismatch"}
