@@ -34,6 +34,7 @@ enum DeploymentPos : uint16_t {
     DEPLOYMENT_TESTDUMMY,
     DEPLOYMENT_TAPROOT, // Deployment of Schnorr/Taproot (BIPs 340-342)
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in deploymentinfo.cpp
+    DEPLOYMENT_CSFS,  // Deployment of CHECKSIGFROMSTACK (BIP 348) (regtest only)
     MAX_VERSION_BITS_DEPLOYMENTS
 };
 constexpr bool ValidDeployment(DeploymentPos dep) { return dep < MAX_VERSION_BITS_DEPLOYMENTS; }
