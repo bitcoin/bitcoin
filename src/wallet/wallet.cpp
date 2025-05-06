@@ -533,16 +533,20 @@ void CWallet::UpgradeDescriptorCache()
  * derivation parameters (should take at least 100ms) and encrypt the master key. */
 static bool EncryptMasterKey(const SecureString& wallet_passphrase, const CKeyingMaterial& plain_master_key, CMasterKey& master_key)
 {
-    constexpr MillisecondsDouble target{100};
-    auto start{SteadyClock::now()};
+    constexpr MillisecondsDouble target_time{100};
     CCrypter crypter;
 
-    crypter.SetKeyFromPassphrase(wallet_passphrase, master_key.vchSalt, master_key.nDeriveIterations, master_key.nDerivationMethod);
-    master_key.nDeriveIterations = static_cast<unsigned int>(master_key.nDeriveIterations * target / (SteadyClock::now() - start));
+    // Get the weighted average of iterations we can do in 100ms over 2 runs.
+    for (int i = 0; i <= 1; i++){
+        auto start_time{SteadyClock::now()};
+        crypter.SetKeyFromPassphrase(wallet_passphrase, master_key.vchSalt, master_key.nDeriveIterations, master_key.nDerivationMethod);
+        auto elapsed_time{SteadyClock::now() - start_time};
 
-    start = SteadyClock::now();
-    crypter.SetKeyFromPassphrase(wallet_passphrase, master_key.vchSalt, master_key.nDeriveIterations, master_key.nDerivationMethod);
-    master_key.nDeriveIterations = (master_key.nDeriveIterations + static_cast<unsigned int>(master_key.nDeriveIterations * target / (SteadyClock::now() - start))) / 2;
+        // target_iterations : elapsed_iterations :: target_time : elapsed_time
+        unsigned int target_iterations = master_key.nDeriveIterations * target_time / elapsed_time;
+        // Get the weighted average with previous runs.
+        master_key.nDeriveIterations = (i * master_key.nDeriveIterations + target_iterations) / (i + 1);
+    }
 
     if (master_key.nDeriveIterations < CMasterKey::DEFAULT_DERIVE_ITERATIONS) {
         master_key.nDeriveIterations = CMasterKey::DEFAULT_DERIVE_ITERATIONS;
