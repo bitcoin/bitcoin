@@ -437,8 +437,8 @@ std::optional<std::pair<CBLSSignature, uint32_t>> GetNonNullCoinbaseChainlock(co
         return std::nullopt;
     }
 
-    // There's no CbTx before DIP0003 activation
-    if (!DeploymentActiveAt(*pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003)) {
+    // There's no CL in CbTx before v20 activation
+    if (!DeploymentActiveAt(*pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) {
         return std::nullopt;
     }
 
@@ -454,14 +454,9 @@ std::optional<std::pair<CBLSSignature, uint32_t>> GetNonNullCoinbaseChainlock(co
         return std::nullopt;
     }
 
-    const CCbTx& cbtx = opt_cbtx.value();
-    if (cbtx.nVersion < CCbTx::Version::CLSIG_AND_BALANCE) {
+    if (!opt_cbtx->bestCLSignature.IsValid()) {
         return std::nullopt;
     }
 
-    if (!cbtx.bestCLSignature.IsValid()) {
-        return std::nullopt;
-    }
-
-    return std::make_pair(cbtx.bestCLSignature, cbtx.bestCLHeightDiff);
+    return std::make_pair(opt_cbtx->bestCLSignature, opt_cbtx->bestCLHeightDiff);
 }
