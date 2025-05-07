@@ -62,6 +62,18 @@ NetInfoStatus MnNetInfo::AddEntry(const std::string& input)
     return NetInfoStatus::BadInput;
 }
 
+CServiceList MnNetInfo::GetEntries() const
+{
+    CServiceList ret;
+    if (!IsEmpty()) {
+        ASSERT_IF_DEBUG(m_addr != CService());
+        ret.push_back(m_addr);
+    }
+    // If MnNetInfo is empty, we probably don't expect any entries to show up, so
+    // we return a blank set instead.
+    return ret;
+}
+
 std::string MnNetInfo::ToString() const
 {
     // Extra padding to account for padding done by the calling function.

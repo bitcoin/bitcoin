@@ -34,12 +34,22 @@ const std::vector<std::pair</*input=*/std::string, /*expected_ret=*/NetInfoStatu
 
 BOOST_FIXTURE_TEST_SUITE(evo_netinfo_tests, RegTestingSetup)
 
+void ValidateGetEntries(const CServiceList& entries, const size_t expected_size)
+{
+    BOOST_CHECK_EQUAL(entries.size(), expected_size);
+}
+
 BOOST_AUTO_TEST_CASE(mnnetinfo_rules)
 {
     // Validate AddEntry() rules enforcement
     for (const auto& [input, expected_ret] : vals) {
         MnNetInfo netInfo;
         BOOST_CHECK_EQUAL(netInfo.AddEntry(input), expected_ret);
+        if (expected_ret != NetInfoStatus::Success) {
+            BOOST_CHECK(netInfo.GetEntries().empty());
+        } else {
+            ValidateGetEntries(netInfo.GetEntries(), /*expected_size=*/1);
+        }
     }
 }
 

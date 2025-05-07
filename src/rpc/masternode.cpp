@@ -565,8 +565,16 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
             payeeStr = EncodeDestination(payeeDest);
         }
 
+        std::string strAddress{};
+        if (strMode == "addr" || strMode == "full" || strMode == "info" || strMode == "json" || strMode == "recent" ||
+            strMode == "evo") {
+            for (const CService& entry : dmn.pdmnState->netInfo.GetEntries()) {
+                strAddress += entry.ToStringAddrPort() + " ";
+            }
+            if (!strAddress.empty()) strAddress.pop_back(); // Remove trailing space
+        }
+
         if (strMode == "addr") {
-            std::string strAddress = dmn.pdmnState->netInfo.GetPrimary().ToStringAddrPort();
             if (!strFilter.empty() && strAddress.find(strFilter) == std::string::npos &&
                 strOutpoint.find(strFilter) == std::string::npos) return;
             obj.pushKV(strOutpoint, strAddress);
@@ -577,7 +585,7 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
                                     payeeStr,
                                     PadString(ToString(dmnToLastPaidTime(dmn)), 10),
                                     PadString(ToString(dmn.pdmnState->nLastPaidHeight), 6),
-                                    dmn.pdmnState->netInfo.GetPrimary().ToStringAddrPort());
+                                    strAddress);
             if (!strFilter.empty() && strFull.find(strFilter) == std::string::npos &&
                 strOutpoint.find(strFilter) == std::string::npos) return;
             obj.pushKV(strOutpoint, strFull);
@@ -586,14 +594,14 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
                                     PadString(dmnToStatus(dmn), 18),
                                     dmn.pdmnState->nPoSePenalty,
                                     payeeStr,
-                                    dmn.pdmnState->netInfo.GetPrimary().ToStringAddrPort());
+                                    strAddress);
             if (!strFilter.empty() && strInfo.find(strFilter) == std::string::npos &&
                 strOutpoint.find(strFilter) == std::string::npos) return;
             obj.pushKV(strOutpoint, strInfo);
         } else if (strMode == "json" || strMode == "recent" || strMode == "evo") {
             std::string strInfo = strprintf("%s %s %s %s %d %d %d %s %s %s %s",
                                     dmn.proTxHash.ToString(),
-                                    dmn.pdmnState->netInfo.GetPrimary().ToStringAddrPort(),
+                                    strAddress,
                                     payeeStr,
                                     dmnToStatus(dmn),
                                     dmn.pdmnState->nPoSePenalty,
