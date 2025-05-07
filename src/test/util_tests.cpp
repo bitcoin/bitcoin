@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(parse_hex)
     result = TryParseHex<uint8_t>("12 34 56 78").value();
     BOOST_CHECK_EQUAL_COLLECTIONS(result.begin(), result.end(), expected.begin(), expected.end());
 
-    // Leading space must be supported (used in BerkeleyEnvironment::Salvage)
+    // Leading space must be supported
     expected = {0x89, 0x34, 0x56, 0x78};
     result = ParseHex(" 89 34 56 78");
     BOOST_CHECK_EQUAL_COLLECTIONS(result.begin(), result.end(), expected.begin(), expected.end());

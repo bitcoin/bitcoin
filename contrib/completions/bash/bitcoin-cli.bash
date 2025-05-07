@@ -39,7 +39,7 @@ _bitcoin_cli() {
 
     if ((cword > 4)); then
         case ${words[cword-4]} in
-            importaddress|listtransactions|setban)
+            listtransactions|setban)
                 COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
                 return 0
                 ;;
@@ -52,10 +52,7 @@ _bitcoin_cli() {
 
     if ((cword > 3)); then
         case ${words[cword-3]} in
-            addmultisigaddress)
-                return 0
-                ;;
-            getbalance|gettxout|importaddress|importpubkey|importprivkey|listreceivedbyaddress|listsinceblock)
+            getbalance|gettxout|listreceivedbyaddress|listsinceblock)
                 COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
                 return 0
                 ;;
@@ -80,7 +77,7 @@ _bitcoin_cli() {
     fi
 
     case "$prev" in
-        backupwallet|dumpwallet|importwallet)
+        backupwallet)
             _filedir
             return 0
             ;;

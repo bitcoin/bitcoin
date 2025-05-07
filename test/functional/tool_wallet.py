@@ -20,16 +20,10 @@ from test_framework.util import (
 
 
 class ToolWalletTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        parser.add_argument("--bdbro", action="store_true", help="Use the BerkeleyRO internal parser when dumping a Berkeley DB wallet file")
-        parser.add_argument("--swap-bdb-endian", action="store_true",help="When making Legacy BDB wallets, always make then byte swapped internally")
-
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
         self.rpc_timeout = 120
-        if self.options.swap_bdb_endian:
-            self.extra_args = [["-swapbdbendian"]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -37,8 +31,6 @@ class ToolWalletTest(BitcoinTestFramework):
 
     def bitcoin_wallet_process(self, *args):
         default_args = ['-datadir={}'.format(self.nodes[0].datadir_path), '-chain=%s' % self.chain]
-        if "dump" in args and self.options.bdbro:
-            default_args.append("-withinternalbdb")
 
         return subprocess.Popen(self.get_binaries().wallet_argv() + default_args + list(args), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 

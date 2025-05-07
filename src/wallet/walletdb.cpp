@@ -18,9 +18,6 @@
 #include <util/fs.h>
 #include <util/time.h>
 #include <util/translation.h>
-#ifdef USE_BDB
-#include <wallet/bdb.h>
-#endif
 #include <wallet/migrate.h>
 #include <wallet/sqlite.h>
 #include <wallet/wallet.h>
@@ -157,11 +154,6 @@ bool WalletBatch::EraseMasterKey(unsigned int id)
     return EraseIC(std::make_pair(DBKeys::MASTER_KEY, id));
 }
 
-bool WalletBatch::WriteCScript(const uint160& hash, const CScript& redeemScript)
-{
-    return WriteIC(std::make_pair(DBKeys::CSCRIPT, hash), redeemScript, false);
-}
-
 bool WalletBatch::WriteWatchOnly(const CScript &dest, const CKeyMetadata& keyMeta)
 {
     if (!WriteIC(std::make_pair(DBKeys::WATCHMETA, dest), keyMeta)) {
@@ -204,21 +196,6 @@ bool WalletBatch::IsEncrypted()
 bool WalletBatch::WriteOrderPosNext(int64_t nOrderPosNext)
 {
     return WriteIC(DBKeys::ORDERPOSNEXT, nOrderPosNext);
-}
-
-bool WalletBatch::ReadPool(int64_t nPool, CKeyPool& keypool)
-{
-    return m_batch->Read(std::make_pair(DBKeys::POOL, nPool), keypool);
-}
-
-bool WalletBatch::WritePool(int64_t nPool, const CKeyPool& keypool)
-{
-    return WriteIC(std::make_pair(DBKeys::POOL, nPool), keypool);
-}
-
-bool WalletBatch::ErasePool(int64_t nPool)
-{
-    return EraseIC(std::make_pair(DBKeys::POOL, nPool));
 }
 
 bool WalletBatch::WriteMinVersion(int nVersion)
@@ -747,18 +724,6 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
     });
     result = std::max(result, watch_meta_res.m_result);
 
-    // Load keypool
-    LoadResult pool_res = LoadRecords(pwallet, batch, DBKeys::POOL,
-        [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
-        int64_t nIndex;
-        key >> nIndex;
-        CKeyPool keypool;
-        value >> keypool;
-        pwallet->GetOrCreateLegacyDataSPKM()->LoadKeyPool(nIndex, keypool);
-        return DBErrors::LOAD_OK;
-    });
-    result = std::max(result, pool_res.m_result);
-
     // Deal with old "wkey" and "defaultkey" records.
     // These are not actually loaded, but we need to check for them
 
@@ -794,15 +759,6 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
         // Only do logging and time first key update if there were no critical errors
         pwallet->WalletLogPrintf("Legacy Wallet Keys: %u plaintext, %u encrypted, %u w/ metadata, %u total.\n",
                key_res.m_records, ckey_res.m_records, keymeta_res.m_records, key_res.m_records + ckey_res.m_records);
-
-        // nTimeFirstKey is only reliable if all keys have metadata
-        if (pwallet->IsLegacy() && (key_res.m_records + ckey_res.m_records + watch_script_res.m_records) != (keymeta_res.m_records + watch_meta_res.m_records)) {
-            auto spk_man = pwallet->GetLegacyScriptPubKeyMan();
-            if (spk_man) {
-                LOCK(spk_man->cs_KeyStore);
-                spk_man->UpdateTimeFirstKey(1);
-            }
-        }
     }
 
     return result;
@@ -1256,14 +1212,6 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     if (any_unordered)
         result = pwallet->ReorderTransactions();
 
-    // Upgrade all of the wallet keymetadata to have the hd master key id
-    // This operation is not atomic, but if it fails, updated entries are still backwards compatible with older software
-    try {
-        pwallet->UpgradeKeyMetadata();
-    } catch (...) {
-        result = DBErrors::CORRUPT;
-    }
-
     // Upgrade all of the descriptor caches to cache the last hardened xpub
     // This operation is not atomic, but if it fails, only new entries are added so it is backwards compatible
     try {
@@ -1319,33 +1267,6 @@ bool RunWithinTxn(WalletDatabase& database, std::string_view process_desc, const
     return RunWithinTxn(batch, process_desc, func);
 }
 
-void MaybeCompactWalletDB(WalletContext& context)
-{
-    static std::atomic<bool> fOneThread(false);
-    if (fOneThread.exchange(true)) {
-        return;
-    }
-
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
-        WalletDatabase& dbh = pwallet->GetDatabase();
-
-        unsigned int nUpdateCounter = dbh.nUpdateCounter;
-
-        if (dbh.nLastSeen != nUpdateCounter) {
-            dbh.nLastSeen = nUpdateCounter;
-            dbh.nLastWalletUpdate = GetTime();
-        }
-
-        if (dbh.nLastFlushed != nUpdateCounter && GetTime() - dbh.nLastWalletUpdate >= 2) {
-            if (dbh.PeriodicFlush()) {
-                dbh.nLastFlushed = nUpdateCounter;
-            }
-        }
-    }
-
-    fOneThread = false;
-}
-
 bool WalletBatch::WriteAddressPreviouslySpent(const CTxDestination& dest, bool previously_spent)
 {
     auto key{std::make_pair(DBKeys::DESTDATA, std::make_pair(EncodeDestination(dest), std::string("used")))};
@@ -1367,11 +1288,6 @@ bool WalletBatch::EraseAddressData(const CTxDestination& dest)
     DataStream prefix;
     prefix << DBKeys::DESTDATA << EncodeDestination(dest);
     return m_batch->ErasePrefix(prefix);
-}
-
-bool WalletBatch::WriteHDChain(const CHDChain& chain)
-{
-    return WriteIC(DBKeys::HDCHAIN, chain);
 }
 
 bool WalletBatch::WriteWalletFlags(const uint64_t flags)

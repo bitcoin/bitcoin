@@ -45,7 +45,7 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, ClientModel
     optionsModel(client_model.getOptionsModel()),
     timer(new QTimer(this))
 {
-    fHaveWatchOnly = m_wallet->haveWatchOnly();
+    fHaveWatchOnly = false;
     addressTableModel = new AddressTableModel(this);
     transactionTableModel = new TransactionTableModel(platformStyle, this);
     recentRequestsTableModel = new RecentRequestsTableModel(this);

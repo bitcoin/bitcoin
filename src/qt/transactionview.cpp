@@ -241,8 +241,8 @@ void TransactionView::setModel(WalletModel *_model)
             }
         }
 
-        // show/hide column Watch-only
-        updateWatchOnlyColumn(_model->wallet().haveWatchOnly());
+        // hide column Watch-only
+        updateWatchOnlyColumn(false);
 
         // Watch-only signal
         connect(_model, &WalletModel::notifyWatchonlyChanged, this, &TransactionView::updateWatchOnlyColumn);
@@ -368,8 +368,6 @@ void TransactionView::exportClicked()
     // name, column, role
     writer.setModel(transactionProxyModel);
     writer.addColumn(tr("Confirmed"), 0, TransactionTableModel::ConfirmedRole);
-    if (model->wallet().haveWatchOnly())
-        writer.addColumn(tr("Watch-only"), TransactionTableModel::Watchonly);
     writer.addColumn(tr("Date"), 0, TransactionTableModel::DateRole);
     writer.addColumn(tr("Type"), TransactionTableModel::Type, Qt::EditRole);
     writer.addColumn(tr("Label"), 0, TransactionTableModel::LabelRole);

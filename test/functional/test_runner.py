@@ -29,8 +29,6 @@ import tempfile
 import re
 import logging
 
-os.environ["REQUIRE_WALLET_TYPE_SET"] = "1"
-
 # Minimum amount of space to run the tests.
 MIN_FREE_SPACE = 1.1 * 1024 * 1024 * 1024
 # Additional space to run an extra job.

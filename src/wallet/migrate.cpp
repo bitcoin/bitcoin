@@ -699,7 +699,7 @@ void BerkeleyRODatabase::Open()
     }
 }
 
-std::unique_ptr<DatabaseBatch> BerkeleyRODatabase::MakeBatch(bool flush_on_close)
+std::unique_ptr<DatabaseBatch> BerkeleyRODatabase::MakeBatch()
 {
     return std::make_unique<BerkeleyROBatch>(*this);
 }

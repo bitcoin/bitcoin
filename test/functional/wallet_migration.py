@@ -15,7 +15,6 @@ from test_framework.address import (
     script_to_p2sh,
     script_to_p2wsh,
 )
-from test_framework.bdb import BTREE_MAGIC
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECPubKey
 from test_framework.test_framework import BitcoinTestFramework
@@ -33,6 +32,8 @@ from test_framework.wallet_util import (
     generate_keypair,
 )
 
+BTREE_MAGIC = 0x053162
+
 
 class WalletMigrationTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -46,10 +47,14 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.skip_if_no_previous_releases()
 
     def setup_nodes(self):
-        self.add_nodes(self.num_nodes, versions=[
-            None,
-            280000,
-        ])
+        self.add_nodes(
+            self.num_nodes,
+            extra_args=self.extra_args,
+            versions=[
+                None,
+                280000,
+            ],
+        )
         self.start_nodes()
         self.init_wallet(node=0)
 
