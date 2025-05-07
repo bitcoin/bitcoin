@@ -95,12 +95,6 @@ class ToolWalletTest(BitcoinTestFramework):
             file_magic = f.read(16)
             assert file_magic == b'SQLite format 3\x00'
 
-    def assert_is_bdb(self, filename):
-        with open(filename, 'rb') as f:
-            f.seek(12, 0)
-            file_magic = f.read(4)
-            assert file_magic == b'\x00\x05\x31\x62' or file_magic == b'\x62\x31\x05\x00'
-
     def write_dump(self, dump, filename, magic=None, skip_checksum=False):
         if magic is None:
             magic = "BITCOIN_CORE_WALLET_DUMP"
@@ -151,12 +145,8 @@ class ToolWalletTest(BitcoinTestFramework):
 
         self.assert_tool_output("The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n", '-wallet={}'.format(wallet_name), '-dumpfile={}'.format(rt_dumppath), 'dump')
 
-        rt_dump_data = self.read_dump(rt_dumppath)
         wallet_dat = self.nodes[0].wallets_path / wallet_name / "wallet.dat"
-        if rt_dump_data["format"] == "bdb":
-            self.assert_is_bdb(wallet_dat)
-        else:
-            self.assert_is_sqlite(wallet_dat)
+        self.assert_is_sqlite(wallet_dat)
 
     def test_invalid_tool_commands_and_args(self):
         self.log.info('Testing that various invalid commands raise with specific error messages')
