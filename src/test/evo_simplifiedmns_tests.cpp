@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(simplifiedmns_merkleroots)
 
         std::string ip = strprintf("%d.%d.%d.%d", 0, 0, 0, i);
         if (auto service = Lookup(ip, i, false); service.has_value()) {
-            smle.netInfo.m_addr = service.value();
+            BOOST_CHECK_EQUAL(smle.netInfo.AddEntry(service.value()), NetInfoStatus::Success);
         } else {
             BOOST_REQUIRE(false);
         }

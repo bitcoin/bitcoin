@@ -112,7 +112,7 @@ public:
     {
         nVersion = ProTxVersion::LegacyBLS;
         pubKeyOperator = CBLSLazyPublicKey();
-        netInfo.m_addr = CService();
+        netInfo.Clear();
         scriptOperatorPayout = CScript();
         nRevocationReason = CProUpRevTx::REASON_NOT_SPECIFIED;
         platformNodeID = uint160();

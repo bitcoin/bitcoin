@@ -106,7 +106,7 @@ static CMutableTransaction CreateProRegTx(const CChain& active_chain, const CTxM
     CProRegTx proTx;
     proTx.nVersion = CProRegTx::GetMaxVersion(!bls::bls_legacy_scheme);
     proTx.collateralOutpoint.n = 0;
-    proTx.netInfo.m_addr = LookupNumeric("1.1.1.1", port);
+    BOOST_CHECK_EQUAL(proTx.netInfo.AddEntry(LookupNumeric("1.1.1.1", port)), NetInfoStatus::Success);
     proTx.keyIDOwner = ownerKeyRet.GetPubKey().GetID();
     proTx.pubKeyOperator.Set(operatorKeyRet.GetPublicKey(), bls::bls_legacy_scheme.load());
     proTx.keyIDVoting = ownerKeyRet.GetPubKey().GetID();
@@ -128,7 +128,7 @@ static CMutableTransaction CreateProUpServTx(const CChain& active_chain, const C
     CProUpServTx proTx;
     proTx.nVersion = CProUpServTx::GetMaxVersion(!bls::bls_legacy_scheme);
     proTx.proTxHash = proTxHash;
-    proTx.netInfo.m_addr = LookupNumeric("1.1.1.1", port);
+    BOOST_CHECK_EQUAL(proTx.netInfo.AddEntry(LookupNumeric("1.1.1.1", port)), NetInfoStatus::Success);
     proTx.scriptOperatorPayout = scriptOperatorPayout;
 
     CMutableTransaction tx;
@@ -634,7 +634,7 @@ void FuncTestMempoolReorg(TestChainSetup& setup)
 
     CProRegTx payload;
     payload.nVersion = CProRegTx::GetMaxVersion(!bls::bls_legacy_scheme);
-    payload.netInfo.m_addr = LookupNumeric("1.1.1.1", 1);
+    BOOST_CHECK_EQUAL(payload.netInfo.AddEntry(LookupNumeric("1.1.1.1", 1)), NetInfoStatus::Success);
     payload.keyIDOwner = ownerKey.GetPubKey().GetID();
     payload.pubKeyOperator.Set(operatorKey.GetPublicKey(), bls::bls_legacy_scheme.load());
     payload.keyIDVoting = ownerKey.GetPubKey().GetID();
@@ -708,7 +708,7 @@ void FuncTestMempoolDualProregtx(TestChainSetup& setup)
     auto scriptPayout = GetScriptForDestination(PKHash(payoutKey.GetPubKey()));
 
     CProRegTx payload;
-    payload.netInfo.m_addr = LookupNumeric("1.1.1.1", 2);
+    BOOST_CHECK_EQUAL(payload.netInfo.AddEntry(LookupNumeric("1.1.1.1", 2)), NetInfoStatus::Success);
     payload.keyIDOwner = ownerKey.GetPubKey().GetID();
     payload.pubKeyOperator.Set(operatorKey.GetPublicKey(), bls::bls_legacy_scheme.load());
     payload.keyIDVoting = ownerKey.GetPubKey().GetID();
@@ -776,7 +776,7 @@ void FuncVerifyDB(TestChainSetup& setup)
 
     CProRegTx payload;
     payload.nVersion = CProRegTx::GetMaxVersion(!bls::bls_legacy_scheme);
-    payload.netInfo.m_addr = LookupNumeric("1.1.1.1", 1);
+    BOOST_CHECK_EQUAL(payload.netInfo.AddEntry(LookupNumeric("1.1.1.1", 1)), NetInfoStatus::Success);
     payload.keyIDOwner = ownerKey.GetPubKey().GetID();
     payload.pubKeyOperator.Set(operatorKey.GetPublicKey(), bls::bls_legacy_scheme.load());
     payload.keyIDVoting = ownerKey.GetPubKey().GetID();

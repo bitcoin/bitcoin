@@ -470,7 +470,7 @@ void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTota
         throw(std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate collateralOutpoint=%s", __func__,
                 dmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort())));
     }
-    if (dmn->pdmnState->netInfo.GetPrimary() != CService() && !AddUniqueProperty(*dmn, dmn->pdmnState->netInfo)) {
+    if (!dmn->pdmnState->netInfo.IsEmpty() && !AddUniqueProperty(*dmn, dmn->pdmnState->netInfo)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
         throw(std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate address=%s", __func__,
                                            dmn->proTxHash.ToString(),
@@ -573,7 +573,7 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
         throw(std::runtime_error(strprintf("%s: Can't delete a masternode %s with a collateralOutpoint=%s", __func__,
                 proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort())));
     }
-    if (dmn->pdmnState->netInfo.GetPrimary() != CService() && !DeleteUniqueProperty(*dmn, dmn->pdmnState->netInfo)) {
+    if (!dmn->pdmnState->netInfo.IsEmpty() && !DeleteUniqueProperty(*dmn, dmn->pdmnState->netInfo)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
         throw(std::runtime_error(strprintf("%s: Can't delete a masternode %s with a address=%s", __func__,
                                            proTxHash.ToString(), dmn->pdmnState->netInfo.GetPrimary().ToStringAddrPort())));
@@ -802,7 +802,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, gsl::no
 
             auto dmnState = std::make_shared<CDeterministicMNState>(proTx);
             dmnState->nRegisteredHeight = nHeight;
-            if (proTx.netInfo.GetPrimary() == CService()) {
+            if (proTx.netInfo.IsEmpty()) {
                 // start in banned pdmnState as we need to wait for a ProUpServTx
                 dmnState->BanIfNotBanned(nHeight);
             }
@@ -1303,7 +1303,7 @@ bool CheckProRegTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl:
 
     // It's allowed to set addr to 0, which will put the MN into PoSe-banned state and require a ProUpServTx to be issues later
     // If any of both is set, it must be valid however
-    if (opt_ptx->netInfo.GetPrimary() != CService() && !CheckService(*opt_ptx, state)) {
+    if (!opt_ptx->netInfo.IsEmpty() && !CheckService(*opt_ptx, state)) {
         // pass the state returned by the function above
         return false;
     }
