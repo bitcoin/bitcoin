@@ -151,24 +151,21 @@ def main():
             )
             logging.info("Please consider adding a fuzz corpus at https://github.com/bitcoin-core/qa-assets")
 
-    try:
-        help_output = subprocess.run(
-            args=[
-                fuzz_bin,
-                '-help=1',
-            ],
-            env=get_fuzz_env(target=test_list_selection[0], source_dir=config['environment']['SRCDIR']),
-            timeout=20,
-            check=False,
-            stderr=subprocess.PIPE,
-            text=True,
-        ).stderr
-        using_libfuzzer = "libFuzzer" in help_output
-        if (args.generate or args.m_dir) and not using_libfuzzer:
-            logging.error("Must be built with libFuzzer")
-            sys.exit(1)
-    except subprocess.TimeoutExpired:
-        logging.error("subprocess timed out: Currently only libFuzzer is supported")
+    print("Check if using libFuzzer ... ", end='')
+    help_output = subprocess.run(
+        args=[
+            fuzz_bin,
+            '-help=1',
+        ],
+        env=get_fuzz_env(target=test_list_selection[0], source_dir=config['environment']['SRCDIR']),
+        check=False,
+        stderr=subprocess.PIPE,
+        text=True,
+    ).stderr
+    using_libfuzzer = "libFuzzer" in help_output
+    print(using_libfuzzer)
+    if (args.generate or args.m_dir) and not using_libfuzzer:
+        logging.error("Must be built with libFuzzer")
         sys.exit(1)
 
     with ThreadPoolExecutor(max_workers=args.par) as fuzz_pool:
