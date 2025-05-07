@@ -946,7 +946,7 @@ RPCHelpMan rescanblockchain()
 RPCHelpMan abortrescan()
 {
     return RPCHelpMan{"abortrescan",
-                "\nStops current wallet rescan triggered by an RPC call, e.g. by an rescanblockchain call.\n"
+                "Stops current wallet rescan triggered by an RPC call, e.g. by a rescanblockchain call.\n"
                 "Note: Use \"getwalletinfo\" to query the scanning progress.\n",
                 {},
                 RPCResult{RPCResult::Type::BOOL, "", "Whether the abort was successful"},
