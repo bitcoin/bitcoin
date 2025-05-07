@@ -112,26 +112,6 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         tfm::format(std::cerr, "The -dumpfile option can only be used with the \"dump\" and \"createfromdump\" commands.\n");
         return false;
     }
-    if (args.IsArgSet("-descriptors")) {
-        if (command != "create") {
-            tfm::format(std::cerr, "The -descriptors option can only be used with the 'create' command.\n");
-            return false;
-        }
-        if (!args.GetBoolArg("-descriptors", true)) {
-            tfm::format(std::cerr, "The -descriptors option must be set to \"true\"\n");
-            return false;
-        }
-    }
-    if (args.IsArgSet("-legacy")) {
-        if (command != "create") {
-            tfm::format(std::cerr, "The -legacy option can only be used with the 'create' command.\n");
-            return false;
-        }
-        if (args.GetBoolArg("-legacy", true)) {
-            tfm::format(std::cerr, "The -legacy option must be set to \"false\"\n");
-            return false;
-        }
-    }
     if (command == "create" && !args.IsArgSet("-wallet")) {
         tfm::format(std::cerr, "Wallet name must be provided when creating a new wallet.\n");
         return false;
