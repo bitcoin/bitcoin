@@ -4,8 +4,17 @@
 
 #include <evo/netinfo.h>
 
-NetInfoStatus MnNetInfo::AddEntry(const CService& service)
+#include <chainparams.h>
+#include <netbase.h>
+#include <span.h>
+
+NetInfoStatus MnNetInfo::AddEntry(const std::string& input)
 {
-    m_addr = service;
-    return NetInfoStatus::Success;
+    if (auto service = Lookup(input, /*portDefault=*/Params().GetDefaultPort(), /*fAllowLookup=*/false);
+        service.has_value()) {
+        m_addr = service.value();
+        ASSERT_IF_DEBUG(m_addr != CService());
+        return NetInfoStatus::Success;
+    }
+    return NetInfoStatus::BadInput;
 }
