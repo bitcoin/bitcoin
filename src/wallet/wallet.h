@@ -1046,7 +1046,7 @@ public:
      * A backup is not created.
      * May crash if something unexpected happens in the filesystem.
      */
-    bool MigrateToSQLite(bilingual_str& error) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool MigrateToSQLite(bilingual_str& error, bool in_memory = false) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Get all of the descriptors from a legacy wallet
     std::optional<MigrationData> GetDescriptorsForLegacy(bilingual_str& error) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -1137,7 +1137,7 @@ struct MigrationResult {
 //! Do all steps to migrate a legacy wallet to a descriptor wallet
 [[nodiscard]] util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& wallet_name, const SecureString& passphrase, WalletContext& context);
 //! Requirement: The wallet provided to this function must be isolated, with no attachment to the node's context.
-[[nodiscard]] util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet> local_wallet, const SecureString& passphrase, WalletContext& context, bool was_loaded);
+[[nodiscard]] util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet> local_wallet, const SecureString& passphrase, WalletContext& context, bool was_loaded, bool in_memory);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_WALLET_H
