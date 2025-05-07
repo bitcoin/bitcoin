@@ -95,12 +95,6 @@ class ToolWalletTest(BitcoinTestFramework):
             file_magic = f.read(16)
             assert file_magic == b'SQLite format 3\x00'
 
-    def assert_is_bdb(self, filename):
-        with open(filename, 'rb') as f:
-            f.seek(12, 0)
-            file_magic = f.read(4)
-            assert file_magic == b'\x00\x05\x31\x62' or file_magic == b'\x62\x31\x05\x00'
-
     def write_dump(self, dump, filename, magic=None, skip_checksum=False):
         if magic is None:
             magic = "BITCOIN_CORE_WALLET_DUMP"
@@ -116,27 +110,6 @@ class ToolWalletTest(BitcoinTestFramework):
                 row = ",".join(["checksum", dump["checksum"]]) + "\n"
                 f.write(row)
 
-    def assert_dump(self, expected, received):
-        e = expected.copy()
-        r = received.copy()
-
-        # BDB will add a "version" record that is not present in sqlite
-        # In that case, we should ignore this record in both
-        # But because this also effects the checksum, we also need to drop that.
-        v_key = "0776657273696f6e" # Version key
-        if v_key in e and v_key not in r:
-            del e[v_key]
-            del e["checksum"]
-            del r["checksum"]
-        if v_key not in e and v_key in r:
-            del r[v_key]
-            del e["checksum"]
-            del r["checksum"]
-
-        assert_equal(len(e), len(r))
-        for k, v in e.items():
-            assert_equal(v, r[k])
-
     def do_tool_createfromdump(self, wallet_name, dumpfile):
         dumppath = self.nodes[0].datadir_path / dumpfile
         rt_dumppath = self.nodes[0].datadir_path / "rt-{}.dump".format(wallet_name)
@@ -151,12 +124,8 @@ class ToolWalletTest(BitcoinTestFramework):
 
         self.assert_tool_output("The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n", '-wallet={}'.format(wallet_name), '-dumpfile={}'.format(rt_dumppath), 'dump')
 
-        rt_dump_data = self.read_dump(rt_dumppath)
         wallet_dat = self.nodes[0].wallets_path / wallet_name / "wallet.dat"
-        if rt_dump_data["format"] == "bdb":
-            self.assert_is_bdb(wallet_dat)
-        else:
-            self.assert_is_sqlite(wallet_dat)
+        self.assert_is_sqlite(wallet_dat)
 
     def test_invalid_tool_commands_and_args(self):
         self.log.info('Testing that various invalid commands raise with specific error messages')
