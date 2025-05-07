@@ -912,6 +912,8 @@ static std::string RecurseImportData(const CScript& script, ImportData& import_d
     case TxoutType::WITNESS_V1_TAPROOT:
     case TxoutType::ANCHOR:
         return "unrecognized script";
+    case TxoutType::TX_BARE_DEFAULT_CHECKTEMPLATEVERIFY:
+        return "bare default CheckTemplateVerify hash";
     } // no default case, so the compiler can warn about missing cases
     NONFATAL_UNREACHABLE();
 }
