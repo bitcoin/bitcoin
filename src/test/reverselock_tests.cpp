@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(reverselock_basics)
 
     BOOST_CHECK(lock.owns_lock());
     {
-        REVERSE_LOCK(lock);
+        REVERSE_LOCK(lock, mutex);
         BOOST_CHECK(!lock.owns_lock());
     }
     BOOST_CHECK(lock.owns_lock());
@@ -33,9 +33,9 @@ BOOST_AUTO_TEST_CASE(reverselock_multiple)
 
     // Make sure undoing two locks succeeds
     {
-        REVERSE_LOCK(lock);
+        REVERSE_LOCK(lock, mutex);
         BOOST_CHECK(!lock.owns_lock());
-        REVERSE_LOCK(lock2);
+        REVERSE_LOCK(lock2, mutex2);
         BOOST_CHECK(!lock2.owns_lock());
     }
     BOOST_CHECK(lock.owns_lock());
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(reverselock_errors)
     g_debug_lockorder_abort = false;
 
     // Make sure trying to reverse lock a previous lock fails
-    BOOST_CHECK_EXCEPTION(REVERSE_LOCK(lock2), std::logic_error, HasReason("lock2 was not most recent critical section locked"));
+    BOOST_CHECK_EXCEPTION(REVERSE_LOCK(lock2, mutex2), std::logic_error, HasReason("lock2 was not most recent critical section locked"));
     BOOST_CHECK(lock2.owns_lock());
 
     g_debug_lockorder_abort = prev;
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(reverselock_errors)
 
     bool failed = false;
     try {
-        REVERSE_LOCK(lock);
+        REVERSE_LOCK(lock, mutex);
     } catch(...) {
         failed = true;
     }
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(reverselock_errors)
     lock.lock();
     BOOST_CHECK(lock.owns_lock());
     {
-        REVERSE_LOCK(lock);
+        REVERSE_LOCK(lock, mutex);
         BOOST_CHECK(!lock.owns_lock());
     }
 
