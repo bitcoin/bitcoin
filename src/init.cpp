@@ -298,9 +298,6 @@ void Shutdown(NodeContext& node)
     StopREST();
     StopRPC();
     StopHTTPServer();
-    for (const auto& client : node.chain_clients) {
-        client->flush();
-    }
     StopMapPort();
 
     // Because these depend on each-other, we make sure that neither can be

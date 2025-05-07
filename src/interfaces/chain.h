@@ -407,9 +407,6 @@ public:
     //! Start client execution and provide a scheduler.
     virtual void start(CScheduler& scheduler) = 0;
 
-    //! Save state to disk.
-    virtual void flush() = 0;
-
     //! Shut down client.
     virtual void stop() = 0;
 
