@@ -107,6 +107,7 @@ void SetMockTime(int64_t nMockTimeIn);
 
 /** For testing. Set e.g. with the setmocktime rpc, or -mocktime argument */
 void SetMockTime(std::chrono::seconds mock_time_in);
+void SetMockTime(std::chrono::time_point<NodeClock, std::chrono::seconds> mock);
 
 /** For testing */
 std::chrono::seconds GetMockTime();
