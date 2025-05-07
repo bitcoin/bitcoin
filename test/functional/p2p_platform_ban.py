@@ -69,11 +69,12 @@ class PlatformBanMessagesTest(DashTestFramework):
 
         assert not self.check_banned(self.mninfo[0])
 
-        self.mine_quorum(llmq_type_name='llmq_test_platform', expected_members=2, expected_connections=1, expected_contributions=2, expected_commitments=2, llmq_type=106)
+        mninfos_valid = self.mninfo.copy()[1:]
+        self.mine_quorum(llmq_type_name='llmq_test_platform', expected_members=2, expected_connections=1, expected_contributions=2, expected_commitments=2, llmq_type=106, mninfos_valid=mninfos_valid)
 
         p2p_node = node.add_p2p_connection(PlatformBanInterface())
         p2p_node.send_message(msg)
-        self.mine_quorum(llmq_type_name='llmq_test_platform', expected_members=2, expected_connections=1, expected_contributions=2, expected_commitments=2, llmq_type=106)
+        self.mine_quorum(llmq_type_name='llmq_test_platform', expected_members=2, expected_connections=1, expected_contributions=2, expected_commitments=2, llmq_type=106, mninfos_valid=mninfos_valid)
         assert self.check_banned(self.mninfo[0])
 
         self.dynamically_evo_update_service(evo_info_0)
