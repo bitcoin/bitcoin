@@ -394,8 +394,11 @@ private:
     template <typename T>
     [[nodiscard]] uint256 GetUniquePropertyHash(const T& v) const
     {
-        static_assert(!std::is_same_v<std::decay_t<T>, CBLSPublicKey>,
-                      "GetUniquePropertyHash cannot be templated against CBLSPublicKey");
+#define DMNL_NO_TEMPLATE(name) \
+    static_assert(!std::is_same_v<std::decay_t<T>, name>, "GetUniquePropertyHash cannot be templated against " #name)
+        DMNL_NO_TEMPLATE(CBLSPublicKey);
+        DMNL_NO_TEMPLATE(MnNetInfo);
+#undef DMNL_NO_TEMPLATE
         return ::SerializeHash(v);
     }
     template <typename T>
