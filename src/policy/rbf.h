@@ -90,7 +90,7 @@ std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx, const CTx
  */
 std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries& ancestors,
                                                    const std::set<Txid>& direct_conflicts,
-                                                   const uint256& txid);
+                                                   const Txid& txid);
 
 /** Check that the feerate of the replacement transaction(s) is higher than the feerate of each
  * of the transactions in iters_conflicting.
@@ -98,7 +98,7 @@ std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries&
  * @returns error message if fees insufficient, otherwise std::nullopt.
  */
 std::optional<std::string> PaysMoreThanConflicts(const CTxMemPool::setEntries& iters_conflicting,
-                                                 CFeeRate replacement_feerate, const uint256& txid);
+                                                 CFeeRate replacement_feerate, const Txid& txid);
 
 /** The replacement transaction must pay more fees than the original transactions. The additional
  * fees must pay for the replacement's bandwidth at or above the incremental relay feerate.
@@ -113,7 +113,7 @@ std::optional<std::string> PaysForRBF(CAmount original_fees,
                                       CAmount replacement_fees,
                                       size_t replacement_vsize,
                                       CFeeRate relay_fee,
-                                      const uint256& txid);
+                                      const Txid& txid);
 
 /**
  * The replacement transaction must improve the feerate diagram of the mempool.
