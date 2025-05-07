@@ -16,7 +16,7 @@
 
 - [Legacy subdirectories and files](#legacy-subdirectories-and-files)
 
-- [Notes](#notes)
+- [Installed Files](#installed-files)
 
 ## Data directory location
 
@@ -123,8 +123,39 @@ Path           | Description | Repository notes
 `addr.dat`     | Peer IP address BDB database; replaced by `peers.dat` in [0.7.0](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.7.0.md) | [PR #1198](https://github.com/bitcoin/bitcoin/pull/1198), [`928d3a01`](https://github.com/bitcoin/bitcoin/commit/928d3a011cc66c7f907c4d053f674ea77dc611cc)
 `onion_private_key` | Cached Tor onion service private key for `-listenonion` option. Was used for Tor v2 services; replaced by `onion_v3_private_key` in [0.21.0](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.21.0.md) | [PR #19954](https://github.com/bitcoin/bitcoin/pull/19954)
 
-## Notes
+### Notes
 
 <a name="note1">1</a>. The `/` (slash, U+002F) is used as the platform-independent path component separator in this document.
 
 <a name="note2">2</a>. `NNNNN` matches `[0-9]{5}` regex.
+
+## Installed Files
+
+This table describes the files installed by Bitcoin across different platforms.
+
+| **Path** | **Description** |
+|----------|-----------------|
+| [README.md](README.md) or [readme.txt](README_windows.txt) | Project information and instructions |
+| bitcoin.conf                        | [Generated](../contrib/devtools/gen-bitcoin-conf.sh) configuration file |
+| bin/bitcoin-cli                     | Command-line tool to interact with the Bitcoin node over RPC |
+| bin/bitcoin-qt                      | Bitcoin node and wallet GUI |
+| bin/bitcoin-tx                      | Tool for creating and modifying transactions |
+| bin/bitcoin-util                    | Miscellaneous utilities |
+| bin/bitcoin-wallet                  | Bitcoin wallet tool |
+| bin/bitcoind                        | Bitcoin node and wallet daemon |
+| *lib/libbitcoinkernel.so*           | Shared library containing core consensus and validation code |
+| *lib/pkgconfig/libbitcoinkernel.pc* | Pkg-config metadata for linking to `libbitcoinkernel` |
+| *libexec/bench_bitcoin*             | Benchmarking tool for measuring node performance |
+| *libexec/bitcoin-chainstate*        | Tool to validate and connect blocks |
+| *libexec/bitcoin-gui*               | IPC-enabled alternative to `bitcoin-qt` |
+| *libexec/bitcoin-node*              | IPC-enabled alternative to `bitcoind` |
+| libexec/test_bitcoin                | Unit test binary |
+| *libexec/test_bitcoin-qt*           | GUI-specific unit tests |
+| share/man/man1/                     | Man pages for command-line tools like `bitcoin-cli`, `bitcoind`, and others |
+| share/rpcauth/                      | Documentation and scripts for RPC authentication setup |
+
+### Notes
+
+- *Italicized* files are installed in source builds but not included in binary releases.
+- README and bitcoin.conf files included in binary releases but not installed in source builds.
+- On Windows, binaries have a `.exe` suffix (e.g., `bitcoin-cli.exe`).
