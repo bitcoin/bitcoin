@@ -243,9 +243,6 @@ void TransactionView::setModel(WalletModel *_model)
 
         // hide column Watch-only
         updateWatchOnlyColumn(false);
-
-        // Watch-only signal
-        connect(_model, &WalletModel::notifyWatchonlyChanged, this, &TransactionView::updateWatchOnlyColumn);
     }
 }
 

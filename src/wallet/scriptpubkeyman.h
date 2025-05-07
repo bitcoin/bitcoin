@@ -167,9 +167,6 @@ public:
         LogInfo("%s %s", m_storage.GetDisplayName(), tfm::format(wallet_fmt, params...));
     };
 
-    /** Watch-only address added */
-    boost::signals2::signal<void (bool fHaveWatchOnly)> NotifyWatchonlyChanged;
-
     /** Keypool has new keys */
     boost::signals2::signal<void ()> NotifyCanGetAddressesChanged;
 
