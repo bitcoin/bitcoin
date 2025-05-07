@@ -22,8 +22,8 @@ struct HeadersGeneratorSetup : public RegTestingSetup {
      * prev_time, and with a fixed merkle root hash.
      */
     void GenerateHeaders(std::vector<CBlockHeader>& headers, size_t count,
-            const uint256& starting_hash, const int nVersion, int prev_time,
-            const uint256& merkle_root, const uint32_t nBits);
+                         const uint256& starting_hash, int nVersion, int prev_time,
+                         const uint256& merkle_root, uint32_t nBits);
 };
 
 void HeadersGeneratorSetup::FindProofOfWork(CBlockHeader& starting_header)

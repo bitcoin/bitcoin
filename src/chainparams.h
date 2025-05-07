@@ -15,7 +15,7 @@ class ArgsManager;
 /**
  * Creates and returns a std::unique_ptr<CChainParams> of the chosen chain.
  */
-std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, const ChainType chain);
+std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, ChainType chain);
 
 /**
  * Return the currently selected parameters. This won't change after app
@@ -26,6 +26,6 @@ const CChainParams &Params();
 /**
  * Sets the params returned by Params() to those for the given chain type.
  */
-void SelectParams(const ChainType chain);
+void SelectParams(ChainType chain);
 
 #endif // BITCOIN_CHAINPARAMS_H

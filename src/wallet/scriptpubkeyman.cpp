@@ -323,7 +323,7 @@ util::Result<CTxDestination> LegacyScriptPubKeyMan::GetReservedDestination(const
     return GetDestinationForKey(keypool.vchPubKey, type);
 }
 
-bool LegacyScriptPubKeyMan::TopUpInactiveHDChain(const CKeyID seed_id, int64_t index, bool internal)
+bool LegacyScriptPubKeyMan::TopUpInactiveHDChain(const CKeyID& seed_id, int64_t index, bool internal)
 {
     LOCK(cs_KeyStore);
 
@@ -1601,7 +1601,7 @@ bool LegacyScriptPubKeyMan::AddKeyOriginWithDB(WalletBatch& batch, const CPubKey
     return batch.WriteKeyMetadata(mapKeyMetadata[pubkey.GetID()], pubkey, true);
 }
 
-bool LegacyScriptPubKeyMan::ImportScripts(const std::set<CScript> scripts, int64_t timestamp)
+bool LegacyScriptPubKeyMan::ImportScripts(const std::set<CScript>& scripts, int64_t timestamp)
 {
     WalletBatch batch(m_storage.GetDatabase());
     for (const auto& entry : scripts) {

@@ -172,7 +172,7 @@ public:
      *
      * @return                   A vector of randomly selected addresses from vRandom.
      */
-    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered = true) const;
+    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, bool filtered = true) const;
 
     /**
      * Returns an information-location pair for all addresses in the selected addrman table.
