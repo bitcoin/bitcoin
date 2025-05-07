@@ -110,27 +110,6 @@ class ToolWalletTest(BitcoinTestFramework):
                 row = ",".join(["checksum", dump["checksum"]]) + "\n"
                 f.write(row)
 
-    def assert_dump(self, expected, received):
-        e = expected.copy()
-        r = received.copy()
-
-        # BDB will add a "version" record that is not present in sqlite
-        # In that case, we should ignore this record in both
-        # But because this also effects the checksum, we also need to drop that.
-        v_key = "0776657273696f6e" # Version key
-        if v_key in e and v_key not in r:
-            del e[v_key]
-            del e["checksum"]
-            del r["checksum"]
-        if v_key not in e and v_key in r:
-            del r[v_key]
-            del e["checksum"]
-            del r["checksum"]
-
-        assert_equal(len(e), len(r))
-        for k, v in e.items():
-            assert_equal(v, r[k])
-
     def do_tool_createfromdump(self, wallet_name, dumpfile):
         dumppath = self.nodes[0].datadir_path / dumpfile
         rt_dumppath = self.nodes[0].datadir_path / "rt-{}.dump".format(wallet_name)
