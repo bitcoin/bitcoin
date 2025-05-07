@@ -820,13 +820,6 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
     return out;
 }
 
-bool LegacyDataSPKM::DeleteRecords()
-{
-    return RunWithinTxn(m_storage.GetDatabase(), /*process_desc=*/"delete legacy records", [&](WalletBatch& batch){
-        return DeleteRecordsWithDB(batch);
-    });
-}
-
 bool LegacyDataSPKM::DeleteRecordsWithDB(WalletBatch& batch)
 {
     LOCK(cs_KeyStore);
