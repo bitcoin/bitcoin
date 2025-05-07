@@ -784,7 +784,9 @@ an irreversible way, you may want to completely purge Guix from your system and
 start over.
 
 1. Uninstall Guix itself according to the way you installed it (e.g. `sudo apt
-   purge guix` for Ubuntu packaging, `sudo make uninstall` for a build from source).
+   purge guix` for Ubuntu packaging, `sudo make uninstall` for a build from
+   source, or running the GUIX [install script][install-script] with the
+   `--uninstall` [flag](https://guix.gnu.org/manual/devel/en/guix.html#index-uninstalling-Guix)).
 2. Remove all build users and groups
 
    You may check for relevant users and groups using:
