@@ -763,6 +763,21 @@ Please see the following links for more details:
 - A commit to skip this test in Guix has been merged into the core-updates branch:
 [savannah/guix@6ba1058](https://git.savannah.gnu.org/cgit/guix.git/commit/?id=6ba1058df0c4ce5611c2367531ae5c3cdc729ab4)
 
+## zdiff3
+
+[Currently](https://issues.guix.gnu.org/72942) `guix` builds may fail if the
+global git config has `merge.conflictstyle` set to `zdiff3` as follows:
+
+```
+Updating channel 'guix' from Git repository at 'https://codeberg.org/guix/guix.git'...
+guix time-machine: error: Git error: unknown style 'zdiff3' given for 'merge.conflictstyle'
+```
+
+This can be fixed by setting `merge.conflictstyle` to `diff3`:
+
+```bash
+git config --global merge.conflictstyle diff3
+```
 
 [install-script]: #options-1-and-2-using-the-official-shell-installer-script-or-binary-tarball
 [install-bin-tarball]: #options-1-and-2-using-the-official-shell-installer-script-or-binary-tarball
