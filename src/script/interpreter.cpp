@@ -433,6 +433,12 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
     execdata.m_codeseparator_pos = 0xFFFFFFFFUL;
     execdata.m_codeseparator_pos_init = true;
 
+    bool unsigned_annex_discouragement_needed = false;
+    if (execdata.m_annex_init && execdata.m_annex_present) {
+        if (flags & SCRIPT_VERIFY_DISCOURAGE_UNSIGNED_ANNEX) {
+            unsigned_annex_discouragement_needed = true;
+        }
+    }
     try
     {
         for (; pc < pend; ++opcode_pos) {
@@ -1070,6 +1076,8 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     popstack(stack);
                     popstack(stack);
                     stack.push_back(fSuccess ? vchTrue : vchFalse);
+                    if (fSuccess)
+                        unsigned_annex_discouragement_needed = false;
                     if (opcode == OP_CHECKSIGVERIFY)
                     {
                         if (fSuccess)
@@ -1098,6 +1106,8 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     popstack(stack);
                     popstack(stack);
                     stack.push_back((num + (success ? 1 : 0)).getvch());
+                    if (success)
+                        unsigned_annex_discouragement_needed = false;
                 }
                 break;
 
@@ -1227,6 +1237,9 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
         return set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
     }
 
+    if (unsigned_annex_discouragement_needed) {
+        return set_error(serror, SCRIPT_ERR_TAPSCRIPT_UNSIGNED_ANNEX);
+    }
     if (!vfExec.empty())
         return set_error(serror, SCRIPT_ERR_UNBALANCED_CONDITIONAL);
 
