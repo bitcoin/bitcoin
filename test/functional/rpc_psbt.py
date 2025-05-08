@@ -44,6 +44,7 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
     find_vout_for_address,
+    wallet_importprivkey,
 )
 from test_framework.wallet_util import (
     calculate_input_weight,
@@ -622,7 +623,7 @@ class PSBTTest(BitcoinTestFramework):
             self.nodes[2].createwallet(wallet_name="wallet{}".format(i))
             wrpc = self.nodes[2].get_wallet_rpc("wallet{}".format(i))
             for key in signer['privkeys']:
-                wrpc.importprivkey(key)
+                wallet_importprivkey(wrpc, key, "now")
             signed_tx = wrpc.walletprocesspsbt(signer['psbt'], True, "ALL")['psbt']
             assert_equal(signed_tx, signer['result'])
 
@@ -878,7 +879,7 @@ class PSBTTest(BitcoinTestFramework):
         addr = self.nodes[0].deriveaddresses(desc)[0]
         self.nodes[0].sendtoaddress(addr, 10)
         self.generate(self.nodes[0], 1)
-        self.nodes[0].importprivkey(privkey)
+        wallet_importprivkey(self.nodes[0], privkey, "now")
 
         psbt = watchonly.sendall([wallet.getnewaddress()])["psbt"]
         signed_tx = self.nodes[0].walletprocesspsbt(psbt)
