@@ -3428,13 +3428,13 @@ void CConnman::Interrupt()
 
     if (semOutbound) {
         for (int i=0; i<m_max_automatic_outbound; i++) {
-            semOutbound->post();
+            semOutbound->release();
         }
     }
 
     if (semAddnode) {
         for (int i=0; i<m_max_addnode; i++) {
-            semAddnode->post();
+            semAddnode->release();
         }
     }
 }
