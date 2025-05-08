@@ -1893,7 +1893,7 @@ bool CConnman::AddConnection(const std::string& address, ConnectionType conn_typ
     if (max_connections != std::nullopt && existing_connections >= max_connections) return false;
 
     // Max total outbound connections already exist
-    SemaphoreGrant grant(*semOutbound, true);
+    CountingSemaphoreGrant<> grant(*semOutbound, true);
     if (!grant) return false;
 
     OpenNetworkConnection(CAddress(), false, std::move(grant), address.c_str(), conn_type, /*use_v2transport=*/use_v2transport);
@@ -2409,7 +2409,7 @@ void CConnman::ProcessAddrFetch()
     // peer doesn't support it or immediately disconnects us for another reason.
     const bool use_v2transport(GetLocalServices() & NODE_P2P_V2);
     CAddress addr;
-    SemaphoreGrant grant(*semOutbound, /*fTry=*/true);
+    CountingSemaphoreGrant<> grant(*semOutbound, /*fTry=*/true);
     if (grant) {
         OpenNetworkConnection(addr, false, std::move(grant), strDest.c_str(), ConnectionType::ADDR_FETCH, use_v2transport);
     }
@@ -2583,7 +2583,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
 
         PerformReconnections();
 
-        SemaphoreGrant grant(*semOutbound);
+        CountingSemaphoreGrant<> grant(*semOutbound);
         if (interruptNet)
             return;
 
@@ -2961,7 +2961,7 @@ void CConnman::ThreadOpenAddedConnections()
     AssertLockNotHeld(m_reconnections_mutex);
     while (true)
     {
-        SemaphoreGrant grant(*semAddnode);
+        CountingSemaphoreGrant<> grant(*semAddnode);
         std::vector<AddedNodeInfo> vInfo = GetAddedNodeInfo(/*include_connected=*/false);
         bool tried = false;
         for (const AddedNodeInfo& info : vInfo) {
@@ -2974,7 +2974,7 @@ void CConnman::ThreadOpenAddedConnections()
             CAddress addr(CService(), NODE_NONE);
             OpenNetworkConnection(addr, false, std::move(grant), info.m_params.m_added_node.c_str(), ConnectionType::MANUAL, info.m_params.m_use_v2transport);
             if (!interruptNet.sleep_for(std::chrono::milliseconds(500))) return;
-            grant = SemaphoreGrant(*semAddnode, /*fTry=*/true);
+            grant = CountingSemaphoreGrant<>(*semAddnode, /*fTry=*/true);
         }
         // See if any reconnections are desired.
         PerformReconnections();
@@ -2985,7 +2985,7 @@ void CConnman::ThreadOpenAddedConnections()
 }
 
 // if successful, this moves the passed grant to the constructed node
-void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, SemaphoreGrant&& grant_outbound, const char *pszDest, ConnectionType conn_type, bool use_v2transport)
+void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CountingSemaphoreGrant<>&& grant_outbound, const char *pszDest, ConnectionType conn_type, bool use_v2transport)
 {
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
     assert(conn_type != ConnectionType::INBOUND);
@@ -3336,11 +3336,11 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
 
     if (semOutbound == nullptr) {
         // initialize semaphore
-        semOutbound = std::make_unique<Semaphore>(std::min(m_max_automatic_outbound, m_max_automatic_connections));
+        semOutbound = std::make_unique<std::counting_semaphore<>>(std::min(m_max_automatic_outbound, m_max_automatic_connections));
     }
     if (semAddnode == nullptr) {
         // initialize semaphore
-        semAddnode = std::make_unique<Semaphore>(m_max_addnode);
+        semAddnode = std::make_unique<std::counting_semaphore<>>(m_max_addnode);
     }
 
     //
