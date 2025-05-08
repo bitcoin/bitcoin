@@ -192,6 +192,7 @@ BITCOIN_CORE_H = \
   evo/evodb.h \
   evo/mnauth.h \
   evo/mnhftx.h \
+  evo/netinfo.h \
   evo/providertx.h \
   evo/simplifiedmns.h \
   evo/specialtx.h \
@@ -776,6 +777,7 @@ libbitcoin_common_a_SOURCES = \
   core_write.cpp \
   deploymentinfo.cpp \
   evo/core_write.cpp \
+  evo/netinfo.cpp \
   governance/common.cpp \
   init/common.cpp \
   key.cpp \

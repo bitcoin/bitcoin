@@ -683,10 +683,8 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     }
 
     if (!request.params[paramIdx].get_str().empty()) {
-        if (auto addr = Lookup(request.params[paramIdx].get_str(), Params().GetDefaultPort(), false); addr.has_value()) {
-            ptx.addr = addr.value();
-        } else {
-            throw std::runtime_error(strprintf("invalid network address %s", request.params[paramIdx].get_str()));
+        if (auto entryRet = ptx.netInfo.AddEntry(request.params[paramIdx].get_str()); entryRet != NetInfoStatus::Success) {
+            throw std::runtime_error(strprintf("%s (%s)", NISToString(entryRet), request.params[paramIdx].get_str()));
         }
     }
 
@@ -978,10 +976,8 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
 
     ptx.nVersion = dmn->pdmnState->nVersion;
 
-    if (auto addr = Lookup(request.params[1].get_str().c_str(), Params().GetDefaultPort(), false); addr.has_value()) {
-        ptx.addr = addr.value();
-    } else {
-        throw std::runtime_error(strprintf("invalid network address %s", request.params[1].get_str()));
+    if (auto entryRet = ptx.netInfo.AddEntry(request.params[1].get_str()); entryRet != NetInfoStatus::Success) {
+        throw std::runtime_error(strprintf("%s (%s)", NISToString(entryRet), request.params[1].get_str()));
     }
 
     CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[2].get_str(), "operatorKey");

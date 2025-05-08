@@ -77,7 +77,9 @@ void CMasternodeUtils::DoMaintenance(CConnman& connman, CDeterministicMNManager&
         }
 
 #ifdef ENABLE_WALLET
-        bool fFound = ranges::any_of(vecDmns, [&pnode](const auto& dmn){ return pnode->addr == dmn->pdmnState->addr; });
+        bool fFound = ranges::any_of(vecDmns, [&pnode](const auto& dmn) {
+            return pnode->addr == dmn->pdmnState->netInfo.GetPrimary();
+        });
         if (fFound) return; // do NOT disconnect mixing masternodes
 #endif // ENABLE_WALLET
         if (fLogIPs) {
