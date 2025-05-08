@@ -1180,29 +1180,15 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
 template <typename ProTx>
 static bool CheckService(const ProTx& proTx, TxValidationState& state)
 {
-    const auto addr{proTx.netInfo.GetPrimary()};
-    if (!addr.IsValid()) {
-        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-ipaddr");
-    }
-    if (Params().RequireRoutableExternalIP() && !addr.IsRoutable()) {
-        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-ipaddr");
-    }
-
-    // TODO: use real args here
-    static int mainnetDefaultPort = CreateChainParams(ArgsManager{}, CBaseChainParams::MAIN)->GetDefaultPort();
-    if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
-        if (addr.GetPort() != mainnetDefaultPort) {
-            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-ipaddr-port");
-        }
-    } else if (addr.GetPort() == mainnetDefaultPort) {
-        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-ipaddr-port");
-    }
-
-    if (!addr.IsIPv4()) {
-        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-ipaddr");
-    }
-
-    return true;
+    switch (proTx.netInfo.Validate()) {
+    case NetInfoStatus::BadInput:
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo");
+    case NetInfoStatus::BadPort:
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-port");
+    case NetInfoStatus::Success:
+        return true;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 template <typename ProTx>

@@ -16,8 +16,14 @@ const std::vector<std::pair</*input=*/std::string, /*expected_ret=*/NetInfoStatu
     {"1.1.1.1:8888", NetInfoStatus::Success},
     // Address specified, port should default to default P2P core
     {"1.1.1.1", NetInfoStatus::Success},
+    // Mainnet P2P port on non-mainnet
+    {"1.1.1.1:9999", NetInfoStatus::BadPort},
+    // Valid IPv4 formatting but invalid IPv4 address
+    {"0.0.0.0:8888", NetInfoStatus::BadInput},
     // Port greater than uint16_t max
     {"1.1.1.1:99999", NetInfoStatus::BadInput},
+    // Only IPv4 allowed
+    {"[2606:4700:4700::1111]:8888", NetInfoStatus::BadInput},
     // Domains are not allowed
     {"example.com:8888", NetInfoStatus::BadInput},
     // Incorrect IPv4 address
