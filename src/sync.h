@@ -301,64 +301,15 @@ inline MutexType* MaybeCheckNotHeld(MutexType* m) LOCKS_EXCLUDED(m) LOCK_RETURNE
 //! gcc and the -Wreturn-stack-address flag in clang, both enabled by default.
 #define WITH_LOCK(cs, code) (MaybeCheckNotHeld(cs), [&]() -> decltype(auto) { LOCK(cs); code; }())
 
-/** An implementation of a semaphore.
- *
- * See https://en.wikipedia.org/wiki/Semaphore_(programming)
- */
-template <std::ptrdiff_t LeastMaxValue = std::counting_semaphore<>::max()>
-class CountingSemaphore
-{
-private:
-    std::condition_variable condition;
-    std::mutex mutex;
-    int value;
-
-public:
-    explicit CountingSemaphore(int init) noexcept : value(init) {}
-
-    // Disallow default construct, copy, move.
-    CountingSemaphore() = delete;
-    CountingSemaphore(const CountingSemaphore&) = delete;
-    CountingSemaphore(CountingSemaphore&&) = delete;
-    CountingSemaphore& operator=(const CountingSemaphore&) = delete;
-    CountingSemaphore& operator=(CountingSemaphore&&) = delete;
-
-    void acquire() noexcept
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        condition.wait(lock, [&]() { return value >= 1; });
-        value--;
-    }
-
-    bool try_acquire() noexcept
-    {
-        std::lock_guard<std::mutex> lock(mutex);
-        if (value < 1) {
-            return false;
-        }
-        value--;
-        return true;
-    }
-
-    void release() noexcept
-    {
-        {
-            std::lock_guard<std::mutex> lock(mutex);
-            value++;
-        }
-        condition.notify_one();
-    }
-};
-
-using BinarySemaphore = CountingSemaphore<1>;
-using Semaphore = CountingSemaphore<>;
+using BinarySemaphore = std::binary_semaphore;
+using Semaphore = std::counting_semaphore<>;
 
 /** RAII-style semaphore lock */
 template <std::ptrdiff_t LeastMaxValue = std::counting_semaphore<>::max()>
 class CountingSemaphoreGrant
 {
 private:
-    CountingSemaphore<LeastMaxValue>* sem;
+    std::counting_semaphore<LeastMaxValue>* sem;
     bool fHaveGrant;
 
 public:
@@ -413,7 +364,7 @@ public:
 
     CountingSemaphoreGrant() noexcept : sem(nullptr), fHaveGrant(false) {}
 
-    explicit CountingSemaphoreGrant(CountingSemaphore<LeastMaxValue>& sema, bool fTry = false) noexcept : sem(&sema), fHaveGrant(false)
+    explicit CountingSemaphoreGrant(std::counting_semaphore<LeastMaxValue>& sema, bool fTry = false) noexcept : sem(&sema), fHaveGrant(false)
     {
         if (fTry) {
             TryAcquire();
