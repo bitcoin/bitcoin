@@ -42,7 +42,8 @@ class CreateWalletTest(BitcoinTestFramework):
         w1 = node.get_wallet_rpc('w1')
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w1.getnewaddress)
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w1.getrawchangeaddress)
-        w1.importpubkey(w0.getaddressinfo(address1)['pubkey'])
+        import_res = w1.importdescriptors([{"desc": w0.getaddressinfo(address1)['desc'], "timestamp": "now"}])
+        assert_equal(import_res[0]["success"], True)
 
         self.log.info('Test that private keys cannot be imported')
         privkey, pubkey = generate_keypair(wif=True)
@@ -57,7 +58,8 @@ class CreateWalletTest(BitcoinTestFramework):
         w2 = node.get_wallet_rpc('w2')
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w2.getnewaddress)
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w2.getrawchangeaddress)
-        w2.importpubkey(w0.getaddressinfo(address1)['pubkey'])
+        import_res = w2.importdescriptors([{"desc": w0.getaddressinfo(address1)['desc'], "timestamp": "now"}])
+        assert_equal(import_res[0]["success"], True)
 
         self.log.info("Test blank creation with private keys enabled.")
         self.nodes[0].createwallet(wallet_name='w3', disable_private_keys=False, blank=True)
