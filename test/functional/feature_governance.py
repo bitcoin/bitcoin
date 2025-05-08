@@ -17,8 +17,8 @@ class DashGovernanceTest (DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(6, 5, [[
             "-budgetparams=10:10:10",
-            '-testactivationheight=v20@160',
         ]] * 6)
+        self.delay_v20(height=160)
 
     def check_superblockbudget(self, v20_active):
         v20_state = self.nodes[0].getblockchaininfo()["softforks"]["v20"]

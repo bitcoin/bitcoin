@@ -20,6 +20,7 @@ from test_framework.util import assert_equal, assert_raises_rpc_error, force_fin
 class LLMQChainLocksTest(DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(5, 4)
+        self.delay_v20(height=200)
 
     def run_test(self):
         # Connect all nodes to node1 so that we always have the whole network connected
@@ -30,8 +31,8 @@ class LLMQChainLocksTest(DashTestFramework):
 
         self.test_coinbase_best_cl(self.nodes[0], expected_cl_in_cb=False)
 
-        self.activate_mn_rr(expected_activation_height=900)
-        self.log.info("Activated MN_RR at height:" + str(self.nodes[0].getblockcount()))
+        self.activate_v20(expected_activation_height=200)
+        self.log.info("Activated v20 at height:" + str(self.nodes[0].getblockcount()))
 
         # v20 is active for the next block, not for the tip
         self.test_coinbase_best_cl(self.nodes[0], expected_cl_in_cb=False)

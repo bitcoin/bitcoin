@@ -53,6 +53,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(9, 8)
         self.set_dash_llmq_test_params(4, 4)
+        self.delay_v20(height=900)
 
     def run_test(self):
         llmq_type=103

@@ -248,8 +248,7 @@ class AssetLocksTest(DashTestFramework):
 
         self.set_sporks()
 
-        self.activate_v20(expected_activation_height=900)
-        self.log.info("Activated v20 at height:" + str(node.getblockcount()))
+        assert_equal(self.nodes[0].getblockchaininfo()['softforks']['v20']['active'], True)
 
         for _ in range(2):
             self.dynamically_add_masternode(evo=True)
@@ -515,10 +514,13 @@ class AssetLocksTest(DashTestFramework):
         total = self.get_credit_pool_balance()
         coins = node_wallet.listunspent()
         while total <= 10_901 * COIN:
+            if len(coins) == 0:
+                coins = node_wallet.listunspent(query_options={'minimumAmount': 1})
             coin = coins.pop()
             to_lock = int(coin['amount'] * COIN) - tiny_amount
-            if to_lock > 99 * COIN:
+            if to_lock > 99 * COIN and total > 10_000 * COIN:
                 to_lock = 99 * COIN
+
             total += to_lock
             tx = self.create_assetlock(coin, to_lock, pubkey)
             self.send_tx_simple(tx)
