@@ -348,6 +348,9 @@ public:
     }
 };
 
+using BinarySemaphore = CSemaphore;
+using Semaphore = CSemaphore;
+
 /** RAII-style semaphore lock */
 class CSemaphoreGrant
 {
@@ -426,5 +429,8 @@ public:
         return fHaveGrant;
     }
 };
+
+using BinarySemaphoreGrant = CSemaphoreGrant;
+using SemaphoreGrant = CSemaphoreGrant;
 
 #endif // BITCOIN_SYNC_H
