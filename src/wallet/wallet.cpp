@@ -282,7 +282,13 @@ std::shared_ptr<CWallet> LoadWalletInternal(WalletContext& context, const std::s
         context.chain->initMessage(_("Loading wallet…"));
         std::shared_ptr<CWallet> wallet = CWallet::Create(context, name, std::move(database), options.create_flags, error, warnings);
         if (!wallet) {
-            error = Untranslated("Wallet loading failed.") + Untranslated(" ") + error;
+            bilingual_str output;
+            if (!error.empty()) output = error;
+            if (!warnings.empty()) {
+                if (!output.empty()) output += Untranslated("\n\n");
+                output += util::Join(warnings, Untranslated("\n"));
+            }
+            error = Untranslated("Wallet loading failed.") + Untranslated(" ") + output;
             status = DatabaseStatus::FAILED_LOAD;
             return nullptr;
         }
@@ -2874,7 +2880,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
                                 "The wallet might have been tampered with or created with malicious intent.\n"), walletFile);
             return nullptr;
         } else if (nLoadWalletRet == DBErrors::LEGACY_WALLET) {
-            error = strprintf(_("Error loading %s: Wallet is a legacy wallet. Please migrate to a descriptor wallet using the migration tool (migratewallet RPC)."), walletFile);
+            warnings.push_back(strprintf(_("Failed to load legacy wallet '%s'.\n\nPlease migrate to a descriptor wallet using the migration tool (migratewallet RPC or the GUI option)."), walletFile));
             return nullptr;
         } else {
             error = strprintf(_("Error loading %s"), walletFile);
