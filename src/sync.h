@@ -304,7 +304,7 @@ inline MutexType* MaybeCheckNotHeld(MutexType* m) LOCKS_EXCLUDED(m) LOCK_RETURNE
  *
  * See https://en.wikipedia.org/wiki/Semaphore_(programming)
  */
-class CSemaphore
+class CountingSemaphore
 {
 private:
     std::condition_variable condition;
@@ -312,14 +312,14 @@ private:
     int value;
 
 public:
-    explicit CSemaphore(int init) noexcept : value(init) {}
+    explicit CountingSemaphore(int init) noexcept : value(init) {}
 
     // Disallow default construct, copy, move.
-    CSemaphore() = delete;
-    CSemaphore(const CSemaphore&) = delete;
-    CSemaphore(CSemaphore&&) = delete;
-    CSemaphore& operator=(const CSemaphore&) = delete;
-    CSemaphore& operator=(CSemaphore&&) = delete;
+    CountingSemaphore() = delete;
+    CountingSemaphore(const CountingSemaphore&) = delete;
+    CountingSemaphore(CountingSemaphore&&) = delete;
+    CountingSemaphore& operator=(const CountingSemaphore&) = delete;
+    CountingSemaphore& operator=(CountingSemaphore&&) = delete;
 
     void acquire() noexcept
     {
@@ -348,14 +348,14 @@ public:
     }
 };
 
-using BinarySemaphore = CSemaphore;
-using Semaphore = CSemaphore;
+using BinarySemaphore = CountingSemaphore;
+using Semaphore = CountingSemaphore;
 
 /** RAII-style semaphore lock */
-class CSemaphoreGrant
+class CountingSemaphoreGrant
 {
 private:
-    CSemaphore* sem;
+    CountingSemaphore* sem;
     bool fHaveGrant;
 
 public:
@@ -386,11 +386,11 @@ public:
     }
 
     // Disallow copy.
-    CSemaphoreGrant(const CSemaphoreGrant&) = delete;
-    CSemaphoreGrant& operator=(const CSemaphoreGrant&) = delete;
+    CountingSemaphoreGrant(const CountingSemaphoreGrant&) = delete;
+    CountingSemaphoreGrant& operator=(const CountingSemaphoreGrant&) = delete;
 
     // Allow move.
-    CSemaphoreGrant(CSemaphoreGrant&& other) noexcept
+    CountingSemaphoreGrant(CountingSemaphoreGrant&& other) noexcept
     {
         sem = other.sem;
         fHaveGrant = other.fHaveGrant;
@@ -398,7 +398,7 @@ public:
         other.sem = nullptr;
     }
 
-    CSemaphoreGrant& operator=(CSemaphoreGrant&& other) noexcept
+    CountingSemaphoreGrant& operator=(CountingSemaphoreGrant&& other) noexcept
     {
         Release();
         sem = other.sem;
@@ -408,9 +408,9 @@ public:
         return *this;
     }
 
-    CSemaphoreGrant() noexcept : sem(nullptr), fHaveGrant(false) {}
+    CountingSemaphoreGrant() noexcept : sem(nullptr), fHaveGrant(false) {}
 
-    explicit CSemaphoreGrant(CSemaphore& sema, bool fTry = false) noexcept : sem(&sema), fHaveGrant(false)
+    explicit CountingSemaphoreGrant(CountingSemaphore& sema, bool fTry = false) noexcept : sem(&sema), fHaveGrant(false)
     {
         if (fTry) {
             TryAcquire();
@@ -419,7 +419,7 @@ public:
         }
     }
 
-    ~CSemaphoreGrant()
+    ~CountingSemaphoreGrant()
     {
         Release();
     }
@@ -430,7 +430,7 @@ public:
     }
 };
 
-using BinarySemaphoreGrant = CSemaphoreGrant;
-using SemaphoreGrant = CSemaphoreGrant;
+using BinarySemaphoreGrant = CountingSemaphoreGrant;
+using SemaphoreGrant = CountingSemaphoreGrant;
 
 #endif // BITCOIN_SYNC_H
