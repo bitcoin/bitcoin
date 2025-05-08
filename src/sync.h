@@ -16,7 +16,6 @@
 
 #include <condition_variable>
 #include <mutex>
-#include <semaphore>
 #include <string>
 #include <thread>
 
@@ -300,87 +299,5 @@ inline MutexType* MaybeCheckNotHeld(MutexType* m) LOCKS_EXCLUDED(m) LOCK_RETURNE
 //! The above is detectable at compile-time with the -Wreturn-local-addr flag in
 //! gcc and the -Wreturn-stack-address flag in clang, both enabled by default.
 #define WITH_LOCK(cs, code) (MaybeCheckNotHeld(cs), [&]() -> decltype(auto) { LOCK(cs); code; }())
-
-/** RAII-style semaphore lock */
-template <std::ptrdiff_t LeastMaxValue = std::counting_semaphore<>::max()>
-class CountingSemaphoreGrant
-{
-private:
-    std::counting_semaphore<LeastMaxValue>* sem;
-    bool fHaveGrant;
-
-public:
-    void Acquire() noexcept
-    {
-        if (fHaveGrant) {
-            return;
-        }
-        sem->acquire();
-        fHaveGrant = true;
-    }
-
-    void Release() noexcept
-    {
-        if (!fHaveGrant) {
-            return;
-        }
-        sem->release();
-        fHaveGrant = false;
-    }
-
-    bool TryAcquire() noexcept
-    {
-        if (!fHaveGrant && sem->try_acquire()) {
-            fHaveGrant = true;
-        }
-        return fHaveGrant;
-    }
-
-    // Disallow copy.
-    CountingSemaphoreGrant(const CountingSemaphoreGrant&) = delete;
-    CountingSemaphoreGrant& operator=(const CountingSemaphoreGrant&) = delete;
-
-    // Allow move.
-    CountingSemaphoreGrant(CountingSemaphoreGrant&& other) noexcept
-    {
-        sem = other.sem;
-        fHaveGrant = other.fHaveGrant;
-        other.fHaveGrant = false;
-        other.sem = nullptr;
-    }
-
-    CountingSemaphoreGrant& operator=(CountingSemaphoreGrant&& other) noexcept
-    {
-        Release();
-        sem = other.sem;
-        fHaveGrant = other.fHaveGrant;
-        other.fHaveGrant = false;
-        other.sem = nullptr;
-        return *this;
-    }
-
-    CountingSemaphoreGrant() noexcept : sem(nullptr), fHaveGrant(false) {}
-
-    explicit CountingSemaphoreGrant(std::counting_semaphore<LeastMaxValue>& sema, bool fTry = false) noexcept : sem(&sema), fHaveGrant(false)
-    {
-        if (fTry) {
-            TryAcquire();
-        } else {
-            Acquire();
-        }
-    }
-
-    ~CountingSemaphoreGrant()
-    {
-        Release();
-    }
-
-    explicit operator bool() const noexcept
-    {
-        return fHaveGrant;
-    }
-};
-
-using BinarySemaphoreGrant = CountingSemaphoreGrant<1>;
 
 #endif // BITCOIN_SYNC_H

@@ -8,6 +8,8 @@
 #include <sync.h>
 #include <wallet/db.h>
 
+#include <semaphore>
+
 struct bilingual_str;
 
 struct sqlite3_stmt;
