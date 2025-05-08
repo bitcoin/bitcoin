@@ -130,9 +130,8 @@ def check_ELF_FORTIFY(binary) -> bool:
         if match:
             chk_funcs.add(match.group(0))
 
-    # ignore stack-protector and bdb
+    # ignore stack-protector
     chk_funcs.discard('__stack_chk')
-    chk_funcs.discard('__db_chk')
 
     return len(chk_funcs) >= 1
 
