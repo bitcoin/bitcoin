@@ -314,9 +314,19 @@ class PSBTTest(BitcoinTestFramework):
         wmulti = self.nodes[2].get_wallet_rpc('wmulti')
 
         # Create all the addresses
-        p2sh = wmulti.addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], label="", address_type="legacy")["address"]
-        p2wsh = wmulti.addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], label="", address_type="bech32")["address"]
-        p2sh_p2wsh = wmulti.addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], label="", address_type="p2sh-segwit")["address"]
+        p2sh_ms = wmulti.createmultisig(2, [pubkey0, pubkey1, pubkey2], address_type="legacy")
+        p2sh = p2sh_ms["address"]
+        p2wsh_ms = wmulti.createmultisig(2, [pubkey0, pubkey1, pubkey2], address_type="bech32")
+        p2wsh = p2wsh_ms["address"]
+        p2sh_p2wsh_ms = wmulti.createmultisig(2, [pubkey0, pubkey1, pubkey2], address_type="p2sh-segwit")
+        p2sh_p2wsh = p2sh_p2wsh_ms["address"]
+        import_res = wmulti.importdescriptors(
+            [
+                {"desc": p2sh_ms["descriptor"], "timestamp": "now"},
+                {"desc": p2wsh_ms["descriptor"], "timestamp": "now"},
+                {"desc": p2sh_p2wsh_ms["descriptor"], "timestamp": "now"},
+            ])
+        assert_equal(all([r["success"] for r in import_res]), True)
         p2wpkh = self.nodes[1].getnewaddress("", "bech32")
         p2pkh = self.nodes[1].getnewaddress("", "legacy")
         p2sh_p2wpkh = self.nodes[1].getnewaddress("", "p2sh-segwit")

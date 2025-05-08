@@ -565,16 +565,18 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[2].createwallet(wallet_name='wmulti', disable_private_keys=True)
         wmulti = self.nodes[2].get_wallet_rpc('wmulti')
         w2 = self.nodes[2].get_wallet_rpc(self.default_wallet_name)
-        mSigObj = wmulti.addmultisigaddress(
+        mSigObj = self.nodes[2].createmultisig(
             2,
             [
                 addr1Obj['pubkey'],
                 addr2Obj['pubkey'],
             ]
-        )['address']
+        )
+        import_res = wmulti.importdescriptors([{"desc": mSigObj["descriptor"], "timestamp": "now"}])
+        assert_equal(import_res[0]["success"], True)
 
         # Send 1.2 BTC to msig addr.
-        self.nodes[0].sendtoaddress(mSigObj, 1.2)
+        self.nodes[0].sendtoaddress(mSigObj["address"], 1.2)
         self.generate(self.nodes[0], 1)
 
         oldBalance = self.nodes[1].getbalance()

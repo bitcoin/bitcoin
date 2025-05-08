@@ -931,21 +931,6 @@ class RPCOverloadWrapper():
     def __getattr__(self, name):
         return getattr(self.rpc, name)
 
-    def addmultisigaddress(self, nrequired, keys, *, label=None, address_type=None):
-        wallet_info = self.getwalletinfo()
-        if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
-            return self.__getattr__('addmultisigaddress')(nrequired, keys, label, address_type)
-        cms = self.createmultisig(nrequired, keys, address_type)
-        req = [{
-            'desc': cms['descriptor'],
-            'timestamp': 0,
-            'label': label if label else '',
-        }]
-        import_res = self.importdescriptors(req)
-        if not import_res[0]['success']:
-            raise JSONRPCException(import_res[0]['error'])
-        return cms
-
     def importpubkey(self, pubkey, *, label=None, rescan=None):
         wallet_info = self.getwalletinfo()
         if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):

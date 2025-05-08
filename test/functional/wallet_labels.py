@@ -35,7 +35,6 @@ class WalletLabelsTest(BitcoinTestFramework):
             [node.setlabel, address],
             [node.getaddressesbylabel],
             [node.importpubkey, pubkey],
-            [node.addmultisigaddress, 1, [pubkey]],
             [node.getreceivedbylabel],
             [node.listsinceblock, node.getblockhash(0), 1, False, True, False],
         ]
