@@ -28,6 +28,9 @@
 #include <leveldb/slice.h>
 #include <leveldb/status.h>
 #include <leveldb/write_batch.h>
+#ifndef WIN32
+#include <leveldb/util/env_posix_test_helper.h>
+#endif
 #include <memory>
 #include <optional>
 #include <utility>
@@ -212,9 +215,40 @@ struct LevelDBContext {
     leveldb::DB* pdb;
 };
 
+#ifndef WIN32
+namespace leveldb {
+
+/** Global levelDB initialization. This needs to be constructed once before the first levelDB context is created.
+ *
+ * Sadly, due to EnvPosixTestHelper's methods being private, this can only be done from the leveldb namespace.
+ */
+class EnvPosixTest {
+public:
+    EnvPosixTest()
+    {
+        /*
+         * By default LevelDB will only mmap() up to 1000 ldb files for reading and then fall back
+         * to using file descriptors.
+         *
+         * The typical linux system has a 'vm.max_map_count = 65530', so mapping only 1000 files
+         * seems arbitrarily small. Increase this value to another arbitrarily small value, 4096.
+         */
+        if (sizeof(void*) >= 8) {
+            leveldb::EnvPosixTestHelper::SetReadOnlyMMapLimit(4096);
+        }
+    }
+};
+
+}
+#endif
+
 CDBWrapper::CDBWrapper(const DBParams& params)
     : m_db_context{std::make_unique<LevelDBContext>()}, m_name{fs::PathToString(params.path.stem())}, m_path{params.path}, m_is_memory{params.memory_only}
 {
+#ifndef WIN32
+    static leveldb::EnvPosixTest one_time_setup;
+#endif
+
     DBContext().penv = nullptr;
     DBContext().readoptions.verify_checksums = true;
     DBContext().iteroptions.verify_checksums = true;
