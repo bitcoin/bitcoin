@@ -99,6 +99,10 @@ bool VerifyWallets(WalletContext& context)
         if (!MakeWalletDatabase(wallet_file, options, status, error_string)) {
             if (status == DatabaseStatus::FAILED_NOT_FOUND) {
                 chain.initWarning(Untranslated(strprintf("Skipping -wallet path that doesn't exist. %s", error_string.original)));
+            } else if (status == DatabaseStatus::FAILED_LEGACY_DISABLED) {
+                // Skipping legacy wallets as they will not be loaded.
+                // This will be properly communicated to the user during the loading process.
+                continue;
             } else {
                 chain.initError(error_string);
                 return false;
@@ -132,8 +136,13 @@ bool LoadWallets(WalletContext& context)
             bilingual_str error;
             std::vector<bilingual_str> warnings;
             std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(name, options, status, error);
-            if (!database && status == DatabaseStatus::FAILED_NOT_FOUND) {
-                continue;
+            if (!database) {
+                if (status == DatabaseStatus::FAILED_NOT_FOUND) continue;
+                if (status == DatabaseStatus::FAILED_LEGACY_DISABLED) {
+                    // Inform user that legacy wallet is not loaded and suggest upgrade options
+                    chain.initWarning(error);
+                    continue;
+                }
             }
             chain.initMessage(_("Loading wallet…"));
             std::shared_ptr<CWallet> pwallet = database ? CWallet::Create(context, name, std::move(database), options.create_flags, error, warnings) : nullptr;
