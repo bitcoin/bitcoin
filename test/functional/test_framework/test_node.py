@@ -8,7 +8,6 @@ import contextlib
 import decimal
 import errno
 from enum import Enum
-import http.client
 import json
 import logging
 import os
@@ -264,6 +263,8 @@ class TestNode():
         """Sets up an RPC connection to the bitcoind process. Returns False if unable to connect."""
         # Poll at a rate of four times per second
         poll_per_s = 4
+        suppressed_errors = collections.defaultdict(int)
+        latest_error = ""
         for _ in range(poll_per_s * self.rpc_timeout):
             if self.process.poll() is not None:
                 # Attach abrupt shutdown error/s to the exception message
@@ -304,33 +305,46 @@ class TestNode():
                     # overhead is trivial, and the added guarantees are worth
                     # the minimal performance cost.
                 self.log.debug("RPC successfully started")
+                # Set rpc_connected even if we are in use_cli mode so that we know we can call self.stop() if needed.
+                self.rpc_connected = True
                 if self.use_cli:
                     return
                 self.rpc = rpc
-                self.rpc_connected = True
                 self.url = self.rpc.rpc_url
                 return
-            except JSONRPCException as e:  # Initialization phase
+            except JSONRPCException as e:
+                # Suppress these as they are expected during initialization.
                 # -28 RPC in warmup
-                # -342 Service unavailable, RPC server started but is shutting down due to error
-                if e.error['code'] != -28 and e.error['code'] != -342:
+                # -342 Service unavailable, could be starting up or shutting down
+                if e.error['code'] not in [-28, -342]:
                     raise  # unknown JSON RPC exception
-            except ConnectionResetError:
-                # This might happen when the RPC server is in warmup, but shut down before the call to getblockcount
-                # succeeds. Try again to properly raise the FailedToStartError
-                pass
+                suppressed_errors[f"JSONRPCException {e.error['code']}"] += 1
+                latest_error = repr(e)
             except OSError as e:
-                if e.errno == errno.ETIMEDOUT:
-                    pass  # Treat identical to ConnectionResetError
-                elif e.errno == errno.ECONNREFUSED:
-                    pass  # Port not yet open?
-                else:
+                error_num = e.errno
+                # Work around issue where socket timeouts don't have errno set.
+                # https://github.com/python/cpython/issues/109601
+                if error_num is None and isinstance(e, TimeoutError):
+                    error_num = errno.ETIMEDOUT
+
+                # Suppress similarly to the above JSONRPCException errors.
+                if error_num not in [
+                    errno.ECONNRESET,   # This might happen when the RPC server is in warmup,
+                                        # but shut down before the call to getblockcount succeeds.
+                    errno.ETIMEDOUT,    # Treat identical to ECONNRESET
+                    errno.ECONNREFUSED  # Port not yet open?
+                ]:
                     raise  # unknown OS error
-            except ValueError as e:  # cookie file not found and no rpcuser or rpcpassword; bitcoind is still starting
+                suppressed_errors[f"OSError {errno.errorcode[error_num]}"] += 1
+                latest_error = repr(e)
+            except ValueError as e:
+                # Suppress if cookie file isn't generated yet and no rpcuser or rpcpassword; bitcoind may be starting.
                 if "No RPC credentials" not in str(e):
                     raise
+                suppressed_errors["missing_credentials"] += 1
+                latest_error = repr(e)
             time.sleep(1.0 / poll_per_s)
-        self._raise_assertion_error("Unable to connect to bitcoind after {}s".format(self.rpc_timeout))
+        self._raise_assertion_error(f"Unable to connect to bitcoind after {self.rpc_timeout}s (ignored errors: {str(dict(suppressed_errors))}, latest error: {latest_error})")
 
     def wait_for_cookie_credentials(self):
         """Ensures auth cookie credentials can be read, e.g. for testing CLI with -rpcwait before RPC connection is up."""
@@ -387,15 +401,15 @@ class TestNode():
         """Stop the node."""
         if not self.running:
             return
+        assert self.rpc_connected, self._node_msg(
+            "Should only call stop_node() on a running node after wait_for_rpc_connection() succeeded. "
+            f"Did you forget to call the latter after start()? Not connected to process: {self.process.pid}")
         self.log.debug("Stopping node")
-        try:
-            # Do not use wait argument when testing older nodes, e.g. in wallet_backwards_compatibility.py
-            if self.version_is_at_least(180000):
-                self.stop(wait=wait)
-            else:
-                self.stop()
-        except http.client.CannotSendRequest:
-            self.log.exception("Unable to stop node.")
+        # Do not use wait argument when testing older nodes, e.g. in wallet_backwards_compatibility.py
+        if self.version_is_at_least(180000):
+            self.stop(wait=wait)
+        else:
+            self.stop()
 
         # If there are any running perf processes, stop them.
         for profile_name in tuple(self.perf_subprocesses.keys()):
