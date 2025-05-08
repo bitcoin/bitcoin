@@ -214,7 +214,7 @@ public:
      */
     class reverse_lock {
     public:
-        explicit reverse_lock(UniqueLock& _lock, const char* _guardname, const char* _file, int _line) : lock(_lock), file(_file), line(_line) {
+        explicit reverse_lock(UniqueLock& _lock, const char* _guardname, const char* _file, int _line) : lock(_lock), lockname(_guardname), file(_file), line(_line) {
             CheckLastCritical((void*)lock.mutex(), lockname, _guardname, _file, _line);
             lock.unlock();
             LeaveCritical();
