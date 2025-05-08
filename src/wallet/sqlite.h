@@ -127,7 +127,7 @@ public:
 
     // Batches must acquire this semaphore on writing, and release when done writing.
     // This ensures that only one batch is modifying the database at a time.
-    CSemaphore m_write_semaphore;
+    BinarySemaphore m_write_semaphore;
 
     bool Verify(bilingual_str& error);
 
