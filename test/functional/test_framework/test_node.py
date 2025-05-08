@@ -959,30 +959,3 @@ class RPCOverloadWrapper():
         import_res = self.importdescriptors(req)
         if not import_res[0]['success']:
             raise JSONRPCException(import_res[0]['error'])
-
-    def importaddress(self, address, *, label=None, rescan=None, p2sh=None):
-        wallet_info = self.getwalletinfo()
-        if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
-            return self.__getattr__('importaddress')(address, label, rescan, p2sh)
-        is_hex = False
-        try:
-            int(address ,16)
-            is_hex = True
-            desc = descsum_create('raw(' + address + ')')
-        except Exception:
-            desc = descsum_create('addr(' + address + ')')
-        reqs = [{
-            'desc': desc,
-            'timestamp': 0 if rescan else 'now',
-            'label': label if label else '',
-        }]
-        if is_hex and p2sh:
-            reqs.append({
-                'desc': descsum_create('p2sh(raw(' + address + '))'),
-                'timestamp': 0 if rescan else 'now',
-                'label': label if label else '',
-            })
-        import_res = self.importdescriptors(reqs)
-        for res in import_res:
-            if not res['success']:
-                raise JSONRPCException(res['error'])

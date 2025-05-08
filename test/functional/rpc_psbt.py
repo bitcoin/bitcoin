@@ -112,7 +112,8 @@ class PSBTTest(BitcoinTestFramework):
         # Mine a transaction that credits the offline address
         offline_addr = offline_node.getnewaddress(address_type="bech32m")
         online_addr = w2.getnewaddress(address_type="bech32m")
-        wonline.importaddress(offline_addr, label="", rescan=False)
+        import_res = wonline.importdescriptors([{"desc": offline_node.getaddressinfo(offline_addr)["desc"], "timestamp": "now"}])
+        assert_equal(import_res[0]["success"], True)
         mining_wallet = mining_node.get_wallet_rpc(self.default_wallet_name)
         mining_wallet.sendtoaddress(address=offline_addr, amount=1.0)
         self.generate(mining_node, nblocks=1, sync_fun=lambda: self.sync_all([online_node, mining_node]))

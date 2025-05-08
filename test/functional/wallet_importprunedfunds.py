@@ -90,7 +90,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         # Import with affiliated address with no rescan
         self.nodes[1].createwallet('wwatch', disable_private_keys=True)
         wwatch = self.nodes[1].get_wallet_rpc('wwatch')
-        wwatch.importaddress(address=address2, rescan=False)
+        wwatch.importdescriptors([{"desc": self.nodes[0].getaddressinfo(address2)["desc"], "timestamp": "now"}])
         wwatch.importprunedfunds(rawtransaction=rawtxn2, txoutproof=proof2)
         assert [tx for tx in wwatch.listtransactions(include_watchonly=True) if tx['txid'] == txnid2]
 

@@ -12,6 +12,7 @@ RPCs tested are:
 from collections import defaultdict
 
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet_util import test_address
@@ -176,17 +177,17 @@ class WalletLabelsTest(BitcoinTestFramework):
         }
         for l in BECH32_VALID:
             ad = BECH32_VALID[l]
-            wallet_watch_only.importaddress(label=l, rescan=False, address=ad)
+            import_res = wallet_watch_only.importdescriptors([{"desc": descsum_create(f"addr({ad})"), "timestamp": "now", "label": l}])
+            assert_equal(import_res[0]["success"], True)
             self.generatetoaddress(node, 1, ad)
             assert_equal(wallet_watch_only.getaddressesbylabel(label=l), {ad: {'purpose': 'receive'}})
             assert_equal(wallet_watch_only.getreceivedbylabel(label=l), 0)
         for l in BECH32_INVALID:
             ad = BECH32_INVALID[l]
-            assert_raises_rpc_error(
-                -5,
-                "Address is not valid",
-                lambda: wallet_watch_only.importaddress(label=l, rescan=False, address=ad),
-            )
+            import_res = wallet_watch_only.importdescriptors([{"desc": descsum_create(f"addr({ad})"), "timestamp": "now", "label": l}])
+            assert_equal(import_res[0]["success"], False)
+            assert_equal(import_res[0]["error"]["code"], -5)
+            assert_equal(import_res[0]["error"]["message"], "Address is not valid")
 
 
 class Label:
