@@ -208,10 +208,10 @@ class TestNode():
     def __getattr__(self, name):
         """Dispatches any unrecognised messages to the RPC connection or a CLI instance."""
         if self.use_cli:
-            return getattr(RPCOverloadWrapper(self.cli), name)
+            return getattr(self.cli, name)
         else:
             assert self.rpc_connected and self.rpc is not None, self._node_msg("Error: no RPC connection")
-            return getattr(RPCOverloadWrapper(self.rpc), name)
+            return getattr(self.rpc, name)
 
     def start(self, extra_args=None, *, cwd=None, stdout=None, stderr=None, env=None, **kwargs):
         """Start the node."""
@@ -373,11 +373,11 @@ class TestNode():
 
     def get_wallet_rpc(self, wallet_name):
         if self.use_cli:
-            return RPCOverloadWrapper(self.cli("-rpcwallet={}".format(wallet_name)))
+            return self.cli("-rpcwallet={}".format(wallet_name))
         else:
             assert self.rpc_connected and self.rpc, self._node_msg("RPC not connected")
             wallet_path = "wallet/{}".format(urllib.parse.quote(wallet_name))
-            return RPCOverloadWrapper(self.rpc / wallet_path)
+            return self.rpc / wallet_path
 
     def version_is_at_least(self, ver):
         return self.version is None or self.version >= ver
@@ -922,10 +922,3 @@ class TestNodeCLI():
             return json.loads(cli_stdout, parse_float=decimal.Decimal)
         except (json.JSONDecodeError, decimal.InvalidOperation):
             return cli_stdout.rstrip("\n")
-
-class RPCOverloadWrapper():
-    def __init__(self, rpc):
-        self.rpc = rpc
-
-    def __getattr__(self, name):
-        return getattr(self.rpc, name)
