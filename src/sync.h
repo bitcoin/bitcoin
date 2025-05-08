@@ -301,9 +301,6 @@ inline MutexType* MaybeCheckNotHeld(MutexType* m) LOCKS_EXCLUDED(m) LOCK_RETURNE
 //! gcc and the -Wreturn-stack-address flag in clang, both enabled by default.
 #define WITH_LOCK(cs, code) (MaybeCheckNotHeld(cs), [&]() -> decltype(auto) { LOCK(cs); code; }())
 
-using BinarySemaphore = std::binary_semaphore;
-using Semaphore = std::counting_semaphore<>;
-
 /** RAII-style semaphore lock */
 template <std::ptrdiff_t LeastMaxValue = std::counting_semaphore<>::max()>
 class CountingSemaphoreGrant
@@ -385,6 +382,5 @@ public:
 };
 
 using BinarySemaphoreGrant = CountingSemaphoreGrant<1>;
-using SemaphoreGrant = CountingSemaphoreGrant<>;
 
 #endif // BITCOIN_SYNC_H
