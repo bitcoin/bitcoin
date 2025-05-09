@@ -44,7 +44,7 @@ class P2PLeakTxTest(BitcoinTestFramework):
         self.log.debug("Request transaction")
         inbound_peer.last_message.pop("tx", None)
         inbound_peer.send_and_ping(want_tx)
-        assert_equal(inbound_peer.last_message.get("tx").tx.getwtxid(), wtxid)
+        assert_equal(inbound_peer.last_message.get("tx").tx.wtxid_hex, wtxid)
 
     def test_notfound_on_replaced_tx(self):
         self.gen_node.disconnect_p2ps()
@@ -57,7 +57,7 @@ class P2PLeakTxTest(BitcoinTestFramework):
         tx_b = tx_a["tx"]
         tx_b.vout[0].nValue -= 9000
         self.gen_node.sendrawtransaction(tx_b.serialize().hex())
-        inbound_peer.wait_until(lambda: "tx" in inbound_peer.last_message and inbound_peer.last_message.get("tx").tx.getwtxid() == tx_b.getwtxid())
+        inbound_peer.wait_until(lambda: "tx" in inbound_peer.last_message and inbound_peer.last_message.get("tx").tx.wtxid_hex == tx_b.wtxid_hex)
 
         self.log.info("Re-request of tx_a after replacement is answered with notfound")
         req_vec = [

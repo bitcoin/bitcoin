@@ -73,7 +73,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         # request very recent, unanounced transactions.
         assert_equal(len(peer1.get_invs()), 0)
         # It's too early to request these two transactions
-        requests_too_recent = msg_getdata([CInv(t=MSG_WTX, h=int(tx["tx"].getwtxid(), 16)) for tx in [tx_before_reorg, tx_child]])
+        requests_too_recent = msg_getdata([CInv(t=MSG_WTX, h=tx["tx"].wtxid_int) for tx in [tx_before_reorg, tx_child]])
         peer1.send_and_ping(requests_too_recent)
         for _ in range(len(requests_too_recent.inv)):
             peer1.sync_with_ping()
@@ -82,7 +82,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
             assert "notfound" in peer1.last_message
 
         # Request the tx from the disconnected block
-        request_disconnected_tx = msg_getdata([CInv(t=MSG_WTX, h=int(tx_disconnected["tx"].getwtxid(), 16))])
+        request_disconnected_tx = msg_getdata([CInv(t=MSG_WTX, h=tx_disconnected["tx"].wtxid_int)])
         peer1.send_and_ping(request_disconnected_tx)
 
         # The tx from the disconnected block was never announced, and it entered the mempool later
@@ -90,7 +90,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         assert_equal(len(peer1.get_invs()), 0)
         with p2p_lock:
             # However, the node will answer requests for the tx from the recently-disconnected block.
-            assert_equal(peer1.last_message["tx"].tx.getwtxid(),tx_disconnected["tx"].getwtxid())
+            assert_equal(peer1.last_message["tx"].tx.wtxid_hex,tx_disconnected["tx"].wtxid_hex)
 
         self.nodes[1].setmocktime(int(time.time()) + 300)
         peer1.sync_with_ping()
@@ -102,7 +102,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         last_tx_received = peer1.last_message["tx"]
 
         tx_after_reorg = self.wallet.send_self_transfer(from_node=self.nodes[1])
-        request_after_reorg = msg_getdata([CInv(t=MSG_WTX, h=int(tx_after_reorg["tx"].getwtxid(), 16))])
+        request_after_reorg = msg_getdata([CInv(t=MSG_WTX, h=tx_after_reorg["tx"].wtxid_int)])
         assert tx_after_reorg["txid"] in self.nodes[1].getrawmempool()
         peer1.send_and_ping(request_after_reorg)
         with p2p_lock:
