@@ -64,8 +64,7 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
     auto future = kj::newPromiseAndFulfiller<typename ServerContext::CallContext>();
     auto& server = server_context.proxy_server;
     int req = server_context.req;
-    auto invoke = MakeAsyncCallable(
-        [fulfiller = kj::mv(future.fulfiller),
+    auto invoke = [fulfiller = kj::mv(future.fulfiller),
          call_context = kj::mv(server_context.call_context), &server, req, fn, args...]() mutable {
                 const auto& params = call_context.getParams();
                 Context::Reader context_arg = Accessor::get(params);
@@ -132,35 +131,35 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
                     return;
                 }
                 KJ_IF_MAYBE(exception, kj::runCatchingExceptions([&]() {
-                    server.m_context.connection->m_loop.sync([&] {
+                    server.m_context.loop->sync([&] {
                         auto fulfiller_dispose = kj::mv(fulfiller);
                         fulfiller_dispose->fulfill(kj::mv(call_context));
                     });
                 }))
                 {
-                    server.m_context.connection->m_loop.sync([&]() {
+                    server.m_context.loop->sync([&]() {
                         auto fulfiller_dispose = kj::mv(fulfiller);
                         fulfiller_dispose->reject(kj::mv(*exception));
                     });
                 }
-            });
+            };
 
     // Lookup Thread object specified by the client. The specified thread should
     // be a local Thread::Server object, but it needs to be looked up
     // asynchronously with getLocalServer().
     auto thread_client = context_arg.getThread();
     return server.m_context.connection->m_threads.getLocalServer(thread_client)
-        .then([&server, invoke, req](const kj::Maybe<Thread::Server&>& perhaps) {
+        .then([&server, invoke = kj::mv(invoke), req](const kj::Maybe<Thread::Server&>& perhaps) mutable {
             // Assuming the thread object is found, pass it a pointer to the
             // `invoke` lambda above which will invoke the function on that
             // thread.
             KJ_IF_MAYBE (thread_server, perhaps) {
                 const auto& thread = static_cast<ProxyServer<Thread>&>(*thread_server);
-                server.m_context.connection->m_loop.log()
+                server.m_context.loop->log()
                     << "IPC server post request  #" << req << " {" << thread.m_thread_context.thread_name << "}";
                 thread.m_thread_context.waiter->post(std::move(invoke));
             } else {
-                server.m_context.connection->m_loop.log()
+                server.m_context.loop->log()
                     << "IPC server error request #" << req << ", missing thread to execute request";
                 throw std::runtime_error("invalid thread handle");
             }

@@ -214,7 +214,10 @@ BasicTestingSetup::~BasicTestingSetup()
     } else {
         fs::remove_all(m_path_root);
     }
+    // Clear all arguments except for -datadir, which GUI tests currently rely
+    // on to be set even after the testing setup is destroyed.
     gArgs.ClearArgs();
+    gArgs.ForceSetArg("-datadir", fs::PathToString(m_path_root));
 }
 
 ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)

@@ -41,10 +41,7 @@ class CapnpProtocol : public Protocol
 public:
     ~CapnpProtocol() noexcept(true)
     {
-        if (m_loop) {
-            std::unique_lock<std::mutex> lock(m_loop->m_mutex);
-            m_loop->removeClient(lock);
-        }
+        m_loop_ref.reset();
         if (m_loop_thread.joinable()) m_loop_thread.join();
         assert(!m_loop);
     };
@@ -71,6 +68,13 @@ public:
         m_loop->loop();
         m_loop.reset();
     }
+    void disconnectIncoming() override
+    {
+        if (!m_loop) return;
+        m_loop->sync([&] {
+            m_loop->m_incoming_connections.clear();
+        });
+    }
     void addCleanup(std::type_index type, void* iface, std::function<void()> cleanup) override
     {
         mp::ProxyTypeRegister::types().at(type)(iface).cleanup_fns.emplace_back(std::move(cleanup));
@@ -83,10 +87,7 @@ public:
         m_loop_thread = std::thread([&] {
             util::ThreadRename("capnp-loop");
             m_loop.emplace(exe_name, &IpcLogFn, &m_context);
-            {
-                std::unique_lock<std::mutex> lock(m_loop->m_mutex);
-                m_loop->addClient(lock);
-            }
+            m_loop_ref.emplace(*m_loop);
             promise.set_value();
             m_loop->loop();
             m_loop.reset();
@@ -96,6 +97,7 @@ public:
     Context m_context;
     std::thread m_loop_thread;
     std::optional<mp::EventLoop> m_loop;
+    std::optional<mp::EventLoopRef> m_loop_ref;
 };
 } // namespace
 

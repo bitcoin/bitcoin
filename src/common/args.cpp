@@ -589,6 +589,14 @@ void ArgsManager::AddHiddenArgs(const std::vector<std::string>& names)
     }
 }
 
+void ArgsManager::ClearArgs()
+{
+    LOCK(cs_args);
+    m_settings = {};
+    m_available_args.clear();
+    m_network_only_args.clear();
+}
+
 void ArgsManager::CheckMultipleCLIArgs() const
 {
     LOCK(cs_args);

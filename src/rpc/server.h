@@ -30,6 +30,7 @@ void RpcInterruptionPoint();
  */
 void SetRPCWarmupStatus(const std::string& newStatus);
 /* Mark warmup as done.  RPC calls will be processed from now on.  */
+void SetRPCWarmupStarting();
 void SetRPCWarmupFinished();
 
 /* returns the current warmup state.  */
