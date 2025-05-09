@@ -260,6 +260,7 @@ inline MutexType* MaybeCheckNotHeld(MutexType* m) LOCKS_EXCLUDED(m) LOCK_RETURNE
     UniqueLock criticalblock2(MaybeCheckNotHeld(cs2), #cs2, __FILE__, __LINE__)
 #define TRY_LOCK(cs, name) UniqueLock name(MaybeCheckNotHeld(cs), #cs, __FILE__, __LINE__, true)
 #define WAIT_LOCK(cs, name) UniqueLock name(MaybeCheckNotHeld(cs), #cs, __FILE__, __LINE__)
+#define IN_PLACE_LOCK(cs) MaybeCheckNotHeld(cs), #cs, __FILE__, __LINE__
 
 #define ENTER_CRITICAL_SECTION(cs)                            \
     {                                                         \
