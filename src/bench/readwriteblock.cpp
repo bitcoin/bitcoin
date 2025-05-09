@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <bench/data/block413567.raw.h>
+#include <bench/data/block_784588.raw.h>
 #include <flatfile.h>
 #include <node/blockstorage.h>
 #include <primitives/block.h>
@@ -21,7 +21,7 @@
 
 static CBlock CreateTestBlock()
 {
-    DataStream stream{benchmark::data::block413567};
+    DataStream stream{benchmark::data::block_784588};
     CBlock block;
     stream >> TX_WITH_WITNESS(block);
     return block;
@@ -33,7 +33,7 @@ static void WriteBlockBench(benchmark::Bench& bench)
     auto& blockman{testing_setup->m_node.chainman->m_blockman};
     const CBlock block{CreateTestBlock()};
     bench.run([&] {
-        const auto pos{blockman.WriteBlock(block, 413'567)};
+        const auto pos{blockman.WriteBlock(block, 784'588)};
         assert(!pos.IsNull());
     });
 }
@@ -42,7 +42,7 @@ static void ReadBlockBench(benchmark::Bench& bench)
 {
     const auto testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN)};
     auto& blockman{testing_setup->m_node.chainman->m_blockman};
-    const auto pos{blockman.WriteBlock(CreateTestBlock(), 413'567)};
+    const auto pos{blockman.WriteBlock(CreateTestBlock(), 784'588)};
     CBlock block;
     bench.run([&] {
         const auto success{blockman.ReadBlock(block, pos)};
@@ -54,7 +54,7 @@ static void ReadRawBlockBench(benchmark::Bench& bench)
 {
     const auto testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN)};
     auto& blockman{testing_setup->m_node.chainman->m_blockman};
-    const auto pos{blockman.WriteBlock(CreateTestBlock(), 413'567)};
+    const auto pos{blockman.WriteBlock(CreateTestBlock(), 784'588)};
     std::vector<uint8_t> block_data;
     blockman.ReadRawBlock(block_data, pos); // warmup
     bench.run([&] {

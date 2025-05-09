@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <bench/data/block413567.raw.h>
+#include <bench/data/block_784588.raw.h>
 #include <chainparams.h>
 #include <common/args.h>
 #include <consensus/validation.h>
@@ -25,14 +25,14 @@
 
 static void DeserializeBlockTest(benchmark::Bench& bench)
 {
-    DataStream stream(benchmark::data::block413567);
+    DataStream stream(benchmark::data::block_784588);
     std::byte a{0};
     stream.write({&a, 1}); // Prevent compaction
 
     bench.unit("block").run([&] {
         CBlock block;
         stream >> TX_WITH_WITNESS(block);
-        bool rewound = stream.Rewind(benchmark::data::block413567.size());
+        bool rewound = stream.Rewind(benchmark::data::block_784588.size());
         assert(rewound);
     });
 }
@@ -67,7 +67,7 @@ static std::map<std::string, uint64_t> TallyScriptTypes(const CBlock& block)
 
 static void DeserializeAndCheckBlockTest(benchmark::Bench& bench)
 {
-    DataStream stream(benchmark::data::block413567);
+    DataStream stream(benchmark::data::block_784588);
     std::byte a{0};
     stream.write({&a, 1}); // Prevent compaction
 
@@ -76,13 +76,17 @@ static void DeserializeAndCheckBlockTest(benchmark::Bench& bench)
         CBlock block;
         stream >> TX_WITH_WITNESS(block);
 
-        assert(block.hashMerkleRoot == uint256{"64a50c649fc816baaa2effda230c39cacf1504e4e616a2863685b72aaa7dce05"});
-        assert(block.vtx.size() == 1557);
+        assert(block.hashMerkleRoot == uint256{"471dd9fc392bb29f35cfa91b2b249294c908c39775b6d8823cb5e158776fb51f"});
+        assert(block.vtx.size() == 1984);
         assert(TallyScriptTypes(block) == (std::map<std::string, uint64_t>{
-            {"OP_RETURN", 3},
-            {"OTHER", 4887},
-            {"P2PKH", 2841},
-            {"P2SH", 737},
+            {"OP_RETURN", 21},
+            {"OTHER", 5541},
+            {"P2MS", 36},
+            {"P2PKH", 800},
+            {"P2SH", 1016},
+            {"P2TR", 1242},
+            {"P2WPKH", 1669},
+            {"P2WSH", 182},
         }));
     }
 
@@ -90,7 +94,7 @@ static void DeserializeAndCheckBlockTest(benchmark::Bench& bench)
     const auto chainParams = CreateChainParams(bench_args, ChainType::MAIN);
 
     bench.unit("block").run([&] {
-        bool rewound = stream.Rewind(benchmark::data::block413567.size());
+        bool rewound = stream.Rewind(benchmark::data::block_784588.size());
         assert(rewound);
 
         CBlock block; // Note that CBlock caches its checked state, so we need to recreate it here
