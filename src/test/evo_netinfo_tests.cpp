@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(netinfo_ser)
 
     {
         // A valid CService should be constructable, readable and pass validation
-        CDataStream ds(SER_DISK, CLIENT_VERSION);
+        CDataStream ds(SER_DISK, CLIENT_VERSION | ADDRV2_FORMAT);
         CService service{LookupNumeric("1.1.1.1", Params().GetDefaultPort())};
         BOOST_CHECK(service.IsValid());
         NetInfoEntry entry{service}, entry2{};
@@ -104,6 +104,28 @@ BOOST_AUTO_TEST_CASE(netinfo_ser)
         BOOST_CHECK(entry == entry2);
         BOOST_CHECK(!entry.IsEmpty() && entry.IsTriviallyValid());
         BOOST_CHECK(entry.GetAddrPort().value() == service);
+    }
+
+    {
+        // NetInfoEntry should be able to read and write ADDRV2 addresses
+        CService service{};
+        service.SetSpecial("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion");
+        BOOST_CHECK(service.IsValid() && service.IsTor());
+
+        CDataStream ds(SER_DISK, CLIENT_VERSION | ADDRV2_FORMAT);
+        ds << NetInfoEntry::NetInfoType::Service << service;
+        ds.SetVersion(CLIENT_VERSION); // Drop the explicit format flag
+
+        NetInfoEntry entry{};
+        ds >> entry;
+        BOOST_CHECK(!entry.IsEmpty() && entry.IsTriviallyValid());
+        BOOST_CHECK(entry.GetAddrPort().value() == service);
+        ds.clear();
+
+        NetInfoEntry entry2{};
+        ds << entry;
+        ds >> entry2;
+        BOOST_CHECK(entry == entry2 && entry2.GetAddrPort().value() == service);
     }
 }
 
