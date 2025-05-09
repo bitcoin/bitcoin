@@ -30,12 +30,6 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
     if (!(TYPE(type) & typeFilter))
         return false;
 
-    bool involvesWatchAddress = index.data(TransactionTableModel::WatchonlyRole).toBool();
-    if (involvesWatchAddress && watchOnlyFilter == WatchOnlyFilter_No)
-        return false;
-    if (!involvesWatchAddress && watchOnlyFilter == WatchOnlyFilter_Yes)
-        return false;
-
     QDateTime datetime = index.data(TransactionTableModel::DateRole).toDateTime();
     if (dateFrom && datetime < *dateFrom) return false;
     if (dateTo && datetime > *dateTo) return false;
@@ -79,12 +73,6 @@ void TransactionFilterProxy::setTypeFilter(quint32 modes)
 void TransactionFilterProxy::setMinAmount(const CAmount& minimum)
 {
     this->minAmount = minimum;
-    invalidateFilter();
-}
-
-void TransactionFilterProxy::setWatchOnlyFilter(WatchOnlyFilter filter)
-{
-    this->watchOnlyFilter = filter;
     invalidateFilter();
 }
 
