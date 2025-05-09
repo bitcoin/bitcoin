@@ -16,6 +16,7 @@ class CService;
 enum class NetInfoStatus : uint8_t {
     // Managing entries
     BadInput,
+    MaxLimit,
 
     // Validation
     BadAddress,
@@ -42,6 +43,8 @@ constexpr std::string_view NISToString(const NetInfoStatus code)
         return "unroutable address";
     case NetInfoStatus::Malformed:
         return "malformed";
+    case NetInfoStatus::MaxLimit:
+        return "too many entries";
     case NetInfoStatus::Success:
         return "success";
     } // no default case, so the compiler can warn about missing cases

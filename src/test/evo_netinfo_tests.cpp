@@ -60,6 +60,14 @@ BOOST_AUTO_TEST_CASE(mnnetinfo_rules)
             ValidateGetEntries(netInfo.GetEntries(), /*expected_size=*/1);
         }
     }
+
+    {
+        // MnNetInfo only stores one value, overwriting prohibited
+        MnNetInfo netInfo;
+        BOOST_CHECK_EQUAL(netInfo.AddEntry("1.1.1.1:9999"), NetInfoStatus::Success);
+        BOOST_CHECK_EQUAL(netInfo.AddEntry("1.1.1.2:9999"), NetInfoStatus::MaxLimit);
+        ValidateGetEntries(netInfo.GetEntries(), /*expected_size=*/1);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(netinfo_ser)

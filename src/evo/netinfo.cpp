@@ -163,6 +163,9 @@ NetInfoStatus MnNetInfo::ValidateService(const CService& service)
 
 NetInfoStatus MnNetInfo::AddEntry(const std::string& input)
 {
+    if (!IsEmpty()) {
+        return NetInfoStatus::MaxLimit;
+    }
     if (auto service_opt{Lookup(input, /*portDefault=*/Params().GetDefaultPort(), /*fAllowLookup=*/false)}) {
         const auto ret{ValidateService(*service_opt)};
         if (ret == NetInfoStatus::Success) {
