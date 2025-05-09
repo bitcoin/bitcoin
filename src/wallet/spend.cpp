@@ -371,8 +371,8 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
 
     // Note that unlike KnapsackSolver, we do not include the fee for creating a change output as BnB will not create a change output.
     std::vector<OutputGroup> positive_groups = GroupOutputs(wallet, coins, coin_selection_params, eligibility_filter, true /* positive_only */);
-    // Note: BnB is disabled because it is unaware of mixed coins
-    if (auto bnb_result{SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change)}; /* DISABLES CODE */ (false)) {
+    positive_groups.clear(); // Cleared to skip BnB and SRD as they're unaware of mixed coins
+    if (auto bnb_result{SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change)}) {
         bnb_result->ComputeAndSetWaste(CAmount(0));
         results.push_back(*bnb_result);
     }
@@ -394,8 +394,7 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
     // We include the minimum final change for SRD as we do want to avoid making really small change.
     // KnapsackSolver does not need this because it includes MIN_CHANGE internally.
     const CAmount srd_target = nTargetValue + coin_selection_params.m_change_fee + MIN_FINAL_CHANGE;
-    // Note: SRD is disabled because it is unaware of mixed coins
-    if (auto srd_result{SelectCoinsSRD(positive_groups, srd_target)}; /* DISABLES CODE */ (false)) {
+    if (auto srd_result{SelectCoinsSRD(positive_groups, srd_target)}) {
         srd_result->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
         results.push_back(*srd_result);
     }
