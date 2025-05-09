@@ -26,7 +26,6 @@ public:
     bool IsRange() const override { return false; }
     bool IsSolvable() const override { return false; }
     bool IsSingleType() const override { return true; }
-    bool IsSingleKey() const override { return true; }
     bool ToPrivateString(const SigningProvider& provider, std::string& out) const override { return false; }
     bool ToNormalizedString(const SigningProvider& provider, std::string& out, const DescriptorCache* cache = nullptr) const override { return false; }
     bool Expand(int pos, const SigningProvider& provider, std::vector<CScript>& output_scripts, FlatSigningProvider& out, DescriptorCache* write_cache = nullptr) const override { return false; };

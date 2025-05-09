@@ -167,9 +167,6 @@ public:
         LogInfo("%s %s", m_storage.GetDisplayName(), tfm::format(wallet_fmt, params...));
     };
 
-    /** Watch-only address added */
-    boost::signals2::signal<void (bool fHaveWatchOnly)> NotifyWatchonlyChanged;
-
     /** Keypool has new keys */
     boost::signals2::signal<void ()> NotifyCanGetAddressesChanged;
 
@@ -270,7 +267,6 @@ public:
      * Does not modify this ScriptPubKeyMan. */
     std::optional<MigrationData> MigrateToDescriptor();
     /** Delete all the records of this LegacyScriptPubKeyMan from disk*/
-    bool DeleteRecords();
     bool DeleteRecordsWithDB(WalletBatch& batch);
 };
 
