@@ -80,7 +80,7 @@ int trace_removed(struct pt_regs *ctx) {
   void *phash = NULL, *preason = NULL;
   bpf_usdt_readarg(1, ctx, phash);
   bpf_probe_read_user(&removed.hash, sizeof(removed.hash), phash);
-  bpf_usdt_readarg(1, ctx, preason);
+  bpf_usdt_readarg(2, ctx, preason);
   bpf_probe_read_user_str(&removed.reason, sizeof(removed.reason), preason);
   bpf_usdt_readarg(3, ctx, &removed.vsize);
   bpf_usdt_readarg(4, ctx, &removed.fee);
@@ -95,7 +95,7 @@ int trace_rejected(struct pt_regs *ctx) {
   void *phash = NULL, *preason = NULL;
   bpf_usdt_readarg(1, ctx, phash);
   bpf_probe_read_user(&rejected.hash, sizeof(rejected.hash), phash);
-  bpf_usdt_readarg(1, ctx, preason);
+  bpf_usdt_readarg(2, ctx, preason);
   bpf_probe_read_user_str(&rejected.reason, sizeof(rejected.reason), preason);
   rejected_events.perf_submit(ctx, &rejected, sizeof(rejected));
   return 0;
