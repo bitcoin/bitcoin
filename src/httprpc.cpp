@@ -278,7 +278,8 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
 
 static bool InitRPCAuthentication()
 {
-    std::string user_colon_pass;
+    std::string user;
+    std::string pass;
 
     if (gArgs.GetArg("-rpcpassword", "") == "")
     {
@@ -293,30 +294,25 @@ static bool InitRPCAuthentication()
             cookie_perms = *perm_opt;
         }
 
-        if (!GenerateAuthCookie(&user_colon_pass, cookie_perms)) {
+        switch (GenerateAuthCookie(cookie_perms, user, pass)) {
+        case GenerateAuthCookieResult::ERR:
             return false;
-        }
-        if (user_colon_pass.empty()) {
+        case GenerateAuthCookieResult::DISABLED:
             LogInfo("RPC authentication cookie file generation is disabled.");
-        } else {
+            break;
+        case GenerateAuthCookieResult::OK:
             LogInfo("Using random cookie authentication.");
+            break;
         }
     } else {
         LogInfo("Using rpcuser/rpcpassword authentication.");
         LogWarning("The use of rpcuser/rpcpassword is less secure, because credentials are configured in plain text. It is recommended that locally-run instances switch to cookie-based auth, or otherwise to use hashed rpcauth credentials. See share/rpcauth in the source directory for more information.");
-        user_colon_pass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
+        user = gArgs.GetArg("-rpcuser", "");
+        pass = gArgs.GetArg("-rpcpassword", "");
     }
 
     // If there is a plaintext credential, hash it with a random salt before storage.
-    if (!user_colon_pass.empty()) {
-        std::vector<std::string> fields{SplitString(user_colon_pass, ':')};
-        if (fields.size() != 2) {
-            LogError("Unable to parse RPC credentials. The configured rpcuser or rpcpassword cannot contain a \":\".");
-            return false;
-        }
-        const std::string& user = fields[0];
-        const std::string& pass = fields[1];
-
+    if (!user.empty() || !pass.empty()) {
         // Generate a random 16 byte hex salt.
         std::array<unsigned char, 16> raw_salt;
         GetStrongRandBytes(raw_salt);
