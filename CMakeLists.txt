@@ -575,20 +575,17 @@ if(WERROR)
   unset(werror_flag)
 endif()
 
-# Prefer Unix-style package components over frameworks on macOS.
-# This improves compatibility with Python version managers.
-set(Python3_FIND_FRAMEWORK LAST CACHE STRING "")
-# Search for generic names before more specialized ones. This
-# improves compatibility with Python version managers that use shims.
-set(Python3_FIND_UNVERSIONED_NAMES FIRST CACHE STRING "")
-mark_as_advanced(Python3_FIND_FRAMEWORK Python3_FIND_UNVERSIONED_NAMES)
-find_package(Python3 3.10 COMPONENTS Interpreter)
-if(Python3_EXECUTABLE)
+option(WITH_PYTHON "Use Python for tests." ON)
+if(WITH_PYTHON)
+  # Prefer Unix-style package components over frameworks on macOS.
+  # This improves compatibility with Python version managers.
+  set(Python3_FIND_FRAMEWORK LAST CACHE STRING "")
+  # Search for generic names before more specialized ones. This
+  # improves compatibility with Python version managers that use shims.
+  set(Python3_FIND_UNVERSIONED_NAMES FIRST CACHE STRING "")
+  mark_as_advanced(Python3_FIND_FRAMEWORK Python3_FIND_UNVERSIONED_NAMES)
+  find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
   set(PYTHON_COMMAND ${Python3_EXECUTABLE})
-else()
-  list(APPEND configure_warnings
-    "Minimum required Python not found. Utils and rpcauth tests are disabled."
-  )
 endif()
 
 target_compile_definitions(core_interface INTERFACE ${DEPENDS_COMPILE_DEFINITIONS})
