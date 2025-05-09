@@ -209,16 +209,14 @@ class CCheckQueueControl
 {
 private:
     CCheckQueue<T, R>& m_queue;
+    UniqueLock<Mutex> m_lock;
     bool fDone;
 
 public:
     CCheckQueueControl() = delete;
     CCheckQueueControl(const CCheckQueueControl&) = delete;
     CCheckQueueControl& operator=(const CCheckQueueControl&) = delete;
-    explicit CCheckQueueControl(CCheckQueue<T>& queueIn) : m_queue(queueIn), fDone(false)
-    {
-        ENTER_CRITICAL_SECTION(m_queue.m_control_mutex);
-    }
+    explicit CCheckQueueControl(CCheckQueue<T>& queueIn) : m_queue(queueIn), m_lock(IN_PLACE_LOCK(queueIn.m_control_mutex)), fDone(false) {}
 
     std::optional<R> Complete()
     {
@@ -236,7 +234,6 @@ public:
     {
         if (!fDone)
             Complete();
-        LEAVE_CRITICAL_SECTION(m_queue.m_control_mutex);
     }
 };
 
