@@ -64,6 +64,8 @@ static const size_t TOTAL_TRIES = 100000;
 
 std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change)
 {
+    if (utxo_pool.empty()) return std::nullopt;
+
     SelectionResult result(selection_target);
     CAmount curr_value = 0;
 
@@ -169,6 +171,8 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
 
 std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value)
 {
+    if (utxo_pool.empty()) return std::nullopt;
+
     SelectionResult result(target_value);
 
     std::vector<size_t> indexes;
@@ -264,6 +268,8 @@ bool less_then_denom (const OutputGroup& group1, const OutputGroup& group2)
 
 std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue, bool fFullyMixedOnly, CAmount maxTxFee)
 {
+    if (groups.empty()) return std::nullopt;
+
     SelectionResult result(nTargetValue);
 
     // List of values less than target
