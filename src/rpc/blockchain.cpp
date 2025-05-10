@@ -185,6 +185,7 @@ UniValue blockToJSON(BlockManager& blockman, const CBlock& block, const CBlockIn
     result.pushKV("size", (int)::GetSerializeSize(TX_WITH_WITNESS(block)));
     result.pushKV("weight", (int)::GetBlockWeight(block));
     UniValue txs(UniValue::VARR);
+    txs.reserve(block.vtx.size());
 
     switch (verbosity) {
         case TxVerbosity::SHOW_TXID:
