@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <bench/data/block413567.raw.h>
+#include <bench/data/block_784588.raw.h>
 #include <span.h>
 #include <util/strencodings.h>
 
@@ -11,7 +11,7 @@
 
 static void HexStrBench(benchmark::Bench& bench)
 {
-    auto const& data = benchmark::data::block413567;
+    auto const& data = benchmark::data::block_784588;
     bench.batch(data.size()).unit("byte").run([&] {
         auto hex = HexStr(data);
         ankerl::nanobench::doNotOptimizeAway(hex);
