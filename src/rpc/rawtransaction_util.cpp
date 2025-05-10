@@ -157,7 +157,7 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
     if (!version.isNull()) {
         uint32_t nVersion = version.getInt<uint32_t>();
         if (nVersion < TX_MIN_STANDARD_VERSION || nVersion > TX_MAX_STANDARD_VERSION)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, version out of range(1~3)");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, version out of range(") + std::to_string(TX_MIN_STANDARD_VERSION) + "~" + std::to_string(TX_MAX_STANDARD_VERSION) + ")");
         rawTx.version = nVersion;
     }
 
