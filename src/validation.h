@@ -437,7 +437,8 @@ enum DisconnectResult
 class ConnectTrace;
 
 /** @see Chainstate::FlushStateToDisk */
-enum class FlushStateMode {
+inline constexpr std::array FlushStateModeNames{"NONE", "IF_NEEDED", "PERIODIC", "ALWAYS"};
+enum class FlushStateMode: uint8_t {
     NONE,
     IF_NEEDED,
     PERIODIC,
