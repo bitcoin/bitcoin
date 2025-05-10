@@ -8,7 +8,7 @@ and are only linked against allowed libraries.
 
 Example usage:
 
-    find ../path/to/binaries -type f -executable | xargs python3 contrib/devtools/symbol-check.py
+    find ../path/to/guix/binaries -type f -executable | xargs python3 contrib/guix/symbol-check.py
 '''
 import sys
 
