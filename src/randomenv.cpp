@@ -38,7 +38,7 @@
 #include <sys/utsname.h>
 #include <unistd.h>
 #endif
-#if HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS
+#ifdef HAVE_IFADDRS
 #include <ifaddrs.h>
 #endif
 #ifdef HAVE_SYSCTL
@@ -330,7 +330,7 @@ void RandAddStaticEnv(CSHA512& hasher)
     }
 #endif
 
-#if HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS
+#ifdef HAVE_IFADDRS
     // Network interfaces
     struct ifaddrs *ifad = nullptr;
     getifaddrs(&ifad);
