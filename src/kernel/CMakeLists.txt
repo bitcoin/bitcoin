@@ -80,9 +80,25 @@ add_library(bitcoinkernel
   ../validationinterface.cpp
   ../versionbits.cpp
 )
+
+# Compiler warnings that apply only to the kernel and its dependencies.
+# These can be more strict and/or warnings that only apply to shared
+# libs.
+add_library(kernel_warn_interface INTERFACE)
+if(MSVC)
+else()
+  try_append_cxx_flags("-Wunique-object-duplication" TARGET kernel_warn_interface SKIP_LINK)
+endif()
+
+# Also manually apply the warnings to the kernel's internal dependencies
+target_link_libraries(bitcoin_clientversion PRIVATE kernel_warn_interface)
+target_link_libraries(bitcoin_crypto PRIVATE kernel_warn_interface)
+target_link_libraries(leveldb PRIVATE kernel_warn_interface)
+
 target_link_libraries(bitcoinkernel
   PRIVATE
     core_interface
+    kernel_warn_interface
     bitcoin_clientversion
     bitcoin_crypto
     leveldb
