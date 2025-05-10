@@ -3,11 +3,12 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test utxo-to-sqlite conversion tool"""
-import os.path
+import os
 try:
     import sqlite3
 except ImportError:
     pass
+import platform
 import subprocess
 import sys
 
@@ -111,6 +112,19 @@ class UtxoToSqliteTest(BitcoinTestFramework):
         muhash_sqlite = calculate_muhash_from_sqlite_utxos(output_filename)
         muhash_compact_serialized = node.gettxoutsetinfo('muhash')['muhash']
         assert_equal(muhash_sqlite, muhash_compact_serialized)
+
+        if platform.system() != "Windows":  # FIFOs are not available on Windows
+            self.log.info('Convert UTXO set directly (without intermediate dump) via named pipe')
+            fifo_filename = os.path.join(self.options.tmpdir, "utxos.fifo")
+            os.mkfifo(fifo_filename)
+            output_direct_filename = os.path.join(self.options.tmpdir, "utxos_direct.sqlite")
+            p = subprocess.Popen([sys.executable, utxo_to_sqlite_path, fifo_filename, output_direct_filename],
+                                 stderr=subprocess.STDOUT)
+            node.dumptxoutset(fifo_filename, "latest")
+            p.wait(timeout=10)
+            muhash_direct_sqlite = calculate_muhash_from_sqlite_utxos(output_direct_filename)
+            assert_equal(muhash_sqlite, muhash_direct_sqlite)
+            os.remove(fifo_filename)
 
 
 if __name__ == "__main__":
