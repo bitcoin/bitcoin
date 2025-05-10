@@ -130,21 +130,21 @@ BOOST_AUTO_TEST_CASE(siphash)
     ss << TX_WITH_WITNESS(tx);
     BOOST_CHECK_EQUAL(SipHashUint256(1, 2, ss.GetHash()), 0x79751e980c2a0a35ULL);
 
-    // Check consistency between CSipHasher and SipHashUint256[Extra].
+    // Check consistency between CSipHasher and SipHashUint256 and Uint256ExtraSipHasher.
     FastRandomContext ctx;
     for (int i = 0; i < 16; ++i) {
+        uint64_t k0 = ctx.rand64();
         uint64_t k1 = ctx.rand64();
-        uint64_t k2 = ctx.rand64();
         uint256 x = m_rng.rand256();
         uint32_t n = ctx.rand32();
         uint8_t nb[4];
         WriteLE32(nb, n);
-        CSipHasher sip256(k1, k2);
+        CSipHasher sip256(k0, k1);
         sip256.Write(x);
         CSipHasher sip288 = sip256;
         sip288.Write(nb);
-        BOOST_CHECK_EQUAL(SipHashUint256(k1, k2, x), sip256.Finalize());
-        BOOST_CHECK_EQUAL(SipHashUint256Extra(k1, k2, x, n), sip288.Finalize());
+        BOOST_CHECK_EQUAL(SipHashUint256(k0, k1, x), sip256.Finalize());
+        BOOST_CHECK_EQUAL(Uint256ExtraSipHasher(k0, k1)(x, n), sip288.Finalize());
     }
 }
 
