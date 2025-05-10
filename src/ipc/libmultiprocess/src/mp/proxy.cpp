@@ -29,11 +29,14 @@
 #include <stddef.h>
 #include <stdexcept>
 #include <string>
-#include <sys/socket.h>
 #include <thread>
 #include <tuple>
-#include <unistd.h>
 #include <utility>
+
+#ifndef WIN32
+#include <sys/socket.h>
+#include <unistd.h>
+#endif
 
 namespace mp {
 
@@ -55,6 +58,20 @@ Connection::~Connection()
     // which may call addAsyncCleanup and add more cleanup callbacks which can
     // run below.
     m_rpc_system.reset();
+
+    // shutdownWrite is needed on Windows so pending data in the m_stream socket
+    // will be sent instead of discarded when m_stream is destroyed. On unix,
+    // this doesn't seem to be needed because data is sent more reliably.
+    //
+    // Sending pending data is important if the connection is a socketpair
+    // because when one side of the socketpair is closed, the other side doesn't
+    // seem to receive any onDisconnect event. So it is important for the other
+    // side to instead receive Cap'n Proto "release" messages (see `struct
+    // Release` in capnp/rpc.capnp) from local Client objects being being
+    // destroyed so the remote side can free resources and shut down cleanly.
+    // Without this call, Server objects corresponding to the Client objects on
+    // the other side of the connection are not freed by Cap'n Proto.
+    m_stream->shutdownWrite();
 
     // ProxyClient cleanup handlers are in sync list, and ProxyServer cleanup
     // handlers are in the async list.
@@ -154,6 +171,40 @@ void Connection::addAsyncCleanup(std::function<void()> fn)
     m_async_cleanup_fns.emplace(m_async_cleanup_fns.end(), std::move(fn));
 }
 
+#ifdef WIN32
+//! Synchronous socket output stream. Cap'n Proto library only provides limited
+//! support for synchronous IO. It provides `FdOutputStream` which wraps unix
+//! file descriptors and calls write() internally, and `HandleOutStream` which
+//! wraps windows HANDLE values and calls WriteFile() internally. This class
+//! just provides analagous functionality wrapping SOCKET values and calls
+//! send() internally.
+class SocketOutputStream : public kj::OutputStream {
+public:
+  explicit SocketOutputStream(SOCKET socket) : m_socket(socket) {}
+
+  void write(const void* buffer, size_t size) override;
+
+private:
+  SOCKET m_socket;
+};
+
+static constexpr size_t WRITE_CLAMP_SIZE = 1u << 30;  // 1GB clamp for Windows, like FdOutputStream
+
+void SocketOutputStream::write(const void* buffer, size_t size) {
+  const char* pos = reinterpret_cast<const char*>(buffer);
+
+  while (size > 0) {
+    int n = send(m_socket, pos, static_cast<int>(kj::min(size, WRITE_CLAMP_SIZE)), 0);
+
+    KJ_WIN32(n != SOCKET_ERROR, "send() failed");
+    KJ_ASSERT(n > 0, "send() returned zero.");
+
+    pos += n;
+    size -= n;
+  }
+}
+#endif
+
 EventLoop::EventLoop(const char* exe_name, LogFn log_fn, void* context)
     : m_exe_name(exe_name),
       m_io_context(kj::setupAsyncIo()),
@@ -161,10 +212,18 @@ EventLoop::EventLoop(const char* exe_name, LogFn log_fn, void* context)
       m_log_fn(std::move(log_fn)),
       m_context(context)
 {
-    int fds[2];
-    KJ_SYSCALL(socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
-    m_wait_fd = fds[0];
-    m_post_fd = fds[1];
+    auto pipe = m_io_context.provider->newTwoWayPipe();
+    m_wait_stream = kj::mv(pipe.ends[0]);
+    m_post_stream = kj::mv(pipe.ends[1]);
+    KJ_IF_MAYBE(fd, m_post_stream->getFd()) {
+        m_post_writer = kj::heap<kj::FdOutputStream>(*fd);
+#ifdef WIN32
+    } else KJ_IF_MAYBE(handle, m_post_stream->getWin32Handle()) {
+        m_post_writer = kj::heap<SocketOutputStream>(reinterpret_cast<SOCKET>(*handle));
+#endif
+    } else {
+        throw std::logic_error("Could not get file descriptor for new pipe.");
+    }
 }
 
 EventLoop::~EventLoop()
@@ -173,8 +232,8 @@ EventLoop::~EventLoop()
     const std::lock_guard<std::mutex> lock(m_mutex);
     KJ_ASSERT(m_post_fn == nullptr);
     KJ_ASSERT(m_async_fns.empty());
-    KJ_ASSERT(m_wait_fd == -1);
-    KJ_ASSERT(m_post_fd == -1);
+    KJ_ASSERT(!m_wait_stream);
+    KJ_ASSERT(!m_post_stream);
     KJ_ASSERT(m_num_clients == 0);
 
     // Spin event loop. wait for any promises triggered by RPC shutdown.
@@ -188,9 +247,7 @@ void EventLoop::loop()
     g_thread_context.loop_thread = true;
     KJ_DEFER(g_thread_context.loop_thread = false);
 
-    kj::Own<kj::AsyncIoStream> wait_stream{
-        m_io_context.lowLevelProvider->wrapSocketFd(m_wait_fd, kj::LowLevelAsyncIoProvider::TAKE_OWNERSHIP)};
-    int post_fd{m_post_fd};
+    kj::Own<kj::AsyncIoStream>& wait_stream{m_wait_stream};
     char buffer = 0;
     for (;;) {
         const size_t read_bytes = wait_stream->read(&buffer, 0, 1).wait(m_io_context.waitScope);
@@ -202,7 +259,7 @@ void EventLoop::loop()
             m_cv.notify_all();
         } else if (done(lock)) {
             // Intentionally do not break if m_post_fn was set, even if done()
-            // would return true, to ensure that the removeClient write(post_fd)
+            // would return true, to ensure that the removeClient write(post_stream)
             // call always succeeds and the loop does not exit between the time
             // that the done condition is set and the write call is made.
             break;
@@ -212,10 +269,9 @@ void EventLoop::loop()
     m_task_set.reset();
     log() << "EventLoop::loop bye.";
     wait_stream = nullptr;
-    KJ_SYSCALL(::close(post_fd));
     const std::unique_lock<std::mutex> lock(m_mutex);
-    m_wait_fd = -1;
-    m_post_fd = -1;
+    m_wait_stream = nullptr;
+    m_post_stream = nullptr;
 }
 
 void EventLoop::post(const std::function<void()>& fn)
@@ -228,10 +284,9 @@ void EventLoop::post(const std::function<void()>& fn)
     addClient(lock);
     m_cv.wait(lock, [this] { return m_post_fn == nullptr; });
     m_post_fn = &fn;
-    int post_fd{m_post_fd};
     Unlock(lock, [&] {
         char buffer = 0;
-        KJ_SYSCALL(write(post_fd, &buffer, 1));
+        m_post_writer->write(&buffer, 1);
     });
     m_cv.wait(lock, [this, &fn] { return m_post_fn != &fn; });
     removeClient(lock);
@@ -244,10 +299,9 @@ bool EventLoop::removeClient(std::unique_lock<std::mutex>& lock)
     m_num_clients -= 1;
     if (done(lock)) {
         m_cv.notify_all();
-        int post_fd{m_post_fd};
         lock.unlock();
         char buffer = 0;
-        KJ_SYSCALL(write(post_fd, &buffer, 1)); // NOLINT(bugprone-suspicious-semicolon)
+        m_post_writer->write(&buffer, 1);
         return true;
     }
     return false;
