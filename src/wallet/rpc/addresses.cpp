@@ -246,6 +246,7 @@ RPCHelpMan keypoolrefill()
     if (pwallet->GetKeyPoolSize() < kpSize) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error refreshing keypool.");
     }
+    pwallet->RefreshAllTXOs();
 
     return UniValue::VNULL;
 },
