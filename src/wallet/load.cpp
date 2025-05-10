@@ -137,7 +137,14 @@ bool LoadWallets(WalletContext& context)
             }
             chain.initMessage(_("Loading wallet…"));
             std::shared_ptr<CWallet> pwallet = database ? CWallet::Create(context, name, std::move(database), options.create_flags, error, warnings) : nullptr;
-            if (!warnings.empty()) chain.initWarning(Join(warnings, Untranslated("\n")));
+            if (!warnings.empty()) {
+                chain.initWarning(Join(warnings, Untranslated("\n")));
+                // If there were no errors but the wallet is still null, it means the wallet is being skipped for compatibility reasons.
+                // For example, we might be trying to load a legacy wallet.
+                // The warning message sent above properly notifies the user, so they can act accordingly.
+                // (If we fail here, the app will shut down during init, and users will be forced to either manually remove the wallet from the settings.json file or use the bitcoin-wallet tool)
+                if (error.empty() && !pwallet) continue;
+            }
             if (!pwallet) {
                 chain.initError(error);
                 return false;
