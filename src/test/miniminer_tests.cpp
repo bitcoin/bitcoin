@@ -349,7 +349,7 @@ BOOST_FIXTURE_TEST_CASE(miniminer_1p1c, TestChain100Setup)
     node::MiniMiner miniminer_pool(pool, all_unspent_outpoints);
     BOOST_CHECK(miniminer_manual.IsReadyToCalculate());
     BOOST_CHECK(miniminer_pool.IsReadyToCalculate());
-    for (const auto& sequences : {miniminer_manual.Linearize(), miniminer_pool.Linearize()}) {
+    for (const auto& sequences : {miniminer_manual.Linearize().inclusion_order, miniminer_pool.Linearize().inclusion_order}) {
         // tx6 is selected first: high feerate with no parents to bump
         BOOST_CHECK_EQUAL(Find(sequences, tx6->GetHash()), 0);
 
@@ -567,7 +567,7 @@ BOOST_FIXTURE_TEST_CASE(miniminer_overlap, TestChain100Setup)
     node::MiniMiner miniminer_pool(pool, all_unspent_outpoints);
     BOOST_CHECK(miniminer_manual.IsReadyToCalculate());
     BOOST_CHECK(miniminer_pool.IsReadyToCalculate());
-    for (const auto& sequences : {miniminer_manual.Linearize(), miniminer_pool.Linearize()}) {
+    for (const auto& sequences : {miniminer_manual.Linearize().inclusion_order, miniminer_pool.Linearize().inclusion_order}) {
         // tx2 and tx4 selected first: high feerate with nothing to bump
         BOOST_CHECK_EQUAL(Find(sequences, tx4->GetHash()), 0);
         BOOST_CHECK_EQUAL(Find(sequences, tx2->GetHash()), 1);
@@ -690,7 +690,7 @@ BOOST_FIXTURE_TEST_CASE(manual_ctor, TestChain100Setup)
 
         node::MiniMiner miniminer_manual(miniminer_info, descendant_caches);
         BOOST_CHECK(miniminer_manual.IsReadyToCalculate());
-        const auto sequences{miniminer_manual.Linearize()};
+        const auto sequences{miniminer_manual.Linearize().inclusion_order};
 
         // CPFP zero + high
         BOOST_CHECK_EQUAL(sequences.at(grandparent_zero_fee->GetHash()), 0);
