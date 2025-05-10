@@ -143,14 +143,14 @@ class FullBlockTest(BitcoinTestFramework):
         tx = CTransaction()
         tx.vin.append(max_size_spendable_output)
         tx.vout.append(CTxOut(0, CScript([])))
-        block = self.generateblock(self.nodes[0], output="raw(55)", transactions=[tx.serialize().hex()])
+        block = self.generateblock(self.nodes[0], transactions=[tx.serialize().hex()])
         assert_equal(block["hash"], self.nodes[0].getbestblockhash())
         self.nodes[0].invalidateblock(block["hash"])
         assert_equal(self.nodes[0].getrawmempool(), [])
 
         # MAX_SCRIPT_SIZE + 1 wasn't added to the utxo set
         tx.vin[0] = min_size_unspendable_output
-        assert_raises_rpc_error(-25, f'TestBlockValidity failed: bad-txns-inputs-missingorspent, CheckTxInputs: inputs missing/spent in transaction {tx.txid_hex}', self.generateblock, self.nodes[0],  output="raw(55)", transactions=[tx.serialize().hex()])
+        assert_raises_rpc_error(-25, f'TestBlockValidity failed: bad-txns-inputs-missingorspent, CheckTxInputs: inputs missing/spent in transaction {tx.txid_hex}', self.generateblock, self.nodes[0], transactions=[tx.serialize().hex()])
 
         # collect spendable outputs now to avoid cluttering the code later on
         out = []
