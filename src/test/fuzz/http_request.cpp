@@ -49,7 +49,7 @@ FUZZ_TARGET(http_request)
     }
 
     util::SignalInterrupt interrupt;
-    HTTPRequest http_request{evreq, interrupt, true};
+    HTTPRequest http_request{evreq, interrupt, /*id=*/0, /*replySent=*/true};
     const HTTPRequest::RequestMethod request_method = http_request.GetRequestMethod();
     (void)RequestMethodString(request_method);
     (void)http_request.GetURI();
