@@ -160,11 +160,11 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock&& block, uint64_t&
     return true;
 }
 
-static UniValue generateBlocks(ChainstateManager& chainman, Mining& miner, const CScript& coinbase_output_script, int nGenerate, uint64_t nMaxTries)
+static UniValue generateBlocks(ChainstateManager& chainman, Mining& miner, const std::vector<CScript>& coinbase_outputs_scripts, int nGenerate, uint64_t nMaxTries)
 {
     UniValue blockHashes(UniValue::VARR);
     while (nGenerate > 0 && !chainman.m_interrupt) {
-        std::unique_ptr<BlockTemplate> block_template(miner.createNewBlock({ .coinbase_output_script = coinbase_output_script }));
+        std::unique_ptr<BlockTemplate> block_template(miner.createNewBlock({ .coinbase_outputs_scripts = coinbase_outputs_scripts }));
         CHECK_NONFATAL(block_template);
 
         std::shared_ptr<const CBlock> block_out;
@@ -248,7 +248,7 @@ static RPCHelpMan generatetodescriptor()
     Mining& miner = EnsureMining(node);
     ChainstateManager& chainman = EnsureChainman(node);
 
-    return generateBlocks(chainman, miner, coinbase_output_script, num_blocks, max_tries);
+    return generateBlocks(chainman, miner, std::vector<CScript>{coinbase_output_script}, num_blocks, max_tries);
 },
     };
 }
@@ -296,7 +296,58 @@ static RPCHelpMan generatetoaddress()
 
     CScript coinbase_output_script = GetScriptForDestination(destination);
 
-    return generateBlocks(chainman, miner, coinbase_output_script, num_blocks, max_tries);
+    return generateBlocks(chainman, miner, std::vector<CScript>{coinbase_output_script}, num_blocks, max_tries);
+},
+    };
+}
+
+static RPCHelpMan generatetomany()
+{
+    return RPCHelpMan{"generatetomany",
+        "Mine to a specified group of addresses and return the block hashes.",
+         {
+             {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated."},
+             {"addresses", RPCArg::Type::ARR, RPCArg::Optional::NO, "The addresses to split, in equal parts, the coinbase reward among.",
+                {
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A valid address"},
+                },
+            },
+             {"maxtries", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_MAX_TRIES}, "How many iterations to try."},
+         },
+         RPCResult{
+             RPCResult::Type::ARR, "", "hashes of blocks generated",
+             {
+                 {RPCResult::Type::STR_HEX, "", "blockhash"},
+             }},
+        RPCExamples{
+            "\nGenerate 11 blocks to two different addresses:\n"
+            + HelpExampleCli("generatetomany", "\"11 '[\\\"bcrt1qal6p633hvwz2yp5mav0qy7u2az8gkn2xywnj6v\\\", \\\"bcrt1qvr3qgyhw6y0e0zj97v0j5yc40xtpea4wqj0g43\\\"]'\"")
+            + "If you are using the " CLIENT_NAME " wallet, you can get a new address to send the newly generated bitcoin to with:\n"
+            + HelpExampleCli("getnewaddress", "")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const int num_blocks{request.params[0].getInt<int>()};
+    const uint64_t max_tries{request.params[2].isNull() ? DEFAULT_MAX_TRIES : request.params[2].getInt<int>()};
+
+    const UniValue& addresses = request.params[1].get_array();
+    if (addresses.empty()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: at least one address must be provided.");
+    }
+    std::vector<CScript> coinbase_outputs_scripts;
+    for (unsigned int i = 0; i < addresses.size(); ++i) {
+        CTxDestination dest = DecodeDestination(addresses[i].get_str());
+        if (!IsValidDestination(dest)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid address at index %d", i));
+        }
+        coinbase_outputs_scripts.push_back(GetScriptForDestination(dest));
+    }
+
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    Mining& miner = EnsureMining(node);
+    ChainstateManager& chainman = EnsureChainman(node);
+
+    return generateBlocks(chainman, miner, coinbase_outputs_scripts, num_blocks, max_tries);
 },
     };
 }
@@ -375,7 +426,7 @@ static RPCHelpMan generateblock()
     {
         LOCK(chainman.GetMutex());
         {
-            std::unique_ptr<BlockTemplate> block_template{miner.createNewBlock({.use_mempool = false, .coinbase_output_script = coinbase_output_script})};
+            std::unique_ptr<BlockTemplate> block_template{miner.createNewBlock({.use_mempool = false, .coinbase_outputs_scripts = {coinbase_output_script}})};
             CHECK_NONFATAL(block_template);
 
             block = block_template->getBlock();
@@ -1144,6 +1195,7 @@ void RegisterMiningRPCCommands(CRPCTable& t)
 
         {"hidden", &generatetoaddress},
         {"hidden", &generatetodescriptor},
+        {"hidden", &generatetomany},
         {"hidden", &generateblock},
         {"hidden", &generate},
     };

@@ -159,9 +159,27 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     coinbaseTx.vin.resize(1);
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vin[0].nSequence = CTxIn::MAX_SEQUENCE_NONFINAL; // Make sure timelock is enforced.
-    coinbaseTx.vout.resize(1);
-    coinbaseTx.vout[0].scriptPubKey = m_options.coinbase_output_script;
-    coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
+
+    const auto numOutputs = m_options.coinbase_outputs_scripts.size();
+    coinbaseTx.vout.resize(numOutputs);
+    if (!numOutputs) {
+        coinbaseTx.vout[0].scriptPubKey = m_options.coinbase_outputs_scripts[0];
+        coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
+    } else {
+        CAmount totalReward = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
+        CAmount rewardParted = totalReward / numOutputs;
+        CAmount remainder = totalReward % numOutputs;
+
+        for (size_t i = 0; i < numOutputs; ++i) {
+            coinbaseTx.vout[i].scriptPubKey = m_options.coinbase_outputs_scripts[i];
+            coinbaseTx.vout[i].nValue = rewardParted;
+            if (i < static_cast<size_t>(remainder)) {
+                // Distribute the remainder to the first 'remainder' outputs
+                coinbaseTx.vout[i].nValue += 1;
+            }
+        }
+    }
+
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
     Assert(nHeight > 0);
     coinbaseTx.nLockTime = static_cast<uint32_t>(nHeight - 1);

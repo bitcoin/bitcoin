@@ -27,7 +27,7 @@ COutPoint generatetoaddress(const NodeContext& node, const std::string& address)
     const auto dest = DecodeDestination(address);
     assert(IsValidDestination(dest));
     BlockAssembler::Options assembler_options;
-    assembler_options.coinbase_output_script = GetScriptForDestination(dest);
+    assembler_options.coinbase_outputs_scripts = {GetScriptForDestination(dest)};
 
     return MineBlock(node, assembler_options);
 }
@@ -136,7 +136,7 @@ std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node,
 std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey)
 {
     BlockAssembler::Options assembler_options;
-    assembler_options.coinbase_output_script = coinbase_scriptPubKey;
+    assembler_options.coinbase_outputs_scripts = {coinbase_scriptPubKey};
     ApplyArgsManOptions(*node.args, assembler_options);
     return PrepareBlock(node, assembler_options);
 }
