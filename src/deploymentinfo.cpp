@@ -11,11 +11,11 @@
 const std::array<VBDeploymentInfo,Consensus::MAX_VERSION_BITS_DEPLOYMENTS> VersionBitsDeploymentInfo{
     VBDeploymentInfo{
         .name = "testdummy",
-        .gbt_force = true,
+        .gbt_optional_rule = true,
     },
     VBDeploymentInfo{
         .name = "taproot",
-        .gbt_force = true,
+        .gbt_optional_rule = true,
     },
 };
 

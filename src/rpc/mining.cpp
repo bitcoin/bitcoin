@@ -596,10 +596,11 @@ static UniValue BIP22ValidationResult(const BlockValidationState& state)
     return "valid?";
 }
 
-static std::string gbt_force_name(const std::string& name, bool gbt_force)
+// Prefix rule name with ! if not optional, see BIP9
+static std::string gbt_rule_value(const std::string& name, bool gbt_optional_rule)
 {
     std::string s{name};
-    if (!gbt_force) {
+    if (!gbt_optional_rule) {
         s.insert(s.begin(), '!');
     }
     return s;
@@ -955,8 +956,8 @@ static RPCHelpMan getblocktemplate()
     const auto gbtstatus = chainman.m_versionbitscache.GBTStatus(*pindexPrev, consensusParams);
 
     for (const auto& [name, info] : gbtstatus.signalling) {
-        vbavailable.pushKV(gbt_force_name(name, info.gbt_force), info.bit);
-        if (!info.gbt_force && !setClientRules.count(name)) {
+        vbavailable.pushKV(gbt_rule_value(name, info.gbt_optional_rule), info.bit);
+        if (!info.gbt_optional_rule && !setClientRules.count(name)) {
             // If the client doesn't support this, don't indicate it in the [default] version
             block.nVersion &= ~info.mask;
         }
@@ -964,16 +965,16 @@ static RPCHelpMan getblocktemplate()
 
     for (const auto& [name, info] : gbtstatus.locked_in) {
         block.nVersion |= info.mask;
-        vbavailable.pushKV(gbt_force_name(name, info.gbt_force), info.bit);
-        if (!info.gbt_force && !setClientRules.count(name)) {
+        vbavailable.pushKV(gbt_rule_value(name, info.gbt_optional_rule), info.bit);
+        if (!info.gbt_optional_rule && !setClientRules.count(name)) {
             // If the client doesn't support this, don't indicate it in the [default] version
             block.nVersion &= ~info.mask;
         }
     }
 
     for (const auto& [name, info] : gbtstatus.active) {
-        aRules.push_back(gbt_force_name(name, info.gbt_force));
-        if (!info.gbt_force && !setClientRules.count(name)) {
+        aRules.push_back(gbt_rule_value(name, info.gbt_optional_rule));
+        if (!info.gbt_optional_rule && !setClientRules.count(name)) {
             // Not supported by the client; make sure it's safe to proceed
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Support for '%s' rule requires explicit client support", name));
         }

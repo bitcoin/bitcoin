@@ -235,7 +235,7 @@ BIP9GBTStatus VersionBitsCache::GBTStatus(const CBlockIndex& block_index, const 
         VersionBitsConditionChecker checker(params, pos);
         ThresholdState state = checker.GetStateFor(&block_index, m_caches[pos]);
         const VBDeploymentInfo& vbdepinfo = VersionBitsDeploymentInfo[pos];
-        BIP9GBTStatus::Info gbtinfo{.bit=params.vDeployments[pos].bit, .mask=checker.Mask(), .gbt_force=vbdepinfo.gbt_force};
+        BIP9GBTStatus::Info gbtinfo{.bit=params.vDeployments[pos].bit, .mask=checker.Mask(), .gbt_optional_rule=vbdepinfo.gbt_optional_rule};
 
         switch (state) {
         case DEFINED:
