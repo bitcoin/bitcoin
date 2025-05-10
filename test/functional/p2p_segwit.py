@@ -71,10 +71,12 @@ from test_framework.script import (
     hash160,
     sign_input_legacy,
     sign_input_segwitv0,
+    SegwitV0SignatureHash,
 )
 from test_framework.script_util import (
     key_to_p2pk_script,
     key_to_p2wpkh_script,
+    keys_to_multisig_script,
     keyhash_to_p2pkh_script,
     script_to_p2sh_script,
     script_to_p2wsh_script,
@@ -293,6 +295,7 @@ class SegWitTest(BitcoinTestFramework):
         self.test_witness_sigops()
         self.test_superfluous_witness()
         self.test_wtxid_relay()
+        self.test_transaction_malleability()
 
     # Individual tests
 
@@ -2066,6 +2069,89 @@ class SegWitTest(BitcoinTestFramework):
         # Check tx2 is there now
         assert_equal(tx2.hash in self.nodes[0].getrawmempool(), True)
 
+    @subtest
+    def test_transaction_malleability(self):
+        # Test transaction malleability after segwit: same txid but different wtxid
+        key, pubkey = generate_keypair()
+        amount = self.utxo[0].nValue // 2
+
+        def create_tx(prev_txid, prev_index, amount, script_pubkey):
+            tx = CTransaction()
+            tx.vin.append(CTxIn(COutPoint(prev_txid, prev_index), b""))
+            tx.vout.append(CTxOut(amount, script_pubkey))
+            tx.rehash()
+            return tx
+
+        def sign_witness_input(tx, vin_index, script, amount, signing_key=key, multisig=False, low_s=True):
+            tx.wit.vtxinwit.append(CTxInWitness())
+            sighash = SegwitV0SignatureHash(script, tx, vin_index, SIGHASH_ALL, amount)
+            der_sig = signing_key.sign_ecdsa(sighash, low_s=low_s)
+            tx.wit.vtxinwit[vin_index].scriptWitness.stack.insert(0, der_sig + bytes([SIGHASH_ALL]))
+            if multisig:
+                # witness stack format is [b'', signature, script]
+                tx.wit.vtxinwit[vin_index].scriptWitness.stack.append(script)
+                tx.wit.vtxinwit[vin_index].scriptWitness.stack.insert(0, b'')
+            else:
+                # witness stack format is [signature, pubkey]
+                tx.wit.vtxinwit[vin_index].scriptWitness.stack.append(pubkey)
+            tx.rehash()
+
+        # Example 1: P2WPKH transaction with malleated signature
+        # 1. Create a funding transaction (P2WPKH output)
+        script_pubkey = key_to_p2wpkh_script(pubkey)
+        funding_p2wpkh_tx = create_tx(self.utxo[0].sha256, self.utxo[0].n, amount, script_pubkey)
+        block = self.build_next_block()
+        self.update_witness_block_with_transactions(block, [funding_p2wpkh_tx])
+        test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
+
+        # 2. Create and sign a transaction spending from the P2WPKH output (bad high-S signature)
+        spending_tx = create_tx(funding_p2wpkh_tx.sha256, 0, amount - 1000, script_pubkey)
+        pubkey_hash = hash160(pubkey)
+        p2pkh_script = keyhash_to_p2pkh_script(pubkey_hash)
+        sign_witness_input(spending_tx, 0, p2pkh_script, amount, low_s=False)
+        prev_txid = spending_tx.hash
+        prev_wtxid = spending_tx.getwtxid()
+        # Submit transaction (should be rejected due to non-canonical signature)
+        test_transaction_acceptance(self.nodes[0], self.test_node, spending_tx, with_witness=True, accepted=False, reason='non-mandatory-script-verify-flag (Non-canonical signature: S value is unnecessarily high)')
+
+        # 3. Re-sign with low-S signature (standard)
+        spending_tx.wit.vtxinwit[0].scriptWitness.stack.clear()
+        sign_witness_input(spending_tx, 0, p2pkh_script, amount, low_s=True)
+
+        # 4. Verify txid matches but wtxid differs
+        assert_equal(prev_txid, spending_tx.hash)
+        assert_not_equal(prev_wtxid, spending_tx.getwtxid())
+        # Transaction should now be accepted
+        test_transaction_acceptance(self.nodes[1], self.test_node, spending_tx, with_witness=True, accepted=True)
+        self.generate(self.nodes[0], 1)
+
+        # Example 2: P2WSH 1-of-2 multisig transaction where each signature applied to tx results in different wtxid
+        # 1. Create a funding transaction (P2WSH 1-of-2 multisig)
+        key2, pubkey2 = generate_keypair()
+        multisig_script = keys_to_multisig_script([pubkey, pubkey2], k=1)
+        p2wsh_script = script_to_p2wsh_script(multisig_script)
+        funding_p2wsh_tx = create_tx(spending_tx.sha256, 0, amount - 2000, p2wsh_script)
+        sign_witness_input(funding_p2wsh_tx, 0, p2pkh_script, amount - 1000)
+        block = self.build_next_block()
+        self.update_witness_block_with_transactions(block, [funding_p2wsh_tx])
+        test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
+
+        # 2. First spending transaction (signed with key1)
+        spending_tx1 = create_tx(funding_p2wsh_tx.sha256, 0, amount - 3000, script_pubkey)
+        sign_witness_input(spending_tx1, 0, multisig_script, amount - 2000, multisig=True)
+        prev_txid = spending_tx1.hash
+        prev_wtxid = spending_tx1.getwtxid()
+        test_transaction_acceptance(self.nodes[1], self.test_node, spending_tx1, with_witness=True, accepted=True)
+
+        # 3. Second spending transaction (signed with key2)
+        spending_tx2 = create_tx(funding_p2wsh_tx.sha256, 0, amount - 3000, script_pubkey)
+        sign_witness_input(spending_tx2, 0, multisig_script, amount - 2000, key2, multisig=True)
+
+        # Verify txid matches but wtxid differs
+        assert_equal(prev_txid, spending_tx2.hash)
+        assert_not_equal(prev_wtxid, spending_tx2.getwtxid())
+        res = self.nodes[0].testmempoolaccept(rawtxs=[spending_tx2.serialize_with_witness().hex()])[0]
+        assert_equal(res['reject-reason'], 'txn-same-nonwitness-data-in-mempool')
 
 if __name__ == '__main__':
     SegWitTest(__file__).main()
