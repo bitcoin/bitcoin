@@ -53,7 +53,6 @@ RPCHelpMan importprunedfunds()
     if (!DecodeHexTx(tx, request.params[0].get_str())) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed. Make sure the tx has at least one input.");
     }
-    uint256 hashTx = tx.GetHash();
 
     DataStream ssMB{ParseHexV(request.params[1], "proof")};
     CMerkleBlock merkleBlock;
@@ -73,7 +72,7 @@ RPCHelpMan importprunedfunds()
     }
 
     std::vector<uint256>::const_iterator it;
-    if ((it = std::find(vMatch.begin(), vMatch.end(), hashTx)) == vMatch.end()) {
+    if ((it = std::find(vMatch.begin(), vMatch.end(), tx.GetHash())) == vMatch.end()) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction given doesn't exist in proof");
     }
 
@@ -110,8 +109,8 @@ RPCHelpMan removeprunedfunds()
 
     LOCK(pwallet->cs_wallet);
 
-    uint256 hash(ParseHashV(request.params[0], "txid"));
-    std::vector<uint256> vHash;
+    Txid hash{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
+    std::vector<Txid> vHash;
     vHash.push_back(hash);
     if (auto res = pwallet->RemoveTxs(vHash); !res) {
         throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(res).original);

@@ -37,7 +37,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     CAmount nCredit = wtx.credit;
     CAmount nDebit = wtx.debit;
     CAmount nNet = nCredit - nDebit;
-    uint256 hash = wtx.tx->GetHash();
+    Txid hash = wtx.tx->GetHash();
     std::map<std::string, std::string> mapValue = wtx.value_map;
 
     bool involvesWatchAddress = false;

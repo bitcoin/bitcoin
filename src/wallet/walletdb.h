@@ -7,6 +7,7 @@
 #define BITCOIN_WALLET_WALLETDB_H
 
 #include <script/sign.h>
+#include <util/transaction_identifier.h>
 #include <wallet/db.h>
 #include <wallet/walletutil.h>
 #include <key.h>
@@ -221,7 +222,7 @@ public:
     bool ErasePurpose(const std::string& strAddress);
 
     bool WriteTx(const CWalletTx& wtx);
-    bool EraseTx(uint256 hash);
+    bool EraseTx(Txid hash);
 
     bool WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, const bool overwrite);
     bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta);

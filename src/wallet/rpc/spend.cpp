@@ -1068,7 +1068,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
         throw JSONRPCError(RPC_WALLET_ERROR, "bumpfee is not available with wallets that have private keys disabled. Use psbtbumpfee instead.");
     }
 
-    uint256 hash(ParseHashV(request.params[0], "txid"));
+    Txid hash{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
 
     CCoinControl coin_control;
     coin_control.fAllowWatchOnly = pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
@@ -1166,7 +1166,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
             throw JSONRPCError(RPC_WALLET_ERROR, "Can't sign transaction.");
         }
 
-        uint256 txid;
+        Txid txid;
         if (feebumper::CommitTransaction(*pwallet, hash, std::move(mtx), errors, txid) != feebumper::Result::OK) {
             throw JSONRPCError(RPC_WALLET_ERROR, errors[0].original);
         }
