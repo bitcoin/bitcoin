@@ -61,7 +61,7 @@ struct BlockCreateOptions {
      * The size and sigops are not checked against
      * coinbase_max_additional_weight and coinbase_output_max_additional_sigops.
      */
-    CScript coinbase_output_script{CScript() << OP_TRUE};
+    std::vector<CScript> coinbase_outputs_scripts{CScript() << OP_TRUE};
 };
 
 struct BlockWaitOptions {

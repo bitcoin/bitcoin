@@ -46,7 +46,7 @@ void initialize_tx_pool()
     g_setup = testing_setup.get();
 
     BlockAssembler::Options options;
-    options.coinbase_output_script = P2WSH_OP_TRUE;
+    options.coinbase_outputs_scripts = {P2WSH_OP_TRUE};
 
     for (int i = 0; i < 2 * COINBASE_MATURITY; ++i) {
         COutPoint prevout{MineBlock(g_setup->m_node, options)};
