@@ -219,7 +219,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
                 ScriptToUniv(prev_txout.scriptPubKey, /*out=*/o_script_pub_key, /*include_hex=*/true, /*include_address=*/true);
 
                 UniValue p(UniValue::VOBJ);
-                p.pushKV("generated", bool(prev_coin.fCoinBase));
+                p.pushKV("generated", prev_coin.IsCoinBase());
                 p.pushKV("height", uint64_t(prev_coin.nHeight));
                 p.pushKV("value", ValueFromAmount(prev_txout.nValue));
                 p.pushKV("scriptPubKey", std::move(o_script_pub_key));
