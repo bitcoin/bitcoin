@@ -19,6 +19,8 @@ from itertools import product
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
     COIN,
+    TX_MAX_STANDARD_VERSION,
+    TX_MIN_STANDARD_VERSION,
     CTransaction,
     CTxOut,
     tx_from_hex,
@@ -254,7 +256,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, "createrawtransaction", self.nodes[0].createrawtransaction, [])
 
         # Test `createrawtransaction` invalid extra parameters
-        assert_raises_rpc_error(-1, "createrawtransaction", self.nodes[0].createrawtransaction, [], {}, 0, False, 'foo')
+        assert_raises_rpc_error(-1, "createrawtransaction", self.nodes[0].createrawtransaction, [], {}, 0, False, 2, 3, 'foo')
+
+        # Test `createrawtransaction` invalid version parameters
+        assert_raises_rpc_error(-8, f"Invalid parameter, version out of range({TX_MIN_STANDARD_VERSION}~{TX_MAX_STANDARD_VERSION})", self.nodes[0].createrawtransaction, [], {}, 0, False, TX_MIN_STANDARD_VERSION - 1)
+        assert_raises_rpc_error(-8, f"Invalid parameter, version out of range({TX_MIN_STANDARD_VERSION}~{TX_MAX_STANDARD_VERSION})", self.nodes[0].createrawtransaction, [], {}, 0, False, TX_MAX_STANDARD_VERSION + 1)
 
         # Test `createrawtransaction` invalid `inputs`
         assert_raises_rpc_error(-3, "JSON value of type string is not of expected type array", self.nodes[0].createrawtransaction, 'foo', {})
@@ -333,6 +339,11 @@ class RawTransactionsTest(BitcoinTestFramework):
             tx.serialize().hex(),
             self.nodes[2].createrawtransaction(inputs=[{'txid': TXID, 'vout': 9}], outputs=[{address: 99}, {address2: 99}, {'data': '99'}]),
         )
+
+        for version in range(TX_MIN_STANDARD_VERSION, TX_MAX_STANDARD_VERSION + 1):
+            rawtx = self.nodes[2].createrawtransaction(inputs=[{'txid': TXID, 'vout': 9}], outputs=OrderedDict([(address, 99), (address2, 99)]), version=version)
+            tx = tx_from_hex(rawtx)
+            assert_equal(tx.version, version)
 
     def sendrawtransaction_tests(self):
         self.log.info("Test sendrawtransaction with missing input")
