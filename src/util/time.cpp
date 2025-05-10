@@ -17,6 +17,9 @@
 #include <string_view>
 #include <thread>
 
+static const std::string weekdays[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+static const std::string months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
 void UninterruptibleSleep(const std::chrono::microseconds& n) { std::this_thread::sleep_for(n); }
 
 static std::atomic<std::chrono::seconds> g_mock_time{}; //!< For testing
@@ -114,6 +117,20 @@ std::optional<int64_t> ParseISO8601DateTime(std::string_view str)
     const auto time{std::chrono::hours{*hour} + std::chrono::minutes{*min} + std::chrono::seconds{*sec}};
     const auto tp{std::chrono::sys_days{ymd} + time};
     return int64_t{TicksSinceEpoch<std::chrono::seconds>(tp)};
+}
+
+std::string FormatRFC7231DateTime(int64_t nTime)
+{
+    const std::chrono::sys_seconds secs{std::chrono::seconds{nTime}};
+    const auto days{std::chrono::floor<std::chrono::days>(secs)};
+    // 1970-01-01 was a Thursday
+    std::string_view weekday{weekdays[(days.time_since_epoch().count() + 4) % 7]};
+    const std::chrono::year_month_day ymd{days};
+    std::string_view month{months[unsigned{ymd.month()} - 1]};
+    const std::chrono::hh_mm_ss hms{secs - days};
+    // examples: Mon, 27 Jul 2009 12:28:53 GMT
+    //           Fri, 31 May 2024 19:18:04 GMT
+    return strprintf("%03s, %02u %03s %04i %02i:%02i:%02i GMT", weekday, unsigned{ymd.day()}, month, signed{ymd.year()}, hms.hours().count(), hms.minutes().count(), hms.seconds().count());
 }
 
 struct timeval MillisToTimeval(int64_t nTimeout)
