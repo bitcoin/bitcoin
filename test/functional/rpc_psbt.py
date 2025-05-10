@@ -29,8 +29,12 @@ from test_framework.psbt import (
     PSBT_IN_SHA256,
     PSBT_IN_HASH160,
     PSBT_IN_HASH256,
+    PSBT_IN_MUSIG2_PARTIAL_SIG,
+    PSBT_IN_MUSIG2_PARTICIPANT_PUBKEYS,
+    PSBT_IN_MUSIG2_PUB_NONCE,
     PSBT_IN_NON_WITNESS_UTXO,
     PSBT_IN_WITNESS_UTXO,
+    PSBT_OUT_MUSIG2_PARTICIPANT_PUBKEYS,
     PSBT_OUT_TAP_TREE,
 )
 from test_framework.script import CScript, OP_TRUE
@@ -198,6 +202,75 @@ class PSBTTest(BitcoinTestFramework):
         assert txid2 in mempool
 
         wallet.unloadwallet()
+
+    def test_decodepsbt_musig2_input_output_types(self):
+        self.log.info("Test decoding PSBT with MuSig2 per-input and per-output types")
+        # create 2-of-2 musig2 using fake aggregate key, leaf hash, pubnonce, and partial sig
+        # TODO: actually implement MuSig2 aggregation (for decoding only it doesn't matter though)
+        _, in_pubkey1 = generate_keypair()
+        _, in_pubkey2 = generate_keypair()
+        _, in_fake_agg_pubkey = generate_keypair()
+        fake_leaf_hash = randbytes(32)
+        fake_pubnonce = randbytes(66)
+        fake_partialsig = randbytes(32)
+        tx = CTransaction()
+        tx.vin = [CTxIn(outpoint=COutPoint(hash=int('ee' * 32, 16), n=0), scriptSig=b"")]
+        tx.vout = [CTxOut(nValue=0, scriptPubKey=b"")]
+        psbt = PSBT()
+        psbt.g = PSBTMap({PSBT_GLOBAL_UNSIGNED_TX: tx.serialize()})
+        participant1_keydata = in_pubkey1 + in_fake_agg_pubkey + fake_leaf_hash
+        psbt.i = [PSBTMap({
+                    bytes([PSBT_IN_MUSIG2_PARTICIPANT_PUBKEYS]) + in_fake_agg_pubkey: [in_pubkey1, in_pubkey2],
+                    bytes([PSBT_IN_MUSIG2_PUB_NONCE]) + participant1_keydata: fake_pubnonce,
+                    bytes([PSBT_IN_MUSIG2_PARTIAL_SIG]) + participant1_keydata: fake_partialsig,
+                 })]
+        _, out_pubkey1 = generate_keypair()
+        _, out_pubkey2 = generate_keypair()
+        _, out_fake_agg_pubkey = generate_keypair()
+        psbt.o = [PSBTMap({
+                    bytes([PSBT_OUT_MUSIG2_PARTICIPANT_PUBKEYS]) + out_fake_agg_pubkey: [out_pubkey1, out_pubkey2],
+                 })]
+        res = self.nodes[0].decodepsbt(psbt.to_base64())
+        assert_equal(len(res["inputs"]), 1)
+        res_input = res["inputs"][0]
+        assert_equal(len(res["outputs"]), 1)
+        res_output = res["outputs"][0]
+
+        assert "musig2_participant_pubkeys" in res_input
+        in_participant_pks = res_input["musig2_participant_pubkeys"][0]
+        assert "aggregate_pubkey" in in_participant_pks
+        assert_equal(in_participant_pks["aggregate_pubkey"], in_fake_agg_pubkey.hex())
+        assert "participant_pubkeys" in in_participant_pks
+        assert_equal(in_participant_pks["participant_pubkeys"], [in_pubkey1.hex(), in_pubkey2.hex()])
+
+        assert "musig2_pubnonces" in res_input
+        in_pubnonce = res_input["musig2_pubnonces"][0]
+        assert "participant_pubkey" in in_pubnonce
+        assert_equal(in_pubnonce["participant_pubkey"], in_pubkey1.hex())
+        assert "aggregate_pubkey" in in_pubnonce
+        assert_equal(in_pubnonce["aggregate_pubkey"], in_fake_agg_pubkey.hex())
+        assert "leaf_hash" in in_pubnonce
+        assert_equal(in_pubnonce["leaf_hash"], fake_leaf_hash.hex())
+        assert "pubnonce" in in_pubnonce
+        assert_equal(in_pubnonce["pubnonce"], fake_pubnonce.hex())
+
+        assert "musig2_partial_sigs" in res_input
+        in_partialsig = res_input["musig2_partial_sigs"][0]
+        assert "participant_pubkey" in in_partialsig
+        assert_equal(in_partialsig["participant_pubkey"], in_pubkey1.hex())
+        assert "aggregate_pubkey" in in_partialsig
+        assert_equal(in_partialsig["aggregate_pubkey"], in_fake_agg_pubkey.hex())
+        assert "leaf_hash" in in_partialsig
+        assert_equal(in_partialsig["leaf_hash"], fake_leaf_hash.hex())
+        assert "partial_sig" in in_partialsig
+        assert_equal(in_partialsig["partial_sig"], fake_partialsig.hex())
+
+        assert "musig2_participant_pubkeys" in res_output
+        out_participant_pks = res_output["musig2_participant_pubkeys"][0]
+        assert "aggregate_pubkey" in out_participant_pks
+        assert_equal(out_participant_pks["aggregate_pubkey"], out_fake_agg_pubkey.hex())
+        assert "participant_pubkeys" in out_participant_pks
+        assert_equal(out_participant_pks["participant_pubkeys"], [out_pubkey1.hex(), out_pubkey2.hex()])
 
     def assert_change_type(self, psbtx, expected_type):
         """Assert that the given PSBT has a change output with the given type."""
@@ -958,6 +1031,8 @@ class PSBTTest(BitcoinTestFramework):
             assert_equal(len(res_input[preimage_key]), 1)
             assert hash.hex() in res_input[preimage_key]
             assert_equal(res_input[preimage_key][hash.hex()], preimage.hex())
+
+        self.test_decodepsbt_musig2_input_output_types()
 
         self.log.info("Test that combining PSBTs with different transactions fails")
         tx = CTransaction()
