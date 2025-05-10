@@ -37,9 +37,11 @@ NetInfoStatus MnNetInfo::ValidateService(const CService& service)
     }
 
     const auto default_port_main = MainParams().GetDefaultPort();
-    if (IsNodeOnMainnet() && service.GetPort() != default_port_main) {
-        // Must use mainnet port on mainnet
-        return NetInfoStatus::BadPort;
+    if (IsNodeOnMainnet()) {
+        if (service.GetPort() != default_port_main) {
+            // Must use mainnet port on mainnet
+            return NetInfoStatus::BadPort;
+        }
     } else if (service.GetPort() == default_port_main) {
         // Using mainnet port prohibited outside of mainnet
         return NetInfoStatus::BadPort;
