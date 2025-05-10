@@ -115,6 +115,9 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                              error_code=-8,
                              error_message="Internal addresses should not have a label")
 
+        self.log.info("External non-ranged addresses can have labels")
+        self.test_importdesc({**import_request, "internal": False}, success=True)
+
         self.log.info("Internal addresses should be detected as such")
         key = get_generate_key()
         self.test_importdesc({"desc": descsum_create("pkh(" + key.pubkey + ")"),
@@ -213,6 +216,16 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               "range": [0, 100],
                               "label": "test"},
                               success=False,
+                              error_code=-8,
+                              error_message='Ranged descriptors should not have a label')
+
+        self.log.info("Ranged descriptors cannot have labels - even if range not provided by user and only implied by asterisk (*)")
+        self.test_importdesc({"desc":descsum_create("wpkh(" + xpub + "/100/0/*)"),
+                              "timestamp": "now",
+                              "label": "test",
+                              "active": True},
+                              success=False,
+                              warnings=['Range not given, using default keypool range'],
                               error_code=-8,
                               error_message='Ranged descriptors should not have a label')
 
