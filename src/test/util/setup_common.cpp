@@ -265,13 +265,9 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
         const BlockManager::Options blockman_opts{
             .chainparams = chainman_opts.chainparams,
             .blocks_dir = m_args.GetBlocksDirPath(),
+            .block_tree_dir = m_args.GetDataDirNet() / "blocks" / "index",
+            .wipe_block_tree_data = m_args.GetBoolArg("-reindex", false),
             .notifications = chainman_opts.notifications,
-            .block_tree_db_params = DBParams{
-                .path = m_args.GetDataDirNet() / "blocks" / "index",
-                .cache_bytes = m_kernel_cache_sizes.block_tree_db,
-                .memory_only = opts.block_tree_db_in_memory,
-                .wipe_data = m_args.GetBoolArg("-reindex", false),
-            },
         };
         m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown_signal), chainman_opts, blockman_opts);
     };

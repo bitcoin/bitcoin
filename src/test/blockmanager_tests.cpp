@@ -32,11 +32,8 @@ BOOST_AUTO_TEST_CASE(blockmanager_find_block_pos)
     const BlockManager::Options blockman_opts{
         .chainparams = *params,
         .blocks_dir = m_args.GetBlocksDirPath(),
+        .block_tree_dir = m_args.GetDataDirNet() / "blocks" / "index",
         .notifications = notifications,
-        .block_tree_db_params = DBParams{
-            .path = m_args.GetDataDirNet() / "blocks" / "index",
-            .cache_bytes = 0,
-        },
     };
     BlockManager blockman{*Assert(m_node.shutdown_signal), blockman_opts};
     // simulate adding a genesis block normally
@@ -143,11 +140,8 @@ BOOST_AUTO_TEST_CASE(blockmanager_flush_block_file)
     node::BlockManager::Options blockman_opts{
         .chainparams = Params(),
         .blocks_dir = m_args.GetBlocksDirPath(),
+        .block_tree_dir = m_args.GetDataDirNet() / "blocks" / "index",
         .notifications = notifications,
-        .block_tree_db_params = DBParams{
-            .path = m_args.GetDataDirNet() / "blocks" / "index",
-            .cache_bytes = 0,
-        },
     };
     BlockManager blockman{*Assert(m_node.shutdown_signal), blockman_opts};
 
