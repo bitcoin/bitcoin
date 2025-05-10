@@ -22,6 +22,7 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <versionbits.h>
+#include <pow.h>
 
 #include <test/util/setup_common.h>
 
@@ -666,7 +667,44 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     CScript scriptPubKey = CScript() << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f"_hex << OP_CHECKSIG;
     BlockAssembler::Options options;
     options.coinbase_output_script = scriptPubKey;
-    std::unique_ptr<BlockTemplate> block_template;
+
+    // Create and check a simple template
+    std::unique_ptr<BlockTemplate> block_template = mining->createNewBlock(options);
+    BOOST_REQUIRE(block_template);
+    {
+        CBlock block{block_template->getBlock()};
+        {
+            std::string reason;
+            std::string debug;
+            BOOST_REQUIRE(!mining->checkBlock(block, {.check_pow = false}, reason, debug));
+            BOOST_REQUIRE_EQUAL(reason, "bad-txnmrklroot");
+            BOOST_REQUIRE_EQUAL(debug, "hashMerkleRoot mismatch");
+        }
+
+        block.hashMerkleRoot = BlockMerkleRoot(block);
+
+        {
+            std::string reason;
+            std::string debug;
+            BOOST_REQUIRE(mining->checkBlock(block, {.check_pow = false}, reason, debug));
+            BOOST_REQUIRE_EQUAL(reason, "");
+            BOOST_REQUIRE_EQUAL(debug, "");
+        }
+
+        {
+            // A block template does not have proof-of-work, but it might pass
+            // verification by coincidence. Grind the nonce if needed:
+            while (CheckProofOfWork(block.GetHash(), block.nBits, Assert(m_node.chainman)->GetParams().GetConsensus())) {
+                block.nNonce++;
+            }
+
+            std::string reason;
+            std::string debug;
+            BOOST_REQUIRE(!mining->checkBlock(block, {.check_pow = true}, reason, debug));
+            BOOST_REQUIRE_EQUAL(reason, "high-hash");
+            BOOST_REQUIRE_EQUAL(debug, "proof of work failed");
+        }
+    }
 
     // We can't make transactions until we have inputs
     // Therefore, load 110 blocks :)
