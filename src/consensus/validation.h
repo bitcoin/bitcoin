@@ -34,10 +34,6 @@ enum class TxValidationResult {
      */
     TX_WITNESS_MUTATED,
     /**
-     * Transaction is missing a witness.
-     */
-    TX_WITNESS_STRIPPED,
-    /**
      * Tx already in mempool or conflicts with a tx in the chain
      * (if it conflicts with another tx in mempool, we use MEMPOOL_POLICY as it failed to reach the RBF threshold)
      * Currently this is only used if the transaction already exists in the mempool or on chain.
