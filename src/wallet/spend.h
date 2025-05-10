@@ -6,7 +6,7 @@
 #define BITCOIN_WALLET_SPEND_H
 
 #include <consensus/amount.h>
-#include <policy/fees.h> // for FeeCalculation
+#include <policy/fees/block_policy_estimator.h> // for FeeCalculation
 #include <util/result.h>
 #include <wallet/coinselection.h>
 #include <wallet/transaction.h>
