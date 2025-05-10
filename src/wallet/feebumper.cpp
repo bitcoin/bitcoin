@@ -6,7 +6,7 @@
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
 #include <node/types.h>
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
 #include <policy/policy.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
