@@ -13,3 +13,4 @@ export PIP_PACKAGES="pyzmq"
 export DEP_OPTS="DEBUG=1"  # Temporarily enable a DEBUG=1 build to check for GCC-bug-117966 regressions. This can be removed once the minimum GCC version is bumped to 12 in the previous releases task, see https://github.com/bitcoin/bitcoin/issues/31436#issuecomment-2530717875
 export GOAL="install"
 export BITCOIN_CONFIG="-DWITH_ZMQ=ON -DBUILD_GUI=ON -DREDUCE_EXPORTS=ON -DCMAKE_BUILD_TYPE=Debug"
+export BITCOIND=bitcoin-node # Used in functional tests
