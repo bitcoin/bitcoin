@@ -45,7 +45,7 @@ FUZZ_TARGET(utxo_total_supply)
         return chainman.ActiveHeight();
     };
     BlockAssembler::Options options;
-    options.coinbase_output_script = CScript() << OP_FALSE;
+    options.coinbase_outputs_scripts = {CScript() << OP_FALSE};
     const auto PrepareNextBlock = [&]() {
         // Use OP_FALSE to avoid BIP30 check from hitting early
         auto block = PrepareBlock(node, options);
