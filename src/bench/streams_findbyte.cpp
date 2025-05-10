@@ -28,7 +28,7 @@ static void FindByte(benchmark::Bench& bench)
     });
 
     // Cleanup
-    file.fclose();
+    assert(file.fclose() == 0);
     fs::remove("streams_tmp");
 }
 
