@@ -673,7 +673,8 @@ class WalletTest(BitcoinTestFramework):
         self.generate(self.wallet, 1, sync_fun=self.no_op)
         self.nodes[0].createwallet("watch_wallet", disable_private_keys=True)
         watch_wallet = self.nodes[0].get_wallet_rpc("watch_wallet")
-        watch_wallet.importaddress(self.wallet.get_address())
+        import_res = watch_wallet.importdescriptors([{"desc": self.wallet.get_descriptor(), "timestamp": "now"}])
+        assert_equal(import_res[0]["success"], True)
 
         # DEFAULT_ANCESTOR_LIMIT transactions off a confirmed tx should be fine
         chain = self.wallet.create_self_transfer_chain(chain_length=DEFAULT_ANCESTOR_LIMIT)

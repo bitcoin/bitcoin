@@ -26,7 +26,6 @@ from .authproxy import (
     JSONRPCException,
     serialization_fallback,
 )
-from .descriptors import descsum_create
 from .messages import NODE_P2P_V2
 from .p2p import P2P_SERVICES, P2P_SUBVERSION
 from .util import (
@@ -208,10 +207,10 @@ class TestNode():
     def __getattr__(self, name):
         """Dispatches any unrecognised messages to the RPC connection or a CLI instance."""
         if self.use_cli:
-            return getattr(RPCOverloadWrapper(self.cli), name)
+            return getattr(self.cli, name)
         else:
             assert self.rpc_connected and self.rpc is not None, self._node_msg("Error: no RPC connection")
-            return getattr(RPCOverloadWrapper(self.rpc), name)
+            return getattr(self.rpc, name)
 
     def start(self, extra_args=None, *, cwd=None, stdout=None, stderr=None, env=None, **kwargs):
         """Start the node."""
@@ -388,11 +387,11 @@ class TestNode():
 
     def get_wallet_rpc(self, wallet_name):
         if self.use_cli:
-            return RPCOverloadWrapper(self.cli("-rpcwallet={}".format(wallet_name)))
+            return self.cli("-rpcwallet={}".format(wallet_name))
         else:
             assert self.rpc_connected and self.rpc, self._node_msg("RPC not connected")
             wallet_path = "wallet/{}".format(urllib.parse.quote(wallet_name))
-            return RPCOverloadWrapper(self.rpc / wallet_path)
+            return self.rpc / wallet_path
 
     def version_is_at_least(self, ver):
         return self.version is None or self.version >= ver
@@ -937,80 +936,3 @@ class TestNodeCLI():
             return json.loads(cli_stdout, parse_float=decimal.Decimal)
         except (json.JSONDecodeError, decimal.InvalidOperation):
             return cli_stdout.rstrip("\n")
-
-class RPCOverloadWrapper():
-    def __init__(self, rpc):
-        self.rpc = rpc
-
-    def __getattr__(self, name):
-        return getattr(self.rpc, name)
-
-    def importprivkey(self, privkey, *, label=None, rescan=None):
-        wallet_info = self.getwalletinfo()
-        if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
-            return self.__getattr__('importprivkey')(privkey, label, rescan)
-        desc = descsum_create('combo(' + privkey + ')')
-        req = [{
-            'desc': desc,
-            'timestamp': 0 if rescan else 'now',
-            'label': label if label else '',
-        }]
-        import_res = self.importdescriptors(req)
-        if not import_res[0]['success']:
-            raise JSONRPCException(import_res[0]['error'])
-
-    def addmultisigaddress(self, nrequired, keys, *, label=None, address_type=None):
-        wallet_info = self.getwalletinfo()
-        if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
-            return self.__getattr__('addmultisigaddress')(nrequired, keys, label, address_type)
-        cms = self.createmultisig(nrequired, keys, address_type)
-        req = [{
-            'desc': cms['descriptor'],
-            'timestamp': 0,
-            'label': label if label else '',
-        }]
-        import_res = self.importdescriptors(req)
-        if not import_res[0]['success']:
-            raise JSONRPCException(import_res[0]['error'])
-        return cms
-
-    def importpubkey(self, pubkey, *, label=None, rescan=None):
-        wallet_info = self.getwalletinfo()
-        if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
-            return self.__getattr__('importpubkey')(pubkey, label, rescan)
-        desc = descsum_create('combo(' + pubkey + ')')
-        req = [{
-            'desc': desc,
-            'timestamp': 0 if rescan else 'now',
-            'label': label if label else '',
-        }]
-        import_res = self.importdescriptors(req)
-        if not import_res[0]['success']:
-            raise JSONRPCException(import_res[0]['error'])
-
-    def importaddress(self, address, *, label=None, rescan=None, p2sh=None):
-        wallet_info = self.getwalletinfo()
-        if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
-            return self.__getattr__('importaddress')(address, label, rescan, p2sh)
-        is_hex = False
-        try:
-            int(address ,16)
-            is_hex = True
-            desc = descsum_create('raw(' + address + ')')
-        except Exception:
-            desc = descsum_create('addr(' + address + ')')
-        reqs = [{
-            'desc': desc,
-            'timestamp': 0 if rescan else 'now',
-            'label': label if label else '',
-        }]
-        if is_hex and p2sh:
-            reqs.append({
-                'desc': descsum_create('p2sh(raw(' + address + '))'),
-                'timestamp': 0 if rescan else 'now',
-                'label': label if label else '',
-            })
-        import_res = self.importdescriptors(reqs)
-        for res in import_res:
-            if not res['success']:
-                raise JSONRPCException(res['error'])

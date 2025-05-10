@@ -190,9 +190,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[3].createwallet(wallet_name="wwatch", disable_private_keys=True)
         wwatch = self.nodes[3].get_wallet_rpc('wwatch')
         watchonly_address = self.nodes[0].getnewaddress()
-        watchonly_pubkey = self.nodes[0].getaddressinfo(watchonly_address)["pubkey"]
         self.watchonly_amount = Decimal(200)
-        wwatch.importpubkey(watchonly_pubkey, label="", rescan=True)
+        import_res = wwatch.importdescriptors([{"desc": self.nodes[0].getaddressinfo(watchonly_address)["desc"], "timestamp": "now"}])
+        assert_equal(import_res[0]["success"], True)
         self.watchonly_utxo = self.create_outpoints(self.nodes[0], outputs=[{watchonly_address: self.watchonly_amount}])[0]
 
         # Lock UTXO so nodes[0] doesn't accidentally spend it
@@ -565,16 +565,18 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[2].createwallet(wallet_name='wmulti', disable_private_keys=True)
         wmulti = self.nodes[2].get_wallet_rpc('wmulti')
         w2 = self.nodes[2].get_wallet_rpc(self.default_wallet_name)
-        mSigObj = wmulti.addmultisigaddress(
+        mSigObj = self.nodes[2].createmultisig(
             2,
             [
                 addr1Obj['pubkey'],
                 addr2Obj['pubkey'],
             ]
-        )['address']
+        )
+        import_res = wmulti.importdescriptors([{"desc": mSigObj["descriptor"], "timestamp": "now"}])
+        assert_equal(import_res[0]["success"], True)
 
         # Send 1.2 BTC to msig addr.
-        self.nodes[0].sendtoaddress(mSigObj, 1.2)
+        self.nodes[0].sendtoaddress(mSigObj["address"], 1.2)
         self.generate(self.nodes[0], 1)
 
         oldBalance = self.nodes[1].getbalance()
