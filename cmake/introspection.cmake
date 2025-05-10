@@ -20,8 +20,8 @@ include(TestAppendRequiredLibraries)
 test_append_atomic_library(core_interface)
 
 check_cxx_symbol_exists(std::system "cstdlib" HAVE_STD_SYSTEM)
-check_cxx_symbol_exists(::_wsystem "stdlib.h" HAVE__WSYSTEM)
-if(HAVE_STD_SYSTEM OR HAVE__WSYSTEM)
+check_cxx_symbol_exists(::system "stdlib.h" HAVE_CRT_SYSTEM)
+if(HAVE_STD_SYSTEM OR HAVE_CRT_SYSTEM)
   set(HAVE_SYSTEM 1)
 endif()
 

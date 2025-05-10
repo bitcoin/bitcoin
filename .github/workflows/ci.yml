@@ -237,6 +237,15 @@ jobs:
         run: |
           cmake --build . -j $NUMBER_OF_PROCESSORS --config Release
 
+      - name: Get bitcoind manifest
+        if: matrix.job-type == 'standard'
+        working-directory: build
+        run: |
+          mt.exe -nologo -inputresource:bin/Release/bitcoind.exe -out:bitcoind.manifest
+          cat bitcoind.manifest
+          echo
+          mt.exe -nologo -inputresource:bin/Release/bitcoind.exe -validate_manifest
+
       - name: Run test suite
         if: matrix.job-type == 'standard'
         working-directory: build
@@ -339,6 +348,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Configure Developer Command Prompt for Microsoft Visual C++
+        # Using microsoft/setup-msbuild is not enough.
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
       - name: Download built executables
         uses: actions/download-artifact@v4
         with:
@@ -346,6 +361,13 @@ jobs:
 
       - name: Run bitcoind.exe
         run: ./bin/bitcoind.exe -version
+
+      - name: Get bitcoind manifest
+        run: |
+          mt.exe -nologo -inputresource:bin/bitcoind.exe -out:bitcoind.manifest
+          cat bitcoind.manifest
+          echo
+          mt.exe -nologo -inputresource:bin/bitcoind.exe -validate_manifest
 
       - name: Run unit tests
         # Can't use ctest here like other jobs as we don't have a CMake build tree.
