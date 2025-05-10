@@ -278,6 +278,14 @@ def check_PE_subsystem_version(binary) -> bool:
         return True
     return False
 
+def check_PE_application_manifest(binary) -> bool:
+    if not binary.has_resources:
+        # No resources at all.
+        return False
+
+    rm = binary.resources_manager
+    return rm.has_manifest
+
 def check_ELF_interpreter(binary) -> bool:
     expected_interpreter = ELF_INTERPRETER_NAMES[binary.header.machine_type][binary.abstract.header.endianness]
 
@@ -307,6 +315,7 @@ lief.EXE_FORMATS.MACHO: [
 lief.EXE_FORMATS.PE: [
     ('DYNAMIC_LIBRARIES', check_PE_libraries),
     ('SUBSYSTEM_VERSION', check_PE_subsystem_version),
+    ('APPLICATION_MANIFEST', check_PE_application_manifest),
 ]
 }
 
