@@ -1001,13 +1001,13 @@ class RPCOverloadWrapper():
             desc = descsum_create('addr(' + address + ')')
         reqs = [{
             'desc': desc,
-            'timestamp': 0 if rescan else 'now',
+            'timestamp': rescan if rescan else 'now',
             'label': label if label else '',
         }]
         if is_hex and p2sh:
             reqs.append({
                 'desc': descsum_create('p2sh(raw(' + address + '))'),
-                'timestamp': 0 if rescan else 'now',
+                'timestamp': rescan if rescan else 'now',
                 'label': label if label else '',
             })
         import_res = self.importdescriptors(reqs)
