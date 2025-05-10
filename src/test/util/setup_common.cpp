@@ -63,6 +63,7 @@
 #include <future>
 #include <functional>
 #include <stdexcept>
+#include <string_view>
 
 using namespace util::hex_literals;
 using node::ApplyArgsManOptions;
@@ -72,6 +73,18 @@ using node::KernelNotifications;
 using node::LoadChainstate;
 using node::RegenerateCommitments;
 using node::VerifyLoadedChainstate;
+
+#if defined(_MSC_VER)
+#include <stdlib.h>
+static const bool g_ci_environment_setup = []() {
+    if (auto* env_ci = std::getenv("CI"); env_ci && std::string_view{env_ci} == "true") {
+        // Suppress the abort message.
+        _set_abort_behavior(0, _WRITE_ABORT_MSG);
+        return true;
+    }
+    return false;
+}();
+#endif // _MSC_VER
 
 const TranslateFn G_TRANSLATION_FUN{nullptr};
 
