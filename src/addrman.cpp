@@ -156,7 +156,7 @@ void AddrManImpl::Serialize(Stream& s_) const
      * * for each new bucket:
      *   * number of elements
      *   * for each element: index in the serialized "all new addresses"
-     * * asmap checksum
+     * * asmap version
      *
      * 2**30 is xorred with the number of buckets to make addrman deserializer v0 detect it
      * as incompatible. This is necessary because it did not check the version number on
@@ -222,9 +222,9 @@ void AddrManImpl::Serialize(Stream& s_) const
             }
         }
     }
-    // Store asmap checksum after bucket entries so that it
+    // Store asmap version after bucket entries so that it
     // can be ignored by older clients for backward compatibility.
-    s << m_netgroupman.GetAsmapChecksum();
+    s << m_netgroupman.GetAsmapVersion();
 }
 
 template <typename Stream>
@@ -330,16 +330,16 @@ void AddrManImpl::Unserialize(Stream& s_)
         }
     }
 
-    // If the bucket count and asmap checksum haven't changed, then attempt
+    // If the bucket count and asmap version haven't changed, then attempt
     // to restore the entries to the buckets/positions they were in before
     // serialization.
-    uint256 supplied_asmap_checksum{m_netgroupman.GetAsmapChecksum()};
-    uint256 serialized_asmap_checksum;
+    uint256 supplied_asmap_version{m_netgroupman.GetAsmapVersion()};
+    uint256 serialized_asmap_version;
     if (format >= Format::V2_ASMAP) {
-        s >> serialized_asmap_checksum;
+        s >> serialized_asmap_version;
     }
     const bool restore_bucketing{nUBuckets == ADDRMAN_NEW_BUCKET_COUNT &&
-        serialized_asmap_checksum == supplied_asmap_checksum};
+        serialized_asmap_version == supplied_asmap_version};
 
     if (!restore_bucketing) {
         LogDebug(BCLog::ADDRMAN, "Bucketing method was updated, re-bucketing addrman entries from disk\n");
