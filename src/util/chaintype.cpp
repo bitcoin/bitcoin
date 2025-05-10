@@ -41,3 +41,20 @@ std::optional<ChainType> ChainTypeFromString(std::string_view chain)
         return std::nullopt;
     }
 }
+
+std::string ChainTypeToDisplayString(ChainType chain)
+{
+    switch (chain) {
+    case ChainType::MAIN:
+        return "Bitcoin";
+    case ChainType::TESTNET:
+        return "testnet";
+    case ChainType::TESTNET4:
+        return "testnet4";
+    case ChainType::SIGNET:
+        return "signet";
+    case ChainType::REGTEST:
+        return "regtest";
+    }
+    assert(false);
+}
