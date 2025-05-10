@@ -854,7 +854,9 @@ std::optional<int> GetPruneHeight(const BlockManager& blockman, const CChain& ch
 
 static RPCHelpMan pruneblockchain()
 {
-    return RPCHelpMan{"pruneblockchain", "",
+    return RPCHelpMan{"pruneblockchain",
+                "\nDeletes block and undo data up to a specified height or timestamp.\n"
+                "Requires `-prune` to be enabled at startup; this action is irreversible.\n",
                 {
                     {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block height to prune up to. May be set to a discrete height, or to a " + UNIX_EPOCH_TIME + "\n"
             "                  to prune blocks whose block time is at least 2 hours older than the provided timestamp."},
