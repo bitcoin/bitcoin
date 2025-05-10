@@ -14,6 +14,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <txorphanage.h>
 #include <uint256.h>
 #include <util/check.h>
@@ -34,7 +35,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     FastRandomContext orphanage_rng{/*fDeterministic=*/true};
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    ElapseTime elapse_time{ConsumeTime(fuzzed_data_provider)};
 
     TxOrphanage orphanage;
     std::vector<COutPoint> outpoints; // Duplicates are tolerated
@@ -215,12 +216,11 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                 },
                 [&] {
                     // test mocktime and expiry
-                    SetMockTime(ConsumeTime(fuzzed_data_provider));
+                    elapse_time.set(ConsumeTime(fuzzed_data_provider));
                     auto limit = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
                     orphanage.LimitOrphans(limit, orphanage_rng);
                     Assert(orphanage.Size() <= limit);
                 });
-
         }
 
         // Set tx as potential parent to be used for future GetChildren() calls.
