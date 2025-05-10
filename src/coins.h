@@ -15,6 +15,7 @@
 #include <uint256.h>
 #include <util/check.h>
 #include <util/hasher.h>
+#include <boost/unordered/unordered_node_map.hpp>
 
 #include <assert.h>
 #include <stdint.h>
@@ -221,12 +222,12 @@ public:
  * Using an additional sizeof(void*)*4 for MAX_BLOCK_SIZE_BYTES should thus be sufficient so that
  * all implementations can allocate the nodes from the PoolAllocator.
  */
-using CCoinsMap = std::unordered_map<COutPoint,
-                                     CCoinsCacheEntry,
-                                     SaltedOutpointHasher,
-                                     std::equal_to<COutPoint>,
-                                     PoolAllocator<CoinsCachePair,
-                                                   sizeof(CoinsCachePair) + sizeof(void*) * 4>>;
+using CCoinsMap = boost::unordered_node_map<COutPoint,
+                                            CCoinsCacheEntry,
+                                            SaltedOutpointHasher,
+                                            std::equal_to<COutPoint>,
+                                            PoolAllocator<CoinsCachePair,
+                                                          sizeof(CoinsCachePair) + sizeof(void*) * 4>>;
 
 using CCoinsMapMemoryResource = CCoinsMap::allocator_type::ResourceType;
 
