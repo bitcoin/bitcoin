@@ -10,6 +10,7 @@
 #include <common/signmessage.h>
 #include <common/types.h>
 #include <logging.h>
+#include <musig.h>
 #include <node/types.h>
 #include <psbt.h>
 #include <script/descriptor.h>
@@ -153,7 +154,7 @@ public:
     /** Sign a message with the given script */
     virtual SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const { return SigningResult::SIGNING_FAILED; };
     /** Adds script and derivation path information to a PSBT, and optionally signs it. */
-    virtual std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, int sighash_type = SIGHASH_DEFAULT, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr, bool finalize = true) const { return common::PSBTError::UNSUPPORTED; }
+    virtual std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, std::optional<int> sighash_type = std::nullopt, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr, bool finalize = true) const { return common::PSBTError::UNSUPPORTED; }
 
     virtual uint256 GetID() const { return uint256(); }
 
@@ -308,6 +309,20 @@ private:
     //! Number of pre-generated keys/scripts (part of the look-ahead process, used to detect payments)
     int64_t m_keypool_size GUARDED_BY(cs_desc_man){DEFAULT_KEYPOOL_SIZE};
 
+    /** Map of a session id to MuSig2 secnonce
+     *
+     * Stores MuSig2 secnonces while the MuSig2 signing session is still ongoing.
+     * Note that these secnonces must not be reused. In order to avoid being tricked into
+     * reusing a nonce, this map is held only in memory and must not be written to disk.
+     * The side effect is that signing sessions cannot persist across restarts, but this
+     * must be done in order to prevent nonce reuse.
+     *
+     * The session id is an arbitrary value set by the signer in order for the signing logic
+     * to find ongoing signing sessions. It is the SHA256 of aggregate xonly key, + participant pubkey + sighash.
+     */
+    // TODO: Check thread safety of this
+    mutable std::map<uint256, MuSig2SecNonce> m_musig2_secnonces;
+
     bool AddDescriptorKeyWithDB(WalletBatch& batch, const CKey& key, const CPubKey &pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
     KeyMap GetKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
@@ -384,7 +399,7 @@ public:
 
     bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const override;
     SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const override;
-    std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, int sighash_type = SIGHASH_DEFAULT, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr, bool finalize = true) const override;
+    std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, std::optional<int> sighash_type = std::nullopt, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr, bool finalize = true) const override;
 
     uint256 GetID() const override;
 
