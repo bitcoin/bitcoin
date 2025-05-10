@@ -10,6 +10,9 @@ the index.
 """
 
 from decimal import Decimal
+import os
+from pathlib import Path
+import shutil
 
 from test_framework.blocktools import (
     COINBASE_MATURITY,
@@ -54,6 +57,11 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self._test_reorg_index()
         self._test_index_rejects_hash_serialized()
         self._test_init_index_after_reorg()
+        # Windows seems to require a different file format than we use in
+        # these tests
+        if os.name == 'posix':
+            self._test_outdated_index_version_migration()
+            self._test_outdated_index_version_corrupted()
 
     def block_sanity_check(self, block_info):
         block_subsidy = 50
@@ -71,8 +79,14 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         # Both none and muhash options allow the usage of the index
         index_hash_options = ['none', 'muhash']
 
-        # Generate a normal transaction and mine it
+        # Generate enough blocks so we have funds to spend. We make it
+        # deterministic so we can later use a different db to test
+        # migrating old versions of the index.
+        node.setmocktime(node.getblockheader(node.getbestblockhash())['time'])
         self.generate(self.wallet, COINBASE_MATURITY + 1)
+        node.setmocktime(0)
+
+        # Generate a normal transaction and mine it
         self.wallet.send_self_transfer(from_node=node)
         self.generate(node, 1)
 
@@ -322,6 +336,32 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self.sync_index_node()
         res1 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=None, use_index=True)
         assert_equal(res["muhash"], res1["muhash"])
+
+    def _test_outdated_index_version_migration(self):
+        self.log.info("Test a node with an outdated index version tries migration")
+        index_node = self.nodes[1]
+        self.stop_node(1)
+        index_db = index_node.chain_path / 'indexes' / 'coinstats' / 'db'
+        shutil.rmtree(index_db)
+        v0_index_db = Path(os.path.dirname(os.path.realpath(__file__))) / 'data' / 'coinstatsindex_v0'
+        shutil.copytree(v0_index_db, index_db)
+        msg1 = "Migrating coinstatsindex to new format (v1)."
+        msg2 = "Migration succeeded"
+        with index_node.assert_debug_log(expected_msgs=[msg1, msg2]):
+            self.restart_node(1, extra_args=["-coinstatsindex"])
+
+    def _test_outdated_index_version_corrupted(self):
+        self.log.info("Test a node doesn't start with an outdated index version that can not be migrated")
+        index_node = self.nodes[1]
+        self.stop_node(1)
+        index_db = index_node.chain_path / 'indexes' / 'coinstats' / 'db'
+        shutil.rmtree(index_db)
+        v0_index_db = Path(os.path.dirname(os.path.realpath(__file__))) / 'data' / 'coinstatsindex_v0_corrupt'
+        shutil.copytree(v0_index_db, index_db)
+        msg1 = "Coinstatsindex is corrupted"
+        msg2 = "Error while migrating to v1. In order to rebuild the index, remove the indexes/coinstats directory in your datadir"
+        with index_node.assert_debug_log(expected_msgs=[msg1, msg2]):
+            index_node.assert_start_raises_init_error(extra_args=["-coinstatsindex"])
 
 
 if __name__ == '__main__':
