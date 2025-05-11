@@ -11,28 +11,30 @@
 
 #include <boost/test/unit_test.hpp>
 
+BOOST_FIXTURE_TEST_SUITE(evo_netinfo_tests, BasicTestingSetup)
+
 const std::vector<std::pair</*input=*/std::string, /*expected_ret=*/NetInfoStatus>> vals{
     // Address and port specified
-    {"1.1.1.1:8888", NetInfoStatus::Success},
+    {"1.1.1.1:9999", NetInfoStatus::Success},
     // Address specified, port should default to default P2P core
     {"1.1.1.1", NetInfoStatus::Success},
-    // Mainnet P2P port on non-mainnet
-    {"1.1.1.1:9999", NetInfoStatus::BadPort},
+    // Non-mainnet port on mainnet
+    {"1.1.1.1:9998", NetInfoStatus::BadPort},
+    // Internal addresses not allowed on mainnet
+    {"127.0.0.1:9999", NetInfoStatus::BadInput},
     // Valid IPv4 formatting but invalid IPv4 address
-    {"0.0.0.0:8888", NetInfoStatus::BadInput},
+    {"0.0.0.0:9999", NetInfoStatus::BadInput},
     // Port greater than uint16_t max
     {"1.1.1.1:99999", NetInfoStatus::BadInput},
     // Only IPv4 allowed
-    {"[2606:4700:4700::1111]:8888", NetInfoStatus::BadInput},
+    {"[2606:4700:4700::1111]:9999", NetInfoStatus::BadInput},
     // Domains are not allowed
-    {"example.com:8888", NetInfoStatus::BadInput},
+    {"example.com:9999", NetInfoStatus::BadInput},
     // Incorrect IPv4 address
-    {"1.1.1.256:8888", NetInfoStatus::BadInput},
+    {"1.1.1.256:9999", NetInfoStatus::BadInput},
     // Missing address
-    {":8888", NetInfoStatus::BadInput},
+    {":9999", NetInfoStatus::BadInput},
 };
-
-BOOST_FIXTURE_TEST_SUITE(evo_netinfo_tests, RegTestingSetup)
 
 void ValidateGetEntries(const CServiceList& entries, const size_t expected_size)
 {
