@@ -126,7 +126,23 @@ template<> struct is_serializable_enum<NetInfoEntry::NetInfoType> : std::true_ty
 
 using NetInfoList = std::vector<std::reference_wrapper<const NetInfoEntry>>;
 
-class MnNetInfo
+class NetInfoInterface
+{
+public:
+    virtual ~NetInfoInterface() = default;
+
+    virtual NetInfoStatus AddEntry(const std::string& service) = 0;
+    virtual NetInfoList GetEntries() const = 0;
+
+    virtual const CService& GetPrimary() const = 0;
+    virtual bool IsEmpty() const = 0;
+    virtual NetInfoStatus Validate() const = 0;
+    virtual std::string ToString() const = 0;
+
+    virtual void Clear() = 0;
+};
+
+class MnNetInfo final : public NetInfoInterface
 {
 private:
     NetInfoEntry m_addr{};
@@ -167,15 +183,15 @@ public:
         m_addr = NetInfoEntry{service};
     }
 
-    NetInfoStatus AddEntry(const std::string& service);
-    NetInfoList GetEntries() const;
+    NetInfoStatus AddEntry(const std::string& service) override;
+    NetInfoList GetEntries() const override;
 
-    const CService& GetPrimary() const;
-    bool IsEmpty() const { return *this == MnNetInfo(); }
-    NetInfoStatus Validate() const;
-    std::string ToString() const;
+    const CService& GetPrimary() const override;
+    bool IsEmpty() const override { return *this == MnNetInfo(); }
+    NetInfoStatus Validate() const override;
+    std::string ToString() const override;
 
-    void Clear() { m_addr.Clear(); }
+    void Clear() override { m_addr.Clear(); }
 };
 
 inline std::shared_ptr<MnNetInfo> MakeNetInfo()
