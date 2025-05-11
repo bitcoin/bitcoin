@@ -185,8 +185,8 @@ class BlockchainTest(BitcoinTestFramework):
             '-testactivationheight=dip0024@13',
             '-testactivationheight=brr@14',
             '-testactivationheight=v19@15',
-            '-testactivationheight=v20@901',
-            '-testactivationheight=mn_rr@902',
+            '-testactivationheight=v20@412', # no earlier than DIP0003
+            '-testactivationheight=mn_rr@16',
         ])
 
         res = self.nodes[0].getblockchaininfo()
@@ -212,8 +212,8 @@ class BlockchainTest(BitcoinTestFramework):
             'dip0024': { 'type': 'buried', 'active': True, 'height': 13},
             'realloc': { 'type': 'buried', 'active': True, 'height': 14},
             'v19': { 'type': 'buried', 'active': True, 'height': 15},
-            'v20': { 'type': 'buried', 'active': False, 'height': 901},
-            'mn_rr': { 'type': 'buried', 'active': False, 'height': 902},
+            'v20': { 'type': 'buried', 'active': False, 'height': 412},
+            'mn_rr': { 'type': 'buried', 'active': True, 'height': 16},
             'withdrawals': {
                 'type': 'bip9',
                 'bip9': {
