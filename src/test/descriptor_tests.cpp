@@ -48,7 +48,7 @@ constexpr int SIGNABLE = 8; // We can sign with this descriptor (this is not tru
 constexpr int DERIVE_HARDENED = 16; // The final derivation is hardened, i.e. ends with *' or *h
 constexpr int MIXED_PUBKEYS = 32;
 constexpr int XONLY_KEYS = 64; // X-only pubkeys are in use (and thus inferring/caching may swap parity of pubkeys/keyids)
-constexpr int MISSING_PRIVKEYS = 128; // Not all private keys are available, so ToPrivateString will fail.
+constexpr int MISSING_PRIVKEYS = 128; // Not all private keys are available.
 constexpr int SIGNABLE_FAILS = 256; // We can sign with this descriptor, but actually trying to sign will fail
 
 /** Compare two descriptors. If only one of them has a checksum, the checksum is ignored. */
