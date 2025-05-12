@@ -9,6 +9,7 @@ Otherwise the exit status will be 1 and it will log which executables failed whi
 '''
 import re
 import sys
+from typing import cast
 
 import lief
 
@@ -26,13 +27,13 @@ def check_ELF_RELRO(binary) -> bool:
         # However, the dynamic linker need to write to this area so these are RW.
         # Glibc itself takes care of mprotecting this area R after relocations are finished.
         # See also https://marc.info/?l=binutils&m=1498883354122353
-        if segment.type == lief.ELF.SEGMENT_TYPES.GNU_RELRO:
+        if segment.type == lief.ELF.Segment.TYPE.GNU_RELRO:
             have_gnu_relro = True
 
     have_bindnow = False
     try:
-        flags = binary.get(lief.ELF.DYNAMIC_TAGS.FLAGS)
-        if flags.value & lief.ELF.DYNAMIC_FLAGS.BIND_NOW:
+        flags = binary.get(lief.ELF.DynamicEntry.TAG.FLAGS)
+        if flags.value & lief.ELF.DynamicEntryFlags.FLAG.BIND_NOW:
             have_bindnow = True
     except Exception:
         have_bindnow = False
@@ -137,13 +138,13 @@ def check_ELF_FORTIFY(binary) -> bool:
 
 def check_PE_DYNAMIC_BASE(binary) -> bool:
     '''PIE: DllCharacteristics bit 0x40 signifies dynamicbase (ASLR)'''
-    return lief.PE.DLL_CHARACTERISTICS.DYNAMIC_BASE in binary.optional_header.dll_characteristics_lists
+    return lief.PE.OptionalHeader.DLL_CHARACTERISTICS.DYNAMIC_BASE in binary.optional_header.dll_characteristics_lists
 
 # Must support high-entropy 64-bit address space layout randomization
 # in addition to DYNAMIC_BASE to have secure ASLR.
 def check_PE_HIGH_ENTROPY_VA(binary) -> bool:
     '''PIE: DllCharacteristics bit 0x20 signifies high-entropy ASLR'''
-    return lief.PE.DLL_CHARACTERISTICS.HIGH_ENTROPY_VA in binary.optional_header.dll_characteristics_lists
+    return lief.PE.OptionalHeader.DLL_CHARACTERISTICS.HIGH_ENTROPY_VA in binary.optional_header.dll_characteristics_lists
 
 def check_PE_RELOC_SECTION(binary) -> bool:
     '''Check for a reloc section. This is required for functional ASLR.'''
@@ -174,7 +175,7 @@ def check_MACHO_NOUNDEFS(binary) -> bool:
     '''
     Check for no undefined references.
     '''
-    return binary.header.has(lief.MachO.HEADER_FLAGS.NOUNDEFS)
+    return binary.header.has(lief.MachO.Header.FLAGS.NOUNDEFS)
 
 def check_MACHO_FIXUP_CHAINS(binary) -> bool:
     '''
@@ -246,28 +247,29 @@ BASE_MACHO = [
 ]
 
 CHECKS = {
-    lief.EXE_FORMATS.ELF: {
-        lief.ARCHITECTURES.X86: BASE_ELF + [('CONTROL_FLOW', check_ELF_CONTROL_FLOW), ('FORTIFY', check_ELF_FORTIFY)],
-        lief.ARCHITECTURES.ARM: BASE_ELF + [('FORTIFY', check_ELF_FORTIFY)],
-        lief.ARCHITECTURES.ARM64: BASE_ELF + [('FORTIFY', check_ELF_FORTIFY)],
-        lief.ARCHITECTURES.PPC: BASE_ELF + [('FORTIFY', check_ELF_FORTIFY)],
-        lief.ARCHITECTURES.RISCV: BASE_ELF, # Skip FORTIFY. See https://github.com/lief-project/LIEF/issues/1082.
+    lief.Binary.FORMATS.ELF: {
+        lief.Header.ARCHITECTURES.X86_64: BASE_ELF + [('CONTROL_FLOW', check_ELF_CONTROL_FLOW), ('FORTIFY', check_ELF_FORTIFY)],
+        lief.Header.ARCHITECTURES.ARM: BASE_ELF + [('FORTIFY', check_ELF_FORTIFY)],
+        lief.Header.ARCHITECTURES.ARM64: BASE_ELF + [('FORTIFY', check_ELF_FORTIFY)],
+        lief.Header.ARCHITECTURES.PPC: BASE_ELF + [('FORTIFY', check_ELF_FORTIFY)],
+        lief.Header.ARCHITECTURES.RISCV: BASE_ELF, # Skip FORTIFY. See https://github.com/lief-project/LIEF/issues/1082.
     },
-    lief.EXE_FORMATS.PE: {
-        lief.ARCHITECTURES.X86: BASE_PE,
+    lief.Binary.FORMATS.PE: {
+        lief.Header.ARCHITECTURES.X86_64: BASE_PE,
     },
-    lief.EXE_FORMATS.MACHO: {
-        lief.ARCHITECTURES.X86: BASE_MACHO + [('PIE', check_PIE),
+    lief.Binary.FORMATS.MACHO: {
+        lief.Header.ARCHITECTURES.X86_64: BASE_MACHO + [('PIE', check_PIE),
                                               ('NX', check_NX),
                                               ('CONTROL_FLOW', check_MACHO_CONTROL_FLOW)],
-        lief.ARCHITECTURES.ARM64: BASE_MACHO + [('BRANCH_PROTECTION', check_MACHO_BRANCH_PROTECTION)],
+        lief.Header.ARCHITECTURES.ARM64: BASE_MACHO + [('BRANCH_PROTECTION', check_MACHO_BRANCH_PROTECTION)],
     }
 }
 
 if __name__ == '__main__':
     retval: int = 0
     for filename in sys.argv[1:]:
-        binary = lief.parse(filename)
+        binary = cast(lief.Binary, lief.parse(filename))
+
         etype = binary.format
         arch = binary.abstract.header.architecture
         binary.concrete
