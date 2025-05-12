@@ -303,6 +303,18 @@ struct CRecipient
     bool fSubtractFeeFromAmount;
 };
 
+// Struct containing all of the info from WalletDescriptor, except with the descriptor as a string,
+// and without its ID or cache.
+// Used when exporting descriptors from the wallet.
+struct WalletDescInfo {
+    std::string descriptor;
+    uint64_t creation_time;
+    bool active;
+    std::optional<bool> internal;
+    std::optional<std::pair<int64_t,int64_t>> range;
+    int64_t next_index;
+};
+
 class WalletRescanReserver; //forward declarations for ScanForWalletTransactions/RescanFromTime
 /**
  * A CWallet maintains a set of transactions and balances, and provides the ability to create new transactions.
@@ -1072,6 +1084,9 @@ public:
     //! Find the private key for the given key id from the wallet's descriptors, if available
     //! Returns nullopt when no descriptor has the key or if the wallet is locked.
     std::optional<CKey> GetKey(const CKeyID& keyid) const;
+
+    //! Export the descriptors from this wallet so that they can be imported elsewhere
+    util::Result<std::vector<WalletDescInfo>> ExportDescriptors(bool export_private) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 };
 
 /**
