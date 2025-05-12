@@ -893,7 +893,7 @@ public:
      */
     void postInitProcess();
 
-    bool BackupWallet(const std::string& strDest) const;
+    [[nodiscard]] bool BackupWallet(const std::string& strDest) const;
 
     /* Returns true if HD is enabled */
     bool IsHDEnabled() const;
@@ -1078,6 +1078,10 @@ public:
 
     //! Export the descriptors from this wallet so that they can be imported elsewhere
     util::Expected<std::vector<WalletDescInfo>, std::string> ExportDescriptors(bool export_private) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Make a new watchonly wallet file containing the public descriptors from this wallet
+    //! The exported watchonly wallet file will be named and placed at the path specified in 'destination'
+    util::Result<std::string> ExportWatchOnlyWallet(const fs::path& destination, WalletContext& context) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 };
 
 /**
