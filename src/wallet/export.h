@@ -27,6 +27,10 @@ struct WalletDescInfo {
 
 //! Export the descriptors from a wallet so that they can be imported elsewhere
 util::Expected<std::vector<WalletDescInfo>, std::string> ExportDescriptors(const CWallet& wallet, bool export_private) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+
+//! Make a new watchonly wallet file containing the public descriptors from this wallet
+//! The exported watchonly wallet file will be named and placed at the path specified in 'destination'
+util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs::path& destination, WalletContext& context) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_EXPORT_H
