@@ -23,6 +23,7 @@
 #include <tinyformat.h>
 #include <uint256.h>
 #include <util/btcsignals.h>
+#include <util/expected.h>
 #include <util/fs.h>
 #include <util/hasher.h>
 #include <util/log.h>
