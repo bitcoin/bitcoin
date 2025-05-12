@@ -726,6 +726,8 @@ class WalletTest(BitcoinTestFramework):
             txid_a = self.nodes[0].sendtoaddress(addr_a, 0.01)
             txid_b = self.nodes[0].sendtoaddress(addr_b, 0.01)
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+            # Prevent race of listunspent with outstanding TxAddedToMempool notifications
+            self.nodes[0].syncwithvalidationinterfacequeue()
             # Now import the descriptors, make sure we can identify on which descriptor each coin was received.
             self.nodes[0].createwallet(wallet_name="wo", descriptors=True, disable_private_keys=True)
             wo_wallet = self.nodes[0].get_wallet_rpc("wo")
