@@ -901,7 +901,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         for node in self.nodes:
             node.mocktime = self.mocktime
 
-    def wait_until(self, test_function, timeout=60, lock=None, sleep=0.5, do_assert=True):
+    def wait_until(self, test_function, timeout=60, lock=None, sleep=0.05, do_assert=True):
         return wait_until_helper(test_function, timeout=timeout, lock=lock, timeout_factor=self.options.timeout_factor, sleep=sleep, do_assert=do_assert)
 
     # Private helper methods. These should not be accessed by the subclass test scripts.
