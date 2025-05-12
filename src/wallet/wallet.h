@@ -23,6 +23,7 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <util/expected.h>
 #include <util/fs.h>
 #include <util/hasher.h>
 #include <util/result.h>
@@ -300,6 +301,18 @@ struct CRecipient
     CTxDestination dest;
     CAmount nAmount;
     bool fSubtractFeeFromAmount;
+};
+
+// Struct containing all of the info from WalletDescriptor, except with the descriptor as a string,
+// and without its ID or cache.
+// Used when exporting descriptors from the wallet.
+struct WalletDescInfo {
+    std::string descriptor;
+    uint64_t creation_time;
+    bool active;
+    std::optional<bool> internal;
+    std::optional<std::pair<int64_t,int64_t>> range;
+    int64_t next_index;
 };
 
 class WalletRescanReserver; //forward declarations for ScanForWalletTransactions/RescanFromTime
@@ -1075,6 +1088,9 @@ public:
 
     //! Disconnect chain notifications and wait for all notifications to be processed
     void DisconnectChainNotifications();
+
+    //! Export the descriptors from this wallet so that they can be imported elsewhere
+    util::Expected<std::vector<WalletDescInfo>, std::string> ExportDescriptors(bool export_private) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 };
 
 /**
