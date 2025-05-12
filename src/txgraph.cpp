@@ -336,6 +336,27 @@ private:
         return a->m_sequence <=> b->m_sequence;
     }
 
+    /** Compare two entries (which must both exist within the main graph). */
+    std::strong_ordering CompareMainTransactions(GraphIndex a, GraphIndex b) const noexcept
+    {
+        Assume(a < m_entries.size() && b < m_entries.size());
+        const auto& entry_a = m_entries[a];
+        const auto& entry_b = m_entries[b];
+        // Compare chunk feerates, and return result if it differs.
+        auto feerate_cmp = FeeRateCompare(entry_b.m_main_chunk_feerate, entry_a.m_main_chunk_feerate);
+        if (feerate_cmp < 0) return std::strong_ordering::less;
+        if (feerate_cmp > 0) return std::strong_ordering::greater;
+        // Compare Cluster m_sequence as tie-break for equal chunk feerates.
+        const auto& locator_a = entry_a.m_locator[0];
+        const auto& locator_b = entry_b.m_locator[0];
+        Assume(locator_a.IsPresent() && locator_b.IsPresent());
+        if (locator_a.cluster != locator_b.cluster) {
+            return CompareClusters(locator_a.cluster, locator_b.cluster);
+        }
+        // As final tie-break, compare position within cluster linearization.
+        return entry_a.m_main_lin_index <=> entry_b.m_main_lin_index;
+    }
+
 public:
     /** Construct a new TxGraphImpl with the specified maximum cluster count. */
     explicit TxGraphImpl(DepGraphIndex max_cluster_count) noexcept :
@@ -1887,16 +1908,8 @@ std::strong_ordering TxGraphImpl::CompareMainOrder(const Ref& a, const Ref& b) n
     Assume(locator_b.IsPresent());
     MakeAcceptable(*locator_a.cluster);
     MakeAcceptable(*locator_b.cluster);
-    // Compare chunk feerates, and return result if it differs.
-    auto feerate_cmp = FeeRateCompare(entry_b.m_main_chunk_feerate, entry_a.m_main_chunk_feerate);
-    if (feerate_cmp < 0) return std::strong_ordering::less;
-    if (feerate_cmp > 0) return std::strong_ordering::greater;
-    // Compare Cluster* as tie-break for equal chunk feerates.
-    if (locator_a.cluster != locator_b.cluster) {
-        return CompareClusters(locator_a.cluster, locator_b.cluster);
-    }
-    // As final tie-break, compare position within cluster linearization.
-    return entry_a.m_main_lin_index <=> entry_b.m_main_lin_index;
+    // Invoke comparison logic.
+    return CompareMainTransactions(GetRefIndex(a), GetRefIndex(b));
 }
 
 TxGraph::GraphIndex TxGraphImpl::CountDistinctClusters(std::span<const Ref* const> refs, bool main_only) noexcept
