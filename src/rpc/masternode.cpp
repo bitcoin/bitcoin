@@ -140,7 +140,7 @@ static RPCHelpMan masternode_outputs()
     }
     UniValue outputsArr(UniValue::VARR);
     for (const auto& out : vPossibleCoins) {
-        outputsArr.push_back(out.GetInputCoin().outpoint.ToStringShort());
+        outputsArr.push_back(out.outpoint.ToStringShort());
     }
 
     return outputsArr;

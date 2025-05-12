@@ -68,14 +68,14 @@ bool CWallet::SelectTxDSInsByDenomination(int nDenom, CAmount nValueMax, std::ve
     Shuffle(vCoins.rbegin(), vCoins.rend(), FastRandomContext());
 
     for (const auto& out : vCoins) {
-        uint256 txHash = out.tx->GetHash();
-        CAmount nValue = out.tx->tx->vout[out.i].nValue;
+        uint256 txHash = out.outpoint.hash;
+        CAmount nValue = out.txout.nValue;
         if (setRecentTxIds.find(txHash) != setRecentTxIds.end()) continue; // no duplicate txids
         if (nValueTotal + nValue > nValueMax) continue;
         if (nValue != nDenomAmount) continue;
 
-        CTxIn txin = CTxIn(txHash, out.i);
-        CScript scriptPubKey = out.tx->tx->vout[out.i].scriptPubKey;
+        CTxIn txin = CTxIn(txHash, out.outpoint.n);
+        CScript scriptPubKey = out.txout.scriptPubKey;
         int nRounds = GetRealOutpointCoinJoinRounds(txin.prevout);
 
         nValueTotal += nValue;
@@ -95,7 +95,7 @@ struct CompareByPriority
     bool operator()(const COutput& t1,
                     const COutput& t2) const
     {
-        return CoinJoin::CalculateAmountPriority(t1.GetInputCoin().effective_value) > CoinJoin::CalculateAmountPriority(t2.GetInputCoin().effective_value);
+        return CoinJoin::CalculateAmountPriority(t1.effective_value) > CoinJoin::CalculateAmountPriority(t2.effective_value);
     }
 };
 
@@ -114,7 +114,7 @@ bool CWallet::SelectDenominatedAmounts(CAmount nValueMax, std::set<CAmount>& set
     std::sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
 
     for (const auto& out : vCoins) {
-        CAmount nValue = out.tx->tx->vout[out.i].nValue;
+        CAmount nValue = out.txout.nValue;
         if (nValueTotal + nValue <= nValueMax) {
             nValueTotal += nValue;
             setAmountsRet.emplace(nValue);
@@ -169,7 +169,7 @@ std::vector<CompactTallyItem> CWallet::SelectCoinsGroupedByAddresses(bool fSkipD
             if(!(mine & filter)) continue;
 
             auto itTallyItem = mapTally.find(txdest);
-            if (nMaxOupointsPerAddress != -1 && itTallyItem != mapTally.end() && int64_t(itTallyItem->second.vecInputCoins.size()) >= nMaxOupointsPerAddress) continue;
+            if (nMaxOupointsPerAddress != -1 && itTallyItem != mapTally.end() && int64_t(itTallyItem->second.outpoints.size()) >= nMaxOupointsPerAddress) continue;
 
             if(IsSpent(outpoint.hash, i) || IsLockedCoin(outpoint.hash, i)) continue;
 
@@ -191,7 +191,7 @@ std::vector<CompactTallyItem> CWallet::SelectCoinsGroupedByAddresses(bool fSkipD
                 itTallyItem->second.txdest = txdest;
             }
             itTallyItem->second.nAmount += wtx.tx->vout[i].nValue;
-            itTallyItem->second.vecInputCoins.emplace_back(wtx.tx, i);
+            itTallyItem->second.outpoints.emplace_back(COutPoint{outpoint.hash, i});
         }
     }
 

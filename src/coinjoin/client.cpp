@@ -1468,12 +1468,12 @@ bool CCoinJoinClientSession::MakeCollateralAmounts(const CompactTallyItem& tally
     if (!CCoinJoinClientOptions::IsEnabled()) return false;
 
     // Denominated input is always a single one, so we can check its amount directly and return early
-    if (!fTryDenominated && tallyItem.vecInputCoins.size() == 1 && CoinJoin::IsDenominatedAmount(tallyItem.nAmount)) {
+    if (!fTryDenominated && tallyItem.outpoints.size() == 1 && CoinJoin::IsDenominatedAmount(tallyItem.nAmount)) {
         return false;
     }
 
     // Skip single inputs that can be used as collaterals already
-    if (tallyItem.vecInputCoins.size() == 1 && CoinJoin::IsCollateralAmount(tallyItem.nAmount)) {
+    if (tallyItem.outpoints.size() == 1 && CoinJoin::IsCollateralAmount(tallyItem.nAmount)) {
         return false;
     }
 
@@ -1562,10 +1562,10 @@ bool CCoinJoinClientSession::CreateCollateralTransaction(CMutableTransaction& tx
     }
 
     const auto& output = vCoins.at(GetRand(vCoins.size()));
-    const CTxOut txout = output.tx->tx->vout[output.i];
+    const CTxOut txout = output.txout;
 
     txCollateral.vin.clear();
-    txCollateral.vin.emplace_back(output.tx->GetHash(), output.i);
+    txCollateral.vin.emplace_back(output.outpoint.hash, output.outpoint.n);
     txCollateral.vout.clear();
 
     // pay collateral charge in fees
@@ -1636,7 +1636,7 @@ bool CCoinJoinClientSession::CreateDenominated(CAmount nBalanceToDenominate, con
     if (!CCoinJoinClientOptions::IsEnabled()) return false;
 
     // denominated input is always a single one, so we can check its amount directly and return early
-    if (tallyItem.vecInputCoins.size() == 1 && CoinJoin::IsDenominatedAmount(tallyItem.nAmount)) {
+    if (tallyItem.outpoints.size() == 1 && CoinJoin::IsDenominatedAmount(tallyItem.nAmount)) {
         return false;
     }
 

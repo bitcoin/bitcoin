@@ -128,7 +128,7 @@ struct CompactTallyItem
 {
     CTxDestination txdest;
     CAmount nAmount{0};
-    std::vector<CInputCoin> vecInputCoins;
+    std::vector<COutPoint> outpoints;
     CompactTallyItem() = default;
 };
 
@@ -345,6 +345,9 @@ private:
     // Decreases amount of nKeysLeftSinceAutoBackup after KeepDestination
     void KeepDestinationCallback(bool erased) override;
 
+    /** Provider of aplication-wide arguments. */
+    const ArgsManager& m_args;
+
     /** Interface for accessing chain state. */
     interfaces::Chain* m_chain;
 
@@ -436,8 +439,9 @@ public:
     unsigned int nMasterKeyMaxID = 0;
 
     /** Construct wallet with specified name and database implementation. */
-    CWallet(interfaces::Chain* chain, interfaces::CoinJoin::Loader* coinjoin_loader, const std::string& name, std::unique_ptr<WalletDatabase> database)
+    CWallet(interfaces::Chain* chain, interfaces::CoinJoin::Loader* coinjoin_loader, const std::string& name, const ArgsManager& args, std::unique_ptr<WalletDatabase> database)
         : fOnlyMixingAllowed(false),
+          m_args(args),
           m_chain(chain),
           m_coinjoin_loader(coinjoin_loader),
           m_name(name),

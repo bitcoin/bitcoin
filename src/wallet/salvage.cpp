@@ -133,7 +133,7 @@ bool RecoverDatabaseFile(const fs::path& file_path, bilingual_str& error, std::v
     }
 
     DbTxn* ptxn = env->TxnBegin();
-    CWallet dummyWallet(nullptr, /*coinjoin_loader=*/ nullptr, "", CreateDummyWalletDatabase());
+    CWallet dummyWallet(/*chain=*/nullptr, /*coinjoin_loader=*/nullptr, "", gArgs, CreateDummyWalletDatabase());
     dummyWallet.SetupLegacyScriptPubKeyMan();
     for (KeyValPair& row : salvagedData)
     {

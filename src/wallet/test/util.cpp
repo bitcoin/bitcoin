@@ -15,9 +15,9 @@
 
 #include <memory>
 
-std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, CChain& cchain, const CKey& key)
+std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, CChain& cchain, ArgsManager& args, const CKey& key)
 {
-    auto wallet = std::make_unique<CWallet>(&chain, &coinjoin_loader, "", CreateMockWalletDatabase());
+    auto wallet = std::make_unique<CWallet>(&chain, &coinjoin_loader, "", args, CreateMockWalletDatabase());
     {
         LOCK(wallet->cs_wallet);
         wallet->SetLastBlockProcessed(cchain.Height(), cchain.Tip()->GetBlockHash());
