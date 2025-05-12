@@ -11,7 +11,6 @@ from test_framework.util import (
 )
 from test_framework.governance import EXPECTED_STDERR_NO_GOV_PRUNE
 
-# TODO: remove testactivationheight=v20@3000 when it will be activated from block 1
 DEPLOYMENT_ARGS = ["-testactivationheight=v20@3000", "-dip3params=3000:3000"]
 
 class FeatureIndexPruneTest(BitcoinTestFramework):
@@ -145,7 +144,7 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
         for node in self.nodes[:2]:
             with node.assert_debug_log(['limited pruning to height 2489']):
                 pruneheight_new = node.pruneblockchain(2500)
-                assert_equal(pruneheight_new, 2125)
+                assert_equal(pruneheight_new, 2196)
 
         self.log.info("ensure that prune locks don't prevent indices from failing in a reorg scenario")
         with self.nodes[0].assert_debug_log(['basic block filter index prune lock moved back to 2480']):
