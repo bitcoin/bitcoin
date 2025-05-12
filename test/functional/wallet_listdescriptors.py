@@ -107,7 +107,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
             'desc': descsum_create('wpkh(' + xpub_acc + ')'),
             'timestamp': TIME_GENESIS_BLOCK,
         }])
-        assert_raises_rpc_error(-4, 'Can\'t get descriptor string', watch_only_wallet.listdescriptors, True)
+        assert_raises_rpc_error(-4, 'Can\'t get private descriptor string for watch-only wallets', watch_only_wallet.listdescriptors, True)
 
         self.log.info('Test non-active non-range combo descriptor')
         node.createwallet(wallet_name='w4', blank=True)
@@ -122,7 +122,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
                 {'active': False,
                  'desc': 'combo(0227d85ba011276cf25b51df6a188b75e604b38770a462b2d0e9fb2fc839ef5d3f)#np574htj',
                  'timestamp': TIME_GENESIS_BLOCK},
-            ]
+            ],
         }
         assert_equal(expected, wallet.listdescriptors())
 
