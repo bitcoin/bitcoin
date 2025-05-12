@@ -1739,6 +1739,11 @@ void CWallet::InitWalletFlags(uint64_t flags)
     if (!LoadWalletFlags(flags)) assert(false);
 }
 
+uint64_t CWallet::GetWalletFlags() const
+{
+    return m_wallet_flags;
+}
+
 void CWallet::MaybeUpdateBirthTime(int64_t time)
 {
     int64_t birthtime = m_birth_time.load();
