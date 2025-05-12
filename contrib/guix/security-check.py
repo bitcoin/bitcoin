@@ -6,6 +6,10 @@
 Perform basic security checks on a series of executables.
 Exit status will be 0 if successful, and the program will be silent.
 Otherwise the exit status will be 1 and it will log which executables failed which checks.
+
+Example usage:
+
+    find ../path/to/guix/binaries -type f -executable | xargs python3 contrib/guix/security-check.py
 '''
 import re
 import sys
