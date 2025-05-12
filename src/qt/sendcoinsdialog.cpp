@@ -787,9 +787,6 @@ void SendCoinsDialog::on_buttonMinimizeFee_clicked()
 
 void SendCoinsDialog::useAvailableBalance(SendCoinsEntry* entry)
 {
-    // Include watch-only for wallets without private key
-    m_coin_control->fAllowWatchOnly = model->wallet().privateKeysDisabled() && !model->wallet().hasExternalSigner();
-
     // Same behavior as send: if we have selected coins, only obtain their available balance.
     // Copy to avoid modifying the member's data.
     CCoinControl coin_control = *m_coin_control;
@@ -847,8 +844,6 @@ void SendCoinsDialog::updateCoinControlState()
     // Either custom fee will be used or if not selected, the confirmation target from dropdown box
     m_coin_control->m_confirm_target = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
     m_coin_control->m_signal_bip125_rbf = ui->optInRBF->isChecked();
-    // Include watch-only for wallets without private key
-    m_coin_control->fAllowWatchOnly = model->wallet().privateKeysDisabled() && !model->wallet().hasExternalSigner();
 }
 
 void SendCoinsDialog::updateNumberOfBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, SyncType synctype, SynchronizationState sync_state) {
