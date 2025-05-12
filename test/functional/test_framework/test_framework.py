@@ -1814,26 +1814,19 @@ class DashTestFramework(BitcoinTestFramework):
 
         self.wait_until(check_dkg_comitments, timeout=timeout, sleep=1)
 
-    def wait_for_quorum_list(self, quorum_hash, nodes, timeout=15, sleep=2, llmq_type_name="llmq_test"):
+    def wait_for_quorum_list(self, quorum_hash, nodes, timeout=15, llmq_type_name="llmq_test"):
         def wait_func():
-            self.log.info("quorums: " + str(self.nodes[0].quorum("list")))
-            if quorum_hash in self.nodes[0].quorum("list")[llmq_type_name]:
-                return True
-            self.bump_mocktime(sleep, nodes=nodes)
-            self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(nodes))
-            return False
-        self.wait_until(wait_func, timeout=timeout, sleep=sleep)
+            quorums = self.nodes[0].quorum('list')
+            self.log.info(f"quorums: {quorums}")
+            return quorum_hash in quorums[llmq_type_name]
+        self.wait_until(wait_func, timeout=timeout, sleep=0.05)
 
-    def wait_for_quorums_list(self, quorum_hash_0, quorum_hash_1, nodes, llmq_type_name="llmq_test",  timeout=15, sleep=2):
+    def wait_for_quorums_list(self, quorum_hash_0, quorum_hash_1, nodes, llmq_type_name="llmq_test",  timeout=15):
         def wait_func():
-            self.log.info("h("+str(self.nodes[0].getblockcount())+") quorums: " + str(self.nodes[0].quorum("list")))
-            if quorum_hash_0 in self.nodes[0].quorum("list")[llmq_type_name]:
-                if quorum_hash_1 in self.nodes[0].quorum("list")[llmq_type_name]:
-                    return True
-            self.bump_mocktime(sleep, nodes=nodes)
-            self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(nodes))
-            return False
-        self.wait_until(wait_func, timeout=timeout, sleep=sleep)
+            quorums = self.nodes[0].quorum("list")
+            self.log.info(f"h({self.nodes[0].getblockcount()}) quorums: {quorums}")
+            return quorum_hash_0 in quorums[llmq_type_name] and quorum_hash_1 in quorums[llmq_type_name]
+        self.wait_until(wait_func, timeout=timeout, sleep=0.05)
 
     def move_blocks(self, nodes, num_blocks):
         self.bump_mocktime(1, nodes=nodes)
