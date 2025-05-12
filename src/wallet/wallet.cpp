@@ -4599,4 +4599,31 @@ void CWallet::DisconnectChainNotifications()
     }
 }
 
+util::Expected<std::vector<WalletDescInfo>, std::string> CWallet::ExportDescriptors(bool export_private) const
+{
+    AssertLockHeld(cs_wallet);
+    std::vector<WalletDescInfo> wallet_descriptors;
+    for (const auto& spk_man : GetAllScriptPubKeyMans()) {
+        const auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man);
+        if (!desc_spk_man) {
+            return util::Unexpected{"Unexpected ScriptPubKey manager type."};
+        }
+        LOCK(desc_spk_man->cs_desc_man);
+        const auto& wallet_descriptor = desc_spk_man->GetWalletDescriptor();
+        std::string descriptor;
+        if (!Assume(desc_spk_man->GetDescriptorString(descriptor, export_private))) {
+            return util::Unexpected{"Can't get descriptor string."};
+        }
+        const bool is_range = wallet_descriptor.descriptor->IsRange();
+        wallet_descriptors.emplace_back(
+            descriptor,
+            wallet_descriptor.creation_time,
+            IsActiveScriptPubKeyMan(*desc_spk_man),
+            IsInternalScriptPubKeyMan(desc_spk_man),
+            is_range ? std::optional(std::make_pair(wallet_descriptor.range_start, wallet_descriptor.range_end)) : std::nullopt,
+            wallet_descriptor.next_index
+        );
+    }
+    return wallet_descriptors;
+}
 } // namespace wallet
