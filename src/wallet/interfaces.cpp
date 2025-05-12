@@ -399,7 +399,6 @@ public:
         result.balance = bal.m_mine_trusted;
         result.unconfirmed_balance = bal.m_mine_untrusted_pending;
         result.immature_balance = bal.m_mine_immature;
-        result.have_watch_only = false;
         return result;
     }
     bool tryGetBalances(WalletBalances& balances, uint256& block_hash) override
