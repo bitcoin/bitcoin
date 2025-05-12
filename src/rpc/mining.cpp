@@ -164,11 +164,41 @@ static UniValue generateBlocks(ChainstateManager& chainman, Mining& miner, const
 {
     UniValue blockHashes(UniValue::VARR);
     while (nGenerate > 0 && !chainman.m_interrupt) {
-        std::unique_ptr<BlockTemplate> block_template(miner.createNewBlock({ .coinbase_outputs_scripts = coinbase_outputs_scripts }));
+        std::unique_ptr<BlockTemplate> block_template(miner.createNewBlock({ .coinbase_output_script = coinbase_outputs_scripts.at(0) }));
         CHECK_NONFATAL(block_template);
 
+        CBlock block = block_template->getBlock();
+        const auto numOutputs = coinbase_outputs_scripts.size();
+        CAmount totalReward = block.vtx[0]->vout[0].nValue;
+        CAmount rewardParted = totalReward / numOutputs;
+        CAmount remainder = totalReward % numOutputs;
+
+        CMutableTransaction mutable_coinbase(*block.vtx.at(0));
+
+        int witness_index = GetWitnessCommitmentIndex(block);
+        CTxOut witness_output;
+        bool has_witness_commitment = false;
+        if (witness_index != -1){
+            witness_output = mutable_coinbase.vout.at(witness_index);
+            has_witness_commitment = true;
+        }
+
+        mutable_coinbase.vout.clear();
+        for (size_t i = 0; i < numOutputs; ++i) {
+            CAmount outReward = (i < static_cast<size_t>(remainder) ? rewardParted + 1 : rewardParted);
+            CTxOut newTxOut(outReward, coinbase_outputs_scripts[i]);
+            mutable_coinbase.vout.push_back(newTxOut);
+        }
+
+        if (has_witness_commitment) {
+            mutable_coinbase.vout.push_back(witness_output);
+        }
+
+        block.vtx.at(0) = MakeTransactionRef(mutable_coinbase);
+        RegenerateCommitments(block, chainman);
+
         std::shared_ptr<const CBlock> block_out;
-        if (!GenerateBlock(chainman, block_template->getBlock(), nMaxTries, block_out, /*process_new_block=*/true)) {
+        if (!GenerateBlock(chainman, std::move(block), nMaxTries, block_out, /*process_new_block=*/true)) {
             break;
         }
 
@@ -426,7 +456,7 @@ static RPCHelpMan generateblock()
     {
         LOCK(chainman.GetMutex());
         {
-            std::unique_ptr<BlockTemplate> block_template{miner.createNewBlock({.use_mempool = false, .coinbase_outputs_scripts = {coinbase_output_script}})};
+            std::unique_ptr<BlockTemplate> block_template{miner.createNewBlock({.use_mempool = false, .coinbase_output_script = coinbase_output_script})};
             CHECK_NONFATAL(block_template);
 
             block = block_template->getBlock();

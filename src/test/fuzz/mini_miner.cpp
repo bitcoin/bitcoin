@@ -185,7 +185,7 @@ FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
     miner_options.blockMinFeeRate = target_feerate;
     miner_options.nBlockMaxWeight = MAX_BLOCK_WEIGHT;
     miner_options.test_block_validity = false;
-    miner_options.coinbase_outputs_scripts = {CScript() << OP_0};
+    miner_options.coinbase_output_script = CScript() << OP_0;
 
     node::BlockAssembler miner{g_setup->m_node.chainman->ActiveChainstate(), &pool, miner_options};
     node::MiniMiner mini_miner{pool, outpoints};

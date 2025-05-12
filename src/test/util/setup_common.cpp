@@ -391,7 +391,7 @@ CBlock TestChain100Setup::CreateBlock(
     Chainstate& chainstate)
 {
     BlockAssembler::Options options;
-    options.coinbase_outputs_scripts = {scriptPubKey};
+    options.coinbase_output_script = scriptPubKey;
     CBlock block = BlockAssembler{chainstate, nullptr, options}.CreateNewBlock()->block;
 
     Assert(block.vtx.size() == 1);
