@@ -1692,7 +1692,7 @@ class DashTestFramework(BitcoinTestFramework):
             self.bump_mocktime(1)
             sporks = self.nodes[0].spork('show')
             return all(node.spork('show') == sporks for node in self.nodes[1:])
-        self.wait_until(check_sporks_same, timeout=timeout, sleep=0.5)
+        self.wait_until(check_sporks_same, timeout=timeout, sleep=1)
 
     def wait_for_quorum_connections(self, quorum_hash, expected_connections, mninfos, llmq_type_name="llmq_test", timeout = 60, wait_proc=None):
         def check_quorum_connections():
