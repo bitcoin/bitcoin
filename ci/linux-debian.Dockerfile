@@ -32,7 +32,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
         gcc-powerpc64le-linux-gnu libc6-dev-ppc64el-cross libc6-dbg:ppc64el \
         gcc-mingw-w64-x86-64-win32 wine64 wine \
         gcc-mingw-w64-i686-win32 wine32 \
-        python3 && \
+        python3-full && \
         if ! ( dpkg --print-architecture | grep --quiet "arm64" ) ; then \
          apt-get install --no-install-recommends -y \
          gcc-aarch64-linux-gnu libc6-dev-arm64-cross libc6-dbg:arm64 ;\
@@ -77,3 +77,7 @@ RUN \
     apt-get autoremove -y wget && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+ENV VIRTUAL_ENV=/root/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+RUN pip install lief

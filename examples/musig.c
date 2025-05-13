@@ -12,6 +12,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 
@@ -193,7 +194,7 @@ int main(void) {
     for (i = 0; i < N_SIGNERS; i++) {
         if (!create_keypair(ctx, &signer_secrets[i], &signers[i])) {
             printf("FAILED\n");
-            return 1;
+            return EXIT_FAILURE;
         }
         pubkeys_ptr[i] = &signers[i].pubkey;
     }
@@ -208,7 +209,7 @@ int main(void) {
     fflush(stdout);
     if (!secp256k1_ec_pubkey_sort(ctx, pubkeys_ptr, N_SIGNERS)) {
         printf("FAILED\n");
-        return 1;
+        return EXIT_FAILURE;
     }
     printf("ok\n");
 
@@ -219,7 +220,7 @@ int main(void) {
      * while providing a non-NULL agg_pk argument. */
     if (!secp256k1_musig_pubkey_agg(ctx, NULL, &cache, pubkeys_ptr, N_SIGNERS)) {
         printf("FAILED\n");
-        return 1;
+        return EXIT_FAILURE;
     }
     printf("ok\n");
     printf("Tweaking................");
@@ -227,21 +228,21 @@ int main(void) {
     /* Optionally tweak the aggregate key */
     if (!tweak(ctx, &agg_pk, &cache)) {
         printf("FAILED\n");
-        return 1;
+        return EXIT_FAILURE;
     }
     printf("ok\n");
     printf("Signing message.........");
     fflush(stdout);
     if (!sign(ctx, signer_secrets, signers, &cache, msg, sig)) {
         printf("FAILED\n");
-        return 1;
+        return EXIT_FAILURE;
     }
     printf("ok\n");
     printf("Verifying signature.....");
     fflush(stdout);
     if (!secp256k1_schnorrsig_verify(ctx, sig, msg, 32, &agg_pk)) {
         printf("FAILED\n");
-        return 1;
+        return EXIT_FAILURE;
     }
     printf("ok\n");
 
@@ -256,5 +257,5 @@ int main(void) {
         secure_erase(&signer_secrets[i], sizeof(signer_secrets[i]));
     }
     secp256k1_context_destroy(ctx);
-    return 0;
+    return EXIT_SUCCESS;
 }

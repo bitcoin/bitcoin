@@ -94,6 +94,8 @@ static int nonce_function_bip340(unsigned char *nonce32, const unsigned char *ms
     secp256k1_sha256_write(&sha, msg, msglen);
     secp256k1_sha256_finalize(&sha, nonce32);
     secp256k1_sha256_clear(&sha);
+    secp256k1_memclear(masked_key, sizeof(masked_key));
+
     return 1;
 }
 
