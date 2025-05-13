@@ -21,6 +21,7 @@
 #include <util/ui_change_type.h>
 #include <wallet/coincontrol.h>
 #include <wallet/context.h>
+#include <wallet/export.h>
 #include <wallet/feebumper.h>
 #include <wallet/fees.h>
 #include <wallet/load.h>
@@ -521,6 +522,12 @@ public:
         return MakeSignalHandler(m_wallet->NotifyCanGetAddressesChanged.connect(fn));
     }
     CWallet* wallet() override { return m_wallet.get(); }
+
+    util::Result<std::string> exportWatchOnlyWallet(const fs::path& destination) override {
+        LOCK(m_wallet->cs_wallet);
+        m_wallet->TopUpKeyPool();
+        return ExportWatchOnlyWallet(*m_wallet, destination, m_context);
+    }
 
     WalletContext& m_context;
     std::shared_ptr<CWallet> m_wallet;
