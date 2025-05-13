@@ -1690,6 +1690,9 @@ CPPFLAGS_TEMP="$CPPFLAGS"
 unset CPPFLAGS
 CPPFLAGS="$CPPFLAGS_TEMP"
 
+
+AX_CHECK_COMPILE_FLAG([-Wno-unterminated-string-initialization], [export SECP_CFLAGS="$SECP_CFLAGS -Wno-unterminated-string-initialization"], [], [$CXXFLAG_WERROR])
+
 if test -n "$use_sanitizers"; then
   export SECP_CFLAGS="$SECP_CFLAGS $SANITIZER_CFLAGS"
 fi
