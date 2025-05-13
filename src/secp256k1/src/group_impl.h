@@ -195,6 +195,44 @@ static void secp256k1_ge_set_gej_var(secp256k1_ge *r, secp256k1_gej *a) {
     SECP256K1_GE_VERIFY(r);
 }
 
+static void secp256k1_ge_set_all_gej(secp256k1_ge *r, const secp256k1_gej *a, size_t len) {
+    secp256k1_fe u;
+    size_t i;
+#ifdef VERIFY
+    for (i = 0; i < len; i++) {
+        SECP256K1_GEJ_VERIFY(&a[i]);
+        VERIFY_CHECK(!secp256k1_gej_is_infinity(&a[i]));
+    }
+#endif
+
+    if (len == 0) {
+        return;
+    }
+
+    /* Use destination's x coordinates as scratch space */
+    r[0].x = a[0].z;
+    for (i = 1; i < len; i++) {
+        secp256k1_fe_mul(&r[i].x, &r[i - 1].x, &a[i].z);
+    }
+    secp256k1_fe_inv(&u, &r[len - 1].x);
+
+    for (i = len - 1; i > 0; i--) {
+        secp256k1_fe_mul(&r[i].x, &r[i - 1].x, &u);
+        secp256k1_fe_mul(&u, &u, &a[i].z);
+    }
+    r[0].x = u;
+
+    for (i = 0; i < len; i++) {
+        secp256k1_ge_set_gej_zinv(&r[i], &a[i], &r[i].x);
+    }
+
+#ifdef VERIFY
+    for (i = 0; i < len; i++) {
+        SECP256K1_GE_VERIFY(&r[i]);
+    }
+#endif
+}
+
 static void secp256k1_ge_set_all_gej_var(secp256k1_ge *r, const secp256k1_gej *a, size_t len) {
     secp256k1_fe u;
     size_t i;

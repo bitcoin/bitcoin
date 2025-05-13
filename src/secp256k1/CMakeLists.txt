@@ -7,7 +7,7 @@ project(libsecp256k1
   # The package (a.k.a. release) version is based on semantic versioning 2.0.0 of
   # the API. All changes in experimental modules are treated as
   # backwards-compatible and therefore at most increase the minor version.
-  VERSION 0.6.0
+  VERSION 0.6.1
   DESCRIPTION "Optimized C library for ECDSA signatures and secret/public key operations on curve secp256k1."
   HOMEPAGE_URL "https://github.com/bitcoin-core/secp256k1"
   LANGUAGES C
@@ -32,7 +32,7 @@ endif()
 # All changes in experimental modules are treated as if they don't affect the
 # interface and therefore only increase the revision.
 set(${PROJECT_NAME}_LIB_VERSION_CURRENT 5)
-set(${PROJECT_NAME}_LIB_VERSION_REVISION 0)
+set(${PROJECT_NAME}_LIB_VERSION_REVISION 1)
 set(${PROJECT_NAME}_LIB_VERSION_AGE 0)
 
 #=============================
@@ -55,7 +55,7 @@ option(SECP256K1_INSTALL "Enable installation." ${PROJECT_IS_TOP_LEVEL})
 ## Modules
 
 # We declare all options before processing them, to make sure we can express
-# dependendencies while processing.
+# dependencies while processing.
 option(SECP256K1_ENABLE_MODULE_ECDH "Enable ECDH module." ON)
 option(SECP256K1_ENABLE_MODULE_RECOVERY "Enable ECDSA pubkey recovery module." OFF)
 option(SECP256K1_ENABLE_MODULE_EXTRAKEYS "Enable extrakeys module." ON)
@@ -242,17 +242,21 @@ endif()
 
 include(TryAppendCFlags)
 if(MSVC)
-  # Keep the following commands ordered lexicographically.
+  # For both cl and clang-cl compilers.
   try_append_c_flags(/W3) # Production quality warning level.
-  try_append_c_flags(/wd4146) # Disable warning C4146 "unary minus operator applied to unsigned type, result still unsigned".
-  try_append_c_flags(/wd4244) # Disable warning C4244 "'conversion' conversion from 'type1' to 'type2', possible loss of data".
-  try_append_c_flags(/wd4267) # Disable warning C4267 "'var' : conversion from 'size_t' to 'type', possible loss of data".
   # Eliminate deprecation warnings for the older, less secure functions.
   add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 else()
+  try_append_c_flags(-Wall) # GCC >= 2.95 and probably many other compilers.
+endif()  
+if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+  # Keep the following commands ordered lexicographically.
+  try_append_c_flags(/wd4146) # Disable warning C4146 "unary minus operator applied to unsigned type, result still unsigned".
+  try_append_c_flags(/wd4244) # Disable warning C4244 "'conversion' conversion from 'type1' to 'type2', possible loss of data".
+  try_append_c_flags(/wd4267) # Disable warning C4267 "'var' : conversion from 'size_t' to 'type', possible loss of data".
+else()
   # Keep the following commands ordered lexicographically.
   try_append_c_flags(-pedantic)
-  try_append_c_flags(-Wall) # GCC >= 2.95 and probably many other compilers.
   try_append_c_flags(-Wcast-align) # GCC >= 2.95.
   try_append_c_flags(-Wcast-align=strict) # GCC >= 8.0.
   try_append_c_flags(-Wconditional-uninitialized) # Clang >= 3.0 only.
@@ -266,8 +270,6 @@ else()
   try_append_c_flags(-Wstrict-prototypes)
   try_append_c_flags(-Wundef)
 endif()
-
-set(CMAKE_C_VISIBILITY_PRESET hidden)
 
 set(print_msan_notice)
 if(SECP256K1_BUILD_CTIME_TESTS)

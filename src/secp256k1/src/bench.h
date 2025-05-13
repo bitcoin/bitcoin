@@ -24,7 +24,7 @@ static int64_t gettime_i64(void) {
     struct timespec tv;
     if (!timespec_get(&tv, TIME_UTC)) {
         fputs("timespec_get failed!", stderr);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     return (int64_t)tv.tv_nsec / 1000 + (int64_t)tv.tv_sec * 1000000LL;
 #else

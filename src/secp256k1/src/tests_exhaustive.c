@@ -383,7 +383,7 @@ int main(int argc, char** argv) {
         this_core = strtol(argv[4], NULL, 0);
         if (num_cores < 1 || this_core >= num_cores) {
             fprintf(stderr, "Usage: %s [count] [seed] [numcores] [thiscore]\n", argv[0]);
-            return 1;
+            return EXIT_FAILURE;
         }
         printf("running tests for core %lu (out of [0..%lu])\n", (unsigned long)this_core, (unsigned long)num_cores - 1);
     }
@@ -462,5 +462,5 @@ int main(int argc, char** argv) {
     testrand_finish();
 
     printf("no problems found\n");
-    return 0;
+    return EXIT_SUCCESS;
 }

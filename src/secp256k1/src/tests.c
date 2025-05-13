@@ -87,15 +87,6 @@ static void counting_callback_fn(const char* str, void* data) {
     (*p)++;
 }
 
-static void uncounting_illegal_callback_fn(const char* str, void* data) {
-    /* Dummy callback function that just counts (backwards). */
-    int32_t *p;
-    (void)str;
-    p = data;
-    CHECK(*p != INT32_MIN);
-    (*p)--;
-}
-
 static void run_xoshiro256pp_tests(void) {
     {
         size_t i;
@@ -3821,14 +3812,38 @@ static void test_ge(void) {
 
     /* Test batch gej -> ge conversion without known z ratios. */
     {
+        secp256k1_ge *ge_set_all_var = (secp256k1_ge *)checked_malloc(&CTX->error_callback, (4 * runs + 1) * sizeof(secp256k1_ge));
         secp256k1_ge *ge_set_all = (secp256k1_ge *)checked_malloc(&CTX->error_callback, (4 * runs + 1) * sizeof(secp256k1_ge));
-        secp256k1_ge_set_all_gej_var(ge_set_all, gej, 4 * runs + 1);
+        secp256k1_ge_set_all_gej_var(&ge_set_all_var[0], &gej[0], 4 * runs + 1);
         for (i = 0; i < 4 * runs + 1; i++) {
             secp256k1_fe s;
             testutil_random_fe_non_zero(&s);
             secp256k1_gej_rescale(&gej[i], &s);
-            CHECK(secp256k1_gej_eq_ge_var(&gej[i], &ge_set_all[i]));
+            CHECK(secp256k1_gej_eq_ge_var(&gej[i], &ge_set_all_var[i]));
         }
+
+        /* Skip infinity at &gej[0]. */
+        secp256k1_ge_set_all_gej(&ge_set_all[1], &gej[1], 4 * runs);
+        for (i = 1; i < 4 * runs + 1; i++) {
+            secp256k1_fe s;
+            testutil_random_fe_non_zero(&s);
+            secp256k1_gej_rescale(&gej[i], &s);
+            CHECK(secp256k1_gej_eq_ge_var(&gej[i], &ge_set_all[i]));
+            CHECK(secp256k1_ge_eq_var(&ge_set_all_var[i], &ge_set_all[i]));
+        }
+
+        /* Test with an array of length 1. */
+        secp256k1_ge_set_all_gej_var(ge_set_all_var, &gej[1], 1);
+        secp256k1_ge_set_all_gej(ge_set_all, &gej[1], 1);
+        CHECK(secp256k1_gej_eq_ge_var(&gej[1], &ge_set_all_var[1]));
+        CHECK(secp256k1_gej_eq_ge_var(&gej[1], &ge_set_all[1]));
+        CHECK(secp256k1_ge_eq_var(&ge_set_all_var[1], &ge_set_all[1]));
+
+        /* Test with an array of length 0. */
+        secp256k1_ge_set_all_gej_var(NULL, NULL, 0);
+        secp256k1_ge_set_all_gej(NULL, NULL, 0);
+
+        free(ge_set_all_var);
         free(ge_set_all);
     }
 
@@ -6248,11 +6263,6 @@ static void run_eckey_negate_test(void) {
     CHECK(secp256k1_ec_seckey_negate(CTX, seckey) == 1);
     CHECK(secp256k1_memcmp_var(seckey, seckey_tmp, 32) == 0);
 
-    /* Check that privkey alias gives same result */
-    CHECK(secp256k1_ec_seckey_negate(CTX, seckey) == 1);
-    CHECK(secp256k1_ec_privkey_negate(CTX, seckey_tmp) == 1);
-    CHECK(secp256k1_memcmp_var(seckey, seckey_tmp, 32) == 0);
-
     /* Negating all 0s fails */
     memset(seckey, 0, 32);
     memset(seckey_tmp, 0, 32);
@@ -6413,22 +6423,15 @@ static void test_ecdsa_end_to_end(void) {
     if (testrand_int(3) == 0) {
         int ret1;
         int ret2;
-        int ret3;
         unsigned char rnd[32];
-        unsigned char privkey_tmp[32];
         secp256k1_pubkey pubkey2;
         testrand256_test(rnd);
-        memcpy(privkey_tmp, privkey, 32);
         ret1 = secp256k1_ec_seckey_tweak_add(CTX, privkey, rnd);
         ret2 = secp256k1_ec_pubkey_tweak_add(CTX, &pubkey, rnd);
-        /* Check that privkey alias gives same result */
-        ret3 = secp256k1_ec_privkey_tweak_add(CTX, privkey_tmp, rnd);
         CHECK(ret1 == ret2);
-        CHECK(ret2 == ret3);
         if (ret1 == 0) {
             return;
         }
-        CHECK(secp256k1_memcmp_var(privkey, privkey_tmp, 32) == 0);
         CHECK(secp256k1_ec_pubkey_create(CTX, &pubkey2, privkey) == 1);
         CHECK(secp256k1_memcmp_var(&pubkey, &pubkey2, sizeof(pubkey)) == 0);
     }
@@ -6437,22 +6440,15 @@ static void test_ecdsa_end_to_end(void) {
     if (testrand_int(3) == 0) {
         int ret1;
         int ret2;
-        int ret3;
         unsigned char rnd[32];
-        unsigned char privkey_tmp[32];
         secp256k1_pubkey pubkey2;
         testrand256_test(rnd);
-        memcpy(privkey_tmp, privkey, 32);
         ret1 = secp256k1_ec_seckey_tweak_mul(CTX, privkey, rnd);
         ret2 = secp256k1_ec_pubkey_tweak_mul(CTX, &pubkey, rnd);
-        /* Check that privkey alias gives same result */
-        ret3 = secp256k1_ec_privkey_tweak_mul(CTX, privkey_tmp, rnd);
         CHECK(ret1 == ret2);
-        CHECK(ret2 == ret3);
         if (ret1 == 0) {
             return;
         }
-        CHECK(secp256k1_memcmp_var(privkey, privkey_tmp, 32) == 0);
         CHECK(secp256k1_ec_pubkey_create(CTX, &pubkey2, privkey) == 1);
         CHECK(secp256k1_memcmp_var(&pubkey, &pubkey2, sizeof(pubkey)) == 0);
     }
@@ -7837,5 +7833,5 @@ int main(int argc, char **argv) {
     testrand_finish();
 
     printf("no problems found\n");
-    return 0;
+    return EXIT_SUCCESS;
 }
