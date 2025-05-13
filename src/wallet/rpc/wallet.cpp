@@ -9,17 +9,16 @@
 #include <key_io.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
+#include <univalue.h>
 #include <util/translation.h>
 #include <wallet/context.h>
 #include <wallet/receive.h>
-#include <wallet/rpc/wallet.h>
 #include <wallet/rpc/util.h>
+#include <wallet/rpc/wallet.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
 #include <optional>
-
-#include <univalue.h>
 
 
 namespace wallet {
@@ -30,14 +29,6 @@ static const std::map<uint64_t, std::string> WALLET_FLAG_CAVEATS{
      "destinations in the past. Until this is done, some destinations may "
      "be considered unused, even if the opposite is the case."},
 };
-
-/** Checks if a CKey is in the given CWallet compressed or otherwise*/
-bool HaveKey(const SigningProvider& wallet, const CKey& key)
-{
-    CKey key2;
-    key2.Set(key.begin(), key.end(), !key.IsCompressed());
-    return wallet.HaveKey(key.GetPubKey().GetID()) || wallet.HaveKey(key2.GetPubKey().GetID());
-}
 
 static RPCHelpMan getwalletinfo()
 {
