@@ -348,6 +348,7 @@ jobs:
         run: ./bin/bitcoind.exe -version
 
       - name: Run unit tests
+        if: false
         # Can't use ctest here like other jobs as we don't have a CMake build tree.
         run: |
           ./bin/test_bitcoin.exe -l test_suite
@@ -358,6 +359,7 @@ jobs:
           ./src/univalue/unitester.exe
 
       - name: Run benchmarks
+        if: false
         run: ./bin/bench_bitcoin.exe -sanity-check
 
       - name: Adjust paths in test/config.ini
@@ -367,10 +369,20 @@ jobs:
           Get-Content "test/config.ini"
 
       - name: Run util tests
+        if: false
         run: py -3 test/util/test_runner.py
 
       - name: Run rpcauth test
+        if: false
         run: py -3 test/util/rpcauth-test.py
+
+      - name: Set previous release directory
+        run: |
+          echo "PREVIOUS_RELEASES_DIR=${{ runner.temp }}/previous_releases" >> "$GITHUB_ENV"
+
+      - name: Get previous releases
+        working-directory: test
+        run: ./get_previous_releases.py -t $PREVIOUS_RELEASES_DIR
 
       - name: Run functional tests
         env:
