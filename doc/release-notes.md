@@ -48,6 +48,12 @@ Notable changes
 
 - #31627 depends: Fix spacing issue
 - #31500 depends: Fix compiling libevent package on NetBSD
+- #32070 build: use make < 3.82 syntax for define directive
+
+### Test
+
+- #32286 test: Handle empty string returned by CLI as None in RPC tests
+- #32336 test: Suppress upstream -Wduplicate-decl-specifier in bpfcc
 
 ### Tracing
 
@@ -56,13 +62,17 @@ Notable changes
 ### Misc
 
 - #31611 doc: upgrade license to 2025
+- #32187 refactor: Remove spurious virtual from final ~CZMQNotificationInterface
 
 Credits
 =======
 
 - 0xB10C
+- Brandon Odiwuor
 - Hennadii Stepanov
 - kehiy
+- MarcoFalke
+- Sjors Provoost
 
 Thanks to everyone who directly contributed to this release:
 
