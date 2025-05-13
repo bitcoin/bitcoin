@@ -72,6 +72,333 @@ static bool EqualTxns(const std::set<CTransactionRef>& set_txns, const std::vect
     return true;
 }
 
+unsigned int CheckNumEvictions(node::TxOrphanage& orphanage)
+{
+    const auto original_total_count{orphanage.CountAnnouncements()};
+    orphanage.LimitOrphans();
+    assert(!orphanage.NeedsTrim());
+    return original_total_count - orphanage.CountAnnouncements();
+}
+
+BOOST_AUTO_TEST_CASE(peer_dos_limits)
+{
+    FastRandomContext det_rand{true};
+
+    // Construct transactions to use. They must all be the same size.
+    static constexpr unsigned int NUM_TXNS_CREATED = 100;
+    static constexpr int64_t TX_SIZE{469};
+    static constexpr int64_t TOTAL_SIZE = NUM_TXNS_CREATED * TX_SIZE;
+
+    std::vector<CTransactionRef> txns;
+    txns.reserve(NUM_TXNS_CREATED);
+    // All transactions are the same size.
+    for (unsigned int i{0}; i < NUM_TXNS_CREATED; ++i) {
+        auto ptx = MakeTransactionSpending({}, det_rand);
+        txns.emplace_back(ptx);
+        BOOST_CHECK_EQUAL(TX_SIZE, GetTransactionWeight(*ptx));
+    }
+
+    // Single peer: eviction is triggered if either limit is hit
+    {
+        // Test announcement limits
+        NodeId peer{8};
+        auto orphanage_low_ann = node::MakeTxOrphanage(/*max_global_ann=*/1, /*reserved_peer_usage=*/TX_SIZE * 10);
+        auto orphanage_low_mem = node::MakeTxOrphanage(/*max_global_ann=*/10, /*reserved_peer_usage=*/TX_SIZE);
+
+        BOOST_CHECK_EQUAL(CheckNumEvictions(*orphanage_low_mem), 0);
+        BOOST_CHECK_EQUAL(CheckNumEvictions(*orphanage_low_ann), 0);
+
+        // Add the first transaction
+        orphanage_low_ann->AddTx(txns.at(0), peer);
+        orphanage_low_mem->AddTx(txns.at(0), peer);
+
+        // Add more. One of the limits is exceeded, so LimitOrphans evicts 1.
+        orphanage_low_ann->AddTx(txns.at(1), peer);
+        BOOST_CHECK(orphanage_low_ann->CountAnnouncements() > orphanage_low_ann->MaxGlobalAnnouncements());
+        BOOST_CHECK(orphanage_low_ann->TotalOrphanUsage() <= orphanage_low_ann->MaxGlobalUsage());
+        BOOST_CHECK(orphanage_low_ann->NeedsTrim());
+
+        orphanage_low_mem->AddTx(txns.at(1), peer);
+        BOOST_CHECK(orphanage_low_mem->CountAnnouncements() <= orphanage_low_mem->MaxGlobalAnnouncements());
+        BOOST_CHECK(orphanage_low_mem->TotalOrphanUsage() > orphanage_low_mem->MaxGlobalUsage());
+        BOOST_CHECK(orphanage_low_mem->NeedsTrim());
+
+        BOOST_CHECK_EQUAL(CheckNumEvictions(*orphanage_low_mem), 1);
+        BOOST_CHECK_EQUAL(CheckNumEvictions(*orphanage_low_ann), 1);
+
+        // The older transaction is evicted.
+        BOOST_CHECK(!orphanage_low_ann->HaveTx(txns.at(0)->GetWitnessHash()));
+        BOOST_CHECK(!orphanage_low_mem->HaveTx(txns.at(0)->GetWitnessHash()));
+        BOOST_CHECK(orphanage_low_ann->HaveTx(txns.at(1)->GetWitnessHash()));
+        BOOST_CHECK(orphanage_low_mem->HaveTx(txns.at(1)->GetWitnessHash()));
+    }
+
+    // Single peer: eviction order is FIFO on non-reconsiderable, then reconsiderable orphans.
+    {
+        // Construct parent + child pairs
+        std::vector<CTransactionRef> parents;
+        std::vector<CTransactionRef> children;
+        for (unsigned int i{0}; i < 10; ++i) {
+            CTransactionRef parent = MakeTransactionSpending({}, det_rand);
+            CTransactionRef child = MakeTransactionSpending({{parent->GetHash(), 0}}, det_rand);
+            parents.emplace_back(parent);
+            children.emplace_back(child);
+        }
+
+        // Test announcement limits
+        NodeId peer{9};
+        auto orphanage = node::MakeTxOrphanage(/*max_global_ann=*/3, /*reserved_peer_usage=*/TX_SIZE * 10);
+
+        // First add a tx which will be made reconsiderable.
+        orphanage->AddTx(children.at(0), peer);
+
+        // Then add 2 more orphans... not oversize yet.
+        orphanage->AddTx(children.at(1), peer);
+        orphanage->AddTx(children.at(2), peer);
+
+        // Make child0 ready to reconsider
+        orphanage->AddChildrenToWorkSet(*parents.at(0), det_rand);
+        BOOST_CHECK(orphanage->HaveTxToReconsider(peer));
+
+        // Add 1 more orphan, causing the orphanage to be oversize. child1 is evicted.
+        orphanage->AddTx(children.at(3), peer);
+        BOOST_CHECK_EQUAL(CheckNumEvictions(*orphanage), 1);
+        BOOST_CHECK(orphanage->HaveTx(children.at(0)->GetWitnessHash()));
+        BOOST_CHECK(!orphanage->HaveTx(children.at(1)->GetWitnessHash()));
+        BOOST_CHECK(orphanage->HaveTx(children.at(2)->GetWitnessHash()));
+        BOOST_CHECK(orphanage->HaveTx(children.at(3)->GetWitnessHash()));
+
+        // Add 1 more... child2 is evicted.
+        orphanage->AddTx(children.at(4), peer);
+        BOOST_CHECK_EQUAL(CheckNumEvictions(*orphanage), 1);
+        BOOST_CHECK(orphanage->HaveTx(children.at(0)->GetWitnessHash()));
+        BOOST_CHECK(!orphanage->HaveTx(children.at(2)->GetWitnessHash()));
+        BOOST_CHECK(orphanage->HaveTx(children.at(3)->GetWitnessHash()));
+        BOOST_CHECK(orphanage->HaveTx(children.at(4)->GetWitnessHash()));
+
+        // Eviction order is FIFO within the orphans that are ready to be reconsidered.
+        orphanage->AddChildrenToWorkSet(*parents.at(4), det_rand);
+        orphanage->AddChildrenToWorkSet(*parents.at(3), det_rand);
+
+        orphanage->AddTx(children.at(5), peer);
+        orphanage->AddChildrenToWorkSet(*parents.at(5), det_rand);
+
+        BOOST_CHECK_EQUAL(CheckNumEvictions(*orphanage), 1);
+        BOOST_CHECK(!orphanage->HaveTx(children.at(0)->GetWitnessHash()));
+        BOOST_CHECK(orphanage->HaveTx(children.at(3)->GetWitnessHash()));
+        BOOST_CHECK(orphanage->HaveTx(children.at(4)->GetWitnessHash()));
+        BOOST_CHECK(orphanage->HaveTx(children.at(5)->GetWitnessHash()));
+
+        // The first transaction returned from GetTxToReconsider is the older one, not the one that was marked for
+        // reconsideration earlier.
+        // Transactions are marked non-reconsiderable again when returned through GetTxToReconsider
+        BOOST_CHECK_EQUAL(orphanage->GetTxToReconsider(peer), children.at(3));
+        orphanage->AddTx(children.at(6), peer);
+        BOOST_CHECK_EQUAL(CheckNumEvictions(*orphanage), 1);
+        BOOST_CHECK(!orphanage->HaveTx(children.at(3)->GetWitnessHash()));
+        BOOST_CHECK(orphanage->HaveTx(children.at(4)->GetWitnessHash()));
+        BOOST_CHECK(orphanage->HaveTx(children.at(5)->GetWitnessHash()));
+        BOOST_CHECK(orphanage->HaveTx(children.at(6)->GetWitnessHash()));
+
+        BOOST_CHECK_EQUAL(orphanage->GetTxToReconsider(peer), children.at(4));
+        BOOST_CHECK_EQUAL(orphanage->GetTxToReconsider(peer), children.at(5));
+    }
+
+    // Multiple peers: when limit is exceeded, we choose the DoSiest peer and evict their oldest transaction.
+    {
+        NodeId peer_dosy{0};
+        NodeId peer1{1};
+        NodeId peer2{2};
+
+        unsigned int max_announcements = 60;
+        // Set a high per-peer reservation so announcement limit is always hit first.
+        auto orphanage = node::MakeTxOrphanage(max_announcements, TOTAL_SIZE * 10);
+
+        // No evictions happen before the global limit is reached.
+        for (unsigned int i{0}; i < max_announcements; ++i) {
+            orphanage->AddTx(txns.at(i), peer_dosy);
+            BOOST_CHECK_EQUAL(CheckNumEvictions(*orphanage), 0);
+        }
+        BOOST_CHECK_EQUAL(orphanage->AnnouncementsFromPeer(peer_dosy), max_announcements);
+        BOOST_CHECK_EQUAL(orphanage->AnnouncementsFromPeer(peer1), 0);
+        BOOST_CHECK_EQUAL(orphanage->AnnouncementsFromPeer(peer2), 0);
+
+        // Add 10 unique transactions from peer1.
+        // LimitOrphans should evict from peer_dosy, because that's the one exceeding announcement limits.
+        unsigned int num_from_peer1 = 10;
+        for (unsigned int i{0}; i < num_from_peer1; ++i) {
+            orphanage->AddTx(txns.at(max_announcements + i), peer1);
+            // The announcement limit per peer has halved, but LimitOrphans does not evict beyond what is necessary to
+            // bring the total announcements within its global limit.
+            BOOST_CHECK_EQUAL(CheckNumEvictions(*orphanage), 1);
+            BOOST_CHECK(orphanage->AnnouncementsFromPeer(peer_dosy) > orphanage->MaxPeerAnnouncements());
+
+            BOOST_CHECK_EQUAL(orphanage->AnnouncementsFromPeer(peer1), i + 1);
+            BOOST_CHECK_EQUAL(orphanage->AnnouncementsFromPeer(peer_dosy), max_announcements - i - 1);
+
+            // Evictions are FIFO within a peer, so the ith transaction sent by peer_dosy is the one that was evicted.
+            BOOST_CHECK(!orphanage->HaveTx(txns.at(i)->GetWitnessHash()));
+        }
+        // Add 10 transactions that are duplicates of the ones sent by peer_dosy. We need to add 10 because the first 10
+        // were just evicted in the previous block additions.
+        for (unsigned int i{num_from_peer1}; i < num_from_peer1 + 10; ++i) {
+            // Tx has already been sent by peer_dosy
+            BOOST_CHECK(orphanage->HaveTxFromPeer(txns.at(i)->GetWitnessHash(), peer_dosy));
+            orphanage->AddTx(txns.at(i), peer2);
+
+            // Announcement limit is by entry, not by unique orphans
+            BOOST_CHECK_EQUAL(CheckNumEvictions(*orphanage), 1);
+
+            // peer_dosy is still the only one getting evicted
+            BOOST_CHECK_EQUAL(orphanage->AnnouncementsFromPeer(peer_dosy), max_announcements - i - 1);
+            BOOST_CHECK_EQUAL(orphanage->AnnouncementsFromPeer(peer1), num_from_peer1);
+            BOOST_CHECK_EQUAL(orphanage->AnnouncementsFromPeer(peer2), i + 1 - num_from_peer1);
+
+            // Evictions are FIFO within a peer, so the ith transaction sent by peer_dosy is the one that was evicted.
+            BOOST_CHECK(!orphanage->HaveTxFromPeer(txns.at(i)->GetWitnessHash(), peer_dosy));
+            BOOST_CHECK(orphanage->HaveTx(txns.at(i)->GetWitnessHash()));
+        }
+
+        // With 6 peers, each can add 10, and still only peer_dosy's orphans are evicted.
+        const unsigned int max_per_peer{max_announcements / 6};
+        for (NodeId peer{3}; peer < 6; ++peer) {
+            for (unsigned int i{0}; i < max_per_peer; ++i) {
+                orphanage->AddTx(txns.at(peer * max_per_peer + i), peer);
+                BOOST_CHECK_EQUAL(CheckNumEvictions(*orphanage), 1);
+            }
+        }
+        for (NodeId peer{0}; peer < 6; ++peer) {
+            BOOST_CHECK_EQUAL(orphanage->AnnouncementsFromPeer(peer), max_per_peer);
+        }
+    }
+
+    // One LimitOrphans call can evict announcements from multiple peers.
+    {
+        // Two peers, both of which send too many announcements.
+        NodeId peer1_dosy{1};
+        NodeId peer2_dosy{2};
+        NodeId peer3_quiet{3};
+        NodeId peer4_quiet{4};
+
+        auto orphanage = node::MakeTxOrphanage(/*max_global_ann=*/12, /*reserved_peer_usage=*/TX_SIZE * 100);
+
+        // peer3_quiet adds 1 announcement
+        orphanage->AddTx(txns.at(20), peer3_quiet);
+
+        // Add 10 announcements from each peer. Normally, LimitOrphans would be
+        // called after each AddTx, but we want to do eviction in one batch.
+        for (unsigned int i{0}; i < 10; ++i) {
+            orphanage->AddTx(txns.at(2 * i), peer1_dosy);
+            orphanage->AddTx(txns.at(2 * i + 1), peer2_dosy);
+        }
+
+        // peer4_quiet adds 1 announcement
+        orphanage->AddTx(txns.at(21), peer4_quiet);
+
+        BOOST_CHECK_EQUAL(orphanage->CountAnnouncements(), 22);
+
+        // LimitOrphans should evict from both peers equally, and not touch peer3_quiet or peer4_quiet.
+        // The title of DoSiest peer alternates between peer1_dosy and peer2_dosy in the loop.
+        BOOST_CHECK_EQUAL(CheckNumEvictions(*orphanage), 10);
+        BOOST_CHECK_EQUAL(orphanage->AnnouncementsFromPeer(peer1_dosy), orphanage->AnnouncementsFromPeer(peer2_dosy));
+
+        for (unsigned int i{0}; i < 10; ++i) {
+            BOOST_CHECK(!orphanage->HaveTx(txns.at(i)->GetWitnessHash()));
+        }
+        for (unsigned int i{10}; i < 22; ++i) {
+            BOOST_CHECK(orphanage->HaveTx(txns.at(i)->GetWitnessHash()));
+        }
+    }
+
+    // Limits change as more peers are added.
+    {
+        auto orphanage{node::MakeTxOrphanage()};
+        // These stay the same regardless of number of peers
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalAnnouncements(), node::DEFAULT_MAX_ORPHAN_ANNOUNCEMENTS);
+        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
+
+        // These change with number of peers
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
+        BOOST_CHECK_EQUAL(orphanage->MaxPeerAnnouncements(), node::DEFAULT_MAX_ORPHAN_ANNOUNCEMENTS);
+
+        // Number of peers = 1
+        orphanage->AddTx(txns.at(0), 0);
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalAnnouncements(), node::DEFAULT_MAX_ORPHAN_ANNOUNCEMENTS);
+        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
+        BOOST_CHECK_EQUAL(orphanage->MaxPeerAnnouncements(), node::DEFAULT_MAX_ORPHAN_ANNOUNCEMENTS);
+
+        // Number of peers = 2
+        orphanage->AddTx(txns.at(1), 1);
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalAnnouncements(), node::DEFAULT_MAX_ORPHAN_ANNOUNCEMENTS);
+        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER * 2);
+        BOOST_CHECK_EQUAL(orphanage->MaxPeerAnnouncements(), node::DEFAULT_MAX_ORPHAN_ANNOUNCEMENTS / 2);
+
+        // Number of peers = 3
+        orphanage->AddTx(txns.at(2), 2);
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalAnnouncements(), node::DEFAULT_MAX_ORPHAN_ANNOUNCEMENTS);
+        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER * 3);
+        BOOST_CHECK_EQUAL(orphanage->MaxPeerAnnouncements(), node::DEFAULT_MAX_ORPHAN_ANNOUNCEMENTS / 3);
+
+        // Number of peers didn't change.
+        orphanage->AddTx(txns.at(3), 2);
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalAnnouncements(), node::DEFAULT_MAX_ORPHAN_ANNOUNCEMENTS);
+        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER * 3);
+        BOOST_CHECK_EQUAL(orphanage->MaxPeerAnnouncements(), node::DEFAULT_MAX_ORPHAN_ANNOUNCEMENTS / 3);
+
+        // Once a peer has no orphans, it is not considered in the limits.
+        // Number of peers = 2
+        orphanage->EraseForPeer(2);
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalAnnouncements(), node::DEFAULT_MAX_ORPHAN_ANNOUNCEMENTS);
+        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER * 2);
+        BOOST_CHECK_EQUAL(orphanage->MaxPeerAnnouncements(), node::DEFAULT_MAX_ORPHAN_ANNOUNCEMENTS / 2);
+
+        // Number of peers = 1
+        orphanage->EraseTx(txns.at(0)->GetWitnessHash());
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalAnnouncements(), node::DEFAULT_MAX_ORPHAN_ANNOUNCEMENTS);
+        BOOST_CHECK_EQUAL(orphanage->ReservedPeerUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
+        BOOST_CHECK_EQUAL(orphanage->MaxGlobalUsage(), node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER);
+        BOOST_CHECK_EQUAL(orphanage->MaxPeerAnnouncements(), node::DEFAULT_MAX_ORPHAN_ANNOUNCEMENTS);
+    }
+
+    // Test eviction of multiple transactions at a time
+    {
+        // Create a large transaction that is 10 times larger than the normal size transaction.
+        CMutableTransaction tx_large;
+        tx_large.vin.resize(1);
+        BulkTransaction(tx_large, 10 * TX_SIZE);
+        auto ptx_large = MakeTransactionRef(tx_large);
+
+        const auto large_tx_size = GetTransactionWeight(*ptx_large);
+        BOOST_CHECK(large_tx_size > 10 * TX_SIZE);
+        BOOST_CHECK(large_tx_size < 11 * TX_SIZE);
+
+        auto orphanage = node::MakeTxOrphanage(20, large_tx_size);
+        // One peer sends 10 normal size transactions. The other peer sends 10 normal transactions and 1 very large one
+        NodeId peer_normal{0};
+        NodeId peer_large{1};
+        for (unsigned int i = 0; i < 20; i++) {
+            orphanage->AddTx(txns.at(i), i < 10 ? peer_normal : peer_large);
+        }
+        BOOST_CHECK(orphanage->CountAnnouncements() <= orphanage->MaxGlobalAnnouncements());
+        BOOST_CHECK(orphanage->TotalOrphanUsage() <= orphanage->MaxGlobalUsage());
+        BOOST_CHECK_EQUAL(CheckNumEvictions(*orphanage), 0);
+
+        // Add the large transaction. This should cause evictions of all the previous 10 transactions from that peer.
+        orphanage->AddTx(ptx_large, peer_large);
+        BOOST_CHECK_EQUAL(CheckNumEvictions(*orphanage), 10);
+
+        // peer_normal should still have 10 transactions, and peer_large should have 1.
+        BOOST_CHECK_EQUAL(orphanage->AnnouncementsFromPeer(peer_normal), 10);
+        BOOST_CHECK_EQUAL(orphanage->AnnouncementsFromPeer(peer_large), 1);
+        BOOST_CHECK(orphanage->HaveTxFromPeer(ptx_large->GetWitnessHash(), peer_large));
+        BOOST_CHECK_EQUAL(orphanage->CountAnnouncements(), 11);
+    }
+}
 BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
 {
     // This test had non-deterministic coverage due to
