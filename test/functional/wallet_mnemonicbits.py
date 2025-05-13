@@ -40,6 +40,7 @@ class WalletMnemonicbitsTest(BitcoinTestFramework):
             found_in_encrypted = 0
             for desc in descriptors:
                 if 'mnemonic' not in desc:
+                    assert not desc['active']
                     # skip imported coinbase private key
                     continue
                 assert_equal(len(desc['mnemonic'].split()), 12)
@@ -47,10 +48,9 @@ class WalletMnemonicbitsTest(BitcoinTestFramework):
                 if desc['mnemonic'] == mnemonic_pre:
                     found_in_encrypted += 1
                     assert desc['active']
-            # there should 5 descriptors in total
-            # one of them imported private key for coinbase without mnemonic
-            # encryption of descriptor wallet creates new private keys,
-            # it should be 2 active and 2 inactive mnemonics
+            # there should 3 descriptors in total
+            # one of them is inactive imported private key for coinbase. It has no mnemonic without mnemonic
+            # two other should be active and have mnemonic
             assert_equal(found_in_encrypted, 2)
             assert_equal(mnemonic_count, 2)
             assert_equal(len(descriptors), 3)
