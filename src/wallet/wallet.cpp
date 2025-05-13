@@ -2870,7 +2870,6 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
 
         if ((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) || !(wallet_creation_flags & (WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET))) {
             walletInstance->SetupDescriptorScriptPubKeyMans();
-            // SetupDescriptorScriptPubKeyMans already calls SetupGeneration for us so we don't need to call SetupGeneration separately
         }
 
         if (chain) {
