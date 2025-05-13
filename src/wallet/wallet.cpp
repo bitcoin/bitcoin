@@ -3760,6 +3760,12 @@ util::Result<std::reference_wrapper<DescriptorScriptPubKeyMan>> CWallet::AddWall
         // Save the descriptor to memory
         uint256 id = new_spk_man->GetID();
         AddScriptPubKeyMan(id, std::move(new_spk_man));
+
+        // Write the existing cache to disk
+        WalletBatch batch(GetDatabase());
+        if (!batch.WriteDescriptorCacheItems(id, desc.cache)) {
+            return util::Error{_("Unable to write descriptor cache")};
+        }
     }
 
     // Add the private keys to the descriptor
