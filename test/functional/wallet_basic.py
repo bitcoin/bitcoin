@@ -656,6 +656,9 @@ class WalletTest(BitcoinTestFramework):
 
         # check that it works again with -spendzeroconfchange set (=default)
         self.restart_node(0, ["-spendzeroconfchange=1"])
+        # Make sure the wallet knows the tx in the mempool
+        self.nodes[0].syncwithvalidationinterfacequeue()
+
         zeroconf_wallet = self.nodes[0].get_wallet_rpc("zeroconf")
         utxos = zeroconf_wallet.listunspent(minconf=0)
         assert_equal(len(utxos), 1)
