@@ -3,8 +3,8 @@
 // file COPYING or https://opensource.org/license/mit/.
 
 use std::env;
-use std::fs;
-use std::io::ErrorKind;
+use std::fs::{self, File};
+use std::io::{ErrorKind, Read, Seek, SeekFrom};
 use std::path::PathBuf;
 use std::process::{Command, ExitCode, Stdio};
 
@@ -87,6 +87,11 @@ fn get_linter_list() -> Vec<&'static Linter> {
             description: "Check for trailing whitespace",
             name: "trailing_whitespace",
             lint_fn: lint_trailing_whitespace
+        },
+        &Linter {
+            description: "Check for trailing newline",
+            name: "trailing_newline",
+            lint_fn: lint_trailing_newline
         },
         &Linter {
             description: "Run all linters of the form: test/lint/lint-*.py",
@@ -506,6 +511,44 @@ Thus, it is best to remove the trailing space now.
 
 Please add any false positives, such as subtrees, Windows-related files, patch files, or externally
 sourced files to the exclude list.
+            "#
+        .trim()
+        .to_string())
+    } else {
+        Ok(())
+    }
+}
+
+fn lint_trailing_newline() -> LintResult {
+    let files = check_output(
+        git()
+            .args([
+                "ls-files", "--", "*.py", "*.cpp", "*.h", "*.md", "*.rs", "*.sh", "*.cmake",
+            ])
+            .args(get_pathspecs_default_excludes()),
+    )?;
+    let mut missing_newline = false;
+    for path in files.lines() {
+        let mut file = File::open(path).expect("must be able to open file");
+        if file.seek(SeekFrom::End(-1)).is_err() {
+            continue; // Allow fully empty files
+        }
+        let mut buffer = [0u8; 1];
+        file.read_exact(&mut buffer)
+            .expect("must be able to read the last byte");
+        if buffer[0] != b'\n' {
+            missing_newline = true;
+            println!("{path}");
+        }
+    }
+    if missing_newline {
+        Err(r#"
+A trailing newline is required, because git may warn about it missing. Also, it can make diffs
+verbose and can break git blame after appending lines.
+
+Thus, it is best to add the trailing newline now.
+
+Please add any false positives to the exclude list.
             "#
         .trim()
         .to_string())
