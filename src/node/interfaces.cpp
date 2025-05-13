@@ -1015,16 +1015,12 @@ public:
                 if (current_fees == -1) {
                     current_fees = 0;
                     for (CAmount fee : m_block_template->vTxFees) {
-                        // Skip coinbase
-                        if (fee < 0) continue;
                         current_fees += fee;
                     }
                 }
 
                 CAmount new_fees = 0;
                 for (CAmount fee : tmpl->m_block_template->vTxFees) {
-                    // Skip coinbase
-                    if (fee < 0) continue;
                     new_fees += fee;
                     Assume(options.fee_threshold != MAX_MONEY);
                     if (new_fees >= current_fees + options.fee_threshold) return tmpl;
