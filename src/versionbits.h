@@ -66,7 +66,7 @@ struct BIP9GBTStatus {
     struct Info {
         int bit;
         uint32_t mask;
-        bool gbt_force;
+        bool gbt_optional_rule;
     };
     std::map<std::string, const Info, std::less<>> signalling, locked_in, active;
 };
