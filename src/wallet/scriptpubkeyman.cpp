@@ -714,10 +714,7 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
 
         std::vector<CScript> desc_spks;
 
-        // Make the descriptor string with private keys
-        std::string desc_str;
-        bool watchonly = !desc->ToPrivateString(*this, desc_str);
-        if (watchonly && !m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        if (!desc->HavePrivateKeys(*this) && !m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
             out.watch_descs.emplace_back(desc->ToString(), creation_time);
 
             // Get the scriptPubKeys without writing this to the wallet
