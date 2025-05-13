@@ -215,8 +215,7 @@ std::shared_ptr<CWallet> SetupDescriptorsWallet(interfaces::Node& node, TestChai
     assert(descs.size() == 1);
     auto& desc = descs.at(0);
     WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1);
-    auto spk_manager = *Assert(wallet->AddWalletDescriptor(w_desc, provider, "", false));
-    assert(spk_manager);
+    Assert(wallet->AddWalletDescriptor(w_desc, provider, "", false));
     const PKHash dest{test.coinbaseKey.GetPubKey()};
     wallet->SetAddressBook(dest, "", wallet::AddressPurpose::RECEIVE);
     wallet->SetLastBlockProcessed(105, WITH_LOCK(node.context()->chainman->GetMutex(), return node.context()->chainman->ActiveChain().Tip()->GetBlockHash()));

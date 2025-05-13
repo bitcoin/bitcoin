@@ -284,11 +284,11 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
 
         self.test_importdesc({**range_request, "range": [5, 10]}, wallet=wpriv, success=False,
-                             error_code=-8, error_message='new range must include current range = [0,20]')
+                             error_code=-4, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
         self.test_importdesc({**range_request, "range": [0, 10]}, wallet=wpriv, success=False,
-                             error_code=-8, error_message='new range must include current range = [0,20]')
+                             error_code=-4, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
         self.test_importdesc({**range_request, "range": [5, 20]}, wallet=wpriv, success=False,
-                             error_code=-8, error_message='new range must include current range = [0,20]')
+                             error_code=-4, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
 
         self.log.info("Check we can change descriptor internal flag")
