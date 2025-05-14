@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2022 The Bitcoin Core developers
+// Copyright (c) 2015-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -77,26 +77,6 @@ public:
         bool operator<(iterator x) const { return ptr < x.ptr; }
     };
 
-    class reverse_iterator {
-        T* ptr{};
-    public:
-        typedef Diff difference_type;
-        typedef T value_type;
-        typedef T* pointer;
-        typedef T& reference;
-        typedef std::bidirectional_iterator_tag iterator_category;
-        reverse_iterator() = default;
-        reverse_iterator(T* ptr_) : ptr(ptr_) {}
-        T& operator*() const { return *ptr; }
-        T* operator->() const { return ptr; }
-        reverse_iterator& operator--() { ptr++; return *this; }
-        reverse_iterator& operator++() { ptr--; return *this; }
-        reverse_iterator operator++(int) { reverse_iterator copy(*this); ++(*this); return copy; }
-        reverse_iterator operator--(int) { reverse_iterator copy(*this); --(*this); return copy; }
-        bool operator==(reverse_iterator x) const { return ptr == x.ptr; }
-        bool operator!=(reverse_iterator x) const { return ptr != x.ptr; }
-    };
-
     class const_iterator {
         const T* ptr{};
     public:
@@ -127,27 +107,6 @@ public:
         bool operator<=(const_iterator x) const { return ptr <= x.ptr; }
         bool operator>(const_iterator x) const { return ptr > x.ptr; }
         bool operator<(const_iterator x) const { return ptr < x.ptr; }
-    };
-
-    class const_reverse_iterator {
-        const T* ptr{};
-    public:
-        typedef Diff difference_type;
-        typedef const T value_type;
-        typedef const T* pointer;
-        typedef const T& reference;
-        typedef std::bidirectional_iterator_tag iterator_category;
-        const_reverse_iterator() = default;
-        const_reverse_iterator(const T* ptr_) : ptr(ptr_) {}
-        const_reverse_iterator(reverse_iterator x) : ptr(&(*x)) {}
-        const T& operator*() const { return *ptr; }
-        const T* operator->() const { return ptr; }
-        const_reverse_iterator& operator--() { ptr++; return *this; }
-        const_reverse_iterator& operator++() { ptr--; return *this; }
-        const_reverse_iterator operator++(int) { const_reverse_iterator copy(*this); ++(*this); return copy; }
-        const_reverse_iterator operator--(int) { const_reverse_iterator copy(*this); --(*this); return copy; }
-        bool operator==(const_reverse_iterator x) const { return ptr == x.ptr; }
-        bool operator!=(const_reverse_iterator x) const { return ptr != x.ptr; }
     };
 
 private:
@@ -303,11 +262,6 @@ public:
     const_iterator begin() const { return const_iterator(item_ptr(0)); }
     iterator end() { return iterator(item_ptr(size())); }
     const_iterator end() const { return const_iterator(item_ptr(size())); }
-
-    reverse_iterator rbegin() { return reverse_iterator(item_ptr(size() - 1)); }
-    const_reverse_iterator rbegin() const { return const_reverse_iterator(item_ptr(size() - 1)); }
-    reverse_iterator rend() { return reverse_iterator(item_ptr(-1)); }
-    const_reverse_iterator rend() const { return const_reverse_iterator(item_ptr(-1)); }
 
     size_t capacity() const {
         if (is_direct()) {
