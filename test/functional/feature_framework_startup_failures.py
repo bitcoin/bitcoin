@@ -69,10 +69,10 @@ class FeatureFrameworkStartupFailures(BitcoinTestFramework):
         self.log.info("Verifying _verify_startup_failure() functionality (self-check).")
         assert_raises_message(
             AssertionError,
-            ("Child test didn't contain (only) expected errors:\n" +
-             linesep.join(["Found 0/1 tracebacks - expecting exactly one with no knock-on exceptions.",
-                           "Found 0/1 occurrences of the specific exception: NonExistentError",
-                           "Found 0/1 test failure output messages."])).encode("unicode_escape").decode("utf-8"),
+            ( "Child test didn't contain (only) expected errors:\n"
+             f"Found 0/1 tracebacks - expecting exactly one with no knock-on exceptions.{linesep}"
+             f"Found 0/1 occurrences of the specific exception: NonExistentError{linesep}"
+              "Found 0/1 test failure output messages."),
             self._verify_startup_failure,
             TestSuccess, [],
             "NonExistentError",
