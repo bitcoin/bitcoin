@@ -22,12 +22,7 @@ static void MerkleRoot(benchmark::Bench& bench)
 
     constexpr uint256 expected_root{"d8d4dfd014a533bc3941b8663fa6e7f3a8707af124f713164d75b0c3179ecb08"};
     bench.batch(hashes.size()).unit("leaf").run([&] {
-        std::vector<uint256> leaves;
-        leaves.reserve(hashes.size());
-        for (size_t s = 0; s < hashes.size(); s++) {
-            leaves.push_back(hashes[s]);
-        }
-
+        auto leaves{ToMerkleLeaves(hashes, [&](bool, const auto& h) { return h; })};
         const uint256 root{ComputeMerkleRoot(std::move(leaves))};
         assert(root == expected_root);
     });
