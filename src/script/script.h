@@ -535,6 +535,12 @@ public:
         return (opcodetype)(OP_1+n-1);
     }
 
+    /** Test for "small positive integer" script opcodes - OP_1 through OP_16. */
+    static constexpr bool IsSmallInteger(opcodetype opcode)
+    {
+        return opcode >= OP_1 && opcode <= OP_16;
+    }
+
     /**
      * Pre-version-0.6, Bitcoin always counted CHECKMULTISIGs
      * as 20 sigops. With pay-to-script-hash, that changed:

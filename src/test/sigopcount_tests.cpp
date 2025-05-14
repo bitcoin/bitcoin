@@ -221,6 +221,82 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig2), 3U);
 }
 
+BOOST_AUTO_TEST_CASE(randomized_sigopcount_matches_original)
+{
+    // Exact original methods
+    auto GetScriptOpOriginal{[&](CScript::const_iterator& pc, CScript::const_iterator end, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet) -> bool {
+        opcodeRet = OP_INVALIDOPCODE;
+        if (pvchRet)
+            pvchRet->clear();
+        if (pc >= end)
+            return false;
+
+        // Read instruction
+        if (end - pc < 1)
+            return false;
+        unsigned int opcode = *pc++;
+
+        // Immediate operand
+        if (opcode <= OP_PUSHDATA4) {
+            unsigned int nSize = 0;
+            if (opcode < OP_PUSHDATA1) {
+                nSize = opcode;
+            } else if (opcode == OP_PUSHDATA1) {
+                if (end - pc < 1)
+                    return false;
+                nSize = *pc++;
+            } else if (opcode == OP_PUSHDATA2) {
+                if (end - pc < 2)
+                    return false;
+                nSize = ReadLE16(&pc[0]);
+                pc += 2;
+            } else if (opcode == OP_PUSHDATA4) {
+                if (end - pc < 4)
+                    return false;
+                nSize = ReadLE32(&pc[0]);
+                pc += 4;
+            }
+            if (end - pc < 0 || (unsigned int)(end - pc) < nSize)
+                return false;
+            if (pvchRet)
+                pvchRet->assign(pc, pc + nSize);
+            pc += nSize;
+        }
+
+        opcodeRet = static_cast<opcodetype>(opcode);
+        return true;
+    }};
+
+    auto GetSigOpCountOriginal{[&](const CScript& script, bool fAccurate) -> unsigned int {
+        unsigned int n = 0;
+        CScript::const_iterator pc = script.begin();
+        opcodetype lastOpcode = OP_INVALIDOPCODE;
+        while (pc < script.end()) {
+            opcodetype opcode;
+            if (!GetScriptOpOriginal(pc, script.end(), opcode, nullptr)) // inlined GetOp
+                break;
+            if (opcode == OP_CHECKSIG || opcode == OP_CHECKSIGVERIFY)
+                n++;
+            else if (opcode == OP_CHECKMULTISIG || opcode == OP_CHECKMULTISIGVERIFY) {
+                if (fAccurate && lastOpcode >= OP_1 && lastOpcode <= OP_16)
+                    n += CScript::DecodeOP_N(lastOpcode);
+                else
+                    n += MAX_PUBKEYS_PER_MULTISIG;
+            }
+            lastOpcode = opcode;
+        }
+        return n;
+    }};
+
+    for (int i{0}; i < 10'000; ++i) {
+        std::vector raw{m_rng.randbytes(m_rng.randrange(1000))};
+        CScript script{raw.begin(), raw.end()};
+        for (const bool fAccurate : {false, true}) {
+            BOOST_CHECK_EQUAL(GetSigOpCountOriginal(script, fAccurate), script.GetLegacySigOpCount(fAccurate));
+        }
+    }
+}
+
 /**
  * Verifies script execution of the zeroth scriptPubKey of tx output and
  * zeroth scriptSig and witness of tx input.

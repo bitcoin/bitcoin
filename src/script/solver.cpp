@@ -53,18 +53,12 @@ static bool MatchPayToPubkeyHash(const CScript& script, valtype& pubkeyhash)
     return true;
 }
 
-/** Test for "small positive integer" script opcodes - OP_1 through OP_16. */
-static constexpr bool IsSmallInteger(opcodetype opcode)
-{
-    return opcode >= OP_1 && opcode <= OP_16;
-}
-
 /** Retrieve a minimally-encoded number in range [min,max] from an (opcode, data) pair,
  *  whether it's OP_n or through a push. */
 static std::optional<int> GetScriptNumber(opcodetype opcode, valtype data, int min, int max)
 {
     int count;
-    if (IsSmallInteger(opcode)) {
+    if (CScript::IsSmallInteger(opcode)) {
         count = CScript::DecodeOP_N(opcode);
     } else if (IsPushdataOp(opcode)) {
         if (!CheckMinimalPush(data, opcode)) return {};

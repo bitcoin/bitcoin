@@ -156,26 +156,54 @@ std::string GetOpName(opcodetype opcode)
     }
 }
 
+static constexpr unsigned int DECODE_ERR{std::numeric_limits<unsigned int>::max()};
+
+static constexpr std::pair<unsigned int, unsigned int> DecodePushData(
+    const opcodetype opcode,
+    const CScript::const_iterator& ptr,
+    const unsigned int remaining) noexcept
+{
+    unsigned int size_bytes;
+    switch (opcode) {
+    case OP_PUSHDATA1: size_bytes = 1; break;
+    case OP_PUSHDATA2: size_bytes = 2; break;
+    case OP_PUSHDATA4: size_bytes = 4; break;
+    default: size_bytes = 0; break;
+    }
+    if (size_bytes > remaining) return {DECODE_ERR, DECODE_ERR};
+
+    unsigned int data_bytes;
+    switch (size_bytes) {
+    case 1: data_bytes = ptr[0]; break;
+    case 2: data_bytes = ReadLE16(&*ptr); break;
+    case 4: data_bytes = ReadLE32(&*ptr); break;
+    default: data_bytes = opcode; break;
+    }
+    if (data_bytes > remaining || size_bytes + data_bytes > remaining) return {size_bytes, DECODE_ERR};
+
+    return {size_bytes, data_bytes};
+}
+
 unsigned int CScript::GetLegacySigOpCount(bool fAccurate) const
 {
-    unsigned int n = 0;
-    const_iterator pc = begin();
-    opcodetype lastOpcode = OP_INVALIDOPCODE;
-    while (pc < end())
-    {
-        opcodetype opcode;
-        if (!GetOp(pc, opcode))
-            break;
-        if (opcode == OP_CHECKSIG || opcode == OP_CHECKSIGVERIFY)
-            n++;
-        else if (opcode == OP_CHECKMULTISIG || opcode == OP_CHECKMULTISIGVERIFY)
-        {
-            if (fAccurate && lastOpcode >= OP_1 && lastOpcode <= OP_16)
-                n += DecodeOP_N(lastOpcode);
-            else
+    unsigned int n{0};
+    opcodetype prev{OP_INVALIDOPCODE};
+    for (const_iterator pc{begin()}, pc_end{end()}; pc < pc_end;) {
+        const auto opcode{static_cast<opcodetype>(*pc++)};
+        if (opcode <= OP_PUSHDATA4) {
+            auto [size_bytes, data_bytes]{DecodePushData(opcode, pc, pc_end - pc)};
+            if (data_bytes == DECODE_ERR) break;
+            pc += size_bytes + data_bytes;
+        } else if (opcode == OP_CHECKSIG || opcode == OP_CHECKSIGVERIFY) {
+            ++n;
+        } else if (opcode == OP_CHECKMULTISIG || opcode == OP_CHECKMULTISIGVERIFY) {
+            if (fAccurate && IsSmallInteger(prev)) {
+                n += DecodeOP_N(prev);
+            } else {
                 n += MAX_PUBKEYS_PER_MULTISIG;
+            }
         }
-        lastOpcode = opcode;
+        if (fAccurate) prev = opcode;
     }
     return n;
 }
@@ -280,52 +308,22 @@ bool CScript::HasValidOps() const
 bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator end, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet)
 {
     opcodeRet = OP_INVALIDOPCODE;
-    if (pvchRet)
-        pvchRet->clear();
-    if (pc >= end)
-        return false;
+    if (pvchRet) pvchRet->clear();
+    if (pc >= end) return false;
 
     // Read instruction
-    if (end - pc < 1)
-        return false;
-    unsigned int opcode = *pc++;
+    const auto opcode{static_cast<opcodetype>(*pc++)};
+    if (opcode <= OP_PUSHDATA4) {
+        auto [size_bytes, data_bytes]{DecodePushData(opcode, pc, end - pc)};
+        if (data_bytes == DECODE_ERR) return false;
 
-    // Immediate operand
-    if (opcode <= OP_PUSHDATA4)
-    {
-        unsigned int nSize = 0;
-        if (opcode < OP_PUSHDATA1)
-        {
-            nSize = opcode;
-        }
-        else if (opcode == OP_PUSHDATA1)
-        {
-            if (end - pc < 1)
-                return false;
-            nSize = *pc++;
-        }
-        else if (opcode == OP_PUSHDATA2)
-        {
-            if (end - pc < 2)
-                return false;
-            nSize = ReadLE16(&pc[0]);
-            pc += 2;
-        }
-        else if (opcode == OP_PUSHDATA4)
-        {
-            if (end - pc < 4)
-                return false;
-            nSize = ReadLE32(&pc[0]);
-            pc += 4;
-        }
-        if (end - pc < 0 || (unsigned int)(end - pc) < nSize)
-            return false;
-        if (pvchRet)
-            pvchRet->assign(pc, pc + nSize);
-        pc += nSize;
+        assert(size_bytes != DECODE_ERR);
+        pc += size_bytes;
+        if (pvchRet) pvchRet->assign(pc, pc + data_bytes);
+        pc += data_bytes;
     }
+    opcodeRet = opcode;
 
-    opcodeRet = static_cast<opcodetype>(opcode);
     return true;
 }
 
