@@ -68,10 +68,10 @@ static void SigOpsBlockBench(benchmark::Bench& bench)
     auto GetLegacySigOpCount{[](const CTransaction& tx) {
         unsigned int nSigOps{0};
         for (const auto& txin : tx.vin) {
-            nSigOps += txin.scriptSig.GetSigOpCount(/*fAccurate=*/false);
+            nSigOps += txin.scriptSig.GetLegacySigOpCount(/*fAccurate=*/false);
         }
         for (const auto& txout : tx.vout) {
-            nSigOps += txout.scriptPubKey.GetSigOpCount(/*fAccurate=*/false);
+            nSigOps += txout.scriptPubKey.GetLegacySigOpCount(/*fAccurate=*/false);
         }
         return nSigOps;
     }};
