@@ -58,10 +58,10 @@ static bool FetchAndClearCommitmentSection(const std::span<const uint8_t> header
 static uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CBlock& block)
 {
     std::vector<uint256> leaves;
-    leaves.resize(block.vtx.size());
-    leaves[0] = cb.GetHash();
-    for (size_t s = 1; s < block.vtx.size(); ++s) {
-        leaves[s] = block.vtx[s]->GetHash();
+    leaves.reserve((block.vtx.size() + 1) & ~1ULL); // capacity rounded up to even
+    leaves.emplace_back(cb.GetHash());
+    for (size_t i{1}; i < block.vtx.size(); ++i) {
+        leaves.emplace_back(block.vtx[i]->GetHash());
     }
     return ComputeMerkleRoot(std::move(leaves));
 }
