@@ -1634,6 +1634,39 @@ BOOST_AUTO_TEST_CASE(script_HasValidOps)
     BOOST_CHECK(!script.HasValidOps());
 }
 
+// Verifies that GetOpName returns a non-OP_UNKNOWN string for every opcode that should have a name.
+BOOST_AUTO_TEST_CASE(GetOpName_no_missing_mnemonics)
+{
+    for (auto op{OP_0}; op < OP_INVALIDOPCODE; op = opcodetype(op + 1)) {
+        switch (auto name{GetOpName(op)}; op) {
+        // Special
+        case OP_FALSE: BOOST_CHECK_EQUAL(name, "0"); break;
+        case OP_TRUE: BOOST_CHECK_EQUAL(name, "1"); break;
+        // Push data
+        case OP_PUSHDATA1: BOOST_CHECK_EQUAL(name, "OP_PUSHDATA1"); break;
+        case OP_PUSHDATA2: BOOST_CHECK_EQUAL(name, "OP_PUSHDATA2"); break;
+        case OP_PUSHDATA4: BOOST_CHECK_EQUAL(name, "OP_PUSHDATA4"); break;
+        // Other
+        case OP_1NEGATE: BOOST_CHECK_EQUAL(name, "-1"); break;
+        case OP_RESERVED: BOOST_CHECK_EQUAL(name, "OP_RESERVED"); break;
+        default:
+            if (op >= OP_RESERVED + 1 && op < OP_NOP) {
+                // Numbers
+                BOOST_CHECK_EQUAL(name, util::ToString(op - OP_RESERVED));
+            } else if (op >= OP_NOP && op <= OP_CHECKSIGADD) {
+                // Named operations
+                BOOST_CHECK_NE(name, "OP_UNKNOWN");
+                BOOST_CHECK(name.starts_with("OP_"));
+            } else {
+                // Direct pushes and unused opcodes
+                BOOST_CHECK_EQUAL(name, "OP_UNKNOWN");
+            }
+            break;
+        }
+    }
+    BOOST_CHECK_EQUAL(GetOpName(OP_INVALIDOPCODE), "OP_INVALIDOPCODE");
+}
+
 BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
 {
     UniValue tests;
