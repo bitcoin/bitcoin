@@ -158,6 +158,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
         self.skip_if_no_bitcoind_tracepoints()
         self.skip_if_no_python_bcc()
         self.skip_if_no_bpf_permissions()
+        self.skip_if_running_under_valgrind()
 
     def added_test(self):
         """Add a transaction to the mempool and make sure the tracepoint returns
