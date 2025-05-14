@@ -11,16 +11,25 @@
 
 static void MerkleRoot(benchmark::Bench& bench)
 {
-    FastRandomContext rng(true);
-    std::vector<uint256> leaves;
-    leaves.resize(9001);
-    for (auto& item : leaves) {
+    FastRandomContext rng{/*fDeterministic=*/true};
+
+    std::vector<uint256> hashes;
+    hashes.resize(9001);
+    for (auto& item : hashes) {
         item = rng.rand256();
     }
-    bench.batch(leaves.size()).unit("leaf").run([&] {
-        bool mutation = false;
-        uint256 hash = ComputeMerkleRoot(std::vector<uint256>(leaves), &mutation);
-        leaves[mutation] = hash;
+
+    constexpr uint256 expected_root{"d8d4dfd014a533bc3941b8663fa6e7f3a8707af124f713164d75b0c3179ecb08"};
+    bench.batch(hashes.size()).unit("leaf").run([&] {
+        std::vector<uint256> leaves;
+        leaves.reserve(hashes.size());
+        for (size_t s = 0; s < hashes.size(); s++) {
+            leaves.push_back(hashes[s]);
+        }
+
+        bool mutation{false};
+        const uint256 hash{ComputeMerkleRoot(std::move(leaves), &mutation)};
+        assert(!mutation && hash == expected_root);
     });
 }
 
