@@ -2128,7 +2128,7 @@ size_t static WitnessSigOps(int witversion, const std::vector<unsigned char>& wi
 
         if (witprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE && witness.stack.size() > 0) {
             CScript subscript(witness.stack.back().begin(), witness.stack.back().end());
-            return subscript.GetSigOpCount(true);
+            return subscript.CountSigOps(/*fAccurate=*/true);
         }
     }
 

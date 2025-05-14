@@ -520,13 +520,20 @@ public:
     }
 
     /**
-     * Pre-version-0.6, Bitcoin always counted CHECKMULTISIGs
-     * as 20 sigops. With pay-to-script-hash, that changed:
-     * CHECKMULTISIGs serialized in scriptSigs are
-     * counted more accurately, assuming they are of the form
-     *  ... OP_N CHECKMULTISIG ...
+     * Count the number of signature operations (sigops) in this script.
+     *
+     * The `fAccurate` parameter controls how `CHECKMULTISIG` operations are counted.
+     * When enforcing the `MAX_BLOCK_SIGOPS_COST` limit, set `fAccurate` to `true` when
+     * counting a redeemScript (P2SH) or witnessScript (P2WSH), and set it to `false`
+     * when counting a scriptPubKey (locking script) or scriptSig (unlocking script).
+     *
+     * Historical note: before P2SH (v0.6), `CHECKMULTISIG` was always counted as
+     * MAX_PUBKEYS_PER_MULTISIG (=20), regardless of the actual number of pubkeys.
+     * Starting with P2SH — and similarly for P2WSH later — `CHECKMULTISIG` inside
+     * the redeemScript/witnessScript began to be counted precisely, using the
+     * preceding OP_N to determine the number of pubkeys.
      */
-    unsigned int GetSigOpCount(bool fAccurate) const;
+    unsigned int CountSigOps(bool fAccurate) const;
 
     /**
      * Accurately count sigOps, including sigOps in
