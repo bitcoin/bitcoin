@@ -36,15 +36,11 @@ class FeatureFrameworkStartupFailures(BitcoinTestFramework):
     # Launches a child test process that runs this same file, but instantiates
     # a child test. Verifies that it raises only the expected exception, once.
     def _verify_startup_failure(self, test, internal_args, expected_exception):
-        # Inherit args from parent, only modifying tmpdir so children don't fail
-        # as a cause of colliding with the parent dir.
-        parent_args = sys.argv.copy()
+        # Inherit sys.argv from parent, only overriding tmpdir to a subdirectory
+        # so children don't fail due to colliding with the parent dir.
         assert self.options.tmpdir, "Framework should always set tmpdir."
-        i, path = next(((i, m[1]) for i, arg in enumerate(parent_args) if (m := re.match(r'--tm(?:p(?:d(?:ir?)?)?)?=(.+)', arg))),
-                       (len(parent_args), self.options.tmpdir))
         subdir = md5(expected_exception.encode('utf-8')).hexdigest()[:8]
-        parent_args[i:i + 1] = [f"--tmpdir={path}/{subdir}"]
-        args = [sys.executable] + parent_args + [f"--internal_test={test.__name__}"] + internal_args
+        args = [sys.executable] + sys.argv + [f"--tmpdir={self.options.tmpdir}/{subdir}", f"--internal_test={test.__name__}"] + internal_args
 
         try:
             # The subprocess encoding argument gives different results for e.output
