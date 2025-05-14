@@ -4062,6 +4062,8 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
                                  strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), tx_state.GetDebugMessage()));
         }
     }
+    // This underestimates the number of sigops, because unlike ConnectBlock it
+    // does not count witness and p2sh sigops.
     unsigned int nSigOps = 0;
     for (const auto& tx : block.vtx)
     {
