@@ -21,7 +21,7 @@ static void MerkleRoot(benchmark::Bench& bench)
     constexpr size_t iterations{1000};
     std::vector<std::vector<uint256>> cases(iterations);
     for (auto& h : cases) {
-        // TODO reserve to even
+        h.reserve(block_vtx_size + (block_vtx_size & 1)); // capacity rounded up to even
         h = leaves; // copies the same vector for each case
     }
 
