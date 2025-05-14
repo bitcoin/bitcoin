@@ -539,4 +539,12 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
 
     return nullptr;
 }
+
+std::optional<BlockRef> GetTip(ChainstateManager& chainman)
+{
+    LOCK(::cs_main);
+    CBlockIndex* tip{chainman.ActiveChain().Tip()};
+    if (!tip) return {};
+    return BlockRef{tip->GetBlockHash(), tip->nHeight};
+}
 } // namespace node

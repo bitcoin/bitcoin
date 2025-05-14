@@ -966,10 +966,7 @@ public:
 
     std::optional<BlockRef> getTip() override
     {
-        LOCK(::cs_main);
-        CBlockIndex* tip{chainman().ActiveChain().Tip()};
-        if (!tip) return {};
-        return BlockRef{tip->GetBlockHash(), tip->nHeight};
+        return GetTip(chainman());
     }
 
     std::optional<BlockRef> waitTipChanged(uint256 current_tip, MillisecondsDouble timeout) override
