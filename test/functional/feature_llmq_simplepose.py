@@ -22,7 +22,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.extra_args = [[ '-testactivationheight=dip0024@9999' ]] * 6
         self.set_dash_test_params(6, 5)
         self.set_dash_llmq_test_params(5, 3)
-        self.delay_v20(height=9999)
+        self.delay_v20_and_mn_rr(height=9999)
 
     def add_options(self, parser):
         parser.add_argument("--disable-spork23", dest="disable_spork23", default=False, action="store_true",

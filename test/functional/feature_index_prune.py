@@ -11,7 +11,11 @@ from test_framework.util import (
 )
 from test_framework.governance import EXPECTED_STDERR_NO_GOV_PRUNE
 
-DEPLOYMENT_ARGS = ["-testactivationheight=v20@3000", "-dip3params=3000:3000"]
+DEPLOYMENT_ARGS = [
+    "-dip3params=3000:3000",
+    "-testactivationheight=v20@3000",
+    "-testactivationheight=mn_rr@3000",
+]
 
 class FeatureIndexPruneTest(BitcoinTestFramework):
     def set_test_params(self):

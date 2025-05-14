@@ -635,6 +635,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             f.write("shrinkdebugfile=0\n")
             f.write("dip3params=2:2\n")
             f.write(f"testactivationheight=v20@{self.v20_height}\n")
+            f.write(f"testactivationheight=mn_rr@{self.mn_rr_height}\n")
             os.makedirs(os.path.join(new_data_dir, 'stderr'), exist_ok=True)
             os.makedirs(os.path.join(new_data_dir, 'stdout'), exist_ok=True)
 
@@ -1172,7 +1173,11 @@ class DashTestFramework(BitcoinTestFramework):
         old_num_nodes = len(self.nodes)
         super().add_nodes(num_nodes, extra_args, rpchost=rpchost, binary=binary, binary_cli=binary_cli, versions=versions)
         for i in range(old_num_nodes, old_num_nodes + num_nodes):
-            append_config(self.nodes[i].datadir, ["dip3params=2:2", f"testactivationheight=v20@{self.v20_height}"])
+            append_config(self.nodes[i].datadir, [
+                "dip3params=2:2",
+                f"testactivationheight=v20@{self.v20_height}",
+                f"testactivationheight=mn_rr@{self.mn_rr_height}",
+            ])
         if old_num_nodes == 0:
             # controller node is the only node that has an extra option allowing it to submit sporks
             append_config(self.nodes[0].datadir, ["sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"])
@@ -1193,6 +1198,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.mninfo = []
         self.setup_clean_chain = True
         self.v20_height = 100
+        self.mn_rr_height = 100
         # additional args
         if extra_args is None:
             extra_args = [[]] * num_nodes
@@ -1210,8 +1216,9 @@ class DashTestFramework(BitcoinTestFramework):
         self.quorum_data_request_expiration_timeout = 360
 
 
-    def delay_v20(self, height=None):
+    def delay_v20_and_mn_rr(self, height=None):
         self.v20_height = height
+        self.mn_rr_height = height
 
     def activate_by_name(self, name, expected_activation_height=None, slow_mode=True):
         assert not softfork_active(self.nodes[0], name)

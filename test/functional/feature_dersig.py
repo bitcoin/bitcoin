@@ -50,10 +50,11 @@ class BIP66Test(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [[
             f'-testactivationheight=dersig@{DERSIG_HEIGHT}',
-            '-testactivationheight=v20@9000', # due to changes in CbTx
             '-whitelist=noban@127.0.0.1',
-            '-dip3params=9000:9000',
             '-par=1',  # Use only one script thread to get the exact log msg for testing
+            '-dip3params=9000:9000',
+            '-testactivationheight=v20@9000', # due to changes in CbTx
+            '-testactivationheight=mn_rr@9000', # due to changes in CbTx
         ]]
         self.setup_clean_chain = True
         self.rpc_timeout = 240

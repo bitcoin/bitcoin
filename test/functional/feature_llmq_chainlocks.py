@@ -20,7 +20,7 @@ from test_framework.util import assert_equal, assert_raises_rpc_error, force_fin
 class LLMQChainLocksTest(DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(5, 4)
-        self.delay_v20(height=200)
+        self.delay_v20_and_mn_rr(height=200)
 
     def run_test(self):
         # Connect all nodes to node1 so that we always have the whole network connected

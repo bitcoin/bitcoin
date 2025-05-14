@@ -47,7 +47,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
     def set_test_params(self):
         self.extra_args = [[ f'-testactivationheight=dip0008@{DIP0008_HEIGHT}', f'-testactivationheight=dip0024@{DIP0024_HEIGHT}', "-vbparams=testdummy:999999999999:999999999999" ]] * 4
         self.set_dash_test_params(4, 3, extra_args = self.extra_args)
-        self.delay_v20(height=V20_HEIGHT)
+        self.delay_v20_and_mn_rr(height=V20_HEIGHT)
 
     def remove_masternode(self, idx):
         mn = self.mninfo[idx]

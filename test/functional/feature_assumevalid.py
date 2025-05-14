@@ -62,7 +62,12 @@ class AssumeValidTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
-        self.extra_args = ["-dip3params=9000:9000", '-testactivationheight=v20@9000', "-checkblockindex=0"]
+        self.extra_args = [
+            "-dip3params=9000:9000",
+            '-testactivationheight=v20@9000',
+            '-testactivationheight=mn_rr@9000',
+            "-checkblockindex=0",
+        ]
         self.rpc_timeout = 120
 
     def setup_network(self):

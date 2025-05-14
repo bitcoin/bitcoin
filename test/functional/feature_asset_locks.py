@@ -54,8 +54,8 @@ class AssetLocksTest(DashTestFramework):
         self.set_dash_test_params(2, 0, [[
                 "-whitelist=127.0.0.1",
                 "-llmqtestinstantsenddip0024=llmq_test_instantsend",
-                "-testactivationheight=mn_rr@620",
         ]] * 2, evo_count=2)
+        self.mn_rr_height = 620
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
