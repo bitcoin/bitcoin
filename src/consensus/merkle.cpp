@@ -66,9 +66,9 @@ uint256 ComputeMerkleRoot(std::vector<uint256> hashes, bool* mutated) {
 uint256 BlockMerkleRoot(const CBlock& block, bool* mutated)
 {
     std::vector<uint256> leaves;
-    leaves.resize(block.vtx.size());
+    leaves.reserve(block.vtx.size() + (block.vtx.size() & 1)); // capacity rounded up to even
     for (size_t s = 0; s < block.vtx.size(); s++) {
-        leaves[s] = block.vtx[s]->GetHash();
+        leaves.push_back(block.vtx[s]->GetHash());
     }
     return ComputeMerkleRoot(std::move(leaves), mutated);
 }
@@ -76,10 +76,10 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated)
 uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated)
 {
     std::vector<uint256> leaves;
-    leaves.resize(block.vtx.size());
-    leaves[0].SetNull(); // The witness hash of the coinbase is 0.
+    leaves.reserve(block.vtx.size() + (block.vtx.size() & 1)); // capacity rounded up to even
+    leaves.emplace_back(); // The witness hash of the coinbase is 0.
     for (size_t s = 1; s < block.vtx.size(); s++) {
-        leaves[s] = block.vtx[s]->GetWitnessHash();
+        leaves.push_back(block.vtx[s]->GetWitnessHash());
     }
     return ComputeMerkleRoot(std::move(leaves), mutated);
 }
