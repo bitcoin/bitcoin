@@ -1187,8 +1187,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
     BOOST_CHECK_EQUAL(sizeof(CScript), 40);
     BOOST_CHECK_EQUAL(sizeof(CTxOut), 48);
 
-    CKey dummy_key;
-    dummy_key.MakeNewKey(/*fCompressed=*/true);
+    CKey dummy_key{GenerateRandomKey(/*compressed=*/true)};
     const CPubKey dummy_pubkey{dummy_key.GetPubKey()};
 
     // Small OP_RETURN has direct allocation
@@ -1248,8 +1247,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
 
     // Uncompressed P2PK needs extra allocation
     {
-        CKey uncompressed_key;
-        uncompressed_key.MakeNewKey(/*fCompressed=*/false);
+        CKey uncompressed_key{GenerateRandomKey(/*compressed=*/false)};
         const CPubKey uncompressed_pubkey{uncompressed_key.GetPubKey()};
 
         const auto script{GetScriptForRawPubKey(uncompressed_pubkey)};
@@ -1627,6 +1625,37 @@ BOOST_AUTO_TEST_CASE(script_HasValidOps)
     BOOST_CHECK(!script.HasValidOps());
     script = ToScript("88acc0"_hex); // Script with undefined opcode
     BOOST_CHECK(!script.HasValidOps());
+}
+
+BOOST_AUTO_TEST_CASE(GetOpName_no_missing_mnemonics)
+{
+    for (auto op{OP_0}; op < OP_INVALIDOPCODE; op = opcodetype(op + 1)) {
+        switch (auto name{GetOpName(op)}; op) {
+        // Special
+        case OP_FALSE: BOOST_CHECK_EQUAL(name, "0"); break;
+        case OP_TRUE: BOOST_CHECK_EQUAL(name, "1"); break;
+        // Push data
+        case OP_PUSHDATA1: BOOST_CHECK_EQUAL(name, "OP_PUSHDATA1"); break;
+        case OP_PUSHDATA2: BOOST_CHECK_EQUAL(name, "OP_PUSHDATA2"); break;
+        case OP_PUSHDATA4: BOOST_CHECK_EQUAL(name, "OP_PUSHDATA4"); break;
+        // Other
+        case OP_1NEGATE: BOOST_CHECK_EQUAL(name, "-1"); break;
+        case OP_RESERVED: BOOST_CHECK_EQUAL(name, "OP_RESERVED"); break;
+        default:
+            if (op >= OP_RESERVED + 1 && op < OP_NOP) {
+                // Numbers
+                BOOST_CHECK_EQUAL(name, util::ToString(op - OP_RESERVED));
+            } else if (op >= OP_NOP && op <= OP_CHECKSIGADD) {
+                // Named operations
+                BOOST_CHECK_NE(name, "OP_UNKNOWN");
+                BOOST_CHECK(name.starts_with("OP_"));
+            } else {
+                BOOST_CHECK_EQUAL(name, "OP_UNKNOWN");
+            }
+            break;
+        }
+    }
+    BOOST_CHECK_EQUAL(GetOpName(OP_INVALIDOPCODE), "OP_INVALIDOPCODE");
 }
 
 BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
