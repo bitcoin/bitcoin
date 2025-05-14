@@ -156,7 +156,7 @@ std::string GetOpName(opcodetype opcode)
     }
 }
 
-unsigned int CScript::GetSigOpCount(bool fAccurate) const
+unsigned int CScript::GetLegacySigOpCount(bool fAccurate) const
 {
     unsigned int n = 0;
     const_iterator pc = begin();
@@ -183,7 +183,7 @@ unsigned int CScript::GetSigOpCount(bool fAccurate) const
 unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
 {
     if (!IsPayToScriptHash())
-        return GetSigOpCount(true);
+        return GetLegacySigOpCount(/*fAccurate=*/true);
 
     // This is a pay-to-script-hash scriptPubKey;
     // get the last item that the scriptSig
@@ -201,7 +201,7 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
 
     /// ... and return its opcount:
     CScript subscript(vData.begin(), vData.end());
-    return subscript.GetSigOpCount(true);
+    return subscript.GetLegacySigOpCount(/*fAccurate=*/true);
 }
 
 bool CScript::IsPayToAnchor() const
