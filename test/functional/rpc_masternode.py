@@ -33,7 +33,6 @@ class RPCMasternodeTest(DashTestFramework):
             payments_block = payments[0]
             payments_block_payees = payments_block["masternodes"][0]["payees"]
 
-            num_payees = 0
             payments_payee = ""
             for i in range(0, len(payments_block_payees)):
                 if i == 0:
@@ -43,10 +42,10 @@ class RPCMasternodeTest(DashTestFramework):
                 payments_payee += payments_block_payees[i]["address"]
                 if i < len(payments_block_payees) - 1:
                     payments_payee += ", "
-                num_payees += 1
             assert_equal(payments_block["height"], height)
             assert_equal(payments_block["blockhash"], blockhash)
             assert_equal(winners_payee, payments_payee)
+            num_payees = len(payments_block_payees) - 1
             if num_payees == 1:
                 checked_0_operator_reward = True
             if num_payees > 1:
