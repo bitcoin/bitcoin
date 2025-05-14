@@ -98,7 +98,10 @@ FUZZ_TARGET(script, .init = initialize_script)
     (void)script.IsPayToScriptHash();
     (void)script.IsPayToWitnessScriptHash();
     (void)script.IsPushOnly();
-    (void)script.GetLegacySigOpCount(/*fAccurate=*/false);
+    (void)script.GetLegacySigOpCount(/*fAccurate=*/fuzzed_data_provider.ConsumeBool());
+
+    auto script_sig{ConsumeScript(fuzzed_data_provider)};
+    (void)script.GetSigOpCount(script_sig);
 
     {
         const std::vector<uint8_t> bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider);
