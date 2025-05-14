@@ -1180,8 +1180,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
     BOOST_CHECK_EQUAL(sizeof(CScript), 40);
     BOOST_CHECK_EQUAL(sizeof(CTxOut), 48);
 
-    CKey dummy_key;
-    dummy_key.MakeNewKey(/*fCompressed=*/true);
+    CKey dummy_key{GenerateRandomKey(/*compressed=*/true)};
     const CPubKey dummy_pubkey{dummy_key.GetPubKey()};
 
     // Small OP_RETURN has direct allocation
@@ -1241,8 +1240,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
 
     // Uncompressed P2PK needs extra allocation
     {
-        CKey uncompressed_key;
-        uncompressed_key.MakeNewKey(/*fCompressed=*/false);
+        CKey uncompressed_key{GenerateRandomKey(/*compressed=*/false)};
         const CPubKey uncompressed_pubkey{uncompressed_key.GetPubKey()};
 
         const auto script{GetScriptForRawPubKey(uncompressed_pubkey)};

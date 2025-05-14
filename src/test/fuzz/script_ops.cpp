@@ -43,8 +43,7 @@ FUZZ_TARGET(script_ops)
             });
     }
     const CScript& script = script_mut;
-    (void)script.CountSigOps(/*fAccurate=*/false);
-    (void)script.CountSigOps(/*fAccurate=*/true);
+    (void)script.CountSigOps(/*fAccurate=*/fuzzed_data_provider.ConsumeBool());
     (void)CountP2SHSigOps(CScript{}, script);
     (void)CountP2SHSigOps(script, CScript{});
     (void)script.HasValidOps();

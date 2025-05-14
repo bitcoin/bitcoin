@@ -4,6 +4,7 @@
 
 #include <chainparams.h>
 #include <compressor.h>
+#include <consensus/tx_verify.h>
 #include <core_io.h>
 #include <core_memusage.h>
 #include <key_io.h>
@@ -12,14 +13,14 @@
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/interpreter.h>
-#include <script/script.h>
 #include <script/script_error.h>
+#include <script/script.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
 #include <streams.h>
-#include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
 #include <univalue.h>
 #include <util/chaintype.h>
@@ -103,7 +104,10 @@ FUZZ_TARGET(script, .init = initialize_script)
     (void)script.IsUncompressedPayToPubKey();
     (void)script.IsPayToWitnessPubKeyHash();
     (void)script.IsPushOnly();
-    (void)script.CountSigOps(/*fAccurate=*/false);
+    (void)script.CountSigOps(/*fAccurate=*/fuzzed_data_provider.ConsumeBool());
+
+    auto script_sig{ConsumeScript(fuzzed_data_provider)};
+    (void)CountP2SHSigOps(script_sig, script);
 
     {
         const std::vector<uint8_t> bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider);
