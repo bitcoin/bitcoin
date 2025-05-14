@@ -225,6 +225,17 @@ class BlockchainTest(BitcoinTestFramework):
                     'ehf': True
                 },
                 'active': False},
+            'v23': {
+                'type': 'bip9',
+                'bip9': {
+                    'status': 'defined',
+                    'start_time': 0,
+                    'timeout': 9223372036854775807,  # "v23" does not have a timeout so is set to the max int64 value
+                    'since': 0,
+                    'min_activation_height': 0,
+                    'ehf': True
+                },
+                'active': False},
             'testdummy': {
                 'type': 'bip9',
                 'bip9': {
