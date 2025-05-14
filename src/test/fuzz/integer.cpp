@@ -22,13 +22,14 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
-#include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
 #include <uint256.h>
 #include <univalue.h>
 #include <util/chaintype.h>
 #include <util/check.h>
+#include <util/ints.h>
 #include <util/moneystr.h>
 #include <util/overflow.h>
 #include <util/strencodings.h>
@@ -80,7 +81,8 @@ FUZZ_TARGET(integer, .init = initialize_integer)
     }
     constexpr uint256 u256_min{"0000000000000000000000000000000000000000000000000000000000000000"};
     constexpr uint256 u256_max{"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
-    const std::vector<uint256> v256{u256, u256_min, u256_max};
+    std::vector<uint256> v256{u256, u256_min, u256_max};
+    v256.reserve(RoundUpToEven(v256.size()));
     (void)ComputeMerkleRoot(v256);
     (void)DecompressAmount(u64);
     {

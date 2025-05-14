@@ -5,6 +5,7 @@
 #include <consensus/merkle.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <util/ints.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -237,6 +238,7 @@ BOOST_AUTO_TEST_CASE(merkle_test_BlockWitness)
     uint256 blockWitness = BlockWitnessMerkleRoot(block);
 
     std::vector<uint256> hashes;
+    hashes.reserve(RoundUpToEven(block.vtx.size()));
     hashes.resize(block.vtx.size());
     hashes[0].SetNull();
     hashes[1] = block.vtx[1]->GetHash();

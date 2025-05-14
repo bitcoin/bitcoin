@@ -3,12 +3,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/merkle.h>
+#include <hash.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
 #include <test/util/str.h>
+#include <util/ints.h>
 #include <util/strencodings.h>
-#include <hash.h>
 
 #include <cassert>
 #include <cstdint>
@@ -44,7 +45,7 @@ FUZZ_TARGET(merkle)
     }
     const size_t num_txs = block->vtx.size();
     std::vector<uint256> tx_hashes;
-    tx_hashes.reserve(num_txs);
+    tx_hashes.reserve(RoundUpToEven(num_txs));
 
     for (size_t i = 0; i < num_txs; ++i) {
         tx_hashes.push_back(block->vtx[i]->GetHash());

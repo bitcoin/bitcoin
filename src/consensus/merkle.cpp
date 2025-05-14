@@ -5,6 +5,7 @@
 #include <consensus/merkle.h>
 #include <hash.h>
 #include <util/check.h>
+#include <util/ints.h>
 
 /*     WARNING! If you're reading this because you're learning about crypto
        and/or designing a new system that will use merkle trees, keep in mind
@@ -66,9 +67,9 @@ uint256 ComputeMerkleRoot(std::vector<uint256> hashes, bool* mutated) {
 uint256 BlockMerkleRoot(const CBlock& block, bool* mutated)
 {
     std::vector<uint256> leaves;
-    leaves.resize(block.vtx.size());
+    leaves.reserve(RoundUpToEven(block.vtx.size()));
     for (size_t s = 0; s < block.vtx.size(); s++) {
-        leaves[s] = block.vtx[s]->GetHash();
+        leaves.push_back(block.vtx[s]->GetHash());
     }
     return ComputeMerkleRoot(std::move(leaves), mutated);
 }
@@ -76,10 +77,10 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated)
 uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated)
 {
     std::vector<uint256> leaves;
-    leaves.resize(block.vtx.size());
-    leaves[0].SetNull(); // The witness hash of the coinbase is 0.
+    leaves.reserve(RoundUpToEven(block.vtx.size()));
+    leaves.emplace_back(); // The witness hash of the coinbase is 0.
     for (size_t s = 1; s < block.vtx.size(); s++) {
-        leaves[s] = block.vtx[s]->GetWitnessHash();
+        leaves.push_back(block.vtx[s]->GetWitnessHash());
     }
     return ComputeMerkleRoot(std::move(leaves), mutated);
 }
