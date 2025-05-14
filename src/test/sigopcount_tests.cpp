@@ -18,6 +18,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+using namespace util::hex_literals;
+
 // Helpers:
 static std::vector<unsigned char>
 Serialize(const CScript& s)
@@ -27,6 +29,191 @@ Serialize(const CScript& s)
 }
 
 BOOST_FIXTURE_TEST_SUITE(sigopcount_tests, BasicTestingSetup)
+
+// Feeds malformed PUSHDATA sequences to confirm the parser never crashes and still counts sig-ops that appear before the error.
+BOOST_AUTO_TEST_CASE(GetLegacySigOpCountErrors)
+{
+    for (const bool fAccurate : {false, true}) {
+        {
+            const auto script{CScript() << OP_CHECKSIG << opcodetype(0x4b)}; // push-75 with 0 bytes present
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 1);
+        }
+        {
+            const auto script{CScript() << OP_CHECKSIG
+                              << opcodetype(0x02)
+                              << OP_CHECKSIGVERIFY}; // push-2 with only 1 byte present ignoring OP_CHECKSIGVERIFY
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 1);
+        }
+
+        {
+            const auto script{CScript() << OP_CHECKSIG << OP_PUSHDATA1}; // not enough data after OP_PUSHDATA1
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 1);
+        }
+        {
+            const auto script{CScript() << OP_CHECKSIG << OP_PUSHDATA1
+                              << opcodetype(0xff)
+                              << OP_CHECKSIGVERIFY}; // out of bounds OP_PUSHDATA1 data size ignoring OP_CHECKSIGVERIFY
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 1);
+        }
+
+        {
+            const auto script{CScript() << OP_CHECKSIG << OP_PUSHDATA2}; // not enough data after OP_PUSHDATA2
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 1);
+        }
+        {
+            const auto script{CScript() << OP_CHECKSIG << OP_PUSHDATA2 << opcodetype(0xff)}; // not enough data after OP_PUSHDATA2
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 1);
+        }
+        {
+            const auto script{CScript() << OP_CHECKSIG << OP_PUSHDATA2
+                              << opcodetype(0xff) << opcodetype(0xff)
+                              << OP_CHECKSIG << OP_CHECKSIGVERIFY << OP_CHECKMULTISIG << OP_CHECKMULTISIGVERIFY}; // out of bounds OP_PUSHDATA2 data size ignoring OP_CHECKSIGVERIFY
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 1);
+        }
+
+        {
+            const auto script{CScript() << OP_CHECKSIG << OP_PUSHDATA4}; // not enough data after OP_PUSHDATA4
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 1);
+        }
+        {
+            const auto script{CScript() << OP_CHECKSIG << OP_PUSHDATA4
+                              << opcodetype(0xff)}; // not enough data after OP_PUSHDATA4
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 1);
+        }
+        {
+            const auto script{CScript() << OP_CHECKSIG << OP_PUSHDATA4
+                              << opcodetype(0xff) << opcodetype(0xff)}; // not enough data after OP_PUSHDATA4
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 1);
+        }
+        {
+            const auto script{CScript() << OP_CHECKSIG << OP_PUSHDATA4
+                              << opcodetype(0xff) << opcodetype(0xff) << opcodetype(0xff)}; // not enough data after OP_PUSHDATA4
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 1);
+        }
+        {
+            const auto script{CScript() << OP_CHECKSIG << OP_PUSHDATA4
+                              << opcodetype(100) << opcodetype(0xff) << opcodetype(0xff) << opcodetype(0xff)
+                              << OP_CHECKSIG << OP_CHECKSIGVERIFY << OP_CHECKMULTISIG << OP_CHECKMULTISIGVERIFY}; // out of bounds OP_PUSHDATA4 data size ignoring OP_CHECKMULTISIGVERIFY
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 1);
+        }
+    }
+}
+
+// Asserts the expected legacy/accurate sig-op totals for all common known script templates
+BOOST_AUTO_TEST_CASE(GetLegacySigOpCountKnownTemplates)
+{
+    CKey dummyKey;
+    dummyKey.MakeNewKey(true);
+    const auto pubkey{dummyKey.GetPubKey()};
+
+    for (const bool fAccurate : {false, true}) {
+        {
+            // P2A
+            const std::vector<unsigned char> anchor_data{0x4e, 0x73};
+            const auto script{CScript() << OP_1 << anchor_data};
+
+            BOOST_CHECK(script.IsPayToAnchor());
+            BOOST_CHECK_EQUAL(script.GetSigOpCount(CScript()), 0); // arg is ignored since script is not P2SH
+            BOOST_CHECK_EQUAL(CScript().GetSigOpCount(script), 0); // arg is ignored since empty script is not P2SH
+            BOOST_CHECK(script.IsPayToAnchor(1, anchor_data));
+        }
+        {
+            // OP_RETURN with sigop after (non-standard, found first in block 229,712)
+            const auto p2pkh_hash{"cd2b3298b7f455f39805377e5f213093df3cc09a"_hex_v_u8};
+            const auto script{CScript() << OP_RETURN << OP_DUP << OP_HASH160 << p2pkh_hash << OP_EQUALVERIFY << OP_CHECKSIG};
+
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 1);
+            BOOST_CHECK_EQUAL(script.GetSigOpCount(CScript()), 1); // arg is ignored since script is not P2SH
+            BOOST_CHECK_EQUAL(CScript().GetSigOpCount(script), 0); // arg is ignored since empty script is not P2SH
+        }
+        {
+            // P2WPKH
+            const auto script{GetScriptForDestination(WitnessV0KeyHash(pubkey.GetID()))};
+            BOOST_REQUIRE(script.IsPayToWitnessPubKeyHash());
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 0);
+            BOOST_CHECK_EQUAL(script.GetSigOpCount(CScript()), 0); // arg is ignored since script is not P2SH
+            BOOST_CHECK_EQUAL(CScript().GetSigOpCount(script), 0); // arg is ignored since empty script is not P2SH
+        }
+        {
+            // P2SH
+            const auto script{GetScriptForDestination(ScriptHash(CScript() << OP_TRUE))};
+            BOOST_REQUIRE(script.IsPayToScriptHash());
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 0);
+
+            BOOST_CHECK_EQUAL(script.GetSigOpCount(CScript()), 0);
+            const auto single_sigop{CScript() << ToByteVector(CScript() << OP_CHECKMULTISIG)};
+            BOOST_CHECK_EQUAL(script.GetSigOpCount(single_sigop), 20); // arg is counted since script is P2SH
+            BOOST_CHECK_EQUAL(CScript().GetSigOpCount(script), 0);     // arg is ignored since empty script is not P2SH
+
+            BOOST_CHECK_EQUAL(script.GetSigOpCount(CScript() << OP_PUSHDATA1), 0);   // error: OP_PUSHDATA1, but no size byte
+            BOOST_CHECK_EQUAL(script.GetSigOpCount(CScript() << OP_CHECKSIGADD), 0); // error: OP_CHECKSIGADD > OP_16
+        }
+        {
+            // P2PKH
+            const auto script{GetScriptForDestination(PKHash(pubkey.GetID()))};
+            BOOST_REQUIRE(script.IsPayToPubKeyHash());
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 1);
+            BOOST_CHECK_EQUAL(script.GetSigOpCount(CScript()), 1); // arg is ignored since script is not P2SH
+            BOOST_CHECK_EQUAL(CScript().GetSigOpCount(script), 0); // arg is ignored since empty script is not P2SH
+        }
+        {
+            // P2WSH
+            const auto script{GetScriptForDestination(WitnessV0ScriptHash(CScript() << OP_TRUE))};
+            BOOST_REQUIRE(script.IsPayToWitnessScriptHash());
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 0);
+            BOOST_CHECK_EQUAL(script.GetSigOpCount(CScript()), 0); // arg is ignored since script is not P2SH
+            BOOST_CHECK_EQUAL(CScript().GetSigOpCount(script), 0); // arg is ignored since empty script is not P2SH
+        }
+        {
+            // P2TR
+            const auto script{GetScriptForDestination(WitnessV1Taproot(XOnlyPubKey(pubkey)))};
+            BOOST_REQUIRE(script.IsPayToTaproot());
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 0);
+            BOOST_CHECK_EQUAL(script.GetSigOpCount(CScript()), 0); // arg is ignored since script is not P2SH
+            BOOST_CHECK_EQUAL(CScript().GetSigOpCount(script), 0); // arg is ignored since empty script is not P2SH
+        }
+        {
+            // P2PK (compressed)
+            const auto script{GetScriptForRawPubKey(pubkey)};
+            BOOST_REQUIRE(script.IsCompressedPayToPubKey());
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 1);
+            BOOST_CHECK_EQUAL(script.GetSigOpCount(CScript()), 1); // arg is ignored since script is not P2SH
+            BOOST_CHECK_EQUAL(CScript().GetSigOpCount(script), 0); // arg is ignored since empty script is not P2SH
+        }
+        {
+            // P2PK (uncompressed)
+            CKey uncompressedKey;
+            uncompressedKey.MakeNewKey(false);
+            const auto script{GetScriptForRawPubKey(uncompressedKey.GetPubKey())};
+            BOOST_REQUIRE(script.IsUncompressedPayToPubKey());
+            BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(fAccurate), 1);
+            BOOST_CHECK_EQUAL(script.GetSigOpCount(CScript()), 1); // arg is ignored since script is not P2SH
+            BOOST_CHECK_EQUAL(CScript().GetSigOpCount(script), 0); // arg is ignored since empty script is not P2SH
+        }
+    }
+
+    // MULTISIG
+    std::vector<CPubKey> keys;
+    keys.push_back(pubkey);
+    keys.push_back(pubkey); // Using the same key twice for simplicity
+    const auto script{GetScriptForMultisig(1, keys)};
+    BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(/*fAccurate=*/false), 20); // Default max pubkeys
+    BOOST_CHECK_EQUAL(script.GetLegacySigOpCount(/*fAccurate=*/true), 2);   // Actual count
+    BOOST_CHECK_EQUAL(script.GetSigOpCount(CScript()), 2);                  // arg is ignored since script is not P2SH
+    BOOST_CHECK_EQUAL(CScript().GetSigOpCount(script), 0);                  // arg is ignored since empty script is not P2SH
+}
+
+BOOST_AUTO_TEST_CASE(GetOpName_no_missing_mnemonics)
+{
+    for (auto op{OP_0}; op < OP_INVALIDOPCODE; op = opcodetype(op + 1)) {
+        const auto op_name{GetOpName(op)};
+        BOOST_CHECK(!op_name.empty());
+        if (op >= OP_PUSHDATA1 && !IsOpSuccess(op)) {
+            BOOST_CHECK_NE(op_name, "OP_UNKNOWN");
+        }
+    }
+    BOOST_CHECK(GetOpName(OP_INVALIDOPCODE) == "OP_INVALIDOPCODE");
+}
 
 BOOST_AUTO_TEST_CASE(GetSigOpCount)
 {
@@ -47,8 +234,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig), 3U);
 
     std::vector<CPubKey> keys;
-    for (int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++) {
         CKey k = GenerateRandomKey();
         keys.push_back(k.GetPubKey());
     }
