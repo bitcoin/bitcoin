@@ -6,6 +6,7 @@
 #include <key_io.h>
 #include <policy/rbf.h>
 #include <rpc/util.h>
+#include <rpc/rawtransaction_util.h>
 #include <rpc/blockchain.h>
 #include <util/vector.h>
 #include <wallet/receive.h>
@@ -738,7 +739,7 @@ RPCHelpMan gettransaction()
                         {RPCResult::Type::STR_HEX, "hex", "Raw data for transaction"},
                         {RPCResult::Type::OBJ, "decoded", /*optional=*/true, "The decoded transaction (only present when `verbose` is passed)",
                         {
-                            {RPCResult::Type::ELISION, "", "Equivalent to the RPC decoderawtransaction method, or the RPC getrawtransaction method when `verbose` is passed."},
+                            DecodeTxDoc(/*txid_field_doc=*/"The transaction id", /*wallet=*/true),
                         }},
                         RESULT_LAST_PROCESSED_BLOCK,
                     })
