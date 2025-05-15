@@ -551,11 +551,6 @@ RPCHelpMan simulaterawtransaction()
                     {"rawtx", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
                 },
             },
-            {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
-                {
-                    {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Whether to include watch-only addresses (see RPC importaddress)"},
-                },
-            },
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -575,22 +570,7 @@ RPCHelpMan simulaterawtransaction()
 
     LOCK(wallet.cs_wallet);
 
-    UniValue include_watchonly(UniValue::VNULL);
-    if (request.params[1].isObject()) {
-        UniValue options = request.params[1];
-        RPCTypeCheckObj(options,
-            {
-                {"include_watchonly", UniValueType(UniValue::VBOOL)},
-            },
-            true, true);
-
-        include_watchonly = options["include_watchonly"];
-    }
-
     isminefilter filter = ISMINE_SPENDABLE;
-    if (ParseIncludeWatchonly(include_watchonly, wallet)) {
-        filter |= ISMINE_WATCH_ONLY;
-    }
 
     const auto& txs = request.params[0].get_array();
     CAmount changes{0};
