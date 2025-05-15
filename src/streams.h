@@ -6,6 +6,7 @@
 #ifndef BITCOIN_STREAMS_H
 #define BITCOIN_STREAMS_H
 
+#include <obfuscation.h>
 #include <serialize.h>
 #include <span.h>
 #include <support/allocators/zeroafterfree.h>
@@ -21,29 +22,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <string>
-#include <utility>
 #include <vector>
-
-namespace util {
-inline void Xor(std::span<std::byte> write, std::span<const std::byte> key, size_t key_offset = 0)
-{
-    if (key.size() == 0) {
-        return;
-    }
-    key_offset %= key.size();
-
-    for (size_t i = 0, j = key_offset; i != write.size(); i++) {
-        write[i] ^= key[j++];
-
-        // This potentially acts on very many bytes of data, so it's
-        // important that we calculate `j`, i.e. the `key` index in this
-        // way instead of doing a %, which would effectively be a division
-        // for each byte Xor'd -- much slower than need be.
-        if (j == key.size())
-            j = 0;
-    }
-}
-} // namespace util
 
 /* Minimal stream for overwriting and/or appending to an existing byte vector
  *
@@ -82,6 +61,17 @@ public:
             vchData.insert(vchData.end(), UCharCast(src.data()) + nOverwrite, UCharCast(src.data() + src.size()));
         }
         nPos += src.size();
+    }
+    void write(std::span<const std::byte, 1> src)
+    {
+        assert(nPos <= vchData.size());
+        const auto byte{*UCharCast(&src[0])};
+        if (nPos < vchData.size()) {
+            vchData[nPos] = byte;
+        } else {
+            vchData.push_back(byte);
+        }
+        nPos += 1;
     }
     template <typename T>
     VectorWriter& operator<<(const T& obj)
@@ -162,6 +152,7 @@ public:
     typedef vector_type::reverse_iterator reverse_iterator;
 
     explicit DataStream() = default;
+    explicit DataStream(size_type n) { reserve(n); }
     explicit DataStream(std::span<const uint8_t> sp) : DataStream{std::as_bytes(sp)} {}
     explicit DataStream(std::span<const value_type> sp) : vch(sp.data(), sp.data() + sp.size()) {}
 
@@ -253,6 +244,10 @@ public:
         // Write to the end of the buffer
         vch.insert(vch.end(), src.begin(), src.end());
     }
+    void write(std::span<const value_type, 1> src)
+    {
+        vch.push_back(src[0]);
+    }
 
     template<typename T>
     DataStream& operator<<(const T& obj)
@@ -261,21 +256,16 @@ public:
         return (*this);
     }
 
-    template<typename T>
+    template <typename T>
     DataStream& operator>>(T&& obj)
     {
         ::Unserialize(*this, obj);
         return (*this);
     }
 
-    /**
-     * XOR the contents of this stream with a certain key.
-     *
-     * @param[in] key    The key used to XOR the data in this stream.
-     */
-    void Xor(const std::vector<unsigned char>& key)
+    void Obfuscate(const Obfuscation& obfuscation)
     {
-        util::Xor(MakeWritableByteSpan(*this), MakeByteSpan(key));
+        if (obfuscation) obfuscation(MakeWritableByteSpan(*this));
     }
 
     /** Compute total memory usage of this object (own memory + any dynamic memory). */
@@ -392,11 +382,11 @@ class AutoFile
 {
 protected:
     std::FILE* m_file;
-    std::vector<std::byte> m_xor;
+    Obfuscation m_obfuscation;
     std::optional<int64_t> m_position;
 
 public:
-    explicit AutoFile(std::FILE* file, std::vector<std::byte> data_xor={});
+    explicit AutoFile(std::FILE* file, const Obfuscation& obfuscation = 0);
 
     ~AutoFile() { fclose(); }
 
@@ -428,7 +418,7 @@ public:
     bool IsNull() const { return m_file == nullptr; }
 
     /** Continue with a different XOR key */
-    void SetXor(std::vector<std::byte> data_xor) { m_xor = data_xor; }
+    void SetObfuscation(const Obfuscation& obfuscation) { m_obfuscation = obfuscation; }
 
     /** Implementation detail, only used internally. */
     std::size_t detail_fread(std::span<std::byte> dst);
@@ -452,8 +442,10 @@ public:
     // Stream subset
     //
     void read(std::span<std::byte> dst);
+    void read(std::span<std::byte, 1> dst);
     void ignore(size_t nSize);
     void write(std::span<const std::byte> src);
+    void write(std::span<const std::byte, 1> src);
 
     template <typename T>
     AutoFile& operator<<(const T& obj)
