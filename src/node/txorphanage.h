@@ -84,7 +84,6 @@ public:
         CTransactionRef tx;
         /** Peers added with AddTx or AddAnnouncer. */
         std::set<NodeId> announcers;
-        NodeSeconds nTimeExpire;
 
         /** Get the weight of this transaction, an approximation of its memory usage. */
         unsigned int GetUsage() const {
@@ -112,6 +111,7 @@ public:
 
 protected:
     struct OrphanTx : public OrphanTxBase {
+        NodeSeconds nTimeExpire;
         size_t list_pos;
     };
 

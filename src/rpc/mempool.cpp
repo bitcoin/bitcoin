@@ -832,8 +832,6 @@ static std::vector<RPCResult> OrphanDescription()
         RPCResult{RPCResult::Type::NUM, "bytes", "The serialized transaction size in bytes"},
         RPCResult{RPCResult::Type::NUM, "vsize", "The virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted."},
         RPCResult{RPCResult::Type::NUM, "weight", "The transaction weight as defined in BIP 141."},
-        RPCResult{RPCResult::Type::NUM_TIME, "entry", "The entry time into the orphanage expressed in " + UNIX_EPOCH_TIME},
-        RPCResult{RPCResult::Type::NUM_TIME, "expiration", "The orphan expiration time expressed in " + UNIX_EPOCH_TIME},
         RPCResult{RPCResult::Type::ARR, "from", "",
         {
             RPCResult{RPCResult::Type::NUM, "peer_id", "Peer ID"},
@@ -849,8 +847,6 @@ static UniValue OrphanToJSON(const node::TxOrphanage::OrphanTxBase& orphan)
     o.pushKV("bytes", orphan.tx->GetTotalSize());
     o.pushKV("vsize", GetVirtualTransactionSize(*orphan.tx));
     o.pushKV("weight", GetTransactionWeight(*orphan.tx));
-    o.pushKV("entry", int64_t{TicksSinceEpoch<std::chrono::seconds>(orphan.nTimeExpire - node::ORPHAN_TX_EXPIRE_TIME)});
-    o.pushKV("expiration", int64_t{TicksSinceEpoch<std::chrono::seconds>(orphan.nTimeExpire)});
     UniValue from(UniValue::VARR);
     for (const auto fromPeer: orphan.announcers) {
         from.push_back(fromPeer);
