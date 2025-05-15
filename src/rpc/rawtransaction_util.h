@@ -7,6 +7,7 @@
 
 #include <addresstype.h>
 #include <consensus/amount.h>
+#include <rpc/util.h>
 #include <map>
 #include <string>
 #include <optional>
@@ -54,5 +55,8 @@ void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in);
 
 /** Create a transaction from univalue parameters */
 CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf);
+
+/** Explain the UniValue "decoded" transaction object **/
+std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc);
 
 #endif // BITCOIN_RPC_RAWTRANSACTION_UTIL_H
