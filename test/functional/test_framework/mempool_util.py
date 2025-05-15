@@ -19,8 +19,6 @@ from .wallet import (
     MiniWallet,
 )
 
-ORPHAN_TX_EXPIRE_TIME = 1200
-
 def assert_mempool_contents(test_framework, node, expected=None, sync=True):
     """Assert that all transactions in expected are in the mempool,
     and no additional ones exist. 'expected' is an array of
