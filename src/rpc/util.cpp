@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -814,6 +814,7 @@ std::string RPCHelpMan::ToString() const
     if (was_optional) ret += " )";
 
     // Description
+    CHECK_NONFATAL(!m_description.starts_with('\n'));  // Historically \n was required, but reject it for new code.
     ret += "\n\n" + TrimString(m_description) + "\n";
 
     // Arguments

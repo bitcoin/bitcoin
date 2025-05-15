@@ -169,8 +169,9 @@ static RPCHelpMan getdescriptorinfo()
 {
     const std::string EXAMPLE_DESCRIPTOR = "wpkh([d34db33f/84h/0h/0h]0279be667ef9dcbbac55a06295Ce870b07029Bfcdb2dce28d959f2815b16f81798)";
 
-    return RPCHelpMan{"getdescriptorinfo",
-        {"\nAnalyses a descriptor.\n"},
+    return RPCHelpMan{
+        "getdescriptorinfo",
+        "Analyses a descriptor.\n",
         {
             {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor."},
         },
@@ -260,8 +261,9 @@ static RPCHelpMan deriveaddresses()
 {
     const std::string EXAMPLE_DESCRIPTOR = "wpkh([d34db33f/84h/0h/0h]xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY/0/*)#cjjspncu";
 
-    return RPCHelpMan{"deriveaddresses",
-        {"\nDerives one or more addresses corresponding to an output descriptor.\n"
+    return RPCHelpMan{
+        "deriveaddresses",
+        "Derives one or more addresses corresponding to an output descriptor.\n"
          "Examples of output descriptors are:\n"
          "    pkh(<pubkey>)                                     P2PKH outputs for the given pubkey\n"
          "    wpkh(<pubkey>)                                    Native segwit P2PKH outputs for the given pubkey\n"
@@ -270,7 +272,7 @@ static RPCHelpMan deriveaddresses()
          "    tr(<pubkey>,multi_a(<n>,<pubkey>,<pubkey>,...))   P2TR-multisig outputs for the given threshold and pubkeys\n"
          "\nIn the above, <pubkey> either refers to a fixed public key in hexadecimal notation, or to an xpub/xprv optionally followed by one\n"
          "or more path elements separated by \"/\", where \"h\" represents a hardened child key.\n"
-         "For more information on output descriptors, see the documentation in the doc/descriptors.md file.\n"},
+        "For more information on output descriptors, see the documentation in the doc/descriptors.md file.\n",
         {
             {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor."},
             {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED, "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},
