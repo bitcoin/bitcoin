@@ -128,21 +128,38 @@ std::string TxStateString(const T& state)
 }
 
 /**
- * Cachable amount subdivided into watchonly and spendable parts.
+ * Cachable amount subdivided into avoid reuse and all balances
  */
 struct CachableAmount
 {
-    // NO and ALL are never (supposed to be) cached
-    std::bitset<ISMINE_ENUM_ELEMENTS> m_cached;
-    CAmount m_value[ISMINE_ENUM_ELEMENTS];
+    std::optional<CAmount> m_avoid_reuse_value;
+    std::optional<CAmount> m_all_value;
     inline void Reset()
     {
-        m_cached.reset();
+        m_avoid_reuse_value.reset();
+        m_all_value.reset();
     }
-    void Set(isminefilter filter, CAmount value)
+    void Set(bool avoid_reuse, CAmount value)
     {
-        m_cached.set(filter);
-        m_value[filter] = value;
+        if (avoid_reuse) {
+            m_avoid_reuse_value = value;
+        } else {
+            m_all_value = value;
+        }
+    }
+    CAmount Get(bool avoid_reuse)
+    {
+        if (avoid_reuse) {
+            Assert(m_avoid_reuse_value.has_value());
+            return m_avoid_reuse_value.value();
+        }
+        Assert(m_all_value.has_value());
+        return m_all_value.value();
+    }
+    bool IsCached(bool avoid_reuse)
+    {
+        if (avoid_reuse) return m_avoid_reuse_value.has_value();
+        return m_all_value.has_value();
     }
 };
 
