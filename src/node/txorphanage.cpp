@@ -37,7 +37,7 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
         return false;
     }
 
-    auto ret = m_orphans.emplace(wtxid, OrphanTx{{tx, {peer}, Now<NodeSeconds>() + ORPHAN_TX_EXPIRE_TIME}, m_orphan_list.size()});
+    auto ret = m_orphans.emplace(wtxid, OrphanTx{{tx, {peer}}, Now<NodeSeconds>() + ORPHAN_TX_EXPIRE_TIME, m_orphan_list.size()});
     assert(ret.second);
     m_orphan_list.push_back(ret.first);
     for (const CTxIn& txin : tx->vin) {
@@ -318,7 +318,7 @@ std::vector<TxOrphanage::OrphanTxBase> TxOrphanage::GetOrphanTransactions() cons
     std::vector<OrphanTxBase> ret;
     ret.reserve(m_orphans.size());
     for (auto const& o : m_orphans) {
-        ret.push_back({o.second.tx, o.second.announcers, o.second.nTimeExpire});
+        ret.push_back({o.second.tx, o.second.announcers});
     }
     return ret;
 }
