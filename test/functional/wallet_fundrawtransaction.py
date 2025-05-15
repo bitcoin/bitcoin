@@ -781,7 +781,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[3].loadwallet('wwatch')
         wwatch = self.nodes[3].get_wallet_rpc('wwatch')
         w3 = self.nodes[3].get_wallet_rpc(self.default_wallet_name)
-        result = wwatch.fundrawtransaction(rawtx, includeWatching=True, changeAddress=w3.getrawchangeaddress(), subtractFeeFromOutputs=[0])
+        result = wwatch.fundrawtransaction(rawtx, changeAddress=w3.getrawchangeaddress(), subtractFeeFromOutputs=[0])
         res_dec = self.nodes[0].decoderawtransaction(result["hex"])
         assert_equal(len(res_dec["vin"]), 1)
         assert res_dec["vin"][0]["txid"] == self.watchonly_utxo['txid']
