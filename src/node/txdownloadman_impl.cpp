@@ -357,8 +357,6 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
 {
     const CTransaction& tx{*ptx};
     // Results returned to caller
-    // Whether we should call AddToCompactExtraTransactions at the end
-    bool add_extra_compact_tx{first_time_failure};
     // Hashes to pass to AddKnownTx later
     std::vector<Txid> unique_parents;
     // Populated if failure is reconsiderable and eligible package is found.
@@ -401,10 +399,6 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
                     return AlreadyHaveTx(GenTxid::Txid(txid), /*include_reconsiderable=*/false);
                 });
                 const auto now{GetTime<std::chrono::microseconds>()};
-                const auto& wtxid = ptx->GetWitnessHash();
-                // Potentially flip add_extra_compact_tx to false if tx is already in orphanage, which
-                // means it was already added to vExtraTxnForCompact.
-                add_extra_compact_tx &= !m_orphanage.HaveTx(wtxid);
 
                 // If there is no candidate for orphan resolution, AddTx will not be called. This means
                 // that if a peer is overloading us with invs and orphans, they will eventually not be
@@ -446,9 +440,7 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
                 m_txrequest.ForgetTxHash(tx.GetWitnessHash());
             }
         }
-    } else if (state.GetResult() == TxValidationResult::TX_WITNESS_STRIPPED) {
-        add_extra_compact_tx = false;
-    } else {
+    } else if (state.GetResult() != TxValidationResult::TX_WITNESS_STRIPPED) {
         // We can add the wtxid of this transaction to our reject filter.
         // Do not add txids of witness transactions or witness-stripped
         // transactions to the filter, as they can have been malleated;
@@ -502,7 +494,6 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
     }
 
     return RejectedTxTodo{
-        .m_should_add_extra_compact_tx = add_extra_compact_tx,
         .m_unique_parents = std::move(unique_parents),
         .m_package_to_validate = std::move(package_to_validate)
     };

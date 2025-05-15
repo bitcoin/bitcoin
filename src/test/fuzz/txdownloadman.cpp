@@ -224,7 +224,6 @@ FUZZ_TARGET(txdownloadman, .init = initialize)
                 bool first_time_failure{fuzzed_data_provider.ConsumeBool()};
 
                 node::RejectedTxTodo todo = txdownloadman.MempoolRejectedTx(rand_tx, state, rand_peer, first_time_failure);
-                Assert(first_time_failure || !todo.m_should_add_extra_compact_tx);
             },
             [&] {
                 GenTxid gtxid = fuzzed_data_provider.ConsumeBool() ?
@@ -369,7 +368,6 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                 bool reject_contains_wtxid{txdownload_impl.RecentRejectsFilter().contains(rand_tx->GetWitnessHash().ToUint256())};
 
                 node::RejectedTxTodo todo = txdownload_impl.MempoolRejectedTx(rand_tx, state, rand_peer, first_time_failure);
-                Assert(first_time_failure || !todo.m_should_add_extra_compact_tx);
                 if (!reject_contains_wtxid) Assert(todo.m_unique_parents.size() <= rand_tx->vin.size());
             },
             [&] {

@@ -23,17 +23,15 @@ struct Behaviors {
     bool m_wtxid_in_rejects;
     bool m_txid_in_rejects_recon;
     bool m_wtxid_in_rejects_recon;
-    bool m_keep_for_compact;
     bool m_ignore_inv_txid;
     bool m_ignore_inv_wtxid;
 
     // Constructor. We are passing and casting ints because they are more readable in a table (see expected_behaviors).
-    Behaviors(bool txid_rejects, bool wtxid_rejects, bool txid_recon, bool wtxid_recon, bool keep, bool txid_inv, bool wtxid_inv) :
+    Behaviors(bool txid_rejects, bool wtxid_rejects, bool txid_recon, bool wtxid_recon, bool txid_inv, bool wtxid_inv) :
         m_txid_in_rejects(txid_rejects),
         m_wtxid_in_rejects(wtxid_rejects),
         m_txid_in_rejects_recon(txid_recon),
         m_wtxid_in_rejects_recon(wtxid_recon),
-        m_keep_for_compact(keep),
         m_ignore_inv_txid(txid_inv),
         m_ignore_inv_wtxid(wtxid_inv)
     {}
@@ -42,7 +40,6 @@ struct Behaviors {
     {
         BOOST_CHECK_EQUAL(other.m_wtxid_in_rejects,       m_wtxid_in_rejects);
         BOOST_CHECK_EQUAL(other.m_wtxid_in_rejects_recon, m_wtxid_in_rejects_recon);
-        BOOST_CHECK_EQUAL(other.m_keep_for_compact,       m_keep_for_compact);
         BOOST_CHECK_EQUAL(other.m_ignore_inv_wtxid,       m_ignore_inv_wtxid);
 
         // false negatives for nonsegwit transactions, since txid == wtxid.
@@ -57,22 +54,22 @@ struct Behaviors {
 // Map from failure reason to expected behavior for a segwit tx that fails
 // Txid and Wtxid are assumed to be different here. For a nonsegwit transaction, use the wtxid results.
 static std::map<TxValidationResult, Behaviors> expected_behaviors{
-    {TxValidationResult::TX_CONSENSUS,               {/*txid_rejects*/0,/*wtxid_rejects*/1,/*txid_recon*/0,/*wtxid_recon*/0,/*keep*/1,/*txid_inv*/0,/*wtxid_inv*/1}},
-    {TxValidationResult::TX_INPUTS_NOT_STANDARD,     {                1,                 1,              0,               0,        1,            1,             1}},
-    {TxValidationResult::TX_NOT_STANDARD,            {                0,                 1,              0,               0,        1,            0,             1}},
-    {TxValidationResult::TX_MISSING_INPUTS,          {                0,                 0,              0,               0,        1,            0,             1}},
-    {TxValidationResult::TX_PREMATURE_SPEND,         {                0,                 1,              0,               0,        1,            0,             1}},
-    {TxValidationResult::TX_WITNESS_MUTATED,         {                0,                 1,              0,               0,        1,            0,             1}},
-    {TxValidationResult::TX_WITNESS_STRIPPED,        {                0,                 0,              0,               0,        0,            0,             0}},
-    {TxValidationResult::TX_CONFLICT,                {                0,                 1,              0,               0,        1,            0,             1}},
-    {TxValidationResult::TX_MEMPOOL_POLICY,          {                0,                 1,              0,               0,        1,            0,             1}},
-    {TxValidationResult::TX_NO_MEMPOOL,              {                0,                 1,              0,               0,        1,            0,             1}},
-    {TxValidationResult::TX_RECONSIDERABLE,          {                0,                 0,              0,               1,        1,            0,             1}},
-    {TxValidationResult::TX_UNKNOWN,                 {                0,                 1,              0,               0,        1,            0,             1}},
+    {TxValidationResult::TX_CONSENSUS,               {/*txid_rejects*/0,/*wtxid_rejects*/1,/*txid_recon*/0,/*wtxid_recon*/0,/*txid_inv*/0,/*wtxid_inv*/1}},
+    {TxValidationResult::TX_INPUTS_NOT_STANDARD,     {                1,                 1,              0,               0,            1,             1}},
+    {TxValidationResult::TX_NOT_STANDARD,            {                0,                 1,              0,               0,            0,             1}},
+    {TxValidationResult::TX_MISSING_INPUTS,          {                0,                 0,              0,               0,            0,             1}},
+    {TxValidationResult::TX_PREMATURE_SPEND,         {                0,                 1,              0,               0,            0,             1}},
+    {TxValidationResult::TX_WITNESS_MUTATED,         {                0,                 1,              0,               0,            0,             1}},
+    {TxValidationResult::TX_WITNESS_STRIPPED,        {                0,                 0,              0,               0,            0,             0}},
+    {TxValidationResult::TX_CONFLICT,                {                0,                 1,              0,               0,            0,             1}},
+    {TxValidationResult::TX_MEMPOOL_POLICY,          {                0,                 1,              0,               0,            0,             1}},
+    {TxValidationResult::TX_NO_MEMPOOL,              {                0,                 1,              0,               0,            0,             1}},
+    {TxValidationResult::TX_RECONSIDERABLE,          {                0,                 0,              0,               1,            0,             1}},
+    {TxValidationResult::TX_UNKNOWN,                 {                0,                 1,              0,               0,            0,             1}},
 };
 
 static bool CheckOrphanBehavior(node::TxDownloadManagerImpl& txdownload_impl, const CTransactionRef& tx, const node::RejectedTxTodo& ret, std::string& err_msg,
-                                bool expect_orphan, bool expect_keep, unsigned int expected_parents)
+                                bool expect_orphan, unsigned int expected_parents)
 {
     // Missing inputs can never result in a PackageToValidate.
     if (ret.m_package_to_validate.has_value()) {
@@ -82,10 +79,6 @@ static bool CheckOrphanBehavior(node::TxDownloadManagerImpl& txdownload_impl, co
 
     if (expect_orphan != txdownload_impl.m_orphanage.HaveTx(tx->GetWitnessHash())) {
         err_msg = strprintf("unexpectedly %s tx in orphanage", expect_orphan ? "did not find" : "found");
-        return false;
-    }
-    if (expect_keep != ret.m_should_add_extra_compact_tx) {
-        err_msg = strprintf("unexpectedly returned %s add to vExtraTxnForCompact", expect_keep ? "should not" : "should");
         return false;
     }
     if (expected_parents != ret.m_unique_parents.size()) {
@@ -136,7 +129,7 @@ BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
                 txdownload_impl.ConnectedPeer(nodeid, connection_info);
                 // Parent failure
                 state.Invalid(result, "");
-                const auto& [keep, unique_txids, package_to_validate] = txdownload_impl.MempoolRejectedTx(ptx_parent, state, nodeid, /*first_time_failure=*/true);
+                const auto& [unique_txids, package_to_validate] = txdownload_impl.MempoolRejectedTx(ptx_parent, state, nodeid, /*first_time_failure=*/true);
 
                 // No distinction between txid and wtxid caching for nonsegwit transactions, so only test these specific
                 // behaviors for segwit transactions.
@@ -145,7 +138,6 @@ BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
                     /*wtxid_rejects=*/txdownload_impl.RecentRejectsFilter().contains(parent_wtxid),
                     /*txid_recon=*/txdownload_impl.RecentRejectsReconsiderableFilter().contains(parent_txid),
                     /*wtxid_recon=*/txdownload_impl.RecentRejectsReconsiderableFilter().contains(parent_wtxid),
-                    /*keep=*/keep,
                     /*txid_inv=*/txdownload_impl.AddTxAnnouncement(nodeid, GenTxid::Txid(parent_txid), now),
                     /*wtxid_inv=*/txdownload_impl.AddTxAnnouncement(nodeid, GenTxid::Wtxid(parent_wtxid), now),
                 };
@@ -238,7 +230,7 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
         const auto ret_1p1c = txdownload_impl.MempoolRejectedTx(orphan, state_orphan, nodeid, /*first_time_failure=*/true);
         std::string err_msg;
         const bool ok = CheckOrphanBehavior(txdownload_impl, orphan, ret_1p1c, err_msg,
-                                            /*expect_orphan=*/expect_keep_orphan, /*expect_keep=*/true, /*expected_parents=*/expected_parents);
+                                            /*expect_orphan=*/expect_keep_orphan, /*expected_parents=*/expected_parents);
         BOOST_CHECK_MESSAGE(ok, err_msg);
     }
 
@@ -269,7 +261,7 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
             const auto ret_1p1c_parent_reconsiderable = txdownload_impl.MempoolRejectedTx(orphan, state_orphan, nodeid, /*first_time_failure=*/true);
             std::string err_msg;
             const bool ok = CheckOrphanBehavior(txdownload_impl, orphan, ret_1p1c_parent_reconsiderable, err_msg,
-                                                /*expect_orphan=*/true, /*expect_keep=*/true, /*expected_parents=*/num_parents);
+                                                /*expect_orphan=*/true, /*expected_parents=*/num_parents);
             BOOST_CHECK_MESSAGE(ok, err_msg);
         }
 
@@ -287,7 +279,7 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
             const auto ret_1recon_conf = txdownload_impl.MempoolRejectedTx(orphan, state_orphan, nodeid, /*first_time_failure=*/true);
             std::string err_msg;
             const bool ok = CheckOrphanBehavior(txdownload_impl, orphan, ret_1recon_conf, err_msg,
-                                                /*expect_orphan=*/true, /*expect_keep=*/true, /*expected_parents=*/expected_parents);
+                                                /*expect_orphan=*/true, /*expected_parents=*/expected_parents);
             BOOST_CHECK_MESSAGE(ok, err_msg);
         }
 
@@ -309,7 +301,7 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
             const auto ret_2_problems = txdownload_impl.MempoolRejectedTx(orphan, state_orphan, nodeid, /*first_time_failure=*/true);
             std::string err_msg;
             const bool ok = CheckOrphanBehavior(txdownload_impl, orphan, ret_2_problems, err_msg,
-                                                /*expect_orphan=*/false, /*expect_keep=*/true, /*expected_parents=*/0);
+                                                /*expect_orphan=*/false, /*expected_parents=*/0);
             BOOST_CHECK_MESSAGE(ok, err_msg);
         }
     }
@@ -332,7 +324,7 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
             const auto ret_1p1c_2reconsiderable = txdownload_impl.MempoolRejectedTx(orphan, state_orphan, nodeid, /*first_time_failure=*/true);
             std::string err_msg;
             const bool ok = CheckOrphanBehavior(txdownload_impl, orphan, ret_1p1c_2reconsiderable, err_msg,
-                                                /*expect_orphan=*/true, /*expect_keep=*/true, /*expected_parents=*/1);
+                                                /*expect_orphan=*/true, /*expected_parents=*/1);
             BOOST_CHECK_MESSAGE(ok, err_msg);
         }
     }
