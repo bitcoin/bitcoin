@@ -52,15 +52,12 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         # Address Test - before import
         address_info = self.nodes[1].getaddressinfo(address1)
-        assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], False)
 
         address_info = self.nodes[1].getaddressinfo(address2)
-        assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], False)
 
         address_info = self.nodes[1].getaddressinfo(address3)
-        assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], False)
 
         # Send funds to self
@@ -104,13 +101,10 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         # Addresses Test - after import
         address_info = w1.getaddressinfo(address1)
-        assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], False)
         address_info = wwatch.getaddressinfo(address2)
-        assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], True)
         address_info = w1.getaddressinfo(address3)
-        assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], True)
 
         # Remove transactions
