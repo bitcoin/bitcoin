@@ -57,6 +57,12 @@
     "description": "Creates a blank transaction when nothing is piped into bitcoin-tx (output in json)"
   },
   { "exec": "./bitcoin-tx",
+    "args": ["-create", "nversion=+1"],
+    "return_code": 1,
+    "error_txt": "error: Invalid TX version requested",
+    "description": "Tests the check for invalid nversion value"
+  },
+  { "exec": "./bitcoin-tx",
     "args": ["-create", "nversion=1foo"],
     "return_code": 1,
     "error_txt": "error: Invalid TX version requested",

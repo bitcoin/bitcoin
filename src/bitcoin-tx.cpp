@@ -211,12 +211,11 @@ static CAmount ExtractAndValidateValue(const std::string& strValue)
 
 static void MutateTxVersion(CMutableTransaction& tx, const std::string& cmdVal)
 {
-    uint32_t newVersion;
-    if (!ParseUInt32(cmdVal, &newVersion) || newVersion < 1 || newVersion > TX_MAX_STANDARD_VERSION) {
+    const auto ver{ToIntegral<uint32_t>(cmdVal)};
+    if (!ver || *ver < 1 || *ver > TX_MAX_STANDARD_VERSION) {
         throw std::runtime_error("Invalid TX version requested: '" + cmdVal + "'");
     }
-
-    tx.version = newVersion;
+    tx.version = *ver;
 }
 
 static void MutateTxLocktime(CMutableTransaction& tx, const std::string& cmdVal)
