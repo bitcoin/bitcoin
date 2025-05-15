@@ -8,9 +8,9 @@
 
 #include <consensus/amount.h>
 #include <net.h>
+#include <node/txorphanage.h>
 #include <protocol.h>
 #include <threadsafety.h>
-#include <txorphanage.h>
 #include <validationinterface.h>
 
 #include <atomic>
@@ -113,7 +113,7 @@ public:
     /** Get statistics from node state */
     virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const = 0;
 
-    virtual std::vector<TxOrphanage::OrphanTxBase> GetOrphanTransactions() = 0;
+    virtual std::vector<node::TxOrphanage::OrphanTxBase> GetOrphanTransactions() = 0;
 
     /** Get peer manager info. */
     virtual PeerManagerInfo GetInfo() const = 0;
