@@ -796,7 +796,16 @@ RPCHelpMan gettransaction()
 
     if (verbose) {
         UniValue decoded(UniValue::VOBJ);
-        TxToUniv(*wtx.tx, /*block_hash=*/uint256(), /*entry=*/decoded, /*include_hex=*/false);
+        TxToUniv(*wtx.tx,
+                /*block_hash=*/uint256(),
+                /*entry=*/decoded,
+                /*include_hex=*/false,
+                /*txundo=*/nullptr,
+                /*verbosity=*/TxVerbosity::SHOW_DETAILS,
+                /*is_change_func=*/[&pwallet](const CTxOut& txout) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+                                        AssertLockHeld(pwallet->cs_wallet);
+                                        return OutputIsChange(*pwallet, txout);
+                                    });
         entry.pushKV("decoded", std::move(decoded));
     }
 
