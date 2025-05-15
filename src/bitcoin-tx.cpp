@@ -507,26 +507,20 @@ static void MutateTxAddOutScript(CMutableTransaction& tx, const std::string& str
 
 static void MutateTxDelInput(CMutableTransaction& tx, const std::string& strInIdx)
 {
-    // parse requested deletion index
-    int64_t inIdx;
-    if (!ParseInt64(strInIdx, &inIdx) || inIdx < 0 || inIdx >= static_cast<int64_t>(tx.vin.size())) {
+    const auto idx{ToIntegral<uint32_t>(strInIdx)};
+    if (!idx || idx >= tx.vin.size()) {
         throw std::runtime_error("Invalid TX input index '" + strInIdx + "'");
     }
-
-    // delete input from transaction
-    tx.vin.erase(tx.vin.begin() + inIdx);
+    tx.vin.erase(tx.vin.begin() + *idx);
 }
 
 static void MutateTxDelOutput(CMutableTransaction& tx, const std::string& strOutIdx)
 {
-    // parse requested deletion index
-    int64_t outIdx;
-    if (!ParseInt64(strOutIdx, &outIdx) || outIdx < 0 || outIdx >= static_cast<int64_t>(tx.vout.size())) {
+    const auto idx{ToIntegral<uint32_t>(strOutIdx)};
+    if (!idx || idx >= tx.vout.size()) {
         throw std::runtime_error("Invalid TX output index '" + strOutIdx + "'");
     }
-
-    // delete output from transaction
-    tx.vout.erase(tx.vout.begin() + outIdx);
+    tx.vout.erase(tx.vout.begin() + *idx);
 }
 
 static const unsigned int N_SIGHASH_OPTS = 7;
