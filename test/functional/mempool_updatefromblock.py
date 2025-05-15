@@ -16,7 +16,7 @@ from test_framework.blocktools import (
     create_coinbase,
 )
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
 
 MAX_DISCONNECTED_TX_POOL_BYTES = 20_000_000
@@ -178,11 +178,45 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         assert_equal([tx["txid"] in mempool for tx in large_std_txs], [tx["txid"] in mempool for tx in small_child_txs])
         assert_equal([tx["txid"] in mempool for tx in large_std_txs], [True] * expected_parent_count + [False] * 2)
 
+    def test_chainlimits_exceeded(self):
+        self.log.info('Check that too long chains on reorg are handled')
+
+        wallet = MiniWallet(self.nodes[0])
+        self.generate(wallet, 101)
+
+        assert_equal(self.nodes[0].getrawmempool(), [])
+
+        # Prep fork
+        fork_blocks = self.create_empty_fork(fork_length=10)
+
+        # Two higher than default descendant count
+        chain = wallet.create_self_transfer_chain(chain_length=27)
+        for tx in chain[:-2]:
+            self.nodes[0].sendrawtransaction(tx["hex"])
+
+        assert_raises_rpc_error(-26, "too-long-mempool-chain, too many descendants for tx", self.nodes[0].sendrawtransaction, chain[-2]["hex"])
+
+        # Mine a block with all but last transaction, non-standardly long chain
+        self.generateblock(self.nodes[0], output="raw(42)", transactions=[tx["hex"] for tx in chain[:-1]])
+        assert_equal(self.nodes[0].getrawmempool(), [])
+
+        # Last tx fits now
+        self.nodes[0].sendrawtransaction(chain[-1]["hex"])
+
+        # Finally, reorg to empty chain kick everything back into mempool
+        # at normal chain limits
+        for block in fork_blocks:
+            self.nodes[0].submitblock(block.serialize().hex())
+        mempool = self.nodes[0].getrawmempool()
+        assert_equal(set(mempool), set([tx["txid"] for tx in chain[:-2]]))
+
     def run_test(self):
         # Use batch size limited by DEFAULT_ANCESTOR_LIMIT = 25 to not fire "too many unconfirmed parents" error.
         self.transaction_graph_test(size=100, n_tx_to_mine=[25, 50, 75])
 
         self.test_max_disconnect_pool_bytes()
+
+        self.test_chainlimits_exceeded()
 
 if __name__ == '__main__':
     MempoolUpdateFromBlockTest(__file__).main()
