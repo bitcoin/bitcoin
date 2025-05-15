@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -472,7 +472,8 @@ public:
     {
         if (!args.empty()) {
             uint8_t n{0};
-            if (ParseUInt8(args.at(0), &n)) {
+            if (const auto res{ToIntegral<uint8_t>(args.at(0))}) {
+                n = *res;
                 m_details_level = std::min(n, NETINFO_MAX_LEVEL);
             } else {
                 throw std::runtime_error(strprintf("invalid -netinfo level argument: %s\nFor more information, run: bitcoin-cli -netinfo help", args.at(0)));
