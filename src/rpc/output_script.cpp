@@ -89,10 +89,10 @@ static RPCHelpMan createmultisig()
 {
     return RPCHelpMan{
         "createmultisig",
-        "Creates a multi-signature address with n signature of m keys required.\n"
+        "Creates a multi-signature address with n signatures of m keys required.\n"
         "It returns a json object with the address and redeemScript.\n",
         {
-            {"nrequired", RPCArg::Type::NUM, RPCArg::Optional::NO, "The number of required signatures out of the n keys."},
+            {"nrequired", RPCArg::Type::NUM, RPCArg::Optional::NO, "The number of required signatures out of the m keys."},
             {"keys", RPCArg::Type::ARR, RPCArg::Optional::NO, "The hex-encoded public keys.",
                 {
                     {"key", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The hex-encoded public key"},

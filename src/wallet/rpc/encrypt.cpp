@@ -221,8 +221,8 @@ RPCHelpMan encryptwallet()
     return RPCHelpMan{
         "encryptwallet",
         "Encrypts the wallet with 'passphrase'. This is for first time encryption.\n"
-                "After this, any calls that interact with private keys such as sending or signing \n"
-                "will require the passphrase to be set prior the making these calls.\n"
+        "After this, any calls that interact with private keys such as sending or signing \n"
+        "will require the passphrase to be set prior to making these calls.\n"
                 "Use the walletpassphrase call for this, and then walletlock call.\n"
                 "If the wallet is already encrypted, use the walletpassphrasechange call.\n"
                 "** IMPORTANT **\n"
