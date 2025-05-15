@@ -76,8 +76,8 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
                                                       wallet.IsMine(result.txout_address.back()) :
                                                       ISMINE_NO);
     }
-    result.credit = CachedTxGetCredit(wallet, wtx, ISMINE_ALL);
-    result.debit = CachedTxGetDebit(wallet, wtx, ISMINE_ALL);
+    result.credit = CachedTxGetCredit(wallet, wtx, ISMINE_ALL, /*avoid_reuse=*/true);
+    result.debit = CachedTxGetDebit(wallet, wtx, ISMINE_ALL, /*avoid_reuse=*/true);
     result.change = CachedTxGetChange(wallet, wtx);
     result.time = wtx.GetTxTime();
     result.value_map = wtx.mapValue;

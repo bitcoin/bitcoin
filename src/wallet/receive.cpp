@@ -97,17 +97,17 @@ CAmount TxGetChange(const CWallet& wallet, const CTransaction& tx)
     return nChange;
 }
 
-static CAmount GetCachableAmount(const CWallet& wallet, const CWalletTx& wtx, CWalletTx::AmountType type, const isminefilter& filter)
+static CAmount GetCachableAmount(const CWallet& wallet, const CWalletTx& wtx, CWalletTx::AmountType type, const isminefilter& filter, bool avoid_reuse)
 {
     auto& amount = wtx.m_amounts[type];
-    if (!amount.m_cached[filter]) {
-        amount.Set(filter, type == CWalletTx::DEBIT ? wallet.GetDebit(*wtx.tx, filter) : TxGetCredit(wallet, *wtx.tx, filter));
+    if (!amount.IsCached(avoid_reuse)) {
+        amount.Set(avoid_reuse, type == CWalletTx::DEBIT ? wallet.GetDebit(*wtx.tx, filter) : TxGetCredit(wallet, *wtx.tx, filter));
         wtx.m_is_cache_empty = false;
     }
-    return amount.m_value[filter];
+    return amount.Get(avoid_reuse);
 }
 
-CAmount CachedTxGetCredit(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter)
+CAmount CachedTxGetCredit(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter, bool avoid_reuse)
 {
     AssertLockHeld(wallet.cs_wallet);
 
@@ -119,12 +119,12 @@ CAmount CachedTxGetCredit(const CWallet& wallet, const CWalletTx& wtx, const ism
     const isminefilter get_amount_filter{filter & ISMINE_ALL};
     if (get_amount_filter) {
         // GetBalance can assume transactions in mapWallet won't change
-        credit += GetCachableAmount(wallet, wtx, CWalletTx::CREDIT, get_amount_filter);
+        credit += GetCachableAmount(wallet, wtx, CWalletTx::CREDIT, get_amount_filter, avoid_reuse);
     }
     return credit;
 }
 
-CAmount CachedTxGetDebit(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter)
+CAmount CachedTxGetDebit(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter, bool avoid_reuse)
 {
     if (wtx.tx->vin.empty())
         return 0;
@@ -132,7 +132,7 @@ CAmount CachedTxGetDebit(const CWallet& wallet, const CWalletTx& wtx, const ismi
     CAmount debit = 0;
     const isminefilter get_amount_filter{filter & ISMINE_ALL};
     if (get_amount_filter) {
-        debit += GetCachableAmount(wallet, wtx, CWalletTx::DEBIT, get_amount_filter);
+        debit += GetCachableAmount(wallet, wtx, CWalletTx::DEBIT, get_amount_filter, avoid_reuse);
     }
     return debit;
 }
@@ -156,7 +156,7 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
     listSent.clear();
 
     // Compute fee:
-    CAmount nDebit = CachedTxGetDebit(wallet, wtx, filter);
+    CAmount nDebit = CachedTxGetDebit(wallet, wtx, filter, /*avoid_reuse=*/false);
     if (nDebit > 0) // debit>0 means we signed/sent this transaction
     {
         CAmount nValueOut = wtx.tx->GetValueOut();
@@ -205,7 +205,7 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
 
 bool CachedTxIsFromMe(const CWallet& wallet, const CWalletTx& wtx, const isminefilter& filter)
 {
-    return (CachedTxGetDebit(wallet, wtx, filter) > 0);
+    return (CachedTxGetDebit(wallet, wtx, filter, /*avoid_reuse=*/false) > 0);
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)

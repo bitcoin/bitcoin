@@ -741,8 +741,8 @@ RPCHelpMan gettransaction()
     }
     const CWalletTx& wtx = it->second;
 
-    CAmount nCredit = CachedTxGetCredit(*pwallet, wtx, filter);
-    CAmount nDebit = CachedTxGetDebit(*pwallet, wtx, filter);
+    CAmount nCredit = CachedTxGetCredit(*pwallet, wtx, filter, /*avoid_reuse=*/false);
+    CAmount nDebit = CachedTxGetDebit(*pwallet, wtx, filter, /*avoid_reuse=*/false);
     CAmount nNet = nCredit - nDebit;
     CAmount nFee = (CachedTxIsFromMe(*pwallet, wtx, filter) ? wtx.tx->GetValueOut() - nDebit : 0);
 
