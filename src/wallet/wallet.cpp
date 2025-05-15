@@ -3771,6 +3771,9 @@ util::Result<ScriptPubKeyMan*> CWallet::AddWalletDescriptor(WalletDescriptor& de
     // Save the descriptor to DB
     spk_man->WriteDescriptor();
 
+    // Break balance caches so that outputs that are now IsMine in already known txs will be included in the balance
+    MarkDirty();
+
     return spk_man;
 }
 
