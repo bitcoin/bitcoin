@@ -123,7 +123,7 @@ protected:
     unsigned int m_total_announcements{0};
 
     /** Map from wtxid to orphan transaction record. Limited by
-     *  -maxorphantx/DEFAULT_MAX_ORPHAN_TRANSACTIONS */
+     *  DEFAULT_MAX_ORPHAN_TRANSACTIONS */
     std::map<Wtxid, OrphanTx> m_orphans;
 
     struct PeerOrphanInfo {
