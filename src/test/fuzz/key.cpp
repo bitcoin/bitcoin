@@ -174,7 +174,7 @@ FUZZ_TARGET(key, .init = initialize_key)
         assert(v_solutions_ret_tx_multisig[2].size() == 1);
 
         OutputType output_type{};
-        const CTxDestination tx_destination = GetDestinationForKey(pubkey, output_type);
+        const CTxDestination tx_destination{PKHash{pubkey}};
         assert(output_type == OutputType::LEGACY);
         assert(IsValidDestination(tx_destination));
         assert(PKHash{pubkey} == *std::get_if<PKHash>(&tx_destination));
