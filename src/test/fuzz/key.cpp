@@ -186,9 +186,6 @@ FUZZ_TARGET(key, .init = initialize_key)
         const std::string destination_address = EncodeDestination(tx_destination);
         assert(DecodeDestination(destination_address) == tx_destination);
 
-        const CPubKey pubkey_from_address_string = AddrToPubKey(fillable_signing_provider, destination_address);
-        assert(pubkey_from_address_string == pubkey);
-
         CKeyID key_id = pubkey.GetID();
         assert(!key_id.IsNull());
         assert(key_id == CKeyID{key_id});
