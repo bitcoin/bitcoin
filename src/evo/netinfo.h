@@ -22,6 +22,7 @@ enum class NetInfoStatus : uint8_t {
     BadPort,
     BadType,
     NotRoutable,
+    Malformed,
 
     Success
 };
@@ -39,6 +40,8 @@ constexpr std::string_view NISToString(const NetInfoStatus code)
         return "invalid address type";
     case NetInfoStatus::NotRoutable:
         return "unroutable address";
+    case NetInfoStatus::Malformed:
+        return "malformed";
     case NetInfoStatus::Success:
         return "success";
     } // no default case, so the compiler can warn about missing cases
@@ -121,7 +124,7 @@ using CServiceList = std::vector<std::reference_wrapper<const CService>>;
 class MnNetInfo
 {
 private:
-    CService m_addr{};
+    NetInfoEntry m_addr{};
 
 private:
     static NetInfoStatus ValidateService(const CService& service);
@@ -133,20 +136,38 @@ public:
     bool operator==(const MnNetInfo& rhs) const { return m_addr == rhs.m_addr; }
     bool operator!=(const MnNetInfo& rhs) const { return !(*this == rhs); }
 
-    SERIALIZE_METHODS(MnNetInfo, obj)
+    template <typename Stream>
+    void Serialize(Stream& s) const
     {
-        READWRITE(obj.m_addr);
+        if (const auto& service{m_addr.GetAddrPort()}; service.has_value()) {
+            s << service->get();
+        } else {
+            s << CService{};
+        }
+    }
+
+    void Serialize(CSizeComputer& s) const
+    {
+        s.seek(::GetSerializeSize(CService{}, s.GetVersion()));
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        CService service;
+        s >> service;
+        m_addr = NetInfoEntry{service};
     }
 
     NetInfoStatus AddEntry(const std::string& service);
     CServiceList GetEntries() const;
 
-    const CService& GetPrimary() const { return m_addr; }
+    const CService& GetPrimary() const;
     bool IsEmpty() const { return *this == MnNetInfo(); }
-    NetInfoStatus Validate() const { return ValidateService(m_addr); }
+    NetInfoStatus Validate() const;
     std::string ToString() const;
 
-    void Clear() { m_addr = CService(); }
+    void Clear() { m_addr.Clear(); }
 };
 
 #endif // BITCOIN_EVO_NETINFO_H

@@ -49,8 +49,11 @@ BOOST_AUTO_TEST_CASE(mnnetinfo_rules)
         MnNetInfo netInfo;
         BOOST_CHECK_EQUAL(netInfo.AddEntry(input), expected_ret);
         if (expected_ret != NetInfoStatus::Success) {
+            // An empty MnNetInfo is considered malformed
+            BOOST_CHECK_EQUAL(netInfo.Validate(), NetInfoStatus::Malformed);
             BOOST_CHECK(netInfo.GetEntries().empty());
         } else {
+            BOOST_CHECK_EQUAL(netInfo.Validate(), NetInfoStatus::Success);
             ValidateGetEntries(netInfo.GetEntries(), /*expected_size=*/1);
         }
     }
@@ -158,6 +161,46 @@ BOOST_AUTO_TEST_CASE(netinfo_retvals)
     // The invalid entry type code is 0xff (highest possible value) and therefore will return as greater
     // in comparison to any valid entry
     BOOST_CHECK(entry < entry_empty);
+}
+
+bool CheckIfSerSame(const CService& lhs, const MnNetInfo& rhs)
+{
+    CHashWriter ss_lhs(SER_GETHASH, 0), ss_rhs(SER_GETHASH, 0);
+    ss_lhs << lhs;
+    ss_rhs << rhs;
+    return ss_lhs.GetSHA256() == ss_rhs.GetSHA256();
+}
+
+BOOST_AUTO_TEST_CASE(cservice_compatible)
+{
+    // Empty values should be the same
+    CService service;
+    MnNetInfo netInfo;
+    BOOST_CHECK(CheckIfSerSame(service, netInfo));
+
+    // Valid IPv4 address, valid port
+    service = LookupNumeric("1.1.1.1", 9999);
+    netInfo.Clear();
+    BOOST_CHECK_EQUAL(netInfo.AddEntry("1.1.1.1:9999"), NetInfoStatus::Success);
+    BOOST_CHECK(CheckIfSerSame(service, netInfo));
+
+    // Valid IPv4 address, default P2P port implied
+    service = LookupNumeric("1.1.1.1", Params().GetDefaultPort());
+    netInfo.Clear();
+    BOOST_CHECK_EQUAL(netInfo.AddEntry("1.1.1.1"), NetInfoStatus::Success);
+    BOOST_CHECK(CheckIfSerSame(service, netInfo));
+
+    // Lookup() failure (domains not allowed), MnNetInfo should remain empty if Lookup() failed
+    service = CService();
+    netInfo.Clear();
+    BOOST_CHECK_EQUAL(netInfo.AddEntry("example.com"), NetInfoStatus::BadInput);
+    BOOST_CHECK(CheckIfSerSame(service, netInfo));
+
+    // Validation failure (non-IPv4 not allowed), MnNetInfo should remain empty if ValidateService() failed
+    service = CService();
+    netInfo.Clear();
+    BOOST_CHECK_EQUAL(netInfo.AddEntry("[2606:4700:4700::1111]:9999"), NetInfoStatus::BadType);
+    BOOST_CHECK(CheckIfSerSame(service, netInfo));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
