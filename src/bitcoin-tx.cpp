@@ -229,16 +229,15 @@ static void MutateTxLocktime(CMutableTransaction& tx, const std::string& cmdVal)
 
 static void MutateTxRBFOptIn(CMutableTransaction& tx, const std::string& strInIdx)
 {
-    // parse requested index
-    int64_t inIdx = -1;
-    if (strInIdx != "" && (!ParseInt64(strInIdx, &inIdx) || inIdx < 0 || inIdx >= static_cast<int64_t>(tx.vin.size()))) {
+    const auto idx{ToIntegral<uint32_t>(strInIdx)};
+    if (strInIdx != "" && (!idx || *idx >= tx.vin.size())) {
         throw std::runtime_error("Invalid TX input index '" + strInIdx + "'");
     }
 
     // set the nSequence to MAX_INT - 2 (= RBF opt in flag)
-    int cnt = 0;
+    uint32_t cnt{0};
     for (CTxIn& txin : tx.vin) {
-        if (strInIdx == "" || cnt == inIdx) {
+        if (strInIdx == "" || cnt == *idx) {
             if (txin.nSequence > MAX_BIP125_RBF_SEQUENCE) {
                 txin.nSequence = MAX_BIP125_RBF_SEQUENCE;
             }
