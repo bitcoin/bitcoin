@@ -433,7 +433,7 @@ public:
 
     bool feof() const { return std::feof(m_file); }
 
-    [[nodiscard]] int fclose()
+    int fclose()
     {
         if (auto rel{release()}) return std::fclose(rel);
         return 0;

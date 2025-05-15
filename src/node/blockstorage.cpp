@@ -1116,11 +1116,11 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
     {
         BufferedWriter fileout{file};
 
-        // Write index header
-        fileout << GetParams().MessageStart() << block_size;
-        pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
-        // Write block
-        fileout << TX_WITH_WITNESS(block);
+    // Write index header
+    fileout << GetParams().MessageStart() << block_size;
+    // Write block
+    pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
+    fileout << TX_WITH_WITNESS(block);
     }
 
     if (file.fclose() != 0) {
