@@ -6,9 +6,8 @@
 #define BITCOIN_NODE_TXDOWNLOADMAN_H
 
 #include <net.h>
+#include <node/txorphanage.h>
 #include <policy/packages.h>
-#include <txorphanage.h>
-#include <util/transaction_identifier.h>
 
 #include <cstdint>
 #include <memory>

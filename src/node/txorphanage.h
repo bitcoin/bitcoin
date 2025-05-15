@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TXORPHANAGE_H
-#define BITCOIN_TXORPHANAGE_H
+#ifndef BITCOIN_NODE_TXORPHANAGE_H
+#define BITCOIN_NODE_TXORPHANAGE_H
 
 #include <consensus/validation.h>
 #include <net.h>
@@ -15,6 +15,7 @@
 #include <map>
 #include <set>
 
+namespace node{
 /** Expiration time for orphan transactions */
 static constexpr auto ORPHAN_TX_EXPIRE_TIME{20min};
 /** Minimum time between orphan transactions expire time checks */
@@ -162,5 +163,5 @@ protected:
     /** Timestamp for the next scheduled sweep of expired orphans */
     NodeSeconds m_next_sweep{0s};
 };
-
-#endif // BITCOIN_TXORPHANAGE_H
+} // namespace node
+#endif // BITCOIN_NODE_TXORPHANAGE_H

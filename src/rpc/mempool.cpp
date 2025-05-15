@@ -841,7 +841,7 @@ static std::vector<RPCResult> OrphanDescription()
     };
 }
 
-static UniValue OrphanToJSON(const TxOrphanage::OrphanTxBase& orphan)
+static UniValue OrphanToJSON(const node::TxOrphanage::OrphanTxBase& orphan)
 {
     UniValue o(UniValue::VOBJ);
     o.pushKV("txid", orphan.tx->GetHash().ToString());
@@ -849,7 +849,7 @@ static UniValue OrphanToJSON(const TxOrphanage::OrphanTxBase& orphan)
     o.pushKV("bytes", orphan.tx->GetTotalSize());
     o.pushKV("vsize", GetVirtualTransactionSize(*orphan.tx));
     o.pushKV("weight", GetTransactionWeight(*orphan.tx));
-    o.pushKV("entry", int64_t{TicksSinceEpoch<std::chrono::seconds>(orphan.nTimeExpire - ORPHAN_TX_EXPIRE_TIME)});
+    o.pushKV("entry", int64_t{TicksSinceEpoch<std::chrono::seconds>(orphan.nTimeExpire - node::ORPHAN_TX_EXPIRE_TIME)});
     o.pushKV("expiration", int64_t{TicksSinceEpoch<std::chrono::seconds>(orphan.nTimeExpire)});
     UniValue from(UniValue::VARR);
     for (const auto fromPeer: orphan.announcers) {
@@ -899,7 +899,7 @@ static RPCHelpMan getorphantxs()
         {
             const NodeContext& node = EnsureAnyNodeContext(request.context);
             PeerManager& peerman = EnsurePeerman(node);
-            std::vector<TxOrphanage::OrphanTxBase> orphanage = peerman.GetOrphanTransactions();
+            std::vector<node::TxOrphanage::OrphanTxBase> orphanage = peerman.GetOrphanTransactions();
 
             int verbosity{ParseVerbosity(request.params[0], /*default_verbosity=*/0, /*allow_bool*/false)};
 

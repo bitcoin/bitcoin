@@ -6,6 +6,7 @@
 #include <consensus/validation.h>
 #include <net_processing.h>
 #include <node/eviction.h>
+#include <node/txorphanage.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -14,7 +15,6 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
-#include <txorphanage.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/time.h>
@@ -36,7 +36,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
     FastRandomContext orphanage_rng{/*fDeterministic=*/true};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 
-    TxOrphanage orphanage;
+    node::TxOrphanage orphanage;
     std::vector<COutPoint> outpoints; // Duplicates are tolerated
     outpoints.reserve(200'000);
 
