@@ -16,10 +16,8 @@
 #include <set>
 
 namespace node{
-/** Expiration time for orphan transactions */
-static constexpr auto ORPHAN_TX_EXPIRE_TIME{20min};
-/** Minimum time between orphan transactions expire time checks */
-static constexpr auto ORPHAN_TX_EXPIRE_INTERVAL{5min};
+class TxOrphanageImpl;
+
 /** Default maximum number of orphan transactions kept in memory */
 static const uint32_t DEFAULT_MAX_ORPHAN_TRANSACTIONS{100};
 
@@ -30,7 +28,11 @@ static const uint32_t DEFAULT_MAX_ORPHAN_TRANSACTIONS{100};
  * Not thread-safe. Requires external synchronization.
  */
 class TxOrphanage {
+    const std::unique_ptr<TxOrphanageImpl> m_impl;
 public:
+    explicit TxOrphanage();
+    ~TxOrphanage();
+
     /** Add a new orphan transaction */
     bool AddTx(const CTransactionRef& tx, NodeId peer);
 
@@ -76,94 +78,29 @@ public:
     std::vector<CTransactionRef> GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId nodeid) const;
 
     /** Return how many entries exist in the orphange */
-    size_t Size() const
-    {
-        return m_orphans.size();
-    }
+    size_t Size() const;
 
     /** Allows providing orphan information externally */
     struct OrphanTxBase {
         CTransactionRef tx;
         /** Peers added with AddTx or AddAnnouncer. */
         std::set<NodeId> announcers;
-
-        /** Get the weight of this transaction, an approximation of its memory usage. */
-        unsigned int GetUsage() const {
-            return GetTransactionWeight(*tx);
-        }
     };
 
     std::vector<OrphanTxBase> GetOrphanTransactions() const;
 
     /** Get the total usage (weight) of all orphans. If an orphan has multiple announcers, its usage is
      * only counted once within this total. */
-    int64_t TotalOrphanUsage() const { return m_total_orphan_usage; }
+    int64_t TotalOrphanUsage() const;
 
     /** Total usage (weight) of orphans for which this peer is an announcer. If an orphan has multiple
      * announcers, its weight will be accounted for in each PeerOrphanInfo, so the total of all
      * peers' UsageByPeer() may be larger than TotalOrphanBytes(). */
-    int64_t UsageByPeer(NodeId peer) const {
-        auto peer_it = m_peer_orphanage_info.find(peer);
-        return peer_it == m_peer_orphanage_info.end() ? 0 : peer_it->second.m_total_usage;
-    }
+    int64_t UsageByPeer(NodeId peer) const;
 
     /** Check consistency between PeerOrphanInfo and m_orphans. Recalculate counters and ensure they
      * match what is cached. */
     void SanityCheck() const;
-
-protected:
-    struct OrphanTx : public OrphanTxBase {
-        NodeSeconds nTimeExpire;
-        size_t list_pos;
-    };
-
-    /** Total usage (weight) of all entries in m_orphans. */
-    int64_t m_total_orphan_usage{0};
-
-    /** Total number of <peer, tx> pairs. Can be larger than m_orphans.size() because multiple peers
-     * may have announced the same orphan. */
-    unsigned int m_total_announcements{0};
-
-    /** Map from wtxid to orphan transaction record. Limited by
-     *  DEFAULT_MAX_ORPHAN_TRANSACTIONS */
-    std::map<Wtxid, OrphanTx> m_orphans;
-
-    struct PeerOrphanInfo {
-        /** List of transactions that should be reconsidered: added to in AddChildrenToWorkSet,
-         * removed from one-by-one with each call to GetTxToReconsider. The wtxids may refer to
-         * transactions that are no longer present in orphanage; these are lazily removed in
-         * GetTxToReconsider. */
-        std::set<Wtxid> m_work_set;
-
-        /** Total weight of orphans for which this peer is an announcer.
-         * If orphans are provided by different peers, its weight will be accounted for in each
-         * PeerOrphanInfo, so the total of all peers' m_total_usage may be larger than
-         * m_total_orphan_size. If a peer is removed as an announcer, even if the orphan still
-         * remains in the orphanage, this number will be decremented. */
-        int64_t m_total_usage{0};
-    };
-    std::map<NodeId, PeerOrphanInfo> m_peer_orphanage_info;
-
-    using OrphanMap = decltype(m_orphans);
-
-    struct IteratorComparator
-    {
-        template<typename I>
-        bool operator()(const I& a, const I& b) const
-        {
-            return a->first < b->first;
-        }
-    };
-
-    /** Index from the parents' COutPoint into the m_orphans. Used
-     *  to remove orphan transactions from the m_orphans */
-    std::map<COutPoint, std::set<OrphanMap::iterator, IteratorComparator>> m_outpoint_to_orphan_it;
-
-    /** Orphan transactions in vector for quick random eviction */
-    std::vector<OrphanMap::iterator> m_orphan_list;
-
-    /** Timestamp for the next scheduled sweep of expired orphans */
-    NodeSeconds m_next_sweep{0s};
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXORPHANAGE_H
