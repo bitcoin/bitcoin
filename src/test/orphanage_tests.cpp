@@ -597,22 +597,30 @@ BOOST_AUTO_TEST_CASE(get_children)
     // Spends the same outpoint as previous tx. Should still be returned; don't assume outpoints are unique.
     auto child_p1n0_p2n0 = MakeTransactionSpending({{parent1->GetHash(), 0}, {parent2->GetHash(), 0}}, det_rand);
 
+    const NodeId node0{0};
     const NodeId node1{1};
     const NodeId node2{2};
+    const NodeId node3{3};
 
     // All orphans provided by node1
     {
-        std::unique_ptr<node::TxOrphanage> orphanage{node::MakeTxOrphanage()};
+        auto orphanage{node::MakeTxOrphanage()};
         BOOST_CHECK(orphanage->AddTx(child_p1n0, node1));
         BOOST_CHECK(orphanage->AddTx(child_p2n1, node1));
         BOOST_CHECK(orphanage->AddTx(child_p1n0_p1n1, node1));
         BOOST_CHECK(orphanage->AddTx(child_p1n0_p2n0, node1));
 
-        std::set<CTransactionRef> expected_parent1_children{child_p1n0, child_p1n0_p2n0, child_p1n0_p1n1};
-        std::set<CTransactionRef> expected_parent2_children{child_p2n1, child_p1n0_p2n0};
+        // Also add some other announcers for the same transactions
+        BOOST_CHECK(!orphanage->AddTx(child_p1n0_p1n1, node0));
+        BOOST_CHECK(!orphanage->AddTx(child_p2n1, node0));
+        BOOST_CHECK(!orphanage->AddTx(child_p1n0, node3));
 
-        BOOST_CHECK(EqualTxns(expected_parent1_children, orphanage->GetChildrenFromSamePeer(parent1, node1)));
-        BOOST_CHECK(EqualTxns(expected_parent2_children, orphanage->GetChildrenFromSamePeer(parent2, node1)));
+
+        std::vector<CTransactionRef> expected_parent1_children{child_p1n0_p2n0, child_p1n0_p1n1, child_p1n0};
+        std::vector<CTransactionRef> expected_parent2_children{child_p1n0_p2n0, child_p2n1};
+
+        BOOST_CHECK(expected_parent1_children == orphanage->GetChildrenFromSamePeer(parent1, node1));
+        BOOST_CHECK(expected_parent2_children == orphanage->GetChildrenFromSamePeer(parent2, node1));
 
         // The peer must match
         BOOST_CHECK(orphanage->GetChildrenFromSamePeer(parent1, node2).empty());
@@ -642,6 +650,8 @@ BOOST_AUTO_TEST_CASE(get_children)
         {
             std::set<CTransactionRef> expected_parent1_node1{child_p1n0};
 
+            BOOST_CHECK_EQUAL(orphanage->GetChildrenFromSamePeer(parent1, node1).size(), 1);
+            BOOST_CHECK(orphanage->HaveTxFromPeer(child_p1n0->GetWitnessHash(), node1));
             BOOST_CHECK(EqualTxns(expected_parent1_node1, orphanage->GetChildrenFromSamePeer(parent1, node1)));
         }
 
@@ -652,17 +662,20 @@ BOOST_AUTO_TEST_CASE(get_children)
             BOOST_CHECK(EqualTxns(expected_parent2_node1, orphanage->GetChildrenFromSamePeer(parent2, node1)));
         }
 
-        // Children of parent1 from node2:
+        // Children of parent1 from node2: newest returned first.
         {
-            std::set<CTransactionRef> expected_parent1_node2{child_p1n0_p1n1, child_p1n0_p2n0};
-
-            BOOST_CHECK(EqualTxns(expected_parent1_node2, orphanage->GetChildrenFromSamePeer(parent1, node2)));
+            std::vector<CTransactionRef> expected_parent1_node2{child_p1n0_p2n0, child_p1n0_p1n1};
+            BOOST_CHECK(orphanage->HaveTxFromPeer(child_p1n0_p1n1->GetWitnessHash(), node2));
+            BOOST_CHECK(orphanage->HaveTxFromPeer(child_p1n0_p2n0->GetWitnessHash(), node2));
+            BOOST_CHECK(expected_parent1_node2 == orphanage->GetChildrenFromSamePeer(parent1, node2));
         }
 
         // Children of parent2 from node2:
         {
             std::set<CTransactionRef> expected_parent2_node2{child_p1n0_p2n0};
 
+            BOOST_CHECK_EQUAL(1, orphanage->GetChildrenFromSamePeer(parent2, node2).size());
+            BOOST_CHECK(orphanage->HaveTxFromPeer(child_p1n0_p2n0->GetWitnessHash(), node2));
             BOOST_CHECK(EqualTxns(expected_parent2_node2, orphanage->GetChildrenFromSamePeer(parent2, node2)));
         }
     }
