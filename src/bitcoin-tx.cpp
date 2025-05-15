@@ -220,11 +220,11 @@ static void MutateTxVersion(CMutableTransaction& tx, const std::string& cmdVal)
 
 static void MutateTxLocktime(CMutableTransaction& tx, const std::string& cmdVal)
 {
-    int64_t newLocktime;
-    if (!ParseInt64(cmdVal, &newLocktime) || newLocktime < 0LL || newLocktime > 0xffffffffLL)
+    const auto locktime{ToIntegral<uint32_t>(cmdVal)};
+    if (!locktime) {
         throw std::runtime_error("Invalid TX locktime requested: '" + cmdVal + "'");
-
-    tx.nLockTime = (unsigned int) newLocktime;
+    }
+    tx.nLockTime = *locktime;
 }
 
 static void MutateTxRBFOptIn(CMutableTransaction& tx, const std::string& strInIdx)

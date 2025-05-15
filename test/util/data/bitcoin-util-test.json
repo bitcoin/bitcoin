@@ -133,6 +133,12 @@
     "description": "Adds an nlocktime to a transaction (output in json)"
   },
   { "exec": "./bitcoin-tx",
+    "args": ["-create", "locktime=+317"],
+    "return_code": 1,
+    "error_txt": "error: Invalid TX locktime requested",
+    "description": "Tests the check for invalid locktime value"
+  },
+  { "exec": "./bitcoin-tx",
     "args": ["-create", "locktime=317000foo"],
     "return_code": 1,
     "error_txt": "error: Invalid TX locktime requested",
