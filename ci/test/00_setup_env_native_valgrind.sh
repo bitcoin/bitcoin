@@ -11,7 +11,11 @@ export CONTAINER_NAME=ci_native_valgrind
 export PACKAGES="valgrind python3-zmq libevent-dev libboost-dev libzmq3-dev libsqlite3-dev"
 export USE_VALGRIND=1
 export NO_DEPENDS=1
-export TEST_RUNNER_EXTRA="--exclude feature_init,rpc_bind,feature_bind_extra"  # feature_init excluded for now, see https://github.com/bitcoin/bitcoin/issues/30011 ; bind tests excluded for now, see https://github.com/bitcoin/bitcoin/issues/17765#issuecomment-602068547
+
+# feature_init and wallet_reorgsrestore excluded for now, see https://github.com/bitcoin/bitcoin/issues/32493
+# bind tests excluded for now, see https://github.com/bitcoin/bitcoin/issues/17765#issuecomment-602068547
+export TEST_RUNNER_EXTRA="--exclude feature_init,wallet_reorgsrestore,rpc_bind,feature_bind_extra"
+
 export GOAL="install"
 # TODO enable GUI
 export BITCOIN_CONFIG="\
