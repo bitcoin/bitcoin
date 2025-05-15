@@ -25,7 +25,6 @@ class WalletMnemonicbitsTest(BitcoinTestFramework):
         descriptors = node.listdescriptors(True)['descriptors']
         for desc in descriptors:
             if desc['desc'][:4] == 'pkh(':
-                pass
                 if mnemonic is None:
                     mnemonic = desc['mnemonic']
                 else:
@@ -67,10 +66,10 @@ class WalletMnemonicbitsTest(BitcoinTestFramework):
                 assert desc['mnemonic'] == mnemonic_pre
                 assert desc['active']
             # there should 3 descriptors in total
-            # one of them is inactive imported private key for coinbase. It has no mnemonic without mnemonic
-            # two other should be active and have mnemonic
+            # One of them is inactive imported private key for coinbase. It has no mnemonic
+            # Two other should be active and have mnemonic
             assert_equal(mnemonic_count, 2)
-            assert_equal(mnemonic_count, 2)
+            assert_equal(cb_count, 1)
             assert_equal(len(descriptors), 3)
         else:
             assert_equal(len(self.nodes[0].dumphdinfo()["mnemonic"].split()), 12)  # 12 words by default
