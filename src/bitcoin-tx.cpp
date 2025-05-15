@@ -275,9 +275,10 @@ static void MutateTxAddInput(CMutableTransaction& tx, const std::string& strInpu
 
     // extract and validate vout
     const std::string& strVout = vStrInputParts[1];
-    int64_t vout;
-    if (!ParseInt64(strVout, &vout) || vout < 0 || vout > static_cast<int64_t>(maxVout))
+    const auto vout{ToIntegral<uint32_t>(strVout)};
+    if (!vout || *vout > maxVout) {
         throw std::runtime_error("invalid TX input vout '" + strVout + "'");
+    }
 
     // extract the optional sequence number
     uint32_t nSequenceIn = CTxIn::SEQUENCE_FINAL;
@@ -286,7 +287,7 @@ static void MutateTxAddInput(CMutableTransaction& tx, const std::string& strInpu
     }
 
     // append to transaction input list
-    CTxIn txin(*txid, vout, CScript(), nSequenceIn);
+    CTxIn txin{*txid, *vout, CScript{}, nSequenceIn};
     tx.vin.push_back(txin);
 }
 

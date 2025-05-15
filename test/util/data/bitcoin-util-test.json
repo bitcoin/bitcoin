@@ -267,6 +267,14 @@
   { "exec": "./bitcoin-tx",
     "args":
     ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:+0"],
+    "return_code": 1,
+    "error_txt": "error: invalid TX input vout",
+    "description": "Tests the check for an invalid vout value when adding an input"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0x"],
     "return_code": 1,
     "error_txt": "error: invalid TX input vout",
