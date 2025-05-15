@@ -20,8 +20,9 @@ namespace {
 
 static RPCHelpMan getzmqnotifications()
 {
-    return RPCHelpMan{"getzmqnotifications",
-                "\nReturns information about the active ZeroMQ notifications.\n",
+    return RPCHelpMan{
+        "getzmqnotifications",
+        "Returns information about the active ZeroMQ notifications.\n",
                 {},
                 RPCResult{
                     RPCResult::Type::ARR, "", "",

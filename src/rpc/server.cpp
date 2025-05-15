@@ -126,8 +126,9 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
 
 static RPCHelpMan help()
 {
-    return RPCHelpMan{"help",
-                "\nList all commands, or get help for a specified command.\n",
+    return RPCHelpMan{
+        "help",
+        "List all commands, or get help for a specified command.\n",
                 {
                     {"command", RPCArg::Type::STR, RPCArg::DefaultHint{"all commands"}, "The command to get help on"},
                 },
@@ -180,8 +181,9 @@ static RPCHelpMan stop()
 
 static RPCHelpMan uptime()
 {
-    return RPCHelpMan{"uptime",
-                "\nReturns the total uptime of the server.\n",
+    return RPCHelpMan{
+        "uptime",
+        "Returns the total uptime of the server.\n",
                             {},
                             RPCResult{
                                 RPCResult::Type::NUM, "", "The number of seconds that the server has been running"
@@ -199,8 +201,9 @@ static RPCHelpMan uptime()
 
 static RPCHelpMan getrpcinfo()
 {
-    return RPCHelpMan{"getrpcinfo",
-                "\nReturns details of the RPC server.\n",
+    return RPCHelpMan{
+        "getrpcinfo",
+        "Returns details of the RPC server.\n",
                 {},
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",

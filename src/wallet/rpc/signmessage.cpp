@@ -13,8 +13,9 @@
 namespace wallet {
 RPCHelpMan signmessage()
 {
-    return RPCHelpMan{"signmessage",
-        "\nSign a message with the private key of an address" +
+    return RPCHelpMan{
+        "signmessage",
+        "Sign a message with the private key of an address" +
           HELP_REQUIRING_PASSPHRASE,
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to use for the private key."},

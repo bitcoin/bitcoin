@@ -56,8 +56,9 @@ const std::vector<std::string> TRANSPORT_TYPE_DOC{
 
 static RPCHelpMan getconnectioncount()
 {
-    return RPCHelpMan{"getconnectioncount",
-                "\nReturns the number of connections to other nodes.\n",
+    return RPCHelpMan{
+        "getconnectioncount",
+        "Returns the number of connections to other nodes.\n",
                 {},
                 RPCResult{
                     RPCResult::Type::NUM, "", "The connection count"
@@ -78,8 +79,9 @@ static RPCHelpMan getconnectioncount()
 
 static RPCHelpMan ping()
 {
-    return RPCHelpMan{"ping",
-                "\nRequests that a ping be sent to all other nodes, to measure ping time.\n"
+    return RPCHelpMan{
+        "ping",
+        "Requests that a ping be sent to all other nodes, to measure ping time.\n"
                 "Results provided in getpeerinfo, pingtime and pingwait fields are decimal seconds.\n"
                 "Ping command is handled in queue with all other commands, so it measures processing backlog, not just network ping.\n",
                 {},
@@ -304,8 +306,9 @@ static RPCHelpMan getpeerinfo()
 
 static RPCHelpMan addnode()
 {
-    return RPCHelpMan{"addnode",
-                "\nAttempts to add or remove a node from the addnode list.\n"
+    return RPCHelpMan{
+        "addnode",
+        "Attempts to add or remove a node from the addnode list.\n"
                 "Or try a connection to a node once.\n"
                 "Nodes added using addnode (or -connect) are protected from DoS disconnection and are not required to be\n"
                 "full nodes/support SegWit as other outbound peers are (though such peers will not be synced from).\n" +
@@ -367,8 +370,9 @@ static RPCHelpMan addnode()
 
 static RPCHelpMan addconnection()
 {
-    return RPCHelpMan{"addconnection",
-        "\nOpen an outbound connection to a specified node. This RPC is for testing only.\n",
+    return RPCHelpMan{
+        "addconnection",
+        "Open an outbound connection to a specified node. This RPC is for testing only.\n",
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP address and port to attempt connecting to."},
             {"connection_type", RPCArg::Type::STR, RPCArg::Optional::NO, "Type of connection to open (\"outbound-full-relay\", \"block-relay-only\", \"addr-fetch\" or \"feeler\")."},
@@ -429,8 +433,9 @@ static RPCHelpMan addconnection()
 
 static RPCHelpMan disconnectnode()
 {
-    return RPCHelpMan{"disconnectnode",
-                "\nImmediately disconnects from the specified peer node.\n"
+    return RPCHelpMan{
+        "disconnectnode",
+        "Immediately disconnects from the specified peer node.\n"
                 "\nStrictly one out of 'address' and 'nodeid' can be provided to identify the node.\n"
                 "\nTo disconnect by nodeid, either set 'address' to the empty string, or call using the named 'nodeid' argument only.\n",
                 {
@@ -475,8 +480,9 @@ static RPCHelpMan disconnectnode()
 
 static RPCHelpMan getaddednodeinfo()
 {
-    return RPCHelpMan{"getaddednodeinfo",
-                "\nReturns information about the given added node, or all added nodes\n"
+    return RPCHelpMan{
+        "getaddednodeinfo",
+        "Returns information about the given added node, or all added nodes\n"
                 "(note that onetry addnodes are not listed here)\n",
                 {
                     {"node", RPCArg::Type::STR, RPCArg::DefaultHint{"all nodes"}, "If provided, return information about this specific node, otherwise all nodes are returned."},
@@ -724,8 +730,9 @@ static RPCHelpMan getnetworkinfo()
 
 static RPCHelpMan setban()
 {
-    return RPCHelpMan{"setban",
-                "\nAttempts to add or remove an IP/Subnet from the banned list.\n",
+    return RPCHelpMan{
+        "setban",
+        "Attempts to add or remove an IP/Subnet from the banned list.\n",
                 {
                     {"subnet", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP/Subnet (see getpeerinfo for nodes IP) with an optional netmask (default is /32 = single IP)"},
                     {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add an IP/Subnet to the list, 'remove' to remove an IP/Subnet from the list"},
@@ -809,8 +816,9 @@ static RPCHelpMan setban()
 
 static RPCHelpMan listbanned()
 {
-    return RPCHelpMan{"listbanned",
-                "\nList all manually banned IPs/Subnets.\n",
+    return RPCHelpMan{
+        "listbanned",
+        "List all manually banned IPs/Subnets.\n",
                 {},
         RPCResult{RPCResult::Type::ARR, "", "",
             {
@@ -856,8 +864,9 @@ static RPCHelpMan listbanned()
 
 static RPCHelpMan clearbanned()
 {
-    return RPCHelpMan{"clearbanned",
-                "\nClear all banned IPs.\n",
+    return RPCHelpMan{
+        "clearbanned",
+        "Clear all banned IPs.\n",
                 {},
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
@@ -877,8 +886,9 @@ static RPCHelpMan clearbanned()
 
 static RPCHelpMan setnetworkactive()
 {
-    return RPCHelpMan{"setnetworkactive",
-                "\nDisable/enable all p2p network activity.\n",
+    return RPCHelpMan{
+        "setnetworkactive",
+        "Disable/enable all p2p network activity.\n",
                 {
                     {"state", RPCArg::Type::BOOL, RPCArg::Optional::NO, "true to enable networking, false to disable"},
                 },
@@ -1067,7 +1077,7 @@ static RPCHelpMan getaddrmaninfo()
 {
     return RPCHelpMan{
         "getaddrmaninfo",
-        "\nProvides information about the node's address manager by returning the number of "
+        "Provides information about the node's address manager by returning the number of "
         "addresses in the `new` and `tried` tables and their sum for all networks.\n",
         {},
         RPCResult{

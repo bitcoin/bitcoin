@@ -411,8 +411,9 @@ static RPCHelpMan getrawtransaction()
 
 static RPCHelpMan createrawtransaction()
 {
-    return RPCHelpMan{"createrawtransaction",
-                "\nCreate a transaction spending the given inputs and creating new outputs.\n"
+    return RPCHelpMan{
+        "createrawtransaction",
+        "Create a transaction spending the given inputs and creating new outputs.\n"
                 "Outputs can be addresses or data.\n"
                 "Returns hex-encoded raw transaction.\n"
                 "Note that the transaction's inputs are not signed, and\n"
@@ -485,7 +486,7 @@ static RPCHelpMan decodescript()
 {
     return RPCHelpMan{
         "decodescript",
-        "\nDecode a hex-encoded script.\n",
+        "Decode a hex-encoded script.\n",
         {
             {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hex-encoded script"},
         },
@@ -618,8 +619,9 @@ static RPCHelpMan decodescript()
 
 static RPCHelpMan combinerawtransaction()
 {
-    return RPCHelpMan{"combinerawtransaction",
-                "\nCombine multiple partially signed transactions into one transaction.\n"
+    return RPCHelpMan{
+        "combinerawtransaction",
+        "Combine multiple partially signed transactions into one transaction.\n"
                 "The combined transaction may be another partially signed transaction or a \n"
                 "fully signed transaction.",
                 {
@@ -704,8 +706,9 @@ static RPCHelpMan combinerawtransaction()
 
 static RPCHelpMan signrawtransactionwithkey()
 {
-    return RPCHelpMan{"signrawtransactionwithkey",
-                "\nSign inputs for raw transaction (serialized, hex-encoded).\n"
+    return RPCHelpMan{
+        "signrawtransactionwithkey",
+        "Sign inputs for raw transaction (serialized, hex-encoded).\n"
                 "The second argument is an array of base58-encoded private\n"
                 "keys that will be the only keys used to sign the transaction.\n"
                 "The third optional argument (may be null) is an array of previous transaction outputs that\n"
@@ -1548,8 +1551,9 @@ static RPCHelpMan decodepsbt()
 
 static RPCHelpMan combinepsbt()
 {
-    return RPCHelpMan{"combinepsbt",
-                "\nCombine multiple partially signed Bitcoin transactions into one transaction.\n"
+    return RPCHelpMan{
+        "combinepsbt",
+        "Combine multiple partially signed Bitcoin transactions into one transaction.\n"
                 "Implements the Combiner role.\n",
                 {
                     {"txs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The base64 strings of partially signed transactions",
@@ -1652,8 +1656,9 @@ static RPCHelpMan finalizepsbt()
 
 static RPCHelpMan createpsbt()
 {
-    return RPCHelpMan{"createpsbt",
-                "\nCreates a transaction in the Partially Signed Transaction format.\n"
+    return RPCHelpMan{
+        "createpsbt",
+        "Creates a transaction in the Partially Signed Transaction format.\n"
                 "Implements the Creator role.\n"
                 "Note that the transaction's inputs are not signed, and\n"
                 "it is not stored in the wallet or transmitted to the network.\n",
@@ -1694,8 +1699,9 @@ static RPCHelpMan createpsbt()
 
 static RPCHelpMan converttopsbt()
 {
-    return RPCHelpMan{"converttopsbt",
-                "\nConverts a network serialized transaction to a PSBT. This should be used only with createrawtransaction and fundrawtransaction\n"
+    return RPCHelpMan{
+        "converttopsbt",
+        "Converts a network serialized transaction to a PSBT. This should be used only with createrawtransaction and fundrawtransaction\n"
                 "createpsbt and walletcreatefundedpsbt should be used for new applications.\n",
                 {
                     {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex string of a raw transaction"},
@@ -1761,8 +1767,9 @@ static RPCHelpMan converttopsbt()
 
 static RPCHelpMan utxoupdatepsbt()
 {
-    return RPCHelpMan{"utxoupdatepsbt",
-            "\nUpdates all segwit inputs and outputs in a PSBT with data from output descriptors, the UTXO set, txindex, or the mempool.\n",
+    return RPCHelpMan{
+        "utxoupdatepsbt",
+        "Updates all segwit inputs and outputs in a PSBT with data from output descriptors, the UTXO set, txindex, or the mempool.\n",
             {
                 {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PSBT"},
                 {"descriptors", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "An array of either strings or objects", {
@@ -1807,8 +1814,9 @@ static RPCHelpMan utxoupdatepsbt()
 
 static RPCHelpMan joinpsbts()
 {
-    return RPCHelpMan{"joinpsbts",
-            "\nJoins multiple distinct PSBTs with different inputs and outputs into one PSBT with inputs and outputs from all of the PSBTs\n"
+    return RPCHelpMan{
+        "joinpsbts",
+        "Joins multiple distinct PSBTs with different inputs and outputs into one PSBT with inputs and outputs from all of the PSBTs\n"
             "No input in any of the PSBTs can be in more than one of the PSBTs.\n",
             {
                 {"txs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The base64 strings of partially signed transactions",
@@ -1908,8 +1916,9 @@ static RPCHelpMan joinpsbts()
 
 static RPCHelpMan analyzepsbt()
 {
-    return RPCHelpMan{"analyzepsbt",
-            "\nAnalyzes and provides information about the current status of a PSBT and its inputs\n",
+    return RPCHelpMan{
+        "analyzepsbt",
+        "Analyzes and provides information about the current status of a PSBT and its inputs\n",
             {
                 {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PSBT"}
             },
@@ -2017,8 +2026,9 @@ static RPCHelpMan analyzepsbt()
 
 RPCHelpMan descriptorprocesspsbt()
 {
-    return RPCHelpMan{"descriptorprocesspsbt",
-                "\nUpdate all segwit inputs in a PSBT with information from output descriptors, the UTXO set or the mempool. \n"
+    return RPCHelpMan{
+        "descriptorprocesspsbt",
+        "Update all segwit inputs in a PSBT with information from output descriptors, the UTXO set or the mempool. \n"
                 "Then, sign the inputs we are able to with information from the output descriptors. ",
                 {
                     {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction base64 string"},

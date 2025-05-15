@@ -29,7 +29,7 @@ static RPCHelpMan validateaddress()
 {
     return RPCHelpMan{
         "validateaddress",
-        "\nReturn information about the given bitcoin address.\n",
+        "Return information about the given bitcoin address.\n",
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to validate"},
         },
@@ -87,8 +87,9 @@ static RPCHelpMan validateaddress()
 
 static RPCHelpMan createmultisig()
 {
-    return RPCHelpMan{"createmultisig",
-        "\nCreates a multi-signature address with n signature of m keys required.\n"
+    return RPCHelpMan{
+        "createmultisig",
+        "Creates a multi-signature address with n signature of m keys required.\n"
         "It returns a json object with the address and redeemScript.\n",
         {
             {"nrequired", RPCArg::Type::NUM, RPCArg::Optional::NO, "The number of required signatures out of the n keys."},
