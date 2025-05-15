@@ -302,23 +302,23 @@ std::set<Challenge> FindChallenges(const NodeRef& root)
         const Node* ref{stack.back()};
         stack.pop_back();
 
-        for (const auto& key : ref->keys) {
-            chal.emplace(ChallengeType::PK, ChallengeNumber(key));
-        }
-        if (ref->fragment == miniscript::Fragment::OLDER) {
-            chal.emplace(ChallengeType::OLDER, ref->k);
-        } else if (ref->fragment == miniscript::Fragment::AFTER) {
-            chal.emplace(ChallengeType::AFTER, ref->k);
-        } else if (ref->fragment == miniscript::Fragment::SHA256) {
-            chal.emplace(ChallengeType::SHA256, ChallengeNumber(ref->data));
-        } else if (ref->fragment == miniscript::Fragment::RIPEMD160) {
-            chal.emplace(ChallengeType::RIPEMD160, ChallengeNumber(ref->data));
-        } else if (ref->fragment == miniscript::Fragment::HASH256) {
-            chal.emplace(ChallengeType::HASH256, ChallengeNumber(ref->data));
-        } else if (ref->fragment == miniscript::Fragment::HASH160) {
-            chal.emplace(ChallengeType::HASH160, ChallengeNumber(ref->data));
-        }
-        for (const auto& sub : ref->subs) {
+    for (const auto& key : ref->keys) {
+        chal.emplace(ChallengeType::PK, ChallengeNumber(key));
+    }
+    if (ref->fragment == miniscript::Fragment::OLDER) {
+        chal.emplace(ChallengeType::OLDER, ref->k);
+    } else if (ref->fragment == miniscript::Fragment::AFTER) {
+        chal.emplace(ChallengeType::AFTER, ref->k);
+    } else if (ref->fragment == miniscript::Fragment::SHA256) {
+        chal.emplace(ChallengeType::SHA256, ChallengeNumber(ref->data));
+    } else if (ref->fragment == miniscript::Fragment::RIPEMD160) {
+        chal.emplace(ChallengeType::RIPEMD160, ChallengeNumber(ref->data));
+    } else if (ref->fragment == miniscript::Fragment::HASH256) {
+        chal.emplace(ChallengeType::HASH256, ChallengeNumber(ref->data));
+    } else if (ref->fragment == miniscript::Fragment::HASH160) {
+        chal.emplace(ChallengeType::HASH160, ChallengeNumber(ref->data));
+    }
+    for (const auto& sub : ref->subs) {
             stack.push_back(sub.get());
         }
     }
@@ -348,7 +348,7 @@ void SatisfactionToWitness(miniscript::MiniscriptContext ctx, CScriptWitness& wi
 /** Run random satisfaction tests. */
 void TestSatisfy(const KeyConverter& converter, const std::string& testcase, const NodeRef& node) {
     auto script = node->ToScript(converter);
-    const auto challenges{FindChallenges(node)}; // Find all challenges in the generated miniscript.
+    auto challenges = FindChallenges(node); // Find all challenges in the generated miniscript.
     std::vector<Challenge> challist(challenges.begin(), challenges.end());
     for (int iter = 0; iter < 3; ++iter) {
         std::shuffle(challist.begin(), challist.end(), g_insecure_rand_ctx);
