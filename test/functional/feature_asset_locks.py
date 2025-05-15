@@ -320,8 +320,17 @@ class AssetLocksTest(DashTestFramework):
         extra_lock_tx = self.create_assetlock(coin, COIN, pubkey)
         self.create_and_check_block([extra_lock_tx], expected_error = 'bad-cbtx-assetlocked-amount')
 
-        self.log.info("Mine a quorum...")
-        self.mine_quorum_2_nodes()
+        self.log.info("Mine IS quorum")
+        if len(self.nodes[0].quorum('list')['llmq_test_instantsend']) == 0:
+            self.mine_quorum(llmq_type_name='llmq_test_instantsend', expected_members=2, expected_connections=1, expected_contributions=2, expected_commitments=2, llmq_type=104)
+        else:
+            self.log.info("IS quorum exist")
+
+        self.log.info("Mine a platform quorum")
+        if len(self.nodes[0].quorum('list')['llmq_test_platform']) == 0:
+            self.mine_quorum_2_nodes()
+        else:
+            self.log.info("Platform quorum exist")
 
         self.validate_credit_pool_balance(locked_1)
 
