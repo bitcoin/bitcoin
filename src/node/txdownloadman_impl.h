@@ -10,9 +10,9 @@
 #include <consensus/validation.h>
 #include <kernel/chain.h>
 #include <net.h>
+#include <node/txorphanage.h>
 #include <primitives/transaction.h>
 #include <policy/packages.h>
-#include <txorphanage.h>
 #include <txrequest.h>
 
 class CTxMemPool;
