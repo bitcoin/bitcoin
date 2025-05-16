@@ -101,6 +101,7 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_waitforblockheight()
         self._test_getblock()
         self._test_getdeploymentinfo()
+        self._test_verificationprogress()
         self._test_y2106()
         assert self.nodes[0].verifychain(4, 0)
 
@@ -279,6 +280,14 @@ class BlockchainTest(BitcoinTestFramework):
 
         # calling with an explicit hash works
         self.check_signalling_deploymentinfo_result(self.nodes[0].getdeploymentinfo(gbci207["bestblockhash"]), gbci207["blocks"], gbci207["bestblockhash"], "started")
+
+    def _test_verificationprogress(self):
+        self.log.info("Check that verificationprogress is less than 1 when the block tip is old")
+        future = 2 * 60 * 60
+        self.nodes[0].setmocktime(self.nodes[0].getblockchaininfo()["time"] + future + 1)
+        assert_greater_than(1, self.nodes[0].getblockchaininfo()["verificationprogress"])
+        self.nodes[0].setmocktime(self.nodes[0].getblockchaininfo()["time"] + future)
+        assert_greater_than(1, self.nodes[0].getblockchaininfo()["verificationprogress"])
 
     def _test_y2106(self):
         self.log.info("Check that block timestamps work until year 2106")
