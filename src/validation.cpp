@@ -5558,10 +5558,9 @@ bool Chainstate::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
     return ret;
 }
 
-//! Guess how far we are in the verification process at the given block index
-//! require cs_main if pindex has not been validated yet (because m_chain_tx_count might be unset)
 double ChainstateManager::GuessVerificationProgress(const CBlockIndex* pindex) const
 {
+    AssertLockHeld(GetMutex());
     const ChainTxData& data{GetParams().TxData()};
     if (pindex == nullptr) {
         return 0.0;
@@ -5573,13 +5572,24 @@ double ChainstateManager::GuessVerificationProgress(const CBlockIndex* pindex) c
     }
 
     const int64_t nNow{TicksSinceEpoch<std::chrono::seconds>(NodeClock::now())};
+    const auto block_time{
+        (Assume(m_best_header) && std::abs(nNow - pindex->GetBlockTime()) <= Ticks<std::chrono::seconds>(2h) &&
+         Assume(m_best_header->nHeight >= pindex->nHeight)) ?
+            // When the header is known to be recent, switch to a height-based
+            // approach. This ensures the returned value is quantized when
+            // close to "1.0", because some users expect it to be. This also
+            // avoids relying too much on the exact miner-set timestamp, which
+            // may be off.
+            nNow - (m_best_header->nHeight - pindex->nHeight) * GetConsensus().nPowTargetSpacing :
+            pindex->GetBlockTime(),
+    };
 
     double fTxTotal;
 
     if (pindex->m_chain_tx_count <= data.tx_count) {
         fTxTotal = data.tx_count + (nNow - data.nTime) * data.dTxRate;
     } else {
-        fTxTotal = pindex->m_chain_tx_count + (nNow - pindex->GetBlockTime()) * data.dTxRate;
+        fTxTotal = pindex->m_chain_tx_count + (nNow - block_time) * data.dTxRate;
     }
 
     return std::min<double>(pindex->m_chain_tx_count / fTxTotal, 1.0);
