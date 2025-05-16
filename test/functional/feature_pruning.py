@@ -136,7 +136,7 @@ class PruneTest(BitcoinTestFramework):
         self.sync_blocks(self.nodes[0:5])
 
     def test_invalid_command_line_options(self):
-        self.stop_node(0)
+        self.stop_node(0, expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
         self.nodes[0].assert_start_raises_init_error(
             expected_msg='Error: Prune cannot be configured with a negative value.',
             extra_args=['-prune=-1', '-txindex=0', '-disablegovernance'],
