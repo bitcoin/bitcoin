@@ -667,6 +667,45 @@ class TestNode():
             report_cmd = "perf report -i {}".format(output_path)
             self.log.info("See perf output by running '{}'".format(report_cmd))
 
+    def assert_log_matches(self, log, expected_msg, match=ErrorMatch.FULL_TEXT):
+        """Assert that the log output matches the expected message according to the given match type"""
+        assert expected_msg is not None
+        log.seek(0)
+        stderr = log.read().decode('utf-8').strip()
+
+        if match == ErrorMatch.PARTIAL_REGEX:
+            matched = re.search(expected_msg, stderr, flags=re.MULTILINE)
+            mismatch_reason = 'does not partially match'
+        elif match == ErrorMatch.FULL_REGEX:
+            matched = re.fullmatch(expected_msg, stderr)
+            mismatch_reason = 'does not fully match regex'
+        elif match == ErrorMatch.FULL_TEXT:
+            matched = (expected_msg == stderr)
+            mismatch_reason = 'does not fully match'
+        else:
+            raise ValueError(f'Unknown match type: {match}')
+
+        if not matched:
+            self._raise_assertion_error(
+                f'Expected message "{expected_msg}" {mismatch_reason}:\n"{stderr}"'
+            )
+
+    def assert_start_raises_init_warning(self, extra_args=None, expected_msg=None, match=ErrorMatch.FULL_TEXT, *args, **kwargs):
+        """Attempt to start the node and expect it to raise a warning.
+
+        extra_args: extra arguments to pass through to bitcoind
+        expected_msg: regex that stdout should match when bitcoind fails
+
+        Will throw if bitcoind starts without returning a warning message through stdout.
+        """
+        assert not self.running
+        with tempfile.NamedTemporaryFile(dir=self.stdout_dir, delete=False) as log_stdout:
+            self.start(extra_args, stdout=log_stdout, *args, **kwargs)
+            self.wait_for_rpc_connection()
+            # Check stdout for expected warning message
+            self.assert_log_matches(log_stdout, expected_msg, match)
+
+
     def assert_start_raises_init_error(self, extra_args=None, expected_msg=None, match=ErrorMatch.FULL_TEXT, *args, **kwargs):
         """Attempt to start the node and expect it to raise an error.
 
@@ -687,20 +726,7 @@ class TestNode():
                 self.process = None
                 # Check stderr for expected message
                 if expected_msg is not None:
-                    log_stderr.seek(0)
-                    stderr = log_stderr.read().decode('utf-8').strip()
-                    if match == ErrorMatch.PARTIAL_REGEX:
-                        if re.search(expected_msg, stderr, flags=re.MULTILINE) is None:
-                            self._raise_assertion_error(
-                                'Expected message "{}" does not partially match stderr:\n"{}"'.format(expected_msg, stderr))
-                    elif match == ErrorMatch.FULL_REGEX:
-                        if re.fullmatch(expected_msg, stderr) is None:
-                            self._raise_assertion_error(
-                                'Expected message "{}" does not fully match stderr:\n"{}"'.format(expected_msg, stderr))
-                    elif match == ErrorMatch.FULL_TEXT:
-                        if expected_msg != stderr:
-                            self._raise_assertion_error(
-                                'Expected message "{}" does not fully match stderr:\n"{}"'.format(expected_msg, stderr))
+                    self.assert_log_matches(log_stderr, expected_msg, match)
             except subprocess.TimeoutExpired:
                 self.process.kill()
                 self.running = False

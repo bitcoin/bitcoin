@@ -55,6 +55,11 @@ class PortTest(BitcoinTestFramework):
         node.extra_args = ["-listen", "-port=0"]
         node.assert_start_raises_init_error(expected_msg="Error: Invalid port specified in -port: '0'")
 
+        # Start node in a bad-port (see doc/p2p-bad-ports.md), expect warning
+        node.extra_args = ["-bind=127.0.0.1:6665"]
+        warning_msg = 'Warning: -bind request to listen on port 6665. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.'
+        node.assert_start_raises_init_warning(node.extra_args, expected_msg=warning_msg)
+
 
 if __name__ == '__main__':
     PortTest(__file__).main()
