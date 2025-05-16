@@ -237,6 +237,15 @@ jobs:
         run: |
           cmake --build . -j $NUMBER_OF_PROCESSORS --config Release
 
+      - name: Get bitcoind manifest
+        if: matrix.job-type == 'standard'
+        working-directory: build
+        run: |
+          mt.exe -nologo -inputresource:bin/Release/bitcoind.exe -out:bitcoind.manifest
+          cat bitcoind.manifest
+          echo
+          mt.exe -nologo -inputresource:bin/Release/bitcoind.exe -validate_manifest
+
       - name: Run test suite
         if: matrix.job-type == 'standard'
         working-directory: build
@@ -346,6 +355,20 @@ jobs:
 
       - name: Run bitcoind.exe
         run: ./bin/bitcoind.exe -version
+
+      - name: Find mt.exe tool
+        shell: pwsh
+        run: |
+          $sdk_dir = (Get-ItemProperty 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots' -Name KitsRoot10).KitsRoot10
+          $sdk_latest = (Get-ChildItem "$sdk_dir\bin" -Directory | Where-Object { $_.Name -match '^\d+\.\d+\.\d+\.\d+$' } | Sort-Object Name -Descending | Select-Object -First 1).Name
+          "MT_EXE=${sdk_dir}bin\${sdk_latest}\x64\mt.exe" >> $env:GITHUB_ENV
+
+      - name: Get bitcoind manifest
+        shell: pwsh
+        run: |
+          & $env:MT_EXE -nologo -inputresource:bin\bitcoind.exe -out:bitcoind.manifest
+          Get-Content bitcoind.manifest
+          & $env:MT_EXE -nologo -inputresource:bin\bitcoind.exe -validate_manifest
 
       - name: Run unit tests
         # Can't use ctest here like other jobs as we don't have a CMake build tree.
