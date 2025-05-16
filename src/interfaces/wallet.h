@@ -117,7 +117,6 @@ public:
     //! Look up address in wallet, return whether exists.
     virtual bool getAddress(const CTxDestination& dest,
         std::string* name,
-        wallet::isminetype* is_mine,
         wallet::AddressPurpose* purpose) = 0;
 
     //! Get wallet address list.
