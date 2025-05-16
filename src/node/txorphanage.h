@@ -91,7 +91,7 @@ public:
     virtual void EraseForBlock(const CBlock& block) = 0;
 
     /** Limit the orphanage to MaxGlobalLatencyScore and MaxGlobalUsage. */
-    virtual void LimitOrphans(FastRandomContext& rng) = 0;
+    virtual void LimitOrphans() = 0;
 
     /** Add any orphans that list a particular tx as a parent into the from peer's work set */
     virtual void AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng) = 0;
