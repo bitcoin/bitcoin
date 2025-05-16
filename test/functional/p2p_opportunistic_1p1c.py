@@ -62,7 +62,6 @@ class PackageRelayTest(BitcoinTestFramework):
             "-datacarriersize=100000",
             "-maxmempool=5",
         ]]
-        self.supports_cli = False
 
     def create_tx_below_mempoolminfee(self, wallet):
         """Create a 1-input 1sat/vB transaction using a confirmed UTXO. Decrement and use

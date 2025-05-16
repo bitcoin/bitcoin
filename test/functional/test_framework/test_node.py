@@ -47,6 +47,8 @@ BITCOIND_PROC_WAIT_TIMEOUT = 60
 # The size of the blocks xor key
 # from InitBlocksdirXorKey::xor_key.size()
 NUM_XOR_BYTES = 8
+CLI_MAX_ARG_SIZE = 131071 # many systems have a 128kb limit per arg (MAX_ARG_STRLEN)
+
 # The null blocks key (all 0s)
 NULL_BLK_XOR_KEY = bytes([0] * NUM_XOR_BYTES)
 BITCOIN_PID_FILENAME_DEFAULT = "bitcoind.pid"
@@ -876,7 +878,7 @@ def arg_to_cli(arg):
         return str(arg).lower()
     elif arg is None:
         return 'null'
-    elif isinstance(arg, dict) or isinstance(arg, list):
+    elif isinstance(arg, dict) or isinstance(arg, list) or isinstance(arg, tuple):
         return json.dumps(arg, default=serialization_fallback)
     else:
         return str(arg)
@@ -913,16 +915,28 @@ class TestNodeCLI():
     def send_cli(self, clicommand=None, *args, **kwargs):
         """Run bitcoin-cli command. Deserializes returned string as python object."""
         pos_args = [arg_to_cli(arg) for arg in args]
-        named_args = [str(key) + "=" + arg_to_cli(value) for (key, value) in kwargs.items()]
+        named_args = [str(key) + "=" + arg_to_cli(value) for (key, value) in kwargs.items() if value is not None]
         p_args = self.binaries.rpc_argv() + [f"-datadir={self.datadir}"] + self.options
         if named_args:
             p_args += ["-named"]
         if clicommand is not None:
             p_args += [clicommand]
         p_args += pos_args + named_args
+        max_arg_size = max(len(arg) for arg in p_args)
+        stdin_data = self.input
+        if max_arg_size > CLI_MAX_ARG_SIZE:
+            self.log.debug(f"Cli: Command size {max_arg_size} too large, using stdin")
+            rpc_args = "\n".join([arg for arg in p_args[1:] if not arg.startswith('-')])
+            if stdin_data is not None:
+                stdin_data += "\n" + rpc_args
+            else:
+                stdin_data = rpc_args
+            base_args = [arg for arg in p_args if arg.startswith('-')]
+            p_args =[p_args[0]] + base_args + ['-stdin']
+
         self.log.debug("Running bitcoin-cli {}".format(p_args[2:]))
         process = subprocess.Popen(p_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        cli_stdout, cli_stderr = process.communicate(input=self.input)
+        cli_stdout, cli_stderr = process.communicate(input=stdin_data)
         returncode = process.poll()
         if returncode:
             match = re.match(r'error code: ([-0-9]+)\nerror message:\n(.*)', cli_stderr)
@@ -962,8 +976,8 @@ class RPCOverloadWrapper():
     def addmultisigaddress(self, nrequired, keys, *, label=None, address_type=None):
         wallet_info = self.getwalletinfo()
         if 'descriptors' not in wallet_info or ('descriptors' in wallet_info and not wallet_info['descriptors']):
-            return self.__getattr__('addmultisigaddress')(nrequired, keys, label, address_type)
-        cms = self.createmultisig(nrequired, keys, address_type)
+            return self.__getattr__('addmultisigaddress')(nrequired, keys, label, address_type=address_type)
+        cms = self.createmultisig(nrequired, keys, address_type=address_type)
         req = [{
             'desc': cms['descriptor'],
             'timestamp': 0,
