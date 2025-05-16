@@ -9,6 +9,7 @@
 #include <attributes.h>
 #include <crypto/common.h>
 #include <prevector.h> // IWYU pragma: export
+#include <pubkey.h>
 #include <serialize.h>
 #include <uint256.h>
 #include <util/hash_type.h>
@@ -23,6 +24,11 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+// Signature hash sizes
+static constexpr size_t WITNESS_V0_KEYHASH_SIZE = 20;
+static constexpr size_t WITNESS_V0_SCRIPTHASH_SIZE = 32;
+static constexpr size_t WITNESS_V1_TAPROOT_SIZE = 32;
 
 // Maximum number of bytes pushable to the stack
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520;
@@ -552,11 +558,60 @@ public:
      */
     static bool IsPayToAnchor(int version, const std::vector<unsigned char>& program);
 
-    bool IsPayToScriptHash() const;
-    bool IsPayToWitnessScriptHash() const;
-    bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
+    bool IsPayToPubKeyHash() const noexcept
+    {
+        return size() == 25 &&
+               front() == OP_DUP &&
+               (*this)[1] == OP_HASH160 &&
+               (*this)[2] == WITNESS_V0_KEYHASH_SIZE &&
+               (*this)[23] == OP_EQUALVERIFY &&
+               back() == OP_CHECKSIG;
+    }
 
-    bool IsPayToTaproot() const;
+    bool IsPayToScriptHash() const noexcept
+    {
+        return size() == 23 &&
+               front() == OP_HASH160 &&
+               (*this)[1] == WITNESS_V0_KEYHASH_SIZE &&
+               back() == OP_EQUAL;
+    }
+
+    bool IsPayToWitnessPubKeyHash() const noexcept
+    {
+        return size() == 22 &&
+               front() == OP_0 &&
+               (*this)[1] == WITNESS_V0_KEYHASH_SIZE;
+    }
+
+    bool IsPayToTaproot() const noexcept
+    {
+        return size() == 34 &&
+               front() == OP_1 &&
+               (*this)[1] == WITNESS_V1_TAPROOT_SIZE;
+    }
+
+    bool IsPayToWitnessScriptHash() const noexcept
+    {
+        return size() == 34 &&
+               front() == OP_0 &&
+               (*this)[1] == WITNESS_V0_SCRIPTHASH_SIZE;
+    }
+
+    bool IsCompressedPayToPubKey() const noexcept
+    {
+        return size() == 35 &&
+               front() == CPubKey::COMPRESSED_SIZE &&
+               back() == OP_CHECKSIG;
+    }
+
+    bool IsUncompressedPayToPubKey() const noexcept
+    {
+        return size() == 67 &&
+               front() == CPubKey::SIZE &&
+               back() == OP_CHECKSIG;
+    }
+
+    bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
     bool IsPushOnly(const_iterator pc) const;
