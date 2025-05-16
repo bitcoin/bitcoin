@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <node/mempool_persist.h>
+#include <test/util/time.h>
 
 #include <node/mempool_args.h>
 #include <node/mempool_persist_args.h>
@@ -40,7 +41,7 @@ FUZZ_TARGET(validation_load_mempool, .init = initialize_validation_load_mempool)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    ElapseTime elapse_time{ConsumeTime(fuzzed_data_provider)};
     FuzzedFileProvider fuzzed_file_provider{fuzzed_data_provider};
 
     bilingual_str error;

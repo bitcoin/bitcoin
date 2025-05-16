@@ -11,6 +11,7 @@
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <util/fs_helpers.h>
 #include <util/threadinterrupt.h>
 
@@ -24,7 +25,7 @@ FUZZ_TARGET(i2p, .init = initialize_i2p)
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    ElapseTime elapse_time{ConsumeTime(fuzzed_data_provider)};
 
     // Mock CreateSock() to create FuzzedSock.
     auto CreateSockOrig = CreateSock;

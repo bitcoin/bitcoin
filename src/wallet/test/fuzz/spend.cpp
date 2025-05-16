@@ -2,20 +2,21 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <addresstype.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/wallet.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <util/time.h>
+#include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/context.h>
 #include <wallet/spend.h>
 #include <wallet/test/util.h>
 #include <wallet/wallet.h>
-#include <validation.h>
-#include <addresstype.h>
 
 using util::ToString;
 
@@ -33,7 +34,7 @@ FUZZ_TARGET(wallet_create_transaction, .init = initialize_setup)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    ElapseTime elapse_time{ConsumeTime(fuzzed_data_provider)};
     const auto& node = g_setup->m_node;
     Chainstate& chainstate{node.chainman->ActiveChainstate()};
     ArgsManager& args = *node.args;

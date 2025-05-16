@@ -21,6 +21,7 @@
 #include <test/fuzz/util.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/fs.h>
@@ -72,6 +73,7 @@ void initialize_chain()
     const auto params{CreateChainParams(ArgsManager{}, ChainType::REGTEST)};
     static const auto chain{CreateBlockChain(2 * COINBASE_MATURITY, *params)};
     g_chain = &chain;
+    SetMockTime(chain.back()->nTime);
 
     // Make sure we can generate a valid snapshot.
     sanity_check_snapshot();
@@ -102,7 +104,7 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    SetMockTime(ConsumeTime(fuzzed_data_provider, /*min=*/1296688602)); // regtest genesis block timestamp
+    ElapseTime elapse_time{ConsumeTime(fuzzed_data_provider, /*min=*/1296688602)}; // regtest genesis block timestamp
     auto& setup{*g_setup};
     bool dirty_chainman{false}; // Re-use the global chainman, but reset it when it is dirty
     auto& chainman{*setup.m_node.chainman};
