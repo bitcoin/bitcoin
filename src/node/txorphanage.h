@@ -19,13 +19,11 @@ namespace node {
 /** Default value for TxOrphanage::m_reserved_usage_per_peer. */
 static constexpr int64_t DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER{404'000};
 /** Default value for TxOrphanage::m_max_global_announcements. */
-static constexpr unsigned int DEFAULT_MAX_ORPHAN_ANNOUNCEMENTS{100};
+static constexpr unsigned int DEFAULT_MAX_ORPHAN_ANNOUNCEMENTS{3000};
 /** Minimum NodeId for lower_bound lookups (in practice, NodeIds start at 0). */
 static constexpr NodeId MIN_PEER{std::numeric_limits<NodeId>::min()};
 /** Maximum NodeId for upper_bound lookups. */
 static constexpr NodeId MAX_PEER{std::numeric_limits<NodeId>::max()};
-/** Default maximum number of orphan transactions kept in memory */
-static const uint32_t DEFAULT_MAX_ORPHAN_TRANSACTIONS{100};
 
 /** A class to track orphan transactions (failed on TX_MISSING_INPUTS)
  * Since we cannot distinguish orphans from bad transactions with non-existent inputs, we heavily limit the amount of
