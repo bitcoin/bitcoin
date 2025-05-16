@@ -39,7 +39,7 @@ namespace node {
 /** Default value for TxOrphanage::m_reserved_usage_per_peer. */
 static constexpr int64_t DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER{404'000};
 /** Default value for TxOrphanage::m_max_global_announcements. */
-static constexpr unsigned int DEFAULT_MAX_ORPHAN_ANNOUNCEMENTS{100};
+static constexpr unsigned int DEFAULT_MAX_ORPHAN_ANNOUNCEMENTS{3000};
 /** Minimum NodeId for lower_bound lookups (in practice, NodeIds start at 0). */
 static constexpr NodeId min_peer{std::numeric_limits<NodeId>::min()};
 
