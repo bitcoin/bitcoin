@@ -185,7 +185,6 @@ public:
     }
     bool getAddress(const CTxDestination& dest,
         std::string* name,
-        isminetype* is_mine,
         AddressPurpose* purpose) override
     {
         LOCK(m_wallet->cs_wallet);
@@ -194,16 +193,9 @@ public:
         if (name) {
             *name = entry->GetLabel();
         }
-        std::optional<isminetype> dest_is_mine;
-        if (is_mine || purpose) {
-            dest_is_mine = m_wallet->IsMine(dest);
-        }
-        if (is_mine) {
-            *is_mine = *dest_is_mine;
-        }
         if (purpose) {
             // In very old wallets, address purpose may not be recorded so we derive it from IsMine
-            *purpose = entry->purpose.value_or(*dest_is_mine ? AddressPurpose::RECEIVE : AddressPurpose::SEND);
+            *purpose = entry->purpose.value_or(m_wallet->IsMine(dest) ? AddressPurpose::RECEIVE : AddressPurpose::SEND);
         }
         return true;
     }
