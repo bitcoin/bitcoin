@@ -1392,6 +1392,32 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // Check port numbers
     if (!CheckHostPortOptions(args)) return false;
 
+    // Configure reachable networks before we start the RPC server.
+    // This is necessary for -rpcallowip to distinguish CJDNS from other RFC4193
+    const auto onlynets = args.GetArgs("-onlynet");
+    if (!onlynets.empty()) {
+        g_reachable_nets.RemoveAll();
+        for (const std::string& snet : onlynets) {
+            enum Network net = ParseNetwork(snet);
+            if (net == NET_UNROUTABLE)
+                return InitError(strprintf(_("Unknown network specified in -onlynet: '%s'"), snet));
+            g_reachable_nets.Add(net);
+        }
+    }
+
+    if (!args.IsArgSet("-cjdnsreachable")) {
+        if (!onlynets.empty() && g_reachable_nets.Contains(NET_CJDNS)) {
+            return InitError(
+                _("Outbound connections restricted to CJDNS (-onlynet=cjdns) but "
+                  "-cjdnsreachable is not provided"));
+        }
+        g_reachable_nets.Remove(NET_CJDNS);
+    }
+    // Now g_reachable_nets.Contains(NET_CJDNS) is true if:
+    // 1. -cjdnsreachable is given and
+    // 2.1. -onlynet is not given or
+    // 2.2. -onlynet=cjdns is given
+
     /* Start the RPC server already.  It will be started in "warmup" mode
      * and not really process calls already (but it will signify connections
      * that the server is there and will be ready later).  Warmup mode will
@@ -1503,30 +1529,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         return InitError(strprintf(_("Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments."),
             strSubVersion.size(), MAX_SUBVERSION_LENGTH));
     }
-
-    const auto onlynets = args.GetArgs("-onlynet");
-    if (!onlynets.empty()) {
-        g_reachable_nets.RemoveAll();
-        for (const std::string& snet : onlynets) {
-            enum Network net = ParseNetwork(snet);
-            if (net == NET_UNROUTABLE)
-                return InitError(strprintf(_("Unknown network specified in -onlynet: '%s'"), snet));
-            g_reachable_nets.Add(net);
-        }
-    }
-
-    if (!args.IsArgSet("-cjdnsreachable")) {
-        if (!onlynets.empty() && g_reachable_nets.Contains(NET_CJDNS)) {
-            return InitError(
-                _("Outbound connections restricted to CJDNS (-onlynet=cjdns) but "
-                  "-cjdnsreachable is not provided"));
-        }
-        g_reachable_nets.Remove(NET_CJDNS);
-    }
-    // Now g_reachable_nets.Contains(NET_CJDNS) is true if:
-    // 1. -cjdnsreachable is given and
-    // 2.1. -onlynet is not given or
-    // 2.2. -onlynet=cjdns is given
 
     // Requesting DNS seeds entails connecting to IPv4/IPv6, which -onlynet options may prohibit:
     // If -dnsseed=1 is explicitly specified, abort. If it's left unspecified by the user, we skip
