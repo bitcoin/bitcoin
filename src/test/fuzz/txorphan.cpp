@@ -52,7 +52,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
 
     std::vector<CTransactionRef> tx_history;
 
-    LIMITED_WHILE(outpoints.size() < 200'000 && fuzzed_data_provider.ConsumeBool(), 10 * node::DEFAULT_MAX_ORPHAN_TRANSACTIONS)
+    LIMITED_WHILE(outpoints.size() < 200'000 && fuzzed_data_provider.ConsumeBool(), 1000)
     {
         // construct transaction
         const CTransactionRef tx = [&] {
@@ -100,7 +100,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
         }
 
         // trigger orphanage functions
-        LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10 * node::DEFAULT_MAX_ORPHAN_TRANSACTIONS)
+        LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 1000)
         {
             NodeId peer_id = fuzzed_data_provider.ConsumeIntegral<NodeId>();
             const auto total_bytes_start{orphanage->TotalOrphanUsage()};
@@ -220,7 +220,6 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                     // test mocktime and expiry
                     SetMockTime(ConsumeTime(fuzzed_data_provider));
                     orphanage->LimitOrphans();
-                    Assert(orphanage->Size() <= node::DEFAULT_MAX_ORPHAN_TRANSACTIONS);
                 });
 
         }
