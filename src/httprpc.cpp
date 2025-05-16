@@ -100,27 +100,31 @@ static void JSONErrorReply(HTTPRequest* req, UniValue objError, const JSONRPCReq
 
 //This function checks username and password against -rpcauth
 //entries from config file.
-static bool CheckUserAuthorized(std::string_view user_pass)
+static bool multiUserAuthorized(std::string strUserPass)
 {
-    if (user_pass.find(':') == std::string::npos) {
+    if (strUserPass.find(':') == std::string::npos) {
         return false;
     }
-    std::string_view user = user_pass.substr(0, user_pass.find(':'));
-    std::string_view pass = user_pass.substr(user_pass.find(':') + 1);
+    std::string strUser = strUserPass.substr(0, strUserPass.find(':'));
+    std::string strPass = strUserPass.substr(strUserPass.find(':') + 1);
 
-    for (const auto& fields : g_rpcauth) {
-        if (!TimingResistantEqual(std::string_view(fields[0]), user)) {
+    for (const auto& vFields : g_rpcauth) {
+        std::string strName = vFields[0];
+        if (!TimingResistantEqual(strName, strUser)) {
             continue;
         }
 
-        const std::string& salt = fields[1];
-        const std::string& hash = fields[2];
+        std::string strSalt = vFields[1];
+        std::string strHash = vFields[2];
 
-        std::array<unsigned char, CHMAC_SHA256::OUTPUT_SIZE> out;
-        CHMAC_SHA256(UCharCast(salt.data()), salt.size()).Write(UCharCast(pass.data()), pass.size()).Finalize(out.data());
-        std::string hash_from_pass = HexStr(out);
+        static const unsigned int KEY_SIZE = 32;
+        unsigned char out[KEY_SIZE];
 
-        if (TimingResistantEqual(hash_from_pass, hash)) {
+        CHMAC_SHA256(reinterpret_cast<const unsigned char*>(strSalt.data()), strSalt.size()).Write(reinterpret_cast<const unsigned char*>(strPass.data()), strPass.size()).Finalize(out);
+        std::vector<unsigned char> hexvec(out, out+KEY_SIZE);
+        std::string strHashFromPass = HexStr(hexvec);
+
+        if (TimingResistantEqual(strHashFromPass, strHash)) {
             return true;
         }
     }
@@ -140,7 +144,7 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     if (strUserPass.find(':') != std::string::npos)
         strAuthUsernameOut = strUserPass.substr(0, strUserPass.find(':'));
 
-    return CheckUserAuthorized(strUserPass);
+    return multiUserAuthorized(strUserPass);
 }
 
 static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
@@ -281,7 +285,7 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
 
 static bool InitRPCAuthentication()
 {
-    std::string user_colon_pass;
+    std::string strRPCUserColonPass;
 
     if (gArgs.GetArg("-rpcpassword", "") == "")
     {
@@ -296,10 +300,10 @@ static bool InitRPCAuthentication()
             cookie_perms = *perm_opt;
         }
 
-        if (!GenerateAuthCookie(&user_colon_pass, cookie_perms)) {
+        if (!GenerateAuthCookie(&strRPCUserColonPass, cookie_perms)) {
             return false;
         }
-        if (user_colon_pass.empty()) {
+        if (strRPCUserColonPass.empty()) {
             LogInfo("RPC authentication cookie file generation is disabled.");
         } else {
             LogInfo("Using random cookie authentication.");
@@ -307,12 +311,12 @@ static bool InitRPCAuthentication()
     } else {
         LogInfo("Using rpcuser/rpcpassword authentication.");
         LogWarning("The use of rpcuser/rpcpassword is less secure, because credentials are configured in plain text. It is recommended that locally-run instances switch to cookie-based auth, or otherwise to use hashed rpcauth credentials. See share/rpcauth in the source directory for more information.");
-        user_colon_pass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
+        strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
     }
 
     // If there is a plaintext credential, hash it with a random salt before storage.
-    if (!user_colon_pass.empty()) {
-        std::vector<std::string> fields{SplitString(user_colon_pass, ':')};
+    if (!strRPCUserColonPass.empty()) {
+        std::vector<std::string> fields{SplitString(strRPCUserColonPass, ':')};
         if (fields.size() != 2) {
             LogError("Unable to parse RPC credentials. The configured rpcuser or rpcpassword cannot contain a \":\".");
             return false;
