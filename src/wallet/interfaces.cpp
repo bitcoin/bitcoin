@@ -291,17 +291,17 @@ public:
         LOCK(m_wallet->cs_wallet);
         m_wallet->CommitTransaction(std::move(tx), std::move(value_map), std::move(order_form));
     }
-    bool transactionCanBeAbandoned(const uint256& txid) override { return m_wallet->TransactionCanBeAbandoned(txid); }
-    bool abandonTransaction(const uint256& txid) override
+    bool transactionCanBeAbandoned(const Txid& txid) override { return m_wallet->TransactionCanBeAbandoned(txid); }
+    bool abandonTransaction(const Txid& txid) override
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->AbandonTransaction(txid);
     }
-    bool transactionCanBeBumped(const uint256& txid) override
+    bool transactionCanBeBumped(const Txid& txid) override
     {
         return feebumper::TransactionCanBeBumped(*m_wallet.get(), txid);
     }
-    bool createBumpTransaction(const uint256& txid,
+    bool createBumpTransaction(const Txid& txid,
         const CCoinControl& coin_control,
         std::vector<bilingual_str>& errors,
         CAmount& old_fee,
@@ -312,15 +312,15 @@ public:
         return feebumper::CreateRateBumpTransaction(*m_wallet.get(), txid, coin_control, errors, old_fee, new_fee, mtx, /* require_mine= */ true, outputs) == feebumper::Result::OK;
     }
     bool signBumpTransaction(CMutableTransaction& mtx) override { return feebumper::SignTransaction(*m_wallet.get(), mtx); }
-    bool commitBumpTransaction(const uint256& txid,
+    bool commitBumpTransaction(const Txid& txid,
         CMutableTransaction&& mtx,
         std::vector<bilingual_str>& errors,
-        uint256& bumped_txid) override
+        Txid& bumped_txid) override
     {
         return feebumper::CommitTransaction(*m_wallet.get(), txid, std::move(mtx), errors, bumped_txid) ==
                feebumper::Result::OK;
     }
-    CTransactionRef getTx(const uint256& txid) override
+    CTransactionRef getTx(const Txid& txid) override
     {
         LOCK(m_wallet->cs_wallet);
         auto mi = m_wallet->mapWallet.find(txid);
@@ -329,7 +329,7 @@ public:
         }
         return {};
     }
-    WalletTx getWalletTx(const uint256& txid) override
+    WalletTx getWalletTx(const Txid& txid) override
     {
         LOCK(m_wallet->cs_wallet);
         auto mi = m_wallet->mapWallet.find(txid);
@@ -347,7 +347,7 @@ public:
         }
         return result;
     }
-    bool tryGetTxStatus(const uint256& txid,
+    bool tryGetTxStatus(const Txid& txid,
         interfaces::WalletTxStatus& tx_status,
         int& num_blocks,
         int64_t& block_time) override
@@ -366,7 +366,7 @@ public:
         tx_status = MakeWalletTxStatus(*m_wallet, mi->second);
         return true;
     }
-    WalletTx getWalletTxDetails(const uint256& txid,
+    WalletTx getWalletTxDetails(const Txid& txid,
         WalletTxStatus& tx_status,
         WalletOrderForm& order_form,
         bool& in_mempool,
@@ -533,7 +533,7 @@ public:
     std::unique_ptr<Handler> handleTransactionChanged(TransactionChangedFn fn) override
     {
         return MakeSignalHandler(m_wallet->NotifyTransactionChanged.connect(
-            [fn](const uint256& txid, ChangeType status) { fn(txid, status); }));
+            [fn](const Txid& txid, ChangeType status) { fn(txid, status); }));
     }
     std::unique_ptr<Handler> handleCanGetAddressesChanged(CanGetAddressesChangedFn fn) override
     {

@@ -49,11 +49,11 @@ struct TxLessThan
     {
         return a.hash < b.hash;
     }
-    bool operator()(const TransactionRecord &a, const uint256 &b) const
+    bool operator()(const TransactionRecord &a, const Txid &b) const
     {
         return a.hash < b;
     }
-    bool operator()(const uint256 &a, const TransactionRecord &b) const
+    bool operator()(const Txid &a, const TransactionRecord &b) const
     {
         return a < b.hash;
     }
@@ -64,7 +64,7 @@ struct TransactionNotification
 {
 public:
     TransactionNotification() = default;
-    TransactionNotification(uint256 _hash, ChangeType _status, bool _showTransaction):
+    TransactionNotification(Txid _hash, ChangeType _status, bool _showTransaction):
         hash(_hash), status(_status), showTransaction(_showTransaction) {}
 
     void invoke(QObject *ttm)
@@ -78,7 +78,7 @@ public:
         assert(invoked);
     }
 private:
-    uint256 hash;
+    Txid hash;
     ChangeType status;
     bool showTransaction;
 };
@@ -103,7 +103,7 @@ public:
     bool m_loading = false;
     std::vector< TransactionNotification > vQueueNotifications;
 
-    void NotifyTransactionChanged(const uint256 &hash, ChangeType status);
+    void NotifyTransactionChanged(const Txid& hash, ChangeType status);
     void DispatchNotifications();
 
     /* Query entire wallet anew from core.
@@ -127,7 +127,7 @@ public:
 
        Call with transaction that was added, removed or changed.
      */
-    void updateWallet(interfaces::Wallet& wallet, const uint256 &hash, int status, bool showTransaction)
+    void updateWallet(interfaces::Wallet& wallet, const Txid& hash, int status, bool showTransaction)
     {
         qDebug() << "TransactionTablePriv::updateWallet: " + QString::fromStdString(hash.ToString()) + " " + QString::number(status);
 
@@ -699,7 +699,7 @@ void TransactionTableModel::updateDisplayUnit()
     Q_EMIT dataChanged(index(0, Amount), index(priv->size()-1, Amount));
 }
 
-void TransactionTablePriv::NotifyTransactionChanged(const uint256 &hash, ChangeType status)
+void TransactionTablePriv::NotifyTransactionChanged(const Txid& hash, ChangeType status)
 {
     // Find transaction in wallet
     // Determine whether to show transaction or not (determine this here so that no relocking is needed in GUI thread)
