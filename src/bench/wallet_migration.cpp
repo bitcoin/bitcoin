@@ -37,7 +37,7 @@ static void WalletMigration(benchmark::Bench& bench)
     for (int w = 0; w < NUM_WATCH_ONLY_ADDR; ++w) {
         CKey key = GenerateRandomKey();
         LOCK(wallet->cs_wallet);
-        const auto& dest = GetDestinationForKey(key.GetPubKey(), OutputType::LEGACY);
+        const PKHash dest{key.GetPubKey()};
         const CScript& script = scripts_watch_only.emplace_back(GetScriptForDestination(dest));
         assert(legacy_spkm->LoadWatchOnly(script));
         assert(wallet->SetAddressBook(dest, strprintf("watch_%d", w), /*purpose=*/std::nullopt));

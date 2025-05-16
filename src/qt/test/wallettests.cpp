@@ -217,7 +217,7 @@ std::shared_ptr<CWallet> SetupDescriptorsWallet(interfaces::Node& node, TestChai
     WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1);
     auto spk_manager = *Assert(wallet->AddWalletDescriptor(w_desc, provider, "", false));
     assert(spk_manager);
-    CTxDestination dest = GetDestinationForKey(test.coinbaseKey.GetPubKey(), wallet->m_default_address_type);
+    const PKHash dest{test.coinbaseKey.GetPubKey()};
     wallet->SetAddressBook(dest, "", wallet::AddressPurpose::RECEIVE);
     wallet->SetLastBlockProcessed(105, WITH_LOCK(node.context()->chainman->GetMutex(), return node.context()->chainman->ActiveChain().Tip()->GetBlockHash()));
     SyncUpWallet(wallet, node);
@@ -406,7 +406,7 @@ void TestGUIWatchOnly(interfaces::Node& node, TestChain100Setup& test)
                    sendCoinsDialog.findChild<QLabel*>("labelBalance"));
 
     // Set change address
-    sendCoinsDialog.getCoinControl()->destChange = GetDestinationForKey(test.coinbaseKey.GetPubKey(), OutputType::LEGACY);
+    sendCoinsDialog.getCoinControl()->destChange = PKHash{test.coinbaseKey.GetPubKey()};
 
     // Time to reject "save" PSBT dialog ('SendCoins' locks the main thread until the dialog receives the event).
     QTimer timer;
